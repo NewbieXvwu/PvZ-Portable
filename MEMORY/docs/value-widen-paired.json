@@ -1,0 +1,99 @@
+{
+ "plan": {
+  "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/ab/manifest.json",
+  "tasks": [
+   "night_l14_eval_n10",
+   "night_l17_eval_n10",
+   "night_l20_eval_n10_orig",
+   "pool_l21_eval_p9k",
+   "pool_l24_eval_p9k",
+   "day_l7_z15_eval"
+  ],
+  "games": 32,
+  "workers": 4,
+  "seed_offset": 0,
+  "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+  "static": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+  "v3": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+  "v4": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/v4/model.pt",
+  "student_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+  "static_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "control": "queue103 run(), beta=1, only leaf value checkpoint changes"
+ },
+ "complete": true,
+ "results": {
+  "night_l14_eval_n10": {
+   "pairs": 32,
+   "old_wins": 29,
+   "new_wins": 31,
+   "gain": 3,
+   "harm": 1,
+   "delta_wins": 2,
+   "delta_rate": 0.0625,
+   "mcnemar_exact_two_sided": 0.625,
+   "missing_old": [],
+   "missing_new": []
+  },
+  "night_l17_eval_n10": {
+   "pairs": 32,
+   "old_wins": 22,
+   "new_wins": 31,
+   "gain": 9,
+   "harm": 0,
+   "delta_wins": 9,
+   "delta_rate": 0.28125,
+   "mcnemar_exact_two_sided": 0.00390625,
+   "missing_old": [],
+   "missing_new": []
+  },
+  "night_l20_eval_n10_orig": {
+   "pairs": 32,
+   "old_wins": 20,
+   "new_wins": 29,
+   "gain": 12,
+   "harm": 3,
+   "delta_wins": 9,
+   "delta_rate": 0.28125,
+   "mcnemar_exact_two_sided": 0.03515625,
+   "missing_old": [],
+   "missing_new": []
+  },
+  "pool_l21_eval_p9k": {
+   "pairs": 32,
+   "old_wins": 10,
+   "new_wins": 19,
+   "gain": 13,
+   "harm": 4,
+   "delta_wins": 9,
+   "delta_rate": 0.28125,
+   "mcnemar_exact_two_sided": 0.049041748046875,
+   "missing_old": [],
+   "missing_new": []
+  },
+  "pool_l24_eval_p9k": {
+   "pairs": 32,
+   "old_wins": 3,
+   "new_wins": 3,
+   "gain": 3,
+   "harm": 3,
+   "delta_wins": 0,
+   "delta_rate": 0.0,
+   "mcnemar_exact_two_sided": 1.0,
+   "missing_old": [],
+   "missing_new": []
+  },
+  "day_l7_z15_eval": {
+   "pairs": 32,
+   "old_wins": 32,
+   "new_wins": 32,
+   "gain": 0,
+   "harm": 0,
+   "delta_wins": 0,
+   "delta_rate": 0.0,
+   "mcnemar_exact_two_sided": 1.0,
+   "missing_old": [],
+   "missing_new": []
+  }
+ },
+ "note": "A nonsignificant difference with 32 pairs does not establish noninferiority. No defaults are changed."
+}

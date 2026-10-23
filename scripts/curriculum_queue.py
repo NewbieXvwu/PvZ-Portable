@@ -65,7 +65,7 @@ STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
 DEFAULT_STATIC_VALUE = MAIN / 'artifacts/hard/value_branch1/model.pt'
-DEFAULT_VALUE = MAIN / 'artifacts/value_net/v3/model.pt'
+DEFAULT_VALUE = MAIN / 'artifacts/value_net/v4/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
 
@@ -598,6 +598,11 @@ def main() -> None:
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
+        # The pack command this controller would run at the end of the round: reviewable before
+        # a round is spent, and the only place the recipe's row options become a real command.
+        labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
+        if labels:
+            print('pack: ' + ' '.join(pack_command(args, labels)))
         return
     args.metrics = Metrics("curriculum_queue").start()
     args.metrics.update(games=0, decisions=0, round=state["round"])

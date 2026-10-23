@@ -19,6 +19,10 @@ Between searches at least ``--min-gap`` ticks pass unless the student itself wan
 Arms: ``fast`` = the student alone, ``fast_search`` = the teacher. ``--frames`` writes per-decision archives
 for training (with ``--dagger-beta`` < 1 the student executes part of the moves, the search still labels all).
 
+The comparison harness ``scripts/b3_noninferiority.py`` can set a private ``_W["candidate_mode"] =
+"student-topk"`` (task42 B3 arm: the student's global top-k plants, wait, and its own action). There is no
+CLI flag, and the formal collection path never sets it.
+
 Continuations run in the original C++ simulator. ``--rollout-sim-skip`` is a CPU presentation-work
 bitmask: mask 29 skips colour, height, attachment matrices and messages, while preserving game ticks
 and animation lifecycle updates.
@@ -165,12 +169,12 @@ VALUE_BATCH = 32
 
 def _values(frames: list[dict], static: bool = False) -> list[float]:
     import torch
-    from pvz_value_net import featurize
+    from pvz_value_net import encode_frame
     net = _W.get("static_vnet", _W["vnet"]) if static else _W["vnet"]
     values: list[float] = []
     for start in range(0, len(frames), VALUE_BATCH):
         part = frames[start:start + VALUE_BATCH]
-        boards, scalars = zip(*(featurize(f) for f in part))
+        boards, scalars = zip(*(encode_frame(f, net.encoder_version) for f in part))
         scalars = torch.stack(scalars)
         if net.context:      # the game's multiplier and zombie roster, set by _play at reset
             scalars = torch.cat([scalars, torch.from_numpy(_W["context"]).expand(len(part), -1)], dim=1)
@@ -300,6 +304,63 @@ def _static_frames(env, root: int, actions: list[dict], income) -> list[tuple[di
     return out
 
 
+def _student_topk_candidates(legal: list[dict], k: int) -> tuple[list[dict], set[str]]:
+    """The student's global top-k legal plants, best first (``ranked_plants``).
+
+    Comparison arm only (scripts/b3_noninferiority.py, task42). The formal path never sets
+    ``_W["candidate_mode"]``, so this function is not reached by collection runs.
+    """
+    from pvz_rollout_policy import ranked_plants
+    if _W.get("student_frame") is None:
+        raise ValueError("student-topk candidates require the current student frame")
+    ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                           legal, context=_W.get("context"), history=_W.get("student_history"))
+    candidates, keys = [], set()
+    for _score, entry in ranked[:k]:
+        action = {"type": "plant", "packet": int(entry["packet"]),
+                  "col": int(entry["col"]), "row": int(entry["row"])}
+        key = json.dumps(action, sort_keys=True)
+        if key not in keys:
+            candidates.append(action)
+            keys.add(key)
+    return candidates, keys
+
+
+_LEAF_PROBE_COUNT = 0
+
+
+def _probe_decision(args, obs: dict, candidates: list[dict], totals: list[float], chosen: dict,
+                    decision_seed: int, policy_action: dict, best: int, policy_index: int) -> None:
+    """Opt-in diagnostic: one JSON line per search decision with candidate-leaf dispersion.
+
+    Off unless --leaf-probe is given, so default behaviour and every recorded result stay
+    unchanged. Writes per worker process (<path>.<pid>.jsonl) to avoid cross-process locking.
+    Pruned halving candidates carry -inf and are excluded; candidates vs scored keeps that
+    visible instead of silently shrinking the set.
+    """
+    global _LEAF_PROBE_COUNT
+    path = getattr(args, "leaf_probe", None)
+    if not path:
+        return
+    limit = getattr(args, "leaf_probe_limit", 0)
+    if limit and _LEAF_PROBE_COUNT >= limit:
+        return
+    import math
+    finite = sorted((float(v) for v in totals if math.isfinite(v)), reverse=True)
+    if len(finite) < 2:
+        return
+    mean = sum(finite) / len(finite)
+    std = (sum((v - mean) ** 2 for v in finite) / len(finite)) ** 0.5
+    row = dict(task=args.task_id, seed=decision_seed // 10000, decision=decision_seed % 10000,
+               tick=int(obs.get("tick", -1)), candidates=len(candidates), scored=len(finite),
+               mean=round(mean, 6), std=round(std, 6), top1_top2=round(finite[0] - finite[1], 6),
+               best=best, policy_index=policy_index, overridden=chosen is not policy_action,
+               chosen=json.dumps(chosen, sort_keys=True), policy=json.dumps(policy_action, sort_keys=True))
+    with open(f"{path}.{os.getpid()}.jsonl", "a") as stream:
+        stream.write(json.dumps(row) + "\n")
+    _LEAF_PROBE_COUNT += 1
+
+
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     if not legal:
@@ -313,45 +374,59 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     income = obs.get("sun_income_rate")
     try:
         plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        static = _static_frames(env, root, plants, income)
-        scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
-                        key=lambda item: -item[0]) if static else []
-        # The best cells of *every* card, not the overall top-k: the static value net was trained on
-        # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
-        # against shooters right after planting -- only the rollout can show what they are worth.
-        by_card: dict[int, list] = {}
-        for v, a in scored:
-            by_card.setdefault(a["packet"], []).append(a)
-        candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP])
         policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
-        if policy_action["type"] == "plant" and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates):
-            candidates.append(policy_action)
+        mode = _W.get("candidate_mode", "static")
+        if mode == "student-topk":
+            # task42 B3 arm: global top-k plants by the student's own probabilities, plus wait and
+            # the student's own action. No static net, no per-card floor.
+            candidates, student_keys = _student_topk_candidates(legal, int(_W.get("student_topk", 3)))
+            candidates.append(NOOP)
+            if (policy_action["type"] == "plant"
+                    and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
+                candidates.append(policy_action)
+            stats["last_student_keys"] = student_keys
+        elif mode == "static":
+            static = _static_frames(env, root, plants, income)
+            scored = sorted(zip(_values([f for _a, f in static], static=True), [a for a, _f in static]),
+                            key=lambda item: -item[0]) if static else []
+            # The best cells of *every* card, not the overall top-k: the static value net was trained on
+            # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
+            # against shooters right after planting -- only the rollout can show what they are worth.
+            by_card: dict[int, list] = {}
+            for v, a in scored:
+                by_card.setdefault(a["packet"], []).append(a)
+            candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP])
+            if (policy_action["type"] == "plant"
+                    and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
+                candidates.append(policy_action)
 
-        # --student-candidates k: the student's own top-k plants join the candidates
-        # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
-        # the student would actually pick -- or its second choice -- never gets compared; the search
-        # could only reach it indirectly by shovelling and letting the student react (learn/06).
-        # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
-        stats["last_student_keys"] = set()
-        if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
-            from pvz_rollout_policy import ranked_plants
-            present = {json.dumps(c, sort_keys=True) for c in candidates}
-            added = 0
-            student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
-                                          legal, context=_W.get("context"), history=_W.get("student_history"))
-            for _score, entry in student_ranked:
-                action = {"type": "plant", "packet": int(entry["packet"]),
-                          "col": int(entry["col"]), "row": int(entry["row"])}
-                key = json.dumps(action, sort_keys=True)
-                if key in present:
-                    continue
-                candidates.append(action)
-                present.add(key)
-                stats["last_student_keys"].add(key)
-                added += 1
-                if added >= args.student_candidates:
-                    break
-            stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+            # --student-candidates k: the student's own top-k plants join the candidates
+            # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
+            # the student would actually pick -- or its second choice -- never gets compared; the search
+            # could only reach it indirectly by shovelling and letting the student react (learn/06).
+            # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
+            stats["last_student_keys"] = set()
+            if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
+                from pvz_rollout_policy import ranked_plants
+                present = {json.dumps(c, sort_keys=True) for c in candidates}
+                added = 0
+                student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                                              legal, context=_W.get("context"), history=_W.get("student_history"))
+                for _score, entry in student_ranked:
+                    action = {"type": "plant", "packet": int(entry["packet"]),
+                              "col": int(entry["col"]), "row": int(entry["row"])}
+                    key = json.dumps(action, sort_keys=True)
+                    if key in present:
+                        continue
+                    candidates.append(action)
+                    present.add(key)
+                    stats["last_student_keys"].add(key)
+                    added += 1
+                    if added >= args.student_candidates:
+                        break
+                stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
+        else:
+            raise ValueError(f"unknown candidate mode {mode!r}")
 
         if args.halving:
             return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
@@ -473,8 +548,11 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     if totals[best] - totals[policy_index] > MARGIN and best != policy_index:
         stats["overrides"] += 1
         stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
-        return candidates[best]
-    return policy_action
+        chosen = candidates[best]
+    else:
+        chosen = policy_action
+    _probe_decision(args, obs, candidates, totals, chosen, decision_seed, policy_action, best, policy_index)
+    return chosen
 
 
 def _frame_json(frame: dict) -> str:
@@ -683,6 +761,10 @@ def main() -> None:
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
     p.add_argument("--horizon", type=int, default=2500)
+    p.add_argument("--leaf-probe", help="diagnostic: write one JSON line per search decision with "
+                   "candidate-leaf mean/std/top1-top2 to <path>.<pid>.jsonl; off by default")
+    p.add_argument("--leaf-probe-limit", type=int, default=0,
+                   help="per worker decision cap for --leaf-probe; 0 = unlimited")
     p.add_argument("--verify-samples", type=int, default=0,
                    help="extra independent futures for student and challenger before an override (0 = disabled)")
     p.add_argument("--min-gap", type=int, default=300,

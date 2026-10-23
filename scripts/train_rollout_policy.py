@@ -495,7 +495,8 @@ def main(*, step_observer=None) -> None:
             rows = same.sum(1) >= 2                                       # >= 2 cells of the labelled card compared
             if rows.any():
                 m = same[rows]
-                logits = out["cell"][rows].gather(1, cd[rows][:, :, 1].clamp(min=0).long())
+                # empty candidate slots are NaN; NaN -> long is 0 on ARM but INT64_MIN on x86, so zero them first (masked by m anyway)
+                logits = out["cell"][rows].gather(1, cd[rows][:, :, 1].nan_to_num(0).clamp(min=0).long())
                 student = torch.log_softmax(logits.masked_fill(~m, -1e9), 1)
                 teacher = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
                 kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)

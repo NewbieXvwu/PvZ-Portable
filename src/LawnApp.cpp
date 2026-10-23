@@ -1566,19 +1566,29 @@ void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& res
 	for (const LawnMower* mower : mBoard->mLawnMowers)
 		if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY)
 			SortedInsert(result.readyDefenses, std::make_pair(mower->mRow, static_cast<int>(mower->mMowerType)));
-	// Duplicate detection for the invariant below; kept across calls so the wait loop does
-	// not allocate, and sorted so the check stays logarithmic in the zombie count.
-	static thread_local std::vector<int> aIdentities;
-	aIdentities.clear();
+	// Duplicate detection for the invariant below, kept across calls so the wait loop does not
+	// allocate.  A generation-stamped table replaces the sorted vector: every zombie paid two
+	// binary searches plus a memmove per tick, and this function is 1.5% of the rollout CPU
+	// (2026-10-23 perf call stacks, 153 of 156 samples from the wait loop).
+	static thread_local std::vector<uint32_t> aIdentityStamp;
+	static thread_local uint32_t aIdentityGeneration = 0;
+	if (++aIdentityGeneration == 0)
+	{
+		std::fill(aIdentityStamp.begin(), aIdentityStamp.end(), 0);
+		aIdentityGeneration = 1;
+	}
 	for (Zombie* zombie : mBoard->mZombies)
 	{
 		if (zombie->mDead) continue;
 		const int identity = static_cast<int>(mBoard->ZombieGetID(zombie));
 		if (identity == 0 || identity == -1 || !std::isfinite(zombie->mPosX))
 			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
-		if (Contains(aIdentities, identity))
+		const size_t aIdentityIndex = static_cast<size_t>(identity);
+		if (aIdentityIndex >= aIdentityStamp.size())
+			aIdentityStamp.resize(aIdentityIndex + 64, 0);
+		if (aIdentityStamp[aIdentityIndex] == aIdentityGeneration)
 			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
-		SortedInsert(aIdentities, identity);
+		aIdentityStamp[aIdentityIndex] = aIdentityGeneration;
 		// Exactly the existing public observation: no hidden hostility/queue flag.
 		// Only a coordinate that decimal rendering could move across the boundary needs the
 		// rendering.  Six significant digits round a value in [100, 1000) to a thousandth, so

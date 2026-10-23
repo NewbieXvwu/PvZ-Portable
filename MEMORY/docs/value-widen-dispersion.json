@@ -1,0 +1,162 @@
+{
+ "protocol": "teacher search decisions, pool L24/L26, only the leaf value net swapped",
+ "margin": 0.02,
+ "tasks": [
+  "pool_l24_eval_p9k",
+  "pool_l26_eval_p9k"
+ ],
+ "games_per_task": 4,
+ "sampled_per_arm": 200,
+ "arms": {
+  "v3": {
+   "decisions": 200,
+   "games": 8,
+   "mean_candidates": 5.43,
+   "mean_scored": 5.43,
+   "mean_leaf": 0.582674405,
+   "mean_std": 0.03416437,
+   "median_std": 0.030206,
+   "mean_gap": 0.019337135,
+   "median_gap": 0.0124805,
+   "share_gap_below_margin": 0.69,
+   "share_overridden": 0.255,
+   "all_decisions": {
+    "decisions": 480,
+    "games": 8,
+    "mean_candidates": 5.358333333333333,
+    "mean_scored": 5.358333333333333,
+    "mean_leaf": 0.58842345625,
+    "mean_std": 0.03431798125,
+    "median_std": 0.028784499999999998,
+    "mean_gap": 0.018358835416666667,
+    "median_gap": 0.010682500000000001,
+    "share_gap_below_margin": 0.7166666666666667,
+    "share_overridden": 0.19791666666666666
+   },
+   "per_game_mean_gap": [
+    0.012625,
+    0.016341,
+    0.017003,
+    0.017399,
+    0.018139,
+    0.018213,
+    0.023482,
+    0.023669
+   ],
+   "per_game_override_rate": [
+    0.1667,
+    0.1667,
+    0.1833,
+    0.2,
+    0.2,
+    0.2167,
+    0.2167,
+    0.2333
+   ]
+  },
+  "v4": {
+   "decisions": 200,
+   "games": 8,
+   "mean_candidates": 5.43,
+   "mean_scored": 5.43,
+   "mean_leaf": 0.001888145,
+   "mean_std": 0.000696525,
+   "median_std": 0.00031,
+   "mean_gap": 0.00089321,
+   "median_gap": 0.00038350000000000005,
+   "share_gap_below_margin": 1.0,
+   "share_overridden": 0.0,
+   "all_decisions": {
+    "decisions": 480,
+    "games": 8,
+    "mean_candidates": 5.445833333333334,
+    "mean_scored": 5.445833333333334,
+    "mean_leaf": 0.00182985,
+    "mean_std": 0.0006694208333333333,
+    "median_std": 0.00031,
+    "mean_gap": 0.0008079708333333333,
+    "median_gap": 0.0003145,
+    "share_gap_below_margin": 1.0,
+    "share_overridden": 0.0
+   },
+   "per_game_mean_gap": [
+    0.000165,
+    0.000363,
+    0.000369,
+    0.000439,
+    0.000837,
+    0.00108,
+    0.001109,
+    0.002101
+   ],
+   "per_game_override_rate": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+   ]
+  }
+ },
+ "per_level": {
+  "v3": {
+   "pool_l24_eval_p9k": {
+    "decisions": 240,
+    "games": 4,
+    "mean_candidates": 5.345833333333333,
+    "mean_scored": 5.345833333333333,
+    "mean_leaf": 0.5867663583333333,
+    "mean_std": 0.0351398625,
+    "median_std": 0.0294305,
+    "mean_gap": 0.01781225,
+    "median_gap": 0.0102135,
+    "share_gap_below_margin": 0.7583333333333333,
+    "share_overridden": 0.20416666666666666
+   },
+   "pool_l26_eval_p9k": {
+    "decisions": 240,
+    "games": 4,
+    "mean_candidates": 5.370833333333334,
+    "mean_scored": 5.370833333333334,
+    "mean_leaf": 0.5900805541666667,
+    "mean_std": 0.0334961,
+    "median_std": 0.028361,
+    "mean_gap": 0.018905420833333332,
+    "median_gap": 0.0112465,
+    "share_gap_below_margin": 0.675,
+    "share_overridden": 0.19166666666666668
+   }
+  },
+  "v4": {
+   "pool_l24_eval_p9k": {
+    "decisions": 240,
+    "games": 4,
+    "mean_candidates": 5.45,
+    "mean_scored": 5.45,
+    "mean_leaf": 0.00264775,
+    "mean_std": 0.0010601333333333334,
+    "median_std": 0.00062,
+    "mean_gap": 0.0012817375,
+    "median_gap": 0.0005475,
+    "share_gap_below_margin": 1.0,
+    "share_overridden": 0.0
+   },
+   "pool_l26_eval_p9k": {
+    "decisions": 240,
+    "games": 4,
+    "mean_candidates": 5.441666666666666,
+    "mean_scored": 5.441666666666666,
+    "mean_leaf": 0.00101195,
+    "mean_std": 0.00027870833333333334,
+    "median_std": 0.00021,
+    "mean_gap": 0.0003342041666666667,
+    "median_gap": 0.00017549999999999998,
+    "share_gap_below_margin": 1.0,
+    "share_overridden": 0.0
+   }
+  }
+ }
+}

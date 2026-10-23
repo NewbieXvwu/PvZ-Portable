@@ -6,6 +6,7 @@
 
 - 固定清单 `artifacts/perf/engine_roots.json`：4 族 × 16 root，每 root 3 个固定未来种子，共 192 条推演。归档、模型与大型运行结果均不入 git。
 - 重放用归档动作与 `EventWaitEnv`，逐决策帧比较公开状态。它不声称比较每个模拟 tick 的全部内部字段。
+- 现重放门禁 `replay_gate_version: 2` 还比较档案中的完整 `v2`、收入、总数、胜负/终局与传送带字段，并拒绝提前终局；“仅 v2 不同”的回归在旧门禁上确实漏过，补强后 13 项夹具回归通过。历史逐帧结果只覆盖原来的字段，完整叶摘要覆盖终点，不能混称历史每帧的 v2 已验证；新门禁的完整重跑尚待槽位。
 - 旧基准每族只保存前 4 条叶摘要，共 16/192；旧 A/B 只比较时间，不自动校验叶状态或返回统计。因此此前“64 root 全部相同”的记录不能仅凭这些 JSON 独立复核，须用增强夹具补验。
 - 现夹具保存全部叶摘要及完整叶观测、estimated_result / decisions / mowers_left / planted / net_calls / ticks / substeps 的联合摘要；A/B 所有轮次均对比同一参考，差异与缺失证据直接失败。计时不进入正确性摘要。
 - A/B 每轮原始证据单独保留，汇总写入 `--out`，交替 A/B 顺序。整局读 `games.jsonl`，拒绝局数不足与重复种子，默认并发 2、上限 2。
@@ -38,6 +39,8 @@
 整局基线 `artifacts/perf/search_base/games.jsonl` 只有种子 30000/30001 两局，分别 98.7/133.9 秒、966/1121 决策；合计 111.45 ms/决策、30.95 games/h（串行工作量口径）。这是 **2/8 局的部分结果**，不能作为完成的整局基线。旧脚本误读 `results.jsonl` 已修正。
 
 ## 增强夹具复核与模型重载修复
+
+重启后审计另发现事件等待复用 bug：`PublicState::clear()` 未清 `plantCount`，真实读取器每次累加存活植物会在缓冲复用后漏掉植物减少条件。新增原地清空/累加场景，在第 2 tick 从 3 株减到 2 株：修复前断言失败，清空全部标量后 12 项 C++ 契约、20 项 Python 等待测试通过。现有 timeout 重放和 rollout 不覆盖条件 5，不能代替该回归；该修复不计性能收益。正式构建重放补验待当前 A2 计时结束后执行。
 
 - `18a58d42` 构建相对 step9：192/192 条完整叶观测和逻辑统计联合摘要相同，16 个归档共 11,475 个决策帧重放 0 差异、16/16 同种子重复 rollout 一致。本地证据：`artifacts/perf/codex_full_gate_step9_current{,_rounds/}` 与 `codex_replay_16.json`。一轮测速比值 1.1298，前一轮为 1.0074，负载波动明显；这里用于补正确性证据，不替代原会话多轮收益结论。
 - 修复前运行既有 24 配置 identity 测试：7/10 packet logits 超出 1e-5，最大绝对误差 0.1854288。新增“同布局换权重 → 与新进程比较”回归也失败：plant logit 为 0.0540556535 vs 0.0564118475。
@@ -139,6 +142,8 @@ im2col，只比矩阵核。激活按层标定（整张输入张量一个 u8 尺�
   越界（`index -9223372036854775808`）。这个文件在本分支与 pvz-env **逐字节相同**，属主干既有问题，
   归 task33/32 线处理，不在本任务范围。
 
+重启恢复后已补好测试环境（ml Python 追加 `/usr/lib/python3/dist-packages` 提供 pytest）：两个训练测试模块实测 **8 passed / 1 failed**，rowpool 全部可运行，identity CPU 训练的 cell gather 越界仍存在。训练/打包/对应测试文件与合入的 origin/pvz-env 无差异；因此 A1 的“完整 pytest 全过”仍未达成，不能只列为缺依赖，也未越过分工去修改训练实现。完整测试已收集到 290 项，待游戏槽位释放后运行。
+
 合并后构建相对 step9 二进制的配对比值中位数 **0.92**（4 轮，单轮 1.175 / 0.785 / 0.933 / 0.909，噪声大），
 即合并+第 11–13 项之后比 step9 快约 8%。
 ## 整局基准：新旧构建同种子对照（A2）
@@ -156,11 +161,18 @@ wall 会被抢占放大，CPU 秒才是能跨构建比较的量。
 |---|---:|---:|---:|---:|---:|---|
 | 白天 L7 `day_l7_train_d7_m150` | 149.3 | 236.7 | **1.586×** | 24.12 | 15.21 | 8/8 相同（全胜，1213 决策） |
 | 夜间 L14 `night_l14_train_n10_m150` | 88.5 | 138.2 | **1.561×** | 40.68 | 26.05 | 8/8 相同（全负，两边一致） |
-| 泳池 L24 `pool_l24_train_p9k_m150` | 待填 | 待填 | | | | |
-| 传送带 L10 `day_l10_orig_train_m150` | 待填 | 待填 | | | | |
+| 泳池 L24 `pool_l24_train_p9k_m150` | 27.624 | 50.290 | **1.821×** | 130.32 | 71.58 | 8/8 相同（全负，平均 425.875 决策） |
+| 传送带 L10 `day_l10_orig_train_m150` | 180.339 | 309.397 | **1.716×** | 19.96 | 11.64 | 8/8 相同（7 胜 1 负，末波 20，决策数逐种子相同） |
 
 旧构建是 `cq` 工作树的二进制（`pvz-env` 合并前，只读、未重编）。逐种子结果（胜/负、末波、决策数）两边完全一致，
 所以比值不是“新构建少算了什么”换来的。
+
+**四族汇总（2026-10-23 完成 4/4）**：几何平均 **1.67×**，区间 1.561×（夜间 L14）–1.821×（泳池 L24）；
+CPU 工作口径的整局吞吐 11.6–82.3 games/h（新）对 7.7–49.6 games/h（旧）。对照主控 10-27 的判据
+（**≥ 2.0×**）还差约 20%，这个缺口不能靠继续微调 1–2% 的热点填平，必须动 BLAS 那 28%（B 的锁步批量）或换更省的前向。
+
+口径注记：四族的“新构建”都是 `build/pvz-portable`（09:51 构建，早于 `2d1e0e6d` 的等待缓冲修复与公开坐标 to_chars），
+所以这张表是**保守**的；最终上线二进制要用当前源码重走 `scripts/build_pgo.sh`（见部署节）。
 ## 锁步批量推演原型实测（B）
 
 原型在 `scripts/prototypes/`，从已提交源码（`08228252`）导出到 `artifacts/perf/batch_prototype/` 的独立构建，
@@ -172,7 +184,59 @@ wall 会被抢占放大，CPU 秒才是能跨构建比较的量。
 
 三条路径的叶观测/逻辑统计逐条比对，任何一条不同即失败；CPU 分别记 network / simulation / snapshot / feature。
 
-待填：三臂总 CPU 秒、`native/batch9` 与 `serial/batch9` 比值、前向加速比、逐 root 一致性计数。
+恢复检查发现旧日志在首个 batch 响应因缺少 `protocol_version` 中断；已修复成功/异常响应，原生臂改用与 batch 一致的进程 CPU 钟，补 network / simulation / snapshot 分项。报告显式区分完整覆盖与正确性通过，叶摘要差异直接非零退出；12 项无引擎回归通过，正重建当前提交的独立副本。
+
+实测（2026-10-23，64 root × 9 未来，horizon 2500、sim-skip 61，证据 `artifacts/perf/batch_prototype/results.json`）：
+
+| 臂 | 总 CPU s | 每 lane 网络 ms | 每 lane 模拟 ms | 每 lane 快照 ms | 每 lane 合计 ms |
+|---|---:|---:|---:|---:|---:|
+| native（同二进制串行 9 条） | 12.52 | 7.41 | 13.83 | 0.24 | 21.74 |
+| batch 1 | 36.11 | 10.74 | 13.79 | 37.16 | 62.69 |
+| batch 9 | 34.87 | 8.84 | 13.69 | 37.06 | 60.54 |
+
+- **正确性**：64/64 root 三臂的叶观测与逻辑统计逐条相同（`native_batch_identical_roots = 64`、`serial_batch_identical_roots = 64`），16 个存档整局逐帧重放 **0 差异**（953/1271/1089/992/877/821/925/789/531/520/405/423/464/524/468/423 帧）。
+- **锁步在这份原型里是净亏**：batch9 的总 CPU 是 native 的 **2.79 倍**（12.52 → 34.87 s）。主因是每 lane 各自快照/还原（37.1 ms/条，占 batch9 的 61%），而模拟段（13.7 ms/lane）完全不因合批变小。
+- **批量本身有效，但幅度有限**：batch1 → batch9 的网络段 **1.214×**（10.74 → 8.84 ms/lane）。两条 batch 臂的每 lane 网络仍比 native 串行（7.41 ms）慢 19% —— 因为 im2col 还是按 lane 单独做，只有 GEMM 合批。
+- **给 task33 的结论**：这条路的收益上限就是网络段占整条推演的份额（**34%**），其中 GEMM 约占整条推演的 28%。要让锁步值钱，必须同时做到 ① 各 lane 共享同一份快照（写时复制或按 lane 回放增量），② im2col 也按 lane 合批；否则不如串行。即便 ①② 都做到，也只能压缩那 34%，**单靠 B 不可能把整局吞吐推到 2.0×**。
+## 最终构建验收（2026-10-23 14:40，合并 pvz-env 后的源码）
+
+`JOBS=8 bash scripts/build_pgo.sh bench` 两阶段重走，`grep -c fprofile-generate build/build.ninja` = **0**（profile-use 阶段）。三项门禁：
+
+| 门禁 | 命令 | 结果 |
+|---|---|---|
+| 整局逐帧重放（gate v2） | `bench_engine.py replay` | 四族 953 / 877 / 531 / 464 帧，**0 差异**；同种子重复推演 4/4 一致 |
+| 64 root 吞吐 | `bench_engine.py bench --rollouts 3` | 484,620 tick / 3.94 CPU-s = **123,000 tick/CPU-s**，20.5 ms/推演，网络占比 38.7% |
+| 配对 A/B（改前二进制） | `bench_engine.py compare --rounds 4` | 比值中位数 **0.987**（本机噪声内），`correctness: all rollout states and logical statistics identical` |
+
+网络占比按族差别很大：夜间 L12 63.6%（模拟段几乎为 0，雾/夜间没有持续交战）、传送带 L10 32.4%、白天 L7 39.4%、泳池 L24 35.2%。这解释了为什么 A2 的整局比值各族不同——族里“学生前向 vs 引擎模拟”的比例不一样。
+
+绝对值对照：步骤 4 记录的 114.8k tick/CPU-s 是**合并 pvz-env 之前**的源码；合并后同一夹具是 123.0k，说明 70 个提交的合并没有带来退化（+7%）。
+
+## 试过但没有收益的改动（已回退 / 不接入）
+
+| 改动 | 依据 | 实测 | 处置 |
+|---|---|---|---|
+| 观察序列化换成 `to_chars`（`JsonSink`） | perf 调用栈里 `__ostream_insert`+`num_put`+`xsputn` 合计约 3% 引擎样本 | 先证明 598,816 个 int/float 与 ostream **逐字节相同**；整引擎配对 A/B 6 轮比值中位数 **1.0116**（a 122,074 vs b 125,022 tick/CPU-s，即新版反而慢 2%），落在本机 ±9% 单轮噪声里 | **回退**。剖面份额没能兑现成吞吐，说明这 3% 的归因本身不可靠（SIGPROF 叶函数归因的已知局限） |
+| 首层格子稀疏卷积 | 首层只有 1.788% 格子非零，核级 0.58× | 与 BLAS 最大差 5.72e-6 —— **破坏逐位门禁**，只能走统计验收；而首层占卷积约 15%、卷积占整条推演约 26%，上限约 1.6% | 不接入。统计验收要 64 局同种子对照，成本远高于 1.6% 的收益 |
+| 等待循环的重复 ID 检测（排序 vector → 代际戳表） | perf 调用栈：`EnvironmentPublicWaitState` 156 样本全部来自等待循环 | 配对 A/B 6 轮中位数 1.06（load 35，单轮 0.876–1.239，测不出）；剖面里该函数仍在 1% 以下 | **保留**：机制上严格少做两次二分 + 一次 memmove，且逐位等价（重放 0 差异）。按规则属“2% 以下不能靠吞吐判定” |
+
+## 停止条件评估（2026-10-23 15:40）
+
+任务书的停止条件是：**连续 3 项尝试的收益都 < 2%，且 perf 前 15 名里没有可以证明“不影响逻辑”的无用功**。逐条核对：
+
+1. 连续三项 < 2%：
+   - 公开坐标 `to_chars`（结果 31）：配对 A/B 0.987，噪声内，≈1%；
+   - 观察序列化 `JsonSink`（“试过但没有收益”）：1.0116，**已回退**；
+   - 等待循环代际戳表（结果 35）：1.06（load 35，单轮 0.876–1.239），剖面份额仍在 1% 以下。
+   本机 load 从 22 涨到 35，单轮离散度到 ±20%，2% 以下的改动已经**无法用吞吐判定**——这本身就是“没有油水”的直接证据。
+2. 前 15 名里没有可证明不影响逻辑的无用功：BLAS 20.7%+打包 4.9%（真算）、`Reanimation::Update` 4.2% + 轨道 lambda 2.5% + `NextEnvTrack` 1.1%（帧号决定攻击时机）、`DataArray<Zombie>::Iterator` 3.0%（真遍历）、`MTRand` 1.9%（共享 RNG 流）、粒子 1.2% / `Plant::Animate` 1.1%（夹带 `RandRangeFloat`）、memset 1.3%（缓冲）。**逐项都查过，没有一项能整块跳过**。
+
+**结论**：引擎进程内的 CPU 已经到底。累计 82.0k → 152.9k tick/CPU-s（同夹具、本机噪声内，约 1.86×），整局吞吐四族几何平均 **1.67×**。要够到 2.0× 只剩三条路，且都不在“引擎微优化”范畴：
+
+1. **搜索预算**（每决策的推演条数 / 视界 / sim-skip）——这是搜索语义，不是本任务能单方面改的；
+2. **锁步 + 共享快照**（B 的设计方向）：收益上限是网络段的 34%，按实测最多 +10%，单独也到不了 2.0×；
+3. **GPU**（10-27 的决策项）。
+
 ## 部署（给主控：在 cq 工作树上一次做完）
 
 本分支的引擎加速全部是**默认构建**的一部分，没有新增运行开关：LTO、PGO、mimalloc、
@@ -206,6 +270,24 @@ grep -c fprofile-generate build/build.ninja
 
 ## 仍需完成
 
+### 公开坐标格式化候选（待整引擎验收）
+
+`scripts/prototypes/bench_public_coordinate.cpp` 对比公开编码使用的 stream/stod 与 `to_chars(general, 6)` / `from_chars`。固定种子生成任意有限 float 位型（引擎坐标和速度都是 float，提升到 double），再覆盖整数附近与左侧边界，共 **1,017,346** 个样本，double 结果（含负零）逐位相同。三轮交替 CPU 秒分别为 stream 0.5862/0.5763/0.5701、chars 0.1289/0.1413/0.1340；中位数单函数加速 **4.30×**。这尚未进入生产，不能外推整引擎收益；v2 Features 每次提取坐标/速度均走该函数，是下一项整条推演候选。
+
+### 首层格子稀疏卷积（独立候选，未并入）
+
+活动通道内依然有大量零格子：与 SSE/int8 相同的 64 个真实 root 中，首层整个棋盘只有 **1.788%** 输入值非零。`scripts/prototypes/bench_sparse_conv.cpp` 将固定卷积权重预转成 `(输入通道, 核位置, 输出通道)`，逐个非零输入向有效输出格子累加，再转回正式 NCHW 布局。实验含 im2col/累加与输出布局成本；静态权重打包和活动通道识别在三臂计时之外，不代表完整前向。
+
+固定 CPU0、每 root 每臂连续 100 次、逐 root 轮换三臂先后、共九轮进程 CPU 计时，减少不同核心/权重缓存状态与长段先后的偏差。三臂结果：
+
+| 路径 | µs/首层，中位数 | 相对 BLAS 配对耗时比，中位数 |
+|---|---:|---:|
+| im2col + BLAS | 18.240 | 1.000 |
+| 非零累加，AVX2 | 10.422 | 0.580 |
+| 非零累加，普通 C++ 向量化 | 14.854 | 0.824 |
+
+两条稀疏路径输出逐位相同；相对 BLAS 最大绝对差 **5.72205e-6**、相对 RMS **6.6228e-8**。初版跨 64 份权重轮流运行的全臂计时波动很大，不用于结论；最终证据为 `artifacts/perf/sparse_conv_compare_three.json`。目前只留独立实验，生产卷积未改；首层收益还须结合完整推演和新剖面，不能把 0.580 耗时比算成整引擎收益或已满足停止条件。
+
 ### 分块手写 SIMD 对照：拒绝替换 BLAS
 
 `scripts/bench_conv_kernels.py` / `.cpp` 是独立实验，不链接进游戏。读取固定清单 64 个真实 root（全部包含 v2 字段），从学生模型构造三层卷积各 64 个输入；第一层沿用稀疏通道选择，后两层为稠密。两条路径共享相同 im2col 与权重矩阵：显式 SSE 的 4 输出通道 × 4 单元分块累加，对照单线程 OpenBLAS SGEMM。`-O3 -ffp-contract=off`，交替先后顺序三轮，每个输入重复 30 次，按进程 CPU 时间测量。
@@ -226,6 +308,77 @@ grep -c fprofile-generate build/build.ninja
 6. 继续逐项优化和记录前 15 热点；尚未证明“连续 3 项收益 <2% 且前 15 无可证明冗余”的停止条件。
 
 ## 历史采样前 15
+
+### prof_current（4931 样本，2026-10-23 14:32，当前构建）
+
+SIGPROF 采样，只在 rollout 阶段 armed（`PVZ_PROF_ARM_ONLY=1`），64 root × 15 条推演、horizon 2500、sim-skip 61。原始样本 `artifacts/perf/pcs_current.bin`，解析 `artifacts/perf/prof_current_symbols.json`。
+
+| 函数或动态符号 | 占比 |
+|---|---:|
+| [libopenblas] sgemm_kernel_HASWELL | 20.1% |
+| Reanimation::Update | 4.0% |
+| DataArray<Zombie>::Iterator::operator++ | 2.5% |
+| [libopenblas] sgemm_oncopy_HASWELL | 2.2% |
+| Sexy::MTRand::NextNoAssert | 2.1% |
+| EnvironmentRollout::Convolve | 2.0% |
+| operator（Reanimator.cpp 轨道 lambda） | 1.9% |
+| [libopenblas] sgemm_itcopy_HASWELL | 1.7% |
+| PvzpParticleEmitter::UpdateParticle | 1.6% |
+| [libopenblas] dgemm_kernel_HASWELL | 1.6% |
+| Reanimation::NextEnvTrack | 1.3% |
+| [libopenblas] dgemm_incopy_HASWELL | 1.3% |
+| Zombie::GetDrawPos | 1.3% |
+| [libc] __memset_avx2_unaligned_erms | 1.2% |
+| Plant::Animate | 1.2% |
+
+- **BLAS 合计 26.9%**（kernel 20.1 + 打包 5.2 + dgemm 1.6 中含打包）。打包占 5.2% 是唯一“可以靠接口绕掉”的部分，而它只在合批时才省得下来（B 已测：单条推演内省不掉）。
+- **Reanimation 三行合计 7.2%**（Update 4.0 + 轨道 lambda 1.9 + NextEnvTrack 1.3）。稀疏轨道遍历本身（NextEnvTrack）已经是位图扫描，1.3% 是它自己的成本；剩下的 5.9% 是有活干的轨道在推进帧与插值，帧号决定攻击时机，不能丢。
+- **视觉三项合计 4.1%**（粒子 1.6、GetDrawPos 1.3、Plant::Animate 1.2）。逐项查过：粒子已经只做寿命记账（死亡时可能 spawn 并从共享 RNG 取数）；GetDrawPos 喂粒子生成位置；Plant::Animate 里有 `RandRangeFloat` 与闪烁倒计时。**没有一项能整块跳过而不动 RNG 流或攻击时机**，所以“前 15 里还有可证明不影响逻辑的无用功”这一条已经不成立。
+- 前 15 之外约 50% 分散在几百个函数里，单项都 < 1.2%，没有第二个可打的大矿。这是停止条件的第二条依据。
+
+### perf 调用栈采样（2026-10-23 15:00，首次拿到真实调用栈）
+
+前面所有剖面都是 SIGPROF 叶函数计数，没有调用者。这次用解包的 perf 7.0.14（`LD_LIBRARY_PATH=artifacts/perf/tools/usr/lib/x86_64-linux-gnu`）配一个 `-g -fno-omit-frame-pointer` 的独立构建 `build-prof/`（不动正式 build）：
+
+```
+perf record -F 400 -e cpu-clock:u -g --call-graph fp -o artifacts/perf/perf.data -- \
+  python3 scripts/bench_engine.py bench --executable build-prof/pvz-portable --rollouts 5
+```
+
+10,294 个样本，其中引擎进程 5,546。按调用者归因（脚本见报告脚注）得到三件 SIGPROF 看不到的事：
+
+| 被调函数 | 引擎样本 | 主要调用者 |
+|---|---:|---|
+| `Projectile::FindCollisionTarget` | 217 | 212 来自 `Projectile::CheckForCollision`（每颗投射物每 tick 扫全部僵尸） |
+| `LawnApp::EnvironmentPublicWaitState` | 156 | 153 来自 `EnvironmentWaitUntil` 的等待循环（每 tick 重建公开状态） |
+| `Zombie::GetDrawPos` | 133 | 76 来自位置偏移计算、26 来自 `Zombie::UpdateReanim` |
+| `__ostream_insert` + `num_put` + `xsputn` | ~560（≈3%） | 全部来自每次推演一次的 `EnvironmentLeanObservation` 序列化 |
+
+最后一项引出了观察序列化的 to_chars 改写（`JsonSink`）——**实测无收益，已回退**，见下面的“试过但没有收益”。`FindCollisionTarget` 与 `EnvironmentPublicWaitState` 是接下来两项候选（后者已改，见“试过但没有收益”）。
+
+### 重启恢复后的工具与 libc 符号补全
+
+已从 `archive.ubuntu.com` 下载与 apt 元数据校验一致的 perf/valgrind/libc debug 包，只解包到 `artifacts/perf/tools/`，未改系统安装。perf 7.0.14 的 `cpu-clock:u` 调用栈探针成功，valgrind 3.26.0 可运行；下一次游戏采样可用真正的 `perf record`。`prof_symbolize.py --debug-root <解包的 usr/lib/debug>` 按 ELF build ID 匹配符号，旧 5752 点数据重解析后前 15 如下。这仍是历史 4de38495 的采样，不冒充当前构建剖面。
+
+| 函数或动态符号 | 占比 |
+|---|---:|
+| SGEMM kernel HASWELL | 17.70% |
+| Reanimation::Update | 3.79% |
+| SGEMM oncopy HASWELL | 2.96% |
+| DataArray<Zombie>::Iterator::operator++ | 2.76% |
+| operator（Reanimator.cpp 轨道 lambda） | 2.16% |
+| PvzpParticleEmitter::UpdateParticle | 1.81% |
+| DGEMM kernel HASWELL | 1.77% |
+| Sexy::MTRand::NextNoAssert | 1.70% |
+| EnvironmentRollout::Convolve | 1.46% |
+| DataArray<Plant>::Iterator::operator++ | 1.44% |
+| SGEMM itcopy HASWELL | 1.39% |
+| libc __memset_avx2_unaligned_erms | 1.32% |
+| DGEMM incopy HASWELL | 1.23% |
+| _mi_page_malloc_zero | 1.18% |
+| std::_Rb_tree_insert_and_rebalance | 1.16% |
+
+原来的 libc `_dl_mcount_wrapper` 最近符号归因不准确，补符号后拆成上述 memset、strcmp（1.11%）等真实实现；不能据旧名称推导调用链。
 
 ### 4de38495 后采样（完整解析共享库）
 

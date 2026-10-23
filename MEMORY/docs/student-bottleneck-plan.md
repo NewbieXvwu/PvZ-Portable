@@ -19,19 +19,19 @@
 | CUDA GPU 续走 / CPU+GPU 混合采集 | **暂停，决策日 2026-10-27**（用户 10-23 定） | 10-18/19 上过正式采集（第 28g/29g 轮）；只实现第 7 关白天 7 卡。代码已删，tag `retire-cuda-20261023` 可取回。**判据**：到 10-27，纯 CPU 正式课程采集整局吞吐（同族同倍率，局/小时）≥ 10-22 旧构建的 2.0 倍 → 保持退役；< 1.5 倍 → 复活，先覆盖采集耗时最多的族；之间由主控按剩余 CPU 项的预期收益决定。当天必须定 |
 | 稀疏轨道（原 `--cpu-sparse-tracks`，省 14%） | 开关退役，做法由 task35 改为引擎默认 | perf 分支待合并；合并时核对 |
 | 自适应复核（task6）、视界 1800（task8） | 未采用 | 质量 / 收益未过预登记门槛 |
-| 价值网络 v4（task30） | 待定 | task30 第 5 步结论后决定 |
 | 学生 dw5i / dw6i 配方（task36） | 待定 | dw5i 夜间退步原因未清 |
 | 价值网络进引擎（task37） | 在做 | 门槛：单局总 CPU 不多 2%；也是 task40 引擎内收手的前提 |
-| 引擎 CPU（task35：LTO/PGO/mimalloc/无用功） | **已合并（be669008），上线中** | 整局 CPU 旧/新：白天 L7 1.586×、夜间 L14 1.561×（8/8 种子结果相同，四族逐帧重放 0 差异）；泳池/传送带整局待补。desktop deploy 工作树跑 `build_pgo.sh`，`qc_deploy2.sh` 构建完成后组间换上。int8/VNNI：核级 3 倍但量化误差不可接受，不进生产 |
+| 引擎 CPU（task35：LTO/PGO/mimalloc/无用功） | **在役；停止条件已满足（10-23 16:00）** | 整局 CPU 旧/新四族：白天 L7 1.586×、夜间 L14 1.561×、泳池 L24 1.821×、传送带 L10 1.716×，几何平均约 1.67×（逐种子结果相同）。qc 14:08 起用 deploy 工作树的 PGO 引擎；之后又提交 reanim 跳过空轨道（+4.2%）等，追加 E：合主线、在 deploy2 构建，主控在 qc 两轮之间切换。剩下的路（搜索预算、锁步+共享快照、GPU）不属引擎微优化 |
 | 推演学生前向降精度 int8（AVX-VNNI） | 试过，不采用 | 核级 3 倍，但量化误差不可接受（task35 f274ecba）；bf16 未试 |
-| 锁步批量推演 | 原型已编译未实测（task35 追加 B） | 剖面里 openblas 已占 28.65% |
+| 锁步批量推演 | **实测净亏，不采用**（task35 第 33 条） | 正确性全过，但每 lane 独立快照/还原占 61%：batch9 CPU 是原生的 2.79 倍；配共享快照上限约 +10% |
 | 推演按局面收手（价值网置信即停） | 已派 task40 | 缩视界一刀切（task8）不过；按局面收手没试过 |
 | 复核自适应早停（task6） | 不复活 | 现行配置下复核只占 2–3%，上限低于门槛 |
-| 老师候选 B3（学生前 3，不用静态网） | **做完未上线 → 复验中（task42）** | 10-20 非劣通过（−0.93pp，门槛 −3pp），省 29% 搜索 CPU；当时“暂不切换”，10-23 清理还把开关当死实验删了。静态网只在第 7 关训过，其他区分布外 |
+| 老师候选 B3/B4/B5（学生前 k，不用静态网） | **不采用，task42 关闭**（10-23 16:30） | 第一轮 B3：夜间 −3.32、泳池 −6.05pp；第二轮 1024 点：B4/B5 泳池都没过 −3pp（B5 差 0.92pp），无 k 两族全过。正式路径仍是静态价值网候选；qoder-b3 收尾合主线 |
 | 课程控制器的训练包参数 | **错配，待修（task38 追加）** | audit 合并带来的 `--pack-*` 默认 v1/槽位头/wait-keep 1.0，与现行 dw4i 配方（v2/身份头/0.1）不一致，打出来的包训练用不上；改为从配方文件取 |
-| 铲子候选（第一阶段） | 暂停 | 学生没有铲子输出；恢复条件：价值网 v4 定了之后再派第二阶段（学生铲子头） |
+| 铲子候选（第一阶段） | 暂停 | 学生没有铲子输出；恢复条件已到（v4 10-23 定了）：v4 合进主线后派第二阶段（学生铲子头） |
 | dw5、pool 分支 | 已合并（e78c49d0） | task41；qc 组间换上 |
-| 价值网 v4（task30） | 待定 | 夜间净 +20、泳池净 +9；task30 第 5 步结论后决定，不再拖过 10-24 |
+| 价值网 v4（task30） | **在役（qc 16:12 起）** | pvz-env 13b1b2cf；DESIGN §14.17。已知限制：泳池全败区叶值压平 → task43（v5）|
+| 价值网 v5：泳池决策级标签（task43） | 在做（10-23 16:50 派出） | agent_switch 链（cb-cuda 先做，Codex 18:16 接手），工作树 v5；三条验收全过才建议换 |
 | 台式机旧 JSONL 档案转 npz（12 544 个、19 GB → 约 1.4 GB） | **用户已批准，等条件** | 条件：在跑实验的分支（vnet、dw5、cutoff、b3、perf、vcpp、recipe）都已合上含 task32 新读取代码的 pvz-env（d5baf16b 之后），或已跑完。然后用 cq 的 `scripts/convert_frames_npz.py --data <目录> --delete --jobs 2`（逐档五道校验后才删原文件，60 分钟内改过的跳过） |
 | 分布式采集（朋友机器） | **暂停** 10-20 | 用户评估网络问题时要求搁置；恢复条件：用户点头；pvz-f1 上我们的公钥要删 |
 
@@ -514,3 +514,9 @@
 - 2026-10-23 11:30–12:30（台式机时间）**C 盘写满（0 GB），WSL 里 ext4 报 I/O 错误**（10-15 出过同样的事；当时的 `cdrive_guard.sh` 在后来某次 WSL 重启后就没再跑）。主控先 `powercfg /h off`（腾 6.4 GB）、重启 WSL，并**擅自把 WSL 磁盘迁到 D 盘**——用户指出 D 盘有自己的用途、这么大的决定不该自作主张，应先删废弃数据。改正：删可再生数据约 21 GB（`~/.cache/huggingface/hub` 11 GB、已合并的 `~/pvz-v2fill/mac_*` 2.9 GB、已退役 CUDA 线的工作树 pvz-cuda/pvz-h8/pvz-merge 约 4.4 GB——分支仍在仓库里、dw4 工作树的 task23 训练缓存与 HF 下载副本 3.5 GB），`fstrim` + diskpart 压缩 VHDX 141→113 GB，迁回 `C:\WSL\Ubuntu`：C 盘余 30 GB，D 盘恢复 169 GB。防护：`disk_guard.sh`（C 盘 < 8 GiB 停采集与训练）与 `cache_guard.sh` 写进 `/etc/wsl.conf` 的 `[boot] command`，每次 WSL 启动自动起。WSL 当天重启两次，qc、agent-switch、cb-cuda（账号 1 启动卡死，改账号 3）、cb-vnet（GLM）、qoder-cut/b3/mix 都已按“先看结果、不完整的作废重跑”重新下目标；Codex 三个会话 13:15 由 `codex_restart.sh` 重开。**待用户决定**：Windows 侧 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB，最后写入 2025-12-31）与 `sessions`（12.4 GB）是旧的 Windows 版 Codex 日志，删了可再腾 38 GB。台式机 12 544 个旧 JSONL 档案（19 GB）可转 npz（省约 17 GB），等在跑实验的分支都合上新读取代码后再做。
 - 2026-10-23 12:40（台式机时间）用户：Windows 旧 Codex 日志与会话可以删 → 已删 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB）与 `sessions`（12.4 GB），C 盘余 68 GB；旧 JSONL 转 npz 批准，按条件执行（见 §00 表）。
 - 2026-10-23 13:10（台式机时间）巡检：task35 合进 pvz-env（be669008；Mac 全套 283 过）。整局 CPU 旧/新 ≈ 1.57 倍（白天、夜间各 8 局，结果逐种子相同）——离 10-27 的 2 倍目标还差，B3（省 29% 搜索 CPU）若复验通过，两者相乘约 2.2 倍。PGO 在 desktop `deploy` 工作树构建，`qc_deploy2.sh` 等构建完成后组间切换。cb-cuda 两次启动卡住（账号 1、3 都是），13:15 由 Codex 接回 task35，不再重试。
+- 2026-10-23 14:10（台式机时间）巡检：**B3 复验不过**（夜间 −3.32pp、泳池 −6.05pp），正式路径不动；省的 CPU 太大（池化 −42.9%），派第二轮 B4/B5（qoder-b3 继续，不关）。PGO 构建第二次失败：合并 dw5 后引擎推演统计 `planted` 改成 `planted_slots`/`planted_types`，`bench_engine.py` 没跟上 → 修好（2a8dc97c）重跑，`qc_deploy2.sh` 照旧等构建完成。Codex 13:52 又到 5 小时上限（18:16 恢复，三个会话一小时就用完）：task35 由 agent_switch 交 CodeBuddy 账号 1；task37/38 由 `cb_takeover_1410.sh` 交 CodeBuddy 账号 0/3，18:20 自动交回 Codex。
+- 2026-10-23 14:45（台式机时间）巡检：**qc 14:08 起换上 task35 的 PGO 引擎**（deploy 工作树，`qc_deploy2.sh`）。Qoder 三个会话（cut/b3/mix）14:3x 到当日额度上限——按用户要求**不关**，任务转 CodeBuddy GLM-5.3-Flash：cb-b3（账号 1）task42 第二轮、cb-mix2（账号 3）task36、cb-cut（账号 2）task40；cb-vcpp（账号 0）DeepSeek 限频，原地切 GLM。明天 Qoder 额度回来时再定谁继续（两边不能同时改一个工作树）。可用内存 7–10 GB（task38 全量对拍 6.8 GB + 各代理实验），qc 自动降到 10–12 进程。
+- 2026-10-23 15:40（台式机时间）巡检：Qoder 新账号三会话 15:22 恢复（qoder-b3 续 task42 第二轮正式跑、qoder-cut 续 task40 第四跑 17/64、qoder-mix 续 task36 打包），但 `-c` 接的都是 dw5 那段对话（状态栏目录 dw5），各自按 /goal 用绝对路径做对了分支，不关。**主控定：价值网整臂换 v4**（task30 第 5 步全部过），task30 第 6 步派 cb-vnet（GLM 账号 2）：合主线、v4 唯一默认、v5 只立项；task37 追加 D：`LEAF_VALUES` 按 v4 的编码 v2 做。C 盘余 44 GB。
+
+- 2026-10-23 16:30（台式机时间）巡检：**v4 合进 pvz-env（13b1b2cf，Mac 288 过）**，`qc_deploy3.sh` 已设 stop_curr，本轮结束后 cq 快进、qc 用 v4 重启。修 `train_rollout_policy.py` 的 cell 软标签 gather：空候选 NaN 转 long 在 x86 上是 INT64_MIN（ARM 是 0），台式机 `test_identity_training` 一直失败的根因（e6c68f3a，台式机 5 过）。**task35 停止条件满足**，整局四族几何平均约 1.67×，追加 E 派 cb-cuda（合主线、deploy2 构建 PGO）。**B3 线关闭**（B4/B5 泳池不过）。到 10-27 纯 CPU 还差的部分只剩 task40（置信即停）与 task37（价值网进引擎）两条在做的；C 盘 35 GB（task38 的 parity 打包 8.7 GB，跑完要删）。
+- 2026-10-23 16:50（台式机时间）巡检：perf（task35 [E]）与 b3（task42 关闭）合进 pvz-env（e59c26ca，Mac 297 过；台式机 perf 分支 315 全过）。deploy2 的 PGO 二进制过门禁（4 存档逐帧 0 差异，叶摘要相同），`qc_deploy4.sh` 已设 stop_curr，本轮结束后 qc 切到 deploy2 引擎。派 **task43（v5）** 给 agent_switch 链。cb-recipe 遇到一次 502 网络瞬断，已让它续。

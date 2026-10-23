@@ -19,6 +19,38 @@ def report():
 
 
 class EngineBenchGateTest(unittest.TestCase):
+    def test_replay_checks_v2_state_and_rejects_early_terminal(self):
+        from unittest.mock import Mock
+        rows = [{}, {'action': {'type': 'wait', 'ticks': 60}, 'tick': 60, 'v2': {'wave_timer': 10}},
+                {'action': {'type': 'wait', 'ticks': 60}, 'tick': 120, 'v2': {'wave_timer': 9}}]
+        spec = {'deck': [0, 1, 2, 3, 4, 5]}
+        for early in (False, True):
+            env = Mock()
+            env.step.return_value = ({'tick': 60, 'v2': {'wave_timer': 10 if early else 11}},
+                                     0, early, False, {})
+            with patch.object(bench, '_task_spec'), patch.object(bench, '_frame', side_effect=lambda v: v):
+                _, errors = bench.replay_episode(env, spec, rows, [2] if early else [1])
+            self.assertTrue(errors)
+            self.assertEqual(errors[0]['key'], 'terminal_before_last_frame' if early else 'v2')
+
+    def test_batch_prototype_requires_all_roots_and_identical_leaves(self):
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts/prototypes'))
+        import bench_batch_rollout as batch
+        metrics = dict(process_cpu_seconds=2, network_cpu_seconds=1,
+                       simulation_cpu_seconds=0.5, snapshot_cpu_seconds=0.2, feature_cpu_seconds=0.1)
+        root = {'arms': {arm: dict(metrics) for arm in ('native', '1', '9')},
+                'serial_batch_identical': True, 'native_batch_identical': True}
+        data = {'roots': [root]}
+        with self.assertRaisesRegex(RuntimeError, 'incomplete'):
+            batch.summarize(data, 64)
+        summary = batch.summarize(data, 1)
+        self.assertEqual(summary['components']['native']['snapshot_cpu_seconds'], 0.2)
+        self.assertEqual(summary['network_speedup'], 1)
+        batch.require_identical(data)
+        root['native_batch_identical'] = False
+        with self.assertRaisesRegex(RuntimeError, 'statistics differ'):
+            batch.require_identical(data)
+
     def test_horizon_starts_at_restored_snapshot_not_archive_post_action(self):
         from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as folder:
@@ -27,7 +59,7 @@ class EngineBenchGateTest(unittest.TestCase):
             manifest.write_text(json.dumps({'families': {'day': [
                 {'archive': str(root / 'archive'), 'decisions': [1]}]}}))
             response = dict(ticks=2500, decisions=42, estimated_result=-1, mowers_left=5,
-                            net_calls=42, planted=[0] * 10, substeps=[[2600, 0]],
+                            net_calls=42, planted_slots=[0] * 10, planted_types={}, substeps=[[2600, 0]],
                             simulation_seconds=1, network_seconds=1)
             from unittest.mock import Mock
             env = Mock()
@@ -63,7 +95,7 @@ class EngineBenchGateTest(unittest.TestCase):
                 bench._require_identical(report(), bad)
 
     def test_digest_includes_logical_stats_but_ignores_timers(self):
-        stats = dict(estimated_result=-1, decisions=1, mowers_left=5, planted=[0] * 10,
+        stats = dict(estimated_result=-1, decisions=1, mowers_left=5, planted_slots=[0] * 10, planted_types={},
                      net_calls=1, ticks=60, substeps=[[60, 0]], simulation_seconds=1)
         baseline = bench._rollout_digest({"tick": 60, "wave": 1}, stats)
         stats["simulation_seconds"] = 999

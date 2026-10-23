@@ -1,0 +1,11 @@
+{
+ "repo": "realnewbiexvwu/pvz-agent-artifacts",
+ "path": "transfer/value_v4.pt",
+ "revision": "cb63056e6d133a56408c3ab27955995439a336e6",
+ "url": "https://huggingface.co/realnewbiexvwu/pvz-agent-artifacts/commit/cb63056e6d133a56408c3ab27955995439a336e6",
+ "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+ "bytes": 611163,
+ "verified_download": true,
+ "encoder": "pvz_value_net.featurize v2",
+ "default_changed": false
+}
