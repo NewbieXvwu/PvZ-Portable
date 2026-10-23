@@ -50,6 +50,35 @@
 - 第 12 步（分布与停止条件）：报告补「当前分布（前 15 项及占比）」——训练数据 593 B/行（棋盘 60.9% / 标量 18.2% / packet 11.8% / 格候选 4.4% / 目标 3.0% / 其余 1.7%），引擎 malloc 7.9 MB（动画定义 51.9%、定义树节点 12.4%、pak 记录表 6.1%…）。连续三项尝试都 <2%：格子头检查点 0%（峰值不在那）、标量降 float16 1%（只有 15% 非零可无损）、packet progress 降 float16 0%（62% 可无损但必须 100%）。前 15 项已无可证明的冗余，按主控的停止条件收工。
 ## 问题
 
+**第 15 步（小 json 并包头）的接口提案，等主控确认再动。**
+
+现状：30 521 个小 json、13.9 MiB 数据、119.6 MiB 块；其中 22 116 个是 `hard_mac/frames` 下 npz 档案旁的
+`meta.json`（每局一个，平均 388 B）。真正的浪费是**每文件 4 KB 的块**，不是数据。
+
+建议形态（与 task33 第 3 项“打包成顺序大文件”对齐，分两级）：
+
+1. **档案级**：`frames.npz` 增加一个 `meta` 键（uint8 的 JSON 字节，与 `frames` 同一写法）。写入端
+   `write_frames` / `write_frames_from_source` 接受可选 `meta: dict`；`meta.json` 仍写，直到转换工具
+   确认过；读取端新增 `pvz_frame_store.frame_meta(archive) -> dict`：npz 里有 `meta` 就用它，否则读
+   `meta.json`（按 `LEGACY(jsonl-archives)` 的方式登记）。收益：22 116 × 4 KB ≈ 86 MiB 的块浪费 +
+   8 MiB 数据 → npz 内压缩后约 +2 MiB。
+2. **包级**（task33 的 pack）：包头放一张 `meta` 表 —— `meta_offsets: int64[n_episodes+1]` +
+   `meta_bytes: uint8[...]`（每局一个 JSON 对象，顺序与档案表一致），`pack_meta(pack, i)` 取第 i 局。
+   包里的局不再需要任何旁挂文件；未打包的旧档案走第 1 级。
+3. `config.json`（218 个）/ `summary.json`（215 个）是**每轮一个**，不是每局一个，并入包头只省
+   0.3 MiB 数据 + 1.7 MiB 块，建议保持独立文件（人要看、要 grep），不做。
+
+需要主控拍三件事：
+
+- (a) 转换完成后是否**删除**已嵌入 npz 的 `meta.json`（Mac 上 22 116 + 其余约 8 000 个，删了省
+  ~119 MiB 块）；台式机按同一条命令由主控择时执行。
+- (b) 包头 `meta` 表由 task33 的 pack 工具实现，还是我这边先做档案级、包级留给 task33？两边都动
+  `pvz_frame_store.py` 的写入端，需要定一个归属，避免冲突。
+- (c) `meta` 键会不会破坏现有 npz 的 `encoder` 签名判定（`cache_episode` 比对签名后直接复用档案）；
+  我的实现里签名不覆盖 `meta`，只覆盖编码器源码 —— 若 task33 要求签名覆盖包头字段，需要一起改。
+
+未做任何改动；等确认。
+
 ## 追加（主控 2026-10-22 23:05，用户的两点）
 1. **“结果不变”放宽**：此前实验已明确模型与搜索本身噪声很大（同一老师换随机未来只有约 75% 的决策相同），所以**不必逐位相同**。
    收益足够大、代价不大的改法可以接受：训练侧要求同数据同配方下验证损失与面板胜率在种子噪声内（给出对照数字）；采集侧要求同种子对局的胜率 / 到达波数在噪声内，
@@ -77,3 +106,4 @@
 4. 完成后把本分支与最新 `origin/pvz-env` 合并、全量测试、push。仍按停止条件持续压榨。
 - 第 13 步（档案转 npz·工具）：`scripts/convert_frames_npz.py` —— 逐档转换 + 五道校验后才删原文件：①npz 里存的字节与 jsonl 原文逐字节相同；②每一帧解析出的 dict 全等；③行索引恰好等于有标签且未被拒的帧号；④`encoder` 签名是当前版本；⑤boards/scalars/plant/packet/cell/values 的行数与行索引一致。写盘走临时文件 + 原子 rename，默认跳过 60 分钟内改过的档案（不碰正在写的采集）。冒烟：教师诊断档 1.4 MB→9.5%、value_net 档 636 016→58 764 B（9.2%），577 帧逐帧全等，`cache_episode` 直接复用 npz 里的行缓存不再重算。`python/pvz_compat.py` 建最小版（只登记 `jsonl-archives`，合并 task33 时以它的完整版为准），`pvz_frame_store.py` 两处加 `LEGACY(jsonl-archives)` 标记（与 task33 措辞逐字一致，便于合并）；`scripts/pack_frames.py` 改走 `frame_paths`（jsonl/npz 都收）、`scripts/early_fix_check.py` 改走 `frame_path`，避免转换后读不到。
 - 第 14 步（日志轮转）：`scripts/rotate_logs.py` —— 超过 `--min-mb 2` 的日志把除最后 1 MB 以外的部分压进 `<name>.log.gz`（每次轮转追加一个 gzip member，长期日志最终是一个 .gz），最后 1 MB 留明文、切点对齐行首；120 分钟内改过的文件跳过（可能还在写），改写走同一 inode 的 seek/write/truncate 不 rename。回环测试：5.9 MB 日志轮转后 gz+明文尾巴**逐字节等于原文**；追加后再轮转仍等于完整历史。Mac 实测 104 个文件 463.3 MB → 明文 109.0 + gz 28.8 MB，**省 325.5 MB（70%）**，9 个正在写的跳过。命令与数字进 `MEMORY/docs/memory-budget.md` §7.2。
+- 第 15 步（小 json 并包头·只评估未动）：`artifacts` 下 ≤64 KB 的小 json 共 30 521 个、13.9 MiB 数据，但占 **119.6 MiB 块**（4 KB 一块，平均每文件 460 B，块浪费 105.7 MiB）。分布：`hard_mac/frames` 22 116 个 meta.json（8.19 MiB，已是 npz 档案的旁挂文件）、`value_net/episodes` 2 048（2.92 MiB）、`value_net/episodes_search` 2 048（0.43）、`student/frames` 2 048（0.43）、`relabel/z15dag1{2,3}bv` 1 280（1.08）、`student/frames_deep_mac` 512（0.11），其余零散；`config.json` 218 个 / 0.23 MiB、`summary.json` 215 个 / 0.07 MiB 是**每轮一个**不是每局一个。键：每个 meta 都有 `task`+`outcome`，2 051 个有 `totals`/`policy_revision`/`frame_count`/`checkpoint`/`checkpoint_sha256`/`simulator_build`，1 280 个有 `relabel`。**按主控要求只做评估，接口写进「问题」等确认，未改任何读写路径。**
