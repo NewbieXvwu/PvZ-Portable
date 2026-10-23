@@ -255,8 +255,118 @@
       }
     }
   },
+  "teacher_v4": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/teacher32-v4/comparison.json",
+    "source_sha256": "fff8359a32fd4b971a0abf2ca7cd180821ba23afb510cd537ce9106b5f665ed8",
+    "plan_sha256": {
+      "before": "be325c0238f253f612210aa4352e0996e2cec5ccdfe256dcaa4e1ecdb3385675",
+      "after": "2be9305b543593a96806f0289cc7522de2022b7f2cf1d776e16d7cf924ad7177",
+      "shadow": "2be9305b543593a96806f0289cc7522de2022b7f2cf1d776e16d7cf924ad7177"
+    },
+    "evidence_files": 386,
+    "evidence_bundle_sha256": "52defe910cd265f50a4dc3b18aefe4a8832462c6837f439e9aeb1cd9944c2e36",
+    "shadow": {
+      "games": 1,
+      "decisions": 1699,
+      "searches": 411,
+      "teacher_choice_differences": 1,
+      "all_roots_futures_search_flags_paired": true,
+      "all_executed_actions_from_baseline": true
+    },
+    "comparison": {
+      "day_l7_train_d7_m150": {
+        "games": 32,
+        "agreement": 1,
+        "decisions_compared": 7042,
+        "noise_agreement": 0.9163879598662207,
+        "noise_points": 897,
+        "wins": {
+          "before": 32,
+          "after": 32,
+          "improved": 0,
+          "regressed": 0,
+          "paired_binomial_p": 1
+        },
+        "cpu_s_per_game": {
+          "before": 191.5887256415312,
+          "after": 155.38566415625002
+        },
+        "cpu_ratio": 0.8110376204859867,
+        "rss_mean_kib": {
+          "before": {
+            "worker": 583802.375,
+            "engine": 214507.375
+          },
+          "after": {
+            "worker": 569795.625,
+            "engine": 216105.125
+          }
+        },
+        "passed": true
+      },
+      "night_l14_train_n10": {
+        "games": 32,
+        "agreement": 0.9999182739457338,
+        "decisions_compared": 12236,
+        "noise_agreement": 0.8516839378238342,
+        "noise_points": 1544,
+        "wins": {
+          "before": 32,
+          "after": 32,
+          "improved": 0,
+          "regressed": 0,
+          "paired_binomial_p": 1
+        },
+        "cpu_s_per_game": {
+          "before": 243.48787584553122,
+          "after": 198.96886900000004
+        },
+        "cpu_ratio": 0.8171612993421732,
+        "rss_mean_kib": {
+          "before": {
+            "worker": 581169.375,
+            "engine": 214232.375
+          },
+          "after": {
+            "worker": 564300.875,
+            "engine": 215789.25
+          }
+        },
+        "passed": true
+      },
+      "pool_l21_train_p9k": {
+        "games": 32,
+        "agreement": 1,
+        "decisions_compared": 4495,
+        "noise_agreement": 0.92,
+        "noise_points": 575,
+        "wins": {
+          "before": 17,
+          "after": 17,
+          "improved": 0,
+          "regressed": 0,
+          "paired_binomial_p": 1
+        },
+        "cpu_s_per_game": {
+          "before": 112.59438061121877,
+          "after": 87.95025081250002
+        },
+        "cpu_ratio": 0.781124691437192,
+        "rss_mean_kib": {
+          "before": {
+            "worker": 578393,
+            "engine": 214262.25
+          },
+          "after": {
+            "worker": 562037.125,
+            "engine": 215880.75
+          }
+        },
+        "passed": true
+      }
+    }
+  },
   "pending": [
-    "complete v4 after/shadow/compare with per-task CPU ratio <=1.02",
     "same-tool v4 profile/top15 and RSS comparison",
     "final stopping-condition review and report"
   ]
