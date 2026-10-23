@@ -34,4 +34,8 @@
 
 ## 结果
 
+1. 普通 Release 已用 AppleClang 21、Ninja `-j4` 构建并进入协议 v4。初版静态 mimalloc 丢失 macOS zone 注册对象，启动时报错释放非所属指针，Apple 链接增加 `-force_load` 后恢复正常。固定对照保存在 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/macbuild/artifacts/perf/task47/pvz-release`。全套测试修复前 25 failed / 316 passed / 9 skipped，修复后 1 failed / 340 passed / 9 skipped（既有 Linux `/proc` 内存监控测试），采集进程保持运行。配对基线待补齐四族存档。
+
 ## 问题
+
+- Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。当前 Mac 没有 task35 的四族基准清单与全部存档，正从台式机按 HF 通道取同一份输入。
