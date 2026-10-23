@@ -38,6 +38,7 @@
 - 10-23 08:07 修复压测预检误判（跑之前发现）：`matching_processes` 原先按 cmdline 子串匹配，earlyoom 的 `--prefer '(pvz-portable|search_play|python3)'` 会一直被当成“采集在跑”而拒绝。改为按 argv token 的 basename 精确匹配，新增 earlyoom 命令行回归测试；实测当前匹配列表只剩 qc 控制器 / `search_play` / 引擎，earlyoom 不再命中。压测单测 4 项、task34+回归共 61 项全过。
 - 10-23 08:08 压测输出加 `pressure_observed`：按每 50 ms 采样的最小值判断是否确实低于 5%（杀进程可能恰好落在两次轮询之间），latency 仍只在轮询当场捕捉到 <5% 时测；62 项测试全过。
 - 10-23 08:18 窗口内跑压测前收紧/校正预检：任务书的硬门禁只有“无训练”；主控 08:16 开窗时 cb-vnet / codex 的采集仍在跑（分数 0），假 worker 分数 1000。原“有采集就拒绝”会让已批准窗口无法使用，改为把其他采集进程记入输出（`other_collection`）后继续；训练在跑仍然拒绝。窗口前 qc 已在 08:15:25 组间停止（stop flag），无训练。
+- 10-23 08:19 压测执行一次并通过（EXIT=0；窗口 08:16:29 开）。2 个假 worker（`oom_score_adj=1000`）：MemTotal 27.4 GiB，起压 MemAvailable 21.6 GiB，最低 **1.36 GiB = 4.95%**（`pressure_observed=true`），结束后 22.8 GiB。延迟：`tmux new-session -d` **0.084 s**（rc=0）、`bash -c true` **0.003 s**（rc=0），均 <2 s。两个假 worker（175719 RSS 22279 MiB ≈ 21.8 GiB、175720 RSS 11273 MiB ≈ 11.0 GiB）均被 earlyoom SIGTERM（rc=-15）；journal 记录 oom_score 2098 / 1861、`process_mrelease` 成功、0.1 s 退出；无强制 kill、无内核 OOM。init 存活；sshd 在 WSL 内未运行；tmux 接入由压力期间的 new-session 成功直接验证（`pgrep -x tmux` 不匹配 comm `tmux: server`，故 watched 列表为空，已如实记入输出）。同机其他代理未被误杀：cb-vnet task30 的控制器 168777 存活、游戏的 `games.jsonl` 12→16 继续推进；codex 的 task37 1-seed profiling 正常写完 `summary.json`（08:19）；运行前 12 个其他采集进程全部记入 `other_collection`。
 
 ## 问题
 - （已答复）压测批准，等待主控创建 `~/pvz-logs/oom_window_open`；本会话后台监视中。原请求：在训练结束后跑 `python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/oom/scripts/oom_stress_test.py --i-know`；当前 dw5i 训练已结束、qc 正在跑第 2 轮，需主控在组间停 qc 并开窗。

@@ -92,9 +92,16 @@ EARLYOOM_ARGS="-m 5 -s 50 -r 300 --prefer '(pvz-portable|search_play|python3)' -
   不动状态偏移、不进档案），每 0.2 s 采样 `search_play` 的全部后代（Python worker + 引擎）取峰值；
   实测失败退回 1 GiB；没有 `/proc`（Mac）不缩放。每组日志先写
   `workers=k/16 (MemAvailable …, per-worker …)`，实际用了几个一眼可见。
-- 压力测试脚本 `scripts/oom_stress_test.py`：默认拒绝，必须 `--i-know`；即使给了也再拒绝
-  训练在跑 / 采集在跑 / 可用 < 12 GiB。它起 2 个分数 1000 的假 worker 把 MemAvailable 压到 5%，
-  量 `tmux new-session -d` 和 `bash -c true` 的延迟（<2 s 为通过），并验证死的是假 worker、
-  init/sshd/tmux/earlyoom 都活着。**主控已批准，等待主控创建 `~/pvz-logs/oom_window_open`
-  时间窗（qc 组间停、无训练）；本会话监视中，结果补在这一节。**
+- 压力测试脚本 `scripts/oom_stress_test.py`：默认拒绝，必须 `--i-know`；即使给了，
+  训练在跑或可用内存 <12 GiB 仍拒绝；其他代理的采集进程记入输出的 `other_collection`
+  （它们的 worker 分数 0，假 worker 1000，守卫应优先杀假 worker）。它起 2 个分数 1000 的假 worker
+  把 MemAvailable 压到 5%，量 `tmux new-session -d` 和 `bash -c true` 的延迟（<2 s 为通过），
+  并验证死的是假 worker、init 与 earlyoom 都活着。
+- **压力测试结果（2026-10-23 08:19，主控窗口内跑一次，通过）**：MemAvailable 从 21.6 GiB
+  压到最低 **1.36 GiB（4.95%）**；压力期间 `tmux new-session -d` **0.084 s**、
+  `bash -c true` **0.003 s**（阈值 2 s）。earlyoom 在 5% 阈值按分数只杀了两个假 worker
+  （SIGTERM，RSS 21.8 / 11.0 GiB，0.1 s 退出），init 存活，无内核 OOM、无强制 kill。
+  同一时刻 cb-vnet 的采集继续推进（games 12→16）、codex 的 task37 profiling 正常完成，
+  没有被误杀；运行前的 12 个其他采集进程记录在压测输出的 `other_collection`。
+  （sshd 在 WSL 内未运行，接入验证以 tmux 新会话为准。）
 
