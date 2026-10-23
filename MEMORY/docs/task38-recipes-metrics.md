@@ -23,7 +23,9 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。
 
 ## 结果
+- 2026-10-23：新增严格版本化配方 schema，反写 dw4i（170 标签）、dw5i（281）、identity_dw3_s1（82）；训练 CLI 收敛为 recipe/out/device/threads/precompute-workers，保存 resolved recipe；schema 4 项与 identity 训练 5 项测试通过。200 步历史对拍及调用方迁移待做。
 - 2026-10-23：指标接入学生/价值训练、采集 worker 共享进度汇总、课程控制器和统一面板；单 worker 真实冒烟 1 局完成，1086 个决策与指标计数一致；metrics 4 项、课程控制器 11 项测试通过。
 - 2026-10-23：完成独立运行指标模块与 metrics_report（30 秒采样、进程树 RSS/CPU、PSI、IO、可选 GPU、进度速率、10 分钟 WARN、按日轮转/7 天保留）；4 项测试通过，尚待各入口接入。
 
 ## 问题
+- 本分支缺 hotpath-audit.md；已 fetch 并完整读取 origin/audit 对应报告（含 §6），依据 task33 批准清单删除训练 EMA/全候选软目标入口，保留 cell soft temperature、width 与旧模型元数据。退役前标记 retire-recipe-training-flags-20261023。

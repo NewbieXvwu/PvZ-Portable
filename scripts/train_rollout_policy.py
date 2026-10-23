@@ -4,8 +4,7 @@ Data: episode archives whose frames carry the executed action (``frames[i]["acti
 frame i). Input is frame i-1, target is the action at frame i. Split by environment seed.
 
 Usage:
-  python scripts/train_rollout_policy.py --data artifacts/value_net/episodes --labels u84_greedy,u84_sampled \
-      --out artifacts/rollout_policy/v1
+  python /absolute/path/scripts/train_rollout_policy.py --recipe /absolute/path/recipes/dw4i.json
 """
 from __future__ import annotations
 
@@ -26,6 +25,7 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
+from pvz_recipe import training_args, write_recipe  # noqa: E402
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
@@ -275,69 +275,16 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     return (*result, packets[:n]) if packets is not None else result
 
 
-def main() -> None:
+def main(*, step_observer=None) -> None:
     # task34: train after collection, but before the controller and the WSL access path.
     set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--data", type=Path, required=True)
-    p.add_argument("--labels", default="u84_greedy,u84_sampled")
-    p.add_argument("--out", type=Path, required=True)
-    p.add_argument("--epochs", type=int, default=12)
-    p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
-    p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
-    p.add_argument("--seed", type=int, default=None, help="torch seed for init and shuffling")
-    p.add_argument("--width", type=int, default=64, help="channels of the net (smaller = faster rollouts)")
-    p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
-    p.add_argument("--packet-balance", type=float, default=0.0,
-                   help="weight plant rows by (packet frequency)^-x, so rare cards (cherry 1.5%%) are not drowned out")
-    p.add_argument("--pool", choices=["mean", "meanmax"], default="mean", help="global pooling of the trunk")
-    p.add_argument("--row-pool", action="store_true", help="broadcast learned per-row mean/max features")
-    p.add_argument('--packet-head', choices=['slot', 'identity'], default='slot')
-    p.add_argument("--aux-weight", type=float, default=0.0, help="row damage prediction BCE weight (0 = off)")
-    p.add_argument("--aux-horizon", type=int, default=8, help="future decision points for row damage labels")
-    p.add_argument("--context", action="store_true",
-                   help="the student also reads the task context (zombie-count multiplier, roster) from meta.json")
-    p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1", help="student feature version")
-    p.add_argument("--soft-weight", type=float, default=0.0,
-                   help="also match the search's preference over its candidates (wait / each card): "
-                        "KL(softmax(values / --soft-temperature) || student), on rows whose frame has search targets")
-    p.add_argument("--soft-temperature", type=float, default=0.05, help="in win-probability units")
-    p.add_argument("--cell-soft-weight", type=float, default=0.0,
-                   help="cell-level soft labels: on planted rows whose search compared >= 2 cells of the labelled card, "
-                        "add KL(softmax(cell values / --soft-temperature) || student cell distribution over those cells). "
-                        "The hard label teaches only the chosen cell; this also teaches how much worse the other cells were")
-    p.add_argument("--spread-weight", type=float, default=0.0,
-                   help="cost-weighted imitation: a searched row (>= 2 candidates) weighs (1 + x * spread / mean spread) / (1 + x) (at most --spread-cap), "
-                        "spread = best minus worst candidate value, so decisions where the choice matters count more")
-    p.add_argument("--spread-cap", type=float, default=5.0, help="upper bound of the --spread-weight factor")
-    p.add_argument("--save-epochs", type=int, default=0,
-                   help="also keep the last N epochs as epoch_XX.pt (candidates for scripts/select_student.py)")
-    p.add_argument("--lr-schedule", choices=["constant", "cosine"], default="constant",
-                   help="cosine: learning rate falls from 2e-3 to 0 over the run (per batch), so the final weights are not "
-                        "a snapshot of a still-bouncing optimiser; constant = the old behaviour")
-    p.add_argument("--ema", type=float, default=0.0,
-                   help="keep an exponential moving average of the weights with this decay (e.g. 0.999, per batch); "
-                        "validation and the saved model use the average. 0 = off (the old behaviour)")
-    p.add_argument("--init", help="start from this student / fast_ppo checkpoint (same width and pool) instead of random")
-    p.add_argument("--cache", action=argparse.BooleanOptionalAction, default=True, help="cache exact per-episode features (--no-cache reads JSON directly)")
-    p.add_argument("--cache-dir", type=Path, help="shared feature cache (default: .feature_cache beside the output directory)")
-    p.add_argument("--precompute-workers", type=int, default=1, help="parallel per-episode feature cache workers")
-    p.add_argument('--read-cache-dir', type=Path, help='optional existing feature cache to read only; misses go to --cache-dir')
-    p.add_argument("--dense-boards", action="store_true", help="use the legacy dense board store instead of in-memory CSR")
-    p.add_argument("--row-weights", type=Path, help="optional checksummed per-row experiment manifest; cached rows required, default off")
-    p.add_argument('--source-row-report', type=Path, help='optional actual retained row counts by source; cached rows required')
-    p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
-    args = p.parse_args()
+    args = training_args(p)
+    torch.set_num_threads(args.threads)
+    args.out.mkdir(parents=True, exist_ok=True)
+    write_recipe(args.out / "recipe.resolved.json", args.resolved_recipe)
     metrics = Metrics("train_rollout_policy", training=True).start()
     metrics.update(step=0, rows=0, phase="loading")
-    if args.aux_weight < 0 or args.aux_horizon < 1:
-        p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
-    if args.row_weights and not args.cache:
-        p.error("--row-weights requires --cache")
-    if args.source_row_report and not args.cache:
-        p.error('--source-row-report requires --cache')
-    if args.max_steps is not None and args.max_steps<=0:
-        p.error("--max-steps must be positive")
     row_plan = None
     if args.row_weights:
         from pvz_training_rows import RowWeights
@@ -366,8 +313,8 @@ def main() -> None:
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started
-    seeds = sorted(set(seed_of)); random.Random(0).shuffle(seeds)
-    val_seeds = set(seeds[: len(seeds) // 10])
+    seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
+    val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
     is_val = torch.tensor([s in val_seeds for s in seed_of])
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
@@ -418,12 +365,9 @@ def main() -> None:
             weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
         net.load_state_dict(weights)
     net = net.to(args.device)
-    opt = torch.optim.AdamW(net.parameters(), lr=2e-3, weight_decay=1e-4)
+    opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
-
-    ema = (torch.optim.swa_utils.AveragedModel(net, multi_avg_fn=torch.optim.swa_utils.get_ema_multi_avg_fn(args.ema),
-                                                use_buffers=True) if args.ema else None)
 
     def batch_loss(idx, train):
         b = boards[idx].float().to(args.device) if args.dense_boards else boards.batch(idx, args.device)
@@ -432,29 +376,13 @@ def main() -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
-        out = (net if train or ema is None else ema.module)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
+        out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
         if args.aux_weight:
             row_loss = F.binary_cross_entropy_with_logits(out["aux"], auxiliary[idx].to(args.device), reduction="none").mean(1)
             loss = loss + args.aux_weight * (row_loss * w).sum() / denom
-        if args.soft_weight:
-            v = values[idx].to(args.device)
-            known = ~torch.isnan(v)
-            soft = known.sum(1) >= 2                     # a preference needs at least two candidates
-            if soft.any():
-                vk, kk = v[soft], known[soft]
-                # student: log p(wait) = log sigmoid(-plant), log p(card k) = log sigmoid(plant) + log softmax(packet)_k,
-                # renormalised over the candidates the search compared
-                student = torch.cat([F.logsigmoid(out["plant"][soft])[:, None] + F.log_softmax(out["packet"][soft], 1),
-                                     F.logsigmoid(-out["plant"][soft])[:, None]], dim=1)
-                student = torch.log_softmax(student.masked_fill(~kk, -1e9), 1)
-                teacher = torch.softmax((vk / args.soft_temperature).masked_fill(~kk, -1e9), 1)
-                kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~kk, 0).sum(1)
-                ws = w[soft]
-                soft_denom=ws.sum().clamp_min(1e-30) if row_plan else ws.sum()
-                loss = loss + args.soft_weight * (kl * ws).sum() / soft_denom
         if args.cell_soft_weight and planted.any():
             cd = cands[idx].to(args.device).float()                       # (B, K, 3): packet, cell, value
             same = (cd[:, :, 0] == pk[:, None].float()) & ~torch.isnan(cd[:, :, 2]) & planted[:, None]
@@ -482,8 +410,10 @@ def main() -> None:
                          "cell_acc": float((out["cell"][planted].argmax(1) == c[planted]).float().mean()) if planted.any() else 0.0}
         return loss, stats
 
+    if not is_val.any() or is_val.all():
+        raise ValueError("recipe split must produce nonempty training and validation sets")
     train_idx = torch.nonzero(~is_val).squeeze(1); val_idx = torch.nonzero(is_val).squeeze(1)
-    steps = args.epochs * -(-len(train_idx) // 2048)
+    steps = args.epochs * -(-len(train_idx) // args.batch_size)
     if args.max_steps is not None:
         if args.max_steps>steps:
             p.error("--max-steps exceeds the requested epochs")
@@ -493,12 +423,14 @@ def main() -> None:
     history = []
 
     def checkpoint() -> dict:
-        return {"state_dict": {k: v.cpu() for k, v in (net if ema is None else ema.module).state_dict().items()}, "labels": args.labels, "width": args.width,
+        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
-                "context": args.context, "obs": args.obs, "soft_weight": args.soft_weight, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "ema": args.ema, "cell_soft_weight": args.cell_soft_weight,
-                "history": list(history),
+                "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
+                # Historical reports compare these metadata keys; both experiments are retired.
+                "soft_weight": 0.0, "ema": 0.0,
+                "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 
@@ -511,16 +443,16 @@ def main() -> None:
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
         train_loss = 0.0
-        for start in range(0, len(perm), 2048):
-            loss, _ = batch_loss(perm[start:start + 2048], True)
-            train_loss += float(loss.detach()) * len(perm[start:start + 2048])
+        for start in range(0, len(perm), args.batch_size):
+            loss, _ = batch_loss(perm[start:start + args.batch_size], True)
+            if step_observer is not None:
+                step_observer(completed_steps + 1, float(loss.detach()))
+            train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
             opt.zero_grad(); loss.backward(); opt.step()
             if schedule is not None:
                 schedule.step()
-            if ema is not None:
-                ema.update_parameters(net)
             completed_steps+=1
-            completed_rows += len(perm[start:start + 2048])
+            completed_rows += len(perm[start:start + args.batch_size])
             metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
             if completed_steps>=steps:
                 break
@@ -529,7 +461,7 @@ def main() -> None:
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
         with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(4096)]
+            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}

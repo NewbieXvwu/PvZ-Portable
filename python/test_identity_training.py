@@ -89,12 +89,14 @@ class IdentityTrainingTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             self.fixture(root / 'data')
-            result = subprocess.run([sys.executable, str(ROOT / 'scripts/train_rollout_policy.py'),
-                                     '--data', str(root / 'data'), '--labels', 'example', '--out', str(root / 'model'),
-                                     '--device', 'cpu', '--width', '8', '--epochs', '2', '--seed', '1', '--obs', 'v2',
-                                     '--pool', 'meanmax', '--row-pool', '--packet-head', 'identity',
-                                     '--packet-balance', '.5', '--cell-soft-weight', '3', '--spread-weight', '8'],
-                                    capture_output=True, text=True)
+            from pvz_recipe import write_recipe
+            recipe = dict(schema_version=1, kind='training', data=str(root/'data'),
+                          labels=['example'], out=str(root/'model'), device='cpu', width=8,
+                          epochs=2, seed=1, obs='v2', pool='meanmax', row_pool=True,
+                          packet_head='identity', packet_balance=.5, cell_soft_weight=3, spread_weight=8)
+            write_recipe(root/'recipe.json', recipe)
+            result = subprocess.run([sys.executable, str(ROOT/'scripts/train_rollout_policy.py'),
+                                     '--recipe', str(root/'recipe.json')], capture_output=True, text=True)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             model = load_student(root / 'model/model.pt')
             self.assertEqual(model.packet_head, 'identity')
@@ -102,13 +104,11 @@ class IdentityTrainingTest(unittest.TestCase):
             checkpoint = torch.load(root / 'model/model.pt', map_location='cpu', weights_only=True)
             self.assertTrue(all(torch.isfinite(v).all() for v in checkpoint['state_dict'].values()))
             self.assertEqual(len(checkpoint['history']), 2)
-            report = root/'source_rows.json'
+            report = root/'reported/source_rows.json'
+            recipe.update(out=str(root/'reported'), source_row_report=True)
+            write_recipe(root/'reported_recipe.json', recipe)
             command = [sys.executable, str(ROOT/'scripts/train_rollout_policy.py'),
-                       '--data', str(root/'data'), '--labels', 'example', '--out', str(root/'reported'),
-                       '--device', 'cpu', '--width', '8', '--epochs', '2', '--seed', '1', '--obs', 'v2',
-                       '--pool', 'meanmax', '--row-pool', '--packet-head', 'identity',
-                       '--packet-balance', '.5', '--cell-soft-weight', '3', '--spread-weight', '8',
-                       '--source-row-report', str(report)]
+                       '--recipe', str(root/'reported_recipe.json')]
             counted = subprocess.run(command, capture_output=True, text=True)
             self.assertEqual(counted.returncode,0,counted.stdout+counted.stderr)
             other = torch.load(root/'reported/model.pt',map_location='cpu',weights_only=True)
