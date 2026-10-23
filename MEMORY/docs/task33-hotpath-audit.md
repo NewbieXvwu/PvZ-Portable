@@ -57,11 +57,13 @@
 
 - 11:05 **第 3 项（打包装载转正）完成**：`train_rollout_policy.load()` 只读包，`pack_training_rows.py` 成为唯一读档案的地方，`curriculum_queue` 每轮结束打包并用 `--prune` 删掉被取代的旧包。验收：同一批 88 692 行，前 200 步 6 个 epoch 的 train/val loss 与 tag `retire-flags-20261023` **逐位相同**（差 0，不是 1e-6）；装载 8.10–8.23 s / 304–305 MB → **0.009 s / 227 MB**，包 262 B/行。231 passed / 6 failed（环境性）。细节见 `hotpath-audit.md` §15。
 - 11:30 第 4 步（静态候选下沉）设计完成：`hotpath-audit.md` §16——`VALUE_LOAD` / `BRANCH_VALUE` 两条命令（复用 `BRANCH_OBSERVE` 的循环体，只把输出从 observation 换成分数）、`PVZVN001` 权重格式、`src/ValueNet.{h,cpp}` 新文件里的特征化与卷积、五项等价性验收（权重按位、特征逐元素、分数 1e-6、决策逐字段、−7.9 s/局）。**没动 `src/EnvironmentRollout.cpp`**。要 task35 确认 `main.cpp` 分发与分支循环是否会被重写，写进“问题”。
+- 11:50 压榨第二轮：三项尝试都 < 2%，Python 侧压到停止条件。① step 改用 lean 观测（现役二进制已有，不用重编）：每步 −23…−26%、400 步 × 2 关的 `_frame` 逐条相同，但搜索局 step 只占 1.2 s → **0.26%**；② 价值网批 32→128：`_values` 实际每批只有 18 帧，**收益 0**；③ 静态候选跳过 `_frame`：上限 **0.2%**。测法固化成 `scripts/hotpath_lean.py`。剩下的 >2% 项（静态候选 7%、旧 JSONL 档案）各有外部前置，见“问题”。`hotpath-audit.md` §17。
 
 ## 问题
 
 - **包的键包含 `cells`，而它跟着 `--cell-soft-weight` 走**（`load()` 里 `cells=bool(args.cell_soft_weight)`）。生产配方带 `--cell-soft-weight 3`，所以采集端起 `curriculum_queue` 时必须给 `--pack-cells`，其余行选项（`--pack-wait-keep 0.1 --pack-obs v2 --pack-packet-head identity`）也要与训练命令一致；不一致时训练端会打印该跑的打包命令，不会静默用错包。
 
+- **旧 JSONL 档案转 npz（7.54 GB → 约 0.6 GB）要主控批**：这是 §13 第 3 项、也是前 15 项里最后一条可证明的冗余，但它在主工作区 `artifacts/` 里，且 13 个采集进程正在往同一个根目录写。要做就等一个停采窗口（与重编 `build/pvz-portable` 同一个窗口），我可以一次跑完并逐帧核对。
 - **第 4 步（静态候选下沉）需要 task35 先给个结论**：价值网是新文件，不碰学生前向；唯一共享的是 `src/main.cpp` 的命令分发与 `BRANCH_OBSERVE` 的循环体。他若正在改这两处，请他先落地（或把分发抽成表），我按新结构接，避免同一段代码二次冲突。另外 `VALUE_LOAD` / `BRANCH_VALUE` 要重编 `build/pvz-portable`，与 §13 第 4 项（lean 观测）共用同一个停采窗口。
 
 ## 追加（主控 2026-10-22 23:55，用户两点 + 主控决定）
