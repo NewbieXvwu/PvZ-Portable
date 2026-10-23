@@ -1329,7 +1329,7 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 		deck.size() > SEEDBANK_MAX ||
 		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
 		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
-		task.zombieCountMultiplier < 1.0 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
+		task.zombieCountMultiplier < 0.1 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
 		task.waveCap < 0 || task.waveCap > FINAL_LEVEL)
 		return false;
 	for (const EnvironmentPreplanted& plant : task.preplanted)

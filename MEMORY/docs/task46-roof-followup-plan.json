@@ -57,5 +57,6 @@
  "models": "same frozen dw4i_s1 / v4 / branch1 hashes as task46-roof-plan.json",
  "teacher": "command_for parameters; beta=1, verify_samples=9, student_candidates=2",
  "concurrency": 4,
- "admission": "original-difficulty teacher >=0.50 only; L45 excluded; unmeasured L46..49 deferred"
+ "admission": "original-difficulty teacher >=0.50 only; L45 excluded; unmeasured L46..49 deferred",
+ "engine_amendment": "task46-roof-engine-amendment.json (before accepted teacher/student half games; first reset-only batch produced zero games)"
 }

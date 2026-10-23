@@ -853,7 +853,7 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 - 选卡预登记：[task46-roof-plan.json](MEMORY/docs/task46-roof-plan.json)。引擎九关共同 Crazy Dave 池上替换原卡组恰 1/2 张，`Random(46)` 打乱候选集合，取前 16 个地形覆盖且九关整组零警告的候选。L41、种子 44000000/44000001，每副老师 2 局，按胜局数→平均终局波数/总波数→候选 id 排序；至少有实际胜局才称“老师可赢”。
 - 正式评估预留 **45000000–45000031**，每关每卡组 32 种子；L41–L45 本阶段老师与学生各取前 16 种子做配对比较。dw4i_s1（本机无 dw5i_s1）+ 叶值 v4 + 静态 branch1，参数照 `curriculum_queue.command_for`（verify=9，student-candidates=2），老师 beta=1，学生 beta=0/fast；不把 beta=0 的搜索标注当老师胜率。模型与引擎哈希冻结在计划中。
 - 训练预留 **46000000 + (N−41)×10000**，每关 8192；筛选与评估段均独立。倍率接入时保持旧八族种子不变，roof 使用独立槽，避免 L41–49 超过旧 32 槽宽时串族；task45 的雾族由对方维护。
-- L45 是 Bungee Blitz 传送带，卡组只描述初始手牌；必须单列语义。L41–49 均白天，预置盆 L41 c0–4 / L42 c0–3 / 其余 c0–2。没有加新动作头，玉米加农炮落点仍是缺口。未改引擎。
+- L45 是 Bungee Blitz 传送带，卡组只描述初始手牌；必须单列语义。L41–49 均白天，预置盆 L41 c0–4 / L42 c0–3 / 其余 c0–2。玉米加农炮落点仍是动作缺口。原版冷启动阶段未改引擎；后续仅对齐reset倍率下限（见本节验证）。
 
 - roof 登记清单 `artifacts/task46/roof_panel.json`，生成器 `scripts/make_roof_panel.py`，公共 `zone_panel.Family`/`Zone`：对照评估 9 关 + r7 评估 9 关 + r7 训练 8 关 = **26 任务**。L45 排除普通训练但保留双卡组评估，L50 不生成。每关每卡组评估 32 种子；训练每关 8192。生成时 reset 九关读取真实 `DECK_OPTIONS` / 整组警告（二周目全部基础卡已解锁，不使用首轮奖励顺序猜测）；按地形、长度、种子独立检查。
 
@@ -865,3 +865,5 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 - 屋顶倍率清单实际生成318任务（旧270+roof48）、651264个种子，329397个JSON/835018个既有种子穷举零冲突；另比对6份派生倍率清单（含fog工作树）屋顶种子零冲突，270个旧任务种子逐一等于原分配公式。摘要见 [task46-roof-multiplier-audit.json](MEMORY/docs/task46-roof-multiplier-audit.json)。本地两份隔离状态的 dry run 都显示roof L41原版/1.25倍率的cell与collect命令，[命令证据](MEMORY/docs/task46-roof-course-check.json)；未写生产状态、未启动采集。
 
 - 正式冷启动320局已齐：对照老师L41–45全0/16，学生仅L45为1/16；r7老师依次15/16、4/16、2/16、0/16、2/16，学生依次8/16、0/16、0/16、0/16、0/16。因此原版课程仅L41过线，L42=25%暂缓、L43/L44按预登记卡组复核后做0.5倍率诊断，L45传送带单列且不入普通训练。每个输局波数/路/僵尸和原始文件哈希见 [task46-roof-cold-start.json](MEMORY/docs/task46-roof-cold-start.json)；全部320局实际terminal，模型与引擎哈希/参数一致。
+
+- 0.5诊断触发了Python/C++范围不一致（Python最低0.1，C++最低1.0）；仅将 `EnvironmentReset` 校验下限对齐0.1。原版320局按旧引擎哈希冻结；新引擎另见 [engine-amendment](MEMORY/docs/task46-roof-engine-amendment.json)。门禁：[engine-gate](MEMORY/docs/task46-roof-engine-gate.json) L1–49公开/隐藏状态28999决策帧零差（非屋顶25113，L35比较2001状态而未终局）；已有C++12契约场景/220490坐标通过，全Python360项+133子测试通过，实际0.5波数计数回归通过。

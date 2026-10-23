@@ -55,7 +55,7 @@
 
 ### 第 1 步：现状盘点（2026-10-23）
 
-- 本工作树 Release 引擎编译成功；未改引擎。`scripts/roof_inventory.py` 在同一游戏进程逐关 reset，等待到 terminal，L41–L49 全部通过（等待冒烟不作为胜率证据）。本地产物 `artifacts/task46/inventory.json`，引擎 SHA256 `2e83c8a925f26e4df0d9b7af703053f4ae3ce0bd30caaa1626e87540bf43755c`。
+- 本工作树 Release 引擎编译成功；第1步当时未改引擎。`scripts/roof_inventory.py` 在同一游戏进程逐关 reset，等待到 terminal，L41–L49 全部通过（等待冒烟不作为胜率证据）。本地产物 `artifacts/task46/inventory.json`，引擎 SHA256 `2e83c8a925f26e4df0d9b7af703053f4ae3ce0bd30caaa1626e87540bf43755c`。
 - 实测每行 r0–r4 都有花盆，但列数随关卡变化；AGENTS §8 / 本文的“c0–c4”只对 L41 成立。没有改动开局或补种花盆。
 - 全部九关 `roof=true, night=false`，夜间屋顶是 L50/Boss 的背景语义，本任务不做 L50。当前环境仅接受 playthrough=2；各关 `available_plants` 均含 0–39，卷心菜 32 / 玉米 34 / 西瓜 39 全解锁，三者也全部在 Crazy Dave 候选池内。
 - 现卡组 `[0,1,2,3,4,5,33]` 九关的 `deck_warnings` 都是 `[]`。这是原生 `OnStartButton/CheckDeckWarnings` 结论，不能证明卡组可赢；该检查没有“缺投掷类”警告。
@@ -165,8 +165,14 @@
 
 - 第 4 步正式实测完成：320局全齐且终局、种子、参数、模型身份门禁通过；L41过原版课程线，其余普通关卡暂缓，低于20%的L43/L44依预登记做后续诊断。
 
+- 0.5诊断发现并定位接口不一致：Python已允许0.1–10，C++ reset仍要求≥1。首批0.5任务全部在reset被拒绝、产出0局，未计输局。现仅对齐C++下限为0.1，原二进制已冻结；接受任何0.5老师/学生局前须过非屋顶逐帧零差异、已有引擎测试及全量Python测试。预登记修订 task46-roof-engine-amendment.json。
+
+- 倍率接口修复已验收：C++ reset下限与Python对齐0.1；真实0.5出怪计数按lround(base×0.5)。旧/新引擎L1–49逐决策公开+隐藏状态共28999帧0差（非屋顶25113帧）；L35砸罐缺动作在2000决策上限停止，其余48关终局。已有C++测试12场景/220490坐标通过，完整Python **360 passed + 133 subtests passed**。证据 task46-roof-engine-gate.json / task46-roof-validation.json；此后才补跑0.5实测。
+
 ## 问题
 
 - 预置花盆列数、夜间屋顶范围与任务书概述不一致，以引擎实测为准；不改引擎补齐。
 - 本机主目录没有 dw5i_s1/model.pt，使用任务明确允许的 dw4i_s1；价值 v4、静态 branch1 均存在。
 - L45 为 Bungee Blitz 原生传送带，候选卡组仅描述 reset 初始手牌，正式比较单列标注，不当普通阳光经济关。
+
+- 0.5 reset的Python/C++范围不一致：已定位为EnvironmentReset下限，已修复并通过门禁；原版320局用旧引擎已冻结。
