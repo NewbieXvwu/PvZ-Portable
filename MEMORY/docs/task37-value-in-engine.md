@@ -53,3 +53,7 @@
 - 仍做不到就如实写进“问题”，附两边的 CPU 数字；主控决定是否保留 Python 侧。不要为了过门槛去改搜索的参数或候选数。
 - 合并提示（主控 10:20）：pvz-env 已合并 audit（b95d2cf7）——整条 CUDA 推演线退役（tag `retire-cuda-20261023`），`python/test_cuda_*.py`、`test_candidate_coverage.py` 等已删除。你合回 pvz-env 前先 `git merge origin/pvz-env`，对这些已删文件的改动直接丢弃；`--rollout-backend` 等开关已不存在。
 - 主控追加（10:10）：task42 在复验“老师候选改用学生前 3、不用静态网”（B3，10-20 已非劣通过、省 29% 搜索 CPU）。若通过，静态候选打分（`STATIC_SCORES`）整条会删掉。所以**先把 `LEAF_VALUES`（叶子价值）做完并过总 CPU 门槛**——它还是 task40“推演胜负已定就收手”的前提；`STATIC_SCORES` 已做的部分保留在分支上，不再继续投入。
+
+## 主控追加 D（2026-10-23 15:45）：价值网换 v4
+主控已决定整臂换价值网 v4（task30 第 6 步，分支 `vnet`，合进主线后 `DEFAULT_VALUE` 指 `artifacts/value_net/v4/model.pt`）。v4 用**编码 v2**（`pvz_value_net.encode_frame(frame, net.encoder_version)`，见 `origin/vnet` 的 `python/pvz_value_net.py`），不是现在的 `featurize`。
+`LEAF_VALUES` 进引擎要按 v2 编码实现，并且以 v4 做逐位/容差一致性门禁。v1/v3 只在过渡期需要，旧编码能顺手兼容就兼容，不能就只做 v2。v4 checkpoint 在 `/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/v4/model.pt`；合并后也会出现在主检出的 `artifacts/value_net/v4/`。
