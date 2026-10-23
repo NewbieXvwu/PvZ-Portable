@@ -29,6 +29,7 @@
 - 每完成一小步就提交并在本文末尾“结果”里记一行；疑问写“问题”，按最佳判断继续。持续压榨：做完上面几项后，用 profile 找 Python 侧剩下的最大项继续，连续 3 项收益 < 2% 才停。
 
 ## 结果
+- 2026-10-23（Business停止条件补核）：在原after链运行期间只跑CPU离线原型，按v4已完成局的搜索数外推候选键/学生特征/encode三项，白天/夜间/泳池最大乐观节省0.0362%/0.0548%/0.0734%，等价性检查全过，不引入缓存或生产改动。新增KB级value-in-engine-validation.json，汇集已核实Board双编码/完整before/原型结论及SHA，整体明确incomplete；原两worker链继续，正式老师/CPU验收未结束。
 - 2026-10-23（Business新会话接手）：核对git干净且HEAD=origin/vcpp=3a65eff3；保留原runner PID86895及after PID110445（仅2游戏），未操作tmux/其他会话。v4 before已完整96/96，逐份核验trace长度、搜索/噪声计数及before/after冻结输入SHA256均通过；三任务胜32/32、32/32、17/32，噪声822/897、1315/1544、529/575。after首批同root，但总CPU暂高于基线；完整门禁未结束，不宣布通过，不重跑已完成局。
 - 2026-10-23（Codex复核接回）：逐提交复核cf55d1d3..c375a489，唯一生产代码变更为4fd750d5的植物/僵尸逐项float32舍入，符合当前NumPy语义；独立核对Board门禁JSON与当前引擎/corpus/模型SHA256一致，v3/v4各四场景256帧全过。确认旧交接PID均已消失，v4当前完整37/96、输入SHA全部未变；保留37份全长trace/result，作废night/pool index12的中断输出，从原串行脚本续跑before→after→shadow→compare（最多2游戏）。v4叶值/状态、Board、快照与门禁等11项复核测试通过；正式CPU/老师验收尚未完成。
 - 2026-10-23（GLM 18:25 移交）：v4整臂门禁链 before→after→shadow→compare 运行中，改前34/96（截至18:19 day/night基本全胜、pool约半数），预计改前~21:20完成；期间修复board-replay门禁1 ULP特征舍入差异（numpy逐项f32舍入vs double累加），修复后1024帧×v3/v4全过（特征0.0、logit≤3.82e-6，提交4fd750d5）。全部代码改动已提交推送（HEAD=a6572fac），工作区干净。

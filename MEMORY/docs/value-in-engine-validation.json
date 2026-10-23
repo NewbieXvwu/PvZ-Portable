@@ -1,0 +1,208 @@
+{
+  "status": "incomplete",
+  "scope": "Verified durable conclusions only; final teacher/CPU acceptance is still running",
+  "verified_date": "2026-10-23",
+  "direct_board": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/board-replay-oracle.json",
+    "source_sha256": "95ced0cdcfe0606276a0fb1461831deae618f48ae2f39ebd26530eec4904af08",
+    "executable_sha256": "6d5a9aed61433cc9b1393705554cd468a5da8c5d8ac38b9906bd470892474454",
+    "corpus_index_sha256": "43ebb06bc6cd7f047d50be60c99ed56f81539de8147b427d52dcd9c346c73077",
+    "archive_count": 32,
+    "source_archive_hashes_verified": true,
+    "models": [
+      {
+        "checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+        "checkpoint_sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+        "encoder": 1,
+        "groups": {
+          "day": {
+            "frames": 256,
+            "max_logit_error": 1.4339050293799005e-06,
+            "max_feature_error": 0.0,
+            "passed": true
+          },
+          "conveyor": {
+            "frames": 256,
+            "max_logit_error": 2.8655737303040496e-06,
+            "max_feature_error": 0.0,
+            "passed": true
+          },
+          "night": {
+            "frames": 256,
+            "max_logit_error": 9.566723635501262e-07,
+            "max_feature_error": 0.0,
+            "passed": true
+          },
+          "pool": {
+            "frames": 256,
+            "max_logit_error": 9.566333005750494e-07,
+            "max_feature_error": 0.0,
+            "passed": true
+          }
+        }
+      },
+      {
+        "checkpoint": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/v4/model.pt",
+        "checkpoint_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+        "encoder": 2,
+        "groups": {
+          "day": {
+            "frames": 256,
+            "max_logit_error": 1.9055108642085372e-06,
+            "max_feature_error": 0.0,
+            "passed": true
+          },
+          "conveyor": {
+            "frames": 256,
+            "max_logit_error": 3.818507080310951e-06,
+            "max_feature_error": 0.0,
+            "passed": true
+          },
+          "night": {
+            "frames": 256,
+            "max_logit_error": 1.4349353030240763e-06,
+            "max_feature_error": 0.0,
+            "passed": true
+          },
+          "pool": {
+            "frames": 256,
+            "max_logit_error": 1.9114367679762267e-06,
+            "max_feature_error": 0.0,
+            "passed": true
+          }
+        }
+      }
+    ]
+  },
+  "teacher_v4_before": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/teacher32-v4/before-summary.json",
+    "source_sha256": "87b375ff61296d3352a7844330ebda98db47fb394a807d759dccbb8470d653ac",
+    "frozen_inputs_and_implementations_verified": true,
+    "summary": {
+      "day_l7_train_d7_m150": {
+        "games": 32,
+        "won": 32,
+        "noise_points": 897,
+        "noise_agreement": 822
+      },
+      "night_l14_train_n10": {
+        "games": 32,
+        "won": 32,
+        "noise_points": 1544,
+        "noise_agreement": 1315
+      },
+      "pool_l21_train_p9k": {
+        "games": 32,
+        "won": 17,
+        "noise_points": 575,
+        "noise_agreement": 529
+      }
+    }
+  },
+  "python_prototypes_v4": [
+    {
+      "scene": "day",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/python-prototypes-v4-day.json",
+      "source_sha256": "2f8e3f91e9598d158673818cbd185ce2b4edeabd326cafef078c8f43770f4fd1",
+      "frames": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1600000/z13dag4_fast_search/frames.npz",
+      "frames_sha256": "92c5169ff5c07309b6b7fb3308d50156b118f3a8ab99d8c556927aa71fd65104",
+      "searches": 219,
+      "game_cpu_s": 207.084065,
+      "scope": "offline CPU microbenchmarks scaled by actual search count; not whole-game A/B results",
+      "attempts": [
+        {
+          "attempt": "candidate keys: sorted JSON to tuples",
+          "cpu_s_saved_upper_bound": 0.02585836239999999,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.0001248689144671754,
+          "below_two_percent": true
+        },
+        {
+          "attempt": "reuse student features for ranked_plants",
+          "cpu_s_saved_upper_bound": 0.022508841899999885,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.0001086942247342879,
+          "below_two_percent": true
+        },
+        {
+          "attempt": "reuse student encoder output for ranked_plants",
+          "cpu_s_saved_upper_bound": 0.07500233912812525,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.0003621830541530332,
+          "below_two_percent": true
+        }
+      ]
+    },
+    {
+      "scene": "night",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/python-prototypes-v4-night.json",
+      "source_sha256": "519ae09e9dddd505f108904614d63c2708cf055be838c73fa352e1cb167155ca",
+      "frames": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1900000/n11dag1_fast_search/frames.npz",
+      "frames_sha256": "8e7aab94f4a6c63278503d076126d9a279362e3e4e528fa2baf3b3c38bdced3d",
+      "searches": 366,
+      "game_cpu_s": 218.07428,
+      "scope": "offline CPU microbenchmarks scaled by actual search count; not whole-game A/B results",
+      "attempts": [
+        {
+          "attempt": "candidate keys: sorted JSON to tuples",
+          "cpu_s_saved_upper_bound": 0.03374120239999989,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.00015472343827066583,
+          "below_two_percent": true
+        },
+        {
+          "attempt": "reuse student features for ranked_plants",
+          "cpu_s_saved_upper_bound": 0.02444670579375,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.00011210265508500132,
+          "below_two_percent": true
+        },
+        {
+          "attempt": "reuse student encoder output for ranked_plants",
+          "cpu_s_saved_upper_bound": 0.11941145508749969,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.0005475723917900804,
+          "below_two_percent": true
+        }
+      ]
+    },
+    {
+      "scene": "pool",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/python-prototypes-v4-pool.json",
+      "source_sha256": "202efbcdab8f75324190ddf81c19a1e52056debf7df2d9637f15c9e2c483a6f6",
+      "frames": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2000000/p21dag1_fast_search/frames.npz",
+      "frames_sha256": "878e38712f8d616251a8767b65f3ed537c53a8f5dd28678e82c14b7fc9dfded8",
+      "searches": 94,
+      "game_cpu_s": 42.531222,
+      "scope": "offline CPU microbenchmarks scaled by actual search count; not whole-game A/B results",
+      "attempts": [
+        {
+          "attempt": "candidate keys: sorted JSON to tuples",
+          "cpu_s_saved_upper_bound": 0.0068797208000001215,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.00016175695116402066,
+          "below_two_percent": true
+        },
+        {
+          "attempt": "reuse student features for ranked_plants",
+          "cpu_s_saved_upper_bound": 0.00943973644374999,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.0002219483946111398,
+          "below_two_percent": true
+        },
+        {
+          "attempt": "reuse student encoder output for ranked_plants",
+          "cpu_s_saved_upper_bound": 0.0312040020625,
+          "equivalent": true,
+          "game_fraction_upper_bound": 0.0007336728312791013,
+          "below_two_percent": true
+        }
+      ]
+    }
+  ],
+  "pending": [
+    "complete v4 after/shadow/compare with per-task CPU ratio <=1.02",
+    "same-tool v4 profile/top15 and RSS comparison",
+    "final stopping-condition review and report"
+  ]
+}
