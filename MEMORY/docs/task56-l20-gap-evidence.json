@@ -1,0 +1,1201 @@
+{
+  "status": "complete",
+  "inventory_source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/inventory.json",
+  "inventory_sha256": "7cd23c114192a8366ea0f7226041229f0da8e3d3136bb3c4387c64369a71b8c8",
+  "captured_at": "2026-10-24T06:02:46.786616+08:00",
+  "sources": {
+    "qc-state.json": {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum_state.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/qc-state.json",
+      "sha256": "61abb2911bbe792a43c5b687278587731c15a298c8626a9f1c23a01cc3106347"
+    },
+    "qc.log": {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum.log",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/qc.log",
+      "sha256": "cb1b0d0f47a1593565bf000056fb98dc56ffc5e758a28ed09a8e52c489b69307"
+    },
+    "A-command.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/train_A.command.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/A-command.json",
+      "sha256": "63a931dc3e6ed2f6017aeff5ffe9d5de6b4ecaa6f6d4123c83792e72e0bc2464"
+    },
+    "A-source-rows.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/source_rows.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/A-source-rows.json",
+      "sha256": "2dbb3ec72d1d7955d5a7b3e4c9635c661a3383d70ea34a97df4bbabfd1ce0335"
+    },
+    "ledger.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/data_ledger.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/ledger.json",
+      "sha256": "cdbf29a4dbe583010aa55e78544b6413da679f56c32606797b9befa10651efbf"
+    },
+    "dw4-inventory.json": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dataset_inventory.json",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/dw4-inventory.json",
+      "sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426"
+    },
+    "task27.md": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/MEMORY/docs/task27-dw5i.md",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task27.md",
+      "sha256": "956fb9a50b621a76c12637944001105bc652620ebed7ce496112c2f49190b5aa"
+    },
+    "task36.md": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/MEMORY/docs/task36-dw5i-mix.md",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task36.md",
+      "sha256": "0e573114d11bb5cbefe355ca7c2cf534de721a27830b35aedba29312ee269e5c"
+    },
+    "task36-family.py": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/task36_data_ledger.py",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task36-family.py",
+      "sha256": "b498b905e49b57a1d1630a399863c9e0e368fa88fedab6627e052c99117f8b4b"
+    },
+    "task36-weights.py": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/scripts/task36_row_weights.py",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task36-weights.py",
+      "sha256": "ee3220945f352280fad5f932fbdca247b18625022d87d4abc049720ea9d5ab2a"
+    },
+    "task49-promotion.py": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_promotion.py",
+      "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/task49-promotion.py",
+      "sha256": "dcc4b53435e09688628743426ad5e6e8a9c96ab33ca530382f83fec9788f4905"
+    }
+  },
+  "qc": {
+    "cells": {
+      "night_l20_train_n10_orig": {
+        "family": "night_l20",
+        "level": 20,
+        "mult_index": 0,
+        "last_round": 0,
+        "windows": {
+          "1.0": {
+            "recent": [
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0,
+              0
+            ],
+            "wins": 0,
+            "games": 32
+          }
+        }
+      }
+    },
+    "collected_groups": [],
+    "offsets": {
+      "night_l20_train_n10_orig": 32
+    },
+    "matching_log_lines": 0
+  },
+  "actual_training": {
+    "dw4_archives": 48816,
+    "dw4_L20_archives": 0,
+    "A_rows": 15788614,
+    "A_labels": 281,
+    "A_L20_labels": [],
+    "A_source_L20_labels": {},
+    "ledger_L20_archives": {
+      "dw4i": 0,
+      "dw5i": 0
+    },
+    "A_L14_source": {
+      "n14t1_fast_search": {
+        "archives": 64,
+        "rows": 32485,
+        "training_rows": 29430,
+        "validation_rows": 3055
+      },
+      "n14t2_fast_search": {
+        "archives": 64,
+        "rows": 32098,
+        "training_rows": 29756,
+        "validation_rows": 2342
+      }
+    }
+  },
+  "n20o1": {
+    "games": 32,
+    "wins": 0,
+    "decisions": 8695,
+    "executed_plants": 0,
+    "labelled_plants": 575,
+    "waits_with_ready_card": 8567,
+    "invalid_label_packets": 0
+  },
+  "pending": [],
+  "packing": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/packing.json",
+    "sha256": "e239f3855827c68906f7e04cd9a9609bc15ec82c63d97166edda2b7ff4441ce6",
+    "status": "complete-for-selected-corpus",
+    "index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/pack_view/packs/cfe7f66e3f2141ec.npz",
+    "index_sha256": "e91819d652a8106c2a4c5379d577326fdd36cd7d0e0d92f97822e2f66cd47a4b",
+    "pack_version": 2,
+    "archives": 36,
+    "rows": 4428,
+    "labels": {
+      "n14t1_fast_search": {
+        "raw_positive": 1135,
+        "packed_rows": 2060,
+        "packed_positive": 1135,
+        "weight_sum": 6587.0,
+        "positive_weight_sum": 1135.0
+      },
+      "n20o1_fast_search": {
+        "raw_positive": 575,
+        "packed_rows": 2368,
+        "packed_positive": 575,
+        "weight_sum": 8848.0,
+        "positive_weight_sum": 575.0
+      }
+    },
+    "original_model_L20_share": 0,
+    "prospective_model_L20_share": "explicitly added to this audit view; no optimisation or model change",
+    "checks": "all retained inputs, packet identity/slot, cell and base row weight exactly match archive; all positive labels retained",
+    "probability_scope": "training-head softmax: packets include nonempty inactive slots; cells all54. Legal-mask inference separately checked live; not calibrated action probabilities.",
+    "models": {
+      "dw4i": {
+        "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+        "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+        "labels": {
+          "n20o1_fast_search": {
+            "teacher_plant_rows": 575,
+            "student_gate_calls_plant": 0,
+            "plant_logit": {
+              "n": 575,
+              "min": -6.123766899108887,
+              "median": -2.9458255767822266,
+              "max": -0.11665964871644974
+            },
+            "plant_probability": {
+              "n": 575,
+              "min": 0.0021854036021977663,
+              "median": 0.049934178590774536,
+              "max": 0.47086814045906067
+            },
+            "teacher_packet_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 4.0,
+              "max": 10.0
+            },
+            "teacher_cell_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 11.0,
+              "max": 44.0
+            },
+            "teacher_packet_probability": {
+              "n": 575,
+              "min": 0.012271027080714703,
+              "median": 0.08856360614299774,
+              "max": 1.0
+            },
+            "joint_probability": {
+              "n": 575,
+              "min": 4.0813832455502227e-07,
+              "median": 8.685131513825764e-05,
+              "max": 0.05244323856166371
+            },
+            "per_kind": {
+              "8": {
+                "rows": 93,
+                "calls_plant": 0
+              },
+              "10": {
+                "rows": 18,
+                "calls_plant": 0
+              },
+              "11": {
+                "rows": 1,
+                "calls_plant": 0
+              },
+              "12": {
+                "rows": 8,
+                "calls_plant": 0
+              },
+              "13": {
+                "rows": 27,
+                "calls_plant": 0
+              },
+              "14": {
+                "rows": 113,
+                "calls_plant": 0
+              },
+              "15": {
+                "rows": 315,
+                "calls_plant": 0
+              }
+            }
+          },
+          "n14t1_fast_search": {
+            "teacher_plant_rows": 1135,
+            "student_gate_calls_plant": 983,
+            "plant_logit": {
+              "n": 1135,
+              "min": -10.255782127380371,
+              "median": 1.685536503791809,
+              "max": 7.47473669052124
+            },
+            "plant_probability": {
+              "n": 1135,
+              "min": 3.515241405693814e-05,
+              "median": 0.8436362743377686,
+              "max": 0.9994331002235413
+            },
+            "teacher_packet_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 1.0,
+              "max": 6.0
+            },
+            "teacher_cell_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 1.0,
+              "max": 22.0
+            },
+            "teacher_packet_probability": {
+              "n": 1135,
+              "min": 0.010721661150455475,
+              "median": 0.5077154636383057,
+              "max": 0.9999798536300659
+            },
+            "joint_probability": {
+              "n": 1135,
+              "min": 2.2386455749937005e-06,
+              "median": 0.04841983727770645,
+              "max": 0.5805456421869447
+            },
+            "per_kind": {
+              "0": {
+                "rows": 91,
+                "calls_plant": 69
+              },
+              "1": {
+                "rows": 225,
+                "calls_plant": 201
+              },
+              "2": {
+                "rows": 22,
+                "calls_plant": 22
+              },
+              "3": {
+                "rows": 84,
+                "calls_plant": 80
+              },
+              "4": {
+                "rows": 89,
+                "calls_plant": 88
+              },
+              "5": {
+                "rows": 23,
+                "calls_plant": 23
+              },
+              "8": {
+                "rows": 277,
+                "calls_plant": 224
+              },
+              "9": {
+                "rows": 276,
+                "calls_plant": 237
+              },
+              "11": {
+                "rows": 48,
+                "calls_plant": 39
+              }
+            }
+          }
+        },
+        "batches": 69,
+        "all_supervised_losses_finite": true
+      },
+      "A": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/model.pt",
+        "sha256": "32724b8e2bb12b7966d899a03f1e3bfac6eb695c33b15ad6d10678ec659df7e7",
+        "labels": {
+          "n20o1_fast_search": {
+            "teacher_plant_rows": 575,
+            "student_gate_calls_plant": 10,
+            "plant_logit": {
+              "n": 575,
+              "min": -7.04206657409668,
+              "median": -2.888259172439575,
+              "max": 0.4668968617916107
+            },
+            "plant_probability": {
+              "n": 575,
+              "min": 0.0008735540905036032,
+              "median": 0.05273701623082161,
+              "max": 0.6146489977836609
+            },
+            "teacher_packet_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 6.0,
+              "max": 10.0
+            },
+            "teacher_cell_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 10.0,
+              "max": 45.0
+            },
+            "teacher_packet_probability": {
+              "n": 575,
+              "min": 0.0011421652743592858,
+              "median": 0.013499471358954906,
+              "max": 1.0
+            },
+            "joint_probability": {
+              "n": 575,
+              "min": 1.2012340027601668e-08,
+              "median": 1.544735304703224e-05,
+              "max": 0.05408587953970746
+            },
+            "per_kind": {
+              "8": {
+                "rows": 93,
+                "calls_plant": 0
+              },
+              "10": {
+                "rows": 18,
+                "calls_plant": 0
+              },
+              "11": {
+                "rows": 1,
+                "calls_plant": 0
+              },
+              "12": {
+                "rows": 8,
+                "calls_plant": 0
+              },
+              "13": {
+                "rows": 27,
+                "calls_plant": 2
+              },
+              "14": {
+                "rows": 113,
+                "calls_plant": 0
+              },
+              "15": {
+                "rows": 315,
+                "calls_plant": 8
+              }
+            }
+          },
+          "n14t1_fast_search": {
+            "teacher_plant_rows": 1135,
+            "student_gate_calls_plant": 958,
+            "plant_logit": {
+              "n": 1135,
+              "min": -4.879153728485107,
+              "median": 2.927011728286743,
+              "max": 8.308405876159668
+            },
+            "plant_probability": {
+              "n": 1135,
+              "min": 0.0075460695661604404,
+              "median": 0.9491657018661499,
+              "max": 0.9997536540031433
+            },
+            "teacher_packet_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 1.0,
+              "max": 5.0
+            },
+            "teacher_cell_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 2.0,
+              "max": 24.0
+            },
+            "teacher_packet_probability": {
+              "n": 1135,
+              "min": 0.005704105831682682,
+              "median": 0.7893797159194946,
+              "max": 0.9999896287918091
+            },
+            "joint_probability": {
+              "n": 1135,
+              "min": 3.269653841618192e-05,
+              "median": 0.07036696030754701,
+              "max": 0.801743194729851
+            },
+            "per_kind": {
+              "0": {
+                "rows": 91,
+                "calls_plant": 70
+              },
+              "1": {
+                "rows": 225,
+                "calls_plant": 197
+              },
+              "2": {
+                "rows": 22,
+                "calls_plant": 22
+              },
+              "3": {
+                "rows": 84,
+                "calls_plant": 78
+              },
+              "4": {
+                "rows": 89,
+                "calls_plant": 79
+              },
+              "5": {
+                "rows": 23,
+                "calls_plant": 23
+              },
+              "8": {
+                "rows": 277,
+                "calls_plant": 211
+              },
+              "9": {
+                "rows": 276,
+                "calls_plant": 235
+              },
+              "11": {
+                "rows": 48,
+                "calls_plant": 43
+              }
+            }
+          }
+        },
+        "batches": 69,
+        "all_supervised_losses_finite": true
+      }
+    }
+  },
+  "diagnostic_plan": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic-plan.json",
+    "source_sha256": "69d523fcb3c07eea50538c1670af5dcc54fd62b9ad2ecd236adb4c405a2ab1e3",
+    "task": "night_l20_eval_n10_orig",
+    "seeds": [
+      30000,
+      30001,
+      30002,
+      30003
+    ],
+    "arms": [
+      "fast",
+      "fast_search"
+    ],
+    "workers": 2,
+    "dagger_beta": 1,
+    "per_card": 1,
+    "student_candidates": 2,
+    "samples": 3,
+    "horizon": 2500,
+    "verify_samples": 9,
+    "rollout_sim_skip": 61,
+    "scope": "8 diagnostic games; eval seeds never used for training; no formal strength claim",
+    "sha256": {
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/scripts/search_play.py": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_env.py": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+      "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+      "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+      "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+      "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f"
+    }
+  },
+  "native": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/native.json",
+    "source_sha256": "5bf31ca35b0d0714100557fece326a40c0c64c96bb22993e7696418601920a54",
+    "status": "complete",
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "executable_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+    "games": [
+      {
+        "seed": 30000,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast/frames.npz",
+        "sha256": "25ed000325387e7dd397c6c4cdbe47344d08d61d4614c030ebf37af665779419",
+        "won": false,
+        "decisions": 279,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 275,
+        "waits_with_legal_plant": 275,
+        "free_card_states": 275,
+        "empty_slot_states": 69,
+        "duplicate_states": 242
+      },
+      {
+        "seed": 30000,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+        "sha256": "092d0b14bbba6da570c4b0fd567875682b14cda16476552e1edb72ac6dce3ef8",
+        "won": true,
+        "decisions": 836,
+        "plantings": 60,
+        "planted_types": {
+          "14": 12,
+          "13": 12,
+          "15": 11,
+          "8": 4,
+          "12": 6,
+          "11": 8,
+          "10": 7
+        },
+        "waits_with_ready_card": 772,
+        "waits_with_legal_plant": 772,
+        "free_card_states": 832,
+        "empty_slot_states": 612,
+        "duplicate_states": 781
+      },
+      {
+        "seed": 30001,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30001/t56diag_fast/frames.npz",
+        "sha256": "d3171a517fc72f312e4f20becde36b871208d01168d5ba3512519993b86b3acf",
+        "won": false,
+        "decisions": 279,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 275,
+        "waits_with_legal_plant": 275,
+        "free_card_states": 275,
+        "empty_slot_states": 68,
+        "duplicate_states": 262
+      },
+      {
+        "seed": 30001,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30001/t56diag_fast_search/frames.npz",
+        "sha256": "753f557e8a613c5cb7a9e9ce4716d09c116795a9b322ae45bc4f00c039c0fd14",
+        "won": true,
+        "decisions": 901,
+        "plantings": 46,
+        "planted_types": {
+          "10": 8,
+          "12": 3,
+          "13": 5,
+          "15": 12,
+          "14": 10,
+          "8": 5,
+          "11": 3
+        },
+        "waits_with_ready_card": 842,
+        "waits_with_legal_plant": 842,
+        "free_card_states": 885,
+        "empty_slot_states": 490,
+        "duplicate_states": 825
+      },
+      {
+        "seed": 30002,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30002/t56diag_fast/frames.npz",
+        "sha256": "7af788111b0d1321e4c403a7851f5f5b3aca6b02784f3930f1c779e97c54ca4a",
+        "won": false,
+        "decisions": 237,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 233,
+        "waits_with_legal_plant": 233,
+        "free_card_states": 233,
+        "empty_slot_states": 69,
+        "duplicate_states": 227
+      },
+      {
+        "seed": 30002,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30002/t56diag_fast_search/frames.npz",
+        "sha256": "061e2ba3bc8c63d10980b3acd75a6d8ae41ea2f4af003cdf777ddfb960129eee",
+        "won": true,
+        "decisions": 976,
+        "plantings": 59,
+        "planted_types": {
+          "14": 12,
+          "15": 9,
+          "13": 9,
+          "11": 5,
+          "10": 11,
+          "12": 7,
+          "8": 6
+        },
+        "waits_with_ready_card": 907,
+        "waits_with_legal_plant": 907,
+        "free_card_states": 966,
+        "empty_slot_states": 629,
+        "duplicate_states": 945
+      },
+      {
+        "seed": 30003,
+        "arm": "fast",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30003/t56diag_fast/frames.npz",
+        "sha256": "df16ad812a9b77996c860d37d873bfaeb3e1c33f90c52279992a7ddd41f2a963",
+        "won": false,
+        "decisions": 260,
+        "plantings": 0,
+        "planted_types": {},
+        "waits_with_ready_card": 256,
+        "waits_with_legal_plant": 256,
+        "free_card_states": 256,
+        "empty_slot_states": 68,
+        "duplicate_states": 243
+      },
+      {
+        "seed": 30003,
+        "arm": "fast_search",
+        "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30003/t56diag_fast_search/frames.npz",
+        "sha256": "7a482221bf3cea12f0649b11952ab75934d0b7e5c4ca8deab99c8ac5253a9d70",
+        "won": true,
+        "decisions": 858,
+        "plantings": 66,
+        "planted_types": {
+          "15": 14,
+          "8": 6,
+          "10": 9,
+          "12": 9,
+          "13": 3,
+          "14": 17,
+          "11": 8
+        },
+        "waits_with_ready_card": 764,
+        "waits_with_legal_plant": 764,
+        "free_card_states": 824,
+        "empty_slot_states": 647,
+        "duplicate_states": 757
+      }
+    ],
+    "frames_exact": 4634,
+    "selected_root_states": 64,
+    "model_root_pairs": 128,
+    "logits_max_abs_error": 6.103515625e-05,
+    "all_head_argmax_and_greedy_actions_equal": true,
+    "full_legal_packet_affordability_matches_engine": true,
+    "probability_scope": "rank among legal plant actions and P(plant)*P(packet|legal packets)*P(cell|legal cells); greedy decision still thresholds plant at0; preferences are not calibrated probabilities",
+    "logit_comparison_tolerance": {
+      "atol": 1e-05,
+      "rtol": 1e-05
+    }
+  },
+  "continuations": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuations.json",
+    "source_sha256": "a5ebda2bb26f78585a307395cdfeeff5314f1fe1406b312a80bb7fc2abf5ccf3",
+    "status": "complete",
+    "root_model_pairs": 8,
+    "encoded_float32_compared": 2077152,
+    "rows": [
+      {
+        "seed": 30000,
+        "model": "dw4i",
+        "root_decision": 155,
+        "root_tick": 8340,
+        "future_seed": 590000,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30000-dw4i.jsonl",
+        "trace_sha256": "b7643aec5c657de5116ff49dea6731c1274c635393a99f73293c9a0f32a99f93",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30000,
+        "model": "A",
+        "root_decision": 155,
+        "root_tick": 8340,
+        "future_seed": 590000,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30000-A.jsonl",
+        "trace_sha256": "b7643aec5c657de5116ff49dea6731c1274c635393a99f73293c9a0f32a99f93",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30001,
+        "model": "dw4i",
+        "root_decision": 152,
+        "root_tick": 8340,
+        "future_seed": 590001,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30001-dw4i.jsonl",
+        "trace_sha256": "979c53d4aadd6cad7363cdeb1eecb887bd1f498e8ae861a0b4e51991eb17b458",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30001,
+        "model": "A",
+        "root_decision": 152,
+        "root_tick": 8340,
+        "future_seed": 590001,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10860,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30001-A.jsonl",
+        "trace_sha256": "979c53d4aadd6cad7363cdeb1eecb887bd1f498e8ae861a0b4e51991eb17b458",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30002,
+        "model": "dw4i",
+        "root_decision": 153,
+        "root_tick": 8400,
+        "future_seed": 590002,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10920,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30002-dw4i.jsonl",
+        "trace_sha256": "c2217070fa4533964a306ffc97c61f5dd6f1c94ddd28b10a98825fb1f6131ad5",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30002,
+        "model": "A",
+        "root_decision": 153,
+        "root_tick": 8400,
+        "future_seed": 590002,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 10920,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30002-A.jsonl",
+        "trace_sha256": "c2217070fa4533964a306ffc97c61f5dd6f1c94ddd28b10a98825fb1f6131ad5",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30003,
+        "model": "dw4i",
+        "root_decision": 173,
+        "root_tick": 9420,
+        "future_seed": 590003,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 11940,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30003-dw4i.jsonl",
+        "trace_sha256": "4b81522bb03fc50cb87dbd6ef35b51f60236ffec33e600f9d2870cd09b29c407",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      },
+      {
+        "seed": 30003,
+        "model": "A",
+        "root_decision": 173,
+        "root_tick": 9420,
+        "future_seed": 590003,
+        "decisions": 42,
+        "student_decisions": 41,
+        "forced_first_actions": 1,
+        "end_tick": 11940,
+        "trace": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/continuation-30003-A.jsonl",
+        "trace_sha256": "4b81522bb03fc50cb87dbd6ef35b51f60236ffec33e600f9d2870cd09b29c407",
+        "all_float32_inputs_bit_exact": true,
+        "full_trajectory_and_leaf_exact": true
+      }
+    ]
+  },
+  "live_teacher_states": {
+    "dw4i": {
+      "roots": 32,
+      "student_gate_calls_plant": 1,
+      "median_plant_probability": 0.0803990513086319,
+      "median_legal_plant_rank": 59.0,
+      "median_legal_joint_preference": 0.0003125847646762843,
+      "examples": [
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 25,
+          "tick": 1440,
+          "model": "dw4i",
+          "plant_logit": -1.46891928,
+          "plant_probability": 0.18710698187351227,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 1,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 97,
+            "legal_joint_preference": 3.6461945090526816e-05
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 93,
+          "tick": 5040,
+          "model": "dw4i",
+          "plant_logit": -0.651545167,
+          "plant_probability": 0.3426412045955658,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 3,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 79,
+            "legal_joint_preference": 0.00011263869472971068
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 172,
+          "tick": 9240,
+          "model": "dw4i",
+          "plant_logit": -2.1537416,
+          "plant_probability": 0.10398208349943161,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 2,
+              "col": 5,
+              "row": 2
+            },
+            "kind": 15,
+            "legal_plant_rank": 63,
+            "legal_joint_preference": 0.00046623718084945107
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 290,
+          "tick": 15840,
+          "model": "dw4i",
+          "plant_logit": -2.43410754,
+          "plant_probability": 0.0806085467338562,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 7,
+              "col": 6,
+              "row": 3
+            },
+            "kind": 15,
+            "legal_plant_rank": 65,
+            "legal_joint_preference": 0.00040788625487146865
+          }
+        }
+      ]
+    },
+    "A": {
+      "roots": 32,
+      "student_gate_calls_plant": 0,
+      "median_plant_probability": 0.08611134067177773,
+      "median_legal_plant_rank": 53.0,
+      "median_legal_joint_preference": 7.639733833252654e-05,
+      "examples": [
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 25,
+          "tick": 1440,
+          "model": "A",
+          "plant_logit": -0.044599779,
+          "plant_probability": 0.48885196447372437,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 1,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 37,
+            "legal_joint_preference": 0.00015715344472473603
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 93,
+          "tick": 5040,
+          "model": "A",
+          "plant_logit": -0.698337913,
+          "plant_probability": 0.3321806788444519,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 3,
+              "col": 1,
+              "row": 0
+            },
+            "kind": 14,
+            "legal_plant_rank": 69,
+            "legal_joint_preference": 6.723436867080163e-06
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 172,
+          "tick": 9240,
+          "model": "A",
+          "plant_logit": -1.59185207,
+          "plant_probability": 0.16912341117858887,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 2,
+              "col": 5,
+              "row": 2
+            },
+            "kind": 15,
+            "legal_plant_rank": 108,
+            "legal_joint_preference": 1.7167206109489234e-06
+          }
+        },
+        {
+          "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/diagnostic_frames/seed_30000/t56diag_fast_search/frames.npz",
+          "seed": 30000,
+          "arm": "fast_search",
+          "decision": 290,
+          "tick": 15840,
+          "model": "A",
+          "plant_logit": -1.99269986,
+          "plant_probability": 0.11997151374816895,
+          "python_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "native_action": {
+            "type": "wait",
+            "ticks": 60,
+            "until": "timeout"
+          },
+          "target": {
+            "teacher_action": {
+              "type": "plant",
+              "packet": 7,
+              "col": 6,
+              "row": 3
+            },
+            "kind": 15,
+            "legal_plant_rank": 119,
+            "legal_joint_preference": 3.1067982128508183e-06
+          }
+        }
+      ]
+    }
+  },
+  "queued_recipe": {
+    "source": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/recipe.json",
+    "snapshot": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/sources/queued-round2-recipe.json",
+    "sha256": "ea40edeac0309b872f0f631765cfc13c46cf5391269d4f5d210fdc2dfb864a0f",
+    "labels": 202,
+    "L20_labels": []
+  },
+  "production_code_sha256": {
+    "scripts/search_play.py": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c",
+    "scripts/pack_training_rows.py": "c02bd0305ea74802890d659fd5aa3adbec37d3c1db543710ec58dbf602bb995e",
+    "python/pvz_frame_store.py": "e32cc260b9e0251539dadce75b4ea054d40c9711c9a241b2bc58d6e72ee7c5e4",
+    "python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+    "python/pvz_student_observation.py": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5",
+    "python/pvz_training_pack.py": "5d85293ddd7c367d275b62152c19e1a6f121052dfef0006e5227dbd9d174cf10",
+    "scripts/train_rollout_policy.py": "2490b586c88e874b70856a028eb1d20435dd3fd695c09a3a3adc7c2e00dedb20",
+    "scripts/curriculum_queue.py": "b23d5e5eb529120d0ec87a9f567e6db401fad337caea8d2a9caded826c06f084",
+    "src/EnvironmentRollout.cpp": "75913f5c8ab8cf96adbedeede2b69ec81e13ce289f738f1140b40c211ca9b85f",
+    "src/LawnApp.cpp": "e7362bda1dd29307032d06d6e13641958e5f5d627176b3e478eac2a75c6a7c51"
+  },
+  "diagnosis": {
+    "classification": "training-corpus coverage gap before packing; no engineering fault found in audited encoding/label/continuation paths",
+    "proven": [
+      "Both completed models have zero direct L20 supervision",
+      "qc L20 is a32-game bootstrap cell with no subsequent collected group at the frozen time",
+      "All575 L20 plant labels survive an explicit current-v2 pack and reach supervised batch tensors with correct identity/slot/cell/weight",
+      "Free-card eligibility, selected native predictions, full public replay and2500tick continuations match"
+    ],
+    "inference": "Zero L20 direct training exposure explains why these results do not demonstrate failure to learn supplied L20 labels; an inclusive retrain is still needed to test sufficiency.",
+    "unproven": [
+      "L20-inclusive retraining will produce wins",
+      "Current architecture has sufficient capacity/duplicate-count representation",
+      "Any new candidate passes cross-zone promotion"
+    ],
+    "task4_branch": "non-engineering/data-requirements branch: report required data; no unjustified encoder or packer patch",
+    "new_candidate_trained": false,
+    "new_promotion_gate_run": false,
+    "production_changes": false
+  },
+  "required_data": [
+    {
+      "step": 1,
+      "action": "Include n20o1_fast_search32 bootstrap archives explicitly; preserve575 teacher plant labels despite losing executed trajectories",
+      "acceptance": "nonzero retained L20 source rows, correct train/validation split and batch weight receipt"
+    },
+    {
+      "step": 2,
+      "action": "Collect frozen-v4 beta1 trajectories on training seeds to cover planted, late-wave and conveyor-flow states; retain wins and losses",
+      "acceptance": "fixed source teacher/seed/task metadata and full replay; diagnostic eval30000..30003 excluded from training"
+    },
+    {
+      "step": 3,
+      "action": "New corpus version and regenerated row weights; explicitly classify L20 original conveyor",
+      "acceptance": "n20o1 cannot silently become unclassified night family with zero share; do not reuse oldA row-vector identity"
+    },
+    {
+      "step": 4,
+      "action": "Preregister small dw4-initialised fine-tune plus old-zone replay, changing data/mix only",
+      "acceptance": "actual optimiser rows and weight updates; independent paired L20 planting and full-game wins"
+    },
+    {
+      "step": 5,
+      "action": "Run existing task49 unified-subset promotion gate for any new candidate; controller decides deployment",
+      "acceptance": "overall paired Newcombe95% lower bound strictly > -0.03 and no zone exact one-sided McNemar regression p<.05; rejection keeps incumbent"
+    }
+  ],
+  "completion_audit": {
+    "verified_at": "2026-10-24T06:26:39.083848+08:00",
+    "scope": "task56 diagnosis and required-data deliverable, not a training or promotion success",
+    "requirements": {
+      "1_quantitative": {
+        "passed": true,
+        "evidence": "32 bootstrap games/575 labels and8 fresh paired diagnostic games; per-game planting types, waits with cards and exact legality; training-head and legal-mask logits/ranks/probabilities in packing/native sources"
+      },
+      "2_pipeline_trace": {
+        "passed": true,
+        "evidence": "explicit current-v2 segments load4428 rows/36 archives with correct per-row input/packet/cell/base weight;575/575 L20 positives retained; actual dw4/A exposure0, L14 actual source counts and batch control included"
+      },
+      "3_student_and_native": {
+        "passed": true,
+        "evidence": "free-card/duplicate/empty-slot facts and identity-code review; all4634 replay frames,128 selected prediction pairs and8 native/Python2500tick continuations/2077152 bit-exact float32 inputs"
+      },
+      "4_followup_branch": {
+        "passed": true,
+        "evidence": "Pinned historical corpus definitions explain zero L20 exposure; no encoding/packer/execution fault found in exercised paths. Required-data proposal specifies source inclusion, teacher trajectories, nonzero batch weights, retraining and task49 gate; no candidate or promotion claimed"
+      },
+      "5_delivery": {
+        "passed": true,
+        "evidence": "Report is inside task56-l20-student-gap.md Results; KB JSON and read-only audit tool; append-only daily memory; l20gap commits/push before goal completion"
+      }
+    },
+    "invariants": {
+      "max_game_processes": 2,
+      "no_qc_or_other_session_operations": true,
+      "no_external_worktree_writes": true,
+      "no_training_or_gpu_job": true,
+      "no_gameplay_rules_or_formulas_added": true,
+      "eval_archives_never_used_for_training": true
+    },
+    "report_sha256": "edeaa5e2c05a200917b7ce3d973c559a3d304aaa2f064d67280b8839e7806f4e"
+  }
+}
