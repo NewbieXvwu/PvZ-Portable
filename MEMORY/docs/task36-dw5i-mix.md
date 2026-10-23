@@ -50,6 +50,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，8 Qoder 再接手：GLM 的 pack 门禁随其会话退出而消失（日志最后一条 15:18、无 gate_done；pack 7233/7259 未受影响，v2 缓存 48.6k/56.8k 仍在增长），已用 setsid nohup 重启同一脚本（pid 48633，10 GiB 门限不变，续写 artifacts/task36/pack_gate.jsonl）。包 packs/e39ba7cbc076380a.npz 仍未生成。当前 MemAvailable 约 11.8 GiB、swap 已用约 3.9 GB；C: 余 44 GB（比 12:17 少 25 GB，缓存补齐所致），/ 余 831 GB。
 
+- 2026-10-23，9 Qoder 停掉 A 打包（与第 7 条“不要杀”相反，原因见下）：15:45 起进程组 7233/7259 的 T 状态来自 pack_gate（<10 GiB SIGSTOP），非外部操作；16:03 系统 MemAvailable 降到约 6.7 GiB（recipe 的 verify_recipe_migration 常驻约 5 GiB、b3 第二轮与 qc 同时跑），而 task40 第四跑的 2 个引擎正被 earlyoom 的 `--prefer (pvz-portable|search_play|python3)` 瞄准。为保证验收不被 OOM 中断，Qoder 主动结束流水线（SIGCONT 后 SIGTERM 组 7259 与 7233；10 GiB 地板在 15:42 已被突破，且 pack 已停在 51,277/56,784）。gate 随即写 `gate_done` 退出，MemAvailable 回到约 8.8 GiB、swap 释放约 2 GB。已落盘的 51,277 份 v2 与 cells/packets/identity_scene 缓存全部保留，包 `e39ba7cbc076380a.npz` 未生成；task40 跑完且 MemAvailable ≥10.5 GiB 后重跑 `run_task36_mix.py --plan A`（复用缓存、补约 5,507 份再出包），A 完成后再跑 B。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
