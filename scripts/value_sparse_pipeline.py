@@ -54,7 +54,7 @@ def git(*args,input=None):
     return result.stdout
 
 
-def publish(stage,details,problem=None):
+def publish(stage,details,problem=None,*,progress_state=None):
     """Only this task's text conclusion paths may be staged; never include another edit."""
     relative=('MEMORY/docs/task43-value-v5-pool.md','MEMORY/docs/value-v5-sparse-progress.json',
               'MEMORY/'+time.strftime('%Y-%m-%d')+'.md')
@@ -63,6 +63,8 @@ def publish(stage,details,problem=None):
     doc=ROOT/relative[0];progress=ROOT/relative[1];daily=ROOT/relative[2]
     data=json.loads(progress.read_text()) if progress.exists() else {}
     data.update(stage=stage,task_complete=False,training_complete=False,acceptance_complete=False)
+    if progress_state:
+        data.update(progress_state)
     data.setdefault('milestones',[]).append(dict(stage=stage,details=details))
     write_json(progress,data)
     text=doc.read_text();n=max(map(int,re.findall(r'^### (\d+)\.',text,re.M)))+1
