@@ -246,3 +246,21 @@ python3 scripts/convert_frames_npz.py --data /Users/newbiexvwu/PvZAgent/artifact
 已重压过的、120 分钟内改过的），**5 195 921 622 B → 3 105 601 019 B（59.8%），省 2.09 GB，失败 0**，
 8 并发 1 970 s。代价：写一局档案 0.055 → 0.63 s、读一档 4.4 → 12 ms（一局游戏几十秒到几分钟）。
 `artifacts` 总计 **11 GB → 4.3 GB**（7.1 转换 + 7.2 日志 + 7.3 LZMA）。
+
+### 7.4 当前分布与停止条件（存储）
+
+`artifacts` 4.3 GB：`hard_mac` 3.5 GB（其中 frames 档案 3.1 GB、日志约 40 MB、`value_self1` 12 MB）、
+`value_net` 356 MB、`student` 273 MB、`relabel` 128 MB、`papers` 9.9 MB。
+
+单个档案（10 档样本，LZMA 后 134 KB）：**frames JSON 73.0%**、boards 9.1%、scalars 7.2%、
+values 2.2%、rows 0.6%，cell/packet/plant/hints/encoder 各 0.2–0.3%。
+
+试过但收益 <2%（各一次，已放弃）：
+
+- **帧间 delta + LZMA**：4 档样本上只省 **0.3%**（LZMA 已经吃到跨帧重复），不做。
+- **完全重复的档案**：按 `frames` 内容 sha256 比对，151 组 153 个副本、14.5 MB（0.3%），而且是不同标签
+  跑出同一条游戏（`u0_greedy` 与 `u16_greedy` 一致），删了会改价值网络的数据构成，不删。
+- **hints / encoder / rows 这些小数组**：合起来 0.8%，不值得动格式。
+
+还剩两项要主控拍板（都写进任务书「问题」）：档案里预计算的编码数组（20%，约 600 MB，可从 `frames` 重算）、
+每局一个的 `meta.json`（119 MB 块浪费）。

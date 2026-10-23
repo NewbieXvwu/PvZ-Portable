@@ -64,6 +64,19 @@
 
 未做任何改动；等确认。
 
+**第 18 步（档案里预计算的编码数组）一并请示。**
+
+一局档案 134 KB（LZMA 后）：frames JSON 73.0%，预计算的编码数组 20.3%（boards 9.1 + scalars 7.2 +
+values 2.2 + rows 0.6 + 其余 1.2）。这些数组完全由 `frames` 算出（`encode_frames_from_source`），
+存它们是为了让 `cache_episode` 直接复用、避免每局重算（task18 的设计）。
+
+合并 task33 之后训练只读包（`read_pack`），档案里的数组只在**建包**时被读一次。若确认包是唯一训练入口，
+可以从档案里去掉这 20%（约 600 MB），建包时重算（实测 0.9 s/档，22 130 档单线程约 5.5 h、8 并发约 40 min，
+一次性）。代价：任何直接读档案的旧工具（`cache_episode` 的非包路径）会退化成每档重算 0.9 s。
+
+要主控拍：包是否已经是唯一训练入口？若是，我按"档案只存 frames JSON + 少量索引、编码数组在建包时重算"改，
+`encoder` 签名改成记录"无预计算"版本；若不是，保持现状（600 MB 换重算时间，不划算）。
+
 ## 追加（主控 2026-10-22 23:05，用户的两点）
 1. **“结果不变”放宽**：此前实验已明确模型与搜索本身噪声很大（同一老师换随机未来只有约 75% 的决策相同），所以**不必逐位相同**。
    收益足够大、代价不大的改法可以接受：训练侧要求同数据同配方下验证损失与面板胜率在种子噪声内（给出对照数字）；采集侧要求同种子对局的胜率 / 到达波数在噪声内，
@@ -95,3 +108,4 @@
 - 第 16 步（档案转 npz·全量）：6 658 个档案（+ 第 13 步冒烟已转的 1 个）**全部通过五道校验后删原文件，失败 0**：7 509 703 263 B JSONL（7.00 GiB）→ 563 481 079 B npz（537 MiB），**7.50%**，省 6.95 GB，196 s（`--jobs 4`）。Mac 上 `frames.jsonl` 剩 0 个，`artifacts` 11 GB → 6.2 GB（含日志轮转）。逐档清单 `MEMORY/docs/frames-npz-converted.txt.gz`（6 658 行、70 KB、sha256 见 report），数字进 `MEMORY/docs/memory-budget.md` §7.1。合并 `origin/pvz-env`（task33 打包装载转正 + CUDA 线退役 + task34 OOM）：冲突只有任务书与 `pvz_compat.py`（取 task33 完整版，`jsonl-archives` 的移除条件改成"所有机器与 HF 上都不再"）；`train_rollout_policy.py` 自动合并为 task33 的包装载 + 本任务的紧凑数组。全量测试：**253 passed / 1 failed / 23 skipped**，失败的是 task34 的 `test_dagger_experiment_runner.py::test_low_memory_pauses_and_resumes_only_own_parent_and_child`，在 `origin/pvz-env` 原样代码上同样失败（已用 pvz-env 版本的两文件单独复现），不是本次合并引入。
 - 第 17 步（档案容器改 LZMA）：`pvz_frame_store._save` 从 `np.savez_compressed`（zlib）改成 `zipfile.ZIP_LZMA` —— 12 档样本上**只要 59.6% 的体积**（235 KB → 140 KB/局），因为 72% 的字节是 frames JSON，LZMA 能跨整局建模重复。代价：写 0.055→0.63 s/局、读 4.4→12 ms/局（一局游戏几十秒到几分钟，均可忽略）。`np.load` 无需改动（zipfile 解码），实测 LZMA 与 deflate 档案都能被 `read_frames`/`cache_episode` 读，且 `cache_episode` 仍直接复用档案（签名命中）。**训练包必须保持 ZIP_STORED**（`pack_training_rows.py` 用 `np.savez`，`read_pack` 走 `mmap_mode`），`python/test_frame_store_container.py` 三项测试钉住：LZMA 容器、0 维字符串、包不被 LZMA 污染。转换工具加 `--recompress`：逐档把所有数组成员读出来重写，**逐个数组 dtype/形状/值全等**才原子替换，ZIP_STORED 的包与 120 分钟内改过的文件跳过。
 - 第 18 步（LZMA 存量重压）：30 120 个 npz 里 22 205 个重压成功、失败 0，**5 195 921 622 B → 3 105 601 019 B（59.8%），省 2.09 GB**，8 并发 1 970 s；7 915 个跳过（训练包 ZIP_STORED、已重压、120 分钟内改过）。`artifacts` **11 GB → 4.3 GB**（转换 6.95 GB + 日志 0.33 GB + LZMA 2.09 GB）。数字与命令进 `MEMORY/docs/memory-budget.md` §7.3。
+- 第 19 步（存储分布与停止条件）：`artifacts` **11 GB → 4.3 GB**。档案单档（LZMA 后 134 KB）分布：frames JSON **73.0%**、boards 9.1、scalars 7.2、values 2.2、rows 0.6，其余各 0.2–0.3。三项试过即放弃（都 <2%）：帧间 delta + LZMA 只省 **0.3%**（LZMA 已吃到跨帧重复）、内容完全相同的档案只有 151 组 153 个副本 14.5 MB（0.3%，且删了会改价值网络数据构成）、hints/encoder/rows 合计 0.8%。剩两项要主控拍板，已写进「问题」：档案里预计算的编码数组（20%、约 600 MB，可从 frames 重算，取决于包是否已是唯一训练入口）、每局一个的 `meta.json`（119 MB 块浪费）。全量测试 **256 passed / 1 failed（task34 既有的 Mac 上失败）/ 23 skipped**。数字进 `MEMORY/docs/memory-budget.md` §7.4。
