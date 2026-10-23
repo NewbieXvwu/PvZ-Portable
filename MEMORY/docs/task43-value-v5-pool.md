@@ -290,3 +290,15 @@
 - 训练：`train_value_widen.py train --out artifacts/task43/v5 --data .../student/frames_v2 --audit-manifest .../vnet/artifacts/task30/full_audit_manifest.json --init artifacts/value_net/v4/model.pt --decision-data artifacts/task43/l21_dump --decision-fraction 0.5 --device cuda`（语料 memmap 已软链进 `artifacts/task43/v5/`；MemAvailable 现约 12 GiB，过 10 GiB 门禁）。
 - 验收：先 (a) `value_leaf_dispersion.py run --v3 v4 --v4 v5 --seed-offset 992 --games 4 --workers 4 --executable .../deploy2/build/pvz-portable`，再 (b)(c) 用已冻结的 `artifacts/task43/ab_{l21,day,night}/plan.json` 跑 `value_widen_ab.py v3|v4|report`。
 - 若 (a) 不过：问题在标签源（学生续走只有 0.6% 胜率、94% 局面候选无差），下一步补**老师续走**的标签或波次次级真值，不要靠加关加种子。
+
+## 主控追加（2026-10-23 21:45）：第二轮——标签可行性检查
+主控认可第一轮否决 v5，v4 维持默认。照你在"结果"末尾提的下一轮做：
+1. 只用少量真实老师分叉（L21 起，8 个种子以内）：
+   - 复用现有搜索 / 快照通道的实际 root、候选集合和短推演叶子；
+   - 再从每个叶子接冻结的搜索老师打到终局；
+   - 记录 root 策略、续走策略、历史上下文、共同随机未来、终局结果。
+2. 报告四项：同局候选之间有胜负差异的比例、有效对数量、每对 CPU 秒，以及扩到 64 种子要多少 CPU 小时（按 qc 正在占的核数折算）。
+3. 判断：
+   - 有效对足够、CPU 可承受：写扩量计划，主控批；
+   - 标签仍几乎全零：分析数据来源后停下。**不堆相同种子，不改估值公式。**
+4. 同时最多 4 个游戏进程；产物放 `artifacts/task43/round2/`；每步提交、push、在"结果"记一行。
