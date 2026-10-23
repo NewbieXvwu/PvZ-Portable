@@ -40,7 +40,7 @@ def bootstrap_counts(groups,metric,field='v4',iterations=2000):
         unit=(g['cell']['level'],g['cell']['seed'])
         by_seed[unit][0]+=counts['correct'];by_seed[unit][1]+=counts['pairs']
     units=list(by_seed.values())
-    if not units or not sum(v[1] for v in units):return None
+    if sum(v[1]>0 for v in units)<2:return None
     rng=random.Random(4505);values=[]
     for _ in range(iterations):
         sample=[units[rng.randrange(len(units))] for _ in units]

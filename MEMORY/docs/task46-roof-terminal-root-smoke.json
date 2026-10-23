@@ -220,9 +220,116 @@
    },
    "root_sha256": "9132f380d279f9d357ac3d27fe5b217cbca2dd0761849c812700a102311626ac",
    "search_trace_sha256": "47f5df3566152dfc91264938a17e5a780f21f9f941d24a2a7f11de00b4cf3d54"
+  },
+  {
+   "cell": "l44-archive-45000000",
+   "root": 195,
+   "labels": 120,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 781,
+      "correct": 430,
+      "value_ties": 0,
+      "accuracy": 0.5505761843790012
+     },
+     "v4_strict": {
+      "pairs": 1337,
+      "correct": 700,
+      "value_ties": 0,
+      "accuracy": 0.5235602094240838
+     },
+     "v4_nonterminal": {
+      "pairs": 722,
+      "correct": 371,
+      "value_ties": 0,
+      "accuracy": 0.5138504155124654
+     },
+     "teacher_path_v4": {
+      "pairs": 781,
+      "correct": 430,
+      "value_ties": 0,
+      "accuracy": 0.5505761843790012
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1147,
+      "correct": 661,
+      "value_ties": 0,
+      "accuracy": 0.5762859633827376
+     },
+     "v4_strict": {
+      "pairs": 1724,
+      "correct": 1028,
+      "value_ties": 0,
+      "accuracy": 0.5962877030162413
+     },
+     "v4_nonterminal": {
+      "pairs": 1088,
+      "correct": 602,
+      "value_ties": 0,
+      "accuracy": 0.5533088235294118
+     },
+     "teacher_path_v4": {
+      "pairs": 1147,
+      "correct": 661,
+      "value_ties": 0,
+      "accuracy": 0.5762859633827376
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 25,
+     "improving_plant_actions": 19,
+     "production_representable_improvers": 19,
+     "candidate_generation_omission": 18,
+     "halving_pruned": 1,
+     "outside_production_action_space": 6
+    },
+    "tick": {
+     "observed_improvers": 26,
+     "improving_plant_actions": 20,
+     "production_representable_improvers": 20,
+     "candidate_generation_omission": 19,
+     "halving_pruned": 1,
+     "outside_production_action_space": 6
+    }
+   },
+   "root_sha256": "399c21d2c12f217be727a5a780ffa579a020fc7b7da3aad6a5658b9f025faf81",
+   "search_trace_sha256": "9f2b8a46dabafd3778ce42984488d451d0126b7612ac0d3d81f19ec13f78c417"
   }
  ],
- "scope": "first two complete roots only; no complete-panel or general roof conclusion",
+ "scope": "first three complete roots only; not a complete-panel or general roof conclusion",
  "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
- "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed"
+ "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed",
+ "bootstrap_guard": "fewer than two informative level/reset-seed clusters => interval null, including duplicated roots from the same reset seed"
 }

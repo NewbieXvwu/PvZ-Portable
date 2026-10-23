@@ -10,6 +10,15 @@ def test_ranking_ties_are_half_credit_and_truth_ties_excluded():
     assert report.pair_counts([1,1.5],[0,1],gap=1)['pairs']==0
 
 
+def test_bootstrap_requires_two_informative_reset_seed_clusters():
+    def group(seed,correct,pairs):
+        return dict(cell=dict(level=44,seed=seed),pair_metrics=dict(wave=dict(v4=dict(correct=correct,pairs=pairs))))
+    a=group(1,1,1)
+    assert report.bootstrap_counts([a],'wave') is None
+    assert report.bootstrap_counts([a,a,group(2,0,0)],'wave') is None
+    assert report.bootstrap_counts([a,group(2,0,1)],'wave')==[0.,1.]
+
+
 def fixture(counts,values,best):
     wait=dict(type='wait',ticks=60,until='timeout');plant=dict(type='plant',packet=1,row=2,col=3)
     group=dict(cell=dict(id='fixture'),point=dict(decision=0),student_position=0,
