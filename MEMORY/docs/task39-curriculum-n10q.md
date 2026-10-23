@@ -66,5 +66,6 @@ SUPERSEDED = {'night_n10p': 'night_n10q'}
 
 - 第 1 步：`make_multiplier_tasks.py` 加 `SUPERSEDED = {'night_n10p': 'night_n10q'}`，FAMILIES 未改；修正种子段注释（档距 500k→700k 后种子平移，控制器按 task_id 偏移续采不会重复，`games.jsonl` 记录种子值本身）。
 - 第 2 步：`training_base_ids()` 跳过 `SUPERSEDED` 中的族；实测 37 个 base id，含 8 个 `_n10q`、0 个 `_n10p`。
+- 第 3 步：新增 `reconcile_cells(state, tasks, names, windows_from_runs)`：新增训练格、退役非训练格到 `retired_cells`、可恢复，`offsets` 不动；`make_state` 改为空状态 + reconcile；`main` 读入已有状态后调用并逐行 `log_line`（未给 `--init-glob` 时新格从空窗口起步）。
 
 ## 问题
