@@ -226,6 +226,11 @@
      }
     }
    }
+  },
+  "confirmation-complete": {
+   "roots": 12,
+   "labels": 384,
+   "corrections": 7
   }
  }
 }
