@@ -68,5 +68,6 @@ SUPERSEDED = {'night_n10p': 'night_n10q'}
 - 第 2 步：`training_base_ids()` 跳过 `SUPERSEDED` 中的族；实测 37 个 base id，含 8 个 `_n10q`、0 个 `_n10p`。
 - 第 3 步：新增 `reconcile_cells(state, tasks, names, windows_from_runs)`：新增训练格、退役非训练格到 `retired_cells`、可恢复，`offsets` 不动；`make_state` 改为空状态 + reconcile；`main` 读入已有状态后调用并逐行 `log_line`（未给 `--init-glob` 时新格从空窗口起步）。
 - 第 4 步：`python/test_curriculum_queue.py` 加 `ReconcileCellsTest` 五项（增删/原样保存/offsets 不变、幂等、撤销取代后恢复、make_state 等价、训练集合 8 个 n10q 且无 n10p）；`python3 -m unittest test_curriculum_queue test_multiplier_tasks test_keep_families` 26 项全过。
+- 主控补充：按指示 `git fetch origin` 后合并 `origin/pvz-env`（含 audit `b95d2cf7` 的 `pack_command` / `pack_labels`）；`python/test_curriculum_queue.py` 仅 import 行冲突，已合并两侧符号；合并后三模块 28 项测试全过。
 
 ## 问题
