@@ -43,7 +43,7 @@ from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, Va
                                   _episode_context, constant_plane)
 
 from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_paths, pack_options,
-                               pack_path, segment_options, segment_path)  # noqa: E402
+                               pack_path, segment_options, segment_path, training_rows)  # noqa: E402
 
 
 def _store_arrays(store) -> dict:
@@ -84,6 +84,16 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     aux_cached = {}
     packet_cached = {}
     scene_cached = {}
+    explicit_rows = {path: training_rows(path) for path in paths}
+
+    def selected_mask(path, mask):
+        selected = explicit_rows[path]
+        if selected is None:
+            return mask
+        if selected and selected[-1] >= len(mask):
+            raise ValueError(f'{path}: training_rows outside archive')
+        wanted = set(selected)
+        return [i in wanted for i in range(len(mask))]
     if cache_dir is not None and precompute_workers > 1:
         from concurrent.futures import ProcessPoolExecutor
         from functools import partial
@@ -108,13 +118,13 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             # Bit-packed: a python list of bools is 8 bytes a frame, and at wait_keep .1 there are ~3.5 frames
             # behind every kept row (task32).
-            keep[path] = np.packbits(mask)
+            keep[path] = np.packbits(selected_mask(path, mask))
             continue
         for line in frame_bytes(path).decode().splitlines():
             # The target is the last field: the DAgger label if there is one, else the executed action.
             tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
             mask.append('"type":"plant"' in tail or '"targets":' in line or rng.random() < wait_keep)
-        keep[path] = np.packbits(mask)
+        keep[path] = np.packbits(selected_mask(path, mask))
     capacity = sum(int(np.unpackbits(packed).sum()) for packed in keep.values())
     boards = scalars = None
     # Per-row labels go straight into preallocated arrays: as Python lists (8 floats a row for `values`) they cost
@@ -134,6 +144,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     for archive_index, path in enumerate(paths):
         seed = int(path.parent.parent.name.split("_")[-1])
         scale = (label_weight or {}).get(path.parent.name, 1.0)
+        retention = wait_keep if explicit_rows[path] is None else 1.0
         if path in cached:
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = np.unpackbits(keep[path])[:len(stored["hints"])].astype(bool)
@@ -194,7 +205,9 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                     with np.load(aux_cached[path], allow_pickle=False) as side:
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         auxiliary[n:n + count] = side["aux"][selected]
-                weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
+                if explicit_rows[path] is not None and count != len(explicit_rows[path]):
+                    raise ValueError(f'{path}: requested training_rows lack valid labels')
+                weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / retention) * scale
                 seed_of.extend([seed] * count)
                 source_archive[n:n + count] = archive_index
                 source_row[n:n + count] = stored["rows"][selected]
@@ -233,7 +246,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
             source_row[n - 1] = i
             is_plant = action["type"] == "plant"
             plant[n - 1] = float(is_plant)
-            weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep)
+            weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / retention)
             packet[n - 1] = action["packet"] if is_plant else -1
             if packets is not None and is_plant and packets.columns[0][n - 1, packet[n - 1]] < 0:
                 raise ValueError(f'identity labelled plant has an empty packet slot: {path}, row {i}')
@@ -243,6 +256,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 auxiliary[n - 1] = future_damage[i - 1]
             if cells:
                 cands.append(candidate_cells(frames[i].get("targets")))
+        if explicit_rows[path] is not None and len(archive_boards) != len(explicit_rows[path]):
+            raise ValueError(f'{path}: requested training_rows lack valid labels')
         if archive_boards:
             stacked = np.stack(archive_boards)
             plane, covered = constant_plane(stacked)
