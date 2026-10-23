@@ -317,7 +317,7 @@ def main():
     p.add_argument('--pressure-tasks', default='', help='optional comma-separated smoke subset')
     p.add_argument('--manifest', type=Path, default=ROOT/'artifacts/task23/unified_manifest.json')
     p.add_argument('--rollout-policy', type=Path)
-    p.add_argument('--value', type=Path, default=MAIN/'artifacts/value_net/v3/model.pt')
+    p.add_argument('--value', type=Path, default=MAIN/'artifacts/value_net/v4/model.pt')
     p.add_argument('--executable', type=Path, default=ROOT/'build/pvz-portable')
     p.add_argument('--resource-dir', type=Path, default=Path('/home/newbiexvwu/.cache/pvz-research-resources'))
     p.add_argument('--out', type=Path, default=ROOT/'artifacts/task23/panel')
