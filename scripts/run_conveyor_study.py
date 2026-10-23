@@ -12,6 +12,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 import dagger_experiment_runner as guard
 from run_identity_validation import descendants, trainers
+from pvz_recipe import materialize_recipe
 
 OUT = ROOT / 'artifacts/task20'
 MAIN = Path.home() / 'PvZ-search'
@@ -49,15 +50,13 @@ def prepare():
     write(manifest, dict(schema_version=1, tasks=tasks))
     inherited = read(ROOT/'MEMORY/docs/task19-validation-amended-plan.json')
     labels = inherited['labels'] + ['d10orig1_fast_search','d10orig2_fast_search']
-    command = list(inherited['command'])
-    replacements = {'--data': str(OUT/'frames_v2'), '--labels': ','.join(labels),
-        '--out': str(OUT/'identity_dagger_s1'), '--cache-dir': str(OUT/'cache'),
-        '--read-cache-dir': str(MAIN/'artifacts/student/v2_cache')}
-    for flag, value in replacements.items():
-        command[command.index(flag)+1]=value
-    assert '--init' not in command and '--max-steps' not in command
+    recipe = materialize_recipe(ROOT/'recipes/identity_dw3_s1.json', OUT/'training.recipe.json',
+                                data=OUT/'frames_v2', labels=labels, out=OUT/'identity_dagger_s1',
+                                cache_dir=OUT/'cache')
+    command = [guard.PYTHON, str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', str(recipe)]
     names = ['scripts/run_conveyor_study.py','scripts/dagger_experiment_runner.py',
         'scripts/run_identity_validation.py','scripts/train_rollout_policy.py',
+        'python/pvz_recipe.py','recipes/identity_dw3_s1.json',
         'python/pvz_rollout_policy.py','python/pvz_frame_store.py','python/pvz_student_observation.py',
         'python/pvz_value_net.py','python/pvz_env.py','python/pvz_event_env.py',
         'scripts/search_play.py','scripts/render_episode.py','scripts/episode_query.py',
@@ -74,7 +73,7 @@ def prepare():
         baseline_seeds=list(range(30000,30256)), teacher_seeds=list(range(30000,30064)),
         collection_seeds=[list(range(1880000,1880128)),list(range(1880128,1880256))],
         collection_labels=['d10orig1','d10orig2'], training_seed=1, labels=labels,
-        training_command=command, evaluation_tasks=['day_l10_orig_eval']+[f'day_l{l}_eval_d7' for l in (7,8,9)],
+        training_command=command, recipe_sha256=sha(recipe), evaluation_tasks=['day_l10_orig_eval']+[f'day_l{l}_eval_d7' for l in (7,8,9)],
         teacher_baseline_beta=1, collection_beta=0,
         teacher_parameters=dict(samples=3,halving=True,verify_samples=9,student_candidates=2,
             candidate_generator='static',per_card=1,horizon=2500,margin=.02,min_gap=300,rollout_sim_skip=61),
@@ -84,6 +83,8 @@ def prepare():
 
 
 def verify(plan):
+    if 'recipe_sha256' in plan:
+        assert sha(OUT/'training.recipe.json') == plan['recipe_sha256']
     assert sha(plan['manifest'])==plan['manifest_sha256']
     assert sha(ROOT/'build/pvz-portable')==plan['executable_sha256']
     for name,digest in plan['sources'].items():

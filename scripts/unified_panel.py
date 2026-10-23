@@ -14,6 +14,7 @@ sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from run_identity_validation import descendants
 import dagger_experiment_runner as guard
 from pvz_metrics import Metrics
+from pvz_recipe import panel_args, write_recipe
 
 
 def read(path):
@@ -121,7 +122,7 @@ def evaluate(args):
             args.metrics.update(games=sum(r["games"] for r in rows), tasks=len(rows))
         print(f"{name}: {row['won']}/{row['games']}", flush=True)
     groups = {}
-    for group in ('day', 'heldout', 'night'):
+    for group in ('day', 'heldout', 'night', 'pool'):
         part = [r for r in rows if r['group'] == group]
         if part:
             groups[group] = dict(tasks=len(part), games=sum(r['games'] for r in part), won=sum(r['won'] for r in part),
@@ -268,38 +269,8 @@ def evaluate_pressure(args):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--generate', action='store_true')
-    p.add_argument('--day-manifest', type=Path, default=MAIN/'artifacts/stage4/day_panel.json')
-    p.add_argument('--perturb-manifest', type=Path, default=MAIN/'.claude/worktrees/identity/artifacts/stage4/day_panel_identity.json')
-    p.add_argument('--night-manifest', type=Path, default=MAIN/'artifacts/stage4/night_panel.json')
-    p.add_argument('--day-orig-manifest', type=Path,
-                   default=MAIN/'.claude/worktrees/conveyor/artifacts/stage4/day_panel.json')
-    p.add_argument('--pool-manifest', type=Path, default=MAIN/'artifacts/stage4/pool_panel.json')
-    p.add_argument('--generate-pressure', action='store_true')
-    p.add_argument('--pressure', action='store_true', help='run the v3 pressure panel')
-    p.add_argument('--pressure-manifest', type=Path, default=ROOT/'artifacts/task29/pressure_manifest.json')
-    p.add_argument('--pressure-seeds', type=int, default=64)
-    p.add_argument('--pressure-tasks', default='', help='optional comma-separated smoke subset')
-    p.add_argument('--manifest', type=Path, default=ROOT/'artifacts/task23/unified_manifest.json')
-    p.add_argument('--rollout-policy', type=Path)
-    p.add_argument('--value', type=Path, default=MAIN/'artifacts/value_net/v3/model.pt')
-    p.add_argument('--executable', type=Path, default=ROOT/'build/pvz-portable')
-    p.add_argument('--resource-dir', type=Path, default=Path('/home/newbiexvwu/.cache/pvz-research-resources'))
-    p.add_argument('--out', type=Path, default=ROOT/'artifacts/task23/panel')
-    p.add_argument('--day-seeds', type=int, default=128)
-    p.add_argument('--heldout-seeds', type=int, default=64)
-    p.add_argument('--night-seeds', type=int, default=128)
-    p.add_argument('--task-seeds', action='append', default=[], metavar='TASK=N',
-                   help='override any individual task budget; repeat for multiple tasks')
-    p.add_argument('--workers', type=int, default=4)
-    p.add_argument('--tasks', default='', help='optional comma-separated smoke subset; marks output incomplete')
-    args = p.parse_args()
-    if not 1 <= args.workers <= 4: p.error('--workers must be 1..4')
-    for name in ('manifest', 'rollout_policy', 'value', 'executable', 'resource_dir', 'out',
-                 'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
-                 'pool_manifest', 'pressure_manifest'):
-        value = getattr(args, name)
-        if value is not None and not value.is_absolute(): p.error('all paths must be absolute: '+name)
+    args = panel_args(p)
+    write_recipe(args.out/'recipe.resolved.json', args.resolved_recipe)
     if args.generate:
         write(args.manifest, generate(read(args.day_manifest), read(args.perturb_manifest), read(args.night_manifest)))
         print(f'wrote {args.manifest}: 29 tasks')
@@ -314,25 +285,19 @@ def main():
             return
     if args.pressure:
         if not args.rollout_policy:
-            p.error('--pressure needs --rollout-policy')
+            p.error('pressure recipe needs rollout_policy')
         evaluate_pressure(args)
         return
     if args.rollout_policy:
         tasks = {task['task_id']:task for task in read(args.manifest)['tasks']}
         selected = set(args.tasks.split(',')) if args.tasks else set(tasks)
-        args.task_seed_overrides = {}
-        for item in args.task_seeds:
-            try:
-                name, value = item.rsplit('=',1); count = int(value)
-            except ValueError:
-                p.error('--task-seeds requires TASK=N')
-            if name not in tasks or name not in selected or name in args.task_seed_overrides:
-                p.error('--task-seeds task must be selected and specified once: '+name)
-            if not 1 <= count <= len(tasks[name]['seeds']):
-                p.error('--task-seeds exceeds the task seed range: '+name)
-            args.task_seed_overrides[name] = count
+        for name, count in args.task_seed_overrides.items():
+            if name not in tasks or name not in selected:
+                p.error('task_seed_overrides task must be selected: '+name)
+            if count > len(tasks[name]['seeds']):
+                p.error('task_seed_overrides exceeds task seed range: '+name)
         evaluate(args)
-    elif not args.generate: p.error('pass --generate or --rollout-policy')
+    elif not args.generate: p.error('recipe must generate a manifest or specify rollout_policy')
 
 
 if __name__ == '__main__':

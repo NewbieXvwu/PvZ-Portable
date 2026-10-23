@@ -19,6 +19,7 @@ import dagger_experiment_runner as guard
 from run_identity_validation import descendants, trainers
 from import_dw4_transfer import hf_environment, sha
 from unified_panel import read, write
+from pvz_recipe import materialize_recipe
 
 guard.OUT = OUT
 guard.descendants = descendants
@@ -132,6 +133,7 @@ def freeze():
     models=dict(identity=str(MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'),v34=str(MAIN/'artifacts/student/v34/model.pt'))
     sources=['scripts/run_dw4_study.py','scripts/report_dw4_study.py','scripts/import_dw4_transfer.py',
              'scripts/unified_panel.py','scripts/train_rollout_policy.py',
+             'python/pvz_recipe.py','recipes/dw4i.json','recipes/panel_v1.json',
              'scripts/dagger_experiment_runner.py','scripts/run_identity_validation.py',
              'python/pvz_rollout_policy.py','python/pvz_frame_store.py','python/pvz_student_observation.py',
              'python/pvz_value_net.py','python/pvz_training_rows.py','scripts/search_play.py',
@@ -140,16 +142,15 @@ def freeze():
              'src/EnvironmentRollout.h','src/LawnApp.cpp','src/LawnApp.h','src/main.cpp']
     commands=[]
     for seed in (1,2):
-        command=list(old['command']);command[1]=str(ROOT/'scripts/train_rollout_policy.py')
-        changes={'--data':str(mirror),'--labels':','.join(labels),'--out':str(OUT/f'dw4i_s{seed}'),
-                 '--cache-dir':str(OUT/'cache'),'--read-cache-dir':str(MAIN/'artifacts/student/v2_cache'),'--seed':str(seed)}
-        for flag,value in changes.items():command[command.index(flag)+1]=value
-        command+=['--source-row-report',str(OUT/f'dw4i_s{seed}/source_rows.json')]
-        assert '--init' not in command and '--max-steps' not in command
+        recipe = materialize_recipe(ROOT/'recipes/dw4i.json', OUT/f'training_s{seed}.recipe.json',
+                                    data=mirror, labels=labels, out=OUT/f'dw4i_s{seed}',
+                                    cache_dir=OUT/'cache', seed=seed)
+        command = [guard.PYTHON, str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', str(recipe)]
         commands.append(command)
     plan=dict(frozen_at=datetime.now(ZoneInfo('Asia/Shanghai')).isoformat(),q101_completed_labels=gate_labels,
               inventory_sha256=sha(OUT/'dataset_inventory.json'),archives=len(inventory),labels=labels,archive_counts=dict(counts),
               groups={label:source_group(label,base) for label in labels},training_commands=commands,
+              recipe_sha256={command[-1]:sha(command[-1]) for command in commands},
               sources={name:sha(ROOT/name) for name in sources},executable_sha256=sha(ROOT/'build/pvz-portable'),
               manifest_sha256=sha(OUT/'unified_manifest.json'),reference_models=models,reference_sha256={k:sha(Path(v)) for k,v in models.items()},
               mac_import=read(OUT/'mac_import.json'),missing_queue100=[f'd{l}dag{r}' for l in (7,8,9,10) for r in range(21,29) if not counts[f'd{l}dag{r}_fast_search']],
@@ -168,6 +169,8 @@ def freeze():
 
 
 def verify(plan, data=False):
+    for path, digest in plan.get('recipe_sha256', {}).items():
+        assert sha(path) == digest, path
     assert sha(OUT/'unified_manifest.json')==plan['manifest_sha256']
     assert sha(ROOT/'build/pvz-portable')==plan['executable_sha256']
     for name,digest in plan['sources'].items():assert sha(ROOT/name)==digest,name
@@ -237,7 +240,7 @@ def evaluate(plan,seed):
     marker=OUT/f'panel_s{seed}_complete.json'
     if marker.exists():
         assert read(marker)['panel_sha256']==sha(OUT/f'panel_dw4i_s{seed}/panel.json');return
-    command=[guard.PYTHON,str(ROOT/'scripts/unified_panel.py'),'--rollout-policy',str(OUT/f'dw4i_s{seed}/model.pt'),
+    command=[guard.PYTHON,str(ROOT/'scripts/unified_panel.py'),'--recipe',str(ROOT/'recipes/panel_v1.json'),'--rollout-policy',str(OUT/f'dw4i_s{seed}/model.pt'),
              '--out',str(OUT/f'panel_dw4i_s{seed}')]
     with (OUT/f'panel_dw4i_s{seed}.txt').open('a') as log:
         subprocess.run(command,cwd=ROOT,env=guard.ENV,stdout=log,stderr=subprocess.STDOUT,check=True)

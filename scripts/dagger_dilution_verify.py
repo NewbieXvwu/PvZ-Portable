@@ -45,9 +45,13 @@ def verify_model(job, plan, plan_sha):
     record = read(out / 'experiment_complete.json')
     assert record['name'] == job['name'] and record['seed'] == job['seed']
     assert record['cohort'] == job['cohort'] and record['run_plan_sha256'] == plan_sha
-    expected_command = [str(ROOT / 'scripts/train_rollout_policy.py'), *plan['common_args'],
-                        '--labels', ','.join(plan['cohorts'][job['cohort']]['labels']),
-                        '--seed', str(job['seed']), '--out', str(out), *job['extra_args']]
+    if 'recipe' in job:
+        expected_command = [str(ROOT/'scripts/train_rollout_policy.py'), '--recipe', job['recipe']]
+    else:
+        # Historical result validation only: these arguments are never launched.
+        expected_command = [str(ROOT / 'scripts/train_rollout_policy.py'), *plan['common_args'],
+                            '--labels', ','.join(plan['cohorts'][job['cohort']]['labels']),
+                            '--seed', str(job['seed']), '--out', str(out), *job['extra_args']]
     assert record['command'] == expected_command
     digest = sha(out / 'model.pt')
     assert digest == record['model_sha256']

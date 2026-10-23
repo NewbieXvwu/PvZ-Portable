@@ -209,3 +209,41 @@ def training_args(parser, argv=None):
     args.resolved_recipe = resolved
     args.recipe_sha256 = hashlib.sha256(cli.recipe.read_bytes()).hexdigest()
     return args
+
+
+def materialize_recipe(base, path, **updates):
+    """Freeze a study's corpus/output variant as a reviewable recipe before launch."""
+    document = load_recipe(base)
+    document.update({key: str(value) if isinstance(value, Path) else value for key, value in updates.items()})
+    document = validate(document)
+    path = Path(path)
+    if path.exists():
+        if load_recipe(path) != document:
+            raise ValueError(f'cannot overwrite a different frozen recipe: {path}')
+    else:
+        write_recipe(path, document)
+    return path
+
+
+def panel_args(parser, argv=None):
+    parser.add_argument('--recipe', type=Path, required=True)
+    for name in ('out', 'rollout-policy', 'executable', 'resource-dir'):
+        parser.add_argument('--' + name, type=Path)
+    parser.add_argument('--workers', type=int)
+    cli = parser.parse_args(argv)
+    try:
+        resolved = load_recipe(cli.recipe, 'panel')
+        for name in ('out', 'rollout_policy', 'executable', 'resource_dir', 'workers'):
+            value = getattr(cli, name)
+            if value is not None:
+                resolved[name] = str(value) if isinstance(value, Path) else value
+        resolved = validate(resolved, 'panel')
+    except (OSError, ValueError) as error:
+        parser.error(str(error))
+    args = argparse.Namespace(**resolved)
+    for name in PATH_FIELDS:
+        if getattr(args, name, None) is not None:
+            setattr(args, name, Path(getattr(args, name)))
+    args.rollout_policy = getattr(args, 'rollout_policy', None)
+    args.resolved_recipe = resolved
+    return args

@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from pvz_recipe import load_recipe, training_args, validate, write_recipe
+from pvz_recipe import load_recipe, training_args, panel_args, materialize_recipe, validate, write_recipe
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -41,6 +41,20 @@ class RecipeTests(unittest.TestCase):
             path.write_text('{"schema_version":1,"schema_version":1}')
             with self.assertRaisesRegex(ValueError, 'duplicate'):
                 load_recipe(path)
+
+    def test_freeze_variants_and_panel_settings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder)/'panel.json'
+            materialize_recipe(ROOT/'recipes/panel_v2.json', path, tasks='day_l7_eval_d7',
+                               task_seed_overrides={'day_l7_eval_d7': 1})
+            args = panel_args(argparse.ArgumentParser(), ['--recipe', str(path), '--workers', '1'])
+            self.assertEqual(args.workers, 1)
+            self.assertEqual(args.pool_seeds, 64)
+            self.assertEqual(args.task_seed_overrides, {'day_l7_eval_d7':1})
+            with self.assertRaisesRegex(ValueError, 'frozen recipe'):
+                materialize_recipe(ROOT/'recipes/panel_v2.json',path,tasks='different')
+            with self.assertRaises(ValueError):
+                validate({**args.resolved_recipe,'day_seed':1})
 
     def test_historical_recipes_resolve_all_training_settings(self):
         for name, labels in [('dw4i',170),('dw5i',281),('identity_dw3_s1',82)]:
