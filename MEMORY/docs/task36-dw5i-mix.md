@@ -98,6 +98,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，32 停掉 B 并把门禁提到 13.5 GiB：B 跑到 **epoch 7/12** 时，外部负载（zones task50、roof、cq search_play、qcbench/qcpipe、CodeBuddy 会话等十余个进程）把它反复压低——整段运行 71.7 min 中有 **33.5 min** `MemAvailable` <10 GiB，最低 **8,014,824 KiB（7.64 GiB）**；暂停态仍持 ~2.3 GiB 匿名内存，继续等会长期占用课程采集要的内存。按第 31 条约定停掉流水线 221689 与训练器 222044（T 态，先 SIGCONT 再 SIGTERM），空闲回到 **11.24 GiB**。训练器只在结束时写 `model.pt`，所以 7 个 epoch 作废、B 必须重跑（`dw5i_B_s1/` 只有 `source_rows.json`，无半成品模型）。启动器重写并重新 armed（pid 237594）：空闲连续 4 次 **≥13.5 GiB**（实测 B 抽取约 2.5 GiB，12.5 GiB 门禁下首发仍跌到 9.14 GiB）、C: ≥15 GiB、且没有 B 流水线在跑，才启动 `run_task36_mix.py --plan B --workers 2`。
 
+- 2026-10-24，33 B 训练完成：门禁 06:50:53 在空闲 **14,319,976 KiB（13.66 GiB）** 触发，pid 263852 重跑；12 epoch、3471 s、rc=0，peak RSS 11.08 GB（映射为主），**最低 MemAvailable 10,219,184 KiB（9.75 GiB）**、仅暂停 139 个采样（约 2.3 分钟），比第 32 条的中止那次好得多。末轮 train_loss 2.9404、val_loss 3.7844、type_acc 0.9171、plant_recall 0.7267、packet_acc 0.7394、cell_acc 0.4439（与 A 的 2.9307/3.7911/0.9158/0.7247/0.7387/0.4425 几乎同水平）。模型 `artifacts/task36/dw5i_B_s1/model.pt`（705,774 B，SHA256 **e77bf75d…**），行权重 SHA 9d21a270…、行身份 c61042a2… 与 A 同。panel v2 已自动接续（2 游戏进程）。
+
 
 
 ## 问题
