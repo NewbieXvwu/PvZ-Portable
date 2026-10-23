@@ -127,8 +127,351 @@
   },
   "pending": [
     "fresh matched teacher/student diagnostic",
-    "same-state logits and probability",
-    "v2 pack and training-batch trace with L14 control",
-    "Python/native parity and final diagnosis"
-  ]
+    "live legal-mask probability and Python/native parity",
+    "final root-cause classification and required-data proposal"
+  ],
+  "packing": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/packing.json",
+    "sha256": "e239f3855827c68906f7e04cd9a9609bc15ec82c63d97166edda2b7ff4441ce6",
+    "status": "complete-for-selected-corpus",
+    "index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/artifacts/task56/pack_view/packs/cfe7f66e3f2141ec.npz",
+    "index_sha256": "e91819d652a8106c2a4c5379d577326fdd36cd7d0e0d92f97822e2f66cd47a4b",
+    "pack_version": 2,
+    "archives": 36,
+    "rows": 4428,
+    "labels": {
+      "n14t1_fast_search": {
+        "raw_positive": 1135,
+        "packed_rows": 2060,
+        "packed_positive": 1135,
+        "weight_sum": 6587.0,
+        "positive_weight_sum": 1135.0
+      },
+      "n20o1_fast_search": {
+        "raw_positive": 575,
+        "packed_rows": 2368,
+        "packed_positive": 575,
+        "weight_sum": 8848.0,
+        "positive_weight_sum": 575.0
+      }
+    },
+    "original_model_L20_share": 0,
+    "prospective_model_L20_share": "explicitly added to this audit view; no optimisation or model change",
+    "checks": "all retained inputs, packet identity/slot, cell and base row weight exactly match archive; all positive labels retained",
+    "probability_scope": "training-head softmax: packets include nonempty inactive slots; cells all54. Legal-mask inference separately checked live; not calibrated action probabilities.",
+    "models": {
+      "dw4i": {
+        "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+        "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+        "labels": {
+          "n20o1_fast_search": {
+            "teacher_plant_rows": 575,
+            "student_gate_calls_plant": 0,
+            "plant_logit": {
+              "n": 575,
+              "min": -6.123766899108887,
+              "median": -2.9458255767822266,
+              "max": -0.11665964871644974
+            },
+            "plant_probability": {
+              "n": 575,
+              "min": 0.0021854036021977663,
+              "median": 0.049934178590774536,
+              "max": 0.47086814045906067
+            },
+            "teacher_packet_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 4.0,
+              "max": 10.0
+            },
+            "teacher_cell_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 11.0,
+              "max": 44.0
+            },
+            "teacher_packet_probability": {
+              "n": 575,
+              "min": 0.012271027080714703,
+              "median": 0.08856360614299774,
+              "max": 1.0
+            },
+            "joint_probability": {
+              "n": 575,
+              "min": 4.0813832455502227e-07,
+              "median": 8.685131513825764e-05,
+              "max": 0.05244323856166371
+            },
+            "per_kind": {
+              "8": {
+                "rows": 93,
+                "calls_plant": 0
+              },
+              "10": {
+                "rows": 18,
+                "calls_plant": 0
+              },
+              "11": {
+                "rows": 1,
+                "calls_plant": 0
+              },
+              "12": {
+                "rows": 8,
+                "calls_plant": 0
+              },
+              "13": {
+                "rows": 27,
+                "calls_plant": 0
+              },
+              "14": {
+                "rows": 113,
+                "calls_plant": 0
+              },
+              "15": {
+                "rows": 315,
+                "calls_plant": 0
+              }
+            }
+          },
+          "n14t1_fast_search": {
+            "teacher_plant_rows": 1135,
+            "student_gate_calls_plant": 983,
+            "plant_logit": {
+              "n": 1135,
+              "min": -10.255782127380371,
+              "median": 1.685536503791809,
+              "max": 7.47473669052124
+            },
+            "plant_probability": {
+              "n": 1135,
+              "min": 3.515241405693814e-05,
+              "median": 0.8436362743377686,
+              "max": 0.9994331002235413
+            },
+            "teacher_packet_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 1.0,
+              "max": 6.0
+            },
+            "teacher_cell_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 1.0,
+              "max": 22.0
+            },
+            "teacher_packet_probability": {
+              "n": 1135,
+              "min": 0.010721661150455475,
+              "median": 0.5077154636383057,
+              "max": 0.9999798536300659
+            },
+            "joint_probability": {
+              "n": 1135,
+              "min": 2.2386455749937005e-06,
+              "median": 0.04841983727770645,
+              "max": 0.5805456421869447
+            },
+            "per_kind": {
+              "0": {
+                "rows": 91,
+                "calls_plant": 69
+              },
+              "1": {
+                "rows": 225,
+                "calls_plant": 201
+              },
+              "2": {
+                "rows": 22,
+                "calls_plant": 22
+              },
+              "3": {
+                "rows": 84,
+                "calls_plant": 80
+              },
+              "4": {
+                "rows": 89,
+                "calls_plant": 88
+              },
+              "5": {
+                "rows": 23,
+                "calls_plant": 23
+              },
+              "8": {
+                "rows": 277,
+                "calls_plant": 224
+              },
+              "9": {
+                "rows": 276,
+                "calls_plant": 237
+              },
+              "11": {
+                "rows": 48,
+                "calls_plant": 39
+              }
+            }
+          }
+        },
+        "batches": 69,
+        "all_supervised_losses_finite": true
+      },
+      "A": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/model.pt",
+        "sha256": "32724b8e2bb12b7966d899a03f1e3bfac6eb695c33b15ad6d10678ec659df7e7",
+        "labels": {
+          "n20o1_fast_search": {
+            "teacher_plant_rows": 575,
+            "student_gate_calls_plant": 10,
+            "plant_logit": {
+              "n": 575,
+              "min": -7.04206657409668,
+              "median": -2.888259172439575,
+              "max": 0.4668968617916107
+            },
+            "plant_probability": {
+              "n": 575,
+              "min": 0.0008735540905036032,
+              "median": 0.05273701623082161,
+              "max": 0.6146489977836609
+            },
+            "teacher_packet_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 6.0,
+              "max": 10.0
+            },
+            "teacher_cell_rank": {
+              "n": 575,
+              "min": 1.0,
+              "median": 10.0,
+              "max": 45.0
+            },
+            "teacher_packet_probability": {
+              "n": 575,
+              "min": 0.0011421652743592858,
+              "median": 0.013499471358954906,
+              "max": 1.0
+            },
+            "joint_probability": {
+              "n": 575,
+              "min": 1.2012340027601668e-08,
+              "median": 1.544735304703224e-05,
+              "max": 0.05408587953970746
+            },
+            "per_kind": {
+              "8": {
+                "rows": 93,
+                "calls_plant": 0
+              },
+              "10": {
+                "rows": 18,
+                "calls_plant": 0
+              },
+              "11": {
+                "rows": 1,
+                "calls_plant": 0
+              },
+              "12": {
+                "rows": 8,
+                "calls_plant": 0
+              },
+              "13": {
+                "rows": 27,
+                "calls_plant": 2
+              },
+              "14": {
+                "rows": 113,
+                "calls_plant": 0
+              },
+              "15": {
+                "rows": 315,
+                "calls_plant": 8
+              }
+            }
+          },
+          "n14t1_fast_search": {
+            "teacher_plant_rows": 1135,
+            "student_gate_calls_plant": 958,
+            "plant_logit": {
+              "n": 1135,
+              "min": -4.879153728485107,
+              "median": 2.927011728286743,
+              "max": 8.308405876159668
+            },
+            "plant_probability": {
+              "n": 1135,
+              "min": 0.0075460695661604404,
+              "median": 0.9491657018661499,
+              "max": 0.9997536540031433
+            },
+            "teacher_packet_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 1.0,
+              "max": 5.0
+            },
+            "teacher_cell_rank": {
+              "n": 1135,
+              "min": 1.0,
+              "median": 2.0,
+              "max": 24.0
+            },
+            "teacher_packet_probability": {
+              "n": 1135,
+              "min": 0.005704105831682682,
+              "median": 0.7893797159194946,
+              "max": 0.9999896287918091
+            },
+            "joint_probability": {
+              "n": 1135,
+              "min": 3.269653841618192e-05,
+              "median": 0.07036696030754701,
+              "max": 0.801743194729851
+            },
+            "per_kind": {
+              "0": {
+                "rows": 91,
+                "calls_plant": 70
+              },
+              "1": {
+                "rows": 225,
+                "calls_plant": 197
+              },
+              "2": {
+                "rows": 22,
+                "calls_plant": 22
+              },
+              "3": {
+                "rows": 84,
+                "calls_plant": 78
+              },
+              "4": {
+                "rows": 89,
+                "calls_plant": 79
+              },
+              "5": {
+                "rows": 23,
+                "calls_plant": 23
+              },
+              "8": {
+                "rows": 277,
+                "calls_plant": 211
+              },
+              "9": {
+                "rows": 276,
+                "calls_plant": 235
+              },
+              "11": {
+                "rows": 48,
+                "calls_plant": 43
+              }
+            }
+          }
+        },
+        "batches": 69,
+        "all_supervised_losses_finite": true
+      }
+    }
+  }
 }

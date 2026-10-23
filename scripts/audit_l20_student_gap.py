@@ -85,7 +85,113 @@ def inventory():
                           qc_new_groups=len(groups),training=answer['actual_training']),ensure_ascii=False))
 
 
+def packing():
+    import numpy as np
+    import torch
+    from pack_training_rows import pack
+    from pvz_frame_store import frame_path,read_frames
+    from pvz_training_pack import pack_options,archive_fingerprint
+    from pvz_rollout_policy import packet_features,identity_scalars,load_student
+    from pvz_student_observation import StudentHistory
+    from train_rollout_policy import load
+    torch.set_num_threads(1)
+    original=read(OUT/'inventory.json')
+    archives=[Path(x['archive']) for x in original['n20o1']]
+    controls=sorted((MAIN/'artifacts/student/frames_v2').glob('*/n14t1_fast_search/meta.json'))[:4]
+    archives += [frame_path(p.parent) for p in controls]
+    assert len(archives)==36
+    view=OUT/'pack_view';labels=set()
+    for path in archives:
+        target=view/path.parent.parent.name/path.parent.name
+        target.parent.mkdir(parents=True,exist_ok=True)
+        if target.is_symlink():assert target.resolve()==path.parent.resolve()
+        else:target.symlink_to(path.parent.resolve(),target_is_directory=True)
+        labels.add(path.parent.name)
+    opts=pack_options(labels,.1,'v2',True,0,'identity',False,sources=archive_fingerprint(view,labels))
+    index=pack(view,opts,OUT/'cache',1)
+    keys=[]
+    def observer(path,rows):keys.extend((path,int(row)) for row in rows)
+    loaded=load(view,labels,.1,obs='v2',cells=True,packet_head='identity',row_observer=observer)
+    boards,scalars,plant,packet,cell,weight,seeds,values,candidates,packets=loaded
+    assert len(keys)==len(plant)
+    source_index={}
+    for j,(path,i) in enumerate(keys):source_index.setdefault(path,[]).append((j,i))
+    label_stats={};positive_types={};rows_checked=0
+    for path,entries in source_index.items():
+        fs=read_frames(path);history=StudentHistory('v2');positions={i:j for j,i in entries}
+        label=path.parent.name;stat=label_stats.setdefault(label,Counter())
+        raw_positive=sum((f.get('label') or f.get('action') or {}).get('type')=='plant' and not f.get('action_rejected') for f in fs[1:])
+        stat['raw_positive']+=raw_positive
+        for i in range(1,len(fs)):
+            b,s=history.features(fs[i-1],fs[i-2] if i>=2 else None)
+            if i not in positions:continue
+            j=positions[i];idx=torch.tensor([j]);a=fs[i].get('label') or fs[i].get('action')
+            s=identity_scalars(fs[i-1],s)
+            np.testing.assert_array_equal(boards.batch(idx,'cpu')[0].numpy(),b.numpy().astype(np.float16).astype(np.float32))
+            np.testing.assert_array_equal(scalars.batch(idx,'cpu')[0].numpy(),s.numpy())
+            np.testing.assert_array_equal(packets[idx][0].numpy(),packet_features(fs[i-1]).numpy())
+            is_plant=a['type']=='plant';assert bool(plant[j])==is_plant
+            assert int(packet[j])==(a['packet'] if is_plant else -1)
+            assert int(cell[j])==(a['row']*9+a['col'] if is_plant else -1)
+            expected_weight=1 if is_plant or fs[i].get('targets') else 10
+            assert float(weight[j])==expected_weight
+            if is_plant:
+                positive_types[j]=fs[i-1]['packets'][a['packet']][1]
+                assert int(packets.columns[0][j,a['packet']])==positive_types[j]>=0
+            stat['packed_rows']+=1;stat['packed_positive']+=is_plant
+            stat['weight_sum']+=float(weight[j]);stat['positive_weight_sum']+=float(weight[j]) if is_plant else 0
+            rows_checked+=1
+    assert label_stats['n20o1_fast_search']['packed_positive']==575
+    assert all(s['raw_positive']==s['packed_positive'] for s in label_stats.values())
+    def distribution(items):
+        return dict(n=len(items),min=float(min(items)),median=float(np.median(items)),max=float(max(items)))
+    model_stats={}
+    for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/model.pt')]:
+        net=load_student(path);assert net.obs=='v2' and net.packet_head=='identity' and not net.context
+        details=[];losses=[]
+        with torch.inference_mode():
+            for start in range(0,len(plant),64):
+                idx=torch.arange(start,min(start+64,len(plant)));info=packets[idx]
+                b=boards.batch(idx,'cpu');s=scalars.batch(idx,'cpu');pk=packet[idx].long().clamp(min=0)
+                outputs=net(b,s,pk,packet_info=info)
+                mask=plant[idx].bool()
+                if mask.any():
+                    loss=torch.nn.functional.cross_entropy(outputs['packet'][mask],packet[idx][mask].long())+torch.nn.functional.cross_entropy(outputs['cell'][mask],cell[idx][mask].long())
+                    assert torch.isfinite(loss);losses.append(float(loss))
+                for k,j in enumerate(idx.tolist()):
+                    if not plant[j]:continue
+                    p=int(packet[j]);c=int(cell[j]);pl=float(outputs['plant'][k]);pk_logits=outputs['packet'][k];cl_logits=outputs['cell'][k]
+                    ppk=float(torch.softmax(pk_logits,0)[p]);pcl=float(torch.softmax(cl_logits,0)[c]);pplant=float(torch.sigmoid(outputs['plant'][k]))
+                    details.append(dict(row=j,archive=str(keys[j][0]),source_row=keys[j][1],label=keys[j][0].parent.name,
+                                        kind=positive_types[j],plant_logit=pl,plant_probability=pplant,
+                                        teacher_packet_rank=int((pk_logits>pk_logits[p]).sum())+1,
+                                        teacher_packet_probability=ppk,teacher_cell_rank=int((cl_logits>cl_logits[c]).sum())+1,
+                                        teacher_cell_probability=pcl,joint_training_head_probability=pplant*ppk*pcl))
+        summary={}
+        for label in labels:
+            rs=[x for x in details if x['label']==label]
+            summary[label]=dict(teacher_plant_rows=len(rs),student_gate_calls_plant=sum(x['plant_logit']>0 for x in rs),
+                               plant_logit=distribution([x['plant_logit'] for x in rs]),
+                               plant_probability=distribution([x['plant_probability'] for x in rs]),
+                               teacher_packet_rank=distribution([x['teacher_packet_rank'] for x in rs]),
+                               teacher_cell_rank=distribution([x['teacher_cell_rank'] for x in rs]),
+                               teacher_packet_probability=distribution([x['teacher_packet_probability'] for x in rs]),
+                               joint_probability=distribution([x['joint_training_head_probability'] for x in rs]),
+                               per_kind={str(kind):dict(rows=sum(x['kind']==kind for x in rs),calls_plant=sum(x['kind']==kind and x['plant_logit']>0 for x in rs)) for kind in sorted({x['kind'] for x in rs})})
+        write(OUT/f'logits-{name}.json',details)
+        model_stats[name]=dict(path=str(path),sha256=sha(path),labels=summary,batches=len(losses),all_supervised_losses_finite=True)
+    result=dict(status='complete-for-selected-corpus',index=str(index),index_sha256=sha(index),pack_version=2,
+                archives=len(archives),rows=rows_checked,labels={k:dict(v) for k,v in label_stats.items()},
+                original_model_L20_share=0,prospective_model_L20_share='explicitly added to this audit view; no optimisation or model change',
+                checks='all retained inputs, packet identity/slot, cell and base row weight exactly match archive; all positive labels retained',
+                probability_scope='training-head softmax: packets include nonempty inactive slots; cells all54. Legal-mask inference separately checked live; not calibrated action probabilities.',
+                models=model_stats)
+    write(OUT/'packing.json',result)
+    print(json.dumps(result,ensure_ascii=False))
+
+
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('phase',choices=['inventory'])
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('phase',choices=['inventory','packing'])
     args=parser.parse_args()
     if args.phase=='inventory':inventory()
+    elif args.phase=='packing':packing()
