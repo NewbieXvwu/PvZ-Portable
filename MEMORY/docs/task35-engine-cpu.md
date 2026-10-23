@@ -72,6 +72,8 @@
 11. **事件等待的公开状态不再每 tick 建 set**。`WAIT_UNTIL_LEGAL` 每决策最多重复 60 次 `EnvironmentWaitUntil(60,0)`，而 `EnvironmentPublicWaitState` 每个 tick 都重建三个 `std::set`（就绪卡 / 割草机 / 左侧僵尸）再加一个去重 set：每个元素一次 malloc + 一次红黑树插入。改成可复用的有序 vector（`SortedInsert`/`Contains`，迭代顺序、去重、成员判定与 set 完全一致），`Run` 用两块 `PublicState` 缓冲交替原地填充，去重表改成 thread_local vector，`clear()` 保留容量。剖面：`_Rb_tree_insert_and_rebalance` 1.9% → **0**，`LawnApp::EnvironmentPublicWaitState` 1.4% → 掉出前 20。整机吞吐在本机 load 23 下测不出（7 轮配对中位数 0.938，对照同二进制自比 5 轮中位数 1.015、单轮 ±9%，见“问题”）。验收：4 个存档整局逐帧重放 **0 差异**，64 个 root 叶摘要与 step9 **逐位相同**，原生 wait 契约测试 11 条全过。
    - `scripts/build_pgo.sh` 不再 `rm -rf build`（只清 profile 目录）：build 目录里有 mimalloc 的 FetchContent 检出，删掉就要重新联网 clone。
 
+12. **火炬树桩判定记住槽位**：`Projectile::PeaAboutToHitTorchwood` 每颗豌豆每 tick 都要遍历全部植物找火炬树桩（1.5%）。改成与海藻判定同样的备忘：按 `mPlants.mNextKey` / `gBoardContentEpoch` 失效，缓存持有火炬树桩的槽位，之后只遍历这几个槽位（没有就立即返回）。**配对 A/B 9 轮中位数 0.988（≈+1.3%，单轮 0.758–1.043，见“问题”里的噪声下限）**；剖面里该函数 1.5% → 掉出前 22，`DataArray<Plant>::Iterator::operator++` 1.7% → 0.8%。验收：4 个存档整局逐帧重放 0 差异。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。
