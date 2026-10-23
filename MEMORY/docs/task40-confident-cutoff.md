@@ -43,12 +43,12 @@
 
 ## 结果
 
-- 2026-10-23 11:46 清单（Qoder，cutoff）：`~/.venvs/ml/bin/python3 scripts/confident_cutoff.py manifest --scan-seeds 100000` → `artifacts/task40/roots.json`（sha256 `7ef100b49de30be214dc8421451db4ecc87a8a3bf7867fb2e72254de7b06d3cf`）。4 族各 16 档 × 4 个决策点 = 每族 64 root：day L7 seeds 1800000–1800015（卡组 0,1,2,3,4,5,7）、night L14 seeds 1930000–1930015（0,1,2,3,4,5,7,8,9）、pool L24 seeds 2030000–2030015（0,1,2,3,4,5,7,16,19）、conveyor L10 orig seeds 1880258–1880273（原版传送带，无卡组）。决策点取每档帧数的 15/40/65/85%。
-- 2026-10-23 11:46 前缀校验：`confident_cutoff.py prefix`，4 族 × 每族 1 档 × 2 个未来 seed × t∈{500,1000,1500,2000}（32 例）。t 推演的引擎 trace 与 2500 推演的前缀逐决策行一致 32/32；t 叶观测与 2500 推演在叶 tick 的下一决策观测一致 32/32（`artifacts/task40/prefix.log`、`prefix.json`）。结论：同 root 同 seed 下 t 推演是 2500 推演的前缀，可以按 (root, seed) 配对。
-- 2026-10-23 11:46 输入 SHA256：学生 dw4i_s1 `122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375`、价值网 v3 `5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a`、分叉网 value_branch1 `2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314`、引擎 `/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build/pvz-portable` `7508e840ec19d0ef6f91d55f4052cf17846a82df7eb24e235fab2aa9b1aefe65`。
-- 2026-10-23 11:46 全量测量已启动（后台）：每 root 9 个未来 seed、t∈{500,1000,1500,2000,2500}，共 256×45=11520 条推演；叶值用 v3 打分（分叉网同时记录作对照），终端叶按 `_score_terminal_or_value` 取 0/1。
-- 2026-10-23 12:57 全量测量完成：`~/.venvs/ml/bin/python3 scripts/confident_cutoff.py measure`（默认参数，引擎 cq 构建；单进程）→ `artifacts/task40/rollouts.jsonl` 11520 行，sha256 `5592ca5f556c732691bf210ee18898e1d2c8d1d33e6e08770032a57c251243ed`；`confident_cutoff.py report` → `artifacts/task40/summary.json` sha256 `a7c711a9cb225cfbc8a5b5bc1af40419b14c125bc2eeaa2a346766e11485d0b1`、`artifacts/task40/report.log`。**全部 4 族 × 4 个检查点 × 4 个 θ 共 64 格，翻转率一律 0.0%**（自信推演合计上万对 (t,2500) 配对，无一对胜负分类改变）。
-- 2026-10-23 12:57 每族表（t = 检查点，θ = 价值置信阈值；自信占比 = v≥θ 或 v≤1−θ 的推演比例；省 tick = 只在 t 收手时相对 2500 的 tick 比例；价值差 = v2500 − vt）：
+- 2026-10-23 09:47 清单（Qoder，cutoff）：`~/.venvs/ml/bin/python3 scripts/confident_cutoff.py manifest --scan-seeds 100000` → `artifacts/task40/roots.json`（sha256 `7ef100b49de30be214dc8421451db4ecc87a8a3bf7867fb2e72254de7b06d3cf`）。4 族各 16 档 × 4 个决策点 = 每族 64 root：day L7 seeds 1800000–1800015（卡组 0,1,2,3,4,5,7）、night L14 seeds 1930000–1930015（0,1,2,3,4,5,7,8,9）、pool L24 seeds 2030000–2030015（0,1,2,3,4,5,7,16,19）、conveyor L10 orig seeds 1880258–1880273（原版传送带，无卡组）。决策点取每档帧数的 15/40/65/85%。
+- 2026-10-23 09:47 前缀校验：`confident_cutoff.py prefix`，4 族 × 每族 1 档 × 2 个未来 seed × t∈{500,1000,1500,2000}（32 例）。t 推演的引擎 trace 与 2500 推演的前缀逐决策行一致 32/32；t 叶观测与 2500 推演在叶 tick 的下一决策观测一致 32/32（`artifacts/task40/prefix.log`、`prefix.json`）。结论：同 root 同 seed 下 t 推演是 2500 推演的前缀，可以按 (root, seed) 配对。
+- 2026-10-23 09:47 输入 SHA256：学生 dw4i_s1 `122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375`、价值网 v3 `5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a`、分叉网 value_branch1 `2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314`、引擎 `/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build/pvz-portable` `7508e840ec19d0ef6f91d55f4052cf17846a82df7eb24e235fab2aa9b1aefe65`。
+- 2026-10-23 09:47 全量测量已启动（后台）：每 root 9 个未来 seed、t∈{500,1000,1500,2000,2500}，共 256×45=11520 条推演；叶值用 v3 打分（分叉网同时记录作对照），终端叶按 `_score_terminal_or_value` 取 0/1。
+- 2026-10-23 09:58 全量测量完成：`~/.venvs/ml/bin/python3 scripts/confident_cutoff.py measure`（默认参数，引擎 cq 构建；单进程）→ `artifacts/task40/rollouts.jsonl` 11520 行，sha256 `5592ca5f556c732691bf210ee18898e1d2c8d1d33e6e08770032a57c251243ed`；`confident_cutoff.py report` → `artifacts/task40/summary.json` sha256 `a7c711a9cb225cfbc8a5b5bc1af40419b14c125bc2eeaa2a346766e11485d0b1`、`artifacts/task40/report.log`。**全部 4 族 × 4 个检查点 × 4 个 θ 共 64 格，翻转率一律 0.0%**（自信推演合计上万对 (t,2500) 配对，无一对胜负分类改变）。
+- 2026-10-23 09:58 每族表（t = 检查点，θ = 价值置信阈值；自信占比 = v≥θ 或 v≤1−θ 的推演比例；省 tick = 只在 t 收手时相对 2500 的 tick 比例；价值差 = v2500 − vt）：
 
 #### day_l7
 | t | θ | 自信占比 | 价值差均值 | abs差 p95 | 翻转率 | 省 tick |
@@ -150,7 +150,7 @@
 | 2000 | 0.98 | 42.0% | -0.001 | 0.006 | 0.0% | 8.1% |
 | 2000 | 0.99 | 33.2% | -0.000 | 0.003 | 0.0% | 6.4% |
 
-- 2026-10-23 12:57 推荐实现口径 = **每 500 tick 查一次（500/1000/1500/2000），第一次“v≥θ 或 v≤1−θ”就收手并直接用该值，否则跑满 2500**。按这个口径重算（`artifacts/task40/combined.json`，sha256 `06216911491ab571227f6fac121a3371cdd22cbfba0d35aecd9e68ddd2c7b005`）：
+- 2026-10-23 09:58 推荐实现口径 = **每 500 tick 查一次（500/1000/1500/2000），第一次“v≥θ 或 v≤1−θ”就收手并直接用该值，否则跑满 2500**。按这个口径重算（`artifacts/task40/combined.json`，sha256 `06216911491ab571227f6fac121a3371cdd22cbfba0d35aecd9e68ddd2c7b005`）：
 
 | θ | 自信停止占比 | 省 tick（全部） | day | night | 传送带 | pool | 翻转 | abs差 p95 |
 |---|---|---|---|---|---|---|---|---|
@@ -160,7 +160,18 @@
 | 0.99 | 35.4% | 26.0% | 38.5% | 1.0% | 64.4% | 0.3% | 0 | 0.0071 |
 
   **建议 (每 500 tick 检查, θ=0.98)**：全族省 31.9% tick（≥15% 门槛），价值扰动 p95 0.0124 低于老师自己的覆盖余量 MARGIN=0.02，1017 条自信停止推演零翻转；这是“省得够多、扰动小于决策余量”的平衡点。θ=0.95 是激进备选（39.9%，但 p95 0.0297 已高于 MARGIN，pool 的尾巴 0.065）；θ=0.99 最保守（26.0%，p95 0.0071）。注意省 tick 主要来自 day 与传送带两族：night 在 θ=0.98 只省 7.2%、pool 只省 3.6%——这两族大多要跑满（或最终确实输），与“输赢未定不砍”的直觉一致。
-- 2026-10-23 12:57 第 1 步结论：可省 ≥15%，进入第 2 步。实现依赖见“问题”。
+- 2026-10-23 09:58 第 1 步结论：可省 ≥15%，进入第 2 步。实现依赖见“问题”。
+- 2026-10-23 10:09 第 3 步预登记（先写后跑）。质量三臂，同一 root、同一组未来：
+  - `exact`：正式搜索，视界 2500。
+  - `cutoff`：同样搜索，但每条推演按 500/1000/1500/2000 顺序在引擎里跑短视界，每到一个检查点用 v3 打分；首次 v≥0.98 或 v≤0.02 就收手、叶子值取该检查点值；短推演若先终局则取 0/1；都不自信才跑满 2500。每检查点一次引擎往返（Python 慢版本，量质量、不量速度）。
+  - `noise`：正式搜索换一组未来（`decision_seed + 7_777_777`），噪声底线。
+  - 臂顺序在每个搜索点轮换；三臂跑完才执行学生的动作（`dagger_beta=0`，学生打完整局）；搜索点判定同 task8：有合法植物且（学生想种植 或 距上次搜索 ≥300 tick），三臂共用同一批决策点。参数：`samples 3`、`per-card 1`、`student-candidates 2`、`verify-samples 9`、halving、`horizon 2500`、`MARGIN 0.02`、`rollout-sim-skip 61`、`max_actions 3000`、`playthrough 2`；卡组/档案由 `training_task_kwargs` 从任务清单解析。
+  - 族与任务：day_l7 `artifacts/stage4/day_l7_hard.json` / `day_l7_z20_eval`；night_l14 `artifacts/stage4/night_panel_n10.json` / `night_l14_eval_n10`；pool_24 `artifacts/stage4/pool_panel.json` / `pool_l24_eval_p9k`；original_1_10 `/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json` / `day_l10_orig_eval`。每族取任务清单 `seeds` 的 30000–30015 共 16 局，4 族 64 局，2 workers。
+  - 判据：`search_agreement_stats.agreement_intervals`，整局成组 bootstrap 20000 次、seed 20261019、margin 0.03；`gate_passed` 要求 cutoff 一致率 − noise 一致率的 95% 区间下界 ≥ −0.03（即不低于噪声底线 3pp），且 64 局齐全。分族 16 局的一致率与区间只报告、不单独设门槛。
+  - 速度：记录每局三臂的 worker+引擎秒数（`seconds_exact/cutoff/noise`）与配对比值；因这是每检查点一次往返的慢版本，速度数字只作诊断、不作门槛。
+  - 强度：质量关通过后才做；每族 64 局 `beta=1`（老师执行搜索决策），cutoff 与 exact 配对，要求差值在噪声内；耗时会显著高于质量关，先记计划。
+  - 输入 SHA256（跑前）：`scripts/cutoff_agreement.py` `59c32efb41c3fc1c1bf903fd42ae50d48caf1ef87aada49d5d95b725322171d0`、`scripts/search_play.py` `d04eaa3643477c86f749df25515a395686b36819d85c69c4302777a45754c340`、`scripts/search_agreement_stats.py` `5353107d891b8701bbef8d25e759bbada755f3fe932016b575db8820ec27a4bb`、`scripts/render_episode.py` `e64f1c249f4946a9bb2da56bbbf926095e654488ebe44c4f551e272e3c278b75`、`python/pvz_env.py` `2d53cd18b5390b1d5b1997bcbeb97a4ff069f962fbb94538f128936a8d568e69`、`python/pvz_event_env.py` `027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89`；`day_l7_hard.json` `8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941`、`night_panel_n10.json` `f62258d7c0d254a47999120ba2456a8c02f7b7b8fbea48e42c0ef8a9b91d4ed1`、`pool_panel.json` `10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb`、conveyor `day_panel.json` `01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27`；学生/价值网/分叉网/引擎同第 1 步（`122703…`、`5171db…`、`248584…`、`7508e8…`）。
+  - 实现自检（跑前已完成）：`artifacts/task40/cutoff_check.py` 在 day_l7 root 137/365/593/776 × seed 0–2 共 12 例上，cutoff 叶值与第 1 步测量逐位一致：不自信 root 等于 2500 值（如 root 137 seed0 `0.765421`）、自信 root 在 500 收手且等于 t=500 值（如 root 593 seed0 `0.990201`）；短推演耗时 0.013 s（500 收手）到 0.22 s（跑满），对照单条 2500 推演 0.02–0.08 s。另试过“跑满 2500 + 引擎 trace 再在 Python 打分”的版本，值与短推演相同但慢 10–20 倍，弃用。
 
 ## 问题
 
