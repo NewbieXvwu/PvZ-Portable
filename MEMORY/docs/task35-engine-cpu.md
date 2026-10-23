@@ -74,6 +74,8 @@
 
 12. **火炬树桩判定记住槽位**：`Projectile::PeaAboutToHitTorchwood` 每颗豌豆每 tick 都要遍历全部植物找火炬树桩（1.5%）。改成与海藻判定同样的备忘：按 `mPlants.mNextKey` / `gBoardContentEpoch` 失效，缓存持有火炬树桩的槽位，之后只遍历这几个槽位（没有就立即返回）。**配对 A/B 9 轮中位数 0.988（≈+1.3%，单轮 0.758–1.043，见“问题”里的噪声下限）**；剖面里该函数 1.5% → 掉出前 22，`DataArray<Plant>::Iterator::operator++` 1.7% → 0.8%。验收：4 个存档整局逐帧重放 0 差异。
 
+13. **边界坐标只在真正需要时做十进制渲染**：`EnvironmentPublicWaitState` 对 `|x-160| < 1` 的僵尸调 `RenderedPublicCoordinate`（`std::ostringstream` + `std::stod`），剖面里 stream/locale/printf 相关合计 **2.6%**（`parse_printf_format` 1.0% + libstdc++ locale 1.7% 的一部分 + `strtof64`）。六位有效数字在 [100,1000) 上只保留到千分位，四舍五入最多移动 0.0005，所以窗口从 1.0 收窄到 0.001 之后判定结果不变（窗口外的值不可能被舍入跨过 160）。**剖面：stream/locale/printf 相关条目全部掉出前 22**；配对 A/B 9 轮中位数 1.010（噪声内，见“问题”）。验收：4 个存档整局逐帧重放 0 差异。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。

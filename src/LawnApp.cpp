@@ -1580,9 +1580,14 @@ void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& res
 			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
 		SortedInsert(aIdentities, identity);
 		// Exactly the existing public observation: no hidden hostility/queue flag.
-		// Only positions near the boundary need decimal rendering to decide the side.
-		const double x = std::abs(zombie->mPosX - LeftZoneMaxX) < 1.0 ?
-			RenderedPublicCoordinate(zombie->mPosX) : static_cast<double>(zombie->mPosX);
+		// Only a coordinate that decimal rendering could move across the boundary needs the
+		// rendering.  Six significant digits round a value in [100, 1000) to a thousandth, so
+		// rounding moves it by at most 0.0005: anything further than 0.001 from the boundary
+		// keeps its side without it.  The stream formatting behind it (locale, printf) was
+		// 2.6% of the rollout CPU, all of it for zombies within a whole unit of x=160.
+		const double aPosX = zombie->mPosX;
+		const double x = std::abs(aPosX - LeftZoneMaxX) <= 0.001 ?
+			RenderedPublicCoordinate(aPosX) : aPosX;
 		if (zombie->IsOnBoard() && x <= LeftZoneMaxX)
 			SortedInsert(result.leftZoneZombies, identity);
 	}
