@@ -56,6 +56,8 @@
 
 11. 传送带 L10 orig 整局验收完成，新旧各 8 局，同种子的胜负、最终波次与决策数全部一致（均 7 胜）。CPU 秒/局由旧 view **132.040** 降至 PGO **66.438**，吞吐 **1.987×**。至此四族各 8 局共 32 对全部验收，等局数汇总 CPU 秒/局 **81.328→38.464**，整体吞吐 **2.114×**。证据 `artifacts/perf/task47/pgo_games_conveyor/engine_games.json`，其余三族见第 7、9、10 条。
 
+12. 最终固定 PGO 构建运行全套测试：**1 failed / 341 passed / 9 skipped / 133 subtests passed**（27.99 秒），比普通 Release 多通过新增 Mac CPU 计时回归，失败仍仅为同一个既有 Linux `/proc` 监控用例，没有新增失败。证据 `artifacts/perf/task47/pytest_pgo.log`。交付二进制与最终 `build/pvz-portable` 的 SHA256 一致。收尾时原采集 PID 64608 仍运行，采集脚本未修改。六项步骤全部完成。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。task35 的四族基准清单与全部存档已经 HF 同步完成。
