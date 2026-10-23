@@ -19,6 +19,11 @@ def report():
 
 
 class EngineBenchGateTest(unittest.TestCase):
+    def test_mac_process_cpu_reads_ps_time(self):
+        with patch.object(bench.sys, 'platform', 'darwin'), \
+                patch.object(bench.subprocess, 'check_output', return_value='  12:34.56\n'):
+            self.assertAlmostEqual(bench._process_cpu(123), 754.56)
+
     def test_replay_checks_v2_state_and_rejects_early_terminal(self):
         from unittest.mock import Mock
         rows = [{}, {'action': {'type': 'wait', 'ticks': 60}, 'tick': 60, 'v2': {'wave_timer': 10}},
