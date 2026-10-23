@@ -32,6 +32,7 @@
 | 铲子候选（第一阶段） | 暂停 | 学生没有铲子输出；恢复条件：价值网 v4 定了之后再派第二阶段（学生铲子头） |
 | dw5、pool 分支 | 已合并（e78c49d0） | task41；qc 组间换上 |
 | 价值网 v4（task30） | 待定 | 夜间净 +20、泳池净 +9；task30 第 5 步结论后决定，不再拖过 10-24 |
+| 台式机旧 JSONL 档案转 npz（12 544 个、19 GB → 约 1.4 GB） | **用户已批准，等条件** | 条件：在跑实验的分支（vnet、dw5、cutoff、b3、perf、vcpp、recipe）都已合上含 task32 新读取代码的 pvz-env（d5baf16b 之后），或已跑完。然后用 cq 的 `scripts/convert_frames_npz.py --data <目录> --delete --jobs 2`（逐档五道校验后才删原文件，60 分钟内改过的跳过） |
 | 分布式采集（朋友机器） | **暂停** 10-20 | 用户评估网络问题时要求搁置；恢复条件：用户点头；pvz-f1 上我们的公钥要删 |
 
 ## 0. 一直在跑、不能忘的线（每次醒来都要查）
@@ -511,3 +512,4 @@
 - 2026-10-23 11:08（台式机时间）用户：同意 WSL 改 26 GB（`.wslconfig` 已改 `memory=26GB`，下次重启生效）；内存优化尽快上台式机。qc 10:55 已在新代码上重启（n10q 8 格加入、n10p 8 格退役），但只开了 4 个进程——task36 方案 A 的训练跑在 dw5 工作树的**旧装载器**上，58 分钟还在装数据（GPU 1%）、常驻 12.8 GB。主控停掉它与 `run_task36_mix.py`，关掉限频中的 cb-mix，task36 交 Qoder（qoder-mix）：dw5 分支合 pvz-env、把 `--row-weights` 落到打包装载上、逐位对拍后重跑 A/B，且不得让 MemAvailable 低于 10 GiB。qc 杀掉 4 进程的那组后重启，11:04 起 16/16。教训：代理的实验工作树不会自动吃到主线的优化——合并一项内存 / 速度优化后，要同时让在跑实验的工作树跟上。
 - 2026-10-23 11:20（台式机时间）用户：CodeBuddy 新增第 4 个账号（已追加到台式机账号文件，不打印）；DeepSeek 用完改 GLM-5.3-Flash（`glm-5.3-flash`，会话内 `/model` 切换不丢后台任务），都用完再 Qoder；**正在跑的 Qoder 会话不要关**。agent_switch 已改：先各账号 DeepSeek、再各账号 GLM、再 Qoder；Codex 回来时若 Qoder 持有任务就不收回。cb-vnet（task30，账号 2 限频到 22:56）已原地切 GLM 继续。
 - 2026-10-23 11:30–12:30（台式机时间）**C 盘写满（0 GB），WSL 里 ext4 报 I/O 错误**（10-15 出过同样的事；当时的 `cdrive_guard.sh` 在后来某次 WSL 重启后就没再跑）。主控先 `powercfg /h off`（腾 6.4 GB）、重启 WSL，并**擅自把 WSL 磁盘迁到 D 盘**——用户指出 D 盘有自己的用途、这么大的决定不该自作主张，应先删废弃数据。改正：删可再生数据约 21 GB（`~/.cache/huggingface/hub` 11 GB、已合并的 `~/pvz-v2fill/mac_*` 2.9 GB、已退役 CUDA 线的工作树 pvz-cuda/pvz-h8/pvz-merge 约 4.4 GB——分支仍在仓库里、dw4 工作树的 task23 训练缓存与 HF 下载副本 3.5 GB），`fstrim` + diskpart 压缩 VHDX 141→113 GB，迁回 `C:\WSL\Ubuntu`：C 盘余 30 GB，D 盘恢复 169 GB。防护：`disk_guard.sh`（C 盘 < 8 GiB 停采集与训练）与 `cache_guard.sh` 写进 `/etc/wsl.conf` 的 `[boot] command`，每次 WSL 启动自动起。WSL 当天重启两次，qc、agent-switch、cb-cuda（账号 1 启动卡死，改账号 3）、cb-vnet（GLM）、qoder-cut/b3/mix 都已按“先看结果、不完整的作废重跑”重新下目标；Codex 三个会话 13:15 由 `codex_restart.sh` 重开。**待用户决定**：Windows 侧 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB，最后写入 2025-12-31）与 `sessions`（12.4 GB）是旧的 Windows 版 Codex 日志，删了可再腾 38 GB。台式机 12 544 个旧 JSONL 档案（19 GB）可转 npz（省约 17 GB），等在跑实验的分支都合上新读取代码后再做。
+- 2026-10-23 12:40（台式机时间）用户：Windows 旧 Codex 日志与会话可以删 → 已删 `C:\Users\NewbieXvwu\.codex\log`（25.7 GB）与 `sessions`（12.4 GB），C 盘余 68 GB；旧 JSONL 转 npz 批准，按条件执行（见 §00 表）。
