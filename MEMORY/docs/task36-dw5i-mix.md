@@ -78,6 +78,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-24，22 A 与 dw5i_s1 同种子配对（`scripts/task36_paired_compare.py`，输出 `artifacts/task36/paired_dw5i_vs_A.json`）：夜间 711→755/1152（**+3.82pp**，仅A 128 / 仅B 172，p=0.0129）；早关 L1/3/4/6 468→481/512（+2.54pp，28/41，p=0.148）；全部 34 个共同任务 2258→2203/3264（**−1.69pp**，p=0.0466）。代价集中在白天普通关：L7 127→101（p=2.2e-7）、L9 115→98（p=0.0115）、L10 holdout2 60→33（p=1.1e-7）；夜间 L13 118→128、L16 114→128、L18 100→121（p≤0.002）。单训练种子，描述性结论。
 
+- 2026-10-24，23 停掉被门禁悬挂的 B，改内存门控重排：B 自 00:42 起一直 paused（MemAvailable 9.3→6.2 GiB 持续下行；外部 cq curriculum、zones/profile_value_engine、qcbench bench、fog/deploy2 等约 13 个进程），而暂停态仍占 **2.25 GB 匿名内存**（`smaps_rollup` Pss_Anon），只会加深短缺并可能被 earlyoom（偏好 python3）选中。已 SIGTERM 训练组 188416 与流水线 188328，释放后 av 6.23→8.51 GiB。新启动器 `artifacts/task36/autostart_B2.sh`（pid 193986）只在 MemAvailable 连续 4 次 ≥10.5 GiB（30 s 间隔）且 C: ≥15 GiB 时才启动 `run_task36_mix.py --plan B --workers 2`（日志 `mix_B2.out`），避免再次“暂停且占内存”。B 复用同一包与已解包目录。
+
 
 
 ## 问题
