@@ -206,7 +206,8 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 # checked against. Test and diagnostic only -- python/test_cpp_rollout.py and scripts/perf_rollout_check.py
 # call it; nothing on the collection path does.
 def _python_rollout_reference(env, obs: dict, first: dict, until_tick: int,
-                              root: int | None = None, seed: int | None = None) -> dict:
+                              root: int | None = None, seed: int | None = None, *,
+                              fast_state_out: dict | None = None) -> dict:
     """Play ``first`` and let the student continue until ``until_tick`` (0 = end of game), one step at a time."""
     student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
     if root is not None:
@@ -249,6 +250,9 @@ def _python_rollout_reference(env, obs: dict, first: dict, until_tick: int,
                     return obs
             action = _fast_action(obs, fast_state)
     finally:
+        if fast_state_out is not None:
+            fast_state_out.clear()
+            fast_state_out.update(fast_state)
         if sim_skip:
             env.set_sim_skip(0)
         if lean:
