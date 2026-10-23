@@ -235,6 +235,30 @@ grep -c fprofile-generate build/build.ninja
 
 ## 历史采样前 15
 
+### 重启恢复后的工具与 libc 符号补全
+
+已从 `archive.ubuntu.com` 下载与 apt 元数据校验一致的 perf/valgrind/libc debug 包，只解包到 `artifacts/perf/tools/`，未改系统安装。perf 7.0.14 的 `cpu-clock:u` 调用栈探针成功，valgrind 3.26.0 可运行；下一次游戏采样可用真正的 `perf record`。`prof_symbolize.py --debug-root <解包的 usr/lib/debug>` 按 ELF build ID 匹配符号，旧 5752 点数据重解析后前 15 如下。这仍是历史 4de38495 的采样，不冒充当前构建剖面。
+
+| 函数或动态符号 | 占比 |
+|---|---:|
+| SGEMM kernel HASWELL | 17.70% |
+| Reanimation::Update | 3.79% |
+| SGEMM oncopy HASWELL | 2.96% |
+| DataArray<Zombie>::Iterator::operator++ | 2.76% |
+| operator（Reanimator.cpp 轨道 lambda） | 2.16% |
+| PvzpParticleEmitter::UpdateParticle | 1.81% |
+| DGEMM kernel HASWELL | 1.77% |
+| Sexy::MTRand::NextNoAssert | 1.70% |
+| EnvironmentRollout::Convolve | 1.46% |
+| DataArray<Plant>::Iterator::operator++ | 1.44% |
+| SGEMM itcopy HASWELL | 1.39% |
+| libc __memset_avx2_unaligned_erms | 1.32% |
+| DGEMM incopy HASWELL | 1.23% |
+| _mi_page_malloc_zero | 1.18% |
+| std::_Rb_tree_insert_and_rebalance | 1.16% |
+
+原来的 libc `_dl_mcount_wrapper` 最近符号归因不准确，补符号后拆成上述 memset、strcmp（1.11%）等真实实现；不能据旧名称推导调用链。
+
 ### 4de38495 后采样（完整解析共享库）
 
 `scripts/prof_symbolize.py` 现对共享库也运行 addr2line；保存的原始可执行文件可通过 `--binary` 映射。对稳定副本 `pvz-portable-codex-reload` 跑四族 64 root × 15 条推演，得到 **5752** 个已限定 rollout 阶段的 SIGPROF 样本（`codex_profile_reload.json`）。BLAS 热点从一个 28% 的库名拆成 SGEMM 内核、矩阵打包与 DGEMM。无调试信息的库仍可能只给最近动态符号，尤其 libc 的 `_dl_mcount_wrapper` 不能视为准确内部函数或直接优化依据。

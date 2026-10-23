@@ -89,6 +89,8 @@
 
 24. **下一个热点候选：公开坐标的十进制往返**。独立 `scripts/prototypes/bench_public_coordinate.cpp` 用固定随机浮点位型与边界邻点共 1,017,346 个有限坐标，`to_chars/general/6 + from_chars` 与旧 stream/stod 的 double 结果逐位相同。三轮交替进程 CPU 秒中位数 0.5763 → 0.1340（单函数 4.30×）；尚未接入正式引擎，不计整体收益，待 A2 结束后做整条推演配对与逐帧验收。另已从可用的 Ubuntu 官方源下载并在 perf ignored 目录解包 valgrind（未改系统或其他工作树），版本 3.26.0 可执行。
 
+25. **恢复真正的调用栈剖析能力**：从 Ubuntu 官方源取包并仅解包到 perf 的 ignored 工具目录，`perf version` 与 `perf record -e cpu-clock:u -g -- /usr/bin/true` 均成功（未改系统安装/权限）。valgrind 3.26.0 同样可运行。`prof_symbolize.py --debug-root` 按 ELF build ID 匹配解包的 libc 调试符号，旧 5752 点剖面里误显示为 `_dl_mcount_wrapper` 的份额已拆为 memset/strcmp 等，报告保留新前 15；这些是历史样本重解析，正式当前构建调用栈采样将在 A2 结束后跑。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。

@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import struct
 import subprocess
 from collections import Counter
@@ -52,12 +53,26 @@ def symbolize(binary: Path, offsets: list[int]) -> dict[int, str]:
     return names
 
 
+def debug_binary(binary: Path, debug_root: Path | None) -> Path:
+    """Use matching build-id debug data without installing it system-wide."""
+    if debug_root is not None:
+        result = subprocess.run(['readelf', '-n', str(binary)], capture_output=True, text=True, check=True)
+        match = re.search(r'Build ID: ([0-9a-f]+)', result.stdout)
+        if match:
+            build_id = match[1]
+            debug = debug_root / '.build-id' / build_id[:2] / (build_id[2:] + '.debug')
+            if debug.is_file():
+                return debug
+    return binary
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--samples", type=Path, default=Path("/tmp/pvz_pcs.bin"))
     parser.add_argument("--binary", type=Path, default=Path("build/pvz-portable"))
     parser.add_argument("--top", type=int, default=15)
     parser.add_argument("--out", type=Path)
+    parser.add_argument("--debug-root", type=Path, help="unpacked usr/lib/debug, matched by ELF build ID")
     args = parser.parse_args()
 
     names, offsets, modules = load(args.samples)
@@ -91,7 +106,7 @@ def main() -> None:
             # Shared libraries often retain dynamic function symbols even without
             # debug line tables (e.g. sgemm_kernel_HASWELL). Resolve those too:
             # merging all BLAS work into one module hid the largest CPU hotspot.
-            resolved = symbolize(library, values) if library.is_file() else {}
+            resolved = symbolize(debug_binary(library, args.debug_root), values) if library.is_file() else {}
             for value in set(values):
                 name = resolved.get(value, "??")
                 labels[(module, value)] = f"[{library.name}]" + (f" {name}" if name != "??" else "")
@@ -105,6 +120,7 @@ def main() -> None:
     if args.out:
         args.out.parent.mkdir(parents=True, exist_ok=True)
         args.out.write_text(json.dumps({"samples": total, "binary": str(args.binary),
+                                        "debug_root": str(args.debug_root) if args.debug_root else None,
                                         "modules": names, "top": rows}, indent=1) + "\n")
 
 
