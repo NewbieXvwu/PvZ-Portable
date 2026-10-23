@@ -1,6 +1,6 @@
 # 正式课程采集吞吐：10-27 决策证据（task51）
 
-状态：进行中；deploy2受控采集已完成（1.5189×，中间档），生产失败打包/重启窗口已闭合（0.7942×）；zones/deploy3及匹配四族的轮间证据仍待完成，尚无最终GPU处置。任务书见 [task51](task51-qc-throughput.md)。
+状态：进行中；deploy2受控采集已完成（1.5189×，中间档），生产失败打包/重启窗口已闭合（0.7942×）；zones/deploy3追加128局已启动，匹配四族的全语料连续周期证据仍待完成，尚无最终GPU处置。任务书见 [task51](task51-qc-throughput.md)。
 
 ## 口径
 
@@ -290,3 +290,16 @@ deploy2受控采集与生产日历窗口终态见下文；zones/deploy3与同四
 若仅作工作量诊断，续走条数/墙钟之比为原游戏吞吐比×新/旧续走数：白天1.637、夜间1.816、泳池1.867、传送带1.653，固定组合1.641。单条续走可提前终局、路径和网络开销也不同，故该诊断数不是独占引擎benchmark；GPU判据继续使用原始游戏/h，不用它替代1.5189×。
 
 纯CPU路径补核：旧64局的CUDA batches/lanes/seconds计数均为0，旧命令使用默认cpp后端；现行代码只调用C++续走，两版学生/价值加载器均显式map_location=cpu。现行逐局schema已删除CUDA计数，不能把缺失字段当作实测0；这里依赖源码/加载器和采集环境的CPU约束。输入与源码哈希、逐族工作量汇总及逐帧配对结论已并入精简JSON；详细配对记录在 ignored `artifacts/task51/trajectory-pair-audit.json`。
+
+
+## zones＋deploy3追加对照正式启动（2026-10-24T03:37:04.497199+08:00）
+
+task50追加A已由最终提交 **96073788** 交付并推送；其completion audit为complete、pending为空。独立重跑strict审计与交付者结果完全一致：before96＋after96＋shadow1，386份result/trace、零缺项；三任务老师一致7042/7042、12235/12236、4495/4495，CPU比0.63388/0.65607/0.55539，均通过。全套395测试＋133子测试及部署门禁属于该依赖的验收证据，不替代本任务正式吞吐实测。
+
+已将该提交的源码/Python/配方导出到本树ignored `artifacts/task51-deploy3/zones-source/`，242个Python文件逐一与git blob一致；构建提交2b743c62至该提交的引擎源码/采集关键接口无变化。deploy3 SHA256 **0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327** 与已通过门禁的PGO二进制相同。最终build/deploy/teacher/completion证据与本次独立strict报告均复制冻结并保留SHA。
+
+新清单的task定义、deck、倍率、16种子与首轮冻结manifest逐字段相等；仍四族×两臂×16局、2 worker、ABBA/BAAB、真实归档。旧1b89bfa9臂同时重新跑，不复用首轮旧计时。清单SHA256 **fd09df70bfffab9728b298a4f4495327f74c4a2f63ee90a402a37c24527deef2**，位于ignored `artifacts/task51-deploy3/collection-plan.json`；可同步的门禁、源码/模型/引擎指纹见 [qc-throughput-deploy3-freeze.json](qc-throughput-deploy3-freeze.json)。内部比较臂键仍叫cq，实际版本在本轮为zones＋deploy3。
+
+原runner **223888** 已启动，第1/16块为旧L7；子进程 **223890** 的真实argv与清单一致，已观察到2个直属游戏、MemAvailable约10.4GiB。后续用该目录active.json结合真实进程核验，不因日志暂时不增长重启。全部16块及归档审计完成后才生成本轮吞吐；生产qc未被本任务操作。
+
+离线流水线PID225466已通过pidfd绑定本轮runner223888；只有采集自然退出且active终态complete，才串行执行全归档report→本组冷打包plan/run/report，不另开游戏。阶段/child PID/退出码保存在 ignored `artifacts/task51-deploy3/offline-pipeline-status.json`，失败只落盘，不重启采集或重复冷启动。后续先结合该状态与真实进程检查，避免重复启动离线作业。

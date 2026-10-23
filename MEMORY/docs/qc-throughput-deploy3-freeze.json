@@ -1,0 +1,116 @@
+{
+  "scope": "Input freeze and passed prerequisite gates for the running zones+deploy3 experiment; no throughput result yet",
+  "input_freeze": {
+    "complete": true,
+    "source_commit": "960737888c371d5a746369b8eb396f3ab4a9a3b4",
+    "binary_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+    "frozen_python_files": 242,
+    "stages": 16,
+    "games": 128,
+    "workers": 2,
+    "reference_manifest_equal": true,
+    "plan_sha256": "fd09df70bfffab9728b298a4f4495327f74c4a2f63ee90a402a37c24527deef2",
+    "gate_files": {
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51-deploy3/gates/task50-a-build.json": "bb375fea967b2f81ff14a2940365d39ce2decf74bb9144dad3c3834456d07daf",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51-deploy3/gates/task50-a-completion-audit.json": "cf262323dbb96cde7d64c2bc8dd72fefd9298897bf6455ec22c0900623fe742f",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51-deploy3/gates/task50-a-deploy-gates.json": "6f2ca00d7c0b7945367eaf6ba39e61fc68bee0cfef5b7a52859062c30d12a838",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51-deploy3/gates/task50-a-teacher-audit.json": "b399cd1ff76271bc08bd5a8aa0adad434d36c0584a9ba8bffd73ed93d32dfd8c",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51-deploy3/gates/teacher-strict-audit.json": "b399cd1ff76271bc08bd5a8aa0adad434d36c0584a9ba8bffd73ed93d32dfd8c"
+    }
+  },
+  "source_archive_sha256": "cf81994e2b5645581cf17a80a4e0a1a4226bb51eba0b3069224b46da1010449a",
+  "source_python_sha256": {
+    "old": "10595fc8c9a647bcef19eb2fd5941cfd49aa82c3e2a0ddbd028c1bb0fa735fec",
+    "cq": "18b035f2d3a01c510e337d81c96aa897b6863bbd66d3d0a661196a7f474b27ba"
+  },
+  "input_sha256": {
+    "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/build-old/pvz-portable": "dd03838136240fc4c1af36205ce3a8a4a486fc54ca5e1ba82ed23b796e36e2cb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51-deploy3/collection-manifest.json": "c931d83d81614d59eb7e899d5003135d05f42a63ccfc5083238f465cc60b83c4",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51/collection-plan.json": "d4226a1f0b73c7cab3729652bca471acf0f20c4ec0a5fdfae33eca66bd9b8fac",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcbench/artifacts/task51/collection-manifest.json": "c931d83d81614d59eb7e899d5003135d05f42a63ccfc5083238f465cc60b83c4"
+  },
+  "dependency": {
+    "commit": "960737888c371d5a746369b8eb396f3ab4a9a3b4",
+    "status": "complete",
+    "tests": {
+      "passed": 395,
+      "subtests": 133,
+      "skipped": 0,
+      "raw_log_sha256": "6ecb16c8aa90b549fadc6072d118aa6d4520dac806677c104898d3bf16030f40"
+    },
+    "deploy3": {
+      "source_commit": "2b743c6216cd14c0d9d195c6be970204f41c0d22",
+      "binary_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+      "fprofile_generate_lines": 0,
+      "fprofile_use_lines": 162,
+      "profile_files": 141
+    },
+    "teacher_gate": {
+      "status": "passed",
+      "runner_exit_code": 0,
+      "completed_phases": [
+        "before",
+        "after",
+        "shadow",
+        "compare"
+      ],
+      "valid_fresh_games": {
+        "before": 96,
+        "after": 96,
+        "shadow": 1
+      },
+      "strict_independent_audit": "MEMORY/docs/task50-a-teacher-audit.json",
+      "evidence_files": 386,
+      "missing_count": 0,
+      "evidence_manifest_sha256": "3789e576fa76da09b5c42923a26351863010087f600f029fc9f855ca38910755",
+      "task_order": [
+        "day_l7_train_d7_m150",
+        "night_l14_train_n10",
+        "pool_l21_train_p9k"
+      ],
+      "teacher_same": [
+        7042,
+        12235,
+        4495
+      ],
+      "teacher_points": [
+        7042,
+        12236,
+        4495
+      ],
+      "cpu_ratio_excluding_noise": [
+        0.633882416206157,
+        0.6560687874807571,
+        0.5553866323902025
+      ],
+      "wins_before": [
+        32,
+        32,
+        17
+      ],
+      "wins_after": [
+        32,
+        32,
+        17
+      ],
+      "search_flag_differences": 0,
+      "cpu_measurement": "Both arms use identical external worker getrusage and engine /proc accounting, minus separately measured future-noise CPU; ratios apply to these fresh paired games."
+    },
+    "raw_deployment_evidence_revalidated": {
+      "replay_frames_per_engine": 166138,
+      "replay_differences": 0,
+      "roots_per_round": 64,
+      "leaves_per_engine_per_round": 192,
+      "paired_rounds": 5,
+      "throughput_ratio_median": 1.0106385418669848,
+      "same_v4_leaf_gate": true,
+      "same_v4_max_python_probability_error": 1.1968539426199243e-07
+    }
+  },
+  "strict_audit_sha256": "b399cd1ff76271bc08bd5a8aa0adad434d36c0584a9ba8bffd73ed93d32dfd8c"
+}
