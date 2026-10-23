@@ -69,6 +69,12 @@
 
 16. **Codex 独立 C++ 锁步原型已编译**：`scripts/prototypes/` 从已提交源码导出专用构建，不修改正式源码/build。每 lane 保留快照/RNG/历史/收入，三层卷积按 batch SGEMM，继续复用正式 Encode 尾部、Heads 与动作选择；报告已写 task33 的接口草案和全局状态隔离要求。原型计时将区分快照/前向/模拟成本，比较同二进制原生串行与 batch=1/9，并全量检查 64×9 条叶观测/统计；当前两个整局任务都仍活着，等槽位空出后运行，尚未声称加速或验收完成。基准 v2 修复提交 `e6dc25c9`。
 
+11. **事件等待的公开状态不再每 tick 建 set**。`WAIT_UNTIL_LEGAL` 每决策最多重复 60 次 `EnvironmentWaitUntil(60,0)`，而 `EnvironmentPublicWaitState` 每个 tick 都重建三个 `std::set`（就绪卡 / 割草机 / 左侧僵尸）再加一个去重 set：每个元素一次 malloc + 一次红黑树插入。改成可复用的有序 vector（`SortedInsert`/`Contains`，迭代顺序、去重、成员判定与 set 完全一致），`Run` 用两块 `PublicState` 缓冲交替原地填充，去重表改成 thread_local vector，`clear()` 保留容量。剖面：`_Rb_tree_insert_and_rebalance` 1.9% → **0**，`LawnApp::EnvironmentPublicWaitState` 1.4% → 掉出前 20。整机吞吐在本机 load 23 下测不出（7 轮配对中位数 0.938，对照同二进制自比 5 轮中位数 1.015、单轮 ±9%，见“问题”）。验收：4 个存档整局逐帧重放 **0 差异**，64 个 root 叶摘要与 step9 **逐位相同**，原生 wait 契约测试 11 条全过。
+   - `scripts/build_pgo.sh` 不再 `rm -rf build`（只清 profile 目录）：build 目录里有 mimalloc 的 FetchContent 检出，删掉就要重新联网 clone。
+
 ## 问题
 
 - 已修复（结果 12）：原构建 identity C++ 多配置测试 packet logits 最大误差 0.1854288，根因是 Load 沿用上一模型的衍生权重缓存；旧摘要与单模型重放不能替代模型重载验收。
+
+- **吞吐基准的分辨率**（2026-10-23 实测）：采集队列让 load 长期在 22–27（12 核 20 线程）。同一份二进制自比（`compare --rollouts 3 --rounds 5`）比值 1.005 / 0.943 / 1.015 / 1.090 / 1.093，中位数 1.015；`--rollouts 9` 3 轮为 1.038 / 1.011 / 1.000。也就是说单轮 ±9%、3–5 轮中位数约 ±2%。**2% 以下的改动不能靠吞吐判定**，改用剖面份额变化（`prof_symbolize`）与机制计数，并把吞吐数字如实标为“噪声内”。
+- `build/` 曾被留在 PGO 第一阶段（`-fprofile-generate`）而没人发现，量出来比 step9 慢 1.77×。换手/重测前先查 `grep -c fprofile-generate build/build.ninja` 应为 0。

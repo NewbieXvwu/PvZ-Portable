@@ -19,7 +19,10 @@ BUILD=$ROOT/build
 PYTHON=${PYTHON:-$HOME/.venvs/ml/bin/python3}
 WORKLOAD=${1:-bench}
 
-rm -rf "$DATA" "$BUILD"
+# The build directory is kept: it holds the FetchContent checkout of mimalloc, and wiping it
+# forces a network clone.  The profile directory is wiped instead; every object is rebuilt
+# because the compile flags change in both phases.
+rm -rf "$DATA"
 mkdir -p "$DATA"
 
 echo "== phase 1: instrumented build ($BUILD -> $DATA)"
