@@ -58,6 +58,7 @@
 - 11:05 **第 3 项（打包装载转正）完成**：`train_rollout_policy.load()` 只读包，`pack_training_rows.py` 成为唯一读档案的地方，`curriculum_queue` 每轮结束打包并用 `--prune` 删掉被取代的旧包。验收：同一批 88 692 行，前 200 步 6 个 epoch 的 train/val loss 与 tag `retire-flags-20261023` **逐位相同**（差 0，不是 1e-6）；装载 8.10–8.23 s / 304–305 MB → **0.009 s / 227 MB**，包 262 B/行。231 passed / 6 failed（环境性）。细节见 `hotpath-audit.md` §15。
 - 11:30 第 4 步（静态候选下沉）设计完成：`hotpath-audit.md` §16——`VALUE_LOAD` / `BRANCH_VALUE` 两条命令（复用 `BRANCH_OBSERVE` 的循环体，只把输出从 observation 换成分数）、`PVZVN001` 权重格式、`src/ValueNet.{h,cpp}` 新文件里的特征化与卷积、五项等价性验收（权重按位、特征逐元素、分数 1e-6、决策逐字段、−7.9 s/局）。**没动 `src/EnvironmentRollout.cpp`**。要 task35 确认 `main.cpp` 分发与分支循环是否会被重写，写进“问题”。
 - 11:50 压榨第二轮：三项尝试都 < 2%，Python 侧压到停止条件。① step 改用 lean 观测（现役二进制已有，不用重编）：每步 −23…−26%、400 步 × 2 关的 `_frame` 逐条相同，但搜索局 step 只占 1.2 s → **0.26%**；② 价值网批 32→128：`_values` 实际每批只有 18 帧，**收益 0**；③ 静态候选跳过 `_frame`：上限 **0.2%**。测法固化成 `scripts/hotpath_lean.py`。剩下的 >2% 项（静态候选 7%、旧 JSONL 档案）各有外部前置，见“问题”。`hotpath-audit.md` §17。
+- 12:10 生产配方的打包链路也验过（默认选项之外）：`--wait-keep 0.1 --obs v2 --packet-head identity --cells --aux-horizon 8` 打同一份 11 标签数据 → 17 069 行 / 10.0 MB / 23.2 s，`--verify` **12 个数组全 same**；再用 `--cell-soft-weight 3 --aux-weight 0.5` 从包里训 1 epoch 正常跑通（`cand_bytes`/`packet_bytes` 非零，证明候选与 identity packet 都来自包）。`hotpath-audit.md` §15。
 
 ## 问题
 

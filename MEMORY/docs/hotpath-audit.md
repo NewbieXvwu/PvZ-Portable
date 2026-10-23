@@ -452,6 +452,18 @@ Tag：`retire-cuda-20261023`（整条 CUDA 线）、`retire-flags-20261023`（�
 打包成本（一次性，之后每轮只重打并集）：冷缓存 6.5 s、热缓存 2.1 s（88 692 行），产物 23 207 118 B = **262 B/行**
 （不压缩的 npz；13.6 M 行约 3.5 GB）。13.6 M 行按 10 900 行/s 的旧路径要 **21 分钟**，读包仍是毫秒级。
 
+### 生产配方也验过（不只是默认选项）
+
+上面两组验收用的是默认行选项（v1、slot 头、无 cands）。生产配方是 `--wait-keep 0.1 --obs v2 --packet-head identity
+--cell-soft-weight 3`（训练端 `cells=bool(cell_soft_weight)`），它多走三条路径：v2 观测的历史通道、identity packet 列、
+候选格子（`CandidateStore`）。同一份 11 标签数据按这套选项再打一次包：
+
+| 项 | 结果 |
+|---|---|
+| 行数 / 体积 / 打包耗时 | 17 069 行（wait_keep 0.1）/ 10 024 562 B / 23.2 s（冷缓存） |
+| `--verify` 逐数组 | **12 项全部 same**（meta、rows、board、scalar、plant、packet、cell、weight、seed、source、values、cands） |
+| 训练 1 epoch（`--cell-soft-weight 3 --aux-weight 0.5 --obs v2 --packet-head identity`） | 正常跑通；`data_memory` 里 `cand_bytes` 173 579、`packet_bytes` 1 194 830，说明候选与 identity packet 确实是从包里读到的 |
+
 ### 采集端接线
 
 `scripts/curriculum_queue.py`：`pack_labels()`（本队列 `state['log']` 里出现过的标签 + `--pack-labels`）、
