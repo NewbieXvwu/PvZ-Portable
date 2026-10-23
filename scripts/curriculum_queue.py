@@ -6,9 +6,17 @@
 
 1. **升级 / 降级**：某格当前倍率的滑动窗口胜率 > 0.85 且样本够 → 倍率升一档；
    < 0.5 → 降一档（不低于 1.0）。
-2. **分配**：预留 `--guard-ratio`（默认 12%）给 1.0 档防遗忘；其余优先给当前倍率
-   胜率落在 [0.5, 0.85] 的格；没有边缘格就退回全体。1.0 档也 < 0.5 的难关照样采
-   （那正是老师标注有价值的地方）。
+2. **分配**（task57，2026-10-24 起）：
+   a. **保底防饿死**：超过 FLOOR_ROUNDS 轮没被采过的格（含 last_round=0 从未采过的）
+      按最久优先轮转，每格 per_group // FLOOR_SHARE 局；预算 = 每轮
+      ceil(len(cells) / FLOOR_ROUNDS) 组。旧版 12% guard 预算（max(48, 92)=48 局）每轮
+      只能救 1 个格，并列按字母序，13 个排在后面的格三轮 2304 局一次都没轮到。
+   b. **其余预算按"可教差距"降序**：老师胜率（有证据时）− 学生胜率（当前倍率窗口，
+      无数据按 0）。老师没有证据时按可教处理——beta0 采集本身就是老师探针；
+      学生全败而老师会赢的格（如 L20：老师 29/32、学生 0/128）排最前，这正是
+      该采的数据；老师也赢不了的格差距 ≈ 0 自然沉底（雾区格本就不在训练集合）。
+      同分按最久没采的先。老师胜率证据读 `--teacher-rates`
+      （默认 ~/pvz-logs/teacher_rates.json，缺文件按全部未知处理）。
 3. **落盘**：状态 json（默认 `~/pvz-logs/curriculum_state.json`），每轮一行日志；
    偏移在**跑之前**写进状态，崩溃/中断不会重采同一批种子。
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
@@ -58,14 +66,14 @@ from pvz_training_pack import pack_flags, pack_options
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
-FRONTIER_LOW = 0.5
-FRONTIER_HIGH = 0.85
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
 MIN_SAMPLES = 8            # 少于这个局数不做升降级，只继续采
 WINDOW = 256               # 滑动窗口：每组只记最近 256 局的结果（0/1）
-GUARD_RATIO = 0.12
+FLOOR_ROUNDS = 4           # 保底：任何格至多隔这么久必须被采一次（防饿死）
+FLOOR_SHARE = 2            # 保底组局数 = per_group // FLOOR_SHARE（小局数换轮转覆盖）
 DEFAULT_STATE = Path.home() / 'pvz-logs/curriculum_state.json'
+DEFAULT_TEACHER_RATES = Path.home() / 'pvz-logs/teacher_rates.json'
 DEFAULT_LOG = Path.home() / 'pvz-logs/curriculum.log'
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
@@ -340,41 +348,73 @@ def adjust(cells: dict, values: list[float]) -> list[str]:
 
 
 def allocate(cells: dict, values: list[float], budget: int, per_group: int,
-             guard_ratio: float, round_index: int) -> list[tuple[str, float, int]]:
-    """返回 [(base, multiplier, games)]，总局数不超过 budget。"""
+             round_index: int, teacher: dict | None = None) -> list[tuple[str, float, int]]:
+    """返回 [(base, multiplier, games)]，总局数不超过 budget。
+
+    1) 保底（防饿死）：超过 FLOOR_ROUNDS 轮没被采过（含 last_round=0 从未采过）的格，
+       按 (last_round, base) 最久优先轮转，每格 per_group // FLOOR_SHARE 局，走当前倍率；
+       预算 = 每轮 ceil(len(cells) / FLOOR_ROUNDS) 个保底组。
+    2) 其余预算按"可教差距"降序：老师胜率（有证据时）− 学生胜率（当前倍率窗口，无数据
+       按 0）。老师没有证据时按可教处理——beta0 采集本身就是老师探针；学生全败而老师
+       会赢的格（如 L20：老师 29/32、学生 0/128）排最前；老师也赢不了的格差距趋 0，
+       自然沉底（雾区格本就不在训练集合）。同分按最久没采的先。
+    """
     if not cells or budget < 1 or per_group < 1:
         return []
+    teacher = teacher or {}
     picks: list[tuple[str, float, int]] = []
+    picked: set[str] = set()
     spent = 0
-    # 1) 防遗忘：1.0 档，按最久没采过的格轮转。
-    guard_budget = max(per_group, int(budget * guard_ratio))
-    guard_candidates = sorted(cells, key=lambda base: (cells[base]['last_round'], base))
-    for base in guard_candidates:
-        if spent + per_group > guard_budget or spent + per_group > budget:
+    floor_games = max(1, per_group // FLOOR_SHARE)
+    floor_budget = min(budget, -(-len(cells) // FLOOR_ROUNDS) * floor_games)
+    for base in sorted(cells, key=lambda name: (cells[name]['last_round'], name)):
+        if spent + floor_games > floor_budget or cells[base]['last_round'] > round_index - FLOOR_ROUNDS:
             break
-        picks.append((base, 1.0, per_group))
-        spent += per_group
+        current = values[cells[base]['mult_index']]
+        picks.append((base, current, floor_games))
+        picked.add(base)
+        spent += floor_games
         cells[base]['last_round'] = round_index
-    # 2) 余下优先给边缘格；没有边缘格就全体按“离 0.675 最近”排。
-    remaining = budget - spent
-    frontier = []
-    others = []
+    scored = []
     for base, cell in cells.items():
+        if base in picked:
+            continue
         current = values[cell['mult_index']]
-        win_rate = rate(cell, current)
-        if win_rate is not None and FRONTIER_LOW <= win_rate <= FRONTIER_HIGH:
-            frontier.append((abs(win_rate - 0.675), base, current))
-        else:
-            others.append((0.0 if win_rate is None else abs(win_rate - 0.675), base, current))
-    for _distance, base, multiplier in sorted(frontier) + sorted(others):
+        student_rate = rate(cell, current)
+        student = 0.0 if student_rate is None else student_rate
+        teacher_rate = teacher.get(base, teacher.get(f'level:{cell["level"]}', 1.0))
+        gap = min(1.0, max(0.0, teacher_rate - student))
+        scored.append((-gap, cells[base]['last_round'], base, current))
+    remaining = budget - spent
+    for _gap, _age, base, multiplier in sorted(scored):
         if remaining < per_group:
             break
-        if any(pick[0] == base and pick[1] == multiplier for pick in picks):
-            continue
         picks.append((base, multiplier, per_group))
         remaining -= per_group
         cells[base]['last_round'] = round_index
     return picks
+
+
+def load_teacher_rates(path: Path) -> dict:
+    """读老师胜率证据（默认 ~/pvz-logs/teacher_rates.json，缺文件返回空 = 全部按未知处理）。
+
+    格式：{"levels": {"<level>": <rate 或 {"wins": w, "games": g}>},
+           "bases": {"<base>": 同上}}；bases 优先于 levels。采样过小的条目应由
+           生成方把关（见 MEMORY/docs/task57 的生成脚本），这里照单全收。
+    """
+    try:
+        document = json.loads(path.read_text())
+    except (OSError, ValueError):
+        return {}
+    rates: dict[str, float] = {}
+    for kind in ('bases', 'levels'):
+        for name, value in (document.get(kind) or {}).items():
+            if isinstance(value, dict):
+                games = value.get('games', 0)
+                value = value.get('wins', 0) / games if games else 1.0
+            key = name if kind == 'bases' else f'level:{name}'
+            rates[key] = min(1.0, max(0.0, float(value)))
+    return rates
 
 
 def task_id_for(base: str, multiplier: float, tasks: dict[str, dict], names: dict[str, float]) -> str:
@@ -744,9 +784,9 @@ def save_state(path: Path, state: dict) -> None:
 
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
-               guard_ratio: float) -> tuple[list[dict], list[str]]:
+               teacher: dict | None = None) -> tuple[list[dict], list[str]]:
     changes = adjust(state['cells'], values)
-    picks = allocate(state['cells'], values, budget, per_group, guard_ratio, state['round'] + 1)
+    picks = allocate(state['cells'], values, budget, per_group, state['round'] + 1, teacher)
     plan = []
     for base, multiplier, games in picks:
         task_id = task_id_for(base, multiplier, tasks, names)
@@ -865,7 +905,8 @@ def main() -> None:
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
     parser.add_argument('--games-per-group', type=int, default=48)
-    parser.add_argument('--guard-ratio', type=float, default=GUARD_RATIO)
+    parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
+                        help='teacher win-rate evidence json (level/base -> rate); missing file = all unknown')
     parser.add_argument('--rounds', type=int, default=1)
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
@@ -883,7 +924,8 @@ def main() -> None:
     if args.workers < 1:
         parser.error('--workers must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
-                 'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag', 'promotion_panel'):
+                 'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
+                 'promotion_panel', 'teacher_rates'):
         value = getattr(args, name)
         if not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
@@ -892,6 +934,9 @@ def main() -> None:
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
+    teacher = load_teacher_rates(args.teacher_rates)
+    if not teacher:
+        log_line(args.log, f'no teacher-rate evidence at {args.teacher_rates}; ranking by student rate only')
     patterns = args.init_glob or [str(MAIN / 'artifacts/hard/*/config.json'),
                                   str(MAIN / 'artifacts/task28/*/config.json'),
                                   str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
@@ -906,7 +951,7 @@ def main() -> None:
         state = make_state(tasks, names, windows, offsets, str(args.manifest))
     if args.dry_run:
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                   args.games_per_group, args.guard_ratio)
+                                   args.games_per_group, teacher)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
@@ -928,7 +973,7 @@ def main() -> None:
         per_worker = -1
         for _ in range(args.rounds):
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                       args.games_per_group, args.guard_ratio)
+                                       args.games_per_group, teacher)
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():

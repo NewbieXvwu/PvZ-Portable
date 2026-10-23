@@ -36,4 +36,65 @@
 
 ## 结果
 
+- [x] 复盘（2026-10-24 07:4x，state round=2 + curriculum.log 全史重放 + 真实 allocate 重演）：
+  - 饿死是三个机制叠加，不是数据缺失：
+    1. **guard 预算算术**：guard_budget = max(per_group, int(budget×0.12)) = max(48, 92) = 92 局，
+       而一组 48 局、两组 96 > 92 → **每轮防遗忘只轮转 1 个格**（38 格要 38 轮才轮一圈）；
+    2. **并列按字母序**：guard 候选按 (last_round, base) 排，last_round=0 的 13 格里
+       day/night 前段字母先轮走，night_l19/pool/roof 永远垫底；
+    3. **边缘带垄断剩余预算**：adjust() 把 >0.85 升档、<0.5 降档，中难度格永远停在
+       [0.5,0.85] 边缘带内；每轮 ≥15 个边缘格把剩余 720 局吃光。全败格在 others 里按
+       |win−0.675| 排序，win=0 距离最大 → **恰好排最后**，与教学价值倒序；无数据格
+       距离 0.0 理应排最前，但预算到不了。
+  - 三轮 2304 局全部流向 day/night 中难度格（部分格三轮被采 3 次），13 格 last_round=0。
+  - 附带发现：allocate 在 plan 时就写 last_round=round_index，控制器若在组间崩溃重启，
+    本轮未跑的组不会被重排（靠 gap 排序的 age 兜底）——未修，记录在案。
+- [x] 改分配（唯一实现，无开关）：scripts/curriculum_queue.py 的 allocate 重写为
+  **保底（FLOOR_ROUNDS=4 轮内必采一次，每格 per_group//2 局，预算 ceil(格数/4) 组/轮）**
+  + **可教差距排序（老师胜率 − 学生胜率，降序；老师无证据按可教处理，同分最久未采先）**。
+  老师证据读 --teacher-rates（默认 ~/pvz-logs/teacher_rates.json，缺文件 = 全部未知）。
+  证据文件已生成：level→{wins,games,model,source}，来自 task55 冻结表现役老师测量
+  （T52/T50/TV4/P，只收 games≥8）：L7=16/16, L14=32/32, L17=31/32, L20=29/32,
+  L21=17/32, L22=5/16(旧), L23=4/16(旧), L24=3/32, L41=13/16。
+- [x] 验证：python/test_curriculum_queue.py 38 过（+4 subtests），test_curriculum_pipeline、
+  test_roof_panel 全过。新单测：饿死格保底、连续 12 轮无格间隔超 FLOOR_ROUNDS+1、
+  老师会赢学生全败优先（L20>L17中难度>L24沉底）、load_teacher_rates 缺文件/两种格式。
+  独立 state 副本 dry run 5 轮（预算 768/组 48）：round 3-4 内 12 个饿死格全部拿到数据
+  （每格 1-4 组），此后每格按 ≤4 轮周期轮转；pool_l26/27/29（学生 0 且老师未知）持续
+  高频，L21-24 按老师证据降权，L24（老师 3/32）只走保底不再吸预算。
+- [x] 部署说明（主控在 qc 组边界切换，2026-10-24 写）：
+  1. 生效文件只有两个：scripts/curriculum_queue.py 与 recipes/dw4i2.json。已 diff 验证
+     cq 工作树的这两个文件改动前与 qcalloc 完全一致，把 qcalloc 版拷进 cq（或 merge
+     qcalloc 分支）即可，其余文件不用动。
+  2. 重启命令与现命令相同（--rounds 100 --workers 16 --round-games 768
+     --games-per-group 48 --manifest <cq 的 multiplier_panel.json> --executable
+     <deploy3 的 pvz-portable>），只把 --recipe 换成 <cq>/recipes/dw4i2.json。
+     新参数 --teacher-rates 有默认（~/pvz-logs/teacher_rates.json，已生成），可省略。
+  3. 切换步骤：向 ~/pvz-logs/stop_curr 写标志 → 控制器在组间停下（不杀正在跑的组）→
+     换文件重启。正在跑的 round 3 按旧计划跑完，round 4 起新分配生效；state 无需迁移
+     （last_round 语义不变）。
+  4. 控制器所在工作树必须有 stage4 面板产物（qcalloc 工作树没有 artifacts/stage4/*，
+     load_panel 会 FileNotFoundError），所以是"拷文件进 cq"，不是"从 qcalloc 启动"。
+  5. teacher_rates.json 与 state 同层不入 git；任务级更新步骤：改 levels 条目即可
+     （wins/games 或数值），只收 games>=8 的现役老师测量。
+- [x] 配方核实：TrainingPipeline.enqueue() 把 state log 标签 ∪ recipe 标签写进快照
+  recipe（round_000002 快照 = 32 个 c1/c2 标签 + 170 个 dw4i 标签 = 202），
+  _prepare_corpus 缺标签直接报错、不静默缩水 → qc 新组确实按普通流程进后台训练。
+  L20 初始化档案 n20o1_fast_search 在 frames_v2（seed_2290000..，32 局）但不在任何
+  recipe 标签里 → 新开 recipes/dw4i2.json（= dw4i.json + n20o1_fast_search），
+  不覆盖 dw4i.json 历史语义。
+
 ## 问题
+
+- allocate 在 plan 时写 last_round，控制器组间崩溃重启后本轮未跑的组不重排（见上）。
+  要修需把 last_round 写挪到 run_round 组完成时，牵涉防遗忘语义，留给主控决定。
+- dagger-beta 提升建议（**只分析，未实现，主控决定**）：pool/roof/L20 这类学生开局即崩的
+  格，beta0 下学生轨迹只覆盖开局 few 十步，老师标签也只落在这些状态上——DAgger 恰恰
+  要求标签覆盖学生自己访问的状态分布，beta0 在这点上是对的；但"学生访问的分布"塌缩成
+  开局，中后盘状态永远没有标签，学生永远学不会中后盘。Ross et al. 2011 的 β-mixing
+  （部分轨迹由老师执行）是标准解法：对全败格把 dagger-beta 提到 ~0.5，既扩大状态覆盖
+  又保持学生分布成分。search_play.py 已支持 --dagger-beta 参数，改动点只在
+  command_for 按"学生胜率 < 0.1 的格用 beta 0.5"分流——一行条件，等主控批准。
+- 老师证据里 L22/L23 用的是旧 identity 老师（10-22，5/16、4/16），可能低估；L25/27-29
+  无任何老师测量（按可教处理，采了才知道）。新面板出来后应更新 teacher_rates.json。
+
