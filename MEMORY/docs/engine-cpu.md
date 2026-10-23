@@ -11,6 +11,12 @@
 - A/B 每轮原始证据单独保留，汇总写入 `--out`，交替 A/B 顺序。整局读 `games.jsonl`，拒绝局数不足与重复种子，默认并发 2、上限 2。
 - 7 项无需游戏进程的回归测试通过：后段叶差异、统计差异、截断证据、空证据、重放失败、A/B 输出与整局文件/worker 限制。命令：`PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=/home/newbiexvwu/PvZ-search/.claude/worktrees/perf/python /usr/bin/python3 -m unittest test_engine_bench`。
 
+### 基准 v2：从快照的真实 tick 计算视界
+
+`replay_episode` 在执行 `rows[index]` 的动作之前保存快照，而该行 `tick` 已是动作执行后的状态。旧 bench/replay 使用该行 tick 加 2500，实际视界多了这个动作经过的 tick。现改为使用 `env.restore(snapshot)['tick'] + horizon`，报告加入 `benchmark_version: 2`。新增回归用 restore=100、存档动作后=160，证明终点是 2600 而非 2660；全部 **8** 项基准回归测试通过。
+
+历史 root 吞吐数字和此前 192/960 条证据对应 v1，仍可用于其自身同口径 A/B，不能直接与 v2 的绝对吞吐比较。v2 完整引擎复核待两组整局测试释放进程槽位后执行；整局 `search_play` 的 8 局对照不使用这个快照计时逻辑，不受影响。
+
 ## 已有优化记录（继承，待增强夹具补验）
 
 以下数字来自任务书与本地旧结果，计时口径不同的行不可直接连乘；缺失的整局数字不做外推。

@@ -19,6 +19,33 @@ def report():
 
 
 class EngineBenchGateTest(unittest.TestCase):
+    def test_horizon_starts_at_restored_snapshot_not_archive_post_action(self):
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            manifest = root / 'manifest.json'
+            manifest.write_text(json.dumps({'families': {'day': [
+                {'archive': str(root / 'archive'), 'decisions': [1]}]}}))
+            response = dict(ticks=2500, decisions=42, estimated_result=-1, mowers_left=5,
+                            net_calls=42, planted=[0] * 10, substeps=[[2600, 0]],
+                            simulation_seconds=1, network_seconds=1)
+            from unittest.mock import Mock
+            env = Mock()
+            env._process = SimpleNamespace(pid=123)
+            env._last_response = response
+            env.restore.return_value = {'tick': 100}
+            env.rollout.return_value = {'tick': 2600}
+            args = argparse.Namespace(manifest=manifest, executable=root / 'engine', sim_skip=61,
+                                      horizon=2500, rollouts=1, seed_base=0, max_actions=1000,
+                                      out=root / 'bench.json')
+            with patch.object(bench, '_export_student'), patch.object(bench, '_open_env', return_value=env), \
+                    patch.object(bench, '_archive_rows', return_value=[{'tick': 100}, {'tick': 160}]), \
+                    patch.object(bench, 'replay_episode', return_value=({1: 1}, [])), \
+                    patch.object(bench, '_process_cpu', side_effect=[0, 1]), patch.object(bench, '_arm'):
+                result = bench.bench(args)
+            self.assertEqual(env.rollout.call_args.args[1], 2600)
+            self.assertEqual(result['benchmark_version'], 2)
+
     def test_checks_later_rollouts_and_statistics(self):
         left, right = report(), report()
         right["families"]["day"]["rollout_digests"][5]["digest"] = "changed"

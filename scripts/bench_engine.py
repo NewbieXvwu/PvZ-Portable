@@ -341,7 +341,7 @@ def bench(args) -> dict:
             # The replay phase is not the workload being measured, and it must not skew the
             # profile: run every replay first, then arm the sampler for the rollouts only.
             env.set_sim_skip(args.sim_skip)
-            report = {"executable": str(args.executable), "student": str(STUDENT),
+            report = {"benchmark_version": 2, "executable": str(args.executable), "student": str(STUDENT),
                       "sim_skip": args.sim_skip, "horizon": args.horizon,
                       "rollouts_per_root": args.rollouts, "families": {}}
             replay_failures = 0
@@ -366,8 +366,9 @@ def bench(args) -> dict:
                     for index, snapshot in snapshots.items():
                         roots += 1
                         for repeat in range(args.rollouts):
-                            start_tick = int(rows[index]["tick"])
-                            env.restore(snapshot)
+                            # The snapshot precedes rows[index]'s recorded action;
+                            # that row's tick is the state *after* the action.
+                            start_tick = int(env.restore(snapshot)["tick"])
                             started = time.perf_counter()
                             observation = env.rollout(
                                 None, start_tick + args.horizon, sim_skip=args.sim_skip,
@@ -502,8 +503,8 @@ def replay(args) -> dict:
                     for index, snapshot in snapshots.items():
                         digests = []
                         for _ in range(2):
-                            env.restore(snapshot)
-                            observation = env.rollout(None, int(rows[index]["tick"]) + args.horizon,
+                            start_tick = int(env.restore(snapshot)["tick"])
+                            observation = env.rollout(None, start_tick + args.horizon,
                                                       sim_skip=args.sim_skip, max_actions=args.max_actions,
                                                       snapshot_id=snapshot, seed=args.seed_base)
                             digests.append(_rollout_digest(observation, env._last_response))
