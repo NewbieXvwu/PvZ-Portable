@@ -58,22 +58,24 @@ def _init(args) -> None:
     _W["weights"] = weights
 
 
-def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: int, rng, context=None) -> list[dict]:
+def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: int, rng, context=None,
+                history=None) -> list[dict]:
     """Wait, plus for every card that can be planted the student's ``cells_per_card`` favourite legal cells
-    and ``random_cells`` other legal cells drawn at random."""
-    import torch
-    from pvz_rollout_policy import LAWN_COLS, WAIT, features
-    board, scalars = features(frame, previous, context if net.context else None)
-    with torch.inference_mode():
-        h, g = net.encode(board[None], scalars[None])
-        out = [dict(WAIT)]
-        for packet in sorted({a["packet"] for a in legal}):
-            logits = net.cell_logits(h, g, torch.tensor([packet]))[0].tolist()
-            ranked = sorted((a for a in legal if a["packet"] == packet), key=lambda a: -logits[a["row"] * LAWN_COLS + a["col"]])
-            chosen = ranked[:cells_per_card]
-            rest = ranked[cells_per_card:]
-            chosen += rng.sample(rest, min(random_cells, len(rest)))
-            out += [{"type": "plant", "packet": packet, "row": a["row"], "col": a["col"]} for a in chosen]
+    and ``random_cells`` other legal cells drawn at random.
+
+    The order comes from ``ranked_plants``, i.e. the same heads ``act`` uses: the identity packet head and
+    the per-episode ``StudentHistory`` of a v2 student are applied there. Scoring the cells here by hand
+    would rank a v2 student's cells with a network input it never sees."""
+    from pvz_rollout_policy import WAIT, ranked_plants
+    order = [action for _score, action in ranked_plants(net, frame, previous, legal, context=context,
+                                                       history=history)]
+    out = [dict(WAIT)]
+    for packet in sorted({a["packet"] for a in legal}):
+        ranked = [a for a in order if a["packet"] == packet]
+        chosen = ranked[:cells_per_card]
+        rest = ranked[cells_per_card:]
+        chosen += rng.sample(rest, min(random_cells, len(rest)))
+        out += [{"type": "plant", "packet": packet, "row": a["row"], "col": a["col"]} for a in chosen]
     return out
 
 
@@ -81,6 +83,7 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     import torch
     from pvz_env import TaskSpec
     from pvz_rollout_policy import act
+    from pvz_student_observation import StudentHistory
     from pvz_value_net import featurize, observation_context
     from render_episode import _frame
     from pvz_tasks import profile_for_deck
@@ -91,17 +94,18 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
     env.load_rollout_net(_W["weights"])
     context = torch.from_numpy(observation_context(obs))
+    history = StudentHistory(net.obs)      # v2 students read per-decision history; v1 ignores it
     rng = random.Random(seed)
     previous, previous_action, positions, dumped = None, None, [], []
     while not obs["terminal"]:
         frame = _frame(obs)
         frame["action"] = previous_action
         legal = (obs.get("legal_actions") or {}).get("plants") or []
-        action = act(net, frame, previous, legal, context=context.numpy())
+        action = act(net, frame, previous, legal, context=context.numpy(), history=history)
         chosen = (legal and obs["wave"] >= args.min_wave and obs["sun"] >= args.min_sun
                   and (not args.student_waits or action["type"] != "plant"))
         if chosen and rng.random() < args.position_rate:
-            position, leaves = _evaluate(env, obs, frame, previous, legal, action, seed, len(positions), context)
+            position, leaves = _evaluate(env, obs, frame, previous, legal, action, seed, len(positions), context, history)
             positions.append(position)
             dumped += leaves
         previous, previous_action = frame, action
@@ -143,13 +147,14 @@ def _save_dump(rows, path: Path, config: dict) -> None:
     temporary.replace(path)
 
 
-def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, context) -> tuple[dict, list[tuple]]:
+def _evaluate(env, obs, frame, previous, legal, student_action, seed, index, context,
+              history=None) -> tuple[dict, list[tuple]]:
     import torch
     from pvz_value_net import featurize
     from render_episode import _frame
     args = _W["args"]
     cands = _candidates(_W["student"], frame, previous, legal, args.cells, args.random_cells,
-                        random.Random(seed * 1000 + index), context.numpy())
+                        random.Random(seed * 1000 + index), context.numpy(), history)
     student_key = json.dumps(student_action, sort_keys=True)
     root = env.snapshot()
     outcomes, leaves, waves = [], [], []
