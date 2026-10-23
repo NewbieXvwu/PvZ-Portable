@@ -10,7 +10,8 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
                               MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              label_for, parse_task_id, plan_round, rate, worker_count)
+                              command_for, label_for, parse_task_id, plan_round, rate,
+                              startup_worker_estimate, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -133,6 +134,32 @@ class WorkerCountTest(unittest.TestCase):
     def test_descendant_rss_excludes_root_and_unrelated(self):
         table = {1: (0, 100), 10: (1, 1000), 11: (10, 500), 12: (1, 200), 20: (0, 9000)}
         self.assertEqual(_descendant_rss(1, table), 1700)
+
+    def test_command_for_overrides_probe_workers_frames_and_out(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), workers=16,
+                               rollout_policy=Path('/m/student.pt'), static_value=Path('/m/static.pt'),
+                               value=Path('/m/value.pt'), executable=Path('/m/pvz-portable'),
+                               resource_dir=Path('/m/resources'), frames=Path('/m/frames'),
+                               out=Path('/m/out'))
+        command = command_for(args, Path('/m/panel.json'), 'day_l7', 5, 1, 'oomprobe',
+                              workers=1, frames=Path('/tmp/probe-frames'), out=Path('/tmp/probe'))
+        self.assertEqual(command[command.index('--workers') + 1], '1')
+        self.assertEqual(command[command.index('--frames') + 1], '/tmp/probe-frames')
+        self.assertEqual(command[command.index('--out') + 1], '/tmp/probe/oomprobe_1')
+        self.assertEqual(command[command.index('--seed-offset') + 1], '5')
+
+    def test_startup_estimate_without_probe(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            args = SimpleNamespace(log=Path(tmp) / 'log')
+            original = queue.mem_available_bytes
+            try:
+                queue.mem_available_bytes = lambda: None       # 没有 /proc
+                self.assertEqual(startup_worker_estimate(args, []), 0)
+                queue.mem_available_bytes = lambda: 20 * GIB  # 有内存但没有计划
+                self.assertEqual(startup_worker_estimate(args, []), queue.DEFAULT_WORKER_BYTES)
+            finally:
+                queue.mem_available_bytes = original
 
 
 if __name__ == '__main__':

@@ -7,10 +7,11 @@ script times ``tmux new-session -d`` and ``bash -c true`` (the task book's stand
 new ``wsl.exe`` session, which cannot be entered from inside WSL) and then checks that the
 two fake workers -- not init, sshd, tmux, earlyoom or the caller -- were the victims.
 
-Refuses to start unless ``--i-know`` is given, no training is running, no collection is
-running, and at least 12 GiB is available.  It only ever signals its own two children
-(SIGKILL as a last resort if the guards did not act); init, sshd, tmux and earlyoom are
-observed, never touched.
+Refuses to start unless ``--i-know`` is given, no training is running, and at least
+12 GiB is available.  Collection from other agents is recorded, not refused: their
+workers carry score 0 while the fake workers carry 1000, so the guards must pick the
+fake workers.  It only ever signals its own two children (SIGKILL as a last resort if
+the guards did not act); init, sshd, tmux and earlyoom are observed, never touched.
 
 Usage:
   python3 scripts/oom_stress_test.py            # prints the plan and refuses
@@ -53,6 +54,15 @@ def meminfo() -> tuple[int, int]:
     return values["MemTotal"], values["MemAvailable"]
 
 
+def command_matches(command: str, needles: tuple[str, ...]) -> bool:
+    """An argv token's basename is exactly one of the needles.
+
+    Plain substring matching would count earlyoom itself as collection because its
+    ``--prefer '(pvz-portable|search_play|python3)'`` contains both names.
+    """
+    return any(Path(token).name in needles for token in command.split())
+
+
 def matching_processes(needles: tuple[str, ...]) -> list[tuple[int, str]]:
     found = []
     for entry in Path("/proc").iterdir():
@@ -62,7 +72,7 @@ def matching_processes(needles: tuple[str, ...]) -> list[tuple[int, str]]:
             command = (entry / "cmdline").read_bytes().replace(b"\0", b" ").decode(errors="replace")
         except OSError:
             continue
-        if any(needle in command for needle in needles):
+        if command_matches(command, needles):
             found.append((int(entry.name), command.strip()))
     return found
 
@@ -131,13 +141,11 @@ def main() -> int:
         print(json.dumps(dict(refused=True, reason="oom_score_adj is unavailable (not Linux)", plan=plan)))
         return 2
 
-    blockers = dict(training=matching_processes(TRAINING), collection=matching_processes(COLLECTION))
+    training = matching_processes(TRAINING)
+    other_collection = matching_processes(COLLECTION)
     mem_total, available = meminfo()
-    if blockers["training"]:
-        print(json.dumps(dict(refused=True, reason="training is running", training=blockers["training"]), indent=1))
-        return 2
-    if blockers["collection"]:
-        print(json.dumps(dict(refused=True, reason="collection is running", collection=blockers["collection"]), indent=1))
+    if training:
+        print(json.dumps(dict(refused=True, reason="training is running", training=training), indent=1))
         return 2
     if available < MIN_START_BYTES:
         print(json.dumps(dict(refused=True, reason=f"only {available / GIB:.1f} GiB available; "
@@ -152,8 +160,8 @@ def main() -> int:
     watched = {"init": [1], "tmux": tmux_pids, "sshd": sshd_pids}
 
     print(f"starting 2 fake workers with oom_score_adj={OOM_SCORE_WORKER}; "
-          f"MemTotal {mem_total / GIB:.1f} GiB, MemAvailable {available / GIB:.1f} GiB, earlyoom={earlyoom}",
-          flush=True)
+          f"MemTotal {mem_total / GIB:.1f} GiB, MemAvailable {available / GIB:.1f} GiB, earlyoom={earlyoom}, "
+          f"other collection processes left running: {len(other_collection)}", flush=True)
     workers = [subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--worker", str(i)],
                                 stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                for i in range(2)]
@@ -200,8 +208,11 @@ def main() -> int:
 
     alive = {name: [pid for pid in pids if Path(f"/proc/{pid}").exists()] for name, pids in watched.items()}
     late_available = meminfo()[1]
+    # A kill can land between two 50 ms polls; the per-poll minimum still proves the box was
+    # pushed below the threshold, while latency is only meaningful if the poll caught it live.
+    pressure_observed = minimum < threshold
     passed = (
-        pressure_at is not None
+        pressure_observed
         and latency is not None
         and latency["tmux_new_session"]["seconds"] < LATENCY_LIMIT
         and latency["bash_true"]["seconds"] < LATENCY_LIMIT
@@ -210,13 +221,14 @@ def main() -> int:
         and all(alive[name] == pids for name, pids in watched.items())
     )
     print(json.dumps(dict(
-        passed=passed, mem_total_gib=round(mem_total / GIB, 1),
+        passed=passed, pressure_observed=pressure_observed, mem_total_gib=round(mem_total / GIB, 1),
         mem_available_start_gib=round(available / GIB, 1),
         minimum_available_gib=round(minimum / GIB, 2),
         minimum_available_percent=round(100 * minimum / mem_total, 2),
         pressure_at_gib=None if pressure_at is None else round(pressure_at / GIB, 2),
         latency=latency, workers=results, forced_kills=forced,
         watched=watched, watched_alive=alive, earlyoom=earlyoom,
+        other_collection=[dict(pid=pid, command=command) for pid, command in other_collection],
         available_after_gib=round(late_available / GIB, 1),
     ), indent=1))
     return 0 if passed else 1

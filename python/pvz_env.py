@@ -21,7 +21,6 @@ from pvz_common import (
     canonical_digest,
     git_metadata,
     is_generated_artifact,
-    set_oom_score_adj,
     sha256_bytes,
     sha256_file,
 )
@@ -205,8 +204,21 @@ def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
 
 
 def _oom_score_engine() -> None:
-    """preexec_fn for the simulator: under memory pressure the engine dies before its worker's driver."""
-    set_oom_score_adj(OOM_SCORE_WORKER)
+    """preexec_fn for the simulator: under memory pressure the engine dies before its worker's driver.
+
+    Runs between fork and exec, so it avoids Python's text-I/O machinery and writes the
+    number with plain os.open/os.write (the parent may hold threads and their locks).
+    """
+    try:
+        descriptor = os.open("/proc/self/oom_score_adj", os.O_WRONLY)
+    except OSError:
+        return
+    try:
+        os.write(descriptor, f"{OOM_SCORE_WORKER}\n".encode())
+    except OSError:
+        pass
+    finally:
+        os.close(descriptor)
 
 
 class PvZEnv:
