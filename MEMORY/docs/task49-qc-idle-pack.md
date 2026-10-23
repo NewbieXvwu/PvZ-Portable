@@ -38,6 +38,7 @@
 
 ## 结果
 
+- 2026-10-23 [正式重叠证据]：修正版首轮 16 局完成后，第二轮立即以旧学生开采；后台 pack=13.316919s、train=4.467141s。独立 `/proc` 采样在 pack 阶段 52 次中有 47 次看到游戏进程、两游戏 CPU 共推进 18.95s；train 阶段 17/17 次看到游戏、CPU 共推进 6.62s。证据 `artifacts/task49/acceptance/phase_cpu_evidence.json`，不是仅凭两个日志区间相交；第二轮剩余采集与最终全量/增量对拍尚待完成。
 - 2026-10-23 [打包计时]：16 份真实档案、3365 训练行：冷缓存两标签构建 10.733s；同缓存串行重建 0.792s。请求 2 进程时当前共享机器内存门禁实际限为 1，0.795s，不能把它当作双进程加速证据；真实双 spawn 的结果一致性由回归覆盖。两份实测包张量逐位相同。计时原件在 `artifacts/task49/pack_bench/results.json`，不入 git。
 - 2026-10-23 [全量测试]：本工作树独立 Release 引擎构建完成；`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest /home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/python -q` → **356 passed / 133 subtests passed / 0 failed / 0 skipped**（49.60s）。预验收按独立停止标志正常组间退出，进程监测峰值 2；修正版完整 32 局已在 `artifacts/task49/acceptance/` 启动（PID 157083），未重启 qc。
 - 2026-10-23 [内存预验收修正]：实测捕获小语料冷启动预算过大导致后台等待，按实际语料体积收紧预测峰值并同步限制标签进程数；27 项相关回归（4 subtests）通过，多进程回归现明确断言真实 spawn 2 个标签构建进程。已补数据契约、学生滞后影响、主控组间部署与首次重建说明；完整 32 局修正版验收待运行。
