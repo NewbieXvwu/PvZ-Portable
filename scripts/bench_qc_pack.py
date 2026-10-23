@@ -27,6 +27,16 @@ def require_cold(view: Path) -> None:
         raise ValueError('untimed cache/pack exists; inspect interrupted cold run instead of reusing it')
 
 
+def verify_view(stage: dict, inputs: dict) -> None:
+    view = Path(stage['view'])
+    validate_sources([str(p.relative_to(view)) for p in view.glob('*/*/frames.npz')], stage['expected_sources'])
+    known = {Path(name).resolve(): digest for name, digest in inputs.items()}
+    for relative in stage['expected_sources']:
+        for file in (view / relative, (view / relative).with_name('meta.json')):
+            if file.resolve() not in known or sha(file) != known[file.resolve()]:
+                raise ValueError('archive view differs from frozen input files')
+
+
 def make_plan(out: Path) -> dict:
     target = out / 'cohort-pack/plan.json'
     if target.exists():
@@ -132,6 +142,7 @@ def run(out: Path, plan: dict) -> None:
     for stage in plan['stages']:
         require_inputs(dict(input_sha256=plan['input_sha256'], source_python_sha256={}))
         require_inputs(json.loads((out / 'collection-plan.json').read_text()))
+        verify_view(stage, plan['input_sha256'])
         folder = Path(stage['view']).parent
         timing_file = folder / 'timing.json'
         if timing_file.exists():
@@ -182,9 +193,48 @@ def run(out: Path, plan: dict) -> None:
     write_json(out / 'cohort-pack/active.json', dict(complete=True, ended_at=time.time()))
 
 
+def report(out: Path, plan: dict) -> dict:
+    if len(plan['stages']) != 4 or {s['task_id'] for s in plan['stages']} != set(TASKS):
+        raise ValueError('all four distinct cohort pack stages are required')
+    require_inputs(dict(input_sha256=plan['input_sha256'], source_python_sha256={}))
+    require_inputs(json.loads((out / 'collection-plan.json').read_text()))
+    collection = json.loads((out / 'collection-results.json').read_text())
+    groups = {}
+    for stage in plan['stages']:
+        file = Path(stage['view']).parent / 'timing.json'
+        timing = json.loads(file.read_text())
+        if not timing['complete'] or timing['returncode'] != 0 or timing['wall_seconds'] <= 0:
+            raise ValueError('cohort pack stage incomplete')
+        verify_view(stage, plan['input_sha256'])
+        audited = audit_pack(Path(timing['pack']['path']), stage)
+        if audited['sha256'] != timing['pack']['sha256']:
+            raise ValueError('pack changed after timing')
+        previous = collection['results'][stage['task_id']]
+        old = previous['old']['wall_seconds']
+        new = previous['cq']['wall_seconds'] + timing['wall_seconds']
+        samples = timing['samples']
+        groups[stage['task_id']] = dict(collection_ratio=previous['throughput_ratio_cq_over_old'],
+            pack_wall_seconds=timing['wall_seconds'], pack_cpu_seconds=timing['cpu_seconds'],
+            old_collection_plus_pack_seconds=old, cq_collection_plus_pack_seconds=new,
+            collection_plus_pack_ratio=old/new, pack=audited, timing_sha256=sha(file),
+            max_sampled_engine_processes=max((s['engine_processes'] for s in samples), default=None),
+            min_mem_available_gib=min((s['mem_available_bytes']/2**30 for s in samples), default=None),
+            max_tree_rss_gib=max((s['tree_rss_bytes']/2**30 for s in samples), default=None))
+    old = sum(g['old_collection_plus_pack_seconds'] for g in groups.values())
+    new = sum(g['cq_collection_plus_pack_seconds'] for g in groups.values())
+    ratio = old/new
+    result = dict(complete=True, scope=plan['scope'], training=plan['training'], results=groups,
+                  plan_sha256=sha(out/'cohort-pack/plan.json'),
+                  old_collection_plus_pack_seconds=old, cq_collection_plus_pack_seconds=new,
+                  collection_plus_pack_ratio=ratio,
+                  classification='>=2.0' if ratio>=2 else '<1.5' if ratio<1.5 else '1.5-2.0')
+    write_json(out/'cohort-pack/results.json', result)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('plan', 'run'))
+    parser.add_argument('phase', choices=('plan', 'run', 'report'))
     parser.add_argument('--out', type=Path, default=ROOT / 'artifacts/task51')
     args = parser.parse_args()
     if not args.out.is_absolute():
@@ -192,6 +242,9 @@ def main():
     plan = make_plan(args.out)
     if args.phase == 'run':
         run(args.out, plan)
+    elif args.phase == 'report':
+        result = report(args.out, plan)
+        print(json.dumps({k:v for k,v in result.items() if k!='results'}, indent=2))
     else:
         print(json.dumps(dict(stages=len(plan['stages']), scope=plan['scope'])))
 

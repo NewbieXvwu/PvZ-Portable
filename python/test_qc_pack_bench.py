@@ -28,6 +28,22 @@ class PackEvidenceTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'untimed'):
                 pack.require_cold(root)
 
+    def test_archive_view_cannot_point_to_a_different_file(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp); archive = root/'seed_1/label'; archive.mkdir(parents=True)
+            file = archive/'frames.npz'; file.write_bytes(b'original')
+            meta = archive/'meta.json'; meta.write_text('{}')
+            inputs = {str(file):pack.sha(file), str(meta):pack.sha(meta)}
+            stage = dict(view=str(root), expected_sources=['seed_1/label/frames.npz'])
+            pack.verify_view(stage, inputs)
+            file.write_bytes(b'changed')
+            with self.assertRaisesRegex(ValueError, 'frozen input'):
+                pack.verify_view(stage, inputs)
+
+    def test_partial_cohort_list_cannot_produce_complete_report(self):
+        with self.assertRaisesRegex(ValueError, 'all four'):
+            pack.report(Path('/unused'), dict(stages=[]))
+
     def fixture(self, root, missing_rows=False, invalid_frame=False):
         view = root / 'frames'; labels = ['block0_fast_search', 'block1_fast_search']; paths = []
         for i in range(16):

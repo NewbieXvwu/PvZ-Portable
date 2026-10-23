@@ -539,7 +539,7 @@
   },
   "pending": [
     "task50 full gates and zones+deploy3 controlled comparison",
-    "same four controlled families/multiplier cycle evidence; historical shared-cycle allocation is separate"
+    "same four tasks/multiplier continuous production cycle with historical corpus remains unobserved; selected-cohort cold-pack stage sums are supplementary"
   ],
   "gap_to_2x_seconds": 938.3993075200051,
   "gap_by_task_seconds": {
@@ -640,5 +640,90 @@
     },
     "ratio": 0.7942152361162315,
     "note": "Different task mixtures/workers; current pack failed with -15 and restart/probe is included."
+  },
+  "supplemental_selected_cohort_cold_pack": {
+    "complete": true,
+    "scope": "selected 16-game cohorts, cold cache, no historical corpus; collection+pack stage sums",
+    "training": "No training stage in the frozen old/cq controller; none launched.",
+    "plan_sha256": "c75bbf127f6be732e1863a155db4b219d0ee4b49a4fcbf67531b7adaa2a775a8",
+    "old_collection_plus_pack_seconds": 5925.559501377997,
+    "cq_collection_plus_pack_seconds": 3988.5593542950082,
+    "collection_plus_pack_ratio": 1.485639042828124,
+    "classification": "<1.5",
+    "result_sha256": "ca8218317da5d84c41575bd9e0150efdaab9d6da65fe7797c106625a08e0d2f2",
+    "results": {
+      "day_l7_train_d7_m150": {
+        "collection_ratio": 1.2417131427391455,
+        "pack_wall_seconds": 29.729378178999468,
+        "pack_cpu_seconds": 28.086208,
+        "old_collection_plus_pack_seconds": 1723.0651717629953,
+        "cq_collection_plus_pack_seconds": 1417.3809318720014,
+        "collection_plus_pack_ratio": 1.2156683732772264,
+        "timing_sha256": "f5828b52c784402703af41c9954a388143e81d6cd5d13d8854af2519472b536e",
+        "max_sampled_engine_processes": 0,
+        "min_mem_available_gib": 9.070140838623047,
+        "max_tree_rss_gib": 0.707794189453125,
+        "pack": {
+          "sha256": "1d867f960c4d86f148613b5f4ac8901c99c3b1ee47e02a72c098fdf8a944847d",
+          "bytes": 3218090,
+          "rows": 5507,
+          "source_archives": 16
+        }
+      },
+      "night_l14_train_n10_m150": {
+        "collection_ratio": 1.9061684715648968,
+        "pack_wall_seconds": 23.407387783998274,
+        "pack_cpu_seconds": 22.852131999999997,
+        "old_collection_plus_pack_seconds": 1526.6417618689957,
+        "cq_collection_plus_pack_seconds": 824.3028934239992,
+        "collection_plus_pack_ratio": 1.8520397951384264,
+        "timing_sha256": "861bf2a78d965a54fe0c20758a6ac6b670e8e9c16e5d43521b07d97ee4690428",
+        "max_sampled_engine_processes": 0,
+        "min_mem_available_gib": 10.158432006835938,
+        "max_tree_rss_gib": 0.6925735473632812,
+        "pack": {
+          "sha256": "4a959174004749abe8cd80f4757f90f0f601790399063c7176343dc3a5fbe8a2",
+          "bytes": 2680938,
+          "rows": 5018,
+          "source_archives": 16
+        }
+      },
+      "pool_l24_train_p9k_m150": {
+        "collection_ratio": 3.257698127212768,
+        "pack_wall_seconds": 10.131763413002773,
+        "pack_cpu_seconds": 9.787124000000006,
+        "old_collection_plus_pack_seconds": 439.60553845499817,
+        "cq_collection_plus_pack_seconds": 145.0753712270016,
+        "collection_plus_pack_ratio": 3.030187238102192,
+        "timing_sha256": "9f8f1acb224c9e8679457ee3c18fd47ea6f4c77108d022808686425bd332bbb0",
+        "max_sampled_engine_processes": 0,
+        "min_mem_available_gib": 10.267852783203125,
+        "max_tree_rss_gib": 0.6411170959472656,
+        "pack": {
+          "sha256": "e61aacd3b5e3dd36062f06b1f501b23acad20df402f3e13481f35fb3afe88c94",
+          "bytes": 759821,
+          "rows": 1802,
+          "source_archives": 16
+        }
+      },
+      "day_l10_orig_train_m150": {
+        "collection_ratio": 1.4174199683282862,
+        "pack_wall_seconds": 24.111766710004304,
+        "pack_cpu_seconds": 23.397848,
+        "old_collection_plus_pack_seconds": 2236.2470292910075,
+        "cq_collection_plus_pack_seconds": 1601.800157772006,
+        "collection_plus_pack_ratio": 1.396083661523341,
+        "timing_sha256": "023728ac04c05a689889ff99f9d494d3755ab90b2914ace3a6231937941459b8",
+        "max_sampled_engine_processes": 0,
+        "min_mem_available_gib": 9.956172943115234,
+        "max_tree_rss_gib": 0.689117431640625,
+        "pack": {
+          "sha256": "20367432a34a1f7745eff3685b0158c7d9c446ba92b77d2ac219f8f62053acfb",
+          "bytes": 2654213,
+          "rows": 4480,
+          "source_archives": 16
+        }
+      }
+    }
   }
 }
