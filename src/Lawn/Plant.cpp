@@ -2855,14 +2855,17 @@ void Plant::UpdateReanim()
 
 void Plant::Update()
 {
+	// The ordinary playing case is tested first: the three special modes below are mutually
+	// exclusive with it, so the disjunction is unchanged and the per-plant cutscene query is
+	// skipped (0.5% of the rollout CPU on 2026-10-23).
 	bool doUpdate = false;
-	if (IsOnBoard() && mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && mApp->IsWallnutBowlingLevel())
+	if (!IsOnBoard() || mApp->mGameScene == GameScenes::SCENE_PLAYING)
+		doUpdate = true;
+	else if (IsOnBoard() && mApp->mGameScene == GameScenes::SCENE_LEVEL_INTRO && mApp->IsWallnutBowlingLevel())
 		doUpdate = true;
 	else if (IsOnBoard() && mApp->mGameMode == GameMode::GAMEMODE_CHALLENGE_ZEN_GARDEN)
 		doUpdate = true;
 	else if (IsOnBoard() && mBoard->mCutScene->ShouldRunUpsellBoard())
-		doUpdate = true;
-	else if (!IsOnBoard() || mApp->mGameScene == GameScenes::SCENE_PLAYING)
 		doUpdate = true;
 
 	if (doUpdate)

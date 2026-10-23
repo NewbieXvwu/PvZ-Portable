@@ -1546,12 +1546,12 @@ void LawnApp::EnvironmentPresent()
 		SDL_Delay(pauseMs);
 }
 
-EnvironmentWaitEvents::PublicState LawnApp::EnvironmentPublicWaitState()
+void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& result)
 {
 	using namespace EnvironmentWaitEvents;
-	PublicState result;
+	result.clear();
 	result.terminal = EnvironmentTerminal();
-	if (!mBoard) return result;
+	if (!mBoard) return;
 	result.tick = mBoard->mMainCounter;
 	result.wave = mBoard->mCurrentWave;
 	result.sun = mBoard->mSunMoney;
@@ -1561,32 +1561,42 @@ EnvironmentWaitEvents::PublicState LawnApp::EnvironmentPublicWaitState()
 	{
 		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
 		if (packet.mActive && packet.mPacketType != SeedType::SEED_NONE)
-			result.readyPackets.emplace(i, static_cast<int>(packet.mPacketType), static_cast<int>(packet.mImitaterType));
+			SortedInsert(result.readyPackets, std::make_tuple(i, static_cast<int>(packet.mPacketType), static_cast<int>(packet.mImitaterType)));
 	}
 	for (const LawnMower* mower : mBoard->mLawnMowers)
 		if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY)
-			result.readyDefenses.emplace(mower->mRow, static_cast<int>(mower->mMowerType));
-	std::set<int> identities;
+			SortedInsert(result.readyDefenses, std::make_pair(mower->mRow, static_cast<int>(mower->mMowerType)));
+	// Duplicate detection for the invariant below; kept across calls so the wait loop does
+	// not allocate, and sorted so the check stays logarithmic in the zombie count.
+	static thread_local std::vector<int> aIdentities;
+	aIdentities.clear();
 	for (Zombie* zombie : mBoard->mZombies)
 	{
 		if (zombie->mDead) continue;
 		const int identity = static_cast<int>(mBoard->ZombieGetID(zombie));
-		if (identity == 0 || identity == -1 || !identities.insert(identity).second || !std::isfinite(zombie->mPosX))
+		if (identity == 0 || identity == -1 || !std::isfinite(zombie->mPosX))
 			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
+		if (Contains(aIdentities, identity))
+			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
+		SortedInsert(aIdentities, identity);
 		// Exactly the existing public observation: no hidden hostility/queue flag.
-		// Only positions near the boundary need decimal rendering to decide the side.
-		const double x = std::abs(zombie->mPosX - LeftZoneMaxX) < 1.0 ?
-			RenderedPublicCoordinate(zombie->mPosX) : static_cast<double>(zombie->mPosX);
+		// Only a coordinate that decimal rendering could move across the boundary needs the
+		// rendering.  Six significant digits round a value in [100, 1000) to a thousandth, so
+		// rounding moves it by at most 0.0005: anything further than 0.001 from the boundary
+		// keeps its side without it.  The stream formatting behind it (locale, printf) was
+		// 2.6% of the rollout CPU, all of it for zombies within a whole unit of x=160.
+		const double aPosX = zombie->mPosX;
+		const double x = std::abs(aPosX - LeftZoneMaxX) <= 0.001 ?
+			RenderedPublicCoordinate(aPosX) : aPosX;
 		if (zombie->IsOnBoard() && x <= LeftZoneMaxX)
-			result.leftZoneZombies.insert(identity);
+			SortedInsert(result.leftZoneZombies, identity);
 	}
-	return result;
 }
 
 EnvironmentWaitEvents::Result LawnApp::EnvironmentWaitUntil(int ticks, int condition)
 {
 	return EnvironmentWaitEvents::Run(ticks, condition,
-		[this] { return EnvironmentPublicWaitState(); },
+		[this](EnvironmentWaitEvents::PublicState& theState) { EnvironmentPublicWaitState(theState); },
 		[this] { EnvironmentWait(1); });
 }
 
