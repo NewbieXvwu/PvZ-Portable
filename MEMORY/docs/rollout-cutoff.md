@@ -54,7 +54,44 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff
 
 逐族、逐检查点全表见 `MEMORY/docs/task40-confident-cutoff.md` 的“结果”节。
 
-## 第 2 步：实现（待续）
+## 第 2 步：实现（Python 验收慢版本）
 
 - task37 的 `vcpp` 分支不可依赖：没有 `origin/vcpp`，工作树有未提交改动，且 C++ 价值网前向有未消除的 CPU 回退。按任务书走 Python 侧验收慢版本（只量质量，不量速度）。
-- 验收设计（待预登记后执行）：同 root 同 decision_seed 跑三条臂——原版（2500）、收手版（检查点每 500、θ=0.98）、原版换随机未来（噪声底线）；`scripts/search_agreement_stats.py` 的整局成组 bootstrap 口径。
+- `scripts/cutoff_agreement.py` 只在一次搜索期间替换 `search_play._rollout_policy` / `_score_terminal_or_value`，搜索代码本身不改。
+- cutoff 臂：按 500/1000/1500/2000 顺序各跑一次引擎短推演（每个检查点一次往返），首次价值 v≥0.98 或 v≤0.02 即收手、叶值取该检查点；短推演先终局取 0/1；都不自信才跑满 2500、取叶值。
+- 自检：day_l7 root 137/365/593/776 × seed 0–2 共 12 例，cutoff 值与第 1 步逐位一致——不自信 root 等于 2500 值（如 root 137 seed0 `0.765421`），自信 root 在 500 收手且等于 t=500 值（如 root 593 seed0 `0.990201`）；日志 `artifacts/task40/cutoff_check.log`。先试过“跑满 2500 + 引擎 trace 再在 Python 打分”的版本，值相同但慢 10–20 倍，弃用。
+
+## 第 3 步：验收（预登记，正式跑）
+
+- 三臂同 root、同未来：`exact`（2500）、`cutoff`（每 500 检查、θ=0.98）、`noise`（未来偏移 `+7,777,777`）；臂顺序在每个搜索点轮换。
+- 参数：`samples 3`、`per-card 1`、`student-candidates 2`、`verify-samples 9`、halving、`horizon 2500`、`MARGIN 0.02`、`rollout-sim-skip 61`、`max-actions 3000`、`playthrough 2`；搜索点同 task8（有合法植物且学生想种植或距上次 ≥300 tick），三臂共用同一批决策点；学生打完整局（`dagger_beta=0`）。
+- 局：4 族 × 任务清单 `seeds` 30000–30015（每族 16 局，共 64 局），2 workers：
+
+| 族 | 清单 | task_id |
+|---|---|---|
+| day_l7 | `/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json` | `day_l7_z20_eval` |
+| night_l14 | `/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10.json` | `night_l14_eval_n10` |
+| pool_24 | `/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json` | `pool_l24_eval_p9k` |
+| original_1_10 | `/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json` | `day_l10_orig_eval` |
+
+- 判据：`search_agreement_stats.agreement_intervals`，整局成组 bootstrap 20000 次、seed 20261019、margin 0.03；gate 要求 cutoff − noise 的一致率差 95% 区间下界 ≥ −0.03，且 64 局齐全；分族 16 局的一致率与区间只报告。
+
+| 输入 | SHA256 |
+|---|---|
+| `scripts/cutoff_agreement.py` | `b0c80e0793c8a022d92f494a4895334d964a617e17c3313837af1492a3ba3cbd` |
+| `scripts/search_play.py` | `d04eaa3643477c86f749df25515a395686b36819d85c69c4302777a45754c340` |
+| `scripts/search_agreement_stats.py` | `5353107d891b8701bbef8d25e759bbada755f3fe932016b575db8820ec27a4bb` |
+| `scripts/render_episode.py` | `e64f1c249f4946a9bb2da56bbbf926095e654488ebe44c4f551e272e3c278b75` |
+| `python/pvz_env.py` | `2d53cd18b5390b1d5b1997bcbeb97a4ff069f962fbb94538f128936a8d568e69` |
+| `python/pvz_event_env.py` | `027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89` |
+| `artifacts/stage4/day_l7_hard.json` | `8b5f16704b3c8fe29b1981d01bd35d6df8b18c346a12cb4260c75b59bdd2a941` |
+| `artifacts/stage4/night_panel_n10.json` | `f62258d7c0d254a47999120ba2456a8c02f7b7b8fbea48e42c0ef8a9b91d4ed1` |
+| `artifacts/stage4/pool_panel.json` | `10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb` |
+| conveyor `day_panel.json` | `01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27` |
+| 学生 / 价值网 / 分叉网 / 引擎 | 同第 1 步表（`122703…` / `5171db…` / `248584…` / `7508e8…`） |
+
+```bash
+cd /home/newbiexvwu/PvZ-search/.claude/worktrees/cutoff
+PVZ_NO_POPUP=1 ~/.venvs/ml/bin/python3 scripts/cutoff_agreement.py --workers 2
+# -> artifacts/task40/agreement.json、artifacts/task40/agreement.log
+```
