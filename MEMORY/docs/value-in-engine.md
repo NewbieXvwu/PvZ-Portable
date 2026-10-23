@@ -122,3 +122,5 @@ v4停止条件补核：利用各任务已完成的首局轨迹，复用 `bench_v
 三项在这些样本上均远小于2%，继续不采纳；这是离线样本耗时外推，不是整局A/B收益，不替代正式CPU硬门槛。没有额外启动游戏，也没有改冻结源码。已把直接Board门禁（当前二进制、固定32档案、v3/v4模型哈希均重新核验）、v4完整before和上述原型的KB级结论合并到 [value-in-engine-validation.json](value-in-engine-validation.json)，显式标记整体incomplete，最终老师/CPU及v4同工具profile仍待完成。
 
 完整v4 cProfile已安排在原before→after→shadow→compare串行链退出之后执行（本地等待器，非tmux）；启动条件包含原runner退出、本分支0游戏、96+96完整结果/trace、全部冻结输入SHA及comparison.json存在。只对同一L7×1.5 seed0按同一配置分别跑改前/改后一次，关闭额外噪声搜索，输出独立目录 `artifacts/task37/v4-cprofile`，包含worker.prof/top15.txt、同源hotpath、/proc RSS/HWM及轨迹。profile CPU含采样开销，仅用来解释分项与查剩余热点，不替代正式96局CPU验收；等待器未启动游戏前不增加现有两worker的并发。
+
+v4半程证据审计（各任务前16个种子，共48对）：全部结果/轨迹完整、种子成对、搜索计数正确，before/after全部冻结输入和二进制SHA仍吻合。白天/夜间/泳池胜局分别16→16、16→16、9→9；完整root/future序列相同16/16、15/16、16/16。唯一需影子的夜间index1，首处分歧是decision430、tick22320的同root老师动作差异，之后轨迹才分开，未发现动作相同却先发生状态漂移。相同16种子的总CPU/局分别186.93→139.94s、238.44→177.51s、116.64→81.07s（比值0.749/0.744/0.695）；这是共享机器上分阶段采样的中期统计，不归因全部差值于代码，也不替代32局最终硬门槛。结论JSON补入半程数据，整体仍incomplete；继续原链，不重跑已完成局。

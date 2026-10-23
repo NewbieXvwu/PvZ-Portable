@@ -200,6 +200,61 @@
       ]
     }
   ],
+  "teacher_v4_after_checkpoint": {
+    "scope": "first 16 paired seeds per task; not final teacher/CPU acceptance",
+    "status": "incomplete",
+    "frozen_hashes_verified": true,
+    "tasks": {
+      "day_l7_train_d7_m150": {
+        "games": 16,
+        "wins": {
+          "before": 16,
+          "after": 16
+        },
+        "same_root_games": 16,
+        "shadow_needed": [],
+        "cpu_s_per_game": {
+          "before": 186.93150898218752,
+          "after": 139.94222762500002
+        },
+        "cpu_ratio": 0.7486283526354829
+      },
+      "night_l14_train_n10": {
+        "games": 16,
+        "wins": {
+          "before": 16,
+          "after": 16
+        },
+        "same_root_games": 15,
+        "shadow_needed": [
+          {
+            "index": 1,
+            "first_choice_difference": 430,
+            "tick": 22320
+          }
+        ],
+        "cpu_s_per_game": {
+          "before": 238.43720325799998,
+          "after": 177.510463375
+        },
+        "cpu_ratio": 0.7444746916567611
+      },
+      "pool_l21_train_p9k": {
+        "games": 16,
+        "wins": {
+          "before": 9,
+          "after": 9
+        },
+        "same_root_games": 16,
+        "shadow_needed": [],
+        "cpu_s_per_game": {
+          "before": 116.63953018025,
+          "after": 81.0720196875
+        },
+        "cpu_ratio": 0.6950646968674735
+      }
+    }
+  },
   "pending": [
     "complete v4 after/shadow/compare with per-task CPU ratio <=1.02",
     "same-tool v4 profile/top15 and RSS comparison",
