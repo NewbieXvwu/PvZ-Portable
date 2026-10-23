@@ -4,6 +4,7 @@ import argparse
 import ast
 import cProfile
 import importlib.util
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -26,6 +27,8 @@ def main():
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--task-id")
     parser.add_argument("--seed-offset", type=int)
+    parser.add_argument("--no-profile", action="store_true")
+    parser.add_argument("--shadow-trace", type=Path)
     args = parser.parse_args()
     args.out.mkdir(parents=True, exist_ok=True)
     spec = importlib.util.spec_from_file_location("profiled_teacher", args.code)
@@ -53,7 +56,33 @@ def main():
     else:
         paths = [config.value, config.static_value]
     teacher._init_worker(paths[0], config.rollout_policy, config.rollout_sim_skip, config.cpp_rollouts, paths[1])
+    # Use task33's actual instrumentation for both implementations. It normally invokes
+    # search_play.main at import; install its wrappers around this selected teacher instead.
+    os.environ["HOTPATH_OUT"] = str(args.out / "hotpath.jsonl")
+    os.environ["HOTPATH_BYTES"] = "0"  # Re-serialising responses would inflate measured worker CPU.
+    previous_teacher = sys.modules.get("search_play")
+    previous_main = teacher.main
+    sys.modules["search_play"] = teacher
+    teacher.main = lambda: None
+    try:
+        hotpath_spec = importlib.util.spec_from_file_location("task37_hotpath", ROOT / "scripts/hotpath_profile.py")
+        hotpath = importlib.util.module_from_spec(hotpath_spec)
+        hotpath_spec.loader.exec_module(hotpath)
+    finally:
+        teacher.main = previous_main
+        if previous_teacher is None:
+            sys.modules.pop("search_play", None)
+        else:
+            sys.modules["search_play"] = previous_teacher
     trace, commands = [], {}
+    noise_cpu = dict(worker=0.0, simulator=0.0)
+    clock_ticks = os.sysconf("SC_CLK_TCK")
+
+    def engine_cpu(env):
+        # /proc/<pid>/stat includes CPU used by all threads in this process.
+        fields = Path(f"/proc/{env._process.pid}/stat").read_text().rsplit(")", 1)[1].split()
+        return (int(fields[11]) + int(fields[12])) / clock_ticks
+    shadow = json.loads(args.shadow_trace.read_text()) if args.shadow_trace else None
     original_command, original_search = PvZEnv._command, teacher._search
 
     def command(env, text):
@@ -70,21 +99,39 @@ def main():
         before = stats["searched"]
         saved = deepcopy(stats) if args.noise_every else None
         chosen = original_search(env, obs, policy, settings, future_seed, stats)
-        if stats["searched"] != before:
-            row = dict(tick=obs["tick"], future_seed=future_seed, policy=policy, chosen=chosen,
-                       targets=stats.get("last_targets"))
-            if args.noise_every and len(trace) % args.noise_every == 0:
+        row = dict(tick=obs["tick"], future_seed=future_seed, policy=policy, chosen=chosen,
+                   state_sha256=hashlib.sha256(json.dumps(obs,sort_keys=True).encode()).hexdigest(),
+                   searched=stats["searched"] != before, targets=stats.get("last_targets"))
+        if row["searched"]:
+            if args.noise_every and (stats["searched"] - 1) % args.noise_every == 0:
+                main_acc, main_count = dict(hotpath.ACC), dict(hotpath.COUNT)
+                worker_start, engine_start = time.process_time(), engine_cpu(env)
                 row["noise_choice"] = original_search(env, obs, policy, settings, future_seed + 7777777, saved)
-            trace.append(row)
+                noise_cpu["worker"] += time.process_time() - worker_start
+                noise_cpu["simulator"] += engine_cpu(env) - engine_start
+                hotpath.ACC.clear(); hotpath.ACC.update(main_acc)
+                hotpath.COUNT.clear(); hotpath.COUNT.update(main_count)
+        if shadow is not None:
+            expected = shadow[len(trace)]
+            if row["state_sha256"] != expected["state_sha256"] or future_seed != expected["future_seed"]:
+                raise AssertionError(f"shadow root mismatch at decision {len(trace)} tick {obs['tick']}")
+            row.update(expected=expected["chosen"], executed=expected["chosen"])
+        trace.append(row)
+        if shadow is not None:
+            return row["executed"]
         return chosen
 
     teacher._search, PvZEnv._command = search, command
     profile = cProfile.Profile(timer=time.process_time)
     try:
-        profile.enable()
+        if not args.no_profile:
+            profile.enable()
         result = teacher._play(dict(seed=seed, arm="fast_search", args=config))
-        profile.disable()
+        if not args.no_profile:
+            profile.disable()
         env = teacher._W["env"]
+        if shadow is not None and len(trace) != len(shadow):
+            raise AssertionError(f"shadow length mismatch: {len(trace)} != {len(shadow)}")
         engine_profile = env._command("ENV_PROFILE")
         def memory(pid):
             path = Path(f"/proc/{pid}/status")
@@ -93,11 +140,18 @@ def main():
         result.update(engine_profile=engine_profile, memory=dict(worker=memory(os.getpid()), engine=memory(env._process.pid)),
                       commands=commands, noise_points=sum("noise_choice" in row for row in trace),
                       noise_agreement=sum(row.get("noise_choice") == row["chosen"] for row in trace if "noise_choice" in row))
-        profile.dump_stats(str(args.out / "worker.prof"))
-        with (args.out / "top15.txt").open("w") as stream:
-            pstats.Stats(profile, stream=stream).strip_dirs().sort_stats("tottime").print_stats(15)
+        result["noise_cpu_s"] = noise_cpu
+        result["hotpath"] = json.loads((args.out / "hotpath.jsonl").read_text().splitlines()[-1])
+        result["host_cpu_excluding_noise_s"] = {
+            name: result["host_cpu"][name]["total_s"] - noise_cpu[name] for name in noise_cpu}
+        if not args.no_profile:
+            profile.dump_stats(str(args.out / "worker.prof"))
+            with (args.out / "top15.txt").open("w") as stream:
+                pstats.Stats(profile, stream=stream).strip_dirs().sort_stats("tottime").print_stats(15)
         (args.out / "trace.json").write_text(json.dumps(trace) + "\n")
-        (args.out / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+        pending = args.out / "result.json.tmp"
+        pending.write_text(json.dumps(result, indent=2) + "\n")
+        pending.replace(args.out / "result.json")
         print(json.dumps(result), flush=True)
     finally:
         PvZEnv._command, teacher._search = original_command, original_search
