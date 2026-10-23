@@ -28,7 +28,6 @@
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
 #include "EnvironmentRollout.h"
-#include "CudaExport.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
@@ -897,76 +896,6 @@ static void RunEnvironment(LawnApp* app)
 			minimalResponse = command == "DROP_SNAPSHOT_FAST";
 			input >> snapshotId;
 			ok = snapshots.erase(snapshotId) > 0;
-		}
-		else if (command == "CUDA_DUMP")
-		{
-			// Export the current board into the layout cuda/CudaRollout.h defines, for the GPU
-			// simulator.  CUDA_DUMP "<path>" <write_level:0|1> <window_start> <count> <tick> <produced>...
-			// The sun income history lives in Python (pvz_env.py::_annotate_observation), so the
-			// caller passes the (tick, produced) events that the 6000-tick window still covers.
-			std::string path;
-			int writeLevel = 0, windowStart = 0, eventCount = 0;
-			std::vector<std::pair<int, uint32_t>> incomeEvents;
-			pvzc::CudaHistory history;
-			if (input >> std::quoted(path) >> writeLevel >> windowStart >> eventCount &&
-				eventCount >= 0 && eventCount <= 100000)
-			{
-				incomeEvents.reserve(eventCount);
-				for (int index = 0; index < eventCount && input; ++index)
-				{
-					int tick = 0; uint32_t produced = 0;
-					input >> tick >> produced;
-					if (input) incomeEvents.emplace_back(tick, produced);
-				}
-				ok = !input.fail() && app->mBoard != nullptr;
-			}
-			// Optional v2lite history, in the same shape ROLLOUT's V2H option uses.  It trails the
-			// income list, whose length the caller already gave, so the token cannot be confused
-			// with a sample.  A caller that omits it gets the v1 root (history wave -1).
-			if (ok)
-			{
-				std::string token;
-				if (input >> token)
-				{
-					int count = 0;
-					ok = token == "V2H" && static_cast<bool>(input >> history.wave >> history.waveTick >> count) &&
-						history.wave >= -1 && history.waveTick >= 0 && count >= 0 && count <= 6 * 9 * 54;
-					for (int index = 0; ok && index < count; ++index)
-					{
-						pvzc::CudaHistoryPlant entry{};
-						ok = static_cast<bool>(input >> entry.row >> entry.col >> entry.kind >> entry.born) &&
-							entry.row >= 0 && entry.row < 6 && entry.col >= 0 && entry.col < 9 &&
-							entry.kind >= 0 && entry.kind < 54 && entry.born >= 0;
-						if (ok) history.plants.push_back(entry);
-					}
-				}
-			}
-			pvzc::RootRecord record{};
-			if (ok)
-				ok = pvzc::BuildCudaRoot(app, incomeEvents, windowStart, record, &history);
-			if (ok)
-			{
-				std::FILE* out = std::fopen(path.c_str(), writeLevel ? "wb" : "ab");
-				ok = out != nullptr;
-				if (ok && writeLevel) ok = pvzc::WriteCudaLevel(out, app);
-				if (ok) ok = pvzc::WriteCudaRoot(out, app, incomeEvents, windowStart, &history);
-				const long bytes = ok ? std::ftell(out) : -1L;
-				if (out) std::fclose(out);
-				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
-					<< ",\"ok\":" << (ok ? "true" : "false")
-					<< ",\"tick\":" << record.tick << ",\"wave\":" << record.wave
-					<< ",\"supported\":" << record.supported
-					<< ",\"reason\":" << record.unsupportedReason
-					<< ",\"plants\":" << record.plantCount << ",\"zombies\":" << record.zombieCount
-					<< ",\"projectiles\":" << record.projectileCount << ",\"coins\":" << record.coinCount
-					<< ",\"bytes\":" << bytes << '}' << std::endl;
-			}
-			else
-			{
-				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
-					<< ",\"ok\":false}" << std::endl;
-			}
-			continue;
 		}
 		else if (command == "CRITIC_INPUTS")
 		{

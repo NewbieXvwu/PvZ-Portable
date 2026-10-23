@@ -12,6 +12,8 @@
 3. **落盘**：状态 json（默认 `~/pvz-logs/curriculum_state.json`），每轮一行日志；
    偏移在**跑之前**写进状态，崩溃/中断不会重采同一批种子。
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
+5. **打包**：每轮结束把“本队列写过的全部标签 + `--pack-labels`”打成训练包（task33 第 2 项），
+   并删掉被它取代的旧包。训练端只读包，行选项必须与训练命令一致（它们是包键的一部分）。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
@@ -355,6 +357,54 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--out', str((args.out if out is None else out) / f'{label}_{games}')]
 
 
+def pack_labels(state: dict, extra: str = '') -> list[str]:
+    """Every label this queue has written so far, plus ``extra`` (the base corpus training also uses)."""
+    labels = {group['label'] for entry in state['log'] for group in entry['groups']}
+    labels.update(name for name in extra.split(',') if name)
+    return sorted(labels)
+
+
+def pack_command(args, labels: list[str]) -> list[str]:
+    """argv of the packer for this label set (task33 item 2: the trainer reads only packs).
+
+    The row options are part of the pack key, so they must equal the training command's
+    --wait-keep / --obs / --packet-head / --aux-horizon / --cells / --context / --label-weight;
+    when they differ the trainer prints the packer command it wants.
+    """
+    python = str(args.python) if args.python.exists() else sys.executable
+    command = [python, str(ROOT / 'scripts/pack_training_rows.py'),
+               '--data', str(args.frames), '--labels', ','.join(labels),
+               '--wait-keep', repr(args.pack_wait_keep), '--obs', args.pack_obs,
+               '--packet-head', args.pack_packet_head, '--aux-horizon', str(args.pack_aux_horizon),
+               '--prune']
+    for flag, on in (('--cells', args.pack_cells), ('--context', args.pack_context)):
+        if on:
+            command.append(flag)
+    if args.pack_label_weight:
+        command += ['--label-weight', args.pack_label_weight]
+    return command
+
+
+def write_pack(args, state: dict) -> None:
+    """Pack every archive this queue has written into one sequential file, at the end of a round.
+
+    The trainer never reads per-game archives (task33): this is the collector's half of that
+    contract. Packing is incremental in content, not in cost: each round rewrites the union of the
+    labels so far and prunes the packs it supersedes. A failed pack is fatal -- it is raised after
+    the round is saved, so the collected games are never lost.
+    """
+    labels = pack_labels(state, args.pack_labels)
+    if not labels:
+        return
+    started = time.time()
+    result = subprocess.run(pack_command(args, labels), cwd=ROOT, capture_output=True, text=True)
+    summary = ' | '.join(result.stdout.strip().splitlines())
+    log_line(args.log, f'pack {len(labels)} labels {time.time() - started:.0f}s rc={result.returncode} {summary}')
+    if result.returncode != 0:
+        log_line(args.log, f'pack failed: {result.stderr.strip()[-2000:]}')
+        raise SystemExit(f'pack_training_rows exited {result.returncode}')
+
+
 def log_line(path: Path, message: str) -> None:
     stamp = datetime.now().isoformat(timespec='seconds')
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -436,6 +486,7 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
     log_line(args.log, f'round {round_index} done: {len(plan)} groups, '
                        f'{sum(item["games"] for item in plan)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
+    write_pack(args, state)          # after the state is saved: a failed pack must not lose the round
     return True
 
 
@@ -479,6 +530,17 @@ def main() -> None:
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
     parser.add_argument('--dry-run', action='store_true')
+    pack = parser.add_argument_group(
+        'training pack (task33)', 'the row options are part of the pack key: they must equal the training command')
+    pack.add_argument('--pack-labels', default='',
+                      help='comma separated base labels the training corpus also has (default: only what this queue wrote)')
+    pack.add_argument('--pack-wait-keep', type=float, default=1.0)
+    pack.add_argument('--pack-obs', choices=['v1', 'v2lite', 'v2'], default='v1')
+    pack.add_argument('--pack-packet-head', choices=['slot', 'identity'], default='slot')
+    pack.add_argument('--pack-aux-horizon', type=int, default=8)
+    pack.add_argument('--pack-cells', action='store_true')
+    pack.add_argument('--pack-context', action='store_true')
+    pack.add_argument('--pack-label-weight', default='')
     args = parser.parse_args()
     if args.workers < 1:
         parser.error('--workers must be positive')

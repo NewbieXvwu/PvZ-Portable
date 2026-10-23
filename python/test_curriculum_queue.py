@@ -10,8 +10,8 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
                               MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              command_for, label_for, parse_task_id, plan_round, rate,
-                              startup_worker_estimate, worker_count)
+                              command_for, label_for, pack_command, pack_labels, parse_task_id,
+                              plan_round, rate, startup_worker_estimate, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -112,6 +112,30 @@ class CurriculumRulesTest(unittest.TestCase):
                 self.assertEqual(state['offsets'], {})
             finally:
                 queue.STOP_FLAG = original
+
+    def test_pack_labels_union_the_log_and_the_base_corpus(self):
+        state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
+                         {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
+        self.assertEqual(pack_labels(state), ['c1d7m150', 'c2d7m125'])
+        self.assertEqual(pack_labels(state, 'base_b,base_a'),
+                         ['base_a', 'base_b', 'c1d7m150', 'c2d7m125'])
+
+    def test_pack_command_carries_the_row_options(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), frames=Path('/frames'),
+                               pack_wait_keep=0.1, pack_obs='v2', pack_packet_head='identity',
+                               pack_aux_horizon=8, pack_cells=True, pack_context=True,
+                               pack_label_weight='old=0.5')
+        command = pack_command(args, ['b', 'a'])
+        self.assertEqual(command[0], sys.executable)
+        self.assertEqual(command[1], str(ROOT / 'scripts/pack_training_rows.py'))
+        self.assertEqual(command[command.index('--labels') + 1], 'b,a')
+        self.assertEqual(command[command.index('--wait-keep') + 1], '0.1')
+        self.assertEqual(command[command.index('--obs') + 1], 'v2')
+        self.assertEqual(command[command.index('--packet-head') + 1], 'identity')
+        self.assertEqual(command[command.index('--label-weight') + 1], 'old=0.5')
+        self.assertIn('--cells', command)
+        self.assertIn('--context', command)
+        self.assertIn('--prune', command)
 
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
