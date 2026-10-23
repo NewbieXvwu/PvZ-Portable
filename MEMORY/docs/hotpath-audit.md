@@ -462,3 +462,91 @@ Tag：`retire-cuda-20261023`（整条 CUDA 线）、`retire-flags-20261023`（�
 单测：`python/test_curriculum_queue.py` 加 `test_pack_labels_union_the_log_and_the_base_corpus`、
 `test_pack_command_carries_the_row_options`。全量 `pytest python -q` → **231 passed / 24 skipped / 56 subtests**，
 6 failed 全是环境性（同 §14：5 个 `test_cpp_rollout` 缺 `build/`，1 个 `test_dagger_experiment_runner` 导入顺序）。
+
+## 16. 第 4 步：静态候选下沉到引擎（设计，未实施）
+
+主控要求只准备设计、**不动 `src/EnvironmentRollout.cpp` 的学生前向**（台式机 task35 正在改）。下面的接口按“新增文件 + 一处 dispatch”设计，
+需要 task35 配合的点写在 §16.6，同时抄进任务书的“问题”。
+
+### 16.1 搬的是哪一段
+
+现在（`scripts/search_play.py`）：
+
+```
+_search
+  → _static_frames(env, root, plants, income)        # 472 条 BRANCH_OBSERVE/局，19 556 个分支
+      → env.branch_snapshot(root, chunk, retain_snapshots=False)
+          → 每个分支回一个 observation（JSON，§5 口径：完整 14 280 B / lean 7 341 B）
+      → render_episode._frame(observation)            # JSON → frame dict
+      → pvz_value_net.featurize(frame)                # 92×6×10 棋盘 + 113 标量（再拼 35 维 context）
+  → _values(..., static=True)                         # torch 前向 + sigmoid
+  → 按卡分组取前 --per-card 个格子
+```
+
+下沉的是**“在快照上执行动作 → 得到一个分数”整段**，返回只有浮点数。候选集合的构造（每卡 top-k、学生 top-k、NOOP、策略动作、`--per-card` 的排序）
+**留在 Python 不动**——这是语义最容易出错的地方，搬它没有收益。
+
+### 16.2 账（§13 第 6 项）
+
+| 段 | 每局 | 说明 |
+|---|---|---|
+| 分支往返 + observation JSON 序列化 | 4.8 s | 19 556 个分支 |
+| `_frame` + `featurize`（92 通道、float32 逐格加法） | 2.7 s | 纯 Python/numpy 循环 |
+| 价值网前向（torch CPU，每批 256） | 0.4 s | |
+| **合计** | **≈7.9 s / 117.4 s = 6.7%** | |
+
+下沉后这一段只剩一次往返的浮点数组（19 556 × 4 B ≈ 78 KB，对现在的 observation 载荷是三个数量级的缩减）。
+
+### 16.3 接口
+
+**权重格式 `PVZVN001`**（新，`python/pvz_value_net.py::export` 写、`src/ValueNet.cpp` 读）：
+
+```
+magic  "PVZVN001" (8 B)
+int32  width, context, board_channels(=92), rows(=6), cols(=10), scalars(=113), context_size(=35)
+float32, 按此顺序：conv0.w[W][92][3][3] conv0.b[W] conv2.w[W][W][3][3] conv2.b[W]
+                    conv4.w[W][W][1][3] conv4.b[W] scalar.w[W][113+35] scalar.b[W]
+                    head0.w[W][W*8] head0.b[W] head2.w[1][W] head2.b[1]
+```
+
+读取时校验 magic / 所有形状常量 / 文件长度，任何一项不符直接拒绝加载（不猜、不兼容旧格式）。小端，与 `PVZRN00x` 同一约定。
+
+**命令**（`src/main.cpp` 的命令分发里加两行；实现全在新文件）：
+
+| 命令 | 请求 | 响应 |
+|---|---|---|
+| `VALUE_LOAD <path>` | 价值网权重路径（与 `LOAD_STUDENT` 并列） | `{"ok":true,"width":64,"context":true}` |
+| `BRANCH_VALUE <snapshot_id> <income> <spec>...` | spec 与 `BRANCH_OBSERVE` 同一编码（`P:packet:row:col` / `S:` / `W:`），上限沿用 128 | `{"values":[0.42,null,...]}`，顺序与 spec 一致；`null` = 该分支 `ok=false`（Python 侧照现在的规则跳过） |
+
+- 复用 `BRANCH_OBSERVE` 的循环体（restore 父快照 → `ExecuteEnvironmentAction` → 打分），**不复制一份**：在同一个循环里按模式选择“输出 observation”或“输出分数”，
+  这样两条路径的 restore/execute 逐行相同，不会分叉。
+- `income` 由 Python 传（`sun_income_rate` 是一局的运行估计，引擎里没有）。
+- context（multiplier / roster）由引擎在 reset 时已知，`VALUE_LOAD` 之后按任务算一次，不需要每条命令传；`context=false` 的权重忽略它。
+- 特征化在 `src/ValueNet.cpp::Features(LawnApp*, double income, board, scalars)`：直接读棋盘结构，不经过 JSON。
+  **不复用 `EnvironmentRollout::Features`**——那是学生观测（obs v1/v2lite/v2 会改同一批 92 通道的内容），价值网的 92 通道是 v1 语义，混用会静默算错。
+
+### 16.4 等价性验收
+
+1. **权重往返**：`export` 写出的二进制读回，逐权重与 torch 的 `state_dict` 按位相同（`np.array_equal`，不是 allclose）。
+2. **特征化**：同种子 `day_l7_z17` 1740001 的真实局抽 10 000 个决策点，Python `featurize` 与 C++ `Features` 的 board/scalars **逐元素相同**（float32 同序加法，允许 0 误差；有差就是搬错了）。
+3. **分数**：同一批局面的 C++ 与 Python 价值网输出 `max |diff| < 1e-6`（含 sigmoid；先比 logit 再比概率，便于定位）。
+4. **决策级**：同种子 A/B（1740000–1740015，学生 dw4i_s1 自走），`games.jsonl` 的 won / decisions / searched / planted 逐字段相同；
+   老师决策一致率不低于噪声底线 75.6%。
+5. **性能**：按 §13 的口径重测一局的账，期望 −7.9 s（−6.7%）；`BRANCH_VALUE` 的单次中位耗时用 `BENCH_SNAPSHOT` 同样的办法拆开（restore / execute / featurize / forward）。
+
+### 16.5 风险
+
+- **浮点顺序**：卷积用 float32、同一 padding/stride、同一 kernel 累加顺序；CMake 若对这段开了 `-ffast-math` 要关掉（先查 `CMakeLists.txt` 的 Release 选项）。1e-6 门槛足够容忍重排，但不容忍 `-ffast-math`。
+- **逐字照抄的细节**：`_col_of`（`(x-40)/80` 截到 0..9）、`min(kind, PLANT_TYPES-1)`、`health/200`、`health/max(1,max_health)`、
+  `amax(dim=3)`（每行最坏格，不是 mean）、`mean(dim=(2,3))`、拼接顺序 pooled → rows → scalar、`on_board` 判定。
+- **并列分数的稳定性**：`sorted(..., key=-score)` 是稳定排序，Python 侧必须保持同一顺序（C++ 只返回分数，不返回顺序，所以这点不受影响）。
+- **回退**：`BRANCH_VALUE` 出任何不一致，Python 侧仍可用 `BRANCH_OBSERVE` + `_values` 走原路（实现期保留到验收通过为止，通过后按“不留两份实现”删除）。
+
+### 16.6 需要的接口（交给主控协调 task35）
+
+1. `src/EnvironmentRollout.cpp` 的学生前向**不需要改**：价值网是新文件 `src/ValueNet.{h,cpp}`，自己读 `LawnApp`。
+2. 唯一共享文件是 `src/main.cpp` 的命令分发与 `BRANCH_OBSERVE` 循环体。请 task35 确认：
+   - 他是否在改 `main.cpp` 的分发（若在改，请他先把分发表抽成 `std::map<std::string, handler>` 或按命令分文件，我再接）；
+   - `BRANCH_OBSERVE` 的循环体是否会被他重写（若会，我按他的新结构接，避免二次冲突）。
+3. `CMakeLists.txt` 加 `src/ValueNet.cpp` 一行（与他的改动不同区域）。
+4. 二进制：`VALUE_LOAD` / `BRANCH_VALUE` 要重编 `build/pvz-portable`。当前 13 个采集进程共用这个二进制，**需要停采窗口**（与 §13 第 4 项 lean 观测同一个窗口）。

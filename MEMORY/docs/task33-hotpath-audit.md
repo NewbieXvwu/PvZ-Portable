@@ -56,9 +56,13 @@
 - 10:20 **删除批准全部执行**（tag `retire-cuda-20261023` / `retire-flags-20261023`）：CUDA 推演后端整体退役（`cuda/`、`src/CudaExport.*`、`CMake/CudaRollout.cmake`、`pvz_cuda_*.py`、11 个 cuda 脚本、10 个 cuda 测试、`mixed_dagger_round.sh`、`scripts/task6/`），`search_play` 的 13 个开关与分支、`train_rollout_policy` 的 `--ema` / `--soft-weight`、候选覆盖与静态价值消融两条实验线。**101 个文件、-24 165 行**。`--margin`→`MARGIN=0.02`、`--max-actions`→`MAX_ACTIONS=3000` 改常量；`--resource-dir` / `--width` / `--soft-temperature` / jsonl 读取路径按批复保留。229 passed / 6 failed（环境性）。细节见 `hotpath-audit.md` §14。
 
 - 11:05 **第 3 项（打包装载转正）完成**：`train_rollout_policy.load()` 只读包，`pack_training_rows.py` 成为唯一读档案的地方，`curriculum_queue` 每轮结束打包并用 `--prune` 删掉被取代的旧包。验收：同一批 88 692 行，前 200 步 6 个 epoch 的 train/val loss 与 tag `retire-flags-20261023` **逐位相同**（差 0，不是 1e-6）；装载 8.10–8.23 s / 304–305 MB → **0.009 s / 227 MB**，包 262 B/行。231 passed / 6 failed（环境性）。细节见 `hotpath-audit.md` §15。
+- 11:30 第 4 步（静态候选下沉）设计完成：`hotpath-audit.md` §16——`VALUE_LOAD` / `BRANCH_VALUE` 两条命令（复用 `BRANCH_OBSERVE` 的循环体，只把输出从 observation 换成分数）、`PVZVN001` 权重格式、`src/ValueNet.{h,cpp}` 新文件里的特征化与卷积、五项等价性验收（权重按位、特征逐元素、分数 1e-6、决策逐字段、−7.9 s/局）。**没动 `src/EnvironmentRollout.cpp`**。要 task35 确认 `main.cpp` 分发与分支循环是否会被重写，写进“问题”。
+
 ## 问题
 
 - **包的键包含 `cells`，而它跟着 `--cell-soft-weight` 走**（`load()` 里 `cells=bool(args.cell_soft_weight)`）。生产配方带 `--cell-soft-weight 3`，所以采集端起 `curriculum_queue` 时必须给 `--pack-cells`，其余行选项（`--pack-wait-keep 0.1 --pack-obs v2 --pack-packet-head identity`）也要与训练命令一致；不一致时训练端会打印该跑的打包命令，不会静默用错包。
+
+- **第 4 步（静态候选下沉）需要 task35 先给个结论**：价值网是新文件，不碰学生前向；唯一共享的是 `src/main.cpp` 的命令分发与 `BRANCH_OBSERVE` 的循环体。他若正在改这两处，请他先落地（或把分发抽成表），我按新结构接，避免同一段代码二次冲突。另外 `VALUE_LOAD` / `BRANCH_VALUE` 要重编 `build/pvz-portable`，与 §13 第 4 项（lean 观测）共用同一个停采窗口。
 
 ## 追加（主控 2026-10-22 23:55，用户两点 + 主控决定）
 1. **采集去掉 Python ↔ 引擎的进程间通信**（用户提议“干掉它、重写成 C++”，主控同意方向）。目标形态：**每个采集 worker 是一个 C++ 进程**，整局决策循环（学生前向——已有 C++ PVZRN006；
