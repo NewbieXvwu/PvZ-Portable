@@ -725,5 +725,198 @@
         }
       }
     }
+  },
+  "search_workload_audit": {
+    "scope": "Offline work counters, not a replacement throughput metric or isolated engine speedup",
+    "collection_result_sha256": "46e603d56631d3240a3e845bb7dee691de2d107b2603cdfcd5d5fcd54147d69c",
+    "verify_samples": 9,
+    "teacher_margin": 0.02,
+    "counter_definitions": "verification_calls = rollout_batches - 3*searched; checked against (rollout_lanes - halving_selected_lanes)/18 per game",
+    "source_sha256": {
+      "old": "81e900e0e882f34695a750b3cc809b329395c95c472ca3e6250b4e287b112329",
+      "cq": "dc07298a4526aaca2a4a795ef006a09866627c186387760e5b47dab9cb12d229"
+    },
+    "results": {
+      "day_l7_train_d7_m150": {
+        "old": {
+          "searched": 3875,
+          "overrides": 510,
+          "halving_candidates": 27233,
+          "halving_selected_lanes": 55379,
+          "rollout_batches": 12359,
+          "rollout_lanes": 68591,
+          "verification_calls": 734,
+          "verification_lanes": 13212,
+          "cuda_evidence": {
+            "fields_present": true,
+            "batches": 0,
+            "lanes": 0,
+            "seconds": 0.0
+          }
+        },
+        "cq": {
+          "searched": 3875,
+          "overrides": 1544,
+          "halving_candidates": 27233,
+          "halving_selected_lanes": 55305,
+          "rollout_batches": 13576,
+          "rollout_lanes": 90423,
+          "verification_calls": 1951,
+          "verification_lanes": 35118,
+          "cuda_evidence": {
+            "fields_present": false,
+            "note": "Removed from schema; missing counters are not reported as measured zero. Frozen code uses C++ continuations and CPU model loaders."
+          }
+        },
+        "lane_count_ratio_cq_over_old": 1.318292487352568,
+        "collection_ratio": 1.2417131427391455,
+        "lanes_per_wall_hour_ratio_diagnostic": 1.6369411075199625
+      },
+      "night_l14_train_n10_m150": {
+        "old": {
+          "searched": 3707,
+          "overrides": 1182,
+          "halving_candidates": 20464,
+          "halving_selected_lanes": 42859,
+          "rollout_batches": 12918,
+          "rollout_lanes": 75205,
+          "verification_calls": 1797,
+          "verification_lanes": 32346,
+          "cuda_evidence": {
+            "fields_present": true,
+            "batches": 0,
+            "lanes": 0,
+            "seconds": 0.0
+          }
+        },
+        "cq": {
+          "searched": 3707,
+          "overrides": 1175,
+          "halving_candidates": 20464,
+          "halving_selected_lanes": 42828,
+          "rollout_batches": 12722,
+          "rollout_lanes": 71646,
+          "verification_calls": 1601,
+          "verification_lanes": 28818,
+          "cuda_evidence": {
+            "fields_present": false,
+            "note": "Removed from schema; missing counters are not reported as measured zero. Frozen code uses C++ continuations and CPU model loaders."
+          }
+        },
+        "lane_count_ratio_cq_over_old": 0.9526760188817233,
+        "collection_ratio": 1.9061684715648968,
+        "lanes_per_wall_hour_ratio_diagnostic": 1.8159609908083052
+      },
+      "pool_l24_train_p9k_m150": {
+        "old": {
+          "searched": 1285,
+          "overrides": 431,
+          "halving_candidates": 6852,
+          "halving_selected_lanes": 14440,
+          "rollout_batches": 4465,
+          "rollout_lanes": 25420,
+          "verification_calls": 610,
+          "verification_lanes": 10980,
+          "cuda_evidence": {
+            "fields_present": true,
+            "batches": 0,
+            "lanes": 0,
+            "seconds": 0.0
+          }
+        },
+        "cq": {
+          "searched": 1285,
+          "overrides": 1,
+          "halving_candidates": 6852,
+          "halving_selected_lanes": 14548,
+          "rollout_batches": 3856,
+          "rollout_lanes": 14566,
+          "verification_calls": 1,
+          "verification_lanes": 18,
+          "cuda_evidence": {
+            "fields_present": false,
+            "note": "Removed from schema; missing counters are not reported as measured zero. Frozen code uses C++ continuations and CPU model loaders."
+          }
+        },
+        "lane_count_ratio_cq_over_old": 0.5730133752950433,
+        "collection_ratio": 3.257698127212768,
+        "lanes_per_wall_hour_ratio_diagnostic": 1.8667045995665292
+      },
+      "day_l10_orig_train_m150": {
+        "old": {
+          "searched": 3327,
+          "overrides": 277,
+          "halving_candidates": 32652,
+          "halving_selected_lanes": 64848,
+          "rollout_batches": 10410,
+          "rollout_lanes": 72570,
+          "verification_calls": 429,
+          "verification_lanes": 7722,
+          "cuda_evidence": {
+            "fields_present": true,
+            "batches": 0,
+            "lanes": 0,
+            "seconds": 0.0
+          }
+        },
+        "cq": {
+          "searched": 3327,
+          "overrides": 786,
+          "halving_candidates": 32652,
+          "halving_selected_lanes": 64749,
+          "rollout_batches": 11085,
+          "rollout_lanes": 84621,
+          "verification_calls": 1104,
+          "verification_lanes": 19872,
+          "cuda_evidence": {
+            "fields_present": false,
+            "note": "Removed from schema; missing counters are not reported as measured zero. Frozen code uses C++ continuations and CPU model loaders."
+          }
+        },
+        "lane_count_ratio_cq_over_old": 1.1660603555188094,
+        "collection_ratio": 1.4174199683282862,
+        "lanes_per_wall_hour_ratio_diagnostic": 1.6527972321883408
+      }
+    },
+    "model_loader_evidence": {
+      "old": {
+        "pvz_rollout_policy.py": {
+          "sha256": "361429c4553369e50b652ed36ad0ea3cfaa9cd5bc02b28debacc65c579296590",
+          "checkpoint_map_location": "cpu"
+        },
+        "pvz_value_net.py": {
+          "sha256": "ed214b79bbb092e7fd043e1b95ec2d39f3a75eb6bcff856291702a76cfb2ff8b",
+          "checkpoint_map_location": "cpu"
+        }
+      },
+      "cq": {
+        "pvz_rollout_policy.py": {
+          "sha256": "f0afa0ca390d3b49ce478fe6bad229cc62f41f118066b52775e3443aa0b5262a",
+          "checkpoint_map_location": "cpu"
+        },
+        "pvz_value_net.py": {
+          "sha256": "32d015ce28466cab7b71ecaecc3a5c3fadf8d98260740e49d2d3a4a5107cb9e7",
+          "checkpoint_map_location": "cpu"
+        }
+      }
+    }
+  },
+  "full_observation_and_executed_action_pair_audit": {
+    "collection_result_sha256": "46e603d56631d3240a3e845bb7dee691de2d107b2603cdfcd5d5fcd54147d69c",
+    "excluded_teacher_fields": [
+      "label",
+      "targets",
+      "verification"
+    ],
+    "observation_or_executed_action_differences": [],
+    "teacher_field_differences": {
+      "label": 4068,
+      "targets": 11637,
+      "verification": 6244
+    },
+    "paired_observation_frames": 56955,
+    "complete": true,
+    "seed_pairs": 64,
+    "full_audit_sha256": "2223e614e65a5fc54bd2511a1e1f659861bc4d0726043b8b9010384b09808c22"
   }
 }
