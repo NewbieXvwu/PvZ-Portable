@@ -57,6 +57,8 @@ def rank_counts(group,metric,gap,nonterminal=False):
     candidates=group['candidates']
     for i,a in enumerate(candidates):
         for b in candidates[:i]:
+            if metric=='tick' and (a['means']['won']>0 or b['means']['won']>0):
+                continue  # Survival ordering is meaningful here only for all-loss candidates.
             delta=a['means'][metric]-b['means'][metric]
             if metric=='mowers_used':delta=-delta
             if abs(delta)<gap-1e-12 or abs(delta)<1e-12:
@@ -111,7 +113,8 @@ def confirmation_plan(plan,jobs):
         student=next(c for c in candidates if c['index']==g['student_index'])
         gains={m:(-1 if m=='mowers_used' else 1)*(best['means'][m]-student['means'][m]) for m in METRICS}
         gaps=plan['protocol']['confirmation']['mean_gap']
-        if not any(gains[m]>=gaps[m] for m in METRICS):
+        if not any(gains[m]>=gaps[m] for m in METRICS
+                   if not(m=='tick' and best['means']['won']==student['means']['won']==1)):
             continue
         selected.append(dict(g['job'],stage='confirm',indices=sorted({best['index'],g['student_index']}),
                              samples=plan['confirm_futures']))
@@ -142,7 +145,8 @@ def confirm_summary(plan):
         candidate=next(c for c in g['candidates'] if c['index']!=g['student_index'])
         for m in METRICS:
             sign=-1 if m=='mowers_used' else 1
-            diff=[sign*(float(a[m])-float(b[m])) for a,b in zip(candidate['outcomes'],student['outcomes'])]
+            diff=[sign*(float(a[m])-float(b[m])) if m!='tick' or not(a['won'] or b['won']) else 0.
+                  for a,b in zip(candidate['outcomes'],student['outcomes'])]
             tests.append(dict(root=g['job']['id'],candidate=candidate['index'],metric=m,
                               differences=diff,p=sign_p(diff),**bootstrap_difference(diff)))
     highest=0.
@@ -162,6 +166,7 @@ def confirm_summary(plan):
     value=dict(status='complete',root_count=len(groups),labels=sum(g['labels'] for g in groups),tests=tests,
                corrections=corrections,significance='independent futures; paired one-sided sign test; Holm across all roots and four metrics',
                confidence_note='paired bootstrap probability(mean oriented gain > 0); mowers are oriented as fewer is better',
+               tick_definition='extra survival on paired losses only; winning completion times are descriptive and never rewarded for being longer',
                selection_budget=selection)
     f.save(Path(plan['out'])/'confirmation-results.json',value)
     return value
@@ -177,6 +182,7 @@ def terminal_pairs(outcomes,candidates,kinds,positions,gaps):
             for j in indices[:ordinal]:
                 if candidates[i]==candidates[j]:continue
                 for metric in METRICS:
+                    if metric=='tick' and (outcomes[i]['won'] or outcomes[j]['won']):continue
                     delta=float(outcomes[i][metric])-float(outcomes[j][metric])
                     if metric=='mowers_used':delta=-delta
                     if abs(delta)<=1e-12 or abs(delta)<gaps[metric]:continue

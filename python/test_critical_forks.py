@@ -174,9 +174,12 @@ def test_value_pairs_keep_metrics_futures_and_leaf_boundaries_separate():
               dict(won=False,wave=5,tick=1000,mowers_used=1)]
     pairs=list(terminal_pairs(outcomes,[0,1,1,2],[0,0,1,0],[1000,1000,1000,1001],
                              dict(won=.125,wave=.5,tick=600,mowers_used=.5)))
-    assert len(pairs)==4
-    assert {p['metric']:p['winner_row'] for p in pairs}==dict(won=0,wave=1,tick=0,mowers_used=0)
+    assert len(pairs)==3
+    assert {p['metric']:p['winner_row'] for p in pairs}==dict(won=0,wave=1,mowers_used=0)
     assert all({p['winner_row'],p['loser_row']}=={0,1} for p in pairs)
+    losses=[outcomes[1],dict(outcomes[2],tick=0)]
+    pairs=list(terminal_pairs(losses,[0,1],[0,0],[1000,1000],dict(won=.125,wave=.5,tick=600,mowers_used=.5)))
+    assert next(p for p in pairs if p['metric']=='tick')['winner_row']==0
 
 
 def test_repro_checks_semantics_instead_of_gzip_timestamps(tmp_path):
@@ -194,3 +197,33 @@ def test_repro_checks_semantics_instead_of_gzip_timestamps(tmp_path):
     repeated['outcome']=1
     with gzip.open(b,'wb') as stream:stream.write(b'{"decision":1}\n')
     with pytest.raises(ValueError,match='teacher_trace'):semantic_compare(original,repeated,a,b)
+
+
+def test_round_budget_selects_whole_stratified_roots_and_rejects_empty_success():
+    from task53_experiment import budget_roots
+    jobs=[dict(id=str(i),terrain=t,reasons=[{'kind':kind}]) for i,(t,kind) in enumerate(
+          [('day','before_loss_breach'),('night','before_loss_breach'),('pool','flat_archived_leaf'),('day','flat_archived_leaf')])]
+    prices={'0':3.,'1':4.,'2':5.,'3':20.}
+    selected,spent=budget_roots(jobs,prices,12.,3,round_index=1)
+    assert selected and spent<=12. and len(selected)<=3
+    assert all(j in jobs and 'indices' not in j and 'samples' not in j for j in selected)
+    assert len({j['id'] for j in selected})==len(selected)
+    with pytest.raises(ValueError,match='no complete'):
+        budget_roots(jobs,prices,2.,3)
+
+
+def test_longer_winning_completion_is_not_a_survival_correction(tmp_path,monkeypatch):
+    import critical_forks_data as data
+    job={'id':'root'}
+    forks.save(tmp_path/'confirmation.json',{'jobs':[job]})
+    plan=dict(out=str(tmp_path),protocol={'confirmation':{'alpha':.05,
+              'mean_gap':dict(won=.125,wave=.5,tick=600,mowers_used=.5)}})
+    candidates=[dict(index=i,action={'type':'wait'},plant_type=None,
+                    outcomes=[dict(won=True,wave=20,tick=1000+2000*i,mowers_used=0) for _ in range(16)])
+                for i in (0,1)]
+    group=dict(job=job,student_index=0,candidates=candidates,labels=32)
+    monkeypatch.setattr(data,'panel',lambda *args:[group])
+    assert data.confirm_summary(plan)['corrections']==[]
+    for candidate in candidates:
+        for outcome in candidate['outcomes']:outcome['won']=False
+    assert len(data.confirm_summary(plan)['corrections'])==1

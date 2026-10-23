@@ -149,6 +149,56 @@ def cost_gate():
     print('COST GATE',forecast,'/',budget,'CPU seconds;',round(value['forecast_share']*100,2),'% qc CPU')
 
 
+def budget_roots(jobs,prices,budget,max_roots,round_index=0):
+    """Budget whole roots, stratify reasons/terrain, and rotate priority across rounds."""
+    if budget<=0 or max_roots<1 or any(not math.isfinite(prices[j['id']]) or prices[j['id']]<=0 for j in jobs):
+        raise ValueError('positive finite root costs, budget and quota required')
+    pools=defaultdict(list)
+    for job in jobs:
+        mechanism='flat' if any(r['kind'].startswith('flat') for r in job['reasons']) else 'breach'
+        pools[(job['terrain'],mechanism)].append(job)
+    for values in pools.values():values.sort(key=lambda j:(prices[j['id']],j['id']))
+    strata=sorted(pools);offset=round_index%len(strata);strata=strata[offset:]+strata[:offset]
+    selected=[];spent=0.
+    while len(selected)<max_roots:
+        added=False
+        for stratum in strata:
+            if len(selected)>=max_roots:break
+            values=pools[stratum]
+            while values:
+                job=values.pop(0);price=prices[job['id']]
+                if spent+price<=budget:
+                    selected.append(job);spent+=price;added=True;break
+        if not added:break
+    if not selected:raise ValueError('no complete legal-action root fits the budget')
+    return selected,spent
+
+
+def production_preview():
+    plan=forks.load(OUT/'plan-budgeted.json');raw=forks.load(OUT/'screen-summary.json')
+    legacy=forks.load(ROOT/'MEMORY/docs/task53-critical-forks-cost.json')
+    current=forks.load(ROOT/'MEMORY/docs/task53-critical-forks-deploy3-cost.json')
+    reference=min(legacy['qc_cpu_seconds'],current['projected_768_game_cpu_seconds']);budget=.15*reference
+    prices={g['job']['id']:1.5*(sum(c['cpu_seconds'] for c in g['candidates'])+
+                 32*max(c['cpu_seconds']/g['samples'] for c in g['candidates']))+12 for g in raw['groups']}
+    selected,predicted=budget_roots(plan['jobs'],prices,budget,legacy['production_root_quota'],
+                                    round_index=legacy['qc_round'])
+    preview=deepcopy(plan);preview.update(jobs=selected,out=str(OUT/'production-preview/round_000002'),
+                                        cpu_budget_seconds=budget)
+    path=OUT/'production-plan.preview.json';forks.save(path,preview)
+    value=dict(status='dry_run_only_not_deployed',candidate_model_sha256=plan['inputs']['rollout_policy']['sha256'],
+        reference_cpu_seconds=reference,reference_scope='minimum of measured old full round and current deploy3 night-group projection; refresh from a complete deployment-matched mixed round before online use',
+        budget_fraction=.15,budget_cpu_seconds=budget,selected_roots=len(selected),
+        selected_by_terrain=dict(Counter(j['terrain'] for j in selected)),
+        forecast_cpu_seconds=predicted,forecast_share=predicted/reference,
+        root_ids=[j['id'] for j in selected],per_root_forecast={j['id']:prices[j['id']] for j in selected},
+        plan=str(path),plan_sha256=forks.sha(path),
+        tradeoff='Less data per round; cost ordering within rotated terrain/reason strata can favour cheaper/shorter continuations. All legal actions and 16 confirmation futures remain intact. No empty-root budget success.',
+        command=[sys.executable,str(ROOT/'scripts/critical_forks.py'),str(path),'screen'])
+    forks.save(ROOT/'MEMORY/docs/task53-critical-forks-production-preview.json',value)
+    print('PRODUCTION DRY RUN',len(selected),'roots;',predicted,'CPU seconds;',predicted/reference,'share')
+
+
 def prepare():
     from pvz_frame_store import frame_path, read_frames
     from render_episode import load_training_task, training_task_kwargs
@@ -242,7 +292,7 @@ def prepare():
 
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection','cost-gate'])
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('stage',choices=['prepare','refresh-setup','register-training','refine-selection','cost-gate','production-preview'])
     args=p.parse_args()
     if args.stage=='prepare':
         prepare()
@@ -252,6 +302,8 @@ def main():
         refine_selection()
     elif args.stage=='cost-gate':
         cost_gate()
+    elif args.stage=='production-preview':
+        production_preview()
     else:
         if list((OUT/'roots').glob('*/screen_[0-9]*.json')) or list((OUT/'roots').glob('*/confirm_[0-9]*.json')):
             raise RuntimeError('terminal labels exist; frozen inputs cannot be changed')

@@ -30,6 +30,16 @@ def verify(plan):
     assert len(groups)==47 and sum(g['labels'] for g in groups)==9723
     assert sum(len(g['candidates']) for g in groups)==3241
     assert all(by_terrain[t]['games']==8 for t in ('day','night','pool'))
+    registered=f.load(ROOT/'MEMORY/docs/task53-critical-forks-sampling-v2.json')
+    assert registered['jobs']==plan['jobs'],'frozen point selection changed'
+    for job in plan['jobs']:
+        recorded=f.load(out/'roots'/job['id']/'root.json')
+        stable={k:v for k,v in job.items() if k not in ('stage','samples','indices','inspect_only')}
+        assert recorded['job']==stable
+    for episode in plan['episodes']:
+        archive=Path(episode['archive'])
+        assert f.sha(frame_path(archive))==episode['frames_sha256']
+        assert f.sha(archive/'meta.json')==episode['meta_sha256']
     selected=f.load(out/'confirmation.json')['jobs']
     seeds=[]
     for stage,jobs,count in [('screen',plan['jobs'],3),('confirm',selected,16)]:
@@ -131,6 +141,9 @@ def verify(plan):
                        parser_validation_control=control,
                        pool_split_note='Use new pool shards as additional training data alongside task43 existing held-out corpus; parser control is not exported or trained here.'),
         ranking_pairs=exported['ranking_pairs'],cpu_seconds_metered=f.spent_cpu(out),active_game_pids=[])
+    value['source_cohorts']={t:sorted({e['source'] for e in plan['episodes'] if e['terrain']==t})
+                              for t in ('day','night','pool')}
+    value['mower_convention']='same as formal search_play: last nonterminal ready-mower count; winning cleanup does not count as consumed mowers'
     f.save(ROOT/'MEMORY/docs/task53-critical-forks-audit.json',value)
     print('VERIFIED',value['roots'],'roots;',value['screen_labels'],'screen labels;',train_corrections,
           'new training rows; live v5 batches loaded',flush=True)
