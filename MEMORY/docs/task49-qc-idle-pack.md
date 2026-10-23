@@ -38,6 +38,7 @@
 
 ## 结果
 
+- 2026-10-23 **[验收完成]**：最终实现代码 `fafc99b3`；独立两轮 **2 组×8 局，共 32 局**全部结束（控制器 rc=0），组间学生版本为 **0→0→0→1**，最终训练到版本 2。第二轮包 **新建 2 段、复用 2 段**；真实 32 局的 **5832 行**做确定性 CPU 同 seed=1 两 epoch 对拍，**84 步损失、21 个模型张量、全部输入张量和来源/划分报告逐位一致，误差 0**。轮间启动间隔 **34.157ms**，pack/train 期间游戏 CPU 持续推进，游戏进程峰值 **2**。全量 pytest **356 passed / 133 subtests passed**。已清理 6,416,298 B 可再生缓存，保留约 19 MiB 验收产物；仅 [约9KB 结论证据](task49-evidence.json) 随 git 交付，`.pt/.npz/.log` 均未入库。主控按下文在 qc 两轮之间切换，本任务未重启 qc。
 - 2026-10-23 [正式重叠证据]：修正版首轮 16 局完成后，第二轮立即以旧学生开采；后台 pack=13.316919s、train=4.467141s。独立 `/proc` 采样在 pack 阶段 52 次中有 47 次看到游戏进程、两游戏 CPU 共推进 18.95s；train 阶段 17/17 次看到游戏、CPU 共推进 6.62s。证据 `artifacts/task49/acceptance/phase_cpu_evidence.json`，不是仅凭两个日志区间相交；第二轮剩余采集与最终全量/增量对拍尚待完成。
 - 2026-10-23 [打包计时]：16 份真实档案、3365 训练行：冷缓存两标签构建 10.733s；同缓存串行重建 0.792s。请求 2 进程时当前共享机器内存门禁实际限为 1，0.795s，不能把它当作双进程加速证据；真实双 spawn 的结果一致性由回归覆盖。两份实测包张量逐位相同。计时原件在 `artifacts/task49/pack_bench/results.json`，不入 git。
 - 2026-10-23 [全量测试]：本工作树独立 Release 引擎构建完成；`PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest /home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe/python -q` → **356 passed / 133 subtests passed / 0 failed / 0 skipped**（49.60s）。预验收按独立停止标志正常组间退出，进程监测峰值 2；修正版完整 32 局已在 `artifacts/task49/acceptance/` 启动（PID 157083），未重启 qc。
@@ -59,6 +60,35 @@
 
 最后一条控制器 metrics（22:23:55）仍为 games=2418、decisions=2943662、round=2，子进程 RSS=864866304 B、进程树 CPU≈99.94%；配合存活的 pack 进程，证明是在单核打包期间采集计数不动。这个累计 games 不是该轮新增局数。现有证据只能报告轮间空转下界 ≥104 分钟，不能虚构未发生的训练时长或打包完成时间。
 
+### 最终验收与预计轮间空转
+
+全部产物位于本工作树 `artifacts/task49/`；正式状态、帧、包、模型和组日志在 `acceptance/`，全量/增量两 epoch 对拍在 `parity/`。两份确定性复训都用真实 32 局语料、seed=1、CPU、width=8、epochs=2，`CUBLAS_WORKSPACE_CONFIG=:4096:8` 与 `torch.use_deterministic_algorithms(True)`；逐行输入字节比较涵盖 CSR 还原后的棋盘/标量、权重、标签、候选、值目标和 identity packets。对拍在清缓存后再次校验输入与最终参数，确认训练只依赖包。
+
+| 轮次 | 采集区间（+08:00） | 采集耗时 | 本轮后台打包 | 本轮后台训练 |
+|---|---|---:|---:|---:|
+| 1，2×8 局 | 22:55:41.625→23:05:06.396 | 564.771s | 13.317s；与次轮采集区间重叠 13.289s | 4.467s；全部与次轮采集重叠 |
+| 2，2×8 局 | 23:05:06.430→23:12:02.544 | 416.113s | 11.571s；2 新段、2 复用段 | 5.916s |
+
+第二轮首组仍用 dw4i；23:10:33 在最后一组开始前换为 `round_000001/student/model.pt`，该组实际完成 8 局，配置文件与状态记录的模型一致。最后约 17.5s 是 `--rounds 2` 退出前排空第二轮后台任务；正式多轮运行会继续采第三轮。验收微型学生最后一组 **0/8 胜**，所以轮次耗时差不能解释成采集算法提速，也不应部署这个 width=8 的测试模型；生产仍使用正式 dw4i 配方的 width=64 / 12 epochs。
+
+**旧路径 vs 改后**：23:13 只读巡检时，原 pack PID 115381 仍存活、CPU≈98.6%、已运行约 **9200s（153 分钟）**，主日志仍无 pack 完成记录。旧轮间空转至少这么长，后续训练耗时不能凭空补上。改后下一轮不等待打包/训练，预计轮间仅剩保存状态、排队和启动命令的开销，接近 0；本次小规模实测 **0.034157s**。这不是正式大语料吞吐倍数或首次全量 v2 建段耗时的实测。
+
+进程监测覆盖 2081 次采样，自有游戏数最大 2、整个控制器进程树峰值 RSS **2.760 GiB**。全局 MemAvailable 最低 **3.082 GiB**；控制器 30s 指标中的低值出现在 23:02:51、后台尚未开始（当时子进程 RSS 约 1.90 GiB）。现行门禁在组边界重算，不能把 6 GiB 公式解释为对其他任务的实时内存限制。本次无 OOM、两个后台任务均完成。
+
+重跑入口（变量展开后全部为绝对路径）：
+
+```bash
+TASK49_ROOT=/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe
+/home/newbiexvwu/.venvs/ml/bin/python3 "$TASK49_ROOT/scripts/verify_curriculum_overlap.py" \
+  --run "$TASK49_ROOT/artifacts/task49/acceptance" \
+  --out "$TASK49_ROOT/artifacts/task49/acceptance/overlap.json"
+/home/newbiexvwu/.venvs/ml/bin/python3 "$TASK49_ROOT/scripts/verify_training_segments.py" \
+  --recipe "$TASK49_ROOT/artifacts/task49/acceptance/state.pipeline/round_000002/recipe.json" \
+  --out "$TASK49_ROOT/artifacts/task49/parity" --device cpu
+```
+
+结论 JSON 保存源码 SHA、状态/报告 SHA、模型张量 SHA、各标签段行数、两阶段 CPU 采样与完整测试数字；上述命令可按需重建已清理的缓存。
+
 ### 数据契约与内存
 
 - `packs/<key>.npz` 是小索引，指向 `packs/segments/<label-options-source-key>.npz`；行选项从训练配方解析，无增量/全量切换开关。`pack_monolithic` 仅供对拍作为全量参考。
@@ -77,9 +107,11 @@
 1. 主控在 qc 两轮之间合并 `origin/qcpipe`，沿用现行生产命令及其 state / log / frames / 引擎 / value 参数，将控制器脚本换为合并后的版本，`--recipe` 指向合并后的 `recipes/dw4i.json` 绝对路径。不覆盖现有学生模型文件。
 2. 已有状态的最后完成轮会自动入队（如果从未训练），新轮立即采集；失败/中断的后台快照重启时恢复。后台目录是 `<state父目录>/<state文件干名>.pipeline/`，每轮独立配方、日志、学生和完成标记。停止标志只在组间检查，退出前等待已保存轮的后台任务完成。
 3. 首次启动会重建 v2 标签段，之后每轮只构建新标签。原配方与课程帧通过状态目录里的 `frames/` 链接视图合并；已确认缺失的两个传送带标签可从 dw4 原配方的 `training_frames` 读到。链接只引用原档案，包与缓存写状态目录，不改动来源语料。旧 v1 包不会被当作 v2 复用或被新 prune 删除。
-4. 检查新日志同时出现 `round ... workers=... background headroom ...` 和 `background round ... pack/train started/done`；检查后续组 `student_round` 前进及 pack 日志的 `built` / `reused`。若后台失败，控制器在组边界报错并将快照标为 failed，不能把失败轮当作已换学生。具体实测时间与完整测试数字在最终验收结果补充。
+4. 检查新日志同时出现 `round ... workers=... background headroom ...` 和 `background round ... pack/train started/done`；检查后续组 `student_round` 前进及 pack 日志的 `built` / `reused`。若后台失败，控制器在组边界报错并将快照标为 failed，不能把失败轮当作已换学生。实测时间与完整测试数字见上方最终验收。
 
 ## 问题
+
+- 2026-10-23 [最终核实]：直接读取在跑的原 pack PID 115381 的 argv，实际 `--labels` 是 **202 个（170 配方来源＋32 个状态日志标签）**，与状态日志逐项一致，没有额外/缺失的队列标签。任务书开头的 235 是原始描述，本报告的数量与语料覆盖以实际 argv 和档案为准。
 
 - 2026-10-23 [预验收发现并修正]：第一版把微型语料也按 4 GiB 冷启动预算，并在后台 admission 额外再加一个已反映在 MemAvailable 的采集 worker；实测 available≈9.3–10.6 GiB、required=10.8 GiB，后台长期等待。这次预验收不计重叠通过。改为实际紧凑语料的 3 倍加 2 GiB 基础开销、单构建进程起步，并消除 admission 的重复采集 RSS；在独立 stop flag 处等待组间退出后，以最终代码重跑完整 32 局。
 
