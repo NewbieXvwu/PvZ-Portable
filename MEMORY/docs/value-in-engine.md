@@ -1,11 +1,11 @@
 # task37：价值前向与静态候选下沉引擎
 
 基线：`c790588d`，独立 vcpp Release 构建；只操作本工作树，游戏进程不超过 2（重启后的用户约束）。
-实现及正式老师/CPU门禁已完成，尚待v4同工具profile与停止条件最终复核。task30 价值编码按 `14713bd4` 的定义导入：模型 v3 使用编码 1，模型 v4 使用编码 2，不改变学生编码签名。
+task37已完成：实现、逐帧/逐位门禁、正式v4老师/胜负/总CPU门禁、同工具profile/RSS及停止条件均已核验。task30 价值编码按 `14713bd4` 的定义导入：模型 v3 使用编码 1，模型 v4 使用编码 2，不改变学生编码签名。
 
 静态候选语义：从 root 恢复、执行动作、立即打分；种植和铲除推进 0 tick。静态收入使用根观测的 sun_income_rate，而非分支累计收入。叶子收入使用完整推演的 6000 tick 窗口（保留决策边界和终点裁剪）。
 
-当前契约按主控追加D：叶子价值使用v4/编码2，静态branch1保持既有实现。已通过：v3/v4各1024个固定档案局面的直接Board编码逐位一致、logit <1e-5；三模型Python特征→C++前向；1028帧基线/新引擎动作重放；真实v3/v4叶值与完整状态；v4三任务各32局beta=1配对、同root老师一致率≥各自噪声底线、胜负配对及总CPU≤同权重基线102%。同工具hotpath/RSS已逐局保存；独立v4 cProfile及三项收益<2%的停止条件仍待最终复核。
+当前契约按主控追加D：叶子价值使用v4/编码2，静态branch1保持既有实现。已通过：v3/v4各1024个固定档案局面的直接Board编码逐位一致、logit <1e-5；三模型Python特征→C++前向；1028帧基线/新引擎动作重放；真实v3/v4叶值与完整状态；v4三任务各32局beta=1配对、同root老师一致率≥各自噪声底线、胜负配对及总CPU≤同权重基线102%。同工具hotpath/RSS逐局保存；独立v4 cProfile同局1098根/未来/动作相同，三项Python原型均不足2%，最终前15项无可证明达到2%的可删Python工作，达到停止条件。可复核结论与输入/产物SHA见 [value-in-engine-validation.json](value-in-engine-validation.json)。
 
 已实现独立 `EnvironmentValueNet`，未改 `EnvironmentRollout.cpp`，无共用数学工具需要协调。PVZVN001 头为 magic[8] + little-endian uint32 width / encoder_version / context_dim，参数按 ValueNet.state_dict 顺序 float32。上下文维度仅接受 0/35，拒绝坏头、截断、非有限数及尾随数据。
 
@@ -138,3 +138,42 @@ v4半程证据审计（各任务前16个种子，共48对）：全部结果/轨�
 每局结束时/proc的RSS均值（KiB，非PSS）：Python worker分别583802→569796、581169→564301、578393→562037；引擎分别214507→216105、214232→215789、214262→215881。worker保留学生torch，RSS下降约13.7/16.5/16.0 MiB，引擎增加约1.5 MiB。worker的VmHWM均值分别598245→597102、583794→568471、581784→563261，白天峰值基本持平，不声称所有场景峰值均明显下降。
 
 KB结论JSON新增正式comparison及386份result/trace的有序路径+SHA256集合摘要，整体仍incomplete，仅剩独立v4 profile/top15与停止条件最终复核。原runner已退出，等待器已开始串行profile，不与正式门禁并行。
+
+v4同局profile及最终停止审计（2026-10-23 22:38）：原链退出后，按相同配置在同一L7×1.5 seed5712288串行跑改前/改后cProfile，无额外噪声搜索。两端1098个根局面/未来种子/最终动作逐点相同，均获胜，219次搜索、3757条推演均相同；输入/二进制SHA仍吻合。等待器与游戏进程均正常退出。
+
+| 同工具hotpath分项（wall s，含嵌套，不能相加） | 改前 | 改后 |
+|---|---:|---:|
+| Python `_static_frames` | 9.114 | 已删除 |
+| Python `_values` | 7.873 | 已删除 |
+| `_leaf_values` | 2.356 | 0.020 |
+| `_frame` | 2.031 / 19877次 | 0.178 / 1098次 |
+| `_fast_action` | 2.033 | 1.864 |
+| 协议响应数 | 7498 | 5736 |
+
+静态分支与价值计算仍真实执行，未把函数消失当作工作消失：改后引擎叶子价值3559次，特征/前向计时0.0125/0.5417s；静态价值15220次，特征/前向0.0215/1.8931s，另有恢复快照/执行动作的成本。CPU cProfile中，静态Python框架4.338→0.113s（新函数`_static_scores`），Python价值前向7.796s消失；叶子框架2.329→0.0176s，旧叶子时间包含价值前向，不与其相加。
+
+同局worker CPU20.499→6.500s、引擎153.470→149.990s；这些数字包含cProfile开销，正式CPU结论仍使用上方96对无cProfile门禁。同局worker RSS584684→570108 KiB，引擎214700→216336 KiB；worker HWM598360→597176 KiB，再次确认白天峰值基本持平。
+
+按改后self CPU排序的前15项（原始before/after worker.prof/top15.txt保留在忽略目录，结论JSON保存全部数字与SHA）：
+
+| 函数 | 改前self CPU s | 改后self CPU s |
+|---|---:|---:|
+| torch.conv2d（改后仅学生） | 3.441 | 0.367 |
+| json.raw_decode | 2.279 | 0.348 |
+| json.iterencode | 0.352 | 0.331 |
+| PvZEnv._read_message | 0.634 | 0.267 |
+| student.v2_extra | 0.248 | 0.234 |
+| dict.get | 0.454 | 0.159 |
+| TextIOWrapper.write | 0.226 | 0.157 |
+| featurize_numpy（改后仅学生） | 1.861 | 0.133 |
+| student.encode | 0.118 | 0.111 |
+| PvZEnv.rollout | 0.161 | 0.101 |
+| max | 0.455 | 0.085 |
+| str.join | 0.083 | 0.078 |
+| rollout选项生成器（pvz_env:853） | 0.071 | 0.075 |
+| student.ranked_plants | 0.067 | 0.070 |
+| torch.cat | 0.131 | 0.069 |
+
+改后最大self项仅占该诊断局总CPU的0.235%；学生`_fast_action`整段inclusive CPU1.854s（1.18%），`ranked_plants`整段0.807s（0.52%），连整段全部免费也不足2%。结合白天/夜间/泳池三项离线原型的样本乐观节省均<0.08%，连续三项<2%的停止条件满足；不引入状态缓存、候选键替换或改变搜索参数。引擎仿真/学生前向仍是必要工作且属task35范围，静态路径按主控要求保留，不再投入。
+
+最终证据复用已完成的全套304通过/10跳过（在最后value-only舍入修复之前），以及修复后的11项复核全过、真实v4叶值oracle通过；没有重复启动整套验收。最终JSON明确区分各证据范围，包含四场景1028帧完整公开状态重放、双编码2048个Board组合、三模型前向、正式老师/CPU和同局profile，`status=complete`、`pending=[]`。本分支交付到origin/vcpp；合回主线前仍按主控提示先合origin/pvz-env，并丢弃其已删除CUDA测试文件的分支改动。

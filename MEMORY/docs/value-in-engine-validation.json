@@ -1,6 +1,6 @@
 {
-  "status": "incomplete",
-  "scope": "Verified durable conclusions only; final teacher/CPU acceptance is still running",
+  "status": "complete",
+  "scope": "Task37 v4 final validation; historical checkpoint fields retain their original scope",
   "verified_date": "2026-10-23",
   "direct_board": {
     "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/board-replay-oracle.json",
@@ -366,8 +366,435 @@
       }
     }
   },
-  "pending": [
-    "same-tool v4 profile/top15 and RSS comparison",
-    "final stopping-condition review and report"
-  ]
+  "profile_v4": {
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/v4-cprofile/summary.json",
+    "source_sha256": "839c6d025e26062cbf9f6a37bec62be3b24dfd1285da6d7facef9fd474878cd0",
+    "plan_sha256": "966bfa2458870ffcd849a2f1f61e07a293387a472d395ce705f6aeb4cdc4ef72",
+    "scope": "same-game CPU cProfile diagnostic; includes profiler overhead; not the formal teacher32 CPU gate",
+    "seed": 5712288,
+    "decisions": 1098,
+    "searches": 219,
+    "identical_roots_futures_and_actions": true,
+    "profiles": {
+      "before": {
+        "worker_profile_cpu_s": 19.188416351999997,
+        "host_cpu_s": {
+          "worker": 20.499436,
+          "simulator": 153.47
+        },
+        "memory": {
+          "worker": {
+            "VmHWM": "598360 kB",
+            "VmRSS": "584684 kB",
+            "VmSwap": "0 kB"
+          },
+          "engine": {
+            "VmHWM": "214700 kB",
+            "VmRSS": "214700 kB",
+            "VmSwap": "0 kB"
+          }
+        },
+        "functions": {
+          "_values": {
+            "calls": 905,
+            "self_cpu_s": 0.11063588,
+            "inclusive_cpu_s": 7.795808679
+          },
+          "_fast_action": {
+            "calls": 1098,
+            "self_cpu_s": 0.033903282,
+            "inclusive_cpu_s": 1.999977381
+          },
+          "_leaf_values": {
+            "calls": 657,
+            "self_cpu_s": 0.022014612000000003,
+            "inclusive_cpu_s": 2.328599353
+          },
+          "_static_frames": {
+            "calls": 438,
+            "self_cpu_s": 0.07465588100000001,
+            "inclusive_cpu_s": 4.33766646
+          },
+          "ranked_plants": {
+            "calls": 219,
+            "self_cpu_s": 0.06666177300000001,
+            "inclusive_cpu_s": 0.7325019030000001
+          }
+        },
+        "top15": [
+          {
+            "function": "~:0:<built-in method torch.conv2d>",
+            "calls": 9929,
+            "self_cpu_s": 3.4412734370000004,
+            "inclusive_cpu_s": 3.4412734370000004
+          },
+          {
+            "function": "decoder.py:351:raw_decode",
+            "calls": 7499,
+            "self_cpu_s": 2.279467856,
+            "inclusive_cpu_s": 2.279467856
+          },
+          {
+            "function": "pvz_value_net.py:73:featurize_numpy",
+            "calls": 20096,
+            "self_cpu_s": 1.860742367,
+            "inclusive_cpu_s": 3.2839368760000003
+          },
+          {
+            "function": "pvz_env.py:350:_read_message",
+            "calls": 7498,
+            "self_cpu_s": 0.6344145360000001,
+            "inclusive_cpu_s": 3.2442504530000003
+          },
+          {
+            "function": "~:0:<built-in method builtins.min>",
+            "calls": 1404771,
+            "self_cpu_s": 0.6129671240000001,
+            "inclusive_cpu_s": 0.6129671240000001
+          },
+          {
+            "function": "render_episode.py:183:_frame_from",
+            "calls": 19877,
+            "self_cpu_s": 0.586443002,
+            "inclusive_cpu_s": 1.4499795510000002
+          },
+          {
+            "function": "~:0:<built-in method builtins.sum>",
+            "calls": 106011,
+            "self_cpu_s": 0.5613608790000001,
+            "inclusive_cpu_s": 1.098044129
+          },
+          {
+            "function": "~:0:<built-in method builtins.max>",
+            "calls": 1005095,
+            "self_cpu_s": 0.45466574400000004,
+            "inclusive_cpu_s": 0.45665808700000005
+          },
+          {
+            "function": "~:0:<method 'get' of 'dict' objects>",
+            "calls": 828286,
+            "self_cpu_s": 0.453670801,
+            "inclusive_cpu_s": 0.453670801
+          },
+          {
+            "function": "render_episode.py:130:_frame",
+            "calls": 19877,
+            "self_cpu_s": 0.449550145,
+            "inclusive_cpu_s": 1.9457801970000002
+          },
+          {
+            "function": "pvz_value_net.py:48:_col_of",
+            "calls": 260616,
+            "self_cpu_s": 0.383659132,
+            "inclusive_cpu_s": 0.600041543
+          },
+          {
+            "function": "hotpath_profile.py:33:inner",
+            "calls": 44145,
+            "self_cpu_s": 0.36414512800000004,
+            "inclusive_cpu_s": 17.996788424000002
+          },
+          {
+            "function": "encoder.py:207:iterencode",
+            "calls": 5186,
+            "self_cpu_s": 0.35233029600000004,
+            "inclusive_cpu_s": 0.35233029600000004
+          },
+          {
+            "function": "pvz_env.py:274:<genexpr>",
+            "calls": 559250,
+            "self_cpu_s": 0.253160781,
+            "inclusive_cpu_s": 0.253160781
+          },
+          {
+            "function": "pvz_student_observation.py:11:v2_extra",
+            "calls": 1317,
+            "self_cpu_s": 0.24785026100000002,
+            "inclusive_cpu_s": 0.37870406100000004
+          }
+        ],
+        "hotpath": {
+          "total_s": 174.513,
+          "responses_s": 7498,
+          "_frame_s": 2.031,
+          "_fast_action_s": 2.033,
+          "_static_frames_s": 9.114,
+          "_values_s": 7.873,
+          "_leaf_values_s": 2.356,
+          "_frame_n": 19877,
+          "rollout_call_n": 3757
+        },
+        "evidence_sha256": {
+          "result.json": "06080a8b75ca6c3bd5825aea3c5c7e9902ae464dfbafee1b60b0d724dde1098b",
+          "trace.json": "a5a5d570a1e0caa2197fbfdd788384490f2d97d4b2c758e1a198dc715f0f07b6",
+          "worker.prof": "17deaa457b70197549e6d846af573727017cdbf739d43151a09afc38dcfb70a3",
+          "top15.txt": "1f4a3dd8c75a8ff19f6bba96f226137067c8ed5e42129f59b177fd1f7b2f26f6"
+        }
+      },
+      "after": {
+        "worker_profile_cpu_s": 5.3934194280000005,
+        "host_cpu_s": {
+          "worker": 6.499814,
+          "simulator": 149.99
+        },
+        "memory": {
+          "worker": {
+            "VmHWM": "597176 kB",
+            "VmRSS": "570108 kB",
+            "VmSwap": "0 kB"
+          },
+          "engine": {
+            "VmHWM": "216336 kB",
+            "VmRSS": "216336 kB",
+            "VmSwap": "0 kB"
+          }
+        },
+        "functions": {
+          "_fast_action": {
+            "calls": 1098,
+            "self_cpu_s": 0.030148961000000002,
+            "inclusive_cpu_s": 1.8538018420000002
+          },
+          "_leaf_values": {
+            "calls": 715,
+            "self_cpu_s": 0.008546539,
+            "inclusive_cpu_s": 0.017562126
+          },
+          "ranked_plants": {
+            "calls": 219,
+            "self_cpu_s": 0.06996466600000001,
+            "inclusive_cpu_s": 0.807233521
+          },
+          "_static_scores": {
+            "calls": 438,
+            "self_cpu_s": 0.0045679430000000005,
+            "inclusive_cpu_s": 0.112853638
+          }
+        },
+        "top15": [
+          {
+            "function": "~:0:<built-in method torch.conv2d>",
+            "calls": 6158,
+            "self_cpu_s": 0.367296609,
+            "inclusive_cpu_s": 0.367296609
+          },
+          {
+            "function": "decoder.py:351:raw_decode",
+            "calls": 5737,
+            "self_cpu_s": 0.34845859700000004,
+            "inclusive_cpu_s": 0.34845859700000004
+          },
+          {
+            "function": "encoder.py:207:iterencode",
+            "calls": 5186,
+            "self_cpu_s": 0.330858492,
+            "inclusive_cpu_s": 0.330858492
+          },
+          {
+            "function": "pvz_env.py:350:_read_message",
+            "calls": 5736,
+            "self_cpu_s": 0.266651242,
+            "inclusive_cpu_s": 0.767723217
+          },
+          {
+            "function": "pvz_student_observation.py:11:v2_extra",
+            "calls": 1317,
+            "self_cpu_s": 0.233578156,
+            "inclusive_cpu_s": 0.36211232800000004
+          },
+          {
+            "function": "~:0:<method 'get' of 'dict' objects>",
+            "calls": 283572,
+            "self_cpu_s": 0.158920882,
+            "inclusive_cpu_s": 0.158920882
+          },
+          {
+            "function": "~:0:<method 'write' of '_io.TextIOWrapper' objects>",
+            "calls": 5736,
+            "self_cpu_s": 0.157411504,
+            "inclusive_cpu_s": 0.157411504
+          },
+          {
+            "function": "pvz_value_net.py:73:featurize_numpy",
+            "calls": 1317,
+            "self_cpu_s": 0.133413887,
+            "inclusive_cpu_s": 0.23220306400000001
+          },
+          {
+            "function": "pvz_rollout_policy.py:127:encode",
+            "calls": 1063,
+            "self_cpu_s": 0.110820782,
+            "inclusive_cpu_s": 1.0508000400000002
+          },
+          {
+            "function": "pvz_env.py:807:rollout",
+            "calls": 3757,
+            "self_cpu_s": 0.10128021000000001,
+            "inclusive_cpu_s": 0.9897154950000001
+          },
+          {
+            "function": "~:0:<built-in method builtins.max>",
+            "calls": 170621,
+            "self_cpu_s": 0.084850795,
+            "inclusive_cpu_s": 0.086819107
+          },
+          {
+            "function": "~:0:<method 'join' of 'str' objects>",
+            "calls": 13179,
+            "self_cpu_s": 0.077776889,
+            "inclusive_cpu_s": 0.212664595
+          },
+          {
+            "function": "pvz_env.py:853:<genexpr>",
+            "calls": 104594,
+            "self_cpu_s": 0.074579371,
+            "inclusive_cpu_s": 0.074579371
+          },
+          {
+            "function": "pvz_rollout_policy.py:227:ranked_plants",
+            "calls": 219,
+            "self_cpu_s": 0.06996466600000001,
+            "inclusive_cpu_s": 0.807233521
+          },
+          {
+            "function": "~:0:<built-in method torch.cat>",
+            "calls": 5999,
+            "self_cpu_s": 0.069194775,
+            "inclusive_cpu_s": 0.069194775
+          }
+        ],
+        "hotpath": {
+          "total_s": 155.579,
+          "responses_s": 5736,
+          "_frame_s": 0.178,
+          "_fast_action_s": 1.864,
+          "_leaf_values_s": 0.02,
+          "_frame_n": 1098,
+          "rollout_call_n": 3757
+        },
+        "evidence_sha256": {
+          "result.json": "70db7ced876778c9967421b0b37a193953ee4597b81cbe67c732445c0e8df9e4",
+          "trace.json": "6f3c45c3e7353e7be6add26c7a81e46cd818dc40c9bab695704a8ba740a8322d",
+          "worker.prof": "b4dd045207f15df2ff9a20f112846195beb264e37f55da409a1fb6ecba7c1dac",
+          "top15.txt": "dd794e0c281f27364b4141771ed30a17021ad121033139048858e700cf5a1406"
+        }
+      }
+    },
+    "engine_value_after": [
+      {
+        "calls": 3559,
+        "features": 0.012523,
+        "forward": 0.541664,
+        "conv": [
+          0.11131,
+          0.292627,
+          0.085102
+        ]
+      },
+      {
+        "calls": 15220,
+        "features": 0.0215408,
+        "forward": 1.89314,
+        "conv": [
+          0.327067,
+          1.13387,
+          0.318705
+        ]
+      }
+    ],
+    "stop": {
+      "consecutive_attempts_below_two_percent": 3,
+      "max_sample_estimated_fraction": 0.0007336728312791013,
+      "ranked_plants_entire_function_fraction": 0.005158377407234953,
+      "largest_after_top15_self_fraction": 0.0023470959522004418,
+      "remaining_top15_has_no_proven_removable_item_reaching_two_percent": true,
+      "passed": true
+    },
+    "worker_value_models_removed": true
+  },
+  "regressions": {
+    "frame_forward": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/frame-oracle-sparse.json",
+      "sha256": "43ebb06bc6cd7f047d50be60c99ed56f81539de8147b427d52dcd9c346c73077",
+      "input": "Python-encoded feature tensors",
+      "models": [
+        {
+          "checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+          "checkpoint_sha256": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a",
+          "encoder": 1,
+          "frames_per_scene": 256,
+          "max_logit_error": 0.0000028655737303040496
+        },
+        {
+          "checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+          "checkpoint_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+          "encoder": 1,
+          "frames_per_scene": 256,
+          "max_logit_error": 0.0000037838012687529954
+        },
+        {
+          "checkpoint": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/v4/model.pt",
+          "checkpoint_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+          "encoder": 2,
+          "frames_per_scene": 256,
+          "max_logit_error": 0.000003818507080310951
+        }
+      ]
+    },
+    "state_replay": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/replay-oracle.json",
+      "sha256": "4412636b811573c8056e86f8f203a98177d9aaf0b4306e8afb25c0fd86106700",
+      "frames": 1028,
+      "scope": "full public observations on archived action replay; collected before final value-only float32 term rounding fix",
+      "groups": {
+        "day": {
+          "frames": 257,
+          "passed": true,
+          "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1600000/z13dag4_fast_search/frames.npz"
+        },
+        "night": {
+          "frames": 257,
+          "passed": true,
+          "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1900000/n11dag1_fast_search/frames.npz"
+        },
+        "pool": {
+          "frames": 257,
+          "passed": true,
+          "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2000000/p21dag1_fast_search/frames.npz"
+        },
+        "conveyor": {
+          "frames": 257,
+          "passed": true,
+          "source": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1880258/c1d10origm100_fast_search/frames.npz"
+        }
+      }
+    },
+    "tests": {
+      "scope": "reused completed evidence; full suite before final value-only rounding fix, 11-test review after it",
+      "runs": [
+        {
+          "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/tests-recovery-final.log",
+          "sha256": "098145bafa2d44f62517c778acc2f4c2c3fba9db6645bae4cb6cb85cbbc7cd15",
+          "ran": 314,
+          "passed": 304,
+          "skipped": 10
+        },
+        {
+          "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/takeover-review-tests.log",
+          "sha256": "56a38e5651d155f9f26cc35f965a82e828811be916e6e705264bc04817f91ceb",
+          "ran": 11,
+          "passed": 11,
+          "skipped": 0
+        },
+        {
+          "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vcpp/artifacts/task37/trained-v4-recovery.log",
+          "sha256": "bdf806794504978284786adc0d1e7ed5abc1f4f2df206c533c719cbd3f5f2b0e",
+          "ran": 1,
+          "passed": 1,
+          "skipped": 0
+        }
+      ]
+    }
+  },
+  "pending": []
 }
