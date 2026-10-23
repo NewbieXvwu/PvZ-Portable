@@ -520,9 +520,338 @@
      }
     ]
    }
+  },
+  {
+   "cell": "l42-archive-45000000",
+   "root": 126,
+   "labels": 156,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 1760,
+      "correct": 1038.0,
+      "value_ties": 2,
+      "accuracy": 0.5897727272727272
+     },
+     "v4_strict": {
+      "pairs": 1760,
+      "correct": 1038.0,
+      "value_ties": 2,
+      "accuracy": 0.5897727272727272
+     },
+     "v4_nonterminal": {
+      "pairs": 1760,
+      "correct": 1038.0,
+      "value_ties": 2,
+      "accuracy": 0.5897727272727272
+     },
+     "teacher_path_v4": {
+      "pairs": 1760,
+      "correct": 1168.0,
+      "value_ties": 2,
+      "accuracy": 0.6636363636363637
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 2633,
+      "correct": 1442.0,
+      "value_ties": 2,
+      "accuracy": 0.5476642612988986
+     },
+     "v4_strict": {
+      "pairs": 2788,
+      "correct": 1519.5,
+      "value_ties": 3,
+      "accuracy": 0.5450143472022956
+     },
+     "v4_nonterminal": {
+      "pairs": 2633,
+      "correct": 1442.0,
+      "value_ties": 2,
+      "accuracy": 0.5476642612988986
+     },
+     "teacher_path_v4": {
+      "pairs": 2633,
+      "correct": 1535.0,
+      "value_ties": 2,
+      "accuracy": 0.5829851879984809
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 2920,
+      "correct": 1611.0,
+      "value_ties": 4,
+      "accuracy": 0.5517123287671233
+     },
+     "v4_strict": {
+      "pairs": 3003,
+      "correct": 1649.0,
+      "value_ties": 4,
+      "accuracy": 0.5491175491175491
+     },
+     "v4_nonterminal": {
+      "pairs": 2920,
+      "correct": 1611.0,
+      "value_ties": 4,
+      "accuracy": 0.5517123287671233
+     },
+     "teacher_path_v4": {
+      "pairs": 2920,
+      "correct": 1676.0,
+      "value_ties": 4,
+      "accuracy": 0.5739726027397261
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 38,
+     "improving_plant_actions": 25,
+     "production_representable_improvers": 25,
+     "candidate_generation_omission": 22,
+     "halving_pruned": 3,
+     "static_retained": 1,
+     "outside_production_action_space": 13
+    },
+    "wave": {
+     "observed_improvers": 69,
+     "production_representable_improvers": 48,
+     "halving_pruned": 4,
+     "improving_plant_actions": 47,
+     "candidate_generation_omission": 42,
+     "static_retained": 3,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 21
+    },
+    "tick": {
+     "observed_improvers": 68,
+     "production_representable_improvers": 47,
+     "halving_pruned": 4,
+     "improving_plant_actions": 46,
+     "candidate_generation_omission": 41,
+     "static_retained": 3,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 21
+    }
+   },
+   "initial_ready_mowers": 0,
+   "root_sha256": "6abd4ae0ce072c93b57e60c8b1d1ae4bdb40a39771da86ba354d2bfd59a2834a",
+   "search_trace_sha256": "b3e8b251ff91f20a6550a1716457ae8a89c85f88f9a13531e411fb63ce79b23c"
+  },
+  {
+   "cell": "l42-student-45000001",
+   "root": 160,
+   "labels": 92,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 451,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.549889135254989
+     },
+     "v4_strict": {
+      "pairs": 451,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.549889135254989
+     },
+     "v4_nonterminal": {
+      "pairs": 451,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.549889135254989
+     },
+     "teacher_path_v4": {
+      "pairs": 451,
+      "correct": 237,
+      "value_ties": 0,
+      "accuracy": 0.5254988913525499
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 912,
+      "correct": 554,
+      "value_ties": 0,
+      "accuracy": 0.6074561403508771
+     },
+     "v4_strict": {
+      "pairs": 973,
+      "correct": 581,
+      "value_ties": 0,
+      "accuracy": 0.5971223021582733
+     },
+     "v4_nonterminal": {
+      "pairs": 912,
+      "correct": 554,
+      "value_ties": 0,
+      "accuracy": 0.6074561403508771
+     },
+     "teacher_path_v4": {
+      "pairs": 912,
+      "correct": 570,
+      "value_ties": 0,
+      "accuracy": 0.625
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1001,
+      "correct": 597,
+      "value_ties": 0,
+      "accuracy": 0.5964035964035964
+     },
+     "v4_strict": {
+      "pairs": 1035,
+      "correct": 610,
+      "value_ties": 0,
+      "accuracy": 0.5893719806763285
+     },
+     "v4_nonterminal": {
+      "pairs": 1001,
+      "correct": 597,
+      "value_ties": 0,
+      "accuracy": 0.5964035964035964
+     },
+     "teacher_path_v4": {
+      "pairs": 1001,
+      "correct": 612,
+      "value_ties": 0,
+      "accuracy": 0.6113886113886113
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 13,
+     "improving_plant_actions": 11,
+     "production_representable_improvers": 11,
+     "candidate_generation_omission": 10,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 2
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 6,
+     "improving_plant_actions": 5,
+     "production_representable_improvers": 5,
+     "candidate_generation_omission": 4,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 1
+    }
+   },
+   "initial_ready_mowers": 0,
+   "root_sha256": "181952a1ad6a484b7e9cea048c641c9e814d22dd175aeee5d385618bf62c2e1b",
+   "search_trace_sha256": "01742ac40c37da439b1fad173a53c0409e91abff4194416d0a6846b807be4868"
+  },
+  {
+   "cell": "l43-student-45000001",
+   "root": 117,
+   "labels": 58,
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 224,
+      "correct": 137,
+      "value_ties": 0,
+      "accuracy": 0.6116071428571429
+     },
+     "v4_strict": {
+      "pairs": 224,
+      "correct": 137,
+      "value_ties": 0,
+      "accuracy": 0.6116071428571429
+     },
+     "v4_nonterminal": {
+      "pairs": 224,
+      "correct": 137,
+      "value_ties": 0,
+      "accuracy": 0.6116071428571429
+     },
+     "teacher_path_v4": {
+      "pairs": 224,
+      "correct": 151,
+      "value_ties": 0,
+      "accuracy": 0.6741071428571429
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 226,
+      "correct": 145,
+      "value_ties": 0,
+      "accuracy": 0.6415929203539823
+     },
+     "v4_strict": {
+      "pairs": 293,
+      "correct": 195,
+      "value_ties": 0,
+      "accuracy": 0.6655290102389079
+     },
+     "v4_nonterminal": {
+      "pairs": 226,
+      "correct": 145,
+      "value_ties": 0,
+      "accuracy": 0.6415929203539823
+     },
+     "teacher_path_v4": {
+      "pairs": 226,
+      "correct": 155,
+      "value_ties": 0,
+      "accuracy": 0.6858407079646017
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 386,
+      "correct": 200,
+      "value_ties": 0,
+      "accuracy": 0.5181347150259067
+     },
+     "v4_strict": {
+      "pairs": 406,
+      "correct": 211,
+      "value_ties": 0,
+      "accuracy": 0.5197044334975369
+     },
+     "v4_nonterminal": {
+      "pairs": 386,
+      "correct": 200,
+      "value_ties": 0,
+      "accuracy": 0.5181347150259067
+     },
+     "teacher_path_v4": {
+      "pairs": 386,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.538860103626943
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 1,
+     "outside_production_action_space": 1
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 2,
+     "improving_plant_actions": 2,
+     "production_representable_improvers": 2,
+     "candidate_generation_omission": 2
+    }
+   },
+   "initial_ready_mowers": 0,
+   "root_sha256": "dee22267bfaf54c86018deba3a3910355b0568d93df6a97dcc9f609b8aa8d7cb",
+   "search_trace_sha256": "c098ad17d90903cc3524f2bba7f6a1074f16f85d4b57f45b9567b6c4bfa87b79"
   }
  ],
- "scope": "first four complete roots only; not a complete-panel or general roof conclusion",
+ "scope": "first seven complete roots only; not a complete-panel or general roof conclusion",
  "selection_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
  "checks": "per-root exact complete candidate/future coverage, full identity/input hashes, true terminal and complete teacher action chains; real four-audit report paths passed",
  "bootstrap_guard": "fewer than two informative level/reset-seed clusters => interval null, including duplicated roots from the same reset seed",
@@ -542,5 +871,5 @@
   "l49-student-45000000": 0,
   "l49-student-45000001": 0
  },
- "mower_validation_complete_labels": 442
+ "mower_validation_complete_labels": 748
 }
