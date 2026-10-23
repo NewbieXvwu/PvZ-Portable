@@ -54,6 +54,8 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
 
 - 2026-10-23，10 Qoder 按第 9 条纠正自己的重启：新会话 16:05 未见 258e5e95（16:04:30 提交）即重启了 A 打包（pack 60253），16:07 读到第 9 条后立即停掉（SIGTERM 流水线 59967 与 pack 组 60253），缓存未受损、v2 增至 51298。此后遵守 task40 优先：等 task40 第四跑结束且 MemAvailable 连续 ≥10.5 GiB 再跑 A（复用缓存、补约 5,486 份）。pack 门禁改用 artifacts/task36/pack_gate2.sh（自动探测 pack 进程组、流水线不在才退出）。当前另有 cq 课程队列 8 个引擎在跑，earlyoom 仍偏好 python3。
 
+- 2026-10-23，11 自动启动器就位：task40 第四跑 16:19 仍在 20/64（日志 16:03 后无新局，单局约 31 分钟、2 引擎），预计还要数小时。为不空耗，artifacts/task36/autostart_A.sh（setsid 常驻，pid 64205）在 cutoff_agreement 全部退出、MemAvailable 连续 4 次 ≥10.5 GiB（间隔 30 s）且 C: 余量 ≥15 GiB 后自行启动 run_task36_mix.py --plan A --workers 2（日志 /home/newbiexvwu/pvz-logs/mix_A3.out），15 s 后挂 pack_gate2；等待期间 cutoff 若重新出现则从头等。启动事件写 artifacts/task36/autostart_A.log。
+
 ## 问题
 
 ## 主控接手说明（2026-10-23 11:05，台式机时间）：换新装载器重跑
