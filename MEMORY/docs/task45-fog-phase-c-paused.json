@@ -1,0 +1,308 @@
+{
+  "status": "paused_by_appendix_D",
+  "purpose": "diagnostic_only_not_curriculum_starts",
+  "fresh_completed": 100,
+  "reused_completed": 16,
+  "cells": [
+    {
+      "task_id": "fog_l31_eval_f8_m025",
+      "level": 31,
+      "observation": "human",
+      "multiplier": 0.25,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 6,
+      "loss_waves": {
+        "9": 1,
+        "14": 4,
+        "16": 2,
+        "13": 1,
+        "15": 1,
+        "18": 1
+      },
+      "loss_types": {
+        "NORMAL": 9,
+        "TRAFFIC_CONE": 1
+      },
+      "loss_joint": {
+        "wave9:NORMAL": 1,
+        "wave14:NORMAL": 4,
+        "wave16:NORMAL": 1,
+        "wave13:NORMAL": 1,
+        "wave15:NORMAL": 1,
+        "wave18:NORMAL": 1,
+        "wave16:TRAFFIC_CONE": 1
+      },
+      "loss_lanes": {
+        "2": 1,
+        "5": 6,
+        "4": 1,
+        "1": 1,
+        "3": 1
+      }
+    },
+    {
+      "task_id": "fog_l31_eval_f8_m035",
+      "level": 31,
+      "observation": "human",
+      "multiplier": 0.35,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 4,
+      "loss_waves": {
+        "9": 1,
+        "13": 1,
+        "12": 3,
+        "19": 1,
+        "15": 4,
+        "16": 1,
+        "18": 1
+      },
+      "loss_types": {
+        "NORMAL": 9,
+        "TRAFFIC_CONE": 3
+      },
+      "loss_joint": {
+        "wave9:NORMAL": 1,
+        "wave13:NORMAL": 1,
+        "wave12:NORMAL": 3,
+        "wave19:NORMAL": 1,
+        "wave15:TRAFFIC_CONE": 2,
+        "wave15:NORMAL": 2,
+        "wave16:NORMAL": 1,
+        "wave18:TRAFFIC_CONE": 1
+      },
+      "loss_lanes": {
+        "2": 3,
+        "5": 7,
+        "4": 1,
+        "0": 1
+      }
+    },
+    {
+      "task_id": "fog_l31_eval_f8_m050",
+      "level": 31,
+      "observation": "human",
+      "multiplier": 0.5,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 0,
+      "loss_waves": {
+        "8": 7,
+        "9": 3,
+        "10": 3,
+        "12": 2,
+        "7": 1
+      },
+      "loss_types": {
+        "TRAFFIC_CONE": 9,
+        "NORMAL": 7
+      },
+      "loss_joint": {
+        "wave8:TRAFFIC_CONE": 4,
+        "wave9:NORMAL": 2,
+        "wave10:TRAFFIC_CONE": 3,
+        "wave12:NORMAL": 2,
+        "wave7:TRAFFIC_CONE": 1,
+        "wave9:TRAFFIC_CONE": 1,
+        "wave8:NORMAL": 3
+      },
+      "loss_lanes": {
+        "4": 2,
+        "5": 13,
+        "1": 1
+      }
+    },
+    {
+      "task_id": "fog_l31_eval_f8x_m025",
+      "level": 31,
+      "observation": "xray",
+      "multiplier": 0.25,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 1,
+      "loss_waves": {
+        "12": 5,
+        "14": 2,
+        "16": 2,
+        "15": 3,
+        "18": 1,
+        "13": 1,
+        "20": 1
+      },
+      "loss_types": {
+        "NORMAL": 13,
+        "TRAFFIC_CONE": 2
+      },
+      "loss_joint": {
+        "wave12:NORMAL": 5,
+        "wave14:TRAFFIC_CONE": 1,
+        "wave16:NORMAL": 2,
+        "wave14:NORMAL": 1,
+        "wave15:NORMAL": 3,
+        "wave18:TRAFFIC_CONE": 1,
+        "wave13:NORMAL": 1,
+        "wave20:NORMAL": 1
+      },
+      "loss_lanes": {
+        "3": 4,
+        "4": 1,
+        "5": 6,
+        "1": 2,
+        "2": 2
+      }
+    },
+    {
+      "task_id": "fog_l31_eval_f8x_m035",
+      "level": 31,
+      "observation": "xray",
+      "multiplier": 0.35,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 2,
+      "loss_waves": {
+        "12": 4,
+        "15": 4,
+        "17": 2,
+        "13": 2,
+        "14": 2
+      },
+      "loss_types": {
+        "NORMAL": 12,
+        "TRAFFIC_CONE": 2
+      },
+      "loss_joint": {
+        "wave12:NORMAL": 4,
+        "wave15:TRAFFIC_CONE": 2,
+        "wave17:NORMAL": 2,
+        "wave13:NORMAL": 2,
+        "wave14:NORMAL": 2,
+        "wave15:NORMAL": 2
+      },
+      "loss_lanes": {
+        "3": 4,
+        "5": 6,
+        "0": 1,
+        "1": 2,
+        "4": 1
+      }
+    },
+    {
+      "task_id": "fog_l31_eval_f8x_m050",
+      "level": 31,
+      "observation": "xray",
+      "multiplier": 0.5,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 0,
+      "loss_waves": {
+        "8": 9,
+        "7": 2,
+        "9": 4,
+        "10": 1
+      },
+      "loss_types": {
+        "TRAFFIC_CONE": 12,
+        "NORMAL": 4
+      },
+      "loss_joint": {
+        "wave8:TRAFFIC_CONE": 7,
+        "wave7:TRAFFIC_CONE": 2,
+        "wave9:TRAFFIC_CONE": 2,
+        "wave9:NORMAL": 2,
+        "wave10:TRAFFIC_CONE": 1,
+        "wave8:NORMAL": 2
+      },
+      "loss_lanes": {
+        "4": 4,
+        "0": 2,
+        "1": 2,
+        "5": 8
+      }
+    },
+    {
+      "task_id": "fog_l32_eval_f8_m025",
+      "level": 32,
+      "observation": "human",
+      "multiplier": 0.25,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 16,
+      "complete": true,
+      "won": 1,
+      "loss_waves": {
+        "13": 2,
+        "12": 3,
+        "15": 4,
+        "20": 1,
+        "14": 2,
+        "17": 1,
+        "22": 1,
+        "18": 1
+      },
+      "loss_types": {
+        "TRAFFIC_CONE": 5,
+        "NORMAL": 10
+      },
+      "loss_joint": {
+        "wave13:TRAFFIC_CONE": 1,
+        "wave12:NORMAL": 3,
+        "wave15:NORMAL": 3,
+        "wave20:TRAFFIC_CONE": 1,
+        "wave14:NORMAL": 2,
+        "wave17:TRAFFIC_CONE": 1,
+        "wave22:NORMAL": 1,
+        "wave15:TRAFFIC_CONE": 1,
+        "wave13:NORMAL": 1,
+        "wave18:TRAFFIC_CONE": 1
+      },
+      "loss_lanes": {
+        "5": 12,
+        "3": 2,
+        "4": 1
+      }
+    },
+    {
+      "task_id": "fog_l32_eval_f8_m035",
+      "level": 32,
+      "observation": "human",
+      "multiplier": 0.35,
+      "student": "dw4i",
+      "beta": 1,
+      "games": 4,
+      "complete": false,
+      "won": 0,
+      "loss_waves": {
+        "13": 1,
+        "12": 2,
+        "15": 1
+      },
+      "loss_types": {
+        "TRAFFIC_CONE": 2,
+        "NORMAL": 2
+      },
+      "loss_joint": {
+        "wave13:TRAFFIC_CONE": 1,
+        "wave12:NORMAL": 2,
+        "wave15:TRAFFIC_CONE": 1
+      },
+      "loss_lanes": {
+        "5": 2,
+        "3": 1,
+        "2": 1
+      }
+    }
+  ]
+}

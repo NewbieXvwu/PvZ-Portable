@@ -1,0 +1,79 @@
+{
+ "status": "requirements_verified",
+ "checks": [
+  {
+   "requirement": "1: L41-L49 reset, terminal, pots, roster, deck warnings, plant-on-pot and pult unlock queries",
+   "status": "passed",
+   "evidence": "inventory.json, roof_inventory.py, task46-roof-zone.md; all nine inspected"
+  },
+  {
+   "requirement": "2: engine-pool neighboring perturbations, actual teacher filtering, frozen separate r7 deck, unchanged old task decks",
+   "status": "passed",
+   "evidence": "34/34 actual pilot games; c02 and c05 2/2; c02 selected by registered tie-break"
+  },
+  {
+   "requirement": "3: roof Family registry, train/eval/original/multiplier tasks, 32 evaluation seeds, terrain/profile constraints, no L50",
+   "status": "passed",
+   "evidence": "current roof_panel=26 and multiplier_panel=318 tasks, 48 roof variants; current generated content matches sources"
+  },
+  {
+   "requirement": "legacy invariants: old families, multiplier grid, exact per-level seed starts and explicit archived decks",
+   "status": "passed",
+   "evidence": "old eight FAMILIES and all 270 prior variant seed starts equal baseline commit 6d787e42"
+  },
+  {
+   "requirement": "4: preregistered five levels x two decks x 16 teacher/student; per-loss wave/row/zombie evidence",
+   "status": "passed",
+   "evidence": "320 raw terminal games match frozen hashes, seeds, wins and every recorded loss"
+  },
+  {
+   "requirement": "5: FAMILIES roof registration, measured admission, isolated original/multiplier dry-run cell and command",
+   "status": "passed",
+   "evidence": "qualified L41 teacher=15/16; other original tasks deferred; both dry-run commands verified"
+  },
+  {
+   "requirement": "6 and conditional engine gates: full Python suite, existing C++ tests and non-roof public/hidden frame replay",
+   "status": "passed",
+   "evidence": "360 Python +133 subtests; 12 C++ cases/220490 coordinates; all 40 non-roof levels, 25113 frames zero differences; L35 bounded at 2000 decisions"
+  },
+  {
+   "requirement": "identity: frozen student dw4i_s1, leaf v4, static branch1",
+   "status": "passed",
+   "evidence": "current checkpoint byte hashes match pre-registration; original and fractional engine identities separately recorded"
+  },
+  {
+   "requirement": "registered low-win follow-up: deck recheck then half-difficulty teacher/student evaluation",
+   "status": "passed",
+   "evidence": "4 c05 teacher games and all 64 fractional games frozen; exact seed sets, real terminals, hashes and paired outcomes verified"
+  },
+  {
+   "requirement": "final global seed audit including other derived panels",
+   "status": "passed",
+   "evidence": "329884 manifests; 1830824 other unique seeds; zero reserved-range collisions"
+  },
+  {
+   "requirement": "local artifact cleanup and no remaining owned game processes",
+   "status": "passed",
+   "evidence": "byte-verified ignored comparison binary removed (14000784 bytes); 0 owned game processes; required runtime manifests retained"
+  },
+  {
+   "requirement": "git volume rules and documentation links",
+   "status": "passed",
+   "evidence": "14 completed step commits checked: 0 binary files, 0 prohibited paths, 0 tracked ignored artifacts; all task result links resolve"
+  }
+ ],
+ "pending": [],
+ "cleanup": {
+  "comparison_binary_bytes_removed": 14000784,
+  "baseline_sha256": "2e83c8a925f26e4df0d9b7af703053f4ae3ce0bd30caaa1626e87540bf43755c",
+  "retained_runtime_manifests": [
+   "artifacts/task46/roof_panel.json",
+   "artifacts/task46/multiplier_panel.json"
+  ]
+ },
+ "delivery": {
+  "branch": "roof",
+  "checked_through": "1c80a88172fc283611f96a855925d40712a5ba2c",
+  "note": "Final audit/report commit and remote equality are verified after this record is saved."
+ }
+}

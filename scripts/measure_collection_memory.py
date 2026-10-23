@@ -39,7 +39,8 @@ def main() -> None:
     steps = {"interpreter": rss()}
     import search_play                                    # noqa: F401  (the worker's own import set)
     steps["search_play imported"] = rss()
-    search_play._load_nets(str(args.value), str(args.student))
+    keep, paths = search_play._export_values(str(args.value), None)
+    search_play._load_nets(paths[0], str(args.student), paths[1])
     steps["nets loaded"] = rss()
 
     from pvz_env import training_task
@@ -47,10 +48,14 @@ def main() -> None:
     env = EventWaitEnv(RESOURCE, executable=ROOT / "build/pvz-portable", headless=True)
     try:
         observation, _ = env.reset(task=training_task(args.seed, args.level))
+        env.load_rollout_net(search_play._W["rollout_file"])
+        env.load_value_net(paths[0])
+        env.load_value_net(paths[1], static=True)
         steps["engine reset"] = rss()
         engine = rss(env._process.pid)
     finally:
         env.close()
+        keep.cleanup()
     steps["engine resident"] = engine
 
     report = {"steps_bytes": steps,

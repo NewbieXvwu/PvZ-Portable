@@ -30,10 +30,14 @@ _ARGS = None
 def _init(args):
     global _ARGS
     _ARGS = args
-    search_play._init_worker(args.value, args.rollout_policy, args.rollout_sim_skip, True, args.static_value)
+    keep, paths = search_play._export_values(args.value, args.static_value)
+    search_play._W["value_keep"] = keep
+    search_play._init_worker(paths[0], args.rollout_policy, args.rollout_sim_skip, paths[1])
     from pvz_event_env import EventWaitEnv
     env = EventWaitEnv(args.resource_dir, executable=args.executable, headless=True)
     env.load_rollout_net(search_play._W["rollout_file"])
+    env.load_value_net(paths[0])
+    env.load_value_net(paths[1], static=True)
     search_play._W["env"] = env
 
 

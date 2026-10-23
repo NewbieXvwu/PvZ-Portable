@@ -37,7 +37,9 @@ from b3_noninferiority import (  # noqa: E402
 
 def init(args):
     import search_play as t
-    t._init_worker(args.value, args.student, 61, args.static_value)
+    keep, paths = t._export_values(args.value, args.static_value)
+    t._W["value_keep"] = keep
+    t._init_worker(paths[0], args.student, 61, paths[1])
 
 
 SEED_BASE = 30064

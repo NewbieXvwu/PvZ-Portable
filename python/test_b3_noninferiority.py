@@ -59,11 +59,10 @@ class DispatchTest(unittest.TestCase):
                         clear=True), \
              patch.object(search_play, "_student_topk_candidates",
                           return_value=([PLANT], {b3.key(PLANT)})), \
-             patch.object(search_play, "_static_frames", return_value=[]), \
-             patch.object(search_play, "_values", return_value=[]), \
+             patch.object(search_play, "_static_scores", return_value=[]), \
              patch.object(search_play, "_halving_choice",
                           side_effect=lambda env, obs, root, candidates, *a: captured.extend(candidates) or WAIT):
-            env = SimpleNamespace(snapshot=lambda: 1, restore=lambda root: None,
+            env = SimpleNamespace(snapshot_fast=lambda: 1, restore_fast=lambda root: None,
                                   release_snapshot=lambda root: None)
             search_play._search(env, self.obs, WAIT, self.args, 300000000,
                                 {"searched": 0, "overrides": 0, "override_kinds": {}})

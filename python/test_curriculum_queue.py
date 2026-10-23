@@ -27,6 +27,12 @@ def cell(wins, games, mult_index=0, last_round=0):
 
 
 class CurriculumRulesTest(unittest.TestCase):
+    def test_zones_admission_only_measured_roof_and_no_fog(self):
+        ids = training_base_ids()
+        self.assertEqual({name for name in ids if name.startswith('roof_')},
+                         {'roof_l41_train_r7'})
+        self.assertFalse(any(name.startswith('fog_') for name in ids))
+
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))
         self.assertEqual(parse_task_id('night_l20_train_n10_orig_m300', NAMES),

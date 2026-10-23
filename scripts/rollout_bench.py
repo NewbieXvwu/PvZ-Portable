@@ -39,9 +39,8 @@ def _init(job_args: dict) -> None:
     import torch
     torch.set_num_threads(1)
     from pvz_rollout_policy import load_student, export_student
-    from pvz_value_net import load_value_net
-    _W["vnet"] = load_value_net(job_args["value"])
-    _W["static_vnet"] = load_value_net(job_args["static_value"] or job_args["value"])
+    from search_play import _export_values
+    _W["value_keep"], _W["value_files"] = _export_values(job_args["value"], job_args["static_value"])
     _W["fast"] = load_student(job_args["rollout_policy"])
     import tempfile
     _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-bench-")
@@ -52,41 +51,18 @@ def _init(job_args: dict) -> None:
         from pvz_env import PvZEnv
         _W["env"] = PvZEnv(job_args["resource_dir"], executable=job_args["executable"], headless=True)
         _W["env"].load_rollout_net(_W["rollout_file"])
+        _W["env"].load_value_net(_W["value_files"][1], static=True)
 
 
 def _candidates(env, obs: dict, income) -> list[dict]:
     """The teacher's candidate set: best ``--per-card`` cells of every legal card, plus NOOP."""
-    import torch
-    from pvz_value_net import featurize
-    from render_episode import _frame
     args = _W["args"]
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
     if not plants:
         return []
     per_card = args["per_card"]
-    scored = []
-    for start in range(0, len(plants), 128):
-        chunk = plants[start:start + 128]
-        records = env.branch_snapshot(_W["root"], chunk, retain_snapshots=False)
-        frames = []
-        for action, record in zip(chunk, records):
-            if not record.get("ok") or not record.get("observation"):
-                continue
-            frame = _frame(record["observation"])
-            frame["sun_income_rate"] = income
-            frames.append((action, frame))
-        if not frames:
-            continue
-        boards, scalars = zip(*(featurize(f) for _a, f in frames))
-        scalars = torch.stack(scalars)
-        net = _W["static_vnet"]
-        if net.context:
-            from pvz_value_net import observation_context
-            scalars = torch.cat([scalars, torch.from_numpy(observation_context(obs))[None].expand(len(frames), -1)], dim=1)
-        with torch.inference_mode():
-            values = torch.sigmoid(net(torch.stack(boards), scalars)).tolist()
-        scored.extend(zip(values, [a for a, _f in frames]))
+    scored = [(v, a) for v, a in zip(env.static_scores(_W["root"], plants, income), plants) if v is not None]
     scored.sort(key=lambda item: -item[0])
     by_card: dict[int, list] = {}
     for value, action in scored:

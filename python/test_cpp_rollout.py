@@ -20,6 +20,11 @@ from pvz_student_observation import StudentHistory
 from render_episode import _frame
 import search_play
 
+
+def _full_rollout(env, obs, first, until, root, seed):
+    return env.rollout(first, until, sim_skip=search_play._W.get("rollout_sim_skip", 0),
+                       snapshot_id=root, seed=seed, student_history=search_play._W.get("student_history"))
+
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
 BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
 
@@ -152,7 +157,7 @@ class CppRolloutTest(unittest.TestCase):
         expected = search_play._python_rollout_reference(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
         expected_frame = _frame(expected)
         expected_history = self.env._sun_production_history.copy()
-        actual = search_play._rollout_policy(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
+        actual = _full_rollout(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
         self.assertEqual(_frame(actual), expected_frame)
         self.assertEqual(self.env._sun_production_history, expected_history)
         restored = self.env.restore(root)
@@ -184,7 +189,7 @@ class CppRolloutTest(unittest.TestCase):
         self.addCleanup(search_play._W.clear)
         until = self.obs["tick"] + 1200
         expected = search_play._python_rollout_reference(self.env, self.obs, first, until, root, 4242)
-        actual = search_play._rollout_policy(self.env, self.obs, first, until, root, 4242)
+        actual = _full_rollout(self.env, self.obs, first, until, root, 4242)
         self.assertEqual(_frame(actual), _frame(expected))
 
 

@@ -1,0 +1,59 @@
+{
+  "merge_parents": {
+    "a12ca704": [
+      "c210d2f913ff654b71ca89985b61a1c7f1cd20ea",
+      "2dcaef33c10be51d76bcaf1e1cc8d0250ca63504"
+    ],
+    "e9ff587a": [
+      "a12ca704ec2d3a225ca714cd0bc1312e259f0644",
+      "f1dce346c671a451491acb08868ce2c84491ea0d"
+    ]
+  },
+  "source_daily_log_paragraphs": {
+    "2dcaef33": 48,
+    "f1dce346": 44
+  },
+  "design_sections_unique": true,
+  "deploy3": {
+    "source_commit": "7a67066a5e62cec47432eaef87c542f6782270c3",
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+    "binary_sha256": "e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d",
+    "profile_files": 140,
+    "fprofile_generate_lines": 0,
+    "fprofile_use_lines": 161,
+    "engine_roots_sha256": "a5c2e1c14606b642a838fc8e6a37b1b5ab1f489b086232fbb83accf87d891a39"
+  },
+  "changes_since_deploy_source": [
+    "MEMORY/2026-10-23.md",
+    "MEMORY/docs/task50-zones-build.json",
+    "MEMORY/docs/task50-zones-course.json",
+    "MEMORY/docs/task50-zones-deploy.md",
+    "MEMORY/docs/task50-zones-gates.json",
+    "MEMORY/docs/task50-zones-registry.json",
+    "MEMORY/docs/task50-zones-tests.json",
+    "scripts/zones_replay_gate.py"
+  ],
+  "tests": {
+    "source_commit": "7a67066a",
+    "tests": 382,
+    "subtests": 133,
+    "skipped": 0,
+    "seconds": 66.31,
+    "binary_sha256": "64a3d1fee3e8e39c97e519ef88faae9760fb3b44ac9210741fde9b6920e2ee63"
+  },
+  "gates": "MEMORY/docs/task50-zones-gates.json",
+  "course": "MEMORY/docs/task50-zones-course.json",
+  "tracked_ignored_files": 0,
+  "binary_additions_per_step": {
+    "31697972237abd1ea7a55c97423d077a055f68f5": 0,
+    "05cf4d9b46658be279f598c951c1d611adb4a48f": 0,
+    "e8d42f950f3d4d007b9dca8ebd6337bc188eae41": 0,
+    "29330bbdf7a2a993551a59d55cc28ebd7b157d1c": 0,
+    "7a67066a5e62cec47432eaef87c542f6782270c3": 0,
+    "e9ff587a7dfd2b8a4514853385ebb2e8eea113dd": 0,
+    "a12ca704ec2d3a225ca714cd0bc1312e259f0644": 0
+  },
+  "production_sessions_modified": false,
+  "deploy_and_deploy2_modified": false,
+  "maximum_task_game_processes": 2
+}

@@ -269,6 +269,17 @@ if(PVZ_ROLLOUT_BLAS)
 	endif()
 endif()
 
+# Value inference always uses im2col + CBLAS, independently of student-kernel selection.
+if(NOT ROLLOUT_BLAS)
+	if(APPLE)
+		find_library(VALUE_BLAS Accelerate REQUIRED)
+	else()
+		find_package(BLAS REQUIRED)
+		set(VALUE_BLAS ${BLAS_LIBRARIES})
+	endif()
+	target_link_libraries(pvz-portable PRIVATE ${VALUE_BLAS})
+endif()
+
 if (LOW_MEMORY)
 	target_compile_definitions(pvz-portable PRIVATE LOW_MEMORY)
 endif()

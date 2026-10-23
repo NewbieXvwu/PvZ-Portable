@@ -1,0 +1,67 @@
+{
+ "criteria": "original-difficulty roof_r7 teacher >=0.50 in complete 16-game preregistered evaluation; exclude L45 conveyor",
+ "measured": [
+  {
+   "level": 41,
+   "teacher_wins": 15,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 42,
+   "teacher_wins": 4,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 43,
+   "teacher_wins": 2,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 44,
+   "teacher_wins": 0,
+   "teacher_games": 16,
+   "complete": true
+  },
+  {
+   "level": 45,
+   "teacher_wins": 2,
+   "teacher_games": 16,
+   "complete": true
+  }
+ ],
+ "eligible_levels": [
+  41
+ ],
+ "deferred_levels": [
+  42,
+  43,
+  44,
+  46,
+  47,
+  48,
+  49
+ ],
+ "evaluation_status": "all 320 formal games complete; L46..49 unmeasured",
+ "checkpoint_plan": "task46-roof-plan.json",
+ "seeds": [
+  45000000,
+  45000001,
+  45000002,
+  45000003,
+  45000004,
+  45000005,
+  45000006,
+  45000007,
+  45000008,
+  45000009,
+  45000010,
+  45000011,
+  45000012,
+  45000013,
+  45000014,
+  45000015
+ ]
+}
