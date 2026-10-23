@@ -75,3 +75,4 @@
 2. **日志轮转**：`artifacts/**/*.log`（221 个、0.49 GB、无轮转）与 `artifacts/hard_mac/*.out`：写 `scripts/rotate_logs.py`（超过 N MB 的压缩成 .gz 留最后 1 MB 明文），给出 Mac 与台式机各自的调用方式。
 3. **每局一个的小 json**（29 679 个 config/meta/summary）：评估能否在打包时并入包头（与 task33 第 2 / 5 项对齐，接口在“问题”里和主控确认后再动）。
 4. 完成后把本分支与最新 `origin/pvz-env` 合并、全量测试、push。仍按停止条件持续压榨。
+- 第 13 步（档案转 npz·工具）：`scripts/convert_frames_npz.py` —— 逐档转换 + 五道校验后才删原文件：①npz 里存的字节与 jsonl 原文逐字节相同；②每一帧解析出的 dict 全等；③行索引恰好等于有标签且未被拒的帧号；④`encoder` 签名是当前版本；⑤boards/scalars/plant/packet/cell/values 的行数与行索引一致。写盘走临时文件 + 原子 rename，默认跳过 60 分钟内改过的档案（不碰正在写的采集）。冒烟：教师诊断档 1.4 MB→9.5%、value_net 档 636 016→58 764 B（9.2%），577 帧逐帧全等，`cache_episode` 直接复用 npz 里的行缓存不再重算。`python/pvz_compat.py` 建最小版（只登记 `jsonl-archives`，合并 task33 时以它的完整版为准），`pvz_frame_store.py` 两处加 `LEGACY(jsonl-archives)` 标记（与 task33 措辞逐字一致，便于合并）；`scripts/pack_frames.py` 改走 `frame_paths`（jsonl/npz 都收）、`scripts/early_fix_check.py` 改走 `frame_path`，避免转换后读不到。

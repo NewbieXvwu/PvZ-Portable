@@ -34,7 +34,8 @@ from render_episode import _col_of  # noqa: E402
 
 
 def frames_of(archive: Path) -> list[dict]:
-    return [json.loads(line) for line in (archive / "frames.jsonl").open()]
+    from pvz_frame_store import frame_path, read_frames
+    return read_frames(frame_path(archive))
 
 
 def empty(frame: dict, row: int, col: int) -> bool:

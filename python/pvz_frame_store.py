@@ -9,6 +9,7 @@ import re
 
 import numpy as np
 
+# LEGACY(jsonl-archives): the JSONL half of the glob is for archives written before frames.npz.
 def frame_paths(data: Path):
     paths = {path.parent: path for path in data.glob("*/*/frames.jsonl")}
     paths.update({path.parent: path for path in data.glob("*/*/frames.npz")})
@@ -20,6 +21,7 @@ def frame_path(archive: Path) -> Path:
     return binary if binary.is_file() else archive / "frames.jsonl"
 
 
+# LEGACY(jsonl-archives): text archives are read, never written, from here on.
 def frame_bytes(path: Path) -> bytes:
     if path.suffix == ".npz":
         with np.load(path, allow_pickle=False) as stored:
