@@ -185,6 +185,24 @@
       "passed": true
     }
   },
+  "independent_progress_review": {
+    "status": "incomplete",
+    "contract": "41d0565248eaec7e69206cd5d5293ada47a4abcaa69d4efbbe9947b548579084",
+    "auditor_sha256": "979a84f6b5696fa1b44cb880177b1236342c3109d6c222219d5b981994c90cfb",
+    "games_verified": 5,
+    "llm_events_verified": 12,
+    "paired_comparison": {},
+    "evidence_files": 28,
+    "evidence_bundle_sha256": "db5e44d635869a8e6d83c34b5b14fc4416b74a0b9a0ab19d4345593f91565961",
+    "scope": "partial checkpoint only; formal 144-game acceptance remains incomplete",
+    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/study-v1/independent-audit.json",
+    "source_sha256": "16a64cc1b2c64e7ba1b77ff63b0325c7b26c26201ddbf93fea6cf1146351199a",
+    "tests": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmcand/artifacts/task52/audit-tests.log",
+      "sha256": "3fe3f77370f02f009290fc79bd6f02adb32a72d59bdb43bf7af5abab88782860",
+      "passed": 6
+    }
+  },
   "pending": [
     "144 formal games (3 families x 16 seeds x 3 arms)",
     "paired comparison and cost/legality/selection analysis",
