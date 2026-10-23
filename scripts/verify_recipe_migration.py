@@ -5,6 +5,10 @@ No shortened schedule, subset, or max_steps override: interrupt after observing
 200 losses, retaining the original full-run cosine length. Only outputs and caches
 are relocated. Preparation uses the recipe's worker count; its pool exits before
 packed tensors are loaded. One trainer at a time.
+
+Both sides run under deterministic kernels, so a repeat of the same code is bitwise
+equal and any remaining difference is a migration difference. A completed pack in the
+output directory is reused when its stored options match this run's.
 """
 import argparse
 import ast
@@ -15,6 +19,7 @@ import inspect
 import json
 import os
 from pathlib import Path
+import numpy as np
 import subprocess
 import shutil
 import tempfile
@@ -159,14 +164,21 @@ def audit_corpus(recipe, out, rows):
     return dict(expected_rows=expected_rows, rows_match=True, source_reports=reports)
 
 
-def verify(recipe_path, out):
+def verify(recipe_path, out, device=None):
     foreign = foreign_trainers()
     if foreign:
-        raise RuntimeError(f'GPU comparison requires no other trainers: {foreign}')
+        raise RuntimeError(f'comparison requires no other trainers: {foreign}')
+    # A 1e-6 bar is only meaningful on a backend that reproduces itself: plain CUDA runs of the
+    # SAME code drifted 7.5e-4 within 12 steps (2026-10-23, full dw4i corpus). Deterministic
+    # kernels make both sides bitwise repeatable, so any difference left is a migration difference.
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
     import torch
+    torch.use_deterministic_algorithms(True)
+    torch.backends.cudnn.benchmark = False
     import train_rollout_policy as current
     torch.set_num_threads(1)
     recipe = load_recipe(recipe_path, 'training')
+    runtime_device = device or recipe['device']
     field_audit = audit_source(recipe)
     cache_seed = seed_private_cache(recipe)
     print(json.dumps(dict(cache_seed=cache_seed)),flush=True)
@@ -181,6 +193,12 @@ def verify(recipe_path, out):
     command[0] = str(ROOT/'scripts/train_rollout_policy.py')
     for flag, value in {'--out':str(out/'legacy'), '--cache-dir':recipe['cache_dir']}.items():
         command[command.index(flag)+1] = value
+    if device:
+        # Numeric equivalence is judged on a deterministic backend; the original device stays in field_audit.
+        if '--device' in command:
+            command[command.index('--device')+1] = device
+        else:
+            command += ['--device', device]
     if '--source-row-report' in command:
         command[command.index('--source-row-report')+1] = str(out/'legacy/source_rows.json')
     (out/'legacy').mkdir(parents=True,exist_ok=True)
@@ -216,12 +234,21 @@ def verify(recipe_path, out):
             data = fields.pop('data')
             options = pack_options(**fields, sources=archive_fingerprint(data, fields['labels']))
             packed = out / 'rows.npz'
-            # A restart never trusts an incomplete pack; build to a temporary name,
-            # then publish only after np.savez has closed it successfully.
-            temporary = out / 'rows.building.npz'
-            pack(data, options, Path(recipe['cache_dir']), recipe['precompute_workers'],
-                 Path(recipe['read_cache_dir']) if recipe['read_cache_dir'] else None, temporary)
-            os.replace(temporary, packed)
+            reused = False
+            if packed.is_file():
+                # A published pack is complete by construction; reuse it only when its stored
+                # options are exactly this run's, so a restart does not rebuild 13.6 M rows.
+                with np.load(packed, allow_pickle=False) as stored:
+                    reused = json.loads(str(stored['meta'])) == options
+            if reused:
+                print(json.dumps(dict(pack_reused=str(packed))), flush=True)
+            else:
+                # A restart never trusts an incomplete pack; build to a temporary name,
+                # then publish only after np.savez has closed it successfully.
+                temporary = out / 'rows.building.npz'
+                pack(data, options, Path(recipe['cache_dir']), recipe['precompute_workers'],
+                     Path(recipe['read_cache_dir']) if recipe['read_cache_dir'] else None, temporary)
+                os.replace(temporary, packed)
             def capture(path, rows):
                 observations.append((path, rows.copy()))
                 if observer is not None:
@@ -237,7 +264,6 @@ def verify(recipe_path, out):
         if mode == 'legacy':
             # Storage-only adapters reconstruct the historical tensor dtypes and
             # dense value matrix. No historical loss, weights or optimizer is edited.
-            import numpy as np
             result[2] = result[2].float()
             result[3] = result[3].long()
             result[4] = result[4].long()
@@ -272,7 +298,7 @@ def verify(recipe_path, out):
                 if step == 200:
                     raise TraceComplete
             sys.argv = command if name == 'legacy' else [str(ROOT/'scripts/train_rollout_policy.py'),
-                '--recipe',str(recipe_path),'--out',str(out/'recipe')]
+                '--recipe',str(recipe_path),'--out',str(out/'recipe')] + (['--device',device] if device else [])
             started = time.monotonic()
             try:
                 if name == 'legacy':
@@ -295,7 +321,8 @@ def verify(recipe_path, out):
             labels=dict(Counter(path.parent.name for path,_ in observations)),
             full_corpus=True,original_schedule=True,corpus_audit=corpus_audit,
             shared_storage='task33 compact pack; historical tensor views restored',
-            precompute_workers=recipe['precompute_workers'],field_audit=field_audit,cache_seed=cache_seed,device=recipe['device'],seed=recipe['seed'],
+            precompute_workers=recipe['precompute_workers'],field_audit=field_audit,cache_seed=cache_seed,
+            device=runtime_device,recipe_device=recipe['device'],seed=recipe['seed'],
             maximum_loss_error=max(errors),passed=max(errors)<=1e-6,
             torch_version=str(torch.__version__),cuda_version=torch.version.cuda,traces=traces)
         (out/'parity.json').write_text(json.dumps(result,indent=2)+'\n')
@@ -310,12 +337,14 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('recipe',type=Path)
     parser.add_argument('out',type=Path)
+    parser.add_argument('--device',choices=('cpu','cuda'),default=None,
+                        help='compare on this device instead of the recipe device (CPU is deterministic)')
     args = parser.parse_args()
     if not args.recipe.is_absolute() or not args.out.is_absolute():
         parser.error('all paths must be absolute')
     args.out.mkdir(parents=True,exist_ok=True)
     (args.out/'parity.json').unlink(missing_ok=True)
-    verify(args.recipe,args.out)
+    verify(args.recipe,args.out,args.device)
 
 
 if __name__ == '__main__': main()

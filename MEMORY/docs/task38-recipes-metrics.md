@@ -40,6 +40,8 @@
 
 - 2026-10-23：接手 Codex 中断的 dw4i 完整语料对拍（原进程仍在装载，未重启）；预先按对拍工具的同一函数把 dw5i（215481 文件/7.5 GB）与 identity（114813 文件/0.86 GB）的历史缓存复制进本工作树私有缓存，两份配方起跑时不必重算；配方/指标/课程/面板/identity 训练 42 项回归全绿。
 
+- 2026-10-23：dw4i 完整语料 200 步对拍**通过，误差 0**（13643901 行、48816 档案、两侧 source_rows 报告 SHA 相同）。同时查清验收口径缺陷：同一份代码在同一 GPU 上重跑，第 4 步就出现 9.5e-7 漂移、第 12 步到 7.5e-4，普通 CUDA 内核不可复现，1e-6 判据在非确定性后端上没有意义；对拍改为确定性内核（`CUBLAS_WORKSPACE_CONFIG=:4096:8` + `use_deterministic_algorithms`），同代码重跑误差 0。另加已发布训练包复用（meta 与本次 options 逐项相等才复用），重启不再重建 13.6M 行。
+
 ## 问题
 - 本分支缺 hotpath-audit.md；已 fetch 并完整读取 origin/audit 对应报告（含 §6），依据 task33 批准清单删除训练 EMA/全候选软目标入口，保留 cell soft temperature、width 与旧模型元数据。退役前标记 retire-recipe-training-flags-20261023。
 
