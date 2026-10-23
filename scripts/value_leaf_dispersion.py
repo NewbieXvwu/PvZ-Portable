@@ -38,7 +38,8 @@ def run(args) -> None:
                    '--value', str(args.v3 if arm == 'v3' else args.v4),
                    '--verify-samples', '9', '--student-candidates', '2',
                    '--manifest', str(MAIN / 'artifacts/stage4/pool_panel.json'), '--task-id', task,
-                   '--seeds', str(args.games), '--workers', str(args.workers),
+                   '--seeds', str(args.games), '--seed-offset', str(args.seed_offset),
+                   '--workers', str(args.workers),
                    '--executable', str(args.executable),
                    '--resource-dir', '/home/newbiexvwu/.cache/pvz-research-resources',
                    '--dagger-beta', '1', '--out', str(out),
@@ -120,6 +121,7 @@ def main() -> None:
     p.add_argument('--v4', type=Path, default=ROOT / 'artifacts/task30/v4/model.pt')
     p.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     p.add_argument('--games', type=int, default=4)
+    p.add_argument('--seed-offset', type=int, default=0)
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--limit', type=int, default=80, help='per worker decision cap')
     p.add_argument('--sample', type=int, default=200)
