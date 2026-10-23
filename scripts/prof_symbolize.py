@@ -68,6 +68,12 @@ def main() -> None:
     target = str(args.binary.resolve())
     executable = next((index for index, name in enumerate(names) if Path(name).resolve() == Path(target)),
                       None)
+    if executable is None:
+        # A saved binary may have a new filename; its captured module still has
+        # the original executable name. --binary supplies that exact saved build.
+        candidates = [index for index, name in enumerate(names) if Path(name).name == "pvz-portable"]
+        if len(candidates) == 1:
+            executable = candidates[0]
     by_module: dict[int, list[int]] = {}
     for offset, module in zip(offsets, modules):
         by_module.setdefault(module, []).append(offset)
@@ -81,8 +87,14 @@ def main() -> None:
             for value, name in resolved.items():
                 labels[(module, value)] = name
         else:
+            library = Path(names[module])
+            # Shared libraries often retain dynamic function symbols even without
+            # debug line tables (e.g. sgemm_kernel_HASWELL). Resolve those too:
+            # merging all BLAS work into one module hid the largest CPU hotspot.
+            resolved = symbolize(library, values) if library.is_file() else {}
             for value in set(values):
-                labels[(module, value)] = f"[{Path(names[module]).name}]"
+                name = resolved.get(value, "??")
+                labels[(module, value)] = f"[{library.name}]" + (f" {name}" if name != "??" else "")
     counts = Counter(labels[(module, offset)] for offset, module in zip(offsets, modules))
     total = sum(counts.values())
     rows = [{"function": name, "samples": count, "share": round(count / total, 4)}

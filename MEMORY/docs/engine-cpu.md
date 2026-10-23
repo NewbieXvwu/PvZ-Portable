@@ -49,6 +49,32 @@
 
 ## 历史采样前 15
 
+### 4de38495 后采样（完整解析共享库）
+
+`scripts/prof_symbolize.py` 现对共享库也运行 addr2line；保存的原始可执行文件可通过 `--binary` 映射。对稳定副本 `pvz-portable-codex-reload` 跑四族 64 root × 15 条推演，得到 **5752** 个已限定 rollout 阶段的 SIGPROF 样本（`codex_profile_reload.json`）。BLAS 热点从一个 28% 的库名拆成 SGEMM 内核、矩阵打包与 DGEMM。无调试信息的库仍可能只给最近动态符号，尤其 libc 的 `_dl_mcount_wrapper` 不能视为准确内部函数或直接优化依据。
+
+`sudo -n apt-get install --no-install-recommends -y linux-perf` 和 valgrind 两次安装均因 BFSU 镜像站 **HTTP 403** 失败（并非无 sudo）；继续使用已有 SIGPROF 采样器。该采样有开销，计时值不用于对比非采样运行，也没有 perf 调用栈语义。
+
+| 函数或动态符号 | 占比 |
+|---|---:|
+| [libopenblas.so.0] sgemm_kernel_HASWELL | 17.70% |
+| Reanimation::Update | 3.79% |
+| [libc.so.6] _dl_mcount_wrapper | 3.25% |
+| [libopenblas.so.0] sgemm_oncopy_HASWELL | 2.96% |
+| DataArray<Zombie>::Iterator::operator++ | 2.76% |
+| operator | 2.16% |
+| PvzpParticleEmitter::UpdateParticle | 1.81% |
+| [libopenblas.so.0] dgemm_kernel_HASWELL | 1.77% |
+| Sexy::MTRand::NextNoAssert | 1.70% |
+| EnvironmentRollout::Convolve | 1.46% |
+| DataArray<Plant>::Iterator::operator++ | 1.44% |
+| [libopenblas.so.0] sgemm_itcopy_HASWELL | 1.39% |
+| [libopenblas.so.0] dgemm_incopy_HASWELL | 1.23% |
+| _mi_page_malloc_zero | 1.18% |
+| [libstdc++.so.6] std::_Rb_tree_insert_and_rebalance | 1.16% |
+
+SGEMM 内核约 17.7%，加输入打包约 4.4%，是接下来对照分块 SIMD / batch 原型的依据；RNG、DataArray 及粒子仍要保持语义。这里没有证明前 15 已无冗余，停止条件仍未满足。
+
 以下从既有 SIGPROF 采样 JSON 原样提取（并非 perf 调用栈剖面）。库内样本被归并为库名，不能据此声称已定位其内部函数；较短的文件不足 15 项照实列出。每个阶段的二进制/编译与采样时点应结合原任务书核对，不能用 P7 采样代表当前未提交源码。
 
 ### prof_base2（1536 样本）
