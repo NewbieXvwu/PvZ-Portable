@@ -39,7 +39,7 @@ def run(args) -> None:
                    '--verify-samples', '9', '--student-candidates', '2',
                    '--manifest', str(MAIN / 'artifacts/stage4/pool_panel.json'), '--task-id', task,
                    '--seeds', str(args.games), '--workers', str(args.workers),
-                   '--executable', str(ROOT / 'build/pvz-portable'),
+                   '--executable', str(args.executable),
                    '--resource-dir', '/home/newbiexvwu/.cache/pvz-research-resources',
                    '--dagger-beta', '1', '--out', str(out),
                    '--leaf-probe', str(probe), '--leaf-probe-limit', str(args.limit)]
@@ -118,6 +118,7 @@ def main() -> None:
     p.add_argument('--json', type=Path, default=ROOT / 'MEMORY/docs/value-widen-dispersion.json')
     p.add_argument('--v3', type=Path, default=MAIN / 'artifacts/value_net/v3/model.pt')
     p.add_argument('--v4', type=Path, default=ROOT / 'artifacts/task30/v4/model.pt')
+    p.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     p.add_argument('--games', type=int, default=4)
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--limit', type=int, default=80, help='per worker decision cap')

@@ -45,7 +45,7 @@ def plan(args):
     result=dict(manifest=str(frozen),tasks=[t['task_id'] for t in tasks],games=args.games,workers=args.workers,
                 seed_offset=args.seed_offset,student=str(MAIN/'artifacts/student/dw4i_s1/model.pt'),
                 static=str(MAIN/'artifacts/hard/value_branch1/model.pt'),
-                v3=str(MAIN/'artifacts/value_net/v3/model.pt'),v4=str(args.v4),
+                v3=str(args.baseline),v4=str(args.v4),executable=str(args.executable),
                 student_sha256=hashlib.sha256((MAIN/'artifacts/student/dw4i_s1/model.pt').read_bytes()).hexdigest(),
                 static_sha256=hashlib.sha256((MAIN/'artifacts/hard/value_branch1/model.pt').read_bytes()).hexdigest(),
                 control='queue103 run(), beta=1, only leaf value checkpoint changes')
@@ -61,7 +61,7 @@ def run(args,arm,p):
         cmd=[sys.executable,str(ROOT/'scripts/search_play.py'),'--rollout-policy',p['student'],
              '--static-value',p['static'],'--value',p[arm],'--verify-samples','9','--student-candidates','2',
              '--manifest',p['manifest'],'--task-id',task,'--seeds',str(p['games']),
-             '--workers',str(args.workers),'--executable',str(ROOT/'build/pvz-portable'),
+             '--workers',str(args.workers),'--executable',str(p['executable']),
              '--resource-dir','/home/newbiexvwu/.cache/pvz-research-resources','--dagger-beta','1','--out',str(out)]
         print(f'{arm} {task}',flush=True)
         with (out/'run.log').open('a') as log:subprocess.run(cmd,stdout=log,stderr=subprocess.STDOUT,check=True,cwd=ROOT)
@@ -87,6 +87,9 @@ def main():
     p.add_argument('--out',type=Path,required=True);p.add_argument('--v4',type=Path,required=True)
     p.add_argument('--workers',type=int,default=4);p.add_argument('--games',type=int,default=32)
     p.add_argument('--seed-offset',type=int,default=0)
+    p.add_argument('--baseline',type=Path,default=MAIN/'artifacts/value_net/v3/model.pt',
+                   help='the arm named v3; pass v4 to compare a new net against v4')
+    p.add_argument('--executable',type=Path,default=ROOT/'build/pvz-portable')
     p.add_argument('--task',action='append',help='MANIFEST:task_id; replaces the default six tasks')
     a=p.parse_args()
     if not 1<=a.workers<=4:p.error('--workers must be 1..4')
