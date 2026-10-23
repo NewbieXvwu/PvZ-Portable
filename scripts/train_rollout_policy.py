@@ -356,7 +356,12 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
 def read_pack(path: Path, data: Path | None = None, row_observer=None):
     """The tuple load has always returned, from one packed file."""
     stored = np.load(path, mmap_mode="r", allow_pickle=False)
-    _OPEN_PACKS.append(stored)
+    if 'segments' in stored.files:
+        names = stored['segments'].tolist()
+        stored.close()
+        return read_segments([path.parent / name for name in names], data, row_observer)
+    # npz arrays are materialized (np.load's mmap_mode does not mmap ZIP members).
+    # Close the archive after reading; every returned array owns its bytes.
     rows = int(stored["rows"])
     boards = CompactBoards.from_arrays(stored, "board")
     scalars = CompactBoards.from_arrays(stored, "scalar")
@@ -381,6 +386,85 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None):
         result = (*result, torch.from_numpy(np.asarray(stored["aux"])))
     if "packet_col0" in stored.files:
         result = (*result, PacketStore.from_arrays(stored, rows))
+    stored.close()
+    return result
+
+
+def read_segments(paths: list[Path], data: Path | None = None, row_observer=None):
+    """Merge compact slices in global archive order, without decompressing game frames.
+
+    Labels interleave by seed in frame_paths. Simply concatenating label segments would change
+    the split, shuffle and losses. Copy CSR slices in that original order instead; no dense
+    boards are created and the trainer keeps its ordinary compact stores and batch code.
+    """
+    parts, chunks = [], []
+    for index, path in enumerate(paths):
+        parts.append(read_pack(path))
+        with np.load(path, allow_pickle=False) as stored:
+            sources = stored['source'].tolist()
+            counts = np.bincount(stored['source_archive'], minlength=len(sources))
+            rows = stored['source_row']
+        start = 0
+        for source, count in zip(sources, counts):
+            stop = start + int(count)
+            chunks.append((source, index, start, stop, rows[start:stop]))
+            start = stop
+    chunks.sort(key=lambda chunk: str(Path(chunk[0]).parent))
+
+    def join(column):
+        return np.concatenate([np.asarray(parts[index][column])[start:stop]
+                               for _, index, start, stop, _ in chunks])
+
+    def csr(column):
+        stores = [part[column] for part in parts]
+        result = CompactBoards(stores[0].shape[1:], stores[0].dtype)
+        counts, indices, values, identities = [], [], [], []
+        plane_base = np.cumsum([0] + [len(store.planes) for store in stores])
+        result.planes = [plane for store in stores for plane in store.planes]
+        for _, index, start, stop, _ in chunks:
+            store = stores[index]
+            lo, hi = store.offsets[start], store.offsets[stop]
+            counts.append(np.diff(store.offsets[start:stop + 1]))
+            indices.append(store.indices[lo:hi])
+            values.append(store.values[lo:hi])
+            ids = (np.full(stop - start, -1, np.int32) if store.plane_of is None
+                   else store.plane_of[start:stop])
+            identities.append(np.where(ids >= 0, ids + plane_base[index], -1).astype(np.int32))
+        counts = np.concatenate(counts)
+        result.offsets = np.concatenate([[0], np.cumsum(counts, dtype=np.int64)])
+        result.indices, result.values = np.concatenate(indices), np.concatenate(values)
+        result.plane_of = np.concatenate(identities) if result.planes else None
+        result.nnz = len(result.values)
+        result.shape = (len(counts), *result.shape[1:])
+        return result
+
+    def sparse(column, cls, fields, prefix):
+        if parts[0][column] is None:
+            return None
+        arrays = {prefix + '_counts': np.concatenate([parts[i][column].counts[a:b]
+                                                     for _, i, a, b, _ in chunks])}
+        for field in fields:
+            arrays[prefix + '_' + field] = np.concatenate([
+                getattr(parts[i][column], field)[parts[i][column].offsets[a]:parts[i][column].offsets[b]]
+                for _, i, a, b, _ in chunks])
+        return cls.from_arrays(arrays)
+
+    boards, scalars = csr(0), csr(1)
+    result = (boards, scalars, *(torch.from_numpy(join(i)) for i in range(2, 6)), join(6),
+              sparse(7, ValueStore, ('slots', 'values'), 'value'),
+              sparse(8, CandidateStore, ('entries',), 'cand'))
+    for column in range(9, len(parts[0])):
+        if isinstance(parts[0][column], PacketStore):
+            packets = PacketStore(0, parts[0][column].slots)
+            packets.columns = [np.concatenate([parts[i][column].columns[c][a:b]
+                                               for _, i, a, b, _ in chunks]) for c in range(4)]
+            result = (*result, packets)
+        else:
+            result = (*result, torch.from_numpy(join(column)))
+    if row_observer is not None and data is not None:
+        for source, _, _, _, rows in chunks:
+            if len(rows):
+                row_observer(Path(data) / source, rows)
     return result
 
 
