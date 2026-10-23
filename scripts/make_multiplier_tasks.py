@@ -65,6 +65,7 @@ POOL_P9K_LEVELS = (21, 22, 23, 24, 26, 27, 28, 29)
 DAY_D7Q_LEVELS = (7, 8, 9, 10)
 NIGHT_N10P_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 NIGHT_N10Q_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
+ROOF_LEVELS = (41, 42, 43, 44, 46, 47, 48, 49)
 
 # (族短名, 源清单 key, 源 task_id 模板, levels, 地形)
 FAMILIES = (
@@ -76,7 +77,13 @@ FAMILIES = (
     ('day_d7q', 'day_d7q', 'day_l{level}_train_d7q', DAY_D7Q_LEVELS, 'day'),
     ('night_n10p', 'night_n10p', 'night_l{level}_train_n10p', NIGHT_N10P_LEVELS, 'night'),
     ('night_n10q', 'night_n10q', 'night_l{level}_train_n10q', NIGHT_N10Q_LEVELS, 'night'),
+    ('roof', 'roof', 'roof_l{level}_train_r7', ROOF_LEVELS, 'roof'),
 )
+
+# Registry coverage and curriculum admission are separate: unmeasured roof levels have
+# reproducible tasks/multipliers, but cannot enter collection before the cold-start gate.
+# Filled from the complete, preregistered teacher evaluation (>=50% at original difficulty).
+CURRICULUM_LEVELS = {'roof': ()}
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。

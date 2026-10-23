@@ -47,7 +47,7 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options
 from pvz_training_pack import pack_flags, pack_options
 from pvz_metrics import Metrics  # noqa: E402
@@ -209,6 +209,8 @@ def training_base_ids() -> set[str]:
         if family in SUPERSEDED:
             continue
         for level in levels:
+            if family in CURRICULUM_LEVELS and level not in CURRICULUM_LEVELS[family]:
+                continue
             ids.add(pattern.format(level=level))
     return ids
 

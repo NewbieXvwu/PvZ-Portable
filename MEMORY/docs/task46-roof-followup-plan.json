@@ -1,0 +1,61 @@
+{
+ "task": "task46",
+ "status": "conditional preregistration before follow-up games",
+ "trigger": "complete original-difficulty teacher r7 result <0.20 on regular L41..L44; L45 conveyor reported separately",
+ "deck_recheck": {
+  "task_id_pattern": "roof_lN_eval_c05diag",
+  "deck": [
+   0,
+   1,
+   2,
+   29,
+   4,
+   32,
+   33
+  ],
+  "source": "task46-roof-selection.json / roof_pilot_c05_l41 (2/2 L41 teacher wins)",
+  "seeds": [
+   44000100,
+   44000101
+  ],
+  "games_per_level": 2,
+  "arms": [
+   "teacher"
+  ],
+  "interpretation": "nearby alternative deck probe only; two losses do not prove structural impossibility"
+ },
+ "half_multiplier": {
+  "task_id_pattern": "roof_lN_eval_r7_m050",
+  "deck_source": "deck_for_level(N,family=roof_r7)",
+  "multiplier": 0.5,
+  "seeds": [
+   45000000,
+   45000001,
+   45000002,
+   45000003,
+   45000004,
+   45000005,
+   45000006,
+   45000007,
+   45000008,
+   45000009,
+   45000010,
+   45000011,
+   45000012,
+   45000013,
+   45000014,
+   45000015
+  ],
+  "games_per_level": 16,
+  "arms": [
+   "teacher",
+   "student"
+  ],
+  "dependency": "run after completing and inspecting the c05 deck recheck",
+  "interpretation": "paired diagnostic on the same formal evaluation seeds; does not silently replace r7 original tasks"
+ },
+ "models": "same frozen dw4i_s1 / v4 / branch1 hashes as task46-roof-plan.json",
+ "teacher": "command_for parameters; beta=1, verify_samples=9, student_candidates=2",
+ "concurrency": 4,
+ "admission": "original-difficulty teacher >=0.50 only; L45 excluded; unmeasured L46..49 deferred"
+}

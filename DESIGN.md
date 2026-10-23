@@ -858,3 +858,5 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 - roof 登记清单 `artifacts/task46/roof_panel.json`，生成器 `scripts/make_roof_panel.py`，公共 `zone_panel.Family`/`Zone`：对照评估 9 关 + r7 评估 9 关 + r7 训练 8 关 = **26 任务**。L45 排除普通训练但保留双卡组评估，L50 不生成。每关每卡组评估 32 种子；训练每关 8192。生成时 reset 九关读取真实 `DECK_OPTIONS` / 整组警告（二周目全部基础卡已解锁，不使用首轮奖励顺序猜测）；按地形、长度、种子独立检查。
 
 - roof 倍率种子预登记为独立段：`48,000,000 + multiplier_index×100,000 + (N−41)×2048`，六档 1.25/1.5/1.75/2/2.5/3，每任务2048；九关上界48,518,431。旧族5M起点/700k档距/32槽映射逐一保持不变，不把41–49直接塞进旧32槽，也不依赖fog族的序号。控制器 dry run 展示 collect 完整命令；最终 FAMILIES 屋顶准入关卡待正式老师结果冻结，未触动运行中的 qc。
+
+- `FAMILIES` 已登记 roof 八个普通关卡（41–44、46–49）的六档倍率，共48任务；课程使用独立 `CURRICULUM_LEVELS` 准入表，待完整原版老师胜率≥50%才放行，未测46–49暂缓，45传送带排除。低于20%的普通关卡按 [task46-roof-followup-plan.json](MEMORY/docs/task46-roof-followup-plan.json) 先用既有筛选赢家c05复核卡组，再做r7的0.5倍率配对诊断，不覆盖原族。
