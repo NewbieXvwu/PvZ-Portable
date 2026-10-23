@@ -1,6 +1,6 @@
 {
   "status": "in_progress",
-  "teacher_runner_pid": 167609,
+  "teacher_runner_pid": 169780,
   "teacher_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-status.json",
   "deploy_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/deploy-gate-status.json",
   "new_after_first_game": {
@@ -20,5 +20,11 @@
     "final A delivery audit and summary"
   ],
   "deploy_gate_status": "passed",
-  "teacher_gate_status": "running before, two workers"
+  "teacher_gate_status": "running before, two live baseline game processes",
+  "teacher_resume_command_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-command.json",
+  "teacher_expected_valid_games": {
+    "before": 96,
+    "after": 96
+  },
+  "deployment_gates": "MEMORY/docs/task50-a-deploy-gates.json"
 }
