@@ -161,7 +161,8 @@ def _freeze_startup() -> None:
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0, cpp_rollouts: bool = True,
                  static_value_path: str | None = None, cuda_socket: str | None = None,
-                 coverage_path: str | None = None, coverage_budget: int = 2) -> None:
+                 coverage_path: str | None = None, coverage_budget: int = 2, metrics_counters=None) -> None:
+    _W["metrics_counters"] = metrics_counters
     if rollout_sim_skip & 256 and cuda_socket is not None:
         raise ValueError("sparse tracks are a CPU-only rollout feature")
     os.environ.setdefault("OMP_NUM_THREADS", "1")
@@ -843,6 +844,10 @@ def _play(job: dict) -> dict:
                     frame["label"] = label        # last field: train_rollout_policy scans for it
                 frames.append(_frame_json(frame))
             decisions += 1
+            counters = _W.get("metrics_counters")
+            if counters is not None and decisions % 32 == 0:
+                with counters.get_lock():
+                    counters[1] += 32
             if not obs["terminal"]:      # a won level fires the remaining mowers; count before that
                 mowers_left = ready_mowers(obs)
             if done:
@@ -907,6 +912,11 @@ def _play(job: dict) -> dict:
             "simulator": difference(simulator, _W.get("sim_cpu_accounted", zero))}
         _W["cpu_accounted"], _W["sim_cpu_accounted"] = worker, simulator
     _release_freed_memory()      # this game's archives are written; its buffers are garbage now
+    counters = _W.get("metrics_counters")
+    if counters is not None:
+        with counters.get_lock():
+            counters[0] += 1
+            counters[1] += decisions if job["arm"] == "fast" and not args.frames and args.cpp_rollouts else decisions % 32
     return result
 
 
@@ -1059,13 +1069,17 @@ def main() -> None:
     # platform can fork, recycle the process after each game: the next one starts from the parent's
     # copy-on-write baseline instead of on top of the last game's peak. Same games, same bytes.
     recycle = 1 if start_method == "fork" else None
+    counters = mp.get_context(start_method).Array("q", [0, 0])
+    metrics = None
     try:
         with results_path.open("a") as out, mp.get_context(start_method).Pool(
                 args.workers, initializer=_init_worker, maxtasksperchild=recycle,
                 initargs=(args.value, args.rollout_policy, args.rollout_sim_skip, args.cpp_rollouts,
-                          args.static_value, cuda_socket) +
-                         ((args.candidate_coverage_model, args.candidate_coverage_budget)
-                          if args.candidate_coverage_model else ())) as pool:
+                          args.static_value, cuda_socket, args.candidate_coverage_model,
+                          args.candidate_coverage_budget, counters)) as pool:
+            from pvz_metrics import Metrics
+            metrics = Metrics("search_play", progress_source=lambda: dict(
+                games=counters[0], decisions=counters[1])).start()
             for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
                 out.write(json.dumps(res) + "\n"); out.flush()
                 if i % 10 == 0 or i == len(jobs):
@@ -1075,6 +1089,8 @@ def main() -> None:
             pool.close()
             pool.join()
     finally:
+        if metrics is not None:
+            metrics.close()
         if args.measure_cpu:
             workers_cpu = difference(usage(resource.RUSAGE_CHILDREN), children_before)
         if cuda_server is not None:

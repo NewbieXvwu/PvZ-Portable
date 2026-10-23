@@ -45,6 +45,7 @@ MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import FAMILIES, load_tasks, source_paths  # noqa: E402
+from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
 FRONTIER_LOW = 0.5
@@ -414,6 +415,11 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             rows = [json.loads(line) for line in (folder / 'games.jsonl').read_text().splitlines() if line.strip()]
             games = len(rows)
             wins = sum(1 for row in rows if row.get('won'))
+        metrics = getattr(args, 'metrics', None)
+        if metrics is not None:
+            args.metrics_games += games
+            args.metrics_decisions += sum(row.get('decisions', 0) for row in rows)
+            metrics.update(games=args.metrics_games, decisions=args.metrics_decisions, round=round_index)
         bucket = state['cells'][item['base']]['windows'].setdefault(
             str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
         bucket['recent'] = (bucket['recent'] + [1 if row.get('won') else 0
@@ -501,6 +507,9 @@ def main() -> None:
                                    args.games_per_group, args.guard_ratio)
         print_plan(state, plan, changes)
         return
+    args.metrics = Metrics("curriculum_queue").start()
+    args.metrics.update(games=0, decisions=0, round=state["round"])
+    args.metrics_games = args.metrics_decisions = 0
     per_worker = -1          # -1 = 还没测；0 = 平台无 /proc，按 --workers 上限跑
     for _ in range(args.rounds):
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
@@ -513,6 +522,8 @@ def main() -> None:
             per_worker = startup_worker_estimate(args, plan)
         if not run_round(args, state, plan, changes, per_worker):
             break
+
+    args.metrics.close()
 
 
 if __name__ == '__main__':

@@ -13,6 +13,7 @@ MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from run_identity_validation import descendants
 import dagger_experiment_runner as guard
+from pvz_metrics import Metrics
 
 
 def read(path):
@@ -73,6 +74,7 @@ def summarize(folder, task, seeds):
 
 
 def evaluate(args):
+    args.metrics = Metrics("unified_panel").start()
     manifest = read(args.manifest)
     model_hash = sha(args.rollout_policy); binary_hash = sha(args.executable); manifest_hash = sha(args.manifest)
     selected = set(args.tasks.split(',')) if args.tasks else set(manifest['groups'])
@@ -115,6 +117,8 @@ def evaluate(args):
         assert config['arms'] == 'fast' and int(config['workers']) == args.workers
         row = summarize(folder, task, seeds); row['group'] = group; rows.append(row)
         assert sha(args.rollout_policy) == model_hash and sha(args.executable) == binary_hash and sha(args.manifest) == manifest_hash
+        if getattr(args, "metrics", None) is not None:
+            args.metrics.update(games=sum(r["games"] for r in rows), tasks=len(rows))
         print(f"{name}: {row['won']}/{row['games']}", flush=True)
     groups = {}
     for group in ('day', 'heldout', 'night'):
@@ -191,6 +195,7 @@ def pressure_ceiling(points):
 
 
 def evaluate_pressure(args):
+    args.metrics = Metrics("unified_panel_pressure").start()
     manifest = read(args.pressure_manifest)
     model_hash = sha(args.rollout_policy)
     binary_hash = sha(args.executable)
@@ -233,6 +238,8 @@ def evaluate_pressure(args):
         row = summarize(folder, task, seeds)
         row['multiplier'] = task['zombie_count_multiplier']
         rows.append(row)
+        if getattr(args, "metrics", None) is not None:
+            args.metrics.update(games=sum(r["games"] for r in rows), tasks=len(rows))
         print(f"{name}: {row['won']}/{row['games']}", flush=True)
     by_level = {}
     for row in rows:

@@ -130,7 +130,7 @@ class ActiveWindow:
 
 
 class Metrics:
-    def __init__(self, name, *, training=False, directory=DEFAULT_DIRECTORY, interval=INTERVAL):
+    def __init__(self, name, *, training=False, directory=DEFAULT_DIRECTORY, interval=INTERVAL, progress_source=None):
         self.name = re.sub(r'[^\w.-]', '_', name)
         self.pid = os.getpid()
         self.training = training
@@ -142,6 +142,7 @@ class Metrics:
         self._stop = threading.Event()
         self._thread = None
         self._progress = {}
+        self._progress_source = progress_source
         self._previous = None
         self._day = None
         self._window = ActiveWindow()
@@ -150,6 +151,11 @@ class Metrics:
     def update(self, **counters):
         with self._lock:
             self._progress.update(counters)
+
+    def advance(self, **increments):
+        with self._lock:
+            for name, value in increments.items():
+                self._progress[name] = self._progress.get(name, 0) + value
 
     def _rotate(self, stamp):
         day = datetime.fromtimestamp(stamp, timezone.utc).date().isoformat()
@@ -174,6 +180,8 @@ class Metrics:
             available = _read_numbers(Path('/proc/meminfo')).get('MemAvailable')
             with self._lock:
                 progress = dict(self._progress)
+            if self._progress_source is not None:
+                progress.update(self._progress_source())
             row = dict(schema_version=1, event='sample', time=datetime.fromtimestamp(
                 stamp, timezone.utc).isoformat(), timestamp=stamp, monotonic_s=monotonic,
                 name=self.name, pid=self.pid, training=self.training,

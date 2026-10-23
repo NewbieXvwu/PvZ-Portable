@@ -81,6 +81,9 @@ def main() -> None:
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
     args = p.parse_args()
+    from pvz_metrics import Metrics
+    metrics = Metrics("train_value_branches", training=True).start()
+    metrics.update(step=0, rows=0)
     torch.manual_seed(args.seed)
     paths = [file for path in map(Path, args.data.split(","))
              for file in (sorted(path.glob("*.pt")) if path.is_dir() else [path])]
@@ -120,6 +123,7 @@ def main() -> None:
                 loss = F.binary_cross_entropy_with_logits(logits, won[batch].to(args.device))
             if train:
                 opt.zero_grad(); loss.backward(); opt.step()
+                metrics.advance(step=1, rows=len(batch))
             total += loss.item() * len(batch)
         return total / len(order)
 

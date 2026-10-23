@@ -26,6 +26,7 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 import torch.nn.functional as F  # noqa: E402
 
+from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode, cache_packets, cache_identity_scene, candidate_cells, frame_bytes,  # noqa: E402
@@ -327,6 +328,8 @@ def main() -> None:
     p.add_argument('--source-row-report', type=Path, help='optional actual retained row counts by source; cached rows required')
     p.add_argument("--max-steps", type=int, help="optional optimizer-step budget and cosine length; default all epochs")
     args = p.parse_args()
+    metrics = Metrics("train_rollout_policy", training=True).start()
+    metrics.update(step=0, rows=0, phase="loading")
     if args.aux_weight < 0 or args.aux_horizon < 1:
         p.error("--aux-weight must be nonnegative and --aux-horizon must be positive")
     if args.row_weights and not args.cache:
@@ -500,8 +503,11 @@ def main() -> None:
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 
     completed_steps=0
+    completed_rows=0
+    metrics.update(phase="training")
     for epoch in range(1, args.epochs + 1):
         epoch_started = time.perf_counter()
+        metrics.update(phase="training")
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
         train_loss = 0.0
@@ -514,8 +520,11 @@ def main() -> None:
             if ema is not None:
                 ema.update_parameters(net)
             completed_steps+=1
+            completed_rows += len(perm[start:start + 2048])
+            metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
             if completed_steps>=steps:
                 break
+        metrics.update(phase="validation")
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU).
@@ -536,6 +545,8 @@ def main() -> None:
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
                                                        "load_seconds": load_seconds, "data_memory": memory}, indent=1))
+    metrics.update(phase="complete")
+    metrics.close()
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
 
 
