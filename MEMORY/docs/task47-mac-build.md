@@ -42,6 +42,8 @@
 
 4. LTO 选择：同源码独立 full 构建对普通 Release 的 thin 构建，64 root × 9 推演、四轮交替，full/thin 吞吐比中位数 **0.987**（0.981 / 0.969 / 1.011 / 0.993），保留 AppleClang 默认 `-flto=thin`。所有完整叶观测及逻辑统计相同。普通 Release 四个存档整局重放 **953 / 877 / 531 / 464 帧，0 差异**，同种子重复推演 4/4 一致。证据 `artifacts/perf/task47/full_vs_thin{.json,_rounds/}` 与 `replay_release.json`。
 
+5. `CMakeLists.txt` 与同一个 `scripts/build_pgo.sh` 已按实际 CMake 编译器分支接入 Clang PGO。`JOBS=4` 完整执行 instr-generate → 原 64 root bench 工作负载 → `xcrun llvm-profdata merge` → instr-use，profile 含 5197 个函数 / 36588 个块。实际使用自定义目录 `artifacts/perf/task47/pgo/engine.profdata`，最终 Ninja 生成标志计数为 0、使用标志正确，GCC 原有编译/链接 flag 行逐字保留。最终二进制 SHA256 `cfa3f51f0210fd4a6c735a7b1ca00ad204c7a315116c147a117ef556379fd7e8`，完整门禁运行中。
+
 ## 问题
 
 - Mac 原始测试基线的 `test_low_memory_pauses_and_resumes_only_own_parent_and_child` 失败，监控读 Linux `/proc`，本任务保持其代码不变。当前 Mac 没有 task35 的四族基准清单与全部存档，正从台式机按 HF 通道取同一份输入。
