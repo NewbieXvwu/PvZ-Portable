@@ -77,6 +77,28 @@ def timing_samples(plan):
     return times
 
 
+def budget_selections(plan,times,samples=2):
+    """Sparse fallback: named roots cover their reset seed; CPU alone picks others."""
+    named=[j for j in selections(plan,1,samples) if j['cell'].get('archive')]
+    covered={(j['cell']['level'],j['cell']['seed']) for j in named}
+    jobs=list(named)
+    for cell in plan['cells']:
+        if cell.get('archive') or (cell['level'],cell['seed']) in covered:continue
+        trajectory=d.load(d.OUT/'episodes'/cell['id']/'trajectory.json')
+        def proxy(point):
+            rows=[(abs(tick-point['tick']),values) for (level,tick,kind),values in times.items()
+                  if level==cell['level']]
+            distance=min(delta for delta,values in rows)
+            return point['candidate_count']*statistics.mean(v for delta,values in rows if delta==distance for v in values)
+        eligible=[point for point in trajectory['eligible'] if 0<=point['tick']<=plan['spec']['window_end_tick']]
+        point=min(eligible,key=lambda point:(proxy(point),point['decision']))
+        jobs.append(dict(cell=cell,point=point,samples=samples,stage='screen',cpu_sparse=True))
+    expected={(c['level'],c['seed']) for c in plan['cells'] if not c.get('archive')}
+    if {(j['cell']['level'],j['cell']['seed']) for j in jobs}!=expected:
+        raise ValueError('sparse fallback lost level/reset-seed coverage')
+    return jobs
+
+
 def select():
     destination=d.OUT/'selection-active.json'
     if destination.exists():
@@ -94,6 +116,13 @@ def select():
         row=dict(student_roots_per_seed=count,samples=samples,roots=len(jobs),
             labels=sum(j['point']['candidate_count']*samples for j in jobs),
             projected_label_cpu_seconds=forecast,
+            conservative_total_cpu_seconds=d.spent_cpu()+1.2*forecast+1200)
+        options.append(row)
+        if selected is None and row['conservative_total_cpu_seconds']<=72000:selected=(row,jobs)
+    if plan['spec'].get('cpu_sparse_fallback'):
+        jobs=budget_selections(plan,times);forecast=timing_forecast(jobs,times)
+        row=dict(selection='CPU sparse; named roots cover their reset seed',samples=2,roots=len(jobs),
+            labels=sum(j['point']['candidate_count']*2 for j in jobs),projected_label_cpu_seconds=forecast,
             conservative_total_cpu_seconds=d.spent_cpu()+1.2*forecast+1200)
         options.append(row)
         if selected is None and row['conservative_total_cpu_seconds']<=72000:selected=(row,jobs)
@@ -140,6 +169,10 @@ def run():
     if not (d.OUT/'selection-active.json').exists():
         for count in (1,2):
             for job in selections(plan,count,2):inspect[(job['cell']['id'],job['point']['decision'])]=job
+        if plan['spec'].get('cpu_sparse_fallback'):
+            fallback=budget_selections(plan,timing_samples(plan))
+            d.save(d.OUT/'budget-root-jobs.json',dict(jobs=fallback,method='candidate count times nearest same-level mean measured CPU; no outcome/value inputs'))
+            for job in fallback:inspect[(job['cell']['id'],job['point']['decision'])]=job
         d.run_jobs('inspect',list(inspect.values()))
     summary=select()
     publish('sampling-frozen',f"第三阶段CPU计时取点已冻结：{summary['choice']['roots']}根、{summary['choice']['samples']}共同未来、{summary['choice']['labels']}条完整候选终局标签；每关2seed，保留全部合法种植/铲子/等待和六个非L45旧点。按计时保守预测共{summary['choice']['conservative_total_cpu_seconds']/3600:.3f}CPU小时≤20；未根据终局结果选根。源工具复用关系和CPU门禁见task46-roof-terminal-plan.json / sampling.json。",

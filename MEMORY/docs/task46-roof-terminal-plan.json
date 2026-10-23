@@ -78,5 +78,14 @@
     "previous_plan_sha256": "f7d418e69ce4fc5c62261a234a45cdfc85ce6cab2ecf2a312873088497481c9d",
     "scope_changed": false,
     "outcomes_used_for_selection": false
+  },
+  "cpu_sparse_fallback": {
+    "reason": "all original options exceed 20h after both timing cohorts; original point density was not a user requirement",
+    "rule": "six named non-L45 roots cover their own reset seed; for each remaining level/reset seed choose one scheduled legal student point in 0..10000 minimizing candidate_count * nearest same-level mean measured CPU, ties by decision",
+    "futures": 2,
+    "preserve": "all seven levels, two reset seeds each, six named roots, every legal plant/shovel/wait action, frozen terminal teacher",
+    "outcomes_used_for_selection": false,
+    "previous_plan_sha256": "c9e83123da211df7560b50a008e1229dece2553bc6ed461b4ae8b1d5ca51c325",
+    "limitation": "CPU-selected sparse points do not estimate all opening decisions or phase-wide policy performance"
   }
 }

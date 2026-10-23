@@ -95,3 +95,21 @@ def test_timing_amendment_keeps_both_stages_and_requires_completion(tmp_path,mon
     assert times[(42,10000,'plant:33')]==[5]
     (folder/'pilot-end-complete.json').unlink()
     with pytest.raises(ValueError,match='incomplete'):pipeline.timing_samples(plan)
+
+
+def test_sparse_cpu_selection_preserves_named_and_reset_seed_coverage(tmp_path,monkeypatch):
+    import roof_terminal_pipeline as pipeline
+    monkeypatch.setattr(d,'OUT',tmp_path)
+    a=dict(id='a',level=42,seed=1);b=dict(id='b',level=42,seed=2)
+    archive=dict(id='archive',level=42,seed=1,archive=True)
+    named=dict(cell=archive,point=dict(decision=99),samples=2,stage='screen')
+    monkeypatch.setattr(pipeline,'selections',lambda *args:[named])
+    # Cheap root wins despite opposite, irrelevant outcome metadata; outside-window root excluded.
+    d.save(tmp_path/'episodes/b/trajectory.json',dict(eligible=[
+        dict(decision=1,tick=60,candidate_count=30,won=True),
+        dict(decision=2,tick=120,candidate_count=20,won=False),
+        dict(decision=3,tick=11000,candidate_count=1,won=True)]))
+    plan=dict(cells=[a,b,archive],spec=dict(window_end_tick=10000))
+    selected=pipeline.budget_selections(plan,{(42,0,'wait'):[10]})
+    assert selected[0]==named
+    assert [(j['cell']['seed'],j['point']['decision']) for j in selected]==[(1,99),(2,2)]
