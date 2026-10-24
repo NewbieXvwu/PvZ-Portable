@@ -1,0 +1,148 @@
+{
+ "schema_version": 1,
+ "scope": "task46 appendix B third phase only (roof terminal candidate audit)",
+ "complete": true,
+ "requirements": {
+  "B1_tool_reuse": {
+   "fog_source": {
+    "commit": "2d3ba1d5a113f4bb196eb674580c988949b60d18",
+    "sha256": "854b9145d83406c6ace4ab4f30fdb7b9eefabfaf584c9625add1f172eaf11e54"
+   },
+   "v5_terminal_continuation": {
+    "commit": "bb2ec969",
+    "sha256": "0b4089d2f34e37ea1e2cda30fdc8be0ee73f70e2aa1c62b56997bd8b613d9588"
+   },
+   "adapted_generic_tool": "scripts/terminal_candidate_audit.py",
+   "relation": "fog fixed phase-e paths and pvz_fog imports; roof version keeps root/history/income restore, common futures, true terminal and action-chain checks; continuation is the same frozen v5 finish_teacher source hash"
+  },
+  "B2_collection": {
+   "levels": [
+    42,
+    43,
+    44,
+    46,
+    47,
+    48,
+    49
+   ],
+   "seed_offsets": [
+    0,
+    1
+   ],
+   "window_end_tick": 10000,
+   "roots": 17,
+   "candidates": 753,
+   "labels": 1506,
+   "terminal_labels": 1506,
+   "wins": 177,
+   "marked_points": 6,
+   "marked_points_deferred": [
+    45
+   ],
+   "mowers_initial_ready": [
+    0
+   ],
+   "mowers_used_max": 0,
+   "common_futures": 2,
+   "actions": "all engine legal plantings plus shovels plus canonical wait",
+   "evidence": "task46-roof-terminal-results.json"
+  },
+  "B3_four_audits": {
+   "static_coverage": {
+    "won": 4,
+    "wave": 7,
+    "tick": 12
+   },
+   "halving_pruned": {
+    "won": 6,
+    "wave": 18,
+    "tick": 21
+   },
+   "candidate_generation_omission": {
+    "won": 46,
+    "wave": 175,
+    "tick": 224
+   },
+   "leaf_ranking_not_top": {
+    "won": 2,
+    "wave": 4,
+    "tick": 7
+   },
+   "initial_margin_blocked": {
+    "won": 1,
+    "wave": 6,
+    "tick": 7
+   },
+   "verification_rejected": {
+    "tick": 1
+   },
+   "v4_pair_accuracy": {
+    "won": {
+     "accuracy": 0.5388516940555894,
+     "pairs": 4929,
+     "cluster_bootstrap_95": [
+      0.47058823529411764,
+      0.6088774525570924
+     ]
+    },
+    "wave": {
+     "accuracy": 0.5613897596656218,
+     "pairs": 13398,
+     "cluster_bootstrap_95": [
+      0.5204897001686093,
+      0.6150107526881721
+     ]
+    },
+    "tick": {
+     "accuracy": 0.5483679876784551,
+     "pairs": 16881,
+     "cluster_bootstrap_95": [
+      0.5210523856254965,
+      0.5870882611670414
+     ]
+    }
+   },
+   "separable_roots": {
+    "won": 8,
+    "wave": 17,
+    "tick": 17
+   },
+   "thresholds_changed": false,
+   "production_parameters_changed": false,
+   "reading": "candidate generation omission dominates every metric; static retention, halving pruning, short-leaf ranking and the 0.02 margin each explain few improvements; won-pair interval spans chance and only L42/L43/L46 roots contain terminal wins"
+  },
+  "B4_limits": {
+   "cpu_hours_metered": 17.73631942277778,
+   "cpu_seconds_after_repro": 64162.019084,
+   "budget_hours": 20,
+   "conservative_total_hours": 18.069150962222224,
+   "workers": 4,
+   "worker_game_processes": 1,
+   "current_roof_game_pids": [],
+   "qc_touched": false,
+   "engine_source_changed": false,
+   "production_parameters_changed": false
+  }
+ },
+ "verification": {
+  "labels": 1506,
+  "roots": 17,
+  "failures": [],
+  "wins": 177,
+  "checks": "identity rebuilt from stored root/frozen plan/preregistered seeds; label, teacher action chain hash, full decision chain, terminal tick, mowers vs actual reset defenses, shared common future",
+  "independent_repro_cases": 8,
+  "repro_status": "complete",
+  "repro_fields": "identity, outcome, v4_short_value, short_leaf, teacher_leaf, terminal_state_sha256, checks and full decompressed teacher action chain"
+ },
+ "tests": {
+  "full_python": "377 passed + 133 subtests passed",
+  "new_verifier_tests": "2 passed"
+ },
+ "evidence_sha256": {
+  "task46-roof-terminal-plan.json": "f0993add0503d63191e7fd1857cd103f3ffdbc6c920a8426d731b45f6f97e797",
+  "task46-roof-terminal-sampling.json": "3cfcc102babe7915fde99401a5b4fd9e4ec7336320b98f6321fd7ab726fa0120",
+  "task46-roof-terminal-results.json": "707c4494951434fc1c6037e12d54bfabe3e82a2ecbbdbad90934b29e4f6308f5",
+  "task46-roof-terminal-repro.json": "4fe99282a5fce5603df24bf6fa6c2b4575e4f6f8402386fad7fa698291293533",
+  "task46-roof-terminal-verification.json": "24bb232abf38a6058949cc5ba366483b61c6728a9967107556d521ba1da4ddf1"
+ }
+}

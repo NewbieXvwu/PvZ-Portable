@@ -577,7 +577,7 @@ def _play(job: dict, observer=None) -> dict:
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
-        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None:
+        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None and observer is None:
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]

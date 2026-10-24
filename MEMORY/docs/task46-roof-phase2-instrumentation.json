@@ -1,0 +1,117 @@
+{
+  "tests": "12 passed: roof_report, roof_panel, search_agreement_stats",
+  "early_archive_checks": [
+    {
+      "level": 42,
+      "policy": "student",
+      "seed": 45000000,
+      "decisions": 364,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    },
+    {
+      "level": 42,
+      "policy": "teacher",
+      "seed": 45000000,
+      "decisions": 364,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    },
+    {
+      "level": 42,
+      "policy": "teacher",
+      "seed": 45000001,
+      "decisions": 366,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    },
+    {
+      "level": 42,
+      "policy": "teacher",
+      "seed": 45000002,
+      "decisions": 830,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    },
+    {
+      "level": 42,
+      "policy": "teacher",
+      "seed": 45000003,
+      "decisions": 686,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    },
+    {
+      "level": 43,
+      "policy": "student",
+      "seed": 45000000,
+      "decisions": 343,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    },
+    {
+      "level": 43,
+      "policy": "teacher",
+      "seed": 45000002,
+      "decisions": 216,
+      "native_mismatches": 0,
+      "cold_match": [
+        "won",
+        "final_tick",
+        "final_wave",
+        "decisions",
+        "planted_types",
+        "searched",
+        "overrides"
+      ]
+    }
+  ]
+}

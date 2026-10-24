@@ -803,7 +803,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                         '因此只比较学生续走下的动作差异，不能当作老师续走的因果效果。', '']
     L = [f"基线：第 {decision} 步（起始 tick {frames[decision-1]['tick']}）做的是 "
          f"{_action_text(base_act, hand)} → 最终第 {base['final_wave']}/"
-         f"{base['wave_count']} 波，{base['reason']}",
+         f"{base['wave_count']} 波，tick {base['final_tick']}，{base['reason']}",
          "",
          # 重放语义必须写出来。2026-10-03 实测：模型在推理里反复追问
          # "whatif 是照抄原局录下的动作序列、只换一条，还是用策略从头重跑？"
@@ -881,7 +881,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             losses += "  ⚠ 这一步当时执行不了（阳光 / 冷却 / 格子），环境改成了等待"
         L.append(f"  {mark} {_action_cli(cand, hand):<15} {_action_text(cand, hand):<28}"
                  f" → 第 {o['final_wave']:>2}/{o['wave_count']} 波  "
-                 f"{sign:>4} 波  {o['reason']}{losses}")
+                 f"{sign:>4} 波  tick {o['final_tick']}  {o['reason']}{losses}")
     best = max((r[0] for r in results), default=0)
     improved = bool(results) and rank(results[0][2]) < rank(base)
     L.append("")

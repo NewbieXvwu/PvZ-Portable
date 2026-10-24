@@ -1,0 +1,1712 @@
+{
+ "semantics": "original teacher action prefix; original action and all variants continue with frozen student",
+ "results": [
+  {
+   "level": 42,
+   "seed": 45000000,
+   "decision": 127,
+   "root_tick": 7020,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 6,
+    "col": 5,
+    "row": 1
+   },
+   "baseline": true,
+   "prefix_frames_equal": 127,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 8,
+    "wave_count": 30,
+    "final_tick": 19618,
+    "actions": 364,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 18
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     0,
+     2,
+     0.0173
+    ],
+    [
+     3,
+     0,
+     2,
+     0.0179
+    ],
+    [
+     6,
+     3,
+     4,
+     0.0124
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0187
+    ],
+    [
+     6,
+     1,
+     5,
+     0.0179
+    ],
+    [
+     1,
+     2,
+     0,
+     0.0174
+    ],
+    [
+     1,
+     3,
+     0,
+     0.0165
+    ]
+   ]
+  },
+  {
+   "level": 42,
+   "seed": 45000000,
+   "decision": 127,
+   "root_tick": 7020,
+   "raw_action": "plant:3:1:3",
+   "action": {
+    "type": "plant",
+    "packet": 3,
+    "row": 1,
+    "col": 3
+   },
+   "baseline": false,
+   "prefix_frames_equal": 127,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 14,
+    "wave_count": 30,
+    "final_tick": 33458,
+    "actions": 618,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 49
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     0,
+     2,
+     0.0173
+    ],
+    [
+     3,
+     0,
+     2,
+     0.0179
+    ],
+    [
+     6,
+     3,
+     4,
+     0.0124
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0187
+    ],
+    [
+     6,
+     1,
+     5,
+     0.0179
+    ],
+    [
+     1,
+     2,
+     0,
+     0.0174
+    ],
+    [
+     1,
+     3,
+     0,
+     0.0165
+    ]
+   ]
+  },
+  {
+   "level": 42,
+   "seed": 45000000,
+   "decision": 127,
+   "root_tick": 7020,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 127,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 9,
+    "wave_count": 30,
+    "final_tick": 21988,
+    "actions": 408,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 24
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     0,
+     2,
+     0.0173
+    ],
+    [
+     3,
+     0,
+     2,
+     0.0179
+    ],
+    [
+     6,
+     3,
+     4,
+     0.0124
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0187
+    ],
+    [
+     6,
+     1,
+     5,
+     0.0179
+    ],
+    [
+     1,
+     2,
+     0,
+     0.0174
+    ],
+    [
+     1,
+     3,
+     0,
+     0.0165
+    ]
+   ]
+  },
+  {
+   "level": 42,
+   "seed": 45000000,
+   "decision": 254,
+   "root_tick": 13920,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 4,
+    "col": 4,
+    "row": 1
+   },
+   "baseline": true,
+   "prefix_frames_equal": 254,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 8,
+    "wave_count": 30,
+    "final_tick": 19618,
+    "actions": 364,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 18
+   },
+   "archived_finite_targets": [
+    [
+     0,
+     0,
+     1,
+     0.0093
+    ],
+    [
+     4,
+     0,
+     1,
+     0.0102
+    ],
+    [
+     6,
+     3,
+     4,
+     0.009
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0077
+    ],
+    [
+     4,
+     1,
+     4,
+     0.0059
+    ],
+    [
+     0,
+     1,
+     4,
+     0.0037
+    ],
+    [
+     4,
+     0,
+     3,
+     0.0096
+    ]
+   ]
+  },
+  {
+   "level": 42,
+   "seed": 45000000,
+   "decision": 254,
+   "root_tick": 13920,
+   "raw_action": "plant:32:0:3",
+   "action": {
+    "type": "plant",
+    "packet": 4,
+    "row": 0,
+    "col": 3
+   },
+   "baseline": false,
+   "prefix_frames_equal": 254,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 10,
+    "wave_count": 30,
+    "final_tick": 23908,
+    "actions": 440,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 24
+   },
+   "archived_finite_targets": [
+    [
+     0,
+     0,
+     1,
+     0.0093
+    ],
+    [
+     4,
+     0,
+     1,
+     0.0102
+    ],
+    [
+     6,
+     3,
+     4,
+     0.009
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0077
+    ],
+    [
+     4,
+     1,
+     4,
+     0.0059
+    ],
+    [
+     0,
+     1,
+     4,
+     0.0037
+    ],
+    [
+     4,
+     0,
+     3,
+     0.0096
+    ]
+   ]
+  },
+  {
+   "level": 42,
+   "seed": 45000000,
+   "decision": 254,
+   "root_tick": 13920,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 254,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 9,
+    "wave_count": 30,
+    "final_tick": 19705,
+    "actions": 361,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 17
+   },
+   "archived_finite_targets": [
+    [
+     0,
+     0,
+     1,
+     0.0093
+    ],
+    [
+     4,
+     0,
+     1,
+     0.0102
+    ],
+    [
+     6,
+     3,
+     4,
+     0.009
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0077
+    ],
+    [
+     4,
+     1,
+     4,
+     0.0059
+    ],
+    [
+     0,
+     1,
+     4,
+     0.0037
+    ],
+    [
+     4,
+     0,
+     3,
+     0.0096
+    ]
+   ]
+  },
+  {
+   "level": 43,
+   "seed": 45000000,
+   "decision": 81,
+   "root_tick": 4440,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 6,
+    "col": 4,
+    "row": 4
+   },
+   "baseline": true,
+   "prefix_frames_equal": 81,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 8,
+    "wave_count": 30,
+    "final_tick": 18345,
+    "actions": 343,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 14
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     2,
+     2,
+     0.0464
+    ],
+    [
+     3,
+     2,
+     2,
+     0.0304
+    ],
+    [
+     6,
+     2,
+     3,
+     0.0352
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0329
+    ],
+    [
+     6,
+     4,
+     4,
+     0.0369
+    ],
+    [
+     1,
+     0,
+     2,
+     0.0201
+    ],
+    [
+     6,
+     2,
+     6,
+     0.0383
+    ]
+   ]
+  },
+  {
+   "level": 43,
+   "seed": 45000000,
+   "decision": 81,
+   "root_tick": 4440,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 81,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 24,
+    "wave_count": 30,
+    "final_tick": 54725,
+    "actions": 1018,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 94
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     2,
+     2,
+     0.0464
+    ],
+    [
+     3,
+     2,
+     2,
+     0.0304
+    ],
+    [
+     6,
+     2,
+     3,
+     0.0352
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0329
+    ],
+    [
+     6,
+     4,
+     4,
+     0.0369
+    ],
+    [
+     1,
+     0,
+     2,
+     0.0201
+    ],
+    [
+     6,
+     2,
+     6,
+     0.0383
+    ]
+   ]
+  },
+  {
+   "level": 43,
+   "seed": 45000000,
+   "decision": 537,
+   "root_tick": 28500,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 4,
+    "col": 7,
+    "row": 4
+   },
+   "baseline": true,
+   "prefix_frames_equal": 537,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 27,
+    "wave_count": 30,
+    "final_tick": 47340,
+    "actions": 899,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 62
+   },
+   "archived_finite_targets": [
+    [
+     0,
+     4,
+     7,
+     0.6442
+    ],
+    [
+     1,
+     4,
+     7,
+     0.6199
+    ],
+    [
+     4,
+     4,
+     7,
+     0.7123
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.7282
+    ]
+   ]
+  },
+  {
+   "level": 43,
+   "seed": 45000000,
+   "decision": 537,
+   "root_tick": 28500,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 537,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 30,
+    "wave_count": 30,
+    "final_tick": 63167,
+    "actions": 1197,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 105
+   },
+   "archived_finite_targets": [
+    [
+     0,
+     4,
+     7,
+     0.6442
+    ],
+    [
+     1,
+     4,
+     7,
+     0.6199
+    ],
+    [
+     4,
+     4,
+     7,
+     0.7123
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.7282
+    ]
+   ]
+  },
+  {
+   "level": 44,
+   "seed": 45000000,
+   "decision": 1,
+   "root_tick": 0,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 6,
+    "col": 4,
+    "row": 0
+   },
+   "baseline": true,
+   "prefix_frames_equal": 1,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 7,
+    "wave_count": 40,
+    "final_tick": 15883,
+    "actions": 283,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 16
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     3,
+     2,
+     0.0156
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0138
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0119
+    ],
+    [
+     6,
+     0,
+     4,
+     0.0124
+    ],
+    [
+     6,
+     0,
+     5,
+     0.0138
+    ],
+    [
+     6,
+     0,
+     3,
+     0.0124
+    ]
+   ]
+  },
+  {
+   "level": 44,
+   "seed": 45000000,
+   "decision": 1,
+   "root_tick": 0,
+   "raw_action": "plant:1:3:2",
+   "action": {
+    "type": "plant",
+    "packet": 1,
+    "row": 3,
+    "col": 2
+   },
+   "baseline": false,
+   "prefix_frames_equal": 1,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 19,
+    "wave_count": 40,
+    "final_tick": 32212,
+    "actions": 605,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 14
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     3,
+     2,
+     0.0156
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0138
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0119
+    ],
+    [
+     6,
+     0,
+     4,
+     0.0124
+    ],
+    [
+     6,
+     0,
+     5,
+     0.0138
+    ],
+    [
+     6,
+     0,
+     3,
+     0.0124
+    ]
+   ]
+  },
+  {
+   "level": 44,
+   "seed": 45000000,
+   "decision": 1,
+   "root_tick": 0,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 1,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 8,
+    "wave_count": 40,
+    "final_tick": 19642,
+    "actions": 362,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 22
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     3,
+     2,
+     0.0156
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0138
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0119
+    ],
+    [
+     6,
+     0,
+     4,
+     0.0124
+    ],
+    [
+     6,
+     0,
+     5,
+     0.0138
+    ],
+    [
+     6,
+     0,
+     3,
+     0.0124
+    ]
+   ]
+  },
+  {
+   "level": 44,
+   "seed": 45000000,
+   "decision": 196,
+   "root_tick": 11039,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 6,
+    "col": 3,
+    "row": 0
+   },
+   "baseline": true,
+   "prefix_frames_equal": 196,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 7,
+    "wave_count": 40,
+    "final_tick": 15883,
+    "actions": 283,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 16
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     1,
+     0,
+     0.0027
+    ],
+    [
+     6,
+     2,
+     2,
+     0.0031
+    ],
+    [
+     3,
+     1,
+     5,
+     0.007
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0032
+    ],
+    [
+     6,
+     0,
+     3,
+     0.0067
+    ],
+    [
+     1,
+     3,
+     0,
+     0.0028
+    ],
+    [
+     1,
+     4,
+     0,
+     0.0046
+    ]
+   ]
+  },
+  {
+   "level": 44,
+   "seed": 45000000,
+   "decision": 196,
+   "root_tick": 11039,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 196,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 6,
+    "wave_count": 40,
+    "final_tick": 15525,
+    "actions": 279,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 15
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     1,
+     0,
+     0.0027
+    ],
+    [
+     6,
+     2,
+     2,
+     0.0031
+    ],
+    [
+     3,
+     1,
+     5,
+     0.007
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0032
+    ],
+    [
+     6,
+     0,
+     3,
+     0.0067
+    ],
+    [
+     1,
+     3,
+     0,
+     0.0028
+    ],
+    [
+     1,
+     4,
+     0,
+     0.0046
+    ]
+   ]
+  },
+  {
+   "level": 45,
+   "seed": 45000000,
+   "decision": 1,
+   "root_tick": 0,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 6,
+    "col": 4,
+    "row": 0
+   },
+   "baseline": true,
+   "prefix_frames_equal": 1,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 3,
+    "wave_count": 30,
+    "final_tick": 7569,
+    "actions": 138,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 11
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     3,
+     2,
+     0.0036
+    ],
+    [
+     0,
+     4,
+     1,
+     0.001
+    ],
+    [
+     4,
+     2,
+     0,
+     0.0021
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0017
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0031
+    ],
+    [
+     6,
+     0,
+     4,
+     0.0023
+    ],
+    [
+     6,
+     0,
+     5,
+     0.0017
+    ],
+    [
+     4,
+     4,
+     2,
+     0.0028
+    ]
+   ]
+  },
+  {
+   "level": 45,
+   "seed": 45000000,
+   "decision": 1,
+   "root_tick": 0,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 1,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 14,
+    "wave_count": 30,
+    "final_tick": 31408,
+    "actions": 599,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 45
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     3,
+     2,
+     0.0036
+    ],
+    [
+     0,
+     4,
+     1,
+     0.001
+    ],
+    [
+     4,
+     2,
+     0,
+     0.0021
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0017
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0031
+    ],
+    [
+     6,
+     0,
+     4,
+     0.0023
+    ],
+    [
+     6,
+     0,
+     5,
+     0.0017
+    ],
+    [
+     4,
+     4,
+     2,
+     0.0028
+    ]
+   ]
+  },
+  {
+   "level": 45,
+   "seed": 45000000,
+   "decision": 80,
+   "root_tick": 4280,
+   "raw_action": null,
+   "action": {
+    "type": "plant",
+    "packet": 6,
+    "col": 2,
+    "row": 0
+   },
+   "baseline": true,
+   "prefix_frames_equal": 80,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 3,
+    "wave_count": 30,
+    "final_tick": 7569,
+    "actions": 138,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 11
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     4,
+     1,
+     0.0024
+    ],
+    [
+     2,
+     3,
+     2,
+     0.0013
+    ],
+    [
+     0,
+     1,
+     1,
+     0.0007
+    ],
+    [
+     5,
+     4,
+     0,
+     0.0005
+    ],
+    [
+     4,
+     4,
+     0,
+     0.0027
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0006
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0008
+    ],
+    [
+     6,
+     0,
+     2,
+     0.0007
+    ],
+    [
+     6,
+     1,
+     4,
+     0.0006
+    ],
+    [
+     6,
+     1,
+     3,
+     0.0006
+    ]
+   ]
+  },
+  {
+   "level": 45,
+   "seed": 45000000,
+   "decision": 80,
+   "root_tick": 4280,
+   "raw_action": "wait:60",
+   "action": {
+    "type": "wait",
+    "ticks": 60
+   },
+   "baseline": false,
+   "prefix_frames_equal": 80,
+   "compared_fields": [
+    "enemy_on_screen",
+    "graves",
+    "lanes",
+    "mowers",
+    "packets",
+    "plants",
+    "result",
+    "row_terrain",
+    "scene",
+    "sun",
+    "sun_income_rate",
+    "terminal",
+    "tick",
+    "totals",
+    "v2",
+    "wave",
+    "zombies"
+   ],
+   "accepted": true,
+   "outcome": {
+    "result": 2,
+    "won": false,
+    "reason": "僵尸进屋",
+    "final_wave": 3,
+    "wave_count": 30,
+    "final_tick": 7564,
+    "actions": 138,
+    "rejected_actions": 0,
+    "mowers_used": 0,
+    "plants_eaten": 11
+   },
+   "archived_finite_targets": [
+    [
+     1,
+     4,
+     1,
+     0.0024
+    ],
+    [
+     2,
+     3,
+     2,
+     0.0013
+    ],
+    [
+     0,
+     1,
+     1,
+     0.0007
+    ],
+    [
+     5,
+     4,
+     0,
+     0.0005
+    ],
+    [
+     4,
+     4,
+     0,
+     0.0027
+    ],
+    [
+     6,
+     2,
+     8,
+     0.0006
+    ],
+    [
+     -1,
+     -1,
+     -1,
+     0.0008
+    ],
+    [
+     6,
+     0,
+     2,
+     0.0007
+    ],
+    [
+     6,
+     1,
+     4,
+     0.0006
+    ],
+    [
+     6,
+     1,
+     3,
+     0.0006
+    ]
+   ]
+  }
+ ]
+}

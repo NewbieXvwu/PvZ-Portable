@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "scope": "task46 appendix A, original difficulty only, no curriculum changes",
+  "selection": "L42–49 each first four r7 evaluation seeds, not selected on outcome; L42–45 also first seed student pair",
+  "levels": [
+    42,
+    43,
+    44,
+    45,
+    46,
+    47,
+    48,
+    49
+  ],
+  "seeds": [
+    45000000,
+    45000001,
+    45000002,
+    45000003
+  ],
+  "teacher_games": 32,
+  "student_games": 4,
+  "deck_family": "roof_r7",
+  "multiplier": 1.0,
+  "max_game_processes": 4,
+  "models": {
+    "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/build/pvz-portable": "e36e9650fbc66952f23f9572b740d35ccd2af3e47c00826be29b346e7c3fbab1"
+  },
+  "protocol": [
+    "command_for unchanged verify=9 student-candidates=2; observational callbacks only",
+    "raw decision timelines: before/after sun, events, action, pot occupants, engine shooter subclass per row, pult count, legal actions, zombies, Python/native action agreement",
+    "complete episode archives; L42–45 first seed teacher sent to isolated Gemini sessions with query tools and whatif",
+    "independent evidence review and key counterfactual replay; no hand-written policy or reward formula",
+    "if deck defects established, new family and preregistration before experiments; otherwise enumerate missing data"
+  ]
+}
