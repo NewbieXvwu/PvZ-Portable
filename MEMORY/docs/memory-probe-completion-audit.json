@@ -1,0 +1,44 @@
+{
+  "corpus_sha256": "d60ebfd1f77d04502bd103bb5bd9ae9df47a73080f7d8dcac5ed42c0d1e02bc7",
+  "episodes": 164,
+  "frames": 66092,
+  "split_counts": {
+    "train": 100,
+    "validation": 20,
+    "test": 44
+  },
+  "hidden_occupied": 61910,
+  "returns": {
+    "train": 22,
+    "validation": 4,
+    "test": 8
+  },
+  "prediction_files": 1320,
+  "cpu_recomputed_episodes": 30,
+  "cpu_prediction_max_abs_error": 1.8298625946044922e-05,
+  "tests": "...............                                                          [100%]\n15 passed in 3.22s",
+  "allowed_changed_paths": [
+    "MEMORY/2026-10-24.md",
+    "MEMORY/docs/memory-probe-data.json",
+    "MEMORY/docs/memory-probe-initial-data.json",
+    "MEMORY/docs/memory-probe-input-audit.json",
+    "MEMORY/docs/memory-probe-numerics.json",
+    "MEMORY/docs/memory-probe-training.json",
+    "MEMORY/docs/memory-probe.md",
+    "MEMORY/docs/task58-memory-probe.md",
+    "python/pvz_memory_probe.py",
+    "python/test_memory_probe.py",
+    "scripts/memory_probe_data.py",
+    "scripts/memory_probe_metrics.py",
+    "scripts/memory_probe_queue.py",
+    "scripts/memory_probe_train.py",
+    "scripts/memory_probe_verify.py"
+  ],
+  "tracked_ignored_files": 0,
+  "branch": "memprobe",
+  "full_audit_sha256": "7b7f50773fb2d28da32146ca01423b68e185163b049a6ea48b73295e62d15f14",
+  "runs": 30,
+  "min_start_mem_available_gib": 10.002067565917969,
+  "max_training_seconds": 523.9566686153412,
+  "status": "all machine-verifiable data/model/metric/resource gates passed; report and git delivery audited separately"
+}
