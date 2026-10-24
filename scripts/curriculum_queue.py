@@ -22,8 +22,14 @@
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
 5. **后台打包 / 训练 / 晋升评估**：每轮保存“本队列写过的全部标签 + `--recipe` 来源标签”的快照，
    复用已有标签段、只打新标签，然后训练并做配对门禁。前台立即采下一轮，组间只切换通过者。
+   打包并发按待建段的原始档案体积估算（build_plan），不按已建段——冷启动也能吃满内存预算。
 
-采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
+采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签）；
+task59 起学生胜率 < 阈值（默认 0.1）的格改用 β 混合（--starved-beta，默认 0.5）：
+部分步改由搜索执行、每个决策仍由搜索打标签，把标签覆盖的状态范围从"开局即崩"扩到中后盘
+（Ross et al. 2011 的 DAgger β-mixing；与 beta0 的行同格式，可一起训练）；
+β 混合组的胜负不是学生胜率，不进学生窗口，另存该倍率桶的 mixed 计数；每
+--probe-interval（默认 3）组保留一个 β=0 探针组测量真实学生胜率（修正 2b），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
 每开一组前读 MemAvailable，`--workers` 只是上限，实际 worker 数按
 `(MemAvailable − 6 GiB) / 一个 worker 的实测 RSS` 取整，至少 1。每 worker 的 RSS 在
@@ -42,6 +48,7 @@ from __future__ import annotations
 import argparse
 import copy
 import glob
+import hashlib
 import json
 import os
 import shlex
@@ -62,7 +69,7 @@ from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import GATE_VERSION, policy as promotion_policy, freeze_panel
 from promotion_gate import contract as promotion_contract, contract_key, sha as file_sha, valid_certificate
-from pvz_training_pack import pack_flags, pack_options
+from pvz_training_pack import pack_flags, pack_options, segment_options, segment_path
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
@@ -85,6 +92,7 @@ DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / nump
 
 GIB = 1024 ** 3
 MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
+PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
@@ -107,6 +115,22 @@ def worker_count(available: int | None, per_worker: int, upper: int, background:
     if available is None or per_worker <= 0:
         return upper
     return max(1, min(upper, (available - MEMORY_RESERVE_BYTES - background) // per_worker))
+
+
+def build_plan(pending_bytes: list[int], recipe_workers: int,
+               available: int | None) -> tuple[int, int]:
+    """返回 (打包并发, 单建造者峰值字节)。
+
+    打包并行是"一个建造者建一个标签段"：单建造者峰值 = PACK_BUILDER_BYTES + 待建标签里
+    最大的原始档案体积；并发 = min(配方值, (可用内存 − 预留) / 单建造者峰值, 待建段数)。
+    旧算法按已建段体积估（冷启动 = 0 → 2 GiB → 并发 1），20 核机器单核打包近 9 小时
+    （2026-10-24 task59）。待建段为空时并发 1（pack 无活可干，数值无意义）。
+    """
+    per_builder = PACK_BUILDER_BYTES + max(pending_bytes, default=0)
+    workers = len(pending_bytes) or 1
+    if available is not None:
+        workers = min(workers, max(1, (available - MEMORY_RESERVE_BYTES) // per_builder))
+    return max(1, min(recipe_workers, workers)), per_builder
 
 
 def _proc_table() -> dict[int, tuple[int, int]]:
@@ -329,6 +353,19 @@ def rate(cell: dict, multiplier: float) -> float | None:
     return sum(bucket['recent']) / len(bucket['recent'])
 
 
+def student_rate(cell: dict, multiplier: float) -> float | None:
+    """学生在该格的最近胜率：先看当前倍率窗口，没有就退回最近一个非空窗口
+    （刚换档还没数据时，这就是执行现实）。全无数据返回 None（第一个组保持 β=0 的探针）。"""
+    current = rate(cell, multiplier)
+    if current is not None:
+        return current
+    latest = None
+    for bucket in cell['windows'].values():
+        if bucket.get('recent'):
+            latest = sum(bucket['recent']) / len(bucket['recent'])
+    return latest
+
+
 def adjust(cells: dict, values: list[float]) -> list[str]:
     """按窗口胜率升降档；返回变更描述（用于日志）。"""
     changes = []
@@ -358,6 +395,9 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
        按 0）。老师没有证据时按可教处理——beta0 采集本身就是老师探针；学生全败而老师
        会赢的格（如 L20：老师 29/32、学生 0/128）排最前；老师也赢不了的格差距趋 0，
        自然沉底（雾区格本就不在训练集合）。同分按最久没采的先。
+    allocate 不改 last_round（task59）：它由 run_round 在每组完成时写并落盘。plan 只在
+    内存里标 picked；控制器组间崩溃重启后重新 plan，没跑的组照常排出、本轮已完成的组
+    不重采（last_round == round_index 跳过）。
     """
     if not cells or budget < 1 or per_group < 1:
         return []
@@ -374,14 +414,13 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
         picks.append((base, current, floor_games))
         picked.add(base)
         spent += floor_games
-        cells[base]['last_round'] = round_index
     scored = []
     for base, cell in cells.items():
-        if base in picked:
-            continue
+        if base in picked or cells[base]['last_round'] == round_index:
+            continue   # 本轮已完成的组（组间崩溃重启后的重排）不重采
         current = values[cell['mult_index']]
-        student_rate = rate(cell, current)
-        student = 0.0 if student_rate is None else student_rate
+        student_win = rate(cell, current)
+        student = 0.0 if student_win is None else student_win
         teacher_rate = teacher.get(base, teacher.get(f'level:{cell["level"]}', 1.0))
         gap = min(1.0, max(0.0, teacher_rate - student))
         scored.append((-gap, cells[base]['last_round'], base, current))
@@ -391,7 +430,6 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
             break
         picks.append((base, multiplier, per_group))
         remaining -= per_group
-        cells[base]['last_round'] = round_index
     return picks
 
 
@@ -433,7 +471,7 @@ def label_for(round_index: int, base: str, multiplier: float) -> str:
 
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
-                out: Path | None = None) -> list[str]:
+                out: Path | None = None, beta: float = 0.0) -> list[str]:
     python = str(args.python) if args.python.exists() else sys.executable
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
@@ -441,7 +479,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--static-value', str(args.static_value), '--value', str(args.value),
             '--manifest', str(manifest), '--task-id', task_id,
             '--seed-offset', str(offset), '--seeds', str(games),
-            '--executable', str(args.executable), '--dagger-beta', '0',
+            '--executable', str(args.executable), '--dagger-beta', f'{beta:g}',
             '--workers', str(args.workers if workers is None else workers),
             '--resource-dir', str(args.resource_dir),
             '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
@@ -485,6 +523,13 @@ class TrainingPipeline:
         self.lock_fd = None
         self.failed = False
         self.futures = []
+        self.build_workers, self.build_peak = 1, 0
+        queued = [job for job in state.setdefault('training_jobs', []) if job['status'] != 'done']
+        if queued:
+            try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
+                self._plan_build(load_recipe(Path(queued[-1]['recipe']), 'training'))
+            except (OSError, ValueError, KeyError, RuntimeError):
+                pass   # 退回 estimate_peak 的已建段估算；_admit 仍按 MemAvailable 把关
         if state.get('student'):
             model = Path(state['student'])
             if not model.is_file():
@@ -547,13 +592,45 @@ class TrainingPipeline:
                     promotion=decision, evaluation_directory=str(out))
 
     def estimate_peak(self):
-        # Loading segments plus merging compact CSR peaks near twice the compact corpus;
-        # allow a third copy and 2 GiB for Python, optimizer and host batches. At least 2 GiB
-        # covers one cold label builder; concurrency grows with the corpus budget (2 GiB each).
-        # MemAvailable already reflects
-        # any current backend RSS; only its unconsumed headroom is subtracted from collection.
+        # 后台流水线的峰值 = max(打包阶段, 训练阶段)。打包按 _plan_build 的待建段估算
+        # （并发建造者 × 单建造者峰值）；训练加载段加合并紧凑 CSR 的峰值约为紧凑语料的
+        # 3 倍，再加 2 GiB 的 Python/优化器/批次。MemAvailable 已含后台现有 RSS，
+        # reservation() 只补 estimate 与现有 RSS 的差额。
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
-        return 3 * compact_bytes + 2 * GIB
+        return max(self.build_peak, 3 * compact_bytes + 2 * GIB)
+
+    def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
+        """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
+        与 pack() 同一段契约；指纹段文件缺失即待建。指纹只用相对路径与文件大小（stat）。"""
+        from pvz_frame_store import frame_paths
+        base = Path(load_recipe(self.args.recipe, 'training')['data'])
+        sources = [base] if base == self.args.frames else [base, self.args.frames]
+        wanted = set(labels)
+        catalog: dict[str, tuple[str, int]] = {}
+        for source in sources:
+            for path in frame_paths(source):
+                if path.parent.name in wanted:
+                    catalog[str(path.parent.relative_to(source))] = (path.parent.name, path.stat().st_size)
+        options = pack_options(**training_row_options(recipe, labels))
+        pending = []
+        for label in sorted(wanted):
+            lines = sorted(f'{rel}:{size}' for rel, (name, size) in catalog.items() if name == label)
+            if not lines:
+                continue   # 没有档案的标签 pack 时会自己报错，不进估算
+            fingerprint = hashlib.sha1('|'.join(lines).encode()).hexdigest()[:16]
+            target = segment_path(self.directory / 'frames', segment_options(options, label, fingerprint))
+            if not target.is_file():
+                pending.append((label, sum(int(line.rsplit(':', 1)[1]) for line in lines)))
+        return pending
+
+    def _plan_build(self, recipe: dict) -> None:
+        """按待建段估算打包并发与峰值；enqueue 写进配方，estimate_peak/reservation 引用。"""
+        pending = self.pending_builds(recipe['labels'], recipe)
+        self.build_workers, per_builder = build_plan([size for _, size in pending],
+                                                     recipe['precompute_workers'], mem_available_bytes())
+        self.build_peak = self.build_workers * per_builder
+        log_line(self.args.log, f'pack plan: {len(pending)} pending segments, '
+                                f'workers={self.build_workers}, peak~{self.build_peak / GIB:.1f} GiB')
 
     def reservation(self):
         if not self.pending():
@@ -575,7 +652,8 @@ class TrainingPipeline:
         folder = self.directory / f'round_{round_index:06d}'
         recipe['out'] = str(folder / 'student')
         recipe['cache_dir'] = str(self.directory / 'cache')
-        recipe['precompute_workers'] = min(recipe['precompute_workers'], max(1, self.estimate_peak() // (2 * GIB)))
+        self._plan_build(recipe)
+        recipe['precompute_workers'] = self.build_workers
         path = folder / 'recipe.json'
         path.parent.mkdir(parents=True, exist_ok=True)
         write_recipe(path, recipe)
@@ -820,8 +898,18 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                            f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
                            f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
+        cell = state['cells'][item['base']]
+        student = student_rate(cell, item['multiplier'])
+        starved = student is not None and student < args.beta_threshold
+        if starved and cell.get('mixed_since_probe', 0) >= max(1, args.probe_interval) - 1:
+            beta = 0.0    # 探针：每 probe_interval 组保留一个 β=0 组，测真实学生胜率
+        elif starved:
+            beta = args.starved_beta
+        else:
+            beta = 0.0
+        item['beta'] = beta
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
-                              item['games'], item['label'], workers=workers)
+                              item['games'], item['label'], workers=workers, beta=beta)
         started = time.time()
         item.update(collection_started=started, student=str(args.rollout_policy),
                     student_round=state.get('student_round', 0), workers=workers)
@@ -840,23 +928,35 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             args.metrics_games += games
             args.metrics_decisions += sum(row.get('decisions', 0) for row in rows)
             metrics.update(games=args.metrics_games, decisions=args.metrics_decisions, round=round_index)
-        bucket = state['cells'][item['base']]['windows'].setdefault(
+        bucket = cell['windows'].setdefault(
             str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
-        bucket['recent'] = (bucket['recent'] + [1 if row.get('won') else 0
+        if beta > 0:
+            # β 混合组的胜负不是学生的胜率（一部分步是搜索在走）：不进学生窗口，另存 mixed；
+            # 否则 adjust/allocate/student_rate 会把混合胜率当学生胜率——全败格被误升档、
+            # 可教差距被算小、student_rate 在阈值附近来回振荡（task59 修正 2b）。
+            target = bucket.setdefault('mixed', {'recent': [], 'wins': 0, 'games': 0})
+            cell['mixed_since_probe'] = cell.get('mixed_since_probe', 0) + 1
+        else:
+            target = bucket
+            cell['mixed_since_probe'] = 0
+        target['recent'] = (target['recent'] + [1 if row.get('won') else 0
                                                 for row in rows])[-WINDOW:]
-        bucket['wins'] += wins
-        bucket['games'] += games
-        bucket['last_round'] = round_index
+        target['wins'] += wins
+        target['games'] += games
         log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} mult={item["multiplier"]:g} '
                            f'offset={item["offset"]} games={games} wins={wins} '
-                           f'rate={(wins / games if games else 0):.2f} rc={result.returncode} {seconds:.0f}s')
+                           f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
+                           f'rc={result.returncode} {seconds:.0f}s')
         if result.returncode != 0:
             raise SystemExit(f'{item["label"]}: search_play exited {result.returncode}')
+        state['cells'][item['base']]['last_round'] = round_index
+        save_state(args.state, state)   # 组完成即落盘：组间崩溃重启不重采、防遗忘轮转不丢（task59）
     state['round'] = round_index
     state['log'].append(dict(round=round_index,
                              groups=[{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',
                                                             'manifest', 'label', 'collection_started',
-                                                            'collection_finished', 'student', 'student_round', 'workers')}
+                                                            'collection_finished', 'student', 'student_round',
+                                                            'workers', 'beta')}
                                      for item in plan],
                              changes=changes))
     save_state(args.state, state)
@@ -907,6 +1007,12 @@ def main() -> None:
     parser.add_argument('--games-per-group', type=int, default=48)
     parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
                         help='teacher win-rate evidence json (level/base -> rate); missing file = all unknown')
+    parser.add_argument('--beta-threshold', type=float, default=0.1,
+                        help='学生最近胜率低于该值的格改用 β 混合（DAgger beta-mixing）')
+    parser.add_argument('--starved-beta', type=float, default=0.5,
+                        help='β 混合格的 dagger-beta：该比例的步由搜索执行，标签仍全部来自搜索')
+    parser.add_argument('--probe-interval', type=int, default=3,
+                        help='全败格每这么多个组保留一个 β=0 探针组（测真实学生胜率），其余 β 混合')
     parser.add_argument('--rounds', type=int, default=1)
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')

@@ -23,7 +23,8 @@ def setup(root):
                            recipe=recipe, python=Path(sys.executable), rollout_policy=root / 'initial.pt',
                            workers=2, stop_flag=root / 'stop', out=root / 'runs',
                            executable=root / 'engine', value=root / 'value.pt', resource_dir=root / 'resources',
-                           promotion_panel=root / 'panel.json')
+                           promotion_panel=root / 'panel.json', beta_threshold=0.1, starved_beta=0.5,
+                           probe_interval=3)
     args.rollout_policy.write_bytes(b'initial')
     args.executable.write_bytes(b'engine')
     args.value.write_bytes(b'value')

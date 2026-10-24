@@ -11,10 +11,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
-                              MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              command_for, label_for, load_teacher_rates, make_state, pack_command,
-                              pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
-                              startup_worker_estimate, training_base_ids, worker_count)
+                              MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
+                              adjust, allocate, build_plan, command_for, label_for, load_teacher_rates,
+                              make_state, pack_command, pack_labels, parse_task_id, plan_round, rate,
+                              reconcile_cells, startup_worker_estimate, student_rate,
+                              training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -75,17 +76,48 @@ class CurriculumRulesTest(unittest.TestCase):
             self.assertIn(multiplier, VALUES)
 
     def test_floor_bounds_starvation_over_rounds(self):
-        # 预算紧张下连续模拟多轮：任何格两次被采的间隔不超过 FLOOR_ROUNDS + 1 轮。
+        # 预算紧张下连续模拟多轮（last_round 由"组完成"写入，如 run_round 的落盘）：
+        # 任何格两次被采的间隔不超过 FLOOR_ROUNDS + 1 轮。
         cells = {f'c{i:02d}': cell(5, 10, last_round=0) for i in range(20)}
         last_seen = {name: 0 for name in cells}
         for round_index in range(1, 13):
-            allocate(cells, VALUES, budget=50, per_group=10, round_index=round_index)
-            for name, picked in cells.items():
-                if picked['last_round'] == round_index:
-                    gap = round_index - last_seen[name]
-                    self.assertLessEqual(gap, FLOOR_ROUNDS + 1, name)
-                    last_seen[name] = round_index
+            picks = allocate(cells, VALUES, budget=50, per_group=10, round_index=round_index)
+            for base, _multiplier, _games in picks:
+                gap = round_index - last_seen[base]
+                self.assertLessEqual(gap, FLOOR_ROUNDS + 1, base)
+                cells[base]['last_round'] = round_index
+                last_seen[base] = round_index
         self.assertEqual(max(last_seen.values()), 12)          # 每个格都真的被轮到过
+
+    def test_allocate_does_not_mutate_last_round(self):
+        # task59：last_round 只由 run_round 在组完成时写；plan/allocate 不得改状态。
+        cells = {'a': cell(5, 10, last_round=0), 'b': cell(5, 10, last_round=1)}
+        before = {name: value['last_round'] for name, value in cells.items()}
+        allocate(cells, VALUES, budget=30, per_group=10, round_index=7)
+        self.assertEqual({name: value['last_round'] for name, value in cells.items()}, before)
+
+    def test_crash_between_groups_replans_unrun_groups(self):
+        # 组间崩溃重启：重新 plan 时本轮已完成的组不重采，没跑的组照常排出。
+        bases = ('day_l7_train_d7', 'night_l7_train_n7', 'pool_l21_train_p9k')
+        tasks = {}
+        for base in bases:
+            for mult, suffix in [(1.0, ''), (1.25, '_m125')]:
+                task_id = base + suffix
+                tasks[task_id] = dict(task_id=task_id, level=7, deck=[0, 1, 2, 3, 4, 5, 7],
+                                      zombie_count_multiplier=mult, seeds=list(range(40)))
+        state = dict(round=0, offsets={}, cells={base: cell(5, 10) for base in bases})
+        manifests = {task_id: Path('/tmp/panel.json') for task_id in tasks}
+        plan1, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=40, per_group=10)
+        self.assertEqual([item['base'] for item in plan1], list(bases))
+        self.assertEqual([item['games'] for item in plan1], [10, 10, 10])
+        for item in plan1[:2]:                                 # 前两组完成，然后控制器崩溃
+            state['cells'][item['base']]['last_round'] = 1
+            state['offsets'][item['task_id']] = item['offset'] + item['games']
+        plan2, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=40, per_group=10)
+        completed = {item['base'] for item in plan1[:2]}
+        self.assertFalse(completed & {item['base'] for item in plan2})
+        self.assertEqual([item['base'] for item in plan2], ['pool_l21_train_p9k'])
+        self.assertEqual(plan2[0]['offset'], 0)                # 偏移接在原计划之后
 
     def test_starved_cell_gets_floor_even_with_tight_budget(self):
         # 预算只够一个保底组时，最久没采的格拿到保底局数（减半），不为零。
@@ -108,12 +140,75 @@ class CurriculumRulesTest(unittest.TestCase):
     def test_unknown_teacher_and_student_gap_tiebreaks_by_age(self):
         # 老师都未知时按 1 - 学生胜率排；同分时最久没采的先。
         cells = {
-            'fresh_hard': cell(0, 10, last_round=1),        # 差距 1.0
+            'fresh_hard': cell(0, 10, last_round=1),        # 差距 1.0（上一轮采过）
             'old_hard': cell(0, 10, last_round=0),          # 差距 1.0，更久没采
             'easy': cell(9, 10),                            # 差距 0.1
         }
-        picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=1)
+        picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=2)
         self.assertEqual([p[0] for p in picks], ['old_hard', 'fresh_hard', 'easy'])
+
+    def test_build_plan_cold_start_uses_pending_volume(self):
+        # round 2 的真实规模：202 个标签、约 5 万局 ≈ 每标签 0.3 GiB 原始档案，MemAvailable 40 GiB。
+        # 冷启动并发应明显大于 1（旧算法按已建段估得 2 GiB → 并发 1），且峰值不超可用预算。
+        pending = [300 * 1024 * 1024] * 202
+        workers, per_builder = build_plan(pending, recipe_workers=32, available=40 * GIB)
+        self.assertGreater(workers, 1)
+        self.assertEqual(per_builder, PACK_BUILDER_BYTES + pending[0])
+        self.assertLessEqual(workers * per_builder, 40 * GIB - MEMORY_RESERVE_BYTES)
+        self.assertEqual(workers, min(32, (40 * GIB - MEMORY_RESERVE_BYTES) // per_builder))
+
+    def test_build_plan_bounds(self):
+        # 配方值是上限；待建段为空并发 1（pack 无活可干）；可用内存极小时并发仍 >=1。
+        self.assertEqual(build_plan([GIB] * 5, 2, None), (2, 3 * GIB))
+        self.assertEqual(build_plan([], 8, 100 * GIB), (1, PACK_BUILDER_BYTES))
+        self.assertEqual(build_plan([GIB], 8, 7 * GIB), (1, 3 * GIB))
+        self.assertEqual(build_plan([GIB] * 9, 32, 100 * GIB), (9, 3 * GIB))
+
+    def test_pack_memory_limit_matches_build_plan_per_builder(self):
+        # pack() 的单建造者假设与 build_plan 一致：2 GiB 底数 + 该批最大的标签原始档案。
+        import pack_training_rows as packer
+        with tempfile.TemporaryDirectory() as tmp:
+            big = Path(tmp) / 'big' / 'frames.npz'
+            big.parent.mkdir()
+            with big.open('wb') as handle:
+                handle.truncate(3 * GIB)                     # 稀疏文件，只占 st_size
+            jobs = [('d', 'c', None, None, [big])]
+            self.assertEqual(packer.pack_memory_limit(40 * GIB, jobs),
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // (PACK_BUILDER_BYTES + 3 * GIB))
+            self.assertEqual(packer.pack_memory_limit(40 * GIB, [('d', 'c', None, None, [])]),
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // PACK_BUILDER_BYTES)
+            self.assertEqual(packer.pack_memory_limit(GIB, jobs), 1)
+
+    def test_pending_builds_uses_merged_catalog_and_segment_contract(self):
+        # 与 _prepare_corpus 同一合并视图（采集优先）、与 pack() 同一段契约：段文件在即已建。
+        import hashlib
+        from pvz_recipe import load_recipe, training_row_options, write_recipe
+        from pvz_training_pack import pack_options, segment_options, segment_path
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            base, coll = root / 'base', root / 'coll'
+            (base / 's1' / 'pool_a').mkdir(parents=True)
+            (base / 's1' / 'pool_a' / 'frames.jsonl').write_bytes(b'x' * 100)
+            (coll / 's1' / 'pool_a').mkdir(parents=True)
+            (coll / 's1' / 'pool_a' / 'frames.jsonl').write_bytes(b'y' * 200)   # 采集同位覆盖
+            (coll / 's2' / 'pool_b').mkdir(parents=True)
+            (coll / 's2' / 'pool_b' / 'frames.jsonl').write_bytes(b'z' * 50)
+            recipe = load_recipe(ROOT / 'recipes/dw4i.json')
+            recipe['data'] = str(base)
+            recipe_path = root / 'recipe.json'
+            write_recipe(recipe_path, recipe)
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.args = SimpleNamespace(recipe=recipe_path, frames=coll, log=root / 'log')
+            pipeline.directory = root / 'pipeline'
+            self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)),
+                             {'pool_a': 200, 'pool_b': 50})
+            fingerprint = hashlib.sha1(b's2/pool_b:50').hexdigest()[:16]
+            options = pack_options(**training_row_options(recipe, ['pool_a', 'pool_b']))
+            target = segment_path(root / 'pipeline' / 'frames', segment_options(options, 'pool_b', fingerprint))
+            target.parent.mkdir(parents=True)
+            target.write_bytes(b'')
+            self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)), {'pool_a': 200})
 
     def test_load_teacher_rates_missing_file_and_shapes(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -162,6 +257,113 @@ class CurriculumRulesTest(unittest.TestCase):
                 self.assertEqual(state['offsets'], {})
             finally:
                 queue.STOP_FLAG = original
+
+    def test_student_rate_uses_current_window_then_latest(self):
+        self.assertAlmostEqual(student_rate(cell(2, 10), VALUES[0]), 0.2)
+        # 刚换档还没数据：退回最近一个非空窗口（执行现实）。
+        self.assertAlmostEqual(student_rate(cell(1, 10, mult_index=1), 2.0), 0.1)
+        # 全无数据：None，第一个组保持 β=0 的探针。
+        self.assertIsNone(student_rate(cell(0, 0), VALUES[0]))
+
+    def test_command_for_passes_dagger_beta(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                               static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=3,
+                               executable=Path('/exe'), resource_dir=Path('/res'),
+                               frames=Path('/frames'), out=Path('/out'))
+        base = command_for(args, Path('/panel.json'), 'day_l7_train_d7_m125', 0, 2, 'c1d7m125')
+        self.assertEqual(base[base.index('--dagger-beta') + 1], '0')
+        mixed = command_for(args, Path('/panel.json'), 'day_l7_train_d7_m125', 0, 2, 'c1d7m125', beta=0.5)
+        self.assertEqual(mixed[mixed.index('--dagger-beta') + 1], '0.5')
+
+    def test_run_round_mixes_beta_for_starved_cells(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+
+            original_flag, original_run = queue.STOP_FLAG, queue.subprocess.run
+            queue.STOP_FLAG = root / 'absent-stop-flag'   # 不存在：组间不停
+            queue.subprocess.run = fake_run
+            try:
+                for wins, games, expected in [(0, 10, '0.5'), (5, 10, '0'), (0, 0, '0')]:
+                    label = f'c1d7m{wins}g{games}'
+                    folder = root / 'out' / f'{label}_2'
+                    folder.mkdir(parents=True)
+                    rows = [{'won': True}, {'won': False}]
+                    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                    args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                                           python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                                           static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
+                                           executable=Path('/exe'), resource_dir=Path('/res'),
+                                           frames=Path('/frames'),
+                                           beta_threshold=0.1, starved_beta=0.5, probe_interval=3)
+                    state = dict(round=0, offsets={}, log=[],
+                                 cells={'day_l7_train_d7': cell(wins, games)})
+                    plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
+                                 offset=0, games=2, manifest='/m', label=label)]
+                    self.assertTrue(queue.run_round(args, state, plan, []))
+                    self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], expected)
+                    self.assertIn(f'beta={expected}', (root / 'log').read_text())
+                    self.assertEqual(state['log'][0]['groups'][0]['beta'], float(expected))
+            finally:
+                queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
+
+    def test_mixed_groups_bypass_student_window_with_probe_cadence(self):
+        # 修正 2b：β>0 组的胜负不进学生胜率窗口（一部分步是搜索在走），另存 mixed；
+        # 每 probe_interval 组保留一个 β=0 探针组，窗口只吃探针与普通 β0 组。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+
+            original_flag, original_run = queue.STOP_FLAG, queue.subprocess.run
+            queue.STOP_FLAG = root / 'absent-stop-flag'
+            queue.subprocess.run = fake_run
+            try:
+                args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                                       python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                                       static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
+                                       executable=Path('/exe'), resource_dir=Path('/res'),
+                                       frames=Path('/frames'), beta_threshold=0.1, starved_beta=0.5,
+                                       probe_interval=3)
+                state = dict(round=0, offsets={}, log=[],
+                             cells={'day_l7_train_d7': cell(0, 10)})   # 学生全败
+                for round_index in (1, 2, 3):
+                    label = f'c{round_index}d7m100'
+                    folder = root / 'out' / f'{label}_2'
+                    folder.mkdir(parents=True)
+                    rows = [{'won': True}, {'won': False}]   # 混入窗口会造出 50% 假胜率
+                    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                    plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
+                                 offset=0, games=2, manifest='/m', label=label)]
+                    self.assertTrue(queue.run_round(args, state, plan, []))
+                betas = [entry['groups'][0]['beta'] for entry in state['log']]
+                self.assertEqual(betas, [0.5, 0.5, 0.0])     # 第 3 组是 β=0 探针
+                self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], '0')
+                starved_cell = state['cells']['day_l7_train_d7']
+                bucket = starved_cell['windows']['1.0']
+                self.assertEqual(bucket['games'], 12)        # 旧窗口 + 探针组
+                self.assertEqual(bucket['recent'], [0] * 10 + [1, 0])
+                mixed = bucket['mixed']
+                self.assertEqual((mixed['wins'], mixed['games']), (2, 4))
+                self.assertEqual(starved_cell['mixed_since_probe'], 0)
+                self.assertAlmostEqual(student_rate(starved_cell, 1.0), 1 / 12)   # 探针口径，不是 50%
+                self.assertEqual(adjust({'d': starved_cell}, VALUES), [])   # 不会因 mixed 误升档
+                # allocate 的可教差距不受 mixed 影响：全败格仍排在 0.5 胜率格前
+                # （若 mixed 污染窗口，两者差距同为 0.5，按更久未采会排反）。
+                rival = {'d': starved_cell, 'mid': cell(5, 10, last_round=1)}
+                picks = allocate(rival, VALUES, budget=20, per_group=10, round_index=4)
+                self.assertEqual([p[0] for p in picks], ['d', 'mid'])
+            finally:
+                queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
 
     def test_pack_labels_union_the_log_and_the_base_corpus(self):
         state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
