@@ -846,6 +846,11 @@ class DemoStartCellsTest(unittest.TestCase):
             {'task_id': 'plain', 'level': 31},
         ]}
         with tempfile.TemporaryDirectory() as tmp:
+            # 存档不进 git：在临时目录里放一份已验证的 meta，不依赖本机有没有用户示范
+            archive = Path(tmp) / 'archive'
+            archive.mkdir()
+            (archive / 'meta.json').write_text(json.dumps({'verified': True}))
+            document['tasks'][0]['demo_start']['archive'] = str(archive)
             path = Path(tmp) / 'tasks.json'
             path.write_text(json.dumps(document))
             cells, manifests = load_demo_start_cells(path)
@@ -860,7 +865,7 @@ class DemoStartCellsTest(unittest.TestCase):
                 load_demo_start_cells(path)
             # 存档不在就没有起点可恢复：启动时就报，而不是组里 replay 才炸
             document['tasks'][0]['demo_start']['decisions'] = self.LADDER
-            document['tasks'][0]['demo_start']['archive'] = 'artifacts/human_demo/raw/seed_19990101/none'
+            document['tasks'][0]['demo_start']['archive'] = str(Path(tmp) / 'none')
             path.write_text(json.dumps(document))
             with self.assertRaises(ValueError) as raised:
                 load_demo_start_cells(path)
@@ -892,6 +897,10 @@ class DemoStartCellsTest(unittest.TestCase):
 
     def test_registered_manifest_start_cells(self):
         manifest = ROOT / 'configs/human_demo_tasks.json'
+        archives = [task['demo_start']['archive'] for task in json.loads(manifest.read_text())['tasks']
+                    if 'demo_start' in task]
+        if not all((ROOT / archive).is_dir() for archive in archives):
+            self.skipTest('user demo archives are not in git; present only where they were recorded/fetched')
         cells, _ = load_demo_start_cells(manifest)
         self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_33_cactus_snow_m200',
                                       'demo_fog_33_cattail_snow_m200'})
