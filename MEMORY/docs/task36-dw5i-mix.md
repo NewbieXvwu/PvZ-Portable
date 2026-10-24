@@ -119,3 +119,5 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
   2. 验收：同一份小数据（取方案 A 的 2 个标签），旧装载（合并前的提交，独立工作树）与新装载在同 seed 下训练前 200 步的损失与全部权重张量逐位相同（照 task33 §15 “验收一”的做法）；若因行顺序不同做不到逐位，就改为统计验收并写清原因。
   3. 按训练器提示的打包命令打包（打包参数必须与训练命令逐项相同），再重跑 `run_task36_mix.py --plan A`，A 完成后跑 B；空闲门禁的内存要求按新装载的实测峰值重定（旧的 16 GiB 是给 12.8 GB 的旧装载定的），并且**不得让 `MemAvailable` 低于 10 GiB**（课程采集要用）。
   4. 每一步提交、`git push origin dw5`，在“结果”记一行。最多 2 个自己的游戏进程；不碰 tmux `qc` 与别的代理会话。
+
+- 2026-10-24，37 结论落盘：`MEMORY/docs/unified-panel.md` 新增「task36：区等权行权重配比（A）与早关×2（B）」一节，含五模型分区表、34 关逐关表与五组同种子配对表（A/B 各对 dw4i、dw5i 及 A vs B）；同时起草 `recipes/dw6i.json`，字段全部取自 `artifacts/task36/train_A.command.json`（281 个 labels、同超参、seed 1、12 epoch），`row_weights` 指向 A 清单（manifest SHA b006fbee…、multipliers be036941…），并记录确定性重生命令 `python3 scripts/task36_row_weights.py --plan A --out artifacts/task36/row_weights_A.json`——清单与 npy 在 `artifacts/` 下、按规则不入 git。dw6i 采用 A 的配比（zone-equal + n10:n9=2:1），不加早关乘子；白天/留出缺口需另开实验，且需第二种子的 A 才能区分配比效应与训练噪声。
