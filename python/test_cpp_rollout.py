@@ -141,8 +141,24 @@ class CppRolloutTest(unittest.TestCase):
                     bits += expected.numel()
                 compared += 1
             if until:
-                expected = search_play._python_rollout_reference(self.env, self.obs, first, until, root, seed)
+                recovered = {}
+                expected = search_play._python_rollout_reference(
+                    self.env, self.obs, first, until, root, seed, fast_state_out=recovered)
                 self.assertEqual(_frame(actual), _frame(expected))
+                self.assertEqual(recovered['frame']['tick'], record['observation']['tick'])
+                self.assertEqual(recovered['history'].wave, recovered['frame']['wave'])
+                next_trace = Path(self.directory.name) / 'leaf_features.jsonl'
+                self.env.rollout_predict(recovered['frame']['tick'],
+                    recovered['action']['type'] == 'plant', student_history=recovered['history'],
+                    trace_path=next_trace)
+                native = json.loads(next_trace.read_text())
+                leaf_frame = _frame(expected)
+                leaf_frame['action'] = recovered['action']
+                board, scalars = recovered['history'].features(leaf_frame, recovered['frame'], context)
+                np.testing.assert_array_equal(board.flatten().numpy().view(np.uint32),
+                    np.array(native['board'], np.float32).view(np.uint32))
+                np.testing.assert_array_equal(scalars.numpy().view(np.uint32),
+                    np.array(native['scalars'], np.float32).view(np.uint32))
         self.assertGreater(compared, 50)
         print(json.dumps({"obs": version, "trajectory_decisions": compared, "equal_float32": bits}), flush=True)
 

@@ -45,7 +45,7 @@ def plan(args):
     result=dict(manifest=str(frozen),tasks=[t['task_id'] for t in tasks],games=args.games,workers=args.workers,
                 seed_offset=args.seed_offset,student=str(MAIN/'artifacts/student/dw4i_s1/model.pt'),
                 static=str(MAIN/'artifacts/hard/value_branch1/model.pt'),
-                v3=str(MAIN/'artifacts/value_net/v3/model.pt'),v4=str(args.v4),
+                v3=str(args.baseline),v4=str(args.v4),executable=str(args.executable),
                 student_sha256=hashlib.sha256((MAIN/'artifacts/student/dw4i_s1/model.pt').read_bytes()).hexdigest(),
                 static_sha256=hashlib.sha256((MAIN/'artifacts/hard/value_branch1/model.pt').read_bytes()).hexdigest(),
                 control='queue103 run(), beta=1, only leaf value checkpoint changes')
@@ -61,7 +61,7 @@ def run(args,arm,p):
         cmd=[sys.executable,str(ROOT/'scripts/search_play.py'),'--rollout-policy',p['student'],
              '--static-value',p['static'],'--value',p[arm],'--verify-samples','9','--student-candidates','2',
              '--manifest',p['manifest'],'--task-id',task,'--seeds',str(p['games']),
-             '--workers',str(args.workers),'--executable',str(ROOT/'build/pvz-portable'),
+             '--workers',str(args.workers),'--executable',str(p['executable']),
              '--resource-dir','/home/newbiexvwu/.cache/pvz-research-resources','--dagger-beta','1','--out',str(out)]
         print(f'{arm} {task}',flush=True)
         with (out/'run.log').open('a') as log:subprocess.run(cmd,stdout=log,stderr=subprocess.STDOUT,check=True,cwd=ROOT)
@@ -69,17 +69,29 @@ def run(args,arm,p):
 
 
 def report(args,p):
+    target=args.out/'paired.json'
+    target.unlink(missing_ok=True) # A failed revalidation must not leave an old success report.
+    frozen={t['task_id']:t for t in json.loads(Path(p['manifest']).read_text())['tasks']}
     out={}
     for task in p['tasks']:
-        results=[]
+        planned=frozen[task]['seeds'];expected=set(map(int,planned))
+        if len(planned)!=p['games'] or len(expected)!=p['games']:
+            raise ValueError(f'{task}: frozen plan does not contain {p["games"]} unique seeds')
+        results=[];missing={}
         for arm in ('v3','v4'):
             path=args.out/arm/task/'games.jsonl'
             rows=[json.loads(s) for s in path.read_text().splitlines()] if path.is_file() else []
-            results.append({r['seed']:bool(r['won']) for r in rows})
+            seeds=[int(r['seed']) for r in rows]
+            if len(seeds)!=len(set(seeds)):raise ValueError(f'{task} {arm}: duplicate game seeds')
+            unexpected=set(seeds)-expected
+            if unexpected:raise ValueError(f'{task} {arm}: unexpected seeds {sorted(unexpected)}')
+            missing[arm]=sorted(expected-set(seeds))
+            results.append({int(r['seed']):bool(r['won']) for r in rows})
         out[task]=paired(*results)
-    doc=dict(plan=p,complete=all(r['pairs']==p['games'] and not r['missing_old'] and not r['missing_new'] for r in out.values()),
+        out[task]['missing_expected_seeds']=missing
+    doc=dict(plan=p,complete=all(r['pairs']==p['games'] and not any(r['missing_expected_seeds'].values()) for r in out.values()),
              results=out,note='A nonsignificant difference with 32 pairs does not establish noninferiority. No defaults are changed.')
-    (args.out/'paired.json').write_text(json.dumps(doc,indent=1));print(json.dumps(doc,indent=1))
+    target.write_text(json.dumps(doc,indent=1));print(json.dumps(doc,indent=1))
 
 
 def main():
@@ -87,6 +99,9 @@ def main():
     p.add_argument('--out',type=Path,required=True);p.add_argument('--v4',type=Path,required=True)
     p.add_argument('--workers',type=int,default=4);p.add_argument('--games',type=int,default=32)
     p.add_argument('--seed-offset',type=int,default=0)
+    p.add_argument('--baseline',type=Path,default=MAIN/'artifacts/value_net/v3/model.pt',
+                   help='the arm named v3; pass v4 to compare a new net against v4')
+    p.add_argument('--executable',type=Path,default=ROOT/'build/pvz-portable')
     p.add_argument('--task',action='append',help='MANIFEST:task_id; replaces the default six tasks')
     a=p.parse_args()
     if not 1<=a.workers<=4:p.error('--workers must be 1..4')

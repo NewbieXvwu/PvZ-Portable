@@ -1005,3 +1005,7 @@ f8新种子覆盖5585728–9104159的离散槽，f8p覆盖5651264–9169695的�
 ### 14.21 雾区全合法候选终局诊断预登记（task45追加E）
 
 L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学生根轨迹，范围0–8000tick。候选为引擎全部合法种植+等待，不用静态网/top-k缩减。冻结dw4i、v4、branch1及本树雾引擎；只读复用v5第二轮finish_teacher，从候选立即接冻结搜索老师到真实终局，不先经过2500tick学生续走。另在同候选/共同未来上计算正式2500tick学生叶的v4值，分报胜率、末波、终tick排序一致率及平局，不用候选对数充当独立样本。先做仅以CPU耗时决定根取样密度的pilot，取点在读终局标签前冻结；每点全候选×3共同未来。若预算允许，以新16共同未来对每关/观测一处筛出的根作独立确认，限制选择偏差。最多4游戏，全部阶段含重试≤20CPU小时，预留600秒停机，原始逐候选/未来终局和动作链保存在ignored phase-e。详见 [冻结方案](MEMORY/docs/task45-fog-terminal-plan.json)。本阶段不训练、不修改老师或v5分支。
+### 14.22 价值网络叶子默认换 v5（task43，2026-10-24）
+
+老师叶子价值网络默认由 `value_net/v4` 改为 `value_net/v5`（`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE`；`unified_panel.py` 的 `--value` 默认不动，静态估值仍用 `value_branch1`）。依据（[task43 任务书 §53](MEMORY/docs/task43-value-v5-pool.md)）：全新 32 种子 L21/L22/L23/L25 各 32 对、v4 vs v5 同种子配对，四关合计胜 42 → 100（gain 67 / harm 9，合并 McNemar p = 4.3e-12，四关方向一致）；白天 / 夜间非劣通过。已知局限：同根候选分散度探针未过（top1−top2 中位差 < 0.02，排序质量存疑）；雾区 / 屋顶关未测。权重经 HF `transfer/value_v5.pt` 回验 SHA256（`8a636d33…88c3b4`）后放主检出 `value_net/v5/model.pt`，不入 git；部署在组边界切换，时机由主控定。
+
