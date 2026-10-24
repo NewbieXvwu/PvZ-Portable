@@ -56,4 +56,15 @@
   防遗忘语义不变：floor 轮转仍按 (last_round, base) 最久优先，FLOOR_ROUNDS 窗口判定未动。
   测试：allocate 纯度、12 轮无格间隔超 FLOOR_ROUNDS+1（按组完成语义模拟）、
   plan→前两组完成→重 plan：已完成组不重采、没跑的组照常排出且偏移接续。47 过。
+- [x] 修正 2b（β 组不污染学生窗口）：run_round 里 β>0 组的胜负改写进该倍率桶的
+  bucket["mixed"]（recent/wins/games 同构，供分析），不再进 bucket["recent"]；cell 上新增
+  mixed_since_probe 计数。学生胜率仍需 β=0 测量——采用"探针组"方案：全败格每
+  --probe-interval（默认 3）组保留一个 β=0 组（普通组，照常进窗口、照常训练、照常计
+  offset），其余组 β 混合。**为什么不用同组拆两段**：--dagger-beta 是 search_play 进程级
+  参数，拆段要把每组成两次调用，组开销翻倍，偏移/日志/state 组条目与标签语义全要拆分；
+  探针组方案只加一个计数器和一个分支，且窗口（WINDOW=256）始终有真实学生测量滚动，
+  student_rate 不会在 0.1 阈值附近振荡（mixed 不进窗口）。adjust/allocate/student_rate
+  一行未改——它们读的 recent 天然干净。测试：3 组节奏 [0.5, 0.5, 0.0]、mixed 计数、
+  窗口只含探针、student_rate=1/12 而非 50%、adjust 不误动、allocate 可教差距不受污染
+  （反证：污染后同分按年龄会排反）。48 过。
 ## 问题

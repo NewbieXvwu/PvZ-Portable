@@ -27,7 +27,9 @@
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签）；
 task59 起学生胜率 < 阈值（默认 0.1）的格改用 β 混合（--starved-beta，默认 0.5）：
 部分步改由搜索执行、每个决策仍由搜索打标签，把标签覆盖的状态范围从"开局即崩"扩到中后盘
-（Ross et al. 2011 的 DAgger β-mixing；与 beta0 的行同格式，可一起训练），
+（Ross et al. 2011 的 DAgger β-mixing；与 beta0 的行同格式，可一起训练）；
+β 混合组的胜负不是学生胜率，不进学生窗口，另存该倍率桶的 mixed 计数；每
+--probe-interval（默认 3）组保留一个 β=0 探针组测量真实学生胜率（修正 2b），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
 每开一组前读 MemAvailable，`--workers` 只是上限，实际 worker 数按
 `(MemAvailable − 6 GiB) / 一个 worker 的实测 RSS` 取整，至少 1。每 worker 的 RSS 在
@@ -896,8 +898,15 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                            f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
                            f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
-        student = student_rate(state['cells'][item['base']], item['multiplier'])
-        beta = args.starved_beta if student is not None and student < args.beta_threshold else 0.0
+        cell = state['cells'][item['base']]
+        student = student_rate(cell, item['multiplier'])
+        starved = student is not None and student < args.beta_threshold
+        if starved and cell.get('mixed_since_probe', 0) >= max(1, args.probe_interval) - 1:
+            beta = 0.0    # 探针：每 probe_interval 组保留一个 β=0 组，测真实学生胜率
+        elif starved:
+            beta = args.starved_beta
+        else:
+            beta = 0.0
         item['beta'] = beta
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
                               item['games'], item['label'], workers=workers, beta=beta)
@@ -919,12 +928,21 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             args.metrics_games += games
             args.metrics_decisions += sum(row.get('decisions', 0) for row in rows)
             metrics.update(games=args.metrics_games, decisions=args.metrics_decisions, round=round_index)
-        bucket = state['cells'][item['base']]['windows'].setdefault(
+        bucket = cell['windows'].setdefault(
             str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
-        bucket['recent'] = (bucket['recent'] + [1 if row.get('won') else 0
+        if beta > 0:
+            # β 混合组的胜负不是学生的胜率（一部分步是搜索在走）：不进学生窗口，另存 mixed；
+            # 否则 adjust/allocate/student_rate 会把混合胜率当学生胜率——全败格被误升档、
+            # 可教差距被算小、student_rate 在阈值附近来回振荡（task59 修正 2b）。
+            target = bucket.setdefault('mixed', {'recent': [], 'wins': 0, 'games': 0})
+            cell['mixed_since_probe'] = cell.get('mixed_since_probe', 0) + 1
+        else:
+            target = bucket
+            cell['mixed_since_probe'] = 0
+        target['recent'] = (target['recent'] + [1 if row.get('won') else 0
                                                 for row in rows])[-WINDOW:]
-        bucket['wins'] += wins
-        bucket['games'] += games
+        target['wins'] += wins
+        target['games'] += games
         log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} mult={item["multiplier"]:g} '
                            f'offset={item["offset"]} games={games} wins={wins} '
                            f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
@@ -993,6 +1011,8 @@ def main() -> None:
                         help='学生最近胜率低于该值的格改用 β 混合（DAgger beta-mixing）')
     parser.add_argument('--starved-beta', type=float, default=0.5,
                         help='β 混合格的 dagger-beta：该比例的步由搜索执行，标签仍全部来自搜索')
+    parser.add_argument('--probe-interval', type=int, default=3,
+                        help='全败格每这么多个组保留一个 β=0 探针组（测真实学生胜率），其余 β 混合')
     parser.add_argument('--rounds', type=int, default=1)
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')

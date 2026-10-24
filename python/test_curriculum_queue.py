@@ -300,7 +300,7 @@ class CurriculumRulesTest(unittest.TestCase):
                                            static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
                                            executable=Path('/exe'), resource_dir=Path('/res'),
                                            frames=Path('/frames'),
-                                           beta_threshold=0.1, starved_beta=0.5)
+                                           beta_threshold=0.1, starved_beta=0.5, probe_interval=3)
                     state = dict(round=0, offsets={}, log=[],
                                  cells={'day_l7_train_d7': cell(wins, games)})
                     plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
@@ -309,6 +309,59 @@ class CurriculumRulesTest(unittest.TestCase):
                     self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], expected)
                     self.assertIn(f'beta={expected}', (root / 'log').read_text())
                     self.assertEqual(state['log'][0]['groups'][0]['beta'], float(expected))
+            finally:
+                queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
+
+    def test_mixed_groups_bypass_student_window_with_probe_cadence(self):
+        # 修正 2b：β>0 组的胜负不进学生胜率窗口（一部分步是搜索在走），另存 mixed；
+        # 每 probe_interval 组保留一个 β=0 探针组，窗口只吃探针与普通 β0 组。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+
+            original_flag, original_run = queue.STOP_FLAG, queue.subprocess.run
+            queue.STOP_FLAG = root / 'absent-stop-flag'
+            queue.subprocess.run = fake_run
+            try:
+                args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                                       python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                                       static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
+                                       executable=Path('/exe'), resource_dir=Path('/res'),
+                                       frames=Path('/frames'), beta_threshold=0.1, starved_beta=0.5,
+                                       probe_interval=3)
+                state = dict(round=0, offsets={}, log=[],
+                             cells={'day_l7_train_d7': cell(0, 10)})   # 学生全败
+                for round_index in (1, 2, 3):
+                    label = f'c{round_index}d7m100'
+                    folder = root / 'out' / f'{label}_2'
+                    folder.mkdir(parents=True)
+                    rows = [{'won': True}, {'won': False}]   # 混入窗口会造出 50% 假胜率
+                    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                    plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
+                                 offset=0, games=2, manifest='/m', label=label)]
+                    self.assertTrue(queue.run_round(args, state, plan, []))
+                betas = [entry['groups'][0]['beta'] for entry in state['log']]
+                self.assertEqual(betas, [0.5, 0.5, 0.0])     # 第 3 组是 β=0 探针
+                self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], '0')
+                starved_cell = state['cells']['day_l7_train_d7']
+                bucket = starved_cell['windows']['1.0']
+                self.assertEqual(bucket['games'], 12)        # 旧窗口 + 探针组
+                self.assertEqual(bucket['recent'], [0] * 10 + [1, 0])
+                mixed = bucket['mixed']
+                self.assertEqual((mixed['wins'], mixed['games']), (2, 4))
+                self.assertEqual(starved_cell['mixed_since_probe'], 0)
+                self.assertAlmostEqual(student_rate(starved_cell, 1.0), 1 / 12)   # 探针口径，不是 50%
+                self.assertEqual(adjust({'d': starved_cell}, VALUES), [])   # 不会因 mixed 误升档
+                # allocate 的可教差距不受 mixed 影响：全败格仍排在 0.5 胜率格前
+                # （若 mixed 污染窗口，两者差距同为 0.5，按更久未采会排反）。
+                rival = {'d': starved_cell, 'mid': cell(5, 10, last_round=1)}
+                picks = allocate(rival, VALUES, budget=20, per_group=10, round_index=4)
+                self.assertEqual([p[0] for p in picks], ['d', 'mid'])
             finally:
                 queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
 
