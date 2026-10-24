@@ -205,20 +205,13 @@ def teacher_args(job):
     return args
 
 
-def replay(job):
+def open_game(job):
     from pvz_env import TaskSpec
     from pvz_event_env import EventWaitEnv
     from pvz_tasks import profile_for_deck
-    from pvz_frame_store import frame_path, read_frames
-    from render_episode import _frame
     from pvz_value_net import observation_context
-    archive = Path(job['archive']); path = frame_path(archive)
-    if sha(path) != job['frames_sha256'] or sha(archive/'meta.json') != job['meta_sha256']:
-        raise ValueError('archive changed')
-    frames = read_frames(path); spec = deepcopy(job['reset']); deck = tuple(spec.pop('deck'))
+    spec = deepcopy(job['reset']); deck = tuple(spec.pop('deck'))
     first_aid = spec.pop('first_aid_owned', False)
-    if list(deck) != [p[1] for p in frames[0]['packets']]:
-        raise ValueError('archived deck differs from frozen reset')
     spec['preplanted'] = tuple(tuple(p) for p in spec.get('preplanted', []))
     env = TEACHER._W['env'] = EventWaitEnv(PLAN['teacher']['resource_dir'],
             executable=PLAN['teacher']['executable'], headless=True)
@@ -226,7 +219,20 @@ def replay(job):
     env.load_value_net(TEACHER._W['value_files'][0])
     env.load_value_net(TEACHER._W['value_files'][1], static=True)
     obs, _ = env.reset(deck=deck, task=TaskSpec(profile=profile_for_deck(deck, first_aid), **spec))
-    TEACHER._W['context'] = observation_context(obs); state = {}; last_search = -10**9
+    TEACHER._W['context'] = observation_context(obs)
+    return env, obs
+
+
+def replay(job):
+    from pvz_frame_store import frame_path, read_frames
+    from render_episode import _frame
+    archive = Path(job['archive']); path = frame_path(archive)
+    if sha(path) != job['frames_sha256'] or sha(archive/'meta.json') != job['meta_sha256']:
+        raise ValueError('archive changed')
+    frames = read_frames(path)
+    if job['reset']['deck'] != [p[1] for p in frames[0]['packets']]:
+        raise ValueError('archived deck differs from frozen reset')
+    env, obs = open_game(job); state = {}; last_search = -10**9
     for i in range(job['decision']):
         usage(env)
         actual, expected = physical(_frame(obs)), physical(frames[i])
@@ -240,8 +246,8 @@ def replay(job):
         if i == job['decision']-1:
             if job.get('student_executed', False) and proposed != frames[i+1]['action']:
                 raise ValueError('archived student proposal differs')
-            if job.get('legacy'):
-                legacy = job['legacy']
+            if job.get('legacy') or job.get('root_check'):
+                legacy = job.get('legacy') or job['root_check']
                 if env._debug_state_sha256() != legacy['engine_sha256']:
                     raise ValueError('legacy root engine identity differs')
                 public = dict(frame=_frame(obs), student_history=history_record(state))
@@ -261,6 +267,57 @@ def replay(job):
         if rejected:
             obs, *_ = env.step(dict(type='wait', ticks=60))
     raise ValueError('invalid decision')
+
+
+def collect_trajectory(job):
+    """Fresh student prefix and outcome-blind temporal roots; no terminal labels.
+
+    Archived teacher prefixes continue to enter through replay/import-legacy. This
+    stage supplies the old fog/roof opening-window capability for new panels.
+    """
+    from render_episode import _frame
+    env = None
+    try:
+        env, obs = open_game(job); state = {}; args = teacher_args(job)
+        folder=Path(PLAN['out'])/'trajectories'/job['id']
+        path=folder/'frames.jsonl'
+        if path.exists():
+            raise ValueError('trajectory exists; use a fresh output plan')
+        folder.mkdir(parents=True,exist_ok=True)
+        window=PLAN.get('window_end_tick',10000); eligible=[]; frames=[dict(_frame(obs),action=None)]
+        last_search=-10**9
+        for decision in range(TEACHER.MAX_ACTIONS):
+            if obs['terminal'] or obs['tick']>window:break
+            usage(env)
+            action=TEACHER._fast_action(obs,state)
+            TEACHER._W['student_history']=state.get('history')
+            scheduled=not(args.min_gap and action['type']!='plant' and obs['tick']-last_search<args.min_gap)
+            if obs['legal_actions'].get('plants') and scheduled:
+                check=dict(engine_sha256=env._debug_state_sha256(),
+                    history_sha256=hashlib.sha256(key(dict(frame=_frame(obs),student_history=history_record(state))).encode()).hexdigest(),
+                    last_search_tick=last_search)
+                eligible.append(dict(decision=decision+1,tick=obs['tick'],root_check=check,
+                                     candidate_count=len(all_candidates(obs))))
+                last_search=obs['tick']
+            state['action']=action;obs,*_,info=env.step(action)
+            if not info.get('ok'):raise ValueError('student trajectory rejected action')
+            frames.append(dict(_frame(obs),action=action))
+        else:
+            if not obs['terminal'] and obs['tick']<=window:
+                raise RuntimeError('student trajectory reached action cap before window end')
+        path.write_text(''.join(json.dumps(frame)+'\n' for frame in frames))
+        save(folder/'meta.json',dict(reset=job['reset'],source_job=job['id'],prefix='student'))
+        jobs=[]
+        for point in pick_roots(eligible,PLAN.get('temporal_roots_per_game',3),window):
+            fresh={k:v for k,v in job.items() if k not in ('legacy','indices','samples','inspect_only','stage')}
+            fresh.update(id=f"{job['id']}-t{point['decision']}",archive=str(folder),
+                frames_sha256=sha(path),meta_sha256=sha(folder/'meta.json'),decision=point['decision'],
+                student_executed=True,root_check=point['root_check'])
+            jobs.append(fresh)
+        save(folder/'eligible.json',dict(eligible=eligible,jobs=jobs))
+        return dict(id=job['id'],jobs=jobs,eligible=len(eligible))
+    finally:
+        TEACHER._close_worker_env();usage(force=True)
 
 
 def audit_search(env, obs, state, args, seed, last_search):
@@ -446,7 +503,7 @@ def run(plan, jobs, phase):
         results = []
         with mp.get_context('fork').Pool(plan['workers'], initializer=init_worker,
                                        initargs=(plan, str(run_dir), stop)) as pool:
-            pending = pool.imap_unordered(collect_job, jobs)
+            pending = pool.imap_unordered(collect_trajectory if phase=='roots' else collect_job, jobs)
             try:
                 while len(results) < len(jobs):
                     if artifact_bytes(out) > plan['artifact_budget_bytes']:
@@ -463,6 +520,8 @@ def run(plan, jobs, phase):
             except BaseException:
                 stop.set(); pool.close(); pool.join(); raise
         save(run_dir/'complete.json', dict(results=results, cpu_seconds=cpu()-own_start))
+        if phase=='roots':
+            save(out/'temporal-jobs.json',dict(jobs=[j for row in results for j in row['jobs']]))
         value_keep.cleanup()
 
 
@@ -543,7 +602,7 @@ def import_legacy(source, selection, out, executable, workers=2):
 
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('plan', type=Path); p.add_argument('stage', choices=['inspect', 'screen', 'confirm', 'import-legacy'])
+    p.add_argument('plan', type=Path); p.add_argument('stage', choices=['roots', 'inspect', 'screen', 'confirm', 'import-legacy'])
     p.add_argument('--jobs', type=Path, help='absolute frozen subset; defaults to plan jobs')
     p.add_argument('--out', type=Path); p.add_argument('--executable', type=Path)
     p.add_argument('--workers', type=int, default=2)
@@ -558,6 +617,8 @@ def main():
     if args.jobs and not args.jobs.is_absolute():
         raise ValueError('absolute subset path required')
     jobs = [dict(j, inspect_only=args.stage == 'inspect', stage=args.stage) for j in jobs]
+    if args.stage=='roots':
+        jobs=list({j['archive']:j for j in jobs}.values())
     run(plan, jobs, args.stage)
 
 

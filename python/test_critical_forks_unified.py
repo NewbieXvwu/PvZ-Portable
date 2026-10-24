@@ -173,6 +173,23 @@ def test_old_and_new_cpu_receipts_count_reaped_children_once(tmp_path):
     assert f.spent_cpu(tmp_path)==20
 
 
+def test_diagnostic_report_retains_observation_arms_legal_coverage_and_attribution(tmp_path,monkeypatch):
+    group,trace=fixture();trace['audit_schema']=2
+    group.update(labels=2,job=dict(id='human',terrain='fog',observation='human',reset=dict(level=31,seed=1)))
+    for i,c in enumerate(group['candidates']):
+        c.update(plant_type=None if i==0 else 4,v4=.5,teacher_path_v4=.5,
+                 short_all_nonterminal=True,outcomes=[dict(won=False,wave=c['means']['wave'],tick=c['means']['tick'],mowers_used=0)])
+    second=deepcopy(group);second['job'].update(id='xray',observation='xray')
+    monkeypatch.setattr(data,'screen_summary',lambda *args:([group,second],{}))
+    monkeypatch.setattr(f,'load',lambda path:trace)
+    result=data.diagnostic_report(dict(out=str(tmp_path),protocol=dict(confirmation=dict(mean_gap=dict(won=1/3,wave=1,tick=600,mowers_used=.5)))),[])
+    assert set(result['by_level_observation'])=={'l31-human','l31-xray'}
+    assert result['overall']['base_seed_units']==1 and result['overall']['labels']==4
+    assert result['overall']['terminal_wins']==0
+    assert result['overall']['available_root_types']=={'4':2}
+    assert result['attribution_totals']['wave']['initial_margin_blocked']==2
+
+
 def test_frozen_selection_resume_ignores_later_cpu_usage(tmp_path,monkeypatch):
     import critical_forks_sampling as pipeline
     monkeypatch.setattr(pipeline,'OUT',tmp_path/'artifacts')

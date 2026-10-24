@@ -187,17 +187,26 @@ def diagnostic_report(plan, jobs):
     for level,mode in keys:
         subset=[g for g in groups if g['job']['reset']['level']==level and
                 g['job'].get('observation',g['job']['reset'].get('fog_observation','human'))==mode]
-        by_level_observation[f'l{level}-{mode}']=dict(roots=len(subset),labels=sum(g['labels'] for g in subset),
-            base_seed_units=len({g['job']['reset']['seed'] for g in subset}),
+        by_level_observation[f'l{level}-{mode}']=dict(**root_counts(subset,gaps),
             metrics={m:dict(thresholded=agreement(subset,m,gaps[m]),strict=agreement(subset,m,0.),
                 nonterminal_v4_only=agreement(subset,m,gaps[m],True),
                 teacher_path_v4=agreement(subset,m,gaps[m],field='teacher_path_v4')) for m in METRICS})
-    value=dict(status='complete',by_terrain=terrains,by_level_observation=by_level_observation,
+    value=dict(status='complete',overall=root_counts(groups,gaps),by_terrain=terrains,by_level_observation=by_level_observation,
         attribution_totals={m:dict(c) for m,c in totals.items()},groups=groups,
         observation_limit='human/xray paired reset seeds follow their own trajectories; no same-state causal claim',
         cpu_seconds=f.spent_cpu(plan['out']),artifact_bytes=f.artifact_bytes(plan['out']))
     f.save(Path(plan['out'])/'diagnostic-report.json',value)
     return value
+
+
+def root_counts(groups, gaps):
+    """Keep legal coverage and branch label wins separate from independent episodes."""
+    return dict(roots=len(groups),base_seed_units=len({(g['job']['reset']['level'],g['job']['reset']['seed']) for g in groups}),
+        labels=sum(g['labels'] for g in groups),candidates=sum(len(g['candidates']) for g in groups),
+        terminal_wins=sum(o['won'] for g in groups for c in g['candidates'] for o in c['outcomes']),
+        separable_roots={m:sum(max(c['means'][m] for c in g['candidates'])-min(c['means'][m] for c in g['candidates'])>=gap for g in groups) for m,gap in gaps.items()},
+        available_root_types=dict(Counter(str(t) for g in groups for t in {c['plant_type'] for c in g['candidates'] if c['plant_type'] is not None})),
+        v4_favourite_types=dict(Counter(str(max(g['candidates'],key=lambda c:c['v4'])['plant_type']) for g in groups)))
 
 
 def confirmation_plan(plan,jobs):

@@ -39,6 +39,10 @@
 
 ## 结果
 
+- 已推合并提交 `e9e89600`（forks）、`986841c4`（roof）、`17e443f5`（fog），统一/去重提交 `150c4f11`。追加补齐新时间窗学生轨迹 `roots → temporal-jobs → inspect/screen`，实机 120 tick 轨迹生成 1 个根、55 个引擎合法候选；重新打开引擎的物理前缀/根 SHA/学生历史检查及 schema=2 搜索审计通过。两份固定复现选择以 KB JSON 提交，避免命令依赖仅本机存在的选择文件。
+- 最终采集器对旧证据重算：fog L31 human/seed39000000/第1决策/wait/k0，终局败、wave7、tick18770、丢车4、329步续走；roof L42/seed45000001/第161决策/wait/k0，终局败、wave30、tick70411、丢车0、1153步续走。两个分支的终局、终态 SHA、公开短叶/老师路径叶帧、完整逐决策老师动作链均精确相同，v4 评分绝对误差分别 7.4713e-9 / 7.4874e-9（旧 Python 与原生 float32，显式阈值 1e-6）。这里只复算两个固定根的 wait 分支，不声称重采全部原面板。
+- 完整 Python 门禁一轮通过 501 项、133 子测试、5 跳过；启用原生价值网资源后的相关三文件通过 46 项、1 跳过。最后的完整门禁又显式指定训练学生/价值模型以覆盖该剩余 oracle，结果待下条最终记录。
+
 - 统一实现第一步：`critical_forks.py` 补时间窗选根、旧轨迹导入、旧命名空间与 0→1 起决策转换、完整静态/halving/锚定/核验追踪；`critical_forks_data.py` 补阻断归因、human/xray 关卡/reset-seed 聚类、老师路径叶值与严格/阈值/非终局排序分列、逐指标多挑战者独立确认。`critical_forks_sampling.py` 仅保留旧计划的 CPU 取点/命名点去重，不含游戏或终局循环。
 - 已先查引用并推 tag `task60-pre-terminal-unification`，再删 10 个重复脚本和 7 个重复测试文件；有价值的行为测试迁入 `test_critical_forks_unified.py`。旧 JSON 全部保留，报告追加新入口说明。
 - 首轮公共与生产相关回归：42 passed（`test_critical_forks.py`、`test_critical_forks_unified.py`、`test_roof_counterfactual.py`、`test_frame_store_chunks.py`）；后续最终全套测试待记录。
@@ -80,14 +84,14 @@
 以下均在本树运行，`--out` 必须是新的绝对目录；源工作树仅只读取证。模型和原始证据继续留本机 ignored 目录/HF，不进 git。
 
 ```bash
-PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/critical_forks.py /home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-e/plan.json import-legacy --jobs /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/fog-selection.json --out /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/repeat-fog --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --workers 1
+PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/critical_forks.py /home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-e/plan.json import-legacy --jobs /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/MEMORY/docs/task60-terminal-fog-selection.json --out /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/repeat-fog --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --workers 1
 PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/critical_forks.py /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/repeat-fog/plan.json screen
 PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/task53_repro.py /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/repeat-fog/plan.json --legacy-source /home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-e --out /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/repeat-fog-proof.json
 ```
 
-屋顶同样三步：源计划换为 `/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/plan.json`，选择换 `artifacts/task60/roof-selection.json` 的绝对路径，输出用新的 `repeat-roof`，`--legacy-source` 换源计划父目录。两份选择分别固定首个未带 teacher archive 的已选根、wait 候选、k=0，不按终局好坏选点。完整重算可用源 `selection-active.json` 代替选择；仍显式 `--workers 1` 或 `2`。
+屋顶同样三步：源计划换为 `/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/plan.json`，选择换 `/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/MEMORY/docs/task60-terminal-roof-selection.json`，输出用新的 `repeat-roof`，`--legacy-source` 换源计划父目录。两份选择分别固定首个未带 teacher archive 的已选根、wait 候选、k=0，不按终局好坏选点。完整重算可用源 `selection-active.json` 代替选择；仍显式 `--workers 1` 或 `2`。
 
-新面板沿用 forks 的冻结 archive jobs；公共 `pick_roots` 支持时间根，`select_points` 支持破防/叶值平坦根，均只读原档案。`inspect/screen/confirm` 共用一个采集循环。
+新面板沿用 forks 的冻结 archive jobs；`critical_forks.py <绝对plan路径> roots` 可按冻结 reset 生成新的学生时间窗轨迹（`window_end_tick`，默认 10000；`temporal_roots_per_game`，默认 3），输出 `temporal-jobs.json`，然后用其绝对路径作为 `inspect/screen --jobs`。根引擎/历史身份也会在重放时校验。公共 `pick_roots` 支持时间根，`select_points` 支持破防/叶值平坦根，均只读原档案。`inspect/screen/confirm` 共用一个采集循环。
 全量只读验证：`/home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/critical_forks_data.py <绝对plan路径> screen`；详细报告将最后的 `screen` 改为 `diagnose`。
 独立确认用 `critical_forks_data.py <plan> plan-confirm` → `critical_forks.py <plan> confirm --jobs <out/confirmation.json>` → `critical_forks_data.py <plan> report-confirm`；所有占位参数都必须替换成绝对路径。报告不会自动提交、覆盖旧 JSON 或操作生产。
 
@@ -98,6 +102,9 @@ PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search
 - 合入 origin/forks；仅当天 MEMORY 日志冲突，双方条目全部保留。后续统一实现与测试继续。
 
 ## 问题
+
+- `merge-tree --write-tree HEAD origin/qcpack` 的唯一冲突是 `MEMORY/docs/task59-qc-pipeline-fixes.md` 的 add/add；生产 `pack_training_rows.py` 自动合并，预览 blob 已核验同时包含 `training_rows` 和 `pack_memory_limit`。qcpack 对照 SHA `25f1a529a640065dbaab547feb02061d86794b1a`。请主控合并时保留 task59 两边任务书条目；无需为本次诊断调整生产部署顺序。
+- 执行中 `origin/pvz-env` 从起点 b69024fa 推进到 98ad8860；按本任务边界，仅 fetch 核对，没有向该分支合并或推送。三个源分支的最新远端头均已是 termmerge 的祖先。
 
 - 已与 origin/qcpack 对照：它的 `pvz_training_pack.py` 与起点相同；`pack_training_rows.py` 只新增 `pack_memory_limit` 并替换 pack 层内存并发估算。本次只改 archive 行选择/权重，语义互补，无需引入 qcpack 或修改课程队列；最终再以 merge-tree 检查文本冲突，主控合并时须同时保留两者，禁止用整文件覆盖解决。
 - 本机是 Linux；Mac 实机尚未运行，不把本机通过写成 Mac 验收。最终记录实际执行的测试文件、跳过和环境限制，主控可按同一文件集在 Mac 复核。
