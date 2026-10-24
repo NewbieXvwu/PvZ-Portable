@@ -24,7 +24,10 @@
    复用已有标签段、只打新标签，然后训练并做配对门禁。前台立即采下一轮，组间只切换通过者。
    打包并发按待建段的原始档案体积估算（build_plan），不按已建段——冷启动也能吃满内存预算。
 
-采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
+采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签）；
+task59 起学生胜率 < 阈值（默认 0.1）的格改用 β 混合（--starved-beta，默认 0.5）：
+部分步改由搜索执行、每个决策仍由搜索打标签，把标签覆盖的状态范围从"开局即崩"扩到中后盘
+（Ross et al. 2011 的 DAgger β-mixing；与 beta0 的行同格式，可一起训练），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
 每开一组前读 MemAvailable，`--workers` 只是上限，实际 worker 数按
 `(MemAvailable − 6 GiB) / 一个 worker 的实测 RSS` 取整，至少 1。每 worker 的 RSS 在
@@ -348,6 +351,19 @@ def rate(cell: dict, multiplier: float) -> float | None:
     return sum(bucket['recent']) / len(bucket['recent'])
 
 
+def student_rate(cell: dict, multiplier: float) -> float | None:
+    """学生在该格的最近胜率：先看当前倍率窗口，没有就退回最近一个非空窗口
+    （刚换档还没数据时，这就是执行现实）。全无数据返回 None（第一个组保持 β=0 的探针）。"""
+    current = rate(cell, multiplier)
+    if current is not None:
+        return current
+    latest = None
+    for bucket in cell['windows'].values():
+        if bucket.get('recent'):
+            latest = sum(bucket['recent']) / len(bucket['recent'])
+    return latest
+
+
 def adjust(cells: dict, values: list[float]) -> list[str]:
     """按窗口胜率升降档；返回变更描述（用于日志）。"""
     changes = []
@@ -452,7 +468,7 @@ def label_for(round_index: int, base: str, multiplier: float) -> str:
 
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
-                out: Path | None = None) -> list[str]:
+                out: Path | None = None, beta: float = 0.0) -> list[str]:
     python = str(args.python) if args.python.exists() else sys.executable
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
@@ -460,7 +476,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--static-value', str(args.static_value), '--value', str(args.value),
             '--manifest', str(manifest), '--task-id', task_id,
             '--seed-offset', str(offset), '--seeds', str(games),
-            '--executable', str(args.executable), '--dagger-beta', '0',
+            '--executable', str(args.executable), '--dagger-beta', f'{beta:g}',
             '--workers', str(args.workers if workers is None else workers),
             '--resource-dir', str(args.resource_dir),
             '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
@@ -879,8 +895,11 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                            f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
                            f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
+        student = student_rate(state['cells'][item['base']], item['multiplier'])
+        beta = args.starved_beta if student is not None and student < args.beta_threshold else 0.0
+        item['beta'] = beta
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
-                              item['games'], item['label'], workers=workers)
+                              item['games'], item['label'], workers=workers, beta=beta)
         started = time.time()
         item.update(collection_started=started, student=str(args.rollout_policy),
                     student_round=state.get('student_round', 0), workers=workers)
@@ -908,14 +927,16 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         bucket['last_round'] = round_index
         log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} mult={item["multiplier"]:g} '
                            f'offset={item["offset"]} games={games} wins={wins} '
-                           f'rate={(wins / games if games else 0):.2f} rc={result.returncode} {seconds:.0f}s')
+                           f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
+                           f'rc={result.returncode} {seconds:.0f}s')
         if result.returncode != 0:
             raise SystemExit(f'{item["label"]}: search_play exited {result.returncode}')
     state['round'] = round_index
     state['log'].append(dict(round=round_index,
                              groups=[{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',
                                                             'manifest', 'label', 'collection_started',
-                                                            'collection_finished', 'student', 'student_round', 'workers')}
+                                                            'collection_finished', 'student', 'student_round',
+                                                            'workers', 'beta')}
                                      for item in plan],
                              changes=changes))
     save_state(args.state, state)
@@ -966,6 +987,10 @@ def main() -> None:
     parser.add_argument('--games-per-group', type=int, default=48)
     parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
                         help='teacher win-rate evidence json (level/base -> rate); missing file = all unknown')
+    parser.add_argument('--beta-threshold', type=float, default=0.1,
+                        help='学生最近胜率低于该值的格改用 β 混合（DAgger beta-mixing）')
+    parser.add_argument('--starved-beta', type=float, default=0.5,
+                        help='β 混合格的 dagger-beta：该比例的步由搜索执行，标签仍全部来自搜索')
     parser.add_argument('--rounds', type=int, default=1)
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')

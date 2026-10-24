@@ -14,7 +14,8 @@ from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMO
                               MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
                               adjust, allocate, build_plan, command_for, label_for, load_teacher_rates,
                               make_state, pack_command, pack_labels, parse_task_id, plan_round, rate,
-                              reconcile_cells, startup_worker_estimate, training_base_ids, worker_count)
+                              reconcile_cells, startup_worker_estimate, student_rate,
+                              training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -225,6 +226,60 @@ class CurriculumRulesTest(unittest.TestCase):
                 self.assertEqual(state['offsets'], {})
             finally:
                 queue.STOP_FLAG = original
+
+    def test_student_rate_uses_current_window_then_latest(self):
+        self.assertAlmostEqual(student_rate(cell(2, 10), VALUES[0]), 0.2)
+        # 刚换档还没数据：退回最近一个非空窗口（执行现实）。
+        self.assertAlmostEqual(student_rate(cell(1, 10, mult_index=1), 2.0), 0.1)
+        # 全无数据：None，第一个组保持 β=0 的探针。
+        self.assertIsNone(student_rate(cell(0, 0), VALUES[0]))
+
+    def test_command_for_passes_dagger_beta(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                               static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=3,
+                               executable=Path('/exe'), resource_dir=Path('/res'),
+                               frames=Path('/frames'), out=Path('/out'))
+        base = command_for(args, Path('/panel.json'), 'day_l7_train_d7_m125', 0, 2, 'c1d7m125')
+        self.assertEqual(base[base.index('--dagger-beta') + 1], '0')
+        mixed = command_for(args, Path('/panel.json'), 'day_l7_train_d7_m125', 0, 2, 'c1d7m125', beta=0.5)
+        self.assertEqual(mixed[mixed.index('--dagger-beta') + 1], '0.5')
+
+    def test_run_round_mixes_beta_for_starved_cells(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+
+            original_flag, original_run = queue.STOP_FLAG, queue.subprocess.run
+            queue.STOP_FLAG = root / 'absent-stop-flag'   # 不存在：组间不停
+            queue.subprocess.run = fake_run
+            try:
+                for wins, games, expected in [(0, 10, '0.5'), (5, 10, '0'), (0, 0, '0')]:
+                    label = f'c1d7m{wins}g{games}'
+                    folder = root / 'out' / f'{label}_2'
+                    folder.mkdir(parents=True)
+                    rows = [{'won': True}, {'won': False}]
+                    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                    args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                                           python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                                           static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
+                                           executable=Path('/exe'), resource_dir=Path('/res'),
+                                           frames=Path('/frames'),
+                                           beta_threshold=0.1, starved_beta=0.5)
+                    state = dict(round=0, offsets={}, log=[],
+                                 cells={'day_l7_train_d7': cell(wins, games)})
+                    plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
+                                 offset=0, games=2, manifest='/m', label=label)]
+                    self.assertTrue(queue.run_round(args, state, plan, []))
+                    self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], expected)
+                    self.assertIn(f'beta={expected}', (root / 'log').read_text())
+                    self.assertEqual(state['log'][0]['groups'][0]['beta'], float(expected))
+            finally:
+                queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
 
     def test_pack_labels_union_the_log_and_the_base_corpus(self):
         state = {'log': [{'groups': [{'label': 'c1d7m150'}]},

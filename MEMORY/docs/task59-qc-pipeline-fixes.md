@@ -33,4 +33,21 @@
 
 ## 结果
 
+- [x] 修正 1（commit c70590d0）：打包并发按待建段估算。新增纯函数 build_plan
+  （单建造者峰值 = PACK_BUILDER_BYTES 2 GiB + 待建标签最大原始档案体积；并发 =
+  min(配方值, (MemAvailable − 6 GiB)/峰值, 待建段数)）与 TrainingPipeline.pending_builds
+  （与 _prepare_corpus 同一合并视图、与 pack() 同一段契约，指纹只用相对路径+大小）；
+  enqueue 写配方前调 _plan_build，estimate_peak = max(打包峰值, 3×已建段+2 GiB)，
+  重启时从最新 queued job 的快照配方恢复估算。pack_training_rows.pack() 的 memory_limit
+  抽成 pack_memory_limit(available, jobs)（2 GiB 底数 + 最大待建档案），与 build_plan 同一
+  假设。测试：round 2 规模（202 标签×0.3 GiB、40 GiB 可用）冷启动并发 14 > 1 且峰值
+  ≤ 可用−6 GiB；边界（空待建/极小内存/配方上限）；pack_memory_limit 一致性（稀疏文件）；
+  pending_builds 合并覆盖与段契约。42 过。
+- [x] 修正 2（β 混合）：student_rate() 先看当前倍率窗口、退回最近非空窗口、全无数据
+  返回 None（首个组保持 β=0 探针）；run_round 对学生胜率 < --beta-threshold（默认 0.1）
+  的格给 --dagger-beta = --starved-beta（默认 0.5），组行日志与 state log 的 groups 都记
+  beta。search_play.py 语义已核实（search_play.py:571-661）：dagger_beta<1 时每个决策仍由
+  搜索打标签（frame["label"]=搜索决策），只是以 1−β 概率执行学生自己的动作——老师执行的
+  步照常产出训练行，与 beta0 的行同格式可混训，无阻碍。
+
 ## 问题
