@@ -1626,6 +1626,22 @@
     "artifact_bytes": 2514365264,
     "recommendation": "retain v4"
    }
+  },
+  {
+   "stage": "collection_audit_and_verdict",
+   "details": {
+    "games": 208,
+    "adoption_gates": {
+     "a": false,
+     "b": true,
+     "c": true
+    },
+    "all_three_pass": false,
+    "recommendation": "retain v4",
+    "hf_uploaded": false,
+    "default_changed": false,
+    "acceptance_sha256": "6d9d50242fbd39352f156a2ab1d1888b6d0554321ebc237fc586357160ba5844"
+   }
   }
  ],
  "bootstrap_v4_pair_accuracy": {
@@ -1712,5 +1728,19 @@
   "receipt": "artifacts/task43/sparse64/audit_48.json",
   "receipt_sha256": "6df99bf5147c10a9609e104f5bb23ff12a0ee86e1c7cbbf15a2fa3feb83737f4",
   "purpose": "raw data integrity; no model scoring or recipe changes"
+ },
+ "adoption_gates": {
+  "a": false,
+  "b": true,
+  "c": true
+ },
+ "all_three_pass": false,
+ "recommendation": "retain v4",
+ "hf_uploaded": false,
+ "default_changed": false,
+ "games": 208,
+ "model_sha256": {
+  "v4": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+  "v5": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
  }
 }
