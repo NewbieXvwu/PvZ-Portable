@@ -184,7 +184,7 @@ python3 scripts/human_demo.py rebaseline \
 何时部署由主控决定。部署前要知道：旧引擎录的示范（含雾/雾霾类粒子）在部署后无法直接
 `verify`，需要 `rebaseline` 或重录。
 
-提交（`demo` 分支，已 `push origin demo`，`3780877c..3ddf7468`）：
+提交（`demo` 分支，已 `push origin demo`，区间 `3780877c..29d8cda4`；下表是三个实质提交，其后 `03e3704e` / `c0e5bc73` / `29d8cda4` 只改本文件与当日日志）：
 
 | commit | 内容 |
 |---|---|
