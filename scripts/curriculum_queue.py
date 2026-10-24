@@ -424,10 +424,16 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
                 raise ValueError(f'{task["task_id"]}: demo_start needs future_seeds or future_seed_start')
             seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
         archive = Path(start['archive'])
+        archive = archive if archive.is_absolute() else ROOT / archive
+        # 起点格没有存档就跑不了：启动时就报，别等到组里 replay 才 FileNotFoundError。
+        if not (archive / 'meta.json').is_file():
+            raise ValueError(f'{task["task_id"]}: demo_start archive missing: {archive}')
+        if not json.loads((archive / 'meta.json').read_text()).get('verified'):
+            raise ValueError(f'{task["task_id"]}: demo_start archive is not verified: {archive}')
         cells[task['task_id']] = dict(
             family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
             last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
-            archive=str(archive if archive.is_absolute() else ROOT / archive), seeds=seeds)
+            archive=str(archive), seeds=seeds)
         manifests[task['task_id']] = path
     return cells, manifests
 

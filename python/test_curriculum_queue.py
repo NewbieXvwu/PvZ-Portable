@@ -858,6 +858,13 @@ class DemoStartCellsTest(unittest.TestCase):
             path.write_text(json.dumps(document))
             with self.assertRaises(ValueError):
                 load_demo_start_cells(path)
+            # 存档不在就没有起点可恢复：启动时就报，而不是组里 replay 才炸
+            document['tasks'][0]['demo_start']['decisions'] = self.LADDER
+            document['tasks'][0]['demo_start']['archive'] = 'artifacts/human_demo/raw/seed_19990101/none'
+            path.write_text(json.dumps(document))
+            with self.assertRaises(ValueError) as raised:
+                load_demo_start_cells(path)
+            self.assertIn('archive missing', str(raised.exception))
 
     def test_reconcile_leaves_panel_cells_byte_identical(self):
         tasks = {f'night_l{level}_train_n10q': dict(task_id=f'night_l{level}_train_n10q', level=level,
