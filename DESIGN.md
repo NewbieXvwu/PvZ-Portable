@@ -1017,4 +1017,6 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 2026-10-24 再追加：用户 1.0 倍、2.0 倍两局都通关，L32–34 的 8 个族各加 2.0 倍僵尸量版本 `<原族名>_m200`（卡组与种子不变）。
 
+2026-10-24 再追加（用户：把带路灯花的卡组都换寒冰射手）：L33/L34 的 cactus、cattail 四族各新开 `<原族名>_snow_m200`（路灯花 25 → 寒冰射手 5，2.0 倍）；L31 已有 `demo_fog_31_snow(_m200)`。原族不变。
+
 `human_demo.py` 使用原生窗口、逐tick动作带与状态哈希，原始局标记 `label_source: human`，可选 `note` 仅存meta。验证通过后导出frames_v2，配方 `train.source_weight` 按来源乘权。`search_play.py --demo-archive ... --demo-decision N` 精确恢复第N步前局面并由老师接管，示范中的后续合法种植动作进入候选，使用既有推演评分。老师续局记为teacher，保留起点与示范备注用于分析。原始示范与npz不入git，走HF transfer。
