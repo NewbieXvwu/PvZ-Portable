@@ -545,7 +545,9 @@ def pack_labels(state: dict, extra: str = '') -> list[str]:
 def pack_command(args, labels: list[str]) -> list[str]:
     """Pack the same row options the trainer resolves from this recipe."""
     recipe = load_recipe(args.recipe, 'training')
-    options = pack_options(**training_row_options(recipe, labels))
+    row_options = training_row_options(recipe, labels)
+    row_options.pop('source_weight', None)
+    options = pack_options(**row_options)
     python = str(args.python) if args.python.exists() else sys.executable
     return [python, str(ROOT / 'scripts/pack_training_rows.py'),
             '--data', str(args.frames), '--labels', ','.join(sorted(labels)),

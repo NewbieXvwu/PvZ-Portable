@@ -289,7 +289,7 @@ endif()
 # (2026-10-23: 103.2k -> 111.1k ticks/CPU-s, 3 runs each, scripts/bench_engine.py).  It
 # overrides malloc process-wide, so it is linked statically and needs no runtime switch.
 # The first configure downloads it; later ones reuse build/_deps.
-if(NOT MSVC AND NOT EMSCRIPTEN)
+if(NOT MSVC AND NOT EMSCRIPTEN AND NOT APPLE)
 	include(FetchContent)
 	set(MI_OVERRIDE ON CACHE BOOL "" FORCE)
 	set(MI_BUILD_TESTS OFF CACHE BOOL "" FORCE)

@@ -471,6 +471,25 @@ float PvzpParticleEmitter::ParticleTrackEvaluate(FloatParameterTrack& theTrack, 
 	return FloatTrackEvaluate(theTrack, theParticle->mParticleTimeValue, theParticle->mParticleInterp[theParticleTrack]);
 }
 
+// Shake fields need a per-particle, per-frame offset in [-1, 1].  The original game took it from
+// the C runtime's rand(), seeded with the particle's *address* and re-seeded every frame.  A
+// particle position is saved state, so that made the state hash depend on the heap layout: a
+// recording and its replay disagreed on the first tick a shake field ran, two runs of the same
+// replay disagreed with each other, and rand() is platform-defined, so a Mac recording could not
+// be replayed bit-for-bit on Linux.  Mix the particle's serialized DataArray id with the frame
+// instead: the same jitter, reproducible from the save image and identical on every platform.
+static float ShakeUnit(uint32_t theParticleId, int theAge, uint32_t theAxis)
+{
+	uint32_t aValue = theParticleId * 0x9E3779B9u + static_cast<uint32_t>(theAge) * 0x85EBCA6Bu +
+		theAxis * 0xC2B2AE35u;
+	aValue ^= aValue >> 16;
+	aValue *= 0x7FEB352Du;
+	aValue ^= aValue >> 15;
+	aValue *= 0x846CA68Bu;
+	aValue ^= aValue >> 16;
+	return static_cast<float>(aValue >> 8) * (2.0f / 16777216.0f) - 1.0f;  // [-1, 1)
+}
+
 void PvzpParticleEmitter::UpdateParticleField(PvzpParticle* theParticle, ParticleField* theParticleField, float theParticleTimeValue, int theFieldIndex)
 {
 	PVZP_ASSERT(theFieldIndex < MAX_PARTICLE_FIELDS);
@@ -535,17 +554,18 @@ void PvzpParticleEmitter::UpdateParticleField(PvzpParticle* theParticle, Particl
 	{
 		float aLastX = FloatTrackEvaluateFromLastTime(theParticleField->mX, theParticle->mParticleLastTimeValue, aInterpX);
 		float aLastY = FloatTrackEvaluateFromLastTime(theParticleField->mY, theParticle->mParticleLastTimeValue, aInterpY);
+		// The particle's DataArray id is part of the save image, so it is the stable stand-in for
+		// the address the original code seeded rand() with.
+		uint32_t aParticleId = static_cast<uint32_t>(mParticleSystem->mParticleHolder->mParticles.DataArrayGetID(theParticle));
 		// undo the previous frame's shake offset
 		int aLastRandSeed = theParticle->mParticleAge - 1;
 		if (aLastRandSeed == -1)
 			aLastRandSeed = theParticle->mParticleDuration - 1;
-		srand(aLastRandSeed * reinterpret_cast<uintptr_t>(theParticle));
-		theParticle->mPosition.x -= aLastX * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2.0f - 1.0f);
-		theParticle->mPosition.y -= aLastY * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2.0f - 1.0f);
+		theParticle->mPosition.x -= aLastX * ShakeUnit(aParticleId, aLastRandSeed, 0U);
+		theParticle->mPosition.y -= aLastY * ShakeUnit(aParticleId, aLastRandSeed, 1U);
 		// apply this frame's random shake offset
-		srand(theParticle->mParticleAge * reinterpret_cast<uintptr_t>(theParticle));
-		theParticle->mPosition.x += x * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2.0f - 1.0f);
-		theParticle->mPosition.y += y * (static_cast<float>(rand()) / static_cast<float>(RAND_MAX) * 2.0f - 1.0f);
+		theParticle->mPosition.x += x * ShakeUnit(aParticleId, theParticle->mParticleAge, 0U);
+		theParticle->mPosition.y += y * ShakeUnit(aParticleId, theParticle->mParticleAge, 1U);
 		break;
 	}
 	case ParticleFieldType::FIELD_CIRCLE:

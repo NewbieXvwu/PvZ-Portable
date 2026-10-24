@@ -549,8 +549,11 @@ class PvZEnv:
             if type(ticks) is not int or not 0 <= ticks <= 1_000_000:
                 raise ValueError("wait ticks must be an integer from 0 to 1000000")
             command = f"WAIT {ticks}"
+        elif kind == "collect":
+            x, y = self._coordinates(action, ("x", "y"))
+            command = f"COLLECT {x} {y}"
         else:
-            raise ValueError("action type must be 'plant', 'shovel' or 'wait'")
+            raise ValueError("action type must be 'plant', 'shovel', 'collect' or 'wait'")
 
         response = self._command(command)
         observation = response.get("observation")
@@ -579,6 +582,22 @@ class PvZEnv:
             raise RuntimeError(f"environment returned no observation: {response}")
         self._adopt_tick(response["observation"])
         return self._annotate_observation(response["observation"], response.get("events", {}))
+
+    def begin_demo(self) -> None:
+        if not self._command("DEMO_BEGIN").get("ok"):
+            raise RuntimeError("simulator does not support human demonstrations")
+
+    def state_hash(self) -> str:
+        response = self._command("STATE_HASH")
+        if not response.get("ok") or not response.get("state_hash"):
+            raise RuntimeError("simulator could not hash the current state")
+        return response["state_hash"]
+
+    def human_input(self) -> dict[str, Any]:
+        response = self._command("HUMAN_POLL")
+        if not response.get("ok"):
+            raise RuntimeError("human input requires a visible demonstration session")
+        return response
 
     def privileged_state(self) -> dict[str, Any]:
         response = self._command("PRIV")

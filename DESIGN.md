@@ -1009,3 +1009,10 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 老师叶子价值网络默认由 `value_net/v4` 改为 `value_net/v5`（`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE`；`unified_panel.py` 的 `--value` 默认不动，静态估值仍用 `value_branch1`）。依据（[task43 任务书 §53](MEMORY/docs/task43-value-v5-pool.md)）：全新 32 种子 L21/L22/L23/L25 各 32 对、v4 vs v5 同种子配对，四关合计胜 42 → 100（gain 67 / harm 9，合并 McNemar p = 4.3e-12，四关方向一致）；白天 / 夜间非劣通过。已知局限：同根候选分散度探针未过（top1−top2 中位差 < 0.02，排序质量存疑）；雾区 / 屋顶关未测。权重经 HF `transfer/value_v5.pt` 回验 SHA256（`8a636d33…88c3b4`）后放主检出 `value_net/v5/model.pt`，不入 git；部署在组边界切换，时机由主控定。
 
+### 14.23 人类示范任务族（task48，2026-10-23）
+
+固定清单 `configs/human_demo_tasks.json`，二周目、倍率1.0、每关同种子20261000+关号，与既有雾区训练族分别保存。L31登记 `demo_fog_31_fume` / `demo_fog_31_burst`，L32登记 `demo_fog_32_magnet` / `demo_fog_32_freeze`，L33与L34分别登记 `demo_fog_N_cactus` / `demo_fog_N_blover` / `demo_fog_N_cattail`（N=33、34）。各族完整十卡顺序以该清单为准，计划与中文卡名见 [human-demo.md](MEMORY/docs/human-demo.md)。录制前按对应 profile 查询引擎解锁植物并执行整组检查，香蒲所有权由 `profile_for_deck` 声明，旧任务与旧存档卡组不变。
+
+2026-10-24 追加（用户意见：大喷菇伤害不够、后期阳光溢出，要寒冰射手做辅助；1.0 倍对人太简单，不用路灯花也能往雾里盲种小喷菇）：新族 `demo_fog_31_snow`（卡组 阳光菇/小喷菇/大喷菇/睡莲/寒冰射手/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果 = [9,8,10,16,5,23,17,19,2,3]，即 fume 族去路灯花换寒冰射手），另登记 1.5 倍、2.0 倍僵尸量的 `demo_fog_31_snow_m150` / `demo_fog_31_snow_m200`；同种子 20261031，旧族与旧存档不变。
+
+`human_demo.py` 使用原生窗口、逐tick动作带与状态哈希，原始局标记 `label_source: human`，可选 `note` 仅存meta。验证通过后导出frames_v2，配方 `train.source_weight` 按来源乘权。`search_play.py --demo-archive ... --demo-decision N` 精确恢复第N步前局面并由老师接管，示范中的后续合法种植动作进入候选，使用既有推演评分。老师续局记为teacher，保留起点与示范备注用于分析。原始示范与npz不入git，走HF transfer。
