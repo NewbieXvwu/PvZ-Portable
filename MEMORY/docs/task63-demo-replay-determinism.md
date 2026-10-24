@@ -169,7 +169,13 @@ python3 scripts/human_demo.py rebaseline \
   `demo_fog_31_fume`）→ `{"verified": true, "operations": 276, "tick": 270}`；再跑一次 verify
   仍是 true。存档在 `artifacts/human_demo/autoplay/`（不入 git）。
 - 用户整局的**有窗口**重放 == 无头重算（0 处不一致），见上表。
-- 测试：见"问题"一节的记录。
+- 测试：`python3 -m pytest python -q -p no:cacheprovider` →
+  **326 passed / 1 failed / 26 skipped / 133 subtests passed**（34.5 s）。
+  唯一的失败是 `test_dagger_experiment_runner.py::...test_low_memory_pauses_and_resumes_only_own_parent_and_child`，
+  这是**既有的 Mac 环境性失败**（task48 记录为 323 passed / 26 skipped / 1 failed，task18/task32/task41 都记过同一条：
+  Mac 上拿不到 Linux 的进程内存统计），与本任务无关 —— 本次改动只碰粒子抖动、`main.cpp` 的调试命令和
+  `scripts/human_demo*.py`，该测试连引擎都不加载。
+  `python3 -m pytest python/test_human_demo.py` → 3 passed。
 
 ### 7. 部署
 
