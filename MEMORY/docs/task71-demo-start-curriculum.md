@@ -30,4 +30,50 @@
 
 ## 结果
 
+- **第 1 步（L33 接手扫描）**：两局各 12 点 × 8 未来 × 2 臂 = 192 局，另加 L31 `demo_fog_31_snow_m200` 同形扫描 192 局（任务书没要求，但它的档位不能照抄 task64 的 fume 1.0 倍点）。老师 50% 线：L33 cactus **N=458（tick 22428，第 9 波）**、L33 cattail **N=316（tick 15365，第 6 波）**、L31 snow **N=142（tick 7052，第 3 波）**；8/8 线分别是 534 / 473 / 213。L33 两局的破防主力是**气球**（老师 47 局输局里气球到家 42 次），L31 一次气球都没有（普通/路障磨穿）。正文见 [demo-start-states.md](demo-start-states.md) §6。
+- **第 2 步（qc 的示范起点格）**：`curriculum_queue` 新增一类格——`demo_start`（清单字段：`archive` / `decisions` 降序阶梯 / `index` / `future_seed_start`+`future_seed_count`）。
+  档位值 = 起点决策号，升降档仍是 0.85 / 0.5，升档 = 起点往前挪一档；`command_for` 在起点格上发
+  `--demo-archive --demo-decision --future-seeds`（`--seed-offset` 固定 0，每组从种子块里取下一段）。
+  帧的 `meta.json` 记 `demo_archive` + `demo_decision` + `demo_archive_sha256`；标签形如 `c1demofog33cactussnowm200s839`；
+  打包/打标签/门禁全走现有路径，起点之前的示范动作走 `human_demo.py export`（human，一次导出）。
+  三个 cell 登记在 `configs/human_demo_tasks.json`（阶梯 777..142 / 839..458 / 867..316），种子块 44.0M / 44.1M / 44.2M 各 256 个，与现有全部段不相交；DESIGN §14.26。
+  旧格不变：`make_multiplier_tasks.py` 未改，同批源清单重建的 420 任务清单与 task68 **逐字节相同**（sha256 `7b72c36d…`）；qc 的 39 个面板格加上三个起点格后逐字段相同（总 39 → 42）。
+- **第 3 步（测试与 dry run）**：`python/test_curriculum_queue.py` 54 项通过（新增 8 项：阶梯升降、种子块切分与耗尽、命令确定性、清单校验/存档缺失、旧格逐字节不变、幂等与退休、登记清单自检）。
+  起点确定性实测：同存档 + 同决策号 + 同未来种子 → 动作/状态/胜负/决策数逐字节相同，换未来种子则不同（`artifacts/task71/determinism/result.json`）。
+  离线 dry run（本地用合成源重建的 420 任务面板，生产代码）：42 个格，每轮 30 组 × 8 局 = 240 局；第一轮就排到三个起点格
+  （`s777` / `s839` / `s867`，命令带 `--demo-decision` 与 `--future-seeds 44xx0000..44xx0007`），第二轮覆盖剩余 12 格并轮转重复格。
+  全量 `python/`：**540 passed, 56 skipped, 2 failed**，两个失败是 `test_plants_eaten_free`（task65 的引擎字段，本机二进制 `a13f6f59` 早于那次改动；合并前后都失败，与本次无关，见问题 1）。
+- **第 4 步**：已 `git push origin demo`（82b38123 → 0c64393b → 本次）。
+
+### 部署清单（主控）
+
+1. **存档必须先到位**：三个 `artifacts/human_demo/raw/<seed>/<task>/` 目录（每个 6.5–7.3 MB，frames.jsonl + ticks.jsonl + meta.json）
+   不在 git 里。qc 启动时 `load_demo_start_cells` 会校验存档存在且 `verified`，缺了直接报错退出（不会带着空格跑一轮）。
+2. `teacher_rates.json` 追加三个 base（用最晚一档的实测，8 局/格）：
+   ```json
+   {"bases": {"demo_fog_31_snow_m200": {"wins": 8, "games": 8},
+              "demo_fog_33_cactus_snow_m200": {"wins": 8, "games": 8},
+              "demo_fog_33_cattail_snow_m200": {"wins": 8, "games": 8}}}
+   ```
+3. `--demo-start-manifest` 缺省就是 `configs/human_demo_tasks.json`，不用加参数；`curriculum_state.json` 里会多出
+   `start cell added: demo_fog_*_m200 (N rungs)` 三行。
+4. 回滚：删掉清单里的 `demo_start`（或把 `--demo-start-manifest` 指向一份没有它的清单），三格自动进 `retired_cells`，面板格不受影响。
+
 ## 问题
+
+1. **本机二进制早于 task65 的引擎改动**：`test_plants_eaten_free` 的两项在合并 origin/pvz-env 前后都失败
+   （`plants_eaten_free` 字段不在引擎回复里）。重建引擎会换掉 `a13f6f59`，而三个示范存档记录的
+   `executable_sha256` 正是它；换引擎属于 task70（台式机 redeploy）的范围，本次不动，也不改这两项测试。
+2. **帧不是逐字节相同**：同输入两局只有 `verification.seconds`（墙钟）不同，训练行不读它。
+   要做到"帧文件逐字节相同"得把这个诊断字段从帧里去掉——那会改所有历史帧的格式，不在本次范围。
+3. **human 导出没有"只导前缀"的选项**：`human_demo.py export` 导出整局示范（`label_source: human`），
+   起点之后的示范动作也会进训练。它们与老师标签是不同对局（老师那局换了未来种子），不是同一条状态被标两次；
+   但同一段局面的示范与老师标签会共存，配比由打包的 `source_weight` 决定。需要"只导到起点"的话，得给
+   export 加 `--decision` 截断——本次没加，避免改既有导出语义。
+4. **8 个未来种子仍共享前史**（同 task64 问题 1）：同一格 8 局只重抽未开始的波次。档位判据用的是 ≥50% 这种粗线，
+   不受影响；单格 7/8 与 8/8 的差不要当趋势读。
+5. **L31 的档位来自额外扫描**：任务书只要求 L33 两局。没有 L31 snow_m200 的 12 点扫描，档位只能照抄
+   task64 的 fume 1.0 倍点，而 §6.4 的表说明那会错 5–6 个波次。
+6. **起点格在 qc 里没有按档位区分的老师胜率**：`teacher_rates` 按 base 记，不按档位记；升档后老师的实际胜率
+   会下降（L33 cactus 的 458 档只有 7/8），而 `teacher_rates` 仍写着 8/8。这只影响分配排序（起点格本来就在最前），
+   不影响升降档（那用学生窗口）。要按档位区分，得把键扩成 `base@decision`——本次没做。
