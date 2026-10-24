@@ -184,6 +184,20 @@ python3 scripts/human_demo.py rebaseline \
 何时部署由主控决定。部署前要知道：旧引擎录的示范（含雾/雾霾类粒子）在部署后无法直接
 `verify`，需要 `rebaseline` 或重录。
 
+提交（`demo` 分支，已 `push origin demo`，`3780877c..3ddf7468`）：
+
+| commit | 内容 |
+|---|---|
+| `6bf977e8` | 粒子抖动不再以堆地址做随机种子（根因修复） |
+| `23731d42` | `human_demo.py rebaseline` + `human_demo_autoplay.py` 有窗口回归 |
+| `3ddf7468` | 本文件的结果与测试数字、`MEMORY/2026-10-24.md` |
+
+推送后复核：源档 `demo_fog_31_fume` 的 `ticks.jsonl` / `meta.json` sha256 仍是
+`d582232d…` / `a7d9dd90…`（未被改动）；`demo_fog_31_fume_rebaselined` 再跑一次 `verify` 仍
+`{"verified": true, "operations": 40488, "tick": 40355, "wave": 20, "result": 1}`；
+`artifacts/human_demo/autoplay/seed_20261031/demo_fog_31_fume` 再跑一次仍
+`{"verified": true, "operations": 276, "tick": 270, "wave": 0, "result": 0}`。
+
 ## 问题
 
 1. **rebaseline 出来的存档能不能当训练数据**：它 `verified: true`，动作与终局都逐条对过原档，
