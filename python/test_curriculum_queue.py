@@ -6,6 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
@@ -609,6 +610,77 @@ class WorkerCountTest(unittest.TestCase):
                 self.assertEqual(startup_worker_estimate(args, []), queue.DEFAULT_WORKER_BYTES)
             finally:
                 queue.mem_available_bytes = original
+
+class TrainingRestartTest(unittest.TestCase):
+    """task61 追加：杀掉后台训练进程 + 控制器重启后，任务干净重跑，不丢不重。"""
+
+    def _job(self, tmp, status, round_index=1):
+        folder = Path(tmp) / f'round_{round_index:06d}'
+        folder.mkdir(parents=True, exist_ok=True)
+        recipe = folder / 'recipe.json'
+        recipe.write_text('{}')
+        model = folder / 'model.pt'
+        model.write_bytes(b'model-bytes')
+        return dict(round=round_index, recipe=str(recipe), model=str(model), status=status)
+
+    def test_init_requeues_non_done_jobs_and_keeps_done(self):
+        from curriculum_queue import TrainingPipeline
+        with tempfile.TemporaryDirectory() as tmp:
+            state = {'training_jobs': [self._job(tmp, 'running'), self._job(tmp, 'failed', 2),
+                                       self._job(tmp, 'done', 3)]}
+            started = []
+            def fake_run(self, job):
+                started.append(job['round'])
+                return {}
+            args = SimpleNamespace(state=Path(tmp) / 'state.json')
+            with mock.patch.object(TrainingPipeline, '_run', fake_run), \
+                    mock.patch.object(TrainingPipeline, '_plan_build', lambda self, recipe: None):
+                pipeline = TrainingPipeline(args, state)
+            pipeline.executor.shutdown(wait=True)
+            self.assertEqual(sorted(started), [1, 2])          # running/failed 都重跑
+            statuses = {job['round']: job['status'] for job in state['training_jobs']}
+            self.assertEqual(statuses, {1: 'queued', 2: 'queued', 3: 'done'})   # done 不动
+            self.assertEqual(len(pipeline.futures), 2)
+
+    def test_run_reuses_trained_json_without_retraining(self):
+        # 训练完成（trained.json 已写）、评估前被杀：重启后凭 sha 校验复用报告，直接进评估，
+        # _admit/_command（重训入口）被调到即失败。
+        from curriculum_queue import TrainingPipeline
+        from promotion_gate import sha as file_sha
+        with tempfile.TemporaryDirectory() as tmp:
+            job = self._job(tmp, 'queued')
+            trained = {'model_sha256': file_sha(job['model']), 'recipe_sha256': file_sha(job['recipe']),
+                       'round': job['round']}
+            (Path(job['recipe']).parent / 'trained.json').write_text(json.dumps(trained))
+            pipeline = TrainingPipeline.__new__(TrainingPipeline)
+            pipeline.failed = False
+            pipeline.args = SimpleNamespace(log=Path(tmp) / 'log')
+            pipeline.lock_fd = None
+            def forbidden(*_a, **_k):
+                raise AssertionError('retrain path was entered')
+            pipeline._admit = forbidden
+            pipeline._command = forbidden
+            pipeline._prepare_corpus = forbidden
+            pipeline._evaluate = lambda _job: {'promotion': {'approved': False, 'reasons': ['x']}}
+            report = pipeline._run(copy.deepcopy(job))
+            self.assertEqual(report['round'], job['round'])
+            self.assertEqual(report['promotion']['approved'], False)
+            self.assertTrue((Path(job['recipe']).parent / 'complete.json').is_file())
+
+    def test_run_rejects_changed_trained_candidate(self):
+        # trained.json 里的 sha 和模型/recipe 对不上（半截文件或被改动）：拒绝复用，报错留给人看。
+        from curriculum_queue import TrainingPipeline
+        with tempfile.TemporaryDirectory() as tmp:
+            job = self._job(tmp, 'queued')
+            trained = {'model_sha256': '0' * 64, 'recipe_sha256': '0' * 64, 'round': job['round']}
+            (Path(job['recipe']).parent / 'trained.json').write_text(json.dumps(trained))
+            pipeline = TrainingPipeline.__new__(TrainingPipeline)
+            pipeline.failed = False
+            pipeline.args = SimpleNamespace(log=Path(tmp) / 'log')
+            pipeline.lock_fd = None
+            with self.assertRaises(ValueError):
+                pipeline._run(copy.deepcopy(job))
+            self.assertTrue(pipeline.failed)
 
 
 if __name__ == '__main__':

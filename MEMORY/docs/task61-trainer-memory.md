@@ -83,3 +83,56 @@
   首次真实训练后 state 里的实测值会自动取代它。
 - 段目录 7.73 GiB 的 memmap 页在训练期间靠 page cache 命中；若采集把 cache 挤掉，
   建批会掉速但不失败——这也是"采集让路"仍按估算扣余量的原因。
+
+## task61 追加（2026-10-24）：训练 45 分钟/epoch 的瓶颈定位与修复（branch `trainspeed`）
+
+现象：round 2 后台训练（14,821,421 行，bs=2048，cuda，threads=1）epoch 1 用了 2747s
+（≈45.8 分钟/epoch，12 epochs ≈ 9 小时）；task23 同量级语料只要 ~6 分钟/epoch。
+训练进程 CPU 99.5%、GPU 5%、majflt 50k → 怀疑 memmap 随机 gather。
+
+### 1. 实测（200 步 × 2 模式，真实 round 2 pack，`/tmp/task61_step_measure.py`）
+
+| 模式 | load | build p50 | fwd/bwd p50 | 整步 | anon 峰值 |
+|---|---|---|---|---|---|
+| memmap（修复前） | 23.3s | 238.6 ms | 7.4 ms | 245.9 ms | 2.69 GiB |
+| heap（修复前） | 19.7s | 224.1 ms | 7.5 ms | 231.6 ms | 9.33 GiB |
+
+**heap 只快 6%** —— memmap 随机 gather 不是瓶颈（分解见下），"按 MemAvailable 自动选 heap"
+用 9.3 GiB anon 换 6% 不值得，未采用；memmap 保持默认。
+
+### 2. 分解定位（`/tmp/task61_decomp.py`，memmap）
+
+boards.batch 222.2 ms 里 **per-identity plane 循环 218.4 ms（98%）**；
+主 CSR scatter 2.0 ms、scalars.batch 1.2 ms、packet_info 0.9 ms、小张量 0.5 ms。
+根因：round 2 有 **5155 个 plane**（每个归档一组常量格），2048 行随机批含
+~1382 个不同身份 → 每步 ~1382 次（H2D 拷贝 + GPU index_put）微 kernel，纯启动延迟。
+task23 当年语料归档数少，循环可忽略 —— 这就是 6 分钟 → 45 分钟的差值来源。
+
+### 3. 修复（`CompactBoards.batch`，scripts/train_rollout_policy.py）
+
+plane 展平一次（concat cells/values + offsets，round 2 共 1.5 MiB），按设备缓存；
+每批一次融合 gather+scatter（ragged repeat 算位置，单次 index_put_）。语义不变：
+每行恰属一个 plane、plane 内格唯一，与逐身份循环逐位等价
+（`test_compact_boards.py::test_batch_with_planes_matches_dense` 按 int32 位型比对）。
+
+| 模式（修复后） | build p50 | 整步 p50 | anon 峰值 |
+|---|---|---|---|
+| memmap | **12.1 ms** | **19.5 ms**（12.6×） | 2.69 GiB |
+| heap | 9.9 ms | 17.4 ms | 9.33 GiB |
+
+外推 6518 步/epoch ≈ **2.1 分钟**（原 45.8）。修复在 merge 模式之外，memmap 模式直接受益。
+
+### 4. 重启语义（杀训练进程 + 控制器重启）
+
+代码审读 + 单测（`test_curriculum_queue.py::TrainingRestartTest`）：
+- `__init__` 把所有 status != 'done' 的训练任务重置 'queued' 并重新提交（实测 running/failed 重跑、done 不动）；
+- `training.lock` flock：锁随活进程，旧子进程未死则新控制器阻塞，不会并发训同一快照；
+- 训练完成（trained.json 已写）、评估前被杀：重启后校验 model/recipe sha 通过则**复用报告直接进评估，不重训**；
+  sha 不符（半截文件/被改动）→ 拒绝复用，报错终止；
+- 训练中途被杀（两个 json 都没有）→ 从头重训，无重复（什么都没完成过）。
+
+### 5. 结论
+
+- 已修复并合入 `trainspeed`（commit 3345e1cf）。生产 round 2 本次训练跑完后，
+  下一轮起 epoch 应降到分钟级；无需改 recipe 或 merge 模式。
+- heap 自动选择不做（数据不支持）；`--merge-mode` 开关也不加 —— 唯一瓶颈已消。
