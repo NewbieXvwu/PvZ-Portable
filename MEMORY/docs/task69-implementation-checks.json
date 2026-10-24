@@ -28,11 +28,23 @@
       "passed": 13,
       "skipped": 0,
       "log": "build/replace-final-tests.log"
+    },
+    {
+      "name": "frozen treatment binary replacement regressions",
+      "tests": 12,
+      "passed": 12,
+      "log": "build/frozen-treatment-tests.log"
+    },
+    {
+      "name": "statistics + read-only measurement/candidate unit tests",
+      "tests": 6,
+      "passed": 6
     }
   ],
   "scope": "Suites overlap; do not sum them as independent test cases. Final suite resolves the earlier trained-oracle skip.",
   "save_format_changed": false,
   "production_defaults_changed": false,
   "deploy3_rebuilt": false,
-  "qc_touched": false
+  "qc_touched": false,
+  "frozen_treatment_engine_sha256": "61b21c430fe4232b0cf65191a71dbd11a81e662ee877aef7354b7f1247685ae0"
 }

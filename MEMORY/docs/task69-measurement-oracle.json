@@ -1,0 +1,45 @@
+{
+  "seed": 69900000,
+  "reference_sha256": "59feecc346836172205fdb3aec8a8f7c6cffc4e05065c342fcd05b5b89dc2cb6",
+  "observed_sha256": "d675b506f7b85808359e5a7d79bdb22acfb40ac10a32afd111321b3a9593f906",
+  "equal_fields": [
+    "seed",
+    "won",
+    "final_wave",
+    "final_tick",
+    "terminal",
+    "wave_count",
+    "final_zombies",
+    "mowers_used",
+    "planted_slots",
+    "planted_types",
+    "searched",
+    "overrides",
+    "override_kinds",
+    "halving_candidates",
+    "halving_rollouts",
+    "rollout_lanes"
+  ],
+  "study": {
+    "verification_by_type": {
+      "plant": {
+        "attempts": 67,
+        "revoked": 25
+      },
+      "wait": {
+        "attempts": 19,
+        "revoked": 11
+      }
+    },
+    "search_selected_by_type": {
+      "plant": 162,
+      "wait": 77
+    },
+    "replace_attempts": 0,
+    "replace_rejected": 0,
+    "replace_events": [],
+    "sun_produced": 8925,
+    "sun_spent": 8925,
+    "sun_remaining": 50
+  }
+}

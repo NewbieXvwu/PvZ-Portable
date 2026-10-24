@@ -73,6 +73,10 @@ def measured_play(job):
     try:
         result = _ORIGINAL_PLAY(job, observer=_ACTIVE)
         result['study'] = _ACTIVE.result()
+        for key in ('verification_by_type', 'search_selected_by_type', 'replace_attempts',
+                    'replace_rejected', 'sun_produced', 'sun_spent', 'sun_remaining'):
+            if key in result and result[key] != result['study'].get(key, 0):
+                raise RuntimeError(f'independent measurement differs for {key}')
         return result
     finally:
         _ACTIVE = None
