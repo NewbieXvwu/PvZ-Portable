@@ -1,0 +1,24 @@
+{
+  "commit": "ababb57805a7c7b78972ffe2ecb688c22bc1748f",
+  "engine_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/baseline-engine",
+  "engine_sha256": "c731dd5f5cf898d0cc7176511102b96a844d083b8b188744e0e4ec22248129c5",
+  "source_fingerprint_sha256": "13591977ab0fc23ccfbd6ed55b1fd4144d73b0c5d32cde91f78d1060f097119d",
+  "models": {
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "static": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "leaf": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+    }
+  },
+  "build_type": "Release",
+  "pgo": false,
+  "compiler": "GCC 15.2.0",
+  "deployment_modified": false
+}
