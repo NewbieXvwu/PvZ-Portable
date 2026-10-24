@@ -66,6 +66,30 @@ def all_candidates(obs):
     return actions
 
 
+def pick_roots(eligible, count=3, end_tick=10000):
+    """Outcome-blind temporal sampling shared by all terrains."""
+    if not eligible:
+        return []
+    if count not in (1, 2, 3):
+        raise ValueError('one to three temporal roots required')
+    targets = [0, end_tick//2, end_tick] if count == 3 else [0, end_tick] if count == 2 else [end_tick//2]
+    selected = []
+    for tick in targets:
+        best = min(eligible, key=lambda p: (abs(p['tick']-tick), p['decision']))
+        if best not in selected:
+            selected.append(best)
+    return sorted(selected, key=lambda p: p['decision'])
+
+
+def job_future(job, stage, k, search=False):
+    legacy = job.get('legacy')
+    if legacy:
+        stage = stage + '-teacher-search' if search else stage
+        text = f"{legacy['namespace']}:{legacy['cell']}:{job['decision']-1}:{stage}:{k}"
+        return int.from_bytes(hashlib.sha256(text.encode()).digest()[:4], 'little')
+    return future_seed(job['id'], stage, k, search)
+
+
 def select_points(frames, params):
     """Archive-only selection; retain every eligibility reason before applying the quota."""
     from render_episode import _mower_fired
@@ -134,7 +158,8 @@ def spent_cpu(out):
     for run in (Path(out)/'runs').glob('*'):
         receipts = sum(load(p)['cpu_seconds'] for p in run.glob('usage-*.json'))
         if (run/'complete.json').exists():
-            receipts = max(receipts, load(run/'complete.json').get('cpu_seconds', 0.))
+            final = load(run/'complete.json')
+            receipts = max(receipts, final.get('cpu_seconds', 0.), final.get('controller_children_cpu_seconds', 0.))
         total += receipts
     return total
 
@@ -215,6 +240,14 @@ def replay(job):
         if i == job['decision']-1:
             if job.get('student_executed', False) and proposed != frames[i+1]['action']:
                 raise ValueError('archived student proposal differs')
+            if job.get('legacy'):
+                legacy = job['legacy']
+                if env._debug_state_sha256() != legacy['engine_sha256']:
+                    raise ValueError('legacy root engine identity differs')
+                public = dict(frame=_frame(obs), student_history=history_record(state))
+                if hashlib.sha256(key(public).encode()).hexdigest() != legacy['history_sha256']:
+                    raise ValueError('legacy root public history differs')
+                last_search = legacy.get('last_search_tick', -10**9)
             return env, obs, state, teacher_args(job), frames, last_search
         action = frames[i+1]['action']; state['action'] = action
         if frames[i+1].get('targets'):
@@ -241,6 +274,7 @@ def audit_search(env, obs, state, args, seed, last_search):
         return result
     def verified(*pos, **kw):
         trace['candidates'] = deepcopy(pos[3]); trace['halving_counts'] = list(pos[5])
+        trace['best_index'] = pos[6]; trace['student_index'] = pos[7]
         trace['pre_verification_values'] = [float(v) if math.isfinite(v) else None for v in pos[4]]
         chosen = original_verified(*pos, **kw)
         trace['final_values'] = [float(v) if math.isfinite(v) else None for v in pos[4]]
@@ -249,7 +283,9 @@ def audit_search(env, obs, state, args, seed, last_search):
     try:
         TEACHER._static_scores = static; TEACHER._verified_choice = verified
         chosen = TEACHER._search(env, obs, state['action'], args, seed, stats)
-        trace.update(chosen=chosen, searched=bool(stats['searched']), margin=TEACHER.MARGIN, audit_schema=1)
+        trace.update(chosen=chosen, searched=bool(stats['searched']), margin=TEACHER.MARGIN, audit_schema=2,
+                     required_halving_samples=args.samples, per_card=args.per_card,
+                     verification=stats.get('last_verification'))
         by_packet = {}
         for entry in sorted(trace.get('static_scores', []), key=lambda e:-e['value']):
             by_packet.setdefault(entry['action']['packet'], []).append(entry['action'])
@@ -269,7 +305,7 @@ def audit_search(env, obs, state, args, seed, last_search):
 def identity(job, action, index, stage, k):
     return dict(root=job['id'], archive_sha256=job['frames_sha256'], decision=job['decision'],
                 action=action, candidate=index, stage=stage, k=k,
-                future=future_seed(job['id'], stage, k), search_future=future_seed(job['id'], stage, k, True),
+                future=job_future(job, stage, k), search_future=job_future(job, stage, k, True),
                 inputs=PLAN['inputs'])
 
 
@@ -279,7 +315,10 @@ def validate(row, expected, trace):
     o = row['outcome']
     if o['result'] not in (1, 2) or o['won'] != (o['result'] == 1) or not 0 <= o['mowers_used'] <= 6:
         raise ValueError('invalid terminal result')
-    if sha(trace) != row['trace_sha256'] or not all(row['checks'].values()):
+    required = {'root', 'income', 'history', 'legal', 'terminal', 'strict_actions'}
+    if set(row['checks']) != required or any(v is not True for v in row['checks'].values()):
+        raise ValueError('missing or failed exact root/history checks')
+    if sha(trace) != row['trace_sha256']:
         raise ValueError('failed trace/root checks')
     with gzip.open(trace, 'rt') as f:
         records = [json.loads(line) for line in f]
@@ -305,7 +344,7 @@ def finish_teacher(env, obs, state, args, seed, trace, initial_mowers, mowers_le
                 leaf = dict(frame=_frame(obs), value=env.leaf_values(income=obs.get('sun_income_rate') or 0.0)[0])
             proposed = TEACHER._fast_action(obs, state)
             TEACHER._W['student_history'] = state.get('history')
-            chosen = TEACHER._search(env, obs, proposed, args, (seed+decision) % 2**32, stats)
+            chosen = TEACHER._search(env, obs, proposed, args, seed+decision, stats)
             f.write(json.dumps(dict(decision=decision, tick=obs['tick'], student=proposed, chosen=chosen))+'\n')
             state['action'] = chosen; obs, *_, info = env.step(chosen)
             if not info.get('ok'):
@@ -326,12 +365,13 @@ def collect_job(job):
         stable_job = {k: v for k, v in job.items() if k not in ('stage', 'samples', 'indices', 'inspect_only')}
         record = dict(job=stable_job, candidates=actions, student_action=state['action'], frame=_frame(obs),
              history=history_record(state), context=TEACHER._W['context'].tolist(),
-             engine_sha256=engine_hash, income=income, income_start=income_start)
+             engine_sha256=engine_hash, income=income, income_start=income_start,
+             initial_mowers=sum(s == 1 for _, s in frames[0]['mowers']))
         path = folder/'root.json'
         if path.exists() and load(path) != json.loads(json.dumps(record)):
             raise ValueError('root changed')
         save(path, record)
-        if not (folder/'search.json').exists() or 'audit_schema' not in load(folder/'search.json'):
+        if not (folder/'search.json').exists() or load(folder/'search.json').get('audit_schema') != 2:
             save(folder/'search.json', audit_search(env, obs, state, args,
                  job['reset']['seed']*10000+job['decision']-1, last_search))
         if job.get('inspect_only'):
@@ -426,11 +466,94 @@ def run(plan, jobs, phase):
         value_keep.cleanup()
 
 
+def import_legacy(source, selection, out, executable, workers=2):
+    """Freeze old fog/roof trajectories into ordinary archive jobs, without editing evidence.
+
+    Only the input adapter knows the historical layout. Replay, candidate enumeration,
+    audit and terminal continuation all use the same collector as new fork data.
+    """
+    from render_episode import load_training_task, training_task_kwargs
+    for path in (source, selection, out, executable):
+        if not Path(path).is_absolute():
+            raise ValueError('absolute legacy paths required')
+    out = Path(out)
+    if out.exists():
+        raise ValueError('legacy destination already exists; preserve frozen plans')
+    original = load(source); paths = original['paths']; jobs = []
+    inputs = {}
+    def pin(name, path, expected=None):
+        path = Path(path); digest = sha(path)
+        if expected is not None and digest != expected:
+            raise ValueError('changed legacy input: '+name)
+        inputs[name] = dict(path=str(path), sha256=digest)
+    pin('legacy_plan', source); pin('legacy_selection', selection)
+    for name in ('rollout_policy', 'value', 'static_value', 'manifest'):
+        pin(name, paths[name], original['sha256'][name])
+    pin('executable', executable); pin('collector', Path(__file__))
+    pin('search_source', ROOT/'scripts/search_play.py')
+    import search_play
+    from curriculum_queue import command_for
+    from types import SimpleNamespace
+    namespace = original['spec'].get('namespace', 'task45-E')
+    for entry in load(selection)['jobs']:
+        cell, point = entry['cell'], entry['point']
+        trajectory_path = Path(source).parent/'episodes'/cell['id']/'trajectory.json'
+        pin('trajectory_'+cell['id'], trajectory_path)
+        trajectory = load(trajectory_path)
+        if trajectory['cell'] != cell or point not in trajectory['eligible']:
+            raise ValueError('legacy selection differs from frozen eligible trajectory')
+        kw = training_task_kwargs(load_training_task(paths['manifest'], cell['task_id']), cell['seed'])
+        reset = dict(level=kw['level'], seed=kw['seed'], deck=kw['deck'], playthrough=2,
+                     **{k:v for k,v in kw['task_extra'].items() if v is not None})
+        archive = out/'archives'/cell['id']; archive.mkdir(parents=True, exist_ok=True)
+        frames = deepcopy(trajectory['frames'])
+        for i, frame in enumerate(frames):
+            frame['action'] = trajectory['tape'][i-1] if i else None
+        frame_file = archive/'frames.jsonl'
+        frame_file.write_text(''.join(json.dumps(f)+'\n' for f in frames))
+        save(archive/'meta.json', dict(reset=reset, source=str(trajectory_path)))
+        job = dict(id=f"{cell['id']}-d{point['decision']+1}", archive=str(archive),
+            frames_sha256=sha(frame_file), meta_sha256=sha(archive/'meta.json'),
+            reset=reset, decision=point['decision']+1, manifest=paths['manifest'], task_id=cell['task_id'],
+            terrain='fog' if cell['level'] < 40 else 'roof', observation=cell.get('observation', 'human'),
+            samples=entry.get('samples', 3),
+            legacy=dict(namespace=namespace, cell=cell['id'], engine_sha256=point['state_sha256'],
+                history_sha256=point['public_history_sha256'],
+                last_search_tick=point.get('schedule_last_search_tick', -10**9)))
+        # Retain exact source candidate identities and outcome-blind source selection.
+        if 'candidate_indices' in entry:
+            job['indices'] = entry['candidate_indices']
+        jobs.append(job)
+    if not jobs:
+        raise ValueError('empty legacy selection')
+    cfg = SimpleNamespace(python=Path(sys.executable), **{k:Path(v) for k,v in paths.items() if k!='manifest'},
+                          workers=1, frames=out/'unused', out=out/'unused')
+    args = search_play.parser().parse_args(command_for(cfg, Path(paths['manifest']), jobs[0]['task_id'], 0, 1, 'terminal')[2:])
+    teacher = {k:getattr(args,k) for k in ('per_card','student_candidates','samples','horizon',
+               'verify_samples','min_gap','rollout_sim_skip')}
+    teacher.update({k:paths[k] for k in ('rollout_policy','value','static_value','resource_dir')}, executable=str(executable))
+    plan = dict(out=str(out), workers=workers, inputs=inputs, teacher=teacher, jobs=jobs,
+        screen_futures=3, confirm_futures=16, artifact_budget_bytes=5_000_000_000,
+        protocol=dict(confirmation=dict(alpha=.05,selection='metric_bests',mean_gap=dict(won=1/3,wave=1.,tick=600.,mowers_used=.5))),
+        legacy_source=dict(plan=str(source),selection=str(selection),source_hashes=original['sha256'],
+            engine_replaced=original['sha256']['executable'] != sha(executable)))
+    save(out/'plan.json', plan)
+    return plan
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('plan', type=Path); p.add_argument('stage', choices=['inspect', 'screen', 'confirm'])
+    p.add_argument('plan', type=Path); p.add_argument('stage', choices=['inspect', 'screen', 'confirm', 'import-legacy'])
     p.add_argument('--jobs', type=Path, help='absolute frozen subset; defaults to plan jobs')
-    args = p.parse_args(); plan = check_plan(args.plan)
+    p.add_argument('--out', type=Path); p.add_argument('--executable', type=Path)
+    p.add_argument('--workers', type=int, default=2)
+    args = p.parse_args()
+    if args.stage == 'import-legacy':
+        if not all((args.jobs, args.out, args.executable)) or not 1 <= args.workers <= 2:
+            p.error('import requires --jobs selection --out destination --executable engine and 1–2 workers')
+        import_legacy(args.plan, args.jobs, args.out, args.executable, args.workers)
+        return
+    plan = check_plan(args.plan)
     jobs = load(args.jobs)['jobs'] if args.jobs else plan['jobs']
     if args.jobs and not args.jobs.is_absolute():
         raise ValueError('absolute subset path required')

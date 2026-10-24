@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 from copy import deepcopy
 import gzip
+import json
 import multiprocessing as mp
 import os
 from pathlib import Path
@@ -46,6 +47,60 @@ def semantic_compare(original,repeated,a,b):
     if x!=y:changed.append('uncompressed_teacher_trace')
     if changed:raise ValueError('replay differs: '+','.join(changed))
     return dict(fields_equal=list(fields),full_teacher_trace_equal=True)
+
+
+def compare_legacy(original, repeated, a, b):
+    """Compare historical Python-valued evidence with the native-valued collector.
+
+    Public physics, every teacher decision and terminal state must match exactly.
+    Only the v4 probability gets a 1e-6 tolerance (Python vs native float32 math).
+    Historical envelope fields differ and are compared by meaning, not key spelling.
+    """
+    fields=('won','terminal','result','wave','tick','mowers_used','decisions')
+    changed=[name for name in fields if original['outcome'][name]!=repeated['outcome'][name]]
+    if original['short_leaf']!=repeated['short_leaf']:
+        changed.append('short_leaf')
+    if original['teacher_leaf']['frame']!=repeated['teacher_leaf']['frame']:
+        changed.append('teacher_leaf_frame')
+    if original['terminal_state_sha256']!=repeated['terminal_engine_sha256']:
+        changed.append('terminal_engine_sha256')
+    deltas={name:abs(x-y) for name,x,y in (
+        ('v4_short',original['v4_short_value'],repeated['v4_short']),
+        ('teacher_path_v4',original['teacher_leaf']['value'],repeated['teacher_leaf']['value']))}
+    if any(not 0<=delta<=1e-6 for delta in deltas.values()):
+        changed.append('v4_value')
+    with gzip.open(a,'rt') as stream:x=[json.loads(line) for line in stream]
+    with gzip.open(b,'rt') as stream:y=[json.loads(line) for line in stream]
+    semantic=lambda rows:[(r['decision'],r['tick'],r['student'],r['chosen']) for r in rows]
+    if semantic(x)!=semantic(y):changed.append('full_teacher_trace')
+    identity=original['identity'];new=repeated['identity']
+    if (identity['action']!=new['action'] or identity['future']!=new['future'] or
+            identity['search_seed_base']!=new['search_future'] or identity['k']!=new['k']):
+        changed.append('common_future_identity')
+    if changed:raise ValueError('legacy replay differs: '+','.join(changed))
+    return dict(terminal_fields_equal=list(fields),full_teacher_trace_equal=True,
+                public_leaf_frames_equal=True,terminal_engine_sha256_equal=True,
+                v4_absolute_differences=deltas,v4_tolerance=1e-6)
+
+
+def legacy_report(plan, source, destination):
+    """Read-only comparison of a completed unified subset with its old raw labels."""
+    proof=[]
+    for job in plan['jobs']:
+        old=Path(source)/'episodes'/job['legacy']['cell']/f"root_{job['decision']-1}"
+        new=Path(plan['out'])/'roots'/job['id']
+        for index in job['indices']:
+            for k in range(job['samples']):
+                name=f'screen_{index}_{k}.json';a=old/name;b=new/name
+                row=f.load(b)
+                f.PLAN=plan
+                f.validate(row,f.identity(job,row['identity']['action'],index,'screen',k),b.with_suffix('.jsonl.gz'))
+                checks=compare_legacy(f.load(a),row,a.with_suffix('.jsonl.gz'),b.with_suffix('.jsonl.gz'))
+                proof.append(dict(root=job['id'],candidate=index,k=k,outcome=row['outcome'],checks=checks,
+                    original_sha256=f.sha(a),repeated_sha256=f.sha(b)))
+    value=dict(status='complete',cases=proof,original_evidence_read_only=True,inputs=plan['inputs'])
+    f.save(destination,value)
+    return value
 
 
 def live_games():
@@ -133,4 +188,10 @@ def run(plan):
 
 if __name__=='__main__':
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path)
-    a=p.parse_args();run(f.check_plan(a.plan))
+    p.add_argument('--legacy-source',type=Path);p.add_argument('--out',type=Path)
+    a=p.parse_args();plan=f.check_plan(a.plan)
+    if a.legacy_source:
+        if not a.legacy_source.is_absolute() or not a.out or not a.out.is_absolute():
+            p.error('absolute --legacy-source and --out required')
+        legacy_report(plan,a.legacy_source,a.out)
+    else:run(plan)

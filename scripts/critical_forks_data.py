@@ -22,7 +22,20 @@ def panel(plan,jobs,stage='screen'):
     f.PLAN=plan;groups=[]
     for job in jobs:
         folder=Path(plan['out'])/'roots'/job['id'];root=f.load(folder/'root.json')
+        stable_job={k:v for k,v in job.items() if k not in ('stage','samples','indices','inspect_only')}
+        if root.get('job')!=stable_job:
+            raise ValueError('root header differs from frozen job')
+        if 'meta_sha256' in job:
+            from pvz_frame_store import frame_path
+            archive=Path(job['archive'])
+            if f.sha(frame_path(archive))!=job['frames_sha256'] or f.sha(archive/'meta.json')!=job['meta_sha256']:
+                raise ValueError('archive input changed')
         actions=root['candidates'];indices=job.get('indices',list(range(len(actions))))
+        if 'initial_mowers' in root:
+            initial_mowers=root['initial_mowers']
+        else:
+            from pvz_frame_store import frame_path,read_frames
+            initial_mowers=sum(s==1 for _,s in read_frames(frame_path(Path(job['archive'])))[0]['mowers'])
         samples=job.get('samples',plan['screen_futures'] if stage=='screen' else plan['confirm_futures'])
         expected={(i,k) for i in indices for k in range(samples)}
         actual={(int(p.stem.split('_')[1]),int(p.stem.split('_')[2])) for p in folder.glob(f'{stage}_[0-9]*.json')}
@@ -41,19 +54,22 @@ def panel(plan,jobs,stage='screen'):
                     raise ValueError('invalid v4 probability')
                 if row['outcome']['tick']<root['frame']['tick']:
                     raise ValueError('terminal precedes root')
+                if row['outcome']['mowers_used']>initial_mowers:
+                    raise ValueError('mowers exceed actual reset defenses')
                 rows.append(f.validate(row,f.identity(job,actions[i],i,stage,k),path.with_suffix('.jsonl.gz')))
             action=actions[i];packets={p[0]:p[1] for p in root['frame']['packets']}
             candidates.append(dict(index=i,action=action,plant_type=packets[action['packet']] if action['type']=='plant' else None,
                 means={m:statistics.mean(float(r['outcome'][m]) for r in rows) for m in METRICS},
                 v4=statistics.mean(r['v4_short'] for r in rows),
+                teacher_path_v4=statistics.mean(r['teacher_leaf']['value'] for r in rows) if all('teacher_leaf' in r for r in rows) else None,
                 short_all_nonterminal=all(not r['short_leaf']['terminal'] for r in rows),
                 outcomes=[r['outcome'] for r in rows],cpu_seconds=sum(r['cpu_seconds'] for r in rows)))
         groups.append(dict(job=job,student_index=student,candidates=candidates,labels=len(expected),samples=samples))
     return groups
 
 
-def rank_counts(group,metric,gap,nonterminal=False):
-    n=correct=0
+def rank_counts(group,metric,gap,nonterminal=False,field='v4'):
+    n=correct=ties=0
     candidates=group['candidates']
     for i,a in enumerate(candidates):
         for b in candidates[:i]:
@@ -65,19 +81,25 @@ def rank_counts(group,metric,gap,nonterminal=False):
                 continue
             if nonterminal and not(a['short_all_nonterminal'] and b['short_all_nonterminal']):
                 continue
-            prediction=a['v4']-b['v4'];n+=1
+            if a.get(field) is None or b.get(field) is None:
+                continue
+            prediction=a[field]-b[field];n+=1
+            ties += abs(prediction)<1e-10
             correct+=.5 if abs(prediction)<1e-10 else int(delta*prediction>0)
-    return dict(pairs=n,correct=correct,accuracy=correct/n if n else None)
+    return dict(pairs=n,correct=correct,value_ties=ties,accuracy=correct/n if n else None)
 
 
-def agreement(groups,metric,gap,nonterminal=False):
+def agreement(groups,metric,gap,nonterminal=False,field='v4'):
     counts=defaultdict(lambda:[0,0.])
     for g in groups:
-        row=rank_counts(g,metric,gap,nonterminal)
-        counts[g['job']['archive']][0]+=row['pairs'];counts[g['job']['archive']][1]+=row['correct']
+        row=rank_counts(g,metric,gap,nonterminal,field)
+        job=g['job']
+        # Paired human/xray arms and every root from one reset stay in one cluster.
+        unit=(job['reset']['level'],job['reset']['seed']) if 'reset' in job else job['archive']
+        counts[unit][0]+=row['pairs'];counts[unit][1]+=row['correct']
     units=list(counts.values());n=sum(v[0] for v in units);correct=sum(v[1] for v in units)
     ci=None
-    if n:
+    if sum(v[0]>0 for v in units)>=2:
         rng=random.Random(53);values=[]
         for _ in range(2000):
             sample=[rng.choice(units) for _ in units];den=sum(v[0] for v in sample)
@@ -88,21 +110,109 @@ def agreement(groups,metric,gap,nonterminal=False):
 
 def screen_summary(plan,jobs):
     groups=panel(plan,jobs);result={}
-    for terrain in ('day','night','pool'):
+    for terrain in sorted({g['job']['terrain'] for g in groups}):
         subset=[g for g in groups if g['job']['terrain']==terrain]
         gaps=plan['protocol']['confirmation']['mean_gap']
         result[terrain]=dict(games=len({g['job']['archive'] for g in subset}),roots=len(subset),
             labels=sum(g['labels'] for g in subset),wins=sum(o['won'] for g in subset for c in g['candidates'] for o in c['outcomes']),
             v4_agreement={m:dict(all_pairs=agreement(subset,m,gaps[m]),
+                                strict_pairs=agreement(subset,m,0.),
+                                teacher_path_v4=agreement(subset,m,gaps[m],field='teacher_path_v4'),
                                 nonterminal_v4_only=agreement(subset,m,gaps[m],True)) for m in METRICS})
     f.save(Path(plan['out'])/'screen-summary.json',dict(by_terrain=result,groups=groups))
     return groups,result
+
+
+def attribution(group, trace, gaps):
+    """First production stage blocking each observed terminal improver.
+
+    Static coverage is overlapping; the final causes are mutually exclusive. Shovels
+    remain engine-legal evidence outside the student's production action space.
+    """
+    static = {f.key(a) for a in trace.get('static_selected', [])}
+    generated = {f.key(a):i for i,a in enumerate(trace.get('candidates', []))}
+    reference = next(c for c in group['candidates'] if c['index']==group['student_index'])
+    stages = {}; details = []
+    for metric, threshold in gaps.items():
+        counts = Counter(); examples = []
+        for candidate in group['candidates']:
+            if metric=='tick' and (candidate['means']['won'] or reference['means']['won']):
+                continue
+            gain = (candidate['means'][metric]-reference['means'][metric]) * (-1 if metric=='mowers_used' else 1)
+            if gain+1e-12<threshold:
+                continue
+            action=candidate['action']; key=f.key(action); index=generated.get(key)
+            counts['observed_improvers']+=1
+            counts['improving_plant_actions']+=action['type']=='plant'
+            counts['production_representable_improvers']+=action['type']!='shovel'
+            counts['static_retained']+=key in static
+            if not trace.get('searched'):
+                cause='search_not_scheduled'
+            elif index is None:
+                cause='outside_production_action_space' if action['type']=='shovel' else 'candidate_generation_omission'
+            elif trace['halving_counts'][index]<trace['required_halving_samples']:
+                cause='halving_pruned'
+            elif index!=trace['best_index']:
+                cause='leaf_ranking_not_top'
+            else:
+                best, anchor = trace['best_index'], trace['student_index']
+                before, after = trace['pre_verification_values'], trace['final_values']
+                if before[best]-before[anchor]<=trace['margin']:
+                    cause='initial_margin_blocked'
+                elif after[best]-after[anchor]<=trace['margin']:
+                    cause='verification_rejected'
+                elif f.key(trace['chosen'])==key:
+                    cause='executed'
+                else:
+                    raise ValueError('unclassified production decision')
+            counts[cause]+=1
+            examples.append(dict(candidate=candidate['index'],action=action,mean_gain=gain,cause=cause,
+                                 static_retained=key in static))
+        stages[metric]=dict(counts); details.append(dict(metric=metric,improvers=examples))
+    return dict(stages=stages,details=details,
+        note='Observed common-future means versus student; statistical confirmation uses independent futures.')
+
+
+def diagnostic_report(plan, jobs):
+    groups, terrains=screen_summary(plan,jobs); gaps=plan['protocol']['confirmation']['mean_gap']
+    by_level_observation={}; totals={m:Counter() for m in METRICS}
+    for group in groups:
+        trace=f.load(Path(plan['out'])/'roots'/group['job']['id']/'search.json')
+        if trace.get('audit_schema')!=2:
+            raise ValueError('rerun inspect for complete candidate attribution')
+        group['attribution']=attribution(group,trace,gaps)
+        for metric,counts in group['attribution']['stages'].items():
+            totals[metric].update(counts)
+    keys=sorted({(g['job']['reset']['level'],g['job'].get('observation',g['job']['reset'].get('fog_observation','human'))) for g in groups})
+    for level,mode in keys:
+        subset=[g for g in groups if g['job']['reset']['level']==level and
+                g['job'].get('observation',g['job']['reset'].get('fog_observation','human'))==mode]
+        by_level_observation[f'l{level}-{mode}']=dict(roots=len(subset),labels=sum(g['labels'] for g in subset),
+            base_seed_units=len({g['job']['reset']['seed'] for g in subset}),
+            metrics={m:dict(thresholded=agreement(subset,m,gaps[m]),strict=agreement(subset,m,0.),
+                nonterminal_v4_only=agreement(subset,m,gaps[m],True),
+                teacher_path_v4=agreement(subset,m,gaps[m],field='teacher_path_v4')) for m in METRICS})
+    value=dict(status='complete',by_terrain=terrains,by_level_observation=by_level_observation,
+        attribution_totals={m:dict(c) for m,c in totals.items()},groups=groups,
+        observation_limit='human/xray paired reset seeds follow their own trajectories; no same-state causal claim',
+        cpu_seconds=f.spent_cpu(plan['out']),artifact_bytes=f.artifact_bytes(plan['out']))
+    f.save(Path(plan['out'])/'diagnostic-report.json',value)
+    return value
 
 
 def confirmation_plan(plan,jobs):
     groups,_=screen_summary(plan,jobs);selected=[];unrepresented=[]
     for g in groups:
         candidates=g['candidates']
+        if plan['protocol']['confirmation'].get('selection')=='metric_bests':
+            # Diagnostic panels retain the best of each separate terminal metric,
+            # the v4 favourite and wait, including engine-only shovel evidence.
+            indices={g['student_index'],0,max(candidates,key=lambda c:c['v4'])['index']}
+            for metric in METRICS:
+                sign=-1 if metric=='mowers_used' else 1
+                indices.add(max(candidates,key=lambda c:sign*c['means'][metric])['index'])
+            selected.append(dict(g['job'],stage='confirm',indices=sorted(indices),samples=plan['confirm_futures']))
+            continue
         rank=lambda c:(c['means']['won'],c['means']['wave'],c['means']['tick'],-c['means']['mowers_used'],-c['index'])
         global_best=max(candidates,key=rank)
         if global_best['action']['type'] not in ('plant','wait'):
@@ -142,27 +252,29 @@ def confirm_summary(plan):
     selection=f.load(Path(plan['out'])/'confirmation.json');groups=panel(plan,selection['jobs'],'confirm');tests=[]
     for g in groups:
         student=next(c for c in g['candidates'] if c['index']==g['student_index'])
-        candidate=next(c for c in g['candidates'] if c['index']!=g['student_index'])
-        for m in METRICS:
-            sign=-1 if m=='mowers_used' else 1
-            diff=[sign*(float(a[m])-float(b[m])) if m!='tick' or not(a['won'] or b['won']) else 0.
-                  for a,b in zip(candidate['outcomes'],student['outcomes'])]
-            tests.append(dict(root=g['job']['id'],candidate=candidate['index'],metric=m,
-                              differences=diff,p=sign_p(diff),**bootstrap_difference(diff)))
+        for candidate in g['candidates']:
+            if candidate['index']==g['student_index']:continue
+            for m in METRICS:
+                sign=-1 if m=='mowers_used' else 1
+                diff=[sign*(float(a[m])-float(b[m])) if m!='tick' or not(a['won'] or b['won']) else 0.
+                      for a,b in zip(candidate['outcomes'],student['outcomes'])]
+                tests.append(dict(root=g['job']['id'],candidate=candidate['index'],metric=m,
+                                  differences=diff,p=sign_p(diff),**bootstrap_difference(diff)))
     highest=0.
     for rank,t in enumerate(sorted(tests,key=lambda t:t['p'])):
         highest=max(highest,min(1.,t['p']*(len(tests)-rank)));t['p_holm']=highest
     cfg=plan['protocol']['confirmation'];corrections=[]
     for g in groups:
-        related=[t for t in tests if t['root']==g['job']['id']]
-        good=[t for t in related if t['p_holm']<=cfg['alpha'] and t['mean_gain']>=cfg['mean_gap'][t['metric']]]
-        # Keep terminal dimensions separate; do not trade a material regression for a scalar reward.
-        if (good and next(t['mean_gain'] for t in related if t['metric']=='won')>=0
-                and all(t['mean_gain']>=-cfg['mean_gap'][t['metric']] for t in related)):
-            evidence=min(good,key=lambda t:t['p_holm'])
-            c=next(c for c in g['candidates'] if c['index']!=g['student_index'])
-            corrections.append(dict(root=g['job']['id'],job=g['job'],action=c['action'],plant_type=c['plant_type'],
-                confidence=evidence['confidence'],evidence=evidence,student_representable=c['action']['type'] in ('plant','wait')))
+        for c in g['candidates']:
+            if c['index']==g['student_index']:continue
+            related=[t for t in tests if t['root']==g['job']['id'] and t['candidate']==c['index']]
+            good=[t for t in related if t['p_holm']<=cfg['alpha'] and t['mean_gain']>=cfg['mean_gap'][t['metric']]]
+            # Keep terminal dimensions separate; never trade a material regression for a scalar reward.
+            if (good and next(t['mean_gain'] for t in related if t['metric']=='won')>=0
+                    and all(t['mean_gain']>=-cfg['mean_gap'][t['metric']] for t in related)):
+                evidence=min(good,key=lambda t:t['p_holm'])
+                corrections.append(dict(root=g['job']['id'],job=g['job'],action=c['action'],plant_type=c['plant_type'],
+                    confidence=evidence['confidence'],evidence=evidence,student_representable=c['action']['type'] in ('plant','wait')))
     value=dict(status='complete',root_count=len(groups),labels=sum(g['labels'] for g in groups),tests=tests,
                corrections=corrections,significance='independent futures; paired one-sided sign test; Holm across all roots and four metrics',
                confidence_note='paired bootstrap probability(mean oriented gain > 0); mowers are oriented as fewer is better',
@@ -206,7 +318,13 @@ def export(plan,jobs):
         if not link.exists():link.symlink_to(source)
         meta=f.load(original/'meta.json');meta['training_rows']=record['rows'];f.save(target/'meta.json',meta)
         labels.add(record['label'])
-    for correction in confirmation['corrections']:
+    # A supervised root needs one label. Diagnostic confirmation may retain several
+    # challengers; use its strongest independently confirmed evidence deterministically.
+    corrections={}
+    for correction in sorted(confirmation['corrections'],key=lambda c:(c['evidence']['p_holm'],-c['confidence'])):
+        if correction['student_representable']:
+            corrections.setdefault(correction['root'],correction)
+    for correction in corrections.values():
         if not correction['student_representable']:continue
         job=correction['job'];source=Path(job['archive']);frames=read_frames(frame_path(source))
         # The executed action stays true; only its supervised target changes.
@@ -264,9 +382,10 @@ def export(plan,jobs):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__);p.add_argument('plan',type=Path)
-    p.add_argument('stage',choices=['screen','plan-confirm','report-confirm','export']);p.add_argument('--jobs',type=Path)
+    p.add_argument('stage',choices=['screen','diagnose','plan-confirm','report-confirm','export']);p.add_argument('--jobs',type=Path)
     a=p.parse_args();plan=f.check_plan(a.plan);jobs=f.load(a.jobs)['jobs'] if a.jobs else plan['jobs']
     if a.stage=='screen':_,value=screen_summary(plan,jobs)
+    elif a.stage=='diagnose':value=diagnostic_report(plan,jobs)
     elif a.stage=='plan-confirm':value=confirmation_plan(plan,jobs)
     elif a.stage=='report-confirm':value=confirm_summary(plan)
     else:value=export(plan,jobs)

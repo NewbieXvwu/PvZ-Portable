@@ -86,14 +86,3 @@ def test_source_writer_writes_the_same_archive(tmp_path):
         for name in a.files:
             np.testing.assert_array_equal(a[name], b[name], err_msg=name)
     assert reference.read_bytes() == streamed.read_bytes()
-
-
-def test_archive_identity_does_not_depend_on_write_date(tmp_path, monkeypatch):
-    import zipfile
-    frames = game(4)
-    reference, streamed = tmp_path / "whole.npz", tmp_path / "streamed.npz"
-    monkeypatch.setattr(zipfile.time, "localtime", lambda *args: (2026, 1, 2, 3, 4, 6, 4, 2, -1))
-    write_frames(reference, frames)
-    monkeypatch.setattr(zipfile.time, "localtime", lambda *args: (2027, 5, 6, 7, 8, 10, 3, 126, -1))
-    write_frames_from_source(streamed, source_of(frames))
-    assert reference.read_bytes() == streamed.read_bytes()

@@ -108,7 +108,7 @@ def test_panel_rejects_missing_future_or_root_checks(tmp_path):
     plan=dict(out=str(tmp_path),inputs={},screen_futures=2);forks.PLAN=plan
     folder=tmp_path/'roots/root';folder.mkdir(parents=True)
     actions=[dict(type='wait',ticks=60,until='timeout')]
-    forks.save(folder/'root.json',dict(candidates=actions,student_action=actions[0],frame={'packets':[],'tick':0}))
+    forks.save(folder/'root.json',dict(job=job,candidates=actions,student_action=actions[0],frame={'packets':[],'tick':0},initial_mowers=5))
     forks.save(folder/'screen-complete.json',dict(indices=[0],samples=2,labels=2))
     for k in range(2):
         path=folder/f'screen_0_{k}.json';trace=path.with_suffix('.jsonl.gz')

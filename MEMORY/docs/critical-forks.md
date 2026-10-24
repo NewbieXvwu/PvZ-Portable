@@ -83,3 +83,10 @@ v5真实`Decisions`类读入47分片、11211行并取出真实batch，按原seed
 采集、确认或打包中断时保持原学生；预算/5GB门禁停止后不得把未完分叉计败局。正式上线前须补齐统一qc泳池来源与当时部署引擎的混合轮CPU测量。这里的192对是小规模可行性面板，不签发上线证书。主控决定是否上线。
 
 [完整结果](task53-critical-forks-results.json)、[配对评估](task53-critical-forks-evaluation.json)、[成本登记](task53-critical-forks-cost.json)。
+
+
+<!-- task60-unified-entry -->
+终局诊断的现行入口已于 task60 合一为 `scripts/critical_forks.py`；本文历史数字、JSON 与原始证据保持原口径。
+原脚本与旧命令的源码可由 tag `task60-pre-terminal-unification` 取回；下次复现使用
+[task60 的绝对路径命令](task60-terminal-tools-merge.md)，包含屋顶/雾区旧轨迹导入、终局重算、只读旧证据对照及共同报告。
+旧世界/搜索未来种子按原命名空间保留，决策索引导入时从 0 起转为统一的 1 起；human/xray 按同一关卡/reset seed 聚类，不能视作同一物理状态的因果对照。
