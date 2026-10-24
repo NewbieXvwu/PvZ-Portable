@@ -365,6 +365,48 @@ class CurriculumRulesTest(unittest.TestCase):
             finally:
                 queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
 
+    def test_estimate_peak_prefers_measured_train_peak(self):
+        # task61：训练的不可回收峰值是匿名内存——最近实测优先，否则按实测系数回退。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.directory = Path(tmp)
+            pipeline.build_peak = 0
+            pipeline.last_train_peak = 5 * GIB
+            self.assertEqual(pipeline.estimate_peak(), 5 * GIB)
+            pipeline.last_train_peak = 0
+            self.assertEqual(pipeline.estimate_peak(), queue.TRAIN_ANON_EXTRA)   # 无段 → 纯常数
+
+    def test_admit_fails_fast_when_request_exceeds_mem_total(self):
+        # task61：required > MemTotal 时报错让训练任务失败退出，不静默死等。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.directory = Path(tmp)
+            pipeline.build_peak = 0
+            pipeline.last_train_peak = 0
+            original = queue.mem_total_bytes
+            queue.mem_total_bytes = lambda: GIB
+            try:
+                with self.assertRaisesRegex(RuntimeError, 'cannot fit'):
+                    pipeline._admit()
+            finally:
+                queue.mem_total_bytes = original
+
+    def test_command_measures_child_anon_peak(self):
+        import threading
+
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.lock = threading.Lock()
+            pipeline.lock_fd = None
+            pipeline.process = None
+            peak = pipeline._command([sys.executable, '-c', 'import time; time.sleep(2.5)'],
+                                     Path(tmp) / 'cmd.log')
+            self.assertIsInstance(peak, int)
+            self.assertGreaterEqual(peak, 0)
+
     def test_pack_labels_union_the_log_and_the_base_corpus(self):
         state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
                          {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
