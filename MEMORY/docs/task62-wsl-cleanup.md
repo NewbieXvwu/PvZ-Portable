@@ -70,3 +70,30 @@
 ## 结果
 
 ## 问题
+
+## 主控批准（2026-10-24 17:05，台式机时间）——第二阶段按此执行
+
+原则（用户 16:30）：本地只留正在用的；能放 HF / GitHub 的不留本地；同一份数据只留一份。第一阶段的 A 判定偏保守："某会话曾经用过"不算在用，只有**正在运行的进程**和**生产配方 / qc state** 才算。
+
+按以下顺序执行，每批记 df 前后：
+1. **§5 的 C 清单全部批准**（约 8.3 GiB）。另外批准以下各项：
+   - `~/pvz-logs` 下没有被打开的大日志，单个 ≥10 MB（`*_tui.log`、`*_eval.log`、`*_panel.log` 等），直接删。被 fd 打开的不动。
+   - `frames_v2/.feature_cache`（2.5 GiB，是可再生缓存，不是帧，不受"frames_v2 永不删"保护）。
+   - `~/PvZ-search/artifacts/student/v2_cache`（8.4 GiB）。理由：现行段已全部建好，`read_cache_dir` 只在段要重建时才读，读不到会自动重算（`candidate.exists()` 检查，不会报错）；生产只留 `curriculum_state.pipeline/cache` 一份。删前确认没有 `pack_training_rows.py` 进程在跑。同时在 cleanup 分支把 `recipes/*.json` 里的 `read_cache_dir` 去掉，或改为 null（看 `pvz_recipe` 支持哪种），主控合并后随下次部署生效。
+   - `dw5/artifacts/task27/cache`（7.1 GiB）和 `dw5/artifacts/task27/training_frames/packs`（打包产物，可再生）。确认当时没有 `train_rollout_policy.py` / `pack_training_rows.py` 在用 dw5 的路径。`training_frames` 里的链接视图和 `unified_v2.json` 保留。
+2. **B 类先上传 HF、回验、再删**：
+   - 范围：`artifacts/hard/branch`、`artifacts/hard/branch3`、`artifacts/night`、`artifacts/relabel`、`~/PvZ-Portable/artifacts`、`~/pvz-lane`。`pvz-lane` 是 seed_300xx 和 out_d27S*，属于 10 月初 lane/d27 实验的产物，归档即可。
+   - 上传方式：每个目录打成 tar，大于 4 GB 的分片；放 HF `$PVZ_HF_REPO` 的 `archive/2026-10-24/<名>.tar[.partN]`，附带 MANIFEST（相对路径、字节数、SHA256）。下载回验 SHA 后再删本地。
+   - 在 `MEMORY/docs/` 记一份归档索引，写清 HF 路径和取回命令。`train_value_widen.py` 等代码里写死的这些默认路径不用改，在索引里写明"需要时先从 HF 取回"。
+3. **旧 `artifacts/student/frames` 整目录退役**：
+   - 与 frames_v2 同 inode 的文件：删旧名不释放空间，但也要删，目录不留。
+   - 其余文件（约 5632 个 jsonl episode、7 个 npz、约 16k 个同名但未证同物的 npz）：按 2 的方式打 tar 分片上传 HF `archive/2026-10-24/student_frames_v1/`，回验后删整个目录。
+   - 先查一遍有没有符号链接指向旧 frames：qc state、生产配方、dw4/task23 视图里有的必须先改成指向 frames_v2 的同物文件，或者证明这些链接不在生产链上。否则不删。
+4. **工作树**：§6 中所有 B / C 类工作树都退役。
+   - B 类先把 ignored 证据打 tar 上传 HF、回验；C 类直接移除。一律用 `git worktree remove <绝对路径>`，不删分支。
+   - 另外批准退役：b3、vnet、fog、roof、qcalloc、qcbench、v5、termmerge、trainmem。这几个分支已合入 pvz-env，它们的会话也已结束；会话（tmux）保留，只是不再有工作目录。对其中 ignored 的证据，按 B 类处理。
+   - 保留：cq、deploy3、dw4、conveyor（这两个在生产链接链上）、cleanup、memprobe（task58 在跑），以及未合入的 cutoff、dw5、llmcand、perf、shovel、vcpp。deploy、deploy2 是旧引擎，可以移除。
+   - prunable 的元数据可以 `git worktree prune`。
+5. 最后 `sudo fstrim -v /`，报 `df -h /`。**WSL 关机与开启 sparse 由主控做，你不要关 WSL。**
+
+不做：memprobe 的 task58 数据（在跑）、`curriculum_state.pipeline` 下的任何东西、主检出的 tracked 变动。
