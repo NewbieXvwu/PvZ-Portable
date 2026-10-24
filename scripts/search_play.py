@@ -878,7 +878,8 @@ def main() -> None:
     done_keys = set()
     if results_path.exists():
         for line in results_path.read_text().splitlines():
-            r = json.loads(line); done_keys.add((r["arm"], r.get("future_seed", r["seed"])))
+            r = json.loads(line)
+            done_keys.add((r["arm"], r["seed"] if r.get("future_seed") is None else r["future_seed"]))
     jobs = [{"seed": s, "future_seed": f, "arm": arm, "args": args}
             for arm in args.arms.split(",") for s in seeds for f in futures
             if (arm, s if f is None else f) not in done_keys]
@@ -922,7 +923,8 @@ def summarize(results_path: Path) -> dict:
     rows = [json.loads(line) for line in results_path.read_text().splitlines()]
     by = {}
     for r in rows:
-        by.setdefault(r["arm"], {})[r.get("future_seed", r["seed"])] = r
+        # A cold-start game has future_seed = null; the key must fall back to the game seed.
+        by.setdefault(r["arm"], {})[r["seed"] if r.get("future_seed") is None else r["future_seed"]] = r
     summary = {arm: {"games": len(v), "won": sum(r["won"] for r in v.values()),
                      "mean_final_wave": round(sum(r["final_wave"] for r in v.values()) / len(v), 2),
                      "mean_seconds": round(sum(r["seconds"] for r in v.values()) / len(v), 1),
