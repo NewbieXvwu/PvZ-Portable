@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from pvz_memory_probe import CONFIGS, MemoryProbe, make_probe
 from memory_probe_data import labels
+from memory_probe_metrics import auc, masks, stats
+from memory_probe_train import objective
 
 torch.set_num_threads(1)
 
@@ -62,3 +64,35 @@ def test_engine_label_onboard_and_multitype_semantics():
     assert y[1, 1, 8] == y[3, 1, 8] == 1
     assert y[1:].sum() == 2
     assert np.isin(y, [0, 1]).all()
+
+
+def test_metric_ties_and_single_class():
+    assert auc([0,1], [.5,.5]) == .5
+    assert auc([0,1,1,0], [.1,.9,.9,.1]) == 1.
+    assert auc([0,1], [.9,.1]) == 0.
+    assert auc([1,1], [.2,.8]) is None
+    assert stats([],[])['logloss'] is None
+    assert stats([0,1],[.5,.5])['logloss'] == pytest.approx(np.log(2))
+
+
+def test_recency_and_event_masks_do_not_overlap_buckets():
+    fog = np.ones((5,6,9), dtype=bool)
+    data = dict(fog=fog, age=np.broadcast_to(np.array([-1,0,120,600,601])[:,None,None],fog.shape),
+                tick=np.array([0,60,120,660,720]))
+    m = masks(data,[dict(tick=120)])
+    buckets = [m[k] for k in ('age_0_120','age_121_600','age_over_600','never_visible')]
+    np.testing.assert_array_equal(sum(buckets),fog.astype(int))
+    assert m['return_before'][:2].all() and not m['return_before'][2:].any()
+    assert m['return_after'][2:].all() and not m['return_after'][:2].any()
+
+
+def test_loss_ignores_padded_episodes_and_has_type_gradient():
+    target = torch.zeros(2,2,35,6,9,dtype=torch.uint8)
+    target[0,0,0,1,2] = target[0,0,3,1,2] = 1
+    valid = torch.tensor([[True,False],[True,False]])[:,:,None,None]
+    logits = torch.zeros(2,2,35,6,9,requires_grad=True)
+    loss = objective(logits,target,valid)
+    loss.backward()
+    assert not logits.grad[:,1].any()
+    assert logits.grad[0,0,3,1,2] < 0
+    assert logits.grad[0,0,2,1,2] > 0
