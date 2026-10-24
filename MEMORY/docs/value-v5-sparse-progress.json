@@ -1669,6 +1669,41 @@
     "criteria": "pooled McNemar p<0.05 AND v5 wins more AND L21-new-seed net wins>0; gate (a) reported but not adoption criterion",
     "adopted_by": "master only"
    }
+  },
+  {
+   "stage": "repro_complete",
+   "details": {
+    "pooled": {
+     "gain": 67,
+     "harm": 9,
+     "n": 76,
+     "mcnemar_exact_two_sided": 4.334352264140022e-12
+    },
+    "checks": {
+     "pooled_p_lt_005": true,
+     "v5_more_wins": true,
+     "l21_direction": true
+    },
+    "adoption_condition_met": true,
+    "l21_new_seeds": {
+     "pairs": 32,
+     "old_wins": 17,
+     "new_wins": 24,
+     "gain": 10,
+     "harm": 3,
+     "delta_wins": 7,
+     "delta_rate": 0.21875,
+     "mcnemar_exact_two_sided": 0.09228515625,
+     "missing_old": [],
+     "missing_new": [],
+     "missing_expected_seeds": {
+      "v3": [],
+      "v4": []
+     }
+    },
+    "games": 256,
+    "raw_rows_verified": true
+   }
   }
  ],
  "bootstrap_v4_pair_accuracy": {
