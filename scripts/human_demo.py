@@ -69,7 +69,7 @@ class Recorder:
     def _frame(self, action, rejected=False):
         frame = _frame(self.observation)
         frame.update(action=action, action_rejected=rejected, label_source=self.label_source, operation=self.operations)
-        if action and action['type'] not in ('plant', 'wait'):
+        if action and action['type'] not in ('plant', 'replace', 'wait'):
             frame['input_action'] = frame['action']
             frame['action'] = None
         self.frames.write(json.dumps(frame, separators=(',', ':')) + '\n')
@@ -125,7 +125,7 @@ class Recorder:
 
 
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
-           save: Path | None = None):
+           save: Path | None = None, before_action=None):
     meta = json.loads((archive / 'meta.json').read_text())
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
@@ -162,6 +162,8 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
             if not diverged and obs['tick'] != entry['tick']:
                 raise RuntimeError(f'demonstration tick differs at operation {operation}')
             action = entry['action']
+            if before_action is not None:
+                before_action(env, operation, obs, action)
             if operation in replacements:
                 skip_until, action = replacements[operation]
             diverged |= operation in replacements
@@ -251,13 +253,70 @@ def rebaseline(archive: Path, out: Path, resource_dir, executable=None):
     return verify(out, resource_dir, executable)
 
 
-def export(archive: Path, data: Path):
+def replacement_pairs(frames):
+    """First subsequent successful same-cell plant, with no intervening same-cell shovel.
+
+    The recorded tape stays unchanged. A pair alone is not a trainable label: export also
+    asks the native engine whether that atomic replacement was legal before the shovel.
+    """
+    pending, pairs, unmatched = {}, [], []
+    for index, frame in enumerate(frames):
+        action = frame.get('input_action') or frame.get('action') or {}
+        if frame.get('action_rejected'):
+            continue
+        kind = action.get('type')
+        if kind not in ('shovel', 'plant'):
+            continue
+        cell = (action['row'], action['col'])
+        if kind == 'shovel':
+            if cell in pending:
+                unmatched.append(pending[cell])
+            pending[cell] = index
+        elif cell in pending:
+            source = pending.pop(cell)
+            pairs.append(dict(shovel_frame=source, plant_frame=index,
+                              interval=int(frame['tick']) - int(frames[source]['tick']),
+                              action=dict(type='replace', packet=action['packet'],
+                                          row=cell[0], col=cell[1])))
+    unmatched.extend(pending.values())
+    intervals = sorted(pair['interval'] for pair in pairs)
+    return pairs, dict(intervals=intervals, N=max(intervals, default=None),
+                       N_rule='maximum observed first subsequent same-cell planting interval',
+                       paired=len(pairs), unmatched_shovels=sorted(unmatched))
+
+
+def export(archive: Path, data: Path, resource_dir=None, executable=None):
     meta = json.loads((archive / 'meta.json').read_text())
     if not meta.get('verified'):
         raise ValueError('verify the demonstration before exporting training data')
+    frames = read_frames(frame_path(archive))
+    pairs, pairing = replacement_pairs(frames)
+    pairing.update(labelled=0, illegal_at_shovel=[], input_board_mismatch=[])
+    if pairs:
+        import os
+        resource_dir = resource_dir or os.environ.get('PVZ_RESOURCE_DIR')
+        if resource_dir is None:
+            raise ValueError('native replacement pairing needs resource_dir for pre-shovel legality')
+        by_operation = {frames[p['shovel_frame']]['operation']: p for p in pairs}
+        def validate(env, operation, obs, action):
+            pair = by_operation.get(operation)
+            if pair is None:
+                return
+            index = pair['shovel_frame']
+            # Training consumes frame i-1. Never put a later affordable card on an earlier board.
+            if index < 1 or frames[index - 1]['tick'] != obs['tick']:
+                pairing['input_board_mismatch'].append(index)
+            elif pair['action'] in env.legal_replacements():
+                frames[index]['label'] = pair['action']
+                pairing['labelled'] += 1
+            else:
+                pairing['illegal_at_shovel'].append(index)
+        with EventWaitEnv(resource_dir, executable=executable) as env:
+            replay(env, archive, before_action=validate)
+    meta = {**meta, 'replacement_pairing': pairing}
     target = data / f'seed_{meta["task"]["seed"]}' / meta['task']['id']
     target.mkdir(parents=True, exist_ok=False)
-    write_frames(target / 'frames.npz', read_frames(frame_path(archive)))
+    write_frames(target / 'frames.npz', frames)
     (target / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
     return target
 
@@ -289,7 +348,7 @@ def main():
         print(json.dumps(rebaseline(args.archive, args.out, args.resource_dir, args.executable)))
         return
     if args.command == 'export':
-        print(export(args.archive, args.out))
+        print(export(args.archive, args.out, args.resource_dir, args.executable))
         return
     spec = load_training_task(args.manifest, args.task)
     kw = training_task_kwargs(spec, args.seed)

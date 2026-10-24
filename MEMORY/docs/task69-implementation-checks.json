@@ -1,0 +1,38 @@
+{
+  "engine_sha256": "9c2008946b02a37fda6997c1ecffe45edf656a6b046c782ce8d0c770381f96c1",
+  "resource": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "python": "/home/newbiexvwu/.venvs/ml/bin/python",
+  "suites": [
+    {
+      "name": "replacement/env/demo/verification/encoders/cache + two C++ continuation oracles",
+      "tests": 78,
+      "passed": 78,
+      "log": "build/replace-tests.log"
+    },
+    {
+      "name": "full C++ rollout suite",
+      "tests": 5,
+      "passed": 5,
+      "log": "build/cpp-rollout-tests.log"
+    },
+    {
+      "name": "expanded four-terrain baseline bytes + native value oracles + candidate regression",
+      "tests": 23,
+      "passed": 22,
+      "skipped": 1,
+      "log": "build/replace-integration-tests.log"
+    },
+    {
+      "name": "final replacement suite including packet ties + trained dw4i/v5 oracle",
+      "tests": 13,
+      "passed": 13,
+      "skipped": 0,
+      "log": "build/replace-final-tests.log"
+    }
+  ],
+  "scope": "Suites overlap; do not sum them as independent test cases. Final suite resolves the earlier trained-oracle skip.",
+  "save_format_changed": false,
+  "production_defaults_changed": false,
+  "deploy3_rebuilt": false,
+  "qc_touched": false
+}

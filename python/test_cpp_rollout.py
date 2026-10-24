@@ -75,7 +75,7 @@ class CppRolloutTest(unittest.TestCase):
                     frame = _frame(self.obs)
                     frame["action"] = previous_action
                     native = self.env.rollout_predict(previous["tick"] if previous else None,
-                                                       bool(previous_action and previous_action["type"] == "plant"),
+                                                       bool(previous_action and previous_action["type"] in ("plant", "replace")),
                                                        student_history=history)
                     board, scalars = (history.features(frame, previous, task_context) if history is not None
                                       else features(frame, previous, task_context))

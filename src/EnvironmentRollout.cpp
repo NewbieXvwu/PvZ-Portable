@@ -597,7 +597,8 @@ EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double income, int previousTick, bool previousPlant, History& history, bool diagnostics)
 {
 	Prediction result{};
-	if (!diagnostics && !app->EnvironmentAnyLegalPlant())
+	const auto replacements = app->EnvironmentReplacements();
+	if (!diagnostics && replacements.empty() && !app->EnvironmentAnyLegalPlant())
 	{
 		if (HasHistory()) history.Update(app);
 		return result;
@@ -623,6 +624,10 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 			for (int col = 0; col < 9; ++col)
 				if (app->mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
 					cells.push_back({index, col, row});
+		for (const auto& a : replacements)
+			if (a.packet == index) cells.push_back({index, a.col, a.row, true});
+		std::stable_sort(cells.begin(), cells.end(), [](const Action& a, const Action& b) {
+			return a.row * 9 + a.col < b.row * 9 + b.col; });
 		if (!cells.empty()) { bestPacket = result.packets[index]; bestKind = kind; legal = std::move(cells); }
 	}
 	if (legal.empty()) return result;

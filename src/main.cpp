@@ -31,6 +31,7 @@
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
 #include "EnvironmentRollout.h"
+#include "EnvironmentSnapshot.h"
 #include "EnvironmentValueNet.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
@@ -65,22 +66,6 @@ struct EnvCounters
 	uint32_t plantsEatenFree = 0;   // task65: plantsEaten whose actual planting cost is 0
 	uint32_t mowers = 0;
 	int waves = 0;
-};
-
-struct EnvironmentSnapshot
-{
-	std::vector<unsigned char> board;
-	std::string randState;
-	int appRandSeed;
-	uint32_t randSeed;
-	uint32_t appCounter;
-	uint32_t zombiesKilled;
-	uint32_t plantsEaten;
-	uint32_t plantsEatenFree;   // task65: not in SaveGame (save format unchanged); rides the in-memory snapshot
-	uint32_t sunProduced;
-	int triggeredLawnMowers;
-	GameScenes gameScene;
-	BoardResult boardResult;
 };
 
 static bool ParseInt(const std::string& text, int& value)
@@ -171,7 +156,7 @@ static EnvCounters ReadCounters(LawnApp* app)
 		static_cast<uint32_t>(app->mBoard->mTriggeredLawnMowers), app->mBoard->mTotalSpawnedWaves };
 }
 
-static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
+bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
 {
 	if (!app->mBoard || !LawnSaveGameToMemory(app->mBoard, snapshot.board))
 		return false;
@@ -255,7 +240,7 @@ static uint64_t EnvironmentSnapshotHash(const EnvironmentSnapshot& snapshot)
 	return FinaliseHash(hash);
 }
 
-static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& snapshot)
+bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& snapshot)
 {
 	if (!app->mBoard || !LawnLoadGameFromMemory(app->mBoard, snapshot.board))
 		return false;
@@ -435,6 +420,13 @@ static void ReseedEnvironment(LawnApp* app, uint32_t seed)
 static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
 	std::istringstream& input)
 {
+	if (command == "REPLACE")
+	{
+		int packet = -1, col = -1, row = -1;
+		std::string extra;
+		return static_cast<bool>(input >> packet >> col >> row) && !(input >> extra) &&
+			app->EnvironmentReplace(packet, col, row);
+	}
 	if (command == "PLANT")
 	{
 		int packet = -1, col = -1, row = -1;
@@ -480,6 +472,7 @@ static bool DecodeBranchAction(const std::string& spec, std::string& command, st
 		return false;
 	const char kind = spec[0];
 	if (kind == 'P') command = "PLANT";
+	else if (kind == 'R') command = "REPLACE";
 	else if (kind == 'S') command = "SHOVEL";
 	else if (kind == 'W') command = "WAIT";
 	else return false;
@@ -533,7 +526,7 @@ static void RunEnvironment(LawnApp* app)
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":4,\"sparse_tracks_version\":1}" << std::endl;
+		<< ",\"rollout_version\":4,\"sparse_tracks_version\":1,\"replace_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -750,7 +743,7 @@ static void RunEnvironment(LawnApp* app)
 				for (int index = 0; index < 54; ++index) std::cout << (index ? "," : "") << prediction.cells[index];
 				std::cout << "],\"action\":{";
 				if (prediction.action.packet < 0) std::cout << "\"type\":\"wait\",\"ticks\":60,\"until\":\"timeout\"";
-				else std::cout << "\"type\":\"plant\",\"packet\":" << prediction.action.packet << ",\"row\":" << prediction.action.row << ",\"col\":" << prediction.action.col;
+				else std::cout << "\"type\":\"" << (prediction.action.replace ? "replace" : "plant") << "\",\"packet\":" << prediction.action.packet << ",\"row\":" << prediction.action.row << ",\"col\":" << prediction.action.col;
 				std::cout << '}';
 			}
 			std::cout << '}' << std::endl << std::setprecision(6);
@@ -827,12 +820,12 @@ static void RunEnvironment(LawnApp* app)
 					bool accepted = true;
 					int plantedType = -1;
 					int plantSlot = action.packet;
-					if (isFirst && actionCommand == "PLANT")
+					if (isFirst && (actionCommand == "PLANT" || actionCommand == "REPLACE"))
 					{
 						std::istringstream arguments(actionArguments);
 						arguments >> plantSlot;
 					}
-					if ((!isFirst || actionCommand == "PLANT") && plantSlot >= 0 && plantSlot < app->mBoard->mSeedBank->mNumPackets)
+					if ((!isFirst || (actionCommand == "PLANT" || actionCommand == "REPLACE")) && plantSlot >= 0 && plantSlot < app->mBoard->mSeedBank->mNumPackets)
 					{
 						const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[plantSlot];
 						plantedType = static_cast<int>(packet.mPacketType == SeedType::SEED_IMITATER ? packet.mImitaterType : packet.mPacketType);
@@ -847,13 +840,13 @@ static void RunEnvironment(LawnApp* app)
 							if (accepted) app->EnvironmentWaitUntil(ticks, 0);
 						}
 						else accepted = ExecuteEnvironmentAction(app, actionCommand, arguments);
-						priorPlant = actionCommand == "PLANT" && accepted;
+						priorPlant = (actionCommand == "PLANT" || actionCommand == "REPLACE") && accepted;
 						if (priorPlant) { arguments.clear(); arguments.str(actionArguments); arguments >> action.packet; }
 					}
 					else
 					{
 						priorPlant = action.packet >= 0;
-						if (priorPlant) accepted = app->EnvironmentPlant(action.packet, action.col, action.row);
+						if (priorPlant) accepted = action.replace ? app->EnvironmentReplace(action.packet, action.col, action.row) : app->EnvironmentPlant(action.packet, action.col, action.row);
 						else app->EnvironmentWaitUntil(60, 0);
 					}
 					if (!accepted) { app->EnvironmentWait(60); priorPlant = false; }
@@ -1004,7 +997,22 @@ static void RunEnvironment(LawnApp* app)
 				before = ReadCounters(app);
 			}
 		}
-		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "COLLECT")
+		else if (command == "REPLACEMENTS")
+		{
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
+				<< ",\"ok\":" << (app->mBoard ? "true" : "false") << ",\"actions\":[";
+			bool first = true;
+			for (const auto& action : app->EnvironmentReplacements())
+			{
+				if (!first) std::cout << ',';
+				first = false;
+				std::cout << "{\"type\":\"replace\",\"packet\":" << action.packet
+					<< ",\"col\":" << action.col << ",\"row\":" << action.row << '}';
+			}
+			std::cout << "]}" << std::endl;
+			continue;
+		}
+		else if (command == "PLANT" || command == "REPLACE" || command == "SHOVEL" || command == "WAIT" || command == "COLLECT")
 		{
 			ok = ExecuteEnvironmentAction(app, command, input);
 		}
@@ -1286,14 +1294,14 @@ static void RunEnvironment(LawnApp* app)
 			continue;
 		}
 
-		if (demo && ok && (command == "PLANT" || command == "SHOVEL"))
+		if (demo && ok && (command == "PLANT" || command == "REPLACE" || command == "SHOVEL"))
 		{
 			human.packet = -1;
 			human.shovel = false;
 		}
 		const auto observationStart = std::chrono::steady_clock::now();
 		const double executionSeconds = std::chrono::duration<double>(observationStart - commandStart).count();
-		if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")
+		if (command == "PLANT" || command == "REPLACE" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")
 			actionSeconds += executionSeconds;
 		else controlSeconds += executionSeconds;
 		const std::string observation = app->EnvironmentObservation(privileged);

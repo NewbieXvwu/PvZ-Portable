@@ -13,7 +13,7 @@ class EnvironmentRollout
 {
 public:
 	static constexpr int Channels = 92, Cells = 60, Scalars = 115, ZombieTypes = 34, TaskContext = 1 + ZombieTypes;
-	struct Action { int packet = -1, col = 0, row = 0; };
+	struct Action { int packet = -1, col = 0, row = 0; bool replace = false; };
 	struct Prediction
 	{
 		float plant;

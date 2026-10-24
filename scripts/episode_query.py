@@ -876,7 +876,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         for p in (legal.get("plants") or []):
             if row_filter is not None and p["row"] != row_filter:
                 continue
-            cands.append({"type": "plant", "packet": p["packet"],
+            cands.append({"type": p.get("type", "plant"), "packet": p["packet"],
                           "row": p["row"], "col": p["col"]})
         cands.append({"type": "wait", "ticks": 60})
         cands = cands[:limit]

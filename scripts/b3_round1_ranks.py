@@ -83,7 +83,7 @@ def ranks_for_seed(family_name, seed, points, data, args):
                 policy = t._fast_action(obs, state)
                 t._W['student_history'] = history
                 assert policy == frames[i + 1]['action'], ('policy replay', family_name, seed, i)
-                legal = [{'type': 'plant', 'packet': a['packet'], 'col': a['col'],
+                legal = [{'type': a.get('type', 'plant'), 'packet': a['packet'], 'col': a['col'],
                           'row': a['row']}
                          for a in (obs.get('legal_actions') or {}).get('plants') or []]
                 ranked = ranked_plants(t._W['fast'], t._W['student_frame'],

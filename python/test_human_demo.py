@@ -22,6 +22,46 @@ BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')
 class HumanDemoTest(unittest.TestCase):
+    def test_replacement_pair_intervals_labels_and_unmatched_shovels(self):
+        from human_demo import replacement_pairs
+        from pvz_frame_store import encode_frames
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / 'raw'
+            deck = (8, 1, 9, 16, 30, 0)
+            task = TaskSpec(level=31, seed=6902, profile=profile_for_deck(deck),
+                           preplanted=((8, 0, 0), (8, 0, 1), (8, 0, 2)))
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                recorder = Recorder(env, archive, 'pair_test', deck, task)
+                recorder.step(dict(type='shovel', row=0, col=0))
+                recorder.step(dict(type='wait', ticks=3))
+                recorder.step(dict(type='plant', packet=1, row=0, col=0))
+                recorder.step(dict(type='shovel', row=0, col=1))
+                recorder.step(dict(type='plant', packet=0, row=0, col=1))  # same effective plant
+                recorder.step(dict(type='shovel', row=0, col=2))
+                recorder.close()
+            self.assertTrue(verify(archive, RESOURCE, BINARY)['verified'])
+            original = read_frames(archive / 'frames.jsonl')
+            pairs, distribution = replacement_pairs(original)
+            self.assertEqual(distribution['intervals'], [0, 3])
+            self.assertEqual(distribution['N'], 3)
+            self.assertEqual(len(distribution['unmatched_shovels']), 1)
+            target = export(archive, root / 'data', RESOURCE, BINARY)
+            converted = read_frames(target / 'frames.npz')
+            report = json.loads((target / 'meta.json').read_text())['replacement_pairing']
+            self.assertEqual(report['labelled'], 1)
+            self.assertEqual(len(report['illegal_at_shovel']), 1)
+            label_index = pairs[0]['shovel_frame']
+            self.assertEqual(converted[label_index]['label']['type'], 'replace')
+            self.assertIsNone(converted[label_index]['action'])
+            self.assertEqual(converted[label_index]['input_action']['type'], 'shovel')
+            encoded = encode_frames(converted, b'')
+            training_row = encoded['rows'].tolist().index(label_index)
+            self.assertEqual(encoded['plant'][training_row], 1)
+            self.assertEqual(encoded['packet'][training_row], 1)
+            self.assertEqual(encoded['cell'][training_row], 0)
+            self.assertEqual(read_frames(archive / 'frames.jsonl'), original)
+
     def test_record_replay_export_and_restore(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

@@ -50,7 +50,7 @@ def row_damage_labels(frames: list[dict], horizon: int) -> np.ndarray:
         after = Counter(tuple(plant[:3]) for plant in current["plants"])
         action = current.get("action") or {}
         for row, col, _kind in before - after:
-            if (action.get("type") == "shovel" and not current.get("action_rejected")
+            if (action.get("type") in ("shovel", "replace") and not current.get("action_rejected")
                     and (row, col) == (action.get("row"), action.get("col"))):
                 continue
             events[index, row] = 1
@@ -154,12 +154,13 @@ def encode_frames(frames: list[dict], source: bytes) -> dict:
         rows.append(index)
         boards.append(board.numpy().astype(np.float16))
         scalars.append(scalar.numpy())
-        is_plant = action["type"] == "plant"
+        is_plant = action["type"] in ("plant", "replace")
         plant.append(float(is_plant))
         packet.append(action["packet"] if is_plant else -1)
         cell.append(action["row"] * LAWN_COLS + action["col"] if is_plant else -1)
         values.append(target_values(frames[index].get("targets")))
-    hints = [b'"type":"plant"' in line[max(line.rfind(b'"label":'), line.rfind(b'"action":')):]
+    hints = [any(token in line[max(line.rfind(b'"label":'), line.rfind(b'"action":')):]
+                 for token in (b'"type":"plant"', b'"type":"replace"'))
              or b'"targets":' in line for line in source.splitlines()]
     return dict(hints=hints, rows=np.array(rows, dtype=np.int64),
                 boards=np.array(boards, dtype=np.float16).reshape(-1, BOARD_CHANNELS, ROWS, COLS),
@@ -205,6 +206,12 @@ def encoder_signature(obs: str = "v1") -> str:
                  for module in (pvz_rollout_policy, pvz_value_net)}
     source = "".join(inspect.getsource(function) for function in functions)
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
+    # Replacement only extends the previously unsupported action domain. The old plant /
+    # wait encodings and shapes are byte-identical; keep their existing archives/cache hits.
+    # A replacement archive has different source bytes (part of every cache digest), and
+    # uses the same three targets. Pin this exact extension, not arbitrary future changes.
+    if signature == '31c8c2a3eb8f6be97268ba1f536a8670d6c290cde9f0c4daae9181bf2ae1e455':
+        signature = '5c34482620514a7434e638058f9b75d05e51a8aa9c18b634a8f80e4dd424f008'
     if obs == "v1":
         return signature
     if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4"):

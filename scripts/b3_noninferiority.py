@@ -239,7 +239,7 @@ def heavy_reference(env, obs, policy, args, decision_seed, arms):
     import search_play as t
     root = env.snapshot()
     try:
-        plants = [{'type': 'plant', **{k: a[k] for k in ('packet', 'row', 'col')}}
+        plants = [{'type': a.get('type', 'plant'), **{k: a[k] for k in ('packet', 'row', 'col')}}
                   for a in obs['legal_actions']['plants']]
         scores = t._static_scores(env, root, plants, obs.get('sun_income_rate'))
         assert len(scores) == len(plants)

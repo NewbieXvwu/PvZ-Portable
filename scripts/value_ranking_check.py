@@ -75,7 +75,7 @@ def _candidates(net, frame, previous, legal, cells_per_card: int, random_cells: 
         chosen = ranked[:cells_per_card]
         rest = ranked[cells_per_card:]
         chosen += rng.sample(rest, min(random_cells, len(rest)))
-        out += [{"type": "plant", "packet": packet, "row": a["row"], "col": a["col"]} for a in chosen]
+        out += [{"type": a.get("type", "plant"), "packet": packet, "row": a["row"], "col": a["col"]} for a in chosen]
     return out
 
 

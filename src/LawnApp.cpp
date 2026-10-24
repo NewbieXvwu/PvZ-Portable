@@ -27,7 +27,9 @@
 #include <fstream>
 #include <iostream>
 #include <cstdlib>
+#include <stdexcept>
 #include "LawnApp.h"
+#include "EnvironmentSnapshot.h"
 #include "Resources.h"
 #include "Lawn/LawnCommon.h"
 #include "Lawn/Board.h"
@@ -1514,6 +1516,94 @@ bool LawnApp::EnvironmentShovel(int col, int row)
 	return mBoard->mPlantsShoveled != shoveled;
 }
 
+static Plant* EnvironmentShovelTarget(LawnApp* app, int col, int row)
+{
+	if (!app->mBoard || app->mGameScene != GameScenes::SCENE_PLAYING ||
+		col < 0 || col >= MAX_GRID_SIZE_X || row < 0 || row >= MAX_GRID_SIZE_Y)
+		return nullptr;
+	// Use precisely the same cursor and hit test as the game's shovel, including layers.
+	auto& cursor = *app->mBoard->mCursorObject;
+	const auto previous = cursor.mCursorType;
+	cursor.mCursorType = CursorType::CURSOR_TYPE_SHOVEL;
+	Plant* target = app->mBoard->ToolHitTest(app->mBoard->GridToPixelX(col, row) + 40,
+		app->mBoard->GridToPixelY(col, row) + 40);
+	cursor.mCursorType = previous;
+	return target;
+}
+
+static SeedType EnvironmentEffectiveSeed(SeedType type, SeedType imitater)
+{
+	// Board::GetPlantsOnLawn uses this identity for its native planting rules.
+	return type == SeedType::SEED_IMITATER && imitater != SeedType::SEED_NONE ? imitater : type;
+}
+
+bool LawnApp::EnvironmentReplace(int packetIndex, int col, int row)
+{
+	Plant* target = EnvironmentShovelTarget(this, col, row);
+	if (!target || packetIndex < 0 || packetIndex >= mBoard->mSeedBank->mNumPackets)
+		return false;
+	const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[packetIndex];
+	if (EnvironmentEffectiveSeed(packet.mPacketType, packet.mImitaterType) ==
+		EnvironmentEffectiveSeed(target->mSeedType, target->mImitaterType))
+		return false;
+	EnvironmentSnapshot saved{};
+	if (!SaveEnvironmentSnapshot(this, saved)) return false;
+	const PlayerInfo profile = *mPlayerInfo;
+	// EnvironmentPlant performs the game's post-shovel CanPickUp/CanPlantAt checks.
+	if (EnvironmentShovel(col, row) && EnvironmentPlant(packetIndex, col, row)) return true;
+	if (!RestoreEnvironmentSnapshot(this, saved)) throw std::runtime_error("replace rollback failed");
+	*mPlayerInfo = profile;
+	return false;
+}
+
+std::vector<LawnApp::EnvironmentReplacement> LawnApp::EnvironmentReplacements()
+{
+	std::vector<EnvironmentReplacement> actions;
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING) return actions;
+	bool ready = false;
+	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+		ready = ready || mBoard->mSeedBank->mSeedPackets[i].CanPickUp();
+	if (!ready) return actions;
+	EnvironmentSnapshot saved{};
+	bool savedRoot = false;
+	const PlayerInfo profile = *mPlayerInfo;
+	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+		for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+		{
+			Plant* target = EnvironmentShovelTarget(this, col, row);
+			if (!target) continue;
+			const SeedType removed = EnvironmentEffectiveSeed(target->mSeedType, target->mImitaterType);
+			std::vector<bool> eligible(mBoard->mSeedBank->mNumPackets, false);
+			bool anyEligible = false;
+			for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+			{
+				auto& packet = mBoard->mSeedBank->mSeedPackets[i];
+				const auto seed = EnvironmentEffectiveSeed(packet.mPacketType, packet.mImitaterType);
+				eligible[i] = packet.CanPickUp() && seed != removed &&
+					mBoard->CanPlantAt(col, row, seed) != PlantingReason::PLANTING_OK;
+				anyEligible = anyEligible || eligible[i];
+			}
+			if (!anyEligible) continue;
+			if (!savedRoot)
+			{
+				if (!SaveEnvironmentSnapshot(this, saved)) return actions;
+				savedRoot = true;
+			}
+			if (EnvironmentShovel(col, row))
+				for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+				{
+					auto& packet = mBoard->mSeedBank->mSeedPackets[i];
+					const auto seed = EnvironmentEffectiveSeed(packet.mPacketType, packet.mImitaterType);
+					if (eligible[i] && packet.CanPickUp() &&
+						mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
+						actions.push_back({i, col, row});
+				}
+			if (!RestoreEnvironmentSnapshot(this, saved)) throw std::runtime_error("replacement mask rollback failed");
+			*mPlayerInfo = profile;
+		}
+	return actions;
+}
+
 void LawnApp::EnvironmentWait(int ticks)
 {
 	if (!mBoard || ticks < 0 || ticks > 1000000)
@@ -1725,6 +1815,17 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 	out << "]}";
 }
 
+static void WriteReplacementActions(std::ostream& out, LawnApp* app, bool& first)
+{
+	for (const auto& action : app->EnvironmentReplacements())
+	{
+		if (!first) out << ',';
+		first = false;
+		out << "{\"type\":\"replace\",\"packet\":" << action.packet
+			<< ",\"col\":" << action.col << ",\"row\":" << action.row << '}';
+	}
+}
+
 std::string LawnApp::EnvironmentLeanObservation()
 {
 	std::ostringstream out;
@@ -1828,6 +1929,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 					out << "{\"packet\":" << i << ",\"col\":" << col << ",\"row\":" << row << '}';
 				}
 	}
+	WriteReplacementActions(out, this, firstAction);
 	out << "]}";
 	WriteObservationV2(out, this);
 	WriteObservationFog(out, this);
@@ -1851,7 +1953,7 @@ bool LawnApp::EnvironmentAnyLegalPlant()
 				if (mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
 					return true;
 	}
-	return false;
+	return !EnvironmentReplacements().empty();
 }
 
 std::string LawnApp::EnvironmentDeckOptions()
@@ -2159,6 +2261,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 					out << "{\"packet\":" << i << ",\"col\":" << col << ",\"row\":" << row << '}';
 				}
 	}
+	WriteReplacementActions(out, this, firstAction);
 	out << "],\"shovels\":[";
 	firstAction = true;
 	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)

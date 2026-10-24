@@ -69,7 +69,7 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
     the level's zombie roster) appended for students trained with ``--context``."""
     board, scalars = featurize_numpy(frame)
     action = frame.get("action") if previous is not None else None
-    extra = np.array([float(bool(action) and action.get("type") == "plant"),
+    extra = np.array([float(bool(action) and action.get("type") in ("plant", "replace")),
                       ((frame["tick"] - previous["tick"]) / 300.0) if previous else 0.0], dtype=np.float32)
     parts = [scalars, extra] if context is None else [scalars, extra, np.asarray(context, dtype=np.float32)]
     return torch.from_numpy(board), torch.from_numpy(np.concatenate(parts))
@@ -218,12 +218,14 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
+    for cells in by_packet.values():
+        cells.sort(key=lambda a: (a["row"], a["col"]))
     packet_logits = net.packet_logits(g, info)[0].tolist()
-    packet = max(by_packet, key=(lambda p: (packet_logits[p], -int(info[0, p, 0])))
+    packet = max(sorted(by_packet), key=(lambda p: (packet_logits[p], -int(info[0, p, 0])))
                  if info is not None else (lambda p: packet_logits[p] if p < PACKETS else -1e9))
     cells = net.cell_logits(h, g, torch.tensor([packet]), info)[0].tolist()
     best = max(by_packet[packet], key=lambda a: cells[a["row"] * LAWN_COLS + a["col"]])
-    return {"type": "plant", "packet": packet, "col": best["col"], "row": best["row"]}
+    return {"type": best.get("type", "plant"), "packet": packet, "col": best["col"], "row": best["row"]}
 
 
 @torch.inference_mode()
@@ -258,6 +260,8 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
+    for cells in by_packet.values():
+        cells.sort(key=lambda a: (a["row"], a["col"]))
     packets = sorted(by_packet)
     packet_p = torch.softmax(net.packet_logits(g, info)[0][packets], dim=0).tolist()
     out: list[tuple[float, dict]] = []

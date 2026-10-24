@@ -89,6 +89,10 @@ def branch_action_token(action: dict[str, Any]) -> str:
     kind = action.get("type")
     if kind == "plant":
         return f"P:{int(action['packet'])}:{int(action['col'])}:{int(action['row'])}"
+    if kind == "replace":
+        if any(type(action.get(key)) is not int for key in ('packet','col','row')):
+            raise ValueError('replace coordinates must be integers')
+        return f"R:{action['packet']}:{action['col']}:{action['row']}"
     if kind == "shovel":
         return f"S:{int(action['col'])}:{int(action['row'])}"
     if kind == "wait":
@@ -246,6 +250,7 @@ class PvZEnv:
         self._reset_done = False
         self._last_response: dict[str, Any] = {}
         self._sparse_tracks_version = 0
+        self._replace_version = 0
         self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
         # Resource hashes and git metadata are computed on first use: hashing main.pak
@@ -340,6 +345,7 @@ class PvZEnv:
             preexec_fn=_oom_score_engine if os.name == "posix" else None,
         )
         ready = self._read_message()
+        self._replace_version = ready.get("replace_version", 0)
         self._rollout_version = ready.get("rollout_version", 0)
         self._sparse_tracks_version = ready.get("sparse_tracks_version", 0)
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
@@ -542,6 +548,9 @@ class PvZEnv:
         if kind == "plant":
             packet, col, row = self._coordinates(action, ("packet", "col", "row"))
             command = f"PLANT {packet} {col} {row}"
+        elif kind == "replace":
+            packet, col, row = self._coordinates(action, ("packet", "col", "row"))
+            command = f"REPLACE {packet} {col} {row}"
         elif kind == "shovel":
             col, row = self._coordinates(action, ("col", "row"))
             command = f"SHOVEL {col} {row}"
@@ -554,7 +563,7 @@ class PvZEnv:
             x, y = self._coordinates(action, ("x", "y"))
             command = f"COLLECT {x} {y}"
         else:
-            raise ValueError("action type must be 'plant', 'shovel', 'collect' or 'wait'")
+            raise ValueError("action type must be 'plant', 'replace', 'shovel', 'collect' or 'wait'")
 
         response = self._command(command)
         observation = response.get("observation")
@@ -605,6 +614,17 @@ class PvZEnv:
         if response.get("observation") is None:
             raise RuntimeError(f"environment returned no state: {response}")
         return response["observation"]
+
+    def legal_replacements(self) -> list[dict[str, Any]]:
+        """Native post-shovel legal extension; existing observation/features stay unchanged."""
+        previous = self._last_response
+        try:
+            response = self._command('REPLACEMENTS')
+        finally:
+            self._last_response = previous
+        if not response.get('ok') or not isinstance(response.get('actions'),list):
+            raise RuntimeError('simulator does not support replacement legality')
+        return response['actions']
 
     def critic_inputs(self, wave_index: int) -> dict[str, Any]:
         response = self._command(f"CRITIC_INPUTS {int(wave_index)}")
@@ -878,11 +898,11 @@ class PvZEnv:
             condition = action.pop("until", None)
             if condition is not None and (action.get("type") != "wait" or condition != "timeout"):
                 raise ValueError("rollout first action only supports fixed or timeout waits")
-            if action.get("type") not in ("plant", "shovel", "wait"):
-                raise ValueError("rollout first action must be plant, shovel or wait")
+            if action.get("type") not in ("plant", "replace", "shovel", "wait"):
+                raise ValueError("rollout first action must be plant, replace, shovel or wait")
             if action["type"] == "wait" and (type(action.get("ticks")) is not int or not 0 <= action["ticks"] <= 1000000):
                 raise ValueError("wait ticks must be from 0 to 1000000")
-            if action["type"] == "plant":
+            if action["type"] in ("plant", "replace"):
                 self._coordinates(action, ("packet", "row", "col"))
             if action["type"] == "shovel":
                 self._coordinates(action, ("col", "row"))

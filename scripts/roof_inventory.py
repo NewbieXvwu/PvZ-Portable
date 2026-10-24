@@ -35,7 +35,7 @@ def main():
                                                       for z in wave}))
             snap = env.snapshot()
             action = next(a for a in obs['legal_actions']['plants'] if a['packet'] == deck.index(1))
-            planted, _, _, _, info = env.step(dict(type='plant', **action))
+            planted, _, _, _, info = env.step({'type': 'plant', **action})
             row['sunflower_on_pot_probe'] = dict(action=action, ok=info['ok'],
                 types_at_cell=sorted(p['type'] for p in planted['plants']
                                      if p['row'] == action['row'] and p['col'] == action['col']))

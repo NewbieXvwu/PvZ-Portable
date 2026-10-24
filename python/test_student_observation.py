@@ -76,7 +76,11 @@ class StudentObservationTest(unittest.TestCase):
         output.mkdir(parents=True, exist_ok=True)
         with tempfile.TemporaryDirectory(dir=output) as directory:
             directory = Path(directory)
-            task = {"task_id": "test", "level": 7, "seeds": [30000], "deck": [0, 1, 2, 3, 4, 5]}
+            # Keep this encoder fixture alive long enough to observe pole vaulters. The
+            # untrained network can now spend its sun replacing existing plants, so its
+            # survival time is no longer a reliable way to arrange feature coverage.
+            task = {"task_id": "test", "level": 7, "seeds": [30000], "deck": [0, 1, 2, 3, 4, 5],
+                    "preplanted": [[0, row, col] for row in range(5) for col in (0, 1)]}
             manifest = directory / "manifest.json"
             manifest.write_text(json.dumps({"tasks": [task]}))
             torch.manual_seed(0)

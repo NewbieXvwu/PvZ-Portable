@@ -279,7 +279,7 @@ def _student_topk_candidates(legal: list[dict], k: int) -> tuple[list[dict], set
                            legal, context=_W.get("context"), history=_W.get("student_history"))
     candidates, keys = [], set()
     for _score, entry in ranked[:k]:
-        action = {"type": "plant", "packet": int(entry["packet"]),
+        action = {"type": entry.get("type", "plant"), "packet": int(entry["packet"]),
                   "col": int(entry["col"]), "row": int(entry["row"])}
         key = json.dumps(action, sort_keys=True)
         if key not in keys:
@@ -327,7 +327,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     if not legal:
         return policy_action
-    if (args.min_gap and policy_action["type"] != "plant"
+    if (args.min_gap and policy_action["type"] not in ("plant", "replace")
             and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
         return policy_action
     stats["last_search_tick"] = obs["tick"]
@@ -335,15 +335,15 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     root = env.snapshot_fast()
     income = obs.get("sun_income_rate")
     try:
-        plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
+        plants = [{"type": a.get("type", "plant"), "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
+        policy_key = json.dumps(policy_action if policy_action["type"] in ("plant", "replace") else NOOP, sort_keys=True)
         mode = _W.get("candidate_mode", "static")
         if mode == "student-topk":
             # task42 B3 arm: global top-k plants by the student's own probabilities, plus wait and
             # the student's own action. No static net, no per-card floor.
             candidates, student_keys = _student_topk_candidates(legal, int(_W.get("student_topk", 3)))
             candidates.append(NOOP)
-            if (policy_action["type"] == "plant"
+            if (policy_action["type"] in ("plant", "replace")
                     and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
                 candidates.append(policy_action)
             stats["last_student_keys"] = student_keys
@@ -352,11 +352,11 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             # The best cells of *every* card, not the overall top-k: the static value net was trained on
             # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
             # against shooters right after planting -- only the rollout can show what they are worth.
-            by_card: dict[int, list] = {}
+            by_card: dict[tuple[str, int], list] = {}
             for v, a in scored:
-                by_card.setdefault(a["packet"], []).append(a)
+                by_card.setdefault((a["type"], a["packet"]), []).append(a)
             candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP])
-            if (policy_action["type"] == "plant"
+            if (policy_action["type"] in ("plant", "replace")
                     and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
                 candidates.append(policy_action)
 
@@ -373,7 +373,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                 student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
                                               legal, context=_W.get("context"), history=_W.get("student_history"))
                 for _score, entry in student_ranked:
-                    action = {"type": "plant", "packet": int(entry["packet"]),
+                    action = {"type": entry.get("type", "plant"), "packet": int(entry["packet"]),
                               "col": int(entry["col"]), "row": int(entry["row"])}
                     key = json.dumps(action, sort_keys=True)
                     if key in present:
@@ -479,7 +479,13 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
     if fresh:
         counts = [0] * len(candidates)
+    selected_kind = candidates[best]['type']
+    stats.setdefault('search_selected_by_type', {}).setdefault(selected_kind, 0)
+    stats['search_selected_by_type'][selected_kind] += 1
     if samples and before:
+        bucket = stats.setdefault('verification_by_type', {}).setdefault(selected_kind,
+            dict(attempts=0, revoked=0))
+        bucket['attempts'] += 1
         prior = None if fresh else [totals[policy_index], totals[best]]
         started = time.perf_counter()
         # The original value batches and terminal-first sum order: a different order can change the
@@ -505,6 +511,8 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
             "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
             "mode": "fresh" if fresh else "reproduced",
             "seconds": time.perf_counter() - started}
+        if not stats['last_verification']['after_override']:
+            bucket['revoked'] += 1
     # Did the winner come from --student-candidates? Counted here so both the halving and the
     # full search report it; the override counter below is the subset that changed the action.
     if json.dumps(candidates[best], sort_keys=True) in (stats.get("last_student_keys") or ()):
@@ -670,8 +678,8 @@ def _play(job: dict, observer=None) -> dict:
             # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
             # there, so the report can say how often the teacher actually used it. Harmless for
             # ordinary plants: the legal list never offers an occupied cell without first aid.
-            planted_type = plant_type_before_action(obs,action['packet']) if action['type']=='plant' else None
-            if action["type"] == "plant":
+            planted_type = plant_type_before_action(obs,action['packet']) if action['type'] in ('plant', 'replace') else None
+            if action["type"] in ("plant", "replace"):
                 occupant = next((p for p in obs.get("plants") or []
                                  if p["row"] == action["row"] and p["col"] == action["col"]), None)
                 if occupant is not None:
@@ -680,9 +688,29 @@ def _play(job: dict, observer=None) -> dict:
                         "packet": action["packet"], "occupant": occupant.get("type"),
                         "occupant_health": occupant.get("health"),
                         "plant_type":planted_type,"same_type": occupant.get("type") == planted_type})
+            before_action = obs
             obs, _r, done, _t, info = env.step(action)
+            for name in ('sun_spent', 'sun_produced'):
+                stats[name] = stats.get(name, 0) + info.get('events', {}).get(name, 0)
             rejected = not info.get("ok")
-            if not rejected and action["type"] == "plant":
+            if action['type'] == 'replace':
+                stats['replace_attempts'] = stats.get('replace_attempts', 0) + 1
+                stats['replace_rejected'] = stats.get('replace_rejected', 0) + int(rejected)
+                if not rejected:
+                    def types_at(board):
+                        return Counter(p['imitater_type'] if p['type'] == 48 else p['type']
+                                       for p in board.get('plants', [])
+                                       if (p['row'], p['col']) == (action['row'], action['col']))
+                    old_types, new_types = types_at(before_action), types_at(obs)
+                    stats.setdefault('replace_events', []).append(dict(
+                        tick=before_action['tick'], packet=action['packet'],
+                        row=action['row'], col=action['col'],
+                        removed=list((old_types - new_types).elements()),
+                        added=list((new_types - old_types).elements()),
+                        planted_type=planted_type,
+                        sun_before=before_action['sun'], sun_after=obs['sun'],
+                        sun_spent=info.get('events', {}).get('sun_spent', 0)))
+            if not rejected and action["type"] in ("plant", "replace"):
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
                 planted_by_type[planted_type] = planted_by_type.get(planted_type, 0) + 1
@@ -690,6 +718,8 @@ def _play(job: dict, observer=None) -> dict:
                     fog_diagnostics.planted(planted_type, action)
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+                for name in ('sun_spent', 'sun_produced'):
+                    stats[name] = stats.get(name, 0) + info.get('events', {}).get(name, 0)
             if observer is not None:
                 observer.after(obs, action, policy_choice, rejected, info)
             if fog_diagnostics is not None:
@@ -778,6 +808,13 @@ def _play(job: dict, observer=None) -> dict:
             "student_candidate_best": stats["student_candidate_best"],
             "student_candidate_override": stats["student_candidate_override"],
             "demo_candidate_added": stats.get('demo_candidate_added', 0),
+            "verification_by_type": stats.get('verification_by_type', {}),
+            "search_selected_by_type": stats.get('search_selected_by_type', {}),
+            "replace_attempts": stats.get('replace_attempts', 0),
+            "replace_rejected": stats.get('replace_rejected', 0),
+            "replace_events": stats.get('replace_events', []),
+            "sun_produced": stats.get('sun_produced', 0),
+            "sun_spent": stats.get('sun_spent', 0), "sun_remaining": obs['sun'],
             "shovel_events": stats.get("shovel_events", []),
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}

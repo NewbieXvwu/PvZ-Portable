@@ -54,7 +54,7 @@ class EngineValueTest(unittest.TestCase):
                                                   np.concatenate([board.flatten().numpy(), scalars.numpy()]))
                     self.assertLess(abs(actual - probability), 1e-5)
                     root = env.snapshot_fast()
-                    actions = [dict(type="plant", **a) for a in obs["legal_actions"]["plants"][:8]]
+                    actions = [{"type": "plant", **a} for a in obs["legal_actions"]["plants"][:8]]
                     actions.append(dict(type="wait", ticks=0))
                     scores = env.static_scores(root, actions, obs["sun_income_rate"])
                     for score, branch in zip(scores, env.branch_snapshot(root, actions, retain_snapshots=False)):

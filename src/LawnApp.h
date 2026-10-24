@@ -252,6 +252,9 @@ public:
 	bool							EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task);
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
+	struct EnvironmentReplacement { int packet, col, row; };
+	bool EnvironmentReplace(int packet, int col, int row);
+	std::vector<EnvironmentReplacement> EnvironmentReplacements();
 	void							EnvironmentWait(int ticks);
 	void							EnvironmentPresent();
 	void EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& theState);

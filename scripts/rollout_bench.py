@@ -58,7 +58,7 @@ def _candidates(env, obs: dict, income) -> list[dict]:
     """The teacher's candidate set: best ``--per-card`` cells of every legal card, plus NOOP."""
     args = _W["args"]
     legal = (obs.get("legal_actions") or {}).get("plants") or []
-    plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
+    plants = [{"type": a.get("type", "plant"), "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
     if not plants:
         return []
     per_card = args["per_card"]
