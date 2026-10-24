@@ -12,6 +12,11 @@ import dagger_experiment_runner as runner
 
 
 class ExperimentRunnerTest(unittest.TestCase):
+    @unittest.skipUnless(
+        sys.platform.startswith('linux'),
+        'Linux-only /proc guard: descendant enumeration and memory accounting require '
+        '/proc/<pid>/task/<pid>/children, /proc/<pid>/status and /proc/meminfo',
+    )
     def test_low_memory_pauses_and_resumes_only_own_parent_and_child(self):
         calls = []
         kill = os.kill
