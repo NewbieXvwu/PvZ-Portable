@@ -36,6 +36,7 @@ def write_json(path, value):
 def inventory():
     entries, seen = [], {}
     paths = sorted(SOURCE.rglob('frames.npz')) + sorted(SOURCE.rglob('frames.jsonl'))
+    paths += sorted((OUT / 'supplement').rglob('frames.jsonl'))
     for path in paths:
         meta = json.loads((path.parent / 'meta.json').read_text())
         task = meta['task']
@@ -49,8 +50,9 @@ def inventory():
             seen[key]['duplicates'].append(str(path))
             continue
         seed = task['seed']
-        split = ('test' if seed < 42000000 or seed % 100 >= 6 else
-                 'validation' if seed % 100 == 5 else 'train')
+        suffix = seed % 100 if seed < 43000000 else seed % 100 % 8
+        split = ('test' if seed < 42000000 or suffix >= 6 else
+                 'validation' if suffix == 5 else 'train')
         item = dict(id=key[:16], source=str(path), source_sha256=digest(path),
                     meta_sha256=digest(path.parent / 'meta.json'), task=task,
                     context=meta.get('context'), split=split, frames=len(frames), duplicates=[])
@@ -176,9 +178,65 @@ def collect(limit=None):
         inventory_sha256=digest(OUT / 'inventory.json'), episodes=results))
 
 
+def supplement(games_per_level):
+    """Collect the existing learned policy, without a new task family or playing rule."""
+    import torch
+    from pvz_rollout_policy import load_student, act
+    from render_episode import training_task_kwargs
+    os.environ['PVZ_NO_POPUP'] = '1'
+    torch.set_num_threads(1)
+    checkpoint = Path('/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt')
+    net = load_student(checkpoint)
+    tasks = json.loads((SOURCE / 'fog_panel.json').read_text())['tasks']
+    with EventWaitEnv('/home/newbiexvwu/.cache/pvz-research-resources', executable=ENGINE) as env:
+        for level in range(31, 35):
+            template = next(t for t in tasks if t['task_id'] == f'fog_l{level}_train_f8p')
+            for i in range(games_per_level):
+                seed = 43000000 + (level - 31) * 10000 + i
+                folder = OUT / 'supplement' / f'seed_{seed}'
+                if (folder / 'meta.json').exists():
+                    continue
+                kw = training_task_kwargs(template, seed)
+                deck = tuple(kw['deck'])
+                extra = {k: v for k, v in kw['task_extra'].items() if v is not None}
+                obs, _ = env.reset(deck=deck, task=TaskSpec(level=level, seed=seed,
+                    profile=profile_for_deck(deck), **extra))
+                history, previous, action = StudentHistory(net.obs), None, None
+                frames = []
+                context = dict(multiplier=template.get('zombie_count_multiplier', 1),
+                               roster=obs['loadout_context']['zombie_roster'])
+                cv = context_vector(context['multiplier'], context['roster']) if net.context else None
+                for decision in range(3001):
+                    frame = _frame(obs)
+                    frame['action'] = action
+                    frames.append(frame)
+                    if obs['terminal'] or decision == 3000:
+                        break
+                    action = act(net, frame, previous, obs['legal_actions']['plants'],
+                                 history=history, context=cv)
+                    previous = frame
+                    obs, _, _, _, info = env.step(action)
+                    # Current student actions are legal; reject rather than silently lose evidence.
+                    assert info['ok']
+                folder.mkdir(parents=True, exist_ok=True)
+                (folder / 'frames.jsonl').write_text(''.join(json.dumps(f)+'\n' for f in frames))
+                task = dict(level=level, seed=seed, deck=list(deck), **extra,
+                            checkpoint=str(checkpoint), checkpoint_sha256=digest(checkpoint),
+                            task_id=template['task_id'], first_aid_owned=False)
+                write_json(folder / 'meta.json', dict(task=task, context=context,
+                    engine_sha256=digest(ENGINE), frames=len(frames)))
+                print(json.dumps(dict(seed=seed, frames=len(frames), terminal=obs['terminal'])), flush=True)
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('stage', choices=['inventory', 'collect'])
+    p.add_argument('stage', choices=['inventory', 'collect', 'supplement'])
     p.add_argument('--limit', type=int)
+    p.add_argument('--games-per-level', type=int, default=32)
     args = p.parse_args()
-    inventory() if args.stage == 'inventory' else collect(args.limit)
+    if args.stage == 'supplement':
+        supplement(args.games_per_level)
+    elif args.stage == 'inventory':
+        inventory()
+    else:
+        collect(args.limit)

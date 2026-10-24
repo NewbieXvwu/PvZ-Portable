@@ -1,0 +1,64 @@
+"""Task58 measurement gates: causality, chunk carry, dt and label boundaries."""
+import sys
+from pathlib import Path
+
+import numpy as np
+import pytest
+import torch
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
+from pvz_memory_probe import CONFIGS, MemoryProbe, make_probe
+from memory_probe_data import labels
+
+torch.set_num_threads(1)
+
+
+@pytest.mark.parametrize('kind', CONFIGS)
+def test_causal_and_chunk_equivalent(kind):
+    torch.manual_seed(58)
+    model = MemoryProbe(kind, 8).eval()
+    board = torch.randn(9, 2, 102, 6, 10)
+    scalar = torch.randn(9, 2, 157)
+    dt = torch.tensor([[0., 0.], [60., 30.], [0., 0.]] * 3)
+    with torch.no_grad():
+        full, _ = model(board, scalar, dt)
+        first, state = model(board[:4], scalar[:4], dt[:4])
+        second, _ = model(board[4:], scalar[4:], dt[4:], state)
+        torch.testing.assert_close(full, torch.cat((first, second)), atol=1e-6, rtol=1e-5)
+        changed = board.clone()
+        changed[5:] += 10
+        future, _ = model(changed, scalar, dt)
+        torch.testing.assert_close(full[:5], future[:5])
+        # A new episode's None state must reproduce the fresh call.
+        repeated, _ = model(board, scalar, dt, None)
+        torch.testing.assert_close(full, repeated)
+    assert full.shape == (9, 2, 35, 6, 9)
+
+
+def test_ssm_zero_dt_preserves_state_and_positive_dt_changes_it():
+    model = MemoryProbe('spatial_ssm', 8)
+    b, s = torch.randn(1, 2, 102, 6, 10), torch.randn(1, 2, 157)
+    state = torch.randn(2, 16, 6, 10)
+    _, zero = model(b, s, torch.zeros(1, 2), state)
+    torch.testing.assert_close(zero, state)
+    _, advanced = model(b, s, torch.full((1, 2), 600.), state)
+    assert not torch.allclose(zero, advanced)
+    advanced.square().mean().backward()
+    assert model.log_rate.grad.isfinite().all()
+    assert model.frequency.grad.isfinite().all()
+
+
+def test_budget_alignment():
+    counts = [sum(p.numel() for p in make_probe(k).parameters()) for k in CONFIGS]
+    assert max(counts) / min(counts) < 1.05
+
+
+def test_engine_label_onboard_and_multitype_semantics():
+    def z(x, kind=0, onboard=True):
+        return dict(row=1, x=x, type=kind, on_board=onboard)
+    y = labels(dict(zombies=[z(759), z(760, 2), z(39, 2), z(600, 3, False), z(759, 2)]))
+    assert y[0].sum() == 1
+    assert y[1, 1, 8] == y[3, 1, 8] == 1
+    assert y[1:].sum() == 2
+    assert np.isin(y, [0, 1]).all()

@@ -1,0 +1,39 @@
+{
+  "engine_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+  "corpus_sha256": "79a1fdff73162840268717d9b254004db5591baefa832f838d78d6c1c7813841",
+  "episodes": 36,
+  "frames": 14397,
+  "splits": {
+    "train": 20,
+    "validation": 4,
+    "test": 12
+  },
+  "mismatches": 0,
+  "returns": {
+    "train": 4,
+    "validation": 2,
+    "test": 2
+  },
+  "parameters": {
+    "current": {
+      "width": 86,
+      "parameters": 100885
+    },
+    "stack4": {
+      "width": 55,
+      "parameters": 98991
+    },
+    "stack8": {
+      "width": 35,
+      "parameters": 99331
+    },
+    "convgru": {
+      "width": 39,
+      "parameters": 101258
+    },
+    "spatial_ssm": {
+      "width": 56,
+      "parameters": 99163
+    }
+  }
+}
