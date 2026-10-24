@@ -751,6 +751,112 @@ B 的实施方案：以明确目录建立含相对路径、字节数、SHA256、
 | 2026-10-24T16:47:44+08:00 | 2-B源目录删除 | `~/pvz-lane` | 113231912960 | 112553816064 | 678096896 | 完成：HF 固定 revision dab418c1b8d1bd9f45a5ffb8483d484cdae4e918 已下载回验，索引 pvz_lane |
 | 2026-10-24T16:47:44+08:00 | 1-配方回归核验 | `~/PvZ-search/.claude/worktrees/cleanup/python/test_recipe.py` | 112554008576 | 112554008576 | 0 | 完成：旧测试强制访问已移除的可选字段导致 KeyError；已改为验证默认 None 和剩余必选路径可移植；pytest test_recipe.py：8 passed、18 subtests passed（13.19s） |
 | 2026-10-24T16:48:14+08:00 | 2-阶段汇总 | `~/PvZ-search/artifacts/hard/branch`；`~/PvZ-search/artifacts/hard/branch3`；`~/PvZ-search/artifacts/night`；`~/PvZ-search/artifacts/relabel`；`~/PvZ-Portable/artifacts`；`~/pvz-lane` | 122237755392 | 112555196416 | 9682558976 | 完成：6 组均完成 HF 固定 revision 下载 SHA256/字节数回验后删除；所有上传/下载暂存已清；night 拆为 4GB+余片；完整索引 task62-archive-index.md |
+| 2026-10-24T17:55:37+08:00 | 3-旧帧归档回验 | `~/PvZ-search/artifacts/student/frames` | 112578510848 | 120607309824 | -8028798976 | 完成：代理传输大量发送失败降速；仅终止自有两个上传进程（均退出143），小流量实测代理0.04MiB/s、直连1.2MiB/s，改归档进程直连复用原分片/Xet数据块；固定 HF revision 782c24f44ac9c2ec6847580c683fd10bd58ccb10 强制下载所有部件，SHA256/字节数及源稳定性通过；暂存已清 |
+| 2026-10-24T17:57:41+08:00 | 3-退役旧离线视图链接 | `~/PvZ-search/artifacts/hard/vdata`；`~/PvZ-search/artifacts/hard/vdata_ctx`；`~/PvZ-search/artifacts/hard/vdata_z15`；`~/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/frames` | 120611647488 | 120596934656 | 14712832 | 完成：3592 条明确软链已随 student_frames_v1 tar 回验后逐一 unlink；全家清查结果与生产 state/recipe/dw4 视图交叉证明不在生产链；未递归删除其余 hard 数据 |
+| 2026-10-24T17:57:54+08:00 | 3-旧帧整根退役 | `~/PvZ-search/artifacts/student/frames` | 120596934656 | 102123933696 | 18473000960 | 完成：HF 固定 revision 782c24f44ac9c2ec6847580c683fd10bd58ccb10 已下载回验，索引 student_frames_v1 |
+| 2026-10-24T17:57:54+08:00 | 3-阶段汇总 | `~/PvZ-search/artifacts/student/frames` | 120609099776 | 102123933696 | 18485166080 | 完成：旧根已不存在；83030 个共享文件在 frames_v2 的 inode/字节数逐一复核未变；3592 条旧入链已归档退役；索引含取回方法 |
+| 2026-10-24T17:59:38+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/advgap` | 102125350912 | 102127976448 | -2625536 | 完成：HF archive/2026-10-24/worktrees/worktree_advgap.MANIFEST.json @ 6529e3c1d3df9caad3e45c1bb6012ddf3f1058db；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T17:59:38+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/advgap` | 102127980544 | 102075891712 | 52088832 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 88839b609bd97ef637692ec6d97246c23ba29f1a 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:01:12+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/b3` | 102075891712 | 102095044608 | -19152896 | 完成：HF archive/2026-10-24/worktrees/worktree_b3.MANIFEST.json @ 3abfd4eba6ebed56dcfdbc785d08a08c15aa8af0；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:01:12+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/b3` | 102095044608 | 101096439808 | 998604800 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD b30a75fbca82a37f09482861cfe129d3276359ae 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:01:39+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/curr` | 101096960000 | 101148155904 | -51195904 | 完成：HF archive/2026-10-24/worktrees/worktree_curr.MANIFEST.json @ 7d28d6efc21c60aa1c154ef11b018fbc247a4370；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:01:39+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/curr` | 101148160000 | 101089828864 | 58331136 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD f69ec11795704959f3deed8904f60624b7ac1dbb 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:01:53+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/curr39` | 101089828864 | 101106180096 | -16351232 | 完成：HF archive/2026-10-24/worktrees/worktree_curr39.MANIFEST.json @ 0ebd46e3d55c9bcc7ad46006859e5735b6b2ffaa；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:01:54+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/curr39` | 101106180096 | 101072064512 | 34115584 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD eec0d13a3378080e45492dff233c3ae40db9855a 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:01:54+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/dayearly` | 101072076800 | 101025452032 | 46624768 | 完成：C 类可再生产物；HEAD 1e7105efd818c219443c9eaa1fbcb9b80489ad75 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:01:54+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/deploy` | 101025452032 | 100911788032 | 113664000 | 完成：C 类可再生产物；HEAD 2a8dc97c8bb726457fb875a685438d5b8e955bcc 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:01:55+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/deploy2` | 100911665152 | 100797792256 | 113872896 | 完成：C 类可再生产物；HEAD f2ae755ab0fc2e4b617ebf56b5bcea491a89cf0d 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:04:15+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/fog` | 100797792256 | 100831576064 | -33783808 | 完成：HF archive/2026-10-24/worktrees/worktree_fog.MANIFEST.json @ 34c8df7f9cb8109634c7984ae9eae88dd9e672f1；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:04:15+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/fog` | 100831576064 | 100434640896 | 396935168 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 15b671aded5f5081bd9206d472953ba15c393518 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:05:08+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/forks` | 100434640896 | 100444631040 | -9990144 | 完成：HF archive/2026-10-24/worktrees/worktree_forks.MANIFEST.json @ fcae351a8a3feed9b52870b17adc65c51eea36af；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:05:09+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/forks` | 100444631040 | 99951419392 | 493211648 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 0e9738d78e76a2bbdf8fccfb4a811fa27d8ff4fc 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:05:44+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/identity` | 99951419392 | 99952304128 | -884736 | 完成：HF archive/2026-10-24/worktrees/worktree_identity.MANIFEST.json @ b860b84b75e56f829823dd84825cdcb15a00d244；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:05:44+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/identity` | 99952312320 | 99770105856 | 182206464 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD e8b2782e0ff8bbb0ad789f8c5f41f04f0ce4e2ef 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:06:13+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/keep` | 99770105856 | 99771478016 | -1372160 | 完成：HF archive/2026-10-24/worktrees/worktree_keep.MANIFEST.json @ 80ec6f9744e49fa3147efe2253ab2cd9a7d13847；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:06:13+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/keep` | 99771478016 | 99707736064 | 63741952 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 7d98a5fecce8eefe53d93e77548017809013c52b 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:06:31+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/l20diag` | 99707736064 | 99708608512 | -872448 | 完成：HF archive/2026-10-24/worktrees/worktree_l20diag.MANIFEST.json @ 045b451d95ead555609cc82ff16bf67dac89d52b；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:06:31+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/l20diag` | 99708608512 | 99661221888 | 47386624 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 86b82ac40a0f3da653eb1bae46f839c6b4a361bb 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:06:51+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/l20gap` | 99661221888 | 99661967360 | -745472 | 完成：HF archive/2026-10-24/worktrees/worktree_l20gap.MANIFEST.json @ a3ed1f1a14f944bd38a3df29175321b114e39541；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:06:51+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/l20gap` | 99661967360 | 99599290368 | 62676992 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 75f16e28de2df9aaf520562deb0471a8a963025b 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:07:07+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/macpool` | 99599290368 | 99599409152 | -118784 | 完成：HF archive/2026-10-24/worktrees/worktree_macpool.MANIFEST.json @ 7a43f56302a431cd8a5dc1f751f66ecc4ed63830；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:07:07+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/macpool` | 99599413248 | 99563163648 | 36249600 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD a4589db5f6b356acc9c84ae0f7845e87e7d84de1 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:07:25+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/n10p` | 99563163648 | 99563421696 | -258048 | 完成：HF archive/2026-10-24/worktrees/worktree_n10p.MANIFEST.json @ 1a437b2c2eeff7f8a4b3d5c69a695138e66c5b6a；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:07:25+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/n10p` | 99563421696 | 99512651776 | 50769920 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD d4caa1a86237b7a2ee3f2226135bd246a4c15557 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:07:47+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/night` | 99512655872 | 99513991168 | -1335296 | 完成：HF archive/2026-10-24/worktrees/worktree_night.MANIFEST.json @ 8f54f30fb196b50990d13c66c48f03d371940bca；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:07:47+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/night` | 99513991168 | 99462377472 | 51613696 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 81810b50b950817c74f756180ac6684696f88b0d 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:08:11+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/nightn10` | 99462377472 | 99463020544 | -643072 | 完成：HF archive/2026-10-24/worktrees/worktree_nightn10.MANIFEST.json @ b015518230e9f2bd3eb07b82cbd7632146b7812e；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:08:11+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/nightn10` | 99463020544 | 99413975040 | 49045504 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 615f35b6d41391f3e7e3e19febee7af064feeef3 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:08:11+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/oom` | 99413975040 | 99390226432 | 23748608 | 完成：C 类可再生产物；HEAD f4a3f17c07574c929637970a16e2b40523c7e3bf 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:08:32+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/pool` | 99390230528 | 99391778816 | -1548288 | 完成：HF archive/2026-10-24/worktrees/worktree_pool.MANIFEST.json @ 3a3208eef2238334ec373374e725129154fa737f；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:08:33+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/pool` | 99391778816 | 99342299136 | 49479680 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD c9d5066704975790b4486ae6f205a971d7dda15b 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:08:33+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/q101` | 99342299136 | 99295907840 | 46391296 | 完成：C 类可再生产物；HEAD 9ccf55373551102fa253b9873082e0d00f4c3a16 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:08:45+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/qcalloc` | 99295907840 | 99296182272 | -274432 | 完成：HF archive/2026-10-24/worktrees/worktree_qcalloc.MANIFEST.json @ 24001d3e6eead6c2cf7199d70ba211325a23d211；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:08:45+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/qcalloc` | 99296182272 | 99269693440 | 26488832 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 539cb2d8592e077994d7fe3c3c495d1f322b727d 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:10:34+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/qcbench` | 99269693440 | 99275304960 | -5611520 | 完成：HF archive/2026-10-24/worktrees/worktree_qcbench.MANIFEST.json @ efb777252643e418faab3390648b4c34ae8939db；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:10:34+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/qcbench` | 99275304960 | 98651410432 | 623894528 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 828c503e4c14f9aa9b4f084a8b9a2b23480e8f7a 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:10:34+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/qcpack` | 98651418624 | 98625101824 | 26316800 | 完成：C 类可再生产物；HEAD 25f1a529a640065dbaab547feb02061d86794b1a 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:11:39+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/qcpipe` | 98625126400 | 98626777088 | -1650688 | 完成：HF archive/2026-10-24/worktrees/worktree_qcpipe.MANIFEST.json @ ce6d6043bfb317af276f7f037c471557c6f0dc57；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:11:39+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/qcpipe` | 98626777088 | 98481057792 | 145719296 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD b48fac4fe60fcba8a9bbd21f953bf257177ea752 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:12:27+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/recipe` | 98481057792 | 98484637696 | -3579904 | 完成：HF archive/2026-10-24/worktrees/worktree_recipe.MANIFEST.json @ 5d0738c5eba4c2dc7b2ffacb13c8e0b5a29f8e9c；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:12:27+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/recipe` | 98484637696 | 98356260864 | 128376832 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 174b16b55109604705bf9284abe322b560b635d1 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:14:46+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/roof` | 98356260864 | 98363768832 | -7507968 | 完成：HF archive/2026-10-24/worktrees/worktree_roof.MANIFEST.json @ d671c02fc8e8f115e36909cd3f471eba3ec5ba88；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:14:46+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/roof` | 98363768832 | 97786949632 | 576819200 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 575d7da0bb76885f31941fb6282beb488615960f 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:14:47+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/rowpool` | 97786949632 | 97740832768 | 46116864 | 完成：C 类可再生产物；HEAD 4703cf11d230bb26ff9c437b23b8c9b81fe0e430 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:14:47+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/rowpool2` | 97740836864 | 97694830592 | 46006272 | 完成：C 类可再生产物；HEAD d6c8e5eb60b123e8c5fe880ee928685bc3c4920e 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:14:47+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/slimworker` | 97694830592 | 97648705536 | 46125056 | 完成：C 类可再生产物；HEAD 67c12e57f279d0e85522148d23a72658ae979f73 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:15:05+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/teacher` | 97648705536 | 97649913856 | -1208320 | 完成：HF archive/2026-10-24/worktrees/worktree_teacher.MANIFEST.json @ 602de53fd8994cf8921515e61a0a9f59e12695df；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:15:05+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/teacher` | 97649917952 | 97552912384 | 97005568 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD 2fdab81c90a62496f3cf5c2a70fed4d3c1d61ff7 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:15:21+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/termmerge` | 97553043456 | 97553547264 | -503808 | 完成：HF archive/2026-10-24/worktrees/worktree_termmerge.MANIFEST.json @ aee1892428775e211008f520c03b93c9afac8e52；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:15:21+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/termmerge` | 97553547264 | 97519259648 | 34287616 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD b5d29130aa683e6e6236a207e7c6c3f89e02884e 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:15:36+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/trainmem` | 97519259648 | 97520074752 | -815104 | 完成：HF archive/2026-10-24/worktrees/worktree_trainmem.MANIFEST.json @ 5f826d3eca0e1fffc1ae3bef028a33afa8397f82；全部部件强制下载、SHA256/字节数一致；源元数据稳定；上传/下载暂存已清除；详细清单在 HF MANIFEST |
+| 2026-10-24T18:15:37+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/trainmem` | 97520074752 | 97487884288 | 32190464 | 完成：ignored/untracked 证据已在 HF 下载回验；HEAD ff597f6da9189ac090896deae48bc9c1b5765b0c 已被 origin/pvz-env 包含，branch -r --contains 有远端；git worktree remove 无 force；保留分支 |
+| 2026-10-24T18:43:33+08:00 | 4-工作树证据-归档回验 | `~/PvZ-search/.claude/worktrees/vnet` | 93209493504 | 93069500416 | 139993088 | 完成：GNU sparse tar 本地逐文件 SHA256/字节数一致；HF 固定 revision e3b3b66bf77884e997574fad144e2e28ab532664 强制下载部件和 MANIFEST 回验一致；原始逻辑文件完整保留 |
+| 2026-10-24T18:43:34+08:00 | 4-工作树退役 | `~/PvZ-search/.claude/worktrees/vnet` | 93069508608 | 91897368576 | 1172140032 | 完成：证据下载回验后 git worktree remove；原分支保留；HEAD e6c68f3ac18d4614f028e9430f80506dc105f562 已在 origin/pvz-env |
+| 2026-10-24T18:57:01+08:00 | 4-prunable元数据 | `~/PvZ-Portable/.git/worktrees` | 91924418560 | 91923505152 | 913408 | 完成：git worktree prune --expire now；已验证全部原有分支仍在；仅清理不存在路径的过期元数据 |
+| 2026-10-24T20:09:19+08:00 | 4-待传tar临时副本清理 | `~/task62-archive-stage/worktree_v5` | 92585099264 | 90036670464 | 2548428800 | 完成：HF私有存储额度不足；仅删除本任务生成、可由保留原证据重建的临时tar，未删除未回验的源目录；保留文件级MANIFEST与操作脚本便于恢复 |
+| 2026-10-24T20:09:19+08:00 | 4-待传tar临时副本清理 | `~/task62-archive-stage/worktree_zones` | 90036670464 | 89768587264 | 268083200 | 完成：HF私有存储额度不足；仅删除本任务生成、可由保留原证据重建的临时tar，未删除未回验的源目录；保留文件级MANIFEST与操作脚本便于恢复 |
+
+### 第二阶段进度检查点（2026-10-24T20:09:19+08:00，尚未完成）
+
+- 步骤1–3完成：批准的 C 清单与追加项、6组B数据、旧frames整根及3592条离线入链均按先验后删执行；83,030个正式共享文件再次逐项核验 inode/字节数一致。
+- 步骤4已完成 **33/35 棵工作树**，合计 **31组HF归档**全部下载回验；所有原有分支保留，4条prunable元数据已清。qcalloc 仅有控制器重建的100B `.keep` 占位目录，已不在Git工作树注册表，没有旧代码或实验数据。
+- 剩余 **v5 / zones**：HF服务端明确返回 `Private storage limit reached`，分别约2.54GB / 267MB预备tar无法提交。无损稀疏格式对v5未减小，对vnet从约1.04GB降到422MB并已成功回验退役；未为腾配额删除任何已有HF备份，也未改写历史或公开私有数据。
+- 待传源证据仍保留；仅清除了本任务生成的重复tar暂存。文件级MANIFEST及恢复操作脚本保留在 `~/.task62-cleanup-state/`，待可用私有空间恢复后从步骤4继续。待传表见[归档索引](task62-archive-index.md)。
+- 原批准保留的12棵工作树全部存在；其他任务运行期间新建的 ['eaten', 'predeploy11', 'replace'] 不属本次授权，未处理。生产四模型/deploy3构建SHA256、主检出tracked diff指纹均与保护快照一致；task58和pipeline数据保留。
+- **步骤5 fstrim 尚未执行**，未关闭WSL。最新主控指示停止上传、列出待传清单后等待；是否扩容HF或清理远端旧内容由用户决定，不再请求或自动执行。
+- 当前df已用 **89768595456 B（83.604 GiB）**；相对本阶段首次删除前 168604545024 B，净减少 **73.422 GiB**，含生产并发增长及映射释放，不能以删除目录du简单相加。
+
+```text
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd       1007G   84G  873G   9% /
+```
+
+### 主控收口：停止上传并等待（2026-10-24T20:13:24+08:00）
+
+按最新主控通知，HF `BadRequestError: Private storage limit reached` 为私有存储额度限制；已停止全部上传重试，当前没有本任务上传进程。主控告知仓库54.8 GB、当天archive占31.8 GB，此处作为通知记录，不作为重新上传依据。是否升级HF或清理远端旧内容由用户决定，本任务未执行这些操作。
+
+不需要上传的获批C类清理，以及无ignored证据或证据已经下载回验的工作树退役均已完成。35棵批准退役工作树中已完成33棵；其余2棵因证据未回验而保留。31组已上传归档均在固定revision强制下载核对SHA256/字节数后才删除源数据。
+
+**待上传未删**（下表为整棵源工作树当前 `du -s -B1` 实占，包含代码和证据；归档证据大小另见索引）：
+
+| 保留的本地路径 | 实占 B | 实占 GiB | 状态 |
+|---|---:|---:|---|
+| `/home/newbiexvwu/PvZ-search/.claude/worktrees/v5` | 2,570,493,952 | 2.394 | 未上传成功、未下载回验；源证据与工作树均保留 |
+| `/home/newbiexvwu/PvZ-search/.claude/worktrees/zones` | 293,486,592 | 0.273 | 未上传成功、未下载回验；源证据与工作树均保留 |
+
+文件级MANIFEST保留于 `~/.task62-cleanup-state/worktree_v5.MANIFEST.json`、`worktree_zones.MANIFEST.json`。先前清除的仅是本任务生成的可重建tar临时副本，未回验的原始证据一律未删。
+
+当前df（生产仍在运行，数值会变化）：
+
+```text
+Filesystem         1B-blocks        Used    Available Use% Mounted on
+/dev/sdd       1081101176832 89895436288 936213385216   9% /
+
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd       1007G   84G  872G   9% /
+```
+
+按主控要求在此暂停，等待主控；fstrim尚未执行，WSL未关闭。后续不自动恢复上传、不处理剩余两棵工作树。
 
 ## 问题
 
