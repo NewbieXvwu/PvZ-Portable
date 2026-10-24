@@ -1,5 +1,5 @@
 {
- "stage": "teacher_v5_calibration_complete",
+ "stage": "teacher_v5_dispersion_complete",
  "task_complete": false,
  "training_complete": true,
  "acceptance_complete": false,
@@ -1225,6 +1225,67 @@
         "actual": 0.0
        }
       ]
+     }
+    }
+   }
+  },
+  {
+   "stage": "teacher_v5_dispersion_complete",
+   "details": {
+    "v3": {
+     "pool_l24_eval_p9k": {
+      "decisions": 320,
+      "games": 4,
+      "mean_candidates": 5.58125,
+      "mean_scored": 5.58125,
+      "mean_leaf": 0.0036829875,
+      "mean_std": 0.00122001875,
+      "median_std": 0.0005239999999999999,
+      "mean_gap": 0.001325384375,
+      "median_gap": 0.000481,
+      "share_gap_below_margin": 0.996875,
+      "share_overridden": 0.00625
+     },
+     "pool_l26_eval_p9k": {
+      "decisions": 320,
+      "games": 4,
+      "mean_candidates": 5.509375,
+      "mean_scored": 5.509375,
+      "mean_leaf": 0.0010451125,
+      "mean_std": 0.00031125,
+      "median_std": 0.00019549999999999998,
+      "mean_gap": 0.000322103125,
+      "median_gap": 0.000128,
+      "share_gap_below_margin": 1.0,
+      "share_overridden": 0.0
+     }
+    },
+    "v4": {
+     "pool_l24_eval_p9k": {
+      "decisions": 320,
+      "games": 4,
+      "mean_candidates": 5.3375,
+      "mean_scored": 5.3375,
+      "mean_leaf": 0.45053379375,
+      "mean_std": 0.049766396875,
+      "median_std": 0.041818,
+      "mean_gap": 0.0305300125,
+      "median_gap": 0.015588,
+      "share_gap_below_margin": 0.590625,
+      "share_overridden": 0.33125
+     },
+     "pool_l26_eval_p9k": {
+      "decisions": 320,
+      "games": 4,
+      "mean_candidates": 5.315625,
+      "mean_scored": 5.315625,
+      "mean_leaf": 0.25090733125,
+      "mean_std": 0.045000225,
+      "median_std": 0.031190000000000002,
+      "mean_gap": 0.030398146875,
+      "median_gap": 0.015144000000000001,
+      "share_gap_below_margin": 0.628125,
+      "share_overridden": 0.259375
      }
     }
    }
