@@ -13,9 +13,10 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
                               MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
-                              adjust, allocate, build_plan, command_for, label_for, load_teacher_rates,
-                              make_state, pack_command, pack_labels, parse_task_id, plan_round, rate,
-                              reconcile_cells, startup_worker_estimate, student_rate,
+                              adjust, allocate, build_plan, cell_level, command_for, label_for,
+                              load_demo_start_cells, load_teacher_rates, make_state, pack_command,
+                              pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
+                              reconcile_start_cells, startup_worker_estimate, student_rate,
                               training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
@@ -477,6 +478,9 @@ class CurriculumRulesTest(unittest.TestCase):
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
         self.assertEqual(label_for(1, 'night_l12_train_n10', 1.0), 'c1n12n10m100')
+        # task71: 示范起点格的标签记起点决策号，不记倍率
+        self.assertEqual(label_for(2, 'demo_fog_33_cactus_snow_m200', 839, start=839),
+                         'c2demofog33cactussnowm200s839')
 
 
 class ReconcileCellsTest(unittest.TestCase):
@@ -764,6 +768,135 @@ class TrainingRestartTest(unittest.TestCase):
                 pipeline = queue.TrainingPipeline(args, state)
             self.assertEqual(pipeline.last_pack_peak, int(0.40 * GIB) // 2)   # 单建造者实测
             self.assertEqual(pipeline.last_train_peak, int(3.53 * GIB))
+
+
+class DemoStartCellsTest(unittest.TestCase):
+    """task71：示范起点格——档位是起点决策号，未来随机流走 RESEED。"""
+
+    BASE = 'demo_fog_33_cactus_snow_m200'
+    LADDER = [800, 600, 400]
+
+    def start_cell(self, mult_index=0, windows=None):
+        return dict(family='demo_start', level=33, mult_index=mult_index, last_round=0,
+                    windows=windows or {}, ladder=list(self.LADDER), task_id=self.BASE,
+                    archive='/archives/demo', seeds=[900 + index for index in range(6)])
+
+    def test_ladder_promotes_earlier_and_demotes_later(self):
+        cells = {'start': self.start_cell(windows={'800': {'recent': [1] * 10, 'wins': 10, 'games': 10}})}
+        changes = adjust(cells, VALUES)
+        self.assertEqual(cells['start']['mult_index'], 1)      # 升档 = 起点往前挪（800 -> 600）
+        self.assertEqual(len(changes), 1)
+        cells['start']['windows']['600'] = {'recent': [0] * 10, 'wins': 0, 'games': 10}
+        adjust(cells, VALUES)
+        self.assertEqual(cells['start']['mult_index'], 0)      # 降档 = 起点往后挪
+        # 最晚一档（下标 0）不再降；最早一档（下标 2）不再升
+        bottom = {'start': self.start_cell(mult_index=2, windows={'400': {'recent': [1] * 10, 'wins': 10, 'games': 10}})}
+        adjust(bottom, VALUES)
+        self.assertEqual(bottom['start']['mult_index'], 2)
+        top = {'start': self.start_cell(windows={'800': {'recent': [0] * 10, 'wins': 0, 'games': 10}})}
+        adjust(top, VALUES)
+        self.assertEqual(top['start']['mult_index'], 0)
+
+    def test_cell_level_reads_the_ladder(self):
+        self.assertEqual(cell_level(self.start_cell(mult_index=2), VALUES), 400)
+        self.assertEqual(cell_level(cell(5, 10, mult_index=3), VALUES), 1.75)
+
+    def test_plan_round_slices_the_future_seed_block(self):
+        state = dict(round=0, offsets={}, cells={self.BASE: self.start_cell()})
+        manifests = {self.BASE: Path('/tmp/human_demo_tasks.json')}
+        plan, _ = plan_round(state, {}, NAMES, VALUES, manifests, budget=2, per_group=2)
+        self.assertEqual(len(plan), 1)
+        item = plan[0]
+        self.assertEqual((item['task_id'], item['demo_decision'], item['offset']), (self.BASE, 800, 0))
+        self.assertEqual(item['future_seeds'], [900, 901])
+        self.assertEqual(item['label'], 'c1demofog33cactussnowm200s800')
+        self.assertEqual(item['multiplier'], 800)             # 档位 = 起点决策号
+        state['offsets'][self.BASE] = 5
+        plan, _ = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        self.assertEqual(plan[0]['future_seeds'], [905])       # 只剩一个未来种子
+        state['offsets'][self.BASE] = 6
+        with self.assertRaises(SystemExit):
+            plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+
+    def test_start_command_is_deterministic_and_carries_the_start(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                               static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=4,
+                               executable=Path('/exe'), resource_dir=Path('/res'),
+                               frames=Path('/frames'), out=Path('/out'))
+        first = command_for(args, Path('/tmp/manifest.json'), self.BASE, 0, 2, 'c1x',
+                            demo_archive='/archives/demo', demo_decision=800, future_seeds=[900, 901])
+        second = command_for(args, Path('/tmp/manifest.json'), self.BASE, 0, 2, 'c1x',
+                             demo_archive='/archives/demo', demo_decision=800, future_seeds=[900, 901])
+        self.assertEqual(first, second)
+        self.assertEqual(first[first.index('--demo-archive') + 1], '/archives/demo')
+        self.assertEqual(first[first.index('--demo-decision') + 1], '800')
+        self.assertEqual(first[first.index('--future-seeds') + 1], '900,901')
+        # 偏移必须是 0：search_play 在 --demo-archive 下要求示范种子落在选中的清单段里
+        self.assertEqual(first[first.index('--seed-offset') + 1], '0')
+        self.assertEqual(first[first.index('--seeds') + 1], '2')
+        plain = command_for(args, Path('/tmp/panel.json'), 'day_l7_train_d7', 4, 2, 'c1d7m100')
+        self.assertNotIn('--demo-archive', plain)
+        self.assertEqual(plain[plain.index('--seed-offset') + 1], '4')
+
+    def test_load_demo_start_cells_validates_and_resolves(self):
+        document = {'tasks': [
+            {'task_id': self.BASE, 'level': 33, 'demo_start': {
+                'archive': 'artifacts/human_demo/raw/seed_20261033/' + self.BASE,
+                'decisions': self.LADDER, 'index': 1, 'future_seeds': [900, 901, 902]}},
+            {'task_id': 'plain', 'level': 31},
+        ]}
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / 'tasks.json'
+            path.write_text(json.dumps(document))
+            cells, manifests = load_demo_start_cells(path)
+            self.assertEqual(set(cells), {self.BASE})
+            self.assertEqual(cells[self.BASE]['ladder'], self.LADDER)
+            self.assertEqual(cells[self.BASE]['mult_index'], 1)
+            self.assertTrue(Path(cells[self.BASE]['archive']).is_absolute())
+            self.assertEqual(manifests, {self.BASE: path})
+            document['tasks'][0]['demo_start']['decisions'] = [400, 600, 800]
+            path.write_text(json.dumps(document))
+            with self.assertRaises(ValueError):
+                load_demo_start_cells(path)
+
+    def test_reconcile_leaves_panel_cells_byte_identical(self):
+        tasks = {f'night_l{level}_train_n10q': dict(task_id=f'night_l{level}_train_n10q', level=level,
+                                                    zombie_count_multiplier=1.0)
+                 for level in N10_LEVELS}
+        specs = {self.BASE: self.start_cell()}
+        plain = make_state(tasks, NAMES, {}, {}, 'panel.json')
+        with_start = make_state(tasks, NAMES, {}, {}, 'panel.json', specs)
+        self.assertEqual(json.dumps(plain['cells'], sort_keys=True),
+                         json.dumps({k: v for k, v in with_start['cells'].items() if k != self.BASE},
+                                    sort_keys=True))
+        self.assertIn(self.BASE, with_start['cells'])
+        # 再对齐一次是幂等的；清单删掉这个格就退休
+        self.assertEqual(reconcile_start_cells(with_start, specs), [])
+        self.assertEqual(reconcile_start_cells(with_start, {}), [f'start cell retired: {self.BASE}'])
+        self.assertNotIn(self.BASE, with_start['cells'])
+
+    def test_reconcile_updates_a_changed_ladder_and_clamps_the_rung(self):
+        state = dict(cells={self.BASE: self.start_cell(mult_index=2)}, retired_cells={})
+        spec = dict(self.start_cell(), ladder=[800, 600])
+        lines = reconcile_start_cells(state, {self.BASE: spec})
+        self.assertEqual(state['cells'][self.BASE]['mult_index'], 1)
+        self.assertEqual(len(lines), 1)
+        self.assertIn('ladder', lines[0])
+
+    def test_registered_manifest_start_cells(self):
+        manifest = ROOT / 'configs/human_demo_tasks.json'
+        cells, _ = load_demo_start_cells(manifest)
+        self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_33_cactus_snow_m200',
+                                      'demo_fog_33_cattail_snow_m200'})
+        for task_id, spec in cells.items():
+            self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
+            self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
+            self.assertTrue(Path(spec['archive']).is_dir(), spec['archive'])
+            self.assertGreaterEqual(len(spec['seeds']), 32, task_id)
+            # 起点之前的示范动作走 human 导出，不走起点格
+            meta = json.loads((Path(spec['archive']) / 'meta.json').read_text())
+            self.assertTrue(meta['verified'], task_id)
+            self.assertEqual(meta['label_source'], 'human', task_id)
 
 
 if __name__ == '__main__':
