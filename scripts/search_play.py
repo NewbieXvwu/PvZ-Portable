@@ -769,13 +769,13 @@ def _play(job: dict) -> dict:
         # Why this game was lost, in the terms the report needs: the wave, what was still on the
         # board and which zombies had reached the house. Cheap enough to keep in games.jsonl; the
         # frame archive is optional and often off.
-        stats["loss_snapshot"] = {
-            "tick": obs.get("tick"), "wave": obs.get("wave"),
-            "zombies": [[z.get("type"), z.get("row"), z.get("col"), z.get("health")]
-                        for z in (obs.get("zombies") or [])],
-            "plants": [[p.get("type"), p.get("row"), p.get("col"), p.get("health")]
-                       for p in (obs.get("plants") or [])],
-            "mowers": [[m[0], m[1]] for m in (obs.get("mowers") or [])]}
+        # _frame normalises both observation formats (the native rollout returns the lean one):
+        # plants [row, col, type, health, max], zombies [row, type, x, vx, hp, on_board, eating,
+        # chilled, ice_trap, id], mowers [row, state].
+        loss = _frame(obs)
+        stats["loss_snapshot"] = {"tick": loss["tick"], "wave": loss["wave"],
+                                  "plants": loss["plants"], "zombies": loss["zombies"],
+                                  "mowers": loss["mowers"]}
     result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
