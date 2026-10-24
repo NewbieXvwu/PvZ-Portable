@@ -85,7 +85,8 @@ class Recorder:
                                       '僵尸进屋' if obs['terminal'] else '中途结束',
                                       final_wave=obs['wave'], wave_count=obs['wave_count'],
                                       final_tick=obs['tick'], actions=self.frame_count - 1,
-                                      plants_eaten=self.events.get('plants_eaten', 0)))
+                                      plants_eaten=self.events.get('plants_eaten', 0),
+                                      plants_eaten_free=self.events.get('plants_eaten_free', 0)))
         (self.archive / 'meta.json').write_text(json.dumps(self.meta, ensure_ascii=False, indent=2) + '\n')
 
     def step(self, action):
@@ -200,6 +201,7 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
                                 wave_count=obs['wave_count'], final_tick=obs['tick'],
                                 reason='通关' if obs['result'] == 1 else '僵尸进屋' if obs['terminal'] else '中途结束',
                                 mowers_used=mowers - mowers_left, plants_eaten=events.get('plants_eaten', 0),
+                                plants_eaten_free=events.get('plants_eaten_free', 0),
                                 override_rejected=rejected)}
         return obs, meta, changed_frames
     return obs, meta, frames[:decision] if decision is not None else frames

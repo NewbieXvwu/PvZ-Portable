@@ -2414,7 +2414,7 @@ void Zombie::UpdateZombieJalapenoHead()
 				//Rect aPlantRect = aPlant->GetPlantRect();
 				if (aPlant->mRow == mRow && !aPlant->NotOnGround())
 				{
-					mBoard->mPlantsEaten++;
+					mBoard->CountPlantEaten(aPlant);
 					aPlant->Die();
 				}
 			}
@@ -2427,7 +2427,7 @@ void Zombie::UpdateZombieJalapenoHead()
 			//Rect aPlantRect = aPlant->GetPlantRect();
 			if (aPlant->mRow == mRow && !aPlant->NotOnGround())
 			{
-				mBoard->mPlantsEaten++;
+				mBoard->CountPlantEaten(aPlant);
 				aPlant->Die();
 			}
 		}
@@ -6489,7 +6489,7 @@ void Zombie::SquishAllInSquare(int theX, int theY, ZombieAttackType theAttackTyp
 
 			if (aPlant->mSeedType != SeedType::SEED_SPIKEROCK)
 			{
-				mBoard->mPlantsEaten++;
+				mBoard->CountPlantEaten(aPlant);
 				aPlant->Squish();
 			}
 		}
@@ -7111,7 +7111,7 @@ void Zombie::EatPlant(Plant* thePlant)
 	{
 		mApp->PlaySample(SOUND_GULP);
 
-		mBoard->mPlantsEaten++;
+		mBoard->CountPlantEaten(thePlant);
 		thePlant->Die();
 		mBoard->mChallenge->ZombieAtePlant(thePlant);
 
@@ -7405,7 +7405,7 @@ void Zombie::BungeeDie()
 		Plant* aPlant = mBoard->mPlants.DataArrayTryToGet(static_cast<unsigned int>(mTargetPlantID));
 		if (aPlant)
 		{
-			mBoard->mPlantsEaten++;
+			mBoard->CountPlantEaten(aPlant);
 			aPlant->Die();
 		}
 	}

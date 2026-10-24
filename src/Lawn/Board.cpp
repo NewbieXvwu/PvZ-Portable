@@ -154,6 +154,7 @@ Board::Board(LawnApp* theApp)
 	mMinFPS = 1000.0f;
 	mGravesCleared = 0;
 	mPlantsEaten = 0;
+	mPlantsEatenFree = 0;
 	mPlantsShoveled = 0;
 	mZombiesKilled = 0;
 	mSunMoneyProduced = 0;
@@ -8989,7 +8990,7 @@ void Board::KillAllPlantsInRadius(int theX, int theY, int theRadius)
 			continue;
 		if (GetCircleRectOverlap(theX, theY, theRadius, aPlant->GetPlantRect()))
 		{
-			mPlantsEaten++;
+			CountPlantEaten(aPlant);
 			aPlant->Die();
 		}
 	}
@@ -9411,6 +9412,27 @@ int Board::GetCurrentPlantCost(SeedType theSeedType, SeedType theImitaterType)
 		aCost += CountPlantByType(theSeedType) * 50;
 	}
 	return aCost;
+}
+
+bool Board::PlantingWasFree(SeedType theSeedType, SeedType theImitaterType)
+{
+	// task65: 被吃植物按"种植时实际支付的费用"判零费——游戏自己的费用函数判定，不写死植物编号。
+	// 传送带关卡与 Easy Planting 种下不扣阳光（AddPlant 跳过 TakeSunMoney），一律算零费。
+	if (HasConveyorBeltSeedBank() || mApp->mEasyPlantingCheat)
+	{
+		return true;
+	}
+	return GetCurrentPlantCost(theSeedType, theImitaterType) == 0;
+}
+
+void Board::CountPlantEaten(Plant* thePlant)
+{
+	// task65: 全部被吃计数入口。mPlantsEaten 含义不变；mPlantsEatenFree 只计其中零费的。
+	mPlantsEaten++;
+	if (PlantingWasFree(thePlant->mSeedType, thePlant->mImitaterType))
+	{
+		mPlantsEatenFree++;
+	}
 }
 
 bool Board::CanUseGameObject(GameObjectType theGameObject)

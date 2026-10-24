@@ -119,6 +119,7 @@ def capture(level, seed, policy):
     outcome = dict(result, result=frames[-1]['result'], actions=result['decisions'],
         reason='通关' if result['won'] else '僵尸进屋' if result['terminal'] else '动作上限截断',
         plants_eaten=observer.events['plants_eaten'],
+        plants_eaten_free=observer.events.get('plants_eaten_free', 0),
         rejected_actions=sum(bool(f.get('action_rejected')) for f in frames))
     assert outcome['terminal'], outcome
     meta = dict(schema='episode_archive_v1', task=task, outcome=outcome,
