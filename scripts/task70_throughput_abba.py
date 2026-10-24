@@ -88,7 +88,7 @@ def main() -> None:
             command[command.index('--seeds') + 1] = '1'
             started = time.time()
             run_one(command)
-            record = read_record(out_dir / f'{label}_1' / 'games.jsonl')
+            record = read_record(out / tag / f'{label}_1')
             row[f'{tag}_seconds'] = record['seconds']
             row[f'{tag}_decisions'] = record['decisions']
             assert record['seed'] == seed, (record['seed'], seed)

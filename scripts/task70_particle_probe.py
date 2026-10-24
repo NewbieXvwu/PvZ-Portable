@@ -35,10 +35,18 @@ from types import SimpleNamespace
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import EventWaitEnv, PlayerProfileContext, TaskSpec  # noqa: E402
+from pvz_event_env import EventWaitEnv  # noqa: E402
+from pvz_env import PlayerProfileContext, TaskSpec  # noqa: E402
 from pvz_frame_store import read_frames  # noqa: E402
 
 RESOURCE_DIR = Path('/home/newbiexvwu/.cache/pvz-research-resources')
+MULT_PANEL = ROOT / 'artifacts/stage4/multiplier_panel.json'
+CELLS = (('day', 'day_l7_train_d7_m125', MULT_PANEL),
+         ('night', 'night_l14_train_n10_m125', MULT_PANEL),
+         ('pool', 'pool_l24_train_p9k_m125', MULT_PANEL),
+         ('conveyor', 'day_l10_orig_train_m125', MULT_PANEL),
+         ('roof', 'roof_l41_train_r7', ROOT / 'artifacts/task46/roof_panel.json'),
+         ('fog', 'fog_user_l31_snow', ROOT / 'artifacts/task68/fog_user_panel.json'))
 
 
 def profile_from(meta_task):
@@ -50,16 +58,14 @@ def profile_from(meta_task):
     return PlayerProfileContext()
 
 
-def task_spec_from(meta_task, seed):
-    fields = dict(level=meta_task['level'], seed=seed, playthrough=meta_task.get('playthrough', 2),
-                  profile=profile_from(meta_task))
-    for key in ('zombie_count_multiplier', 'wave_cap', 'sun_start', 'conveyor_start',
-                'fog_observation', 'loadout_mode'):
-        if meta_task.get(key) is not None:
-            fields[key] = meta_task[key]
-    if meta_task.get('preplanted'):
-        fields['preplanted'] = tuple(tuple(p) for p in meta_task['preplanted'])
-    return TaskSpec(**fields)
+def task_spec_from(task_definition, seed):
+    """Same construction as search_play's _play for the manifest task."""
+    from pvz_tasks import profile_for_deck
+    from render_episode import training_task_kwargs
+    kw = training_task_kwargs(task_definition, seed)
+    return TaskSpec(level=kw['level'], seed=kw['seed'], playthrough=2,
+                    profile=profile_for_deck(tuple(kw['deck']), kw.get('first_aid_owned', False)),
+                    **{k: v for k, v in kw['task_extra'].items() if v is not None})
 
 
 def state_hash_via_branch(env) -> str:
@@ -76,16 +82,11 @@ def state_hash_via_branch(env) -> str:
         env.release_snapshot(parent)
 
 
-def replay_and_hash(executable, frames_dir, label, seed, resource_dir=RESOURCE_DIR):
-    """Replay one archived game; return (per-decision observation digests, per-decision state hashes)."""
-    archive = frames_dir / f'seed_{seed}' / f'{label}_fast_search'
-    meta = json.loads((archive / 'meta.json').read_text())
-    frames = read_frames(archive / 'frames.npz')
-    meta_task = meta.get('task', {})
+def replay_and_hash(executable, frames, task_definition, seed, resource_dir=RESOURCE_DIR):
+    """Replay one recorded action stream; return (reset hash, obs digests, state hashes)."""
     observations, hashes = [], []
     with EventWaitEnv(resource_dir, executable=executable, headless=True) as env:
-        seed_value = meta_task.get('seed', seed)
-        obs = env.reset(deck=meta_task['deck'], task=task_spec_from(meta_task, seed_value))[0]
+        obs = env.reset(deck=task_definition['deck'], task=task_spec_from(task_definition, seed))[0]
         reset_hash = state_hash_via_branch(env)
         previous_tick = obs['tick']
         for frame in frames:
@@ -93,15 +94,15 @@ def replay_and_hash(executable, frames_dir, label, seed, resource_dir=RESOURCE_D
             if tick is None:
                 continue
             if tick > previous_tick:
-                obs, _r, _done, _t = env.step({'type': 'wait', 'ticks': tick - previous_tick})
+                obs, _r, _done, _trunc, _info = env.step({'type': 'wait', 'ticks': tick - previous_tick})
                 previous_tick = tick
             action = frame.get('action')
             if action is not None:
-                obs, _r, _done, _t = env.step(action)
+                obs, _r, _done, _trunc, _info = env.step(action)
             observations.append(hashlib.sha256(
                 json.dumps(obs, sort_keys=True, ensure_ascii=False).encode()).hexdigest())
             hashes.append(state_hash_via_branch(env))
-    return observations, hashes, reset_hash
+    return reset_hash, observations, hashes
 
 
 def compare(left, right):
@@ -121,9 +122,17 @@ def main() -> None:
     args = p.parse_args()
 
     report = {'games': []}
+    panel = {t['task_id']: t for t in json.loads(MULT_PANEL.read_text())['tasks']}
+    source_panels = {}
+    for cell, task_id, panel_path in CELLS:
+        document = json.loads(Path(panel_path).read_text())
+        source_panels[cell] = (next(t for t in document['tasks'] if t['task_id'] == task_id)
+                               if task_id in {t['task_id'] for t in document['tasks']}
+                               else panel[task_id])
     for cell in args.cells.split(','):
         # sample the student arm; its action stream is policy-determined and replayable
-        samples = sorted((args.gate / 'frames_old').glob(f'seed_*'))
+        task_definition = source_panels[cell]
+        samples = sorted((args.gate / 'frames_old').glob('seed_*'))
         done = 0
         for seed_dir in samples:
             label = f'{cell}_fast_old'
@@ -131,10 +140,11 @@ def main() -> None:
             if not (archive / 'frames.npz').exists():
                 continue
             seed = int(seed_dir.name[len('seed_'):])
-            obs_o1, hash_o1, reset_o1 = replay_and_hash(args.old, args.gate / 'frames_old', label, seed)
-            obs_n1, hash_n1, reset_n1 = replay_and_hash(args.new, args.gate / 'frames_new', label, seed)
-            obs_n2, hash_n2, reset_n2 = replay_and_hash(args.new, args.gate / 'frames_new', label, seed)
-            obs_o2, hash_o2, reset_o2 = replay_and_hash(args.old, args.gate / 'frames_old', label, seed)
+            frames = read_frames(archive / 'frames.npz')
+            reset_o1, obs_o1, hash_o1 = replay_and_hash(args.old, frames, task_definition, seed)
+            reset_n1, obs_n1, hash_n1 = replay_and_hash(args.new, frames, task_definition, seed)
+            reset_n2, obs_n2, hash_n2 = replay_and_hash(args.new, frames, task_definition, seed)
+            reset_o2, obs_o2, hash_o2 = replay_and_hash(args.old, frames, task_definition, seed)
             game = {
                 'cell': cell, 'seed': seed, 'label': label,
                 'reset_state_hash': {'old_run1': reset_o1, 'old_run2': reset_o2,
