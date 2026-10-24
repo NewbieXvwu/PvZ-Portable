@@ -95,3 +95,5 @@
 - [task23-dw4i-unified-panel.md](docs/task23-dw4i-unified-panel.md)
 
 - [unified-panel.md](docs/unified-panel.md)
+
+- [task68-fog31-snow-qc.md](docs/task68-fog31-snow-qc.md)
