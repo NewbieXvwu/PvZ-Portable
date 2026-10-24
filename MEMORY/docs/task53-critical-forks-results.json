@@ -1,0 +1,4068 @@
+{
+ "status": "complete_negative_finetune_feasibility_result_no_deployment",
+ "frozen_inputs": {
+  "rollout_policy": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+   "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+  },
+  "value": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+  },
+  "static_value": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "executable": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+   "sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+  },
+  "collector": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/critical_forks.py",
+   "sha256": "c83d67e9182a74f41556e3d27ca27b35cd83cd2712f9feb1438c58971e7518fd"
+  },
+  "search": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/search_play.py",
+   "sha256": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c"
+  },
+  "env": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/python/pvz_env.py",
+   "sha256": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18"
+  },
+  "student_features": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/python/pvz_student_observation.py",
+   "sha256": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5"
+  }
+ },
+ "by_terrain": {
+  "day": {
+   "games": 8,
+   "roots": 15,
+   "labels": 3363,
+   "wins": 1528,
+   "v4_agreement": {
+    "won": {
+     "all_pairs": {
+      "pairs": 12144,
+      "accuracy": 0.5134634387351779,
+      "game_cluster_bootstrap_95": [
+       0.4763436790310371,
+       0.5246106936730915
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 3147,
+      "accuracy": 0.49602796313949793,
+      "game_cluster_bootstrap_95": [
+       0.49602796313949793,
+       0.49602796313949793
+      ]
+     }
+    },
+    "wave": {
+     "all_pairs": {
+      "pairs": 564,
+      "accuracy": 0.6861702127659575,
+      "game_cluster_bootstrap_95": [
+       0.24013157894736842,
+       0.9354026845637584
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 91,
+      "accuracy": 0.0989010989010989,
+      "game_cluster_bootstrap_95": [
+       0.0,
+       0.1
+      ]
+     }
+    },
+    "tick": {
+     "all_pairs": {
+      "pairs": 1098,
+      "accuracy": 0.8756830601092896,
+      "game_cluster_bootstrap_95": [
+       0.4382716049382716,
+       0.9673871824042473
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 17,
+      "accuracy": 0.11764705882352941,
+      "game_cluster_bootstrap_95": [
+       0.0,
+       0.3333333333333333
+      ]
+     }
+    },
+    "mowers_used": {
+     "all_pairs": {
+      "pairs": 0,
+      "accuracy": null,
+      "game_cluster_bootstrap_95": null
+     },
+     "nonterminal_v4_only": {
+      "pairs": 0,
+      "accuracy": null,
+      "game_cluster_bootstrap_95": null
+     }
+    }
+   }
+  },
+  "night": {
+   "games": 8,
+   "roots": 16,
+   "labels": 2940,
+   "wins": 0,
+   "v4_agreement": {
+    "won": {
+     "all_pairs": {
+      "pairs": 0,
+      "accuracy": null,
+      "game_cluster_bootstrap_95": null
+     },
+     "nonterminal_v4_only": {
+      "pairs": 0,
+      "accuracy": null,
+      "game_cluster_bootstrap_95": null
+     }
+    },
+    "wave": {
+     "all_pairs": {
+      "pairs": 2201,
+      "accuracy": 0.5154475238527941,
+      "game_cluster_bootstrap_95": [
+       0.5154475238527941,
+       0.5154475238527941
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 20,
+      "accuracy": 0.3,
+      "game_cluster_bootstrap_95": [
+       0.3,
+       0.3
+      ]
+     }
+    },
+    "tick": {
+     "all_pairs": {
+      "pairs": 435,
+      "accuracy": 0.8540229885057471,
+      "game_cluster_bootstrap_95": [
+       0.5,
+       0.9835164835164835
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 6,
+      "accuracy": 0.16666666666666666,
+      "game_cluster_bootstrap_95": [
+       0.16666666666666666,
+       0.16666666666666666
+      ]
+     }
+    },
+    "mowers_used": {
+     "all_pairs": {
+      "pairs": 45,
+      "accuracy": 0.5,
+      "game_cluster_bootstrap_95": [
+       0.5,
+       0.5
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 0,
+      "accuracy": null,
+      "game_cluster_bootstrap_95": null
+     }
+    }
+   }
+  },
+  "pool": {
+   "games": 8,
+   "roots": 16,
+   "labels": 3420,
+   "wins": 5,
+   "v4_agreement": {
+    "won": {
+     "all_pairs": {
+      "pairs": 250,
+      "accuracy": 0.816,
+      "game_cluster_bootstrap_95": [
+       0.5,
+       0.9759036144578314
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 166,
+      "accuracy": 0.9759036144578314,
+      "game_cluster_bootstrap_95": [
+       0.9759036144578314,
+       0.9759036144578314
+      ]
+     }
+    },
+    "wave": {
+     "all_pairs": {
+      "pairs": 1585,
+      "accuracy": 0.6211356466876972,
+      "game_cluster_bootstrap_95": [
+       0.5056657223796034,
+       0.8080357142857143
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 1298,
+      "accuracy": 0.6016949152542372,
+      "game_cluster_bootstrap_95": [
+       0.5056657223796034,
+       0.7892156862745098
+      ]
+     }
+    },
+    "tick": {
+     "all_pairs": {
+      "pairs": 1728,
+      "accuracy": 0.5532407407407407,
+      "game_cluster_bootstrap_95": [
+       0.4155112651646447,
+       0.8
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 1420,
+      "accuracy": 0.5225352112676056,
+      "game_cluster_bootstrap_95": [
+       0.3895809739524349,
+       0.7602040816326531
+      ]
+     }
+    },
+    "mowers_used": {
+     "all_pairs": {
+      "pairs": 166,
+      "accuracy": 0.024096385542168676,
+      "game_cluster_bootstrap_95": [
+       0.024096385542168676,
+       0.024096385542168676
+      ]
+     },
+     "nonterminal_v4_only": {
+      "pairs": 166,
+      "accuracy": 0.024096385542168676,
+      "game_cluster_bootstrap_95": [
+       0.024096385542168676,
+       0.024096385542168676
+      ]
+     }
+    }
+   }
+  }
+ },
+ "correction_counts": {
+  "day": {
+   "roots": 15,
+   "corrections": 2,
+   "student_corrections": 2,
+   "action_types": {
+    "寒冰射手": 2
+   }
+  },
+  "night": {
+   "roots": 16,
+   "corrections": 1,
+   "student_corrections": 1,
+   "action_types": {
+    "胆小菇": 1
+   }
+  },
+  "pool": {
+   "roots": 16,
+   "corrections": 4,
+   "student_corrections": 4,
+   "action_types": {
+    "寒冰射手": 1,
+    "向日葵": 1,
+    "坚果墙": 2
+   }
+  }
+ },
+ "confirmation": {
+  "status": "complete",
+  "root_count": 12,
+  "labels": 384,
+  "tests": [
+   {
+    "root": "v2-day-2500356-c2d7d7qm100-d1127",
+    "candidate": 12,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2500356-c2d7d7qm100-d1127",
+    "candidate": 12,
+    "metric": "wave",
+    "differences": [
+     0.0,
+     1.0,
+     1.0,
+     1.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0
+    ],
+    "p": 0.015625,
+    "mean_gain": 0.375,
+    "confidence": 0.9992,
+    "mean_gain_95": [
+     0.125,
+     0.625
+    ],
+    "p_holm": 0.5
+   },
+   {
+    "root": "v2-day-2500356-c2d7d7qm100-d1127",
+    "candidate": 12,
+    "metric": "tick",
+    "differences": [
+     187.0,
+     391.0,
+     470.0,
+     297.0,
+     253.0,
+     401.0,
+     135.0,
+     222.0,
+     205.0,
+     246.0,
+     302.0,
+     272.0,
+     185.0,
+     204.0,
+     233.0,
+     354.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 272.3125,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     230.125,
+     316.4375
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-day-2500356-c2d7d7qm100-d1127",
+    "candidate": 12,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "candidate": 32,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "candidate": 32,
+    "metric": "wave",
+    "differences": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 1.0,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     1.0,
+     1.0
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "candidate": 32,
+    "metric": "tick",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "candidate": 32,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-2230527-c2n14n10m100-d1472",
+    "candidate": 18,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-2230527-c2n14n10m100-d1472",
+    "candidate": 18,
+    "metric": "wave",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-2230527-c2n14n10m100-d1472",
+    "candidate": 18,
+    "metric": "tick",
+    "differences": [
+     1126.0,
+     1080.0,
+     1182.0,
+     1072.0,
+     1186.0,
+     1020.0,
+     1040.0,
+     1109.0,
+     1045.0,
+     990.0,
+     1269.0,
+     1098.0,
+     1025.0,
+     34.0,
+     1067.0,
+     1154.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 1031.0625,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     878.875,
+     1124.5
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-night-2230527-c2n14n10m100-d1472",
+    "candidate": 18,
+    "metric": "mowers_used",
+    "differences": [
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -1.0,
+     -0.0,
+     -1.0,
+     -1.0
+    ],
+    "p": 1.0,
+    "mean_gain": -0.9375,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     -1.0,
+     -0.8125
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "candidate": 40,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "candidate": 40,
+    "metric": "wave",
+    "differences": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 1.0,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     1.0,
+     1.0
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "candidate": 40,
+    "metric": "tick",
+    "differences": [
+     896.0,
+     894.0,
+     732.0,
+     1326.0,
+     1155.0,
+     1126.0,
+     698.0,
+     908.0,
+     783.0,
+     801.0,
+     828.0,
+     1230.0,
+     1203.0,
+     1121.0,
+     1016.0,
+     1035.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 984.5,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     894.375,
+     1072.6875
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "candidate": 40,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "candidate": 49,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "candidate": 49,
+    "metric": "wave",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "candidate": 49,
+    "metric": "tick",
+    "differences": [
+     1025.0,
+     664.0,
+     265.0,
+     326.0,
+     924.0,
+     767.0,
+     1037.0,
+     754.0,
+     709.0,
+     275.0,
+     886.0,
+     294.0,
+     451.0,
+     717.0,
+     754.0,
+     840.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 668.0,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     538.5625,
+     788.8125
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "candidate": 49,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-6410241-c2d6d7m175-d844",
+    "candidate": 0,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-6410241-c2d6d7m175-d844",
+    "candidate": 0,
+    "metric": "wave",
+    "differences": [
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0
+    ],
+    "p": 0.125,
+    "mean_gain": 0.1875,
+    "confidence": 0.961,
+    "mean_gain_95": [
+     0.0,
+     0.375
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-6410241-c2d6d7m175-d844",
+    "candidate": 0,
+    "metric": "tick",
+    "differences": [
+     10353.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     3743.0,
+     4656.0,
+     3775.0,
+     3807.0,
+     0.0,
+     2351.0,
+     6248.0,
+     0.0,
+     2610.0
+    ],
+    "p": 0.00390625,
+    "mean_gain": 2346.4375,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     1014.3125,
+     3856.9375
+    ],
+    "p_holm": 0.12890625
+   },
+   {
+    "root": "v2-day-6410241-c2d6d7m175-d844",
+    "candidate": 0,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "candidate": 5,
+    "metric": "won",
+    "differences": [
+     1.0,
+     0.0,
+     0.0,
+     1.0,
+     1.0,
+     0.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 0.0625,
+    "mean_gain": 0.25,
+    "confidence": 0.9894,
+    "mean_gain_95": [
+     0.0625,
+     0.5
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "candidate": 5,
+    "metric": "wave",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "candidate": 5,
+    "metric": "tick",
+    "differences": [
+     0.0,
+     861.0,
+     1183.0,
+     0.0,
+     0.0,
+     988.0,
+     0.0,
+     1152.0,
+     963.0,
+     1115.0,
+     1284.0,
+     805.0,
+     1018.0,
+     1012.0,
+     1128.0,
+     859.0
+    ],
+    "p": 0.000244140625,
+    "mean_gain": 773.0,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     530.8125,
+     986.25
+    ],
+    "p_holm": 0.0087890625
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "candidate": 5,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d706",
+    "candidate": 105,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d706",
+    "candidate": 105,
+    "metric": "wave",
+    "differences": [
+     0.0,
+     1.0,
+     1.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     1.0,
+     0.0,
+     1.0,
+     0.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "p": 0.001953125,
+    "mean_gain": 0.5625,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     0.3125,
+     0.8125
+    ],
+    "p_holm": 0.068359375
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d706",
+    "candidate": 105,
+    "metric": "tick",
+    "differences": [
+     273.0,
+     809.0,
+     1134.0,
+     560.0,
+     161.0,
+     171.0,
+     329.0,
+     367.0,
+     468.0,
+     906.0,
+     437.0,
+     488.0,
+     124.0,
+     581.0,
+     719.0,
+     596.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 507.6875,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     380.5,
+     643.9375
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d706",
+    "candidate": 105,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "candidate": 5,
+    "metric": "won",
+    "differences": [
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     0.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "p": 3.0517578125e-05,
+    "mean_gain": 0.9375,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     0.8125,
+     1.0
+    ],
+    "p_holm": 0.001129150390625
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "candidate": 5,
+    "metric": "wave",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "candidate": 5,
+    "metric": "tick",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1166.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 0.5,
+    "mean_gain": 72.875,
+    "confidence": 0.6254,
+    "mean_gain_95": [
+     0.0,
+     218.625
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "candidate": 5,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "candidate": 58,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "candidate": 58,
+    "metric": "wave",
+    "differences": [
+     3.0,
+     3.0,
+     1.0,
+     3.0,
+     1.0,
+     1.0,
+     3.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     3.0,
+     1.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 1.625,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     1.25,
+     2.125
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "candidate": 58,
+    "metric": "tick",
+    "differences": [
+     6498.0,
+     6064.0,
+     2442.0,
+     6532.0,
+     2605.0,
+     2712.0,
+     5647.0,
+     2371.0,
+     2300.0,
+     2329.0,
+     2327.0,
+     2396.0,
+     2360.0,
+     2381.0,
+     6205.0,
+     2434.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 3600.1875,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     2827.375,
+     4521.5
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "candidate": 58,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2060144-p27dag3-d605",
+    "candidate": 7,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2060144-p27dag3-d605",
+    "candidate": 7,
+    "metric": "wave",
+    "differences": [
+     1.0,
+     1.0,
+     0.0,
+     1.0,
+     1.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     1.0,
+     3.0,
+     0.0
+    ],
+    "p": 0.015625,
+    "mean_gain": 0.5,
+    "confidence": 0.9994,
+    "mean_gain_95": [
+     0.1875,
+     0.9375
+    ],
+    "p_holm": 0.5
+   },
+   {
+    "root": "v2-pool-2060144-p27dag3-d605",
+    "candidate": 7,
+    "metric": "tick",
+    "differences": [
+     894.0,
+     690.0,
+     461.0,
+     1319.0,
+     962.0,
+     -75.0,
+     576.0,
+     961.0,
+     -940.0,
+     697.0,
+     899.0,
+     446.0,
+     268.0,
+     1544.0,
+     4857.0,
+     633.0
+    ],
+    "p": 0.0020904541015625,
+    "mean_gain": 887.0,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     409.25,
+     1543.75
+    ],
+    "p_holm": 0.071075439453125
+   },
+   {
+    "root": "v2-pool-2060144-p27dag3-d605",
+    "candidate": 7,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "candidate": 33,
+    "metric": "won",
+    "differences": [
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0,
+     0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "candidate": 33,
+    "metric": "wave",
+    "differences": [
+     1.0,
+     1.0,
+     2.0,
+     2.0,
+     1.0,
+     1.0,
+     2.0,
+     1.0,
+     2.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 1.25,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     1.0625,
+     1.5
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "candidate": 33,
+    "metric": "tick",
+    "differences": [
+     1687.0,
+     1816.0,
+     1849.0,
+     2295.0,
+     1736.0,
+     1827.0,
+     1935.0,
+     1953.0,
+     2370.0,
+     1880.0,
+     1990.0,
+     2133.0,
+     1739.0,
+     1726.0,
+     2108.0,
+     1909.0
+    ],
+    "p": 1.52587890625e-05,
+    "mean_gain": 1934.5625,
+    "confidence": 1.0,
+    "mean_gain_95": [
+     1843.4375,
+     2036.5625
+    ],
+    "p_holm": 0.000732421875
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "candidate": 33,
+    "metric": "mowers_used",
+    "differences": [
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0,
+     -0.0
+    ],
+    "p": 1.0,
+    "mean_gain": 0.0,
+    "confidence": 0.0,
+    "mean_gain_95": [
+     0.0,
+     0.0
+    ],
+    "p_holm": 1.0
+   }
+  ],
+  "corrections": [
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "job": {
+     "terrain": "night",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+     "frames_sha256": "f79cc84a2a09ccf4de2341f3afcd4abb78dc13454ad9f95fe41cfb7a42ae1b4e",
+     "meta_sha256": "01193fc513846e0b094da9b5d0f7b782b1dfec46905e8c9cc81942bb5fd974fc",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+     "task_id": "night_l13_train_n10q",
+     "reset": {
+      "level": 13,
+      "seed": 3320126,
+      "deck": [
+       11,
+       13,
+       3,
+       8,
+       1,
+       15,
+       7,
+       9,
+       2,
+       0
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n13n10qm100_48",
+     "decision": 733,
+     "tick": 42042,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 748
+      }
+     ],
+     "id": "v2-night-3320126-c2n13n10qm100-d733",
+     "stage": "confirm",
+     "indices": [
+      0,
+      32
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 4,
+     "col": 3
+    },
+    "plant_type": 13,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-night-3320126-c2n13n10qm100-d733",
+     "candidate": 32,
+     "metric": "wave",
+     "differences": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "p": 1.52587890625e-05,
+     "mean_gain": 1.0,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      1.0,
+      1.0
+     ],
+     "p_holm": 0.000732421875
+    },
+    "student_representable": true
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "job": {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+     "frames_sha256": "6ed0a26ba1a0fb6ce25d8284f1acb2dc0ec290d2eba1fa4ae0fe16697d52b505",
+     "meta_sha256": "3f051577c78a9e98ee793adf5c612f02bcc2b86fa922dbacd059620b264ae376",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l23_train_p9k",
+     "reset": {
+      "level": 23,
+      "seed": 2020151,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p23dag3_48",
+     "decision": 487,
+     "tick": 24972,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2020151-p23dag3-d487",
+     "stage": "confirm",
+     "indices": [
+      27,
+      40
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 5,
+     "row": 5,
+     "col": 0
+    },
+    "plant_type": 5,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-pool-2020151-p23dag3-d487",
+     "candidate": 40,
+     "metric": "wave",
+     "differences": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "p": 1.52587890625e-05,
+     "mean_gain": 1.0,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      1.0,
+      1.0
+     ],
+     "p_holm": 0.000732421875
+    },
+    "student_representable": true
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "job": {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+     "frames_sha256": "c161e559a4be98835df6e5fcf18774abd07185edfba8fac2b841dcf12c078e0c",
+     "meta_sha256": "665fad7e78edf57b31a81c58a9e3f05f599d58916adb9ae006f97a92291175aa",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l28_train_p9k",
+     "reset": {
+      "level": 28,
+      "seed": 2070134,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p28dag3_48",
+     "decision": 445,
+     "tick": 23251,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2070134-p28dag3-d445",
+     "stage": "confirm",
+     "indices": [
+      49,
+      59
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 5,
+     "col": 1
+    },
+    "plant_type": 1,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-pool-2070134-p28dag3-d445",
+     "candidate": 49,
+     "metric": "tick",
+     "differences": [
+      1025.0,
+      664.0,
+      265.0,
+      326.0,
+      924.0,
+      767.0,
+      1037.0,
+      754.0,
+      709.0,
+      275.0,
+      886.0,
+      294.0,
+      451.0,
+      717.0,
+      754.0,
+      840.0
+     ],
+     "p": 1.52587890625e-05,
+     "mean_gain": 668.0,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      538.5625,
+      788.8125
+     ],
+     "p_holm": 0.000732421875
+    },
+    "student_representable": true
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "job": {
+     "terrain": "day",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+     "frames_sha256": "c88e2a48537932c1a08ccc69e4e199f9d4b3240e85c07a9717d3cbb51fac373d",
+     "meta_sha256": "a3cc687a4a5f8cbb3e6fc1ff23dc30bfbc5fcd9c71c0ac7bf20b165e4e4547bb",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+     "task_id": "day_l8_train_d7q",
+     "reset": {
+      "level": 8,
+      "seed": 2510303,
+      "deck": [
+       5,
+       0,
+       26,
+       2,
+       4,
+       1,
+       3
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d8d7qm100_48",
+     "decision": 779,
+     "tick": 43883,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-day-2510303-c2d8d7qm100-d779",
+     "stage": "confirm",
+     "indices": [
+      0,
+      5
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 0,
+     "row": 1,
+     "col": 0
+    },
+    "plant_type": 5,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-day-2510303-c2d8d7qm100-d779",
+     "candidate": 5,
+     "metric": "tick",
+     "differences": [
+      0.0,
+      861.0,
+      1183.0,
+      0.0,
+      0.0,
+      988.0,
+      0.0,
+      1152.0,
+      963.0,
+      1115.0,
+      1284.0,
+      805.0,
+      1018.0,
+      1012.0,
+      1128.0,
+      859.0
+     ],
+     "p": 0.000244140625,
+     "mean_gain": 773.0,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      530.8125,
+      986.25
+     ],
+     "p_holm": 0.0087890625
+    },
+    "student_representable": true
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "job": {
+     "terrain": "day",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+     "frames_sha256": "c88e2a48537932c1a08ccc69e4e199f9d4b3240e85c07a9717d3cbb51fac373d",
+     "meta_sha256": "a3cc687a4a5f8cbb3e6fc1ff23dc30bfbc5fcd9c71c0ac7bf20b165e4e4547bb",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+     "task_id": "day_l8_train_d7q",
+     "reset": {
+      "level": 8,
+      "seed": 2510303,
+      "deck": [
+       5,
+       0,
+       26,
+       2,
+       4,
+       1,
+       3
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d8d7qm100_48",
+     "decision": 777,
+     "tick": 43763,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 792
+      }
+     ],
+     "id": "v2-day-2510303-c2d8d7qm100-d777",
+     "stage": "confirm",
+     "indices": [
+      0,
+      5
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 0,
+     "row": 1,
+     "col": 0
+    },
+    "plant_type": 5,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-day-2510303-c2d8d7qm100-d777",
+     "candidate": 5,
+     "metric": "won",
+     "differences": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "p": 3.0517578125e-05,
+     "mean_gain": 0.9375,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      0.8125,
+      1.0
+     ],
+     "p_holm": 0.001129150390625
+    },
+    "student_representable": true
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "job": {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+     "frames_sha256": "275a67fb534b725a895079f153d05ff6065a12763eba5ee8f4154e293378467a",
+     "meta_sha256": "6579aeee2bb3b06ee5075ca8f2e5729b3814ea6d7e275a414b1e169d3bc3c0ce",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l22_train_p9k",
+     "reset": {
+      "level": 22,
+      "seed": 2010165,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p22dag3_48",
+     "decision": 581,
+     "tick": 30344,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2010165-p22dag3-d581",
+     "stage": "confirm",
+     "indices": [
+      58,
+      84
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 3,
+     "row": 5,
+     "col": 0
+    },
+    "plant_type": 3,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-pool-2010165-p22dag3-d581",
+     "candidate": 58,
+     "metric": "wave",
+     "differences": [
+      3.0,
+      3.0,
+      1.0,
+      3.0,
+      1.0,
+      1.0,
+      3.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      3.0,
+      1.0
+     ],
+     "p": 1.52587890625e-05,
+     "mean_gain": 1.625,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      1.25,
+      2.125
+     ],
+     "p_holm": 0.000732421875
+    },
+    "student_representable": true
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "job": {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+     "frames_sha256": "c4b26b39c88bafc2648fc4bbda72aa27969b5541350105580aae0a1dc7185187",
+     "meta_sha256": "de1d73774b012436510ca8493151df806c508e448e8c6e6897c28ea139ddb1f7",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l26_train_p9k",
+     "reset": {
+      "level": 26,
+      "seed": 2050149,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p26dag3_48",
+     "decision": 468,
+     "tick": 24335,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.010499999999999954,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2050149-p26dag3-d468",
+     "stage": "confirm",
+     "indices": [
+      0,
+      33
+     ],
+     "samples": 16
+    },
+    "action": {
+     "type": "plant",
+     "packet": 3,
+     "row": 5,
+     "col": 1
+    },
+    "plant_type": 3,
+    "confidence": 1.0,
+    "evidence": {
+     "root": "v2-pool-2050149-p26dag3-d468",
+     "candidate": 33,
+     "metric": "wave",
+     "differences": [
+      1.0,
+      1.0,
+      2.0,
+      2.0,
+      1.0,
+      1.0,
+      2.0,
+      1.0,
+      2.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0
+     ],
+     "p": 1.52587890625e-05,
+     "mean_gain": 1.25,
+     "confidence": 1.0,
+     "mean_gain_95": [
+      1.0625,
+      1.5
+     ],
+     "p_holm": 0.000732421875
+    },
+    "student_representable": true
+   }
+  ],
+  "significance": "independent futures; paired one-sided sign test; Holm across all roots and four metrics",
+  "confidence_note": "paired bootstrap probability(mean oriented gain > 0); mowers are oriented as fewer is better",
+  "tick_definition": "extra survival on paired losses only; winning completion times are descriptive and never rewarded for being longer",
+  "selection_budget": {
+   "jobs": [
+    {
+     "terrain": "day",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+     "frames_sha256": "df31132d90eaf62aa9f01cc07fb4670e63d84c17f0b2894b1fc1fbd43cd415c1",
+     "meta_sha256": "0772289afd0777ddeb6765ed332164e277df60f6a078025cf295acdd7d1fcb8f",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+     "task_id": "day_l7_train_d7q",
+     "reset": {
+      "level": 7,
+      "seed": 2500356,
+      "deck": [
+       4,
+       5,
+       6,
+       1,
+       2,
+       26,
+       7
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d7d7qm100_48",
+     "decision": 1127,
+     "tick": 61975,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1142
+      }
+     ],
+     "id": "v2-day-2500356-c2d7d7qm100-d1127",
+     "stage": "confirm",
+     "indices": [
+      0,
+      12
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "night",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+     "frames_sha256": "f79cc84a2a09ccf4de2341f3afcd4abb78dc13454ad9f95fe41cfb7a42ae1b4e",
+     "meta_sha256": "01193fc513846e0b094da9b5d0f7b782b1dfec46905e8c9cc81942bb5fd974fc",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+     "task_id": "night_l13_train_n10q",
+     "reset": {
+      "level": 13,
+      "seed": 3320126,
+      "deck": [
+       11,
+       13,
+       3,
+       8,
+       1,
+       15,
+       7,
+       9,
+       2,
+       0
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n13n10qm100_48",
+     "decision": 733,
+     "tick": 42042,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 748
+      }
+     ],
+     "id": "v2-night-3320126-c2n13n10qm100-d733",
+     "stage": "confirm",
+     "indices": [
+      0,
+      32
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "night",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+     "frames_sha256": "1fded9759c3c6c6d55aad7c7fc2dac7ea6b071dbe9b44f997f5b0333f53a274b",
+     "meta_sha256": "089cf8ed0904e4377b3222e0662e0676e242eaceaa342358a34810726f46b1a6",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+     "task_id": "night_l14_train_n10",
+     "reset": {
+      "level": 14,
+      "seed": 2230527,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       8,
+       9,
+       11
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n14n10m100_48",
+     "decision": 1472,
+     "tick": 74859,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1487
+      }
+     ],
+     "id": "v2-night-2230527-c2n14n10m100-d1472",
+     "stage": "confirm",
+     "indices": [
+      0,
+      18
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+     "frames_sha256": "6ed0a26ba1a0fb6ce25d8284f1acb2dc0ec290d2eba1fa4ae0fe16697d52b505",
+     "meta_sha256": "3f051577c78a9e98ee793adf5c612f02bcc2b86fa922dbacd059620b264ae376",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l23_train_p9k",
+     "reset": {
+      "level": 23,
+      "seed": 2020151,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p23dag3_48",
+     "decision": 487,
+     "tick": 24972,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2020151-p23dag3-d487",
+     "stage": "confirm",
+     "indices": [
+      27,
+      40
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+     "frames_sha256": "c161e559a4be98835df6e5fcf18774abd07185edfba8fac2b841dcf12c078e0c",
+     "meta_sha256": "665fad7e78edf57b31a81c58a9e3f05f599d58916adb9ae006f97a92291175aa",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l28_train_p9k",
+     "reset": {
+      "level": 28,
+      "seed": 2070134,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p28dag3_48",
+     "decision": 445,
+     "tick": 23251,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2070134-p28dag3-d445",
+     "stage": "confirm",
+     "indices": [
+      49,
+      59
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "day",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+     "frames_sha256": "0aac551256e9780ef429b8af57e420872fe8eab908f32fcefe4f0c99cb910076",
+     "meta_sha256": "d066d24cfd14d420514a6a8df431c8ef5a3b84f3b98a6cc24a326ad29abf11ab",
+     "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+     "task_id": "day_l6_train_d7_m175",
+     "reset": {
+      "level": 6,
+      "seed": 6410241,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.75
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d6d7m175_48",
+     "decision": 844,
+     "tick": 45127,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 859
+      }
+     ],
+     "id": "v2-day-6410241-c2d6d7m175-d844",
+     "stage": "confirm",
+     "indices": [
+      0,
+      46
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "day",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+     "frames_sha256": "c88e2a48537932c1a08ccc69e4e199f9d4b3240e85c07a9717d3cbb51fac373d",
+     "meta_sha256": "a3cc687a4a5f8cbb3e6fc1ff23dc30bfbc5fcd9c71c0ac7bf20b165e4e4547bb",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+     "task_id": "day_l8_train_d7q",
+     "reset": {
+      "level": 8,
+      "seed": 2510303,
+      "deck": [
+       5,
+       0,
+       26,
+       2,
+       4,
+       1,
+       3
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d8d7qm100_48",
+     "decision": 779,
+     "tick": 43883,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-day-2510303-c2d8d7qm100-d779",
+     "stage": "confirm",
+     "indices": [
+      0,
+      5
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "night",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+     "frames_sha256": "f79cc84a2a09ccf4de2341f3afcd4abb78dc13454ad9f95fe41cfb7a42ae1b4e",
+     "meta_sha256": "01193fc513846e0b094da9b5d0f7b782b1dfec46905e8c9cc81942bb5fd974fc",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+     "task_id": "night_l13_train_n10q",
+     "reset": {
+      "level": 13,
+      "seed": 3320126,
+      "deck": [
+       11,
+       13,
+       3,
+       8,
+       1,
+       15,
+       7,
+       9,
+       2,
+       0
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n13n10qm100_48",
+     "decision": 706,
+     "tick": 40480,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-night-3320126-c2n13n10qm100-d706",
+     "stage": "confirm",
+     "indices": [
+      0,
+      105
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "day",
+     "source": "qc_latest_complete_round",
+     "qc_round": 2,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+     "frames_sha256": "c88e2a48537932c1a08ccc69e4e199f9d4b3240e85c07a9717d3cbb51fac373d",
+     "meta_sha256": "a3cc687a4a5f8cbb3e6fc1ff23dc30bfbc5fcd9c71c0ac7bf20b165e4e4547bb",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+     "task_id": "day_l8_train_d7q",
+     "reset": {
+      "level": 8,
+      "seed": 2510303,
+      "deck": [
+       5,
+       0,
+       26,
+       2,
+       4,
+       1,
+       3
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d8d7qm100_48",
+     "decision": 777,
+     "tick": 43763,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 792
+      }
+     ],
+     "id": "v2-day-2510303-c2d8d7qm100-d777",
+     "stage": "confirm",
+     "indices": [
+      0,
+      5
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+     "frames_sha256": "275a67fb534b725a895079f153d05ff6065a12763eba5ee8f4154e293378467a",
+     "meta_sha256": "6579aeee2bb3b06ee5075ca8f2e5729b3814ea6d7e275a414b1e169d3bc3c0ce",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l22_train_p9k",
+     "reset": {
+      "level": 22,
+      "seed": 2010165,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p22dag3_48",
+     "decision": 581,
+     "tick": 30344,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2010165-p22dag3-d581",
+     "stage": "confirm",
+     "indices": [
+      58,
+      84
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+     "frames_sha256": "c6708ed413fafc16f8b28bd570edc7a33aa6e8a4deaf8e3a760529c8c5afb67e",
+     "meta_sha256": "40cd87964c7095ec3fac9a6fb90351e5d73adfc3d689a25a70b95dec74c47c36",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l27_train_p9k",
+     "reset": {
+      "level": 27,
+      "seed": 2060144,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p27dag3_48",
+     "decision": 605,
+     "tick": 31506,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.010299999999999976,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2060144-p27dag3-d605",
+     "stage": "confirm",
+     "indices": [
+      0,
+      7
+     ],
+     "samples": 16
+    },
+    {
+     "terrain": "pool",
+     "source": "independent_p9k_teacher_round3",
+     "qc_round": null,
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+     "frames_sha256": "c4b26b39c88bafc2648fc4bbda72aa27969b5541350105580aae0a1dc7185187",
+     "meta_sha256": "de1d73774b012436510ca8493151df806c508e448e8c6e6897c28ea139ddb1f7",
+     "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+     "task_id": "pool_l26_train_p9k",
+     "reset": {
+      "level": 26,
+      "seed": 2050149,
+      "deck": [
+       0,
+       1,
+       2,
+       3,
+       4,
+       5,
+       7,
+       16,
+       19
+      ],
+      "playthrough": 2,
+      "first_aid_owned": false,
+      "zombie_count_multiplier": 1.0
+     },
+     "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+     "student_executed": true,
+     "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p26dag3_48",
+     "decision": 468,
+     "tick": 24335,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.010499999999999954,
+       "position": "median in final 6000 ticks"
+      }
+     ],
+     "id": "v2-pool-2050149-p26dag3-d468",
+     "stage": "confirm",
+     "indices": [
+      0,
+      33
+     ],
+     "samples": 16
+    }
+   ],
+   "labels": 384,
+   "selection": "one lexicographic terminal win/wave/tick/mower challenger among student-representable plant/wait actions per root; screen data only",
+   "unrepresented_global_bests": [
+    {
+     "root": "v2-day-2520360-c2d9d7qm100-d1012",
+     "candidate": 2,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-day-2500356-c2d7d7qm100-d1097",
+     "candidate": 41,
+     "action": {
+      "type": "shovel",
+      "row": 3,
+      "col": 4
+     }
+    },
+    {
+     "root": "v2-day-2510303-c2d8d7qm100-d777",
+     "candidate": 39,
+     "action": {
+      "type": "shovel",
+      "row": 3,
+      "col": 0
+     }
+    },
+    {
+     "root": "v2-day-2510303-c2d8d7qm100-d779",
+     "candidate": 64,
+     "action": {
+      "type": "shovel",
+      "row": 3,
+      "col": 0
+     }
+    },
+    {
+     "root": "v2-day-6046147-c2d10d7qm150-d928",
+     "candidate": 95,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-day-6400020-c2d1d7m175-d957",
+     "candidate": 75,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-day-6400020-c2d1d7m175-d962",
+     "candidate": 3,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 2
+     }
+    },
+    {
+     "root": "v2-day-6404126-c2d3d7m175-d891",
+     "candidate": 61,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-day-6406158-c2d4d7m175-d824",
+     "candidate": 43,
+     "action": {
+      "type": "shovel",
+      "row": 3,
+      "col": 2
+     }
+    },
+    {
+     "root": "v2-day-6410241-c2d6d7m175-d830",
+     "candidate": 43,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 3
+     }
+    },
+    {
+     "root": "v2-day-6410241-c2d6d7m175-d844",
+     "candidate": 67,
+     "action": {
+      "type": "shovel",
+      "row": 3,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-night-2230527-c2n14n10m100-d1464",
+     "candidate": 34,
+     "action": {
+      "type": "shovel",
+      "row": 1,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-night-2230559-c2n14n10m100-d1622",
+     "candidate": 59,
+     "action": {
+      "type": "shovel",
+      "row": 1,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-pool-2020151-p23dag3-d487",
+     "candidate": 80,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 1
+     }
+    },
+    {
+     "root": "v2-pool-2050149-p26dag3-d468",
+     "candidate": 90,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 2
+     }
+    }
+   ],
+   "future_independence": "confirm namespace disjoint from screen; common world/search seeds within each root",
+   "excluded_by_cpu": [
+    {
+     "root": "v2-pool-2080175-p29dag3-d384",
+     "forecast_cpu_seconds": 2039.4982079999972
+    }
+   ],
+   "cost_selection": "cheapest actual screening challenger/student branch CPU first; preserve 16 independent futures; reserve 500 seconds for exports, training, evaluation and final gates"
+  }
+ },
+ "training": {
+  "recipe": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/recipe.effective.json",
+  "recipe_sha256": "9dd875c35c7e7f5eee9cd1dd4edca08eb1e46dcba5d643f6ead2d26d38cf1c07",
+  "registered_recipe_sha256": "1863fbb14becccc7f46b12e684bfbcc2f7ec8cd8ce391951999464d9e80164a5",
+  "step_resolution": {
+   "registered_recipe_sha256": "1863fbb14becccc7f46b12e684bfbcc2f7ec8cd8ce391951999464d9e80164a5",
+   "registered_step_cap": 64,
+   "epochs": 2,
+   "training_rows": 2823,
+   "validation_rows": 256,
+   "batch_size": 256,
+   "effective_steps": 24,
+   "effective_recipe_sha256": "9dd875c35c7e7f5eee9cd1dd4edca08eb1e46dcba5d643f6ead2d26d38cf1c07",
+   "rule": "min(registered upper bound, epochs * ceil(actual training rows / batch size)); all other settings unchanged"
+  },
+  "model": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/model/model.pt",
+  "model_sha256": "b6a45ac63f4dec53f229cfc28911073174a2d46db78faae7033f1c081f5fe623",
+  "new_rows": 7,
+  "old_replay_rows": 3072,
+  "actual_old_rows": 3072,
+  "actual_new_training_rows": 7,
+  "optimizer_steps": 24,
+  "changed_parameter_tensors": 21,
+  "original_preregistration_parameters_verified": true,
+  "corrected_root_actions_adopted": 0
+ },
+ "paired_evaluation": {
+  "status": "complete",
+  "overall": {
+   "pairs": 192,
+   "candidate_wins": 75,
+   "incumbent_wins": 76,
+   "gain": 12,
+   "harm": 13,
+   "both_win": 63,
+   "both_lose": 104,
+   "delta_rate": -0.005208333333333333,
+   "ci95": [
+    -0.05688413177468268,
+    0.0465224807698305
+   ],
+   "mcnemar_worse_p": 0.5
+  },
+  "by_terrain": {
+   "day": {
+    "pairs": 64,
+    "candidate_wins": 42,
+    "incumbent_wins": 46,
+    "gain": 1,
+    "harm": 5,
+    "both_win": 41,
+    "both_lose": 17,
+    "delta_rate": -0.0625,
+    "ci95": [
+     -0.14276045379968583,
+     0.017523761090064927
+    ],
+    "mcnemar_worse_p": 0.109375
+   },
+   "night": {
+    "pairs": 64,
+    "candidate_wins": 33,
+    "incumbent_wins": 30,
+    "gain": 11,
+    "harm": 8,
+    "both_win": 22,
+    "both_lose": 23,
+    "delta_rate": 0.046875,
+    "ci95": [
+     -0.08716993855164559,
+     0.1779607904209908
+    ],
+    "mcnemar_worse_p": 0.8203582763671875
+   },
+   "pool": {
+    "pairs": 64,
+    "candidate_wins": 0,
+    "incumbent_wins": 0,
+    "gain": 0,
+    "harm": 0,
+    "both_win": 0,
+    "both_lose": 64,
+    "delta_rate": 0.0,
+    "ci95": [
+     -0.05662405979280531,
+     0.05662405979280531
+    ],
+    "mcnemar_worse_p": 1.0
+   }
+  },
+  "interval": "existing pvz_promotion paired Newcombe method 10, 95%; retains uncertainty on unanimous outcomes",
+  "deployment_note": "Feasibility experiment only; no promotion certificate, default or qc changes."
+ },
+ "cost": {
+  "cpu_seconds_metered": 14281.168473,
+  "additional_allowance": 250,
+  "qc_round_cpu_seconds": 96529.85206656535,
+  "conservative_share": 0.1505354888866871,
+  "reference_engine": "deploy2 (engine used by the frozen qc round); task53 collection uses required deploy3",
+  "per_point": [
+   {
+    "root": "v2-day-2520360-c2d9d7qm100-d1012",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2520360/c2d9d7qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1027
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 46.241051000000006
+   },
+   {
+    "root": "v2-day-2500356-c2d7d7qm100-d1097",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0009,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 70.92157399999999
+   },
+   {
+    "root": "v2-day-2500356-c2d7d7qm100-d1127",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1142
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 13.130490000000012
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d777",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 792
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 129.24823600000002
+   },
+   {
+    "root": "v2-day-2510303-c2d8d7qm100-d779",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 71,
+    "labels": 213,
+    "terminal_and_short_leaf_cpu_seconds": 95.88297999999998
+   },
+   {
+    "root": "v2-day-6046147-c2d10d7qm150-d891",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0042999999999999705,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 186,
+    "labels": 558,
+    "terminal_and_short_leaf_cpu_seconds": 3037.637170000004
+   },
+   {
+    "root": "v2-day-6046147-c2d10d7qm150-d928",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 943
+     }
+    ],
+    "candidates": 98,
+    "labels": 294,
+    "terminal_and_short_leaf_cpu_seconds": 330.870936
+   },
+   {
+    "root": "v2-day-6400020-c2d1d7m175-d957",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 78,
+    "labels": 234,
+    "terminal_and_short_leaf_cpu_seconds": 32.42778800000001
+   },
+   {
+    "root": "v2-day-6400020-c2d1d7m175-d962",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 977
+     }
+    ],
+    "candidates": 15,
+    "labels": 45,
+    "terminal_and_short_leaf_cpu_seconds": 5.516457999999915
+   },
+   {
+    "root": "v2-day-6404126-c2d3d7m175-d891",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0043999999999999595,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 76,
+    "labels": 228,
+    "terminal_and_short_leaf_cpu_seconds": 584.6194649999995
+   },
+   {
+    "root": "v2-day-6404126-c2d3d7m175-d959",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 974
+     }
+    ],
+    "candidates": 201,
+    "labels": 603,
+    "terminal_and_short_leaf_cpu_seconds": 729.4307939999999
+   },
+   {
+    "root": "v2-day-6406158-c2d4d7m175-d824",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.00010000000000000005,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 197.4709049999999
+   },
+   {
+    "root": "v2-day-6406158-c2d4d7m175-d864",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 879
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 12.66779299999962
+   },
+   {
+    "root": "v2-day-6410241-c2d6d7m175-d830",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 87.3588390000001
+   },
+   {
+    "root": "v2-day-6410241-c2d6d7m175-d844",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 859
+     }
+    ],
+    "candidates": 74,
+    "labels": 222,
+    "terminal_and_short_leaf_cpu_seconds": 165.56655400000034
+   },
+   {
+    "root": "v2-night-3360022-c2n17n10qm100-d1715",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 156.4314
+   },
+   {
+    "root": "v2-night-3360022-c2n17n10qm100-d1744",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1759
+     }
+    ],
+    "candidates": 20,
+    "labels": 60,
+    "terminal_and_short_leaf_cpu_seconds": 18.021310000000312
+   },
+   {
+    "root": "v2-night-2230527-c2n14n10m100-d1464",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 83.89618999999993
+   },
+   {
+    "root": "v2-night-2230527-c2n14n10m100-d1472",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1487
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 49.45827999999983
+   },
+   {
+    "root": "v2-night-2210487-c2n12n10m100-d1776",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 56,
+    "labels": 168,
+    "terminal_and_short_leaf_cpu_seconds": 118.11578200000008
+   },
+   {
+    "root": "v2-night-2210487-c2n12n10m100-d1798",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1813
+     }
+    ],
+    "candidates": 62,
+    "labels": 186,
+    "terminal_and_short_leaf_cpu_seconds": 48.637114999999994
+   },
+   {
+    "root": "v2-night-3350052-c2n16n10qm100-d1137",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 72,
+    "labels": 216,
+    "terminal_and_short_leaf_cpu_seconds": 271.79533399999934
+   },
+   {
+    "root": "v2-night-3350052-c2n16n10qm100-d1160",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1175
+     }
+    ],
+    "candidates": 76,
+    "labels": 228,
+    "terminal_and_short_leaf_cpu_seconds": 99.72008099999903
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d706",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 116,
+    "labels": 348,
+    "terminal_and_short_leaf_cpu_seconds": 346.4517579999997
+   },
+   {
+    "root": "v2-night-3320126-c2n13n10qm100-d733",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 748
+     }
+    ],
+    "candidates": 116,
+    "labels": 348,
+    "terminal_and_short_leaf_cpu_seconds": 63.783258000000615
+   },
+   {
+    "root": "v2-night-2260425-c2n17n10m100-d1539",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 35.916436000000886
+   },
+   {
+    "root": "v2-night-2260425-c2n17n10m100-d1542",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1557
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 30.795338999999558
+   },
+   {
+    "root": "v2-night-3360021-c2n17n10qm100-d1354",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 72.63312300000075
+   },
+   {
+    "root": "v2-night-3360021-c2n17n10qm100-d1362",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1377
+     }
+    ],
+    "candidates": 46,
+    "labels": 138,
+    "terminal_and_short_leaf_cpu_seconds": 24.84156899999948
+   },
+   {
+    "root": "v2-night-2230559-c2n14n10m100-d1622",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 70,
+    "labels": 210,
+    "terminal_and_short_leaf_cpu_seconds": 67.58274200000028
+   },
+   {
+    "root": "v2-night-2230559-c2n14n10m100-d1624",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 1639
+     }
+    ],
+    "candidates": 70,
+    "labels": 210,
+    "terminal_and_short_leaf_cpu_seconds": 61.078009999998585
+   },
+   {
+    "root": "v2-pool-2000170-p21dag3-d414",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 63,
+    "labels": 189,
+    "terminal_and_short_leaf_cpu_seconds": 83.308887
+   },
+   {
+    "root": "v2-pool-2000170-p21dag3-d419",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 434
+     }
+    ],
+    "candidates": 36,
+    "labels": 108,
+    "terminal_and_short_leaf_cpu_seconds": 34.63535200000024
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d581",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 121,
+    "labels": 363,
+    "terminal_and_short_leaf_cpu_seconds": 406.4939700000002
+   },
+   {
+    "root": "v2-pool-2010165-p22dag3-d590",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 605
+     }
+    ],
+    "candidates": 58,
+    "labels": 174,
+    "terminal_and_short_leaf_cpu_seconds": 71.37524799999869
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d487",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 85,
+    "labels": 255,
+    "terminal_and_short_leaf_cpu_seconds": 454.03985299999977
+   },
+   {
+    "root": "v2-pool-2020151-p23dag3-d494",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 509
+     }
+    ],
+    "candidates": 55,
+    "labels": 165,
+    "terminal_and_short_leaf_cpu_seconds": 57.040561000000025
+   },
+   {
+    "root": "v2-pool-2030167-p24dag3-d424",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 55,
+    "labels": 165,
+    "terminal_and_short_leaf_cpu_seconds": 80.30742600000008
+   },
+   {
+    "root": "v2-pool-2030167-p24dag3-d432",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 447
+     }
+    ],
+    "candidates": 62,
+    "labels": 186,
+    "terminal_and_short_leaf_cpu_seconds": 35.788692999999284
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d468",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.010499999999999954,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 95,
+    "labels": 285,
+    "terminal_and_short_leaf_cpu_seconds": 1278.232839000002
+   },
+   {
+    "root": "v2-pool-2050149-p26dag3-d515",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 530
+     }
+    ],
+    "candidates": 56,
+    "labels": 168,
+    "terminal_and_short_leaf_cpu_seconds": 61.189976000002616
+   },
+   {
+    "root": "v2-pool-2060144-p27dag3-d605",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.010299999999999976,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 56,
+    "labels": 168,
+    "terminal_and_short_leaf_cpu_seconds": 674.8094959999985
+   },
+   {
+    "root": "v2-pool-2060144-p27dag3-d654",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 669
+     }
+    ],
+    "candidates": 65,
+    "labels": 195,
+    "terminal_and_short_leaf_cpu_seconds": 114.20584499999927
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d445",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.0,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 111,
+    "labels": 333,
+    "terminal_and_short_leaf_cpu_seconds": 231.95705099999736
+   },
+   {
+    "root": "v2-pool-2070134-p28dag3-d458",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 473
+     }
+    ],
+    "candidates": 61,
+    "labels": 183,
+    "terminal_and_short_leaf_cpu_seconds": 59.379928000004384
+   },
+   {
+    "root": "v2-pool-2080175-p29dag3-d384",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "flat_archived_leaf",
+      "spread": 0.012300000000000089,
+      "position": "median in final 6000 ticks"
+     }
+    ],
+    "candidates": 85,
+    "labels": 255,
+    "terminal_and_short_leaf_cpu_seconds": 1093.7829160000033
+   },
+   {
+    "root": "v2-pool-2080175-p29dag3-d424",
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+    "reasons": [
+     {
+      "kind": "before_loss_breach",
+      "lookback_decisions": 16,
+      "breach_decision": 439
+     }
+    ],
+    "candidates": 76,
+    "labels": 228,
+    "terminal_and_short_leaf_cpu_seconds": 76.40852699999732
+   }
+  ],
+  "formal_points_per_game": 1.9583333333333333,
+  "metered_cost_per_formal_point_including_all_pilots_training_and_evaluation": 303.8546483617021,
+  "scope": "Per-point branch CPU includes native short-leaf and true-terminal teacher work. Shared replay/startup, off-panel pilot, training and evaluation overhead is retained in the total ledger, not silently omitted.",
+  "experiment_completion_snapshot": {
+   "cpu_seconds_metered": 14044.392969999999,
+   "conservative_share": 0.14808261552232388
+  },
+  "metered_share": 0.14794561648299168,
+  "metered_within_registered_budget": true,
+  "conservative_within_15_percent_target": false,
+  "current_deploy3_night_group_projection_cpu_seconds": 74310.08,
+  "current_deploy3_night_group_projection_conservative_share": 0.1955477436304738,
+  "projection_scope": "one night group, not an observed complete mixed-terrain round",
+  "point_cost_summary": {
+   "min": 5.516457999999915,
+   "median": 80.30742600000008,
+   "max": 3037.637170000004
+  },
+  "per_game_branch_cpu_seconds": {
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2520360/c2d9d7qm100_fast_search": 46.241051000000006,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search": 84.052064,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search": 225.131216,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search": 3368.508106000004,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search": 37.94424599999992,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search": 1314.0502589999994,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search": 210.13869799999952,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search": 252.92539300000044,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search": 174.4527100000003,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search": 133.35446999999976,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search": 166.75289700000008,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search": 371.51541499999837,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search": 410.2350160000003,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search": 66.71177500000044,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search": 97.47469200000023,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search": 128.66075199999887,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search": 117.94423900000024,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search": 477.8692179999989,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search": 511.0804139999998,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search": 116.09611899999936,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search": 1339.4228150000047,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search": 789.0153409999978,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search": 291.33697900000175,
+   "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search": 1170.1914430000006
+  },
+  "per_round_label_production_preview": {
+   "status": "dry_run_only_not_deployed",
+   "candidate_model_sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+   "reference_cpu_seconds": 74310.08,
+   "reference_scope": "minimum of measured old full round and current deploy3 night-group projection; refresh from a complete deployment-matched mixed round before online use",
+   "budget_fraction": 0.15,
+   "budget_cpu_seconds": 11146.512,
+   "selected_roots": 22,
+   "selected_by_terrain": {
+    "night": 8,
+    "pool": 8,
+    "day": 6
+   },
+   "forecast_cpu_seconds": 3525.0260949999865,
+   "forecast_share": 0.047436715113211916,
+   "fixed_overhead_cpu_seconds": 250.0,
+   "forecast_total_cpu_seconds": 3775.0260949999865,
+   "forecast_total_share": 0.050800996244385506,
+   "scope": "label screening and independent confirmation plus fixed overhead; task49 full training and promotion evaluation are accounted separately",
+   "root_ids": [
+    "v2-night-3360022-c2n17n10qm100-d1744",
+    "v2-night-2260425-c2n17n10m100-d1539",
+    "v2-pool-2030167-p24dag3-d432",
+    "v2-pool-2030167-p24dag3-d424",
+    "v2-day-6400020-c2d1d7m175-d962",
+    "v2-day-6400020-c2d1d7m175-d957",
+    "v2-night-3360021-c2n17n10qm100-d1362",
+    "v2-night-2230559-c2n14n10m100-d1622",
+    "v2-pool-2000170-p21dag3-d419",
+    "v2-pool-2000170-p21dag3-d414",
+    "v2-day-6406158-c2d4d7m175-d864",
+    "v2-day-2500356-c2d7d7qm100-d1097",
+    "v2-night-2260425-c2n17n10m100-d1542",
+    "v2-night-3360021-c2n17n10qm100-d1354",
+    "v2-pool-2020151-p23dag3-d494",
+    "v2-pool-2070134-p28dag3-d445",
+    "v2-day-2500356-c2d7d7qm100-d1127",
+    "v2-day-6410241-c2d6d7m175-d830",
+    "v2-night-2210487-c2n12n10m100-d1798",
+    "v2-night-2230527-c2n14n10m100-d1464",
+    "v2-pool-2070134-p28dag3-d458",
+    "v2-pool-2010165-p22dag3-d581"
+   ],
+   "per_root_forecast": {
+    "v2-night-3360022-c2n17n10qm100-d1744": 60.670829000002755,
+    "v2-night-2260425-c2n17n10m100-d1539": 88.13886199999456,
+    "v2-pool-2030167-p24dag3-d432": 81.93843149999441,
+    "v2-pool-2030167-p24dag3-d424": 168.3841149999945,
+    "v2-day-6400020-c2d1d7m175-d962": 27.4779829999991,
+    "v2-day-6400020-c2d1d7m175-d957": 76.78702600000048,
+    "v2-night-3360021-c2n17n10qm100-d1362": 65.03670549999958,
+    "v2-night-2230559-c2n14n10m100-d1622": 137.38568100000214,
+    "v2-pool-2000170-p21dag3-d419": 91.54304400000228,
+    "v2-pool-2000170-p21dag3-d414": 170.9253145,
+    "v2-day-6406158-c2d4d7m175-d864": 40.82197749999841,
+    "v2-day-2500356-c2d7d7qm100-d1097": 174.6078969999998,
+    "v2-night-2260425-c2n17n10m100-d1542": 77.3793764999981,
+    "v2-night-3360021-c2n17n10qm100-d1354": 157.77262850000068,
+    "v2-pool-2020151-p23dag3-d494": 122.20839349999858,
+    "v2-pool-2070134-p28dag3-d445": 418.9455604999963,
+    "v2-day-2500356-c2d7d7qm100-d1127": 40.994375000000026,
+    "v2-day-6410241-c2d6d7m175-d830": 191.53203450000132,
+    "v2-night-2210487-c2n12n10m100-d1798": 101.28658449999944,
+    "v2-night-2230527-c2n14n10m100-d1464": 174.3677729999988,
+    "v2-pool-2070134-p28dag3-d458": 127.32699600000319,
+    "v2-pool-2010165-p22dag3-d581": 929.4945070000022
+   },
+   "plan": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/production-plan.preview.json",
+   "plan_sha256": "3139aea31b86c305d4f7f7ae1c97f9c715a5cd999afe8af4eb2911fee38ec1e8",
+   "tradeoff": "Less data per round; cost ordering within rotated terrain/reason strata can favour cheaper/shorter continuations. All legal actions and 16 confirmation futures remain intact. No empty-root budget success.",
+   "command": [
+    "/home/newbiexvwu/.venvs/ml/bin/python3",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/critical_forks.py",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/production-plan.preview.json",
+    "screen"
+   ],
+   "confirmed_corrections_retained_descriptively": [
+    "v2-pool-2070134-p28dag3-d445",
+    "v2-pool-2010165-p22dag3-d581"
+   ],
+   "note": "Cost-only selection was fixed before this descriptive retention count; it is not outcome-tuned. Research campaign remains all 47 frozen roots."
+  }
+ },
+ "artifact_bytes": 399537649,
+ "value_rows": 11211,
+ "value_ranking_pairs": {
+  "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/value-data/pairs.jsonl.gz",
+  "sha256": "cf71a2672b9d34fa3e3413597da5f765080b00e3f7288bde0f53f03da6c7fad6",
+  "by_metric": {
+   "wave": 22933,
+   "tick": 18388,
+   "won": 21383,
+   "mowers_used": 659
+  },
+  "note": "same seed/root/future/kind; metrics kept separate; wave/tick/mower preferences are never substituted for binary won labels"
+ },
+ "raw_evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53",
+ "export_sha256": "79228dca441bbc87fbb391872381d77b5a4b102c336b6914c811d28b076c93ae",
+ "final_delivery": {
+  "audit_sha256": "fa7a195236b4119b55d87edab00b0fa5a0493ba57533f4686d8682d13695e56d",
+  "repro_sha256": "eb19066f75081de24c8bdbf81953c9065c5b32e2814dae5db3f2d6552792be80",
+  "gates": {
+   "passed": 431,
+   "skipped": 1,
+   "subtests_passed": 133,
+   "log": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/delivery-tests-fixed.log",
+   "skipped_reason": "legacy StudentObservationTest hardcodes this worktree build/pvz-portable; native feature parity is separately covered against required deploy3",
+   "fixed_trace_test_synchronization": true,
+   "frozen_environment_and_engine_unchanged": true
+  },
+  "isolated_reproduction": {
+   "cases": 5,
+   "pool_actor_archives": 8,
+   "pool_actor_prefix_decisions": 3986
+  }
+ },
+ "source_cohorts": {
+  "day": [
+   "qc_latest_complete_round"
+  ],
+  "night": [
+   "qc_latest_complete_round"
+  ],
+  "pool": [
+   "independent_p9k_teacher_round3"
+  ]
+ },
+ "feasibility": {
+  "confirmed_correction_points": 7,
+  "formal_roots": 47,
+  "point_fraction": 0.14893617021276595,
+  "wins_not_decreasing_demonstrated": false,
+  "observed_win_delta": -0.005208333333333333,
+  "correction_roots_followed_by_new_student": 0,
+  "conclusion": "The label/learner/evaluation pipeline works, but this fixed finetune supplies no evidence of nondecreasing win rate; keep incumbent."
+ }
+}

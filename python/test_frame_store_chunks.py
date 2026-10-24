@@ -71,18 +71,22 @@ def test_chunked_encode_is_independent_of_the_chunk_size():
         assert reference["hints"] == encoded["hints"]
 
 
-def test_source_writer_writes_the_same_archive(tmp_path):
+def test_source_writer_writes_the_same_archive(tmp_path, monkeypatch):
+    import zipfile
     frames = game()
     source = source_of(frames)
     reference = tmp_path / "whole" / "frames.npz"
     reference.parent.mkdir()
+    monkeypatch.setattr(zipfile.time, "localtime", lambda *args: (2026, 1, 2, 3, 4, 6, 4, 2, -1))
     write_frames(reference, frames)
     streamed = tmp_path / "streamed" / "frames.npz"
     streamed.parent.mkdir()
+    monkeypatch.setattr(zipfile.time, "localtime", lambda *args: (2027, 5, 6, 7, 8, 10, 3, 126, -1))
     write_frames_from_source(streamed, source)
     assert frame_bytes(reference) == frame_bytes(streamed)
     with np.load(reference, allow_pickle=False) as a, np.load(streamed, allow_pickle=False) as b:
         assert a.files == b.files
         for name in a.files:
             np.testing.assert_array_equal(a[name], b[name], err_msg=name)
-    assert reference.read_bytes() == streamed.read_bytes()
+    # ZIP envelope dates are allowed to differ; the source and every array above
+    # must remain identical across the two writers and across write dates.

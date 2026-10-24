@@ -1,0 +1,30 @@
+{
+ "jobs": [
+  {
+   "cell": {
+    "id": "l42-student-45000001",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 160,
+    "tick": 8820,
+    "wave": 3,
+    "sun": 25,
+    "candidate_count": 46,
+    "candidate_sha256": "60bc896a9b785e6627c9f50b4491f00410d93f2253575d057dcebfee6da769a6",
+    "state_sha256": "38030b0f421c92beb7b812e70c7fe53dc82775e7908626ff9280134989661e44",
+    "public_history_sha256": "f36075915b3b8ccfcc151f224ea085088da43bbc95945fe37cdaa6fad1342654",
+    "schedule_last_search_tick": 8400,
+    "prefix": "student"
+   },
+   "samples": 1,
+   "stage": "screen",
+   "cpu_sparse": true,
+   "candidate_indices": [
+    0
+   ]
+  }
+ ]
+}

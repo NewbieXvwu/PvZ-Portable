@@ -1,0 +1,271 @@
+{
+ "status": "verified",
+ "base": "b69024facd7686e14307efe8a15a994130920c4c",
+ "source_refs": {
+  "forks": "0e9738d78e76a2bbdf8fccfb4a811fa27d8ff4fc",
+  "roof": "575d7da0bb76885f31941fb6282beb488615960f",
+  "fog": "15b671aded5f5081bd9206d472953ba15c393518",
+  "qcpack": "25f1a529a640065dbaab547feb02061d86794b1a"
+ },
+ "merged_in_order": [
+  "e9e89600",
+  "986841c4",
+  "17e443f5"
+ ],
+ "implementation_commits": [
+  "150c4f11",
+  "b133908a"
+ ],
+ "retired_tag": "task60-pre-terminal-unification",
+ "removed_duplicates": [
+  "python/test_fog_terminal_diagnostic.py",
+  "python/test_fog_terminal_pipeline.py",
+  "python/test_fog_terminal_report.py",
+  "python/test_fog_terminal_repro.py",
+  "python/test_roof_terminal_verify.py",
+  "python/test_terminal_candidate_audit.py",
+  "python/test_terminal_candidate_report.py",
+  "scripts/fog_terminal_diagnostic.py",
+  "scripts/fog_terminal_pipeline.py",
+  "scripts/fog_terminal_report.py",
+  "scripts/fog_terminal_repro_check.py",
+  "scripts/roof_terminal_diagnosis.py",
+  "scripts/roof_terminal_pipeline.py",
+  "scripts/roof_terminal_repro.py",
+  "scripts/roof_terminal_verify.py",
+  "scripts/terminal_candidate_audit.py",
+  "scripts/terminal_candidate_report.py"
+ ],
+ "old_evidence_json_unchanged": true,
+ "all_source_memory_lines_retained": true,
+ "production_review": {
+  "location": "task60-terminal-tools-merge.md",
+  "files": [
+   "python/pvz_env.py",
+   "python/pvz_training_pack.py",
+   "scripts/episode_query.py",
+   "scripts/pack_training_rows.py",
+   "scripts/search_play.py"
+  ],
+  "global_npz_timestamp_change_reverted": true
+ },
+ "tests": {
+  "command": "/home/newbiexvwu/.venvs/ml/bin/python -m pytest -q -r s /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/python",
+  "passed": 506,
+  "subtests_passed": 133,
+  "skipped": 1,
+  "skip": "test_student_observation.py:74 hardcodes absent worktree build/resources",
+  "platform": "Linux",
+  "mac_executed": false,
+  "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+  "raw_output_sha256": "59780bce6f29c8a5657919d2724cf707d4849e2e22048a49775a8c2935f270a1"
+ },
+ "reproductions": {
+  "fog": {
+   "cases": [
+    {
+     "root": "l31-human-39000000-d1",
+     "candidate": 0,
+     "k": 0,
+     "outcome": {
+      "won": false,
+      "terminal": true,
+      "result": 2,
+      "wave": 7,
+      "tick": 18770,
+      "mowers_used": 4,
+      "decisions": 329
+     },
+     "checks": {
+      "terminal_fields_equal": [
+       "won",
+       "terminal",
+       "result",
+       "wave",
+       "tick",
+       "mowers_used",
+       "decisions"
+      ],
+      "full_teacher_trace_equal": true,
+      "public_leaf_frames_equal": true,
+      "terminal_engine_sha256_equal": true,
+      "v4_absolute_differences": {
+       "v4_short": 7.471303558465037e-09,
+       "teacher_path_v4": 7.471303558465037e-09
+      },
+      "v4_tolerance": 1e-06
+     },
+     "original_sha256": "17d935e05fb08d33e6b944b189bd395f05690b875a3cc1c281eb92158a752289",
+     "repeated_sha256": "fc405d3dba0c4b5079a7981661b2a1fc3dc067986b2b377906720a492b8141a9"
+    }
+   ],
+   "labels": 1,
+   "inputs": {
+    "legacy_plan": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-e/plan.json",
+     "sha256": "5164e2c0c52a169a6b19951f585fc267a82d8b64e3061dd8b16f836ca882eeed"
+    },
+    "legacy_selection": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/fog-selection-final.json",
+     "sha256": "afd6d4b3a0f5631f46c6a921724b39acfa69e4e55a7af9a0e929a5154c468218"
+    },
+    "rollout_policy": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+     "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "value": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+    },
+    "static_value": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+     "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "manifest": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/fog_panel.json",
+     "sha256": "df38c21db20506c14c33c99b1759e2340e6ad319ffdc39501482c8f6eebc351f"
+    },
+    "executable": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+     "sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+    },
+    "collector": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/critical_forks.py",
+     "sha256": "bd86a5e8b6ef54f0f6d7a06a823685de10f2f1ac40d853df9ad228abafe8c124"
+    },
+    "search_source": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/search_play.py",
+     "sha256": "c9ec58e97e014edb57dca75c1b01e880419890ed8dbc6046b0dbe86f24fe4365"
+    },
+    "trajectory_l31-human-39000000": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-e/episodes/l31-human-39000000/trajectory.json",
+     "sha256": "0a6c39da1cd2c8239e22d0b7b4b3e522a45147ec13ea841ae95e3d06f780f753"
+    }
+   }
+  },
+  "roof": {
+   "cases": [
+    {
+     "root": "l42-student-45000001-d161",
+     "candidate": 0,
+     "k": 0,
+     "outcome": {
+      "won": false,
+      "terminal": true,
+      "result": 2,
+      "wave": 30,
+      "tick": 70411,
+      "mowers_used": 0,
+      "decisions": 1153
+     },
+     "checks": {
+      "terminal_fields_equal": [
+       "won",
+       "terminal",
+       "result",
+       "wave",
+       "tick",
+       "mowers_used",
+       "decisions"
+      ],
+      "full_teacher_trace_equal": true,
+      "public_leaf_frames_equal": true,
+      "terminal_engine_sha256_equal": true,
+      "v4_absolute_differences": {
+       "v4_short": 7.487397004485308e-09,
+       "teacher_path_v4": 7.487397004485308e-09
+      },
+      "v4_tolerance": 1e-06
+     },
+     "original_sha256": "0b8ec882b0c737a7099f7c1c2b7d3aab6cb9f69d94e54c30e227cbcda73d51e9",
+     "repeated_sha256": "599e9d41cd2e55fda720f54912ad35311522f7e76dbba9a7759f433a2d8bbb68"
+    }
+   ],
+   "labels": 1,
+   "inputs": {
+    "legacy_plan": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/plan.json",
+     "sha256": "39fc0d81af509f9b5b55d83cfa4d51f4019d5cf8675bb3057251179c9325161f"
+    },
+    "legacy_selection": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/artifacts/task60/roof-selection-final.json",
+     "sha256": "933561a9a63ea1f7eecee39da41df4c23b864fdef9411e8fa9980c6611b05e39"
+    },
+    "rollout_policy": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+     "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "value": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+     "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+    },
+    "static_value": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+     "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "manifest": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/roof_panel.json",
+     "sha256": "393004fbe47b372bb18a94aa8688166ccdffb226618b9becbc77714a7e4534d1"
+    },
+    "executable": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+     "sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+    },
+    "collector": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/critical_forks.py",
+     "sha256": "bd86a5e8b6ef54f0f6d7a06a823685de10f2f1ac40d853df9ad228abafe8c124"
+    },
+    "search_source": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/scripts/search_play.py",
+     "sha256": "c9ec58e97e014edb57dca75c1b01e880419890ed8dbc6046b0dbe86f24fe4365"
+    },
+    "trajectory_l42-student-45000001": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/episodes/l42-student-45000001/trajectory.json",
+     "sha256": "9e14c935f660d911ad883b679559d3597f23429f44d95b7de7654fbd472e434f"
+    }
+   }
+  }
+ },
+ "new_student_prefix": [
+  {
+   "id": "l31-human-39000000-d1-t1",
+   "candidates": 55,
+   "engine_sha256": "b2ebb95e3a933b473571a751d09dfd7cb6b5c3540b05dfce721db11c4111f29c",
+   "audit_schema": 2
+  }
+ ],
+ "own_game_concurrency_limit": 2,
+ "qcpack": {
+  "ref": "25f1a529a640065dbaab547feb02061d86794b1a",
+  "production_auto_merge_preserves": [
+   "training_rows",
+   "pack_memory_limit"
+  ],
+  "conflicts": [
+   "MEMORY/docs/task59-qc-pipeline-fixes.md (add/add)"
+  ],
+  "merge_order": "main controller decides"
+ },
+ "loose_ends": {
+  "executed": true,
+  "raw_sha256": "0f889e9822f0d72d9449f138b84edcfbcd79cf519139a0a16f0c6589d8608f49"
+ },
+ "local_links": {
+  "current_design_task_and_reports_broken": 0,
+  "historical_daily_log_broken": 2,
+  "correct_links_appended": true
+ },
+ "code_sha256": {
+  "python/pvz_env.py": "65065b56086ba4e310b56421ecd131ddd8f10e38542f9892c9fd918cca72e35a",
+  "python/pvz_training_pack.py": "f9a0e8402dfbc63ca5f8139660fd765a5fdf80757743f3e375526fb183a18991",
+  "scripts/episode_query.py": "44f82c83e4159d52d4430741a77ba388976f57baec42c354c5088b3a32f256c3",
+  "scripts/pack_training_rows.py": "132f062fe9ac83cc859c2f373246a7e98968c10ad73371787b8ebf094e94f579",
+  "scripts/search_play.py": "c9ec58e97e014edb57dca75c1b01e880419890ed8dbc6046b0dbe86f24fe4365",
+  "scripts/critical_forks.py": "bd86a5e8b6ef54f0f6d7a06a823685de10f2f1ac40d853df9ad228abafe8c124",
+  "scripts/critical_forks_data.py": "c5728d8ab8055f129447a658cbbe1948e9ac2fa1d6ed3343836fe84fee530422",
+  "scripts/critical_forks_sampling.py": "1a2fbfc0e7fe2d2647d1cd7ce0007c57804362098808c1744f9b847205fd8b69",
+  "scripts/task53_repro.py": "f69b3b5c046e81257e497957580270a7e6f4aa80dd8f44cdf24763719d293323",
+  "python/test_critical_forks_unified.py": "ef1dab7db98fc4b4f19454a32d261bfe919ed35ef7ba7395d3191b261ba45b18",
+  "python/test_frame_store_chunks.py": "467a2291a91688ca94a2cb15deccf696e609b1dad85a82dfce1ec2f24b7d2db7"
+ }
+}

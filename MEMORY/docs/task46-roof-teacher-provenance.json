@@ -1,0 +1,42 @@
+[
+  {
+    "level": 42,
+    "model": "gemini-3.8-flash-high",
+    "verbatim_document": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-l42.md",
+    "sha256": "bc57366eea42d141666472cc1dfec91cf8f6ca20ad643e8adf263edf1b400acc",
+    "final_response_exact_suffix": true,
+    "api_responses": 20,
+    "tool_responses": 18,
+    "messages_sha256": "58e13452ff7cefa3c6a1623ea908307e462cd695eb8d893a582f622bf2c57f58"
+  },
+  {
+    "level": 43,
+    "model": "gemini-3.8-flash-high",
+    "verbatim_document": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-l43.md",
+    "sha256": "f236849734c26b9fbcb325be88b9ef720d71cb757eb654fcf47e5a5c11151f2b",
+    "final_response_exact_suffix": true,
+    "api_responses": 19,
+    "tool_responses": 17,
+    "messages_sha256": "7308d6ae3d3224452477a439dd6e85e51cda288f25c6a9bbb3611c48a650eaa7"
+  },
+  {
+    "level": 44,
+    "model": "gemini-3.8-flash-high",
+    "verbatim_document": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-l44.md",
+    "sha256": "0de6318d0ff1c61a70d9dfeed42f29ce07f360fce9f218354169a09aac2f9d30",
+    "final_response_exact_suffix": true,
+    "api_responses": 20,
+    "tool_responses": 18,
+    "messages_sha256": "57af32c2ec90f2d00ba52d9c8e4ad08840dfa6d54b7cedec619162ff37359fa9"
+  },
+  {
+    "level": 45,
+    "model": "gemini-3.8-flash-high",
+    "verbatim_document": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-l45.md",
+    "sha256": "a3e603b7cbc0b829b54602d89dd97befcf4b3858c76327d92b60d7438230ca49",
+    "final_response_exact_suffix": true,
+    "api_responses": 19,
+    "tool_responses": 17,
+    "messages_sha256": "67b5b7825dec56cb2a61bc659cf1d0f3fa42517e71bd71bbd25a74a862f04211"
+  }
+]

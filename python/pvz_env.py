@@ -823,6 +823,11 @@ class PvZEnv:
                                  + self._student_options(student_history, trace_path))
         if not response.get("ok"):
             raise RuntimeError("simulator rejected ROLLOUT_PREDICT")
+        if trace_path is not None:
+            # Older engines reply before the local trace stream is closed. A read-only
+            # round trip waits for that command scope to end before callers read the file.
+            if not self._command("OBS").get("ok"):
+                raise RuntimeError("simulator rejected rollout trace synchronization")
         return response
 
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
