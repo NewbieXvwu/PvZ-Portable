@@ -1642,6 +1642,33 @@
     "default_changed": false,
     "acceptance_sha256": "6d9d50242fbd39352f156a2ab1d1888b6d0554321ebc237fc586357160ba5844"
    }
+  },
+  {
+   "stage": "repro_preregistered",
+   "details": {
+    "plan_sha256": "d8ee0b732d909e783509595c444e80ee420f0031ee49a33efb7ff1860d2e5b26",
+    "manifest_sha256": "dc1bf704c7e573ce6c62295cda0f881cde2882b0c35a46bba2a6f59bc8e8c4ba",
+    "tasks": {
+     "pool_l21_eval_p9k": [
+      31064,
+      31095
+     ],
+     "pool_l22_eval_p9k": [
+      31096,
+      31127
+     ],
+     "pool_l23_eval_p9k": [
+      31128,
+      31159
+     ],
+     "pool_l25_eval_p9k": [
+      31160,
+      31191
+     ]
+    },
+    "criteria": "pooled McNemar p<0.05 AND v5 wins more AND L21-new-seed net wins>0; gate (a) reported but not adoption criterion",
+    "adopted_by": "master only"
+   }
   }
  ],
  "bootstrap_v4_pair_accuracy": {
