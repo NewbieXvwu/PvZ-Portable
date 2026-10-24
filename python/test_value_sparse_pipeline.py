@@ -12,6 +12,7 @@ from value_teacher_feasibility import write_json
 
 
 class SparsePipelineTest(unittest.TestCase):
+    @unittest.skipUnless(Path('/proc/self/stat').exists(), 'process identity is read from /proc (Linux only)')
     def test_live_process_identity_uses_real_process_handle(self):
         self.assertIsNotNone(pipeline.process_identity(os.getpid()))
         self.assertIsNone(pipeline.process_identity(999999999))
