@@ -134,8 +134,12 @@ def verify():
     assert max(params)/min(params) < 1.05
     assert set(evaluation['cpu']['configurations']) == set(CONFIGS)
     assert evaluation['cpu']['threads'] == evaluation['cpu']['batch'] == 1
-    for row in evaluation['cpu']['configurations'].values():
+    assert evaluation['cpu']['episode_id'] in expected_ids['test']
+    sample = next(r for r in test_rows if r['id']==evaluation['cpu']['episode_id'])
+    assert evaluation['cpu']['episode_pack_sha256'] == sample['pack_sha256']
+    for kind,row in evaluation['cpu']['configurations'].items():
         assert 0 < row['p50_us'] <= row['p95_us'] and row['state_bytes'] >= 0
+        assert row['checkpoint_sha256'] == digest(OUT/'models'/f'{kind}-human-s1'/'model.pt')
     for bucket in ('hidden','age_0_120','age_121_600','age_over_600','return_after'):
         assert set(evaluation['comparisons'][bucket]) == set(CONFIGS[1:])
     tests = subprocess.run([sys.executable,'-m','pytest','-q',str(ROOT/'python/test_memory_probe.py')],

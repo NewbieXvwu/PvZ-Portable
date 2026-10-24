@@ -149,27 +149,47 @@ def paired_comparisons(runs, bootstrap=2000):
 def benchmark():
     torch.set_num_threads(1)
     torch.manual_seed(58)
+    sample = None
+    if (OUT/'corpus.json').exists():
+        corpus = json.loads((OUT/'corpus.json').read_text())
+        row = next(r for r in corpus['episodes'] if r['split']=='test')
+        path = OUT/'episodes'/f"{row['id']}.npz"
+        with np.load(path,allow_pickle=False) as pack:
+            sample = (torch.from_numpy(pack['human_board'])[:,None],
+                      torch.from_numpy(pack['human_scalar'])[:,None],
+                      torch.from_numpy(pack['dt'].astype(np.float32))[:,None])
     results = {}
     for kind in CONFIGS:
         model = make_probe(kind).eval()
-        b, s, dt = torch.zeros(1,1,102,6,10), torch.zeros(1,1,157), torch.full((1,1),60.)
-        # Nonzero synthetic encoded values avoid denormal benchmarks and do not affect training.
-        b.normal_(); s.normal_()
+        checkpoint = OUT/'models'/f'{kind}-human-s1'/'model.pt'
+        if checkpoint.exists():
+            model.load_state_dict(torch.load(checkpoint,map_location='cpu',weights_only=True)['state_dict'])
+        b,s,dt = sample if sample is not None else (
+            torch.randn(1,1,102,6,10),torch.randn(1,1,157),torch.full((1,1),60.))
         state, timings = None, []
         with torch.inference_mode():
             for step in range(1100):
+                i = step % len(b)
+                if i == 0:
+                    state = None
+                # Precomputed tensor views; timing starts at encoded inputs.
+                inputs = b[i:i+1],s[i:i+1],dt[i:i+1]
                 start = time.perf_counter_ns()
-                _, state = model(b,s,dt,state)
+                _, state = model(*inputs,state)
                 elapsed = (time.perf_counter_ns()-start)/1000
                 if step >= 100:
                     timings.append(elapsed)
         results[kind] = dict(width=model.width, parameters=sum(p.numel() for p in model.parameters()),
             p50_us=float(np.median(timings)),p95_us=float(np.quantile(timings,.95)),
-            state_bytes=state.numel()*state.element_size() if state is not None else 0)
+            state_bytes=state.numel()*state.element_size() if state is not None else 0,
+            checkpoint_sha256=digest(checkpoint) if checkpoint.exists() else None)
     cpu = next((s.split(':',1)[1].strip() for s in Path('/proc/cpuinfo').read_text().splitlines()
                 if s.startswith('model name')), platform.processor())
     return dict(cpu=cpu,torch_version=torch.__version__,threads=1,batch=1,warmup=100,steps=1000,
                 scope='encoded tensors through output logits; includes streaming state update; excludes v2fog encoding',
+                input='repeated real human test episode; state resets at episode boundary' if sample is not None else 'synthetic',
+                episode_id=row['id'] if sample is not None else None,
+                episode_pack_sha256=row['pack_sha256'] if sample is not None else None,
                 configurations=results)
 
 
