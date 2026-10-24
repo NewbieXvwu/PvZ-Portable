@@ -39,13 +39,18 @@
 
 ## 结果
 
+- **交付验收**：最终 Linux 全套 `python/` 为 **506 passed、133 subtests passed、1 skipped**（76 秒）；跳过的是 `test_student_observation.py:74` 硬编码本树不存在的 build/resources，相关 fog/identity/C++ 续走与训练模型价值 oracle 已用指定 deploy3 引擎实际执行。Mac 未实机执行，未冒充跨平台验收；本次记录完整本机门禁及相关文件回归，主控审阅时可复用。
+- 所有生产增量逐处审完；NPZ 全局固定日期撤回，流写测试改为跨不同日期比较帧/数组内容，消除无关 ZIP 日期导致的偶发失败。最终复现、源分支祖先关系、17 个删除、原 JSON 不变、两日日志零缺行、代码 SHA 与测试结果逐项核验，见 [交付审计](task60-terminal-merge-audit.json)。`loose_ends.py` 已在最终状态执行；现行文档导航 0 断链。新轨迹/选择补齐提交 `b133908a` 已推，最后测试及审计随本记录推到 `origin/termmerge`，由主控决定合入 pvz-env。
+
+最终门禁使用 `/home/newbiexvwu/.venvs/ml/bin/python -m pytest -q -r s /home/newbiexvwu/PvZ-search/.claude/worktrees/termmerge/python`；环境为 `PVZ_NO_POPUP=1`，`PYTHONPATH` 指向本树绝对 scripts/python 路径，`PVZ_RESOURCE_DIR` / `PVZ_TEST_RESOURCE_DIR` 均为 `/home/newbiexvwu/.cache/pvz-research-resources`，`PVZ_EXECUTABLE` / `PVZ_TEST_EXECUTABLE` 均为 `/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable`，`PVZ_TEST_STUDENT=/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt`、`PVZ_TEST_VALUE=/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt`、`OMP_NUM_THREADS=1`。
+
 - 已推合并提交 `e9e89600`（forks）、`986841c4`（roof）、`17e443f5`（fog），统一/去重提交 `150c4f11`。追加补齐新时间窗学生轨迹 `roots → temporal-jobs → inspect/screen`，实机 120 tick 轨迹生成 1 个根、55 个引擎合法候选；重新打开引擎的物理前缀/根 SHA/学生历史检查及 schema=2 搜索审计通过。两份固定复现选择以 KB JSON 提交，避免命令依赖仅本机存在的选择文件。
 - 最终采集器对旧证据重算：fog L31 human/seed39000000/第1决策/wait/k0，终局败、wave7、tick18770、丢车4、329步续走；roof L42/seed45000001/第161决策/wait/k0，终局败、wave30、tick70411、丢车0、1153步续走。两个分支的终局、终态 SHA、公开短叶/老师路径叶帧、完整逐决策老师动作链均精确相同，v4 评分绝对误差分别 7.4713e-9 / 7.4874e-9（旧 Python 与原生 float32，显式阈值 1e-6）。这里只复算两个固定根的 wait 分支，不声称重采全部原面板。
-- 完整 Python 门禁一轮通过 501 项、133 子测试、5 跳过；启用原生价值网资源后的相关三文件通过 46 项、1 跳过。最后的完整门禁又显式指定训练学生/价值模型以覆盖该剩余 oracle，结果待下条最终记录。
+- 中间 Python 门禁一轮通过 501 项、133 子测试、5 跳过；启用原生价值网资源后的相关三文件通过 46 项、1 跳过。最终完整门禁又显式指定训练学生/价值模型覆盖该剩余 oracle，结果见本节交付验收。
 
 - 统一实现第一步：`critical_forks.py` 补时间窗选根、旧轨迹导入、旧命名空间与 0→1 起决策转换、完整静态/halving/锚定/核验追踪；`critical_forks_data.py` 补阻断归因、human/xray 关卡/reset-seed 聚类、老师路径叶值与严格/阈值/非终局排序分列、逐指标多挑战者独立确认。`critical_forks_sampling.py` 仅保留旧计划的 CPU 取点/命名点去重，不含游戏或终局循环。
 - 已先查引用并推 tag `task60-pre-terminal-unification`，再删 10 个重复脚本和 7 个重复测试文件；有价值的行为测试迁入 `test_critical_forks_unified.py`。旧 JSON 全部保留，报告追加新入口说明。
-- 首轮公共与生产相关回归：42 passed（`test_critical_forks.py`、`test_critical_forks_unified.py`、`test_roof_counterfactual.py`、`test_frame_store_chunks.py`）；后续最终全套测试待记录。
+- 首轮公共与生产相关回归：42 passed（`test_critical_forks.py`、`test_critical_forks_unified.py`、`test_roof_counterfactual.py`、`test_frame_store_chunks.py`）；最终全套门禁见本节交付验收。
 
 ### 能力逐项对照
 
@@ -103,7 +108,9 @@ PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python /home/newbiexvwu/PvZ-search
 
 ## 问题
 
-- `merge-tree --write-tree HEAD origin/qcpack` 的唯一冲突是 `MEMORY/docs/task59-qc-pipeline-fixes.md` 的 add/add；生产 `pack_training_rows.py` 自动合并，预览 blob 已核验同时包含 `training_rows` 和 `pack_memory_limit`。qcpack 对照 SHA `25f1a529a640065dbaab547feb02061d86794b1a`。请主控合并时保留 task59 两边任务书条目；无需为本次诊断调整生产部署顺序。
+- 全部新增/改动 Markdown 扫描发现原合并日志内 2 条历史相对链接少了 `docs/`；为遵守日志 append-only 保留原文，并在当天日志末追加正确链接。现行任务书、设计与报告导航扫描 0 断链。
+
+- `merge-tree --write-tree HEAD origin/qcpack` 的唯一冲突是 `MEMORY/docs/task59-qc-pipeline-fixes.md` 的 add/add；生产 `pack_training_rows.py` 自动合并，预览 blob 已核验同时包含 `training_rows` 和 `pack_memory_limit`。qcpack 对照 SHA `25f1a529a640065dbaab547feb02061d86794b1a`。请主控合并时保留 task59 两边任务书条目；合并顺序由主控决定。
 - 执行中 `origin/pvz-env` 从起点 b69024fa 推进到 98ad8860；按本任务边界，仅 fetch 核对，没有向该分支合并或推送。三个源分支的最新远端头均已是 termmerge 的祖先。
 
 - 已与 origin/qcpack 对照：它的 `pvz_training_pack.py` 与起点相同；`pack_training_rows.py` 只新增 `pack_memory_limit` 并替换 pack 层内存并发估算。本次只改 archive 行选择/权重，语义互补，无需引入 qcpack 或修改课程队列；最终再以 merge-tree 检查文本冲突，主控合并时须同时保留两者，禁止用整文件覆盖解决。
