@@ -7,6 +7,13 @@ import torch
 from torch import nn
 
 CONFIGS = ('current', 'stack4', 'stack8', 'convgru', 'spatial_ssm')
+PREDICTION_DIR = 'test_ieee_fp32'
+
+
+def configure_probe_inference():
+    """Match the CPU audit's float32 arithmetic; fitting/checkpoint selection is frozen."""
+    torch.backends.cuda.matmul.fp32_precision = 'ieee'
+    torch.backends.cudnn.conv.fp32_precision = 'ieee'
 
 
 class MemoryProbe(nn.Module):

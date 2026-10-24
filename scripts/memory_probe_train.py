@@ -20,7 +20,7 @@ from torch.nn import functional as F
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
-from pvz_memory_probe import CONFIGS, make_probe
+from pvz_memory_probe import CONFIGS, PREDICTION_DIR, configure_probe_inference, make_probe
 from memory_probe_data import OUT, digest, write_json
 
 
@@ -174,6 +174,7 @@ def run_all(epochs):
 
 def predict():
     torch.set_num_threads(1)
+    configure_probe_inference()
     device = torch.device('cuda')
     # No optimization: held-out inference uses the validation-selected checkpoint only.
     for arm in ('human', 'xray'):
@@ -189,12 +190,13 @@ def predict():
                 model.load_state_dict(ckpt['state_dict'])
                 model.eval()
                 for episode in episodes:
-                    target = folder / 'test' / f"{episode['meta']['id']}.npz"
+                    target = folder / PREDICTION_DIR / f"{episode['meta']['id']}.npz"
                     if target.exists():
                         with np.load(target, allow_pickle=False) as existing:
                             assert str(existing['checkpoint_sha256']) == result['checkpoint_sha256']
                             assert str(existing['corpus_sha256']) == result['corpus_sha256']
                             assert str(existing['episode_pack_sha256']) == episode['meta']['pack_sha256']
+                            assert str(existing['precision']) == 'ieee_fp32'
                         continue
                     state, outputs = None, []
                     with torch.inference_mode():
@@ -210,7 +212,7 @@ def predict():
                     np.savez_compressed(target, probabilities=np.concatenate(outputs),
                         checkpoint_sha256=result['checkpoint_sha256'],
                         corpus_sha256=result['corpus_sha256'],
-                        episode_pack_sha256=episode['meta']['pack_sha256'])
+                        episode_pack_sha256=episode['meta']['pack_sha256'], precision='ieee_fp32')
                 print('PREDICTED ' + folder.name, flush=True)
 
 

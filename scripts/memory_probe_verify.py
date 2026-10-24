@@ -12,7 +12,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from pvz_frame_store import read_frames
-from pvz_memory_probe import CONFIGS, make_probe
+from pvz_memory_probe import CONFIGS, PREDICTION_DIR, make_probe
 from memory_probe_data import OUT, digest, write_json
 from memory_probe_metrics import masks, stats
 
@@ -66,6 +66,7 @@ def verify():
     summary = json.loads((ROOT/'MEMORY/docs/memory-probe-results.json').read_text())
     assert summary['full_evaluation_sha256'] == digest(evaluation_path)
     assert evaluation['corpus_sha256'] == summary['corpus_sha256'] == corpus_hash
+    assert evaluation['inference'] == dict(precision='ieee_fp32',prediction_directory=PREDICTION_DIR)
     assert evaluation['test_episodes'] == 44 and evaluation['test_returns'] == returns['test']
     runs = {(r['kind'],r['arm'],r['seed']):r for r in evaluation['runs']}
     assert len(runs) == 30
@@ -86,7 +87,7 @@ def verify():
                 assert result['corpus_sha256'] == corpus_hash
                 assert result['checkpoint_sha256'] == digest(folder/'model.pt')
                 assert result['train_episodes'] == 100 and result['validation_episodes'] == 20
-                assert {p.stem for p in (folder/'test').glob('*.npz')} == expected_ids['test']
+                assert {p.stem for p in (folder/PREDICTION_DIR).glob('*.npz')} == expected_ids['test']
                 run = runs[kind,arm,seed]
                 assert {e['id'] for e in run['episodes']} == expected_ids['test']
                 resource_rows.append(dict(kind=kind,arm=arm,seed=seed,
@@ -98,12 +99,13 @@ def verify():
                 checkpoint = torch.load(folder/'model.pt',map_location='cpu',weights_only=True)
                 model.load_state_dict(checkpoint['state_dict'])
                 for test in test_rows:
-                    path = folder/'test'/f"{test['id']}.npz"
+                    path = folder/PREDICTION_DIR/f"{test['id']}.npz"
                     with np.load(path,allow_pickle=False) as prediction:
                         probability = prediction['probabilities']
                         assert str(prediction['checkpoint_sha256']) == result['checkpoint_sha256']
                         assert str(prediction['corpus_sha256']) == corpus_hash
                         assert str(prediction['episode_pack_sha256']) == test['pack_sha256']
+                        assert str(prediction['precision']) == 'ieee_fp32'
                         assert probability.shape == (test['frames'],35,6,9)
                         assert np.isfinite(probability).all() and (probability>=0).all() and (probability<=1).all()
                         assert (probability[:,1:] <= probability[:,:1]+1e-7).all()

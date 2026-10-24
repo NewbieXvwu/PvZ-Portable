@@ -1,0 +1,260 @@
+{
+  "default_cudnn_precision": "tf32",
+  "matmul_precision": "ieee default",
+  "audit_absolute_tolerance": 2e-05,
+  "audit_relative_tolerance": 0.0002,
+  "diagnostics": [
+    {
+      "kind": "current",
+      "arm": "human",
+      "seed": 1,
+      "old_max": 1.2740492820739746e-06,
+      "old_occ_max": 1.2740492820739746e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "current",
+      "arm": "xray",
+      "seed": 1,
+      "old_max": 2.0265579223632812e-06,
+      "old_occ_max": 2.0265579223632812e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "stack4",
+      "arm": "human",
+      "seed": 1,
+      "old_max": 0.0002371668815612793,
+      "old_occ_max": 0.0002371668815612793,
+      "old_pass": false,
+      "ieee_max": 2.5779008865356445e-06,
+      "ieee_pass": true
+    },
+    {
+      "kind": "stack4",
+      "arm": "xray",
+      "seed": 1,
+      "old_max": 0.00025159120559692383,
+      "old_occ_max": 0.00025159120559692383,
+      "old_pass": false,
+      "ieee_max": 1.6391277313232422e-06,
+      "ieee_pass": true
+    },
+    {
+      "kind": "stack8",
+      "arm": "human",
+      "seed": 1,
+      "old_max": 3.5762786865234375e-06,
+      "old_occ_max": 3.5762786865234375e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "stack8",
+      "arm": "xray",
+      "seed": 1,
+      "old_max": 3.2186508178710938e-06,
+      "old_occ_max": 3.2186508178710938e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "convgru",
+      "arm": "human",
+      "seed": 1,
+      "old_max": 2.7120113372802734e-06,
+      "old_occ_max": 2.7120113372802734e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "convgru",
+      "arm": "xray",
+      "seed": 1,
+      "old_max": 2.086162567138672e-06,
+      "old_occ_max": 2.086162567138672e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "spatial_ssm",
+      "arm": "human",
+      "seed": 1,
+      "old_max": 1.2516975402832031e-05,
+      "old_occ_max": 9.953975677490234e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "spatial_ssm",
+      "arm": "xray",
+      "seed": 1,
+      "old_max": 4.976987838745117e-06,
+      "old_occ_max": 4.649162292480469e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "current",
+      "arm": "human",
+      "seed": 2,
+      "old_max": 8.940696716308594e-07,
+      "old_occ_max": 8.940696716308594e-07,
+      "old_pass": true
+    },
+    {
+      "kind": "current",
+      "arm": "xray",
+      "seed": 2,
+      "old_max": 2.384185791015625e-06,
+      "old_occ_max": 2.086162567138672e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "stack4",
+      "arm": "human",
+      "seed": 2,
+      "old_max": 0.00047129392623901367,
+      "old_occ_max": 0.00047129392623901367,
+      "old_pass": false,
+      "ieee_max": 2.3245811462402344e-06,
+      "ieee_pass": true
+    },
+    {
+      "kind": "stack4",
+      "arm": "xray",
+      "seed": 2,
+      "old_max": 0.0004291534423828125,
+      "old_occ_max": 0.0004291534423828125,
+      "old_pass": false,
+      "ieee_max": 2.682209014892578e-06,
+      "ieee_pass": true
+    },
+    {
+      "kind": "stack8",
+      "arm": "human",
+      "seed": 2,
+      "old_max": 2.5331974029541016e-06,
+      "old_occ_max": 2.5331974029541016e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "stack8",
+      "arm": "xray",
+      "seed": 2,
+      "old_max": 3.844499588012695e-06,
+      "old_occ_max": 3.635883331298828e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "convgru",
+      "arm": "human",
+      "seed": 2,
+      "old_max": 2.4139881134033203e-06,
+      "old_occ_max": 2.4139881134033203e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "convgru",
+      "arm": "xray",
+      "seed": 2,
+      "old_max": 8.940696716308594e-07,
+      "old_occ_max": 8.940696716308594e-07,
+      "old_pass": true
+    },
+    {
+      "kind": "spatial_ssm",
+      "arm": "human",
+      "seed": 2,
+      "old_max": 9.059906005859375e-06,
+      "old_occ_max": 8.940696716308594e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "spatial_ssm",
+      "arm": "xray",
+      "seed": 2,
+      "old_max": 1.8298625946044922e-05,
+      "old_occ_max": 1.2516975402832031e-05,
+      "old_pass": true
+    },
+    {
+      "kind": "current",
+      "arm": "human",
+      "seed": 3,
+      "old_max": 2.7120113372802734e-06,
+      "old_occ_max": 2.7120113372802734e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "current",
+      "arm": "xray",
+      "seed": 3,
+      "old_max": 4.291534423828125e-06,
+      "old_occ_max": 4.291534423828125e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "stack4",
+      "arm": "human",
+      "seed": 3,
+      "old_max": 0.0005687475204467773,
+      "old_occ_max": 0.0005687475204467773,
+      "old_pass": false,
+      "ieee_max": 2.0265579223632812e-06,
+      "ieee_pass": true
+    },
+    {
+      "kind": "stack4",
+      "arm": "xray",
+      "seed": 3,
+      "old_max": 0.00034546852111816406,
+      "old_occ_max": 0.00034546852111816406,
+      "old_pass": false,
+      "ieee_max": 1.7285346984863281e-06,
+      "ieee_pass": true
+    },
+    {
+      "kind": "stack8",
+      "arm": "human",
+      "seed": 3,
+      "old_max": 3.6656856536865234e-06,
+      "old_occ_max": 3.6656856536865234e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "stack8",
+      "arm": "xray",
+      "seed": 3,
+      "old_max": 4.0531158447265625e-06,
+      "old_occ_max": 4.0531158447265625e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "convgru",
+      "arm": "human",
+      "seed": 3,
+      "old_max": 7.092952728271484e-06,
+      "old_occ_max": 7.092952728271484e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "convgru",
+      "arm": "xray",
+      "seed": 3,
+      "old_max": 2.5033950805664062e-06,
+      "old_occ_max": 2.5033950805664062e-06,
+      "old_pass": true
+    },
+    {
+      "kind": "spatial_ssm",
+      "arm": "human",
+      "seed": 3,
+      "old_max": 1.3649463653564453e-05,
+      "old_occ_max": 1.3649463653564453e-05,
+      "old_pass": true
+    },
+    {
+      "kind": "spatial_ssm",
+      "arm": "xray",
+      "seed": 3,
+      "old_max": 1.0848045349121094e-05,
+      "old_occ_max": 1.0848045349121094e-05,
+      "old_pass": true
+    }
+  ]
+}

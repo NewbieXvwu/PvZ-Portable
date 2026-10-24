@@ -13,7 +13,7 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
-from pvz_memory_probe import CONFIGS, make_probe
+from pvz_memory_probe import CONFIGS, PREDICTION_DIR, make_probe
 from memory_probe_data import OUT, digest, write_json
 
 
@@ -73,7 +73,8 @@ def measure_run(kind, arm, seed, episodes):
         path = OUT / 'episodes' / f"{row['id']}.npz"
         assert digest(path) == row['pack_sha256']
         with np.load(path, allow_pickle=False) as data, np.load(
-                folder / 'test' / f"{row['id']}.npz", allow_pickle=False) as pred:
+                folder / PREDICTION_DIR / f"{row['id']}.npz", allow_pickle=False) as pred:
+            assert str(pred['precision']) == 'ieee_fp32'
             y, probability = data['target'], pred['probabilities']
             assert probability.shape == y.shape
             assert np.isfinite(probability).all()
@@ -184,7 +185,8 @@ def report():
                 print(json.dumps({k:r[k] for k in ('kind','arm','seed')} | r['metrics']['hidden']),flush=True)
     result = dict(corpus_sha256=digest(OUT/'corpus.json'), test_episodes=len(episodes),
         test_returns=sum(len(e['returns']) for e in episodes), runs=runs,
-        comparisons=paired_comparisons(runs), cpu=benchmark())
+        comparisons=paired_comparisons(runs), cpu=benchmark(),
+        inference=dict(precision='ieee_fp32',prediction_directory=PREDICTION_DIR))
     # Per-episode arrays stay with the ignored evidence; git carries conclusions only.
     write_json(OUT / 'evaluation.json', result)
     result['full_evaluation_sha256'] = digest(OUT / 'evaluation.json')

@@ -8,7 +8,7 @@ import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
-from pvz_memory_probe import CONFIGS, MemoryProbe, make_probe
+from pvz_memory_probe import CONFIGS, MemoryProbe, configure_probe_inference, make_probe
 from memory_probe_data import labels
 from memory_probe_metrics import auc, masks, stats
 from memory_probe_train import objective
@@ -133,3 +133,14 @@ def test_lightweight_queue_covers_every_configuration_without_torch_import():
         'import sys; sys.path.insert(0,' + repr(str(ROOT/'scripts')) + '); '
         'import memory_probe_queue; assert "torch" not in sys.modules'],check=True)
     assert check.returncode == 0
+
+
+def test_inference_explicitly_uses_ieee_fp32():
+    matmul,conv=torch.backends.cuda.matmul.fp32_precision,torch.backends.cudnn.conv.fp32_precision
+    try:
+        configure_probe_inference()
+        assert torch.backends.cuda.matmul.fp32_precision == 'ieee'
+        assert torch.backends.cudnn.conv.fp32_precision == 'ieee'
+    finally:
+        torch.backends.cuda.matmul.fp32_precision=matmul
+        torch.backends.cudnn.conv.fp32_precision=conv
