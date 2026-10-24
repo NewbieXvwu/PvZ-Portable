@@ -180,10 +180,10 @@ class CurriculumRulesTest(unittest.TestCase):
             self.assertEqual(packer.pack_memory_limit(GIB, jobs), 1)
 
     def test_pending_builds_uses_merged_catalog_and_segment_contract(self):
-        # 与 _prepare_corpus 同一合并视图（采集优先）、与 pack() 同一段契约：段文件在即已建。
-        import hashlib
+        # 与 _prepare_corpus 同一合并视图（采集优先）、与 pack() 同一套指纹函数：
+        # 视图链接不齐直接待建；链接齐全时按 pack 的指纹查段文件，段在即已建。
         from pvz_recipe import load_recipe, training_row_options, write_recipe
-        from pvz_training_pack import pack_options, segment_options, segment_path
+        from pvz_training_pack import fingerprint_paths, pack_options, segment_options, segment_path
         import curriculum_queue as queue
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -202,10 +202,13 @@ class CurriculumRulesTest(unittest.TestCase):
             pipeline.args = SimpleNamespace(recipe=recipe_path, frames=coll, log=root / 'log')
             pipeline.directory = root / 'pipeline'
             self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)),
-                             {'pool_a': 200, 'pool_b': 50})
-            fingerprint = hashlib.sha1(b's2/pool_b:50').hexdigest()[:16]
+                             {'pool_a': 200, 'pool_b': 50})          # 视图还没有链接
+            view = root / 'pipeline' / 'frames'
+            (view / 's2' / 'pool_b').mkdir(parents=True)
+            (view / 's2' / 'pool_b' / 'frames.jsonl').symlink_to(coll / 's2' / 'pool_b' / 'frames.jsonl')
             options = pack_options(**training_row_options(recipe, ['pool_a', 'pool_b']))
-            target = segment_path(root / 'pipeline' / 'frames', segment_options(options, 'pool_b', fingerprint))
+            fingerprint = fingerprint_paths(view, [view / 's2' / 'pool_b' / 'frames.jsonl'])
+            target = segment_path(view, segment_options(options, 'pool_b', fingerprint))
             target.parent.mkdir(parents=True)
             target.write_bytes(b'')
             self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)), {'pool_a': 200})
