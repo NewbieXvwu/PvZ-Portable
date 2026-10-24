@@ -682,6 +682,86 @@ class TrainingRestartTest(unittest.TestCase):
                 pipeline._run(copy.deepcopy(job))
             self.assertTrue(pipeline.failed)
 
+    def test_build_plan_prefers_measured_per_builder(self):
+        # task61 追加：单建造者基线实测优先（round 2 实测 0.37 GiB vs 假设 2 GiB），无实测回退。
+        measured = int(0.37 * GIB)
+        pending = [500 * 2 ** 20, 300 * 2 ** 20]
+        _workers, per = build_plan(pending, 6, None, measured_per_builder=measured)
+        self.assertEqual(per, measured + max(pending))
+        _workers, per = build_plan(pending, 6, None)
+        self.assertEqual(per, PACK_BUILDER_BYTES + max(pending))
+
+    def _bare_pipeline(self, tmp):
+        from curriculum_queue import TrainingPipeline
+        pipeline = TrainingPipeline.__new__(TrainingPipeline)
+        pipeline.failed = False
+        pipeline.args = SimpleNamespace(log=Path(tmp) / 'log', python=Path(sys.executable))
+        pipeline.lock_fd = None
+        pipeline.build_workers = 6
+        pipeline.build_peak = 12 * GIB          # 15:22 生产现场：pack plan 估到 12.1 GiB
+        pipeline.last_train_peak = int(3.53 * GIB)
+        pipeline.directory = Path(tmp)          # estimate_peak 在这里 glob 段目录
+        return pipeline
+
+    def test_pack_end_clears_build_peak_from_reservation(self):
+        # 打包一结束（训练/评估期间），estimate_peak 只反映训练估算，不再扣 12 GiB。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = self._bare_pipeline(tmp)
+            job = self._job(tmp, 'queued')
+            peaks = {}
+            def fake_command(command, log):
+                peaks['pack' if 'pack' in str(command) else 'train'] = pipeline.build_peak
+                return int(0.40 * GIB) if 'pack' in str(command) else int(3.53 * GIB)
+            pipeline._admit = lambda: None
+            pipeline._prepare_corpus = lambda labels: None
+            pipeline._command = fake_command
+            pipeline._evaluate = lambda _job: {'promotion': {'approved': False, 'reasons': ['x']}}
+            with mock.patch.object(queue, 'load_recipe',
+                                   lambda path, kind=None: {'labels': ['x'], 'data': '/tmp/frames'}), \
+                    mock.patch.object(queue, 'pack_command', lambda args, labels: ['pack-cmd']):
+                report = pipeline._run(copy.deepcopy(job))
+            self.assertEqual(peaks['pack'], 12 * GIB)          # 打包进行时仍按 pack plan 扣
+            self.assertEqual(peaks['train'], 0)                # 打包一结束就清零
+            self.assertEqual(pipeline.build_peak, 0)
+            self.assertEqual(pipeline.last_train_peak, int(3.53 * GIB))
+            self.assertEqual(report['train_peak_anon_bytes'], int(3.53 * GIB))
+            self.assertEqual(pipeline.estimate_peak(), int(3.53 * GIB))   # reservation 只按训练估算
+
+    def test_pack_failure_still_clears_build_peak(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = self._bare_pipeline(tmp)
+            job = self._job(tmp, 'queued')
+            pipeline._admit = lambda: None
+            def broken(_labels):
+                raise RuntimeError('no archives for labels')
+            pipeline._prepare_corpus = broken
+            with mock.patch.object(queue, 'load_recipe',
+                                   lambda path, kind=None: {'labels': ['x'], 'data': '/tmp/frames'}), \
+                    mock.patch.object(queue, 'pack_command', lambda args, labels: ['pack-cmd']):
+                with self.assertRaises(RuntimeError):
+                    pipeline._run(copy.deepcopy(job))
+            self.assertEqual(pipeline.build_peak, 0)           # 失败同样清零
+
+    def test_init_restores_measured_pack_peak(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            job = self._job(tmp, 'done')
+            job['timing'] = {'pack_peak_anon_bytes': int(0.40 * GIB),
+                             'train_peak_anon_bytes': int(3.53 * GIB)}
+            state = {'training_jobs': [job]}
+            args = SimpleNamespace(state=Path(tmp) / 'state.json')
+            def fake_run(self, _job):
+                return {}
+            with mock.patch.object(queue.TrainingPipeline, '_run', fake_run), \
+                    mock.patch.object(queue.TrainingPipeline, '_plan_build', lambda self, recipe: None), \
+                    mock.patch.object(queue, 'load_recipe',
+                                      lambda path, kind=None: {'precompute_workers': 2}):
+                pipeline = queue.TrainingPipeline(args, state)
+            self.assertEqual(pipeline.last_pack_peak, int(0.40 * GIB) // 2)   # 单建造者实测
+            self.assertEqual(pipeline.last_train_peak, int(3.53 * GIB))
+
 
 if __name__ == '__main__':
     unittest.main()
