@@ -425,6 +425,10 @@ Codex 额度用尽后接手，先 `ps` 核实而没有重启任何任务：数�
 
 {"artifact_bytes": 2511483121, "held_out_seeds": [2000087, 2000152, 2000165, 2000182, 2000190, 2000192, 2000200, 2000204], "nonterminal_rows": 3860, "seeds": 64, "wins": 2104.0}
 
+### 42. 稀疏扩量阶段 `teacher_v5_training_complete`
+
+{"artifact_bytes": 2512103421, "best_epoch": 1, "pair_accuracy": {"init": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt", "checkpoint_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d", "cohorts": {"day_l7_branch": {"cells": {"pair_accuracy": 0.5438972162740899, "pairs": 467, "positions": 199}, "leaves": {"pair_accuracy": 0.655788876276958, "pairs": 3524, "positions": 655}, "rows": 29446, "seeds": 32}, "pool_decision": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "leaves": {"pair_accuracy": 0.483271375464684, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}}, "leaves": {"pair_accuracy": 0.483271375464684, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}, "v5": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "checkpoint": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/v5/model.pt", "checkpoint_sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4", "cohorts": {"day_l7_branch": {"cells": {"pair_accuracy": 0.5588865096359743, "pairs": 467, "positions": 199}, "leaves": {"pair_accuracy": 0.6475595913734393, "pairs": 3524, "positions": 655}, "rows": 29446, "seeds": 32}, "pool_decision": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "leaves": {"pair_accuracy": 0.5613382899628253, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}}, "leaves": {"pair_accuracy": 0.5613382899628253, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}}, "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"}
+
 ## 问题
 
 ### 问题 3：第一轮数据的 root 也来自学生轨迹，不只是续走为学生
