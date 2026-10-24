@@ -694,6 +694,64 @@ B 的实施方案：以明确目录建立含相对路径、字节数、SHA256、
 
 **阶段边界：本报告提交并 push origin cleanup 后，第一阶段完成；停止等待主控批准，不进入第二阶段。**
 
+### 第二阶段执行记录（主控 17:05 批准）
+
+按批准的 1→5 顺序执行。下表 df 单位 B，差值 = 前已用 − 后已用；qc 并发增长、页缓存/延迟回收和归档暂存会影响净变化，不能把它等同于单一目录 du。每行路径均为实际明确对象。 初期第二步的“归档回验”行在临时 tar 清除前采样，故可出现负值；各阶段总净变化以下方阶段汇总的首尾 df 为准，不累加重叠窗口。
+
+| 本机时间 | 步骤 | 路径/批次 | df 已用前 | df 已用后 | 净减少 B | 状态与证据 |
+|---|---|---|---:|---:|---:|---|
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.npm/_cacache` | 168604545024 | 167577673728 | 1026871296 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.nv/ComputeCache` | 167577677824 | 166512861184 | 1064816640 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.debug` | 166512861184 | 166433763328 | 79097856 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.157.1-x86_64-unknown-linux-musl` | 166433767424 | 166042492928 | 391274496 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.158.0-x86_64-unknown-linux-musl` | 166042492928 | 165598203904 | 444289024 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.159.0-x86_64-unknown-linux-musl` | 165598203904 | 165153763328 | 444440576 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.159.1-x86_64-unknown-linux-musl` | 165153763328 | 164709183488 | 444579840 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.159.2-x86_64-unknown-linux-musl` | 164709183488 | 164264701952 | 444481536 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.159.3-x86_64-unknown-linux-musl` | 164264701952 | 163819876352 | 444825600 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:04+08:00 | 1-C及追加缓存 | `~/.codex/packages/app-server-daemon/releases/0.160.0-x86_64-unknown-linux-musl` | 163819876352 | 163373039616 | 446836736 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:05+08:00 | 1-C及追加缓存 | `~/PvZ-Portable/logs` | 163373043712 | 162595741696 | 777302016 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:05+08:00 | 1-C及追加缓存 | `~/PvZ-Portable/build/core.2439` | 162595741696 | 162394333184 | 201408512 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:05+08:00 | 1-C及追加缓存 | `~/PvZ-search/artifacts/student/.feature_cache` | 162394337280 | 161863958528 | 530378752 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:09+08:00 | 1-C及追加缓存 | `~/PvZ-search/.claude/worktrees/conveyor/artifacts/task20/cache` | 161863958528 | 160741408768 | 1122549760 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:13+08:00 | 1-C及追加缓存 | `~/PvZ-search/.claude/worktrees/identity/artifacts/task19/cache` | 160741408768 | 159656206336 | 1085202432 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:14+08:00 | 1-C及追加缓存 | `~/PvZ-search/artifacts/student/frames_v2/.feature_cache` | 159656206336 | 156965822464 | 2690383872 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:17+08:00 | 1-C及追加缓存 | `~/PvZ-search/artifacts/student/v2_cache` | 156965822464 | 147981946880 | 8983875584 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:22+08:00 | 1-C及追加缓存 | `~/PvZ-search/.claude/worktrees/dw5/artifacts/task27/cache` | 147981946880 | 140370956288 | 7610990592 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:22+08:00 | 1-C及追加缓存 | `~/PvZ-search/.claude/worktrees/dw5/artifacts/task27/training_frames/packs` | 140370960384 | 122853666816 | 17517293568 | 完成：主控逐项批准；删除前复核可见 fd/cwd/exe 与相关 pack/train 进程；未递归跟随软链 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/cb_cuda_tui.log` | 122853670912 | 122810265600 | 43405312 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/cb_shovel_tui.log` | 122810265600 | 122777595904 | 32669696 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/codex_cuda_tui.log` | 122777595904 | 122763276288 | 14319616 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/dw3s2_eval.log` | 122763276288 | 122600067072 | 163209216 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/iter2_teacher_eval.log` | 122600067072 | 122576740352 | 23326720 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/night_vdata_a100.log` | 122576740352 | 122565074944 | 11665408 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/night_vdata_b25.log` | 122565074944 | 122553430016 | 11644928 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:22+08:00 | 1-未打开大日志 | `~/pvz-logs/night_vdata_b50.log` | 122553430016 | 122541764608 | 11665408 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/night_vdata_b75.log` | 122541764608 | 122530103296 | 11661312 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/probe_day_l9.log` | 122530103296 | 122519871488 | 10231808 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/qoder_tui.log` | 122519871488 | 122350030848 | 169840640 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/student_v2b_eval.log` | 122350034944 | 122326745088 | 23289856 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/student_v3_eval.log` | 122326745088 | 122303426560 | 23318528 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/student_v3all_eval.log` | 122303426560 | 122280136704 | 23289856 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/v34_panel.log` | 122280136704 | 122256830464 | 23306240 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/weak_update_000000_rerun.log` | 122256830464 | 122246537216 | 10293248 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:31:23+08:00 | 1-未打开大日志 | `~/pvz-logs/weak_update_000034.log` | 122246537216 | 122234875904 | 11661312 | 完成：单文件 ≥10,000,000 B；删除前再次检查 fd，qc.out 等打开日志保留 |
+| 2026-10-24T16:33:37+08:00 | 1-配方变更 | `~/PvZ-search/.claude/worktrees/cleanup/recipes/dw4i.json`；`~/PvZ-search/.claude/worktrees/cleanup/recipes/dw4i2.json`；`~/PvZ-search/.claude/worktrees/cleanup/recipes/dw5i.json`；`~/PvZ-search/.claude/worktrees/cleanup/recipes/identity_dw3_s1.json` | 122237718528 | 122237718528 | 0 | 完成：移除可选 read_cache_dir；pvz_recipe 默认为 None；全部 recipes schema 验证通过；未改 cq 或 pipeline 已保存配方 |
+| 2026-10-24T16:34:57+08:00 | 2-B-归档回验 | `~/PvZ-search/artifacts/hard/branch` | 122237755392 | 124691021824 | -2453266432 | 完成：HF archive/2026-10-24/hard_branch.MANIFEST.json @ 64688af9c6861b94bd74fa3d159265d8ab5ce25f；全部部件强制下载、SHA256/字节数一致；源元数据稳定；详细清单在 HF MANIFEST |
+| 2026-10-24T16:34:58+08:00 | 2-B源目录删除 | `~/PvZ-search/artifacts/hard/branch` | 122238795776 | 119786631168 | 2452164608 | 完成：HF 固定 revision 64688af9c6861b94bd74fa3d159265d8ab5ce25f 已下载回验，索引 hard_branch |
+| 2026-10-24T16:35:42+08:00 | 2-B-归档回验 | `~/PvZ-search/artifacts/hard/branch3` | 119786635264 | 121471156224 | -1684520960 | 完成：HF archive/2026-10-24/hard_branch3.MANIFEST.json @ 474831852f2e4594a062e779f87715e6f337355a；全部部件强制下载、SHA256/字节数一致；源元数据稳定；详细清单在 HF MANIFEST |
+| 2026-10-24T16:35:42+08:00 | 2-B源目录删除 | `~/PvZ-search/artifacts/hard/branch3` | 119788965888 | 118106873856 | 1682092032 | 完成：HF 固定 revision 474831852f2e4594a062e779f87715e6f337355a 已下载回验，索引 hard_branch3 |
+| 2026-10-24T16:38:59+08:00 | 2-B-归档回验 | `~/PvZ-search/artifacts/night` | 118106873856 | 122182909952 | -4076036096 | 完成：HF archive/2026-10-24/night.MANIFEST.json @ 82108867dac86e39d5ad0bed729757eaf248d75c；全部部件强制下载、SHA256/字节数一致；源元数据稳定；详细清单在 HF MANIFEST |
+| 2026-10-24T16:38:59+08:00 | 2-B源目录删除 | `~/PvZ-search/artifacts/night` | 118118555648 | 114045411328 | 4073144320 | 完成：HF 固定 revision 82108867dac86e39d5ad0bed729757eaf248d75c 已下载回验，索引 night |
+| 2026-10-24T16:42:00+08:00 | 2-B-归档回验 | `~/PvZ-search/artifacts/relabel` | 114045411328 | 114441355264 | -395943936 | 完成：HF archive/2026-10-24/relabel.MANIFEST.json @ ba30a8018bb6354acf0745721e69ec8644de7b0f；全部部件强制下载、SHA256/字节数一致；源元数据稳定；详细清单在 HF MANIFEST |
+| 2026-10-24T16:42:00+08:00 | 2-B源目录删除 | `~/PvZ-search/artifacts/relabel` | 114054791168 | 113658167296 | 396623872 | 完成：HF 固定 revision ba30a8018bb6354acf0745721e69ec8644de7b0f 已下载回验，索引 relabel |
+| 2026-10-24T16:43:43+08:00 | 2-B-归档回验 | `~/PvZ-Portable/artifacts` | 113658167296 | 114111021056 | -452853760 | 完成：HF archive/2026-10-24/portable_artifacts.MANIFEST.json @ 6a6978e1446bf411a137b83e47d0e354066b52d1；全部部件强制下载、SHA256/字节数一致；源元数据稳定；详细清单在 HF MANIFEST |
+| 2026-10-24T16:43:43+08:00 | 2-B源目录删除 | `~/PvZ-Portable/artifacts` | 113663692800 | 113219944448 | 443748352 | 完成：HF 固定 revision 6a6978e1446bf411a137b83e47d0e354066b52d1 已下载回验，索引 portable_artifacts |
+| 2026-10-24T16:47:44+08:00 | 2-B-归档回验 | `~/pvz-lane` | 113219944448 | 113900937216 | -680992768 | 完成：HF archive/2026-10-24/pvz_lane.MANIFEST.json @ dab418c1b8d1bd9f45a5ffb8483d484cdae4e918；全部部件强制下载、SHA256/字节数一致；源元数据稳定；详细清单在 HF MANIFEST |
+| 2026-10-24T16:47:44+08:00 | 2-B源目录删除 | `~/pvz-lane` | 113231912960 | 112553816064 | 678096896 | 完成：HF 固定 revision dab418c1b8d1bd9f45a5ffb8483d484cdae4e918 已下载回验，索引 pvz_lane |
+| 2026-10-24T16:47:44+08:00 | 1-配方回归核验 | `~/PvZ-search/.claude/worktrees/cleanup/python/test_recipe.py` | 112554008576 | 112554008576 | 0 | 完成：旧测试强制访问已移除的可选字段导致 KeyError；已改为验证默认 None 和剩余必选路径可移植；pytest test_recipe.py：8 passed、18 subtests passed（13.19s） |
+| 2026-10-24T16:48:14+08:00 | 2-阶段汇总 | `~/PvZ-search/artifacts/hard/branch`；`~/PvZ-search/artifacts/hard/branch3`；`~/PvZ-search/artifacts/night`；`~/PvZ-search/artifacts/relabel`；`~/PvZ-Portable/artifacts`；`~/pvz-lane` | 122237755392 | 112555196416 | 9682558976 | 完成：6 组均完成 HF 固定 revision 下载 SHA256/字节数回验后删除；所有上传/下载暂存已清；night 拆为 4GB+余片；完整索引 task62-archive-index.md |
+
 ## 问题
 
 ## 主控批准（2026-10-24 17:05，台式机时间）——第二阶段按此执行

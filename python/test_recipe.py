@@ -158,8 +158,11 @@ class RecipeTests(unittest.TestCase):
             # The file itself must stay portable: nothing inside the repository is absolute,
             # so the recipe survives deleting a worktree and moving to another machine.
             document = json.loads((ROOT/f'recipes/{name}.json').read_text())
-            for field in ('data', 'out', 'cache_dir', 'read_cache_dir'):
+            for field in ('data', 'out', 'cache_dir'):
                 self.assertFalse(Path(document[field]).is_absolute(), f'{name}.{field}')
+            self.assertIsNone(recipe['read_cache_dir'])
+            if document.get('read_cache_dir') is not None:
+                self.assertFalse(Path(document['read_cache_dir']).is_absolute(), f'{name}.read_cache_dir')
             self.assertEqual(validate(copy.deepcopy(recipe)), recipe)
 
 

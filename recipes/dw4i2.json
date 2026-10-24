@@ -58,7 +58,6 @@
  "init": null,
  "cache": true,
  "cache_dir": "artifacts/student/recipe_cache/dw4i",
- "read_cache_dir": "artifacts/student/v2_cache",
  "dense_boards": false,
  "row_weights": null,
  "source_row_report": true,
