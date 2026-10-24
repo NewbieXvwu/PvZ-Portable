@@ -445,6 +445,10 @@ Codex 额度用尽后接手，先 `ps` 核实而没有重启任何任务：数�
 
 {"v3": {"pool_l24_eval_p9k": {"decisions": 320, "games": 4, "mean_candidates": 5.58125, "mean_gap": 0.001325384375, "mean_leaf": 0.0036829875, "mean_scored": 5.58125, "mean_std": 0.00122001875, "median_gap": 0.000481, "median_std": 0.0005239999999999999, "share_gap_below_margin": 0.996875, "share_overridden": 0.00625}, "pool_l26_eval_p9k": {"decisions": 320, "games": 4, "mean_candidates": 5.509375, "mean_gap": 0.000322103125, "mean_leaf": 0.0010451125, "mean_scored": 5.509375, "mean_std": 0.00031125, "median_gap": 0.000128, "median_std": 0.00019549999999999998, "share_gap_below_margin": 1.0, "share_overridden": 0.0}}, "v4": {"pool_l24_eval_p9k": {"decisions": 320, "games": 4, "mean_candidates": 5.3375, "mean_gap": 0.0305300125, "mean_leaf": 0.45053379375, "mean_scored": 5.3375, "mean_std": 0.049766396875, "median_gap": 0.015588, "median_std": 0.041818, "share_gap_below_margin": 0.590625, "share_overridden": 0.33125}, "pool_l26_eval_p9k": {"decisions": 320, "games": 4, "mean_candidates": 5.315625, "mean_gap": 0.030398146875, "mean_leaf": 0.25090733125, "mean_scored": 5.315625, "mean_std": 0.045000225, "median_gap": 0.015144000000000001, "median_std": 0.031190000000000002, "share_gap_below_margin": 0.628125, "share_overridden": 0.259375}}}
 
+### 46. 稀疏扩量阶段 `teacher_v5_paired_l21_complete`
+
+{"pool_l21_eval_p9k": {"delta_rate": 0.4375, "delta_wins": 14, "gain": 15, "harm": 1, "mcnemar_exact_two_sided": 0.000518798828125, "missing_expected_seeds": {"v3": [], "v4": []}, "missing_new": [], "missing_old": [], "new_wins": 28, "old_wins": 14, "pairs": 32}}
+
 ## 问题
 
 ### 问题 3：第一轮数据的 root 也来自学生轨迹，不只是续走为学生

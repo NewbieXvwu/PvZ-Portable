@@ -1,5 +1,5 @@
 {
- "stage": "teacher_v5_dispersion_complete",
+ "stage": "teacher_v5_paired_l21_complete",
  "task_complete": false,
  "training_complete": true,
  "acceptance_complete": false,
@@ -1286,6 +1286,27 @@
       "median_gap": 0.015144000000000001,
       "share_gap_below_margin": 0.628125,
       "share_overridden": 0.259375
+     }
+    }
+   }
+  },
+  {
+   "stage": "teacher_v5_paired_l21_complete",
+   "details": {
+    "pool_l21_eval_p9k": {
+     "pairs": 32,
+     "old_wins": 14,
+     "new_wins": 28,
+     "gain": 15,
+     "harm": 1,
+     "delta_wins": 14,
+     "delta_rate": 0.4375,
+     "mcnemar_exact_two_sided": 0.000518798828125,
+     "missing_old": [],
+     "missing_new": [],
+     "missing_expected_seeds": {
+      "v3": [],
+      "v4": []
      }
     }
    }
