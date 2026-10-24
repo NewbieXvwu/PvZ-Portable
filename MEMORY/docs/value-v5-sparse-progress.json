@@ -1,5 +1,5 @@
 {
- "stage": "teacher_v5_paired_day_complete",
+ "stage": "teacher_v5_paired_night_complete",
  "task_complete": false,
  "training_complete": true,
  "acceptance_complete": false,
@@ -1322,6 +1322,27 @@
      "harm": 0,
      "delta_wins": 0,
      "delta_rate": 0.0,
+     "mcnemar_exact_two_sided": 1.0,
+     "missing_old": [],
+     "missing_new": [],
+     "missing_expected_seeds": {
+      "v3": [],
+      "v4": []
+     }
+    }
+   }
+  },
+  {
+   "stage": "teacher_v5_paired_night_complete",
+   "details": {
+    "night_l14_eval_n10": {
+     "pairs": 32,
+     "old_wins": 30,
+     "new_wins": 31,
+     "gain": 2,
+     "harm": 1,
+     "delta_wins": 1,
+     "delta_rate": 0.03125,
      "mcnemar_exact_two_sided": 1.0,
      "missing_old": [],
      "missing_new": [],
