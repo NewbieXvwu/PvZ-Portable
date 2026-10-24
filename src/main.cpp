@@ -267,6 +267,52 @@ static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& 
 	return true;
 }
 
+// Debug aid for "two runs disagree" reports: dump every field StableEnvironmentHash folds in,
+// so the two runs can be compared field by field instead of only by a 64-bit digest.  The board
+// payload is the same SaveGame V4 image the hash uses (header + TLV chunks), so a diff can be
+// narrowed to a chunk and then to a field.  Layout:
+//   "PVZSB1\n" | u64 board size | board bytes | u64 rand size | rand bytes |
+//   u32 appRandSeed | u32 randSeed | u32 appCounter | u32 zombiesKilled | u32 plantsEaten |
+//   u32 sunProduced | u32 triggeredLawnMowers | u32 gameScene | u32 boardResult
+static bool WriteEnvironmentStateBytes(LawnApp* app, const std::string& thePath)
+{
+	EnvironmentSnapshot snapshot{};
+	if (!app->mBoard)
+		return false;
+	// Same presentation zeroing StableEnvironmentHash does, so the dumped image is byte-for-byte
+	// what the digest covered.
+	Board* board = app->mBoard;
+	auto presentation = std::make_tuple(board->mDrawCount, board->mStartDrawTime,
+		board->mIntervalDrawTime, board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime);
+	std::tie(board->mDrawCount, board->mStartDrawTime, board->mIntervalDrawTime,
+		board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime) = std::make_tuple(0U, 0LL, 0LL, 0U, 0.0f, 0);
+	bool saved = SaveEnvironmentSnapshot(app, snapshot);
+	std::tie(board->mDrawCount, board->mStartDrawTime, board->mIntervalDrawTime,
+		board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime) = presentation;
+	if (!saved)
+		return false;
+	std::ofstream out(thePath, std::ios::binary);
+	if (!out)
+		return false;
+	auto writeU64 = [&out](uint64_t value) { out.write(reinterpret_cast<const char*>(&value), sizeof(value)); };
+	auto writeU32 = [&out](uint32_t value) { out.write(reinterpret_cast<const char*>(&value), sizeof(value)); };
+	out.write("PVZSB1\n", 7);
+	writeU64(snapshot.board.size());
+	out.write(reinterpret_cast<const char*>(snapshot.board.data()), static_cast<std::streamsize>(snapshot.board.size()));
+	writeU64(snapshot.randState.size());
+	out.write(reinterpret_cast<const char*>(snapshot.randState.data()), static_cast<std::streamsize>(snapshot.randState.size()));
+	writeU32(snapshot.appRandSeed);
+	writeU32(snapshot.randSeed);
+	writeU32(snapshot.appCounter);
+	writeU32(snapshot.zombiesKilled);
+	writeU32(snapshot.plantsEaten);
+	writeU32(snapshot.sunProduced);
+	writeU32(snapshot.triggeredLawnMowers);
+	writeU32(static_cast<uint32_t>(snapshot.gameScene));
+	writeU32(static_cast<uint32_t>(snapshot.boardResult));
+	return static_cast<bool>(out);
+}
+
 static uint64_t StableEnvironmentHash(LawnApp* app)
 {
 	Board* board = app->mBoard;
@@ -522,6 +568,13 @@ static void RunEnvironment(LawnApp* app)
 			if (app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';
 			std::cout << '}' << std::endl;
 			continue;
+		}
+		else if (command == "STATE_BYTES")
+		{
+			std::string path;
+			input >> std::quoted(path);
+			ok = !input.fail() && !path.empty() && app->mBoard != nullptr && WriteEnvironmentStateBytes(app, path);
+			minimalResponse = true;
 		}
 		else if (command == "ENV_PROFILE")
 		{
