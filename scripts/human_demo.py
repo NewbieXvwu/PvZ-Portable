@@ -6,6 +6,7 @@ from dataclasses import asdict
 import hashlib
 import json
 from pathlib import Path
+import shutil
 import sys
 import time
 
@@ -212,6 +213,42 @@ def verify(archive: Path, resource_dir, executable=None):
     return dict(verified=True, operations=meta['operations'], tick=obs['tick'], wave=obs['wave'], result=obs['result'])
 
 
+def rebaseline(archive: Path, out: Path, resource_dir, executable=None):
+    """Rewrite an archive's per-operation hashes with the current engine, into a new directory.
+
+    Only for archives recorded by an engine whose state hash was not reproducible.  task63 found
+    one: a particle FIELD_SHAKE seeded the C runtime rand() with the particle's *address*, so every
+    tick that ran a shake field hashed a heap address.  Those hashes cannot be reproduced by any
+    process, so such an archive can never verify again -- not by the old engine and not by a fixed
+    one.  The actions themselves are sound, and this conversion keeps them: it replays them, checks
+    the tick timeline and the terminal outcome against the archive, and writes the hashes this
+    engine produces.  The result verifies on any machine from then on; the source is never touched.
+    """
+    meta = json.loads((archive / 'meta.json').read_text())
+    out.mkdir(parents=True, exist_ok=False)
+    shutil.copyfile(archive / 'frames.jsonl', out / 'frames.jsonl')
+    rewritten = 0
+    with EventWaitEnv(resource_dir, executable=executable) as env:
+        obs = reset_archive(env, meta)
+        with (archive / 'ticks.jsonl').open() as stream, (out / 'ticks.jsonl').open('w') as tape:
+            for operation, line in enumerate(stream, 1):
+                entry = json.loads(line)
+                obs, _, _, _, info = env.step(entry['action'])
+                if obs['tick'] != entry['end_tick'] or info['ok'] != entry['ok']:
+                    raise RuntimeError(f'action timeline differs at operation {operation}')
+                state_hash = env._last_response['state_hash']
+                rewritten += state_hash != entry['state_hash']
+                tape.write(json.dumps({**entry, 'state_hash': state_hash}, separators=(',', ':')) + '\n')
+        outcome = meta['outcome']
+        if (obs['tick'], obs['wave'], obs['result']) != (outcome['final_tick'], outcome['final_wave'], outcome['result']):
+            raise RuntimeError('terminal outcome differs')
+    meta['rebaseline'] = dict(source=str(archive.resolve()), rewritten_operations=rewritten,
+                               reason='recorded with heap-address-seeded particle shake (task63)')
+    meta['verified'] = False
+    (out / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
+    return verify(out, resource_dir, executable)
+
+
 def export(archive: Path, data: Path):
     meta = json.loads((archive / 'meta.json').read_text())
     if not meta.get('verified'):
@@ -236,12 +273,18 @@ def main():
     record.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/raw')
     check = commands.add_parser('verify')
     check.add_argument('--archive', type=Path, required=True)
+    fix = commands.add_parser('rebaseline')
+    fix.add_argument('--archive', type=Path, required=True)
+    fix.add_argument('--out', type=Path, required=True)
     convert = commands.add_parser('export')
     convert.add_argument('--archive', type=Path, required=True)
     convert.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/frames_v2')
     args = parser.parse_args()
     if args.command == 'verify':
         print(json.dumps(verify(args.archive, args.resource_dir, args.executable)))
+        return
+    if args.command == 'rebaseline':
+        print(json.dumps(rebaseline(args.archive, args.out, args.resource_dir, args.executable)))
         return
     if args.command == 'export':
         print(export(args.archive, args.out))
