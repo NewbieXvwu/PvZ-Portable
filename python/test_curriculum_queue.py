@@ -11,10 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
-                              MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              command_for, label_for, load_teacher_rates, make_state, pack_command,
-                              pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
-                              startup_worker_estimate, training_base_ids, worker_count)
+                              MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
+                              adjust, allocate, build_plan, command_for, label_for, load_teacher_rates,
+                              make_state, pack_command, pack_labels, parse_task_id, plan_round, rate,
+                              reconcile_cells, startup_worker_estimate, training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -114,6 +114,69 @@ class CurriculumRulesTest(unittest.TestCase):
         }
         picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=1)
         self.assertEqual([p[0] for p in picks], ['old_hard', 'fresh_hard', 'easy'])
+
+    def test_build_plan_cold_start_uses_pending_volume(self):
+        # round 2 的真实规模：202 个标签、约 5 万局 ≈ 每标签 0.3 GiB 原始档案，MemAvailable 40 GiB。
+        # 冷启动并发应明显大于 1（旧算法按已建段估得 2 GiB → 并发 1），且峰值不超可用预算。
+        pending = [300 * 1024 * 1024] * 202
+        workers, per_builder = build_plan(pending, recipe_workers=32, available=40 * GIB)
+        self.assertGreater(workers, 1)
+        self.assertEqual(per_builder, PACK_BUILDER_BYTES + pending[0])
+        self.assertLessEqual(workers * per_builder, 40 * GIB - MEMORY_RESERVE_BYTES)
+        self.assertEqual(workers, min(32, (40 * GIB - MEMORY_RESERVE_BYTES) // per_builder))
+
+    def test_build_plan_bounds(self):
+        # 配方值是上限；待建段为空并发 1（pack 无活可干）；可用内存极小时并发仍 >=1。
+        self.assertEqual(build_plan([GIB] * 5, 2, None), (2, 3 * GIB))
+        self.assertEqual(build_plan([], 8, 100 * GIB), (1, PACK_BUILDER_BYTES))
+        self.assertEqual(build_plan([GIB], 8, 7 * GIB), (1, 3 * GIB))
+        self.assertEqual(build_plan([GIB] * 9, 32, 100 * GIB), (9, 3 * GIB))
+
+    def test_pack_memory_limit_matches_build_plan_per_builder(self):
+        # pack() 的单建造者假设与 build_plan 一致：2 GiB 底数 + 该批最大的标签原始档案。
+        import pack_training_rows as packer
+        with tempfile.TemporaryDirectory() as tmp:
+            big = Path(tmp) / 'big' / 'frames.npz'
+            big.parent.mkdir()
+            with big.open('wb') as handle:
+                handle.truncate(3 * GIB)                     # 稀疏文件，只占 st_size
+            jobs = [('d', 'c', None, None, [big])]
+            self.assertEqual(packer.pack_memory_limit(40 * GIB, jobs),
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // (PACK_BUILDER_BYTES + 3 * GIB))
+            self.assertEqual(packer.pack_memory_limit(40 * GIB, [('d', 'c', None, None, [])]),
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // PACK_BUILDER_BYTES)
+            self.assertEqual(packer.pack_memory_limit(GIB, jobs), 1)
+
+    def test_pending_builds_uses_merged_catalog_and_segment_contract(self):
+        # 与 _prepare_corpus 同一合并视图（采集优先）、与 pack() 同一段契约：段文件在即已建。
+        import hashlib
+        from pvz_recipe import load_recipe, training_row_options, write_recipe
+        from pvz_training_pack import pack_options, segment_options, segment_path
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            base, coll = root / 'base', root / 'coll'
+            (base / 's1' / 'pool_a').mkdir(parents=True)
+            (base / 's1' / 'pool_a' / 'frames.jsonl').write_bytes(b'x' * 100)
+            (coll / 's1' / 'pool_a').mkdir(parents=True)
+            (coll / 's1' / 'pool_a' / 'frames.jsonl').write_bytes(b'y' * 200)   # 采集同位覆盖
+            (coll / 's2' / 'pool_b').mkdir(parents=True)
+            (coll / 's2' / 'pool_b' / 'frames.jsonl').write_bytes(b'z' * 50)
+            recipe = load_recipe(ROOT / 'recipes/dw4i.json')
+            recipe['data'] = str(base)
+            recipe_path = root / 'recipe.json'
+            write_recipe(recipe_path, recipe)
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.args = SimpleNamespace(recipe=recipe_path, frames=coll, log=root / 'log')
+            pipeline.directory = root / 'pipeline'
+            self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)),
+                             {'pool_a': 200, 'pool_b': 50})
+            fingerprint = hashlib.sha1(b's2/pool_b:50').hexdigest()[:16]
+            options = pack_options(**training_row_options(recipe, ['pool_a', 'pool_b']))
+            target = segment_path(root / 'pipeline' / 'frames', segment_options(options, 'pool_b', fingerprint))
+            target.parent.mkdir(parents=True)
+            target.write_bytes(b'')
+            self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)), {'pool_a': 200})
 
     def test_load_teacher_rates_missing_file_and_shapes(self):
         with tempfile.TemporaryDirectory() as tmp:

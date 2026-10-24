@@ -322,6 +322,13 @@ def _build_segment(job):
     return pack_monolithic(data, options, cache, 1, read_cache, target, True, paths)
 
 
+def pack_memory_limit(available: int, jobs: list[tuple]) -> int:
+    """并发建造者的内存上限：每人 2 GiB（Python/torch 与解压缓冲）加该批最大的标签原始档案
+    体积，并给整 机留 6 GiB（curriculum_queue.build_plan 用同一单建造者估算）。"""
+    heavy = max((sum(path.stat().st_size for path in paths) for *_, paths in jobs), default=0)
+    return max(1, (available - 6 * 1024**3) // (2 * 1024**3 + heavy))
+
+
 def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
          read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False,
          rebuild: bool = False) -> Path:
@@ -350,12 +357,12 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
                 valid = json.loads(str(stored['meta'])) == contract
         if not valid:
             jobs.append((data, contract, cache_dir, read_cache_dir, paths))
-    # Each label worker includes Python/torch and a label's compact rows. Keep the same
-    # 6 GiB reserve as collection, with a conservative 2 GiB per concurrent pack worker.
+    # Each label worker includes Python/torch and a label's compact rows; its peak grows with
+    # the label's raw archives. Same 6 GiB reserve as collection (pack_memory_limit docstring).
     try:
         available = next(int(line.split()[1]) * 1024 for line in Path('/proc/meminfo').read_text().splitlines()
                          if line.startswith('MemAvailable:'))
-        memory_limit = max(1, (available - 6 * 1024**3) // (2 * 1024**3))
+        memory_limit = pack_memory_limit(available, jobs)
     except (OSError, StopIteration):
         memory_limit = 1
     workers = max(1, min(precompute_workers, len(jobs) or 1, memory_limit))

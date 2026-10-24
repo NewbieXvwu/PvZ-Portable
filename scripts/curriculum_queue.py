@@ -22,6 +22,7 @@
 4. **停止标志** `~/pvz-logs/stop_curr`：只在两组之间检查，绝不 SIGTERM 子进程。
 5. **后台打包 / 训练 / 晋升评估**：每轮保存“本队列写过的全部标签 + `--recipe` 来源标签”的快照，
    复用已有标签段、只打新标签，然后训练并做配对门禁。前台立即采下一轮，组间只切换通过者。
+   打包并发按待建段的原始档案体积估算（build_plan），不按已建段——冷启动也能吃满内存预算。
 
 采集参数照 `~/pvz-logs/queue103.sh` 的 `run()`（beta=0，学生自走、搜索打标签），
 帧默认直接写 `~/PvZ-search/artifacts/student/frames_v2`（只增不改）。并发不再手动定：
@@ -42,6 +43,7 @@ from __future__ import annotations
 import argparse
 import copy
 import glob
+import hashlib
 import json
 import os
 import shlex
@@ -62,7 +64,7 @@ from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import GATE_VERSION, policy as promotion_policy, freeze_panel
 from promotion_gate import contract as promotion_contract, contract_key, sha as file_sha, valid_certificate
-from pvz_training_pack import pack_flags, pack_options
+from pvz_training_pack import pack_flags, pack_options, segment_options, segment_path
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
@@ -85,6 +87,7 @@ DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / nump
 
 GIB = 1024 ** 3
 MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
+PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
@@ -107,6 +110,22 @@ def worker_count(available: int | None, per_worker: int, upper: int, background:
     if available is None or per_worker <= 0:
         return upper
     return max(1, min(upper, (available - MEMORY_RESERVE_BYTES - background) // per_worker))
+
+
+def build_plan(pending_bytes: list[int], recipe_workers: int,
+               available: int | None) -> tuple[int, int]:
+    """返回 (打包并发, 单建造者峰值字节)。
+
+    打包并行是"一个建造者建一个标签段"：单建造者峰值 = PACK_BUILDER_BYTES + 待建标签里
+    最大的原始档案体积；并发 = min(配方值, (可用内存 − 预留) / 单建造者峰值, 待建段数)。
+    旧算法按已建段体积估（冷启动 = 0 → 2 GiB → 并发 1），20 核机器单核打包近 9 小时
+    （2026-10-24 task59）。待建段为空时并发 1（pack 无活可干，数值无意义）。
+    """
+    per_builder = PACK_BUILDER_BYTES + max(pending_bytes, default=0)
+    workers = len(pending_bytes) or 1
+    if available is not None:
+        workers = min(workers, max(1, (available - MEMORY_RESERVE_BYTES) // per_builder))
+    return max(1, min(recipe_workers, workers)), per_builder
 
 
 def _proc_table() -> dict[int, tuple[int, int]]:
@@ -485,6 +504,13 @@ class TrainingPipeline:
         self.lock_fd = None
         self.failed = False
         self.futures = []
+        self.build_workers, self.build_peak = 1, 0
+        queued = [job for job in state.setdefault('training_jobs', []) if job['status'] != 'done']
+        if queued:
+            try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
+                self._plan_build(load_recipe(Path(queued[-1]['recipe']), 'training'))
+            except (OSError, ValueError, KeyError, RuntimeError):
+                pass   # 退回 estimate_peak 的已建段估算；_admit 仍按 MemAvailable 把关
         if state.get('student'):
             model = Path(state['student'])
             if not model.is_file():
@@ -547,13 +573,45 @@ class TrainingPipeline:
                     promotion=decision, evaluation_directory=str(out))
 
     def estimate_peak(self):
-        # Loading segments plus merging compact CSR peaks near twice the compact corpus;
-        # allow a third copy and 2 GiB for Python, optimizer and host batches. At least 2 GiB
-        # covers one cold label builder; concurrency grows with the corpus budget (2 GiB each).
-        # MemAvailable already reflects
-        # any current backend RSS; only its unconsumed headroom is subtracted from collection.
+        # 后台流水线的峰值 = max(打包阶段, 训练阶段)。打包按 _plan_build 的待建段估算
+        # （并发建造者 × 单建造者峰值）；训练加载段加合并紧凑 CSR 的峰值约为紧凑语料的
+        # 3 倍，再加 2 GiB 的 Python/优化器/批次。MemAvailable 已含后台现有 RSS，
+        # reservation() 只补 estimate 与现有 RSS 的差额。
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
-        return 3 * compact_bytes + 2 * GIB
+        return max(self.build_peak, 3 * compact_bytes + 2 * GIB)
+
+    def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
+        """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
+        与 pack() 同一段契约；指纹段文件缺失即待建。指纹只用相对路径与文件大小（stat）。"""
+        from pvz_frame_store import frame_paths
+        base = Path(load_recipe(self.args.recipe, 'training')['data'])
+        sources = [base] if base == self.args.frames else [base, self.args.frames]
+        wanted = set(labels)
+        catalog: dict[str, tuple[str, int]] = {}
+        for source in sources:
+            for path in frame_paths(source):
+                if path.parent.name in wanted:
+                    catalog[str(path.parent.relative_to(source))] = (path.parent.name, path.stat().st_size)
+        options = pack_options(**training_row_options(recipe, labels))
+        pending = []
+        for label in sorted(wanted):
+            lines = sorted(f'{rel}:{size}' for rel, (name, size) in catalog.items() if name == label)
+            if not lines:
+                continue   # 没有档案的标签 pack 时会自己报错，不进估算
+            fingerprint = hashlib.sha1('|'.join(lines).encode()).hexdigest()[:16]
+            target = segment_path(self.directory / 'frames', segment_options(options, label, fingerprint))
+            if not target.is_file():
+                pending.append((label, sum(int(line.rsplit(':', 1)[1]) for line in lines)))
+        return pending
+
+    def _plan_build(self, recipe: dict) -> None:
+        """按待建段估算打包并发与峰值；enqueue 写进配方，estimate_peak/reservation 引用。"""
+        pending = self.pending_builds(recipe['labels'], recipe)
+        self.build_workers, per_builder = build_plan([size for _, size in pending],
+                                                     recipe['precompute_workers'], mem_available_bytes())
+        self.build_peak = self.build_workers * per_builder
+        log_line(self.args.log, f'pack plan: {len(pending)} pending segments, '
+                                f'workers={self.build_workers}, peak~{self.build_peak / GIB:.1f} GiB')
 
     def reservation(self):
         if not self.pending():
@@ -575,7 +633,8 @@ class TrainingPipeline:
         folder = self.directory / f'round_{round_index:06d}'
         recipe['out'] = str(folder / 'student')
         recipe['cache_dir'] = str(self.directory / 'cache')
-        recipe['precompute_workers'] = min(recipe['precompute_workers'], max(1, self.estimate_peak() // (2 * GIB)))
+        self._plan_build(recipe)
+        recipe['precompute_workers'] = self.build_workers
         path = folder / 'recipe.json'
         path.parent.mkdir(parents=True, exist_ok=True)
         write_recipe(path, recipe)
