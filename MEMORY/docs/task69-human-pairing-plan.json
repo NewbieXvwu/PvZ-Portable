@@ -1,0 +1,1961 @@
+{
+  "source": {
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "repo_type": "model",
+    "revision": "c95fc0a0b29016e0c1ed3c5167434f5bc2267d31",
+    "path": "transfer/human_demo_raw_20261024.tar.gz",
+    "bytes": 4384075,
+    "sha256": "99acbbe7164f3eaa6d1c79cb6befac89f83b9d7036bd3b4e01ee6fbaa53b89b1"
+  },
+  "rule": "maximum of observed first successful same-cell plant intervals, across four distinct demonstrations",
+  "N": 420,
+  "intervals": [
+    48,
+    49,
+    50,
+    50,
+    55,
+    56,
+    62,
+    63,
+    65,
+    66,
+    66,
+    68,
+    68,
+    69,
+    69,
+    70,
+    71,
+    71,
+    72,
+    72,
+    73,
+    73,
+    73,
+    75,
+    75,
+    75,
+    77,
+    78,
+    78,
+    78,
+    78,
+    79,
+    80,
+    81,
+    82,
+    83,
+    84,
+    85,
+    86,
+    86,
+    86,
+    86,
+    88,
+    88,
+    89,
+    89,
+    90,
+    91,
+    91,
+    92,
+    92,
+    94,
+    95,
+    96,
+    97,
+    102,
+    109,
+    116,
+    120,
+    123,
+    132,
+    143,
+    147,
+    345,
+    420
+  ],
+  "quantiles": {
+    "0.0": 48.0,
+    "0.25": 71.0,
+    "0.5": 80.0,
+    "0.75": 91.0,
+    "0.9": 118.4,
+    "0.95": 140.79999999999995,
+    "1.0": 420.0
+  },
+  "shovel_attempts": 68,
+  "successful_shovels": 65,
+  "rejected_shovels": 3,
+  "unmatched_successful_shovels": 0,
+  "archives": [
+    {
+      "name": "demo_fog_31_fume_rebaselined",
+      "task": {
+        "id": "demo_fog_31_fume",
+        "level": 31,
+        "seed": 20261031,
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          3,
+          25
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 1.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "outcome": {
+        "result": 1,
+        "won": true,
+        "reason": "通关",
+        "final_wave": 20,
+        "wave_count": 20,
+        "final_tick": 40355,
+        "actions": 874,
+        "plants_eaten": 10
+      },
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume_rebaselined",
+      "source_hashes": {
+        "ticks.jsonl": "23396d998a3726a866b7f8a889a7bcab85df623ebe1bac2e73053c2d5286d920",
+        "meta.json": "862e9201f18b2c9e3ad0bc60c5e5f710d82cd933c8a42fddc25564b420922f2b",
+        "frames.jsonl": "82ff0495381d918814598a5245d0e53f097611b42eae0ce4fcc93298bbe8a312"
+      },
+      "distribution": {
+        "intervals": [
+          55,
+          56,
+          62,
+          72,
+          73,
+          78,
+          86,
+          86,
+          88,
+          88,
+          91,
+          91,
+          92,
+          95,
+          97,
+          109,
+          116,
+          123,
+          132,
+          345
+        ],
+        "N": 345,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 20,
+        "unmatched_shovels": [],
+        "shovel_attempts": 22,
+        "rejected_shovels": 2,
+        "successful_shovels": 20
+      },
+      "pairs": [
+        {
+          "shovel_frame": 303,
+          "plant_frame": 306,
+          "interval": 86,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 160,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 324,
+          "plant_frame": 327,
+          "interval": 73,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 185,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 349,
+          "plant_frame": 352,
+          "interval": 91,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 215,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 371,
+          "plant_frame": 374,
+          "interval": 88,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 250,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 389,
+          "plant_frame": 391,
+          "interval": 55,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 280,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 404,
+          "plant_frame": 408,
+          "interval": 132,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 230,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            661,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 464,
+          "plant_frame": 467,
+          "interval": 116,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 250,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            698,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 476,
+          "plant_frame": 483,
+          "interval": 345,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 250,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            474,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 529,
+          "plant_frame": 531,
+          "interval": 56,
+          "action": {
+            "type": "replace",
+            "packet": 0,
+            "row": 0,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 9,
+          "sun_at_shovel": 300,
+          "packet_at_shovel": [
+            0,
+            9,
+            true,
+            0,
+            750,
+            25
+          ]
+        },
+        {
+          "shovel_frame": 538,
+          "plant_frame": 541,
+          "interval": 86,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 325,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 551,
+          "plant_frame": 554,
+          "interval": 62,
+          "action": {
+            "type": "replace",
+            "packet": 0,
+            "row": 1,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 9,
+          "sun_at_shovel": 325,
+          "packet_at_shovel": [
+            0,
+            9,
+            true,
+            0,
+            750,
+            25
+          ]
+        },
+        {
+          "shovel_frame": 563,
+          "plant_frame": 566,
+          "interval": 92,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 315,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 576,
+          "plant_frame": 579,
+          "interval": 88,
+          "action": {
+            "type": "replace",
+            "packet": 0,
+            "row": 4,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 9,
+          "sun_at_shovel": 330,
+          "packet_at_shovel": [
+            0,
+            9,
+            true,
+            0,
+            750,
+            25
+          ]
+        },
+        {
+          "shovel_frame": 587,
+          "plant_frame": 590,
+          "interval": 95,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 380,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 596,
+          "plant_frame": 599,
+          "interval": 91,
+          "action": {
+            "type": "replace",
+            "packet": 0,
+            "row": 5,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 9,
+          "sun_at_shovel": 330,
+          "packet_at_shovel": [
+            0,
+            9,
+            true,
+            0,
+            750,
+            25
+          ]
+        },
+        {
+          "shovel_frame": 607,
+          "plant_frame": 610,
+          "interval": 78,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 445,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 631,
+          "plant_frame": 634,
+          "interval": 72,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 6
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 490,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 652,
+          "plant_frame": 656,
+          "interval": 123,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 6
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 540,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 679,
+          "plant_frame": 682,
+          "interval": 97,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 6
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 650,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 696,
+          "plant_frame": 699,
+          "interval": 109,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 6
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 700,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        }
+      ],
+      "raw_transitions": {
+        "[8] -> 10": 16,
+        "[8] -> 9": 4
+      }
+    },
+    {
+      "name": "demo_fog_31_snow_m200",
+      "task": {
+        "id": "demo_fog_31_snow_m200",
+        "level": 31,
+        "seed": 20261031,
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          5,
+          23,
+          17,
+          19,
+          2,
+          3
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 2.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "outcome": {
+        "result": 1,
+        "won": true,
+        "reason": "通关",
+        "final_wave": 20,
+        "wave_count": 20,
+        "final_tick": 39479,
+        "actions": 826,
+        "plants_eaten": 10
+      },
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_snow_m200",
+      "source_hashes": {
+        "ticks.jsonl": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+        "meta.json": "808ac9421bf2a456a85744da65e5e5149c19933bb8d8f82c436aa5c6af3ef99d",
+        "frames.jsonl": "0342e4bae283b693215fb2000c1b71d05268b1b8da2a5bed136e594b608d2038"
+      },
+      "distribution": {
+        "intervals": [
+          50,
+          66,
+          68,
+          69,
+          70,
+          71,
+          73,
+          77,
+          78,
+          78,
+          85,
+          90,
+          92,
+          94,
+          102,
+          143
+        ],
+        "N": 143,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 16,
+        "unmatched_shovels": [],
+        "shovel_attempts": 16,
+        "rejected_shovels": 0,
+        "successful_shovels": 16
+      },
+      "pairs": [
+        {
+          "shovel_frame": 272,
+          "plant_frame": 275,
+          "interval": 85,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 100,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 292,
+          "plant_frame": 295,
+          "interval": 77,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 120,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 394,
+          "plant_frame": 397,
+          "interval": 70,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 1,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 220,
+          "packet_at_shovel": [
+            4,
+            5,
+            true,
+            0,
+            0,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 427,
+          "plant_frame": 430,
+          "interval": 78,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 4,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 185,
+          "packet_at_shovel": [
+            4,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 454,
+          "plant_frame": 460,
+          "interval": 143,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 0,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            4,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 488,
+          "plant_frame": 491,
+          "interval": 94,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 5,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            4,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 592,
+          "plant_frame": 595,
+          "interval": 66,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 200,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 613,
+          "plant_frame": 615,
+          "interval": 50,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 200,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 633,
+          "plant_frame": 636,
+          "interval": 102,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 275,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 654,
+          "plant_frame": 657,
+          "interval": 92,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 300,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 710,
+          "plant_frame": 713,
+          "interval": 71,
+          "action": {
+            "type": "replace",
+            "packet": 5,
+            "row": 2,
+            "col": 5
+          },
+          "removed_types": [
+            3
+          ],
+          "new_type": 23,
+          "sun_at_shovel": 350,
+          "packet_at_shovel": [
+            5,
+            23,
+            true,
+            0,
+            2000,
+            125
+          ]
+        },
+        {
+          "shovel_frame": 730,
+          "plant_frame": 733,
+          "interval": 73,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 350,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 747,
+          "plant_frame": 750,
+          "interval": 90,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 400,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 769,
+          "plant_frame": 772,
+          "interval": 69,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 400,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 786,
+          "plant_frame": 789,
+          "interval": 78,
+          "action": {
+            "type": "replace",
+            "packet": 5,
+            "row": 3,
+            "col": 5
+          },
+          "removed_types": [
+            3
+          ],
+          "new_type": 23,
+          "sun_at_shovel": 350,
+          "packet_at_shovel": [
+            5,
+            23,
+            true,
+            0,
+            3000,
+            125
+          ]
+        },
+        {
+          "shovel_frame": 797,
+          "plant_frame": 800,
+          "interval": 68,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 300,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        }
+      ],
+      "raw_transitions": {
+        "[8] -> 10": 10,
+        "[8] -> 5": 4,
+        "[3] -> 23": 2
+      }
+    },
+    {
+      "name": "demo_fog_33_cactus_snow_m200",
+      "task": {
+        "id": "demo_fog_33_cactus_snow_m200",
+        "level": 33,
+        "seed": 20261033,
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          26,
+          5
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 2.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "outcome": {
+        "result": 1,
+        "won": true,
+        "reason": "通关",
+        "final_wave": 20,
+        "wave_count": 20,
+        "final_tick": 40969,
+        "actions": 892,
+        "plants_eaten": 12
+      },
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261033/demo_fog_33_cactus_snow_m200",
+      "source_hashes": {
+        "ticks.jsonl": "3f7df22d92a0a98e944c1c4ae99f2a9a3a052ff71b311cc7fb5914699ba55787",
+        "meta.json": "506fe2974f86d211fa368f1e81802f2d854a0dbe2dfbc65a726ff0e68f8d5788",
+        "frames.jsonl": "f9e646ce266433743993e6fbfe5a74b35f579264eb68cdd657c8521062632647"
+      },
+      "distribution": {
+        "intervals": [
+          63,
+          68,
+          71,
+          72,
+          73,
+          75,
+          75,
+          78,
+          79,
+          83,
+          84,
+          86,
+          89,
+          96,
+          120,
+          147,
+          420
+        ],
+        "N": 420,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 17,
+        "unmatched_shovels": [],
+        "shovel_attempts": 18,
+        "rejected_shovels": 1,
+        "successful_shovels": 17
+      },
+      "pairs": [
+        {
+          "shovel_frame": 242,
+          "plant_frame": 245,
+          "interval": 78,
+          "action": {
+            "type": "replace",
+            "packet": 8,
+            "row": 1,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 26,
+          "sun_at_shovel": 130,
+          "packet_at_shovel": [
+            8,
+            26,
+            true,
+            0,
+            0,
+            125
+          ]
+        },
+        {
+          "shovel_frame": 274,
+          "plant_frame": 277,
+          "interval": 120,
+          "action": {
+            "type": "replace",
+            "packet": 8,
+            "row": 4,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 26,
+          "sun_at_shovel": 125,
+          "packet_at_shovel": [
+            8,
+            26,
+            true,
+            0,
+            750,
+            125
+          ]
+        },
+        {
+          "shovel_frame": 308,
+          "plant_frame": 311,
+          "interval": 96,
+          "action": {
+            "type": "replace",
+            "packet": 8,
+            "row": 5,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 26,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            8,
+            26,
+            true,
+            0,
+            750,
+            125
+          ]
+        },
+        {
+          "shovel_frame": 332,
+          "plant_frame": 336,
+          "interval": 147,
+          "action": {
+            "type": "replace",
+            "packet": 8,
+            "row": 0,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 26,
+          "sun_at_shovel": 115,
+          "packet_at_shovel": [
+            8,
+            26,
+            true,
+            0,
+            750,
+            125
+          ]
+        },
+        {
+          "shovel_frame": 497,
+          "plant_frame": 500,
+          "interval": 79,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 1,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 530,
+          "plant_frame": 533,
+          "interval": 75,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 4,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 560,
+          "plant_frame": 563,
+          "interval": 71,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 5,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 586,
+          "plant_frame": 589,
+          "interval": 63,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 0,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 604,
+          "plant_frame": 607,
+          "interval": 73,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 100,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            0,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 631,
+          "plant_frame": 634,
+          "interval": 75,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 125,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 648,
+          "plant_frame": 651,
+          "interval": 68,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            750,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 662,
+          "plant_frame": 680,
+          "interval": 420,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            550,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 750,
+          "plant_frame": 753,
+          "interval": 86,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 225,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 773,
+          "plant_frame": 776,
+          "interval": 89,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 275,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 797,
+          "plant_frame": 800,
+          "interval": 72,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 350,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 816,
+          "plant_frame": 819,
+          "interval": 84,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 5
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 400,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 880,
+          "plant_frame": 883,
+          "interval": 83,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 6
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 500,
+          "packet_at_shovel": [
+            2,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        }
+      ],
+      "raw_transitions": {
+        "[8] -> 26": 4,
+        "[8] -> 5": 4,
+        "[8] -> 10": 9
+      }
+    },
+    {
+      "name": "demo_fog_33_cattail_snow_m200",
+      "task": {
+        "id": "demo_fog_33_cattail_snow_m200",
+        "level": 33,
+        "seed": 20261033,
+        "deck": [
+          9,
+          8,
+          16,
+          43,
+          10,
+          31,
+          3,
+          17,
+          19,
+          5
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 2.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "outcome": {
+        "result": 1,
+        "won": true,
+        "reason": "通关",
+        "final_wave": 20,
+        "wave_count": 20,
+        "final_tick": 41682,
+        "actions": 922,
+        "plants_eaten": 20
+      },
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261033/demo_fog_33_cattail_snow_m200",
+      "source_hashes": {
+        "ticks.jsonl": "bf0ef9aa52410fd0e001666393770836cd3161a3f5c901e1d8e8c4ca93d6f2a6",
+        "meta.json": "64295df7ecfc59bb08c8e2f39a02b3fba055c7161ca0ac557160e28b068d5bdc",
+        "frames.jsonl": "d23d645dce99a003179569c2644c0b82a08963b4eb3350542eb2d4a77ae06e7c"
+      },
+      "distribution": {
+        "intervals": [
+          48,
+          49,
+          50,
+          65,
+          66,
+          69,
+          75,
+          80,
+          81,
+          82,
+          86,
+          89
+        ],
+        "N": 89,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 12,
+        "unmatched_shovels": [],
+        "shovel_attempts": 12,
+        "rejected_shovels": 0,
+        "successful_shovels": 12
+      },
+      "pairs": [
+        {
+          "shovel_frame": 337,
+          "plant_frame": 340,
+          "interval": 75,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 4,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 275,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            0,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 361,
+          "plant_frame": 364,
+          "interval": 65,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 1,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 210,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 467,
+          "plant_frame": 470,
+          "interval": 86,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 0,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 559,
+          "plant_frame": 562,
+          "interval": 82,
+          "action": {
+            "type": "replace",
+            "packet": 9,
+            "row": 5,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 175,
+          "packet_at_shovel": [
+            9,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        },
+        {
+          "shovel_frame": 682,
+          "plant_frame": 684,
+          "interval": 50,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 1,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 325,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            0,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 740,
+          "plant_frame": 742,
+          "interval": 49,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 0,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 275,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 762,
+          "plant_frame": 765,
+          "interval": 80,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 4,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 275,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 781,
+          "plant_frame": 784,
+          "interval": 89,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 5,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 300,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 806,
+          "plant_frame": 808,
+          "interval": 48,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 0,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 375,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 831,
+          "plant_frame": 834,
+          "interval": 66,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 1,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 400,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 853,
+          "plant_frame": 856,
+          "interval": 69,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 4,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 425,
+          "packet_at_shovel": [
+            4,
+            10,
+            true,
+            0,
+            750,
+            75
+          ]
+        },
+        {
+          "shovel_frame": 879,
+          "plant_frame": 882,
+          "interval": 81,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 5,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 450,
+          "packet_at_shovel": [
+            4,
+            10,
+            false,
+            733,
+            750,
+            75
+          ]
+        }
+      ],
+      "raw_transitions": {
+        "[8] -> 5": 4,
+        "[8] -> 10": 8
+      }
+    }
+  ],
+  "labels_native_validated": false,
+  "raw_transitions": {
+    "[8] -> 10": 43,
+    "[8] -> 9": 4,
+    "[8] -> 5": 12,
+    "[3] -> 23": 2,
+    "[8] -> 26": 4
+  }
+}
