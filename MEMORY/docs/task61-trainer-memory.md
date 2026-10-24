@@ -42,4 +42,44 @@
 
 ## 结果
 
+- [x] 步骤 1（commit 78a69103）：read_segments 改两遍逐段拷贝。第一遍只读每行元数据与各成员
+  npy 头（段是未压缩 np.savez，zipfile 读头不解压数据），按全局档案序预计算每个 chunk 的
+  目标行位与各流条目前缀（board/scalar CSR 的 nnz 前缀；value/cand 段内没有 offsets 成员，
+  由 counts 累积）；第二遍一次载入一个段，按位置拷贝后释放。目标数组在 data 给出时用
+  _spilled_array 文件后备 memmap（匿名内存 ≈ 一个段），否则普通数组。**逐位相同**：40 段
+  真实子集（2,560,231 行）逐列 sha256 与改前实现一致（heap 与 memmap 双模式），哈希常量
+  固化在 python/test_incremental_pack.py::ROUND2_SUBSET_HASHES；合成语料逐列位比较
+  （含 planes/plane_of/observer 行序）；既有 verify/assert_payload_equal 全过。
+- [x] 步骤 2（实测峰值，round 2 真实 pack：202 段、14,821,421 行、紧凑段 7.73 GiB，只读）：
+  - 改前全量**未跑**：需 ~2× 语料匿名 ≈ 16-18 GiB，超过"MemAvailable 比估算峰值多 3 GiB"
+    的开跑线。子集外推：40 段峰值 3299 MB ≈ 2.3× 子集语料 → 全量 ≈ 16-17 GiB，与 task23
+    独立实测（dw4i 1364 万行峰值 15.9 GB）吻合；旧 3× 公式给 31.2 GiB 确实永远装不下。
+  - 改后 memmap（默认，data 给出）：读入 34.5 s，峰值 RSS 8.54 GiB（大头是可回收文件页），
+    **MemAvailable 最低 15.66 GiB**，RssAnon 峰值 **1.59 GiB = 0.205×紧凑语料**；
+    建批 256×50 步 p50 16.0 ms / p90 75.1 ms。
+  - 改后 heap（对照）：读入 33.5 s，峰值 RSS 8.54 GiB（全匿名），MemAvailable 最低 9.5 GiB；
+    建批 p50 5.7 ms / p90 18.0 ms。
+  - **决定：训练走 memmap**。理由：匿名峰值 1.6 vs 8.5 GiB——heap 的估算+预留（6+9≈15 GiB）
+    又逼近卡死线，而 memmap 的 required（6+4≈10 GiB）在 qc 同时采集时也总能满足；批构建
+    慢 ~2.8×（p50 16 vs 5.7 ms）是可接受的代价，若实际训练中证明太慢，可选方案见"问题"。
+- [x] 步骤 3（commit ba4b2e5f）：estimate_peak 按实测校准——训练口径改为**匿名内存**
+  （语料数组是文件页，可回收不算需求）：优先用最近一次后台训练的实测 RssAnon 峰值
+  （_command 每 2 s 轮询子进程树 RssAnon，写入 report 的 pack/train_peak_anon_bytes，
+  随 trained.json/complete.json/state training_jobs timing 落盘，重启时读回）；没有实测时
+  回退 0.25×紧凑段字节 + 2 GiB（实测 0.205×，留余量；常数覆盖模型/优化器/批次）。
+  reservation/_admit 语义不变，只是余量按新估算算。**不可能满足的需求不静默死等**：
+  _admit 开头检查 required（预留 6 GiB + estimate）> MemTotal 时直接 RuntimeError 带数字，
+  该训练任务失败退出，poll() 变成控制器可见错误，停止标志与退出不再被卡。
+  round 2 数值检验：required = 6 + max(打包, 0.25×7.73+2 ≈ 3.9) = 9.9 GiB < MemTotal 25.4
+  ✓ 不再死等；实测全过程 MemAvailable 最低 15.66 GiB，qc 前台不受挤压。
+- 全部测试 68 过 + 4 subtests（test_curriculum_queue/pipeline/incremental_pack/
+  identity_training/value_widen_training/compact_loader/roof_panel）。
+
 ## 问题
+
+- memmap 建批 p90 75 ms（写回高峰期），若训练耗时不可接受，可选：(a) 给 read_pack 加
+  heap 开关（一行参数，实测数据齐）；(b) 训练前把段目录 cat 进 page cache 预热。
+- estimate_peak 的回退常数（2 GiB）按 torch 模型/优化器的经验余量取值，未逐模型实测；
+  首次真实训练后 state 里的实测值会自动取代它。
+- 段目录 7.73 GiB 的 memmap 页在训练期间靠 page cache 命中；若采集把 cache 挤掉，
+  建批会掉速但不失败——这也是"采集让路"仍按估算扣余量的原因。

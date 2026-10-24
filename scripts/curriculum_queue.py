@@ -93,6 +93,11 @@ DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / nump
 GIB = 1024 ** 3
 MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
 PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
+# 训练阶段的不可回收峰值 = 匿名内存（read_segments 的目标数组是文件后备 memmap，task61）。
+# 实测（2026-10-24，round 2 全量 7.73 GiB 段）：读入 + 建批 RssAnon 峰值 1.59 GiB = 0.205×
+# 紧凑语料；系数取 0.25 留余量，常数 2 GiB 覆盖 torch 模型/优化器/批次。
+TRAIN_ANON_FACTOR = 0.25
+TRAIN_ANON_EXTRA = 2 * GIB
 DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
@@ -106,6 +111,18 @@ def mem_available_bytes() -> int | None:
         return None
     for line in text.splitlines():
         if line.startswith('MemAvailable:'):
+            return int(line.split()[1]) * 1024
+    return None
+
+
+def mem_total_bytes() -> int | None:
+    """Linux 的 MemTotal（字节）；没有 /proc 的平台返回 None。"""
+    try:
+        text = Path('/proc/meminfo').read_text()
+    except OSError:
+        return None
+    for line in text.splitlines():
+        if line.startswith('MemTotal:'):
             return int(line.split()[1]) * 1024
     return None
 
@@ -161,6 +178,35 @@ def _descendant_rss(root: int, table: dict[int, tuple[int, int]]) -> int:
     while stack:
         pid = stack.pop()
         total += table[pid][1]
+        stack.extend(children.get(pid, ()))
+    return total
+
+
+def _anon_bytes(pid: int) -> int:
+    """一个进程的 RssAnon（匿名常驻字节）；读不到为 0。"""
+    try:
+        for line in Path(f'/proc/{pid}/status').read_text().splitlines():
+            if line.startswith('RssAnon:'):
+                return int(line.split()[1]) * 1024
+    except OSError:
+        pass
+    return 0
+
+
+def _tree_anon_bytes(root: int) -> int:
+    """root 及其所有后代的匿名常驻字节之和。
+
+    后台训练的不可回收峰值就是这个口径：read_segments 的语料数组是文件后备 memmap
+    （task61），文件页可被内核回收，不算需求；匿名内存才必须留足。
+    """
+    table = _proc_table()
+    children: dict[int, list[int]] = {}
+    for pid, (ppid, _rss) in table.items():
+        children.setdefault(ppid, []).append(pid)
+    total, stack = _anon_bytes(root), list(children.get(root, ()))
+    while stack:
+        pid = stack.pop()
+        total += _anon_bytes(pid)
         stack.extend(children.get(pid, ()))
     return total
 
@@ -524,6 +570,12 @@ class TrainingPipeline:
         self.failed = False
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
+        self.last_train_peak = 0
+        for job in reversed(state.get('training_jobs', [])):
+            value = (job.get('timing') or {}).get('train_peak_anon_bytes')
+            if value:
+                self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+                break
         queued = [job for job in state.setdefault('training_jobs', []) if job['status'] != 'done']
         if queued:
             try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
@@ -597,7 +649,11 @@ class TrainingPipeline:
         # 3 倍，再加 2 GiB 的 Python/优化器/批次。MemAvailable 已含后台现有 RSS，
         # reservation() 只补 estimate 与现有 RSS 的差额。
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
-        return max(self.build_peak, 3 * compact_bytes + 2 * GIB)
+        if self.last_train_peak:
+            train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
+        else:
+            train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
+        return max(self.build_peak, train_peak)
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
         """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
@@ -701,15 +757,31 @@ class TrainingPipeline:
                                        pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             with self.lock:
                 self.process = process
+            peak = 0
             try:
-                code = process.wait()
+                while True:
+                    code = process.poll()
+                    if code is not None:
+                        break
+                    peak = max(peak, _tree_anon_bytes(process.pid))
+                    time.sleep(2)
             finally:
                 with self.lock:
                     self.process = None
         if code:
             raise RuntimeError(f'exit {code}; see {log}')
+        return peak
 
     def _admit(self):
+        required = MEMORY_RESERVE_BYTES + self.estimate_peak()
+        total = mem_total_bytes()
+        if total is not None and required > total:
+            # 不可能满足的需求不能静默死等（task61）：让该训练任务失败退出、写明原因，
+            # poll() 会把它变成控制器可见的错误，停止标志与控制器退出不再被卡住。
+            raise RuntimeError(
+                f'background training cannot fit: required {required / GIB:.1f} GiB '
+                f'(reserve {MEMORY_RESERVE_BYTES / GIB:.1f} + estimate {self.estimate_peak() / GIB:.1f}) '
+                f'> MemTotal {total / GIB:.1f} GiB')
         last_log = 0
         while True:
             available = mem_available_bytes()
@@ -767,7 +839,9 @@ class TrainingPipeline:
                         log_line(self.args.log, f'background round {job["round"]} {phase} started')
                         if phase == 'pack':
                             self._prepare_corpus(recipe['labels'])
-                        self._command(command, folder / f'{phase}.log')
+                        report[phase + '_peak_anon_bytes'] = self._command(command, folder / f'{phase}.log')
+                        if phase == 'train':
+                            self.last_train_peak = report[phase + '_peak_anon_bytes']
                         report[phase + '_finished'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} done: '
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
