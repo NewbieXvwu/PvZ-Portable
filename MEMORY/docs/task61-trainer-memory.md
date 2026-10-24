@@ -42,4 +42,18 @@
 
 ## 结果
 
+- [x] 步骤 1（read_segments 逐段拷贝）：scripts/train_rollout_policy.py 重写为两遍——
+  第一遍只读每行元数据（source/source_archive/source_row）与各成员的 npy 头（段是未压缩
+  np.savez，zipfile 读头不解压数据），按全局档案序排出每个 chunk 的目标行位与各流
+  （board/scalar CSR 的 nnz 前缀、value/cand 稀疏流的条目前缀，后者由 counts 累积，段内
+  没有 offsets 成员）；第二遍一次载入一个段（read_pack），按预计算位置拷贝后释放。
+  目标数组在 data 给出时用 _spilled_array 文件后备 memmap（匿名内存 ≈ 一个段），否则
+  普通数组（测试/直连路径）。校验：40 段真实子集（2,560,231 行）逐列 sha256 与改前
+  实现完全一致（heap 与 memmap 双模式），哈希常量固化在
+  python/test_incremental_pack.py::ROUND2_SUBSET_HASHES；合成语料（2 标签 6 档案、
+  identity packet + aux3）逐列位比较（含 planes/plane_of/observer 行序），两个既有
+  verify/assert_payload_equal 测试照常过。65 测试全过。改前该子集峰值 3299 MB
+  （≈2.3×语料），改后 heap 2019 MB、memmap 模式 RSS 计入文件页（看 MemAvailable 才准）。
+  待办：全量 round 2 实测峰值 → estimate_peak 校准 + 不可满足时报错。
+
 ## 问题
