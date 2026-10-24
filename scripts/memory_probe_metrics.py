@@ -38,9 +38,10 @@ def stats(y, p):
     p = np.asarray(p, dtype=np.float64).ravel()
     if not len(y):
         return dict(cells=0, positive=0, auc=None, logloss=None)
-    p = np.clip(p, 1e-7, 1-1e-7)
-    loss = -np.where(y, np.log(p), np.log1p(-p))
-    return dict(cells=len(y), positive=int(y.sum()), auc=auc(y, p), logloss=float(loss.mean()))
+    ranking_auc = auc(y, p)
+    clipped = np.clip(p, 1e-7, 1-1e-7)
+    loss = -np.where(y, np.log(clipped), np.log1p(-clipped))
+    return dict(cells=len(y), positive=int(y.sum()), auc=ranking_auc, logloss=float(loss.mean()))
 
 
 def masks(data, events):
@@ -146,6 +147,7 @@ def paired_comparisons(runs, bootstrap=2000):
 
 def benchmark():
     torch.set_num_threads(1)
+    torch.manual_seed(58)
     results = {}
     for kind in CONFIGS:
         model = make_probe(kind).eval()
@@ -183,6 +185,10 @@ def report():
     result = dict(corpus_sha256=digest(OUT/'corpus.json'), test_episodes=len(episodes),
         test_returns=sum(len(e['returns']) for e in episodes), runs=runs,
         comparisons=paired_comparisons(runs), cpu=benchmark())
+    # Per-episode arrays stay with the ignored evidence; git carries conclusions only.
+    write_json(OUT / 'evaluation.json', result)
+    result['full_evaluation_sha256'] = digest(OUT / 'evaluation.json')
+    result['runs'] = [{k: v for k, v in run.items() if k != 'episodes'} for run in runs]
     write_json(ROOT / 'MEMORY/docs/memory-probe-results.json',result)
 
 

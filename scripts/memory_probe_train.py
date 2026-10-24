@@ -97,8 +97,13 @@ def validate(model, episodes, device):
 def train_one(kind, arm, seed, epochs):
     torch.set_num_threads(1)
     available = mem_available()
-    if available < 10 * 1024 ** 3:
-        raise RuntimeError(f'MemAvailable {available} < 10 GiB; no GPU training started')
+    # Imports and other workloads can consume memory between the parent's check and
+    # child startup. Remain before CUDA initialization until the child's gate passes.
+    while available < 10 * 1024 ** 3:
+        print(json.dumps(dict(wait='child MemAvailable', bytes=available,
+                              gpu_training_started=False)), flush=True)
+        time.sleep(30)
+        available = mem_available()
     gate = dict(mem_available_bytes=available, required_bytes=10 * 1024 ** 3,
                 time_limit_seconds=3600, start_unix=time.time(), kind=kind, arm=arm, seed=seed)
     folder = OUT / 'models' / f'{kind}-{arm}-s{seed}'
@@ -170,7 +175,7 @@ def run_all(epochs):
                     assert result['checkpoint_sha256'] == digest(folder/'model.pt')
                     continue
                 # Wait only for the resource gate, never alter other workloads.
-                while mem_available() < 10 * 1024 ** 3:
+                while mem_available() < 10 * 1024 ** 3 + 512 * 1024 ** 2:
                     print(json.dumps(dict(wait='MemAvailable', bytes=mem_available())), flush=True)
                     time.sleep(30)
                 folder.mkdir(parents=True, exist_ok=True)
@@ -203,6 +208,10 @@ def predict():
                 for episode in episodes:
                     target = folder / 'test' / f"{episode['meta']['id']}.npz"
                     if target.exists():
+                        with np.load(target, allow_pickle=False) as existing:
+                            assert str(existing['checkpoint_sha256']) == result['checkpoint_sha256']
+                            assert str(existing['corpus_sha256']) == result['corpus_sha256']
+                            assert str(existing['episode_pack_sha256']) == episode['meta']['pack_sha256']
                         continue
                     state, outputs = None, []
                     with torch.inference_mode():
@@ -215,7 +224,10 @@ def predict():
                             probabilities[:, 1:] *= probabilities[:, :1]
                             outputs.append(probabilities.cpu().numpy())
                     target.parent.mkdir(exist_ok=True)
-                    np.savez_compressed(target, probabilities=np.concatenate(outputs))
+                    np.savez_compressed(target, probabilities=np.concatenate(outputs),
+                        checkpoint_sha256=result['checkpoint_sha256'],
+                        corpus_sha256=result['corpus_sha256'],
+                        episode_pack_sha256=episode['meta']['pack_sha256'])
                 print('PREDICTED ' + folder.name, flush=True)
 
 

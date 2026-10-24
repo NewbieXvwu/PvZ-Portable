@@ -12,6 +12,7 @@ from pvz_memory_probe import CONFIGS, MemoryProbe, make_probe
 from memory_probe_data import labels
 from memory_probe_metrics import auc, masks, stats
 from memory_probe_train import objective
+import memory_probe_train
 
 torch.set_num_threads(1)
 
@@ -73,6 +74,16 @@ def test_metric_ties_and_single_class():
     assert auc([1,1], [.2,.8]) is None
     assert stats([],[])['logloss'] is None
     assert stats([0,1],[.5,.5])['logloss'] == pytest.approx(np.log(2))
+    assert stats([1,0],[2e-9,1e-9])['auc'] == 1.
+
+
+def test_auc_matches_pairwise_definition_with_ties():
+    rng = np.random.default_rng(58)
+    y = rng.integers(0,2,200).astype(bool)
+    p = rng.integers(0,7,200) / 6.
+    comparisons = p[y,None] - p[None,~y]
+    reference = np.mean((comparisons > 0) + .5 * (comparisons == 0))
+    assert auc(y,p) == pytest.approx(reference)
 
 
 def test_recency_and_event_masks_do_not_overlap_buckets():
@@ -96,3 +107,19 @@ def test_loss_ignores_padded_episodes_and_has_type_gradient():
     assert not logits.grad[:,1].any()
     assert logits.grad[0,0,3,1,2] < 0
     assert logits.grad[0,0,2,1,2] > 0
+
+
+def test_child_waits_for_memory_before_loading_data_or_cuda(monkeypatch,tmp_path):
+    readings = iter([9 * 1024**3, 11 * 1024**3])
+    calls = []
+    monkeypatch.setattr(memory_probe_train,'OUT',tmp_path)
+    monkeypatch.setattr(memory_probe_train,'mem_available',lambda:next(readings))
+    monkeypatch.setattr(memory_probe_train.time,'sleep',lambda seconds:calls.append(('sleep',seconds)))
+    monkeypatch.setattr(memory_probe_train,'write_json',lambda path,value:calls.append(('gate',value['mem_available_bytes'])))
+    def stop_before_gpu(*args):
+        calls.append(('load',None))
+        raise RuntimeError('test stops before allocating data or model')
+    monkeypatch.setattr(memory_probe_train,'load_episodes',stop_before_gpu)
+    with pytest.raises(RuntimeError,match='test stops'):
+        memory_probe_train.train_one('current','human',999,20)
+    assert calls == [('sleep',30),('gate',11 * 1024**3),('load',None)]
