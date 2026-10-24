@@ -1,0 +1,8 @@
+{
+  "episodes": 164,
+  "checked_frames": 66092,
+  "compared_float32_values": 414859484,
+  "bit_mismatches": 0,
+  "corpus_sha256": "d60ebfd1f77d04502bd103bb5bd9ae9df47a73080f7d8dcac5ed42c0d1e02bc7",
+  "scope": "human inputs re-encoded from archived public frames and public reset context; no PRIV/target/xray read"
+}

@@ -228,14 +228,64 @@ def supplement(games_per_level):
                 print(json.dumps(dict(seed=seed, frames=len(frames), terminal=obs['terminal'])), flush=True)
 
 
+def audit_inputs():
+    """Re-encode archives without reading any PRIV labels or xray input tensors."""
+    os.environ['PVZ_NO_POPUP'] = '1'
+    corpus = json.loads((OUT / 'corpus.json').read_text())
+    entries = json.loads((OUT / 'inventory.json').read_text())
+    assert corpus['inventory_sha256'] == digest(OUT / 'inventory.json')
+    assert corpus['engine_sha256'] == digest(ENGINE)
+    # Context missing in legacy meta is recovered from public reset only, never PRIV.
+    contexts = {}
+    with EventWaitEnv('/home/newbiexvwu/.cache/pvz-research-resources', executable=ENGINE) as env:
+        for entry in entries:
+            if entry['context'] is not None:
+                contexts[entry['id']] = entry['context']
+                continue
+            task = entry['task']
+            deck = tuple(task['deck'])
+            obs, _ = env.reset(deck=deck, task=TaskSpec(level=task['level'], seed=task['seed'],
+                profile=profile_for_deck(deck), fog_observation='human',
+                playthrough=task.get('playthrough', 2),
+                zombie_count_multiplier=task.get('zombie_count_multiplier', 1)))
+            contexts[entry['id']] = dict(multiplier=task.get('zombie_count_multiplier', 1),
+                                        roster=obs['loadout_context']['zombie_roster'])
+    checked, values = 0, 0
+    for entry, row in zip(entries, corpus['episodes']):
+        assert entry['id'] == row['id']
+        source = Path(entry['source'])
+        assert digest(source) == entry['source_sha256']
+        frames = read_frames(source)
+        context = contexts[entry['id']]
+        cv = context_vector(context['multiplier'], context['roster'])
+        history, previous = StudentHistory('v2fog'), None
+        with np.load(OUT / 'episodes' / f"{entry['id']}.npz", allow_pickle=False) as packed:
+            # Only these two public arrays are accessed; target/xray are not opened.
+            board, scalar = packed['human_board'], packed['human_scalar']
+            for i, frame in enumerate(frames):
+                b, s = encode_public(history, frame, previous, cv)
+                np.testing.assert_array_equal(b.view(np.uint32), board[i].view(np.uint32))
+                np.testing.assert_array_equal(s.view(np.uint32), scalar[i].view(np.uint32))
+                previous = frame
+                checked += 1
+                values += b.size + s.size
+    result = dict(episodes=len(entries), checked_frames=checked, compared_float32_values=values,
+        bit_mismatches=0, corpus_sha256=digest(OUT / 'corpus.json'),
+        scope='human inputs re-encoded from archived public frames and public reset context; no PRIV/target/xray read')
+    write_json(ROOT / 'MEMORY/docs/memory-probe-input-audit.json', result)
+    print(json.dumps(result), flush=True)
+
+
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('stage', choices=['inventory', 'collect', 'supplement'])
+    p.add_argument('stage', choices=['inventory', 'collect', 'supplement', 'audit-inputs'])
     p.add_argument('--limit', type=int)
     p.add_argument('--games-per-level', type=int, default=32)
     args = p.parse_args()
     if args.stage == 'supplement':
         supplement(args.games_per_level)
+    elif args.stage == 'audit-inputs':
+        audit_inputs()
     elif args.stage == 'inventory':
         inventory()
     else:
