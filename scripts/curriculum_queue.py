@@ -393,6 +393,9 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
        按 0）。老师没有证据时按可教处理——beta0 采集本身就是老师探针；学生全败而老师
        会赢的格（如 L20：老师 29/32、学生 0/128）排最前；老师也赢不了的格差距趋 0，
        自然沉底（雾区格本就不在训练集合）。同分按最久没采的先。
+    allocate 不改 last_round（task59）：它由 run_round 在每组完成时写并落盘。plan 只在
+    内存里标 picked；控制器组间崩溃重启后重新 plan，没跑的组照常排出、本轮已完成的组
+    不重采（last_round == round_index 跳过）。
     """
     if not cells or budget < 1 or per_group < 1:
         return []
@@ -409,14 +412,13 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
         picks.append((base, current, floor_games))
         picked.add(base)
         spent += floor_games
-        cells[base]['last_round'] = round_index
     scored = []
     for base, cell in cells.items():
-        if base in picked:
-            continue
+        if base in picked or cells[base]['last_round'] == round_index:
+            continue   # 本轮已完成的组（组间崩溃重启后的重排）不重采
         current = values[cell['mult_index']]
-        student_rate = rate(cell, current)
-        student = 0.0 if student_rate is None else student_rate
+        student_win = rate(cell, current)
+        student = 0.0 if student_win is None else student_win
         teacher_rate = teacher.get(base, teacher.get(f'level:{cell["level"]}', 1.0))
         gap = min(1.0, max(0.0, teacher_rate - student))
         scored.append((-gap, cells[base]['last_round'], base, current))
@@ -426,7 +428,6 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
             break
         picks.append((base, multiplier, per_group))
         remaining -= per_group
-        cells[base]['last_round'] = round_index
     return picks
 
 
@@ -924,13 +925,14 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
                                                 for row in rows])[-WINDOW:]
         bucket['wins'] += wins
         bucket['games'] += games
-        bucket['last_round'] = round_index
         log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} mult={item["multiplier"]:g} '
                            f'offset={item["offset"]} games={games} wins={wins} '
                            f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
                            f'rc={result.returncode} {seconds:.0f}s')
         if result.returncode != 0:
             raise SystemExit(f'{item["label"]}: search_play exited {result.returncode}')
+        state['cells'][item['base']]['last_round'] = round_index
+        save_state(args.state, state)   # 组完成即落盘：组间崩溃重启不重采、防遗忘轮转不丢（task59）
     state['round'] = round_index
     state['log'].append(dict(round=round_index,
                              groups=[{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',

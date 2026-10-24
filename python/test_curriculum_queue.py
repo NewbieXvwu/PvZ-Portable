@@ -76,17 +76,48 @@ class CurriculumRulesTest(unittest.TestCase):
             self.assertIn(multiplier, VALUES)
 
     def test_floor_bounds_starvation_over_rounds(self):
-        # 预算紧张下连续模拟多轮：任何格两次被采的间隔不超过 FLOOR_ROUNDS + 1 轮。
+        # 预算紧张下连续模拟多轮（last_round 由"组完成"写入，如 run_round 的落盘）：
+        # 任何格两次被采的间隔不超过 FLOOR_ROUNDS + 1 轮。
         cells = {f'c{i:02d}': cell(5, 10, last_round=0) for i in range(20)}
         last_seen = {name: 0 for name in cells}
         for round_index in range(1, 13):
-            allocate(cells, VALUES, budget=50, per_group=10, round_index=round_index)
-            for name, picked in cells.items():
-                if picked['last_round'] == round_index:
-                    gap = round_index - last_seen[name]
-                    self.assertLessEqual(gap, FLOOR_ROUNDS + 1, name)
-                    last_seen[name] = round_index
+            picks = allocate(cells, VALUES, budget=50, per_group=10, round_index=round_index)
+            for base, _multiplier, _games in picks:
+                gap = round_index - last_seen[base]
+                self.assertLessEqual(gap, FLOOR_ROUNDS + 1, base)
+                cells[base]['last_round'] = round_index
+                last_seen[base] = round_index
         self.assertEqual(max(last_seen.values()), 12)          # 每个格都真的被轮到过
+
+    def test_allocate_does_not_mutate_last_round(self):
+        # task59：last_round 只由 run_round 在组完成时写；plan/allocate 不得改状态。
+        cells = {'a': cell(5, 10, last_round=0), 'b': cell(5, 10, last_round=1)}
+        before = {name: value['last_round'] for name, value in cells.items()}
+        allocate(cells, VALUES, budget=30, per_group=10, round_index=7)
+        self.assertEqual({name: value['last_round'] for name, value in cells.items()}, before)
+
+    def test_crash_between_groups_replans_unrun_groups(self):
+        # 组间崩溃重启：重新 plan 时本轮已完成的组不重采，没跑的组照常排出。
+        bases = ('day_l7_train_d7', 'night_l7_train_n7', 'pool_l21_train_p9k')
+        tasks = {}
+        for base in bases:
+            for mult, suffix in [(1.0, ''), (1.25, '_m125')]:
+                task_id = base + suffix
+                tasks[task_id] = dict(task_id=task_id, level=7, deck=[0, 1, 2, 3, 4, 5, 7],
+                                      zombie_count_multiplier=mult, seeds=list(range(40)))
+        state = dict(round=0, offsets={}, cells={base: cell(5, 10) for base in bases})
+        manifests = {task_id: Path('/tmp/panel.json') for task_id in tasks}
+        plan1, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=40, per_group=10)
+        self.assertEqual([item['base'] for item in plan1], list(bases))
+        self.assertEqual([item['games'] for item in plan1], [10, 10, 10])
+        for item in plan1[:2]:                                 # 前两组完成，然后控制器崩溃
+            state['cells'][item['base']]['last_round'] = 1
+            state['offsets'][item['task_id']] = item['offset'] + item['games']
+        plan2, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=40, per_group=10)
+        completed = {item['base'] for item in plan1[:2]}
+        self.assertFalse(completed & {item['base'] for item in plan2})
+        self.assertEqual([item['base'] for item in plan2], ['pool_l21_train_p9k'])
+        self.assertEqual(plan2[0]['offset'], 0)                # 偏移接在原计划之后
 
     def test_starved_cell_gets_floor_even_with_tight_budget(self):
         # 预算只够一个保底组时，最久没采的格拿到保底局数（减半），不为零。
@@ -109,11 +140,11 @@ class CurriculumRulesTest(unittest.TestCase):
     def test_unknown_teacher_and_student_gap_tiebreaks_by_age(self):
         # 老师都未知时按 1 - 学生胜率排；同分时最久没采的先。
         cells = {
-            'fresh_hard': cell(0, 10, last_round=1),        # 差距 1.0
+            'fresh_hard': cell(0, 10, last_round=1),        # 差距 1.0（上一轮采过）
             'old_hard': cell(0, 10, last_round=0),          # 差距 1.0，更久没采
             'easy': cell(9, 10),                            # 差距 0.1
         }
-        picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=1)
+        picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=2)
         self.assertEqual([p[0] for p in picks], ['old_hard', 'fresh_hard', 'easy'])
 
     def test_build_plan_cold_start_uses_pending_volume(self):

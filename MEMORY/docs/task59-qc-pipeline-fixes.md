@@ -50,4 +50,10 @@
   搜索打标签（frame["label"]=搜索决策），只是以 1−β 概率执行学生自己的动作——老师执行的
   步照常产出训练行，与 beta0 的行同格式可混训，无阻碍。
 
+- [x] 修正 3（组间崩溃重启）：allocate 不再写 last_round（plan 纯读，只在内存标 picked；
+  scored 排序跳过 last_round == round_index 的格——本轮已完成的组不重采）；run_round 在
+  每组成功完成后写 cell 级 last_round 并 save_state 落盘（原 bucket 级写入无人读，删除）。
+  防遗忘语义不变：floor 轮转仍按 (last_round, base) 最久优先，FLOOR_ROUNDS 窗口判定未动。
+  测试：allocate 纯度、12 轮无格间隔超 FLOOR_ROUNDS+1（按组完成语义模拟）、
+  plan→前两组完成→重 plan：已完成组不重采、没跑的组照常排出且偏移接续。47 过。
 ## 问题
