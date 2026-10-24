@@ -231,7 +231,7 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
-                **({'source_weight': recipe['source_weight']} if recipe['source_weight'] else {}))
+                **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
 
 
 def training_args(parser, argv=None):
