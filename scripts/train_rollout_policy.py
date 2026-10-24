@@ -89,6 +89,8 @@ class CompactBoards:
         self.nnz = 0
         self.planes, self._plane_ids, self._plane_index = [], bytearray(), {}
         self.plane_of = None
+        self._plane_cells = None            # lazy flatten of planes, see _plane_tables
+        self._plane_device = {}             # device -> (cells, values) resident tensors
         self.indices = bytearray()
         self.values = bytearray()
         self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
@@ -146,6 +148,29 @@ class CompactBoards:
         return (self.indices.nbytes + self.values.nbytes + self.offsets.nbytes
                 + (0 if self.plane_of is None else self.plane_of.nbytes))
 
+    def _plane_tables(self):
+        """Flatten the per-archive planes once: (cells, values, offsets) with offsets[nplanes+1]."""
+        if self._plane_cells is None:
+            if self.planes:
+                cells = np.concatenate([p[0] for p in self.planes])
+                values = np.concatenate([p[1] for p in self.planes])
+                offsets = np.zeros(len(self.planes) + 1, dtype=np.int64)
+                np.cumsum([len(p[0]) for p in self.planes], out=offsets[1:])
+            else:
+                cells, values, offsets = np.zeros(0, dtype=np.int64), np.zeros(0, dtype=self.dtype), np.zeros(1, dtype=np.int64)
+            self._plane_cells, self._plane_values, self._plane_offsets = cells, values, offsets
+        return self._plane_cells, self._plane_values, self._plane_offsets
+
+    def _plane_device_tables(self, device):
+        """The flattened planes resident on one device (round-2 pack: 1.5 MiB total)."""
+        tables = self._plane_device.get(device)
+        if tables is None:
+            cells, values, _ = self._plane_tables()
+            tables = (torch.from_numpy(cells).to(device).long(),
+                      torch.from_numpy(values).to(device=device, dtype=torch.float32))
+            self._plane_device[device] = tables
+        return tables
+
     def batch(self, idx, device):
         selected = np.asarray(idx)
         starts = self.offsets[selected]
@@ -159,12 +184,22 @@ class CompactBoards:
                           torch.from_numpy(self.values[positions]).to(device=device, dtype=torch.float32))
         if self.plane_of is not None:
             identities = self.plane_of[selected]
-            if (identities >= 0).any():
-                view = output.view(len(selected), size)
-                for identity in np.unique(identities[identities >= 0]):
-                    rows = torch.from_numpy(np.flatnonzero(identities == identity)).to(device)
-                    cells, values = self.planes[identity]
-                    view[rows.unsqueeze(1), torch.from_numpy(cells).long().to(device)] = torch.from_numpy(values).to(device=device, dtype=torch.float32)
+            mask = identities >= 0
+            if mask.any():
+                # One fused scatter instead of one kernel launch per distinct plane: on the
+                # round-2 pack (5155 planes, ~1400 distinct in a 2048-row batch) the loop was
+                # 218 ms of a 222 ms batch build; gathers below are ~1 ms (task61).
+                cells, values, offsets = self._plane_tables()
+                ids = identities[mask]
+                lens = offsets[ids + 1] - offsets[ids]
+                total = int(lens.sum())
+                row_of = np.repeat(np.flatnonzero(mask), lens)
+                positions = (np.repeat(offsets[ids], lens) + np.arange(total)
+                             - np.repeat(np.cumsum(lens) - lens, lens))
+                plane_cells, plane_values = self._plane_device_tables(device)
+                gathered = torch.from_numpy(positions).to(device)
+                output.view(len(selected), size)[
+                    torch.from_numpy(row_of).to(device), plane_cells[gathered]] = plane_values[gathered]
         return output.reshape(len(selected), *self.shape[1:])
 
 
