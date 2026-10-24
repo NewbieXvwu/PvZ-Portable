@@ -1029,7 +1029,7 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 ### 14.24 雾夜用户卡组族 `fog_user_l31_snow` 接入 qc 课程（task68，2026-10-24 登记，AGENTS.md §8 第 4 条）
 
-**为什么**：task67（[fog-user-decks.md](MEMORY/docs/fog-user-decks.md)）在雾区 L31–L34 用 12 个卡组族各跑 32 个配对种子。只有 L31 的用户卡组（阳光菇/小喷菇/大喷菇/睡莲/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果/**寒冰射手**）老师冷启动过 50%：**25/32 = 78.1%**（Wilson 61.2–89.0）；同一批种子下 task45 的 `fog_l31_train_f8` 卡组 **0/32**，配对 McNemar p<1e-6。两副卡组只差一张：寒冰射手 5 换掉路灯花 25。带路灯花时老师每局种 4.3 株路灯花、只种 2.7 株阳光菇（经济节奏被带偏）；换成寒冰射手后是 21.6 株阳光菇、24.9 株小喷菇、8.3 株大喷菇。L32–L34 的 8 个候选族全部 0–3/32，不进课程。
+**为什么**：task67（[fog-user-decks.md](MEMORY/docs/fog-user-decks.md)）在雾区 L31–L34 用 12 个卡组族各跑 32 个配对种子。只有 L31 的用户卡组（阳光菇/小喷菇/大喷菇/睡莲/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果/**寒冰射手**）老师冷启动过 50%：**25/32 = 78.1%**（Wilson 61.2–89.0）；同一批种子下 task45 的 `fog_l31_train_f8` 卡组 **0/32**，配对 McNemar p<1e-6。两副卡组只差一张：寒冰射手 5 换掉路灯花 25。带路灯花时每局种 4.3 株路灯花、只种 2.7 株阳光菇（经济节奏被带偏；task67b 逐决策溯源：21 株里 18 株是学生 dw4i_s1 自己选的，它把 25 阳光那一手从阳光菇换成了没见过的路灯花，老师叶值差多在 0.02 以内而很少推翻，见 [fog-user-decks.md](MEMORY/docs/fog-user-decks.md) §7）；换成寒冰射手后是 21.6 株阳光菇、24.9 株小喷菇、8.3 株大喷菇。L32–L34 的 8 个候选族全部 0–3/32，不进课程。
 
 - **族**：`fog_user_l31_snow`，关卡 31，卡组 `[9,8,10,16,23,17,19,2,3,5]`（与 task67 面板同一集合，顺序即清单顺序），`fog_observation: human`；二周目、倍率 1.0、不限波、阳光 50、无预置植物。卡组含睡莲 16 覆盖水路，不含升级植物，`profile_for_deck` 无需声明 `owned_upgrade_plants`。
 - **生成器** `scripts/make_fog_user_panel.py`（复用 `zone_panel.task_document` / `check_decks`），本机清单 `artifacts/task68/fog_user_panel.json`：训练任务 `fog_user_l31_snow`（8192 种子）+ 评估任务 `fog_user_l31_snow_eval`（32 种子），不入 git。
