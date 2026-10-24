@@ -30,8 +30,34 @@ def archive_fingerprint(data: Path, labels) -> str:
 
 
 def fingerprint_paths(data: Path, paths) -> str:
-    lines = sorted(f"{path.relative_to(data)}:{path.stat().st_size}" for path in paths)
+    lines = []
+    for path in paths:
+        line = f"{path.relative_to(data)}:{path.stat().st_size}"
+        selection = training_rows(path)
+        if selection is not None:
+            line += ':training_rows=' + json.dumps(selection, separators=(',', ':'))
+        lines.append(line)
+    lines.sort()
     return hashlib.sha1("|".join(lines).encode()).hexdigest()[:16]
+
+
+def training_rows(frame_path):
+    """Optional exact supervision rows, preserving all real prefix frames for history.
+
+    Ordinary archives retain their original fingerprint and sampling contract. Explicit
+    rows are retained exactly, including wait corrections, with no wait downsampling.
+    """
+    path = Path(frame_path).parent / 'meta.json'
+    if not path.exists():
+        return None
+    meta = json.loads(path.read_text())
+    rows = meta.get('training_rows')
+    if rows is None:
+        return None
+    if (not isinstance(rows, list) or any(type(i) is not int or i < 1 for i in rows)
+            or rows != sorted(set(rows))):
+        raise ValueError(f'{path}: training_rows must be sorted unique positive decision indices')
+    return rows
 
 
 def segment_options(options: dict, label: str, sources: str) -> dict:

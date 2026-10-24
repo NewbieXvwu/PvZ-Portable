@@ -1,0 +1,1433 @@
+{
+ "status": "complete",
+ "overall": {
+  "pairs": 192,
+  "candidate_wins": 75,
+  "incumbent_wins": 76,
+  "gain": 12,
+  "harm": 13,
+  "both_win": 63,
+  "both_lose": 104,
+  "delta_rate": -0.005208333333333333,
+  "ci95": [
+   -0.05688413177468268,
+   0.0465224807698305
+  ],
+  "mcnemar_worse_p": 0.5
+ },
+ "by_terrain": {
+  "day": {
+   "pairs": 64,
+   "candidate_wins": 42,
+   "incumbent_wins": 46,
+   "gain": 1,
+   "harm": 5,
+   "both_win": 41,
+   "both_lose": 17,
+   "delta_rate": -0.0625,
+   "ci95": [
+    -0.14276045379968583,
+    0.017523761090064927
+   ],
+   "mcnemar_worse_p": 0.109375
+  },
+  "night": {
+   "pairs": 64,
+   "candidate_wins": 33,
+   "incumbent_wins": 30,
+   "gain": 11,
+   "harm": 8,
+   "both_win": 22,
+   "both_lose": 23,
+   "delta_rate": 0.046875,
+   "ci95": [
+    -0.08716993855164559,
+    0.1779607904209908
+   ],
+   "mcnemar_worse_p": 0.8203582763671875
+  },
+  "pool": {
+   "pairs": 64,
+   "candidate_wins": 0,
+   "incumbent_wins": 0,
+   "gain": 0,
+   "harm": 0,
+   "both_win": 0,
+   "both_lose": 64,
+   "delta_rate": 0.0,
+   "ci95": [
+    -0.05662405979280531,
+    0.05662405979280531
+   ],
+   "mcnemar_worse_p": 1.0
+  }
+ },
+ "paired": [
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-0",
+   "terrain": "day",
+   "seed": 53000000,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-1",
+   "terrain": "day",
+   "seed": 53000001,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-2",
+   "terrain": "day",
+   "seed": 53000002,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-3",
+   "terrain": "day",
+   "seed": 53000003,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-4",
+   "terrain": "day",
+   "seed": 53000004,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-5",
+   "terrain": "day",
+   "seed": 53000005,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-6",
+   "terrain": "day",
+   "seed": 53000006,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2520360-c2d9d7qm100-eval-7",
+   "terrain": "day",
+   "seed": 53000007,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-0",
+   "terrain": "day",
+   "seed": 53000100,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-1",
+   "terrain": "day",
+   "seed": 53000101,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-2",
+   "terrain": "day",
+   "seed": 53000102,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-3",
+   "terrain": "day",
+   "seed": 53000103,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-4",
+   "terrain": "day",
+   "seed": 53000104,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-5",
+   "terrain": "day",
+   "seed": 53000105,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-6",
+   "terrain": "day",
+   "seed": 53000106,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2500356-c2d7d7qm100-eval-7",
+   "terrain": "day",
+   "seed": 53000107,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-0",
+   "terrain": "day",
+   "seed": 53000200,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-1",
+   "terrain": "day",
+   "seed": 53000201,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-2",
+   "terrain": "day",
+   "seed": 53000202,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-3",
+   "terrain": "day",
+   "seed": 53000203,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-4",
+   "terrain": "day",
+   "seed": 53000204,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-5",
+   "terrain": "day",
+   "seed": 53000205,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-6",
+   "terrain": "day",
+   "seed": 53000206,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-2510303-c2d8d7qm100-eval-7",
+   "terrain": "day",
+   "seed": 53000207,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-0",
+   "terrain": "day",
+   "seed": 53000300,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-1",
+   "terrain": "day",
+   "seed": 53000301,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-2",
+   "terrain": "day",
+   "seed": 53000302,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-3",
+   "terrain": "day",
+   "seed": 53000303,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-4",
+   "terrain": "day",
+   "seed": 53000304,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-5",
+   "terrain": "day",
+   "seed": 53000305,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-6",
+   "terrain": "day",
+   "seed": 53000306,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6046147-c2d10d7qm150-eval-7",
+   "terrain": "day",
+   "seed": 53000307,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-0",
+   "terrain": "day",
+   "seed": 53000400,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-1",
+   "terrain": "day",
+   "seed": 53000401,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-2",
+   "terrain": "day",
+   "seed": 53000402,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-3",
+   "terrain": "day",
+   "seed": 53000403,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-4",
+   "terrain": "day",
+   "seed": 53000404,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-5",
+   "terrain": "day",
+   "seed": 53000405,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-6",
+   "terrain": "day",
+   "seed": 53000406,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6400020-c2d1d7m175-eval-7",
+   "terrain": "day",
+   "seed": 53000407,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-0",
+   "terrain": "day",
+   "seed": 53000500,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-1",
+   "terrain": "day",
+   "seed": 53000501,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-2",
+   "terrain": "day",
+   "seed": 53000502,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-3",
+   "terrain": "day",
+   "seed": 53000503,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-4",
+   "terrain": "day",
+   "seed": 53000504,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-5",
+   "terrain": "day",
+   "seed": 53000505,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-6",
+   "terrain": "day",
+   "seed": 53000506,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6404126-c2d3d7m175-eval-7",
+   "terrain": "day",
+   "seed": 53000507,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-0",
+   "terrain": "day",
+   "seed": 53000600,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-1",
+   "terrain": "day",
+   "seed": 53000601,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-2",
+   "terrain": "day",
+   "seed": 53000602,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-3",
+   "terrain": "day",
+   "seed": 53000603,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-4",
+   "terrain": "day",
+   "seed": 53000604,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-5",
+   "terrain": "day",
+   "seed": 53000605,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-6",
+   "terrain": "day",
+   "seed": 53000606,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6406158-c2d4d7m175-eval-7",
+   "terrain": "day",
+   "seed": 53000607,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-0",
+   "terrain": "day",
+   "seed": 53000700,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-1",
+   "terrain": "day",
+   "seed": 53000701,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-2",
+   "terrain": "day",
+   "seed": 53000702,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-3",
+   "terrain": "day",
+   "seed": 53000703,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-4",
+   "terrain": "day",
+   "seed": 53000704,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-5",
+   "terrain": "day",
+   "seed": 53000705,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-6",
+   "terrain": "day",
+   "seed": 53000706,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "day-6410241-c2d6d7m175-eval-7",
+   "terrain": "day",
+   "seed": 53000707,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-0",
+   "terrain": "night",
+   "seed": 53000800,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-1",
+   "terrain": "night",
+   "seed": 53000801,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-2",
+   "terrain": "night",
+   "seed": 53000802,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-3",
+   "terrain": "night",
+   "seed": 53000803,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-4",
+   "terrain": "night",
+   "seed": 53000804,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-5",
+   "terrain": "night",
+   "seed": 53000805,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-6",
+   "terrain": "night",
+   "seed": 53000806,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3360022-c2n17n10qm100-eval-7",
+   "terrain": "night",
+   "seed": 53000807,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-0",
+   "terrain": "night",
+   "seed": 53000900,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-1",
+   "terrain": "night",
+   "seed": 53000901,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-2",
+   "terrain": "night",
+   "seed": 53000902,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-3",
+   "terrain": "night",
+   "seed": 53000903,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-4",
+   "terrain": "night",
+   "seed": 53000904,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-5",
+   "terrain": "night",
+   "seed": 53000905,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-6",
+   "terrain": "night",
+   "seed": 53000906,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2230527-c2n14n10m100-eval-7",
+   "terrain": "night",
+   "seed": 53000907,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-0",
+   "terrain": "night",
+   "seed": 53001000,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-1",
+   "terrain": "night",
+   "seed": 53001001,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-2",
+   "terrain": "night",
+   "seed": 53001002,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-3",
+   "terrain": "night",
+   "seed": 53001003,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-4",
+   "terrain": "night",
+   "seed": 53001004,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-5",
+   "terrain": "night",
+   "seed": 53001005,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-6",
+   "terrain": "night",
+   "seed": 53001006,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2210487-c2n12n10m100-eval-7",
+   "terrain": "night",
+   "seed": 53001007,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-0",
+   "terrain": "night",
+   "seed": 53001100,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-1",
+   "terrain": "night",
+   "seed": 53001101,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-2",
+   "terrain": "night",
+   "seed": 53001102,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-3",
+   "terrain": "night",
+   "seed": 53001103,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-4",
+   "terrain": "night",
+   "seed": 53001104,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-5",
+   "terrain": "night",
+   "seed": 53001105,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-6",
+   "terrain": "night",
+   "seed": 53001106,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3350052-c2n16n10qm100-eval-7",
+   "terrain": "night",
+   "seed": 53001107,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-0",
+   "terrain": "night",
+   "seed": 53001200,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-1",
+   "terrain": "night",
+   "seed": 53001201,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-2",
+   "terrain": "night",
+   "seed": 53001202,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-3",
+   "terrain": "night",
+   "seed": 53001203,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-4",
+   "terrain": "night",
+   "seed": 53001204,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-5",
+   "terrain": "night",
+   "seed": 53001205,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-6",
+   "terrain": "night",
+   "seed": 53001206,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3320126-c2n13n10qm100-eval-7",
+   "terrain": "night",
+   "seed": 53001207,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-0",
+   "terrain": "night",
+   "seed": 53001300,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-1",
+   "terrain": "night",
+   "seed": 53001301,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-2",
+   "terrain": "night",
+   "seed": 53001302,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-3",
+   "terrain": "night",
+   "seed": 53001303,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-4",
+   "terrain": "night",
+   "seed": 53001304,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-5",
+   "terrain": "night",
+   "seed": 53001305,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-6",
+   "terrain": "night",
+   "seed": 53001306,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2260425-c2n17n10m100-eval-7",
+   "terrain": "night",
+   "seed": 53001307,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-0",
+   "terrain": "night",
+   "seed": 53001400,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-1",
+   "terrain": "night",
+   "seed": 53001401,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-2",
+   "terrain": "night",
+   "seed": 53001402,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-3",
+   "terrain": "night",
+   "seed": 53001403,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-4",
+   "terrain": "night",
+   "seed": 53001404,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-5",
+   "terrain": "night",
+   "seed": 53001405,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-6",
+   "terrain": "night",
+   "seed": 53001406,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-3360021-c2n17n10qm100-eval-7",
+   "terrain": "night",
+   "seed": 53001407,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-0",
+   "terrain": "night",
+   "seed": 53001500,
+   "incumbent": true,
+   "candidate": false
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-1",
+   "terrain": "night",
+   "seed": 53001501,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-2",
+   "terrain": "night",
+   "seed": 53001502,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-3",
+   "terrain": "night",
+   "seed": 53001503,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-4",
+   "terrain": "night",
+   "seed": 53001504,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-5",
+   "terrain": "night",
+   "seed": 53001505,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-6",
+   "terrain": "night",
+   "seed": 53001506,
+   "incumbent": false,
+   "candidate": true
+  },
+  {
+   "id": "night-2230559-c2n14n10m100-eval-7",
+   "terrain": "night",
+   "seed": 53001507,
+   "incumbent": true,
+   "candidate": true
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53001600,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53001601,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53001602,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53001603,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53001604,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53001605,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53001606,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2000170-p21dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53001607,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53001700,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53001701,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53001702,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53001703,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53001704,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53001705,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53001706,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2010165-p22dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53001707,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53001800,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53001801,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53001802,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53001803,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53001804,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53001805,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53001806,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2020151-p23dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53001807,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53001900,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53001901,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53001902,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53001903,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53001904,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53001905,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53001906,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2030167-p24dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53001907,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53002000,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53002001,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53002002,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53002003,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53002004,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53002005,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53002006,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2050149-p26dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53002007,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53002100,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53002101,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53002102,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53002103,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53002104,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53002105,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53002106,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2060144-p27dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53002107,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53002200,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53002201,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53002202,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53002203,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53002204,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53002205,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53002206,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2070134-p28dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53002207,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-0",
+   "terrain": "pool",
+   "seed": 53002300,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-1",
+   "terrain": "pool",
+   "seed": 53002301,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-2",
+   "terrain": "pool",
+   "seed": 53002302,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-3",
+   "terrain": "pool",
+   "seed": 53002303,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-4",
+   "terrain": "pool",
+   "seed": 53002304,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-5",
+   "terrain": "pool",
+   "seed": 53002305,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-6",
+   "terrain": "pool",
+   "seed": 53002306,
+   "incumbent": false,
+   "candidate": false
+  },
+  {
+   "id": "pool-2080175-p29dag3-eval-7",
+   "terrain": "pool",
+   "seed": 53002307,
+   "incumbent": false,
+   "candidate": false
+  }
+ ],
+ "interval": "existing pvz_promotion paired Newcombe method 10, 95%; retains uncertainty on unanimous outcomes",
+ "deployment_note": "Feasibility experiment only; no promotion certificate, default or qc changes.",
+ "contract": {
+  "models": {
+   "incumbent": {
+    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+    "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+   },
+   "candidate": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/training/model/model.pt",
+    "sha256": "b6a45ac63f4dec53f229cfc28911073174a2d46db78faae7033f1c081f5fe623"
+   }
+  },
+  "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+  "executable_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+  "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "registration_sha256": "62ff408ae12fb7a0f396c685c69f7290044381b25c5f3d3ef9cecffffb5cbcbc",
+  "binaries": {
+   "incumbent": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/evaluation/incumbent.bin",
+   "candidate": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/artifacts/task53/evaluation/candidate.bin"
+  }
+ }
+}

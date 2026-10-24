@@ -1,0 +1,314 @@
+{
+ "qc_round": 2,
+ "qc_games": 768,
+ "qc_cpu_seconds": 96529.85206656535,
+ "qc_reference_window_unix": [
+  1792750768.8946593,
+  1792759177.834668
+ ],
+ "metrics": [
+  {
+   "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-84633.jsonl",
+   "sha256": "7649eab4c21a98754d361b22f4e824c4c975e775a9e18a4089122c1ea2ddd316",
+   "cpu_seconds": 96529.85206656535
+  }
+ ],
+ "qc_measurement": "read-only curriculum process-tree CPU sample integration over frozen complete round; final exiting children between samples can be missed, making this reference conservative",
+ "qc_reference_engine": "deploy2 (engine used by the frozen qc round); task53 collection uses required deploy3",
+ "cpu_budget_seconds": 14479.477809984803,
+ "cpu_already_spent": 691.9563410000001,
+ "label_cpu_seconds_by_terrain": {
+  "day": 0.335080079710145,
+  "night": 1.1335608695652173,
+  "pool": 0.4407877619047619
+ },
+ "per_point": [
+  {
+   "id": "v2-day-2520360-c2d9d7qm100-d1012",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-2500356-c2d7d7qm100-d1097",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-2500356-c2d7d7qm100-d1127",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-2510303-c2d8d7qm100-d777",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-2510303-c2d8d7qm100-d779",
+   "terrain": "day",
+   "candidates": 71,
+   "forecast_cpu_seconds": 135.14192929347828
+  },
+  {
+   "id": "v2-day-6046147-c2d10d7qm150-d891",
+   "terrain": "day",
+   "candidates": 186,
+   "forecast_cpu_seconds": 308.5458705434783
+  },
+  {
+   "id": "v2-day-6046147-c2d10d7qm150-d928",
+   "terrain": "day",
+   "candidates": 98,
+   "forecast_cpu_seconds": 175.8541589782609
+  },
+  {
+   "id": "v2-day-6400020-c2d1d7m175-d957",
+   "terrain": "day",
+   "candidates": 78,
+   "forecast_cpu_seconds": 145.69695180434783
+  },
+  {
+   "id": "v2-day-6400020-c2d1d7m175-d962",
+   "terrain": "day",
+   "candidates": 15,
+   "forecast_cpu_seconds": 50.70174920652175
+  },
+  {
+   "id": "v2-day-6404126-c2d3d7m175-d891",
+   "terrain": "day",
+   "candidates": 76,
+   "forecast_cpu_seconds": 142.68123108695653
+  },
+  {
+   "id": "v2-day-6404126-c2d3d7m175-d959",
+   "terrain": "day",
+   "candidates": 201,
+   "forecast_cpu_seconds": 331.1637759239131
+  },
+  {
+   "id": "v2-day-6406158-c2d4d7m175-d824",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-6406158-c2d4d7m175-d864",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-6410241-c2d6d7m175-d830",
+   "terrain": "day",
+   "candidates": 46,
+   "forecast_cpu_seconds": 97.44542032608697
+  },
+  {
+   "id": "v2-day-6410241-c2d6d7m175-d844",
+   "terrain": "day",
+   "candidates": 74,
+   "forecast_cpu_seconds": 139.66551036956525
+  },
+  {
+   "id": "v2-night-3360022-c2n17n10qm100-d1715",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-3360022-c2n17n10qm100-d1744",
+   "terrain": "night",
+   "candidates": 20,
+   "forecast_cpu_seconds": 168.4314
+  },
+  {
+   "id": "v2-night-2230527-c2n14n10m100-d1464",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-2230527-c2n14n10m100-d1472",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-2210487-c2n12n10m100-d1776",
+   "terrain": "night",
+   "candidates": 56,
+   "forecast_cpu_seconds": 352.06826086956517
+  },
+  {
+   "id": "v2-night-2210487-c2n12n10m100-d1798",
+   "terrain": "night",
+   "candidates": 62,
+   "forecast_cpu_seconds": 382.67440434782606
+  },
+  {
+   "id": "v2-night-3350052-c2n16n10qm100-d1137",
+   "terrain": "night",
+   "candidates": 72,
+   "forecast_cpu_seconds": 433.68464347826085
+  },
+  {
+   "id": "v2-night-3350052-c2n16n10qm100-d1160",
+   "terrain": "night",
+   "candidates": 76,
+   "forecast_cpu_seconds": 454.08873913043476
+  },
+  {
+   "id": "v2-night-3320126-c2n13n10qm100-d706",
+   "terrain": "night",
+   "candidates": 116,
+   "forecast_cpu_seconds": 658.1296956521738
+  },
+  {
+   "id": "v2-night-3320126-c2n13n10qm100-d733",
+   "terrain": "night",
+   "candidates": 116,
+   "forecast_cpu_seconds": 658.1296956521738
+  },
+  {
+   "id": "v2-night-2260425-c2n17n10m100-d1539",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-2260425-c2n17n10m100-d1542",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-3360021-c2n17n10qm100-d1354",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-3360021-c2n17n10qm100-d1362",
+   "terrain": "night",
+   "candidates": 46,
+   "forecast_cpu_seconds": 301.0580217391304
+  },
+  {
+   "id": "v2-night-2230559-c2n14n10m100-d1622",
+   "terrain": "night",
+   "candidates": 70,
+   "forecast_cpu_seconds": 423.48259565217387
+  },
+  {
+   "id": "v2-night-2230559-c2n14n10m100-d1624",
+   "terrain": "night",
+   "candidates": 70,
+   "forecast_cpu_seconds": 423.48259565217387
+  },
+  {
+   "id": "v2-pool-2000170-p21dag3-d414",
+   "terrain": "pool",
+   "candidates": 63,
+   "forecast_cpu_seconds": 158.12114307142855
+  },
+  {
+   "id": "v2-pool-2000170-p21dag3-d419",
+   "terrain": "pool",
+   "candidates": 36,
+   "forecast_cpu_seconds": 104.56542999999999
+  },
+  {
+   "id": "v2-pool-2010165-p22dag3-d581",
+   "terrain": "pool",
+   "candidates": 121,
+   "forecast_cpu_seconds": 273.1667489285714
+  },
+  {
+   "id": "v2-pool-2010165-p22dag3-d590",
+   "terrain": "pool",
+   "candidates": 58,
+   "forecast_cpu_seconds": 148.2034184285714
+  },
+  {
+   "id": "v2-pool-2020151-p23dag3-d487",
+   "terrain": "pool",
+   "candidates": 85,
+   "forecast_cpu_seconds": 201.7591315
+  },
+  {
+   "id": "v2-pool-2020151-p23dag3-d494",
+   "terrain": "pool",
+   "candidates": 55,
+   "forecast_cpu_seconds": 142.25278364285714
+  },
+  {
+   "id": "v2-pool-2030167-p24dag3-d424",
+   "terrain": "pool",
+   "candidates": 55,
+   "forecast_cpu_seconds": 142.25278364285714
+  },
+  {
+   "id": "v2-pool-2030167-p24dag3-d432",
+   "terrain": "pool",
+   "candidates": 62,
+   "forecast_cpu_seconds": 156.13759814285714
+  },
+  {
+   "id": "v2-pool-2050149-p26dag3-d468",
+   "terrain": "pool",
+   "candidates": 95,
+   "forecast_cpu_seconds": 221.59458078571427
+  },
+  {
+   "id": "v2-pool-2050149-p26dag3-d515",
+   "terrain": "pool",
+   "candidates": 56,
+   "forecast_cpu_seconds": 144.23632857142857
+  },
+  {
+   "id": "v2-pool-2060144-p27dag3-d605",
+   "terrain": "pool",
+   "candidates": 56,
+   "forecast_cpu_seconds": 144.23632857142857
+  },
+  {
+   "id": "v2-pool-2060144-p27dag3-d654",
+   "terrain": "pool",
+   "candidates": 65,
+   "forecast_cpu_seconds": 162.08823292857141
+  },
+  {
+   "id": "v2-pool-2070134-p28dag3-d445",
+   "terrain": "pool",
+   "candidates": 111,
+   "forecast_cpu_seconds": 253.33129964285712
+  },
+  {
+   "id": "v2-pool-2070134-p28dag3-d458",
+   "terrain": "pool",
+   "candidates": 61,
+   "forecast_cpu_seconds": 154.1540532142857
+  },
+  {
+   "id": "v2-pool-2080175-p29dag3-d384",
+   "terrain": "pool",
+   "candidates": 85,
+   "forecast_cpu_seconds": 201.7591315
+  },
+  {
+   "id": "v2-pool-2080175-p29dag3-d424",
+   "terrain": "pool",
+   "candidates": 76,
+   "forecast_cpu_seconds": 183.90722714285712
+  }
+ ],
+ "forecast_total_cpu_seconds": 11906.869862812113,
+ "forecast_share": 0.12334909468835958,
+ "approved": true,
+ "production_root_quota": 22,
+ "production_policy": "768-game round: select a deterministic loss-root reservoir, cap by root quota and accumulated forecast; stop collection at measured 15% CPU. Do not process every loss root."
+}

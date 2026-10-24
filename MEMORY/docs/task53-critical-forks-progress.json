@@ -1,0 +1,932 @@
+{
+ "stages": {
+  "screen-complete": {
+   "day": {
+    "games": 8,
+    "roots": 15,
+    "labels": 3363,
+    "wins": 1528,
+    "v4_agreement": {
+     "won": {
+      "all_pairs": {
+       "pairs": 12144,
+       "accuracy": 0.5134634387351779,
+       "game_cluster_bootstrap_95": [
+        0.4763436790310371,
+        0.5246106936730915
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 3147,
+       "accuracy": 0.49602796313949793,
+       "game_cluster_bootstrap_95": [
+        0.49602796313949793,
+        0.49602796313949793
+       ]
+      }
+     },
+     "wave": {
+      "all_pairs": {
+       "pairs": 564,
+       "accuracy": 0.6861702127659575,
+       "game_cluster_bootstrap_95": [
+        0.24013157894736842,
+        0.9354026845637584
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 91,
+       "accuracy": 0.0989010989010989,
+       "game_cluster_bootstrap_95": [
+        0.0,
+        0.1
+       ]
+      }
+     },
+     "tick": {
+      "all_pairs": {
+       "pairs": 1098,
+       "accuracy": 0.8756830601092896,
+       "game_cluster_bootstrap_95": [
+        0.4382716049382716,
+        0.9673871824042473
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 17,
+       "accuracy": 0.11764705882352941,
+       "game_cluster_bootstrap_95": [
+        0.0,
+        0.3333333333333333
+       ]
+      }
+     },
+     "mowers_used": {
+      "all_pairs": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      },
+      "nonterminal_v4_only": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      }
+     }
+    }
+   },
+   "night": {
+    "games": 8,
+    "roots": 16,
+    "labels": 2940,
+    "wins": 0,
+    "v4_agreement": {
+     "won": {
+      "all_pairs": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      },
+      "nonterminal_v4_only": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      }
+     },
+     "wave": {
+      "all_pairs": {
+       "pairs": 2201,
+       "accuracy": 0.5154475238527941,
+       "game_cluster_bootstrap_95": [
+        0.5154475238527941,
+        0.5154475238527941
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 20,
+       "accuracy": 0.3,
+       "game_cluster_bootstrap_95": [
+        0.3,
+        0.3
+       ]
+      }
+     },
+     "tick": {
+      "all_pairs": {
+       "pairs": 435,
+       "accuracy": 0.8540229885057471,
+       "game_cluster_bootstrap_95": [
+        0.5,
+        0.9835164835164835
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 6,
+       "accuracy": 0.16666666666666666,
+       "game_cluster_bootstrap_95": [
+        0.16666666666666666,
+        0.16666666666666666
+       ]
+      }
+     },
+     "mowers_used": {
+      "all_pairs": {
+       "pairs": 45,
+       "accuracy": 0.5,
+       "game_cluster_bootstrap_95": [
+        0.5,
+        0.5
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 0,
+       "accuracy": null,
+       "game_cluster_bootstrap_95": null
+      }
+     }
+    }
+   },
+   "pool": {
+    "games": 8,
+    "roots": 16,
+    "labels": 3420,
+    "wins": 5,
+    "v4_agreement": {
+     "won": {
+      "all_pairs": {
+       "pairs": 250,
+       "accuracy": 0.816,
+       "game_cluster_bootstrap_95": [
+        0.5,
+        0.9759036144578314
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 166,
+       "accuracy": 0.9759036144578314,
+       "game_cluster_bootstrap_95": [
+        0.9759036144578314,
+        0.9759036144578314
+       ]
+      }
+     },
+     "wave": {
+      "all_pairs": {
+       "pairs": 1585,
+       "accuracy": 0.6211356466876972,
+       "game_cluster_bootstrap_95": [
+        0.5056657223796034,
+        0.8080357142857143
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 1298,
+       "accuracy": 0.6016949152542372,
+       "game_cluster_bootstrap_95": [
+        0.5056657223796034,
+        0.7892156862745098
+       ]
+      }
+     },
+     "tick": {
+      "all_pairs": {
+       "pairs": 1728,
+       "accuracy": 0.5532407407407407,
+       "game_cluster_bootstrap_95": [
+        0.4155112651646447,
+        0.8
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 1420,
+       "accuracy": 0.5225352112676056,
+       "game_cluster_bootstrap_95": [
+        0.3895809739524349,
+        0.7602040816326531
+       ]
+      }
+     },
+     "mowers_used": {
+      "all_pairs": {
+       "pairs": 166,
+       "accuracy": 0.024096385542168676,
+       "game_cluster_bootstrap_95": [
+        0.024096385542168676,
+        0.024096385542168676
+       ]
+      },
+      "nonterminal_v4_only": {
+       "pairs": 166,
+       "accuracy": 0.024096385542168676,
+       "game_cluster_bootstrap_95": [
+        0.024096385542168676,
+        0.024096385542168676
+       ]
+      }
+     }
+    }
+   }
+  },
+  "confirmation-complete": {
+   "roots": 12,
+   "labels": 384,
+   "corrections": 7
+  },
+  "export-complete": {
+   "student_corrections": 7,
+   "value_rows": 11211
+  },
+  "finetune-complete": {
+   "model_sha256": "b6a45ac63f4dec53f229cfc28911073174a2d46db78faae7033f1c081f5fe623",
+   "new_rows": 7
+  },
+  "experiment-complete": {
+   "cost": {
+    "cpu_seconds_metered": 14044.392969999999,
+    "additional_allowance": 250,
+    "qc_round_cpu_seconds": 96529.85206656535,
+    "conservative_share": 0.14808261552232388,
+    "reference_engine": "deploy2 (engine used by the frozen qc round); task53 collection uses required deploy3",
+    "per_point": [
+     {
+      "root": "v2-day-2520360-c2d9d7qm100-d1012",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2520360/c2d9d7qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1027
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 46.241051000000006
+     },
+     {
+      "root": "v2-day-2500356-c2d7d7qm100-d1097",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0009,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 70.92157399999999
+     },
+     {
+      "root": "v2-day-2500356-c2d7d7qm100-d1127",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1142
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 13.130490000000012
+     },
+     {
+      "root": "v2-day-2510303-c2d8d7qm100-d777",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 792
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 129.24823600000002
+     },
+     {
+      "root": "v2-day-2510303-c2d8d7qm100-d779",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 71,
+      "labels": 213,
+      "terminal_and_short_leaf_cpu_seconds": 95.88297999999998
+     },
+     {
+      "root": "v2-day-6046147-c2d10d7qm150-d891",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0042999999999999705,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 186,
+      "labels": 558,
+      "terminal_and_short_leaf_cpu_seconds": 3037.637170000004
+     },
+     {
+      "root": "v2-day-6046147-c2d10d7qm150-d928",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 943
+       }
+      ],
+      "candidates": 98,
+      "labels": 294,
+      "terminal_and_short_leaf_cpu_seconds": 330.870936
+     },
+     {
+      "root": "v2-day-6400020-c2d1d7m175-d957",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 78,
+      "labels": 234,
+      "terminal_and_short_leaf_cpu_seconds": 32.42778800000001
+     },
+     {
+      "root": "v2-day-6400020-c2d1d7m175-d962",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 977
+       }
+      ],
+      "candidates": 15,
+      "labels": 45,
+      "terminal_and_short_leaf_cpu_seconds": 5.516457999999915
+     },
+     {
+      "root": "v2-day-6404126-c2d3d7m175-d891",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0043999999999999595,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 76,
+      "labels": 228,
+      "terminal_and_short_leaf_cpu_seconds": 584.6194649999995
+     },
+     {
+      "root": "v2-day-6404126-c2d3d7m175-d959",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 974
+       }
+      ],
+      "candidates": 201,
+      "labels": 603,
+      "terminal_and_short_leaf_cpu_seconds": 729.4307939999999
+     },
+     {
+      "root": "v2-day-6406158-c2d4d7m175-d824",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.00010000000000000005,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 197.4709049999999
+     },
+     {
+      "root": "v2-day-6406158-c2d4d7m175-d864",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 879
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 12.66779299999962
+     },
+     {
+      "root": "v2-day-6410241-c2d6d7m175-d830",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 87.3588390000001
+     },
+     {
+      "root": "v2-day-6410241-c2d6d7m175-d844",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 859
+       }
+      ],
+      "candidates": 74,
+      "labels": 222,
+      "terminal_and_short_leaf_cpu_seconds": 165.56655400000034
+     },
+     {
+      "root": "v2-night-3360022-c2n17n10qm100-d1715",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 156.4314
+     },
+     {
+      "root": "v2-night-3360022-c2n17n10qm100-d1744",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1759
+       }
+      ],
+      "candidates": 20,
+      "labels": 60,
+      "terminal_and_short_leaf_cpu_seconds": 18.021310000000312
+     },
+     {
+      "root": "v2-night-2230527-c2n14n10m100-d1464",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 83.89618999999993
+     },
+     {
+      "root": "v2-night-2230527-c2n14n10m100-d1472",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1487
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 49.45827999999983
+     },
+     {
+      "root": "v2-night-2210487-c2n12n10m100-d1776",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 56,
+      "labels": 168,
+      "terminal_and_short_leaf_cpu_seconds": 118.11578200000008
+     },
+     {
+      "root": "v2-night-2210487-c2n12n10m100-d1798",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1813
+       }
+      ],
+      "candidates": 62,
+      "labels": 186,
+      "terminal_and_short_leaf_cpu_seconds": 48.637114999999994
+     },
+     {
+      "root": "v2-night-3350052-c2n16n10qm100-d1137",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 72,
+      "labels": 216,
+      "terminal_and_short_leaf_cpu_seconds": 271.79533399999934
+     },
+     {
+      "root": "v2-night-3350052-c2n16n10qm100-d1160",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1175
+       }
+      ],
+      "candidates": 76,
+      "labels": 228,
+      "terminal_and_short_leaf_cpu_seconds": 99.72008099999903
+     },
+     {
+      "root": "v2-night-3320126-c2n13n10qm100-d706",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 116,
+      "labels": 348,
+      "terminal_and_short_leaf_cpu_seconds": 346.4517579999997
+     },
+     {
+      "root": "v2-night-3320126-c2n13n10qm100-d733",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 748
+       }
+      ],
+      "candidates": 116,
+      "labels": 348,
+      "terminal_and_short_leaf_cpu_seconds": 63.783258000000615
+     },
+     {
+      "root": "v2-night-2260425-c2n17n10m100-d1539",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 35.916436000000886
+     },
+     {
+      "root": "v2-night-2260425-c2n17n10m100-d1542",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1557
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 30.795338999999558
+     },
+     {
+      "root": "v2-night-3360021-c2n17n10qm100-d1354",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 72.63312300000075
+     },
+     {
+      "root": "v2-night-3360021-c2n17n10qm100-d1362",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1377
+       }
+      ],
+      "candidates": 46,
+      "labels": 138,
+      "terminal_and_short_leaf_cpu_seconds": 24.84156899999948
+     },
+     {
+      "root": "v2-night-2230559-c2n14n10m100-d1622",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 70,
+      "labels": 210,
+      "terminal_and_short_leaf_cpu_seconds": 67.58274200000028
+     },
+     {
+      "root": "v2-night-2230559-c2n14n10m100-d1624",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 1639
+       }
+      ],
+      "candidates": 70,
+      "labels": 210,
+      "terminal_and_short_leaf_cpu_seconds": 61.078009999998585
+     },
+     {
+      "root": "v2-pool-2000170-p21dag3-d414",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 63,
+      "labels": 189,
+      "terminal_and_short_leaf_cpu_seconds": 83.308887
+     },
+     {
+      "root": "v2-pool-2000170-p21dag3-d419",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 434
+       }
+      ],
+      "candidates": 36,
+      "labels": 108,
+      "terminal_and_short_leaf_cpu_seconds": 34.63535200000024
+     },
+     {
+      "root": "v2-pool-2010165-p22dag3-d581",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 121,
+      "labels": 363,
+      "terminal_and_short_leaf_cpu_seconds": 406.4939700000002
+     },
+     {
+      "root": "v2-pool-2010165-p22dag3-d590",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 605
+       }
+      ],
+      "candidates": 58,
+      "labels": 174,
+      "terminal_and_short_leaf_cpu_seconds": 71.37524799999869
+     },
+     {
+      "root": "v2-pool-2020151-p23dag3-d487",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 85,
+      "labels": 255,
+      "terminal_and_short_leaf_cpu_seconds": 454.03985299999977
+     },
+     {
+      "root": "v2-pool-2020151-p23dag3-d494",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 509
+       }
+      ],
+      "candidates": 55,
+      "labels": 165,
+      "terminal_and_short_leaf_cpu_seconds": 57.040561000000025
+     },
+     {
+      "root": "v2-pool-2030167-p24dag3-d424",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 55,
+      "labels": 165,
+      "terminal_and_short_leaf_cpu_seconds": 80.30742600000008
+     },
+     {
+      "root": "v2-pool-2030167-p24dag3-d432",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 447
+       }
+      ],
+      "candidates": 62,
+      "labels": 186,
+      "terminal_and_short_leaf_cpu_seconds": 35.788692999999284
+     },
+     {
+      "root": "v2-pool-2050149-p26dag3-d468",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.010499999999999954,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 95,
+      "labels": 285,
+      "terminal_and_short_leaf_cpu_seconds": 1278.232839000002
+     },
+     {
+      "root": "v2-pool-2050149-p26dag3-d515",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 530
+       }
+      ],
+      "candidates": 56,
+      "labels": 168,
+      "terminal_and_short_leaf_cpu_seconds": 61.189976000002616
+     },
+     {
+      "root": "v2-pool-2060144-p27dag3-d605",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.010299999999999976,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 56,
+      "labels": 168,
+      "terminal_and_short_leaf_cpu_seconds": 674.8094959999985
+     },
+     {
+      "root": "v2-pool-2060144-p27dag3-d654",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 669
+       }
+      ],
+      "candidates": 65,
+      "labels": 195,
+      "terminal_and_short_leaf_cpu_seconds": 114.20584499999927
+     },
+     {
+      "root": "v2-pool-2070134-p28dag3-d445",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.0,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 111,
+      "labels": 333,
+      "terminal_and_short_leaf_cpu_seconds": 231.95705099999736
+     },
+     {
+      "root": "v2-pool-2070134-p28dag3-d458",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 473
+       }
+      ],
+      "candidates": 61,
+      "labels": 183,
+      "terminal_and_short_leaf_cpu_seconds": 59.379928000004384
+     },
+     {
+      "root": "v2-pool-2080175-p29dag3-d384",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "flat_archived_leaf",
+        "spread": 0.012300000000000089,
+        "position": "median in final 6000 ticks"
+       }
+      ],
+      "candidates": 85,
+      "labels": 255,
+      "terminal_and_short_leaf_cpu_seconds": 1093.7829160000033
+     },
+     {
+      "root": "v2-pool-2080175-p29dag3-d424",
+      "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+      "reasons": [
+       {
+        "kind": "before_loss_breach",
+        "lookback_decisions": 16,
+        "breach_decision": 439
+       }
+      ],
+      "candidates": 76,
+      "labels": 228,
+      "terminal_and_short_leaf_cpu_seconds": 76.40852699999732
+     }
+    ],
+    "formal_points_per_game": 1.9583333333333333,
+    "metered_cost_per_formal_point_including_all_pilots_training_and_evaluation": 298.8168717021276,
+    "scope": "Per-point branch CPU includes native short-leaf and true-terminal teacher work. Shared replay/startup, off-panel pilot, training and evaluation overhead is retained in the total ledger, not silently omitted."
+   },
+   "paired": {
+    "pairs": 192,
+    "candidate_wins": 75,
+    "incumbent_wins": 76,
+    "gain": 12,
+    "harm": 13,
+    "both_win": 63,
+    "both_lose": 104,
+    "delta_rate": -0.005208333333333333,
+    "ci95": [
+     -0.05688413177468268,
+     0.0465224807698305
+    ],
+    "mcnemar_worse_p": 0.5
+   },
+   "artifact_bytes": 398892693
+  }
+ }
+}

@@ -1,0 +1,2598 @@
+{
+ "version": 2,
+ "source_plan_sha256": "a652c1b32344a68dbce1c9b4c50d64a39add391b044b36e9c791419d55427389",
+ "rule": "16th decision before loss; median archived-flat search point in final 6000 ticks",
+ "reason": "Initial structural inspection showed adjacent last decisions and no plant options at some final roots.",
+ "candidate_outcome_analysis_before_refinement": false,
+ "off_panel_pilot_labels": 543,
+ "initial_pilot_cpu_access": "cpu_seconds only; original pilot labels retained and charged",
+ "episodes": [
+  {
+   "episode": "day-2520360-c2d9d7qm100",
+   "points": [
+    {
+     "decision": 1012,
+     "tick": 55029,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1027
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-2500356-c2d7d7qm100",
+   "points": [
+    {
+     "decision": 1097,
+     "tick": 60258,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0009,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1127,
+     "tick": 61975,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1142
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-2510303-c2d8d7qm100",
+   "points": [
+    {
+     "decision": 777,
+     "tick": 43763,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 792
+      }
+     ]
+    },
+    {
+     "decision": 779,
+     "tick": 43883,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-6046147-c2d10d7qm150",
+   "points": [
+    {
+     "decision": 891,
+     "tick": 48172,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0042999999999999705,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 928,
+     "tick": 50152,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 943
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-6400020-c2d1d7m175",
+   "points": [
+    {
+     "decision": 957,
+     "tick": 50764,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 962,
+     "tick": 51004,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 977
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-6404126-c2d3d7m175",
+   "points": [
+    {
+     "decision": 891,
+     "tick": 50405,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0043999999999999595,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 959,
+     "tick": 54344,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 974
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-6406158-c2d4d7m175",
+   "points": [
+    {
+     "decision": 824,
+     "tick": 43833,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.00010000000000000005,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 864,
+     "tick": 45936,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 879
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "day-6410241-c2d6d7m175",
+   "points": [
+    {
+     "decision": 830,
+     "tick": 44347,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 844,
+     "tick": 45127,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 859
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-3360022-c2n17n10qm100",
+   "points": [
+    {
+     "decision": 1715,
+     "tick": 87271,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1744,
+     "tick": 88608,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1759
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-2230527-c2n14n10m100",
+   "points": [
+    {
+     "decision": 1464,
+     "tick": 74552,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1472,
+     "tick": 74859,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1487
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-2210487-c2n12n10m100",
+   "points": [
+    {
+     "decision": 1776,
+     "tick": 88594,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1798,
+     "tick": 89674,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1813
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-3350052-c2n16n10qm100",
+   "points": [
+    {
+     "decision": 1137,
+     "tick": 61105,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1160,
+     "tick": 62331,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1175
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-3320126-c2n13n10qm100",
+   "points": [
+    {
+     "decision": 706,
+     "tick": 40480,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 733,
+     "tick": 42042,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 748
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-2260425-c2n17n10m100",
+   "points": [
+    {
+     "decision": 1539,
+     "tick": 76958,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1542,
+     "tick": 77138,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1557
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-3360021-c2n17n10qm100",
+   "points": [
+    {
+     "decision": 1354,
+     "tick": 69628,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1362,
+     "tick": 69966,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1377
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "night-2230559-c2n14n10m100",
+   "points": [
+    {
+     "decision": 1622,
+     "tick": 81082,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 1624,
+     "tick": 81202,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 1639
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2000170-p21dag3",
+   "points": [
+    {
+     "decision": 414,
+     "tick": 21799,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 419,
+     "tick": 22039,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 434
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2010165-p22dag3",
+   "points": [
+    {
+     "decision": 581,
+     "tick": 30344,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 590,
+     "tick": 30656,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 605
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2020151-p23dag3",
+   "points": [
+    {
+     "decision": 487,
+     "tick": 24972,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 494,
+     "tick": 25332,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 509
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2030167-p24dag3",
+   "points": [
+    {
+     "decision": 424,
+     "tick": 21745,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 432,
+     "tick": 22165,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 447
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2050149-p26dag3",
+   "points": [
+    {
+     "decision": 468,
+     "tick": 24335,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.010499999999999954,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 515,
+     "tick": 26780,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 530
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2060144-p27dag3",
+   "points": [
+    {
+     "decision": 605,
+     "tick": 31506,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.010299999999999976,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 654,
+     "tick": 34141,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 669
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2070134-p28dag3",
+   "points": [
+    {
+     "decision": 445,
+     "tick": 23251,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.0,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 458,
+     "tick": 23911,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 473
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "episode": "pool-2080175-p29dag3",
+   "points": [
+    {
+     "decision": 384,
+     "tick": 19785,
+     "reasons": [
+      {
+       "kind": "flat_archived_leaf",
+       "spread": 0.012300000000000089,
+       "position": "median in final 6000 ticks"
+      }
+     ]
+    },
+    {
+     "decision": 424,
+     "tick": 21893,
+     "reasons": [
+      {
+       "kind": "before_loss_breach",
+       "lookback_decisions": 16,
+       "breach_decision": 439
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "inputs": {
+  "rollout_policy": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+   "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+  },
+  "value": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+  },
+  "static_value": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "executable": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+   "sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327"
+  },
+  "collector": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/critical_forks.py",
+   "sha256": "c83d67e9182a74f41556e3d27ca27b35cd83cd2712f9feb1438c58971e7518fd"
+  },
+  "search": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/scripts/search_play.py",
+   "sha256": "e3b4b943b4579bb93e62b511048a54fde93d462cdc23c4da754c948de037805c"
+  },
+  "env": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/python/pvz_env.py",
+   "sha256": "4383428452d034b024a4dfb1ebf9dbb4f670174934dba6dda788c80c6a3eec18"
+  },
+  "student_features": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/forks/python/pvz_student_observation.py",
+   "sha256": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5"
+  }
+ },
+ "jobs": [
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2520360/c2d9d7qm100_fast_search",
+   "frames_sha256": "7aad040fc7a89126dac30d1ff77efcd8e2c14cd5425f404d700d66a9d22e0418",
+   "meta_sha256": "b4b38ab07e00b9ff66473cb32aabc4554437af63679b953738cd3540ff4c5f24",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+   "task_id": "day_l9_train_d7q",
+   "reset": {
+    "level": 9,
+    "seed": 2520360,
+    "deck": [
+     4,
+     5,
+     21,
+     7,
+     2,
+     1,
+     0
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d9d7qm100_48",
+   "decision": 1012,
+   "tick": 55029,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1027
+    }
+   ],
+   "id": "v2-day-2520360-c2d9d7qm100-d1012"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+   "frames_sha256": "df31132d90eaf62aa9f01cc07fb4670e63d84c17f0b2894b1fc1fbd43cd415c1",
+   "meta_sha256": "0772289afd0777ddeb6765ed332164e277df60f6a078025cf295acdd7d1fcb8f",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+   "task_id": "day_l7_train_d7q",
+   "reset": {
+    "level": 7,
+    "seed": 2500356,
+    "deck": [
+     4,
+     5,
+     6,
+     1,
+     2,
+     26,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d7d7qm100_48",
+   "decision": 1097,
+   "tick": 60258,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0009,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-2500356-c2d7d7qm100-d1097"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500356/c2d7d7qm100_fast_search",
+   "frames_sha256": "df31132d90eaf62aa9f01cc07fb4670e63d84c17f0b2894b1fc1fbd43cd415c1",
+   "meta_sha256": "0772289afd0777ddeb6765ed332164e277df60f6a078025cf295acdd7d1fcb8f",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+   "task_id": "day_l7_train_d7q",
+   "reset": {
+    "level": 7,
+    "seed": 2500356,
+    "deck": [
+     4,
+     5,
+     6,
+     1,
+     2,
+     26,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d7d7qm100_48",
+   "decision": 1127,
+   "tick": 61975,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1142
+    }
+   ],
+   "id": "v2-day-2500356-c2d7d7qm100-d1127"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+   "frames_sha256": "c88e2a48537932c1a08ccc69e4e199f9d4b3240e85c07a9717d3cbb51fac373d",
+   "meta_sha256": "a3cc687a4a5f8cbb3e6fc1ff23dc30bfbc5fcd9c71c0ac7bf20b165e4e4547bb",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+   "task_id": "day_l8_train_d7q",
+   "reset": {
+    "level": 8,
+    "seed": 2510303,
+    "deck": [
+     5,
+     0,
+     26,
+     2,
+     4,
+     1,
+     3
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d8d7qm100_48",
+   "decision": 777,
+   "tick": 43763,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 792
+    }
+   ],
+   "id": "v2-day-2510303-c2d8d7qm100-d777"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510303/c2d8d7qm100_fast_search",
+   "frames_sha256": "c88e2a48537932c1a08ccc69e4e199f9d4b3240e85c07a9717d3cbb51fac373d",
+   "meta_sha256": "a3cc687a4a5f8cbb3e6fc1ff23dc30bfbc5fcd9c71c0ac7bf20b165e4e4547bb",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+   "task_id": "day_l8_train_d7q",
+   "reset": {
+    "level": 8,
+    "seed": 2510303,
+    "deck": [
+     5,
+     0,
+     26,
+     2,
+     4,
+     1,
+     3
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d8d7qm100_48",
+   "decision": 779,
+   "tick": 43883,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-2510303-c2d8d7qm100-d779"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search",
+   "frames_sha256": "b4d9e6ce9593ea1197b889b559839a13d133a4488d7d755be3ab51c402f9f818",
+   "meta_sha256": "b613ecbe895aae84ebb1d9744eccaca105e8dbf1b53c7e88346b65b8eeb9c5e0",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l10_train_d7q_m150",
+   "reset": {
+    "level": 10,
+    "seed": 6046147,
+    "deck": [
+     0,
+     32,
+     4,
+     3,
+     1,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.5
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d10d7qm150_48",
+   "decision": 891,
+   "tick": 48172,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0042999999999999705,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-6046147-c2d10d7qm150-d891"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6046147/c2d10d7qm150_fast_search",
+   "frames_sha256": "b4d9e6ce9593ea1197b889b559839a13d133a4488d7d755be3ab51c402f9f818",
+   "meta_sha256": "b613ecbe895aae84ebb1d9744eccaca105e8dbf1b53c7e88346b65b8eeb9c5e0",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l10_train_d7q_m150",
+   "reset": {
+    "level": 10,
+    "seed": 6046147,
+    "deck": [
+     0,
+     32,
+     4,
+     3,
+     1,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.5
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d10d7qm150_48",
+   "decision": 928,
+   "tick": 50152,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 943
+    }
+   ],
+   "id": "v2-day-6046147-c2d10d7qm150-d928"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search",
+   "frames_sha256": "31f4f1a61a4cb10f2cc5904e112204c985adef4564cdb874b4099a7ed375723e",
+   "meta_sha256": "851ba446dae56f073e7451a25c79f0a995554abce3e69b0cff093c5252709a5c",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l1_train_d7_m175",
+   "reset": {
+    "level": 1,
+    "seed": 6400020,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d1d7m175_48",
+   "decision": 957,
+   "tick": 50764,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-6400020-c2d1d7m175-d957"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6400020/c2d1d7m175_fast_search",
+   "frames_sha256": "31f4f1a61a4cb10f2cc5904e112204c985adef4564cdb874b4099a7ed375723e",
+   "meta_sha256": "851ba446dae56f073e7451a25c79f0a995554abce3e69b0cff093c5252709a5c",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l1_train_d7_m175",
+   "reset": {
+    "level": 1,
+    "seed": 6400020,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d1d7m175_48",
+   "decision": 962,
+   "tick": 51004,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 977
+    }
+   ],
+   "id": "v2-day-6400020-c2d1d7m175-d962"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search",
+   "frames_sha256": "6cf92a9a9fca1df8829b768a0d585f97ed0b46d1f80fd1d9676d454caecbf9fe",
+   "meta_sha256": "6f672ab852dfe1c6a9c7c1de81a07eba5ae1e0a74a61a5146c47604bf73fc8a5",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l3_train_d7_m175",
+   "reset": {
+    "level": 3,
+    "seed": 6404126,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d3d7m175_48",
+   "decision": 891,
+   "tick": 50405,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0043999999999999595,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-6404126-c2d3d7m175-d891"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6404126/c2d3d7m175_fast_search",
+   "frames_sha256": "6cf92a9a9fca1df8829b768a0d585f97ed0b46d1f80fd1d9676d454caecbf9fe",
+   "meta_sha256": "6f672ab852dfe1c6a9c7c1de81a07eba5ae1e0a74a61a5146c47604bf73fc8a5",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l3_train_d7_m175",
+   "reset": {
+    "level": 3,
+    "seed": 6404126,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d3d7m175_48",
+   "decision": 959,
+   "tick": 54344,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 974
+    }
+   ],
+   "id": "v2-day-6404126-c2d3d7m175-d959"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search",
+   "frames_sha256": "c8b79f1ada4c270fc53d1e574909a9b3afee90fadde7dad99783248424e64253",
+   "meta_sha256": "667efa7ffb3a9392d25edef4ccab5d3dd81038a9485f5a0696873cdd06e14576",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l4_train_d7_m175",
+   "reset": {
+    "level": 4,
+    "seed": 6406158,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d4d7m175_48",
+   "decision": 824,
+   "tick": 43833,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.00010000000000000005,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-6406158-c2d4d7m175-d824"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6406158/c2d4d7m175_fast_search",
+   "frames_sha256": "c8b79f1ada4c270fc53d1e574909a9b3afee90fadde7dad99783248424e64253",
+   "meta_sha256": "667efa7ffb3a9392d25edef4ccab5d3dd81038a9485f5a0696873cdd06e14576",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l4_train_d7_m175",
+   "reset": {
+    "level": 4,
+    "seed": 6406158,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d4d7m175_48",
+   "decision": 864,
+   "tick": 45936,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 879
+    }
+   ],
+   "id": "v2-day-6406158-c2d4d7m175-d864"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+   "frames_sha256": "0aac551256e9780ef429b8af57e420872fe8eab908f32fcefe4f0c99cb910076",
+   "meta_sha256": "d066d24cfd14d420514a6a8df431c8ef5a3b84f3b98a6cc24a326ad29abf11ab",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l6_train_d7_m175",
+   "reset": {
+    "level": 6,
+    "seed": 6410241,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d6d7m175_48",
+   "decision": 830,
+   "tick": 44347,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-day-6410241-c2d6d7m175-d830"
+  },
+  {
+   "terrain": "day",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_6410241/c2d6d7m175_fast_search",
+   "frames_sha256": "0aac551256e9780ef429b8af57e420872fe8eab908f32fcefe4f0c99cb910076",
+   "meta_sha256": "d066d24cfd14d420514a6a8df431c8ef5a3b84f3b98a6cc24a326ad29abf11ab",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+   "task_id": "day_l6_train_d7_m175",
+   "reset": {
+    "level": 6,
+    "seed": 6410241,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.75
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2d6d7m175_48",
+   "decision": 844,
+   "tick": 45127,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 859
+    }
+   ],
+   "id": "v2-day-6410241-c2d6d7m175-d844"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search",
+   "frames_sha256": "7122d80e06d9fbc66819295f61bf2427c98b2452a844dbe9cd1e14bc50cd037a",
+   "meta_sha256": "76861bd0aec7167d66a27b8f54f87539eacccc4b2254c65a93056e0c07cd8ce9",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l17_train_n10q",
+   "reset": {
+    "level": 17,
+    "seed": 3360022,
+    "deck": [
+     29,
+     8,
+     3,
+     11,
+     1,
+     7,
+     5,
+     0,
+     9,
+     4
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n17n10qm100_48",
+   "decision": 1715,
+   "tick": 87271,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-3360022-c2n17n10qm100-d1715"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360022/c2n17n10qm100_fast_search",
+   "frames_sha256": "7122d80e06d9fbc66819295f61bf2427c98b2452a844dbe9cd1e14bc50cd037a",
+   "meta_sha256": "76861bd0aec7167d66a27b8f54f87539eacccc4b2254c65a93056e0c07cd8ce9",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l17_train_n10q",
+   "reset": {
+    "level": 17,
+    "seed": 3360022,
+    "deck": [
+     29,
+     8,
+     3,
+     11,
+     1,
+     7,
+     5,
+     0,
+     9,
+     4
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n17n10qm100_48",
+   "decision": 1744,
+   "tick": 88608,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1759
+    }
+   ],
+   "id": "v2-night-3360022-c2n17n10qm100-d1744"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+   "frames_sha256": "1fded9759c3c6c6d55aad7c7fc2dac7ea6b071dbe9b44f997f5b0333f53a274b",
+   "meta_sha256": "089cf8ed0904e4377b3222e0662e0676e242eaceaa342358a34810726f46b1a6",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l14_train_n10",
+   "reset": {
+    "level": 14,
+    "seed": 2230527,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n14n10m100_48",
+   "decision": 1464,
+   "tick": 74552,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-2230527-c2n14n10m100-d1464"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230527/c2n14n10m100_fast_search",
+   "frames_sha256": "1fded9759c3c6c6d55aad7c7fc2dac7ea6b071dbe9b44f997f5b0333f53a274b",
+   "meta_sha256": "089cf8ed0904e4377b3222e0662e0676e242eaceaa342358a34810726f46b1a6",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l14_train_n10",
+   "reset": {
+    "level": 14,
+    "seed": 2230527,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n14n10m100_48",
+   "decision": 1472,
+   "tick": 74859,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1487
+    }
+   ],
+   "id": "v2-night-2230527-c2n14n10m100-d1472"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search",
+   "frames_sha256": "b639fe7faac8d54c6450925e10d6b7a4c3986e9c366eb4ed9011102976b03c29",
+   "meta_sha256": "31ba425490aa6b05df3f753bd8bf4c061e559613a149e8e72a98e9552ef6c6f4",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l12_train_n10",
+   "reset": {
+    "level": 12,
+    "seed": 2210487,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n12n10m100_48",
+   "decision": 1776,
+   "tick": 88594,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-2210487-c2n12n10m100-d1776"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210487/c2n12n10m100_fast_search",
+   "frames_sha256": "b639fe7faac8d54c6450925e10d6b7a4c3986e9c366eb4ed9011102976b03c29",
+   "meta_sha256": "31ba425490aa6b05df3f753bd8bf4c061e559613a149e8e72a98e9552ef6c6f4",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l12_train_n10",
+   "reset": {
+    "level": 12,
+    "seed": 2210487,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n12n10m100_48",
+   "decision": 1798,
+   "tick": 89674,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1813
+    }
+   ],
+   "id": "v2-night-2210487-c2n12n10m100-d1798"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search",
+   "frames_sha256": "ae4383495fe3d4570ef0d4c242d8a315fe1b1918873603627043b377b452b825",
+   "meta_sha256": "de748a4ee9e3069cee572928002d43ee57825793771e06c708b68dcc6610975a",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l16_train_n10q",
+   "reset": {
+    "level": 16,
+    "seed": 3350052,
+    "deck": [
+     8,
+     30,
+     11,
+     0,
+     9,
+     4,
+     3,
+     7,
+     2,
+     5
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n16n10qm100_48",
+   "decision": 1137,
+   "tick": 61105,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-3350052-c2n16n10qm100-d1137"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350052/c2n16n10qm100_fast_search",
+   "frames_sha256": "ae4383495fe3d4570ef0d4c242d8a315fe1b1918873603627043b377b452b825",
+   "meta_sha256": "de748a4ee9e3069cee572928002d43ee57825793771e06c708b68dcc6610975a",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l16_train_n10q",
+   "reset": {
+    "level": 16,
+    "seed": 3350052,
+    "deck": [
+     8,
+     30,
+     11,
+     0,
+     9,
+     4,
+     3,
+     7,
+     2,
+     5
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n16n10qm100_48",
+   "decision": 1160,
+   "tick": 62331,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1175
+    }
+   ],
+   "id": "v2-night-3350052-c2n16n10qm100-d1160"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+   "frames_sha256": "f79cc84a2a09ccf4de2341f3afcd4abb78dc13454ad9f95fe41cfb7a42ae1b4e",
+   "meta_sha256": "01193fc513846e0b094da9b5d0f7b782b1dfec46905e8c9cc81942bb5fd974fc",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l13_train_n10q",
+   "reset": {
+    "level": 13,
+    "seed": 3320126,
+    "deck": [
+     11,
+     13,
+     3,
+     8,
+     1,
+     15,
+     7,
+     9,
+     2,
+     0
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n13n10qm100_48",
+   "decision": 706,
+   "tick": 40480,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-3320126-c2n13n10qm100-d706"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320126/c2n13n10qm100_fast_search",
+   "frames_sha256": "f79cc84a2a09ccf4de2341f3afcd4abb78dc13454ad9f95fe41cfb7a42ae1b4e",
+   "meta_sha256": "01193fc513846e0b094da9b5d0f7b782b1dfec46905e8c9cc81942bb5fd974fc",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l13_train_n10q",
+   "reset": {
+    "level": 13,
+    "seed": 3320126,
+    "deck": [
+     11,
+     13,
+     3,
+     8,
+     1,
+     15,
+     7,
+     9,
+     2,
+     0
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n13n10qm100_48",
+   "decision": 733,
+   "tick": 42042,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 748
+    }
+   ],
+   "id": "v2-night-3320126-c2n13n10qm100-d733"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search",
+   "frames_sha256": "8d8d2155b93497b7032b679d432fd1764000b1da7131c247596ff1a314ac4652",
+   "meta_sha256": "fb04a68858b717e6a76c828706db50535da8056936cb8070712aebf0d360ca58",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l17_train_n10",
+   "reset": {
+    "level": 17,
+    "seed": 2260425,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n17n10m100_48",
+   "decision": 1539,
+   "tick": 76958,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-2260425-c2n17n10m100-d1539"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260425/c2n17n10m100_fast_search",
+   "frames_sha256": "8d8d2155b93497b7032b679d432fd1764000b1da7131c247596ff1a314ac4652",
+   "meta_sha256": "fb04a68858b717e6a76c828706db50535da8056936cb8070712aebf0d360ca58",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l17_train_n10",
+   "reset": {
+    "level": 17,
+    "seed": 2260425,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n17n10m100_48",
+   "decision": 1542,
+   "tick": 77138,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1557
+    }
+   ],
+   "id": "v2-night-2260425-c2n17n10m100-d1542"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search",
+   "frames_sha256": "4b080b3e9b4d4f44f213763d6db5de392bcccdcacd2ed0e0de31e00bf0fc2892",
+   "meta_sha256": "59a6febdd7cd7346824257dcd8967f5784d5bb49717e1621beb324792aaae806",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l17_train_n10q",
+   "reset": {
+    "level": 17,
+    "seed": 3360021,
+    "deck": [
+     3,
+     5,
+     8,
+     11,
+     13,
+     0,
+     2,
+     39,
+     1,
+     9
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n17n10qm100_48",
+   "decision": 1354,
+   "tick": 69628,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-3360021-c2n17n10qm100-d1354"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360021/c2n17n10qm100_fast_search",
+   "frames_sha256": "4b080b3e9b4d4f44f213763d6db5de392bcccdcacd2ed0e0de31e00bf0fc2892",
+   "meta_sha256": "59a6febdd7cd7346824257dcd8967f5784d5bb49717e1621beb324792aaae806",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+   "task_id": "night_l17_train_n10q",
+   "reset": {
+    "level": 17,
+    "seed": 3360021,
+    "deck": [
+     3,
+     5,
+     8,
+     11,
+     13,
+     0,
+     2,
+     39,
+     1,
+     9
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n17n10qm100_48",
+   "decision": 1362,
+   "tick": 69966,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1377
+    }
+   ],
+   "id": "v2-night-3360021-c2n17n10qm100-d1362"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search",
+   "frames_sha256": "d9c837537c68a92f902b6b4847b2aced1446b47da77fb68584f45710bf68650f",
+   "meta_sha256": "7830bc3db6c7f45f4fe33ea1802c935b7f5d60f6378f57a5cb16624f5ff6afae",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l14_train_n10",
+   "reset": {
+    "level": 14,
+    "seed": 2230559,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n14n10m100_48",
+   "decision": 1622,
+   "tick": 81082,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-night-2230559-c2n14n10m100-d1622"
+  },
+  {
+   "terrain": "night",
+   "source": "qc_latest_complete_round",
+   "qc_round": 2,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230559/c2n14n10m100_fast_search",
+   "frames_sha256": "d9c837537c68a92f902b6b4847b2aced1446b47da77fb68584f45710bf68650f",
+   "meta_sha256": "7830bc3db6c7f45f4fe33ea1802c935b7f5d60f6378f57a5cb16624f5ff6afae",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+   "task_id": "night_l14_train_n10",
+   "reset": {
+    "level": 14,
+    "seed": 2230559,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/c2n14n10m100_48",
+   "decision": 1624,
+   "tick": 81202,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 1639
+    }
+   ],
+   "id": "v2-night-2230559-c2n14n10m100-d1624"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+   "frames_sha256": "29cc940fdfa8bd5c0d9cd86474d2202f72ccb53bf3921b38326912ee402c02bd",
+   "meta_sha256": "ab61703f2db24046c65b993cf3531ce4d3d34321f5fff273c2558304d0eb271a",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l21_train_p9k",
+   "reset": {
+    "level": 21,
+    "seed": 2000170,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p21dag3_48",
+   "decision": 414,
+   "tick": 21799,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2000170-p21dag3-d414"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2000170/p21dag3_fast_search",
+   "frames_sha256": "29cc940fdfa8bd5c0d9cd86474d2202f72ccb53bf3921b38326912ee402c02bd",
+   "meta_sha256": "ab61703f2db24046c65b993cf3531ce4d3d34321f5fff273c2558304d0eb271a",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l21_train_p9k",
+   "reset": {
+    "level": 21,
+    "seed": 2000170,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p21dag3_48",
+   "decision": 419,
+   "tick": 22039,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 434
+    }
+   ],
+   "id": "v2-pool-2000170-p21dag3-d419"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+   "frames_sha256": "275a67fb534b725a895079f153d05ff6065a12763eba5ee8f4154e293378467a",
+   "meta_sha256": "6579aeee2bb3b06ee5075ca8f2e5729b3814ea6d7e275a414b1e169d3bc3c0ce",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l22_train_p9k",
+   "reset": {
+    "level": 22,
+    "seed": 2010165,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p22dag3_48",
+   "decision": 581,
+   "tick": 30344,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2010165-p22dag3-d581"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2010165/p22dag3_fast_search",
+   "frames_sha256": "275a67fb534b725a895079f153d05ff6065a12763eba5ee8f4154e293378467a",
+   "meta_sha256": "6579aeee2bb3b06ee5075ca8f2e5729b3814ea6d7e275a414b1e169d3bc3c0ce",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l22_train_p9k",
+   "reset": {
+    "level": 22,
+    "seed": 2010165,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p22dag3_48",
+   "decision": 590,
+   "tick": 30656,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 605
+    }
+   ],
+   "id": "v2-pool-2010165-p22dag3-d590"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+   "frames_sha256": "6ed0a26ba1a0fb6ce25d8284f1acb2dc0ec290d2eba1fa4ae0fe16697d52b505",
+   "meta_sha256": "3f051577c78a9e98ee793adf5c612f02bcc2b86fa922dbacd059620b264ae376",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l23_train_p9k",
+   "reset": {
+    "level": 23,
+    "seed": 2020151,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p23dag3_48",
+   "decision": 487,
+   "tick": 24972,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2020151-p23dag3-d487"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2020151/p23dag3_fast_search",
+   "frames_sha256": "6ed0a26ba1a0fb6ce25d8284f1acb2dc0ec290d2eba1fa4ae0fe16697d52b505",
+   "meta_sha256": "3f051577c78a9e98ee793adf5c612f02bcc2b86fa922dbacd059620b264ae376",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l23_train_p9k",
+   "reset": {
+    "level": 23,
+    "seed": 2020151,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p23dag3_48",
+   "decision": 494,
+   "tick": 25332,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 509
+    }
+   ],
+   "id": "v2-pool-2020151-p23dag3-d494"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+   "frames_sha256": "a9ac2e91ef96941abbe4eaaa2a688079591ba3e38bdb1f866240adc2089aa47f",
+   "meta_sha256": "5d5e29d9d243bf5246c973eb596fcc7ea192bfec5516c185653558740eae7c99",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l24_train_p9k",
+   "reset": {
+    "level": 24,
+    "seed": 2030167,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p24dag3_48",
+   "decision": 424,
+   "tick": 21745,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2030167-p24dag3-d424"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2030167/p24dag3_fast_search",
+   "frames_sha256": "a9ac2e91ef96941abbe4eaaa2a688079591ba3e38bdb1f866240adc2089aa47f",
+   "meta_sha256": "5d5e29d9d243bf5246c973eb596fcc7ea192bfec5516c185653558740eae7c99",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l24_train_p9k",
+   "reset": {
+    "level": 24,
+    "seed": 2030167,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p24dag3_48",
+   "decision": 432,
+   "tick": 22165,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 447
+    }
+   ],
+   "id": "v2-pool-2030167-p24dag3-d432"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+   "frames_sha256": "c4b26b39c88bafc2648fc4bbda72aa27969b5541350105580aae0a1dc7185187",
+   "meta_sha256": "de1d73774b012436510ca8493151df806c508e448e8c6e6897c28ea139ddb1f7",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l26_train_p9k",
+   "reset": {
+    "level": 26,
+    "seed": 2050149,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p26dag3_48",
+   "decision": 468,
+   "tick": 24335,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.010499999999999954,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2050149-p26dag3-d468"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2050149/p26dag3_fast_search",
+   "frames_sha256": "c4b26b39c88bafc2648fc4bbda72aa27969b5541350105580aae0a1dc7185187",
+   "meta_sha256": "de1d73774b012436510ca8493151df806c508e448e8c6e6897c28ea139ddb1f7",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l26_train_p9k",
+   "reset": {
+    "level": 26,
+    "seed": 2050149,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p26dag3_48",
+   "decision": 515,
+   "tick": 26780,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 530
+    }
+   ],
+   "id": "v2-pool-2050149-p26dag3-d515"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+   "frames_sha256": "c6708ed413fafc16f8b28bd570edc7a33aa6e8a4deaf8e3a760529c8c5afb67e",
+   "meta_sha256": "40cd87964c7095ec3fac9a6fb90351e5d73adfc3d689a25a70b95dec74c47c36",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l27_train_p9k",
+   "reset": {
+    "level": 27,
+    "seed": 2060144,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p27dag3_48",
+   "decision": 605,
+   "tick": 31506,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.010299999999999976,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2060144-p27dag3-d605"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2060144/p27dag3_fast_search",
+   "frames_sha256": "c6708ed413fafc16f8b28bd570edc7a33aa6e8a4deaf8e3a760529c8c5afb67e",
+   "meta_sha256": "40cd87964c7095ec3fac9a6fb90351e5d73adfc3d689a25a70b95dec74c47c36",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l27_train_p9k",
+   "reset": {
+    "level": 27,
+    "seed": 2060144,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p27dag3_48",
+   "decision": 654,
+   "tick": 34141,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 669
+    }
+   ],
+   "id": "v2-pool-2060144-p27dag3-d654"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+   "frames_sha256": "c161e559a4be98835df6e5fcf18774abd07185edfba8fac2b841dcf12c078e0c",
+   "meta_sha256": "665fad7e78edf57b31a81c58a9e3f05f599d58916adb9ae006f97a92291175aa",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l28_train_p9k",
+   "reset": {
+    "level": 28,
+    "seed": 2070134,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p28dag3_48",
+   "decision": 445,
+   "tick": 23251,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.0,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2070134-p28dag3-d445"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2070134/p28dag3_fast_search",
+   "frames_sha256": "c161e559a4be98835df6e5fcf18774abd07185edfba8fac2b841dcf12c078e0c",
+   "meta_sha256": "665fad7e78edf57b31a81c58a9e3f05f599d58916adb9ae006f97a92291175aa",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l28_train_p9k",
+   "reset": {
+    "level": 28,
+    "seed": 2070134,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p28dag3_48",
+   "decision": 458,
+   "tick": 23911,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 473
+    }
+   ],
+   "id": "v2-pool-2070134-p28dag3-d458"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+   "frames_sha256": "3b3f6ed0ee762bf9b50da9795ecb2bca3ed7814e392d0530fd3d3d7249ff64ec",
+   "meta_sha256": "300343a3d2c5fdd9d817eb80f772815aebffc8167551cd8b808d8a0ade8f4c1c",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l29_train_p9k",
+   "reset": {
+    "level": 29,
+    "seed": 2080175,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p29dag3_48",
+   "decision": 384,
+   "tick": 19785,
+   "reasons": [
+    {
+     "kind": "flat_archived_leaf",
+     "spread": 0.012300000000000089,
+     "position": "median in final 6000 ticks"
+    }
+   ],
+   "id": "v2-pool-2080175-p29dag3-d384"
+  },
+  {
+   "terrain": "pool",
+   "source": "independent_p9k_teacher_round3",
+   "qc_round": null,
+   "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames/seed_2080175/p29dag3_fast_search",
+   "frames_sha256": "3b3f6ed0ee762bf9b50da9795ecb2bca3ed7814e392d0530fd3d3d7249ff64ec",
+   "meta_sha256": "300343a3d2c5fdd9d817eb80f772815aebffc8167551cd8b808d8a0ade8f4c1c",
+   "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+   "task_id": "pool_l29_train_p9k",
+   "reset": {
+    "level": 29,
+    "seed": 2080175,
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "playthrough": 2,
+    "first_aid_owned": false,
+    "zombie_count_multiplier": 1.0
+   },
+   "source_value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
+   "student_executed": true,
+   "source_run": "/home/newbiexvwu/PvZ-search/artifacts/hard/p29dag3_48",
+   "decision": 424,
+   "tick": 21893,
+   "reasons": [
+    {
+     "kind": "before_loss_breach",
+     "lookback_decisions": 16,
+     "breach_decision": 439
+    }
+   ],
+   "id": "v2-pool-2080175-p29dag3-d424"
+  }
+ ],
+ "plan_sha256": "8af242383c2c85aa305d6f11e345ad30916a8625b8124460a67d0cc196426b56"
+}

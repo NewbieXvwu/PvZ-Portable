@@ -87,6 +87,9 @@ def test_native_student_features_use_same_filtered_observation(mode, version):
         board, scalars = history.features(_frame(obs), None)
         trace = Path(tmp) / 'features.jsonl'
         native = env.rollout_predict(student_history=StudentHistory(version), trace_path=trace)
+        # The frozen engine replies before the diagnostic stream's destructor closes
+        # the file. A read-only command is a barrier before inspecting that stream.
+        env.observe()
         encoded = json.loads(trace.read_text().splitlines()[0])
         np.testing.assert_array_equal(board.numpy().ravel(), np.asarray(encoded['board'], dtype=np.float32))
         np.testing.assert_array_equal(scalars.numpy(), np.asarray(encoded['scalars'], dtype=np.float32))
