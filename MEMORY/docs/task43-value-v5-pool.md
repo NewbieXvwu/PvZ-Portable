@@ -486,6 +486,12 @@ Codex 额度用尽后接手，先 `ps` 核实而没有重启任何任务：数�
 
 **边界**：执行者不改生产默认、不上传 HF；采纳与否由主控依据本节判据裁定。同时并行推进 §52 的 v5b（成对 margin 重训），只报分散度与离线排序、不做配对对局，其结果不参与本节判据。
 
+### 52. v5b 配方冻结：`train_value_widen` 加同根成对 margin 项（2026-10-24 10:05，开跑前）
+
+按 §50 的方向给 `train_value_widen.py` 加了可选成对项：每个 minibatch 内，对决策行按 (seed, position) 分组，把胜负不同的候选组成 (胜,负) 对，损失加 `relu(margin − (z_胜 − z_负))` 的均值，默认 `--margin-weight 0` 时与旧行为逐位相同（不传参即旧行为）。验证损失与早停仍用原 BCE，不掺 margin；`margin` 与 `margin_weight` 写入 checkpoint 与 `training.json`。冒烟：CPU 3 步 margin 项有值（0.884）且历史/配置正确记录。
+
+**v5b 冻结配方（开跑前写定，之后不改）**：数据与 v5 完全同一份（`sparse64/data` 64 分片 + 旧语料软链）、init v4 热启动、`--decision-fraction 0.5 --branch-fraction 0.75 --epochs 24 --steps 256 --batch-size 512 --lr 1e-4 --seed 0`，新增 `--margin-weight 1.0 --margin 1.0`（1 个 logit 的间距），输出 `sparse64/v5b/`。GPU 训练沿用既有门禁：MemAvailable≥10 GiB 且无学生训练进程时才开跑。**交付范围**：`pair_accuracy.json`（held-out 离线排序）+ L24/L26 分散度探针（v4 基线 vs v5b，门 (a) 口径照报）+ 训练曲线；**不做任何配对对局**，是否对照复现结论由主控裁定；不上传、不改默认。
+
 ## 问题
 
 ### 问题 3：第一轮数据的 root 也来自学生轨迹，不只是续走为学生

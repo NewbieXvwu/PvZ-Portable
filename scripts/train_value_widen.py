@@ -246,10 +246,28 @@ def train(args):
         net.train();losses=[]
         nd=int(args.batch_size*args.decision_fraction) if decisions is not None else 0
         nb=int((args.batch_size-nd)*args.branch_fraction);ne=args.batch_size-nd-nb
+        margin_losses=[]
         for _ in range(args.steps):
-            b,s,y=batch(rng.choice(branches.fit,nb),rng.choice(fit_idx,ne),
-                       rng.choice(decisions.fit,nd) if decisions is not None else None)
+            decision_indices=(rng.choice(decisions.fit,nd) if decisions is not None else None)
+            b,s,y=batch(rng.choice(branches.fit,nb),rng.choice(fit_idx,ne),decision_indices)
             logits=net(b,s);loss=F.binary_cross_entropy_with_logits(logits,y)
+            if decision_indices is not None and args.margin_weight>0:
+                # Pairwise hinge on same-root candidates with differing outcomes. The decision
+                # rows occupy the [nb:nb+nd] slice of the concatenated batch (branch, decision,
+                # episode order in batch()); gate (a) measures top1-top2 gaps, so train the gap.
+                rows=decisions.rows(decision_indices)
+                groups={}
+                for i,(sd,pos,w) in enumerate(zip(rows['seed'].tolist(),rows['position'].tolist(),rows['won'].tolist())):
+                    groups.setdefault((sd,pos),[[],[]])[0 if w>0.5 else 1].append(i)
+                win=[];lose=[]
+                for wins,loses_ in groups.values():
+                    if wins and loses_:
+                        win.extend(wins*len(loses_));lose.extend([l for _ in wins for l in loses_])
+                if win:
+                    z=logits[nb:nb+len(decision_indices)]
+                    diff=z[torch.tensor(win,device=z.device)]-z[torch.tensor(lose,device=z.device)]
+                    mloss=F.relu(args.margin-diff).mean()
+                    loss=loss+args.margin_weight*mloss;margin_losses.append(mloss.item())
             opt.zero_grad();loss.backward();opt.step();losses.append(loss.item())
         net.eval();validation={}
         with torch.inference_mode():
@@ -265,7 +283,8 @@ def train(args):
         core=args.branch_fraction*validation['branch']+(1-args.branch_fraction)*validation['episode']
         val_loss=(args.decision_fraction*validation['decision']+(1-args.decision_fraction)*core
                   if decisions is not None else core)
-        entry=dict(epoch=epoch,fit=float(np.mean(losses)),validation=val_loss,validation_components=validation)
+        entry=dict(epoch=epoch,fit=float(np.mean(losses)),validation=val_loss,validation_components=validation,
+                   margin=(float(np.mean(margin_losses)) if margin_losses else None))
         history.append(entry);print(entry,flush=True)
         if val_loss<best-1e-4:
             best=val_loss;patience=0
@@ -279,6 +298,7 @@ def train(args):
                             branch_fit_rows=len(branches.fit),branch_validation_rows=len(branches.val),
                             episode_fit_rows=len(fit_idx),episode_validation_rows=len(val_idx),
                             decision_data=str(args.decision_data),decision_fraction=args.decision_fraction,
+                            margin_weight=args.margin_weight,margin=args.margin,
                             decision_fit_rows=(len(decisions.fit) if decisions is not None else 0),
                             decision_validation_rows=(len(decisions.val) if decisions is not None else 0),
                             decision_seeds=(len(decisions.seeds) if decisions is not None else 0))
@@ -325,6 +345,9 @@ def main():
     p.add_argument('--decision-fraction',type=float,default=0.0,
                    help='share of every minibatch taken from the decision dumps (0 = old behaviour)')
     p.add_argument('--pair-min-gap',type=float,default=0.25)
+    p.add_argument('--margin-weight',type=float,default=0.0,
+                   help='weight of the same-root win/lose pairwise hinge on decision rows (0 = old behaviour)')
+    p.add_argument('--margin',type=float,default=1.0,help='required logit gap between winner and loser logits')
     args=p.parse_args()
     if args.stage=='prepare':prepare(args)
     elif args.stage=='append':append_supplement(args)
