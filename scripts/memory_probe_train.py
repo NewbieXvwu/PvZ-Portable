@@ -5,10 +5,14 @@ import argparse
 import json
 import os
 import random
-import subprocess
 import sys
 import time
 from pathlib import Path
+
+# Replace this process before heavy imports when it is only scheduling work.
+if __name__ == '__main__' and len(sys.argv) > 1 and sys.argv[1] == 'run-all':
+    os.execv(sys.executable,[sys.executable,str(Path(__file__).with_name('memory_probe_queue.py')),
+                            *sys.argv[2:]])
 
 import numpy as np
 import torch
@@ -164,29 +168,8 @@ def train_one(kind, arm, seed, epochs):
 
 
 def run_all(epochs):
-    for seed in (1, 2, 3):
-        for kind in CONFIGS:
-            for arm in ('human', 'xray'):
-                folder = OUT / 'models' / f'{kind}-{arm}-s{seed}'
-                if (folder / 'result.json').exists():
-                    result = json.loads((folder / 'result.json').read_text())
-                    assert result['corpus_sha256'] == digest(OUT/'corpus.json')
-                    assert result['epochs'] == epochs
-                    assert result['checkpoint_sha256'] == digest(folder/'model.pt')
-                    continue
-                # Wait only for the resource gate, never alter other workloads.
-                while mem_available() < 10 * 1024 ** 3 + 512 * 1024 ** 2:
-                    print(json.dumps(dict(wait='MemAvailable', bytes=mem_available())), flush=True)
-                    time.sleep(30)
-                folder.mkdir(parents=True, exist_ok=True)
-                cmd = [sys.executable, str(Path(__file__).resolve()), 'train-one',
-                       '--kind', kind, '--arm', arm, '--seed', str(seed), '--epochs', str(epochs)]
-                print('START ' + ' '.join(cmd), flush=True)
-                with (folder / 'train.log').open('w') as log:
-                    subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True,
-                                   timeout=3600, env={**os.environ, 'PVZ_NO_POPUP': '1',
-                                   'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
-                print('DONE ' + folder.name, flush=True)
+    os.execv(sys.executable,[sys.executable,str(ROOT/'scripts/memory_probe_queue.py'),
+                            '--epochs',str(epochs)])
 
 
 def predict():

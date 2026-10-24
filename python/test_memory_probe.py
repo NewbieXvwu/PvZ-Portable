@@ -13,6 +13,7 @@ from memory_probe_data import labels
 from memory_probe_metrics import auc, masks, stats
 from memory_probe_train import objective
 import memory_probe_train
+import memory_probe_queue
 
 torch.set_num_threads(1)
 
@@ -123,3 +124,12 @@ def test_child_waits_for_memory_before_loading_data_or_cuda(monkeypatch,tmp_path
     with pytest.raises(RuntimeError,match='test stops'):
         memory_probe_train.train_one('current','human',999,20)
     assert calls == [('sleep',30),('gate',11 * 1024**3),('load',None)]
+
+
+def test_lightweight_queue_covers_every_configuration_without_torch_import():
+    import subprocess
+    assert memory_probe_queue.CONFIGS == CONFIGS
+    check = subprocess.run([sys.executable,'-c',
+        'import sys; sys.path.insert(0,' + repr(str(ROOT/'scripts')) + '); '
+        'import memory_probe_queue; assert "torch" not in sys.modules'],check=True)
+    assert check.returncode == 0
