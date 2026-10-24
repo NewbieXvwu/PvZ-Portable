@@ -195,7 +195,7 @@ def scan_manifests() -> list[Path]:
     patterns = [str(MAIN / 'artifacts/**/*.json'), str(MAIN / '.claude/worktrees/*/artifacts/**/*.json')]
     paths: list[Path] = []
     for pattern in patterns:
-        paths.extend(Path(p) for p in glob.glob(pattern, recursive=True))
+        paths.extend(Path(p) for p in glob.glob(pattern, recursive=True) if Path(p).is_file())  # skip dangling links
     return sorted(set(paths))
 
 
