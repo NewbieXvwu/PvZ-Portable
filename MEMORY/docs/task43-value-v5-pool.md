@@ -449,6 +449,10 @@ Codex 额度用尽后接手，先 `ps` 核实而没有重启任何任务：数�
 
 {"pool_l21_eval_p9k": {"delta_rate": 0.4375, "delta_wins": 14, "gain": 15, "harm": 1, "mcnemar_exact_two_sided": 0.000518798828125, "missing_expected_seeds": {"v3": [], "v4": []}, "missing_new": [], "missing_old": [], "new_wins": 28, "old_wins": 14, "pairs": 32}}
 
+### 47. 稀疏扩量阶段 `teacher_v5_paired_day_complete`
+
+{"day_l7_z15_eval": {"delta_rate": 0.0, "delta_wins": 0, "gain": 0, "harm": 0, "mcnemar_exact_two_sided": 1.0, "missing_expected_seeds": {"v3": [], "v4": []}, "missing_new": [], "missing_old": [], "new_wins": 32, "old_wins": 32, "pairs": 32}}
+
 ## 问题
 
 ### 问题 3：第一轮数据的 root 也来自学生轨迹，不只是续走为学生

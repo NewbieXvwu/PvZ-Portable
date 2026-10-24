@@ -1,5 +1,5 @@
 {
- "stage": "teacher_v5_paired_l21_complete",
+ "stage": "teacher_v5_paired_day_complete",
  "task_complete": false,
  "training_complete": true,
  "acceptance_complete": false,
@@ -1302,6 +1302,27 @@
      "delta_wins": 14,
      "delta_rate": 0.4375,
      "mcnemar_exact_two_sided": 0.000518798828125,
+     "missing_old": [],
+     "missing_new": [],
+     "missing_expected_seeds": {
+      "v3": [],
+      "v4": []
+     }
+    }
+   }
+  },
+  {
+   "stage": "teacher_v5_paired_day_complete",
+   "details": {
+    "day_l7_z15_eval": {
+     "pairs": 32,
+     "old_wins": 32,
+     "new_wins": 32,
+     "gain": 0,
+     "harm": 0,
+     "delta_wins": 0,
+     "delta_rate": 0.0,
+     "mcnemar_exact_two_sided": 1.0,
      "missing_old": [],
      "missing_new": [],
      "missing_expected_seeds": {
