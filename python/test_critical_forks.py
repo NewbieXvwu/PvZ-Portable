@@ -140,6 +140,7 @@ def test_paired_evaluation_refuses_partial_and_keeps_unanimous_uncertainty():
         summary(rows+[rows[0]],evaluation)
 
 
+@pytest.mark.skipif(not Path('/proc/self/stat').exists(), reason='process identity is read from /proc (Linux only)')
 def test_pipeline_wait_checks_process_identity_without_restarting():
     from task53_pipeline import alive
     pid=os.getpid();start=Path(f'/proc/{pid}/stat').read_text().rsplit(')',1)[1].split()[19]
@@ -247,6 +248,7 @@ def test_registered_step_upper_bound_preserves_epochs_and_small_corpus():
     with pytest.raises(ValueError,match='nonempty'):effective_step_cap(recipe,0)
 
 
+@pytest.mark.skipif(not Path('/proc/self/stat').exists(), reason='process identity is read from /proc (Linux only)')
 def test_resume_training_uses_completed_artifacts_without_recollecting(tmp_path,monkeypatch):
     import task53_pipeline as pipeline
     monkeypatch.setattr(pipeline,'OUT',tmp_path)
