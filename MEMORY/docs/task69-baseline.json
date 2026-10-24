@@ -1,8 +1,8 @@
 {
-  "commit": "ababb57805a7c7b78972ffe2ecb688c22bc1748f",
+  "commit": "edcde9e3394411a726fcc31d83059e7cdf68497b",
   "engine_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/baseline-engine",
-  "engine_sha256": "c731dd5f5cf898d0cc7176511102b96a844d083b8b188744e0e4ec22248129c5",
-  "source_fingerprint_sha256": "13591977ab0fc23ccfbd6ed55b1fd4144d73b0c5d32cde91f78d1060f097119d",
+  "engine_sha256": "c90d051f38294a56832c7adc904ad6dca2c71b2b442d8cc90f39a5804629dbec",
+  "source_fingerprint_sha256": "3e0f6c6b71aa64335e434395033c28a2a8341d39aa0f890b7a84c869c620b91b",
   "models": {
     "student": {
       "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
@@ -20,5 +20,8 @@
   "build_type": "Release",
   "pgo": false,
   "compiler": "GCC 15.2.0",
-  "deployment_modified": false
+  "deployment_modified": false,
+  "original_engine_sha256": "c731dd5f5cf898d0cc7176511102b96a844d083b8b188744e0e4ec22248129c5",
+  "original_commit": "ababb57805a7c7b78972ffe2ecb688c22bc1748f",
+  "common_fix": "Only initializes serialized idle Challenge/GridItem fields; both arms share this fix before any calibration or A/B."
 }

@@ -1,0 +1,95 @@
+{
+  "schema_version": 1,
+  "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+  "source_sha256": "11800940b1980d0760d0410bbc5a907c503a2f70640e3d210bcda710ec12fee4",
+  "purpose": "Task69 baseline-only day pressure calibration, preregistered seeds excluded from paired test",
+  "tasks": [
+    {
+      "task_id": "day_l7_train_d7_m200",
+      "terrain": "day",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "zombie_count_multiplier": 2.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        69900000,
+        69900001,
+        69900002,
+        69900003,
+        69900004,
+        69900005,
+        69900006,
+        69900007
+      ]
+    },
+    {
+      "task_id": "day_l7_train_d7_m250",
+      "terrain": "day",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "zombie_count_multiplier": 2.5,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        69900000,
+        69900001,
+        69900002,
+        69900003,
+        69900004,
+        69900005,
+        69900006,
+        69900007
+      ]
+    },
+    {
+      "task_id": "day_l7_train_d7_m300",
+      "terrain": "day",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        7
+      ],
+      "zombie_count_multiplier": 3.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": [
+        69900000,
+        69900001,
+        69900002,
+        69900003,
+        69900004,
+        69900005,
+        69900006,
+        69900007
+      ]
+    }
+  ]
+}
