@@ -1016,3 +1016,14 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 2026-10-24 追加（用户意见：大喷菇伤害不够、后期阳光溢出，要寒冰射手做辅助；1.0 倍对人太简单，不用路灯花也能往雾里盲种小喷菇）：新族 `demo_fog_31_snow`（卡组 阳光菇/小喷菇/大喷菇/睡莲/寒冰射手/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果 = [9,8,10,16,5,23,17,19,2,3]，即 fume 族去路灯花换寒冰射手），另登记 1.5 倍、2.0 倍僵尸量的 `demo_fog_31_snow_m150` / `demo_fog_31_snow_m200`；同种子 20261031，旧族与旧存档不变。
 
 `human_demo.py` 使用原生窗口、逐tick动作带与状态哈希，原始局标记 `label_source: human`，可选 `note` 仅存meta。验证通过后导出frames_v2，配方 `train.source_weight` 按来源乘权。`search_play.py --demo-archive ... --demo-decision N` 精确恢复第N步前局面并由老师接管，示范中的后续合法种植动作进入候选，使用既有推演评分。老师续局记为teacher，保留起点与示范备注用于分析。原始示范与npz不入git，走HF transfer。
+
+### 14.24 雾夜用户卡组族 `fog_user_l31_snow` 接入 qc 课程（task68，2026-10-24 登记，AGENTS.md §8 第 4 条）
+
+**为什么**：task67（[fog-user-decks.md](MEMORY/docs/fog-user-decks.md)）在雾区 L31–L34 用 12 个卡组族各跑 32 个配对种子。只有 L31 的用户卡组（阳光菇/小喷菇/大喷菇/睡莲/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果/**寒冰射手**）老师冷启动过 50%：**25/32 = 78.1%**（Wilson 61.2–89.0）；同一批种子下 task45 的 `fog_l31_train_f8` 卡组 **0/32**，配对 McNemar p<1e-6。两副卡组只差一张：寒冰射手 5 换掉路灯花 25。带路灯花时老师每局种 4.3 株路灯花、只种 2.7 株阳光菇（经济节奏被带偏）；换成寒冰射手后是 21.6 株阳光菇、24.9 株小喷菇、8.3 株大喷菇。L32–L34 的 8 个候选族全部 0–3/32，不进课程。
+
+- **族**：`fog_user_l31_snow`，关卡 31，卡组 `[9,8,10,16,23,17,19,2,3,5]`（与 task67 面板同一集合，顺序即清单顺序），`fog_observation: human`；二周目、倍率 1.0、不限波、阳光 50、无预置植物。卡组含睡莲 16 覆盖水路，不含升级植物，`profile_for_deck` 无需声明 `owned_upgrade_plants`。
+- **生成器** `scripts/make_fog_user_panel.py`（复用 `zone_panel.task_document` / `check_decks`），本机清单 `artifacts/task68/fog_user_panel.json`：训练任务 `fog_user_l31_snow`（8192 种子）+ 评估任务 `fog_user_l31_snow_eval`（32 种子），不入 git。
+- **种子段**：训练 `43,000,000–43,008,191`；评估 `43,700,000–43,700,031`；六档倍率 `43,100,000 + 档序号×100,000`（每任务 2048，最高 `43,602,047`）。与示范种子 20261031–20261034、task67 面板 20261101–20261132、雾区 39M/40M/41M/42M、屋顶 44M/45M/46M/48M、倍率 5M/700k 段、夜间 1.9M/2.2M、泳池 2.0M、n10p 2.4M、n10q 3.3M/3.4M 全部不相交（`test_fog_user_cell_preserves_every_existing_cell` 逐种子比对）。
+- **课程**：`make_multiplier_tasks.FAMILIES` 追加 `('fog_user', 'fog_user', 'fog_user_l{level}_snow', (31,), 'fog')`，`CURRICULUM_LEVELS['fog_user'] = (31,)`；cell 名 `fog_user_l31_snow`，倍率阶梯从 1.0 起，沿用同一条 0.85 升档 / 0.5 降档规则。`teacher_rates.json` 的 `bases.fog_user_l31_snow = 25/32`（task67 证据）。
+- **现有 cell 不变**：新族排在 `FAMILIES` 末尾且使用独立种子块（十个旧族已占满 655,360/700,000 档宽，插槽会平移所有已发种子）。同一批源任务重建，现有 **414 个** cell 的 task_id、种子、偏移与全部复制字段逐字节相同，新增 6 个 cell（总 420）。旧族 `fog_f8` / `fog_f8p` 的清单、种子、数据与评估全部保留，`CURRICULUM_LEVELS` 仍为空 —— 它们不进课程。
+- **晋升门禁不动**：冻结面板不加雾族（改面板等于改门禁合同）。新族的进展看 qc 自己的组胜率窗口（`~/pvz-logs/curriculum_state.json` 的 `cells.fog_user_l31_snow.windows`）。
