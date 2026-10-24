@@ -1704,6 +1704,21 @@
     "games": 256,
     "raw_rows_verified": true
    }
+  },
+  {
+   "stage": "v5b_delivered",
+   "details": {
+    "sha256": "3110b7f4303f20ddaf20a0c0863b7c4c002a07590ddcd819890622c0d3a37718",
+    "device": "cpu (documented deviation: qc trainers continuous, no GPU window)",
+    "epochs": 7,
+    "held_out_pool_pair_accuracy": 0.5464684014869888,
+    "dispersion_median_gap": {
+     "pool_l24_eval_p9k": 0.016443,
+     "pool_l26_eval_p9k": 0.013203
+    },
+    "gate_a_still_failed": true,
+    "games_played": 0
+   }
   }
  ],
  "bootstrap_v4_pair_accuracy": {
