@@ -34,10 +34,10 @@ class CurriculumRulesTest(unittest.TestCase):
         ids = training_base_ids()
         self.assertEqual({name for name in ids if name.startswith('roof_')},
                          {'roof_l41_train_r7'})
-        # task68: only the user-deck fog family measured above 50% (task67 teacher 25/32)
-        # enters the curriculum; the task45 fog_f8/f8p families stay out.
+        # task70: fog_user_v2 (human_v2 observation) replaces fog_user in the curriculum;
+        # the task45 fog_f8/f8p families and the superseded fog_user stay out.
         self.assertEqual({name for name in ids if name.startswith('fog_')},
-                         {'fog_user_l31_snow'})
+                         {'fog_user_v2_l31_snow'})
 
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))

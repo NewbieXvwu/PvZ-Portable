@@ -77,11 +77,13 @@ class MultiplierTasksTest(unittest.TestCase):
 
     def test_roof_allocation_preserves_every_existing_seed_block(self):
         """Re-adding roof last must not move any other family's preregistered seeds."""
+        # task70: fog_user_v2 was appended after roof, so it is not part of the seed set
+        # roof had to preserve either.
         old = {(m, entry[0], level): seed_start(m, f, level)
-               for f, entry in enumerate(FAMILIES) if entry[0] != 'roof'
+               for f, entry in enumerate(FAMILIES) if entry[0] not in ('roof', 'fog_user_v2')
                for m in range(len(MULTIPLIERS)) for level in entry[3]}
         roof = ('roof', 'roof', 'roof_l{level}_train_r7', (41, 42, 43, 44, 46, 47, 48, 49), 'roof')
-        families = tuple(f for f in FAMILIES if f[0] != 'roof') + (roof,)
+        families = tuple(f for f in FAMILIES if f[0] not in ('roof', 'fog_user_v2')) + (roof,)
         with patch.object(generator, 'FAMILIES', families):
             index = {entry[0]: i for i, entry in enumerate(families)}
             for (m, name, level), value in old.items():
@@ -104,6 +106,9 @@ class MultiplierTasksTest(unittest.TestCase):
                     elif family == 'fog_user':
                         # task68: new family, new block; the base task keeps 43_000_000.
                         expected = 43100000 + mult * 100000 + (level - 31) * 2048
+                    elif family == 'fog_user_v2':
+                        # task70: another independent block above roof (48.52M-50M free window).
+                        expected = 49200000 + mult * 100000 + (level - 31) * 2048
                     else:
                         expected = (5000000 + mult * 700000 +
                                     (legacy.index(family) * 32 + level - 1) * 2048)
@@ -116,15 +121,24 @@ class MultiplierTasksTest(unittest.TestCase):
         structural: drop the family, rebuild, and require the surviving task list to be
         byte-identical (ids, seeds, offsets, every copied field) and the new seeds disjoint.
         """
-        old_families = tuple(f for f in FAMILIES if f[0] != 'fog_user')
-        old_sources = {key: table for key, table in self.sources.items() if key != 'fog_user'}
+        # task70: fog_user_v2 now also exists; the original task68 proof (appending fog_user
+        # preserved everything) must drop both fog families from the "before" build.
+        old_families = tuple(f for f in FAMILIES if f[0] not in ('fog_user', 'fog_user_v2'))
+        old_sources = {key: table for key, table in self.sources.items()
+                       if key not in ('fog_user', 'fog_user_v2')}
         with patch.object(generator, 'FAMILIES', old_families):
             before = build_variants(old_sources, seeds=SEEDS_PER_TASK)
+        families_with_user = old_families + tuple(
+            f for f in FAMILIES if f[0] == 'fog_user')
+        with patch.object(generator, 'FAMILIES', families_with_user):
+            with_user = build_variants({**old_sources, 'fog_user': self.sources['fog_user']},
+                                       seeds=SEEDS_PER_TASK)
         after = build_variants(self.sources, seeds=SEEDS_PER_TASK)
-        self.assertEqual(len(after), len(before) + len(MULTIPLIERS))
-        for old, new in zip(before, after):
+        for old, new in zip(before, with_user):
             self.assertEqual(json.dumps(old, sort_keys=True), json.dumps(new, sort_keys=True))
-        added = after[len(before):]
+        for old, new in zip(with_user, after):
+            self.assertEqual(json.dumps(old, sort_keys=True), json.dumps(new, sort_keys=True))
+        added = with_user[len(before):]
         self.assertEqual([task['task_id'] for task in added],
                          [variant_id('fog_user_l31_snow', suffix) for _m, suffix in MULTIPLIERS])
         old_seeds = {seed for task in before for seed in task['seeds']}
@@ -161,6 +175,83 @@ class MultiplierTasksTest(unittest.TestCase):
         # AGENTS section 8: the deck covers the pool terrain and needs no upgrade ownership.
         self.assertIn(16, train['deck'])
         self.assertNotIn(43, train['deck'])
+
+    def test_fog_user_v2_cell_preserves_every_existing_cell(self):
+        """task70: appending fog_user_v2 (and superseding fog_user) leaves every cell intact.
+
+        Same structural proof as task68: drop fog_user_v2, rebuild, and require the
+        surviving task list to be byte-identical (ids, seeds, offsets, every copied field)
+        while the new seeds stay disjoint from all preregistered blocks.
+        """
+        old_families = tuple(f for f in FAMILIES if f[0] != 'fog_user_v2')
+        old_sources = {key: table for key, table in self.sources.items() if key != 'fog_user_v2'}
+        with patch.object(generator, 'FAMILIES', old_families):
+            before = build_variants(old_sources, seeds=SEEDS_PER_TASK)
+        after = build_variants(self.sources, seeds=SEEDS_PER_TASK)
+        self.assertEqual(len(after), len(before) + len(MULTIPLIERS))
+        for old, new in zip(before, after):
+            self.assertEqual(json.dumps(old, sort_keys=True), json.dumps(new, sort_keys=True))
+        added = after[len(before):]
+        self.assertEqual([task['task_id'] for task in added],
+                         [variant_id('fog_user_v2_l31_snow', suffix) for _m, suffix in MULTIPLIERS])
+        old_seeds = {seed for task in before for seed in task['seeds']}
+        new_seeds = {seed for task in added for seed in task['seeds']}
+        self.assertFalse(old_seeds & new_seeds)
+        self.assertEqual(min(new_seeds), 49200000)
+        self.assertEqual(max(new_seeds), 49200000 + 5 * 100000 + SEEDS_PER_TASK - 1)
+        import make_fog_user_v2_panel as panel
+        base_seeds = set(range(panel.TRAIN_SEED_BASE, panel.TRAIN_SEED_BASE + panel.TRAIN_SEEDS))
+        eval_seeds = set(range(panel.EVAL_SEED_BASE, panel.EVAL_SEED_BASE + panel.EVAL_SEEDS))
+        self.assertFalse(base_seeds & (old_seeds | new_seeds))
+        self.assertFalse(eval_seeds & (old_seeds | new_seeds))
+        self.assertLess(max(old_seeds), min(base_seeds))
+        self.assertLess(max(base_seeds), min(eval_seeds))
+        self.assertLess(max(eval_seeds), min(new_seeds))
+        # The old fog_user cells move over byte-identically (the family is superseded, not
+        # edited): every fog_user task in the new build matches the without-v2 build.
+        fog_user_ids = [task['task_id'] for task in before if task['task_id'].startswith('fog_user_l31')]
+        self.assertEqual(len(fog_user_ids), len(MULTIPLIERS))
+        for task_id in fog_user_ids:
+            old_task = next(t for t in before if t['task_id'] == task_id)
+            new_task = next(t for t in after if t['task_id'] == task_id)
+            self.assertEqual(json.dumps(old_task, sort_keys=True), json.dumps(new_task, sort_keys=True))
+
+    def test_fog_user_v2_panel_task_definition(self):
+        """The source manifest carries the task68 deck under human_v2, fresh seeds."""
+        import make_fog_user_v2_panel as panel
+        document = panel.document()
+        train, evaluation = document['tasks']
+        self.assertEqual(train['task_id'], 'fog_user_v2_l31_snow')
+        self.assertEqual(train['deck'], [9, 8, 10, 16, 23, 17, 19, 2, 3, 5])
+        self.assertEqual(train['level'], 31)
+        self.assertEqual(train['terrain'], 'fog')
+        self.assertEqual(train['fog_observation'], 'human_v2')
+        self.assertEqual(train['zombie_count_multiplier'], 1.0)
+        self.assertEqual(train['playthrough'], 2)
+        self.assertEqual(len(train['seeds']), panel.TRAIN_SEEDS)
+        self.assertEqual(evaluation['seeds'][0], panel.EVAL_SEED_BASE)
+        self.assertFalse(set(train['seeds']) & set(evaluation['seeds']))
+        # Same deck as task68's fog_user panel; only the observation differs.
+        import make_fog_user_panel as old_panel
+        old_train = old_panel.document()['tasks'][0]
+        self.assertEqual(train['deck'], old_train['deck'])
+        self.assertEqual(train['seeds'][0], old_train['seeds'][0] + 6_000_000)
+        # AGENTS section 8: the deck covers the pool terrain and needs no upgrade ownership.
+        self.assertIn(16, train['deck'])
+        self.assertNotIn(43, train['deck'])
+
+    def test_fog_user_v2_supersedes_fog_user_in_curriculum(self):
+        """task70: fog_user_v2 is admitted, fog_user is retired as superseded."""
+        import make_multiplier_tasks as module
+        from curriculum_queue import training_base_ids
+        with patch.object(module, 'FAMILIES', FAMILIES), patch.object(module, 'SUPERSEDED', module.SUPERSEDED):
+            pass
+        self.assertEqual(module.SUPERSEDED.get('fog_user'), 'fog_user_v2')
+        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user_v2'), (31,))
+        self.assertNotIn('fog_user', module.CURRICULUM_LEVELS)
+        ids = training_base_ids()
+        self.assertIn('fog_user_v2_l31_snow', ids)
+        self.assertNotIn('fog_user_l31_snow', ids)
 
     def test_fields_copied_and_perturbation_kept(self):
         tasks = build_variants(self.sources, seeds=32)
