@@ -298,6 +298,7 @@ void LawnApp::KillBoard()
 					<< "  \"seconds\": " << (mBoard->mMainCounter / 100.0) << ",\n"
 					<< "  \"zombies_killed\": " << mBoard->mZombiesKilled << ",\n"
 					<< "  \"plants_eaten\": " << mBoard->mPlantsEaten << ",\n"
+					<< "  \"plants_eaten_free\": " << mBoard->mPlantsEatenFree << ",\n"
 					<< "  \"mower_triggered\": " << mBoard->mTriggeredLawnMowers << ",\n"
 					<< "  \"sun_produced\": " << mBoard->mSunMoneyProduced << "\n"
 					<< "}\n";

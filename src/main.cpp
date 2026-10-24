@@ -62,6 +62,7 @@ struct EnvCounters
 	uint32_t sunProduced = 0;
 	uint32_t zombiesKilled = 0;
 	uint32_t plantsEaten = 0;
+	uint32_t plantsEatenFree = 0;   // task65: plantsEaten whose actual planting cost is 0
 	uint32_t mowers = 0;
 	int waves = 0;
 };
@@ -75,6 +76,7 @@ struct EnvironmentSnapshot
 	uint32_t appCounter;
 	uint32_t zombiesKilled;
 	uint32_t plantsEaten;
+	uint32_t plantsEatenFree;   // task65: not in SaveGame (save format unchanged); rides the in-memory snapshot
 	uint32_t sunProduced;
 	int triggeredLawnMowers;
 	GameScenes gameScene;
@@ -165,7 +167,8 @@ static EnvCounters ReadCounters(LawnApp* app)
 	if (!app->mBoard)
 		return {};
 	return { app->mBoard->mSunMoney, app->mBoard->mSunMoneyProduced, app->mBoard->mZombiesKilled,
-		app->mBoard->mPlantsEaten, static_cast<uint32_t>(app->mBoard->mTriggeredLawnMowers), app->mBoard->mTotalSpawnedWaves };
+		app->mBoard->mPlantsEaten, app->mBoard->mPlantsEatenFree,
+		static_cast<uint32_t>(app->mBoard->mTriggeredLawnMowers), app->mBoard->mTotalSpawnedWaves };
 }
 
 static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
@@ -178,6 +181,7 @@ static bool SaveEnvironmentSnapshot(LawnApp* app, EnvironmentSnapshot& snapshot)
 	snapshot.appCounter = app->mAppCounter;
 	snapshot.zombiesKilled = app->mBoard->mZombiesKilled;
 	snapshot.plantsEaten = app->mBoard->mPlantsEaten;
+	snapshot.plantsEatenFree = app->mBoard->mPlantsEatenFree;
 	snapshot.sunProduced = app->mBoard->mSunMoneyProduced;
 	snapshot.triggeredLawnMowers = app->mBoard->mTriggeredLawnMowers;
 	snapshot.gameScene = app->mGameScene;
@@ -261,6 +265,7 @@ static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& 
 	app->mAppCounter = snapshot.appCounter;
 	app->mBoard->mZombiesKilled = snapshot.zombiesKilled;
 	app->mBoard->mPlantsEaten = snapshot.plantsEaten;
+	app->mBoard->mPlantsEatenFree = snapshot.plantsEatenFree;
 	app->mBoard->mSunMoneyProduced = snapshot.sunProduced;
 	app->mBoard->mTriggeredLawnMowers = snapshot.triggeredLawnMowers;
 	app->mGameScene = snapshot.gameScene;
@@ -1157,6 +1162,7 @@ static void RunEnvironment(LawnApp* app)
 						std::cout << ",\"snapshot_id\":" << childSnapshotId << ",\"state_hash\":\"" << childStateHash << '\"';
 					std::cout << ",\"events\":{\"zombies_killed\":" << branchAfter.zombiesKilled - branchBefore.zombiesKilled
 						<< ",\"plants_eaten\":" << branchAfter.plantsEaten - branchBefore.plantsEaten
+						<< ",\"plants_eaten_free\":" << branchAfter.plantsEatenFree - branchBefore.plantsEatenFree
 						<< ",\"sun_produced\":" << branchAfter.sunProduced - branchBefore.sunProduced
 						<< ",\"sun_spent\":" << std::max(branchBefore.sun - branchAfter.sun, 0)
 						<< ",\"mower_triggered\":" << branchAfter.mowers - branchBefore.mowers
@@ -1325,6 +1331,7 @@ static void RunEnvironment(LawnApp* app)
 			EnvCounters after = ReadCounters(app);
 			std::cout << ",\"events\":{\"zombies_killed\":" << after.zombiesKilled - before.zombiesKilled
 				<< ",\"plants_eaten\":" << after.plantsEaten - before.plantsEaten
+			<< ",\"plants_eaten_free\":" << after.plantsEatenFree - before.plantsEatenFree
 				<< ",\"sun_produced\":" << after.sunProduced - before.sunProduced
 				<< ",\"sun_spent\":" << std::max(before.sun - after.sun, 0)
 				<< ",\"mower_triggered\":" << after.mowers - before.mowers

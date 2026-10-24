@@ -56,6 +56,7 @@ EVENT_KEYS: dict[str, str] = {
     name: sys.intern(name) for name in (
         "zombies_killed",
         "plants_eaten",
+        "plants_eaten_free",
         "sun_produced",
         "sun_spent",
         "mower_triggered",

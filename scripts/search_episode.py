@@ -54,6 +54,7 @@ def collect_search(resource_dir, seed, checkpoint, manifest, task_id, value, sta
         outcome = dict(meta['outcome'], result=final['result'],
             reason='通关' if result['won'] else '僵尸进屋' if final['terminal'] else '动作上限截断',
             actions=result['decisions'], rejected_actions=sum(bool(f.get('action_rejected')) for f in frames),
-            mowers_used=result['mowers_used'], plants_eaten=observer.events['plants_eaten'])
+            mowers_used=result['mowers_used'], plants_eaten=observer.events['plants_eaten'],
+            plants_eaten_free=observer.events.get('plants_eaten_free', 0))
         return dict(task=meta['task'], outcome=outcome, totals=dict(observer.events),
                     frames=frames, log=[], search_result=result)

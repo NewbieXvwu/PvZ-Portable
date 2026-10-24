@@ -573,8 +573,9 @@ def _fmt_narrative(frames: list, w0: int | None, w1: int | None,
         L.append(f"推进到第 {o['final_wave']}/{o['wave_count']} 波，"
                  f"{o['actions']} 次决策，{o['final_tick']} tick。"
                  f"杀死 {meta['totals']['zombies_killed']} 只僵尸，"
-                 f"损失 {meta['totals']['plants_eaten']} 株植物，"
-                 f"割草机消耗 {meta['totals']['mower_triggered']} 台。")
+                 f"损失 {meta['totals']['plants_eaten']} 株植物"
+                 + eaten_free_note(meta['totals'])
+                 + f"，割草机消耗 {meta['totals']['mower_triggered']} 台。")
         L.append("（每波两行态势。✓=这一路火力清得掉来犯僵尸；⚠=勉强或僵局；"
                  "✗=清不完。判定已算好，不需要自己换算。）")
         L.append("")
@@ -786,6 +787,21 @@ def _run_variant(meta: dict, override: dict, resource_dir: str,
     return {**rec["outcome"], "override_rejected": bool(rejected)}
 
 
+def paid_eaten(outcome: dict) -> int:
+    """task65: 付费植物被吃数 = 被吃总数 − 零费被吃。
+
+    旧存档没有 plants_eaten_free 时按旧口径：缺省 0，付费被吃 == 全部被吃，
+    排序与 task65 之前完全一致。
+    """
+    return outcome.get("plants_eaten", 0) - outcome.get("plants_eaten_free", 0)
+
+
+def eaten_free_note(totals: dict) -> str:
+    """task65: totals 带零费列时给出"（其中零费 M）"；旧存档没有就空串（旧口径不显示）。"""
+    free = totals.get("plants_eaten_free")
+    return f"（其中零费 {free}）" if free is not None else ""
+
+
 def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             raw_actions: list, resource_dir: str, enumerate_: bool,
             row_filter: int | None, limit: int, save_best: str | None) -> str:
@@ -869,7 +885,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         return "\n".join(L + ["（没有候选动作。用 --try 给一个，或 --enumerate 枚举）"])
 
     L.append("排序口径：先看输赢和末波（推得越远越好）；都赢 / 同一波时，丢车（割草机用掉的台数）越少越好，"
-             "再看植物被吃的株数。")
+             "再看付费植物被吃的株数（零费垫材被吃不算损失，task65）。")
     L.append(f"试 {len(cands)} 个候选（每次都要从头重放，约 1–3 秒/个）：")
     L.append("")
     L.append("  左列**可以直接复制**当作 --try 用，不用自己翻译成数字。")
@@ -884,17 +900,21 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
         delta = o["final_wave"] - base["final_wave"]
         results.append((delta, cand, o))
 
-    # 旧存档的 outcome 没有丢车 / 被吃（2026-10-16 之前），那时只比末波
+    # 旧存档的 outcome 没有丢车 / 被吃（2026-10-16 之前），那时只比末波；
+    # 旧存档也没有 plants_eaten_free（task65 之前）——free 缺省 0，付费被吃 == 全部被吃，序不变。
     has_losses = "mowers_used" in base
     rank = lambda o: (-o["final_wave"], o.get("mowers_used", 0) if has_losses else 0,
-                      o.get("plants_eaten", 0) if has_losses else 0)
+                      paid_eaten(o) if has_losses else 0)
     results.sort(key=lambda x: (rank(x[2]), x[2]["final_tick"]))
     if has_losses:
-        L.append(f"  基线：丢车 {base['mowers_used']}，植物被吃 {base['plants_eaten']} 株")
+        L.append(f"  基线：丢车 {base['mowers_used']}，植物被吃 {base['plants_eaten']} 株"
+                 + eaten_free_note(base))
     for delta, cand, o in results:
         mark = "★" if rank(o) < rank(base) else ("·" if rank(o) == rank(base) else "↓")
         sign = f"+{delta}" if delta > 0 else str(delta)
-        losses = (f"  丢车 {o['mowers_used']}  被吃 {o['plants_eaten']:>2}" if has_losses else "")
+        losses = (f"  丢车 {o['mowers_used']}  被吃 {o['plants_eaten']:>2}"
+                  + (f"（零费 {o['plants_eaten_free']:>2}）" if "plants_eaten_free" in o else "")
+                  if has_losses else "")
         if o.get("override_rejected"):
             losses += "  ⚠ 这一步当时执行不了（阳光 / 冷却 / 格子），环境改成了等待"
         L.append(f"  {mark} {_action_cli(cand, hand):<15} {_action_text(cand, hand):<28}"
@@ -906,7 +926,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     if best > 0 or improved:
         L.append(f"  最好的一步：第 {results[0][2]['final_wave']} 波"
                  + (f"，丢车 {base['mowers_used']} → {results[0][2]['mowers_used']}，"
-                    f"被吃 {base['plants_eaten']} → {results[0][2]['plants_eaten']}" if has_losses else "")
+                    f"付费被吃 {paid_eaten(base)} → {paid_eaten(results[0][2])}" if has_losses else "")
                  + f"。说明第 {decision} 步附近**确实有**可以改善的选择。")
         if save_best and results:
             top = results[0]

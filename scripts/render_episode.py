@@ -344,7 +344,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
 
     frames = [_frame(obs)]
     frames[0]["action"] = None
-    events_total = {"zombies_killed": 0, "plants_eaten": 0, "sun_produced": 0,
+    events_total = {"zombies_killed": 0, "plants_eaten": 0, "plants_eaten_free": 0, "sun_produced": 0,
                     "mower_triggered": 0, "waves_started": 0, "level_lost": 0}
     log = []  # (tick, wave, kind, detail)
     actions = 0
@@ -390,6 +390,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
         cur["action"] = action
         cur["action_rejected"] = was_rejected
         cur["eaten"] = int(ev.get("plants_eaten") or 0)   # 这一步里被僵尸吃掉的植物数（游戏自己的计数）
+        cur["eaten_free"] = int(ev.get("plants_eaten_free") or 0)   # task65: 其中零费的（旧引擎帧没有此字段）
 
         # ---- 事件：从事件计数器和帧间差里还原"发生了什么"。
         # 逐只僵尸的死亡日志太吵，改成并进"开波"那一行（上一波清掉几只）。
@@ -402,9 +403,12 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             log.append((cur["tick"], cur["wave"], "割草机启动", f"{r} 号草坪后手被用掉"))
         if ev.get("plants_eaten"):
             gone = _plant_diff(prev["plants"], cur["plants"])
+            # task65: 零费垫材被吃是有意的打法，叙述里单独标出
+            free_note = (f"（其中零费 {ev['plants_eaten_free']} 株）"
+                         if ev.get("plants_eaten_free") is not None else "")
             log.append((cur["tick"], cur["wave"], "植物被吃",
-                        "、".join(f"({r},{c}) {PLANT_NAME.get(t, t)}" for r, c, t, _ in gone)
-                        or f"{ev['plants_eaten']} 株"))
+                        ("、".join(f"({r},{c}) {PLANT_NAME.get(t, t)}" for r, c, t, _ in gone)
+                         or f"{ev['plants_eaten']} 株") + free_note))
         placed = _plant_diff(cur["plants"], prev["plants"])
         if placed:
             log.append((cur["tick"], cur["wave"], "种植",
@@ -448,6 +452,7 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
             "mowers_used": len({r for i in range(1, len(frames) - (1 if result == 1 else 0))
                                 for r in _mower_fired(frames[i - 1], frames[i])}),
             "plants_eaten": events_total["plants_eaten"],
+            "plants_eaten_free": events_total["plants_eaten_free"],
         },
         "totals": events_total,
         "frames": frames,
@@ -1169,8 +1174,11 @@ def render_text(rec: dict, reference: dict | None = None) -> str:
             delta = o["final_wave"] - ro["final_wave"]
             L.append(f"  → 比什么都不做{'多' if delta >= 0 else '少'}推进 {abs(delta)} 波")
     L.append(f"  事件合计：杀死 {rec['totals']['zombies_killed']} 只僵尸，"
-             f"损失 {rec['totals']['plants_eaten']} 株植物，"
-             f"割草机消耗 {rec['totals']['mower_triggered']} 台，"
+             f"损失 {rec['totals']['plants_eaten']} 株植物"
+             # task65: 旧存档 totals 没有零费列，保持旧口径
+             + (f"（其中零费 {rec['totals']['plants_eaten_free']}）"
+                if 'plants_eaten_free' in rec['totals'] else "")
+             + f"，割草机消耗 {rec['totals']['mower_triggered']} 台，"
              f"产阳光 {rec['totals']['sun_produced']}")
 
     # ---- 自动诊断：机械信号直接回答"输在哪"

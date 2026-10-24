@@ -692,6 +692,7 @@ def _play(job: dict, observer=None) -> dict:
                 frame["action_rejected"] = rejected
                 if observer is not None:
                     frame["eaten"] = int((info.get("events") or {}).get("plants_eaten", 0))
+                    frame["eaten_free"] = int((info.get("events") or {}).get("plants_eaten_free", 0))
                 if stats.get("last_verification"):
                     # Wall time is not part of the label: keeping it in the archive makes two runs of
                     # the same arm differ byte for byte (and the GPU schedule comparison impossible).
