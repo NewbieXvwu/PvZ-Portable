@@ -135,15 +135,17 @@ def worker_count(available: int | None, per_worker: int, upper: int, background:
 
 
 def build_plan(pending_bytes: list[int], recipe_workers: int,
-               available: int | None) -> tuple[int, int]:
+               available: int | None, measured_per_builder: int = 0) -> tuple[int, int]:
     """返回 (打包并发, 单建造者峰值字节)。
 
-    打包并行是"一个建造者建一个标签段"：单建造者峰值 = PACK_BUILDER_BYTES + 待建标签里
-    最大的原始档案体积；并发 = min(配方值, (可用内存 − 预留) / 单建造者峰值, 待建段数)。
+    打包并行是"一个建造者建一个标签段"：单建造者峰值 = 打包基线 + 待建标签里
+    最大的原始档案体积；基线优先用最近一次实测（pack_peak_anon_bytes / 建造者数，
+    task61 追加：round 2 实测 0.37 GiB，比 PACK_BUILDER_BYTES 的 2 GiB 假设小得多），
+    没有实测回退 PACK_BUILDER_BYTES。并发 = min(配方值, (可用内存 − 预留) / 单建造者峰值, 待建段数)。
     旧算法按已建段体积估（冷启动 = 0 → 2 GiB → 并发 1），20 核机器单核打包近 9 小时
     （2026-10-24 task59）。待建段为空时并发 1（pack 无活可干，数值无意义）。
     """
-    per_builder = PACK_BUILDER_BYTES + max(pending_bytes, default=0)
+    per_builder = (measured_per_builder or PACK_BUILDER_BYTES) + max(pending_bytes, default=0)
     workers = len(pending_bytes) or 1
     if available is not None:
         workers = min(workers, max(1, (available - MEMORY_RESERVE_BYTES) // per_builder))
@@ -571,10 +573,19 @@ class TrainingPipeline:
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
+        self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
         for job in reversed(state.get('training_jobs', [])):
-            value = (job.get('timing') or {}).get('train_peak_anon_bytes')
+            timing = job.get('timing') or {}
+            value = timing.get('train_peak_anon_bytes')
             if value:
                 self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+            if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
+                try:      # 建造者数记在当轮配方的 precompute_workers 里
+                    builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
+                    self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
+                except (OSError, ValueError, KeyError):
+                    pass
+            if self.last_train_peak and self.last_pack_peak:
                 break
         queued = [job for job in state.setdefault('training_jobs', []) if job['status'] != 'done']
         if queued:
@@ -645,8 +656,10 @@ class TrainingPipeline:
 
     def estimate_peak(self):
         # 后台流水线的峰值 = max(打包阶段, 训练阶段)。打包按 _plan_build 的待建段估算
-        # （并发建造者 × 单建造者峰值）；训练加载段加合并紧凑 CSR 的峰值约为紧凑语料的
-        # 3 倍，再加 2 GiB 的 Python/优化器/批次。MemAvailable 已含后台现有 RSS，
+        # （并发建造者 × 单建造者实测优先峰值），且只在打包进行时有值——_run 的 pack
+        # 一结束（成败都算）就清零，训练/评估阶段只按训练估算（task61 追加）；
+        # 训练加载段加合并紧凑 CSR 的峰值约为紧凑语料的 3 倍，再加 2 GiB 的
+        # Python/优化器/批次。MemAvailable 已含后台现有 RSS，
         # reservation() 只补 estimate 与现有 RSS 的差额。
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
         if self.last_train_peak:
@@ -695,7 +708,8 @@ class TrainingPipeline:
         """按待建段估算打包并发与峰值；enqueue 写进配方，estimate_peak/reservation 引用。"""
         pending = self.pending_builds(recipe['labels'], recipe)
         self.build_workers, per_builder = build_plan([size for _, size in pending],
-                                                     recipe['precompute_workers'], mem_available_bytes())
+                                                     recipe['precompute_workers'], mem_available_bytes(),
+                                                     measured_per_builder=self.last_pack_peak)
         self.build_peak = self.build_workers * per_builder
         log_line(self.args.log, f'pack plan: {len(pending)} pending segments, '
                                 f'workers={self.build_workers}, peak~{self.build_peak / GIB:.1f} GiB')
@@ -849,9 +863,15 @@ class TrainingPipeline:
                         self._admit()
                         report[phase + '_started'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} started')
-                        if phase == 'pack':
-                            self._prepare_corpus(recipe['labels'])
-                        report[phase + '_peak_anon_bytes'] = self._command(command, folder / f'{phase}.log')
+                        try:
+                            if phase == 'pack':
+                                self._prepare_corpus(recipe['labels'])
+                            report[phase + '_peak_anon_bytes'] = self._command(command, folder / f'{phase}.log')
+                        finally:
+                            if phase == 'pack':
+                                # 打包已结束（成功或失败都算）： reservation 之后只按训练/评估估算，
+                                # 不再背着 pack plan 的 12 GiB 把前台压到 2 worker（2026-10-24 15:22）。
+                                self.build_peak = 0
                         if phase == 'train':
                             self.last_train_peak = report[phase + '_peak_anon_bytes']
                         report[phase + '_finished'] = time.time()
