@@ -46,6 +46,7 @@ GridItem::GridItem()
 	mGoalX = 0.0f;
 	mGoalY = 0.0f;
 	mGridItemType = GridItemType::GRIDITEM_NONE;
+	mGridItemState = static_cast<GridItemState>(0);
 	mGridX = 0;
 	mGridY = 0;
 	mGridItemCounter = 0;
@@ -59,6 +60,8 @@ GridItem::GridItem()
 	mHighlighted = false;
 	mTransparentCounter = 0;
 	mSunCount = 0;
+	for (auto& frame : mMotionTrailFrames)
+		frame = {};
 	mMotionTrailCount = 0;
 }
 

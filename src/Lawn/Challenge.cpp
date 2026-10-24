@@ -343,7 +343,10 @@ Challenge::Challenge()
 	mRainCounter = 0;
 	mTreeOfWisdomTalkIndex = 0;
 	for (int i = 0; i < 6; i++)
+	{
 		mReanimClouds[i] = REANIMATIONID_NULL;
+		mCloudsCounter[i] = 0;
+	}
 	memset(mBeghouledEated, 0, sizeof(mBeghouledEated));
 	for (int i = 0; i < static_cast<int>(BeghouledUpgrade::NUM_BEGHOULED_UPGRADES); i++)
 		mBeghouledPurcasedUpgrade[i] = false;
