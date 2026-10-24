@@ -1019,4 +1019,10 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 2026-10-24 再追加（用户：把带路灯花的卡组都换寒冰射手）：L33/L34 的 cactus、cattail 四族各新开 `<原族名>_snow_m200`（路灯花 25 → 寒冰射手 5，2.0 倍）；L31 已有 `demo_fog_31_snow(_m200)`。原族不变。
 
+2026-10-24 task67 追加（雾夜冷启动的卡组面板）：新开 12 个**评估族**，32 个种子（20261101–20261132，与示范种子 20261031–34 分开），倍率一律 1.0，卡组取自既有示范族、**旧族不动**：
+- 用户卡组：`fog_user_l31_fume` / `fog_user_l31_snow` / `fog_user_l32_magnet` / `fog_user_l32_freeze` / `fog_user_l33_blover` / `fog_user_l34_blover`（卡组与同名 `demo_fog_*` 族逐位相同）；
+- 新登记 1.0 倍的 `demo_fog_33_cactus_snow` / `demo_fog_34_cactus_snow`（卡组取自 `_snow_m200`：路灯花 25 → 寒冰射手 5），这两个族直接带 32 个评估种子；
+- 对照：`fog_ctrl_l31`–`fog_ctrl_l34`，卡组 `[0,9,2,3,4,5,16,43]`（`pvz_tasks.deck_for_level` 给 31–40 的 qc 雾族卡组）。
+面板用老师生产参数做冷启动，配对比较同批种子；结论见 [fog-user-decks.md](MEMORY/docs/fog-user-decks.md)。接不接 qc 由主控定。
+
 `human_demo.py` 使用原生窗口、逐tick动作带与状态哈希，原始局标记 `label_source: human`，可选 `note` 仅存meta。验证通过后导出frames_v2，配方 `train.source_weight` 按来源乘权。`search_play.py --demo-archive ... --demo-decision N` 精确恢复第N步前局面并由老师接管，示范中的后续合法种植动作进入候选，使用既有推演评分。老师续局记为teacher，保留起点与示范备注用于分析。原始示范与npz不入git，走HF transfer。
