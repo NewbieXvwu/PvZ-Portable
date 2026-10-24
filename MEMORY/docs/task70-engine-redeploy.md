@@ -38,4 +38,14 @@
 
 ## 结果
 
+- [A1] deploy4 构建完成：redeploy 工作树 PGO 两阶段（bench workload），generate=0/use=162，与 deploy3 相同配置（task50 流程）。二进制 SHA256 `16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2`，路径 `/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/build/pvz-portable`。deploy3 现行二进制 SHA256 `0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327`（源 2b743c62）。
+
+- [A3] 旧档 state_hash 兼容清单（逐处说明）：
+  1. `scripts/human_demo.py:replay()`（被 `search_play --demo-archive` 的示范开局、`episode_query` 的 replay/whatif、`human_demo verify`、task66 雾工具复用）——逐操作比对 `state_hash` 与 `initial_state_hash`。deploy3 及更早引擎录的档（含 deploy3 rebaseline 过的），在 deploy4 下重放会因 task63 的粒子播种改动报 "state hash differs"。**处理（已实现，提交 b329cf4d）**：按档内 `meta.executable_sha256`（Recorder 一直在记）选校验方式——同引擎照旧全量哈希校验；异引擎改为强制校验引擎无关字段（tick 时间线、逐操作 ok、终局胜负），返回的 meta 里记 `hash_verification` 模式，不静默。要恢复全量哈希校验就用 deploy4 跑一次 `human_demo --rebaseline`（现有机制，源目录不动）。
+  2. `scripts/value_teacher_feasibility.py` 的 `_debug_state_sha256` 叶子哈希比对——离线诊断工具，不在生产路径；对旧叶子档案会报差异，属预期，不处理。
+  3. `scripts/promotion_gate.py`——评估 config 固定 executable 路径，换引擎后若复用旧评估目录会显式 ValueError（"evaluation config mismatch"），不会静默；换引擎后的下一次晋升按新引擎重跑评估即可，无旧档哈希比对。
+  4. 课程控制器（`curriculum_state.json` / multiplier_panel / 打包）：不读 state_hash；面板换新后 fog_user 格会以 "superseded by fog_user_v2" 显式退役（SUPERSEDED 机制）。
+  5. 引擎内 branch snapshot：同一进程内存态，不跨引擎，无兼容问题。
+  6. Recorder 新录的档本来就记 `executable_sha256`，将来换引擎自动走第 1 条的选择逻辑。
+
 ## 问题
