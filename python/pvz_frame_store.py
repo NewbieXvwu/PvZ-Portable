@@ -239,7 +239,10 @@ def _save(path: Path, **arrays):
                 for name, array in arrays.items():
                     buffer = io.BytesIO()
                     np.lib.format.write_array(buffer, np.asarray(array), allow_pickle=False)
-                    archive.writestr(name + ".npy", buffer.getvalue())
+                    # Archive identity must depend on its arrays, not the wall clock.
+                    member = zipfile.ZipInfo(name + ".npy", date_time=(1980, 1, 1, 0, 0, 0))
+                    member.compress_type = archive.compression
+                    archive.writestr(member, buffer.getvalue())
             temporary.close()
             temporary_path.replace(path)
         finally:

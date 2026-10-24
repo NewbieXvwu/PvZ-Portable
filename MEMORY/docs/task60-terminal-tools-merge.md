@@ -39,6 +39,8 @@
 
 ## 结果
 
+- 合入 origin/fog；DESIGN 与两日日志的追加段全部保留，生产增量为 trace 同步与 NPZ 时间戳确定性，后续逐项验证。
+
 - 合入 origin/roof；两日日志冲突保留双方条目，search_play 快路径条件同时保留 fog_diagnostics 与 observer，后续审查测试。
 
 - 合入 origin/forks；仅当天 MEMORY 日志冲突，双方条目全部保留。后续统一实现与测试继续。

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "levels": [
+    31,
+    32,
+    33,
+    34
+  ],
+  "observations": [
+    "human",
+    "xray"
+  ],
+  "seed_offsets": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "root_policy": "frozen dw4i_s1 student; original task45 f8/f8x",
+  "root_window_ticks": [
+    0,
+    8000
+  ],
+  "root_selection": "initial legal decision plus temporally spaced later legal student decisions, frozen before terminal labels; final density chosen from timing-only pilot",
+  "candidates": "all engine legal plant packet/row/col combinations plus wait:60/timeout; never static/top-k filtering",
+  "screening_futures": 3,
+  "confirmation_futures": 16,
+  "confirmation_max_roots": 8,
+  "terminal_policy": "same frozen search teacher applied immediately after candidate, all the way to a real terminal; no short-student-prefix terminal labels",
+  "leaf_comparison": "formal 2500-tick student continuation + v4 leaf on same candidate/common future; terminal-before-horizon uses true win/loss; separate teacher-path v4 auxiliary",
+  "ranking_metrics": [
+    "win fraction",
+    "mean terminal wave",
+    "mean terminal tick"
+  ],
+  "rank_pairs": "strict ground-truth pairs and thresholds reported separately; v4 ties half credit; cluster bootstrap over paired episode seeds, not candidate pairs",
+  "confirmation": "independent future seeds; one root per level/observation, chosen from screening by largest mean-wave gain; compare screening wave/tick/win favourites, v4 favourite, student and wait with paired sign tests and Holm correction",
+  "workers": 4,
+  "cpu_budget_seconds": 72000,
+  "cpu_stop_reserve_seconds": 600,
+  "artifact_budget_bytes": 5000000000,
+  "reuse": {
+    "branch": "v5",
+    "commit": "bb2ec969",
+    "file": "scripts/value_teacher_feasibility.py",
+    "sha256": "0b4089d2f34e37ea1e2cda30fdc8be0ee73f70e2aa1c62b56997bd8b613d9588",
+    "function": "finish_teacher",
+    "access": "read-only; frozen source copy in ignored phase-e/frozen"
+  }
+}

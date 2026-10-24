@@ -1,0 +1,467 @@
+{
+  "root_count_per_episode": 2,
+  "total_roots": 64,
+  "planned_screen_labels": 12372,
+  "pilot_labels": 207,
+  "selection_rule": "first legal decision and closest legal decision to tick8000; ties earlier; labels never inputs",
+  "cpu_forecast_hours": 14.459050024958733,
+  "forecast_method": "mean measured CPU of pilot candidates at roots within1500ticks, otherwise global mean; no outcome fields used",
+  "root_selection_sha256": "ed62868a21f31dd357cc0790c9242a41197794a1305b1ca7939d4749de8bcff8",
+  "pilot_cpu_sum": 830.5713920000001,
+  "pilot_cpu_mean": 4.01242218357488,
+  "pilot_cpu_max": 15.665328000000002,
+  "shared_future_scope": "all candidates within a root; reset seeds paired across observation arms, future hashes include arm/root identity",
+  "total_budget_seconds": 72000,
+  "stop_at_metered_seconds": 71400,
+  "unmetered_setup_test_reporting_allowance_seconds": 480,
+  "roots": [
+    {
+      "cell": "l31-human-39000000",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-human-39000000",
+      "root": 133,
+      "tick": 7607,
+      "candidates": 87,
+      "forecast_cpu_seconds": 1042.6768312835823
+    },
+    {
+      "cell": "l31-human-39000001",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-human-39000001",
+      "root": 126,
+      "tick": 7012,
+      "candidates": 79,
+      "forecast_cpu_seconds": 946.7985019701495
+    },
+    {
+      "cell": "l31-human-39000002",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-human-39000002",
+      "root": 139,
+      "tick": 7871,
+      "candidates": 50,
+      "forecast_cpu_seconds": 599.2395582089554
+    },
+    {
+      "cell": "l31-human-39000003",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-human-39000003",
+      "root": 105,
+      "tick": 6000,
+      "candidates": 89,
+      "forecast_cpu_seconds": 1057.5838280399998
+    },
+    {
+      "cell": "l31-xray-39000000",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-xray-39000000",
+      "root": 130,
+      "tick": 7522,
+      "candidates": 89,
+      "forecast_cpu_seconds": 1066.6464136119405
+    },
+    {
+      "cell": "l31-xray-39000001",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-xray-39000001",
+      "root": 122,
+      "tick": 6772,
+      "candidates": 47,
+      "forecast_cpu_seconds": 563.285184716418
+    },
+    {
+      "cell": "l31-xray-39000002",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-xray-39000002",
+      "root": 135,
+      "tick": 7745,
+      "candidates": 89,
+      "forecast_cpu_seconds": 1066.6464136119405
+    },
+    {
+      "cell": "l31-xray-39000003",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l31-xray-39000003",
+      "root": 105,
+      "tick": 6000,
+      "candidates": 89,
+      "forecast_cpu_seconds": 1057.5838280399998
+    },
+    {
+      "cell": "l32-human-39000100",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-human-39000100",
+      "root": 120,
+      "tick": 6840,
+      "candidates": 87,
+      "forecast_cpu_seconds": 1042.6768312835823
+    },
+    {
+      "cell": "l32-human-39000101",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-human-39000101",
+      "root": 128,
+      "tick": 7376,
+      "candidates": 87,
+      "forecast_cpu_seconds": 1042.6768312835823
+    },
+    {
+      "cell": "l32-human-39000102",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-human-39000102",
+      "root": 140,
+      "tick": 7790,
+      "candidates": 46,
+      "forecast_cpu_seconds": 551.3003935522389
+    },
+    {
+      "cell": "l32-human-39000103",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-human-39000103",
+      "root": 121,
+      "tick": 6900,
+      "candidates": 87,
+      "forecast_cpu_seconds": 1042.6768312835823
+    },
+    {
+      "cell": "l32-xray-39000100",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-xray-39000100",
+      "root": 92,
+      "tick": 5220,
+      "candidates": 85,
+      "forecast_cpu_seconds": 907.5306981428571
+    },
+    {
+      "cell": "l32-xray-39000101",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-xray-39000101",
+      "root": 128,
+      "tick": 7376,
+      "candidates": 85,
+      "forecast_cpu_seconds": 1018.707248955224
+    },
+    {
+      "cell": "l32-xray-39000102",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-xray-39000102",
+      "root": 140,
+      "tick": 7790,
+      "candidates": 46,
+      "forecast_cpu_seconds": 551.3003935522389
+    },
+    {
+      "cell": "l32-xray-39000103",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l32-xray-39000103",
+      "root": 94,
+      "tick": 5340,
+      "candidates": 85,
+      "forecast_cpu_seconds": 1080.6315743999999
+    },
+    {
+      "cell": "l33-human-39000200",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-human-39000200",
+      "root": 131,
+      "tick": 7396,
+      "candidates": 85,
+      "forecast_cpu_seconds": 1018.707248955224
+    },
+    {
+      "cell": "l33-human-39000201",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-human-39000201",
+      "root": 143,
+      "tick": 7968,
+      "candidates": 18,
+      "forecast_cpu_seconds": 215.72624095522391
+    },
+    {
+      "cell": "l33-human-39000202",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-human-39000202",
+      "root": 115,
+      "tick": 6576,
+      "candidates": 87,
+      "forecast_cpu_seconds": 999.8026851340209
+    },
+    {
+      "cell": "l33-human-39000203",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-human-39000203",
+      "root": 98,
+      "tick": 5640,
+      "candidates": 52,
+      "forecast_cpu_seconds": 695.7230124000002
+    },
+    {
+      "cell": "l33-xray-39000200",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-xray-39000200",
+      "root": 138,
+      "tick": 7951,
+      "candidates": 89,
+      "forecast_cpu_seconds": 1066.6464136119405
+    },
+    {
+      "cell": "l33-xray-39000201",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-xray-39000201",
+      "root": 141,
+      "tick": 7968,
+      "candidates": 50,
+      "forecast_cpu_seconds": 599.2395582089554
+    },
+    {
+      "cell": "l33-xray-39000202",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-xray-39000202",
+      "root": 104,
+      "tick": 6000,
+      "candidates": 89,
+      "forecast_cpu_seconds": 1057.5838280399998
+    },
+    {
+      "cell": "l33-xray-39000203",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l33-xray-39000203",
+      "root": 117,
+      "tick": 6780,
+      "candidates": 87,
+      "forecast_cpu_seconds": 1042.6768312835823
+    },
+    {
+      "cell": "l34-human-39000300",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-human-39000300",
+      "root": 140,
+      "tick": 7897,
+      "candidates": 63,
+      "forecast_cpu_seconds": 755.0418433432837
+    },
+    {
+      "cell": "l34-human-39000301",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-human-39000301",
+      "root": 142,
+      "tick": 7981,
+      "candidates": 48,
+      "forecast_cpu_seconds": 575.2699758805971
+    },
+    {
+      "cell": "l34-human-39000302",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-human-39000302",
+      "root": 128,
+      "tick": 7241,
+      "candidates": 50,
+      "forecast_cpu_seconds": 599.2395582089554
+    },
+    {
+      "cell": "l34-human-39000303",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-human-39000303",
+      "root": 139,
+      "tick": 7846,
+      "candidates": 81,
+      "forecast_cpu_seconds": 970.7680842985077
+    },
+    {
+      "cell": "l34-xray-39000300",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-xray-39000300",
+      "root": 138,
+      "tick": 7837,
+      "candidates": 83,
+      "forecast_cpu_seconds": 994.7376666268658
+    },
+    {
+      "cell": "l34-xray-39000301",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-xray-39000301",
+      "root": 136,
+      "tick": 7621,
+      "candidates": 81,
+      "forecast_cpu_seconds": 970.7680842985077
+    },
+    {
+      "cell": "l34-xray-39000302",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-xray-39000302",
+      "root": 85,
+      "tick": 4860,
+      "candidates": 89,
+      "forecast_cpu_seconds": 985.2621162857142
+    },
+    {
+      "cell": "l34-xray-39000303",
+      "root": 0,
+      "tick": 0,
+      "candidates": 55,
+      "forecast_cpu_seconds": 745.272447857143
+    },
+    {
+      "cell": "l34-xray-39000303",
+      "root": 136,
+      "tick": 7726,
+      "candidates": 85,
+      "forecast_cpu_seconds": 1018.707248955224
+    }
+  ]
+}
