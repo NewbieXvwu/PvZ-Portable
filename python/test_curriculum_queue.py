@@ -30,11 +30,14 @@ def cell(wins, games, mult_index=0, last_round=0, level=7):
 
 
 class CurriculumRulesTest(unittest.TestCase):
-    def test_zones_admission_only_measured_roof_and_no_fog(self):
+    def test_zones_admission_only_measured_roof_and_one_fog_family(self):
         ids = training_base_ids()
         self.assertEqual({name for name in ids if name.startswith('roof_')},
                          {'roof_l41_train_r7'})
-        self.assertFalse(any(name.startswith('fog_') for name in ids))
+        # task68: only the user-deck fog family measured above 50% (task67 teacher 25/32)
+        # enters the curriculum; the task45 fog_f8/f8p families stay out.
+        self.assertEqual({name for name in ids if name.startswith('fog_')},
+                         {'fog_user_l31_snow'})
 
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))

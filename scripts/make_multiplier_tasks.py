@@ -59,6 +59,18 @@ SEEDS_PER_TASK = 2048
 ROOF_MULT_SEED_BASE = 48_000_000
 ROOF_MULT_STRIDE = 100_000
 
+# task68: the ten legacy families already fill 655_360 of the 700_000-wide band, so a new
+# family cannot take another slot without moving every preregistered seed. It gets its own
+# block instead (same rule as roof). The base task keeps 43_000_000..43_008_191; the six
+# multiplier bands start at 43_100_000.
+FOG_USER_MULT_SEED_BASE = 43_100_000
+FOG_USER_MULT_STRIDE = 100_000
+INDEPENDENT_BLOCKS = {
+    # family -> (multiplier seed base, band width, first level of the block)
+    'roof': (ROOF_MULT_SEED_BASE, ROOF_MULT_STRIDE, 41),
+    'fog_user': (FOG_USER_MULT_SEED_BASE, FOG_USER_MULT_STRIDE, 31),
+}
+
 DAY_D7_LEVELS = (1, 3, 4, 6, 7, 8, 9)
 NIGHT_N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 POOL_P9K_LEVELS = (21, 22, 23, 24, 26, 27, 28, 29)
@@ -80,12 +92,18 @@ FAMILIES = (
     ('fog_f8', 'fog', 'fog_l{level}_train_f8', (31, 32, 33, 34, 36, 37, 38, 39), 'fog'),
     ('fog_f8p', 'fog', 'fog_l{level}_train_f8p', (31, 32, 33, 34, 36, 37, 38, 39), 'fog'),
     ('roof', 'roof', 'roof_l{level}_train_r7', ROOF_LEVELS, 'roof'),
+    # task68: the only fog cold-start family above 50% (teacher 25/32, task67).
+    ('fog_user', 'fog_user', 'fog_user_l{level}_snow', (31,), 'fog'),
 )
 
 # Registry coverage and curriculum admission are separate: unmeasured roof levels have
 # reproducible tasks/multipliers, but cannot enter collection before the cold-start gate.
 # Filled from the complete, preregistered teacher evaluation (>=50% at original difficulty).
-CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': ()}  # task46-roof-admission.json: r7 teacher L41 = 15/16
+# task46-roof-admission.json: r7 teacher L41 = 15/16.
+# task68: fog_user L31 is admitted at multiplier 1.0 (task67 teacher 25/32 = 78.1%, paired
+# p<1e-6 against 0/32 for the fog_f8 deck on the same seeds). The task45 fog_f8/f8p families
+# stay outside the curriculum: they were never measured above 50%.
+CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user': (31,)}
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。
@@ -97,10 +115,12 @@ def variant_id(base_id: str, suffix: str) -> str:
 
 
 def seed_start(mult_index: int, family_index: int, level: int) -> int:
-    if FAMILIES[family_index][0] == 'roof':
-        if not 41 <= level <= 49:
-            raise ValueError('roof multiplier level must be 41..49')
-        return ROOF_MULT_SEED_BASE + mult_index * ROOF_MULT_STRIDE + (level - 41) * SEEDS_PER_TASK
+    family = FAMILIES[family_index][0]
+    if family in INDEPENDENT_BLOCKS:
+        base, stride, first = INDEPENDENT_BLOCKS[family]
+        if not first <= level <= first + SLOTS_PER_FAMILY - 1:
+            raise ValueError(f'{family} multiplier level must be {first}..{first + SLOTS_PER_FAMILY - 1}')
+        return base + mult_index * stride + (level - first) * SEEDS_PER_TASK
     slot = family_index * SLOTS_PER_FAMILY + (level - 1)
     return SEED_BASE + mult_index * MULT_STRIDE + slot * SEEDS_PER_TASK
 
@@ -117,6 +137,8 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'night_n10q': overrides.get('night_n10q') or MAIN / 'artifacts/stage4/night_panel_n10q.json',
         'roof': overrides.get('roof') or ROOT / 'artifacts/task46/roof_panel.json',
         'fog': overrides.get('fog') or ROOT / 'artifacts/task45/fog_panel.json',
+        # task68: local manifest from scripts/make_fog_user_panel.py (not in git).
+        'fog_user': overrides.get('fog_user') or ROOT / 'artifacts/task68/fog_user_panel.json',
     }
 
 
@@ -217,6 +239,8 @@ def audit(tasks: list[dict], sources: dict[str, dict[str, dict]], manifest_paths
     return dict(tasks=len(tasks), seeds=len(owner), decks_checked=checked_decks,
                 scanned_manifests=len(manifest_paths), scanned_seeds=len(seen), seed_overlap=len(clashes),
                 seed_base=SEED_BASE, mult_stride=MULT_STRIDE,
+                independent_blocks={name: base for name, (base, _stride, _first)
+                                    in sorted(INDEPENDENT_BLOCKS.items())},
                 slots_per_family=SLOTS_PER_FAMILY, seeds_per_task=SEEDS_PER_TASK,
                 multipliers=[m for m, _ in MULTIPLIERS])
 
@@ -235,6 +259,7 @@ def main() -> None:
     parser.add_argument('--night-n10q-manifest', type=Path)
     parser.add_argument('--roof-manifest', type=Path)
     parser.add_argument('--fog-manifest', type=Path)
+    parser.add_argument('--fog-user-manifest', type=Path)
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -242,7 +267,8 @@ def main() -> None:
     paths = source_paths({'day': args.day_manifest, 'day_orig': args.day_orig_manifest,
                           'night': args.night_manifest, 'pool': args.pool_manifest,
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
-                          'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest, 'fog': args.fog_manifest})
+                          'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest,
+                          'fog': args.fog_manifest, 'fog_user': args.fog_user_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests()
