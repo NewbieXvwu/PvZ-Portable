@@ -121,3 +121,5 @@ dw5i 比 dw4i 多了 q102/q103 全部、Mac 夜间 n9 与早关轮次。泳池�
   4. 每一步提交、`git push origin dw5`，在“结果”记一行。最多 2 个自己的游戏进程；不碰 tmux `qc` 与别的代理会话。
 
 - 2026-10-24，37 结论落盘：`MEMORY/docs/unified-panel.md` 新增「task36：区等权行权重配比（A）与早关×2（B）」一节，含五模型分区表、34 关逐关表与五组同种子配对表（A/B 各对 dw4i、dw5i 及 A vs B）；同时起草 `recipes/dw6i.json`，字段全部取自 `artifacts/task36/train_A.command.json`（281 个 labels、同超参、seed 1、12 epoch），`row_weights` 指向 A 清单（manifest SHA b006fbee…、multipliers be036941…），并记录确定性重生命令 `python3 scripts/task36_row_weights.py --plan A --out artifacts/task36/row_weights_A.json`——清单与 npy 在 `artifacts/` 下、按规则不入 git。dw6i 采用 A 的配比（zone-equal + n10:n9=2:1），不加早关乘子；白天/留出缺口需另开实验，且需第二种子的 A 才能区分配比效应与训练噪声。
+
+- 2026-10-24，38 B 模型 HF 交付：`transfer/dw5i_B_s1_model.pt` 上传后固定远端 revision **63535416ae9e287240220468e1317028f8cd4e21** 回读，LFS sha256 与下载文件 SHA256 均等于本地 **e77bf75dfda68b260a673012a70b00f355f34967db8abc935fc7fe4c7a8989eb**（705,774 B），与 `complete_B.json` 一致；记录 `artifacts/task36/hf_B.json`。A/B 两个模型至此都在 HF `transfer/`，模型不进 git，仓库名来自 `$PVZ_HF_REPO`。
