@@ -429,6 +429,14 @@ Codex 额度用尽后接手，先 `ps` 核实而没有重启任何任务：数�
 
 {"artifact_bytes": 2512103421, "best_epoch": 1, "pair_accuracy": {"init": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt", "checkpoint_sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d", "cohorts": {"day_l7_branch": {"cells": {"pair_accuracy": 0.5438972162740899, "pairs": 467, "positions": 199}, "leaves": {"pair_accuracy": 0.655788876276958, "pairs": 3524, "positions": 655}, "rows": 29446, "seeds": 32}, "pool_decision": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "leaves": {"pair_accuracy": 0.483271375464684, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}}, "leaves": {"pair_accuracy": 0.483271375464684, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}, "v5": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "checkpoint": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/v5/model.pt", "checkpoint_sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4", "cohorts": {"day_l7_branch": {"cells": {"pair_accuracy": 0.5588865096359743, "pairs": 467, "positions": 199}, "leaves": {"pair_accuracy": 0.6475595913734393, "pairs": 3524, "positions": 655}, "rows": 29446, "seeds": 32}, "pool_decision": {"cells": {"pair_accuracy": 0.0, "pairs": 0, "positions": 0}, "leaves": {"pair_accuracy": 0.5613382899628253, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}}, "leaves": {"pair_accuracy": 0.5613382899628253, "pairs": 269, "positions": 88}, "rows": 456, "seeds": 8}}, "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"}
 
+### 43. 全部 64 种子原始证据独立通过，采集账本 35.34 CPU 小时（2026-10-24 08:14）
+
+`labels64` 正常终态后接续器依次完成 `report` 与 `export`（64 分片、3,860 行非终局叶），数据接续进程退出，重训验收进程接住并已完成固定配方训练（结果见 §42），当前在外部校准阶段。
+
+不占游戏槽，独立重算全部 **64 种子 / 768 root / 4,325 条标签**（`audit_64.json`，SHA `41796d53…15d658`）：逐种子核对冻结的 12 个选点决策与状态 SHA、每 root 唯一共同未来、续走种子基址、四项历史交接、终局叶与叶结果一致、老师轨迹行数等于记录决策数、`summary.json` 与逐候选重算一致，全部通过。汇总 **2,275 胜（52.6%）**、**363/768 root** 有候选胜负差异（47.3%）、**3,860 条非终局叶、2,104 胜、2,200 个非终局有效对**、**359/768 root** 有非终局差异；与 `report.json` 的对应七项逐项相同，说明独立实现与采集器同尺。
+
+采集账本 **35.34 CPU 小时**（逐种子 usage：root 3,097.8 s + 标签 124,780.0 s；`report.json` 计 35.52 h），低于获批 60 小时；task43 自有 **2,512,104,899 字节**，低于 5 GB 停止线。`plan.json` 与四个老师输入 SHA 未变，导出分片的 held-out 8 种子与 `train_value_widen.held` 的哈希划分一致。此节只做数据完整性核对，不给模型评分；三条验收仍以 §44 起的实际对局为准。
+
 ## 问题
 
 ### 问题 3：第一轮数据的 root 也来自学生轨迹，不只是续走为学生

@@ -438,6 +438,23 @@
     },
     "artifact_bytes": 2512103421
    }
+  },
+  {
+   "stage": "collection_audit_64",
+   "details": {
+    "seeds": 64,
+    "root_groups": 768,
+    "labels": 4325,
+    "wins": 2275,
+    "mixed_groups": 363,
+    "nonterminal_labels": 3860,
+    "nonterminal_wins": 2104,
+    "nonterminal_effective_pairs": 2200,
+    "nonterminal_mixed_groups": 359,
+    "collection_cpu_hours": 35.3429,
+    "artifact_bytes": 2512104899,
+    "audit_sha256": "41796d53d3164ee7f18d7c5f5bf7e69cce0e2754890ac765385e4966ba15d658"
+   }
   }
  ],
  "bootstrap_v4_pair_accuracy": {
