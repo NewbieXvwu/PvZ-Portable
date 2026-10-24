@@ -33,4 +33,16 @@ AGENTS §8 说过："打不过的时候必须先考虑卡组。"雾夜族至今�
 
 ## 结果
 
+- 结论正文写在 **[fog-user-decks.md](fog-user-decks.md)**（12 族 × 32 种子的胜率表、Wilson 区间、
+  配对 McNemar、输局归因、每局种植构成）。
+- 一句话：**L31 是卡组问题**（只换路灯花→寒冰射手，1/32 → 25/32，p < 1e-6，建议 1.0 倍接入 qc）；
+  **L32–L34 不是**（0–9.4%，与对照 0/32 无显著差异），应改用 task64 的示范起点倒推课程。
+- 新登记 12 个评估族（旧族不动）：`fog_user_l31_fume` / `fog_user_l31_snow` / `fog_user_l32_magnet` /
+  `fog_user_l32_freeze` / `demo_fog_33_cactus_snow` / `fog_user_l33_blover` /
+  `demo_fog_34_cactus_snow` / `fog_user_l34_blover` + 对照 `fog_ctrl_l31`–`l34`，
+  种子 20261101–20261132，倍率 1.0。
+
 ## 问题
+
+- 见 [fog-user-decks.md](fog-user-decks.md) 的"问题"一节：对照卡组不是 task45 的原表（本机没有那份清单）、
+  32 局区间偏宽、只测 1.0 倍、种子未与 task45 全库审计交叉。

@@ -35,4 +35,12 @@
 
 ## 结果
 
+- 结论正文写在 **[demo-start-states.md](demo-start-states.md)**（胜率表、输局归因、铲子时刻、12 个点的继承棋盘）。
+- 一句话：老师从第 76 个决策（tick 3765，第 1 波，8 株在场）起 8/8，冷启动 2/8；学生要到第 299 个
+  决策（tick 14304，第 6 波）才过半。老师 96 局 0 铲——生产搜索的候选集里没有铲子。
+- 工具：`search_play.py` 新增 `--future-seeds`（恢复后用 `RESEED` 抽 8 个未来）；合并 `origin/pvz-env`
+  后老师改走引擎内叶值，示范环境校验改成按存档记录的字段比较。
+
 ## 问题
+
+- 见 [demo-start-states.md](demo-start-states.md) 的"问题"一节（8 局不独立、与 task45 的卡组差异、铲子候选缺口）。

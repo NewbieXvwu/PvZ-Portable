@@ -559,7 +559,10 @@ def _play(job: dict, observer=None) -> dict:
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
-    torch.manual_seed(kw["seed"])
+    # A demonstration start draws its future from RESEED instead of the task seed, so the teacher's
+    # own sampling (torch draws and the search's decision seed) follows the same number.
+    future_seed = job.get("future_seed")
+    torch.manual_seed(kw["seed"] if future_seed is None else future_seed)
     started = time.time()
     stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
              "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
@@ -571,10 +574,21 @@ def _play(job: dict, observer=None) -> dict:
             from dataclasses import asdict
             from human_demo import replay
             demo_meta = json.loads((Path(demo_archive) / 'meta.json').read_text())
+            # Compare every field the archive recorded. A field added to TaskSpec after the
+            # demonstration was recorded (fog_observation, task53) did not exist then and must not
+            # block the start; an actual environment difference still fails replay()'s per-operation
+            # state-hash check.
+            recorded = demo_meta['environment_task']
+            current = json.loads(json.dumps(asdict(task)))
             if (demo_meta['task']['id'] != args.task_id or demo_meta['task']['deck'] != list(kw['deck']) or
-                    demo_meta['environment_task'] != json.loads(json.dumps(asdict(task)))):
+                    any(current.get(key) != value for key, value in recorded.items())):
                 raise ValueError('demonstration task, deck, seed or environment differs from the manifest')
             obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision)
+            if future_seed is not None:
+                # The restored snapshot carries the demonstration's RNG, so replaying it would hand the
+                # teacher the true future (the clairvoyance problem, scripts/verify_reseed.py). RESEED
+                # re-picks every wave that has not started yet and leaves the board untouched.
+                env.reseed(future_seed)
             from pvz_frame_store import frame_path, read_frames
             demo_frames = read_frames(frame_path(Path(demo_archive)))
             _W['demo_actions'] = [(before['tick'], after['action'])
@@ -617,6 +631,8 @@ def _play(job: dict, observer=None) -> dict:
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
         if job["arm"] == "fast" and not args.frames and fog_diagnostics is None and observer is None:
+            if fast_state.get("history") is not None:
+                _W["student_history"] = fast_state["history"]   # a demonstration start has history
             obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
@@ -633,7 +649,8 @@ def _play(job: dict, observer=None) -> dict:
                 searched_before = stats['searched']
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
-                action = _search(env, obs, action, args, kw["seed"] * 10000 + decisions, stats)
+                action = _search(env, obs, action, args,
+                                 (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions, stats)
                 if fog_diagnostics is not None:
                     fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
                 if action["type"] == "shovel":
@@ -715,7 +732,8 @@ def _play(job: dict, observer=None) -> dict:
         raise
     if frames is not None:
         # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
-        archive = Path(args.frames) / f"seed_{job['seed']}" / f"{args.frames_label}_{job['arm']}"
+        seed_tag = job["seed"] if future_seed is None else f"{job['seed']}_f{future_seed}"
+        archive = Path(args.frames) / f"seed_{seed_tag}" / f"{args.frames_label}_{job['arm']}"
         archive.mkdir(parents=True, exist_ok=True)
         from pvz_frame_store import write_frames_from_source
         write_frames_from_source(archive / "frames.npz",
@@ -742,7 +760,7 @@ def _play(job: dict, observer=None) -> dict:
             "task": archive_task,
             "context": task_context,
             "outcome": archive_outcome}))
-    result = {"seed": job["seed"], "arm": job["arm"], "won": obs.get("result") == 1,
+    result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
             **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
                 'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
@@ -782,6 +800,11 @@ def parser():
     p.add_argument("--task-id", required=True)
     p.add_argument("--demo-archive", type=Path, help="verified human demonstration used as the starting state")
     p.add_argument("--demo-decision", type=int, default=1, help="start immediately before this demo decision")
+    p.add_argument("--future-seeds",
+                   help="comma-separated RESEED values drawn right after the demonstration is restored; one "
+                        "game per value, and the teacher's own sampling follows the same number. Without it "
+                        "the restored RNG replays the demonstration's true future (clairvoyant, "
+                        "scripts/verify_reseed.py)")
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--seeds", type=int, default=64)
     p.add_argument("--seed-offset", type=int, default=0)
@@ -846,14 +869,21 @@ def main() -> None:
         if seed not in seeds:
             p.error('demonstration seed is outside the selected manifest seeds')
         seeds = [seed]
+    futures = [int(v) for v in args.future_seeds.split(",") if v.strip()] if args.future_seeds else [None]
+    if args.future_seeds and not args.demo_archive:
+        p.error("--future-seeds only applies to a demonstration start (--demo-archive)")
+    if len(set(futures)) != len(futures):
+        p.error("--future-seeds contains duplicates")
     args.out.mkdir(parents=True, exist_ok=True)
     results_path = args.out / "games.jsonl"
     done_keys = set()
     if results_path.exists():
         for line in results_path.read_text().splitlines():
-            r = json.loads(line); done_keys.add((r["arm"], r["seed"]))
-    jobs = [{"seed": s, "arm": arm, "args": args} for arm in args.arms.split(",") for s in seeds
-            if (arm, s) not in done_keys]
+            r = json.loads(line)
+            done_keys.add((r["arm"], r["seed"] if r.get("future_seed") is None else r["future_seed"]))
+    jobs = [{"seed": s, "future_seed": f, "arm": arm, "args": args}
+            for arm in args.arms.split(",") for s in seeds for f in futures
+            if (arm, s if f is None else f) not in done_keys]
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
     print(f"{len(jobs)} games on {args.workers} workers", flush=True)
     value_keep, value_files = _export_values(args.value, args.static_value)
@@ -894,7 +924,8 @@ def summarize(results_path: Path) -> dict:
     rows = [json.loads(line) for line in results_path.read_text().splitlines()]
     by = {}
     for r in rows:
-        by.setdefault(r["arm"], {})[r["seed"]] = r
+        # A cold-start game has future_seed = null; the key must fall back to the game seed.
+        by.setdefault(r["arm"], {})[r["seed"] if r.get("future_seed") is None else r["future_seed"]] = r
     summary = {arm: {"games": len(v), "won": sum(r["won"] for r in v.values()),
                      "mean_final_wave": round(sum(r["final_wave"] for r in v.values()) / len(v), 2),
                      "mean_seconds": round(sum(r["seconds"] for r in v.values()) / len(v), 1),

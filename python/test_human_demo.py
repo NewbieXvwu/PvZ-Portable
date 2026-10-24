@@ -104,6 +104,11 @@ class HumanDemoTest(unittest.TestCase):
                     net.plant.bias.fill_(-100)
                 checkpoint = root / 'student.pt'
                 torch.save(dict(state_dict=net.state_dict(), obs='v2lite'), checkpoint)
+                # The teacher scores leaves inside the engine (task37), so the worker needs the
+                # exported value network exactly as production's _load_nets leaves it.
+                from export_value_net import export_value_net
+                value_bin = root / 'value.bin'
+                export_value_net(ValueNet(width=8).eval(), value_bin)
                 native = root / 'student.bin'
                 export_student(net, native)
                 env.load_rollout_net(native)
@@ -114,7 +119,8 @@ class HumanDemoTest(unittest.TestCase):
                                        demo_archive=archive, demo_decision=2, frames=root / 'teacher',
                                        frames_label='demo', dagger_beta=1.0, rollout_policy=checkpoint,
                                        min_gap=0, per_card=1, halving=False, samples=1, horizon=60)
-                with patch.dict(search_play._W, dict(env=env, fast=net, vnet=ValueNet(width=8).eval()), clear=True), \
+                with patch.dict(search_play._W, dict(env=env, fast=net,
+                                                     value_files=(str(value_bin), str(value_bin))), clear=True), \
                      patch.object(search_play, 'MAX_ACTIONS', 1), patch.object(search_play, '_static_scores', return_value=[]):
                     result = search_play._play(dict(args=args, seed=271, arm='fast_search'))
                 self.assertEqual(result['searched'], 1)

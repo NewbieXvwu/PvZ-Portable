@@ -389,7 +389,9 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
     if 'segments' in stored.files:
         names = stored['segments'].tolist()
         stored.close()
-        return read_segments([path.parent / name for name in names], data, row_observer)
+        # source_weight is applied while merging: the segments carry the per-row source columns,
+        # the concatenated pack does not.
+        return read_segments([path.parent / name for name in names], data, row_observer, source_weight)
     # npz arrays are materialized (np.load's mmap_mode does not mmap ZIP members).
     # Close the archive after reading; every returned array owns its bytes.
     rows = int(stored["rows"])
@@ -448,7 +450,7 @@ def _member_array(archive, name):
         return np.lib.format.read_array(handle)
 
 
-def read_segments(paths: list[Path], data: Path | None = None, row_observer=None):
+def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
     """Merge compact slices in global archive order, without decompressing game frames.
 
     Labels interleave by seed in frame_paths. Simply concatenating label segments would change
@@ -637,6 +639,19 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
         for entry in placed:
             if len(entry["rows"]):
                 row_observer(Path(data) / entry["source"], entry["rows"])
+    if source_weight and data is not None:
+        # Same rule as the single-file branch: a row's weight is scaled by its archive's
+        # label_source. task61's segmented packs merged the weights but dropped this step, so
+        # human/demonstration rows kept full weight in the production trainer.
+        for entry in placed:
+            span = entry["stop"] - entry["start"]
+            if not span:
+                continue
+            meta_path = (Path(data) / entry["source"]).parent / "meta.json"
+            meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
+            factor = source_weight.get(meta.get("label_source", "teacher"), 1.0)
+            if factor != 1.0:
+                dense_targets["weight"][entry["pos"]:entry["pos"] + span] *= factor
     return result
 
 def main(*, step_observer=None) -> None:
