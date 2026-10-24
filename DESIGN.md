@@ -846,3 +846,8 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 ### 14.17 价值网络叶子默认换 v4（task30，2026-10-23）
 
 老师叶子价值网络默认由 `value_net/v3` 改为 `value_net/v4`（编码 v2：空槽跳过、传送带免费与同类手牌聚合、公开场景/坟头标量；`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 与 `scripts/unified_panel.py` 的 `--value` 默认同步改）。依据：[value-widen.md 第 5 步](MEMORY/docs/value-widen.md)——同种子配对下白天 m150/m250 不掉（m250 L7 净 +2、L10 净 0）、夜间 96 对净 +20、泳池 L21 净 +9、L24 净 0；静态估值仍用 `value_branch1`。已知限制：全败泳池区叶值压平（修法另立 v5）；v4 不入 git，走 HF `transfer/value_v4.pt`（SHA256 回验一致）。
+
+### 14.18 价值网络叶子默认换 v5（task43，2026-10-24）
+
+老师叶子价值网络默认由 `value_net/v4` 改为 `value_net/v5`（`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE`；`unified_panel.py` 的 `--value` 默认不动，静态估值仍用 `value_branch1`）。依据（[task43 任务书 §53](MEMORY/docs/task43-value-v5-pool.md)）：全新 32 种子 L21/L22/L23/L25 各 32 对、v4 vs v5 同种子配对，四关合计胜 42 → 100（gain 67 / harm 9，合并 McNemar p = 4.3e-12，四关方向一致）；白天 / 夜间非劣通过。已知局限：同根候选分散度探针未过（top1−top2 中位差 < 0.02，排序质量存疑）；雾区 / 屋顶关未测。权重经 HF `transfer/value_v5.pt` 回验 SHA256（`8a636d33…88c3b4`）后放主检出 `value_net/v5/model.pt`，不入 git；部署在组边界切换，时机由主控定。
+

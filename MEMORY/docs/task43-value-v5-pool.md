@@ -527,6 +527,21 @@ v4 基线在 L22/L25 的低胜率（6/32、3/32）与 §45 的叶值压平一致
 
 **结论：margin 项没有修好 (a)。** v5b 的中位差 L24 微升（0.0156→0.0164）、L26 反降（0.0151→0.0132），两关仍低于 0.02；held-out 排序还略低于 v5（0.5465 vs 0.5613）。「推开成对 logit 间距」与「中位 top1−top2 差过 0.02」不是一回事——排序对里的**次优候选**同样被 margin 推高，前两名的相对差没有系统变大。v5b 候选留在 `sparse64/v5b/model.pt`（SHA `3110b7f4303f…a37718`），仅作诊断，不参与 §51 复现判据，是否进一步处置由主控裁定；生产默认仍一字未动。
 
+### 55. 采纳 v5 为生产默认叶值（主控裁定 2026-10-24 13:20，发布 13:2x）
+
+主控裁定：**采纳 v5（`artifacts/task43/sparse64/v5/model.pt`，SHA256 `8a636d33…88c3b4`）为生产默认叶值**；v5b 不采纳，留作诊断（见 §54）。
+
+**证据**（预登记修订判据，§51/§53）：
+- 新种子复现：L21/L22/L23/L25 各 32 对，v4 vs v5 同种子配对，四关合计 42 → 100（gain 67 / harm 9），合并 McNemar p = 4.3e-12，四关方向全部一致；§51 预登记三条判据全部满足。
+- 白天 / 夜间非劣（§50 判据 (c)）通过；门 (a) 分散度探针未过但照实报告、不作采纳判据（预登记修订理由见 §51）。
+- 完整性：64 种子原始证据独立审计逐项通过（§43/`audit_64.json`）；证据链 SHA 记于 `sparse64/evaluation/audit_53.json`。
+
+**发布记录**：
+- HF：`transfer/value_v5.pt` @ revision `8aff8e7b`（repo `realnewbiexvwu/pvz-agent-artifacts`），下载回验 SHA256 一致（`hf_receipt_v5.json`）。
+- 台式机主检出：新建 `/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt`，SHA256 与源一致；v4 目录未动。
+- `scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 改为 `value_net/v5/model.pt`；实验脚本里冻结的 v4 路径一律未动。`scripts/value_widen_publish.py` 参数化上传路径/提交信息、`--audit-manifest` 改可选（本机无 task30 审计清单，跳过重叠检查并在 receipt 注明 `audit_seeds_checked: false`），v4 默认行为不变。
+- 已知局限：门 (a) 分散度探针仍未过（L24/L26 top1−top2 中位差 0.0156/0.0151 < 0.02）；雾区（白天 m 系列）与屋顶关未测。部署时机由主控定：等 round 2 后台训练与晋升门禁完成后，在组边界切换。
+
 ## 问题
 
 ### 问题 3：第一轮数据的 root 也来自学生轨迹，不只是续走为学生
