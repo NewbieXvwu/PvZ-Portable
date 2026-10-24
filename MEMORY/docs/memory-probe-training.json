@@ -575,6 +575,54 @@
           "gpu": "NVIDIA GeForce RTX 5080"
         }
       ]
+    },
+    {
+      "kind": "stack8",
+      "seed": 3,
+      "arms": [
+        {
+          "mem_available_bytes": 16091820032,
+          "required_bytes": 10737418240,
+          "time_limit_seconds": 3600,
+          "start_unix": 1792811211.1676095,
+          "kind": "stack8",
+          "arm": "human",
+          "seed": 3,
+          "elapsed_seconds": 43.6149742603302,
+          "epochs": 20,
+          "best_epoch": 20,
+          "validation_hidden_logloss": 0.14454177969965684,
+          "parameters": 99331,
+          "width": 35,
+          "train_episodes": 100,
+          "validation_episodes": 20,
+          "corpus_sha256": "d60ebfd1f77d04502bd103bb5bd9ae9df47a73080f7d8dcac5ed42c0d1e02bc7",
+          "checkpoint_sha256": "5be335b61304b73934aa3939c7dcacb72fb2be44029c1eb541d3f1cf250118c5",
+          "torch_version": "2.14.0+cu132",
+          "gpu": "NVIDIA GeForce RTX 5080"
+        },
+        {
+          "mem_available_bytes": 15993225216,
+          "required_bytes": 10737418240,
+          "time_limit_seconds": 3600,
+          "start_unix": 1792811256.6084044,
+          "kind": "stack8",
+          "arm": "xray",
+          "seed": 3,
+          "elapsed_seconds": 43.748079776763916,
+          "epochs": 20,
+          "best_epoch": 11,
+          "validation_hidden_logloss": 0.0006160433287333395,
+          "parameters": 99331,
+          "width": 35,
+          "train_episodes": 100,
+          "validation_episodes": 20,
+          "corpus_sha256": "d60ebfd1f77d04502bd103bb5bd9ae9df47a73080f7d8dcac5ed42c0d1e02bc7",
+          "checkpoint_sha256": "37f07b85e8e962d53a9adb437b6b68789211c19a96761f220dad81285c080d35",
+          "torch_version": "2.14.0+cu132",
+          "gpu": "NVIDIA GeForce RTX 5080"
+        }
+      ]
     }
   ]
 }
