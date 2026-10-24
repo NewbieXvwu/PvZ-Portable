@@ -214,6 +214,12 @@ public:
 
 	// These throw a ResourceManagerException if the resource is not found
 	virtual SharedImageRef	GetImageThrow(const std::string &theId);
+
+	// task66: one image's pixels, for observation-only analysis.  -env mode loads every image
+	// size-only (task32), so nothing headless had the fog alpha to read.  This reloads that one
+	// resource with its companion alpha composed exactly as the renderer sees it and leaves the
+	// cached image, the resource groups and every observation untouched.  Caller owns the result.
+	ImageLib::Image*		LoadAnalysisImage(const std::string &theId, int *theCols, int *theRows);
 	virtual intptr_t			GetSoundThrow(const std::string &theId);
 	virtual _Font*			GetFontThrow(const std::string &theId);
 

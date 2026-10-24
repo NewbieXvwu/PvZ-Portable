@@ -583,6 +583,16 @@ static void RunEnvironment(LawnApp* app)
 			ok = !input.fail() && !path.empty() && app->mBoard != nullptr && WriteEnvironmentStateBytes(app, path);
 			minimalResponse = true;
 		}
+		else if (command == "SCREENSHOT")
+		{
+			// task66: visible runs only.  The frame is read back from the GL framebuffer inside
+			// the process, so a sleeping display or a locked desktop cannot black it out.
+			std::string path;
+			input >> std::quoted(path);
+			ok = !input.fail() && !path.empty() && visible && app->mBoard != nullptr &&
+				app->EnvironmentScreenshot(path);
+			minimalResponse = true;
+		}
 		else if (command == "ENV_PROFILE")
 		{
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"
@@ -976,8 +986,11 @@ static void RunEnvironment(LawnApp* app)
 				while (input >> extra)
 				{
 					if (extra == "conveyor_original") task.originalConveyorStart = true;
-					else if (extra == "fog_human") task.humanFogObservation = true;
-					else if (extra == "fog_xray") task.humanFogObservation = false;
+					// fog_human keeps the pre-task66 cell rule so old archives replay byte for
+					// byte; fog_human_v2 is the calibrated opacity rule (task66).
+					else if (extra == "fog_human") task.fogObservation = EnvironmentFogObservation::Cell;
+					else if (extra == "fog_human_v2") task.fogObservation = EnvironmentFogObservation::Opacity;
+					else if (extra == "fog_xray") task.fogObservation = EnvironmentFogObservation::None;
 					else parsed = false;
 				}
 			}

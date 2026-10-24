@@ -1037,3 +1037,13 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 - **课程**：`make_multiplier_tasks.FAMILIES` 追加 `('fog_user', 'fog_user', 'fog_user_l{level}_snow', (31,), 'fog')`，`CURRICULUM_LEVELS['fog_user'] = (31,)`；cell 名 `fog_user_l31_snow`，倍率阶梯从 1.0 起，沿用同一条 0.85 升档 / 0.5 降档规则。`teacher_rates.json` 的 `bases.fog_user_l31_snow = 25/32`（task67 证据）。
 - **现有 cell 不变**：新族排在 `FAMILIES` 末尾且使用独立种子块（十个旧族已占满 655,360/700,000 档宽，插槽会平移所有已发种子）。同一批源任务重建，现有 **414 个** cell 的 task_id、种子、偏移与全部复制字段逐字节相同，新增 6 个 cell（总 420）。旧族 `fog_f8` / `fog_f8p` 的清单、种子、数据与评估全部保留，`CURRICULUM_LEVELS` 仍为空 —— 它们不进课程。
 - **晋升门禁不动**：冻结面板不加雾族（改面板等于改门禁合同）。新族的进展看 qc 自己的组胜率窗口（`~/pvz-logs/curriculum_state.json` 的 `cells.fog_user_l31_snow.windows`）。
+
+### 14.25 雾可见性口径 v2：`fog_observation: human_v2`（task66，2026-10-24，AGENTS.md §8 第 4 条）
+
+旧口径 `human` 是"格值非 0 即隐藏"：它按 `mGridCelFog` 的格子判定，而 `Board::DrawFog` 画的是自带 alpha 渐变的雾图格，两者并不一致——三局人类示范里 92.2% 的僵尸-tick 被隐藏，其中 28.3% 的人眼覆盖不到一半，另有 15.9% 是"只有头露出雾面"。
+
+新口径 `human_v2` 按**实际渲染出来的合成不透明度**判定：僵尸全身采样框（`GetZombieRect()` 左右各外扩 h/4、上方 h/8，覆盖头、头饰、手持物）上 3 列 × 5 行取最小值，`< 0.925` 即视为可见；子弹按同一口径（`GetProjectileRect()` 上 3×3 取最小值）。阈值不是拍的：23 张校准图（16 档 0.20–0.95 + 3 张只有头露出 + 4 张对照）由用户标注，看得到的最高 0.900、看不到的最低 0.950，取中点 0.925，见 [task66](MEMORY/docs/task66-fog-visibility-boundary.md)。
+
+**族名而不是版本号**：`fog_observation` 现有 `human`（旧格值口径，保留）/ `human_v2`（本口径）/ `xray`（不隐藏）；缺省仍是 x-ray 且不追加 reset 尾串，所以旧任务、旧存档的重放逐位不变（实测 human/xray/None 各 36 个公开观察与改动前引擎完全一致）。`fog_amount` 观测保持原样，它是格值，供记忆与诊断使用。
+
+**影响面**：完整、lean、v2 与 C++ 学生输入走同一个 `EnvironmentZombieVisible` / `EnvironmentProjectileVisible`，不会出现两套可见性。雾区族目前不在 qc 训练集合里；task58（记忆探针）以"现行规则隐藏"作标签，换到 `human_v2` 前需要主控决定是否重新打标签。
