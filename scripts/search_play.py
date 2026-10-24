@@ -574,8 +574,14 @@ def _play(job: dict, observer=None) -> dict:
             from dataclasses import asdict
             from human_demo import replay
             demo_meta = json.loads((Path(demo_archive) / 'meta.json').read_text())
+            # Compare every field the archive recorded. A field added to TaskSpec after the
+            # demonstration was recorded (fog_observation, task53) did not exist then and must not
+            # block the start; an actual environment difference still fails replay()'s per-operation
+            # state-hash check.
+            recorded = demo_meta['environment_task']
+            current = json.loads(json.dumps(asdict(task)))
             if (demo_meta['task']['id'] != args.task_id or demo_meta['task']['deck'] != list(kw['deck']) or
-                    demo_meta['environment_task'] != json.loads(json.dumps(asdict(task)))):
+                    any(current.get(key) != value for key, value in recorded.items())):
                 raise ValueError('demonstration task, deck, seed or environment differs from the manifest')
             obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision)
             if future_seed is not None:
