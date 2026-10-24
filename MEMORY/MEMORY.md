@@ -41,6 +41,7 @@
 
 ## 历史报告（`docs/`）
 
+- [从示范中途让老师接手：12 个接手点的胜率与输局归因](docs/demo-start-states.md)
 - [课程后台管线与学生晋升门禁](docs/task49-qc-idle-pack.md)
 - [task49A 验收证据](docs/task49-A-evidence.json)
 - [CUDA 续走：设计与实测](docs/cuda-rollout-report.md)
