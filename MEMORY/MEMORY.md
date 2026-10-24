@@ -41,6 +41,9 @@
 
 ## 历史报告（`docs/`）
 
+- [WSL清理：用户20:20直接清理政策与执行结果](docs/task62-wsl-cleanup.md)
+- [HF旧归档删除状态](docs/task62-archive-index.md)
+
 - [课程后台管线与学生晋升门禁](docs/task49-qc-idle-pack.md)
 - [task49A 验收证据](docs/task49-A-evidence.json)
 - [CUDA 续走：设计与实测](docs/cuda-rollout-report.md)

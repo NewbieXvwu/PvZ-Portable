@@ -69,6 +69,8 @@
 
 ## 结果
 
+> 当前结论：用户20:20新指示已执行；旧HF归档已按要求删除，不再保留，不再上传。追加9棵工作树退役（累计42棵），清理完成并执行fstrim；最终df与保留理由见下方“最终交付”。前述盘点、配额等待和旧回验记录均为历史状态。
+
 ### 第一阶段盘点与处置提案（2026-10-24，待主控批准）
 
 本阶段只做只读盘点、分类和方案，未删除/移动/转换任何已有文件，未上传 HF，未改生产配方，未对任何 tmux pane 发指令、按键或停止/重启会话。tmux 仅 `list-panes` 读取任务归属。后续删除、压缩、工作树移除、`fstrim` 均未执行。
@@ -857,6 +859,75 @@ Filesystem      Size  Used Avail Use% Mounted on
 ```
 
 按主控要求在此暂停，等待主控；fstrim尚未执行，WSL未关闭。后续不自动恢复上传、不处理剩余两棵工作树。
+
+### 用户20:20新指示执行结果（不再归档，直接清理）
+
+**本节为当前结论，取代前面的待上传/等待配额状态。** 用户明确不要囤积，原先B类和旧帧等不再上传；HF旧归档已由主控删除并压缩历史，原归档索引现标明“已按用户要求删除，不再保留”。本轮没有HF上传操作。
+
+保留qc流水线、frames_v2、dw4i_s1、value_net v4/v5、hard/value_branch1、round_*学生，以及deploy3/cq/dw4/conveyor生产链、memprobe/replace/fogvis等在跑任务；dw5保留工作树与会话，仅清理未在用的大文件及旧产物。
+
+| 本机时间 | 步骤 | 明确路径 | df已用前 B | df已用后 B | 净减少 B | 状态与依据 |
+|---|---|---|---:|---:|---:|---|
+| 2026-10-24T20:49:37+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/v5` | 90014523392 | 87443828736 | 2570694656 | 完成：删除前实占2570493952 B；HEAD ced8ef48de953a6fe2cb8cd2841a22a09604943d 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:38+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/zones` | 87443832832 | 87150145536 | 293687296 | 完成：删除前实占293486592 B；HEAD 960737888c371d5a746369b8eb396f3ab4a9a3b4 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:38+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/cutoff` | 87150145536 | 87102750720 | 47394816 | 完成：删除前实占47218688 B；HEAD 69a8f0ed89f52a2a73a2ec2b8c281ae502969338 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:38+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/llmcand` | 87102750720 | 86935162880 | 167587840 | 完成：删除前实占167399424 B；HEAD cd4da073dc7d737632a308da5b215b60ba4d1325 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:39+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/perf` | 86935371776 | 86110072832 | 825298944 | 完成：删除前实占825106432 B；HEAD 84c02629d186f922f028af15fe72b007cecbea35 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:39+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/shovel` | 86110072832 | 86014128128 | 95944704 | 完成：删除前实占95694848 B；HEAD c7af988ac8839e66bf16ee6dcb5e2a16f3dda58f 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:39+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/vcpp` | 86014156800 | 85777301504 | 236855296 | 完成：删除前实占236691456 B；HEAD b73fd8cf979f0c240edcddfd7ad42b224f1c18b9 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:39+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/eaten` | 85777301504 | 85651533824 | 125767680 | 完成：删除前实占125562880 B；HEAD 3e59e53b5e1aa5b1160657933d4c8e11fbb950de 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:49:39+08:00 | 追加工作树退役 | `~/PvZ-search/.claude/worktrees/predeploy11` | 85651533824 | 85621694464 | 29839360 | 完成：删除前实占29638656 B；HEAD 4f4d217b1bcdd8244f8e9c45709cc0695eb07c89 已在GitHub远端引用中；无在用数据/生产入链，闲置agent仅cwd不算运行任务；git worktree remove无force，保留分支；ignored证据按20:20新指示直接删除，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/.npm/_cacache` | 85742411776 | 85739069440 | 3342336 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/.nv/ComputeCache` | 85739069440 | 85346463744 | 392605696 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/.cache/huggingface` | 85346467840 | 85284483072 | 61984768 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/.cache/pip` | 85284483072 | 85282230272 | 2252800 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/.cache/mesa_shader_cache` | 85282230272 | 85280038912 | 2191360 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/cleanup_20261015` | 85280038912 | 85221339136 | 58699776 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/PvZ-search/build` | 85221339136 | 85196787712 | 24551424 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/PvZ-Portable/build` | 85196787712 | 85172224000 | 24563712 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧缓存/构建/下载副本清理 | `~/PvZ-search/.claude/worktrees/dw5/build` | 85172224000 | 85148274688 | 23949312 | 完成：20:20批准直接清理；删除前确认无可见进程fd/maps/参数引用；构建未被Git跟踪，不上传 |
+| 2026-10-24T20:51:18+08:00 | 旧解释器缓存清理 | `~/PvZ-search/.claude/worktrees/cleanup/.pytest_cache` | 85148274688 | 85148241920 | 32768 | 完成：可再生pyc/pytest缓存，无在用引用 |
+| 2026-10-24T20:51:18+08:00 | 旧解释器缓存清理 | `~/PvZ-search/.claude/worktrees/cleanup/scripts/__pycache__` | 85148241920 | 85148073984 | 167936 | 完成：可再生pyc/pytest缓存，无在用引用 |
+| 2026-10-24T20:51:18+08:00 | 旧解释器缓存清理 | `~/PvZ-search/.claude/worktrees/cleanup/python/__pycache__` | 85148073984 | 85147844608 | 229376 | 完成：可再生pyc/pytest缓存，无在用引用 |
+| 2026-10-24T20:51:18+08:00 | 旧解释器缓存清理 | `~/PvZ-search/.claude/worktrees/dw5/scripts/__pycache__` | 85147844608 | 85147017216 | 827392 | 完成：可再生pyc/pytest缓存，无在用引用 |
+| 2026-10-24T20:51:18+08:00 | 旧解释器缓存清理 | `~/PvZ-search/.claude/worktrees/dw5/python/__pycache__` | 85147017216 | 85146677248 | 339968 | 完成：可再生pyc/pytest缓存，无在用引用 |
+| 2026-10-24T20:51:18+08:00 | APT下载缓存清理 | `/var/cache/apt/archives` | 85146677248 | 81499930624 | 3646746624 | 完成：删除已安装包的下载副本；未卸载软件、未改运行环境 |
+| 2026-10-24T20:51:19+08:00 | 旧systemd日志清理 | `/var/log/journal` | 81499930624 | 80440045568 | 1059885056 | 完成：仅journalctl vacuum已归档日志；当前打开的活动journal保留；Vacuuming done, freed 1010.7M of archived journals from /var/log/journal/e292389aabe442bf942686b428795804. |
+| 2026-10-24T20:52:08+08:00 | dw5 artifacts大文件清理 | `~/PvZ-search/.claude/worktrees/dw5/artifacts` | 80402137088 | 78132740096 | 2269396992 | 完成：逐文件删除199个≥1 MB文件，逻辑大小合计2478341055 B；无fd/maps/训练或打包进程引用；小报告、training_frames链接视图、unified_v2.json、工作树及qoder会话保留；未上传 |
+| 2026-10-24T20:52:09+08:00 | 未打开的大日志清理 | `~/pvz-logs`；`~/.qoder/logs`；`~/.codebuddy/logs`；`~/.codex/log` | 78132744192 | 77548699648 | 584044544 | 完成：按明确文件清单删除213个≥1 MB旧.log/.out文件，逻辑大小合计583491589 B；4个被fd打开的日志保留，pipeline及会话JSONL/SQLite未动；完整删除清单见本节明细 |
+| 2026-10-24T20:53:49+08:00 | 旧导入暂存清理 | `~/pvz-v2fill` | 77553176576 | 77474250752 | 78925824 | 完成：历史v2补帧导入输出，无进程引用或符号链接入链；正式frames_v2不动，按20:20直接清理，不上传 |
+| 2026-10-24T20:53:49+08:00 | 旧安装下载副本清理 | `~/debs` | 77474250752 | 77464092672 | 10158080 | 完成：离线deb下载副本，不卸载已安装软件，无在用引用 |
+| 2026-10-24T20:54:06+08:00 | 主检出未在用的旧实验产物清理 | `~/PvZ-search/artifacts` | 77464096768 | 76934660096 | 529436672 | 完成：按明确子路径删除1340个ignored旧实验目录/文件，删除前du合计530776064 B；保护frames_v2和dw4i_s1/value_net v4 v5/hard value_branch1，主检出tracked变动不动；无生产链接入链和运行引用；详单见task62-deleted-paths.tsv；保留额外项3 |
+| 2026-10-24T20:54:06+08:00 | 生产源工作树的旧构建清理 | `~/PvZ-search/.claude/worktrees/dw4/build` | 76934774784 | 76910825472 | 23949312 | 完成：删除前实占23949312 B；仅清理未被使用的build输出，不触碰artifacts链接链、源代码或工作树；当前运行引擎为deploy3 |
+| 2026-10-24T20:54:06+08:00 | 生产源工作树的旧构建清理 | `~/PvZ-search/.claude/worktrees/conveyor/build` | 76910825472 | 76886900736 | 23924736 | 完成：删除前实占23924736 B；仅清理未被使用的build输出，不触碰artifacts链接链、源代码或工作树；当前运行引擎为deploy3 |
+| 2026-10-24T20:57:16+08:00 | 本任务归档暂存/清单清理 | `~/task62-archive-stage` | 76916670464 | 76916666368 | 4096 | 完成：所有旧HF归档已由主控删除；不再上传或恢复，清除本任务临时归档、文件级清单和旧上传脚本；结果与删除路径保留在Git文档 |
+| 2026-10-24T20:57:16+08:00 | 本任务归档暂存/清单清理 | `~/.task62-cleanup-state` | 76916666368 | 76806270976 | 110395392 | 完成：所有旧HF归档已由主控删除；不再上传或恢复，清除本任务临时归档、文件级清单和旧上传脚本；结果与删除路径保留在Git文档 |
+| 2026-10-24T20:57:16+08:00 | 本任务临时盘点副本清理 | `/tmp/task62-conveyor-broken.txt`；`/tmp/task62-production-broken-links.txt`；`/tmp/task62-production-target-roots.json`；`/tmp/task62-cache-log-du.txt`；`/tmp/task62-system-du.txt`；`/tmp/task62-dw5-big.json`；`/tmp/task62-artifacts-du.txt`；`/tmp/task62-wt-plan.json`；`/tmp/task62-live.json`；`/tmp/task62-current-du.txt`；`/tmp/task62-finalize.py`；`/tmp/task62-write-report.py`；`/tmp/task62-relations.json`；`/tmp/task62-link-groups.json`；`/tmp/task62-relations.py`；`/tmp/task62-files.json`；`/tmp/task62-code-refs.json`；`/tmp/task62-worktrees.json`；`/tmp/task62-remote.json`；`/tmp/task62-git.py`；`/tmp/task62-audit.py`；`/tmp/task62-state-paths.json`；`/tmp/task62-proc.json`；`/tmp/task62-du-inventory.json` | 76806270976 | 76806270976 | 0 | 完成：删除24个临时盘点/旧操作脚本，逻辑大小合计370686987 B；必要执行结果已写入任务书，避免留下重复清单 |
+| 2026-10-24T21:01:02+08:00 | 最终fstrim | `/` | 76807639040 | 76912017408 | -104378368 | 完成：sudo -n fstrim -v / 成功：78.4 GiB (84223389696 bytes) trimmed；前df取自20:57:42采样，生产并发会影响后df；trim字节不等于本轮删除字节 |
+
+
+
+#### 最终交付（2026-10-24T21:01:02+08:00）
+
+- **已完成本轮可清理项，没有待上传项，没有进行任何新上传。** HF旧归档均以主控通知为准，已按用户要求删除、不再保留；原恢复命令已从[归档索引](task62-archive-index.md)撤下。
+- 本轮追加退役 **9棵**：`v5`、`zones`、`cutoff`、`llmcand`、`perf`、`shovel`、`vcpp`、`eaten`、`predeploy11`。连同此前33棵累计 **42棵**，原35棵批准清单现全部完成。全部使用 `git worktree remove`，未删分支；删除前逐棵确认HEAD在GitHub远端引用中。`shovel` 原远端引用不存在，已先推送 `origin/shovel`（HEAD `c7af988ac8839e66bf16ee6dcb5e2a16f3dda58f`）再退役。
+- 原“待上传未删”的v5/zones源工作树已直接删除；六组旧B目录与旧 `artifacts/student/frames` 也均确认不存在。旧归档副本、暂存、文件级大清单及旧上传脚本已清除。
+- dw5保留工作树和qoder会话，删除artifacts内 **199个≥1 MB文件**（逻辑合计2,478,341,055 B；共享硬链接使实占释放量更小），最终扫描未剩≥1 MB普通文件；小报告、`training_frames`链接视图和`unified_v2.json`保留。
+- 删除 **213个未打开的大日志**、未在用的旧构建/解释器缓存、CUDA/npm/HF/pip下载缓存、APT下载副本和已归档systemd日志；另清理主检出1340个无在用引用的ignored旧实验子路径。逐文件/子路径及删除前大小见[删除明细](task62-deleted-paths.tsv)，每批df见上表；未将任何数据、模型或日志内容提交到Git。
+- 保护核验通过：生产4个模型与deploy3引擎SHA256/字节数未变；**83,030个正式共享文件**的device/inode/字节数逐项一致；dw4与conveyor训练链接检查均为0断链；主检出tracked diff指纹未变，所有原有本地分支保留。
+- 保留工作树：`cleanup`、`cq`、`deploy3`、`dw4`、`conveyor`、`dw5`、`memprobe`、`replace`；本轮期间新建的 **redeploy** 已有3处tracked修改、新脚本和task70构建/测试产物，属于在跑任务，保留。两个主检出保留。没有触碰fogvis等其他在跑任务。
+- 主检出 `artifacts/hard/c6roofl41r7m100_48` 当时有屋顶评估进程打开`games.jsonl`，保留；`artifacts/adventure2_level7`、`artifacts/multiterrain`含tracked结论，保留。打开的 `qc.out` 及3个qoder日志保留；qc流水线、round_*学生、frames_v2、生产模型、生产链接链、task58和replace均未清理。
+- `sudo -n fstrim -v /` 成功返回 **`/: 78.4 GiB (84223389696 bytes) trimmed`**。本轮df已用净减少 **13,095,514,112 B（12.196 GiB）**；相对第二阶段首次删除前168,604,545,024 B，净减少 **85.395 GiB**。这些是采样间df净变化，含并发生产增长；trim范围也不等于删除量。未关闭WSL、未操作tmux会话。
+
+当前df（2026-10-24T21:01:02+08:00，生产仍会继续改变数值）：
+
+```text
+Filesystem         1B-blocks        Used    Available Use% Mounted on
+/dev/sdd       1081101176832 76912017408 949196804096   8% /
+
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sdd       1007G   72G  885G   8% /
+```
 
 ## 问题
 
