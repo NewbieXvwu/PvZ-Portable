@@ -578,6 +578,16 @@ static void RunEnvironment(LawnApp* app)
 			ok = !input.fail() && !path.empty() && app->mBoard != nullptr && WriteEnvironmentStateBytes(app, path);
 			minimalResponse = true;
 		}
+		else if (command == "SCREENSHOT")
+		{
+			// task66: visible runs only.  The frame is read back from the GL framebuffer inside
+			// the process, so a sleeping display or a locked desktop cannot black it out.
+			std::string path;
+			input >> std::quoted(path);
+			ok = !input.fail() && !path.empty() && visible && app->mBoard != nullptr &&
+				app->EnvironmentScreenshot(path);
+			minimalResponse = true;
+		}
 		else if (command == "ENV_PROFILE")
 		{
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"

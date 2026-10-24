@@ -188,6 +188,8 @@ public:
 	int						mDisplayHeight;
 
 	Rect					mPresentationRect;
+	std::string					mPendingScreenImage;
+	bool						mScreenImageTaken = false;
 	int						mRefreshRate;
 	int						mMillisecondsPerFrame;
 
@@ -217,6 +219,15 @@ public:
 	~GLInterface() override;
 
 	GLImage*				GetScreenImage();
+
+	// task66: write the next presented frame (the 4:3 letterboxed game area only) as a PNG.
+	// The read has to happen between the draw and the swap -- Flush() clears the back buffer
+	// right after swapping -- so the request is queued here and served inside Flush().
+	// Reading the framebuffer inside the process is also the only way to get a picture of the
+	// board when the desktop cannot be captured (asleep display, locked session, fullscreen).
+	void					RequestScreenImage(const std::string& thePath);
+	bool					ScreenImageTaken() const { return mScreenImageTaken; }
+	bool					SaveScreenImage(const std::string& thePath, int* theWidth, int* theHeight);
 	void					UpdateViewport();
 	int						Init(bool IsWindowed);
 	bool					Redraw(Rect* theClipRect = nullptr);

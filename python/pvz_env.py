@@ -599,6 +599,12 @@ class PvZEnv:
             raise RuntimeError("human input requires a visible demonstration session")
         return response
 
+    def screenshot(self, path: str | Path) -> None:
+        """Save the presented frame as a PNG (visible runs only, task66 calibration)."""
+        response = self._command(f'SCREENSHOT "{Path(path).resolve()}"')
+        if not response.get("ok"):
+            raise RuntimeError(f"environment could not take a screenshot: {response}")
+
     def privileged_state(self) -> dict[str, Any]:
         response = self._command("PRIV")
         if response.get("observation") is None:

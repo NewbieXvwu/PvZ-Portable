@@ -32,6 +32,7 @@
 #include "graphics/Graphics.h"
 #include "graphics/MemoryImage.h"
 #include "SexyAppBase.h"
+#include "imagelib/ImageLib.h"
 #include <cstdlib>
 #include <cstring>
 #include <mutex>
@@ -1156,6 +1157,42 @@ void GLInterface::Remove3DData(MemoryImage* theImage)
 
 GLImage* GLInterface::GetScreenImage() { return mScreenImage.get(); }
 
+bool GLInterface::SaveScreenImage(const std::string& thePath, int* theWidth, int* theHeight)
+{
+	int aDrawableWidth = 0, aDrawableHeight = 0;
+	SDL_GL_GetDrawableSize((SDL_Window*)mApp->mWindow, &aDrawableWidth, &aDrawableHeight);
+	const Rect& aRect = mPresentationRect;
+	if (aDrawableWidth <= 0 || aDrawableHeight <= 0 || aRect.mWidth <= 0 || aRect.mHeight <= 0)
+		return false;
+
+	std::vector<unsigned char> aPixels(static_cast<size_t>(aDrawableWidth) * aDrawableHeight * 4);
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
+	// GLES2 has no glReadBuffer: the read always comes from the default framebuffer's colour
+	// attachment, which is the frame the last DrawDirtyStuff painted.
+	glReadPixels(0, 0, aDrawableWidth, aDrawableHeight, GL_RGBA, GL_UNSIGNED_BYTE, aPixels.data());
+
+	ImageLib::Image anImage;
+	anImage.mWidth = aRect.mWidth;
+	anImage.mHeight = aRect.mHeight;
+	anImage.mBits = std::make_unique<uint32_t[]>(static_cast<size_t>(aRect.mWidth) * aRect.mHeight);
+	for (int y = 0; y < aRect.mHeight; ++y)
+	{
+		// glReadPixels counts rows from the bottom; the presentation rect is in the same frame.
+		const int aSourceRow = aDrawableHeight - 1 - (aRect.mY + y);
+		const unsigned char* aSource = aPixels.data() +
+			(static_cast<size_t>(aSourceRow) * aDrawableWidth + aRect.mX) * 4;
+		uint32_t* aDestination = anImage.mBits.get() + static_cast<size_t>(y) * aRect.mWidth;
+		for (int x = 0; x < aRect.mWidth; ++x)
+			aDestination[x] = static_cast<uint32_t>(aSource[x * 4]) |
+				(static_cast<uint32_t>(aSource[x * 4 + 1]) << 8) |
+				(static_cast<uint32_t>(aSource[x * 4 + 2]) << 16) |
+				(static_cast<uint32_t>(aSource[x * 4 + 3]) << 24);
+	}
+	if (theWidth != nullptr) *theWidth = aRect.mWidth;
+	if (theHeight != nullptr) *theHeight = aRect.mHeight;
+	return ImageLib::WritePNGImage(thePath, &anImage);
+}
+
 void GLInterface::UpdateViewport()
 {
 	int vx = 0, vy = 0, vw, vh;
@@ -1280,9 +1317,21 @@ bool GLInterface::PreDraw()
 	return true;
 }
 
+void GLInterface::RequestScreenImage(const std::string& thePath)
+{
+	mPendingScreenImage = thePath;
+	mScreenImageTaken = false;
+}
+
 void GLInterface::Flush()
 {
 	gNumVertices = 0;
+	if (!mPendingScreenImage.empty())
+	{
+		// Still the back buffer here: the swap below is what destroys it.
+		mScreenImageTaken = SaveScreenImage(mPendingScreenImage, nullptr, nullptr);
+		mPendingScreenImage.clear();
+	}
 #ifdef __SWITCH__
 	eglSwapBuffers(mApp->mWindow, mApp->mSurface);
 #else

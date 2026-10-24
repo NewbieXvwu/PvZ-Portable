@@ -254,6 +254,7 @@ public:
 	bool							EnvironmentShovel(int col, int row);
 	void							EnvironmentWait(int ticks);
 	void							EnvironmentPresent();
+	bool							EnvironmentScreenshot(const std::string& thePath);
 	void EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& theState);
 	EnvironmentWaitEvents::Result EnvironmentWaitUntil(int ticks, int condition);
 	bool							EnvironmentTerminal() const;

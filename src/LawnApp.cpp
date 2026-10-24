@@ -59,6 +59,7 @@
 #include "Lawn/Widget/AwardScreen.h"
 #include "Lawn/Widget/TitleScreen.h"
 #include "imagelib/ImageLib.h"
+#include "graphics/GLInterface.h"
 #include "Lawn/Widget/StoreScreen.h"
 #include "Lawn/Widget/CheatDialog.h"
 #include "Lawn/Widget/GameSelector.h"
@@ -1534,6 +1535,17 @@ void LawnApp::EnvironmentWait(int ticks)
 // -env-visible only: draw the board so a human can watch the policy play. Headless runs never get here.
 // PVZ_ENV_RENDER_EVERY = logic ticks per drawn frame (default 1), PVZ_ENV_RENDER_MS = pause per frame
 // (default 10 ms, i.e. normal game speed at 1 tick per frame).
+bool LawnApp::EnvironmentScreenshot(const std::string& thePath)
+{
+	if (mHeadlessMode || !mBoard) return false;
+	// Force a full repaint so the picture is this tick and not a stale region, then let the
+	// queued request be served inside the draw's own Flush (the only moment the frame exists).
+	mGLInterface->RequestScreenImage(thePath);
+	mBoard->MarkAllDirty();
+	DrawDirtyStuff();
+	return mGLInterface->ScreenImageTaken();
+}
+
 void LawnApp::EnvironmentPresent()
 {
 	static const int every = std::max(1, std::atoi(std::getenv("PVZ_ENV_RENDER_EVERY") ? std::getenv("PVZ_ENV_RENDER_EVERY") : "1"));
