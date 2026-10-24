@@ -48,4 +48,17 @@
   5. 引擎内 branch snapshot：同一进程内存态，不跨引擎，无兼容问题。
   6. Recorder 新录的档本来就记 `executable_sha256`，将来换引擎自动走第 1 条的选择逻辑。
 
+- [B4] 部署清单（由主控在组边界执行；本任务未动 qc/cq/deploy3）：
+  1. **前置**：等旧 qc 在组边界自然退出（或主控确认退出），清理组间停止标志。当前生产 qc 从 cq 工作树跑：`--executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build/pvz-portable`（SHA256 `b642614f...`，engine src 与 deploy3 2b743c62 完全一致，已验证 `git diff 2b743c62 c84ad7d1 -- src/` 为空）。
+  2. **引擎切换**：命令里 `--executable` 换成 `/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/build/pvz-portable`（SHA256 `16989f23...`）。一步重启命令（沿用现行参数，仅换 engine 与 scripts 树；workers=16 维持现行）：
+     ```bash
+     /usr/bin/tmux kill-session -t qc   # 仅在旧控制器已结束后
+     /usr/bin/tmux new-session -d -s qc '/usr/bin/env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/scripts/curriculum_queue.py --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/artifacts/stage4/multiplier_panel.json --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/build/pvz-portable --state /home/newbiexvwu/pvz-logs/curriculum_state.json --log /home/newbiexvwu/pvz-logs/curriculum.log --out /home/newbiexvwu/PvZ-search/artifacts/hard --frames /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2 --recipe /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/recipes/dw4i.json --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --resource-dir /home/newbiexvwu/.cache/pvz-research-resources 2>&1 | /usr/bin/tee -a /home/newbiexvwu/pvz-logs/qc.out'
+     ```
+     注意：现行 qc 命令没有显式 --state/--log/--out/--frames/--recipe/--rollout-policy 等（控制器有默认值），主控按现行命令只替换 scripts 树、--manifest、--executable 三处即可；上面是全参数版本供参考。
+  3. **新 multiplier_panel**：redeploy 树 `artifacts/stage4/multiplier_panel.json`（426 任务 = 旧 420 逐项相同 + fog_user_v2 六档；generation_audit 已更新，种子扫描 258,874 份清单 280,196 种子重叠 0）。旧 fog_user 六档仍在清单里（数据可追溯），只是 SUPERSEDED 不再排新局。
+  4. **teacher_rates**：`~/pvz-logs/teacher_rates.json` 的 `bases` 加 `"fog_user_v2_l31_snow": {"wins": <B3 实测>, "games": 32, "model": "dw4i_s1 + v4", "source": "T70"}`（数字见 artifacts/task70/cold/cold_start.json；32 局 deploy4 老师冷启动，种子 49_100_000..31，与训练段不相交）。
+  5. **回滚**：tmux qc kill → 恢复现行命令（cq 树 + cq 引擎 + 旧清单路径不变，curriculum_state.json 里 fog_user_v2 的 cell 留着无害，控制器下次 reconcile 会按当时清单再处理）→ 重启。fog_user 旧族清单/数据/种子从未动，回滚即回到 task68 状态。
+  6. **示范档**（Mac 侧，主控执行）：deploy4 上线后若要用 demo 档做 DAgger 开局/whatif，先 `human_demo.py verify` 试跑；报 state hash differs 就用 deploy4 `human_demo --rebaseline` 出新目录（源目录不动），replay 会按 executable_sha256 自动选校验方式，不会静默跳过。
+
 ## 问题
