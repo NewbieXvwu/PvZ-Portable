@@ -115,7 +115,7 @@ class HumanDemoTest(unittest.TestCase):
                                        frames_label='demo', dagger_beta=1.0, rollout_policy=checkpoint,
                                        min_gap=0, per_card=1, halving=False, samples=1, horizon=60)
                 with patch.dict(search_play._W, dict(env=env, fast=net, vnet=ValueNet(width=8).eval()), clear=True), \
-                     patch.object(search_play, 'MAX_ACTIONS', 1), patch.object(search_play, '_static_frames', return_value=[]):
+                     patch.object(search_play, 'MAX_ACTIONS', 1), patch.object(search_play, '_static_scores', return_value=[]):
                     result = search_play._play(dict(args=args, seed=271, arm='fast_search'))
                 self.assertEqual(result['searched'], 1)
                 self.assertEqual(result['demo_candidate_added'], 1)
