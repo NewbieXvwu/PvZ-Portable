@@ -1030,6 +1030,32 @@ int	ResourceManager::GetNumResources(const std::string &theGroup)
 	return GetNumImages(theGroup) + GetNumSounds(theGroup) + GetNumFonts(theGroup);
 }
 
+ImageLib::Image* ResourceManager::LoadAnalysisImage(const std::string &theId, int *theCols, int *theRows)
+{
+	ResMap::iterator anItr = mImageMap.find(theId);
+	if (anItr == mImageMap.end())
+		return nullptr;
+
+	ImageRes *aRes = (ImageRes*)anItr->second.get();
+	if (aRes->mFromProgram)
+		return nullptr;
+
+	// Only the pixels are wanted.  Everything the simulation reads -- the manifest, the groups,
+	// the cached image -- stays exactly as it was, so nothing else in the process can observe
+	// that this ran.  The companion alpha file is found the same way the renderer finds it
+	// (ImageLib::GetImage's auto-find), which is how IMAGE_FOG picks up images/fog_.jpg.
+	const bool aSizeOnly = ImageLib::gSizeOnly;
+	ImageLib::gSizeOnly = false;
+	ImageLib::Image* anImage = ImageLib::GetImage(aRes->mPath, aRes->mAutoFindAlpha);
+	ImageLib::gSizeOnly = aSizeOnly;
+
+	if (anImage == nullptr)
+		return nullptr;
+	*theCols = aRes->mCols;
+	*theRows = aRes->mRows;
+	return anImage;
+}
+
 SharedImageRef ResourceManager::GetImage(const std::string &theId)
 {
 	ResMap::iterator anItr = mImageMap.find(theId);

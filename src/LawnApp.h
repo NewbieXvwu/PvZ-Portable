@@ -261,6 +261,11 @@ public:
 	std::string					EnvironmentLeanObservation();
 	int EnvironmentFogAmount(int row, int col) const;
 	bool EnvironmentFogMasked() const;
+	float EnvironmentFogOpacityAt(int theX, int theY) const;
+	Rect EnvironmentZombieFogBox(const class Zombie* zombie) const;
+	float EnvironmentZombieFogOpacity(const class Zombie* zombie, float* theHeadOpacity = nullptr,
+		float* theBodyOpacity = nullptr) const;
+	bool EnvironmentZombieCellFogHidden(const class Zombie* zombie) const;
 	bool EnvironmentZombieVisible(const class Zombie* zombie) const;
 	bool EnvironmentVisibleEnemies() const;
 	std::string                     EnvironmentDeckOptions();

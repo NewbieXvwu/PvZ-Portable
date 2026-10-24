@@ -58,6 +58,7 @@
 #include "PvzpLib/PvzpParticle.h"
 #include "Lawn/Widget/AwardScreen.h"
 #include "Lawn/Widget/TitleScreen.h"
+#include "imagelib/ImageLib.h"
 #include "Lawn/Widget/StoreScreen.h"
 #include "Lawn/Widget/CheatDialog.h"
 #include "Lawn/Widget/GameSelector.h"
@@ -1645,11 +1646,171 @@ bool LawnApp::EnvironmentFogMasked() const
 	return mEnvironmentTaskSpec.humanFogObservation && mBoard && mBoard->StageHasFog();
 }
 
+// task66: the fog a zombie actually stands in, measured the way Board::DrawFog paints it.
+//
+// DrawFog draws one IMAGE_FOG cel per fog cell: 1680x190, 8 shapes (resources.xml cols="8"),
+// at (x*80 + mFogOffset - 15, y*85 + 20), the last fog column drawn twice (x and x+80).  It
+// tints the cel with SetColor(..., aFadeAmount) under SetColorizeImages(true), so the shader's
+// TEX2D * v_color yields texelAlpha * aFadeAmount / 255, and DRAWMODE_NORMAL blends it with
+// SRC_ALPHA / ONE_MINUS_SRC_ALPHA.  aMotion only feeds aColorVariant / aLightnessVariant (the
+// cel's RGB), never the alpha, so the animation cannot move this number.
+//
+// The cel's own alpha runs from 0 at its edges to ~190/255 in the middle, and neighbouring
+// cells overlap (80 px apart, 210 px wide).  That is why the leftmost fog column can read 200
+// in mGridCelFog and still be almost transparent on screen.  So the quantity that matches the
+// eye is the composite alpha at the zombie, not the cell value.
+namespace
+{
+struct FogAlphaField
+{
+	bool aTried = false;
+	bool aAvailable = false;
+	int aWidth = 0;
+	int aHeight = 0;
+	int aCols = 1;
+	int aRows = 1;
+	std::vector<unsigned char> aAlpha;  // row-major, aWidth * aHeight, 0 = clear, 255 = opaque
+};
+
+const FogAlphaField& FogAlpha(const LawnApp* theApp)
+{
+	static FogAlphaField aField;
+	if (aField.aTried)
+		return aField;
+	aField.aTried = true;
+
+	// IMAGE_FOG, not IMAGE_FOG_SOFTWARE: the software cel is only used when the app is not 3D
+	// accelerated (DrawFog's !aIs3DAccelerated branch), which never happens in this port's
+	// windowed or headless runs, and the two images have different geometry (3 columns, +10/+3
+	// offset, different size).  The demo screenshots the threshold is calibrated against are
+	// the 3D-accelerated ones, so that is the geometry to model.
+	int aCols = 1;
+	int aRows = 1;
+	ImageLib::Image* anImage = theApp->mResourceManager->LoadAnalysisImage("IMAGE_FOG", &aCols, &aRows);
+	if (anImage == nullptr)
+	{
+		std::cerr << "task66: IMAGE_FOG has no pixels; fog opacity falls back to the cell rule\n";
+		return aField;
+	}
+
+	aField.aWidth = anImage->mWidth;
+	aField.aHeight = anImage->mHeight;
+	aField.aCols = aCols;
+	aField.aRows = aRows;
+	const int aSize = aField.aWidth * aField.aHeight;
+	aField.aAlpha.resize(static_cast<size_t>(aSize));
+	const uint32_t* aBits = anImage->GetBits();
+	for (int i = 0; i < aSize; ++i)
+		aField.aAlpha[static_cast<size_t>(i)] = static_cast<unsigned char>((aBits[i] >> 24) & 0xFF);
+	delete anImage;
+	aField.aAvailable = true;
+	return aField;
+}
+}
+
+float LawnApp::EnvironmentFogOpacityAt(int theX, int theY) const
+{
+	if (!mBoard || !mBoard->StageHasFog()) return 0.0f;
+	const FogAlphaField& aField = FogAlpha(this);
+	if (!aField.aAvailable) return 1.0f;
+
+	const int aCelWidth = aField.aWidth / aField.aCols;
+	const int aCelHeight = aField.aHeight / aField.aRows;
+	float aTransmittance = 1.0f;
+	for (int x = 0; x < MAX_GRID_SIZE_X; ++x)
+	{
+		// DrawImageCel takes ints, so the float position truncates: reproduce that exactly.
+		const int aPosX = static_cast<int>(x * 80 + mBoard->mFogOffset - 15);
+		for (int y = 0; y <= MAX_GRID_SIZE_Y; ++y)
+		{
+			const int aFade = mBoard->mGridCelFog[x][y];
+			if (aFade == 0) continue;
+			const int aPosY = y * 85 + 20;
+			if (theY < aPosY || theY >= aPosY + aCelHeight) continue;
+
+			// Same shape choice as DrawFog; row 6 reuses row 0's shape.
+			const int aCelCol = mBoard->mGridCelLook[x][y % MAX_GRID_SIZE_Y] % 8;
+			const int aCopies = x == MAX_GRID_SIZE_X - 1 ? 2 : 1;
+			for (int aCopy = 0; aCopy < aCopies; ++aCopy)
+			{
+				const int aLeft = aPosX + aCopy * 80;
+				if (theX < aLeft || theX >= aLeft + aCelWidth) continue;
+				const int aTexel = aCelCol * aCelWidth + (theX - aLeft);
+				const unsigned char aAlpha = aField.aAlpha[static_cast<size_t>((theY - aPosY) * aField.aWidth + aTexel)];
+				if (aAlpha == 0) continue;
+				const float aCoverage = (aAlpha / 255.0f) * (aFade / 255.0f);
+				aTransmittance *= 1.0f - aCoverage;
+			}
+		}
+	}
+	return 1.0f - aTransmittance;
+}
+
+Rect LawnApp::EnvironmentZombieFogBox(const Zombie* zombie) const
+{
+	// The collision box is the torso and head -- 42 x 115 for a basic zombie -- but the drawn
+	// zombie is wider and starts higher: the sprite is 120 x 120 around that box, hats and
+	// headwear sit on top of it, and arms and held objects reach out to the sides.  A person
+	// recognises a zombie from any of those parts, and the fog's upper edge is a soft gradient,
+	// so a body-only box misses exactly the case that started this task: a head above the fog
+	// line while the torso is buried.
+	const Rect aBody = const_cast<Zombie*>(zombie)->GetZombieRect();
+	const int aPadX = aBody.mHeight / 4;
+	const int aPadTop = aBody.mHeight / 8;
+	return Rect(aBody.mX - aPadX, aBody.mY - aPadTop,
+		aBody.mWidth + 2 * aPadX, aBody.mHeight + aPadTop);
+}
+
+// 3 columns x 5 rows over the fog box; the top two rows are the head band (head, hat, and the
+// raised part of a held object), the bottom three the body band.  Reported separately so a
+// "only the head shows" tick can be told apart from "nothing shows".
+static constexpr int FOG_GRID_COLS = 3;
+static constexpr int FOG_GRID_ROWS = 5;
+static constexpr int FOG_GRID_HEAD_ROWS = 2;
+
+float LawnApp::EnvironmentZombieFogOpacity(const Zombie* zombie, float* theHeadOpacity,
+	float* theBodyOpacity) const
+{
+	if (!mBoard || !mBoard->StageHasFog())
+	{
+		if (theHeadOpacity != nullptr) *theHeadOpacity = 0.0f;
+		if (theBodyOpacity != nullptr) *theBodyOpacity = 0.0f;
+		return 0.0f;
+	}
+	const Rect aBox = EnvironmentZombieFogBox(zombie);
+	float aClearest = 1.0f;
+	float aHeadClearest = 1.0f;
+	float aBodyClearest = 1.0f;
+	for (int aRow = 0; aRow < FOG_GRID_ROWS; ++aRow)
+	{
+		const int y = aBox.mY + (2 * aRow + 1) * aBox.mHeight / (2 * FOG_GRID_ROWS);
+		for (int aCol = 0; aCol < FOG_GRID_COLS; ++aCol)
+		{
+			const int x = aBox.mX + (2 * aCol + 1) * aBox.mWidth / (2 * FOG_GRID_COLS);
+			const float aOpacity = EnvironmentFogOpacityAt(x, y);
+			aClearest = std::min(aClearest, aOpacity);
+			if (aRow < FOG_GRID_HEAD_ROWS)
+				aHeadClearest = std::min(aHeadClearest, aOpacity);
+			else
+				aBodyClearest = std::min(aBodyClearest, aOpacity);
+		}
+	}
+	if (theHeadOpacity != nullptr) *theHeadOpacity = aHeadClearest;
+	if (theBodyOpacity != nullptr) *theBodyOpacity = aBodyClearest;
+	return aClearest;
+}
+
+bool LawnApp::EnvironmentZombieCellFogHidden(const Zombie* zombie) const
+{
+	if (!mBoard || !mBoard->StageHasFog()) return false;
+	const int col = std::clamp(static_cast<int>(std::floor((zombie->mPosX - 40.0) / 80.0)), 0, 8);
+	return EnvironmentFogAmount(zombie->mRow, col) > 0;
+}
+
 bool LawnApp::EnvironmentZombieVisible(const Zombie* zombie) const
 {
 	if (!EnvironmentFogMasked()) return true;
-	const int col = std::clamp(static_cast<int>(std::floor((zombie->mPosX - 40.0) / 80.0)), 0, 8);
-	return EnvironmentFogAmount(zombie->mRow, col) == 0;
+	return !EnvironmentZombieCellFogHidden(zombie);
 }
 
 bool LawnApp::EnvironmentVisibleEnemies() const
@@ -2093,7 +2254,24 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"ice_trap\":" << zombie->mIceTrapCounter << ",\"has_head\":" << (zombie->mHasHead ? "true" : "false")
 				<< ",\"has_arm\":" << (zombie->mHasArm ? "true" : "false") << ",\"has_object\":" << (zombie->mHasObject ? "true" : "false")
 				<< ",\"is_eating\":" << (zombie->mIsEating ? "true" : "false") << ",\"target_col\":" << zombie->mTargetCol
-				<< ",\"target_row\":" << zombie->mTargetRow << '}';
+				<< ",\"target_row\":" << zombie->mTargetRow;
+			if (privileged && mBoard->StageHasFog())
+			{
+				// task66 diagnostics: the composite fog alpha over the zombie in permille (0 = clear,
+				// 1000 = opaque), the same for its head band only, the sampling box, and the verdict
+				// of the pre-task66 cell rule.  All of it only ever reaches the privileged stream, so
+				// no policy arm and no public frame changes.
+				float aHeadOpacity = 0.0f;
+				float aBodyOpacity = 0.0f;
+				const float aOpacity = EnvironmentZombieFogOpacity(zombie, &aHeadOpacity, &aBodyOpacity);
+				const Rect aBox = EnvironmentZombieFogBox(zombie);
+				out << ",\"fog_opacity\":" << static_cast<int>(std::lround(aOpacity * 1000.0f))
+					<< ",\"fog_head_opacity\":" << static_cast<int>(std::lround(aHeadOpacity * 1000.0f))
+					<< ",\"fog_body_opacity\":" << static_cast<int>(std::lround(aBodyOpacity * 1000.0f))
+					<< ",\"fog_box\":[" << aBox.mX << ',' << aBox.mY << ',' << aBox.mWidth << ',' << aBox.mHeight << ']'
+					<< ",\"fog_cell_hidden\":" << (EnvironmentZombieCellFogHidden(zombie) ? "true" : "false");
+			}
+			out << '}';
 	}
 	out << "],\"coins\":[";
 	first = true;
@@ -2177,7 +2355,21 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		// Loss attribution is diagnostic only; it never reaches either policy arm.
 		if (mBoard->StageHasFog())
 		{
-			out << ",\"fog_loss\":";
+			// task66: the raw inputs of the fog geometry, so a second implementation can
+			// reproduce EnvironmentFogOpacityAt from the resource instead of trusting it.
+			out << ",\"fog_offset\":" << mBoard->mFogOffset << ",\"fog_look\":[";
+			for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
+			{
+				if (row) out << ',';
+				out << '[';
+				for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
+				{
+					if (col) out << ',';
+					out << mBoard->mGridCelLook[col][row];
+				}
+				out << ']';
+			}
+			out << "],\"fog_loss\":";
 			bool found = false;
 			for (Zombie* zombie : mBoard->mZombies)
 				if (!zombie->mDead && zombie->mFromWave == Zombie::ZOMBIE_WAVE_WINNER)
