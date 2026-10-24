@@ -27,7 +27,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import PlayerProfileContext, TaskSpec
+from pvz_env import PlayerProfileContext, TaskSpec, fog_diagnostics
 from pvz_event_env import EventWaitEnv
 
 DEFAULT_RESOURCE_DIR = Path(os.environ.get(
@@ -183,22 +183,24 @@ def capture(selection: Path, out_dir: Path, resource_dir: Path, executable: Path
                         continue
                     item = targets[tick]
                     state = env.privileged_state()
+                    diagnostics = fog_diagnostics(state)
                     zombie = next((z for z in state['zombies'] if z['id'] == item['id']), None)
                     if zombie is None:
                         raise RuntimeError(f'{archive}: zombie {item["id"]} gone at tick {tick}')
                     if tick in expected:
                         want = sorted(expected[tick])
-                        got = sorted((z['id'], z['row'], z['type'], z['x'], z['fog_opacity'])
+                        got = sorted((z['id'], z['row'], z['type'], z['x'],
+                                      diagnostics[z['id']]['opacity'])
                                      for z in state['zombies'] if z['on_board'])
                         if got != want:
                             raise RuntimeError(f'{archive}: zombie table differs at tick {tick}: '
                                                f'{got} != {want}')
+                    detail = diagnostics[item['id']]
                     path = out_dir / f"{item['index']:02d}.png"
                     env.screenshot(path)
-                    shots.append(dict(item, screenshot=str(path), box=zombie['fog_box'],
-                                      opacity=zombie['fog_opacity'],
-                                      head=zombie['fog_head_opacity'],
-                                      body=zombie['fog_body_opacity']))
+                    shots.append(dict(item, screenshot=str(path), box=detail['box'],
+                                      opacity=detail['opacity'], head=detail['head'],
+                                      body=detail['body']))
                     if tick >= last:
                         break
     (out_dir / 'shots.json').write_text(json.dumps(dict(shots=shots), indent=2))

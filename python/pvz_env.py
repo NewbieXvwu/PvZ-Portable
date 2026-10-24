@@ -134,7 +134,19 @@ class TaskSpec:
     # "original": conveyor levels keep the engine's own seed bank (10 empty packets, cards dealt
     # by Challenge::UpdateConveyorBelt) instead of writing the task deck into it.
     conveyor_start: str | None = None
-    fog_observation: str | None = None  # task family: human / xray; None preserves legacy tasks
+    # Task family: "human" (pre-task66 cell rule), "human_v2" (task66 calibrated opacity rule),
+    # "xray" (nothing hidden); None preserves legacy tasks and emits no trailing token.
+    fog_observation: str | None = None
+
+
+def fog_diagnostics(state: dict[str, Any]) -> dict[int, dict[str, Any]]:
+    """task66: per-zombie fog numbers from a privileged frame, keyed by zombie id.
+
+    They live in their own fog_zombies array rather than as extra keys on the zombie objects,
+    so a public frame is still exactly "the privileged zombies minus the hidden ones".  Absent
+    on non-fog boards and on public frames.
+    """
+    return {entry['id']: entry for entry in state.get('fog_zombies') or []}
 
 
 def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
@@ -425,8 +437,8 @@ class PvZEnv:
             raise ValueError("preplanted seed_type, row and col must be in range")
         if task.conveyor_start not in (None, "original"):
             raise ValueError("conveyor_start must be None or 'original'")
-        if task.fog_observation not in (None, "human", "xray"):
-            raise ValueError("fog_observation must be None, 'human' or 'xray'")
+        if task.fog_observation not in (None, "human", "human_v2", "xray"):
+            raise ValueError("fog_observation must be None, 'human', 'human_v2' or 'xray'")
         if type(task.playthrough) is not int or task.playthrough != 2:
             raise ValueError("only replay semantics (playthrough=2) are supported")
         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:

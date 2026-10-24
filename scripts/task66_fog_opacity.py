@@ -22,7 +22,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import PlayerProfileContext, TaskSpec
+from pvz_env import PlayerProfileContext, TaskSpec, fog_diagnostics
 from pvz_event_env import EventWaitEnv
 
 DEFAULT_RESOURCE_DIR = Path(os.environ.get(
@@ -72,17 +72,19 @@ def replay(archive: Path, resource_dir: Path, executable: Path, limit: int | Non
                 if fog is None:
                     continue
                 tick = privileged['tick']
+                diagnostics = fog_diagnostics(privileged)
                 for zombie in privileged['zombies']:
                     if not zombie['on_board']:
                         continue
                     col = max(0, min(8, int((zombie['x'] - 40) // 80)))
+                    detail = diagnostics[zombie['id']]
                     entry = dict(tick=tick, id=zombie['id'], row=zombie['row'], x=zombie['x'],
-                                 type=zombie['type'], col=col, opacity=zombie['fog_opacity'],
-                                 head=zombie['fog_head_opacity'], body=zombie['fog_body_opacity'],
-                                 box=zombie['fog_box'], cell=fog[zombie['row']][col],
-                                 cell_hidden=zombie['fog_cell_hidden'])
+                                 type=zombie['type'], col=col, opacity=detail['opacity'],
+                                 head=detail['head'], body=detail['body'],
+                                 box=detail['box'], cell=fog[zombie['row']][col],
+                                 cell_hidden=detail['cell_hidden'])
                     rows.append(entry)
-                    if zombie['fog_cell_hidden']:
+                    if detail['cell_hidden']:
                         hidden.append(entry)
     return dict(archive=str(archive), label=meta['task']['id'], level=meta['task']['level'],
                 operations=verified, zombie_ticks=len(rows), hidden_ticks=len(hidden),

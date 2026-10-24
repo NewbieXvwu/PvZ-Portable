@@ -144,4 +144,55 @@ op   .25  .35  .44  .41  .64  .78  .80  .82  .83  .78  .83  .81  .83  .82  .83  
 的下沿；"勉强"那一档单独记，看是否落在阈值附近。
 
 
+### 3b. 用户标注（主控转达，2026-10-24）
+
+- **看不到**：09、13、14；其余 20 张都看得到，包括只露头的 01 / 08 / 23。
+- 按 `shots.json` 的不透明度排开，切分很干净：看得到的最高 0.900（06），看不到的最低 0.950（09）。
+  **主控定 τ = 0.925**（两者中点），记作 `fog_opacity < 0.925 → 可见`。
+- 现行格值规则会把这 20 张里的一半藏起来（01、16、08、02、23、21、19、04、10、06）。
+- 用户另提截图偏橙；不影响标注，本次不修。
+
+### 4. 实现
+
+- `EnvironmentZombieVisible`：`human_v2` 族下 `EnvironmentZombieFogOpacity(zombie) < 0.925`
+  （`kFogVisibilityThreshold`，全身 15 点最小值）；`human` 族仍走格值规则，旧任务与旧存档逐位不变。
+- **子弹同口径**：新增 `EnvironmentProjectileVisible`，在 `GetProjectileRect()` 上 3×3 取最小值比同一个阈值；
+  完整观测与 v2 观测两个过滤点都改成调它，`human` 族的格值分支原样保留。
+- **观测族**：`fog_observation` 增加 `human_v2`（reset 尾串 `fog_human_v2`），`human` / `xray` 语义不变；
+  引擎里 `humanFogObservation` 这个 bool 换成 `EnvironmentFogObservation{None,Cell,Opacity}`。
+  走族名而不是抬 `OBSERVATION_VERSION`，因为要保证旧存档/旧任务重放逐位不变。
+- **诊断字段挪位置**：`fog_opacity` 等五项原先直接挂在 privileged 的僵尸对象上，这破坏了
+  `test_fog_observation.py` 的两个不变式（公开帧 == privileged 减去隐藏项）。改为 privileged 帧里
+  独立的 `fog_zombies` 数组（按 id 对应），Python 侧用 `pvz_env.fog_diagnostics(state)` 取。
+- DESIGN.md §14.24 登记（新族名、阈值来源、影响面）。
+
+### 5. 测试
+
+| 检查 | 结果 |
+|---|---|
+| `python/test_fog_opacity.py` | 7 passed（新增 4 个） |
+| `test_fog_observation` / `test_fog_memory` / `test_replay_task_spec` / `test_search_episode` / `test_shared_helpers` | 44 passed, 9 subtests passed |
+| 旧族逐位不变（`/tmp/t66base` = 改动前引擎） | human / xray / None 各 36 个公开观察，全部相同 |
+| 参考实现交叉核对（独立解析 pak） | 0 处不符，最大误差 0.00049 |
+
+新增的 4 个测试：
+
+1. `test_human_v2_hides_exactly_what_the_threshold_says` —— 20000 tick 里每个僵尸-tick 的
+   "在不在公开帧"都必须等于 `opacity < 925`，且两侧都要被踩到（否则断言是空的）。
+2. `test_human_v2_shows_what_the_cell_rule_hides` —— 同一 tick、同一批僵尸，格值规则藏起来的
+   那个 `human_v2` 必须露出来，且它的 opacity 确实小于阈值。
+3. `test_human_v2_applies_the_same_rule_to_projectiles` —— 预置豌豆射手，找出格值规则藏掉子弹的
+   tick，`human_v2` 必须多露出来（实测 tick 2500 那颗 x=598.5 的豌豆）。
+4. `test_fog_family_only_changes_what_is_reported` —— 三个族跑同一串动作，state_hash 必须一致：
+   可见性是呈现层，不改棋局。
+
 ## 问题
+
+- **task58（记忆探针）需要主控决定**：它以"现行规则隐藏"作标签。`human` 族语义未变，所以既有标签
+  仍然自洽；但若要把探针换到 `human_v2`，标签必须重打（新口径下同一批 tick 里约有一半不再隐藏）。
+  本任务只提供口径，不擅自改 task58 的标签。
+- **截图偏橙**：用户指出校准图颜色偏橙。已核对不是截图链路的问题（帧缓冲原样输出），更像是
+  夜景/雾色调色与用户显示器配置的差异；不影响"能否看到"的标注，未修。若以后要用截图做颜色相关的
+  判断，需要先查这条。
+- **τ 的适用面**：23 张样本只覆盖 L31/L33 的雾区（草地夜间），没有覆盖屋顶/泳池与"路灯花开雾后"的
+  瞬态。若以后在别的场景发现口径不对，按同样流程重新标定，不要就地调数字。

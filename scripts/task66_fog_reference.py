@@ -27,7 +27,7 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import TaskSpec
+from pvz_env import TaskSpec, fog_diagnostics
 from pvz_event_env import EventWaitEnv
 from pvz_tasks import deck_for_level, profile_for_deck
 
@@ -135,10 +135,12 @@ def main() -> int:
                     grid[grid_x][row] = state['fog_amount'][row][col] if 0 <= col < 9 else 0
                 grid[grid_x][6] = grid[grid_x][0]
             look = np.asarray(state['fog_look'], dtype=np.int64)   # [row][col]
+            diagnostics = fog_diagnostics(state)
             for zombie in state['zombies']:
-                if not zombie['on_board'] or 'fog_opacity' not in zombie:
+                if not zombie['on_board'] or zombie['id'] not in diagnostics:
                     continue
-                box_x, box_y, box_width, box_height = zombie['fog_box']
+                detail = diagnostics[zombie['id']]
+                box_x, box_y, box_width, box_height = detail['box']
                 head_values, body_values = [], []
                 for row in range(5):
                     y = box_y + trunc_div((2 * row + 1) * box_height, 2 * 5)
@@ -146,9 +148,9 @@ def main() -> int:
                         x = box_x + trunc_div((2 * column + 1) * box_width, 2 * 3)
                         value = opacity_at(alpha, 8, 1, grid, look, offset, x, y)
                         (head_values if row < 2 else body_values).append(value)
-                pairs = [(min(head_values + body_values), zombie['fog_opacity'] / 1000.0, 'all'),
-                         (min(head_values), zombie['fog_head_opacity'] / 1000.0, 'head'),
-                         (min(body_values), zombie['fog_body_opacity'] / 1000.0, 'body')]
+                pairs = [(min(head_values + body_values), detail['opacity'] / 1000.0, 'all'),
+                         (min(head_values), detail['head'] / 1000.0, 'head'),
+                         (min(body_values), detail['body'] / 1000.0, 'body')]
                 for reference, engine, band in pairs:
                     compared += 1
                     worst = max(worst, abs(reference - engine))

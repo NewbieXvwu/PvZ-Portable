@@ -1016,3 +1016,13 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 2026-10-24 追加（用户意见：大喷菇伤害不够、后期阳光溢出，要寒冰射手做辅助；1.0 倍对人太简单，不用路灯花也能往雾里盲种小喷菇）：新族 `demo_fog_31_snow`（卡组 阳光菇/小喷菇/大喷菇/睡莲/寒冰射手/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果 = [9,8,10,16,5,23,17,19,2,3]，即 fume 族去路灯花换寒冰射手），另登记 1.5 倍、2.0 倍僵尸量的 `demo_fog_31_snow_m150` / `demo_fog_31_snow_m200`；同种子 20261031，旧族与旧存档不变。
 
 `human_demo.py` 使用原生窗口、逐tick动作带与状态哈希，原始局标记 `label_source: human`，可选 `note` 仅存meta。验证通过后导出frames_v2，配方 `train.source_weight` 按来源乘权。`search_play.py --demo-archive ... --demo-decision N` 精确恢复第N步前局面并由老师接管，示范中的后续合法种植动作进入候选，使用既有推演评分。老师续局记为teacher，保留起点与示范备注用于分析。原始示范与npz不入git，走HF transfer。
+
+### 14.24 雾可见性口径 v2：`fog_observation: human_v2`（task66，2026-10-24，AGENTS.md §8 第 4 条）
+
+旧口径 `human` 是"格值非 0 即隐藏"：它按 `mGridCelFog` 的格子判定，而 `Board::DrawFog` 画的是自带 alpha 渐变的雾图格，两者并不一致——三局人类示范里 92.2% 的僵尸-tick 被隐藏，其中 28.3% 的人眼覆盖不到一半，另有 15.9% 是"只有头露出雾面"。
+
+新口径 `human_v2` 按**实际渲染出来的合成不透明度**判定：僵尸全身采样框（`GetZombieRect()` 左右各外扩 h/4、上方 h/8，覆盖头、头饰、手持物）上 3 列 × 5 行取最小值，`< 0.925` 即视为可见；子弹按同一口径（`GetProjectileRect()` 上 3×3 取最小值）。阈值不是拍的：23 张校准图（16 档 0.20–0.95 + 3 张只有头露出 + 4 张对照）由用户标注，看得到的最高 0.900、看不到的最低 0.950，取中点 0.925，见 [task66](MEMORY/docs/task66-fog-visibility-boundary.md)。
+
+**族名而不是版本号**：`fog_observation` 现有 `human`（旧格值口径，保留）/ `human_v2`（本口径）/ `xray`（不隐藏）；缺省仍是 x-ray 且不追加 reset 尾串，所以旧任务、旧存档的重放逐位不变（实测 human/xray/None 各 36 个公开观察与改动前引擎完全一致）。`fog_amount` 观测保持原样，它是格值，供记忆与诊断使用。
+
+**影响面**：完整、lean、v2 与 C++ 学生输入走同一个 `EnvironmentZombieVisible` / `EnvironmentProjectileVisible`，不会出现两套可见性。雾区族目前不在 qc 训练集合里；task58（记忆探针）以"现行规则隐藏"作标签，换到 `human_v2` 前需要主控决定是否重新打标签。

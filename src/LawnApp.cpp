@@ -1655,7 +1655,8 @@ int LawnApp::EnvironmentFogAmount(int row, int col) const
 
 bool LawnApp::EnvironmentFogMasked() const
 {
-	return mEnvironmentTaskSpec.humanFogObservation && mBoard && mBoard->StageHasFog();
+	return mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::None &&
+		mBoard && mBoard->StageHasFog();
 }
 
 // task66: the fog a zombie actually stands in, measured the way Board::DrawFog paints it.
@@ -1819,10 +1820,42 @@ bool LawnApp::EnvironmentZombieCellFogHidden(const Zombie* zombie) const
 	return EnvironmentFogAmount(zombie->mRow, col) > 0;
 }
 
+// task66: where the human boundary sits.  Calibrated on 23 rendered frames picked from three
+// human demonstrations of the fog levels -- 16 bands from 0.20 to 0.95, three "only the head
+// shows", four controls -- with no opacity printed on the sheet.  The user saw every frame up
+// to 0.900 and none at 0.950, so the cut sits between them; 0.925 is the midpoint.  The number
+// is a measurement, not a preference: change it only against a new labelling round.
+static constexpr float kFogVisibilityThreshold = 0.925f;
+
 bool LawnApp::EnvironmentZombieVisible(const Zombie* zombie) const
 {
 	if (!EnvironmentFogMasked()) return true;
+	if (mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Opacity)
+		return EnvironmentZombieFogOpacity(zombie) < kFogVisibilityThreshold;
 	return !EnvironmentZombieCellFogHidden(zombie);
+}
+
+bool LawnApp::EnvironmentProjectileVisible(const Projectile* projectile) const
+{
+	if (!EnvironmentFogMasked()) return true;
+	if (mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::Opacity)
+		return EnvironmentFogAmount(projectile->mRow,
+			std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) == 0;
+	// Same "any part of it is clear" rule as a zombie.  GetProjectileRect() is the box the
+	// projectile occupies in board coordinates (40x40 for a pea, larger for a cob cannon);
+	// nine samples over it is plenty for something that small.
+	const Rect aBox = const_cast<Projectile*>(projectile)->GetProjectileRect();
+	float aClearest = 1.0f;
+	for (int aRow = 0; aRow < 3; ++aRow)
+	{
+		for (int aCol = 0; aCol < 3; ++aCol)
+		{
+			aClearest = std::min(aClearest, EnvironmentFogOpacityAt(
+				aBox.mX + (2 * aCol + 1) * aBox.mWidth / 6,
+				aBox.mY + (2 * aRow + 1) * aBox.mHeight / 6));
+		}
+	}
+	return aClearest < kFogVisibilityThreshold;
 }
 
 bool LawnApp::EnvironmentVisibleEnemies() const
@@ -1888,8 +1921,7 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 	first = true;
 	for (Projectile* projectile : board->mProjectiles)
 	{
-		if (projectile->mDead || (masked && app->EnvironmentFogAmount(projectile->mRow,
-			std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) > 0)) continue;
+		if (projectile->mDead || (masked && !app->EnvironmentProjectileVisible(projectile))) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << projectile->mRow << ',' << projectile->mPosX << ',' << projectile->GetProjectileDef().mDamage << ']';
@@ -2267,22 +2299,6 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"has_arm\":" << (zombie->mHasArm ? "true" : "false") << ",\"has_object\":" << (zombie->mHasObject ? "true" : "false")
 				<< ",\"is_eating\":" << (zombie->mIsEating ? "true" : "false") << ",\"target_col\":" << zombie->mTargetCol
 				<< ",\"target_row\":" << zombie->mTargetRow;
-			if (privileged && mBoard->StageHasFog())
-			{
-				// task66 diagnostics: the composite fog alpha over the zombie in permille (0 = clear,
-				// 1000 = opaque), the same for its head band only, the sampling box, and the verdict
-				// of the pre-task66 cell rule.  All of it only ever reaches the privileged stream, so
-				// no policy arm and no public frame changes.
-				float aHeadOpacity = 0.0f;
-				float aBodyOpacity = 0.0f;
-				const float aOpacity = EnvironmentZombieFogOpacity(zombie, &aHeadOpacity, &aBodyOpacity);
-				const Rect aBox = EnvironmentZombieFogBox(zombie);
-				out << ",\"fog_opacity\":" << static_cast<int>(std::lround(aOpacity * 1000.0f))
-					<< ",\"fog_head_opacity\":" << static_cast<int>(std::lround(aHeadOpacity * 1000.0f))
-					<< ",\"fog_body_opacity\":" << static_cast<int>(std::lround(aBodyOpacity * 1000.0f))
-					<< ",\"fog_box\":[" << aBox.mX << ',' << aBox.mY << ',' << aBox.mWidth << ',' << aBox.mHeight << ']'
-					<< ",\"fog_cell_hidden\":" << (EnvironmentZombieCellFogHidden(zombie) ? "true" : "false");
-			}
 			out << '}';
 	}
 	out << "],\"coins\":[";
@@ -2298,8 +2314,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	first = true;
 	for (Projectile* projectile : mBoard->mProjectiles)
 	{
-		if (projectile->mDead || (!privileged && EnvironmentFogMasked() && EnvironmentFogAmount(projectile->mRow,
-			std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) > 0)) continue;
+		if (projectile->mDead || (!privileged && !EnvironmentProjectileVisible(projectile))) continue;
 		if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(projectile->mProjectileType) << ",\"row\":" << projectile->mRow
@@ -2380,6 +2395,32 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 					out << mBoard->mGridCelLook[col][row];
 				}
 				out << ']';
+			}
+			// task66 diagnostics: per zombie, the composite fog alpha over it in permille (0 =
+			// clear, 1000 = opaque), the same for its head band only, the sampling box, and the
+			// verdict of the pre-task66 cell rule.  A separate array rather than extra keys on the
+			// zombie objects, so the public frame stays exactly "the privileged zombies minus the
+			// hidden ones" -- test_fog_observation.py checks that equality.
+			out << "],\"fog_zombies\":[";
+			{
+				bool firstFog = true;
+				for (Zombie* zombie : mBoard->mZombies)
+				{
+					if (zombie->mDead) continue;
+					float aHeadOpacity = 0.0f;
+					float aBodyOpacity = 0.0f;
+					const float aOpacity = EnvironmentZombieFogOpacity(zombie, &aHeadOpacity, &aBodyOpacity);
+					const Rect aBox = EnvironmentZombieFogBox(zombie);
+					if (!firstFog) out << ',';
+					firstFog = false;
+					out << "{\"id\":" << static_cast<int>(mBoard->ZombieGetID(zombie))
+						<< ",\"opacity\":" << static_cast<int>(std::lround(aOpacity * 1000.0f))
+						<< ",\"head\":" << static_cast<int>(std::lround(aHeadOpacity * 1000.0f))
+						<< ",\"body\":" << static_cast<int>(std::lround(aBodyOpacity * 1000.0f))
+						<< ",\"box\":[" << aBox.mX << ',' << aBox.mY << ',' << aBox.mWidth << ',' << aBox.mHeight << ']'
+						<< ",\"cell_hidden\":" << (EnvironmentZombieCellFogHidden(zombie) ? "true" : "false")
+						<< '}';
+				}
 			}
 			out << "],\"fog_loss\":";
 			bool found = false;

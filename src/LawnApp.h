@@ -74,6 +74,19 @@ struct EnvironmentPreplanted
 	int col = 0;
 };
 
+// How a fog board hides what the player cannot see.  A task property, so old tasks and old
+// archives keep the rule they were recorded under.
+//   None    -- x-ray: nothing is hidden (the historical default).
+//   Cell    -- the pre-task66 rule: a non-zero mGridCelFog value in the zombie's cell hides it.
+//   Opacity -- task66: hide only when the fog the renderer actually paints over the sprite is
+//              at least EnvironmentFogVisibilityThreshold.
+enum class EnvironmentFogObservation
+{
+	None = 0,
+	Cell = 1,
+	Opacity = 2
+};
+
 struct EnvironmentTaskSpec
 {
 	int playthrough = 1;
@@ -94,8 +107,7 @@ struct EnvironmentTaskSpec
 	// Conveyor levels only: leave the engine's own seed bank (10 empty packets) in place and
 	// let Challenge::UpdateConveyorBelt deal cards, instead of writing the task deck into it.
 	bool originalConveyorStart = false;
-	// A task property: old tasks retain their historical x-ray observations.
-	bool humanFogObservation = false;
+	EnvironmentFogObservation fogObservation = EnvironmentFogObservation::None;
 };
 
 class LevelStats
@@ -268,6 +280,7 @@ public:
 		float* theBodyOpacity = nullptr) const;
 	bool EnvironmentZombieCellFogHidden(const class Zombie* zombie) const;
 	bool EnvironmentZombieVisible(const class Zombie* zombie) const;
+	bool EnvironmentProjectileVisible(const class Projectile* projectile) const;
 	bool EnvironmentVisibleEnemies() const;
 	std::string                     EnvironmentDeckOptions();
 	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);
