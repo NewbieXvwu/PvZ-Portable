@@ -46,16 +46,16 @@ sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
 FRAMES_ROOT = Path.home() / "PvZ-search" / "artifacts" / "student" / "frames_v2"
-STUDENT = Path.home() / "PvZ-search" / "artifacts" / "student" / "dw4i_s1" / "model.pt"
-RESOURCES = Path.home() / ".cache" / "pvz-research-resources"
+STUDENT = Path(os.environ.get("PVZ_STUDENT", Path.home() / "PvZ-search" / "artifacts" / "student" / "dw4i_s1" / "model.pt"))
+RESOURCES = Path(os.environ.get("PVZ_RESOURCE_DIR", Path.home() / ".cache" / "pvz-research-resources"))
 EXECUTABLE = ROOT / "build" / "pvz-portable"
 
 # The queue (~/pvz-logs/queue103.sh) runs search_play with these; the benchmark has to
 # measure the same workload or the numbers do not transfer.
 QUEUE_ARGS = [
     "--verify-samples", "9", "--student-candidates", "2",
-    "--static-value", str(Path.home() / "PvZ-search" / "artifacts" / "hard" / "value_branch1" / "model.pt"),
-    "--value", str(Path.home() / "PvZ-search" / "artifacts" / "value_net" / "v3" / "model.pt"),
+    "--static-value", os.environ.get("PVZ_STATIC_VALUE", str(Path.home() / "PvZ-search" / "artifacts" / "hard" / "value_branch1" / "model.pt")),
+    "--value", os.environ.get("PVZ_VALUE", str(Path.home() / "PvZ-search" / "artifacts" / "value_net" / "v3" / "model.pt")),
     "--dagger-beta", "0",
 ]
 
@@ -318,12 +318,18 @@ def _arm(env, on: bool) -> None:
 
 
 def _process_cpu(pid: int) -> float:
-    """CPU seconds the simulator has burned (utime+stime from /proc/<pid>/stat).
+    """CPU seconds the simulator has burned (ps on macOS, /proc on Linux).
 
     The in-simulator timers are steady_clock, so on a machine that is also running the
     collection queue they inherit every preemption.  Process CPU time is the number that
     survives a noisy neighbour, and it is what this benchmark compares across builds.
     """
+    if sys.platform == "darwin":
+        elapsed = subprocess.check_output(["/bin/ps", "-p", str(pid), "-o", "time="], text=True)
+        seconds = 0.0
+        for component in elapsed.strip().split(":"):
+            seconds = seconds * 60 + float(component)
+        return seconds
     try:
         fields = Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()
     except (OSError, IndexError):

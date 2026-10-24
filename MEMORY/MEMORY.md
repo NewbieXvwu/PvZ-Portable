@@ -37,9 +37,12 @@
 - [2026-10-19](2026-10-19.md)
 - [2026-10-20](2026-10-20.md)
 - [2026-10-21](2026-10-21.md)
+- [2026-10-24](2026-10-24.md)
 
 ## 历史报告（`docs/`）
 
+- [课程后台管线与学生晋升门禁](docs/task49-qc-idle-pack.md)
+- [task49A 验收证据](docs/task49-A-evidence.json)
 - [CUDA 续走：设计与实测](docs/cuda-rollout-report.md)
 - [CUDA 合并待审说明](docs/cuda-merge-notes.md)
 - [CUDA 阶段 1 语料](docs/cuda-corpus-phase1.md)

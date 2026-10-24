@@ -124,13 +124,14 @@ class PipelinePerfTest(unittest.TestCase):
         boards, scalars = actual[:2]
         boards = boards.batch(torch.arange(boards.shape[0]), "cpu").half()
         scalars = scalars.batch(torch.arange(scalars.shape[0]), "cpu")
-        rows = [(board.numpy(), scalar.numpy(), float(index % 2), 30000, index // 4, index % 4, 0, index % 2)
+        rows = [(board.numpy(), scalar.numpy(), float(index % 2), 30000, index // 4, index % 4, 0, index % 2, scalar.numpy())
                 for index, (board, scalar) in enumerate(zip(boards, scalars))]
         shard = self.directory / "dump/seed_30000.pt"
         _save_dump(rows, shard, {})
         stored = torch.load(shard, weights_only=False, mmap=True)
         self.assertTrue(torch.equal(boards, stored["boards"]))
         self.assertTrue(torch.equal(scalars, stored["scalars"]))
+        self.assertTrue(torch.equal(scalars, stored["scalars_v2"]))
         self.assertEqual([row[2] for row in rows], stored["won"].tolist())
         write_frames(source, frames[:3])
         self.assertFalse(binary.exists())

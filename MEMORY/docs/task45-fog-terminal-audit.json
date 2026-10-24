@@ -1,0 +1,39 @@
+{
+ "status": "complete",
+ "screen_roots": 64,
+ "screen_candidates": 4124,
+ "screen_labels": 12372,
+ "confirmation_roots": 8,
+ "confirmation_labels": 512,
+ "confirmation_wins": 0,
+ "exact_panel_and_teacher_trace_validation": true,
+ "root_tick_range": [
+  0,
+  7981
+ ],
+ "screening_world_and_search_seed_count": 384,
+ "confirmation_world_and_search_seed_count": 256,
+ "all_seeds_unique_within_stage": true,
+ "stage_seed_overlap": 0,
+ "reproducible_cases": 9,
+ "frozen_inputs_unchanged": true,
+ "root_selection_sha256": "ed62868a21f31dd357cc0790c9242a41197794a1305b1ca7939d4749de8bcff8",
+ "screen_report_sha256": "ff918851ba49bba32e1062a21a380534d0f604b4324fc911ffe1d454e94c8cf9",
+ "significance_family_tests": 72,
+ "significant_tests": 3,
+ "tests": {
+  "passed": 383,
+  "subtests_passed": 133,
+  "raw_log": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/artifacts/task45/phase-e/runs/1792782284-delivery-tests/pytest.log",
+  "log_sha256": "25a431555aa134b64baee3f41d8b839e152f4524ad8697dba30cc281ae141b13",
+  "cpu_seconds": 83.15104699999999
+ },
+ "cpu_seconds_metered": 50965.499554,
+ "cpu_seconds_additional_allowance": 480,
+ "conservative_cpu_hours": 14.290416542777779,
+ "metering_note": "Includes roots, pilot, screening, confirmation, reproducibility and both full delivery test attempts; 480 seconds also reserved for other preparation, targeted tests and reporting.",
+ "artifact_bytes": 154728336,
+ "active_task45_engine_pids": [],
+ "engine_sha256": "a13665a9a916fc961ea5d0f50be5448a2eb322ecd91edd35f8bd37b1e400411f",
+ "results_sha256": "e89db650df4b000767c1eb293bce24fab5b97ff4775be8acd47f06b6f9f27d59"
+}

@@ -1,0 +1,27 @@
+{
+ "jobs": [
+  {
+   "cell": {
+    "id": "l31-human-39000000",
+    "task_id": "fog_l31_eval_f8",
+    "level": 31,
+    "observation": "human",
+    "seed": 39000000
+   },
+   "point": {
+    "decision": 0,
+    "tick": 0,
+    "wave": 0,
+    "sun": 50,
+    "candidate_count": 55,
+    "candidate_sha256": "d9af1a51432a63373014b85b2522512991103bbd6d729dc9e64c7e3a5281bf7c",
+    "state_sha256": "b2ebb95e3a933b473571a751d09dfd7cb6b5c3540b05dfce721db11c4111f29c",
+    "public_history_sha256": "dff2b0961db174922f1ae6ee876abac71adade74d0bd980525b4a0667f9acdba"
+   },
+   "samples": 1,
+   "candidate_indices": [
+    0
+   ]
+  }
+ ]
+}

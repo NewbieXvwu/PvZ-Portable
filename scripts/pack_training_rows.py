@@ -1,26 +1,23 @@
-"""Pack the training rows of one label set into a single sequential file (task33 item 2).
+"""Immutable per-label training packs with an atomic corpus index (task49).
 
-Why: a training run used to decompress 25 M rows x 13.8 KB (345 GB) out of 21 056 per-game
-frames.npz files and compress every row into CSR again -- on every run, because neither the
-decompressed rows nor the CSR were kept. Measured 2026-10-23: 48 598 rows/s with --cache-dir and 8
-precompute workers (1.28 M rows in 32 s, 13.6 M rows ~280 s), and the packed file reads back in
-0.17 s. This writes what the trainer wants, once: the CSR boards and scalars, the labels, the
-search targets, the per-row seed and the per-row archive position, in archive order.
+Only new/changed label segments are built; row options and source fingerprints identify
+segments. --precompute-workers builds labels in parallel under the memory cap. The trainer
+reads the small index and restores global archive order from compact segments, without
+reading game frames. Version 2 uses independent seed=0 wait-sampling streams per label;
+adding another label never changes an existing segment's rows. This intentionally changes
+v1's cross-label sampling; v1 packs are never reused as v2.
 
-The trainer (train_rollout_policy.load) reads only packs. The archives are read here and nowhere
-else; that is the LEGACY side of the pair -- an archive written before packs still works, through
-this tool.
+pack_monolithic is the full-build reference for verification, with identical row semantics.
+The production CLI always writes segments; there is no alternate packing mode.
 
-  python3 scripts/pack_training_rows.py --data DIR --labels a,b
-  python3 scripts/pack_training_rows.py --data DIR --labels a,b --verify DIR/packs/x.npz
-
-Options that change the rows (--wait-keep, --obs, --cells, --aux-horizon, --packet-head, --context,
---label-weight) are part of the pack key: the trainer looks for the pack of exactly its own options
-and prints the command to run when it is missing.
+  python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b
+  python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b --verify --out /absolute/pack.npz
 """
 from __future__ import annotations
 
 import argparse
+import os
+import tempfile
 import hashlib
 import json
 import sys
@@ -45,7 +42,8 @@ from pvz_rollout_policy import (LAWN_COLS, PACKETS, features, identity_scalars, 
 from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,  # noqa: E402
                                   _episode_context, constant_plane)
 
-from pvz_training_pack import PACK_VERSION, archive_fingerprint, pack_options, pack_path  # noqa: E402
+from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_paths, pack_options,
+                               pack_path, segment_options, segment_path, training_rows)  # noqa: E402
 
 
 def _store_arrays(store) -> dict:
@@ -61,7 +59,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                         label_weight: dict[str, float] | None = None, cache_dir: Path | None = None,
                         with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
                         cells: bool = False, aux_horizon: int = 0, row_observer=None,
-                        packet_head: str = 'slot', read_cache_dir: Path | None = None):
+                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games).
@@ -73,16 +71,29 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     Rows are stored compactly (task32): bit-packed keep masks, uint8/int16 labels, a split packet block, uint8
     scalar indices and per-archive constant planes taken out of the board CSR. Every value a batch sees is
     bit-identical to the dense arrays this replaced."""
-    paths = [p for p in frame_paths(data) if p.parent.name in labels]
+    paths = ([p for p in frame_paths(data) if p.parent.name in labels]
+             if archive_paths is None else list(archive_paths))
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
     # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
-    rng = random.Random(0)
+    # Independent streams make row selection invariant to other labels entering the corpus.
+    # Version 2 deliberately differs from v1 across labels; single-label selection is unchanged.
+    label_rng = {}
     keep = {}
     cached = {}
     cell_cached = {}
     aux_cached = {}
     packet_cached = {}
     scene_cached = {}
+    explicit_rows = {path: training_rows(path) for path in paths}
+
+    def selected_mask(path, mask):
+        selected = explicit_rows[path]
+        if selected is None:
+            return mask
+        if selected and selected[-1] >= len(mask):
+            raise ValueError(f'{path}: training_rows outside archive')
+        wanted = set(selected)
+        return [i in wanted for i in range(len(mask))]
     if cache_dir is not None and precompute_workers > 1:
         from concurrent.futures import ProcessPoolExecutor
         from functools import partial
@@ -98,6 +109,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 packet_cached = dict(zip(paths, pool.map(partial(cache_packets, directory=cache_dir), paths, chunksize=8)))
                 scene_cached = dict(zip(paths, pool.map(partial(cache_identity_scene, directory=cache_dir), paths, chunksize=8)))
     for path in paths:
+        rng = label_rng.setdefault(path.parent.name, random.Random(0))
         mask = []
         if cache_dir is not None:
             if path not in cached:
@@ -106,13 +118,13 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             # Bit-packed: a python list of bools is 8 bytes a frame, and at wait_keep .1 there are ~3.5 frames
             # behind every kept row (task32).
-            keep[path] = np.packbits(mask)
+            keep[path] = np.packbits(selected_mask(path, mask))
             continue
         for line in frame_bytes(path).decode().splitlines():
             # The target is the last field: the DAgger label if there is one, else the executed action.
             tail = line[max(line.rfind('"label":'), line.rfind('"action":')):]
             mask.append('"type":"plant"' in tail or '"targets":' in line or rng.random() < wait_keep)
-        keep[path] = np.packbits(mask)
+        keep[path] = np.packbits(selected_mask(path, mask))
     capacity = sum(int(np.unpackbits(packed).sum()) for packed in keep.values())
     boards = scalars = None
     # Per-row labels go straight into preallocated arrays: as Python lists (8 floats a row for `values`) they cost
@@ -132,6 +144,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     for archive_index, path in enumerate(paths):
         seed = int(path.parent.parent.name.split("_")[-1])
         scale = (label_weight or {}).get(path.parent.name, 1.0)
+        retention = wait_keep if explicit_rows[path] is None else 1.0
         if path in cached:
             with np.load(cached[path], allow_pickle=False) as stored:
                 mask = np.unpackbits(keep[path])[:len(stored["hints"])].astype(bool)
@@ -192,7 +205,9 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                     with np.load(aux_cached[path], allow_pickle=False) as side:
                         assert np.array_equal(side["rows"], stored["rows"]), path
                         auxiliary[n:n + count] = side["aux"][selected]
-                weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / wait_keep) * scale
+                if explicit_rows[path] is not None and count != len(explicit_rows[path]):
+                    raise ValueError(f'{path}: requested training_rows lack valid labels')
+                weight[n:n + count] = np.where((types != 0) | (~np.isnan(vals)).any(1), 1.0, 1.0 / retention) * scale
                 seed_of.extend([seed] * count)
                 source_archive[n:n + count] = archive_index
                 source_row[n:n + count] = stored["rows"][selected]
@@ -231,7 +246,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
             source_row[n - 1] = i
             is_plant = action["type"] == "plant"
             plant[n - 1] = float(is_plant)
-            weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / wait_keep)
+            weight[n - 1] = scale * (1.0 if is_plant or frames[i].get("targets") else 1.0 / retention)
             packet[n - 1] = action["packet"] if is_plant else -1
             if packets is not None and is_plant and packets.columns[0][n - 1, packet[n - 1]] < 0:
                 raise ValueError(f'identity labelled plant has an empty packet slot: {path}, row {i}')
@@ -241,6 +256,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 auxiliary[n - 1] = future_damage[i - 1]
             if cells:
                 cands.append(candidate_cells(frames[i].get("targets")))
+        if explicit_rows[path] is not None and len(archive_boards) != len(explicit_rows[path]):
+            raise ValueError(f'{path}: requested training_rows lack valid labels')
         if archive_boards:
             stacked = np.stack(archive_boards)
             plane, covered = constant_plane(stacked)
@@ -259,8 +276,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
 
 
 
-def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
-         read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False) -> Path:
+def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
+         read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False, archive_paths=None) -> Path:
     """Build the pack for these options from the archives under ``data``; returns its path."""
     started = time.perf_counter()
     loaded, sources, source_archive, source_row = build_from_archives(
@@ -268,7 +285,7 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
                                  options["label_weight"], cache_dir, options["with_context"],
                                  options["obs"], precompute_workers, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
-                                 read_cache_dir=read_cache_dir)
+                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if options["aux_horizon"] else None
     packets = loaded[9 + (auxiliary is not None)] if options["packet_head"] == "identity" else None
@@ -292,12 +309,96 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
     target = Path(out) if out is not None else pack_path(data, options)
     target.parent.mkdir(parents=True, exist_ok=True)
     write_started = time.perf_counter()
-    np.savez(target, **arrays)
+    atomic_savez(target, arrays)
     if not quiet:
         print(json.dumps({"pack": str(target), "rows": int(len(plant)), "labels": options["labels"],
                           "build_s": round(build_seconds, 1),
                           "write_s": round(time.perf_counter() - write_started, 1),
                           "bytes": target.stat().st_size}), flush=True)
+    return target
+
+
+def atomic_savez(target: Path, arrays: dict) -> None:
+    """Readers see a complete generation, including when two packers build the same label."""
+    target.parent.mkdir(parents=True, exist_ok=True)
+    fd, temporary = tempfile.mkstemp(dir=target.parent, suffix='.building')
+    try:
+        with os.fdopen(fd, 'wb') as handle:
+            np.savez(handle, **arrays)
+        os.replace(temporary, target)
+    finally:
+        Path(temporary).unlink(missing_ok=True)
+
+
+def _build_segment(job):
+    data, options, cache, read_cache, paths = job
+    torch.set_num_threads(1)
+    target = segment_path(data, options)
+    return pack_monolithic(data, options, cache, 1, read_cache, target, True, paths)
+
+
+def pack_memory_limit(available: int, jobs: list[tuple]) -> int:
+    """并发建造者的内存上限：每人 2 GiB（Python/torch 与解压缓冲）加该批最大的标签原始档案
+    体积，并给整 机留 6 GiB（curriculum_queue.build_plan 用同一单建造者估算）。"""
+    heavy = max((sum(path.stat().st_size for path in paths) for *_, paths in jobs), default=0)
+    return max(1, (available - 6 * 1024**3) // (2 * 1024**3 + heavy))
+
+
+def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
+         read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False,
+         rebuild: bool = False) -> Path:
+    """Publish an index of immutable per-label segments; only missing segments are built.
+
+    The whole archive catalog is scanned once. Parallelism is across labels, never a nested
+    feature pool. A training snapshot pins its segment names, so later rounds cannot change it.
+    """
+    from concurrent.futures import ProcessPoolExecutor
+    import multiprocessing as mp
+    started = time.perf_counter()
+    catalog = {label: [] for label in options['labels']}
+    for path in frame_paths(data):
+        if path.parent.name in catalog:
+            catalog[path.parent.name].append(path)
+    jobs, segments = [], []
+    for label, paths in sorted(catalog.items()):
+        if not paths:
+            raise ValueError(f'no archives for label {label!r} in {data}')
+        contract = segment_options(options, label, fingerprint_paths(data, paths))
+        target = segment_path(data, contract)
+        segments.append(target)
+        valid = False
+        if target.is_file() and not rebuild:
+            with np.load(target, allow_pickle=False) as stored:
+                valid = json.loads(str(stored['meta'])) == contract
+        if not valid:
+            jobs.append((data, contract, cache_dir, read_cache_dir, paths))
+    # Each label worker includes Python/torch and a label's compact rows; its peak grows with
+    # the label's raw archives. Same 6 GiB reserve as collection (pack_memory_limit docstring).
+    try:
+        available = next(int(line.split()[1]) * 1024 for line in Path('/proc/meminfo').read_text().splitlines()
+                         if line.startswith('MemAvailable:'))
+        memory_limit = pack_memory_limit(available, jobs)
+    except (OSError, StopIteration):
+        memory_limit = 1
+    workers = max(1, min(precompute_workers, len(jobs) or 1, memory_limit))
+    if workers > 1:
+        with ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context('spawn')) as pool:
+            list(pool.map(_build_segment, jobs))
+    else:
+        for job in jobs:
+            _build_segment(job)
+    target = Path(out) if out is not None else pack_path(data, options)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    rows = 0
+    for segment in segments:
+        with np.load(segment, allow_pickle=False) as stored:
+            rows += int(stored['rows'])
+    atomic_savez(target, {'meta': np.asarray(json.dumps(options)), 'rows': np.int64(rows),
+                          'segments': np.asarray([os.path.relpath(path, target.parent) for path in segments])})
+    if not quiet:
+        print(json.dumps({'pack': str(target), 'rows': rows, 'built': len(jobs),
+                          'reused': len(segments) - len(jobs), 'workers': workers,
+                          'seconds': round(time.perf_counter() - started, 3)}), flush=True)
     return target
 
 
@@ -317,7 +418,13 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
                 meta = json.loads(str(stored["meta"]))
         except Exception:          # a pack another process is still writing; try again next round
             continue
-        if set(meta["labels"]) <= labels:
+        # A different recipe or a v1 corpus is not superseded by this index.
+        with np.load(keep, allow_pickle=False) as stored:
+            current = json.loads(str(stored['meta']))
+        keys = set(current) - {'labels', 'sources', 'label_weight'}
+        if (set(meta['labels']) <= labels and all(meta.get(k) == current[k] for k in keys)
+                and all(meta['label_weight'].get(label, 1.) == current['label_weight'].get(label, 1.)
+                        for label in meta['labels'])):
             path.unlink()
             removed.append(path)
     return removed
@@ -336,7 +443,7 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
                            sources=archive_fingerprint(data, set(labels)))
     path = pack_path(data, options)
     if rebuild or not path.is_file():
-        pack(data, options, cache_dir, 1, None, path, quiet=True)
+        pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
     return read_pack(path, data, row_observer)
 
 
@@ -346,36 +453,43 @@ def verify(data: Path, options: dict, out: Path) -> None:
                                  data, set(options["labels"]), options["wait_keep"], options["label_weight"],
                                  None, options["with_context"], options["obs"], 1, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"])
-    boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
-    with np.load(out, allow_pickle=False) as stored:
-        read = {name: stored[name] for name in stored.files}
-    same = {
-        "meta": json.loads(str(read["meta"])) == options,
-        "rows": int(read["rows"]) == len(plant),
-        "board": _same_store(read, "board", boards),
-        "scalar": _same_store(read, "scalar", scalars),
-        "plant": np.array_equal(read["plant"], np.asarray(plant)),
-        "packet": np.array_equal(read["packet"], np.asarray(packet)),
-        "cell": np.array_equal(read["cell"], np.asarray(cell)),
-        "weight": np.array_equal(read["weight"], np.asarray(weight)),
-        "seed": np.array_equal(read["seed"], np.asarray(seed_of, np.int32)),
-        "source": np.array_equal(read["source_archive"], source_archive),
-        "values": (np.array_equal(read["value_counts"], values.counts)
-                   and np.array_equal(read["value_slots"], values.slots)
-                   and np.array_equal(read["value_values"], values.values)),
-    }
-    if cands is not None:
-        same["cands"] = (np.array_equal(read["cand_counts"], cands.counts)
-                         and np.array_equal(read["cand_entries"], cands.entries))
-    for name, ok in same.items():
-        print("  %-8s %s" % (name, "same" if ok else "DIFFERENT"), flush=True)
-    if not all(same.values()):
-        raise SystemExit("pack does not reproduce the archives")
+    from train_rollout_policy import read_pack
+    observed = []
+    actual = read_pack(out, data, lambda path, rows: observed.append((str(path.relative_to(data)), rows)))
+    assert_payload_equal(loaded, actual)
+    expected = []
+    for index, source in enumerate(_sources):
+        rows = source_row[source_archive == index]
+        if len(rows):
+            expected.append((source, rows))
+    if len(expected) != len(observed) or any(a != b or not np.array_equal(x, y)
+                                              for (a, x), (b, y) in zip(expected, observed)):
+        raise AssertionError('source archive / row order differs')
+    print('all tensors and source rows bitwise identical', flush=True)
 
 
-def _same_store(read: dict, prefix: str, store) -> bool:
-    return all(np.array_equal(read[prefix + "_" + key], value)
-               for key, value in _store_arrays(store).items())
+def assert_payload_equal(expected, actual, batch_size=64):
+    """Compare dense batch bytes (including signed zeros and NaNs), not CSR layout."""
+    if len(expected) != len(actual):
+        raise AssertionError('payload columns differ')
+    rows = len(expected[2])
+    for column, (left, right) in enumerate(zip(expected, actual)):
+        if left is None or right is None:
+            assert left is right, column
+            continue
+        for start in range(0, rows, batch_size):
+            idx = torch.arange(start, min(start + batch_size, rows))
+            def block(value):
+                if isinstance(value, CompactBoards):
+                    return value.batch(idx, 'cpu').numpy()
+                if isinstance(value, (ValueStore, CandidateStore, PacketStore)):
+                    return value[idx].numpy()
+                return np.asarray(value)[idx.numpy()]
+            a, b = block(left), block(right)
+            if column == 6:  # the archive builder returns Python seed ints; packs store int32
+                a, b = a.astype(np.int32), b.astype(np.int32)
+            if a.shape != b.shape or a.dtype != b.dtype or a.tobytes() != b.tobytes():
+                raise AssertionError(f'column {column}, rows {start}:{start + batch_size} differ')
 
 
 def main() -> None:
@@ -384,14 +498,14 @@ def main() -> None:
     p.add_argument("--labels", required=True, help="comma separated <label> directory names")
     p.add_argument("--out", type=Path, help="pack path (default: <data>/packs/<key>.npz)")
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
-    p.add_argument("--obs", choices=["v1", "v2lite", "v2"], default="v1")
+    p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4"], default="v1")
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")
     p.add_argument("--context", action="store_true", help="append the task context to the scalars")
     p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
-    p.add_argument("--precompute-workers", type=int, default=1)
+    p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
     p.add_argument("--verify", action="store_true", help="compare the pack with a fresh build")
     p.add_argument("--prune", action="store_true",
                    help="delete the packs of a label subset this one supersedes")

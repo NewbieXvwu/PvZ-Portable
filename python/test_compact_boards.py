@@ -38,6 +38,41 @@ class CompactBoardsTest(unittest.TestCase):
                     expected = torch.from_numpy(boards[indices]).float()
                     self.assertTrue(torch.equal(actual.view(torch.int32), expected.view(torch.int32)))
 
+    def test_batch_with_planes_matches_dense(self):
+        # task61: the per-identity scatter loop became one fused gather+scatter; the result
+        # must stay exactly the dense board with each row's plane written over it.
+        rng = np.random.default_rng(7)
+        rows, channels = 40, 92
+        cells_total = channels * 6 * 10
+        boards = np.zeros((rows, channels, 6, 10), dtype=np.float16)
+        planes = {}
+        store = CompactBoards(boards.shape[1:])
+        for group in range(4):
+            cells = np.sort(rng.choice(cells_total, size=20 + 5 * group, replace=False)).astype(np.int64)
+            values = (rng.random(len(cells)) + 0.5).astype(np.float16)
+            planes[group] = (cells, values)
+            covered = np.zeros(cells_total, dtype=bool)
+            covered[cells] = True
+            chunk = boards[group * 10:(group + 1) * 10]
+            chunk[:, 0, 0, 0] = 1.0                       # sparse content alongside the plane
+            chunk[:, 1, 1, 1] = -0.0                      # stored zero, still distinct from plane cells
+            store.append(chunk, covered=covered, plane=planes[group])
+        store.finish()
+        flat = boards.reshape(rows, -1)
+        for group in range(4):
+            cells, values = planes[group]
+            flat[group * 10:(group + 1) * 10][:, cells] = values
+        dense = flat.reshape(boards.shape)
+        devices = ["cpu"]
+        if torch.cuda.is_available():
+            devices.append("cuda")
+        for device in devices:
+            for indices in ([0, 39, 5, 5, 17], list(range(rows)), []):
+                actual = store.batch(torch.tensor(indices, dtype=torch.int64), device).cpu()
+                expected = torch.from_numpy(dense[indices]).float()
+                self.assertEqual(actual.shape, expected.shape)
+                self.assertTrue(torch.equal(actual.view(torch.int32), expected.view(torch.int32)))
+
 
 if __name__ == "__main__":
     unittest.main()

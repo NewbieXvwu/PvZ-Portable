@@ -12,6 +12,7 @@ import argparse
 import json
 import math
 import os
+import zipfile
 import random
 import sys
 import time
@@ -88,6 +89,8 @@ class CompactBoards:
         self.nnz = 0
         self.planes, self._plane_ids, self._plane_index = [], bytearray(), {}
         self.plane_of = None
+        self._plane_cells = None            # lazy flatten of planes, see _plane_tables
+        self._plane_device = {}             # device -> (cells, values) resident tensors
         self.indices = bytearray()
         self.values = bytearray()
         self.offsets = bytearray(np.zeros(1, dtype=np.int64).tobytes())
@@ -145,6 +148,29 @@ class CompactBoards:
         return (self.indices.nbytes + self.values.nbytes + self.offsets.nbytes
                 + (0 if self.plane_of is None else self.plane_of.nbytes))
 
+    def _plane_tables(self):
+        """Flatten the per-archive planes once: (cells, values, offsets) with offsets[nplanes+1]."""
+        if self._plane_cells is None:
+            if self.planes:
+                cells = np.concatenate([p[0] for p in self.planes])
+                values = np.concatenate([p[1] for p in self.planes])
+                offsets = np.zeros(len(self.planes) + 1, dtype=np.int64)
+                np.cumsum([len(p[0]) for p in self.planes], out=offsets[1:])
+            else:
+                cells, values, offsets = np.zeros(0, dtype=np.int64), np.zeros(0, dtype=self.dtype), np.zeros(1, dtype=np.int64)
+            self._plane_cells, self._plane_values, self._plane_offsets = cells, values, offsets
+        return self._plane_cells, self._plane_values, self._plane_offsets
+
+    def _plane_device_tables(self, device):
+        """The flattened planes resident on one device (round-2 pack: 1.5 MiB total)."""
+        tables = self._plane_device.get(device)
+        if tables is None:
+            cells, values, _ = self._plane_tables()
+            tables = (torch.from_numpy(cells).to(device).long(),
+                      torch.from_numpy(values).to(device=device, dtype=torch.float32))
+            self._plane_device[device] = tables
+        return tables
+
     def batch(self, idx, device):
         selected = np.asarray(idx)
         starts = self.offsets[selected]
@@ -158,12 +184,22 @@ class CompactBoards:
                           torch.from_numpy(self.values[positions]).to(device=device, dtype=torch.float32))
         if self.plane_of is not None:
             identities = self.plane_of[selected]
-            if (identities >= 0).any():
-                view = output.view(len(selected), size)
-                for identity in np.unique(identities[identities >= 0]):
-                    rows = torch.from_numpy(np.flatnonzero(identities == identity)).to(device)
-                    cells, values = self.planes[identity]
-                    view[rows.unsqueeze(1), torch.from_numpy(cells).long().to(device)] = torch.from_numpy(values).to(device=device, dtype=torch.float32)
+            mask = identities >= 0
+            if mask.any():
+                # One fused scatter instead of one kernel launch per distinct plane: on the
+                # round-2 pack (5155 planes, ~1400 distinct in a 2048-row batch) the loop was
+                # 218 ms of a 222 ms batch build; gathers below are ~1 ms (task61).
+                cells, values, offsets = self._plane_tables()
+                ids = identities[mask]
+                lens = offsets[ids + 1] - offsets[ids]
+                total = int(lens.sum())
+                row_of = np.repeat(np.flatnonzero(mask), lens)
+                positions = (np.repeat(offsets[ids], lens) + np.arange(total)
+                             - np.repeat(np.cumsum(lens) - lens, lens))
+                plane_cells, plane_values = self._plane_device_tables(device)
+                gathered = torch.from_numpy(positions).to(device)
+                output.view(len(selected), size)[
+                    torch.from_numpy(row_of).to(device), plane_cells[gathered]] = plane_values[gathered]
         return output.reshape(len(selected), *self.shape[1:])
 
 
@@ -324,11 +360,6 @@ class ValueStore:
         return self.counts.nbytes + self.slots.nbytes + self.values.nbytes + self.offsets.nbytes
 
 
-# Packs stay mapped for the whole run: the arrays are memmaps into the file, and closing the NpzFile
-# would drop the handle the mappings were opened from.
-_OPEN_PACKS: list = []
-
-
 def _pack_flags(options: dict) -> str:
     import shlex
     return shlex.join(pack_flags(options))
@@ -339,9 +370,8 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
          row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
-    One sequential pass over one file, with the CSR already built, instead of decompressing 21 056
-    archives and rebuilding it on every run (task33). The collection step writes the pack; a label set
-    without one says which command to run.
+    Read the corpus index and immutable label segments, merging CSR slices in archive order.
+    The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
                            sources=archive_fingerprint(data, labels))
@@ -356,7 +386,14 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
 def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None):
     """The tuple load has always returned, from one packed file."""
     stored = np.load(path, mmap_mode="r", allow_pickle=False)
-    _OPEN_PACKS.append(stored)
+    if 'segments' in stored.files:
+        names = stored['segments'].tolist()
+        stored.close()
+        # source_weight is applied while merging: the segments carry the per-row source columns,
+        # the concatenated pack does not.
+        return read_segments([path.parent / name for name in names], data, row_observer, source_weight)
+    # npz arrays are materialized (np.load's mmap_mode does not mmap ZIP members).
+    # Close the archive after reading; every returned array owns its bytes.
     rows = int(stored["rows"])
     boards = CompactBoards.from_arrays(stored, "board")
     scalars = CompactBoards.from_arrays(stored, "scalar")
@@ -389,8 +426,233 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         result = (*result, torch.from_numpy(np.asarray(stored["aux"])))
     if "packet_col0" in stored.files:
         result = (*result, PacketStore.from_arrays(stored, rows))
+    stored.close()
     return result
 
+
+def _member_header(archive, name):
+    """One npz member's (shape, dtype) from its .npy header, without reading the data.
+
+    Segments are uncompressed np.savez archives, so sizing a big CSR array costs a header
+    parse, not a decompress (task61).
+    """
+    with archive.open(name if name.endswith(".npy") else name + ".npy") as handle:
+        version = np.lib.format.read_magic(handle)
+        read_header = (np.lib.format.read_array_header_1_0 if version == (1, 0)
+                       else np.lib.format.read_array_header_2_0)
+        shape, _, dtype = read_header(handle)
+    return shape, np.dtype(dtype)
+
+
+def _member_array(archive, name):
+    """Read one npz member fully -- only used for the tiny per-store descriptors."""
+    with archive.open(name + ".npy") as handle:
+        return np.lib.format.read_array(handle)
+
+
+def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
+    """Merge compact slices in global archive order, without decompressing game frames.
+
+    Labels interleave by seed in frame_paths. Simply concatenating label segments would change
+    the split, shuffle and losses. Copy CSR slices in that original order instead; no dense
+    boards are created and the trainer keeps its ordinary compact stores and batch code.
+
+    task61: two passes keep the peak near one segment instead of the whole corpus twice. Pass
+    one reads only per-row metadata and every member's npy header (no big array is decompressed),
+    lays the chunks out in global archive order and preallocates the targets -- file backed
+    _spilled_array memmaps when data names a directory (anonymous memory then stays around one
+    segment), plain arrays otherwise. Pass two loads one segment at a time, copies each chunk
+    to its precomputed position and releases it. The result is bitwise identical to the previous
+    concatenate-everything implementation (tests compare every column, plus hashes over a real
+    round-2 pack subset).
+    """
+    spill = Path(data) / ".merge" if data is not None else None
+
+    def allocate(name, dtype, shape):
+        if spill is not None:
+            return _spilled_array(spill, name, np.dtype(dtype), shape)
+        return np.zeros(shape, dtype=np.dtype(dtype))
+
+    # Pass one: the chunk layout comes from per-row metadata and the (small) offsets/counts
+    # arrays, which also give every chunk its source entry range per stream. Nothing big is
+    # held. source_row (int32, 4 bytes a row) is kept because row_observer needs it at the
+    # end, exactly like the old implementation kept it inside chunks.
+    layouts, chunks = [], []
+    for index, path in enumerate(paths):
+        with np.load(path, allow_pickle=False) as stored:
+            sources = stored["source"].tolist()
+            archive = np.asarray(stored["source_archive"])
+            rows = np.asarray(stored["source_row"])
+            has_cands = "cand_counts" in stored.files
+            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+            # CSR streams carry an offsets member; the sparse stores derive theirs from
+            # counts (uint8 per row, cumsum like ValueStore.from_arrays does at load).
+            boundaries = {"board": np.asarray(stored["board_offsets"]),
+                          "scalar": np.asarray(stored["scalar_offsets"]),
+                          "value": np.concatenate(
+                              [[0], np.cumsum(np.asarray(stored["value_counts"]).astype(np.int64))])}
+            if has_cands:
+                boundaries["cand"] = np.concatenate(
+                    [[0], np.cumsum(np.asarray(stored["cand_counts"]).astype(np.int64))])
+        counts = np.bincount(archive, minlength=len(sources))
+        start = 0
+        for source, count in zip(sources, counts):
+            stop = start + int(count)
+            ranges = {name: (int(boundaries[name][start]), int(boundaries[name][stop]))
+                      for name in streams}
+            chunks.append((source, index, start, stop, rows[start:stop], ranges))
+            start = stop
+        layouts.append(dict(path=path, rows=len(rows), source_row=rows))
+    chunks.sort(key=lambda chunk: str(Path(chunk[0]).parent))
+
+    # Column composition is fixed by the shared row options; the first segment describes
+    # every segment, and the copy loop asserts each store's descriptors as it goes.
+    with zipfile.ZipFile(layouts[0]["path"]) as zfile:
+        members = set(name[:-4] for name in zfile.namelist())
+        dense_names = ("plant", "packet", "cell", "weight")
+        has_aux = "aux" in members
+        has_packets = "packet_col0" in members
+        has_cands = "cand_counts" in members
+        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+        headers = {name: _member_header(zfile, name) for name in
+                   dense_names + (("aux",) if has_aux else ()) + ("seed",)
+                   + ("value_counts", "value_slots", "value_values")
+                   + (("cand_counts", "cand_entries") if has_cands else ())
+                   + (("packet_col0", "packet_col1", "packet_col2", "packet_col3") if has_packets else ())}
+        descriptors = {"board": dict(shape=tuple(int(n) for n in _member_array(zfile, "board_shape")),
+                                     dtype=np.dtype(str(_member_array(zfile, "board_dtype"))),
+                                     index_dtype=_member_header(zfile, "board_indices")[1]),
+                       "scalar": dict(shape=tuple(int(n) for n in _member_array(zfile, "scalar_shape")),
+                                      dtype=np.dtype(str(_member_array(zfile, "scalar_dtype"))),
+                                      index_dtype=_member_header(zfile, "scalar_indices")[1])}
+
+    # Target positions in global archive order: the row position and, per stream, the entry
+    # position -- a running prefix over the sorted chunks, exactly what np.concatenate
+    # produced in the old implementation.
+    placed, position = [], 0
+    cursors = {name: 0 for name in streams}
+    for source, index, start, stop, rows, ranges in chunks:
+        entry = dict(source=source, index=index, start=start, stop=stop, rows=rows, pos=position)
+        position += stop - start
+        for name in streams:
+            lo, hi = ranges[name]
+            entry[name] = (cursors[name], lo, hi)
+            cursors[name] += hi - lo
+        placed.append(entry)
+    total_rows = position
+    entries_by_index = {index: [] for index in range(len(layouts))}
+    for entry in placed:
+        entries_by_index[entry["index"]].append(entry)
+
+    totals = dict(cursors)      # the running prefixes end at each stream's full size
+    plane_counts = {"board": [], "scalar": []}
+    for layout in layouts:
+        with zipfile.ZipFile(layout["path"]) as zfile:
+            for name in ("board", "scalar"):
+                plane_counts[name].append(int(_member_header(zfile, name + "_plane_offsets")[0][0]) - 1)
+    plane_bases = {name: np.cumsum([0] + plane_counts[name]) for name in ("board", "scalar")}
+
+    # Targets, preallocated once: file backed memmaps in the trainer (data given), plain
+    # arrays otherwise. The whole merged corpus is written exactly once, position by position.
+    stores = []
+    for name in ("board", "scalar"):
+        descriptor = descriptors[name]
+        store = CompactBoards(descriptor["shape"], descriptor["dtype"])
+        store.index_dtype = descriptor["index_dtype"]
+        store.indices = allocate(name + "_indices", store.index_dtype, (totals[name],))
+        store.values = allocate(name + "_values", descriptor["dtype"], (totals[name],))
+        store.offsets = allocate(name + "_offsets", np.int64, (total_rows + 1,))
+        store.offsets[0] = 0
+        store.plane_of = (allocate(name + "_plane_of", np.int32, (total_rows,))
+                          if plane_bases[name][-1] else None)
+        store.planes = []
+        store.nnz = totals[name]
+        store.shape = (total_rows, *descriptor["shape"])
+        stores.append(store)
+    dense_targets = {name: allocate(name, headers[name][1], (total_rows, *headers[name][0][1:]))
+                     for name in dense_names + (("aux",) if has_aux else ())}
+    seed_target = allocate("seed", headers["seed"][1], (total_rows,))
+    value_arrays = {"value_counts": allocate("value_counts", headers["value_counts"][1], (total_rows,)),
+                    "value_slots": allocate("value_slots", headers["value_slots"][1], (totals["value"],)),
+                    "value_values": allocate("value_values", headers["value_values"][1], (totals["value"],))}
+    cand_arrays = None
+    if has_cands:
+        cand_arrays = {"cand_counts": allocate("cand_counts", headers["cand_counts"][1], (total_rows,)),
+                       "cand_entries": allocate("cand_entries", headers["cand_entries"][1],
+                                                (totals["cand"], *headers["cand_entries"][0][1:]))}
+    packets = PacketStore(total_rows, headers["packet_col0"][0][1]) if has_packets else None
+
+    # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
+    for index, layout in enumerate(layouts):
+        part = read_pack(layout["path"])
+        for store, name, part_store in ((stores[0], "board", part[0]), (stores[1], "scalar", part[1])):
+            descriptor = descriptors[name]
+            if (part_store.indices.dtype != descriptor["index_dtype"]
+                    or part_store.dtype != descriptor["dtype"]
+                    or tuple(part_store.shape[1:]) != descriptor["shape"]):
+                raise ValueError(f'{layout["path"]}: {name} descriptors differ from the first segment')
+            store.planes.extend(part_store.planes)
+        for entry in entries_by_index[index]:
+            start, stop, pos = entry["start"], entry["stop"], entry["pos"]
+            span = stop - start
+            for store, part_store, name, plane_base in (
+                    (stores[0], part[0], "board", plane_bases["board"][index]),
+                    (stores[1], part[1], "scalar", plane_bases["scalar"][index])):
+                nnz_at, lo, hi = entry[name]
+                store.offsets[pos + 1:pos + span + 1] = nnz_at + np.cumsum(
+                    np.diff(part_store.offsets[start:stop + 1]), dtype=np.int64)
+                store.indices[nnz_at:nnz_at + (hi - lo)] = part_store.indices[lo:hi]
+                store.values[nnz_at:nnz_at + (hi - lo)] = part_store.values[lo:hi]
+                if store.plane_of is not None:
+                    ids = (np.full(span, -1, np.int32) if part_store.plane_of is None
+                           else part_store.plane_of[start:stop])
+                    store.plane_of[pos:pos + span] = np.where(
+                        ids >= 0, ids + plane_base, -1).astype(np.int32)
+            for name, part_store, arrays, fields in (
+                    ("value", part[7], value_arrays, ("slots", "values")),
+                    ("cand", part[8], cand_arrays, ("entries",))):
+                if arrays is None:
+                    continue
+                entry_at, lo, hi = entry[name]
+                arrays[name + "_counts"][pos:pos + span] = part_store.counts[start:stop]
+                for field in fields:
+                    arrays[name + "_" + field][entry_at:entry_at + (hi - lo)] = \
+                        getattr(part_store, field)[lo:hi]
+            for name, part_index in (("plant", 2), ("packet", 3), ("cell", 4), ("weight", 5),
+                                     *((("aux", 9),) if has_aux else ())):
+                dense_targets[name][pos:pos + span] = np.asarray(part[part_index])[start:stop]
+            seed_target[pos:pos + span] = np.asarray(part[6])[start:stop]
+            if packets is not None:
+                for column, target_column in zip(part[9 + has_aux].columns, packets.columns):
+                    target_column[pos:pos + span] = np.asarray(column)[start:stop]
+        del part
+
+    result = (stores[0], stores[1],
+              *(torch.from_numpy(dense_targets[name]) for name in dense_names),
+              seed_target, ValueStore.from_arrays(value_arrays),
+              CandidateStore.from_arrays(cand_arrays) if cand_arrays is not None else None)
+    if has_aux:
+        result = (*result, torch.from_numpy(dense_targets["aux"]))
+    if has_packets:
+        result = (*result, packets)
+    if row_observer is not None and data is not None:
+        for entry in placed:
+            if len(entry["rows"]):
+                row_observer(Path(data) / entry["source"], entry["rows"])
+    if source_weight and data is not None:
+        # Same rule as the single-file branch: a row's weight is scaled by its archive's
+        # label_source. task61's segmented packs merged the weights but dropped this step, so
+        # human/demonstration rows kept full weight in the production trainer.
+        for entry in placed:
+            span = entry["stop"] - entry["start"]
+            if not span:
+                continue
+            meta_path = (Path(data) / entry["source"]).parent / "meta.json"
+            meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
+            factor = source_weight.get(meta.get("label_source", "teacher"), 1.0)
+            if factor != 1.0:
+                dense_targets["weight"][entry["pos"]:entry["pos"] + span] *= factor
+    return result
 
 def main(*, step_observer=None) -> None:
     # task34: train after collection, but before the controller and the WSL access path.
@@ -475,6 +737,10 @@ def main(*, step_observer=None) -> None:
         if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
             weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
             weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
+        if args.obs == "v2fog" and initial.obs == "v2" and args.context == initial.context:
+            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 1))
+        if args.obs == "v2fogstack4" and initial.obs == "v2" and args.context == initial.context:
+            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 103))
         net.load_state_dict(weights)
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})

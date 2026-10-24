@@ -1,0 +1,6337 @@
+{
+ "schema_version": 1,
+ "status": "complete",
+ "sampling_sha256": "209082aa01c2482f732d37f07b5dc546b67c290b34f9b21ccfc39556c6081818",
+ "overall": {
+  "roots": 17,
+  "episodes": 14,
+  "base_seed_units": 14,
+  "candidates": 753,
+  "labels": 1506,
+  "terminal_wins": 177,
+  "separable_roots": {
+   "won": 8,
+   "wave": 17,
+   "tick": 17
+  },
+  "available_root_types": {
+   "1": 8,
+   "3": 9,
+   "33": 8,
+   "0": 2,
+   "32": 2
+  },
+  "v4_favourite_types": {
+   "3": 1,
+   "None": 11,
+   "1": 4,
+   "33": 1
+  },
+  "wave_favourite_types": {
+   "1": 5,
+   "None": 9,
+   "33": 2,
+   "3": 1
+  },
+  "metrics": {
+   "won": {
+    "v4": {
+     "pairs": 4929,
+     "accuracy": 0.5388516940555894,
+     "value_ties": 4,
+     "cluster_bootstrap_95": [
+      0.47058823529411764,
+      0.6088774525570924
+     ]
+    },
+    "v4_strict": {
+     "pairs": 4929,
+     "accuracy": 0.5388516940555894,
+     "value_ties": 4,
+     "cluster_bootstrap_95": [
+      0.47058823529411764,
+      0.6088774525570924
+     ]
+    },
+    "v4_nonterminal": {
+     "pairs": 4929,
+     "accuracy": 0.5388516940555894,
+     "value_ties": 4,
+     "cluster_bootstrap_95": [
+      0.47058823529411764,
+      0.6088774525570924
+     ]
+    },
+    "teacher_path_v4": {
+     "pairs": 4929,
+     "accuracy": 0.5588354635828768,
+     "value_ties": 3,
+     "cluster_bootstrap_95": [
+      0.4498136315228967,
+      0.6681706316652994
+     ]
+    }
+   },
+   "wave": {
+    "v4": {
+     "pairs": 13398,
+     "accuracy": 0.5613897596656218,
+     "value_ties": 15,
+     "cluster_bootstrap_95": [
+      0.5204897001686093,
+      0.6150107526881721
+     ]
+    },
+    "v4_strict": {
+     "pairs": 15969,
+     "accuracy": 0.5499091990732043,
+     "value_ties": 17,
+     "cluster_bootstrap_95": [
+      0.5164477315376973,
+      0.5981919015422016
+     ]
+    },
+    "v4_nonterminal": {
+     "pairs": 13339,
+     "accuracy": 0.5594497338631081,
+     "value_ties": 15,
+     "cluster_bootstrap_95": [
+      0.5166763061499904,
+      0.6150107526881721
+     ]
+    },
+    "teacher_path_v4": {
+     "pairs": 13398,
+     "accuracy": 0.5644499178981938,
+     "value_ties": 15,
+     "cluster_bootstrap_95": [
+      0.5249413771050948,
+      0.6102862061545082
+     ]
+    }
+   },
+   "tick": {
+    "v4": {
+     "pairs": 16881,
+     "accuracy": 0.5483679876784551,
+     "value_ties": 18,
+     "cluster_bootstrap_95": [
+      0.5210523856254965,
+      0.5870882611670414
+     ]
+    },
+    "v4_strict": {
+     "pairs": 18552,
+     "accuracy": 0.547542043984476,
+     "value_ties": 20,
+     "cluster_bootstrap_95": [
+      0.5230845365626455,
+      0.582538317172349
+     ]
+    },
+    "v4_nonterminal": {
+     "pairs": 16822,
+     "accuracy": 0.5467839733682083,
+     "value_ties": 18,
+     "cluster_bootstrap_95": [
+      0.5183343319352905,
+      0.5870882611670414
+     ]
+    },
+    "teacher_path_v4": {
+     "pairs": 16881,
+     "accuracy": 0.5507375155500267,
+     "value_ties": 16,
+     "cluster_bootstrap_95": [
+      0.5244142371668753,
+      0.5884510029159671
+     ]
+    }
+   }
+  }
+ },
+ "by_level": {
+  "42": {
+   "roots": 3,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 186,
+   "labels": 372,
+   "terminal_wins": 65,
+   "separable_roots": {
+    "won": 3,
+    "wave": 3,
+    "tick": 3
+   },
+   "available_root_types": {
+    "1": 1,
+    "3": 1,
+    "33": 3,
+    "0": 1,
+    "32": 1
+   },
+   "v4_favourite_types": {
+    "3": 1,
+    "None": 1,
+    "33": 1
+   },
+   "wave_favourite_types": {
+    "1": 1,
+    "None": 1,
+    "33": 1
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 2443,
+      "accuracy": 0.5697912402783463,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.549889135254989,
+       0.5742971887550201
+      ]
+     },
+     "v4_strict": {
+      "pairs": 2443,
+      "accuracy": 0.5697912402783463,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.549889135254989,
+       0.5742971887550201
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 2443,
+      "accuracy": 0.5697912402783463,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.549889135254989,
+       0.5742971887550201
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 2443,
+      "accuracy": 0.6393778141629145,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.5254988913525499,
+       0.6651606425702812
+      ]
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 4283,
+      "accuracy": 0.5577865981788466,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.544348857905666,
+       0.6074561403508771
+      ]
+     },
+     "v4_strict": {
+      "pairs": 5150,
+      "accuracy": 0.5439805825242718,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5316016279626526,
+       0.5971223021582733
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 4283,
+      "accuracy": 0.5577865981788466,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.544348857905666,
+       0.6074561403508771
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 4283,
+      "accuracy": 0.5951435909409293,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.5870661524770098,
+       0.625
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 5449,
+      "accuracy": 0.5377133418975959,
+      "value_ties": 4,
+      "cluster_bootstrap_95": [
+       0.5245053956834532,
+       0.5964035964035964
+      ]
+     },
+     "v4_strict": {
+      "pairs": 5929,
+      "accuracy": 0.5309495699106088,
+      "value_ties": 4,
+      "cluster_bootstrap_95": [
+       0.5185941969758888,
+       0.5893719806763285
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 5449,
+      "accuracy": 0.5377133418975959,
+      "value_ties": 4,
+      "cluster_bootstrap_95": [
+       0.5245053956834532,
+       0.5964035964035964
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 5449,
+      "accuracy": 0.5619379702697743,
+      "value_ties": 4,
+      "cluster_bootstrap_95": [
+       0.5508093525179856,
+       0.6113886113886113
+      ]
+     }
+    }
+   }
+  },
+  "43": {
+   "roots": 3,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 139,
+   "labels": 278,
+   "terminal_wins": 81,
+   "separable_roots": {
+    "won": 3,
+    "wave": 3,
+    "tick": 3
+   },
+   "available_root_types": {
+    "1": 2,
+    "3": 2,
+    "33": 1,
+    "0": 1,
+    "32": 1
+   },
+   "v4_favourite_types": {
+    "None": 3
+   },
+   "wave_favourite_types": {
+    "1": 1,
+    "None": 2
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 1968,
+      "accuracy": 0.5167682926829268,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.5045871559633027,
+       0.6116071428571429
+      ]
+     },
+     "v4_strict": {
+      "pairs": 1968,
+      "accuracy": 0.5167682926829268,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.5045871559633027,
+       0.6116071428571429
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 1968,
+      "accuracy": 0.5167682926829268,
+      "value_ties": 2,
+      "cluster_bootstrap_95": [
+       0.5045871559633027,
+       0.6116071428571429
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 1968,
+      "accuracy": 0.4839939024390244,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.4595756880733945,
+       0.6741071428571429
+      ]
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 2165,
+      "accuracy": 0.6367205542725173,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.6361526560082517,
+       0.6415929203539823
+      ]
+     },
+     "v4_strict": {
+      "pairs": 2742,
+      "accuracy": 0.6066739606126915,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.5996325030624745,
+       0.6655290102389079
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 2165,
+      "accuracy": 0.6367205542725173,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.6361526560082517,
+       0.6415929203539823
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 2165,
+      "accuracy": 0.5665127020785219,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.5526044352759154,
+       0.6858407079646017
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 3448,
+      "accuracy": 0.5735208816705336,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5181347150259067,
+       0.5805029392553887
+      ]
+     },
+     "v4_strict": {
+      "pairs": 3665,
+      "accuracy": 0.5703956343792633,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5197044334975369,
+       0.5767106474378644
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 3448,
+      "accuracy": 0.5735208816705336,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5181347150259067,
+       0.5805029392553887
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 3448,
+      "accuracy": 0.5378480278422274,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.5377204441541477,
+       0.538860103626943
+      ]
+     }
+    }
+   }
+  },
+  "44": {
+   "roots": 3,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 167,
+   "labels": 334,
+   "terminal_wins": 0,
+   "separable_roots": {
+    "won": 0,
+    "wave": 3,
+    "tick": 3
+   },
+   "available_root_types": {
+    "1": 2,
+    "33": 3,
+    "3": 1
+   },
+   "v4_favourite_types": {
+    "1": 2,
+    "None": 1
+   },
+   "wave_favourite_types": {
+    "None": 2,
+    "1": 1
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 3352,
+      "accuracy": 0.5250596658711217,
+      "value_ties": 8,
+      "cluster_bootstrap_95": [
+       0.49013968775677896,
+       0.6176470588235294
+      ]
+     },
+     "v4_strict": {
+      "pairs": 4088,
+      "accuracy": 0.5198140900195695,
+      "value_ties": 8,
+      "cluster_bootstrap_95": [
+       0.49159663865546216,
+       0.607645875251509
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 3293,
+      "accuracy": 0.5165502581232918,
+      "value_ties": 8,
+      "cluster_bootstrap_95": [
+       0.47747368421052633,
+       0.6176470588235294
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 3352,
+      "accuracy": 0.5250596658711217,
+      "value_ties": 8,
+      "cluster_bootstrap_95": [
+       0.49013968775677896,
+       0.6176470588235294
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 3881,
+      "accuracy": 0.5340118526153054,
+      "value_ties": 7,
+      "cluster_bootstrap_95": [
+       0.5062090375991721,
+       0.6160896130346232
+      ]
+     },
+     "v4_strict": {
+      "pairs": 4589,
+      "accuracy": 0.5452168228372194,
+      "value_ties": 8,
+      "cluster_bootstrap_95": [
+       0.528137310073157,
+       0.6038647342995169
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 3822,
+      "accuracy": 0.5268184196755625,
+      "value_ties": 7,
+      "cluster_bootstrap_95": [
+       0.4959507042253521,
+       0.6160896130346232
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 3881,
+      "accuracy": 0.5350425148157691,
+      "value_ties": 7,
+      "cluster_bootstrap_95": [
+       0.5062090375991721,
+       0.620162932790224
+      ]
+     }
+    }
+   }
+  },
+  "46": {
+   "roots": 2,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 62,
+   "labels": 124,
+   "terminal_wins": 31,
+   "separable_roots": {
+    "won": 2,
+    "wave": 2,
+    "tick": 2
+   },
+   "available_root_types": {
+    "3": 1,
+    "1": 1
+   },
+   "v4_favourite_types": {
+    "None": 1,
+    "1": 1
+   },
+   "wave_favourite_types": {
+    "None": 1,
+    "1": 1
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 518,
+      "accuracy": 0.4768339768339768,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.2702702702702703,
+       0.7522522522522522
+      ]
+     },
+     "v4_strict": {
+      "pairs": 518,
+      "accuracy": 0.4768339768339768,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.2702702702702703,
+       0.7522522522522522
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 518,
+      "accuracy": 0.4768339768339768,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.2702702702702703,
+       0.7522522522522522
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 518,
+      "accuracy": 0.46332046332046334,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.2939189189189189,
+       0.6891891891891891
+      ]
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 750,
+      "accuracy": 0.602,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.465675057208238,
+       0.792332268370607
+      ]
+     },
+     "v4_strict": {
+      "pairs": 846,
+      "accuracy": 0.5975177304964538,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.46399176954732513,
+       0.7777777777777778
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 750,
+      "accuracy": 0.602,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.465675057208238,
+       0.792332268370607
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 750,
+      "accuracy": 0.5846666666666667,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.477116704805492,
+       0.7348242811501597
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 901,
+      "accuracy": 0.5810210876803552,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.48035363457760316,
+       0.7117346938775511
+      ]
+     },
+     "v4_strict": {
+      "pairs": 934,
+      "accuracy": 0.5819057815845824,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.48579545454545453,
+       0.7068965517241379
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 901,
+      "accuracy": 0.5810210876803552,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.48035363457760316,
+       0.7117346938775511
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 901,
+      "accuracy": 0.5621531631520533,
+      "value_ties": 1,
+      "cluster_bootstrap_95": [
+       0.4823182711198428,
+       0.6658163265306123
+      ]
+     }
+    }
+   }
+  },
+  "47": {
+   "roots": 2,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 52,
+   "labels": 104,
+   "terminal_wins": 0,
+   "separable_roots": {
+    "won": 0,
+    "wave": 2,
+    "tick": 2
+   },
+   "available_root_types": {
+    "3": 2
+   },
+   "v4_favourite_types": {
+    "None": 2
+   },
+   "wave_favourite_types": {
+    "None": 2
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 582,
+      "accuracy": 0.6597938144329897,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.6085626911314985,
+       0.7254901960784313
+      ]
+     },
+     "v4_strict": {
+      "pairs": 618,
+      "accuracy": 0.6553398058252428,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.6034985422740525,
+       0.72
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 582,
+      "accuracy": 0.6597938144329897,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.6085626911314985,
+       0.7254901960784313
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 582,
+      "accuracy": 0.6563573883161512,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.5963302752293578,
+       0.7333333333333333
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 604,
+      "accuracy": 0.6423841059602649,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.5835777126099707,
+       0.7186311787072244
+      ]
+     },
+     "v4_strict": {
+      "pairs": 650,
+      "accuracy": 0.6353846153846154,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.584045584045584,
+       0.6956521739130435
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 604,
+      "accuracy": 0.6423841059602649,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.5835777126099707,
+       0.7186311787072244
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 604,
+      "accuracy": 0.6556291390728477,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.6011730205278593,
+       0.7262357414448669
+      ]
+     }
+    }
+   }
+  },
+  "48": {
+   "roots": 2,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 90,
+   "labels": 180,
+   "terminal_wins": 0,
+   "separable_roots": {
+    "won": 0,
+    "wave": 2,
+    "tick": 2
+   },
+   "available_root_types": {
+    "1": 1,
+    "3": 1,
+    "33": 1
+   },
+   "v4_favourite_types": {
+    "None": 2
+   },
+   "wave_favourite_types": {
+    "3": 1,
+    "33": 1
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 1562,
+      "accuracy": 0.469270166453265,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.38307873090481787,
+       0.5724331926863573
+      ]
+     },
+     "v4_strict": {
+      "pairs": 1759,
+      "accuracy": 0.47299602046617395,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.3858267716535433,
+       0.5620689655172414
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 1562,
+      "accuracy": 0.469270166453265,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.38307873090481787,
+       0.5724331926863573
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 1562,
+      "accuracy": 0.48975672215108834,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.38660399529964745,
+       0.6132208157524613
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1835,
+      "accuracy": 0.49318801089918257,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.4224049331963001,
+       0.5730858468677494
+      ]
+     },
+     "v4_strict": {
+      "pairs": 1981,
+      "accuracy": 0.49520444220090865,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.4280193236714976,
+       0.5687103594080338
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 1835,
+      "accuracy": 0.49318801089918257,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.4224049331963001,
+       0.5730858468677494
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 1835,
+      "accuracy": 0.5051771117166213,
+      "value_ties": 0,
+      "cluster_bootstrap_95": [
+       0.4131551901336074,
+       0.6090487238979119
+      ]
+     }
+    }
+   }
+  },
+  "49": {
+   "roots": 2,
+   "episodes": 2,
+   "base_seed_units": 2,
+   "candidates": 57,
+   "labels": 114,
+   "terminal_wins": 0,
+   "separable_roots": {
+    "won": 0,
+    "wave": 2,
+    "tick": 2
+   },
+   "available_root_types": {
+    "3": 1,
+    "1": 1
+   },
+   "v4_favourite_types": {
+    "None": 1,
+    "1": 1
+   },
+   "wave_favourite_types": {
+    "None": 1,
+    "1": 1
+   },
+   "metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "accuracy": null,
+      "value_ties": 0,
+      "cluster_bootstrap_95": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 704,
+      "accuracy": 0.6044034090909091,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5702947845804989,
+       0.6615969581749049
+      ]
+     },
+     "v4_strict": {
+      "pairs": 766,
+      "accuracy": 0.5861618798955613,
+      "value_ties": 4,
+      "cluster_bootstrap_95": [
+       0.5515151515151515,
+       0.6494464944649446
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 704,
+      "accuracy": 0.6044034090909091,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5702947845804989,
+       0.6615969581749049
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 704,
+      "accuracy": 0.6271306818181818,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5702947845804989,
+       0.7224334600760456
+      ]
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 763,
+      "accuracy": 0.6035386631716907,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5781563126252505,
+       0.6515151515151515
+      ]
+     },
+     "v4_strict": {
+      "pairs": 804,
+      "accuracy": 0.5970149253731343,
+      "value_ties": 4,
+      "cluster_bootstrap_95": [
+       0.5757575757575758,
+       0.6376811594202898
+      ]
+     },
+     "v4_nonterminal": {
+      "pairs": 763,
+      "accuracy": 0.6035386631716907,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5781563126252505,
+       0.6515151515151515
+      ]
+     },
+     "teacher_path_v4": {
+      "pairs": 763,
+      "accuracy": 0.6218872870249017,
+      "value_ties": 3,
+      "cluster_bootstrap_95": [
+       0.5781563126252505,
+       0.7045454545454546
+      ]
+     }
+    }
+   }
+  }
+ },
+ "cpu_seconds_metered": 63850.749922,
+ "cpu_allowance_seconds": 1200,
+ "frozen_inputs": {
+  "paths": {
+   "rollout_policy": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+   "value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "static_value": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/build/pvz-portable",
+   "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+   "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/roof_panel.json"
+  },
+  "sha256": {
+   "rollout_policy": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+   "value": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+   "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+   "executable": "e36e9650fbc66952f23f9572b740d35ccd2af3e47c00826be29b346e7c3fbab1",
+   "manifest": "393004fbe47b372bb18a94aa8688166ccdffb226618b9becbc77714a7e4534d1",
+   "search_source": "33e41442e149a057a28fed3bd20bd7762b5746a6031b1a83c5c10851a9bf8a50"
+  },
+  "cells": [
+   {
+    "id": "l42-student-45000000",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000000
+   },
+   {
+    "id": "l42-student-45000001",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000001
+   },
+   {
+    "id": "l43-student-45000000",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000000
+   },
+   {
+    "id": "l43-student-45000001",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000001
+   },
+   {
+    "id": "l44-student-45000000",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000000
+   },
+   {
+    "id": "l44-student-45000001",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000001
+   },
+   {
+    "id": "l46-student-45000000",
+    "task_id": "roof_l46_eval_r7",
+    "level": 46,
+    "seed": 45000000
+   },
+   {
+    "id": "l46-student-45000001",
+    "task_id": "roof_l46_eval_r7",
+    "level": 46,
+    "seed": 45000001
+   },
+   {
+    "id": "l47-student-45000000",
+    "task_id": "roof_l47_eval_r7",
+    "level": 47,
+    "seed": 45000000
+   },
+   {
+    "id": "l47-student-45000001",
+    "task_id": "roof_l47_eval_r7",
+    "level": 47,
+    "seed": 45000001
+   },
+   {
+    "id": "l48-student-45000000",
+    "task_id": "roof_l48_eval_r7",
+    "level": 48,
+    "seed": 45000000
+   },
+   {
+    "id": "l48-student-45000001",
+    "task_id": "roof_l48_eval_r7",
+    "level": 48,
+    "seed": 45000001
+   },
+   {
+    "id": "l49-student-45000000",
+    "task_id": "roof_l49_eval_r7",
+    "level": 49,
+    "seed": 45000000
+   },
+   {
+    "id": "l49-student-45000001",
+    "task_id": "roof_l49_eval_r7",
+    "level": 49,
+    "seed": 45000001
+   },
+   {
+    "id": "l42-archive-45000000",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l42-45000000-teacher",
+    "window_end_tick": 14000
+   },
+   {
+    "id": "l43-archive-45000000",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l43-45000000-teacher",
+    "window_end_tick": 28600
+   },
+   {
+    "id": "l44-archive-45000000",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l44-45000000-teacher",
+    "window_end_tick": 11100
+   }
+  ],
+  "spec": {
+   "schema_version": 1,
+   "namespace": "task46-B-roof-terminal",
+   "levels": [
+    42,
+    43,
+    44,
+    46,
+    47,
+    48,
+    49
+   ],
+   "seed_offsets": [
+    0,
+    1
+   ],
+   "window_end_tick": 10000,
+   "root_selection": "timing-only pilot selects 1 or 2 time-spaced scheduled student decisions per seed; target 0/10000 if two, nearest5000 if one; all-candidate labels never used for root selection",
+   "marked_decisions_1based": {
+    "42": [
+     127,
+     254
+    ],
+    "43": [
+     81,
+     537
+    ],
+    "44": [
+     1,
+     196
+    ]
+   },
+   "scope_resolution": "retain six non-L45 marked points with original teacher prefixes; >10000 ticks are explicit named-point exceptions; two L45 points deferred under explicit final sentence of appendix B",
+   "candidates": "all engine legal planting AND shovels plus canonical wait:60/timeout; root shovel outcomes remain separate from production representable candidates",
+   "terminal_policy": "immediately after candidate, same frozen search teacher all the way to terminal; world and search noise common across root candidates",
+   "screening_futures_options": [
+    3,
+    2
+   ],
+   "pilot": "first seed per ordinary level, initial/nearest5000 roots plus marked points; one future, representative first/middle/last cells per plant packet + one shovel + wait; only CPU timing used",
+   "sampling_budget_gate": "freeze root density and sample count after pilot CPU projections, preserving all legal candidates and >=2 seeds per level; reserve >=1200 CPU seconds for audits/repro/report",
+   "cpu_budget_seconds": 72000,
+   "cpu_stop_seconds": 70800,
+   "artifact_budget_bytes": 5000000000,
+   "workers": 4,
+   "metrics": [
+    "terminal win fraction",
+    "mean terminal wave",
+    "mean terminal tick",
+    "mowers used",
+    "static coverage of terminal improvements",
+    "halving survival of terminal improvements",
+    "v4 vs terminal pair rankings",
+    "margin blocked improvements; verification separately"
+   ],
+   "uncertainty": "small common-future cohort; strict/tie/thresholded rankings and reset-seed clusters; observed improvements do not imply independent significance",
+   "reuse": {
+    "fog": {
+     "commit": "2d3ba1d5a113f4bb196eb674580c988949b60d18",
+     "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/scripts/fog_terminal_diagnostic.py",
+     "sha256": "854b9145d83406c6ace4ab4f30fdb7b9eefabfaf584c9625add1f172eaf11e54"
+    },
+    "v5": {
+     "commit": "bb2ec969",
+     "file": "scripts/value_teacher_feasibility.py",
+     "sha256": "0b4089d2f34e37ea1e2cda30fdc8be0ee73f70e2aa1c62b56997bd8b613d9588",
+     "reference": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/frozen/task43_teacher.py"
+    }
+   },
+   "production_changes": false,
+   "qc_changes": false,
+   "timing_job_manifests": [
+    "pilot-jobs.json",
+    "pilot-end-jobs.json"
+   ],
+   "timing_amendment": {
+    "reason": "all four projections exceeded 20h; original two-root choice includes near10000 but original timing pilot covered initial/near5000 only; measure already-inspected end roots before declaring infeasible",
+    "previous_plan_sha256": "f7d418e69ce4fc5c62261a234a45cdfc85ce6cab2ecf2a312873088497481c9d",
+    "scope_changed": false,
+    "outcomes_used_for_selection": false
+   },
+   "cpu_sparse_fallback": {
+    "reason": "all original options exceed 20h after both timing cohorts; original point density was not a user requirement",
+    "rule": "six named non-L45 roots cover their own reset seed; for each remaining level/reset seed choose one scheduled legal student point in 0..10000 minimizing candidate_count * nearest same-level mean measured CPU, ties by decision",
+    "futures": 2,
+    "preserve": "all seven levels, two reset seeds each, six named roots, every legal plant/shovel/wait action, frozen terminal teacher",
+    "outcomes_used_for_selection": false,
+    "previous_plan_sha256": "c9e83123da211df7560b50a008e1229dece2553bc6ed461b4ae8b1d5ca51c325",
+    "limitation": "CPU-selected sparse points do not estimate all opening decisions or phase-wide policy performance"
+   }
+  },
+  "reference_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/frozen/task43_teacher.py",
+  "reference_sha256": "0b4089d2f34e37ea1e2cda30fdc8be0ee73f70e2aa1c62b56997bd8b613d9588"
+ },
+ "raw_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/episodes",
+ "inference_limit": "Only preregistered root/common-future cohort; report wins/wave/tick separately. Terminal continuation is frozen teacher, short v4 leaf is 2500-tick student.",
+ "attribution_totals": {
+  "won": {
+   "observed_improvers": 92,
+   "improving_plant_actions": 54,
+   "production_representable_improvers": 55,
+   "candidate_generation_omission": 46,
+   "halving_pruned": 6,
+   "static_retained": 4,
+   "outside_production_action_space": 37,
+   "leaf_ranking_not_top": 2,
+   "initial_margin_blocked": 1
+  },
+  "wave": {
+   "observed_improvers": 324,
+   "production_representable_improvers": 203,
+   "halving_pruned": 18,
+   "improving_plant_actions": 197,
+   "candidate_generation_omission": 175,
+   "static_retained": 7,
+   "leaf_ranking_not_top": 4,
+   "initial_margin_blocked": 6,
+   "outside_production_action_space": 121
+  },
+  "tick": {
+   "observed_improvers": 433,
+   "production_representable_improvers": 260,
+   "halving_pruned": 21,
+   "improving_plant_actions": 254,
+   "candidate_generation_omission": 224,
+   "static_retained": 12,
+   "leaf_ranking_not_top": 7,
+   "initial_margin_blocked": 7,
+   "outside_production_action_space": 173,
+   "verification_rejected": 1
+  }
+ },
+ "root_summaries": [
+  {
+   "cell": {
+    "id": "l42-archive-45000000",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l42-45000000-teacher",
+    "window_end_tick": 14000
+   },
+   "point": {
+    "decision": 126,
+    "tick": 7020,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 78,
+    "candidate_sha256": "6a5c9e3bedd2293078af9d5cbc91bce03f9be2aee75313d1145fba72fc55877c",
+    "state_sha256": "5abf5c0eadde0aa6bb969414ab75e32803be5c298e6afe08f16f64ab29c2153b",
+    "public_history_sha256": "7e751982d576ade47f2fe06b43e2a342cbb6e4a42e9074b76bb8c9f9d273a8d2",
+    "schedule_last_search_tick": 6960,
+    "prefix": "teacher_archive"
+   },
+   "labels": 156,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 37,
+    "action": {
+     "type": "plant",
+     "packet": 6,
+     "row": 1,
+     "col": 5
+    },
+    "plant_type": 33,
+    "means": {
+     "won": 0,
+     "wave": 13,
+     "tick": 31867,
+     "mowers_used": 0
+    },
+    "v4": 0.017413529101759195,
+    "teacher_path_v4": 0.017413529101759195,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 13,
+      "tick": 33413,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 13,
+      "tick": 30321,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 37.97437400000035
+   },
+   "best": {
+    "won": {
+     "index": 4,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 3
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 67606.5,
+      "mowers_used": 0
+     },
+     "v4": 0.022266541607677937,
+     "teacher_path_v4": 0.022266541607677937,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 63468,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 71745,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 145.01625800000005
+    },
+    "wave": {
+     "index": 2,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 1
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 63220,
+      "mowers_used": 0
+     },
+     "v4": 0.012053693644702435,
+     "teacher_path_v4": 0.012053693644702435,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 59264,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 67176,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 145.820055
+    },
+    "tick": {
+     "index": 25,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 1,
+      "col": 3
+     },
+     "plant_type": 3,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 77707,
+      "mowers_used": 0
+     },
+     "v4": 0.02193417400121689,
+     "teacher_path_v4": 0.02193417400121689,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 76537,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 78877,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 189.1167719999994
+    }
+   },
+   "v4_favourite": {
+    "index": 28,
+    "action": {
+     "type": "plant",
+     "packet": 3,
+     "row": 2,
+     "col": 3
+    },
+    "plant_type": 3,
+    "means": {
+     "won": 0,
+     "wave": 17,
+     "tick": 39284.5,
+     "mowers_used": 0
+    },
+    "v4": 0.02961611934006214,
+    "teacher_path_v4": 0.02961611934006214,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 25,
+      "tick": 53665,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 24904,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 63.723715000000084
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 1760,
+      "correct": 1038.0,
+      "value_ties": 2,
+      "accuracy": 0.5897727272727272
+     },
+     "v4_strict": {
+      "pairs": 1760,
+      "correct": 1038.0,
+      "value_ties": 2,
+      "accuracy": 0.5897727272727272
+     },
+     "v4_nonterminal": {
+      "pairs": 1760,
+      "correct": 1038.0,
+      "value_ties": 2,
+      "accuracy": 0.5897727272727272
+     },
+     "teacher_path_v4": {
+      "pairs": 1760,
+      "correct": 1168.0,
+      "value_ties": 2,
+      "accuracy": 0.6636363636363637
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 2633,
+      "correct": 1442.0,
+      "value_ties": 2,
+      "accuracy": 0.5476642612988986
+     },
+     "v4_strict": {
+      "pairs": 2788,
+      "correct": 1519.5,
+      "value_ties": 3,
+      "accuracy": 0.5450143472022956
+     },
+     "v4_nonterminal": {
+      "pairs": 2633,
+      "correct": 1442.0,
+      "value_ties": 2,
+      "accuracy": 0.5476642612988986
+     },
+     "teacher_path_v4": {
+      "pairs": 2633,
+      "correct": 1535.0,
+      "value_ties": 2,
+      "accuracy": 0.5829851879984809
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 2920,
+      "correct": 1611.0,
+      "value_ties": 4,
+      "accuracy": 0.5517123287671233
+     },
+     "v4_strict": {
+      "pairs": 3003,
+      "correct": 1649.0,
+      "value_ties": 4,
+      "accuracy": 0.5491175491175491
+     },
+     "v4_nonterminal": {
+      "pairs": 2920,
+      "correct": 1611.0,
+      "value_ties": 4,
+      "accuracy": 0.5517123287671233
+     },
+     "teacher_path_v4": {
+      "pairs": 2920,
+      "correct": 1676.0,
+      "value_ties": 4,
+      "accuracy": 0.5739726027397261
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 38,
+     "improving_plant_actions": 25,
+     "production_representable_improvers": 25,
+     "candidate_generation_omission": 22,
+     "halving_pruned": 3,
+     "static_retained": 1,
+     "outside_production_action_space": 13
+    },
+    "wave": {
+     "observed_improvers": 69,
+     "production_representable_improvers": 48,
+     "halving_pruned": 4,
+     "improving_plant_actions": 47,
+     "candidate_generation_omission": 42,
+     "static_retained": 3,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 21
+    },
+    "tick": {
+     "observed_improvers": 68,
+     "production_representable_improvers": 47,
+     "halving_pruned": 4,
+     "improving_plant_actions": 46,
+     "candidate_generation_omission": 41,
+     "static_retained": 3,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 21
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l42-archive-45000000",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l42-45000000-teacher",
+    "window_end_tick": 14000
+   },
+   "point": {
+    "decision": 253,
+    "tick": 13920,
+    "wave": 6,
+    "sun": 100,
+    "candidate_count": 62,
+    "candidate_sha256": "2fa14231af768af9ea0c9c8e1068d7b847a34d4fca7acbdd3109ccb145dcd4cc",
+    "state_sha256": "a52944b8774a2973e9e387b8e266c5a5b6eabf34781a5051b83bd7ce4c327cbe",
+    "public_history_sha256": "9938fe361bf007717bf886c51a179998772776188f99d9a1e04ba83670da7327",
+    "schedule_last_search_tick": 13860,
+    "prefix": "teacher_archive"
+   },
+   "labels": 124,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 13,
+    "action": {
+     "type": "plant",
+     "packet": 4,
+     "row": 1,
+     "col": 4
+    },
+    "plant_type": 32,
+    "means": {
+     "won": 0,
+     "wave": 9,
+     "tick": 20838,
+     "mowers_used": 0
+    },
+    "v4": 0.010526940459385514,
+    "teacher_path_v4": 0.010526940459385514,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 20141,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 21535,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 13.075142999999997
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 19.5,
+      "tick": 46354,
+      "mowers_used": 0
+     },
+     "v4": 0.0061916683334857225,
+     "teacher_path_v4": 0.047202746383845806,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 23040,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 69668,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 96.28964500000001
+    },
+    "wave": {
+     "index": 47,
+     "action": {
+      "type": "shovel",
+      "row": 1,
+      "col": 2
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 67169,
+      "mowers_used": 0
+     },
+     "v4": 0.035742875188589096,
+     "teacher_path_v4": 0.05228726007044315,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 65288,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 69050,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 145.84028899999998
+    },
+    "tick": {
+     "index": 47,
+     "action": {
+      "type": "shovel",
+      "row": 1,
+      "col": 2
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 67169,
+      "mowers_used": 0
+     },
+     "v4": 0.035742875188589096,
+     "teacher_path_v4": 0.05228726007044315,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 65288,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 69050,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 145.84028899999998
+    }
+   },
+   "v4_favourite": {
+    "index": 45,
+    "action": {
+     "type": "shovel",
+     "row": 1,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 16.5,
+     "tick": 37265.5,
+     "mowers_used": 0
+    },
+    "v4": 0.039096196414902806,
+    "teacher_path_v4": 0.039096196414902806,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 20120,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 24,
+      "tick": 54411,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 56.45461299999977
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 232,
+      "correct": 106,
+      "value_ties": 0,
+      "accuracy": 0.45689655172413796
+     },
+     "v4_strict": {
+      "pairs": 232,
+      "correct": 106,
+      "value_ties": 0,
+      "accuracy": 0.45689655172413796
+     },
+     "v4_nonterminal": {
+      "pairs": 232,
+      "correct": 106,
+      "value_ties": 0,
+      "accuracy": 0.45689655172413796
+     },
+     "teacher_path_v4": {
+      "pairs": 232,
+      "correct": 157,
+      "value_ties": 0,
+      "accuracy": 0.6767241379310345
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 738,
+      "correct": 393,
+      "value_ties": 0,
+      "accuracy": 0.532520325203252
+     },
+     "v4_strict": {
+      "pairs": 1389,
+      "correct": 701,
+      "value_ties": 0,
+      "accuracy": 0.5046796256299496
+     },
+     "v4_nonterminal": {
+      "pairs": 738,
+      "correct": 393,
+      "value_ties": 0,
+      "accuracy": 0.532520325203252
+     },
+     "teacher_path_v4": {
+      "pairs": 738,
+      "correct": 444,
+      "value_ties": 0,
+      "accuracy": 0.6016260162601627
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1528,
+      "correct": 722,
+      "value_ties": 0,
+      "accuracy": 0.4725130890052356
+     },
+     "v4_strict": {
+      "pairs": 1891,
+      "correct": 889,
+      "value_ties": 0,
+      "accuracy": 0.4701216287678477
+     },
+     "v4_nonterminal": {
+      "pairs": 1528,
+      "correct": 722,
+      "value_ties": 0,
+      "accuracy": 0.4725130890052356
+     },
+     "teacher_path_v4": {
+      "pairs": 1528,
+      "correct": 774,
+      "value_ties": 0,
+      "accuracy": 0.506544502617801
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 4,
+     "production_representable_improvers": 1,
+     "halving_pruned": 1,
+     "outside_production_action_space": 3
+    },
+    "wave": {
+     "observed_improvers": 14,
+     "production_representable_improvers": 9,
+     "halving_pruned": 2,
+     "improving_plant_actions": 8,
+     "candidate_generation_omission": 7,
+     "outside_production_action_space": 5
+    },
+    "tick": {
+     "observed_improvers": 35,
+     "production_representable_improvers": 25,
+     "halving_pruned": 2,
+     "improving_plant_actions": 24,
+     "candidate_generation_omission": 22,
+     "static_retained": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 10
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l43-archive-45000000",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l43-45000000-teacher",
+    "window_end_tick": 28600
+   },
+   "point": {
+    "decision": 80,
+    "tick": 4440,
+    "wave": 2,
+    "sun": 50,
+    "candidate_count": 72,
+    "candidate_sha256": "9feac4b48b0ca578122511039da224e6f1f7a74e1157eeeb222bdcb03eaf94cc",
+    "state_sha256": "64a5168bf75d4675566345b0f57d2a485a50ce6c393bf021ac0a5eb315a08f1f",
+    "public_history_sha256": "856d175ae74842705a99ffec19cca19ab4915f9858b9e43d2fe012ef74dd47d1",
+    "schedule_last_search_tick": 4380,
+    "prefix": "teacher_archive"
+   },
+   "labels": 144,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 50,
+    "action": {
+     "type": "plant",
+     "packet": 6,
+     "row": 4,
+     "col": 4
+    },
+    "plant_type": 33,
+    "means": {
+     "won": 0.5,
+     "wave": 30,
+     "tick": 59118,
+     "mowers_used": 0
+    },
+    "v4": 0.03560133557766676,
+    "teacher_path_v4": 0.03560133557766676,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": true,
+      "wave": 30,
+      "tick": 59372,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 58864,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 160.84363600000052
+   },
+   "best": {
+    "won": {
+     "index": 7,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 2,
+      "col": 0
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 62821.5,
+      "mowers_used": 0
+     },
+     "v4": 0.014256803318858147,
+     "teacher_path_v4": 0.025210583116859198,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 63683,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 61960,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 133.45976599999995
+    },
+    "wave": {
+     "index": 1,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 0
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 0,
+      "wave": 30,
+      "tick": 59969,
+      "mowers_used": 0
+     },
+     "v4": 0.04597956873476505,
+     "teacher_path_v4": 0.06895044445991516,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 57364,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 62574,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 149.07045000000002
+    },
+    "tick": {
+     "index": 43,
+     "action": {
+      "type": "plant",
+      "packet": 6,
+      "row": 2,
+      "col": 8
+     },
+     "plant_type": 33,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 70406,
+      "mowers_used": 0
+     },
+     "v4": 0.03239348903298378,
+     "teacher_path_v4": 0.03239348903298378,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 67671,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 73141,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 158.705019
+    }
+   },
+   "v4_favourite": {
+    "index": 55,
+    "action": {
+     "type": "shovel",
+     "row": 0,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 28,
+     "tick": 61436.5,
+     "mowers_used": 0
+    },
+    "v4": 0.05121590197086334,
+    "teacher_path_v4": 0.05121590197086334,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 63471,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 26,
+      "tick": 59402,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 134.72638800000004
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 1307,
+      "correct": 672.0,
+      "value_ties": 2,
+      "accuracy": 0.5141545524100994
+     },
+     "v4_strict": {
+      "pairs": 1307,
+      "correct": 672.0,
+      "value_ties": 2,
+      "accuracy": 0.5141545524100994
+     },
+     "v4_nonterminal": {
+      "pairs": 1307,
+      "correct": 672.0,
+      "value_ties": 2,
+      "accuracy": 0.5141545524100994
+     },
+     "teacher_path_v4": {
+      "pairs": 1307,
+      "correct": 680.5,
+      "value_ties": 1,
+      "accuracy": 0.5206579954093343
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 1802,
+      "correct": 1129.5,
+      "value_ties": 1,
+      "accuracy": 0.626803551609323
+     },
+     "v4_strict": {
+      "pairs": 2187,
+      "correct": 1315.5,
+      "value_ties": 1,
+      "accuracy": 0.6015089163237312
+     },
+     "v4_nonterminal": {
+      "pairs": 1802,
+      "correct": 1129.5,
+      "value_ties": 1,
+      "accuracy": 0.626803551609323
+     },
+     "teacher_path_v4": {
+      "pairs": 1802,
+      "correct": 987.5,
+      "value_ties": 1,
+      "accuracy": 0.5480022197558269
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 2426,
+      "correct": 1466.5,
+      "value_ties": 3,
+      "accuracy": 0.6044929925803793
+     },
+     "v4_strict": {
+      "pairs": 2556,
+      "correct": 1536.5,
+      "value_ties": 3,
+      "accuracy": 0.6011345852895149
+     },
+     "v4_nonterminal": {
+      "pairs": 2426,
+      "correct": 1466.5,
+      "value_ties": 3,
+      "accuracy": 0.6044929925803793
+     },
+     "teacher_path_v4": {
+      "pairs": 2426,
+      "correct": 1370.5,
+      "value_ties": 1,
+      "accuracy": 0.564921681780709
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 3,
+     "improving_plant_actions": 3,
+     "production_representable_improvers": 3,
+     "candidate_generation_omission": 2,
+     "static_retained": 1,
+     "halving_pruned": 1
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 37,
+     "improving_plant_actions": 28,
+     "production_representable_improvers": 28,
+     "candidate_generation_omission": 26,
+     "static_retained": 1,
+     "halving_pruned": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 9
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l43-archive-45000000",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l43-45000000-teacher",
+    "window_end_tick": 28600
+   },
+   "point": {
+    "decision": 536,
+    "tick": 28500,
+    "wave": 14,
+    "sun": 125,
+    "candidate_count": 38,
+    "candidate_sha256": "a8823feafa163271af23db38803325d3df4161c147645aa9e1391eeb643af0f2",
+    "state_sha256": "da4dec3f52910a716b36e1b0340d936c950422e2cc44a5bdaebf6d2528ee8488",
+    "public_history_sha256": "95ce63156b322cd675c7f24500d60d254e9a6a403b31db73fd5c4f6fc405c85e",
+    "schedule_last_search_tick": 28260,
+    "prefix": "teacher_archive"
+   },
+   "labels": 76,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 3,
+    "action": {
+     "type": "plant",
+     "packet": 4,
+     "row": 4,
+     "col": 7
+    },
+    "plant_type": 32,
+    "means": {
+     "won": 0.5,
+     "wave": 29.5,
+     "tick": 58443.5,
+     "mowers_used": 0
+    },
+    "v4": 0.7343608140945435,
+    "teacher_path_v4": 0.7678547501564026,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": true,
+      "wave": 30,
+      "tick": 64203,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 29,
+      "tick": 52684,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 75.277131
+   },
+   "best": {
+    "won": {
+     "index": 2,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 4,
+      "col": 7
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 62195,
+      "mowers_used": 0
+     },
+     "v4": 0.641708493232727,
+     "teacher_path_v4": 0.7211853861808777,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 63033,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 61357,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 105.203192
+    },
+    "wave": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 60417.5,
+      "mowers_used": 0
+     },
+     "v4": 0.6665907800197601,
+     "teacher_path_v4": 0.7207513153553009,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 57765,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 63070,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 120.612661
+    },
+    "tick": {
+     "index": 23,
+     "action": {
+      "type": "shovel",
+      "row": 2,
+      "col": 5
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 73029.5,
+      "mowers_used": 0
+     },
+     "v4": 0.6924663186073303,
+     "teacher_path_v4": 0.7438880503177643,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 69360,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 76699,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 120.92605999999978
+    }
+   },
+   "v4_favourite": {
+    "index": 29,
+    "action": {
+     "type": "shovel",
+     "row": 3,
+     "col": 5
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0.5,
+     "wave": 30,
+     "tick": 56255.5,
+     "mowers_used": 0
+    },
+    "v4": 0.7828373908996582,
+    "teacher_path_v4": 0.7810027003288269,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 57552,
+      "mowers_used": 0
+     },
+     {
+      "won": true,
+      "wave": 30,
+      "tick": 54959,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 90.48025200000029
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 437,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.4759725400457666
+     },
+     "v4_strict": {
+      "pairs": 437,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.4759725400457666
+     },
+     "v4_nonterminal": {
+      "pairs": 437,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.4759725400457666
+     },
+     "teacher_path_v4": {
+      "pairs": 437,
+      "correct": 121,
+      "value_ties": 0,
+      "accuracy": 0.2768878718535469
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 137,
+      "correct": 104,
+      "value_ties": 0,
+      "accuracy": 0.7591240875912408
+     },
+     "v4_strict": {
+      "pairs": 262,
+      "correct": 153,
+      "value_ties": 0,
+      "accuracy": 0.583969465648855
+     },
+     "v4_nonterminal": {
+      "pairs": 137,
+      "correct": 104,
+      "value_ties": 0,
+      "accuracy": 0.7591240875912408
+     },
+     "teacher_path_v4": {
+      "pairs": 137,
+      "correct": 84,
+      "value_ties": 0,
+      "accuracy": 0.6131386861313869
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 636,
+      "correct": 311,
+      "value_ties": 0,
+      "accuracy": 0.4889937106918239
+     },
+     "v4_strict": {
+      "pairs": 703,
+      "correct": 343,
+      "value_ties": 0,
+      "accuracy": 0.4879089615931721
+     },
+     "v4_nonterminal": {
+      "pairs": 636,
+      "correct": 311,
+      "value_ties": 0,
+      "accuracy": 0.4889937106918239
+     },
+     "teacher_path_v4": {
+      "pairs": 636,
+      "correct": 276,
+      "value_ties": 0,
+      "accuracy": 0.4339622641509434
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 7,
+     "improving_plant_actions": 1,
+     "production_representable_improvers": 1,
+     "static_retained": 1,
+     "halving_pruned": 1,
+     "outside_production_action_space": 6
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 25,
+     "production_representable_improvers": 3,
+     "verification_rejected": 1,
+     "improving_plant_actions": 2,
+     "static_retained": 2,
+     "halving_pruned": 2,
+     "outside_production_action_space": 22
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l44-archive-45000000",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l44-45000000-teacher",
+    "window_end_tick": 11100
+   },
+   "point": {
+    "decision": 0,
+    "tick": 0,
+    "wave": 0,
+    "sun": 50,
+    "candidate_count": 61,
+    "candidate_sha256": "3cdc40fbff4af1b95b8c8fe31dd73961d88d10550bff70a2c60a5f54d6426ab9",
+    "state_sha256": "6674159e312d8b78b3fa821d5c01645b060cac55fcb5b9716ca4349a95930233",
+    "public_history_sha256": "036727387def4f2e3da289b125bafd8a97d1519405569b158a090186bc1aef2d",
+    "schedule_last_search_tick": -1000000000,
+    "prefix": "teacher_archive"
+   },
+   "labels": 122,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 17,
+    "action": {
+     "type": "plant",
+     "packet": 6,
+     "row": 0,
+     "col": 4
+    },
+    "plant_type": 33,
+    "means": {
+     "won": 0,
+     "wave": 10,
+     "tick": 24777.5,
+     "mowers_used": 0
+    },
+    "v4": 0.01061323843896389,
+    "teacher_path_v4": 0.01061323843896389,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 6,
+      "tick": 15285,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 14,
+      "tick": 34270,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 27.180396999999857
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 18,
+      "tick": 36380,
+      "mowers_used": 0
+     },
+     "v4": 0.013221404049545527,
+     "teacher_path_v4": 0.013221404049545527,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 10,
+       "tick": 24792,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 26,
+       "tick": 47968,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 56.926452000000154
+    },
+    "wave": {
+     "index": 48,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 2
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 29.5,
+      "tick": 55426.5,
+      "mowers_used": 0
+     },
+     "v4": 0.012230108492076397,
+     "teacher_path_v4": 0.012230108492076397,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 33,
+       "tick": 59889,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 26,
+       "tick": 50964,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 120.84124299999985
+    },
+    "tick": {
+     "index": 48,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 2
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 29.5,
+      "tick": 55426.5,
+      "mowers_used": 0
+     },
+     "v4": 0.012230108492076397,
+     "teacher_path_v4": 0.012230108492076397,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 33,
+       "tick": 59889,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 26,
+       "tick": 50964,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 120.84124299999985
+    }
+   },
+   "v4_favourite": {
+    "index": 12,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 3,
+     "col": 2
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 23.5,
+     "tick": 48501.5,
+     "mowers_used": 0
+    },
+    "v4": 0.018052401021122932,
+    "teacher_path_v4": 0.018052401021122932,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 18,
+      "tick": 35663,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 29,
+      "tick": 61340,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 80.99415199999976
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 1653,
+      "correct": 763.0,
+      "value_ties": 8,
+      "accuracy": 0.4615849969751966
+     },
+     "v4_strict": {
+      "pairs": 1757,
+      "correct": 821.0,
+      "value_ties": 8,
+      "accuracy": 0.46727376209447924
+     },
+     "v4_nonterminal": {
+      "pairs": 1653,
+      "correct": 763.0,
+      "value_ties": 8,
+      "accuracy": 0.4615849969751966
+     },
+     "teacher_path_v4": {
+      "pairs": 1653,
+      "correct": 763.0,
+      "value_ties": 8,
+      "accuracy": 0.4615849969751966
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1752,
+      "correct": 806.5,
+      "value_ties": 7,
+      "accuracy": 0.4603310502283105
+     },
+     "v4_strict": {
+      "pairs": 1830,
+      "correct": 849.0,
+      "value_ties": 8,
+      "accuracy": 0.4639344262295082
+     },
+     "v4_nonterminal": {
+      "pairs": 1752,
+      "correct": 806.5,
+      "value_ties": 7,
+      "accuracy": 0.4603310502283105
+     },
+     "teacher_path_v4": {
+      "pairs": 1752,
+      "correct": 806.5,
+      "value_ties": 7,
+      "accuracy": 0.4603310502283105
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 50,
+     "production_representable_improvers": 41,
+     "halving_pruned": 3,
+     "improving_plant_actions": 40,
+     "candidate_generation_omission": 36,
+     "static_retained": 2,
+     "initial_margin_blocked": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 9
+    },
+    "tick": {
+     "observed_improvers": 49,
+     "production_representable_improvers": 40,
+     "halving_pruned": 3,
+     "improving_plant_actions": 39,
+     "candidate_generation_omission": 35,
+     "static_retained": 2,
+     "initial_margin_blocked": 1,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 9
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l44-archive-45000000",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l44-45000000-teacher",
+    "window_end_tick": 11100
+   },
+   "point": {
+    "decision": 195,
+    "tick": 11039,
+    "wave": 5,
+    "sun": 50,
+    "candidate_count": 60,
+    "candidate_sha256": "8906c7e10e8401647defa8dd9f537028a4fcadd33d3f04d1253e4b6915ddcaf0",
+    "state_sha256": "f865672e1d839579ea564f533a4357e25c3e0d1a8a126483e24493443cc2b04f",
+    "public_history_sha256": "aca64bbf5b58e9f0a27664c24e1d76edff1266e31da7c44691d8bf2654dd386d",
+    "schedule_last_search_tick": 10919,
+    "prefix": "teacher_archive"
+   },
+   "labels": 120,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 15,
+    "action": {
+     "type": "plant",
+     "packet": 6,
+     "row": 0,
+     "col": 3
+    },
+    "plant_type": 33,
+    "means": {
+     "won": 0,
+     "wave": 6,
+     "tick": 15626.5,
+     "mowers_used": 0
+    },
+    "v4": 0.00505461054854095,
+    "teacher_path_v4": 0.00505461054854095,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 6,
+      "tick": 15782,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 6,
+      "tick": 15471,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 4.013308999999936
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 6,
+      "tick": 15597.5,
+      "mowers_used": 0
+     },
+     "v4": 0.0053571651224046946,
+     "teacher_path_v4": 0.0053571651224046946,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 6,
+       "tick": 15771,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 6,
+       "tick": 15424,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 4.233721000000514
+    },
+    "wave": {
+     "index": 2,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 1
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 0,
+      "wave": 8,
+      "tick": 20379.5,
+      "mowers_used": 0
+     },
+     "v4": 0.005655407439917326,
+     "teacher_path_v4": 0.005655407439917326,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 7,
+       "tick": 18186,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 22573,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 8.85420699999986
+    },
+    "tick": {
+     "index": 9,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 1
+     },
+     "plant_type": 3,
+     "means": {
+      "won": 0,
+      "wave": 8,
+      "tick": 20549,
+      "mowers_used": 0
+     },
+     "v4": 0.004083852516487241,
+     "teacher_path_v4": 0.004083852516487241,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 22751,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 7,
+       "tick": 18347,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 8.040196000000378
+    }
+   },
+   "v4_favourite": {
+    "index": 1,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 0,
+     "col": 0
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 7.5,
+     "tick": 18498,
+     "mowers_used": 0
+    },
+    "v4": 0.006398461060598493,
+    "teacher_path_v4": 0.006398461060598493,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 21326,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 6,
+      "tick": 15670,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 7.39662399999952
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 781,
+      "correct": 430,
+      "value_ties": 0,
+      "accuracy": 0.5505761843790012
+     },
+     "v4_strict": {
+      "pairs": 1337,
+      "correct": 700,
+      "value_ties": 0,
+      "accuracy": 0.5235602094240838
+     },
+     "v4_nonterminal": {
+      "pairs": 722,
+      "correct": 371,
+      "value_ties": 0,
+      "accuracy": 0.5138504155124654
+     },
+     "teacher_path_v4": {
+      "pairs": 781,
+      "correct": 430,
+      "value_ties": 0,
+      "accuracy": 0.5505761843790012
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1147,
+      "correct": 661,
+      "value_ties": 0,
+      "accuracy": 0.5762859633827376
+     },
+     "v4_strict": {
+      "pairs": 1724,
+      "correct": 1028,
+      "value_ties": 0,
+      "accuracy": 0.5962877030162413
+     },
+     "v4_nonterminal": {
+      "pairs": 1088,
+      "correct": 602,
+      "value_ties": 0,
+      "accuracy": 0.5533088235294118
+     },
+     "teacher_path_v4": {
+      "pairs": 1147,
+      "correct": 661,
+      "value_ties": 0,
+      "accuracy": 0.5762859633827376
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 25,
+     "improving_plant_actions": 19,
+     "production_representable_improvers": 19,
+     "candidate_generation_omission": 18,
+     "halving_pruned": 1,
+     "outside_production_action_space": 6
+    },
+    "tick": {
+     "observed_improvers": 26,
+     "improving_plant_actions": 20,
+     "production_representable_improvers": 20,
+     "candidate_generation_omission": 19,
+     "halving_pruned": 1,
+     "outside_production_action_space": 6
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l42-student-45000001",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 160,
+    "tick": 8820,
+    "wave": 3,
+    "sun": 25,
+    "candidate_count": 46,
+    "candidate_sha256": "60bc896a9b785e6627c9f50b4491f00410d93f2253575d057dcebfee6da769a6",
+    "state_sha256": "38030b0f421c92beb7b812e70c7fe53dc82775e7908626ff9280134989661e44",
+    "public_history_sha256": "f36075915b3b8ccfcc151f224ea085088da43bbc95945fe37cdaa6fad1342654",
+    "schedule_last_search_tick": 8400,
+    "prefix": "student"
+   },
+   "labels": 92,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 29.5,
+     "tick": 66180.5,
+     "mowers_used": 0
+    },
+    "v4": 0.01676465244963765,
+    "teacher_path_v4": 0.01676465244963765,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 70411,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 29,
+      "tick": 61950,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 148.79496400000016
+   },
+   "best": {
+    "won": {
+     "index": 3,
+     "action": {
+      "type": "plant",
+      "packet": 6,
+      "row": 0,
+      "col": 7
+     },
+     "plant_type": 33,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 67033,
+      "mowers_used": 0
+     },
+     "v4": 0.016255543567240238,
+     "teacher_path_v4": 0.016255543567240238,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 68583,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 65483,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 156.30474799999956
+    },
+    "wave": {
+     "index": 1,
+     "action": {
+      "type": "plant",
+      "packet": 6,
+      "row": 0,
+      "col": 5
+     },
+     "plant_type": 33,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 66131.5,
+      "mowers_used": 0
+     },
+     "v4": 0.016210189554840326,
+     "teacher_path_v4": 0.016210189554840326,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 61041,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 71222,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 162.2462190000001
+    },
+    "tick": {
+     "index": 15,
+     "action": {
+      "type": "plant",
+      "packet": 6,
+      "row": 2,
+      "col": 8
+     },
+     "plant_type": 33,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 70711.5,
+      "mowers_used": 0
+     },
+     "v4": 0.01640195958316326,
+     "teacher_path_v4": 0.01640195958316326,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 68732,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 72691,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 159.41516299999967
+    }
+   },
+   "v4_favourite": {
+    "index": 13,
+    "action": {
+     "type": "plant",
+     "packet": 6,
+     "row": 2,
+     "col": 6
+    },
+    "plant_type": 33,
+    "means": {
+     "won": 0,
+     "wave": 10.5,
+     "tick": 24725,
+     "mowers_used": 0
+    },
+    "v4": 0.020115302875638008,
+    "teacher_path_v4": 0.020115302875638008,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 12,
+      "tick": 28300,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 21150,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 22.08667500000047
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 451,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.549889135254989
+     },
+     "v4_strict": {
+      "pairs": 451,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.549889135254989
+     },
+     "v4_nonterminal": {
+      "pairs": 451,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.549889135254989
+     },
+     "teacher_path_v4": {
+      "pairs": 451,
+      "correct": 237,
+      "value_ties": 0,
+      "accuracy": 0.5254988913525499
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 912,
+      "correct": 554,
+      "value_ties": 0,
+      "accuracy": 0.6074561403508771
+     },
+     "v4_strict": {
+      "pairs": 973,
+      "correct": 581,
+      "value_ties": 0,
+      "accuracy": 0.5971223021582733
+     },
+     "v4_nonterminal": {
+      "pairs": 912,
+      "correct": 554,
+      "value_ties": 0,
+      "accuracy": 0.6074561403508771
+     },
+     "teacher_path_v4": {
+      "pairs": 912,
+      "correct": 570,
+      "value_ties": 0,
+      "accuracy": 0.625
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 1001,
+      "correct": 597,
+      "value_ties": 0,
+      "accuracy": 0.5964035964035964
+     },
+     "v4_strict": {
+      "pairs": 1035,
+      "correct": 610,
+      "value_ties": 0,
+      "accuracy": 0.5893719806763285
+     },
+     "v4_nonterminal": {
+      "pairs": 1001,
+      "correct": 597,
+      "value_ties": 0,
+      "accuracy": 0.5964035964035964
+     },
+     "teacher_path_v4": {
+      "pairs": 1001,
+      "correct": 612,
+      "value_ties": 0,
+      "accuracy": 0.6113886113886113
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 13,
+     "improving_plant_actions": 11,
+     "production_representable_improvers": 11,
+     "candidate_generation_omission": 10,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 2
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 6,
+     "improving_plant_actions": 5,
+     "production_representable_improvers": 5,
+     "candidate_generation_omission": 4,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 1
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l43-student-45000001",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 117,
+    "tick": 6420,
+    "wave": 2,
+    "sun": 50,
+    "candidate_count": 29,
+    "candidate_sha256": "b5c4a6c9bdc32cb92bff15849f115020714d93ada019a0a1bcab0350b2ea8690",
+    "state_sha256": "41577ece07585ac3a67a57edf49fabdd1bba171c718cf08364b6f6f200217eb6",
+    "public_history_sha256": "67d30d460d7c636c74a8495d91f1ae356e9e5527cf34b569b9665da2f84bbc8c",
+    "schedule_last_search_tick": 6060,
+    "prefix": "student"
+   },
+   "labels": 58,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0.5,
+     "wave": 30,
+     "tick": 68243,
+     "mowers_used": 0
+    },
+    "v4": 0.034930577501654625,
+    "teacher_path_v4": 0.03832181170582771,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": true,
+      "wave": 30,
+      "tick": 71753,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 64733,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 160.77589800000078
+   },
+   "best": {
+    "won": {
+     "index": 21,
+     "action": {
+      "type": "shovel",
+      "row": 2,
+      "col": 1
+     },
+     "plant_type": null,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 64161.5,
+      "mowers_used": 0
+     },
+     "v4": 0.041404278948903084,
+     "teacher_path_v4": 0.036840761080384254,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 66069,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 62254,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 154.26223299999856
+    },
+    "wave": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 68243,
+      "mowers_used": 0
+     },
+     "v4": 0.034930577501654625,
+     "teacher_path_v4": 0.03832181170582771,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 71753,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 64733,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 160.77589800000078
+    },
+    "tick": {
+     "index": 1,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 0,
+      "col": 0
+     },
+     "plant_type": 3,
+     "means": {
+      "won": 0,
+      "wave": 30,
+      "tick": 75524,
+      "mowers_used": 0
+     },
+     "v4": 0.032710698433220387,
+     "teacher_path_v4": 0.032710698433220387,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 89126,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 61922,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 155.92855599999893
+    }
+   },
+   "v4_favourite": {
+    "index": 14,
+    "action": {
+     "type": "shovel",
+     "row": 0,
+     "col": 2
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 23,
+     "tick": 46912.5,
+     "mowers_used": 0
+    },
+    "v4": 0.05526731349527836,
+    "teacher_path_v4": 0.048283617943525314,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 28,
+      "tick": 56452,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 18,
+      "tick": 37373,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 92.29671999999937
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 224,
+      "correct": 137,
+      "value_ties": 0,
+      "accuracy": 0.6116071428571429
+     },
+     "v4_strict": {
+      "pairs": 224,
+      "correct": 137,
+      "value_ties": 0,
+      "accuracy": 0.6116071428571429
+     },
+     "v4_nonterminal": {
+      "pairs": 224,
+      "correct": 137,
+      "value_ties": 0,
+      "accuracy": 0.6116071428571429
+     },
+     "teacher_path_v4": {
+      "pairs": 224,
+      "correct": 151,
+      "value_ties": 0,
+      "accuracy": 0.6741071428571429
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 226,
+      "correct": 145,
+      "value_ties": 0,
+      "accuracy": 0.6415929203539823
+     },
+     "v4_strict": {
+      "pairs": 293,
+      "correct": 195,
+      "value_ties": 0,
+      "accuracy": 0.6655290102389079
+     },
+     "v4_nonterminal": {
+      "pairs": 226,
+      "correct": 145,
+      "value_ties": 0,
+      "accuracy": 0.6415929203539823
+     },
+     "teacher_path_v4": {
+      "pairs": 226,
+      "correct": 155,
+      "value_ties": 0,
+      "accuracy": 0.6858407079646017
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 386,
+      "correct": 200,
+      "value_ties": 0,
+      "accuracy": 0.5181347150259067
+     },
+     "v4_strict": {
+      "pairs": 406,
+      "correct": 211,
+      "value_ties": 0,
+      "accuracy": 0.5197044334975369
+     },
+     "v4_nonterminal": {
+      "pairs": 386,
+      "correct": 200,
+      "value_ties": 0,
+      "accuracy": 0.5181347150259067
+     },
+     "teacher_path_v4": {
+      "pairs": 386,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.538860103626943
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 1,
+     "outside_production_action_space": 1
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 2,
+     "improving_plant_actions": 2,
+     "production_representable_improvers": 2,
+     "candidate_generation_omission": 2
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l44-student-45000001",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 145,
+    "tick": 7979,
+    "wave": 3,
+    "sun": 25,
+    "candidate_count": 46,
+    "candidate_sha256": "5e3fdcbfb9375ee5d201763dfbaf31d954f4af15b4bc14ca00447e4341dc968f",
+    "state_sha256": "d23956a32b7abc1023d586b8f5aca6850cae499040fa5d9e7fe7a8b965a25ccd",
+    "public_history_sha256": "d38c37e69111412768b241891060b34bf81fccde7affbcabd4f2f271c1c217be",
+    "schedule_last_search_tick": 7319,
+    "prefix": "student"
+   },
+   "labels": 92,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 8.5,
+     "tick": 20779,
+     "mowers_used": 0
+    },
+    "v4": 0.019463086500763893,
+    "teacher_path_v4": 0.019463086500763893,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 8,
+      "tick": 19956,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 21602,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 16.14427700000033
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 8.5,
+      "tick": 20779,
+      "mowers_used": 0
+     },
+     "v4": 0.019463086500763893,
+     "teacher_path_v4": 0.019463086500763893,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 8,
+       "tick": 19956,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 21602,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 16.14427700000033
+    },
+    "wave": {
+     "index": 32,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 2
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 34,
+      "tick": 65706.5,
+      "mowers_used": 0
+     },
+     "v4": 0.039521439000964165,
+     "teacher_path_v4": 0.039521439000964165,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 39,
+       "tick": 73082,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 58331,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 141.78535799999918
+    },
+    "tick": {
+     "index": 32,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 2
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 34,
+      "tick": 65706.5,
+      "mowers_used": 0
+     },
+     "v4": 0.039521439000964165,
+     "teacher_path_v4": 0.039521439000964165,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 39,
+       "tick": 73082,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 58331,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 141.78535799999918
+    }
+   },
+   "v4_favourite": {
+    "index": 32,
+    "action": {
+     "type": "shovel",
+     "row": 0,
+     "col": 2
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 34,
+     "tick": 65706.5,
+     "mowers_used": 0
+    },
+    "v4": 0.039521439000964165,
+    "teacher_path_v4": 0.039521439000964165,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 39,
+      "tick": 73082,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 29,
+      "tick": 58331,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 141.78535799999918
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 918,
+      "correct": 567,
+      "value_ties": 0,
+      "accuracy": 0.6176470588235294
+     },
+     "v4_strict": {
+      "pairs": 994,
+      "correct": 604,
+      "value_ties": 0,
+      "accuracy": 0.607645875251509
+     },
+     "v4_nonterminal": {
+      "pairs": 918,
+      "correct": 567,
+      "value_ties": 0,
+      "accuracy": 0.6176470588235294
+     },
+     "teacher_path_v4": {
+      "pairs": 918,
+      "correct": 567,
+      "value_ties": 0,
+      "accuracy": 0.6176470588235294
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 982,
+      "correct": 605,
+      "value_ties": 0,
+      "accuracy": 0.6160896130346232
+     },
+     "v4_strict": {
+      "pairs": 1035,
+      "correct": 625,
+      "value_ties": 0,
+      "accuracy": 0.6038647342995169
+     },
+     "v4_nonterminal": {
+      "pairs": 982,
+      "correct": 605,
+      "value_ties": 0,
+      "accuracy": 0.6160896130346232
+     },
+     "teacher_path_v4": {
+      "pairs": 982,
+      "correct": 609,
+      "value_ties": 0,
+      "accuracy": 0.620162932790224
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 44,
+     "improving_plant_actions": 28,
+     "production_representable_improvers": 28,
+     "candidate_generation_omission": 25,
+     "initial_margin_blocked": 1,
+     "halving_pruned": 2,
+     "static_retained": 1,
+     "outside_production_action_space": 16
+    },
+    "tick": {
+     "observed_improvers": 44,
+     "improving_plant_actions": 28,
+     "production_representable_improvers": 28,
+     "candidate_generation_omission": 25,
+     "initial_margin_blocked": 1,
+     "halving_pruned": 2,
+     "static_retained": 1,
+     "outside_production_action_space": 16
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l46-student-45000000",
+    "task_id": "roof_l46_eval_r7",
+    "level": 46,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 159,
+    "tick": 8820,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 29,
+    "candidate_sha256": "4153815f8b5eea45c4a9ebc6a5d2d87598ce30c4c2cd040dcc5d5dffe6875f86",
+    "state_sha256": "1392d75c9db1dfaba918f9cc8a7e3bedf4a905eb61225aaeae014c02655d038c",
+    "public_history_sha256": "27da162ccd43d8c92057864853fabfda7d00eb92015658f092897185176d75da",
+    "schedule_last_search_tick": 8340,
+    "prefix": "student"
+   },
+   "labels": 58,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 30,
+     "tick": 60115.5,
+     "mowers_used": 0
+    },
+    "v4": 0.03273707162588835,
+    "teacher_path_v4": 0.039786068722605705,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 57806,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 62425,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 149.20349200000055
+   },
+   "best": {
+    "won": {
+     "index": 6,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 1,
+      "col": 3
+     },
+     "plant_type": 3,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 63104,
+      "mowers_used": 0
+     },
+     "v4": 0.03129159100353718,
+     "teacher_path_v4": 0.03129159100353718,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 61670,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 64538,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 121.34570100000019
+    },
+    "wave": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 30,
+      "tick": 60115.5,
+      "mowers_used": 0
+     },
+     "v4": 0.03273707162588835,
+     "teacher_path_v4": 0.039786068722605705,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 57806,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 62425,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 149.20349200000055
+    },
+    "tick": {
+     "index": 19,
+     "action": {
+      "type": "shovel",
+      "row": 2,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 69579.5,
+      "mowers_used": 0
+     },
+     "v4": 0.0271573718637228,
+     "teacher_path_v4": 0.03213141951709986,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 68794,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 70365,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 146.7721760000004
+    }
+   },
+   "v4_favourite": {
+    "index": 26,
+    "action": {
+     "type": "shovel",
+     "row": 4,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 1,
+     "wave": 30,
+     "tick": 64015,
+     "mowers_used": 0
+    },
+    "v4": 0.03628421202301979,
+    "teacher_path_v4": 0.03628421202301979,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": true,
+      "wave": 30,
+      "tick": 62318,
+      "mowers_used": 0
+     },
+     {
+      "won": true,
+      "wave": 30,
+      "tick": 65712,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 134.68636999999944
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 222,
+      "correct": 167,
+      "value_ties": 0,
+      "accuracy": 0.7522522522522522
+     },
+     "v4_strict": {
+      "pairs": 222,
+      "correct": 167,
+      "value_ties": 0,
+      "accuracy": 0.7522522522522522
+     },
+     "v4_nonterminal": {
+      "pairs": 222,
+      "correct": 167,
+      "value_ties": 0,
+      "accuracy": 0.7522522522522522
+     },
+     "teacher_path_v4": {
+      "pairs": 222,
+      "correct": 153,
+      "value_ties": 0,
+      "accuracy": 0.6891891891891891
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 313,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.792332268370607
+     },
+     "v4_strict": {
+      "pairs": 360,
+      "correct": 280,
+      "value_ties": 0,
+      "accuracy": 0.7777777777777778
+     },
+     "v4_nonterminal": {
+      "pairs": 313,
+      "correct": 248,
+      "value_ties": 0,
+      "accuracy": 0.792332268370607
+     },
+     "teacher_path_v4": {
+      "pairs": 313,
+      "correct": 230,
+      "value_ties": 0,
+      "accuracy": 0.7348242811501597
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 392,
+      "correct": 279,
+      "value_ties": 0,
+      "accuracy": 0.7117346938775511
+     },
+     "v4_strict": {
+      "pairs": 406,
+      "correct": 287,
+      "value_ties": 0,
+      "accuracy": 0.7068965517241379
+     },
+     "v4_nonterminal": {
+      "pairs": 392,
+      "correct": 279,
+      "value_ties": 0,
+      "accuracy": 0.7117346938775511
+     },
+     "teacher_path_v4": {
+      "pairs": 392,
+      "correct": 261,
+      "value_ties": 0,
+      "accuracy": 0.6658163265306123
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 11,
+     "improving_plant_actions": 4,
+     "production_representable_improvers": 4,
+     "candidate_generation_omission": 3,
+     "static_retained": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 7
+    },
+    "wave": {},
+    "tick": {
+     "observed_improvers": 11,
+     "improving_plant_actions": 4,
+     "production_representable_improvers": 4,
+     "candidate_generation_omission": 2,
+     "halving_pruned": 1,
+     "static_retained": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 7
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l46-student-45000001",
+    "task_id": "roof_l46_eval_r7",
+    "level": 46,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 10,
+    "tick": 540,
+    "wave": 0,
+    "sun": 50,
+    "candidate_count": 33,
+    "candidate_sha256": "ee451df42d41db6b5cd18ffe990a7ddcdfb73a096e4cc01f79b5a71edfbe9ee0",
+    "state_sha256": "ddca15ccf234c429e936506a1c1e83bcd901d0e8639c90a9ebdb3a338e118eeb",
+    "public_history_sha256": "f98f4377e5c0af176817a5d16ae57ed20cd214df08287629a2c09c0c650fd4ef",
+    "schedule_last_search_tick": 0,
+    "prefix": "student"
+   },
+   "labels": 66,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 13,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 3,
+     "col": 2
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 17,
+     "tick": 42136.5,
+     "mowers_used": 0
+    },
+    "v4": 0.027398928999900818,
+    "teacher_path_v4": 0.027398928999900818,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 25,
+      "tick": 60252,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 24021,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 78.44618199999968
+   },
+   "best": {
+    "won": {
+     "index": 3,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 2
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 1,
+      "wave": 30,
+      "tick": 61705,
+      "mowers_used": 0
+     },
+     "v4": 0.020460098050534725,
+     "teacher_path_v4": 0.020460098050534725,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 60713,
+       "mowers_used": 0
+      },
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 62697,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 140.82000100000005
+    },
+    "wave": {
+     "index": 1,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 0
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 0.5,
+      "wave": 30,
+      "tick": 62450.5,
+      "mowers_used": 0
+     },
+     "v4": 0.026493177749216557,
+     "teacher_path_v4": 0.026493177749216557,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": true,
+       "wave": 30,
+       "tick": 58320,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 66581,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 141.70225100000062
+    },
+    "tick": {
+     "index": 4,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 0,
+      "col": 4
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 0,
+      "wave": 30,
+      "tick": 70633.5,
+      "mowers_used": 0
+     },
+     "v4": 0.03177687805145979,
+     "teacher_path_v4": 0.03177687805145979,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 75310,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 30,
+       "tick": 65957,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 149.86115900000004
+    }
+   },
+   "v4_favourite": {
+    "index": 16,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 4,
+     "col": 2
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 30,
+     "tick": 66790,
+     "mowers_used": 0
+    },
+    "v4": 0.03317851200699806,
+    "teacher_path_v4": 0.03317851200699806,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 67935,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 65645,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 132.80079399999886
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 296,
+      "correct": 80,
+      "value_ties": 0,
+      "accuracy": 0.2702702702702703
+     },
+     "v4_strict": {
+      "pairs": 296,
+      "correct": 80,
+      "value_ties": 0,
+      "accuracy": 0.2702702702702703
+     },
+     "v4_nonterminal": {
+      "pairs": 296,
+      "correct": 80,
+      "value_ties": 0,
+      "accuracy": 0.2702702702702703
+     },
+     "teacher_path_v4": {
+      "pairs": 296,
+      "correct": 87,
+      "value_ties": 0,
+      "accuracy": 0.2939189189189189
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 437,
+      "correct": 203.5,
+      "value_ties": 1,
+      "accuracy": 0.465675057208238
+     },
+     "v4_strict": {
+      "pairs": 486,
+      "correct": 225.5,
+      "value_ties": 1,
+      "accuracy": 0.46399176954732513
+     },
+     "v4_nonterminal": {
+      "pairs": 437,
+      "correct": 203.5,
+      "value_ties": 1,
+      "accuracy": 0.465675057208238
+     },
+     "teacher_path_v4": {
+      "pairs": 437,
+      "correct": 208.5,
+      "value_ties": 1,
+      "accuracy": 0.477116704805492
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 509,
+      "correct": 244.5,
+      "value_ties": 1,
+      "accuracy": 0.48035363457760316
+     },
+     "v4_strict": {
+      "pairs": 528,
+      "correct": 256.5,
+      "value_ties": 1,
+      "accuracy": 0.48579545454545453
+     },
+     "v4_nonterminal": {
+      "pairs": 509,
+      "correct": 244.5,
+      "value_ties": 1,
+      "accuracy": 0.48035363457760316
+     },
+     "teacher_path_v4": {
+      "pairs": 509,
+      "correct": 245.5,
+      "value_ties": 1,
+      "accuracy": 0.4823182711198428
+     }
+    }
+   },
+   "attribution": {
+    "won": {
+     "observed_improvers": 15,
+     "improving_plant_actions": 10,
+     "production_representable_improvers": 10,
+     "candidate_generation_omission": 9,
+     "leaf_ranking_not_top": 1,
+     "outside_production_action_space": 5
+    },
+    "wave": {
+     "observed_improvers": 21,
+     "production_representable_improvers": 16,
+     "halving_pruned": 1,
+     "improving_plant_actions": 15,
+     "candidate_generation_omission": 13,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 5
+    },
+    "tick": {
+     "observed_improvers": 21,
+     "improving_plant_actions": 15,
+     "production_representable_improvers": 15,
+     "candidate_generation_omission": 13,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 6
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l47-student-45000000",
+    "task_id": "roof_l47_eval_r7",
+    "level": 47,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 158,
+    "tick": 8820,
+    "wave": 4,
+    "sun": 50,
+    "candidate_count": 27,
+    "candidate_sha256": "5cdf942c9e3af9186e3cc8fc341d1a0b7710d186a0e3abe6bec6ce752e76ec79",
+    "state_sha256": "b8b3feb3c8e79930e6e5b8bf55afcdea8c887f83cd1b439e47821c28bab58f8d",
+    "public_history_sha256": "12e4b9754fbbef80a0cf99e040fefe4edef22f22174e9b3d852ad08422801601",
+    "schedule_last_search_tick": 8520,
+    "prefix": "student"
+   },
+   "labels": 54,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 22,
+     "tick": 41664.5,
+     "mowers_used": 0
+    },
+    "v4": 0.026314702816307545,
+    "teacher_path_v4": 0.025574330240488052,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 29,
+      "tick": 49105,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 15,
+      "tick": 34224,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 65.33981700000004
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 22,
+      "tick": 41664.5,
+      "mowers_used": 0
+     },
+     "v4": 0.026314702816307545,
+     "teacher_path_v4": 0.025574330240488052,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 49105,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 15,
+       "tick": 34224,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 65.33981700000004
+    },
+    "wave": {
+     "index": 17,
+     "action": {
+      "type": "shovel",
+      "row": 2,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 37,
+      "tick": 71008.5,
+      "mowers_used": 0
+     },
+     "v4": 0.026066658087074757,
+     "teacher_path_v4": 0.05148531682789326,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 35,
+       "tick": 69960,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 39,
+       "tick": 72057,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 152.93193900000006
+    },
+    "tick": {
+     "index": 17,
+     "action": {
+      "type": "shovel",
+      "row": 2,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 37,
+      "tick": 71008.5,
+      "mowers_used": 0
+     },
+     "v4": 0.026066658087074757,
+     "teacher_path_v4": 0.05148531682789326,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 35,
+       "tick": 69960,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 39,
+       "tick": 72057,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 152.93193900000006
+    }
+   },
+   "v4_favourite": {
+    "index": 24,
+    "action": {
+     "type": "shovel",
+     "row": 4,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 28.5,
+     "tick": 56686,
+     "mowers_used": 0
+    },
+    "v4": 0.03860894963145256,
+    "teacher_path_v4": 0.037440819665789604,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 25,
+      "tick": 49924,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 32,
+      "tick": 63448,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 110.90110099999947
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 327,
+      "correct": 199,
+      "value_ties": 0,
+      "accuracy": 0.6085626911314985
+     },
+     "v4_strict": {
+      "pairs": 343,
+      "correct": 207,
+      "value_ties": 0,
+      "accuracy": 0.6034985422740525
+     },
+     "v4_nonterminal": {
+      "pairs": 327,
+      "correct": 199,
+      "value_ties": 0,
+      "accuracy": 0.6085626911314985
+     },
+     "teacher_path_v4": {
+      "pairs": 327,
+      "correct": 195,
+      "value_ties": 0,
+      "accuracy": 0.5963302752293578
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 341,
+      "correct": 199,
+      "value_ties": 0,
+      "accuracy": 0.5835777126099707
+     },
+     "v4_strict": {
+      "pairs": 351,
+      "correct": 205,
+      "value_ties": 0,
+      "accuracy": 0.584045584045584
+     },
+     "v4_nonterminal": {
+      "pairs": 341,
+      "correct": 199,
+      "value_ties": 0,
+      "accuracy": 0.5835777126099707
+     },
+     "teacher_path_v4": {
+      "pairs": 341,
+      "correct": 205,
+      "value_ties": 0,
+      "accuracy": 0.6011730205278593
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 22,
+     "improving_plant_actions": 9,
+     "production_representable_improvers": 9,
+     "candidate_generation_omission": 6,
+     "halving_pruned": 2,
+     "static_retained": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 13
+    },
+    "tick": {
+     "observed_improvers": 24,
+     "improving_plant_actions": 9,
+     "production_representable_improvers": 9,
+     "candidate_generation_omission": 6,
+     "halving_pruned": 2,
+     "static_retained": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 15
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l47-student-45000001",
+    "task_id": "roof_l47_eval_r7",
+    "level": 47,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 168,
+    "tick": 9300,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 25,
+    "candidate_sha256": "b59fc205035f84d67594f1ac55ca7a57ab21f8efd05c709571880bf829a6f632",
+    "state_sha256": "9178692bd2fbff3f340c75387eaf24d1cdc9c041920a38380cfef71ab664d7e5",
+    "public_history_sha256": "c117ce90d9c0669d3e45628725ae6ccd4dbe552fdaffb8b8a23e9e4bb2a5e11d",
+    "schedule_last_search_tick": 8940,
+    "prefix": "student"
+   },
+   "labels": 50,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 7.5,
+     "tick": 18974.5,
+     "mowers_used": 0
+    },
+    "v4": 0.011823754291981459,
+    "teacher_path_v4": 0.011823754291981459,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 6,
+      "tick": 16195,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 9,
+      "tick": 21754,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 9.795710000002146
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 7.5,
+      "tick": 18974.5,
+      "mowers_used": 0
+     },
+     "v4": 0.011823754291981459,
+     "teacher_path_v4": 0.011823754291981459,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 6,
+       "tick": 16195,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 21754,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 9.795710000002146
+    },
+    "wave": {
+     "index": 22,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 28.5,
+      "tick": 57440,
+      "mowers_used": 0
+     },
+     "v4": 0.01857888652011752,
+     "teacher_path_v4": 0.01857888652011752,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 28,
+       "tick": 54589,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 60291,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 118.12751500000013
+    },
+    "tick": {
+     "index": 22,
+     "action": {
+      "type": "shovel",
+      "row": 4,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 28.5,
+      "tick": 57440,
+      "mowers_used": 0
+     },
+     "v4": 0.01857888652011752,
+     "teacher_path_v4": 0.01857888652011752,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 28,
+       "tick": 54589,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 60291,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 118.12751500000013
+    }
+   },
+   "v4_favourite": {
+    "index": 16,
+    "action": {
+     "type": "shovel",
+     "row": 2,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 19.5,
+     "tick": 42418.5,
+     "mowers_used": 0
+    },
+    "v4": 0.027919618412852287,
+    "teacher_path_v4": 0.027919618412852287,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 33,
+      "tick": 68035,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 6,
+      "tick": 16802,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 83.11257999999907
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 255,
+      "correct": 185,
+      "value_ties": 0,
+      "accuracy": 0.7254901960784313
+     },
+     "v4_strict": {
+      "pairs": 275,
+      "correct": 198,
+      "value_ties": 0,
+      "accuracy": 0.72
+     },
+     "v4_nonterminal": {
+      "pairs": 255,
+      "correct": 185,
+      "value_ties": 0,
+      "accuracy": 0.7254901960784313
+     },
+     "teacher_path_v4": {
+      "pairs": 255,
+      "correct": 187,
+      "value_ties": 0,
+      "accuracy": 0.7333333333333333
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 263,
+      "correct": 189,
+      "value_ties": 0,
+      "accuracy": 0.7186311787072244
+     },
+     "v4_strict": {
+      "pairs": 299,
+      "correct": 208,
+      "value_ties": 0,
+      "accuracy": 0.6956521739130435
+     },
+     "v4_nonterminal": {
+      "pairs": 263,
+      "correct": 189,
+      "value_ties": 0,
+      "accuracy": 0.7186311787072244
+     },
+     "teacher_path_v4": {
+      "pairs": 263,
+      "correct": 191,
+      "value_ties": 0,
+      "accuracy": 0.7262357414448669
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 10,
+     "outside_production_action_space": 10
+    },
+    "tick": {
+     "observed_improvers": 11,
+     "outside_production_action_space": 11
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l48-student-45000000",
+    "task_id": "roof_l48_eval_r7",
+    "level": 48,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 148,
+    "tick": 8160,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 44,
+    "candidate_sha256": "cd74bec7bce619dd1205479bc22856b07e35cd4fb57c96e059dc0b0de6301ce4",
+    "state_sha256": "19689184730544609142b0889b153686940259ebd4637230d5c021e70c4a2733",
+    "public_history_sha256": "76c60049c88e295657f363d563ad79395b0d170e59edbbefb535802e9bbcc580",
+    "schedule_last_search_tick": 7980,
+    "prefix": "student"
+   },
+   "labels": 88,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 11,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 3,
+     "col": 0
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 7,
+     "tick": 17704.5,
+     "mowers_used": 0
+    },
+    "v4": 0.008890927769243717,
+    "teacher_path_v4": 0.008890927769243717,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 7,
+      "tick": 17703,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 7,
+      "tick": 17706,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 9.37696799999867
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 13,
+      "tick": 29058.5,
+      "mowers_used": 0
+     },
+     "v4": 0.011702925898134708,
+     "teacher_path_v4": 0.011702925898134708,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 7,
+       "tick": 17831,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 19,
+       "tick": 40286,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 39.10996999999952
+    },
+    "wave": {
+     "index": 21,
+     "action": {
+      "type": "plant",
+      "packet": 3,
+      "row": 2,
+      "col": 3
+     },
+     "plant_type": 3,
+     "means": {
+      "won": 0,
+      "wave": 14,
+      "tick": 31533,
+      "mowers_used": 0
+     },
+     "v4": 0.016080697067081928,
+     "teacher_path_v4": 0.016080697067081928,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 22593,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 19,
+       "tick": 40473,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 39.94197299999905
+    },
+    "tick": {
+     "index": 33,
+     "action": {
+      "type": "shovel",
+      "row": 2,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 14,
+      "tick": 32327,
+      "mowers_used": 0
+     },
+     "v4": 0.022117599844932556,
+     "teacher_path_v4": 0.022117599844932556,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 19,
+       "tick": 42906,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 9,
+       "tick": 21748,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 36.41345300000103
+    }
+   },
+   "v4_favourite": {
+    "index": 38,
+    "action": {
+     "type": "shovel",
+     "row": 3,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 13.5,
+     "tick": 30380.5,
+     "mowers_used": 0
+    },
+    "v4": 0.024670161306858063,
+    "teacher_path_v4": 0.024670161306858063,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 8,
+      "tick": 18707,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 19,
+      "tick": 42054,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 34.854739000000336
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 711,
+      "correct": 407,
+      "value_ties": 0,
+      "accuracy": 0.5724331926863573
+     },
+     "v4_strict": {
+      "pairs": 870,
+      "correct": 489,
+      "value_ties": 0,
+      "accuracy": 0.5620689655172414
+     },
+     "v4_nonterminal": {
+      "pairs": 711,
+      "correct": 407,
+      "value_ties": 0,
+      "accuracy": 0.5724331926863573
+     },
+     "teacher_path_v4": {
+      "pairs": 711,
+      "correct": 436,
+      "value_ties": 0,
+      "accuracy": 0.6132208157524613
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 862,
+      "correct": 494,
+      "value_ties": 0,
+      "accuracy": 0.5730858468677494
+     },
+     "v4_strict": {
+      "pairs": 946,
+      "correct": 538,
+      "value_ties": 0,
+      "accuracy": 0.5687103594080338
+     },
+     "v4_nonterminal": {
+      "pairs": 862,
+      "correct": 494,
+      "value_ties": 0,
+      "accuracy": 0.5730858468677494
+     },
+     "teacher_path_v4": {
+      "pairs": 862,
+      "correct": 525,
+      "value_ties": 0,
+      "accuracy": 0.6090487238979119
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 13,
+     "production_representable_improvers": 3,
+     "halving_pruned": 2,
+     "improving_plant_actions": 2,
+     "candidate_generation_omission": 1,
+     "outside_production_action_space": 10
+    },
+    "tick": {
+     "observed_improvers": 13,
+     "production_representable_improvers": 3,
+     "halving_pruned": 2,
+     "improving_plant_actions": 2,
+     "candidate_generation_omission": 1,
+     "outside_production_action_space": 10
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l48-student-45000001",
+    "task_id": "roof_l48_eval_r7",
+    "level": 48,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 149,
+    "tick": 8340,
+    "wave": 3,
+    "sun": 25,
+    "candidate_count": 46,
+    "candidate_sha256": "eaecbf856758d9f3ae6dc64efb4970e37b76b003a647a4c762354c9a3871fe13",
+    "state_sha256": "7a979b837e050eed4f58a5afe433ae96092714944ba30daac77fe154ef21737d",
+    "public_history_sha256": "a6d109317ccae79439719df6c7b55229d938f31f39489382e8b5f7c66da94b85",
+    "schedule_last_search_tick": 7860,
+    "prefix": "student"
+   },
+   "labels": 92,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 19,
+     "tick": 42426,
+     "mowers_used": 0
+    },
+    "v4": 0.021560157649219036,
+    "teacher_path_v4": 0.03250447940081358,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 19,
+      "tick": 42736,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 19,
+      "tick": 42116,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 65.94377800000075
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 19,
+      "tick": 42426,
+      "mowers_used": 0
+     },
+     "v4": 0.021560157649219036,
+     "teacher_path_v4": 0.03250447940081358,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 19,
+       "tick": 42736,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 19,
+       "tick": 42116,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 65.94377800000075
+    },
+    "wave": {
+     "index": 2,
+     "action": {
+      "type": "plant",
+      "packet": 6,
+      "row": 0,
+      "col": 5
+     },
+     "plant_type": 33,
+     "means": {
+      "won": 0,
+      "wave": 26.5,
+      "tick": 57664.5,
+      "mowers_used": 0
+     },
+     "v4": 0.01617311965674162,
+     "teacher_path_v4": 0.01617311965674162,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 62691,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 24,
+       "tick": 52638,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 111.46138500000052
+    },
+    "tick": {
+     "index": 2,
+     "action": {
+      "type": "plant",
+      "packet": 6,
+      "row": 0,
+      "col": 5
+     },
+     "plant_type": 33,
+     "means": {
+      "won": 0,
+      "wave": 26.5,
+      "tick": 57664.5,
+      "mowers_used": 0
+     },
+     "v4": 0.01617311965674162,
+     "teacher_path_v4": 0.01617311965674162,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 62691,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 24,
+       "tick": 52638,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 111.46138500000052
+    }
+   },
+   "v4_favourite": {
+    "index": 40,
+    "action": {
+     "type": "shovel",
+     "row": 3,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 19,
+     "tick": 40875.5,
+     "mowers_used": 0
+    },
+    "v4": 0.02859685756266117,
+    "teacher_path_v4": 0.0372735820710659,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 19,
+      "tick": 42080,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 19,
+      "tick": 39671,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 50.576241000000664
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 851,
+      "correct": 326,
+      "value_ties": 0,
+      "accuracy": 0.38307873090481787
+     },
+     "v4_strict": {
+      "pairs": 889,
+      "correct": 343,
+      "value_ties": 0,
+      "accuracy": 0.3858267716535433
+     },
+     "v4_nonterminal": {
+      "pairs": 851,
+      "correct": 326,
+      "value_ties": 0,
+      "accuracy": 0.38307873090481787
+     },
+     "teacher_path_v4": {
+      "pairs": 851,
+      "correct": 329,
+      "value_ties": 0,
+      "accuracy": 0.38660399529964745
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 973,
+      "correct": 411,
+      "value_ties": 0,
+      "accuracy": 0.4224049331963001
+     },
+     "v4_strict": {
+      "pairs": 1035,
+      "correct": 443,
+      "value_ties": 0,
+      "accuracy": 0.4280193236714976
+     },
+     "v4_nonterminal": {
+      "pairs": 973,
+      "correct": 411,
+      "value_ties": 0,
+      "accuracy": 0.4224049331963001
+     },
+     "teacher_path_v4": {
+      "pairs": 973,
+      "correct": 402,
+      "value_ties": 0,
+      "accuracy": 0.4131551901336074
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 17,
+     "improving_plant_actions": 15,
+     "production_representable_improvers": 15,
+     "candidate_generation_omission": 15,
+     "outside_production_action_space": 2
+    },
+    "tick": {
+     "observed_improvers": 21,
+     "improving_plant_actions": 16,
+     "production_representable_improvers": 16,
+     "candidate_generation_omission": 16,
+     "outside_production_action_space": 5
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l49-student-45000000",
+    "task_id": "roof_l49_eval_r7",
+    "level": 49,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 151,
+    "tick": 8460,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 24,
+    "candidate_sha256": "a27f4879597305f5566863bda894e65e7d90548175186399bbc933eef4201e22",
+    "state_sha256": "6d08be7bfb7e3af677375df4281b144db5dd855427aab97179d9d43c0feef949",
+    "public_history_sha256": "87c3e051359fff0ed7151ccbc097691feb1d781394a4e21cd6ad3a203750eee8",
+    "schedule_last_search_tick": 7920,
+    "prefix": "student"
+   },
+   "labels": 48,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 0,
+    "action": {
+     "type": "wait",
+     "ticks": 60,
+     "until": "timeout"
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 21.5,
+     "tick": 47630,
+     "mowers_used": 0
+    },
+    "v4": 0.010570850688964128,
+    "teacher_path_v4": 0.030979279428720474,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 24,
+      "tick": 52474,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 19,
+      "tick": 42786,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 83.50352999999996
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 21.5,
+      "tick": 47630,
+      "mowers_used": 0
+     },
+     "v4": 0.010570850688964128,
+     "teacher_path_v4": 0.030979279428720474,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 24,
+       "tick": 52474,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 19,
+       "tick": 42786,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 83.50352999999996
+    },
+    "wave": {
+     "index": 12,
+     "action": {
+      "type": "shovel",
+      "row": 1,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 33.5,
+      "tick": 68360.5,
+      "mowers_used": 0
+     },
+     "v4": 0.014310901518911123,
+     "teacher_path_v4": 0.027477207127958536,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 38,
+       "tick": 77538,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 59183,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 155.88880099999915
+    },
+    "tick": {
+     "index": 12,
+     "action": {
+      "type": "shovel",
+      "row": 1,
+      "col": 0
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 33.5,
+      "tick": 68360.5,
+      "mowers_used": 0
+     },
+     "v4": 0.014310901518911123,
+     "teacher_path_v4": 0.027477207127958536,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 38,
+       "tick": 77538,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 59183,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 155.88880099999915
+    }
+   },
+   "v4_favourite": {
+    "index": 15,
+    "action": {
+     "type": "shovel",
+     "row": 2,
+     "col": 0
+    },
+    "plant_type": null,
+    "means": {
+     "won": 0,
+     "wave": 19,
+     "tick": 40443,
+     "mowers_used": 0
+    },
+    "v4": 0.030250128358602524,
+    "teacher_path_v4": 0.030250128358602524,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 8,
+      "tick": 18602,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 30,
+      "tick": 62284,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 60.622018000000025
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 263,
+      "correct": 174,
+      "value_ties": 0,
+      "accuracy": 0.6615969581749049
+     },
+     "v4_strict": {
+      "pairs": 271,
+      "correct": 176,
+      "value_ties": 0,
+      "accuracy": 0.6494464944649446
+     },
+     "v4_nonterminal": {
+      "pairs": 263,
+      "correct": 174,
+      "value_ties": 0,
+      "accuracy": 0.6615969581749049
+     },
+     "teacher_path_v4": {
+      "pairs": 263,
+      "correct": 190,
+      "value_ties": 0,
+      "accuracy": 0.7224334600760456
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 264,
+      "correct": 172,
+      "value_ties": 0,
+      "accuracy": 0.6515151515151515
+     },
+     "v4_strict": {
+      "pairs": 276,
+      "correct": 176,
+      "value_ties": 0,
+      "accuracy": 0.6376811594202898
+     },
+     "v4_nonterminal": {
+      "pairs": 264,
+      "correct": 172,
+      "value_ties": 0,
+      "accuracy": 0.6515151515151515
+     },
+     "teacher_path_v4": {
+      "pairs": 264,
+      "correct": 186,
+      "value_ties": 0,
+      "accuracy": 0.7045454545454546
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 8,
+     "outside_production_action_space": 8
+    },
+    "tick": {
+     "observed_improvers": 9,
+     "outside_production_action_space": 9
+    }
+   }
+  },
+  {
+   "cell": {
+    "id": "l49-student-45000001",
+    "task_id": "roof_l49_eval_r7",
+    "level": 49,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 13,
+    "tick": 720,
+    "wave": 0,
+    "sun": 50,
+    "candidate_count": 33,
+    "candidate_sha256": "ee451df42d41db6b5cd18ffe990a7ddcdfb73a096e4cc01f79b5a71edfbe9ee0",
+    "state_sha256": "1d1106c2dae6b41492c314de6f378bdeebe27e1dbe426592ba045c2c2c2885a8",
+    "public_history_sha256": "715d691919b19b782ae5e3f8446b855febe077dec646956aae3eb47838167af3",
+    "schedule_last_search_tick": 0,
+    "prefix": "student"
+   },
+   "labels": 66,
+   "initial_ready_mowers": 0,
+   "student": {
+    "index": 13,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 3,
+     "col": 2
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 7,
+     "tick": 17472.5,
+     "mowers_used": 0
+    },
+    "v4": 0.012371250428259373,
+    "teacher_path_v4": 0.012371250428259373,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 7,
+      "tick": 17134,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 7,
+      "tick": 17811,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 15.630238999998255
+   },
+   "best": {
+    "won": {
+     "index": 0,
+     "action": {
+      "type": "wait",
+      "ticks": 60,
+      "until": "timeout"
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 26,
+      "tick": 57568.5,
+      "mowers_used": 0
+     },
+     "v4": 0.014021482784301043,
+     "teacher_path_v4": 0.014021482784301043,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 28,
+       "tick": 60761,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 24,
+       "tick": 54376,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 125.30222700000013
+    },
+    "wave": {
+     "index": 11,
+     "action": {
+      "type": "plant",
+      "packet": 1,
+      "row": 3,
+      "col": 0
+     },
+     "plant_type": 1,
+     "means": {
+      "won": 0,
+      "wave": 29,
+      "tick": 62976.5,
+      "mowers_used": 0
+     },
+     "v4": 0.008377461228519678,
+     "teacher_path_v4": 0.008377461228519678,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 65825,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 60128,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 123.15475300000071
+    },
+    "tick": {
+     "index": 20,
+     "action": {
+      "type": "shovel",
+      "row": 0,
+      "col": 4
+     },
+     "plant_type": null,
+     "means": {
+      "won": 0,
+      "wave": 28.5,
+      "tick": 63334.5,
+      "mowers_used": 0
+     },
+     "v4": 0.012272791936993599,
+     "teacher_path_v4": 0.012272791936993599,
+     "short_all_nonterminal": true,
+     "per_future": [
+      {
+       "won": false,
+       "wave": 28,
+       "tick": 62477,
+       "mowers_used": 0
+      },
+      {
+       "won": false,
+       "wave": 29,
+       "tick": 64192,
+       "mowers_used": 0
+      }
+     ],
+     "cpu_seconds": 115.82867900000383
+    }
+   },
+   "v4_favourite": {
+    "index": 10,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "row": 2,
+     "col": 2
+    },
+    "plant_type": 1,
+    "means": {
+     "won": 0,
+     "wave": 28.5,
+     "tick": 57561,
+     "mowers_used": 0
+    },
+    "v4": 0.019857347942888737,
+    "teacher_path_v4": 0.019857347942888737,
+    "short_all_nonterminal": true,
+    "per_future": [
+     {
+      "won": false,
+      "wave": 28,
+      "tick": 59613,
+      "mowers_used": 0
+     },
+     {
+      "won": false,
+      "wave": 29,
+      "tick": 55509,
+      "mowers_used": 0
+     }
+    ],
+    "cpu_seconds": 107.53301699999975
+   },
+   "pair_metrics": {
+    "won": {
+     "v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_strict": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "v4_nonterminal": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     },
+     "teacher_path_v4": {
+      "pairs": 0,
+      "correct": 0,
+      "value_ties": 0,
+      "accuracy": null
+     }
+    },
+    "wave": {
+     "v4": {
+      "pairs": 441,
+      "correct": 251.5,
+      "value_ties": 3,
+      "accuracy": 0.5702947845804989
+     },
+     "v4_strict": {
+      "pairs": 495,
+      "correct": 273.0,
+      "value_ties": 4,
+      "accuracy": 0.5515151515151515
+     },
+     "v4_nonterminal": {
+      "pairs": 441,
+      "correct": 251.5,
+      "value_ties": 3,
+      "accuracy": 0.5702947845804989
+     },
+     "teacher_path_v4": {
+      "pairs": 441,
+      "correct": 251.5,
+      "value_ties": 3,
+      "accuracy": 0.5702947845804989
+     }
+    },
+    "tick": {
+     "v4": {
+      "pairs": 499,
+      "correct": 288.5,
+      "value_ties": 3,
+      "accuracy": 0.5781563126252505
+     },
+     "v4_strict": {
+      "pairs": 528,
+      "correct": 304.0,
+      "value_ties": 4,
+      "accuracy": 0.5757575757575758
+     },
+     "v4_nonterminal": {
+      "pairs": 499,
+      "correct": 288.5,
+      "value_ties": 3,
+      "accuracy": 0.5781563126252505
+     },
+     "teacher_path_v4": {
+      "pairs": 499,
+      "correct": 288.5,
+      "value_ties": 3,
+      "accuracy": 0.5781563126252505
+     }
+    }
+   },
+   "attribution": {
+    "won": {},
+    "wave": {
+     "observed_improvers": 31,
+     "production_representable_improvers": 15,
+     "halving_pruned": 1,
+     "improving_plant_actions": 14,
+     "candidate_generation_omission": 12,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 16
+    },
+    "tick": {
+     "observed_improvers": 31,
+     "production_representable_improvers": 15,
+     "halving_pruned": 1,
+     "improving_plant_actions": 14,
+     "candidate_generation_omission": 12,
+     "leaf_ranking_not_top": 1,
+     "initial_margin_blocked": 1,
+     "outside_production_action_space": 16
+    }
+   }
+  }
+ ]
+}

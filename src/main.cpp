@@ -31,6 +31,7 @@
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
 #include "EnvironmentRollout.h"
+#include "EnvironmentValueNet.h"
 #include "Resources.h"
 #include "PvzpLib/PvzpStringFile.h"
 #include <algorithm>
@@ -520,13 +521,14 @@ static void RunEnvironment(LawnApp* app)
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
 	EnvironmentRollout rollout;
+	EnvironmentValueNet valueNets[2]; // leaf, static
 	HumanInput human;
 	bool demo = false;
 	const bool visible = !app->mHeadlessMode;
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":3,\"sparse_tracks_version\":1}" << std::endl;
+		<< ",\"rollout_version\":4,\"sparse_tracks_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -580,7 +582,15 @@ static void RunEnvironment(LawnApp* app)
 		{
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"
 				<< ",\"action_seconds\":" << actionSeconds << ",\"observation_seconds\":" << observationSeconds
-				<< ",\"control_seconds\":" << controlSeconds << '}' << std::endl;
+				<< ",\"control_seconds\":" << controlSeconds << ",\"value\":[";
+			for (int slot = 0; slot < 2; ++slot)
+			{
+				const auto& net = valueNets[slot];
+				std::cout << (slot ? "," : "") << "{\"calls\":" << net.calls << ",\"features\":" << net.featureSeconds
+					<< ",\"forward\":" << net.forwardSeconds << ",\"conv\":[" << net.convolutionSeconds[0] << ','
+					<< net.convolutionSeconds[1] << ',' << net.convolutionSeconds[2] << "]}";
+			}
+			std::cout << "]}" << std::endl;
 			continue;
 		}
 		else if (command == "DECK_OPTIONS")
@@ -608,6 +618,99 @@ static void RunEnvironment(LawnApp* app)
 		{
 			const std::string pool = app->EnvironmentDeckPool();
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << pool.substr(1) << std::endl;
+			continue;
+		}
+		else if (command == "LOAD_VALUE_NET")
+		{
+			int slot = -1;
+			std::string path, extra;
+			if (input >> slot >> std::quoted(path) && (slot == 0 || slot == 1) && !(input >> extra))
+			{
+				try { valueNets[slot].Load(path); ok = true; }
+				catch (const std::exception& error) { std::cerr << error.what() << std::endl; }
+			}
+			minimalResponse = true;
+		}
+		else if (command == "LEAF_VALUES")
+		{
+			// Board mode scores without serializing the board. Feature-file mode also serves
+			// external simulator leaves and the Python oracle; it runs the same forward.
+			int slot = -1, count = 0;
+			double income = 0;
+			std::string mode, path, extra;
+			ok = static_cast<bool>(input >> slot >> mode) && slot >= 0 && slot < 2 && valueNets[slot].Loaded();
+			std::vector<float> logits;
+			if (ok && mode == "BOARD")
+			{
+				ok = static_cast<bool>(input >> income) && std::isfinite(income) && app->mBoard;
+				if (input >> std::quoted(path)) { if (input >> extra) ok = false; }
+				if (ok)
+				{
+					std::vector<float> board, scalars;
+					valueNets[slot].Features(app, income, board, scalars);
+					logits.push_back(valueNets[slot].Logit(board, scalars));
+					if (!path.empty())
+					{
+						std::ofstream trace(path, std::ios::binary);
+						trace.write(reinterpret_cast<const char*>(board.data()), board.size() * sizeof(float));
+						trace.write(reinterpret_cast<const char*>(scalars.data()), scalars.size() * sizeof(float));
+						ok = trace.good();
+					}
+				}
+			}
+			else if (ok && mode == "FEATURES")
+			{
+				ok = static_cast<bool>(input >> count >> std::quoted(path)) && count > 0 && count <= 4096 && !(input >> extra);
+				if (ok)
+				{
+					std::ifstream features(path, std::ios::binary);
+					std::vector<float> board(EnvironmentValueNet::Channels * EnvironmentValueNet::Cells), scalars(valueNets[slot].ScalarCount());
+					for (int index = 0; ok && index < count; ++index)
+					{
+						features.read(reinterpret_cast<char*>(board.data()), board.size() * sizeof(float));
+						features.read(reinterpret_cast<char*>(scalars.data()), scalars.size() * sizeof(float));
+						ok = features.good() && std::all_of(board.begin(), board.end(), [](float x) { return std::isfinite(x); }) &&
+							std::all_of(scalars.begin(), scalars.end(), [](float x) { return std::isfinite(x); });
+						if (ok) logits.push_back(valueNets[slot].Logit(board, scalars));
+					}
+					ok = ok && features.peek() == std::char_traits<char>::eof();
+				}
+			}
+			else ok = false;
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"logits\":[" << std::setprecision(9);
+			for (size_t i = 0; ok && i < logits.size(); ++i) std::cout << (i ? "," : "") << logits[i];
+			std::cout << "],\"values\":[";
+			for (size_t i = 0; ok && i < logits.size(); ++i) std::cout << (i ? "," : "") << EnvironmentValueNet::Probability(logits[i]);
+			std::cout << "]}" << std::endl << std::setprecision(6);
+			continue;
+		}
+		else if (command == "STATIC_SCORES")
+		{
+			int count = 0;
+			double income = 0;
+			std::string extra;
+			ok = static_cast<bool>(input >> snapshotId >> income >> count) && snapshots.contains(snapshotId) &&
+				std::isfinite(income) && count > 0 && count <= 1024 && valueNets[1].Loaded();
+			std::vector<std::string> specs;
+			for (int i = 0; ok && i < count; ++i)
+			{
+				std::string spec, actionCommand, actionArguments;
+				ok = static_cast<bool>(input >> spec) && DecodeBranchAction(spec, actionCommand, actionArguments);
+				if (ok) specs.push_back(spec);
+			}
+			ok = ok && !(input >> extra);
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"values\":[" << std::setprecision(9);
+			for (int i = 0; ok && i < count; ++i)
+			{
+				if (i) std::cout << ',';
+				bool branchOk = RestoreEnvironmentSnapshot(app, snapshots.at(snapshotId));
+				std::string actionCommand, actionArguments;
+				if (branchOk) branchOk = DecodeBranchAction(specs[i], actionCommand, actionArguments);
+				if (branchOk) { std::istringstream arguments(actionArguments); branchOk = ExecuteEnvironmentAction(app, actionCommand, arguments); }
+				if (branchOk) std::cout << valueNets[1].Predict(app, income);
+				else std::cout << "null";
+			}
+			std::cout << "]}" << std::endl << std::setprecision(6);
 			continue;
 		}
 		else if (command == "LOAD_ROLLOUT_NET")
@@ -648,8 +751,9 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << '}' << std::endl << std::setprecision(6);
 			continue;
 		}
-		else if (command == "ROLLOUT")
+		else if (command == "ROLLOUT" || command == "ROLLOUT_VALUE")
 		{
+			const bool scoreValue = command == "ROLLOUT_VALUE";
 			int untilTick = 0, mask = 0, maxActions = 0, eventWait = 0, historyStart = 0, historyCount = 0;
 			int rootId = 0;
 			int64_t seed = -1;
@@ -658,7 +762,7 @@ static void RunEnvironment(LawnApp* app)
 			std::ofstream trace;
 			std::deque<std::pair<int, uint32_t>> history;
 			ok = static_cast<bool>(input >> rootId >> seed >> untilTick >> mask >> maxActions >> eventWait >> first >> historyStart >> historyCount) &&
-				rollout.Loaded() && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
+				rollout.Loaded() && (!scoreValue || valueNets[0].Loaded()) && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
 				maxActions > 0 && maxActions <= 1000000 && (eventWait == 0 || eventWait == 1) && historyCount >= 0 && historyCount <= 100000 &&
 				rootId >= 0 && (rootId == 0 || snapshots.contains(rootId)) && seed >= -1 && seed <= UINT32_MAX;
 			if (ok && rootId) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
@@ -800,6 +904,28 @@ static void RunEnvironment(LawnApp* app)
 				if (trace.is_open()) { trace.flush(); ok = trace.good(); }
 			}
 			actionSeconds += simulationSeconds;
+			if (scoreValue)
+			{
+				double value = 0;
+				if (ok)
+				{
+					const int now = app->mBoard->mMainCounter;
+					double produced = 0;
+					for (auto sample : history) if (sample.first >= now - 6000) produced += sample.second;
+					const int elapsed = std::max(0, std::min(6000, now - historyStart));
+					if (estimatedResult >= 0) value = estimatedResult;
+					else if (app->EnvironmentTerminal()) value = app->mBoardResult == BoardResult::BOARDRESULT_WON ? 1.0 : 0.0;
+					else value = valueNets[0].Predict(app, elapsed ? produced * 1000.0 / elapsed : 0.0);
+				}
+				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
+					<< ",\"observation\":{\"tick\":" << (app->mBoard ? app->mBoard->mMainCounter : 0)
+					<< ",\"wave_timer\":0,\"terminal\":" << (app->EnvironmentTerminal() ? "true" : "false")
+					<< ",\"result\":" << static_cast<int>(app->mBoardResult) << ",\"value\":" << std::setprecision(9) << value;
+				if (estimatedResult >= 0) std::cout << ",\"rollout_result\":" << estimatedResult;
+				std::cout << "},\"decisions\":" << decisions << ",\"simulation_seconds\":" << simulationSeconds
+					<< ",\"network_seconds\":" << networkSeconds << "}" << std::endl << std::setprecision(6);
+				continue;
+			}
 			const auto observationStart = std::chrono::steady_clock::now();
 			const std::string observation = app->mBoard ? app->EnvironmentLeanObservation() : "null";
 			observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
@@ -842,12 +968,12 @@ static void RunEnvironment(LawnApp* app)
 				// Optional trailing token, absent in every pre-task20 task: the command text of
 				// those tasks therefore stays byte-identical.
 				std::string extra;
-				if (input >> extra)
+				while (input >> extra)
 				{
 					if (extra == "conveyor_original") task.originalConveyorStart = true;
+					else if (extra == "fog_human") task.humanFogObservation = true;
+					else if (extra == "fog_xray") task.humanFogObservation = false;
 					else parsed = false;
-					std::string trailing;
-					if (input >> trailing) parsed = false;
 				}
 			}
 			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&

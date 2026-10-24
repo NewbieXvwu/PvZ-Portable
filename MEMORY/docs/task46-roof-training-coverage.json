@@ -1,0 +1,25 @@
+{
+  "scope": "dw4i_s1 task23 frozen dataset inventory; current source metadata hashes rechecked",
+  "inventory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dataset_inventory.json",
+  "inventory_sha256": "3b1892381f3ef424e565ce1cf6e3aa5cd6d6d1bcbe91b9d6ddb352bce1f82426",
+  "archives": 48816,
+  "levels": {
+    "7": 35455,
+    "8": 1536,
+    "9": 4977,
+    "10": 5312,
+    "11": 192,
+    "12": 192,
+    "13": 192,
+    "14": 192,
+    "16": 192,
+    "17": 192,
+    "18": 192,
+    "19": 192
+  },
+  "roof_archives": 0,
+  "missing": 0,
+  "hash_mismatches": 0,
+  "unknown_levels": 0,
+  "training_results_sha256": "c63cc0ba7fdcae5c47355ef88bd1c2861430d6c8d0b2e5396255c9bd7c0a0157"
+}

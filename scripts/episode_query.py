@@ -69,9 +69,16 @@ SCHEMA = "episode_archive_v1"
 
 def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
             out_dir: Path, max_actions: int, checkpoint: str | None = None,
-            task_extra: dict | None = None) -> dict:
-    rec = collect(resource_dir, seed, level, policy, max_actions, deck,
-                  checkpoint=checkpoint, task_extra=task_extra)
+            task_extra: dict | None = None, search_config: dict | None = None) -> dict:
+    if policy == "teacher" or search_config:
+        if not search_config:
+            raise ValueError("teacher capture requires search_config")
+        from search_episode import collect_search
+        rec = collect_search(resource_dir, seed, checkpoint, arm="fast_search" if policy=="teacher" else "fast",
+                             **search_config)
+    else:
+        rec = collect(resource_dir, seed, level, policy, max_actions, deck,
+                      checkpoint=checkpoint, task_extra=task_extra)
     out_dir.mkdir(parents=True, exist_ok=True)
     meta = {
         "schema": SCHEMA,
@@ -756,7 +763,8 @@ def _replay_task_extra(task: dict) -> dict:
     return {"wave_cap": task.get("wave_cap"),
             "zombie_count_multiplier": task.get("zombie_count_multiplier"),
             "preplanted": tuple(tuple(p) for p in task.get("preplanted") or ()),
-            **({"conveyor_start": task["conveyor_start"]} if task.get("conveyor_start") else {})}
+            **({"conveyor_start": task["conveyor_start"]} if task.get("conveyor_start") else {}),
+            **({"fog_observation": task["fog_observation"]} if task.get("fog_observation") else {})}
 
 
 def _run_variant(meta: dict, override: dict, resource_dir: str,
@@ -768,7 +776,7 @@ def _run_variant(meta: dict, override: dict, resource_dir: str,
             _, changed, _ = replay(env, Path(meta['_archive']), overrides=override)
         return changed['outcome']
     t = meta["task"]
-    rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
+    rec = collect(resource_dir, t["seed"], t["level"], "student" if t["policy"] == "teacher" else t["policy"],
                   4000, t.get("deck"), override=override, prefix_actions=prefix,
                   # 反事实重放必须用**同一个检查点**，否则"改一步之后会怎样"问的是另一个模型。
                   checkpoint=t.get("checkpoint"), task_extra=_replay_task_extra(t))
@@ -797,9 +805,14 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
 
     base_act = frames[decision].get("action")
     base = meta["outcome"]
-    L = [f"基线：第 {decision} 步（tick {frames[decision]['tick']}）做的是 "
+    teacher_note = []
+    if t.get('policy') == 'teacher':
+        base = _run_variant(meta, {decision: base_act}, resource_dir, prefix=prefix)
+        teacher_note = ['注意：存档由搜索老师执行；反事实与原动作基线均在相同前缀后由同一学生续走，'
+                        '因此只比较学生续走下的动作差异，不能当作老师续走的因果效果。', '']
+    L = [f"基线：第 {decision} 步（起始 tick {frames[decision-1]['tick']}）做的是 "
          f"{_action_text(base_act, hand)} → 最终第 {base['final_wave']}/"
-         f"{base['wave_count']} 波，{base['reason']}",
+         f"{base['wave_count']} 波，tick {base['final_tick']}，{base['reason']}",
          "",
          # 重放语义必须写出来。2026-10-03 实测：模型在推理里反复追问
          # "whatif 是照抄原局录下的动作序列、只换一条，还是用策略从头重跑？"
@@ -814,6 +827,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
     if human:
         L[2] = f'重放方式：逐 tick 重放示范，只替换第 {decision} 步，随后继续执行原局录下的操作。'
 
+    L = teacher_note + L
     cands: list[dict] = []
     for raw in raw_actions:
         try:
@@ -838,7 +852,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             legal = observation.get('legal_actions') or {}
         else:
             probe = collect(resource_dir, meta["task"]["seed"], meta["task"]["level"],
-                        meta["task"]["policy"], 4000, deck,
+                        "student" if task["policy"] == "teacher" else task["policy"], 4000, deck,
                         capture_legal_at=decision, prefix_actions=prefix,
                         checkpoint=meta["task"].get("checkpoint"),
                         task_extra=_replay_task_extra(task))
@@ -885,7 +899,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             losses += "  ⚠ 这一步当时执行不了（阳光 / 冷却 / 格子），环境改成了等待"
         L.append(f"  {mark} {_action_cli(cand, hand):<15} {_action_text(cand, hand):<28}"
                  f" → 第 {o['final_wave']:>2}/{o['wave_count']} 波  "
-                 f"{sign:>4} 波  {o['reason']}{losses}")
+                 f"{sign:>4} 波  tick {o['final_tick']}  {o['reason']}{losses}")
     best = max((r[0] for r in results), default=0)
     improved = bool(results) and rank(results[0][2]) < rank(base)
     L.append("")
@@ -904,13 +918,14 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                     replay(env, archive, overrides={decision: top[1]}, save=out)
                 verify(out, resource_dir)
             else:
-                rec = collect(resource_dir, t["seed"], t["level"], t["policy"],
+                rec = collect(resource_dir, t["seed"], t["level"], "student" if t["policy"] == "teacher" else t["policy"],
                           4000, deck, override={decision: top[1]}, prefix_actions=prefix,
                           checkpoint=t.get("checkpoint"), task_extra=_replay_task_extra(t))
                 out.mkdir(parents=True, exist_ok=True)
                 (out / "meta.json").write_text(json.dumps(
                     {"schema": SCHEMA,
                      "task": {**t,
+                              **({"policy": "student", "source_policy": "teacher"} if t.get("policy") == "teacher" else {}),
                               "note": f"反事实：第 {decision} 步改为 "
                                       f"{_action_text(top[1], hand)}"},
                      "outcome": rec["outcome"], "totals": rec["totals"],
@@ -923,9 +938,7 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
             L.append(f"  最好的那个已存档到 {out} —— 可以接着用 lane / narrative / "
                      f"frame 查它，和原局对照。")
     else:
-        L.append(f"  没有任何单个替换能多推一波。说明第 {decision} 步不是瓶颈 ——"
-                 f"问题更可能是**系统性的**（整局的建线顺序、植物类型组合），"
-                 f"而不是某一步选错。换个决策点再试。")
+        L.append("  本次测试的单步替换未改善结果；不能排除未测动作更好，或需要多步配合。")
     return "\n".join(L)
 
 
@@ -1094,8 +1107,12 @@ def main() -> None:
     c.add_argument("--seed", type=int, default=None,
                    help="不给就取 --task-manifest 里该任务的第一个种子。")
     c.add_argument("--level", type=int, default=7)
-    c.add_argument("--policy", choices=["student"], default="student",
-                   help="只有 student = 专家迭代的学生网络（卡组用 --task-manifest/--task-id）")
+    c.add_argument("--policy", choices=["student", "teacher"], default="student",
+                   help="student 或实际搜索老师 teacher；teacher 使用生产搜索配方")
+    c.add_argument("--value", help="teacher 的叶值检查点")
+    c.add_argument("--static-value", help="teacher 的静态候选检查点")
+    c.add_argument("--timeline", help="逐决策 tick 的原始证据；也可用于纯学生的原生动作一致性诊断")
+    c.add_argument("--executable", help="本树引擎路径")
     c.add_argument("--checkpoint", required=True, help="学生 model.pt")
     c.add_argument("--deck", default=None)
     c.add_argument("--task-manifest", default=None,
@@ -1211,8 +1228,16 @@ def main() -> None:
         if seed is None:
             print("要给 --seed，或者用 --task-manifest + --task-id。", file=sys.stderr)
             return 2
+        search_config = None
+        if args.policy == 'teacher' or args.timeline:
+            if not (args.task_manifest and args.task_id and args.value):
+                ap.error('teacher/timeline capture requires task-manifest, task-id and value')
+            search_config = dict(manifest=args.task_manifest, task_id=args.task_id,
+                value=args.value, static_value=args.static_value, executable=args.executable,
+                timeline=args.timeline)
         res = capture(args.resource_dir, seed, level, args.policy, deck,
-                      Path(args.out), args.max_actions, checkpoint=args.checkpoint, task_extra=task_extra)
+                      Path(args.out), args.max_actions, checkpoint=args.checkpoint, task_extra=task_extra,
+                      search_config=search_config)
         print(f"已存档到 {args.out}：{res['meta']['frame_count']} 帧，"
               f"{res['meta']['outcome']['reason']}")
         return
@@ -1225,7 +1250,7 @@ def main() -> None:
     if args.cmd == "policy":
         t = load(Path(args.archive))[0]["task"] if args.archive else {}
         print("\n".join([
-            "这一局是**专家迭代的学生网络**打的（DESIGN.md §13–§14），不是规则脚本。",
+            "这一局由**实际搜索老师**执行，推演由学生续走。" if t.get("policy")=="teacher" else "这一局是**专家迭代的学生网络**打的（DESIGN.md §13–§14）。",
             "",
             *([f"  检查点：{t.get('checkpoint')}（指纹 {t.get('checkpoint_sha256')}）"] if t else []),
             "  怎么来的：模仿“学生 + 搜索”这位老师在每个局面的选择（搜索 = 每张卡挑少数几个格子、"

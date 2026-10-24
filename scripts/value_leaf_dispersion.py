@@ -24,22 +24,61 @@ TASKS = ('pool_l24_eval_p9k', 'pool_l26_eval_p9k')
 MARGIN = 0.02
 
 
+def prepare_probe_resume(out: Path, task: str, expected: set[int]) -> None:
+    """Keep completed games' probes; discard only unfinished games' regenerable prefixes."""
+    games = out / 'games.jsonl'
+    completed = [json.loads(line) for line in games.read_text().splitlines()] if games.exists() else []
+    seeds = [int(row['seed']) for row in completed]
+    if len(seeds) != len(set(seeds)) or not set(seeds) <= expected:
+        raise ValueError('existing game seeds differ from frozen probe plan')
+    done = set(seeds)
+    parts = []
+    seen = set()
+    for path in out.glob('leaves.*.jsonl'):
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+        keep = []
+        for row in rows:
+            if row['task'] != task or row['seed'] not in expected:
+                raise ValueError('existing probes differ from frozen task/seeds')
+            if row['seed'] in done:
+                key = (row['seed'], row['decision'])
+                if key in seen: raise ValueError('duplicate completed-game probe')
+                seen.add(key); keep.append(row)
+        parts.append((path, rows, keep))
+    for row in completed:
+        if row['searched'] and not any(seed == row['seed'] for seed, _ in seen):
+            raise ValueError('completed game has no probes; cannot silently skip it')
+    for path, rows, keep in parts:
+        if len(rows) != len(keep):
+            temporary = path.with_suffix(path.suffix + '.tmp')
+            temporary.write_text(''.join(json.dumps(row) + '\n' for row in keep))
+            temporary.replace(path)
+
+
 def run(args) -> None:
+    if not 1 <= args.workers <= 4:
+        raise ValueError('at most four game workers')
+    # Internal callers can supply a frozen extended seed manifest without a new CLI switch.
+    manifest = Path(getattr(args, 'manifest', MAIN / 'artifacts/stage4/pool_panel.json'))
+    tasks = {task['task_id']: task for task in json.loads(manifest.read_text())['tasks']}
     for arm in ('v3', 'v4'):
         for task in TASKS:
             out = args.out / arm / task
             out.mkdir(parents=True, exist_ok=True)
             probe = out / 'leaves'
-            for stale in out.glob('leaves.*.jsonl'):
-                stale.unlink()
+            expected = tasks[task]['seeds'][args.seed_offset:args.seed_offset + args.games]
+            if len(expected) != args.games or len(set(expected)) != args.games:
+                raise ValueError('not enough unique frozen probe seeds')
+            prepare_probe_resume(out, task, set(expected))
             cmd = [sys.executable, str(ROOT / 'scripts/search_play.py'),
                    '--rollout-policy', str(MAIN / 'artifacts/student/dw4i_s1/model.pt'),
                    '--static-value', str(MAIN / 'artifacts/hard/value_branch1/model.pt'),
                    '--value', str(args.v3 if arm == 'v3' else args.v4),
                    '--verify-samples', '9', '--student-candidates', '2',
-                   '--manifest', str(MAIN / 'artifacts/stage4/pool_panel.json'), '--task-id', task,
-                   '--seeds', str(args.games), '--workers', str(args.workers),
-                   '--executable', str(ROOT / 'build/pvz-portable'),
+                   '--manifest', str(manifest), '--task-id', task,
+                   '--seeds', str(args.games), '--seed-offset', str(args.seed_offset),
+                   '--workers', str(args.workers),
+                   '--executable', str(args.executable),
                    '--resource-dir', '/home/newbiexvwu/.cache/pvz-research-resources',
                    '--dagger-beta', '1', '--out', str(out),
                    '--leaf-probe', str(probe), '--leaf-probe-limit', str(args.limit)]
@@ -118,7 +157,10 @@ def main() -> None:
     p.add_argument('--json', type=Path, default=ROOT / 'MEMORY/docs/value-widen-dispersion.json')
     p.add_argument('--v3', type=Path, default=MAIN / 'artifacts/value_net/v3/model.pt')
     p.add_argument('--v4', type=Path, default=ROOT / 'artifacts/task30/v4/model.pt')
+    p.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     p.add_argument('--games', type=int, default=4)
+    p.add_argument('--seed-offset', type=int, default=0,
+                   help='index into the task seed list (the eval panels hold 30000..31023, so 992 = 30992)')
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--limit', type=int, default=80, help='per worker decision cap')
     p.add_argument('--sample', type=int, default=200)

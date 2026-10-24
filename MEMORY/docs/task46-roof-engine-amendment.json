@@ -1,0 +1,23 @@
+{
+ "task": "task46",
+ "status": "validated before accepted teacher/student half-difficulty games",
+ "reason": "Python already accepts 0.1..10; C++ EnvironmentReset still rejected multiplier<1.0. The first half-difficulty batch produced no games.",
+ "change": {
+  "file": "src/LawnApp.cpp",
+  "function": "LawnApp::EnvironmentReset",
+  "minimum_before": 1.0,
+  "minimum_after": 0.1,
+  "scope": "align reset range with existing Python contract; wave scaling implementation unchanged"
+ },
+ "baseline_sha256": "2e83c8a925f26e4df0d9b7af703053f4ae3ce0bd30caaa1626e87540bf43755c",
+ "candidate_sha256": "e36e9650fbc66952f23f9572b740d35ccd2af3e47c00826be29b346e7c3fbab1",
+ "formal_320_engine": "baseline_sha256 (all formal original-difficulty games frozen before this change)",
+ "followup_engine": "candidate_sha256 after required gates",
+ "gates": {
+  "replay": "scripts/roof_engine_gate.py: L1..L49; every decision compares full public and privileged state",
+  "cpp": "tests/test_environment_wait_events.cpp: existing coordinate/reducer tests",
+  "fractional": "python/test_roof_multiplier_engine.py: actual C++ guard and half wave counts",
+  "python": "full python pytest suite with PVZ_RESOURCE_DIR"
+ },
+ "validation": "task46-roof-validation.json"
+}

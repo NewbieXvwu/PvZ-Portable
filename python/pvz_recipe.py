@@ -133,7 +133,7 @@ def validate(document, kind=None):
             if type(result[name]) is not bool:
                 raise ValueError(f'{name}: expected boolean')
         for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
-                                  obs=('v1', 'v2lite', 'v2'), lr_schedule=('constant', 'cosine')).items():
+                                  obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4'), lr_schedule=('constant', 'cosine')).items():
             if result[name] not in choices:
                 raise ValueError(f'{name}: expected one of {choices}')
         if not isinstance(result['device'], str) or not result['device']:
@@ -231,7 +231,7 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
-                **({'source_weight': recipe['source_weight']} if recipe['source_weight'] else {}))
+                **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
 
 
 def training_args(parser, argv=None):

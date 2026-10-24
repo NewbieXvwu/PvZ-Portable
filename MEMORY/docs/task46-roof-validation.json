@@ -1,0 +1,44 @@
+{
+ "python": {
+  "command": [
+   "/home/newbiexvwu/.venvs/ml/bin/python3",
+   "-m",
+   "pytest",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/python",
+   "-q"
+  ],
+  "environment": {
+   "PVZ_NO_POPUP": "1",
+   "PVZ_RESOURCE_DIR": "/home/newbiexvwu/.cache/pvz-research-resources",
+   "OMP_NUM_THREADS": "1",
+   "MKL_NUM_THREADS": "1",
+   "OPENBLAS_NUM_THREADS": "1"
+  },
+  "exit_code": 0,
+  "passed": 360,
+  "subtests_passed": 133,
+  "seconds": 77.14,
+  "stdout_sha256": "ec5f1e5e4c2442247044b6eda6430e1783c53794c0350d47a2ad06cef9950051"
+ },
+ "cpp": {
+  "source": "tests/test_environment_wait_events.cpp",
+  "exit_code": 0,
+  "public_coordinate_values": 220490,
+  "contract_scenarios": 12,
+  "stdout": "public coordinate bit-exact vs stream: 220490 finite values\nnative wait reducer: 12 contract scenarios passed"
+ },
+ "replay": {
+  "levels": 49,
+  "non_roof_levels": 40,
+  "frames": 28999,
+  "non_roof_frames": 25113,
+  "frame_differences": 0,
+  "bounded_level": {
+   "level": 35,
+   "max_decisions": 2000,
+   "reason": "ScaryPotter: existing policy has no vase-opening action; compared 2001 states"
+  },
+  "evidence": "task46-roof-engine-gate.json"
+ },
+ "engine_sha256": "e36e9650fbc66952f23f9572b740d35ccd2af3e47c00826be29b346e7c3fbab1"
+}

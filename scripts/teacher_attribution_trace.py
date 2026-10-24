@@ -14,7 +14,9 @@ sys.path[:0]=[str(ROOT/'python'),str(ROOT/'scripts')]
 
 def init(args):
     import search_play as teacher
-    teacher._init_worker(args.value,args.student,61,True,args.static_value)
+    keep, paths = teacher._export_values(args.value, args.static_value)
+    teacher._W["value_keep"] = keep
+    teacher._init_worker(paths[0],args.student,61,paths[1])
 
 
 def trace(point,args):
@@ -48,6 +50,8 @@ def trace(point,args):
             assert (not info['ok'])==bool(frames[i+1].get('action_rejected'))
             if not info['ok']:obs,*_=env.step({'type':'wait','ticks':60})
         env.load_rollout_net(teacher._W['rollout_file'])
+        env.load_value_net(teacher._W['value_files'][0])
+        env.load_value_net(teacher._W['value_files'][1], static=True)
         teacher._W['context']=observation_context(obs)
         history=StudentHistory(teacher._W['fast'].obs)
         for frame in frames[:d-1]:history.extra(frame)

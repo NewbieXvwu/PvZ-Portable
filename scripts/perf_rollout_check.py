@@ -52,9 +52,11 @@ def check_cpp(args) -> None:
         export_student(net, path)
         env.load_rollout_net(path)
         search_play._W.update(fast=net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=args.mask)
-        if args.cpp_mode == "search":
-            from pvz_value_net import load_value_net
-            search_play._W["vnet"] = load_value_net(args.value)
+        if args.cpp_mode in ("search", "throughput"):
+            keep, paths = search_play._export_values(args.value, None)
+            search_play._W.update(value_keep=keep, value_files=paths, env=env)
+            env.load_value_net(paths[0])
+            env.load_value_net(paths[1], static=True)
         for seed in task_data["seeds"][: args.seeds]:
             kw = training_task_kwargs(task_data, seed)
             task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
@@ -147,7 +149,7 @@ def _rollout_pair(env, obs: dict, first: dict, seed: int, counters: dict) -> Non
             env.restore(root)
             env.reseed(seed)
             search_play._W.update(batch_waits=batch, lean_rollouts=lean)
-            leaf = search_play._rollout_policy(env, obs, first, obs["tick"] + 3000)
+            leaf = search_play._python_rollout_reference(env, obs, first, obs["tick"] + 3000)
             leaves.append((leaf["tick"], _frame(leaf), env._sun_production_history.copy()))
     finally:
         env.restore(root)

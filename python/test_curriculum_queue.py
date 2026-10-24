@@ -1,32 +1,41 @@
 """task29 第 2 步：课程控制器的元规则单测（不跑引擎、不读真实清单）。"""
 import copy
+import json
 import sys
 import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
-from curriculum_queue import (DEMOTE_BELOW, FRONTIER_HIGH, FRONTIER_LOW, GIB, MEMORY_RESERVE_BYTES,
-                              MIN_SAMPLES, PROMOTE_ABOVE, WINDOW, _descendant_rss, adjust, allocate,
-                              command_for, label_for, make_state, pack_command, pack_labels,
-                              parse_task_id, plan_round, rate, reconcile_cells,
-                              startup_worker_estimate, training_base_ids, worker_count)
+from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
+                              MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
+                              adjust, allocate, build_plan, command_for, label_for, load_teacher_rates,
+                              make_state, pack_command, pack_labels, parse_task_id, plan_round, rate,
+                              reconcile_cells, startup_worker_estimate, student_rate,
+                              training_base_ids, worker_count)
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
 N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
 
 
-def cell(wins, games, mult_index=0, last_round=0):
-    return dict(family='f', level=7, mult_index=mult_index, last_round=last_round,
+def cell(wins, games, mult_index=0, last_round=0, level=7):
+    return dict(family='f', level=level, mult_index=mult_index, last_round=last_round,
                 windows={str(VALUES[mult_index]): {'recent': [1] * wins + [0] * (games - wins),
                                                    'wins': wins, 'games': games}})
 
 
 class CurriculumRulesTest(unittest.TestCase):
+    def test_zones_admission_only_measured_roof_and_no_fog(self):
+        ids = training_base_ids()
+        self.assertEqual({name for name in ids if name.startswith('roof_')},
+                         {'roof_l41_train_r7'})
+        self.assertFalse(any(name.startswith('fog_') for name in ids))
+
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))
         self.assertEqual(parse_task_id('night_l20_train_n10_orig_m300', NAMES),
@@ -53,31 +62,168 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertAlmostEqual(rate(cells['c'], 1.0), 56 / 256)
         self.assertLessEqual(len(bucket['recent']), WINDOW)
 
-    def test_allocate_guard_share_and_budget(self):
-        # 全部格已经升到 1.25，这样第二阶段的“当前倍率”不会是 1.0，能单独看防遗忘那 12%。
-        cells = {f'c{i}': cell(6, 10, mult_index=1, last_round=i) for i in range(10)}
-        picks = allocate(cells, VALUES, budget=100, per_group=10, guard_ratio=0.12, round_index=1)
-        self.assertLessEqual(sum(p[2] for p in picks), 100)
-        at_one = [p for p in picks if p[1] == 1.0]
-        self.assertEqual(len(at_one), 1)                       # 12% -> 至少 1 组，但只有 1 组
-        self.assertEqual(at_one[0][0], 'c0')                   # 最久没采的优先
-        self.assertEqual(len([p for p in picks if p[1] == 1.25]), 9)
-        self.assertGreater(len(picks), 1)
+    def test_floor_serves_starved_cells_first(self):
+        # last_round=0 的格（从未采过）最先轮到；保底组局数减半；预算封顶。
+        cells = {f'c{i}': cell(6, 10, mult_index=1, last_round=1) for i in range(4)}
+        cells.update({f's{i}': cell(0, 10, mult_index=0, last_round=0) for i in range(4)})
+        picks = allocate(cells, VALUES, budget=60, per_group=10, round_index=5)
+        floor_games = 10 // FLOOR_SHARE
+        self.assertEqual([p[0] for p in picks[:2]], ['s0', 's1'])   # 饿死格按字母序先轮到
+        self.assertEqual([p[2] for p in picks[:2]], [floor_games] * 2)   # 保底组是小局数
+        self.assertTrue(all(p[2] == 10 for p in picks[2:]))    # 其余组按整组局数
+        self.assertEqual([p[0] for p in picks[2:4]], ['s2', 's3'])  # 没轮到保底的饿死格在可教排序里最前
+        self.assertLessEqual(sum(p[2] for p in picks), 60)
         for base, multiplier, games in picks:
-            self.assertEqual(games, 10)
             self.assertIn(multiplier, VALUES)
 
-    def test_frontier_preferred_over_resolved(self):
+    def test_floor_bounds_starvation_over_rounds(self):
+        # 预算紧张下连续模拟多轮（last_round 由"组完成"写入，如 run_round 的落盘）：
+        # 任何格两次被采的间隔不超过 FLOOR_ROUNDS + 1 轮。
+        cells = {f'c{i:02d}': cell(5, 10, last_round=0) for i in range(20)}
+        last_seen = {name: 0 for name in cells}
+        for round_index in range(1, 13):
+            picks = allocate(cells, VALUES, budget=50, per_group=10, round_index=round_index)
+            for base, _multiplier, _games in picks:
+                gap = round_index - last_seen[base]
+                self.assertLessEqual(gap, FLOOR_ROUNDS + 1, base)
+                cells[base]['last_round'] = round_index
+                last_seen[base] = round_index
+        self.assertEqual(max(last_seen.values()), 12)          # 每个格都真的被轮到过
+
+    def test_allocate_does_not_mutate_last_round(self):
+        # task59：last_round 只由 run_round 在组完成时写；plan/allocate 不得改状态。
+        cells = {'a': cell(5, 10, last_round=0), 'b': cell(5, 10, last_round=1)}
+        before = {name: value['last_round'] for name, value in cells.items()}
+        allocate(cells, VALUES, budget=30, per_group=10, round_index=7)
+        self.assertEqual({name: value['last_round'] for name, value in cells.items()}, before)
+
+    def test_crash_between_groups_replans_unrun_groups(self):
+        # 组间崩溃重启：重新 plan 时本轮已完成的组不重采，没跑的组照常排出。
+        bases = ('day_l7_train_d7', 'night_l7_train_n7', 'pool_l21_train_p9k')
+        tasks = {}
+        for base in bases:
+            for mult, suffix in [(1.0, ''), (1.25, '_m125')]:
+                task_id = base + suffix
+                tasks[task_id] = dict(task_id=task_id, level=7, deck=[0, 1, 2, 3, 4, 5, 7],
+                                      zombie_count_multiplier=mult, seeds=list(range(40)))
+        state = dict(round=0, offsets={}, cells={base: cell(5, 10) for base in bases})
+        manifests = {task_id: Path('/tmp/panel.json') for task_id in tasks}
+        plan1, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=40, per_group=10)
+        self.assertEqual([item['base'] for item in plan1], list(bases))
+        self.assertEqual([item['games'] for item in plan1], [10, 10, 10])
+        for item in plan1[:2]:                                 # 前两组完成，然后控制器崩溃
+            state['cells'][item['base']]['last_round'] = 1
+            state['offsets'][item['task_id']] = item['offset'] + item['games']
+        plan2, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=40, per_group=10)
+        completed = {item['base'] for item in plan1[:2]}
+        self.assertFalse(completed & {item['base'] for item in plan2})
+        self.assertEqual([item['base'] for item in plan2], ['pool_l21_train_p9k'])
+        self.assertEqual(plan2[0]['offset'], 0)                # 偏移接在原计划之后
+
+    def test_starved_cell_gets_floor_even_with_tight_budget(self):
+        # 预算只够一个保底组时，最久没采的格拿到保底局数（减半），不为零。
+        cells = {'old': cell(5, 10, last_round=0), 'new': cell(5, 10, last_round=1)}
+        picks = allocate(cells, VALUES, budget=6, per_group=10, round_index=9)
+        self.assertEqual([(p[0], p[2]) for p in picks], [('old', 10 // FLOOR_SHARE)])
+
+    def test_teacher_wins_student_loses_ranks_first(self):
+        # L20 情形：学生 0/10、老师 0.9 -> 排在中难度格前面（task57 的核心诉求）。
         cells = {
-            'edge': cell(6, 10),            # 0.6 -> frontier
-            'easy': cell(10, 10),           # 1.0 -> 会先升档，当前倍率无数据
-            'hard': cell(1, 10),            # 0.1 -> 1.0 的难关照样采
+            'l20': cell(0, 10, level=20),   # 学生全败，老师 0.9 -> 差距 0.9
+            'mid': cell(6, 10, level=17),   # 0.6，老师未知按可教 -> 差距 0.4
+            'l24': cell(0, 10, level=24),   # 学生全败，老师 0.1 -> 差距 0.1，沉底
         }
-        adjust(cells, VALUES)
-        picks = allocate(cells, VALUES, budget=40, per_group=10, guard_ratio=0.0, round_index=1)
+        teacher = {'level:20': 0.9, 'level:24': 0.1}
+        picks = allocate(cells, VALUES, budget=20, per_group=10, round_index=1, teacher=teacher)
         bases = [p[0] for p in picks]
-        self.assertIn('edge', bases)
-        self.assertIn('hard', bases)
+        self.assertEqual(bases, ['l20', 'mid'])            # 预算只够两组，l24 被挤出
+
+    def test_unknown_teacher_and_student_gap_tiebreaks_by_age(self):
+        # 老师都未知时按 1 - 学生胜率排；同分时最久没采的先。
+        cells = {
+            'fresh_hard': cell(0, 10, last_round=1),        # 差距 1.0（上一轮采过）
+            'old_hard': cell(0, 10, last_round=0),          # 差距 1.0，更久没采
+            'easy': cell(9, 10),                            # 差距 0.1
+        }
+        picks = allocate(cells, VALUES, budget=30, per_group=10, round_index=2)
+        self.assertEqual([p[0] for p in picks], ['old_hard', 'fresh_hard', 'easy'])
+
+    def test_build_plan_cold_start_uses_pending_volume(self):
+        # round 2 的真实规模：202 个标签、约 5 万局 ≈ 每标签 0.3 GiB 原始档案，MemAvailable 40 GiB。
+        # 冷启动并发应明显大于 1（旧算法按已建段估得 2 GiB → 并发 1），且峰值不超可用预算。
+        pending = [300 * 1024 * 1024] * 202
+        workers, per_builder = build_plan(pending, recipe_workers=32, available=40 * GIB)
+        self.assertGreater(workers, 1)
+        self.assertEqual(per_builder, PACK_BUILDER_BYTES + pending[0])
+        self.assertLessEqual(workers * per_builder, 40 * GIB - MEMORY_RESERVE_BYTES)
+        self.assertEqual(workers, min(32, (40 * GIB - MEMORY_RESERVE_BYTES) // per_builder))
+
+    def test_build_plan_bounds(self):
+        # 配方值是上限；待建段为空并发 1（pack 无活可干）；可用内存极小时并发仍 >=1。
+        self.assertEqual(build_plan([GIB] * 5, 2, None), (2, 3 * GIB))
+        self.assertEqual(build_plan([], 8, 100 * GIB), (1, PACK_BUILDER_BYTES))
+        self.assertEqual(build_plan([GIB], 8, 7 * GIB), (1, 3 * GIB))
+        self.assertEqual(build_plan([GIB] * 9, 32, 100 * GIB), (9, 3 * GIB))
+
+    def test_pack_memory_limit_matches_build_plan_per_builder(self):
+        # pack() 的单建造者假设与 build_plan 一致：2 GiB 底数 + 该批最大的标签原始档案。
+        import pack_training_rows as packer
+        with tempfile.TemporaryDirectory() as tmp:
+            big = Path(tmp) / 'big' / 'frames.npz'
+            big.parent.mkdir()
+            with big.open('wb') as handle:
+                handle.truncate(3 * GIB)                     # 稀疏文件，只占 st_size
+            jobs = [('d', 'c', None, None, [big])]
+            self.assertEqual(packer.pack_memory_limit(40 * GIB, jobs),
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // (PACK_BUILDER_BYTES + 3 * GIB))
+            self.assertEqual(packer.pack_memory_limit(40 * GIB, [('d', 'c', None, None, [])]),
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // PACK_BUILDER_BYTES)
+            self.assertEqual(packer.pack_memory_limit(GIB, jobs), 1)
+
+    def test_pending_builds_uses_merged_catalog_and_segment_contract(self):
+        # 与 _prepare_corpus 同一合并视图（采集优先）、与 pack() 同一套指纹函数：
+        # 视图链接不齐直接待建；链接齐全时按 pack 的指纹查段文件，段在即已建。
+        from pvz_recipe import load_recipe, training_row_options, write_recipe
+        from pvz_training_pack import fingerprint_paths, pack_options, segment_options, segment_path
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            base, coll = root / 'base', root / 'coll'
+            (base / 's1' / 'pool_a').mkdir(parents=True)
+            (base / 's1' / 'pool_a' / 'frames.jsonl').write_bytes(b'x' * 100)
+            (coll / 's1' / 'pool_a').mkdir(parents=True)
+            (coll / 's1' / 'pool_a' / 'frames.jsonl').write_bytes(b'y' * 200)   # 采集同位覆盖
+            (coll / 's2' / 'pool_b').mkdir(parents=True)
+            (coll / 's2' / 'pool_b' / 'frames.jsonl').write_bytes(b'z' * 50)
+            recipe = load_recipe(ROOT / 'recipes/dw4i.json')
+            recipe['data'] = str(base)
+            recipe_path = root / 'recipe.json'
+            write_recipe(recipe_path, recipe)
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.args = SimpleNamespace(recipe=recipe_path, frames=coll, log=root / 'log')
+            pipeline.directory = root / 'pipeline'
+            self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)),
+                             {'pool_a': 200, 'pool_b': 50})          # 视图还没有链接
+            view = root / 'pipeline' / 'frames'
+            (view / 's2' / 'pool_b').mkdir(parents=True)
+            (view / 's2' / 'pool_b' / 'frames.jsonl').symlink_to(coll / 's2' / 'pool_b' / 'frames.jsonl')
+            options = pack_options(**training_row_options(recipe, ['pool_a', 'pool_b']))
+            fingerprint = fingerprint_paths(view, [view / 's2' / 'pool_b' / 'frames.jsonl'])
+            target = segment_path(view, segment_options(options, 'pool_b', fingerprint))
+            target.parent.mkdir(parents=True)
+            target.write_bytes(b'')
+            self.assertEqual(dict(pipeline.pending_builds(['pool_a', 'pool_b'], recipe)), {'pool_a': 200})
+
+    def test_load_teacher_rates_missing_file_and_shapes(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertEqual(load_teacher_rates(Path(tmp) / 'absent.json'), {})
+            path = Path(tmp) / 'rates.json'
+            path.write_text(json.dumps({'levels': {'20': {'wins': 29, 'games': 32}, '24': 0.1},
+                                        'bases': {'pool_l21_train_p9k': 0.5}}))
+            rates = load_teacher_rates(path)
+            self.assertAlmostEqual(rates['level:20'], 29 / 32)
+            self.assertAlmostEqual(rates['level:24'], 0.1)
+            self.assertAlmostEqual(rates['pool_l21_train_p9k'], 0.5)
 
     def test_plan_round_offsets_and_exhaustion(self):
         tasks = {}
@@ -88,14 +234,14 @@ class CurriculumRulesTest(unittest.TestCase):
         state = dict(round=0, offsets={}, cells={'day_l7_train_d7': cell(5, 10)})
         manifests = {task_id: Path('/tmp/panel.json') for task_id in tasks}
         plan, _ = plan_round(state, tasks, NAMES, VALUES, manifests,
-                             budget=10, per_group=10, guard_ratio=1.0)
+                             budget=10, per_group=10)
         self.assertEqual(len(plan), 1)
         self.assertEqual(plan[0]['task_id'], 'day_l7_train_d7')
         self.assertEqual(plan[0]['offset'], 0)
         state['offsets']['day_l7_train_d7'] = 15
         with self.assertRaises(SystemExit):
             plan_round(state, tasks, NAMES, VALUES, manifests,
-                       budget=10, per_group=10, guard_ratio=1.0)
+                       budget=10, per_group=10)
 
     def test_stop_flag_stops_before_any_group(self):
         import curriculum_queue as queue
@@ -116,12 +262,161 @@ class CurriculumRulesTest(unittest.TestCase):
             finally:
                 queue.STOP_FLAG = original
 
+    def test_student_rate_uses_current_window_then_latest(self):
+        self.assertAlmostEqual(student_rate(cell(2, 10), VALUES[0]), 0.2)
+        # 刚换档还没数据：退回最近一个非空窗口（执行现实）。
+        self.assertAlmostEqual(student_rate(cell(1, 10, mult_index=1), 2.0), 0.1)
+        # 全无数据：None，第一个组保持 β=0 的探针。
+        self.assertIsNone(student_rate(cell(0, 0), VALUES[0]))
+
+    def test_command_for_passes_dagger_beta(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                               static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=3,
+                               executable=Path('/exe'), resource_dir=Path('/res'),
+                               frames=Path('/frames'), out=Path('/out'))
+        base = command_for(args, Path('/panel.json'), 'day_l7_train_d7_m125', 0, 2, 'c1d7m125')
+        self.assertEqual(base[base.index('--dagger-beta') + 1], '0')
+        mixed = command_for(args, Path('/panel.json'), 'day_l7_train_d7_m125', 0, 2, 'c1d7m125', beta=0.5)
+        self.assertEqual(mixed[mixed.index('--dagger-beta') + 1], '0.5')
+
+    def test_run_round_mixes_beta_for_starved_cells(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+
+            original_flag, original_run = queue.STOP_FLAG, queue.subprocess.run
+            queue.STOP_FLAG = root / 'absent-stop-flag'   # 不存在：组间不停
+            queue.subprocess.run = fake_run
+            try:
+                for wins, games, expected in [(0, 10, '0.5'), (5, 10, '0'), (0, 0, '0')]:
+                    label = f'c1d7m{wins}g{games}'
+                    folder = root / 'out' / f'{label}_2'
+                    folder.mkdir(parents=True)
+                    rows = [{'won': True}, {'won': False}]
+                    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                    args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                                           python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                                           static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
+                                           executable=Path('/exe'), resource_dir=Path('/res'),
+                                           frames=Path('/frames'),
+                                           beta_threshold=0.1, starved_beta=0.5, probe_interval=3)
+                    state = dict(round=0, offsets={}, log=[],
+                                 cells={'day_l7_train_d7': cell(wins, games)})
+                    plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
+                                 offset=0, games=2, manifest='/m', label=label)]
+                    self.assertTrue(queue.run_round(args, state, plan, []))
+                    self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], expected)
+                    self.assertIn(f'beta={expected}', (root / 'log').read_text())
+                    self.assertEqual(state['log'][0]['groups'][0]['beta'], float(expected))
+            finally:
+                queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
+
+    def test_mixed_groups_bypass_student_window_with_probe_cadence(self):
+        # 修正 2b：β>0 组的胜负不进学生胜率窗口（一部分步是搜索在走），另存 mixed；
+        # 每 probe_interval 组保留一个 β=0 探针组，窗口只吃探针与普通 β0 组。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            commands = []
+
+            def fake_run(command, **_kwargs):
+                commands.append(command)
+                return SimpleNamespace(returncode=0)
+
+            original_flag, original_run = queue.STOP_FLAG, queue.subprocess.run
+            queue.STOP_FLAG = root / 'absent-stop-flag'
+            queue.subprocess.run = fake_run
+            try:
+                args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                                       python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                                       static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
+                                       executable=Path('/exe'), resource_dir=Path('/res'),
+                                       frames=Path('/frames'), beta_threshold=0.1, starved_beta=0.5,
+                                       probe_interval=3)
+                state = dict(round=0, offsets={}, log=[],
+                             cells={'day_l7_train_d7': cell(0, 10)})   # 学生全败
+                for round_index in (1, 2, 3):
+                    label = f'c{round_index}d7m100'
+                    folder = root / 'out' / f'{label}_2'
+                    folder.mkdir(parents=True)
+                    rows = [{'won': True}, {'won': False}]   # 混入窗口会造出 50% 假胜率
+                    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                    plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
+                                 offset=0, games=2, manifest='/m', label=label)]
+                    self.assertTrue(queue.run_round(args, state, plan, []))
+                betas = [entry['groups'][0]['beta'] for entry in state['log']]
+                self.assertEqual(betas, [0.5, 0.5, 0.0])     # 第 3 组是 β=0 探针
+                self.assertEqual(commands[-1][commands[-1].index('--dagger-beta') + 1], '0')
+                starved_cell = state['cells']['day_l7_train_d7']
+                bucket = starved_cell['windows']['1.0']
+                self.assertEqual(bucket['games'], 12)        # 旧窗口 + 探针组
+                self.assertEqual(bucket['recent'], [0] * 10 + [1, 0])
+                mixed = bucket['mixed']
+                self.assertEqual((mixed['wins'], mixed['games']), (2, 4))
+                self.assertEqual(starved_cell['mixed_since_probe'], 0)
+                self.assertAlmostEqual(student_rate(starved_cell, 1.0), 1 / 12)   # 探针口径，不是 50%
+                self.assertEqual(adjust({'d': starved_cell}, VALUES), [])   # 不会因 mixed 误升档
+                # allocate 的可教差距不受 mixed 影响：全败格仍排在 0.5 胜率格前
+                # （若 mixed 污染窗口，两者差距同为 0.5，按更久未采会排反）。
+                rival = {'d': starved_cell, 'mid': cell(5, 10, last_round=1)}
+                picks = allocate(rival, VALUES, budget=20, per_group=10, round_index=4)
+                self.assertEqual([p[0] for p in picks], ['d', 'mid'])
+            finally:
+                queue.STOP_FLAG, queue.subprocess.run = original_flag, original_run
+
+    def test_estimate_peak_prefers_measured_train_peak(self):
+        # task61：训练的不可回收峰值是匿名内存——最近实测优先，否则按实测系数回退。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.directory = Path(tmp)
+            pipeline.build_peak = 0
+            pipeline.last_train_peak = 5 * GIB
+            self.assertEqual(pipeline.estimate_peak(), 5 * GIB)
+            pipeline.last_train_peak = 0
+            self.assertEqual(pipeline.estimate_peak(), queue.TRAIN_ANON_EXTRA)   # 无段 → 纯常数
+
+    def test_admit_fails_fast_when_request_exceeds_mem_total(self):
+        # task61：required > MemTotal 时报错让训练任务失败退出，不静默死等。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.directory = Path(tmp)
+            pipeline.build_peak = 0
+            pipeline.last_train_peak = 0
+            original = queue.mem_total_bytes
+            queue.mem_total_bytes = lambda: GIB
+            try:
+                with self.assertRaisesRegex(RuntimeError, 'cannot fit'):
+                    pipeline._admit()
+            finally:
+                queue.mem_total_bytes = original
+
+    def test_command_measures_child_anon_peak(self):
+        import threading
+
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = object.__new__(queue.TrainingPipeline)
+            pipeline.lock = threading.Lock()
+            pipeline.lock_fd = None
+            pipeline.process = None
+            peak = pipeline._command([sys.executable, '-c', 'import time; time.sleep(2.5)'],
+                                     Path(tmp) / 'cmd.log')
+            self.assertIsInstance(peak, int)
+            self.assertGreaterEqual(peak, 0)
+
     def test_pack_labels_union_the_log_and_the_base_corpus(self):
         state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
                          {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
-        self.assertEqual(pack_labels(state), ['c1d7m150', 'c2d7m125'])
+        self.assertEqual(pack_labels(state), ['c1d7m150_fast_search', 'c2d7m125_fast_search'])
         self.assertEqual(pack_labels(state, 'base_b,base_a'),
-                         ['base_a', 'base_b', 'c1d7m150', 'c2d7m125'])
+                         ['base_a', 'base_b', 'c1d7m150_fast_search', 'c2d7m125_fast_search'])
 
     def test_recipe_pack_command_matches_actual_trainer_load_request(self):
         import argparse
@@ -315,6 +610,157 @@ class WorkerCountTest(unittest.TestCase):
                 self.assertEqual(startup_worker_estimate(args, []), queue.DEFAULT_WORKER_BYTES)
             finally:
                 queue.mem_available_bytes = original
+
+class TrainingRestartTest(unittest.TestCase):
+    """task61 追加：杀掉后台训练进程 + 控制器重启后，任务干净重跑，不丢不重。"""
+
+    def _job(self, tmp, status, round_index=1):
+        folder = Path(tmp) / f'round_{round_index:06d}'
+        folder.mkdir(parents=True, exist_ok=True)
+        recipe = folder / 'recipe.json'
+        recipe.write_text('{}')
+        model = folder / 'model.pt'
+        model.write_bytes(b'model-bytes')
+        return dict(round=round_index, recipe=str(recipe), model=str(model), status=status)
+
+    def test_init_requeues_non_done_jobs_and_keeps_done(self):
+        from curriculum_queue import TrainingPipeline
+        with tempfile.TemporaryDirectory() as tmp:
+            state = {'training_jobs': [self._job(tmp, 'running'), self._job(tmp, 'failed', 2),
+                                       self._job(tmp, 'done', 3)]}
+            started = []
+            def fake_run(self, job):
+                started.append(job['round'])
+                return {}
+            args = SimpleNamespace(state=Path(tmp) / 'state.json')
+            with mock.patch.object(TrainingPipeline, '_run', fake_run), \
+                    mock.patch.object(TrainingPipeline, '_plan_build', lambda self, recipe: None):
+                pipeline = TrainingPipeline(args, state)
+            pipeline.executor.shutdown(wait=True)
+            self.assertEqual(sorted(started), [1, 2])          # running/failed 都重跑
+            statuses = {job['round']: job['status'] for job in state['training_jobs']}
+            self.assertEqual(statuses, {1: 'queued', 2: 'queued', 3: 'done'})   # done 不动
+            self.assertEqual(len(pipeline.futures), 2)
+
+    def test_run_reuses_trained_json_without_retraining(self):
+        # 训练完成（trained.json 已写）、评估前被杀：重启后凭 sha 校验复用报告，直接进评估，
+        # _admit/_command（重训入口）被调到即失败。
+        from curriculum_queue import TrainingPipeline
+        from promotion_gate import sha as file_sha
+        with tempfile.TemporaryDirectory() as tmp:
+            job = self._job(tmp, 'queued')
+            trained = {'model_sha256': file_sha(job['model']), 'recipe_sha256': file_sha(job['recipe']),
+                       'round': job['round']}
+            (Path(job['recipe']).parent / 'trained.json').write_text(json.dumps(trained))
+            pipeline = TrainingPipeline.__new__(TrainingPipeline)
+            pipeline.failed = False
+            pipeline.args = SimpleNamespace(log=Path(tmp) / 'log')
+            pipeline.lock_fd = None
+            def forbidden(*_a, **_k):
+                raise AssertionError('retrain path was entered')
+            pipeline._admit = forbidden
+            pipeline._command = forbidden
+            pipeline._prepare_corpus = forbidden
+            pipeline._evaluate = lambda _job: {'promotion': {'approved': False, 'reasons': ['x']}}
+            report = pipeline._run(copy.deepcopy(job))
+            self.assertEqual(report['round'], job['round'])
+            self.assertEqual(report['promotion']['approved'], False)
+            self.assertTrue((Path(job['recipe']).parent / 'complete.json').is_file())
+
+    def test_run_rejects_changed_trained_candidate(self):
+        # trained.json 里的 sha 和模型/recipe 对不上（半截文件或被改动）：拒绝复用，报错留给人看。
+        from curriculum_queue import TrainingPipeline
+        with tempfile.TemporaryDirectory() as tmp:
+            job = self._job(tmp, 'queued')
+            trained = {'model_sha256': '0' * 64, 'recipe_sha256': '0' * 64, 'round': job['round']}
+            (Path(job['recipe']).parent / 'trained.json').write_text(json.dumps(trained))
+            pipeline = TrainingPipeline.__new__(TrainingPipeline)
+            pipeline.failed = False
+            pipeline.args = SimpleNamespace(log=Path(tmp) / 'log')
+            pipeline.lock_fd = None
+            with self.assertRaises(ValueError):
+                pipeline._run(copy.deepcopy(job))
+            self.assertTrue(pipeline.failed)
+
+    def test_build_plan_prefers_measured_per_builder(self):
+        # task61 追加：单建造者基线实测优先（round 2 实测 0.37 GiB vs 假设 2 GiB），无实测回退。
+        measured = int(0.37 * GIB)
+        pending = [500 * 2 ** 20, 300 * 2 ** 20]
+        _workers, per = build_plan(pending, 6, None, measured_per_builder=measured)
+        self.assertEqual(per, measured + max(pending))
+        _workers, per = build_plan(pending, 6, None)
+        self.assertEqual(per, PACK_BUILDER_BYTES + max(pending))
+
+    def _bare_pipeline(self, tmp):
+        from curriculum_queue import TrainingPipeline
+        pipeline = TrainingPipeline.__new__(TrainingPipeline)
+        pipeline.failed = False
+        pipeline.args = SimpleNamespace(log=Path(tmp) / 'log', python=Path(sys.executable))
+        pipeline.lock_fd = None
+        pipeline.build_workers = 6
+        pipeline.build_peak = 12 * GIB          # 15:22 生产现场：pack plan 估到 12.1 GiB
+        pipeline.last_train_peak = int(3.53 * GIB)
+        pipeline.directory = Path(tmp)          # estimate_peak 在这里 glob 段目录
+        return pipeline
+
+    def test_pack_end_clears_build_peak_from_reservation(self):
+        # 打包一结束（训练/评估期间），estimate_peak 只反映训练估算，不再扣 12 GiB。
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = self._bare_pipeline(tmp)
+            job = self._job(tmp, 'queued')
+            peaks = {}
+            def fake_command(command, log):
+                peaks['pack' if 'pack' in str(command) else 'train'] = pipeline.build_peak
+                return int(0.40 * GIB) if 'pack' in str(command) else int(3.53 * GIB)
+            pipeline._admit = lambda: None
+            pipeline._prepare_corpus = lambda labels: None
+            pipeline._command = fake_command
+            pipeline._evaluate = lambda _job: {'promotion': {'approved': False, 'reasons': ['x']}}
+            with mock.patch.object(queue, 'load_recipe',
+                                   lambda path, kind=None: {'labels': ['x'], 'data': '/tmp/frames'}), \
+                    mock.patch.object(queue, 'pack_command', lambda args, labels: ['pack-cmd']):
+                report = pipeline._run(copy.deepcopy(job))
+            self.assertEqual(peaks['pack'], 12 * GIB)          # 打包进行时仍按 pack plan 扣
+            self.assertEqual(peaks['train'], 0)                # 打包一结束就清零
+            self.assertEqual(pipeline.build_peak, 0)
+            self.assertEqual(pipeline.last_train_peak, int(3.53 * GIB))
+            self.assertEqual(report['train_peak_anon_bytes'], int(3.53 * GIB))
+            self.assertEqual(pipeline.estimate_peak(), int(3.53 * GIB))   # reservation 只按训练估算
+
+    def test_pack_failure_still_clears_build_peak(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            pipeline = self._bare_pipeline(tmp)
+            job = self._job(tmp, 'queued')
+            pipeline._admit = lambda: None
+            def broken(_labels):
+                raise RuntimeError('no archives for labels')
+            pipeline._prepare_corpus = broken
+            with mock.patch.object(queue, 'load_recipe',
+                                   lambda path, kind=None: {'labels': ['x'], 'data': '/tmp/frames'}), \
+                    mock.patch.object(queue, 'pack_command', lambda args, labels: ['pack-cmd']):
+                with self.assertRaises(RuntimeError):
+                    pipeline._run(copy.deepcopy(job))
+            self.assertEqual(pipeline.build_peak, 0)           # 失败同样清零
+
+    def test_init_restores_measured_pack_peak(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            job = self._job(tmp, 'done')
+            job['timing'] = {'pack_peak_anon_bytes': int(0.40 * GIB),
+                             'train_peak_anon_bytes': int(3.53 * GIB)}
+            state = {'training_jobs': [job]}
+            args = SimpleNamespace(state=Path(tmp) / 'state.json')
+            def fake_run(self, _job):
+                return {}
+            with mock.patch.object(queue.TrainingPipeline, '_run', fake_run), \
+                    mock.patch.object(queue.TrainingPipeline, '_plan_build', lambda self, recipe: None), \
+                    mock.patch.object(queue, 'load_recipe',
+                                      lambda path, kind=None: {'precompute_workers': 2}):
+                pipeline = queue.TrainingPipeline(args, state)
+            self.assertEqual(pipeline.last_pack_peak, int(0.40 * GIB) // 2)   # 单建造者实测
+            self.assertEqual(pipeline.last_train_peak, int(3.53 * GIB))
 
 
 if __name__ == '__main__':

@@ -1,0 +1,91 @@
+{
+  "schema_version": 1,
+  "namespace": "task46-B-roof-terminal",
+  "levels": [
+    42,
+    43,
+    44,
+    46,
+    47,
+    48,
+    49
+  ],
+  "seed_offsets": [
+    0,
+    1
+  ],
+  "window_end_tick": 10000,
+  "root_selection": "timing-only pilot selects 1 or 2 time-spaced scheduled student decisions per seed; target 0/10000 if two, nearest5000 if one; all-candidate labels never used for root selection",
+  "marked_decisions_1based": {
+    "42": [
+      127,
+      254
+    ],
+    "43": [
+      81,
+      537
+    ],
+    "44": [
+      1,
+      196
+    ]
+  },
+  "scope_resolution": "retain six non-L45 marked points with original teacher prefixes; >10000 ticks are explicit named-point exceptions; two L45 points deferred under explicit final sentence of appendix B",
+  "candidates": "all engine legal planting AND shovels plus canonical wait:60/timeout; root shovel outcomes remain separate from production representable candidates",
+  "terminal_policy": "immediately after candidate, same frozen search teacher all the way to terminal; world and search noise common across root candidates",
+  "screening_futures_options": [
+    3,
+    2
+  ],
+  "pilot": "first seed per ordinary level, initial/nearest5000 roots plus marked points; one future, representative first/middle/last cells per plant packet + one shovel + wait; only CPU timing used",
+  "sampling_budget_gate": "freeze root density and sample count after pilot CPU projections, preserving all legal candidates and >=2 seeds per level; reserve >=1200 CPU seconds for audits/repro/report",
+  "cpu_budget_seconds": 72000,
+  "cpu_stop_seconds": 70800,
+  "artifact_budget_bytes": 5000000000,
+  "workers": 4,
+  "metrics": [
+    "terminal win fraction",
+    "mean terminal wave",
+    "mean terminal tick",
+    "mowers used",
+    "static coverage of terminal improvements",
+    "halving survival of terminal improvements",
+    "v4 vs terminal pair rankings",
+    "margin blocked improvements; verification separately"
+  ],
+  "uncertainty": "small common-future cohort; strict/tie/thresholded rankings and reset-seed clusters; observed improvements do not imply independent significance",
+  "reuse": {
+    "fog": {
+      "commit": "2d3ba1d5a113f4bb196eb674580c988949b60d18",
+      "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/fog/scripts/fog_terminal_diagnostic.py",
+      "sha256": "854b9145d83406c6ace4ab4f30fdb7b9eefabfaf584c9625add1f172eaf11e54"
+    },
+    "v5": {
+      "commit": "bb2ec969",
+      "file": "scripts/value_teacher_feasibility.py",
+      "sha256": "0b4089d2f34e37ea1e2cda30fdc8be0ee73f70e2aa1c62b56997bd8b613d9588",
+      "reference": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase3/frozen/task43_teacher.py"
+    }
+  },
+  "production_changes": false,
+  "qc_changes": false,
+  "timing_job_manifests": [
+    "pilot-jobs.json",
+    "pilot-end-jobs.json"
+  ],
+  "timing_amendment": {
+    "reason": "all four projections exceeded 20h; original two-root choice includes near10000 but original timing pilot covered initial/near5000 only; measure already-inspected end roots before declaring infeasible",
+    "previous_plan_sha256": "f7d418e69ce4fc5c62261a234a45cdfc85ce6cab2ecf2a312873088497481c9d",
+    "scope_changed": false,
+    "outcomes_used_for_selection": false
+  },
+  "cpu_sparse_fallback": {
+    "reason": "all original options exceed 20h after both timing cohorts; original point density was not a user requirement",
+    "rule": "six named non-L45 roots cover their own reset seed; for each remaining level/reset seed choose one scheduled legal student point in 0..10000 minimizing candidate_count * nearest same-level mean measured CPU, ties by decision",
+    "futures": 2,
+    "preserve": "all seven levels, two reset seeds each, six named roots, every legal plant/shovel/wait action, frozen terminal teacher",
+    "outcomes_used_for_selection": false,
+    "previous_plan_sha256": "c9e83123da211df7560b50a008e1229dece2553bc6ed461b4ae8b1d5ca51c325",
+    "limitation": "CPU-selected sparse points do not estimate all opening decisions or phase-wide policy performance"
+  }
+}

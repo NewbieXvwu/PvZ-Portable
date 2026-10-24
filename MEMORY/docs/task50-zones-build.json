@@ -1,0 +1,9 @@
+{
+  "source_commit": "7a67066a5e62cec47432eaef87c542f6782270c3",
+  "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable",
+  "binary_sha256": "e231cdb9f872e50a7eec55180c8ca2b156076e2f0ffaba41a4100ab10d39a12d",
+  "profile_files": 140,
+  "fprofile_generate_lines": 0,
+  "fprofile_use_lines": 161,
+  "engine_roots_sha256": "a5c2e1c14606b642a838fc8e6a37b1b5ab1f489b086232fbb83accf87d891a39"
+}

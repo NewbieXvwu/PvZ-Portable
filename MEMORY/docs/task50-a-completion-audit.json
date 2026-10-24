@@ -1,0 +1,87 @@
+{
+  "status": "complete",
+  "audited_head": "f07fbbd5f911bdb777f3a8186b14fb6da0ffc14b",
+  "merges": {
+    "pvz_env_merge": {
+      "commit": "8df7fa90e3d95d8593e4d4712c681dccee78d610",
+      "parents": [
+        "e7e1d902b641a9a786c1dc0a6a2c551193bd4704",
+        "9b8ae8b13a7389104e474b7d19534f229c601c96"
+      ]
+    },
+    "vcpp_merge": {
+      "commit": "6b840b1ef4e928e50168b9c9b1254d6d9660ad1d",
+      "parents": [
+        "8df7fa90e3d95d8593e4d4712c681dccee78d610",
+        "8e1f91f76b56c690b4b3a5c3134594a8b5f16d5b"
+      ]
+    }
+  },
+  "tests": {
+    "passed": 395,
+    "subtests": 133,
+    "skipped": 0,
+    "raw_log_sha256": "6ecb16c8aa90b549fadc6072d118aa6d4520dac806677c104898d3bf16030f40"
+  },
+  "deploy3": {
+    "source_commit": "2b743c6216cd14c0d9d195c6be970204f41c0d22",
+    "binary_sha256": "0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327",
+    "fprofile_generate_lines": 0,
+    "fprofile_use_lines": 162,
+    "profile_files": 141
+  },
+  "post_build_changes_are_diagnostics_or_docs": true,
+  "post_build_files": [
+    "MEMORY/2026-10-23.md",
+    "MEMORY/2026-10-24.md",
+    "MEMORY/docs/task50-a-build.json",
+    "MEMORY/docs/task50-a-completion-audit.json",
+    "MEMORY/docs/task50-a-deploy-gates.json",
+    "MEMORY/docs/task50-a-dry-run.json",
+    "MEMORY/docs/task50-a-progress.json",
+    "MEMORY/docs/task50-a-teacher-audit.json",
+    "MEMORY/docs/task50-zones-deploy.md",
+    "scripts/audit_zones_teacher.py",
+    "scripts/profile_value_engine.py",
+    "scripts/zones_value_leaf_gate.py"
+  ],
+  "raw_deployment_evidence_revalidated": {
+    "replay_frames_per_engine": 166138,
+    "replay_differences": 0,
+    "roots_per_round": 64,
+    "leaves_per_engine_per_round": 192,
+    "paired_rounds": 5,
+    "throughput_ratio_median": 1.0106385418669848,
+    "same_v4_leaf_gate": true,
+    "same_v4_max_python_probability_error": 1.1968539426199243e-07
+  },
+  "dry_run": {
+    "roof_cell": "roof_l41_train_r7                      1      -     0     48  c1roofl41r7m100",
+    "command": "collect: /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/scripts/search_play.py --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --verify-samples 9 --student-candidates 2 --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task46/roof_panel.json --task-id roof_l41_train_r7 --seed-offset 0 --seeds 48 --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable --dagger-beta 0 --workers 2 --resource-dir /home/newbiexvwu/.cache/pvz-research-resources --frames /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/dry-frames --frames-label c1roofl41r7m100 --out /home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/dry-runs/c1roofl41r7m100_48",
+    "summary": "total groups 38, games 1824",
+    "fog_cells": 0
+  },
+  "frozen_teacher_inputs_revalidated": 17,
+  "tracked_ignored_files": 0,
+  "teacher_gate": {
+    "status": "passed",
+    "runner_exit_code": 0,
+    "completed_phases": ["before", "after", "shadow", "compare"],
+    "valid_fresh_games": {"before": 96, "after": 96, "shadow": 1},
+    "strict_independent_audit": "MEMORY/docs/task50-a-teacher-audit.json",
+    "evidence_files": 386,
+    "missing_count": 0,
+    "evidence_manifest_sha256": "3789e576fa76da09b5c42923a26351863010087f600f029fc9f855ca38910755",
+    "task_order": ["day_l7_train_d7_m150", "night_l14_train_n10", "pool_l21_train_p9k"],
+    "teacher_same": [7042, 12235, 4495],
+    "teacher_points": [7042, 12236, 4495],
+    "cpu_ratio_excluding_noise": [0.633882416206157, 0.6560687874807571, 0.5553866323902025],
+    "wins_before": [32, 32, 17],
+    "wins_after": [32, 32, 17],
+    "search_flag_differences": 0,
+    "cpu_measurement": "Both arms use identical external worker getrusage and engine /proc accounting, minus separately measured future-noise CPU; ratios apply to these fresh paired games."
+  },
+  "pending": [],
+  "qc_restart_command_documented_in": "MEMORY/docs/task50-zones-deploy.md",
+  "production_sessions_operated_on": false
+}

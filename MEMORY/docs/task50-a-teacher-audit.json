@@ -1,0 +1,151 @@
+{
+  "status": "passed",
+  "tasks": {
+    "day_l7_train_d7_m150": {
+      "before_games": 32,
+      "after_games": 32,
+      "paired_games": 32,
+      "shadow_games": 0,
+      "teacher_same": 7042,
+      "teacher_points": 7042,
+      "noise_same": 822,
+      "noise_points": 897,
+      "before_wins": 32,
+      "after_wins": 32,
+      "improved": 0,
+      "regressed": 0,
+      "before_cpu_s": 5897.094676284999,
+      "after_cpu_s": 3738.064622000001,
+      "search_flag_differences": 0
+    },
+    "night_l14_train_n10": {
+      "before_games": 32,
+      "after_games": 32,
+      "paired_games": 32,
+      "shadow_games": 1,
+      "teacher_same": 12235,
+      "teacher_points": 12236,
+      "noise_same": 1315,
+      "noise_points": 1544,
+      "before_wins": 32,
+      "after_wins": 32,
+      "improved": 0,
+      "regressed": 0,
+      "before_cpu_s": 7459.902513871,
+      "after_cpu_s": 4894.209196999999,
+      "search_flag_differences": 0
+    },
+    "pool_l21_train_p9k": {
+      "before_games": 32,
+      "after_games": 32,
+      "paired_games": 32,
+      "shadow_games": 0,
+      "teacher_same": 4495,
+      "teacher_points": 4495,
+      "noise_same": 529,
+      "noise_points": 575,
+      "before_wins": 17,
+      "after_wins": 17,
+      "improved": 0,
+      "regressed": 0,
+      "before_cpu_s": 3405.6595094120003,
+      "after_cpu_s": 1891.457766,
+      "search_flag_differences": 0
+    }
+  },
+  "comparison": {
+    "day_l7_train_d7_m150": {
+      "games": 32,
+      "agreement": 1.0,
+      "decisions_compared": 7042,
+      "noise_agreement": 0.9163879598662207,
+      "noise_points": 897,
+      "wins": {
+        "before": 32,
+        "after": 32,
+        "improved": 0,
+        "regressed": 0,
+        "paired_binomial_p": 1.0
+      },
+      "cpu_s_per_game": {
+        "before": 184.28420863390622,
+        "after": 116.81451943750002
+      },
+      "cpu_ratio": 0.633882416206157,
+      "rss_mean_kib": {
+        "before": {
+          "worker": 584046.0,
+          "engine": 214526.75
+        },
+        "after": {
+          "worker": 569056.125,
+          "engine": 388306.875
+        }
+      },
+      "passed": true
+    },
+    "night_l14_train_n10": {
+      "games": 32,
+      "agreement": 0.9999182739457338,
+      "decisions_compared": 12236,
+      "noise_agreement": 0.8516839378238342,
+      "noise_points": 1544,
+      "wins": {
+        "before": 32,
+        "after": 32,
+        "improved": 0,
+        "regressed": 0,
+        "paired_binomial_p": 1.0
+      },
+      "cpu_s_per_game": {
+        "before": 233.12195355846876,
+        "after": 152.94403740624998
+      },
+      "cpu_ratio": 0.6560687874807571,
+      "rss_mean_kib": {
+        "before": {
+          "worker": 581049.25,
+          "engine": 214207.875
+        },
+        "after": {
+          "worker": 564472.0,
+          "engine": 359439.25
+        }
+      },
+      "passed": true
+    },
+    "pool_l21_train_p9k": {
+      "games": 32,
+      "agreement": 1.0,
+      "decisions_compared": 4495,
+      "noise_agreement": 0.92,
+      "noise_points": 575,
+      "wins": {
+        "before": 17,
+        "after": 17,
+        "improved": 0,
+        "regressed": 0,
+        "paired_binomial_p": 1.0
+      },
+      "cpu_s_per_game": {
+        "before": 106.42685966912501,
+        "after": 59.1080551875
+      },
+      "cpu_ratio": 0.5553866323902025,
+      "rss_mean_kib": {
+        "before": {
+          "worker": 578290.625,
+          "engine": 214302.75
+        },
+        "after": {
+          "worker": 561736.25,
+          "engine": 338602.75
+        }
+      },
+      "passed": true
+    }
+  },
+  "missing_count": 0,
+  "evidence_files": 386,
+  "evidence_manifest_sha256": "3789e576fa76da09b5c42923a26351863010087f600f029fc9f855ca38910755"
+}

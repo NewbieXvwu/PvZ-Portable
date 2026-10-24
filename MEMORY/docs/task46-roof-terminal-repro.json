@@ -1,0 +1,393 @@
+{
+ "status": "complete",
+ "cases": [
+  {
+   "cell": {
+    "id": "l42-student-45000001",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 160,
+    "tick": 8820,
+    "wave": 3,
+    "sun": 25,
+    "candidate_count": 46,
+    "candidate_sha256": "60bc896a9b785e6627c9f50b4491f00410d93f2253575d057dcebfee6da769a6",
+    "state_sha256": "38030b0f421c92beb7b812e70c7fe53dc82775e7908626ff9280134989661e44",
+    "public_history_sha256": "f36075915b3b8ccfcc151f224ea085088da43bbc95945fe37cdaa6fad1342654",
+    "schedule_last_search_tick": 8400,
+    "prefix": "student"
+   },
+   "candidate": 0,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 70411,
+    "wave": 30,
+    "decisions": 1153,
+    "searched": 220,
+    "overrides": 48,
+    "mowers_used": 0,
+    "final_sun": 25
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "0b8ec882b0c737a7099f7c1c2b7d3aab6cb9f69d94e54c30e227cbcda73d51e9",
+   "repeated_sha256": "e98566fa7694936b3d9af3abb54bc0fce746e1e27ec313429c864bb38f7a63c6"
+  },
+  {
+   "cell": {
+    "id": "l43-student-45000001",
+    "task_id": "roof_l43_eval_r7",
+    "level": 43,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 117,
+    "tick": 6420,
+    "wave": 2,
+    "sun": 50,
+    "candidate_count": 29,
+    "candidate_sha256": "b5c4a6c9bdc32cb92bff15849f115020714d93ada019a0a1bcab0350b2ea8690",
+    "state_sha256": "41577ece07585ac3a67a57edf49fabdd1bba171c718cf08364b6f6f200217eb6",
+    "public_history_sha256": "67d30d460d7c636c74a8495d91f1ae356e9e5527cf34b569b9665da2f84bbc8c",
+    "schedule_last_search_tick": 6060,
+    "prefix": "student"
+   },
+   "candidate": 0,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": true,
+    "terminal": true,
+    "result": 1,
+    "tick": 71753,
+    "wave": 30,
+    "decisions": 1238,
+    "searched": 233,
+    "overrides": 46,
+    "mowers_used": 0,
+    "final_sun": 50
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "b55cec36c59c75b1abdbd31ff05a679341c5a753ce756f6b093d26fa42255ee9",
+   "repeated_sha256": "2dbf179e758c4b18016ea389037815d0ce97f389dc73b94e79fbac349f8d7298"
+  },
+  {
+   "cell": {
+    "id": "l44-student-45000001",
+    "task_id": "roof_l44_eval_r7",
+    "level": 44,
+    "seed": 45000001
+   },
+   "point": {
+    "decision": 145,
+    "tick": 7979,
+    "wave": 3,
+    "sun": 25,
+    "candidate_count": 46,
+    "candidate_sha256": "5e3fdcbfb9375ee5d201763dfbaf31d954f4af15b4bc14ca00447e4341dc968f",
+    "state_sha256": "d23956a32b7abc1023d586b8f5aca6850cae499040fa5d9e7fe7a8b965a25ccd",
+    "public_history_sha256": "d38c37e69111412768b241891060b34bf81fccde7affbcabd4f2f271c1c217be",
+    "schedule_last_search_tick": 7319,
+    "prefix": "student"
+   },
+   "candidate": 0,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 19956,
+    "wave": 8,
+    "decisions": 216,
+    "searched": 38,
+    "overrides": 0,
+    "mowers_used": 0,
+    "final_sun": 75
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "b602bb363d0b5cb6509c1bf3079f0fdad873b7cb162a9c5572d0703eaf7fae1f",
+   "repeated_sha256": "5e8ed2965ad56ed4d8370111a17942d41d62094f9c6c3c713ecaa3ceb32c5159"
+  },
+  {
+   "cell": {
+    "id": "l46-student-45000000",
+    "task_id": "roof_l46_eval_r7",
+    "level": 46,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 159,
+    "tick": 8820,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 29,
+    "candidate_sha256": "4153815f8b5eea45c4a9ebc6a5d2d87598ce30c4c2cd040dcc5d5dffe6875f86",
+    "state_sha256": "1392d75c9db1dfaba918f9cc8a7e3bedf4a905eb61225aaeae014c02655d038c",
+    "public_history_sha256": "27da162ccd43d8c92057864853fabfda7d00eb92015658f092897185176d75da",
+    "schedule_last_search_tick": 8340,
+    "prefix": "student"
+   },
+   "candidate": 0,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 57806,
+    "wave": 30,
+    "decisions": 928,
+    "searched": 172,
+    "overrides": 32,
+    "mowers_used": 0,
+    "final_sun": 25
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "4b06acd0c1476b245d9a8b644ff8f7175a8785583d60d28fe5371d08454f66e7",
+   "repeated_sha256": "86a5e51f4e80f6847ae51939e80015198186e7128e4b5f855056c26013b741ed"
+  },
+  {
+   "cell": {
+    "id": "l47-student-45000000",
+    "task_id": "roof_l47_eval_r7",
+    "level": 47,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 158,
+    "tick": 8820,
+    "wave": 4,
+    "sun": 50,
+    "candidate_count": 27,
+    "candidate_sha256": "5cdf942c9e3af9186e3cc8fc341d1a0b7710d186a0e3abe6bec6ce752e76ec79",
+    "state_sha256": "b8b3feb3c8e79930e6e5b8bf55afcdea8c887f83cd1b439e47821c28bab58f8d",
+    "public_history_sha256": "12e4b9754fbbef80a0cf99e040fefe4edef22f22174e9b3d852ad08422801601",
+    "schedule_last_search_tick": 8520,
+    "prefix": "student"
+   },
+   "candidate": 0,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 49105,
+    "wave": 29,
+    "decisions": 748,
+    "searched": 126,
+    "overrides": 27,
+    "mowers_used": 0,
+    "final_sun": 25
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "5dae5de3237b20be6a9a06839853cb5f1652e8ac7cf586ef3dcf46dbf50a2fbf",
+   "repeated_sha256": "c59a7b47ababb3881772ed0db249a1f96cb56099fba2af48a297538d2ff65348"
+  },
+  {
+   "cell": {
+    "id": "l48-student-45000000",
+    "task_id": "roof_l48_eval_r7",
+    "level": 48,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 148,
+    "tick": 8160,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 44,
+    "candidate_sha256": "cd74bec7bce619dd1205479bc22856b07e35cd4fb57c96e059dc0b0de6301ce4",
+    "state_sha256": "19689184730544609142b0889b153686940259ebd4637230d5c021e70c4a2733",
+    "public_history_sha256": "76c60049c88e295657f363d563ad79395b0d170e59edbbefb535802e9bbcc580",
+    "schedule_last_search_tick": 7980,
+    "prefix": "student"
+   },
+   "candidate": 11,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 17703,
+    "wave": 7,
+    "decisions": 176,
+    "searched": 29,
+    "overrides": 0,
+    "mowers_used": 0,
+    "final_sun": 25
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "9cd22e89ab80d635ba8588c18e9e87b49964ae78ae59fcfa043b01686381d163",
+   "repeated_sha256": "2740c884d126e17de98ea0b3d5cdf5dfe70650ad8ef9695c7e55260e827ddafc"
+  },
+  {
+   "cell": {
+    "id": "l49-student-45000000",
+    "task_id": "roof_l49_eval_r7",
+    "level": 49,
+    "seed": 45000000
+   },
+   "point": {
+    "decision": 151,
+    "tick": 8460,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 24,
+    "candidate_sha256": "a27f4879597305f5566863bda894e65e7d90548175186399bbc933eef4201e22",
+    "state_sha256": "6d08be7bfb7e3af677375df4281b144db5dd855427aab97179d9d43c0feef949",
+    "public_history_sha256": "87c3e051359fff0ed7151ccbc097691feb1d781394a4e21cd6ad3a203750eee8",
+    "schedule_last_search_tick": 7920,
+    "prefix": "student"
+   },
+   "candidate": 0,
+   "reason": "first seed/earliest selected root; odd levels wait, even levels student",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 52474,
+    "wave": 24,
+    "decisions": 825,
+    "searched": 155,
+    "overrides": 30,
+    "mowers_used": 0,
+    "final_sun": 50
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "dc7d37eb8345ac7a301061ad08a5c0e1dfb500ef8df4733a246357ef8a6dd939",
+   "repeated_sha256": "13ced778430c77919652f6ef9cf7a7d3c4f599188547be0e5980f1303aa5b3ba"
+  },
+  {
+   "cell": {
+    "id": "l42-archive-45000000",
+    "task_id": "roof_l42_eval_r7",
+    "level": 42,
+    "seed": 45000000,
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roof/artifacts/task46/phase2/l42-45000000-teacher",
+    "window_end_tick": 14000
+   },
+   "point": {
+    "decision": 126,
+    "tick": 7020,
+    "wave": 3,
+    "sun": 50,
+    "candidate_count": 78,
+    "candidate_sha256": "6a5c9e3bedd2293078af9d5cbc91bce03f9be2aee75313d1145fba72fc55877c",
+    "state_sha256": "5abf5c0eadde0aa6bb969414ab75e32803be5c298e6afe08f16f64ab29c2153b",
+    "public_history_sha256": "7e751982d576ade47f2fe06b43e2a342cbb6e4a42e9074b76bb8c9f9d273a8d2",
+    "schedule_last_search_tick": 6960,
+    "prefix": "teacher_archive"
+   },
+   "candidate": 56,
+   "reason": "first selected root first legal shovel",
+   "outcome": {
+    "won": false,
+    "terminal": true,
+    "result": 2,
+    "tick": 68020,
+    "wave": 29,
+    "decisions": 1158,
+    "searched": 224,
+    "overrides": 18,
+    "mowers_used": 0,
+    "final_sun": 50
+   },
+   "checks": {
+    "fields_equal": [
+     "identity",
+     "outcome",
+     "v4_short_value",
+     "short_leaf",
+     "teacher_leaf",
+     "terminal_state_sha256",
+     "checks"
+    ],
+    "teacher_action_chain_equal": true
+   },
+   "original_sha256": "4f5f0a6c83998c47213f11534ae4cff92c0b8b7e6babcf89fd49c4730e32cc21",
+   "repeated_sha256": "b9ce0b1456b272bb0d551d79c2f1804438d111a52e26608cfb800b568daa9f55"
+  }
+ ],
+ "cpu_seconds_after": 64162.019084,
+ "comparison": "exact root, history, bank context, public leaves, v4 values, terminal and full decompressed action chain; elapsed CPU/wall and gzip timestamps excluded"
+}

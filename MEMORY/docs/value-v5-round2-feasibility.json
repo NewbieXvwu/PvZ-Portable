@@ -1,0 +1,417 @@
+{
+ "status": "complete",
+ "seeds": [
+  2000064,
+  2000065,
+  2000066,
+  2000067
+ ],
+ "root_games_won": 2,
+ "root_games": 4,
+ "root_groups": 10,
+ "missing_targets": {
+  "2000064": [],
+  "2000065": [
+   13
+  ],
+  "2000066": [],
+  "2000067": [
+   13
+  ]
+ },
+ "mixed_groups": 4,
+ "mixed_fraction": 0.4,
+ "all_loss_groups": 1,
+ "labels": 46,
+ "wins": 32,
+ "label_win_fraction": 0.6956521739130435,
+ "effective_pairs": 18,
+ "total_candidate_pairs": 86,
+ "nonterminal_leaf_labels": 40,
+ "nonterminal_leaf_wins": 32,
+ "nonterminal_mixed_groups": 4,
+ "nonterminal_effective_pairs": 18,
+ "cpu_seconds": {
+  "total": 2304.7368770000003,
+  "teacher_continuation": 2078.8964849999998,
+  "history_replay": 3.529570999999807,
+  "root_and_instrumentation": 222.31082100000071,
+  "per_candidate_terminal_pair_total": 50.102975586956525,
+  "per_effective_ranking_pair_total": 128.04093761111113,
+  "per_nonterminal_effective_pair_total": 128.04093761111113,
+  "per_effective_ranking_pair_continuation": 115.49424916666665
+ },
+ "mean_search_roots_per_game": 142.25,
+ "groups": [
+  {
+   "labels": 4,
+   "wins": 1,
+   "mixed": true,
+   "all_loss": false,
+   "effective_pairs": 3,
+   "total_pairs": 6,
+   "continuation_cpu_seconds": 174.9515,
+   "replay_cpu_seconds": 0.31193499999999563,
+   "nonterminal_labels": 4,
+   "nonterminal_wins": 1,
+   "nonterminal_effective_pairs": 3,
+   "nonterminal_mixed": true,
+   "seed": 2000064,
+   "wave_target": 3,
+   "root_tick": 7440
+  },
+  {
+   "labels": 5,
+   "wins": 5,
+   "mixed": false,
+   "all_loss": false,
+   "effective_pairs": 0,
+   "total_pairs": 10,
+   "continuation_cpu_seconds": 312.67292599999996,
+   "replay_cpu_seconds": 0.4434120000000519,
+   "nonterminal_labels": 5,
+   "nonterminal_wins": 5,
+   "nonterminal_effective_pairs": 0,
+   "nonterminal_mixed": false,
+   "seed": 2000064,
+   "wave_target": 8,
+   "root_tick": 21797
+  },
+  {
+   "labels": 4,
+   "wins": 4,
+   "mixed": false,
+   "all_loss": false,
+   "effective_pairs": 0,
+   "total_pairs": 6,
+   "continuation_cpu_seconds": 156.8266860000001,
+   "replay_cpu_seconds": 0.4696859999996832,
+   "nonterminal_labels": 4,
+   "nonterminal_wins": 4,
+   "nonterminal_effective_pairs": 0,
+   "nonterminal_mixed": false,
+   "seed": 2000064,
+   "wave_target": 13,
+   "root_tick": 32357
+  },
+  {
+   "labels": 4,
+   "wins": 2,
+   "mixed": true,
+   "all_loss": false,
+   "effective_pairs": 4,
+   "total_pairs": 6,
+   "continuation_cpu_seconds": 184.92189499999998,
+   "replay_cpu_seconds": 0.3372239999999893,
+   "nonterminal_labels": 4,
+   "nonterminal_wins": 2,
+   "nonterminal_effective_pairs": 4,
+   "nonterminal_mixed": true,
+   "seed": 2000065,
+   "wave_target": 3,
+   "root_tick": 7273
+  },
+  {
+   "labels": 6,
+   "wins": 0,
+   "mixed": false,
+   "all_loss": true,
+   "effective_pairs": 0,
+   "total_pairs": 15,
+   "continuation_cpu_seconds": 0.0021850000000540604,
+   "replay_cpu_seconds": 0.27158099999999763,
+   "nonterminal_labels": 0,
+   "nonterminal_wins": 0,
+   "nonterminal_effective_pairs": 0,
+   "nonterminal_mixed": false,
+   "seed": 2000065,
+   "wave_target": 8,
+   "root_tick": 18170
+  },
+  {
+   "labels": 6,
+   "wins": 5,
+   "mixed": true,
+   "all_loss": false,
+   "effective_pairs": 5,
+   "total_pairs": 15,
+   "continuation_cpu_seconds": 414.065667,
+   "replay_cpu_seconds": 0.4232429999998981,
+   "nonterminal_labels": 6,
+   "nonterminal_wins": 5,
+   "nonterminal_effective_pairs": 5,
+   "nonterminal_mixed": true,
+   "seed": 2000066,
+   "wave_target": 3,
+   "root_tick": 7538
+  },
+  {
+   "labels": 4,
+   "wins": 4,
+   "mixed": false,
+   "all_loss": false,
+   "effective_pairs": 0,
+   "total_pairs": 6,
+   "continuation_cpu_seconds": 214.61736399999978,
+   "replay_cpu_seconds": 0.3282069999999635,
+   "nonterminal_labels": 4,
+   "nonterminal_wins": 4,
+   "nonterminal_effective_pairs": 0,
+   "nonterminal_mixed": false,
+   "seed": 2000066,
+   "wave_target": 8,
+   "root_tick": 19836
+  },
+  {
+   "labels": 4,
+   "wins": 4,
+   "mixed": false,
+   "all_loss": false,
+   "effective_pairs": 0,
+   "total_pairs": 6,
+   "continuation_cpu_seconds": 111.60685399999988,
+   "replay_cpu_seconds": 0.3857810000001791,
+   "nonterminal_labels": 4,
+   "nonterminal_wins": 4,
+   "nonterminal_effective_pairs": 0,
+   "nonterminal_mixed": false,
+   "seed": 2000066,
+   "wave_target": 13,
+   "root_tick": 28536
+  },
+  {
+   "labels": 4,
+   "wins": 4,
+   "mixed": false,
+   "all_loss": false,
+   "effective_pairs": 0,
+   "total_pairs": 6,
+   "continuation_cpu_seconds": 310.15484699999996,
+   "replay_cpu_seconds": 0.21566400000001984,
+   "nonterminal_labels": 4,
+   "nonterminal_wins": 4,
+   "nonterminal_effective_pairs": 0,
+   "nonterminal_mixed": false,
+   "seed": 2000067,
+   "wave_target": 3,
+   "root_tick": 7080
+  },
+  {
+   "labels": 5,
+   "wins": 3,
+   "mixed": true,
+   "all_loss": false,
+   "effective_pairs": 6,
+   "total_pairs": 10,
+   "continuation_cpu_seconds": 199.07656100000003,
+   "replay_cpu_seconds": 0.34283800000002884,
+   "nonterminal_labels": 5,
+   "nonterminal_wins": 3,
+   "nonterminal_effective_pairs": 6,
+   "nonterminal_mixed": true,
+   "seed": 2000067,
+   "wave_target": 8,
+   "root_tick": 19009
+  }
+ ],
+ "per_wave": {
+  "3": {
+   "groups": 4,
+   "mixed": 3,
+   "labels": 18,
+   "wins": 12,
+   "effective_pairs": 12,
+   "nonterminal_effective_pairs": 12,
+   "cpu_seconds": 1085.3819749999998
+  },
+  "8": {
+   "groups": 4,
+   "mixed": 1,
+   "labels": 20,
+   "wins": 12,
+   "effective_pairs": 6,
+   "nonterminal_effective_pairs": 6,
+   "cpu_seconds": 727.7550739999999
+  },
+  "13": {
+   "groups": 2,
+   "mixed": 0,
+   "labels": 8,
+   "wins": 8,
+   "effective_pairs": 0,
+   "nonterminal_effective_pairs": 0,
+   "cpu_seconds": 269.28900699999986
+  }
+ },
+ "resources": {
+  "samples": 163,
+  "max_own_engines": 4,
+  "logical_cpus": 20,
+  "qc_engines_min": 0,
+  "qc_engines_max": 0,
+  "qc_mean_cpu_cores_lower_bound": 0.9627507260073321,
+  "qc_reserved_workers": 16,
+  "assumed_available_cores": 4,
+  "mean_cpu_per_lane_wall_second": 0.9663725965765093
+ },
+ "expansion_64": {
+  "same_three_roots_single_future": {
+   "cpu_hours": 10.24327500888889,
+   "elapsed_hours_at_four_reserved_cores": 2.5608187522222225,
+   "elapsed_hours_at_observed_lane_utilization": 2.649928983183329,
+   "candidate_terminal_labels": 736.0,
+   "effective_pairs_linear_projection": 288.0,
+   "nonterminal_effective_pairs_linear_projection": 288.0
+  },
+  "all_search_roots_single_future": {
+   "cpu_hours": 527.6104595884444,
+   "elapsed_hours_at_four_reserved_cores": 131.9026148971111,
+   "elapsed_hours_at_observed_lane_utilization": 136.49250337229338,
+   "candidate_terminal_labels": 41878.4,
+   "effective_pairs_linear_projection": 16387.2,
+   "nonterminal_effective_pairs_linear_projection": 16387.2
+  },
+  "all_search_roots_three_futures": {
+   "cpu_hours": 1580.8552825786667,
+   "elapsed_hours_at_four_reserved_cores": 395.21382064466667,
+   "elapsed_hours_at_observed_lane_utilization": 408.96629524135824,
+   "candidate_terminal_labels": 125635.20000000001,
+   "effective_pairs_linear_projection": 49161.600000000006,
+   "nonterminal_effective_pairs_linear_projection": 49161.600000000006
+  }
+ },
+ "limitations": [
+  "One shared actual first-round future per root: observed win/loss contrasts, not precise win probabilities.",
+  "Twelve intended roots in four independent games; candidate pairs and roots within a game are correlated.",
+  "Terminal short leaves bypass the value net. Nonterminal-only pairs are reported separately as the relevant ranking signal.",
+  "Expansion extrapolates stratified wave samples; continuation cost varies with phase and policy state.",
+  "CPU excludes parent model preload/report and small worker-init costs; includes root/continuation Python and engine plus replay/check overhead.",
+  "qc CPU cores from surviving PID deltas are a lower bound; reserved16/20 cores is an allocation scenario, not a promise of throughput."
+ ],
+ "input_sha256": {
+  "value": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+  "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "rollout_policy": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+  "executable": "bf1472f7b858c1badc4f1e81ed9398d2f7633da408499e0c6b10dff35bea4aef",
+  "manifest": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb"
+ },
+ "teacher": {
+  "value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+  "static_value": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+  "rollout_policy": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+  "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable",
+  "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+  "task_id": "pool_l21_train_p9k",
+  "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "per_card": 1,
+  "student_candidates": 2,
+  "samples": 3,
+  "horizon": 2500,
+  "halving": true,
+  "verify_samples": 9,
+  "min_gap": 300,
+  "rollout_sim_skip": 61,
+  "leaf_probe": null
+ },
+ "context_audit": {
+  "status": "pass",
+  "seeds": [
+   {
+    "seed": 2000064,
+    "roots": 3,
+    "leaves": 13,
+    "cpu_seconds": 3.3463760000000002,
+    "wall_seconds": 3.3810869029985042
+   },
+   {
+    "seed": 2000065,
+    "roots": 2,
+    "leaves": 10,
+    "cpu_seconds": 1.50359,
+    "wall_seconds": 1.5472423510000226
+   },
+   {
+    "seed": 2000066,
+    "roots": 3,
+    "leaves": 14,
+    "cpu_seconds": 3.412555000000001,
+    "wall_seconds": 3.4592180990002817
+   },
+   {
+    "seed": 2000067,
+    "roots": 2,
+    "leaves": 9,
+    "cpu_seconds": 1.916672000000001,
+    "wall_seconds": 1.9649008569977013
+   }
+  ],
+  "root_states": 10,
+  "native_leaf_states_and_student_histories": 46,
+  "cpu_seconds": 10.179193000000001,
+  "max_own_engines": 1,
+  "collection_engines_at_start": 0,
+  "source_sha256": "65891b115e81618755cf750a1ee536af7fee8d04cd859d2cab9d99e36cfd41cf"
+ },
+ "root_control": {
+  "status": "pass",
+  "seed": 2000064,
+  "decisions": 913,
+  "compared": "all root ticks/waves/executed actions and every final public-frame field; win/search/override counts",
+  "archive_only_fields": [
+   "action",
+   "action_rejected",
+   "targets"
+  ],
+  "root_trace_sha256": "fa3df14667199414fca4343fe6e4e510cc224301455dad37c768aff6d8d62a66",
+  "original_frames_sha256": "4d7d1cb5f91d361af695c26e1693f0ae5690678eafb19dc3cb32a6c5aed9f220",
+  "original_result_sha256": "444270f59a81cc738c4bf618eb80b9b6fc347b68fff7ee58f5e5cc9512f60edd",
+  "original_cpu_seconds": 106.756125,
+  "original_wall_seconds": 112.44345450401306
+ },
+ "artifact_manifest": {
+  "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/round2/summary.json",
+  "sha256": "f26b0820ee8a2cee3e0ee44661988145f59a50f393e382ac7b3e5408cde1c1e1",
+  "files": 122
+ },
+ "extra_audit_sha256": {
+  "context_audit.json": "f73af804cf18122e85896baa50f599b8f092d308f241c9cd86046e1c0552e95a",
+  "control_check.json": "c6a264f8589c31aba45fe35ce3d6ed47eecdf1989113c5a01b572435144ac6a7",
+  "control_resources_start.json": "29355a5db86878f75c68471b78db4f41a9480a0deb0214b0ffdc690f4ddef6af"
+ },
+ "source_sha256": {
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/search_play.py": "238184c740fc1cada8b695d29ed3a371e4ea4c5b304a7618efa303342a925e52",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/value_teacher_feasibility.py": "13d15284023d67a2895fb1d5aeae983d4d57ce2eaf1e9869d7dfcdd5e5ce618c",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/value_teacher_feasibility_report.py": "6be7e2e6d463d56ba34292f3e6fca08a627038b85f400d7df395f8b8c83b7ca3",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/value_teacher_context_audit.py": "65891b115e81618755cf750a1ee536af7fee8d04cd859d2cab9d99e36cfd41cf"
+ },
+ "disk_bytes": 4610052,
+ "decision": "Teacher-label signal exists; full-decision 64-seed collection is too expensive for the original one-day expectation. Propose sparse roots, pending controller approval; no training/default change.",
+ "expansion_proposal": {
+  "status": "proposed_pending_controller_approval",
+  "approved": false,
+  "executed": false,
+  "root_seeds": 64,
+  "max_games": 4,
+  "roots_per_seed": 12,
+  "task": "pool_l21_train_p9k, unchanged deck and task semantics",
+  "selection": "Two passes: archive the full frozen-teacher root trajectory; select 12 equally spaced actual search ordinals before reading candidate terminal labels; replay recorded root actions and verify original states before collecting the actual search first-future leaves.",
+  "seed_isolation": "Before collection, freeze 64 training seeds disjoint from external A6 audit, model selection and A/B seeds; reserve at least 8 by seed for held-out validation. Pilot seeds remain diagnostic and are not silently added to training.",
+  "teacher": "same dw4i_s1 + static value_branch1 + leaf v4; same search config and actual first shared future",
+  "estimate": {
+   "candidate_terminal_labels": 3532.8,
+   "nonterminal_effective_pairs": 1382.4,
+   "cpu_hours": 45.41313728800001,
+   "elapsed_hours_at_observed_four_slots": 11.748350855788308,
+   "initial_eight_seed_cpu_hours": 5.676642161000001,
+   "initial_eight_seed_wall_hours": 1.4685438569735385,
+   "root_extra_replay_cost": "not yet measured; 60 CPU-hour hard budget provides headroom over the point estimate"
+  },
+  "gates": [
+   "First 8 new seeds: verify all native states/histories, all candidates and actual terminals; at least 125 nonterminal effective pairs before considering remaining seeds.",
+   "Pause expansion and diagnose if labels become almost all negative or projected total exceeds 60 CPU hours; do not fill quota with the same failed data.",
+   "Only continue to 64 within approved 60 CPU-hour budget; report total and per-seed/per-phase pairs, CPU and exact seed isolation.",
+   "No automatic training, acceptance run, upload, default change, or exhaustive 64-seed collection. Controller approval is required before expansion."
+  ],
+  "caveat": "Only four pilot games and one shared future per root. Pair counts are correlated and projected yield may fail; this proposal tests scale, not value-model effectiveness."
+ }
+}

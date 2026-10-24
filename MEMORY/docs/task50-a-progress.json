@@ -1,0 +1,125 @@
+{
+  "status": "complete",
+  "teacher_runner_pid": 169780,
+  "teacher_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-status.json",
+  "deploy_phase_status": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/deploy-gate-status.json",
+  "new_after_first_game": {
+    "seed": 5712288,
+    "won": true,
+    "decisions": 1098,
+    "searched": 219,
+    "host_cpu_excluding_noise_s": {
+      "worker": 6.209484,
+      "simulator": 104.33
+    }
+  },
+  "first_game_roots_futures_actions_match_original_vcpp_after": true,
+  "post_adapter_unit_tests": 19,
+  "pending": [],
+  "deploy_gate_status": "passed",
+  "teacher_gate_status": "passed; original runner finished all four phases naturally, exit 0",
+  "teacher_resume_command_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/zones/artifacts/task50-a/teacher-gate-command.json",
+  "teacher_expected_valid_games": {
+    "before": 96,
+    "after": 96
+  },
+  "deployment_gates": "MEMORY/docs/task50-a-deploy-gates.json",
+  "first_pair_audit": {
+    "task": "day_l7_train_d7_m150",
+    "seed": 5712288,
+    "decisions": 1098,
+    "same_teacher_points": 219,
+    "teacher_points": 219,
+    "before_noise_agreement": 25,
+    "before_noise_points": 28,
+    "wins": {
+      "before": true,
+      "after": true
+    },
+    "cpu_excluding_noise_s": {
+      "before": 189.60390877399996,
+      "after": 110.539484
+    },
+    "frozen_input_files_revalidated": 17,
+    "evidence_scope": "first seed only; not a substitute for 32 paired seeds per task",
+    "cpu_ratio": 0.5830021370063552
+  },
+  "independent_audit_tool": "scripts/audit_zones_teacher.py",
+  "strict_audit_requires_complete_evidence": true,
+  "final_teacher_audit": {
+    "report": "MEMORY/docs/task50-a-teacher-audit.json",
+    "status": "passed",
+    "valid_games": {"before": 96, "after": 96, "shadow": 1},
+    "evidence_files": 386,
+    "missing_count": 0,
+    "task_order": ["day_l7_train_d7_m150", "night_l14_train_n10", "pool_l21_train_p9k"],
+    "teacher_same": [7042, 12235, 4495],
+    "teacher_points": [7042, 12236, 4495],
+    "cpu_ratio_excluding_noise": [0.633882416206157, 0.6560687874807571, 0.5553866323902025],
+    "wins_before": [32, 32, 17],
+    "wins_after": [32, 32, 17]
+  },
+  "reviewed_takeover_commits": [
+    "1cc97265",
+    "3cf05630",
+    "f0fc4d3a"
+  ],
+  "takeover_changes_only_documentation": true,
+  "before_complete": true,
+  "fresh_before_reproduction": [
+    {
+      "task": "day_l7_train_d7_m150",
+      "games": 32,
+      "decision_roots": 36463,
+      "teacher_points": 7042,
+      "all_roots_futures_flags_choices_match_original": true
+    },
+    {
+      "task": "night_l14_train_n10",
+      "games": 32,
+      "decision_roots": 51880,
+      "teacher_points": 12236,
+      "all_roots_futures_flags_choices_match_original": true
+    },
+    {
+      "task": "pool_l21_train_p9k",
+      "games": 32,
+      "decision_roots": 21138,
+      "teacher_points": 4495,
+      "all_roots_futures_flags_choices_match_original": true
+    }
+  ],
+  "after_halfway_audit": {
+    "after_games": 49,
+    "paired_games_audited": 48,
+    "evidence_files": 290,
+    "evidence_manifest_sha256": "75b5b3970beafcd0e2d01aee26773f1296806cec0205f066348dee0a5d9f14e9",
+    "tasks": {
+      "day_l7_train_d7_m150": {
+        "before_games": 32,
+        "after_games": 17,
+        "paired_games": 17,
+        "teacher_same": 3712,
+        "teacher_points": 3712,
+        "search_flag_differences": 0
+      },
+      "night_l14_train_n10": {
+        "before_games": 32,
+        "after_games": 16,
+        "paired_games": 15,
+        "teacher_same": 5698,
+        "teacher_points": 5698,
+        "search_flag_differences": 0
+      },
+      "pool_l21_train_p9k": {
+        "before_games": 32,
+        "after_games": 16,
+        "paired_games": 16,
+        "teacher_same": 2305,
+        "teacher_points": 2305,
+        "search_flag_differences": 0
+      }
+    },
+    "scope": "partial; pending all 32 pairs per task and required shadows"
+  }
+}
