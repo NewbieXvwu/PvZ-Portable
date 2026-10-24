@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import numpy as np
@@ -14,7 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 from pack_training_rows import assert_payload_equal, pack, pack_monolithic, verify
 from pvz_frame_store import write_frames
-from pvz_recipe import write_recipe
+from pvz_recipe import training_row_options, write_recipe
 from pvz_training_pack import archive_fingerprint, pack_options
 from test_compact_loader import game_frames
 from verify_training_segments import train_pair
@@ -266,3 +267,34 @@ def test_read_segments_matches_concatenating_reference_on_round2_subset(tmp_path
     for kwargs in ({}, {'data': tmp_path}):
         got = _column_hashes(trainer.read_segments(paths, **kwargs))
         assert got == expected
+
+
+def test_pending_builds_empty_after_pack(tmp_path):
+    """task59 遗留修正：pending_builds 复用 pack() 的同一套指纹函数，pack 建完即判已建。"""
+    import curriculum_queue as queue
+    from pvz_frame_store import frame_paths
+    from pvz_recipe import load_recipe, write_recipe
+    data = tmp_path / 'data'
+    fixture(data, ['a', 'b'])
+    recipe = dict(schema_version=1, kind='training', data=str(data), labels=['a', 'b'],
+                  out=str(tmp_path / 'unused'), epochs=2, precompute_workers=2,
+                  wait_keep=1.0, obs='v1', context=False, aux_weight=0, cell_soft_weight=0,
+                  packet_head='slot', label_weight={})
+    recipe_path = tmp_path / 'recipe.json'
+    write_recipe(recipe_path, recipe)
+    pipeline = object.__new__(queue.TrainingPipeline)
+    pipeline.args = SimpleNamespace(recipe=recipe_path, frames=data, log=tmp_path / 'log')
+    pipeline.directory = tmp_path / 'pipeline'
+    labels = ['a', 'b']
+    assert set(dict(pipeline.pending_builds(labels, recipe))) == set(labels)   # 视图还空
+    view = pipeline.directory / 'frames'
+    for path in frame_paths(data):                    # 手动做 _prepare_corpus 同款链接
+        target = view / path.parent.relative_to(data)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.symlink_to(path.parent, target_is_directory=True)
+    still_pending = dict(pipeline.pending_builds(labels, recipe))
+    assert set(still_pending) == set(labels) and all(size > 0 for size in still_pending.values())
+    packed = pack(view, pack_options(**training_row_options(recipe, labels)),
+                  view / '.cache', 1, None, quiet=True)   # 段建在视图里，与生产一致
+    assert packed.is_file()
+    assert pipeline.pending_builds(labels, recipe) == []

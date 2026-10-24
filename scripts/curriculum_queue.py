@@ -48,7 +48,6 @@ from __future__ import annotations
 import argparse
 import copy
 import glob
-import hashlib
 import json
 import os
 import shlex
@@ -69,7 +68,8 @@ from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import GATE_VERSION, policy as promotion_policy, freeze_panel
 from promotion_gate import contract as promotion_contract, contract_key, sha as file_sha, valid_certificate
-from pvz_training_pack import pack_flags, pack_options, segment_options, segment_path
+from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
+                               segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
@@ -657,26 +657,38 @@ class TrainingPipeline:
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
         """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
-        与 pack() 同一段契约；指纹段文件缺失即待建。指纹只用相对路径与文件大小（stat）。"""
+        判定与 pack() 完全同一套函数——fingerprint_paths / segment_options / segment_path。
+
+        task59 的独立实现把指纹行写成"episode 目录:大小"，丢了 frames 文件名，与 pack 的
+        "相对路径:大小"（含文件名）对不上，生产上 202 段全判成待建（2026-10-24 12:33）。
+        enqueue 时本轮新采的帧还没有链进视图——缺链接的标签直接待建（pack 必然要建）；
+        链接齐全的标签在视图路径上调用真 fingerprint_paths 后查段文件是否存在。
+        """
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
         wanted = set(labels)
-        catalog: dict[str, tuple[str, int]] = {}
+        catalog: dict[str, Path] = {}
         for source in sources:
             for path in frame_paths(source):
                 if path.parent.name in wanted:
-                    catalog[str(path.parent.relative_to(source))] = (path.parent.name, path.stat().st_size)
+                    catalog[str(path.parent.relative_to(source))] = path
         options = pack_options(**training_row_options(recipe, labels))
+        view = self.directory / 'frames'
         pending = []
         for label in sorted(wanted):
-            lines = sorted(f'{rel}:{size}' for rel, (name, size) in catalog.items() if name == label)
-            if not lines:
+            archives = sorted((rel, path) for rel, path in catalog.items() if Path(rel).name == label)
+            if not archives:
                 continue   # 没有档案的标签 pack 时会自己报错，不进估算
-            fingerprint = hashlib.sha1('|'.join(lines).encode()).hexdigest()[:16]
-            target = segment_path(self.directory / 'frames', segment_options(options, label, fingerprint))
+            total = sum(path.stat().st_size for _, path in archives)
+            view_paths = [view / rel / path.name for rel, path in archives]
+            if not all(view_path.exists() for view_path in view_paths):
+                pending.append((label, total))
+                continue
+            fingerprint = fingerprint_paths(view, view_paths)
+            target = segment_path(view, segment_options(options, label, fingerprint))
             if not target.is_file():
-                pending.append((label, sum(int(line.rsplit(':', 1)[1]) for line in lines)))
+                pending.append((label, total))
         return pending
 
     def _plan_build(self, recipe: dict) -> None:
