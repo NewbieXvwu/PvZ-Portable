@@ -750,5 +750,33 @@
       "conclusion",
       "hash_schema"
     ]
+  },
+  "handover_audit": {
+    "archive_sources": {
+      "files": 12,
+      "sha256_mismatch": 0,
+      "record": "archive_source_sha256.json"
+    },
+    "memcheck_savegame_uninitialised": {
+      "before": 24,
+      "after": 0
+    },
+    "full_final_traces": {
+      "runs": 8,
+      "unique_sha256": 1,
+      "sha256": "5fb2c46087de25ccd19cb03cc22dc15165d3a73fe07f19b6b443be3c17ea75f4"
+    },
+    "panel_final_unique_traces": {
+      "demo_fog_31_snow_m200": 1,
+      "demo_fog_32_snow_m200": 1,
+      "demo_fog_33_cactus_snow_m200": 1,
+      "demo_fog_33_cattail_snow_m200": 1
+    },
+    "panel_before_unique_traces": {
+      "demo_fog_31_snow_m200": 2,
+      "demo_fog_32_snow_m200": 2,
+      "demo_fog_33_cactus_snow_m200": 2,
+      "demo_fog_33_cattail_snow_m200": 2
+    }
   }
 }
