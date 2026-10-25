@@ -297,12 +297,14 @@ def command(cell,arm,plan,root):
     return args,output
 
 
-def run_arm(root,arm):
+def run_arm(root,arm,only=None):
     import fcntl
     with (ROOT/'artifacts/task78/games-controller.lock').open('a') as lock:
         fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
         plan=runtime_plan(root)
         for cell in frozen_panel(root):
+            if only and cell['cell_id'] not in only:
+                continue
             # No fifth/third engine can be hidden behind another task78 stage.
             for path in Path('/proc').glob('[0-9]*/cmdline'):
                 try:
@@ -326,11 +328,28 @@ def run_arm(root,arm):
                     env=os.environ | dict(PVZ_NO_POPUP='1',OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1'))
 
 
+def candidate_receipt():
+    """Whether the candidate is the preregistered one or the documented diagnostic."""
+    path=ROOT/'artifacts/task78/v6/model.pt'
+    if not path.exists():
+        return dict(diagnostic=None,preregistered_recipe_met=None)
+    import torch
+    checkpoint=torch.load(path,map_location='cpu',weights_only=False)
+    diagnostic=not checkpoint.get('preregistered_corpus',True)
+    return dict(diagnostic=diagnostic,preregistered_recipe_met=not diagnostic)
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('phase', choices=['tasks','freeze','v5','v6','report'])
     parser.add_argument('--root', default=str(ROOT/'artifacts/task78/ab'))
+    parser.add_argument('--cells', default='',
+                        help='comma-separated cell ids; empty runs the whole frozen panel')
     args = parser.parse_args()
+    only={c.strip() for c in args.cells.split(',') if c.strip()}
+    known={c['cell_id'] for c in frozen_panel(Path(args.root))}
+    if only-set(known):
+        parser.error(f'unknown cells: {sorted(only-known)}')
     if args.phase == 'tasks':
         if not Path(args.root).is_absolute():
             parser.error('absolute paired output root required')
@@ -341,7 +360,7 @@ def main():
     if args.phase=='freeze':
         return runtime_plan(root)
     if args.phase in ('v5','v6'):
-        return run_arm(root,args.phase)
+        return run_arm(root,args.phase,only or None)
     panel=frozen_panel(root)
     results, pooled = {}, {}
     checked_runtime=None
@@ -383,14 +402,10 @@ def main():
         acc['mcnemar_p'] = mcnemar(acc['gain'], acc['harm'])
         acc['conservative_lower'] = (clopper_lower(acc['gain'], n) - clopper_upper(acc['harm'], n)) if n else None
     gates=game_gates(results,pooled,panel)
-    import torch
-    candidate=torch.load(ROOT/'artifacts/task78/v6/model.pt',map_location='cpu',weights_only=False)
-    diagnostic=not candidate.get('preregistered_corpus',True)
     document=dict(cells=results,terrain=pooled,gates=gates,
                   complete=all(v['status']=='evaluated' for v in gates.values()),
                   all_game_gates_pass=all(v['passed'] is True for v in gates.values()),
-                  includes_terminal_and_stability_gates=False,
-                  diagnostic=diagnostic,preregistered_recipe_met=not diagnostic)
+                  includes_terminal_and_stability_gates=False,**candidate_receipt())
     out = root/'paired.json'
     out.write_text(json.dumps(document,indent=1)+'\n')
     print(json.dumps(document,indent=1))
