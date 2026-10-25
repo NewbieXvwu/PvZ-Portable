@@ -58,6 +58,20 @@
 
 ## 结果
 
+- 2026-10-25 21:25 **验收矩阵（一屏看全）**：
+
+  | 任务书条目 | 状态 | 证据 |
+  |---|---|---|
+  | §1 接口（Game/plant/shovel/wait/wait_until/rewind/branch/observe/legal/summary/export_archive） | 完成 | `python/test_llmplay.py` 31 条全过；两个容器里 200 步实跑 |
+  | §2 引擎二进制：静态、无窗口、glibc 兼容 | 完成 | `ldd: not a dynamic executable`；ubuntu 22.04（glibc 2.35）与 python:3.11-slim（2.41）均能 `RESET_V2` 起 L41 |
+  | §2 台式机重放 4 局示范 | 完成 | `mac_check.sh` 对 deploy4 与包内二进制各 4/4 PASS（HEAD `8e98e01b` 前后） |
+  | §2 **Mac 上重放 4 局** | **未完成（环境阻断）** | 本机无 Mac 通路：无 sshd、WSL↔Windows interop 坏、无内网主机、Windows 侧 `known_hosts` 里也没有 Mac |
+  | §3 两镜像断网自测 + 回台式机 verify | 完成 | 见 21:00 条：两镜像各 189 操作 / tick 9955 / wave 4 / result 2，正式引擎 `verified: true` |
+  | §4 安全扫描 + 包只在本机 | 完成 | zip 全成员凭据模式 0 命中、禁入路径 0；包在 `~/pvz-logs/llmplay_pkg/`，不在 git、不在 HF |
+  | §5 `scripts/llmplay/PROMPT.md` | 完成 | 主控 18:30 已审读，§G 三处意见已改并重打包 |
+  | §6 主控验收记录 | 完成 | 包路径 / 44,635,895 字节 / SHA256 `c912da70…` / 离线自测 / 逐位一致 / PROMPT 路径均在"结果" |
+
+  只剩 Mac 一行。要关闭它只有两条路：① 在 Mac 上跑 `scripts/llmplay/mac_check.sh <资源目录>`（台式机已两次 4/4 PASS，脚本可用）；② 主控认为包里发的是 Linux ELF、Mac 那一条本就不适用于本交付物，在任务书里改掉 §2 的那句。**我没有自行改动 §2**，因为那是主控定的验收条件。
 - 2026-10-25 21:20 **同一脚本对"包里那个二进制"再跑一遍**：把 4 份示范拷到 `~/pvz-logs/llmplay_pkg/maccheck_archives/`（不写别的工作树），用 `scripts/llmplay/mac_check.sh` 配**包内静态二进制**（`stage/build/pvz-portable`，SHA `a84f10cf20bd`）重放：4/4 `PASS`、`MACCHECK OK`，四局操作数 39,590 / 57,596 / 41,107 / 41,831，tick 39,479 / 57,363 / 40,969 / 41,682，`result=1` 全通关。加上 deploy4 那一轮，台式机上已有两个互不相同的引擎各自 4/4 通过。
 - 2026-10-25 21:20 **§2 的 Mac 子句需要澄清**：包里发的是 **Linux 静态 ELF**（`ldd` 报 `not a dynamic executable`，`file` 报 `ELF 64-bit LSB executable`），macOS 内核不能直接执行它，所以"用这个二进制在 Mac 上重放"只有两种可能：① Mac 上装 Docker/虚拟机跑这个 ELF；② Mac 用它自己从同一份源码编出来的 Mach-O 引擎。无论哪种都要在 Mac 上操作，本机无法代办。这一点写进"问题"，请主控在下一轮明确要哪一种。
 - 2026-10-25 21:15 **Mac 检查做成一条命令**：新增 `scripts/llmplay/mac_check.sh`（参数：资源目录、引擎；默认读 `$PVZ_RESOURCE_DIR` 与 `build/pvz-portable`，可用 `PVZ_DEMO_RAW` 指向存档根）。它按 seed 找到 4 份示范、逐份 `human_demo.py verify`，核对 `operations` 是否等于 39,590 / 57,596 / 41,107 / 41,831，每局打一行 `PASS`，末行 `MACCHECK OK` / `MACCHECK FAILED`。**在台式机上用 deploy4（16989f23cdce）实测 4/4 PASS、`MACCHECK OK`**，四局 `verified:true` 且 tick/wave/result 与记录一致，说明脚本本身可用；Mac 上只需跑 `scripts/llmplay/mac_check.sh <资源目录>` 一条命令。仍未解决的是**在 Mac 上执行**这一步：本机 `sshd` 未安装、WSL 与 Windows 的 interop 已坏（`cmd.exe` 也报 `UtilAcceptVsock: accept4 failed 110`）、`/etc/hosts` 无内网主机、`who` 无外部登录，没有任何到 Mac 的通路。
