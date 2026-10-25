@@ -200,7 +200,7 @@ class AdaptiveScan:
 
     def __init__(self, grid: list, equidistant: int = 4):
         self.grid = [int(d) for d in grid]
-        self.wins: dict[int, dict] = {}       # decision -> {'teacher': (wins, games), 'student': …}
+        self.wins: dict[int, dict] = {}       # decision -> {'teacher': {'wins','games','rows'}, …}
         self.equidistant = self._pick_equidistant(len(self.grid), equidistant)
         self.stage = 'equidistant'
         self.next_queue: list = []
@@ -216,9 +216,9 @@ class AdaptiveScan:
 
     def rate(self, decision: int) -> float | None:
         data = self.wins.get(decision, {}).get('teacher')
-        if not data or not data[1]:
+        if not data or not data['games']:
             return None
-        return data[0] / data[1]
+        return data['wins'] / data['games']
 
     def next_teacher_point(self) -> int | None:
         """返回下一个要跑老师臂的决策号；None 表示老师臂结束。"""
@@ -273,8 +273,8 @@ class AdaptiveScan:
     def _top_index(self) -> int | None:
         """顶档：最晚的 8/8 稳定点；没有 8/8 就取最晚的 ≥50% 点。"""
         full = [self._grid_index(d) for d, data in self.wins.items()
-                if data.get('teacher') and data['teacher'][1]
-                and data['teacher'][0] == data['teacher'][1]]
+                if data.get('teacher') and data['teacher']['games']
+                and data['teacher']['wins'] == data['teacher']['games']]
         passing = [self._grid_index(d) for d in self.wins if self._passing(d)]
         if full:
             return max(full)
@@ -289,8 +289,10 @@ class AdaptiveScan:
             if self.grid[index] not in self.wins and self.grid[index] not in self.next_queue:
                 self.next_queue.append(self.grid[index])
 
-    def observe(self, decision: int, arm: str, wins: int, games: int) -> None:
-        self.wins.setdefault(int(decision), {})[arm] = (int(wins), int(games))
+    def observe(self, decision: int, arm: str, summary: dict) -> None:
+        self.wins.setdefault(int(decision), {})[arm] = {
+            'wins': int(summary['wins']), 'games': int(summary['games']),
+            'rows': summary.get('rows', [])}
         if arm == 'teacher' and self.stage == 'bisect' and not self.next_queue:
             # 二分队列跑完一批后重算：可能还有未探明的跨线区间。
             self._plan_bisect()
@@ -303,8 +305,9 @@ class AdaptiveScan:
         self.student_points = [d for d in (self.l50, self.top) if d is not None]
         points = {str(d): dict(data) for d, data in sorted(self.wins.items())}
         return dict(l50=self.l50, top=self.top, student_points=self.student_points,
-                    points=points, ladder=build_ladder({d: data['teacher'] for d, data in self.wins.items()
-                                                        if data.get('teacher')}))
+                    points=points,
+                    ladder=build_ladder({d: (data['teacher']['wins'], data['teacher']['games'])
+                                         for d, data in self.wins.items() if data.get('teacher')}))
 
 
 def build_ladder(points: dict) -> dict | None:
@@ -340,11 +343,11 @@ def cmd_adaptive(args) -> None:
             if decision is None:
                 break
             summary = run_point(jobs, decision, 'teacher', ('teacher',), args)
-            scanner.observe(decision, 'teacher', summary['wins'], summary['games'])
+            scanner.observe(decision, 'teacher', summary)
         state = scanner.finish()
         for decision in state['student_points']:
             summary = run_point(jobs, decision, 'student', ('student',), args)
-            scanner.observe(decision, 'student', summary['wins'], summary['games'])
+            scanner.observe(decision, 'student', summary)
         state = scanner.finish()
         document = dict(schema=RESULT_SCHEMA, task_id=entry['task_id'], seed=entry['seed'],
                         archive=entry['archive'], grade=entry.get('grade'), layer=entry.get('layer'),

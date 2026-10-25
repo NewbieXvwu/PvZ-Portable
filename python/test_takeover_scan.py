@@ -30,7 +30,7 @@ def drive(scanner: AdaptiveScan, rate_fn) -> int:
         if decision is None:
             return count
         wins, games = rate_fn(decision)
-        scanner.observe(decision, 'teacher', wins, games)
+        scanner.observe(decision, 'teacher', {'wins': wins, 'games': games, 'rows': []})
         count += 1
 
 
