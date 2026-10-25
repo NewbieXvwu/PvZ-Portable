@@ -458,17 +458,19 @@ def resolve_target_task(document: dict, manifest_path: Path) -> tuple[str, dict 
         if (task.get('demo_start') or {}).get('archive') == document['archive']:
             return task['task_id'], task['demo_start']
     base = document['task_id']
-    candidates = [base, f'{base}_llm']
-    for candidate in candidates:
+    occupied = None
+    for candidate in (base, f'{base}_llm'):
         for task in tasks:
             if task['task_id'] != candidate:
                 continue
             if not task.get('demo_start'):
                 return candidate, None
-            raise ValueError(
-                f'{base}: 族 {candidate} 已被存档 {(task["demo_start"]["archive"])} 占用，'
-                f'需人工指定登记族')
-    raise KeyError(f'{base}: manifest 里没有可登记的族（试过 {candidates}）')
+            occupied = (candidate, task['demo_start']['archive'])
+            break
+    if occupied:
+        raise ValueError(
+            f'{base}: 候选族 {occupied[0]} 已被存档 {occupied[1]} 占用，需人工指定登记族')
+    raise KeyError(f'{base}: manifest 里没有可登记的族（试过 {base} / {base}_llm）')
 
 
 def cmd_register(args) -> None:

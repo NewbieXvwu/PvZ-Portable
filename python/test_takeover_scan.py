@@ -188,6 +188,17 @@ class ResolveTargetTaskTest(unittest.TestCase):
             resolve_target_task(
                 dict(task_id='base', archive='artifacts/llm_demo/raw/z'), self.path)
 
+    def test_base_occupied_falls_back_to_llm(self):
+        # task87 先例：base 族已被人类示范占用时，LLM 存档落到 base_llm。
+        self.path.write_text(json.dumps({'tasks': [
+            {'task_id': 'base', 'demo_start': {'archive': 'artifacts/human_demo/raw/x'}},
+            {'task_id': 'base_llm', 'seeds': [1]},
+        ]}), encoding='utf-8')
+        task_id, existing = resolve_target_task(
+            dict(task_id='base', archive='artifacts/llm_demo/raw/x'), self.path)
+        self.assertEqual(task_id, 'base_llm')
+        self.assertIsNone(existing)
+
     def test_unknown_task_raises(self):
         with self.assertRaises(KeyError):
             resolve_target_task(
