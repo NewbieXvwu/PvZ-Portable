@@ -67,3 +67,13 @@
   40 个标签：p21w34m-38m, p22w34m-38m, p23w34m-38m, p24w34m-38m, p26w34m-38m, p27w33m-38m, p28w33m-38m, p29w33m-37m。
 
 ## 问题
+
+## 主控追加（2026-10-25 14:00，B6 与 deploy14 准备）
+B5 收到：human_v2 修订后老师 31/32，作为 fog_user_v2 的 teacher_rates 底数。下一步准备 deploy14，部署由主控做：
+1. **发现的漏洞——示范起点格是透视的**：`configs/human_demo_tasks.json` 的示范任务没有 `fog_observation`，录制时为 null，所以 `demo_start` 格里学生看到的是 x-ray。`search_play` 恢复示范时又要求 `environment_task` 逐字段一致。
+   - 改法：`fog_observation` 只改呈现、不改棋局（task66 的不变式测试已证明 state_hash 不变），恢复时允许它与录制时不同，使用清单里的值。
+   - 按 AGENTS §8 第 4 条新开示范起点族：现有 5 个示范起点格（L31 snow、L32 snow、L33 cactus/cattail、L34 cactus，含 task71b 的 L32/L34）各一个 `_hv2` 版本，`fog_observation: human_v2`，阶梯与种子块沿用原格（与旧格不相交时另取，写清）。旧格退休。
+   - 测试：同存档同决策号，human_v2 与 null 两种口径下 state_hash 一致，公开观察按口径遮挡。
+2. **fog_user_v2 入课程**：恢复 `CURRICULUM_LEVELS['fog_user_v2']=(31,)` 与 `SUPERSEDED['fog_user']='fog_user_v2'`（主控在 1613ecdc 暂时撤下的那两处），测试随之改回。
+3. **引擎**：B5 改了 C++，按 deploy4 的 PGO 流程构建 deploy5，记 SHA；照 A2 做逐位门禁（human/xray 族与 deploy4 逐位一致），照 A4 做吞吐 ABBA。
+4. 部署清单写进本文件：新代码 rev、引擎路径、teacher_rates 增量（fog_user_v2_l31_snow 31/32、新示范起点格各 8/8）、回滚方式。push origin redeploy。
