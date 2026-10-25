@@ -2,6 +2,11 @@
  "schema": "llm_run_import_evidence_v1",
  "source_sha256": "d199f51129eec00b40d52caf37cbb2e03e84e93a90da97ddc4d89c67d1f7a801",
  "unit_tests_passed": 30,
+ "cli_checks": [
+  {"case": "valid_directory_minimal_command", "exit_code": 0, "default_scan_plan_saved": true},
+  {"case": "zip_path_traversal", "exit_code": 1},
+  {"case": "meta_archive_mismatch", "exit_code": 1}
+ ],
  "reused_codebuddy_engine_verification": {
   "archives": 102,
   "pass_count": 102

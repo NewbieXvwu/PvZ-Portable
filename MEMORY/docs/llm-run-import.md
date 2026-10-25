@@ -55,6 +55,8 @@ PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 $P/scripts/import_llm_run.
 重新走更新后的发现/自洽/入库/分档/扫描路径（这一步跳过引擎），102 行任务、种子、波数、操作数、分档
 逐项吻合旧索引，12 份 half / 90 份 loss，无新增族。12 个预留块逐对不相交，也与盘点所有登记段不相交。
 随后用当前显式关闭哈希比较的验证调用抽验一胜一负，均通过；最多一个游戏进程，未运行接手扫描。
+最终 CLI 检查：真实目录输入退出 0，并在不传 `--scan-out` 时保存 24 组扫描清单；
+路径穿越 zip 和 meta/存档不一致各退出 1。30 项测试覆盖新族登记、分档、输入只读、种子冲突及幂等。
 紧凑证据见 [llm-run-import-evidence.json](llm-run-import-evidence.json)。
 
 ## 已知边界
