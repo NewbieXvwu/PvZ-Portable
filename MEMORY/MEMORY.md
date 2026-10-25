@@ -99,3 +99,9 @@
 - [unified-panel.md](docs/unified-panel.md)
 
 - [task68-fog31-snow-qc.md](docs/task68-fog31-snow-qc.md)
+- [task76 任务书：屋顶候选遗漏检验](docs/task76-roof-candidates-v5.md)
+- [task76 最终结论：候选不是最大缺口，局面已死才是](docs/roof-candidates-v5.md)
+- [task76 面板报告](docs/task76-roof-candidates-v5-report.json)
+- [task76 终局真值报告](docs/task76-roof-terminal-truth.json)
+- [2026-10-25](2026-10-25.md)
+- [2026-10-26](2026-10-26.md)
