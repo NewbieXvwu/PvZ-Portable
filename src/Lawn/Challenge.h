@@ -142,7 +142,7 @@ public:
 	void                    GraveDangerSpawnGraveAt(int theGridX, int theGridY);
 	void                    SpawnLevelAward(int theGridX, int theGridY);
 	void                    BeghouledScore(int theGridX, int theGridY, int theNumPlants, int theIsHorizontal);
-	void                    DrawStormFlash(Graphics* g, int theTime, int theMaxAmount);
+	void                    StormNightOverlay(int& theDarkness, int& theFlash) const;
 	void                    UpdateRainingSeeds();
 	void         PlayBossEnter();
 	void                    UpdateConveyorBelt();

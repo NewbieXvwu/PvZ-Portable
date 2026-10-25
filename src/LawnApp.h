@@ -84,7 +84,8 @@ enum class EnvironmentFogObservation
 {
 	None = 0,
 	Cell = 1,
-	Opacity = 2
+	Opacity = 2,
+	Storm = 3
 };
 
 struct EnvironmentTaskSpec
@@ -274,6 +275,7 @@ public:
 	std::string					EnvironmentLeanObservation();
 	int EnvironmentFogAmount(int row, int col) const;
 	bool EnvironmentFogMasked() const;
+	bool EnvironmentStormHidden() const;
 	float EnvironmentFogOpacityAt(int theX, int theY) const;
 	Rect EnvironmentZombieFogBox(const class Zombie* zombie) const;
 	float EnvironmentZombieFogOpacity(const class Zombie* zombie, float* theHeadOpacity = nullptr,

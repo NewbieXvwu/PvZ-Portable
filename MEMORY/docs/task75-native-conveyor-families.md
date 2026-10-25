@@ -30,6 +30,27 @@ L10、L20 的原生传送带族已经在 qc 里，L20 学生从 0 练到了 45/4
 
 ## 结果
 
+- 2026-10-25：登记六个独立原生传送带任务与 60M 训练 / 61M 评估种子段，生成器不改旧面板。L40 的 storm 观测协议与遮挡在下一步实现，尚未启动冷启动测量。
+- 种子机械审计：53889 个 JSON、748 项含种子任务、968772 个现有唯一种子与新增24672个种子零交集，包含倍率清单。清单静态测试 1 passed。
+- 2026-10-25：完成 L25 体型字段与 v2size 学生输入，L40 storm 共用绘制透明度并遮挡场上实体与网络特征。相关回归 39 passed，旧构建与新构建六个任务共48份 full/lean记录及状态哈希一致，五种既有学生编码签名保持不变。准备每关32局冷启动。
+- 2026-10-25：L30 评估种子 61100001 在老师搜索局里确定性段错误（`Reanimation::GetFramesForLayer`，三头豌豆第三头的槽位已被回收成 husk，而 `ReanimationGet` 不校验 id）；修改前构建同样崩溃，属既有缺陷。三处三头豌豆读头部动画改 `ReanimationTryToGet` 并跳过缺失头，崩溃种子跑完；46 passed / 47 subtests，同种子状态哈希与修改前一致。
+
 ## 问题
 
 Mac 上的模型路径：静态网 `/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt`（主控已从台式机拷来，SHA 24858410…）；叶值 v5 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt`（8a636d33…，只读）；学生 dw4i_s1 同 demo 工作树的现有路径。
+- 2026-10-25：L40 冷启动第 3 局同样因头部动画槽位被回收而崩（`Plant::UpdateShooting` 空指针），属同一类缺陷的分裂豌豆分支。`FindTargetAndFire` 副武器、`UpdateShooting` 开火门控与待机复位三处改 `ReanimationTryToGet` 并跳过缺失头；崩溃种子 61200001/61200003 跑完，46 passed / 47 subtests。
+- 2026-10-25：96 局老师冷启动跑完（L25 9/32=28.1%，Wilson 15.6–45.4；L30 0/32，0–10.7；L40 5/32=15.6%，Wilson 6.9–31.8），三关都不到 50%，都不建议进 qc。L30 的 0% 归因为冷启动政策缺陷（32 局零睡莲、带子 8000 tick 满 10 张后堵死），不是牌表结构性输局；L40 主要漏气球（18/27 局输局里气球是走得最远的破防者）。三批同种子状态哈希一致。结论写入 MEMORY/docs/native-conveyor.md。
+- 2026-10-25：补原生族整局测试（`test_native_family_plays_a_full_game_to_terminal`，L25/L30/L40 各跑一局到 terminal，确认发牌 ≥2 种、结果码为胜/负），三个测试文件 49 passed / 47 subtests。
+- L30 的 p9k 对照（`pool_l30_eval_p9k`）与 L40 的 storm/xray 对照都没跑，本机没有现成记录，各 32 局约 10 分钟。前者能区分「原生牌表问题」与「政策问题」，后者能量出黑幕的信息成本。（2026-10-25 已补跑，结果见「结果」段。）
+- L30 冷启动 0/32 的具体成因（为什么同一模型在 L40 会种 332 张睡莲、在 L30 一张不种）还没定位到状态特征层，只确认了动作空间覆盖水路（342 个种植动作覆盖 0–5 行）。
+- 2026-10-25：把两处头部动画段错误的修复写进结论文档，并补上"没踩到缺陷的轨迹逐位不变"的直接证据（L30 种子 61100000 新旧构建 state_hash 均 1d254baf24303983、末波均 9）。
+- 2026-10-25：补跑 L30 的 p9k 对照（32 局，种子 30000–30031）：0/32，末波 12.2、割草机 1.75/局、睡莲 71 张；原生族 0/32、末波 8.5、睡莲 0 张。两族同为零胜，说明 L30 的 0% 不是原生牌表的结构性输局；p9k 的差别来自初始手牌（第 0 tick 就有睡莲与向日葵）。种子段不同，末波只作量级参考。已写入 `MEMORY/docs/native-conveyor.md`。
+- 2026-10-25：定位 L30 零睡莲（4 局 frames，1482 决策）：睡莲从 tick 1020–1800 起 active、水路每行 9 列动作一直有，40 次种植全在 0/1/4 行、水路 0 次；32 局破防 24/57 在水路。同一模型在 L40 种 332 张睡莲、p9k 手牌在 L30 种 80 张，所以不是动作/观测管道，是政策偏好。写入结论文档。
+- 2026-10-25：全量回归 `pytest python -q`：605 passed / 19 skipped / 133 subtests，67 s，零失败（含基线对照测试）。
+- 2026-10-25：把「原族/旧任务逐位不变」做成可复跑测试 `test_old_observation_families_match_the_pre_task75_build`（6 任务 × 4 族 × full/lean = 48 份，对比 `artifacts/task75/pvz-baseline` Build 1967）。首次跑暴露出原文「48 份记录一致」不准确：新构建的完整观测与 v2 多了 `scale`（仅当体型 ≠ 1.0 时出现），去掉该字段后逐位一致、状态哈希一致。`test_native_conveyor.py` 12 passed。
+- 2026-10-25：L30 补同种子配对（p9k 牌表跑 61100000–61100031）：仍 0/32，末波 13.0 vs 原生 8.5（+4.5），割草机 2.19 vs 4.28，睡莲 80 张。配对结论与跨种子一致：0% 不是牌表结构性输局。顺带记下 `conveyor_start: 'original'` 会忽略 `deck`（首次配对因此与原生逐位相同）。
+- 2026-10-25：L40 气球诊断（4 局 xray 带 frames）：仙人掌行的气球 tick 47.2% 受伤，只有杨桃的行 252 tick 零受伤，所有破防帧行内对空植物都只有杨桃、血量全程 270。引擎里杨桃的伤害范围是 `DAMAGES_GROUND`（Plant.cpp:604 默认分支），打不中飞行的气球；牌表里只有仙人掌（权重 15）与三叶草（5）能处理。黑幕不是瓶颈，下一步是训练数据覆盖气球行补仙人掌。
+- 2026-10-25：按 task66 四类不变式复核 storm 测试，补上亮屏时 projectiles / defenses / grid_items / coins 与特权状态的逐字段比对（公开帧只遮 `target_zombie_id`），并要求至少一个带子弹的亮屏 tick 防空断言。`test_native_conveyor.py` 11 passed。
+- 2026-10-25：补跑 L40 的 storm vs xray 对照（同种子 61200000–61200031）：storm 5/32（15.6%，Wilson 6.9–31.8）对 xray 6/32（18.8%，8.9–35.3），末波 18.69 vs 20.78，气球破防 19 vs 21。差值不显著，黑幕的信息成本量不出来；原先「黑屏看不见气球」的假设被否掉，L40 的瓶颈在气球处理。两族逐种子胜局零重叠，配对比较无意义。已写入 `MEMORY/docs/native-conveyor.md`。
+- 2026-10-25（交回主控）：task75 五项全部做完——原生族登记、观测审查（L25 体型 / L40 storm / L30 原生 vs p9k）、96 局老师冷启动、测试（49 passed / 47 subtests）、结论进 `MEMORY/docs/native-conveyor.md`。工作树干净，`conveyor2` 与 origin 一致（HEAD 393c5a2d）。未做的两项对照（L30 的 p9k、L40 的 storm vs xray）记在"问题"。
+- 2026-10-25 最终审计：当前 `HEAD=ce29b238` 与 `origin/conveyor2` 一致；`python -m pytest python -q` 为 605 passed / 19 skipped / 133 subtests，`coldstart3` 的三关原始记录核验为 96/96 局，结论文档、L30 p9k 配对和 L40 storm/xray 对照均已在仓库历史中。

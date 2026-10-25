@@ -60,7 +60,7 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 	// numpy's cell += scalar casts each term to float32 first, then accumulates in float32;
 	// rounding the term before the add is what reproduces that bit-exactly.
 	for (const Plant* plant : state->mPlants)
-		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
+		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 			b[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] +=
 				static_cast<float>(static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth));
 	for (Zombie* zombie : state->mZombies)
@@ -78,7 +78,7 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 		b[89 * Cells + cell] += zombie->mChilledCounter > 0;
 	}
 	for (const LawnMower* mower : state->mLawnMowers)
-		if (!mower->mDead && mower->mRow >= 0 && mower->mRow < 6)
+		if (!mower->mDead && !app->EnvironmentStormHidden() && mower->mRow >= 0 && mower->mRow < 6)
 			b[90 * Cells + mower->mRow * 10] = mower->mMowerState == LawnMowerState::MOWER_READY;
 	for (int row = 0; row < 6; ++row)
 	{

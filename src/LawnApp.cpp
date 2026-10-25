@@ -1649,6 +1649,12 @@ bool LawnApp::EnvironmentTerminal() const
 // No Board state is changed; both arms play precisely the same underlying game.
 int LawnApp::EnvironmentFogAmount(int row, int col) const
 {
+	if (mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Storm && const_cast<LawnApp*>(this)->IsStormyNightLevel())
+	{
+		int darkness, flash;
+		mBoard->mChallenge->StormNightOverlay(darkness, flash);
+		return 255 - (255 - darkness) * (255 - flash) / 255;
+	}
 	if (!mBoard || !mBoard->StageHasFog() || row < 0 || row >= MAX_GRID_SIZE_Y) return 0;
 	const int fogCol = col - static_cast<int>((mBoard->mFogOffset + 50) / 100);
 	return fogCol >= 0 && fogCol < MAX_GRID_SIZE_X ? mBoard->mGridCelFog[fogCol][row] : 0;
@@ -1656,8 +1662,16 @@ int LawnApp::EnvironmentFogAmount(int row, int col) const
 
 bool LawnApp::EnvironmentFogMasked() const
 {
+	if (mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Storm)
+		return mBoard && const_cast<LawnApp*>(this)->IsStormyNightLevel();
 	return mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::None &&
 		mBoard && mBoard->StageHasFog();
+}
+
+bool LawnApp::EnvironmentStormHidden() const
+{
+	return mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Storm &&
+		mBoard && const_cast<LawnApp*>(this)->IsStormyNightLevel() && EnvironmentFogAmount(0, 0) == 255;
 }
 
 // task66: the fog a zombie actually stands in, measured the way Board::DrawFog paints it.
@@ -1830,6 +1844,8 @@ static constexpr float kFogVisibilityThreshold = 0.925f;
 
 bool LawnApp::EnvironmentZombieVisible(const Zombie* zombie) const
 {
+	if (mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Storm)
+		return !EnvironmentStormHidden();
 	if (!EnvironmentFogMasked()) return true;
 	if (mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Opacity)
 		return EnvironmentZombieFogOpacity(zombie) < kFogVisibilityThreshold;
@@ -1838,6 +1854,8 @@ bool LawnApp::EnvironmentZombieVisible(const Zombie* zombie) const
 
 bool LawnApp::EnvironmentProjectileVisible(const Projectile* projectile) const
 {
+	if (mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Storm)
+		return !EnvironmentStormHidden();
 	if (!EnvironmentFogMasked()) return true;
 	if (mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::Opacity)
 		return EnvironmentFogAmount(projectile->mRow,
@@ -1870,7 +1888,7 @@ bool LawnApp::EnvironmentVisibleEnemies() const
 static void WriteObservationFog(std::ostream& out, const LawnApp* app)
 {
 	// Omit on non-fog boards: every historical non-fog observation stays byte-identical.
-	if (!app->mBoard->StageHasFog()) return;
+	if (!app->mBoard->StageHasFog() && !app->EnvironmentFogMasked()) return;
 	out << ",\"fog_amount\":[";
 	for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
 	{
@@ -1890,6 +1908,7 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 {
 	Board* board = app->mBoard;
 	const bool masked = !privileged && app->EnvironmentFogMasked();
+	const bool dark = !privileged && app->EnvironmentStormHidden();
 	out << ",\"v2\":{\"wave_timer\":" << board->mZombieCountDown
 		<< ",\"huge_wave_countdown\":" << board->mHugeWaveCountDown
 		<< ",\"wave_health\":" << (masked ? 0 : board->TotalZombiesHealthInWave(board->mCurrentWave - 1))
@@ -1897,12 +1916,12 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 		<< ",\"sun_countdown\":" << board->mSunCountDown << ",\"sun_pending\":";
 	int pending = 0;
 	for (Coin* coin : board->mCoins)
-		if (!coin->mDead && coin->IsSun()) pending += coin->GetSunValue();
+		if (!coin->mDead && coin->IsSun() && !dark) pending += coin->GetSunValue();
 	out << pending << ",\"plants\":[";
 	bool first = true;
 	for (const Plant* plant : board->mPlants)
 	{
-		if (plant->mDead || plant->mSquished) continue;
+		if (plant->mDead || plant->mSquished || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
@@ -1916,7 +1935,10 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 		if (zombie->mDead || (!privileged && !app->EnvironmentZombieVisible(zombie))) continue;
 		if (!first) out << ',';
 		first = false;
-		out << '[' << (zombie->mHasObject ? 1 : 0) << ',' << zombie->mHelmHealth << ',' << zombie->mShieldHealth << ']';
+		out << '[' << (zombie->mHasObject ? 1 : 0) << ',' << zombie->mHelmHealth << ',' << zombie->mShieldHealth;
+		if (app->mEnvironmentTaskSpec.originalConveyorStart && app->IsLittleTroubleLevel())
+			out << ',' << zombie->mScaleZombie;
+		out << ']';
 	}
 	out << "],\"projectiles\":[";
 	first = true;
@@ -1932,6 +1954,7 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 
 std::string LawnApp::EnvironmentLeanObservation()
 {
+	const bool dark = EnvironmentStormHidden();
 	std::ostringstream out;
 	out << "{\"lean\":1,\"observation_version\":4,\"level\":" << mBoard->mLevel
 		<< ",\"terrain\":" << static_cast<int>(mBoard->mBackground)
@@ -1977,7 +2000,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 	bool first = true;
 	for (const Plant* plant : mBoard->mPlants)
 	{
-		if (plant->mDead) continue;
+		if (plant->mDead || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
@@ -1995,14 +2018,17 @@ std::string LawnApp::EnvironmentLeanObservation()
 			<< ',' << zombie->mVelX << ',' << zombie->mBodyHealth + zombie->mHelmHealth + zombie->mShieldHealth
 			<< ',' << (zombie->IsOnBoard() ? 1 : 0) << ',' << (zombie->mIsEating ? 1 : 0)
 			<< ',' << zombie->mChilledCounter << ',' << zombie->mIceTrapCounter
-			<< ',' << static_cast<int>(mBoard->ZombieGetID(zombie)) << ']';
+			<< ',' << static_cast<int>(mBoard->ZombieGetID(zombie));
+		if (mEnvironmentTaskSpec.originalConveyorStart && IsLittleTroubleLevel())
+			out << ',' << zombie->mScaleZombie;
+		out << ']';
 	}
 	// [row, state]
 	out << "],\"defenses\":[";
 	first = true;
 	for (const LawnMower* mower : mBoard->mLawnMowers)
 	{
-		if (mower->mDead) continue;
+		if (mower->mDead || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << mower->mRow << ',' << static_cast<int>(mower->mMowerState) << ']';
@@ -2012,7 +2038,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 	first = true;
 	for (const GridItem* item : mBoard->mGridItems)
 	{
-		if (item->mDead) continue;
+		if (item->mDead || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << '[' << item->mGridY << ',' << item->mGridX << ',' << static_cast<int>(item->mGridItemType) << ']';
@@ -2149,6 +2175,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		return "null";
 	if (mEnvironmentLeanObservation && !privileged)
 		return EnvironmentLeanObservation();
+	const bool dark = !privileged && EnvironmentStormHidden();
 
 	std::ostringstream out;
 	out << "{\"protocol_version\":4,\"observation_version\":4,\"task_version\":2,\"level\":" << mBoard->mLevel
@@ -2231,7 +2258,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"plant_types\":[";
 			bool firstCellPlant = true;
 			for (const Plant* plant : mBoard->mPlants)
-				if (!plant->mDead && plant->mPlantCol == col && plant->mRow == row)
+					if (!plant->mDead && !dark && plant->mPlantCol == col && plant->mRow == row)
 				{
 					if (!firstCellPlant) out << ',';
 					firstCellPlant = false;
@@ -2240,7 +2267,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 			out << "],\"grid_item_types\":[";
 			bool firstCellItem = true;
 			for (const GridItem* item : mBoard->mGridItems)
-				if (!item->mDead && item->mGridX == col && item->mGridY == row)
+					if (!item->mDead && !dark && item->mGridX == col && item->mGridY == row)
 				{
 					if (!firstCellItem) out << ',';
 					firstCellItem = false;
@@ -2267,7 +2294,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	bool first = true;
 	for (const Plant* plant : mBoard->mPlants)
 	{
-		if (plant->mDead) continue;
+		if (plant->mDead || dark) continue;
 			if (!first) out << ',';
 			first = false;
 			out << "{\"type\":" << static_cast<int>(plant->mSeedType) << ",\"imitater_type\":" << static_cast<int>(plant->mImitaterType)
@@ -2299,14 +2326,16 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"ice_trap\":" << zombie->mIceTrapCounter << ",\"has_head\":" << (zombie->mHasHead ? "true" : "false")
 				<< ",\"has_arm\":" << (zombie->mHasArm ? "true" : "false") << ",\"has_object\":" << (zombie->mHasObject ? "true" : "false")
 				<< ",\"is_eating\":" << (zombie->mIsEating ? "true" : "false") << ",\"target_col\":" << zombie->mTargetCol
-				<< ",\"target_row\":" << zombie->mTargetRow;
+					<< ",\"target_row\":" << zombie->mTargetRow;
+			if (mEnvironmentTaskSpec.originalConveyorStart && IsLittleTroubleLevel())
+				out << ",\"scale\":" << zombie->mScaleZombie;
 			out << '}';
 	}
 	out << "],\"coins\":[";
 	first = true;
 	for (const Coin* coin : mBoard->mCoins)
 	{
-		if (coin->mDead) continue;
+		if (coin->mDead || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << "{\"type\":" << static_cast<int>(coin->mType) << ",\"x\":" << coin->mPosX << ",\"y\":" << coin->mPosY << '}';
@@ -2329,7 +2358,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	first = true;
 	for (const LawnMower* mower : mBoard->mLawnMowers)
 	{
-		if (mower->mDead) continue;
+		if (mower->mDead || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << "{\"type\":" << static_cast<int>(mower->mMowerType) << ",\"row\":" << mower->mRow
@@ -2340,7 +2369,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	first = true;
 	for (const GridItem* item : mBoard->mGridItems)
 	{
-		if (item->mDead) continue;
+		if (item->mDead || dark) continue;
 		if (!first) out << ',';
 		first = false;
 		out << "{\"type\":" << static_cast<int>(item->mGridItemType) << ",\"state\":" << static_cast<int>(item->mGridItemState)
@@ -2376,8 +2405,9 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				out << '[' << col << ',' << row << ']';
 			}
 	out << "],\"wait\":true}";
-	WriteObservationV2(out, this, privileged);
-	WriteObservationFog(out, this);
+		WriteObservationV2(out, this, privileged);
+	if (!privileged || mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::Storm)
+		WriteObservationFog(out, this);
 	if (privileged)
 	{
 		// Loss attribution is diagnostic only; it never reaches either policy arm.

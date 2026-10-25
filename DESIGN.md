@@ -1102,3 +1102,11 @@ L31 `demo_fog_31_snow_m200` **N=142**（第 3 波）。冷启动三局全 0/8。
   用户打法（雾里坚果防线、前面垫零费小喷菇）不改变这一点。阶梯 `1231..225` 共 9 档，
   种子块 44,300,000–44,300,255（与现有段不相交）；起点格 42 → 43，
   `test_registered_manifest_start_cells` 的期望集合同步加它。扫描正文见 [demo-start-states.md](MEMORY/docs/demo-start-states.md) §6.6。
+
+### 14.27 原生传送带 L25 / L30 / L40（task75，2026-10-25）
+
+`scripts/make_native_conveyor_panel.py` 生成独立本地清单 `artifacts/task75/native_conveyor_panel.json`，六个任务为 `pool_l25_orig_eval/train`、`pool_l30_orig_eval/train`、`storm_l40_orig_eval/train`。全部 `deck: []`、`conveyor_start: original`，二周目、倍率 1、不限波、阳光 50、无预置。保留引擎的十空槽开局、免费种植与动态发牌，重复牌按实际槽位保留。原有泳池 p9k 与 L40 初始牌变体不变，重放仍读存档任务。
+
+训练段依次为 60000000–60008191、60100000–60108191、60200000–60208191。评估段依次为 61000000–61000031、61100000–61100031、61200000–61200031，每关 32 局。L40 独立采用 `fog_observation: storm`，按照暴风雨绘制状态遮挡，与既有 human / human_v2 / xray 分开。登记清单不改变生产课程，冷启动结果与准入建议见 `MEMORY/docs/native-conveyor.md`。
+
+L25 新原生族的 full 僵尸字段 `scale`、lean 僵尸末尾和 v2 僵尸第四项均输出引擎 `mScaleZombie`，紧凑帧保存在索引 10。新学生观测 `v2size` 在 v2 后追加逐格体型和，Python 与 C++ 使用相同输入，旧模型保持原维数。L40 的 storm 从 `Challenge::StormNightOverlay` 读取绘制层的黑色与白色透明度，完全遮蔽时隐藏场上实体及对应学生/价值网特征，卡槽和阳光仍可见。原有观测取值与编码签名不变，特权诊断保留真实末局僵尸用于输局归因。

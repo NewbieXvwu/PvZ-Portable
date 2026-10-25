@@ -741,11 +741,14 @@ bool Plant::FindTargetAndFire(int theRow, PlantWeapon thePlantWeapon)
 
 	if (mSeedType == SeedType::SEED_SPLITPEA && thePlantWeapon == PlantWeapon::WEAPON_SECONDARY)
 	{
-		Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-		aHeadReanim2->StartBlend(20);
-		aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-		aHeadReanim2->mAnimRate = 35.0f;
-		aHeadReanim2->SetFramesForLayer("anim_splitpea_shooting");
+		Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+		if (aHeadReanim2)
+		{
+			aHeadReanim2->StartBlend(20);
+			aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+			aHeadReanim2->mAnimRate = 35.0f;
+			aHeadReanim2->SetFramesForLayer("anim_splitpea_shooting");
+		}
 		mShootingCounter = 26;
 	}
 	else if (aHeadReanim && aHeadReanim->TrackExists("anim_shooting"))
@@ -826,11 +829,16 @@ void Plant::LaunchThreepeater()
 		(mBoard->RowCanHaveZombies(rowAbove) && FindTargetZombie(rowAbove, PlantWeapon::WEAPON_PRIMARY)) ||
 		(mBoard->RowCanHaveZombies(rowBelow) && FindTargetZombie(rowBelow, PlantWeapon::WEAPON_PRIMARY)))
 	{
-		Reanimation* aHeadReanim1 = mApp->ReanimationGet(mHeadReanimID);
-		Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-		Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
+		// A head reanimation can be killed as an attachment and its slot recycled while the
+		// plant still holds the id; ReanimationGet does not validate the id, so it would hand
+		// back the recycled slot.  TryToGet returns null instead and that head simply does
+		// not play its shot (a missing head never fires either -- the shot is gated on the
+		// head's own loop type in UpdateShooter).
+		Reanimation* aHeadReanim1 = mApp->ReanimationTryToGet(mHeadReanimID);
+		Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+		Reanimation* aHeadReanim3 = mApp->ReanimationTryToGet(mHeadReanimID3);
 
-		if (mBoard->RowCanHaveZombies(rowBelow))
+		if (aHeadReanim1 && mBoard->RowCanHaveZombies(rowBelow))
 		{
 			aHeadReanim1->StartBlend(10);
 			aHeadReanim1->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
@@ -838,12 +846,15 @@ void Plant::LaunchThreepeater()
 			aHeadReanim1->SetFramesForLayer("anim_shooting1");
 		}
 
-		aHeadReanim2->StartBlend(10);
-		aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-		aHeadReanim2->mAnimRate = 20.0f;
-		aHeadReanim2->SetFramesForLayer("anim_shooting2");
+		if (aHeadReanim2)
+		{
+			aHeadReanim2->StartBlend(10);
+			aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+			aHeadReanim2->mAnimRate = 20.0f;
+			aHeadReanim2->SetFramesForLayer("anim_shooting2");
+		}
 
-		if (mBoard->RowCanHaveZombies(rowAbove))
+		if (aHeadReanim3 && mBoard->RowCanHaveZombies(rowAbove))
 		{
 			aHeadReanim3->StartBlend(10);
 			aHeadReanim3->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
@@ -3254,19 +3265,19 @@ void Plant::UpdateShooting()
 		{
 			int rowAbove = mRow - 1;
 			int rowBelow = mRow + 1;
-			Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-			Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
-			Reanimation* aHeadReanim1 = mApp->ReanimationGet(mHeadReanimID);
+			Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+			Reanimation* aHeadReanim3 = mApp->ReanimationTryToGet(mHeadReanimID3);
+			Reanimation* aHeadReanim1 = mApp->ReanimationTryToGet(mHeadReanimID);
 
-			if (aHeadReanim1->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadReanim1 && aHeadReanim1->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				Fire(nullptr, rowBelow, PlantWeapon::WEAPON_PRIMARY);
 			}
-			if (aHeadReanim2->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadReanim2 && aHeadReanim2->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				Fire(nullptr, mRow, PlantWeapon::WEAPON_PRIMARY);
 			}
-			if (aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadReanim3 && aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				Fire(nullptr, rowAbove, PlantWeapon::WEAPON_PRIMARY);
 			}
@@ -3275,11 +3286,11 @@ void Plant::UpdateShooting()
 		{
 			Reanimation* aHeadBackReanim = mApp->ReanimationTryToGet(mHeadReanimID2);
 			Reanimation* aHeadFrontReanim = mApp->ReanimationTryToGet(mHeadReanimID);
-			if (aHeadFrontReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mLaunchCounter > 25)
+			if (aHeadFrontReanim && aHeadFrontReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mLaunchCounter > 25)
 			{
 				Fire(nullptr, mRow, PlantWeapon::WEAPON_PRIMARY);
 			}
-			if (aHeadBackReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadBackReanim && aHeadBackReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				Fire(nullptr, mRow, PlantWeapon::WEAPON_SECONDARY);
 			}
@@ -3318,12 +3329,12 @@ void Plant::UpdateShooting()
 	Reanimation* aHeadReanim = mApp->ReanimationTryToGet(mHeadReanimID);
 	if (mSeedType == SeedType::SEED_THREEPEATER)
 	{
-		Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-		Reanimation* aHeadReanim3 = mApp->ReanimationGet(mHeadReanimID3);
+		Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+		Reanimation* aHeadReanim3 = mApp->ReanimationTryToGet(mHeadReanimID3);
 
-		if (aHeadReanim2->mLoopCount > 0)
+		if (aHeadReanim2 && aHeadReanim2->mLoopCount > 0)
 		{
-			if (aHeadReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadReanim && aHeadReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				aHeadReanim->StartBlend(20);
 				aHeadReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
@@ -3338,7 +3349,7 @@ void Plant::UpdateShooting()
 			aHeadReanim2->mAnimRate = aBodyReanim->mAnimRate;
 			aHeadReanim2->mAnimTime = aBodyReanim->mAnimTime;
 
-			if (aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadReanim3 && aHeadReanim3->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				aHeadReanim3->StartBlend(20);
 				aHeadReanim3->mLoopType = ReanimLoopType::REANIM_LOOP;
@@ -3352,9 +3363,9 @@ void Plant::UpdateShooting()
 	}
 	else if (mSeedType == SeedType::SEED_SPLITPEA)
 	{
-		Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
+		Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
 
-		if (aHeadReanim->mLoopCount > 0)
+		if (aHeadReanim && aHeadReanim->mLoopCount > 0)
 		{
 			aHeadReanim->StartBlend(20);
 			aHeadReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
@@ -3363,7 +3374,7 @@ void Plant::UpdateShooting()
 			aHeadReanim->mAnimTime = aBodyReanim->mAnimTime;
 		}
 
-		if (aHeadReanim2->mLoopCount > 0)
+		if (aHeadReanim2 && aHeadReanim2->mLoopCount > 0)
 		{
 			aHeadReanim2->StartBlend(20);
 			aHeadReanim2->mLoopType = ReanimLoopType::REANIM_LOOP;
