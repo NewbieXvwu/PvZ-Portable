@@ -33,5 +33,20 @@
   "tests": "13 passed in 0.52s; includes refusing to overwrite an existing journal",
   "live_import_entry": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/import_mac_labels.py",
   "live_entry_guard_deployed": true,
-  "import_loop_restarted_by_recovery": false
+  "import_loop_restarted_by_recovery": false,
+  "closeout_readonly_check": {
+    "recorded_at": "2026-10-25T10:22:41.576313+08:00",
+    "historical_marker_labels": 377,
+    "historical_labels_present": 377,
+    "missing_labels": [],
+    "local_archives_observed": 51014,
+    "journal_rows_at_snapshot": 529,
+    "journal_snapshot_sha256": "78943a28b9cb9eb1243ff63829a348964dbd086cc95f5de3dd58690eef896ca0",
+    "all_historical_receipt_flags_retained": true,
+    "network_access": false,
+    "canonical_journal_writes": 0,
+    "frame_writes": 0,
+    "live_cq_script_has_reimport_guard": true
+  },
+  "import_loop_ownership": "controller; no loop edits or restarts performed by recovery agent"
 }

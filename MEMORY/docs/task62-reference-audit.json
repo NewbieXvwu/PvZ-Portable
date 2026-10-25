@@ -3606,21 +3606,24 @@
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_pressure.json",
    "location": "/day_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/day_panel.json"
+   "context": "artifacts/stage4/day_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v1.json",
    "location": "/day_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/day_panel.json"
+   "context": "artifacts/stage4/day_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v2.json",
    "location": "/day_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/day_panel.json"
+   "context": "artifacts/stage4/day_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
@@ -4047,21 +4050,24 @@
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_pressure.json",
    "location": "/night_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/night_panel.json"
+   "context": "artifacts/stage4/night_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v1.json",
    "location": "/night_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/night_panel.json"
+   "context": "artifacts/stage4/night_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v2.json",
    "location": "/night_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/night_panel.json"
+   "context": "artifacts/stage4/night_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
@@ -4733,21 +4739,24 @@
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_pressure.json",
    "location": "/pool_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/pool_panel.json"
+   "context": "artifacts/stage4/pool_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v1.json",
    "location": "/pool_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/pool_panel.json"
+   "context": "artifacts/stage4/pool_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v2.json",
    "location": "/pool_manifest",
    "kind": "recipe",
-   "context": "artifacts/stage4/pool_panel.json"
+   "context": "artifacts/stage4/pool_panel.json",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
@@ -5258,147 +5267,168 @@
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/early_fix_check.py",
    "location": "3",
    "kind": "script_text_main_candidate",
-   "context": "    python3 scripts/early_fix_check.py --student artifacts/student/v30/model.pt --seeds 30000:30256 --workers 2 \\"
+   "context": "    python3 scripts/early_fix_check.py --student artifacts/student/v30/model.pt --seeds 30000:30256 --workers 2 \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_counterfactual_audit.py",
    "location": "235",
    "kind": "script_default",
-   "context": "str(Path.home()/'PvZ-search/artifacts/student/v30/model.pt')"
+   "context": "str(Path.home()/'PvZ-search/artifacts/student/v30/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_counterfactual_audit.py",
    "location": "235",
    "kind": "script_resolved_path",
-   "context": "str(Path.home()/'PvZ-search/artifacts/student/v30/model.pt')"
+   "context": "str(Path.home()/'PvZ-search/artifacts/student/v30/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_counterfactual_audit.py",
    "location": "235",
    "kind": "script_resolved_path",
-   "context": "Path.home()/'PvZ-search/artifacts/student/v30/model.pt'"
+   "context": "Path.home()/'PvZ-search/artifacts/student/v30/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/watch_policy.py",
    "location": "20",
    "kind": "script_text_main_candidate",
-   "context": "    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student artifacts/student/v30/model.pt \\"
+   "context": "    PVZ_ENV_RENDER_EVERY=5 python scripts/watch_policy.py --visible --student artifacts/student/v30/model.pt \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v31/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/episode_query.py",
    "location": "24",
    "kind": "script_text_main_candidate",
-   "context": "    python3 scripts/episode_query.py capture --checkpoint artifacts/student/v31/model.pt \\"
+   "context": "    python3 scripts/episode_query.py capture --checkpoint artifacts/student/v31/model.pt \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v31/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/render_episode.py",
    "location": "20",
    "kind": "script_text_main_candidate",
-   "context": "    python3 scripts/render_episode.py --student artifacts/student/v31/model.pt \\"
+   "context": "    python3 scripts/render_episode.py --student artifacts/student/v31/model.pt \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v31/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/watch_policy.py",
    "location": "12",
    "kind": "script_text_main_candidate",
-   "context": "    python scripts/watch_policy.py --visible --student artifacts/student/v31/model.pt --deck 0,1,2,3,4,5,7 \\"
+   "context": "    python scripts/watch_policy.py --visible --student artifacts/student/v31/model.pt --deck 0,1,2,3,4,5,7 \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v32/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/eval_panel.py",
    "location": "17",
    "kind": "script_text_main_candidate",
-   "context": "  python3 scripts/eval_panel.py --rollout-policy artifacts/student/v32/model.pt \\"
+   "context": "  python3 scripts/eval_panel.py --rollout-policy artifacts/student/v32/model.pt \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v32/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/eval_panel.py",
    "location": "21",
    "kind": "script_text_main_candidate",
-   "context": "  python3 scripts/eval_panel.py --rollout-policy artifacts/student/v32/model.pt \\"
+   "context": "  python3 scripts/eval_panel.py --rollout-policy artifacts/student/v32/model.pt \\",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "24",
    "kind": "script_path_constant",
-   "context": "SOURCE / 'artifacts/student/v33/model.pt'"
+   "context": "SOURCE / 'artifacts/student/v33/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "24",
    "kind": "script_resolved_path",
-   "context": "SOURCE / 'artifacts/student/v33/model.pt'"
+   "context": "SOURCE / 'artifacts/student/v33/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "24",
    "kind": "script_text_main_candidate",
-   "context": "    model = SOURCE / 'artifacts/student/v33/model.pt'"
+   "context": "    model = SOURCE / 'artifacts/student/v33/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "27",
    "kind": "script_resolved_path",
-   "context": "str(model)"
+   "context": "str(model)",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "38",
    "kind": "script_resolved_path",
-   "context": "str(model)"
+   "context": "str(model)",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_conveyor_study.py",
    "location": "65",
    "kind": "script_resolved_path",
-   "context": "str(MAIN/'artifacts/student/v34/model.pt')"
+   "context": "str(MAIN/'artifacts/student/v34/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_conveyor_study.py",
    "location": "65",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/student/v34/model.pt'"
+   "context": "MAIN/'artifacts/student/v34/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_conveyor_study.py",
    "location": "65",
    "kind": "script_text_main_candidate",
-   "context": "    models = dict(v34=str(MAIN/'artifacts/student/v34/model.pt'),"
+   "context": "    models = dict(v34=str(MAIN/'artifacts/student/v34/model.pt'),",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_dw4_study.py",
    "location": "133",
    "kind": "script_resolved_path",
-   "context": "str(MAIN/'artifacts/student/v34/model.pt')"
+   "context": "str(MAIN/'artifacts/student/v34/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_dw4_study.py",
    "location": "133",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/student/v34/model.pt'"
+   "context": "MAIN/'artifacts/student/v34/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_dw4_study.py",
    "location": "133",
    "kind": "script_text_main_candidate",
-   "context": "    models=dict(identity=str(MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'),v34=str(MAIN/'artifacts/student/v34/model.pt'))"
+   "context": "    models=dict(identity=str(MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'),v34=str(MAIN/'artifacts/student/v34/model.pt'))",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v3all/model.pt",
@@ -5489,350 +5519,403 @@
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_pressure.json",
    "location": "/value",
    "kind": "recipe",
-   "context": "artifacts/value_net/v3/model.pt"
+   "context": "artifacts/value_net/v3/model.pt",
+   "dependency_status": "obsolete_reference_per_controller",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v1.json",
    "location": "/value",
    "kind": "recipe",
-   "context": "artifacts/value_net/v3/model.pt"
+   "context": "artifacts/value_net/v3/model.pt",
+   "dependency_status": "obsolete_reference_per_controller",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/panel_v2.json",
    "location": "/value",
    "kind": "recipe",
-   "context": "artifacts/value_net/v3/model.pt"
+   "context": "artifacts/value_net/v3/model.pt",
+   "dependency_status": "obsolete_reference_per_controller",
+   "consumer_status": "obsolete_recipe_not_in_production_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_noninferiority.py",
    "location": "361",
    "kind": "script_default",
-   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_noninferiority.py",
    "location": "361",
    "kind": "script_resolved_path",
-   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_noninferiority.py",
    "location": "361",
    "kind": "script_resolved_path",
-   "context": "MAIN / 'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN / 'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_noninferiority.py",
    "location": "361",
    "kind": "script_text_main_candidate",
-   "context": "    p.add_argument('--value', default=str(MAIN / 'artifacts/value_net/v3/model.pt'))"
+   "context": "    p.add_argument('--value', default=str(MAIN / 'artifacts/value_net/v3/model.pt'))",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_round2_arms.py",
    "location": "188",
    "kind": "script_default",
-   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_round2_arms.py",
    "location": "188",
    "kind": "script_resolved_path",
-   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN / 'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_round2_arms.py",
    "location": "188",
    "kind": "script_resolved_path",
-   "context": "MAIN / 'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN / 'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/b3_round2_arms.py",
    "location": "188",
    "kind": "script_text_main_candidate",
-   "context": "    p.add_argument('--value', default=str(MAIN / 'artifacts/value_net/v3/model.pt'))"
+   "context": "    p.add_argument('--value', default=str(MAIN / 'artifacts/value_net/v3/model.pt'))",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/bench_engine.py",
    "location": "58",
    "kind": "script_resolved_path",
-   "context": "str(Path.home() / \"PvZ-search\" / \"artifacts\" / \"value_net\" / \"v3\" / \"model.pt\")"
+   "context": "str(Path.home() / \"PvZ-search\" / \"artifacts\" / \"value_net\" / \"v3\" / \"model.pt\")",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/bench_engine.py",
    "location": "58",
    "kind": "script_resolved_path",
-   "context": "Path.home() / \"PvZ-search\" / \"artifacts\" / \"value_net\" / \"v3\" / \"model.pt\""
+   "context": "Path.home() / \"PvZ-search\" / \"artifacts\" / \"value_net\" / \"v3\" / \"model.pt\"",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/bench_qc_collection.py",
    "location": "133",
    "kind": "script_resolved_path",
-   "context": "MAIN / 'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN / 'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/bench_qc_collection.py",
    "location": "133",
    "kind": "script_text_main_candidate",
-   "context": "                    old_value=MAIN / 'artifacts/value_net/v3/model.pt',"
+   "context": "                    old_value=MAIN / 'artifacts/value_net/v3/model.pt',",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/check_panel_type_counts.py",
    "location": "52",
    "kind": "script_resolved_path",
-   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/check_panel_type_counts.py",
    "location": "52",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/check_panel_type_counts.py",
    "location": "52",
    "kind": "script_text_main_candidate",
-   "context": "                   '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),"
+   "context": "                   '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/dagger_dilution_eval.py",
    "location": "86",
    "kind": "script_resolved_path",
-   "context": "str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt')"
+   "context": "str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/dagger_dilution_eval.py",
    "location": "86",
    "kind": "script_resolved_path",
-   "context": "Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt'"
+   "context": "Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_conveyor_study.py",
    "location": "67",
    "kind": "script_resolved_path",
-   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_conveyor_study.py",
    "location": "67",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_conveyor_study.py",
    "location": "67",
    "kind": "script_text_main_candidate",
-   "context": "        value=str(MAIN/'artifacts/value_net/v3/model.pt'),"
+   "context": "        value=str(MAIN/'artifacts/value_net/v3/model.pt'),",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "40",
    "kind": "script_resolved_path",
-   "context": "str(SOURCE / 'artifacts/value_net/v3/model.pt')"
+   "context": "str(SOURCE / 'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "40",
    "kind": "script_resolved_path",
-   "context": "SOURCE / 'artifacts/value_net/v3/model.pt'"
+   "context": "SOURCE / 'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_identity_smoke.py",
    "location": "40",
    "kind": "script_text_main_candidate",
-   "context": "                       '--value', str(SOURCE / 'artifacts/value_net/v3/model.pt'), '--manifest', str(args.manifest),"
+   "context": "                       '--value', str(SOURCE / 'artifacts/value_net/v3/model.pt'), '--manifest', str(args.manifest),",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "32",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "32",
    "kind": "script_text_main_candidate",
-   "context": "                    value_sha256=sha(MAIN/'artifacts/value_net/v3/model.pt'),"
+   "context": "                    value_sha256=sha(MAIN/'artifacts/value_net/v3/model.pt'),",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "45",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "45",
    "kind": "script_text_main_candidate",
-   "context": "    assert sha(MAIN/'artifacts/value_net/v3/model.pt') == data['value_sha256']"
+   "context": "    assert sha(MAIN/'artifacts/value_net/v3/model.pt') == data['value_sha256']",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "65",
    "kind": "script_resolved_path",
-   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "65",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/run_task27_pretraining.py",
    "location": "65",
    "kind": "script_text_main_candidate",
-   "context": "                   '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),"
+   "context": "                   '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_attribution_trace.py",
    "location": "84",
    "kind": "script_default",
-   "context": "str(base/'value_net/v3/model.pt')"
+   "context": "str(base/'value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_attribution_trace.py",
    "location": "84",
    "kind": "script_resolved_path",
-   "context": "str(base/'value_net/v3/model.pt')"
+   "context": "str(base/'value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_attribution_trace.py",
    "location": "84",
    "kind": "script_resolved_path",
-   "context": "base/'value_net/v3/model.pt'"
+   "context": "base/'value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_counterfactual_audit.py",
    "location": "236",
    "kind": "script_default",
-   "context": "str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt')"
+   "context": "str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_counterfactual_audit.py",
    "location": "236",
    "kind": "script_resolved_path",
-   "context": "str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt')"
+   "context": "str(Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/teacher_counterfactual_audit.py",
    "location": "236",
    "kind": "script_resolved_path",
-   "context": "Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt'"
+   "context": "Path.home()/'PvZ-search/artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/train_value_widen.py",
    "location": "338",
    "kind": "script_default",
-   "context": "Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt')"
+   "context": "Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/train_value_widen.py",
    "location": "338",
    "kind": "script_resolved_path",
-   "context": "Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt')"
+   "context": "Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_leaf_dispersion.py",
    "location": "158",
    "kind": "script_default",
-   "context": "MAIN / 'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN / 'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_leaf_dispersion.py",
    "location": "158",
    "kind": "script_resolved_path",
-   "context": "MAIN / 'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN / 'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_leaf_dispersion.py",
    "location": "158",
    "kind": "script_text_main_candidate",
-   "context": "    p.add_argument('--v3', type=Path, default=MAIN / 'artifacts/value_net/v3/model.pt')"
+   "context": "    p.add_argument('--v3', type=Path, default=MAIN / 'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_widen_ab.py",
    "location": "102",
    "kind": "script_default",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_widen_ab.py",
    "location": "102",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_widen_ab.py",
    "location": "102",
    "kind": "script_text_main_candidate",
-   "context": "    p.add_argument('--baseline',type=Path,default=MAIN/'artifacts/value_net/v3/model.pt',"
+   "context": "    p.add_argument('--baseline',type=Path,default=MAIN/'artifacts/value_net/v3/model.pt',",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_widen_collect.py",
    "location": "21",
    "kind": "script_resolved_path",
-   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')"
+   "context": "str(MAIN/'artifacts/value_net/v3/model.pt')",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_widen_collect.py",
    "location": "21",
    "kind": "script_resolved_path",
-   "context": "MAIN/'artifacts/value_net/v3/model.pt'"
+   "context": "MAIN/'artifacts/value_net/v3/model.pt'",
+   "dependency_status": "obsolete_reference_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
    "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/value_widen_collect.py",
    "location": "21",
    "kind": "script_text_main_candidate",
-   "context": "            '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),"
+   "context": "            '--value',str(MAIN/'artifacts/value_net/v3/model.pt'),",
+   "dependency_status": "obsolete_reference_per_controller"
   }
  ],
  "summary": {
@@ -5849,7 +5932,7 @@
   "deleted_c6_paths_still_missing": 18
  },
  "inventory_file": "task62-reference-audit.tsv",
- "inventory_sha256": "c510c84fcd4801dc99603e6307dba6a3375ce885c347e93dfc23da147a79b210",
+ "inventory_sha256": "e9593341a6ed9c84898a856dc1e9ebe429987f65dcaec7ac603e0c883cc02e6b",
  "audit_command": [
   "python3",
   "-B",
@@ -5947,7 +6030,41 @@
   "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json": true,
   "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json": true
  },
- "unresolved_checkpoints": [
+ "unresolved_original_manifests": [
+  "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
+  "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_l12_n1.json"
+ ],
+ "unresolved_historical_games": {
+  "paths": [
+   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l7_d7_256",
+   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l8_d7_256",
+   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l9_d7_256",
+   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l10_d7_256"
+  ],
+  "required_files": [
+   "config.json",
+   "games.jsonl"
+  ],
+  "historical_verification_hashes": "MEMORY/docs/task19-dw3s1-reference.json"
+ },
+ "known_original_checkpoint_sha256": {
+  "student/dw3s1/model.pt": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+  "student/v34/model.pt": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
+  "value_net/v3/model.pt": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a"
+ },
+ "checkpoint_hash_provenance": [
+  "MEMORY/docs/task19-dw3s1-reference.json",
+  "MEMORY/docs/task20-study-plan.json"
+ ],
+ "pipeline_impact": [
+  "Formal frames_v2 and pipeline round/student state were preserved; no restoration writes there.",
+  "Deleted config/games/summary timing records cannot be reconstructed exactly from surviving frame metadata.",
+  "A future init_from_runs from missing historical output directories cannot reconstruct the complete old windows and offsets; surviving curriculum_state must be retained.",
+  "The 18 deleted c6 paths remain absent at this audit. Other c6 paths generated after the master restart are not evidence of restoration of these originals.",
+  "No qc controller operation, collection, evaluation, model training, upload, or deletion performed in this recovery follow-up."
+ ],
+ "df_B1": "Filesystem         1B-blocks        Used    Available Use% Mounted on\n/dev/sdd       1081101176832 90585755648 935523065856   9% /\n",
+ "historical_missing_checkpoints": [
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v2/model.pt",
    "reference_ids": [
@@ -5955,7 +6072,8 @@
     435
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "historical_loss_record_only_no_further_copy_search_in_this_closeout"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3/model.pt",
@@ -6000,7 +6118,8 @@
     489
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "obsolete_reference_no_restore_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/identity_dw3_s1/model.pt",
@@ -6008,7 +6127,8 @@
     403
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "historical_loss_record_only_no_further_copy_search_in_this_closeout"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v34/model.pt",
@@ -6019,7 +6139,8 @@
     427
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "obsolete_reference_no_restore_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v29/model.pt",
@@ -6029,7 +6150,8 @@
     407
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "historical_loss_record_only_no_further_copy_search_in_this_closeout"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw3s1/model.pt",
@@ -6039,7 +6161,8 @@
     402
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "historical_loss_record_only_no_further_copy_search_in_this_closeout"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v33/model.pt",
@@ -6050,7 +6173,8 @@
     422
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "obsolete_reference_no_restore_per_controller"
   },
   {
    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/v30/model.pt",
@@ -6060,41 +6184,26 @@
     411
    ],
    "restored": false,
-   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy."
+   "reason": "No exact copy found in inspected preserved artifact directories, HF cache, or small pvz-logs checkpoints; not tracked in Git. Need original external copy.",
+   "closure_status": "obsolete_reference_no_restore_per_controller"
   }
  ],
- "unresolved_original_manifests": [
-  "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_l7_hard.json",
-  "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_l12_n1.json"
- ],
- "unresolved_historical_games": {
-  "paths": [
-   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l7_d7_256",
-   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l8_d7_256",
-   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l9_d7_256",
-   "/home/newbiexvwu/PvZ-search/artifacts/day_panel/dw3s1_l10_d7_256"
+ "controller_closeout": {
+  "recorded_at": "2026-10-25T10:22:41.576313+08:00",
+  "confirmed_obsolete_paths": [
+   "/home/newbiexvwu/PvZ-search/artifacts/value_net/v3",
+   "/home/newbiexvwu/PvZ-search/artifacts/student/v30",
+   "/home/newbiexvwu/PvZ-search/artifacts/student/v31",
+   "/home/newbiexvwu/PvZ-search/artifacts/student/v32",
+   "/home/newbiexvwu/PvZ-search/artifacts/student/v33",
+   "/home/newbiexvwu/PvZ-search/artifacts/student/v34"
   ],
-  "required_files": [
-   "config.json",
-   "games.jsonl"
-  ],
-  "historical_verification_hashes": "MEMORY/docs/task19-dw3s1-reference.json"
- },
- "known_original_checkpoint_sha256": {
-  "student/dw3s1/model.pt": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
-  "student/v34/model.pt": "093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877",
-  "value_net/v3/model.pt": "5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a"
- },
- "checkpoint_hash_provenance": [
-  "MEMORY/docs/task19-dw3s1-reference.json",
-  "MEMORY/docs/task20-study-plan.json"
- ],
- "pipeline_impact": [
-  "Formal frames_v2 and pipeline round/student state were preserved; no restoration writes there.",
-  "Deleted config/games/summary timing records cannot be reconstructed exactly from surviving frame metadata.",
-  "A future init_from_runs from missing historical output directories cannot reconstruct the complete old windows and offsets; surviving curriculum_state must be retained.",
-  "The 18 deleted c6 paths remain absent at this audit. Other c6 paths generated after the master restart are not evidence of restoration of these originals.",
-  "No qc controller operation, collection, evaluation, model training, upload, or deletion performed in this recovery follow-up."
- ],
- "df_B1": "Filesystem         1B-blocks        Used    Available Use% Mounted on\n/dev/sdd       1081101176832 90585755648 935523065856   9% /\n"
+  "production_recipe": "dw4i2",
+  "production_leaf_value": "v5",
+  "production_student": "current pipeline student",
+  "controller_evidence": "Promotion gates completed six rounds overnight normally; reported by controller, not rerun by recovery agent.",
+  "action": "Do not restore value_net/v3 or student/v30-v34; do not search for copies. Record historical losses and close journal verification/reference audit.",
+  "import_loop_owner": "controller; recovery agent does not modify or restart mac_import_loop.sh",
+  "status": "journal verification and reference audit closed; no pending backup search"
+ }
 }
