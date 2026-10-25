@@ -10,7 +10,10 @@
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
-- [分工与 codex / CUDA 执行记录约定](notes/workflow.md)
+- [分工与 codex](notes/workflow.md)
+- [回放 RL 检查点的硬规则 / 任务名陷阱](notes/replay.md)
+- [奖励与训练机制](notes/training.md)
+- [主问题：熵爆炸崩溃](notes/entropy.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)
@@ -33,21 +36,9 @@
 - [2026-10-15](2026-10-15.md)
 - [2026-10-16](2026-10-16.md)
 - [2026-10-17](2026-10-17.md)
-- [2026-10-18](2026-10-18.md)
-- [2026-10-19](2026-10-19.md)
-- [2026-10-20](2026-10-20.md)
-- [2026-10-21](2026-10-21.md)
-- [2026-10-24](2026-10-24.md)
 
 ## 历史报告（`docs/`）
 
-- [雾夜冷启动的卡组面板：L31 是卡组问题，L32–34 不是](docs/fog-user-decks.md)
-- [从示范中途让老师接手：12 个接手点的胜率与输局归因](docs/demo-start-states.md)
-- [课程后台管线与学生晋升门禁](docs/task49-qc-idle-pack.md)
-- [task49A 验收证据](docs/task49-A-evidence.json)
-- [CUDA 续走：设计与实测](docs/cuda-rollout-report.md)
-- [CUDA 合并待审说明](docs/cuda-merge-notes.md)
-- [CUDA 阶段 1 语料](docs/cuda-corpus-phase1.md)
 - [codex-night-plan.md](docs/codex-night-plan.md)
 - [codex-night-plan-v2.md](docs/codex-night-plan-v2.md)
 - [codex-night-plan-v4.md](docs/codex-night-plan-v4.md)
@@ -70,32 +61,10 @@
 - [night-report-final.md](docs/night-report-final.md)
 - [n2-progress.txt](docs/n2-progress.txt)
 - [reports/codex-night-report-2026-10-10.md](docs/reports/codex-night-report-2026-10-10.md)
+- [heldout-regression.md](docs/heldout-regression.md)
 
 ## 自动化记忆
 
 - [automations/a2607a07-…](automations/a2607a07-1ecd-40c9-b059-afa3234da37f/memory.md)
 - [automations/436f3e5c-…](automations/436f3e5c-d5b1-48a8-b561-e865920da1d4/memory.md)
 - [automations/938705e9-…](automations/938705e9-2dd7-4c5b-80e5-2ffbc2a64aac/memory.md)
-
-- [teacher-candidate-coverage.md](docs/teacher-candidate-coverage.md)
-
-- [static-value-branch1-compare.md](docs/static-value-branch1-compare.md)
-
-- [static-value-ablation.md](docs/static-value-ablation.md)
-
-- [dagger-data-dilution.md](docs/dagger-data-dilution.md)
-
-- [task19-identity-packets.md](docs/task19-identity-packets.md)
-- [task19-engineering-validation.json](docs/task19-engineering-validation.json)
-- [task19-identity-results.json](docs/task19-identity-results.json)
-
-- [task20-conveyor-fidelity.md](docs/task20-conveyor-fidelity.md)
-- [day-panel.md](docs/day-panel.md)
-
-- [2026-10-22](2026-10-22.md)
-
-- [task23-dw4i-unified-panel.md](docs/task23-dw4i-unified-panel.md)
-
-- [unified-panel.md](docs/unified-panel.md)
-
-- [task68-fog31-snow-qc.md](docs/task68-fog31-snow-qc.md)
