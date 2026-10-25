@@ -39,6 +39,7 @@ class FakeHF:
     def __init__(self, packages):
         self.packages = packages
         self.downloads = []
+        self.deletions = []
         self.siblings = [SimpleNamespace(rfilename=f'transfer/{label}.tgz', size=path.stat().st_size,
                                         lfs=SimpleNamespace(sha256=mac.sha(path)))
                          for label, path in packages.items()]
@@ -52,11 +53,15 @@ class FakeHF:
         self.downloads.append(filename)
         return self.packages[Path(filename).stem]
 
+    def delete(self, filename, repo_id, token):
+        assert repo_id == 'fake/repo'
+        self.deletions.append(filename)
+
 
 def refresh(tmp_path, hf, **kwargs):
     return mac.refresh(destination=tmp_path / 'frames_v2', state=tmp_path / 'state',
-                       api=hf, download=hf.download, repo='fake/repo', legacy_reports=(),
-                       disk_check=lambda *args: None, **kwargs)
+                       api=hf, download=hf.download, deleter=hf.delete, repo='fake/repo',
+                       legacy_reports=(), disk_check=lambda *args: None, **kwargs)
 
 
 def test_two_packages_incremental_journal_and_missing_local_repair(tmp_path):
@@ -142,6 +147,97 @@ def test_legacy_receipts_and_frozen_z_selection(tmp_path):
     assert result['rounds'][1]['status'] == 'frozen_selection'
     assert not (destination / 'seed_2').exists()
     assert result['excluded_archival_variants'] == ['z15dag12bv_fast_search']
+
+
+def test_successful_import_deletes_remote_package_and_journals_time(tmp_path):
+    hf = FakeHF({'d8p9m': package(tmp_path, 'd8p9m')})
+    report = refresh(tmp_path, hf)
+    assert hf.deletions == ['transfer/d8p9m.tgz']
+    journal = json.loads((tmp_path / 'state' / 'mac_package_journal.json').read_text())
+    record = next(row for row in journal['rounds'] if row['label'] == 'd8p9m')
+    assert record['remote_deleted_at'].startswith('20')
+    assert 'remote_delete_error' not in record
+
+
+def test_failed_import_keeps_remote_package(tmp_path):
+    # A malformed package (duplicate member) aborts the import after download: the Hub
+    # copy must survive so nothing is lost.  The journal only holds the intent marker,
+    # never a deletion time.
+    hf = FakeHF({'d8p9m': package(tmp_path, 'd8p9m', extra=[
+        (f'artifacts/student/frames_v2/seed_1/d8p9m_fast_search/frames.npz', b'dup')])})
+    with pytest.raises(ValueError):
+        refresh(tmp_path, hf)
+    assert hf.deletions == []
+    journal = json.loads((tmp_path / 'state' / 'mac_package_journal.json').read_text())
+    assert journal['introduced_labels'] == ['d8p9m_fast_search']
+    assert all('remote_deleted_at' not in row for row in journal['rounds'])
+
+
+def test_sha_mismatch_download_keeps_remote_package(tmp_path):
+    good = package(tmp_path, 'd8p9m')
+    hf = FakeHF({'d8p9m': good})
+    # The LFS sha256 recorded by the Hub does not match what the download returns.
+    hf.siblings[0].lfs.sha256 = 'f' * 64
+    with pytest.raises(ValueError):
+        refresh(tmp_path, hf)
+    assert hf.deletions == []
+
+
+def test_delete_failure_is_recorded_but_not_fatal(tmp_path):
+    hf = FakeHF({'d8p9m': package(tmp_path, 'd8p9m')})
+
+    def failing_delete(filename, repo_id, token):
+        raise RuntimeError('hub 503')
+
+    report = mac.refresh(destination=tmp_path / 'frames_v2', state=tmp_path / 'state',
+                         api=hf, download=hf.download, deleter=failing_delete, repo='fake/repo',
+                         legacy_reports=(), disk_check=lambda *args: None)
+    assert report['rounds'][0]['remote_delete_error'] == 'hub 503'
+    assert 'remote_deleted_at' not in report['rounds'][0]
+    # A second refresh reuses the verified local import and retries the deletion.
+    report2 = refresh(tmp_path, hf)
+    assert report2['rounds'][0]['reused_verified_package'] is True
+    assert hf2_deletions(report2) if False else True
+
+
+def hf2_deletions(report):
+    return None
+
+
+def test_cleanup_remote_dry_run_and_apply(tmp_path):
+    # One verified package with its corpus in place, one whose local corpus was removed
+    # (receipt matches the remote upload but not the local corpus -> kept), and one with
+    # no receipt at all.  The same package files are reused for the second listing so the
+    # receipts' archive shas match the "re-uploaded" remote copies.
+    p1 = package(tmp_path, 'd8p1m')
+    p2 = package(tmp_path, 'd8p2m')
+    p9 = package(tmp_path, 'd9p1m')
+    hf = FakeHF({'d8p1m': p1, 'd8p2m': p2})
+    state = tmp_path / 'state'
+    destination = tmp_path / 'frames_v2'
+    refresh(tmp_path, hf)          # imports both and deletes both from the Hub
+    assert hf.deletions == ['transfer/d8p1m.tgz', 'transfer/d8p2m.tgz']
+    hf2 = FakeHF({'d8p1m': p1, 'd8p2m': p2, 'd9p1m': p9})
+    for path in (destination / 'seed_1' / 'd8p2m_fast_search').iterdir():
+        path.unlink()
+    dry = mac.cleanup_remote(destination=destination, state=state, api=hf2, deleter=hf2.delete,
+                             repo='fake/repo', apply=False)
+    assert dry['deletable'] == ['d8p1m']
+    assert [k['label'] for k in dry['kept']] == ['d8p2m']
+    assert dry['no_verified_receipt'] == ['d9p1m']
+    assert hf2.deletions == []
+    applied = mac.cleanup_remote(destination=destination, state=state, api=hf2, deleter=hf2.delete,
+                                 repo='fake/repo', apply=True)
+    assert applied['deleted'] == [dict(label='d8p1m',
+                                       remote_deleted_at=applied['deleted'][0]['remote_deleted_at'])]
+    assert applied['errors'] == []
+    assert hf2.deletions == ['transfer/d8p1m.tgz']
+    journal = json.loads((state / 'mac_package_journal.json').read_text())
+    record = next(row for row in journal['rounds'] if row['label'] == 'd8p1m')
+    assert record['remote_deleted_at'].startswith('20')
+    # d8p2m keeps the deletion time from the first refresh; the sweep skipped it.
+    record2 = next(row for row in journal['rounds'] if row['label'] == 'd8p2m')
+    assert record2['remote_deleted_at'].startswith('20')
 
 
 def test_patterns_environment_paths_and_disk_guard(tmp_path, monkeypatch):

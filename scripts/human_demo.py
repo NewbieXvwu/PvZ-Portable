@@ -125,8 +125,25 @@ class Recorder:
 
 
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
-           save: Path | None = None):
+           save: Path | None = None, *, strict_hashes: bool | None = None):
     meta = json.loads((archive / 'meta.json').read_text())
+    # task70: state-hash equality only holds when the replaying engine is the one that
+    # recorded the archive.  task63 changed the FIELD_SHAKE seeding inside the SaveGame
+    # image, so an archive recorded by a pre-task63 engine (or rebaselined by deploy3)
+    # hashes differently under deploy4 even though every observable field is identical.
+    # The archive's executable_sha256 selects the verification mode: same engine -> the
+    # full per-operation hash check; different engine -> the engine-independent fields
+    # (tick timeline, per-operation ok, terminal outcome) are still enforced, and the
+    # relaxed mode is recorded on the returned meta so it is never silent.
+    current_sha = (hashlib.sha256(Path(env.executable).read_bytes()).hexdigest()
+                   if getattr(env, 'executable', None) else None)
+    recorded_sha = meta.get('executable_sha256')
+    if strict_hashes is None:
+        strict_hashes = not recorded_sha or recorded_sha == current_sha
+    meta['hash_verification'] = (
+        'per-operation state hash' if strict_hashes else
+        'tick/ok/outcome only: archive recorded by engine '
+        + (recorded_sha or 'unknown')[:12] + ', replayed by ' + (current_sha or 'unknown')[:12])
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
@@ -140,7 +157,7 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
         recorder = Recorder(env, save, meta['task']['id'], meta['task']['deck'], TaskSpec(**config),
                             meta.get('note', ''), label_source='counterfactual')
         obs = recorder.observation
-    if env._last_response['state_hash'] != meta['initial_state_hash']:
+    if strict_hashes and env._last_response['state_hash'] != meta['initial_state_hash']:
         raise RuntimeError('demonstration initial state hash differs')
     replacements = {frames[index - 1]['operation'] + 1: (frames[index]['operation'], action)
                     for index, action in (overrides or {}).items()}
@@ -182,8 +199,9 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
                 frame.update(action=action if action['type'] in ('plant', 'wait') else None,
                              action_rejected=not info['ok'], label_source='counterfactual')
                 changed_frames.append(frame)
-            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick'] or
-                                 env._last_response['state_hash'] != entry['state_hash']):
+            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick']
+                                 or (strict_hashes
+                                     and env._last_response['state_hash'] != entry['state_hash'])):
                 raise RuntimeError(f'demonstration state hash differs at operation {operation}, tick {obs["tick"]}')
             if obs['terminal'] and diverged:
                 break

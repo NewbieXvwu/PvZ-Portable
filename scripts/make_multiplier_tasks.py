@@ -65,10 +65,18 @@ ROOF_MULT_STRIDE = 100_000
 # multiplier bands start at 43_100_000.
 FOG_USER_MULT_SEED_BASE = 43_100_000
 FOG_USER_MULT_STRIDE = 100_000
+
+# task70: fog_user_v2 (same deck/level as fog_user, fog_observation human_v2) is another
+# independent block. 48.52M-50M is the first free window above roof (verified against all
+# 1.67M seeds already present in the repository manifests): base task keeps
+# 49_000_000..49_008_191, eval sibling 49_100_000..49_100_031, multiplier bands 49_200_000+.
+FOG_USER_V2_MULT_SEED_BASE = 49_200_000
+FOG_USER_V2_MULT_STRIDE = 100_000
 INDEPENDENT_BLOCKS = {
     # family -> (multiplier seed base, band width, first level of the block)
     'roof': (ROOF_MULT_SEED_BASE, ROOF_MULT_STRIDE, 41),
     'fog_user': (FOG_USER_MULT_SEED_BASE, FOG_USER_MULT_STRIDE, 31),
+    'fog_user_v2': (FOG_USER_V2_MULT_SEED_BASE, FOG_USER_V2_MULT_STRIDE, 31),
 }
 
 DAY_D7_LEVELS = (1, 3, 4, 6, 7, 8, 9)
@@ -94,6 +102,10 @@ FAMILIES = (
     ('roof', 'roof', 'roof_l{level}_train_r7', ROOF_LEVELS, 'roof'),
     # task68: the only fog cold-start family above 50% (teacher 25/32, task67).
     ('fog_user', 'fog_user', 'fog_user_l{level}_snow', (31,), 'fog'),
+    # task70: same deck/level/multipliers as fog_user, but the fog observation is human_v2
+    # (task66 rendered-opacity rule). Observation is a family property (AGENTS.md section 8),
+    # so this is a new family with a fresh seed block; fog_user is superseded below.
+    ('fog_user_v2', 'fog_user_v2', 'fog_user_v2_l{level}_snow', (31,), 'fog'),
 )
 
 # Registry coverage and curriculum admission are separate: unmeasured roof levels have
@@ -103,11 +115,13 @@ FAMILIES = (
 # task68: fog_user L31 is admitted at multiplier 1.0 (task67 teacher 25/32 = 78.1%, paired
 # p<1e-6 against 0/32 for the fog_f8 deck on the same seeds). The task45 fog_f8/f8p families
 # stay outside the curriculum: they were never measured above 50%.
-CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user': (31,)}
+# task70: fog_user_v2 replaces fog_user in the curriculum once its own teacher cold start
+# (32 human_v2 games) is on file; the old family keeps its manifest, seeds and data.
+CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user_v2': (31,)}
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。
-SUPERSEDED = {'night_n10p': 'night_n10q'}
+SUPERSEDED = {'night_n10p': 'night_n10q', 'fog_user': 'fog_user_v2'}
 
 
 def variant_id(base_id: str, suffix: str) -> str:
@@ -139,6 +153,8 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'fog': overrides.get('fog') or ROOT / 'artifacts/task45/fog_panel.json',
         # task68: local manifest from scripts/make_fog_user_panel.py (not in git).
         'fog_user': overrides.get('fog_user') or ROOT / 'artifacts/task68/fog_user_panel.json',
+        # task70: local manifest from scripts/make_fog_user_v2_panel.py (not in git).
+        'fog_user_v2': overrides.get('fog_user_v2') or ROOT / 'artifacts/task70/fog_user_v2_panel.json',
     }
 
 

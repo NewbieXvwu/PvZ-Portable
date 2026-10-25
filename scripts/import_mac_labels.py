@@ -44,6 +44,39 @@ def hf_environment():
     return repo
 
 
+def utc_now():
+    from datetime import datetime, timezone
+    return datetime.now(timezone.utc).isoformat(timespec='seconds')
+
+
+def default_delete_file(path_in_repo, *, repo_id, token):
+    """huggingface_hub.delete_file, imported lazily like the rest of the HF surface."""
+    from huggingface_hub import delete_file
+    delete_file(path_in_repo, repo_id=repo_id, token=token)
+
+
+def delete_remote(record, *, repo, token, deleter=None):
+    """Delete one verified package from HF and journal the deletion time.
+
+    Failures are recorded on the record (never silent) and the package simply stays
+    on the Hub; the next refresh/cleanup retries it.
+    """
+    try:
+        (deleter or default_delete_file)(record['remote_path'], repo_id=repo, token=token)
+    except Exception as error:  # noqa: BLE001 - every failure mode must land in the journal
+        record['remote_delete_error'] = str(error)
+        record.pop('remote_deleted_at', None)
+        return False
+    record.pop('remote_delete_error', None)
+    record['remote_deleted_at'] = utc_now()
+    return True
+
+
+def verified_import(record):
+    """True when the journal receipt proves this exact package was imported and verified."""
+    return bool(record.get('archive_sha256')) and record.get('status') != 'frozen_selection'
+
+
 def sha(path):
     digest = hashlib.sha256()
     with Path(path).open('rb') as source:
@@ -205,7 +238,8 @@ def import_lock(state):
 
 
 def refresh(*, destination=DESTINATION, state=STATE, labels=None, legacy_reports=LEGACY_REPORTS,
-            api=None, download=None, repo=None, disk_check=check_disk):
+            api=None, download=None, repo=None, disk_check=check_disk, deleter=None,
+            delete_remote_packages=True):
     """Snapshot HF once, reconcile legacy records, checkpoint each completed label."""
     from huggingface_hub import HfApi, hf_hub_download
     destination, state = absolute(destination), absolute(state)
@@ -277,12 +311,87 @@ def refresh(*, destination=DESTINATION, state=STATE, labels=None, legacy_reports
                 result['reused_verified_package'] = False
             known[label] = result
             checkpoint(state / 'mac_package_journal.json', list(known.values()))
+            # The package is now provably imported (or re-verified against the local corpus);
+            # the Hub copy is redundant.  Frozen selections were never verified, so they stay.
+            if delete_remote_packages and verified_import(result) and label in entries:
+                if delete_remote(result, repo=repo, token=os.environ.get('HF_TOKEN') or False,
+                                 deleter=deleter):
+                    entries.pop(label, None)
+                checkpoint(state / 'mac_package_journal.json', list(known.values()))
             records.append(result)
-            print(json.dumps({key: result[key] for key in ('label', 'archives', 'refresh_added_files')}
-                             | ({'rows': result['rows']} if 'rows' in result else {})), flush=True)
+            summary = {key: result[key] for key in ('label', 'archives', 'refresh_added_files')}
+            if 'rows' in result:
+                summary['rows'] = result['rows']
+            if result.get('remote_deleted_at'):
+                summary['remote_deleted_at'] = result['remote_deleted_at']
+            if result.get('remote_delete_error'):
+                summary['remote_delete_error'] = result['remote_delete_error']
+            print(json.dumps(summary), flush=True)
         report = checkpoint(state / 'mac_import.json', records)
         report['added_files_this_refresh'] = sum(row['refresh_added_files'] for row in records)
         write(state / 'mac_import.json', report)
+        return report
+
+
+def cleanup_remote(*, destination=DESTINATION, state=STATE, legacy_reports=LEGACY_REPORTS,
+                   api=None, repo=None, deleter=None, apply=False):
+    """One-time sweep: delete HF transfer/ packages whose receipts prove a verified import.
+
+    A package is deleted only when the journal receipt carries the archive sha of the
+    current remote upload AND the local corpus still matches that receipt
+    (local_matches).  Everything else is listed as kept, never silently dropped.
+    Dry-run by default; apply=True deletes and journals the deletion times.
+    """
+    from huggingface_hub import HfApi
+    destination, state = absolute(destination), absolute(state)
+    repo = repo or hf_environment()
+    api = api if api is not None else HfApi(token=os.environ.get('HF_TOKEN') or False)
+    token = os.environ.get('HF_TOKEN') or False
+    with import_lock(state):
+        info = api.model_info(repo, files_metadata=True)
+        entries = {label: entry for entry in info.siblings
+                   if (label := label_from_remote(entry.rfilename))}
+        known = {}
+        for report in (*legacy_reports, state / 'mac_package_journal.json', state / 'mac_import.json'):
+            if not Path(report).exists():
+                continue
+            data = read(report)
+            # A receipt from another corpus/repository cannot authorize a deletion here.
+            if (data.get('destination', str(DESTINATION)) != str(destination)
+                    or data.get('repo', repo) != repo):
+                continue
+            known.update({row['label']: row for row in data.get('rounds', [])})
+        deletable, kept, no_receipt = [], [], []
+        for label in sorted(entries):
+            record = known.get(label)
+            remote_sha = getattr(entries[label].lfs, 'sha256', None)
+            if not record or not verified_import(record) or record.get('archive_sha256') != remote_sha:
+                no_receipt.append(label)
+                continue
+            if not local_matches(destination, label, record):
+                kept.append(dict(label=label, reason='local corpus does not match the receipt'))
+                continue
+            deletable.append(label)
+        report = dict(repo=repo, revision=info.sha, apply=apply, deletable=deletable,
+                      kept=kept, no_verified_receipt=no_receipt, deleted=[], errors=[])
+        if apply:
+            updated = {}
+            for label in deletable:
+                record = dict(known[label], remote_path=f'transfer/{label}.tgz')
+                if delete_remote(record, repo=repo, token=token, deleter=deleter):
+                    report['deleted'].append(dict(label=label, remote_deleted_at=record['remote_deleted_at']))
+                    updated[label] = record
+                else:
+                    report['errors'].append(dict(label=label,
+                                                 remote_delete_error=record['remote_delete_error']))
+            if updated:
+                journal_path = state / 'mac_package_journal.json'
+                data = read(journal_path) if journal_path.exists() else dict(
+                    rounds=[], introduced_labels=[], excluded_archival_variants=[])
+                rounds = {row['label']: row for row in data.get('rounds', [])}
+                rounds.update(updated)
+                data['rounds'] = [rounds[key] for key in sorted(rounds)]
+                write(journal_path, data)
         return report
 
 
@@ -292,9 +401,17 @@ def main():
     parser.add_argument('--state', type=Path, default=STATE)
     parser.add_argument('--report', type=Path, help='also write the completed report to this absolute path')
     parser.add_argument('--labels', help='optional comma-separated bare labels; default: every eligible Mac upload')
+    parser.add_argument('--cleanup-remote-dry-run', action='store_true',
+                        help='list HF transfer/ packages that a verified-import cleanup would delete')
+    parser.add_argument('--cleanup-remote', action='store_true',
+                        help='apply the cleanup: delete verified-import packages from HF')
     args = parser.parse_args()
     if args.report:
         absolute(args.report)
+    if args.cleanup_remote or args.cleanup_remote_dry_run:
+        print(json.dumps(cleanup_remote(destination=args.destination, state=args.state,
+                                        apply=args.cleanup_remote), ensure_ascii=False, indent=1))
+        return
     result = refresh(destination=args.destination, state=args.state,
                      labels=args.labels.split(',') if args.labels else None)
     if args.report:

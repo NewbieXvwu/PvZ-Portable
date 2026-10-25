@@ -545,6 +545,14 @@ def _final_zombies(obs: dict) -> list[dict]:
             for z in _frame(obs)['zombies'] if z[5]]
 
 
+def final_state_hash(env) -> str:
+    """STATE_HASH digest of the final position, or '' on engines that predate the command."""
+    try:
+        return env.state_hash()
+    except Exception:
+        return ""
+
+
 def _play(job: dict, observer=None) -> dict:
     args = job["args"]
     from collections import Counter
@@ -781,6 +789,10 @@ def _play(job: dict, observer=None) -> dict:
                 'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "final_tick": obs["tick"], "terminal": bool(obs.get("terminal")),
+            # Final stable state digest (SaveGame image + RNG + counters): lets engine-swap
+            # gates report how often the hashed state moved without replaying every tick.
+            # Older deployed engines predate STATE_HASH; they just report no digest.
+            "state_hash": final_state_hash(env),
             "wave_count": obs.get("wave_count"),
             # Public final-board evidence, including the row/type of a house breach.
             # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.

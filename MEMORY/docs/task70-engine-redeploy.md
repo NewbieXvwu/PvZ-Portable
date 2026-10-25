@@ -38,4 +38,32 @@
 
 ## 结果
 
+- [A1] deploy4 构建完成：redeploy 工作树 PGO 两阶段（bench workload），generate=0/use=162，与 deploy3 相同配置（task50 流程）。二进制 SHA256 `16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2`，路径 `/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/build/pvz-portable`。deploy3 现行二进制 SHA256 `0dec4a275548ef761a49cb34c6f1c3e6d2eabf5854da95045ca1eb7bb0000327`（源 2b743c62）。
+
+- [A3] 旧档 state_hash 兼容清单（逐处说明）：
+  1. `scripts/human_demo.py:replay()`（被 `search_play --demo-archive` 的示范开局、`episode_query` 的 replay/whatif、`human_demo verify`、task66 雾工具复用）——逐操作比对 `state_hash` 与 `initial_state_hash`。deploy3 及更早引擎录的档（含 deploy3 rebaseline 过的），在 deploy4 下重放会因 task63 的粒子播种改动报 "state hash differs"。**处理（已实现，提交 b329cf4d）**：按档内 `meta.executable_sha256`（Recorder 一直在记）选校验方式——同引擎照旧全量哈希校验；异引擎改为强制校验引擎无关字段（tick 时间线、逐操作 ok、终局胜负），返回的 meta 里记 `hash_verification` 模式，不静默。要恢复全量哈希校验就用 deploy4 跑一次 `human_demo --rebaseline`（现有机制，源目录不动）。
+  2. `scripts/value_teacher_feasibility.py` 的 `_debug_state_sha256` 叶子哈希比对——离线诊断工具，不在生产路径；对旧叶子档案会报差异，属预期，不处理。
+  3. `scripts/promotion_gate.py`——评估 config 固定 executable 路径，换引擎后若复用旧评估目录会显式 ValueError（"evaluation config mismatch"），不会静默；换引擎后的下一次晋升按新引擎重跑评估即可，无旧档哈希比对。
+  4. 课程控制器（`curriculum_state.json` / multiplier_panel / 打包）：不读 state_hash；面板换新后 fog_user 格会以 "superseded by fog_user_v2" 显式退役（SUPERSEDED 机制）。
+  5. 引擎内 branch snapshot：同一进程内存态，不跨引擎，无兼容问题。
+  6. Recorder 新录的档本来就记 `executable_sha256`，将来换引擎自动走第 1 条的选择逻辑。
+
+- [B4] 部署清单（由主控在组边界执行；本任务未动 qc/cq/deploy3）：
+  1. **前置**：等旧 qc 在组边界自然退出（或主控确认退出），清理组间停止标志。当前生产 qc 从 cq 工作树跑：`--executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build/pvz-portable`（SHA256 `b642614f...`，engine src 与 deploy3 2b743c62 完全一致，已验证 `git diff 2b743c62 c84ad7d1 -- src/` 为空）。
+  2. **引擎切换**：命令里 `--executable` 换成 `/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/build/pvz-portable`（SHA256 `16989f23...`）。一步重启命令（沿用现行参数，仅换 engine 与 scripts 树；workers=16 维持现行）：
+     ```bash
+     /usr/bin/tmux kill-session -t qc   # 仅在旧控制器已结束后
+     /usr/bin/tmux new-session -d -s qc '/usr/bin/env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/scripts/curriculum_queue.py --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/artifacts/stage4/multiplier_panel.json --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/build/pvz-portable --state /home/newbiexvwu/pvz-logs/curriculum_state.json --log /home/newbiexvwu/pvz-logs/curriculum.log --out /home/newbiexvwu/PvZ-search/artifacts/hard --frames /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2 --recipe /home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy/recipes/dw4i.json --rollout-policy /home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt --resource-dir /home/newbiexvwu/.cache/pvz-research-resources 2>&1 | /usr/bin/tee -a /home/newbiexvwu/pvz-logs/qc.out'
+     ```
+     注意：现行 qc 命令没有显式 --state/--log/--out/--frames/--recipe/--rollout-policy 等（控制器有默认值），主控按现行命令只替换 scripts 树、--manifest、--executable 三处即可；上面是全参数版本供参考。
+  3. **新 multiplier_panel**：redeploy 树 `artifacts/stage4/multiplier_panel.json`（426 任务 = 旧 420 逐项相同 + fog_user_v2 六档；generation_audit 已更新，种子扫描 258,874 份清单 280,196 种子重叠 0）。旧 fog_user 六档仍在清单里（数据可追溯），只是 SUPERSEDED 不再排新局。
+  4. **teacher_rates**：`~/pvz-logs/teacher_rates.json` 的 `bases` 加 `"fog_user_v2_l31_snow": {"wins": <B3 实测>, "games": 32, "model": "dw4i_s1 + v4", "source": "T70"}`（数字见 artifacts/task70/cold/cold_start.json；32 局 deploy4 老师冷启动，种子 49_100_000..31，与训练段不相交）。
+  5. **回滚**：tmux qc kill → 恢复现行命令（cq 树 + cq 引擎 + 旧清单路径不变，curriculum_state.json 里 fog_user_v2 的 cell 留着无害，控制器下次 reconcile 会按当时清单再处理）→ 重启。fog_user 旧族清单/数据/种子从未动，回滚即回到 task68 状态。
+  6. **示范档**（Mac 侧，主控执行）：deploy4 上线后若要用 demo 档做 DAgger 开局/whatif，先 `human_demo.py verify` 试跑；报 state hash differs 就用 deploy4 `human_demo --rebaseline` 出新目录（源目录不动），replay 会按 executable_sha256 自动选校验方式，不会静默跳过。
+- [A2] 逐位门禁 **GATE PASS**：六族（day L7 m125 / night L14 m125 / pool L24 m125 / conveyor L10 m125 / roof L41 1.0 / fog_user L31 1.0）× {老师 β=1, 学生 β=0} × 8 种子，deploy3 与 deploy4 各 96 局（共 192 局）。**动作序列（frames 逐帧 tick+action+rejected）、胜负、末波、末 tick、决策数、种植数/种植类型、mowers、shovel/replant 事件全部 0 差异**。工具 scripts/task70_redeploy_gate.py（命令用 curriculum_queue.command_for 生产形态）。state_hash：deploy3 无 STATE_HASH 命令无法直接报比例，由粒子探针补齐（见下）。
+- [A2-探针] scripts/task70_particle_probe.py：用 BRANCH_SNAPSHOT_FAST W:0（两引擎唯一共同哈希路径）对 6 局学生局逐决策哈希重放。结论：**5400 个决策 tick 上观测逐字节 0 差异**（含重跑）；哈希差异 959/5400（17.8%）。归因：重置时刻存在与负载相关的双态线（load race，两引擎共有、先于 task70 存在，line A 下 deploy3 与 deploy4 哈希**逐 tick 全同**（fog 局 581/581 同），line B（粒子已抖动）上两者不同——正是 task63 把 FIELD_SHAKE 播种从堆地址换成 DataArray id 的预期差异，差异字节位于 SaveGame 镜像的粒子块）。deploy4 在正常负载下 6/6 次重置 STATE_HASH 全同（确定性成立）。
+- [A4] 吞吐 ABBA **PASS**：16 局学生局（day 8 + pool 8）串行 ABBA，中位配对耗时比 **1.0152**（≤1.03），min 0.757 / max 1.648（受生产 qc 16 进程挤占的噪声），16/16 局决策数逐局相同。证据 artifacts/task70/throughput_abba.json。
+- [C] HF 清理 dry-run（--cleanup-remote-dry-run）：远端现存 40 个 transfer/ 包（p21w34m…p29w37m 共 40 个池族标签 + 4 个非标签文件），**全部无已验证回执**——dw4/dw5 旧回执（137 标签）与共享 journal（377 标签，2026-10-24 21:41 由另一侧 importer 写入）都不含它们，即这些都是**尚未导入的待用上传**；所有已导入的历史包已不在 HF 上。结论：**无可删项，一个都不删**（不满足"已导入"判据）。清单已核验（repo realnewbiexvwu/pvz-agent-artifacts，revision 33353855）。今后每次 refresh 导入校验成功后会自动删包并记 remote_deleted_at，失败不删。
+  40 个标签：p21w34m-38m, p22w34m-38m, p23w34m-38m, p24w34m-38m, p26w34m-38m, p27w33m-38m, p28w33m-38m, p29w33m-37m。
+
 ## 问题
