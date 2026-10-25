@@ -22,7 +22,13 @@ from __future__ import annotations
 import json
 import os
 import time
+from contextlib import contextmanager
 from pathlib import Path
+
+try:
+    import fcntl
+except ImportError:          # Windows 开发机：没有 flock，退化为单进程
+    fcntl = None
 
 WALL_LIMIT_SECONDS = 3 * 60 * 60
 STOP_NEW_GAME_SECONDS = 2 * 60 * 45      # 2:45 之后不许开新局
@@ -59,9 +65,38 @@ class Session:
         self.save()
 
     def save(self) -> None:
+        # 原子替换：读的一方不会读到写了一半的 JSON。
         self.path.parent.mkdir(parents=True, exist_ok=True)
-        self.path.write_text(json.dumps(self.data, ensure_ascii=False, indent=2) + "\n",
-                             encoding="utf-8")
+        tmp = self.path.with_name(self.path.name + ".tmp")
+        tmp.write_text(json.dumps(self.data, ensure_ascii=False, indent=2) + "\n",
+                       encoding="utf-8")
+        os.replace(tmp, self.path)
+
+    def refresh(self) -> None:
+        """重新读磁盘：3 个子代理是 3 个进程，各自的内存副本会过期。"""
+        try:
+            if self.path.is_file():
+                self.data = json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            pass
+
+    @contextmanager
+    def _transaction(self):
+        """跨进程读改写：flock 保护，避免 3 个子代理互相覆盖预算。"""
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        lock = self.path.with_name(self.path.name + ".lock")
+        with open(lock, "a+", encoding="utf-8") as handle:
+            if fcntl is not None:
+                fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+            try:
+                self.refresh()
+                if self.data is None:
+                    self.load()
+                yield
+                self.save()
+            finally:
+                if fcntl is not None:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
     # ------------------------------------------------------------ 时间
 
@@ -74,6 +109,7 @@ class Session:
         return self.elapsed >= STOP_NEW_GAME_SECONDS
 
     def require_new_game_allowed(self) -> None:
+        self.refresh()
         if self.stop_new_games:
             raise RuntimeError(
                 "墙钟已到 2:45：立即停止开新局。现在只做三件事 —— "
@@ -83,13 +119,13 @@ class Session:
 
     def calibrate(self, ticks: int, seconds: float) -> None:
         """用一次实测把'约 25 分钟的计算量'换算成 tick 预算。"""
-        if self.data.get("calibrated_rate") and self.data.get("search_limit_ticks"):
-            return
-        rate = max(1.0, float(ticks) / max(seconds, 1e-3))
-        self.data["calibrated_rate"] = rate
-        self.data["search_limit_ticks"] = int(rate * SEARCH_MINUTES * 60)
-        self.data["level_limit_ticks"] = int(rate * LEVEL_MINUTES * 60)
-        self.save()
+        with self._transaction():
+            if self.data.get("calibrated_rate") and self.data.get("search_limit_ticks"):
+                return
+            rate = max(1.0, float(ticks) / max(seconds, 1e-3))
+            self.data["calibrated_rate"] = rate
+            self.data["search_limit_ticks"] = int(rate * SEARCH_MINUTES * 60)
+            self.data["level_limit_ticks"] = int(rate * LEVEL_MINUTES * 60)
 
     @property
     def search_limit(self) -> int:
@@ -116,14 +152,14 @@ class Session:
     def note_ticks(self, level, ticks: int, mode: str) -> None:
         if ticks <= 0:
             return
-        state = self.level(level)
-        state["total_ticks"] += int(ticks)
-        state["search_ticks" if mode == "search" else "manual_ticks"] += int(ticks)
-        if mode == "search":
-            self._maybe_checkpoint(state)
-        if state["total_ticks"] >= self.level_limit:
-            state["exhausted"] = True
-        self.save()
+        with self._transaction():
+            state = self.level(level)
+            state["total_ticks"] += int(ticks)
+            state["search_ticks" if mode == "search" else "manual_ticks"] += int(ticks)
+            if mode == "search":
+                self._maybe_checkpoint(state)
+            if state["total_ticks"] >= self.level_limit:
+                state["exhausted"] = True
 
     def _maybe_checkpoint(self, state: dict) -> None:
         """用掉 40% / 80% / 100% 搜索预算时各记一次最远波（§A）。"""
@@ -147,31 +183,33 @@ class Session:
             state["search_closed"] = True
 
     def record_wave(self, level, wave: int) -> None:
-        state = self.level(level)
-        wave = int(wave or 0)
-        if wave > state["max_wave"]:
-            state["max_wave"] = wave
-        if wave > state["last_progress_wave"]:
-            state["last_progress_wave"] = wave
-            state["segment_rewrites"] = 0
-        self.save()
+        with self._transaction():
+            state = self.level(level)
+            wave = int(wave or 0)
+            if wave > state["max_wave"]:
+                state["max_wave"] = wave
+            if wave > state["last_progress_wave"]:
+                state["last_progress_wave"] = wave
+                state["segment_rewrites"] = 0
 
     def record_best_archive(self, level, path) -> None:
-        state = self.level(level)
-        state["best_archive"] = str(path)
-        self.save()
+        with self._transaction():
+            state = self.level(level)
+            state["best_archive"] = str(path)
 
     # ------------------------------------------------------------ 门禁
 
     def mode(self, level) -> str:
+        self.refresh()
         return self.level(level)["mode"]
 
     def set_mode(self, level, mode: str) -> None:
-        self.level(level)["mode"] = mode
-        self.save()
+        with self._transaction():
+            self.level(level)["mode"] = mode
 
     def search_reason(self, level) -> str | None:
         """搜索为什么被关掉；没关就是 None。"""
+        self.refresh()
         state = self.level(level)
         if state["search_closed"] or state["search_bad"]:
             if state["search_bad"]:
@@ -188,12 +226,13 @@ class Session:
                 "看结果 → 不满意就 rewind() 重写这一段。" % (reason, what))
 
     def note_branch(self, level, delta: int = 1) -> None:
-        state = self.level(level)
-        state["branches"] = max(0, state["branches"] + delta)
-        self.save()
+        with self._transaction():
+            state = self.level(level)
+            state["branches"] = max(0, state["branches"] + delta)
 
     def require_branch(self, level) -> None:
         self.require_search(level, "branch()")
+        self.refresh()
         state = self.level(level)
         if state["branches"] >= BRANCH_LIMIT_SEARCH:
             raise RuntimeError(
@@ -201,21 +240,22 @@ class Session:
                 "或者直接在主局上 rewind 试错。" % BRANCH_LIMIT_SEARCH)
 
     def note_rewind(self, level, target_tick: int, current_tick: int) -> None:
-        state = self.level(level)
-        if target_tick < state["segment_start"]:
-            # 退回更早一段：重写计数重来。
-            state["segment_start"] = int(target_tick)
-            state["segment_rewrites"] = 0
-        else:
-            state["segment_rewrites"] += 1
-            if state["segment_rewrites"] > SEGMENT_REWRITES:
-                raise RuntimeError(
-                    "本段已经 rewind %d 次仍没过去：不要再改这一段了，"
-                    "退回更早的一段重写（rewind 到一个更早的 tick）。"
-                    % SEGMENT_REWRITES)
-        self.save()
+        with self._transaction():
+            state = self.level(level)
+            if target_tick < state["segment_start"]:
+                # 退回更早一段：重写计数重来。
+                state["segment_start"] = int(target_tick)
+                state["segment_rewrites"] = 0
+            else:
+                state["segment_rewrites"] += 1
+                if state["segment_rewrites"] > SEGMENT_REWRITES:
+                    raise RuntimeError(
+                        "本段已经 rewind %d 次仍没过去：不要再改这一段了，"
+                        "退回更早的一段重写（rewind 到一个更早的 tick）。"
+                        % SEGMENT_REWRITES)
 
     def require_not_exhausted(self, level) -> None:
+        self.refresh()
         state = self.level(level)
         if state["exhausted"]:
             raise RuntimeError(
@@ -225,6 +265,7 @@ class Session:
     # ------------------------------------------------------------ 状态行
 
     def status_line(self, level=None) -> str:
+        self.refresh()
         left = max(0, WALL_LIMIT_SECONDS - self.elapsed)
         head = "[已用 %s / 3:00" % _clock(self.elapsed)
         if level is None:

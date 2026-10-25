@@ -18,6 +18,14 @@ os.environ['PVZ_LLMPLAY_SESSION'] = str(Path(_SESSION_DIR) / 'budget.json')
 from llmplay.game import Game, ROOT as PACKAGE_ROOT, load_tasks, task_spec  # noqa: E402
 from llmplay import budget, build_package  # noqa: E402
 from pvz_tasks import profile_for_deck  # noqa: E402
+
+
+def _bump_budget(path, count):
+    """子进程里给同一份预算加 tick（并发测试用，必须模块级才能被 fork/pickle）。"""
+    from llmplay import budget as budget_module
+    session = budget_module.Session(Path(path))
+    for _ in range(count):
+        session.note_ticks(46, 1, 'manual')
 from pvz_env import TaskSpec  # noqa: E402
 
 
@@ -142,6 +150,24 @@ class BudgetTest(unittest.TestCase):
         with self.assertRaises(RuntimeError) as caught:
             self.session.note_rewind(level, 100, 900)
         self.assertIn('退回更早的一段', str(caught.exception))
+
+    def test_concurrent_processes_do_not_lose_updates(self):
+        """3 个子代理是 3 个进程：预算的读改写必须串行，不能互相覆盖。"""
+        import multiprocessing
+        try:
+            context = multiprocessing.get_context('fork')
+        except ValueError:
+            self.skipTest('当前平台没有 fork')
+        path = Path(self.dir) / 'budget-concurrent.json'
+        budget.Session(path)                     # 先建文件
+        processes = [context.Process(target=_bump_budget, args=(str(path), 50))
+                     for _ in range(4)]
+        for process in processes:
+            process.start()
+        for process in processes:
+            process.join(30)
+        self.assertTrue(all(process.exitcode == 0 for process in processes))
+        self.assertEqual(budget.Session(path).level(46)['total_ticks'], 200)
 
     def test_session_path_does_not_depend_on_cwd(self):
         """§A：换个工作目录不能把预算/墙钟清零。"""
