@@ -69,7 +69,7 @@
 
 ## 结果
 
-> 当前结论：用户20:20新指示已执行；旧HF归档已按要求删除，不再保留，不再上传。追加9棵工作树退役（累计42棵），清理完成并执行fstrim；最终df与保留理由见下方“最终交付”。前述盘点、配额等待和旧回验记录均为历史状态。
+> 当前结论：221ae160误删在用stage4导致qc停机。六份清单已恢复并核验，主控于2026-10-24 21:35重启qc；详见“事故”一节。此前“清理完成”结论已被该事故纠正，禁止继续删除。
 
 ### 第一阶段盘点与处置提案（2026-10-24，待主控批准）
 
@@ -928,6 +928,57 @@ Filesystem         1B-blocks        Used    Available Use% Mounted on
 Filesystem      Size  Used Avail Use% Mounted on
 /dev/sdd       1007G   72G  885G   8% /
 ```
+
+## 事故：221ae160误删在用stage4（恢复记录，2026-10-25补交）
+
+### 责任、故障与当前状态
+
+`221ae160` 把 `/home/newbiexvwu/PvZ-search/artifacts/stage4`（删除前22,876,160 B）列为 `main_unused_artifact` 整目录删除，这是执行者的错误。第一阶段已经识别state对stage4的引用，但后续实现只用白名单、进程fd/参数快照与符号链接入链判定通用ignored子目录，没有把 `cq/scripts/make_multiplier_tasks.py:source_paths()`、state和配方中的间接读取合并成保护集合。**“当时没有打开fd”不能证明路径不在用。** 前面“保护核验通过/清理完成”的结论不能作为生产依赖安全的证明。
+
+2026-10-24 **20:58:37**，qc round 6的 `c6n18n10qm100` 读取 `night_panel_n10q.json` 报 `FileNotFoundError`，控制器退出。随后按主控指令从Git生成器恢复六份源清单并核验。主控独立复核后，已于 **21:35** 用14 worker重启qc；不是执行者启动。此后不再操作qc，不改deploy3/redeploy/replace/memprobe，也不再删除任何东西。journal及其余引用审计在本节后续追加。
+
+### 恢复依据、命令与SHA256
+
+恢复脚本来自cleanup的Git版本（恢复开始时HEAD为`221ae160`）；参数依据 task17/21/22/23/24/25/28/31 的任务书和生成器固定种子段。白天/夜间/泳池使用`--combined`，然后依次生成d7q、n10p、n10q，恢复到原主检出路径。d7q/n10p的整组检查使用cq现有引擎的独立副本：`~/pvz-logs/restore/task62-recovery/pvz-portable`，SHA256 `b642614f25789dd2ec503a56f40c7412157c8742071cd10b930cb83593be9e67`。没有修改或使用deploy3构建来重新生成。
+
+Mac副本只作交叉核对：恢复的白天26项逐任务与Mac一致；恢复的夜间54项中，Mac幸存的36项逐任务一致，另外18项由task25记录的n10和L20原版任务补齐。没有直接用旧Mac清单覆盖台式机定义。
+
+以下是实际执行命令（所有returncode=0）。最后一条是当时qc仍停机时的隔离dry-run：state使用副本，日志和out指向恢复目录，未启动采集。
+
+```bash
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_day_panel.py --combined --out /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_night_panel.py --combined --out /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_pool_panel.py --combined --out /home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_day_d7q.py --manifest /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json --out /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json --executable /home/newbiexvwu/pvz-logs/restore/task62-recovery/pvz-portable --scan /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json /home/newbiexvwu/pvz-logs/restore/mac_day_panel_identity.json
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_night_n10p.py --manifest /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json --out /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json --executable /home/newbiexvwu/pvz-logs/restore/task62-recovery/pvz-portable --scan /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json /home/newbiexvwu/pvz-logs/restore/mac_day_panel_identity.json
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_night_n10q.py --source /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json --out /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json --scan /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json /home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json /home/newbiexvwu/pvz-logs/restore/mac_day_panel_identity.json
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/curriculum_queue.py --dry-run --state /home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun-state.json --log /home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun-controller.log --out /home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun-output --executable /home/newbiexvwu/pvz-logs/restore/task62-recovery/pvz-portable --manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json --recipe /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/dw4i2.json --round-games 768 --games-per-group 48
+```
+
+六份文件均位于 `/home/newbiexvwu/PvZ-search/artifacts/stage4/`：
+
+| 文件 | 任务数 | SHA256 |
+|---|---:|---|
+| `day_panel.json` | 26 | `861826360161c2762c66093c93b42c992b2395db8f36f2bdd199c1f14862c8dd` |
+| `night_panel.json` | 54 | `f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f` |
+| `pool_panel.json` | 35 | `10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb` |
+| `day_panel_d7q.json` | 16 | `ea0f8c0348cafd6a897bc0defde239e4a15cf702126779edc76d3d2f236cfc8f` |
+| `night_panel_n10p.json` | 24 | `af71030371c5cf7b0479139fe16d02909632ee6508887cbb8312cba175c35d87` |
+| `night_panel_n10q.json` | 24 | `ab856b0e1213d64fd526574e4523ece8a68ee5fb032d3d3c9509559d9a662fae` |
+
+### 验证结果与证据边界
+
+1. **倍率逐字段核对：420/420通过，0不一致。** 每个变体去掉`_mXXX`后查对应源任务；排除`task_id`、`seeds`、`zombie_count_multiplier`后，字段集合和值均完全相同，包含完整`deck_perturb`和引擎检查表。
+2. **state覆盖：**执行者核对47个基础任务（含offsets、cells、retired_cells和历史log引用）全部存在。主控独立核对state全部 **92个offsets**，对应任务均在完整面板中且未越界。
+3. **历史种子：43格，0不一致。** 41格使用幸存的原始帧`meta.json`配合`curriculum.log`、`queue98.log`、`queue103.log`或state历史组记录，逐个核对选定组的实际种子与`seeds[offset+i]`一致。旧metadata没有task_id时，用独立采集日志里的group label和task_id绑定，未给原metadata补造字段。同名label经历多次采集时，按各次日志的offset/games区间核对，不误把合并归档当成一组。
+   - 另2格为已退役的 `night_l14_train_n10p`、`night_l17_train_n10p` 历史评估，未保存到正式帧。使用Git中 `MEMORY/docs/night-panel.md` 的实际逐局表（各16条seed）与 `task28-night-coverage.md` 记录的独立offset=0核对，结果一致。**没有恢复它们的原始games.jsonl，也不声称原始档案仍在。**
+4. **完整面板dry-run通过。** 实际`cq/scripts/curriculum_queue.py --dry-run`返回0，生成16组/768局计划；验证期间真实state与cq倍率清单SHA256保持不变。主控也独立确认dry-run正常。
+
+完整六份哈希、精确argv及43格逐组证据索引见 [结构化恢复记录](task62-stage4-recovery.json)。主控据上述结果于21:35重启qc；执行者不再负责或操作qc运行。
+
+### 今后删除判定
+
+凡 `source_paths`、recipes、state或生产脚本默认路径出现的路径，均视为在用；包括惰性读取、输出父目录及其仍被引用的子路径。先解析这些权威引用及传递依赖，再谈处置；不得用“ignored”“暂时未打开fd”或“没有符号链接”替代引用核对。主控当前明确禁止继续删除任何东西。
 
 ## 问题
 

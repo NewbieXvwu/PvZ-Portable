@@ -41,7 +41,7 @@
 
 ## 历史报告（`docs/`）
 
-- [WSL清理：用户20:20直接清理政策与执行结果](docs/task62-wsl-cleanup.md)
+- [WSL清理事故、stage4恢复与在用路径判定](docs/task62-wsl-cleanup.md)
 - [HF旧归档删除状态](docs/task62-archive-index.md)
 
 - [课程后台管线与学生晋升门禁](docs/task49-qc-idle-pack.md)

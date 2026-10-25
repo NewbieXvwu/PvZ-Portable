@@ -80,6 +80,8 @@ PPO 训练线（`python/pvz_research.py`、`train_pvz_ppo*.py`）连同它的检
 
 ## 4. 删除前必须确认引用链
 
+- **在用判定必须先覆盖 `source_paths`、recipes、state与生产脚本的默认路径及传递依赖。** 其中出现的路径均算在用，包括惰性读取和输出父目录。`ignored`、暂时没有打开fd、没有符号链接，都不能授权删除；必须先核对这些引用。task62曾违反此条误删stage4导致qc退出。
+
 - 删代码 / 文档前，先查谁还引用它（`git grep`），改掉引用再删；整条线退役先打 tag。
 - 本机若还留着旧的 `artifacts/research*/` 目录，要删就**整目录**删；其中 `archive_manifest.json`
   记录了每个文件的 SHA256，零散删单个检查点会让校验链断掉。

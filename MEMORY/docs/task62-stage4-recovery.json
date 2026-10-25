@@ -1,0 +1,1112 @@
+{
+  "incident_commit": "221ae1606b7eb4a30166eb086954b189cd60f049",
+  "restoration_date": "2026-10-24",
+  "commands": [
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_day_panel.py",
+        "--combined",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_night_panel.py",
+        "--combined",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_pool_panel.py",
+        "--combined",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json"
+      ],
+      "returncode": 0
+    },
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_day_d7q.py",
+        "--manifest",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+        "--executable",
+        "/home/newbiexvwu/pvz-logs/restore/task62-recovery/pvz-portable",
+        "--scan",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+        "/home/newbiexvwu/pvz-logs/restore/mac_day_panel_identity.json"
+      ],
+      "returncode": 0,
+      "log": "/home/newbiexvwu/pvz-logs/restore/task62-recovery/make_day_d7q.log"
+    },
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_night_n10p.py",
+        "--manifest",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json",
+        "--executable",
+        "/home/newbiexvwu/pvz-logs/restore/task62-recovery/pvz-portable",
+        "--scan",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+        "/home/newbiexvwu/pvz-logs/restore/mac_day_panel_identity.json"
+      ],
+      "returncode": 0,
+      "log": "/home/newbiexvwu/pvz-logs/restore/task62-recovery/make_night_n10p.log"
+    },
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/scripts/make_night_n10q.py",
+        "--source",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+        "--scan",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+        "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json",
+        "/home/newbiexvwu/pvz-logs/restore/mac_day_panel_identity.json"
+      ],
+      "returncode": 0,
+      "log": "/home/newbiexvwu/pvz-logs/restore/task62-recovery/make_night_n10q.log"
+    },
+    {
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "-B",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/curriculum_queue.py",
+        "--dry-run",
+        "--state",
+        "/home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun-state.json",
+        "--log",
+        "/home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun-controller.log",
+        "--out",
+        "/home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun-output",
+        "--executable",
+        "/home/newbiexvwu/pvz-logs/restore/task62-recovery/pvz-portable",
+        "--manifest",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/dw4i2.json",
+        "--round-games",
+        "768",
+        "--games-per-group",
+        "48"
+      ],
+      "returncode": 0,
+      "log": "/home/newbiexvwu/pvz-logs/restore/task62-recovery/dryrun.log"
+    }
+  ],
+  "restored_sources": {
+    "day": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel.json",
+      "sha256": "861826360161c2762c66093c93b42c992b2395db8f36f2bdd199c1f14862c8dd",
+      "tasks": 26
+    },
+    "night": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+      "sha256": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f",
+      "tasks": 54
+    },
+    "pool": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+      "sha256": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb",
+      "tasks": 35
+    },
+    "day_d7q": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+      "sha256": "ea0f8c0348cafd6a897bc0defde239e4a15cf702126779edc76d3d2f236cfc8f",
+      "tasks": 16
+    },
+    "night_n10p": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json",
+      "sha256": "af71030371c5cf7b0479139fe16d02909632ee6508887cbb8312cba175c35d87",
+      "tasks": 24
+    },
+    "night_n10q": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+      "sha256": "ab856b0e1213d64fd526574e4523ece8a68ee5fb032d3d3c9509559d9a662fae",
+      "tasks": 24
+    }
+  },
+  "variant_checks": {
+    "checked": 420,
+    "mismatches": 0
+  },
+  "state_checks": {
+    "local_base_ids": 47,
+    "missing_base_ids": 0,
+    "controller_independent_offset_count": 92,
+    "controller_report": "All 92 offsets present in panel and in bounds; complete dry-run succeeds."
+  },
+  "historical_seed_checks": {
+    "wanted_cells": 43,
+    "archive_episodes_examined_for_cells": 5903,
+    "passed_cells": 43,
+    "checks": [
+      {
+        "task_id": "day_l10_orig_train",
+        "group": {
+          "round": 1,
+          "label": "c1d10origm100",
+          "task_id": "day_l10_orig_train",
+          "offset": 258,
+          "games": 48,
+          "evidence": "curriculum.log:1"
+        },
+        "games": 48,
+        "seeds_first": 1880258,
+        "seeds_last": 1880305,
+        "metadata_example": {
+          "seed": 1880261,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1880261/c1d10origm100_fast_search/meta.json",
+          "meta_sha256": "c6b3d2a6eb69ee099fe860cfaa1b79d7260a905a6dbe672114c45e9d8fc52b6a"
+        }
+      },
+      {
+        "task_id": "day_l10_train_d7q",
+        "group": {
+          "round": 1,
+          "label": "c1d10d7qm100",
+          "task_id": "day_l10_train_d7q",
+          "offset": 0,
+          "games": 48,
+          "evidence": "curriculum.log:6"
+        },
+        "games": 48,
+        "seeds_first": 2530000,
+        "seeds_last": 2530047,
+        "metadata_example": {
+          "seed": 2530043,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2530043/c1d10d7qm100_fast_search/meta.json",
+          "meta_sha256": "1a6182a4842229fbd1d20aa8bbe98dc2282294ab6edaa4233067fafad020d017"
+        }
+      },
+      {
+        "task_id": "day_l7_train_d7q",
+        "group": {
+          "base": "day_l7_train_d7q",
+          "multiplier": 1.0,
+          "task_id": "day_l7_train_d7q",
+          "offset": 0,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+          "label": "c1d7d7qm100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2500000,
+        "seeds_last": 2500047,
+        "metadata_example": {
+          "seed": 2500010,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2500010/c1d7d7qm100_fast_search/meta.json",
+          "meta_sha256": "a86742a026938bbf0d2c3af7766620bc0b6a38d609636ed1e1d75411f743e1b3"
+        }
+      },
+      {
+        "task_id": "day_l8_train_d7q",
+        "group": {
+          "base": "day_l8_train_d7q",
+          "multiplier": 1.0,
+          "task_id": "day_l8_train_d7q",
+          "offset": 0,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+          "label": "c1d8d7qm100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2510000,
+        "seeds_last": 2510047,
+        "metadata_example": {
+          "seed": 2510045,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2510045/c1d8d7qm100_fast_search/meta.json",
+          "meta_sha256": "6077caba9da20f1630b824e8517482bbe05b5d2f30a5ada3caa63571bd108ddc"
+        }
+      },
+      {
+        "task_id": "day_l9_train_d7q",
+        "group": {
+          "base": "day_l9_train_d7q",
+          "multiplier": 1.0,
+          "task_id": "day_l9_train_d7q",
+          "offset": 0,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+          "label": "c1d9d7qm100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2520000,
+        "seeds_last": 2520047,
+        "metadata_example": {
+          "seed": 2520022,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2520022/c1d9d7qm100_fast_search/meta.json",
+          "meta_sha256": "12b3ad1c442d4633c024467d425082b416e1c44b73467c58ce96d1000d64a32d"
+        }
+      },
+      {
+        "task_id": "fog_user_l31_snow",
+        "group": {
+          "round": 6,
+          "label": "c6foguserl31snowm100",
+          "task_id": "fog_user_l31_snow",
+          "offset": 0,
+          "games": 24,
+          "evidence": "curriculum.log:559"
+        },
+        "games": 24,
+        "seeds_first": 43000000,
+        "seeds_last": 43000023,
+        "metadata_example": {
+          "seed": 43000019,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_43000019/c6foguserl31snowm100_fast_search/meta.json",
+          "meta_sha256": "fd36421773e6f311304914542a274da90d00818f2aec1d29f286bd0d62decdd1"
+        }
+      },
+      {
+        "task_id": "night_l11_train_n10",
+        "group": {
+          "base": "night_l11_train_n10",
+          "multiplier": 1.0,
+          "task_id": "night_l11_train_n10",
+          "offset": 0,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+          "label": "c1n11n10m100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2200000,
+        "seeds_last": 2200047,
+        "metadata_example": {
+          "seed": 2200009,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2200009/c1n11n10m100_fast_search/meta.json",
+          "meta_sha256": "5144bc8d687a9dcddc1a135907692179758d74d294208c41fc51d7d049501bf0"
+        }
+      },
+      {
+        "task_id": "night_l11_train_n10p",
+        "group": {
+          "round": 2,
+          "label": "c2n11n10pm100",
+          "task_id": "night_l11_train_n10p",
+          "offset": 0,
+          "games": 48,
+          "evidence": "curriculum.log:28"
+        },
+        "games": 48,
+        "seeds_first": 2400000,
+        "seeds_last": 2400047,
+        "metadata_example": {
+          "seed": 2400010,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2400010/c2n11n10pm100_fast_search/meta.json",
+          "meta_sha256": "d70a5a0689028d39b932375999e1944d92606e18735e536dce3583111150e016"
+        }
+      },
+      {
+        "task_id": "night_l11_train_n10q",
+        "group": {
+          "round": 3,
+          "label": "c3n11n10qm100",
+          "task_id": "night_l11_train_n10q",
+          "offset": 48,
+          "games": 48,
+          "evidence": "curriculum.log:398"
+        },
+        "games": 48,
+        "seeds_first": 3300048,
+        "seeds_last": 3300095,
+        "metadata_example": {
+          "seed": 3300049,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3300049/c3n11n10qm100_fast_search/meta.json",
+          "meta_sha256": "d9c65df531307721de78ec664da67acee5411137c4c5d9610833550384c31a65"
+        }
+      },
+      {
+        "task_id": "night_l12_train_n10",
+        "group": {
+          "base": "night_l12_train_n10",
+          "multiplier": 1.0,
+          "task_id": "night_l12_train_n10",
+          "offset": 176,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+          "label": "c1n12n10m100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2210176,
+        "seeds_last": 2210223,
+        "metadata_example": {
+          "seed": 2210170,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2210170/c1n12n10m100_fast_search/meta.json",
+          "meta_sha256": "7d95ee587860b0b3abb54157399433b0e48b1ab4d981777f5822bbab8061ef90"
+        }
+      },
+      {
+        "task_id": "night_l12_train_n10p",
+        "group": {
+          "round": 2,
+          "label": "c2n12n10pm100",
+          "task_id": "night_l12_train_n10p",
+          "offset": 64,
+          "games": 48,
+          "evidence": "curriculum.log:38"
+        },
+        "games": 48,
+        "seeds_first": 2410064,
+        "seeds_last": 2410111,
+        "metadata_example": {
+          "seed": 2410096,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2410096/c2n12n10pm100_fast_search/meta.json",
+          "meta_sha256": "8212f37532855bc64de76b80dd70cc7aadbf15d85a8d463a32ff4ae9eca08f4b"
+        }
+      },
+      {
+        "task_id": "night_l12_train_n10q",
+        "group": {
+          "base": "night_l12_train_n10q",
+          "multiplier": 1.0,
+          "task_id": "night_l12_train_n10q",
+          "offset": 96,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+          "label": "c5n12n10qm100",
+          "collection_started": 1792839147.3326907,
+          "collection_finished": 1792839453.0997114,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 16,
+          "beta": 0.0,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 3310096,
+        "seeds_last": 3310143,
+        "metadata_example": {
+          "seed": 3310126,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3310126/c5n12n10qm100_fast_search/meta.json",
+          "meta_sha256": "7c08ebf92cb0af638b3d8d53cc0f1fe3178b1bff228bcff4207ebda4a87ce25c"
+        }
+      },
+      {
+        "task_id": "night_l13_train_n10",
+        "group": {
+          "round": 3,
+          "label": "c3n13n10m100",
+          "task_id": "night_l13_train_n10",
+          "offset": 48,
+          "games": 48,
+          "evidence": "curriculum.log:402"
+        },
+        "games": 48,
+        "seeds_first": 2220048,
+        "seeds_last": 2220095,
+        "metadata_example": {
+          "seed": 2220059,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2220059/c3n13n10m100_fast_search/meta.json",
+          "meta_sha256": "ad770ba766344ba9f088f8a66a4809be178f61c30ee1c9c31e041f78fb00315c"
+        }
+      },
+      {
+        "task_id": "night_l13_train_n10q",
+        "group": {
+          "base": "night_l13_train_n10q",
+          "multiplier": 1.0,
+          "task_id": "night_l13_train_n10q",
+          "offset": 96,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+          "label": "c2n13n10qm100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 3320096,
+        "seeds_last": 3320143,
+        "metadata_example": {
+          "seed": 3320040,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3320040/c2n13n10qm100_fast_search/meta.json",
+          "meta_sha256": "cb9032e495e6f008fc14e200080cb1f2dfdc986745c156b1acc6f14e3c849766"
+        }
+      },
+      {
+        "task_id": "night_l14_train_n10",
+        "group": {
+          "base": "night_l14_train_n10",
+          "multiplier": 1.0,
+          "task_id": "night_l14_train_n10",
+          "offset": 178,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+          "label": "c1n14n10m100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2230178,
+        "seeds_last": 2230225,
+        "metadata_example": {
+          "seed": 2230164,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2230164/c1n14n10m100_fast_search/meta.json",
+          "meta_sha256": "6946c2cbe6e17b8f583020dfa6066ee3e85a1284210b2a76cfd381212489f756"
+        }
+      },
+      {
+        "task_id": "night_l14_train_n10q",
+        "group": {
+          "base": "night_l14_train_n10q",
+          "multiplier": 1.0,
+          "task_id": "night_l14_train_n10q",
+          "offset": 96,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+          "label": "c3n14n10qm100",
+          "collection_started": 1792823728.6561894,
+          "collection_finished": 1792824187.2013822,
+          "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "student_round": 0,
+          "workers": 13,
+          "beta": 0.0,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 3330096,
+        "seeds_last": 3330143,
+        "metadata_example": {
+          "seed": 3330102,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3330102/c3n14n10qm100_fast_search/meta.json",
+          "meta_sha256": "5cbacd657a039ef9be474595728c1ea22e45b52d75a6f2f765436a8c8fb778e5"
+        }
+      },
+      {
+        "task_id": "night_l16_train_n10",
+        "group": {
+          "round": 2,
+          "label": "c2n16n10m100",
+          "task_id": "night_l16_train_n10",
+          "offset": 0,
+          "games": 48,
+          "evidence": "curriculum.log:107"
+        },
+        "games": 48,
+        "seeds_first": 2250000,
+        "seeds_last": 2250047,
+        "metadata_example": {
+          "seed": 2250036,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2250036/c2n16n10m100_fast_search/meta.json",
+          "meta_sha256": "84b866c993ade45bc6ce11cf394b6184ad8e32840f4c4e590030e23398d99c68"
+        }
+      },
+      {
+        "task_id": "night_l16_train_n10q",
+        "group": {
+          "base": "night_l16_train_n10q",
+          "multiplier": 1.0,
+          "task_id": "night_l16_train_n10q",
+          "offset": 48,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+          "label": "c2n16n10qm100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 3350048,
+        "seeds_last": 3350095,
+        "metadata_example": {
+          "seed": 3350037,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3350037/c2n16n10qm100_fast_search/meta.json",
+          "meta_sha256": "f2881de0c0fab63932d8b4515943f32bb8dd3f0463085c4ee0748fd9c42cbf41"
+        }
+      },
+      {
+        "task_id": "night_l17_train_n10",
+        "group": {
+          "base": "night_l17_train_n10",
+          "multiplier": 1.0,
+          "task_id": "night_l17_train_n10",
+          "offset": 176,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+          "label": "c1n17n10m100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2260176,
+        "seeds_last": 2260223,
+        "metadata_example": {
+          "seed": 2260191,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2260191/c1n17n10m100_fast_search/meta.json",
+          "meta_sha256": "1738c32e60ad47eeb1e6b67e8d929eabc3c47d4ee38d8c036e51f2e0a45bf7ac"
+        }
+      },
+      {
+        "task_id": "night_l17_train_n10q",
+        "group": {
+          "base": "night_l17_train_n10q",
+          "multiplier": 1.0,
+          "task_id": "night_l17_train_n10q",
+          "offset": 0,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+          "label": "c2n17n10qm100",
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 3360000,
+        "seeds_last": 3360047,
+        "metadata_example": {
+          "seed": 3360026,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3360026/c2n17n10qm100_fast_search/meta.json",
+          "meta_sha256": "0610f1937d12065fa340d4f5f99c290e46f8a6c19ab0566207c80a49c42c8518"
+        }
+      },
+      {
+        "task_id": "night_l18_train_n10",
+        "group": {
+          "round": 3,
+          "label": "c3n18n10m100",
+          "task_id": "night_l18_train_n10",
+          "offset": 128,
+          "games": 48,
+          "evidence": "curriculum.log:171"
+        },
+        "games": 48,
+        "seeds_first": 2270128,
+        "seeds_last": 2270175,
+        "metadata_example": {
+          "seed": 2270164,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2270164/c3n18n10m100_fast_search/meta.json",
+          "meta_sha256": "1f74c39e8886c5f0bd88a348275692bae7ba64d6b415f8ccb54d7c2b5f129554"
+        }
+      },
+      {
+        "task_id": "night_l18_train_n10q",
+        "group": {
+          "round": 3,
+          "label": "c3n18n10qm100",
+          "task_id": "night_l18_train_n10q",
+          "offset": 0,
+          "games": 48,
+          "evidence": "curriculum.log:184"
+        },
+        "games": 48,
+        "seeds_first": 3370000,
+        "seeds_last": 3370047,
+        "metadata_example": {
+          "seed": 3370043,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3370043/c3n18n10qm100_fast_search/meta.json",
+          "meta_sha256": "47acd43bff47e450da34b9b8f9e654dc5d88dcec3aa8c1e7c447e068273e4af7"
+        }
+      },
+      {
+        "task_id": "night_l19_train_n10",
+        "group": {
+          "base": "night_l19_train_n10",
+          "multiplier": 1.0,
+          "task_id": "night_l19_train_n10",
+          "offset": 128,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+          "label": "c3n19n10m100",
+          "collection_started": 1792824187.2254,
+          "collection_finished": 1792824852.2126708,
+          "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "student_round": 0,
+          "workers": 14,
+          "beta": 0.0,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2280128,
+        "seeds_last": 2280175,
+        "metadata_example": {
+          "seed": 2280146,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2280146/c3n19n10m100_fast_search/meta.json",
+          "meta_sha256": "cd7dd047050a180100b9e998bc4b28ffe771ad7bee7725573aa87c056d579a44"
+        }
+      },
+      {
+        "task_id": "night_l19_train_n10q",
+        "group": {
+          "base": "night_l19_train_n10q",
+          "multiplier": 1.0,
+          "task_id": "night_l19_train_n10q",
+          "offset": 48,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json",
+          "label": "c5n19n10qm100",
+          "collection_started": 1792838793.9401293,
+          "collection_finished": 1792839147.327492,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 16,
+          "beta": 0.0,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 3380048,
+        "seeds_last": 3380095,
+        "metadata_example": {
+          "seed": 3380090,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3380090/c5n19n10qm100_fast_search/meta.json",
+          "meta_sha256": "7432bff313aaf92639a52ad6f7f69a48c8d5dd84ca5534e8c5cba0454e92046b"
+        }
+      },
+      {
+        "task_id": "night_l20_train_n10_orig",
+        "group": {
+          "base": "night_l20_train_n10_orig",
+          "multiplier": 1.0,
+          "task_id": "night_l20_train_n10_orig",
+          "offset": 80,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json",
+          "label": "c4n20n10origm100",
+          "collection_started": 1792834428.9034033,
+          "collection_finished": 1792834883.3721182,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 15,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2290080,
+        "seeds_last": 2290127,
+        "metadata_example": {
+          "seed": 2290095,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2290095/c4n20n10origm100_fast_search/meta.json",
+          "meta_sha256": "33560bd2853392caf6654fc80ff7654798341d5c07349ff7cb46c6659bf32108"
+        }
+      },
+      {
+        "task_id": "pool_l21_train_p9k",
+        "group": {
+          "base": "pool_l21_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l21_train_p9k",
+          "offset": 176,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c3p21p9km100",
+          "collection_started": 1792824852.222112,
+          "collection_finished": 1792825104.160034,
+          "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "student_round": 0,
+          "workers": 14,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2000176,
+        "seeds_last": 2000223,
+        "metadata_example": {
+          "seed": 2000211,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2000211/c3p21p9km100_fast_search/meta.json",
+          "meta_sha256": "daef2d6d98f248b0c26c1174e3ce593d9d9f82e7453c4e9a23317fd644cf7c8a"
+        }
+      },
+      {
+        "task_id": "pool_l22_train_p9k",
+        "group": {
+          "base": "pool_l22_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l22_train_p9k",
+          "offset": 176,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c3p22p9km100",
+          "collection_started": 1792825104.181542,
+          "collection_finished": 1792825520.303201,
+          "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "student_round": 0,
+          "workers": 13,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2010176,
+        "seeds_last": 2010223,
+        "metadata_example": {
+          "seed": 2010207,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2010207/c3p22p9km100_fast_search/meta.json",
+          "meta_sha256": "4246fa1ca263ea1123b61310d6a43059d474a1cf73948feaac34c06afe58f1e8"
+        }
+      },
+      {
+        "task_id": "pool_l23_train_p9k",
+        "group": {
+          "base": "pool_l23_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l23_train_p9k",
+          "offset": 176,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c3p23p9km100",
+          "collection_started": 1792825520.3123646,
+          "collection_finished": 1792825995.8178196,
+          "student": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "student_round": 0,
+          "workers": 12,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2020176,
+        "seeds_last": 2020223,
+        "metadata_example": {
+          "seed": 2020179,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2020179/c3p23p9km100_fast_search/meta.json",
+          "meta_sha256": "ba490de1481b8520b2a1628d1eb450ed31f05ef68336c3b42cbab0c112fe89cc"
+        }
+      },
+      {
+        "task_id": "pool_l24_train_p9k",
+        "group": {
+          "base": "pool_l24_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l24_train_p9k",
+          "offset": 176,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c3p24p9km100",
+          "collection_started": 1792825995.8690062,
+          "collection_finished": 1792826450.7012246,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 16,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2030176,
+        "seeds_last": 2030223,
+        "metadata_example": {
+          "seed": 2030178,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2030178/c3p24p9km100_fast_search/meta.json",
+          "meta_sha256": "f05c3133593ce82917485cdcc44e2370f7934a8423d2ad56990fe0d8d782fee9"
+        }
+      },
+      {
+        "task_id": "pool_l26_train_p9k",
+        "group": {
+          "base": "pool_l26_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l26_train_p9k",
+          "offset": 224,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c4p26p9km100",
+          "collection_started": 1792832899.8254035,
+          "collection_finished": 1792833237.8189306,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 14,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2050224,
+        "seeds_last": 2050271,
+        "metadata_example": {
+          "seed": 2050231,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2050231/c4p26p9km100_fast_search/meta.json",
+          "meta_sha256": "331d4f658ada5c5f22204fcb471f7056b2a48059d8944f2939127d510f56826a"
+        }
+      },
+      {
+        "task_id": "pool_l27_train_p9k",
+        "group": {
+          "base": "pool_l27_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l27_train_p9k",
+          "offset": 224,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c4p27p9km100",
+          "collection_started": 1792833237.826292,
+          "collection_finished": 1792833668.174558,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 16,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2060224,
+        "seeds_last": 2060271,
+        "metadata_example": {
+          "seed": 2060251,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2060251/c4p27p9km100_fast_search/meta.json",
+          "meta_sha256": "74a8301687d58e42cd11545c8950200295499d65b828c44e02616b6fe719243f"
+        }
+      },
+      {
+        "task_id": "pool_l28_train_p9k",
+        "group": {
+          "base": "pool_l28_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l28_train_p9k",
+          "offset": 224,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c4p28p9km100",
+          "collection_started": 1792834035.5514832,
+          "collection_finished": 1792834428.8985257,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 16,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2070224,
+        "seeds_last": 2070271,
+        "metadata_example": {
+          "seed": 2070247,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2070247/c4p28p9km100_fast_search/meta.json",
+          "meta_sha256": "31dcca4823aeb88ae9dc1d45a301a219b0518b31ab1a79ad8bf77a44b058556b"
+        }
+      },
+      {
+        "task_id": "pool_l29_train_p9k",
+        "group": {
+          "base": "pool_l29_train_p9k",
+          "multiplier": 1.0,
+          "task_id": "pool_l29_train_p9k",
+          "offset": 224,
+          "games": 48,
+          "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json",
+          "label": "c4p29p9km100",
+          "collection_started": 1792833668.1794734,
+          "collection_finished": 1792834035.5453641,
+          "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000002/student/model.pt",
+          "student_round": 2,
+          "workers": 16,
+          "beta": 0.5,
+          "evidence": "curriculum_state.json/log"
+        },
+        "games": 48,
+        "seeds_first": 2080224,
+        "seeds_last": 2080271,
+        "metadata_example": {
+          "seed": 2080231,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2080231/c4p29p9km100_fast_search/meta.json",
+          "meta_sha256": "c023d3dbb9fc2ff5f8eb7b43fa0c03d801588883b03b5315165d9aa74ff5106b"
+        }
+      },
+      {
+        "task_id": "roof_l41_train_r7",
+        "group": {
+          "round": 3,
+          "label": "c3roofl41r7m100",
+          "task_id": "roof_l41_train_r7",
+          "offset": 0,
+          "games": 48,
+          "evidence": "curriculum.log:414"
+        },
+        "games": 48,
+        "seeds_first": 46000000,
+        "seeds_last": 46000047,
+        "metadata_example": {
+          "seed": 46000017,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_46000017/c3roofl41r7m100_fast_search/meta.json",
+          "meta_sha256": "a12573a732e3497d1cfdf94746b1f7acac84a69ad14307df71cc6e52f703ab2b"
+        }
+      },
+      {
+        "task_id": "day_l1_train_d7",
+        "group": {
+          "label": "d1dag1d",
+          "offset": 0,
+          "games": 48,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue103.log:7",
+          "historical_log_line": "2026-10-22T14:55:37+08:00 d1dag1d (dw4i_s1, day_l1_train_d7, offset 0, 16 workers): 45/48"
+        },
+        "games": 48,
+        "seeds_first": 2100000,
+        "seeds_last": 2100047,
+        "metadata_example": {
+          "seed": 2100000,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2100000/d1dag1d_fast_search/meta.json",
+          "meta_sha256": "9b907e76f1ab55020a328af951518daa6c05da112138f08296bcb81a9d756899"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "day_l3_train_d7",
+        "group": {
+          "label": "d3dag1d",
+          "offset": 0,
+          "games": 48,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue103.log:8",
+          "historical_log_line": "2026-10-22T15:00:43+08:00 d3dag1d (dw4i_s1, day_l3_train_d7, offset 0, 16 workers): 45/48"
+        },
+        "games": 48,
+        "seeds_first": 2120000,
+        "seeds_last": 2120047,
+        "metadata_example": {
+          "seed": 2120000,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2120000/d3dag1d_fast_search/meta.json",
+          "meta_sha256": "76bf258ef2fa4687b9075bd1bdb25a9a5a3e371a646f56f2e13833ea2d8b2157"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "day_l4_train_d7",
+        "group": {
+          "label": "d4dag1d",
+          "offset": 0,
+          "games": 48,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue103.log:9",
+          "historical_log_line": "2026-10-22T15:05:59+08:00 d4dag1d (dw4i_s1, day_l4_train_d7, offset 0, 16 workers): 47/48"
+        },
+        "games": 48,
+        "seeds_first": 2130000,
+        "seeds_last": 2130047,
+        "metadata_example": {
+          "seed": 2130000,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2130000/d4dag1d_fast_search/meta.json",
+          "meta_sha256": "b51a53649d39d6aef5b3b47ef87171a0d744c953c67fcc67adcd6e3cb4c2f106"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "day_l6_train_d7",
+        "group": {
+          "label": "d6dag1d",
+          "offset": 0,
+          "games": 48,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue103.log:10",
+          "historical_log_line": "2026-10-22T15:12:16+08:00 d6dag1d (dw4i_s1, day_l6_train_d7, offset 0, 16 workers): 44/48"
+        },
+        "games": 48,
+        "seeds_first": 2150000,
+        "seeds_last": 2150047,
+        "metadata_example": {
+          "seed": 2150000,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2150000/d6dag1d_fast_search/meta.json",
+          "meta_sha256": "05d79572562d2f2d48331b8b5ec58a681d9434a5689986c2b06426cbb0f7c88c"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "day_l7_train_d7",
+        "group": {
+          "label": "d7dag1",
+          "offset": 0,
+          "games": 128,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue98.log:1",
+          "historical_log_line": "2026-10-21T10:01:39+08:00 d7dag1 (v33, L7 1.0x d7, offset 0, 8 workers): 125/128"
+        },
+        "games": 128,
+        "seeds_first": 1800000,
+        "seeds_last": 1800127,
+        "metadata_example": {
+          "seed": 1800000,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1800000/d7dag1_fast_search/meta.json",
+          "meta_sha256": "7f76e391ea460eef40b1491b6a3b881367031d7ede7da284edf09c261acfd2db"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "day_l8_train_d7",
+        "group": {
+          "label": "d8dag1",
+          "offset": 0,
+          "games": 128,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue98.log:2",
+          "historical_log_line": "2026-10-21T10:23:37+08:00 d8dag1 (v33, L8 1.0x d7, offset 0, 8 workers): 125/128"
+        },
+        "games": 128,
+        "seeds_first": 1810000,
+        "seeds_last": 1810127,
+        "metadata_example": {
+          "seed": 1810000,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1810000/d8dag1_fast_search/meta.json",
+          "meta_sha256": "a301d2a03440f1fae27b610d16cdc2098ba6f0cb0044c62e61208f8fccf0689b"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "day_l9_train_d7",
+        "group": {
+          "label": "d9dag5",
+          "offset": 1536,
+          "games": 128,
+          "evidence": "/home/newbiexvwu/pvz-logs/queue98.log:3",
+          "historical_log_line": "2026-10-21T10:59:19+08:00 d9dag5 (v33, L9 1.0x d7, offset 1536, 8 workers): 116/128"
+        },
+        "games": 128,
+        "seeds_first": 1821536,
+        "seeds_last": 1821663,
+        "metadata_example": {
+          "seed": 1821536,
+          "meta": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1821536/d9dag5_fast_search/meta.json",
+          "meta_sha256": "71ae158f02354134c27a7f49101dcc04ccf303919594548ee8ad56d1066d7e02"
+        },
+        "evidence_type": "raw_frame_metadata_plus_original_collection_log"
+      },
+      {
+        "task_id": "night_l14_train_n10p",
+        "group": {
+          "label": "task28_teacher_l14",
+          "offset": 0,
+          "games": 16,
+          "evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/MEMORY/docs/night-panel.md",
+          "offset_evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/MEMORY/docs/task28-night-coverage.md"
+        },
+        "games": 16,
+        "seeds_first": 2430000,
+        "seeds_last": 2430015,
+        "evidence_type": "git_preserved_actual_game_table",
+        "note": "Historical evaluation-only cell; raw run was retired, not in frames_v2. Committed per-game table supplies actual seed/task_id; taskbook independently records offset=0. This does not claim raw games.jsonl recovery."
+      },
+      {
+        "task_id": "night_l17_train_n10p",
+        "group": {
+          "label": "task28_teacher_l17",
+          "offset": 0,
+          "games": 16,
+          "evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/MEMORY/docs/night-panel.md",
+          "offset_evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup/MEMORY/docs/task28-night-coverage.md"
+        },
+        "games": 16,
+        "seeds_first": 2460000,
+        "seeds_last": 2460015,
+        "evidence_type": "git_preserved_actual_game_table",
+        "note": "Historical evaluation-only cell; raw run was retired, not in frames_v2. Committed per-game table supplies actual seed/task_id; taskbook independently records offset=0. This does not claim raw games.jsonl recovery."
+      }
+    ],
+    "missing": [],
+    "raw_frame_cells": 41,
+    "git_actual_game_table_cells": 2
+  },
+  "controller_restart": "2026-10-24 21:35 +08:00; controller restarted qc with 14 workers; this agent did not restart qc."
+}
