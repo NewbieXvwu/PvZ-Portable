@@ -96,3 +96,17 @@
   与现有全部段不相交）。`test_registered_manifest_start_cells` 期望集合同步加它，
   `python/test_curriculum_queue.py` 54 项通过。DESIGN §14.26 加 task71b 条目。
 - **提交**：`git push origin demo`（本步）。
+
+## 结果（task71b 追加，2026-10-25 同日）
+
+- **L34 接手扫描**：12 点 × 8 未来 × 2 臂。老师 0/8 一直到 N=512，50% 线 **N=615**（6/8）、
+  8/8 线 **N=717**；学生 50% 线 N=717。分界很陡（512→615 之间 0/8→6/8）。
+  破防混合型：普通 30、路障 25、海豚 21、气球 13（老师 51 输局）——气球比 L33 温和，
+  海豚（水路）是 L34 独有来源。正文见 [demo-start-states.md](demo-start-states.md) §6.7。
+- **登记**：`demo_fog_34_cactus_snow_m200` 加 `demo_start`（阶梯 `1126..615` 共 6 档；
+  种子块 44,400,000–44,400,255，与现有全部段不相交）。测试期望集合同步，
+  `python/test_curriculum_queue.py` 54 项通过。DESIGN §14.26 task71b 追加条目。
+- **提交**：`git push origin demo`（本步）。
+- **离线 dry run**：本地重建的 420 任务面板 + 生产控制器，5 个起点格（含新加的 L32 `s1231`、
+  L34 `s1126`）第一轮全部排到，`command_for` 带 `--demo-decision` 与各自种子块（44.3M / 44.4M），
+  旧面板格逐字段不变（总格数 42 → 44）。
