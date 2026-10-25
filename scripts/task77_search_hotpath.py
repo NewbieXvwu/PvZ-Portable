@@ -596,11 +596,12 @@ def abba_baseline(args):
 class EngineCpu:
     """Sum utime+stime of one arm's engine processes.
 
-    Wall clock on this box is dominated by other agents' queueing, which is why the
-    whole-game ABBA needs a load-stationary subset.  The engine's own CPU time is the
-    quantity the patch can change: engines live for the whole arm, so a half-second poll
-    loses at most the last tick's worth of samples.  Process identity comes from
-    /proc/<pid>/exe, so the A and B arms (different binaries) cannot be confused.
+    CPU time excludes scheduler waiting, but frequency and resource contention can
+    still change it. Each process contributes its last observed cumulative count:
+    exit between polls can lose a polling interval of CPU time (nominally 0.5 s;
+    scheduling can delay a poll further). This matters especially for short games.
+    Process identity comes from /proc/<pid>/exe, so the A and B arms (different
+    binaries) cannot be confused.
     """
 
     def __init__(self, executables, interval=0.5):
