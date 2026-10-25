@@ -28,6 +28,7 @@ L40 是 StormyNight，`StageHasFog=false`：引擎没有雾，但雷雨周期性
 
 - 黑屏时实体列表（zombies/plants/projectiles/defenses/grid_items/coins）、v2 实体通道、`enemy_zombies_on_screen`、每格 `plant_types`/`grid_item_types` 全空；闪电亮起时恢复成与特权状态逐字段一致。
 - 遮挡只作用于观测：同一 tick 的 `state_hash` 与特权状态，和 `xray` 跑出来的完全相同（`test_storm_masks_scene_but_preserves_raw_state_and_lean_alignment`）。
+- 亮屏时六类实体（zombies / plants / projectiles / defenses / grid_items / coins）与特权状态逐字段相等，只排除公开帧本来就遮的 `target_zombie_id`（子弹的目标 id 与植物同一套规则遮成 -1）。测试同时要求至少有一个带子弹的亮屏 tick，否则这条比对是空的。
 - v2 / v2fog 的 Python 特征与 C++ 原生特征在黑屏、闪电两种时刻逐位相等（`test_storm_python_native_features_match_during_blackout_and_flash`）。
 
 原族（None / human / human_v2 / xray）逐位不变：新旧构建在六个任务上的 48 份 full/lean 记录与状态哈希一致，五种既有学生编码签名不变。

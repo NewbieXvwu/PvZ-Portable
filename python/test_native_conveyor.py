@@ -25,6 +25,12 @@ engine = pytest.mark.skipif(not BINARY.is_file() or not (RESOURCE / 'main.pak').
                             reason='requires simulator and resources')
 
 
+def _public_entities(entities):
+    """Public frames hide the target id; every other field must match privileged."""
+    return [{key: value for key, value in entity.items() if key != 'target_zombie_id'}
+            for entity in entities]
+
+
 def reset_native(env, level, mode=None, preplanted=()):
     return env.reset(deck=(), task=TaskSpec(level=level, seed=61_000_000 + (25, 30, 40).index(level) * 100_000,
                      conveyor_start='original', profile=profile_for_deck(()),
@@ -111,6 +117,7 @@ def test_storm_masks_scene_but_preserves_raw_state_and_lean_alignment():
         reset_native(env, 40, 'storm', ((0, 1, 0), (3, 1, 1)))
         obs, *_ = env.step(dict(type='wait', ticks=8000))
         seen = set()
+        lit_projectile_ticks = 0
         for _ in range(180):
             raw = env.privileged_state()
             dark = obs['fog_amount'][0][0] == 255
@@ -123,11 +130,10 @@ def test_storm_masks_scene_but_preserves_raw_state_and_lean_alignment():
                 assert not obs['enemy_zombies_on_screen']
                 assert all(cell['plant_types'] == cell['grid_item_types'] == [] for cell in obs['cells'])
             else:
-                assert obs['zombies'] == raw['zombies']
-                assert [{key: value for key, value in plant.items() if key != 'target_zombie_id'}
-                        for plant in obs['plants']] == [
-                            {key: value for key, value in plant.items() if key != 'target_zombie_id'}
-                            for plant in raw['plants']]
+                for key in ('zombies', 'plants', 'projectiles', 'defenses', 'grid_items', 'coins'):
+                    assert _public_entities(obs[key]) == _public_entities(raw[key]), key
+                if raw['projectiles']:
+                    lit_projectile_ticks += 1
             assert obs['v2']['wave_health'] == obs['v2']['wave_start_health'] == 0
             env.set_lean_observation(True)
             assert _frame(env.observe()) == _frame(obs)
@@ -136,6 +142,7 @@ def test_storm_masks_scene_but_preserves_raw_state_and_lean_alignment():
                 break
             obs, *_ = env.step(dict(type='wait', ticks=30))
         assert seen == {False, True}
+        assert lit_projectile_ticks, 'no lit tick carried a projectile; the parity check would be empty'
         storm_state, storm_hash = env.privileged_state(), env.state_hash()
         tick = obs['tick']
         reset_native(env, 40, 'xray', ((0, 1, 0), (3, 1, 1)))
