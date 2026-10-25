@@ -638,3 +638,11 @@
   - **待办**：llmplay 分支的 `configs/human_demo_tasks.json` 里也有 `demo_pool_30_orig_m100`，种子是 81031000。合并 llmplay 时要合成一条，种子写成 [20261030, 81031000]。
   - task81c 正式包定版为 `139f3ee5…`，台式机文件 SHA 与文档一致；断网容器复验和清理由 Codex 接手。
   - 台式机 Codex 01:10 恢复，agent_pool 先让 CodeBuddy 收尾，10 分钟后交还。
+- 2026-10-26 01:50（台式机时间）：
+  - agent_pool 01:21–01:22 把 6 个任务全部交还 Codex。新任务第一次设目标时，Codex 会弹出“Replace current goal”确认，已补上自动确认。
+  - task76 的 Codex 在重查 `mCloudsCounter`，已告诉它 task82 的结论，让它回到主线。
+  - **task88 完成并合入**（ec25be38，DESIGN §14.32）：门禁种子池加第二段 [1 亿, 1.01 亿)，约 520 轮。
+    - 机械盘点 61 个已登记区间，全部不相交；引擎对 9 位种子不截断；不升 GATE_VERSION。
+    - 已要求 B8 把它并进 deploy14。旧池大约还够 15 轮。
+  - **task89 完成**（`scripts/import_llm_run.py`）：免费模型的 102 份存档全部校验通过。12 份通关因为没有稳健性记录，全部分在 half 档；自动生成扫描作业 288 条。分支已合并 llmplay，等 llmplay 定版后两者一起合进 pvz-env。注意 llmplay 的 DESIGN 节号 14.31 与 L50 重号，合并时改号。
+  - **task84 中间结果**：用同一份数据重训 r13 配方，heldout 只有 124/192，r11 是 166，对照组 172 持平。heldout 的退步可能主要来自训练随机性在换卡组族上的放大，而不是配方本身。等消融 B 和结论。
