@@ -288,6 +288,52 @@ def test_terminal_panel_sources_cannot_overwrite_training_labels(tmp_path):
     assert labels!=ROOT/'artifacts/task78/labels'
 
 
+def test_panel_export_cannot_target_the_training_corpus(tmp_path):
+    import task78_export as export
+    with pytest.raises(ValueError):
+        export.panel_destination(None, str(tmp_path/'export.json'))
+    for bad in (ROOT/'artifacts/task78/data', ROOT/'artifacts/task78/data/sub',
+                ROOT/'artifacts/task78/export.json'):
+        with pytest.raises(ValueError):
+            export.panel_destination(ROOT/'artifacts/task78/data', str(bad))
+    output, document = export.panel_destination(tmp_path/'shards', tmp_path/'export.json')
+    assert output == (tmp_path/'shards').resolve() and document == (tmp_path/'export.json').resolve()
+
+
+def test_panel_merge_requires_disjoint_complete_exports(tmp_path):
+    import task78_export as export
+    shard = lambda index, horizon: dict(archive_index=index, horizon=horizon, group='roof_l41',
+                                        rows=2, wins=1, terminal_dropped=0, stop=False)
+    first = tmp_path/'k0.json'; second = tmp_path/'k1.json'
+    first.write_text(json.dumps(dict(complete=True, training_eligible=False,
+                                     shards=[shard(0, 2500), shard(1, 2500)])))
+    second.write_text(json.dumps(dict(complete=True, training_eligible=False,
+                                      shards=[shard(100, 2500), shard(101, 2500)])))
+    merged = tmp_path/'panel.json'
+    export.merge([first, second], merged)
+    document = json.loads(merged.read_text())
+    assert document['complete'] is True and document['training_eligible'] is False
+    assert document['total']['shards'] == 4 and document['total']['rows'] == 8
+    second.write_text(json.dumps(dict(complete=True, training_eligible=False,
+                                      shards=[shard(0, 2500)])))
+    with pytest.raises(ValueError):
+        export.merge([first, second], merged)
+    second.write_text(json.dumps(dict(complete=False, shards=[shard(100, 2500)])))
+    with pytest.raises(ValueError):
+        export.merge([first, second], merged)
+
+
+def test_only_the_independent_roof_panel_makes_the_roof_gate_eligible():
+    import task78_gates as gates
+    corpus = gates.report({}, ['v5', 'v6'])
+    assert corpus['roof']['preregistered_gate_eligible'] is False
+    panel = gates.report({}, ['v5', 'v6'], gates.PANEL_SCOPE)
+    assert panel['roof']['preregistered_gate_eligible'] is True
+    assert panel['fog']['preregistered_gate_eligible'] is False
+    assert panel['preregistered_gate_eligible'] is False
+    assert panel['missing_required_panels'] == ['task72b original 94 states']
+
+
 def test_training_corpus_diagnostics_are_never_preregistered_terminal_gates():
     import task78_gates as gates
     result=gates.report({},['v5','v6'])

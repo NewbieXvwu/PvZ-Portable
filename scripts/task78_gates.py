@@ -202,13 +202,20 @@ def bootstrap_difference(left, right, n=10000, seed=780):
                 lower=float(draws[int(0.025*n)]), upper=float(draws[int(0.975*n)]))
 
 
-def report(states, names):
+PANEL_SCOPE = 'independent_roof_terminal_panel'
+CORPUS_SCOPE = 'training_and_stopping_corpus_diagnostic'
+
+
+def report(states, names, scope=CORPUS_SCOPE):
     fog = {k: v for k, v in states.items() if not v['group'].startswith('roof')}
     roof = {k: v for k, v in states.items() if v['group'].startswith('roof')}
+    panel = scope == PANEL_SCOPE
     document = dict(states=len(states), fog_states=len(fog), roof_states=len(roof),
-                    evaluation_scope='training_and_stopping_corpus_diagnostic',
+                    evaluation_scope=scope,
                     preregistered_gate_eligible=False,
-                    missing_required_panels=['task72b original 94 states','independent roof 48 roots with three futures'],
+                    missing_required_panels=(['task72b original 94 states'] if panel else
+                                             ['task72b original 94 states',
+                                              'independent roof 48 roots with three futures']),
                     note='single common future per candidate; terminal gaps are 0/1',
                     dead_zone=DEAD_ZONE)
     for terrain, subset in (('fog', fog), ('roof', roof)):
@@ -224,6 +231,9 @@ def report(states, names):
         document[terrain]['flip_difference'] = bootstrap_difference(
             document[terrain][names[0]]['flips_all'],
             document[terrain][names[1]]['flips_all'])
+        # Only the independent roof panel makes that half of the terminal gate eligible;
+        # the fog half still needs the unrebuildable task72b 94 states.
+        document[terrain]['preregistered_gate_eligible'] = panel and terrain == 'roof'
     return document
 
 
@@ -237,7 +247,8 @@ def main():
     args = parser.parse_args()
     models = dict(v5=load_value_net(args.v5).cpu(), v6=load_value_net(args.v6).cpu())
     states = score(models, load_rows(args.export, args.data))
-    document = report(states, ['v5', 'v6'])
+    panel = json.loads(Path(args.export).read_text()).get('training_eligible') is False
+    document = report(states, ['v5', 'v6'], PANEL_SCOPE if panel else CORPUS_SCOPE)
     document['inputs'] = dict(export=sha(args.export), v5=sha(args.v5), v6=sha(args.v6))
     Path(args.out).write_text(json.dumps(document, indent=1) + '\n')
     print(json.dumps({t: {n: document[t][n]['consistency']['rate']

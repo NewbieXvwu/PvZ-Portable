@@ -153,10 +153,11 @@ def audit_labels(index, horizon, row, manifest, replay):
     return output, artifacts
 
 
-def shard(index, horizon, row, stop, output, manifest, replay):
+def shard(index, horizon, row, stop, output, manifest, replay, label_index=None):
     import torch
     from pvz_value_net import encode_frame
-    records, provenance = audit_labels(index, horizon, row, manifest, replay)
+    records, provenance = audit_labels(
+        index if label_index is None else label_index, horizon, row, manifest, replay)
     boards, scalars, legacy, won, positions, candidates, packets = [], [], [], [], [], [], []
     terminal = 0
     for position, root_record, record in records:
@@ -200,34 +201,21 @@ def shard(index, horizon, row, stop, output, manifest, replay):
                 path=str(target), sha256=sha(target), provenance=provenance)
 
 
-def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('manifest', nargs='?', default=str(ROOT/'artifacts/task78/sources.json'))
-    parser.add_argument('--only', type=int, help='single archive index (smoke test)')
-    args = parser.parse_args()
-    manifest = Path(args.manifest)
-    source = json.loads(manifest.read_text())
-    replay_path, _ = paths(manifest)
-    replay = json.loads(replay_path.read_text())
-    if not replay['passed'] or replay['source_manifest_sha256'] != sha(manifest):
-        raise ValueError('frozen archives must pass exact root replay first')
-    old = manifest.name.startswith('old')
-    output = ROOT/('artifacts/task78/data_old' if old else 'artifacts/task78/data')
-    output.mkdir(parents=True, exist_ok=True)
-    stops, added = stop_set(source['archives'], old)
-    shards = []
-    for index, row in enumerate(source['archives']):
-        if args.only is not None and index != args.only:
-            continue
-        stop = stops[index]
-        for horizon in collection_horizons(row, old):
-            result = shard(index, horizon, row, stop, output, manifest, replay)
-            shards.append(result)
-            print(json.dumps({k:v for k,v in result.items() if k != 'provenance'}), flush=True)
-    total = dict(shards=len(shards), rows=sum(s['rows'] for s in shards),
-                 wins=sum(s['wins'] for s in shards),
-                 terminal_dropped=sum(s['terminal_dropped'] for s in shards),
-                 skipped=sum(1 for s in shards if s.get('skipped')))
+def panel_destination(out_dir, export):
+    """Panel shards live outside the training corpus, by construction."""
+    if not (out_dir and export):
+        raise ValueError('independent panel exports need --out-dir and --export')
+    output = Path(out_dir).resolve()
+    export_path = Path(export).resolve()
+    forbidden = [(ROOT/'artifacts/task78'/name).resolve()
+                 for name in ('data', 'data_old', 'export.json', 'export_old.json')]
+    if any(export_path == f or f in export_path.parents or output == f or f in output.parents
+           for f in forbidden):
+        raise ValueError('independent panel labels must not enter the training corpus')
+    return output, export_path
+
+
+def summarise(shards):
     by_group = {}
     for s in shards:
         item = by_group.setdefault(s['group'], dict(rows=0, wins=0, archives=set(), stop_archives=set()))
@@ -237,10 +225,85 @@ def main():
             item['stop_archives'].add(s['archive_index'])
     summary = {g: dict(rows=v['rows'], wins=v['wins'], archives=len(v['archives']),
                        stop_archives=len(v['stop_archives'])) for g, v in by_group.items()}
-    name = 'export_old.json' if old else 'export.json'
-    write_json(ROOT/f'artifacts/task78/{name}',
+    total = dict(shards=len(shards), rows=sum(s['rows'] for s in shards),
+                 wins=sum(s['wins'] for s in shards),
+                 terminal_dropped=sum(s['terminal_dropped'] for s in shards),
+                 skipped=sum(1 for s in shards if s.get('skipped')))
+    return total, summary
+
+
+def merge(sources, target):
+    """Concatenate complete exports; archive indices must already be disjoint."""
+    if not target:
+        raise ValueError('--merge requires --export')
+    documents = [json.loads(Path(p).read_text()) for p in sources]
+    if any(d.get('complete') is not True for d in documents):
+        raise ValueError('merge requires complete exports')
+    shards, seen = [], set()
+    for d in documents:
+        for s in d['shards']:
+            key = (s['archive_index'], s['horizon'])
+            if key in seen:
+                raise ValueError(f'duplicate shard {key}')
+            seen.add(key); shards.append(s)
+    total, summary = summarise(shards)
+    write_json(Path(target), dict(
+        complete=True, training_eligible=all(d.get('training_eligible') is not False for d in documents),
+        selection='merged independent panel exports',
+        merged_from=[dict(path=str(p), sha256=sha(p)) for p in sources],
+        total=total, by_group=summary, shards=shards))
+    print(json.dumps(dict(merged=len(shards), total=total), indent=1))
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('manifest', nargs='?', default=str(ROOT/'artifacts/task78/sources.json'))
+    parser.add_argument('--only', type=int, help='single archive index (smoke test)')
+    parser.add_argument('--out-dir', help='shard directory for an independent panel')
+    parser.add_argument('--export', help='export document for an independent panel')
+    parser.add_argument('--index-offset', type=int, default=0,
+                        help='archive index offset so panel shards stay disjoint')
+    parser.add_argument('--merge', nargs='+', metavar='EXPORT', help='merge complete exports into --export')
+    args = parser.parse_args()
+    if args.merge:
+        merge(args.merge, args.export)
+        return
+    manifest = Path(args.manifest)
+    source = json.loads(manifest.read_text())
+    replay_path, _ = paths(manifest)
+    replay = json.loads(replay_path.read_text())
+    if not replay['passed'] or replay['source_manifest_sha256'] != sha(manifest):
+        raise ValueError('frozen archives must pass exact root replay first')
+    old = manifest.name.startswith('old')
+    panel = source.get('training_eligible') is False
+    if panel:
+        output, export_path = panel_destination(args.out_dir, args.export)
+        if args.only is not None:
+            raise ValueError('independent panels are exported whole')
+    else:
+        if args.out_dir or args.export or args.index_offset:
+            raise ValueError('training corpus export paths and indices are fixed')
+        output = ROOT/('artifacts/task78/data_old' if old else 'artifacts/task78/data')
+        export_path = ROOT/('artifacts/task78/export_old.json' if old else 'artifacts/task78/export.json')
+    output.mkdir(parents=True, exist_ok=True)
+    stops, added = stop_set(source['archives'], old)
+    shards = []
+    for index, row in enumerate(source['archives']):
+        if args.only is not None and index != args.only:
+            continue
+        stop = stops[index]
+        for horizon in collection_horizons(row, old):
+            result = shard(index + args.index_offset, horizon, row, stop, output, manifest, replay,
+                           label_index=index)
+            shards.append(result)
+            print(json.dumps({k:v for k,v in result.items() if k != 'provenance'}), flush=True)
+    total, summary = summarise(shards)
+    write_json(export_path,
                dict(source_manifest=str(manifest), source_manifest_sha256=sha(manifest),
-                    complete=args.only is None, selection='all registered fog and roof horizons; at most two games',
+                    complete=args.only is None, training_eligible=not panel,
+                    index_offset=args.index_offset,
+                    selection=('independent panel labels; never exported to the training corpus'
+                               if panel else 'all registered fog and roof horizons; at most two games'),
                     stopping_archives=sorted(i for i, v in stops.items() if v),
                     stopping_floor_added=added,
                     total=total, by_group=summary, shards=shards))
