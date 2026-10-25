@@ -79,6 +79,9 @@ def main() -> None:
     p.add_argument("--init", help="start from this value checkpoint (must take the task context)")
     p.add_argument("--width", type=int, default=64, help="channels of the value net (checkpoints record it)")
     p.add_argument("--epochs", type=int, default=40)
+    p.add_argument("--lr", type=float, default=1e-3)
+    p.add_argument("--kind", type=int, choices=(0, 1), help="train only rows with this dump kind")
+    p.add_argument("--early-stop-metric", choices=("loss", "cells"), default="loss")
     p.add_argument("--min-gap", type=float, default=0.25)
     p.add_argument("--seed", type=int, default=0)
     p.add_argument("--device", default="cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu")
@@ -118,6 +121,9 @@ def main() -> None:
     d = {k: concatenated(k) for k in keys}
     del parts
     d["won"] = d["won"].float()
+    if args.kind is not None:
+        keep = d["kind"] == args.kind
+        d = {k: v[keep] for k, v in d.items()}
     seeds = sorted(set(d["seed"].tolist()))
     random.Random(0).shuffle(seeds)
     held_seeds = set(seeds[: max(1, len(seeds) // 10)])
@@ -130,7 +136,7 @@ def main() -> None:
     if args.init:
         net.load_state_dict(load_value_net(args.init).state_dict())
     net.to(args.device)
-    opt = torch.optim.AdamW(net.parameters(), lr=1e-3, weight_decay=1e-4)
+    opt = torch.optim.AdamW(net.parameters(), lr=args.lr, weight_decay=1e-4)
     won = d["won"]
 
     def run(idx, train: bool) -> float:
@@ -148,14 +154,19 @@ def main() -> None:
             total += loss.item() * len(batch)
         return total / len(order)
 
-    best, best_state, patience, history = float("inf"), None, 0, []
+    best, best_state, patience, history = (float("-inf"), None, 0, []) if args.early_stop_metric == "cells" else (float("inf"), None, 0, [])
     for epoch in range(args.epochs):
         fit_loss = run(fit_idx, True)
         val_loss = run(val_idx, False)
-        history.append({"epoch": epoch, "fit": fit_loss, "held_out": val_loss})
-        print(f"epoch {epoch} fit {fit_loss:.4f} held-out {val_loss:.4f}", flush=True)
-        if val_loss < best - 1e-4:
-            best, patience = val_loss, 0
+        held_pred = predict(net, d["boards"][val_idx], d["scalars"][val_idx], args.device) if args.early_stop_metric == "cells" else None
+        held_cells = pair_accuracy(held_pred, {k: v[val_idx] for k, v in d.items()}, torch.arange(len(val_idx)), args.min_gap, by_packet=True)["pair_accuracy"] if held_pred is not None else None
+        history.append({"epoch": epoch, "fit": fit_loss, "held_out": val_loss, "cells": held_cells})
+        metric = held_cells if held_cells is not None else val_loss
+        print(f"epoch {epoch} fit {fit_loss:.4f} held-out {val_loss:.4f}" + (f" cells {held_cells:.4f}" if held_cells is not None else ""), flush=True)
+        improved = metric > best + 1e-4 if args.early_stop_metric == "cells" else metric < best - 1e-4
+        if improved:
+            best = metric
+            patience = 0
             best_state = {k: v.detach().cpu().clone() for k, v in net.state_dict().items()}
         else:
             patience += 1
