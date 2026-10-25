@@ -643,6 +643,15 @@ class EngineCpu:
         return len(self.ticks)
 
 
+def selected_cells(args):
+    """Cells to measure, in the canonical order. --cells only narrows the panel."""
+    names = [name for name in (getattr(args, 'cells', '') or '').split(',') if name]
+    unknown = [name for name in names if name not in CELLS]
+    if unknown:
+        raise ValueError(f'unknown cells: {unknown}')
+    return [cell for cell in CELLS if not names or cell in names]
+
+
 def abba(args):
     if args.candidate is None or not args.candidate.is_file():
         raise ValueError('--candidate executable is required')
@@ -651,7 +660,8 @@ def abba(args):
                 'cpu_ratios': [], 'observables': ['wall', 'engine_cpu'],
                 'candidate': {'path': str(args.candidate), 'sha256': digest(args.candidate)},
                 'baseline': {'path': str(baseline), 'sha256': digest(baseline)}}
-    for cell in CELLS:
+    cells = selected_cells(args)
+    for cell in cells:
         # --count caps the games per arm; it also caps how many engine processes run at once
         # (search_play runs one worker per game), so the caller can keep the box under a
         # memory/process budget without changing the pairing.
@@ -696,7 +706,7 @@ def abba(args):
         save(args.out / 'abba_progress.json', evidence)
     evidence['summary'] = paired_interval([r['ratio'] for r in evidence['games']])
     evidence['by_cell'] = {cell: paired_interval([r['ratio'] for r in evidence['games']
-                                               if r['cell'] == cell]) for cell in CELLS}
+                                               if r['cell'] == cell]) for cell in cells}
     evidence['cpu_summary'] = paired_interval([r['ratio'] for r in evidence['cpu_ratios']])
     save(args.out / 'abba_evidence.json', evidence)
     print(json.dumps({'wall': evidence['summary'], 'engine_cpu': evidence['cpu_summary']}), flush=True)
@@ -717,7 +727,10 @@ def audit_abba(args):
     audit = {'pass': True, 'paired_games': 0, 'frame_comparisons': 0,
              'decision_frames_compared': 0, 'cells': {}, 'state_hash_differ': 0}
     recomputed_games = []
+    cells = selected_cells(args)
     for cell, task_id in CELLS.items():
+        if cell not in cells:
+            continue
         count = args.count or (2 if cell in ('roof', 'fog') else 3)
         task = next(t for t in manifest['tasks'] if t['task_id'] == task_id)
         expected_seeds = set(task['seeds'][:count])
@@ -787,7 +800,7 @@ def audit_abba(args):
                                'raw_sha256': {path: digest(path) for path in paths}}
     if 'engine_cpu' in evidence.get('observables', []):
         recomputed_cpu = []
-        for cell in CELLS:
+        for cell in cells:
             arms = [r for r in evidence.get('cpu', []) if r['cell'] == cell]
             if sorted(r['index'] for r in arms) != [0, 1, 2, 3]:
                 raise ValueError(f'missing engine CPU measurements: {cell}')
@@ -800,7 +813,7 @@ def audit_abba(args):
             recomputed_cpu.append(dict(cell=cell, old=old_cpu, new=new_cpu,
                                        ratio=new_cpu / old_cpu))
         reported_cpu = {r['cell']: r for r in evidence.get('cpu_ratios', [])}
-        if set(reported_cpu) != set(CELLS):
+        if set(reported_cpu) != set(cells):
             raise ValueError('missing engine CPU ratios')
         for row in recomputed_cpu:
             prior = reported_cpu[row['cell']]
@@ -853,6 +866,7 @@ def main():
     parser.add_argument('--candidate', type=Path)
     parser.add_argument('--baseline', type=Path)
     parser.add_argument('--count', type=int, choices=(1, 2, 3, 4))
+    parser.add_argument('--cells', default='', help='comma-separated subset of the six cells')
     parser.add_argument('--engine', type=Path, default=MAIN / '.claude/worktrees/cq/build4/pvz-portable')
     parser.add_argument('--student', type=Path, default=Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt'))
     args = parser.parse_args()

@@ -14,6 +14,16 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'limited to two game processes'):
             command(SimpleNamespace(workers=4), 'day', 'test', 4)
 
+    def test_cell_filter_narrows_the_panel_without_reordering(self):
+        from types import SimpleNamespace
+        from task77_search_hotpath import selected_cells
+        self.assertEqual(selected_cells(SimpleNamespace(cells='')),
+                         ['day', 'night', 'pool', 'conveyor', 'roof', 'fog'])
+        self.assertEqual(selected_cells(SimpleNamespace(cells='day')), ['day'])
+        self.assertEqual(selected_cells(SimpleNamespace(cells='pool,day')), ['day', 'pool'])
+        with self.assertRaisesRegex(ValueError, 'unknown cells'):
+            selected_cells(SimpleNamespace(cells='day,lobby'))
+
     def test_qc_cohorts_exclude_ancestor_matches_and_midblock_shutdown(self):
         from task77_search_hotpath import qc_cohorts
         rows = [dict(cell=cell, index=index,

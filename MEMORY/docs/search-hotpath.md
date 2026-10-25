@@ -28,6 +28,9 @@
    - 整局：两轮 ABBA（各 12 对、48 局）每局耗时比 geomean **0.993**（95% [0.948, 1.035]，qc 负载下的首轮）
      与 **0.990**（[0.969, 1.012]，负载较轻的第二轮）；第二轮同时记引擎进程 CPU 时间，比值 **0.985**（[0.959, 1.011]）。
      第三轮在**六族全程同一个 qc 控制器**下同时记墙钟与引擎 CPU：**1.0045**（[0.987, 1.022]）、CPU **1.0050**（[0.985, 1.029]）——三轮的点估计在 0.99–1.005 之间、区间都覆盖 1。
+     第四轮改用**两侧同负载重训的 PGO 二进制**：墙钟 **1.0144**（[0.989, 1.045]）、CPU **1.0161**（[0.983, 1.064]），
+     点估计仍覆盖 1；其中 day 的 +11.5% 来自唯一没有负载监控的 A 臂（同二进制两次差 26–29%），
+     day-only 复测为 **0.979**，去掉 day 的其余五族为 0.995（§7.5）。
    - 值网络前向占每决策耗时 2.0–5.2%（§3）。假定微基准收益能原样转移、调用分布不变，
      简单外推这一部分可节省整局 **约 0.3–0.9%**；这是估算，不是整局实测。`DataArray` 与动画两处改动的独立收益没有分离测量。
    - **目前不建议仅为提速单独部署。** 已测面板的行为一致性支持随下一次引擎重建评估带上，部署由主控决定。
@@ -78,17 +81,21 @@ $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/ab
 # 第三轮：qc 负载下的同设计 ABBA（六族全程同一控制器，§7.4）
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_qc --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_qc --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
-# 第四轮（未跑完）：两份 PGO 的 ABBA（§7.5，交接时 ABBA 尚未开始）
+# 第四轮：两份 PGO 的 ABBA（§7.5）
 # 两份 PGO 用同一流程、同一训练负载（day L7、种子 5012288/5012289、2 进程）各自两阶段构建：
 #   基线 = c0249d62 的临时 worktree；补丁 = 本工作树；均 -O3 -flto=auto -ffp-contract=off -g1
 #   阶段1 -fprofile-generate=<data> → 跑上面的 search_play 训练负载 → 阶段2 -DPVZ_PGO_DATA=<data>
 # 产物：artifacts/task77/pvz-pgo-base（ca7d9283…）、artifacts/task77/pvz-pgo-cand（a5098255…）
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_pgo --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2
 $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_pgo --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2
+# day 单元复测：主轮 day 的 A0 臂跑在负载监控启动之前（§7.5），另建目录整轮重跑该族
+PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_pgo_day --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2 --cells day
+$PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_pgo_day --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2 --cells day
 # 组件级：逐位核检查 + 交错计时（§7.3b）
 $PY $P/scripts/task77_value_kernel_check.py --time
 ```
 
+`--cells` 只收窄面板（用于补测单族），不改变四臂配对、`--count` 或统计口径；`abba` 与 `abba-verify` 都接受。
 `prepare` 拒绝覆盖既有冻结；`profile` 可续跑已落盘的局（首批 day/night 缺引擎计数器，已按同一任务与种子
 另存 `profile_complete/`，不覆盖旧证据）。
 `abba_final/` 是本轮全新计时目录，含冻结清单/身份文件的副本与指向冻结 `baseline/` 的软链，
@@ -363,16 +370,42 @@ night 更麻烦：B1 与 A1 同在 loadavg 29.2，却快 33%（147.8 vs 221.2）
 `-O3 -flto=auto -ffp-contract=off -g1` 和 `-fprofile-use` 重建。二进制不含 gcov 训练期运行时。
 基线临时工作树已清理；两个产物与构建脚本保留在 ignored 的 `artifacts/task77/`，完整 SHA256 见 §2。
 
-本轮用全新 `abba_pgo/` 目录，按六族 × 2 种子 × A-B-B-A、`--workers 2 --count 2`，
-同时记墙钟、引擎 CPU 与只读负载监控。训练负载一致有助于比较补丁在 PGO 下的表现，
-但这套新训练 profile 与历史生产 deploy4 的 profile 不同，因此也不能直接当成上线吞吐比。
+本轮用全新 `abba_pgo/` 目录，按六族 × 2 种子 × A-B-B-A、`--workers 2 --count 2`（48 局），
+同时记墙钟、引擎 CPU 与只读负载监控。24 个 block 边界都是同一个 qc 控制器（pid 626824，552 个监控样本）；
+边界快照 loadavg 12.3–25.9、qc 引擎 7–10 个，样本里另有 2 个采样点落在 qc 换轮的空档（0 引擎）。
 
-本轮计时进行中；待 24 臂全部完成后运行 `abba-verify`，再填写逐族结果与完整帧审计。
+| 族 | 墙钟 geomean | 95% 区间 | 中位 | 引擎 CPU 比 | CPU 秒（A→B） |
+|---|---|---|---|---|---|
+| day | 1.1152 | [1.0919, 1.1391] | 1.1155 | 1.1342 | 181.4 → 205.7 |
+| night | 0.9642 | [0.9588, 0.9696] | 0.9642 | 0.9733 | 275.1 → 267.8 |
+| pool | 0.9737 | [0.9692, 0.9781] | 0.9737 | 0.9855 | 393.9 → 388.2 |
+| conveyor | 1.0270 | [1.0246, 1.0295] | 1.0270 | 1.0295 | 249.2 → 256.5 |
+| roof | 1.0200 | [1.0141, 1.0260] | 1.0200 | 0.9915 | 6.5 → 6.4 |
+| fog | 0.9932 | [0.9930, 0.9933] | 0.9932 | 0.9912 | 127.6 → 126.5 |
+
+- **六族合一**：墙钟 geomean **1.0144**（95% [0.9886, 1.0446]，按族重采样 [0.9808, 1.0578]），中位 1.0037；
+  引擎 CPU **1.0161**（[0.9834, 1.0638]），中位 0.9913。
+- 完整帧审计 `pass`：12 对、36 次比较、40,686 帧逐位一致；36 次比较里 state_hash 13 处不同、23 处相同（与前三轮同样的口径：hash 只作观察项，逐位判据是完整帧）。
+  两侧二进制在测量后被复核 SHA256 未变。
+
+**day 的 +11.5% 归因于该臂的窗口，不是二进制。** day 的 A0 臂（20:18:11–20:19:46）跑在负载监控启动
+（20:19:47）之前，是 24 个臂里唯一没有监控样本的；同一个 A 二进制跑两次，引擎 CPU 158.3 s 与 204.5 s
+（+29%）、墙钟 96.9 s 与 122.2 s（+26%），这个离散度比 A/B 之差（181.4 vs 205.7 s）还大。
+因此在 `abba_pgo_day/` 单独补了一轮 day-only（同设计、全程监控：85 个样本，4 个边界同为 626824，
+qc 引擎 1–8 个，loadavg 15.3–22.9）：2 对、6 次完整帧、6,411 帧一致，墙钟 **0.9790** [0.9760, 0.9820]、
+CPU **0.9780**；同一臂内 A 的两次为 176.6 / 181.6 s（差 3%），面板比主轮紧得多。**与主轮的 +11.5% 反号。**
+
+- 去掉 day 后其余五族 geomean **0.9953**；把 day 换成复测的敏感性估计（12 对）为 **0.9926** [0.9796, 1.0064]。
+  这只是敏感性分析，主轮结果原样保留、不覆盖、不拼接。
+
+训练负载一致有助于比较补丁在 PGO 下的表现，但这套新训练 profile 与历史生产 deploy4 的 profile 不同，
+因此不能直接当成上线吞吐比。结论与 §7.2–§7.4 一致：**逐位不变成立，PGO 下同样没有可测的整局提速。**
 
 ## 8. 局限与后续
 
-- **前三轮使用无 PGO 的匹配构建。** 生产 deploy4 带本机 PGO（历史实测 18%），所以前三轮 A 臂用同 flags 重编的
-  `pvz-portable-release-before`；§7.5 另用相同负载重新训练两份 PGO。两类实验分别报告，
+- **前三轮使用无 PGO 的匹配构建，第四轮用同负载重训的 PGO。** 生产 deploy4 带本机 PGO（历史实测 18%），
+  所以前三轮 A 臂用同 flags 重编的 `pvz-portable-release-before`；§7.5 另用相同负载重新训练两份 PGO，
+  墙钟 1.0144 [0.989, 1.045]、CPU 1.0161 [0.983, 1.064]，同样没有可测收益。两类实验分别报告，
   都不直接代表历史生产引擎上线后的墙钟比。部署由主控执行。
 - **当前整局区间仍有百分数级宽度。** 三轮各 12 对 ABBA 的区间分别约 ±4.5%（部分 qc 负载、只有墙钟）、
   ±2%（负载轻）、±1.8%（qc 负载、墙钟与引擎 CPU 同时记，§7.4），引擎 CPU 观测约 ±2.2–2.6%。
