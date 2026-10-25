@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
-                              MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
+                              CURRICULUM_LADDERS, MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE,
+                              WINDOW, _descendant_rss,
                               adjust, allocate, build_plan, cell_level, command_for, label_for,
                               load_demo_start_cells, load_teacher_rates, make_state, pack_command,
                               pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
@@ -39,6 +40,8 @@ class CurriculumRulesTest(unittest.TestCase):
         # paired human/human_v2 cold start (task70); the task45 fog_f8/f8p families stay out.
         self.assertEqual({name for name in ids if name.startswith('fog_')},
                          {'fog_user_l31_snow'})
+        self.assertIn('pool_l25_orig_train', ids)
+        self.assertEqual(CURRICULUM_LADDERS['native_l25'], [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
 
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))

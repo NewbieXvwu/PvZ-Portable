@@ -39,6 +39,12 @@ from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402
 # 倍率档 -> 族名后缀。任务书要求 1.25 / 1.5 / 1.75 / 2.0 / 2.5 / 3.0。
 MULTIPLIERS = ((1.25, 'm125'), (1.5, 'm150'), (1.75, 'm175'),
                (2.0, 'm200'), (2.5, 'm250'), (3.0, 'm300'))
+NATIVE_MULTIPLIERS = ((0.25, 'm025'), (0.5, 'm050'), (0.75, 'm075')) + MULTIPLIERS
+NATIVE_LADDER_MULTIPLIERS = {
+    'native_l25': NATIVE_MULTIPLIERS[1:],
+    'native_l30': NATIVE_MULTIPLIERS,
+    'native_l40': NATIVE_MULTIPLIERS[1:],
+}
 
 # 种子段：5_000_000 起，每档 700_000。档内按 (族序号, 关卡) 排槽：
 #   slot = family_index * 32 + (level - 1)，每槽 SEEDS_PER_TASK 个种子。
@@ -72,12 +78,17 @@ FOG_USER_MULT_STRIDE = 100_000
 # 49_000_000..49_008_191, eval sibling 49_100_000..49_100_031, multiplier bands 49_200_000+.
 FOG_USER_V2_MULT_SEED_BASE = 49_200_000
 FOG_USER_V2_MULT_STRIDE = 100_000
+NATIVE_MULT_SEED_BASE = 62_000_000
+NATIVE_MULT_STRIDE = 10_000
 INDEPENDENT_BLOCKS = {
     # family -> (multiplier seed base, band width, first level of the block)
     'roof': (ROOF_MULT_SEED_BASE, ROOF_MULT_STRIDE, 41),
     'fog_user': (FOG_USER_MULT_SEED_BASE, FOG_USER_MULT_STRIDE, 31),
     'fog_user_v2': (FOG_USER_V2_MULT_SEED_BASE, FOG_USER_V2_MULT_STRIDE, 31),
 }
+NATIVE_BLOCKS = {'native_l25': NATIVE_MULT_SEED_BASE,
+                 'native_l30': NATIVE_MULT_SEED_BASE + 100_000,
+                 'native_l40': NATIVE_MULT_SEED_BASE + 200_000}
 
 DAY_D7_LEVELS = (1, 3, 4, 6, 7, 8, 9)
 NIGHT_N10_LEVELS = (11, 12, 13, 14, 16, 17, 18, 19)
@@ -106,6 +117,9 @@ FAMILIES = (
     # (task66 rendered-opacity rule). Observation is a family property (AGENTS.md section 8),
     # so this is a new family with a fresh seed block; fog_user is superseded below.
     ('fog_user_v2', 'fog_user_v2', 'fog_user_v2_l{level}_snow', (31,), 'fog'),
+    ('native_l25', 'native', 'pool_l25_orig_train', (25,), 'pool'),
+    ('native_l30', 'native', 'pool_l30_orig_train', (30,), 'pool'),
+    ('native_l40', 'native', 'storm_l40_orig_train', (40,), 'fog'),
 )
 
 # Registry coverage and curriculum admission are separate: unmeasured roof levels have
@@ -118,7 +132,8 @@ FAMILIES = (
 # task70: fog_user_v2 is registered but NOT admitted yet: its first teacher cold start on deploy4
 # was 8/32 (25%) against 25/32 for fog_user on other seeds/engine; a paired human vs human_v2
 # comparison on the same seeds decides before it replaces fog_user (2026-10-25).
-CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user': (31,), 'fog_user_v2': ()}
+CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user': (31,),
+                     'fog_user_v2': (), 'native_l25': (25,), 'native_l30': (), 'native_l40': ()}
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。
@@ -129,8 +144,14 @@ def variant_id(base_id: str, suffix: str) -> str:
     return f'{base_id}_{suffix}'
 
 
+def multipliers_for_family(family: str):
+    return NATIVE_LADDER_MULTIPLIERS[family] if family in NATIVE_BLOCKS else MULTIPLIERS
+
+
 def seed_start(mult_index: int, family_index: int, level: int) -> int:
     family = FAMILIES[family_index][0]
+    if family in NATIVE_BLOCKS:
+        return NATIVE_BLOCKS[family] + mult_index * NATIVE_MULT_STRIDE
     if family in INDEPENDENT_BLOCKS:
         base, stride, first = INDEPENDENT_BLOCKS[family]
         if not first <= level <= first + SLOTS_PER_FAMILY - 1:
@@ -156,6 +177,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'fog_user': overrides.get('fog_user') or ROOT / 'artifacts/task68/fog_user_panel.json',
         # task70: local manifest from scripts/make_fog_user_v2_panel.py (not in git).
         'fog_user_v2': overrides.get('fog_user_v2') or ROOT / 'artifacts/task70/fog_user_v2_panel.json',
+        'native': overrides.get('native') or ROOT / 'artifacts/task75/native_conveyor_panel.json',
     }
 
 
@@ -172,7 +194,7 @@ def build_variants(sources: dict[str, dict[str, dict]], seeds: int = SEEDS_PER_T
         table = sources[key]
         for level in levels:
             base = table[pattern.format(level=level)]
-            for index, (multiplier, suffix) in enumerate(MULTIPLIERS):
+            for index, (multiplier, suffix) in enumerate(multipliers_for_family(family)):
                 task = copy.deepcopy(base)
                 start = seed_start(index, family_index, level)
                 task.update(task_id=variant_id(base['task_id'], suffix),
@@ -218,7 +240,8 @@ def scan_manifests() -> list[Path]:
 
 def audit(tasks: list[dict], sources: dict[str, dict[str, dict]], manifest_paths: list[Path],
           exclude: set[Path]) -> dict:
-    assert len(tasks) == sum(len(levels) for _, _, _, levels, _ in FAMILIES) * len(MULTIPLIERS)
+    assert len(tasks) == sum(len(levels) * len(multipliers_for_family(family))
+                             for family, _key, _pattern, levels, _terrain in FAMILIES)
     # 1) 新种子全局唯一。
     owner: dict[int, str] = {}
     for task in tasks:
@@ -237,7 +260,7 @@ def audit(tasks: list[dict], sources: dict[str, dict[str, dict]], manifest_paths
         table = sources[key]
         for level in levels:
             base = table[pattern.format(level=level)]
-            for multiplier, suffix in MULTIPLIERS:
+            for multiplier, suffix in multipliers_for_family(family):
                 task = by_id[variant_id(base['task_id'], suffix)]
                 assert task['zombie_count_multiplier'] == multiplier
                 assert task['level'] == level and task['terrain'] == terrain
@@ -258,8 +281,9 @@ def audit(tasks: list[dict], sources: dict[str, dict[str, dict]], manifest_paths
                 seed_base=SEED_BASE, mult_stride=MULT_STRIDE,
                 independent_blocks={name: base for name, (base, _stride, _first)
                                     in sorted(INDEPENDENT_BLOCKS.items())},
+                native_blocks=dict(NATIVE_BLOCKS),
                 slots_per_family=SLOTS_PER_FAMILY, seeds_per_task=SEEDS_PER_TASK,
-                multipliers=[m for m, _ in MULTIPLIERS])
+                multipliers=sorted({m for family, *_ in FAMILIES for m, _ in multipliers_for_family(family)}))
 
 
 def main() -> None:
@@ -277,6 +301,7 @@ def main() -> None:
     parser.add_argument('--roof-manifest', type=Path)
     parser.add_argument('--fog-manifest', type=Path)
     parser.add_argument('--fog-user-manifest', type=Path)
+    parser.add_argument('--native-manifest', type=Path)
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -285,7 +310,8 @@ def main() -> None:
                           'night': args.night_manifest, 'pool': args.pool_manifest,
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
                           'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest,
-                          'fog': args.fog_manifest, 'fog_user': args.fog_user_manifest})
+                          'fog': args.fog_manifest, 'fog_user': args.fog_user_manifest,
+                          'native': args.native_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests()
@@ -293,10 +319,11 @@ def main() -> None:
     if args.dry_run:
         print(f"{'family':<12}{'levels':>7}{'tasks':>7}{'seeds/task':>12}{'seed range':>28}")
         for family_index, (family, key, pattern, levels, _terrain) in enumerate(FAMILIES):
-            starts = [seed_start(i, family_index, level) for i, _ in enumerate(MULTIPLIERS) for level in levels]
+            family_multipliers = multipliers_for_family(family)
+            starts = [seed_start(i, family_index, level) for i, _ in enumerate(family_multipliers) for level in levels]
             ends = [seed_start(i, family_index, level) + args.seeds - 1
-                    for i, _ in enumerate(MULTIPLIERS) for level in levels]
-            print(f'{family:<12}{len(levels):>7}{len(levels) * len(MULTIPLIERS):>7}{args.seeds:>12}'
+                    for i, _ in enumerate(family_multipliers) for level in levels]
+            print(f'{family:<12}{len(levels):>7}{len(levels) * len(family_multipliers):>7}{args.seeds:>12}'
                   f'{min(starts):>16}..{max(ends):<11}')
         print(json.dumps(summary, ensure_ascii=False, indent=2))
         return

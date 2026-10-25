@@ -68,7 +68,8 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
+                                   load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, policy as promotion_policy, freeze_panel
 from promotion_gate import (allocate_seed_block, contract as promotion_contract, contract_key,
@@ -87,6 +88,9 @@ FLOOR_SHARE = 2            # 保底组局数 = per_group // FLOOR_SHARE（小局
 DEFAULT_STATE = Path.home() / 'pvz-logs/curriculum_state.json'
 DEFAULT_TEACHER_RATES = Path.home() / 'pvz-logs/teacher_rates.json'
 DEFAULT_LOG = Path.home() / 'pvz-logs/curriculum.log'
+CURRICULUM_LADDERS = {
+    'native_l25': [0.5, 1.0] + [m for m, _ in MULTIPLIERS],
+}
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
@@ -281,8 +285,9 @@ def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, floa
             if task_id not in tasks:
                 tasks[task_id] = task
                 manifests[task_id] = path_
-    values = sorted({float(task['zombie_count_multiplier']) for task in document['tasks']})
-    values = [1.0] + [value for value in values if value != 1.0]
+    values = sorted({float(task['zombie_count_multiplier']) for task in document['tasks']
+                     if task['zombie_count_multiplier'] > 1})
+    values = [1.0] + values
     return tasks, values, names, manifests
 
 
@@ -386,8 +391,12 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
     for base, task in wanted.items():
         if base in cells:
             continue
-        cells[base] = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
-                           mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        family = family_of(base)
+        cell = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
+                    mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        if family in CURRICULUM_LADDERS:
+            cell['ladder'] = CURRICULUM_LADDERS[family]
+        cells[base] = cell
         lines.append(f'cell added: {base}')
     return lines
 
