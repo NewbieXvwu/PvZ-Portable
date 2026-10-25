@@ -590,8 +590,8 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"closed\":" << (human.closed ? "true" : "false") << '}' << std::endl;
 			continue;
 		}
-		else if (command == "DEMO_INPUT")
-		{
+			else if (command == "DEMO_INPUT")
+			{
 			// task80 test seam: push a synthetic event into the very SDL queue the recorder
 			// reads, so a scripted regression drives the real Esc/Space/window-close path
 			// instead of a parallel one.  Never accepted outside a visible demo session.
@@ -610,8 +610,47 @@ static void RunEnvironment(LawnApp* app)
 				}
 				SDL_PushEvent(&event);
 			}
-			minimalResponse = true;
-		}
+				minimalResponse = true;
+			}
+			else if (command == "DEMO_CLICK_PACKET")
+			{
+				int index = -1;
+				ok = static_cast<bool>(input >> index) && demo && visible && app->mBoard &&
+					index >= 0 && index < app->mBoard->mSeedBank->mNumPackets;
+				if (ok)
+				{
+					human.packet = index;
+					human.shovel = false;
+				}
+				minimalResponse = true;
+			}
+			else if (command == "DEMO_CLICK_CELL")
+			{
+				int col = -1, row = -1;
+				ok = static_cast<bool>(input >> col >> row) && demo && visible && app->mBoard &&
+					col >= 0 && col < MAX_GRID_SIZE_X && row >= 0 && row < MAX_GRID_SIZE_Y;
+				if (ok)
+				{
+					int x = app->mBoard->mX + app->mBoard->GridToPixelX(col, row) + 40;
+					int y = app->mBoard->mY + app->mBoard->GridToPixelY(col, row) + 40;
+					x = (x - app->mWidgetManager->mMouseDestRect.mX) * app->mWidgetManager->mMouseSourceRect.mWidth /
+						app->mWidgetManager->mMouseDestRect.mWidth + app->mWidgetManager->mMouseSourceRect.mX;
+					y = (y - app->mWidgetManager->mMouseDestRect.mY) * app->mWidgetManager->mMouseSourceRect.mHeight /
+						app->mWidgetManager->mMouseDestRect.mHeight + app->mWidgetManager->mMouseSourceRect.mY;
+					SDL_Event motion{};
+					motion.type = SDL_MOUSEMOTION;
+					motion.motion.x = x;
+					motion.motion.y = y;
+					SDL_PushEvent(&motion);
+					SDL_Event click{};
+					click.type = SDL_MOUSEBUTTONDOWN;
+					click.button.button = SDL_BUTTON_LEFT;
+					click.button.x = x;
+					click.button.y = y;
+					SDL_PushEvent(&click);
+				}
+				minimalResponse = true;
+			}
 		else if (command == "STATE_HASH")
 		{
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (app->mBoard ? "true" : "false");
