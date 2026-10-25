@@ -384,7 +384,12 @@ class Game:
         self._start()
         assert self.env is not None
         level = self.spec.level
-        self.session.require_not_exhausted(level)
+        if self.session.level(level)["exhausted"]:
+            # §A：单关总预算用尽时，接口自己把最远进度存下来，再告诉模型换关。
+            saved = self._auto_export_best()
+            raise RuntimeError(
+                "本关总预算（搜索 + 手动）已用尽。最远进度的存档已经自动导出到 %s，"
+                "现在换下一关，有余力再回来。" % saved)
         before = self.tick
         before_wave = int((self.obs or {}).get("wave") or 0)
         before_plants, before_zombies = self._plants_snapshot, self._zombies_snapshot
@@ -400,6 +405,21 @@ class Game:
                              state_hash=state_hash))
         self._maybe_frame(action, ok)
         return ok
+
+    def _auto_export_best(self) -> str:
+        """把当前这局导出成存档（预算用尽时自动调用）。失败也不挡住异常。"""
+        try:
+            out = Path.cwd() / "llmplay_out"
+            target = out / ("%s_tick%d" % (self.task_id, self.tick))
+            index = 1
+            while target.exists():
+                target = out / ("%s_tick%d_%d" % (self.task_id, self.tick, index))
+                index += 1
+            self.export_archive(target)
+            self.session.record_best_archive(self.spec.level, target)
+            return str(target)
+        except Exception as error:      # 存档失败不能掩盖"预算用尽"这件事
+            return "(自动导出失败：%s)" % error
 
     def _maybe_frame(self, action: dict, ok: bool) -> None:
         if action.get("type") != "wait":
@@ -540,6 +560,11 @@ class Game:
         self._observed_at = self.tick
         self._dirty = False
         return text
+
+    def legend(self) -> str:
+        """网格与明细里那些短代码是什么意思（第一次 observe 会自动附一次）。"""
+        from . import scene
+        return self.session.status_line(self.spec.level) + "\n" + scene.legend()
 
     def timeline(self) -> str:
         """每波一行的历史（§B.7）：波号、tick、阳光、植物数、击杀、失去、小推车。"""
