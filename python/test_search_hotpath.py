@@ -36,12 +36,29 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         from types import SimpleNamespace
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
-            (root / 'freeze.json').write_text(json.dumps({'engine': {'path': '/nonexistent/engine'}}))
+            production = root / 'production-pgo'
+            production.write_bytes(b'production')
+            (root / 'freeze.json').write_text(json.dumps({'engine': {'path': str(production)}}))
             explicit = root / 'release-before'
             explicit.write_bytes(b'x')
             self.assertEqual(abba_baseline(SimpleNamespace(out=root, baseline=explicit)), explicit)
             with self.assertRaises(ValueError):
                 abba_baseline(SimpleNamespace(out=root, baseline=None))
+
+    def test_sample_reader_rejects_partial_parallel_arrays_and_bad_module_ids(self):
+        import struct
+        import tempfile
+        from prof_symbolize import load
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'samples.bin'
+            good = b'PVZPROF 1 1\n/engine\n' + struct.pack('<2Q2I', 123, 456, 0, 0)
+            path.write_bytes(good)
+            self.assertEqual(load(path), (['/engine'], [123, 456], [0, 0]))
+            for data in (good[:-1], good + b'\0\0\0\0',
+                         good[:-4] + struct.pack('<I', 4)):
+                path.write_bytes(data)
+                with self.assertRaises(ValueError):
+                    load(path)
 
     def test_interval_rejects_invalid_or_empty_evidence(self):
         for ratios in ([], [0], [-1], [float('nan')], [float('inf')]):
@@ -50,6 +67,64 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         result = paired_interval([.8] * 8, draws=100)
         self.assertAlmostEqual(result['geomean'], .8)
         self.assertAlmostEqual(result['bootstrap95'][0], .8)
+
+    def test_abba_audit_checks_raw_timings_configuration_and_label_archives(self):
+        import json
+        import os
+        import tempfile
+        from types import SimpleNamespace
+        from unittest.mock import patch
+        import task77_search_hotpath as bench
+        import pvz_frame_store
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            for name in ('before', 'after', 'weights'):
+                (root / name).write_bytes(name.encode())
+            bench.save(root / 'manifest.json', {'tasks': [{'task_id': 'day_task', 'seeds': [1, 2]}]})
+            bench.save(root / 'freeze.json', {k: {'path': str(root / 'weights')}
+                                            for k in ('student', 'value', 'static')})
+            evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [
+                dict(cell='day', seed=seed, old=1., new=.8, ratio=.8) for seed in (1, 2)]}
+            for key, name in (('baseline', 'before'), ('candidate', 'after')):
+                evidence[key] = {'path': str(root / name), 'sha256': bench.digest(root / name)}
+            for index, arm in enumerate(evidence['order']):
+                path = root / f'abba_{index}_{arm}' / f'day_abba_{index}_{arm}_2'
+                path.mkdir(parents=True)
+                config = dict(task_id='day_task', dagger_beta='1.0', verify_samples='9',
+                    student_candidates='2', horizon='2500', samples='3', seed_offset='0', seeds='2',
+                    halving='True', executable=str(root / ('before' if arm == 'A' else 'after')),
+                    manifest=str(root / 'manifest.json'), rollout_policy=str(root / 'weights'),
+                    value=str(root / 'weights'), static_value=str(root / 'weights'))
+                bench.save(path / 'config.json', config)
+                (path / 'games.jsonl').write_text(''.join(json.dumps(dict(seed=seed,
+                    decisions=1, won=True, state_hash='same', seconds=1. if arm == 'A' else .8))
+                    + '\n' for seed in (1, 2)))
+                start = 10_000_000_000 + index * 2_000_000_000
+                os.utime(path / 'config.json', ns=(start, start))
+                os.utime(path / 'games.jsonl', ns=(start + 1_000_000_000,) * 2)
+            args = SimpleNamespace(out=root, count=2)
+            frames = [{'tick': 0}, {'tick': 60, 'label': {'type': 'wait'}}]
+            with patch.object(bench, 'CELLS', {'day': 'day_task'}), \
+                    patch.object(pvz_frame_store, 'read_frames', return_value=frames), \
+                    patch.object(bench, 'paired_interval', return_value={}), \
+                    patch('builtins.print'):
+                bench.save(root / 'abba_evidence.json', evidence)
+                bench.audit_abba(args)
+                audited = json.loads((root / 'abba_evidence.json').read_text())
+                self.assertEqual(audited['identity_audit']['frame_comparisons'], 6)
+                evidence['games'][0]['ratio'] = .1
+                bench.save(root / 'abba_evidence.json', evidence)
+                with self.assertRaisesRegex(ValueError, 'timing differs'):
+                    bench.audit_abba(args)
+                evidence['games'][0]['ratio'] = .8
+                bench.save(root / 'abba_evidence.json', evidence)
+                config_path = root / 'abba_1_B/day_abba_1_B_2/config.json'
+                config = json.loads(config_path.read_text())
+                config['halving'] = 'False'
+                bench.save(config_path, config)
+                with self.assertRaisesRegex(ValueError, 'configuration differs'):
+                    bench.audit_abba(args)
 
 
 if __name__ == '__main__':

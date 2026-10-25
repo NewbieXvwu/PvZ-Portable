@@ -64,15 +64,21 @@ static int is_simulator(void)
 
 static void dump(void)
 {
+	/* Freeze the count before allocating/writing the two parallel arrays. SIGPROF
+	 * used to keep appending here, so their lengths could differ by one sample. */
+	g_armed = 0;
+	struct itimerval stopped = {0};
+	setitimer(ITIMER_PROF, &stopped, NULL);
+	const size_t sample_count = g_count;
 	const char *path = getenv("PVZ_PROF_OUT");
 	if (!path) path = "/tmp/pvz_pcs.bin";
 	char *names[MODULES];
 	memset(names, 0, sizeof names);
-	uint64_t *offsets = (uint64_t *)malloc(g_count * sizeof(uint64_t));
-	uint32_t *modules = (uint32_t *)malloc(g_count * sizeof(uint32_t));
+	uint64_t *offsets = (uint64_t *)malloc(sample_count * sizeof(uint64_t));
+	uint32_t *modules = (uint32_t *)malloc(sample_count * sizeof(uint32_t));
 	if (!offsets || !modules) return;
 	int used = 0;
-	for (size_t index = 0; index < g_count; ++index)
+	for (size_t index = 0; index < sample_count; ++index)
 	{
 		Dl_info info;
 		if (!dladdr((void *)(uintptr_t)g_raw[index], &info) || !info.dli_fbase)
@@ -100,8 +106,8 @@ static void dump(void)
 	if (!out) return;
 	fprintf(out, "PVZPROF 1 %d\n", used);
 	for (int index = 0; index < used; ++index) fprintf(out, "%s\n", names[index] ? names[index] : "?");
-	fwrite(offsets, sizeof(uint64_t), g_count, out);
-	fwrite(modules, sizeof(uint32_t), g_count, out);
+	fwrite(offsets, sizeof(uint64_t), sample_count, out);
+	fwrite(modules, sizeof(uint32_t), sample_count, out);
 	fclose(out);
 }
 

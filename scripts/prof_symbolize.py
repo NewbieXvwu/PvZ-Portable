@@ -34,11 +34,15 @@ def load(path: Path) -> tuple[list[str], list[int], list[int]]:
     for _ in range(int(count)):
         line, _, rest = rest.partition(b"\n")
         names.append(line.decode())
-    # A worker killed mid-write leaves a partial trailing record; drop it rather than
-    # rejecting every sample collected before the interruption.
+    # Offsets and module ids are separate arrays, not interleaved records. A partial
+    # write cannot safely be repaired by truncating the tail: the boundary is unknown.
+    if len(rest) % 12:
+        raise ValueError(f'invalid sample array lengths in {path}: {len(rest)} bytes')
     total = len(rest) // 12
     offsets = list(struct.unpack(f"<{total}Q", rest[: total * 8]))
     modules = list(struct.unpack(f"<{total}I", rest[total * 8: total * 12]))
+    if any(module != 0xFFFFFFFF and module >= len(names) for module in modules):
+        raise ValueError(f'invalid sample module id in {path}')
     return names, offsets, modules
 
 

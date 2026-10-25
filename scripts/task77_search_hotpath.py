@@ -121,6 +121,7 @@ def profiled_play(job):
     save(_PROFILE_DIR / f"{job['seed']}.json", {
         'game': result, 'wall_seconds': time.perf_counter() - started,
         'worker_cpu_seconds': time.process_time() - cpu_started,
+        'engine_pid': search_play._W['env']._process.pid,
         'commands': _TIMES, 'rollout': search_play._W['rollout_metrics'],
         'engine_before': before, 'engine_after': _COMMAND(search_play._W['env'], 'ENV_PROFILE')})
     return result
@@ -248,8 +249,17 @@ def profile_summary(args):
         }
         counts = Counter()
         modules = {}
-        for path in folder.glob('pcs.*.bin'):
-            names, offsets, slots = load(path)
+        sample_paths = sorted(folder.glob('pcs.*.bin'))
+        sample_paths += sorted((args.out / 'profile_recovery' / cell).glob('pcs.*.bin'))
+        invalid_samples = []
+        valid_samples = []
+        for path in sample_paths:
+            try:
+                names, offsets, slots = load(path)
+            except ValueError as error:
+                invalid_samples.append({'path': str(path), 'error': str(error)})
+                continue
+            valid_samples.append(str(path))
             for offset, slot in zip(offsets, slots):
                 name = names[slot] if slot < len(names) else 'unknown'
                 modules.setdefault(name, set()).add(offset)
@@ -268,7 +278,8 @@ def profile_summary(args):
             'milliseconds_per_decision': {k: v * 1000 / totals['decisions'] for k, v in components.items()},
             'commands_wall_seconds': dict(commands), 'commands_engine_cpu_seconds': dict(cpu_commands),
             'python_self_seconds': python_functions.most_common(25),
-            'samples': sum(functions.values()), 'cpp_samples': functions.most_common(45)}
+            'samples': sum(functions.values()), 'cpp_samples': functions.most_common(45),
+            'valid_sample_files': valid_samples, 'invalid_sample_files': invalid_samples}
     save(args.out / 'profile_summary.json', evidence)
     print(json.dumps({k: v['milliseconds_per_decision'] for k, v in evidence['cells'].items()}, indent=1))
 
@@ -416,8 +427,8 @@ def abba_baseline(args):
     candidate build does not, so using it as A would report the build difference instead of
     the patch.  Callers must pass the freshly built pre-change binary explicitly.
     """
-    baseline = args.baseline or Path(json.loads((args.out / 'freeze.json').read_text())['engine']['path'])
-    if not baseline.is_file():
+    baseline = args.baseline
+    if baseline is None or not baseline.is_file():
         raise ValueError('--baseline executable is required')
     return baseline
 
@@ -466,12 +477,112 @@ def abba(args):
     print(json.dumps(evidence['summary']), flush=True)
 
 
+def audit_abba(args):
+    """Require all four arms, matching labels/outcomes and original frozen inputs."""
+    from pvz_frame_store import read_frames
+    evidence_path = args.out / 'abba_evidence.json'
+    evidence = json.loads(evidence_path.read_text())
+    frozen = json.loads((args.out / 'freeze.json').read_text())
+    manifest = json.loads((args.out / 'manifest.json').read_text())
+    if evidence['order'] != ['A', 'B', 'B', 'A']:
+        raise ValueError('ABBA order differs')
+    for name in ('baseline', 'candidate'):
+        if digest(evidence[name]['path']) != evidence[name]['sha256']:
+            raise ValueError(f'{name} executable changed after measurement')
+    audit = {'pass': True, 'paired_games': 0, 'frame_comparisons': 0,
+             'decision_frames_compared': 0, 'cells': {}, 'state_hash_differ': 0}
+    recomputed_games = []
+    for cell, task_id in CELLS.items():
+        count = args.count or (2 if cell in ('roof', 'fog') else 3)
+        task = next(t for t in manifest['tasks'] if t['task_id'] == task_id)
+        expected_seeds = set(task['seeds'][:count])
+        rows, archives, paths = [], [], []
+        shared_config = None
+        previous_end = 0
+        for index, arm in enumerate(evidence['order']):
+            label = f'abba_{index}_{arm}'
+            path = args.out / label / f'{cell}_{label}_{count}/games.jsonl'
+            config = json.loads((path.parent / 'config.json').read_text())
+            expected_engine = evidence['baseline' if arm == 'A' else 'candidate']['path']
+            expected = {'task_id': task_id, 'dagger_beta': '1.0', 'verify_samples': '9',
+                        'student_candidates': '2', 'horizon': '2500', 'samples': '3',
+                        'seed_offset': '0', 'seeds': str(count)}
+            if any(config.get(k) != value for k, value in expected.items()):
+                raise ValueError(f'nonproduction search settings: {path.parent}')
+            comparable = {k: v for k, v in config.items()
+                          if k not in ('executable', 'out', 'frames', 'frames_label')}
+            if shared_config is not None and comparable != shared_config:
+                raise ValueError(f'ABBA search configuration differs: {path.parent}')
+            shared_config = comparable
+            for key, value in (('executable', expected_engine),
+                               ('rollout_policy', frozen['student']['path']),
+                               ('value', frozen['value']['path']),
+                               ('static_value', frozen['static']['path']),
+                               ('manifest', args.out / 'manifest.json')):
+                if Path(config[key]).resolve() != Path(value).resolve():
+                    raise ValueError(f'input differs ({key}): {path.parent}')
+            loaded = [json.loads(line) for line in path.read_text().splitlines()]
+            by_seed = {r['seed']: r for r in loaded}
+            if len(loaded) != count or set(by_seed) != expected_seeds:
+                raise ValueError(f'incomplete or duplicate ABBA arm: {path}')
+            # A fresh directory is required. These timestamps rule out the underlying
+            # search runner silently reusing a completed arm from a previous attempt.
+            start = (path.parent / 'config.json').stat().st_mtime_ns
+            end = path.stat().st_mtime_ns
+            if start <= previous_end or end <= start:
+                raise ValueError(f'ABBA arm reused or reordered: {path}')
+            previous_end = end
+            rows.append(by_seed)
+            archives.append((args.out / label / 'frames', f'{cell}_{label}_fast_search'))
+            paths.append(str(path))
+        for seed in sorted(expected_seeds):
+            reference = {k: v for k, v in rows[0][seed].items() if k not in ('seconds', 'state_hash')}
+            reference_path = archives[0][0] / f'seed_{seed}' / archives[0][1] / 'frames.npz'
+            reference_frames = read_frames(reference_path)
+            if len(reference_frames) != rows[0][seed]['decisions'] + 1:
+                raise ValueError(f'truncated frames: {reference_path}')
+            for index in (1, 2, 3):
+                other = {k: v for k, v in rows[index][seed].items() if k not in ('seconds', 'state_hash')}
+                if reference != other:
+                    raise ValueError(f'ABBA logical results differ: {cell}, {seed}, arm {index}')
+                frame_path = archives[index][0] / f'seed_{seed}' / archives[index][1] / 'frames.npz'
+                frames = read_frames(frame_path)
+                if compare_frames(reference_frames, frames) is not None:
+                    raise ValueError(f'ABBA full frames differ: {cell}, {seed}, arm {index}')
+                audit['frame_comparisons'] += 1
+                audit['decision_frames_compared'] += len(frames)
+                audit['state_hash_differ'] += rows[0][seed]['state_hash'] != rows[index][seed]['state_hash']
+            audit['paired_games'] += 1
+            old = statistics.mean(rows[i][seed]['seconds'] for i in (0, 3))
+            new = statistics.mean(rows[i][seed]['seconds'] for i in (1, 2))
+            if old <= 0 or new <= 0:
+                raise ValueError('nonpositive raw game timing')
+            recomputed_games.append(dict(cell=cell, seed=seed, old=old, new=new, ratio=new / old))
+        audit['cells'][cell] = {'seeds': sorted(expected_seeds),
+                               'raw_sha256': {path: digest(path) for path in paths}}
+    if len(evidence['games']) != audit['paired_games']:
+        raise ValueError('summary has missing or extra pairs')
+    reported = {(r['cell'], r['seed']): r for r in evidence['games']}
+    if len(reported) != len(recomputed_games):
+        raise ValueError('summary has duplicate game pairs')
+    for row in recomputed_games:
+        prior = reported.get((row['cell'], row['seed']), {})
+        if any(not math.isclose(row[k], prior.get(k, float('nan')), rel_tol=1e-12)
+               for k in ('old', 'new', 'ratio')):
+            raise ValueError('summary timing differs from raw games')
+    evidence['games'] = recomputed_games
+    evidence['identity_audit'] = audit
+    evidence['summary'] = paired_interval([r['ratio'] for r in evidence['games']])
+    save(evidence_path, evidence)
+    print(json.dumps(audit, indent=1), flush=True)
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'driver':
         driver(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'gate', 'verify', 'abba'))
+    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'gate', 'verify', 'abba', 'abba-verify'))
     parser.add_argument('--out', type=Path, default=OUT)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
     parser.add_argument('--candidate', type=Path)
@@ -483,7 +594,7 @@ def main():
     if not args.out.is_absolute():
         parser.error('--out must be absolute')
     {'prepare': prepare, 'profile': profile, 'profile-summary': profile_summary,
-     'gate': gate, 'verify': verify, 'abba': abba}[args.phase](args)
+     'gate': gate, 'verify': verify, 'abba': abba, 'abba-verify': audit_abba}[args.phase](args)
 
 
 if __name__ == '__main__':

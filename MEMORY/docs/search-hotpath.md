@@ -10,18 +10,18 @@
 1. **每决策 74.8–161.0 ms。两块占 80–87%：rollout 引擎步（50.3–65.3%）与引擎内学生前向（19.7–32.0%）。**
    值网络前向（叶值 0.8–1.6% + 静态值 0.9–4.3%）、显式快照往返（0.3–0.7%）、IPC（3.6–8.1%）、
    Python 侧（5.7–10.0%）合计 < 20%。
-2. 引擎进程 CPU 只占整局墙钟的 61–82%（其余是在 20 核、loadavg 23–29 的机器上排队），
+2. 引擎进程 CPU 为整局墙钟的 57–78%（还包含 Python、IPC 和系统调度等成本，不能把差额全算成排队），
    其中 **89–95% 落在 `ROLLOUT_VALUE` 一条命令里**。
-3. 采样热点（pool，206 014 样本）：openblas sgemm 16.0%（学生前向）>
-   `Reanimation::Update` 及其 track lambda 8.3% > 粒子发射器 7.5% > `DataArray` 迭代器与查找 8.2% >
-   `MTRand` 1.4–2.6%。
-4. **最大的两块不能在不改搜索算法的前提下压缩。** sgemm 的 K 维含整块零（im2col 边界行/列），
-   删零会改变 BLAS 的求和顺序，就不再逐位不变；动画与粒子的稀疏跳过 2026-10-23 已经做过
+3. 采样集中在 BLAS、动画、粒子与对象数组遍历（§4）；平面 PC 采样不能把 BLAS 内部样本
+   精确分给学生与值网络，二者分别耗时以 §3 的引擎计数器为准。
+4. **本轮保留 BLAS 算术及动画/粒子生命周期。** sgemm 删零可能改变求和顺序；
+   动画与粒子的稀疏跳过 2026-10-23 已经做过
    （`Reanimator.cpp` 的 sparse 路径、`ENV_LIGHT_ANIMATION`），剩下的 track 更新与粒子会消耗共享 RNG
    ——`PvzpCommon.h` 记着：跳过粒子让 16/64 局结果翻转。
 5. 所以优化挑的是**占比最大且能证明逐位不变**的三处实现细节（§5）：
    值网络卷积的核打包缓存 + 无填充 memcpy、`DataArray` 取值改走 `get()`、`Reanimation::Update` 模式判断前置。
-   离线核检查给出同输入的叶值前向 **0.74–0.86 倍**耗时（480 个 logit × 3 遍，SHA256 完全相同）。
+   离线核检查的 value/static 各 480 个 logit（各含 3 遍）输出 SHA256 完全相同；
+   该工具验证数值，未持久化微基准计时，性能结论只采用完整 ABBA。
 
 ## 2. 冻结输入与复现
 
@@ -54,11 +54,13 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py prepare --out $P/artifact
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py profile --out $P/artifacts/task77
 $PY $P/scripts/task77_search_hotpath.py profile-summary --out $P/artifacts/task77
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py gate --out $P/artifacts/task77 --candidate $P/artifacts/task77/frozen/pvz-portable-candidate
-PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77 --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before
+PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_final --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 ```
 
 `prepare` 拒绝覆盖既有冻结；`profile` 可续跑已落盘的局（首批 day/night 缺引擎计数器，已按同一任务与种子
 另存 `profile_complete/`，不覆盖旧证据）。
+`abba_final/` 是本轮全新计时目录，含冻结清单/身份文件的副本与指向冻结 `baseline/` 的软链，
+避免 `search_play` 自动跳过旧结果破坏 ABBA 时间顺序。旧的未完成尝试单独保留，不拼接进本轮。
 
 组件定义（`task77_search_hotpath.py:profile_summary`）：`rollout_simulation` = 引擎回报的
 `simulation_seconds`；`cpp_student` = `network_seconds`；`leaf/static_features_forward` = 引擎计数器增量；
@@ -74,8 +76,8 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 | 叶值网络（features+forward） | 1.45 | 1.37 | 1.09 | 1.40 | 1.18 |
 | 静态值网络（features+forward） | 6.85 | 2.03 | 1.70 | 1.13 | 1.06 |
 | 显式快照往返 | 0.57 | 0.50 | 0.47 | 0.76 | 0.55 |
-| 静态值命令 IPC | 6.62 | 1.51 | 1.79 | 0.78 | 0.79 |
-| rollout 命令 IPC | 4.51 | 3.64 | 3.26 | 5.51 | 4.16 |
+| 静态分支恢复/动作/IPC（残差） | 6.62 | 1.51 | 1.79 | 0.78 | 0.79 |
+| rollout 恢复/控制/IPC（残差） | 4.51 | 3.64 | 3.26 | 5.51 | 4.16 |
 | 其他命令（真实对局推进等） | 3.02 | 2.13 | 2.73 | 5.79 | 3.01 |
 | Python 侧（命令之外） | 9.29 | 8.45 | 7.93 | 8.53 | 7.49 |
 | **合计** | **161.0** | **125.5** | **139.9** | **122.1** | **74.8** |
@@ -88,7 +90,11 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
   （引擎 CPU 42.1 s，其余族 5–22 s）。也就是说值网络这条路的优化只在白天族有可观收益。
 - **屋顶与雾的 Python 侧更高**（10.0% / 7.0%）：对局短、决策少，固定开销摊不薄。
 
-## 4. 采样热点（pool，206 014 样本，SIGPROF @1 kHz）
+## 4. 采样热点（下表待采样格式审计后重算）
+
+审计发现泳池 `pcs.522801.bin` 的两段数组长度不一致（多 4 字节）。旧读法丢尾后可能错认数组边界，
+不能当成有效证据。已修复 SIGPROF 导出期间计数仍增长的问题，读取器严格拒绝坏长度/模块号；
+原文件保留、明确排除，待用修复后的采样器补采 1 局。下表是旧汇总，最终版将替换。
 
 | 占比 | 累计 | 符号 |
 |---|---|---|
@@ -105,8 +111,7 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 | 1.48% | 38.80% | `PvzpParticleEmitter::Update` |
 | 1.44% | 40.24% | `Plant::Animate` |
 
-- openblas 合计 16.0%（kernel + oncopy + itcopy + dgemm），全部来自学生前向的 GEMM：
-  与 §3 里 21–32% 的 `cpp_student` 同源（BLAS 之外还有 im2col、encode 与 MLP 的逐元素部分）。
+- openblas 包含学生与值网络的矩阵运算；平面采样不能区分共享内核的调用者。
 - 动画合计约 12.5%：`Reanimation::Update` + lambda + `NextEnvTrack` + `FloatTrackEvaluate` +
   `PvzpCurveEvaluate` + `GetTrackVelocity` + `TrackMemoHit`。
 - 粒子合计约 7.5%：**不能跳**（共享 RNG）。
@@ -122,7 +127,7 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
      9 或 10，行方向只遍历落在 `[0,6)` 的部分，省掉 92×9×60 次分支。
    - 逐位不变：两种写法写出的 `columns` 与 `kernel` 布局相同，sgemm 参数不变、累加顺序不变；
      越界格仍写 `+0.0f`（先清零、不覆盖），与原来的逐格写 0 一致。
-2. **`src/PvzpLib/DataArray.h`**：`operator*` 与 `DataArrayGet` 从 `mItems[i]`（`unique_ptr<T[]>::operator[]`）
+2. **`src/PvzpLib/DataArray.h`**：`operator*` 与 `DataArrayTryToGet` 从 `mItems[i]`（`unique_ptr<T[]>::operator[]`）
    改成 `mItems.get()[i]`，`Iterator::operator++` 标 `always_inline`。去掉的正是采样里
    0.8% 的 `unique_ptr<...>::operator[]` 与 `DataArrayTryToGet` 中的非内联取址。
 3. **`src/PvzpLib/Reanimator.cpp` 的 `updateTrack`**：把 `gEnvSimSkip & ENV_LIGHT_ANIMATION` 的判断
@@ -146,30 +151,32 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 所以标签、软目标、复核次数、override 决策都在比较范围内。
 
 - 结果：`gate_evidence.json` `pass=true`，**48/48 对局一致**（6 族 × 2 臂 × 4 种子）。
-- 比较项：task70 `COMPARE_FIELDS`（动作、标签、软目标、复核、观测、`state_hash` 等）
+- 比较项：task70 `COMPARE_FIELDS`（胜负、末波、末 tick、决策数、种植、终局僵尸等逻辑结果）
   + `rollout_batches` / `rollout_lanes` / `halving_candidates` / `halving_rollouts` /
   `halving_selected_lanes` / `student_candidate_added` / `student_candidate_best` /
   `student_candidate_override` / `override_kinds`，再加**完整决策帧归档**（帧数 = decisions + 1，
   逐帧按规范化 JSON 比较，`-0.0` 与 `+0.0` 区分，只有复核耗时 `verification.seconds` 排除）。
+- `state_hash` 按 task70 A2 的口径单独报告，不作为策略门禁：35/48 相同、13/48 不同（27.1%）。
+  本轮未把这 13 处差异归因于某个存档块；不能据完整帧一致就声称内部状态哈希也全同。
 - 旧臂的老师那 20 局（5 族 × 4）直接复用 §3 的剖析局：同一冻结输入、同一任务与同一批种子，
   重打只会得到同一局。传送带没有剖析局，旧臂老师现场打。
 
-### 7.2 ABBA 配对计时（未完成，需下一轮补）
+### 7.2 ABBA 配对计时（正在跑）
 
 按主控 2026-10-25 14:57 的指令（Codex 额度恢复、交回执行权）在 3 个 block 后停止，**没有产出配对比值**：
-`abba_evidence.json` / `abba_progress.json` 都不存在。
+旧轮次没有完整证据。当前已在全新 `artifacts/task77/abba_final/` 启动完整一轮：
+六族各 2 种子 × A-B-B-A，共 48 个完整老师局，`--workers 2 --count 2`。
 
 - 已落盘的只是**未完成的 block**：`abba_0_A`（day，A 臂 3 局）、`abba_1_B`（day，B 臂 3 局）、
   `abba_2_B` 进行到 2/3 局被中断。同一 block 必须 A-B-B-A 四臂齐全才能配对，所以这些数字不能当证据用。
 - 复跑命令见 §2，两条硬约束：`--workers 2`（主控 2026-10-25 起本任务同时最多 2 个游戏进程）；
-  A 臂必须显式传 `--baseline …/pvz-portable-release-before`，不要用带 PGO 的生产 deploy4。
-- 预计 6 族 × 4 block × 每 block 2–3 局，`--workers 2` 下约 70–90 分钟。
-  `abba()` 没有断点续跑，中断就要整轮重跑。
+  A 臂必须显式传 `--baseline …/pvz-portable-release-before`，工具现已拒绝缺省回落到生产 PGO 二进制。
+- 本轮结束后将报告每局 B/A 比值及配对 bootstrap 95% 区间，并核验四臂结果/标签与后台 qc 负载。
 
 ## 8. 局限与后续
 
 - **候选二进制不带 PGO。** 生产 deploy4 带本机 PGO（历史实测 18%）。ABBA 的 A 臂因此用同 flags 重编的
-  `pvz-portable-release-before`，只量代码差异；真正上线要由主控按 PGO 两阶段重建，届时收益还会叠上 PGO 本身。
+  `pvz-portable-release-before`，只量代码差异；真正上线要由主控按 PGO 两阶段重建，PGO 与补丁的交互收益尚未测量。
   **不要把本文的比值直接当成上线后的墙钟比。**
 - 剩余可动的最大项是学生前向的 GEMM（16% 采样）与动画 track 更新（8.3%），两者都卡在「改了就未必逐位不变」。
   前者需要一套「删零块仍保序」的 GEMM（例如把零块排到 K 末尾再截断，并逐族过门禁）；
