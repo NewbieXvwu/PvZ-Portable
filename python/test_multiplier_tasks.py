@@ -240,18 +240,16 @@ class MultiplierTasksTest(unittest.TestCase):
         self.assertIn(16, train['deck'])
         self.assertNotIn(43, train['deck'])
 
-    def test_fog_user_v2_supersedes_fog_user_in_curriculum(self):
-        """task70: fog_user_v2 is admitted, fog_user is retired as superseded."""
+    def test_fog_user_v2_registered_but_not_admitted(self):
+        """task70: fog_user_v2 has a manifest and seeds but waits for the paired cold start."""
         import make_multiplier_tasks as module
         from curriculum_queue import training_base_ids
-        with patch.object(module, 'FAMILIES', FAMILIES), patch.object(module, 'SUPERSEDED', module.SUPERSEDED):
-            pass
-        self.assertEqual(module.SUPERSEDED.get('fog_user'), 'fog_user_v2')
-        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user_v2'), (31,))
-        self.assertNotIn('fog_user', module.CURRICULUM_LEVELS)
+        self.assertNotIn('fog_user', module.SUPERSEDED)
+        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user_v2'), ())
+        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user'), (31,))
         ids = training_base_ids()
-        self.assertIn('fog_user_v2_l31_snow', ids)
-        self.assertNotIn('fog_user_l31_snow', ids)
+        self.assertIn('fog_user_l31_snow', ids)
+        self.assertNotIn('fog_user_v2_l31_snow', ids)
 
     def test_fields_copied_and_perturbation_kept(self):
         tasks = build_variants(self.sources, seeds=32)
