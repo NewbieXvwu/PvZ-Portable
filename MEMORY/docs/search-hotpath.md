@@ -99,7 +99,13 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_pgo_day --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2 --cells day
 # 组件级：逐位核检查 + 交错计时（§7.3b）
 $PY $P/scripts/task77_value_kernel_check.py --time
+# 结论层复核：§3 / §3.1 / §4 与 §7.5 的每个数字都从证据复算，不匹配就抛错
+$PY $P/scripts/task77_audit_report.py --out $P/artifacts/task77
+$PY $P/scripts/task77_audit_pgo.py --out $P/artifacts/task77
 ```
+
+两个审计脚本放在 `scripts/`（随 git 走），默认 `--out` 指向本仓库的 `artifacts/task77`；
+它们把报告里的期望值写成断言，所以结论层不依赖 ignored 目录里的临时脚本。
 
 `--cells` 只收窄面板（用于补测单族），不改变四臂配对、`--count` 或统计口径；`abba`、`abba-verify`、`profile`、
 `profile-summary` 都接受。`profile` 默认仍是五地形面板；`profile-summary` 只在选择等于五地形时写

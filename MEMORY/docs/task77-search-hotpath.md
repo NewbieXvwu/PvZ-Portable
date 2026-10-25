@@ -63,6 +63,8 @@
 
 - [§4 改完整直方图 2026-10-25 23:10] 采样热点不再每格截断 top-45：`profile_summary` 存完整符号直方图，`hotspots` 的 `unlisted` 从 31.4% 降到 **0**，类别份额变成精确值且可复现（连续两次 `profile-summary` + `hotspots` 逐字节相同）。新增 `sim` 类（`Board::`/`Zombie::`/`Plant::`/`Projectile`/`Coin::`/`GridItem`/`LawnMower`/`EffectSystem`/`Attachment::`/`CursorPreview`/`LawnApp::`/`MTRand` 前缀）**26.44%**，把上一版藏在 `unlisted` 里的模拟对象开销单独列出来；openblas 21.60、`DataArray` 10.72、动画 10.37、粒子 7.23、两处 `Convolve` 2.59、libc 4.71（现与按模块统计的 26,664 / 566,659 完全一致）、其他 16.35。§1.3/§4/§8 与审计脚本已更新，16 项测试通过；旧 §4 数字（openblas 20.55 / 动画 8.52 / DataArray 7.25 / 粒子 4.62 / 卷积 2.47 / libc 4.17 / unlisted 31.39）作废。
 
+- [结论层可复核 2026-10-25 23:25] 两个审计脚本从 ignored 的 `artifacts/task77/` 移进 `scripts/`：`task77_audit_report.py`（§3/§3.1/§4）与 `task77_audit_pgo.py`（§7.5），改成 `--out`（默认本仓库 `artifacts/task77`），并写进报告 §2 的复现命令。它们把报告里的期望值写成断言，所以结论层不再依赖 ignored 目录里的临时脚本；改完默认路径后两条都跑通（§3.1 与 §7.5 全部数字复算吻合）。ignored 里的旧副本已删，避免两份漂移。
+
 ## 问题
 
 - [无待办 2026-10-25 21:30] 第四轮 PGO ABBA 与 day 复测已并入报告，本任务的四项要求（剖析、优化、逐位门禁、ABBA 验收）与结论文件全部交付；§7.5 的每个数字由 `audit_pgo_numbers.py` 从原始证据复算。部署（PGO 两阶段重建）由主控决定，本工作树无残留游戏进程。
