@@ -21,11 +21,14 @@ import time
 import math
 import random
 import statistics
+import io
+import tarfile
 from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 OUT = ROOT / 'artifacts/task77'
+BASELINE_COMMIT = 'c0249d62c19bad3f2ebcb5cbcf6adc9071130d2d'
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 CELLS = {
@@ -45,6 +48,14 @@ def digest(path):
 def save(path, data):
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(data, ensure_ascii=False, indent=1) + '\n')
+
+
+def freeze_baseline(destination):
+    """Use the original commit even when prepare is invoked after the optimization."""
+    data = subprocess.check_output(['git', '-C', str(ROOT), 'archive', BASELINE_COMMIT,
+                                    'python', 'scripts', 'src'])
+    with tarfile.open(fileobj=io.BytesIO(data)) as archive:
+        archive.extractall(destination, filter='data')
 
 
 def prepare(args):
@@ -70,9 +81,8 @@ def prepare(args):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
         identities[name] = {'source': str(source), 'path': str(target), 'sha256': digest(target)}
-    for folder in ('python', 'scripts', 'src'):
-        shutil.copytree(ROOT / folder, args.out / 'baseline' / folder,
-                        ignore=shutil.ignore_patterns('__pycache__'))
+    freeze_baseline(args.out / 'baseline')
+    identities['baseline_commit'] = BASELINE_COMMIT
     identities['manifest_sha256'] = digest(args.out / 'manifest.json')
     identities['git_head'] = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip()
     save(args.out / 'freeze.json', identities)

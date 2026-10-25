@@ -42,6 +42,8 @@
 白天/夜间/泳池/传送带沿 task70 A2 的 m125 任务；屋顶用 L41 r7 原版；
 雾用在役 `fog_user_l31_snow`（human）。human_v2 尚待主控部署，不在本任务换族。
 模型、引擎副本、完整基线 Python/C++ 源码与每族前 8 个既有种子冻结在 `artifacts/task77/`，全部保持 gitignore。
+`prepare` 从固定提交 `c0249d62` 提取基线源码，避免在优化后重跑工具时把候选代码误当成改前版本；
+本轮冻结副本及新提取副本的四个改动引擎文件、搜索驱动均已逐字节核对原提交。
 预检中发现 redeploy/build 已被 task70 B5 重建为另一引擎，故正式实验取生产 cq/build4 的 deploy4 副本；未修改 cq 或 build4。
 
 系统无 perf，使用仓库 SIGPROF 采样器（`scripts/prof_sample.c`，setitimer + SIGPROF，只记 PC）
@@ -176,6 +178,8 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 - 复跑命令见 §2，两条硬约束：`--workers 2`（主控 2026-10-25 起本任务同时最多 2 个游戏进程）；
   A 臂必须显式传 `--baseline …/pvz-portable-release-before`，工具现已拒绝缺省回落到生产 PGO 二进制。
 - 本轮结束后将报告每局 B/A 比值及配对 bootstrap 95% 区间，并核验四臂结果/标签与后台 qc 负载。
+- 负载监测已观察到原 qc 控制器退出；当前计时继续保留，待主控说明后续负载安排，
+  不能把无 qc 的窗口写成恒定生产负载。只读负载序列另存 `abba_final/load_monitor.jsonl`。
 
 ## 8. 局限与后续
 
