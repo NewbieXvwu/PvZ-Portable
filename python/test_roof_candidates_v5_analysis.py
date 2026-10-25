@@ -221,3 +221,15 @@ def test_terminal_evidence_validator_requires_full_action_coverage_and_replay(mo
     document['actions'].pop()
     with pytest.raises(AssertionError,match='coverage incomplete'):
         audit.validate_terminal_root(*arguments)
+
+
+def test_historical_comparison_keeps_shovel_action_scope_separate():
+    shovel=dict(type='shovel',row=0,col=0)
+    document=dict(actions=[dict(action=a,terminal=[dict(won=(i<n)) for i in range(8)],
+        leaf={'value':{'2500':[v]*9}}) for a,n,v in [(A,2,.3),(WAIT,0,.1),(shovel,8,.05)]])
+    production=audit.metrics(document)
+    all_legal=audit.metrics(document,representable=False)
+    assert production['actions']==2 and production['pairs']==1 and production['accuracy']==1
+    assert all_legal['actions']==3 and all_legal['pairs']==3 and all_legal['accuracy']==1/3
+    assert audit.direction_score(1e-11,1)==.5
+    assert audit.direction_score(-1e-11,-1)==.5

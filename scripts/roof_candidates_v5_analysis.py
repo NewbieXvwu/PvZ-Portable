@@ -401,7 +401,7 @@ def terminal_probe(levels,workers,pilot=False):
 
 
 def direction_score(prediction,truth):
-    if prediction==0:return .5
+    if abs(prediction)<1e-10:return .5
     return float((prediction>0)==(truth>0))
 
 
@@ -463,11 +463,14 @@ def validate_terminal_root(root,replay,receipt,baseline,plan,level,seed,decision
 def terminal_report(levels):
     report=dict(schema_version=SCHEMA,task=76,complete=False,per_level={},
         method='Shared eight terminal futures for every legal action at identical current-v5-teacher roots; current student history passed after proposal; true terminal checked; nine independent shared leaf futures. v4 loaded explicitly for identical roots/futures; v5 horizons2500/4000/6000.',
-        historical_comparison='task46 v4 53.9% (95%47.1-60.9): different roots, models, two futures and search-teacher continuation, so no direct before/after claim. Matched v4/v5 numbers below isolate leaf model under task72b student continuation.',
+        historical_comparison='task46 v4 53.9% (95%47.1-60.9, 4929 pairs) includes all legal plant/shovel/wait actions. Compare its action scope with *_all_legal below; unsuffixed metrics restrict to production-representable plant/wait. Different roots, two futures and search-teacher continuation prevent a direct before/after claim. Matched v4/v5 share current roots/futures and student continuation. Predicted differences below 1e-10 receive half credit, as in task46.',
         invalidated_legacy='artifacts/task76/terminal schema1 used preloaded v5 for v4_control, pre-proposal history and action-specific futures; excluded in full.',
         root_evidence=[],good_action_coverage={})
     plan=base.verify_plan()
     complete=True;clusters=defaultdict(list);coverage=Counter()
+    specifications=[(model,horizon,representable)
+        for model,horizon in [('value',2500),('value',4000),('value',6000),('v4_control',2500)]
+        for representable in (True,False)]
     for level in levels:
         seeds=base.probe_seeds(level,2);expected=[(seed,d) for seed in seeds for d in base.probe_targets(level,seed)]
         rows=[]
@@ -480,10 +483,10 @@ def terminal_report(levels):
             baseline=base.trace_rows(level,'production',seed)[d]
             validate_terminal_root(root,replay_record,receipt,baseline,plan,level,seed,d)
             summary={}
-            for model,horizon in [('value',2500),('value',4000),('value',6000),('v4_control',2500)]:
-                name=f'{model}_h{horizon}'
-                summary[name]=metrics(root,model,horizon)
-                clusters[(model,horizon,level,seed)].append(summary[name])
+            for model,horizon,representable in specifications:
+                name=f'{model}_h{horizon}'+('' if representable else '_all_legal')
+                summary[name]=metrics(root,model,horizon,representable)
+                clusters[(model,horizon,representable,level,seed)].append(summary[name])
             rows.append(dict(seed=seed,decision=d,tick=root['tick'],metrics=summary))
             policy=root['policy'] if root['policy']['type']=='plant' else dict(type='wait',ticks=60,until='timeout')
             gold={key(a['action']):mean([v['won'] for v in a['terminal']]) for a in root['actions']}
@@ -495,8 +498,8 @@ def terminal_report(levels):
         report['per_level'][str(level)]=dict(expected_roots=len(expected),completed_roots=len(rows),roots=rows)
     pooled={}
     rng=random.Random(76)
-    for model,horizon in [('value',2500),('value',4000),('value',6000),('v4_control',2500)]:
-        cohorts=[v for k,v in clusters.items() if k[:2]==(model,horizon)]
+    for model,horizon,representable in specifications:
+        cohorts=[v for k,v in clusters.items() if k[:3]==(model,horizon,representable)]
         values=[v for cohort in cohorts for v in cohort]
         pairs=sum(v['pairs'] for v in values);score=sum(v['pair_score'] for v in values)
         boot=[]
@@ -505,8 +508,10 @@ def terminal_report(levels):
             n=sum(v['pairs'] for v in sample)
             if n:boot.append(sum(v['pair_score'] for v in sample)/n)
         boot.sort()
-        pooled[f'{model}_h{horizon}']=dict(roots=len(values),level_seed_clusters=len(cohorts),
-            unique_reset_seeds=len({k[3] for k in clusters if k[:2]==(model,horizon)}),pairs=pairs,
+        name=f'{model}_h{horizon}'+('' if representable else '_all_legal')
+        pooled[name]=dict(action_scope='plant/wait' if representable else 'all legal plant/shovel/wait',
+            roots=len(values),level_seed_clusters=len(cohorts),
+            unique_reset_seeds=len({k[4] for k in clusters if k[:3]==(model,horizon,representable)}),pairs=pairs,
             pairwise_accuracy=score/pairs if pairs else None,
             level_seed_bootstrap95_exploratory=[boot[int(.025*(len(boot)-1))],boot[int(.975*(len(boot)-1))]] if boot else None,
             all_actions_zero_wins_roots=sum(v['all_actions_zero_wins'] for v in values),
@@ -518,6 +523,8 @@ def terminal_report(levels):
     report['uncertainty']='Bootstrap intervals treat (level, reset seed) as clusters and are exploratory; the same two reset seeds are reused across levels. They do not establish a population-level model improvement. Eight sampled futures do not prove any state is unwinnable.'
     v5=pooled['value_h2500']['pairwise_accuracy'];v4=pooled['v4_control_h2500']['pairwise_accuracy']
     report['matched_v5_minus_v4_accuracy']=(v5-v4) if v5 is not None and v4 is not None else None
+    v5_all=pooled['value_h2500_all_legal']['pairwise_accuracy'];v4_all=pooled['v4_control_h2500_all_legal']['pairwise_accuracy']
+    report['matched_v5_minus_v4_accuracy_all_legal']=(v5_all-v4_all) if v5_all is not None and v4_all is not None else None
     if coverage['observed_improving_plant_actions']:
         report['good_action_coverage'].update(static_miss_rate=coverage['static_missed']/coverage['observed_improving_plant_actions'],
             production_miss_rate=coverage['production_missed']/coverage['observed_improving_plant_actions'])
