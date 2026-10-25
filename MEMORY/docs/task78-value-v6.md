@@ -81,6 +81,22 @@
 
 - 2026-10-25 18:17：配对面板首格完成（day_l7_d7，64 对）：两臂各 64 胜，gain 0 / harm 0，净胜 0，McNemar p=1.0；保守单侧下界 −0.056 > −0.10，白天地形非劣门**通过**。报告机制在真实数据上跑通（其余地形仍为 incomplete）。
 
+- 2026-10-25 19:47（主控要求停，交接回 Codex）：配对面板进度 **2.5/15 格**。已完整：day_l7_d7（64 对，两臂全胜，非劣门通过）、night_l14_n10 的 v5 臂（32/32）；night_l14_n10 的 v6 臂 31/32（收尾那局被停机杀掉）。此前三格雾区（fog_l31_snow_m100、fog_l33_cactus_d839、fog_l33_cactus_d762）两臂各 32 局完整保留。其余 11 格 0 局。
+  **续跑可直接重发同一条命令，不需要删目录**：`search_play.py` 启动时读已有 `games.jsonl`，按 `(arm, seed 或 future_seed)` 去重，只补缺的局（`scripts/search_play.py:906`）。因此上面 `START` 之后被打断的格会从断点继续，不会产生重复 seed（`task78_ab.py report` 对重复 seed 会直接报错）。
+  续跑命令（工作树内，逐格先 v5 后 v6，2 worker）：
+  ```bash
+  cd /home/newbiexvwu/PvZ-search/.claude/worktrees/v6
+  export PVZ_NO_POPUP=1
+  for cell in night_l14_n10 night_l17_n10 night_l20_n10 pool_l21_p9k pool_l22_p9k pool_l23_p9k pool_l24_p9k roof_l41_r7 roof_l42_r7 roof_l43_r7 fog_l33_cactus_d686; do
+    for arm in v5 v6; do
+      echo "START $arm $cell $(date +%s)" >> artifacts/task78/ab/progress2.log
+      /home/newbiexvwu/.venvs/ml/bin/python scripts/task78_ab.py $arm --cells $cell >> artifacts/task78/ab/run_all.log 2>&1
+      echo "DONE $arm $cell $? $(date +%s)" >> artifacts/task78/ab/progress2.log
+    done
+  done
+  ```
+  实测速率：白天 36 s/局、夜间约 45–65 s/局（2 worker），屋顶预计更慢。跑完后 `task78_ab.py report` 写 `artifacts/task78/ab/paired.json`，§4 与门禁汇总即可落数。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 ### 来源、抽样与训练
