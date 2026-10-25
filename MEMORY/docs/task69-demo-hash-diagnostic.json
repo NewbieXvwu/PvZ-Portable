@@ -1,0 +1,42 @@
+{
+  "failing_operation": 21369,
+  "tick": 21312,
+  "frozen_expected_hash": "b19d309a9990bcd2",
+  "independent_hashes": [
+    "137ff6cbd1e75895",
+    "a72adda0a18c7b07"
+  ],
+  "public_observations_equal": true,
+  "state_dump_bytes": 196595,
+  "different_bytes_including_crc": 5,
+  "only_payload_difference": {
+    "chunk": 4,
+    "chunk_name": "projectiles",
+    "relative_offset": 934,
+    "field": "mLastPortalX",
+    "values": [
+      87,
+      100
+    ]
+  },
+  "rng_and_snapshot_metadata_identical": true,
+  "preexisting_projectile_source_sha256": {
+    "baseline": "a9d6a5ccb66e2c7c8610100ebfafecb14db5a083629960abf6a3d3fce7319f36",
+    "treatment": "a9d6a5ccb66e2c7c8610100ebfafecb14db5a083629960abf6a3d3fce7319f36"
+  },
+  "scope": "field read only by Challenge::UpdatePortal, gated by GAMEMODE_CHALLENGE_PORTAL_COMBAT; fixed adventure panel has no portals",
+  "fix": "initialize mLastPortalX=-1 in ProjectileInitialize, matching Zombie/LawnMower sentinel; no serialization layout change or ignored fields",
+  "build_source_base_commit": "05aa0b043da08ff993a1d097e7a124446e7ef38e",
+  "build_cpp_patch": "diff --git a/src/Lawn/Projectile.cpp b/src/Lawn/Projectile.cpp\nindex cd0c3bd6..3b333309 100644\n--- a/src/Lawn/Projectile.cpp\n+++ b/src/Lawn/Projectile.cpp\n@@ -73,6 +73,7 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in\n \tmAccZ = 0.0f;\n \tmShadowY = mBoard->GridToPixelY(aGridX, theRow) + 67.0f;\n \tmHitTorchwoodGridX = -1;\n+\tmLastPortalX = -1;\n \tmMotionType = ProjectileMotion::MOTION_STRAIGHT;\n \tmFrame = 0;\n \tmNumFrames = 1;\n",
+  "validation_engine": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/demo-validation-engine",
+    "sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a"
+  },
+  "tests": {
+    "frozen_engine_regression": "fails: observed portal field 12983360 instead of -1",
+    "fixed_initialization": 1,
+    "fixed_replacement_regressions": 12,
+    "passed": 13
+  },
+  "frozen_AB_engines_preserved": true
+}

@@ -42,7 +42,7 @@
 
 ## 历史报告（`docs/`）
 
-- [task69 任务书与执行约束](docs/task69-replace-action.md)
+- [task69 任务书与每任务并发约束](docs/task69-replace-action.md)
 - [task69 替换动作报告](docs/replace-action.md)
 - [雾夜冷启动的卡组面板：L31 是卡组问题，L32–34 不是](docs/fog-user-decks.md)
 - [从示范中途让老师接手：12 个接手点的胜率与输局归因](docs/demo-start-states.md)

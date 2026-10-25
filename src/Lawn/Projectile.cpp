@@ -73,6 +73,7 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 	mAccZ = 0.0f;
 	mShadowY = mBoard->GridToPixelY(aGridX, theRow) + 67.0f;
 	mHitTorchwoodGridX = -1;
+	mLastPortalX = -1;
 	mMotionType = ProjectileMotion::MOTION_STRAIGHT;
 	mFrame = 0;
 	mNumFrames = 1;
