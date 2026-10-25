@@ -303,8 +303,13 @@ class PairedProbe:
         try:
             for index,action in enumerate(actions):
                 env.restore_fast(root)
-                branch=env.branch_snapshot(root,[action],retain_snapshots=False)[0]
-                assert branch['ok'],f'listed legal action rejected: {action}'
+                # Canonical timeout waits require ROLLOUT's native macro path;
+                # branch batching explicitly forbids dropping the until field.
+                if action['type']!='wait':
+                    branch=env.branch_snapshot(root,[action],retain_snapshots=False)[0]
+                    assert branch['ok'],f'listed legal action rejected: {action}'
+                else:
+                    assert action==dict(type='wait',ticks=60,until='timeout')
                 outcomes=[]
                 env.load_value_net(self.models['value'])
                 for future in world:

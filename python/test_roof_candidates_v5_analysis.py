@@ -150,7 +150,10 @@ class ProbeEnv:
     def state_hash(self):return 'root-state'
 
     def branch_snapshot(self,root,actions,retain_snapshots):
+        from pvz_env import branch_action_token
         assert root==17 and not retain_snapshots
+        # Match the actual API: event waits cannot use branch batching.
+        for action in actions:branch_action_token(action)
         return [{'ok':True}]
 
     def load_value_net(self,path):self.model=path

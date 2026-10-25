@@ -50,6 +50,8 @@
 
 - 全8关32种子×3臂768局面板完成，全部trace SHA与430126决策/74778搜索根/3002157条halving评分审计通过。production共1胜、all_plants共5胜，配对gained5/lost1、整簇p=0.21875；L42为4/32对0/32，L46两臂各1胜但种子不同，其余0胜。终局pilot在第0帧被tuple/list序列化差异误报拦下，未生成合格终局根；修复为完整规范JSON比较后再实机验收，仍保留字段和整局回放校验。
 
+- 终局pilot第二项集成修复：带until=timeout的等待不能使用branch_snapshot合法性批接口，现仅植物/铲子先branch检查；等待保持完整动作走原生ROLLOUT宏路径，不剥掉until。mock同时调用真实branch_action_token，覆盖该API约束；后续仍需完整真实pilot回放通过。
+
 ## 问题
 
 - task74来源与并发范围问题均已解决；按每任务最多2进程继续完成面板及终局真值。
