@@ -486,7 +486,8 @@ def cmd_register(args) -> None:
             skipped.append(base_id)
             print(f'{base_id} s{document["seed"]}: 跳过 —— {exc}')
             continue
-        points = {int(d): data.get('teacher') for d, data in (document.get('points') or {}).items()
+        points = {int(d): (data['teacher']['wins'], data['teacher']['games'])
+                  for d, data in (document.get('points') or {}).items()
                   if data and data.get('teacher')}
         ladder = build_ladder(points)
         if not ladder:
@@ -574,6 +575,7 @@ def parser() -> argparse.ArgumentParser:
 
     register = sub.add_parser('register', help='判读并登记 demo_start')
     register.add_argument('results', nargs='+', help='结果 json 或目录')
+    common(register)
     register.add_argument('--ledger', type=Path, default=DEFAULT_LEDGER)
     register.add_argument('--scan-ledger', type=Path,
                           default=ROOT / 'artifacts/llm_demo/raw/scan_seed_ledger.json')
