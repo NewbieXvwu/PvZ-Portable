@@ -149,8 +149,8 @@ def main():
         model.train()
         losses = []
         for _ in range(args.steps):
-            parts = [src.batch(rng.choice(src.fit, MIX[name]), args.device)
-                     for name, src in sources.items()]
+            parts = [src.batch(rng.choice(src.fit, max(1, round(MIX[name]*args.batch_size/512))),
+                               args.device) for name, src in sources.items()]
             b = torch.cat([p[0] for p in parts])
             s = torch.cat([p[1] for p in parts])
             y = torch.cat([p[2] for p in parts])
