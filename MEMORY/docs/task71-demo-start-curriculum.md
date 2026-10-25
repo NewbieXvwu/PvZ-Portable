@@ -96,3 +96,4 @@
   与现有全部段不相交）。`test_registered_manifest_start_cells` 期望集合同步加它，
   `python/test_curriculum_queue.py` 54 项通过。DESIGN §14.26 加 task71b 条目。
 - **提交**：`git push origin demo`（本步）。
+- 追加（同日）：用户打通屋顶 L42 `demo_roof_42_melon_m200`（30 波、1513 动作、被吃 42、零费 0，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261042/demo_roof_42_melon_m200`）。照 L32/L34 做接手扫描与起点格。屋顶老师冷启动全败，最晚档要取老师稳定 8/8 的点；注意 `fog_observation` 不涉及屋顶。
