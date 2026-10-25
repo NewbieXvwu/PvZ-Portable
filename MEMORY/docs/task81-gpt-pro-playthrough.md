@@ -58,6 +58,12 @@
 
 ## 结果
 
+- 2026-10-25 21:50 **新包 `1000afb7…` 重跑 §3 的两个断网容器验收**（旧包 21:00 那轮是 `c912da70…`，包变了就要重跑）。按 21:00 的配方自建隔离 daemon（官方静态 `docker-29.9.2.tgz`，data-root/exec-root/socket 全在 `~/pvz-logs/llmplay_pkg/docker-test/`，`--bridge=none --iptables=false --ip6tables=false`，不碰宿主网络）：
+  ① **ubuntu:22.04**（镜像里没 python3，先 `--network host` 装 python3 3.10.12 再 `docker commit` 成 `lp22py:final`）→ `--network none` 容器内用 **Python 的 zipfile** 解压新包：`build/pvz-portable` 权限是 **644**（正好验证新加的自补可执行位），`python3 selfcheck.py` → `SELFCHECK OK`，L41 200 步 → **189 操作**、导出 `episode_archive_v1`（`label_source=llm_gpt_pro`）。
+  ② **python:3.11-slim**（Python 3.11.17 / glibc 2.41）→ 同样 `--network none`、同样 zipfile 解压、`SELFCHECK OK`、189 操作。
+  ③ 两份存档回台式机用**独立引擎**（`~/llmplay-build/hostbuild2/pvz-portable`，SHA `e849cf8f…`，不是包里那个）`human_demo.py verify`：**都通过** `{"verified": true, "operations": 189, "tick": 9955, "wave": 4, "result": 2}`；两份 `ticks.jsonl` 逐条比 `action/tick/end_tick/ok` **0 处不同**，只有 `state_hash` 189/189 不同（已知跨进程不可复现）。
+  ④ **清理**：容器（全是 `--rm`）无残留；`docker rmi lp22py:final python:3.11-slim ubuntu:22.04`、`docker builder prune -af`（回收 0B）；删除前后 `docker images` 落在 `docker-test/out/docker-images-{before,after}-final.txt`（前 3 个镜像，后空）。停 daemon 后 `mount` 无残留挂载点，删掉 data/exec/docker 二进制与 86 MB 压缩包，目录 **310 MB → 2.0 MB**，只剩日志、两份存档、重跑脚本。
+  证据：`docker-test/out/final/{2204.log,slim.log}` 与 `docker-test/out/final/{2204,slim}/l41/`。
 - 2026-10-25 21:45 **重打正式包（取代 `c912da70…`）**：`/home/newbiexvwu/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,636,271 字节**，26 文件，SHA256 **`1000afb7363f2ec93cd66651b89832f68e7f18b7b9e6e68799d6968473868a83`**，密钥扫描 0 命中。
   改了三处，都是复核时实测撞到的：
   ① **引擎可执行位由接口自己补**（`llmplay/game.py` 新增 `_ensure_executable`，`_start()` 前调用）。Python 的 `zipfile` 解压**不保留权限位**，冷解压后 `build/pvz-portable` 是 0644，模型自写脚本直接 Popen 会报 `PermissionError`（以前只有 `selfcheck.py` 会 chmod，跳过自检就中招）。实测把包内二进制改回 0644 后跑整套 API 脚本，不再需要手工 chmod。
@@ -74,7 +80,7 @@
   | §2 引擎二进制：静态、无窗口、glibc 兼容 | 完成 | `ldd: not a dynamic executable`；ubuntu 22.04（glibc 2.35）与 python:3.11-slim（2.41）均能 `RESET_V2` 起 L41 |
   | §2 台式机重放 4 局示范 | 完成 | `mac_check.sh` 对 deploy4 与包内二进制各 4/4 PASS（HEAD `8e98e01b` 前后） |
   | §2 **Mac 上重放 4 局** | **未完成（环境阻断）** | 本机无 Mac 通路：无 sshd、WSL↔Windows interop 坏、无内网主机、Windows 侧 `known_hosts` 里也没有 Mac |
-  | §3 两镜像断网自测 + 回台式机 verify | 完成 | 见 21:00 条：两镜像各 189 操作 / tick 9955 / wave 4 / result 2，正式引擎 `verified: true` |
+  | §3 两镜像断网自测 + 回台式机 verify | 完成 | 21:00 条（旧包）与 **21:50 条（当前包 `1000afb7…` 重跑）**：两镜像各 189 操作 / tick 9955 / wave 4 / result 2，独立引擎 `verified: true` |
   | §4 安全扫描 + 包只在本机 | 完成 | zip 全成员凭据模式 0 命中、禁入路径 0；包在 `~/pvz-logs/llmplay_pkg/`，不在 git、不在 HF |
   | §5 `scripts/llmplay/PROMPT.md` | 完成 | 主控 18:30 已审读，§G 三处意见已改并重打包 |
   | §6 主控验收记录 | 完成 | 包路径 / 44,636,271 字节 / SHA256 `1000afb7…` / 离线自测 / 逐位一致 / PROMPT 路径均在"结果" |
