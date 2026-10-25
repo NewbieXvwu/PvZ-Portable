@@ -226,20 +226,40 @@ def rebaseline(archive: Path, out: Path, resource_dir, executable=None):
     process, so such an archive can never verify again -- not by the old engine and not by a fixed
     one.  The actions themselves are sound, and this conversion keeps them: it replays them, checks
     the tick timeline and the terminal outcome against the archive, and writes the hashes this
-    engine produces.  The result verifies on any machine from then on; the source is never touched.
+    engine produces. task69 also initializes formerly undefined serialized idle fields.
+    Recompute the initial hash too, and compare every archived public frame before accepting
+    new hashes. The result verifies with this engine; the source is never touched.
     """
     meta = json.loads((archive / 'meta.json').read_text())
     out.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(archive / 'frames.jsonl', out / 'frames.jsonl')
-    rewritten = 0
+    rewritten = checked_frames = 0
+    checkpoints = {}
+    for frame in read_frames(frame_path(archive)):
+        checkpoints.setdefault(frame['operation'], []).append(frame)
+    def check_frame(observation, operation):
+        nonlocal checked_frames
+        expected = checkpoints.get(operation, ())
+        if not expected:
+            return
+        actual = json.loads(json.dumps(_frame(observation)))
+        for recorded in expected:
+            differing = [key for key in actual if key in recorded and actual[key] != recorded[key]]
+            if differing:
+                raise RuntimeError(f'public frame differs at operation {operation}: {differing}')
+            checked_frames += 1
     with EventWaitEnv(resource_dir, executable=executable) as env:
         obs = reset_archive(env, meta)
+        initial_hash = env._last_response['state_hash']
+        check_frame(obs, 0)
+        current_engine_sha256 = hashlib.sha256(env.executable.read_bytes()).hexdigest()
         with (archive / 'ticks.jsonl').open() as stream, (out / 'ticks.jsonl').open('w') as tape:
             for operation, line in enumerate(stream, 1):
                 entry = json.loads(line)
                 obs, _, _, _, info = env.step(entry['action'])
                 if obs['tick'] != entry['end_tick'] or info['ok'] != entry['ok']:
                     raise RuntimeError(f'action timeline differs at operation {operation}')
+                check_frame(obs, operation)
                 state_hash = env._last_response['state_hash']
                 rewritten += state_hash != entry['state_hash']
                 tape.write(json.dumps({**entry, 'state_hash': state_hash}, separators=(',', ':')) + '\n')
@@ -247,7 +267,11 @@ def rebaseline(archive: Path, out: Path, resource_dir, executable=None):
         if (obs['tick'], obs['wave'], obs['result']) != (outcome['final_tick'], outcome['final_wave'], outcome['result']):
             raise RuntimeError('terminal outcome differs')
     meta['rebaseline'] = dict(source=str(archive.resolve()), rewritten_operations=rewritten,
-                               reason='recorded with heap-address-seeded particle shake (task63)')
+                               checked_public_frames=checked_frames,
+                               source_initial_state_hash=meta['initial_state_hash'],
+                               executable_sha256=current_engine_sha256,
+                               reason='recompute reproducible hashes; original actions, ticks and outcome preserved')
+    meta['initial_state_hash'] = initial_hash
     meta['verified'] = False
     (out / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
     return verify(out, resource_dir, executable)
@@ -260,11 +284,15 @@ def replacement_pairs(frames):
     asks the native engine whether that atomic replacement was legal before the shovel.
     """
     pending, pairs, unmatched = {}, [], []
+    shovel_attempts = rejected_shovels = 0
     for index, frame in enumerate(frames):
         action = frame.get('input_action') or frame.get('action') or {}
+        kind = action.get('type')
+        if kind == 'shovel':
+            shovel_attempts += 1
+            rejected_shovels += int(bool(frame.get('action_rejected')))
         if frame.get('action_rejected'):
             continue
-        kind = action.get('type')
         if kind not in ('shovel', 'plant'):
             continue
         cell = (action['row'], action['col'])
@@ -282,7 +310,9 @@ def replacement_pairs(frames):
     intervals = sorted(pair['interval'] for pair in pairs)
     return pairs, dict(intervals=intervals, N=max(intervals, default=None),
                        N_rule='maximum observed first subsequent same-cell planting interval',
-                       paired=len(pairs), unmatched_shovels=sorted(unmatched))
+                       paired=len(pairs), unmatched_shovels=sorted(unmatched),
+                       shovel_attempts=shovel_attempts, rejected_shovels=rejected_shovels,
+                       successful_shovels=shovel_attempts - rejected_shovels)
 
 
 def export(archive: Path, data: Path, resource_dir=None, executable=None):

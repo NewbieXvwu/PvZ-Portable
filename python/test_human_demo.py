@@ -10,7 +10,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-from human_demo import Recorder, export, replay, verify
+from human_demo import Recorder, export, replay, verify, rebaseline, replacement_pairs
 from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from pvz_frame_store import read_frames
@@ -18,6 +18,26 @@ from pvz_tasks import profile_for_deck
 
 RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'))
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
+
+
+class PairingIntervalsTest(unittest.TestCase):
+    def test_rejected_and_superseded_shovels_are_separate_from_successful_pairs(self):
+        shovel = lambda col: dict(type='shovel', row=0, col=col)
+        plant = lambda col: dict(type='plant', packet=0, row=0, col=col)
+        frames = [dict(tick=0, action=None),
+                  dict(tick=0, input_action=shovel(0), action_rejected=True),
+                  dict(tick=1, input_action=shovel(0)), dict(tick=2, action=plant(0)),
+                  dict(tick=3, input_action=shovel(1)), dict(tick=4, input_action=shovel(1)),
+                  dict(tick=5, action=plant(1)), dict(tick=6, input_action=shovel(2))]
+        pairs, summary = replacement_pairs(frames)
+        self.assertEqual(summary['shovel_attempts'], 5)
+        self.assertEqual(summary['rejected_shovels'], 1)
+        self.assertEqual(summary['successful_shovels'], 4)
+        self.assertEqual(summary['paired'], 2)
+        self.assertEqual(summary['intervals'], [1, 1])
+        self.assertEqual(summary['N'], 1)
+        self.assertEqual(summary['unmatched_shovels'], [4, 7])
+        self.assertEqual([pair['shovel_frame'] for pair in pairs], [2, 5])
 
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')
@@ -61,6 +81,36 @@ class HumanDemoTest(unittest.TestCase):
             self.assertEqual(encoded['packet'][training_row], 1)
             self.assertEqual(encoded['cell'][training_row], 0)
             self.assertEqual(read_frames(archive / 'frames.jsonl'), original)
+
+    def test_rebaseline_recomputes_initial_hash_without_changing_original_tape(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            deck = [0, 1, 2, 3, 4, 5]
+            task = TaskSpec(level=7, seed=6903, profile=profile_for_deck(deck))
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                recorder = Recorder(env, source, 'initial_hash', deck, task)
+                recorder.step(dict(type='plant', packet=1, row=0, col=0))
+                recorder.step(dict(type='wait', ticks=2))
+                recorder.close()
+            meta_path = source / 'meta.json'
+            meta = json.loads(meta_path.read_text())
+            meta['initial_state_hash'] = 'ffffffffffffffff'  # old uninitialized-field hash
+            meta_path.write_text(json.dumps(meta))
+            original = {p.name: p.read_bytes() for p in source.iterdir() if p.is_file()}
+            target = root / 'rebaselined'
+            self.assertTrue(rebaseline(source, target, RESOURCE, BINARY)['verified'])
+            converted = json.loads((target / 'meta.json').read_text())
+            self.assertNotEqual(converted['initial_state_hash'], 'ffffffffffffffff')
+            self.assertEqual(converted['rebaseline']['source_initial_state_hash'], 'ffffffffffffffff')
+            self.assertEqual(converted['rebaseline']['checked_public_frames'], meta['frame_count'])
+            self.assertEqual((target / 'frames.jsonl').read_bytes(), original['frames.jsonl'])
+            self.assertEqual({p.name: p.read_bytes() for p in source.iterdir() if p.is_file()}, original)
+            frames = read_frames(source / 'frames.jsonl')
+            frames[0]['sun'] += 25
+            (source / 'frames.jsonl').write_text(''.join(json.dumps(f) + '\n' for f in frames))
+            with self.assertRaisesRegex(RuntimeError, 'public frame differs'):
+                rebaseline(source, root / 'wrong_public_state', RESOURCE, BINARY)
 
     def test_record_replay_export_and_restore(self):
         with tempfile.TemporaryDirectory() as directory:
