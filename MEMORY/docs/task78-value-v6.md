@@ -30,6 +30,10 @@
 
 - 2026-10-25：完成任务与本机来源初查；以下预登记写于任何 v6 训练、正式配对对局或候选标签生成之前。基线固定已采纳 v5，执行者不改生产默认。
 
+- 2026-10-25：64/64 冻结档案在未改动引擎（SHA `49783a70…`）上逐帧物理重放通过（4 worker，642 s），每个 root 的引擎状态 SHA 与档案一致，无失败；`artifacts/task78/replay.json`（ignored）。采集脚本因此获得"root 可精确复原"的前置条件。
+- 2026-10-25：预留评估段机械审计通过：本地 200 份面板/结论/配置 + 105,740 个档案 seed 身份 + v5 `trained_on` 3,661 项，0 碰撞 0 读取错误；未覆盖远端未下载的实验（`unseen_remote_experiments_covered=false`）。`artifacts/task78/seed_audit_summary.json`（ignored）。
+- 2026-10-25：本机 torch 只在 `/home/newbiexvwu/.venvs/ml/bin/python`（3.14.4 / torch 2.14.0+cu132，RTX 5080 可用）；`/usr/bin/python3` 无 torch，采集与训练一律用前者。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 ### 来源、抽样与训练

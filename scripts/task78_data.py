@@ -140,7 +140,8 @@ def inventory():
         old = json.loads(manifest.read_text())
         if old['archives'] != rows:
             raise ValueError('frozen source inventory differs; do not overwrite')
-    manifest.write_text(json.dumps(dict(archives=rows, dependencies=dep), indent=1)+'\n')
+    else:
+        manifest.write_text(json.dumps(dict(archives=rows, dependencies=dep), indent=1)+'\n')
     summary = dict(status='sources_selected_not_replay_verified',
                    available=dict(Counter(group_name(p.name) for p in paths)),
                    selected=dict(Counter(r['group'] for r in rows)),

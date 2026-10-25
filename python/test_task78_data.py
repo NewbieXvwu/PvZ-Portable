@@ -27,3 +27,19 @@ def test_selection_counts_worlds_not_duplicate_archive_labels():
     identities = [(group, tuple(world_identity(path).items())) for group, path in chosen]
     assert len(set(identities)) == 64
     assert select(list(reversed(paths))) == chosen
+
+
+def test_replay_compares_physics_but_not_teacher_annotations():
+    from task78_replay import equal, physical
+    frame = dict(tick=3, plants=[(1, 2)], action={'type': 'wait'}, targets=[[1, 0, 0, .2]])
+    assert equal(physical(frame), dict(tick=3, plants=[[1, 2]]))
+    assert not equal(physical(frame), dict(tick=4, plants=[[1, 2]]))
+    assert not equal(physical(frame), dict(tick=3, plants=[[1, 2]], hidden=1))
+
+
+def test_seed_audit_checks_explicit_and_implicit_future_ranges():
+    from task78_seed_audit import collisions
+    assert collisions(dict(tasks=[dict(seeds=[78000002])]))
+    assert collisions(dict(demo_start=dict(future_seed_start=77999999, future_seed_count=3)))
+    assert collisions(dict(seed_range=[77999999, 78200000]))
+    assert not collisions(dict(tick=78000002, seed=123))
