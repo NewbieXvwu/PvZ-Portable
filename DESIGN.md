@@ -1184,7 +1184,35 @@ task79b 选用 r11 下已过 50% 的三组基元：L36 `split`、L37 `split`、L
   种子块 45,200,000–45,200,255。两关破防均无气球（普通为主，L48 老师输局有巨人 8）。
   起点格 50 → 52，测试期望集合同步。扫描正文 §6.14 / §6.15。
 
-### 14.31 LLM 示范导入：屋顶 doom 族免费模型通关局（task87，2026-10-26 登记）
+### 14.31 LLM 打全程的任务分层与 40 种子块（task81c / task81d，2026-10-26，AGENTS §8 第 4 条）
+
+GPT Pro 的离线沙箱用 llmplay 接口打冒险模式。task81c 把任务单从「每任务 3 个种子」扩到
+**每个任务 40 个种子**，并分成五层推进；task81d 加「换未来也能赢」的稳健性口径。
+任务定义与种子分配都由 `scripts/llmplay/make_llmplay_tasks.py` 生成，可重复执行：
+
+- **A 层**（屋顶 L46–L49 doom，2.0 倍）：`demo_roof_{46,47,48,49}_doom_m200`（沿用 task71b 已登记族）。
+- **B 层**（屋顶 L42–L44 的全部卡组变体 + L41）：`demo_roof_4{2,3,4}_{melon,gloom,kernel}_m200`、
+  `demo_roof_42_gloommelon_m200`、新登记的 `demo_roof_41_doom_m200`（卡组复制 L46 doom 族，只改关卡）。
+- **C 层**（更高倍率）：新族 `demo_roof_{46,47,48,49}_doom_m300` 与 `_m400`，关卡 / 卡组与 A 层同源，
+  只改 `zombie_count_multiplier`（3.0 / 4.0）。
+- **D 层**（雾夜 L36–L39 fog79 提到 2.0 倍）：新族 `fog79_l3{6,7,8,9}_*_v2_m200` 共 8 个，
+  保留 `fog_observation: human_v2`。
+- **E 层**（原生传送带）：新族 `demo_conv_30_orig_m100` / `demo_conv_40_orig_m100`，
+  `deck: []` + `conveyor_start: "original"`（卡由引擎发）。命名刻意避开 task75 的
+  `pool_l30_orig_*` / `storm_l40_orig_*`，两者并存不覆盖。L50 待 boss50 分支合入后再登记。
+
+**种子**：新独立块 **81,000,000–81,032,039**（33 个任务 × 40，每任务步长 1000），
+每个任务第一个种子同时写进 `configs/human_demo_tasks.json` 作默认种子，完整 40 个写在
+`configs/llmplay_seeds.json`。机械核对：全仓 1988 份 JSON / 4,376,532 个种子条目里
+落在 [81,000,000, 81,200,000) 的 **0 个**；块内 1320 个种子互不重复。
+
+**稳健性块**：**83,000,000–83,000,307**（4 个检查点 × 100 + 8 个未来），写在
+`configs/llmplay_robustness.json`，与任务种子不相交。
+
+**无头 reset**：`scripts/llmplay/check_tasks.py` 对 33 个任务各 reset + 120 tick，
+全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波）。
+
+### 14.32 LLM 示范导入：屋顶 doom 族免费模型通关局（task87，2026-10-26 登记）
 
 用户拿 task81 正式包让免费模型（meta `label_source=llm_gpt_pro`，主控注明实际是免费模型）跑了 20 分钟，
 交回屋顶 L46/L47/L48/L49 doom 族 12 份通关存档（每关 3 个种子，全部 2.0 倍）。
