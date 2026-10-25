@@ -20,22 +20,26 @@ sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
 
 R13_EVAL = Path("/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40")
 TASK = "day_l7_eval_d7p_holdout1"
-MODEL = {"a": ROOT / "artifacts/task84/variant_a/student/model.pt",
-         "b": ROOT / "artifacts/task84/variant_b/student/model.pt"}[sys.argv[1] if len(sys.argv) > 1 else "a"]
+MODELS = {"a": ROOT / "artifacts/task84/variant_a/student/model.pt",
+          "b": ROOT / "artifacts/task84/variant_b/student/model.pt"}
 
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("variant", choices=("a", "b"))
     parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--control", action="store_true", help="standard-deck day_l7 control task instead")
     args = parser.parse_args()
     variant = args.variant
-    model = MODEL[variant]
+    model = MODELS[variant]
     if not model.is_file():
         raise SystemExit("variant model missing: %s" % model)
-    manifest = ROOT / "artifacts/task84/heldout_eval_manifest.json"
-    task = next(t for t in json.loads(manifest.read_text())["tasks"] if t["task_id"] == TASK)
-    out = ROOT / ("artifacts/task84/variant_%s/eval_%s" % (variant, TASK))
+    manifest = ROOT / ("artifacts/task84/control_eval_manifest.json" if args.control
+                       else "artifacts/task84/heldout_eval_manifest.json")
+    document = json.loads(manifest.read_text())
+    task = document["tasks"][0]
+    task_id = task["task_id"]
+    out = ROOT / ("artifacts/task84/variant_%s/eval_%s" % (variant, task_id))
     out.mkdir(parents=True, exist_ok=True)
     games = out / "games.jsonl"
     complete = games.exists() and len(games.read_text().splitlines()) == len(task["seeds"])
@@ -44,7 +48,7 @@ def main():
         command = ["/home/newbiexvwu/.venvs/ml/bin/python3", str(ROOT / "scripts/search_play.py"),
                    "--rollout-policy", str(model),
                    "--value", "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
-                   "--manifest", str(manifest), "--task-id", TASK,
+                   "--manifest", str(manifest), "--task-id", task_id,
                    "--executable", "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
                    "--resource-dir", "/home/newbiexvwu/.cache/pvz-research-resources",
                    "--seeds", str(len(task["seeds"])), "--workers", str(args.workers),
@@ -59,11 +63,11 @@ def main():
         print("played %d games in %.0f s" % (len(task["seeds"]), time.time() - started), flush=True)
     candidate = {row["seed"]: row for row in map(json.loads, games.read_text().splitlines())}
     incumbent = {row["seed"]: row for row in
-                 map(json.loads, (R13_EVAL / "incumbent" / TASK / "games.jsonl").read_text().splitlines())}
+                 map(json.loads, (R13_EVAL / "incumbent" / task_id / "games.jsonl").read_text().splitlines())}
     seeds = sorted(incumbent)
     flips = [s for s in seeds if incumbent[s]["won"] and not candidate[s]["won"]]
     gains = [s for s in seeds if not incumbent[s]["won"] and candidate[s]["won"]]
-    summary = dict(variant=variant, model=str(model),
+    summary = dict(variant=variant, task=task_id, model=str(model),
                    variant_wins=sum(1 for s in seeds if candidate[s]["won"]),
                    incumbent_wins=sum(1 for s in seeds if incumbent[s]["won"]),
                    flips=len(flips), gains=len(gains), flip_seeds=flips, gain_seeds=gains)
