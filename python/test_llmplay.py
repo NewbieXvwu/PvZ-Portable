@@ -340,6 +340,96 @@ class GridTest(unittest.TestCase):
 class RobustnessTest(unittest.TestCase):
     """task81d：换未来也能赢 —— 种子块、闭环循环、meta 记录。"""
 
+    def setUp(self):
+        budget.reset_session(Path(tempfile.mkdtemp(prefix='llmplay-robustness-')) / 'budget.json')
+
+    def test_branch_preserves_manual_patch_and_copies_assessment(self):
+        from unittest.mock import patch
+        parent = Game('demo_roof_49_doom_m200', tick=60, ops=[dict(end_tick=60)])
+        parent.manual_patch = True
+        parent.robustness_report = {'checkpoints': {'10': {'wins': 5, 'k': 8}}}
+        with patch.object(parent, '_start'):
+            child = parent.branch()
+        try:
+            self.assertTrue(child.manual_patch)
+            self.assertEqual(child.robustness_report, parent.robustness_report)
+            child.robustness_report['checkpoints']['10']['wins'] = 0
+            self.assertEqual(parent.robustness_report['checkpoints']['10']['wins'], 5)
+        finally:
+            child.close()
+            parent.close()
+
+    def test_internal_trials_cannot_rewind_branch_or_export(self):
+        from unittest.mock import patch
+        trial = Game('demo_roof_49_doom_m200', tick=60, ops=[dict(end_tick=60)], _internal=True)
+        with tempfile.TemporaryDirectory() as directory, patch.object(trial, '_start') as start:
+            for name, args in [('rewind', (0,)), ('branch', ()), ('save', (Path(directory)/'run.json',)),
+                               ('export_archive', (Path(directory)/'archive',)), ('robustness', (lambda g: None,))]:
+                with self.subTest(method=name), self.assertRaisesRegex(RuntimeError, '试打局'):
+                    getattr(trial, name)(*args)
+            self.assertEqual(list(Path(directory).iterdir()), [])
+            start.assert_not_called()
+        trial.close()
+
+    def test_internal_trial_charges_search_ticks_in_manual_mode(self):
+        from unittest.mock import patch
+        from types import SimpleNamespace
+        trial = Game('demo_roof_49_doom_m200', tick=60, ops=[dict(end_tick=60)], _internal=True)
+        trial.obs = dict(wave=10, tick=60)
+        trial.env = SimpleNamespace(_last_response={'state_hash': 'diagnostic'}, close=lambda: None)
+        trial.session.set_mode(49, 'manual')
+        def step(action):
+            trial.tick += action['ticks']
+            trial.obs['tick'] = trial.tick
+            return True
+        with patch.object(trial, '_start'), patch.object(trial, '_step_raw', side_effect=step), \
+                patch.object(trial, '_note_events'), patch.object(trial, '_maybe_frame'):
+            trial.wait(30)
+        self.assertEqual(trial.session.level(49)['search_ticks'], 30)
+        self.assertEqual(trial.session.level(49)['manual_ticks'], 0)
+        trial.close()
+
+    def test_pass_requires_five_wins_out_of_eight_actual_futures(self):
+        from unittest.mock import patch
+        class Env:
+            result = 0
+            def snapshot_fast(self): return 'snapshot'
+            def restore_fast(self, snapshot): self.result = 0
+            def observe(self): return dict(tick=0, wave=10, result=self.result)
+            def reseed(self, seed): self.result = int(seed < wins)
+            def release_snapshot(self, snapshot): pass
+        class Trial:
+            tick = 0
+            terminal = True
+            def __init__(self): self.env = Env()
+            def _start(self): pass
+            def _reset_bookkeeping(self, obs): self.obs = obs
+            def close(self): pass
+        def policy(game): game.wait(30)
+        for k, wins, passed in [(None, 5, True), (8, 4, False), (7, 7, False), (5, 5, False)]:
+            with self.subTest(k=k, wins=wins):
+                parent = Game('demo_roof_49_doom_m200', tick=60)
+                parent.wave_history = [dict(wave=10, tick=0)]
+                with patch.object(parent, '_start'), patch.object(parent, '_persist_best'), \
+                        patch('llmplay.game.Game', return_value=Trial()), \
+                        patch('llmplay.game.robustness_seeds', return_value={10: list(range(8))}):
+                    report = parent.robustness(policy, k=k, checkpoints=[10])
+                self.assertEqual(report['passed'], passed)
+                self.assertEqual(report['k'], k if k is not None else 8)
+                parent.close()
+
+    def test_policy_source_unavailable_is_not_replaced_by_a_name(self):
+        from unittest.mock import patch
+        from llmplay.game import _policy_source
+        with patch('llmplay.game.inspect.getsource', side_effect=OSError('no source')):
+            with self.assertRaisesRegex(ValueError, r'\.py 文件'):
+                _policy_source(lambda game: None)
+
+    def test_fixed_action_list_is_rejected_as_a_policy(self):
+        from llmplay.game import _policy_source
+        with self.assertRaisesRegex(TypeError, '闭环打法函数'):
+            _policy_source([dict(type='wait', ticks=60)])
+
     def test_seed_block_is_fixed_and_disjoint_from_task_seeds(self):
         from llmplay.game import robustness_seeds
         plan = robustness_seeds()
