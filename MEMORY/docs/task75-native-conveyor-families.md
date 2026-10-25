@@ -38,3 +38,4 @@ L10、L20 的原生传送带族已经在 qc 里，L20 学生从 0 练到了 45/4
 ## 问题
 
 Mac 上的模型路径：静态网 `/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt`（主控已从台式机拷来，SHA 24858410…）；叶值 v5 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt`（8a636d33…，只读）；学生 dw4i_s1 同 demo 工作树的现有路径。
+- 2026-10-25：L40 冷启动第 3 局同样因头部动画槽位被回收而崩（`Plant::UpdateShooting` 空指针），属同一类缺陷的分裂豌豆分支。`FindTargetAndFire` 副武器、`UpdateShooting` 开火门控与待机复位三处改 `ReanimationTryToGet` 并跳过缺失头；崩溃种子 61200001/61200003 跑完，46 passed / 47 subtests。

@@ -741,11 +741,14 @@ bool Plant::FindTargetAndFire(int theRow, PlantWeapon thePlantWeapon)
 
 	if (mSeedType == SeedType::SEED_SPLITPEA && thePlantWeapon == PlantWeapon::WEAPON_SECONDARY)
 	{
-		Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
-		aHeadReanim2->StartBlend(20);
-		aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
-		aHeadReanim2->mAnimRate = 35.0f;
-		aHeadReanim2->SetFramesForLayer("anim_splitpea_shooting");
+		Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
+		if (aHeadReanim2)
+		{
+			aHeadReanim2->StartBlend(20);
+			aHeadReanim2->mLoopType = ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD;
+			aHeadReanim2->mAnimRate = 35.0f;
+			aHeadReanim2->SetFramesForLayer("anim_splitpea_shooting");
+		}
 		mShootingCounter = 26;
 	}
 	else if (aHeadReanim && aHeadReanim->TrackExists("anim_shooting"))
@@ -3283,11 +3286,11 @@ void Plant::UpdateShooting()
 		{
 			Reanimation* aHeadBackReanim = mApp->ReanimationTryToGet(mHeadReanimID2);
 			Reanimation* aHeadFrontReanim = mApp->ReanimationTryToGet(mHeadReanimID);
-			if (aHeadFrontReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mLaunchCounter > 25)
+			if (aHeadFrontReanim && aHeadFrontReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD && mLaunchCounter > 25)
 			{
 				Fire(nullptr, mRow, PlantWeapon::WEAPON_PRIMARY);
 			}
-			if (aHeadBackReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
+			if (aHeadBackReanim && aHeadBackReanim->mLoopType == ReanimLoopType::REANIM_PLAY_ONCE_AND_HOLD)
 			{
 				Fire(nullptr, mRow, PlantWeapon::WEAPON_SECONDARY);
 			}
@@ -3360,9 +3363,9 @@ void Plant::UpdateShooting()
 	}
 	else if (mSeedType == SeedType::SEED_SPLITPEA)
 	{
-		Reanimation* aHeadReanim2 = mApp->ReanimationGet(mHeadReanimID2);
+		Reanimation* aHeadReanim2 = mApp->ReanimationTryToGet(mHeadReanimID2);
 
-		if (aHeadReanim->mLoopCount > 0)
+		if (aHeadReanim && aHeadReanim->mLoopCount > 0)
 		{
 			aHeadReanim->StartBlend(20);
 			aHeadReanim->mLoopType = ReanimLoopType::REANIM_LOOP;
@@ -3371,7 +3374,7 @@ void Plant::UpdateShooting()
 			aHeadReanim->mAnimTime = aBodyReanim->mAnimTime;
 		}
 
-		if (aHeadReanim2->mLoopCount > 0)
+		if (aHeadReanim2 && aHeadReanim2->mLoopCount > 0)
 		{
 			aHeadReanim2->StartBlend(20);
 			aHeadReanim2->mLoopType = ReanimLoopType::REANIM_LOOP;
