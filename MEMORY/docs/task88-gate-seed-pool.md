@@ -41,6 +41,7 @@
 - 2026-10-26 第 1 步（修正后重扫，最终）：candidate [100000000, 101000000) **disjoint: true**（61 个占用区间约 496 万种子，最高段 llmplay [83000000, 83000308)）；全机 251774 个 JSON/JSONL 字面量复核 108 命中全部甄别为误报（rss_bytes 与十六进制 state_hash），零真实种子占用；紧凑汇总 `MEMORY/docs/gate-seed-inventory.json` 入库。
 - 2026-10-26 第 5 步：结论写 `MEMORY/docs/gate-seed-pool.md`（含新池依据、实现、不升版理由、交接注意、产物索引）。task88 全部 5 步完成。
 - 2026-10-26 Codex 接续验收：上述“全部完成”暂不能成立。发现 width-check 丢弃第二次 reset、把自身比较当确定性；现保留九次独立采样记录并核对引擎 PRIV 的 uint32 种子回显，覆盖池首/尾、65535/65536、UINT32_MAX，实测全部通过，新增两项负例测试通过。已有 promotion 24 项测试复核通过。还发现 inventory 跳过 tasks 列表、闭区间上端点少算 1，且缺 Mac 部署账本证据，继续补齐，不重做已正确的多池实现与 dry-run。
+- 2026-10-26 盘点解析修正：tasks 数组/字典递归、闭区间末端、单局 seed、future_seeds、多池 ledger、base/stride/per_task 尾部均覆盖；字面量复核排除十六进制后缀，并保留每个命中的 key/偏移，不再截成前 50 条；增加双机 inventory 合并与 ledger 存在性/文件 SHA、课程 offset 源码表达式记录。6 项回归通过；quick 扫描机械读到 configs 的 804 个声明（原报告漏掉），候选仍无交集。修正后的本机全量扫描进行中，Mac 证据待补。
 
 ## 问题
 
