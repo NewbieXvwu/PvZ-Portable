@@ -178,8 +178,10 @@ def cmd_run(args) -> None:
                 for arm, value in bucket.items():
                     if isinstance(value, list):   # 旧 adaptive 格式 [wins, games]
                         bucket[arm] = {'wins': value[0], 'games': value[1], 'rows': []}
-            # 保留 adaptive 等来源写入的汇总字段（l50/顶档/阶梯），只更新 points。
-            extra = {k: v for k, v in previous.items() if k not in ('schema', 'points')}
+            # 保留 adaptive 等来源写入的汇总字段（l50/顶档/阶梯），只更新 points 与基础字段。
+            extra = {k: v for k, v in previous.items()
+                     if k not in ('schema', 'points', 'task_id', 'seed', 'archive',
+                                  'grade', 'layer')}
         for decision in points:
             bucket = store.setdefault(str(decision), {})
             for arm in arms:
