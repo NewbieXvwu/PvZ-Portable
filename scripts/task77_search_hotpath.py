@@ -307,7 +307,11 @@ def profile_summary(args):
             'milliseconds_per_decision': {k: v * 1000 / totals['decisions'] for k, v in components.items()},
             'commands_wall_seconds': dict(commands), 'commands_engine_cpu_seconds': dict(cpu_commands),
             'python_self_seconds': python_functions.most_common(25),
-            'samples': sum(functions.values()), 'cpp_samples': functions.most_common(45),
+            # Keep the whole histogram: a top-N cut makes the category shares depend on how
+            # finely the symbolizer splits a module (libc offsets land on one coarse export
+            # in one run and on memset/memcpy in another), which turned a third of the
+            # samples into 'unlisted' and made §4 irreproducible.
+            'samples': sum(functions.values()), 'cpp_samples': functions.most_common(),
             'valid_sample_files': valid_samples, 'invalid_sample_files': invalid_samples}
     save(summary_path(args.out, cells), evidence)
     print(json.dumps({k: v['milliseconds_per_decision'] for k, v in evidence['cells'].items()}, indent=1))
@@ -320,6 +324,10 @@ HOTSPOT_CATEGORIES = (
     ('animation', ('Reanimation', 'EnvTrack', 'FloatTrack', 'CurveEvaluate', 'TrackVelocity', 'TrackMemoHit')),
     ('value_net', ('EnvironmentValueNet', 'EnvironmentRollout::Convolve')),
     ('libc', ('libc.so',)),
+    # The rollout's own simulation objects.  Matched last: Reanimation/Particle/DataArray
+    # symbols that happen to live on a Plant or Zombie already went to those buckets.
+    ('sim', ('Board::', 'Zombie::', 'Plant::', 'Projectile', 'Coin::', 'GridItem', 'LawnMower',
+             'EffectSystem', 'Attachment::', 'CursorPreview', 'LawnApp::', 'MTRand')),
 )
 
 

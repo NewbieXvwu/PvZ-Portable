@@ -14,8 +14,9 @@
    （每决策 37.3 次 `STATIC_SCORES`，§3.1），所以那张表不能直接套到第六族。
 2. 引擎进程 CPU 为整局墙钟的 57–78%（还包含 Python、IPC 和系统调度等成本，不能把差额全算成排队），
    其中 **89–95% 落在 `ROLLOUT_VALUE` 一条命令里**。
-3. 采样集中在 BLAS、动画、粒子与对象数组遍历（§4）；平面 PC 采样不能把 BLAS 内部样本
-   精确分给学生与值网络，二者分别耗时以 §3 的引擎计数器为准。
+3. 采样集中在模拟对象自身（26.4%）、BLAS（21.6%）、`DataArray` 遍历（10.7%）、动画（10.4%）
+   与粒子（7.2%）（§4）；平面 PC 采样不能把 BLAS 内部样本精确分给学生与值网络，
+   二者分别耗时以 §3 的引擎计数器为准。
 4. **本轮保留 BLAS 算术及动画/粒子生命周期。** sgemm 删零可能改变求和顺序；
    动画与粒子的稀疏跳过 2026-10-23 已经做过
    （`Reanimator.cpp` 的 sparse 路径、`ENV_LIGHT_ANIMATION`），剩下的 track 更新与粒子会消耗共享 RNG
@@ -173,20 +174,22 @@ rollout+学生 = 79.9%（rollout 53.0% / 学生 27.0%），与五地形同量级
 （`invalid_sample_files`），并用修复后的采样器按同一任务与种子补采 1 局（`profile_recovery/`）。
 最终样本 = day 4 + night 4（`profile_complete/`）+ pool 3 + 补采 1 + fog 4 + roof 4 = 20 局，
 **566,659 个样本**，由 `hotspots` 阶段从 `profile_summary.json` 汇总成 `artifacts/task77/hotspots.json`。
-类别互斥、按首次匹配归类；每格只保留最重的 45 个符号，其余记为 `unlisted`（31.4%），
-所以下表类别份额是**下界**。
+每格保存**完整**符号直方图，不再截断 top-45。上一版每格只留 45 个符号，`unlisted` 占 31.4%，
+而截断位次会随符号解析粒度变化（同一批 libc 偏移一次落到 `_dl_mcount_wrapper`、另一次落到
+`__memset_avx2_unaligned_erms`），类别份额既只是下界、又不可复现。现在 `unlisted` 为 0，
+类别份额是精确值，且只取决于模块名与符号前缀，不随解析粒度改变。类别互斥、按首次匹配归类。
 
 | 占比 | 样本 | 符号 |
 |---|---|---|
 | 14.64% | 82969 | libopenblas `sgemm_kernel_HASWELL` |
 | 4.81% | 27284 | `Reanimation::Update` |
-| 3.37% | 19074 | libc 内部函数（addr2line 只能落到最近的导出符号 `_dl_mcount_wrapper`） |
 | 3.02% | 17138 | `operator()` 汇总（含 `Reanimation::Update` 的 track lambda；同名符号不能全归给这一调用者） |
 | 2.37% | 13415 | libopenblas `sgemm_oncopy_HASWELL`（打包开销） |
 | 2.21% | 12539 | `DataArray<Zombie>::Iterator::operator++` |
 | 2.08% | 11786 | `DataArray<Plant>::Iterator::operator++` |
-| 1.95% | 11046 | `PvzpParticleEmitter::UpdateParticle` |
+| 1.96% | 11132 | `PvzpParticleEmitter::UpdateParticle` |
 | 1.88% | 10642 | `Sexy::MTRand::NextNoAssert` |
+| 1.60% | 9042 | libc `__memset_avx2_unaligned_erms` |
 | 1.56% | 8833 | `Plant::Animate` |
 | 1.34% | 7572 | libopenblas `dgemm_kernel_HASWELL` |
 | 1.32% | 7501 | `EnvironmentRollout::Convolve` |
@@ -196,36 +199,44 @@ rollout+学生 = 79.9%（rollout 53.0% / 学生 27.0%），与五地形同量级
 | 1.15% | 6509 | `EnvironmentValueNet::Convolve` |
 | 1.13% | 6395 | `Plant::UpdateAbilities` |
 | 1.12% | 6331 | `DataArray<Reanimation>::DataArrayTryToGet` |
-| 1.05% | 5976 | `DataArray<Reanimation>::Iterator::operator++` |
-| 1.03% | 5861 | libopenblas `dgemm_incopy_HASWELL` |
 
-按类别（互斥，占全部样本）：
+按类别（互斥，按首次匹配归类，占全部样本）：
 
 | 类别 | 合计 | day | night | pool | fog | roof |
 |---|---|---|---|---|---|---|
-| openblas | 20.55% | 25.6% | 24.6% | 16.0% | 16.0% | 15.3% |
-| 动画 | 8.52% | 7.5% | 7.6% | 9.3% | 9.7% | 10.4% |
-| `DataArray` | 7.25% | 6.0% | 7.0% | 7.8% | 8.3% | 8.3% |
-| 粒子 | 4.62% | 2.7% | 3.7% | 7.7% | 3.3% | 1.2% |
-| 学生/值网络卷积前处理 | 2.47% | 3.3% | 3.0% | 1.7% | 1.9% | 2.2% |
-| libc | 4.17% | 5.3% | 4.4% | 3.4% | 3.6% | 4.8% |
+| openblas | 21.60% | 26.9% | 25.8% | 16.9% | 17.0% | 16.2% |
+| 模拟对象（`sim`） | 26.44% | 22.6% | 24.7% | 28.5% | 29.9% | 31.1% |
+| 动画 | 10.37% | 9.6% | 9.2% | 11.1% | 11.6% | 13.0% |
+| `DataArray` | 10.72% | 8.8% | 10.2% | 11.7% | 12.5% | 11.2% |
+| 粒子 | 7.23% | 5.3% | 6.2% | 10.6% | 5.6% | 3.0% |
+| 学生/值网络卷积前处理 | 2.59% | 3.5% | 3.1% | 1.8% | 2.0% | 2.3% |
+| libc | 4.71% | 5.8% | 4.9% | 3.8% | 4.2% | 5.8% |
+| 其他（未归类） | 16.35% | 17.6% | 15.8% | 15.7% | 17.1% | 17.2% |
+| `unlisted` | 0.00% | 0.0% | 0.0% | 0.0% | 0.0% | 0.0% |
 
-- openblas 包含学生与值网络的矩阵运算；平面采样不能区分共享内核的调用者，二者分别耗时以 §3 的计数器为准。
-- 动画合计 8.52%（`Reanimation::Update` + lambda + `NextEnvTrack` + `FloatTrackEvaluate` +
+- **`sim` 是新增的一类**（26.44%）：`Board::` / `Zombie::` / `Plant::` / `Projectile` / `Coin::` /
+  `GridItem` / `LawnMower` / `EffectSystem` / `Attachment::` / `CursorPreview` / `LawnApp::` /
+  `MTRand` 前缀，即推进对象本身的函数。上一版没有这一类，它整个藏在 `unlisted` 里。
+  它和 §3 的 rollout 引擎步（50–65%）不是同一口径：动画、粒子、`DataArray` 遍历里也有相当部分
+  是在模拟循环里被调用的，所以 §3 的引擎步样本分散在这四个类别中，类别之间也不能直接相加。
+- openblas 21.60% 包含学生与值网络的矩阵运算；平面采样不能区分共享内核的调用者，
+  二者分别耗时以 §3 的计数器为准。
+- 动画合计 10.37%（`Reanimation::Update` + lambda + `NextEnvTrack` + `FloatTrackEvaluate` +
   `PvzpCurveEvaluate` + `GetTrackVelocity` + `TrackMemoHit`）：**不能跳**（共享 RNG，见 §1.4）。
-- 粒子合计 4.62%：**不能跳**（共享 RNG）。
-- `DataArray` 迭代器与查找合计 7.25%：2026-10-23 已做过四槽一判的扫描优化，这里是剩余成本。
-- 两处 `Convolve` 合计 2.47%（证据内沿用键名 `value_net`），其中学生网 1.32%、值网络 1.15%；
+- 粒子合计 7.23%：**不能跳**（共享 RNG）。
+- `DataArray` 迭代器与查找合计 10.72%：2026-10-23 已做过四槽一判的扫描优化，这里是剩余成本。
+- 两处 `Convolve` 合计 2.59%（证据内沿用键名 `value_net`），其中学生网 1.32%、值网络 1.15%；
   矩阵乘法另记在 openblas 里。值网络整体占每决策 2.0–5.2%（§3），可用于估算值网络优化的量级，
-  但 **2.47% 不是三处补丁的收益上限**，因为补丁也改了 `DataArray` 和动画。
-- `_dl_mcount_wrapper` 不是 `-pg`：二进制里 `mcount` 符号计数为 0，这是 libc 无 debug 符号时的误标。
-- **libc 那 4.17% 拆开了。** `libc6-dbg` 在这台机上装不上（apt 走代理返回 403），改用
-  `scripts/task77_libc_classify.py`：按模块统计 libc 占 **4.71%**（26,664 / 566,659，差额是符号解析成
-  `??` 后被算进 `unlisted` 的部分），再用采样地址处的指令窗口分类——
-  memset（`rep stos`）**26.9%**（占全部 1.26%）、AVX 向量拷/写 **19.8%**（0.93%）、
-  memcpy/memmove（`rep movs`）**4.6%**（0.22%）、其余 48.7%（2.29%，未分类）。
-  这是指令特征启发式分类，既不能确定所有未分类样本的函数，也不能确定清零/拷贝的调用者；
-  不能由此单独推出 im2col 优化的整局收益上限。
+  但 **2.59% 不是三处补丁的收益上限**，因为补丁也改了 `DataArray` 和动画。
+- **libc 4.71% 现在与按模块统计的 26,664 / 566,659 完全一致**：完整直方图下没有符号被截掉。
+  最大的一项是 `__memset_avx2_unaligned_erms` 1.60%，与 `scripts/task77_libc_classify.py` 按采样地址
+  的指令窗口分类（memset `rep stos` 26.9% = 占全部 1.26%）同向——分类器只认指令特征，范围更窄。
+  同一工具还给出 AVX 向量拷/写 0.93%、`rep movs` 0.22%、其余 2.29%（未分类）。
+  `libc6-dbg` 在这台机上装不上（apt 走代理返回 403），所以只能到这个粒度；
+  它既不能确定所有未分类样本的函数，也不能确定清零/拷贝的调用者。
+- **其他 16.35%** 是长尾：`operator()` 3.02%（lambda 聚合，不能归给单一调用者）、
+  `Linear`/`IdentityLinear` 1.01%（值网络非 BLAS 路径）、`libz crc32_z` 0.63%、
+  `memcpy` 0.62% 等；不再往下归因。
 - 上一版表格（11.40% sgemm、动画 12.5% 等）是采样审计前只含 day/night 的汇总，已作废。
 
 ## 5. 改了什么（都只改实现，不改搜索）
@@ -462,12 +473,11 @@ CPU **0.9780**；同一臂内 A 的两次为 176.6 / 181.6 s（差 3%），面�
   指令窗口分类代替（`scripts/task77_libc_classify.py`，§4）：libc 4.71% 里 memset 1.26%、AVX 拷贝 0.93%、
   `rep movs` 0.22%，其余 2.29%；这个口径只能回答“是不是 memset/拷贝”，不能回答谁调用的。
 
-- **§4 的类别份额绑定 15:53 那次聚合。** 同一批 `pcs.*.bin` 重新跑 `profile-summary` 时，
-  libc 偏移被 addr2line 解析成更细的导出符号（`__memset_avx2_unaligned_erms`、`__memcpy_avx_unaligned_erms`、
-  `__strcmp_avx2` 等，而 15:53 那次落到 `_dl_mcount_wrapper`），每格 top-45 的占位随之变化，
-  `unlisted` 与非 libc 类别份额会移动几个百分点；模块级的 libc 样本数不变。
-  所以 §4 那张表固定为 15:53 的聚合、`hotspots.json` 未重算，复核只能对 `hotspots.json` 本身，
-  不能靠重跑 `profile-summary` 复现。§3 用的是引擎计数器，不受符号解析影响（传送带补测同理）。
+- **§4 的类别份额现在可复现，逐符号表不可。** 每格保存完整直方图后，类别份额只取决于模块名
+  与符号前缀，`unlisted` 为 0；同一批 `pcs.*.bin` 重跑 `profile-summary` + `hotspots` 得到相同类别值。
+  逐符号的 top 表仍会随 addr2line 的解析粒度变化（同一批 libc 偏移可能落到
+  `_dl_mcount_wrapper`，也可能落到 `__memset_avx2_unaligned_erms`），所以表中 libc 行的具体符号名
+  不能当稳定证据，libc 的**份额**可以（按模块统计）。§3 用引擎计数器，与符号解析无关。
 
 - **试过但回退：学生网 im2col 缓冲按层拆分。** `EnvironmentRollout::Convolve` 的三层（0/2/4）
   共用一块 im2col 缓冲，而三层的 feature 数不同，零边因此在每个前向被重建三次。改成每层一块
@@ -475,4 +485,4 @@ CPU **0.9780**；同一臂内 A 的两次为 176.6 / 181.6 s（差 3%），面�
   （单核 pin、同任务同种子、每轮 126 局 rollout、A/B 交替）：引擎自报
   `network_seconds / net_calls` 的比值为 **0.988（0.967–1.008）**，`sim_μs/tick` 对照 1.005，
   即这次实验未测出收益，已回退、未进候选。学生前向总耗时以 §3 的独立计数器为准，
-  不能把 §4 的共享 openblas 20.55% 全归给学生，也不能由这次否决推断所有缓冲或遍历优化都无效。
+  不能把 §4 的共享 openblas 21.60% 全归给学生，也不能由这次否决推断所有缓冲或遍历优化都无效。

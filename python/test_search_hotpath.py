@@ -209,6 +209,9 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
                          'data_array')
         self.assertEqual(bench.hotspot_category('pvz-portable:Reanimation::Update'), 'animation')
         self.assertEqual(bench.hotspot_category('libopenblas.so.0:sgemm_kernel_HASWELL'), 'openblas')
+        self.assertEqual(bench.hotspot_category('pvz-portable:Board::Update'), 'sim')
+        # A reanimation that belongs to a plant is animation work, not simulation bookkeeping.
+        self.assertEqual(bench.hotspot_category('pvz-portable:Reanimation::Update'), 'animation')
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             bench.save(root / 'profile_summary.json', {'cells': {'day': {

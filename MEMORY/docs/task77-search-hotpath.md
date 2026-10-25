@@ -61,6 +61,8 @@
 
 - [传送带补测 2026-10-25 22:52] 验收面板六族里唯一没有剖析局的 conveyor 补齐（任务书 §3 的分解此前只覆盖五地形，报告自己记着"传送带没有剖析局"）。同一冻结输入、同一 `command_for` 形态、2 进程，`profile --cells conveyor` 跑 4 局（种子 5083968–5083971），另存 `profile_summary_conveyor.json`，**不覆盖** §4 的 20 局样本集。每决策 151.9 ms，rollout+学生 79.9%（53.0 / 27.0）；**静态值合计 16.1 ms = 10.6%，是六族最高**——每决策 37.3 次 `STATIC_SCORES`（day 17.5、night 6.3、pool 5.8、fog 3.1、roof 2.7），所以值网络/静态评分优化的收益上限只在传送带与白天族。`profile` / `profile-summary` 现在接受 `--cells`（默认仍是任务书的五地形面板，非默认面板另存文件，五格汇总与改动前逐字节相同），补一条回归测试（16 项通过）；§1/§3.1/§8 已更新，`audit_report_numbers.py` 逐项复算 §3.1 全部数字。另记一条重跑口径：同一批 `pcs.*.bin` 重新聚合会把 libc 偏移解析成更细的导出符号，top-45 占位随之变化，§4 固定为 15:53 的聚合。报告 §2 的复现命令补上 `--cells conveyor` 两条，§7.1 那句"传送带没有剖析局"改成当时状态（门禁 15:14 已跑完，不重跑）。
 
+- [§4 改完整直方图 2026-10-25 23:10] 采样热点不再每格截断 top-45：`profile_summary` 存完整符号直方图，`hotspots` 的 `unlisted` 从 31.4% 降到 **0**，类别份额变成精确值且可复现（连续两次 `profile-summary` + `hotspots` 逐字节相同）。新增 `sim` 类（`Board::`/`Zombie::`/`Plant::`/`Projectile`/`Coin::`/`GridItem`/`LawnMower`/`EffectSystem`/`Attachment::`/`CursorPreview`/`LawnApp::`/`MTRand` 前缀）**26.44%**，把上一版藏在 `unlisted` 里的模拟对象开销单独列出来；openblas 21.60、`DataArray` 10.72、动画 10.37、粒子 7.23、两处 `Convolve` 2.59、libc 4.71（现与按模块统计的 26,664 / 566,659 完全一致）、其他 16.35。§1.3/§4/§8 与审计脚本已更新，16 项测试通过；旧 §4 数字（openblas 20.55 / 动画 8.52 / DataArray 7.25 / 粒子 4.62 / 卷积 2.47 / libc 4.17 / unlisted 31.39）作废。
+
 ## 问题
 
 - [无待办 2026-10-25 21:30] 第四轮 PGO ABBA 与 day 复测已并入报告，本任务的四项要求（剖析、优化、逐位门禁、ABBA 验收）与结论文件全部交付；§7.5 的每个数字由 `audit_pgo_numbers.py` 从原始证据复算。部署（PGO 两阶段重建）由主控决定，本工作树无残留游戏进程。
