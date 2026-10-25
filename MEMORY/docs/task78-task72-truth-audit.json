@@ -1,0 +1,43 @@
+{
+ "scope": "arithmetic_and_candidate_coverage_audit_of_supplied_task72b_summary",
+ "states": 94,
+ "unique_state_identities": 94,
+ "labelled_candidates_per_state": {
+  "2": 16,
+  "3": 78
+ },
+ "recorded_candidate_future_outcomes": 2128,
+ "all_labelled_pairs": 250,
+ "absolute_gap_counts": {
+  "0.0": 236,
+  "0.125": 14
+ },
+ "maximum_absolute_gap": 0.125,
+ "static_vs_wait_gap_counts": {
+  "0.0": 88,
+  "0.125": 6
+ },
+ "minimum_registered_gap": 0.25,
+ "eligible_truth_pairs": 0,
+ "eligible_state_count": 0,
+ "eligible_pairs": [],
+ "all_candidates_lose_states": 87,
+ "nonterminal_eligible_pairs_upper_bound": 0,
+ "ranking_signal_status": "insufficient_evidence",
+ "value_consistency": {
+  "v5": null,
+  "v6": null,
+  "improvement": null,
+  "bootstrap_interval": null
+ },
+ "engine_replay_verified": false,
+ "leaf_scores_recomputed": false,
+ "horizon_stability_evaluated": false,
+ "original_takeover_mapping_verified": false,
+ "original_26_state_mask_restored": false,
+ "overall_task_complete": false,
+ "note": "The supplied wins/finals and candidate coverage are internally consistent. This does not verify original trajectories or terminal traces. With zero truth-gap-eligible pairs, nonterminal filtering cannot produce an evaluable ranking pair; no zero agreement rate or fabricated confidence interval is reported.",
+ "reference_sha256": "b0e52098921ff018dbdb7ccaee35a6b51a52c69d92c30619b54cdcb60cc7ab63",
+ "audit_script_sha256": "269a9348e450c049139cad34d8da71936fd93532210bd6a486f1c928c08b1436",
+ "engine_processes_started": 0
+}
