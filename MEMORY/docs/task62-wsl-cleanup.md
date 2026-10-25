@@ -988,9 +988,58 @@ Mac副本只作交叉核对：恢复的白天26项逐任务与Mac一致；恢复
 
 原路径`~/PvZ-search/artifacts/mac_import/mac_import.json`与`mac_package_journal.json`已恢复。恢复时两份SHA256分别为`d87895ea8818f3e7f2600b36a1cdc50eb3e939279574f04b78edf2d618f3a9f6`和`1a17d73616be15d048440c1065d5e7d9ce2c6d7d8476611f4eaaa972ba94f27e`。之后活动导入器正常追加新标签，验证快照已有418条journal记录，不能再以377为整个活动journal总数，也不能用旧快照覆盖新记录。
 
-导入器增加恢复收据保护：原包哈希与本地ledger均一致才直接复用；历史z筛选沿用冻结策略；恢复记录缺原包哈希或核验不符时明确报错并拒绝下载/重导，须先对账。新标签继续走原有导入流程。主控已把小时循环入口改为cq脚本，执行者将同一保护补丁同步到`cq/scripts/import_mac_labels.py`，只改该独立导入文件，未操作qc或重启导入循环。此前还为被退役macpool的旧脚本路径补了指向cleanup导入器的兼容软链；它不是注册工作树。
+导入器增加恢复收据保护：原包哈希与本地ledger均一致才直接复用；历史z筛选沿用冻结策略；恢复记录缺原包哈希或核验不符时明确报错并拒绝下载/重导，须先对账。新标签继续走原有导入流程。现场小时循环入口现已指向cq脚本（执行者未修改循环），执行者将同一保护补丁同步到`cq/scripts/import_mac_labels.py`，只改该独立导入文件，未操作qc或重启导入循环。此前还为被退役macpool的旧脚本路径补了指向cleanup导入器的兼容软链；它不是注册工作树。
 
 复制journal到独立验证目录、使用模拟远端（真实正式帧只读）抽查三种行为：已知哈希复用、冻结筛选复用、未知哈希拒绝；下载调用均0，正式帧写入0。回归测试`python/test_import_mac_labels.py`共13项通过（0.52s），包含拒绝覆盖现有journal。详细快照与结果见[收据恢复核验](task62-mac-journal-recovery.json)。
+
+### 其余删除项引用复核、追加恢复与缺口（2026-10-25 10:19）
+
+已逐条复核`task62-deleted-paths.tsv`全部**1,752项**：main_unused_artifact 1,340项、dw5_large_file 199项、old_unopened_log 213项。读取当前state、cq的7份recipes及199份Python/shell脚本，并纳入DESIGN和5份幸存的在跑任务书，共214个输入文件；Python静态解析错误0。每个输入SHA、引用的路径/位置/上下文、恢复命令及结果见[引用证据](task62-reference-audit.json)，逐项处置状态与引用ID见[完整清单](task62-reference-audit.tsv)。这是静态引用审计，没有操作课程控制器。
+
+main_unused_artifact中1,089项有明确路径或默认输出父目录引用；另7项仅有依赖运行cwd的文本示例，已单列，未将cq自己的`artifacts/perf`误说成主检出同名目录。dw5的199项和旧日志213项未找到这些来源中的明确引用。没有匹配不构成删除授权；本轮没有任何继续删除。全目录发现用的`**/*.json`扫描另列，不当作每一个文件都在被消费的证明。
+
+**本轮追加恢复7个路径，均未覆盖现存文件：**
+
+| 恢复路径（主检出下，除特别注明） | 依据与验证 |
+|---|---|
+| `artifacts/stage4/multiplier_panel.json` | 从幸存cq派生清单复制，SHA `11800940b1980d0760d0410bbc5a907c503a2f70640e3d210bcda710ec12fee4`；恢复默认入口，不声称等于被删文件原始字节 |
+| `artifacts/stage4/night_panel_n8.json` | Git生成器原deck/suffix参数；9任务的全部字段含seeds等于已恢复合并夜间面板 |
+| `artifacts/stage4/night_panel_n9.json` | 同上，n9独立9任务；按task21/DESIGN登记参数生成 |
+| `artifacts/stage4/night_panel_n10.json` | dw5幸存副本SHA与历史comparison.json的current_sha一致，`f62258d7c0d254a47999120ba2456a8c02f7b7b8fbea48e42c0ef8a9b91d4ed1`；任务也等于Mac旧副本 |
+| `artifacts/stage4/day_panel_identity.json` | Git make_identity_tasks原8192默认值及独立引擎副本生成；16任务全部字段含seeds等于Mac旧d7p副本，32768训练种子留出排除自查通过；generation_audit标明本轮引擎身份 |
+| `.claude/worktrees/identity/artifacts/stage4/day_panel_identity.json` | 复制已核验d7p清单，补回3份panel recipe的物理输入路径；只恢复数据文件，没有重新注册identity工作树或恢复代码检出 |
+| `artifacts/task29/pressure_manifest.json` | recipe引用但现场缺失；它不在删除TSV中，不能归因于本次删除。调用Git unified_panel.generate_pressure纯生成函数，按recipe 64种子生成21任务；除规定变动字段外逐字段核对源清单，不运行评估/采集 |
+
+上表完整SHA与精确argv在引用证据的additional_restorations中；额外恢复脚本保留于`~/pvz-logs/restore/task62-recovery/restore_additional_panels.py`和`restore_recipe_manifests.py`。再次读取原六份源清单，SHA全部仍匹配事故恢复记录。只写新增缺失路径和本任务证据，没有改qc清单/state/正式帧，没有启动qc，没有碰deploy3/redeploy/replace/memprobe。
+
+**尚未恢复的原件，不能写成已恢复：**
+
+| 主检出路径 | 明确引用与影响 |
+|---|---|
+| `artifacts/student/dw3s1/model.pt` | summarize_identity_validation基线；与历史v34同SHA `093c8811de5faa6135ca2ac6a82618a362b635397d862578ddc0074292885877` |
+| `artifacts/student/identity_dw3_s1/` | identity_dw3_s1 recipe的输出目录，旧模型/证据已删；未重训冒充旧产物 |
+| `artifacts/student/v29/model.pt` | teacher_attribution_trace默认学生 |
+| `artifacts/student/v30/model.pt` | teacher_counterfactual_audit默认学生 |
+| `artifacts/student/v33/model.pt` | run_identity_smoke固定模型 |
+| `artifacts/student/v34/model.pt` | run_conveyor_study/run_dw4_study固定基线，与上面dw3s1同SHA |
+| `artifacts/value_net/v2/model.pt` | run_identity_validation固定价值模型 |
+| `artifacts/value_net/v3/model.pt` | 3份panel recipes及多处诊断/基准默认值；历史SHA `5171db54a31ab1795ce3cc136a25684a5bf6237cfd0e49a3b3380956dc26374a` |
+| `artifacts/stage4/day_l7_hard.json` | teacher_counterfactual_audit/teacher_attribution_trace等默认清单及DESIGN。Git中未找到原生成器；现有登记不能证明旧任务全集/全部可选字段和原字节 |
+| `artifacts/stage4/night_l12_n1.json` | DESIGN旧夜间族及重放命令；同样缺原任务全集原件 |
+| `artifacts/day_panel/dw3s1_l{7,8,9,10}_d7_256/{config.json,games.jsonl}` | identity历史基线报告及conveyor兼容重放读取；旧逐文件SHA仍在task19-dw3s1-reference.json，不能用新跑数据替代旧审计原件 |
+
+上述模型在已检查的保留artifacts、HF本地缓存及pvz-logs小模型备份中没有匹配副本；Git不保存这些ignored模型，主控已确认旧HF内容删除。需要Mac或其他原始备份；已向主控索取可访问路径，尚未收到。另将v3all/v32/v4/v8/v31/v12与perf等仅文本/cwd候选保留在清单，未扩大为已证实的主检出消费者。旧评估/诊断入口在未覆盖参数时仍可能因上述缺文件失败；六份课程源恢复不代表这些原件已恢复。
+
+**hard/c6与流水线影响：** 1,078个被删hard输出目录均落在cq curriculum_queue与qc_log_throughput的`--out ~/PvZ-search/artifacts/hard`默认父路径下，按新判定均应保护；其中18个旧c6精确路径在审计时仍缺失，完整名字、删除前字节数见清单。主控重启后生成的其他c6目录与它们不同，不能声称旧目录已恢复。已归档的正式frames_v2、pipeline缓存和round学生、curriculum_state保留，故不能将删raw输出等同于删正式训练帧；但旧config/games/summary及计时证据确实丢失，元数据不能完整反推这些原件。本轮未向任何活动hard目录补造games或config。未来若丢失state而调用init_from_runs从这些旧目录重建，将缺少旧窗口/offset证据；必须保留现有state与幸存日志，不能以扫描不报错宣称历史完整。
+
+本节状态为：①事故恢复记录已推送，②journal已恢复并加防重复保护，③引用审计已完成、可核验追加清单已恢复，**旧原件缺口仍待外部备份，未宣称全部恢复完成**。本轮没有上传、删除、模型训练、课程控制或重新采集。
+
+审计交付时`df -B1 /`快照（生产并发会变化，本轮不再fstrim）：
+
+```text
+Filesystem         1B-blocks        Used    Available Use% Mounted on
+/dev/sdd       1081101176832 90585755648 935523065856   9% /
+```
 
 ### 今后删除判定
 
