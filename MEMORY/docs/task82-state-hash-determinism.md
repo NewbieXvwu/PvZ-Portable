@@ -60,4 +60,6 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 ## 问题
 
+- `hashdet` 从较旧的 `pvz-env` 拉出（截至 2026-10-25 落后 85 个提交）。合并预演只冲突日志文件、三处源码自动合并；但证据是在旧基线上构建的，主控合并后应重跑 `test_state_hash_determinism` 与 8 次 reset，确认上游改动没有改变结论。
+
 - 原始存档来自不同引擎，原有跨二进制回放本就采用 tick/ok/outcome 校验。本任务另外比较完整 privileged 状态（含隐藏僵尸、RNG）和事件；不把旧存档的跨版本哈希变化误报为模拟变化。
