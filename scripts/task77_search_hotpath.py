@@ -430,7 +430,10 @@ def abba(args):
                 'candidate': {'path': str(args.candidate), 'sha256': digest(args.candidate)},
                 'baseline': {'path': str(baseline), 'sha256': digest(baseline)}}
     for cell in CELLS:
-        count = 2 if cell in ('roof', 'fog') else 3
+        # --count caps the games per arm; it also caps how many engine processes run at once
+        # (search_play runs one worker per game), so the caller can keep the box under a
+        # memory/process budget without changing the pairing.
+        count = args.count or (2 if cell in ('roof', 'fog') else 3)
         rows = []
         for index, arm in enumerate(evidence['order']):
             label = f'abba_{index}_{arm}'
@@ -473,6 +476,7 @@ def main():
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
     parser.add_argument('--candidate', type=Path)
     parser.add_argument('--baseline', type=Path)
+    parser.add_argument('--count', type=int, choices=(1, 2, 3, 4))
     parser.add_argument('--engine', type=Path, default=MAIN / '.claude/worktrees/cq/build4/pvz-portable')
     parser.add_argument('--student', type=Path, default=Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt'))
     args = parser.parse_args()
