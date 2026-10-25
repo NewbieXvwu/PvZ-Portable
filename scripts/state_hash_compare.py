@@ -33,8 +33,9 @@ def compare(left, right):
 def summarize(directory):
     summary = json.loads((directory / 'summary.json').read_text())
     summary['reset_hashes'] = sorted({r['initial_hash'] for r in summary['runs']})
-    summary['variable_segments'] = sorted({key for run in summary['runs']
-        for key, value in summary['runs'][0]['segments'].items() if run['segments'][key] != value})
+    keys = {key for run in summary['runs'] for key in run['segments']}
+    summary['variable_segments'] = sorted({key for run in summary['runs'] for key in keys
+        if run['segments'].get(key) != summary['runs'][0]['segments'].get(key)})
     summary['comparisons_to_first'] = [compare(directory / 'trace_0.jsonl', directory / f'trace_{i}.jsonl')
                                        for i in range(1, len(summary['runs']))]
     summary['trace_sha256'] = [hashlib.sha256((directory / f'trace_{i}.jsonl').read_bytes()).hexdigest()

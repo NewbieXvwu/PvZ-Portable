@@ -67,7 +67,7 @@ def segments(path):
             assert struct.unpack_from('<IIIIII', data) == (1, 1, 360, 356, 100, 348)
             for index in range(6):
                 result[f'Challenge.mCloudsCounter[{index}]'] = data[328 + 4 * index:332 + 4 * index]
-        if kind == 4:
+        if kind in (4, 5):
             data = result[f'chunk_{kind}']
             item_pos = 32  # chunk wrapper (12) + DataArray header (20)
             max_used, = struct.unpack_from('<I', data, 16)
@@ -79,8 +79,14 @@ def segments(path):
                     field, field_size = struct.unpack_from('<II', data, item_pos)
                     item_pos += 8
                     if field == 100:
-                        assert field_size == 102
-                        result[f'Projectile[{key}].mLastPortalX'] = data[item_pos + 98:item_pos + 102]
+                        if kind == 4:
+                            assert field_size == 102
+                            result[f'Projectile[{key}].mLastPortalX'] = data[item_pos + 98:item_pos + 102]
+                        else:
+                            assert field_size == 153
+                            for name, offset, width in (('mCollectX', 25, 4), ('mCollectY', 29, 4),
+                                                        ('mIsBeingCollected', 41, 1)):
+                                result[f'Coin[{key}].{name}'] = data[item_pos + offset:item_pos + offset + width]
                     item_pos += field_size
                 assert item_pos == end
         pos += 8 + length
@@ -110,6 +116,8 @@ def run(args):
               'coverage': 'all decisions and non-wait actions' if args.decisions else 'every operation',
               'privileged': args.privileged, 'runs': []}
     for repeat in range(args.repeats):
+        if hashlib.sha256(args.executable.read_bytes()).hexdigest() != report['executable_sha256']:
+            raise RuntimeError('executable changed during the probe; refusing mixed-build evidence')
         trace = args.out / f'trace_{repeat}.jsonl'
         with EventWaitEnv(args.resource_dir, executable=args.executable) as env, trace.open('w') as output:
             obs = reset_archive(env, meta)

@@ -39,10 +39,15 @@ class StateHashDeterminismTest(unittest.TestCase):
                         env.step({'type': 'wait', 'ticks': ticks})
                         hashes[-1].append(env.state_hash())
                         self.assertTrue(env._command(f'STATE_BYTES "{path}"')['ok'])
-                        for name, value in segments(path).items():
+                        fields = segments(path)
+                        for name, value in fields.items():
                             if name.startswith('Projectile['):
                                 self.assertEqual(value['hex'], 'ffffffff')
                                 projectile_samples += 1
+                            if name.startswith('Coin[') and name.endswith('.mIsBeingCollected') and value['hex'] == '00':
+                                prefix = name.rsplit('.', 1)[0]
+                                self.assertEqual(fields[prefix + '.mCollectX']['hex'], '00000000')
+                                self.assertEqual(fields[prefix + '.mCollectY']['hex'], '00000000')
                     self.assertGreater(projectile_samples, 0)
                     env.restore(snapshot)
                     self.assertEqual(env.state_hash(), hashes[-1][0])
