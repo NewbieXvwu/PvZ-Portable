@@ -1,0 +1,58 @@
+{
+ "window": [
+  31024,
+  65536
+ ],
+ "checks": [
+  {
+   "name": "training_frame_seed_tags",
+   "roots": [
+    "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames"
+   ],
+   "tags": 161300,
+   "inside_window": 0,
+   "min_seed": 1600000,
+   "max_seed": 46000167
+  },
+  {
+   "name": "recorded_eval_outputs",
+   "files": 582,
+   "seeds_inside_window": [],
+   "hit_files": []
+  },
+  {
+   "name": "manifest_seed_lists",
+   "files_with_seeds": 478,
+   "seeds_inside_window": [],
+   "hit_files": []
+  },
+  {
+   "name": "demo_seeds_inside_window",
+   "sources": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/configs/human_demo_tasks.json": []
+   }
+  },
+  {
+   "name": "task67_70_73_segments",
+   "task67": {
+    "seeds_inside_window": [],
+    "files": []
+   },
+   "task70": {
+    "seeds_inside_window": [],
+    "files": []
+   },
+   "task73": {
+    "seeds_inside_window": [],
+    "files": []
+   }
+  }
+ ],
+ "fingerprints": {
+  "unified_v2.json": "a03243d6f7f55f30e4fdc500e06e36e9c44fb95357d976d82104edac532f862f",
+  "panel_v2.json": "c305784a7c01cddfbef737ef3549cf33b3a07e5f1c6ea0ecafc190cda1caf1e9",
+  "human_demo_tasks.json": "81a6f2274c992cf0c2ee83cff2750bc78092c5cc1dd4ee730560cb0982f28ef7"
+ },
+ "conclusion": "clean"
+}

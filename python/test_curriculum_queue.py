@@ -308,7 +308,8 @@ class CurriculumRulesTest(unittest.TestCase):
                                            static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=2,
                                            executable=Path('/exe'), resource_dir=Path('/res'),
                                            frames=Path('/frames'),
-                                           beta_threshold=0.1, starved_beta=0.5, probe_interval=3)
+                                           beta_threshold=0.1, starved_beta=0.5, probe_interval=3,
+                                           seed_ledger=root / 'gate_ledger.json')
                     state = dict(round=0, offsets={}, log=[],
                                  cells={'day_l7_train_d7': cell(wins, games)})
                     plan = [dict(base='day_l7_train_d7', multiplier=1.0, task_id='day_l7_train_d7',
@@ -639,7 +640,8 @@ class TrainingRestartTest(unittest.TestCase):
             def fake_run(self, job):
                 started.append(job['round'])
                 return {}
-            args = SimpleNamespace(state=Path(tmp) / 'state.json')
+            args = SimpleNamespace(state=Path(tmp) / 'state.json',
+                                   seed_ledger=Path(tmp) / 'gate_ledger.json')
             with mock.patch.object(TrainingPipeline, '_run', fake_run), \
                     mock.patch.object(TrainingPipeline, '_plan_build', lambda self, recipe: None):
                 pipeline = TrainingPipeline(args, state)

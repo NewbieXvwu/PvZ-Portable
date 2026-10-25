@@ -110,3 +110,4 @@
 - **离线 dry run**：本地重建的 420 任务面板 + 生产控制器，5 个起点格（含新加的 L32 `s1231`、
   L34 `s1126`）第一轮全部排到，`command_for` 带 `--demo-decision` 与各自种子块（44.3M / 44.4M），
   旧面板格逐字段不变（总格数 42 → 44）。
+- 追加（同日）：用户打通屋顶 L42 `demo_roof_42_melon_m200`（30 波、1513 动作、被吃 42、零费 0，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261042/demo_roof_42_melon_m200`）。照 L32/L34 做接手扫描与起点格。屋顶老师冷启动全败，最晚档要取老师稳定 8/8 的点；注意 `fog_observation` 不涉及屋顶。
