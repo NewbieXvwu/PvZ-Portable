@@ -52,6 +52,15 @@ L40 是 StormyNight，`StageHasFog=false`：引擎没有雾，但雷雨周期性
 - p9k（`pool_l30_eval_p9k`）：reset 写入固定九张初始牌 [0,1,2,3,4,5,7,16,19]（豌豆 / 向日葵 / 樱桃 / 坚果 / 土豆雷 / 寒冰 / 双发 / 睡莲 / 缠绕水草），容量 9。
 - 差别是两层：初始牌里有七张（0/1/2/3/4/5/7）根本不在 L30 的传送带表里；容量 9 vs 10 改变满带与补卡节奏。观测层不用改（两者都是普通传送带语义、免费种植），但两者数据不可比 —— 不能拿 p9k 的胜率当原生族基线。
 
+## 顺带修掉的两处引擎缺陷
+
+接原生族之后冷启动撞到的：三头豌豆与分裂豌豆读头部动画时用 `ReanimationGet`，它不校验 id。头部动画槽位被回收后 `DataArrayFree` 把槽位清成 husk，下一次读就解引用 `mDefinition == nullptr` 的动画，直接段错误。
+
+- 三头豌豆：`LaunchThreepeater` 的三颗头、`UpdateShooting` 的开火门控与待机复位改成 `ReanimationTryToGet` + 判空；缺哪颗头就跳过哪颗。L30 种子 61100001 原来必崩，现在跑完（末波 9、388 决策）。
+- 分裂豌豆：`FindTargetAndFire` 副武器、`UpdateShooting` 的前后头门控与待机复位同样处理。L40 种子 61200001 / 61200003 原来必崩，现在跑完。
+
+没踩到缺陷的轨迹逐位不变：L30 种子 61100000 在修改前构建（`artifacts/task75/pvz-baseline`）与本构建上 `state_hash` 都是 `1d254baf24303983`、末波都是 9。
+
 ## 老师冷启动（96 局）
 
 参数与生产老师一致：叶值 v5、静态网 branch1（SHA 24858410…）、`--dagger-beta 1 --verify-samples 9 --student-candidates 2 --per-card 1 --samples 3 --halving --horizon 2500 --rollout-sim-skip 61`，每关 32 局，`--workers 2`。数据在本机 `artifacts/task75/coldstart3/<task>/games.jsonl`（不入 git）。
