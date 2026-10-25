@@ -38,19 +38,29 @@ def full_leaf_rollout(env, obs, first, until_tick, root=None, seed=None):
     return leaf
 
 
+def paths(manifest):
+    """Derive the replay record and label directory that belong to one frozen manifest."""
+    name = Path(manifest).name
+    replay = Path(manifest).with_name(name.replace('sources', 'replay'))
+    labels = ROOT/('artifacts/task78/labels_old' if name.startswith('old') else 'artifacts/task78/labels')
+    return replay, labels
+
+
 def main():
-    index, horizon = map(int, sys.argv[1:])
-    if not 0 <= index < 64 or horizon not in (2500, 4000, 6000):
-        raise ValueError('requires archive index 0..63 and frozen horizon 2500/4000/6000')
-    source = ROOT/'artifacts/task78/sources.json'
-    row = json.loads(source.read_text())['archives'][index]
-    replay = json.loads((ROOT/'artifacts/task78/replay.json').read_text())
+    index, horizon = map(int, sys.argv[1:3])
+    source = Path(sys.argv[3]) if len(sys.argv) > 3 else ROOT/'artifacts/task78/sources.json'
+    manifest = json.loads(source.read_text())
+    if not 0 <= index < len(manifest['archives']) or horizon not in (2500, 4000, 6000):
+        raise ValueError(f'requires archive index 0..{len(manifest["archives"])-1} and horizon 2500/4000/6000')
+    row = manifest['archives'][index]
+    replay_path, label_root = paths(source)
+    replay = json.loads(replay_path.read_text())
     if not replay['passed'] or replay['source_manifest_sha256'] != sha(source):
         raise ValueError('all frozen archives must pass exact root replay before labelling')
     executable = ROOT/'build/pvz-portable'
     if replay['executable_sha256'] != sha(executable):
         raise ValueError('engine differs from replay verification')
-    output = ROOT/f'artifacts/task78/labels/archive_{index:02d}/h{horizon}'
+    output = label_root/f'archive_{index:02d}/h{horizon}'
     output.mkdir(parents=True, exist_ok=True)
     with (output/'lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -111,7 +121,7 @@ def main():
                 if i in roots:
                     # A fresh search at the frozen source root. Common world/noise
                     # schedules are identical across the three horizons.
-                    decision_seed = 78200000 + index*100 + sorted(roots).index(i)
+                    decision_seed = int(manifest.get('seed_base', 78200000)) + index*100 + sorted(roots).index(i)
                     formal = teacher._rollout_policy
                     try:
                         teacher._rollout_policy = full_leaf_rollout
@@ -119,7 +129,7 @@ def main():
                                                   stats_new(), output/f'root_{i}')
                     finally:
                         teacher._rollout_policy = formal
-                    results.append(dict(frame=i, decision_seed=decision_seed, **summary))
+                    results.append(dict(frame=i, **summary))
                     print(json.dumps(results[-1]), flush=True)
                 if i == max(roots):
                     break

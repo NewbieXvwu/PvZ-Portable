@@ -91,7 +91,8 @@ def verify(row, executable, observe_input=None):
 
 
 def main():
-    manifest = ROOT/'artifacts/task78/sources.json'
+    manifest = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT/'artifacts/task78/sources.json'
+    output = manifest.with_name(manifest.name.replace('sources', 'replay'))
     rows = json.loads(manifest.read_text())['archives']
     executable = ROOT/'build/pvz-portable'
     results = []
@@ -103,7 +104,7 @@ def main():
                 raise ValueError('engine changed during root verification')
             results.append(result)
             print(json.dumps(result), flush=True)
-            target = ROOT/'artifacts/task78/replay.json'
+            target = output
             target.write_text(json.dumps(dict(source_manifest_sha256=sha(manifest),
                 executable=str(executable), executable_sha256=executable_sha, workers=4,
                 complete=len(results)==len(rows),

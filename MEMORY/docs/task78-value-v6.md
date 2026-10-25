@@ -34,6 +34,10 @@
 - 2026-10-25：预留评估段机械审计通过：本地 200 份面板/结论/配置 + 105,740 个档案 seed 身份 + v5 `trained_on` 3,661 项，0 碰撞 0 读取错误；未覆盖远端未下载的实验（`unseen_remote_experiments_covered=false`）。`artifacts/task78/seed_audit_summary.json`（ignored）。
 - 2026-10-25：本机 torch 只在 `/home/newbiexvwu/.venvs/ml/bin/python`（3.14.4 / torch 2.14.0+cu132，RTX 5080 可用）；`/usr/bin/python3` 无 torch，采集与训练一律用前者。
 
+- 2026-10-25：标签通道打通（`scripts/task78_collect.py`）。两处与 task43 不同的实现细节：生产 `ROLLOUT_VALUE` 只回值不回帧，采集器改用同一 root/seed/tick 的完整 `ROLLOUT` 并自行打叶值分（状态哈希与生产逐位相同，已用 `task78_leaf_check.py` 核对）；终局叶子的私有状态哈希与逐帧参考不同（公开帧与两项收入检查一致），这类行 v5 导出本来也丢弃，改为记录 `terminal_private_state` 而不中止，非终局叶仍要求逐位一致。
+- 2026-10-25：**旧语料不可恢复，改用同源重建（偏离预登记，记录在此）**。v5 声明的 99 项来源全部缺失：`worktrees/v5/artifacts/task43/sparse64/data`、`artifacts/hard/branch/z13_384.pt`、`artifacts/hard/branch3/z15d_shards/`（96 分片）、`worktrees/vnet/artifacts/task30/full_audit_manifest.json`；HF 也无。替代：同源 qc 档案重建旧区决策标签（day_d7 / night_n9_n10 / pool_p9k 各 8 档案、1 视界 2500）与旧区整局 episode 语料（各 192 局 × 32 帧）。预登记的 branch 192 行份额并入 episode 份额（64→256），旧:新仍 384:128 = 75:25，其余配方不变。
+- 2026-10-25：首批 6 个档案的标签分布（诚实记录）：L31 示范接手组 4/4 档案的 root 在 2500 tick 内全部终局且全胜（有效对 0，行被终局过滤丢弃）；屋顶样例 4 候选全负。也就是说雾区示范接手的 root 本身已经赢了，采不到可教信号。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 ### 来源、抽样与训练
@@ -60,6 +64,9 @@
 - 四类门禁（旧三区非劣、新两区配对改善、终局排序改善、视界稳定性）取 AND。所有任务/种子/档案/标签/模型哈希与覆盖均通过才可给“满足预登记”；任何门未过或缺原始证据即不推荐替换，采纳由主控决定。最终完整结论写 `MEMORY/docs/value-v6.md`；权重与大分片不入 git，不自动上传或切换生产。
 
 ## 问题
+
+- 数据量远小于预登记预期：每个 root 只有 4–10 个候选，64 档案 × 2 root × 3 视界 ≈ 1.2k 行；v5 的 129,992 行训练集在本机无法复现。v6 的可训练信号因此比预登记假设弱一个量级，结论必须按此说明。
+- 雾区示范接手（fog_demo_l31/l32/l33）的档案从接手点开始就是终局前 2–3k tick，2500/4000/6000 三个视界的叶子基本都终局，导出会丢掉全部行。这些档案对"终局一致率"与配对胜率仍有用，但对标签训练几乎无贡献。
 
 - 初查本机没有 `/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/`，v5 checkpoint 声明的旧 branch、episode 缓存也需逐项定位。2026-10-25 HF 文件列表只有 v5 权重与其他传输件，无 v5 原语料；完整合并训练依赖恢复原分片，不能用热启动替代“与v5原语料合并”。
 - task72b 的94行有真值和已评分汇总，没有原生状态/叶特征；需恢复原始档案或精确重建协议后才能评分 v6。缺失时不宣布完成94态验收。

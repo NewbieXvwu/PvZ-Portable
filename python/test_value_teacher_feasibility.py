@@ -5,10 +5,21 @@ import tempfile
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from value_teacher_feasibility import group_summary, load_plan, digest
+from value_teacher_feasibility import group_summary, leaf_checks, load_plan, digest
 
 
 class TeacherFeasibilityTest(unittest.TestCase):
+    def test_terminal_leaf_state_hash_is_recorded_not_failed(self):
+        live = dict(terminal=False)
+        self.assertFalse(all(leaf_checks(True, False, True, True, live).values()))
+        terminal = leaf_checks(True, False, True, True, dict(terminal=True))
+        self.assertTrue(all(terminal.values()))
+        self.assertIn('terminal_private_state', terminal)
+        # A terminal leaf whose public frame differs is still a hard failure.
+        self.assertFalse(all(leaf_checks(False, False, True, True, dict(terminal=True)).values()))
+        # Non-terminal leaves keep the bit-exact requirement.
+        self.assertFalse(all(leaf_checks(True, False, True, True, dict(terminal=False)).values()))
+
     def test_effective_pairs_count_only_opposite_terminal_outcomes(self):
         rows = [dict(outcome=dict(terminal=True, won=x), continuation_cpu_seconds=2,
                      replay_cpu_seconds=.5) for x in (True, True, False, False, False)]
