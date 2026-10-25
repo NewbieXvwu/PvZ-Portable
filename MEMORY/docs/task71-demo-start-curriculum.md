@@ -97,3 +97,4 @@
   `python/test_curriculum_queue.py` 54 项通过。DESIGN §14.26 加 task71b 条目。
 - **提交**：`git push origin demo`（本步）。
 - 追加（同日）：用户打通屋顶 L42 `demo_roof_42_melon_m200`（30 波、1513 动作、被吃 42、零费 0，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261042/demo_roof_42_melon_m200`）。照 L32/L34 做接手扫描与起点格。屋顶老师冷启动全败，最晚档要取老师稳定 8/8 的点；注意 `fog_observation` 不涉及屋顶。
+- 追加（同日）：用户打通雾夜 L39 `demo_fog_39_cactus_snow_m200`（30 波、1609 动作、被吃 19 其中零费 18、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261039/demo_fog_39_cactus_snow_m200`）。L39 老师冷启动各卡组 0–1/16（气球破防，task74b），这是该关唯一的成功轨迹。L42 做完后照同样流程扫描与起点格；起点格族带 `fog_observation`（与 B6 的 `_hv2` 口径一致）。
