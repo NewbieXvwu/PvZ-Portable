@@ -46,6 +46,8 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 - 2026-10-25：按任务书五项补“完成核对”映射，结果 JSON 增 `requirements` 逐项指向证据；提交 `99f85080` 并推送。
 
+- 2026-10-25：合并预演（`git merge-tree origin/pvz-env hashdet`）：仅 `MEMORY/2026-10-25.md` 冲突（append-only 日志），`Challenge.cpp` 自动合并，`Coin.cpp` / `Projectile.cpp` 无冲突；部署合并只需并日志。
+
 ## 完成核对
 
 1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧由 `scripts/state_hash_mac_probe.sh` 交接，台式机未执行。
