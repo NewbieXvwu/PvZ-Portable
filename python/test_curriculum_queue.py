@@ -904,8 +904,8 @@ class DemoStartCellsTest(unittest.TestCase):
         if not all((ROOT / archive).is_dir() for archive in archives):
             self.skipTest('user demo archives are not in git; present only where they were recorded/fetched')
         cells, _ = load_demo_start_cells(manifest)
-        self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_33_cactus_snow_m200',
-                                      'demo_fog_33_cattail_snow_m200'})
+        self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_32_snow_m200',
+                                      'demo_fog_33_cactus_snow_m200', 'demo_fog_33_cattail_snow_m200'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
