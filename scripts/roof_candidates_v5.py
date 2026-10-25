@@ -3,11 +3,17 @@ from __future__ import annotations
 
 import argparse
 import copy
+from collections import Counter
+import contextlib
+import fcntl
+import gzip
 import hashlib
 import json
+import multiprocessing as mp
 import os
 from pathlib import Path
 import sys
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 MAIN = Path('/home/newbiexvwu/PvZ-search')
@@ -134,14 +140,260 @@ def verify_plan():
     return plan
 
 
+def action_key(action):
+    return json.dumps(action, sort_keys=True, separators=(',', ':'))
+
+
+def all_actions(obs):
+    plants = [dict(type='plant', packet=a['packet'], row=a['row'], col=a['col'])
+              for a in obs['legal_actions'].get('plants', [])]
+    plants.sort(key=lambda a: (a['packet'], a['row'], a['col']))
+    shovels = [dict(type='shovel', row=a['row'] if isinstance(a, dict) else a[1],
+                    col=a['col'] if isinstance(a, dict) else a[0])
+               for a in obs['legal_actions'].get('shovels', [])]
+    shovels.sort(key=lambda a: (a['row'], a['col']))
+    return [dict(type='wait', ticks=60, until='timeout')] + plants + shovels
+
+
+def augment_candidates(candidates, obs, arm):
+    result = copy.deepcopy(candidates)
+    if arm == 'production':
+        return result
+    if arm not in ('all_plants', 'all_legal'):
+        raise ValueError('unknown diagnostic arm')
+    present = {action_key(a) for a in result}
+    for action in all_actions(obs):
+        if arm == 'all_plants' and action['type'] == 'shovel':
+            continue
+        if action_key(action) not in present:
+            result.append(action)
+            present.add(action_key(action))
+    return result
+
+
+class PanelRecorder:
+    """Per-decision observer; wrappers are confined to this diagnostic worker."""
+    def __init__(self, path, arm):
+        self.path, self.arm = Path(path), arm
+        self.stream = None
+        self.current = None
+        self.searched = 0
+        self.decisions = 0
+
+    def before(self, env, obs, fast_state, decision):
+        from render_episode import _frame
+        self.current = dict(decision=decision, tick=obs['tick'], wave=obs['wave'],
+            sun=obs['sun'], frame=_frame(obs), legal_actions=all_actions(obs),
+            packets=obs['packets'], searched=False)
+
+    def after(self, obs, action, policy, rejected, info):
+        self.current.update(executed=action, policy=policy, rejected=rejected,
+                            next_tick=obs['tick'], terminal=obs['terminal'])
+        if rejected:
+            raise ValueError('diagnostic teacher executed a rejected action')
+        self.stream.write(json.dumps(self.current, separators=(',', ':'), allow_nan=False)+'\n')
+        self.decisions += 1
+
+    def __enter__(self):
+        import search_play as teacher
+        self.originals = {name: getattr(teacher, name) for name in
+                          ('_static_scores', '_halving_choice', '_continuations', '_verified_choice')}
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.stream = gzip.open(self.path, 'wt', compresslevel=1)
+
+        def static(*args, **kwargs):
+            scores = self.originals['_static_scores'](*args, **kwargs)
+            self.current['static_scores'] = [dict(action=a, value=float(v)) for v, a in scores]
+            return scores
+
+        def halving(env, obs, root, candidates, policy, policy_key, args, seed, stats):
+            self.current.update(searched=True, production_candidates=copy.deepcopy(candidates),
+                                decision_seed=seed, rounds=[])
+            expanded = augment_candidates(candidates, obs, self.arm)
+            self.current['evaluated_candidates'] = copy.deepcopy(expanded)
+            self.searched += 1
+            return self.originals['_halving_choice'](env, obs, root, expanded, policy,
+                                                       policy_key, args, seed, stats)
+
+        def continuations(env, obs, root, jobs, args, stats):
+            handles = self.originals['_continuations'](env, obs, root, jobs, args, stats)
+            values = teacher._leaf_values(handles)
+            self.current['rounds'].append([dict(action=a, future=seed % 2**32, value=float(v))
+                                          for (a, seed), v in zip(jobs, values)])
+            return handles
+
+        def verified(env, obs, root, candidates, totals, counts, best, policy_index,
+                     policy, args, seed, stats, **kwargs):
+            self.current['before_verification'] = dict(values=list(totals), counts=list(counts),
+                                                       best=best, policy_index=policy_index)
+            chosen = self.originals['_verified_choice'](env, obs, root, candidates, totals,
+                         counts, best, policy_index, policy, args, seed, stats, **kwargs)
+            self.current['after_verification_values'] = list(totals)
+            verification = copy.deepcopy(stats.get('last_verification'))
+            if verification:
+                verification.pop('seconds', None)
+            self.current['verification'] = verification
+            return chosen
+
+        teacher._static_scores, teacher._halving_choice = static, halving
+        teacher._continuations, teacher._verified_choice = continuations, verified
+        return self
+
+    def __exit__(self, *error):
+        import search_play as teacher
+        for name, original in self.originals.items():
+            setattr(teacher, name, original)
+        self.stream.close()
+
+
+def teacher_args(plan, level, frames=False):
+    import search_play as teacher
+    p = plan['inputs']
+    argv = ['--rollout-policy', p['student']['path'], '--value', p['value']['path'],
+            '--static-value', p['static']['path'], '--executable', p['engine']['path'],
+            '--resource-dir', plan['resource_dir'], '--manifest', plan['manifest'],
+            '--task-id', f'roof_l{level}_eval_r7', '--out', str(OUT/'panels'), '--workers', '1']
+    for key in ('per_card','student_candidates','samples','verify_samples','horizon',
+                'min_gap','rollout_sim_skip','dagger_beta'):
+        argv += ['--'+key.replace('_','-'), str(plan['teacher'][key])]
+    if frames:
+        argv += ['--frames', str(OUT/'frames'), '--frames-label', f'production_l{level}']
+    return teacher.parser().parse_args(argv)
+
+
+def initialize_worker(plan):
+    import search_play as teacher
+    teacher._init_worker(plan['inputs']['value']['path'], plan['inputs']['student']['path'],
+                         plan['teacher']['rollout_sim_skip'], plan['inputs']['static']['path'])
+
+
+def preload(plan):
+    import search_play as teacher
+    keep, values = teacher._export_values(plan['inputs']['value']['path'], plan['inputs']['static']['path'])
+    teacher._load_nets(values[0], plan['inputs']['student']['path'], values[1])
+    teacher._freeze_startup()
+    return keep
+
+
+def semantic_game(row):
+    return {k:v for k,v in row.items() if k != 'seconds'}
+
+
+def play_job(job):
+    import search_play as teacher
+    plan, level, seed, arm = job['plan'], job['level'], job['seed'], job['arm']
+    folder = OUT/'panels'/f'l{level}'/arm/str(seed)
+    identity = dict(level=level, seed=seed, diagnostic_arm=arm,
+                    input_sha256={k:v['sha256'] for k,v in plan['inputs'].items()},
+                    manifest_sha256=plan['manifest_sha256'], teacher=plan['teacher'], schema=1)
+    if (folder/'result.json').exists():
+        result = read(folder/'result.json')
+        if result['identity'] != identity or sha(folder/'decisions.jsonl.gz') != result['trace_sha256']:
+            raise ValueError('incompatible completed game receipt')
+        return result
+    args = teacher_args(plan, level, frames=arm=='production')
+    # Native allocation identifiers survive RESET and enter STATE_HASH. Fresh
+    # processes make later archived-root replay compare the same hidden identity.
+    teacher._close_worker_env()
+    started = time.monotonic()
+    with PanelRecorder(folder/'decisions.jsonl.gz', arm) as recorder:
+        outcome = teacher._play(dict(args=args, seed=seed, arm='fast_search'), observer=recorder)
+    if not outcome['terminal']:
+        raise RuntimeError('game reached action limit; no loss label written')
+    result = dict(identity=identity, outcome=outcome, trace_sha256=sha(folder/'decisions.jsonl.gz'),
+                  recorded_decisions=recorder.decisions, recorded_searches=recorder.searched,
+                  elapsed_seconds=time.monotonic()-started, worker_pid=os.getpid(),
+                  driver_sha256_at_execution=sha(Path(__file__)))
+    assert result['recorded_decisions'] == outcome['decisions']
+    write(folder/'result.json', result)
+    print(json.dumps(dict(level=level, seed=seed, arm=arm, won=outcome['won'],
+                          seconds=round(result['elapsed_seconds'],2))), flush=True)
+    return result
+
+
+@contextlib.contextmanager
+def controller_lock():
+    OUT.mkdir(parents=True, exist_ok=True)
+    with (OUT/'controller.lock').open('a+') as stream:
+        fcntl.flock(stream, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        yield
+
+
+def smoke():
+    import search_play as teacher
+    plan = verify_plan()
+    keep = preload(plan)
+    initialize_worker(plan)
+    try:
+        args = teacher_args(plan,42)
+        plain = teacher._play(dict(args=args, seed=45000000, arm='fast_search'))
+        reused_plain = teacher._play(dict(args=args, seed=45000000, arm='fast_search'))
+        assert {k:v for k,v in semantic_game(plain).items() if k!='state_hash'} == {
+            k:v for k,v in semantic_game(reused_plain).items() if k!='state_hash'}
+        teacher._close_worker_env()
+        folder = OUT/'smoke'
+        with PanelRecorder(folder/'instrumented-production.jsonl.gz', 'production') as recorder:
+            instrumented = teacher._play(dict(args=args, seed=45000000, arm='fast_search'), observer=recorder)
+        write(folder/'parity-comparison.json',dict(plain=plain,instrumented=instrumented,
+            reused_uninstrumented=reused_plain,
+            differing_fields=[k for k in plain if semantic_game(plain).get(k)!=semantic_game(instrumented).get(k)]))
+        assert semantic_game(plain) == semantic_game(instrumented), 'observer changed baseline game'
+        for arm in ('all_plants','all_legal'):
+            teacher._close_worker_env()
+            with PanelRecorder(folder/f'{arm}.jsonl.gz',arm) as recorder:
+                result = teacher._play(dict(args=args,seed=45000000,arm='fast_search'),observer=recorder)
+            assert result['terminal']
+            with gzip.open(folder/f'{arm}.jsonl.gz','rt') as f:
+                for row in map(json.loads,f):
+                    if row['searched']:
+                        expected = {action_key(a) for a in row['legal_actions']
+                                    if arm=='all_legal' or a['type']!='shovel'}
+                        actual = {action_key(a) for a in row['evaluated_candidates']}
+                        assert expected <= actual
+        write(ROOT/'MEMORY/docs/task76-roof-smoke.json', dict(parity=True,
+            plain=plain,instrumented=instrumented,expanded_arms_complete=True,
+            reused_uninstrumented=reused_plain,
+            native_reset_note='Process reuse changes native STATE_HASH without changing any other game outcome field; fresh-process plain/instrumented equality includes STATE_HASH.',
+            inputs=plan['inputs'],driver_sha256=sha(Path(__file__))))
+        print('SMOKE PASS: full production game identical; both expansions complete and terminal',flush=True)
+    finally:
+        teacher._close_worker_env()
+        keep.cleanup()
+
+
+def panels(levels, count, workers):
+    plan = verify_plan()
+    if not 1 <= workers <= 6 or not 1 <= count <= 32:
+        raise ValueError('one to six engines; at most 32 fixed evaluation seeds')
+    jobs = [dict(plan=plan,level=level,seed=45000000+i,arm=arm)
+            for i in range(count) for level in levels for arm in plan['arms']]
+    with controller_lock():
+        keep = preload(plan)
+        try:
+            with mp.get_context('fork').Pool(workers,initializer=initialize_worker,initargs=(plan,)) as pool:
+                results = list(pool.imap_unordered(play_job,jobs,chunksize=1))
+            write(OUT/'panel-batch-complete.json',dict(levels=levels,games_per_arm=count,
+                workers=workers,completed=len(results),complete=True))
+        finally:
+            keep.cleanup()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['prepare','verify'])
+    parser.add_argument('mode', choices=['prepare','verify','smoke','panels'])
+    parser.add_argument('--levels', default='42,43')
+    parser.add_argument('--games',type=int,default=32)
+    parser.add_argument('--workers',type=int,default=6)
     args = parser.parse_args()
     if args.mode == 'prepare':
         prepare()
-    else:
+    elif args.mode == 'verify':
         verify_plan(); print('frozen inputs, manifest and production source identities verified')
+    elif args.mode == 'smoke':
+        with controller_lock():
+            smoke()
+    else:
+        panels([int(v) for v in args.levels.split(',')],args.games,args.workers)
 
 
 if __name__ == '__main__':
