@@ -27,7 +27,7 @@ private:
 	int width = 0, encoder = 0, context = 0;
 	std::vector<std::vector<float>> weights;
 	std::vector<float> board, scalars, first, second, columns, joined, scalarHidden, hidden, kernelBuffer;
-	std::vector<int> activeChannels;
+	std::vector<int> activeChannels, kernelChannels;
 	void Convolve(const std::vector<float>& input, int channels, int kernelRows, int layer,
 		std::vector<float>& output);
 };

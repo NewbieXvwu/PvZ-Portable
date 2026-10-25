@@ -145,9 +145,12 @@ public:
 
 		T* operator*() const
 		{
-			return &mArray->mItems[mIndex];
+			return &mArray->mItems.get()[mIndex];
 		}
 
+#if defined(__GNUC__) || defined(__clang__)
+		[[gnu::always_inline]]
+#endif
 		Iterator& operator++()
 		{
 			// A dead slot holds a free-list index, which is below DATA_ARRAY_MAX_SIZE, so its key
@@ -241,7 +244,7 @@ public:
 			return nullptr;
 
 		unsigned int anIndex = theId & DATA_ARRAY_INDEX_MASK;
-		return (mItemIds[anIndex] == theId) ? &mItems[anIndex] : nullptr;
+		return (mItemIds[anIndex] == theId) ? &mItems.get()[anIndex] : nullptr;
 	}
 
 	T* DataArrayGet(unsigned int theId)

@@ -22,6 +22,8 @@
 
 - [0] 已冻结生产 deploy4（16989f23）、在役 round11、v5、台式机 branch1 与六族清单；添加独立剖析工具，启动五地形各 4 局。细节见 search-hotpath.md；原始数据仅留 ignored artifacts/task77，不操作 qc/cq/流水线。
 - [门禁工具] 补齐六族×8种子的前后对照（每族前4老师 β=1、后4学生 β=0，均搜索打标签），比较完整帧、动作、标签、软目标、复核及 task70 逻辑统计；补16局 ABBA 配对计时与确定性 bootstrap 区间。5项证据回归测试通过；真实前后验收尚未开始。
+- [优化1] 叶值/静态值卷积：首层核打包按通道集缓存（候选分支通常只改数值、通道集不变）+ 无填充 memcpy 快路径（先清零再按偏移整段拷贝，替代逐格越界判断）；`DataArray` 迭代器取址改走 `get()` 并强制内联；`Reanimation::Update` 把 `gEnvSimSkip` 判断前置，省掉 rollout 每 tick 的无谓浮点加载。逐位一致由离线核检查 `scripts/task77_value_kernel_check.py` 证明：value/static 各 480 个 logit × 3 遍（含换权重、全零、±0、稠密、稀疏通道），before/after SHA256 完全相同；候选引擎已按生产 flags 重建（build-candidate.log）。
+- [剖析补采] 首批 day/night 剖析缺引擎计数器（旧版 driver），`profile` 阶段改为不覆盖证据、另存 `profile_complete/`，按同一任务与种子重采；`profile-summary` 汇总每决策毫秒分解。
 
 ## 问题
 

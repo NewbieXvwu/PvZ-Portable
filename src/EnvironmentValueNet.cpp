@@ -11,6 +11,7 @@
 #include <cmath>
 #include <chrono>
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <stdexcept>
 
@@ -51,6 +52,7 @@ void EnvironmentValueNet::Load(const std::string& path)
 	columns.reserve(std::max(Channels, width) * 9 * Cells);
 	kernelBuffer.reserve(width * Channels * 9);
 	activeChannels.reserve(Channels);
+	kernelChannels.clear();
 }
 
 void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<float>& b, std::vector<float>& s) const
@@ -136,24 +138,35 @@ void EnvironmentValueNet::Convolve(const std::vector<float>& input, int channels
 	const int count = activeChannels.size() * kernelRows * 3;
 	if (layer == 0)
 	{
-		kernelBuffer.resize(width * count);
-		for (int out = 0; out < width; ++out)
-			for (size_t index = 0; index < activeChannels.size(); ++index)
-				std::copy_n(kernel + (out * channels + activeChannels[index]) * kernelRows * 3, kernelRows * 3,
-					kernelBuffer.data() + out * count + index * kernelRows * 3);
+		// Candidate branches often change a value within an already active channel.
+		// Their first-layer packed weights are identical; only the input changes.
+		if (activeChannels != kernelChannels)
+		{
+			kernelBuffer.resize(width * count);
+			for (int out = 0; out < width; ++out)
+				for (size_t index = 0; index < activeChannels.size(); ++index)
+					std::copy_n(kernel + (out * channels + activeChannels[index]) * kernelRows * 3, kernelRows * 3,
+						kernelBuffer.data() + out * count + index * kernelRows * 3);
+			kernelChannels = activeChannels;
+		}
 		kernel = kernelBuffer.data();
 	}
 	columns.resize(count * Cells);
+	std::fill(columns.begin(), columns.end(), 0.0f);
 	for (size_t index = 0; index < activeChannels.size(); ++index)
 		for (int kr = 0; kr < kernelRows; ++kr)
 			for (int kc = 0; kc < 3; ++kc)
-				for (int row = 0; row < 6; ++row)
-					for (int col = 0; col < 10; ++col)
+			{
+				const int dr = kr - kernelRows / 2, dc = kc - 1;
+				const int firstCol = std::max(0, -dc), lastCol = std::min(10, 10 - dc);
+				for (int row = std::max(0, -dr); row < std::min(6, 6 - dr); ++row)
 					{
-						const int r = row + kr - kernelRows / 2, c = col + kc - 1;
-						columns[((index * kernelRows + kr) * 3 + kc) * Cells + row * 10 + col] =
-							r >= 0 && r < 6 && c >= 0 && c < 10 ? input[activeChannels[index] * Cells + r * 10 + c] : 0.0f;
+						float* dest = columns.data() + ((index * kernelRows + kr) * 3 + kc) * Cells + row * 10 + firstCol;
+						const float* source = input.data() + activeChannels[index] * Cells + (row + dr) * 10 + firstCol + dc;
+						if (lastCol - firstCol == 10) std::memcpy(dest, source, 10 * sizeof(float));
+						else std::memcpy(dest, source, 9 * sizeof(float));
 					}
+			}
 	cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, width, Cells, count, 1.0f,
 		kernel, std::max(1, count), columns.data(), Cells, 0.0f, output.data(), Cells);
 	for (int ch = 0; ch < width; ++ch)

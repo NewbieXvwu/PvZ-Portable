@@ -175,18 +175,102 @@ def profile(args):
     subprocess.run(['cc', '-shared', '-fPIC', '-O2', '-o', str(sampler),
                     str(ROOT / 'scripts/prof_sample.c'), '-ldl'], check=True)
     for cell in ('day', 'night', 'pool', 'fog', 'roof'):
-        folder = args.out / 'profile' / cell
+        tag = 'profile'
+        folder = args.out / tag / cell
+        previous = list(folder.glob('[0-9]*.json'))
+        if len(previous) == 4:
+            if all('worker_cpu_seconds' in json.loads(p.read_text()) for p in previous):
+                print(f'{cell}: complete detailed profile exists', flush=True)
+                continue
+            # Early preflight profiles lacked engine counters. Preserve them; collect a
+            # complete replacement with identical tasks/seeds, never overwrite evidence.
+            tag = 'profile_complete'
+            folder = args.out / tag / cell
         folder.mkdir(parents=True, exist_ok=True)
         wrapper = folder / 'engine'
         wrapper.write_text('#!/bin/sh\nexport LD_PRELOAD=' + shlex.quote(str(sampler)) +
                            '\nexport PVZ_PROF_OUT=' + shlex.quote(str(folder)) + '/pcs.$$.bin\nexec ' +
                            shlex.quote(frozen['engine']['path']) + ' "$@"\n')
         wrapper.chmod(0o755)
-        cmd = command(args, cell, 'profile', 4, engine=wrapper)
+        cmd = command(args, cell, tag, 4, engine=wrapper)
         cmd[1:2] = [str(Path(__file__).resolve()), 'driver', '--source', str(args.out / 'baseline'),
                     '--profile-dir', str(folder)]
         save(folder / 'command.json', cmd)
         run(cmd, folder / 'run.log')
+
+
+def profile_summary(args):
+    import pstats
+    from collections import Counter
+    from prof_symbolize import load, symbolize
+    evidence = {'cells': {}}
+    frozen = json.loads((args.out / 'freeze.json').read_text())
+    for cell in ('day', 'night', 'pool', 'fog', 'roof'):
+        folder = args.out / 'profile_complete' / cell
+        if not folder.is_dir():
+            folder = args.out / 'profile' / cell
+        paths = sorted(folder.glob('[0-9]*.json'))
+        if len(paths) != 4:
+            raise ValueError(f'{cell}: expected four complete profiles')
+        totals = Counter()
+        commands = Counter()
+        cpu_commands = Counter()
+        python_functions = Counter()
+        for path in paths:
+            data = json.loads(path.read_text())
+            totals.update({'wall': data['wall_seconds'], 'worker_cpu': data['worker_cpu_seconds'],
+                           'decisions': data['game']['decisions'], 'searches': data['game']['searched'],
+                           'simulation': data['rollout']['simulation_seconds'],
+                           'student': data['rollout']['network_seconds']})
+            for name, timing in data['commands'].items():
+                commands[name] += timing['wall_seconds']
+                cpu_commands[name] += timing['engine_cpu_seconds']
+            for slot, kind in enumerate(('leaf', 'static')):
+                before = data['engine_before']
+                for metric in ('features', 'forward', 'calls'):
+                    delta = data['engine_after']['value'][slot][metric]
+                    if before is not None:
+                        delta -= before['value'][slot][metric]
+                    totals[f'{kind}_{metric}'] += delta
+            for (file, line, name), (_cc, _nc, tt, _ct, _callers) in pstats.Stats(str(path.with_suffix('.pstats'))).stats.items():
+                # Self time excludes children, so categories here do not double count.
+                python_functions[f'{Path(file).name}:{line}:{name}'] += tt
+        components = {
+            'rollout_simulation': totals['simulation'], 'cpp_student': totals['student'],
+            'leaf_features_forward': totals['leaf_features'] + totals['leaf_forward'],
+            'static_features_forward': totals['static_features'] + totals['static_forward'],
+            'snapshot_explicit_roundtrip': sum(commands[k] for k in ('SNAPSHOT_FAST', 'RESTORE_FAST', 'DROP_SNAPSHOT_FAST')),
+            'static_restore_action_ipc': commands['STATIC_SCORES'] - totals['static_features'] - totals['static_forward'],
+            'rollout_restore_control_ipc': commands['ROLLOUT_VALUE'] - totals['simulation'] - totals['student'] - totals['leaf_features'] - totals['leaf_forward'],
+            'other_commands': sum(v for k, v in commands.items() if k not in
+                ('SNAPSHOT_FAST', 'RESTORE_FAST', 'DROP_SNAPSHOT_FAST', 'STATIC_SCORES', 'ROLLOUT_VALUE')),
+            'python_outside_commands': totals['wall'] - sum(commands.values()),
+        }
+        counts = Counter()
+        modules = {}
+        for path in folder.glob('pcs.*.bin'):
+            names, offsets, slots = load(path)
+            for offset, slot in zip(offsets, slots):
+                name = names[slot] if slot < len(names) else 'unknown'
+                modules.setdefault(name, set()).add(offset)
+                counts[name, offset] += 1
+        functions = Counter()
+        for name, offsets in modules.items():
+            binary = Path(name)
+            if binary.name == 'pvz-portable':
+                binary = Path(frozen['engine']['path'])
+            labels = symbolize(binary, list(offsets)) if binary.is_file() else {}
+            for offset in offsets:
+                functions[f'{Path(name).name}:{labels.get(offset, "unknown")}'] += counts[name, offset]
+        evidence['cells'][cell] = {
+            'profiles': [str(p) for p in paths], 'totals': dict(totals),
+            'components_seconds': components,
+            'milliseconds_per_decision': {k: v * 1000 / totals['decisions'] for k, v in components.items()},
+            'commands_wall_seconds': dict(commands), 'commands_engine_cpu_seconds': dict(cpu_commands),
+            'python_self_seconds': python_functions.most_common(25),
+            'samples': sum(functions.values()), 'cpp_samples': functions.most_common(45)}
+    save(args.out / 'profile_summary.json', evidence)
+    print(json.dumps({k: v['milliseconds_per_decision'] for k, v in evidence['cells'].items()}, indent=1))
 
 
 def compare_frames(old, new):
@@ -212,6 +296,21 @@ def compare_frames(old, new):
     return None
 
 
+def game_paths(args, cell, tag, arm):
+    label = f'gate_{tag}_{arm}'
+    result = args.out / label / f'{cell}_{label}_4/games.jsonl'
+    frames = args.out / label / 'frames'
+    frame_label = f'{cell}_{label}_fast_search'
+    # The profiled baseline is a complete teacher game with the very same frozen
+    # inputs. Reuse its raw evidence, rather than play the same game a second time.
+    if tag == 'old' and arm == 'teacher' and cell != 'conveyor':
+        for profile_tag in ('profile_complete', 'profile'):
+            candidate = args.out / profile_tag / f'{cell}_{profile_tag}_4/games.jsonl'
+            if candidate.is_file() and len(candidate.read_text().splitlines()) == 4:
+                return candidate, args.out / profile_tag / 'frames', f'{cell}_{profile_tag}_fast_search'
+    return result, frames, frame_label
+
+
 def verify(args):
     from pvz_frame_store import read_frames
     from task70_redeploy_gate import COMPARE_FIELDS
@@ -224,7 +323,7 @@ def verify(args):
         for arm, indices in (('teacher', range(4)), ('student', range(4, 8))):
             rows = {}
             for tag in ('old', 'new'):
-                path = args.out / f'gate_{tag}_{arm}' / f'{cell}_gate_{tag}_{arm}_4/games.jsonl'
+                path, _, _ = game_paths(args, cell, tag, arm)
                 loaded = [json.loads(line) for line in path.read_text().splitlines()]
                 rows[tag] = {r['seed']: r for r in loaded}
                 if len(loaded) != 4 or set(rows[tag]) != {seeds[i] for i in indices}:
@@ -239,8 +338,8 @@ def verify(args):
                 changed = [key for key in fields if a.get(key) != b.get(key)]
                 frames = {}
                 for tag in ('old', 'new'):
-                    path = (args.out / f'gate_{tag}_{arm}' / 'frames' / f'seed_{seed}' /
-                            f'{cell}_gate_{tag}_{arm}_fast_search/frames.npz')
+                    _, frame_root, frame_label = game_paths(args, cell, tag, arm)
+                    path = frame_root / f'seed_{seed}' / frame_label / 'frames.npz'
                     frames[tag] = read_frames(path)
                     if len(frames[tag]) != rows[tag][seed]['decisions'] + 1:
                         raise ValueError(f'incomplete decision archive: {path}')
@@ -263,6 +362,12 @@ def gate(args):
         for cell in CELLS:
             for arm, beta, offset in (('teacher', 1., 0), ('student', 0., 4)):
                 label = f'gate_{tag}_{arm}'
+                path, _, _ = game_paths(args, cell, tag, arm)
+                if tag == 'old' and arm == 'teacher' and path.is_file():
+                    print(f'reuse full profiled baseline: {path}', flush=True)
+                    save(args.out / label / f'{cell}_reused.json',
+                         {'source': str(path), 'sha256': digest(path)})
+                    continue
                 cmd = command(args, cell, label, 4, beta=beta, offset=offset,
                     engine=args.candidate if tag == 'new' else None,
                     source=ROOT if tag == 'new' else args.out / 'baseline')
@@ -282,6 +387,28 @@ def paired_interval(ratios, draws=10000):
             'bootstrap95': [means[int(draws * .025)], means[int(draws * .975)]]}
 
 
+def load_snapshot():
+    processes = {}
+    for directory in Path('/proc').glob('[0-9]*'):
+        try:
+            fields = (directory / 'stat').read_text().rsplit(')', 1)[1].split()
+            cmd = (directory / 'cmdline').read_bytes().replace(b'\0', b' ').decode(errors='replace')
+            processes[int(directory.name)] = (int(fields[1]), cmd)
+        except (OSError, ValueError, IndexError):
+            continue
+    controllers = {pid for pid, (_, cmd) in processes.items()
+                   if '/cq/scripts/curriculum_queue.py' in cmd and 'python' in cmd}
+    descendants = set(controllers)
+    while True:
+        expanded = descendants | {pid for pid, (parent, _) in processes.items() if parent in descendants}
+        if expanded == descendants:
+            break
+        descendants = expanded
+    return {'loadavg': Path('/proc/loadavg').read_text().strip(), 'qc_controllers': sorted(controllers),
+            'qc_engines': sum('pvz-portable -env ' in processes[p][1] for p in descendants),
+            'all_engines': sum('pvz-portable -env ' in cmd for _, cmd in processes.values())}
+
+
 def abba(args):
     if args.candidate is None or not args.candidate.is_file():
         raise ValueError('--candidate executable is required')
@@ -294,10 +421,11 @@ def abba(args):
             cmd = command(args, cell, label, count,
                 engine=args.candidate if arm == 'B' else None,
                 source=ROOT if arm == 'B' else args.out / 'baseline')
-            evidence['load'].append({'cell': cell, 'index': index,
-                                     'loadavg': Path('/proc/loadavg').read_text().strip()})
+            load = {'cell': cell, 'index': index, 'before': load_snapshot()}
+            evidence['load'].append(load)
             save(args.out / label / f'{cell}_command.json', cmd)
             run(cmd, args.out / label / f'{cell}.log')
+            load['after'] = load_snapshot()
             path = args.out / label / f'{cell}_{label}_{count}/games.jsonl'
             data = [json.loads(line) for line in path.read_text().splitlines()]
             if len(data) != count or len({r['seed'] for r in data}) != count:
@@ -324,7 +452,7 @@ def main():
         driver(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('prepare', 'profile', 'gate', 'verify', 'abba'))
+    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'gate', 'verify', 'abba'))
     parser.add_argument('--out', type=Path, default=OUT)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
     parser.add_argument('--candidate', type=Path)
@@ -333,7 +461,8 @@ def main():
     args = parser.parse_args()
     if not args.out.is_absolute():
         parser.error('--out must be absolute')
-    {'prepare': prepare, 'profile': profile, 'gate': gate, 'verify': verify, 'abba': abba}[args.phase](args)
+    {'prepare': prepare, 'profile': profile, 'profile-summary': profile_summary,
+     'gate': gate, 'verify': verify, 'abba': abba}[args.phase](args)
 
 
 if __name__ == '__main__':

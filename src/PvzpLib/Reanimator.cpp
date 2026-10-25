@@ -572,7 +572,9 @@ void Reanimation::Update()
 		if (aTrack->mBlendCounter > 0)
 			aTrack->mBlendCounter--;
 
-		if (aTrack->mShakeOverride != 0.0f && !(gEnvSimSkip & ENV_LIGHT_ANIMATION))
+		// Rollouts skip shake updates. Test that mode before touching the per-track
+		// float: sparse active tracks still paid this cold load on every tick.
+		if (!(gEnvSimSkip & ENV_LIGHT_ANIMATION) && aTrack->mShakeOverride != 0.0f)
 		{
 			aTrack->mShakeX = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
 			aTrack->mShakeY = RandRangeFloat(-aTrack->mShakeOverride, aTrack->mShakeOverride);
