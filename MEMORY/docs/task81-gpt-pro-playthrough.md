@@ -161,7 +161,7 @@ Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到�
 - **Docker Desktop 不可用，但 Docker 本身可用**（2026-10-25 21:00 更正）：`docker` 命令是 Docker Desktop 的 WSL 占位脚本，提示本发行版未启用集成，`/var/run/docker.sock` 与 rootless 套接字都不存在。绕开方式：下载官方静态包 `docker-29.9.2.tgz`，用 `sudo` 起一个**只在本目录**的 daemon（`--data-root/--exec-root/--host` 全指向 `~/pvz-logs/llmplay_pkg/docker-test/`，`--bridge=none --iptables=false`），不需要 Docker Desktop、不改系统网络、不装 apt 包。两个镜像的断网测试因此可以真做（见"结果"）。另：jammy 的 GCC 11 确实编不过引擎（`#include <format>` 要 GCC 13+），所以 ubuntu:22.04 里只验证了预编静态二进制；"从源码编"仍只能在目标沙箱里测。
 - **截图（§C）跑不通，已按主控意见放弃**：`LawnApp::EnvironmentScreenshot` 要求非 headless（有窗口）并从 GL framebuffer 读回。实测 `SDL_VIDEODRIVER=dummy` 下引擎能起来、RESET_V2 正常，但 `SCREENSHOT` 返回 `ok:false`（静态 SDL2 只编了 dummy 视频后端，没有 GL）。要做成需要一套 EGL/Mesa 软件 GL + 带该后端的 SDL 构建，成本高。主控 18:30 决定放弃（§G.3），PROMPT 里保留"本会话没有截图"，只用文字观测。
 - **清理（§E）**：截至 20:40 本机没有可用的 Docker，没有容器/镜像可删（21:00 自建 daemon 后的清理记录见"结果"：3 个镜像 + 1 个容器 + builder 缓存已删，删除前后 `docker images` 有留档）；已删 `~/llmplay-build/hostbuild`（旧构建树 81 MB）与 `/tmp` 下全部自测目录。`~/llmplay-build/rootfs`（2.4 GB，早先 22.04 chroot 用，文件属 root）已由主控于 18:30 代删。**教训**：chroot 用完必须先 `umount` `/proc`、`/sys`、`/dev`、`src` 这些绑定挂载，否则递归删除会穿过 `src` 删到整块数据盘；主控这次是先确认没有挂载点残留、再用 `rm --one-file-system` 删的。
-- **Mac 侧没验（唯一未完成项）**：这台机器不是 Mac；`~/.ssh/config` 只有 GitHub 入口，`/etc/hosts` 无内网主机，本机没有 sshd 在监听、`who` 里也没有外部登录，因此没有可用的 Mac 验证入口。§2 的“Mac 上重放 4 局”仍需用户在自己的 Mac 上跑一次。**已备好可直接粘贴的命令**（在 Mac 的仓库根目录执行，四份存档在 `artifacts/human_demo/raw/seed_2026103{1,2,3}/` 下）：
+- **Mac 侧没验（唯一未完成项）**：这台机器不是 Mac；`~/.ssh/config` 只有 GitHub 入口，`/etc/hosts` 无内网主机，本机没有 sshd 在监听、`who` 里也没有外部登录，因此没有可用的 Mac 验证入口。§2 的“Mac 上重放 4 局”仍需用户在自己的 Mac 上跑一次。**已备好一条命令**（在 Mac 的仓库根目录执行）：`scripts/llmplay/mac_check.sh <资源目录>`——它逐份 verify 四局、核对操作数并打 `MACCHECK OK`（台式机已用两个不同引擎各跑过一遍，均 4/4 PASS）。等价的手工命令如下（四份存档在 `artifacts/human_demo/raw/seed_2026103{1,2,3}/`）：
   ```bash
   R="$PVZ_RESOURCE_DIR"   # Mac 上的游戏资源目录
   python3 scripts/human_demo.py --resource-dir "$R" verify --archive artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200
@@ -169,7 +169,7 @@ Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到�
   python3 scripts/human_demo.py --resource-dir "$R" verify --archive artifacts/human_demo/raw/seed_20261033/demo_fog_33_cactus_snow_m200
   python3 scripts/human_demo.py --resource-dir "$R" verify --archive artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200
   ```
-  期望每局输出 `{"verified": true, ...}`，且 `operations` / `tick` / `wave` 与台式机记录一致（39,590 / 57,596 / 41,107 / 41,831 个操作，四局均 `result=1` 通关）。把这段输出贴回“结果”即可关闭本项。注意 Mac 用的是它自己编的 Mach-O 引擎，不能直接跑包里的 Linux 静态 ELF（`ldd` 已确认该文件是静态 ELF，只能在 Linux 上跑）。反过来，**Linux 侧已经能逐 tick 复现 Mac 录的四局**（`final_audit/four-demos.txt`：826 / 1309 / 892 / 922 帧观测全一致），所以剩下的只是 Mac 端的自证。
+  期望每局输出 `{"verified": true, ...}`，且 `operations` / `tick` / `wave` 与台式机记录一致（39,590 / 57,596 / 41,107 / 41,831 个操作，四局均 `result=1` 通关）。把这段输出贴回“结果”即可关闭本项。注意包里发的是 Linux 静态 ELF，macOS 不能直接执行；Mac 上要么用自己编的 Mach-O 引擎（默认 `build/pvz-portable`，脚本会自动用它），要么在 Mac 的 Docker 里跑这个 ELF。请主控明确要哪一种。反过来，**Linux 侧已经能逐 tick 复现 Mac 录的四局**（`final_audit/four-demos.txt`：826 / 1309 / 892 / 922 帧观测全一致），所以剩下的只是 Mac 端的自证。
 - **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）；`STATE_HASH` 命令与 reset 响应里的哈希也对不上。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理：`executable_sha256` 写成自解释标记，让官方 verify 走 tick/ok/终局的路径）。**推测**是 SaveGame V4 快照里混进了地址或未初始化字段；主控 18:30 已记录、另派人查，本任务不修。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
