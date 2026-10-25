@@ -656,7 +656,10 @@ def panel_report(levels):
         per_level[level] = dict(seeds=len(seeds), completed={arm: len(outcomes[arm]) for arm in arms},
                                 wins=wins, paired=paired, profile=profile, coverage=by_arm,
                                 decision_records=detail)
+    detail = {str(level): value.pop('decision_records') for level, value in per_level.items()}
     summary['per_level'] = per_level
+    # Per-decision records are megabytes; only aggregates are small enough for git.
+    write(OUT/'reports'/'task76-roof-candidates-v5-decisions.json', dict(schema_version=1, per_level=detail))
     write(ROOT/'MEMORY/docs/task76-roof-candidates-v5-report.json', summary)
     print(json.dumps({l: dict(seeds=v['seeds'], wins=v['wins'], paired=v['paired'], profile=v['profile'], coverage=v['coverage'])
                       for l, v in per_level.items()}, ensure_ascii=False, indent=1))

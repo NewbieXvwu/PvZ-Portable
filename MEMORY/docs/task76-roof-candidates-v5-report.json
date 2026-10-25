@@ -1,0 +1,276 @@
+{
+ "schema_version": 1,
+ "task": 76,
+ "levels": [
+  42,
+  43
+ ],
+ "arms": [
+  "production",
+  "all_plants",
+  "all_legal"
+ ],
+ "seeds_per_level": 32,
+ "teacher": {
+  "per_card": 1,
+  "student_candidates": 2,
+  "samples": 3,
+  "verify_samples": 9,
+  "horizon": 2500,
+  "min_gap": 300,
+  "rollout_sim_skip": 61,
+  "dagger_beta": 1.0,
+  "margin": 0.02
+ },
+ "inputs": {
+  "engine": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+  "student": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+  "value": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+  "static": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "v4_control": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+ },
+ "historical_v4_reference": "MEMORY/docs/task46-roof-zone.md: won 53.9%, cluster95%47.1-60.9; different roots, model, two futures and teacher continuation",
+ "per_level": {
+  "42": {
+   "seeds": 32,
+   "completed": {
+    "production": 32,
+    "all_plants": 32,
+    "all_legal": 32
+   },
+   "wins": {
+    "production": 0,
+    "all_plants": 4,
+    "all_legal": 0
+   },
+   "paired": {
+    "all_plants": {
+     "seeds": 32,
+     "production_wins": 0,
+     "arm_wins": 4,
+     "gained": 4,
+     "lost": 0,
+     "mcnemar_p": 0.125
+    },
+    "all_legal": {
+     "seeds": 32,
+     "production_wins": 0,
+     "arm_wins": 0,
+     "gained": 0,
+     "lost": 0,
+     "mcnemar_p": 1.0
+    }
+   },
+   "profile": {
+    "production": {
+     "games": 32,
+     "median_final_wave": 4,
+     "max_final_wave": 26,
+     "median_final_tick": 12285,
+     "mean_wave_count": 30.0,
+     "mean_decisions": 289.59375,
+     "mean_plants_per_game": 33.53,
+     "plants_per_game": {
+      "0": 0.16,
+      "1": 10.5,
+      "3": 2.44,
+      "32": 3.12,
+      "33": 17.31
+     },
+     "mowers_used": 0.0
+    },
+    "all_plants": {
+     "games": 32,
+     "median_final_wave": 25,
+     "max_final_wave": 30,
+     "median_final_tick": 60646,
+     "mean_wave_count": 30.0,
+     "mean_decisions": 861.15625,
+     "mean_plants_per_game": 115.66,
+     "plants_per_game": {
+      "0": 3.38,
+      "1": 25.16,
+      "2": 0.47,
+      "3": 11.5,
+      "32": 22.84,
+      "33": 52.31
+     },
+     "mowers_used": 0.0
+    },
+    "all_legal": {
+     "games": 32,
+     "median_final_wave": 9,
+     "max_final_wave": 24,
+     "median_final_tick": 23493,
+     "mean_wave_count": 30.0,
+     "mean_decisions": 581.0625,
+     "mean_plants_per_game": 63.78,
+     "plants_per_game": {
+      "0": 0.31,
+      "1": 16.56,
+      "3": 6.81,
+      "32": 7.5,
+      "33": 32.59
+     },
+     "mowers_used": 0.0
+    }
+   },
+   "coverage": {
+    "production": {
+     "decisions": 1528,
+     "omitted_best_rate": 0.3900523560209424,
+     "mean_regret": 0.005391875267224476,
+     "regret_above_margin": 0.07329842931937172,
+     "mean_legal_plants": 27.384816753926703,
+     "mean_production_offered": 2.5268324607329844,
+     "mean_evaluated": 5.133507853403142,
+     "chosen_outside_production": 0.03795811518324607,
+     "mean_shared_prefix": 289.59375
+    },
+    "all_plants": {
+     "decisions": 4901,
+     "omitted_best_rate": 0.5633544174658233,
+     "mean_regret": 0.022454686620610693,
+     "regret_above_margin": 0.29259334829626604,
+     "mean_legal_plants": 14.058151397673944,
+     "mean_production_offered": 2.416853703325852,
+     "mean_evaluated": 15.058151397673944,
+     "chosen_outside_production": 0.16608855335645786,
+     "mean_shared_prefix": 7.625
+    },
+    "all_legal": {
+     "decisions": 3198,
+     "omitted_best_rate": 0.7195121951219512,
+     "mean_regret": 0.03277475970692258,
+     "regret_above_margin": 0.41181988742964354,
+     "mean_legal_plants": 23.022826766729207,
+     "mean_production_offered": 2.5118824265165727,
+     "mean_evaluated": 43.9537210756723,
+     "chosen_outside_production": 0.29424640400250157,
+     "mean_shared_prefix": 7.625
+    }
+   }
+  },
+  "43": {
+   "seeds": 32,
+   "completed": {
+    "production": 32,
+    "all_plants": 32,
+    "all_legal": 32
+   },
+   "wins": {
+    "production": 0,
+    "all_plants": 0,
+    "all_legal": 0
+   },
+   "paired": {
+    "all_plants": {
+     "seeds": 32,
+     "production_wins": 0,
+     "arm_wins": 0,
+     "gained": 0,
+     "lost": 0,
+     "mcnemar_p": 1.0
+    },
+    "all_legal": {
+     "seeds": 32,
+     "production_wins": 0,
+     "arm_wins": 0,
+     "gained": 0,
+     "lost": 0,
+     "mcnemar_p": 1.0
+    }
+   },
+   "profile": {
+    "production": {
+     "games": 32,
+     "median_final_wave": 6,
+     "max_final_wave": 29,
+     "median_final_tick": 16545,
+     "mean_wave_count": 30.0,
+     "mean_decisions": 486.8125,
+     "mean_plants_per_game": 58.81,
+     "plants_per_game": {
+      "0": 0.75,
+      "1": 13.47,
+      "2": 0.22,
+      "3": 6.19,
+      "32": 9.38,
+      "33": 28.81
+     },
+     "mowers_used": 0.0
+    },
+    "all_plants": {
+     "games": 32,
+     "median_final_wave": 24,
+     "max_final_wave": 29,
+     "median_final_tick": 51162,
+     "mean_wave_count": 30.0,
+     "mean_decisions": 737.75,
+     "mean_plants_per_game": 94.16,
+     "plants_per_game": {
+      "0": 1.59,
+      "1": 19.75,
+      "2": 0.25,
+      "3": 9.66,
+      "32": 18.69,
+      "33": 44.22
+     },
+     "mowers_used": 0.0
+    },
+    "all_legal": {
+     "games": 32,
+     "median_final_wave": 10,
+     "max_final_wave": 30,
+     "median_final_tick": 27609,
+     "mean_wave_count": 30.0,
+     "mean_decisions": 635.5625,
+     "mean_plants_per_game": 67.62,
+     "plants_per_game": {
+      "0": 0.31,
+      "1": 16.28,
+      "3": 7.91,
+      "32": 8.12,
+      "33": 35.0
+     },
+     "mowers_used": 0.0
+    }
+   },
+   "coverage": {
+    "production": {
+     "decisions": 2546,
+     "omitted_best_rate": 0.3739198743126473,
+     "mean_regret": 0.010162287841254792,
+     "regret_above_margin": 0.13157894736842105,
+     "mean_legal_plants": 18.798900235663787,
+     "mean_production_offered": 2.4120188531029063,
+     "mean_evaluated": 4.800078554595443,
+     "chosen_outside_production": 0.09073055773762766,
+     "mean_shared_prefix": 486.8125
+    },
+    "all_plants": {
+     "decisions": 4082,
+     "omitted_best_rate": 0.5595296423321902,
+     "mean_regret": 0.026055700828389514,
+     "regret_above_margin": 0.32508574228319453,
+     "mean_legal_plants": 15.589906908378246,
+     "mean_production_offered": 2.417687408133268,
+     "mean_evaluated": 16.589906908378246,
+     "chosen_outside_production": 0.1945124938755512,
+     "mean_shared_prefix": 2.5625
+    },
+    "all_legal": {
+     "decisions": 3604,
+     "omitted_best_rate": 0.640677025527192,
+     "mean_regret": 0.035838296859958096,
+     "regret_above_margin": 0.40704772475027745,
+     "mean_legal_plants": 21.08185349611543,
+     "mean_production_offered": 2.5011098779134295,
+     "mean_evaluated": 38.91509433962264,
+     "chosen_outside_production": 0.3146503884572697,
+     "mean_shared_prefix": 2.1875
+    }
+   }
+  }
+ }
+}
