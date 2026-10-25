@@ -159,12 +159,28 @@ def report():
                               breach_types=dict(Counter(str(row['breach']['type'])
                                   if row['breach'] else 'unrecorded' for row in losses)),
                               losses=losses))
+    r11_cells = []
+    for path in sorted((OUT / 'cold_r11').glob('*/games.jsonl')):
+        rows = [json.loads(line) for line in path.read_text().splitlines()]
+        losses = [dict(seed=row['seed'], wave=row['final_wave'],
+                       wave_count=row['wave_count'], tick=row['final_tick'],
+                       breach=row.get('fog_diagnostics', {}).get('loss'))
+                  for row in rows if not row['won']]
+        wins = sum(row['won'] for row in rows)
+        r11_cells.append(dict(task_id=path.parent.name, wins=wins, games=len(rows),
+                              wilson95=wilson(wins, len(rows)),
+                              seeds=sorted(row['seed'] for row in rows),
+                              loss_waves=dict(Counter(row['wave'] for row in losses)),
+                              breach_types=dict(Counter(str(row['breach']['type'])
+                                  if row['breach'] else 'unrecorded' for row in losses)),
+                              losses=losses))
     result = dict(task74_provenance=snapshot['provenance'],
                   task79_provenance=json.loads((OUT / 'cold-provenance.json').read_text()),
-                  opacity=json.loads((OUT / 'opacity.json').read_text()), cells=cells)
+                  opacity=json.loads((OUT / 'opacity.json').read_text()), cells=cells,
+                  r11_cells=r11_cells)
     (ROOT / 'MEMORY/docs/fog-l36-39-results.json').write_text(
         json.dumps(result, ensure_ascii=False, indent=1) + '\n')
-    for cell in cells:
+    for cell in cells + r11_cells:
         print(cell['task_id'], cell['wins'], '/', cell['games'], cell['wilson95'])
 
 

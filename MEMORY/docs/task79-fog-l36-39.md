@@ -37,6 +37,8 @@
 - 2026-10-25：r11 六族补测（主控叫停时）：L36 magnet 32/32、L36 split 32/32、L37 magnet 27/32、L37 split 31/32、L38 magnet 32/32、L39 blover 3/32。五族 ≥84%，只有 L39 掉到 3/32 且 29 个输局全是空中 → L37 是学生短板、L39 不是，这个结论在两个学生下一致。L38 tall（6/32）与 L39 cactus（0/32）未跑完，`bash artifacts/task79/run_r11_rest.sh` 可续（已完成的种子会跳过）。批次已按主控指令停止，游戏进程已释放。
 - 2026-10-25：交付自查：`configs/human_demo_tasks.json` 46 个任务（38 旧 + 8 新）任务名唯一；八族各 32 种子、256 个互不重复，范围 79,000,000–79,070,031；卡组均 10 张、全部 1.0 倍与 human_v2；新种子段 79,080,000–031 在 16 棵树、12204 份 JSON、2,581,618 个种子条目里零冲突（留给候选第三套，本任务未用）。`python/test_curriculum_queue.py` 53 过 1 跳过；`scripts/check_task_manifests.py` 因缺 `artifacts/task_family/train.json` 报 fail，该产物不在仓库里，与本次改动无关。
 
+- 2026-10-25：补完 r11 的 L38 tall 与 L39 cactus（同卡组、同 32 种子、`--workers 2` 控负载）：tall **29/32**（75.8–96.8%，3 个输局全在第 17–19 波、全是跳跳），cactus **0/32**（32 个输局 30 个气球）。八族在两个学生下各 32 局齐备，r11 七族 ≥84%。换 r11 后 L38 magnet 对 tall（32/0 对 29/3，p=0.24）与 L39 blover 对 cactus（3/29 对 0/32，p=0.24）都不再显著，但方向不变。`scripts/task79_fog36.py report` 增加 `r11_cells`（含逐局种子、末波、破防），结果 JSON 已重生成，八族 r11 数字与文档表逐项一致。
+
 ## 问题
 
 - task74 任务书未随 gatepower 推送，已直接只读取得台式机运行脚本、清单、provenance 与逐局结果。其学生为 round 11，本机无同摘要副本，SSH 中断后未能转取。本任务采用 task75 指定的 dw4i_s1 学生，合表标注两批的学生与观测差异。v5 与 branch1 已逐一核实 SHA256 相同。

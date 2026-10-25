@@ -5347,5 +5347,1757 @@
     }
    ]
   }
+ ],
+ "r11_cells": [
+  {
+   "task_id": "fog79_l36_snow_magnet_v2",
+   "wins": 32,
+   "games": 32,
+   "wilson95": [
+    0.8928208017449293,
+    1.0
+   ],
+   "seeds": [
+    79000000,
+    79000001,
+    79000002,
+    79000003,
+    79000004,
+    79000005,
+    79000006,
+    79000007,
+    79000008,
+    79000009,
+    79000010,
+    79000011,
+    79000012,
+    79000013,
+    79000014,
+    79000015,
+    79000016,
+    79000017,
+    79000018,
+    79000019,
+    79000020,
+    79000021,
+    79000022,
+    79000023,
+    79000024,
+    79000025,
+    79000026,
+    79000027,
+    79000028,
+    79000029,
+    79000030,
+    79000031
+   ],
+   "loss_waves": {},
+   "breach_types": {},
+   "losses": []
+  },
+  {
+   "task_id": "fog79_l36_snow_split_v2",
+   "wins": 32,
+   "games": 32,
+   "wilson95": [
+    0.8928208017449293,
+    1.0
+   ],
+   "seeds": [
+    79010000,
+    79010001,
+    79010002,
+    79010003,
+    79010004,
+    79010005,
+    79010006,
+    79010007,
+    79010008,
+    79010009,
+    79010010,
+    79010011,
+    79010012,
+    79010013,
+    79010014,
+    79010015,
+    79010016,
+    79010017,
+    79010018,
+    79010019,
+    79010020,
+    79010021,
+    79010022,
+    79010023,
+    79010024,
+    79010025,
+    79010026,
+    79010027,
+    79010028,
+    79010029,
+    79010030,
+    79010031
+   ],
+   "loss_waves": {},
+   "breach_types": {},
+   "losses": []
+  },
+  {
+   "task_id": "fog79_l37_snow_magnet_v2",
+   "wins": 27,
+   "games": 32,
+   "wilson95": [
+    0.682458504024696,
+    0.9313557971749429
+   ],
+   "seeds": [
+    79020000,
+    79020001,
+    79020002,
+    79020003,
+    79020004,
+    79020005,
+    79020006,
+    79020007,
+    79020008,
+    79020009,
+    79020010,
+    79020011,
+    79020012,
+    79020013,
+    79020014,
+    79020015,
+    79020016,
+    79020017,
+    79020018,
+    79020019,
+    79020020,
+    79020021,
+    79020022,
+    79020023,
+    79020024,
+    79020025,
+    79020026,
+    79020027,
+    79020028,
+    79020029,
+    79020030,
+    79020031
+   ],
+   "loss_waves": {
+    "30": 5
+   },
+   "breach_types": {
+    "0": 1,
+    "2": 2,
+    "4": 2
+   },
+   "losses": [
+    {
+     "seed": 79020007,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 73443,
+     "breach": {
+      "id": 74186760,
+      "row": 3,
+      "type": 0,
+      "first_seen": {
+       "tick": 66124,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 73443
+     }
+    },
+    {
+     "seed": 79020018,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 76073,
+     "breach": {
+      "id": 74514449,
+      "row": 3,
+      "type": 2,
+      "first_seen": {
+       "tick": 68121,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 76073
+     }
+    },
+    {
+     "seed": 79020020,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 70359,
+     "breach": {
+      "id": 74448908,
+      "row": 5,
+      "type": 4,
+      "first_seen": {
+       "tick": 63035,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 70359
+     }
+    },
+    {
+     "seed": 79020025,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 71805,
+     "breach": {
+      "id": 74514434,
+      "row": 3,
+      "type": 4,
+      "first_seen": {
+       "tick": 65920,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 71805
+     }
+    },
+    {
+     "seed": 79020028,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 78210,
+     "breach": {
+      "id": 74383379,
+      "row": 5,
+      "type": 2,
+      "first_seen": {
+       "tick": 70298,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 78210
+     }
+    }
+   ]
+  },
+  {
+   "task_id": "fog79_l37_snow_split_v2",
+   "wins": 31,
+   "games": 32,
+   "wilson95": [
+    0.8425573617998744,
+    0.9944621398359969
+   ],
+   "seeds": [
+    79030000,
+    79030001,
+    79030002,
+    79030003,
+    79030004,
+    79030005,
+    79030006,
+    79030007,
+    79030008,
+    79030009,
+    79030010,
+    79030011,
+    79030012,
+    79030013,
+    79030014,
+    79030015,
+    79030016,
+    79030017,
+    79030018,
+    79030019,
+    79030020,
+    79030021,
+    79030022,
+    79030023,
+    79030024,
+    79030025,
+    79030026,
+    79030027,
+    79030028,
+    79030029,
+    79030030,
+    79030031
+   ],
+   "loss_waves": {
+    "30": 1
+   },
+   "breach_types": {
+    "4": 1
+   },
+   "losses": [
+    {
+     "seed": 79030027,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 73300,
+     "breach": {
+      "id": 73924609,
+      "row": 5,
+      "type": 4,
+      "first_seen": {
+       "tick": 65396,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 73300
+     }
+    }
+   ]
+  },
+  {
+   "task_id": "fog79_l38_snow_magnet_v2",
+   "wins": 32,
+   "games": 32,
+   "wilson95": [
+    0.8928208017449293,
+    1.0
+   ],
+   "seeds": [
+    79040000,
+    79040001,
+    79040002,
+    79040003,
+    79040004,
+    79040005,
+    79040006,
+    79040007,
+    79040008,
+    79040009,
+    79040010,
+    79040011,
+    79040012,
+    79040013,
+    79040014,
+    79040015,
+    79040016,
+    79040017,
+    79040018,
+    79040019,
+    79040020,
+    79040021,
+    79040022,
+    79040023,
+    79040024,
+    79040025,
+    79040026,
+    79040027,
+    79040028,
+    79040029,
+    79040030,
+    79040031
+   ],
+   "loss_waves": {},
+   "breach_types": {},
+   "losses": []
+  },
+  {
+   "task_id": "fog79_l38_snow_tall_v2",
+   "wins": 29,
+   "games": 32,
+   "wilson95": [
+    0.7578184527161212,
+    0.9675984487016337
+   ],
+   "seeds": [
+    79050000,
+    79050001,
+    79050002,
+    79050003,
+    79050004,
+    79050005,
+    79050006,
+    79050007,
+    79050008,
+    79050009,
+    79050010,
+    79050011,
+    79050012,
+    79050013,
+    79050014,
+    79050015,
+    79050016,
+    79050017,
+    79050018,
+    79050019,
+    79050020,
+    79050021,
+    79050022,
+    79050023,
+    79050024,
+    79050025,
+    79050026,
+    79050027,
+    79050028,
+    79050029,
+    79050030,
+    79050031
+   ],
+   "loss_waves": {
+    "18": 1,
+    "19": 1,
+    "17": 1
+   },
+   "breach_types": {
+    "18": 3
+   },
+   "losses": [
+    {
+     "seed": 79050008,
+     "wave": 18,
+     "wave_count": 20,
+     "tick": 35884,
+     "breach": {
+      "id": 69337096,
+      "row": 4,
+      "type": 18,
+      "first_seen": {
+       "tick": 34148,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 18,
+      "tick": 35884
+     }
+    },
+    {
+     "seed": 79050010,
+     "wave": 19,
+     "wave_count": 20,
+     "tick": 37835,
+     "breach": {
+      "id": 69402632,
+      "row": 0,
+      "type": 18,
+      "first_seen": {
+       "tick": 35994,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 37835
+     }
+    },
+    {
+     "seed": 79050013,
+     "wave": 17,
+     "wave_count": 20,
+     "tick": 34674,
+     "breach": {
+      "id": 69271559,
+      "row": 1,
+      "type": 18,
+      "first_seen": {
+       "tick": 32868,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 17,
+      "tick": 34674
+     }
+    }
+   ]
+  },
+  {
+   "task_id": "fog79_l39_snow_blover_v2",
+   "wins": 3,
+   "games": 32,
+   "wilson95": [
+    0.032401551298366194,
+    0.24218154728387864
+   ],
+   "seeds": [
+    79070000,
+    79070001,
+    79070002,
+    79070003,
+    79070004,
+    79070005,
+    79070006,
+    79070007,
+    79070008,
+    79070009,
+    79070010,
+    79070011,
+    79070012,
+    79070013,
+    79070014,
+    79070015,
+    79070016,
+    79070017,
+    79070018,
+    79070019,
+    79070020,
+    79070021,
+    79070022,
+    79070023,
+    79070024,
+    79070025,
+    79070026,
+    79070027,
+    79070028,
+    79070029,
+    79070030,
+    79070031
+   ],
+   "loss_waves": {
+    "23": 6,
+    "26": 2,
+    "17": 1,
+    "18": 2,
+    "27": 2,
+    "22": 2,
+    "30": 5,
+    "25": 1,
+    "28": 2,
+    "19": 4,
+    "16": 1,
+    "29": 1
+   },
+   "breach_types": {
+    "16": 22,
+    "18": 7
+   },
+   "losses": [
+    {
+     "seed": 79070000,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 45340,
+     "breach": {
+      "id": 71041037,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 41800,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 45340
+     }
+    },
+    {
+     "seed": 79070002,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 46373,
+     "breach": {
+      "id": 70975497,
+      "row": 5,
+      "type": 16,
+      "first_seen": {
+       "tick": 43634,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 46373
+     }
+    },
+    {
+     "seed": 79070003,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 53153,
+     "breach": {
+      "id": 70713344,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 50283,
+       "in_fog": false,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 53153
+     }
+    },
+    {
+     "seed": 79070001,
+     "wave": 26,
+     "wave_count": 30,
+     "tick": 55503,
+     "breach": {
+      "id": 71958539,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 52917,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 26,
+      "tick": 55503
+     }
+    },
+    {
+     "seed": 79070005,
+     "wave": 17,
+     "wave_count": 30,
+     "tick": 36670,
+     "breach": {
+      "id": 69009410,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 34152,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 17,
+      "tick": 36670
+     }
+    },
+    {
+     "seed": 79070008,
+     "wave": 18,
+     "wave_count": 30,
+     "tick": 35196,
+     "breach": {
+      "id": 69074947,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 31971,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 18,
+      "tick": 35196
+     }
+    },
+    {
+     "seed": 79070006,
+     "wave": 27,
+     "wave_count": 30,
+     "tick": 54542,
+     "breach": {
+      "id": 72089611,
+      "row": 0,
+      "type": 18,
+      "first_seen": {
+       "tick": 52543,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 27,
+      "tick": 54542
+     }
+    },
+    {
+     "seed": 79070009,
+     "wave": 22,
+     "wave_count": 30,
+     "tick": 44424,
+     "breach": {
+      "id": 70647815,
+      "row": 0,
+      "type": 18,
+      "first_seen": {
+       "tick": 42587,
+       "in_fog": false,
+       "public": true
+      },
+      "ever_in_fog": false,
+      "wave": 22,
+      "tick": 44424
+     }
+    },
+    {
+     "seed": 79070004,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 69512,
+     "breach": {
+      "id": 74317829,
+      "row": 0,
+      "type": 18,
+      "first_seen": {
+       "tick": 67604,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 69512
+     }
+    },
+    {
+     "seed": 79070007,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 66505,
+     "breach": {
+      "id": 74383369,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 62741,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 66505
+     }
+    },
+    {
+     "seed": 79070011,
+     "wave": 25,
+     "wave_count": 30,
+     "tick": 47350,
+     "breach": {
+      "id": 71761929,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 44857,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 25,
+      "tick": 47350
+     }
+    },
+    {
+     "seed": 79070012,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 45015,
+     "breach": {
+      "id": 70647817,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 41379,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 45015
+     }
+    },
+    {
+     "seed": 79070013,
+     "wave": 18,
+     "wave_count": 30,
+     "tick": 36683,
+     "breach": {
+      "id": 69271558,
+      "row": 5,
+      "type": 18,
+      "first_seen": {
+       "tick": 34803,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 18,
+      "tick": 36683
+     }
+    },
+    {
+     "seed": 79070010,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 64306,
+     "breach": {
+      "id": 74842121,
+      "row": 1,
+      "type": 18,
+      "first_seen": {
+       "tick": 62365,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 64306
+     }
+    },
+    {
+     "seed": 79070015,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 46904,
+     "breach": {
+      "id": 71303176,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 43672,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 46904
+     }
+    },
+    {
+     "seed": 79070014,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 61991,
+     "breach": {
+      "id": 75104273,
+      "row": 5,
+      "type": 18,
+      "first_seen": {
+       "tick": 60045,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 61991
+     }
+    },
+    {
+     "seed": 79070018,
+     "wave": 30,
+     "wave_count": 30,
+     "tick": 66829,
+     "breach": {
+      "id": 74579979,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 64341,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 30,
+      "tick": 66829
+     }
+    },
+    {
+     "seed": 79070016,
+     "wave": 28,
+     "wave_count": 30,
+     "tick": 57560,
+     "breach": {
+      "id": 73334790,
+      "row": 0,
+      "type": 18,
+      "first_seen": {
+       "tick": 55734,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 28,
+      "tick": 57560
+     }
+    },
+    {
+     "seed": 79070021,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 39341,
+     "breach": {
+      "id": 69337092,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 36768,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 39341
+     }
+    },
+    {
+     "seed": 79070019,
+     "wave": 22,
+     "wave_count": 30,
+     "tick": 45940,
+     "breach": {
+      "id": 70909962,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 42744,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 22,
+      "tick": 45940
+     }
+    },
+    {
+     "seed": 79070020,
+     "wave": 26,
+     "wave_count": 30,
+     "tick": 57170,
+     "breach": {
+      "id": 71761928,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 53588,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 26,
+      "tick": 57170
+     }
+    },
+    {
+     "seed": 79070023,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 36728,
+     "breach": {
+      "id": 69402627,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 34065,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 36728
+     }
+    },
+    {
+     "seed": 79070024,
+     "wave": 16,
+     "wave_count": 30,
+     "tick": 35296,
+     "breach": {
+      "id": 68485127,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 32090,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 16,
+      "tick": 35296
+     }
+    },
+    {
+     "seed": 79070026,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 38395,
+     "breach": {
+      "id": 69533702,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 35976,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 38395
+     }
+    },
+    {
+     "seed": 79070022,
+     "wave": 28,
+     "wave_count": 30,
+     "tick": 55910,
+     "breach": {
+      "id": 72941580,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 53298,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 28,
+      "tick": 55910
+     }
+    },
+    {
+     "seed": 79070028,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 47447,
+     "breach": {
+      "id": 71237635,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 44911,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 47447
+     }
+    },
+    {
+     "seed": 79070029,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 41775,
+     "breach": {
+      "id": 69992455,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 38607,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 41775
+     }
+    },
+    {
+     "seed": 79070030,
+     "wave": 29,
+     "wave_count": 30,
+     "tick": 59968,
+     "breach": {
+      "id": 73400322,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 56497,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 29,
+      "tick": 59968
+     }
+    },
+    {
+     "seed": 79070031,
+     "wave": 27,
+     "wave_count": 30,
+     "tick": 60309,
+     "breach": {
+      "id": 72941573,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 57666,
+       "in_fog": false,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 27,
+      "tick": 60309
+     }
+    }
+   ]
+  },
+  {
+   "task_id": "fog79_l39_snow_cactus_v2",
+   "wins": 0,
+   "games": 32,
+   "wilson95": [
+    0.0,
+    0.1071791982550706
+   ],
+   "seeds": [
+    79060000,
+    79060001,
+    79060002,
+    79060003,
+    79060004,
+    79060005,
+    79060006,
+    79060007,
+    79060008,
+    79060009,
+    79060010,
+    79060011,
+    79060012,
+    79060013,
+    79060014,
+    79060015,
+    79060016,
+    79060017,
+    79060018,
+    79060019,
+    79060020,
+    79060021,
+    79060022,
+    79060023,
+    79060024,
+    79060025,
+    79060026,
+    79060027,
+    79060028,
+    79060029,
+    79060030,
+    79060031
+   ],
+   "loss_waves": {
+    "19": 11,
+    "21": 3,
+    "15": 1,
+    "27": 2,
+    "18": 3,
+    "17": 4,
+    "23": 2,
+    "24": 3,
+    "16": 2,
+    "25": 1
+   },
+   "breach_types": {
+    "16": 30,
+    "18": 1,
+    "2": 1
+   },
+   "losses": [
+    {
+     "seed": 79060000,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 40208,
+     "breach": {
+      "id": 69009412,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 36414,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 40208
+     }
+    },
+    {
+     "seed": 79060001,
+     "wave": 21,
+     "wave_count": 30,
+     "tick": 46043,
+     "breach": {
+      "id": 70516737,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 43240,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 21,
+      "tick": 46043
+     }
+    },
+    {
+     "seed": 79060003,
+     "wave": 15,
+     "wave_count": 30,
+     "tick": 33206,
+     "breach": {
+      "id": 68550664,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 30374,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 15,
+      "tick": 33206
+     }
+    },
+    {
+     "seed": 79060002,
+     "wave": 27,
+     "wave_count": 30,
+     "tick": 57487,
+     "breach": {
+      "id": 71630861,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 54333,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 27,
+      "tick": 57487
+     }
+    },
+    {
+     "seed": 79060004,
+     "wave": 18,
+     "wave_count": 30,
+     "tick": 36695,
+     "breach": {
+      "id": 68812802,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 33029,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 18,
+      "tick": 36695
+     }
+    },
+    {
+     "seed": 79060006,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 38002,
+     "breach": {
+      "id": 69795850,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 35513,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 38002
+     }
+    },
+    {
+     "seed": 79060005,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 40369,
+     "breach": {
+      "id": 69140484,
+      "row": 5,
+      "type": 16,
+      "first_seen": {
+       "tick": 36551,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 40369
+     }
+    },
+    {
+     "seed": 79060008,
+     "wave": 17,
+     "wave_count": 30,
+     "tick": 36511,
+     "breach": {
+      "id": 68681732,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 32794,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 17,
+      "tick": 36511
+     }
+    },
+    {
+     "seed": 79060007,
+     "wave": 27,
+     "wave_count": 30,
+     "tick": 53238,
+     "breach": {
+      "id": 71630863,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 49996,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 27,
+      "tick": 53238
+     }
+    },
+    {
+     "seed": 79060009,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 42947,
+     "breach": {
+      "id": 69468167,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 39675,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 42947
+     }
+    },
+    {
+     "seed": 79060010,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 43349,
+     "breach": {
+      "id": 68681737,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 39656,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 43349
+     }
+    },
+    {
+     "seed": 79060011,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 47572,
+     "breach": {
+      "id": 70909967,
+      "row": 4,
+      "type": 18,
+      "first_seen": {
+       "tick": 45698,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 47572
+     }
+    },
+    {
+     "seed": 79060012,
+     "wave": 17,
+     "wave_count": 30,
+     "tick": 36174,
+     "breach": {
+      "id": 68681732,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 32383,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 17,
+      "tick": 36174
+     }
+    },
+    {
+     "seed": 79060013,
+     "wave": 18,
+     "wave_count": 30,
+     "tick": 37945,
+     "breach": {
+      "id": 69206021,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 35363,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 18,
+      "tick": 37945
+     }
+    },
+    {
+     "seed": 79060014,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 37633,
+     "breach": {
+      "id": 69468163,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 35030,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 37633
+     }
+    },
+    {
+     "seed": 79060016,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 40681,
+     "breach": {
+      "id": 69206020,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 37302,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 40681
+     }
+    },
+    {
+     "seed": 79060015,
+     "wave": 24,
+     "wave_count": 30,
+     "tick": 48677,
+     "breach": {
+      "id": 71696392,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 46015,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 24,
+      "tick": 48677
+     }
+    },
+    {
+     "seed": 79060017,
+     "wave": 17,
+     "wave_count": 30,
+     "tick": 39969,
+     "breach": {
+      "id": 68550663,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 37393,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 17,
+      "tick": 39969
+     }
+    },
+    {
+     "seed": 79060018,
+     "wave": 24,
+     "wave_count": 30,
+     "tick": 51827,
+     "breach": {
+      "id": 70909962,
+      "row": 4,
+      "type": 2,
+      "first_seen": {
+       "tick": 44443,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 24,
+      "tick": 51827
+     }
+    },
+    {
+     "seed": 79060019,
+     "wave": 16,
+     "wave_count": 30,
+     "tick": 31817,
+     "breach": {
+      "id": 68550661,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 28963,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 16,
+      "tick": 31817
+     }
+    },
+    {
+     "seed": 79060021,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 36054,
+     "breach": {
+      "id": 69730313,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 33379,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 36054
+     }
+    },
+    {
+     "seed": 79060020,
+     "wave": 23,
+     "wave_count": 30,
+     "tick": 46997,
+     "breach": {
+      "id": 70975496,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 43544,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 23,
+      "tick": 46997
+     }
+    },
+    {
+     "seed": 79060022,
+     "wave": 17,
+     "wave_count": 30,
+     "tick": 36514,
+     "breach": {
+      "id": 68812808,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 34062,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 17,
+      "tick": 36514
+     }
+    },
+    {
+     "seed": 79060024,
+     "wave": 16,
+     "wave_count": 30,
+     "tick": 32259,
+     "breach": {
+      "id": 68419592,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 28754,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 16,
+      "tick": 32259
+     }
+    },
+    {
+     "seed": 79060023,
+     "wave": 24,
+     "wave_count": 30,
+     "tick": 50636,
+     "breach": {
+      "id": 71368715,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 47979,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 24,
+      "tick": 50636
+     }
+    },
+    {
+     "seed": 79060025,
+     "wave": 21,
+     "wave_count": 30,
+     "tick": 40939,
+     "breach": {
+      "id": 70844421,
+      "row": 0,
+      "type": 16,
+      "first_seen": {
+       "tick": 37858,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 21,
+      "tick": 40939
+     }
+    },
+    {
+     "seed": 79060026,
+     "wave": 21,
+     "wave_count": 30,
+     "tick": 46353,
+     "breach": {
+      "id": 70582288,
+      "row": 5,
+      "type": 16,
+      "first_seen": {
+       "tick": 43742,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 21,
+      "tick": 46353
+     }
+    },
+    {
+     "seed": 79060027,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 43948,
+     "breach": {
+      "id": 69337090,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 40275,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 43948
+     }
+    },
+    {
+     "seed": 79060028,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 37271,
+     "breach": {
+      "id": 69074948,
+      "row": 2,
+      "type": 16,
+      "first_seen": {
+       "tick": 34475,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 37271
+     }
+    },
+    {
+     "seed": 79060030,
+     "wave": 19,
+     "wave_count": 30,
+     "tick": 41931,
+     "breach": {
+      "id": 70057986,
+      "row": 1,
+      "type": 16,
+      "first_seen": {
+       "tick": 38554,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 19,
+      "tick": 41931
+     }
+    },
+    {
+     "seed": 79060029,
+     "wave": 25,
+     "wave_count": 30,
+     "tick": 53322,
+     "breach": {
+      "id": 71827457,
+      "row": 4,
+      "type": 16,
+      "first_seen": {
+       "tick": 50649,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 25,
+      "tick": 53322
+     }
+    },
+    {
+     "seed": 79060031,
+     "wave": 18,
+     "wave_count": 30,
+     "tick": 32517,
+     "breach": {
+      "id": 69009418,
+      "row": 3,
+      "type": 16,
+      "first_seen": {
+       "tick": 28920,
+       "in_fog": true,
+       "public": true
+      },
+      "ever_in_fog": true,
+      "wave": 18,
+      "tick": 32517
+     }
+    }
+   ]
+  }
  ]
 }
