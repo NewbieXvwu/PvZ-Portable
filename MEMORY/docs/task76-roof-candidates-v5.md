@@ -52,6 +52,12 @@
 
 - 终局pilot第二项集成修复：带until=timeout的等待不能使用branch_snapshot合法性批接口，现仅植物/铲子先branch检查；等待保持完整动作走原生ROLLOUT宏路径，不剥掉until。mock同时调用真实branch_action_token，覆盖该API约束；后续仍需完整真实pilot回放通过。
 
+- 首根66动作已完成528条真实终局未来，v4/v5原生网络SHA与预测均不同；完整逐决策帧/执行/策略已通过。终局整局回执校验再遇planted_types/slots整数键与存档字符串键的表示差异，现对全部非墙时字段统一JSON表示后比较，仍保留state_hash等全部字段；无整局回验确认的旧根保存副本并重采，避免空探针回放替旧根背书。
+
+- STATE_HASH实机根因与协议修订已冻结：4种无探针控制（原版/带帧/记录器/记录器带帧）全部非哈希回执相同，STATE_BYTES仅Challenge.mCloudsCounter[6]及CRC不同；这6项仅智慧树读用，屋顶构造未初始化。4份完整状态精确规范后SHA均089402d34a5d5dd0aa5e2e9b1490391f9981526c9825dc6296b4e3164eb2184c。schema3每seed新增独立无探针对照，逐根及终局对照完整状态字节，仅规范24字节及派生CRC，原始哈希/字节均保留；对原面板仍校验全部帧/动作/策略及其他回执字段。原面板无原始STATE_BYTES，故不能直接规范其旧hash，此限制明确保留。输入/教师/选根/未来完全不变，旧terminal及terminal_v2均排除；证据task76-replay-state-audit.json。
+
+- schema3真实pilot通过：L42 seed45000000首根66动作、528个真实终局未来，原版全部逐决策帧/动作/策略和非原生hash结果相同；paired control/probe逐根及最终完整状态字节精确规范后相同，原始hash与state保留。当前历史/根恢复/不同v4-v5原生网均通过。证据task76-roof-terminal-pilot.json；随后正式采全部8关×2输seed×4根，最多2引擎。
+
 ## 问题
 
 - task74来源与并发范围问题均已解决；按每任务最多2进程继续完成面板及终局真值。

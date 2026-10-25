@@ -1,6 +1,6 @@
 """Audited task76 analysis and paired terminal probes; isolated from production.
 
-The original terminal collector is retained as historical invalid data. Schema 2
+The original terminal collector is retained as historical invalid data. Schema 3
 uses the current root's student history, common futures across actions, and scores
 v4/v5 at identical v5-teacher roots with explicit native-network loading.
 """
@@ -23,14 +23,32 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'scripts'), str(ROOT/'python')]
 import roof_candidates_v5 as base
+from task76_state_audit import canonical_snapshot, verify_snapshot
 OUT = base.OUT
-TERM = OUT/'terminal_v2'
-SCHEMA = 2
+TERM = OUT/'terminal_v3'
+SCHEMA = 3
 PAYLOAD = None
 
 
 def key(action):
     return base.action_key(action)
+
+
+def serialized_game(outcome):
+    # JSON also stringifies integer keys (e.g. planted_types/slots).
+    return json.loads(json.dumps(base.semantic_game(outcome),allow_nan=False))
+
+
+def comparable_game(outcome):
+    return {k:v for k,v in serialized_game(outcome).items() if k!='state_hash'}
+
+
+def capture_state(env,path,level):
+    path.parent.mkdir(parents=True,exist_ok=True)
+    result=env._command('STATE_BYTES '+json.dumps(str(path)))
+    assert result.get('ok'), 'frozen engine cannot export full state evidence'
+    normal,metadata=canonical_snapshot(path.read_bytes(),level)
+    return dict(path=str(path),**metadata),normal
 
 
 def future_seeds(level, seed, decision, stage, n):
@@ -242,12 +260,14 @@ def history_sha(fast_state):
 
 
 class PairedProbe:
-    def __init__(self,plan,level,seed,models,pilot=False):
+    def __init__(self,plan,level,seed,models,pilot=False,control_only=False,control_roots=None,state_dir=None):
         self.plan,self.level,self.seed,self.models=plan,level,seed,models
         self.rows=base.trace_rows(level,'production',seed)
         self.targets=set(base.probe_targets(level,seed));self.written=[];self.pilot=pilot
         if pilot:self.targets={min(self.targets)}
         self.decision=None;self.fast_state=None
+        self.control_only=control_only;self.control_roots=control_roots if control_roots is not None else {}
+        self.state_dir=state_dir or TERM/f'l{level}'/str(seed)/'state_images'/f'replay_{time.time_ns()}'
 
     def before(self,env,obs,fast_state,decision):
         from render_episode import _frame
@@ -272,7 +292,12 @@ class PairedProbe:
         def wrapper(env,obs,root,candidates,policy,policy_key,args,decision_seed,stats):
             if self.decision in self.targets:
                 assert candidates==self.rows[self.decision]['production_candidates']
-                self.probe(env,obs,root,candidates,policy)
+                if self.control_only:
+                    env.restore_fast(root)
+                    metadata,_=capture_state(env,self.state_dir/f'control_root_{self.decision}.state',self.level)
+                    self.control_roots[str(self.decision)]=metadata
+                else:
+                    self.probe(env,obs,root,candidates,policy)
             return self.original(env,obs,root,candidates,policy,policy_key,args,decision_seed,stats)
         teacher._halving_choice=wrapper
         return self
@@ -286,17 +311,23 @@ class PairedProbe:
         env.restore_fast(root)
         state_hash=env.state_hash();income=(list(env._sun_production_history),env._sun_history_start_tick)
         history=copy.deepcopy(teacher._W.get('student_history'));hs=history_sha(self.fast_state)
+        state_metadata,_=capture_state(env,self.state_dir/f'probe_root_{self.decision}.state',self.level)
+        assert state_metadata['canonical_sha256']==self.control_roots[str(self.decision)]['canonical_sha256'], 'probe root differs from unprobed control beyond unused cloud counters'
         actions=base.all_actions(obs)
         filename=TERM/f'l{self.level}'/str(self.seed)/f'root_{self.decision}.json'
         identity=dict(schema_version=SCHEMA,level=self.level,seed=self.seed,decision=self.decision,
             input_sha256={k:v['sha256'] for k,v in self.plan['inputs'].items()},
             native_model_bin_sha256={k:base.sha(v) for k,v in self.models.items()},
             trace_sha256=base.sha(OUT/'panels'/f'l{self.level}'/'production'/str(self.seed)/'decisions.jsonl.gz'),
-            state_hash=state_hash,history_sha256=hs,terminal_futures=8,leaf_futures=9,
+            canonical_state_sha256=state_metadata['canonical_sha256'],history_sha256=hs,terminal_futures=8,leaf_futures=9,
             horizons=[2500,4000,6000],protocol='current v5 teacher prefix; frozen student continuation; common futures across actions; actual terminal required')
         if filename.exists():
             old=base.read(filename);assert old['identity']==identity and old['complete']
-            self.written.append(str(filename));return
+            digest=base.sha(filename)
+            # Re-run roots in a fresh successful paired game; keep previous data.
+            previous=TERM/'unacknowledged'/f'l{self.level}'/str(self.seed)/f'root_{self.decision}_{digest}.json'
+            previous.parent.mkdir(parents=True,exist_ok=True)
+            if not previous.exists():previous.write_bytes(filename.read_bytes())
         world=future_seeds(self.level,self.seed,self.decision,'terminal',8)
         leaf_seeds=future_seeds(self.level,self.seed,self.decision,'leaf',9)
         records=[];started=time.monotonic()
@@ -341,7 +372,9 @@ class PairedProbe:
         assert env.state_hash()==state_hash,'probe changed native root'
         assert (list(env._sun_production_history),env._sun_history_start_tick)==income,'probe changed income history'
         assert history_sha(self.fast_state)==hs,'probe changed student history'
-        document=dict(identity=identity,complete=True,tick=obs['tick'],wave=obs['wave'],sun=obs['sun'],
+        document=dict(identity=identity,complete=True,native_state_hash=state_hash,
+            probe_state=state_metadata,control_state=self.control_roots[str(self.decision)],
+            tick=obs['tick'],wave=obs['wave'],sun=obs['sun'],
             packets=obs['packets'],policy=policy,production_choice=self.rows[self.decision]['executed'],
             production_candidates=candidates,static_selected_keys=sorted(static_keys(self.rows[self.decision])),
             actions=records,terminal_world_seeds=world,leaf_world_seeds=leaf_seeds,
@@ -360,13 +393,35 @@ def terminal_job(job):
     import search_play as teacher
     level,seed=job;plan=PAYLOAD['plan'];teacher._close_worker_env()
     args=base.teacher_args(plan,level)
-    observer=PairedProbe(plan,level,seed,PAYLOAD['models'],PAYLOAD.get('pilot',False))
+    # Fresh unprobed and probed games use the same frozen inputs and prefix.
+    # The original native hash contains uninitialised Tree-of-Wisdom counters;
+    # preserve it but verify every other outcome field against the original and
+    # all canonical state bytes (RNG included) against this fresh control.
+    state_dir=TERM/f'l{level}'/str(seed)/'state_images'/f'replay_{time.time_ns()}'
+    control=PairedProbe(plan,level,seed,PAYLOAD['models'],PAYLOAD.get('pilot',False),control_only=True,state_dir=state_dir)
+    with control:
+        baseline=teacher._play(dict(args=args,seed=seed,arm='fast_search'),observer=control)
+    baseline_state,baseline_bytes=capture_state(teacher._W['env'],state_dir/'control_final.state',level)
+    original=read_receipt(level,'production',seed)['outcome']
+    assert comparable_game(baseline)==comparable_game(original), 'unprobed replay differs from original gameplay'
+    teacher._close_worker_env()
+    observer=PairedProbe(plan,level,seed,PAYLOAD['models'],PAYLOAD.get('pilot',False),control_roots=control.control_roots,state_dir=state_dir)
     with observer:
         outcome=teacher._play(dict(args=args,seed=seed,arm='fast_search'),observer=observer)
-    original=read_receipt(level,'production',seed)['outcome']
-    assert base.semantic_game(outcome)==base.semantic_game(original),'terminal probe changed complete production replay'
+    probe_state,probe_bytes=capture_state(teacher._W['env'],state_dir/'probe_final.state',level)
+    actual,expected=serialized_game(outcome),serialized_game(original)
+    if comparable_game(actual)!=comparable_game(expected) or baseline_bytes!=probe_bytes:
+        base.write(TERM/f'l{level}'/str(seed)/'replay-outcome-mismatch.json',dict(
+            actual=actual,expected=expected,baseline=serialized_game(baseline),
+            differing_fields=[k for k in comparable_game(actual).keys() | comparable_game(expected).keys()
+                              if comparable_game(actual).get(k)!=comparable_game(expected).get(k)],
+            baseline_state=baseline_state,probe_state=probe_state))
+        raise AssertionError('terminal probe changed complete gameplay or canonical state bytes')
     result=dict(level=level,seed=seed,roots=len(observer.written),complete_game_parity=True,
-        input_sha256={k:v['sha256'] for k,v in plan['inputs'].items()},outcome=base.semantic_game(outcome),
+        canonical_replay_proven=True,original_native_state_hash=original['state_hash'],
+        input_sha256={k:v['sha256'] for k,v in plan['inputs'].items()},outcome=actual,
+        baseline_outcome=serialized_game(baseline),baseline_state=baseline_state,probe_state=probe_state,
+        control_roots=control.control_roots,
         root_sha256={str(path):base.sha(path) for path in observer.written})
     base.write(TERM/f'l{level}'/str(seed)/'replay-complete.json',result)
     print(json.dumps({'replay_complete':True,'level':level,'seed':seed,'roots':len(observer.written)}),flush=True)
@@ -446,7 +501,12 @@ def validate_terminal_root(root,replay,receipt,baseline,plan,level,seed,decision
     assert root['complete'] and identity['schema_version']==SCHEMA
     assert (identity['level'],identity['seed'],identity['decision'])==(level,seed,decision)
     assert identity['input_sha256']==expected_inputs==replay['input_sha256']
-    assert replay['complete_game_parity'] and replay['outcome']==base.semantic_game(receipt['outcome'])
+    assert replay['complete_game_parity'] and replay['canonical_replay_proven']
+    assert comparable_game(replay['outcome'])==comparable_game(replay['baseline_outcome'])==comparable_game(receipt['outcome'])
+    assert replay['original_native_state_hash']==receipt['outcome']['state_hash']
+    assert verify_snapshot(replay['baseline_state'],level)==verify_snapshot(replay['probe_state'],level)
+    assert verify_snapshot(root['control_state'],level)==verify_snapshot(root['probe_state'],level)
+    assert identity['canonical_state_sha256']==root['control_state']['canonical_sha256']==root['probe_state']['canonical_sha256']
     assert identity['trace_sha256']==receipt['trace_sha256']
     assert root['tick']==baseline['tick'] and root['production_candidates']==baseline['production_candidates']
     assert root['production_choice']==baseline['executed'] and root['policy']==baseline['policy']
@@ -477,7 +537,8 @@ def terminal_report(levels):
     report=dict(schema_version=SCHEMA,task=76,complete=False,per_level={},
         method='Shared eight terminal futures for every legal action at identical current-v5-teacher roots; current student history passed after proposal; true terminal checked; nine independent shared leaf futures. v4 loaded explicitly for identical roots/futures; v5 horizons2500/4000/6000.',
         historical_comparison='task46 v4 53.9% (95%47.1-60.9, 4929 pairs) includes all legal plant/shovel/wait actions. Compare its action scope with *_all_legal below; unsuffixed metrics restrict to production-representable plant/wait. Different roots, two futures and search-teacher continuation prevent a direct before/after claim. Matched v4/v5 share current roots/futures and student continuation. Predicted differences below 1e-10 receive half credit, as in task46.',
-        invalidated_legacy='artifacts/task76/terminal schema1 used preloaded v5 for v4_control, pre-proposal history and action-specific futures; excluded in full.',
+        invalidated_legacy='terminal/schema1 used preloaded v5 for v4, stale history and action-specific futures; terminal_v2 roots lack matched complete-state replay; both excluded.',
+        state_method='Schema3: raw native hashes and STATE_BYTES retained. Fresh unprobed/probed prefixes and finals must match all state bytes after zeroing only the six unused, uninitialised Tree-of-Wisdom cloud counters plus their CRC. Every other outcome field, frame, action and policy must also match the original receipt.',
         root_evidence=[],good_action_coverage={})
     plan=base.verify_plan()
     complete=True;clusters=defaultdict(list);coverage=Counter()

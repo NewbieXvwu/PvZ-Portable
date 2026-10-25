@@ -1,0 +1,102 @@
+{
+ "task": 76,
+ "schema_version": 1,
+ "engine_sha256": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+ "original_receipt_native_hash": "2f0f4dd6a8d142c5",
+ "cases": [
+  {
+   "case": "plain",
+   "native_hash": "a4334811f7014e54",
+   "non_hash_outcome_differences": {},
+   "state_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/replay_hash_controls/plain.state",
+   "raw_sha256": "bf970a52a680816b64d68d92e7f04c4fa5a57eca37daf58910c7cc61c51fcfb6",
+   "canonical_sha256": "089402d34a5d5dd0aa5e2e9b1490391f9981526c9825dc6296b4e3164eb2184c",
+   "cloud_counters": [
+    0,
+    0,
+    3,
+    0,
+    46,
+    0
+   ],
+   "board_bytes": 92567,
+   "cloud_bytes_offset": 92440,
+   "normalised_cloud_bytes": 24,
+   "method": "Only Challenge.mCloudsCounter[6] and the dependent SaveGame CRC; roof adventure only"
+  },
+  {
+   "case": "plain_frames",
+   "native_hash": "a4334811f7014e54",
+   "non_hash_outcome_differences": {},
+   "state_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/replay_hash_controls/plain_frames.state",
+   "raw_sha256": "bf970a52a680816b64d68d92e7f04c4fa5a57eca37daf58910c7cc61c51fcfb6",
+   "canonical_sha256": "089402d34a5d5dd0aa5e2e9b1490391f9981526c9825dc6296b4e3164eb2184c",
+   "cloud_counters": [
+    0,
+    0,
+    3,
+    0,
+    46,
+    0
+   ],
+   "board_bytes": 92567,
+   "cloud_bytes_offset": 92440,
+   "normalised_cloud_bytes": 24,
+   "method": "Only Challenge.mCloudsCounter[6] and the dependent SaveGame CRC; roof adventure only"
+  },
+  {
+   "case": "record",
+   "native_hash": "f83000d02f7e05c1",
+   "non_hash_outcome_differences": {},
+   "state_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/replay_hash_controls/record.state",
+   "raw_sha256": "3f2f1cf3bc1c03d12043a5589e8d7a481e2c22936dc4dc61fb0df55492a52212",
+   "canonical_sha256": "089402d34a5d5dd0aa5e2e9b1490391f9981526c9825dc6296b4e3164eb2184c",
+   "cloud_counters": [
+    -971227136,
+    -971227136,
+    3,
+    0,
+    46,
+    0
+   ],
+   "board_bytes": 92567,
+   "cloud_bytes_offset": 92440,
+   "normalised_cloud_bytes": 24,
+   "method": "Only Challenge.mCloudsCounter[6] and the dependent SaveGame CRC; roof adventure only"
+  },
+  {
+   "case": "record_frames",
+   "native_hash": "a4334811f7014e54",
+   "non_hash_outcome_differences": {},
+   "state_file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/replay_hash_controls/record_frames.state",
+   "raw_sha256": "bf970a52a680816b64d68d92e7f04c4fa5a57eca37daf58910c7cc61c51fcfb6",
+   "canonical_sha256": "089402d34a5d5dd0aa5e2e9b1490391f9981526c9825dc6296b4e3164eb2184c",
+   "cloud_counters": [
+    0,
+    0,
+    3,
+    0,
+    46,
+    0
+   ],
+   "board_bytes": 92567,
+   "cloud_bytes_offset": 92440,
+   "normalised_cloud_bytes": 24,
+   "method": "Only Challenge.mCloudsCounter[6] and the dependent SaveGame CRC; roof adventure only"
+  }
+ ],
+ "all_canonical_states_identical": true,
+ "source_evidence": {
+  "src/Lawn/Challenge.cpp": "Constructor does not initialise mCloudsCounter[6]; its only read/update loop is TreeOfWisdomUpdate, not roof adventure.",
+  "src/Lawn/System/SaveGame.cpp": "SyncChallengeTailPortable serialises all six counters; SaveGame V4 includes their dependent payload CRC.",
+  "src/main.cpp": "STATE_BYTES exports every component used by StableEnvironmentHash, including board image, RNG and counters."
+ },
+ "local_source_sha256": {
+  "src/Lawn/Challenge.cpp": "1fa09f39ac464b3bcb726b766e1f2dd7264b22284ce2b05097d6d58ea2975e5a",
+  "src/Lawn/System/SaveGame.cpp": "b969f1555f7ba37367634fe101efc4f1746461447ae4cdef837abc060e2df4de",
+  "src/main.cpp": "4cf2917f30b057bb80557a991693583ba20cbe2a7284ca62cc1d7c42d3ea9168"
+ },
+ "interpretation": "Native hashes are not reproducible across fresh games because six unused Tree-of-Wisdom counters are uninitialised. Only these 24 bytes and their derived CRC are normalised for task76 roof state comparisons; every other state/RNG byte must match.",
+ "limitation": "Original panel raw state images were not captured, so their native hashes cannot be directly normalised. Fresh paired controls must match all original archived frames/actions/policies and all non-hash outcome fields, then prove full canonical-state equality with probed games. Original hashes remain visible.",
+ "production_or_engine_changes": false
+}

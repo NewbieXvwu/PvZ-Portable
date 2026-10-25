@@ -239,5 +239,20 @@
   "interrupted_games": "No loss label; resume only missing complete receipts",
   "game_inputs_and_teacher_unchanged": true,
   "scope": "Per task, explicitly clarified by master; not a global limit"
+ },
+ "replay_amendment": {
+  "schema_version": 3,
+  "evidence": "MEMORY/docs/task76-replay-state-audit.json",
+  "reason": "Frozen engine serialises six uninitialised Tree-of-Wisdom cloud counters even in roof adventure; fresh unprobed controls exhibit different raw hashes.",
+  "comparison": "Fresh unprobed and probed game per sampled seed. Compare all original archived frames/actions/policies and all outcome fields except raw native hash; compare full state images at every probe root and final state after zeroing only cloud counters and derived CRC. Retain raw hashes and raw state images.",
+  "normalisation_scope": "Only task76 L42-L49, SaveGame V4 exact validated layout; all other bytes including RNG/counters must match.",
+  "frozen_inputs_and_teacher_unchanged": true,
+  "root_selection_and_future_seeds_unchanged": true,
+  "future_namespace": "task76-schema2 remains fixed to avoid changing sampled futures",
+  "accepted_raw_directory": "artifacts/task76/terminal_v3",
+  "excluded_directories": [
+   "artifacts/task76/terminal",
+   "artifacts/task76/terminal_v2"
+  ]
  }
 }

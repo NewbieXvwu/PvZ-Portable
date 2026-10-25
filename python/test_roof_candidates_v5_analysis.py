@@ -180,7 +180,10 @@ def setup_probe(monkeypatch):
     monkeypatch.setattr(Path,'exists',lambda path:False)
     documents=[]
     monkeypatch.setattr(audit.base,'write',lambda path,document:documents.append(document))
-    observer=audit.PairedProbe(plan,42,45000000,{'value':'v5.bin','v4_control':'v4.bin'})
+    metadata={'canonical_sha256':'canonical','path':'mock.state'}
+    monkeypatch.setattr(audit,'capture_state',lambda env,path,level:(metadata,b'canonical'))
+    monkeypatch.setattr(audit,'verify_snapshot',lambda metadata,level:b'canonical')
+    observer=audit.PairedProbe(plan,42,45000000,{'value':'v5.bin','v4_control':'v4.bin'},control_roots={'0':metadata})
     observer.decision=0;observer.fast_state={}
     return observer,documents
 
@@ -212,10 +215,12 @@ def test_terminal_evidence_validator_requires_full_action_coverage_and_replay(mo
     observer,documents=setup_probe(monkeypatch);env=ProbeEnv()
     observer.probe(env,dict(tick=500,wave=1,sun=50,packets=[]),17,[A,WAIT],A)
     document=documents[0];baseline=audit.base.trace_rows(42,'production',45000000)[0]
-    receipt={'outcome':{'terminal':True,'won':False,'seconds':3},
+    receipt={'outcome':{'terminal':True,'won':False,'seconds':3,'state_hash':'original'},
              'trace_sha256':document['identity']['trace_sha256']}
-    replay={'complete_game_parity':True,'input_sha256':{},
-            'outcome':audit.base.semantic_game(receipt['outcome'])}
+    replay={'complete_game_parity':True,'canonical_replay_proven':True,'input_sha256':{},
+            'outcome':audit.base.semantic_game(receipt['outcome']),
+            'baseline_outcome':audit.base.semantic_game(receipt['outcome']),
+            'original_native_state_hash':'original','baseline_state':{},'probe_state':{}}
     arguments=(document,replay,receipt,baseline,observer.plan,42,45000000,0)
     audit.validate_terminal_root(*arguments)
     replay['complete_game_parity']=False
@@ -254,3 +259,45 @@ def test_replay_compares_full_json_frame_without_tuple_list_false_alarm(monkeypa
     with pytest.raises(AssertionError,match='state differs at 0'):
         probe.before(None,{}, {},0)
     assert documents[0]['differing_fields']==['v2']
+
+
+def test_full_replay_preserves_every_outcome_field_across_json_integer_keys():
+    import json
+    actual={'seconds':2.3,'terminal':True,'state_hash':'abc','planted_types':{3:4,16:2},'won':False}
+    stored=json.loads(json.dumps(actual))
+    stored['seconds']=99
+    assert audit.serialized_game(actual)==audit.serialized_game(stored)
+    stored['state_hash']='different'
+    assert audit.serialized_game(actual)!=audit.serialized_game(stored)
+
+
+def snapshot_fixture(clouds,gameplay=4):
+    import struct,zlib
+    tail=bytearray(348)
+    struct.pack_into('<6i',tail,304,*clouds)
+    challenge=struct.pack('<6I',1,1,360,356,100,348)+tail
+    chunks=[]
+    for tag in range(1,21):
+        payload=challenge if tag==19 else struct.pack('<I',gameplay)
+        chunks.append(struct.pack('<II',tag,len(payload))+payload)
+    payload=b''.join(chunks)
+    board=struct.pack('<12sIII',b'PVZP_SAVE4',1,len(payload),zlib.crc32(payload))+payload
+    return b'PVZSB1\n'+struct.pack('<Q',len(board))+board+struct.pack('<Q',4)+b'rand'+bytes(36)
+
+
+def test_state_comparison_normalises_only_unused_roof_cloud_counters():
+    from task76_state_audit import canonical_snapshot
+    a,ma=canonical_snapshot(snapshot_fixture([0]*6),42)
+    b,mb=canonical_snapshot(snapshot_fixture([-971227136,42,3,0,46,0]),42)
+    assert a==b and ma['canonical_sha256']==mb['canonical_sha256']
+    c,_=canonical_snapshot(snapshot_fixture([0]*6,gameplay=5),42)
+    assert a!=c
+
+
+def test_state_comparison_rejects_other_levels_or_corrupt_save():
+    import pytest
+    from task76_state_audit import canonical_snapshot
+    image=snapshot_fixture([0]*6)
+    with pytest.raises(AssertionError):canonical_snapshot(image,41)
+    corrupt=bytearray(image);corrupt[45]^=1
+    with pytest.raises(AssertionError):canonical_snapshot(bytes(corrupt),42)
