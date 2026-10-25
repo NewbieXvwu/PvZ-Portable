@@ -174,6 +174,10 @@ def cmd_run(args) -> None:
         if existing.exists():
             previous = json.loads(existing.read_text(encoding='utf-8'))
             store = previous.get('points', {})
+            for bucket in store.values():
+                for arm, value in bucket.items():
+                    if isinstance(value, list):   # 旧 adaptive 格式 [wins, games]
+                        bucket[arm] = {'wins': value[0], 'games': value[1], 'rows': []}
             # 保留 adaptive 等来源写入的汇总字段（l50/顶档/阶梯），只更新 points。
             extra = {k: v for k, v in previous.items() if k not in ('schema', 'points')}
         for decision in points:
