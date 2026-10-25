@@ -43,3 +43,10 @@
 - 新数据只纳入强加全部合法格运行中未拒绝的老师最终种植动作，并保留 `seed`、关卡区、原候选集、全合法集和 `teacher_action_in_original`；种子按任务族独立分块，训练/留出按种子划分，留出种子不参与训练。
 - 召回率按 day、night、pool、fog、roof 分区比较 branch1 与新网；配对胜率使用同种子 32 局，L40 0.5 倍与两族 L39 为主检验，L31 雾夜和 L41 屋顶为旧区回归检验，非劣界为 -3 个百分点。
 - 只有在决策级数据完成机械审计、旧数据路径可读且不含检查点或日志后才训练；缺少上述条件时记录为未完成，不修改生产路径。
+
+## 2026-10-25 路径复核
+
+- 复核 `/Users/newbiexvwu/PvZAgent` 及全部工作树：指定的 `artifacts/hard/value_branch1/model.pt` 只有模型权重，没有原始训练样本；HF `realnewbiexvwu/pvz-agent-artifacts` 只有 `transfer/` 下的示范归档和 `value_v5.pt`，没有 branch1 语料。
+- 现有 `scripts/train_value_branches.py` 接受 `value_ranking_check.py --dump` 的叶值分叉数据，训练目标是 `won`，不能消费 `teacher_action_in_original` 或候选集合标签。
+- 历史提交 `2f63f10e` 的候选覆盖实验是“给现有候选补少量动作”的覆盖提议器，模型目标和 task86 的静态候选网重训契约不同；该实现已在 `e6a9ba4d` 删除，不能直接当作 branch1 重训器。
+- 因此 task86 的 L40/L39 数据混训、候选召回对比、新网训练和 32 局评估保持未执行，生产默认与现有 branch1 权重不变。
