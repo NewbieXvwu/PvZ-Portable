@@ -494,9 +494,21 @@
   "mac_handoff": {
     "deliverables": [
       "summary.json",
-      "mac-comparison.json"
+      "comparison.json"
     ],
-    "status": "not run on the desktop; commands are in MEMORY/docs/state-hash-determinism.md"
+    "dry_run": {
+      "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+      "note": "script executed on the desktop with override paths against the fixed Linux build",
+      "operations": 2000,
+      "out": "/home/newbiexvwu/pvz-logs/task82/macprobe_test",
+      "repeats": 8,
+      "reset_hashes": [
+        "d75e64ae66c61470"
+      ],
+      "states_compared": 2001,
+      "unique_traces": 1
+    },
+    "status": "not run on a Mac; the hand-off script was validated on the desktop with override paths"
   },
   "memcheck": {
     "build": "same objects, mimalloc removed from the link only (diagnostic, not a production switch)",

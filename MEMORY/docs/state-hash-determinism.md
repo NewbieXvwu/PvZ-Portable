@@ -59,7 +59,7 @@ Valgrind 3.26 的 `--track-origins=yes --num-callers=30` 对同源码、仅移�
 
 新增 `python/test_state_hash_determinism.py` 在 8 个独立进程检查云数组、在场弹丸 portal 哨兵、未收集硬币坐标、固定序列哈希与 snapshot/restore。旧构建会在弹丸字段上失败（实测 `401cc600`），修复版通过；Python 协议测试 35 项通过。
 
-Mac 步骤按任务要求交主控运行，台式机不声称已经执行。主控把本分支合入 Mac 检出后，直接运行 `scripts/state_hash_mac_probe.sh`（路径可用 `PVZ_MAC_ROOT` / `PVZ_MAC_EXECUTABLE` / `PVZ_RESOURCE_DIR` / `PVZ_ARCHIVE` / `PVZ_OUT` 覆盖），它等价于下面两条命令，对**当前正式 build 引擎**运行，不需要先部署本修复：
+Mac 上的正式构建按任务要求交主控运行，台式机没有 Mac，不声称在那里执行过。主控把本分支合入 Mac 检出后，直接运行 `scripts/state_hash_mac_probe.sh`（路径可用 `PVZ_MAC_ROOT` / `PVZ_MAC_EXECUTABLE` / `PVZ_RESOURCE_DIR` / `PVZ_ARCHIVE` / `PVZ_OUT` 覆盖），它等价于下面两条命令，对**当前正式 build 引擎**运行，不需要先部署本修复：
 
 ```bash
 PVZ_NO_POPUP=1 python3 /Users/newbiexvwu/PvZAgent/scripts/state_hash_determinism.py \
@@ -73,4 +73,4 @@ python3 /Users/newbiexvwu/PvZAgent/scripts/state_hash_compare.py \
   --out /Users/newbiexvwu/pvz-logs/task82/mac-comparison.json
 ```
 
-交回 `summary.json` 和 `mac-comparison.json` 即可；必要时再在本机比对 STATE_BYTES，不上传游戏资源或画面。正式 build 若是另一个 Mac 检出的目录，只替换上述绝对 executable 路径。该脚本同时最多一个游戏进程；台式机所有阶段最多两个，没有操作 tmux `qc` 或其他工作树。
+交回 `$OUT/summary.json` 和 `$OUT/comparison.json` 即可（脚本把比较结果写在输出目录内；上面两条手工命令的写法是 `mac-comparison.json`，两者内容同构）；必要时再在本机比对 STATE_BYTES，不上传游戏资源或画面。脚本已在台式机用覆盖路径对本机修复版完整跑通：8 个独立进程、1 种 reset 哈希、2001 个逐操作点全同，比较 JSON 正常生成——交接的是执行过的路径，不是未验证的文本。正式 build 若是另一个 Mac 检出的目录，只替换上述绝对 executable 路径。该脚本同时最多一个游戏进程；台式机所有阶段最多两个，没有操作 tmux `qc` 或其他工作树。
