@@ -4,7 +4,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from task77_search_hotpath import abba_baseline, compare_frames, paired_interval
+from task77_search_hotpath import abba_baseline, compare_frames, paired_interval, family_interval
 
 
 class SearchHotpathEvidenceTest(unittest.TestCase):
@@ -67,6 +67,12 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         result = paired_interval([.8] * 8, draws=100)
         self.assertAlmostEqual(result['geomean'], .8)
         self.assertAlmostEqual(result['bootstrap95'][0], .8)
+        with self.assertRaises(ValueError):
+            family_interval([])
+        interval = family_interval([dict(cell=cell, ratio=.8) for cell in ('day', 'pool')
+                                    for _ in range(2)], draws=100)
+        self.assertAlmostEqual(interval[0], .8)
+        self.assertAlmostEqual(interval[1], .8)
 
     def test_abba_audit_checks_raw_timings_configuration_and_label_archives(self):
         import json

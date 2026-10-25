@@ -284,6 +284,50 @@ def profile_summary(args):
     print(json.dumps({k: v['milliseconds_per_decision'] for k, v in evidence['cells'].items()}, indent=1))
 
 
+def recover_samples(args):
+    """Supplement the rejected pool sample using the fixed sampler, after ABBA ends."""
+    from prof_symbolize import load
+    from pvz_frame_store import read_frames
+    for directory in Path('/proc').glob('[0-9]*'):
+        try:
+            executable = (directory / 'exe').resolve(strict=True)
+        except OSError:
+            continue
+        if executable.parent == args.out / 'frozen':
+            raise RuntimeError('task77 engine still running; finish ABBA before sampling recovery')
+    frozen = json.loads((args.out / 'freeze.json').read_text())
+    folder = args.out / 'profile_recovery/pool'
+    folder.mkdir(parents=True, exist_ok=True)
+    sampler = args.out / 'prof_sample_fixed.so'
+    subprocess.run(['cc', '-shared', '-fPIC', '-O2', '-o', str(sampler),
+                    str(ROOT / 'scripts/prof_sample.c'), '-ldl'], check=True)
+    wrapper = folder / 'engine'
+    wrapper.write_text('#!/bin/sh\nexport LD_PRELOAD=' + shlex.quote(str(sampler)) +
+                       '\nexport PVZ_PROF_OUT=' + shlex.quote(str(folder)) + '/pcs.$$.bin\nexec ' +
+                       shlex.quote(frozen['engine']['path']) + ' "$@"\n')
+    wrapper.chmod(0o755)
+    cmd = command(args, 'pool', 'profile_recovery', 1, engine=wrapper, offset=2)
+    cmd[cmd.index('--workers') + 1] = '1'
+    cmd[1:2] = [str(Path(__file__).resolve()), 'driver', '--source', str(args.out / 'baseline'),
+                '--profile-dir', str(folder)]
+    save(folder / 'command.json', cmd)
+    run(cmd, folder / 'run.log')
+    task = next(t for t in json.loads((args.out / 'manifest.json').read_text())['tasks']
+                if t['task_id'] == CELLS['pool'])
+    seed = task['seeds'][2]
+    _, old_root, old_label = game_paths(args, 'pool', 'old', 'teacher')
+    old_frames = read_frames(old_root / f'seed_{seed}' / old_label / 'frames.npz')
+    new_frames = read_frames(args.out / 'profile_recovery/frames' / f'seed_{seed}' /
+                             'pool_profile_recovery_fast_search/frames.npz')
+    if compare_frames(old_frames, new_frames) is not None:
+        raise ValueError('sampling recovery changed the recorded game')
+    samples = {str(p): len(load(p)[1]) for p in folder.glob('pcs.*.bin')}
+    if not samples or not all(samples.values()):
+        raise ValueError('no usable recovery samples')
+    save(args.out / 'profile_recovery/evidence.json', dict(seed=seed,
+        full_frames_identical=True, samples=samples, sampler_sha256=digest(sampler)))
+
+
 def compare_frames(old, new):
     """Compare complete ordered records, including labels/targets/verification and observations.
 
@@ -398,26 +442,46 @@ def paired_interval(ratios, draws=10000):
             'bootstrap95': [means[int(draws * .025)], means[int(draws * .975)]]}
 
 
+def family_interval(games, draws=10000):
+    """Resample whole ABBA families: their seeds share the same load window."""
+    families = {}
+    for game in games:
+        if not math.isfinite(game['ratio']) or game['ratio'] <= 0:
+            raise ValueError('positive finite paired timings required')
+        families.setdefault(game['cell'], []).append(math.log(game['ratio']))
+    if not families:
+        raise ValueError('no timing families')
+    groups = list(families.values())
+    rng = random.Random(77)
+    means = sorted(math.exp(statistics.mean(value for group in rng.choices(groups, k=len(groups))
+                                            for value in group)) for _ in range(draws))
+    return [means[int(draws * .025)], means[int(draws * .975)]]
+
+
 def load_snapshot():
     processes = {}
     for directory in Path('/proc').glob('[0-9]*'):
         try:
             fields = (directory / 'stat').read_text().rsplit(')', 1)[1].split()
-            cmd = (directory / 'cmdline').read_bytes().replace(b'\0', b' ').decode(errors='replace')
-            processes[int(directory.name)] = (int(fields[1]), cmd)
+            argv = [v.decode(errors='replace') for v in (directory / 'cmdline').read_bytes().split(b'\0') if v]
+            processes[int(directory.name)] = (int(fields[1]), argv)
         except (OSError, ValueError, IndexError):
             continue
-    controllers = {pid for pid, (_, cmd) in processes.items()
-                   if '/cq/scripts/curriculum_queue.py' in cmd and 'python' in cmd}
+    controllers = {pid for pid, (_, argv) in processes.items()
+                   if argv and Path(argv[0]).name.startswith('python') and
+                   any(v.endswith('/cq/scripts/curriculum_queue.py') for v in argv[1:])}
     descendants = set(controllers)
     while True:
         expanded = descendants | {pid for pid, (parent, _) in processes.items() if parent in descendants}
         if expanded == descendants:
             break
         descendants = expanded
+    def is_engine(argv):
+        return len(argv) > 1 and argv[1] == '-env' and '-resdir' in argv
+
     return {'loadavg': Path('/proc/loadavg').read_text().strip(), 'qc_controllers': sorted(controllers),
-            'qc_engines': sum('pvz-portable -env ' in processes[p][1] for p in descendants),
-            'all_engines': sum('pvz-portable -env ' in cmd for _, cmd in processes.values())}
+            'qc_engines': sum(is_engine(processes[p][1]) for p in descendants),
+            'all_engines': sum(is_engine(argv) for _, argv in processes.values())}
 
 
 def abba_baseline(args):
@@ -573,6 +637,7 @@ def audit_abba(args):
     evidence['games'] = recomputed_games
     evidence['identity_audit'] = audit
     evidence['summary'] = paired_interval([r['ratio'] for r in evidence['games']])
+    evidence['summary']['family_bootstrap95'] = family_interval(evidence['games'])
     save(evidence_path, evidence)
     print(json.dumps(audit, indent=1), flush=True)
 
@@ -582,7 +647,8 @@ def main():
         driver(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'gate', 'verify', 'abba', 'abba-verify'))
+    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'recover-samples',
+                                         'gate', 'verify', 'abba', 'abba-verify'))
     parser.add_argument('--out', type=Path, default=OUT)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
     parser.add_argument('--candidate', type=Path)
@@ -594,6 +660,7 @@ def main():
     if not args.out.is_absolute():
         parser.error('--out must be absolute')
     {'prepare': prepare, 'profile': profile, 'profile-summary': profile_summary,
+     'recover-samples': recover_samples,
      'gate': gate, 'verify': verify, 'abba': abba, 'abba-verify': audit_abba}[args.phase](args)
 
 
