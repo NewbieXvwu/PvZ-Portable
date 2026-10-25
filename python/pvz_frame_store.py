@@ -207,7 +207,7 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4"):
+    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size"):
         raise ValueError(f"unknown student observation version: {obs}")
     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared
     # module must not invalidate all historical archives and rewrite every pack.
@@ -217,6 +217,8 @@ def encoder_signature(obs: str = "v1") -> str:
         frozen = {
             'v2lite': 'b6020e4131d35d7ff9ef0fb0996f877e6f3ffd2122045a65bd5e87be2c065aa5',
             'v2': '5031d93614db9ecff271dcaa6aa8645d7a799452f170e5ebf699cc2fb8c1df91',
+            'v2fog': '17aba0780afb4005daeb1cff6f50ca6048179a7c83b4fae0bbde35437e4036e8',
+            'v2fogstack4': '072d07ab4bba3b373abe9d09d832c17f4a476c2a49d325b69de2196a1fcd84b5',
         }
         if obs in frozen:
             return frozen[obs]

@@ -796,7 +796,8 @@ def _play(job: dict, observer=None) -> dict:
             "wave_count": obs.get("wave_count"),
             # Public final-board evidence, including the row/type of a house breach.
             # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.
-            "final_zombies": _final_zombies(obs),
+            "final_zombies": _final_zombies(env.privileged_state()
+                if task_definition.get('fog_observation') == 'storm' else obs),
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
             "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],

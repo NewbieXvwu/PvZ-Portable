@@ -3016,15 +3016,27 @@ void Challenge::SpawnZombieWave()
 	}
 }
 
-void Challenge::DrawStormFlash(Graphics* g, int theTime, int theMaxAmount)
+void Challenge::StormNightOverlay(int& theDarkness, int& theFlash) const
 {
+	int theTime = mChallengeStateCounter;
+	int theMaxAmount = 255;
+	if (mChallengeState == STATECHALLENGE_STORM_FLASH_1 && theTime < 300)
+	{
+		if (theTime > STORM_FLASH_TIME) theTime -= STORM_FLASH_TIME;
+		else theMaxAmount = 92;
+	}
+	else if (mChallengeState == STATECHALLENGE_STORM_FLASH_2 && theTime < 300)
+		theTime /= 2;
+	else if (!(mChallengeState == STATECHALLENGE_STORM_FLASH_3 && theTime < 150))
+	{
+		theDarkness = 255;
+		theFlash = 0;
+		return;
+	}
 	MTRand aDrawRand = MTRand(mBoard->mMainCounter / 6);
 	int aDarkness = PvzpAnimateCurve(150, 0, theTime, 255 - theMaxAmount, 255, CURVE_LINEAR) + aDrawRand.NextNoAssert((unsigned long)64) - 32;
-	g->SetColor(Color(0, 0, 0, std::clamp(aDarkness, 0, 255)));
-	g->FillRect(-1000, -1000, 2800, 2600);
-
-	g->SetColor(Color(255, 255, 255, PvzpAnimateCurve(150, 75, theTime, theMaxAmount, 0, CURVE_LINEAR)));
-	g->FillRect(-1000, -1000, 2800, 2600);
+	theDarkness = std::clamp(aDarkness, 0, 255);
+	theFlash = PvzpAnimateCurve(150, 75, theTime, theMaxAmount, 0, CURVE_LINEAR);
 }
 
 void Challenge::DrawWeather(Graphics* g)
@@ -3088,30 +3100,12 @@ void Challenge::DrawRain(Graphics* g)
 
 void Challenge::DrawStormNight(Graphics* g)
 {
-	if (mChallengeState == STATECHALLENGE_STORM_FLASH_1 && mChallengeStateCounter < 300)
-	{
-		if (mChallengeStateCounter > STORM_FLASH_TIME)
-		{
-			DrawStormFlash(g, mChallengeStateCounter - STORM_FLASH_TIME, 255);
-		}
-		else
-		{
-			DrawStormFlash(g, mChallengeStateCounter, 92);
-		}
-	}
-	else if (mChallengeState == STATECHALLENGE_STORM_FLASH_2 && mChallengeStateCounter < 300)
-	{
-		DrawStormFlash(g, mChallengeStateCounter / 2, 255);
-	}
-	else if (mChallengeState == STATECHALLENGE_STORM_FLASH_3 && mChallengeStateCounter < 150)
-	{
-		DrawStormFlash(g, mChallengeStateCounter, 255);
-	}
-	else
-	{
-		g->SetColor(Color::Black);
-		g->FillRect(-1000, -1000, BOARD_WIDTH + 2000, BOARD_HEIGHT + 2000);
-	}
+	int aDarkness, aFlash;
+	StormNightOverlay(aDarkness, aFlash);
+	g->SetColor(Color(0, 0, 0, aDarkness));
+	g->FillRect(-1000, -1000, 2800, 2600);
+	g->SetColor(Color(255, 255, 255, aFlash));
+	g->FillRect(-1000, -1000, 2800, 2600);
 
 	mBoard->DrawUIBottom(g);
 	mBoard->DrawTopRightUI(g);

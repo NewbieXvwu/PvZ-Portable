@@ -990,6 +990,7 @@ static void RunEnvironment(LawnApp* app)
 					// byte; fog_human_v2 is the calibrated opacity rule (task66).
 					else if (extra == "fog_human") task.fogObservation = EnvironmentFogObservation::Cell;
 					else if (extra == "fog_human_v2") task.fogObservation = EnvironmentFogObservation::Opacity;
+					else if (extra == "fog_storm") task.fogObservation = EnvironmentFogObservation::Storm;
 					else if (extra == "fog_xray") task.fogObservation = EnvironmentFogObservation::None;
 					else parsed = false;
 				}

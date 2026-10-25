@@ -438,8 +438,8 @@ class PvZEnv:
             raise ValueError("preplanted seed_type, row and col must be in range")
         if task.conveyor_start not in (None, "original"):
             raise ValueError("conveyor_start must be None or 'original'")
-        if task.fog_observation not in (None, "human", "human_v2", "xray"):
-            raise ValueError("fog_observation must be None, 'human', 'human_v2' or 'xray'")
+        if task.fog_observation not in (None, "human", "human_v2", "xray", "storm"):
+            raise ValueError("fog_observation must be None, 'human', 'human_v2', 'xray' or 'storm'")
         if type(task.playthrough) is not int or task.playthrough != 2:
             raise ValueError("only replay semantics (playthrough=2) are supported")
         if type(profile.seed_slot_count) is not int or not 6 <= profile.seed_slot_count <= 10:
