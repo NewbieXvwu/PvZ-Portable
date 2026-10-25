@@ -40,3 +40,4 @@ L10、L20 的原生传送带族已经在 qc 里，L20 学生从 0 练到了 45/4
 Mac 上的模型路径：静态网 `/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt`（主控已从台式机拷来，SHA 24858410…）；叶值 v5 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt`（8a636d33…，只读）；学生 dw4i_s1 同 demo 工作树的现有路径。
 - 2026-10-25：L40 冷启动第 3 局同样因头部动画槽位被回收而崩（`Plant::UpdateShooting` 空指针），属同一类缺陷的分裂豌豆分支。`FindTargetAndFire` 副武器、`UpdateShooting` 开火门控与待机复位三处改 `ReanimationTryToGet` 并跳过缺失头；崩溃种子 61200001/61200003 跑完，46 passed / 47 subtests。
 - 2026-10-25：96 局老师冷启动跑完（L25 9/32=28.1%，Wilson 15.6–45.4；L30 0/32，0–10.7；L40 5/32=15.6%，Wilson 6.9–31.8），三关都不到 50%，都不建议进 qc。L30 的 0% 归因为冷启动政策缺陷（32 局零睡莲、带子 8000 tick 满 10 张后堵死），不是牌表结构性输局；L40 主要漏气球（18/27 局输局里气球是走得最远的破防者）。三批同种子状态哈希一致。结论写入 MEMORY/docs/native-conveyor.md。
+- 2026-10-25：补原生族整局测试（`test_native_family_plays_a_full_game_to_terminal`，L25/L30/L40 各跑一局到 terminal，确认发牌 ≥2 种、结果码为胜/负），三个测试文件 49 passed / 47 subtests。

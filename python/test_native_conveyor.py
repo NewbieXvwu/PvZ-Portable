@@ -62,6 +62,23 @@ def test_native_reset_keeps_ten_empty_slots_and_engine_deals_duplicates(level):
 
 
 @engine
+@pytest.mark.parametrize('level', [25, 30, 40])
+def test_native_family_plays_a_full_game_to_terminal(level):
+    with PvZEnv(RESOURCE, executable=BINARY) as env:
+        obs = reset_native(env, level, 'storm' if level == 40 else None)
+        dealt = set()
+        for _ in range(80):
+            dealt.update(packet['type'] for packet in obs['packets'] if packet['type'] >= 0)
+            if obs['terminal']:
+                break
+            obs, *_ = env.step(dict(type='wait', ticks=500))
+        assert obs['terminal'], obs['tick']
+        assert obs['result'] in (1, 2)  # BOARDRESULT_WON / BOARDRESULT_LOST
+        assert obs['wave'] > 1
+        assert len(dealt) >= 2
+
+
+@engine
 def test_little_zombie_size_survives_full_lean_v2_and_native_student():
     torch.set_num_threads(1)
     torch.manual_seed(75)
