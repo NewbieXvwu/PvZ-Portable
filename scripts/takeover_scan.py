@@ -18,6 +18,7 @@
 import argparse
 import datetime as dt
 import fcntl
+import hashlib
 import json
 import os
 import re
@@ -45,6 +46,13 @@ PASS_RATE = 0.5
 # search_play 的臂名与 dagger-beta：teacher = 搜索老师（β=1），student = 学生独自走（β=0）。
 ARM_SPEC = {'teacher': ('fast_search', 1.0), 'student': ('fast', 0.0)}
 RESULT_SCHEMA = 'takeover_scan_results_v1'
+
+
+def write_json(path: Path, document: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=path.parent, delete=False) as tmp:
+        tmp.write(json.dumps(document, ensure_ascii=False, indent=1) + '\n')
+    Path(tmp.name).replace(path)
 
 
 def load_jobs(path: Path) -> dict:
@@ -99,7 +107,9 @@ def run_job(job: dict, args) -> list:
     """跑一个 (存档, 点, 臂) 作业；断点续跑靠 search_play 自己的 games.jsonl。"""
     out = job_out(args.out, job)
     out.mkdir(parents=True, exist_ok=True)
-    done = {row.get('future_seed') for row in read_rows(out)}
+    rows = read_rows(out)
+    validate_job_context(job, args, out, bool(rows))
+    done = {row.get('future_seed') for row in rows if row.get('arm') == ARM_SPEC[job['arm']][0]}
     missing = [seed for seed in job['future_seeds'] if seed not in done]
     if missing:
         env = dict(os.environ, PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
@@ -108,11 +118,75 @@ def run_job(job: dict, args) -> list:
         if proc.returncode != 0:
             tail = '\n'.join(proc.stdout.splitlines()[-15:])
             raise RuntimeError(f"search_play 失败 ({job['task_id']} d{job['decision']} {job['arm']}):\n{tail}")
-    return read_rows(out)
+    wanted = set(job['future_seeds'])
+    selected = [r for r in read_rows(out) if r.get('future_seed') in wanted
+                and r.get('arm') == ARM_SPEC[job['arm']][0] and r.get('seed') == job['seed']]
+    if len(selected) != len(wanted) or {r['future_seed'] for r in selected} != wanted:
+        raise ValueError('扫描结果缺少未来种子或有重复局')
+    return sorted(selected, key=lambda row: job['future_seeds'].index(row['future_seed']))
+
+
+_DIGESTS = {}
+
+
+def file_digest(path: Path) -> str:
+    path = Path(path).resolve()
+    stat = path.stat()
+    key = (str(path), stat.st_size, stat.st_mtime_ns)
+    if key not in _DIGESTS:
+        _DIGESTS[key] = hashlib.sha256(path.read_bytes()).hexdigest()
+    return _DIGESTS[key]
+
+
+def validate_job_context(job: dict, args, out: Path, has_rows: bool) -> None:
+    """固定存档与搜索输入，未来种子可扩展；不把别的存档/模型结果当作断点。"""
+    archive = resolve_archive(job['archive']).resolve()
+    task = next(t for t in json.loads(args.manifest.read_text())['tasks'] if t['task_id'] == job['task_id'])
+    context = dict(archive=str(archive), task_id=job['task_id'], seed=job['seed'],
+                   decision=job['decision'], arm=job['arm'],
+                   task={k: v for k, v in task.items() if k != 'demo_start'},
+                   resource_dir=str(args.resource_dir.resolve()),
+                   inputs={str(Path(p).resolve()): file_digest(p) for p in
+                           (args.student, args.value, args.static_value, args.executable,
+                            archive / 'meta.json', archive / 'ticks.jsonl',
+                            *[archive / n for n in ('frames.jsonl', 'frames.npz') if (archive / n).exists()])})
+    path = out / 'takeover_context.json'
+    if path.exists():
+        if json.loads(path.read_text()) != context:
+            raise ValueError(f'{out}: 存档或搜索输入已变化，请另用输出目录')
+        return
+    if has_rows:
+        # Existing CodeBuddy runs predate fingerprints; validate their recorded config
+        # before freezing the current inputs. Their historical weight hashes are unavailable.
+        config = json.loads((out / 'config.json').read_text())
+        paths = dict(rollout_policy=args.student, value=args.value, static_value=args.static_value,
+                     executable=args.executable, demo_archive=archive, resource_dir=args.resource_dir)
+        if any(Path(config.get(k, '')).resolve() != Path(v).resolve() for k, v in paths.items()):
+            raise ValueError(f'{out}: 旧扫描配置与当前存档/模型不符')
+        expected = dict(task_id=job['task_id'], demo_decision=str(job['decision']),
+                        arms=ARM_SPEC[job['arm']][0], verify_samples='9', student_candidates='2',
+                        samples='3', horizon='2500', per_card='1', halving='True')
+        if any(config.get(k) != v for k, v in expected.items()) or float(config['dagger_beta']) != ARM_SPEC[job['arm']][1]:
+            raise ValueError(f'{out}: 旧扫描搜索参数不符')
+    write_json(path, context)
 
 
 def point_summary(rows: list) -> dict:
     return dict(wins=sum(1 for row in rows if row.get('won')), games=len(rows), rows=[trim_row(r) for r in rows])
+
+
+def cached_points_for_futures(points: dict, futures: list) -> dict:
+    """汇总只保留本次请求的完整未来集合；行数相同不代表同一批未来。"""
+    result = {}
+    expected = set(futures)
+    for decision, bucket in points.items():
+        for arm, data in bucket.items():
+            if not isinstance(data, dict):
+                continue
+            rows = [row for row in data.get('rows', []) if row.get('future_seed') in expected]
+            if len(rows) == len(expected) and {r['future_seed'] for r in rows} == expected:
+                result.setdefault(decision, {})[arm] = point_summary(rows)
+    return result
 
 
 def entry_filter(entry: dict, args) -> bool:
@@ -139,7 +213,7 @@ def write_archive_result(entry: dict, points: dict, out: Path, extra: dict | Non
                     **(extra or {}), points=points)
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"{entry['task_id']}_s{entry['seed']}.json"
-    path.write_text(json.dumps(document, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+    write_json(path, document)
     return path
 
 
@@ -175,20 +249,23 @@ def cmd_run(args) -> None:
         existing = points_path / f"{entry['task_id']}_s{entry['seed']}.json"
         if existing.exists():
             previous = json.loads(existing.read_text(encoding='utf-8'))
-            store = previous.get('points', {})
-            for bucket in store.values():
-                for arm, value in bucket.items():
-                    if isinstance(value, list):   # 旧 adaptive 格式 [wins, games]
-                        bucket[arm] = {'wins': value[0], 'games': value[1], 'rows': []}
+            store = cached_points_for_futures(previous.get('points', {}), futures)
             # 保留 adaptive 等来源写入的汇总字段（l50/顶档/阶梯），只更新 points 与基础字段。
             extra = {k: v for k, v in previous.items()
                      if k not in ('schema', 'points', 'task_id', 'seed', 'archive',
                                   'grade', 'layer')}
+            prior_futures = previous.get('future_seeds')
+            if prior_futures is None:
+                sets = {tuple(sorted(row['future_seed'] for row in arm.get('rows', [])))
+                        for bucket in previous.get('points', {}).values() for arm in bucket.values()
+                        if isinstance(arm, dict) and arm.get('rows')}
+                prior_futures = list(next(iter(sets))) if len(sets) == 1 else None
+            if prior_futures != futures:
+                extra = {}  # 派生的 adaptive L50/阶梯属于另一组未来，不可保留。
+        extra['future_seeds'] = futures
         for decision in points:
             bucket = store.setdefault(str(decision), {})
             for arm in arms:
-                if bucket.get(arm) and len(bucket[arm].get('rows', [])) >= len(futures):
-                    continue    # 断点续跑：该点两臂已齐
                 summary = run_point(jobs, decision, arm, arms, args)
                 if summary is not None:
                     bucket[arm] = summary
@@ -361,10 +438,10 @@ def cmd_adaptive(args) -> None:
         state = scanner.finish()
         document = dict(schema=RESULT_SCHEMA, task_id=entry['task_id'], seed=entry['seed'],
                         archive=entry['archive'], grade=entry.get('grade'), layer=entry.get('layer'),
-                        adaptive=True, **state)
-        args.out.mkdir(parents=True, exist_ok=True)
+                        adaptive=True, future_seeds=futures, **state)
         path = args.out / 'results' / f"{entry['task_id']}_s{entry['seed']}.json"
-        path.write_text(json.dumps(document, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+        path.parent.mkdir(parents=True, exist_ok=True)
+        write_json(path, document)
         ladder = state['ladder']
         verdict = (f"L50={state['l50']} 顶档={state['top']} 阶梯 {len(ladder['ladder'])} 档"
                    if ladder else '老师全程 <50%，不登记')
@@ -578,8 +655,8 @@ def parser() -> argparse.ArgumentParser:
         sp.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
         sp.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
         sp.add_argument('--python', type=Path, default=Path(sys.executable))
-        sp.add_argument('--workers', type=int, default=2, help='同时游戏进程数（台式机内存紧，默认 2）')
-        sp.add_argument('--futures', type=int, default=8, help='每个点用几个未来种子（测试可调小）')
+        sp.add_argument('--workers', type=int, choices=(1, 2), default=2, help='同时游戏进程数（台式机内存紧，默认 2）')
+        sp.add_argument('--futures', type=int, choices=range(1, 9), default=8, help='每个点用几个未来种子（测试可调小）')
         sp.add_argument('--archive', help='只跑 task_id / 种子包含该子串的存档')
         sp.add_argument('--task-id', help='只跑这个 task_id（精确匹配）')
         sp.add_argument('--max-archives', type=int)

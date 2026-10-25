@@ -27,6 +27,10 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
 
 ## 实现要点
 
+- Codex 接续修正：断点按实际未来种子集合匹配，禁止用相同行数的其他种子充数；存档/模型/引擎指纹变化时拒绝沿用旧输出。
+  CodeBuddy 旧缓存先核对记录的搜索配置，再冻结当前输入（旧运行时的权重哈希不可追溯，不作历史哈希保证）。
+  结果原子落盘；全新输出目录可直接执行 adaptive。22项测试通过，真实已完成点续跑0.27s，原始对局文件不变。
+
 - **断点续跑三层**：run 的 per-(存档,点,臂) 输出目录里，search_play 自己按 (arm, future_seed)
   跳过已完局；takeover_scan 再按结果文件里已有的完整点跳过整点。实测重跑 0.08s 零重跑。
 - **登记族解析**（`resolve_target_task`）：按存档路径匹配清单里已有的 demo_start 最可靠；

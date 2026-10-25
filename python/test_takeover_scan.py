@@ -9,10 +9,12 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
+import takeover_scan as scan
 
 from takeover_scan import (AdaptiveScan, build_ladder, resolve_target_task, update_manifest,
                            update_test_expectations)
@@ -32,6 +34,72 @@ def drive(scanner: AdaptiveScan, rate_fn) -> int:
         wins, games = rate_fn(decision)
         scanner.observe(decision, 'teacher', {'wins': wins, 'games': games, 'rows': []})
         count += 1
+
+
+class ResumeTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.root = Path(self.tmp.name)
+        self.args = scan.parser().parse_args(['run', str(self.root / 'jobs.json'), '--out', str(self.root / 'out')])
+        self.job = dict(task_id='t', seed=42, archive=str(self.root / 'archive'),
+                        decision=100, arm='teacher', future_seeds=[20, 21])
+        self.entry = dict(task_id='t', seed=42, archive=self.job['archive'], decisions=[100],
+                          future_seeds=[20, 21], jobs=[self.job])
+        (self.root / 'jobs.json').write_text(json.dumps(dict(schema='llm_scan_jobs_v1', archives=[self.entry])))
+
+    def row(self, future):
+        return dict(seed=42, future_seed=future, arm='fast_search', won=True, final_wave=30)
+
+    def test_resume_only_missing_requested_futures_and_filters_old_rows(self):
+        out = scan.job_out(self.args.out, self.job)
+        out.mkdir(parents=True)
+        raw = out / 'games.jsonl'
+        raw.write_text('\n'.join(json.dumps(self.row(f)) for f in (10, 20)) + '\n')
+        def run(command, **kwargs):
+            self.assertEqual(command[command.index('--future-seeds') + 1], '21')
+            with raw.open('a') as stream:
+                stream.write(json.dumps(self.row(21)) + '\n')
+            return type('Result', (), dict(returncode=0, stdout=''))()
+        with patch.object(scan, 'validate_job_context'), patch.object(scan.subprocess, 'run', side_effect=run) as execute:
+            rows = scan.run_job(self.job, self.args)
+            self.assertEqual([r['future_seed'] for r in rows], [20, 21])
+            self.assertEqual(scan.run_job(self.job, self.args), rows)
+            self.assertEqual(execute.call_count, 1)
+
+    def test_equal_row_counts_with_different_futures_are_not_a_checkpoint(self):
+        store = {'100': {'teacher': scan.point_summary([self.row(10), self.row(11)])}}
+        self.assertEqual(scan.cached_points_for_futures(store, [20, 21]), {})
+        path = self.args.out / 'results/t_s42.json'
+        scan.write_json(path, dict(points=store))
+        self.args.futures, self.args.teacher_only = 2, True
+        with patch.object(scan, 'run_point', return_value=scan.point_summary([self.row(20), self.row(21)])) as run:
+            scan.cmd_run(self.args)
+        run.assert_called_once()
+        result = json.loads(path.read_text())
+        self.assertEqual(result['future_seeds'], [20, 21])
+        self.assertEqual(result['points']['100']['teacher']['games'], 2)
+
+    def test_fresh_adaptive_creates_results_directory(self):
+        self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'), '--out', str(self.root / 'fresh')])
+        with patch.object(scan, 'run_point', return_value=dict(wins=0, games=2, rows=[])):
+            scan.cmd_adaptive(self.args)
+        self.assertTrue((self.args.out / 'results/t_s42.json').is_file())
+
+    def test_input_fingerprint_rejects_changed_weights(self):
+        archive = Path(self.job['archive']); archive.mkdir()
+        for name in ('meta.json', 'ticks.jsonl'):
+            (archive / name).write_text('{}')
+        for key in ('student', 'value', 'static_value', 'executable'):
+            path = self.root / key; path.write_bytes(b'original')
+            setattr(self.args, key, path)
+        self.args.manifest = self.root / 'tasks.json'
+        self.args.manifest.write_text(json.dumps({'tasks': [{'task_id': 't', 'seeds': [42]}]}))
+        out = self.root / 'context'; out.mkdir()
+        scan.validate_job_context(self.job, self.args, out, False)
+        self.args.student.write_bytes(b'changed weights')
+        with self.assertRaisesRegex(ValueError, '搜索输入已变化'):
+            scan.validate_job_context(self.job, self.args, out, True)
 
 
 class BuildLadderTest(unittest.TestCase):
