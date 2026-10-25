@@ -31,7 +31,7 @@ L40 是 StormyNight，`StageHasFog=false`：引擎没有雾，但雷雨周期性
 - 亮屏时六类实体（zombies / plants / projectiles / defenses / grid_items / coins）与特权状态逐字段相等，只排除公开帧本来就遮的 `target_zombie_id`（子弹的目标 id 与植物同一套规则遮成 -1）。测试同时要求至少有一个带子弹的亮屏 tick，否则这条比对是空的。
 - v2 / v2fog 的 Python 特征与 C++ 原生特征在黑屏、闪电两种时刻逐位相等（`test_storm_python_native_features_match_during_blackout_and_flash`）。
 
-原族（None / human / human_v2 / xray）逐位不变：新旧构建在六个任务上的 48 份 full/lean 记录与状态哈希一致，五种既有学生编码签名不变。
+原族（None / human / human_v2 / xray）逐位不变：新旧构建在六个任务上各 4 种观测族、full + lean 共 48 份记录，**去掉新增的 `scale` 后逐字段一致**，状态哈希一致；五种既有学生编码签名不变。这条现在是可复跑的测试 `test_old_observation_families_match_the_pre_task75_build`：拿 `PVZ_BASELINE_EXECUTABLE`（本机默认 `artifacts/task75/pvz-baseline`，Build 1967）与当前构建逐任务逐族对比，缺基线二进制时跳过。注意 `scale` 只在该值不为 1.0 时出现在僵尸对象里。
 
 ### 三条传送带实际发什么（`Challenge::UpdateConveyorBelt`）
 

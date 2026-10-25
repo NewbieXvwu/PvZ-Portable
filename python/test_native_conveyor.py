@@ -23,6 +23,11 @@ RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/home/newbiexvwu/.cache/pvz-
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 engine = pytest.mark.skipif(not BINARY.is_file() or not (RESOURCE / 'main.pak').is_file(),
                             reason='requires simulator and resources')
+BASELINE = Path(os.environ.get('PVZ_BASELINE_EXECUTABLE',
+                               ROOT / 'artifacts/task75/pvz-baseline'))
+baseline_engine = pytest.mark.skipif(not BINARY.is_file() or not BASELINE.is_file()
+                                     or not (RESOURCE / 'main.pak').is_file(),
+                                     reason='requires simulator, the pre-task75 build and resources')
 
 
 def _public_entities(entities):
@@ -35,6 +40,56 @@ def reset_native(env, level, mode=None, preplanted=()):
     return env.reset(deck=(), task=TaskSpec(level=level, seed=61_000_000 + (25, 30, 40).index(level) * 100_000,
                      conveyor_start='original', profile=profile_for_deck(()),
                      fog_observation=mode, preplanted=preplanted))[0]
+
+
+def _without_size(obs):
+    """Drop the task75 size field so the pre-task75 fields can be compared bit for bit."""
+    stripped = dict(obs)
+    stripped['zombies'] = [{key: value for key, value in zombie.items() if key != 'scale'}
+                           for zombie in obs['zombies']]
+    if 'v2' in obs:
+        v2 = dict(obs['v2'])
+        v2['zombies'] = [list(zombie[:3]) for zombie in v2['zombies']]
+        stripped['v2'] = v2
+    return stripped
+
+
+def _frame_without_size(frame):
+    frame = dict(frame)
+    frame['zombies'] = [tuple(zombie[:10]) for zombie in frame['zombies']]
+    if 'v2' in frame:
+        v2 = dict(frame['v2'])
+        v2['zombies'] = [list(zombie[:3]) for zombie in v2['zombies']]
+        frame['v2'] = v2
+    return frame
+
+
+def _observation_signature(executable, task, mode):
+    with PvZEnv(RESOURCE, executable=executable) as env:
+        env.reset(deck=(), task=TaskSpec(level=task['level'], seed=task['seeds'][0],
+                                         conveyor_start='original', profile=profile_for_deck(()),
+                                         fog_observation=mode, preplanted=()))
+        obs, *_ = env.step(dict(type='wait', ticks=8000))
+        env.set_lean_observation(True)
+        return obs, _frame(env.observe()), env.state_hash()
+
+
+@baseline_engine
+def test_old_observation_families_match_the_pre_task75_build():
+    records = 0
+    saw_scale = False
+    for task in build_tasks():
+        for mode in (None, 'human', 'human_v2', 'xray'):
+            current = _observation_signature(BINARY, task, mode)
+            baseline = _observation_signature(BASELINE, task, mode)
+            saw_scale = saw_scale or any('scale' in zombie for zombie in current[0]['zombies'])
+            assert all('scale' not in zombie for zombie in baseline[0]['zombies'])
+            assert _without_size(current[0]) == baseline[0], (task['task_id'], mode, 'full')
+            assert _frame_without_size(current[1]) == baseline[1], (task['task_id'], mode, 'lean')
+            assert current[2] == baseline[2], (task['task_id'], mode, 'state_hash')
+            records += 2
+    assert records == 48
+    assert saw_scale, 'the size field was never exercised; the comparison would be vacuous'
 
 
 def test_native_conveyor_manifest_preserves_engine_dealing():
