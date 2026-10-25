@@ -116,6 +116,8 @@ def point_summary(rows: list) -> dict:
 
 
 def entry_filter(entry: dict, args) -> bool:
+    if getattr(args, 'task_id', None) and entry['task_id'] != args.task_id:
+        return False
     if args.archive and args.archive not in entry['task_id'] and args.archive != str(entry['seed']):
         return False
     return True
@@ -577,6 +579,7 @@ def parser() -> argparse.ArgumentParser:
         sp.add_argument('--workers', type=int, default=2, help='同时游戏进程数（台式机内存紧，默认 2）')
         sp.add_argument('--futures', type=int, default=8, help='每个点用几个未来种子（测试可调小）')
         sp.add_argument('--archive', help='只跑 task_id / 种子包含该子串的存档')
+        sp.add_argument('--task-id', help='只跑这个 task_id（精确匹配）')
         sp.add_argument('--max-archives', type=int)
 
     run = sub.add_parser('run', help='按清单跑老师/学生两臂')
