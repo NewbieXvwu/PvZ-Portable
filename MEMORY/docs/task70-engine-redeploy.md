@@ -65,11 +65,15 @@
 - [A4] 吞吐 ABBA **PASS**：16 局学生局（day 8 + pool 8）串行 ABBA，中位配对耗时比 **1.0152**（≤1.03），min 0.757 / max 1.648（受生产 qc 16 进程挤占的噪声），16/16 局决策数逐局相同。证据 artifacts/task70/throughput_abba.json。
 - [C] HF 清理 dry-run（--cleanup-remote-dry-run）：远端现存 40 个 transfer/ 包（p21w34m…p29w37m 共 40 个池族标签 + 4 个非标签文件），**全部无已验证回执**——dw4/dw5 旧回执（137 标签）与共享 journal（377 标签，2026-10-24 21:41 由另一侧 importer 写入）都不含它们，即这些都是**尚未导入的待用上传**；所有已导入的历史包已不在 HF 上。结论：**无可删项，一个都不删**（不满足"已导入"判据）。清单已核验（repo realnewbiexvwu/pvz-agent-artifacts，revision 33353855）。今后每次 refresh 导入校验成功后会自动删包并记 remote_deleted_at，失败不删。
   40 个标签：p21w34m-38m, p22w34m-38m, p23w34m-38m, p24w34m-38m, p26w34m-38m, p27w33m-38m, p28w33m-38m, p29w33m-37m。
-- [B3] 老师冷启动（deploy4 16989f23…，生产参数：dw4i_s1 + 叶值 v4 + static branch1，dagger β=1，`command_for` 生产命令形态，32 局）：
+- [B3] **（作废，主控 2026-10-25 更正）**下面 1–4 的两组 49.1M 冷启动误用了叶值 v4；生产老师是叶值 **v5**（`8a636d33…`）+ 台式机 branch1（`artifacts/hard/value_branch1`，`24858410…`）。v4 数字不作为 teacher_rates 底数，重跑见 [B3v5]。原记录保留：老师冷启动（deploy4 16989f23…，dw4i_s1 + 叶值 v4 + static branch1，dagger β=1，`command_for` 生产命令形态，32 局）：
   1. `fog_user_v2_l31_snow_eval`（新种子 49_100_000..31，human_v2 口径）：**8/32**（25%）。证据 artifacts/task70/cold/cold_start.json。
   2. 配对对照：同批 32 种子改 `fog_observation: human`（其余全同）：**5/32**。证据 artifacts/task70/cold_human_control/。
   3. 口径交叉对照：task68 旧种子 43_700_000..31 + human_v2：**5/32**。证据 artifacts/task70/cold_v2_old_seeds/。
-  4. **配对结论（主控要求）**：新种子块上 human_v2 vs human 配对表——两者都赢 0、都输 19、仅 v2 赢 8、仅 human 赢 5（13 个赢种子完全不相交），精确 McNemar 双侧 p=0.58，**口径差异不显著**。49.1M 块的绝对胜率低是种子块难度，不是 human_v2 口径的锅；与 task67 的 25/32 本来就不可直接比（种子段、引擎、叶值模型三者都不同，见 [B3-复现]）。
+  4. （v4 数字，随本条作废）新种子块上 human_v2 8/32 vs human 5/32 的配对 McNemar p=0.58——该结论待 [B3v5] 生产参数重跑后重新下。
+- [B3v5] 主控更正后重跑（进行中，2026-10-25）：生产参数 dw4i_s1 + **叶值 v5** `8a636d33…` + **台式机 branch1** `24858410…`，deploy4 16989f23…，`search_play` fast_search β=1 verify-samples 9 student-candidates 2，workers 4：
+  1. 49.1M 块 human_v2（manifest `artifacts/task70/fog_user_v2_panel.json`）32 局 → artifacts/task70/b3v5/v2/。
+  2. 49.1M 块 human（manifest `artifacts/task70/fog_user_v2_panel_human_control.json`）32 局 → artifacts/task70/b3v5/human/。跑完报配对表 + McNemar，胜率取 human_v2 一侧作 teacher_rates 底数。
+  3. task67 种子 20261101..132 human + 台式机 branch1（对照 [B3-复现] 的 mac_branch1 25/32）→ artifacts/task70/repro_task67_desktop/。
 - [B3-复现] task67 基准在 deploy4 上逐种子复现：用 task67 原参数（`search_play --arms fast_search --dagger-beta 1 --verify-samples 9 --student-candidates 2 --seeds 32 --workers 4`，manifest `configs/human_demo_tasks.json` 的 `fog_user_l31_snow`，种子 20261101..20261132，叶值 v5 `8a636d33…` + static `pvz-logs/mac_branch1` `91e562a0…`，与 task67 记录的 SHA 一致），仅把引擎换成 deploy4（16989f23…）。结果 **25/32**，且**逐种子一致**：7 个输局种子、输局末波分布（10×1 12×1 19×1 20×4）、输局丢车分布（1×4 3×3）、平均丢车 1.09、赢局全部第 20 波通关——与 fog-user-decks.md §2/§4 记录的 task67 数字逐项相同。结论：换引擎（含 Mac→Linux 跨平台构建）不改变 human 口径下老师的行为，25/32 与 8/32 的差完全归因于种子块与叶值模型（v5 vs v4），不是引擎退化。证据 artifacts/task70/repro_task67/search/games.jsonl。
 
 ## 问题
