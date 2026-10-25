@@ -146,5 +146,30 @@ class BudgetTest(unittest.TestCase):
             self.assertIn(piece, line)
 
 
+class GridTest(unittest.TestCase):
+    """§G.2：格内标僵尸类型，放不下就截断并标 +n。"""
+
+    def test_single_type(self):
+        from llmplay import scene
+        self.assertEqual(scene._zombie_tags([{'type': 23, 'x': 800.0}]), 'Gar1')
+
+    def test_two_types_fit(self):
+        from llmplay import scene
+        zombies = [{'type': 23, 'x': 800.0}, {'type': 24, 'x': 820.0}]
+        self.assertEqual(scene._zombie_tags(zombies), 'Gar1 Imp1')
+
+    def test_truncation_counts_hidden_zombies(self):
+        from llmplay import scene
+        zombies = [{'type': 23, 'x': 800.0}, {'type': 24, 'x': 820.0}, {'type': 0, 'x': 950.0}]
+        self.assertEqual(scene._zombie_tags(zombies), 'Gar1 +2')
+
+    def test_cell_width_is_fixed(self):
+        from llmplay import scene
+        cell = scene._cell({'type': 39, 'health': 85, 'max_health': 100},
+                           [{'type': 23, 'x': 800.0}, {'type': 24, 'x': 820.0}])
+        self.assertEqual(len(cell), scene.CELL_WIDTH)
+        self.assertTrue(cell.startswith('Mel85'))
+
+
 if __name__ == '__main__':
     unittest.main()

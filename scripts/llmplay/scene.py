@@ -3,7 +3,7 @@
 格式由主控 2026-10-25 定，顺序固定：
 1. 状态行（预算/墙钟，来自 budget.Session）
 2. 局面头：关卡、第几波、tick、距下一波、阳光、每行小推车、本关出怪类型
-3. 空间网格：行 × 9 列，每格固定宽度，植物短代码 + 血量百分比，僵尸按实际位置计数
+3. 空间网格：行 × 9 列，每格固定宽度，植物短代码 + 血量百分比，僵尸短代码 + 只数
 4. 逐行明细：每行的植物（列/类型/血量/状态）与僵尸（类型/列号一位小数/本体+护具血量/
    减速冰冻/特殊状态），以及最前面那只多久到下一个植物列、多久到小推车
 5. 卡片：费用、冷却、买不买得起、能种在哪些格
@@ -19,8 +19,9 @@ from pvz_constants import PLANT_NAME, ZOMBIE_NAME
 from render_episode import (_frame, _col_of, lane_indices, LAWN_XMIN, CELL_PX, GRID_COLS)
 from episode_query import _fmt_scene
 
-CELL_WIDTH = 10          # 网格里每格固定宽度：植物 6 格 + 僵尸 4 格
+CELL_WIDTH = 17          # 网格里每格固定宽度：植物 6 格 + 空格 + 僵尸 9 格 + 分隔空格
 PLANT_PART = 6
+ZOMBIE_PART = 9
 MOWER_STATE = {0: "已用", 1: "待命", 2: "启动", 3: "行驶"}
 
 # 短代码：3 个字母 + 血量百分比（Mel85 = 西瓜剩 85% 血）。
@@ -32,6 +33,16 @@ PLANT_CODE = {
     29: "Sta", 30: "Pmp", 31: "Mag", 32: "Cbg", 33: "Flp", 34: "Krn", 35: "Cof",
     36: "Gar", 37: "Umb", 38: "Mar", 39: "Mel", 40: "Gat", 41: "Twn", 42: "Glm",
     43: "Cat", 44: "Wml", 45: "Gld", 46: "Spr", 47: "Cob", 48: "Imi",
+}
+
+# 僵尸短代码：3 个字母 + 只数（Gar1 = 1 只巨人，Imp2 = 2 只小鬼）。
+# 顺序照 ZOMBIE_NAME 的类型编号，未列出的类型退化成 z<编号>。
+ZOMBIE_CODE = {
+    0: "Zom", 1: "Flg", 2: "Con", 3: "Pol", 4: "Buc", 5: "Nws", 6: "Scr", 7: "Ftb",
+    8: "Dan", 9: "Bkp", 10: "Duk", 11: "Div", 12: "Zam", 13: "Sld", 14: "Dol",
+    15: "Cln", 16: "Bal", 17: "Min", 18: "Pog", 19: "Yet", 20: "Bun", 21: "Lad",
+    22: "Cat", 23: "Gar", 24: "Imp", 25: "Bss", 26: "Pea", 27: "Wal", 28: "Jal",
+    29: "Gat", 30: "Squ", 31: "Tln", 32: "Red",
 }
 
 # PlantState 全表，顺序照 src/Lawn/Plant.h:49 的 enum（值就是下标）。
@@ -76,6 +87,16 @@ def _plant_name(seed_type) -> str:
 
 def _zombie_name(zombie_type) -> str:
     return ZOMBIE_NAME.get(int(zombie_type), "type%s" % zombie_type)
+
+
+def _zombie_code(zombie_type) -> str:
+    return ZOMBIE_CODE.get(int(zombie_type), "z%02d" % int(zombie_type))
+
+
+def _zombie_label(zombie_type) -> str:
+    """图例里的短名：去掉中文名末尾的"僵尸"，省空间（巨人僵尸 → 巨人）。"""
+    name = _zombie_name(zombie_type)
+    return name[:-2] if name.endswith("僵尸") else name
 
 
 def _plants(obs) -> list:
@@ -123,20 +144,39 @@ def header(game) -> str:
 
 # ---------------------------------------------------------------- 3. 空间网格
 
+def _zombie_tags(zombies) -> str:
+    """格内僵尸：类型短代码 + 只数，最靠左（威胁最大）的排前面。
+
+    放不下就丢掉末尾的类型，改写成 "+n"（n = 没显示出来的僵尸只数）。
+    """
+    counts, order = {}, []
+    for zombie in sorted(zombies, key=lambda z: float(z.get("x") or 0)):
+        code = _zombie_code(zombie["type"])
+        if code not in counts:
+            counts[code] = 0
+            order.append(code)
+        counts[code] += 1
+    tokens = ["%s%d" % (code, counts[code]) for code in order]
+    text = " ".join(tokens)
+    hidden = 0
+    while tokens and len(text) > ZOMBIE_PART:
+        hidden += counts[order[len(tokens) - 1]]
+        tokens.pop()
+        text = " ".join(tokens)
+        text = (text + " +%d" % hidden) if text else "+%d" % hidden
+    return text[:ZOMBIE_PART]
+
+
 def _cell(plant, zombies, pool: bool = False) -> str:
     if plant is None:
         left = ("~~" if pool else "..").ljust(PLANT_PART)
     else:
-        left = ("%s%3d" % (_plant_code(plant["type"]), _pct(plant.get("health"),
-                                                          plant.get("max_health"))))
+        left = ("%-3s%-2d" % (_plant_code(plant["type"]), _pct(plant.get("health"),
+                                                             plant.get("max_health"))))
         left = left[:PLANT_PART].ljust(PLANT_PART)
-    if not zombies:
-        return (left + "    ")[:CELL_WIDTH]
-    if len(zombies) == 1:
-        tag = "z"
-    else:
-        tag = "z%d" % min(len(zombies), 9)
-    return (left + (" " + tag).ljust(CELL_WIDTH - PLANT_PART))[:CELL_WIDTH]
+    tags = (" " + _zombie_tags(zombies)) if zombies else ""
+    # 末尾留一格空格，免得"Con1 Zom1"和右边格子的 ".." 粘在一起。
+    return (left + tags.ljust(ZOMBIE_PART + 1) + " ")[:CELL_WIDTH]
 
 
 def grid(game) -> str:
@@ -153,7 +193,7 @@ def grid(game) -> str:
         cell = (int(zombie["row"]), _col_of(float(zombie["x"])))
         if 0 <= cell[1] < GRID_COLS:
             zcell.setdefault(cell, []).append(zombie)
-    lines = ["       " + "".join("c%-9d" % c for c in range(GRID_COLS))]
+    lines = ["        " + "".join(("c%d" % c).ljust(CELL_WIDTH) for c in range(GRID_COLS))]
     for row in lanes:
         cells = []
         for col in range(GRID_COLS):
@@ -371,10 +411,19 @@ def events(game) -> str:
 
 # ---------------------------------------------------------------- 组装
 
+def _code_table(per_line: int = 7) -> str:
+    entries = ["%s=%s" % (ZOMBIE_CODE[z], _zombie_label(z)) for z in sorted(ZOMBIE_CODE)]
+    rows = ["  " + " ".join(entries[i:i + per_line]) for i in range(0, len(entries), per_line)]
+    return "\n".join(rows)
+
+
 def legend() -> str:
-    return ("图例：网格每格 = 植物短代码+血量百分比（Mel85 = 西瓜剩 85% 血）与僵尸只数"
-            "（z1/z2…）；.. = 空地，~~ = 水路；r0–r5 = 行，c0–c8 = 列（c0 最左，僵尸从右往左走）。"
-            "血量都是当前/上限，位置列号保留一位小数。")
+    return ("图例：网格每格 = 植物短代码+血量百分比（Mel85 = 西瓜剩 85% 血）与僵尸短代码+只数。\n"
+            "Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到右的威胁顺序，\n"
+            "放不下时截断并标 +n（n = 还有几只没显示）。\n"
+            ".. = 空地，~~ = 水路；r0–r5 = 行，c0–c8 = 列（c0 最左，僵尸从右往左走）。\n"
+            "血量都是当前/上限，位置列号保留一位小数。\n"
+            "僵尸短代码：\n" + _code_table())
 
 
 def render(game, level: str = "full") -> str:
@@ -386,7 +435,7 @@ def render(game, level: str = "full") -> str:
         lines += [legend(), ""]
         session.data["legend_shown"] = True
         session.save()
-    lines += ["空间网格（植物 + 该格僵尸数）：", grid(game), "",
+    lines += ["空间网格（植物 + 该格僵尸）：", grid(game), "",
               "逐行明细：", rows(game), "",
               "卡片：", cards(game), "",
               "事件（自上次 observe 以来）：", events(game)]

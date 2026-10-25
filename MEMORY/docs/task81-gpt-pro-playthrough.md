@@ -62,6 +62,7 @@
 - 2026-10-25 17:05 构建环境：Docker 不可用（Docker Desktop 未对本 WSL 发行版开集成，`docker.exe` 走 vsock 报错）。改用 ubuntu 22.04 rootfs（ubuntu-base-22.04.5）chroot；jammy 的 GCC 11 编不过引擎（`#include <format>` 是 C++20，libstdc++ 11 没有），于是改为宿主 GCC 15 + 全静态链接（`-static`）——静态二进制不依赖目标机 glibc，比"在 22.04 里编"更稳。静态 SDL2 另编（只留 dummy 视频/音频后端，见下一条）。
 - 2026-10-25 18:00 **探路包已出**（§F）：`~/pvz-logs/llmplay_pkg/probe/llmplay_probe.zip`，52,078,406 字节，SHA256 `380a0111e62bc091c91e9ed87030e2da0b8ab9d7e2212bd606e3f13c3636b66f`，825 个文件，源码 rev `8bf65b19`。断网（`unshare -n`）实测：`build.sh` 用 GCC 15.2 + cmake 4.2.3 编译 72 秒成功；`selfcheck.py` 对新编引擎与预编静态二进制各跑一遍，4 局人类示范全部 PASS（时间线 39,590–57,596 个操作逐条一致、每个决策点的阳光/波次/植物数/僵尸数一致、终局 tick/波数/结果一致）。判据按 §F 改成"结果一致"，state_hash 只作诊断。
 - 2026-10-25 18:05 接口 §A/§B/§D 重写（commit 5d0d14a7）：observe 改为状态行 + 局面头 + 5×9 网格 + 逐行明细 + 卡片 + 事件 + timeline；预算/检查点/rewind 上限/2:45 门禁全部落在 `llmplay_session/budget.json`，开场实测吞吐（约 650–3000 tick/s）换算 25 分钟搜索预算；脚本退出时自动打印一次完整 observe。测试 13 条全过。
+- 2026-10-25 18:45 **按 §G 重打正式包**（取代 18:10 的 `e6c48503…`）：`~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，44,634,175 字节，SHA256 `2842de59cad4a885cd47c73271cd2ead93517b70d6a90fb117210cb78c3a1111`，26 个文件，密钥扫描 0 命中。改动：① 合入 `origin/pvz-env`（`ca5efd7e`），任务清单含 `demo_roof_46_doom_m200` / `demo_roof_47_doom_m200`，PROMPT 关卡表改为 L49 → L48 → L47 → L46；② 网格格内僵尸改成类型短代码+只数（`Gar1 Imp2`，放不下截断标 `+n`），图例补 33 个短代码；③ 截图按主控意见放弃，PROMPT 保留"本会话没有截图"。断网（`unshare -rn`）`selfcheck.py` 通过：L41 走 200 步、189 个操作、tick 9955、result 2；导出的存档回台式机用正式引擎 `human_demo.py verify` 通过（`{"verified": true, "operations": 189, "tick": 9955, "wave": 4, "result": 2}`）。单测 17 条全过（新增 4 条网格短代码/截断测试）。
 - 2026-10-25 18:10 **正式包已出**：`~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，44,633,163 字节，SHA256 `e6c48503d69b63b19f172040583ca6a13bd9a2987e25df398f596dfbd1759fc8`，26 个文件（接口 + 引擎 + 资源 + 5 个常量来源 C++ 文件 + 任务清单 + PROMPT.md + 示例）。密钥扫描 0 命中（`hf_` / `sk-` / `AIza` / `ghp_` / `token` / `password`；命中值是函数调用的一律过滤，例如 `token = branch_action_token(action)`）。断网 `selfcheck.py` 通过（L41 走 200 步、189 个操作、导出存档），这份存档回台式机用正式引擎 `human_demo.py verify` 通过（tick 9955 / wave 4 / result 2，与导出时一致）。任务书 `scripts/llmplay/PROMPT.md`。
 
 
@@ -70,21 +71,33 @@
 主控要求贴"L49 第 15 波"。L49 是 40 波 ×2.0 倍，打到第 15 波需要真策略，而本任务
 不许手写打法，所以这里用**现成的人类示范**（L32 雾夜 30 波，同一套接口、同一份观测
 代码）重放到第 15 波取的一帧。格式与 L49 完全一致，差别只在关卡、卡组与地形。
-复现方式：把示范存档的 ticks.jsonl 读成 ops 传给 `Game(task_id, ops=..., tick=...)`，
-再 `wait_until(lambda g: g.obs["wave"] >= 15)` 后 `observe()`。
+复现方式：把示范存档的 ticks.jsonl 读成 ops 传给 `Game(task_id, ops=..., tick=32051)`
+（tick 32051 就是第 15 波那一帧，重放会停在那里），再 `observe()`。
 
 ```
-[已用 0:21 / 3:00 | 本关 L32 模式=搜索 | 搜索预算 0% | 最远 15 波 | 本段重写 0/8]
+[已用 0:29 / 3:00 | 本关 L32 模式=搜索 | 搜索预算 0% | 最远 15 波 | 本段重写 0/8]
 L32 第 15/30 波 tick 32051 距下一波约 3091 tick 阳光 150 小推车 r0:待命 r1:待命 r2:待命 r3:待命 r4:待命 r5:待命 本关出怪 普通僵尸、路障僵尸、橄榄球僵尸、小丑僵尸 进行中
 
-空间网格（植物 + 该格僵尸数）：
-       c0        c1        c2        c3        c4        c5        c6        c7        c8
-  r0    ShS100    ShS100    Sno100    Fum100    Puf100    Puf100    Puf 99    ..     z2 ..
-  r1    ShS100    ShS100    Sno100    Fum100    Fum100    Puf 60    Puf100    Puf100 z  ..     z
-  r2    Lil100    Lil100    Lil100    Lil100    Lil100    ~~        Lil100    ~~     z2 ~~
-  r3    Lil100    Lil100    Lil100    Lil100    Lil100    ~~        ~~        ~~     z3 ~~
-  r4    ShS100    ShS100    Sno100    Fum100    Fum100    Puf100    Puf 52    ..        ..     z2
-  r5    ShS100    ShS100    Sno100    Fum100    Fum100    Puf 57    Puf100    Puf 81 z  ..     z
+图例：网格每格 = 植物短代码+血量百分比（Mel85 = 西瓜剩 85% 血）与僵尸短代码+只数。
+Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到右的威胁顺序，
+放不下时截断并标 +n（n = 还有几只没显示）。
+.. = 空地，~~ = 水路；r0–r5 = 行，c0–c8 = 列（c0 最左，僵尸从右往左走）。
+血量都是当前/上限，位置列号保留一位小数。
+僵尸短代码：
+  Zom=普通 Flg=旗帜 Con=路障 Pol=撑杆 Buc=铁桶 Nws=报纸 Scr=铁门
+  Ftb=橄榄球 Dan=舞王 Bkp=伴舞 Duk=鸭子救生圈 Div=潜水 Zam=冰车 Sld=雪橇
+  Dol=海豚骑士 Cln=小丑 Bal=气球 Min=矿工 Pog=跳跳 Yet=雪人 Bun=蹦极
+  Lad=梯子 Cat=投石车 Gar=巨人 Imp=小鬼 Bss=僵王博士 Pea=豌豆头 Wal=坚果头
+  Jal=辣椒头 Gat=机枪头 Squ=窝瓜头 Tln=高坚果头 Red=红眼巨人
+
+空间网格（植物 + 该格僵尸）：
+        c0               c1               c2               c3               c4               c5               c6               c7               c8               
+  r0    ShS100           ShS100           Sno100           Fum100           Puf100           Puf100           Puf99            ..     Con1 Zom1 ..               
+  r1    ShS100           ShS100           Sno100           Fum100           Fum100           Puf60            Puf100           Puf100 Zom1      ..     Zom1      
+  r2    Lil100           Lil100           Lil100           Lil100           Lil100           ~~               Lil100           ~~     Con1 Zom1 ~~               
+  r3    Lil100           Lil100           Lil100           Lil100           Lil100           ~~               ~~               ~~     Zom3      ~~               
+  r4    ShS100           ShS100           Sno100           Fum100           Fum100           Puf100           Puf52            ..               ..     Zom2      
+  r5    ShS100           ShS100           Sno100           Fum100           Fum100           Puf57            Puf100           Puf81  Zom1      ..     Zom1      
 
 逐行明细：
   r0 植物: c0 阳光菇 300/300 阳光菇成年 · c1 阳光菇 300/300 阳光菇成年 · c2 寒冰射手 300/300 正常 · c3 大喷菇 300/300 正常 · c4 小喷菇 300/300 正常 · c5 小喷菇 300/300 正常 · c6 小喷菇 296/300 正常
@@ -125,10 +138,10 @@ L32 第 15/30 波 tick 32051 距下一波约 3091 tick 阳光 150 小推车 r0:�
 ## 问题
 
 - **Docker 不可用**（Docker Desktop 未对本 WSL 发行版开集成）。§E 要求的 `docker run --network none ubuntu:22.04` 没法照做，改用两条等价性够用的路径：① `unshare -n` 断网跑；② 早先试过 ubuntu-base-22.04.5 rootfs chroot，但 jammy 的 GCC 11 编不过引擎（`#include <format>` 要 GCC 13+），所以"在 22.04 里编"这件事本身在台式机上做不出来 —— 这正是探路包要在目标沙箱里测的。
-- **截图（§C）跑不通**：`LawnApp::EnvironmentScreenshot` 要求非 headless（有窗口）并从 GL framebuffer 读回。实测 `SDL_VIDEODRIVER=dummy` 下引擎能起来、RESET_V2 正常，但 `SCREENSHOT` 返回 `ok:false`（静态 SDL2 只编了 dummy 视频后端，没有 GL）。要做成需要一套 EGL/Mesa 软件 GL + 带该后端的 SDL 构建。按 §C 的兜底：只用文字观测，不拖住主线。
-- **清理（§E）**：本机没有 Docker（`docker` 命令不存在，`docker images` 无法输出），所以没有容器/镜像可删；已删 `~/llmplay-build/hostbuild`（旧构建树 81 MB）与 `/tmp` 下全部自测目录。`~/llmplay-build/rootfs`（2.4 GB，早先 22.04 chroot 用，文件属 root）删不掉，需要 sudo；现在用不到，要腾空间就 `sudo rm -rf ~/llmplay-build/rootfs`。
+- **截图（§C）跑不通，已按主控意见放弃**：`LawnApp::EnvironmentScreenshot` 要求非 headless（有窗口）并从 GL framebuffer 读回。实测 `SDL_VIDEODRIVER=dummy` 下引擎能起来、RESET_V2 正常，但 `SCREENSHOT` 返回 `ok:false`（静态 SDL2 只编了 dummy 视频后端，没有 GL）。要做成需要一套 EGL/Mesa 软件 GL + 带该后端的 SDL 构建，成本高。主控 18:30 决定放弃（§G.3），PROMPT 里保留"本会话没有截图"，只用文字观测。
+- **清理（§E）**：本机没有 Docker（`docker` 命令不存在，`docker images` 无法输出），所以没有容器/镜像可删；已删 `~/llmplay-build/hostbuild`（旧构建树 81 MB）与 `/tmp` 下全部自测目录。`~/llmplay-build/rootfs`（2.4 GB，早先 22.04 chroot 用，文件属 root）已由主控于 18:30 代删。**教训**：chroot 用完必须先 `umount` `/proc`、`/sys`、`/dev`、`src` 这些绑定挂载，否则递归删除会穿过 `src` 删到整块数据盘；主控这次是先确认没有挂载点残留、再用 `rm --one-file-system` 删的。
 - **Mac 侧没验**：这台机器不是 Mac，§2 的"Mac 上重放 4 局"只能由用户在 Mac 上跑（二进制是全静态链接，理论上不依赖目标机 glibc）。
-- **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理）。
+- **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）；`STATE_HASH` 命令与 reset 响应里的哈希也对不上。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理：`executable_sha256` 写成自解释标记，让官方 verify 走 tick/ok/终局的路径）。**推测**是 SaveGame V4 快照里混进了地址或未初始化字段；主控 18:30 已记录、另派人查，本任务不修。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
 用户指出两个问题：① LLM 没有时间观念，用分钟约束它等于没约束；② “只打印简短摘要”信息不够，它上下文很长，应该给足信息，而且要让它看清某一帧场上的空间分布。
