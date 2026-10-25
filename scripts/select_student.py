@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import glob
+import hashlib
 import json
 import shutil
 import subprocess
@@ -18,6 +19,69 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+
+
+def sha(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def score_rows(path, expected_seeds):
+    rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    if (len(rows) != len(expected_seeds) or {row.get('seed') for row in rows} != set(expected_seeds)
+            or any(row.get('arm') != 'fast' or row.get('terminal') is not True
+                   or type(row.get('won')) is not bool or row.get('searched', 0) != 0 for row in rows)):
+        raise ValueError(f'incomplete/wrong selection games: {path}')
+    return sum(row['won'] for row in rows)
+
+
+def select(candidates, out, manifest, sets, workers, value, resource_dir, executable,
+           run_command=None):
+    """Pick by the existing total-win rule, preserving complete per-game evidence."""
+    run_command = subprocess.run if run_command is None else run_command
+    paths = sorted({str(Path(path).resolve()) for path in candidates})
+    if not paths:
+        raise ValueError('no candidates')
+    table = {task['task_id']: task for task in json.loads(Path(manifest).read_text())['tasks']}
+    work = Path(out) / 'selection'
+    work.mkdir(parents=True, exist_ok=True)
+    scores = {}
+    for path in paths:
+        model_sha = sha(path)
+        wins, files = {}, {}
+        for spec in sets.split(','):
+            task, offset, count = spec.split(':')
+            offset, count = int(offset), int(count)
+            expected = table[task]['seeds'][offset:offset + count]
+            if len(expected) != count or count < 1:
+                raise ValueError(f'invalid selection slice: {spec}')
+            folder = work / f'{model_sha[:16]}_{task}'
+            command = [sys.executable, str(ROOT / 'scripts/search_play.py'), '--rollout-policy', path,
+                       '--value', str(value), '--executable', str(executable), '--manifest', str(manifest),
+                       '--task-id', task, '--seed-offset', str(offset), '--seeds', str(count),
+                       '--arms', 'fast', '--workers', str(workers), '--out', str(folder)]
+            if resource_dir:
+                command += ['--resource-dir', str(resource_dir)]
+            run_command(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            games = folder / 'games.jsonl'
+            wins[task] = score_rows(games, expected)
+            files[task] = dict(path=str(games), sha256=sha(games))
+        if sha(path) != model_sha:
+            raise ValueError(f'candidate changed during selection: {path}')
+        scores[path] = dict(wins=wins, total=sum(wins.values()), model_sha256=model_sha, games=files)
+        print(json.dumps(dict(candidate=path, **scores[path])), flush=True)
+    best = max(paths, key=lambda path: scores[path]['total'])
+    temporary = Path(out) / 'model.building'
+    shutil.copyfile(best, temporary)
+    temporary.replace(Path(out) / 'model.pt')
+    result = dict(best=best, sets=sets, scores=scores, manifest=str(manifest),
+                  manifest_sha256=sha(manifest), model_sha256=sha(best),
+                  executable=str(executable), executable_sha256=sha(executable),
+                  rule='maximum total wins; stable candidate-path order breaks ties',
+                  rejected=[path for path in paths if path != best])
+    temporary = Path(out) / 'selection.building'
+    temporary.write_text(json.dumps(result, indent=2) + '\n')
+    temporary.replace(Path(out) / 'selection.json')
+    return result
 
 
 def main() -> None:
@@ -35,28 +99,9 @@ def main() -> None:
     paths = sorted({q for pattern in args.candidates.split(",") for q in glob.glob(pattern)})
     if not paths:
         raise SystemExit("no candidates")
-    work = args.out / "selection"
-    scores = {}
-    for i, path in enumerate(paths):
-        wins = {}
-        for spec in args.sets.split(","):
-            task, offset, count = spec.split(":")
-            out = work / f"c{i}_{task}"
-            cmd = [sys.executable, str(ROOT / "scripts/search_play.py"), "--rollout-policy", path, "--value", args.value,
-                   "--executable", str(args.executable),
-                   "--manifest", args.manifest, "--task-id", task, "--seed-offset", offset, "--seeds", count,
-                   "--arms", "fast", "--workers", str(args.workers), "--out", str(out)]
-            if args.resource_dir:
-                cmd += ["--resource-dir", args.resource_dir]
-            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-            wins[task] = json.loads((out / "summary.json").read_text())["fast"]["won"]
-        scores[path] = {"wins": wins, "total": sum(wins.values())}
-        print(json.dumps({"candidate": path, **scores[path]}), flush=True)
-    best = max(paths, key=lambda q: scores[q]["total"])
-    args.out.mkdir(parents=True, exist_ok=True)
-    shutil.copy(best, args.out / "model.pt")
-    (args.out / "selection.json").write_text(json.dumps({"best": best, "sets": args.sets, "scores": scores}, indent=1))
-    print(f"best {best} -> {args.out / 'model.pt'}")
+    result = select(paths, args.out, args.manifest, args.sets, args.workers, args.value,
+                    args.resource_dir, args.executable)
+    print(f"best {result['best']} -> {args.out / 'model.pt'}")
 
 
 if __name__ == "__main__":

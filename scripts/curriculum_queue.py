@@ -78,6 +78,7 @@ from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segm
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
+from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -896,6 +897,21 @@ class TrainingPipeline:
         write_recipe(path, recipe)
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
+        # Freeze the plan on the durable job. Historical jobs without this field
+        # retain their original single-seed training/resume semantics.
+        selection_source = ROOT / 'configs/student_selection.json'
+        selection = json.loads(selection_source.read_text())
+        from pvz_promotion import SEED_POOLS_V2
+        reserved = list(SEED_POOLS_V2)
+        for source in (getattr(self.args, 'manifest', None), getattr(self.args, 'promotion_panel', None),
+                       ROOT / 'configs/human_demo_tasks.json'):
+            if source is not None and Path(source).is_file():
+                reserved.extend(seed_spans(json.loads(Path(source).read_text())))
+        assert_disjoint(selection, reserved)
+        selection_path = folder / 'selection_manifest.json'
+        selection_path.write_text(json.dumps(selection, indent=2) + '\n')
+        job.update(training_seeds=list(TRAINING_SEEDS), selection_manifest=str(selection_path),
+                   selection_manifest_sha256=file_sha(selection_path))
         self.state['training_jobs'].append(job)
         self._seeded(job)
         save_state(self.args.state, self.state)  # durable before the worker is submitted
@@ -1005,6 +1021,8 @@ class TrainingPipeline:
                     # Pre-A completion is proof of training only, never a quality approval.
                     report = {k: v for k, v in old.items() if k not in
                               ('promotion', 'evaluation_started', 'evaluation_finished', 'evaluation_directory')}
+                elif job.get('training_seeds'):
+                    report = self._train_selected(job)
                 else:
                     self._admit()
                     local_args = copy.copy(self.args)
@@ -1047,6 +1065,119 @@ class TrainingPipeline:
         except BaseException:
             self.failed = True
             raise
+
+    @staticmethod
+    def _marker(path, document):
+        temporary = path.with_suffix('.building')
+        temporary.write_text(json.dumps(document, indent=2) + '\n')
+        temporary.replace(path)
+
+    def _train_selected(self, job):
+        """One packed corpus, serial independent seeds, then a single gate candidate.
+
+        A failed seed is local to its candidate. Only an entirely failed round
+        reaches the existing B7 retry/stop mechanism in _run/poll.
+        """
+        recipe_path = Path(job['recipe'])
+        folder = recipe_path.parent
+        recipe = load_recipe(recipe_path, 'training')
+        report = dict(round=job['round'], model=job['model'])
+        pack_marker = folder / 'packed.json'
+        if pack_marker.is_file():
+            packed = json.loads(pack_marker.read_text())
+            if packed['recipe_sha256'] != file_sha(recipe_path):
+                raise ValueError('saved packed recipe changed')
+            self.build_peak = 0
+        else:
+            self._admit()
+            local_args = copy.copy(self.args)
+            local_args.recipe, local_args.frames = recipe_path, Path(recipe['data'])
+            packed = dict(pack_started=time.time(), recipe_sha256=file_sha(recipe_path))
+            try:
+                self._prepare_corpus(recipe['labels'])
+                packed['pack_peak_anon_bytes'] = self._command(
+                    pack_command(local_args, recipe['labels']), folder / 'pack.log')
+            finally:
+                self.build_peak = 0
+            packed['pack_finished'] = time.time()
+            self._marker(pack_marker, packed)
+        report.update({key: value for key, value in packed.items() if key.startswith('pack_')})
+        candidates = []
+        python = str(self.args.python) if self.args.python.exists() else sys.executable
+        for seed in job['training_seeds']:
+            directory = folder / 'seeds' / f'seed_{seed:06d}'
+            directory.mkdir(parents=True, exist_ok=True)
+            path = directory / 'recipe.json'
+            child_recipe = dict(recipe, seed=seed, out=str(directory / 'student'))
+            if path.exists():
+                if load_recipe(path, 'training') != child_recipe:
+                    raise ValueError('saved seed recipe changed')
+            else:
+                write_recipe(path, child_recipe)
+            model, marker = directory / 'student/model.pt', directory / 'trained.json'
+            if marker.is_file():
+                candidate = json.loads(marker.read_text())
+                if candidate['recipe_sha256'] != file_sha(path) or candidate['model_sha256'] != file_sha(model):
+                    raise ValueError('saved seed candidate changed')
+            else:
+                candidate = dict(seed=seed, model=str(model), recipe=str(path), train_started=time.time())
+                try:
+                    self._admit()
+                    candidate['train_peak_anon_bytes'] = self._command(
+                        [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
+                        directory / 'train.log')
+                    if not model.is_file():
+                        raise RuntimeError(f'trainer did not publish {model}')
+                    candidate.update(status='trained', train_finished=time.time(),
+                                     model_sha256=file_sha(model), recipe_sha256=file_sha(path))
+                    self._marker(marker, candidate)
+                except Exception as error:
+                    candidate.update(status='failed', train_finished=time.time(), error=str(error))
+                    self._marker(directory / 'failed.json', candidate)
+                    log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
+                                            f'continuing other seeds: {error}')
+            candidates.append(candidate)
+            self._marker(folder / 'candidates.json', dict(candidates=candidates))
+        trained = [candidate for candidate in candidates if candidate['status'] == 'trained']
+        if not trained:
+            raise RuntimeError('all training seeds failed; see candidates.json')
+        report.update(candidates=candidates, training_seeds=job['training_seeds'],
+                      train_started=min(candidate['train_started'] for candidate in candidates),
+                      train_finished=max(candidate['train_finished'] for candidate in candidates),
+                      train_peak_anon_bytes=max(candidate.get('train_peak_anon_bytes', 0) or 0
+                                                for candidate in trained))
+        self.last_train_peak = report['train_peak_anon_bytes']
+        report.update(self._select(job, trained))
+        return report
+
+    def _select(self, job, candidates):
+        manifest = Path(job['selection_manifest'])
+        if file_sha(manifest) != job['selection_manifest_sha256']:
+            raise ValueError('frozen selection panel changed')
+        panel = json.loads(manifest.read_text())
+        sets = ','.join(f'{task["task_id"]}:0:{len(task["seeds"])}' for task in panel['tasks'])
+        folder = Path(job['recipe']).parent
+        self._admit()
+        units = min(2, worker_count(mem_available_bytes(), self.per_worker_bytes,
+                                   max(1, self.args.workers - self.foreground_workers), 0))
+        self.eval_units = units
+        command = [str(self.args.python) if self.args.python.exists() else sys.executable,
+                   str(ROOT / 'scripts/select_student.py'), '--candidates',
+                   ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
+                   '--manifest', str(manifest), '--sets', sets, '--workers', str(units),
+                   '--value', str(self.args.value), '--executable', str(self.args.executable),
+                   '--resource-dir', str(self.args.resource_dir)]
+        started = time.time()
+        peak = self._command(command, folder / 'selection.log')
+        receipt = json.loads((folder / 'student/selection.json').read_text())
+        eligible = {candidate['model']: candidate for candidate in candidates}
+        best = receipt['best']
+        if (best not in eligible or receipt['model_sha256'] != eligible[best]['model_sha256']
+                or file_sha(job['model']) != receipt['model_sha256']
+                or receipt['manifest_sha256'] != job['selection_manifest_sha256']):
+            raise ValueError('selected candidate does not match its training/panel receipt')
+        return dict(selection=receipt, selection_started=started, selection_finished=time.time(),
+                    selection_peak_anon_bytes=peak, selection_units=units)
 
     def poll(self, retry: bool = True):
         for index, (job, future) in enumerate(list(self.futures)):
