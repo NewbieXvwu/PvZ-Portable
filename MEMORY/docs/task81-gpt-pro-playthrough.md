@@ -58,6 +58,7 @@
 
 ## 结果
 
+- 2026-10-25 21:27 **接手复核（Codex 停下的地方）**：工作树干净、HEAD `7428da79` 已推送；`python/test_llmplay.py` **31 条全过**；正式包 SHA256 仍是 `c912da70…`（44,635,895 字节），冷解压后包内 `llmplay/{budget,game,scene,selfcheck}.py`、`PROMPT.md`、`scripts/{episode_query,pvz_tasks,pvz_constants}.py` 与 HEAD **逐字一致**（没有包比代码旧的问题）；包内 `build/pvz-portable` 与 21:20 跑过 4/4 PASS 的 `stage/build/pvz-portable` **同 SHA256**（`a84f10cf…`），所以那轮 PASS 验的就是交付的这个字节序列。Mac 通路再确认一次仍不存在（无 sshd、`/etc/hosts` 无内网主机、`ip neigh` 只有 WSL 网关）。**唯一未完成项仍是 §2 的 Mac 重放**，已在“问题”补上 Mac + Docker 的一条命令，等主控决定是自己在 Mac 上跑还是改掉该子句。
 - 2026-10-25 21:25 **验收矩阵（一屏看全）**：
 
   | 任务书条目 | 状态 | 证据 |
@@ -184,6 +185,17 @@ Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到�
   python3 scripts/human_demo.py --resource-dir "$R" verify --archive artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200
   ```
   期望每局输出 `{"verified": true, ...}`，且 `operations` / `tick` / `wave` 与台式机记录一致（39,590 / 57,596 / 41,107 / 41,831 个操作，四局均 `result=1` 通关）。把这段输出贴回“结果”即可关闭本项。注意包里发的是 Linux 静态 ELF，macOS 不能直接执行；Mac 上要么用自己编的 Mach-O 引擎（默认 `build/pvz-portable`，脚本会自动用它），要么在 Mac 的 Docker 里跑这个 ELF。请主控明确要哪一种。反过来，**Linux 侧已经能逐 tick 复现 Mac 录的四局**（`final_audit/four-demos.txt`：826 / 1309 / 892 / 922 帧观测全一致），所以剩下的只是 Mac 端的自证。
+  Mac 上若只装了 Docker、没有本地构建的引擎，用下面这一条即可跑同一个 ELF —— 与台式机已验过的
+  `python:3.11-slim` 断网路径是同一个镜像、同一个二进制：
+
+  ```bash
+  PKG="$HOME/pvz-logs/llmplay_pkg/stage"          # 或解压后的 llmplay_pkg 目录
+  docker run --rm -v "$PWD":/w -v "$PKG":/pkg:ro -v "$PVZ_RESOURCE_DIR":/res:ro -w /w \
+    python:3.11-slim bash -c 'scripts/llmplay/mac_check.sh /res /pkg/build/pvz-portable'
+  ```
+
+  期望末行 `MACCHECK OK`。包里那个 ELF 与台式机 21:20 跑过的 `stage/build/pvz-portable`
+  是同一份（SHA256 `a84f10cf…`），所以这条命令换到 Mac 上跑，验的是同一串字节。
 - **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）；`STATE_HASH` 命令与 reset 响应里的哈希也对不上。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理：`executable_sha256` 写成自解释标记，让官方 verify 走 tick/ok/终局的路径）。**推测**是 SaveGame V4 快照里混进了地址或未初始化字段；主控 18:30 已记录、另派人查，本任务不修。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
