@@ -126,6 +126,8 @@ L32 第 15/30 波 tick 32051 距下一波约 3091 tick 阳光 150 小推车 r0:�
 
 - **Docker 不可用**（Docker Desktop 未对本 WSL 发行版开集成）。§E 要求的 `docker run --network none ubuntu:22.04` 没法照做，改用两条等价性够用的路径：① `unshare -n` 断网跑；② 早先试过 ubuntu-base-22.04.5 rootfs chroot，但 jammy 的 GCC 11 编不过引擎（`#include <format>` 要 GCC 13+），所以"在 22.04 里编"这件事本身在台式机上做不出来 —— 这正是探路包要在目标沙箱里测的。
 - **截图（§C）跑不通**：`LawnApp::EnvironmentScreenshot` 要求非 headless（有窗口）并从 GL framebuffer 读回。实测 `SDL_VIDEODRIVER=dummy` 下引擎能起来、RESET_V2 正常，但 `SCREENSHOT` 返回 `ok:false`（静态 SDL2 只编了 dummy 视频后端，没有 GL）。要做成需要一套 EGL/Mesa 软件 GL + 带该后端的 SDL 构建。按 §C 的兜底：只用文字观测，不拖住主线。
+- **清理（§E）**：本机没有 Docker（`docker` 命令不存在，`docker images` 无法输出），所以没有容器/镜像可删；已删 `~/llmplay-build/hostbuild`（旧构建树 81 MB）与 `/tmp` 下全部自测目录。`~/llmplay-build/rootfs`（2.4 GB，早先 22.04 chroot 用，文件属 root）删不掉，需要 sudo；现在用不到，要腾空间就 `sudo rm -rf ~/llmplay-build/rootfs`。
+- **Mac 侧没验**：这台机器不是 Mac，§2 的"Mac 上重放 4 局"只能由用户在 Mac 上跑（二进制是全静态链接，理论上不依赖目标机 glibc）。
 - **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理）。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
