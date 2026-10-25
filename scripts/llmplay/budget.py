@@ -50,6 +50,9 @@ class Session:
     def __init__(self, path: Path):
         self.path = Path(path)
         self.data = None
+        # 分支持数是**进程内**状态：进程退出时分支引擎也没了，不能写进 budget.json，
+        # 否则每个脚本都会把上一条脚本的分支算进来，8 次之后永远开不了新分支。
+        self.branches = 0
         self.load()
 
     # ------------------------------------------------------------ 持久化
@@ -146,7 +149,7 @@ class Session:
                                checkpoints=[], search_bad=False, search_closed=False,
                                segment_rewrites=0, segment_start=0,
                                last_progress_wave=0, best_archive=None,
-                               branches=0, exhausted=False)
+                               exhausted=False)
         return levels[key]
 
     def note_ticks(self, level, ticks: int, mode: str) -> None:
@@ -226,15 +229,11 @@ class Session:
                 "看结果 → 不满意就 rewind() 重写这一段。" % (reason, what))
 
     def note_branch(self, level, delta: int = 1) -> None:
-        with self._transaction():
-            state = self.level(level)
-            state["branches"] = max(0, state["branches"] + delta)
+        self.branches = max(0, self.branches + int(delta))
 
     def require_branch(self, level) -> None:
         self.require_search(level, "branch()")
-        self.refresh()
-        state = self.level(level)
-        if state["branches"] >= BRANCH_LIMIT_SEARCH:
+        if self.branches >= BRANCH_LIMIT_SEARCH:
             raise RuntimeError(
                 "同时存在的分支持数已达上限 %d：先把不用的分支关掉（close()），"
                 "或者直接在主局上 rewind 试错。" % BRANCH_LIMIT_SEARCH)

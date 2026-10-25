@@ -151,6 +151,25 @@ class BudgetTest(unittest.TestCase):
             self.session.note_rewind(level, 100, 900)
         self.assertIn('退回更早的一段', str(caught.exception))
 
+    def test_branch_counter_is_per_process_not_persisted(self):
+        """分支引擎随进程消失；计数写进磁盘会让下一个脚本一开局就顶着上限。"""
+        path = Path(self.dir) / 'branch.json'
+        first = budget.Session(path)
+        first.note_branch(46, +3)
+        self.assertEqual(first.branches, 3)
+        second = budget.Session(path)
+        self.assertEqual(second.branches, 0)
+
+    def test_branch_limit_and_close(self):
+        session = budget.Session(Path(self.dir) / 'branch-limit.json')
+        for _ in range(budget.BRANCH_LIMIT_SEARCH):
+            session.note_branch(46, +1)
+        with self.assertRaises(RuntimeError) as caught:
+            session.require_branch(46)
+        self.assertIn('close()', str(caught.exception))
+        session.note_branch(46, -1)
+        session.require_branch(46)          # 关掉一个之后可以再开
+
     def test_concurrent_processes_do_not_lose_updates(self):
         """3 个子代理是 3 个进程：预算的读改写必须串行，不能互相覆盖。"""
         import multiprocessing
