@@ -21,12 +21,15 @@ sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
 R13_EVAL = Path("/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40")
 TASK = "day_l7_eval_d7p_holdout1"
 MODELS = {"a": ROOT / "artifacts/task84/variant_a/student/model.pt",
-          "b": ROOT / "artifacts/task84/variant_b/student/model.pt"}
+          "b": ROOT / "artifacts/task84/variant_b/student/model.pt",
+          "c": ROOT / "artifacts/task84/variant_c/student/model.pt",
+          "d2": ROOT / "artifacts/task84/variant_d2/student/model.pt",
+          "d3": ROOT / "artifacts/task84/variant_d3/student/model.pt"}
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("variant", choices=("a", "b"))
+    parser.add_argument("variant", choices=("a", "b", "c", "d2", "d3"))
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--control", action="store_true", help="standard-deck day_l7 control task instead")
     args = parser.parse_args()
