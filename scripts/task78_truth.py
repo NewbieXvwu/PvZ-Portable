@@ -93,7 +93,8 @@ def run_group(job):
                 if 'wait' in truth and static_cell in truth:
                     gap = truth[static_cell]['win_rate'] - truth['wait']['win_rate']
                     if abs(gap) >= 0.25:
-                        pair = dict(true_better=static_cell if gap > 0 else 'wait', gap=gap)
+                        pair = dict(better=static_cell if gap > 0 else 'wait',
+                                    worse='wait' if gap > 0 else static_cell, gap=gap)
                 out.append(dict(task=task, decision=decision, tick=row['tick'],
                                 wave=row['wave'], seed=row['seed'], horizon=horizon,
                                 values=values, truth_pair=pair,
@@ -107,15 +108,73 @@ def run_group(job):
         return dict(status='failed', decision=decision, reason=f'{type(exc).__name__}: {exc}')
 
 
+def agreement(rows, arm):
+    """Sign agreement with the terminal truth on wait vs static_best; ties score 0.5."""
+    scored, ties, pairs = [], 0, 0
+    for row in rows:
+        pair = row.get('truth_pair')
+        values = row['values'].get(arm) or {}
+        if not pair or pair['better'] not in values or pair['worse'] not in values:
+            continue
+        pairs += 1
+        diff = values[pair['better']] - values[pair['worse']]
+        if abs(diff) < 1e-9:
+            ties += 1
+            scored.append(0.5)
+        else:
+            scored.append(1.0 if diff > 0 else 0.0)
+    return dict(pairs=pairs, ties=ties, correct=sum(scored), rate=(sum(scored)/pairs if pairs else None))
+
+
+def cluster_bootstrap(rows, arms, seed=780, draws=10000):
+    """Paired improvement in agreement, resampling independent worlds (task+decision)."""
+    import numpy as np
+    groups = {}
+    for row in rows:
+        if not row.get('truth_pair'):
+            continue
+        groups.setdefault((row['task'], row['decision']), []).append(row)
+    keys = sorted(groups)
+    per_world = []
+    for key in keys:
+        world = groups[key]
+        per_world.append([agreement(world, arm) for arm in arms])
+    rng = np.random.default_rng(seed)
+    deltas = []
+    for _ in range(draws):
+        pick = rng.integers(0, len(per_world), len(per_world))
+        a = sum(per_world[i][0]['correct'] for i in pick)
+        b = sum(per_world[i][1]['correct'] for i in pick)
+        n = sum(per_world[i][0]['pairs'] for i in pick)
+        deltas.append((b-a)/n if n else 0.0)
+    deltas = np.sort(np.array(deltas))
+    return dict(draws=draws, worlds=len(per_world), seed=seed,
+                lower=float(deltas[int(0.025*draws)]), upper=float(deltas[int(0.975*draws)]))
+
+
+def report(path, arms):
+    document = json.loads(Path(path).read_text())
+    rows = [row for result in document['results'] if result['status'] == 'ok' for row in result['rows']]
+    summary = {arm: agreement(rows, arm) for arm in arms}
+    boot = cluster_bootstrap(rows, list(arms))
+    out = dict(horizon=document['horizon'], arms=summary, bootstrap=boot,
+               improvement=summary[list(arms)[1]]['rate'] - summary[list(arms)[0]]['rate'])
+    Path(path).with_name(f"agreement_h{document['horizon']}.json").write_text(json.dumps(out, indent=1)+'\n')
+    print(json.dumps(out, indent=1))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--horizon', type=int, default=2500)
+    parser.add_argument('--report', action='store_true')
     parser.add_argument('--arms', default='v5=/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt,'
                                          f'v6={ROOT}/artifacts/task78/v6/model.pt')
     parser.add_argument('--out', default=str(ROOT/'artifacts/task78/truth'))
     parser.add_argument('--workers', type=int, default=4)
     args = parser.parse_args()
     arms = dict(spec.split('=', 1) for spec in args.arms.split(','))
+    if args.report:
+        return report(Path(args.out)/f"h{args.horizon}.json", arms)
     for path in arms.values():
         if not Path(path).is_file():
             raise ValueError(f'arm checkpoint missing: {path}')
