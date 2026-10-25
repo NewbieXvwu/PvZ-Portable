@@ -2,11 +2,107 @@
  "level": 7,
  "ticks_per_step": 100,
  "steps": 3,
+ "runs": [
+  {
+   "seed": 100000000,
+   "observed_rand_seed": 100000000,
+   "chain": [
+    "737fb08d0ebaa0e5",
+    "3235eee6c2b45767",
+    "325e40171b8c3bca",
+    "d9b312473bfb5e8a"
+   ]
+  },
+  {
+   "seed": 100000000,
+   "observed_rand_seed": 100000000,
+   "chain": [
+    "737fb08d0ebaa0e5",
+    "3235eee6c2b45767",
+    "325e40171b8c3bca",
+    "d9b312473bfb5e8a"
+   ]
+  },
+  {
+   "seed": 57600,
+   "observed_rand_seed": 57600,
+   "chain": [
+    "1adefe6d97d7d28c",
+    "c6fe73d92fa182f7",
+    "3c5ed66f57edeb49",
+    "ed7193fe85b360aa"
+   ]
+  },
+  {
+   "seed": 0,
+   "observed_rand_seed": 0,
+   "chain": [
+    "b47ab6198a3f8df4",
+    "bc4f607575611e8c",
+    "5b5cd2b857cdaa34",
+    "291176fc2339f831"
+   ]
+  },
+  {
+   "seed": 100000001,
+   "observed_rand_seed": 100000001,
+   "chain": [
+    "663c10540c0e5731",
+    "68d18695b5e61bdc",
+    "d95d22f42729a563",
+    "d18fd6184056a82c"
+   ]
+  },
+  {
+   "seed": 100999999,
+   "observed_rand_seed": 100999999,
+   "chain": [
+    "b90ea6d06ca3a7c8",
+    "6abbd4b4fd8cac0e",
+    "6c37da7472e8a7c8",
+    "7a8df1379857c51a"
+   ]
+  },
+  {
+   "seed": 65535,
+   "observed_rand_seed": 65535,
+   "chain": [
+    "513f5070d7ca8b07",
+    "94988bbeecd56390",
+    "b196031f343518a6",
+    "4a240ce66c68e29a"
+   ]
+  },
+  {
+   "seed": 65536,
+   "observed_rand_seed": 65536,
+   "chain": [
+    "d6c35dcf9dbb6618",
+    "e4b57c363f64d16e",
+    "a725edfab34487d0",
+    "48b619a1b36e59c6"
+   ]
+  },
+  {
+   "seed": 4294967295,
+   "observed_rand_seed": 4294967295,
+   "chain": [
+    "b8d633fc66775a57",
+    "396e0c92bbf73dc6",
+    "90a7d1610b35e124",
+    "bbb8af2a07bbbe08"
+   ]
+  }
+ ],
  "seeds": [
   100000000,
   57600,
   0,
-  100000001
+  100000001,
+  100999999,
+  65535,
+  65536,
+  4294967295
  ],
  "chains": {
   "100000000": [
@@ -32,10 +128,37 @@
    "68d18695b5e61bdc",
    "d95d22f42729a563",
    "d18fd6184056a82c"
+  ],
+  "100999999": [
+   "b90ea6d06ca3a7c8",
+   "6abbd4b4fd8cac0e",
+   "6c37da7472e8a7c8",
+   "7a8df1379857c51a"
+  ],
+  "65535": [
+   "513f5070d7ca8b07",
+   "94988bbeecd56390",
+   "b196031f343518a6",
+   "4a240ce66c68e29a"
+  ],
+  "65536": [
+   "d6c35dcf9dbb6618",
+   "e4b57c363f64d16e",
+   "a725edfab34487d0",
+   "48b619a1b36e59c6"
+  ],
+  "4294967295": [
+   "b8d633fc66775a57",
+   "396e0c92bbf73dc6",
+   "90a7d1610b35e124",
+   "bbb8af2a07bbbe08"
   ]
  },
  "deterministic": true,
+ "exact_uint32_echo": true,
  "differs_from_uint16_residue": true,
  "differs_from_uint8_residue": true,
- "differs_from_next_seed": true
+ "differs_from_next_seed": true,
+ "executable": "/home/newbiexvwu/pvz-logs/llmplay_pkg/stage/build/pvz-portable",
+ "executable_sha256": "a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb"
 }

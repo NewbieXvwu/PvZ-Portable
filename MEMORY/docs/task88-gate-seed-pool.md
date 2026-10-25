@@ -40,5 +40,8 @@
 - 2026-10-26 更正：磁盘上的 /tmp/gate-seed-inventory-full.json 与 MEMORY/docs/gate-seed-inventory.json（01:02 写）是**第一轮旧代码扫描**的产物（含 1688 误报与自身工件污染，candidate 误报 overlap [100000000,100000002]）；等 pid 731438 结束（约 01:22）覆盖后再判读/入库。新正则已单点实测：task23-results.json 误报清零。
 - 2026-10-26 第 1 步（修正后重扫，最终）：candidate [100000000, 101000000) **disjoint: true**（61 个占用区间约 496 万种子，最高段 llmplay [83000000, 83000308)）；全机 251774 个 JSON/JSONL 字面量复核 108 命中全部甄别为误报（rss_bytes 与十六进制 state_hash），零真实种子占用；紧凑汇总 `MEMORY/docs/gate-seed-inventory.json` 入库。
 - 2026-10-26 第 5 步：结论写 `MEMORY/docs/gate-seed-pool.md`（含新池依据、实现、不升版理由、交接注意、产物索引）。task88 全部 5 步完成。
+- 2026-10-26 Codex 接续验收：上述“全部完成”暂不能成立。发现 width-check 丢弃第二次 reset、把自身比较当确定性；现保留九次独立采样记录并核对引擎 PRIV 的 uint32 种子回显，覆盖池首/尾、65535/65536、UINT32_MAX，实测全部通过，新增两项负例测试通过。已有 promotion 24 项测试复核通过。还发现 inventory 跳过 tasks 列表、闭区间上端点少算 1，且缺 Mac 部署账本证据，继续补齐，不重做已正确的多池实现与 dry-run。
 
 ## 问题
+
+- 台式机没有 `~/.pvz-dist/ledger.json`，当前盘点根也没有 Mac 主机；不能据此声称两台机器全覆盖。已请求 Mac 的只读 SSH 地址或已有盘点结果路径，本地修正继续进行。
