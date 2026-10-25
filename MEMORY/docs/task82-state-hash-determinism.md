@@ -44,6 +44,8 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 - 2026-10-25：结论层 `state-hash-determinism.md` 与 `state-hash-determinism-results.json` 提交并推送。交接复核：最终构建 8 份整局 trace 的 SHA256 全同（`5fb2c460…`）；四份示范修复后各 4 进程 trace 全同、修复前各 2 进程全异；回归测试从仓库根目录运行通过（测试自补 `python/` 与 `scripts/` 路径），协议 35 项 OK。Mac 探针脚本 `scripts/state_hash_mac_probe.sh` 交主控，台式机未执行。
 - 2026-10-25：接手复核（Claude）：工作树干净、HEAD 与 `origin/hashdet` 一致；最终二进制 sha256 `5e890b3a…` 与证据一致；`test_state_hash_determinism` 8 个独立进程回归通过（3.6 s），协议测试 35 项 OK；`artifacts/`、`logs/` 的 `check-ignore --no-index` 为空。Mac 侧仍待主控执行 `scripts/state_hash_mac_probe.sh`。
 
+- 2026-10-25：按任务书五项补“完成核对”映射，结果 JSON 增 `requirements` 逐项指向证据；提交 `99f85080` 并推送。
+
 ## 完成核对
 
 1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧由 `scripts/state_hash_mac_probe.sh` 交接，台式机未执行。
