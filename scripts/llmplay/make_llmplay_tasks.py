@@ -59,7 +59,9 @@ LAYERS = {
           'fog79_l39_snow_cactus_v2_m200', 'fog79_l39_snow_blover_v2_m200'],
     # E 层命名对齐主控：task85c 在 boss50 上登记的是 demo_pool_30_orig_m100 /
     # demo_boss_50_orig_m100，这里 L30 用同一个名字，避免两条线合并后出现两个同义族。
-    'E': ['demo_pool_30_orig_m100', 'demo_storm_40_orig_m100'],
+    # L50 的族定义随 boss50 合入 pvz-env（2026-10-26 合并）进入清单，种子合并成
+    # [20261050, 81033000]（主控指示：两条线的种子合成一条）。
+    'E': ['demo_pool_30_orig_m100', 'demo_storm_40_orig_m100', 'demo_boss_50_orig_m100'],
 }
 
 # 需要新建的族：id -> 复制来源（None = 自己写全字段）
@@ -82,11 +84,12 @@ NEW_FAMILIES = {
     'fog79_l39_snow_cactus_v2_m200': ('fog79_l39_snow_cactus_v2', dict(zombie_count_multiplier=2.0)),
     'fog79_l39_snow_blover_v2_m200': ('fog79_l39_snow_blover_v2', dict(zombie_count_multiplier=2.0)),
     # 原生传送带：卡由引擎发，任务没有卡组（pvz_tasks.deck_for_level 的约定）。
-    # L50 的 demo_boss_50_orig_m100 等 boss50 合入后再加。
     'demo_pool_30_orig_m100': (None, dict(level=30, deck=[], conveyor_start='original',
                                           zombie_count_multiplier=1.0)),
     'demo_storm_40_orig_m100': (None, dict(level=40, deck=[], conveyor_start='original',
                                            zombie_count_multiplier=1.0)),
+    'demo_boss_50_orig_m100': (None, dict(level=50, deck=[], conveyor_start='original',
+                                          zombie_count_multiplier=1.0)),
 }
 
 

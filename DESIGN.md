@@ -1239,19 +1239,21 @@ GPT Pro 的离线沙箱用 llmplay 接口打冒险模式。task81c 把任务单�
   只改 `zombie_count_multiplier`（3.0 / 4.0）。
 - **D 层**（雾夜 L36–L39 fog79 提到 2.0 倍）：新族 `fog79_l3{6,7,8,9}_*_v2_m200` 共 8 个，
   保留 `fog_observation: human_v2`。
-- **E 层**（原生传送带）：新族 `demo_pool_30_orig_m100` / `demo_storm_40_orig_m100`，
+- **E 层**（原生传送带）：`demo_pool_30_orig_m100` / `demo_storm_40_orig_m100`，
+  boss50 合入 pvz-env 后（2026-10-26 并入 llmplay）再加 `demo_boss_50_orig_m100`。
   `deck: []` + `conveyor_start: "original"`（卡由引擎发）。L30 的名字与 task85c 在
-  boss50 上登记的 `demo_pool_30_orig_m100` 一致，避免两条线合并后出现同义族；
-  L50 的 `demo_boss_50_orig_m100` 待 boss50 合入后再加。
+  boss50 上登记的同名族合并为一条（种子 `[20261030, 81031000]`，主控指示），
+  L50 同样合并为 `[20261050, 81033000]`。
 
-**种子**：新独立块 **81,000,000–81,032,039**（33 个任务 × 40，每任务步长 1000），
+**种子**：新独立块 **81,000,000–81,033,039**（34 个任务 × 40，每任务步长 1000），
 每个任务第一个种子同时写进 `configs/human_demo_tasks.json` 作默认种子，完整 40 个写在
 `configs/llmplay_seeds.json`。机械核对：全仓 1988 份 JSON / 4,376,532 个种子条目里
-落在 [81,000,000, 81,200,000) 的 **0 个**；块内 1320 个种子互不重复。
+落在 [81,000,000, 81,200,000) 的 **0 个**；块内 1360 个种子互不重复。
 
 **稳健性块**：**83,000,000–83,000,307**（4 个检查点 × 100 + 8 个未来），写在
 `configs/llmplay_robustness.json`，与任务种子不相交。
 
-**无头 reset**：`scripts/llmplay/check_tasks.py` 对 33 个任务各 reset + 120 tick，
-全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波）。
+**无头 reset**：`scripts/llmplay/check_tasks.py` 对 34 个任务各 reset + 120 tick，
+全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波，
+L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
 

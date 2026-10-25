@@ -112,6 +112,8 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(by_id['demo_pool_30_orig_m100']['conveyor_start'], 'original')
         self.assertEqual(by_id['demo_pool_30_orig_m100']['deck'], [])
         self.assertEqual(by_id['demo_storm_40_orig_m100']['conveyor_start'], 'original')
+        self.assertEqual(by_id['demo_boss_50_orig_m100']['level'], 50)
+        self.assertEqual(by_id['demo_boss_50_orig_m100']['deck'], [])
 
     def test_task_manifest_registers_roof_46_and_47(self):
         """§G.1：L46/L47 的族已由主控登记，包里的任务清单必须带上。"""
