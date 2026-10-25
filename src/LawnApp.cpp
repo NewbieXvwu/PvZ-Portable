@@ -2294,7 +2294,12 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"body_max_health\":" << zombie->mBodyMaxHealth << ",\"helm_health\":" << zombie->mHelmHealth
 				<< ",\"helm_max_health\":" << zombie->mHelmMaxHealth << ",\"shield_health\":" << zombie->mShieldHealth
 				<< ",\"shield_max_health\":" << zombie->mShieldMaxHealth << ",\"phase\":" << static_cast<int>(zombie->mZombiePhase)
-				<< ",\"phase_counter\":" << zombie->mPhaseCounter << ",\"velocity_x\":" << zombie->mVelX
+				<< ",\"phase_counter\":" << zombie->mPhaseCounter
+				// task81: 投石车的出手计数（mSummonCounter 从 20 起递减，见 Zombie.cpp:473/1595）。
+				// 模型的逐行明细要报"投石车剩余弹药"，原来只能靠位置猜。纯增量字段，
+				// 不动 observation_version（Python 侧不校验版本号）。
+				<< ",\"summon_counter\":" << zombie->mSummonCounter
+				<< ",\"velocity_x\":" << zombie->mVelX
 				<< ",\"chilled\":" << zombie->mChilledCounter << ",\"buttered\":" << zombie->mButteredCounter
 				<< ",\"ice_trap\":" << zombie->mIceTrapCounter << ",\"has_head\":" << (zombie->mHasHead ? "true" : "false")
 				<< ",\"has_arm\":" << (zombie->mHasArm ? "true" : "false") << ",\"has_object\":" << (zombie->mHasObject ? "true" : "false")
