@@ -14,6 +14,16 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'limited to two game processes'):
             command(SimpleNamespace(workers=4), 'day', 'test', 4)
 
+    def test_qc_cohorts_exclude_ancestor_matches_and_midblock_shutdown(self):
+        from task77_search_hotpath import qc_cohorts
+        rows = [dict(cell=cell, index=index,
+                     before={'qc_controllers': [9, 88]},
+                     after={'qc_controllers': [9] if cell == 'pool' and index == 0 else [9, 88]})
+                for cell in ('day', 'pool') for index in range(4)]
+        self.assertEqual(qc_cohorts(rows, {88}), {'day': [88], 'pool': []})
+        with self.assertRaisesRegex(ValueError, 'incomplete ABBA load'):
+            qc_cohorts(rows[:-1], {88})
+
     def test_length_difference_at_end_is_reported(self):
         self.assertEqual(compare_frames([{'tick': 1}], [])['reason'], 'length')
         self.assertEqual(compare_frames([], [{'tick': 1}])['index'], 0)

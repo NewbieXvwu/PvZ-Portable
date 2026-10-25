@@ -470,6 +470,21 @@ def family_interval(games, draws=10000):
     return [means[int(draws * .025)], means[int(draws * .975)]]
 
 
+def qc_cohorts(load, verified_controllers):
+    """Use exact Python controller identities, excluding legacy ancestor matches."""
+    result = {}
+    for cell in sorted({row['cell'] for row in load}):
+        blocks = [row for row in load if row['cell'] == cell]
+        if sorted(row['index'] for row in blocks) != [0, 1, 2, 3]:
+            raise ValueError('incomplete ABBA load record')
+        common = set(verified_controllers)
+        for block in blocks:
+            for boundary in ('before', 'after'):
+                common &= set(block[boundary]['qc_controllers'])
+        result[cell] = sorted(common)
+    return result
+
+
 def load_snapshot():
     processes = {}
     for directory in Path('/proc').glob('[0-9]*'):
@@ -650,6 +665,19 @@ def audit_abba(args):
     evidence['identity_audit'] = audit
     evidence['summary'] = paired_interval([r['ratio'] for r in evidence['games']])
     evidence['summary']['family_bootstrap95'] = family_interval(evidence['games'])
+    monitor = args.out / 'load_monitor.jsonl'
+    if monitor.is_file():
+        observations = [json.loads(line) for line in monitor.read_text().splitlines()]
+        verified = {pid for row in observations for pid in row['qc_controllers']}
+        cohorts = qc_cohorts(evidence['load'], verified)
+        qc_games = [row for row in evidence['games'] if cohorts[row['cell']]]
+        qc_summary = paired_interval([row['ratio'] for row in qc_games]) if qc_games else None
+        if qc_summary is not None:
+            qc_summary['family_bootstrap95'] = family_interval(qc_games)
+        evidence['qc_running'] = {
+            'definition': 'same verified Python controller at all eight ABBA block endpoints; worker load may vary',
+            'controller_ids_by_cell': cohorts, 'paired_games': len(qc_games), 'summary': qc_summary,
+            'monitor_sha256': digest(monitor), 'monitor_samples': len(observations)}
     save(evidence_path, evidence)
     print(json.dumps(audit, indent=1), flush=True)
 

@@ -180,6 +180,9 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 - 本轮结束后将报告每局 B/A 比值及配对 bootstrap 95% 区间，并核验四臂结果/标签与后台 qc 负载。
 - 负载监测已观察到原 qc 控制器退出；当前计时继续保留，待主控说明后续负载安排，
   不能把无 qc 的窗口写成恒定生产负载。只读负载序列另存 `abba_final/load_monitor.jsonl`。
+- 已核对 day/night 的 8 个 block：同一个真实 Python qc 控制器在每个 block 的前后均存在，
+  因此这两族可单独形成“qc 正常运行期”的 4 对 ABBA；worker 负载仍会随生产阶段变化。
+  最终同时报告这个子集与完整六族结果，按负载状态划分，不按耗时结果筛选。
 
 ## 8. 局限与后续
 
