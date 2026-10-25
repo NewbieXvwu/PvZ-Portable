@@ -20,6 +20,7 @@ import datetime as dt
 import fcntl
 import json
 import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -441,7 +442,9 @@ def update_design(design_path: Path, lines: list) -> bool:
     if block in text:
         return False
     stamp = dt.date.today().isoformat()
-    text = text.rstrip('\n') + f"\n\n### 14.35 接手扫描运行器登记（task91，{stamp}）\n\n{block}\n"
+    numbers = [int(match.group(1)) for match in re.finditer(r'^### 14\.(\d+)', text, re.M)]
+    section = max(numbers, default=34) + 1
+    text = text.rstrip('\n') + f"\n\n### 14.{section} 接手扫描运行器登记（task91，{stamp}）\n\n{block}\n"
     design_path.write_text(text, encoding='utf-8')
     return True
 
