@@ -1,0 +1,64 @@
+{
+  "purpose": "isolate the per-observe cost of the replace legal mask",
+  "task": {
+    "level": 11,
+    "seed": 6901,
+    "deck": [
+      8,
+      1,
+      0,
+      4,
+      16,
+      30
+    ]
+  },
+  "resource": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "reps": 30,
+  "warmup": 5,
+  "engines": {
+    "treatment": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/build/pvz-portable",
+      "sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a"
+    },
+    "baseline": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/baseline-engine",
+      "sha256": "c90d051f38294a56832c7adc904ad6dca2c71b2b442d8cc90f39a5804629dbec"
+    }
+  },
+  "measurements": {
+    "8": {
+      "treatment": {
+        "median_ms": 1.819,
+        "min_ms": 1.419,
+        "max_ms": 3.339,
+        "legal_cells": 74
+      },
+      "baseline": {
+        "median_ms": 0.332,
+        "min_ms": 0.243,
+        "max_ms": 0.968,
+        "legal_cells": 66
+      },
+      "ratio_treatment_over_baseline": 5.48
+    },
+    "32": {
+      "treatment": {
+        "median_ms": 8.021,
+        "min_ms": 6.011,
+        "max_ms": 10.06,
+        "legal_cells": 50
+      },
+      "baseline": {
+        "median_ms": 0.447,
+        "min_ms": 0.304,
+        "max_ms": 0.598,
+        "legal_cells": 18
+      },
+      "ratio_treatment_over_baseline": 17.94
+    }
+  },
+  "marginal_ms_per_occupied_cell": {
+    "treatment": 0.2584,
+    "baseline": 0.0048
+  }
+}
