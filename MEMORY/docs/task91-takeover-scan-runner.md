@@ -35,5 +35,9 @@
   结果按存档写 json 含胜负/末波/破防僵尸），`python/test_takeover_scan.py` 13 项单测过；
   冒烟：L46 s20261046 d1 老师臂 2 未来跑通（0/2，早期点每局约 4 秒），重跑 0.08s 零重跑。commit 713b28f3。
   task89 的 zip 已入库本工作树（12 份通关、288 组扫描清单、`scan_seed_ledger.json`），生产清单未被改（task87 登记幂等）。
+- 2026-10-26（同日）：register 就绪——按存档解析登记族（task87 `_llm` 先例），既有起点格不覆盖只报告；
+  独立登记账本 `register_seed_ledger.json`（86M 起、256 块、合并盘点+两账本避让）；单测 17 项过。commit 809cf48a。
+  回测（12 份 adaptive vs task87 的 12 点线）后台进行中；首份 L46 s46 的 d634=7/8 与 task87 逐点吻合。结论骨架
+  `MEMORY/docs/takeover-scan-runner.md` 已建。
 
 ## 问题
