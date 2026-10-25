@@ -381,7 +381,7 @@ def _scan_plan(rows: list, layers: dict, base: int, root: Path, reservations: di
     claimed = []
     for entry in reservations.values():
         start, count = entry['start'], entry['count']
-        if not (isinstance(start, int) and 0 <= start < 2**32 and count == FUTURE_BLOCK
+        if not (isinstance(start, int) and 0 <= start < 2**32 and type(count) is int and count > 0
                 and start + count <= 2**32):
             raise ValueError('扫描种子账本范围无效')
         interval = (start, start + count - 1)
@@ -394,6 +394,8 @@ def _scan_plan(rows: list, layers: dict, base: int, root: Path, reservations: di
     for row in usable:
         key = json.dumps([row['task_id'], row['seed'], row['archive']], ensure_ascii=False)
         existing = reservations.get(key)
+        if existing and existing['count'] != FUTURE_BLOCK:
+            raise ValueError('既有扫描分配的块大小不符')
         start = existing['start'] if existing else allocate_future_block(ranges, cursor, FUTURE_BLOCK)
         if not existing:
             reservations[key] = dict(start=start, count=FUTURE_BLOCK)

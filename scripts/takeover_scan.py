@@ -9,7 +9,7 @@
                             50% 线到顶档之间补齐网格档，学生臂只打两端。
   register <result.json…>   判读：老师 ≥50% 的存档生成阶梯（档位全部 ≥50%，
                             顶档取最晚的稳定 8/8 点），写 demo_start；未来种子块
-                            用独立加锁账本分配；同步 DESIGN 与测试期望集合。
+                            与 task89 共用加锁账本分配；同步 DESIGN 与测试期望集合。
 
 生产老师参数（curriculum_queue 同款）：学生 r11、叶值 v5、静态网 branch1、
 --verify-samples 9 --student-candidates 2；老师臂 dagger-beta 1，学生臂 0。
@@ -30,7 +30,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-from import_llm_run import allocate_future_block, occupied_seed_ranges  # noqa: E402
+from import_llm_run import allocate_future_block, occupied_seed_ranges, DEFAULT_SEED_LEDGER  # noqa: E402
 
 # 生产模型（task91 任务书：学生 r11、叶值 v5、静态网 branch1）。
 DEFAULT_STUDENT = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt')
@@ -39,7 +39,8 @@ DEFAULT_STATIC = Path('/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_MANIFEST = ROOT / 'configs/human_demo_tasks.json'
 DEFAULT_OUT = ROOT / 'artifacts/llm_demo/scan_out'
-DEFAULT_LEDGER = ROOT / 'artifacts/llm_demo/register_seed_ledger.json'
+DEFAULT_LEDGER = DEFAULT_SEED_LEDGER
+LEGACY_REGISTER_LEDGER = ROOT / 'artifacts/llm_demo/register_seed_ledger.json'
 DEFAULT_REGISTER_BASE = 86_000_000   # import 的扫描账本从 84M 起每份 +1000，登记块挪到 86M 起
 REGISTER_BLOCK = 256                 # task71b 先例：每个 demo_start 格 256 个未来种子
 PASS_RATE = 0.5
@@ -451,7 +452,7 @@ def cmd_adaptive(args) -> None:
 # ---------------------------------------------------------------- register
 
 class RegisterLedger:
-    """登记用未来种子块的加锁账本（schema 与 task89 扫描账本同格式，独立文件）。
+    """登记与 task89 扫描共用未来种子加锁账本，兼容读取旧独立账本。
 
     占用范围 = 清单/盘点既有段 + task89 扫描账本已分配块 + 本账本已登记块，
     保证与全部段不相交。
@@ -464,14 +465,14 @@ class RegisterLedger:
 
     def _ranges(self) -> list:
         ranges = list(occupied_seed_ranges(ROOT))
-        for ledger in (self.scan_ledger, self.path):
+        for ledger in {self.scan_ledger, self.path, LEGACY_REGISTER_LEDGER}:
             if ledger and ledger.exists():
                 document = json.loads(ledger.read_text(encoding='utf-8'))
                 for entry in (document.get('reservations') or {}).values():
                     ranges.append((entry['start'], entry['start'] + entry['count'] - 1))
         return ranges
 
-    def allocate(self, base: int, count: int = REGISTER_BLOCK) -> int:
+    def allocate(self, base: int, count: int = REGISTER_BLOCK, key: str | None = None) -> int:
         self.lock.parent.mkdir(parents=True, exist_ok=True)
         with self.lock.open('a') as lock:
             fcntl.flock(lock, fcntl.LOCK_EX)
@@ -479,8 +480,13 @@ class RegisterLedger:
                         if self.path.exists() else dict(schema='llm_scan_seed_ledger_v1', reservations={}))
             if document.get('schema') != 'llm_scan_seed_ledger_v1':
                 raise ValueError('未知登记种子账本格式')
+            existing = document['reservations'].get(key) if key else None
+            if existing:
+                if existing['count'] != count:
+                    raise ValueError('既有登记分配的块大小不符')
+                return existing['start']
             start = allocate_future_block(self._ranges(), base, count)
-            document['reservations'][f'register_{start}'] = dict(start=start, count=count)
+            document['reservations'][key or f'register_{start}'] = dict(start=start, count=count)
             with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=self.path.parent,                                             delete=False) as temporary:
                 temporary.write(json.dumps(document, ensure_ascii=False, indent=2) + '\n')
             Path(temporary.name).replace(self.path)
@@ -507,8 +513,10 @@ def update_manifest(manifest_path: Path, task_id: str, spec: dict) -> bool:
     for task in document.get('tasks') or []:
         if task['task_id'] == task_id:
             existing = task.get('demo_start')
-            if existing and existing.get('decisions') == spec['decisions']:
-                return False    # 幂等
+            if existing:
+                if existing == spec:
+                    return False
+                raise ValueError(f'{task_id}: 已有起点格，不得覆盖')
             task['demo_start'] = spec
             manifest_path.write_text(json.dumps(document, ensure_ascii=False, indent=1) + '\n',
                                      encoding='utf-8')
@@ -519,12 +527,12 @@ def update_manifest(manifest_path: Path, task_id: str, spec: dict) -> bool:
 def update_test_expectations(test_path: Path, task_ids: list) -> bool:
     """把新起点格 task_id 加进 test_registered_manifest_start_cells 的期望集合。"""
     text = test_path.read_text(encoding='utf-8')
-    missing = [task_id for task_id in task_ids if f"'{task_id}'" not in text]
-    if not missing:
-        return False
     marker = "self.assertEqual(set(cells), {"
     start = text.index(marker) + len(marker)
     end = text.index('})', start)
+    missing = [task_id for task_id in task_ids if f"'{task_id}'" not in text[start:end]]
+    if not missing:
+        return False
     lines = ''.join(f"                                      '{task_id}',\n" for task_id in missing)
     text = text[:start] + '\n' + lines + ' ' * 38 + text[start:end].lstrip('\n') + text[end:]
     test_path.write_text(text, encoding='utf-8')
@@ -576,6 +584,7 @@ def cmd_register(args) -> None:
     ledger = RegisterLedger(args.ledger, args.scan_ledger)
     manifest_path = args.manifest
     registered, skipped, report = [], [], []
+    dry_ranges = ledger._ranges() if args.dry_run else []
     for document in results:
         base_id = document['task_id']
         try:
@@ -609,11 +618,13 @@ def cmd_register(args) -> None:
                     decisions=ladder['ladder'], index=0,
                     future_seed_start=None, future_seed_count=REGISTER_BLOCK)
         if args.dry_run:
-            start = DEFAULT_REGISTER_BASE
+            start = allocate_future_block(dry_ranges, args.register_base, REGISTER_BLOCK)
+            dry_ranges.append((start, start + REGISTER_BLOCK - 1))
             print(f'[dry run] {task_id}: 阶梯 {ladder["ladder"]}（顶档 {ladder["top"]}'
-                  f'{"，8/8" if ladder["top_is_full"] else "，非 8/8"}），种子块将从 {DEFAULT_REGISTER_BASE} 起')
+                  f'{"，全胜" if ladder["top_is_full"] else "，非全胜"}），种子块 {start} 起')
         else:
-            start = ledger.allocate(args.register_base)
+            key = json.dumps(['register', task_id, document['archive']], ensure_ascii=False)
+            start = ledger.allocate(args.register_base, key=key)
             spec['future_seed_start'] = start
             update_manifest(manifest_path, task_id, spec)
             print(f'{task_id}: 阶梯 {ladder["ladder"]}（顶档 {ladder["top"]}），种子块 {start}–{start + REGISTER_BLOCK - 1}，已写入清单')
@@ -679,7 +690,7 @@ def parser() -> argparse.ArgumentParser:
     common(register)
     register.add_argument('--ledger', type=Path, default=DEFAULT_LEDGER)
     register.add_argument('--scan-ledger', type=Path,
-                          default=ROOT / 'artifacts/llm_demo/raw/scan_seed_ledger.json')
+                          default=DEFAULT_SEED_LEDGER)
     register.add_argument('--register-base', type=int, default=DEFAULT_REGISTER_BASE)
     register.add_argument('--design', type=Path, default=ROOT / 'DESIGN.md')
     register.add_argument('--tests', type=Path, default=ROOT / 'python/test_curriculum_queue.py')

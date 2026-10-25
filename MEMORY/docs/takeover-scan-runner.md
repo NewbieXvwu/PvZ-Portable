@@ -15,7 +15,7 @@ $PY $P/scripts/takeover_scan.py run  $P/artifacts/llm_demo/raw/scan_jobs_2026102
 # 2') 自适应取点（默认）：4 等距老师点 → 跨 50% 二分 → [50% 线, 顶档] 补齐网格档，
 #     学生臂只打 50% 线与顶档两端。所有点都落在 task89 的 12 点网格上，可与 12 点结果直接比档。
 $PY $P/scripts/takeover_scan.py adaptive $P/artifacts/llm_demo/raw/scan_jobs_20261026.json
-# 3) 判读登记：老师 ≥50% 的存档生成阶梯写 demo_start；独立加锁账本分配 256 种子块；
+# 3) 判读登记：老师 ≥50% 的存档生成阶梯写 demo_start；共用 task89 加锁账本分配 256 种子块；
 #    既有起点格不覆盖（task87 的 _llm 族等），只核对与报告；同步 DESIGN 与测试期望。
 $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results --dry-run   # 先看
 $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
@@ -36,12 +36,13 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
 - **登记族解析**（`resolve_target_task`）：按存档路径匹配清单里已有的 demo_start 最可靠；
   本机种子 LLM 局与人类示范共用 base task_id 时落 `base_llm` 族（task87 先例）；base 被别的
   存档占用则报错留人工，绝不静默覆盖既有起点格。
-- **登记种子账本**：`artifacts/llm_demo/register_seed_ledger.json`，与 task89 扫描账本
-  （`scan_seed_ledger.json`，84M 起、每份 1000 步长 96 块）同格式但独立文件；分配时合并
-  清单/盘点/两个账本的所有已占段，登记块从 86M 起步长 1M。
+- **登记种子账本**：默认与 task89 共用 `artifacts/llm_demo/scan_seed_ledger.json` 及同一个文件锁，
+  同时接受扫描96块与登记256块。旧 `register_seed_ledger.json` 只作为兼容占用来源参与避让；
+  清单/盘点也参与检查，登记从86M起。按存档绑定分配，失败重试复用已有块。
+  隔离验收用显式私有账本，不写生产清单。dry-run仅计算避让结果；底层清单更新也禁止覆盖既有格。
 - **阶梯规则**（task71b 同款）：档位全部 ≥50%（4/8 恰过线）；顶档取最晚的 8/8 稳定点，
   没有 8/8 就取最晚 ≥50% 点（报告注明）；顶档以上即使 ≥50% 也不入（不如稳定点）。
-- **测试**：`python/test_takeover_scan.py` 17 项（阶梯规则、自适应取点顺序的合成驱动、
+- **测试**：`python/test_takeover_scan.py` 当前26项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
   族名解析、清单/测试期望的文件更新）。
 
 ## 回测（自适应 vs 全量 12 点，同一存档同一未来种子块）

@@ -15,6 +15,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import takeover_scan as scan
+import import_llm_run as importer
 
 from takeover_scan import (AdaptiveScan, build_ladder, resolve_target_task, update_manifest,
                            update_test_expectations)
@@ -220,12 +221,56 @@ class RegisterHelpersTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             update_manifest(path, 'nope', dict(decisions=[1]))
 
+    def test_update_manifest_does_not_replace_an_existing_archive(self):
+        path = self.tmp / 'manifest.json'
+        old = dict(archive='old', decisions=[3, 2])
+        path.write_text(json.dumps({'tasks': [{'task_id': 't1', 'demo_start': old}]}))
+        before = path.read_bytes()
+        with self.assertRaises(ValueError):
+            update_manifest(path, 't1', dict(archive='other', decisions=[3, 2]))
+        self.assertEqual(path.read_bytes(), before)
+
     def test_update_test_expectations_inserts_missing_ids(self):
         path = self.tmp / 'test_x.py'
         path.write_text("self.assertEqual(set(cells), {\n                                      'a',\n                                      'b',\n                                      })\n", encoding='utf-8')
         self.assertTrue(update_test_expectations(path, ['c']))
         self.assertIn("'c',", path.read_text(encoding='utf-8'))
         self.assertFalse(update_test_expectations(path, ['c']))
+
+    def test_expectation_id_elsewhere_in_file_does_not_count(self):
+        path = self.tmp / 'test_x.py'
+        path.write_text("other = 'c'\nself.assertEqual(set(cells), {'a',\n})\n")
+        self.assertTrue(update_test_expectations(path, ['c']))
+        self.assertEqual(path.read_text().count("'c'"), 2)
+
+
+class SharedSeedLedgerTest(unittest.TestCase):
+    def test_import_and_register_share_the_same_default_ledger(self):
+        args = scan.parser().parse_args(['register', '/results'])
+        self.assertEqual(args.ledger, importer.DEFAULT_SEED_LEDGER)
+        self.assertEqual(args.scan_ledger, importer.DEFAULT_SEED_LEDGER)
+
+    def test_scan_and_registration_blocks_do_not_overlap_and_retry_reuses_block(self):
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = Path(directory) / 'seeds.json'
+            def row(name):
+                return dict(task_id=name, base_task_id=name, seed=1, archive=name,
+                            level=46, frames=100, grade='half')
+            with patch.object(importer, 'occupied_seed_ranges', return_value=[]), \
+                 patch.object(scan, 'occupied_seed_ranges', return_value=[]), \
+                 patch.object(scan, 'LEGACY_REGISTER_LEDGER', Path(directory) / 'legacy.json'):
+                importer.scan_plan([row('first')], {}, 84_000_000, ledger_path=ledger)
+                registry = scan.RegisterLedger(ledger, ledger)
+                first = registry.allocate(84_000_000, key='register-a')
+                self.assertEqual(registry.allocate(84_000_000, key='register-a'), first)
+                importer.scan_plan([row('second')], {}, 84_000_000, ledger_path=ledger)
+            claims = list(json.loads(ledger.read_text())['reservations'].values())
+            self.assertEqual(len(claims), 3)
+            self.assertEqual(sorted(x['count'] for x in claims), [96, 96, 256])
+            for i, a in enumerate(claims):
+                for b in claims[i + 1:]:
+                    self.assertTrue(a['start'] + a['count'] <= b['start'] or
+                                    b['start'] + b['count'] <= a['start'])
 
 
 class ResolveTargetTaskTest(unittest.TestCase):
