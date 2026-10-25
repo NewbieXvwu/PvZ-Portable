@@ -52,11 +52,11 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 ## 完成核对
 
-1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧由 `scripts/state_hash_mac_probe.sh` 交接，台式机未执行。
+1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧按任务书属主控执行；`scripts/state_hash_mac_probe.sh` 与命令已交付，并在本机以覆盖路径验证。
 2. 定位：Save4 按 chunk/成员分段并比对原始字节，三处未初始化成员；Memcheck `--track-origins` 指向 `Board` 创建 `Challenge` 的堆分配。非指针（残值为整数/浮点残值）、非时钟或种子（reset 重播种后相关分段一致）；静态链接/mimalloc 只改变残值出现频率。
 3. 影响：deploy4 8 局 + 静态 8 局共 16 局，827 个决策点 privileged 状态、事件与终局全同；最终构建另做 8 进程逐操作整局（39590 操作），8 份 trace 的 SHA256 全同。
 4. 修复：三处构造初始化（`5e7c90c7`、`e8ba7716`）；四份旧示范跨修复逐边界配对，行为会变的已测存档为空；未加开关、未改生产默认。
-5. 结论：`MEMORY/docs/state-hash-determinism.md` 与 `state-hash-determinism-results.json` 已提交并推送；Mac 8 次 reset 待主控执行。
+5. 结论：`MEMORY/docs/state-hash-determinism.md` 与 `state-hash-determinism-results.json` 已提交并推送；Mac 8 次 reset 按任务书归主控执行（交接物已交付）。
 
 ## 问题
 

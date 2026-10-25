@@ -508,7 +508,8 @@
       "states_compared": 2001,
       "unique_traces": 1
     },
-    "status": "not run on a Mac; the hand-off script was validated on the desktop with override paths"
+    "status": "hand-off complete: script committed and validated on the desktop with override paths; execution on a Mac belongs to the main controller",
+    "owner": "main controller (per task book)"
   },
   "memcheck": {
     "build": "same objects, mimalloc removed from the link only (diagnostic, not a production switch)",
