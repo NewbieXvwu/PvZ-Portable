@@ -131,10 +131,10 @@ def job_map(entry: dict, points: list, futures: list) -> dict:
     return jobs
 
 
-def write_archive_result(entry: dict, points: dict, out: Path) -> Path:
+def write_archive_result(entry: dict, points: dict, out: Path, extra: dict | None = None) -> Path:
     document = dict(schema=RESULT_SCHEMA, task_id=entry['task_id'], seed=entry['seed'],
                     archive=entry['archive'], grade=entry.get('grade'), layer=entry.get('layer'),
-                    points=points)
+                    **(extra or {}), points=points)
     out.mkdir(parents=True, exist_ok=True)
     path = out / f"{entry['task_id']}_s{entry['seed']}.json"
     path.write_text(json.dumps(document, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
@@ -169,9 +169,13 @@ def cmd_run(args) -> None:
         jobs = job_map(entry, points, futures)
         points_path = args.out / 'results'
         store = {}
+        extra = {}
         existing = points_path / f"{entry['task_id']}_s{entry['seed']}.json"
         if existing.exists():
-            store = json.loads(existing.read_text(encoding='utf-8')).get('points', {})
+            previous = json.loads(existing.read_text(encoding='utf-8'))
+            store = previous.get('points', {})
+            # 保留 adaptive 等来源写入的汇总字段（l50/顶档/阶梯），只更新 points。
+            extra = {k: v for k, v in previous.items() if k not in ('schema', 'points')}
         for decision in points:
             bucket = store.setdefault(str(decision), {})
             for arm in arms:
@@ -180,8 +184,8 @@ def cmd_run(args) -> None:
                 summary = run_point(jobs, decision, arm, arms, args)
                 if summary is not None:
                     bucket[arm] = summary
-                    write_archive_result(entry, store, points_path)
-        write_archive_result(entry, store, points_path)
+                    write_archive_result(entry, store, points_path, extra)
+        write_archive_result(entry, store, points_path, extra)
     print(f'完成 {len(entries)} 份存档，结果在 {args.out / "results"}')
 
 
