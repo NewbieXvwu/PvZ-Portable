@@ -155,3 +155,4 @@
 - 初查本机没有 `/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/`，v5 checkpoint 声明的旧 branch、episode 缓存也需逐项定位。2026-10-25 HF 文件列表只有 v5 权重与其他传输件，无 v5 原语料；完整合并训练依赖恢复原分片，不能用热启动替代“与v5原语料合并”。
 - task72b 的94行有真值和已评分汇总，没有原生状态/叶特征；需恢复原始档案或精确重建协议后才能评分 v6。缺失时不宣布完成94态验收。
 - 2026-10-26 02:05（CodeBuddy 接手）：提交 task72b 94态重建通道 `task78_task72_rebuild.py`（plan/bind 不启动游戏；TAKEOVER FUTURE 需单游戏，排队等采集预算）并禁用 `task78_truth.py` 的旧重放路径（reference decision 是续走序号不能直接重放），17+49 项测试通过，已推送。context-fix 补采批次在跑（13/69，单进程串行，符合 2 游戏上限），配对面板剩余格与屋顶独立评估排在采集之后。
+- 2026-10-26 02:30（CodeBuddy）：context 补采曾因瞬态竞态（上一任务游戏未退净即计 2 游戏）让位一次，已重启续跑（30→32/69）。写好 `driver3.sh`（完整导出→配对剩余 6 格→report→屋顶面板 3 k×3 视界 216 任务→roof_score→gates→task72 重建 24 轨迹，失败即停、全程断点可续）与 `supervisor3.sh`（补采完成后自动接 driver3，仅对资源让位自动重启），已在后台运行。决策记录：诊断候选保持 16:16 冻结的 `v6/model.pt`（144 任务快照训练）——A/B 两臂身份不能中途更换，重训等于作废已完成 9 格配对；语料差异写进结论，不冒充预登记候选。
