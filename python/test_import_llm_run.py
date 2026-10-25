@@ -30,7 +30,8 @@ def _meta(task_id='demo_roof_46_doom_m200', seed=20261046, operations=120,
                               zombie_count_multiplier=multiplier, wave_cap=None, preplanted=[]),
         outcome=dict(result=1 if won else 0, won=won, final_wave=30, wave_count=30,
                      final_tick=operations, actions=operations),
-        operations=operations, initial_state_hash='deadbeef', verified=False,
+        operations=operations, frame_count=operations + 1,
+        initial_state_hash='deadbeef', verified=False,
     )
     if wins is not None:
         meta['robustness'] = dict(k=k, passed=wins >= 5, checkpoints={
@@ -50,7 +51,9 @@ def _write_archive(root, name, meta):
             stream.write(json.dumps(dict(action=dict(type='wait', ticks=1), tick=index,
                                          end_tick=index + 1, ok=True,
                                          state_hash='x')) + '\n')
-    (archive / 'frames.jsonl').write_text('', encoding='utf-8')
+    with (archive / 'frames.jsonl').open('w', encoding='utf-8') as stream:
+        for _ in range(int(meta['frame_count'])):
+            stream.write('{}\n')
     return archive
 
 

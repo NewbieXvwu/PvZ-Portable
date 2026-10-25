@@ -134,6 +134,12 @@ def archive_problems(meta: dict, archive: Path) -> list[str]:
         lines = None
     if lines is not None and meta.get('operations') is not None and int(meta['operations']) != lines:
         problems.append(f'meta.operations={meta["operations"]} 与 ticks.jsonl 的 {lines} 行不一致')
+    frames = archive / 'frames.jsonl'
+    if frames.is_file() and meta.get('frame_count') is not None:
+        with frames.open(encoding='utf-8') as stream:
+            count = sum(1 for line in stream if line.strip())
+        if int(meta['frame_count']) != count:
+            problems.append(f'meta.frame_count={meta["frame_count"]} 与 frames.jsonl 的 {count} 行不一致')
     return problems
 
 
@@ -317,7 +323,7 @@ def scan_plan(rows: list, layers: dict, base: int, root: Path = ROOT) -> dict:
         start = cursor
         cursor += FUTURE_STRIDE
         futures = list(range(start, start + SCAN_FUTURES))
-        decisions = scan_decisions(row['operations'])
+        decisions = scan_decisions(row['frames'])
         jobs = []
         for decision in decisions:
             for arm, beta in (('teacher', 1.0), ('student', 0.0)):
@@ -449,6 +455,7 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
                        level=int(task.get('level') or 0),
                        wave=(meta.get('outcome') or {}).get('final_wave'),
                        operations=int(meta.get('operations') or 0),
+                       frames=int(meta.get('frame_count') or meta.get('operations') or 0),
                        verify='未做', grade='loss', robustness=robustness_text(meta),
                        new_family=new_family, archive='', note='',
                        manual_patch=meta.get('manual_patch'))
