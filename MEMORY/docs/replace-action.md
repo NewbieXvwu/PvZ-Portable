@@ -103,3 +103,5 @@ replace以游戏原有工具命中逻辑决定被铲植物，再以原生CanPick
 ## 统计口径补充
 
 阳光产生数按原生Board::AddCoin中的mSunMoneyProduced计数，包含已生成但尚未收集的阳光，不能直接当作可花预算；花费来自实际动作事件，剩余取末观测。资源成本另外描述每局seconds、决策/搜索/续演量及割草机使用；seconds使用工作进程的对局耗时，排除调度器空等。该描述不改变预登记胜率检验、Holm校正或候选选择，也不视为控制硬件负载后的性能基准。
+
+结论层可复现：在 HEAD 重跑 `scripts/replace_action_audit.py`，24批192局的审计输出与已入库的[面板审计](task69-paired-audit.json)逐字段一致；重跑 `scripts/replace_action_stats.py` 生成的[配对结果](task69-paired-results.json)除原始文件路径写成相对路径外，全部数值与区间一致，三个McNemar精确p与Holm校正值（0.1721／0.5000／0.5000）也独立重算相符。

@@ -43,6 +43,8 @@
 
 ## 结果
 
+- 2026-10-25 21:52（北京时间）：独立复现核验：`scripts/replace_action_audit.py` 重跑输出与 task69-paired-audit.json 逐字段一致（24批/192局，problems 为空）；`scripts/replace_action_stats.py` 重跑输出与 task69-paired-results.json 仅差原始文件路径的相对/绝对写法，全部数值、区间一致；三个 McNemar 精确 p（0.34375／0.057373／0.25）与 Holm（0.1721／0.5000／0.5000）独立重算相符，雾区合并 64 对 16→11、p=0.3323 亦相符。结论层可复现，接入门槛失败这一结论不依赖一次性运行。
+
 - 2026-10-25 21:39（北京时间）：新执行者接手做交付核验：工作树干净、HEAD 1e92ef37 与 origin/replace 一致，本任务无残留游戏进程（在跑的 search_play 属 cq 工作树，未触碰）。逐项对照任务书六条：原子 replace 与原生合法掩码、老师逐卡替换候选与验证统计、学生格子头/训练标签、预登记 A/B 三面板 192 局、结论层 task69-paired-results.json / task69-paired-audit.json / task69-demo-validation.json / task69-demo-hash-diagnostic.json、报告 MEMORY/docs/replace-action.md 均已入库。用项目 venv 在 HEAD 重跑 test_replace_action / test_replace_action_demo_batch / test_replace_action_stats 共 17 项全部通过。任务交付项确认完整。
 
 - 2026-10-25 21:20（北京时间）：四局示范在独立修复构建（69d4feb6…）下全部完成并原生核验通过：3,518帧、163,016次操作，65个原始配对产出57个合法替换标签（大喷菇17、雪豌豆15、仙人掌14、香蒲11），8个铲前不合法（6冷却、2阳光不足）、0输入错位、0未配对成功铲子，原始公共观测与归档哈希不变。标签转移为小喷→大喷37/寒冰11/阳光菇4/仙人掌3、坚果→高坚果2。结论层task69-demo-validation.json已入库，报告补齐该节；A/B结论不变（接入门槛仍未通过），任务交付项全部完成。
