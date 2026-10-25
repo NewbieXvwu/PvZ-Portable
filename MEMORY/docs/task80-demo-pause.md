@@ -29,4 +29,39 @@
 
 ## 结果
 
+### 实现（提交 b82c179b）
+
+- **Esc = 操作暂停开关**（`src/main.cpp` `HumanInput::Poll`）：暂停时 poll 的默认动作从
+  `wait ticks:1` 改为 `wait ticks:0`，录制循环对 wait 不 step，游戏时间不走；点击处理
+  不再被 `paused` 拦截，种植/铲子/收集照常，动作在冻结 tick 执行，多个动作落在同一 tick。
+  每次轮询仍走 poll 自带的呈现块，棋盘和光标持续刷新。
+- **空格与 Esc 统一**：都切换同一个操作暂停。理由：旧空格暂停（冻结 + 丢弃所有点击）
+  严格更差且是陷阱（暂停后点了没反应），录制循环对两个标志的处理本就相同；两种暂停
+  语义并存只会让人混淆。
+- **结束录制 = 关窗口**（SDL_QUIT / WINDOWEVENT_CLOSE），Esc 不再结束。提示文字改为
+  「Esc 或空格暂停/继续（暂停时可以慢慢种、铲、收集），右键取消选卡，关闭窗口结束录制。」
+- **暂停提示**走窗口标题（追加「已暂停（可继续操作）」，恢复时还原）。任务书允许「角落
+  小字或边框」但不强制；标题零遮挡、不碰绘制管线，比画面叠加安全。
+- **`DEMO_INPUT <escape|space|close>`**（main.cpp，仅 visible demo 会话接受）：把合成 SDL
+  事件推进真实队列，脚本回归驱动的是人按键走的同一条路径。Python 侧 `PvZEnv.demo_key()`。
+
+### 录制语义（不变）
+
+- 存档仍只记动作与 tick；暂停期不产生任何 tape 条目，暂停期的多个动作就是同一 tick 上的
+  连续动作（`Recorder.step` 对同 tick 动作本就不插 wait 帧）。
+- 旧存档逐位重放：用新引擎 headless `replay()` 两局示范存档（demo_fog_32_snow_m200、
+  demo_fog_34_cactus_snow_m200），逐操作 hash 全对；存档目录 sha256 前后一致（verify 会写
+  meta.json，示范存档只读，所以这次用不落盘的 replay 验证）。
+
+### 测试
+
+- 新增 `scripts/human_demo_pause_regress.py`（有窗口，仿 autoplay）：Esc 暂停 → poll 返回
+  `wait ticks:0` 且不推进时间 → 暂停中种两株（tape 上两笔同一 tick、时间未动）→ Esc 继续
+  → `wait 90` → DEMO_INPUT close 结束 → verify 通过（20261031/demo_fog_31_fume，verified=true）。
+- 原有测试：`test_human_demo` / `test_env_protocol` / `test_replay_task_spec` / `test_deck_warnings`
+  共 54 passed, 47 subtests passed。
+
 ## 问题
+
+- 暂停提示在窗口标题而不是画面角落：任务书的角落提示是「可以」项。若用户实际用下来还是
+  想要画面内提示（比如全屏时标题看不见），再加画边框的方案——那要动绘制管线，这次没做。

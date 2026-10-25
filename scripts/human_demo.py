@@ -318,14 +318,18 @@ def main():
     archive = args.out / f'seed_{seed}' / args.task
     with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
         recorder = Recorder(env, archive, args.task, deck, task, args.note)
-        print(f'录制中：{archive}。空格暂停，右键取消选卡，Esc 结束。', flush=True)
+        print(f'录制中：{archive}。Esc 或空格暂停/继续（暂停时可以慢慢种、铲、收集），'
+              f'右键取消选卡，关闭窗口结束录制。', flush=True)
         try:
             while not recorder.observation['terminal']:
                 event = env.human_input()
                 if event['closed']:
                     break
-                if event['paused']:
-                    time.sleep(.05)
+                # task80: while paused the poll yields wait ticks:0 -- step nothing, so game
+                # time stands still; but a plant/shovel/collect is still accepted and runs at
+                # the frozen tick.  Several paused actions therefore land on one tick.
+                if event['paused'] and event['action']['type'] == 'wait':
+                    time.sleep(.03)
                     continue
                 recorder.step(event['action'])
         finally:
