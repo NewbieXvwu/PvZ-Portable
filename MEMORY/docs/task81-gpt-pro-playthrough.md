@@ -58,6 +58,7 @@
 
 ## 结果
 
+- 2026-10-26 02:00 **稳健性三条实测脚本**：新增 `scripts/llmplay/robustness_check.py`（要引擎、单进程）。在 L41 doom 族上实测：**可复现 OK**（同打法同种子两次 `robustness()` 结果逐字相同）、**预算 OK**（搜索 tick +1,200 ≥ 2×2×300）、**RESEED 只改未来 OK**（换种子前后 tick / 阳光 / 植物数不变，2,400 tick 后的僵尸类型不同），末行 `ROBUSTNESS CHECK OK`。
 - 2026-10-26 01:45 **Mac 自检包随新正式包重打**：`mac_bundle.sh` 用新 stage 重打，`~/pvz-logs/llmplay_pkg/mac_bundle.tar.gz` = **48,776,677 字节**，SHA256 **`40c79c8b39a550843b91ad74890fa192ae4513f4e9d2e12cf4742608aea7162c`**，解出 **48 文件 / 70 项**、无 `__pycache__`；包内引擎本地模式重放 4 局 **4/4 PASS**（39,590 / 57,596 / 41,107 / 41,831，tick 39,479 / 57,363 / 40,969 / 41,682，四局 `result=1`，末行 `MACCHECK OK`，4 分 51 秒）。凭据模式 0 命中、禁入路径 0；`run.sh` 里的 Apple Silicon `--platform linux/amd64` 分支仍在。**Mac 一项仍需在 Mac 上执行**，`问题` 节里的路径与 SHA 已同步。
 - 2026-10-26 01:30 **重打正式包（task81c + task81d）**：`/home/newbiexvwu/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,654,631 字节**，**30 文件**，SHA256 **`ddfe0f9f331d4f661835f0bdb67a78f4739163161b66024f54535fccb574b836`**。包内 33 个任务（A4 / B11 / C8 / D8 / E2），每任务 **40 种子**（`extra_seeds.json` 与 `llmplay_seeds.json` 同块），稳健性配置 4 检查点 × 8 未来；引擎未动（`a84f10cf…`，与 21:20 4/4 PASS 的是同一份字节）。冷解压（Python `zipfile`，引擎权限 644 → 接口自补可执行位）后 `unshare -rn python3 selfcheck.py` → **`SELFCHECK OK`**（33 任务、181 操作、稳健性两次结果一致、meta 含 `robustness`/`manual_patch`）；同一份冷解压导出的存档回台式机用**独立引擎**（hostbuild2 `e849cf8f…`）`human_demo.py verify` 通过：`{"verified": true, "operations": 181, "tick": 9441, "wave": 3, "result": 2}`。整包扫描：**30 成员 CRC 全通过、凭据模式（`hf_`/`sk-`/`AIza`/`ghp_`/`password=`）0 命中、禁入路径 0**；包内 `llmplay/game.py`、`PROMPT.md`、`configs/llmplay_seeds.json`、`configs/llmplay_robustness.json` 与 HEAD **逐字一致**。包仍只在本机 `~/pvz-logs/llmplay_pkg/`，不进 git、不上 HF。
 - 2026-10-26 01:20 **task81d `robustness()` 与导出 meta**（commit 92593c6b）：`Game.robustness(policy, k=8, checkpoints=[0,10,20,30])` —— 对每个**已打到**的检查点（波开始时）读档 → `RESEED` 成 k 个新未来（种子取 `configs/llmplay_robustness.json` 的独立块 **83,000,000–83,000,307**）→ 用模型自己的**闭环**函数打到终局，返回每个检查点的胜局数。一次调用不推进局面直接报错（固定动作序列在新未来里没有意义）；调用计入搜索预算（实测 2 个未来 × 300 tick → `search_ticks` +600）；内部试打局不写「最远进度」、不进自动 observe、不能用 rewind/save/export（RESEED 后日志不可重放）；`rewind` 自动把局标 `manual_patch`。导出 meta 增加 `robustness`（含 `policy_sha256`、`passed` = 第 10 波 8 个新未来 ≥5 胜）与 `manual_patch`。实测：同打法同种子两次结果逐字相同；RESEED 前后 tick/阳光/植物数不变、出怪种类改变；`manual_patch` 真值路径实测为 True。单测 **39 条全过**。
@@ -219,6 +220,11 @@ Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到�
   期望末行 `MACCHECK OK`。包里那个 ELF 与台式机 21:20 跑过的 `stage/build/pvz-portable`
   是同一份（SHA256 `a84f10cf…`），所以这条命令换到 Mac 上跑，验的是同一串字节。
 - **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）；`STATE_HASH` 命令与 reset 响应里的哈希也对不上。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理：`executable_sha256` 写成自解释标记，让官方 verify 走 tick/ok/终局的路径）。**推测**是 SaveGame V4 快照里混进了地址或未初始化字段；主控 18:30 已记录、另派人查，本任务不修。
+
+- **task81c / task81d 的验收边界**（2026-10-26 02:00）：新包 `ddfe0f9f…` 的断网自测用 `unshare -rn`，**没有重跑 ubuntu:22.04 / python:3.11-slim 两个容器**。理由：引擎字节未变（`a84f10cf…`，与 21:50 那轮两个容器验的是同一份），改动只有纯 Python 与配置；新代码对 Python 3.10 兼容（`from __future__ import annotations`，没有 3.11+ 专有语法）。要按 task81 §3 的口径补跑，隔离 daemon 需重新下载静态 docker（约 86 MB）与两个镜像（约 250 MB）；主控需要时再跑。
+- **L50 仍不在包里（E 层只有 L30 / L40）**：`boss_l50_orig_*` 要等 boss50 分支合入 pvz-env 才有；合入后在 `scripts/llmplay/make_llmplay_tasks.py` 的 `LAYERS['E']` 追加、重跑生成器与 `check_tasks.py`，再重打包即可。
+- **E 层的族名是 llmplay 专用**：`demo_conv_30_orig_m100` / `demo_conv_40_orig_m100` 刻意不与 task75 的 `pool_l30_orig_*` / `storm_l40_orig_*` 同名，避免两条线合并时撞名；语义相同（`deck: []` + `conveyor_start: "original"`）。
+- **稳健性种子块**：`configs/llmplay_robustness.json` 的 83,000,000–83,000,307 在 DESIGN §14.31 登记；它与任务块 81,000,000–81,032,039 不相交（全仓 1990 份 JSON 机械核对，外来命中 0）。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
 用户指出两个问题：① LLM 没有时间观念，用分钟约束它等于没约束；② “只打印简短摘要”信息不够，它上下文很长，应该给足信息，而且要让它看清某一帧场上的空间分布。
