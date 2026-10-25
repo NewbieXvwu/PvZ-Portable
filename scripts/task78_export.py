@@ -30,6 +30,37 @@ def v5_stop(seed):
     return int(seed_key(int(seed))[:8], 16) % 10 == 0
 
 
+def region(group):
+    return 'roof' if group.startswith('roof') else 'fog'
+
+
+def stop_set(archives, old):
+    """Stopping identities, fixed before any label is read.
+
+    New regions use SHA256(world identity)[:8] % 10 == 0. The pre-registration adds a floor:
+    if a region ends with fewer than two stopping archives, the region's hash-smallest
+    archives join the stopping set, so validation always covers at least two worlds.
+    """
+    import hashlib
+    flags = {i: (v5_stop(a['world']['seed']) if old else identity_stop(a['world']))
+             for i, a in enumerate(archives)}
+    added = {}
+    if not old:
+        for name in ('fog', 'roof'):
+            index = [i for i, a in enumerate(archives) if region(a['group']) == name]
+            if sum(flags[i] for i in index) >= 2:
+                continue
+            order = sorted(index, key=lambda i: hashlib.sha256(
+                json.dumps(archives[i]['world'], sort_keys=True).encode()).hexdigest())
+            added[name] = []
+            for i in order:
+                if sum(flags[j] for j in index) >= 2:
+                    break
+                flags[i] = True
+                added[name].append(i)
+    return flags, added
+
+
 def shard(index, horizon, row, stop, output):
     import torch
     from pvz_value_net import encode_frame
@@ -99,11 +130,12 @@ def main():
     old = manifest.name.startswith('old')
     output = ROOT/('artifacts/task78/data_old' if old else 'artifacts/task78/data')
     output.mkdir(parents=True, exist_ok=True)
+    stops, added = stop_set(source['archives'], old)
     shards = []
     for index, row in enumerate(source['archives']):
         if args.only is not None and index != args.only:
             continue
-        stop = v5_stop(row['world']['seed']) if old else identity_stop(row['world'])
+        stop = stops[index]
         for horizon in ((2500,) if old else (2500, 4000, 6000)):
             result = shard(index, horizon, row, stop, output)
             shards.append(result)
@@ -124,6 +156,8 @@ def main():
     name = 'export_old.json' if old else 'export.json'
     write_json(ROOT/f'artifacts/task78/{name}',
                dict(source_manifest=str(manifest), source_manifest_sha256=sha(manifest),
+                    stopping_archives=sorted(i for i, v in stops.items() if v),
+                    stopping_floor_added=added,
                     total=total, by_group=summary, shards=shards))
     print(json.dumps(dict(total=total, by_group=summary), indent=1))
 
