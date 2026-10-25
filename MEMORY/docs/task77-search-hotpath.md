@@ -28,6 +28,7 @@
 - [计时口径] ABBA 的 A 臂改为显式传同 flags 的 `pvz-portable-release-before`：生产 deploy4 带本机 PGO（历史实测 18%），拿它当 A 会把编译差异算进补丁。`abba_baseline()` 拒绝静默回落到生产二进制，并加了一条回归测试（6 项通过）。
 - [门禁通过] 六族×8种子（老师 4 + 学生 4，均搜索打标签）端到端逐位一致：`gate_evidence.json` pass=true，48/48 对局；比较含 task70 COMPARE_FIELDS、rollout/halving/student_candidate 计数与完整决策帧归档。旧臂老师 20 局复用剖析局，不重打。候选 `b4999d65…`，报告 §7.1。
 - [计时进行中] 按主控新约束（同时最多 2 个游戏进程）以 `--workers 2` 跑 ABBA（A=同 flags 改前二进制 `51949eff…`，B=候选），24 个 block × 4 臂；结果补进报告 §7.2。
+- [交接 2026-10-25 14:57] 按主控指令（Codex 额度恢复）停在这里。已完成：冻结、五地形剖析与分解（报告 §3–§4）、三处逐位不变优化（§5）、离线核检查、48/48 端到端门禁（§7.1）、报告主体。**未完成：ABBA 配对计时**——`--workers 2` 跑到 3 个 block（day 的 A、B、B 各差最后一臂）即中断，没有 `abba_evidence.json`；`abba()` 无断点续跑，下一轮按报告 §2 的命令整轮重跑（约 70–90 分钟），A 臂务必显式传 `--baseline …/pvz-portable-release-before`。已停止本任务的全部游戏进程。
 
 ## 问题
 
