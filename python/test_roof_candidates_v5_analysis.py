@@ -233,3 +233,21 @@ def test_historical_comparison_keeps_shovel_action_scope_separate():
     assert all_legal['actions']==3 and all_legal['pairs']==3 and all_legal['accuracy']==1/3
     assert audit.direction_score(1e-11,1)==.5
     assert audit.direction_score(-1e-11,-1)==.5
+
+
+def test_replay_compares_full_json_frame_without_tuple_list_false_alarm(monkeypatch):
+    import pytest
+    import render_episode
+    frame={'tick':0,'plants':[(0,1,33,300,300)],'v2':{'wave_timer':1800}}
+    monkeypatch.setattr(render_episode,'_frame',lambda obs:frame)
+    probe=object.__new__(audit.PairedProbe)
+    probe.rows=[{'frame':{'tick':0,'plants':[[0,1,33,300,300]],'v2':{'wave_timer':1800}}}]
+    probe.level=42;probe.seed=45000000
+    documents=[]
+    monkeypatch.setattr(audit.base,'write',lambda path,document:documents.append(document))
+    probe.before(None,{}, {},0)
+    assert not documents
+    frame['v2']['wave_timer']=1799
+    with pytest.raises(AssertionError,match='state differs at 0'):
+        probe.before(None,{}, {},0)
+    assert documents[0]['differing_fields']==['v2']

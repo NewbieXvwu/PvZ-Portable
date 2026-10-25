@@ -252,7 +252,15 @@ class PairedProbe:
     def before(self,env,obs,fast_state,decision):
         from render_episode import _frame
         self.decision,self.fast_state=decision,fast_state
-        assert _frame(obs)==self.rows[decision]['frame'],f'production replay state differs at {decision}'
+        actual,expected=_frame(obs),self.rows[decision]['frame']
+        # Frame records contain tuples in memory and lists after JSON roundtrip.
+        # Canonical serialization preserves every value while matching that format.
+        if key(actual)!=key(expected):
+            base.write(TERM/f'l{self.level}'/str(self.seed)/'replay-state-mismatch.json',
+                dict(decision=decision,actual=actual,expected=expected,
+                     differing_fields=[k for k in actual.keys() | expected.keys()
+                                       if key(actual.get(k))!=key(expected.get(k))]))
+            raise AssertionError(f'production replay state differs at {decision}')
 
     def after(self,obs,action,policy,rejected,info):
         expected=self.rows[self.decision]
