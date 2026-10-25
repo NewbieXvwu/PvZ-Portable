@@ -31,4 +31,9 @@
 
 ## 结果
 
+- 2026-10-26（CodeBuddy 接手）：`scripts/takeover_scan.py` run/adaptive 核心就绪（生产老师参数、断点续跑、
+  结果按存档写 json 含胜负/末波/破防僵尸），`python/test_takeover_scan.py` 13 项单测过；
+  冒烟：L46 s20261046 d1 老师臂 2 未来跑通（0/2，早期点每局约 4 秒），重跑 0.08s 零重跑。commit 713b28f3。
+  task89 的 zip 已入库本工作树（12 份通关、288 组扫描清单、`scan_seed_ledger.json`），生产清单未被改（task87 登记幂等）。
+
 ## 问题
