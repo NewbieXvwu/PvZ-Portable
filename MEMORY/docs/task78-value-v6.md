@@ -159,3 +159,4 @@
 - 2026-10-26 03:25（CodeBuddy）：context 补采 42/69（supervisor 自动让位重启正常，本树 1 游戏、nice 19）；driver3 尚未启动，等补采完成自动接。屋顶 h4000/h6000 长局约 15 分钟/任务，预计上午补完。
 - 2026-10-26 03:25（CodeBuddy）：**context 补采 69/69 完成，完整导出通过**（export.json complete=true, training_eligible=true，192 任务全量），driver3 自动接手：配对面板 night_l17 v5 起跑。维持 02:30 的候选冻结决策（重训会使已完成 9 格配对作废，192 任务重训列为后续工作）。
 - 2026-10-26 04:30（CodeBuddy）：driver3 配对面板推进：night_l17 双臂完成（11/15 格），night_l20 v5 起跑；每臂约 20–36 分钟。
+- 2026-10-26 05:25（CodeBuddy）：配对面板 night 区全部完成（13/15 格），pool L21–L24 开跑（8 臂约 4h），之后 report → 屋顶独立面板 → score → gates → task72 重建。
