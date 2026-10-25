@@ -250,6 +250,35 @@ def test_reconstructed_corpus_requires_a_marked_substitute_cache(tmp_path,monkey
     assert (len(sources['old_episode'].fit),len(sources['old_episode'].val))==(1,1)
 
 
+def _two_horizon_state(v5, v6):
+    rows={h:[dict(candidate=0,packet=-1,won=0.0,index=0),dict(candidate=1,packet=5,won=1.0,index=1)]
+          for h in (2500,6000)}
+    values={name:{(h,c):value[(h,c)] for h in (2500,6000) for c in (0,1)}
+            for name,value in (('v5',v5),('v6',v6))}
+    return dict(group='fog_l31_human',world='w',rows=rows,values=values)
+
+
+def test_consistency_scores_ordering_and_predicted_ties():
+    import task78_gates as gates
+    correct=_two_horizon_state({(2500,0):0.2,(2500,1):0.8,(6000,0):0.3,(6000,1):0.7},
+                               {(2500,0):0.5,(2500,1):0.5,(6000,0):0.9,(6000,1):0.1})
+    stats={name:gates.consistency({('a',0):correct},name) for name in ('v5','v6')}
+    assert (stats['v5']['correct'],stats['v5']['total'])==(2,2)
+    # One predicted tie (0.5) plus one reversed ordering (0) at the 6000 horizon.
+    assert (stats['v6']['correct'],stats['v6']['ties'],stats['v6']['total'])==(0.5,1,2)
+
+
+def test_flip_rate_counts_only_sign_reversals_and_skips_dead_zones():
+    import task78_gates as gates
+    flipped=_two_horizon_state({(2500,0):0.10,(2500,1):0.20,(6000,0):0.10,(6000,1):0.05},
+                               {(2500,0):0.10,(2500,1):0.20,(6000,0):0.10,(6000,1):0.05})
+    assert gates.flips({('a',0):flipped},'v5')['rate']==1.0
+    flat=_two_horizon_state({(2500,0):0.1,(2500,1):0.1+1e-12,(6000,0):0.1,(6000,1):0.1-1e-12},
+                            {(2500,0):0.1,(2500,1):0.1,(6000,0):0.1,(6000,1):0.1})
+    assert gates.flips({('a',0):flat},'v5')['rate']==0.0
+    assert gates.flips({('a',0):flat},'v5',gates.DEAD_ZONE)['total']==0
+
+
 def test_terminal_panel_sources_cannot_overwrite_training_labels(tmp_path):
     from task78_collect import paths
     manifest=tmp_path/'roof_truth/k1/sources.json'

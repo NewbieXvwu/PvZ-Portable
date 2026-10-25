@@ -73,6 +73,7 @@
 - 2026-10-25 续作：配对报告空跑前置核对完成，五地形均返回incomplete/passed=null，`complete=false`、`all_game_gates_pass=false`；未把尚未进行的正式对局记成通过。真实游戏仍只有续采批次。
 - 2026-10-25 接手（CodeBuddy）：屋顶终局面板入口 `task78_roof_truth.py`（plan/trajectories/sources，24 世界 48 root × 3 共同未来，`training_eligible=false`）与导出器“雾区一律三视界”口径修正入库；采集器把独立面板的标签隔离到面板自己的目录，避免覆盖训练标签。恢复清单 `artifacts/task78/jobs_fog_restore.txt`（雾区 9–31 的 h4000/h6000，46 个任务）已生成、尚未运行。24 项相关测试通过。
 - 2026-10-25 接手：**训练语料硬阻塞确认**：v5 原语料的 branch 分片（`z13_384.pt` + 96 个 `z15d_shards`）、64 个 pool 决策分片、episode 缓存在本机与 HF 都不存在（HF 只有 `transfer/` 三个文件），因此预登记要求的"与 v5 原语料合并"无法执行。新增 `--corpus reconstructed` 诊断通道：旧区 320/512 份额由同源重建 episode 承担（`old_episode 384 / fog 64 / roof 64`，75/12.5/12.5 不变），checkpoint 与 `paired.json` 都写 `preregistered_corpus=false`/`diagnostic=true`，不能冒充预登记候选。`task78_ab.py` 按 mix 与回执一致性双向校验。26 项测试通过。
+- 2026-10-25 接手：离线门禁脚本 `task78_gates.py`：用已审计的雾/屋顶标签分片（同一 root 同一候选、三视界同共同未来）直接算终局排序一致率与视界方向翻转率，v5/v6 同态对比、按世界聚类 10000 次 bootstrap，无需再开对局。**偏离记录**：task72b 的 94 态不可重建（探针脚本只在已删除的 `/tmp/task72b`，接手点 N=229/306/382 未归档映射），改用手上冻结 64 档案语料，结论里标注。28 项测试通过。
 
 ## 预登记（2026-10-25，训练前冻结）
 
