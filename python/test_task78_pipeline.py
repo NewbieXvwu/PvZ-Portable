@@ -187,5 +187,39 @@ def test_victory_gates_enforce_legacy_cell_floor_despite_pooled_noninferiority()
     assert ab.game_gates(results,pooled)['pool']['passed'] is False
 
 
+def test_demo_run_command_preserves_base_seed_and_uses_independent_futures(tmp_path):
+    cell=next(c for c in ab.cells() if c['cell_id']=='fog_l33_cactus_d762')
+    plan=dict(models={k:dict(path='/models/'+k) for k in ('v5','v6','student','static')},
+              executable=dict(path='/engine'),demos={cell['task_id']:dict(path='/demo')})
+    args,out=ab.command(cell,'v6',plan,tmp_path)
+    assert args[args.index('--seed-list')+1]=='20261033'
+    assert args[args.index('--demo-decision')+1]=='762'
+    assert args[args.index('--future-seeds')+1]==','.join(map(str,range(78100032,78100064)))
+    assert args[args.index('--workers')+1]=='2'
+    assert out==tmp_path/cell['cell_id']/'v4'/cell['task_id']
+
+
+def test_the_two_paired_commands_change_only_the_leaf_and_output(tmp_path):
+    cell=ab.cells()[0]
+    plan=dict(models={k:dict(path='/models/'+k) for k in ('v5','v6','student','static')},
+              executable=dict(path='/engine'))
+    old,_=ab.command(cell,'v5',plan,tmp_path)
+    new,_=ab.command(cell,'v6',plan,tmp_path)
+    changed=[i for i,(a,b) in enumerate(zip(old,new)) if a!=b]
+    assert changed==[old.index('--out')+1,old.index('--value')+1]
+
+
+def test_frozen_panel_rejects_retrospective_seed_edit(tmp_path,monkeypatch):
+    root=tmp_path/'run';root.mkdir()
+    path=root/'tasks.json';path.write_text(json.dumps(dict(cells=[dict(seed=1)])))
+    docs=tmp_path/'MEMORY/docs';docs.mkdir(parents=True)
+    (docs/'task78-ab-plan.json').write_text(json.dumps(dict(sha256=ab.digest(path))))
+    monkeypatch.setattr(ab,'ROOT',tmp_path)
+    assert ab.frozen_panel(root)==[dict(seed=1)]
+    path.write_text(json.dumps(dict(cells=[dict(seed=2)])))
+    with pytest.raises(ValueError,match='preregistration'):
+        ab.frozen_panel(root)
+
+
 if __name__ == '__main__':
     unittest.main()

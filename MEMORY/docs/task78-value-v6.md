@@ -68,6 +68,10 @@
 - 2026-10-25 续作：正式训练器恢复原预登记五类配比：old episode 64 / old L7 branch 192 / old pool decision 128 / fog 64 / roof 64。此前生成的同源重建缓存仅留诊断，不充当v5原语料。原分片用mmap读取，新的fit采样对group/world/root/horizon等权；原分割行数、全部97 branch来源、64 pool分片、episode缓存与审计清单必须与v5检查点匹配。
 - 2026-10-25 续作：从v5检查点机械取出原语料规格：branch fit/val=324559/29446、episode=75136/9600、pool decision=3404/456，共442601行（更正此前129992行的笼统描述）。完整恢复/路径映射规格见 [原语料要求](task78-v5-corpus-requirements.json)。训练前拒绝部分新数据导出、评估seed/future交叠和已有run目录；检查点记录初始化与新增future身份，写入采用原子替换。41项相关测试通过；尚未开始GPU训练。
 
+
+- 2026-10-25 续作：完整配对执行入口已实现 `task78_ab.py freeze/v5/v6/report`：原候选训练必须完整且初始化/训练seed不碰评估段；两臂冻结模型、native引擎、核心Python代码、软件版本、示范三份原始文件与面板SHA。示范命令显式传原base seed、接手点、32个独立future。每格写运行回执、重新核对输入，先确认本树没有其他活游戏才启动2 worker；报告必须匹配回执。命令差异测试证明两臂只换叶值/输出路径。相关44项测试通过。
+- 2026-10-25 续作：配对报告空跑前置核对完成，五地形均返回incomplete/passed=null，`complete=false`、`all_game_gates_pass=false`；未把尚未进行的正式对局记成通过。真实游戏仍只有续采批次。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 ### 来源、抽样与训练

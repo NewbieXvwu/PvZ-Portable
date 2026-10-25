@@ -13,6 +13,8 @@ import math
 from copy import deepcopy
 from pathlib import Path
 import sys
+import os
+import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
@@ -93,14 +95,14 @@ def cells():
     return result
 
 
-def tasks():
+def tasks(out=None):
     entries={}
     for cell in cells():
         entries.setdefault(cell['task_id'],{k:v for k,v in cell.items()
             if k not in ('cell_id','terrain','pairs','demo_decision','future_seeds')})
     document = dict(tasks=list(entries.values()),cells=cells(),
                     reserved=[[SEED_START,SEED_START+2000],[78100000,78102000]])
-    out = ROOT/'artifacts/task78/ab'
+    out = ROOT/'artifacts/task78/ab' if out is None else out
     out.mkdir(parents=True, exist_ok=True)
     path = out/'tasks.json'
     if path.exists() and list(out.rglob('games.jsonl')):
@@ -173,44 +175,183 @@ def load_arm(directory, expected, use_future=False):
     return {int(r[field]): r['won'] for r in rows}, sorted(set(expected)-set(seeds))
 
 
-def game_gates(results, pooled):
+def game_gates(results, pooled, planned=None):
     """Only complete cells can support the pre-registered victory gates."""
     gates={}
+    panel=cells() if planned is None else planned
     for terrain in ('day','night','pool','fog','roof'):
-        planned=[c for c in cells() if c['terrain']==terrain]
-        complete=all(results.get(c['cell_id'],{}).get('complete') is True for c in planned)
+        cohort=[c for c in panel if c['terrain']==terrain]
+        complete=all(results.get(c['cell_id'],{}).get('complete') is True for c in cohort)
         if not complete:
             gates[terrain]=dict(status='incomplete',passed=None)
             continue
         acc=pooled[terrain]
         if terrain in ('day','night','pool'):
-            floor=all(results[c['cell_id']]['net'] >= (-4 if c['pairs']==64 else -2) for c in planned)
+            floor=all(results[c['cell_id']]['net'] >= (-4 if c['pairs']==64 else -2) for c in cohort)
             passed=acc['conservative_lower'] > -.10 and floor
             gates[terrain]=dict(status='evaluated',passed=passed,
                                 conservative_lower=acc['conservative_lower'],cell_floors_met=floor)
         else:
             direction=(results['fog_l31_snow_m100']['net']>=0 and
-                       sum(results[c['cell_id']]['net'] for c in planned if 'future_seeds' in c)>=0
-                       if terrain=='fog' else all(results[c['cell_id']]['net']>=0 for c in planned))
+                       sum(results[c['cell_id']]['net'] for c in cohort if 'future_seeds' in c)>=0
+                       if terrain=='fog' else all(results[c['cell_id']]['net']>=0 for c in cohort))
             gates[terrain]=dict(status='evaluated',passed=acc['net']>0 and acc['mcnemar_p']<.05 and direction,
                                 net=acc['net'],mcnemar_p=acc['mcnemar_p'],direction_met=direction)
     return gates
 
 
+def digest(path):
+    from task78_data import sha
+    return sha(path)
+
+
+def frozen_panel(root):
+    path=root/'tasks.json'
+    receipt=json.loads((ROOT/'MEMORY/docs/task78-ab-plan.json').read_text())
+    if digest(path)!=receipt['sha256']:
+        raise ValueError('paired panel differs from the committed 512-pair preregistration')
+    return json.loads(path.read_text())['cells']
+
+
+def runtime_plan(root):
+    """Freeze all model, code, engine and demo inputs before either arm starts."""
+    import torch
+    from pvz_frame_store import frame_path
+    from task78_train import MIX,BASELINE_SHA
+    main=Path('/home/newbiexvwu/PvZ-search')
+    panel=frozen_panel(root)
+    model_paths=dict(v5=main/'artifacts/value_net/v5/model.pt',v6=ROOT/'artifacts/task78/v6/model.pt',
+                     student=main/'artifacts/student/dw4i_s1/model.pt',
+                     static=main/'artifacts/hard/value_branch1/model.pt')
+    models={name:dict(path=str(path),sha256=digest(path)) for name,path in model_paths.items()}
+    if models['v5']['sha256']!=BASELINE_SHA:
+        raise ValueError('baseline is not the adopted v5')
+    training=json.loads((ROOT/'artifacts/task78/v6/train_log.json').read_text())
+    if training.get('complete') is not True:
+        raise ValueError('candidate training has not finished')
+    evaluation={s for c in panel for s in (c.get('future_seeds') or c['seeds'])}
+    for arm in ('v5','v6'):
+        checkpoint=torch.load(model_paths[arm],map_location='cpu',weights_only=False)
+        if evaluation & set(checkpoint['trained_on']):
+            raise ValueError(f'{arm}: training overlaps frozen evaluation identities')
+        if arm=='v6' and (checkpoint['mix']!=MIX or 'original' not in checkpoint['input_provenance']):
+            raise ValueError('candidate did not use the complete original-corpus recipe')
+    source=json.loads((ROOT/'artifacts/task78/sources.json').read_text())
+    demos={}
+    for cell in panel:
+        if 'future_seeds' not in cell or cell['task_id'] in demos:
+            continue
+        paths={Path(r['demo_archive']) for r in source['archives']
+               if r.get('demo_archive') and Path(r['demo_archive']).name==cell['task_id']}
+        if len(paths)!=1:
+            raise ValueError('cannot identify the frozen human demonstration source')
+        archive=paths.pop()
+        meta=json.loads((archive/'meta.json').read_text())
+        if meta['task']['id']!=cell['task_id'] or meta['task']['deck']!=cell['deck']:
+            raise ValueError('demo identity or deck differs from the frozen family')
+        demos[cell['task_id']]=dict(path=str(archive),files={str(p):digest(p)
+            for p in (archive/'meta.json',frame_path(archive),archive/'ticks.jsonl')})
+    code=['scripts/search_play.py','scripts/pvz_tasks.py','scripts/render_episode.py',
+          'python/pvz_env.py','python/pvz_event_env.py','python/pvz_rollout_policy.py',
+          'python/pvz_student_observation.py','python/pvz_value_net.py','scripts/task78_ab.py']
+    code=sorted(set(code)|{str(p.relative_to(ROOT)) for p in (ROOT/'python').glob('pvz_*.py')})
+    result=dict(panel_sha256=digest(root/'tasks.json'),models=models,demos=demos,
+                python='/home/newbiexvwu/.venvs/ml/bin/python3',
+                software=dict(python=sys.version,torch=str(torch.__version__)),
+                executable=dict(path=str(ROOT/'build/pvz-portable'),sha256=digest(ROOT/'build/pvz-portable')),
+                code={str(ROOT/p):digest(ROOT/p) for p in code},workers=2,
+                control='only leaf value changes; beta1/samples3/verify9/student2/h2500/gap300/skip61')
+    path=root/'runtime.json'
+    if path.exists() and json.loads(path.read_text())!=result:
+        raise ValueError('an input changed after paired runtime inputs were frozen')
+    if not path.exists():
+        path.write_text(json.dumps(result,indent=1)+'\n')
+    return result
+
+
+def command(cell,arm,plan,root):
+    """Explicit production arguments, including takeover and independent future IDs."""
+    legacy_arm='v3' if arm=='v5' else 'v4'
+    output=root/cell['cell_id']/legacy_arm/cell['task_id']
+    args=[plan.get('python',sys.executable),str(ROOT/'scripts/search_play.py'),
+          '--manifest',str(root/'tasks.json'),'--task-id',cell['task_id'],
+          '--out',str(output),'--value',plan['models'][arm]['path'],
+          '--rollout-policy',plan['models']['student']['path'],
+          '--static-value',plan['models']['static']['path'],
+          '--executable',plan['executable']['path'],'--resource-dir','/home/newbiexvwu/.cache/pvz-research-resources',
+          '--workers','2','--dagger-beta','1','--samples','3','--verify-samples','9',
+          '--student-candidates','2','--horizon','2500','--min-gap','300','--per-card','1',
+          '--halving','--rollout-sim-skip','61','--seed-list',','.join(map(str,cell['seeds']))]
+    if 'future_seeds' in cell:
+        args+=['--demo-archive',plan['demos'][cell['task_id']]['path'],
+               '--demo-decision',str(cell['demo_decision']),
+               '--future-seeds',','.join(map(str,cell['future_seeds']))]
+    return args,output
+
+
+def run_arm(root,arm):
+    import fcntl
+    with (ROOT/'artifacts/task78/games-controller.lock').open('a') as lock:
+        fcntl.flock(lock,fcntl.LOCK_EX | fcntl.LOCK_NB)
+        plan=runtime_plan(root)
+        for cell in frozen_panel(root):
+            # No fifth/third engine can be hidden behind another task78 stage.
+            for path in Path('/proc').glob('[0-9]*/cmdline'):
+                try:
+                    first=path.read_bytes().split(b'\0')[0]
+                    if first==plan['executable']['path'].encode():
+                        raise RuntimeError('another task78 game is live; wait before starting paired workers')
+                except (FileNotFoundError,ProcessLookupError,PermissionError):
+                    continue
+            runtime_plan(root)  # Recheck mutable external model/demo inputs at every cell.
+            args,output=command(cell,arm,plan,root)
+            output.mkdir(parents=True,exist_ok=True)
+            receipt=dict(runtime_sha256=digest(root/'runtime.json'),command=args,
+                         cell_id=cell['cell_id'],arm=arm)
+            receipt_path=output/'cell_run.json'
+            if receipt_path.exists() and json.loads(receipt_path.read_text())!=receipt:
+                raise ValueError('cell results belong to another frozen runtime')
+            receipt_path.write_text(json.dumps(receipt,indent=1)+'\n')
+            print(f'{arm} {cell["cell_id"]}',flush=True)
+            with (output/'run.log').open('a') as log:
+                subprocess.run(args,stdout=log,stderr=subprocess.STDOUT,check=True,
+                    env=os.environ | dict(PVZ_NO_POPUP='1',OMP_NUM_THREADS='1',OPENBLAS_NUM_THREADS='1'))
+
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('phase', choices=['tasks', 'report'])
+    parser.add_argument('phase', choices=['tasks','freeze','v5','v6','report'])
     parser.add_argument('--root', default=str(ROOT/'artifacts/task78/ab'))
     args = parser.parse_args()
     if args.phase == 'tasks':
-        return tasks()
+        if not Path(args.root).is_absolute():
+            parser.error('absolute paired output root required')
+        return tasks(Path(args.root))
     root = Path(args.root)
+    if not root.is_absolute():
+        parser.error('absolute paired output root required')
+    if args.phase=='freeze':
+        return runtime_plan(root)
+    if args.phase in ('v5','v6'):
+        return run_arm(root,args.phase)
+    panel=frozen_panel(root)
     results, pooled = {}, {}
-    for cell in cells():
+    checked_runtime=None
+    for cell in panel:
         expected = set(cell.get('future_seeds') or cell['seeds'])
         base = root/cell['cell_id']
         old, old_missing = load_arm(base/'v3'/cell['task_id'], expected,'future_seeds' in cell)
         new, new_missing = load_arm(base/'v4'/cell['task_id'], expected,'future_seeds' in cell)
+        for arm,legacy,rows in [('v5','v3',old),('v6','v4',new)]:
+            if rows:
+                if checked_runtime is None:
+                    checked_runtime=runtime_plan(root)
+                plan=checked_runtime
+                args_expected,_=command(cell,arm,plan,root)
+                record=json.loads((base/legacy/cell['task_id']/'cell_run.json').read_text())
+                if record!=dict(runtime_sha256=digest(root/'runtime.json'),command=args_expected,
+                                cell_id=cell['cell_id'],arm=arm):
+                    raise ValueError('paired rows are not tied to the frozen runtime inputs')
         if old is None or new is None:
             results[cell['cell_id']] = dict(terrain=cell['terrain'], pairs=0,
                                             complete=False, missing_old=old_missing,
@@ -233,7 +374,7 @@ def main():
         acc['net'] = acc['gain']-acc['harm']
         acc['mcnemar_p'] = mcnemar(acc['gain'], acc['harm'])
         acc['conservative_lower'] = (clopper_lower(acc['gain'], n) - clopper_upper(acc['harm'], n)) if n else None
-    gates=game_gates(results,pooled)
+    gates=game_gates(results,pooled,panel)
     document=dict(cells=results,terrain=pooled,gates=gates,
                   complete=all(v['status']=='evaluated' for v in gates.values()),
                   all_game_gates_pass=all(v['passed'] is True for v in gates.values()),

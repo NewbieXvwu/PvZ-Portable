@@ -32,7 +32,7 @@ old decision 128 / fog 64 / roof 64 / old branch 192 / old episode 64 混训，�
 
 ## 4. 配对胜率
 
-（待填）
+已冻结15格/512对。正式对局尚未开始；运行入口为 `scripts/task78_ab.py` 的 freeze/v5/v6/report 阶段，逐格绑定冻结输入回执。空结果前置报告为全部 incomplete，不构成胜率证据。
 
 ## 5. 终局一致率
 
