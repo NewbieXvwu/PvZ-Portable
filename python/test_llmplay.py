@@ -177,5 +177,41 @@ class GridTest(unittest.TestCase):
         self.assertTrue(cell.startswith('Mel85'))
 
 
+class AutoObserveTest(unittest.TestCase):
+    """§D：退出时只自动打印最后推进的那一局，别被 branch 淹没。"""
+
+    def test_only_last_active_game_prints_full_observe(self):
+        import contextlib
+        import io
+        from llmplay import game as game_module
+
+        class Fake:
+            def __init__(self, name):
+                self.task_id = name
+                self.tick = 10
+                self.env = object()
+                self._dirty = True
+
+            def observe(self):
+                self._dirty = False
+                return 'FULL ' + self.task_id
+
+        first, second = Fake('first'), Fake('second')
+        game_module._LIVE_GAMES.extend([first, second])
+        game_module._LAST_ACTIVE = second
+        try:
+            buffer = io.StringIO()
+            with contextlib.redirect_stdout(buffer):
+                game_module._auto_observe()
+        finally:
+            for fake in (first, second):
+                game_module._LIVE_GAMES.remove(fake)
+            game_module._LAST_ACTIVE = None
+        output = buffer.getvalue()
+        self.assertIn('FULL second', output)
+        self.assertNotIn('FULL first', output)
+        self.assertIn('1 个其它局', output)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -46,16 +46,31 @@ from . import budget  # noqa: E402
 
 # 还活着、且自上次 observe 之后又推进过的局：进程退出时自动打印一次完整 observe（§D）。
 # 模型不用记得自己调用 —— 脚本怎么结束都会看到局面。
+# 只打印**最后推进过**的那一局：搜索脚本可能开出几十个 branch，全打印会把输出淹掉。
 _LIVE_GAMES: list = []
+_LAST_ACTIVE = None
+
+
+def _mark_active(game) -> None:
+    global _LAST_ACTIVE
+    _LAST_ACTIVE = game
 
 
 def _auto_observe() -> None:
-    for game in list(_LIVE_GAMES):
-        try:
-            if getattr(game, "_dirty", False) and game.env is not None:
-                print(game.observe())
-        except Exception as error:      # 自动打印失败不能吞掉脚本的真实结果
-            print("[自动 observe 失败：%s]" % error)
+    live = [game for game in list(_LIVE_GAMES)
+            if getattr(game, "_dirty", False) and game.env is not None]
+    if not live:
+        return
+    primary = _LAST_ACTIVE if _LAST_ACTIVE in live else live[-1]
+    try:
+        print(primary.observe())
+    except Exception as error:      # 自动打印失败不能吞掉脚本的真实结果
+        print("[自动 observe 失败：%s]" % error)
+    others = [game for game in live if game is not primary]
+    if others:
+        print("（本次脚本还推进了 %d 个其它局：%s；要看哪个就 print(那个局.observe())）"
+              % (len(others), "、".join("%s@tick%s" % (game.task_id, game.tick)
+                                       for game in others)))
 
 
 atexit.register(_auto_observe)
@@ -398,6 +413,7 @@ class Game:
         self._note_events(action, ok, before_plants, before_zombies, before_mowers, before_wave)
         self.session.note_ticks(level, self.tick - before, self.session.mode(level))
         self._dirty = True
+        _mark_active(self)
         # 精简观测的响应不带 state_hash（那是给搜索用的轻量路径），存档要逐操作哈希，
         # 所以缺了就单独问一次。一次命令的代价，比关掉精简观测便宜得多。
         state_hash = self.env._last_response.get("state_hash") or self.env.state_hash()
