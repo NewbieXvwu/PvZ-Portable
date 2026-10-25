@@ -3,8 +3,8 @@ import copy
 
 import pytest
 
-from pvz_promotion import (PANEL_TASKS, PANEL_TASKS_V3, SEED_POOLS_V2, SEED_POOL_V2, decide,
-                           freeze_panel, paired_interval, policy, summarize)
+from pvz_promotion import (PANEL_TASKS, PANEL_TASKS_V3, decide, freeze_panel, paired_interval,
+                           policy, summarize)
 
 
 def manifest():
@@ -93,48 +93,6 @@ def v2_panel(start=31024):
 
 def v3_panel(start=31024):
     return freeze_panel(v3_source_document(), version=3, seed_block=(start, start + V3_BLOCK_SIZE))
-
-
-# ---- task88: ordered gate pool list (second window after the first is spent) ----
-
-def test_gate_pools_are_ordered_disjoint_and_keep_the_legacy_first_window():
-    assert SEED_POOL_V2 == (31024, 65536)  # v2/v3 were registered against this window
-    assert SEED_POOLS_V2[0] == SEED_POOL_V2
-    assert len(SEED_POOLS_V2) >= 2
-    ordered = sorted(SEED_POOLS_V2)
-    assert ordered == list(SEED_POOLS_V2)  # consumption order is the registered order
-    for (low, high), (next_low, _) in zip(ordered, ordered[1:]):
-        assert low < high <= next_low  # disjoint, never touching
-    # The new window must fit >= 200 v3 rounds (1920 pairs each) with room to spare.
-    assert SEED_POOLS_V2[-1][1] - SEED_POOLS_V2[-1][0] >= 200 * V3_BLOCK_SIZE
-
-
-def test_frozen_panel_for_an_issued_block_stays_byte_identical():
-    """Lock the v2/v3 panels of an already-issued block: task88 must not move a seed.
-
-    Both digests were taken from the code as of commit 04b0e75b, before the pool
-    list existed. A change here means an old certificate no longer replays.
-    """
-    import hashlib
-    import json
-    for panel, digest in ((v2_panel(), '3b6e2e62031345294a534f8dc07bd448e23274b867f40859cf3eff67335a361d'),
-                          (v3_panel(), 'f29f3c828117447b9c6fceb596dbadb39175f425ab20b6c9f0e2984be6435c99')):
-        assert hashlib.sha256(json.dumps(panel, sort_keys=True).encode()).hexdigest() == digest
-
-
-def test_second_window_freezes_and_pools_outside_the_list_are_rejected():
-    start = SEED_POOLS_V2[1][0]
-    panel = v3_panel(start)
-    seeds = [seed for task in panel['tasks'] for seed in task['seeds']]
-    assert panel['seed_block'] == [start, start + V3_BLOCK_SIZE]
-    assert min(seeds) == start and max(seeds) == start + V3_BLOCK_SIZE - 1
-    assert len(set(seeds)) == V3_BLOCK_SIZE
-    # A block that straddles the end of a pool, or sits between pools, is refused.
-    for block in ((SEED_POOLS_V2[0][1] - 1, SEED_POOLS_V2[0][1] - 1 + V3_BLOCK_SIZE),
-                  (SEED_POOLS_V2[0][1], SEED_POOLS_V2[0][1] + V3_BLOCK_SIZE),
-                  (2_000_000_000, 2_000_000_000 + V3_BLOCK_SIZE)):
-        with pytest.raises(ValueError):
-            freeze_panel(v3_source_document(), version=3, seed_block=block)
 
 
 def test_v2_policy_records_fresh_seed_design_and_v1_stays_byte_compatible():

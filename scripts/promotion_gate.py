@@ -15,11 +15,6 @@ aborts the gate instead of wrapping around to reuse seeds.
 Gate version 3 (task73c): panel extended with the practiced fog and roof zones
 and the floor day_l9 holdout replaced; 1920 pairs. Decision rules unchanged.
 
-task88: the dedicated pool became an ordered list (SEED_POOLS_V2). The first
-window is nearly spent, so the ledger continues into a second registered window
-instead of aborting the gate. Blocks stay ordered and never reused; the panel,
-the policy document and the certificate format are unchanged.
-
 Parallelism (task73c): --eval-units N runs up to N search_play children
 concurrently (each with the contract's own --workers). Game outcomes are a
 function of (model, task, seed) only, so unit order and concurrency never
@@ -79,67 +74,44 @@ def contract(candidate, incumbent, source_panel, executable, value, resource_dir
     return document
 
 
-def allocate_seed_block(ledger_path, total, pool=None, pools=None):
-    """Reserve the next unused contiguous block from the gate seed pools (task73b/task88).
+def allocate_seed_block(ledger_path, total, pool=None):
+    """Reserve the next unused contiguous block from the gate pool (task73b).
 
     The ledger lives outside git and is the sole authority for gate seed
     consumption: blocks are handed out in pool order, never reused, never
-    wrapped. Pools are walked in the order registered in SEED_POOLS_V2, so the
-    second window only starts handing out blocks once the first one is spent;
-    exhaustion of every pool raises SeedPoolExhausted.
-
-    A ledger written before task88 has only the legacy "pool" key. It is read as
-    a single-pool ledger, and the first write upgrades it in place to
-    "pools" (plus the legacy key, so older code still recognises the file and
-    fails closed instead of allocating from a window it does not know).
+    wrapped. Exhaustion raises SeedPoolExhausted.
     """
-    if pool is not None:
-        pools = (pool,)
-    pools = tuple(tuple(int(bound) for bound in entry) for entry in (pools or pvz_promotion.SEED_POOLS_V2))
+    pool = pvz_promotion.SEED_POOL_V2 if pool is None else pool
     ledger_path, lock_path = Path(ledger_path), Path(str(ledger_path) + '.lock')
     ledger_path.parent.mkdir(parents=True, exist_ok=True)
     with lock_path.open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         if ledger_path.exists():
             document = read(ledger_path)
-            if 'pools' in document:
-                if tuple(tuple(p) for p in document['pools']) != pools:
-                    raise ValueError(f'seed ledger {ledger_path} was created for pools '
-                                     f'{document.get("pools")}')
-            elif tuple(document.get('pool', ())) != pools[0]:
+            if tuple(document.get('pool', ())) != tuple(pool):
                 raise ValueError(f'seed ledger {ledger_path} was created for pool {document.get("pool")}')
             blocks = document.get('allocated')
             if (type(blocks) is not list
                     or any(type(b) is not list or len(b) != 2 or any(type(s) is not int for s in b)
-                           or b[0] >= b[1]
-                           or not any(low <= b[0] and b[1] <= high for low, high in pools)
-                           for b in blocks)):
+                           or b[0] < pool[0] or b[1] > pool[1] or b[0] >= b[1] for b in blocks)):
                 raise ValueError(f'corrupt seed ledger: {ledger_path}')
             ordered = sorted(tuple(b) for b in blocks)
             if any(a[1] > b[0] for a, b in zip(ordered, ordered[1:])):
                 raise ValueError(f'overlapping blocks in seed ledger: {ledger_path}')
         else:
             blocks, ordered = [], []
-        block = None
-        for pool_low, pool_high in pools:
-            cursor = pool_low
-            for low, high in ordered:
-                if high <= pool_low or low >= pool_high:
-                    continue
-                if cursor + total <= low:
-                    break
-                cursor = max(cursor, high)
-            if cursor + total <= pool_high:
-                block = (cursor, cursor + total)
+        cursor = pool[0]
+        for low, high in ordered:
+            if cursor + total <= low:
                 break
-        if block is None:
+            cursor = max(cursor, high)
+        if cursor + total > pool[1]:
             raise SeedPoolExhausted(
-                f'gate seed pools {[list(entry) for entry in pools]} exhausted: need {total} '
-                f'more seeds after {len(blocks)} allocated blocks; refusing to reuse seeds')
-        blocks.append([block[0], block[1]])
-        write(ledger_path, dict(pool=list(pools[0]), pools=[list(entry) for entry in pools],
-                               allocated=blocks))
-        return block
+                f'gate seed pool {list(pool)} exhausted: need {total} more seeds after '
+                f'{len(blocks)} allocated blocks; refusing to reuse seeds')
+        blocks.append([cursor, cursor + total])
+        write(ledger_path, dict(pool=list(pool), allocated=blocks))
+        return cursor, cursor + total
 
 
 def require_allocated_block(ledger_path, seed_block):

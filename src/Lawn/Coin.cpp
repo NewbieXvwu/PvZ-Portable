@@ -53,10 +53,6 @@ void Coin::CoinInitialize(int theX, int theY, CoinType theCoinType, CoinMotion t
 	mPosY = theY;
 	mType = theCoinType;
 	mCollectionDistance = 0.0f;
-	// Collect() sets these before gameplay uses them, but snapshots also save
-	// uncollected coins. Do not let unused collection coordinates retain heap data.
-	mCollectX = 0.0f;
-	mCollectY = 0.0f;
 	mDead = false;
 	mWidth = 60;
 	mHeight = 60;
