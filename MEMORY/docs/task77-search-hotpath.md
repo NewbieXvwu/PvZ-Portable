@@ -26,6 +26,8 @@
 - [剖析补采] 首批 day/night 剖析缺引擎计数器（旧版 driver），`profile` 阶段改为不覆盖证据、另存 `profile_complete/`，按同一任务与种子重采；`profile-summary` 汇总每决策毫秒分解。
 - [分解] 五地形各 4 局剖析完成：每决策耗时里 rollout 引擎步 41.8–91.3 ms、C++ 学生前向 14.8–47.8 ms，二者占 80–90%；叶值+静态值前向 1.0–6.9 ms、显式快照往返 0.5–0.8 ms、IPC 与 Python 调度 8–20 ms。引擎 CPU 的 89% 在 ROLLOUT_VALUE 里；采样热点是 openblas sgemm（学生前向 11–13%）、`Reanimation::Update` 与其 track lambda（约 8%）、粒子发射器（约 6%）、`DataArray` 迭代器（约 6%）。
 - [计时口径] ABBA 的 A 臂改为显式传同 flags 的 `pvz-portable-release-before`：生产 deploy4 带本机 PGO（历史实测 18%），拿它当 A 会把编译差异算进补丁。`abba_baseline()` 拒绝静默回落到生产二进制，并加了一条回归测试（6 项通过）。
+- [门禁通过] 六族×8种子（老师 4 + 学生 4，均搜索打标签）端到端逐位一致：`gate_evidence.json` pass=true，48/48 对局；比较含 task70 COMPARE_FIELDS、rollout/halving/student_candidate 计数与完整决策帧归档。旧臂老师 20 局复用剖析局，不重打。候选 `b4999d65…`，报告 §7.1。
+- [计时进行中] 按主控新约束（同时最多 2 个游戏进程）以 `--workers 2` 跑 ABBA（A=同 flags 改前二进制 `51949eff…`，B=候选），24 个 block × 4 臂；结果补进报告 §7.2。
 
 ## 问题
 
