@@ -50,7 +50,14 @@ def main() -> None:
     p.add_argument('--out', type=Path, default=ROOT / 'artifacts/task79/control/E_r11')
     p.add_argument('--workers', type=int, default=4)
     p.add_argument('--seeds', type=int, default=len(SEEDS))
+    p.add_argument('--level', type=int, default=37)
+    p.add_argument('--seed-start', type=int, default=SEEDS[0])
+    p.add_argument('--deck', default=','.join(str(card) for card in DECK),
+                   help='comma separated seed types; default is the L37 magnet deck')
+    p.add_argument('--task-id', default=TASK_ID)
     args = p.parse_args()
+    deck = [int(card) for card in args.deck.split(',')]
+    seeds = list(range(args.seed_start, args.seed_start + args.seeds))
 
     digest = sha(args.student)
     if digest != R11_SHA:
@@ -62,11 +69,11 @@ def main() -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     manifest = args.out / 'manifest.json'
     manifest.write_text(json.dumps(dict(tasks=[dict(
-        task_id=TASK_ID, level=37, deck=DECK, seeds=SEEDS,
+        task_id=args.task_id, level=args.level, deck=deck, seeds=seeds,
         zombie_count_multiplier=1.0, fog_observation='human_v2')]), indent=1) + '\n')
 
     command = [sys.executable, str(ROOT / 'scripts/search_play.py'),
-               '--manifest', str(manifest), '--task-id', TASK_ID,
+               '--manifest', str(manifest), '--task-id', args.task_id,
                '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
                '--arms', 'fast_search', '--dagger-beta', '1', '--verify-samples', '9',
                '--student-candidates', '2', '--workers', str(args.workers),
@@ -79,11 +86,11 @@ def main() -> None:
                             'OPENBLAS_NUM_THREADS': '1'})
     rows = [json.loads(line) for line in (args.out / 'games.jsonl').read_text().splitlines()]
     wins = sum(row['won'] for row in rows)
-    print(f'{TASK_ID} {wins} / {len(rows)}  (control A on the same seeds: 4 / 16)', flush=True)
+    print(f'{args.task_id} {wins} / {len(rows)}  (dw4i_s1 on the same seeds: see control A)', flush=True)
     (args.out / 'result.json').write_text(json.dumps(dict(
-        task_id=TASK_ID, student=str(args.student), student_sha256=digest,
-        seeds=[row['seed'] for row in rows], wins=wins, games=len(rows),
-        control_A=dict(student='dw4i_s1', wins=4, games=16)), indent=1) + '\n')
+        task_id=args.task_id, level=args.level, deck=deck,
+        student=str(args.student), student_sha256=digest,
+        seeds=[row['seed'] for row in rows], wins=wins, games=len(rows)), indent=1) + '\n')
 
 
 if __name__ == '__main__':
