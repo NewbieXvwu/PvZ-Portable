@@ -14,10 +14,39 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from human_demo import reset_archive
 from pvz_event_env import EventWaitEnv
+from pvz_frame_store import frame_path, read_frames
 
 
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
+def groups(archive, decisions):
+    """Only combine successful plain waits, retaining every archived decision boundary."""
+    boundaries = {frame['operation'] for frame in read_frames(frame_path(archive))} if decisions else set()
+    pending = None
+    with (archive / 'ticks.jsonl').open() as tape:
+        for operation, line in enumerate(tape, 1):
+            entry = json.loads(line)
+            action = entry['action']
+            mergeable = decisions and action['type'] == 'wait' and 'until' not in action and entry['ok']
+            if pending is not None and not mergeable:
+                yield pending
+                pending = None
+            if mergeable:
+                if pending is None:
+                    pending = [operation, operation, entry, entry, dict(action)]
+                else:
+                    assert pending[3]['end_tick'] == entry['tick']
+                    pending[1], pending[3] = operation, entry
+                    pending[4]['ticks'] += action['ticks']
+                if operation in boundaries or pending[4]['ticks'] >= 100000:
+                    yield pending
+                    pending = None
+            else:
+                yield operation, operation, entry, entry, action
+    if pending is not None:
+        yield pending
 
 
 def segments(path):
@@ -32,6 +61,28 @@ def segments(path):
     while pos < len(board):
         kind, length = struct.unpack_from('<II', board, pos)
         result[f'chunk_{kind}'] = board[pos + 8:pos + 8 + length]
+        if kind == 19:
+            # chunk version + field header + blob length + tail TLV header.
+            data = result[f'chunk_{kind}']
+            assert struct.unpack_from('<IIIIII', data) == (1, 1, 360, 356, 100, 348)
+            for index in range(6):
+                result[f'Challenge.mCloudsCounter[{index}]'] = data[328 + 4 * index:332 + 4 * index]
+        if kind == 4:
+            data = result[f'chunk_{kind}']
+            item_pos = 32  # chunk wrapper (12) + DataArray header (20)
+            max_used, = struct.unpack_from('<I', data, 16)
+            for _ in range(max_used):
+                key, item_size = struct.unpack_from('<II', data, item_pos)
+                item_pos += 8
+                end = item_pos + item_size
+                while item_pos < end:
+                    field, field_size = struct.unpack_from('<II', data, item_pos)
+                    item_pos += 8
+                    if field == 100:
+                        assert field_size == 102
+                        result[f'Projectile[{key}].mLastPortalX'] = data[item_pos + 98:item_pos + 102]
+                    item_pos += field_size
+                assert item_pos == end
         pos += 8 + length
     pos = 15 + size
     size, = struct.unpack_from('<Q', raw, pos)
@@ -55,7 +106,9 @@ def run(args):
     report = {'executable': str(args.executable),
               'executable_sha256': hashlib.sha256(args.executable.read_bytes()).hexdigest(),
               'archive': str(args.archive), 'tape_sha256': hashlib.sha256(
-                  (args.archive / 'ticks.jsonl').read_bytes()).hexdigest(), 'runs': []}
+                  (args.archive / 'ticks.jsonl').read_bytes()).hexdigest(),
+              'coverage': 'all decisions and non-wait actions' if args.decisions else 'every operation',
+              'privileged': args.privileged, 'runs': []}
     for repeat in range(args.repeats):
         trace = args.out / f'trace_{repeat}.jsonl'
         with EventWaitEnv(args.resource_dir, executable=args.executable) as env, trace.open('w') as output:
@@ -68,27 +121,27 @@ def run(args):
             logical = hashlib.sha256()
             first_archive_hash_diff = 0 if initial_hash != meta['initial_state_hash'] else None
             operations = 0
-            with (args.archive / 'ticks.jsonl').open() as tape:
-                for operation, line in enumerate(tape, 1):
-                    if args.operations and operation > args.operations:
-                        break
-                    entry = json.loads(line)
-                    before = obs['tick']
-                    obs, _, _, _, info = env.step(entry['action'])
-                    state_hash = env._last_response.get('state_hash') or env.state_hash()
-                    assert (before, obs['tick'], info['ok']) == (entry['tick'], entry['end_tick'], entry['ok']), operation
-                    if first_archive_hash_diff is None and state_hash != entry['state_hash']:
-                        first_archive_hash_diff = operation
-                    # Privileged view covers hidden zombies too; compare every operation,
-                    # stronger than checking only archived decision frames.
-                    state = env.privileged_state() if args.privileged else obs
-                    record = {'operation': operation, 'hash': state_hash,
-                              'observation': digest(state), 'events': info['events']}
-                    logical.update(json.dumps({k: v for k, v in record.items() if k != 'hash'},
-                                              sort_keys=True).encode())
-                    output.write(json.dumps(record, separators=(',', ':')) + '\n')
-                    operations = operation
-                    env.episode['operations'].clear()
+            for start, operation, first, entry, action in groups(args.archive, args.decisions):
+                if args.operations and operation > args.operations:
+                    break
+                before = obs['tick']
+                obs, _, _, _, info = env.step(action)
+                state_hash = env._last_response.get('state_hash') or env.state_hash()
+                if operation in args.dump_at:
+                    dump = args.out / f'operation_{operation}_{repeat}.bin'
+                    assert env._command(f'STATE_BYTES {json.dumps(str(dump))}')['ok']
+                assert (before, obs['tick'], info['ok']) == (first['tick'], entry['end_tick'], entry['ok']), operation
+                if first_archive_hash_diff is None and state_hash != entry['state_hash']:
+                    first_archive_hash_diff = operation
+                # Privileged view also covers hidden zombies and the gameplay RNG.
+                state = env.privileged_state() if args.privileged else obs
+                record = {'operation': operation, 'hash': state_hash,
+                          'observation': digest(state), 'events': info['events']}
+                logical.update(json.dumps({k: v for k, v in record.items() if k != 'hash'},
+                                          sort_keys=True).encode())
+                output.write(json.dumps(record, separators=(',', ':')) + '\n')
+                operations = operation
+                env.episode['operations'].clear()
             item.update(operations=operations, logical_sha256=logical.hexdigest(),
                         first_archive_hash_diff=first_archive_hash_diff,
                         outcome={k: obs.get(k) for k in ('tick', 'wave', 'result', 'terminal')})
@@ -111,12 +164,18 @@ def main():
     parser.add_argument('--operations', type=int, default=2000,
                         help='0: entire tape; -1: reset only; default: first 2000 operations')
     parser.add_argument('--privileged', action='store_true')
+    parser.add_argument('--decisions', action='store_true',
+                        help='coalesce waits between archived decisions (whole-tape mode only)')
+    parser.add_argument('--dump-at', type=int, nargs='*', default=[],
+                        help='also export snapshot bytes after these operation numbers')
     args = parser.parse_args()
     for name in ('executable', 'resource_dir', 'archive', 'out'):
         if not getattr(args, name).is_absolute():
             parser.error(f'--{name.replace("_", "-")} must be absolute')
     if args.repeats < 1 or args.operations < -1:
         parser.error('invalid repeat/operation count')
+    if args.decisions and args.operations != 0:
+        parser.error('--decisions requires --operations 0')
     run(args)
 
 
