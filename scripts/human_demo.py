@@ -330,6 +330,12 @@ def main():
                 recorder.step(event['action'])
         finally:
             recorder.close()
+    # 打法要点在打完之后才说得出来：没在命令行给就在这里问（只进 meta，不进哈希）
+    if not args.note and sys.stdin.isatty():
+        note = input('打法要点（直接回车跳过）：').strip()
+        if note:
+            recorder.meta['note'] = note
+            recorder._save_meta()
     print(json.dumps(verify(archive, args.resource_dir, args.executable)))
     print(f'存档：{archive}')
 

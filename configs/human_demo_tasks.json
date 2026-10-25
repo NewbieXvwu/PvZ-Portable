@@ -14,6 +14,7 @@
     {"task_id":"demo_fog_31_snow_m150","level":31,"seeds":[20261031],"zombie_count_multiplier":1.5,"deck":[9,8,10,16,5,23,17,19,2,3]},
     {"task_id":"demo_fog_31_snow_m200","level":31,"seeds":[20261031],"zombie_count_multiplier":2.0,"deck":[9,8,10,16,5,23,17,19,2,3],"demo_start":{"archive":"artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200","decisions":[777,706,635,565,495,424,353,283,213,142],"index":0,"future_seed_start":44000000,"future_seed_count":256}},
     {"task_id":"demo_fog_32_magnet_m200","level":32,"seeds":[20261032],"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,31,3]},
+    {"task_id":"demo_fog_32_snow_m200","level":32,"seeds":[20261032],"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,5,3]},
     {"task_id":"demo_fog_32_freeze_m200","level":32,"seeds":[20261032],"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,14,20]},
     {"task_id":"demo_fog_33_cactus_m200","level":33,"seeds":[20261033],"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,26,25]},
     {"task_id":"demo_fog_33_blover_m200","level":33,"seeds":[20261033],"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,27,7]},
