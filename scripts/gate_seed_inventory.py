@@ -208,9 +208,44 @@ def verify_window(roots, low, high):
     return dict(files=files, hits=hits)
 
 
+def compact(result, widest=40):
+    """The git-committed form: merged intervals plus a few named examples.
+
+    The full per-declaration table is a scan artifact (thousands of task rows, a
+    megabyte of JSON); what a reviewer needs in the repository is the merged
+    occupancy, the per-source counts and the widest named segments.
+    """
+    by_kind = {}
+    for segment in result['sources']:
+        entry = by_kind.setdefault(segment['kind'], dict(declarations=0, low=segment['low'],
+                                                        high=segment['high']))
+        entry['declarations'] += 1
+        entry['low'] = min(entry['low'], segment['low'])
+        entry['high'] = max(entry['high'], segment['high'])
+    widest_segments = sorted(result['sources'], key=lambda s: s['high'] - s['low'], reverse=True)[:widest]
+    return dict(
+        schema=result['schema'],
+        roots=result['roots'],
+        scan=result['scan'],
+        occupied=result['occupied'],
+        occupied_seeds=result['occupied_seeds'],
+        free_gaps_ge_1m=result['free_gaps_ge_1m'],
+        sources_by_kind=by_kind,
+        widest_segments=[dict(name=s['name'], kind=s['kind'], low=s['low'], high=s['high'],
+                              source=Path(s['source']).name) for s in widest_segments],
+        **{key: result[key] for key in ('candidate', 'verification') if key in result},
+    )
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument('--out', type=Path, default=ROOT / 'MEMORY/docs/gate-seed-inventory.json')
+    parser.add_argument('--out', type=Path, default=None,
+                        help='full scan result (default: a temp file when --summary-out is set)')
+    parser.add_argument('--summary-out', type=Path,
+                        default=ROOT / 'MEMORY/docs/gate-seed-inventory.json',
+                        help='compact, git-committed summary')
+    parser.add_argument('--from-inventory', type=Path, default=None,
+                        help='re-summarise a previous full result without rescanning')
     parser.add_argument('--roots', type=Path, nargs='*', default=None,
                         help='roots to scan (default: every local worktree, main checkout, ~/pvz-logs)')
     parser.add_argument('--quick', action='store_true', help='design ranges + ledger + configs only')
@@ -219,6 +254,17 @@ def main():
     parser.add_argument('--candidate', type=int, nargs=2, default=None,
                         help='LO HI candidate pool to report against the free gaps')
     args = parser.parse_args()
+    if args.from_inventory is not None:
+        result = json.loads(args.from_inventory.read_text())
+        if args.candidate:
+            low, high = args.candidate
+            overlap = [[max(low, a), min(high, b)] for a, b in result['occupied'] if a < high and low < b]
+            result['candidate'] = dict(low=low, high=high, size=high - low,
+                                       disjoint=not overlap, overlaps=overlap)
+        args.summary_out.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_out.write_text(json.dumps(compact(result), indent=1) + '\n')
+        print(json.dumps(result.get('candidate', {}), indent=1))
+        return 0
 
     roots = [str(path) for path in (args.roots or worktree_roots())]
     design = []
@@ -266,8 +312,12 @@ def main():
                                       **verify_window(roots, args.verify_lo, args.verify_hi))
         result['verification']['hit_count'] = len(result['verification']['hits'])
         result['verification']['hits'] = result['verification']['hits'][:50]
-    args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, indent=1) + "\n")
+    if args.out is not None:
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(result, indent=1) + "\n")
+    if args.summary_out is not None:
+        args.summary_out.parent.mkdir(parents=True, exist_ok=True)
+        args.summary_out.write_text(json.dumps(compact(result), indent=1) + "\n")
     summary = {key: result[key] for key in ('scan', 'occupied_seeds')}
     summary['occupied_intervals'] = len(occupied)
     summary['free_gaps_ge_1m'] = gaps[:10]
