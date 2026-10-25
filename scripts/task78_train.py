@@ -40,7 +40,7 @@ def require_memory():
 class Rows:
     """One training source: tensors plus fit/validation index arrays."""
 
-    def __init__(self, boards, scalars, won, seeds, stop):
+    def __init__(self, boards, scalars, won, seeds, stop, allow_empty=False):
         self.boards = boards
         self.scalars = scalars
         self.won = won
@@ -48,7 +48,7 @@ class Rows:
         self.fit = np.flatnonzero(~stop)
         self.val = np.flatnonzero(stop)
         self.seeds = {int(v) for v in np.unique(np.asarray(seeds))}
-        if not len(self.fit) or not len(self.val):
+        if not allow_empty and (not len(self.fit) or not len(self.val)):
             raise ValueError(f'source split is empty: fit {len(self.fit)} val {len(self.val)}')
 
     def batch(self, indices, device):
@@ -128,14 +128,25 @@ def main():
     fog = np.flatnonzero([not g.startswith('roof') for g in groups])
     roof = np.flatnonzero([g.startswith('roof') for g in groups])
     sources = {
-        'fog': Rows(new_boards[fog], new_scalars[fog], new_won[fog], new_seeds[fog], new_stop[fog]),
-        'roof': Rows(new_boards[roof], new_scalars[roof], new_won[roof], new_seeds[roof], new_stop[roof]),
+        'fog': Rows(new_boards[fog], new_scalars[fog], new_won[fog], new_seeds[fog], new_stop[fog],
+                    allow_empty=True),
+        'roof': Rows(new_boards[roof], new_scalars[roof], new_won[roof], new_seeds[roof], new_stop[roof],
+                     allow_empty=True),
     }
     old_boards, old_scalars, old_won, old_seeds, old_stop, _ = load_decisions(
         args.old_data, held)
     sources['old_decision'] = Rows(old_boards, old_scalars, old_won, old_seeds, old_stop)
     ep = load_episodes(args.episodes)
     sources['old_episode'] = Rows(*ep)
+    dropped = []
+    for name in list(sources):
+        if len(sources[name].fit) == 0 or len(sources[name].val) == 0:
+            # A cohort that produced no non-terminal row cannot carry its pre-registered
+            # share. Drop it and renormalise the remaining weights; the checkpoint records it.
+            dropped.append(name)
+            del sources[name]
+    if 'fog' not in sources or 'roof' not in sources:
+        print(f'warning: new-region sources present: {sorted(sources)}; dropped {dropped}', flush=True)
 
     model = load_value_net(args.init).to(args.device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
@@ -174,8 +185,9 @@ def main():
                 encoder=2, width=model.conv[0].out_channels, context=True,
                 trained_on=used, init=args.init, epoch=epoch,
                 validation=total, components=components,
-                mix=MIX, sources={name: dict(fit=len(src.fit), val=len(src.val))
-                                  for name, src in sources.items()},
+                mix=MIX, dropped_sources=dropped,
+                sources={name: dict(fit=len(src.fit), val=len(src.val))
+                         for name, src in sources.items()},
                 hyper=dict(lr=args.lr, weight_decay=1e-4, epochs=args.epochs, steps=args.steps,
                            batch_size=args.batch_size, seed=args.seed, device=args.device,
                            patience=args.patience, min_improvement=args.min_improvement),
@@ -190,7 +202,7 @@ def main():
                 print(f'early stop at epoch {epoch}', flush=True)
                 break
     (out/'train_log.json').write_text(json.dumps(dict(history=history, best_epoch=best_epoch,
-        best_validation=best, mix=MIX, wall_seconds=time.time()-started,
+        best_validation=best, mix=MIX, dropped_sources=dropped, wall_seconds=time.time()-started,
         sources={name: dict(rows=len(src.fit)+len(src.val), fit=len(src.fit), val=len(src.val))
                  for name, src in sources.items()}), indent=1)+'\n')
     print(json.dumps(dict(best_epoch=best_epoch, best_validation=best), indent=1))
