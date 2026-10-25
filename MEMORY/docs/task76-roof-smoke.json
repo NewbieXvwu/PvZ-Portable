@@ -1,0 +1,881 @@
+{
+ "parity": true,
+ "plain": {
+  "seed": 45000000,
+  "future_seed": null,
+  "arm": "fast_search",
+  "won": false,
+  "final_wave": 7,
+  "decisions": 367,
+  "seconds": 7.8,
+  "final_tick": 19433,
+  "terminal": true,
+  "state_hash": "a4334811f7014e54",
+  "wave_count": 30,
+  "final_zombies": [
+   {
+    "row": 1,
+    "type": 0,
+    "x": 652.195,
+    "health": 150
+   },
+   {
+    "row": 3,
+    "type": 0,
+    "x": 384.234,
+    "health": 270
+   },
+   {
+    "row": 3,
+    "type": 2,
+    "x": 326.052,
+    "health": 160
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": 80.6485,
+    "health": 270
+   },
+   {
+    "row": 4,
+    "type": 0,
+    "x": -34.4076,
+    "health": 270
+   },
+   {
+    "row": 4,
+    "type": 2,
+    "x": 648.273,
+    "health": 640
+   },
+   {
+    "row": 2,
+    "type": 0,
+    "x": 211.257,
+    "health": 270
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": -54.172,
+    "health": 270
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": -180,
+    "health": 270
+   }
+  ],
+  "mowers_used": 0,
+  "planted_slots": {
+   "6": 22,
+   "1": 11,
+   "3": 4,
+   "4": 3
+  },
+  "planted_types": {
+   "33": 22,
+   "1": 11,
+   "3": 4,
+   "32": 3
+  },
+  "searched": 53,
+  "overrides": 3,
+  "rollout_batches": 163,
+  "rollout_lanes": 657,
+  "halving_candidates": 276,
+  "halving_rollouts": 585,
+  "halving_selected_lanes": 585,
+  "student_candidate_added": 106,
+  "student_candidate_best": 14,
+  "student_candidate_override": 2,
+  "demo_candidate_added": 0,
+  "shovel_events": [],
+  "replant_events": [
+   {
+    "tick": 1260,
+    "row": 0,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 2640,
+    "row": 4,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 4080,
+    "row": 0,
+    "col": 5,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 216,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 5700,
+    "row": 3,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 6480,
+    "row": 2,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 7620,
+    "row": 0,
+    "col": 4,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 9060,
+    "row": 3,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   },
+   {
+    "tick": 10800,
+    "row": 1,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 11460,
+    "row": 0,
+    "col": 2,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 12000,
+    "row": 2,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 12840,
+    "row": 3,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 13680,
+    "row": 4,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 14460,
+    "row": 4,
+    "col": 1,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 15060,
+    "row": 1,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   },
+   {
+    "tick": 16346,
+    "row": 0,
+    "col": 0,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 176,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 17172,
+    "row": 4,
+    "col": 1,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 18192,
+    "row": 1,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 19398,
+    "row": 2,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   }
+  ],
+  "override_kinds": {
+   "plant_over_wait": 1,
+   "plant_over_plant": 1,
+   "wait_over_plant": 1
+  }
+ },
+ "instrumented": {
+  "seed": 45000000,
+  "future_seed": null,
+  "arm": "fast_search",
+  "won": false,
+  "final_wave": 7,
+  "decisions": 367,
+  "seconds": 7.1,
+  "final_tick": 19433,
+  "terminal": true,
+  "state_hash": "a4334811f7014e54",
+  "wave_count": 30,
+  "final_zombies": [
+   {
+    "row": 1,
+    "type": 0,
+    "x": 652.195,
+    "health": 150
+   },
+   {
+    "row": 3,
+    "type": 0,
+    "x": 384.234,
+    "health": 270
+   },
+   {
+    "row": 3,
+    "type": 2,
+    "x": 326.052,
+    "health": 160
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": 80.6485,
+    "health": 270
+   },
+   {
+    "row": 4,
+    "type": 0,
+    "x": -34.4076,
+    "health": 270
+   },
+   {
+    "row": 4,
+    "type": 2,
+    "x": 648.273,
+    "health": 640
+   },
+   {
+    "row": 2,
+    "type": 0,
+    "x": 211.257,
+    "health": 270
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": -54.172,
+    "health": 270
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": -180,
+    "health": 270
+   }
+  ],
+  "mowers_used": 0,
+  "planted_slots": {
+   "6": 22,
+   "1": 11,
+   "3": 4,
+   "4": 3
+  },
+  "planted_types": {
+   "33": 22,
+   "1": 11,
+   "3": 4,
+   "32": 3
+  },
+  "searched": 53,
+  "overrides": 3,
+  "rollout_batches": 163,
+  "rollout_lanes": 657,
+  "halving_candidates": 276,
+  "halving_rollouts": 585,
+  "halving_selected_lanes": 585,
+  "student_candidate_added": 106,
+  "student_candidate_best": 14,
+  "student_candidate_override": 2,
+  "demo_candidate_added": 0,
+  "shovel_events": [],
+  "replant_events": [
+   {
+    "tick": 1260,
+    "row": 0,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 2640,
+    "row": 4,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 4080,
+    "row": 0,
+    "col": 5,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 216,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 5700,
+    "row": 3,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 6480,
+    "row": 2,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 7620,
+    "row": 0,
+    "col": 4,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 9060,
+    "row": 3,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   },
+   {
+    "tick": 10800,
+    "row": 1,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 11460,
+    "row": 0,
+    "col": 2,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 12000,
+    "row": 2,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 12840,
+    "row": 3,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 13680,
+    "row": 4,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 14460,
+    "row": 4,
+    "col": 1,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 15060,
+    "row": 1,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   },
+   {
+    "tick": 16346,
+    "row": 0,
+    "col": 0,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 176,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 17172,
+    "row": 4,
+    "col": 1,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 18192,
+    "row": 1,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 19398,
+    "row": 2,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   }
+  ],
+  "override_kinds": {
+   "plant_over_wait": 1,
+   "plant_over_plant": 1,
+   "wait_over_plant": 1
+  }
+ },
+ "expanded_arms_complete": true,
+ "reused_uninstrumented": {
+  "seed": 45000000,
+  "future_seed": null,
+  "arm": "fast_search",
+  "won": false,
+  "final_wave": 7,
+  "decisions": 367,
+  "seconds": 7.1,
+  "final_tick": 19433,
+  "terminal": true,
+  "state_hash": "236429377d8879b5",
+  "wave_count": 30,
+  "final_zombies": [
+   {
+    "row": 1,
+    "type": 0,
+    "x": 652.195,
+    "health": 150
+   },
+   {
+    "row": 3,
+    "type": 0,
+    "x": 384.234,
+    "health": 270
+   },
+   {
+    "row": 3,
+    "type": 2,
+    "x": 326.052,
+    "health": 160
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": 80.6485,
+    "health": 270
+   },
+   {
+    "row": 4,
+    "type": 0,
+    "x": -34.4076,
+    "health": 270
+   },
+   {
+    "row": 4,
+    "type": 2,
+    "x": 648.273,
+    "health": 640
+   },
+   {
+    "row": 2,
+    "type": 0,
+    "x": 211.257,
+    "health": 270
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": -54.172,
+    "health": 270
+   },
+   {
+    "row": 0,
+    "type": 0,
+    "x": -180,
+    "health": 270
+   }
+  ],
+  "mowers_used": 0,
+  "planted_slots": {
+   "6": 22,
+   "1": 11,
+   "3": 4,
+   "4": 3
+  },
+  "planted_types": {
+   "33": 22,
+   "1": 11,
+   "3": 4,
+   "32": 3
+  },
+  "searched": 53,
+  "overrides": 3,
+  "rollout_batches": 163,
+  "rollout_lanes": 657,
+  "halving_candidates": 276,
+  "halving_rollouts": 585,
+  "halving_selected_lanes": 585,
+  "student_candidate_added": 106,
+  "student_candidate_best": 14,
+  "student_candidate_override": 2,
+  "demo_candidate_added": 0,
+  "shovel_events": [],
+  "replant_events": [
+   {
+    "tick": 1260,
+    "row": 0,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 2640,
+    "row": 4,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 4080,
+    "row": 0,
+    "col": 5,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 216,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 5700,
+    "row": 3,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 6480,
+    "row": 2,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 7620,
+    "row": 0,
+    "col": 4,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 9060,
+    "row": 3,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   },
+   {
+    "tick": 10800,
+    "row": 1,
+    "col": 2,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 11460,
+    "row": 0,
+    "col": 2,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 12000,
+    "row": 2,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 12840,
+    "row": 3,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 13680,
+    "row": 4,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 14460,
+    "row": 4,
+    "col": 1,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 15060,
+    "row": 1,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   },
+   {
+    "tick": 16346,
+    "row": 0,
+    "col": 0,
+    "packet": 3,
+    "occupant": 33,
+    "occupant_health": 176,
+    "plant_type": 3,
+    "same_type": false
+   },
+   {
+    "tick": 17172,
+    "row": 4,
+    "col": 1,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 18192,
+    "row": 1,
+    "col": 0,
+    "packet": 1,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 1,
+    "same_type": false
+   },
+   {
+    "tick": 19398,
+    "row": 2,
+    "col": 1,
+    "packet": 4,
+    "occupant": 33,
+    "occupant_health": 300,
+    "plant_type": 32,
+    "same_type": false
+   }
+  ],
+  "override_kinds": {
+   "plant_over_wait": 1,
+   "plant_over_plant": 1,
+   "wait_over_plant": 1
+  }
+ },
+ "native_reset_note": "Process reuse changes native STATE_HASH without changing any other game outcome field; fresh-process plain/instrumented equality includes STATE_HASH.",
+ "inputs": {
+  "engine": {
+   "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/pvz-portable",
+   "sha256": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+   "bytes": 10396392
+  },
+  "student": {
+   "source": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/student.pt",
+   "sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+   "bytes": 722094
+  },
+  "value": {
+   "source": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/value.pt",
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+   "bytes": 611739
+  },
+  "static": {
+   "source": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/static.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+   "bytes": 584603
+  },
+  "v4_control": {
+   "source": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/v4_control.pt",
+   "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+   "bytes": 611163
+  }
+ },
+ "driver_sha256": "0ac96e11e65d1016b57d6963878710defe8afab544f861a6022bdacc021591b9"
+}
