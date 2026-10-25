@@ -54,6 +54,8 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 - 2026-10-25：独立审计交接证据：12 份源存档 SHA256 与 `archive_source_sha256.json` 全同（未改写）；memcheck SaveGame 未初始化报告 24 → 0；`full_final` 8 份 trace 1 种哈希、`panel_final` 每份 1 种、`panel_before` 每份 2 种；审计摘要入 results JSON 的 `handover_audit`。
 
+- 2026-10-25：任务书顶部加交接说明（五项已完成、不要重做；剩余为主控侧合并与 Mac 执行）。
+
 ## 完成核对
 
 1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧按任务书属主控执行；`scripts/state_hash_mac_probe.sh` 与命令已交付，并在本机以覆盖路径验证。
