@@ -43,6 +43,20 @@ CELLS = {
 }
 
 
+PANEL = ('day', 'night', 'pool', 'fog', 'roof')
+
+
+def panel_cells(args):
+    """The task book's panel is five terrains; --cells widens it (conveyor is the sixth family)."""
+    return selected_cells(args) if getattr(args, 'cells', '') else list(PANEL)
+
+
+def summary_path(out, cells):
+    name = ('profile_summary.json' if set(cells) == set(PANEL)
+            else 'profile_summary_' + '_'.join(cells) + '.json')
+    return out / name
+
+
 def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -189,7 +203,7 @@ def profile(args):
     sampler = args.out / 'prof_sample.so'
     subprocess.run(['cc', '-shared', '-fPIC', '-O2', '-o', str(sampler),
                     str(ROOT / 'scripts/prof_sample.c'), '-ldl'], check=True)
-    for cell in ('day', 'night', 'pool', 'fog', 'roof'):
+    for cell in panel_cells(args):
         tag = 'profile'
         folder = args.out / tag / cell
         previous = list(folder.glob('[0-9]*.json'))
@@ -220,7 +234,8 @@ def profile_summary(args):
     from prof_symbolize import load, symbolize
     evidence = {'cells': {}}
     frozen = json.loads((args.out / 'freeze.json').read_text())
-    for cell in ('day', 'night', 'pool', 'fog', 'roof'):
+    cells = panel_cells(args)
+    for cell in cells:
         folder = args.out / 'profile_complete' / cell
         if not folder.is_dir():
             folder = args.out / 'profile' / cell
@@ -294,7 +309,7 @@ def profile_summary(args):
             'python_self_seconds': python_functions.most_common(25),
             'samples': sum(functions.values()), 'cpp_samples': functions.most_common(45),
             'valid_sample_files': valid_samples, 'invalid_sample_files': invalid_samples}
-    save(args.out / 'profile_summary.json', evidence)
+    save(summary_path(args.out, cells), evidence)
     print(json.dumps({k: v['milliseconds_per_decision'] for k, v in evidence['cells'].items()}, indent=1))
 
 

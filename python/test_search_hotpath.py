@@ -24,6 +24,19 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'unknown cells'):
             selected_cells(SimpleNamespace(cells='day,lobby'))
 
+    def test_supplementary_panel_keeps_the_frozen_five_terrain_summary(self):
+        from types import SimpleNamespace
+        from task77_search_hotpath import PANEL, panel_cells, summary_path
+        self.assertEqual(panel_cells(SimpleNamespace(cells='')), list(PANEL))
+        self.assertEqual(panel_cells(SimpleNamespace(cells='conveyor')), ['conveyor'])
+        self.assertEqual(summary_path(Path('/tmp'), panel_cells(SimpleNamespace(cells=''))).name,
+                         'profile_summary.json')
+        self.assertEqual(summary_path(Path('/tmp'), panel_cells(SimpleNamespace(cells='conveyor'))).name,
+                         'profile_summary_conveyor.json')
+        # Naming the five terrains explicitly must still land on the frozen panel file.
+        self.assertEqual(summary_path(Path('/tmp'), panel_cells(
+            SimpleNamespace(cells='day,night,pool,fog,roof'))).name, 'profile_summary.json')
+
     def test_qc_cohorts_exclude_ancestor_matches_and_midblock_shutdown(self):
         from task77_search_hotpath import qc_cohorts
         rows = [dict(cell=cell, index=index,
