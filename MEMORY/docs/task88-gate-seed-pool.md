@@ -35,5 +35,6 @@
 - 2026-10-26 第 1 步（脚本，扫描仍在跑）：新增 `scripts/gate_seed_inventory.py`，从 DESIGN.md 正则、各工作树/主检出/~/pvz-logs 的 JSON 种子字段、门禁账本机械汇总区间并求空闲区间；输出 json，不手抄。
 - 2026-10-26 第 3 步（代码）：`pvz_promotion.SEED_POOLS_V2 = ((31024, 65536), (100_000_000, 101_000_000))`，`SEED_POOL_V2` 保留为首段别名；`allocate_seed_block` 按池序领取、旧账本（只有 `pool` 键）可读并在首次写入时原地升级为 `pools`；`_freeze_ledger_panel` 接受任一段内的块。**不升 GATE_VERSION**：panel / policy / 契约字段一字未改，v2/v3 旧证书逐位不变（两条 SHA256 断言锁住）。
 - 2026-10-26 第 2 步（引擎种子宽度实测）+ 第 4 步（dry-run）产物入库：`scripts/gate_seed_width_check.py` + json 实测 9 位种子逐位保留（非 16/8 位截断）；`scripts/gate_seed_dryrun.py` 在账本副本上模拟 250 轮，逐对不相交、全部落在已登记池内、窗口单调；盘点脚本加紧凑汇总模式。真实账本未动（仍止于 36272）。（commit ce7951db）
+- 2026-10-26 盘点脚本两处修正：verify 正则排除浮点小数/十六进制串（`0.100845682` 的小数部分、state_hash 数字串曾被误报为 9 位种子命中，实测 1688 命中全为误报）；扫描排除本任务自身工件（gate-seed-*.json 的测试/演示值不是种子声明，曾把占用区间污染成 [0, 100000002]）。重跑全量扫描中。
 
 ## 问题

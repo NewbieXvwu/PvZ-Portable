@@ -41,6 +41,7 @@ POOL = re.compile(r"\[\s*(\d{1,3}(?:,\d{3})*|\d+)\s*,\s*(\d{1,3}(?:,\d{3})*|\d+)
 PREFILTER = (b'"seeds"', b'"seed_block"', b'"seed_window"', b'"future_seed_start"', b'"base"')
 SKIP_DIRS = {'.git', 'node_modules', '__pycache__', '.mypy_cache', '.pytest_cache'}
 SKIP_PARTS = ('/artifacts/student/frames', '/artifacts/human_demo/raw', '/artifacts/research')
+SKIP_NAMES = ('gate-seed-width-check.json', 'gate-seed-dryrun.json', 'gate-seed-inventory.json')
 MAX_JSON_BYTES = 32 << 20
 
 
@@ -134,7 +135,7 @@ def scan_json(roots):
                 subfolders[:] = []
                 continue
             for name in names:
-                if not name.endswith('.json'):
+                if not name.endswith('.json') or name in SKIP_NAMES:
                     continue
                 path = Path(folder) / name
                 try:
@@ -184,7 +185,11 @@ def verify_window(roots, low, high):
     """Every literal integer inside [low, high) in every JSON/JSONL file on the machine."""
     assert len(str(low)) == len(str(high)), 'window must not straddle a digit width'
     width = len(str(low))
-    pattern = re.compile((r'(?<!\d)\d{%d}(?!\d)' % width).encode())
+    # The run must sit outside any identifier/decimal fraction: preceded by a
+    # non-word char (': ', ', ', '['), followed by neither a digit nor a dot.
+    # Otherwise every 9-digit float mantissa (0.100845682) and every hex state
+    # hash with a digit run becomes a false hit (measured 1688 -> real hits).
+    pattern = re.compile((r'(?<![\d.\w])\d{%d}(?![\d.])' % width).encode())
     hits, files = [], 0
     for root in roots:
         for folder, subfolders, names in os.walk(root):
@@ -193,7 +198,7 @@ def verify_window(roots, low, high):
                 subfolders[:] = []
                 continue
             for name in names:
-                if not name.endswith(('.json', '.jsonl')):
+                if not name.endswith(('.json', '.jsonl')) or name in SKIP_NAMES:
                     continue
                 path = Path(folder) / name
                 try:
