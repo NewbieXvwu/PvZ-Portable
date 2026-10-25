@@ -42,7 +42,7 @@ def v2_extra(frame: dict, wave_tick: int) -> tuple[np.ndarray, np.ndarray]:
             board[5, row, col] = max(float(board[5, row, col]), zombie[7] / 2000.0)
     np.divide(totals[:2], totals[2:3], out=board[:2], where=totals[2:3] > 0)
     board[2] = np.where(np.isfinite(maximum), maximum, 0.0)
-    scalars = np.zeros(7, dtype=np.float32)
+    scalars = np.zeros(9 if frame.get('_boss_features') else 7, dtype=np.float32)
     scalars[5] = min(1.0, (frame["tick"] - wave_tick) / 3000.0)
     if raw is None:
         return board, scalars
