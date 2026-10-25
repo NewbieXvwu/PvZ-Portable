@@ -130,6 +130,60 @@ def measure(task):
     return result
 
 
+OWN_OUTPUTS = {'configs/human_demo_tasks.json',
+               'MEMORY/docs/fog-l36-39-results.json',
+               'MEMORY/docs/fog-l36-39-controls.json'}
+
+
+def seed_audit():
+    """Every integer in every JSON of every local worktree, intersected with the new seeds.
+
+    Own outputs of this task are listed separately: they contain the new seeds by
+    construction, so they cannot count as evidence of a collision.
+    """
+    listing = subprocess.run(['git', 'worktree', 'list', '--porcelain'], cwd=ROOT,
+                             capture_output=True, text=True, check=True).stdout
+    roots = [line.split('worktree ', 1)[1] for line in listing.splitlines()
+             if line.startswith('worktree ')]
+    new = {seed for task in tasks() for seed in task['seeds']}
+    files = values = 0
+    hits = Counter()
+    for root in roots:
+        for folder, subfolders, names in os.walk(root):
+            subfolders[:] = [name for name in subfolders
+                             if name not in ('.git', '.claude', 'node_modules',
+                                             'artifacts', 'logs')]
+            for name in names:
+                if not name.endswith('.json'):
+                    continue
+                path = Path(folder) / name
+                try:
+                    data = json.loads(path.read_text())
+                except (ValueError, OSError, UnicodeDecodeError):
+                    continue
+                files += 1
+                stack = [data]
+                while stack:
+                    item = stack.pop()
+                    if isinstance(item, dict):
+                        stack.extend(item.values())
+                    elif isinstance(item, list):
+                        stack.extend(item)
+                    elif isinstance(item, int) and not isinstance(item, bool):
+                        values += 1
+                        if item in new:
+                            hits[str(path.relative_to(root))] += 1
+    conflicts = {path: count for path, count in hits.items() if path not in OWN_OUTPUTS}
+    # Listed without counts: this report is one of the own outputs, so counting its
+    # own occurrences would make the file differ on every regeneration.
+    result = dict(worktrees=roots, json_files_checked=files, integers_checked=values,
+                  new_seeds=len(new), own_outputs=sorted(p for p in hits if p in OWN_OUTPUTS),
+                  conflicts=conflicts)
+    (OUT / 'seed-audit.json').write_text(json.dumps(result, indent=2) + '\n')
+    print(json.dumps({k: v for k, v in result.items() if k != 'worktrees'}, ensure_ascii=False))
+    return result
+
+
 def report():
     snapshot = json.loads((OUT / 'task74-snapshot.json').read_text())
     cells = []
@@ -176,8 +230,8 @@ def report():
                               losses=losses))
     result = dict(task74_provenance=snapshot['provenance'],
                   task79_provenance=json.loads((OUT / 'cold-provenance.json').read_text()),
-                  opacity=json.loads((OUT / 'opacity.json').read_text()), cells=cells,
-                  r11_cells=r11_cells)
+                  opacity=json.loads((OUT / 'opacity.json').read_text()),
+                  seed_audit=seed_audit(), cells=cells, r11_cells=r11_cells)
     (ROOT / 'MEMORY/docs/fog-l36-39-results.json').write_text(
         json.dumps(result, ensure_ascii=False, indent=1) + '\n')
     for cell in cells + r11_cells:
@@ -208,8 +262,10 @@ def main():
         (OUT / 'opacity.json').write_text(json.dumps(results, indent=2) + '\n')
     elif mode == 'report':
         report()
+    elif mode == 'seed-audit':
+        seed_audit()
     else:
-        raise ValueError('choose traces, opacity, cold or report')
+        raise ValueError('choose traces, opacity, cold, report or seed-audit')
 
 
 if __name__ == '__main__':

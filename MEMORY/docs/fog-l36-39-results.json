@@ -926,6 +926,36 @@
    "final_state_hash": "5c2341c1128717a0"
   }
  ],
+ "seed_audit": {
+  "worktrees": [
+   "/Users/newbiexvwu/PvZAgent",
+   "/private/tmp/audit-prepack",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/audit",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/conveyor2",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/daypanel",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/demopause",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/distributed",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/fog36",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/fogq",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/fogvis",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/macbuild",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/mem",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/ops",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/rowpool",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/slimworker",
+   "/Users/newbiexvwu/PvZAgent/.claude/worktrees/view"
+  ],
+  "json_files_checked": 2162,
+  "integers_checked": 1004862,
+  "new_seeds": 256,
+  "own_outputs": [
+   "MEMORY/docs/fog-l36-39-controls.json",
+   "MEMORY/docs/fog-l36-39-results.json",
+   "configs/human_demo_tasks.json"
+  ],
+  "conflicts": {}
+ },
  "cells": [
   {
    "source": "task74",
