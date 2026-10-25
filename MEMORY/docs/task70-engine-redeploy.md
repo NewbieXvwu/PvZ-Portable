@@ -57,7 +57,7 @@
      ```
      注意：现行 qc 命令没有显式 --state/--log/--out/--frames/--recipe/--rollout-policy 等（控制器有默认值），主控按现行命令只替换 scripts 树、--manifest、--executable 三处即可；上面是全参数版本供参考。
   3. **新 multiplier_panel**：redeploy 树 `artifacts/stage4/multiplier_panel.json`（426 任务 = 旧 420 逐项相同 + fog_user_v2 六档；generation_audit 已更新，种子扫描 258,874 份清单 280,196 种子重叠 0）。旧 fog_user 六档仍在清单里（数据可追溯），只是 SUPERSEDED 不再排新局。
-  4. **teacher_rates**：`~/pvz-logs/teacher_rates.json` 的 `bases` 加 `"fog_user_v2_l31_snow": {"wins": <B3 实测>, "games": 32, "model": "dw4i_s1 + v4", "source": "T70"}`（数字见 artifacts/task70/cold/cold_start.json；32 局 deploy4 老师冷启动，种子 49_100_000..31，与训练段不相交）。
+  4. **teacher_rates**：`~/pvz-logs/teacher_rates.json` 的 `bases` 加 `"fog_user_v2_l31_snow": {"wins": 31, "games": 32, "model": "dw4i_s1 + v5 + 台式机 branch1", "source": "T70"}`（B5 修订后实测 31/32，见 artifacts/task70/b3v5/v2_post_b5/；32 局 deploy4 6264aaf4 老师冷启动，种子 49_100_000..31，与训练段不相交）。
   5. **回滚**：tmux qc kill → 恢复现行命令（cq 树 + cq 引擎 + 旧清单路径不变，curriculum_state.json 里 fog_user_v2 的 cell 留着无害，控制器下次 reconcile 会按当时清单再处理）→ 重启。fog_user 旧族清单/数据/种子从未动，回滚即回到 task68 状态。
   6. **示范档**（Mac 侧，主控执行）：deploy4 上线后若要用 demo 档做 DAgger 开局/whatif，先 `human_demo.py verify` 试跑；报 state hash differs 就用 deploy4 `human_demo --rebaseline` 出新目录（源目录不动），replay 会按 executable_sha256 自动选校验方式，不会静默跳过。
 - [A2] 逐位门禁 **GATE PASS**：六族（day L7 m125 / night L14 m125 / pool L24 m125 / conveyor L10 m125 / roof L41 1.0 / fog_user L31 1.0）× {老师 β=1, 学生 β=0} × 8 种子，deploy3 与 deploy4 各 96 局（共 192 局）。**动作序列（frames 逐帧 tick+action+rejected）、胜负、末波、末 tick、决策数、种植数/种植类型、mowers、shovel/replant 事件全部 0 差异**。工具 scripts/task70_redeploy_gate.py（命令用 curriculum_queue.command_for 生产形态）。state_hash：deploy3 无 STATE_HASH 命令无法直接报比例，由粒子探针补齐（见下）。
@@ -71,7 +71,7 @@
   3. 口径交叉对照：task68 旧种子 43_700_000..31 + human_v2：**5/32**。证据 artifacts/task70/cold_v2_old_seeds/。
   4. （v4 数字，随本条作废）新种子块上 human_v2 8/32 vs human 5/32 的配对 McNemar p=0.58——该结论待 [B3v5] 生产参数重跑后重新下。
 - [B3v5] 主控更正后重跑（2026-10-25）：生产参数 dw4i_s1 + **叶值 v5** `8a636d33…` + **台式机 branch1** `24858410…`，deploy4 16989f23…，`search_play` fast_search β=1 verify-samples 9 student-candidates 2，workers 4：
-  1. 49.1M 块 human_v2（manifest `artifacts/task70/fog_user_v2_panel.json`）32 局：**31/32**（唯一输种子 49100029）→ artifacts/task70/b3v5/v2/。**注意：这组跑在 B5 修订前的 human_v2 定义上**；B5 构建后需在新二进制上重测一次作为 teacher_rates 底数（老师全知，但 student-candidates 走学生输入，遮蔽可能微调老师轨迹）。
+  1. 49.1M 块 human_v2（manifest `artifacts/task70/fog_user_v2_panel.json`）32 局：pre-B5 定义 **31/32**（输 49100029，artifacts/task70/b3v5/v2/）；**B5 修订后（6264aaf4）重测 31/32（输 49100010）→ artifacts/task70/b3v5/v2_post_b5/，这就是 teacher_rates 底数**。B5 遮蔽经 student-candidates 翻动了 2 个种子（49100010 胜→负、49100029 负→胜），净效应为零，31/32 不变。
   2. 49.1M 块 human（manifest `artifacts/task70/fog_user_v2_panel_human_control.json`）32 局：**29/32**（输种子 49100013/027/029/031）→ artifacts/task70/b3v5/human/。human 路径 B5 不改（对拍见 [B5]），此数不受 B5 影响。
   3. **配对表（主控要求）**：都赢 28、都输 0、仅 v2 赢 3（49100013/027/031）、仅 human 赢 1（49100029），精确 McNemar 双侧 p=0.625——口径差异不显著。v4 时代的"种子块难"判断作废：49.1M 块在正确叶值下老师近乎全胜，8/32 纯粹是叶值 v4 拖累。
   4. task67 种子 20261101..132 human + **台式机 branch1**（生产静态网）：**29/32**，输种子 20261102/111/124 → artifacts/task70/repro_task67_desktop/。对照 [B3-复现] 的 mac_branch1 25/32（同一叶值 v5、同一 deploy4，只换静态网）：静态网选择本身移动 4 局（输局集合只共享 20261102），teacher_rates 与后续对照一律以台式机 branch1（生产）为准。
