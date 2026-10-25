@@ -528,6 +528,16 @@ def _frame_json(frame: dict) -> str:
     return json.dumps(frame, separators=(",", ":")) + "\n"
 
 
+def _archive_sha256(path: Path) -> str:
+    """示范存档的 SHA256（帧文件）：起点由"哪个存档 + 第几个决策"唯一确定，帧里记下它。"""
+    import hashlib
+    digest = hashlib.sha256()
+    with path.open('rb') as handle:
+        for chunk in iter(lambda: handle.read(1 << 20), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def _final_zombies(obs: dict) -> list[dict]:
     # ROLLOUT returns a lean board even when ordinary root observations are full.
     from render_episode import _frame
@@ -747,6 +757,11 @@ def _play(job: dict, observer=None) -> dict:
         write_frames_from_source(archive / "frames.npz",
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
+        demo_sha = None
+        if demo_archive:
+            demo_sha = _W.get('demo_sha')
+            if demo_sha is None:
+                demo_sha = _W['demo_sha'] = _archive_sha256(frame_path(Path(demo_archive)))
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
         if (demo_archive or 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original'
                 or task_definition.get('fog_observation')):
@@ -764,6 +779,7 @@ def _play(job: dict, observer=None) -> dict:
         (archive / "meta.json").write_text(json.dumps({
             "label_source": "teacher",
             **({"demo_archive": str(Path(demo_archive).resolve()), "demo_decision": args.demo_decision,
+                "demo_archive_sha256": demo_sha,
                 "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
             "task": archive_task,
             "context": task_context,

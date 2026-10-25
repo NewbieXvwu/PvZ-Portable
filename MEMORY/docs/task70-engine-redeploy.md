@@ -79,3 +79,13 @@
 - [B5] 雾中己方植物遮蔽（主控追加，2026-10-25）：修订 `human_v2` 定义——植物格锚点渲染不透明度 `>= 0.925` 时保留行/列/种类，`mPlantHealth/mPlantMaxHealth/mState/mStateCountdown/mDoSpecialCountdown/mLaunchCounter` 六字段改固定 **-1**（沿用 `target_zombie_id` 未知约定；`launch_rate` 类型常数保持原值）。完整/lean/v2/C++ 学生输入四处走同一个 `EnvironmentPlantFogHidden`（LawnApp）；C++ 学生输入按 JSON 同值的 -1 字段计算（血量通道 -1.0，进度公式作用于 -1），与 python 解码器逐位一致（test_cpp_rollout 5+48 子测试全过）。特权态（老师视图）不遮蔽。特权诊断新增 `fog_plants`（每株植物锚点不透明度，仅 privileged_state）。对拍基线 artifacts/task70/deploy4_pre_b5/（16989f23）：human/xray/None 公开观察逐字节相同（`test_fog_plant_masking` 6 项全过）；human_v2 仅五字段差且差值全为 -1。新二进制 SHA256 `6264aaf4ad4de7d16f1c46986662abe81d0b692b38595f805f5c9bd881c20117`（增量重链，PGO 配置同 A1）。**注意**：`test_fog_family_only_changes_what_is_reported`（task66 的跨模式 state_hash 测试）在 qc 生产负载下抖动——同二进制同模式同种子连跑两次哈希即不同（A2 探针的重置粒子双态线，新旧二进制都抖），特权态逐项相等不受影响。
 
 ## 问题
+
+## 主控追加（2026-10-25 14:00，B6 与 deploy14 准备）
+B5 收到：human_v2 修订后老师 31/32，作为 fog_user_v2 的 teacher_rates 底数。下一步准备 deploy14，部署由主控做：
+1. **发现的漏洞——示范起点格是透视的**：`configs/human_demo_tasks.json` 的示范任务没有 `fog_observation`，录制时为 null，所以 `demo_start` 格里学生看到的是 x-ray。`search_play` 恢复示范时又要求 `environment_task` 逐字段一致。
+   - 改法：`fog_observation` 只改呈现、不改棋局（task66 的不变式测试已证明 state_hash 不变），恢复时允许它与录制时不同，使用清单里的值。
+   - 按 AGENTS §8 第 4 条新开示范起点族：现有 5 个示范起点格（L31 snow、L32 snow、L33 cactus/cattail、L34 cactus，含 task71b 的 L32/L34）各一个 `_hv2` 版本，`fog_observation: human_v2`，阶梯与种子块沿用原格（与旧格不相交时另取，写清）。旧格退休。
+   - 测试：同存档同决策号，human_v2 与 null 两种口径下 state_hash 一致，公开观察按口径遮挡。
+2. **fog_user_v2 入课程**：恢复 `CURRICULUM_LEVELS['fog_user_v2']=(31,)` 与 `SUPERSEDED['fog_user']='fog_user_v2'`（主控在 1613ecdc 暂时撤下的那两处），测试随之改回。
+3. **引擎**：B5 改了 C++，按 deploy4 的 PGO 流程构建 deploy5，记 SHA；照 A2 做逐位门禁（human/xray 族与 deploy4 逐位一致），照 A4 做吞吐 ABBA。
+4. 部署清单写进本文件：新代码 rev、引擎路径、teacher_rates 增量（fog_user_v2_l31_snow 31/32、新示范起点格各 8/8）、回滚方式。push origin redeploy。

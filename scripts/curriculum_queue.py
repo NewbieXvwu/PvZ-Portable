@@ -6,6 +6,10 @@
 
 1. **升级 / 降级**：某格当前倍率的滑动窗口胜率 > 0.85 且样本够 → 倍率升一档；
    < 0.5 → 降一档（不低于 1.0）。
+   示范起点格（task71）的档位不是倍率，而是"起点决策号"：开局由（示范存档、第 N 个决策）
+   恢复，未来随机流走 RESEED（--future-seeds，每组换一批种子）。阶梯写在清单任务的
+   demo_start 字段里（降序，0 号最晚 = 老师已稳定会赢）；同样用 0.85 / 0.5 升降，
+   升档 = 起点往前挪一档（更早、更难）。
 2. **分配**（task57，2026-10-24 起）：
    a. **保底防饿死**：超过 FLOOR_ROUNDS 轮没被采过的格（含 last_round=0 从未采过的）
       按最久优先轮转，每格 per_group // FLOOR_SHARE 局；预算 = 每轮
@@ -66,8 +70,9 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
-from pvz_promotion import GATE_VERSION, policy as promotion_policy, freeze_panel
-from promotion_gate import contract as promotion_contract, contract_key, sha as file_sha, valid_certificate
+from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, policy as promotion_policy, freeze_panel
+from promotion_gate import (allocate_seed_block, contract as promotion_contract, contract_key,
+                            sha as file_sha, valid_certificate)
 from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
@@ -366,15 +371,15 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
             continue
         wanted[base] = task
     for base in sorted(cells):
-        if base in training:
-            continue
+        if base in training or cells[base].get('ladder'):
+            continue   # 示范起点格（task71）由 reconcile_start_cells 管，不看训练集合
         retired[base] = cells.pop(base)
         family = family_of(base)
         reason = (f'superseded by {SUPERSEDED[family]}' if family in SUPERSEDED
                   else 'not in the training set')
         lines.append(f'cell retired: {base} ({reason})')
     for base in sorted(retired):
-        if base not in training:
+        if base not in training or retired[base].get('ladder'):
             continue
         cells[base] = retired.pop(base)
         lines.append(f'cell restored: {base}')
@@ -387,11 +392,104 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
     return lines
 
 
+def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]:
+    """示范起点格（task71）：任务清单里带 demo_start 的任务 -> (格定义, 任务 -> 清单)。
+
+    demo_start 字段：
+      archive       —— 已验证的示范存档（相对仓库根或绝对路径）
+      decisions     —— 起点决策号阶梯，**降序**：0 号最晚（老师已稳定会赢），末位最早
+      index         —— 起始档位（缺省 0 = 最晚那档）
+      future_seeds  —— RESEED 未来种子块（字面列表）；或写 future_seed_start +
+                       future_seed_count（缺省 256）。每组按偏移往后取，跨档共用同一块
+
+    起点之前的示范动作不在这里导出：它们走 human_demo.py export 的
+    label_source=human 那条既有路径，一次导出、不重复。
+    """
+    document = json.loads(path.read_text(encoding='utf-8'))
+    cells: dict[str, dict] = {}
+    manifests: dict[str, Path] = {}
+    for task in document.get('tasks') or []:
+        start = task.get('demo_start')
+        if not start:
+            continue
+        ladder = [int(value) for value in start['decisions']]
+        if not ladder or ladder != sorted(ladder, reverse=True):
+            raise ValueError(f'{task["task_id"]}: demo_start.decisions must be descending')
+        if len(set(ladder)) != len(ladder):
+            raise ValueError(f'{task["task_id"]}: demo_start.decisions has duplicates')
+        seeds = [int(seed) for seed in start.get('future_seeds') or []]
+        if not seeds:
+            # 清单里写块起点而不是 256 个字面值：future_seed_start / future_seed_count。
+            first = start.get('future_seed_start')
+            if first is None:
+                raise ValueError(f'{task["task_id"]}: demo_start needs future_seeds or future_seed_start')
+            seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
+        archive = Path(start['archive'])
+        archive = archive if archive.is_absolute() else ROOT / archive
+        # 起点格没有存档就跑不了：启动时就报，别等到组里 replay 才 FileNotFoundError。
+        if not (archive / 'meta.json').is_file():
+            raise ValueError(f'{task["task_id"]}: demo_start archive missing: {archive}')
+        if not json.loads((archive / 'meta.json').read_text()).get('verified'):
+            raise ValueError(f'{task["task_id"]}: demo_start archive is not verified: {archive}')
+        cells[task['task_id']] = dict(
+            family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
+            last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
+            archive=str(archive), seeds=seeds)
+        manifests[task['task_id']] = path
+    return cells, manifests
+
+
+def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | None = None) -> list[str]:
+    """把状态里的示范起点格对齐到清单：新增、更新阶梯/种子块、撤掉已删的格。
+
+    普通格的 reconcile_cells 会把不在训练集合里的格退休；起点格的 base 是示范任务 id
+    （如 demo_fog_33_cactus_snow_m200），永远不在 training_base_ids 里，所以它由这里管，
+    并且 reconcile_cells 会跳过带 ladder 的格。
+    """
+    lines = []
+    cells = state.setdefault('cells', {})
+    retired = state.setdefault('retired_cells', {})
+    for base in sorted(cells):
+        if cells[base].get('ladder') and base not in specs:
+            retired[base] = cells.pop(base)
+            lines.append(f'start cell retired: {base}')
+    for base, spec in sorted(specs.items()):
+        cell = cells.get(base)
+        if cell is None:
+            cells[base] = dict(spec, windows=dict((windows or {}).get(base, {})))
+            lines.append(f'start cell added: {base} ({len(spec["ladder"])} rungs)')
+            continue
+        changed = [key for key in ('ladder', 'seeds', 'archive') if cell.get(key) != spec[key]]
+        cell.update({key: spec[key] for key in ('ladder', 'seeds', 'archive', 'family', 'level', 'task_id')})
+        cell['mult_index'] = min(int(cell.get('mult_index', 0)), len(spec['ladder']) - 1)
+        if changed:
+            lines.append(f'start cell updated: {base} ({", ".join(changed)})')
+    return lines
+
+
 def make_state(tasks: dict[str, dict], names: dict[str, float], windows: dict, offsets: dict,
-               panel: str) -> dict:
+               panel: str, start_cells: dict[str, dict] | None = None) -> dict:
     state = dict(schema_version=1, panel=panel, round=0, cells={}, offsets=offsets, log=[])
     reconcile_cells(state, tasks, names, windows)
+    if start_cells:
+        reconcile_start_cells(state, start_cells)
     return state
+
+
+def cell_level(cell: dict, values: list[float]) -> float:
+    """格子当前档位的值：普通格是倍率表里的倍率，示范起点格（task71）是它自己的起点决策号表。
+
+    起点表按**决策号降序**排：0 号是最晚、最容易接手的起点（老师已稳定会赢），
+    升档 = 下标 +1 = 起点往前挪一档（更早、更难）。
+    """
+    ladder = cell.get('ladder')
+    if ladder:
+        return ladder[cell['mult_index']]
+    return values[cell['mult_index']]
+
+
+def _ceiling(cell: dict, values: list[float]) -> int:
+    return len(cell['ladder']) - 1 if cell.get('ladder') else len(values) - 1
 
 
 def rate(cell: dict, multiplier: float) -> float | None:
@@ -418,17 +516,17 @@ def adjust(cells: dict, values: list[float]) -> list[str]:
     """按窗口胜率升降档；返回变更描述（用于日志）。"""
     changes = []
     for base, cell in sorted(cells.items()):
-        current = values[cell['mult_index']]
+        current = cell_level(cell, values)
         bucket = cell['windows'].get(str(current)) or {}
         if len(bucket.get('recent') or []) < MIN_SAMPLES:
             continue
         win_rate = sum(bucket['recent']) / len(bucket['recent'])
-        if win_rate > PROMOTE_ABOVE and cell['mult_index'] < len(values) - 1:
+        if win_rate > PROMOTE_ABOVE and cell['mult_index'] < _ceiling(cell, values):
             cell['mult_index'] += 1
-            changes.append(f'{base}: {current:g} -> {values[cell["mult_index"]]:g} (win {win_rate:.2f})')
+            changes.append(f'{base}: {current:g} -> {cell_level(cell, values):g} (win {win_rate:.2f})')
         elif win_rate < DEMOTE_BELOW and cell['mult_index'] > 0:
             cell['mult_index'] -= 1
-            changes.append(f'{base}: {current:g} -> {values[cell["mult_index"]]:g} (win {win_rate:.2f})')
+            changes.append(f'{base}: {current:g} -> {cell_level(cell, values):g} (win {win_rate:.2f})')
     return changes
 
 
@@ -458,7 +556,7 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
     for base in sorted(cells, key=lambda name: (cells[name]['last_round'], name)):
         if spent + floor_games > floor_budget or cells[base]['last_round'] > round_index - FLOOR_ROUNDS:
             break
-        current = values[cells[base]['mult_index']]
+        current = cell_level(cells[base], values)
         picks.append((base, current, floor_games))
         picked.add(base)
         spent += floor_games
@@ -466,7 +564,7 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
     for base, cell in cells.items():
         if base in picked or cells[base]['last_round'] == round_index:
             continue   # 本轮已完成的组（组间崩溃重启后的重排）不重采
-        current = values[cell['mult_index']]
+        current = cell_level(cell, values)
         student_win = rate(cell, current)
         student = 0.0 if student_win is None else student_win
         teacher_rate = teacher.get(base, teacher.get(f'level:{cell["level"]}', 1.0))
@@ -511,22 +609,39 @@ def task_id_for(base: str, multiplier: float, tasks: dict[str, dict], names: dic
     raise KeyError(f'no task for {base} at {multiplier:g}')
 
 
-def label_for(round_index: int, base: str, multiplier: float) -> str:
+def label_for(round_index: int, base: str, multiplier: float, start: int | None = None) -> str:
     short = base.replace('_train', '').replace('day_l', 'd').replace('night_l', 'n').replace('pool_l', 'p')
     short = short.replace('_', '')
+    if start is not None:
+        # 示范起点格：档位是起点决策号，不是倍率，标签里记 s<决策号>。
+        return f'c{round_index}{short}s{int(start)}'
     return f'c{round_index}{short}m%03d' % round(multiplier * 100)
 
 
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
-                out: Path | None = None, beta: float = 0.0) -> list[str]:
+                out: Path | None = None, beta: float = 0.0,
+                demo_archive: str | None = None, demo_decision: int | None = None,
+                future_seeds: list[int] | None = None) -> list[str]:
+    """生产采集命令。
+
+    示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
+    （--future-seeds），一个未来种子一局。--seed-offset/--seeds 仍给 0/局数——
+    search_play 在 --demo-archive 下只接受"示范种子在清单选中段里"，给偏移会把它挤出段外。
+    """
     python = str(args.python) if args.python.exists() else sys.executable
+    if demo_archive:
+        seed_args = ['--seed-offset', '0', '--seeds', str(games),
+                     '--demo-archive', str(demo_archive), '--demo-decision', str(demo_decision),
+                     '--future-seeds', ','.join(str(seed) for seed in future_seeds or [])]
+    else:
+        seed_args = ['--seed-offset', str(offset), '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
             '--verify-samples', '9', '--student-candidates', '2',
             '--static-value', str(args.static_value), '--value', str(args.value),
             '--manifest', str(manifest), '--task-id', task_id,
-            '--seed-offset', str(offset), '--seeds', str(games),
+            *seed_args,
             '--executable', str(args.executable), '--dagger-beta', f'{beta:g}',
             '--workers', str(args.workers if workers is None else workers),
             '--resource-dir', str(args.resource_dir),
@@ -603,6 +718,8 @@ class TrainingPipeline:
         for job in state.setdefault('training_jobs', []):
             if job['status'] != 'done':
                 job['status'] = 'queued'
+                self._seeded(job)
+                save_state(self.args.state, self.state)
                 self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
     def pending(self):
@@ -623,7 +740,18 @@ class TrainingPipeline:
         if source is None:
             source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
         return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
-                                  self.args.value, self.args.resource_dir)
+                                  self.args.value, self.args.resource_dir, version=GATE_VERSION,
+                                  seed_block=job.get('seed_block'))
+
+    def _seeded(self, job):
+        """task73b: one fresh-seed block per evaluation job, allocated on the
+        persisted job dict (never on the _run copy), so resumed and stale re-evaluations
+        reuse the same block and the ledger is never double-spent. Pool exhaustion
+        raises and closes the gate; seeds are never wrapped around and reused."""
+        if GATE_VERSION >= 2 and 'seed_block' not in job:
+            job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
+                                                         promotion_policy(GATE_VERSION)['pair_count']))
+        return job
 
     def _evaluate(self, job):
         """Evaluate one already trained immutable candidate against the current collector."""
@@ -634,7 +762,11 @@ class TrainingPipeline:
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
-                   '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1']
+                   '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
+                   '--gate-version', str(GATE_VERSION)]
+        if GATE_VERSION >= 2:
+            command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
+                        '--seed-ledger', str(self.args.seed_ledger)]
         self._admit()
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against {frozen["incumbent_sha256"]}')
@@ -744,6 +876,7 @@ class TrainingPipeline:
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
         self.state['training_jobs'].append(job)
+        self._seeded(job)
         save_state(self.args.state, self.state)  # durable before the worker is submitted
         log_line(self.args.log, f'background round {round_index} queued: {path}')
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
@@ -913,6 +1046,7 @@ class TrainingPipeline:
             elif promotion.get('contract') != current_contract:
                 job['status'] = 'queued'
                 log_line(self.args.log, f'background round {job["round"]} comparison stale; re-evaluate current student')
+                self._seeded(job)
                 self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
                 save_state(self.args.state, self.state)
                 continue
@@ -975,14 +1109,21 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     picks = allocate(state['cells'], values, budget, per_group, state['round'] + 1, teacher)
     plan = []
     for base, multiplier, games in picks:
-        task_id = task_id_for(base, multiplier, tasks, names)
-        task = tasks[task_id]
+        cell = state['cells'][base]
+        start = cell.get('ladder') is not None
+        task_id = cell['task_id'] if start else task_id_for(base, multiplier, tasks, names)
+        seeds = cell['seeds'] if start else tasks[task_id]['seeds']
         offset = state['offsets'].get(task_id, 0)
-        if offset + games > len(task['seeds']):
-            raise SystemExit(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(task["seeds"])})')
-        plan.append(dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
-                         games=games, manifest=str(manifests[task_id]),
-                         label=label_for(state['round'] + 1, base, multiplier)))
+        if offset + games > len(seeds):
+            raise SystemExit(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)})')
+        item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
+                    games=games, manifest=str(manifests[task_id]),
+                    label=label_for(state['round'] + 1, base, multiplier,
+                                    start=int(multiplier) if start else None))
+        if start:
+            item.update(demo_archive=cell['archive'], demo_decision=int(multiplier),
+                        future_seeds=seeds[offset:offset + games])
+        plan.append(item)
     return plan, changes
 
 
@@ -1017,7 +1158,10 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             beta = 0.0
         item['beta'] = beta
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
-                              item['games'], item['label'], workers=workers, beta=beta)
+                              item['games'], item['label'], workers=workers, beta=beta,
+                              demo_archive=item.get('demo_archive'),
+                              demo_decision=item.get('demo_decision'),
+                              future_seeds=item.get('future_seeds'))
         started = time.time()
         item.update(collection_started=started, student=str(args.rollout_policy),
                     student_round=state.get('student_round', 0), workers=workers)
@@ -1051,8 +1195,10 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
                                                 for row in rows])[-WINDOW:]
         target['wins'] += wins
         target['games'] += games
-        log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} mult={item["multiplier"]:g} '
-                           f'offset={item["offset"]} games={games} wins={wins} '
+        log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} '
+                           f'mult={item["multiplier"]:g}'
+                           + (f' start={item["demo_decision"]}' if 'demo_decision' in item else '') +
+                           f' offset={item["offset"]} games={games} wins={wins} '
                            f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
                            f'rc={result.returncode} {seconds:.0f}s')
         if result.returncode != 0:
@@ -1061,10 +1207,12 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         save_state(args.state, state)   # 组完成即落盘：组间崩溃重启不重采、防遗忘轮转不丢（task59）
     state['round'] = round_index
     state['log'].append(dict(round=round_index,
-                             groups=[{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',
-                                                            'manifest', 'label', 'collection_started',
-                                                            'collection_finished', 'student', 'student_round',
-                                                            'workers', 'beta')}
+                             groups=[{**{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',
+                                                             'manifest', 'label', 'collection_started',
+                                                             'collection_finished', 'student', 'student_round',
+                                                             'workers', 'beta')},
+                                       **{k: item[k] for k in ('demo_archive', 'demo_decision', 'future_seeds')
+                                          if k in item}}
                                      for item in plan],
                              changes=changes))
     save_state(args.state, state)
@@ -1077,13 +1225,14 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
 
 
 def print_plan(state: dict, plan: list[dict], changes: list[str]) -> None:
-    print(f"{'cell':<34}{'mult':>6}{'win%':>7}{'n':>6}{'games':>7}  label")
+    print(f"{'cell':<34}{'level':>6}{'win%':>7}{'n':>6}{'games':>7}  label")
     for item in plan:
         cell = state['cells'][item['base']]
         win_rate = rate(cell, item['multiplier'])
         shown = f'{win_rate * 100:.1f}' if win_rate is not None else '-'
         games = len(cell['windows'].get(str(item['multiplier']), {}).get('recent') or [])
-        print(f'{item["base"]:<34}{item["multiplier"]:>6g}{shown:>7}{games:>6}{item["games"]:>7}  {item["label"]}')
+        level = f'{item["multiplier"]:g}' + ('s' if 'demo_decision' in item else '')
+        print(f'{item["base"]:<34}{level:>6}{shown:>7}{games:>6}{item["games"]:>7}  {item["label"]}')
     print(f'total groups {len(plan)}, games {sum(item["games"] for item in plan)}')
     if changes:
         print('multiplier changes:')
@@ -1096,6 +1245,9 @@ def main() -> None:
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
+    parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
+                        help='task manifest whose demo_start entries become start cells (task71); '
+                             'missing file = no start cells')
     parser.add_argument('--state', type=Path, default=DEFAULT_STATE)
     parser.add_argument('--log', type=Path, default=DEFAULT_LOG)
     parser.add_argument('--stop-flag', type=Path, default=STOP_FLAG,
@@ -1130,6 +1282,8 @@ def main() -> None:
     parser.add_argument('--promotion-panel', type=Path,
                         default=Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest']),
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
+    parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
+                        help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
@@ -1139,15 +1293,26 @@ def main() -> None:
         parser.error('--workers must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
-                 'promotion_panel', 'teacher_rates'):
+                 'promotion_panel', 'teacher_rates', 'demo_start_manifest'):
         value = getattr(args, name)
         if not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
+    if not args.seed_ledger.is_absolute():
+        parser.error('--seed-ledger must be absolute')
     try:
-        freeze_panel(json.loads(args.promotion_panel.read_text()))
+        probe = None
+        if GATE_VERSION >= 2:
+            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(GATE_VERSION)['pair_count'])
+        freeze_panel(json.loads(args.promotion_panel.read_text()), version=GATE_VERSION, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
+    start_cells, start_manifests = ({}, {})
+    if args.demo_start_manifest.exists():
+        start_cells, start_manifests = load_demo_start_cells(args.demo_start_manifest)
+        tasks.update({task_id: task for task_id, task in load_tasks(args.demo_start_manifest).items()
+                      if task_id in start_cells})
+        manifests.update(start_manifests)
     teacher = load_teacher_rates(args.teacher_rates)
     if not teacher:
         log_line(args.log, f'no teacher-rate evidence at {args.teacher_rates}; ranking by student rate only')
@@ -1160,16 +1325,21 @@ def main() -> None:
         windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
         for line in reconcile_cells(state, tasks, names, windows):
             log_line(args.log, line)
+        for line in reconcile_start_cells(state, start_cells, windows):
+            log_line(args.log, line)
     else:
         windows, offsets = init_from_runs(patterns, names)
-        state = make_state(tasks, names, windows, offsets, str(args.manifest))
+        state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
     if args.dry_run:
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, teacher)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
-                                                       item['offset'], item['games'], item['label'])))
+                                                       item['offset'], item['games'], item['label'],
+                                                       demo_archive=item.get('demo_archive'),
+                                                       demo_decision=item.get('demo_decision'),
+                                                       future_seeds=item.get('future_seeds'))))
         # The pack command this controller would run at the end of the round: reviewable before
         # a round is spent, and the only place the recipe's row options become a real command.
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))

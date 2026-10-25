@@ -3,13 +3,13 @@ import copy
 
 import pytest
 
-from pvz_promotion import PANEL_TASKS, decide, freeze_panel, paired_interval, summarize
+from pvz_promotion import PANEL_TASKS, decide, freeze_panel, paired_interval, policy, summarize
 
 
 def manifest():
     tasks = [dict(task_id=name, level=1, seeds=list(range(30000, 30128)), deck=[0, 1, 2, 3, 4, 5],
                   zombie_count_multiplier=1., wave_cap=None) for _, name in PANEL_TASKS]
-    return freeze_panel(dict(panel_version='v2', groups={name: zone for zone, name in PANEL_TASKS}, tasks=tasks))
+    return freeze_panel(dict(panel_version='v2', groups={name: zone for zone, name in PANEL_TASKS}, tasks=tasks), version=1)
 
 
 def outcomes(panel, candidate, incumbent):
@@ -60,3 +60,67 @@ def test_panel_is_unchanged_except_seed_subset_and_outcomes_are_complete():
     with pytest.raises(ValueError):
         decide(wrong, panel)
     assert summarize([dict(candidate=True, incumbent=False)])['mcnemar_worse_p'] == 1
+
+# ---- task73b: gate v2 (fresh seeds per round, 1536 pairs, ledger pool) ----
+
+V2_BLOCK_SIZE = 192 * 8
+
+
+def source_document():
+    return dict(panel_version='v2', groups={name: zone for zone, name in PANEL_TASKS},
+                tasks=[dict(task_id=name, seeds=list(range(30000, 30128)), wave_cap=None,
+                            zombie_count_multiplier=1, level=1, deck=[0, 1, 2, 3, 4, 5])
+                       for _, name in PANEL_TASKS])
+
+
+def v2_panel(start=31024):
+    return freeze_panel(source_document(), version=2, seed_block=(start, start + V2_BLOCK_SIZE))
+
+
+def test_v2_policy_records_fresh_seed_design_and_v1_stays_byte_compatible():
+    v2 = policy(2)
+    assert v2['version'] == 2 and v2['pair_count'] == 1536 and v2['seeds_per_task'] == 192
+    assert v2['episode_count'] == 3072 and v2['seed_pool'] == [31024, 65536]
+    assert 'never' in v2['seed_reuse'] and 'cached' in v2['incumbent_rerun']
+    assert len(v2['tasks']) == 8
+    # The v1 policy dict is embedded in every task49A certificate contract; it must
+    # not gain, lose or reorder keys, or old certificates would stop verifying.
+    v1 = policy(1)
+    assert list(v1) == ['version', 'alpha', 'noninferiority_margin', 'overall_interval',
+                        'zone_veto', 'pair_count', 'episode_count', 'seeds_per_task', 'tasks']
+    assert v1['pair_count'] == 64 and v1['version'] == 1 and v1['seeds_per_task'] == 8
+    with pytest.raises(ValueError):
+        policy(3)
+
+
+def test_v2_panel_partitions_block_and_decide_covers_1536_pairs():
+    panel = v2_panel()
+    assert panel['panel_version'] == 'v2-task73b' and panel['seed_block'] == [31024, 31024 + V2_BLOCK_SIZE]
+    seeds = [seed for task in panel['tasks'] for seed in task['seeds']]
+    assert len(seeds) == 1536 and len(set(seeds)) == 1536
+    assert min(seeds) == 31024 and max(seeds) == 31024 + V2_BLOCK_SIZE - 1
+    assert all(not (30000 <= seed < 31024) for seed in seeds)  # never dips into consumed windows
+    positive = decide(outcomes(panel, True, False), panel)
+    assert positive['version'] == 2 and positive['approved'] and positive['overall']['pairs'] == 1536
+    negative = decide(outcomes(panel, False, True), panel)
+    assert not negative['approved']
+    assert all('significant_zone_regression:' + zone in negative['reasons'] for zone in positive['zones'])
+    for broken in (outcomes(panel, True, False)[:-1], outcomes(panel, True, False) + [outcomes(panel, True, False)[0]]):
+        with pytest.raises(ValueError):
+            decide(broken, panel)
+
+
+def test_v2_seed_block_is_validated_against_pool_and_size():
+    with pytest.raises(ValueError):
+        freeze_panel(source_document(), version=2)
+    with pytest.raises(ValueError):
+        freeze_panel(source_document(), version=2, seed_block=(31024, 31024 + V2_BLOCK_SIZE - 1))
+    with pytest.raises(ValueError):
+        freeze_panel(source_document(), version=2, seed_block=(30000, 30000 + V2_BLOCK_SIZE))
+    with pytest.raises(ValueError):
+        freeze_panel(source_document(), version=2, seed_block=(65536 - V2_BLOCK_SIZE + 1, 65536 + 1))
+    with pytest.raises(ValueError):
+        freeze_panel(source_document(), version=1, seed_block=(31024, 31024 + V2_BLOCK_SIZE))
+    with pytest.raises(ValueError):
+        freeze_panel(source_document(), version=3, seed_block=(31024, 31024 + V2_BLOCK_SIZE))
+

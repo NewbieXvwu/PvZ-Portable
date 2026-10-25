@@ -1019,6 +1019,8 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 2026-10-24 再追加（用户：把带路灯花的卡组都换寒冰射手）：L33/L34 的 cactus、cattail 四族各新开 `<原族名>_snow_m200`（路灯花 25 → 寒冰射手 5，2.0 倍）；L31 已有 `demo_fog_31_snow(_m200)`。原族不变。
 
+2026-10-25 再追加（用户：L32 把磁力菇换寒冰射手）：新开 `demo_fog_32_snow_m200`（卡组取自 `demo_fog_32_magnet_m200`，磁力菇 31 → 寒冰射手 5，即 [9,8,10,16,23,17,19,2,5,3]；2.0 倍，种子 20261032）。原族不变。
+
 2026-10-24 task67 追加（雾夜冷启动的卡组面板）：新开 12 个**评估族**，32 个种子（20261101–20261132，与示范种子 20261031–34 分开），倍率一律 1.0，卡组取自既有示范族、**旧族不动**：
 - 用户卡组：`fog_user_l31_fume` / `fog_user_l31_snow` / `fog_user_l32_magnet` / `fog_user_l32_freeze` / `fog_user_l33_blover` / `fog_user_l34_blover`（卡组与同名 `demo_fog_*` 族逐位相同）；
 - 新登记 1.0 倍的 `demo_fog_33_cactus_snow` / `demo_fog_34_cactus_snow`（卡组取自 `_snow_m200`：路灯花 25 → 寒冰射手 5），这两个族直接带 32 个评估种子；
@@ -1049,3 +1051,51 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 **影响面**：完整、lean、v2 与 C++ 学生输入走同一个 `EnvironmentZombieVisible` / `EnvironmentProjectileVisible`，不会出现两套可见性。雾区族目前不在 qc 训练集合里；task58（记忆探针）以"现行规则隐藏"作标签，换到 `human_v2` 前需要主控决定是否重新打标签。
 
 **修订（task70 B5，2026-10-25）：雾中己方植物的内部状态遮蔽。** 用户标注发现人**看不到雾里的己方植物**——只能靠落子记忆和"拿卡去点、点不下去就说明有植物"。原 human_v2 却把雾中植物的 `mPlantHealth/mPlantMaxHealth` 与状态计时 `mState/mStateCountdown/mDoSpecialCountdown/mLaunchCounter` 原样报出，比人多。修订：植物所在格锚点的渲染不透明度 `>= τ(0.925)`（与僵尸同一阈值）时，观测**保留行/列/种类**（记忆加落子校验可得，植物也从不被从公开清单里删掉），上述六个字段改为固定值 **-1**（沿用 `target_zombie_id` 的未知约定；`launch_rate` 是类型常数、`squished` 等不在列举内，保持原值）。完整、lean、v2 与 C++ 学生输入四处走同一个 `EnvironmentPlantFogHidden`；C++ 学生输入对被遮蔽植物按 JSON 同值的 -1 字段计算（血量通道记 -1.0，土豆/樱桃进度与发射倒计时公式原样作用于 -1），与 python 解码器逐位一致。`human` / `xray` 与非雾关卡逐位不变（对拍脚本 `python/test_fog_plant_masking.py`，对拍基线 `artifacts/task70/deploy4_pre_b5/`）。学生现在对雾中植物**知道的比人少的那部分不再偷看**；已知残留：`shooting_counter`/`wake_up_counter` 未在主控列举内，暂保持原值。
+### 14.26 示范起点倒推课程：`demo_start` 格（task71，2026-10-24 登记，AGENTS.md §8 第 4 条）
+
+**为什么**：task67 用 12 个卡组族 × 32 个配对种子证明雾区 L32–L34 不是卡组问题（用户卡组 0–9.4%，与对照 0/32 无差异），
+冷启动打不过就没有胜局可学；task64 在 L31 上验证了另一条路——**从人类示范的中途局面让老师接手**，
+示范越往后剩下的路越短，老师越可能赢。task71 在用户已通关的 L33 两局（2.0 倍、verified）上重做 12 点扫描：
+老师 50% 线是 `demo_fog_33_cactus_snow_m200` **N=458**（第 9 波）、`demo_fog_33_cattail_snow_m200` **N=316**（第 6 波），
+L31 `demo_fog_31_snow_m200` **N=142**（第 3 波）。冷启动三局全 0/8。破防证据见
+[demo-start-states.md](MEMORY/docs/demo-start-states.md) §6。
+
+- **族**：不是新关卡、新卡组，而是**新的一类格**——格子由（示范存档、起点决策号）定义，开局从那里恢复。
+  任务 id 就是示范任务 id（`demo_fog_33_cactus_snow_m200` 等），因为 `search_play` 会逐字段校验
+  `demo_meta['task']` 与清单一致；**没有新 task id、没有新种子段、卡组一字不改**（AGENTS §8 的"改卡组 = 换任务族"不适用）。
+- **清单字段**（`configs/human_demo_tasks.json`，三个任务的 `demo_start`）：
+
+  | 字段 | 含义 |
+  |---|---|
+  | `archive` | 已验证示范存档（相对仓库根）；起点之前的示范动作由它提供 |
+  | `decisions` | 起点决策号阶梯，**降序**：0 号最晚（老师已稳定会赢），末位最早（老师仍 ≥50%） |
+  | `index` | 起始档位，缺省 0 |
+  | `future_seed_start` / `future_seed_count` | RESEED 未来种子块（每组取下一段，跨档共用一块） |
+
+  档位 = 扫描里老师 ≥ 50% 的点；低于 50% 的点不入阶梯（老师接不住的局面没有可教标签，升上去会立刻按 0.5 降回来）。
+- **种子块**：L31 snow 44,000,000–44,000,255、L33 cactus 44,100,000–44,100,255、L33 cattail 44,200,000–44,200,255，
+  与示范种子 20261031–20261034、倍率 5M/700k 段、雾 39M–43.7M、屋顶 44M 以外全部段、夜间/泳池段都不相交（逐种子比对过）。
+- **采集**：`curriculum_queue.command_for` 在起点格上给 `--demo-archive <存档> --demo-decision <N> --future-seeds <csv>`，
+  并把 `--seed-offset` 固定为 0、`--seeds` 给组局数（`search_play` 在 `--demo-archive` 下只接受"示范种子在清单选中段里"，
+  给偏移会把它挤出段外）。恢复后每局调用一次 `RESEED`（`--future-seeds`），只重抽尚未开始的波次。
+- **升降档**：沿用 0.85 升档 / 0.5 降档（同一条规则，只是档位值从倍率换成起点决策号）；
+  升档 = 起点往前挪一档（更早、更难）。窗口按 `str(决策号)` 分桶，和倍率格同一套滑动窗口。
+- **帧与标签**：`--frames-label` 形如 `c1demofog33cactussnowm200s839`（`s<决策号>` 而不是 `m<倍率>`）；
+  每局 `meta.json` 记 `demo_archive`（绝对路径）、`demo_decision`、`demo_archive_sha256`（帧文件 SHA256），
+  `label_source: teacher`。打包、打标签、门禁**全走现有路径**，不认起点格的任何特殊字段。
+  起点**之前**的示范动作走 `human_demo.py export`（`label_source: human`）一次导出，不另写导出器、不重复导出。
+- **确定性**：同存档 + 同决策号 + 同未来种子 → 动作序列、状态、胜负、决策数与全部训练字段逐字节相同
+  （`artifacts/task71/determinism/result.json`；唯一差异是帧里诊断字段 `verification.seconds` 的墙钟值，训练行不读它）。
+- **现有 cell 不变**：`make_multiplier_tasks.py` 一字未改，同批源清单重建的 420 个任务的清单文件与 task68 的
+  **逐字节相同**（sha256 `7b72c36d…`）；`curriculum_queue` 的 39 个面板格在加上三个起点格后逐字段相同
+  （`test_reconcile_leaves_panel_cells_byte_identical`），总格数 39 → 42。
+- **晋升门禁不动**：冻结面板不加起点格（改面板等于改门禁合同）。进展看 qc 自己的组胜率窗口
+  （`~/pvz-logs/curriculum_state.json` 的 `cells.demo_fog_33_*`）。
+- **回滚**：把清单里的 `demo_start` 去掉（或给 `--demo-start-manifest` 指一份没有它的清单），
+  `reconcile_start_cells` 会把三个格退休到 `retired_cells`，面板格与倍率阶梯完全不受影响。
+- **task71b（2026-10-25）**：L32 `demo_fog_32_snow_m200` 加入。12 点扫描：老师 50% 线 **N=225**（第 25 波附近，4/8）、
+  8/8 线 **N=560**；学生 50% 线 N=672、8/8 线 N=895。N=336 是 3/8（低于 50%，不入阶梯，8 未来共享前史的噪声带）。
+  破防**无气球**（老师 26 输局：普通 30、路障 19、橄榄 3）——与 task67 的 L32 归因（开局经济）同型，
+  用户打法（雾里坚果防线、前面垫零费小喷菇）不改变这一点。阶梯 `1231..225` 共 9 档，
+  种子块 44,300,000–44,300,255（与现有段不相交）；起点格 42 → 43，
+  `test_registered_manifest_start_cells` 的期望集合同步加它。扫描正文见 [demo-start-states.md](MEMORY/docs/demo-start-states.md) §6.6。
