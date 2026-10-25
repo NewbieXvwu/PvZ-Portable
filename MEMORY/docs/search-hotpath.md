@@ -75,6 +75,9 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py prepare --out $P/artifact
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py profile --out $P/artifacts/task77
 $PY $P/scripts/task77_search_hotpath.py profile-summary --out $P/artifacts/task77
 $PY $P/scripts/task77_search_hotpath.py hotspots --out $P/artifacts/task77
+# 传送带补测（§3.1）：默认面板仍是五地形，选到非默认面板时汇总另存，不覆盖 profile_summary.json
+PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py profile --out $P/artifacts/task77 --cells conveyor
+$PY $P/scripts/task77_search_hotpath.py profile-summary --out $P/artifacts/task77 --cells conveyor
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py gate --out $P/artifacts/task77 --candidate $P/artifacts/task77/frozen/pvz-portable-candidate
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_final --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 # 第二轮：同设计，另建目录，并记引擎进程 CPU（§7.3a）
@@ -97,7 +100,9 @@ $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/ab
 $PY $P/scripts/task77_value_kernel_check.py --time
 ```
 
-`--cells` 只收窄面板（用于补测单族），不改变四臂配对、`--count` 或统计口径；`abba` 与 `abba-verify` 都接受。
+`--cells` 只收窄面板（用于补测单族），不改变四臂配对、`--count` 或统计口径；`abba`、`abba-verify`、`profile`、
+`profile-summary` 都接受。`profile` 默认仍是五地形面板；`profile-summary` 只在选择等于五地形时写
+`profile_summary.json`，否则写 `profile_summary_<cells>.json`（显式列出那五族仍算默认）。
 `prepare` 拒绝覆盖既有冻结；`profile` 可续跑已落盘的局（首批 day/night 缺引擎计数器，已按同一任务与种子
 另存 `profile_complete/`，不覆盖旧证据）。
 `abba_final/` 是本轮全新计时目录，含冻结清单/身份文件的副本与指向冻结 `baseline/` 的软链，
@@ -269,7 +274,8 @@ rollout+学生 = 79.9%（rollout 53.0% / 学生 27.0%），与五地形同量级
 - `state_hash` 按 task70 A2 的口径单独报告，不作为策略门禁：35/48 相同、13/48 不同（27.1%）。
   本轮未把这 13 处差异归因于某个存档块；不能据完整帧一致就声称内部状态哈希也全同。
 - 旧臂的老师那 20 局（5 族 × 4）直接复用 §3 的剖析局：同一冻结输入、同一任务与同一批种子，
-  重打只会得到同一局。传送带没有剖析局，旧臂老师现场打。
+  重打只会得到同一局。传送带当时没有剖析局，旧臂老师现场打（§3.1 之后才补了 4 局，
+  但门禁已在 15:14 跑完，不改用它、也不重跑）。
 
 - 门禁仍然描述当前树：四个改动文件最后一次提交是 `740671ed`（门禁在 15:14 跑，早于其后的任何提交），
   之后 `src/` 无新提交、工作区干净，冻结候选 `b4999d65…` 与改前 `51949eff…` 的 SHA256 未变。
