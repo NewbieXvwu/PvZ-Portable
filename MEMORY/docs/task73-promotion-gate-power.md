@@ -95,3 +95,52 @@ L39 在 [9,8,10,16,23,17,19,2,5,31] 下输给气球（21 只破防，第 16–29
 3. **评估并行**：评估 worker 数改为由 qc 的内存准入分配，评估期间与采集共享上限，目标是 1536 对 ≤ 10 分钟；在 curriculum.log 里记实际耗时。
 4. **测试**：v3 面板的区覆盖、种子领取、旧证书兼容、并行评估结果与串行逐局一致。
 5. 结果写本文件，`git push origin gatepower`。部署随 deploy14 一起，由主控做。同时最多 2 个游戏进程（验证用）。
+
+## 结果（task73c：门禁 v3 已实施，待主控随 deploy14 部署）
+
+- **holdout 替换实测（scripts/task73c_holdout_probe.py，两个账本块 [32560,33072)+[33072,33200)）**：
+  现役 r11 学生（round_000011/model.pt，deploy4 引擎 + v5 value + arms=fast + β=0，与门禁契约同参）×
+  64 新种子/候选，把注册 heldout 组 10 个候选全部测完（day_l7h1 用 task73 复测 28/32 佐证）：
+  **整组两极化，无一落在 15–85%**——地板 0–2%（l8h1 0/64、l9h3 1/64、l7h3 0/64），
+  天花板 87.5–100%（l9h2 56/64、l10h2 57/64、l10h1 58/64、l8h2 62/64、l10h3 62/64、l8h3 64/64、l7h2 64/64）。
+  选 **day_l9_eval_d7p_holdout2（56/64=87.5%，95% Wilson CI ≈[77%,94%]，上沿跨 85%）**：
+  离带最近、不是地板、保留对退步的完整否决力。数据 artifacts/task73c/probe*/probe-summary.json（git 外）。
+- **面板 v3（GATE_VERSION=3，panel v3-task73c）**：10 任务 × 192 种子 = **1920 对 / 3840 局**，
+  六区 day(2)/heldout(2)/night(2)/pool(2)/**fog(1)/roof(1)**。fog=fog_user_l31_snow（雪夜卡组
+  [9,8,10,16,23,17,19,2,3,5]，fog_observation human，倍率 1.0——curriculum_state 读出的当前档，
+  固定写死）；roof=roof_l41_train_r7（[0,1,2,3,32,35,33]，1.0）。两任务逐字段复制自课程清单
+  （cq 树 task68/task46），wave_cap=None、倍率 1.0 → 沿用 v2 式"完整原始难度"冻结检查。
+  判定规则未动：总体非劣 −3pp + 任一区 McNemar 否决，新区同样适用。种子照旧账本按池
+  [31024,65536) 顺序领 1920 连续种子（每区每任务 192），耗尽报错不回绕。
+  **注册面板新文档** artifacts/task73c/panel_v3_source.json（git 外，SHA256
+  bb0a9129…d8e2f636；unified_v2.json 一字未动，旧证书 SHA 不受影响）。v1/v2 证书按记录版本重放照旧可验证。
+- **评估并行（promotion_gate.py --eval-units N）**：门禁内部以线程池并发跑至多 N 个 search_play
+  子进程（每个 --workers 1），16 个 (side,task) 单元变成 20 个，单元级断点续跑/命令校验/独立性
+  校验全保留；结局只是 (model,task,seed) 的函数，单元顺序与并发数不影响任何配对数据——
+  **并行=串行逐局一致**有测试（同契约、同 paired、同 episode sha256，仅时间戳不同）；
+  eval_units 刻意不进契约。curriculum_queue._evaluate 用与采集同一条内存准入公式分配
+  units（MemAvailable−6GiB 预留）/单 worker 实测 RSS，并扣除前台在跑组宽共享 --workers 上限；
+  评估期间新开的组按 foreground_limit() 收缩（预留 units 个名额）。curriculum.log 记
+  eval_units 与实际耗时。按当前内存（19 GiB 可用、0.88 GiB/worker）units≈14，
+  3840 局 × 1.06 w·s / 14 ≈ **4.9 分钟 ≤ 10 分钟目标**。
+- **测试**：test_promotion.py + test_promotion_evaluation.py + test_curriculum_pipeline.py +
+  test_curriculum_queue.py 共 **80 通过 + 1 跳过 + 4 子测试**（ml venv；系统 python 缺 torch 的
+  2 个 CurriculumRulesTest 失败为环境预存，与本次无关）。新增覆盖：v3 六区分块/区覆盖/种子领取、
+  v3 源面板组名校验与原始难度校验、v1+v2 全流程在 GATE_VERSION=3 下仍可签发与验证、
+  并行(7 单元)=串行逐局一致、并发上限构造参数、账本续跑不重复分配、耗尽拒绝回绕。
+- **部署交主控（deploy14）**：启动课程控制器时必须显式 `--promotion-panel
+  /home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task73c/panel_v3_source.json`
+  （默认值仍指 unified_v2，会在启动校验处报"missing/wrong group for gate v3"——这是有意的，
+  防止误用旧面板跑 v3）。评估并行 units 由内存准入自动定，无需新参数；手动直跑 promotion_gate.py
+  默认 --eval-units 1（串行）。
+
+## 问题（task73c）
+
+- **"每区仍是 2 个任务 × 192 种子"没有照字面执行**：fog/roof 区各只有 1 个任务。注册清单里
+  fog/roof 各只练一格（fog_user_v2 未入课程、roof_l41_eval_r7 与 train_r7 同关同卡组仅种子段
+  不同——门禁本来就覆盖种子，重复任务只会让 384 局变成重复信息）。若主控仍要每区 2 任务，
+  fog 区第二任务需要先注册一个新雾关（同 fog_user 卡组不同关），roof 区同理，这超出本次范围。
+- **"day_l9 holdout 换成 15–85% 的 holdout 任务"无解**：注册 heldout 组 10 个候选对现役学生
+  全部两极化（0–2% 或 87.5–100%），选了离带最近的 l9h2（87.5%）。副作用：它测退步灵敏、
+  测进步会饱和（现役已 87.5%）；且候选若整体变强，该任务会失去区分度，届时需再换。
+- 种子账本现分配 [31024,33200)（v2 首轮 1536 + 探针 512+128）。池剩 32336 颗 = 16 轮 v3。

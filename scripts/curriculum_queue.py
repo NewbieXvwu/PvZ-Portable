@@ -701,6 +701,9 @@ class TrainingPipeline:
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
+        self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
+        self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
+        self.foreground_workers = 0 # 前台当前组正在跑的游戏 worker 数
         for job in reversed(state.get('training_jobs', [])):
             timing = job.get('timing') or {}
             value = timing.get('train_peak_anon_bytes')
@@ -736,10 +739,11 @@ class TrainingPipeline:
         return any(not future.done() for _, future in self.futures)
 
     def foreground_limit(self):
-        # Evaluation always has one game worker. Reserve its slot before a group starts,
-        # because training may finish in the middle of that group. --workers=1 still allows
-        # one collector + one evaluator; --workers>=2 caps their combined game count.
-        return max(1, self.args.workers - int(self.pending()))
+        # Evaluation reserves the game workers it is actually using (task73c: eval units
+        # are memory-admitted, see _evaluate). Reserve them before a group starts,
+        # because training may finish in the middle of that group. --workers=1 still
+        # allows one collector + one evaluator; --workers>=2 caps their combined count.
+        return max(1, self.args.workers - int(self.pending()) * self.eval_units)
 
     def incumbent(self):
         with self.lock:
@@ -769,17 +773,24 @@ class TrainingPipeline:
         folder = Path(job['recipe']).parent
         out = folder / 'evaluations' / contract_key(frozen)
         python = str(self.args.python) if self.args.python.exists() else sys.executable
+        self._admit()
+        # task73c: 评估 worker 数与采集同一条内存准入公式分配（MemAvailable 已排除在跑
+        # 游戏 worker 的 RSS），并与前台在跑的组共享 --workers 进程上限（扣除其宽度）。
+        # 评估开始后新开的组按 foreground_limit() 收缩，让评估在 ≤10 分钟量级完成。
+        units = worker_count(mem_available_bytes(), self.per_worker_bytes,
+                             max(1, self.args.workers - self.foreground_workers), 0)
+        self.eval_units = units
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
-                   '--gate-version', str(GATE_VERSION)]
+                   '--eval-units', str(units), '--gate-version', str(GATE_VERSION)]
         if GATE_VERSION >= 2:
             command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                         '--seed-ledger', str(self.args.seed_ledger)]
-        self._admit()
         started = time.time()
-        log_line(self.args.log, f'background round {job["round"]} evaluate started against {frozen["incumbent_sha256"]}')
+        log_line(self.args.log, f'background round {job["round"]} evaluate started against '
+                                f'{frozen["incumbent_sha256"]} eval_units={units}')
         try:
             self._command(command, folder / 'evaluation.log')
             decision = json.loads((out / 'decision.json').read_text())
@@ -795,7 +806,7 @@ class TrainingPipeline:
         log_line(self.args.log, f'background round {job["round"]} evaluate done: {finished-started:.3f}s '
                                f'approved={decision["approved"]} reasons={decision["reasons"]}')
         return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
-                    evaluation_started=started, evaluation_finished=finished,
+                    evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
 
     def estimate_peak(self):
@@ -1174,6 +1185,11 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         background = pipeline.reservation() if pipeline is not None else 0
         upper = pipeline.foreground_limit() if pipeline is not None else args.workers
         workers = worker_count(available, per_worker, upper, background)
+        if pipeline is not None:
+            # 评估分配 units 时要扣除前台在跑的组宽（task73c）；启动探针后这里也补上
+            # 单 worker 实测 RSS，供 _evaluate 的内存准入使用。
+            pipeline.per_worker_bytes = per_worker
+            pipeline.foreground_workers = workers
         per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
         log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                            f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
@@ -1198,6 +1214,8 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
                     student_round=state.get('student_round', 0), workers=workers)
         result = subprocess.run(command, cwd=ROOT)
         item['collection_finished'] = time.time()
+        if pipeline is not None:
+            pipeline.foreground_workers = 0
         seconds = time.time() - started
         folder = args.out / f'{item["label"]}_{item["games"]}'
         wins = games = 0
