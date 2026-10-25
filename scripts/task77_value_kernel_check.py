@@ -61,6 +61,80 @@ def compile_driver(folder, source, tag):
     return executable
 
 
+TIMING_DRIVER = r'''
+#include "EnvironmentValueNet.h"
+#include <algorithm>
+#include <chrono>
+#include <cstdio>
+#include <cstdlib>
+#include <fstream>
+#include <vector>
+int main(int argc, char** argv) {
+    if (argc != 4) return 2;
+    EnvironmentValueNet net;
+    net.Load(argv[1]);
+    std::ifstream in(argv[2], std::ios::binary);
+    std::vector<float> board(net.Channels * net.Cells), scalars(net.ScalarCount());
+    if (!in.read(reinterpret_cast<char*>(board.data()), board.size() * sizeof(float))) return 3;
+    if (!in.read(reinterpret_cast<char*>(scalars.data()), scalars.size() * sizeof(float))) return 3;
+    const int repeats = std::atoi(argv[3]);
+    volatile float sink = 0;
+    for (int i = 0; i < 50; ++i) sink += net.Logit(board, scalars);
+    std::vector<double> times;
+    times.reserve(repeats);
+    for (int r = 0; r < repeats; ++r) {
+        const auto start = std::chrono::steady_clock::now();
+        sink += net.Logit(board, scalars);
+        const auto stop = std::chrono::steady_clock::now();
+        times.push_back(std::chrono::duration<double, std::nano>(stop - start).count());
+    }
+    std::sort(times.begin(), times.end());
+    std::printf("%.1f\n", times[times.size() / 2]);
+    return 0;
+}
+'''
+
+
+def compile_timing_driver(folder, source, tag):
+    units = json.loads((ROOT / 'build/compile_commands.json').read_text())
+    unit = next(u for u in units if u['file'].endswith('/EnvironmentValueNet.cpp'))
+    original = shlex.split(unit['command'])
+    flags, skip = [], False
+    for word in original[1:]:
+        if skip:
+            skip = False
+        elif word == '-o':
+            skip = True
+        elif word not in ('-c', unit['file']):
+            flags.append(word)
+    (folder / 'timing.cpp').write_text(TIMING_DRIVER)
+    executable = folder / f'timing_{tag}'
+    cmd = [original[0], '-I' + str(source), *flags, '-ffunction-sections', '-fdata-sections',
+           str(folder / 'timing.cpp'), str(source / 'EnvironmentValueNet.cpp'),
+           '-Wl,--gc-sections', '-lopenblas', '-o', str(executable)]
+    with (folder / f'compile_timing_{tag}.log').open('w') as log:
+        subprocess.run(cmd, stdout=log, stderr=subprocess.STDOUT, check=True)
+    return executable
+
+
+def time_forward(folder, executables, models, rounds=9, repeats=400, cpu=None):
+    """Alternate before/after on one pinned core: the two builds are separate processes,
+    so interleaving is what keeps load drift from being attributed to the change."""
+    import statistics
+    prefix = ['taskset', '-c', cpu] if cpu else []
+    per_round = {tag: [] for tag in executables}
+    for _ in range(rounds):
+        for tag, executable in executables.items():
+            for kind in ('value', 'static'):
+                result = subprocess.run([*prefix, str(executable),
+                                         str(models[kind]), str(models[kind + '_features']),
+                                         str(repeats)], capture_output=True, text=True, check=True)
+                per_round[tag].append(float(result.stdout))
+    medians = {tag: statistics.median(values) for tag, values in per_round.items()}
+    return {'median_nanoseconds': medians, 'rounds': per_round,
+            'ratio': medians['after'] / medians['before'], 'repeats': repeats, 'cpu': cpu}
+
+
 def main():
     import numpy as np
     from export_value_net import export_value_net
@@ -119,6 +193,20 @@ def main():
     print(json.dumps(evidence, indent=1))
     if not evidence['pass']:
         raise RuntimeError('value logits differ bit for bit')
+    if '--time' in sys.argv[1:]:
+        timing_folder = OUT / 'value_kernel_timing'
+        timing_folder.mkdir(parents=True, exist_ok=True)
+        timing_executables = {tag: compile_timing_driver(timing_folder, source, tag)
+                              for tag, source in (('before', OUT / 'baseline/src'),
+                                                  ('after', ROOT / 'src'))}
+        models = {kind: folder / f'{kind}.bin' for kind in ('value', 'static')}
+        models.update({f'{kind}_features': folder / f'{kind}_features.bin'
+                       for kind in ('value', 'static')})
+        timing = time_forward(timing_folder, timing_executables, models, cpu='19')
+        timing['models'] = {name: str(path) for name, path in models.items()}
+        save(timing_folder / 'timing.json', timing)
+        print(json.dumps({'ratio': timing['ratio'],
+                          'median_nanoseconds': timing['median_nanoseconds']}, indent=1))
 
 
 if __name__ == '__main__':

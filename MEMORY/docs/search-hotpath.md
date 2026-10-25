@@ -3,7 +3,7 @@
 > 2026-10-25。工作树 `perf2`（分支 `perf2`，从 origin/pvz-env 拉出）。
 > 原始数据只在 ignored 的 `artifacts/task77/`；本文件放结论与复核口径。
 > 工具：`scripts/task77_search_hotpath.py`（prepare / profile / profile-summary / hotspots / gate / verify / abba）、
-> `scripts/task77_value_kernel_check.py`（离线逐位检查）、`python/test_search_hotpath.py`（证据回归）。
+> `scripts/task77_value_kernel_check.py`（离线逐位检查 + 交错计时）、`python/test_search_hotpath.py`（证据回归）。
 
 ## 1. 结论
 
@@ -20,14 +20,18 @@
    ——`PvzpCommon.h` 记着：跳过粒子让 16/64 局结果翻转。
 5. 所以优化挑的是**占比最大且能证明逐位不变**的三处实现细节（§5）：
    值网络卷积的核打包缓存 + 无填充 memcpy、`DataArray` 取值改走 `get()`、`Reanimation::Update` 模式判断前置。
-   离线核检查的 value/static 各 480 个 logit（各含 3 遍）输出 SHA256 完全相同；
-   该工具验证数值，未持久化微基准计时，性能结论只采用完整 ABBA。
-6. **结论是否定的：这三处改动逐位不变（门禁 48/48 对局；ABBA 12 对、36 次完整帧比较全部一致），但没有可测的加速。**
-   六族 12 对 ABBA 的每局耗时比 geomean **0.993**（配对 bootstrap 95% [0.948, 1.035]），
-   稳定负载子集（conveyor/roof/fog，6 对）**1.005**（[0.998, 1.012]）。这与被改代码的占比吻合：
-   两处 `Convolve` 合计只占引擎样本 2.47%（§4），`DataArray` 取值 7.25%、动画 8.52% 上的改动每次只省一条
-   间接寻址或一个分支。**不要为提速上线这个补丁**；要提速只能动 rollout 引擎步与学生前向（合计 76–86%），
-   而那需要新的浮点保序方案，不在本任务范围（§8）。
+   离线核检查的 value/static 各 480 个 logit（各含 3 遍）输出 SHA256 完全相同。
+   同一工具还做**交错计时**（同核 pin、before/after 交替 9 轮 × 400 次、取中位数）：
+   value/static 前向 **164.1 → 136.1 µs，快 17%**（§7.3）。整局结论仍只采用 ABBA，微基准只作机制核对。
+6. **逐位不变成立；有真实但很小的加速，整局量级测不出来。**
+   - 组件级：value/static 前向快 **17%**（§7.3）。
+   - 整局：两轮 ABBA（各 12 对、48 局）每局耗时比 geomean **0.993**（95% [0.948, 1.035]，qc 负载下的首轮）
+     与 **0.990**（[0.969, 1.012]，负载较轻的第二轮）；第二轮同时记引擎进程 CPU 时间，比值 **0.985**（[0.959, 1.011]）。
+   - 三者互相印证：值网络前向只占每决策耗时 2.0–5.2%（§3），快 17% 只能换来整局 **0.3–0.9%**，
+     低于两轮 ABBA 的分辨率（±2–4%）。`DataArray` 取值 7.25%、动画 8.52% 上的改动每次只省一条间接寻址或一个分支。
+   - **结论：不要为提速单独上线这个补丁**（收益 <1%，还要重建 PGO 引擎）。补丁本身逐位不变、无风险，
+     可以随下一次引擎重建顺带带上。要真正提速只能动 rollout 引擎步与学生前向（合计 76–86%），
+     那需要新的浮点保序方案，不在本任务范围（§8）。
 
 ## 2. 冻结输入与复现
 
@@ -66,6 +70,11 @@ $PY $P/scripts/task77_search_hotpath.py profile-summary --out $P/artifacts/task7
 $PY $P/scripts/task77_search_hotpath.py hotspots --out $P/artifacts/task77
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py gate --out $P/artifacts/task77 --candidate $P/artifacts/task77/frozen/pvz-portable-candidate
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_final --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
+# 第二轮：同设计，另建目录，并记引擎进程 CPU（§7.3a）
+PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_cpu --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
+$PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_cpu --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
+# 组件级：逐位核检查 + 交错计时（§7.3b）
+$PY $P/scripts/task77_value_kernel_check.py --time
 ```
 
 `prepare` 拒绝覆盖既有冻结；`profile` 可续跑已落盘的局（首批 day/night 缺引擎计数器，已按同一任务与种子
@@ -150,7 +159,8 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
   `PvzpCurveEvaluate` + `GetTrackVelocity` + `TrackMemoHit`）：**不能跳**（共享 RNG，见 §1.4）。
 - 粒子合计 4.62%：**不能跳**（共享 RNG）。
 - `DataArray` 迭代器与查找合计 7.25%：2026-10-23 已做过四槽一判的扫描优化，这里是剩余成本。
-- 两处 `Convolve` 合计 2.47%——**这就是值网络那两处优化的收益天花板**，与 §7.2 的计时一致。
+- 两处 `Convolve` 合计 2.47%，但卷积只是值网络前向的一部分（矩阵乘法记在 openblas 里）：
+  值网络前向整体占每决策 2.0–5.2%（§3），**那才是 §5 那两处改动的收益天花板**，与 §7.3 的计时一致。
 - `_dl_mcount_wrapper` 不是 `-pg`：二进制里 `mcount` 符号计数为 0，这是 libc 无 debug 符号时的误标。
 - 上一版表格（11.40% sgemm、动画 12.5% 等）是采样审计前只含 day/night 的汇总，已作废。
 
@@ -179,6 +189,9 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
   （value `9762c586…`、static `f4f8f4a0…`）。输入覆盖全零、`-0.0`、稠密与 1–23 个稀疏通道。
   最后一条和重新 Load 后第一条均为全部通道活动，确保覆盖“换模型但活动通道集相同”的缓存失效场景。
   原先首条为全零的核检查仍保留在 `value_kernel_check/`，不据它单独宣称已覆盖此场景。
+- **组件级计时**（`--time`，证据 `artifacts/task77/value_kernel_timing/timing.json`）：
+  同一批冻结模型与输入，before/after 交替在同一核上跑，value/static 前向 **164.1 → 136.1 µs（0.829）**，
+  逐轮比值 0.79–0.85 无重叠；同一次运行里 480+480 个 logit 仍逐字节相同（§7.3b）。
 - **端到端门禁**：见 §7。
 
 ## 7. 端到端门禁与计时
@@ -237,27 +250,71 @@ A 臂 = 同 flags 的改前二进制 `51949eff…`，B 臂 = 候选 `b4999d65…
 A 臂占 block 两端，两端的负载并不对称：day 的第一个 A 落在整块最轻的时刻（loadavg 11.9，其余 25–34），
 night 的第一个 A 落在最重的时刻（29.2，随后降到 14.4）。"两个 A 取均值"因此继承了这个偏置。
 night 更麻烦：B1 与 A1 同在 loadavg 29.2，却快 33%（147.8 vs 221.2），端点负载解释不了它；
-本轮没有把它归因于补丁，也没有再跑一轮去追（主控内存约束下同时最多 2 个游戏进程，
-再跑一轮 70–90 分钟仍是同一批外部负载）。结论只采用稳定负载子集与六族合一区间。
+不把它归因于补丁，只采用稳定负载子集与六族合一区间。
+墙钟这条路到此为止——后来补的第二轮换了观测量，见 §7.3。
 
-**判定：逐位不变成立，提速不成立。** 稳定负载下 +0.5%（[0.998, 1.012]），
+**首轮判定：逐位不变成立，提速不成立。** 稳定负载下 +0.5%（[0.998, 1.012]），
 与 §4 的"两处 `Convolve` 只占引擎样本 2.47%"一致——即使这三处改动全部命中，整局上限也在 1–2%。
-12 对的设计本身也只有 ±4.5% 的分辨率，**任何小于 4% 的效应在这套设计下都不可判定**；
-要判定 1% 量级需要 40 对以上（约 3–4 小时独占机器）。因此不把本补丁作为提速项上线，
-也不建议为它单独重建 PGO 引擎。
+12 对的设计本身只有 ±4.5% 的分辨率，**小于 4% 的效应在这套设计下不可判定**；
+要判定 1% 量级需要 40 对以上（约 3–4 小时独占机器）。
+所以另做了一轮换观测量的实验 + 组件级计时，见 §7.3——它们把结论从"测不出"变成"测得准，且确实只有 0.3–0.9%"。
+
+### 7.3 第二轮 ABBA（引擎 CPU 观测）与组件级计时
+
+首轮（§7.2）的问题很具体：墙钟在别人占机器时会被排队污染，区间 ±4.5%，判不了 1%。所以补了两件事。
+
+**(a) 换观测量：引擎进程 CPU 时间。** `abba_cpu/` 是全新一轮同设计实验（六族 × 2 种子 × A-B-B-A，
+`--workers 2 --count 2`，48 局），每臂同时记墙钟与**引擎进程 utime+stime**
+（`EngineCpu`：每 0.5 s 扫 `/proc/<pid>/exe` 认二进制，A/B 是两个不同文件，不会串）。
+审计同样通过：12 对、36 次完整帧比较、40,686 帧一致，`state_hash` 13/36 不同。
+
+| 族 | 墙钟比（种子 1 / 2） | 墙钟 geomean | 引擎 CPU 秒（A 均值 → B 均值） | CPU 比 |
+|---|---|---|---|---|
+| day | 1.038 / 1.035 | 1.037 | 132.8 → 137.6 | 1.036 |
+| night | 0.993 / 0.998 | 0.995 | 223.0 → 221.7 | 0.994 |
+| pool | 0.939 / 0.938 | 0.938 | 279.1 → 261.9 | 0.938 |
+| conveyor | 0.967 / 0.971 | 0.969 | 179.7 → 174.0 | 0.968 |
+| roof | 1.039 / 1.043 | 1.041 | 4.4 → 4.4 | 1.011 |
+| fog | 0.965 / 0.962 | 0.964 | 88.5 → 85.3 | 0.964 |
+
+- 六族合一：墙钟 geomean **0.990**（95% [0.969, 1.012]，按族 [0.961, 1.020]）；
+  引擎 CPU geomean **0.985**（[0.959, 1.011]）。
+- 这一轮负载轻（别的 agent 大多收工），墙钟与 CPU 在 pool/conveyor/fog 上几乎相等（0.938/0.938、0.969/0.968、
+  0.964/0.964）——说明这三个族是 CPU 受限的，两个观测量一致；day/night/roof 仍不一致，是残余排队。
+- **但逐族符号并不稳定**：同一补丁在 day/roof 上 CPU 略升（+3.6%/+1.1%），在 pool/conveyor/fog 上降 3–6%。
+  这不是补丁会有的形状，而是 ±4% 的族级噪声；只有六族合一才有意义。
+
+**(b) 组件级交错计时。** `task77_value_kernel_check.py --time`：用生产编译参数分别编 before（冻结源码）
+与 after（当前源码），两者**交替**在同一个核（`taskset -c 19`）上跑，9 轮 × 400 次前向 × 2 个模型（value/static），
+取中位数。交替是为了让漂移在两个版本上均摊。
+
+| 版本 | value/static 前向中位数 | 相对 |
+|---|---|---|
+| before（`c0249d62` 源码） | 164.1 µs | 1.000 |
+| after（本轮改动） | 136.1 µs | **0.829** |
+
+18 个中位数里 before 163–167 µs、after 135–140 µs，逐轮比值 0.79–0.85，没有重叠。
+同一次运行里 value/static 各 480 个 logit 仍逐字节相同（`9762c586…` / `f4f8f4a0…`）——
+**快 17% 且逐位不变**。
+
+**三者对得上。** 值网络前向（features+forward）占每决策耗时：day 5.2%、night 2.7%、pool 2.0%、fog 2.1%、roof 3.0%
+（§3）。快 17% 只能换来整局 **0.3–0.9%**，正好落在两轮 ABBA 的点估计（0.985–0.993）里、
+落在它们的区间宽度（±2–4%）之下。这就是"改得对、但整局看不出来"的完整解释。
 
 ## 8. 局限与后续
 
 - **候选二进制不带 PGO。** 生产 deploy4 带本机 PGO（历史实测 18%）。ABBA 的 A 臂因此用同 flags 重编的
   `pvz-portable-release-before`，只量代码差异；真正上线要由主控按 PGO 两阶段重建，PGO 与补丁的交互收益尚未测量。
   **不要把本文的比值直接当成上线后的墙钟比。**
-- **计时分辨率不够判定 1% 量级。** 12 对 ABBA 的区间宽约 ±4.5%，稳定负载 6 对约 ±0.7%。
-  要在生产负载下判定 1% 需要 40 对以上、机器独占 3–4 小时；本轮在"同时最多 2 个游戏进程、qc 优先"的约束下没有做。
+- **整局计时只能判到 1–2% 量级。** 两轮各 12 对 ABBA 的区间分别是 ±4.5%（qc 负载下）与 ±2%（负载轻），
+  引擎 CPU 观测也是 ±2.6%。族级噪声约 ±4%，符号都不稳定（§7.3）。要在生产负载下判定 0.5% 需要 40 对以上、
+  机器独占 3–4 小时；本轮在"同时最多 2 个游戏进程、qc 优先"的约束下没有做。
   另外 `search_play` 记录的每局耗时是 `time.time()` 差、保留 0.1 s（`scripts/search_play.py:790`），
   40–250 s 的对局对应 0.04–0.25% 的量化，短局（roof 2.4 s）则是 4%。
+  **能判到 1% 以下的是组件级交错计时（§7.3b），但它只覆盖值网络前向，不能外推到整局。**
 - **外部负载无法控制。** 计时窗口内有别的 agent 在跑（`all_engines` 2–23），qc 引擎数也在变；
-  按负载分层只能缓解、不能消除。要得到干净结论应独占机器重跑，或改用引擎进程 CPU 时间而非墙钟作观测量
-  （本轮的 `load_monitor.jsonl` 已能支撑这种改法，但工具尚未实现）。
+  按负载分层只能缓解、不能消除。引擎进程 CPU 时间已作为第二观测量实现（`EngineCpu`，§7.3a），
+  它在 pool/conveyor/fog 上与墙钟一致、在 day/night/roof 上仍受残余排队影响。要彻底干净只能独占机器重跑。
 - 后续可研究共享 BLAS 内核和动画 track 更新；本轮没有实现新的 GEMM，也没有跳过额外动画生命周期。
   任何后续方案都需独立验证浮点求和顺序与 track 重新激活行为，不能把移动零块或稀疏跳过直接当成保序优化。
   按 §4 的占比，真正值得投入的仍是 rollout 引擎步（50–65%）与学生前向（20–32%）。

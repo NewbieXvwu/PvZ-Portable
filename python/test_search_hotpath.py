@@ -195,6 +195,27 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
                 bench.hotspots(SimpleNamespace(out=root))
 
 
+    def test_forward_timing_alternates_the_two_builds(self):
+        import tempfile
+        from task77_value_kernel_check import time_forward
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            executables = {}
+            for tag, value in (('before', 200.0), ('after', 100.0)):
+                path = root / f'timing_{tag}'
+                path.write_text(f'#!/bin/sh\necho {value}\n')
+                path.chmod(0o755)
+                executables[tag] = path
+            models = {name: root / 'model' for name in
+                      ('value', 'static', 'value_features', 'static_features')}
+            for path in models.values():
+                path.write_bytes(b'')
+            result = time_forward(root, executables, models, rounds=3, repeats=5)
+            self.assertAlmostEqual(result['ratio'], .5)
+            # Two models per round, so the alternating order is visible in the record.
+            self.assertEqual(len(result['rounds']['before']), 6)
+            self.assertEqual(result['rounds']['before'], [200.0] * 6)
+
     def test_engine_cpu_sampler_counts_only_the_measured_binary(self):
         import os
         import shutil
