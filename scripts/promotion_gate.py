@@ -11,6 +11,15 @@ gate-dedicated pool [31024, 65536) via an out-of-git ledger
 (~/pvz-logs/gate_seed_ledger.json); 1536 pairs; the incumbent is re-evaluated on
 the same fresh seeds (cached incumbent outcomes are never used). Pool exhaustion
 aborts the gate instead of wrapping around to reuse seeds.
+
+Gate version 3 (task73c): panel extended with the practiced fog and roof zones
+and the floor day_l9 holdout replaced; 1920 pairs. Decision rules unchanged.
+
+Parallelism (task73c): --eval-units N runs up to N search_play children
+concurrently (each with the contract's own --workers). Game outcomes are a
+function of (model, task, seed) only, so unit order and concurrency never
+change the paired data; unit folders stay resumable per (side, task). The unit
+count is an execution detail, deliberately absent from the contract.
 """
 from __future__ import annotations
 
@@ -19,6 +28,7 @@ import fcntl
 import hashlib
 import json
 import os
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import subprocess
 import sys
@@ -167,12 +177,51 @@ def _task_rows(folder, task, model, args):
     return {row['seed']: row for row in rows}
 
 
+def _unit_command(args, manifest_path, task, side, model):
+    return [sys.executable, str(ROOT / 'scripts/search_play.py'),
+            '--rollout-policy', str(model), '--value', str(args.value),
+            '--manifest', str(manifest_path), '--task-id', task['task_id'],
+            '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
+            '--seeds', str(len(task['seeds'])), '--workers', str(args.workers),
+            '--arms', 'fast', '--dagger-beta', '0', '--out', str(args.out / side / task['task_id'])]
+
+
+def _run_unit(args, lock, manifest_path, task, side, model):
+    """One (task, side) evaluation unit: resumable search_play over its own seeds."""
+    folder = args.out / side / task['task_id']
+    command = _unit_command(args, manifest_path, task, side, model)
+    folder.mkdir(parents=True, exist_ok=True)
+    command_path = folder / 'command.json'
+    if command_path.exists():
+        if read(command_path) != command:
+            raise ValueError(f'command changed: {folder}')
+    else:
+        write(command_path, command)
+    complete = False
+    if (folder / 'games.jsonl').exists():
+        # search_play resumes missing (arm,seed) keys. Corruption is never repaired by
+        # silently dropping rows; the complete-data validator below will reject it.
+        complete = len((folder / 'games.jsonl').read_text().splitlines()) == len(task['seeds'])
+    if not complete:
+        with (folder / 'run.log').open('a') as log:
+            result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
+                                    pass_fds=(lock.fileno(),),
+                                    env={**os.environ, 'CUDA_VISIBLE_DEVICES': '',
+                                         'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
+        if result.returncode:
+            raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; see {folder / "run.log"}')
+    rows = _task_rows(folder, task, model, args)
+    print(f'{side} {task["task_id"]}: {sum(r["won"] for r in rows.values())}/{len(task["seeds"])}', flush=True)
+    return side, task['task_id'], rows
+
+
 def evaluate(args):
     args.out.mkdir(parents=True, exist_ok=True)
     # A resumed run cannot race the still-live evaluator or its game children.
     with (args.out / 'evaluation.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
         version = getattr(args, 'gate_version', GATE_VERSION)
+        units_limit = max(1, int(getattr(args, 'eval_units', 1) or 1))
         registration = args.out / 'registration.json'
         # A resumed v2 run must reuse the block recorded at first registration,
         # otherwise resuming would silently consume another ledger block.
@@ -206,48 +255,37 @@ def evaluate(args):
         started = time.time()
         paired = []
         files = {}
-        for index, task in enumerate(manifest['tasks']):
-            outcomes = {}
-            # Alternate model order by task; seed pairing never depends on execution order.
-            sides = ('incumbent', 'candidate') if index % 2 == 0 else ('candidate', 'incumbent')
-            for side in sides:
-                model = getattr(args, side)
-                folder = args.out / side / task['task_id']
-                command = [sys.executable, str(ROOT / 'scripts/search_play.py'),
-                           '--rollout-policy', str(model), '--value', str(args.value),
-                           '--manifest', str(manifest_path), '--task-id', task['task_id'],
-                           '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
-                           '--seeds', str(len(task['seeds'])), '--workers', str(args.workers),
-                           '--arms', 'fast', '--dagger-beta', '0', '--out', str(folder)]
-                folder.mkdir(parents=True, exist_ok=True)
-                command_path = folder / 'command.json'
-                if command_path.exists():
-                    if read(command_path) != command:
-                        raise ValueError(f'command changed: {folder}')
-                else:
-                    write(command_path, command)
-                complete = False
-                if (folder / 'games.jsonl').exists():
-                    # search_play resumes missing (arm,seed) keys. Corruption is never repaired by
-                    # silently dropping rows; the complete-data validator below will reject it.
-                    complete = len((folder / 'games.jsonl').read_text().splitlines()) == len(task['seeds'])
-                if not complete:
-                    with (folder / 'run.log').open('a') as log:
-                        result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
-                                                pass_fds=(lock.fileno(),),
-                                                env={**os.environ, 'CUDA_VISIBLE_DEVICES': '',
-                                                     'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
-                    if result.returncode:
-                        raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; see {folder / "run.log"}')
-                outcomes[side] = _task_rows(folder, task, model, args)
+        outcomes = {}
+        # Alternate model order by task; seed pairing never depends on execution order.
+        units = [(task, side)
+                 for index, task in enumerate(manifest['tasks'])
+                 for side in (('incumbent', 'candidate') if index % 2 == 0 else ('candidate', 'incumbent'))]
+        futures = []
+        executor = ThreadPoolExecutor(max_workers=units_limit, thread_name_prefix='gate-eval')
+        try:
+            for task, side in units:
+                futures.append(executor.submit(_run_unit, args, lock, manifest_path, task, side,
+                                               getattr(args, side)))
+            for future in futures:
+                side, task_id, rows = future.result()
+                outcomes[(side, task_id)] = rows
                 if contract(args.candidate, args.incumbent, args.source_panel, args.executable,
                             args.value, args.resource_dir, args.workers, version=version,
                             seed_block=seed_block) != frozen:
                     raise ValueError('model/build/panel changed during paired evaluation')
+        except BaseException:
+            for future in futures:
+                future.cancel()
+            raise
+        finally:
+            executor.shutdown(wait=True)
+        for task in manifest['tasks']:
+            for side in ('candidate', 'incumbent'):
+                folder = args.out / side / task['task_id']
                 files[str((folder / 'games.jsonl').relative_to(args.out))] = sha(folder / 'games.jsonl')
-                print(f'{side} {task["task_id"]}: {sum(r["won"] for r in outcomes[side].values())}/{len(task["seeds"])}', flush=True)
             paired.extend(dict(task_id=task['task_id'], seed=seed, zone=manifest['groups'][task['task_id']],
-                               candidate=outcomes['candidate'][seed]['won'], incumbent=outcomes['incumbent'][seed]['won'])
+                               candidate=outcomes['candidate', task['task_id']][seed]['won'],
+                               incumbent=outcomes['incumbent', task['task_id']][seed]['won'])
                           for seed in task['seeds'])
         result = decide(paired, manifest)
         result.update(contract=frozen, contract_key=contract_key(frozen), paired=paired,
@@ -264,16 +302,22 @@ def main():
     for name in ('candidate', 'incumbent', 'source-panel', 'executable', 'value', 'resource-dir', 'out'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--workers', type=int, default=1)
-    parser.add_argument('--gate-version', type=int, choices=(1, 2), default=GATE_VERSION,
-                        help='1 = task49A fixed 64-pair panel; 2 = task73b fresh-seed 1536-pair panel')
+    parser.add_argument('--eval-units', type=int, default=1,
+                        help='concurrent search_play children (task73c); execution detail, '
+                             'never part of the contract, outcomes are identical for any value')
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3), default=GATE_VERSION,
+                        help='1 = task49A fixed 64-pair panel; 2 = task73b fresh-seed 1536-pair panel; '
+                             '3 = task73c fog/roof 1920-pair panel')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
-                        help='out-of-git ledger of allocated gate seed blocks (v2 only)')
+                        help='out-of-git ledger of allocated gate seed blocks (v2+)')
     parser.add_argument('--seed-block', default=None,
-                        help='START,END already allocated in the ledger (v2 pipeline flow); '
+                        help='START,END already allocated in the ledger (v2+ pipeline flow); '
                              'omit to allocate the next free block')
     args = parser.parse_args()
     if args.workers not in (1, 2):
         parser.error('--workers must be 1 or 2')
+    if args.eval_units < 1:
+        parser.error('--eval-units must be positive')
     absolute = ('candidate', 'incumbent', 'source_panel', 'executable', 'value', 'resource_dir')
     if args.gate_version >= 2:
         absolute += ('seed_ledger',)

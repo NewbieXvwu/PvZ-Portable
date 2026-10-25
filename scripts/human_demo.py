@@ -20,8 +20,18 @@ from pvz_tasks import profile_for_deck
 from render_episode import _frame, load_training_task, training_task_kwargs
 
 
-def reset_archive(env, meta):
+def reset_archive(env, meta, *, fog_observation=None):
+    """Restore the archive's initial board.
+
+    task70 B6: fog_observation is presentation only (the task66 invariant tests pin the
+    state hash across modes), so a caller may override the recorded value with the
+    manifest's: the demo_start cells replayed under human_v2 must not inherit the
+    recording-time x-ray just because the demo task predates the fog families.  The
+    board itself is untouched -- every hash check still applies.
+    """
     config = dict(meta['environment_task'])
+    if fog_observation is not None:
+        config['fog_observation'] = fog_observation
     config['profile'] = PlayerProfileContext(**config['profile'])
     config['preplanted'] = tuple(tuple(plant) for plant in config.get('preplanted', ()))
     env.begin_demo()
@@ -125,7 +135,8 @@ class Recorder:
 
 
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
-           save: Path | None = None, *, strict_hashes: bool | None = None):
+           save: Path | None = None, *, strict_hashes: bool | None = None,
+           fog_observation: str | None = None):
     meta = json.loads((archive / 'meta.json').read_text())
     # task70: state-hash equality only holds when the replaying engine is the one that
     # recorded the archive.  task63 changed the FIELD_SHAKE seeding inside the SaveGame
@@ -148,7 +159,7 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
     stop = frames[decision - 1]['operation'] if decision is not None else meta['operations']
-    obs = reset_archive(env, meta)
+    obs = reset_archive(env, meta, fog_observation=fog_observation)
     recorder = None
     if save is not None:
         config = dict(meta['environment_task'])
