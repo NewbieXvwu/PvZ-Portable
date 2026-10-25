@@ -43,6 +43,8 @@
 
 ## 结果
 
+- 2026-10-26（北京时间）：最终产物核对确认四局结论与实际归档完全一致，3518帧、57个标签、原始输入及派生带哈希均通过检查。报告更正为55个小喷起始标签与2个坚果起始标签，并明确事后价格/反向计数和掩码微基准的解释边界；预登记统计与接入门槛结论保持一致。
+
 - 2026-10-26（北京时间）：主控交接确认：工作树干净，HEAD 9db150d4 已推 origin/replace，本轮改动（两日志并集 b0786960、结果行 f9f11f6c、24 项验收 9db150d4）均已入库并在"结果"留痕，无未提交进度；Codex 接手从 HEAD 继续。
 
 - 2026-10-26（北京时间）：第四执行者在最终 HEAD（f9f11f6c）做本机验收：项目 venv（~/.venvs/ml）跑 test_replace_action + demo_batch + stats 共 17 项、test_human_demo 6 项、test_projectile_initialization 1 项，24 项全过 0 失败。注：test_human_demo 首跑 5 项跳过是该文件默认资源路径为 Mac 路径所致，补 PVZ_RESOURCE_DIR=~/.cache/pvz-research-resources 后 6/6 通过；worktree 内 build/pvz-portable（10-25 构建）与资源均在位。至此任务书六项交付在最终 HEAD 上验收完毕，无剩余步骤。
