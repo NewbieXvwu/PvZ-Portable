@@ -75,3 +75,12 @@ task81 探路：在 GPT 沙箱（Debian 13、Xeon 8573C、静态二进制 a84f10
 - `hashdet` 从较旧的 `pvz-env` 拉出（截至 2026-10-25 落后 85 个提交）。合并预演只冲突日志文件、三处源码自动合并；但证据是在旧基线上构建的，主控合并后应重跑 `test_state_hash_determinism` 与 8 次 reset，确认上游改动没有改变结论。
 
 - 原始存档来自不同引擎，原有跨二进制回放本就采用 tick/ok/outcome 校验。本任务另外比较完整 privileged 状态（含隐藏僵尸、RNG）和事件；不把旧存档的跨版本哈希变化误报为模拟变化。
+
+## 主控验收（2026-10-26 00:40，Mac）
+- **修复前**（Mac 当时的 `build/pvz-portable`）：`state_hash_mac_probe.sh` 跑 L31 示范，8 个独立进程，开局哈希只有 1 种，前 2000 操作的 2001 个点哈希、观测、事件全同，也与存档哈希一致。
+  - 这说明 macOS 的分配器给的新页是干净的。所以 Mac 录制和校验一直能逐位通过，而台式机的 mimalloc 与静态版会带出堆上的残值。
+- **合并 hashdet 后重建**（`3be4b8a7…`）：
+  - 同一探针 8 次、1 种 reset 哈希，与存档相同；
+  - `test_state_hash_determinism` 通过；
+  - 人类示范 L49 doom（74281 操作）和 L42 gloommelon（66115 操作）严格 `verify` 通过。
+- 已合并进 pvz-env（`937c86a1`）。台式机生产引擎随下一次引擎部署带上，排在 deploy14 之后，不单独部署。
