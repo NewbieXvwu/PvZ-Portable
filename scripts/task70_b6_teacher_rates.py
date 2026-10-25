@@ -24,6 +24,15 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from curriculum_queue import command_for  # noqa: E402
 
 MANIFEST = ROOT / 'configs/human_demo_tasks.json'
+
+def demo_archive(relative: str) -> Path:
+    """The demo archives were recorded on the Mac and fetched into the cq tree (qc's
+    working tree); the main checkout does not carry them."""
+    for base in (MAIN, ROOT, MAIN / '.claude/worktrees/cq'):
+        candidate = base / relative
+        if (candidate / 'meta.json').is_file():
+            return candidate
+    raise FileNotFoundError(f'demo archive not found under MAIN/ROOT/cq: {relative}')
 GAMES = 8
 CELLS = ['demo_fog_31_snow_m200_hv2', 'demo_fog_32_snow_m200_hv2',
          'demo_fog_33_cactus_snow_m200_hv2', 'demo_fog_33_cattail_snow_m200_hv2']
@@ -64,7 +73,7 @@ def main() -> None:
         out_dir.mkdir(parents=True, exist_ok=True)
         command = command_for(common, MANIFEST, task_id, 0, GAMES, label,
                               frames=out_dir / 'frames', out=out_dir / 'search', beta=1.0,
-                              demo_archive=str(MAIN / start['archive']),
+                              demo_archive=str(demo_archive(start['archive'])),
                               demo_decision=decision, future_seeds=seeds)
         env = dict(os.environ, PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
         proc = subprocess.run(command, env=env)
