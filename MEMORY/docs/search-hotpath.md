@@ -101,11 +101,14 @@ $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/ab
 $PY $P/scripts/task77_value_kernel_check.py --time
 # 结论层复核：§3 / §3.1 / §4 与 §7.5 的每个数字都从证据复算，不匹配就抛错
 $PY $P/scripts/task77_audit_report.py --out $P/artifacts/task77
+$PY $P/scripts/task77_audit_abba.py --out $P/artifacts/task77
 $PY $P/scripts/task77_audit_pgo.py --out $P/artifacts/task77
 ```
 
-两个审计脚本放在 `scripts/`（随 git 走），默认 `--out` 指向本仓库的 `artifacts/task77`；
-它们把报告里的期望值写成断言，所以结论层不依赖 ignored 目录里的临时脚本。
+三个审计脚本放在 `scripts/`（随 git 走），默认 `--out` 指向本仓库的 `artifacts/task77`：
+`task77_audit_report.py` 查 §3/§3.1/§4，`task77_audit_abba.py` 查 §7.1–§7.4（含每臂均值、
+逐族负载区间与 qc 边界计数），`task77_audit_pgo.py` 查 §7.5。它们把报告里的期望值写成断言，
+所以结论层不依赖 ignored 目录里的临时脚本。
 
 `--cells` 只收窄面板（用于补测单族），不改变四臂配对、`--count` 或统计口径；`abba`、`abba-verify`、`profile`、
 `profile-summary` 都接受。`profile` 默认仍是五地形面板；`profile-summary` 只在选择等于五地形时写
@@ -395,7 +398,7 @@ night 更麻烦：B1 与 A1 同在 loadavg 29.2，却快 33%（147.8 vs 221.2）
 前两轮各占一半：§7.2 有 qc 负载但只有墙钟、且只有 day/night 在同一个控制器下；§7.3 记了引擎 CPU 但机器基本空闲。
 为覆盖 qc 持续运行的生产场景，补了这一轮：同设计（六族 × 2 种子 × A-B-B-A，`--workers 2 --count 2`，48 局），
 每臂同时记墙钟与引擎进程 CPU，**24 个 block 边界上都是同一个 qc 控制器**（pid 626824，独立只读监控 535 个样本，
-6–9 个 qc 引擎全程在场，loadavg 13–16）。
+边界上 qc 引擎 6–9 个；边界 loadavg 9.7–19.6，监控样本 12.7–19.8）。
 
 审计通过：12 对、36 次完整帧比较、40,686 帧一致；`state_hash` 18/36 不同（按 §7.1 的口径单独报告）。
 
