@@ -100,3 +100,4 @@
 - 追加（同日）：用户打通雾夜 L39 `demo_fog_39_cactus_snow_m200`（30 波、1609 动作、被吃 19 其中零费 18、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261039/demo_fog_39_cactus_snow_m200`）。L39 老师冷启动各卡组 0–1/16（气球破防，task74b），这是该关唯一的成功轨迹。L42 做完后照同样流程扫描与起点格；起点格族带 `fog_observation`（与 B6 的 `_hv2` 口径一致）。
 - 追加（同日）：用户打通屋顶 L43 `demo_roof_43_melon_m200`（30 波、1129 动作、仅被吃 2 株、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261043/demo_roof_43_melon_m200`）。L42 之后照同样流程做扫描与起点格。主控定：屋顶示范以西瓜套为主，玉米套不再录（群怪下西瓜溅射远强于玉米的单体控制）。
 - 更正（同日）：忧郁菇+大蒜套照录（用户：无衰减穿透对群怪比西瓜更强），L42/43/44 各一局，录完同样做扫描与起点格。只有玉米套不录。
+- 追加（同日）：用户打通屋顶 L44 `demo_roof_44_melon_m200`（40 波、1438 动作、被吃 5 株、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261044/demo_roof_44_melon_m200`）。排在 L43 之后做扫描与起点格。
