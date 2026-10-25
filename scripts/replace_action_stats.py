@@ -82,7 +82,7 @@ def arm_summary(games, rng):
             added.update(map(str, event['added']))
             transitions['+'.join(map(str, sorted(event['removed']))) + ' -> ' +
                         '+'.join(map(str, sorted(event['added'])))] += 1
-    return dict(wins=sum(g['won'] for g in games), n=len(games),
+    result = dict(wins=sum(g['won'] for g in games), n=len(games),
                 nonterminal=sum(not g['terminal'] for g in games),
                 replace_executed=sum(replacements), replace_rejected=sum(s['replace_rejected'] for s in metrics),
                 replacements_per_game=mean_with_interval(replacements, rng),
@@ -92,6 +92,14 @@ def arm_summary(games, rng):
                      for key in ('sun_produced', 'sun_spent', 'sun_remaining')},
                 verification={kind: verification_summary(games, kind, rng)
                               for kind in ('plant', 'replace', 'wait')})
+    # Descriptive resource cost, outside the preregistered win-test family. Use a separate
+    # stream so adding diagnostics cannot change any primary/verification bootstrap draws.
+    performance_rng = np.random.default_rng((sum(g['seed'] for g in games) + 69010000) % 2 ** 32)
+    result['observed_performance'] = {key: mean_with_interval([g.get(key, 0) for g in games], performance_rng)
+        for key in ('seconds', 'decisions', 'searched', 'rollout_lanes', 'halving_candidates', 'mowers_used', 'final_tick')}
+    result['observed_performance_note'] = ('seconds is each worker game duration, not manager batch wall time; '
+        'scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark')
+    return result
 
 
 def paired_panel(before, after, seed):
