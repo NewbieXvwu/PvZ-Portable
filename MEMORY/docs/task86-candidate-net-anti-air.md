@@ -1,6 +1,6 @@
 # task86：静态候选网漏掉对空植物——用“强加全部合法格”的老师标签重训候选网
 
-> 主控 2026-10-25 写。执行者：Mac Codex（plus2 号，tmux `codex-plus2`）。工作树沿用 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/conveyor2`（先 `git merge origin/pvz-env`）。Mac 上每个任务最多 6 个游戏进程。
+> 主控 2026-10-25 写。执行者：Mac Codex（plus2 号，tmux `codex-plus2`）。工作树沿用 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/conveyor2`（先 `git merge origin/pvz-env`）。每个任务最多 2 个游戏进程，其他任务进程不计入本任务限制。
 
 ## 证据
 - **task75c**：L40 原生 0.5 倍，候选强加全部合法格后老师 **6/16 → 15/16**，多种了仙人掌 298 张、三叶草 97 张。现行静态候选网（branch1）在气球关几乎不提议对空植物，属于**候选遗漏**。
@@ -30,12 +30,13 @@
 
 ## 结果
 - 预登记提交 `e18f8f14` 并已推送 `origin/conveyor2`。
-- L39 仙人掌族现行候选完成 16/16，0/16 胜，16/16 终局含气球类型16；全合法候选完成 3/16，0/3 胜，3/3 含气球。
-- L39 三叶草族现行候选完成 12/16，0/12 胜，11/12 终局含气球类型16；全合法候选完成 2/16，1/2 胜，1/2 含气球。
-- 完整配对、决策级数据集、重训和后续评估未执行完成，详见 `MEMORY/docs/candidate-net-anti-air.md`。
+- L39 仙人掌族现行候选与全合法候选均完成 16/16，胜率均为 0/16；气球终局数为 16 对 15。
+- L39 三叶草族现行候选与全合法候选均完成 16/16，胜率为 0/16 对 8/16；气球终局数为 14 对 6，配对差 +50 个百分点。
+- L39 逐决策原候选召回率为仙人掌 2431/2483、三叶草 3916/4014；全合法候选追加和最终动作已完成机械核对。
+- L40 数据采集、候选网重训和后续 32 局评估仍未执行，详见 `MEMORY/docs/candidate-net-anti-air.md`。
 
 ## 问题
-- 全合法候选每局耗时显著高于基线，本轮停止未完成作业；仓库没有静态候选网训练器或 branch1 原始数据路径，现有 `train_value_branches.py` 的目标是叶值预测，不能直接替代候选网重训。
+- 仓库没有静态候选网训练器或 branch1 原始数据路径，现有 `train_value_branches.py` 的目标是叶值预测，不能直接替代候选网重训。
 
 ## 预登记（训练前）
 - 模型沿用 `ValueNet(width=64, context=True)` 与 `scripts/train_value_branches.py`，不改生产默认；新数据按 25% 抽样，旧 branch1 数据占 75%，以旧数据为基线保留多区覆盖。
