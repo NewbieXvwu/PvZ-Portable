@@ -6,7 +6,7 @@ from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of
 
 SPEED_SCALE = 1.0
 OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7), "v2fog": (10, 7),
-             "v2fogstack4": (112, 7), "v2size": (10, 7)}
+             "v2fogstack4": (112, 7), "v2size": (10, 7), "v2boss": (13, 9)}
 
 
 def fog_channel(frame: dict) -> np.ndarray:
@@ -22,7 +22,7 @@ def fog_channel(frame: dict) -> np.ndarray:
 
 
 def v2_extra(frame: dict, wave_tick: int) -> tuple[np.ndarray, np.ndarray]:
-    board = np.zeros((9, ROWS, COLS), dtype=np.float32)
+    board = np.zeros((13 if frame.get('_boss_features') else 9, ROWS, COLS), dtype=np.float32)
     totals = np.zeros((3, ROWS, COLS), dtype=np.float64)
     maximum = np.full((ROWS, COLS), -np.inf)
     raw = frame.get("v2")
@@ -64,6 +64,19 @@ def v2_extra(frame: dict, wave_tick: int) -> tuple[np.ndarray, np.ndarray]:
                    raw["wave_health"] / raw["wave_start_health"] if raw["wave_start_health"] else 0.0,
                    raw["sun_countdown"] / 1224.0, raw["sun_pending"] / 200.0)
     scalars[6] = 1.0
+    if frame.get('_boss_features'):
+        boss = frame.get('boss') or {}
+        if boss.get('active'):
+            board[9, 0, 0] = float(boss.get('head', False))
+            projectile = boss.get('projectile')
+            if projectile and 0 <= projectile.get('row', -1) < ROWS:
+                board[10 if projectile.get('type') == 'fire' else 11, projectile['row'], _col_of(projectile.get('x', 0))] = 1.0
+            if boss.get('action') in ('summon', 'stomp', 'bungee', 'rv'):
+                row, col = boss.get('target_row', -1), boss.get('target_col', -1)
+                if 0 <= row < ROWS and 0 <= col < COLS:
+                    board[12, row, col] = 1.0
+            scalars[7] = boss.get('stage', 0) / 2.0
+            scalars[8] = boss.get('projectile', {}).get('row', 0) / 5.0 if boss.get('projectile') else 0.0
     return board, scalars
 
 
@@ -79,7 +92,8 @@ class StudentHistory:
         tick = frame["tick"]
         if frame["wave"] != self.wave:
             self.wave, self.wave_tick = frame["wave"], tick
-        if self.obs in ("v2", "v2fog", "v2fogstack4", "v2size"):
+        if self.obs in ("v2", "v2fog", "v2fogstack4", "v2size", "v2boss"):
+            frame = {**frame, '_boss_features': self.obs == 'v2boss'}
             board, scalars = v2_extra(frame, self.wave_tick)
             if self.obs == 'v2size':
                 size = np.zeros((1, ROWS, COLS), dtype=np.float32)
