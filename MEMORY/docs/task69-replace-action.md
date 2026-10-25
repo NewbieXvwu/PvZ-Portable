@@ -108,6 +108,10 @@
 - 是否建议主控接入：至少一档雾区经校正后取得正收益，另一雾档及日间净收益不为负，且不出现确定的合法性/噪声回归时才提出接入候选；同时明确日间32对的统计精度。其余结果据实解释，不靠挑seed、改牌或换参数求过线。
 - 最多4个本任务游戏进程，阶段间不叠加超额测试进程；PVZ_NO_POPUP=1。原始游戏/模型/分片/log只留ignored产物，git交付代码、预登记、KB结论与报告。任何GPU训练另受每次3600秒和启动MemAvailable≥10GiB约束。
 
+## 结果
+
+- 2026-10-26（北京时间）：CodeBuddy 接手收尾：任务书六项交付已由前三位执行者完成并三次独立核验，本层无剩余实验步骤。把工作树里两个 append-only 日志（MEMORY/2026-10-24.md、2026-10-25.md，内容为其他任务在他处的追加条目）核实为对 HEAD 与 origin/pvz-env 均零删除的严格并集后提交（b0786960），交接预检里的 3 处合并冲突中两处日志冲突已提前消除，剩余仅 scripts/human_demo.py（取本分支版本）与两个引擎确定性修复 cherry-pick（edcde9e3、9549f595），均留主控合并时处理。交付物复核：replace-action.md、冻结清单 configs/task69-replace-paired.json 与 10 份 task69 结论层 JSON 均在库，工作树干净，HEAD 已推 origin/replace。
+
 ## 问题
 
 - 2026-10-25 23:57（北京时间）：交接风险（本任务未改 pvz-env，只做只读检查，供主控合并时处理）。① `git merge-tree --write-tree origin/pvz-env replace` 报 3 处冲突：`MEMORY/2026-10-24.md`、`MEMORY/2026-10-25.md`（append-only 日志，取并集即可）与 `scripts/human_demo.py`。② `human_demo.py` 已在分支内前向合并（5c85b90e）：把 task70 的 `strict_hashes`/`fog_observation` 与本分支的 `'replace'` 标签类型、`before_action` 钩子、rebaseline 公共帧校验并到一起，`diff` 确认新文件是 pvz-env 版本的超集（差异只有本任务的四处新增）。合并时该文件仍会报文本冲突（两边都改了 `replay` 签名行），**取本分支版本即可，不会丢 task70 的改动**；验收：`test_human_demo` 6 项（含 rebaseline/record/replay/export）与 `test_replace_action_demo_batch` 2 项通过，并用该文件完整重放 `demo_fog_31_fume_rebaselined`（40,488 操作）得到 `verified: true, wave 20, result 1`。注意两分支的反事实分支都用 `('plant','wait')`，本任务没有改它，所以替换动作在 whatif 反事实导出里仍不带标签，这是既有行为、不是合并引入的。③ 两个引擎确定性修复只在本分支：`edcde9e3`（Challenge.mCloudsCounter[6] 与 GridItem 状态初始化，3 行）与 `9549f595`（Projectile.mLastPortalX，1 行，含 `python/test_projectile_initialization.py`）；`git merge-base --is-ancestor` 显示两者都不在 origin/pvz-env，若 deploy4 从 pvz-env 构建，跨进程哈希差异与示范 verify 会复现，建议先 cherry-pick 这两个提交再构建。已把 origin/pvz-env 用 `git archive` 解到 /tmp 做只读预检：`patch -p1 --dry-run` 对 Challenge.cpp、GridItem.cpp、Projectile.cpp、test_projectile_initialization.py 全部 rc=0，可干净应用。
