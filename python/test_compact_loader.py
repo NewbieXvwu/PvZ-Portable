@@ -132,6 +132,14 @@ class CompactLoaderTest(unittest.TestCase):
         loaded = self.load()
         self.assertIn(44300000, set(loaded[6].tolist()))
 
+    def test_source_row_counts_take_demo_start_directories(self):
+        """Round 13 training then crashed in SourceRowCounts on the same directory names."""
+        from pvz_training_rows import SourceRowCounts
+        counts = SourceRowCounts()
+        counts.observe(Path("data/seed_20261032_f44300000/fast/frames.npz"), [0, 1, 2])
+        counts.observe(Path("data/seed_7/fast/frames.npz"), [0])
+        self.assertEqual(counts.sources["fast"]["seeds"], {44300000: 3, 7: 1})
+
     def test_the_store_hoists_the_constant_plane(self):
         rows = self.load()
         self.assertGreater(len(rows[0].planes), 0)

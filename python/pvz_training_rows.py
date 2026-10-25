@@ -5,6 +5,8 @@ import json
 from pathlib import Path
 import numpy as np
 
+from pvz_frame_store import archive_seed
+
 
 class SourceRowCounts:
     """Count actual retained cached rows without changing sampling, weights or RNG state."""
@@ -15,7 +17,7 @@ class SourceRowCounts:
         path = Path(path)
         record = self.sources.setdefault(path.parent.name, dict(archives=0, seeds={}))
         record['archives'] += 1
-        seed = int(path.parent.parent.name.split('_')[-1])
+        seed = archive_seed(path.parent.parent.name)
         record['seeds'][seed] = record['seeds'].get(seed, 0)+len(rows)
 
     def finish(self, total, validation_seeds, destination):
