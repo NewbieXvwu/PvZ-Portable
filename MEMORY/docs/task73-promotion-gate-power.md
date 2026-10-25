@@ -37,4 +37,6 @@
 
 ## 结果
 
+- 口径与种子来源冻结：复测参数与 round11 门禁契约一致（deploy3 引擎、value_net/v5、arms=fast、beta=0、绝对路径），只换种子。种子来源=注册评估池 unified_v2.json（34 任务×1024 种子，[30000,31024)）：历史评估已消耗 30000–30255（含冻结门禁 30000–30063），30256–31023 无任何记录使用；训练段 157,863 个 frames 种子标签全部 ≥1,600,000，与池零交集。新种子取 30256–30511 连续 256 个，按 PANEL_TASKS 顺序每任务连续 32 个、全局唯一。runner `scripts/gate_power_retest.py`：5 学生×8 任务×32 种子=1280 局，workers=5（≤6 进程上限）、search_play 按 (arm,seed) 断点续跑，统计复用门禁自己的 `pvz_promotion.summarize`。manifest/provenance 已落 `artifacts/task73/retest/`（ignored）。
+
 ## 问题
