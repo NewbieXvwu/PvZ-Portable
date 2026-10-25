@@ -22,6 +22,7 @@ import time
 import math
 import random
 import statistics
+import threading
 import io
 import tarfile
 from types import SimpleNamespace
@@ -592,11 +593,61 @@ def abba_baseline(args):
     return baseline
 
 
+class EngineCpu:
+    """Sum utime+stime of one arm's engine processes.
+
+    Wall clock on this box is dominated by other agents' queueing, which is why the
+    whole-game ABBA needs a load-stationary subset.  The engine's own CPU time is the
+    quantity the patch can change: engines live for the whole arm, so a half-second poll
+    loses at most the last tick's worth of samples.  Process identity comes from
+    /proc/<pid>/exe, so the A and B arms (different binaries) cannot be confused.
+    """
+
+    def __init__(self, executables, interval=0.5):
+        self.targets = {Path(exe).resolve() for exe in executables}
+        self.interval = interval
+        self.ticks = {}
+        self._stop = threading.Event()
+        self._thread = None
+
+    def _poll(self):
+        ticks_per_second = os.sysconf('SC_CLK_TCK')
+        while not self._stop.is_set():
+            for directory in Path('/proc').glob('[0-9]*'):
+                try:
+                    if Path(os.readlink(directory / 'exe')) not in self.targets:
+                        continue
+                    fields = (directory / 'stat').read_text().rsplit(')', 1)[1].split()
+                    used = int(fields[11]) + int(fields[12])
+                except (OSError, ValueError, IndexError):
+                    continue
+                pid = int(directory.name)
+                self.ticks[pid] = max(self.ticks.get(pid, 0), used)
+            self._stop.wait(self.interval)
+
+    def __enter__(self):
+        self._thread = threading.Thread(target=self._poll, daemon=True)
+        self._thread.start()
+        return self
+
+    def __exit__(self, *exc):
+        self._stop.set()
+        self._thread.join()
+        return False
+
+    def seconds(self):
+        return sum(self.ticks.values()) / os.sysconf('SC_CLK_TCK')
+
+    def processes(self):
+        return len(self.ticks)
+
+
 def abba(args):
     if args.candidate is None or not args.candidate.is_file():
         raise ValueError('--candidate executable is required')
     baseline = abba_baseline(args)
-    evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [], 'load': [],
+    evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [], 'load': [], 'cpu': [],
+                'cpu_ratios': [], 'observables': ['wall', 'engine_cpu'],
                 'candidate': {'path': str(args.candidate), 'sha256': digest(args.candidate)},
                 'baseline': {'path': str(baseline), 'sha256': digest(baseline)}}
     for cell in CELLS:
@@ -613,8 +664,14 @@ def abba(args):
             load = {'cell': cell, 'index': index, 'before': load_snapshot()}
             evidence['load'].append(load)
             save(args.out / label / f'{cell}_command.json', cmd)
-            run(cmd, args.out / label / f'{cell}.log')
+            started = time.perf_counter()
+            with EngineCpu([cmd[cmd.index('--executable') + 1]]) as sampler:
+                run(cmd, args.out / label / f'{cell}.log')
             load['after'] = load_snapshot()
+            evidence['cpu'].append({'cell': cell, 'index': index, 'arm': arm,
+                                    'seconds': sampler.seconds(),
+                                    'processes': sampler.processes(),
+                                    'wall_seconds': time.perf_counter() - started})
             path = args.out / label / f'{cell}_{label}_{count}/games.jsonl'
             data = [json.loads(line) for line in path.read_text().splitlines()]
             if len(data) != count or len({r['seed'] for r in data}) != count:
@@ -628,12 +685,20 @@ def abba(args):
             if old <= 0 or new <= 0:
                 raise ValueError('nonpositive game timing')
             evidence['games'].append(dict(cell=cell, seed=seed, old=old, new=new, ratio=new / old))
+        cpu = [r for r in evidence['cpu'] if r['cell'] == cell]
+        old_cpu = statistics.mean(r['seconds'] for r in cpu if r['arm'] == 'A')
+        new_cpu = statistics.mean(r['seconds'] for r in cpu if r['arm'] == 'B')
+        if old_cpu <= 0 or new_cpu <= 0:
+            raise ValueError(f'nonpositive engine CPU time: {cell}')
+        evidence['cpu_ratios'].append(dict(cell=cell, old=old_cpu, new=new_cpu,
+                                           ratio=new_cpu / old_cpu, games_per_arm=count))
         save(args.out / 'abba_progress.json', evidence)
     evidence['summary'] = paired_interval([r['ratio'] for r in evidence['games']])
     evidence['by_cell'] = {cell: paired_interval([r['ratio'] for r in evidence['games']
                                                if r['cell'] == cell]) for cell in CELLS}
+    evidence['cpu_summary'] = paired_interval([r['ratio'] for r in evidence['cpu_ratios']])
     save(args.out / 'abba_evidence.json', evidence)
-    print(json.dumps(evidence['summary']), flush=True)
+    print(json.dumps({'wall': evidence['summary'], 'engine_cpu': evidence['cpu_summary']}), flush=True)
 
 
 def audit_abba(args):
@@ -719,6 +784,31 @@ def audit_abba(args):
             recomputed_games.append(dict(cell=cell, seed=seed, old=old, new=new, ratio=new / old))
         audit['cells'][cell] = {'seeds': sorted(expected_seeds),
                                'raw_sha256': {path: digest(path) for path in paths}}
+    if 'engine_cpu' in evidence.get('observables', []):
+        recomputed_cpu = []
+        for cell in CELLS:
+            arms = [r for r in evidence.get('cpu', []) if r['cell'] == cell]
+            if sorted(r['index'] for r in arms) != [0, 1, 2, 3]:
+                raise ValueError(f'missing engine CPU measurements: {cell}')
+            if any(not math.isfinite(r['seconds']) or r['seconds'] <= 0 for r in arms):
+                raise ValueError(f'invalid engine CPU time: {cell}')
+            if any(r['processes'] < 1 for r in arms):
+                raise ValueError(f'engine CPU sampled no process: {cell}')
+            old_cpu = statistics.mean(r['seconds'] for r in arms if r['arm'] == 'A')
+            new_cpu = statistics.mean(r['seconds'] for r in arms if r['arm'] == 'B')
+            recomputed_cpu.append(dict(cell=cell, old=old_cpu, new=new_cpu,
+                                       ratio=new_cpu / old_cpu))
+        reported_cpu = {r['cell']: r for r in evidence.get('cpu_ratios', [])}
+        if set(reported_cpu) != set(CELLS):
+            raise ValueError('missing engine CPU ratios')
+        for row in recomputed_cpu:
+            prior = reported_cpu[row['cell']]
+            if any(not math.isclose(row[k], prior.get(k, float('nan')), rel_tol=1e-9)
+                   for k in ('old', 'new', 'ratio')):
+                raise ValueError('engine CPU ratio differs from raw measurements')
+        evidence['cpu_ratios'] = recomputed_cpu
+        evidence['cpu_summary'] = paired_interval([r['ratio'] for r in recomputed_cpu])
+    audit['observables'] = evidence.get('observables', ['wall'])
     if len(evidence['games']) != audit['paired_games']:
         raise ValueError('summary has missing or extra pairs')
     reported = {(r['cell'], r['seed']): r for r in evidence['games']}

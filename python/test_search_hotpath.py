@@ -107,7 +107,12 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
             bench.save(root / 'freeze.json', {k: {'path': str(root / 'weights')}
                                             for k in ('student', 'value', 'static')})
             evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [
-                dict(cell='day', seed=seed, old=1., new=.8, ratio=.8) for seed in (1, 2)]}
+                dict(cell='day', seed=seed, old=1., new=.8, ratio=.8) for seed in (1, 2)],
+                'observables': ['wall', 'engine_cpu'],
+                'cpu': [dict(cell='day', index=index, arm=arm, processes=2, wall_seconds=2.,
+                             seconds=2. if arm == 'A' else 1.8)
+                        for index, arm in enumerate(['A', 'B', 'B', 'A'])],
+                'cpu_ratios': [dict(cell='day', old=2., new=1.8, ratio=.9)]}
             for key, name in (('baseline', 'before'), ('candidate', 'after')):
                 evidence[key] = {'path': str(root / name), 'sha256': bench.digest(root / name)}
             for index, arm in enumerate(evidence['order']):
@@ -135,6 +140,20 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
                 bench.audit_abba(args)
                 audited = json.loads((root / 'abba_evidence.json').read_text())
                 self.assertEqual(audited['identity_audit']['frame_comparisons'], 6)
+                self.assertAlmostEqual(audited['cpu_ratios'][0]['ratio'], .9)
+                self.assertEqual(audited['identity_audit']['observables'], ['wall', 'engine_cpu'])
+                # Engine CPU must be recomputable from the per-arm records, so a hand-edited
+                # ratio or a truncated arm list cannot survive the audit.
+                evidence['cpu'][1]['seconds'] = 1.0
+                bench.save(root / 'abba_evidence.json', evidence)
+                with self.assertRaisesRegex(ValueError, 'engine CPU ratio differs'):
+                    bench.audit_abba(args)
+                evidence['cpu'][1]['seconds'] = 1.8
+                dropped = evidence.pop('cpu')
+                bench.save(root / 'abba_evidence.json', evidence)
+                with self.assertRaisesRegex(ValueError, 'missing engine CPU measurements'):
+                    bench.audit_abba(args)
+                evidence['cpu'] = dropped
                 evidence['games'][0]['ratio'] = .1
                 bench.save(root / 'abba_evidence.json', evidence)
                 with self.assertRaisesRegex(ValueError, 'timing differs'):
@@ -174,6 +193,33 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
                 'samples': 0, 'invalid_sample_files': [], 'cpp_samples': []}}})
             with self.assertRaisesRegex(ValueError, 'no symbolized samples'):
                 bench.hotspots(SimpleNamespace(out=root))
+
+
+    def test_engine_cpu_sampler_counts_only_the_measured_binary(self):
+        import os
+        import shutil
+        import subprocess
+        import sys
+        import tempfile
+        import time
+        from task77_search_hotpath import EngineCpu
+        with tempfile.TemporaryDirectory() as folder:
+            # A private copy gives the sampler an executable path no other process on the
+            # box can match; attribution is by /proc/<pid>/exe, as it is for the two arms.
+            engine = Path(folder) / 'pvz-portable'
+            shutil.copy2(os.path.realpath(sys.executable), engine)
+            burn = 'import time\nt=time.time()\nwhile time.time()-t<0.4: pass\n'
+            with EngineCpu([engine], interval=0.05) as sampler:
+                subprocess.run([str(engine), '-c', burn], check=True)
+                time.sleep(0.15)
+            self.assertEqual(sampler.processes(), 1)
+            self.assertGreater(sampler.seconds(), 0.1)
+            self.assertLess(sampler.seconds(), 2.0)
+            with EngineCpu(['/nonexistent/pvz-portable'], interval=0.05) as empty:
+                subprocess.run([str(engine), '-c', burn], check=True)
+                time.sleep(0.1)
+            self.assertEqual(empty.processes(), 0)
+            self.assertEqual(empty.seconds(), 0.0)
 
 
 if __name__ == '__main__':
