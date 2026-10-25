@@ -378,9 +378,294 @@ def panels(levels, count, workers):
             keep.cleanup()
 
 
+def trace_rows(level, arm, seed):
+    path = OUT/'panels'/f'l{level}'/arm/str(seed)/'decisions.jsonl.gz'
+    with gzip.open(path, 'rt') as stream:
+        return [json.loads(line) for line in stream]
+
+
+def round_values(row):
+    """Round-1 leaf value of every candidate: all of them, one common future seed."""
+    if not row.get('rounds'):
+        return {}
+    return {action_key(entry['action']): float(entry['value']) for entry in row['rounds'][0]}
+
+
+def shared_prefix(left, right):
+    """Decisions before the first difference: same state, same action, hence the same root."""
+    count = 0
+    for a, b in zip(left, right):
+        if a['frame'] != b['frame'] or action_key(a['executed']) != action_key(b['executed']):
+            break
+        count += 1
+    return count
+
+
+def binom_two_sided(k, n):
+    if n == 0:
+        return 1.0
+    from math import comb
+    tail = sum(comb(n, i) for i in range(0, k + 1)) / 2 ** n
+    return min(1.0, 2 * tail)
+
+
+def production_like(row):
+    """What the production candidate rule would have offered at this state.
+
+    Reconstructed from the trace: one best cell per affordable card (the static net's per-card
+    argmax, per_card=1), the student's own action, and the wait. The student's two extra
+    candidates are not recorded per decision, so this set is a subset of production's; a cell
+    missing from it was *definitely* not offered by production, and a cell inside it probably was.
+    """
+    static = {}
+    for item in row.get('static_scores') or []:
+        static[action_key(item['action'])] = float(item['value'])
+    best = {}
+    for key, value in static.items():
+        packet = json.loads(key)['packet']
+        if packet not in best or value > best[packet][0]:
+            best[packet] = (value, key)
+    keys = {value[1] for value in best.values()}
+    keys.add(action_key(row['policy']))
+    return keys, static
+
+
+def coverage(level, seed, arms):
+    """Per-decision candidate coverage, reconstructed inside each arm's own trace."""
+    prod = trace_rows(level, 'production', seed)
+    result = {}
+    for arm in arms:
+        rows = trace_rows(level, arm, seed)
+        prefix = shared_prefix(prod, rows)
+        decisions = []
+        for index, row in enumerate(rows):
+            if not row.get('searched'):
+                continue
+            values = round_values(row)
+            legal = [x for x in row['legal_actions'] if x['type'] == 'plant']
+            offered, static = production_like(row)
+            scored = [(values[action_key(x)], x) for x in legal if action_key(x) in values]
+            inside = [(v, x) for v, x in scored if action_key(x) in offered]
+            if not scored or not inside:
+                continue
+            best_all, best_action = max(scored, key=lambda item: item[0])
+            best_inside = max(inside, key=lambda item: item[0])[0]
+            packet_cells = [static[action_key(x)] for x in legal
+                            if action_key(x) in static and x['packet'] == best_action['packet']]
+            decisions.append(dict(
+                decision=index, tick=row['tick'], wave=row['wave'], sun=row['sun'],
+                legal_plants=len(legal), evaluated=len(row['evaluated_candidates']),
+                production_offered=len(offered),
+                omitted_best=action_key(best_action) not in offered,
+                regret=best_all - best_inside,
+                best_value=best_all, best_inside=best_inside, best_action=best_action,
+                best_packet_cells=len(packet_cells),
+                best_static_rank=(sorted(packet_cells, reverse=True).index(static[action_key(best_action)]) + 1
+                                  if action_key(best_action) in static else None),
+                chosen=row['executed'], chosen_in_production=action_key(row['executed']) in offered))
+        result[arm] = dict(shared_prefix=prefix, searched=len(decisions), decisions=decisions)
+    return result
+
+
+def probe_targets(level, seed):
+    """Four time-spaced searched decisions, chosen from the trace alone (never from outcomes)."""
+    rows = trace_rows(level, 'production', seed)
+    receipt = read(OUT/'panels'/f'l{level}'/'production'/str(seed)/'result.json')
+    final_tick = receipt['outcome']['final_tick']
+    searched = [i for i, row in enumerate(rows) if row.get('searched')]
+    chosen = []
+    for fraction in (0.0, 1/3, 2/3):
+        tick = final_tick * fraction
+        chosen.append(min(searched, key=lambda i: (abs(rows[i]['tick'] - tick), i)))
+    chosen.append(searched[-1])
+    return sorted(set(chosen))
+
+
+def probe_seeds(level, count=2):
+    losing = []
+    for receipt_path in sorted((OUT/'panels'/f'l{level}'/'production').glob('*/result.json')):
+        receipt = read(receipt_path)
+        if not receipt['outcome']['won']:
+            losing.append(int(receipt['identity']['seed']))
+    return sorted(losing)[:count]
+
+
+class TerminalRecorder:
+    """Read-only probe at scheduled roots: every legal action, terminal futures and leaf futures."""
+
+    def __init__(self, level, seed, targets, model, futures, leaf_futures, horizon):
+        self.level, self.seed, self.targets = level, seed, set(targets)
+        self.model, self.futures = model, futures
+        self.leaf_futures, self.horizon = leaf_futures, horizon
+        self.written = []
+
+    def before(self, env, obs, fast_state, decision):
+        if decision in self.targets:
+            self.probe(env, obs, decision)
+
+    def after(self, obs, action, policy, rejected, info):
+        pass
+
+    @staticmethod
+    def future_seed(parts):
+        return int(hashlib.sha256(':'.join(map(str, parts)).encode()).hexdigest()[:8], 16)
+
+    def probe(self, env, obs, decision):
+        import search_play as teacher
+        root = env.snapshot_fast()
+        try:
+            records = []
+            for action in all_actions(obs):
+                key = action_key(action)
+                terminal = [teacher._score_terminal_or_value(
+                                teacher._rollout_policy(env, obs, action, 0, root,
+                                    self.future_seed(('terminal', self.seed, decision, key, future))))
+                            for future in range(self.futures)]
+                leaves = [teacher._leaf_values([teacher._rollout_policy(
+                              env, obs, action, obs['tick'] + self.horizon, root,
+                              self.future_seed(('leaf', self.seed, decision, key, future)))])[0]
+                          for future in range(self.leaf_futures)]
+                records.append(dict(action=action, terminal=terminal,
+                                    terminal_wins=sum(1 for v in terminal if v == 1.0),
+                                    terminal_unfinished=sum(1 for v in terminal if v is None),
+                                    leaf_values=leaves,
+                                    leaf_mean=sum(leaves) / len(leaves)))
+        finally:
+            env.restore_fast(root)
+            env.release_snapshot(root)
+        path = OUT/'terminal'/f'l{self.level}'/str(self.seed)/f'root_{decision}_{self.model}.json'
+        write(path, dict(schema_version=1, level=self.level, seed=self.seed, decision=decision,
+                         tick=obs['tick'], wave=obs['wave'], sun=obs['sun'], model=self.model,
+                         futures=self.futures, leaf_futures=self.leaf_futures,
+                         horizon=self.horizon, actions=records))
+        self.written.append(str(path))
+        print(json.dumps(dict(level=self.level, seed=self.seed, decision=decision,
+                              tick=obs['tick'], actions=len(records))), flush=True)
+
+
+def terminal_job(job):
+    import search_play as teacher
+    plan, level, seed, model = job['plan'], job['level'], job['seed'], job['model']
+    targets = probe_targets(level, seed)
+    path_dir = OUT/'terminal'/f'l{level}'/str(seed)
+    if all((path_dir/f'root_{d}_{model}.json').exists() for d in targets):
+        return dict(level=level, seed=seed, model=model, skipped=True)
+    args = teacher_args(plan, level)
+    teacher._close_worker_env()
+    recorder = TerminalRecorder(level, seed, targets, model, plan['terminal_probe']['futures_per_action'],
+                                plan['terminal_probe']['leaf_futures'], 2500)
+    outcome = teacher._play(dict(args=args, seed=seed, arm='fast_search'), observer=recorder)
+    return dict(level=level, seed=seed, model=model, terminal=outcome['terminal'],
+                won=outcome['won'], probes=len(recorder.written))
+
+
+def initialize_value_worker(payload):
+    plan, model = payload
+    import search_play as teacher
+    teacher._init_worker(plan['inputs'][model]['path'], plan['inputs']['student']['path'],
+                         plan['teacher']['rollout_sim_skip'], plan['inputs']['static']['path'])
+
+
+def terminal_probe(levels, count, workers):
+    plan = verify_plan()
+    if not 1 <= workers <= 4:
+        raise ValueError('at most four engines for the terminal probe')
+    jobs = []
+    for level in levels:
+        for seed in probe_seeds(level, count):
+            for model in ('value', 'v4_control'):
+                jobs.append(dict(plan=plan, level=level, seed=seed, model=model))
+    if not jobs:
+        raise SystemExit('no losing production seeds to probe')
+    with controller_lock():
+        keep = preload(plan)
+        try:
+            for model in ('value', 'v4_control'):
+                subset = [job for job in jobs if job['model'] == model]
+                with mp.get_context('fork').Pool(min(workers, len(subset)),
+                        initializer=initialize_value_worker, initargs=((plan, model),)) as pool:
+                    for result in pool.imap_unordered(terminal_job, subset, chunksize=1):
+                        print(json.dumps(result), flush=True)
+        finally:
+            keep.cleanup()
+    write(OUT/'terminal'/'complete.json', dict(levels=levels, seeds_per_level=count,
+          models=['value', 'v4_control'], jobs=len(jobs), complete=True))
+
+
+def panel_report(levels):
+    plan = read(PLAN)
+    arms = plan['arms']
+    summary = dict(schema_version=1, task=76, levels=list(levels), arms=arms,
+                   seeds_per_level=plan['seeds_per_level'], teacher=plan['teacher'],
+                   inputs={k: v['sha256'] for k, v in plan['inputs'].items()},
+                   historical_v4_reference=plan['historical_v4_reference'])
+    per_level = {}
+    for level in levels:
+        seeds = sorted(int(p.parent.name) for p in (OUT/'panels'/f'l{level}'/'production').glob('*/result.json'))
+        outcomes = {arm: {} for arm in arms}
+        for arm in arms:
+            for seed in seeds:
+                receipt = OUT/'panels'/f'l{level}'/arm/str(seed)/'result.json'
+                if receipt.exists():
+                    outcomes[arm][seed] = read(receipt)['outcome']
+        wins = {arm: sum(1 for o in outcomes[arm].values() if o['won']) for arm in arms}
+        profile = {}
+        for arm in arms:
+            games = list(outcomes[arm].values())
+            if not games:
+                continue
+            waves = sorted(g['final_wave'] for g in games)
+            ticks = sorted(g['final_tick'] for g in games)
+            planted = {}
+            for g in games:
+                for kind, count in (g.get('planted_types') or {}).items():
+                    planted[kind] = planted.get(kind, 0) + count / len(games)
+            profile[arm] = dict(games=len(games), median_final_wave=waves[len(waves)//2],
+                                max_final_wave=waves[-1], median_final_tick=ticks[len(ticks)//2],
+                                mean_wave_count=sum(g['wave_count'] for g in games)/len(games),
+                                mean_decisions=sum(g['decisions'] for g in games)/len(games),
+                                mean_plants_per_game=round(sum(planted.values()), 2),
+                                plants_per_game={k: round(v, 2) for k, v in sorted(planted.items())},
+                                mowers_used=sum(g.get('mowers_used', 0) for g in games)/len(games))
+        paired = {}
+        for arm in arms[1:]:
+            shared = sorted(set(outcomes['production']) & set(outcomes[arm]))
+            up = sum(1 for s in shared if not outcomes['production'][s]['won'] and outcomes[arm][s]['won'])
+            down = sum(1 for s in shared if outcomes['production'][s]['won'] and not outcomes[arm][s]['won'])
+            paired[arm] = dict(seeds=len(shared), production_wins=sum(1 for s in shared if outcomes['production'][s]['won']),
+                               arm_wins=sum(1 for s in shared if outcomes[arm][s]['won']),
+                               gained=up, lost=down, mcnemar_p=binom_two_sided(min(up, down), up + down))
+        detail = {}
+        for seed in seeds:
+            if all((OUT/'panels'/f'l{level}'/arm/str(seed)/'result.json').exists() for arm in arms):
+                detail[seed] = coverage(level, seed, arms)
+        flat = [d for seed in detail for arm in arms for d in detail[seed][arm]['decisions']]
+        by_arm = {}
+        for arm in arms:
+            rows = [d for seed in detail for d in detail[seed][arm]['decisions']]
+            if rows:
+                by_arm[arm] = dict(decisions=len(rows),
+                    omitted_best_rate=sum(d['omitted_best'] for d in rows) / len(rows),
+                    mean_regret=sum(d['regret'] for d in rows) / len(rows),
+                    regret_above_margin=sum(d['regret'] > plan['teacher']['margin'] for d in rows) / len(rows),
+                    mean_legal_plants=sum(d['legal_plants'] for d in rows) / len(rows),
+                    mean_production_offered=sum(d['production_offered'] for d in rows) / len(rows),
+                    mean_evaluated=sum(d['evaluated'] for d in rows) / len(rows),
+                    chosen_outside_production=sum(not d['chosen_in_production'] for d in rows) / len(rows),
+                    mean_shared_prefix=sum(detail[s][arm]['shared_prefix'] for s in detail) / len(detail))
+        per_level[level] = dict(seeds=len(seeds), completed={arm: len(outcomes[arm]) for arm in arms},
+                                wins=wins, paired=paired, profile=profile, coverage=by_arm,
+                                decision_records=detail)
+    summary['per_level'] = per_level
+    write(ROOT/'MEMORY/docs/task76-roof-candidates-v5-report.json', summary)
+    print(json.dumps({l: dict(seeds=v['seeds'], wins=v['wins'], paired=v['paired'], profile=v['profile'], coverage=v['coverage'])
+                      for l, v in per_level.items()}, ensure_ascii=False, indent=1))
+    return summary
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['prepare','verify','smoke','panels'])
+    parser.add_argument('mode', choices=['prepare','verify','smoke','panels','report','terminal'])
     parser.add_argument('--levels', default='42,43')
     parser.add_argument('--games',type=int,default=32)
     parser.add_argument('--workers',type=int,default=6)
@@ -392,6 +677,10 @@ def main():
     elif args.mode == 'smoke':
         with controller_lock():
             smoke()
+    elif args.mode == 'report':
+        panel_report([int(v) for v in args.levels.split(',')])
+    elif args.mode == 'terminal':
+        terminal_probe([int(v) for v in args.levels.split(',')], args.games, args.workers)
     else:
         panels([int(v) for v in args.levels.split(',')],args.games,args.workers)
 
