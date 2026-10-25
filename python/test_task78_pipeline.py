@@ -323,15 +323,16 @@ def test_panel_merge_requires_disjoint_complete_exports(tmp_path):
         export.merge([first, second], merged)
 
 
-def test_only_the_independent_roof_panel_makes_the_roof_gate_eligible():
+def test_a_panel_name_cannot_certify_multi_future_roof_coverage():
     import task78_gates as gates
     corpus = gates.report({}, ['v5', 'v6'])
     assert corpus['roof']['preregistered_gate_eligible'] is False
     panel = gates.report({}, ['v5', 'v6'], gates.PANEL_SCOPE)
-    assert panel['roof']['preregistered_gate_eligible'] is True
+    assert panel['roof']['preregistered_gate_eligible'] is False
     assert panel['fog']['preregistered_gate_eligible'] is False
     assert panel['preregistered_gate_eligible'] is False
-    assert panel['missing_required_panels'] == ['task72b original 94 states']
+    assert panel['missing_required_panels'] == ['task72b original 94 states',
+                                               'independent roof action/future coverage audit']
 
 
 def test_training_corpus_diagnostics_are_never_preregistered_terminal_gates():

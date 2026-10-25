@@ -1,0 +1,41 @@
+{
+ "scope": "independent_roof_terminal_panel",
+ "training_eligible": false,
+ "frozen_root_plan_sha256": "4afca60e9217c79b8b5eb90ed41550bf734ef2a88db66f483481f3d32592668b",
+ "source_manifests_sha256": {
+  "k0": "f137d8a427a5825439ed87b4c64a61e515654fb48646005ff966f3c7bc324384",
+  "k1": "f68ecfb8e1acd8508d5991fd25150fc6c89063536a2dc31572bd792abd03b51f",
+  "k2": "cf0063ead8b948962ca09a4405c59701c8c8697fa2a5d0829b63002d092caed4"
+ },
+ "worlds": 24,
+ "roots_per_world": 2,
+ "roots": 48,
+ "common_futures": 3,
+ "horizons": [
+  2500,
+  4000,
+  6000
+ ],
+ "primary_horizon": 2500,
+ "required_label_jobs": 216,
+ "completed_label_jobs_at_protocol_record": 0,
+ "candidate_identity": "exact action JSON; duplicates or missing actions across common futures reject evaluation",
+ "root_identity": "source replay engine hash, student history and context must agree across futures and horizons",
+ "truth": "mean of three frozen-v5-teacher terminal outcomes for the same action",
+ "prediction": "mean of three full-precision leaf predictions from the same immutable leaves for each model; terminal leaves bypass both nets",
+ "primary_pairs": "both actions have nonterminal leaves in all three futures; terminal exclusions retained and counted",
+ "supplementary_pairs": "all candidates including terminal bypass; never substituted for primary pairs",
+ "minimum_absolute_truth_gap": 0.25,
+ "prediction_tie_credit": 0.5,
+ "prediction_tie_tolerance": 1e-09,
+ "bootstrap": {
+  "cluster": "independent world",
+  "draws": 10000,
+  "seed": 780,
+  "difference": "v6 minus v5",
+  "zero_denominator": "undefined, reported; any undefined resamples leave interval insufficient rather than fabricating zero"
+ },
+ "primary_gate": "point improvement > 0 and 95% interval lower >= 0; incomplete or no eligible pairs cannot pass",
+ "overall_task_complete": false,
+ "engine_processes_started": 0
+}

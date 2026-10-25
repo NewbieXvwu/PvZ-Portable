@@ -120,6 +120,8 @@
 
 执行状态修正（2026-10-26）：driver2已停止让资源给qc，不会自动续跑；配对9/15格、320/512对完整，night L17 v5另有16局。此前屋顶高视界48/48确实补齐，但新学生历史审计否定69个示范标签任务，当前可用123/192任务、868行，完整导出不可训练。旧985行导出/分片与69个原始任务保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`；待补清单`jobs_context_fix.txt`。纠正后的collector恢复人类前缀的previous frame/action与StudentHistory，导出同时核对物理状态和观察历史。完整预登记范围与种子不变。
 
+独立屋顶评分（2026-10-26，分支标签开始前明确）：原`driver2`仅排72个h2500任务，不能直接续用；完整要求是24世界×3共同未来×3视界=216任务，主视界2500、4000/6000分报。用`task78_roof_score.py`读取原始审计链，按action JSON匹配三未来，不能合并候选编号后当成三未来均值。主统计只比三叶均非终局的候选对，同时单列含终局旁路的全部候选诊断、平局、排除数和全部48root覆盖；按世界聚类bootstrap，零分母不能伪造零一致率。协议细节与当前缺216任务见`task78-roof-evaluation.json`及ignored的`roof_truth/scored.json`。此步骤不启动游戏，也未改变预留世界、root、种子或模型。
+
 ### 来源、抽样与训练
 
 - qc 只读来源：`/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2`。按档案名区分 L31 human、L31/L32/L33 仙人掌/L33 香蒲示范接手、L41 r7；不把老师旧 targets 当终局真值。按 SHA256(档案绝对路径) 排序，五个雾组各取 8 份、屋顶取 24 份，共 64 份；每份取实际有 targets 的搜索序列中点分位两个 root（不足则全取），选择过程不读取胜负。固定源文件 SHA 后才生成候选标签。完整清单在本树 ignored `artifacts/task78/`，KB 级统计进 git。

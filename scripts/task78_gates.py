@@ -32,6 +32,8 @@ DEAD_ZONE = 0.001  # task72b: |Δ| below this is v5's noise floor
 def load_rows(export_path, data_dir):
     """Every audited row, keyed by archive and root position."""
     export = json.loads(Path(export_path).read_text())
+    if export.get('training_eligible') is False:
+        raise ValueError('independent multi-future panels require task78_roof_score.py')
     if export.get('complete') is not True:
         raise ValueError('gates require the complete audited export')
     states = defaultdict(dict)
@@ -213,7 +215,8 @@ def report(states, names, scope=CORPUS_SCOPE):
     document = dict(states=len(states), fog_states=len(fog), roof_states=len(roof),
                     evaluation_scope=scope,
                     preregistered_gate_eligible=False,
-                    missing_required_panels=(['task72b original 94 states'] if panel else
+                    missing_required_panels=(['task72b original 94 states',
+                                              'independent roof action/future coverage audit'] if panel else
                                              ['task72b original 94 states',
                                               'independent roof 48 roots with three futures']),
                     note='single common future per candidate; terminal gaps are 0/1',
@@ -231,9 +234,9 @@ def report(states, names, scope=CORPUS_SCOPE):
         document[terrain]['flip_difference'] = bootstrap_difference(
             document[terrain][names[0]]['flips_all'],
             document[terrain][names[1]]['flips_all'])
-        # Only the independent roof panel makes that half of the terminal gate eligible;
-        # the fog half still needs the unrebuildable task72b 94 states.
-        document[terrain]['preregistered_gate_eligible'] = panel and terrain == 'roof'
+        # A name or training_eligible=false does not prove three-future coverage.
+        # This legacy single-future reader cannot certify either original panel.
+        document[terrain]['preregistered_gate_eligible'] = False
     return document
 
 
