@@ -18,6 +18,9 @@ import shutil
 import subprocess
 import sys
 import time
+import math
+import random
+import statistics
 from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -82,13 +85,23 @@ _PROFILE_DIR = None
 _TIMES = {}
 
 
+def process_cpu(env):
+    if env._process is None:
+        return 0.0
+    fields = Path(f'/proc/{env._process.pid}/stat').read_text().rsplit(')', 1)[1].split()
+    return (int(fields[11]) + int(fields[12])) / os.sysconf('SC_CLK_TCK')
+
+
 def measured_command(env, command):
     name = command.split()[0]
+    cpu_before = process_cpu(env)
     start = time.perf_counter()
     result = _COMMAND(env, command)
-    row = _TIMES.setdefault(name, {'calls': 0, 'wall_seconds': 0.0})
+    elapsed = time.perf_counter() - start
+    row = _TIMES.setdefault(name, {'calls': 0, 'wall_seconds': 0.0, 'engine_cpu_seconds': 0.0})
     row['calls'] += 1
-    row['wall_seconds'] += time.perf_counter() - start
+    row['wall_seconds'] += elapsed
+    row['engine_cpu_seconds'] += process_cpu(env) - cpu_before
     return result
 
 
@@ -98,13 +111,18 @@ def profiled_play(job):
     search_play._W['rollout_metrics'] = {}
     profiler = cProfile.Profile()
     started = time.perf_counter()
+    cpu_started = time.process_time()
+    before = (_COMMAND(search_play._W['env'], 'ENV_PROFILE')
+              if search_play._W.get('env') is not None else None)
     try:
         result = profiler.runcall(_PLAY, job)
     finally:
         profiler.dump_stats(str(_PROFILE_DIR / f"{job['seed']}.pstats"))
     save(_PROFILE_DIR / f"{job['seed']}.json", {
         'game': result, 'wall_seconds': time.perf_counter() - started,
-        'commands': _TIMES, 'rollout': search_play._W['rollout_metrics']})
+        'worker_cpu_seconds': time.process_time() - cpu_started,
+        'commands': _TIMES, 'rollout': search_play._W['rollout_metrics'],
+        'engine_before': before, 'engine_after': _COMMAND(search_play._W['env'], 'ENV_PROFILE')})
     return result
 
 
@@ -125,7 +143,7 @@ def driver(argv):
     search_play.main()
 
 
-def command(args, cell, tag, games, beta=1.0, engine=None, source=None):
+def command(args, cell, tag, games, beta=1.0, engine=None, source=None, offset=0):
     from curriculum_queue import command_for
     frozen = json.loads((args.out / 'freeze.json').read_text())
     common = SimpleNamespace(
@@ -134,7 +152,7 @@ def command(args, cell, tag, games, beta=1.0, engine=None, source=None):
         rollout_policy=Path(frozen['student']['path']), value=Path(frozen['value']['path']),
         static_value=Path(frozen['static']['path']),
         executable=engine or Path(frozen['engine']['path']))
-    cmd = command_for(common, args.out / 'manifest.json', CELLS[cell], 0, games,
+    cmd = command_for(common, args.out / 'manifest.json', CELLS[cell], offset, games,
                       f'{cell}_{tag}', frames=args.out / tag / 'frames', out=args.out / tag,
                       beta=beta)
     if source is not None:
@@ -171,20 +189,151 @@ def profile(args):
         run(cmd, folder / 'run.log')
 
 
+def compare_frames(old, new):
+    """Compare complete ordered records, including labels/targets/verification and observations.
+
+    Verification wall time is diagnostic, deliberately excluded from label identity.
+    Dict float equality alone misses -0.0; canonical JSON retains that distinction.
+    """
+    def canonical(frame):
+        frame = dict(frame)
+        if frame.get('verification'):
+            frame['verification'] = dict(frame['verification'])
+            frame['verification'].pop('seconds', None)
+        return json.dumps(frame, sort_keys=True, separators=(',', ':'), allow_nan=False)
+
+    for index in range(max(len(old), len(new))):
+        if index >= min(len(old), len(new)):
+            return {'index': index, 'reason': 'length', 'old': len(old), 'new': len(new)}
+        if canonical(old[index]) != canonical(new[index]):
+            return {'index': index, 'reason': 'frame', 'fields': [
+                key for key in old[index].keys() | new[index].keys()
+                if canonical({key: old[index].get(key)}) != canonical({key: new[index].get(key)})]}
+    return None
+
+
+def verify(args):
+    from pvz_frame_store import read_frames
+    from task70_redeploy_gate import COMPARE_FIELDS
+    manifest = json.loads((args.out / 'manifest.json').read_text())
+    evidence = {'games': [], 'pass': True, 'expected_pairs': 48}
+    for cell, task_id in CELLS.items():
+        seeds = next(t['seeds'] for t in manifest['tasks'] if t['task_id'] == task_id)
+        if len(seeds) != 8:
+            raise ValueError('each family must contain exactly eight seeds')
+        for arm, indices in (('teacher', range(4)), ('student', range(4, 8))):
+            rows = {}
+            for tag in ('old', 'new'):
+                path = args.out / f'gate_{tag}_{arm}' / f'{cell}_gate_{tag}_{arm}_4/games.jsonl'
+                loaded = [json.loads(line) for line in path.read_text().splitlines()]
+                rows[tag] = {r['seed']: r for r in loaded}
+                if len(loaded) != 4 or set(rows[tag]) != {seeds[i] for i in indices}:
+                    raise ValueError(f'missing, extra or duplicate games: {path}')
+            for index in indices:
+                seed = seeds[index]
+                a, b = rows['old'][seed], rows['new'][seed]
+                fields = list(COMPARE_FIELDS) + ['rollout_batches', 'rollout_lanes',
+                    'halving_candidates', 'halving_rollouts', 'halving_selected_lanes',
+                    'student_candidate_added', 'student_candidate_best',
+                    'student_candidate_override', 'override_kinds']
+                changed = [key for key in fields if a.get(key) != b.get(key)]
+                frames = {}
+                for tag in ('old', 'new'):
+                    path = (args.out / f'gate_{tag}_{arm}' / 'frames' / f'seed_{seed}' /
+                            f'{cell}_gate_{tag}_{arm}_fast_search/frames.npz')
+                    frames[tag] = read_frames(path)
+                    if len(frames[tag]) != rows[tag][seed]['decisions'] + 1:
+                        raise ValueError(f'incomplete decision archive: {path}')
+                mismatch = compare_frames(frames['old'], frames['new'])
+                ok = not changed and mismatch is None
+                evidence['pass'] &= ok
+                evidence['games'].append(dict(cell=cell, arm=arm, seed=seed, pass_=ok,
+                    changed=changed, frame_mismatch=mismatch, decisions=a['decisions'],
+                    state_hash_same=a.get('state_hash') == b.get('state_hash')))
+    save(args.out / 'gate_evidence.json', evidence)
+    if not evidence['pass'] or len(evidence['games']) != evidence['expected_pairs']:
+        raise RuntimeError('bit identity gate failed')
+    print('48/48 game pairs and complete decision archives identical', flush=True)
+
+
+def gate(args):
+    if args.candidate is None or not args.candidate.is_file():
+        raise ValueError('--candidate executable is required')
+    for tag in ('old', 'new'):
+        for cell in CELLS:
+            for arm, beta, offset in (('teacher', 1., 0), ('student', 0., 4)):
+                label = f'gate_{tag}_{arm}'
+                cmd = command(args, cell, label, 4, beta=beta, offset=offset,
+                    engine=args.candidate if tag == 'new' else None,
+                    source=ROOT if tag == 'new' else args.out / 'baseline')
+                save(args.out / label / f'{cell}_command.json', cmd)
+                run(cmd, args.out / label / f'{cell}.log')
+    verify(args)
+
+
+def paired_interval(ratios, draws=10000):
+    if not ratios or any(not math.isfinite(r) or r <= 0 for r in ratios):
+        raise ValueError('positive finite paired timings required')
+    logs = [math.log(r) for r in ratios]
+    rng = random.Random(77)
+    means = sorted(math.exp(statistics.mean(rng.choices(logs, k=len(logs))))
+                   for _ in range(draws))
+    return {'geomean': math.exp(statistics.mean(logs)), 'median': statistics.median(ratios),
+            'bootstrap95': [means[int(draws * .025)], means[int(draws * .975)]]}
+
+
+def abba(args):
+    if args.candidate is None or not args.candidate.is_file():
+        raise ValueError('--candidate executable is required')
+    evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [], 'load': []}
+    for cell in CELLS:
+        count = 2 if cell in ('roof', 'fog') else 3
+        rows = []
+        for index, arm in enumerate(evidence['order']):
+            label = f'abba_{index}_{arm}'
+            cmd = command(args, cell, label, count,
+                engine=args.candidate if arm == 'B' else None,
+                source=ROOT if arm == 'B' else args.out / 'baseline')
+            evidence['load'].append({'cell': cell, 'index': index,
+                                     'loadavg': Path('/proc/loadavg').read_text().strip()})
+            save(args.out / label / f'{cell}_command.json', cmd)
+            run(cmd, args.out / label / f'{cell}.log')
+            path = args.out / label / f'{cell}_{label}_{count}/games.jsonl'
+            data = [json.loads(line) for line in path.read_text().splitlines()]
+            if len(data) != count or len({r['seed'] for r in data}) != count:
+                raise ValueError(f'incomplete ABBA block: {path}')
+            rows.append({r['seed']: r for r in data})
+        if any(set(r) != set(rows[0]) for r in rows):
+            raise ValueError('ABBA seed sets differ')
+        for seed in rows[0]:
+            old = statistics.mean(rows[i][seed]['seconds'] for i in (0, 3))
+            new = statistics.mean(rows[i][seed]['seconds'] for i in (1, 2))
+            if old <= 0 or new <= 0:
+                raise ValueError('nonpositive game timing')
+            evidence['games'].append(dict(cell=cell, seed=seed, old=old, new=new, ratio=new / old))
+        save(args.out / 'abba_progress.json', evidence)
+    evidence['summary'] = paired_interval([r['ratio'] for r in evidence['games']])
+    evidence['by_cell'] = {cell: paired_interval([r['ratio'] for r in evidence['games']
+                                               if r['cell'] == cell]) for cell in CELLS}
+    save(args.out / 'abba_evidence.json', evidence)
+    print(json.dumps(evidence['summary']), flush=True)
+
+
 def main():
     if len(sys.argv) > 1 and sys.argv[1] == 'driver':
         driver(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('prepare', 'profile'))
+    parser.add_argument('phase', choices=('prepare', 'profile', 'gate', 'verify', 'abba'))
     parser.add_argument('--out', type=Path, default=OUT)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
+    parser.add_argument('--candidate', type=Path)
     parser.add_argument('--engine', type=Path, default=MAIN / '.claude/worktrees/cq/build4/pvz-portable')
     parser.add_argument('--student', type=Path, default=Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt'))
     args = parser.parse_args()
     if not args.out.is_absolute():
         parser.error('--out must be absolute')
-    {'prepare': prepare, 'profile': profile}[args.phase](args)
+    {'prepare': prepare, 'profile': profile, 'gate': gate, 'verify': verify, 'abba': abba}[args.phase](args)
 
 
 if __name__ == '__main__':
