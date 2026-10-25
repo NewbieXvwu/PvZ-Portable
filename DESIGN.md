@@ -1013,6 +1013,8 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 固定清单 `configs/human_demo_tasks.json`，二周目、倍率1.0、每关同种子20261000+关号，与既有雾区训练族分别保存。L31登记 `demo_fog_31_fume` / `demo_fog_31_burst`，L32登记 `demo_fog_32_magnet` / `demo_fog_32_freeze`，L33与L34分别登记 `demo_fog_N_cactus` / `demo_fog_N_blover` / `demo_fog_N_cattail`（N=33、34）。各族完整十卡顺序以该清单为准，计划与中文卡名见 [human-demo.md](MEMORY/docs/human-demo.md)。录制前按对应 profile 查询引擎解锁植物并执行整组检查，香蒲所有权由 `profile_for_deck` 声明，旧任务与旧存档卡组不变。
 
+2026-10-26 追加 task85c 原生传送带示范族：`demo_boss_50_orig_m100`（L50，种子 20261050）与 `demo_pool_30_orig_m100`（L30，种子 20261030）。两者均为倍率 1.0、空牌组、`conveyor_start='original'`，种子段与现有示范清单不相交。
+
 2026-10-24 追加（用户意见：大喷菇伤害不够、后期阳光溢出，要寒冰射手做辅助；1.0 倍对人太简单，不用路灯花也能往雾里盲种小喷菇）：新族 `demo_fog_31_snow`（卡组 阳光菇/小喷菇/大喷菇/睡莲/寒冰射手/高坚果/窝瓜/缠绕海草/樱桃炸弹/坚果 = [9,8,10,16,5,23,17,19,2,3]，即 fume 族去路灯花换寒冰射手），另登记 1.5 倍、2.0 倍僵尸量的 `demo_fog_31_snow_m150` / `demo_fog_31_snow_m200`；同种子 20261031，旧族与旧存档不变。
 
 2026-10-24 再追加：用户 1.0 倍、2.0 倍两局都通关，L32–34 的 8 个族各加 2.0 倍僵尸量版本 `<原族名>_m200`（卡组与种子不变）。
