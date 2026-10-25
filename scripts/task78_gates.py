@@ -186,6 +186,8 @@ def flips(states, name, differentiated=None):
 def bootstrap_difference(left, right, n=10000, seed=780):
     """Cluster bootstrap over worlds for a rate difference left-right."""
     worlds = sorted(set(left['worlds']) | set(right['worlds']))
+    if not worlds or not any(v[1] for v in left['worlds'].values()) or not any(v[1] for v in right['worlds'].values()):
+        return dict(mean=None,lower=None,upper=None,status='insufficient_evidence')
     rng = np.random.default_rng(seed)
     draws = np.empty(n)
     for i in range(n):
@@ -204,6 +206,9 @@ def report(states, names):
     fog = {k: v for k, v in states.items() if not v['group'].startswith('roof')}
     roof = {k: v for k, v in states.items() if v['group'].startswith('roof')}
     document = dict(states=len(states), fog_states=len(fog), roof_states=len(roof),
+                    evaluation_scope='training_and_stopping_corpus_diagnostic',
+                    preregistered_gate_eligible=False,
+                    missing_required_panels=['task72b original 94 states','independent roof 48 roots with three futures'],
                     note='single common future per candidate; terminal gaps are 0/1',
                     dead_zone=DEAD_ZONE)
     for terrain, subset in (('fog', fog), ('roof', roof)):

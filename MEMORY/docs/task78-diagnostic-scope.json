@@ -1,0 +1,16 @@
+{
+ "evaluation_scope": "training_and_stopping_corpus_diagnostic",
+ "preregistered_gate_eligible": false,
+ "model_sha256": "4df43aea69e22098d555219c2a79892e8332cdf4cefdf18da3e0f65c0421e4cb",
+ "export_144_sha256": "bc9a7d040ec7205863140c4bf6d9013e7441b3d8b1943e0d9653a6024abef65a",
+ "diagnostic_report_sha256": "ccda65063f5b046247859cff76e04acebad05b4b80470187504d440b45f2347d",
+ "checkpoint_fit_or_stopping_worlds": 49,
+ "measured_worlds": 23,
+ "overlapping_worlds": 23,
+ "all_measured_worlds_seen": true,
+ "required_missing": [
+  "complete original v5 corpus",
+  "task72b original 94-state evaluation",
+  "independent roof terminal panel"
+ ]
+}

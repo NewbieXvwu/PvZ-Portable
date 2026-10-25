@@ -16,7 +16,7 @@ class StopSetTest(unittest.TestCase):
         for group in ('fog_l31_human','fog_demo_l31','fog_demo_l32',
                       'fog_demo_l33_cactus','fog_demo_l33_cattail'):
             self.assertEqual(export.collection_horizons(dict(group=group)), (2500,4000,6000))
-        self.assertEqual(export.collection_horizons(dict(group='roof_l41')), (2500,))
+        self.assertEqual(export.collection_horizons(dict(group='roof_l41')), (2500,4000,6000))
         self.assertEqual(export.collection_horizons(dict(group='pool_p9k'), old=True), (2500,))
 
     def test_region_floor_adds_hash_smallest_archive(self):
@@ -286,6 +286,14 @@ def test_terminal_panel_sources_cannot_overwrite_training_labels(tmp_path):
     assert replay==manifest.with_name('replay.json')
     assert labels==manifest.parent/'labels'
     assert labels!=ROOT/'artifacts/task78/labels'
+
+
+def test_training_corpus_diagnostics_are_never_preregistered_terminal_gates():
+    import task78_gates as gates
+    result=gates.report({},['v5','v6'])
+    assert result['preregistered_gate_eligible'] is False
+    assert result['evaluation_scope']=='training_and_stopping_corpus_diagnostic'
+    assert result['roof']['flip_difference']['lower'] is None
 
 
 if __name__ == '__main__':
