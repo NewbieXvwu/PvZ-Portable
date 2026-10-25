@@ -93,6 +93,19 @@ def _default_executable() -> Path:
     return ROOT / "build" / ("pvz-portable.exe" if os.name == "nt" else "pvz-portable")
 
 
+def _ensure_executable(path: Path) -> None:
+    """解压工具不一定保留可执行位（Python 的 zipfile 就不保留），跑引擎前补上。
+
+    沙箱里很常见：包用 zipfile 解开，selfcheck 之外的自写脚本直接 Popen 会报
+    PermissionError。这里补一次，任何入口都不会因为这个卡住。
+    """
+    try:
+        if path.is_file() and not os.access(path, os.X_OK):
+            path.chmod(path.stat().st_mode | 0o111)
+    except OSError:
+        pass
+
+
 def load_tasks(manifest: str | Path | None = None) -> dict:
     """任务清单 -> {task_id: 定义}。清单就是仓库的 configs/human_demo_tasks.json。"""
     path = Path(manifest) if manifest else DEFAULT_MANIFEST
@@ -191,6 +204,7 @@ class Game:
     def _start(self) -> None:
         if self.env is not None:
             return
+        _ensure_executable(self.executable)
         self._calibrate_once()
         target = self.tick          # _reset_engine 会把 self.tick 归零，先记住
         self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True)

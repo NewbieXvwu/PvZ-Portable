@@ -58,19 +58,25 @@
 
 ## 结果
 
+- 2026-10-25 21:45 **重打正式包（取代 `c912da70…`）**：`/home/newbiexvwu/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,636,271 字节**，26 文件，SHA256 **`1000afb7363f2ec93cd66651b89832f68e7f18b7b9e6e68799d6968473868a83`**，密钥扫描 0 命中。
+  改了三处，都是复核时实测撞到的：
+  ① **引擎可执行位由接口自己补**（`llmplay/game.py` 新增 `_ensure_executable`，`_start()` 前调用）。Python 的 `zipfile` 解压**不保留权限位**，冷解压后 `build/pvz-portable` 是 0644，模型自写脚本直接 Popen 会报 `PermissionError`（以前只有 `selfcheck.py` 会 chmod，跳过自检就中招）。实测把包内二进制改回 0644 后跑整套 API 脚本，不再需要手工 chmod。
+  ② **PROMPT 补两条**：`Game.load()` 是惰性的（第一次 `observe()`/`summary()`/`wait()` 前 `game.obs` 是 `None`）；可执行位不用自己补。
+  ③ **`mac_check.sh` 不再进包**（它依赖仓库的 `human_demo.py` 与示范存档，沙箱里没有）；上一版是 26 文件，中途误打成 27 文件后已修掉。
+  验收：`python/test_llmplay.py` **33 条全过**（新增 2 条可执行位测试）；冷解压到 `/tmp/pkg3` 后 `unshare -rn python3 selfcheck.py` → `SELFCHECK OK`（189 操作）；同一份冷解压跑整套 API 脚本（list_tasks / observe / legend / summary / timeline / legal / plant / wait / wait_until 字符串与回调两种 / rewind / branch / save / load / export_archive）全通，导出 37 操作存档；L41 200 步导出 **189 操作 / tick 9955 / wave 4 / result 2**。两份存档用**独立引擎**（`~/llmplay-build/hostbuild2/pvz-portable`，SHA `e849cf8f…`，不是包里那个）跑 `human_demo.py verify` 都通过：`{"verified": true, "operations": 37, "tick": 600, "wave": 0, "result": 0}` 与 `{"verified": true, "operations": 189, "tick": 9955, "wave": 4, "result": 2}`。包内引擎仍是 `a84f10cf…`（与 21:20 跑过 4/4 PASS 的同一份），引擎未动。
 - 2026-10-25 21:27 **接手复核（Codex 停下的地方）**：工作树干净、HEAD `7428da79` 已推送；`python/test_llmplay.py` **31 条全过**；正式包 SHA256 仍是 `c912da70…`（44,635,895 字节），冷解压后包内 `llmplay/{budget,game,scene,selfcheck}.py`、`PROMPT.md`、`scripts/{episode_query,pvz_tasks,pvz_constants}.py` 与 HEAD **逐字一致**（没有包比代码旧的问题）；包内 `build/pvz-portable` 与 21:20 跑过 4/4 PASS 的 `stage/build/pvz-portable` **同 SHA256**（`a84f10cf…`），所以那轮 PASS 验的就是交付的这个字节序列。Mac 通路再确认一次仍不存在（无 sshd、`/etc/hosts` 无内网主机、`ip neigh` 只有 WSL 网关）。**唯一未完成项仍是 §2 的 Mac 重放**，已在“问题”补上 Mac + Docker 的一条命令，等主控决定是自己在 Mac 上跑还是改掉该子句。
 - 2026-10-25 21:25 **验收矩阵（一屏看全）**：
 
   | 任务书条目 | 状态 | 证据 |
   |---|---|---|
-  | §1 接口（Game/plant/shovel/wait/wait_until/rewind/branch/observe/legal/summary/export_archive） | 完成 | `python/test_llmplay.py` 31 条全过；两个容器里 200 步实跑 |
+  | §1 接口（Game/plant/shovel/wait/wait_until/rewind/branch/observe/legal/summary/export_archive） | 完成 | `python/test_llmplay.py` **33 条**全过；两个容器里 200 步实跑 |
   | §2 引擎二进制：静态、无窗口、glibc 兼容 | 完成 | `ldd: not a dynamic executable`；ubuntu 22.04（glibc 2.35）与 python:3.11-slim（2.41）均能 `RESET_V2` 起 L41 |
   | §2 台式机重放 4 局示范 | 完成 | `mac_check.sh` 对 deploy4 与包内二进制各 4/4 PASS（HEAD `8e98e01b` 前后） |
   | §2 **Mac 上重放 4 局** | **未完成（环境阻断）** | 本机无 Mac 通路：无 sshd、WSL↔Windows interop 坏、无内网主机、Windows 侧 `known_hosts` 里也没有 Mac |
   | §3 两镜像断网自测 + 回台式机 verify | 完成 | 见 21:00 条：两镜像各 189 操作 / tick 9955 / wave 4 / result 2，正式引擎 `verified: true` |
   | §4 安全扫描 + 包只在本机 | 完成 | zip 全成员凭据模式 0 命中、禁入路径 0；包在 `~/pvz-logs/llmplay_pkg/`，不在 git、不在 HF |
   | §5 `scripts/llmplay/PROMPT.md` | 完成 | 主控 18:30 已审读，§G 三处意见已改并重打包 |
-  | §6 主控验收记录 | 完成 | 包路径 / 44,635,895 字节 / SHA256 `c912da70…` / 离线自测 / 逐位一致 / PROMPT 路径均在"结果" |
+  | §6 主控验收记录 | 完成 | 包路径 / 44,636,271 字节 / SHA256 `1000afb7…` / 离线自测 / 逐位一致 / PROMPT 路径均在"结果" |
 
   只剩 Mac 一行。要关闭它只有两条路：① 在 Mac 上跑 `scripts/llmplay/mac_check.sh <资源目录>`（台式机已两次 4/4 PASS，脚本可用）；② 主控认为包里发的是 Linux ELF、Mac 那一条本就不适用于本交付物，在任务书里改掉 §2 的那句。**我没有自行改动 §2**，因为那是主控定的验收条件。
 - 2026-10-25 21:20 **同一脚本对"包里那个二进制"再跑一遍**：把 4 份示范拷到 `~/pvz-logs/llmplay_pkg/maccheck_archives/`（不写别的工作树），用 `scripts/llmplay/mac_check.sh` 配**包内静态二进制**（`stage/build/pvz-portable`，SHA `a84f10cf20bd`）重放：4/4 `PASS`、`MACCHECK OK`，四局操作数 39,590 / 57,596 / 41,107 / 41,831，tick 39,479 / 57,363 / 40,969 / 41,682，`result=1` 全通关。加上 deploy4 那一轮，台式机上已有两个互不相同的引擎各自 4/4 通过。
@@ -82,7 +88,7 @@
   ③ **清理**（§E）：`docker rm` 容器、`docker rmi` 三个镜像（lp22py:local / python:3.11-slim / ubuntu:22.04）、`docker builder prune -af`（回收 0B）；删除前后的 `docker images` 分别落在 `docker-test/out/docker-images-before.txt`（3 个镜像）与 `docker-images-after.txt`（空）；停 daemon 后先 `umount` 残留的 `exec/netns/default`（nsfs）再删 data/exec 与 225 MB 二进制、83 MB 压缩包，目录从约 390 MB 降到 82 MB；确认证据完整后再删掉解压副本 `extract/`，最终只剩 1.1 MB（日志、两份存档、重跑脚本）。
   证据：`docker-test/out/{selfcheck-2204.log,play200-2204.log,verify-2204.json,selfcheck-slim.log,play200-slim.log,verify-slim.json,docker-images-before.txt,docker-images-after.txt}`；重跑脚本 `docker-test/start_dockerd.sh` 与 `docker-test/out/play200.py` 留在本机，不进 git。**Mac 侧仍未验**（见"问题"），其余 §2 / §3 / §E 项至此都有实测记录。
 - 2026-10-25 **Codex 接手验收修复**（代码提交 `57eec964`）：2:45 门禁的旧表达式 `2 * 60 * 45` 实际是 90 分钟，现改为 165 分钟；状态行改为时:分。搜索关闭时切手动，连续两个无进展检查点可提前止损，重写达到上限后允许退到更早 tick。最远操作日志按关卡跨脚本/分支保留，耗尽时从纪录导出；真实引擎验证当前 tick 120、自动导出 tick 300，正式引擎 `verify` 通过（5 操作）。预算首次创建与图例标记改用同一 flock 事务，日志原子写入；读档/rewind/快照恢复重建逐波历史，observe 附历史，植物类型 0 不再误判为空槽。`python/test_llmplay.py` **31 条全过**；人类示范日志实测两次读档历史一致、快照 rewind 到 tick 3000 后历史一致且无未来行。
-- 2026-10-25 **本次最终正式包**（取代上面的 20:10 版）：`/home/newbiexvwu/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,635,895 字节**，26 文件，SHA256 **`c912da70a36012b465f088c360e8744229e5e08c019369b925018a34a8f4a32c`**。冷解压后 `unshare -rn` 断网 `selfcheck.py` 通过；L41 200 步入口生成 189 操作，tick 9955 / wave 4 / result 2，存档回正式引擎 `human_demo.py verify` 通过。对 zip 所有成员（包含二进制与资源）扫描凭据模式 0 命中，禁入路径 0，CRC 检查通过。预编引擎指纹保持 `a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb`；断网重放四局示范再次 ALL PASS：39,590 / 57,596 / 41,107 / 41,831 操作，826 / 1,309 / 892 / 922 帧观测全部一致，四局均通关。`state_hash` 仍仅作诊断，Docker / Mac 未测的限制见“问题”。探路包保持原路径与 SHA256；任务书为 `scripts/llmplay/PROMPT.md`。本次游戏进程最多 2 个，未操作其它任务的运行进程。
+- 2026-10-25 **上一版正式包**（已被 21:45 的 `1000afb7…` 取代）：`/home/newbiexvwu/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,635,895 字节**，26 文件，SHA256 **`c912da70a36012b465f088c360e8744229e5e08c019369b925018a34a8f4a32c`**。冷解压后 `unshare -rn` 断网 `selfcheck.py` 通过；L41 200 步入口生成 189 操作，tick 9955 / wave 4 / result 2，存档回正式引擎 `human_demo.py verify` 通过。对 zip 所有成员（包含二进制与资源）扫描凭据模式 0 命中，禁入路径 0，CRC 检查通过。预编引擎指纹保持 `a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb`；断网重放四局示范再次 ALL PASS：39,590 / 57,596 / 41,107 / 41,831 操作，826 / 1,309 / 892 / 922 帧观测全部一致，四局均通关。`state_hash` 仍仅作诊断，Docker / Mac 未测的限制见“问题”。探路包保持原路径与 SHA256；任务书为 `scripts/llmplay/PROMPT.md`。本次游戏进程最多 2 个，未操作其它任务的运行进程。
 
 - 2026-10-25 17:05 接口骨架 + 打包器 + 单测（commit 58656c0a，已推 llmplay）：`scripts/llmplay/` 的 Game/observe/legal/summary/rewind/branch/save/load/export_archive，任务书 PROMPT.md，build_package.py，`python/test_llmplay.py` 8 条全过。合法动作直接取引擎 lean 观测里的 `legal_actions`（Board::CanPlantAt），不在 Python 里重写种植规则。
 - 2026-10-25 17:05 构建环境：Docker 不可用（Docker Desktop 未对本 WSL 发行版开集成，`docker.exe` 走 vsock 报错）。改用 ubuntu 22.04 rootfs（ubuntu-base-22.04.5）chroot；jammy 的 GCC 11 编不过引擎（`#include <format>` 是 C++20，libstdc++ 11 没有），于是改为宿主 GCC 15 + 全静态链接（`-static`）——静态二进制不依赖目标机 glibc，比"在 22.04 里编"更稳。静态 SDL2 另编（只留 dummy 视频/音频后端，见下一条）。

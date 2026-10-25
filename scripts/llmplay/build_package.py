@@ -86,7 +86,7 @@ def copy_modules(stage: Path) -> None:
                     ignore=shutil.ignore_patterns("__pycache__", "build_package.py",
                                                   "build_probe.py", "probe",
                                                   "PROMPT.md", "README.md", "examples",
-                                                  "verify_archive.py"))
+                                                  "verify_archive.py", "mac_check.sh"))
 
 
 def copy_constant_sources(stage: Path) -> None:

@@ -127,6 +127,9 @@ g.export_archive("/mnt/data/out/l49_seed20261049")   # 导出可校验存档
 - 阳光自动收集（和人类示范一致），你不需要点阳光。
 - `export_archive` 写 `ticks.jsonl` / `frames.jsonl` / `meta.json`，`label_source` 是
   `llm_gpt_pro`。**每通关一关就导出一份。**
+- `Game.load()` 是惰性的：第一次 `observe()` / `summary()` / `wait()` 时才会从开局重放到存档的
+  tick。在那之前 `game.obs` 是 `None`，先调一次 `observe()` 再读它。
+- 引擎的可执行位由接口自己补（解压工具可能不保留），不需要你 `chmod`。
 
 ## 4. 搜索与手动：止损由接口执行，不靠你掐表
 

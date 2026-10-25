@@ -70,6 +70,24 @@ class LogRoundTripTest(unittest.TestCase):
         self.assertEqual(loaded.seed, game.seed)
         self.assertEqual(len(loaded.frames), 1)
 
+    def test_missing_exec_bit_is_added_before_start(self):
+        from llmplay.game import _ensure_executable
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'pvz-portable'
+            path.write_bytes(b'not really an engine')
+            path.chmod(0o644)
+            _ensure_executable(path)
+            self.assertTrue(os.access(path, os.X_OK))
+            _ensure_executable(path)                      # 幂等
+            self.assertEqual(path.read_bytes(), b'not really an engine')
+
+    def test_ensure_executable_leaves_missing_file_alone(self):
+        from llmplay.game import _ensure_executable
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'nope'
+            _ensure_executable(path)
+            self.assertFalse(path.exists())
+
     def test_load_rejects_foreign_schema(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'run.json'
