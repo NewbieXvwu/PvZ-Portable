@@ -104,7 +104,8 @@ def copy_modules(stage: Path) -> None:
                                                   "build_probe.py", "probe",
                                                   "PROMPT.md", "README.md", "examples",
                                                   "verify_archive.py", "mac_check.sh",
-                                                  "mac_bundle.sh"))
+                                                  "mac_bundle.sh", "make_llmplay_tasks.py",
+                                                  "check_tasks.py", "robustness_check.py"))
 
 
 def copy_constant_sources(stage: Path) -> None:
