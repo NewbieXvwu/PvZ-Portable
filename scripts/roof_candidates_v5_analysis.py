@@ -300,7 +300,8 @@ def terminal_probe(levels,workers,pilot=False):
     import search_play as teacher
     from export_value_net import export_value_net
     from pvz_value_net import load_value_net
-    plan=base.verify_plan();assert 1<=workers<=6
+    base.require_game_capacity(workers)
+    plan=base.verify_plan()
     with base.controller_lock():
         keep=base.preload(plan)
         v4=OUT/'frozen/v4_control.bin'
@@ -411,7 +412,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('mode',choices=['panel-report','terminal','terminal-report','pilot'])
     p.add_argument('--levels',default='42,43,44,45,46,47,48,49')
-    p.add_argument('--workers',type=int,default=6)
+    p.add_argument('--workers',type=int,default=base.MAX_GAME_PROCESSES)
     p.add_argument('--verify-traces',action='store_true')
     a=p.parse_args();levels=list(map(int,a.levels.split(',')))
     if a.mode=='panel-report':panel_report(levels,a.verify_traces)

@@ -64,3 +64,27 @@ def test_argmax_compares_sets_without_adversarial_tie_breaking():
     result=audit.metrics(document)
     assert result['discriminating'] and result['tie_aware_argmax_overlap']
     assert result['pairs']==2 and result['accuracy']==1
+
+
+def test_memory_cap_rejects_excess_workers_before_launch(monkeypatch):
+    import pytest
+    monkeypatch.setattr(audit.base, 'native_game_processes', lambda: [])
+    with pytest.raises(ValueError, match='one or two'):
+        audit.base.require_game_capacity(3)
+    audit.base.require_game_capacity(2)
+
+
+def test_existing_games_reserve_capacity_for_qc(monkeypatch):
+    import pytest
+    monkeypatch.setattr(audit.base, 'native_game_processes',
+                        lambda: [dict(pid=123, executable='/qc/pvz-portable')])
+    with pytest.raises(RuntimeError, match='qc has priority'):
+        audit.base.require_game_capacity(2)
+    audit.base.require_game_capacity(1)
+
+
+def test_full_global_budget_starts_no_game(monkeypatch):
+    import pytest
+    monkeypatch.setattr(audit.base, 'native_game_processes', lambda: [dict(pid=1), dict(pid=2)])
+    with pytest.raises(RuntimeError, match='no task76 game started'):
+        audit.base.require_game_capacity(1)

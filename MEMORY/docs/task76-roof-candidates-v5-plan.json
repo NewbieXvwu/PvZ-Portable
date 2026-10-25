@@ -185,7 +185,7 @@
    "starting_pots": 15
   }
  ],
- "workers": 6,
+ "workers": 2,
  "teacher": {
   "per_card": 1,
   "student_candidates": 2,
@@ -228,5 +228,15 @@
  },
  "production_changes": false,
  "protected_tree_writes": false,
- "historical_v4_reference": "MEMORY/docs/task46-roof-zone.md: won 53.9%, cluster95%47.1-60.9; different roots, model, two futures and teacher continuation"
+ "historical_v4_reference": "MEMORY/docs/task46-roof-zone.md: won 53.9%, cluster95%47.1-60.9; different roots, model, two futures and teacher continuation",
+ "resource_amendment": {
+  "source": "2026-10-25 master memory-pressure instruction",
+  "original_workers": 6,
+  "max_game_processes": 2,
+  "qc_priority": true,
+  "admission": "Read-only global native-game count; refuse to start if existing games plus requested workers exceeds two. No automatic restart while occupied.",
+  "completed_receipts_preserved": 602,
+  "interrupted_games": "No loss label; resume only missing complete receipts",
+  "game_inputs_and_teacher_unchanged": true
+ }
 }

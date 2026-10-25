@@ -19,10 +19,48 @@ ROOT = Path(__file__).resolve().parents[1]
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 OUT = ROOT / 'artifacts/task76'
 PLAN = ROOT / 'MEMORY/docs/task76-roof-candidates-v5-plan.json'
+MAX_GAME_PROCESSES = 2
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 for name in ('OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS'):
     os.environ[name] = '1'
 os.environ['PVZ_NO_POPUP'] = '1'
+
+
+
+def native_game_processes():
+    """Read-only global admission check; never signal another task's process."""
+    games = []
+    for process in Path('/proc').iterdir():
+        if not process.name.isdigit():
+            continue
+        try:
+            executable = os.readlink(process/'exe')
+        except (FileNotFoundError, ProcessLookupError):
+            continue
+        except PermissionError:
+            # System-owned exe links may be hidden; comm remains readable and
+            # retains the pvz-portable prefix even when truncated by the kernel.
+            try:
+                name = (process/'comm').read_text().strip()
+            except (FileNotFoundError, ProcessLookupError):
+                continue
+            except PermissionError as error:
+                raise RuntimeError('cannot inspect game capacity; refusing to launch') from error
+            if name.startswith('pvz-portable'):
+                games.append(dict(pid=int(process.name), executable='unreadable', comm=name))
+            continue
+        if Path(executable.removesuffix(' (deleted)')).name.startswith('pvz-portable'):
+            games.append(dict(pid=int(process.name), executable=executable))
+    return games
+
+
+def require_game_capacity(workers):
+    if not 1 <= workers <= MAX_GAME_PROCESSES:
+        raise ValueError('master memory limit: one or two game processes only')
+    games = native_game_processes()
+    if len(games) + workers > MAX_GAME_PROCESSES:
+        raise RuntimeError('global game slots occupied; qc has priority; no task76 game started: '
+                           + json.dumps(games))
 
 
 def read(path):
@@ -70,6 +108,7 @@ def prepare():
         verify_plan()
         print('existing frozen plan verified; not refreezing the live student')
         return
+    require_game_capacity(1)
     state = read('/home/newbiexvwu/pvz-logs/curriculum_state.json')
     sources = dict(engine=MAIN/'.claude/worktrees/cq/build4/pvz-portable',
                    student=Path(state['student']), value=MAIN/'artifacts/value_net/v5/model.pt',
@@ -107,7 +146,7 @@ def prepare():
                 student_round_at_freeze=state.get('student_round'),
                 curriculum_round_at_freeze=state.get('round'),
                 code_sha256={str(ROOT/p):sha(ROOT/p) for p in files},
-                deck_checks=checks, workers=6,
+                deck_checks=checks, workers=MAX_GAME_PROCESSES,
                 teacher=dict(per_card=1, student_candidates=2, samples=3, verify_samples=9,
                              horizon=2500, min_gap=300, rollout_sim_skip=61, dagger_beta=1.0, margin=.02),
                 initial_levels=[42,43], seeds_per_level=32,
@@ -320,6 +359,7 @@ def controller_lock():
 
 
 def smoke():
+    require_game_capacity(1)
     import search_play as teacher
     plan = verify_plan()
     keep = preload(plan)
@@ -363,8 +403,9 @@ def smoke():
 
 def panels(levels, count, workers):
     plan = verify_plan()
-    if not 1 <= workers <= 6 or not 1 <= count <= 32:
-        raise ValueError('one to six engines; at most 32 fixed evaluation seeds')
+    require_game_capacity(workers)
+    if not 1 <= count <= 32:
+        raise ValueError('at most 32 fixed evaluation seeds')
     jobs = [dict(plan=plan,level=level,seed=45000000+i,arm=arm)
             for i in range(count) for level in levels for arm in plan['arms']]
     with controller_lock():
@@ -744,7 +785,7 @@ def main():
     parser.add_argument('mode', choices=['prepare','verify','smoke','panels','report','terminal','terminal-report'])
     parser.add_argument('--levels', default='42,43')
     parser.add_argument('--games',type=int,default=32)
-    parser.add_argument('--workers',type=int,default=6)
+    parser.add_argument('--workers',type=int,default=MAX_GAME_PROCESSES)
     args = parser.parse_args()
     if args.mode == 'prepare':
         prepare()
@@ -754,11 +795,14 @@ def main():
         with controller_lock():
             smoke()
     elif args.mode == 'report':
-        panel_report([int(v) for v in args.levels.split(',')])
+        from roof_candidates_v5_analysis import panel_report as audited_panel_report
+        audited_panel_report([int(v) for v in args.levels.split(',')])
     elif args.mode == 'terminal':
-        terminal_probe([int(v) for v in args.levels.split(',')], args.games, args.workers)
+        from roof_candidates_v5_analysis import terminal_probe as audited_terminal_probe
+        audited_terminal_probe([int(v) for v in args.levels.split(',')], args.workers)
     elif args.mode == 'terminal-report':
-        terminal_report([int(v) for v in args.levels.split(',')])
+        from roof_candidates_v5_analysis import terminal_report as audited_terminal_report
+        audited_terminal_report([int(v) for v in args.levels.split(',')])
     else:
         panels([int(v) for v in args.levels.split(',')],args.games,args.workers)
 
