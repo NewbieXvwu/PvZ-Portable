@@ -36,5 +36,6 @@
 - 2026-10-26 第 3 步（代码）：`pvz_promotion.SEED_POOLS_V2 = ((31024, 65536), (100_000_000, 101_000_000))`，`SEED_POOL_V2` 保留为首段别名；`allocate_seed_block` 按池序领取、旧账本（只有 `pool` 键）可读并在首次写入时原地升级为 `pools`；`_freeze_ledger_panel` 接受任一段内的块。**不升 GATE_VERSION**：panel / policy / 契约字段一字未改，v2/v3 旧证书逐位不变（两条 SHA256 断言锁住）。
 - 2026-10-26 第 2 步（引擎种子宽度实测）+ 第 4 步（dry-run）产物入库：`scripts/gate_seed_width_check.py` + json 实测 9 位种子逐位保留（非 16/8 位截断）；`scripts/gate_seed_dryrun.py` 在账本副本上模拟 250 轮，逐对不相交、全部落在已登记池内、窗口单调；盘点脚本加紧凑汇总模式。真实账本未动（仍止于 36272）。（commit ce7951db）
 - 2026-10-26 盘点脚本两处修正：verify 正则排除浮点小数/十六进制串（`0.100845682` 的小数部分、state_hash 数字串曾被误报为 9 位种子命中，实测 1688 命中全为误报）；扫描排除本任务自身工件（gate-seed-*.json 的测试/演示值不是种子声明，曾把占用区间污染成 [0, 100000002]）。重跑全量扫描中。
+- 2026-10-26 交接 CodeBuddy→Codex：代码交接时全仓 24 测试绿（test_promotion 14 + test_promotion_evaluation 10）。修正后的全量盘点重扫仍在后台跑（pid 731438，输出到 /tmp/gate-seed-inventory-full.json，含 --candidate 100000000 101000000 与 --verify-lo/-hi 字面量复核），预计十几分钟内结束；接手者跑完后用 `--from-inventory /tmp/gate-seed-inventory-full.json` 生成紧凑汇总入库，并甄别剩余命中（第一轮 1688 命中已证实全是浮点小数/十六进制串误报，新正则下 task23-results.json 命中清零）。第 5 步结论文档未写。
 
 ## 问题
