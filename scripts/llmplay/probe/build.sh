@@ -6,6 +6,8 @@ set -u
 cd "$(dirname "$0")"
 
 JOBS="${JOBS:-$(nproc 2>/dev/null || echo 2)}"
+# 解压工具不一定会保留可执行位（Python zipfile 就不保留），兜底二进制先补上。
+[ -f build_prebuilt/pvz-portable ] && chmod +x build_prebuilt/pvz-portable 2>/dev/null
 REPORT=build_report.json
 : > "$REPORT.tmp"
 

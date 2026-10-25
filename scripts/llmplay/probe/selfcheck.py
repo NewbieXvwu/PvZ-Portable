@@ -248,6 +248,14 @@ def main() -> int:
     if not (args.resources / "main.pak").is_file():
         print("SELFCHECK FAILED: 缺少 res/main.pak")
         return 1
+    # 解压工具不一定保留可执行位（Python 的 zipfile.extractall 就不保留），
+    # 所以这里自己补上，别让"Permission denied"被误读成二进制不可用。
+    for engine in engines:
+        try:
+            engine.chmod(engine.stat().st_mode | 0o111)
+        except OSError:
+            pass
+
     archives = sorted(path for path in DEMOS.iterdir() if (path / "meta.json").is_file())
     if not archives:
         print("SELFCHECK FAILED: demos/ 里没有存档")
@@ -269,8 +277,8 @@ def main() -> int:
     if build:
         lines.append("compiler:  %s" % build.get("cxx", "?"))
         lines.append("cmake:     %s" % build.get("cmake", "?"))
-        lines.append("build:     %s %s" % (build.get("build", "?"),
-                                           build.get("build_stage", "")).strip())
+        lines.append(("build:     %s %s" % (build.get("build", "?"),
+                                            build.get("build_stage", ""))).strip())
     else:
         lines.append("build:     not attempted (没有 build_report.json)")
 
