@@ -127,5 +127,20 @@
   "remaining paired evaluations",
   "independent roof terminal labels and scoring",
   "original task72b states/probe protocol and horizon stability"
- ]
+ ],
+ "training_source_preflight": {
+  "new_sources": {
+   "fog": {
+    "fit": 278,
+    "validation": 126
+   },
+   "roof": {
+    "fit": 525,
+    "validation": 58
+   }
+  },
+  "original_corpus_available": false,
+  "formal_training_started": false,
+  "sha256": "c1bb3cfb4241bdbac691ccd7182bfd1874da4304ab1b89221f8be7300c75c504"
+ }
 }

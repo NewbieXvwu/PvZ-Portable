@@ -27,6 +27,8 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
 
 完整范围为64档案×三视界，共192任务。当前完整导出987非终局行（731胜，1833终局行只留审计）；雾区404行、屋顶583行。
 
+正式训练的数据加载器也已实读通过：雾区fit278/validation126，屋顶fit525/validation58。原v5加载器在缺少`original_v5/corpus.json`时明确拒绝继续；本轮未启动GPU训练。
+
 无游戏审计曾发现：32个示范档案×2 root×3视界中，117个root/视界的`wave_tick`与原前缀不符，涉及69任务。已修复初始化、补采69任务并重新完整导出。新审计`student_context_audit_corrected.json`覆盖192个示范root/视界，0失败；完整导出同时检查物理状态、观察历史及标签链。
 
 旧192任务导出/分片保存在`export_192_before_context_fix.json`、`data_192_before_context_fix/`，受影响原始标签整任务移至`labels_before_context_fix/`，路径和哈希映射见`context_label_preservation.json`。当前`export.json`为`complete=true, training_eligible=true`。这些产物均在ignored的`artifacts/task78/`；训练资格只指该新区域数据，不代表原v5语料已恢复或正式训练已完成。
