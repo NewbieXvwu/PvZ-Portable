@@ -65,7 +65,7 @@ class BuildLadderTest(unittest.TestCase):
 
 class AdaptiveScanTest(unittest.TestCase):
     def test_equidistant_indices(self):
-        self.assertEqual(AdaptiveScan(grid12()).equidistant, [0, 4, 7, 11])
+        self.assertEqual(AdaptiveScan(grid12()).equidistant, [0, 3, 6, 8, 11])
 
     def test_monotonic_step_finds_l50_by_bisection(self):
         grid = grid12()
@@ -91,7 +91,7 @@ class AdaptiveScanTest(unittest.TestCase):
         scanner = AdaptiveScan(grid12())
         count = drive(scanner, lambda d: (0, 8))
         state = scanner.finish()
-        self.assertEqual(count, 4)
+        self.assertEqual(count, 5)
         self.assertIsNone(state['ladder'])
         self.assertIsNone(state['l50'])
         self.assertEqual(state['student_points'], [])

@@ -5,7 +5,7 @@
 
   run <scan_jobs.json>      按 task89 的作业清单跑老师/学生两臂，断点续跑，
                             结果按存档写 json（每局胜负、末波、破防行与僵尸类型）。
-  adaptive <scan_jobs.json> 自适应取点：4 等距点老师臂 → 跨 50% 区间二分 →
+  adaptive <scan_jobs.json> 自适应取点：5 等距点老师臂 → 跨 50% 区间二分 →
                             50% 线到顶档之间补齐网格档，学生臂只打两端。
   register <result.json…>   判读：老师 ≥50% 的存档生成阶梯（档位全部 ≥50%，
                             顶档取最晚的稳定 8/8 点），写 demo_start；未来种子块
@@ -202,11 +202,13 @@ def cmd_run(args) -> None:
 class AdaptiveScan:
     """自适应取点的纯决策逻辑（可用合成胜率单测）。
 
-    阶段：4 等距点 → 跨 50% 区间二分 → [50% 线, 顶档] 之间补齐网格档。
+    阶段：5 等距点 → 跨 50% 区间二分 → [50% 线, 顶档] 之间补齐网格档。
     所有实测点都落在 task89 的 12 点网格上，与 12 点结果可直接比档。
+    等距 5 点（间距 ≤3 档）用于捕捉 4 等距（间距 3–4 档）会漏掉的非单调隆起
+    （回测 L46 s20261048：622 过线、725 跌回、829 再过线，4 等距漏掉 622）。
     """
 
-    def __init__(self, grid: list, equidistant: int = 4):
+    def __init__(self, grid: list, equidistant: int = 5):
         self.grid = [int(d) for d in grid]
         self.wins: dict[int, dict] = {}       # decision -> {'teacher': {'wins','games','rows'}, …}
         self.equidistant = self._pick_equidistant(len(self.grid), equidistant)
@@ -591,7 +593,7 @@ def parser() -> argparse.ArgumentParser:
 
     adaptive = sub.add_parser('adaptive', help='自适应取点（4 等距 → 二分 → 补档）')
     adaptive.add_argument('jobs', type=Path)
-    adaptive.add_argument('--equidistant', type=int, default=4)
+    adaptive.add_argument('--equidistant', type=int, default=5)
     common(adaptive)
     adaptive.set_defaults(func=cmd_adaptive)
 
