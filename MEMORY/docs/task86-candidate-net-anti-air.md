@@ -31,3 +31,21 @@
 ## 结果
 
 ## 问题
+
+## 主控追加（2026-10-26 00:30，task86b：训练入口就在仓库里）
+“没有静态候选网训练器”这个判断不对。branch1 本身就是分叉价值网，训练链路见 DESIGN.md §14 表格 B 行“第 2 轮”：`value_ranking_check.py --dump` 生成分叉数据，再用 `train_value_branches.py` 训练。
+- `--dump` 里的 **kind 1** 行，正是“某张牌种在某格之后那一刻的局面 + 该候选全部未来的平均结果”。这就是 search_play `--static-value` 在挑格子时打分的对象，也就是候选网的训练目标。
+- **kind 0** 是 3000 tick 叶子，是 v2 系叶值的目标。
+- branch1 的原始语料不在了。这不是阻断：branch1 当年只用白天 z13 / z15 的数据训练，没见过泳池、雾夜、屋顶。正好借这次用现行学生 r11 重新生成多区语料。
+
+做法：
+1. **语料**。用 `value_ranking_check.py --values none --dump-shards <目录> --cells 2 --random-cells 2`，学生 r11。
+   - 关卡：
+     - 新数据：L40 0.5 倍、两族 L39；
+     - 旧区：day L7、night、pool L21–L25、fog L31、roof L41。各取一个现行训练族。
+   - 每关 32 个训练种子。种子段与全部现有段不相交，要机械核对。
+   - 留出 8 个种子，只用来算成对一致率。
+   - `--random-cells` 是为了让对空植物种在非学生首选格的分叉也能进入数据。这就是候选遗漏的直接解法，不写任何规则。
+2. **训练**。`train_value_branches.py --init <branch1> --data <全部分片> --compare branch1=<branch1>`，宽度和 context 与 branch1 一致。报每区成对一致率，新网对 branch1。原先 25% 新 / 75% 旧的混合比例作废，改为按关等量，并把这一改动写进预登记。
+3. **评估**。不变：L40 0.5 倍与两族 L39 各 32 局配对；五个旧区各 32 局，非劣界 −3pp。老师只换 `--static-value`，叶值 v5、学生 r11 不变。
+4. 正在跑的 `task86_collect.py` 跑完就停，不用丢弃，它的结果作为召回对照。Mac 上每个任务最多 6 个游戏进程。
