@@ -77,3 +77,8 @@
 6. **起点格在 qc 里没有按档位区分的老师胜率**：`teacher_rates` 按 base 记，不按档位记；升档后老师的实际胜率
    会下降（L33 cactus 的 458 档只有 7/8），而 `teacher_rates` 仍写着 8/8。这只影响分配排序（起点格本来就在最前），
    不影响升降档（那用学生窗口）。要按档位区分，得把键扩成 `base@decision`——本次没做。
+
+## 主控追加（2026-10-25，task71b）
+用户打通 L32：`demo_fog_32_snow_m200`（磁力菇换寒冰射手，2.0 倍；30 波、1309 个动作、被吃 28 株其中零费 26、0 小推车，verified）。存档在主检出 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200`（只读，先拷进 demo 工作树同路径再用）。
+1. 照第 1 步做 12 点接手扫描（老师/学生各 8 局，`--future-seeds`），报老师过 50% 与 8/8 的最早点、输局归因（用户说后期是在雾里布坚果防线、前面垫零费小喷菇）。
+2. 在 `configs/human_demo_tasks.json` 给它加 `demo_start`（阶梯取扫描结果，种子块与现有全部段不相交），照第 2 步的测试与 DESIGN 登记；提交并 push origin demo。部署由主控做。
