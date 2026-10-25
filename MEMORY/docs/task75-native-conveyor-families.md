@@ -41,3 +41,5 @@ Mac 上的模型路径：静态网 `/Users/newbiexvwu/PvZAgent/artifacts/hard/va
 - 2026-10-25：L40 冷启动第 3 局同样因头部动画槽位被回收而崩（`Plant::UpdateShooting` 空指针），属同一类缺陷的分裂豌豆分支。`FindTargetAndFire` 副武器、`UpdateShooting` 开火门控与待机复位三处改 `ReanimationTryToGet` 并跳过缺失头；崩溃种子 61200001/61200003 跑完，46 passed / 47 subtests。
 - 2026-10-25：96 局老师冷启动跑完（L25 9/32=28.1%，Wilson 15.6–45.4；L30 0/32，0–10.7；L40 5/32=15.6%，Wilson 6.9–31.8），三关都不到 50%，都不建议进 qc。L30 的 0% 归因为冷启动政策缺陷（32 局零睡莲、带子 8000 tick 满 10 张后堵死），不是牌表结构性输局；L40 主要漏气球（18/27 局输局里气球是走得最远的破防者）。三批同种子状态哈希一致。结论写入 MEMORY/docs/native-conveyor.md。
 - 2026-10-25：补原生族整局测试（`test_native_family_plays_a_full_game_to_terminal`，L25/L30/L40 各跑一局到 terminal，确认发牌 ≥2 种、结果码为胜/负），三个测试文件 49 passed / 47 subtests。
+- L30 的 p9k 对照（`pool_l30_eval_p9k`）与 L40 的 storm/xray 对照都没跑，本机没有现成记录，各 32 局约 10 分钟。前者能区分「原生牌表问题」与「政策问题」，后者能量出黑幕的信息成本。
+- L30 冷启动 0/32 的具体成因（为什么同一模型在 L40 会种 332 张睡莲、在 L30 一张不种）还没定位到状态特征层，只确认了动作空间覆盖水路（342 个种植动作覆盖 0–5 行）。
