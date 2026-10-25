@@ -110,6 +110,8 @@
 
 ## 问题
 
+- 2026-10-25 23:57（北京时间）：交接风险（本任务未改 pvz-env，只做只读检查，供主控合并时处理）。① `git merge-tree --write-tree origin/pvz-env replace` 报 3 处冲突：`MEMORY/2026-10-24.md`、`MEMORY/2026-10-25.md`（append-only 日志，取并集即可）与 `scripts/human_demo.py`。② `human_demo.py` 两边动了同一处：本分支把 `'replace'` 加进 `Recorder._frame` 的保留动作类型，并新增 `before_action` 钩子与 rebaseline 公共帧校验；pvz-env（task70）给 `replay` 加了 keyword-only 的 `strict_hashes`/`fog_observation` 并放宽哈希校验。手工合并须同时保留 `'replace'` 与新增参数，且 pvz-env 反事实分支里的 `action['type'] in ('plant','wait')` 也要补 `'replace'`，否则替换标签会静默丢失；合并后需重跑四局示范核验与 `test_replace_action_demo_batch`。③ 两个引擎确定性修复只在本分支：`edcde9e3`（Challenge.mCloudsCounter[6] 与 GridItem 状态初始化，3 行）与 `9549f595`（Projectile.mLastPortalX，1 行，含 `python/test_projectile_initialization.py`）；`git merge-base --is-ancestor` 显示两者都不在 origin/pvz-env，若 deploy4 从 pvz-env 构建，跨进程哈希差异与示范 verify 会复现，建议先 cherry-pick 这两个提交再构建。
+
 - 2026-10-24：四局示范在任务文档中指向Mac路径；本机完整项目扫描及既有HF仓库未找到demo/human对象，已异步询问可访问路径，环境与A/B工作继续。配对阈值N必须等取得真实间隔分布后冻结，暂不猜测。
 - 2026-10-24：原生可直接种的已占格（升级、底座叠种、南瓜、咖啡豆/修补）须保留原plant语义与优先级；否则单一packet/cell头无法区分两个后果不同的动作。新增学生/老师replace格用于原plant不可种而铲后可种的扩展；环境显式replace仍按游戏铲后合法性处理。此裁决用于同时满足旧动作不变与无需新输出头，不增加打法规则。
 
