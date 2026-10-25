@@ -71,3 +71,10 @@ task79 已合入 pvz-env（2d6be85a）。r11 下 L36 两族 32/32、L37 split 31
 3. 同步登记 DESIGN，测试照 test_zones 那组的写法补上，全量 pytest 通过。
 4. 注意台式机 cb-qcalloc 的 B6 也在改 `CURRICULUM_LEVELS`（fog_user_v2 准入），以后合并可能冲突。只加你自己的键，不改别的键。
 5. 结果写本文件，`git push origin fog36`。部署由主控随 deploy14 一起做。Mac 上每个任务最多 6 个游戏进程。
+
+## task79b 执行结果
+
+- 已合并 `origin/pvz-env`（快进至 `df86700f`）。
+- 新增 `scripts/make_fog79b_panel.py`，登记三个 `human_v2` 基元：L36 split、L37 split、L38 magnet；倍率由 `make_multiplier_tasks.py` 沿用 1.0、1.25、1.5、1.75、2.0、2.5、3.0 七档。
+- 新增 `fog79b` 独立种子块：基元 `79,100,000–79,124,575`，倍率从 `79,200,000` 起，三关六档倍率任务各 2048 局种子；`CURRICULUM_LEVELS['fog79b'] = (36, 37, 38)`。
+- 静态测试 `python.test_multiplier_tasks` 与 `python.test_curriculum_queue` 共 67 项通过、1 项跳过；`make_fog79b_panel.py --dry-run` 核对三关卡组、地形覆盖和 `human_v2` 字段均通过。
