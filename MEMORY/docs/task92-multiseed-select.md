@@ -50,3 +50,4 @@
 
 ## 问题
 - 2026-10-26 07:1x（CodeBuddy 接手）：步骤 1 完成。一轮耗时构成（round 12–17 complete.json 实测）：pack 0.3–10 min、train 36–130 min（d3 旁证实测 ~170 s/epoch × 12）、门禁评估 2–46 min；后台串行单线程，采集 744 局/轮约 45–105 min，round 16/17 train（7768/6153 s）已成瓶颈——K 种子若串行会进一步拖慢轮节奏，倾向并行 2 训练。训练种子在 recipe 的 "seed" 字段（现值 1），K 种子 = 每轮 K 份配方（不同 seed、不同 out 目录 round_*/student_s*）。select_student.py 口径 = search_play --arms fast 按 wins 总和选，selection.json 已记录全部候选得分可复用为"落选记录"。search_play 无 CUDA 引用（纯 CPU），GPU 只有训练用；RTX 5080 16 GB。GATE_VERSION=3，门禁种子走 seed ledger（allocate_seed_block），挑选面板种子需与之机械核对不相交。
+- 2026-10-26（CodeBuddy）：GPU 实测完成（round17 配方 256 步）：单训 0.526 s/步、CUDA 1.2 GiB；双训并行 0.854/0.703 s/步、+2.4 GiB、墙钟 1.23x → K=2 成立，实现取串行（并行留作加速项）。离线验证完成：面板 A=144/C=148/D2=147，选中 C，D2 以 1 局之差落选（预登记判据半过：A 未选中√、D2 未选中×，照实报告）；4/6 区饱和，面板逐局 sd≈3.5 局；K 增益 MC：K=2 +10.1 heldout 局（P 选对 0.94）、K=3 +14.8（0.90）→ 定 K=2。结论写入 MEMORY/docs/multiseed-select.md。
