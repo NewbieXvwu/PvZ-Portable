@@ -1,0 +1,1408 @@
+{
+  "preregistration": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/configs/task69-replace-paired.json",
+  "manifest_sha256": "730f23304eb955d011abb6362477bba5565f2cd6298f43a44c8cf4db2f55bcaa",
+  "before": {
+    "commit": "edcde9e3394411a726fcc31d83059e7cdf68497b",
+    "source_root": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/baseline-source",
+    "engine": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/baseline-engine",
+    "engine_sha256": "c90d051f38294a56832c7adc904ad6dca2c71b2b442d8cc90f39a5804629dbec",
+    "source_fingerprint_sha256": "3e0f6c6b71aa64335e434395033c28a2a8341d39aa0f890b7a84c869c620b91b"
+  },
+  "after": {
+    "commit": "5740bb618f3d81dc6fda2027ac8eb0dede045cdb",
+    "source_root": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/treatment-source",
+    "engine": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/treatment-engine",
+    "engine_sha256": "61b21c430fe4232b0cf65191a71dbd11a81e662ee877aef7354b7f1247685ae0",
+    "source_fingerprint_sha256": "15d87c43632e4d63f35dc5013c30459997f9c1a43411a96914088c8c93e7dbc7"
+  },
+  "models": {
+    "student": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "static": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "leaf": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+    }
+  },
+  "bootstraps": 20000,
+  "cluster": "paired seed/game; continuations are not independent observations",
+  "primary": {
+    "day_l7_train_d7_m200": {
+      "n": 32,
+      "both_win": 22,
+      "both_lose": 0,
+      "before_only_win": 7,
+      "after_only_win": 3,
+      "win_rate_difference": {
+        "mean": -0.125,
+        "ci95": [
+          -0.3125,
+          0.0625
+        ]
+      },
+      "mcnemar_two_sided_p": 0.34375,
+      "before": {
+        "wins": 29,
+        "n": 32,
+        "nonterminal": 0,
+        "replace_executed": 0,
+        "replace_rejected": 0,
+        "replacements_per_game": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "replacement_transitions": {},
+        "removed_types": {},
+        "added_types": {},
+        "sun": {
+          "sun_produced": {
+            "mean": 9239.0625,
+            "ci95": [
+              8905.46875,
+              9599.21875
+            ]
+          },
+          "sun_spent": {
+            "mean": 9192.96875,
+            "ci95": [
+              8846.875,
+              9548.4375
+            ]
+          },
+          "sun_remaining": {
+            "mean": 96.09375,
+            "ci95": [
+              53.125,
+              152.34375
+            ]
+          }
+        },
+        "verification": {
+          "plant": {
+            "revoked": 727,
+            "attempts": 1592,
+            "ratio": 0.4566582914572864,
+            "ci95": [
+              0.4305106110240707,
+              0.48397892592422076
+            ]
+          },
+          "replace": {
+            "revoked": 0,
+            "attempts": 0,
+            "ratio": null,
+            "ci95": null
+          },
+          "wait": {
+            "revoked": 142,
+            "attempts": 234,
+            "ratio": 0.6068376068376068,
+            "ci95": [
+              0.5461847389558233,
+              0.6713615023474179
+            ]
+          }
+        },
+        "observed_performance": {
+          "seconds": {
+            "mean": 114.28125,
+            "ci95": [
+              105.23734375,
+              123.728203125
+            ]
+          },
+          "decisions": {
+            "mean": 1291.875,
+            "ci95": [
+              1264.12421875,
+              1321.1882812499998
+            ]
+          },
+          "searched": {
+            "mean": 241.1875,
+            "ci95": [
+              235.34375,
+              247.03125
+            ]
+          },
+          "rollout_lanes": {
+            "mean": 3958.28125,
+            "ci95": [
+              3857.0296875,
+              4064.40859375
+            ]
+          },
+          "halving_candidates": {
+            "mean": 1427.90625,
+            "ci95": [
+              1363.5625,
+              1494.6570312499998
+            ]
+          },
+          "mowers_used": {
+            "mean": 2.3125,
+            "ci95": [
+              1.78125,
+              2.84375
+            ]
+          },
+          "final_tick": {
+            "mean": 70050.9375,
+            "ci95": [
+              68778.9546875,
+              71435.05
+            ]
+          }
+        },
+        "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+      },
+      "after": {
+        "wins": 25,
+        "n": 32,
+        "nonterminal": 0,
+        "replace_executed": 214,
+        "replace_rejected": 0,
+        "replacements_per_game": {
+          "mean": 6.6875,
+          "ci95": [
+            5.625,
+            7.90625
+          ]
+        },
+        "replacement_transitions": {
+          "1 -> 0": 44,
+          "1 -> 7": 29,
+          "1 -> 4": 19,
+          "3 -> 1": 18,
+          "0 -> 1": 16,
+          "1 -> 3": 15,
+          "0 -> 5": 12,
+          "4 -> 1": 10,
+          "1 -> 5": 8,
+          "0 -> 7": 6,
+          "0 -> 3": 6,
+          "0 -> 4": 4,
+          "3 -> 0": 4,
+          "4 -> 7": 4,
+          "4 -> 0": 3,
+          "5 -> 0": 2,
+          "3 -> 4": 2,
+          "5 -> 1": 2,
+          "7 -> 3": 1,
+          "7 -> 1": 1,
+          "4 -> 3": 1,
+          "7 -> 0": 1,
+          "7 -> 4": 1,
+          "4 -> 2": 1,
+          "5 -> 4": 1,
+          "3 -> 7": 1,
+          "3 -> 5": 1,
+          "1 -> 2": 1
+        },
+        "removed_types": {
+          "1": 116,
+          "0": 44,
+          "3": 26,
+          "4": 19,
+          "5": 5,
+          "7": 4
+        },
+        "added_types": {
+          "0": 54,
+          "1": 47,
+          "7": 40,
+          "4": 27,
+          "3": 23,
+          "5": 21,
+          "2": 2
+        },
+        "sun": {
+          "sun_produced": {
+            "mean": 8478.90625,
+            "ci95": [
+              8136.71875,
+              8814.84375
+            ]
+          },
+          "sun_spent": {
+            "mean": 8345.3125,
+            "ci95": [
+              7986.71875,
+              8702.34375
+            ]
+          },
+          "sun_remaining": {
+            "mean": 183.59375,
+            "ci95": [
+              114.0625,
+              263.28125
+            ]
+          }
+        },
+        "verification": {
+          "plant": {
+            "revoked": 431,
+            "attempts": 1046,
+            "ratio": 0.41204588910133844,
+            "ci95": [
+              0.37843327099961405,
+              0.4479642812539028
+            ]
+          },
+          "replace": {
+            "revoked": 116,
+            "attempts": 327,
+            "ratio": 0.3547400611620795,
+            "ci95": [
+              0.3119258680197056,
+              0.3952702702702703
+            ]
+          },
+          "wait": {
+            "revoked": 130,
+            "attempts": 214,
+            "ratio": 0.6074766355140186,
+            "ci95": [
+              0.5592417061611374,
+              0.665
+            ]
+          }
+        },
+        "observed_performance": {
+          "seconds": {
+            "mean": 2075.328125,
+            "ci95": [
+              1716.724453125,
+              2442.2884375
+            ]
+          },
+          "decisions": {
+            "mean": 1306.9375,
+            "ci95": [
+              1273.81171875,
+              1339.2820312499998
+            ]
+          },
+          "searched": {
+            "mean": 240.0625,
+            "ci95": [
+              231.53125,
+              247.4375
+            ]
+          },
+          "rollout_lanes": {
+            "mean": 5204.71875,
+            "ci95": [
+              4917.18671875,
+              5487.65703125
+            ]
+          },
+          "halving_candidates": {
+            "mean": 2194.875,
+            "ci95": [
+              1990.278125,
+              2401.25234375
+            ]
+          },
+          "mowers_used": {
+            "mean": 2.40625,
+            "ci95": [
+              1.9375,
+              2.90625
+            ]
+          },
+          "final_tick": {
+            "mean": 71485.8125,
+            "ci95": [
+              69810.28359375,
+              73079.1
+            ]
+          }
+        },
+        "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+      },
+      "sun_paired_differences": {
+        "sun_produced": {
+          "mean": -760.15625,
+          "ci95": [
+            -1234.375,
+            -280.4492187500017
+          ]
+        },
+        "sun_spent": {
+          "mean": -847.65625,
+          "ci95": [
+            -1349.23828125,
+            -355.46875
+          ]
+        },
+        "sun_remaining": {
+          "mean": 87.5,
+          "ci95": [
+            14.84375,
+            169.53125
+          ]
+        }
+      },
+      "verification_ratio_differences": {
+        "after_replace_minus_after_plant": {
+          "difference": -0.057305827939258924,
+          "ci95": [
+            -0.12017821519581615,
+            0.0025486032572858033
+          ]
+        },
+        "after_plant_minus_before_plant": {
+          "difference": -0.04461240235594799,
+          "ci95": [
+            -0.07691916971206716,
+            -0.012019238803050919
+          ]
+        }
+      },
+      "holm_adjusted_p": 0.5
+    },
+    "fog_user_l31_snow_m150": {
+      "n": 32,
+      "both_win": 5,
+      "both_lose": 13,
+      "before_only_win": 11,
+      "after_only_win": 3,
+      "win_rate_difference": {
+        "mean": -0.25,
+        "ci95": [
+          -0.46875,
+          -0.03125
+        ]
+      },
+      "mcnemar_two_sided_p": 0.057373046875,
+      "before": {
+        "wins": 16,
+        "n": 32,
+        "nonterminal": 0,
+        "replace_executed": 0,
+        "replace_rejected": 0,
+        "replacements_per_game": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "replacement_transitions": {},
+        "removed_types": {},
+        "added_types": {},
+        "sun": {
+          "sun_produced": {
+            "mean": 2795.15625,
+            "ci95": [
+              2370.46875,
+              3202.1875
+            ]
+          },
+          "sun_spent": {
+            "mean": 2800.78125,
+            "ci95": [
+              2375.78125,
+              3206.25
+            ]
+          },
+          "sun_remaining": {
+            "mean": 44.375,
+            "ci95": [
+              31.246093750000004,
+              58.75390624999966
+            ]
+          }
+        },
+        "verification": {
+          "plant": {
+            "revoked": 683,
+            "attempts": 2471,
+            "ratio": 0.2764063132335087,
+            "ci95": [
+              0.25850311955768224,
+              0.2947413523897895
+            ]
+          },
+          "replace": {
+            "revoked": 0,
+            "attempts": 0,
+            "ratio": null,
+            "ci95": null
+          },
+          "wait": {
+            "revoked": 149,
+            "attempts": 322,
+            "ratio": 0.46273291925465837,
+            "ci95": [
+              0.4244791666666667,
+              0.5087108013937283
+            ]
+          }
+        },
+        "observed_performance": {
+          "seconds": {
+            "mean": 96.89375000000001,
+            "ci95": [
+              77.11546875,
+              118.04749999999994
+            ]
+          },
+          "decisions": {
+            "mean": 950.75,
+            "ci95": [
+              848.153125,
+              1042.7828124999999
+            ]
+          },
+          "searched": {
+            "mean": 184.21875,
+            "ci95": [
+              162.78046875,
+              203.75
+            ]
+          },
+          "rollout_lanes": {
+            "mean": 3758.28125,
+            "ci95": [
+              3259.9234375,
+              4219.321093749999
+            ]
+          },
+          "halving_candidates": {
+            "mean": 1063.96875,
+            "ci95": [
+              939.4359375,
+              1180.5625
+            ]
+          },
+          "mowers_used": {
+            "mean": 1.53125,
+            "ci95": [
+              1.21875,
+              1.84375
+            ]
+          },
+          "final_tick": {
+            "mean": 49566.21875,
+            "ci95": [
+              44335.3515625,
+              54270.8453125
+            ]
+          }
+        },
+        "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+      },
+      "after": {
+        "wins": 8,
+        "n": 32,
+        "nonterminal": 0,
+        "replace_executed": 364,
+        "replace_rejected": 0,
+        "replacements_per_game": {
+          "mean": 11.375,
+          "ci95": [
+            9.78125,
+            12.9375
+          ]
+        },
+        "replacement_transitions": {
+          "9 -> 8": 143,
+          "19 -> 16": 75,
+          "16 -> 19": 44,
+          "8 -> 9": 41,
+          "10 -> 8": 7,
+          "8 -> 10": 7,
+          "8 -> 3": 6,
+          "17 -> 8": 6,
+          "3 -> 8": 6,
+          "9 -> 10": 4,
+          "17 -> 9": 4,
+          "9 -> 17": 3,
+          "10 -> 9": 3,
+          "9 -> 3": 2,
+          "3 -> 9": 2,
+          "10 -> 17": 2,
+          "17 -> 10": 2,
+          "3 -> 23": 1,
+          "8 -> 17": 1,
+          "8 -> 23": 1,
+          "17 -> 3": 1,
+          "9 -> 23": 1,
+          "17 -> 2": 1,
+          "23 -> 9": 1
+        },
+        "removed_types": {
+          "9": 153,
+          "19": 75,
+          "8": 56,
+          "16": 44,
+          "17": 14,
+          "10": 12,
+          "3": 9,
+          "23": 1
+        },
+        "added_types": {
+          "8": 162,
+          "16": 75,
+          "9": 51,
+          "19": 44,
+          "10": 13,
+          "3": 9,
+          "17": 6,
+          "23": 3,
+          "2": 1
+        },
+        "sun": {
+          "sun_produced": {
+            "mean": 2173.125,
+            "ci95": [
+              1810.9375,
+              2550.1601562499995
+            ]
+          },
+          "sun_spent": {
+            "mean": 2186.71875,
+            "ci95": [
+              1826.5625,
+              2561.738281249998
+            ]
+          },
+          "sun_remaining": {
+            "mean": 36.40625,
+            "ci95": [
+              24.6875,
+              49.21875
+            ]
+          }
+        },
+        "verification": {
+          "plant": {
+            "revoked": 523,
+            "attempts": 1895,
+            "ratio": 0.27598944591029023,
+            "ci95": [
+              0.2533126898141073,
+              0.29870894920502394
+            ]
+          },
+          "replace": {
+            "revoked": 120,
+            "attempts": 422,
+            "ratio": 0.2843601895734597,
+            "ci95": [
+              0.25,
+              0.3218390804597701
+            ]
+          },
+          "wait": {
+            "revoked": 107,
+            "attempts": 242,
+            "ratio": 0.44214876033057854,
+            "ci95": [
+              0.3843137254901961,
+              0.5021097046413502
+            ]
+          }
+        },
+        "observed_performance": {
+          "seconds": {
+            "mean": 471.284375,
+            "ci95": [
+              366.68125,
+              581.2988281249998
+            ]
+          },
+          "decisions": {
+            "mean": 917.4375,
+            "ci95": [
+              831.625,
+              995.3445312499999
+            ]
+          },
+          "searched": {
+            "mean": 162.59375,
+            "ci95": [
+              144.59375,
+              179.59375
+            ]
+          },
+          "rollout_lanes": {
+            "mean": 3823.5,
+            "ci95": [
+              3317.359375,
+              4311.444531249999
+            ]
+          },
+          "halving_candidates": {
+            "mean": 1204.65625,
+            "ci95": [
+              1050.184375,
+              1359.75
+            ]
+          },
+          "mowers_used": {
+            "mean": 2.125,
+            "ci95": [
+              1.6875,
+              2.563281249999932
+            ]
+          },
+          "final_tick": {
+            "mean": 48158.75,
+            "ci95": [
+              43602.3,
+              52268.39453124999
+            ]
+          }
+        },
+        "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+      },
+      "sun_paired_differences": {
+        "sun_produced": {
+          "mean": -622.03125,
+          "ci95": [
+            -1120.9453125,
+            -82.79687500000136
+          ]
+        },
+        "sun_spent": {
+          "mean": -614.0625,
+          "ci95": [
+            -1107.05078125,
+            -85.9375
+          ]
+        },
+        "sun_remaining": {
+          "mean": -7.96875,
+          "ci95": [
+            -24.0625,
+            7.5
+          ]
+        }
+      },
+      "verification_ratio_differences": {
+        "after_replace_minus_after_plant": {
+          "difference": 0.008370743663169478,
+          "ci95": [
+            -0.03224108109608051,
+            0.0496219905062948
+          ]
+        },
+        "after_plant_minus_before_plant": {
+          "difference": -0.00041686732321849496,
+          "ci95": [
+            -0.02583721339337949,
+            0.0234140472622875
+          ]
+        }
+      },
+      "holm_adjusted_p": 0.172119140625
+    },
+    "fog_user_l31_snow_m200": {
+      "n": 32,
+      "both_win": 0,
+      "both_lose": 29,
+      "before_only_win": 0,
+      "after_only_win": 3,
+      "win_rate_difference": {
+        "mean": 0.09375,
+        "ci95": [
+          0.0,
+          0.21875
+        ]
+      },
+      "mcnemar_two_sided_p": 0.25,
+      "before": {
+        "wins": 0,
+        "n": 32,
+        "nonterminal": 0,
+        "replace_executed": 0,
+        "replace_rejected": 0,
+        "replacements_per_game": {
+          "mean": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ]
+        },
+        "replacement_transitions": {},
+        "removed_types": {},
+        "added_types": {},
+        "sun": {
+          "sun_produced": {
+            "mean": 1570.46875,
+            "ci95": [
+              1251.87109375,
+              1907.0351562499995
+            ]
+          },
+          "sun_spent": {
+            "mean": 1582.03125,
+            "ci95": [
+              1265.625,
+              1910.15625
+            ]
+          },
+          "sun_remaining": {
+            "mean": 38.4375,
+            "ci95": [
+              28.125,
+              50.0
+            ]
+          }
+        },
+        "verification": {
+          "plant": {
+            "revoked": 397,
+            "attempts": 1202,
+            "ratio": 0.3302828618968386,
+            "ci95": [
+              0.2948021986839993,
+              0.3666422489356373
+            ]
+          },
+          "replace": {
+            "revoked": 0,
+            "attempts": 0,
+            "ratio": null,
+            "ci95": null
+          },
+          "wait": {
+            "revoked": 74,
+            "attempts": 156,
+            "ratio": 0.47435897435897434,
+            "ci95": [
+              0.39111056105610564,
+              0.568
+            ]
+          }
+        },
+        "observed_performance": {
+          "seconds": {
+            "mean": 34.309375,
+            "ci95": [
+              25.596875,
+              43.584843749999955
+            ]
+          },
+          "decisions": {
+            "mean": 650.625,
+            "ci95": [
+              561.6234375,
+              741.25
+            ]
+          },
+          "searched": {
+            "mean": 122.71875,
+            "ci95": [
+              104.06171875,
+              141.625
+            ]
+          },
+          "rollout_lanes": {
+            "mean": 2218.5,
+            "ci95": [
+              1815.05859375,
+              2639.84453125
+            ]
+          },
+          "halving_candidates": {
+            "mean": 702.96875,
+            "ci95": [
+              594.71796875,
+              810.0945312499999
+            ]
+          },
+          "mowers_used": {
+            "mean": 1.53125,
+            "ci95": [
+              1.25,
+              1.84375
+            ]
+          },
+          "final_tick": {
+            "mean": 34218.875,
+            "ci95": [
+              29623.51875,
+              38935.12421874999
+            ]
+          }
+        },
+        "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+      },
+      "after": {
+        "wins": 3,
+        "n": 32,
+        "nonterminal": 0,
+        "replace_executed": 263,
+        "replace_rejected": 0,
+        "replacements_per_game": {
+          "mean": 8.21875,
+          "ci95": [
+            6.53125,
+            10.03125
+          ]
+        },
+        "replacement_transitions": {
+          "9 -> 8": 93,
+          "19 -> 16": 64,
+          "8 -> 9": 42,
+          "16 -> 19": 36,
+          "10 -> 8": 5,
+          "17 -> 8": 5,
+          "8 -> 10": 4,
+          "17 -> 9": 3,
+          "3 -> 10": 3,
+          "9 -> 10": 3,
+          "10 -> 9": 2,
+          "3 -> 9": 1,
+          "8 -> 3": 1,
+          "10 -> 17": 1
+        },
+        "removed_types": {
+          "9": 96,
+          "19": 64,
+          "8": 47,
+          "16": 36,
+          "10": 8,
+          "17": 8,
+          "3": 4
+        },
+        "added_types": {
+          "8": 103,
+          "16": 64,
+          "9": 48,
+          "19": 36,
+          "10": 10,
+          "3": 1,
+          "17": 1
+        },
+        "sun": {
+          "sun_produced": {
+            "mean": 1736.09375,
+            "ci95": [
+              1397.1875,
+              2092.8164062499995
+            ]
+          },
+          "sun_spent": {
+            "mean": 1752.34375,
+            "ci95": [
+              1408.59375,
+              2107.8125
+            ]
+          },
+          "sun_remaining": {
+            "mean": 33.75,
+            "ci95": [
+              25.9375,
+              42.5
+            ]
+          }
+        },
+        "verification": {
+          "plant": {
+            "revoked": 378,
+            "attempts": 1217,
+            "ratio": 0.3105998356614626,
+            "ci95": [
+              0.280632329267335,
+              0.3423870799298795
+            ]
+          },
+          "replace": {
+            "revoked": 84,
+            "attempts": 291,
+            "ratio": 0.28865979381443296,
+            "ci95": [
+              0.22413793103448276,
+              0.3523505094202311
+            ]
+          },
+          "wait": {
+            "revoked": 91,
+            "attempts": 179,
+            "ratio": 0.5083798882681564,
+            "ci95": [
+              0.44047464840858624,
+              0.5851851851851851
+            ]
+          }
+        },
+        "observed_performance": {
+          "seconds": {
+            "mean": 305.046875,
+            "ci95": [
+              215.618671875,
+              406.3890624999999
+            ]
+          },
+          "decisions": {
+            "mean": 720.96875,
+            "ci95": [
+              638.59140625,
+              805.5007812499999
+            ]
+          },
+          "searched": {
+            "mean": 130.1875,
+            "ci95": [
+              113.0,
+              148.15625
+            ]
+          },
+          "rollout_lanes": {
+            "mean": 2878.8125,
+            "ci95": [
+              2403.6515625,
+              3379.84609375
+            ]
+          },
+          "halving_candidates": {
+            "mean": 978.75,
+            "ci95": [
+              836.03046875,
+              1124.6882812499998
+            ]
+          },
+          "mowers_used": {
+            "mean": 1.78125,
+            "ci95": [
+              1.40625,
+              2.1875
+            ]
+          },
+          "final_tick": {
+            "mean": 37781.1875,
+            "ci95": [
+              33572.946875,
+              42114.62812499999
+            ]
+          }
+        },
+        "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+      },
+      "sun_paired_differences": {
+        "sun_produced": {
+          "mean": 165.625,
+          "ci95": [
+            -211.09375,
+            551.1093749999986
+          ]
+        },
+        "sun_spent": {
+          "mean": 170.3125,
+          "ci95": [
+            -211.71875,
+            554.6875
+          ]
+        },
+        "sun_remaining": {
+          "mean": -4.6875,
+          "ci95": [
+            -16.71875,
+            7.5
+          ]
+        }
+      },
+      "verification_ratio_differences": {
+        "after_replace_minus_after_plant": {
+          "difference": -0.021940041847029634,
+          "ci95": [
+            -0.08789569907035275,
+            0.03838161502412005
+          ]
+        },
+        "after_plant_minus_before_plant": {
+          "difference": -0.01968302623537599,
+          "ci95": [
+            -0.058129532484323815,
+            0.018572084149714962
+          ]
+        }
+      },
+      "holm_adjusted_p": 0.5
+    }
+  },
+  "supplementary_fog_pooled": {
+    "n": 64,
+    "both_win": 5,
+    "both_lose": 42,
+    "before_only_win": 11,
+    "after_only_win": 6,
+    "win_rate_difference": {
+      "mean": -0.078125,
+      "ci95": [
+        -0.203125,
+        0.046875
+      ]
+    },
+    "mcnemar_two_sided_p": 0.332305908203125,
+    "before": {
+      "wins": 16,
+      "n": 64,
+      "nonterminal": 0,
+      "replace_executed": 0,
+      "replace_rejected": 0,
+      "replacements_per_game": {
+        "mean": 0.0,
+        "ci95": [
+          0.0,
+          0.0
+        ]
+      },
+      "replacement_transitions": {},
+      "removed_types": {},
+      "added_types": {},
+      "sun": {
+        "sun_produced": {
+          "mean": 2182.8125,
+          "ci95": [
+            1875.15625,
+            2490.15625
+          ]
+        },
+        "sun_spent": {
+          "mean": 2191.40625,
+          "ci95": [
+            1885.15625,
+            2497.666015624999
+          ]
+        },
+        "sun_remaining": {
+          "mean": 41.40625,
+          "ci95": [
+            32.890625,
+            50.46875
+          ]
+        }
+      },
+      "verification": {
+        "plant": {
+          "revoked": 1080,
+          "attempts": 3673,
+          "ratio": 0.2940375714674653,
+          "ci95": [
+            0.27661961258091333,
+            0.3128190947830766
+          ]
+        },
+        "replace": {
+          "revoked": 0,
+          "attempts": 0,
+          "ratio": null,
+          "ci95": null
+        },
+        "wait": {
+          "revoked": 223,
+          "attempts": 478,
+          "ratio": 0.4665271966527197,
+          "ci95": [
+            0.42830188679245285,
+            0.5088118273573857
+          ]
+        }
+      },
+      "observed_performance": {
+        "seconds": {
+          "mean": 65.6015625,
+          "ci95": [
+            52.31871093749999,
+            79.79535156249999
+          ]
+        },
+        "decisions": {
+          "mean": 800.6875,
+          "ci95": [
+            723.9671875,
+            875.5941406249999
+          ]
+        },
+        "searched": {
+          "mean": 153.46875,
+          "ci95": [
+            137.796484375,
+            169.10976562499997
+          ]
+        },
+        "rollout_lanes": {
+          "mean": 2988.390625,
+          "ci95": [
+            2619.65234375,
+            3358.2718749999995
+          ]
+        },
+        "halving_candidates": {
+          "mean": 883.46875,
+          "ci95": [
+            790.71796875,
+            974.5476562499999
+          ]
+        },
+        "mowers_used": {
+          "mean": 1.53125,
+          "ci95": [
+            1.328125,
+            1.75
+          ]
+        },
+        "final_tick": {
+          "mean": 41892.546875,
+          "ci95": [
+            37997.067578125,
+            45750.41835937499
+          ]
+        }
+      },
+      "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+    },
+    "after": {
+      "wins": 11,
+      "n": 64,
+      "nonterminal": 0,
+      "replace_executed": 627,
+      "replace_rejected": 0,
+      "replacements_per_game": {
+        "mean": 9.796875,
+        "ci95": [
+          8.546875,
+          11.03125
+        ]
+      },
+      "replacement_transitions": {
+        "9 -> 8": 236,
+        "19 -> 16": 139,
+        "8 -> 9": 83,
+        "16 -> 19": 80,
+        "10 -> 8": 12,
+        "17 -> 8": 11,
+        "8 -> 10": 11,
+        "8 -> 3": 7,
+        "9 -> 10": 7,
+        "17 -> 9": 7,
+        "3 -> 8": 6,
+        "10 -> 9": 5,
+        "9 -> 17": 3,
+        "3 -> 9": 3,
+        "10 -> 17": 3,
+        "3 -> 10": 3,
+        "9 -> 3": 2,
+        "17 -> 10": 2,
+        "3 -> 23": 1,
+        "8 -> 17": 1,
+        "8 -> 23": 1,
+        "17 -> 3": 1,
+        "9 -> 23": 1,
+        "17 -> 2": 1,
+        "23 -> 9": 1
+      },
+      "removed_types": {
+        "9": 249,
+        "19": 139,
+        "8": 103,
+        "16": 80,
+        "17": 22,
+        "10": 20,
+        "3": 13,
+        "23": 1
+      },
+      "added_types": {
+        "8": 265,
+        "16": 139,
+        "9": 99,
+        "19": 80,
+        "10": 23,
+        "3": 10,
+        "17": 7,
+        "23": 3,
+        "2": 1
+      },
+      "sun": {
+        "sun_produced": {
+          "mean": 1954.609375,
+          "ci95": [
+            1699.373046875,
+            2220.625
+          ]
+        },
+        "sun_spent": {
+          "mean": 1969.53125,
+          "ci95": [
+            1716.40625,
+            2233.984375
+          ]
+        },
+        "sun_remaining": {
+          "mean": 35.078125,
+          "ci95": [
+            27.8125,
+            42.890625
+          ]
+        }
+      },
+      "verification": {
+        "plant": {
+          "revoked": 901,
+          "attempts": 3112,
+          "ratio": 0.28952442159383035,
+          "ci95": [
+            0.27138184530555165,
+            0.30851072185346357
+          ]
+        },
+        "replace": {
+          "revoked": 204,
+          "attempts": 713,
+          "ratio": 0.2861150070126227,
+          "ci95": [
+            0.2523486796713291,
+            0.32022492353989823
+          ]
+        },
+        "wait": {
+          "revoked": 198,
+          "attempts": 421,
+          "ratio": 0.47030878859857483,
+          "ci95": [
+            0.4255304733898403,
+            0.5171568627450981
+          ]
+        }
+      },
+      "observed_performance": {
+        "seconds": {
+          "mean": 388.16562500000003,
+          "ci95": [
+            313.7561328125,
+            465.3475390624999
+          ]
+        },
+        "decisions": {
+          "mean": 819.203125,
+          "ci95": [
+            755.342578125,
+            882.8285156249999
+          ]
+        },
+        "searched": {
+          "mean": 146.390625,
+          "ci95": [
+            133.375,
+            159.34375
+          ]
+        },
+        "rollout_lanes": {
+          "mean": 3351.15625,
+          "ci95": [
+            2982.918359375,
+            3726.7093749999995
+          ]
+        },
+        "halving_candidates": {
+          "mean": 1091.703125,
+          "ci95": [
+            983.859375,
+            1200.625390625
+          ]
+        },
+        "mowers_used": {
+          "mean": 1.953125,
+          "ci95": [
+            1.65625,
+            2.25
+          ]
+        },
+        "final_tick": {
+          "mean": 42969.96875,
+          "ci95": [
+            39701.909765625,
+            46253.64414062499
+          ]
+        }
+      },
+      "observed_performance_note": "seconds is each worker game duration, not manager batch wall time; scheduler idle time is excluded; timing is descriptive, not a controlled throughput benchmark"
+    },
+    "sun_paired_differences": {
+      "sun_produced": {
+        "mean": -228.203125,
+        "ci95": [
+          -560.234375,
+          104.93164062499915
+        ]
+      },
+      "sun_spent": {
+        "mean": -221.875,
+        "ci95": [
+          -555.078125,
+          113.671875
+        ]
+      },
+      "sun_remaining": {
+        "mean": -6.328125,
+        "ci95": [
+          -16.015625,
+          3.671875
+        ]
+      }
+    },
+    "verification_ratio_differences": {
+      "after_replace_minus_after_plant": {
+        "difference": -0.003409414581207637,
+        "ci95": [
+          -0.03852794608556635,
+          0.03173076776937086
+        ]
+      },
+      "after_plant_minus_before_plant": {
+        "difference": -0.004513149873634936,
+        "ci95": [
+          -0.025322277506108076,
+          0.015051433188417352
+        ]
+      }
+    }
+  },
+  "gate": {
+    "corrected_positive_fog": false,
+    "nonnegative_all_tasks": false,
+    "no_rejected_replace_or_truncation": true,
+    "statistical_screen_passed": false,
+    "note": "Deployment suggestion additionally requires legality/noise review; day N=32 does not prove noninferiority"
+  },
+  "raw_sources": [
+    {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/paired/day_l7_train_d7_m200/before/games.jsonl",
+      "sha256": "bd65be36e7bb66a0a27a935568acaec0c9a1f205d5ea6259fd4d1d5c837d7229"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/paired/day_l7_train_d7_m200/after/games.jsonl",
+      "sha256": "672de9565eae71051d1e4d3b2fe8e8c53c2469ad6404fec8ad00a7acab86afcd"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/paired/fog_user_l31_snow_m150/before/games.jsonl",
+      "sha256": "2c52337bc7a26cffaed799405be15acfbf62f1d530bc64e5eb38859c87c7c15b"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/paired/fog_user_l31_snow_m150/after/games.jsonl",
+      "sha256": "252f342987edfbe816d7e54c761e1b38640cd267c529ea23d6f9a1a83abede1b"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/paired/fog_user_l31_snow_m200/before/games.jsonl",
+      "sha256": "7da77c4c1dc4b2af9c2c6ab476da6d7bacde7fc87ddcd917cf9681b3de47f6f6"
+    },
+    {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/paired/fog_user_l31_snow_m200/after/games.jsonl",
+      "sha256": "6faa647102fd4b7ddb297dccc6c3451c362a2172adbc8802e5c4c0d87d2c5f28"
+    }
+  ]
+}

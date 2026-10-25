@@ -1,0 +1,45 @@
+{
+  "panels": {
+    "day_l7_train_d7_m200": {
+      "before": {
+        "games": 32,
+        "complete": true,
+        "missing_seeds": 0
+      },
+      "after": {
+        "games": 32,
+        "complete": true,
+        "missing_seeds": 0
+      }
+    },
+    "fog_user_l31_snow_m150": {
+      "before": {
+        "games": 32,
+        "complete": true,
+        "missing_seeds": 0
+      },
+      "after": {
+        "games": 32,
+        "complete": true,
+        "missing_seeds": 0
+      }
+    },
+    "fog_user_l31_snow_m200": {
+      "before": {
+        "games": 32,
+        "complete": true,
+        "missing_seeds": 0
+      },
+      "after": {
+        "games": 32,
+        "complete": true,
+        "missing_seeds": 0
+      }
+    }
+  },
+  "batches_checked": 24,
+  "complete": true,
+  "partial_batches": [],
+  "problems": [],
+  "passed": true
+}
