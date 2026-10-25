@@ -70,8 +70,9 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
-from pvz_promotion import GATE_VERSION, policy as promotion_policy, freeze_panel
-from promotion_gate import contract as promotion_contract, contract_key, sha as file_sha, valid_certificate
+from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, policy as promotion_policy, freeze_panel
+from promotion_gate import (allocate_seed_block, contract as promotion_contract, contract_key,
+                            sha as file_sha, valid_certificate)
 from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
@@ -717,6 +718,8 @@ class TrainingPipeline:
         for job in state.setdefault('training_jobs', []):
             if job['status'] != 'done':
                 job['status'] = 'queued'
+                self._seeded(job)
+                save_state(self.args.state, self.state)
                 self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
     def pending(self):
@@ -737,7 +740,18 @@ class TrainingPipeline:
         if source is None:
             source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
         return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
-                                  self.args.value, self.args.resource_dir)
+                                  self.args.value, self.args.resource_dir, version=GATE_VERSION,
+                                  seed_block=job.get('seed_block'))
+
+    def _seeded(self, job):
+        """task73b: one fresh-seed block per evaluation job, allocated on the
+        persisted job dict (never on the _run copy), so resumed and stale re-evaluations
+        reuse the same block and the ledger is never double-spent. Pool exhaustion
+        raises and closes the gate; seeds are never wrapped around and reused."""
+        if GATE_VERSION >= 2 and 'seed_block' not in job:
+            job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
+                                                         promotion_policy(GATE_VERSION)['pair_count']))
+        return job
 
     def _evaluate(self, job):
         """Evaluate one already trained immutable candidate against the current collector."""
@@ -748,7 +762,11 @@ class TrainingPipeline:
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
-                   '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1']
+                   '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
+                   '--gate-version', str(GATE_VERSION)]
+        if GATE_VERSION >= 2:
+            command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
+                        '--seed-ledger', str(self.args.seed_ledger)]
         self._admit()
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against {frozen["incumbent_sha256"]}')
@@ -858,6 +876,7 @@ class TrainingPipeline:
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
         self.state['training_jobs'].append(job)
+        self._seeded(job)
         save_state(self.args.state, self.state)  # durable before the worker is submitted
         log_line(self.args.log, f'background round {round_index} queued: {path}')
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
@@ -1027,6 +1046,7 @@ class TrainingPipeline:
             elif promotion.get('contract') != current_contract:
                 job['status'] = 'queued'
                 log_line(self.args.log, f'background round {job["round"]} comparison stale; re-evaluate current student')
+                self._seeded(job)
                 self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
                 save_state(self.args.state, self.state)
                 continue
@@ -1262,6 +1282,8 @@ def main() -> None:
     parser.add_argument('--promotion-panel', type=Path,
                         default=Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest']),
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
+    parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
+                        help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
@@ -1275,8 +1297,13 @@ def main() -> None:
         value = getattr(args, name)
         if not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
+    if not args.seed_ledger.is_absolute():
+        parser.error('--seed-ledger must be absolute')
     try:
-        freeze_panel(json.loads(args.promotion_panel.read_text()))
+        probe = None
+        if GATE_VERSION >= 2:
+            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(GATE_VERSION)['pair_count'])
+        freeze_panel(json.loads(args.promotion_panel.read_text()), version=GATE_VERSION, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
