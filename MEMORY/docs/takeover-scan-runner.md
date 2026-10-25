@@ -3,7 +3,7 @@
 > 2026-10-26。入口 `scripts/takeover_scan.py`（run / adaptive / register），测试
 > `python/test_takeover_scan.py`。任务书：[task91-takeover-scan-runner.md](task91-takeover-scan-runner.md)。
 >
-> 当前状态：工具、LLM同块回测和两份端到端已验证；**第2步人类L46/L48/L49同块回测仍缺存档，任务未全部完成**。
+> 当前状态：工具、LLM同块回测和两份端到端已验证；**已从部署记录定位人类L46/L48/L49副本，当前正在执行第2步同块回测**。
 > 紧凑证据：[takeover-scan-evidence.json](takeover-scan-evidence.json)。
 
 ## 用法
@@ -80,9 +80,10 @@ task87 的扫描块相比，三份的 L50 分别差 1 / 2 / 2 档（如 s2026104
 含义：`demo_start` 阶梯档位只应依赖**同一块**的实测（本工具自洽满足）；不要拿不同块的
 两次扫描逐档对比，也不要把 4/8 vs 6/8 的边界差读成趋势。
 
-**未做**：task71b 的 L46/L48/L49 人类示范存档只在 Mac（`/Users/newbiexvwu/PvZAgent/...`），
-本机没有，无法同块回测人类示范（见任务书问题节）。工具与判据已由 LLM 局三份验证，
-主控上生产后可对人类示范同样跑一遍 adaptive + `--teacher-only` 对照。
+**人类回测进行中**：沿task70部署记录定位到cq工作树中的L46/L48/L49副本，只读复制到本任务
+`artifacts/human_demo/raw/`并逐文件SHA核验。当前r11按task89生成的12点网格执行adaptive，
+再补齐同一未来块的12点老师对照；结果出来后登记下表。历史Mac胜率表不充作本次逐局证据。
+扫描计划与原始证据位于ignored的`artifacts/task91/audit/human_*`；本任务最多2个游戏进程。
 
 ## 端到端（task89 包 2 份，独立 dest/账本/临时清单，未来块 90M 起）
 
