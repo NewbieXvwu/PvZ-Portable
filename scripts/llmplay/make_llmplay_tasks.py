@@ -44,11 +44,13 @@ SEEDS_PER_TASK = 40
 LAYERS = {
     'A': ['demo_roof_46_doom_m200', 'demo_roof_47_doom_m200',
           'demo_roof_48_doom_m200', 'demo_roof_49_doom_m200'],
+    # kernel 三个族不打（主控 2026-10-26：用户定过玉米套不打，群怪下溅射远强于单体控制）。
+    # 族登记留在 configs/human_demo_tasks.json，只是不进 llmplay 任务表。
     'B': ['demo_roof_41_doom_m200',
           'demo_roof_42_melon_m200', 'demo_roof_42_gloom_m200',
-          'demo_roof_42_gloommelon_m200', 'demo_roof_42_kernel_m200',
-          'demo_roof_43_melon_m200', 'demo_roof_43_gloom_m200', 'demo_roof_43_kernel_m200',
-          'demo_roof_44_melon_m200', 'demo_roof_44_gloom_m200', 'demo_roof_44_kernel_m200'],
+          'demo_roof_42_gloommelon_m200',
+          'demo_roof_43_melon_m200', 'demo_roof_43_gloom_m200',
+          'demo_roof_44_melon_m200', 'demo_roof_44_gloom_m200'],
     'C': ['demo_roof_46_doom_m300', 'demo_roof_46_doom_m400',
           'demo_roof_47_doom_m300', 'demo_roof_47_doom_m400',
           'demo_roof_48_doom_m300', 'demo_roof_48_doom_m400',
@@ -217,6 +219,20 @@ def main() -> int:
     for task in missing:
         task['seeds'] = [plan[task['task_id']]['seeds'][0]]
 
+    # 生成器管理的族（NEW_FAMILIES）：清单默认种子同步为当前块首。
+    # 槽位前移（例如 kernel 出表）时自愈；演示种子（< BLOCK_BASE，如 20261030）保留在前。
+    seed_synced = False
+    for task in tasks:
+        if task['task_id'] not in NEW_FAMILIES:
+            continue
+        demo = [x for x in task.get('seeds', []) if x < BLOCK_BASE][:1]
+        want = demo + [plan[task['task_id']]['seeds'][0]]
+        if task.get('seeds') != want:
+            task['seeds'] = want
+            seed_synced = True
+    if seed_synced:
+        print('清单默认种子同步：生成器管理的族改为当前块首（演示种子保留在前）')
+
     known_after = dict(known)
     known_after.update({task['task_id']: task for task in missing})
     unknown = [task_id for _, task_id in ordered_tasks() if task_id not in known_after]
@@ -243,7 +259,7 @@ def main() -> int:
             print('  %s 层 %d 任务：%s' % (layer, len(ids), ', '.join(ids)))
         return 0
 
-    if missing or len(tasks) != len(document['tasks']):
+    if missing or seed_synced or len(tasks) != len(document['tasks']):
         write_manifest(document, tasks + missing)
     SEEDS.write_text(json.dumps(dict(
         schema='llmplay_seeds_v1',
