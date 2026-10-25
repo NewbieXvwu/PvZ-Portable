@@ -1,0 +1,778 @@
+{
+  "N": 420,
+  "N_rule": "maximum of observed first successful same-cell plant intervals, across four distinct demonstrations",
+  "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe",
+  "source": {
+    "repo": "realnewbiexvwu/pvz-agent-artifacts",
+    "repo_type": "model",
+    "revision": "c95fc0a0b29016e0c1ed3c5167434f5bc2267d31",
+    "path": "transfer/human_demo_raw_20261024.tar.gz",
+    "bytes": 4384075,
+    "sha256": "99acbbe7164f3eaa6d1c79cb6befac89f83b9d7036bd3b4e01ee6fbaa53b89b1"
+  },
+  "archives": [
+    {
+      "name": "demo_fog_31_fume_rebaselined",
+      "task": {
+        "id": "demo_fog_31_fume",
+        "level": 31,
+        "seed": 20261031,
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          3,
+          25
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 1.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "N": 420,
+      "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe",
+      "engine_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+      "tool_sha256": "ae2db0bc429bbe4159036a05b6b0b244404ad2ed6a013fe87f950f02122b362a",
+      "batch_tool_sha256": "6249ee4204c4a1c2d51c6cdc18adf6d97b7b26647f4682649a431afcdd74eaa0",
+      "source_hashes": {
+        "ticks.jsonl": "23396d998a3726a866b7f8a889a7bcab85df623ebe1bac2e73053c2d5286d920",
+        "meta.json": "862e9201f18b2c9e3ad0bc60c5e5f710d82cd933c8a42fddc25564b420922f2b",
+        "frames.jsonl": "82ff0495381d918814598a5245d0e53f097611b42eae0ce4fcc93298bbe8a312"
+      },
+      "distribution": {
+        "intervals": [
+          55,
+          56,
+          62,
+          72,
+          73,
+          78,
+          86,
+          86,
+          88,
+          88,
+          91,
+          91,
+          92,
+          95,
+          97,
+          109,
+          116,
+          123,
+          132,
+          345
+        ],
+        "N": 345,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 20,
+        "unmatched_shovels": [],
+        "shovel_attempts": 22,
+        "rejected_shovels": 2,
+        "successful_shovels": 20
+      },
+      "native_pairing": {
+        "intervals": [
+          55,
+          56,
+          62,
+          72,
+          73,
+          78,
+          86,
+          86,
+          88,
+          88,
+          91,
+          91,
+          92,
+          95,
+          97,
+          109,
+          116,
+          123,
+          132,
+          345
+        ],
+        "N": 420,
+        "N_rule": "maximum of observed first successful same-cell plant intervals, across four distinct demonstrations",
+        "paired": 20,
+        "unmatched_shovels": [],
+        "shovel_attempts": 22,
+        "rejected_shovels": 2,
+        "successful_shovels": 20,
+        "labelled": 17,
+        "illegal_at_shovel": [
+          404,
+          464,
+          476
+        ],
+        "input_board_mismatch": [],
+        "observed_archive_max_interval": 345,
+        "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe"
+      },
+      "invalid_at_shovel": [
+        {
+          "frame": 404,
+          "interval": 132,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 1,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 230,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            661,
+            750,
+            75
+          ]
+        },
+        {
+          "frame": 464,
+          "interval": 116,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 4,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 250,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            698,
+            750,
+            75
+          ]
+        },
+        {
+          "frame": 476,
+          "interval": 345,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 250,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            474,
+            750,
+            75
+          ]
+        }
+      ],
+      "labelled_transitions": {
+        "[8] -> 10": 13,
+        "[8] -> 9": 4
+      },
+      "verified_replay": {
+        "verified": true,
+        "operations": 40488,
+        "tick": 40355,
+        "wave": 20,
+        "result": 1
+      },
+      "checked_public_frames": 875,
+      "rebaseline": {
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume_rebaselined",
+        "rewritten_operations": 13958,
+        "checked_public_frames": 875,
+        "source_initial_state_hash": "df2cd0d4c224c0d5",
+        "executable_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+        "reason": "recompute reproducible hashes; original actions, ticks and outcome preserved"
+      },
+      "training_cache_shape": {
+        "boards": [
+          848,
+          101,
+          6,
+          10
+        ],
+        "scalars": [
+          848,
+          122
+        ]
+      },
+      "derived_tape": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
+        "sha256": "f4b34155d9c223eb0387a20e9018c9d8afc3235c1886cdfe1f988d7e0fe6c951"
+      },
+      "training_frames": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/training/seed_20261031/demo_fog_31_fume/frames.npz",
+        "sha256": "c05e5047a0689fd826be29814f55c15f27b0f4c9525dcb6b4b602e4a1955c13e"
+      }
+    },
+    {
+      "name": "demo_fog_31_snow_m200",
+      "task": {
+        "id": "demo_fog_31_snow_m200",
+        "level": 31,
+        "seed": 20261031,
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          5,
+          23,
+          17,
+          19,
+          2,
+          3
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 2.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "N": 420,
+      "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe",
+      "engine_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+      "tool_sha256": "ae2db0bc429bbe4159036a05b6b0b244404ad2ed6a013fe87f950f02122b362a",
+      "batch_tool_sha256": "6249ee4204c4a1c2d51c6cdc18adf6d97b7b26647f4682649a431afcdd74eaa0",
+      "source_hashes": {
+        "ticks.jsonl": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+        "meta.json": "808ac9421bf2a456a85744da65e5e5149c19933bb8d8f82c436aa5c6af3ef99d",
+        "frames.jsonl": "0342e4bae283b693215fb2000c1b71d05268b1b8da2a5bed136e594b608d2038"
+      },
+      "distribution": {
+        "intervals": [
+          50,
+          66,
+          68,
+          69,
+          70,
+          71,
+          73,
+          77,
+          78,
+          78,
+          85,
+          90,
+          92,
+          94,
+          102,
+          143
+        ],
+        "N": 143,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 16,
+        "unmatched_shovels": [],
+        "shovel_attempts": 16,
+        "rejected_shovels": 0,
+        "successful_shovels": 16
+      },
+      "native_pairing": {
+        "intervals": [
+          50,
+          66,
+          68,
+          69,
+          70,
+          71,
+          73,
+          77,
+          78,
+          78,
+          85,
+          90,
+          92,
+          94,
+          102,
+          143
+        ],
+        "N": 420,
+        "N_rule": "maximum of observed first successful same-cell plant intervals, across four distinct demonstrations",
+        "paired": 16,
+        "unmatched_shovels": [],
+        "shovel_attempts": 16,
+        "rejected_shovels": 0,
+        "successful_shovels": 16,
+        "labelled": 15,
+        "illegal_at_shovel": [
+          454
+        ],
+        "input_board_mismatch": [],
+        "observed_archive_max_interval": 143,
+        "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe"
+      },
+      "invalid_at_shovel": [
+        {
+          "frame": 454,
+          "interval": 143,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 0,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 5,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            4,
+            5,
+            true,
+            0,
+            750,
+            175
+          ]
+        }
+      ],
+      "labelled_transitions": {
+        "[8] -> 10": 10,
+        "[8] -> 5": 3,
+        "[3] -> 23": 2
+      },
+      "verified_replay": {
+        "verified": true,
+        "operations": 39590,
+        "tick": 39479,
+        "wave": 20,
+        "result": 1
+      },
+      "checked_public_frames": 827,
+      "rebaseline": {
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_snow_m200",
+        "rewritten_operations": 26914,
+        "checked_public_frames": 827,
+        "source_initial_state_hash": "d75e64ae66c61470",
+        "executable_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+        "reason": "recompute reproducible hashes; original actions, ticks and outcome preserved"
+      },
+      "training_cache_shape": {
+        "boards": [
+          815,
+          101,
+          6,
+          10
+        ],
+        "scalars": [
+          815,
+          122
+        ]
+      },
+      "derived_tape": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_snow_m200/ticks.jsonl",
+        "sha256": "985b2ef31a788cd3f97da7da7215eeecb5c945d2a8bc1e8e63e48d5fa1c9519e"
+      },
+      "training_frames": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/training/seed_20261031/demo_fog_31_snow_m200/frames.npz",
+        "sha256": "88532f157970f4e105c57ccc49ab1eb34c816885fc034c43e0c142ddc79eed31"
+      }
+    },
+    {
+      "name": "demo_fog_33_cactus_snow_m200",
+      "task": {
+        "id": "demo_fog_33_cactus_snow_m200",
+        "level": 33,
+        "seed": 20261033,
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          26,
+          5
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 2.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "N": 420,
+      "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe",
+      "engine_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+      "tool_sha256": "ae2db0bc429bbe4159036a05b6b0b244404ad2ed6a013fe87f950f02122b362a",
+      "batch_tool_sha256": "6249ee4204c4a1c2d51c6cdc18adf6d97b7b26647f4682649a431afcdd74eaa0",
+      "source_hashes": {
+        "ticks.jsonl": "3f7df22d92a0a98e944c1c4ae99f2a9a3a052ff71b311cc7fb5914699ba55787",
+        "meta.json": "506fe2974f86d211fa368f1e81802f2d854a0dbe2dfbc65a726ff0e68f8d5788",
+        "frames.jsonl": "f9e646ce266433743993e6fbfe5a74b35f579264eb68cdd657c8521062632647"
+      },
+      "distribution": {
+        "intervals": [
+          63,
+          68,
+          71,
+          72,
+          73,
+          75,
+          75,
+          78,
+          79,
+          83,
+          84,
+          86,
+          89,
+          96,
+          120,
+          147,
+          420
+        ],
+        "N": 420,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 17,
+        "unmatched_shovels": [],
+        "shovel_attempts": 18,
+        "rejected_shovels": 1,
+        "successful_shovels": 17
+      },
+      "native_pairing": {
+        "intervals": [
+          63,
+          68,
+          71,
+          72,
+          73,
+          75,
+          75,
+          78,
+          79,
+          83,
+          84,
+          86,
+          89,
+          96,
+          120,
+          147,
+          420
+        ],
+        "N": 420,
+        "N_rule": "maximum of observed first successful same-cell plant intervals, across four distinct demonstrations",
+        "paired": 17,
+        "unmatched_shovels": [],
+        "shovel_attempts": 18,
+        "rejected_shovels": 1,
+        "successful_shovels": 17,
+        "labelled": 14,
+        "illegal_at_shovel": [
+          332,
+          648,
+          662
+        ],
+        "input_board_mismatch": [],
+        "observed_archive_max_interval": 420,
+        "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe"
+      },
+      "invalid_at_shovel": [
+        {
+          "frame": 332,
+          "interval": 147,
+          "action": {
+            "type": "replace",
+            "packet": 8,
+            "row": 0,
+            "col": 2
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 26,
+          "sun_at_shovel": 115,
+          "packet_at_shovel": [
+            8,
+            26,
+            true,
+            0,
+            750,
+            125
+          ]
+        },
+        {
+          "frame": 648,
+          "interval": 68,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 0,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            750,
+            750,
+            75
+          ]
+        },
+        {
+          "frame": 662,
+          "interval": 420,
+          "action": {
+            "type": "replace",
+            "packet": 2,
+            "row": 5,
+            "col": 4
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 150,
+          "packet_at_shovel": [
+            2,
+            10,
+            false,
+            550,
+            750,
+            75
+          ]
+        }
+      ],
+      "labelled_transitions": {
+        "[8] -> 26": 3,
+        "[8] -> 5": 4,
+        "[8] -> 10": 7
+      },
+      "verified_replay": {
+        "verified": true,
+        "operations": 41107,
+        "tick": 40969,
+        "wave": 20,
+        "result": 1
+      },
+      "checked_public_frames": 893,
+      "rebaseline": {
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261033/demo_fog_33_cactus_snow_m200",
+        "rewritten_operations": 28833,
+        "checked_public_frames": 893,
+        "source_initial_state_hash": "7e1d2e4e17a552e9",
+        "executable_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+        "reason": "recompute reproducible hashes; original actions, ticks and outcome preserved"
+      },
+      "training_cache_shape": {
+        "boards": [
+          854,
+          101,
+          6,
+          10
+        ],
+        "scalars": [
+          854,
+          122
+        ]
+      },
+      "derived_tape": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_33_cactus_snow_m200/ticks.jsonl",
+        "sha256": "c69c9e338af9e34a5b6f2c2dbb83957010ffa484be7c39d39b2590a9a201ce98"
+      },
+      "training_frames": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/training/seed_20261033/demo_fog_33_cactus_snow_m200/frames.npz",
+        "sha256": "e963154c5456d3ca7836b279a6930652a75398535129914f050a74f004162843"
+      }
+    },
+    {
+      "name": "demo_fog_33_cattail_snow_m200",
+      "task": {
+        "id": "demo_fog_33_cattail_snow_m200",
+        "level": 33,
+        "seed": 20261033,
+        "deck": [
+          9,
+          8,
+          16,
+          43,
+          10,
+          31,
+          3,
+          17,
+          19,
+          5
+        ],
+        "policy": "human",
+        "playthrough": 2,
+        "zombie_count_multiplier": 2.0,
+        "wave_cap": null,
+        "preplanted": []
+      },
+      "N": 420,
+      "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe",
+      "engine_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+      "tool_sha256": "ae2db0bc429bbe4159036a05b6b0b244404ad2ed6a013fe87f950f02122b362a",
+      "batch_tool_sha256": "6249ee4204c4a1c2d51c6cdc18adf6d97b7b26647f4682649a431afcdd74eaa0",
+      "source_hashes": {
+        "ticks.jsonl": "bf0ef9aa52410fd0e001666393770836cd3161a3f5c901e1d8e8c4ca93d6f2a6",
+        "meta.json": "64295df7ecfc59bb08c8e2f39a02b3fba055c7161ca0ac557160e28b068d5bdc",
+        "frames.jsonl": "d23d645dce99a003179569c2644c0b82a08963b4eb3350542eb2d4a77ae06e7c"
+      },
+      "distribution": {
+        "intervals": [
+          48,
+          49,
+          50,
+          65,
+          66,
+          69,
+          75,
+          80,
+          81,
+          82,
+          86,
+          89
+        ],
+        "N": 89,
+        "N_rule": "maximum observed first subsequent same-cell planting interval",
+        "paired": 12,
+        "unmatched_shovels": [],
+        "shovel_attempts": 12,
+        "rejected_shovels": 0,
+        "successful_shovels": 12
+      },
+      "native_pairing": {
+        "intervals": [
+          48,
+          49,
+          50,
+          65,
+          66,
+          69,
+          75,
+          80,
+          81,
+          82,
+          86,
+          89
+        ],
+        "N": 420,
+        "N_rule": "maximum of observed first successful same-cell plant intervals, across four distinct demonstrations",
+        "paired": 12,
+        "unmatched_shovels": [],
+        "shovel_attempts": 12,
+        "rejected_shovels": 0,
+        "successful_shovels": 12,
+        "labelled": 11,
+        "illegal_at_shovel": [
+          879
+        ],
+        "input_board_mismatch": [],
+        "observed_archive_max_interval": 89,
+        "N_plan_sha256": "fc0fd74c5ec006669ae25a223b032d0503d9dbc3e4353a8eebb04aa83e1b66fe"
+      },
+      "invalid_at_shovel": [
+        {
+          "frame": 879,
+          "interval": 81,
+          "action": {
+            "type": "replace",
+            "packet": 4,
+            "row": 5,
+            "col": 3
+          },
+          "removed_types": [
+            8
+          ],
+          "new_type": 10,
+          "sun_at_shovel": 450,
+          "packet_at_shovel": [
+            4,
+            10,
+            false,
+            733,
+            750,
+            75
+          ]
+        }
+      ],
+      "labelled_transitions": {
+        "[8] -> 5": 4,
+        "[8] -> 10": 7
+      },
+      "verified_replay": {
+        "verified": true,
+        "operations": 41831,
+        "tick": 41682,
+        "wave": 20,
+        "result": 1
+      },
+      "checked_public_frames": 923,
+      "rebaseline": {
+        "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261033/demo_fog_33_cattail_snow_m200",
+        "rewritten_operations": 31676,
+        "checked_public_frames": 923,
+        "source_initial_state_hash": "5db52aef3f4b22e3",
+        "executable_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+        "reason": "recompute reproducible hashes; original actions, ticks and outcome preserved"
+      },
+      "training_cache_shape": {
+        "boards": [
+          878,
+          101,
+          6,
+          10
+        ],
+        "scalars": [
+          878,
+          122
+        ]
+      },
+      "derived_tape": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_33_cattail_snow_m200/ticks.jsonl",
+        "sha256": "87e4fe1d3e1a924bf02f6888cf6ff0ca4f23241f7e52d98deec5556518207113"
+      },
+      "training_frames": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/training/seed_20261033/demo_fog_33_cattail_snow_m200/frames.npz",
+        "sha256": "7f986874f5af76663a66c84ef38fc6808ea7d69b96789cc2fe913ac4d877da05"
+      }
+    }
+  ],
+  "shovel_attempts": 68,
+  "successful_shovels": 65,
+  "rejected_shovels": 3,
+  "paired": 65,
+  "unmatched_successful_shovels": 0,
+  "labelled": 57,
+  "illegal_at_shovel": 8,
+  "input_board_mismatch": 0,
+  "labelled_transitions": {
+    "[8] -> 10": 37,
+    "[8] -> 9": 4,
+    "[8] -> 5": 11,
+    "[3] -> 23": 2,
+    "[8] -> 26": 3
+  },
+  "checked_public_frames": 3518,
+  "verified_operations": 163016,
+  "originals_unchanged": true,
+  "labels_native_validated": true
+}
