@@ -17,7 +17,7 @@ from __future__ import annotations
 
 import argparse
 import datetime as dt
-import hashlib
+import fcntl
 import json
 import re
 import shutil
@@ -34,6 +34,7 @@ DEFAULT_DEST = ROOT / 'artifacts/llm_demo/raw'
 DEFAULT_MANIFEST = ROOT / 'configs/human_demo_tasks.json'
 DEFAULT_LAYERS = ROOT / 'configs/llmplay_seeds.json'
 DEFAULT_RESOURCES = Path('/home/newbiexvwu/.cache/pvz-research-resources')
+DEFAULT_SEED_LEDGER = ROOT / 'artifacts/llm_demo/scan_seed_ledger.json'
 
 SCAN_POINTS = 12
 SCAN_FUTURES = 8
@@ -53,6 +54,7 @@ def _zip_target(root: Path, name: str) -> Path:
     """zip 成员 -> 落盘路径；绝对路径、盘符、.. 一律拒绝。"""
     if not name or name.startswith(('/', '\\')) or re.match(r'^[A-Za-z]:', name):
         raise ValueError(f'zip 里有绝对路径：{name!r}')
+    name = name.replace('\\', '/')
     if '..' in Path(name).parts:
         raise ValueError(f'zip 里有路径穿越：{name!r}')
     target = (root / name).resolve()
@@ -281,16 +283,29 @@ def scan_decisions(operations: int, points: int = SCAN_POINTS) -> list[int]:
 
 def _config_seed_points(document, points: set) -> None:
     if isinstance(document, dict):
+        start, count = document.get('future_seed_start'), document.get('future_seed_count')
+        if type(start) is int and type(count) is int:
+            points.update(range(start, start + count))
         for key, value in document.items():
             if key in ('seeds', 'future_seeds') and isinstance(value, list):
                 points.update(int(item) for item in value if isinstance(item, int))
+                _config_seed_points(value, points)
+            elif key == 'tasks' and isinstance(value, dict):
+                for task in value.values():
+                    if isinstance(task, list):
+                        points.update(item for item in task if type(item) is int)
+                    else:
+                        _config_seed_points(task, points)
+            elif key in ('seed_block', 'seed_window') and isinstance(value, list) and len(value) == 2:
+                points.update(range(*value))
             elif key in ('future_seed_start', 'seed') and isinstance(value, int):
                 points.add(value)
             elif key == 'block' and isinstance(value, dict):
                 base = value.get('base')
                 stride = int(value.get('stride') or 1)
                 count = int(value.get('per_task') or 0)
-                tasks = int(value.get('tasks') or 0)
+                tasks = value.get('tasks') or document.get('tasks') or 1
+                tasks = len(tasks) if isinstance(tasks, (dict, list)) else int(tasks)
                 if isinstance(base, int) and count:
                     for index in range(max(tasks, 1)):
                         points.update(range(base + index * stride, base + index * stride + count))
@@ -321,26 +336,69 @@ def occupied_seed_ranges(root: Path, gap: int = 100_000) -> list:
             ranges[-1] = (ranges[-1][0], value)
         else:
             ranges.append((value, value))
+    snapshot = root / 'MEMORY/docs/llm-import-seed-inventory.json'
+    if snapshot.is_file():
+        document = json.loads(snapshot.read_text(encoding='utf-8'))
+        ranges += [(low, high - 1) for low, high in document['occupied'] + document['reserved_pools']]
     return ranges
 
 
 def allocate_future_block(ranges: list, base: int, count: int) -> int:
     while True:
+        if base < 0 or count < 1 or base + count > 2**32:
+            raise ValueError('未来种子块超出 uint32 范围')
         end = base + count - 1
         if not any(start <= end and base <= stop for start, stop in ranges):
             return base
         base += 1_000_000
 
 
-def scan_plan(rows: list, layers: dict, base: int, root: Path = ROOT) -> dict:
+def scan_plan(rows: list, layers: dict, base: int, root: Path = ROOT,
+              ledger_path: Path | None = None) -> dict:
+    """锁住本目标目录的分配账本，跨导入不复用新未来，同档重跑保持分配。"""
+    if ledger_path is None:
+        return _scan_plan(rows, layers, base, root, {})
+    ledger_path.parent.mkdir(parents=True, exist_ok=True)
+    with ledger_path.with_suffix('.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        ledger = (json.loads(ledger_path.read_text(encoding='utf-8')) if ledger_path.exists()
+                  else dict(schema='llm_scan_seed_ledger_v1', reservations={}))
+        if ledger.get('schema') != 'llm_scan_seed_ledger_v1':
+            raise ValueError('未知扫描种子账本格式')
+        result = _scan_plan(rows, layers, base, root, ledger['reservations'])
+        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=ledger_path.parent,
+                                         delete=False) as temporary:
+            temporary.write(json.dumps(ledger, ensure_ascii=False, indent=2) + '\n')
+        Path(temporary.name).replace(ledger_path)
+        return result
+
+
+def _scan_plan(rows: list, layers: dict, base: int, root: Path, reservations: dict) -> dict:
     """为 full / half 的局生成 task71b 作业清单；只生成，不运行。"""
-    ranges = occupied_seed_ranges(root)
+    registered_ranges = occupied_seed_ranges(root)
+    ranges = list(registered_ranges)
     usable = [row for row in rows if row['grade'] != 'loss' and row.get('archive')]
-    cursor = allocate_future_block(ranges, base, FUTURE_BLOCK * max(len(usable), 1))
+    claimed = []
+    for entry in reservations.values():
+        start, count = entry['start'], entry['count']
+        if not (isinstance(start, int) and 0 <= start < 2**32 and count == FUTURE_BLOCK
+                and start + count <= 2**32):
+            raise ValueError('扫描种子账本范围无效')
+        interval = (start, start + count - 1)
+        if any(a <= interval[1] and interval[0] <= b for a, b in claimed):
+            raise ValueError('扫描种子账本区间重叠')
+        claimed.append(interval)
+    ranges += claimed
+    cursor = base
     archives = []
     for row in usable:
-        start = cursor
-        cursor += FUTURE_STRIDE
+        key = json.dumps([row['task_id'], row['seed'], row['archive']], ensure_ascii=False)
+        existing = reservations.get(key)
+        start = existing['start'] if existing else allocate_future_block(ranges, cursor, FUTURE_BLOCK)
+        if not existing:
+            reservations[key] = dict(start=start, count=FUTURE_BLOCK)
+            ranges.append((start, start + FUTURE_BLOCK - 1))
+        cursor = start + FUTURE_STRIDE
         futures = list(range(start, start + SCAN_FUTURES))
         decisions = scan_decisions(row['frames'])
         jobs = []
@@ -351,13 +409,16 @@ def scan_plan(rows: list, layers: dict, base: int, root: Path = ROOT) -> dict:
                                  dagger_beta=beta, future_seeds=futures))
         archives.append(dict(task_id=row['task_id'], archive=row['archive'], level=row['level'],
                              seed=row['seed'], grade=row['grade'], decisions=decisions,
+                             reused_reservation=existing is not None,
                              future_seed_start=start, future_seed_count=FUTURE_BLOCK,
                              future_seeds=futures, layer=layers.get(row['base_task_id'], '其他'),
                              jobs=jobs))
     return dict(schema='llm_scan_jobs_v1',
                 generated=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
-                future_block=dict(base=base, stride=FUTURE_STRIDE, count=FUTURE_BLOCK),
-                seed_audit=dict(existing_ranges=[[a, b] for a, b in ranges],
+                future_block=dict(base=archives[0]['future_seed_start'] if archives else base,
+                                  requested_base=base, stride=FUTURE_STRIDE, count=FUTURE_BLOCK),
+                seed_audit=dict(existing_ranges=[[a, b] for a, b in registered_ranges],
+                                previous_allocations=[[a, b] for a, b in claimed],
                                 allocated=[[entry['future_seed_start'],
                                             entry['future_seed_start'] + FUTURE_BLOCK - 1]
                                            for entry in archives]),
@@ -368,9 +429,15 @@ def scan_plan(rows: list, layers: dict, base: int, root: Path = ROOT) -> dict:
 
 def _same_archive(left: Path, right: Path) -> bool:
     try:
-        return hashlib.sha256((left / 'ticks.jsonl').read_bytes()).hexdigest() == \
-            hashlib.sha256((right / 'ticks.jsonl').read_bytes()).hexdigest()
-    except OSError:
+        for filename in ('ticks.jsonl', 'frames.jsonl', 'frames.npz'):
+            a, b = left / filename, right / filename
+            if a.exists() != b.exists() or (a.exists() and a.read_bytes() != b.read_bytes()):
+                return False
+        def metadata(path):
+            return {k: v for k, v in json.loads((path / 'meta.json').read_text()).items()
+                    if k not in ('verified', 'hash_verification')}
+        return metadata(left) == metadata(right)
+    except (OSError, ValueError):
         return False
 
 
@@ -394,24 +461,25 @@ def reject_archive(target: Path, dest: Path) -> Path:
 
 def verify_copy(archive: Path, resource_dir: Path, executable: Path | None) -> dict:
     from human_demo import verify
-    return verify(archive, resource_dir, executable)
+    return verify(archive, resource_dir, executable, strict_hashes=False)
 
 
 # ---------------------------------------------------------------- 报告
 
 def render_report(rows: list, layers: dict, plan: dict) -> str:
-    lines = ['| 任务 | 种子 | 波 | 操作 | verify | 分档 | 稳健性（第10波） | 补救 | 新族 |',
-             '|---|---|---|---|---|---|---|---|---|']
+    lines = ['| 任务 | 种子 | 倍率 | 结果 | 波 | 操作 | verify | 分档 | 稳健性（第10波） | 补救 | 新族 | 备注 |',
+             '|---|---|---|---|---|---|---|---|---|---|---|---|']
     for row in rows:
         patch = row.get('manual_patch')
-        lines.append('| {task_id} | {seed} | {wave} | {operations} | {verify} | {grade} | '
-                     '{robust} | {patch} | {new} |'.format(
+        lines.append('| {task_id} | {seed} | {multiplier} | {outcome} | {wave} | {operations} | {verify} | {grade} | '
+                     '{robust} | {patch} | {new} | {note} |'.format(
                          task_id=row['task_id'], seed=row['seed'], wave=row['wave'],
+                         multiplier=row.get('multiplier', ''), outcome=row.get('result', ''),
                          operations=row['operations'], verify=row['verify'],
                          grade=row['grade'], robust=row['robustness'],
                          patch='未知' if patch is None else ('是' if patch else '否'),
-                         new='是' if row['new_family'] else '否'))
-    summary = {}
+                         new='是' if row['new_family'] else '否', note=row.get('note', '').replace('|', '\\|').replace('\n', ' ')))
+    summary = {layer: dict(total=0, won=0, full=0, half=0, loss=0) for layer in 'ABCDE'}
     for row in rows:
         layer = layers.get(row['base_task_id'], '其他')
         cell = summary.setdefault(layer, dict(total=0, won=0, full=0, half=0, loss=0))
@@ -423,8 +491,10 @@ def render_report(rows: list, layers: dict, plan: dict) -> str:
         cell = summary[layer]
         lines.append('| {layer} | {total} | {won} | {full} | {half} | {loss} |'.format(
             layer=layer, **cell))
-    lines += ['', '扫描作业：{count} 条（{archives} 份存档 × 12 点 × 8 未来 × 2 臂）。'.format(
-                  count=sum(len(entry['jobs']) for entry in plan['archives']),
+    jobs = sum(len(entry['jobs']) for entry in plan['archives'])
+    trajectories = sum(len(job['future_seeds']) for entry in plan['archives'] for job in entry['jobs'])
+    lines += ['', '扫描作业：{count} 组（每组 8 个未来），合计 {trajectories} 条续走；{archives} 份存档。'.format(
+                  count=jobs, trajectories=trajectories,
                   archives=len(plan['archives'])),
               '未来种子块：{base} 起，每份存档 {stride} 步长、{count} 个。'.format(
                   **plan['future_block'])]
@@ -435,13 +505,17 @@ def render_report(rows: list, layers: dict, plan: dict) -> str:
 
 def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
         resource_dir: Path, executable: Path | None, do_verify: bool,
-        future_base: int, design_path: Path | None = None) -> dict:
+        future_base: int, design_path: Path | None = None,
+        seed_ledger: Path | None = None) -> dict:
     if input_path.is_dir():
         source_path, output_path = input_path.resolve(), dest.resolve()
         if source_path == output_path or source_path in output_path.parents or output_path in source_path.parents:
             raise ValueError('输入目录与 dest 不得互相包含（输入只读）')
     if design_path is None:
         design_path = (manifest.parent.parent if manifest.parent.name == 'configs' else manifest.parent) / 'DESIGN.md'
+    if input_path.is_dir() and any(input_path.resolve() in path.resolve().parents
+                                   for path in (manifest, design_path)):
+        raise ValueError('任务清单与 DESIGN 不得写进只读输入目录')
     layers = (json.loads(layers_path.read_text(encoding='utf-8')).get('layers') or {})
     layer_of = {task_id: name for name, ids in layers.items() for task_id in ids}
     tasks = load_manifest(manifest)
@@ -478,6 +552,8 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
                 seen[key] = str(archive)
             row = dict(source=str(archive), task_id=final_id, base_task_id=base_id, seed=seed,
                        level=int(task.get('level') or 0),
+                       multiplier=float(task.get('zombie_count_multiplier') or 1.0),
+                       result=(meta.get('outcome') or {}).get('result'),
                        wave=(meta.get('outcome') or {}).get('final_wave'),
                        operations=int(meta.get('operations') or 0),
                        frames=int(meta.get('frame_count') or meta.get('operations') or 0),
@@ -542,7 +618,8 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
         register_tasks(manifest, entries)
         register_design(design_path, entries)
         rows.sort(key=lambda item: (item['base_task_id'], item['seed']))
-        plan = scan_plan(rows, layer_of, future_base)
+        plan = scan_plan(rows, layer_of, future_base,
+                         ledger_path=seed_ledger or dest / 'scan_seed_ledger.json')
         return dict(rows=rows, layers=layer_of, plan=plan, registered=entries)
     finally:
         if workdir is not None:
@@ -551,23 +628,24 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
 
 def main_with(args) -> int:
     result = run(args.input, args.dest, args.manifest, args.layers, args.resource_dir,
-                 args.executable, not args.no_verify, args.future_base)
+                 args.executable, not args.no_verify, args.future_base, seed_ledger=args.seed_ledger)
     report = render_report(result['rows'], result['layers'], result['plan'])
     print(report)
     if args.report:
         args.report.parent.mkdir(parents=True, exist_ok=True)
         args.report.write_text(report, encoding='utf-8')
-    if args.scan_out:
-        args.scan_out.parent.mkdir(parents=True, exist_ok=True)
-        args.scan_out.write_text(json.dumps(result['plan'], ensure_ascii=False, indent=2) + '\n',
-                                 encoding='utf-8')
+    stamp = dt.datetime.now().strftime('%Y%m%d')
+    scan_out = args.scan_out or args.dest / f'scan_jobs_{stamp}.json'
+    scan_out.parent.mkdir(parents=True, exist_ok=True)
+    scan_out.write_text(json.dumps(result['plan'], ensure_ascii=False, indent=2) + '\n',
+                        encoding='utf-8')
     index = dict(schema='llm_import_v1',
                  generated=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
                  input=str(args.input), archives=result['rows'],
                  registered=[entry['task_id'] for entry in result['registered']],
+                 scan_plan=str(scan_out), seed_ledger=str(args.seed_ledger),
                  scan_jobs=sum(len(entry['jobs']) for entry in result['plan']['archives']))
     args.dest.mkdir(parents=True, exist_ok=True)
-    stamp = dt.datetime.now().strftime('%Y%m%d')
     (args.dest / f'llm_import_{stamp}.json').write_text(
         json.dumps(index, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
     bad = [row for row in result['rows'] if row['verify'] in ('失败', '拒绝')]
@@ -587,6 +665,8 @@ def main() -> int:
     parser.add_argument('--report', type=Path, help='把 markdown 报告写到这里')
     parser.add_argument('--scan-out', type=Path, help='扫描作业清单 json')
     parser.add_argument('--future-base', type=int, default=DEFAULT_FUTURE_BASE)
+    parser.add_argument('--seed-ledger', type=Path, default=DEFAULT_SEED_LEDGER,
+                        help='扫描种子分配账本；默认各次导入共用，不随 dest 改变')
     args = parser.parse_args()
     return main_with(args)
 

@@ -1,10 +1,15 @@
 """task89 存档一键入库的纯逻辑测试：不需要引擎。"""
 import json
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
 import zipfile
 from pathlib import Path
+from unittest.mock import patch
+from unittest.mock import Mock
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -75,6 +80,14 @@ class SafeExtractTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 importer.safe_extract(bundle, Path(directory) / 'out')
 
+    def test_rejects_windows_parent_traversal(self):
+        with tempfile.TemporaryDirectory() as directory:
+            bundle = Path(directory) / 'bad.zip'
+            with zipfile.ZipFile(bundle, 'w') as zip_file:
+                zip_file.writestr('a\\..\\escape.json', '{}')
+            with self.assertRaises(ValueError):
+                importer.safe_extract(bundle, Path(directory) / 'out')
+
     def test_extracts_normal_tree(self):
         with tempfile.TemporaryDirectory() as directory:
             bundle = Path(directory) / 'ok.zip'
@@ -86,6 +99,12 @@ class SafeExtractTest(unittest.TestCase):
 
 
 class MetaTest(unittest.TestCase):
+    def test_verification_explicitly_uses_timeline_without_state_hashes(self):
+        verify = Mock(return_value={'verified': True})
+        with patch.dict(sys.modules, human_demo=SimpleNamespace(verify=verify)):
+            importer.verify_copy(Path('/archive'), Path('/resources'), Path('/engine'))
+        verify.assert_called_once_with(Path('/archive'), Path('/resources'), Path('/engine'), strict_hashes=False)
+
     def test_conveyor_empty_deck_is_valid_but_fixed_empty_deck_is_not(self):
         with tempfile.TemporaryDirectory() as directory:
             meta = _meta(task_id='demo_conv_30_orig_m100', level=30, deck=(), multiplier=1.0)
@@ -184,6 +203,39 @@ class FamilyTest(unittest.TestCase):
 
 
 class ScanTest(unittest.TestCase):
+    def row(self, name):
+        return dict(grade='half', archive=name, task_id=name, base_task_id=name,
+                    seed=123, frames=100, level=46)
+
+    def test_checks_each_strided_block(self):
+        occupied = [(84_001_000, 84_001_095)]
+        with patch.object(importer, 'occupied_seed_ranges', return_value=occupied):
+            plan = importer.scan_plan([self.row('a'), self.row('b')], {}, 84_000_000)
+        starts = [entry['future_seed_start'] for entry in plan['archives']]
+        self.assertEqual(starts, [84_000_000, 85_001_000])
+
+    def test_ledger_prevents_reuse_across_imports_and_preserves_reruns(self):
+        with tempfile.TemporaryDirectory() as directory:
+            ledger = Path(directory) / 'scan_seed_ledger.json'
+            with patch.object(importer, 'occupied_seed_ranges', return_value=[]):
+                first = importer.scan_plan([self.row('a')], {}, 84_000_000, ledger_path=ledger)
+                second = importer.scan_plan([self.row('b')], {}, 84_000_000, ledger_path=ledger)
+                repeat = importer.scan_plan([self.row('a')], {}, 84_000_000, ledger_path=ledger)
+            self.assertEqual(first['archives'][0]['future_seed_start'], 84_000_000)
+            self.assertEqual(second['archives'][0]['future_seed_start'], 85_000_000)
+            self.assertEqual(repeat['archives'][0]['future_seed_start'], 84_000_000)
+            self.assertTrue(repeat['archives'][0]['reused_reservation'])
+
+    def test_nested_seed_inventory_and_uint32_limit(self):
+        seeds = set()
+        importer._config_seed_points(dict(tasks={'a': [100, 101]}, seeds=[dict(seeds=[200])],
+                                         future_seed_start=300, future_seed_count=4), seeds)
+        self.assertTrue({100, 101, 200, 300, 301, 302, 303} <= seeds)
+        with self.assertRaises(ValueError):
+            importer.allocate_future_block([], 2**32 - 1, 96)
+        ranges = importer.occupied_seed_ranges(ROOT)
+        self.assertTrue(any(a <= 100_000_000 < b for a, b in ranges))
+
     def test_points_cover_tail_excluded(self):
         points = importer.scan_decisions(1000)
         self.assertEqual(len(points), 12)
@@ -238,6 +290,45 @@ class RegisterTest(unittest.TestCase):
 
 
 class EndToEndTest(unittest.TestCase):
+    def test_minimal_command_saves_scan_plan_and_reports_all_layers(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            _write_archive(source, 'archive', _meta(wins=6))
+            manifest = root / 'tasks.json'
+            manifest.write_text('{"tasks":[]}')
+            args = SimpleNamespace(input=source, dest=root / 'dest', manifest=manifest,
+                                   layers=importer.DEFAULT_LAYERS, resource_dir=importer.DEFAULT_RESOURCES,
+                                   executable=None, no_verify=True, future_base=84_000_000,
+                                   report=None, scan_out=None, seed_ledger=root / 'seeds.json')
+            output = io.StringIO()
+            with contextlib.redirect_stdout(output):
+                self.assertEqual(importer.main_with(args), 0)
+            plans = list(args.dest.glob('scan_jobs_*.json'))
+            self.assertEqual(len(plans), 1)
+            plan = json.loads(plans[0].read_text())
+            self.assertEqual(len(plan['archives'][0]['jobs']), 24)
+            self.assertIn('192 条续走', output.getvalue())
+            for layer in 'ABCDE':
+                self.assertIn(f'| {layer} |', output.getvalue())
+    def test_same_actions_with_changed_robustness_are_not_silently_deduplicated(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            old = _write_archive(root, 'old', _meta(wins=4))
+            new = _write_archive(root, 'new', _meta(wins=8))
+            target, _ = importer.import_archive(old, root / 'dest', 'safe_id', 123)
+            self.assertEqual(importer.import_archive(new, root / 'dest', 'safe_id', 123)[1], 'conflict')
+            meta = json.loads((target / 'meta.json').read_text())
+            meta['verified'] = True
+            meta['hash_verification'] = 'tick/ok/outcome only'
+            (target / 'meta.json').write_text(json.dumps(meta))
+            self.assertEqual(importer.import_archive(old, root / 'dest', 'safe_id', 123)[1], 'duplicate')
+    def test_input_directory_cannot_be_the_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory)
+            with self.assertRaisesRegex(ValueError, '输入只读'):
+                importer.run(source, source / 'dest', source / 'tasks.json',
+                             importer.DEFAULT_LAYERS, importer.DEFAULT_RESOURCES, None, False, 84_000_000)
     def test_imports_only_wins_and_registers_foreign_seeds(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

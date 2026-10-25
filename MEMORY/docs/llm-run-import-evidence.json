@@ -1,0 +1,127 @@
+{
+ "schema": "llm_run_import_evidence_v1",
+ "source_sha256": "d199f51129eec00b40d52caf37cbb2e03e84e93a90da97ddc4d89c67d1f7a801",
+ "unit_tests_passed": 30,
+ "reused_codebuddy_engine_verification": {
+  "archives": 102,
+  "pass_count": 102
+ },
+ "updated_import": {
+  "archives": 102,
+  "full": 0,
+  "half": 12,
+  "loss": 90,
+  "new_families": [],
+  "matches_task87": true,
+  "input_zip_unchanged": true
+ },
+ "current_engine_verification": {
+  "engine_sha256": "1e5e3f11fad67d083c678b9342b266479603718d8f41294de37f5ed4f357ec10",
+  "checks": [
+   {
+    "task_id": "demo_roof_46_doom_m200",
+    "seed": 20261046,
+    "source_archive": "L46_seed20261046_h152_024_wave30_tick58018",
+    "grade": "half",
+    "seconds": 4.71,
+    "verified": true,
+    "operations": 1059,
+    "tick": 58018,
+    "wave": 30,
+    "result": 1
+   },
+   {
+    "task_id": "demo_roof_46_doom_m200",
+    "seed": 20261046,
+    "source_archive": "L46_seed20261046_opt44_001_wave09_tick21846",
+    "grade": "loss",
+    "seconds": 1.04,
+    "verified": true,
+    "operations": 399,
+    "tick": 21846,
+    "wave": 9,
+    "result": 2
+   }
+  ]
+ },
+ "scan": {
+  "archives": 12,
+  "points_per_archive": 12,
+  "futures_per_point": 8,
+  "arms": 2,
+  "job_groups": 288,
+  "continuations": 2304,
+  "allocated_inclusive": [
+   [
+    84000000,
+    84000095
+   ],
+   [
+    84001000,
+    84001095
+   ],
+   [
+    84002000,
+    84002095
+   ],
+   [
+    84003000,
+    84003095
+   ],
+   [
+    84004000,
+    84004095
+   ],
+   [
+    84005000,
+    84005095
+   ],
+   [
+    84006000,
+    84006095
+   ],
+   [
+    84007000,
+    84007095
+   ],
+   [
+    84008000,
+    84008095
+   ],
+   [
+    84009000,
+    84009095
+   ],
+   [
+    84010000,
+    84010095
+   ],
+   [
+    84011000,
+    84011095
+   ]
+  ],
+  "disjoint_from_inventory": true,
+  "pairwise_disjoint": true,
+  "executed": false
+ },
+ "seed_inventory": {
+  "source_commit": "92d962991d8c382605d31e40df64c14144a00ec1",
+  "source_path": "MEMORY/docs/gate-seed-inventory.json",
+  "intervals": "half-open",
+  "sha256": "87e7b58e45527dba761caac48c457cc2e11a755a27442bc8837682833d4ee14b"
+ },
+ "raw_evidence_directory": "artifacts/task89/verification",
+ "sha256": {
+  "codebuddy_index.json": "b989d9533e6385d890b5a4903193bdb6d900d92335a0cfdbda91b0912c32a446",
+  "full_run.log": "eb724998a45761ca94a72b5f114517b7a8a15008e176100aff3d6a5e6309cd37",
+  "updated_rows.json": "59a20251d146fe937930d4e6509029cff0da26952d1838f6458826ebfd56444b",
+  "updated_scan.json": "ba5366d8afeda013d6be2c08b4a0d2a6fc7dc58879ddabedb45a8f124ce4c4a5",
+  "current_verify.json": "8c326708c9a72f0de43807658f021c9420d9b3c068a0f8825f9800c6f0e89101"
+ },
+ "source_sha256_by_path": {
+  "scripts/import_llm_run.py": "7936eeee1257fa75c4862fd2e5a991216afe3d39fe8d00d642a6dc423c1ddfcf",
+  "scripts/human_demo.py": "1a5a2a1fef98799c73492b48a10a5fc0fbc2c188442e465bd9030fa466a6e687",
+  "python/test_import_llm_run.py": "c0f119fd1b0b4c1cbfda99315a354c1cbece4d3de5d58d8b1209b3c4f0536207"
+ }
+}
