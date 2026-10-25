@@ -20,4 +20,8 @@
 
 ## 结果
 
+- [0] 已冻结生产 deploy4（16989f23）、在役 round11、v5、台式机 branch1 与六族清单；添加独立剖析工具，启动五地形各 4 局。细节见 search-hotpath.md；原始数据仅留 ignored artifacts/task77，不操作 qc/cq/流水线。
+
 ## 问题
+
+- redeploy/build 已由 task70 B5 重建，不能当原 deploy4；正式基线只读复制生产 cq/build4（SHA 与 task70 deploy4 一致）。系统无 perf，采用现有 SIGPROF 采样器并结合 cProfile。
