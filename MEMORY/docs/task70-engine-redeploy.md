@@ -74,7 +74,7 @@
   1. 49.1M 块 human_v2（manifest `artifacts/task70/fog_user_v2_panel.json`）32 局：**31/32**（唯一输种子 49100029）→ artifacts/task70/b3v5/v2/。**注意：这组跑在 B5 修订前的 human_v2 定义上**；B5 构建后需在新二进制上重测一次作为 teacher_rates 底数（老师全知，但 student-candidates 走学生输入，遮蔽可能微调老师轨迹）。
   2. 49.1M 块 human（manifest `artifacts/task70/fog_user_v2_panel_human_control.json`）32 局：**29/32**（输种子 49100013/027/029/031）→ artifacts/task70/b3v5/human/。human 路径 B5 不改（对拍见 [B5]），此数不受 B5 影响。
   3. **配对表（主控要求）**：都赢 28、都输 0、仅 v2 赢 3（49100013/027/031）、仅 human 赢 1（49100029），精确 McNemar 双侧 p=0.625——口径差异不显著。v4 时代的"种子块难"判断作废：49.1M 块在正确叶值下老师近乎全胜，8/32 纯粹是叶值 v4 拖累。
-  4. task67 种子 20261101..132 human + 台式机 branch1（对照 [B3-复现] 的 mac_branch1 25/32）→ artifacts/task70/repro_task67_desktop/（跑完补数）。
+  4. task67 种子 20261101..132 human + **台式机 branch1**（生产静态网）：**29/32**，输种子 20261102/111/124 → artifacts/task70/repro_task67_desktop/。对照 [B3-复现] 的 mac_branch1 25/32（同一叶值 v5、同一 deploy4，只换静态网）：静态网选择本身移动 4 局（输局集合只共享 20261102），teacher_rates 与后续对照一律以台式机 branch1（生产）为准。
 - [B3-复现] task67 基准在 deploy4 上逐种子复现：用 task67 原参数（`search_play --arms fast_search --dagger-beta 1 --verify-samples 9 --student-candidates 2 --seeds 32 --workers 4`，manifest `configs/human_demo_tasks.json` 的 `fog_user_l31_snow`，种子 20261101..20261132，叶值 v5 `8a636d33…` + static `pvz-logs/mac_branch1` `91e562a0…`，与 task67 记录的 SHA 一致），仅把引擎换成 deploy4（16989f23…）。结果 **25/32**，且**逐种子一致**：7 个输局种子、输局末波分布（10×1 12×1 19×1 20×4）、输局丢车分布（1×4 3×3）、平均丢车 1.09、赢局全部第 20 波通关——与 fog-user-decks.md §2/§4 记录的 task67 数字逐项相同。结论：换引擎（含 Mac→Linux 跨平台构建）不改变 human 口径下老师的行为，25/32 与 8/32 的差完全归因于种子块与叶值模型（v5 vs v4），不是引擎退化。证据 artifacts/task70/repro_task67/search/games.jsonl。
 
 ## 问题
