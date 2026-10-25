@@ -20,8 +20,18 @@ from pvz_tasks import profile_for_deck
 from render_episode import _frame, load_training_task, training_task_kwargs
 
 
-def reset_archive(env, meta):
+def reset_archive(env, meta, *, fog_observation=None):
+    """Restore the archive's initial board.
+
+    task70 B6: fog_observation is presentation only (the task66 invariant tests pin the
+    state hash across modes), so a caller may override the recorded value with the
+    manifest's: the demo_start cells replayed under human_v2 must not inherit the
+    recording-time x-ray just because the demo task predates the fog families.  The
+    board itself is untouched -- every hash check still applies.
+    """
     config = dict(meta['environment_task'])
+    if fog_observation is not None:
+        config['fog_observation'] = fog_observation
     config['profile'] = PlayerProfileContext(**config['profile'])
     config['preplanted'] = tuple(tuple(plant) for plant in config.get('preplanted', ()))
     env.begin_demo()
@@ -125,13 +135,31 @@ class Recorder:
 
 
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
-           save: Path | None = None, before_action=None):
+           save: Path | None = None, before_action=None, *,
+           strict_hashes: bool | None = None, fog_observation: str | None = None):
     meta = json.loads((archive / 'meta.json').read_text())
+    # task70: state-hash equality only holds when the replaying engine is the one that
+    # recorded the archive.  task63 changed the FIELD_SHAKE seeding inside the SaveGame
+    # image, so an archive recorded by a pre-task63 engine (or rebaselined by deploy3)
+    # hashes differently under deploy4 even though every observable field is identical.
+    # The archive's executable_sha256 selects the verification mode: same engine -> the
+    # full per-operation hash check; different engine -> the engine-independent fields
+    # (tick timeline, per-operation ok, terminal outcome) are still enforced, and the
+    # relaxed mode is recorded on the returned meta so it is never silent.
+    current_sha = (hashlib.sha256(Path(env.executable).read_bytes()).hexdigest()
+                   if getattr(env, 'executable', None) else None)
+    recorded_sha = meta.get('executable_sha256')
+    if strict_hashes is None:
+        strict_hashes = not recorded_sha or recorded_sha == current_sha
+    meta['hash_verification'] = (
+        'per-operation state hash' if strict_hashes else
+        'tick/ok/outcome only: archive recorded by engine '
+        + (recorded_sha or 'unknown')[:12] + ', replayed by ' + (current_sha or 'unknown')[:12])
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
     stop = frames[decision - 1]['operation'] if decision is not None else meta['operations']
-    obs = reset_archive(env, meta)
+    obs = reset_archive(env, meta, fog_observation=fog_observation)
     recorder = None
     if save is not None:
         config = dict(meta['environment_task'])
@@ -140,7 +168,7 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
         recorder = Recorder(env, save, meta['task']['id'], meta['task']['deck'], TaskSpec(**config),
                             meta.get('note', ''), label_source='counterfactual')
         obs = recorder.observation
-    if env._last_response['state_hash'] != meta['initial_state_hash']:
+    if strict_hashes and env._last_response['state_hash'] != meta['initial_state_hash']:
         raise RuntimeError('demonstration initial state hash differs')
     replacements = {frames[index - 1]['operation'] + 1: (frames[index]['operation'], action)
                     for index, action in (overrides or {}).items()}
@@ -184,8 +212,9 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
                 frame.update(action=action if action['type'] in ('plant', 'wait') else None,
                              action_rejected=not info['ok'], label_source='counterfactual')
                 changed_frames.append(frame)
-            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick'] or
-                                 env._last_response['state_hash'] != entry['state_hash']):
+            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick']
+                                 or (strict_hashes
+                                     and env._last_response['state_hash'] != entry['state_hash'])):
                 raise RuntimeError(f'demonstration state hash differs at operation {operation}, tick {obs["tick"]}')
             if obs['terminal'] and diverged:
                 break
@@ -389,14 +418,18 @@ def main():
     archive = args.out / f'seed_{seed}' / args.task
     with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
         recorder = Recorder(env, archive, args.task, deck, task, args.note)
-        print(f'录制中：{archive}。空格暂停，右键取消选卡，Esc 结束。', flush=True)
+        print(f'录制中：{archive}。Esc 或空格暂停/继续（暂停时可以慢慢种、铲、收集），'
+              f'右键取消选卡，关闭窗口结束录制。', flush=True)
         try:
             while not recorder.observation['terminal']:
                 event = env.human_input()
                 if event['closed']:
                     break
-                if event['paused']:
-                    time.sleep(.05)
+                # task80: while paused the poll yields wait ticks:0 -- step nothing, so game
+                # time stands still; but a plant/shovel/collect is still accepted and runs at
+                # the frozen tick.  Several paused actions therefore land on one tick.
+                if event['paused'] and event['action']['type'] == 'wait':
+                    time.sleep(.03)
                     continue
                 recorder.step(event['action'])
         finally:
