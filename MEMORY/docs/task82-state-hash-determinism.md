@@ -34,4 +34,6 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 ## 结果
 
+- 2026-10-25：两种指定引擎各 8 次 reset + 前 2000 操作已复现；首次分歧为 reset，定位到 Challenge 的未初始化 `mCloudsCounter[6]`，同引擎观察/事件一致；工具与初步证据见 `state-hash-determinism.md`。
+
 ## 问题
