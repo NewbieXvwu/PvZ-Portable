@@ -281,6 +281,7 @@ public:
 	bool EnvironmentZombieCellFogHidden(const class Zombie* zombie) const;
 	bool EnvironmentZombieVisible(const class Zombie* zombie) const;
 	bool EnvironmentProjectileVisible(const class Projectile* projectile) const;
+	bool EnvironmentPlantFogHidden(const class Plant* plant) const;
 	bool EnvironmentVisibleEnemies() const;
 	std::string                     EnvironmentDeckOptions();
 	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);

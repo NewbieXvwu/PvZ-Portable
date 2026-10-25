@@ -1859,6 +1859,24 @@ bool LawnApp::EnvironmentProjectileVisible(const Projectile* projectile) const
 	return aClearest < kFogVisibilityThreshold;
 }
 
+// task70 B5: a human cannot see their own plants inside the fog wall -- only where they
+// planted them and what the card-click test tells them.  When the plant's grid anchor sits
+// under render fog at least as opaque as the zombie threshold, the observation keeps the
+// plant's row/col/type (memory plus the planting probe recover those) and reports fixed
+// "unknown" values for health and the state timers.  One rule for every plant consumer:
+// the full, lean and v2 observations and the C++ student input all call this.
+bool LawnApp::EnvironmentPlantFogHidden(const Plant* plant) const
+{
+	if (mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::Opacity) return false;
+	if (!mBoard || !mBoard->StageHasFog()) return false;
+	if (plant->mPlantCol < 0 || plant->mPlantCol >= MAX_GRID_SIZE_X ||
+		plant->mRow < 0 || plant->mRow >= MAX_GRID_SIZE_Y) return false;
+	// The cell anchor, not the plant's animated mX/mY: the rule is a property of the cell,
+	// so it is stable across planting/shooting animations.
+	return EnvironmentFogOpacityAt(mBoard->GridToPixelX(plant->mPlantCol, plant->mRow),
+		mBoard->GridToPixelY(plant->mPlantCol, plant->mRow)) >= kFogVisibilityThreshold;
+}
+
 bool LawnApp::EnvironmentVisibleEnemies() const
 {
 	if (!EnvironmentFogMasked()) return mBoard->AreEnemyZombiesOnScreen();
@@ -1905,9 +1923,14 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 		if (plant->mDead || plant->mSquished) continue;
 		if (!first) out << ',';
 		first = false;
-		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
-			<< ',' << static_cast<int>(plant->mState) << ',' << plant->mStateCountdown
-			<< ',' << plant->mDoSpecialCountdown << ',' << plant->mLaunchCounter << ',' << plant->mLaunchRate << ']';
+		// task70 B5: masked plants keep row/col/type and the type-constant launch_rate; the
+		// state and its timers are "unknown" (-1).  Consumers compute from these fields as
+		// written, so -1 must stay a value no real state can produce.
+			const bool aHidden = !privileged && app->EnvironmentPlantFogHidden(plant);
+			out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
+				<< ',' << (aHidden ? -1 : static_cast<int>(plant->mState)) << ',' << (aHidden ? -1 : plant->mStateCountdown)
+			<< ',' << (aHidden ? -1 : plant->mDoSpecialCountdown) << ',' << (aHidden ? -1 : plant->mLaunchCounter)
+			<< ',' << plant->mLaunchRate << ']';
 	}
 	out << "],\"zombies\":[";
 	first = true;
@@ -1980,8 +2003,11 @@ std::string LawnApp::EnvironmentLeanObservation()
 		if (plant->mDead) continue;
 		if (!first) out << ',';
 		first = false;
+		// task70 B5: a plant under the fog wall keeps row/col/type; health is "unknown" (-1).
+		const bool aHidden = EnvironmentPlantFogHidden(plant);
 		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
-			<< ',' << plant->mPlantHealth << ',' << plant->mPlantMaxHealth << ',' << (plant->mSquished ? 1 : 0) << ']';
+			<< ',' << (aHidden ? -1 : plant->mPlantHealth) << ',' << (aHidden ? -1 : plant->mPlantMaxHealth)
+			<< ',' << (plant->mSquished ? 1 : 0) << ']';
 	}
 	// [row, type, x, velocity_x, body+helm+shield health, on_board, is_eating, chilled, ice_trap, id]
 	out << "],\"zombies\":[";
@@ -2270,10 +2296,14 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		if (plant->mDead) continue;
 			if (!first) out << ',';
 			first = false;
+			// task70 B5: a fog-hidden plant keeps row/col/type (memory + the card-click test
+			// recover those); health and the state timers are "unknown" (-1), matching the
+			// target_zombie_id convention.  launch_rate is type-constant and stays real.
+			const bool aPlantHidden = !privileged && EnvironmentPlantFogHidden(plant);
 			out << "{\"type\":" << static_cast<int>(plant->mSeedType) << ",\"imitater_type\":" << static_cast<int>(plant->mImitaterType)
-				<< ",\"col\":" << plant->mPlantCol << ",\"row\":" << plant->mRow << ",\"health\":" << plant->mPlantHealth
-				<< ",\"max_health\":" << plant->mPlantMaxHealth << ",\"state\":" << static_cast<int>(plant->mState)
-				<< ",\"state_countdown\":" << plant->mStateCountdown << ",\"launch_counter\":" << plant->mLaunchCounter
+				<< ",\"col\":" << plant->mPlantCol << ",\"row\":" << plant->mRow << ",\"health\":" << (aPlantHidden ? -1 : plant->mPlantHealth)
+				<< ",\"max_health\":" << (aPlantHidden ? -1 : plant->mPlantMaxHealth) << ",\"state\":" << (aPlantHidden ? -1 : static_cast<int>(plant->mState))
+				<< ",\"state_countdown\":" << (aPlantHidden ? -1 : plant->mStateCountdown) << ",\"launch_counter\":" << (aPlantHidden ? -1 : plant->mLaunchCounter)
 				<< ",\"launch_rate\":" << plant->mLaunchRate << ",\"shooting_counter\":" << plant->mShootingCounter
 				<< ",\"wake_up_counter\":" << plant->mWakeUpCounter << ",\"asleep\":" << (plant->mIsAsleep ? "true" : "false")
 				<< ",\"squished\":" << (plant->mSquished ? "true" : "false")
@@ -2435,6 +2465,29 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				}
 			if (!found) out << "null";
 		}
+		// task70 B5 diagnostics: per plant, the rendered fog opacity at its grid anchor in
+		// permille -- the quantity EnvironmentPlantFogHidden thresholds.  Keyed by grid cell
+		// and type (plants have no ids); two plants can share a cell (pumpkin on a lily).
+		out << ",\"fog_plants\":[";
+		{
+			bool firstFogPlant = true;
+			for (const Plant* plant : mBoard->mPlants)
+			{
+				if (plant->mDead) continue;
+				const float aOpacity = mBoard->StageHasFog() &&
+					plant->mPlantCol >= 0 && plant->mPlantCol < MAX_GRID_SIZE_X &&
+					plant->mRow >= 0 && plant->mRow < MAX_GRID_SIZE_Y
+					? EnvironmentFogOpacityAt(mBoard->GridToPixelX(plant->mPlantCol, plant->mRow),
+						mBoard->GridToPixelY(plant->mPlantCol, plant->mRow))
+					: 0.0f;
+				if (!firstFogPlant) out << ',';
+				firstFogPlant = false;
+				out << "{\"row\":" << plant->mRow << ",\"col\":" << plant->mPlantCol
+					<< ",\"type\":" << static_cast<int>(plant->mSeedType)
+					<< ",\"opacity\":" << static_cast<int>(std::lround(aOpacity * 1000.0f)) << '}';
+			}
+		}
+		out << ']';
 		const std::string aRandState = GetRandState();
 		constexpr char aHex[] = "0123456789abcdef";
 		out << ",\"hidden\":{\"app_counter\":" << mAppCounter << ",\"wave_timer\":" << mBoard->mZombieCountDown << ",\"app_rand_seed\":" << mAppRandSeed

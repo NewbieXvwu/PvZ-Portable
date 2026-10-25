@@ -162,7 +162,10 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 		{
-			const double health = static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
+			// task70 B5: a fog-hidden plant's health is "unknown" (-1) -- the same fixed value the
+			// observations carry, so the type channel reads a presence marker, never real internals.
+			const double health = app->EnvironmentPlantFogHidden(plant) ? -1.0 :
+				static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
 			board[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] += HasHistory() ? static_cast<float>(health) : health;
 		}
 	for (Zombie* zombie : state->mZombies)
@@ -297,17 +300,25 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		{
 			if (plant->mDead || plant->mSquished || plant->mRow < 0 || plant->mRow >= 6 || plant->mPlantCol < 0 || plant->mPlantCol >= 9) continue;
 			const int cell = plant->mRow * 10 + plant->mPlantCol;
+			// task70 B5: a fog-hidden plant contributes exactly what the JSON decoders compute
+			// from the "unknown" (-1) fields the observations carry, so the C++ student input
+			// and the python student input stay identical on fog frames.
+			const bool aHidden = app->EnvironmentPlantFogHidden(plant);
+			const PlantState aState = aHidden ? static_cast<PlantState>(-1) : plant->mState;
+			const int aCountdown = aHidden ? -1 : plant->mStateCountdown;
+			const int aSpecial = aHidden ? -1 : plant->mDoSpecialCountdown;
+			const int aLaunch = aHidden ? -1 : plant->mLaunchCounter;
 			double progress = 0;
 			if (plant->mSeedType == SeedType::SEED_POTATOMINE)
 			{
-				if (plant->mState == PlantState::STATE_NOTREADY) progress = 1.0 - plant->mStateCountdown / 1500.0;
-				else if (plant->mState == PlantState::STATE_POTATO_RISING || plant->mState == PlantState::STATE_POTATO_ARMED) progress = 1.0;
+				if (aState == PlantState::STATE_NOTREADY) progress = 1.0 - aCountdown / 1500.0;
+				else if (aState == PlantState::STATE_POTATO_RISING || aState == PlantState::STATE_POTATO_ARMED) progress = 1.0;
 			}
 			else if (plant->mSeedType == SeedType::SEED_CHERRYBOMB || plant->mSeedType == SeedType::SEED_JALAPENO)
-				progress = 1.0 - plant->mDoSpecialCountdown / 100.0;
+				progress = 1.0 - aSpecial / 100.0;
 			board[98 * Cells + cell] = std::max(static_cast<double>(board[98 * Cells + cell]), progress);
 			if (plant->mLaunchRate > 0)
-				board[99 * Cells + cell] = std::max(static_cast<double>(board[99 * Cells + cell]), 1.0 - static_cast<double>(plant->mLaunchCounter) / plant->mLaunchRate);
+				board[99 * Cells + cell] = std::max(static_cast<double>(board[99 * Cells + cell]), 1.0 - static_cast<double>(aLaunch) / plant->mLaunchRate);
 		}
 		for (Projectile* projectile : state->mProjectiles)
 		{
