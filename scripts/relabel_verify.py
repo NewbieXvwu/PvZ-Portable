@@ -197,9 +197,9 @@ def main():
         parser.error("--new-label must be a directory name")
     if args.out.resolve().is_relative_to(args.data.resolve()):
         parser.error("--out must be outside the source archives")
-    from pvz_frame_store import frame_paths
+    from pvz_frame_store import archive_seed, frame_paths
     paths = [path for path in frame_paths(args.data) if path.parent.name == args.label]
-    paths.sort(key=lambda path: int(path.parent.parent.name.removeprefix("seed_")))
+    paths.sort(key=lambda path: archive_seed(path.parent.parent.name))
     paths = paths[args.seed_offset:args.seed_offset + args.seeds]
     if len(paths) != args.seeds:
         parser.error("requested archive range is unavailable")

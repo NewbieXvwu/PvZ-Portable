@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "python"))
 sys.path.insert(0, str(ROOT / "scripts"))
 
-from pvz_frame_store import frame_paths, read_frames, write_frames
+from pvz_frame_store import archive_seed, frame_paths, read_frames, write_frames
 from relabel_verify import _check_frame
 from render_episode import DEFAULT_RESOURCE_DIR, _frame, load_training_task, training_task_kwargs
 
@@ -83,7 +83,7 @@ def main():
     if args.workers < 1 or args.seeds < 0 or args.seed_offset < 0:
         parser.error("进程数必须为正，局数和起始位置不能为负")
     paths = sorted((path for path in frame_paths(args.data) if path.parent.name == args.label),
-                   key=lambda path: int(path.parent.parent.name.removeprefix("seed_")))
+                   key=lambda path: archive_seed(path.parent.parent.name))
     paths = paths[args.seed_offset:args.seed_offset + args.seeds if args.seeds else None]
     if not paths or (args.seeds and len(paths) != args.seeds):
         parser.error("请求的档案范围不存在")

@@ -124,6 +124,14 @@ class CompactLoaderTest(unittest.TestCase):
                                sources=archive_fingerprint(self.data, {"fast"}))
         verify(self.data, options, pack_path(self.data, options))
 
+    def test_demo_start_archives_pack_under_their_future_seed(self):
+        """Demo-start games live in seed_<demo>_f<future>; packing them used to crash on int('f44300000')."""
+        path = self.data / "seed_20261032_f44300000" / "fast" / "frames.jsonl"
+        path.parent.mkdir(parents=True)
+        write_frames(path, game_frames(60))
+        loaded = self.load()
+        self.assertIn(44300000, set(loaded[6].tolist()))
+
     def test_the_store_hoists_the_constant_plane(self):
         rows = self.load()
         self.assertGreater(len(rows[0].planes), 0)
