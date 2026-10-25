@@ -133,12 +133,14 @@ def main():
         'roof': Rows(new_boards[roof], new_scalars[roof], new_won[roof], new_seeds[roof], new_stop[roof],
                      allow_empty=True),
     }
-    old_boards, old_scalars, old_won, old_seeds, old_stop, _ = load_decisions(
-        args.old_data, held)
-    sources['old_decision'] = Rows(old_boards, old_scalars, old_won, old_seeds, old_stop)
+    old_shards = sorted(Path(args.old_data).glob('*.pt')) if Path(args.old_data).is_dir() else []
+    if old_shards:
+        old_boards, old_scalars, old_won, old_seeds, old_stop, _ = load_decisions(
+            args.old_data, held)
+        sources['old_decision'] = Rows(old_boards, old_scalars, old_won, old_seeds, old_stop)
     ep = load_episodes(args.episodes)
     sources['old_episode'] = Rows(*ep)
-    dropped = []
+    dropped = [] if old_shards else ['old_decision']
     for name in list(sources):
         if len(sources[name].fit) == 0 or len(sources[name].val) == 0:
             # A cohort that produced no non-terminal row cannot carry its pre-registered
