@@ -6,10 +6,34 @@
 
 训练种子分别为 60000000–60008191、60100000–60108191、60200000–60208191，评估分别为 61000000–61000031、61100000–61100031。2026-10-25 机械扫描主目录与全部工作树的 artifacts/configs 清单，共 53889 个 JSON、748 项含种子任务、968772 个现有唯一种子，新增 24672 个种子与它们交集为零。包含现有倍率清单。扫描明细在本机 `artifacts/task75/seed_audit.json`。
 
-## 观测审查（实现中）
+## 观测审查
 
-L25 引擎把僵尸缩放设为 0.5，并把各部分血量除以四。完整观测有当前与最大血量，精简帧丢弃最大血量，v2 和 C++ 学生仅有当前血量，受伤的普通僵尸与小僵尸缺乏明确体型区分，需补充体型字段。
+### L25：小僵尸体型（已补）
 
-L30 原生开局是空的十槽传送带，p9k 变体由 reset 写入九张初始牌并把容量改成九槽。两者之后仍按游戏发牌，免费种植，容量差异会影响满带与补卡节奏。
+引擎把小僵尸（`ZOMBIE_LITTLE`）画成一半大、血量也按比例压低，碰撞与格子占用不变。改动前：完整观测有当前/最大血量，lean 帧丢最大血量，v2 与 C++ 学生只有当前血量，于是受伤的小僵尸与普通僵尸在特征上分不开。
 
-L40 是 StormyNight，`StageHasFog=false`。既有 human/human_v2 均未处理暴风雨黑幕，新任务另用 `fog_observation: storm`。观测实现、测试与96局老师冷启动结果待续。
+现在：
+
+- 完整观测 `zombies[i]` 增加 `scale`（绘制缩放：普通 1.0、小僵尸 0.5）；lean 帧与完整帧逐字段一致，不再丢体型。
+- v2 的 `raw["zombies"][i]` 第 4 个分量就是 scale（`[has_object, helm, shield, scale]`）；既有三种编码（v2 / v2fog / v2fogstack4）的签名不变。
+- C++ 学生输入新增 `v2size` 编码：v2 的 9 通道后追加 1 个"每格僵尸体型之和"通道（`OBS_EXTRA['v2size'] = (10, 7)`）。
+
+证据：`python/test_native_conveyor.py::test_little_zombie_size_survives_full_lean_v2_and_native_student` —— L25 原生传送带跑 8000 tick 后，完整观测所有僵尸 `scale == 0.5`、v2 `[3] == 0.5`；lean 帧 `_frame()` 与完整帧相等；`v2size` 通道非空，且与 C++ 侧 `rollout_predict` 吐出的 board/scalars 逐位相等。
+
+### L40：暴风雨黑屏（已补，新取值 storm）
+
+L40 是 StormyNight，`StageHasFog=false`：引擎没有雾，但雷雨周期性把整屏压黑（`EnvironmentStormHidden`），闪电亮起时才看得见。既有 `human` / `human_v2` 只按雾量遮挡，对 L40 什么都不遮，等于透视。
+
+新增 `fog_observation: 'storm'`，直接拿引擎的绘制判定（`EnvironmentStormHidden()` 与 `StormNightOverlay()` 的透明度）当 `fog_amount`，与 `human` 共用同一条遮挡路径：
+
+- 黑屏时实体列表（zombies/plants/projectiles/defenses/grid_items/coins）、v2 实体通道、`enemy_zombies_on_screen`、每格 `plant_types`/`grid_item_types` 全空；闪电亮起时恢复成与特权状态逐字段一致。
+- 遮挡只作用于观测：同一 tick 的 `state_hash` 与特权状态，和 `xray` 跑出来的完全相同（`test_storm_masks_scene_but_preserves_raw_state_and_lean_alignment`）。
+- v2 / v2fog 的 Python 特征与 C++ 原生特征在黑屏、闪电两种时刻逐位相等（`test_storm_python_native_features_match_during_blackout_and_flash`）。
+
+原族（None / human / human_v2 / xray）逐位不变：新旧构建在六个任务上的 48 份 full/lean 记录与状态哈希一致，五种既有学生编码签名不变。
+
+### L30：原生开局与 p9k 覆盖开局
+
+- 原生（`pool_l30_orig_*`）：十张空槽、容量 10，reset 后由引擎按关卡自带的传送带种子发牌，允许表是关卡的 [0,2,4,11,12,13,14]（豌豆 / 樱桃 / 土豆雷 / 墓碑吞噬者 / 魅惑菇 / 胆小菇 / 寒冰菇）。
+- p9k（`pool_l30_eval_p9k`）：reset 写入固定九张初始牌 [0,1,2,3,4,5,7,16,19]（向日葵、坚果、寒冰、双发、睡莲、缠绕水草），容量 9。
+- 差别是两层：初始牌里出现原生传送带根本不会发的植物，以及容量 9 vs 10 改变满带与补卡节奏。观测层不用改（两者都是普通传送带语义、免费种植），但两者数据不可比 —— 不能拿 p9k 的胜率当原生族基线。
