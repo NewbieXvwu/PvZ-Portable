@@ -82,3 +82,4 @@
 用户打通 L32：`demo_fog_32_snow_m200`（磁力菇换寒冰射手，2.0 倍；30 波、1309 个动作、被吃 28 株其中零费 26、0 小推车，verified）。存档在主检出 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200`（只读，先拷进 demo 工作树同路径再用）。
 1. 照第 1 步做 12 点接手扫描（老师/学生各 8 局，`--future-seeds`），报老师过 50% 与 8/8 的最早点、输局归因（用户说后期是在雾里布坚果防线、前面垫零费小喷菇）。
 2. 在 `configs/human_demo_tasks.json` 给它加 `demo_start`（阶梯取扫描结果，种子块与现有全部段不相交），照第 2 步的测试与 DESIGN 登记；提交并 push origin demo。部署由主控做。
+- 追加（同日）：用户又打通 L34 `demo_fog_34_cactus_snow_m200`（30 波、1198 动作、被吃 29 其中零费 28、0 小推车，verified；打法：开局看到有气球就在第三列种仙人掌，再上寒冰射手和大喷菇）。存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261034/demo_fog_34_cactus_snow_m200`。L32 做完后对它做同样的扫描与起点格。
