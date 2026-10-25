@@ -346,10 +346,10 @@ def hotspots(args):
             'top': [{'symbol': symbol, 'samples': count, 'share': count / values['samples']}
                     for symbol, count in counts.most_common(12)],
             'categories': {name: sum(count for symbol, count in counts.items()
-                                     if hotspot_category(symbol) == name)
+                                     if hotspot_category(symbol) == name) / values['samples']
                            for name in HOTSPOT_NAMES if name != 'unlisted'},
         }
-        cells[cell]['categories']['unlisted'] = values['samples'] - sum(counts.values())
+        cells[cell]['categories']['unlisted'] = (values['samples'] - sum(counts.values())) / values['samples']
     summary = {
         'samples': total,
         'categories': {name: categories[name] / total for name in HOTSPOT_NAMES},
