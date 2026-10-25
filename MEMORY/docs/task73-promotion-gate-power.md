@@ -43,6 +43,19 @@
 
 ## 问题
 
+## 结果（task73b：门禁 v2 已实施，待主控部署）
+
+- **门禁 v2 实现**（`pvz_promotion.py` / `promotion_gate.py`，`GATE_VERSION=2`）：1536 对（8 任务×192 种子）、非劣界仍 −3pp、zone-McNemar 否决保留。种子来自专用池 **[31024, 65536)**，由 git 外账本 `~/pvz-logs/gate_seed_ledger.json`（fcntl 锁 + 原子写 + 只追加）按池顺序分配连续块；**耗尽抛 `SeedPoolExhausted` 停门禁，不回绕重用**；账本池号不一致/损坏/重叠均报错。现役与候选同轮在相同新种子上重跑（门禁本就双侧评估，契约/策略里显式声明不缓存旧成绩）。**旧 v1 证书照旧可验证**：`contract`/`freeze_panel`/`decide`/`policy` 全部按记录版本重放（v1 策略字典逐键不变，v1 清单验证 64 对语义不变），v1 流程完全不碰账本。门禁新增 `--gate-version {1,2}`（默认 2）、`--seed-ledger`、`--seed-block START,END`（只接受账本已登记块，未登记直接拒绝）。
+- **管线协同**（`curriculum_queue.py`）：后台评估任务在**提交点**（持久化的 job 字典上）一次性分配种子块并存入 state，`deepcopy` 给 `_run` 的副本与外层共享同块——续跑/陈旧重评/重启都不会二次分配（修复过程中发现并堵住了一个“副本分配→外层契约永失配→无限重评烧账本”的漏洞，插桩验证每任务恰 1 次分配）。门禁子命令带 `--gate-version/--seed-block/--seed-ledger`；启动面板校验用探针块（纯验证，不碰账本）；`--seed-ledger` 新 CLI 参数（默认 `SEED_LEDGER_DEFAULT`，必须绝对路径）。池耗尽在提交点即抛错停门禁。
+- **测试**：`test_promotion.py`（v2 面板分块/1536 对 decide/块校验拒绝/v1 策略字典逐键兼容）+ `test_promotion_evaluation.py`（账本顺序分配不重用、断点续跑不重复分配、池耗尽拒绝回绕、v1 全流程证书可读、现役双侧同轮重评、未登记块拒绝）+ 管线/队列夹具 v2 化。相关 4 个测试文件 **74 通过 + 4 子测试**（含 v1 旧用例全部保留通过）；另做了 `--seed-block` 冒烟：预分配→门禁复用（账本仍 1 块）、未登记块拒绝。
+- **种子窗审计**（[gate-v2-seed-window-audit.json](gate-v2-seed-window-audit.json)，结论 clean）：窗口 [31024,65536) 与全部已知种子段零交集——训练帧种子标签 161,300 个（min 1,600,000 / max 46,000,167）窗内 0；582 份已记录评估输出（games.jsonl/games.json，全部工作树 artifacts + pvz-logs）窗内 0；478 份含种子列表的清单/面板/配方窗内 0；human_demo_tasks.json 示范种子窗内 0；task67/70/73 产物段窗内 0。核对办法与来源 SHA256 已写入审计 JSON。
+- **部署交主控**：账本随首次 v2 分配惰性创建；升级后旧任务（无 seed_block）会自然分配新块并在新目录重评一次，旧目录不受影响。
+
+## 问题
+
+- v1 的 `_evaluate` 例外路径写 `version=GATE_VERSION` 的 error.json——v2 下 error 决策的 policy 字段自动为 v2 形状，与 1024 行的版本一致性检查自洽，无需额外改动。
+- 种子窗审计依赖“评估输出与清单已落盘”的完整性；若存在未落盘的历史游戏消耗了窗内种子，无法从磁盘证据发现。已扫描全部已知落盘位置（582 份对局输出 + 478 份清单），无任何命中。
+
 ## 主控追加（2026-10-25，task73b：门禁 v2，实施）
 结论收到。主控定：
 - 已在组边界手动启用 round 11（新种子复测 +6.6pp [+1.6, +11.7]），curriculum.log 记了理由。
