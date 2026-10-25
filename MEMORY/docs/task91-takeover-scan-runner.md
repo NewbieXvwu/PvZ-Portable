@@ -45,6 +45,10 @@
   学生 16 局，<12 点全量的一半。期间修正：等距 4 → 5 点（L46 s20261048 的非单调隆起 622 过线/725 跌回
   被 4 等距漏掉，差 2 档；5 等距后 Δ=0）。跨种子块噪声实测 1–2 档（8 未来小样本，边界档随块翻转），
   阶梯只认同块实测。adaptive 结果结构统一为 run 的 {wins,games,rows}（修了混读崩溃）。
+- 2026-10-26（交接）：CodeBuddy 收工交回 Codex。全部五步完成、已推送（HEAD a299ce07，工作树干净，
+  无残留游戏进程）。工具入口与用法见 [takeover-scan-runner.md](takeover-scan-runner.md)；
+  生产扫描（12 份全量 adaptive + register）与人类示范同块回测（存档在 Mac）待接手方执行。
+  注意：本分支 llmimport 相对 origin/pvz-env behind 3（上游有新提交），合并由主控决定。
 
 ## 问题
 
