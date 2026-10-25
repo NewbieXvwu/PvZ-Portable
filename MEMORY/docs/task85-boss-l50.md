@@ -50,3 +50,21 @@
 2. **候选反事实**：照 task75c 的方法，强加全部合法格，同种子配对 16 局（1.0 倍）。看胜率和 Boss 剩余体力是否改变，判断是候选遗漏、叶值尺度，还是局面本身早已无救。
 3. **录制器能否录传送带关**：核对 `scripts/human_demo.py` 加 C++ HumanInput 能否在原生传送带关（L50，以及 L30）里点选传送带上的牌并种下。不能就写清楚缺什么、要改多少（只写方案，不实施）。主控据此决定是否请用户录 L50 / L30 的示范。
 4. 结论写进 `MEMORY/docs/boss-l50.md`，`git push origin boss50`。Mac 上每个任务最多 6 个游戏进程。
+
+## 主控追加（2026-10-26 00:30，task85c：准备 L50 / L30 人类示范，并解剖 L30）
+task85b 的结论是：强加全部合法格也是 0/16，录制器可以直接录原生传送带关。所以下一步请用户示范。执行者：Mac Codex `codex-plus2b`，工作树沿用 `boss50`（先 `git merge origin/pvz-env`）。Mac 上每个任务最多 6 个游戏进程。
+
+1. **录制任务**。在 `configs/human_demo_tasks.json` 登记两个任务，DESIGN 同步登记：
+   - `demo_boss_50_orig_m100`：L50，1.0 倍；
+   - `demo_pool_30_orig_m100`：L30，1.0 倍。
+   要求：
+   - 空牌组，`conveyor_start='original'`；
+   - 种子用 2026105x / 2026103x 段里没用过的，机械核对；
+   - 先用 `scripts/human_demo.py` 无头 reset 两个任务。
+2. **传送带回放的端到端测试**。用 `env.human_input()` 脚本化地点传送带上的牌、再点草坪种下，写成一份 5–20 个操作的短存档，确认 `human_demo.py verify` 通过。测试进 `python/`，证明录得了、也回放得了。这一步不需要用户。
+3. **L30 输局解剖**。照 task85b 第 1 步的格式：r11 + 生产老师，L30 原生 1.0 倍取 4 局带 frames 的输局，逐波列出：
+   - 破防的僵尸类型和行；
+   - 当时传送带上有什么牌；
+   - 老师选了什么、没选什么。
+   只用引擎事实，不写打法规则。
+4. 结论写 `MEMORY/docs/boss-l50.md` 新的一节，`git push origin boss50`。合并与部署由主控做。
