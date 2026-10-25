@@ -41,5 +41,9 @@
   `crazy_dave_pool ∩ [0,40) ∩ not_recommended==0`（原稿用未过滤 `available_plants`，含升级卡，纯升级卡组是种不下的结构性死局）。
   种子段 93_000_000 起，对全仓 artifacts 90M+ 数字扫描 0 撞车；生产引擎= `cq/build/pvz-portable`（与 d7q 清单指纹一致）。
   `test_deck_perturb.py` 9 过。下一步：跑生成脚本产出三族清单。
+- 2026-10-26 CodeBuddy：三族清单已生成 → `/home/newbiexvwu/PvZ-search/artifacts/stage4/random_deck_panel.json`
+  （本地派生不入 git）。day_l7/night_l12/pool_l21 各 96 种子全部拿到引擎校验收据（cold 32 + tiers 16 + train 48）；
+  长度 6–10 近均匀；泳池族睡莲(16) 96/96；夜间整组警告拒绝全来自引擎 `sun`（154/263 次），无手写规则；
+  heldout 签名碰撞 0；引擎指纹 b642614f（= 生产 cq）。下一步：冷启动 32 局/族（老师 + r11）。
 
 ## 问题
