@@ -19,7 +19,7 @@ sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 import numpy as np
 import torch
 import torch.nn.functional as F
-from pvz_value_net import load_value_net
+from pvz_value_net import ENCODER_V2, load_value_net
 from value_widen_audit import seed_key
 from task78_data import sha
 
@@ -361,7 +361,7 @@ def main():
             best, best_epoch, stale = total, epoch, 0
             torch.save(dict(
                 state_dict={k: v.detach().cpu().clone() for k, v in model.state_dict().items()},
-                encoder=2, width=model.conv[0].out_channels, context=True,
+                encoder=ENCODER_V2, width=model.conv[0].out_channels, context=True,
                 trained_on=used, init=args.init, epoch=epoch,
                 validation=total, components=components,
                 mix=mix, dropped_sources=dropped,
