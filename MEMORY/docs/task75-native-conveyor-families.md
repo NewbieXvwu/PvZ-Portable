@@ -30,6 +30,9 @@ L10、L20 的原生传送带族已经在 qc 里，L20 学生从 0 练到了 45/4
 
 ## 结果
 
+- 2026-10-25：登记六个独立原生传送带任务与 60M 训练 / 61M 评估种子段，生成器不改旧面板。L40 的 storm 观测协议与遮挡在下一步实现，尚未启动冷启动测量。
+- 种子机械审计：53889 个 JSON、748 项含种子任务、968772 个现有唯一种子与新增24672个种子零交集，包含倍率清单。清单静态测试 1 passed。
+
 ## 问题
 
 Mac 上的模型路径：静态网 `/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt`（主控已从台式机拷来，SHA 24858410…）；叶值 v5 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt`（8a636d33…，只读）；学生 dw4i_s1 同 demo 工作树的现有路径。
