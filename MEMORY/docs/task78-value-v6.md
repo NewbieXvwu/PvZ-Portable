@@ -64,6 +64,10 @@
 - 2026-10-25 续作：已完成的新标签中59个计划任务逐一通过原始标签身份、全部候选、完整动作链与root重放状态审计，403条非终局叶，失败0；另21个任务尚未完成。审计快照在ignored `artifacts/task78/label_audit_partial.json`，不冒充全量导出。
 - 2026-10-25 续作：复核task72b说明，94行decision是接手后老师续走序号，不能当成人类原始示范的decision；原始/tmp/task72b探针源码、接手点和状态轨迹仍需取得。现有 `task78_truth.py` 的直接按decision重放流程尚不能定位这94态，正式复评尚未运行，须修复后再用。
 
+
+- 2026-10-25 续作：正式训练器恢复原预登记五类配比：old episode 64 / old L7 branch 192 / old pool decision 128 / fog 64 / roof 64。此前生成的同源重建缓存仅留诊断，不充当v5原语料。原分片用mmap读取，新的fit采样对group/world/root/horizon等权；原分割行数、全部97 branch来源、64 pool分片、episode缓存与审计清单必须与v5检查点匹配。
+- 2026-10-25 续作：从v5检查点机械取出原语料规格：branch fit/val=324559/29446、episode=75136/9600、pool decision=3404/456，共442601行（更正此前129992行的笼统描述）。完整恢复/路径映射规格见 [原语料要求](task78-v5-corpus-requirements.json)。训练前拒绝部分新数据导出、评估seed/future交叠和已有run目录；检查点记录初始化与新增future身份，写入采用原子替换。41项相关测试通过；尚未开始GPU训练。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 ### 来源、抽样与训练

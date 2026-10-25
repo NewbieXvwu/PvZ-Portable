@@ -1,0 +1,165 @@
+{
+ "baseline_sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+ "baseline_checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+ "original_branch_paths": [
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch/z13_384.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610256.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610257.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610258.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610259.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610260.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610261.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610262.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610263.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610264.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610265.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610266.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610267.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610268.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610269.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610270.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610271.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610272.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610273.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610274.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610275.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610276.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610277.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610278.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610279.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610280.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610281.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610282.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610283.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610284.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610285.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610286.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610287.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610288.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610289.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610290.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610291.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610292.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610293.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610294.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610295.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610296.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610297.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610298.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610299.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610300.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610301.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610302.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610303.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610304.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610305.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610306.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610307.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610308.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610310.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610311.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610312.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610313.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610314.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610315.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610316.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610317.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610318.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610319.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610320.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610321.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610322.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610323.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610324.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610325.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610326.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610327.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610328.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610329.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610330.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610331.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610332.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610333.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610334.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610335.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610336.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610337.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610338.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610339.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610340.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610341.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610342.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610343.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610344.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610346.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610347.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610348.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610350.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610351.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610352.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610353.pt",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/branch3/z15d_shards/seed_1610355.pt"
+ ],
+ "original_decision_directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/data",
+ "original_external_audit": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/full_audit_manifest.json",
+ "decision_shards": 64,
+ "required_splits": {
+  "branch": {
+   "fit": 324559,
+   "validation": 29446
+  },
+  "decision": {
+   "fit": 3404,
+   "validation": 456
+  },
+  "episode": {
+   "fit": 75136,
+   "validation": 9600
+  }
+ },
+ "required_episode_cache": [
+  "episodes.json",
+  "boards.npy",
+  "scalars.npy",
+  "rows.npz"
+ ],
+ "mix_per_512": {
+  "old_episode": 64,
+  "old_branch": 192,
+  "old_decision": 128,
+  "fog": 64,
+  "roof": 64
+ },
+ "restored_root": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/original_v5",
+ "descriptor_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/original_v5/corpus.json",
+ "descriptor_schema": {
+  "baseline_sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+  "branches": [
+   {
+    "source_path": "exact original branch path listed above",
+    "path": "absolute restored file path",
+    "sha256": "restored file SHA256"
+   }
+  ],
+  "decision_source_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/data",
+  "decision_shards": [
+   {
+    "path": "absolute restored decision shard path",
+    "sha256": "restored file SHA256"
+   }
+  ],
+  "audit_manifest": {
+   "source_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/vnet/artifacts/task30/full_audit_manifest.json",
+   "path": "absolute restored audit path",
+   "sha256": "restored file SHA256"
+  },
+  "episode_files": [
+   {
+    "path": "absolute restored episode cache file path",
+    "sha256": "restored file SHA256"
+   }
+  ]
+ },
+ "training_started": false,
+ "original_corpus_received": false
+}
