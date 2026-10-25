@@ -36,10 +36,10 @@ class CurriculumRulesTest(unittest.TestCase):
         ids = training_base_ids()
         self.assertEqual({name for name in ids if name.startswith('roof_')},
                          {'roof_l41_train_r7'})
-        # task68: only fog_user L31 is admitted; fog_user_v2 is registered but held out until the
-        # paired human/human_v2 cold start (task70); the task45 fog_f8/f8p families stay out.
-        self.assertEqual({name for name in ids if name.startswith('fog_')},
-                         {'fog_user_l31_snow'})
+        # task79b admits the measured L36-L38 human_v2 bases; L39 remains demonstration-only.
+        self.assertEqual({name for name in ids if name.startswith('fog')},
+                         {'fog_user_l31_snow', 'fog79b_l36_best', 'fog79b_l37_best',
+                          'fog79b_l38_best'})
         self.assertIn('pool_l25_orig_train', ids)
         self.assertEqual(CURRICULUM_LADDERS['native_l25'], [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
 
