@@ -1,0 +1,32 @@
+{
+ "status": "sources_selected_not_replay_verified",
+ "available": {
+  "roof_l41": 168,
+  "fog_l31_human": 144,
+  "fog_demo_l33_cattail": 24,
+  "fog_demo_l33_cactus": 24,
+  "fog_demo_l32": 24,
+  "fog_demo_l31": 24
+ },
+ "selected": {
+  "fog_demo_l31": 8,
+  "fog_demo_l32": 8,
+  "fog_demo_l33_cactus": 8,
+  "fog_demo_l33_cattail": 8,
+  "fog_l31_human": 8,
+  "roof_l41": 24
+ },
+ "selected_archives": 64,
+ "selected_roots": 128,
+ "source_manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/sources.json",
+ "source_manifest_sha256": "b3b86e2996e9e6b1173ac48264eb6858c00ee3a51470280b3b069b8976c2edf0",
+ "baseline_sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+ "missing_v5_declared_sources": 99,
+ "v5_declared_sources": 99,
+ "direct_reserved_seed_collisions": [],
+ "full_panel_seed_audit_complete": false,
+ "replay_verified": false,
+ "trained": false,
+ "evaluated": false,
+ "demo_sources_missing": 0
+}
