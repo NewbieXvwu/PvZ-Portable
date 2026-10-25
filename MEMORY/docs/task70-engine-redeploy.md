@@ -65,5 +65,10 @@
 - [A4] 吞吐 ABBA **PASS**：16 局学生局（day 8 + pool 8）串行 ABBA，中位配对耗时比 **1.0152**（≤1.03），min 0.757 / max 1.648（受生产 qc 16 进程挤占的噪声），16/16 局决策数逐局相同。证据 artifacts/task70/throughput_abba.json。
 - [C] HF 清理 dry-run（--cleanup-remote-dry-run）：远端现存 40 个 transfer/ 包（p21w34m…p29w37m 共 40 个池族标签 + 4 个非标签文件），**全部无已验证回执**——dw4/dw5 旧回执（137 标签）与共享 journal（377 标签，2026-10-24 21:41 由另一侧 importer 写入）都不含它们，即这些都是**尚未导入的待用上传**；所有已导入的历史包已不在 HF 上。结论：**无可删项，一个都不删**（不满足"已导入"判据）。清单已核验（repo realnewbiexvwu/pvz-agent-artifacts，revision 33353855）。今后每次 refresh 导入校验成功后会自动删包并记 remote_deleted_at，失败不删。
   40 个标签：p21w34m-38m, p22w34m-38m, p23w34m-38m, p24w34m-38m, p26w34m-38m, p27w33m-38m, p28w33m-38m, p29w33m-37m。
+- [B3] 老师冷启动（deploy4 16989f23…，生产参数：dw4i_s1 + 叶值 v4 + static branch1，dagger β=1，`command_for` 生产命令形态，32 局）：
+  1. `fog_user_v2_l31_snow_eval`（新种子 49_100_000..31，human_v2 口径）：**8/32**（25%）。证据 artifacts/task70/cold/cold_start.json。
+  2. 配对对照：同批 32 种子改 `fog_observation: human`（其余全同）：**5/32**。证据 artifacts/task70/cold_human_control/。
+  3. 口径交叉对照：task68 旧种子 43_700_000..31 + human_v2：**5/32**。证据 artifacts/task70/cold_v2_old_seeds/。
+  4. **配对结论（主控要求）**：新种子块上 human_v2 vs human 配对表——两者都赢 0、都输 19、仅 v2 赢 8、仅 human 赢 5（13 个赢种子完全不相交），精确 McNemar 双侧 p=0.58，**口径差异不显著**。49.1M 块的绝对胜率低是种子块难度，不是 human_v2 口径的锅；与 task67 的 25/32 本来就不可直接比（种子段、引擎、叶值模型三者都不同，见 [B3-复现]）。
 
 ## 问题
