@@ -14,6 +14,12 @@ Gate versions:
   fog (fog_user L31, human observation) and roof (L41 r7) - and the floor
   day_l9 holdout replaced by a measured in-band holdout. 1920 pairs. Decision
   rules unchanged; v1/v2 certificates stay verifiable.
+
+task88 extends the v2/v3 seed pool from one window to an ordered list
+(SEED_POOLS_V2). Blocks are still handed out in order and never reused; the list
+only says what to do when the first window runs out. The panel, the decision
+rules, the policy document and GATE_VERSION are untouched, so v2/v3 certificates
+issued before task88 stay byte-identical and verifiable.
 """
 from __future__ import annotations
 
@@ -53,7 +59,13 @@ V2_PANEL = 'v2-task73b'
 V3_PANEL = 'v3-task73c'
 VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2, V3_PANEL: 3}
 V1_POOL = (30000, 30128)
-SEED_POOL_V2 = (31024, 65536)
+# task88: ordered pool list. [31024, 65536) was registered for task73b and is
+# nearly spent (ledger allocated up to 36272 on 2026-10-26); the second window is
+# 1,000,000 seeds, i.e. ~520 v3 rounds, and sits above every other registered
+# segment (highest is 83,000,307, llmplay robustness). Allocation walks the list
+# in order, so extending it never moves a block that was already issued.
+SEED_POOLS_V2 = ((31024, 65536), (100_000_000, 101_000_000))
+SEED_POOL_V2 = SEED_POOLS_V2[0]  # legacy name: the window v2/v3 were registered against
 V2_SEEDS_PER_TASK = 192
 V3_SEEDS_PER_TASK = 192
 SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/gate_seed_ledger.json'
@@ -73,6 +85,11 @@ def policy(version=GATE_VERSION):
                     pair_count=V2_SEEDS_PER_TASK * len(PANEL_TASKS),
                     episode_count=2 * V2_SEEDS_PER_TASK * len(PANEL_TASKS),
                     seeds_per_task=V2_SEEDS_PER_TASK,
+                    # Registered window of this gate version, kept verbatim after
+                    # task88 extended the pool list: the policy document is hashed
+                    # into every contract, so editing it would invalidate in-flight
+                    # certificates. The ledger records which window each block came
+                    # from; see SEED_POOLS_V2.
                     seed_pool=list(SEED_POOL_V2),
                     seed_ledger=SEED_LEDGER_DEFAULT,
                     seed_reuse='never; ledger-allocated contiguous block per round, '
@@ -87,6 +104,11 @@ def policy(version=GATE_VERSION):
                     pair_count=V3_SEEDS_PER_TASK * len(PANEL_TASKS_V3),
                     episode_count=2 * V3_SEEDS_PER_TASK * len(PANEL_TASKS_V3),
                     seeds_per_task=V3_SEEDS_PER_TASK,
+                    # Registered window of this gate version, kept verbatim after
+                    # task88 extended the pool list: the policy document is hashed
+                    # into every contract, so editing it would invalidate in-flight
+                    # certificates. The ledger records which window each block came
+                    # from; see SEED_POOLS_V2.
                     seed_pool=list(SEED_POOL_V2),
                     seed_ledger=SEED_LEDGER_DEFAULT,
                     seed_reuse='never; ledger-allocated contiguous block per round, '
@@ -102,9 +124,11 @@ def _freeze_ledger_panel(document, spec, seed_block, per_task, panel_name, versi
     if seed_block is None or [int(s) for s in seed_block] != list(seed_block) or len(seed_block) != 2:
         raise ValueError(f'gate v{version} requires the ledger-allocated seed block')
     start, end = int(seed_block[0]), int(seed_block[1])
-    if start < SEED_POOL_V2[0] or end > SEED_POOL_V2[1] or end - start != per_task * len(spec):
-        raise ValueError(f'seed block [{start}, {end}) is outside the gate pool '
-                         f'{list(SEED_POOL_V2)} or has the wrong size')
+    if not any(low <= start and end <= high for low, high in SEED_POOLS_V2):
+        raise ValueError(f'seed block [{start}, {end}) is outside the gate pools '
+                         f'{[list(pool) for pool in SEED_POOLS_V2]} or has the wrong size')
+    if end - start != per_task * len(spec):
+        raise ValueError(f'seed block [{start}, {end}) has the wrong size for gate v{version}')
     table = {task['task_id']: task for task in document['tasks']}
     tasks, groups = [], {}
     for index, (zone, name) in enumerate(spec):
