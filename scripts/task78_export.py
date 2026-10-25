@@ -62,8 +62,8 @@ def stop_set(archives, old):
 
 
 def collection_horizons(row, old=False):
-    """Whole-cohort resource amendments recorded before the affected collection."""
-    return (2500, 4000, 6000) if not old and row['group'] == 'fog_l31_human' else (2500,)
+    """Fog retains the original three horizons; the master capped roof at h2500."""
+    return (2500,4000,6000) if not old and row['group'].startswith('fog') else (2500,)
 
 
 def audit_labels(index, horizon, row, manifest, replay):
@@ -240,7 +240,7 @@ def main():
     name = 'export_old.json' if old else 'export.json'
     write_json(ROOT/f'artifacts/task78/{name}',
                dict(source_manifest=str(manifest), source_manifest_sha256=sha(manifest),
-                    complete=args.only is None, selection='frozen whole-cohort horizon amendments',
+                    complete=args.only is None, selection='all fog horizons; master roof h2500 resource amendment',
                     stopping_archives=sorted(i for i, v in stops.items() if v),
                     stopping_floor_added=added,
                     total=total, by_group=summary, shards=shards))

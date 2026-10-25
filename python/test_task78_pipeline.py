@@ -12,11 +12,11 @@ import task78_export as export
 
 
 class StopSetTest(unittest.TestCase):
-    def test_only_the_human_fog_group_retains_three_horizons(self):
-        self.assertEqual(export.collection_horizons(dict(group='fog_l31_human')), (2500,4000,6000))
-        for group in ('fog_demo_l31', 'fog_demo_l32', 'fog_demo_l33_cactus',
-                      'fog_demo_l33_cattail', 'roof_l41'):
-            self.assertEqual(export.collection_horizons(dict(group=group)), (2500,))
+    def test_every_fog_group_retains_the_three_preregistered_horizons(self):
+        for group in ('fog_l31_human','fog_demo_l31','fog_demo_l32',
+                      'fog_demo_l33_cactus','fog_demo_l33_cattail'):
+            self.assertEqual(export.collection_horizons(dict(group=group)), (2500,4000,6000))
+        self.assertEqual(export.collection_horizons(dict(group='roof_l41')), (2500,))
         self.assertEqual(export.collection_horizons(dict(group='pool_p9k'), old=True), (2500,))
 
     def test_region_floor_adds_hash_smallest_archive(self):
@@ -219,6 +219,15 @@ def test_frozen_panel_rejects_retrospective_seed_edit(tmp_path,monkeypatch):
     path.write_text(json.dumps(dict(cells=[dict(seed=2)])))
     with pytest.raises(ValueError,match='preregistration'):
         ab.frozen_panel(root)
+
+
+def test_terminal_panel_sources_cannot_overwrite_training_labels(tmp_path):
+    from task78_collect import paths
+    manifest=tmp_path/'roof_truth/k1/sources.json'
+    replay,labels=paths(manifest)
+    assert replay==manifest.with_name('replay.json')
+    assert labels==manifest.parent/'labels'
+    assert labels!=ROOT/'artifacts/task78/labels'
 
 
 if __name__ == '__main__':

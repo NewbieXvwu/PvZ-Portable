@@ -42,7 +42,10 @@ def paths(manifest):
     """Derive the replay record and label directory that belong to one frozen manifest."""
     name = Path(manifest).name
     replay = Path(manifest).with_name(name.replace('sources', 'replay'))
-    labels = ROOT/('artifacts/task78/labels_old' if name.startswith('old') else 'artifacts/task78/labels')
+    if Path(manifest).parent!=ROOT/'artifacts/task78':
+        labels=Path(manifest).parent/'labels'
+    else:
+        labels = ROOT/('artifacts/task78/labels_old' if name.startswith('old') else 'artifacts/task78/labels')
     return replay, labels
 
 
