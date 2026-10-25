@@ -109,16 +109,19 @@ def archive_problems(meta: dict, archive: Path) -> list[str]:
     task_id = str(task.get('id') or '')
     if not task_id:
         problems.append('meta 缺 task.id')
-    for key in ('level', 'seed'):
+    if task_id and not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]*', task_id):
+        problems.append('meta.task.id 不是安全的任务名')
+    for key in ('level', 'seed', 'zombie_count_multiplier'):
         if task.get(key) is not None and env.get(key) is not None:
-            if int(task[key]) != int(env[key]):
+            if task[key] != env[key]:
                 problems.append(f'meta 自相矛盾：task.{key}={task[key]} vs environment_task.{key}={env[key]}')
     if task_id and task.get('level') is not None:
         match = LEVEL_IN_ID.search(task_id)
         if match and int(match.group(1)) != int(task['level']):
             problems.append(f'task.id={task_id} 编码的是 L{match.group(1)}，meta 写 L{task["level"]}')
     deck = task.get('deck')
-    if not isinstance(deck, list) or not deck:
+    conveyor = task.get('conveyor_start') or env.get('conveyor_start')
+    if not isinstance(deck, list) or (not deck and conveyor != 'original'):
         problems.append('meta 的 task.deck 为空或不是列表')
     if task.get('seed') is None:
         problems.append('meta 缺 task.seed')
@@ -127,6 +130,8 @@ def archive_problems(meta: dict, archive: Path) -> list[str]:
     else:
         if 'won' not in meta['outcome'] or 'final_wave' not in meta['outcome']:
             problems.append('meta.outcome 缺 won / final_wave')
+        if 'result' in meta['outcome'] and bool(meta['outcome'].get('won')) != (meta['outcome']['result'] == 1):
+            problems.append('meta.outcome.won 与 result 不一致')
     try:
         lines = _tick_lines(archive)
     except OSError as error:
@@ -150,7 +155,8 @@ def grade(meta: dict) -> str:
     if not won:
         return 'loss'
     checkpoint = ((meta.get('robustness') or {}).get('checkpoints') or {}).get(ROBUST_WAVE) or {}
-    if checkpoint.get('reached') and int(checkpoint.get('wins') or 0) >= ROBUST_MIN:
+    k = int(checkpoint.get('k') or (meta.get('robustness') or {}).get('k') or 0)
+    if checkpoint.get('reached') and k == SCAN_FUTURES and ROBUST_MIN <= int(checkpoint.get('wins') or 0) <= k:
         return 'full'
     return 'half'
 
@@ -189,6 +195,9 @@ def resolve_family(meta: dict, tasks: dict) -> tuple[str, bool, list[str]]:
     family_deck = [int(value) for value in entry.get('deck') or []]
     if deck != family_deck:
         return base, False, [f'卡组与已登记的 {base} 不同：meta {deck} vs 清单 {family_deck}']
+    for key, default in (('level', None), ('zombie_count_multiplier', 1.0)):
+        if task.get(key, default) != entry.get(key, default):
+            return base, False, [f'{base} 的 {key} 与已登记任务不同']
     if seed in {int(value) for value in entry.get('seeds') or []}:
         return base, False, []
     final = f'{base}_s{seed}'
@@ -229,25 +238,34 @@ def register_tasks(path: Path, entries: list[dict]) -> None:
         # 单行 JSON 也接受：整份重排成仓库惯用的一行一任务。
         document = json.loads(path.read_text(encoding='utf-8'))
         document.setdefault('tasks', []).extend(entries)
-        rebuilt = ['{', '  "tasks": [']
-        encoded = [json.dumps(task, ensure_ascii=False, separators=(',', ':'))
-                   for task in document['tasks']]
-        rebuilt += ['    ' + item + (',' if index < len(encoded) - 1 else '')
-                    for index, item in enumerate(encoded)]
-        rebuilt += ['  ]', '}']
-        path.write_text('\n'.join(rebuilt) + '\n', encoding='utf-8')
+        path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
         load_manifest(path)
         return
     index = closing[-1]
     if index == 0 or not lines[index - 1].strip():
         raise ValueError(f'{path} 的 tasks 数组是空的，拒绝自动登记')
-    if not lines[index - 1].rstrip().endswith(','):
+    if lines[index - 1].strip() != '"tasks": [' and not lines[index - 1].rstrip().endswith(','):
         lines[index - 1] = lines[index - 1].rstrip() + ','
     new_lines = ['    ' + json.dumps(entry, ensure_ascii=False, separators=(',', ':'))
-                 for entry in entries]
+                 + (',' if i < len(entries) - 1 else '') for i, entry in enumerate(entries)]
     lines[index:index] = new_lines
     path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
     load_manifest(path)  # 写坏了立刻报
+
+
+def register_design(path: Path, entries: list[dict]) -> None:
+    """与清单同步登记新族；重复调用不追加已有 task_id。"""
+    text = path.read_text(encoding='utf-8') if path.exists() else ''
+    missing = [entry for entry in entries if f'`{entry["task_id"]}`' not in text]
+    if not missing:
+        return
+    lines = ['\n### task89：LLM 存档自动登记的新族\n',
+             '| task_id | 关卡 | 种子 | 倍率 | 卡组（存档 meta） |',
+             '|---|---|---|---|---|']
+    for entry in missing:
+        lines.append(f'| `{entry["task_id"]}` | {entry["level"]} | {entry["seeds"]} | '
+                     f'{entry["zombie_count_multiplier"]} | {entry["deck"]} |')
+    path.write_text(text.rstrip() + '\n' + '\n'.join(lines) + '\n', encoding='utf-8')
 
 
 # ---------------------------------------------------------------- 扫描作业
@@ -417,7 +435,13 @@ def render_report(rows: list, layers: dict, plan: dict) -> str:
 
 def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
         resource_dir: Path, executable: Path | None, do_verify: bool,
-        future_base: int) -> dict:
+        future_base: int, design_path: Path | None = None) -> dict:
+    if input_path.is_dir():
+        source_path, output_path = input_path.resolve(), dest.resolve()
+        if source_path == output_path or source_path in output_path.parents or output_path in source_path.parents:
+            raise ValueError('输入目录与 dest 不得互相包含（输入只读）')
+    if design_path is None:
+        design_path = (manifest.parent.parent if manifest.parent.name == 'configs' else manifest.parent) / 'DESIGN.md'
     layers = (json.loads(layers_path.read_text(encoding='utf-8')).get('layers') or {})
     layer_of = {task_id: name for name, ids in layers.items() for task_id in ids}
     tasks = load_manifest(manifest)
@@ -516,6 +540,7 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
         shutil.rmtree(staging, ignore_errors=True)
 
         register_tasks(manifest, entries)
+        register_design(design_path, entries)
         rows.sort(key=lambda item: (item['base_task_id'], item['seed']))
         plan = scan_plan(rows, layer_of, future_base)
         return dict(rows=rows, layers=layer_of, plan=plan, registered=entries)

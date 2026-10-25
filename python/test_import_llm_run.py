@@ -86,6 +86,24 @@ class SafeExtractTest(unittest.TestCase):
 
 
 class MetaTest(unittest.TestCase):
+    def test_conveyor_empty_deck_is_valid_but_fixed_empty_deck_is_not(self):
+        with tempfile.TemporaryDirectory() as directory:
+            meta = _meta(task_id='demo_conv_30_orig_m100', level=30, deck=(), multiplier=1.0)
+            meta['task']['conveyor_start'] = 'original'
+            archive = _write_archive(Path(directory), 'a', meta)
+            self.assertEqual(importer.archive_problems(meta, archive), [])
+            del meta['task']['conveyor_start']
+            self.assertTrue(importer.archive_problems(meta, archive))
+
+    def test_rejects_unsafe_id_and_inconsistent_outcome_or_multiplier(self):
+        with tempfile.TemporaryDirectory() as directory:
+            meta = _meta(task_id='../../outside')
+            meta['outcome']['won'] = False
+            meta['environment_task']['zombie_count_multiplier'] = 3.0
+            archive = _write_archive(Path(directory), 'a', meta)
+            problems = importer.archive_problems(meta, archive)
+            self.assertEqual(len(problems), 3, problems)
+
     def test_detects_level_mismatch_between_id_and_meta(self):
         meta = _meta(task_id='demo_roof_46_doom_m200', level=48)
         with tempfile.TemporaryDirectory() as directory:
@@ -117,6 +135,8 @@ class GradeTest(unittest.TestCase):
         self.assertEqual(importer.grade(_meta(won=True, wins=4)), 'half')
         self.assertEqual(importer.grade(_meta(won=True, wins=None)), 'half')
         self.assertEqual(importer.grade(_meta(won=False, wins=8)), 'loss')
+        self.assertEqual(importer.grade(_meta(won=True, wins=5, k=5)), 'half')
+        self.assertEqual(importer.grade(_meta(won=True, wins=9, k=8)), 'half')
 
 
 class FamilyTest(unittest.TestCase):
@@ -158,6 +178,10 @@ class FamilyTest(unittest.TestCase):
         _, _, problems = importer.resolve_family(meta, self.tasks)
         self.assertTrue(problems)
 
+    def test_registered_family_cannot_change_multiplier(self):
+        _, _, problems = importer.resolve_family(_meta(multiplier=3.0), self.tasks)
+        self.assertTrue(problems)
+
 
 class ScanTest(unittest.TestCase):
     def test_points_cover_tail_excluded(self):
@@ -179,6 +203,24 @@ class ScanTest(unittest.TestCase):
 
 
 class RegisterTest(unittest.TestCase):
+    def test_multiple_new_families_are_valid_json_and_registered_in_design(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'tasks.json'
+            path.write_text('{\n  "tasks": [\n    {"task_id":"old"}\n  ]\n}\n')
+            entries = [dict(task_id=name, level=46, seeds=[seed],
+                            zombie_count_multiplier=2.0, deck=[1, 33, 39, 44, 15, 3])
+                       for name, seed in [('new_a', 123), ('new_b', 456)]]
+            importer.register_tasks(path, entries)
+            self.assertEqual(set(importer.load_manifest(path)), {'old', 'new_a', 'new_b'})
+            design = root / 'DESIGN.md'
+            importer.register_design(design, entries)
+            original = design.read_text()
+            importer.register_design(design, entries)
+            self.assertEqual(design.read_text(), original)
+            self.assertIn('`new_a`', original)
+            self.assertIn('`new_b`', original)
+
     def test_append_preserves_existing_lines(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'tasks.json'
@@ -224,6 +266,8 @@ class EndToEndTest(unittest.TestCase):
             self.assertEqual(tasks['demo_roof_46_doom_m200_s20261047']['seeds'], [20261047])
             self.assertEqual(tasks['demo_roof_46_doom_m200_s20261047']['deck'],
                              [1, 33, 39, 44, 15, 3, 2, 17, 4, 35])
+            self.assertIn('`demo_roof_46_doom_m200_s20261047`',
+                          (root / 'DESIGN.md').read_text())
             self.assertEqual(len(result['plan']['archives']), 2)
             self.assertEqual(sum(len(entry['jobs']) for entry in result['plan']['archives']), 48)
             starts = [entry['future_seed_start'] for entry in result['plan']['archives']]
