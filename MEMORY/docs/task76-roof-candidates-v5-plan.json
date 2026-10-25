@@ -234,9 +234,10 @@
   "original_workers": 6,
   "max_game_processes": 2,
   "qc_priority": true,
-  "admission": "Read-only global native-game count; refuse to start if existing games plus requested workers exceeds two. No automatic restart while occupied.",
+  "admission": "Count only the exact frozen task76 engine executable; other tasks do not consume task76 slots. Exclusive task76 controller lock plus at most two pool workers.",
   "completed_receipts_preserved": 602,
   "interrupted_games": "No loss label; resume only missing complete receipts",
-  "game_inputs_and_teacher_unchanged": true
+  "game_inputs_and_teacher_unchanged": true,
+  "scope": "Per task, explicitly clarified by master; not a global limit"
  }
 }

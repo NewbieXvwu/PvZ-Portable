@@ -68,26 +68,29 @@ def test_argmax_compares_sets_without_adversarial_tie_breaking():
 
 def test_memory_cap_rejects_excess_workers_before_launch(monkeypatch):
     import pytest
-    monkeypatch.setattr(audit.base, 'native_game_processes', lambda: [])
+    monkeypatch.setattr(audit.base, 'owned_game_processes', lambda: [])
     with pytest.raises(ValueError, match='one or two'):
         audit.base.require_game_capacity(3)
     audit.base.require_game_capacity(2)
 
 
-def test_existing_games_reserve_capacity_for_qc(monkeypatch):
+def test_existing_task76_games_count_toward_its_two_slots(monkeypatch):
     import pytest
-    monkeypatch.setattr(audit.base, 'native_game_processes',
-                        lambda: [dict(pid=123, executable='/qc/pvz-portable')])
-    with pytest.raises(RuntimeError, match='qc has priority'):
+    monkeypatch.setattr(audit.base, 'owned_game_processes', lambda: [dict(pid=123)])
+    with pytest.raises(RuntimeError, match='task76 slots occupied'):
         audit.base.require_game_capacity(2)
     audit.base.require_game_capacity(1)
 
 
-def test_full_global_budget_starts_no_game(monkeypatch):
-    import pytest
-    monkeypatch.setattr(audit.base, 'native_game_processes', lambda: [dict(pid=1), dict(pid=2)])
-    with pytest.raises(RuntimeError, match='no task76 game started'):
-        audit.base.require_game_capacity(1)
+def test_other_tasks_do_not_consume_task76_game_slots(monkeypatch):
+    processes=[Path('/proc')/str(i) for i in (11,22,33)]
+    executables={11:'/qc/pvz-portable',22:'/other/pvz-portable',33:'/another/pvz-portable-release'}
+    monkeypatch.setattr(Path,'iterdir',lambda path:iter(processes))
+    monkeypatch.setattr(audit.base.os,'readlink',lambda path:executables[int(path.parent.name)])
+    assert audit.base.owned_game_processes()==[]
+    audit.base.require_game_capacity(2)
+    executables[11]=str(audit.base.OUT/'frozen/pvz-portable')
+    assert [g['pid'] for g in audit.base.owned_game_processes()]==[11]
 
 
 def test_holm_controls_the_whole_required_level_family():

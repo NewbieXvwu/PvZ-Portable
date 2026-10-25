@@ -27,39 +27,28 @@ os.environ['PVZ_NO_POPUP'] = '1'
 
 
 
-def native_game_processes():
-    """Read-only global admission check; never signal another task's process."""
+def owned_game_processes():
+    """Inspect only task76's frozen engine; other tasks consume no task76 slots."""
     games = []
+    expected = str(OUT/'frozen/pvz-portable')
     for process in Path('/proc').iterdir():
         if not process.name.isdigit():
             continue
         try:
-            executable = os.readlink(process/'exe')
-        except (FileNotFoundError, ProcessLookupError):
+            executable = os.readlink(process/'exe').removesuffix(' (deleted)')
+        except (FileNotFoundError, ProcessLookupError, PermissionError):
             continue
-        except PermissionError:
-            # System-owned exe links may be hidden; comm remains readable and
-            # retains the pvz-portable prefix even when truncated by the kernel.
-            try:
-                name = (process/'comm').read_text().strip()
-            except (FileNotFoundError, ProcessLookupError):
-                continue
-            except PermissionError as error:
-                raise RuntimeError('cannot inspect game capacity; refusing to launch') from error
-            if name.startswith('pvz-portable'):
-                games.append(dict(pid=int(process.name), executable='unreadable', comm=name))
-            continue
-        if Path(executable.removesuffix(' (deleted)')).name.startswith('pvz-portable'):
+        if executable == expected:
             games.append(dict(pid=int(process.name), executable=executable))
     return games
 
 
 def require_game_capacity(workers):
     if not 1 <= workers <= MAX_GAME_PROCESSES:
-        raise ValueError('master memory limit: one or two game processes only')
-    games = native_game_processes()
+        raise ValueError('master per-task memory limit: one or two game processes only')
+    games = owned_game_processes()
     if len(games) + workers > MAX_GAME_PROCESSES:
-        raise RuntimeError('global game slots occupied; qc has priority; no task76 game started: '
+        raise RuntimeError('task76 slots occupied; no additional task76 game started: '
                            + json.dumps(games))
 
 
