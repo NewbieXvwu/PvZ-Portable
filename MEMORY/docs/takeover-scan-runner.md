@@ -2,6 +2,9 @@
 
 > 2026-10-26。入口 `scripts/takeover_scan.py`（run / adaptive / register），测试
 > `python/test_takeover_scan.py`。任务书：[task91-takeover-scan-runner.md](task91-takeover-scan-runner.md)。
+>
+> 当前状态：工具、LLM同块回测和两份端到端已验证；**第2步人类L46/L48/L49同块回测仍缺存档，任务未全部完成**。
+> 紧凑证据：[takeover-scan-evidence.json](takeover-scan-evidence.json)。
 
 ## 用法
 
@@ -45,8 +48,10 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
 - **自适应预算**：最多9个老师点、2个不同学生点，8未来时最多88局（<192/2）。失败区间补探降低漏掉非单调隆起的风险，
   不能保证发现任意未测点的孤立过线；没有发现过线时报告“已测点均<50%”，不冒充全网格皆失败。
   每点原子保存；中断状态不可登记。独立 `adaptive_trace` 保留本次取点顺序、逐局结果和真实预算。
-- **测试**：`python/test_takeover_scan.py` 当前32项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
+- **测试**：`python/test_takeover_scan.py` 当前34项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
   族名解析、清单/测试期望的文件更新）。
+  实际课程测试模板里有多个 `set(cells)` 断言，更新器按AST定位 `test_registered_manifest_start_cells`，
+  不再误改临时样例。`DemoStartCellsTest` 8项中7项通过、1项因人类示范缺失跳过。
 
 ## 回测（自适应 vs 全量 12 点，同一存档同一未来种子块）
 
@@ -83,9 +88,14 @@ task87 的扫描块相比，三份的 L50 分别差 1 / 2 / 2 档（如 s2026104
 
 - **import**：全包 102 行走完，12 份通关入 `artifacts/e2e/dest/`，扫描清单 288 组、独立账本
   `artifacts/e2e/scan_seed_ledger.json`（90,000,000 起、每份 1000 步长 96），生产清单零改动。
-- **run**：2 份 × 2 点 × 2 未来 × 两臂（`--decisions 1,906,996,1089` 按各存档网格取交集）。
+- **run**：第一份3点、第二份2点，各2未来两臂，共20局（`--decisions 1,906,996,1089` 按网格取交集）。
 - **register**（临时清单副本 + 临时 DESIGN/测试/账本）：两族写入 `demo_start`
   （base 被人类示范占用 → 正确回退 `_llm`；阶梯 [996,906]（d906 1/2 恰过线）与 [1089]，
   种子块 86M/87M）；`update_manifest` / `update_test_expectations`（期望集合插入）/
   `update_design`（§14.35 自动编号）产物逐项核对通过；登记账本两条 256 块记录正确。
 - run 的 `--decisions` 现按每份存档的网格取交集（否则第二份会 KeyError）。
+
+Codex在当前代码上重验：两份输入重新verify通过，20局扫描全部复用缓存、原始对局mtime/SHA不变；
+登记使用同一份隔离账本，实际写入上述两族、DESIGN和正确的测试期望集合。
+再次register后清单/DESIGN/测试/账本均不变。生产清单、生产DESIGN、生产测试和生产账本均保持原字节；
+本次最多1个游戏进程，收尾无残留游戏进程。原始证据在ignored的 `artifacts/task91/audit/`。

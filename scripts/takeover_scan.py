@@ -16,6 +16,7 @@
 """
 
 import argparse
+import ast
 import datetime as dt
 import fcntl
 import hashlib
@@ -190,6 +191,13 @@ def cached_points_for_futures(points: dict, futures: list) -> dict:
     return result
 
 
+def validate_cached_identity(previous: dict, entry: dict) -> None:
+    if (previous.get('task_id') != entry['task_id'] or previous.get('seed') != entry['seed']
+            or not previous.get('archive')
+            or resolve_archive(previous['archive']).resolve() != resolve_archive(entry['archive']).resolve()):
+        raise ValueError('已有汇总属于另一个存档/任务/种子，请另用输出目录')
+
+
 def entry_filter(entry: dict, args) -> bool:
     if getattr(args, 'task_id', None) and entry['task_id'] != args.task_id:
         return False
@@ -252,6 +260,7 @@ def cmd_run(args) -> None:
         existing = points_path / f"{entry['task_id']}_s{entry['seed']}.json"
         if existing.exists():
             previous = json.loads(existing.read_text(encoding='utf-8'))
+            validate_cached_identity(previous, entry)
             store = cached_points_for_futures(previous.get('points', {}), futures)
             # 保留 adaptive 等来源写入的汇总字段（l50/顶档/阶梯），只更新 points 与基础字段。
             extra = {k: v for k, v in previous.items()
@@ -455,6 +464,8 @@ def cmd_adaptive(args) -> None:
         jobs = job_map(entry, set(entry['decisions']), futures)
         path = args.out / 'results' / f"{entry['task_id']}_s{entry['seed']}.json"
         previous = json.loads(path.read_text()) if path.exists() else {}
+        if previous:
+            validate_cached_identity(previous, entry)
         cached = cached_points_for_futures(previous.get('points', {}), futures)
         def checkpoint(complete):
             state = scanner.finish()
@@ -596,14 +607,27 @@ def update_manifest(manifest_path: Path, task_id: str, spec: dict) -> bool:
 def update_test_expectations(test_path: Path, task_ids: list) -> bool:
     """把新起点格 task_id 加进 test_registered_manifest_start_cells 的期望集合。"""
     text = test_path.read_text(encoding='utf-8')
-    marker = "self.assertEqual(set(cells), {"
-    start = text.index(marker) + len(marker)
-    end = text.index('})', start)
-    missing = [task_id for task_id in task_ids if f"'{task_id}'" not in text[start:end]]
+    tree = ast.parse(text)
+    methods = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)
+               and node.name == 'test_registered_manifest_start_cells']
+    scope = methods[0] if len(methods) == 1 else tree
+    candidates = [node.args[1] for node in ast.walk(scope) if isinstance(node, ast.Call)
+                  and isinstance(node.func, ast.Attribute) and node.func.attr == 'assertEqual'
+                  and len(node.args) >= 2 and ast.dump(node.args[0]) == ast.dump(ast.parse('set(cells)', mode='eval').body)
+                  and isinstance(node.args[1], ast.Set)
+                  and all(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in node.args[1].elts)]
+    if len(candidates) != 1:
+        raise ValueError('找不到唯一的已登记起点格期望集合')
+    target = candidates[0]
+    present = {item.value for item in target.elts}
+    missing = [task_id for task_id in task_ids if task_id not in present]
     if not missing:
         return False
-    lines = ''.join(f"                                      '{task_id}',\n" for task_id in missing)
-    text = text[:start] + '\n' + lines + ' ' * 38 + text[start:end].lstrip('\n') + text[end:]
+    lines = text.splitlines(keepends=True)
+    start = sum(map(len, lines[:target.lineno - 1])) + len(lines[target.lineno - 1].encode()[:target.col_offset].decode()) + 1
+    inserted = ''.join(f"                                      {task_id!r},\n" for task_id in missing)
+    text = text[:start] + '\n' + inserted + ' ' * 38 + text[start:]
+    ast.parse(text)
     test_path.write_text(text, encoding='utf-8')
     return True
 

@@ -73,7 +73,7 @@ class ResumeTest(unittest.TestCase):
         store = {'100': {'teacher': scan.point_summary([self.row(10), self.row(11)])}}
         self.assertEqual(scan.cached_points_for_futures(store, [20, 21]), {})
         path = self.args.out / 'results/t_s42.json'
-        scan.write_json(path, dict(points=store))
+        scan.write_json(path, dict(task_id='t', seed=42, archive=self.job['archive'], points=store))
         self.args.futures, self.args.teacher_only = 2, True
         with patch.object(scan, 'run_point', return_value=scan.point_summary([self.row(20), self.row(21)])) as run:
             scan.cmd_run(self.args)
@@ -81,6 +81,14 @@ class ResumeTest(unittest.TestCase):
         result = json.loads(path.read_text())
         self.assertEqual(result['future_seeds'], [20, 21])
         self.assertEqual(result['points']['100']['teacher']['games'], 2)
+
+    def test_archive_path_is_part_of_checkpoint_identity(self):
+        path = self.args.out / 'results/t_s42.json'
+        scan.write_json(path, dict(task_id='t', seed=42, archive='/another/archive', points={}))
+        with patch.object(scan, 'run_point') as run:
+            with self.assertRaisesRegex(ValueError, '另一个存档'):
+                scan.cmd_run(self.args)
+        run.assert_not_called()
 
     def test_fresh_adaptive_creates_results_directory(self):
         self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'), '--out', str(self.root / 'fresh')])
@@ -300,6 +308,17 @@ class RegisterHelpersTest(unittest.TestCase):
         path.write_text("other = 'c'\nself.assertEqual(set(cells), {'a',\n})\n")
         self.assertTrue(update_test_expectations(path, ['c']))
         self.assertEqual(path.read_text().count("'c'"), 2)
+
+    def test_actual_curriculum_template_updates_only_the_registered_manifest_test(self):
+        path = self.tmp / 'test_curriculum_queue.py'
+        original = (ROOT / 'python/test_curriculum_queue.py').read_text()
+        path.write_text(original)
+        boundary = original.index('    def test_registered_manifest_start_cells(')
+        self.assertTrue(update_test_expectations(path, ['task91_new_cell']))
+        changed = path.read_text()
+        self.assertEqual(changed[:boundary], original[:boundary])
+        self.assertIn("self.assertEqual(set(cells), {self.BASE})", changed)
+        self.assertFalse(update_test_expectations(path, ['task91_new_cell']))
 
 
 class SharedSeedLedgerTest(unittest.TestCase):

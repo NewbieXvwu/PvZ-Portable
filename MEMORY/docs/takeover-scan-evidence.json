@@ -1,0 +1,121 @@
+{
+ "schema": "takeover_scan_evidence_v1",
+ "status": "pending_human_same_block_backtest",
+ "tests": {
+  "takeover_passed": 34,
+  "importer_passed": 30,
+  "curriculum_start_cell_tests": 8,
+  "curriculum_skipped_for_missing_archives": 1
+ },
+ "llm_backtest": [
+  {
+   "task_id": "demo_roof_46_doom_m200",
+   "seed": 20261046,
+   "adaptive_l50": 634,
+   "full_l50": 634,
+   "delta": 0,
+   "teacher_points": 9,
+   "scan_games": 88,
+   "full_two_arm_games": 192,
+   "passed": true,
+   "raw_cache_manifest_sha256": "9d46ca7cf38229561e1066fd165b047dc00d2f620633396ffccdd223d6e74306",
+   "result_sha256": "f203013e368eaea8665cd5593ba501d319a504c936ed5d61e1f31cef11df49da"
+  },
+  {
+   "task_id": "demo_roof_46_doom_m200_s20261047",
+   "seed": 20261047,
+   "adaptive_l50": 693,
+   "full_l50": 693,
+   "delta": 0,
+   "teacher_points": 9,
+   "scan_games": 88,
+   "full_two_arm_games": 192,
+   "passed": true,
+   "raw_cache_manifest_sha256": "16e2c7084bd8d23e1af4094798d99bc80075f7096bf8ab1e28304001707aa26b",
+   "result_sha256": "3d620d61c089360157dd35b5574fefcfdc49af631461b31dad70cd1d21fcb2d3"
+  },
+  {
+   "task_id": "demo_roof_46_doom_m200_s20261048",
+   "seed": 20261048,
+   "adaptive_l50": 622,
+   "full_l50": 622,
+   "delta": 0,
+   "teacher_points": 9,
+   "scan_games": 88,
+   "full_two_arm_games": 192,
+   "passed": true,
+   "raw_cache_manifest_sha256": "706fb1cba1fd4b70575dc5634d10c9a642270e105b2f2ffdc40a316ff3af5735",
+   "result_sha256": "61068893fb4439930ebf66c90c4fe3e271c2805226f4e36180210baf1a0babc5"
+  }
+ ],
+ "resume": {
+  "seconds": 0.268,
+  "raw_unchanged": true,
+  "sha256": "7a264e0c5a237877d1e7b35c261e1a6cbd13df9889ceb95a30093937d515ae82"
+ },
+ "e2e": {
+  "imports": 2,
+  "verified": 2,
+  "futures": 2,
+  "continuation_games": 20,
+  "scan_games_reused": true,
+  "registered": 2,
+  "retry_did_not_change_files": true,
+  "production_files_unchanged": true,
+  "input_sha256": "0d967acb7441dec516629fdd25687476a5ddc548b8c8b38025f556237d3fe083",
+  "report": {
+   "schema": "takeover_scan_register_v1",
+   "registered": 2,
+   "skipped": [],
+   "entries": [
+    {
+     "task_id": "demo_roof_46_doom_m200_llm",
+     "seed": 20261046,
+     "registered": true,
+     "ladder": [
+      996,
+      906
+     ],
+     "top": 996,
+     "top_is_full": true,
+     "l50": 906,
+     "future_seed_start": 86000000
+    },
+    {
+     "task_id": "demo_roof_46_doom_m200_s20261047",
+     "seed": 20261047,
+     "registered": true,
+     "ladder": [
+      1089
+     ],
+     "top": 1089,
+     "top_is_full": true,
+     "l50": 1089,
+     "future_seed_start": 87000000
+    }
+   ]
+  }
+ },
+ "e2e_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8",
+ "missing_human_archives": [
+  {
+   "task_id": "demo_roof_46_doom_m200",
+   "archive": "artifacts/human_demo/raw/seed_20261046/demo_roof_46_doom_m200"
+  },
+  {
+   "task_id": "demo_roof_48_doom_m200",
+   "archive": "artifacts/human_demo/raw/seed_20261048/demo_roof_48_doom_m200"
+  },
+  {
+   "task_id": "demo_roof_49_doom_m200",
+   "archive": "artifacts/human_demo/raw/seed_20261049/demo_roof_49_doom_m200"
+  }
+ ],
+ "raw_evidence_directory": "artifacts/task91/audit",
+ "source_sha256": {
+  "scripts/takeover_scan.py": "dd54ee9e04f3cf517728acab5899808d8edc44fef3ee8c869033d64e2b9c131f",
+  "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
+  "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
+  "python/test_takeover_scan.py": "252aa12a20f81415a9da5e873dd7455dc8ce558e5fe58e1bf6bdc8e7590ac554"
+ }
+}
