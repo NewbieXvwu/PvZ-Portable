@@ -31,7 +31,7 @@ except ImportError:          # Windows 开发机：没有 flock，退化为单�
     fcntl = None
 
 WALL_LIMIT_SECONDS = 3 * 60 * 60
-STOP_NEW_GAME_SECONDS = 2 * 60 * 45      # 2:45 之后不许开新局
+STOP_NEW_GAME_SECONDS = (2 * 60 + 45) * 60  # 2 小时 45 分之后不许开新局
 SEARCH_MINUTES = 25                       # 每关先给搜索的时间预算（换算成 tick）
 LEVEL_MINUTES = 70                        # 单关总预算（搜索 + 手动）
 CHECKPOINT_FRACTION = 0.40                # 每用掉 40% 搜索预算记一次最远波
@@ -40,8 +40,8 @@ BRANCH_LIMIT_SEARCH = 8                   # 搜索模式下同时存在的分支
 
 
 def _clock(seconds: float) -> str:
-    seconds = max(0, int(seconds))
-    return "%d:%02d" % (seconds // 60, seconds % 60)
+    minutes = max(0, int(seconds)) // 60
+    return "%d:%02d" % (minutes // 60, minutes % 60)
 
 
 class Session:
@@ -53,7 +53,8 @@ class Session:
         # 分支持数是**进程内**状态：进程退出时分支引擎也没了，不能写进 budget.json，
         # 否则每个脚本都会把上一条脚本的分支算进来，8 次之后永远开不了新分支。
         self.branches = 0
-        self.load()
+        with self._transaction():
+            pass
 
     # ------------------------------------------------------------ 持久化
 
@@ -82,6 +83,12 @@ class Session:
                 self.data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             pass
+
+    def claim_legend(self) -> bool:
+        with self._transaction():
+            first = not self.data.get("legend_shown")
+            self.data["legend_shown"] = True
+            return first
 
     @contextmanager
     def _transaction(self):
@@ -177,13 +184,16 @@ class Session:
                                              max_wave=state["max_wave"],
                                              elapsed=round(self.elapsed, 1)))
         history = state["checkpoints"]
-        if len(history) >= 3:
-            before, prev, last = (h["max_wave"] for h in history[-3:])
+        if len(history) >= 2:
+            before = history[-3]["max_wave"] if len(history) >= 3 else 0
+            prev, last = (h["max_wave"] for h in history[-2:])
             if last < prev + 1 and prev < before + 1:
                 state["search_bad"] = True
                 state["search_closed"] = True
         if used >= limit:
             state["search_closed"] = True
+        if state["search_closed"]:
+            state["mode"] = "manual"
 
     def record_wave(self, level, wave: int) -> None:
         with self._transaction():
@@ -199,6 +209,23 @@ class Session:
         with self._transaction():
             state = self.level(level)
             state["best_archive"] = str(path)
+
+    def save_best_log(self, level, log: dict, *, wave: int, won: bool = False) -> Path:
+        """按最远波/同波 tick 保留操作日志，供别的脚本或分支取回。"""
+        with self._transaction():
+            state = self.level(level)
+            score = [int(won), int(wave), int(log["tick"])]
+            previous = state.get("best_log")
+            if previous and Path(previous).is_file() and score <= state.get("best_score", []):
+                return Path(previous)
+            path = self.path.parent / "best" / ("L%s.json" % int(level))
+            path.parent.mkdir(parents=True, exist_ok=True)
+            tmp = path.with_suffix(".tmp")
+            tmp.write_text(json.dumps(log, ensure_ascii=False, separators=(",", ":")) + "\n",
+                           encoding="utf-8")
+            os.replace(tmp, path)
+            state.update(best_log=str(path), best_score=score)
+            return path
 
     # ------------------------------------------------------------ 门禁
 
@@ -241,10 +268,10 @@ class Session:
     def note_rewind(self, level, target_tick: int, current_tick: int) -> None:
         with self._transaction():
             state = self.level(level)
-            if target_tick < state["segment_start"]:
+            if not state["segment_rewrites"] or target_tick < state["segment_start"]:
                 # 退回更早一段：重写计数重来。
                 state["segment_start"] = int(target_tick)
-                state["segment_rewrites"] = 0
+                state["segment_rewrites"] = 1
             else:
                 state["segment_rewrites"] += 1
                 if state["segment_rewrites"] > SEGMENT_REWRITES:

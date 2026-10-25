@@ -345,7 +345,7 @@ def cards(game) -> str:
     lines = []
     for packet in obs.get("packets") or []:
         index = int(packet["index"])
-        seed = int(packet.get("type") or -1)
+        seed = int(packet["type"]) if packet.get("type") is not None else -1
         if seed < 0:
             lines.append("  [%d] （空槽）" % index)
             continue
@@ -429,16 +429,15 @@ def legend() -> str:
 def render(game, level: str = "full") -> str:
     from . import budget
     session = budget.session()
-    first = not session.data.get("legend_shown")
+    first = session.claim_legend()
     lines = [session.status_line(game.spec.level), header(game), ""]
     if first:
         lines += [legend(), ""]
-        session.data["legend_shown"] = True
-        session.save()
     lines += ["空间网格（植物 + 该格僵尸）：", grid(game), "",
               "逐行明细：", rows(game), "",
               "卡片：", cards(game), "",
-              "事件（自上次 observe 以来）：", events(game)]
+              "事件（自上次 observe 以来）：", events(game), "",
+              "逐波历史：", timeline(game)]
     return "\n".join(lines)
 
 

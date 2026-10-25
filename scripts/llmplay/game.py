@@ -224,6 +224,10 @@ class Game:
             self.saw_mowers = True
         self._plants_snapshot, self._zombies_snapshot = self._snapshot()
         self._mower_snapshot = self._mower_states()
+        self.events = []
+        self.wave_history = []
+        self._wave_stats = dict(kills=0, lost=0, mowers=0)
+        self._close_wave(self.max_wave)
 
     # ------------------------------------------------------------ 事件差分
 
@@ -331,7 +335,7 @@ class Game:
         stats = self._wave_stats
         self.wave_history.append(dict(wave=wave, tick=self.tick,
                                       sun=(self.obs or {}).get("sun"),
-                                      plants=len(self._plants_snapshot),
+                                      plants=len((self.obs or {}).get("plants") or []),
                                       kills=stats["kills"], lost=stats["lost"],
                                       mowers=stats["mowers"]))
         self._wave_stats = dict(kills=0, lost=0, mowers=0)
@@ -355,22 +359,34 @@ class Game:
             self.max_wave = cached["max_wave"]
             self.totals = dict(cached["totals"])
             self.saw_mowers = cached["saw_mowers"]
+            self.wave_history = [dict(row) for row in cached["wave_history"]]
+            self._wave_stats = dict(cached["wave_stats"])
+            self.events = []
+            self._plants_snapshot, self._zombies_snapshot = self._snapshot()
+            self._mower_snapshot = self._mower_states()
             start_ops = cached["n"]
         else:
             self._reset_engine()
             self._cache = None
 
         start_tick = self.tick
+        def replay_step(action):
+            before_wave = int(self.obs.get("wave") or 0)
+            plants, zombies = self._plants_snapshot, self._zombies_snapshot
+            mowers = self._mower_snapshot
+            ok = self._step_raw(action)
+            self._note_events(action, ok, plants, zombies, mowers, before_wave)
+
         kept = []
         for op in self.ops[start_ops:]:
             action = op["action"]
             if op["end_tick"] <= target:
-                self._step_raw(action)
+                replay_step(action)
                 kept.append(op)
                 continue
             if action.get("type") == "wait" and op["tick"] < target:
                 partial = target - op["tick"]
-                self._step_raw({"type": "wait", "ticks": partial})
+                replay_step({"type": "wait", "ticks": partial})
                 kept.append(dict(op, action={"type": "wait", "ticks": partial}, end_tick=target))
             break
         self.ops = self.ops[:start_ops] + kept
@@ -420,22 +436,37 @@ class Game:
         self.ops.append(dict(action=action, tick=before, end_tick=self.tick, ok=ok,
                              state_hash=state_hash))
         self._maybe_frame(action, ok)
+        if self.terminal or int(self.obs.get("wave") or 0) > before_wave:
+            self._persist_best()
         return ok
 
+    def _persist_best(self):
+        if self.env is None or self.obs is None:
+            return None
+        return self.session.save_best_log(self.spec.level, self.log(), wave=self.max_wave,
+                                          won=int(self.obs.get("result") or 0) == 1)
+
     def _auto_export_best(self) -> str:
-        """把当前这局导出成存档（预算用尽时自动调用）。失败也不挡住异常。"""
+        """从磁盘上的最远操作日志导出，不能用当前较差的分支覆盖纪录。"""
+        best = None
         try:
+            path = self._persist_best()
+            best = Game.load(path, manifest=self.manifest, executable=self.executable,
+                             resource_dir=self.resource_dir)
             out = Path.cwd() / "llmplay_out"
-            target = out / ("%s_tick%d" % (self.task_id, self.tick))
+            target = out / ("%s_tick%d" % (best.task_id, best.tick))
             index = 1
             while target.exists():
-                target = out / ("%s_tick%d_%d" % (self.task_id, self.tick, index))
+                target = out / ("%s_tick%d_%d" % (best.task_id, best.tick, index))
                 index += 1
-            self.export_archive(target)
+            best.export_archive(target)
             self.session.record_best_archive(self.spec.level, target)
             return str(target)
         except Exception as error:      # 存档失败不能掩盖"预算用尽"这件事
             return "(自动导出失败：%s)" % error
+        finally:
+            if best is not None:
+                best.close()
 
     def _maybe_frame(self, action: dict, ok: bool) -> None:
         if action.get("type") != "wait":
@@ -518,6 +549,7 @@ class Game:
             raise ValueError("不能向前 rewind：当前 tick %d，目标 %d" % (self.tick, target))
         # 同一段第 9 次重写直接拒绝（§A）：计数在 budget.json 里，模型绕不过。
         self.session.note_rewind(self.spec.level, target, self.tick)
+        self._persist_best()
         self._replay_to(target)
 
     def branch(self) -> "Game":
@@ -549,7 +581,9 @@ class Game:
                            ops=[dict(op) for op in self.ops], n=len(self.ops),
                            obs=dict(self.obs or {}), terminal=self.terminal,
                            max_wave=self.max_wave, totals=dict(self.totals),
-                           saw_mowers=self.saw_mowers)
+                           saw_mowers=self.saw_mowers,
+                           wave_history=[dict(row) for row in self.wave_history],
+                           wave_stats=dict(self._wave_stats))
 
     # ------------------------------------------------------------ 读局面
 
@@ -616,8 +650,10 @@ class Game:
     def save(self, path) -> Path:
         target = Path(path)
         target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_text(json.dumps(self.log(), ensure_ascii=False, separators=(",", ":")) + "\n",
-                          encoding="utf-8")
+        temporary = target.with_name(".%s.%s.tmp" % (target.name, os.getpid()))
+        temporary.write_text(json.dumps(self.log(), ensure_ascii=False, separators=(",", ":")) + "\n",
+                             encoding="utf-8")
+        os.replace(temporary, target)
         return target
 
     @classmethod
@@ -710,8 +746,11 @@ class Game:
 
     def close(self) -> None:
         if self.env is not None:
-            self.env.close()
-            self.env = None
+            try:
+                self._persist_best()
+            finally:
+                self.env.close()
+                self.env = None
         if self._is_branch:
             self.session.note_branch(self.spec.level, -1)
             self._is_branch = False

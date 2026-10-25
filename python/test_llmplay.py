@@ -24,6 +24,7 @@ def _bump_budget(path, count):
     """子进程里给同一份预算加 tick（并发测试用，必须模块级才能被 fork/pickle）。"""
     from llmplay import budget as budget_module
     session = budget_module.Session(Path(path))
+    session.claim_legend()
     for _ in range(count):
         session.note_ticks(46, 1, 'manual')
 from pvz_env import TaskSpec  # noqa: E402
@@ -133,6 +134,21 @@ class BudgetTest(unittest.TestCase):
         self.assertEqual(len(state['checkpoints']), 3)
         self.assertTrue(state['search_bad'])
 
+    def test_two_flat_checkpoints_switch_to_manual_before_budget_end(self):
+        self.session.calibrate(1000, 1.0)
+        for fraction in (0.4, 0.8):
+            self.session.note_ticks(49, int(fraction * self.session.search_limit)
+                                    - self.session.level(49)['search_ticks'], 'search')
+        self.assertTrue(self.session.level(49)['search_bad'])
+        self.assertEqual(self.session.mode(49), 'manual')
+        self.assertLess(self.session.level(49)['search_ticks'], self.session.search_limit)
+
+    def test_search_budget_exhaustion_switches_to_manual(self):
+        self.session.calibrate(1000, 1.0)
+        self.session.record_wave(49, 12)
+        self.session.note_ticks(49, self.session.search_limit, 'search')
+        self.assertEqual(self.session.mode(49), 'manual')
+
     def test_wave_progress_resets_rewrite_counter(self):
         self.session.calibrate(1000, 1.0)
         level = 49
@@ -150,6 +166,24 @@ class BudgetTest(unittest.TestCase):
         with self.assertRaises(RuntimeError) as caught:
             self.session.note_rewind(level, 100, 900)
         self.assertIn('退回更早的一段', str(caught.exception))
+
+    def test_earlier_rewind_is_allowed_after_segment_limit(self):
+        for _ in range(budget.SEGMENT_REWRITES):
+            self.session.note_rewind(49, 100, 900)
+        self.session.note_rewind(49, 99, 900)
+        self.assertEqual(self.session.level(49)['segment_start'], 99)
+        self.assertEqual(self.session.level(49)['segment_rewrites'], 1)
+
+    def test_best_log_survives_new_session_and_worse_run(self):
+        original = dict(tick=900, task_id='best', ops=[{'action': 'original'}])
+        path = self.session.save_best_log(49, original, wave=10)
+        other = budget.Session(self.session.path)
+        other.save_best_log(49, dict(tick=1000, task_id='worse'), wave=9)
+        self.assertEqual(json.loads(path.read_text()), original)
+        later = dict(tick=950, task_id='later')
+        other.save_best_log(49, later, wave=10)
+        self.assertEqual(json.loads(path.read_text()), later)
+        self.assertEqual(budget.Session(self.session.path).level(49)['best_log'], str(path))
 
     def test_branch_counter_is_per_process_not_persisted(self):
         """分支引擎随进程消失；计数写进磁盘会让下一个脚本一开局就顶着上限。"""
@@ -178,7 +212,6 @@ class BudgetTest(unittest.TestCase):
         except ValueError:
             self.skipTest('当前平台没有 fork')
         path = Path(self.dir) / 'budget-concurrent.json'
-        budget.Session(path)                     # 先建文件
         processes = [context.Process(target=_bump_budget, args=(str(path), 50))
                      for _ in range(4)]
         for process in processes:
@@ -187,6 +220,13 @@ class BudgetTest(unittest.TestCase):
             process.join(30)
         self.assertTrue(all(process.exitcode == 0 for process in processes))
         self.assertEqual(budget.Session(path).level(46)['total_ticks'], 200)
+
+    def test_legend_claim_does_not_overwrite_other_process_progress(self):
+        stale = budget.Session(self.session.path)
+        self.session.note_ticks(49, 123, 'manual')
+        self.assertTrue(stale.claim_legend())
+        self.assertFalse(self.session.claim_legend())
+        self.assertEqual(budget.Session(self.session.path).level(49)['total_ticks'], 123)
 
     def test_session_path_does_not_depend_on_cwd(self):
         """§A：换个工作目录不能把预算/墙钟清零。"""
@@ -213,6 +253,24 @@ class BudgetTest(unittest.TestCase):
         for piece in ('已用', '/ 3:00', '本关 L49', '模式=搜索', '搜索预算', '最远 12 波', '本段重写'):
             self.assertIn(piece, line)
 
+    def test_new_game_gate_uses_two_hours_and_forty_five_minutes(self):
+        from unittest.mock import patch
+        started = self.session.data['started_at']
+        for elapsed in (90 * 60, 165 * 60 - 1):
+            with self.subTest(elapsed=elapsed), patch.object(budget.time, 'time', return_value=started + elapsed):
+                self.session.require_new_game_allowed()
+                self.assertFalse(self.session.stop_new_games)
+        with patch.object(budget.time, 'time', return_value=started + 165 * 60):
+            with self.assertRaisesRegex(RuntimeError, '墙钟已到 2:45'):
+                self.session.require_new_game_allowed()
+            self.assertIn('已到 2:45：停止开新局', self.session.status_line(49))
+
+    def test_status_clock_displays_hours_and_minutes(self):
+        from unittest.mock import patch
+        started = self.session.data['started_at']
+        with patch.object(budget.time, 'time', return_value=started + 72 * 60 + 34):
+            self.assertIn('[已用 1:12 / 3:00', self.session.status_line(49))
+
 
 class GridTest(unittest.TestCase):
     """§G.2：格内标僵尸类型，放不下就截断并标 +n。"""
@@ -220,6 +278,15 @@ class GridTest(unittest.TestCase):
     def test_single_type(self):
         from llmplay import scene
         self.assertEqual(scene._zombie_tags([{'type': 23, 'x': 800.0}]), 'Gar1')
+
+    def test_peashooter_type_zero_is_not_an_empty_packet(self):
+        from types import SimpleNamespace
+        from llmplay import scene
+        game = SimpleNamespace(obs=dict(sun=100, packets=[dict(index=0, type=0, cost=100,
+                                                              cooldown=0, active=True)]))
+        text = scene.cards(game)
+        self.assertIn('豌豆射手', text)
+        self.assertNotIn('空槽', text)
 
     def test_two_types_fit(self):
         from llmplay import scene
