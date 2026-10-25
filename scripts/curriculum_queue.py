@@ -96,6 +96,7 @@ DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
 
 GIB = 1024 ** 3
+MAX_BACKGROUND_ATTEMPTS = 2   # task70 B7: 同一轮后台任务连败 2 次才停 qc（首次失败只标记并在组边界重试一次）
 MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
 PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 # 训练阶段的不可回收峰值 = 匿名内存（read_segments 的目标数组是文件后备 memmap，task61）。
@@ -1027,16 +1028,32 @@ class TrainingPipeline:
             self.failed = True
             raise
 
-    def poll(self):
+    def poll(self, retry: bool = True):
         for index, (job, future) in enumerate(list(self.futures)):
             if job['status'] == 'done' or not future.done():
                 continue
             try:
                 report = future.result()
             except BaseException as error:
+                # task70 B7: a background failure must not kill collection. Record it,
+                # retry once; only a second consecutive failure of the same round stops qc.
                 job['status'] = 'failed'
+                job['error'] = str(error)
+                job['attempts'] = job.get('attempts', 0) + 1
                 save_state(self.args.state, self.state)
-                raise RuntimeError(f'background round {job["round"]} failed: {error}') from error
+                if retry and job['attempts'] < MAX_BACKGROUND_ATTEMPTS:
+                    log_line(self.args.log, f'background round {job["round"]} failed '
+                                            f'(attempt {job["attempts"]}/{MAX_BACKGROUND_ATTEMPTS}); '
+                                            f'retrying once: {error}')
+                    self.failed = False
+                    job['status'] = 'queued'
+                    self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
+                    continue
+                if job['attempts'] >= MAX_BACKGROUND_ATTEMPTS:
+                    log_line(self.args.log, f'background round {job["round"]} failed '
+                                            f'{job["attempts"]} times; stopping qc: {error}')
+                raise RuntimeError(f'background round {job["round"]} failed '
+                                   f'{job["attempts"]} times; stopping: {error}') from error
             promotion = report.get('promotion', {})
             current_contract = self.evaluation_contract(job)
             invalid = False
@@ -1073,15 +1090,20 @@ class TrainingPipeline:
 
     def close(self):
         # poll may schedule a stale comparison again; drain it before closing the executor.
+        # B7: failed jobs stay failed here (no retry), so only wait on queued ones.
         try:
-            while any(job['status'] != 'done' for job, _ in self.futures):
+            while any(job['status'] == 'queued' for job, _ in self.futures):
                 for _, future in list(self.futures):
                     if not future.done():
                         try:
                             future.result()
                         except BaseException:
                             pass  # poll persists and reports the failure
-                self.poll()
+                try:
+                    self.poll(retry=False)
+                except RuntimeError as error:
+                    # B7: a single background failure at final drain is recorded, not fatal.
+                    log_line(self.args.log, f'background job failed during final drain: {error}')
         finally:
             self.executor.shutdown(wait=True)
 

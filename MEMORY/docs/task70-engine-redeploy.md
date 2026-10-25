@@ -90,6 +90,13 @@
      - teacher_rates（~/pvz-logs/teacher_rates.json 的 bases）：照 B4 第 4 条（fog_user_v2_l31_snow 31/32）**再加 4 条**：`demo_fog_31_snow_m200_hv2` / `demo_fog_32_snow_m200_hv2` / `demo_fog_33_cactus_snow_m200_hv2` / `demo_fog_33_cattail_snow_m200_hv2`，各 `{"wins": 8, "games": 8, "model": "dw4i_s1 + v5 + 台式机 branch1", "source": "T70"}`。
      - 回滚：fog_user_v2/fog_user 族 = revert B6.2 提交（LEVELS/SUPERSEDED 复原，fog_user 恢复排新局）；示范格 = revert B6.1 提交（281921b0：旧格 demo_start 恢复、_hv2 撤下；旧格数据从未删除）；引擎 = 换回 deploy4-pre-B5 16989f23（artifacts/task70/deploy4_pre_b5/，B5 的 C++ 修订随二进制一并回退）。
 
+- [B7] 后台任务失败不让 qc 整体退出（主控 2026-10-25 17:00 追加，与 B6 一起进 deploy14）：
+  1. **合入修复**：`git merge origin/pvz-env`（redeploy 提交 f02e7f26）带进 51d67c66——`pvz_frame_store.archive_seed()`（`seed_<n>` 与示范起点局 `seed_<示范>_f<未来>` 两种目录统一按未来种子解析）及 `pack_training_rows.py` / `backfill_observation_v2.py` / `relabel_verify.py` / `student_packet_recall.py` 四处调用点，加 test_compact_loader 用例。第 13 轮崩溃的那个解析点已随合并进树。
+  2. **B7.1 失败不再杀 qc**（`scripts/curriculum_queue.py` TrainingPipeline）：`poll()` 捕获后台任务异常——job 标 `failed`、`error`/`attempts` 写入 state 持久化、curriculum.log 记原因，**采集继续**；在下一个组边界自动重试一次（status 回 `queued`、重置 failed 门闩重投）；**同一轮连续失败 2 次**（`MAX_BACKGROUND_ATTEMPTS=2`）才写明 "stopping qc" 并 raise 停 qc。attempts 随 state 持久：中途重启后，曾败 1 次的任务只剩 1 次机会。`close()` 收尾 drain 改为只等 `queued` 任务、`poll(retry=False)` 永不重试；收尾期单次失败只记日志（"failed during final drain"）不致命，不再死循环也不再让正常收尾变崩溃。
+  3. **B7.2 全仓库 `seed_` 目录名解析扫描**：会碰到示范起点局目录的（默认/参数指向训练语料 frames_v2 的）5 处统一改 `archive_seed`：`teacher_counterfactual_audit.py`（--archives 默认 frames_v2）、`dw4_night_sun_candidate.py`、`dw4_night_card_logit.py`（--frames-root 默认 frames_v2）、`value_widen_audit.py`、`train_value_widen.py`（--data）。其余 `seed_` 解析点结构上只扫各自私有输出树（feasibility_report/value_teacher_sparse 的 teacher out、bench_qc_pack 自建 view、task70_particle_probe 的 gate 输出），碰不到示范目录，未改。
+  4. **B7.3 测试**：`python/test_background_failure_retry.py` 3 项——首败仅记录（status/error/attempts 落 state）且组边界照常推进；重试恰好一次；第二次连败 raise（"2 times" + "stopping qc" 日志）；重试成功则整轮照常 done；close 不重试、不挂起。回归 test_curriculum_queue + test_multiplier_tasks + test_compact_loader **71 passed**。
+  5. **deploy14 增量**：无引擎变化（仍 6264aaf4）；scripts 树换到含 B7 的 redeploy 最新提交即可，curriculum_queue.py 的失败语义随部署生效。回滚：revert 本提交即回到"后台失败即退"旧行为。
+
 ## 问题
 
 - **示范起点格数量对不上（B6.1）**：主控追加里说"现有 5 个示范起点格（含 task71b 的 L34）"，但 redeploy 树的 `configs/human_demo_tasks.json` 在 B6.1 之前只有 **4** 个 demo_start 格（L31 snow、L32 snow、L33 cactus/cattail）。task71b 的 L34 格（`demo_fog_34_cactus_snow_m200`，提交 a6becca3）只在 `origin/demo` 分支上，未合入 redeploy/pvz-env，本次未处理。若要 L34 也去透视：先合 a6becca3，再照同样模式加 `_hv2`（archive 与决策阶梯见 MEMORY/docs/demo-start-states.md），teacher_rates 按同法补测 8 局。

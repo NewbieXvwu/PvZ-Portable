@@ -27,7 +27,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 import numpy as np
 import torch
-from pvz_frame_store import cache_episode, cache_packets, cache_identity_scene, read_frames
+from pvz_frame_store import archive_seed, cache_episode, cache_packets, cache_identity_scene, read_frames
 from pvz_rollout_policy import load_student
 
 SUN_SHROOM = 9
@@ -64,7 +64,7 @@ def select_archives(root: Path, first_seed: int, last_seed: int, levels: set[int
     for folder in sorted(root.iterdir()):
         if not folder.name.startswith('seed_'):
             continue
-        seed = int(folder.name.split('_', 1)[1])
+        seed = archive_seed(folder.name)
         if not first_seed <= seed <= last_seed:
             continue
         for archive in sorted(folder.iterdir()):

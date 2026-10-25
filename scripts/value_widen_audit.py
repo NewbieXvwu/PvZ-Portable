@@ -16,7 +16,7 @@ import numpy as np
 import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
-from pvz_frame_store import frame_path, read_frames
+from pvz_frame_store import archive_seed, frame_path, read_frames
 from pvz_value_net import context_vector, featurize, load_value_net
 import pvz_value_net as value_encoding
 from train_value_net import auc, wave_starts
@@ -83,7 +83,7 @@ def main():
         groups=defaultdict(lambda:defaultdict(list))
         for sd in args.data.iterdir():
             if not sd.is_dir() or not sd.name.startswith('seed_'):continue
-            seed=int(sd.name[5:])
+            seed=archive_seed(sd.name)
             if seed in excluded:continue
             for archive in sd.iterdir():
                 group=cohort(archive.name)
