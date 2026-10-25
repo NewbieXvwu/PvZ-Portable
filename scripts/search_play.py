@@ -595,13 +595,19 @@ def _play(job: dict, observer=None) -> dict:
             # Compare every field the archive recorded. A field added to TaskSpec after the
             # demonstration was recorded (fog_observation, task53) did not exist then and must not
             # block the start; an actual environment difference still fails replay()'s per-operation
-            # state-hash check.
+            # state-hash check.  fog_observation is exempt outright (task70 B6): it is presentation
+            # only, so a demo start cell may replay a null-mode recording under human_v2, and the
+            # _hv2 start cells deliberately carry task ids that extend the recorded one.
             recorded = demo_meta['environment_task']
             current = json.loads(json.dumps(asdict(task)))
-            if (demo_meta['task']['id'] != args.task_id or demo_meta['task']['deck'] != list(kw['deck']) or
-                    any(current.get(key) != value for key, value in recorded.items())):
+            if (demo_meta['task']['id'] != args.task_id and
+                    not (isinstance(args.task_id, str) and args.task_id.startswith(demo_meta['task']['id'] + '_')) or
+                    demo_meta['task']['deck'] != list(kw['deck']) or
+                    any(current.get(key) != value for key, value in recorded.items()
+                        if key != 'fog_observation')):
                 raise ValueError('demonstration task, deck, seed or environment differs from the manifest')
-            obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision)
+            obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision,
+                                    fog_observation=task.fog_observation)
             if future_seed is not None:
                 # The restored snapshot carries the demonstration's RNG, so replaying it would hand the
                 # teacher the true future (the clairvoyance problem, scripts/verify_reseed.py). RESEED
@@ -796,7 +802,8 @@ def _play(job: dict, observer=None) -> dict:
             "wave_count": obs.get("wave_count"),
             # Public final-board evidence, including the row/type of a house breach.
             # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.
-            "final_zombies": _final_zombies(obs),
+            "final_zombies": _final_zombies(env.privileged_state()
+                if task_definition.get('fog_observation') == 'storm' else obs),
             "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
             "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],

@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import curriculum_queue as queue
 from pvz_recipe import write_recipe
-from pvz_promotion import GATE_VERSION, PANEL_TASKS, decide, freeze_panel
+from pvz_promotion import GATE_VERSION, PANEL_TASKS_V3, decide, freeze_panel
 from promotion_gate import contract_key, sha
 
 
@@ -30,9 +30,9 @@ def setup(root):
     args.value.write_bytes(b'value')
     args.resource_dir.mkdir()
     args.promotion_panel.write_text(json.dumps(dict(panel_version='v2',
-        groups={name: zone for zone, name in PANEL_TASKS},
+        groups={name: zone for zone, name in PANEL_TASKS_V3},
         tasks=[dict(task_id=name, seeds=list(range(30000, 30128)), wave_cap=None,
-                    zombie_count_multiplier=1, level=1, deck=[0, 1, 2, 3, 4, 5]) for _, name in PANEL_TASKS])))
+                    zombie_count_multiplier=1, level=1, deck=[0, 1, 2, 3, 4, 5]) for _, name in PANEL_TASKS_V3])))
     for label in ('base', 'c1a_fast_search', 'c1b_fast_search', 'c2a_fast_search', 'c2b_fast_search'):
         archive = args.frames / 'seed_1' / label
         archive.mkdir(parents=True)
@@ -150,13 +150,10 @@ def test_background_failure_is_saved_and_can_be_retried():
              patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
             pipeline = queue.TrainingPipeline(args, state)
             pipeline.enqueue()
-            try:
-                pipeline.close()
-                assert False, 'failure must reach the controller'
-            except RuntimeError as error:
-                assert 'pack failed' in str(error)
+            pipeline.close()   # task70 B7: one failure during the final drain is logged, not raised
         saved = json.loads(args.state.read_text())
         assert saved['round'] == 1 and saved['training_jobs'][0]['status'] == 'failed'
+        assert 'pack failed' in saved['training_jobs'][0]['error']
         def success(self, command, logfile):
             if logfile.name == 'train.log':
                 model = logfile.parent / 'student/model.pt'

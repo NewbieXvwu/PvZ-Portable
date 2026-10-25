@@ -137,7 +137,7 @@ def _frame(obs: dict) -> dict:
         return _frame_from(
             obs,
             plants=[tuple(p[:5]) for p in obs["plants"] if not p[5]],
-            zombies=[(z[0], z[1], z[2], z[3], z[4], bool(z[5]), bool(z[6]), int(z[7]), int(z[8]), int(z[9]))
+            zombies=[(z[0], z[1], z[2], z[3], z[4], bool(z[5]), bool(z[6]), int(z[7]), int(z[8]), int(z[9])) + tuple(z[10:])
                      for z in obs["zombies"]],
             mowers=[[d[0], d[1]] for d in obs["defenses"]],
             packets=[[p[0], p[1], bool(p[2]), int(p[3]), int(p[4]), int(p[5])] for p in obs["packets"]],
@@ -155,7 +155,7 @@ def _frame(obs: dict) -> dict:
             bool(z.get("on_board")), bool(z.get("is_eating")),
             int(z.get("chilled") or 0), int(z.get("ice_trap") or 0),
             int(z["id"]),  # 索引 9：追踪单只僵尸用。加在末尾，前面的索引不变。
-        )
+        ) + ((z['scale'],) if 'scale' in z else ())
         for z in obs.get("zombies") or []
     ]
     # 存成 [[row, state], ...] 而不是 {row: state}：JSON 的对象键永远是字符串，

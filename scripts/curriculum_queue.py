@@ -68,7 +68,8 @@ ROOT = Path(__file__).resolve().parent.parent
 MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from make_multiplier_tasks import CURRICULUM_LEVELS, FAMILIES, SUPERSEDED, load_tasks, source_paths  # noqa: E402
+from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
+                                   load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, policy as promotion_policy, freeze_panel
 from promotion_gate import (allocate_seed_block, contract as promotion_contract, contract_key,
@@ -87,6 +88,9 @@ FLOOR_SHARE = 2            # 保底组局数 = per_group // FLOOR_SHARE（小局
 DEFAULT_STATE = Path.home() / 'pvz-logs/curriculum_state.json'
 DEFAULT_TEACHER_RATES = Path.home() / 'pvz-logs/teacher_rates.json'
 DEFAULT_LOG = Path.home() / 'pvz-logs/curriculum.log'
+CURRICULUM_LADDERS = {
+    'native_l25': [0.5, 1.0] + [m for m, _ in MULTIPLIERS],
+}
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
@@ -96,6 +100,7 @@ DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
 
 GIB = 1024 ** 3
+MAX_BACKGROUND_ATTEMPTS = 2   # task70 B7: 同一轮后台任务连败 2 次才停 qc（首次失败只标记并在组边界重试一次）
 MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
 PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 # 训练阶段的不可回收峰值 = 匿名内存（read_segments 的目标数组是文件后备 memmap，task61）。
@@ -281,8 +286,9 @@ def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, floa
             if task_id not in tasks:
                 tasks[task_id] = task
                 manifests[task_id] = path_
-    values = sorted({float(task['zombie_count_multiplier']) for task in document['tasks']})
-    values = [1.0] + [value for value in values if value != 1.0]
+    values = sorted({float(task['zombie_count_multiplier']) for task in document['tasks']
+                     if task['zombie_count_multiplier'] > 1})
+    values = [1.0] + values
     return tasks, values, names, manifests
 
 
@@ -386,8 +392,12 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
     for base, task in wanted.items():
         if base in cells:
             continue
-        cells[base] = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
-                           mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        family = family_of(base)
+        cell = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
+                    mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
+        if family in CURRICULUM_LADDERS:
+            cell['ladder'] = CURRICULUM_LADDERS[family]
+        cells[base] = cell
         lines.append(f'cell added: {base}')
     return lines
 
@@ -691,6 +701,9 @@ class TrainingPipeline:
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
+        self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
+        self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
+        self.foreground_workers = 0 # 前台当前组正在跑的游戏 worker 数
         for job in reversed(state.get('training_jobs', [])):
             timing = job.get('timing') or {}
             value = timing.get('train_peak_anon_bytes')
@@ -726,10 +739,11 @@ class TrainingPipeline:
         return any(not future.done() for _, future in self.futures)
 
     def foreground_limit(self):
-        # Evaluation always has one game worker. Reserve its slot before a group starts,
-        # because training may finish in the middle of that group. --workers=1 still allows
-        # one collector + one evaluator; --workers>=2 caps their combined game count.
-        return max(1, self.args.workers - int(self.pending()))
+        # Evaluation reserves the game workers it is actually using (task73c: eval units
+        # are memory-admitted, see _evaluate). Reserve them before a group starts,
+        # because training may finish in the middle of that group. --workers=1 still
+        # allows one collector + one evaluator; --workers>=2 caps their combined count.
+        return max(1, self.args.workers - int(self.pending()) * self.eval_units)
 
     def incumbent(self):
         with self.lock:
@@ -759,17 +773,24 @@ class TrainingPipeline:
         folder = Path(job['recipe']).parent
         out = folder / 'evaluations' / contract_key(frozen)
         python = str(self.args.python) if self.args.python.exists() else sys.executable
+        self._admit()
+        # task73c: 评估 worker 数与采集同一条内存准入公式分配（MemAvailable 已排除在跑
+        # 游戏 worker 的 RSS），并与前台在跑的组共享 --workers 进程上限（扣除其宽度）。
+        # 评估开始后新开的组按 foreground_limit() 收缩，让评估在 ≤10 分钟量级完成。
+        units = worker_count(mem_available_bytes(), self.per_worker_bytes,
+                             max(1, self.args.workers - self.foreground_workers), 0)
+        self.eval_units = units
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
-                   '--gate-version', str(GATE_VERSION)]
+                   '--eval-units', str(units), '--gate-version', str(GATE_VERSION)]
         if GATE_VERSION >= 2:
             command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                         '--seed-ledger', str(self.args.seed_ledger)]
-        self._admit()
         started = time.time()
-        log_line(self.args.log, f'background round {job["round"]} evaluate started against {frozen["incumbent_sha256"]}')
+        log_line(self.args.log, f'background round {job["round"]} evaluate started against '
+                                f'{frozen["incumbent_sha256"]} eval_units={units}')
         try:
             self._command(command, folder / 'evaluation.log')
             decision = json.loads((out / 'decision.json').read_text())
@@ -785,7 +806,7 @@ class TrainingPipeline:
         log_line(self.args.log, f'background round {job["round"]} evaluate done: {finished-started:.3f}s '
                                f'approved={decision["approved"]} reasons={decision["reasons"]}')
         return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
-                    evaluation_started=started, evaluation_finished=finished,
+                    evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
 
     def estimate_peak(self):
@@ -1027,16 +1048,32 @@ class TrainingPipeline:
             self.failed = True
             raise
 
-    def poll(self):
+    def poll(self, retry: bool = True):
         for index, (job, future) in enumerate(list(self.futures)):
             if job['status'] == 'done' or not future.done():
                 continue
             try:
                 report = future.result()
             except BaseException as error:
+                # task70 B7: a background failure must not kill collection. Record it,
+                # retry once; only a second consecutive failure of the same round stops qc.
                 job['status'] = 'failed'
+                job['error'] = str(error)
+                job['attempts'] = job.get('attempts', 0) + 1
                 save_state(self.args.state, self.state)
-                raise RuntimeError(f'background round {job["round"]} failed: {error}') from error
+                if retry and job['attempts'] < MAX_BACKGROUND_ATTEMPTS:
+                    log_line(self.args.log, f'background round {job["round"]} failed '
+                                            f'(attempt {job["attempts"]}/{MAX_BACKGROUND_ATTEMPTS}); '
+                                            f'retrying once: {error}')
+                    self.failed = False
+                    job['status'] = 'queued'
+                    self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
+                    continue
+                if job['attempts'] >= MAX_BACKGROUND_ATTEMPTS:
+                    log_line(self.args.log, f'background round {job["round"]} failed '
+                                            f'{job["attempts"]} times; stopping qc: {error}')
+                raise RuntimeError(f'background round {job["round"]} failed '
+                                   f'{job["attempts"]} times; stopping: {error}') from error
             promotion = report.get('promotion', {})
             current_contract = self.evaluation_contract(job)
             invalid = False
@@ -1073,15 +1110,20 @@ class TrainingPipeline:
 
     def close(self):
         # poll may schedule a stale comparison again; drain it before closing the executor.
+        # B7: failed jobs stay failed here (no retry), so only wait on queued ones.
         try:
-            while any(job['status'] != 'done' for job, _ in self.futures):
+            while any(job['status'] == 'queued' for job, _ in self.futures):
                 for _, future in list(self.futures):
                     if not future.done():
                         try:
                             future.result()
                         except BaseException:
                             pass  # poll persists and reports the failure
-                self.poll()
+                try:
+                    self.poll(retry=False)
+                except RuntimeError as error:
+                    # B7: a single background failure at final drain is recorded, not fatal.
+                    log_line(self.args.log, f'background job failed during final drain: {error}')
         finally:
             self.executor.shutdown(wait=True)
 
@@ -1143,6 +1185,11 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         background = pipeline.reservation() if pipeline is not None else 0
         upper = pipeline.foreground_limit() if pipeline is not None else args.workers
         workers = worker_count(available, per_worker, upper, background)
+        if pipeline is not None:
+            # 评估分配 units 时要扣除前台在跑的组宽（task73c）；启动探针后这里也补上
+            # 单 worker 实测 RSS，供 _evaluate 的内存准入使用。
+            pipeline.per_worker_bytes = per_worker
+            pipeline.foreground_workers = workers
         per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
         log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                            f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
@@ -1167,6 +1214,8 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
                     student_round=state.get('student_round', 0), workers=workers)
         result = subprocess.run(command, cwd=ROOT)
         item['collection_finished'] = time.time()
+        if pipeline is not None:
+            pipeline.foreground_workers = 0
         seconds = time.time() - started
         folder = args.out / f'{item["label"]}_{item["games"]}'
         wins = games = 0

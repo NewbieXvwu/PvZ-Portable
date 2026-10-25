@@ -115,6 +115,13 @@ def main() -> None:
             for cell, task_id, manifest in cells:
                 for arm, beta in ARMS:
                     label = f'{cell}_{arm}_{tag}'
+                    # task70 B6: a set whose games.jsonl is already complete (one row per seed)
+                    # is kept -- worker count does not change the games, so an interrupted run
+                    # resumes instead of redoing finished sets.
+                    done = out_dir / f'{label}_{args.seeds}' / 'games.jsonl'
+                    if done.is_file() and sum(1 for _ in done.open()) == args.seeds:
+                        print(f'   skip {label}: {args.seeds} games already on file', flush=True)
+                        continue
                     command = command_for(common, manifest, task_id, 0, args.seeds, label,
                                           frames=frames_dir, out=out_dir, beta=beta)
                     run_command(command, args.out / f'{tag}.log')

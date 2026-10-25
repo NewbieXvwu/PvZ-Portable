@@ -54,6 +54,7 @@ private:
 	bool v2lite = false;
 	bool v2 = false;
 	bool fogChannel = false;
+	bool sizeChannel = false;
 	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	// Every buffer the forward pass needs is allocated once in Load(): a rollout runs the

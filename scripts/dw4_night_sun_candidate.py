@@ -22,7 +22,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 import numpy as np
-from pvz_frame_store import read_frames
+from pvz_frame_store import archive_seed, read_frames
 
 SUN_SHROOM = 9
 GRAVE_BUSTER = 11
@@ -36,7 +36,7 @@ def archives(root: Path, first: int, last: int):
     for folder in sorted(root.iterdir()):
         if not folder.name.startswith('seed_'):
             continue
-        seed = int(folder.name.split('_', 1)[1])
+        seed = archive_seed(folder.name)
         if not first <= seed <= last:
             continue
         for archive in sorted(folder.iterdir()):

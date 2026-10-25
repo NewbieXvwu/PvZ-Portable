@@ -40,7 +40,7 @@ def category(state, label):
 
 
 def select(args):
-    from pvz_frame_store import read_frames
+    from pvz_frame_store import archive_seed, read_frames
     paths = sorted(Path(args.archives).glob(f'*/{args.label}/frames.npz'))
     pools = defaultdict(list)
     rng = random.Random(args.seed)
@@ -54,7 +54,7 @@ def select(args):
             if found:
                 c, gap = found
                 per_game[c].append(dict(category=c, archive=str(path.parent), decision=i,
-                                        seed=int(path.parents[1].name.removeprefix('seed_')),
+                                        seed=archive_seed(path.parents[1].name),
                                         gap=gap, wave=frames[i-1]['wave'], tick=frames[i-1]['tick'],
                                         label=label))
                 totals[c] += 1
@@ -104,7 +104,7 @@ def alternatives(obs, point, archived):
 
 
 def run_point(point, args, replay_only=False):
-    from pvz_frame_store import read_frames
+    from pvz_frame_store import archive_seed, read_frames
     from render_episode import _frame, load_training_task, training_task_kwargs
     from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec

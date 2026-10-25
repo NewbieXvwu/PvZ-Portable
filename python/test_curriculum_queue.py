@@ -12,7 +12,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
-                              MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE, WINDOW, _descendant_rss,
+                              CURRICULUM_LADDERS, MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE,
+                              WINDOW, _descendant_rss,
                               adjust, allocate, build_plan, cell_level, command_for, label_for,
                               load_demo_start_cells, load_teacher_rates, make_state, pack_command,
                               pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
@@ -35,10 +36,13 @@ class CurriculumRulesTest(unittest.TestCase):
         ids = training_base_ids()
         self.assertEqual({name for name in ids if name.startswith('roof_')},
                          {'roof_l41_train_r7'})
-        # task68: only fog_user L31 is admitted; fog_user_v2 is registered but held out until the
-        # paired human/human_v2 cold start (task70); the task45 fog_f8/f8p families stay out.
-        self.assertEqual({name for name in ids if name.startswith('fog_')},
-                         {'fog_user_l31_snow'})
+        # task70 B6: fog_user_v2 (human_v2) replaces fog_user; task79b admits the measured L36-L38
+        # human_v2 bases; L39 remains demonstration-only; fog_f8/f8p stay out.
+        self.assertEqual({name for name in ids if name.startswith('fog')},
+                         {'fog_user_v2_l31_snow', 'fog79b_l36_best', 'fog79b_l37_best',
+                          'fog79b_l38_best'})
+        self.assertIn('pool_l25_orig_train', ids)
+        self.assertEqual(CURRICULUM_LADDERS['native_l25'], [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
 
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))
@@ -904,8 +908,15 @@ class DemoStartCellsTest(unittest.TestCase):
         if not all((ROOT / archive).is_dir() for archive in archives):
             self.skipTest('user demo archives are not in git; present only where they were recorded/fetched')
         cells, _ = load_demo_start_cells(manifest)
-        self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_32_snow_m200',
-                                      'demo_fog_33_cactus_snow_m200', 'demo_fog_33_cattail_snow_m200'})
+        # task70 B6: fog start cells use the _hv2 family (human_v2 observation, same archives /
+        # ladders / future seed blocks); roof start cells have no fog and keep the base task id.
+        self.assertEqual(set(cells), {'demo_fog_31_snow_m200_hv2', 'demo_fog_32_snow_m200_hv2',
+                                      'demo_fog_33_cactus_snow_m200_hv2', 'demo_fog_33_cattail_snow_m200_hv2',
+                                      'demo_fog_34_cactus_snow_m200_hv2', 'demo_fog_39_cactus_snow_m200_hv2',
+                                      'demo_roof_42_melon_m200', 'demo_roof_43_melon_m200',
+                                      'demo_roof_44_melon_m200', 'demo_roof_42_gloommelon_m200',
+                                      'demo_roof_49_doom_m200', 'demo_roof_48_doom_m200',
+                                      'demo_roof_46_doom_m200'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)

@@ -93,12 +93,12 @@ void EnvironmentRollout::Load(const std::string& path)
 		input.read(reinterpret_cast<char*>(&embedding), 4);
 	}
 	else embedding = size;
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 4 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 5 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	std::vector<size_t> counts = {
-		nextWidth * (Channels + (observation == 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
+		nextWidth * (Channels + (observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
 		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation >= 3 ? 7 : observation == 2)), nextWidth,
 		nextContext, 1, packetHead ? nextWidth * (nextContext + embedding + 3) : 10 * nextContext,
 		packetHead ? nextWidth : 10, (packetHead ? 54 : 10) * embedding,
@@ -124,6 +124,7 @@ void EnvironmentRollout::Load(const std::string& path)
 	v2lite = observation == 2;
 	v2 = observation >= 3;
 	fogChannel = observation == 4;
+	sizeChannel = observation == 5;
 	weights = std::move(loaded);
 	// LOAD_ROLLOUT_NET can replace a model in an existing process, including with
 	// another model of the same layout. Channel sets and dimensions do not identify
@@ -144,7 +145,7 @@ void EnvironmentRollout::History::Update(LawnApp* app)
 	if (wave != state->mCurrentWave) { wave = state->mCurrentWave; waveTick = state->mMainCounter; }
 	decltype(plants) current;
 	for (const Plant* plant : state->mPlants)
-		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
+		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 		{
 			const auto key = std::make_tuple(plant->mRow, plant->mPlantCol, static_cast<int>(plant->mSeedType));
 			const auto found = plants.find(key);
@@ -157,12 +158,15 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	std::vector<float>& board, std::vector<float>& scalars, History& history)
 {
 	Board* state = app->mBoard;
-	board.assign((Channels + (fogChannel ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
+	board.assign((Channels + ((fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
 	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + (v2 ? 7 : v2lite), 0.0f);
 	for (const Plant* plant : state->mPlants)
-		if (!plant->mDead && !plant->mSquished && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
+		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 		{
-			const double health = static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
+			// task70 B5: a fog-hidden plant's health is "unknown" (-1) -- the same fixed value the
+			// observations carry, so the type channel reads a presence marker, never real internals.
+			const double health = app->EnvironmentPlantFogHidden(plant) ? -1.0 :
+				static_cast<double>(plant->mPlantHealth) / std::max(1, plant->mPlantMaxHealth);
 			board[std::min(static_cast<int>(plant->mSeedType), 53) * Cells + plant->mRow * 10 + plant->mPlantCol] += HasHistory() ? static_cast<float>(health) : health;
 		}
 	for (Zombie* zombie : state->mZombies)
@@ -177,9 +181,11 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		board[(54 + std::min(static_cast<int>(zombie->mZombieType), 33)) * Cells + cell] += HasHistory() ? static_cast<float>(health) : health;
 		board[88 * Cells + cell] += zombie->mIsEating;
 		board[89 * Cells + cell] += zombie->mChilledCounter > 0;
+		if (sizeChannel)
+			board[101 * Cells + cell] += app->mEnvironmentTaskSpec.originalConveyorStart && app->IsLittleTroubleLevel() ? zombie->mScaleZombie : 1.0f;
 	}
 	for (const LawnMower* mower : state->mLawnMowers)
-		if (!mower->mDead && mower->mRow >= 0 && mower->mRow < 6)
+		if (!mower->mDead && !app->EnvironmentStormHidden() && mower->mRow >= 0 && mower->mRow < 6)
 			board[90 * Cells + mower->mRow * 10] = mower->mMowerState == LawnMowerState::MOWER_READY;
 	for (int row = 0; row < 6; ++row)
 	{
@@ -295,24 +301,32 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		}
 		for (const Plant* plant : state->mPlants)
 		{
-			if (plant->mDead || plant->mSquished || plant->mRow < 0 || plant->mRow >= 6 || plant->mPlantCol < 0 || plant->mPlantCol >= 9) continue;
+			if (plant->mDead || plant->mSquished || app->EnvironmentStormHidden() || plant->mRow < 0 || plant->mRow >= 6 || plant->mPlantCol < 0 || plant->mPlantCol >= 9) continue;
 			const int cell = plant->mRow * 10 + plant->mPlantCol;
+			// task70 B5: a fog-hidden plant contributes exactly what the JSON decoders compute
+			// from the "unknown" (-1) fields the observations carry, so the C++ student input
+			// and the python student input stay identical on fog frames.
+			const bool aHidden = app->EnvironmentPlantFogHidden(plant);
+			const PlantState aState = aHidden ? static_cast<PlantState>(-1) : plant->mState;
+			const int aCountdown = aHidden ? -1 : plant->mStateCountdown;
+			const int aSpecial = aHidden ? -1 : plant->mDoSpecialCountdown;
+			const int aLaunch = aHidden ? -1 : plant->mLaunchCounter;
 			double progress = 0;
 			if (plant->mSeedType == SeedType::SEED_POTATOMINE)
 			{
-				if (plant->mState == PlantState::STATE_NOTREADY) progress = 1.0 - plant->mStateCountdown / 1500.0;
-				else if (plant->mState == PlantState::STATE_POTATO_RISING || plant->mState == PlantState::STATE_POTATO_ARMED) progress = 1.0;
+				if (aState == PlantState::STATE_NOTREADY) progress = 1.0 - aCountdown / 1500.0;
+				else if (aState == PlantState::STATE_POTATO_RISING || aState == PlantState::STATE_POTATO_ARMED) progress = 1.0;
 			}
 			else if (plant->mSeedType == SeedType::SEED_CHERRYBOMB || plant->mSeedType == SeedType::SEED_JALAPENO)
-				progress = 1.0 - plant->mDoSpecialCountdown / 100.0;
+				progress = 1.0 - aSpecial / 100.0;
 			board[98 * Cells + cell] = std::max(static_cast<double>(board[98 * Cells + cell]), progress);
 			if (plant->mLaunchRate > 0)
-				board[99 * Cells + cell] = std::max(static_cast<double>(board[99 * Cells + cell]), 1.0 - static_cast<double>(plant->mLaunchCounter) / plant->mLaunchRate);
+				board[99 * Cells + cell] = std::max(static_cast<double>(board[99 * Cells + cell]), 1.0 - static_cast<double>(aLaunch) / plant->mLaunchRate);
 		}
 		for (Projectile* projectile : state->mProjectiles)
 		{
 			if (projectile->mDead || projectile->mRow < 0 || projectile->mRow >= 6) continue;
-			if (app->EnvironmentFogMasked() && app->EnvironmentFogAmount(projectile->mRow,
+			if (app->mEnvironmentTaskSpec.fogObservation == EnvironmentFogObservation::Storm ? !app->EnvironmentProjectileVisible(projectile) : app->EnvironmentFogMasked() && app->EnvironmentFogAmount(projectile->mRow,
 				std::clamp(static_cast<int>((projectile->mPosX - 40) / 80), 0, 8)) > 0) continue;
 			const double position = EnvironmentWaitEvents::RenderedPublicCoordinate(projectile->mPosX);
 			const int col = std::clamp(static_cast<int>(std::floor((position - 40.0) / 80.0)), 0, 9);
@@ -320,7 +334,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		}
 		int pending = 0;
 		for (Coin* coin : state->mCoins)
-			if (!coin->mDead && coin->IsSun()) pending += coin->GetSunValue();
+			if (!coin->mDead && coin->IsSun() && !app->EnvironmentStormHidden()) pending += coin->GetSunValue();
 		const int start = Scalars + (taskContext ? TaskContext : 0);
 		scalars[start] = state->mZombieCountDown / 4500.0;
 		scalars[start + 1] = state->mHugeWaveCountDown > 0;
@@ -436,7 +450,7 @@ static float IdentityLinear(const float* input, const float* weight, int count, 
 
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
-	Convolve(board, Channels + (fogChannel ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
+	Convolve(board, Channels + ((fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
 	if (rowPool)

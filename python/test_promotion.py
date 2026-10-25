@@ -3,7 +3,8 @@ import copy
 
 import pytest
 
-from pvz_promotion import PANEL_TASKS, decide, freeze_panel, paired_interval, policy, summarize
+from pvz_promotion import (PANEL_TASKS, PANEL_TASKS_V3, decide, freeze_panel, paired_interval,
+                           policy, summarize)
 
 
 def manifest():
@@ -64,6 +65,7 @@ def test_panel_is_unchanged_except_seed_subset_and_outcomes_are_complete():
 # ---- task73b: gate v2 (fresh seeds per round, 1536 pairs, ledger pool) ----
 
 V2_BLOCK_SIZE = 192 * 8
+V3_BLOCK_SIZE = 192 * 10
 
 
 def source_document():
@@ -73,8 +75,24 @@ def source_document():
                        for _, name in PANEL_TASKS])
 
 
+def v3_source_document():
+    """The registered unified v2 schema plus the practiced fog/roof cells (task73c)."""
+    document = source_document()
+    for zone, name in PANEL_TASKS_V3:
+        if (zone, name) not in PANEL_TASKS:
+            document['groups'][name] = zone
+            document['tasks'].append(dict(task_id=name, seeds=list(range(43000000, 43000128)),
+                                          wave_cap=None, zombie_count_multiplier=1, level=31,
+                                          deck=[0, 1, 2, 3, 4, 5]))
+    return document
+
+
 def v2_panel(start=31024):
     return freeze_panel(source_document(), version=2, seed_block=(start, start + V2_BLOCK_SIZE))
+
+
+def v3_panel(start=31024):
+    return freeze_panel(v3_source_document(), version=3, seed_block=(start, start + V3_BLOCK_SIZE))
 
 
 def test_v2_policy_records_fresh_seed_design_and_v1_stays_byte_compatible():
@@ -90,7 +108,7 @@ def test_v2_policy_records_fresh_seed_design_and_v1_stays_byte_compatible():
                         'zone_veto', 'pair_count', 'episode_count', 'seeds_per_task', 'tasks']
     assert v1['pair_count'] == 64 and v1['version'] == 1 and v1['seeds_per_task'] == 8
     with pytest.raises(ValueError):
-        policy(3)
+        policy(4)
 
 
 def test_v2_panel_partitions_block_and_decide_covers_1536_pairs():
@@ -122,5 +140,80 @@ def test_v2_seed_block_is_validated_against_pool_and_size():
     with pytest.raises(ValueError):
         freeze_panel(source_document(), version=1, seed_block=(31024, 31024 + V2_BLOCK_SIZE))
     with pytest.raises(ValueError):
-        freeze_panel(source_document(), version=3, seed_block=(31024, 31024 + V2_BLOCK_SIZE))
+        freeze_panel(source_document(), version=4, seed_block=(31024, 31024 + V2_BLOCK_SIZE))
 
+
+# ---- task73c: gate v3 (fog + roof zones, replaced holdout, 1920 pairs) ----
+
+V3_ZONES = ('day', 'fog', 'heldout', 'night', 'pool', 'roof')
+
+
+def test_v3_policy_covers_practiced_zones_and_keeps_older_policies_frozen():
+    v3 = policy(3)
+    assert v3['version'] == 3 and v3['pair_count'] == 1920 and v3['seeds_per_task'] == 192
+    assert v3['episode_count'] == 3840 and v3['seed_pool'] == [31024, 65536]
+    zones = [task['zone'] for task in v3['tasks']]
+    assert zones.count('fog') == 1 and zones.count('roof') == 1
+    names = [task['task_id'] for task in v3['tasks']]
+    assert 'day_l9_eval_d7p_holdout1' not in names          # floor task is gone
+    assert 'day_l9_eval_d7p_holdout2' in names              # measured in-band-adjacent replacement
+    assert 'fog_user_l31_snow' in names and 'roof_l41_train_r7' in names
+    # v1/v2 policy dicts are embedded in old certificate contracts: byte-for-byte stable.
+    assert policy(2)['pair_count'] == 1536 and len(policy(2)['tasks']) == 8
+    assert policy(1)['pair_count'] == 64
+
+
+def test_v3_panel_partitions_block_across_six_zones():
+    panel = v3_panel()
+    assert panel['panel_version'] == 'v3-task73c' and panel['seed_block'] == [31024, 31024 + V3_BLOCK_SIZE]
+    assert sorted(set(panel['groups'].values())) == sorted(V3_ZONES)
+    seeds = [seed for task in panel['tasks'] for seed in task['seeds']]
+    assert len(seeds) == 1920 and len(set(seeds)) == 1920
+    assert min(seeds) == 31024 and max(seeds) == 31024 + V3_BLOCK_SIZE - 1
+    per_zone = {}
+    for task in panel['tasks']:
+        per_zone[panel['groups'][task['task_id']]] = per_zone.get(panel['groups'][task['task_id']], 0) + len(task['seeds'])
+    assert per_zone == {'day': 384, 'fog': 192, 'heldout': 384, 'night': 384, 'pool': 384, 'roof': 192}
+    positive = decide(outcomes(panel, True, False), panel)
+    assert positive['version'] == 3 and positive['approved'] and positive['overall']['pairs'] == 1920
+    assert sorted(positive['zones']) == sorted(V3_ZONES)
+    negative = decide(outcomes(panel, False, True), panel)
+    assert not negative['approved']
+    assert all('significant_zone_regression:' + zone in negative['reasons'] for zone in V3_ZONES)
+
+
+def test_v3_freeze_validates_source_panel_groups_and_block():
+    document = v3_source_document()
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=3)                                   # block required
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=3, seed_block=(31024, 31024 + V3_BLOCK_SIZE - 1))
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=3, seed_block=(30000, 30000 + V3_BLOCK_SIZE))
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=3, seed_block=(65536 - V3_BLOCK_SIZE + 1, 65536 + 1))
+    # A v3 task whose group was not registered under the v3 zone name is rejected.
+    swapped = copy.deepcopy(document)
+    swapped['groups']['fog_user_l31_snow'] = 'day'
+    with pytest.raises(ValueError, match='fog_user_l31_snow'):
+        freeze_panel(swapped, version=3, seed_block=(31024, 31024 + V3_BLOCK_SIZE))
+    # Non-original difficulty stays rejected in v3 (the frozen fog/roof cells are 1.0).
+    easier = copy.deepcopy(document)
+    easier['tasks'][-1]['zombie_count_multiplier'] = 0.5
+    with pytest.raises(ValueError, match='original-difficulty'):
+        freeze_panel(easier, version=3, seed_block=(31024, 31024 + V3_BLOCK_SIZE))
+    # The v2 spec must not accept a v3 task: panel membership is version-pinned.
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=2, seed_block=(31024, 31024 + V3_BLOCK_SIZE))
+
+
+def test_v3_decision_uses_zone_veto_on_new_zones_too():
+    panel = v3_panel()
+    pairs = outcomes(panel, True, False)
+    for row in pairs:
+        if row['zone'] in ('fog', 'roof'):
+            row.update(candidate=False, incumbent=True)
+    result = decide(pairs, panel)
+    assert not result['approved']
+    assert sorted(result['reasons']) == ['significant_zone_regression:fog',
+                                         'significant_zone_regression:roof']

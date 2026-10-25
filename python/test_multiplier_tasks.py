@@ -13,8 +13,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from make_multiplier_tasks import (FAMILIES, INDEPENDENT_BLOCKS, MULT_STRIDE, MULTIPLIERS,
-                                   SEEDS_PER_TASK, SLOTS_PER_FAMILY, build_variants, seed_start,
-                                   variant_id)
+                                   NATIVE_BLOCKS,
+                                   SEEDS_PER_TASK, SLOTS_PER_FAMILY, build_variants, multipliers_for_family,
+                                   seed_start, variant_id)
 from pvz_tasks import deck_for_seed
 import make_multiplier_tasks as generator
 
@@ -49,6 +50,8 @@ class MultiplierTasksTest(unittest.TestCase):
                 # Multiple families may share one source manifest (fog f8/f8p).
                 self.sources[key][name]['task_id'] = name
                 self.sources[key][name]['terrain'] = terrain
+                if key == 'fog79b':
+                    self.sources[key][name]['fog_observation'] = 'human_v2'
 
     def test_variant_ids_and_multipliers(self):
         tasks = build_variants(self.sources, seeds=64)
@@ -56,8 +59,19 @@ class MultiplierTasksTest(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         for task in tasks:
             suffix = task['task_id'].rsplit('_', 1)[1]
-            expected = dict((s, m) for m, s in MULTIPLIERS)[suffix]
+            family = next(f for f, _k, pattern, levels, _t in FAMILIES
+                          if any(task['task_id'].startswith(pattern.format(level=level)) for level in levels))
+            expected = dict((s, m) for m, s in multipliers_for_family(family))[suffix]
             self.assertEqual(task['zombie_count_multiplier'], expected)
+
+    def test_native_multiplier_blocks_and_low_rungs(self):
+        by_id = {task['task_id']: task for task in build_variants(self.sources, seeds=16)}
+        self.assertIn('pool_l25_orig_train_m050', by_id)
+        self.assertNotIn('pool_l25_orig_train_m025', by_id)
+        self.assertIn('pool_l30_orig_train_m025', by_id)
+        self.assertEqual(by_id['pool_l25_orig_train_m050']['seeds'][0], 62_000_000)
+        self.assertEqual(by_id['pool_l30_orig_train_m025']['seeds'][0], 62_100_000)
+        self.assertEqual(by_id['storm_l40_orig_train_m050']['seeds'][0], 62_200_000)
 
     def test_seed_blocks_do_not_overlap(self):
         tasks = build_variants(self.sources, seeds=SEEDS_PER_TASK)
@@ -66,9 +80,9 @@ class MultiplierTasksTest(unittest.TestCase):
             for seed in task['seeds']:
                 self.assertNotIn(seed, owner)
                 owner[seed] = task['task_id']
-        # Roof and the task68 fog_user family use their own blocks; only the legacy
+        # Independent fog families use their own blocks; only the legacy
         # families share the 700k stride.
-        block = (sum(f[0] not in INDEPENDENT_BLOCKS for f in FAMILIES)
+        block = (sum(f[0] not in INDEPENDENT_BLOCKS and f[0] not in NATIVE_BLOCKS for f in FAMILIES)
                  * SLOTS_PER_FAMILY * SEEDS_PER_TASK)
         self.assertLess(block, MULT_STRIDE)
         for family_index, (_name, _key, _pattern, levels, _terrain) in enumerate(FAMILIES):
@@ -80,10 +94,12 @@ class MultiplierTasksTest(unittest.TestCase):
         # task70: fog_user_v2 was appended after roof, so it is not part of the seed set
         # roof had to preserve either.
         old = {(m, entry[0], level): seed_start(m, f, level)
-               for f, entry in enumerate(FAMILIES) if entry[0] not in ('roof', 'fog_user_v2')
+               for f, entry in enumerate(FAMILIES)
+               if entry[0] not in ('roof', 'fog_user_v2', 'fog79b', 'native_l25', 'native_l30', 'native_l40')
                for m in range(len(MULTIPLIERS)) for level in entry[3]}
         roof = ('roof', 'roof', 'roof_l{level}_train_r7', (41, 42, 43, 44, 46, 47, 48, 49), 'roof')
-        families = tuple(f for f in FAMILIES if f[0] not in ('roof', 'fog_user_v2')) + (roof,)
+        families = tuple(f for f in FAMILIES if f[0] not in ('roof', 'fog_user_v2', 'fog79b',
+                                                             'native_l25', 'native_l30', 'native_l40')) + (roof,)
         with patch.object(generator, 'FAMILIES', families):
             index = {entry[0]: i for i, entry in enumerate(families)}
             for (m, name, level), value in old.items():
@@ -99,6 +115,8 @@ class MultiplierTasksTest(unittest.TestCase):
         legacy = ('day_d7', 'day_orig', 'night_n10', 'night_orig', 'pool_p9k',
                   'day_d7q', 'night_n10p', 'night_n10q', 'fog_f8', 'fog_f8p')
         for index, (family, _key, _pattern, levels, _terrain) in enumerate(FAMILIES):
+            if family in ('native_l25', 'native_l30', 'native_l40'):
+                continue
             for mult in range(6):
                 for level in levels:
                     if family == 'roof':
@@ -109,6 +127,8 @@ class MultiplierTasksTest(unittest.TestCase):
                     elif family == 'fog_user_v2':
                         # task70: another independent block above roof (48.52M-50M free window).
                         expected = 49200000 + mult * 100000 + (level - 31) * 2048
+                    elif family == 'fog79b':
+                        expected = 79200000 + mult * 100000 + (level - 36) * 2048
                     else:
                         expected = (5000000 + mult * 700000 +
                                     (legacy.index(family) * 32 + level - 1) * 2048)
@@ -123,9 +143,10 @@ class MultiplierTasksTest(unittest.TestCase):
         """
         # task70: fog_user_v2 now also exists; the original task68 proof (appending fog_user
         # preserved everything) must drop both fog families from the "before" build.
-        old_families = tuple(f for f in FAMILIES if f[0] not in ('fog_user', 'fog_user_v2'))
+        old_families = tuple(f for f in FAMILIES if f[0] not in ('fog_user', 'fog_user_v2', 'fog79b',
+                                                                 'native_l25', 'native_l30', 'native_l40'))
         old_sources = {key: table for key, table in self.sources.items()
-                       if key not in ('fog_user', 'fog_user_v2')}
+                       if key not in ('fog_user', 'fog_user_v2', 'native')}
         with patch.object(generator, 'FAMILIES', old_families):
             before = build_variants(old_sources, seeds=SEEDS_PER_TASK)
         families_with_user = old_families + tuple(
@@ -134,6 +155,7 @@ class MultiplierTasksTest(unittest.TestCase):
             with_user = build_variants({**old_sources, 'fog_user': self.sources['fog_user']},
                                        seeds=SEEDS_PER_TASK)
         after = build_variants(self.sources, seeds=SEEDS_PER_TASK)
+        after = [task for task in after if not task['task_id'].startswith('fog79b_')]
         for old, new in zip(before, with_user):
             self.assertEqual(json.dumps(old, sort_keys=True), json.dumps(new, sort_keys=True))
         for old, new in zip(with_user, after):
@@ -183,11 +205,15 @@ class MultiplierTasksTest(unittest.TestCase):
         surviving task list to be byte-identical (ids, seeds, offsets, every copied field)
         while the new seeds stay disjoint from all preregistered blocks.
         """
-        old_families = tuple(f for f in FAMILIES if f[0] != 'fog_user_v2')
-        old_sources = {key: table for key, table in self.sources.items() if key != 'fog_user_v2'}
+        old_families = tuple(f for f in FAMILIES if f[0] not in ('fog_user_v2', 'fog79b',
+                                                                 'native_l25', 'native_l30', 'native_l40'))
+        old_sources = {key: table for key, table in self.sources.items()
+                       if key not in ('fog_user_v2', 'native')}
         with patch.object(generator, 'FAMILIES', old_families):
             before = build_variants(old_sources, seeds=SEEDS_PER_TASK)
         after = build_variants(self.sources, seeds=SEEDS_PER_TASK)
+        after = [task for task in after if not task['task_id'].startswith(
+            ('pool_l25_orig_train_m', 'pool_l30_orig_train_m', 'storm_l40_orig_train_m', 'fog79b_'))]
         self.assertEqual(len(after), len(before) + len(MULTIPLIERS))
         for old, new in zip(before, after):
             self.assertEqual(json.dumps(old, sort_keys=True), json.dumps(new, sort_keys=True))
@@ -240,16 +266,26 @@ class MultiplierTasksTest(unittest.TestCase):
         self.assertIn(16, train['deck'])
         self.assertNotIn(43, train['deck'])
 
-    def test_fog_user_v2_registered_but_not_admitted(self):
-        """task70: fog_user_v2 has a manifest and seeds but waits for the paired cold start."""
+    def test_fog_user_v2_supersedes_fog_user_in_curriculum(self):
+        """task70 B6: fog_user_v2 is admitted (teacher 31/32 post-B5), fog_user is retired."""
         import make_multiplier_tasks as module
         from curriculum_queue import training_base_ids
-        self.assertNotIn('fog_user', module.SUPERSEDED)
-        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user_v2'), ())
-        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user'), (31,))
+        self.assertEqual(module.SUPERSEDED.get('fog_user'), 'fog_user_v2')
+        self.assertEqual(module.CURRICULUM_LEVELS.get('fog_user_v2'), (31,))
+        self.assertNotIn('fog_user', module.CURRICULUM_LEVELS)
         ids = training_base_ids()
-        self.assertIn('fog_user_l31_snow', ids)
-        self.assertNotIn('fog_user_v2_l31_snow', ids)
+        self.assertIn('fog_user_v2_l31_snow', ids)
+        self.assertNotIn('fog_user_l31_snow', ids)
+
+    def test_task79b_fog_family_is_admitted_with_human_v2_bases(self):
+        self.assertEqual(generator.CURRICULUM_LEVELS['fog79b'], (36, 37, 38))
+        family = next(entry for entry in FAMILIES if entry[0] == 'fog79b')
+        self.assertEqual(family[3], (36, 37, 38))
+        source = [self.sources['fog79b'][f'fog79b_l{level}_best'] for level in (36, 37, 38)]
+        self.assertEqual([task['fog_observation'] for task in source], ['human_v2'] * 3)
+        index = FAMILIES.index(family)
+        self.assertEqual(seed_start(0, index, 36), 79_200_000)
+        self.assertEqual(seed_start(5, index, 38), 79_200_000 + 500_000 + 2 * 2048)
 
     def test_fields_copied_and_perturbation_kept(self):
         tasks = build_variants(self.sources, seeds=32)

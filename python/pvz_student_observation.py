@@ -6,7 +6,7 @@ from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of
 
 SPEED_SCALE = 1.0
 OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7), "v2fog": (10, 7),
-             "v2fogstack4": (112, 7)}
+             "v2fogstack4": (112, 7), "v2size": (10, 7)}
 
 
 def fog_channel(frame: dict) -> np.ndarray:
@@ -35,7 +35,7 @@ def v2_extra(frame: dict, wave_tick: int) -> tuple[np.ndarray, np.ndarray]:
         totals[:, row, col] += (health * fraction, health * velocity / 0.7, health)
         maximum[row, col] = max(maximum[row, col], velocity / 0.7)
         if raw is not None:
-            has_object, helm, shield = raw["zombies"][index]
+            has_object, helm, shield = raw["zombies"][index][:3]
             if kind == 3 and has_object:
                 board[3, row, col] += health / 200.0
             board[4, row, col] += (helm + shield) / 370.0
@@ -79,8 +79,15 @@ class StudentHistory:
         tick = frame["tick"]
         if frame["wave"] != self.wave:
             self.wave, self.wave_tick = frame["wave"], tick
-        if self.obs in ("v2", "v2fog", "v2fogstack4"):
+        if self.obs in ("v2", "v2fog", "v2fogstack4", "v2size"):
             board, scalars = v2_extra(frame, self.wave_tick)
+            if self.obs == 'v2size':
+                size = np.zeros((1, ROWS, COLS), dtype=np.float32)
+                for zombie in frame['zombies']:
+                    row, _kind, position, _velocity, _health, on_board = zombie[:6]
+                    if on_board and 0 <= row < ROWS:
+                        size[0, row, _col_of(position)] += zombie[10] if len(zombie) > 10 else 1.0
+                board = np.concatenate([board, size])
             if self.obs in ("v2fog", "v2fogstack4"):
                 board = np.concatenate([board, fog_channel(frame)])
             if self.obs == 'v2fogstack4':
