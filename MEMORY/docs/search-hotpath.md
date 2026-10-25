@@ -77,6 +77,13 @@ $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/ab
 # 第三轮：qc 负载下的同设计 ABBA（六族全程同一控制器，§7.4）
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_qc --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_qc --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
+# 第四轮（未跑完）：两份 PGO 的 ABBA（§7.5，交接时 ABBA 尚未开始）
+# 两份 PGO 用同一流程、同一训练负载（day L7、种子 5012288/5012289、2 进程）各自两阶段构建：
+#   基线 = c0249d62 的临时 worktree；补丁 = 本工作树；均 -O3 -flto=auto -ffp-contract=off -g1
+#   阶段1 -fprofile-generate=<data> → 跑上面的 search_play 训练负载 → 阶段2 -DPVZ_PGO_DATA=<data>
+# 产物：artifacts/task77/pvz-pgo-base（ca7d9283…）、artifacts/task77/pvz-pgo-cand（a5098255…）
+PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_pgo --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2
+$PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_pgo --candidate $P/artifacts/task77/pvz-pgo-cand --baseline $P/artifacts/task77/pvz-pgo-base --workers 2 --count 2
 # 组件级：逐位核检查 + 交错计时（§7.3b）
 $PY $P/scripts/task77_value_kernel_check.py --time
 ```

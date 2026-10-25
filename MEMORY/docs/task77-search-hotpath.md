@@ -46,6 +46,8 @@
 
 - [数字复核] 报告里的派生数字逐项重算并全部吻合：§3 的九项组件与 `profile_summary.milliseconds_per_decision` 一致（合计 161.0/125.5/139.9/122.1/74.8），rollout+学生 75.6–86.4%、叶值+静态值 2.0–5.2%、引擎 CPU 占墙钟 57–78%；§4 类别份额与 `hotspots.json` 一致（openblas 20.55 / 动画 8.52 / DataArray 7.25 / 粒子 4.62 / 值网络 2.47 / libc 4.17 / other 21.02 / unlisted 31.39）；§7.2–§7.4 的 geomean 与区间、样本数 566,659 均与证据文件一致。报告无需改动。
 
+- [PGO 两份·交接 2026-10-25 20:08] 按主控指示自编两份 PGO（同一流程、同一训练负载：day L7、种子 5012288/5012289、2 进程、各 141 个 `.gcda`）：基线取 `c0249d62` 的临时 worktree，补丁侧取本工作树，两份都用 `-O3 -flto=auto -ffp-contract=off -g1` + `-fprofile-use`。产物 `artifacts/task77/pvz-pgo-base`（`ca7d9283…`，68,689,696 B）与 `pvz-pgo-cand`（`a5098255…`，68,766,936 B），临时 worktree 已删。**ABBA 尚未开始**（主控叫停，无游戏进程残留）；恢复命令已写进报告 §2，跑 `abba` + `abba-verify` 到 `artifacts/task77/abba_pgo` 即可。
+
 ## 问题
 
 - redeploy/build 已由 task70 B5 重建，不能当原 deploy4；正式基线只读复制生产 cq/build4（SHA 与 task70 deploy4 一致）。系统无 perf，采用现有 SIGPROF 采样器并结合 cProfile。
