@@ -40,6 +40,19 @@
 - 2026-10-25：**视界采集的整组偏离（在任何 h4000/h6000 行被生成前记录）**：雾区示范接手档案（索引 0–31）在 h2500 的全部叶子都已终局，游戏既然在 2500 tick 内结束，h4000/h6000 的叶子必然同样终局、导出恒为 0 行。因此这 32 个档案只采 h2500；三个视界在 fog_l31_human（32–39）与 roof（40–63）上采齐。决定按整组统一施加，没有按结果挑档案，也没有删任何可能存在的行。
 - 2026-10-25 14:50（主控通知）：台式机内存紧张，qc 只剩 5 个采集进程，本任务从此刻起**同时最多 2 个游戏进程**（此前为 4）。直接后果：屋顶 24 档案只采 h2500（原定三视界），配对对局的可跑规模随之受限。这是外部资源约束，不是按结果挑选。
 
+- 2026-10-25 15:05（交接，主控要求停）：**标签采集完成 41/64 档案、68 个 (档案,视界) 任务**。已齐：雾区示范接手 0–31 的 h2500（32 档案）、fog_l31_human 32–38 的三视界、roof 48 的 h2500。**未完成**：fog_l31_human 39 的 h4000/h6000，以及 roof 40–47、49–63 的 h2500，共 **25 个任务**，清单已写在 ignored `artifacts/task78/jobs_new.txt`，用 `xargs -P 2 -n 2` 续跑即可（每局约 8–11 分钟，2 进程约 2 小时）。**导出、训练、94 态复评、配对对局都还没跑**。
+- 2026-10-25 15:05：续跑命令（工作树内，绝对路径）：
+  ```bash
+  cd /home/newbiexvwu/PvZ-search/.claude/worktrees/v6
+  xargs -P 2 -n 2 -a artifacts/task78/jobs_new.txt sh -c 'PVZ_NO_POPUP=1 PVZ_RESOURCE_DIR=/home/newbiexvwu/.cache/pvz-research-resources /home/newbiexvwu/.venvs/ml/bin/python scripts/task78_collect.py $0 $1 >> artifacts/task78/logs/batch_new.log 2>&1; echo "DONE $0 $1 $?" >> artifacts/task78/logs/batch_new.status'
+  /home/newbiexvwu/.venvs/ml/bin/python scripts/task78_export.py            # 新区域 -> artifacts/task78/data
+  # 旧区决策标签（另一份清单，需先跑 task78_replay.py artifacts/task78/old_sources.json）
+  /home/newbiexvwu/.venvs/ml/bin/python scripts/task78_episode.py --games-per-cohort 192   # 已完成，18,432 行
+  /home/newbiexvwu/.venvs/ml/bin/python scripts/task78_train.py --device cuda
+  /home/newbiexvwu/.venvs/ml/bin/python scripts/task78_truth.py --horizon 2500 --workers 2
+  ```
+- 2026-10-25 15:05：已落盘的可用产物（全部 ignored，不在 git）：`artifacts/task78/{sources.json, old_sources.json, replay.json, seed_audit_summary.json, labels/, episodes/}`。旧区决策标签清单 `old_sources.json` 已冻结但**尚未重放验证**（`task78_replay.py artifacts/task78/old_sources.json`，24 档案、4 worker 约 4 分钟，现按 2 进程约 8 分钟）。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 ### 来源、抽样与训练
