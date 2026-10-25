@@ -198,6 +198,7 @@ def resolve_family(meta: dict, tasks: dict) -> tuple[str, bool, list[str]]:
             return final, False, [f'{final} 已登记但卡组不同']
         if seed not in {int(value) for value in existing.get('seeds') or []}:
             return final, False, [f'{final} 已登记但没有种子 {seed}']
+        return final, False, []   # 族和种子都已登记过，不算新族
     return final, True, []
 
 

@@ -137,6 +137,15 @@ class FamilyTest(unittest.TestCase):
         self.assertTrue(new)
         self.assertEqual(problems, [])
 
+    def test_foreign_seed_family_already_registered_is_not_new(self):
+        tasks = dict(self.tasks, **{'demo_roof_46_doom_m200_s20261047': dict(
+            task_id='demo_roof_46_doom_m200_s20261047', level=46, seeds=[20261047],
+            zombie_count_multiplier=2.0, deck=[1, 33, 39, 44, 15, 3, 2, 17, 4, 35])})
+        task_id, new, problems = importer.resolve_family(_meta(seed=20261047), tasks)
+        self.assertEqual(task_id, 'demo_roof_46_doom_m200_s20261047')
+        self.assertFalse(new)
+        self.assertEqual(problems, [])
+
     def test_unknown_base_registers_itself(self):
         task_id, new, problems = importer.resolve_family(_meta(task_id='demo_roof_45_doom_m200',
                                                               level=45), self.tasks)
