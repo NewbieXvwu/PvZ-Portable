@@ -154,3 +154,4 @@
 
 - 初查本机没有 `/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/`，v5 checkpoint 声明的旧 branch、episode 缓存也需逐项定位。2026-10-25 HF 文件列表只有 v5 权重与其他传输件，无 v5 原语料；完整合并训练依赖恢复原分片，不能用热启动替代“与v5原语料合并”。
 - task72b 的94行有真值和已评分汇总，没有原生状态/叶特征；需恢复原始档案或精确重建协议后才能评分 v6。缺失时不宣布完成94态验收。
+- 2026-10-26 02:05（CodeBuddy 接手）：提交 task72b 94态重建通道 `task78_task72_rebuild.py`（plan/bind 不启动游戏；TAKEOVER FUTURE 需单游戏，排队等采集预算）并禁用 `task78_truth.py` 的旧重放路径（reference decision 是续走序号不能直接重放），17+49 项测试通过，已推送。context-fix 补采批次在跑（13/69，单进程串行，符合 2 游戏上限），配对面板剩余格与屋顶独立评估排在采集之后。
