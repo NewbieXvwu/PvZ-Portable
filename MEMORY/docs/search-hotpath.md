@@ -27,6 +27,7 @@
    - 组件级：value/static 前向快 **17%**（§7.3）。
    - 整局：两轮 ABBA（各 12 对、48 局）每局耗时比 geomean **0.993**（95% [0.948, 1.035]，qc 负载下的首轮）
      与 **0.990**（[0.969, 1.012]，负载较轻的第二轮）；第二轮同时记引擎进程 CPU 时间，比值 **0.985**（[0.959, 1.011]）。
+     第三轮在**六族全程同一个 qc 控制器**下同时记墙钟与引擎 CPU：**1.0045**（[0.987, 1.022]）、CPU **1.0050**（[0.985, 1.029]）——三轮的点估计在 0.99–1.005 之间、区间都覆盖 1。
    - 三者互相印证：值网络前向只占每决策耗时 2.0–5.2%（§3），快 17% 只能换来整局 **0.3–0.9%**，
      低于两轮 ABBA 的分辨率（±2–4%）。`DataArray` 取值 7.25%、动画 8.52% 上的改动每次只省一条间接寻址或一个分支。
    - **结论：不要为提速单独上线这个补丁**（收益 <1%，还要重建 PGO 引擎）。补丁本身逐位不变、无风险，
@@ -73,6 +74,9 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 # 第二轮：同设计，另建目录，并记引擎进程 CPU（§7.3a）
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_cpu --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 $PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_cpu --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
+# 第三轮：qc 负载下的同设计 ABBA（六族全程同一控制器，§7.4）
+PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_qc --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
+$PY $P/scripts/task77_search_hotpath.py abba-verify --out $P/artifacts/task77/abba_qc --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 # 组件级：逐位核检查 + 交错计时（§7.3b）
 $PY $P/scripts/task77_value_kernel_check.py --time
 ```
@@ -301,13 +305,39 @@ night 更麻烦：B1 与 A1 同在 loadavg 29.2，却快 33%（147.8 vs 221.2）
 （§3）。快 17% 只能换来整局 **0.3–0.9%**，正好落在两轮 ABBA 的点估计（0.985–0.993）里、
 落在它们的区间宽度（±2–4%）之下。这就是"改得对、但整局看不出来"的完整解释。
 
+### 7.4 第三轮 ABBA：qc 负载下的六族（墙钟 + 引擎 CPU）
+
+前两轮各占一半：§7.2 有 qc 负载但只有墙钟、且只有 day/night 在同一个控制器下；§7.3 记了引擎 CPU 但机器基本空闲。
+生产永远跑在 qc 负载里，所以补了这一轮：同设计（六族 × 2 种子 × A-B-B-A，`--workers 2 --count 2`，48 局），
+每臂同时记墙钟与引擎进程 CPU，**24 个 block 边界上都是同一个 qc 控制器**（pid 626824，独立只读监控 535 个样本，
+6–9 个 qc 引擎全程在场，loadavg 13–16）。
+
+审计通过：12 对、36 次完整帧比较、40,686 帧一致；`state_hash` 18/36 不同（按 §7.1 的口径单独报告）。
+
+| 族 | 墙钟比（种子 1 / 2） | 墙钟 geomean | 引擎 CPU 秒（A → B） | CPU 比 |
+|---|---|---|---|---|
+| day | 0.987 / 0.990 | 0.988 | 184.7 → 182.6 | 0.989 |
+| night | 1.018 / 1.013 | 1.016 | 295.2 → 299.3 | 1.014 |
+| pool | 1.016 / 1.018 | 1.017 | 376.8 → 383.1 | 1.017 |
+| conveyor | 0.987 / 0.982 | 0.984 | 259.9 → 255.8 | 0.984 |
+| roof | 0.988 / 0.947 | 0.967 | 7.0 → 6.8 | 0.973 |
+| fog | 1.056 / 1.058 | 1.057 | 120.8 → 127.5 | 1.056 |
+
+- 六族合一：墙钟 geomean **1.0045**（95% [0.9874, 1.0221]，按族 [0.9823, 1.0298]），
+  引擎 CPU **1.0050**（[0.9846, 1.0286]）。这是三轮里最窄的区间（±1.8%），仍然覆盖 1。
+- 族级符号依旧不稳定：day / conveyor / roof < 1，night / pool / fog > 1。fog 的 +5.6% 在两粒种子、
+  墙钟与 CPU 上都一致，但同一族在 §7.3 是 −3.6%，方向翻转；每族只有 2 粒种子、族级噪声约 ±4%，
+  因此不把它归因于补丁，只采用六族合一的区间（与 §7.2 的口径相同）。
+- 三轮的点估计：0.993（qc 负载、墙钟）/ 0.990（轻载、墙钟）· 0.985（轻载、CPU）/ 1.0045（qc 负载、墙钟）· 1.0050（qc 负载、CPU），
+  区间全部覆盖 1。**结论不变：逐位不变成立，整局没有可测的提速；补丁的价值仍在组件级（§7.3b）。**
+
 ## 8. 局限与后续
 
 - **候选二进制不带 PGO。** 生产 deploy4 带本机 PGO（历史实测 18%）。ABBA 的 A 臂因此用同 flags 重编的
   `pvz-portable-release-before`，只量代码差异；真正上线要由主控按 PGO 两阶段重建，PGO 与补丁的交互收益尚未测量。
   **不要把本文的比值直接当成上线后的墙钟比。**
-- **整局计时只能判到 1–2% 量级。** 两轮各 12 对 ABBA 的区间分别是 ±4.5%（qc 负载下）与 ±2%（负载轻），
-  引擎 CPU 观测也是 ±2.6%。族级噪声约 ±4%，符号都不稳定（§7.3）。要在生产负载下判定 0.5% 需要 40 对以上、
+- **整局计时只能判到 1–2% 量级。** 三轮各 12 对 ABBA 的区间分别是 ±4.5%（qc 负载、只有墙钟）、
+  ±2%（负载轻）、±1.8%（qc 负载、墙钟与引擎 CPU 同时记，§7.4），引擎 CPU 观测是 ±2.2–2.6%。族级噪声约 ±4%，符号都不稳定（§7.3）。要在生产负载下判定 0.5% 需要 40 对以上、
   机器独占 3–4 小时；本轮在"同时最多 2 个游戏进程、qc 优先"的约束下没有做。
   另外 `search_play` 记录的每局耗时是 `time.time()` 差、保留 0.1 s（`scripts/search_play.py:790`），
   40–250 s 的对局对应 0.04–0.25% 的量化，短局（roof 2.4 s）则是 4%。
