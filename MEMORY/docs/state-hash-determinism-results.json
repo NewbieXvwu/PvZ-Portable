@@ -641,7 +641,7 @@
       "result": "FAILED"
     },
     "state_hash_test_final": {
-      "command": "PVZ_EXECUTABLE=<final> PVZ_RESOURCE_DIR=<resources> PYTHONPATH=python python3 -m unittest test_state_hash_determinism",
+      "command": "PVZ_EXECUTABLE=<final> PVZ_RESOURCE_DIR=<resources> python3 -m unittest python.test_state_hash_determinism",
       "fresh_processes": 8,
       "result": "OK"
     }

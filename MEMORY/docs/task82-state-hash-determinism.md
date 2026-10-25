@@ -39,7 +39,7 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 - 2026-10-25：`Coin::mCollectX/mCollectY` 初始化修复与探针 chunk 5 支持提交为 `e8ba7716` 并推送；四份旧示范修复前后逐决策配对完成（827/1310/893/923 个边界点，privileged 观测与事件全同，终局全同；哈希首差分别在 3995/4191/3599/3874，属未初始化字段被保存，不是模拟分歧）。
 
-- 2026-10-25：结论层 `state-hash-determinism.md` 与 `state-hash-determinism-results.json` 提交并推送。交接复核：最终构建 8 份整局 trace 的 SHA256 全同（`5fb2c460…`）；四份示范修复后各 4 进程 trace 全同、修复前各 2 进程全异；回归测试从 `python/` 目录（或 `PYTHONPATH=python`）运行通过，协议 35 项 OK。Mac 探针脚本 `scripts/state_hash_mac_probe.sh` 交主控，台式机未执行。
+- 2026-10-25：结论层 `state-hash-determinism.md` 与 `state-hash-determinism-results.json` 提交并推送。交接复核：最终构建 8 份整局 trace 的 SHA256 全同（`5fb2c460…`）；四份示范修复后各 4 进程 trace 全同、修复前各 2 进程全异；回归测试从仓库根目录运行通过（测试自补 `python/` 与 `scripts/` 路径），协议 35 项 OK。Mac 探针脚本 `scripts/state_hash_mac_probe.sh` 交主控，台式机未执行。
 
 ## 问题
 
