@@ -1,0 +1,41 @@
+{
+  "repo": "realnewbiexvwu/pvz-agent-artifacts",
+  "repo_type": "model",
+  "revision": "d817a36ce1aaebb5c016838b92d4d5c8cb6f88f9",
+  "path": "transfer/task69_replace_20261026_4454ef3e",
+  "source_commit": "4454ef3e2667b28d6cadc77ea0d7632cae63d914",
+  "files": 52,
+  "bytes": 1655331,
+  "manifest_sha256": "0294e8b419ebc1e9ef719d575e971dcf4639dd8c70d611ba1fe208beaf7ac667",
+  "roundtrip_sha256_verified": true,
+  "paired_games": 192,
+  "paired_seeds": 96,
+  "labels": 57,
+  "archives": [
+    {
+      "name": "demo_fog_31_fume_rebaselined",
+      "labels": 17,
+      "frames": "training/demo_fog_31_fume_rebaselined/frames.npz",
+      "metadata": "training/demo_fog_31_fume_rebaselined/meta.json"
+    },
+    {
+      "name": "demo_fog_31_snow_m200",
+      "labels": 15,
+      "frames": "training/demo_fog_31_snow_m200/frames.npz",
+      "metadata": "training/demo_fog_31_snow_m200/meta.json"
+    },
+    {
+      "name": "demo_fog_33_cactus_snow_m200",
+      "labels": 14,
+      "frames": "training/demo_fog_33_cactus_snow_m200/frames.npz",
+      "metadata": "training/demo_fog_33_cactus_snow_m200/meta.json"
+    },
+    {
+      "name": "demo_fog_33_cattail_snow_m200",
+      "labels": 11,
+      "frames": "training/demo_fog_33_cattail_snow_m200/frames.npz",
+      "metadata": "training/demo_fog_33_cattail_snow_m200/meta.json"
+    }
+  ],
+  "url": "https://huggingface.co/realnewbiexvwu/pvz-agent-artifacts/tree/d817a36ce1aaebb5c016838b92d4d5c8cb6f88f9/transfer/task69_replace_20261026_4454ef3e"
+}

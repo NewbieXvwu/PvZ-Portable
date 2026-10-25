@@ -46,5 +46,19 @@
   "production_defaults_changed": false,
   "deploy3_rebuilt": false,
   "qc_touched": false,
-  "frozen_treatment_engine_sha256": "61b21c430fe4232b0cf65191a71dbd11a81e662ee877aef7354b7f1247685ae0"
+  "frozen_treatment_engine_sha256": "61b21c430fe4232b0cf65191a71dbd11a81e662ee877aef7354b7f1247685ae0",
+  "final_acceptance": {
+    "date": "2026-10-26",
+    "engine_sha256": "69d4feb69dfe2043f0f893520cceec012670aabaab304b47c634225d78b8729a",
+    "tests": 25,
+    "passed": 25,
+    "skipped": 0,
+    "suites": ["test_replace_action", "test_replace_action_demo_batch", "test_replace_action_stats", "test_human_demo", "test_projectile_initialization"],
+    "log": "artifacts/task69/final-25-tests.txt",
+    "rebaseline_hash_guard": {
+      "before_fix": "tampered hash incorrectly accepted when original recorder engine differs",
+      "after_fix": "tampered hash rejected; strict mode selected by rebaseline.executable_sha256",
+      "real_archives_initial_strict_mode_checks": 4
+    }
+  }
 }

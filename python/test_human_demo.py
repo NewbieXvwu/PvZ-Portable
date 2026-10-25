@@ -112,6 +112,32 @@ class HumanDemoTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'public frame differs'):
                 rebaseline(source, root / 'wrong_public_state', RESOURCE, BINARY)
 
+    def test_rebaselined_tape_rejects_tampered_hash_with_older_recorder_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            deck = [0, 1, 2, 3, 4, 5]
+            task = TaskSpec(level=7, seed=6905, profile=profile_for_deck(deck))
+            with EventWaitEnv(RESOURCE, executable=BINARY) as env:
+                recorder = Recorder(env, source, 'rebaseline_hash_owner', deck, task)
+                recorder.step(dict(type='wait', ticks=2))
+                recorder.close()
+            meta_path = source / 'meta.json'
+            meta = json.loads(meta_path.read_text())
+            meta['executable_sha256'] = '0' * 64
+            meta_path.write_text(json.dumps(meta))
+            target = root / 'rebaselined'
+            self.assertTrue(rebaseline(source, target, RESOURCE, BINARY)['verified'])
+            converted = json.loads((target / 'meta.json').read_text())
+            self.assertEqual(converted['executable_sha256'], '0' * 64)
+            tape = target / 'ticks.jsonl'
+            entries = [json.loads(line) for line in tape.read_text().splitlines()]
+            entries[0]['state_hash'] = 'ffffffffffffffff'
+            tape.write_text(''.join(json.dumps(entry) + '\n' for entry in entries))
+            with self.assertRaisesRegex(RuntimeError, 'state hash differs'):
+                verify(target, RESOURCE, BINARY)
+            self.assertEqual(converted['hash_verification'], 'per-operation state hash')
+
     def test_record_replay_export_and_restore(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

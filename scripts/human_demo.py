@@ -142,18 +142,20 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     # recorded the archive.  task63 changed the FIELD_SHAKE seeding inside the SaveGame
     # image, so an archive recorded by a pre-task63 engine (or rebaselined by deploy3)
     # hashes differently under deploy4 even though every observable field is identical.
-    # The archive's executable_sha256 selects the verification mode: same engine -> the
+    # The hash-producing engine selects the verification mode: same engine -> the
     # full per-operation hash check; different engine -> the engine-independent fields
     # (tick timeline, per-operation ok, terminal outcome) are still enforced, and the
     # relaxed mode is recorded on the returned meta so it is never silent.
     current_sha = (hashlib.sha256(Path(env.executable).read_bytes()).hexdigest()
                    if getattr(env, 'executable', None) else None)
-    recorded_sha = meta.get('executable_sha256')
+    # Rebaselining preserves the recorder's provenance, but writes hashes with its own engine.
+    recorded_sha = ((meta.get('rebaseline') or {}).get('executable_sha256')
+                    or meta.get('executable_sha256'))
     if strict_hashes is None:
         strict_hashes = not recorded_sha or recorded_sha == current_sha
     meta['hash_verification'] = (
         'per-operation state hash' if strict_hashes else
-        'tick/ok/outcome only: archive recorded by engine '
+        'tick/ok/outcome only: archive hashes produced by engine '
         + (recorded_sha or 'unknown')[:12] + ', replayed by ' + (current_sha or 'unknown')[:12])
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
