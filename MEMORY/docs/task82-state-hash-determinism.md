@@ -56,6 +56,8 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 - 2026-10-25：任务书顶部加交接说明（五项已完成、不要重做；剩余为主控侧合并与 Mac 执行）。
 
+- 2026-10-25：补 mid-game Memcheck：最终修复版前 2000 操作（2001 次序列化）中 `LawnSaveGameToMemory` 未初始化上下文 0，其余 169 个上下文为既有 zlib/资源缓存与闲置对象销毁报告；结果入 `memcheck.midgame_2000_ops`。
+
 ## 完成核对
 
 1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧按任务书属主控执行；`scripts/state_hash_mac_probe.sh` 与命令已交付，并在本机以覆盖路径验证。

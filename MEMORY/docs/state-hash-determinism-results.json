@@ -516,7 +516,17 @@
     "other_reports": "resource compilation and idle object destruction remain; this task does not claim a clean whole-engine Memcheck run",
     "savegame_uninitialised_reports_after_cloud_fix": 0,
     "savegame_uninitialised_reports_before": 24,
-    "tool": "valgrind 3.26 --track-origins=yes --num-callers=30"
+    "tool": "valgrind 3.26 --track-origins=yes --num-callers=30",
+    "midgame_2000_ops": {
+      "executable": "/home/newbiexvwu/pvz-logs/task82/final-libc (diagnostic relink without mimalloc, via memcheck-midgame wrapper)",
+      "operations": 2000,
+      "serialisations": 2001,
+      "savegame_uninitialised_contexts": 0,
+      "other_uninitialised_contexts": 169,
+      "other_reports": "zlib/resource-cache and idle-object destruction, already documented as pre-existing",
+      "log": "/home/newbiexvwu/pvz-logs/task82/memcheck-midgame.out",
+      "trace": "/home/newbiexvwu/pvz-logs/task82/memcheck_midgame"
+    }
   },
   "pairing": {
     "demo_fog_31_snow_m200": {

@@ -20,7 +20,7 @@
 
 原始字节例子分别在本机 `deploy4/reset_*.bin`、`midgame_dumps/operation_21375_*.bin`、`l32_dumps/operation_41732_*.bin`。目录根为 `/home/newbiexvwu/pvz-logs/task82/`。这些二进制与滚动输出不进 git。
 
-Valgrind 3.26 的 `--track-origins=yes --num-callers=30` 对同源码、仅移除 mimalloc 的诊断重链接版本，确认 reset 时 `crc32_little → LawnSaveGameToMemory → StableEnvironmentHash` 使用未初始化值，来源是 `Board` 创建 `Challenge` 的堆分配；修复云数组后 reset 的 SaveGame 报告消失。保留相同编译对象，仅去 allocator 链接，用于让 Memcheck 跟踪真实分配，不是生产构建开关。另有资源缓存编译、闲置对象销毁的既有 Memcheck 报告，本任务不宣称整个引擎 Memcheck 零错误。
+Valgrind 3.26 的 `--track-origins=yes --num-callers=30` 对同源码、仅移除 mimalloc 的诊断重链接版本，确认 reset 时 `crc32_little → LawnSaveGameToMemory → StableEnvironmentHash` 使用未初始化值，来源是 `Board` 创建 `Challenge` 的堆分配；修复云数组后 reset 的 SaveGame 报告消失。保留相同编译对象，仅去 allocator 链接，用于让 Memcheck 跟踪真实分配，不是生产构建开关。另有资源缓存编译、闲置对象销毁的既有 Memcheck 报告，本任务不宣称整个引擎 Memcheck 零错误。 对最终修复版再跑前 2000 操作的 mid-game Memcheck（2001 次快照序列化），`LawnSaveGameToMemory` 的未初始化上下文为 0；其余 169 个上下文仍是 zlib/资源缓存与闲置对象销毁的既有报告。
 
 重置代码会覆盖启动时由 `time(0)` / `SDL_GetTicks` 初始化的 app seed、rand seed，重新播种两个 RNG 并清零 app counter；实际分段也确认它们一致。观察到的变化都是上述数字成员的堆残留，不能据哈希不同推断是 ASLR 或时钟进入了模拟。
 
