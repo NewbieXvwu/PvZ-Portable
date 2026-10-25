@@ -73,6 +73,9 @@ void Projectile::ProjectileInitialize(int theX, int theY, int theRenderOrder, in
 	mAccZ = 0.0f;
 	mShadowY = mBoard->GridToPixelY(aGridX, theRow) + 67.0f;
 	mHitTorchwoodGridX = -1;
+	// A projectile has not traversed a portal yet. DataArray slots are reused,
+	// so initialize this even on adventure boards where only SaveGame reads it.
+	mLastPortalX = -1;
 	mMotionType = ProjectileMotion::MOTION_STRAIGHT;
 	mFrame = 0;
 	mNumFrames = 1;
