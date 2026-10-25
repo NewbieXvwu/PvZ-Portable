@@ -124,7 +124,7 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
    - 首层核打包按「活动通道集」缓存：候选分支通常只改通道内的数值、不增删通道，原来每次前向都重排
      `width × count` 个权重，现在只在通道集变化时重排（`Load()` 清空缓存，跨模型不会复用）。
    - im2col 从「逐格判越界再写」改成「先清零、再按偏移整段 memcpy」：`dc ∈ {-1,0,1}` 时有效列数恒为
-     9 或 10，行方向只遍历落在 `[0,6)` 的部分，省掉 92×9×60 次分支。
+  9 或 10，行方向只遍历落在 `[0,6)` 的部分，把逐格边界判断换成逐行连续拷贝。
    - 逐位不变：两种写法写出的 `columns` 与 `kernel` 布局相同，sgemm 参数不变、累加顺序不变；
      越界格仍写 `+0.0f`（先清零、不覆盖），与原来的逐格写 0 一致。
 2. **`src/PvzpLib/DataArray.h`**：`operator*` 与 `DataArrayTryToGet` 从 `mItems[i]`（`unique_ptr<T[]>::operator[]`）
@@ -136,11 +136,13 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 
 ## 6. 逐位一致性
 
-- **离线核检查**（`scripts/task77_value_kernel_check.py`，证据 `artifacts/task77/value_kernel_check/evidence.json`）：
+- **离线核检查**（`scripts/task77_value_kernel_check.py`，最终证据 `artifacts/task77/value_kernel_check_final/evidence.json`）：
   用 `build/compile_commands.json` 里的生产编译参数分别编 before（冻结源码）与 after（当前源码），
   同一批输入跑 3 遍（第 2 遍换一份改过首层权重的模型，验证缓存不跨模型复用）：
   value 与 static 各 480 个 logit，before/after 输出字节 SHA256 完全相同
-  （value `66b5ec3e…`、static `f22fdd59…`）。输入覆盖全零、`-0.0`、稠密与 1–23 个稀疏通道。
+  （value `9762c586…`、static `f4f8f4a0…`）。输入覆盖全零、`-0.0`、稠密与 1–23 个稀疏通道。
+  最后一条和重新 Load 后第一条均为全部通道活动，确保覆盖“换模型但活动通道集相同”的缓存失效场景。
+  原先首条为全零的核检查仍保留在 `value_kernel_check/`，不据它单独宣称已覆盖此场景。
 - **端到端门禁**：见 §7。
 
 ## 7. 端到端门禁与计时
@@ -178,7 +180,6 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 - **候选二进制不带 PGO。** 生产 deploy4 带本机 PGO（历史实测 18%）。ABBA 的 A 臂因此用同 flags 重编的
   `pvz-portable-release-before`，只量代码差异；真正上线要由主控按 PGO 两阶段重建，PGO 与补丁的交互收益尚未测量。
   **不要把本文的比值直接当成上线后的墙钟比。**
-- 剩余可动的最大项是学生前向的 GEMM（16% 采样）与动画 track 更新（8.3%），两者都卡在「改了就未必逐位不变」。
-  前者需要一套「删零块仍保序」的 GEMM（例如把零块排到 K 末尾再截断，并逐族过门禁）；
-  后者需要证明 `mEnvTrackPermanent` 里那些「什么都不做」的 track 能被移出活动位图而不影响重新激活。
+- 后续可研究共享 BLAS 内核和动画 track 更新；本轮没有实现新的 GEMM，也没有跳过额外动画生命周期。
+  任何后续方案都需独立验证浮点求和顺序与 track 重新激活行为，不能把移动零块或稀疏跳过直接当成保序优化。
 - 采样器的 libc 符号是误标的（无 debug 信息）。要看清 libc 那 2.9% 得装 `libc6-dbg` 或给 `addr2line` 指定 debug 路径。

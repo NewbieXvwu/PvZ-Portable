@@ -65,7 +65,7 @@ def main():
     import numpy as np
     from export_value_net import export_value_net
     from pvz_value_net import load_value_net
-    folder = OUT / 'value_kernel_check'
+    folder = OUT / 'value_kernel_check_final'
     folder.mkdir(parents=True, exist_ok=True)
     (folder / 'driver.cpp').write_text(DRIVER)
     executables = {tag: compile_driver(folder, source, tag) for tag, source in (
@@ -88,7 +88,12 @@ def main():
         samples = []
         for index in range(160):
             board = rng.normal(size=(92, 60)).astype('<f4')
-            if index % 8 == 0:
+            # The final input of one pass and the first input after Load both have
+            # all channels active. Without Load invalidating the packed kernel,
+            # the changed model would incorrectly reuse the previous weights.
+            if index in (0, 159):
+                pass
+            elif index % 8 == 0:
                 board.fill(0)
             elif index % 8 == 1:
                 board.fill(-0.0)
