@@ -237,9 +237,9 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     return obs, meta, frames[:decision] if decision is not None else frames
 
 
-def verify(archive: Path, resource_dir, executable=None):
+def verify(archive: Path, resource_dir, executable=None, *, strict_hashes=None):
     with EventWaitEnv(resource_dir, executable=executable) as env:
-        obs, meta, _ = replay(env, archive)
+        obs, meta, _ = replay(env, archive, strict_hashes=strict_hashes)
     meta['verified'] = True
     (archive / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
     return dict(verified=True, operations=meta['operations'], tick=obs['tick'], wave=obs['wave'], result=obs['result'])
