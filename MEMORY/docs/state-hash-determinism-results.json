@@ -1,0 +1,717 @@
+{
+  "archives": {
+    "demo_fog_31_snow_m200": {
+      "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08"
+    },
+    "demo_fog_32_snow_m200": {
+      "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_32_snow_m200",
+      "tape_sha256": "5ce6cab7d34bed4cb8dda59d405afc9fdf8e222954256d87df56421a7ebcd0b9"
+    },
+    "demo_fog_33_cactus_snow_m200": {
+      "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_33_cactus_snow_m200",
+      "tape_sha256": "3f7df22d92a0a98e944c1c4ae99f2a9a3a052ff71b311cc7fb5914699ba55787"
+    },
+    "demo_fog_33_cattail_snow_m200": {
+      "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_33_cattail_snow_m200",
+      "tape_sha256": "bf0ef9aa52410fd0e001666393770836cd3161a3f5c901e1d8e8c4ca93d6f2a6"
+    }
+  },
+  "artifacts": {
+    "note": "binary dumps and rolling logs stay local; not committed",
+    "root": "/home/newbiexvwu/pvz-logs/task82"
+  },
+  "branch": "hashdet",
+  "conclusion": "Snapshot bytes read three uninitialised members. Across independent processes the hashes varied, while privileged game state, events and outcomes did not. Initialising the members at construction removes the variation; hash algorithm, Save4 layout and schema are unchanged.",
+  "executables": {
+    "before": {
+      "path": "/home/newbiexvwu/pvz-logs/task82/before-mimalloc",
+      "sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e"
+    },
+    "deploy4": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+      "sha256": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2"
+    },
+    "final": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+      "sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f"
+    },
+    "static": {
+      "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/stage/build/pvz-portable",
+      "sha256": "a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb"
+    }
+  },
+  "field_encoding": "observed_residue lists raw bytes in file order (little-endian int32/float on x86)",
+  "fixes": [
+    {
+      "commit": "5e7c90c7",
+      "file": "src/Lawn/Challenge.cpp",
+      "gameplay": "Adventure mode never reads it; TreeOfWisdomInit assigns every entry before use.",
+      "observed_residue": [
+        "00000000",
+        "00401cc6"
+      ],
+      "snapshot_offset": "Save4 chunk 19, tail bytes 328-351",
+      "symbol": "Challenge::mCloudsCounter[6]"
+    },
+    {
+      "commit": "5e7c90c7",
+      "file": "src/Lawn/Projectile.cpp",
+      "gameplay": "Adventure mode never reads it; Challenge::UpdatePortal does, so the portal minigame had a real logic risk.",
+      "observed_residue": [
+        "000000e7",
+        "58000000",
+        "5f000000",
+        "63000000",
+        "401cc600"
+      ],
+      "snapshot_offset": "Save4 chunk 4, item field 100 + 98",
+      "symbol": "Projectile::mLastPortalX"
+    },
+    {
+      "commit": "e8ba7716",
+      "file": "src/Lawn/Coin.cpp",
+      "gameplay": "Collect() overwrites both coordinates before setting mIsBeingCollected; ordinary play never reads the unassigned values.",
+      "observed_residue": [
+        "00401cc6",
+        "2b5b0000",
+        "7d580000",
+        "b1580000"
+      ],
+      "snapshot_offset": "Save4 chunk 5, item field 100 + 25 and + 29",
+      "symbol": "Coin::mCollectX, mCollectY"
+    }
+  ],
+  "full_games": {
+    "before_decisions_8": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": "all decisions and non-wait actions",
+      "executable": "/home/newbiexvwu/pvz-logs/task82/before-mimalloc",
+      "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+      "first_archive_hash_diff": [
+        0,
+        1764
+      ],
+      "logical_sha256": [
+        "788e9162a505ab47b92d53de246c5ba30b275da5d500715a464c0ee4ac6e62dd"
+      ],
+      "operations": [
+        39590
+      ],
+      "outcomes": [
+        "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+      ],
+      "privileged": true,
+      "repeats": 8,
+      "reset_hashes": [
+        "8a32d54e12940523",
+        "d75e64ae66c61470",
+        "e04ed3fb714cc9c5"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 8,
+      "variable_segments": [
+        "Challenge.mCloudsCounter[0]",
+        "Challenge.mCloudsCounter[1]",
+        "Challenge.mCloudsCounter[2]",
+        "Challenge.mCloudsCounter[3]",
+        "Challenge.mCloudsCounter[5]",
+        "board_header",
+        "chunk_19"
+      ]
+    },
+    "before_panel": {
+      "demo_fog_31_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/pvz-logs/task82/before-mimalloc",
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "first_archive_hash_diff": [
+          0,
+          1764
+        ],
+        "logical_sha256": [
+          "788e9162a505ab47b92d53de246c5ba30b275da5d500715a464c0ee4ac6e62dd"
+        ],
+        "operations": [
+          39590
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+        ],
+        "privileged": true,
+        "repeats": 2,
+        "reset_hashes": [
+          "80781d238d4596b9",
+          "d75e64ae66c61470"
+        ],
+        "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+        "unique_traces": 2,
+        "variable_segments": [
+          "Challenge.mCloudsCounter[1]",
+          "Challenge.mCloudsCounter[2]",
+          "Challenge.mCloudsCounter[3]",
+          "Challenge.mCloudsCounter[4]",
+          "Challenge.mCloudsCounter[5]",
+          "board_header",
+          "chunk_19"
+        ]
+      },
+      "demo_fog_32_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_32_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/pvz-logs/task82/before-mimalloc",
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "first_archive_hash_diff": [
+          90
+        ],
+        "logical_sha256": [
+          "a38837b57c4d11cf121bc989b7d406d08d00ac7d6d2f15c3af244051ca6cca9e"
+        ],
+        "operations": [
+          57596
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 57363, \"wave\": 30}"
+        ],
+        "privileged": true,
+        "repeats": 2,
+        "reset_hashes": [
+          "f64b9bd3ef427a26"
+        ],
+        "tape_sha256": "5ce6cab7d34bed4cb8dda59d405afc9fdf8e222954256d87df56421a7ebcd0b9",
+        "unique_traces": 2,
+        "variable_segments": []
+      },
+      "demo_fog_33_cactus_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_33_cactus_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/pvz-logs/task82/before-mimalloc",
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "first_archive_hash_diff": [
+          0,
+          143
+        ],
+        "logical_sha256": [
+          "77b5b2ae2164b017872e553f3c41639ce8c96629bf32a8fb1dd491caceee6485"
+        ],
+        "operations": [
+          41107
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 40969, \"wave\": 20}"
+        ],
+        "privileged": true,
+        "repeats": 2,
+        "reset_hashes": [
+          "7e1d2e4e17a552e9",
+          "d0e3ab9ac24cd028"
+        ],
+        "tape_sha256": "3f7df22d92a0a98e944c1c4ae99f2a9a3a052ff71b311cc7fb5914699ba55787",
+        "unique_traces": 2,
+        "variable_segments": [
+          "Challenge.mCloudsCounter[4]",
+          "Challenge.mCloudsCounter[5]",
+          "board_header",
+          "chunk_19"
+        ]
+      },
+      "demo_fog_33_cattail_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_33_cattail_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/pvz-logs/task82/before-mimalloc",
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "first_archive_hash_diff": [
+          0,
+          74
+        ],
+        "logical_sha256": [
+          "ab218c928fcec77f1d812ed694580cde7028e5a531a1e05d96142edf719e02d9"
+        ],
+        "operations": [
+          41831
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 41682, \"wave\": 20}"
+        ],
+        "privileged": true,
+        "repeats": 2,
+        "reset_hashes": [
+          "2777112095267d23",
+          "5db52aef3f4b22e3"
+        ],
+        "tape_sha256": "bf0ef9aa52410fd0e001666393770836cd3161a3f5c901e1d8e8c4ca93d6f2a6",
+        "unique_traces": 2,
+        "variable_segments": [
+          "Challenge.mCloudsCounter[1]",
+          "Challenge.mCloudsCounter[2]",
+          "Challenge.mCloudsCounter[3]",
+          "Challenge.mCloudsCounter[4]",
+          "Challenge.mCloudsCounter[5]",
+          "board_header",
+          "chunk_19"
+        ]
+      }
+    },
+    "deploy4_decisions_8": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": "all decisions and non-wait actions",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+      "executable_sha256": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+      "first_archive_hash_diff": [
+        0,
+        1764
+      ],
+      "logical_sha256": [
+        "788e9162a505ab47b92d53de246c5ba30b275da5d500715a464c0ee4ac6e62dd"
+      ],
+      "operations": [
+        39590
+      ],
+      "outcomes": [
+        "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+      ],
+      "privileged": true,
+      "repeats": 8,
+      "reset_hashes": [
+        "1c0a167e485da53d",
+        "443aa57cc0812a88",
+        "d75e64ae66c61470",
+        "e04ed3fb714cc9c5"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 7,
+      "variable_segments": [
+        "Challenge.mCloudsCounter[0]",
+        "Challenge.mCloudsCounter[1]",
+        "Challenge.mCloudsCounter[2]",
+        "Challenge.mCloudsCounter[3]",
+        "Challenge.mCloudsCounter[4]",
+        "Challenge.mCloudsCounter[5]",
+        "board_header",
+        "chunk_19"
+      ]
+    },
+    "final_every_operation_8": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": "every operation",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+      "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+      "first_archive_hash_diff": [
+        1764
+      ],
+      "logical_sha256": [
+        "4c848fd9406ef6f39508b02ff82cc85d64995a6bd586d2159a34746f045d699c"
+      ],
+      "operations": [
+        39590
+      ],
+      "outcomes": [
+        "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+      ],
+      "privileged": true,
+      "repeats": 8,
+      "reset_hashes": [
+        "d75e64ae66c61470"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 1,
+      "variable_segments": []
+    },
+    "final_panel": {
+      "demo_fog_31_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "first_archive_hash_diff": [
+          1764
+        ],
+        "logical_sha256": [
+          "788e9162a505ab47b92d53de246c5ba30b275da5d500715a464c0ee4ac6e62dd"
+        ],
+        "operations": [
+          39590
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+        ],
+        "privileged": true,
+        "repeats": 4,
+        "reset_hashes": [
+          "d75e64ae66c61470"
+        ],
+        "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+        "unique_traces": 1,
+        "variable_segments": []
+      },
+      "demo_fog_32_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_32_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "first_archive_hash_diff": [
+          90
+        ],
+        "logical_sha256": [
+          "a38837b57c4d11cf121bc989b7d406d08d00ac7d6d2f15c3af244051ca6cca9e"
+        ],
+        "operations": [
+          57596
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 57363, \"wave\": 30}"
+        ],
+        "privileged": true,
+        "repeats": 4,
+        "reset_hashes": [
+          "f64b9bd3ef427a26"
+        ],
+        "tape_sha256": "5ce6cab7d34bed4cb8dda59d405afc9fdf8e222954256d87df56421a7ebcd0b9",
+        "unique_traces": 1,
+        "variable_segments": []
+      },
+      "demo_fog_33_cactus_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_33_cactus_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "first_archive_hash_diff": [
+          143
+        ],
+        "logical_sha256": [
+          "77b5b2ae2164b017872e553f3c41639ce8c96629bf32a8fb1dd491caceee6485"
+        ],
+        "operations": [
+          41107
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 40969, \"wave\": 20}"
+        ],
+        "privileged": true,
+        "repeats": 4,
+        "reset_hashes": [
+          "7e1d2e4e17a552e9"
+        ],
+        "tape_sha256": "3f7df22d92a0a98e944c1c4ae99f2a9a3a052ff71b311cc7fb5914699ba55787",
+        "unique_traces": 1,
+        "variable_segments": []
+      },
+      "demo_fog_33_cattail_snow_m200": {
+        "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_33_cattail_snow_m200",
+        "coverage": "all decisions and non-wait actions",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "first_archive_hash_diff": [
+          74
+        ],
+        "logical_sha256": [
+          "ab218c928fcec77f1d812ed694580cde7028e5a531a1e05d96142edf719e02d9"
+        ],
+        "operations": [
+          41831
+        ],
+        "outcomes": [
+          "{\"result\": 1, \"terminal\": true, \"tick\": 41682, \"wave\": 20}"
+        ],
+        "privileged": true,
+        "repeats": 4,
+        "reset_hashes": [
+          "5db52aef3f4b22e3"
+        ],
+        "tape_sha256": "bf0ef9aa52410fd0e001666393770836cd3161a3f5c901e1d8e8c4ca93d6f2a6",
+        "unique_traces": 1,
+        "variable_segments": []
+      }
+    },
+    "fixed_cloud_projectile_8": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": "all decisions and non-wait actions",
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet/build/pvz-portable",
+      "executable_sha256": "0b895c9280ef2b8df25e08756acfb14c36bb01cf4d4fd0364b015d0632b3460b",
+      "first_archive_hash_diff": [
+        1764
+      ],
+      "logical_sha256": [
+        "788e9162a505ab47b92d53de246c5ba30b275da5d500715a464c0ee4ac6e62dd"
+      ],
+      "operations": [
+        39590
+      ],
+      "outcomes": [
+        "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+      ],
+      "privileged": true,
+      "repeats": 8,
+      "reset_hashes": [
+        "d75e64ae66c61470"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 1,
+      "variable_segments": []
+    },
+    "static_decisions_8": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": "all decisions and non-wait actions",
+      "executable": "/home/newbiexvwu/pvz-logs/llmplay_pkg/stage/build/pvz-portable",
+      "executable_sha256": "a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb",
+      "first_archive_hash_diff": [
+        0
+      ],
+      "logical_sha256": [
+        "347c8bd56a63cdabe7b65da3b17dcc068a252df6686a5144b62cb2d87ce91ff7"
+      ],
+      "operations": [
+        39590
+      ],
+      "outcomes": [
+        "{\"result\": 1, \"terminal\": true, \"tick\": 39479, \"wave\": 20}"
+      ],
+      "privileged": true,
+      "repeats": 8,
+      "reset_hashes": [
+        "443aa57cc0812a88",
+        "60bd878def7dbd21",
+        "93a0fbfa8663b366",
+        "e2b5ff90caf9d9a7",
+        "fdb753f51ddaf32e"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 5,
+      "variable_segments": [
+        "Challenge.mCloudsCounter[0]",
+        "Challenge.mCloudsCounter[1]",
+        "Challenge.mCloudsCounter[2]",
+        "Challenge.mCloudsCounter[3]",
+        "Challenge.mCloudsCounter[4]",
+        "Challenge.mCloudsCounter[5]",
+        "board_header",
+        "chunk_19"
+      ]
+    }
+  },
+  "hash_schema": "portable_snapshot_v1_without_draw_statistics",
+  "mac_handoff": {
+    "deliverables": [
+      "summary.json",
+      "mac-comparison.json"
+    ],
+    "status": "not run on the desktop; commands are in MEMORY/docs/state-hash-determinism.md"
+  },
+  "memcheck": {
+    "build": "same objects, mimalloc removed from the link only (diagnostic, not a production switch)",
+    "other_reports": "resource compilation and idle object destruction remain; this task does not claim a clean whole-engine Memcheck run",
+    "savegame_uninitialised_reports_after_cloud_fix": 0,
+    "savegame_uninitialised_reports_before": 24,
+    "tool": "valgrind 3.26 --track-origins=yes --num-callers=30"
+  },
+  "pairing": {
+    "demo_fog_31_snow_m200": {
+      "after": {
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "repeats": 4,
+        "reset_hashes": [
+          "d75e64ae66c61470"
+        ],
+        "unique_traces": 1
+      },
+      "before": {
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "repeats": 2,
+        "reset_hashes": [
+          "80781d238d4596b9",
+          "d75e64ae66c61470"
+        ],
+        "unique_traces": 2
+      },
+      "comparison": {
+        "first_events_diff": null,
+        "first_hash_diff": 3995,
+        "first_observation_diff": null,
+        "states_compared": 827
+      },
+      "outcome": {
+        "result": 1,
+        "terminal": true,
+        "tick": 39479,
+        "wave": 20
+      }
+    },
+    "demo_fog_32_snow_m200": {
+      "after": {
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "repeats": 4,
+        "reset_hashes": [
+          "f64b9bd3ef427a26"
+        ],
+        "unique_traces": 1
+      },
+      "before": {
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "repeats": 2,
+        "reset_hashes": [
+          "f64b9bd3ef427a26"
+        ],
+        "unique_traces": 2
+      },
+      "comparison": {
+        "first_events_diff": null,
+        "first_hash_diff": 4191,
+        "first_observation_diff": null,
+        "states_compared": 1310
+      },
+      "outcome": {
+        "result": 1,
+        "terminal": true,
+        "tick": 57363,
+        "wave": 30
+      }
+    },
+    "demo_fog_33_cactus_snow_m200": {
+      "after": {
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "repeats": 4,
+        "reset_hashes": [
+          "7e1d2e4e17a552e9"
+        ],
+        "unique_traces": 1
+      },
+      "before": {
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "repeats": 2,
+        "reset_hashes": [
+          "7e1d2e4e17a552e9",
+          "d0e3ab9ac24cd028"
+        ],
+        "unique_traces": 2
+      },
+      "comparison": {
+        "first_events_diff": null,
+        "first_hash_diff": 3599,
+        "first_observation_diff": null,
+        "states_compared": 893
+      },
+      "outcome": {
+        "result": 1,
+        "terminal": true,
+        "tick": 40969,
+        "wave": 20
+      }
+    },
+    "demo_fog_33_cattail_snow_m200": {
+      "after": {
+        "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+        "repeats": 4,
+        "reset_hashes": [
+          "5db52aef3f4b22e3"
+        ],
+        "unique_traces": 1
+      },
+      "before": {
+        "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+        "repeats": 2,
+        "reset_hashes": [
+          "2777112095267d23",
+          "5db52aef3f4b22e3"
+        ],
+        "unique_traces": 2
+      },
+      "comparison": {
+        "first_events_diff": null,
+        "first_hash_diff": 3874,
+        "first_observation_diff": null,
+        "states_compared": 923
+      },
+      "outcome": {
+        "result": 1,
+        "terminal": true,
+        "tick": 41682,
+        "wave": 20
+      }
+    }
+  },
+  "regression": {
+    "protocol_tests": {
+      "command": "PYTHONPATH=python python3 -m unittest test_env_protocol",
+      "count": 35,
+      "result": "OK"
+    },
+    "state_hash_test_before": {
+      "failure": "'401cc600' != 'ffffffff' (Projectile::mLastPortalX)",
+      "result": "FAILED"
+    },
+    "state_hash_test_final": {
+      "command": "PVZ_EXECUTABLE=<final> PVZ_RESOURCE_DIR=<resources> PYTHONPATH=python python3 -m unittest test_state_hash_determinism",
+      "fresh_processes": 8,
+      "result": "OK"
+    }
+  },
+  "reproduction_prefix_2000": {
+    "deploy4": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": null,
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+      "executable_sha256": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+      "first_archive_hash_diff": [
+        0,
+        1764
+      ],
+      "logical_sha256": [
+        "87006bff2a8120da999ef51b8ab225e43d7199df16dcee8e0ea24457bf64d55b"
+      ],
+      "operations": [
+        2000
+      ],
+      "outcomes": [
+        "{\"result\": 0, \"terminal\": false, \"tick\": 1994, \"wave\": 1}"
+      ],
+      "privileged": null,
+      "repeats": 8,
+      "reset_hashes": [
+        "443aa57cc0812a88",
+        "d75e64ae66c61470",
+        "e04ed3fb714cc9c5"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 3,
+      "variable_segments": [
+        "board_header",
+        "chunk_19"
+      ]
+    },
+    "static": {
+      "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200",
+      "coverage": null,
+      "executable": "/home/newbiexvwu/pvz-logs/llmplay_pkg/stage/build/pvz-portable",
+      "executable_sha256": "a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb",
+      "first_archive_hash_diff": [
+        0
+      ],
+      "logical_sha256": [
+        "9e42c86626cb692862123dfb90fc46163cd845b622c62a863183170ea0e1e012"
+      ],
+      "operations": [
+        2000
+      ],
+      "outcomes": [
+        "{\"result\": 0, \"terminal\": false, \"tick\": 1994, \"wave\": 1}"
+      ],
+      "privileged": null,
+      "repeats": 8,
+      "reset_hashes": [
+        "14c148392316a3b6",
+        "443aa57cc0812a88",
+        "8774eb7be426aae0",
+        "93a0fbfa8663b366",
+        "fdb753f51ddaf32e"
+      ],
+      "tape_sha256": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+      "unique_traces": 6,
+      "variable_segments": [
+        "board_header",
+        "chunk_19"
+      ]
+    }
+  },
+  "task": "task82"
+}
