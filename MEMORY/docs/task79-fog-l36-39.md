@@ -58,3 +58,16 @@ task74（`MEMORY/docs/task74-cold-start-sweep.md`，分支 gatepower）：
 - L37 是本批唯一与 task74 不一致的关（0/32 对 15/16，p<1e-8）。前四组对照（A–D）：同 16 个种子 4/16（排除种子块）、改回 human 口径 4/16 且配对 McNemar p=0.125（排除口径）、L36 旧口径正对照 7/8（口径本身没问题）、dw5i_s1 0/16 且退化到每局 4 株、0 次推翻（不能当学生能力对照）。已定因：E 用同一批 16 个种子换 round 11 拿到 14/16，排除引擎构建与观测口径，落差来自学生（详见结论 §与 task74 的差异）。
 - 台式机通路（留给后续）：`ssh -p 22222 newbiexvwu@127.0.0.1` 落在 Windows PowerShell，命令要用 `wsl -e bash -lc "..."` 包一层；二进制走 base64 中转（`wsl -e bash -lc "base64 -w0 <file>"` 本地 `base64 -d`），传完核 SHA。22223 是朋友机 pvz-f1，不是台式机。
 - dw5i_s1 在本栈（human_v2 观测 + v5 叶值 + branch1）下作为 proposal policy 退化：16 局全负、第 6–9 波破防、每局 2 蘑菇 + 1 睡莲 + 1 缠绕、老师 0 次推翻。它的用途（macbuild 的 p9k 池采集）不受影响，但不要把它当雾关的生产学生候选。
+
+## 主控追加（2026-10-25 21:30，task79b：L36–L38 进课程）
+task79 已合入 pvz-env（2d6be85a）。r11 下 L36 两族 32/32、L37 split 31/32、L38 magnet 32/32，可以进课程；L39 走示范起点格（cb-demo 在做），不在本任务里处理。
+1. 先 `git merge origin/pvz-env`。
+2. 每关选 r11 下最好的一族：L36 split（与 magnet 等效，取 split）、L37 split、L38 magnet。照 `make_multiplier_tasks.py` 现有的 fog_user 与 native 做法，登记倍率族：
+   - 观测 `human_v2`；
+   - 倍率阶梯沿用 fog_user 的档位，起始档 1.0；
+   - 种子块独立，与现有全部段不相交（机械核对）；
+   - 写进 `CURRICULUM_LEVELS`；
+   - 旧族与旧面板逐字节不变。
+3. 同步登记 DESIGN，测试照 test_zones 那组的写法补上，全量 pytest 通过。
+4. 注意台式机 cb-qcalloc 的 B6 也在改 `CURRICULUM_LEVELS`（fog_user_v2 准入），以后合并可能冲突。只加你自己的键，不改别的键。
+5. 结果写本文件，`git push origin fog36`。部署由主控随 deploy14 一起做。Mac 上每个任务最多 6 个游戏进程。
