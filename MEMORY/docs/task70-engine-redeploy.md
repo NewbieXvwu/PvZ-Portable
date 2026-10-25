@@ -77,3 +77,10 @@ B5 收到：human_v2 修订后老师 31/32，作为 fog_user_v2 的 teacher_rate
 2. **fog_user_v2 入课程**：恢复 `CURRICULUM_LEVELS['fog_user_v2']=(31,)` 与 `SUPERSEDED['fog_user']='fog_user_v2'`（主控在 1613ecdc 暂时撤下的那两处），测试随之改回。
 3. **引擎**：B5 改了 C++，按 deploy4 的 PGO 流程构建 deploy5，记 SHA；照 A2 做逐位门禁（human/xray 族与 deploy4 逐位一致），照 A4 做吞吐 ABBA。
 4. 部署清单写进本文件：新代码 rev、引擎路径、teacher_rates 增量（fog_user_v2_l31_snow 31/32、新示范起点格各 8/8）、回滚方式。push origin redeploy。
+
+## 主控追加（2026-10-25 17:00，B7：后台任务失败不能让 qc 整体退出）
+15:30 第 13 轮后台打包崩溃：示范起点局的目录名是 `seed_<示范>_f<未来>`，`pack_training_rows.py` 把它当 int 解析。`Pipeline.poll` 把异常往上抛，qc 整个退出，采集停了 80 分钟。修复在 pvz-env 51d67c66（`pvz_frame_store.archive_seed`），已热补到 cq，qc 16:54 重启并续上第 13 轮。B7 要做：
+1. 后台任务（打包 / 训练 / 评估）失败时：记日志，job 标 `failed` 并记下错误，**采集继续**；到下一个组边界重试一次；同一轮连续失败 2 次才停 qc，并在 curriculum.log 写明原因。
+2. 全仓库再扫一遍按目录名解析种子的地方（`seed_` + `split`/`removeprefix`），凡是会碰到示范起点局目录的，统一改用 `archive_seed`。
+3. 测试：注入一个会失败的后台任务，断言采集继续、重试恰好一次、第二次失败才退出。
+B7 和 B6 一起进 deploy14。

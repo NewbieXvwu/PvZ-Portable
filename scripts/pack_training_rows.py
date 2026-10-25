@@ -34,7 +34,7 @@ import random  # noqa: E402
 
 import torch  # noqa: E402
 
-from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode,  # noqa: E402
+from pvz_frame_store import (CELL_CANDIDATES, archive_seed, cache_aux, cache_candidates, cache_episode,  # noqa: E402
                              cache_identity_scene, cache_packets, candidate_cells, frame_bytes,
                              frame_paths, read_frames, row_damage_labels, target_values)
 from pvz_rollout_policy import (LAWN_COLS, PACKETS, features, identity_scalars,  # noqa: E402
@@ -142,7 +142,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     packets = PacketStore(capacity, PACKETS) if packet_head == 'identity' else None
     n = 0
     for archive_index, path in enumerate(paths):
-        seed = int(path.parent.parent.name.split("_")[-1])
+        seed = archive_seed(path.parent.parent.name)
         scale = (label_weight or {}).get(path.parent.name, 1.0)
         retention = wait_keep if explicit_rows[path] is None else 1.0
         if path in cached:
