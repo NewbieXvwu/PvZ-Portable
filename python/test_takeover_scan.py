@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import takeover_scan as scan
 import import_llm_run as importer
+from compare_same_block import compare_document
 
 from takeover_scan import (AdaptiveScan, build_ladder, resolve_target_task, update_manifest,
                            update_test_expectations)
@@ -134,7 +135,7 @@ class BuildLadderTest(unittest.TestCase):
 
 class AdaptiveScanTest(unittest.TestCase):
     def test_equidistant_indices(self):
-        self.assertEqual(AdaptiveScan(grid12()).equidistant, [0, 3, 6, 8, 11])
+        self.assertEqual(AdaptiveScan(grid12()).equidistant, [0, 4, 7, 11])
 
     def test_monotonic_step_finds_l50_by_bisection(self):
         grid = grid12()
@@ -153,14 +154,14 @@ class AdaptiveScanTest(unittest.TestCase):
         self.assertEqual(state['ladder']['l50'], grid[5])
         # 等距 4 点 + 二分 2 点 + 补档 3 点（idx5..11 里未测的），远少于 12 点全跑。
         self.assertLess(count, 12)
-        self.assertEqual(len(state['ladder']['ladder']), 7)
+        self.assertTrue(all(grid.index(d) >= 5 for d in state['ladder']['ladder']))
         self.assertEqual(state['student_points'], [grid[5], grid[11]])
 
     def test_all_fail_reports_no_ladder(self):
         scanner = AdaptiveScan(grid12())
         count = drive(scanner, lambda d: (0, 8))
         state = scanner.finish()
-        self.assertEqual(count, 5)
+        self.assertLessEqual(count, 9)
         self.assertIsNone(state['ladder'])
         self.assertIsNone(state['l50'])
         self.assertEqual(state['student_points'], [])
@@ -170,9 +171,31 @@ class AdaptiveScanTest(unittest.TestCase):
         scanner = AdaptiveScan(grid)
         count = drive(scanner, lambda d: (8, 8))
         state = scanner.finish()
-        self.assertEqual(count, 12)     # 补档把整段阶梯测满
+        self.assertLessEqual(count, 9)
         self.assertEqual(state['l50'], grid[0])
         self.assertEqual(state['top'], grid[11])
+
+    def test_nonmonotonic_island_from_real_l46_curve(self):
+        grid = grid12()
+        wins = [0, 0, 0, 0, 0, 0, 6, 3, 5, 8, 8, 8]
+        scanner = AdaptiveScan(grid)
+        count = drive(scanner, lambda d: (wins[grid.index(d)], 8))
+        self.assertEqual(scanner.finish()['l50'], grid[6])
+        self.assertLess((count + len(scanner.finish()['student_points'])) * 8, 96)
+
+    def test_budget_is_below_half_of_full_scan_for_all_binary_curves(self):
+        grid = grid12()
+        for bits in range(1 << len(grid)):
+            scanner = AdaptiveScan(grid)
+            count = drive(scanner, lambda d: (8 if bits & (1 << grid.index(d)) else 0, 8))
+            self.assertLess((count + len(scanner.finish()['student_points'])) * 8, 96)
+
+    def test_partial_or_inconsistent_results_cannot_register(self):
+        with self.assertRaises(ValueError):
+            scan.validate_result({'complete': False})
+        data = dict(wins=2, games=2, rows=[dict(future_seed=10, won=True), dict(future_seed=11, won=False)])
+        with self.assertRaises(ValueError):
+            scan.validate_result(dict(future_seeds=[10, 11], points={'1': {'teacher': data}}))
 
     def test_non_monotonic_l48_shape(self):
         grid = grid12()
@@ -196,6 +219,41 @@ class AdaptiveScanTest(unittest.TestCase):
         ladder = state['ladder']['ladder']
         self.assertNotIn(grid[8], ladder)
         self.assertIn(grid[4], ladder)
+
+
+class BacktestEvidenceTest(unittest.TestCase):
+    def fixture(self):
+        grid, futures = grid12(), [10, 11]
+        def summary():
+            return dict(wins=2, games=2, rows=[dict(future_seed=f, won=True, final_wave=30) for f in futures])
+        points = {str(d): {'teacher': summary()} for d in grid}
+        order = [grid[i] for i in (0, 4, 7, 11)]
+        measured = {str(d): {'teacher': summary()} for d in order}
+        for d in (grid[0], grid[-1]):
+            measured[str(d)]['student'] = summary()
+        trace = dict(complete=True, algorithm='coarse4_guard_budget9_v1', grid=grid,
+                     future_seeds=futures, teacher_decisions=order, points=measured,
+                     l50=grid[0], scan_games=12)
+        entry = dict(task_id='t', seed=42, decisions=grid, future_seeds=futures)
+        return entry, dict(complete=True, points=points, future_seeds=futures, adaptive_trace=trace)
+
+    def test_full_grid_and_independent_trace_are_verified(self):
+        entry, result = self.fixture()
+        comparison = compare_document(entry, result)
+        self.assertTrue(comparison['passed'])
+        self.assertEqual(comparison['delta'], 0)
+
+    def test_partial_full_grid_is_not_accepted_as_a_baseline(self):
+        entry, result = self.fixture()
+        del result['points'][str(entry['decisions'][1])]
+        with self.assertRaisesRegex(ValueError, '全量网格缺少'):
+            compare_document(entry, result)
+
+    def test_different_future_block_is_not_a_same_block_comparison(self):
+        entry, result = self.fixture()
+        result['adaptive_trace']['future_seeds'] = [20, 21]
+        with self.assertRaisesRegex(ValueError, '不是同一块'):
+            compare_document(entry, result)
 
 
 class RegisterHelpersTest(unittest.TestCase):

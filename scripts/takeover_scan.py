@@ -5,8 +5,8 @@
 
   run <scan_jobs.json>      按 task89 的作业清单跑老师/学生两臂，断点续跑，
                             结果按存档写 json（每局胜负、末波、破防行与僵尸类型）。
-  adaptive <scan_jobs.json> 自适应取点：5 等距点老师臂 → 跨 50% 区间二分 →
-                            50% 线到顶档之间补齐网格档，学生臂只打两端。
+  adaptive <scan_jobs.json> 自适应取点：4 等距老师点 → 跨50%二分、失败区间补探 →
+                            50%线附近补阶梯；最多9个老师点，学生臂只打两端。
   register <result.json…>   判读：老师 ≥50% 的存档生成阶梯（档位全部 ≥50%，
                             顶档取最晚的稳定 8/8 点），写 demo_start；未来种子块
                             与 task89 共用加锁账本分配；同步 DESIGN 与测试期望集合。
@@ -243,6 +243,8 @@ def cmd_run(args) -> None:
         all_points = [int(d) for d in entry['decisions']]
         wanted = [int(d) for d in args.decisions.split(',')] if args.decisions else all_points
         points = [d for d in wanted if d in all_points]   # 各存档网格不同，取交集
+        if not points:
+            continue
         jobs = job_map(entry, points, futures)
         points_path = args.out / 'results'
         store = {}
@@ -261,9 +263,11 @@ def cmd_run(args) -> None:
                         for bucket in previous.get('points', {}).values() for arm in bucket.values()
                         if isinstance(arm, dict) and arm.get('rows')}
                 prior_futures = list(next(iter(sets))) if len(sets) == 1 else None
-            if prior_futures != futures:
+            if prior_futures != futures or previous.get('complete') is False:
                 extra = {}  # 派生的 adaptive L50/阶梯属于另一组未来，不可保留。
         extra['future_seeds'] = futures
+        extra['complete'] = False
+        write_archive_result(entry, store, points_path, extra)
         for decision in points:
             bucket = store.setdefault(str(decision), {})
             for arm in arms:
@@ -271,6 +275,7 @@ def cmd_run(args) -> None:
                 if summary is not None:
                     bucket[arm] = summary
                     write_archive_result(entry, store, points_path, extra)
+        extra['complete'] = True
         write_archive_result(entry, store, points_path, extra)
     print(f'完成 {len(entries)} 份存档，结果在 {args.out / "results"}')
 
@@ -280,13 +285,13 @@ def cmd_run(args) -> None:
 class AdaptiveScan:
     """自适应取点的纯决策逻辑（可用合成胜率单测）。
 
-    阶段：5 等距点 → 跨 50% 区间二分 → [50% 线, 顶档] 之间补齐网格档。
+    阶段：4 等距点 → 跨50%二分 → 失败区间补探 → 50%线附近补阶梯。
     所有实测点都落在 task89 的 12 点网格上，与 12 点结果可直接比档。
-    等距 5 点（间距 ≤3 档）用于捕捉 4 等距（间距 3–4 档）会漏掉的非单调隆起
-    （回测 L46 s20261048：622 过线、725 跌回、829 再过线，4 等距漏掉 622）。
+    失败区间补探用于发现非单调隆起；不假设所有未测点失败。
+    最多9个老师点+2个学生点，8未来时至多88局，低于全量192局的一半。
     """
 
-    def __init__(self, grid: list, equidistant: int = 5):
+    def __init__(self, grid: list, equidistant: int = 4):
         self.grid = [int(d) for d in grid]
         self.wins: dict[int, dict] = {}       # decision -> {'teacher': {'wins','games','rows'}, …}
         self.equidistant = self._pick_equidistant(len(self.grid), equidistant)
@@ -295,6 +300,7 @@ class AdaptiveScan:
         self.l50: int | None = None
         self.top: int | None = None
         self.student_points: list = []
+        self.teacher_budget = min(9, len(self.grid))
 
     @staticmethod
     def _pick_equidistant(count: int, points: int) -> list:
@@ -311,6 +317,9 @@ class AdaptiveScan:
     def next_teacher_point(self) -> int | None:
         """返回下一个要跑老师臂的决策号；None 表示老师臂结束。"""
         while True:
+            if sum('teacher' in data for data in self.wins.values()) >= self.teacher_budget:
+                self.stage = 'done'
+                return None
             if self.next_queue:
                 decision = self.next_queue.pop(0)
                 if decision not in self.wins:
@@ -327,6 +336,10 @@ class AdaptiveScan:
                 pending = [d for d in self.next_queue if d not in self.wins]
                 if pending:
                     return pending[0]
+                self.stage = 'guard'
+                self._plan_guard()
+                continue
+            if self.stage == 'guard':
                 self.stage = 'fill'
                 self._plan_fill()
                 continue
@@ -358,6 +371,17 @@ class AdaptiveScan:
         passing = [self._grid_index(d) for d in self.wins if self._passing(d)]
         return min(passing) if passing else None
 
+    def _plan_guard(self) -> None:
+        """在已知50%线之前的失败区间补一个中点，防止漏掉非单调隆起。"""
+        tested = sorted((self._grid_index(d), d) for d in self.wins if 'teacher' in self.wins[d])
+        limit = self._l50_index()
+        gaps = [(ia, ib) for (ia, da), (ib, db) in zip(tested, tested[1:])
+                if ib - ia > 2 and not self._passing(da) and not self._passing(db)
+                and (limit is None or ib < limit)]
+        if gaps:
+            ia, ib = max(gaps, key=lambda gap: gap[1])
+            self.next_queue.append(self.grid[round((ia + ib) / 2)])
+
     def _top_index(self) -> int | None:
         """顶档：最晚的 8/8 稳定点；没有 8/8 就取最晚的 ≥50% 点。"""
         full = [self._grid_index(d) for d, data in self.wins.items()
@@ -381,8 +405,9 @@ class AdaptiveScan:
         self.wins.setdefault(int(decision), {})[arm] = {
             'wins': int(summary['wins']), 'games': int(summary['games']),
             'rows': summary.get('rows', [])}
-        if arm == 'teacher' and self.stage == 'bisect' and not self.next_queue:
+        if arm == 'teacher' and self.stage in ('bisect', 'guard') and not self.next_queue:
             # 二分队列跑完一批后重算：可能还有未探明的跨线区间。
+            self.stage = 'bisect'
             self._plan_bisect()
 
     def finish(self) -> dict:
@@ -390,9 +415,12 @@ class AdaptiveScan:
         l50_index, top_index = self._l50_index(), self._top_index()
         self.l50 = self.grid[l50_index] if l50_index is not None else None
         self.top = self.grid[top_index] if top_index is not None else None
-        self.student_points = [d for d in (self.l50, self.top) if d is not None]
+        self.student_points = list(dict.fromkeys(d for d in (self.l50, self.top) if d is not None))
         points = {str(d): dict(data) for d, data in sorted(self.wins.items())}
         return dict(l50=self.l50, top=self.top, student_points=self.student_points,
+                    teacher_budget=self.teacher_budget,
+                    teacher_points=sum('teacher' in data for data in self.wins.values()),
+                    scan_games=sum(arm['games'] for data in self.wins.values() for arm in data.values()),
                     points=points,
                     ladder=build_ladder({d: (data['teacher']['wins'], data['teacher']['games'])
                                          for d, data in self.wins.items() if data.get('teacher')}))
@@ -425,6 +453,25 @@ def cmd_adaptive(args) -> None:
         futures = list(entry['future_seeds'])[:args.futures]
         scanner = AdaptiveScan(entry['decisions'], equidistant=args.equidistant)
         jobs = job_map(entry, set(entry['decisions']), futures)
+        path = args.out / 'results' / f"{entry['task_id']}_s{entry['seed']}.json"
+        previous = json.loads(path.read_text()) if path.exists() else {}
+        cached = cached_points_for_futures(previous.get('points', {}), futures)
+        def checkpoint(complete):
+            state = scanner.finish()
+            merged = {d: dict(bucket) for d, bucket in cached.items()}
+            for decision, bucket in state['points'].items():
+                merged.setdefault(decision, {}).update(bucket)
+            trace = dict(algorithm=f'coarse{args.equidistant}_guard_budget9_v1', complete=complete,
+                         grid=entry['decisions'], future_seeds=futures,
+                         teacher_decisions=[d for d, bucket in scanner.wins.items() if 'teacher' in bucket],
+                         l50=state['l50'], top=state['top'], points=state['points'],
+                         teacher_points=state['teacher_points'], scan_games=state['scan_games'])
+            document = dict(schema=RESULT_SCHEMA, task_id=entry['task_id'], seed=entry['seed'],
+                            archive=entry['archive'], grade=entry.get('grade'), layer=entry.get('layer'),
+                            adaptive=True, complete=complete, future_seeds=futures,
+                            adaptive_trace=trace, **{**state, 'points': merged})
+            write_json(path, document)
+            return state
         print(f"{entry['task_id']} s{entry['seed']}（{len(entry['decisions'])} 点网格）", flush=True)
         while True:
             decision = scanner.next_teacher_point()
@@ -432,20 +479,16 @@ def cmd_adaptive(args) -> None:
                 break
             summary = run_point(jobs, decision, 'teacher', ('teacher',), args)
             scanner.observe(decision, 'teacher', summary)
+            checkpoint(False)
         state = scanner.finish()
         for decision in state['student_points']:
             summary = run_point(jobs, decision, 'student', ('student',), args)
             scanner.observe(decision, 'student', summary)
-        state = scanner.finish()
-        document = dict(schema=RESULT_SCHEMA, task_id=entry['task_id'], seed=entry['seed'],
-                        archive=entry['archive'], grade=entry.get('grade'), layer=entry.get('layer'),
-                        adaptive=True, future_seeds=futures, **state)
-        path = args.out / 'results' / f"{entry['task_id']}_s{entry['seed']}.json"
-        path.parent.mkdir(parents=True, exist_ok=True)
-        write_json(path, document)
+            checkpoint(False)
+        state = checkpoint(True)
         ladder = state['ladder']
         verdict = (f"L50={state['l50']} 顶档={state['top']} 阶梯 {len(ladder['ladder'])} 档"
-                   if ladder else '老师全程 <50%，不登记')
+                   if ladder else '已测老师点均 <50%，暂不登记')
         print(f"  => {verdict}", flush=True)
 
 
@@ -504,8 +547,34 @@ def load_results(paths: list) -> list:
         document = json.loads(path.read_text(encoding='utf-8'))
         if document.get('schema') != RESULT_SCHEMA:
             raise ValueError(f'{path}: 不是 {RESULT_SCHEMA} 结果文件')
+        validate_result(document)
         documents.append(document)
     return documents
+
+
+def validate_summary(data: dict, futures: list) -> None:
+    rows = data.get('rows') or []
+    if (data.get('games') != len(rows) or len(rows) != len(futures)
+            or {row.get('future_seed') for row in rows} != set(futures)
+            or any(type(row.get('won')) is not bool for row in rows)
+            or data.get('wins') != sum(row['won'] for row in rows)):
+        raise ValueError('扫描汇总与逐局未来/胜负证据不一致')
+
+
+def validate_result(document: dict) -> list:
+    if document.get('complete') is False:
+        raise ValueError('自适应扫描尚未完成，不可登记')
+    futures = document.get('future_seeds')
+    for bucket in document.get('points', {}).values():
+        for data in bucket.values():
+            if not isinstance(data, dict):
+                raise ValueError('旧扫描汇总缺逐局证据，请从原始对局缓存重建')
+            if futures is None:
+                futures = [row.get('future_seed') for row in data.get('rows', [])]
+            if not futures or len(futures) != len(set(futures)):
+                raise ValueError('扫描未来集合为空或重复')
+            validate_summary(data, futures)
+    return futures or []
 
 
 def update_manifest(manifest_path: Path, task_id: str, spec: dict) -> bool:
@@ -601,9 +670,9 @@ def cmd_register(args) -> None:
         ladder = build_ladder(points)
         if not ladder:
             report.append(dict(task_id=task_id, seed=document['seed'],
-                               registered=False, reason='老师全程 <50%'))
+                               registered=False, reason='已测老师点均 <50%'))
             skipped.append(task_id)
-            print(f'{task_id} s{document["seed"]}: 老师 {len(points)} 点全程 <50%，不登记')
+            print(f'{task_id} s{document["seed"]}: 已测老师 {len(points)} 点均 <50%，不登记')
             continue
         if existing:
             # 既有格不覆盖：已登记的阶梯来自全量扫描（task87 等），这里只核对与报告。
@@ -681,7 +750,7 @@ def parser() -> argparse.ArgumentParser:
 
     adaptive = sub.add_parser('adaptive', help='自适应取点（4 等距 → 二分 → 补档）')
     adaptive.add_argument('jobs', type=Path)
-    adaptive.add_argument('--equidistant', type=int, default=5)
+    adaptive.add_argument('--equidistant', type=int, choices=(4, 5), default=4)
     common(adaptive)
     adaptive.set_defaults(func=cmd_adaptive)
 
