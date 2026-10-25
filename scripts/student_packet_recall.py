@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "python"))
 import torch  # noqa: E402
 
 from pvz_rollout_policy import features, load_student  # noqa: E402
-from pvz_frame_store import frame_paths, read_frames  # noqa: E402
+from pvz_frame_store import archive_seed, frame_paths, read_frames  # noqa: E402
 
 
 def main() -> None:
@@ -32,7 +32,7 @@ def main() -> None:
     p.add_argument("--models", required=True)
     args = p.parse_args()
     split = set(args.split_labels.split(","))
-    seeds = sorted({int(q.parent.parent.name.split("_")[-1]) for q in frame_paths(args.data)
+    seeds = sorted({archive_seed(q.parent.parent.name) for q in frame_paths(args.data)
                     if q.parent.name in split})
     random.Random(0).shuffle(seeds)
     val_seeds = set(seeds[: len(seeds) // 10])
@@ -40,7 +40,7 @@ def main() -> None:
     for path in frame_paths(args.data):
         if path.parent.name not in args.labels.split(","):
             continue
-        part = "val" if int(path.parent.parent.name.split("_")[-1]) in val_seeds else "train"
+        part = "val" if archive_seed(path.parent.parent.name) in val_seeds else "train"
         frames = read_frames(path)
         for i in range(1, len(frames)):
             a = frames[i].get("label") or frames[i].get("action")

@@ -341,24 +341,42 @@ struct HumanInput
 	bool closed = false;
 	int mouseX = 0;
 	int mouseY = 0;
+	std::string title;
 
 	std::string Poll(LawnApp* app)
 	{
 		SDL_Event event;
-		std::string action = "{\"type\":\"wait\",\"ticks\":1}";
+		std::string action;
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT || (event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_CLOSE)) closed = true;
 			if (event.type == SDL_KEYDOWN && !event.key.repeat)
 			{
-				if (event.key.keysym.sym == SDLK_ESCAPE) closed = true;
-				if (event.key.keysym.sym == SDLK_SPACE) paused = !paused;
+				// task80: Esc (and Space, deliberately the same thing) toggles the operation
+				// pause: game time stands still, but planting/shoveling/collecting below keep
+				// working so a slow turn is playable.  The old two-pause split (Space froze and
+				// ate every click, Esc quit) was a trap -- clicking into a dead screen -- and the
+				// recorder loop treats both flags identically anyway.  The recording ends by
+				// closing the window.  The title bar carries the "paused" hint: it cannot cover
+				// the lawn, unlike any overlay.
+				if (event.key.keysym.sym == SDLK_ESCAPE || event.key.keysym.sym == SDLK_SPACE)
+				{
+					paused = !paused;
+					SDL_Window* window = static_cast<SDL_Window*>(app->mWindow);
+					if (window != nullptr)
+					{
+						if (title.empty()) title = SDL_GetWindowTitle(window);
+						SDL_SetWindowTitle(window, paused ? (title + " — 已暂停（可继续操作）").c_str()
+														  : title.c_str());
+					}
+				}
 			}
 			if (event.type != SDL_MOUSEMOTION && event.type != SDL_MOUSEBUTTONDOWN) continue;
 			mouseX = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
 			mouseY = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
 			app->mWidgetManager->RemapMouse(mouseX, mouseY);
-			if (event.type != SDL_MOUSEBUTTONDOWN || paused) continue;
+			// Clicks stay live while paused -- that is the whole point of the operation pause.
+			if (event.type != SDL_MOUSEBUTTONDOWN) continue;
 			if (event.button.button == SDL_BUTTON_RIGHT) { packet = -1; shovel = false; continue; }
 			if (event.button.button != SDL_BUTTON_LEFT) continue;
 			Board* board = app->mBoard;
@@ -387,6 +405,9 @@ struct HumanInput
 				break;
 			}
 		}
+		// Nothing clicked: running time offers one tick, paused time offers none -- the record
+		// loop simply steps whatever this returns, so a paused poll must be a no-op.
+		if (action.empty()) action = paused ? "{\"type\":\"wait\",\"ticks\":0}" : "{\"type\":\"wait\",\"ticks\":1}";
 		EnvironmentSnapshot snapshot{};
 		if (!SaveEnvironmentSnapshot(app, snapshot)) throw std::runtime_error("could not save presentation state");
 		auto* manager = app->mWidgetManager.get();
@@ -568,6 +589,28 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"action\":" << action << ",\"paused\":" << (human.paused ? "true" : "false")
 				<< ",\"closed\":" << (human.closed ? "true" : "false") << '}' << std::endl;
 			continue;
+		}
+		else if (command == "DEMO_INPUT")
+		{
+			// task80 test seam: push a synthetic event into the very SDL queue the recorder
+			// reads, so a scripted regression drives the real Esc/Space/window-close path
+			// instead of a parallel one.  Never accepted outside a visible demo session.
+			std::string key;
+			input >> key;
+			ok = demo && visible && app->mBoard &&
+				(key == "escape" || key == "space" || key == "close");
+			if (ok)
+			{
+				SDL_Event event{};
+				if (key == "close") event.type = SDL_QUIT;
+				else
+				{
+					event.type = SDL_KEYDOWN;
+					event.key.keysym.sym = key == "escape" ? SDLK_ESCAPE : SDLK_SPACE;
+				}
+				SDL_PushEvent(&event);
+			}
+			minimalResponse = true;
 		}
 		else if (command == "STATE_HASH")
 		{
