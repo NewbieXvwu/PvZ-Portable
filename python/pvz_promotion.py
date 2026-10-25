@@ -1,4 +1,4 @@
-"""task49A/task73b paired student promotion policy, with no scipy dependency.
+"""task49A/task73b/task73c paired student promotion policy, no scipy dependency.
 
 Newcombe method 10 (paired Wilson intervals, corrected phi), not a zero-width
 Wald interval on unanimous outcomes. Formula/reference:
@@ -10,6 +10,10 @@ Gate versions:
 - 2 (task73b): fresh seeds every round from the gate-dedicated pool
   [31024, 65536) via an out-of-git ledger, 1536 pairs, incumbent re-evaluated
   on the same fresh seeds (no cached incumbent outcomes).
+- 3 (task73c): panel extended with the zones the curriculum actually practices -
+  fog (fog_user L31, human observation) and roof (L41 r7) - and the floor
+  day_l9 holdout replaced by a measured in-band holdout. 1920 pairs. Decision
+  rules unchanged; v1/v2 certificates stay verifiable.
 """
 from __future__ import annotations
 
@@ -17,7 +21,7 @@ import copy
 import math
 from statistics import NormalDist
 
-GATE_VERSION = 2
+GATE_VERSION = 3
 ALPHA = .05
 MARGIN = .03
 SEEDS_PER_TASK = 8
@@ -27,12 +31,31 @@ PANEL_TASKS = (
     ('night', 'night_l12_eval_n10'), ('night', 'night_l18_eval_n10'),
     ('pool', 'pool_l21_eval_p9k'), ('pool', 'pool_l26_eval_p9k'),
 )
+# task73c: the zones the gate must measure are the zones the curriculum practices.
+# fog_user_l31_snow / roof_l41_train_r7 are the practiced cells (multiplier 1.0,
+# read from curriculum_state on 2026-10-25 and frozen here); the fog task keeps its
+# registered human fog observation. The second heldout task replaces the floor
+# day_l9 holdout (0-2/192 on both sides in the round-13 gate). Every registered
+# day-family holdout was measured on the incumbent student first
+# (scripts/task73c_holdout_probe.py, 64 fresh ledger seeds each): the group is
+# strongly polarized - floors at 0-2% and ceilings at 87.5-100%, none inside
+# 15-85%. day_l9_eval_d7p_holdout2 is the closest to band (56/64 = 87.5%, 95% CI
+# [77%, 94%] straddling the upper edge) and keeps full regression veto power.
+PANEL_TASKS_V3 = (
+    ('day', 'day_l7_eval_d7'), ('day', 'day_l10_orig_eval'),
+    ('heldout', 'day_l7_eval_d7p_holdout1'), ('heldout', 'day_l9_eval_d7p_holdout2'),
+    ('night', 'night_l12_eval_n10'), ('night', 'night_l18_eval_n10'),
+    ('pool', 'pool_l21_eval_p9k'), ('pool', 'pool_l26_eval_p9k'),
+    ('fog', 'fog_user_l31_snow'), ('roof', 'roof_l41_train_r7'),
+)
 V1_PANEL = 'v2-task49A'
 V2_PANEL = 'v2-task73b'
-VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2}
+V3_PANEL = 'v3-task73c'
+VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2, V3_PANEL: 3}
 V1_POOL = (30000, 30128)
 SEED_POOL_V2 = (31024, 65536)
 V2_SEEDS_PER_TASK = 192
+V3_SEEDS_PER_TASK = 192
 SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/gate_seed_ledger.json'
 
 
@@ -57,7 +80,47 @@ def policy(version=GATE_VERSION):
                     incumbent_rerun='both sides are evaluated on the round seeds; '
                                     'cached incumbent outcomes are never used',
                     tasks=[dict(zone=zone, task_id=name) for zone, name in PANEL_TASKS])
+    if version == 3:
+        return dict(version=version, alpha=ALPHA, noninferiority_margin=MARGIN,
+                    overall_interval='Newcombe paired method 10, two-sided 95%',
+                    zone_veto='one-sided exact McNemar p < 0.05 in any panel group',
+                    pair_count=V3_SEEDS_PER_TASK * len(PANEL_TASKS_V3),
+                    episode_count=2 * V3_SEEDS_PER_TASK * len(PANEL_TASKS_V3),
+                    seeds_per_task=V3_SEEDS_PER_TASK,
+                    seed_pool=list(SEED_POOL_V2),
+                    seed_ledger=SEED_LEDGER_DEFAULT,
+                    seed_reuse='never; ledger-allocated contiguous block per round, '
+                               'exhaustion aborts the gate instead of wrapping',
+                    incumbent_rerun='both sides are evaluated on the round seeds; '
+                                    'cached incumbent outcomes are never used',
+                    tasks=[dict(zone=zone, task_id=name) for zone, name in PANEL_TASKS_V3])
     raise ValueError(f'unknown gate version: {version}')
+
+
+def _freeze_ledger_panel(document, spec, seed_block, per_task, panel_name, version, purpose):
+    """Shared v2/v3 fresh-seed panel: ledger block partitioned across the spec tasks."""
+    if seed_block is None or [int(s) for s in seed_block] != list(seed_block) or len(seed_block) != 2:
+        raise ValueError(f'gate v{version} requires the ledger-allocated seed block')
+    start, end = int(seed_block[0]), int(seed_block[1])
+    if start < SEED_POOL_V2[0] or end > SEED_POOL_V2[1] or end - start != per_task * len(spec):
+        raise ValueError(f'seed block [{start}, {end}) is outside the gate pool '
+                         f'{list(SEED_POOL_V2)} or has the wrong size')
+    table = {task['task_id']: task for task in document['tasks']}
+    tasks, groups = [], {}
+    for index, (zone, name) in enumerate(spec):
+        if document['groups'].get(name) != zone or name not in table:
+            raise ValueError(f'missing/wrong group for gate v{version}: {name}')
+        task = copy.deepcopy(table[name])
+        task['seeds'] = list(range(start + index * per_task, start + (index + 1) * per_task))
+        if task.get('wave_cap') is not None or task['zombie_count_multiplier'] != 1:
+            raise ValueError(f'promotion must use complete, original-difficulty evaluation games: {name}')
+        tasks.append(task)
+        groups[name] = zone
+    seeds = [seed for task in tasks for seed in task['seeds']]
+    if len(set(seeds)) != len(seeds) or any(s < start or s >= end for s in seeds):
+        raise ValueError(f'gate v{version} seed assignment is not a disjoint partition of the block')
+    return dict(schema_version=1, panel_version=panel_name, groups=groups, tasks=tasks,
+                seed_block=[start, end], purpose=purpose)
 
 
 def freeze_panel(document, version=GATE_VERSION, seed_block=None):
@@ -84,30 +147,15 @@ def freeze_panel(document, version=GATE_VERSION, seed_block=None):
         return dict(schema_version=1, panel_version=V1_PANEL, groups=groups, tasks=tasks,
                     purpose='task49A fixed 64-pair student promotion subset')
     if version == 2:
-        if seed_block is None or [int(s) for s in seed_block] != list(seed_block) or len(seed_block) != 2:
-            raise ValueError('gate v2 requires the ledger-allocated seed block')
-        start, end = int(seed_block[0]), int(seed_block[1])
-        if start < SEED_POOL_V2[0] or end > SEED_POOL_V2[1] or end - start != V2_SEEDS_PER_TASK * len(PANEL_TASKS):
-            raise ValueError(f'seed block [{start}, {end}) is outside the gate pool '
-                             f'{list(SEED_POOL_V2)} or has the wrong size')
-        tasks, groups = [], {}
-        for index, (zone, name) in enumerate(PANEL_TASKS):
-            if document['groups'].get(name) != zone or name not in table:
-                raise ValueError(f'missing/wrong v2 group: {name}')
-            task = copy.deepcopy(table[name])
-            task['seeds'] = list(range(start + index * V2_SEEDS_PER_TASK,
-                                       start + (index + 1) * V2_SEEDS_PER_TASK))
-            if task.get('wave_cap') is not None or task['zombie_count_multiplier'] != 1:
-                raise ValueError(f'promotion must use complete, original-difficulty evaluation games: {name}')
-            tasks.append(task)
-            groups[name] = zone
-        seeds = [seed for task in tasks for seed in task['seeds']]
-        if len(set(seeds)) != len(seeds) or any(s < start or s >= end for s in seeds):
-            raise ValueError('gate v2 seed assignment is not a disjoint partition of the block')
-        return dict(schema_version=1, panel_version=V2_PANEL, groups=groups, tasks=tasks,
-                    seed_block=[start, end],
-                    purpose='task73b fresh-seed 1536-pair student promotion subset; '
-                            'block allocated from the out-of-git gate seed ledger')
+        return _freeze_ledger_panel(
+            document, PANEL_TASKS, seed_block, V2_SEEDS_PER_TASK, V2_PANEL, 2,
+            'task73b fresh-seed 1536-pair student promotion subset; '
+            'block allocated from the out-of-git gate seed ledger')
+    if version == 3:
+        return _freeze_ledger_panel(
+            document, PANEL_TASKS_V3, seed_block, V3_SEEDS_PER_TASK, V3_PANEL, 3,
+            'task73c fresh-seed 1920-pair student promotion subset covering the '
+            'practiced fog and roof zones; block allocated from the out-of-git gate seed ledger')
     raise ValueError(f'unknown gate version: {version}')
 
 
