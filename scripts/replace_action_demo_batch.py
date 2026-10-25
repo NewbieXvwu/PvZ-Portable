@@ -1,7 +1,8 @@
 """Validate the four frozen task69 demonstrations and export native-legal replacement labels.
 
-This batch needs four free game slots. The task runner schedules it after A/B, so it never
-holds up the paired manager. Original HF archives stay unchanged; derived tapes/NPZ stay ignored.
+The four archives run with two game processes, following the main controller's reduced cap.
+The task runner schedules them after A/B. Original HF archives stay unchanged;
+derived tapes/NPZ stay ignored.
 """
 from __future__ import annotations
 
@@ -149,12 +150,12 @@ def run(plan_path, out, resource, executable):
         raise ValueError('requires the frozen four-demo interval plan')
     active = task_game_pids()
     if active:
-        raise RuntimeError(f'four demo slots are not free: {active}')
+        raise RuntimeError(f'demo slots are not free: {active}')
     out.mkdir(parents=True, exist_ok=True)
     plan_hash = digest(plan_path)
     jobs = [(item, plan, plan_hash, out, resource, executable) for item in plan['archives']]
     results = []
-    with ProcessPoolExecutor(max_workers=4) as pool:
+    with ProcessPoolExecutor(max_workers=2) as pool:
         futures = [pool.submit(validate_one, job) for job in jobs]
         for future in as_completed(futures):
             result = future.result()
