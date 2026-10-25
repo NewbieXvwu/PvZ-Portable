@@ -1,0 +1,80 @@
+{
+  "manifest_sha256": "730f23304eb955d011abb6362477bba5565f2cd6298f43a44c8cf4db2f55bcaa",
+  "scope": "after arm only; post-hoc description of the observed behaviour, does not alter the preregistered win-rate test or its intervals",
+  "reversal_rule": "consecutive replacements on one cell where the later plant is exactly the type the earlier replacement removed",
+  "cost_source": {
+    "path": "src/Lawn/Plant.cpp",
+    "sha256": "8ae7a5d360792a7d7a19e9d139f41a3eccde318e840681c424a620c266667a90"
+  },
+  "cost_proxy_note": "engine seed cost is used only as a descriptive proxy, not as a strength or strategy rule; zero-cost plants make a free replacement legal",
+  "tasks": {
+    "day_l7_train_d7_m200": {
+      "games": 32,
+      "events": 214,
+      "free_events": 0,
+      "free_share": 0.0,
+      "same_cell_reversals": 5,
+      "same_cell_reversal_share": 0.02336448598130841,
+      "games_with_any_reversal": 5,
+      "cells_replaced": 188,
+      "cells_replaced_twice_or_more": 24,
+      "seed_cost_delta": {
+        "upgrade": 125,
+        "equal": 33,
+        "downgrade": 56,
+        "unknown": 0
+      }
+    },
+    "fog_user_l31_snow_m150": {
+      "games": 32,
+      "events": 364,
+      "free_events": 162,
+      "free_share": 0.44505494505494503,
+      "same_cell_reversals": 48,
+      "same_cell_reversal_share": 0.13186813186813187,
+      "games_with_any_reversal": 21,
+      "cells_replaced": 288,
+      "cells_replaced_twice_or_more": 58,
+      "seed_cost_delta": {
+        "upgrade": 70,
+        "equal": 120,
+        "downgrade": 174,
+        "unknown": 0
+      }
+    },
+    "fog_user_l31_snow_m200": {
+      "games": 32,
+      "events": 263,
+      "free_events": 103,
+      "free_share": 0.3916349809885932,
+      "same_cell_reversals": 37,
+      "same_cell_reversal_share": 0.14068441064638784,
+      "games_with_any_reversal": 17,
+      "cells_replaced": 204,
+      "cells_replaced_twice_or_more": 49,
+      "seed_cost_delta": {
+        "upgrade": 53,
+        "equal": 100,
+        "downgrade": 110,
+        "unknown": 0
+      }
+    }
+  },
+  "pooled": {
+    "games": 96,
+    "events": 841,
+    "free_events": 265,
+    "free_share": 0.3151010701545779,
+    "same_cell_reversals": 90,
+    "same_cell_reversal_share": 0.1070154577883472,
+    "games_with_any_reversal": 43,
+    "cells_replaced": 680,
+    "cells_replaced_twice_or_more": 131,
+    "seed_cost_delta": {
+      "upgrade": 248,
+      "equal": 253,
+      "downgrade": 340,
+      "unknown": 0
+    }
+  }
+}
