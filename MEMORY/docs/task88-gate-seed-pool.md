@@ -32,5 +32,7 @@
 - 每完成一小步就提交、push，在“结果”里记一行；有疑问写进“问题”，按最佳判断继续。
 
 ## 结果
+- 2026-10-26 第 1 步（脚本，扫描仍在跑）：新增 `scripts/gate_seed_inventory.py`，从 DESIGN.md 正则、各工作树/主检出/~/pvz-logs 的 JSON 种子字段、门禁账本机械汇总区间并求空闲区间；输出 json，不手抄。
+- 2026-10-26 第 3 步（代码）：`pvz_promotion.SEED_POOLS_V2 = ((31024, 65536), (100_000_000, 101_000_000))`，`SEED_POOL_V2` 保留为首段别名；`allocate_seed_block` 按池序领取、旧账本（只有 `pool` 键）可读并在首次写入时原地升级为 `pools`；`_freeze_ledger_panel` 接受任一段内的块。**不升 GATE_VERSION**：panel / policy / 契约字段一字未改，v2/v3 旧证书逐位不变（两条 SHA256 断言锁住）。
 
 ## 问题
