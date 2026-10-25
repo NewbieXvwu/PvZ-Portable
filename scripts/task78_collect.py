@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import MAIN, sha
 from task78_replay import equal, open_archive, physical
+from task78_student_context import initial_state, context_identity
 from value_teacher_feasibility import sample_root, stats_new, write_json
 import search_play as teacher
 
@@ -75,6 +76,8 @@ def main():
                       rollout_policy=MAIN/'artifacts/student/dw4i_s1/model.pt',
                       static_value=MAIN/'artifacts/hard/value_branch1/model.pt')
         run['models'] = {k:dict(path=str(p), sha256=sha(p)) for k,p in models.items()}
+        if row.get('demo_archive'):
+            run['student_context'] = context_identity(row)
         identity = {k:v for k,v in run.items() if k not in ('pid', 'started')}
         if (output/'identity.json').exists():
             if json.loads((output/'identity.json').read_text()) != identity:
@@ -115,7 +118,7 @@ def main():
                     for before, after in zip(prefix, prefix[1:])
                     if (after.get('action') or {}).get('type') == 'plant']
             roots = {r['frame'] for r in row['roots']}
-            state, results = {}, []
+            state, results = initial_state(row, teacher._W['fast'].obs), []
             for i in range(max(roots)+1):
                 if not equal(physical(_frame(obs)), physical(frames[i])):
                     raise ValueError(f'prefix changed at input frame {i}')

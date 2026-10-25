@@ -1,13 +1,13 @@
-"""Offline terminal-consistency and horizon-stability gates for value v6.
+"""Offline training-corpus consistency and horizon-stability diagnostics for value v6.
 
 Both gates read the audited fog/roof decision labels that were already collected. Each
 root keeps every search candidate and one common random future per candidate, and each
 horizon scores the same root/candidates, so v5 and v6 can be compared on identical
 states without opening another game.
 
-Deviation from the preregistration, recorded in MEMORY/docs/value-v6.md: the 94-state
-task72b panel cannot be rebuilt (its probe scripts lived in /tmp and its takeover points
-were not archived), so these gates use the frozen 64-archive cohort instead.
+These diagnostics do not replace the preregistered task72b 94-state panel or the
+independent roof panel. Rebuilding task72b requires its original probe inputs or
+an exactly validated reconstruction; those inputs have not yet been obtained.
 """
 from __future__ import annotations
 

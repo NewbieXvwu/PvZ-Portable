@@ -14,6 +14,7 @@ from pathlib import Path
 from task78_data import MAIN, ROOT, sha
 from task78_replay import verify
 from task78_collect import full_leaf_rollout
+from task78_student_context import initial_state
 from value_teacher_feasibility import write_json
 import search_play as teacher
 
@@ -33,7 +34,7 @@ def main():
     results = []
     try:
         for group, row in selected.items():
-            state = {}
+            state = initial_state(row, teacher._W['fast'].obs)
             frames = None
 
             def check(env, obs, i):

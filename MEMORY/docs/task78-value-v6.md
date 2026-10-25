@@ -1,6 +1,6 @@
 # task78：叶值 v6——把雾区与屋顶的决策级数据加进来，并修"雾区估值随视界翻转"
 
-> 主控 2026-10-25 写。执行者：台式机 Codex（Plus 号，新开 tmux `codex-v6`，`CODEX_HOME=/home/newbiexvwu/.codex-plus`）。工作树自建 `/home/newbiexvwu/PvZ-search/.claude/worktrees/v6`（分支 `v6`，从 origin/pvz-env 拉出）。游戏进程最多 4 个；每次 GPU 训练 ≤1 小时，开始前 `MemAvailable` ≥10 GiB；**不碰 qc、cq、流水线**（流水线目录只读）。
+> 主控 2026-10-25 写。执行者：台式机 Codex（Plus 号，新开 tmux `codex-v6`，`CODEX_HOME=/home/newbiexvwu/.codex-plus`）。工作树自建 `/home/newbiexvwu/PvZ-search/.claude/worktrees/v6`（分支 `v6`，从 origin/pvz-env 拉出）。**现行上限：同时最多2个游戏进程，qc优先**（主控10-25修订，替代原4）；每次 GPU 训练 ≤1 小时，开始前 `MemAvailable` ≥10 GiB；**不碰 qc、cq、流水线**（流水线目录只读）。
 
 ## 为什么
 - v5（task43，`MEMORY/docs/task43-value-v5-pool.md`）用泳池决策级标签修好了叶值压平，L21 配对胜率 14→28/32，之后被采纳。
@@ -118,10 +118,12 @@
 
 ## 预登记（2026-10-25，训练前冻结）
 
+执行状态修正（2026-10-26）：driver2已停止让资源给qc，不会自动续跑；配对9/15格、320/512对完整，night L17 v5另有16局。此前屋顶高视界48/48确实补齐，但新学生历史审计否定69个示范标签任务，当前可用123/192任务、868行，完整导出不可训练。旧985行导出/分片与69个原始任务保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`；待补清单`jobs_context_fix.txt`。纠正后的collector恢复人类前缀的previous frame/action与StudentHistory，导出同时核对物理状态和观察历史。完整预登记范围与种子不变。
+
 ### 来源、抽样与训练
 
 - qc 只读来源：`/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2`。按档案名区分 L31 human、L31/L32/L33 仙人掌/L33 香蒲示范接手、L41 r7；不把老师旧 targets 当终局真值。按 SHA256(档案绝对路径) 排序，五个雾组各取 8 份、屋顶取 24 份，共 64 份；每份取实际有 targets 的搜索序列中点分位两个 root（不足则全取），选择过程不读取胜负。固定源文件 SHA 后才生成候选标签。完整清单在本树 ignored `artifacts/task78/`，KB 级统计进 git。
-- 标签复用 task43 `sample_root` 的真实搜索候选、原生学生叶、历史恢复核对及 `finish_teacher` 冻结老师终局续走；2500/4000/6000 三视界等量采集，完整候选与共同随机未来均记录。短推演已终局的叶保留审计，训练只用非终局叶，不把学生终局当老师标签。最多本任务 4 个游戏进程。
+- 标签复用 task43 `sample_root` 的真实搜索候选、原生学生叶、历史恢复核对及 `finish_teacher` 冻结老师终局续走；2500/4000/6000 三视界等量采集，完整候选与共同随机未来均记录。短推演已终局的叶保留审计，训练只用非终局叶，不把学生终局当老师标签。现行资源上限为同时最多2游戏，qc优先。
 - 合并 v5 的完整旧语料（旧决策分片、L7 branch、跨区 episode 缓存），从 v5 权重热启动。每批 512 行：旧决策 128、雾区 64、屋顶 64、旧 branch 192、旧 episode 64。新区域按组/档案/root/视界等概率取样，避免 L41 长局或 L33 多候选独占；三个视界各占新数据 1/3。保留 75% 旧样本暴露以约束遗忘，新两区各 12.5% 有相同训练权重。64 档案/128 root 是与 v5 64 seed、768 root 相比的稀疏区域补充，不声称独立样本为候选行数。
 - AdamW、lr=1e-4、weight_decay=1e-4、最多24 epoch、每epoch256步、训练随机种子0；不加 margin/手写价值公式。沿用 BCE、验证损失早停（4轮不改善、最小改善1e-4），只取最优验证模型。新数据按世界身份 SHA256 的前8位 mod10==0 作停止集，训练与停止身份不交叉；若任一区停止集不足2档案，取该区哈希最小2份作停止集并在训练前固定。旧数据沿用 v5 split。训练前 MemAvailable≥10 GiB；每次 GPU 训练用独立进程硬限≤3600秒，可恢复的多轮需另记开始/结束/设备/超参，不择优挑评估。
 

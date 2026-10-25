@@ -10,13 +10,14 @@
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
-- [分工与 codex / CUDA 执行记录约定](notes/workflow.md)
+- [分工与 codex / 并发与 qc 优先 / CUDA 执行记录约定](notes/workflow.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)
 
 ## 每日日志
 
+- [2026-10-26](2026-10-26.md)
 - [2026-09-28](2026-09-28.md)
 - [2026-09-29](2026-09-29.md)
 - [2026-09-30](2026-09-30.md)

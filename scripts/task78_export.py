@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import sha
 from task78_collect import paths
+from task78_student_context import context_identity, expected_histories, validate_root_history
 from value_teacher_feasibility import write_json
 from value_widen_audit import seed_key
 
@@ -93,6 +94,9 @@ def audit_labels(index, horizon, row, manifest, replay):
             raise ValueError(f'{directory}: changed model {name}')
     if sha(row['frames_path']) != row['frames_sha256'] or sha(Path(row['archive'])/'meta.json') != row['meta_sha256']:
         raise ValueError(f'{directory}: source archive changed')
+    if row.get('demo_archive') and 'student_context' in identity:
+        if identity['student_context'] != context_identity(row):
+            raise ValueError(f'{directory}: demonstration context identity changed')
     expected_roots = {r['frame']: r for r in row['roots']}
     root_dirs = {int(p.name[5:]): p for p in directory.glob('root_*') if p.is_dir()}
     summaries = complete['roots']
@@ -103,6 +107,7 @@ def audit_labels(index, horizon, row, manifest, replay):
     verified_roots = {r['frame']: r for r in verified['roots']}
     artifacts = {str(complete_path): sha(complete_path)}
     output = []
+    histories = {}
     for frame, root_dir in sorted(root_dirs.items()):
         root_path = root_dir/'root.json'
         root = json.loads(root_path.read_text())
@@ -111,6 +116,12 @@ def audit_labels(index, horizon, row, manifest, replay):
             raise ValueError(f'{root_dir}: root tick/wave differs')
         if root['root_state_sha256'] != verified_roots[frame]['engine_sha256']:
             raise ValueError(f'{root_dir}: root engine state differs from replay')
+        if row.get('demo_archive'):
+            saved = root['history']['history']
+            obs = saved['obs'] if saved is not None else 'v1'
+            if obs not in histories:
+                histories[obs] = expected_histories(row, obs)
+            validate_root_history(row, frame, root, histories[obs])
         validate_income(root, root['root_frame']['tick'])
         records = [json.loads(p.read_text()) for p in sorted(root_dir.glob('candidate_[0-9]*.json'))]
         count = len(root['candidates'])

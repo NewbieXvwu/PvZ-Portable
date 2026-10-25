@@ -1,0 +1,374 @@
+{
+ "evaluation_scope": "source_student_observation_history_audit",
+ "engine_processes_started": 0,
+ "source_manifest_sha256": "b3b86e2996e9e6b1173ac48264eb6858c00ee3a51470280b3b069b8976c2edf0",
+ "audit_sha256": "1f6022ccb0fad8d64636061ea4430baf3755132b51b3c90002a9d622c5f20fe4",
+ "preservation_receipt_sha256": "57409a1231604488992c53bf6d5870ea6f78a538d983d505c04da7cce40ff63a",
+ "historical_export_sha256": "1dc1cafd710145e477489bd71c8b5db95335504bb7e3cf30916ffb18bb123a94",
+ "demo_root_horizon_checks": 192,
+ "mismatched_root_horizons": 117,
+ "mismatched_by_group": {
+  "fog_demo_l31": 48,
+  "fog_demo_l32": 21,
+  "fog_demo_l33_cattail": 48
+ },
+ "pending_jobs": [
+  {
+   "index": 0,
+   "horizon": 2500
+  },
+  {
+   "index": 0,
+   "horizon": 4000
+  },
+  {
+   "index": 0,
+   "horizon": 6000
+  },
+  {
+   "index": 1,
+   "horizon": 2500
+  },
+  {
+   "index": 1,
+   "horizon": 4000
+  },
+  {
+   "index": 1,
+   "horizon": 6000
+  },
+  {
+   "index": 2,
+   "horizon": 2500
+  },
+  {
+   "index": 2,
+   "horizon": 4000
+  },
+  {
+   "index": 2,
+   "horizon": 6000
+  },
+  {
+   "index": 3,
+   "horizon": 2500
+  },
+  {
+   "index": 3,
+   "horizon": 4000
+  },
+  {
+   "index": 3,
+   "horizon": 6000
+  },
+  {
+   "index": 4,
+   "horizon": 2500
+  },
+  {
+   "index": 4,
+   "horizon": 4000
+  },
+  {
+   "index": 4,
+   "horizon": 6000
+  },
+  {
+   "index": 5,
+   "horizon": 2500
+  },
+  {
+   "index": 5,
+   "horizon": 4000
+  },
+  {
+   "index": 5,
+   "horizon": 6000
+  },
+  {
+   "index": 6,
+   "horizon": 2500
+  },
+  {
+   "index": 6,
+   "horizon": 4000
+  },
+  {
+   "index": 6,
+   "horizon": 6000
+  },
+  {
+   "index": 7,
+   "horizon": 2500
+  },
+  {
+   "index": 7,
+   "horizon": 4000
+  },
+  {
+   "index": 7,
+   "horizon": 6000
+  },
+  {
+   "index": 8,
+   "horizon": 2500
+  },
+  {
+   "index": 8,
+   "horizon": 4000
+  },
+  {
+   "index": 8,
+   "horizon": 6000
+  },
+  {
+   "index": 10,
+   "horizon": 2500
+  },
+  {
+   "index": 10,
+   "horizon": 4000
+  },
+  {
+   "index": 10,
+   "horizon": 6000
+  },
+  {
+   "index": 11,
+   "horizon": 2500
+  },
+  {
+   "index": 11,
+   "horizon": 4000
+  },
+  {
+   "index": 11,
+   "horizon": 6000
+  },
+  {
+   "index": 12,
+   "horizon": 2500
+  },
+  {
+   "index": 12,
+   "horizon": 4000
+  },
+  {
+   "index": 12,
+   "horizon": 6000
+  },
+  {
+   "index": 13,
+   "horizon": 2500
+  },
+  {
+   "index": 13,
+   "horizon": 4000
+  },
+  {
+   "index": 13,
+   "horizon": 6000
+  },
+  {
+   "index": 14,
+   "horizon": 2500
+  },
+  {
+   "index": 14,
+   "horizon": 4000
+  },
+  {
+   "index": 14,
+   "horizon": 6000
+  },
+  {
+   "index": 15,
+   "horizon": 2500
+  },
+  {
+   "index": 15,
+   "horizon": 4000
+  },
+  {
+   "index": 15,
+   "horizon": 6000
+  },
+  {
+   "index": 24,
+   "horizon": 2500
+  },
+  {
+   "index": 24,
+   "horizon": 4000
+  },
+  {
+   "index": 24,
+   "horizon": 6000
+  },
+  {
+   "index": 25,
+   "horizon": 2500
+  },
+  {
+   "index": 25,
+   "horizon": 4000
+  },
+  {
+   "index": 25,
+   "horizon": 6000
+  },
+  {
+   "index": 26,
+   "horizon": 2500
+  },
+  {
+   "index": 26,
+   "horizon": 4000
+  },
+  {
+   "index": 26,
+   "horizon": 6000
+  },
+  {
+   "index": 27,
+   "horizon": 2500
+  },
+  {
+   "index": 27,
+   "horizon": 4000
+  },
+  {
+   "index": 27,
+   "horizon": 6000
+  },
+  {
+   "index": 28,
+   "horizon": 2500
+  },
+  {
+   "index": 28,
+   "horizon": 4000
+  },
+  {
+   "index": 28,
+   "horizon": 6000
+  },
+  {
+   "index": 29,
+   "horizon": 2500
+  },
+  {
+   "index": 29,
+   "horizon": 4000
+  },
+  {
+   "index": 29,
+   "horizon": 6000
+  },
+  {
+   "index": 30,
+   "horizon": 2500
+  },
+  {
+   "index": 30,
+   "horizon": 4000
+  },
+  {
+   "index": 30,
+   "horizon": 6000
+  },
+  {
+   "index": 31,
+   "horizon": 2500
+  },
+  {
+   "index": 31,
+   "horizon": 4000
+  },
+  {
+   "index": 31,
+   "horizon": 6000
+  }
+ ],
+ "retained_jobs_audited": 123,
+ "retained_nonterminal_rows": 868,
+ "current_training_export_complete": false,
+ "diagnostic_candidate_unchanged": true,
+ "paired_snapshot": {
+  "sha256": "1c457d893bcf797251e51a3e677b284dd6b7db5d1b19f66da61f0961df13c1fe",
+  "complete_cells": 9,
+  "complete_pairs": 320,
+  "terrain": {
+   "day": {
+    "pairs": 64,
+    "old_wins": 64,
+    "new_wins": 64,
+    "gain": 0,
+    "harm": 0,
+    "net": 0,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.05600908938663657
+   },
+   "night": {
+    "pairs": 32,
+    "old_wins": 31,
+    "new_wins": 31,
+    "gain": 1,
+    "harm": 1,
+    "net": 0,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.161380125583559
+   },
+   "fog": {
+    "pairs": 128,
+    "old_wins": 127,
+    "new_wins": 128,
+    "gain": 1,
+    "harm": 0,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.028210277628882095
+   },
+   "roof": {
+    "pairs": 96,
+    "old_wins": 42,
+    "new_wins": 43,
+    "gain": 10,
+    "harm": 9,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.11942434288618571
+   }
+  },
+  "gates": {
+   "day": {
+    "status": "evaluated",
+    "passed": true,
+    "conservative_lower": -0.05600908938663657,
+    "cell_floors_met": true
+   },
+   "night": {
+    "status": "incomplete",
+    "passed": null
+   },
+   "pool": {
+    "status": "incomplete",
+    "passed": null
+   },
+   "fog": {
+    "status": "evaluated",
+    "passed": false,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "direction_met": true
+   },
+   "roof": {
+    "status": "evaluated",
+    "passed": false,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "direction_met": false
+   }
+  }
+ }
+}
