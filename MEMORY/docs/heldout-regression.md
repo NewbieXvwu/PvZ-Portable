@@ -174,3 +174,22 @@ r14 就是疑似受害者。这与 task73 的种子层赢家诅咒同构，只�
 - 任务书里「d7p / d7q 这类扰动卡组族」中的 **d7q 实为标准卡组的新种子段**（deck 与 d7 相同），
   不构成扰动泛化的训练信号；扰动卡组数据只有冻结的 legacy d7p/d8p/d10p。B 的权重设计据此调整，
   原字面做法（恢复 r11 占比，×1.04）是空跑。
+## 主控追加（2026-10-26 04:35）：变体 C / D
+
+背景：第 15 轮也因 heldout 被拒（主控通报），课程卡在 r11。追加两个变体，
+评估口径与 A/B 相同：heldout 192 对 + 对照 day_l7_eval_d7 192 对，对手 = r11 同种子对局。
+
+### 预登记（开跑前写定）
+
+- **C（续训）**：r13 配方原样（380 标签、data=pipeline frames、seed=1），仅改
+  "init=round_000011/student/model.pt"、epochs 12→3、AdamW lr 0.002→0.0005（1/4）。
+  - H-C：续训继承权重 ⇒ 不重抽签，heldout 与 r11 持平（预期 ≥155/192、McNemar 不显著）。
+  - 若 heldout 仍显著崩 ⇒ 低学习率微调也重抽签，不改权重继承的管线过不了 heldout 区；
+    若对照也崩 ⇒ 微调整体伤害。
+- **D（从头训练方差）**：r11 配方原样（348 标签、12 epochs、lr 0.002），仅 seed 1→2、1→3，各训一次。
+  - H-D：同配方三种子（seed1=166、seed2、seed3）heldout 极差 ≥30pp，样本 std ≈15–25pp；
+    A（seed1 重跑、不同标签集）作旁证。
+  - 用途：若 std 在此量级，门禁 heldout 区固定 192 对 McNemar 假阳性率高，需随机性口径。
+- 检验方法：与 A/B 同脚本（task84_ablation_eval.py，MODELS 增 c/d2/d3），配对 McNemar +
+  Newcombe method 10；D 的 σ = 三个同配方种子 heldout 胜率的样本 std（n=3，只报极差与 std）。
+- 约束：GPU 一次只训一个，qc 训练优先（qc round16 训练已于 03:50 结束，现空闲）。
