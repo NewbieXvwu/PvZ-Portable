@@ -94,12 +94,71 @@ def terrain_covered(level: int, deck) -> bool:
     return True
 
 
+def random_deck_draws(task: dict, seed: int):
+    """Uniform length and ordered samples from the engine candidate pool recorded in the task.
+
+    Whole-deck eligibility is queried by the manifest generator, never reimplemented here.
+    Keep the chosen length fixed during rejection sampling so all five lengths remain equiprobable.
+    """
+    spec = task['deck_random']
+    options = spec['engine_options']
+    if options['level'] != task['level'] or options['playthrough'] != task.get('playthrough', 2):
+        raise ValueError('random deck engine options do not match task level/profile')
+    pool = sorted(set(int(card) for card in options['available_plants']))
+    if len(pool) < 10:
+        raise ValueError('random deck pool must support every length in 6..10')
+    rng = random.Random(int(seed))
+    length = rng.choice(range(6, 11))
+    for attempt in range(1, 4097):
+        yield attempt, tuple(rng.sample(pool, length))
+
+
+def random_deck_covered(task: dict, deck) -> bool:
+    """Only terrain coverage and held-out card-set exclusion; no strength judgement."""
+    spec = task['deck_random']
+    excluded = {tuple(sorted(cards)) for cards in spec['excluded_decks']}
+    background = _perturbation_background(task['level'])
+    if background in ('BACKGROUND_3_POOL', 'BACKGROUND_4_FOG') and LILY_PAD not in deck:
+        return False
+    return terrain_covered(task['level'], deck) and tuple(sorted(deck)) not in excluded
+
+
+def random_deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
+    """Regenerate the exact engine-validated draw for a registered seed.
+
+    A receipt includes the actual deck as well as its draw index: changing the sampler/runtime must
+    fail visibly instead of silently changing a task. Archives replay their stored actual deck.
+    """
+    spec = task['deck_random']
+    key = str(int(seed))
+    receipt = spec.get('validated_decks', {}).get(key)
+    if receipt is None:
+        raise ValueError('random deck seed has no engine-validation receipt; regenerate the task manifest')
+    accepted = receipt['attempt']
+    if type(accepted) is not int or not 1 <= accepted <= 4096:
+        raise ValueError('invalid random deck draw receipt')
+    for attempt, deck in random_deck_draws(task, seed):
+        if attempt != accepted:
+            continue
+        if tuple(receipt['deck']) != deck or not random_deck_covered(task, deck):
+            raise ValueError('random deck differs from its engine-validated receipt')
+        profile = profile_for_deck(deck)
+        if profile.seed_slot_count != len(deck):
+            raise ValueError('random deck profile slot count differs from deck length')
+        return deck
+    raise ValueError('random deck draw receipt is out of range')
+
+
 def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
     """Deterministic exact-set replacements then slot shuffle; held-out sets are never returned.
 
     Eligibility is supplied by a frozen DECK_OPTIONS engine query, not a manually ranked card list.
     New choices exclude upgrades, imitater and special seeds; pre-existing upgrades retain their profile.
     """
+    if 'deck_random' in task:
+        if 'deck_perturb' in task:
+            raise ValueError('random and perturbation deck families are distinct')
+        return random_deck_for_seed(task, seed)
     base = tuple(task['deck'])
     if 'deck_perturb' not in task:
         return base
