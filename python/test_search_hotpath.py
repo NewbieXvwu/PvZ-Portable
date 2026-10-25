@@ -168,6 +168,15 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
                     bench.audit_abba(args)
 
 
+    def test_libc_sample_window_separates_memset_copies_and_other_code(self):
+        from task77_libc_classify import classify_window
+        self.assertEqual(classify_window('mov %rdx,%rcx; rep stos %al,%es:(%rdi)'),
+                         'memset (rep stos)')
+        self.assertEqual(classify_window('rep movs %ds:(%rsi),%es:(%rdi)'),
+                         'memcpy/memmove (rep movs)')
+        self.assertEqual(classify_window('vmovdqu %ymm0,(%rdi)'), 'vector copy/set (avx)')
+        self.assertEqual(classify_window('nop'), 'other libc')
+
     def test_hotspot_categories_are_disjoint_and_keep_unlisted_samples(self):
         import json
         import tempfile

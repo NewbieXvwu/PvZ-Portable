@@ -166,6 +166,12 @@ $PY $P/scripts/task77_value_kernel_check.py --time
 - 两处 `Convolve` 合计 2.47%，但卷积只是值网络前向的一部分（矩阵乘法记在 openblas 里）：
   值网络前向整体占每决策 2.0–5.2%（§3），**那才是 §5 那两处改动的收益天花板**，与 §7.3 的计时一致。
 - `_dl_mcount_wrapper` 不是 `-pg`：二进制里 `mcount` 符号计数为 0，这是 libc 无 debug 符号时的误标。
+- **libc 那 4.17% 拆开了。** `libc6-dbg` 在这台机上装不上（apt 走代理返回 403），改用
+  `scripts/task77_libc_classify.py`：按模块统计 libc 占 **4.71%**（26,664 / 566,659，差额是符号解析成
+  `??` 后被算进 `unlisted` 的部分），再用采样地址处的指令窗口分类——
+  memset（`rep stos`）**26.9%**（占全部 1.26%）、AVX 向量拷/写 **19.8%**（0.93%）、
+  memcpy/memmove（`rep movs`）**4.6%**（0.22%）、其余 48.7%（2.29%，malloc/free 与字符串例程）。
+  这条和 §8 被否决的 im2col 缓冲拆分对得上：三个前向的零边重建只占 memset 的一部分，整局上限远低于 1%。
 - 上一版表格（11.40% sgemm、动画 12.5% 等）是采样审计前只含 day/night 的汇总，已作废。
 
 ## 5. 改了什么（都只改实现，不改搜索）
@@ -348,7 +354,9 @@ night 更麻烦：B1 与 A1 同在 loadavg 29.2，却快 33%（147.8 vs 221.2）
 - 后续可研究共享 BLAS 内核和动画 track 更新；本轮没有实现新的 GEMM，也没有跳过额外动画生命周期。
   任何后续方案都需独立验证浮点求和顺序与 track 重新激活行为，不能把移动零块或稀疏跳过直接当成保序优化。
   按 §4 的占比，真正值得投入的仍是 rollout 引擎步（50–65%）与学生前向（20–32%）。
-- 采样器的 libc 符号是误标的（无 debug 信息）。要看清 libc 那 4.17% 得装 `libc6-dbg` 或给 `addr2line` 指定 debug 路径。
+- 采样器的 libc 符号是误标的（无 debug 信息），`libc6-dbg` 在本机装不上（代理 403）。已用采样地址的
+  指令窗口分类代替（`scripts/task77_libc_classify.py`，§4）：libc 4.71% 里 memset 1.26%、AVX 拷贝 0.93%、
+  `rep movs` 0.22%，其余 2.29%；这个口径只能回答“是不是 memset/拷贝”，不能回答谁调用的。
 
 - **试过但回退：学生网 im2col 缓冲按层拆分。** `EnvironmentRollout::Convolve` 的三层（0/2/4）
   共用一块 im2col 缓冲，而三层的 feature 数不同，零边因此在每个前向被重建三次。改成每层一块
