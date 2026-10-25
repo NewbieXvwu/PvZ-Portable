@@ -30,12 +30,13 @@ def _packet_line(frame: dict) -> str:
     return "卡槽：" + " | ".join(parts)
 
 
-def _lane_line(frame: dict) -> str:
+def _lane_line(frame: dict, game) -> str:
     parts = []
     for row in _lane_rows(frame):
         front = "—" if row["front_col"] is None else "c%d" % row["front_col"]
+        mower = row["mower"] if game.saw_mowers else "本关无"
         parts.append("r%d 火力%d/僵尸%d 最前%s 割草机%s"
-                     % (row["row"], row["shooters"], row["zombies"], front, row["mower"]))
+                     % (row["row"], row["shooters"], row["zombies"], front, mower))
     return "路况：" + "｜".join(parts)
 
 
@@ -60,7 +61,7 @@ def render(game, level: str = "brief") -> str:
     lines = [_header(frame, game), "", _fmt_scene(frame), "",
              "棋盘（植物；大写=满血，小写=受伤；~ = 水路）：",
              _board_ascii(frame, "plant"), "",
-             _packet_line(frame), _lane_line(frame)]
+             _packet_line(frame), _lane_line(frame, game)]
     if level == "full":
         lines += ["", "棋盘（僵尸密度；数字=该格僵尸数，9 表示 9 只以上）：",
                   _board_ascii(frame, "zombie")]
@@ -89,11 +90,11 @@ def legal(game) -> dict:
     grouped: dict[int, list] = {}
     for action in actions:
         grouped.setdefault(int(action["packet"]), []).append([int(action["row"]), int(action["col"])])
-    packets = {int(p[0]): int(p[1]) for p in obs.get("packets") or []}
+    frame = _frame(obs)
+    packets = {int(p[0]): int(p[1]) for p in frame["packets"]}
     plants = [{"packet": packet, "type": _plant_name(packets.get(packet, -1)),
                "cells": cells}
               for packet, cells in sorted(grouped.items())]
-    frame = _frame(obs)
     shovels = sorted({(int(p[0]), int(p[1])) for p in frame["plants"]})
     return {"plants": plants, "shovels": [list(cell) for cell in shovels]}
 
@@ -107,7 +108,8 @@ def summary(game) -> dict:
     lanes = []
     for row in _lane_rows(frame):
         lanes.append(dict(row=row["row"], shooters=row["shooters"], zombies=row["zombies"],
-                          front_col=row["front_col"], mower=row["mower"],
+                          front_col=row["front_col"],
+                          mower=row["mower"] if game.saw_mowers else "本关无",
                           zombie_hp=row["zombie_hp"]))
     result = obs.get("result")
     return dict(tick=frame["tick"], level=obs.get("level"),

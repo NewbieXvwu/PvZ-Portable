@@ -110,6 +110,7 @@ class Game:
         self.terminal = False
         self.totals = {}
         self.max_wave = 0
+        self.saw_mowers = False
         self._cache = None
 
     # ------------------------------------------------------------ 引擎生命周期
@@ -117,18 +118,21 @@ class Game:
     def _start(self) -> None:
         if self.env is not None:
             return
+        target = self.tick          # _reset_engine 会把 self.tick 归零，先记住
         self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True)
         self._reset_engine()
-        if self.ops or self.tick:
-            self._replay_to(self.tick)
+        if self.ops or target:
+            self._replay_to(target)
 
     def _reset_engine(self) -> None:
         assert self.env is not None
         self.initial_obs, _ = self.env.reset(deck=self.deck, task=self.spec)
-        self.env.set_lean_observation(True)
+        # 开局哈希必须紧跟在 reset 之后取：之后任何一条命令都会覆盖 _last_response。
         self.initial_hash = (self.env._last_response.get("state_hash")
                              or self.env.state_hash())
-        self._reset_bookkeeping(self.initial_obs)
+        self.env.set_lean_observation(True)
+        # 精简观测才带 legal_actions（Board::CanPlantAt 的结果），所以从第一帧起就用它。
+        self._reset_bookkeeping(self.env.observe())
         if not self.frames:
             self._frame_now(None)
 
@@ -138,6 +142,8 @@ class Game:
         self.terminal = bool(obs.get("terminal"))
         self.max_wave = int(obs.get("wave") or 0)
         self.totals = {}
+        if obs.get("defenses"):
+            self.saw_mowers = True
 
     def _replay_to(self, target: int) -> None:
         """reset 后重放到 tick target，并把 ops / frames 截断到那一点。
@@ -155,6 +161,7 @@ class Game:
             self.terminal = cached["terminal"]
             self.max_wave = cached["max_wave"]
             self.totals = dict(cached["totals"])
+            self.saw_mowers = cached["saw_mowers"]
             start_ops = cached["n"]
         else:
             self._reset_engine()
@@ -183,6 +190,8 @@ class Game:
         self.tick = int(obs["tick"])
         self.terminal = bool(terminal)
         self.max_wave = max(self.max_wave, int(obs.get("wave") or 0))
+        if obs.get("defenses"):
+            self.saw_mowers = True
         for name, value in info["events"].items():
             self.totals[name] = self.totals.get(name, 0) + value
         return bool(info["ok"])
@@ -192,8 +201,11 @@ class Game:
         assert self.env is not None
         before = self.tick
         ok = self._step_raw(action)
+        # 精简观测的响应不带 state_hash（那是给搜索用的轻量路径），存档要逐操作哈希，
+        # 所以缺了就单独问一次。一次命令的代价，比关掉精简观测便宜得多。
+        state_hash = self.env._last_response.get("state_hash") or self.env.state_hash()
         self.ops.append(dict(action=action, tick=before, end_tick=self.tick, ok=ok,
-                             state_hash=self.env._last_response.get("state_hash")))
+                             state_hash=state_hash))
         self._maybe_frame(action, ok)
         return ok
 
@@ -299,7 +311,8 @@ class Game:
         self._cache = dict(tick=self.tick, snapshot=self.env.snapshot_fast(),
                            ops=[dict(op) for op in self.ops], n=len(self.ops),
                            obs=dict(self.obs or {}), terminal=self.terminal,
-                           max_wave=self.max_wave, totals=dict(self.totals))
+                           max_wave=self.max_wave, totals=dict(self.totals),
+                           saw_mowers=self.saw_mowers)
 
     # ------------------------------------------------------------ 读局面
 
