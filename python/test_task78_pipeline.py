@@ -55,12 +55,21 @@ class CellsTest(unittest.TestCase):
         cells = ab.cells()
         seen = set()
         for cell in cells:
-            self.assertEqual(len(cell['seeds']), cell['pairs'])
-            self.assertFalse(seen & set(cell['seeds']))
-            seen |= set(cell['seeds'])
-        self.assertLessEqual(max(seen), ab.SEED_START + 1999)
+            seeds=cell.get('future_seeds') or cell['seeds']
+            self.assertEqual(len(seeds), cell['pairs'])
+            self.assertFalse(seen & set(seeds))
+            seen |= set(seeds)
+        self.assertLessEqual(max(seen), 78101999)
         self.assertGreaterEqual(min(seen), ab.SEED_START)
-        self.assertEqual(sum(c['pairs'] for c in cells), 416)
+        self.assertEqual(sum(c['pairs'] for c in cells), 512)
+
+    def test_human_fog_and_all_three_takeover_points_are_in_the_formal_panel(self):
+        cells=ab.cells()
+        cold=next(c for c in cells if c['cell_id']=='fog_l31_snow_m100')
+        self.assertEqual(cold['fog_observation'],'human')
+        demos=[c for c in cells if 'future_seeds' in c]
+        self.assertEqual([c['demo_decision'] for c in demos],[839,762,686])
+        self.assertEqual(len({c['cell_id'] for c in cells}),15)
 
 
 @pytest.fixture
@@ -146,6 +155,36 @@ def test_truth_report_rejects_a_failed_collection(tmp_path):
     path.write_text(json.dumps(dict(complete=True,passed=False,results=[])))
     with pytest.raises(ValueError,match='finish successfully'):
         report(path,{'v5':'/old','v6':'/new'})
+
+
+def test_demonstration_pairing_uses_future_not_repeated_base_seed(tmp_path):
+    (tmp_path/'games.jsonl').write_text('\n'.join(json.dumps(dict(seed=20261033,future_seed=s,
+        terminal=True,won=bool(s%2))) for s in [78100000,78100001]))
+    wins,missing=ab.load_arm(tmp_path,{78100000,78100001},use_future=True)
+    assert missing==[] and wins=={78100000:False,78100001:True}
+
+
+@pytest.mark.parametrize('overrides',[dict(terminal=False),dict(won='false')])
+def test_pairing_rejects_invalid_game_results(tmp_path,overrides):
+    (tmp_path/'games.jsonl').write_text(json.dumps(dict(dict(seed=1,terminal=True,won=False),**overrides)))
+    with pytest.raises(ValueError):
+        ab.load_arm(tmp_path,{1})
+
+
+def test_victory_gates_do_not_accept_a_missing_demo_cell():
+    results={c['cell_id']:dict(complete=True,net=1) for c in ab.cells()}
+    del results['fog_l33_cactus_d686']
+    pooled={t:dict(conservative_lower=0,net=10,mcnemar_p=.001) for t in ('day','night','pool','fog','roof')}
+    gates=ab.game_gates(results,pooled)
+    assert gates['fog']==dict(status='incomplete',passed=None)
+    assert gates['day']['passed'] is True
+
+
+def test_victory_gates_enforce_legacy_cell_floor_despite_pooled_noninferiority():
+    results={c['cell_id']:dict(complete=True,net=1) for c in ab.cells()}
+    results['pool_l21_p9k']['net']=-3
+    pooled={t:dict(conservative_lower=0,net=10,mcnemar_p=.001) for t in ('day','night','pool','fog','roof')}
+    assert ab.game_gates(results,pooled)['pool']['passed'] is False
 
 
 if __name__ == '__main__':

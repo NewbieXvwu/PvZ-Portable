@@ -1,0 +1,172 @@
+{
+ "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/ab/tasks.json",
+ "sha256": "863bae41c5656aa9cb4780896a18fcede1897f9a0df4512ecd28f63354df2b9d",
+ "cells": [
+  {
+   "cell_id": "day_l7_d7",
+   "task_id": "day_l7_d7",
+   "terrain": "day",
+   "pairs": 64,
+   "seed_role": "environment",
+   "seeds": [
+    78000000,
+    78000063
+   ]
+  },
+  {
+   "cell_id": "night_l14_n10",
+   "task_id": "night_l14_n10",
+   "terrain": "night",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000064,
+    78000095
+   ]
+  },
+  {
+   "cell_id": "night_l17_n10",
+   "task_id": "night_l17_n10",
+   "terrain": "night",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000096,
+    78000127
+   ]
+  },
+  {
+   "cell_id": "night_l20_n10",
+   "task_id": "night_l20_n10",
+   "terrain": "night",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000128,
+    78000159
+   ]
+  },
+  {
+   "cell_id": "pool_l21_p9k",
+   "task_id": "pool_l21_p9k",
+   "terrain": "pool",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000160,
+    78000191
+   ]
+  },
+  {
+   "cell_id": "pool_l22_p9k",
+   "task_id": "pool_l22_p9k",
+   "terrain": "pool",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000192,
+    78000223
+   ]
+  },
+  {
+   "cell_id": "pool_l23_p9k",
+   "task_id": "pool_l23_p9k",
+   "terrain": "pool",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000224,
+    78000255
+   ]
+  },
+  {
+   "cell_id": "pool_l24_p9k",
+   "task_id": "pool_l24_p9k",
+   "terrain": "pool",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000256,
+    78000287
+   ]
+  },
+  {
+   "cell_id": "fog_l31_snow_m100",
+   "task_id": "fog_l31_snow_m100",
+   "terrain": "fog",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000288,
+    78000319
+   ]
+  },
+  {
+   "cell_id": "roof_l41_r7",
+   "task_id": "roof_l41_r7",
+   "terrain": "roof",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000320,
+    78000351
+   ]
+  },
+  {
+   "cell_id": "roof_l42_r7",
+   "task_id": "roof_l42_r7",
+   "terrain": "roof",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000352,
+    78000383
+   ]
+  },
+  {
+   "cell_id": "roof_l43_r7",
+   "task_id": "roof_l43_r7",
+   "terrain": "roof",
+   "pairs": 32,
+   "seed_role": "environment",
+   "seeds": [
+    78000384,
+    78000415
+   ]
+  },
+  {
+   "cell_id": "fog_l33_cactus_d839",
+   "task_id": "demo_fog_33_cactus_snow_m200",
+   "terrain": "fog",
+   "pairs": 32,
+   "seed_role": "future",
+   "seeds": [
+    78100000,
+    78100031
+   ]
+  },
+  {
+   "cell_id": "fog_l33_cactus_d762",
+   "task_id": "demo_fog_33_cactus_snow_m200",
+   "terrain": "fog",
+   "pairs": 32,
+   "seed_role": "future",
+   "seeds": [
+    78100032,
+    78100063
+   ]
+  },
+  {
+   "cell_id": "fog_l33_cactus_d686",
+   "task_id": "demo_fog_33_cactus_snow_m200",
+   "terrain": "fog",
+   "pairs": 32,
+   "seed_role": "future",
+   "seeds": [
+    78100064,
+    78100095
+   ]
+  }
+ ],
+ "total_pairs": 512
+}

@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import json
 import math
+from copy import deepcopy
 from pathlib import Path
 import sys
 
@@ -74,23 +75,43 @@ def cells():
             raise ValueError(f'{task_id}: deck lacks flower pots')
         if deck != panel_deck(terrain, level):
             raise ValueError(f'{task_id}: deck differs from the frozen task family')
-        result.append(dict(task_id=task_id, terrain=terrain, level=level, deck=list(deck),
+        result.append(dict(cell_id=task_id, task_id=task_id, terrain=terrain, level=level, deck=list(deck),
                            zombie_count_multiplier=multiplier, seeds=seeds, pairs=pairs))
+        if terrain == 'fog':
+            result[-1]['fog_observation'] = 'human'
     if seed > SEED_START + 2000:
         raise ValueError('cells exceed the reserved seed block')
+    document=json.loads((ROOT/'configs/human_demo_tasks.json').read_text())
+    demo=next(t for t in document['tasks'] if t['task_id']=='demo_fog_33_cactus_snow_m200')
+    future=78100000
+    for decision in (839,762,686):
+        if decision not in demo['demo_start']['decisions']:
+            raise ValueError('pre-registered L33 takeover point missing from its task family')
+        result.append(dict(deepcopy(demo),cell_id=f'fog_l33_cactus_d{decision}',terrain='fog',
+                           demo_decision=decision,future_seeds=list(range(future,future+32)),pairs=32))
+        future+=32
     return result
 
 
 def tasks():
-    document = dict(tasks=[{k: v for k, v in c.items() if k != 'terrain'} for c in cells()],
-                    reserved=[SEED_START, SEED_START + 2000])
+    entries={}
+    for cell in cells():
+        entries.setdefault(cell['task_id'],{k:v for k,v in cell.items()
+            if k not in ('cell_id','terrain','pairs','demo_decision','future_seeds')})
+    document = dict(tasks=list(entries.values()),cells=cells(),
+                    reserved=[[SEED_START,SEED_START+2000],[78100000,78102000]])
     out = ROOT/'artifacts/task78/ab'
     out.mkdir(parents=True, exist_ok=True)
     path = out/'tasks.json'
+    if path.exists() and list(out.rglob('games.jsonl')):
+        if json.loads(path.read_text()) != document:
+            raise ValueError('cannot change the frozen panel after paired games start')
     path.write_text(json.dumps(document, indent=1)+'\n')
     summary = dict(path=str(path), sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
-                   cells=[dict(task_id=c['task_id'], terrain=c['terrain'], pairs=c['pairs'],
-                               seeds=[c['seeds'][0], c['seeds'][-1]]) for c in cells()],
+                   cells=[dict(cell_id=c['cell_id'],task_id=c['task_id'], terrain=c['terrain'], pairs=c['pairs'],
+                               seed_role='future' if 'future_seeds' in c else 'environment',
+                               seeds=[(c.get('future_seeds') or c['seeds'])[0],
+                                      (c.get('future_seeds') or c['seeds'])[-1]]) for c in cells()],
                    total_pairs=sum(c['pairs'] for c in cells()))
     (out/'tasks_summary.json').write_text(json.dumps(summary, indent=1)+'\n')
     print(json.dumps(summary, indent=1))
@@ -134,17 +155,46 @@ def mcnemar(gain, harm):
     return min(1.0, 2*sum(math.comb(n, k) for k in range(min(gain, harm)+1))/2**n)
 
 
-def load_arm(directory, expected):
+def load_arm(directory, expected, use_future=False):
     path = Path(directory)/'games.jsonl'
     if not path.is_file():
         return None, sorted(expected)
     rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
-    seeds = [int(r['seed']) for r in rows]
+    if any(type(r.get('won')) is not bool or r.get('terminal') is not True for r in rows):
+        raise ValueError(f'{path}: only terminal games with boolean wins are valid')
+    if use_future and any(type(r.get('future_seed')) is not int for r in rows):
+        raise ValueError(f'{path}: demonstration games must carry their future identity')
+    field='future_seed' if use_future else 'seed'
+    seeds = [int(r[field]) for r in rows]
     if len(seeds) != len(set(seeds)):
         raise ValueError(f'{path}: duplicate seeds')
     if set(seeds) - set(expected):
         raise ValueError(f'{path}: seeds outside the frozen cell')
-    return {int(r['seed']): bool(r['won']) for r in rows}, sorted(set(expected)-set(seeds))
+    return {int(r[field]): r['won'] for r in rows}, sorted(set(expected)-set(seeds))
+
+
+def game_gates(results, pooled):
+    """Only complete cells can support the pre-registered victory gates."""
+    gates={}
+    for terrain in ('day','night','pool','fog','roof'):
+        planned=[c for c in cells() if c['terrain']==terrain]
+        complete=all(results.get(c['cell_id'],{}).get('complete') is True for c in planned)
+        if not complete:
+            gates[terrain]=dict(status='incomplete',passed=None)
+            continue
+        acc=pooled[terrain]
+        if terrain in ('day','night','pool'):
+            floor=all(results[c['cell_id']]['net'] >= (-4 if c['pairs']==64 else -2) for c in planned)
+            passed=acc['conservative_lower'] > -.10 and floor
+            gates[terrain]=dict(status='evaluated',passed=passed,
+                                conservative_lower=acc['conservative_lower'],cell_floors_met=floor)
+        else:
+            direction=(results['fog_l31_snow_m100']['net']>=0 and
+                       sum(results[c['cell_id']]['net'] for c in planned if 'future_seeds' in c)>=0
+                       if terrain=='fog' else all(results[c['cell_id']]['net']>=0 for c in planned))
+            gates[terrain]=dict(status='evaluated',passed=acc['net']>0 and acc['mcnemar_p']<.05 and direction,
+                                net=acc['net'],mcnemar_p=acc['mcnemar_p'],direction_met=direction)
+    return gates
 
 
 def main():
@@ -157,12 +207,12 @@ def main():
     root = Path(args.root)
     results, pooled = {}, {}
     for cell in cells():
-        expected = set(cell['seeds'])
-        base = root/cell['task_id']
-        old, old_missing = load_arm(base/'v3'/cell['task_id'], expected)
-        new, new_missing = load_arm(base/'v4'/cell['task_id'], expected)
+        expected = set(cell.get('future_seeds') or cell['seeds'])
+        base = root/cell['cell_id']
+        old, old_missing = load_arm(base/'v3'/cell['task_id'], expected,'future_seeds' in cell)
+        new, new_missing = load_arm(base/'v4'/cell['task_id'], expected,'future_seeds' in cell)
         if old is None or new is None:
-            results[cell['task_id']] = dict(terrain=cell['terrain'], pairs=0,
+            results[cell['cell_id']] = dict(terrain=cell['terrain'], pairs=0,
                                             complete=False, missing_old=old_missing,
                                             missing_new=new_missing)
             continue
@@ -174,7 +224,7 @@ def main():
                      gain=gain, harm=harm, net=gain-harm,
                      mcnemar_p=mcnemar(gain, harm),
                      complete=len(seeds) == cell['pairs'] and not old_missing and not new_missing)
-        results[cell['task_id']] = entry
+        results[cell['cell_id']] = entry
         acc = pooled.setdefault(cell['terrain'], dict(pairs=0, old_wins=0, new_wins=0, gain=0, harm=0))
         acc['pairs'] += len(seeds); acc['old_wins'] += entry['old_wins']
         acc['new_wins'] += entry['new_wins']; acc['gain'] += gain; acc['harm'] += harm
@@ -183,9 +233,14 @@ def main():
         acc['net'] = acc['gain']-acc['harm']
         acc['mcnemar_p'] = mcnemar(acc['gain'], acc['harm'])
         acc['conservative_lower'] = (clopper_lower(acc['gain'], n) - clopper_upper(acc['harm'], n)) if n else None
+    gates=game_gates(results,pooled)
+    document=dict(cells=results,terrain=pooled,gates=gates,
+                  complete=all(v['status']=='evaluated' for v in gates.values()),
+                  all_game_gates_pass=all(v['passed'] is True for v in gates.values()),
+                  includes_terminal_and_stability_gates=False)
     out = root/'paired.json'
-    out.write_text(json.dumps(dict(cells=results, terrain=pooled), indent=1)+'\n')
-    print(json.dumps(dict(cells=results, terrain=pooled), indent=1))
+    out.write_text(json.dumps(document,indent=1)+'\n')
+    print(json.dumps(document,indent=1))
 
 
 if __name__ == '__main__':
