@@ -80,9 +80,13 @@ def copy_modules(stage: Path) -> None:
         shutil.copyfile(ROOT / "python" / name, stage / "python" / name)
     for name in SCRIPT_MODULES:
         shutil.copyfile(ROOT / "scripts" / name, stage / "scripts" / name)
+    # 只拷接口本体：PROMPT/README/examples 在包根目录已经有了，再拷一份会让人
+    # 分不清看哪个；verify_archive.py 依赖仓库里的 human_demo/pvz_event_env，包里没有。
     shutil.copytree(ROOT / "scripts" / "llmplay", stage / "llmplay",
                     ignore=shutil.ignore_patterns("__pycache__", "build_package.py",
-                                                  "build_probe.py", "probe"))
+                                                  "build_probe.py", "probe",
+                                                  "PROMPT.md", "README.md", "examples",
+                                                  "verify_archive.py"))
 
 
 def copy_constant_sources(stage: Path) -> None:
@@ -121,9 +125,14 @@ def scan(stage: Path) -> list:
 
 
 def build(executable: Path, out: Path, *, resource_dir: Path = RESOURCE_DIR) -> Path:
-    if out.exists():
-        shutil.rmtree(out)
+    # 只清自己的产物：out 下面还住着探路包（probe/），整个 rmtree 会把它删掉
+    # ——2026-10-25 已经删过一次，探路包的 zip 就这么没的。
     stage = out / "stage"
+    if stage.exists():
+        shutil.rmtree(stage)
+    for leftover in (out / "llmplay_pkg.zip", out / "secret_scan.txt"):
+        if leftover.exists():
+            leftover.unlink()
     stage.mkdir(parents=True)
     copy_modules(stage)
     copy_constant_sources(stage)

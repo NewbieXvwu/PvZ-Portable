@@ -16,8 +16,7 @@ legal_actions（Board::CanPlantAt），到小推车的 tick 数是 距离 / 当�
 from __future__ import annotations
 
 from pvz_constants import PLANT_NAME, ZOMBIE_NAME
-from render_episode import (_frame, _col_of, lane_indices, LAWN_XMIN, CELL_PX, GRID_COLS,
-                            SHOOTER_TYPES)
+from render_episode import (_frame, _col_of, lane_indices, LAWN_XMIN, CELL_PX, GRID_COLS)
 from episode_query import _fmt_scene
 
 CELL_WIDTH = 10          # 网格里每格固定宽度：植物 6 格 + 僵尸 4 格
@@ -124,9 +123,9 @@ def header(game) -> str:
 
 # ---------------------------------------------------------------- 3. 空间网格
 
-def _cell(plant, zombies) -> str:
+def _cell(plant, zombies, pool: bool = False) -> str:
     if plant is None:
-        left = "  ..  "
+        left = ("~~" if pool else "..").ljust(PLANT_PART)
     else:
         left = ("%s%3d" % (_plant_code(plant["type"]), _pct(plant.get("health"),
                                                           plant.get("max_health"))))
@@ -165,10 +164,7 @@ def grid(game) -> str:
             pool = False
             if row < len(grid_rows) and col < len(grid_rows[row]):
                 pool = int(grid_rows[row][col]) == 3
-            text = _cell(plant, zcell.get((row, col)))
-            if plant is None and pool:
-                text = ("  ~~  " + text[PLANT_PART:])[:CELL_WIDTH]
-            cells.append(text)
+            cells.append(_cell(plant, zcell.get((row, col)), pool=pool))
         lines.append("  r%-2d   " % row + "".join(cells))
     outside = [z for z in _zombies(obs) if not z.get("on_board")]
     if outside:
@@ -187,9 +183,10 @@ def grid(game) -> str:
 
 # ---------------------------------------------------------------- 4. 逐行明细
 
-# 有"装填"概念的植物（射手与投手）：STATE_NOTREADY 对它们才叫"待装填"。
-# 花盆/睡莲/坚果这类永远停在 STATE_NOTREADY，翻译成"待装填"会误导。
-RELOAD_TYPES = set(SHOOTER_TYPES) | {32, 34, 39, 44, 47}
+# 只有**投手**（有 mLaunchRate 的）用 STATE_READY/STATE_NOTREADY 表示"装填好了/还没"。
+# 射手的状态位基本一直停在 STATE_NOTREADY（换弹由 shooting_counter 管），
+# 花盆/睡莲/坚果更是永远停在 0 —— 把它们翻译成"待装填"会误导。
+RELOAD_TYPES = {32, 34, 39, 44, 47}
 
 
 def _plant_state(plant) -> str:
@@ -270,7 +267,9 @@ def rows(game) -> str:
     for row in lanes:
         row_plants = sorted([p for p in plants if int(p["row"]) == row], key=lambda p: int(p["col"]))
         row_zombies = [z for z in zombies if int(z["row"]) == row]
-        on_board = [z for z in row_zombies if z.get("on_board")]
+        # 本体血量 ≤ 0 的是正在倒下的尸体，不参与"最前"与到达时间。
+        on_board = [z for z in row_zombies
+                    if z.get("on_board") and int(z.get("body_health") or 0) > 0]
         if row_plants:
             text = " · ".join(
                 "c%d %s %d/%d %s" % (int(p["col"]), _plant_name(p["type"]),
