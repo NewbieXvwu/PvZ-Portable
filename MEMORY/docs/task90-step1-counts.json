@@ -1,0 +1,125 @@
+{
+ "protocol": "task90 step1",
+ "groups": {
+  "l30_orig_m100": {
+   "task_id": "task90_l30_orig_m100",
+   "conveyor": true,
+   "games": [
+    91000000,
+    91000001,
+    91000002,
+    91000003,
+    91000004,
+    91000005,
+    91000006,
+    91000007
+   ],
+   "decisions": "artifacts/task90/step1/l30_orig_m100/decisions.jsonl",
+   "summary": {
+    "decisions": 1159,
+    "games": 8,
+    "mean_candidates": 6.7248,
+    "mean_conveyor_candidate_count": 5.7248,
+    "mean_conveyor_candidate_share": 0.8334,
+    "mean_student_leaf_rank": 3.079,
+    "median_student_leaf_rank": 3.0,
+    "mean_top1_top2": 0.01036,
+    "mean_std": 0.018475,
+    "override_rate": 0.071613,
+    "rollout_packet_trace": [
+     "unrecorded"
+    ]
+   }
+  },
+  "l40_orig_m050": {
+   "task_id": "task90_l40_orig_m050",
+   "conveyor": true,
+   "games": [
+    91010000,
+    91010001,
+    91010002,
+    91010003,
+    91010004,
+    91010005,
+    91010006,
+    91010007
+   ],
+   "decisions": "artifacts/task90/step1/l40_orig_m050/decisions.jsonl",
+   "summary": {
+    "decisions": 1568,
+    "games": 8,
+    "mean_candidates": 6.1116,
+    "mean_conveyor_candidate_count": 5.1116,
+    "mean_conveyor_candidate_share": 0.8159,
+    "mean_student_leaf_rank": 2.5893,
+    "median_student_leaf_rank": 2,
+    "mean_top1_top2": 0.067633,
+    "mean_std": 0.095899,
+    "override_rate": 0.371811,
+    "rollout_packet_trace": [
+     "unrecorded"
+    ]
+   }
+  },
+  "l50_orig_m100": {
+   "task_id": "task90_l50_orig_m100",
+   "conveyor": true,
+   "games": [
+    91020000,
+    91020001,
+    91020002,
+    91020003,
+    91020004,
+    91020005,
+    91020006,
+    91020007
+   ],
+   "decisions": "artifacts/task90/step1/l50_orig_m100/decisions.jsonl",
+   "summary": {
+    "decisions": 681,
+    "games": 8,
+    "mean_candidates": 5.6476,
+    "mean_conveyor_candidate_count": 4.6476,
+    "mean_conveyor_candidate_share": 0.8131,
+    "mean_student_leaf_rank": 3.2114,
+    "median_student_leaf_rank": 3.0,
+    "mean_top1_top2": 0.004866,
+    "mean_std": 0.00942,
+    "override_rate": 0.032305,
+    "rollout_packet_trace": [
+     "unrecorded"
+    ]
+   }
+  },
+  "l25_control_m050": {
+   "task_id": "task90_l25_control_m050",
+   "conveyor": false,
+   "games": [
+    91030000,
+    91030001,
+    91030002,
+    91030003,
+    91030004,
+    91030005,
+    91030006,
+    91030007
+   ],
+   "decisions": "artifacts/task90/step1/l25_control_m050/decisions.jsonl",
+   "summary": {
+    "decisions": 1338,
+    "games": 8,
+    "mean_candidates": 7.8572,
+    "mean_conveyor_candidate_count": 0,
+    "mean_conveyor_candidate_share": 0.0,
+    "mean_student_leaf_rank": 3.6829,
+    "median_student_leaf_rank": 3,
+    "mean_top1_top2": 0.022084,
+    "mean_std": 0.042269,
+    "override_rate": 0.18012,
+    "rollout_packet_trace": [
+     "unrecorded"
+    ]
+   }
+  }
+ }
+}
