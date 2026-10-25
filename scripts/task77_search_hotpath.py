@@ -409,17 +409,33 @@ def load_snapshot():
             'all_engines': sum('pvz-portable -env ' in cmd for _, cmd in processes.values())}
 
 
+def abba_baseline(args):
+    """The A-arm binary: same source, same flags, without the change.
+
+    The production binary carries this machine's PGO profile, which a plain Release/LTO
+    candidate build does not, so using it as A would report the build difference instead of
+    the patch.  Callers must pass the freshly built pre-change binary explicitly.
+    """
+    baseline = args.baseline or Path(json.loads((args.out / 'freeze.json').read_text())['engine']['path'])
+    if not baseline.is_file():
+        raise ValueError('--baseline executable is required')
+    return baseline
+
+
 def abba(args):
     if args.candidate is None or not args.candidate.is_file():
         raise ValueError('--candidate executable is required')
-    evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [], 'load': []}
+    baseline = abba_baseline(args)
+    evidence = {'order': ['A', 'B', 'B', 'A'], 'games': [], 'load': [],
+                'candidate': {'path': str(args.candidate), 'sha256': digest(args.candidate)},
+                'baseline': {'path': str(baseline), 'sha256': digest(baseline)}}
     for cell in CELLS:
         count = 2 if cell in ('roof', 'fog') else 3
         rows = []
         for index, arm in enumerate(evidence['order']):
             label = f'abba_{index}_{arm}'
             cmd = command(args, cell, label, count,
-                engine=args.candidate if arm == 'B' else None,
+                engine=args.candidate if arm == 'B' else baseline,
                 source=ROOT if arm == 'B' else args.out / 'baseline')
             load = {'cell': cell, 'index': index, 'before': load_snapshot()}
             evidence['load'].append(load)
@@ -456,6 +472,7 @@ def main():
     parser.add_argument('--out', type=Path, default=OUT)
     parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
     parser.add_argument('--candidate', type=Path)
+    parser.add_argument('--baseline', type=Path)
     parser.add_argument('--engine', type=Path, default=MAIN / '.claude/worktrees/cq/build4/pvz-portable')
     parser.add_argument('--student', type=Path, default=Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt'))
     args = parser.parse_args()

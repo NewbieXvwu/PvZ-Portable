@@ -34,9 +34,11 @@ def load(path: Path) -> tuple[list[str], list[int], list[int]]:
     for _ in range(int(count)):
         line, _, rest = rest.partition(b"\n")
         names.append(line.decode())
+    # A worker killed mid-write leaves a partial trailing record; drop it rather than
+    # rejecting every sample collected before the interruption.
     total = len(rest) // 12
     offsets = list(struct.unpack(f"<{total}Q", rest[: total * 8]))
-    modules = list(struct.unpack(f"<{total}I", rest[total * 8:]))
+    modules = list(struct.unpack(f"<{total}I", rest[total * 8: total * 12]))
     return names, offsets, modules
 
 

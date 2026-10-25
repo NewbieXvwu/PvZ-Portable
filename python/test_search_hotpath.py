@@ -4,7 +4,7 @@ import sys
 import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from task77_search_hotpath import compare_frames, paired_interval
+from task77_search_hotpath import abba_baseline, compare_frames, paired_interval
 
 
 class SearchHotpathEvidenceTest(unittest.TestCase):
@@ -29,6 +29,19 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
         left = {'tick': 1, 'verification': {'gap': 0.1, 'seconds': 2}}
         right = {'verification': {'seconds': 3, 'gap': 0.1}, 'tick': 1}
         self.assertIsNone(compare_frames([left], [right]))
+
+    def test_abba_a_arm_is_the_same_build_not_the_pgo_production_binary(self):
+        import json
+        import tempfile
+        from types import SimpleNamespace
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            (root / 'freeze.json').write_text(json.dumps({'engine': {'path': '/nonexistent/engine'}}))
+            explicit = root / 'release-before'
+            explicit.write_bytes(b'x')
+            self.assertEqual(abba_baseline(SimpleNamespace(out=root, baseline=explicit)), explicit)
+            with self.assertRaises(ValueError):
+                abba_baseline(SimpleNamespace(out=root, baseline=None))
 
     def test_interval_rejects_invalid_or_empty_evidence(self):
         for ratios in ([], [0], [-1], [float('nan')], [float('inf')]):
