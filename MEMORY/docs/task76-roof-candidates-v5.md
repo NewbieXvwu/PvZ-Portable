@@ -58,6 +58,8 @@
 
 - schema3真实pilot通过：L42 seed45000000首根66动作、528个真实终局未来，原版全部逐决策帧/动作/策略和非原生hash结果相同；paired control/probe逐根及最终完整状态字节精确规范后相同，原始hash与state保留。当前历史/根恢复/不同v4-v5原生网均通过。证据task76-roof-terminal-pilot.json；随后正式采全部8关×2输seed×4根，最多2引擎。
 
+- 正式64根采样已启动（2引擎）；pilot根及整局回验确认保留原字节稳定副本，task76-roof-terminal-pilot.json中的路径与原SHA均已复核，正式首根重采不覆盖pilot验收证据。
+
 ## 问题
 
 - task74来源与并发范围问题均已解决；按每任务最多2进程继续完成面板及终局真值。
