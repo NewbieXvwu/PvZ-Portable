@@ -36,5 +36,10 @@
   - 任务清单是本地派生不入 git（`/home/newbiexvwu/PvZ-search/artifacts/stage4/*.json` 等）；新种子段必须扫描全部现有清单防撞（`perturb_family.run_family` 的 `scan_paths` 模式），候选块 90_000_000 起待核对。
   - 建议基任务复制非卡组字段自现行课程族：`day_l7_train_d7` / `night_l12_train_n10q` / `pool_l21_train_p9k`（各 1 关，playthrough 2，倍率 1.0）。
   - 下一步：写 `scripts/make_rand_deck_panel.py` 生成三族清单（第 1 步），然后冷启动 32 局/族（第 2 步）。
+- 2026-10-26 CodeBuddy（deckvar）：第 1 步代码完成并提交（6b978c39）。Codex 已写的 `make_random_deck_tasks.py` /
+  `pvz_tasks.py` deck_random 收据机制 / `search_play.py` 支持照收；修正候选池为任务书定的
+  `crazy_dave_pool ∩ [0,40) ∩ not_recommended==0`（原稿用未过滤 `available_plants`，含升级卡，纯升级卡组是种不下的结构性死局）。
+  种子段 93_000_000 起，对全仓 artifacts 90M+ 数字扫描 0 撞车；生产引擎= `cq/build/pvz-portable`（与 d7q 清单指纹一致）。
+  `test_deck_perturb.py` 9 过。下一步：跑生成脚本产出三族清单。
 
 ## 问题
