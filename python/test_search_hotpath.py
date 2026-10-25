@@ -8,6 +8,12 @@ from task77_search_hotpath import abba_baseline, compare_frames, paired_interval
 
 
 class SearchHotpathEvidenceTest(unittest.TestCase):
+    def test_experiment_commands_enforce_the_two_engine_budget(self):
+        from types import SimpleNamespace
+        from task77_search_hotpath import command
+        with self.assertRaisesRegex(ValueError, 'limited to two game processes'):
+            command(SimpleNamespace(workers=4), 'day', 'test', 4)
+
     def test_length_difference_at_end_is_reported(self):
         self.assertEqual(compare_frames([{'tick': 1}], [])['reason'], 'length')
         self.assertEqual(compare_frames([], [{'tick': 1}])['index'], 0)

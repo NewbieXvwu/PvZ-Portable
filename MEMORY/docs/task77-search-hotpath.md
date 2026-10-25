@@ -1,6 +1,6 @@
 # task77：老师搜索的热路径——每个决策的耗时花在哪，能不能逐位不变地再快一截
 
-> 主控 2026-10-25 写。执行者：台式机 Codex（Plus 号，新开 tmux `codex-perf`，`CODEX_HOME=/home/newbiexvwu/.codex-plus`）。工作树自建 `/home/newbiexvwu/PvZ-search/.claude/worktrees/perf2`（分支 `perf2`，从 origin/pvz-env 拉出）。游戏进程最多 4 个；**不碰 tmux `qc`、cq、build4、流水线**。
+> 主控 2026-10-25 写。执行者：台式机 Codex（Plus 号，新开 tmux `codex-perf`，`CODEX_HOME=/home/newbiexvwu/.codex-plus`）。工作树自建 `/home/newbiexvwu/PvZ-search/.claude/worktrees/perf2`（分支 `perf2`，从 origin/pvz-env 拉出）。游戏进程上限原为4，主控因内存紧张明确改为同时最多 **2 个，qc 优先**；**不碰 tmux `qc`、cq、build4、流水线**。
 
 ## 为什么
 - qc 的产出（每小时多少局老师标签）直接决定学生学得多快。
@@ -22,9 +22,9 @@
 
 - [0] 已冻结生产 deploy4（16989f23）、在役 round11、v5、台式机 branch1 与六族清单；添加独立剖析工具，启动五地形各 4 局。细节见 search-hotpath.md；原始数据仅留 ignored artifacts/task77，不操作 qc/cq/流水线。
 - [门禁工具] 补齐六族×8种子的前后对照（每族前4老师 β=1、后4学生 β=0，均搜索打标签），比较完整帧、动作、标签、软目标、复核及 task70 逻辑统计；补16局 ABBA 配对计时与确定性 bootstrap 区间。5项证据回归测试通过；真实前后验收尚未开始。
-- [优化1] 叶值/静态值卷积：首层核打包按通道集缓存（候选分支通常只改数值、通道集不变）+ 无填充 memcpy 快路径（先清零再按偏移整段拷贝，替代逐格越界判断）；`DataArray` 迭代器取址改走 `get()` 并强制内联；`Reanimation::Update` 把 `gEnvSimSkip` 判断前置，省掉 rollout 每 tick 的无谓浮点加载。逐位一致由离线核检查 `scripts/task77_value_kernel_check.py` 证明：value/static 各 480 个 logit × 3 遍（含换权重、全零、±0、稠密、稀疏通道），before/after SHA256 完全相同；候选引擎已按生产 flags 重建（build-candidate.log）。
+- [优化1] 叶值/静态值卷积：首层核打包按通道集缓存（候选分支通常只改数值、通道集不变）+ 无填充 memcpy 快路径（先清零再按偏移整段拷贝，替代逐格越界判断）；`DataArray` 迭代器取址改走 `get()` 并强制内联；`Reanimation::Update` 把 `gEnvSimSkip` 判断前置，省掉 rollout 每 tick 的无谓浮点加载。逐位一致由离线核检查 `scripts/task77_value_kernel_check.py` 证明：value/static 各 480 个 logit（三遍合计，含换权重、全零、±0、稠密、稀疏通道），before/after SHA256 完全相同；候选引擎已按生产 flags 重建（build-candidate.log）。
 - [剖析补采] 首批 day/night 剖析缺引擎计数器（旧版 driver），`profile` 阶段改为不覆盖证据、另存 `profile_complete/`，按同一任务与种子重采；`profile-summary` 汇总每决策毫秒分解。
-- [分解] 五地形各 4 局剖析完成：每决策耗时里 rollout 引擎步 41.8–91.3 ms、C++ 学生前向 14.8–47.8 ms，二者占 80–90%；叶值+静态值前向 1.0–6.9 ms、显式快照往返 0.5–0.8 ms、IPC 与 Python 调度 8–20 ms。引擎 CPU 的 89% 在 ROLLOUT_VALUE 里；采样热点是 openblas sgemm（学生前向 11–13%）、`Reanimation::Update` 与其 track lambda（约 8%）、粒子发射器（约 6%）、`DataArray` 迭代器（约 6%）。
+- [分解] 五地形各 4 局剖析完成：每决策耗时里 rollout 引擎步 41.8–91.3 ms、C++ 学生前向 14.8–47.8 ms，二者占 76–86%；叶值+静态值前向 1.0–6.9 ms、显式快照往返 0.5–0.8 ms、恢复/IPC 与 Python 调度约 8–20 ms。BLAS 平面样本无法单独归给学生；样本格式审计与最终采样热点以 search-hotpath.md 为准。
 - [计时口径] ABBA 的 A 臂改为显式传同 flags 的 `pvz-portable-release-before`：生产 deploy4 带本机 PGO（历史实测 18%），拿它当 A 会把编译差异算进补丁。`abba_baseline()` 拒绝静默回落到生产二进制，并加了一条回归测试（6 项通过）。
 - [门禁通过] 六族×8种子（老师 4 + 学生 4，均搜索打标签）端到端逐位一致：`gate_evidence.json` pass=true，48/48 对局；比较含 task70 COMPARE_FIELDS、rollout/halving/student_candidate 计数与完整决策帧归档。旧臂老师 20 局复用剖析局，不重打。候选 `b4999d65…`，报告 §7.1。
 - [计时进行中] 按主控新约束（同时最多 2 个游戏进程）以 `--workers 2` 跑 ABBA（A=同 flags 改前二进制 `51949eff…`，B=候选），24 个 block × 4 臂；结果补进报告 §7.2。

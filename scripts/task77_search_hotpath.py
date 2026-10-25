@@ -146,6 +146,8 @@ def driver(argv):
 
 def command(args, cell, tag, games, beta=1.0, engine=None, source=None, offset=0):
     from curriculum_queue import command_for
+    if args.workers not in (1, 2):
+        raise ValueError('task77 is limited to two game processes; qc has priority')
     frozen = json.loads((args.out / 'freeze.json').read_text())
     common = SimpleNamespace(
         python=Path(sys.executable), workers=args.workers,
@@ -650,7 +652,7 @@ def main():
     parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'recover-samples',
                                          'gate', 'verify', 'abba', 'abba-verify'))
     parser.add_argument('--out', type=Path, default=OUT)
-    parser.add_argument('--workers', type=int, choices=range(1, 5), default=4)
+    parser.add_argument('--workers', type=int, choices=(1, 2), default=2)
     parser.add_argument('--candidate', type=Path)
     parser.add_argument('--baseline', type=Path)
     parser.add_argument('--count', type=int, choices=(1, 2, 3, 4))
