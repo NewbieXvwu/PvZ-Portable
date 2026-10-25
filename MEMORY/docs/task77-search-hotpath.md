@@ -44,6 +44,8 @@
 
 - [Python 侧归因] 8 局 cProfile：90.8% 的 tottime 在 `pvz_env._read_message`（阻塞等引擎，属命令内），扣除后剩 143 s/8 局（cProfile 放大 ~1.8×，对应 worker CPU 9.9 s/局）分散在 torch.conv2d 0.42%、json 0.39%、_io.open 0.39% 等，最大项不到半成；worker CPU 仅占墙钟 5.8%。结论：Python 侧无单点可优化，报告 §3 已记。
 
+- [数字复核] 报告里的派生数字逐项重算并全部吻合：§3 的九项组件与 `profile_summary.milliseconds_per_decision` 一致（合计 161.0/125.5/139.9/122.1/74.8），rollout+学生 75.6–86.4%、叶值+静态值 2.0–5.2%、引擎 CPU 占墙钟 57–78%；§4 类别份额与 `hotspots.json` 一致（openblas 20.55 / 动画 8.52 / DataArray 7.25 / 粒子 4.62 / 值网络 2.47 / libc 4.17 / other 21.02 / unlisted 31.39）；§7.2–§7.4 的 geomean 与区间、样本数 566,659 均与证据文件一致。报告无需改动。
+
 ## 问题
 
 - redeploy/build 已由 task70 B5 重建，不能当原 deploy4；正式基线只读复制生产 cq/build4（SHA 与 task70 deploy4 一致）。系统无 perf，采用现有 SIGPROF 采样器并结合 cProfile。
