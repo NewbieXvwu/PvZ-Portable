@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pvz_promotion import PANEL_TASKS
+from pvz_promotion import PANEL_TASKS, SEED_POOLS_V2
 from test_curriculum_pipeline import setup
 import promotion_gate as gate
 
@@ -33,11 +33,13 @@ def fake_games(args, command, **kwargs):
     if registration['version'] == 3:
         assert registration['policy']['pair_count'] == 1920
         block = registration['seed_block']
-        assert block[1] - block[0] == 10 * 192 and 31024 <= block[0] and block[1] <= 65536
+        assert block[1] - block[0] == 10 * 192
+        assert any(low <= block[0] and block[1] <= high for low, high in SEED_POOLS_V2)
     elif registration['version'] == 2:
         assert registration['policy']['pair_count'] == 1536
         block = registration['seed_block']
-        assert block[1] - block[0] == 8 * 192 and 31024 <= block[0] and block[1] <= 65536
+        assert block[1] - block[0] == 8 * 192
+        assert any(low <= block[0] and block[1] <= high for low, high in SEED_POOLS_V2)
     else:
         assert registration['policy']['pair_count'] == 64
     assert command[command.index('--arms') + 1] == 'fast'
@@ -168,7 +170,8 @@ def test_seed_pool_exhaustion_aborts_instead_of_wrapping():
         root = Path(folder)
         args = arguments(root)
         tiny = (31024, 31024 + 1920 + 100)
-        with patch.object(pvz_promotion, 'SEED_POOL_V2', tiny):
+        # A single-pool registration still has to abort, not continue somewhere else.
+        with patch.object(pvz_promotion, 'SEED_POOLS_V2', (tiny,)):
             gate.allocate_seed_block(args.seed_ledger, 1920)
             with pytest.raises(gate.SeedPoolExhausted, match='refusing to reuse'):
                 gate.allocate_seed_block(args.seed_ledger, 1920)
@@ -210,3 +213,67 @@ def test_v1_and_v2_gate_flows_still_run_and_old_certificates_stay_readable():
         assert v2['version'] == 2 and len(v2['paired']) == 1536
         assert gate.read(args2.seed_ledger)['allocated'] == [[31024, 31024 + 1536]]
         assert gate.valid_certificate(v2, v2['contract'], args2.out)
+
+
+# ---- task88: the gate continues into a second pool window instead of aborting ----
+
+def test_allocation_falls_through_to_the_second_window_and_never_overlaps():
+    import pvz_promotion
+    with tempfile.TemporaryDirectory() as folder:
+        ledger = Path(folder) / 'gate_ledger.json'
+        first = pvz_promotion.SEED_POOLS_V2[0]
+        # A first window with room for exactly two blocks of 1920.
+        narrow = (first[0], first[0] + 2 * 1920)
+        pools = (narrow, pvz_promotion.SEED_POOLS_V2[1])
+        blocks = [gate.allocate_seed_block(ledger, 1920, pools=pools) for _ in range(3)]
+        assert blocks[0] == (first[0], first[0] + 1920)
+        assert blocks[1] == (first[0] + 1920, first[0] + 2 * 1920)
+        assert blocks[2] == (pools[1][0], pools[1][0] + 1920)  # new window, from its start
+        document = gate.read(ledger)
+        assert document['pool'] == list(pools[0]) and document['pools'] == [list(p) for p in pools]
+        assert document['allocated'] == [list(block) for block in blocks]
+        # Blocks from different windows are disjoint and every block stays inside a pool.
+        spans = sorted(blocks)
+        assert all(a[1] <= b[0] for a, b in zip(spans, spans[1:]))
+        assert all(any(low <= a and b <= high for low, high in pools) for a, b in blocks)
+
+
+def test_legacy_single_pool_ledger_is_read_and_upgraded_in_place():
+    import pvz_promotion
+    with tempfile.TemporaryDirectory() as folder:
+        ledger = Path(folder) / 'gate_ledger.json'
+        legacy = dict(pool=[31024, 65536], allocated=[[31024, 32560], [32560, 34736]])
+        ledger.write_text(json.dumps(legacy))
+        block = gate.allocate_seed_block(ledger, 1920)
+        assert block == (34736, 34736 + 1920)  # continues where the legacy file stopped
+        document = gate.read(ledger)
+        assert document['allocated'][:2] == legacy['allocated']  # nothing rewritten
+        assert document['pool'] == [31024, 65536]
+        assert document['pools'] == [list(p) for p in pvz_promotion.SEED_POOLS_V2]
+        # The legacy key can only vouch for the first window; a different first
+        # window, or a "pools" document that disagrees, is still refused.
+        ledger.write_text(json.dumps(dict(pool=[20000, 30000], allocated=[])))
+        with pytest.raises(ValueError, match='was created for pool'):
+            gate.allocate_seed_block(ledger, 1920)
+        ledger.write_text(json.dumps(dict(pool=[31024, 65536],
+                                          pools=[[31024, 65536], [200_000_000, 201_000_000]],
+                                          allocated=[[31024, 32560]])))
+        with pytest.raises(ValueError, match='was created for pools'):
+            gate.allocate_seed_block(ledger, 1920)
+
+
+def test_two_hundred_fifty_rounds_are_pairwise_disjoint_across_both_windows():
+    """Dry-run shape of task88 step 4: 250 v3 rounds (1920 seeds each) from a copy."""
+    import pvz_promotion
+    with tempfile.TemporaryDirectory() as folder:
+        ledger = Path(folder) / 'gate_ledger.json'
+        first = pvz_promotion.SEED_POOLS_V2[0]
+        # Start near the end of the first window, as the live ledger is on 2026-10-26.
+        ledger.write_text(json.dumps(dict(pool=list(first), allocated=[[first[0], 65000]])))
+        blocks = [gate.allocate_seed_block(ledger, 1920) for _ in range(250)]
+        spans = sorted(blocks)
+        assert all(a[1] <= b[0] for a, b in zip(spans, spans[1:]))
+        assert len({seed for low, high in blocks for seed in (low,)}) == 250
+        assert sum(high - low for low, high in blocks) == 250 * 1920
+        assert any(low >= pvz_promotion.SEED_POOLS_V2[1][0] for low, _ in blocks)
+        assert gate.read(ledger)['allocated'][-1] == list(blocks[-1])
