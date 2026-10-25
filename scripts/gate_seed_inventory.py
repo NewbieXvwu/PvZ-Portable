@@ -129,6 +129,14 @@ def json_segments(document, label):
             if (isinstance(block, list) and len(block) == 2
                     and all(type(x) is int for x in block) and 0 <= block[0] < block[1] <= SEED_LIMIT):
                 found.append(dict(name=name, low=block[0], high=block[1], kind='declared block'))
+            # make_fog*_panel registers closed train/eval bounds under seed_blocks.
+            declared_blocks = item.get('seed_blocks')
+            if isinstance(declared_blocks, dict):
+                for block_name, block in declared_blocks.items():
+                    if (_int_list(block) and len(block) == 2
+                            and 0 <= block[0] <= block[1] < SEED_LIMIT):
+                        found.append(dict(name=name + '/seed_blocks/' + block_name,
+                                          low=block[0], high=block[1] + 1, kind='declared closed block'))
             start, count = item.get('future_seed_start'), item.get('future_seed_count')
             if type(start) is int and type(count) is int and 0 <= start < SEED_LIMIT and count > 0:
                 found.append(dict(name=name + '/future', low=start, high=min(start + count, SEED_LIMIT),
@@ -326,6 +334,8 @@ def main():
     parser.add_argument('--include-inventory', type=Path, action='append', default=[],
                         help='merge a full inventory captured on the other machine (repeatable)')
     args = parser.parse_args()
+    if args.candidate and not 0 <= args.candidate[0] < args.candidate[1] <= SEED_LIMIT:
+        parser.error('candidate must be a nonempty uint32 seed interval')
     if args.from_inventory is not None:
         result = json.loads(args.from_inventory.read_text())
         if args.candidate:

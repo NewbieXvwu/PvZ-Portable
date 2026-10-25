@@ -26,6 +26,7 @@ def test_manifest_dictionary_ledger_and_wide_last_task_are_not_dropped():
     assert (100_000_000, 100_000_002) in spans({'tasks': {'probe': {'seeds': [100_000_000, 100_000_001]}}})
     assert spans({'pool': [31024, 65536], 'allocated': [[31024, 32560]]}) == {
         (31024, 65536), (31024, 32560)}
+    assert (49_000_000, 49_008_192) in spans({'seed_blocks': {'train': [49_000_000, 49_008_191]}})
     # per_task may exceed stride: do not leave the final task's tail "free".
     assert (100_000_000, 100_000_040) in spans(
         {'base': 100_000_000, 'stride': 10, 'per_task': 30, 'tasks': ['a', 'b']})
