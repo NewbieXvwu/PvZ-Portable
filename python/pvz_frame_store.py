@@ -18,6 +18,12 @@ def frame_paths(data: Path):
     return sorted(paths.values(), key=lambda path: str(path.parent))
 
 
+def archive_seed(directory: str) -> int:
+    """Seed of a `seed_<n>` archive directory; demo-start games are `seed_<demo>_f<future>` and go by the future seed."""
+    tag = directory.removeprefix("seed_").rsplit("_f", 1)[-1]
+    return int(tag)
+
+
 def frame_path(archive: Path) -> Path:
     binary = archive / "frames.npz"
     return binary if binary.is_file() else archive / "frames.jsonl"

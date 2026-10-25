@@ -96,3 +96,11 @@
   与现有全部段不相交）。`test_registered_manifest_start_cells` 期望集合同步加它，
   `python/test_curriculum_queue.py` 54 项通过。DESIGN §14.26 加 task71b 条目。
 - **提交**：`git push origin demo`（本步）。
+- 追加（同日）：用户打通屋顶 L42 `demo_roof_42_melon_m200`（30 波、1513 动作、被吃 42、零费 0，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261042/demo_roof_42_melon_m200`）。照 L32/L34 做接手扫描与起点格。屋顶老师冷启动全败，最晚档要取老师稳定 8/8 的点；注意 `fog_observation` 不涉及屋顶。
+- 追加（同日）：用户打通雾夜 L39 `demo_fog_39_cactus_snow_m200`（30 波、1609 动作、被吃 19 其中零费 18、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261039/demo_fog_39_cactus_snow_m200`）。L39 老师冷启动各卡组 0–1/16（气球破防，task74b），这是该关唯一的成功轨迹。L42 做完后照同样流程扫描与起点格；起点格族带 `fog_observation`（与 B6 的 `_hv2` 口径一致）。
+- 追加（同日）：用户打通屋顶 L43 `demo_roof_43_melon_m200`（30 波、1129 动作、仅被吃 2 株、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261043/demo_roof_43_melon_m200`）。L42 之后照同样流程做扫描与起点格。主控定：屋顶示范以西瓜套为主，玉米套不再录（群怪下西瓜溅射远强于玉米的单体控制）。
+- 更正（同日）：忧郁菇+大蒜套照录（用户：无衰减穿透对群怪比西瓜更强），L42/43/44 各一局，录完同样做扫描与起点格。只有玉米套不录。
+- 追加（同日）：用户打通屋顶 L44 `demo_roof_44_melon_m200`（40 波、1438 动作、被吃 5 株、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261044/demo_roof_44_melon_m200`）。排在 L43 之后做扫描与起点格。
+- 追加（同日）：用户打通 L42 忧郁菇+西瓜混合 `demo_roof_42_gloommelon_m200`（30 波、1357 动作、被吃 24 株、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261042/demo_roof_42_gloommelon_m200`；用户说后期被蹦极偷得多）。排在 L44 之后，同样做接手扫描。是否进课程只看扫描：老师接手过 50% 的点才入阶梯，过不了就不登记 `demo_start`，在“结果”里写清老师在哪一段接不住。
+- 追加（同日）：用户打通屋顶 L49 `demo_roof_49_doom_m200`（40 波、1577 动作、被吃 17、0 小推车，verified，存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261049/demo_roof_49_doom_m200`；用户说毁灭菇基本能清掉整个大波，没带保护伞，西瓜一直被蹦极偷走）。L49 是屋顶最难的一关，**排到 L42 西瓜之后、L39 之前**。
+- 追加（同日）：用户打通屋顶 L48 `demo_roof_48_doom_m200`（30 波、1107 动作、被吃 1、0 小推车）和 L46 `demo_roof_46_doom_m200`（30 波、977 动作、被吃 1、0 小推车），都已 verified，存档在 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261048/…` 和 `seed_20261046/…`。排在 L49 之后（L48 先于 L46），其余顺序不变。

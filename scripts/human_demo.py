@@ -318,24 +318,22 @@ def main():
     archive = args.out / f'seed_{seed}' / args.task
     with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
         recorder = Recorder(env, archive, args.task, deck, task, args.note)
-        print(f'录制中：{archive}。空格暂停，右键取消选卡，Esc 结束。', flush=True)
+        print(f'录制中：{archive}。Esc 或空格暂停/继续（暂停时可以慢慢种、铲、收集），'
+              f'右键取消选卡，关闭窗口结束录制。', flush=True)
         try:
             while not recorder.observation['terminal']:
                 event = env.human_input()
                 if event['closed']:
                     break
-                if event['paused']:
-                    time.sleep(.05)
+                # task80: while paused the poll yields wait ticks:0 -- step nothing, so game
+                # time stands still; but a plant/shovel/collect is still accepted and runs at
+                # the frozen tick.  Several paused actions therefore land on one tick.
+                if event['paused'] and event['action']['type'] == 'wait':
+                    time.sleep(.03)
                     continue
                 recorder.step(event['action'])
         finally:
             recorder.close()
-    # 打法要点在打完之后才说得出来：没在命令行给就在这里问（只进 meta，不进哈希）
-    if not args.note and sys.stdin.isatty():
-        note = input('打法要点（直接回车跳过）：').strip()
-        if note:
-            recorder.meta['note'] = note
-            recorder._save_meta()
     print(json.dumps(verify(archive, args.resource_dir, args.executable)))
     print(f'存档：{archive}')
 
