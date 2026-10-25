@@ -592,6 +592,79 @@ def terminal_probe(levels, count, workers):
           models=['value', 'v4_control'], jobs=len(jobs), complete=True))
 
 
+def spearman(pairs):
+    n = len(pairs)
+    if n < 3:
+        return None
+    def ranks(values):
+        order = sorted(range(n), key=lambda i: values[i])
+        out = [0.0] * n
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and values[order[j + 1]] == values[order[i]]:
+                j += 1
+            rank = (i + j) / 2 + 1
+            for k in range(i, j + 1):
+                out[order[k]] = rank
+            i = j + 1
+        return out
+    rx, ry = ranks([p[0] for p in pairs]), ranks([p[1] for p in pairs])
+    mx, my = sum(rx) / n, sum(ry) / n
+    num = sum((a - mx) * (b - my) for a, b in zip(rx, ry))
+    den = (sum((a - mx) ** 2 for a in rx) * sum((b - my) ** 2 for b in ry)) ** 0.5
+    return num / den if den else None
+
+
+def terminal_report(levels):
+    """Leaf value against terminal truth at the same frozen roots (task72b protocol)."""
+    summary = dict(schema_version=1, task=76, futures_per_action=None, leaf_horizon=2500,
+                   historical_v4_reference='MEMORY/docs/task46-roof-zone.md 53.9% (different roots, model, two futures, teacher continuation)',
+                   per_level={})
+    for level in levels:
+        per_model = {}
+        for model in ('value', 'v4_control'):
+            roots = sorted((OUT/'terminal'/f'l{level}').glob(f'*/root_*_{model}.json'))
+            pairs, argmax_hits, argmax_total, calib, unfinished = [], 0, 0, [], 0
+            for path in roots:
+                document = read(path)
+                summary['futures_per_action'] = document['futures']
+                usable = [a for a in document['actions'] if a['terminal_unfinished'] == 0 and a['terminal']]
+                unfinished += sum(a['terminal_unfinished'] for a in document['actions'])
+                if len(usable) < 2:
+                    continue
+                truth = {action_key(a['action']): a['terminal_wins'] / len(a['terminal']) for a in usable}
+                leaf = {action_key(a['action']): a['leaf_mean'] for a in usable}
+                keys = sorted(truth)
+                for i in range(len(keys)):
+                    for j in range(i + 1, len(keys)):
+                        a, b = keys[i], keys[j]
+                        if truth[a] == truth[b]:
+                            continue
+                        pairs.append((leaf[a] - leaf[b], truth[a] - truth[b]))
+                best_truth = max(keys, key=lambda k: (truth[k], -leaf[k]))
+                best_leaf = max(keys, key=lambda k: (leaf[k], -truth[k]))
+                argmax_hits += best_truth == best_leaf
+                argmax_total += 1
+                calib.append(dict(decision=document['decision'], tick=document['tick'],
+                                  leaf_max=round(max(leaf.values()), 4),
+                                  truth_max=round(max(truth.values()), 4),
+                                  leaf_argmax=json.loads(best_leaf), truth_argmax=json.loads(best_truth),
+                                  actions=len(keys)))
+            agree = sum(1 for d, t in pairs if (d > 0) == (t > 0))
+            per_model[model] = dict(roots=argmax_total, pairs=len(pairs),
+                                    pairwise_accuracy=(agree / len(pairs)) if pairs else None,
+                                    argmax_agreement=(argmax_hits / argmax_total) if argmax_total else None,
+                                    spearman=spearman(pairs), unfinished_futures=unfinished,
+                                    calibration=calib)
+        summary['per_level'][level] = per_model
+    write(ROOT/'MEMORY/docs/task76-roof-terminal-truth.json', summary)
+    print(json.dumps({l: {m: {k: v for k, v in d.items() if k != 'calibration'}
+                          for m, d in models.items()} for l, models in summary['per_level'].items()},
+                     ensure_ascii=False, indent=1))
+    return summary
+
+
 def panel_report(levels):
     plan = read(PLAN)
     arms = plan['arms']
@@ -668,7 +741,7 @@ def panel_report(levels):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode', choices=['prepare','verify','smoke','panels','report','terminal'])
+    parser.add_argument('mode', choices=['prepare','verify','smoke','panels','report','terminal','terminal-report'])
     parser.add_argument('--levels', default='42,43')
     parser.add_argument('--games',type=int,default=32)
     parser.add_argument('--workers',type=int,default=6)
@@ -684,6 +757,8 @@ def main():
         panel_report([int(v) for v in args.levels.split(',')])
     elif args.mode == 'terminal':
         terminal_probe([int(v) for v in args.levels.split(',')], args.games, args.workers)
+    elif args.mode == 'terminal-report':
+        terminal_report([int(v) for v in args.levels.split(',')])
     else:
         panels([int(v) for v in args.levels.split(',')],args.games,args.workers)
 
