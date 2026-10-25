@@ -518,14 +518,23 @@
     "savegame_uninitialised_reports_before": 24,
     "tool": "valgrind 3.26 --track-origins=yes --num-callers=30",
     "midgame_2000_ops": {
-      "executable": "/home/newbiexvwu/pvz-logs/task82/final-libc (diagnostic relink without mimalloc, via memcheck-midgame wrapper)",
       "operations": 2000,
       "serialisations": 2001,
-      "savegame_uninitialised_contexts": 0,
-      "other_uninitialised_contexts": 169,
-      "other_reports": "zlib/resource-cache and idle-object destruction, already documented as pre-existing",
-      "log": "/home/newbiexvwu/pvz-logs/task82/memcheck-midgame.out",
-      "trace": "/home/newbiexvwu/pvz-logs/task82/memcheck_midgame"
+      "before": {
+        "executable": "/home/newbiexvwu/pvz-logs/task82/before-libc (diagnostic relink without mimalloc)",
+        "savegame_uninitialised_contexts": 32,
+        "total_contexts": 200,
+        "log": "/home/newbiexvwu/pvz-logs/task82/memcheck-midgame-before.out",
+        "trace": "/home/newbiexvwu/pvz-logs/task82/memcheck_midgame_before"
+      },
+      "after": {
+        "executable": "/home/newbiexvwu/pvz-logs/task82/final-libc (diagnostic relink without mimalloc)",
+        "savegame_uninitialised_contexts": 0,
+        "total_contexts": 169,
+        "log": "/home/newbiexvwu/pvz-logs/task82/memcheck-midgame.out",
+        "trace": "/home/newbiexvwu/pvz-logs/task82/memcheck_midgame"
+      },
+      "other_reports": "zlib/resource-cache and idle-object destruction, already documented as pre-existing"
     }
   },
   "pairing": {
