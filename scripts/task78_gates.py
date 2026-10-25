@@ -113,8 +113,6 @@ def consistency(states, name):
     correct = total = ties = 0
     per_world = defaultdict(lambda: [0, 0])
     for (archive, position), state in states.items():
-        if not usable(state):
-            continue
         for horizon in sorted(state['rows']):
             rows = state['rows'][horizon]
             for a in range(len(rows)):
