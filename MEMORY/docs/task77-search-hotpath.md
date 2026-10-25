@@ -36,6 +36,8 @@
 - [基线复现] `prepare` 固定从原提交c0249d62提取源码，不再取优化后的当前树充当“改前”；本轮原冻结和新提取的4个引擎文件及搜索驱动均逐字节吻合原提交。
 - [负载分层] day/night四臂的全部8个边界均有同一真实qc控制器，单独计算qc正常运行期4对ABBA；完整六族计时仍全部保留。新增回归测试排除tmux祖先误命中和中途停机窗口，10项证据测试通过。
 
+- [学生网微优化·否决] 试把 `EnvironmentRollout::Convolve` 的三层 im2col 缓冲拆开（零边本应每前向重建三次）。9 轮 A/B（单核、126 rollout/轮）引擎自报 `network_seconds/net_calls` 比值 0.988 [0.967,1.008]，sim 对照 1.005——无可测收益，已回退源码并重建；报告 §8 记下否决理由，避免后续重复尝试。
+
 ## 问题
 
 - redeploy/build 已由 task70 B5 重建，不能当原 deploy4；正式基线只读复制生产 cq/build4（SHA 与 task70 deploy4 一致）。系统无 perf，采用现有 SIGPROF 采样器并结合 cProfile。
