@@ -2,6 +2,10 @@
 
 > 主控 2026-10-25 写。执行者：台式机 Codex（plus 号，tmux `codex-llmplay`，task81 收尾后接）。工作树自建 `/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet`（分支 `hashdet`，从 origin/pvz-env 拉出）。每个任务最多 2 个游戏进程；**不碰 tmux `qc`、cq、别的工作树**。
 
+## 交接给下一个代理（2026-10-25 23:30，CodeBuddy）
+
+五项已完成，证据见「完成核对」与 `state-hash-determinism.md`；**不要重做**。分支已 push 到 `origin/hashdet`（以 `git log -1` 为准）。剩余只有主控侧动作：合并到当前 `pvz-env`（预演仅日志文件冲突）后复验，以及在 Mac 上运行 `scripts/state_hash_mac_probe.sh`。
+
 ## 现象
 task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stage` 里的 `pvz-portable`）观察到：同一个二进制、同一个任务，每次 reset 得到的开局 `state_hash` 都不一样（`d3ec36d5…` / `83328bcc…` / `cefd2775…`）。另一方面，Mac 录制的人类示范存档在录制和 verify 时都做了逐操作哈希校验，并且通过了（`hash_schema=portable_snapshot_v1_without_draw_statistics`）。
 
@@ -34,4 +38,49 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 
 ## 结果
 
+- 2026-10-25：两种指定引擎各 8 次 reset + 前 2000 操作已复现；首次分歧为 reset，定位到 Challenge 的未初始化 `mCloudsCounter[6]`，同引擎观察/事件一致；工具与初步证据见 `state-hash-determinism.md`。
+- 2026-10-25：整局又定位到 `Projectile::mLastPortalX`；两处初始化已修。指定引擎各 8 次整局的 827 个决策点逻辑状态/事件一致（合并等待与逐操作基准逐决策核对通过）；修复版 8 次整局哈希也全部一致，新增构造/弹丸/快照回归通过。继续做四份旧示范的修复前后配对与 Mac 交接说明。
+
+- 2026-10-25：`Coin::mCollectX/mCollectY` 初始化修复与探针 chunk 5 支持提交为 `e8ba7716` 并推送；四份旧示范修复前后逐决策配对完成（827/1310/893/923 个边界点，privileged 观测与事件全同，终局全同；哈希首差分别在 3995/4191/3599/3874，属未初始化字段被保存，不是模拟分歧）。
+
+- 2026-10-25：Mac 交接脚本用覆盖路径在本机修复版上完整跑通（8 进程 / 2000 操作 / 2001 点全同 / 1 种 reset 哈希），并修正交接清单里的比较文件名（脚本写 `$OUT/comparison.json`，不是 `mac-comparison.json`）；memcheck 交叉核对：修复前 24 条 SaveGame 未初始化报告，修复后 0 条。
+
+- 2026-10-25：结论层 `state-hash-determinism.md` 与 `state-hash-determinism-results.json` 提交并推送。交接复核：最终构建 8 份整局 trace 的 SHA256 全同（`5fb2c460…`）；四份示范修复后各 4 进程 trace 全同、修复前各 2 进程全异；回归测试从仓库根目录运行通过（测试自补 `python/` 与 `scripts/` 路径），协议 35 项 OK。Mac 探针脚本 `scripts/state_hash_mac_probe.sh` 交主控，台式机未执行。
+- 2026-10-25：接手复核（Claude）：工作树干净、HEAD 与 `origin/hashdet` 一致；最终二进制 sha256 `5e890b3a…` 与证据一致；`test_state_hash_determinism` 8 个独立进程回归通过（3.6 s），协议测试 35 项 OK；`artifacts/`、`logs/` 的 `check-ignore --no-index` 为空。Mac 侧仍待主控执行 `scripts/state_hash_mac_probe.sh`。
+
+- 2026-10-25：按任务书五项补“完成核对”映射，结果 JSON 增 `requirements` 逐项指向证据；提交 `99f85080` 并推送。
+
+- 2026-10-25：合并预演（`git merge-tree origin/pvz-env hashdet`）：仅 `MEMORY/2026-10-25.md` 冲突（append-only 日志），`Challenge.cpp` 自动合并，`Coin.cpp` / `Projectile.cpp` 无冲突；部署合并只需并日志。
+
+- 2026-10-25：独立审计交接证据：12 份源存档 SHA256 与 `archive_source_sha256.json` 全同（未改写）；memcheck SaveGame 未初始化报告 24 → 0；`full_final` 8 份 trace 1 种哈希、`panel_final` 每份 1 种、`panel_before` 每份 2 种；审计摘要入 results JSON 的 `handover_audit`。
+
+- 2026-10-25：任务书顶部加交接说明（五项已完成、不要重做；剩余为主控侧合并与 Mac 执行）。
+
+- 2026-10-25：补 mid-game Memcheck（修复前后各 2000 操作 / 2001 次序列化）：`LawnSaveGameToMemory` 未初始化上下文 32 → 0（总上下文 200 → 169），其余为既有 zlib/资源缓存与闲置对象销毁报告；结果入 `memcheck.midgame_2000_ops`。
+
+- 2026-10-25：屋顶 L46 短存档地形泛化检查：最终构建 4 进程 reset 哈希与逻辑 trace 各 1 种；修复前 8 进程也未变化（短存档不触发未初始化字段，只作无回归检查）；入 `terrain_generalisation`。
+
+## 完成核对
+
+1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧按任务书属主控执行；`scripts/state_hash_mac_probe.sh` 与命令已交付，并在本机以覆盖路径验证。
+2. 定位：Save4 按 chunk/成员分段并比对原始字节，三处未初始化成员；Memcheck `--track-origins` 指向 `Board` 创建 `Challenge` 的堆分配。非指针（残值为整数/浮点残值）、非时钟或种子（reset 重播种后相关分段一致）；静态链接/mimalloc 只改变残值出现频率。
+3. 影响：deploy4 8 局 + 静态 8 局共 16 局，827 个决策点 privileged 状态、事件与终局全同；最终构建另做 8 进程逐操作整局（39590 操作），8 份 trace 的 SHA256 全同。
+4. 修复：三处构造初始化（`5e7c90c7`、`e8ba7716`）；四份旧示范跨修复逐边界配对，行为会变的已测存档为空；未加开关、未改生产默认。
+5. 结论：`MEMORY/docs/state-hash-determinism.md` 与 `state-hash-determinism-results.json` 已提交并推送；Mac 8 次 reset 按任务书归主控执行（交接物已交付）。
+
 ## 问题
+
+## 主控追加（2026-10-25 23:00，外部数据点）
+task81 探路：在 GPT 沙箱（Debian 13、Xeon 8573C、静态二进制 a84f10cf）上重放 4 局 Mac 录的示范，开局 state_hash 有 2 局与存档相同（L32 snow、L33 cattail），2 局不同（L31 snow、L33 cactus）；但所有操作、拒绝与逐 tick 观测全部一致。这和 task70 A2 探针里“重置时刻有双态线、差异字节在粒子块”的说法吻合。请把它作为证据之一，确认差异只在粒子 / 绘制相关字段。
+- `hashdet` 从较旧的 `pvz-env` 拉出（截至 2026-10-25 落后 85 个提交）。合并预演只冲突日志文件、三处源码自动合并；但证据是在旧基线上构建的，主控合并后应重跑 `test_state_hash_determinism` 与 8 次 reset，确认上游改动没有改变结论。
+
+- 原始存档来自不同引擎，原有跨二进制回放本就采用 tick/ok/outcome 校验。本任务另外比较完整 privileged 状态（含隐藏僵尸、RNG）和事件；不把旧存档的跨版本哈希变化误报为模拟变化。
+
+## 主控验收（2026-10-26 00:40，Mac）
+- **修复前**（Mac 当时的 `build/pvz-portable`）：`state_hash_mac_probe.sh` 跑 L31 示范，8 个独立进程，开局哈希只有 1 种，前 2000 操作的 2001 个点哈希、观测、事件全同，也与存档哈希一致。
+  - 这说明 macOS 的分配器给的新页是干净的。所以 Mac 录制和校验一直能逐位通过，而台式机的 mimalloc 与静态版会带出堆上的残值。
+- **合并 hashdet 后重建**（`3be4b8a7…`）：
+  - 同一探针 8 次、1 种 reset 哈希，与存档相同；
+  - `test_state_hash_determinism` 通过；
+  - 人类示范 L49 doom（74281 操作）和 L42 gloommelon（66115 操作）严格 `verify` 通过。
+- 已合并进 pvz-env（`937c86a1`）。台式机生产引擎随下一次引擎部署带上，排在 deploy14 之后，不单独部署。

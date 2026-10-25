@@ -1,0 +1,859 @@
+{
+ "schema": "gate_seed_inventory_v1",
+ "roots": [
+  "/home/newbiexvwu/PvZ-Portable",
+  "/home/newbiexvwu/PvZ-search",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmplay",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/memprobe",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/perf2",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/seedpool",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6",
+  "/home/newbiexvwu/pvz-logs"
+ ],
+ "scan": {
+  "files_seen": 241314,
+  "files_parsed": 4310,
+  "segments": 2339,
+  "quick": false
+ },
+ "occupied": [
+  [
+   30000,
+   31023
+  ],
+  [
+   31024,
+   65536
+  ],
+  [
+   80256,
+   80320
+  ],
+  [
+   130000,
+   130640
+  ],
+  [
+   1500000,
+   1501023
+  ],
+  [
+   1600000,
+   1601023
+  ],
+  [
+   1601024,
+   1602047
+  ],
+  [
+   1602048,
+   1604095
+  ],
+  [
+   1604096,
+   1608191
+  ],
+  [
+   1608192,
+   1612287
+  ],
+  [
+   1612288,
+   1616383
+  ],
+  [
+   1700000,
+   1704095
+  ],
+  [
+   1710000,
+   1775535
+  ],
+  [
+   1800000,
+   1878191
+  ],
+  [
+   1880000,
+   1888191
+  ],
+  [
+   1900000,
+   1998191
+  ],
+  [
+   2000000,
+   2088191
+  ],
+  [
+   2100000,
+   2108191
+  ],
+  [
+   2120000,
+   2128191
+  ],
+  [
+   2130000,
+   2138191
+  ],
+  [
+   2150000,
+   2158191
+  ],
+  [
+   2200000,
+   2298191
+  ],
+  [
+   5000000,
+   9169695
+  ],
+  [
+   20261031,
+   20261034
+  ],
+  [
+   20261101,
+   20261132
+  ],
+  [
+   43000000,
+   43008191
+  ],
+  [
+   43700000,
+   43700032
+  ],
+  [
+   44000000,
+   44000256
+  ],
+  [
+   44100000,
+   44100256
+  ],
+  [
+   44200000,
+   44200256
+  ],
+  [
+   44300000,
+   44300256
+  ],
+  [
+   44400000,
+   44400255
+  ],
+  [
+   44500000,
+   44500255
+  ],
+  [
+   44600000,
+   44600255
+  ],
+  [
+   44700000,
+   44700255
+  ],
+  [
+   44800000,
+   44800255
+  ],
+  [
+   44900000,
+   44900255
+  ],
+  [
+   45000000,
+   45000255
+  ],
+  [
+   45100000,
+   45100255
+  ],
+  [
+   45200000,
+   45200255
+  ],
+  [
+   46000000,
+   46000002
+  ],
+  [
+   49100000,
+   49100032
+  ],
+  [
+   60000000,
+   60008191
+  ],
+  [
+   60100000,
+   60108191
+  ],
+  [
+   60200000,
+   60208191
+  ],
+  [
+   61000000,
+   61000031
+  ],
+  [
+   61100000,
+   61100031
+  ],
+  [
+   61200000,
+   61200031
+  ],
+  [
+   78000000,
+   78000416
+  ],
+  [
+   78100000,
+   78100096
+  ],
+  [
+   79000000,
+   79000032
+  ],
+  [
+   79010000,
+   79010032
+  ],
+  [
+   79020000,
+   79020032
+  ],
+  [
+   79030000,
+   79030032
+  ],
+  [
+   79040000,
+   79040032
+  ],
+  [
+   79050000,
+   79050032
+  ],
+  [
+   79060000,
+   79060032
+  ],
+  [
+   79070000,
+   79070032
+  ],
+  [
+   79100000,
+   79124575
+  ],
+  [
+   81000000,
+   81200000
+  ],
+  [
+   83000000,
+   83000308
+  ]
+ ],
+ "occupied_seeds": 4958611,
+ "free_gaps_ge_1m": [
+  {
+   "low": 130640,
+   "high": 1500000,
+   "size": 1369360
+  },
+  {
+   "low": 2298191,
+   "high": 5000000,
+   "size": 2701809
+  },
+  {
+   "low": 9169695,
+   "high": 20261031,
+   "size": 11091336
+  },
+  {
+   "low": 20261132,
+   "high": 43000000,
+   "size": 22738868
+  },
+  {
+   "low": 46000002,
+   "high": 49100000,
+   "size": 3099998
+  },
+  {
+   "low": 49100032,
+   "high": 60000000,
+   "size": 10899968
+  },
+  {
+   "low": 61200031,
+   "high": 78000000,
+   "size": 16799969
+  },
+  {
+   "low": 79124575,
+   "high": 81000000,
+   "size": 1875425
+  },
+  {
+   "low": 81200000,
+   "high": 83000000,
+   "size": 1800000
+  },
+  {
+   "low": 83000308,
+   "high": 4294967296,
+   "size": 4211966988
+  }
+ ],
+ "sources_by_kind": {
+  "task seeds": {
+   "declarations": 2299,
+   "low": 30000,
+   "high": 83000308
+  },
+  "design range": {
+   "declarations": 1313,
+   "low": 30000,
+   "high": 83000307
+  },
+  "declared block": {
+   "declarations": 28,
+   "low": 30512,
+   "high": 36272
+  },
+  "gate ledger": {
+   "declarations": 6,
+   "low": 31024,
+   "high": 65536
+  },
+  "future seeds": {
+   "declarations": 6,
+   "low": 44100000,
+   "high": 44100256
+  },
+  "seed block": {
+   "declarations": 6,
+   "low": 81000000,
+   "high": 81001000
+  }
+ },
+ "widest_segments": [
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5651264\u20139169695",
+   "kind": "design range",
+   "low": 5651264,
+   "high": 9169695,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5,000,000\u20137,932,127",
+   "kind": "design range",
+   "low": 5000000,
+   "high": 7932127,
+   "source": "DESIGN.md"
+  }
+ ],
+ "candidate": {
+  "low": 100000000,
+  "high": 101000000,
+  "size": 1000000,
+  "disjoint": true,
+  "overlaps": []
+ },
+ "verification": {
+  "low": 100000000,
+  "high": 101000000,
+  "files": 251774,
+  "hits": [
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume_rebaselined/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume_rebaselined/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
+    "value": 100845635
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_deploy4/trace_2.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_deploy4/trace_0.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/decisions_static/trace_4.jsonl",
+    "value": 100298519
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/decisions_static/trace_7.jsonl",
+    "value": 100298519
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_2.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_4.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_1.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_3.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_6.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_5.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_7.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_0.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_static/trace_2.jsonl",
+    "value": 100298519
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/task82/full_static/trace_1.jsonl",
+    "value": 100618984
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/mac_bundle/demos/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/mac_bundle/demos/seed_20261032/demo_fog_32_snow_m200/ticks.jsonl",
+    "value": 100070718
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_32_snow_m200/ticks.jsonl",
+    "value": 100070718
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/maccheck_archives/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
+    "value": 100387332
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/maccheck_archives/seed_20261032/demo_fog_32_snow_m200/ticks.jsonl",
+    "value": 100070718
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-413642.jsonl",
+    "value": 100968848
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   },
+   {
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
+    "value": 100270080
+   }
+  ],
+  "hit_count": 108
+ }
+}

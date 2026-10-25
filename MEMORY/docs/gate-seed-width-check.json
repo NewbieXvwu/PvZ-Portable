@@ -1,0 +1,41 @@
+{
+ "level": 7,
+ "ticks_per_step": 100,
+ "steps": 3,
+ "seeds": [
+  100000000,
+  57600,
+  0,
+  100000001
+ ],
+ "chains": {
+  "100000000": [
+   "737fb08d0ebaa0e5",
+   "3235eee6c2b45767",
+   "325e40171b8c3bca",
+   "d9b312473bfb5e8a"
+  ],
+  "57600": [
+   "1adefe6d97d7d28c",
+   "c6fe73d92fa182f7",
+   "3c5ed66f57edeb49",
+   "ed7193fe85b360aa"
+  ],
+  "0": [
+   "b47ab6198a3f8df4",
+   "bc4f607575611e8c",
+   "5b5cd2b857cdaa34",
+   "291176fc2339f831"
+  ],
+  "100000001": [
+   "663c10540c0e5731",
+   "68d18695b5e61bdc",
+   "d95d22f42729a563",
+   "d18fd6184056a82c"
+  ]
+ },
+ "deterministic": true,
+ "differs_from_uint16_residue": true,
+ "differs_from_uint8_residue": true,
+ "differs_from_next_seed": true
+}
