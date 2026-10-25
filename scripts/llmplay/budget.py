@@ -249,10 +249,15 @@ _SESSION: Session | None = None
 
 
 def default_path() -> Path:
+    """会话文件固定在用户主目录，**不随当前目录变**（§A：模型换个 cwd 不能重置预算）。"""
     override = os.environ.get("PVZ_LLMPLAY_SESSION")
     if override:
         return Path(override)
-    return Path.cwd() / "llmplay_session" / "budget.json"
+    try:
+        home = Path.home()
+    except RuntimeError:            # 没有 HOME 的极端环境：退回当前目录
+        home = Path.cwd()
+    return home / ".llmplay_session" / "budget.json"
 
 
 def session() -> Session:

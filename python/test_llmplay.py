@@ -143,6 +143,23 @@ class BudgetTest(unittest.TestCase):
             self.session.note_rewind(level, 100, 900)
         self.assertIn('退回更早的一段', str(caught.exception))
 
+    def test_session_path_does_not_depend_on_cwd(self):
+        """§A：换个工作目录不能把预算/墙钟清零。"""
+        previous = os.environ.pop('PVZ_LLMPLAY_SESSION', None)
+        cwd = os.getcwd()
+        try:
+            with tempfile.TemporaryDirectory() as first, tempfile.TemporaryDirectory() as second:
+                os.chdir(first)
+                one = budget.default_path()
+                os.chdir(second)
+                two = budget.default_path()
+        finally:
+            os.chdir(cwd)
+            if previous is not None:
+                os.environ['PVZ_LLMPLAY_SESSION'] = previous
+        self.assertEqual(one, two)
+        self.assertEqual(one, Path.home() / '.llmplay_session' / 'budget.json')
+
     def test_status_line_has_every_field(self):
         self.session.calibrate(1000, 1.0)
         self.session.note_ticks(49, 500, 'search')
