@@ -1,0 +1,131 @@
+{
+ "at_utc": "2026-10-25T22:52:27.597521+00:00",
+ "overall_task_complete": false,
+ "new_labels": {
+  "complete": true,
+  "training_eligible": true,
+  "totals": {
+   "shards": 192,
+   "rows": 987,
+   "wins": 731,
+   "terminal_dropped": 1833,
+   "skipped": 72
+  },
+  "export_sha256": "ee8c6e9238d46e22456f43fee706e1bf85a80165ebe08857dcb1004d7ab3cb9f",
+  "student_history_checks": 192,
+  "student_history_failures": 0,
+  "student_history_audit_sha256": "6d786e98154e260c99231845ce04eaf6dbbb42cb295208ec7fb48f98b48012ed"
+ },
+ "original_v5_corpus_received": false,
+ "formal_candidate_training_complete": false,
+ "paired_diagnostic": {
+  "complete": false,
+  "complete_cells": 13,
+  "paired_games": 448,
+  "sha256": "d35b43ba9355d81f3fe33992e723e24f272644b01a3804050ad0aa48a4a30f57",
+  "terrain": {
+   "day": {
+    "pairs": 64,
+    "old_wins": 64,
+    "new_wins": 64,
+    "gain": 0,
+    "harm": 0,
+    "net": 0,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.05600908938663657
+   },
+   "night": {
+    "pairs": 96,
+    "old_wins": 93,
+    "new_wins": 91,
+    "gain": 3,
+    "harm": 5,
+    "net": -2,
+    "mcnemar_p": 0.7265625,
+    "conservative_lower": -0.1108797452766956
+   },
+   "pool": {
+    "pairs": 64,
+    "old_wins": 52,
+    "new_wins": 51,
+    "gain": 11,
+    "harm": 12,
+    "net": -1,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.2155738773660454
+   },
+   "fog": {
+    "pairs": 128,
+    "old_wins": 127,
+    "new_wins": 128,
+    "gain": 1,
+    "harm": 0,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.028210277628882095
+   },
+   "roof": {
+    "pairs": 96,
+    "old_wins": 42,
+    "new_wins": 43,
+    "gain": 10,
+    "harm": 9,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.11942434288618571
+   }
+  },
+  "gates": {
+   "day": {
+    "status": "evaluated",
+    "passed": true,
+    "conservative_lower": -0.05600908938663657,
+    "cell_floors_met": true
+   },
+   "night": {
+    "status": "evaluated",
+    "passed": false,
+    "conservative_lower": -0.1108797452766956,
+    "cell_floors_met": false
+   },
+   "pool": {
+    "status": "incomplete",
+    "passed": null
+   },
+   "fog": {
+    "status": "evaluated",
+    "passed": false,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "direction_met": true
+   },
+   "roof": {
+    "status": "evaluated",
+    "passed": false,
+    "net": 1,
+    "mcnemar_p": 1.0,
+    "direction_met": false
+   }
+  }
+ },
+ "task72_reconstruction": {
+  "completed_trajectories": 1,
+  "exactly_matched_states": 0,
+  "mapping_complete": false,
+  "original_probe_protocol_verified": false,
+  "rescore_eligible": false,
+  "plan_sha256": "489da5f0b000ced92aed18a9567f8c8f256fce2ca5fb6d993f78398da5d11c83",
+  "binding_report_sha256": "f4730135581d5ce214090f94809e43314145e23377519c248d217add643b00eb"
+ },
+ "independent_roof": {
+  "expected_label_jobs": 216,
+  "completed_label_jobs": 0
+ },
+ "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
+ "unresolved_requirements": [
+  "original v5 corpus and formal merged-corpus training",
+  "remaining paired evaluations",
+  "independent roof terminal labels and scoring",
+  "original task72b states/probe protocol and horizon stability"
+ ]
+}

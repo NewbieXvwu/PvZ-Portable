@@ -118,7 +118,9 @@
 
 ## 预登记（2026-10-25，训练前冻结）
 
-执行状态修正（2026-10-26）：driver2已停止让资源给qc，不会自动续跑；配对9/15格、320/512对完整，night L17 v5另有16局。此前屋顶高视界48/48确实补齐，但新学生历史审计否定69个示范标签任务，当前可用123/192任务、868行，完整导出不可训练。旧985行导出/分片与69个原始任务保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`；待补清单`jobs_context_fix.txt`。纠正后的collector恢复人类前缀的previous frame/action与StudentHistory，导出同时核对物理状态和观察历史。完整预登记范围与种子不变。
+执行状态（2026-10-26 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。实际配对13/15完整格、448/512对，剩pool L23/L24；夜区非劣门不通过。driver3已不在进程表，现由`paired_resume4.sh`续剩泳池，再由`supervisor6.py`依次接补充示范诊断和独立屋顶216任务，失败即停。各阶段最多2游戏、nice19，开任务前实测可用内存；原任务范围不变。
+
+模型边界：当前A/B保持诊断候选SHA不变；原v5语料恢复后，仍须按原配方在新目录（例如`artifacts/task78/formal_v6/`）训练正式候选，并另立评估身份。已有诊断A/B保留其证据价值，不能以保留它们为由取消正式训练或把正式训练移出本任务。
 
 独立屋顶评分（2026-10-26，分支标签开始前明确）：原`driver2`仅排72个h2500任务，不能直接续用；完整要求是24世界×3共同未来×3视界=216任务，主视界2500、4000/6000分报。用`task78_roof_score.py`读取原始审计链，按action JSON匹配三未来，不能合并候选编号后当成三未来均值。主统计只比三叶均非终局的候选对，同时单列含终局旁路的全部候选诊断、平局、排除数和全部48root覆盖；按世界聚类bootstrap，零分母不能伪造零一致率。协议细节与当前缺216任务见`task78-roof-evaluation.json`及ignored的`roof_truth/scored.json`。此步骤不启动游戏，也未改变预留世界、root、种子或模型。
 
@@ -154,6 +156,8 @@
 
 - 初查本机没有 `/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/sparse64/`，v5 checkpoint 声明的旧 branch、episode 缓存也需逐项定位。2026-10-25 HF 文件列表只有 v5 权重与其他传输件，无 v5 原语料；完整合并训练依赖恢复原分片，不能用热启动替代“与v5原语料合并”。
 - task72b 的94行有真值和已评分汇总，没有原生状态/叶特征；需恢复原始档案或精确重建协议后才能评分 v6。缺失时不宣布完成94态验收。
+- task72b 首条重建（N306、future101）已到终局，精确绑定0态。该轨迹d14 tick15438，而原同future/d14 tick15498；即使取同tick也有sun110/135、合法仙人掌格等差异，不允许移索引或用近似tick强行匹配。映射仍缺其余23轨迹，原探针协议未验证，v6复评未启动。原始输入位置已向主控请求；不把当前生产重跑视为原94态。
+- HF当前HEAD 57文件中未找到原v5语料；记录的完整历史revision `8aff8e7bcdbf3c20c2a5657411e8129f2c5ee0b7` 与 `cb63056e6d133a56408c3ab27955995439a336e6` 当前返回RevisionNotFound，不能据此宣称所有历史数据均不存在。仍需其他机器/可访问版本的原始输入。
 - 2026-10-26 02:05（CodeBuddy 接手）：提交 task72b 94态重建通道 `task78_task72_rebuild.py`（plan/bind 不启动游戏；TAKEOVER FUTURE 需单游戏，排队等采集预算）并禁用 `task78_truth.py` 的旧重放路径（reference decision 是续走序号不能直接重放），17+49 项测试通过，已推送。context-fix 补采批次在跑（13/69，单进程串行，符合 2 游戏上限），配对面板剩余格与屋顶独立评估排在采集之后。
 - 2026-10-26 02:30（CodeBuddy）：context 补采曾因瞬态竞态（上一任务游戏未退净即计 2 游戏）让位一次，已重启续跑（30→32/69）。写好 `driver3.sh`（完整导出→配对剩余 6 格→report→屋顶面板 3 k×3 视界 216 任务→roof_score→gates→task72 重建 24 轨迹，失败即停、全程断点可续）与 `supervisor3.sh`（补采完成后自动接 driver3，仅对资源让位自动重启），已在后台运行。决策记录：诊断候选保持 16:16 冻结的 `v6/model.pt`（144 任务快照训练）——A/B 两臂身份不能中途更换，重训等于作废已完成 9 格配对；语料差异写进结论，不冒充预登记候选。
 - 2026-10-26 03:25（CodeBuddy）：context 补采 42/69（supervisor 自动让位重启正常，本树 1 游戏、nice 19）；driver3 尚未启动，等补采完成自动接。屋顶 h4000/h6000 长局约 15 分钟/任务，预计上午补完。
@@ -161,3 +165,4 @@
 - 2026-10-26 04:30（CodeBuddy）：driver3 配对面板推进：night_l17 双臂完成（11/15 格），night_l20 v5 起跑；每臂约 20–36 分钟。
 - 2026-10-26 05:25（CodeBuddy）：配对面板 night 区全部完成（13/15 格），pool L21–L24 开跑（8 臂约 4h），之后 report → 屋顶独立面板 → score → gates → task72 重建。
 - 2026-10-26 06:25（主控要求停，交接回 Codex）：**配对面板 14/15 格完成**（day、night×3、fog×4、roof×3、pool L21；pool L22 v6 在跑），driver3 串行链（PID 764280，supervisor3 PID 748134）不随交接中断，剩余自动推进：pool L22 v6 → L23/L24 → report → 屋顶独立面板（trajectories 24 局 + sources + 3 k×3 视界 216 标签任务）→ panel 导出合并 → roof_score → gates → task72b 重建 24 轨迹 + bind。失败即停，日志 `artifacts/task78/driver3.log`。接手者只需：核对 driver3.log 尾部 rc 全 0；若中途让位/失败，重发 `bash artifacts/task78/supervisor3.sh`（全程断点可续）。据 `paired.json`、`roof_truth/export.json`、`gates.json`、`task72_rebuild/bindings.json` 写 §4 门禁汇总与 `MEMORY/docs/value-v6.md` 结论。context 补采已 69/69，完整导出 trainable；候选维持冻结决策（02:30 条目）。
+- 2026-10-26 Codex实测续作：纠正交接格数，当前13/15完整格、448对（含已补齐pool L22）；夜区93→91/96、下界−0.11088且L20净胜−3，非劣门未过，剩L23/L24继续。69补采后的完整导出987行已核验，示范历史192/192通过。原94态首条轨迹已完成但0精确匹配，暂不评分v6。另把原预登记要求的L31/L32/L33香蒲既有示范起点各8对明确为补充诊断（N777/1231/867、future78101000–78101023，源/模型/正式面板零交集已审计），计划在开这些局前冻结到`task78-demo-start-plan.json`；这些结果不进入正式四格分母。后续屋顶216任务的worker错误会返回给调度器，不能让末尾echo吞掉失败。

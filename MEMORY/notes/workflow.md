@@ -1,6 +1,6 @@
 # 分工与 codex
 
-- **主控 2026-10-25 资源约束**：台式机内存紧张，task78 同时最多 2 个游戏进程，qc 优先；qc 占用资源时本任务让出游戏采集/评估槽位，继续离线核验。不操作 qc/cq/流水线。并发限制不改变原任务的数据、视界或验收范围。
+- **主控 2026-10-25 资源约束**：台式机内存紧张，task78 同时最多 2 个游戏进程，qc 优先；资源不足时本任务让出游戏采集/评估槽位，继续离线核验。不操作 qc/cq/流水线。并发限制不改变原任务的数据、视界或验收范围。
 - **训练队列由另一个 Agent 负责**；本 Agent：仓库体积治理、制品交付通道、跨机同步、文档与约束。
 - codex 在台式机跑：任务书 `~/codex-task.md`、日志 `~/codex-run.log`、报告 `~/codex-report*.md`。启动：
   `tmux new-session -d -s codex "cd ~/PvZ-Portable && cat ~/codex-task.md | codex exec -C ~/PvZ-Portable --dangerously-bypass-approvals-and-sandbox - > ~/codex-run.log 2>&1; echo EXIT=\$? >> ~/codex-run.log"`。

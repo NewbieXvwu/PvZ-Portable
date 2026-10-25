@@ -1,0 +1,256 @@
+{
+ "diagnostic_only": true,
+ "preregistered_gate_eligible": false,
+ "registration_timing": "after diagnostic-model training; before any supplemental diagnostic games",
+ "purpose": "Report the additionally requested existing L31/L32/L33-cattail demonstration starts, outside the formal four fog cells",
+ "pairs_per_cell": 8,
+ "total_pairs": 24,
+ "cells": [
+  {
+   "task_id": "demo_fog_31_snow_m200",
+   "task": {
+    "task_id": "demo_fog_31_snow_m200",
+    "level": 31,
+    "seeds": [
+     20261031
+    ],
+    "zombie_count_multiplier": 2.0,
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     5,
+     23,
+     17,
+     19,
+     2,
+     3
+    ],
+    "demo_start": {
+     "archive": "artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200",
+     "decisions": [
+      777,
+      706,
+      635,
+      565,
+      495,
+      424,
+      353,
+      283,
+      213,
+      142
+     ],
+     "index": 0,
+     "future_seed_start": 44000000,
+     "future_seed_count": 256
+    }
+   },
+   "demo_archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200",
+   "demo_decision": 777,
+   "future_seeds": [
+    78101000,
+    78101001,
+    78101002,
+    78101003,
+    78101004,
+    78101005,
+    78101006,
+    78101007
+   ]
+  },
+  {
+   "task_id": "demo_fog_32_snow_m200",
+   "task": {
+    "task_id": "demo_fog_32_snow_m200",
+    "level": 32,
+    "seeds": [
+     20261032
+    ],
+    "zombie_count_multiplier": 2.0,
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     3
+    ],
+    "demo_start": {
+     "archive": "artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200",
+     "decisions": [
+      1231,
+      1119,
+      1007,
+      895,
+      783,
+      672,
+      560,
+      448,
+      225
+     ],
+     "index": 0,
+     "future_seed_start": 44300000,
+     "future_seed_count": 256
+    }
+   },
+   "demo_archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200",
+   "demo_decision": 1231,
+   "future_seeds": [
+    78101008,
+    78101009,
+    78101010,
+    78101011,
+    78101012,
+    78101013,
+    78101014,
+    78101015
+   ]
+  },
+  {
+   "task_id": "demo_fog_33_cattail_snow_m200",
+   "task": {
+    "task_id": "demo_fog_33_cattail_snow_m200",
+    "level": 33,
+    "seeds": [
+     20261033
+    ],
+    "zombie_count_multiplier": 2.0,
+    "deck": [
+     9,
+     8,
+     16,
+     43,
+     10,
+     31,
+     3,
+     17,
+     19,
+     5
+    ],
+    "demo_start": {
+     "archive": "artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200",
+     "decisions": [
+      867,
+      788,
+      709,
+      631,
+      552,
+      473,
+      395,
+      316
+     ],
+     "index": 0,
+     "future_seed_start": 44200000,
+     "future_seed_count": 256
+    }
+   },
+   "demo_archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200",
+   "demo_decision": 867,
+   "future_seeds": [
+    78101016,
+    78101017,
+    78101018,
+    78101019,
+    78101020,
+    78101021,
+    78101022,
+    78101023
+   ]
+  }
+ ],
+ "models": {
+  "v5": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "v6": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/v6/model.pt",
+   "sha256": "4df43aea69e22098d555219c2a79892e8332cdf4cefdf18da3e0f65c0421e4cb"
+  },
+  "student": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+   "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+  },
+  "static": {
+   "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  }
+ },
+ "executable": {
+  "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/build/pvz-portable",
+  "sha256": "49783a7024e04e2223513a54a48554de6275207700a30675d2bbeca04b3b9d2c"
+ },
+ "control_args": [
+  "--workers",
+  "2",
+  "--dagger-beta",
+  "1",
+  "--samples",
+  "3",
+  "--verify-samples",
+  "9",
+  "--student-candidates",
+  "2",
+  "--horizon",
+  "2500",
+  "--min-gap",
+  "300",
+  "--per-card",
+  "1",
+  "--halving",
+  "--rollout-sim-skip",
+  "61"
+ ],
+ "seed_audit": {
+  "selected_future_range": [
+   78101000,
+   78101024
+  ],
+  "formal_panel_overlap": 0,
+  "new_training_future_overlap": 0,
+  "frozen_value_models_seen_seed_or_future_overlap": 0
+ },
+ "sealed_files": {
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_common.py": "b4e7d2295d72d88246cf940062772d17a5ef0a58e9d89c705a7f974e33fa5445",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_compat.py": "430aa40f7bfa1873a5858ab7fc7163ea6cb93c65676f592bcbec200c4919a659",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_cpu_usage.py": "8040f7438d740c2f6e757df881646da1ebbbae9f4bc1cf9027c39a14705908bb",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_env.py": "735d012e46f45641b0f33a861054b7a8ad08e47b975e77e574e6ded9fa185821",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_episode_stats.py": "717f3b20e7e6d7d80ce36d74f52844b9a225ad9a6459bd2cb35c43d65b83b8d8",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_event_env.py": "027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_fog.py": "22056d232519da1376f4cd9a689fe8d0a801b2a672a10668370964cc32107df0",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_frame_store.py": "e32cc260b9e0251539dadce75b4ea054d40c9711c9a241b2bc58d6e72ee7c5e4",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_metrics.py": "c41dc793c8dbb99e9c564ce6d350c8df8636eb7076b8d40e951f52f9e9cfdfaa",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_promotion.py": "bece93c177f7e94cb2665bf188b997c31879e0c1d4ac4483ab32916c4059cc71",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_recipe.py": "00d365caabbff518703ecdf669420afd56943b9d92c91a729fed772634a45f53",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_student_observation.py": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_training_pack.py": "f9a0e8402dfbc63ca5f8139660fd765a5fdf80757743f3e375526fb183a18991",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_training_rows.py": "5f6cc2514a8e72e341e44e8c06166a7e680295b3a1d46c245a381ab26707b6fe",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_value_net.py": "32d015ce28466cab7b71ecaecc3a5c3fadf8d98260740e49d2d3a4a5107cb9e7",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/python/pvz_wait_events.py": "385efae1b15f775de84f5fc4c8899836a37ca1c93b81f807a5d9ba6c6fc1aa21",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/pvz_tasks.py": "61279b49f572a4b1232d4b39a6b7349a36385e2b8e3e7081d61826c1096519bf",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/render_episode.py": "8b5fd19d8a94ae339f6c0c7f9e367255e1521faa085fb919ede2eab8332f9311",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/search_play.py": "98193f51ad5a1960bcf9c47f1492bd654419b25648f080a11264652f10a1d45a",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_ab.py": "a591f115f579b30a88a80551205e7bcad99d84f982d333fecc99c6b83ba2dbd8",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/demo_start_diag.py": "4120c3cdb7364f38b73e98b01f95543dcd297c901529bfcbe2a46428b37046af",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200/meta.json": "3ad9ecad83abb1e4a0a07067b10aab9f585074e71036366304883ed2c5d5f9dd",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200/frames.jsonl": "0342e4bae283b693215fb2000c1b71d05268b1b8da2a5bed136e594b608d2038",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl": "89d950cd83176eb69fb31284e48f763e737ae9da0e27f4afd5222d87476f1f08",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200/meta.json": "75ced7b79ae0e08b58897945a95f5e672796d845b867771328403625ee0ee464",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200/frames.jsonl": "d7ab64227976bc79d0b634af5f23919b7d2cf62d45cdb3f5e22f9b468ab8d3d0",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261032/demo_fog_32_snow_m200/ticks.jsonl": "5ce6cab7d34bed4cb8dda59d405afc9fdf8e222954256d87df56421a7ebcd0b9",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200/meta.json": "b8c22ad15a5de620b46a4f873dd2020d29f71bf6ee5ff07edffbee467be8b5f9",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200/frames.jsonl": "d23d645dce99a003179569c2644c0b82a08963b4eb3350542eb2d4a77ae06e7c",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/seed_20261033/demo_fog_33_cattail_snow_m200/ticks.jsonl": "bf0ef9aa52410fd0e001666393770836cd3161a3f5c901e1d8e8c4ca93d6f2a6",
+  "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/v6/model.pt": "4df43aea69e22098d555219c2a79892e8332cdf4cefdf18da3e0f65c0421e4cb",
+  "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+  "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/build/pvz-portable": "49783a7024e04e2223513a54a48554de6275207700a30675d2bbeca04b3b9d2c"
+ }
+}
