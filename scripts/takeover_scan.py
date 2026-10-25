@@ -164,7 +164,8 @@ def cmd_run(args) -> None:
     for entry in entries:
         futures = list(entry['future_seeds'])[:args.futures]
         all_points = [int(d) for d in entry['decisions']]
-        points = all_points if not args.decisions else [int(d) for d in args.decisions.split(',')]
+        wanted = [int(d) for d in args.decisions.split(',')] if args.decisions else all_points
+        points = [d for d in wanted if d in all_points]   # 各存档网格不同，取交集
         jobs = job_map(entry, points, futures)
         points_path = args.out / 'results'
         store = {}

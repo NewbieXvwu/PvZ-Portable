@@ -44,6 +44,13 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
 
 （进行中，本节跑完后补数）
 
-## 端到端
+## 端到端（task89 包 2 份，独立 dest/账本/临时清单，未来块 90M 起）
 
-（进行中，本节跑完后补）
+- **import**：全包 102 行走完，12 份通关入 `artifacts/e2e/dest/`，扫描清单 288 组、独立账本
+  `artifacts/e2e/scan_seed_ledger.json`（90,000,000 起、每份 1000 步长 96），生产清单零改动。
+- **run**：2 份 × 2 点 × 2 未来 × 两臂（`--decisions 1,906,996,1089` 按各存档网格取交集）。
+- **register**（临时清单副本 + 临时 DESIGN/测试/账本）：两族写入 `demo_start`
+  （base 被人类示范占用 → 正确回退 `_llm`；阶梯 [996,906]（d906 1/2 恰过线）与 [1089]，
+  种子块 86M/87M）；`update_manifest` / `update_test_expectations`（期望集合插入）/
+  `update_design`（§14.35 自动编号）产物逐项核对通过；登记账本两条 256 块记录正确。
+- run 的 `--decisions` 现按每份存档的网格取交集（否则第二份会 KeyError）。
