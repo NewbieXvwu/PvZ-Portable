@@ -36,3 +36,6 @@
 ## 结果
 
 ## 问题
+
+## 主控补充（2026-10-26 00:35）
+测试输入已到台式机：`/home/newbiexvwu/pvz-logs/task89/llm_free_out_numeric.zip`（SHA256 前缀 `d199f511…`）。它是免费模型交回的原样目录，只保留了 json / jsonl / md（402 个文件），去掉了 LLM 写的 py 与运行日志。12 份通关存档的清单见其中的 `report.md`；Mac 上 task87 的入库结果可作对照（`origin/demo` 的 `artifacts/llm_demo` 不在 git 里，比较 task87 文档的表即可）。HF 上的中转文件已删。
