@@ -149,10 +149,11 @@ Gar1 = 1 只巨人，Gar1 Imp2 = 1 只巨人 + 2 只小鬼；格内按从左到�
 
 ## 问题
 
+- **接手验收仍缺环境证据**（2026-10-25）：重新检查后，PATH 中的 `docker` 是 Docker Desktop 的 WSL 占位脚本，执行时提示本发行版未启用集成；`/var/run/docker.sock` 与当前用户的 rootless 套接字均不存在。Windows `docker.exe version` 也以 `UtilAcceptVsock: accept4 failed 110` 退出。因此 Docker 的 Ubuntu 22.04 编译/断网测试、Python 3.11 slim 断网测试及相应镜像清理记录尚未完成；已有 `unshare -rn` 结果只证明宿主环境断网运行，不能冒充这两种容器的结果。已请求补充可运行 Docker 的环境及 Mac 验证入口。上述缺项未验收前，整体目标保持 active；正式包指纹和已推送代码不变。
 - **Docker 不可用**（Docker Desktop 未对本 WSL 发行版开集成）。§E 要求的 `docker run --network none ubuntu:22.04` 没法照做，改用两条等价性够用的路径：① `unshare -n` 断网跑；② 早先试过 ubuntu-base-22.04.5 rootfs chroot，但 jammy 的 GCC 11 编不过引擎（`#include <format>` 要 GCC 13+），所以"在 22.04 里编"这件事本身在台式机上做不出来 —— 这正是探路包要在目标沙箱里测的。
 - **截图（§C）跑不通，已按主控意见放弃**：`LawnApp::EnvironmentScreenshot` 要求非 headless（有窗口）并从 GL framebuffer 读回。实测 `SDL_VIDEODRIVER=dummy` 下引擎能起来、RESET_V2 正常，但 `SCREENSHOT` 返回 `ok:false`（静态 SDL2 只编了 dummy 视频后端，没有 GL）。要做成需要一套 EGL/Mesa 软件 GL + 带该后端的 SDL 构建，成本高。主控 18:30 决定放弃（§G.3），PROMPT 里保留"本会话没有截图"，只用文字观测。
 - **清理（§E）**：本机没有 Docker（`docker` 命令不存在，`docker images` 无法输出），所以没有容器/镜像可删；已删 `~/llmplay-build/hostbuild`（旧构建树 81 MB）与 `/tmp` 下全部自测目录。`~/llmplay-build/rootfs`（2.4 GB，早先 22.04 chroot 用，文件属 root）已由主控于 18:30 代删。**教训**：chroot 用完必须先 `umount` `/proc`、`/sys`、`/dev`、`src` 这些绑定挂载，否则递归删除会穿过 `src` 删到整块数据盘；主控这次是先确认没有挂载点残留、再用 `rm --one-file-system` 删的。
-- **Mac 侧没验**：这台机器不是 Mac，§2 的"Mac 上重放 4 局"只能由用户在 Mac 上跑（二进制是全静态链接，理论上不依赖目标机 glibc）。
+- **Mac 侧没验**：这台机器不是 Mac；接手复核时本机 SSH 配置只有 GitHub 入口，尚无 Mac 主机名、用户名、端口及可用验证环境。§2 的“Mac 上重放 4 局”仍需可访问的 Mac 或用户回传实际验证记录。Linux 静态二进制的可移植性不能替代 Mac 侧实测。
 - **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）；`STATE_HASH` 命令与 reset 响应里的哈希也对不上。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理：`executable_sha256` 写成自解释标记，让官方 verify 走 tick/ok/终局的路径）。**推测**是 SaveGame V4 快照里混进了地址或未初始化字段；主控 18:30 已记录、另派人查，本任务不修。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
