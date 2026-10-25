@@ -14,7 +14,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-from takeover_scan import AdaptiveScan, build_ladder, update_manifest, update_test_expectations
+from takeover_scan import (AdaptiveScan, build_ladder, resolve_target_task, update_manifest,
+                           update_test_expectations)
 
 
 def grid12() -> list:
@@ -157,6 +158,40 @@ class RegisterHelpersTest(unittest.TestCase):
         self.assertTrue(update_test_expectations(path, ['c']))
         self.assertIn("'c',", path.read_text(encoding='utf-8'))
         self.assertFalse(update_test_expectations(path, ['c']))
+
+
+class ResolveTargetTaskTest(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.path = self.tmp / 'manifest.json'
+        self.path.write_text(json.dumps({'tasks': [
+            {'task_id': 'base', 'demo_start': {'archive': 'artifacts/human_demo/raw/x'}},
+            {'task_id': 'base_llm', 'demo_start': {'archive': 'artifacts/llm_demo/raw/x'}},
+            {'task_id': 'fresh', 'seeds': [1]},
+        ]}), encoding='utf-8')
+
+    def test_archive_match_wins(self):
+        task_id, existing = resolve_target_task(
+            dict(task_id='base', archive='artifacts/llm_demo/raw/x'), self.path)
+        self.assertEqual(task_id, 'base_llm')
+        self.assertEqual(existing['archive'], 'artifacts/llm_demo/raw/x')
+
+    def test_base_without_demo_start_is_used(self):
+        task_id, existing = resolve_target_task(
+            dict(task_id='fresh', archive='artifacts/llm_demo/raw/y'), self.path)
+        self.assertEqual(task_id, 'fresh')
+        self.assertIsNone(existing)
+
+    def test_conflict_raises(self):
+        with self.assertRaises(ValueError):
+            resolve_target_task(
+                dict(task_id='base', archive='artifacts/llm_demo/raw/z'), self.path)
+
+    def test_unknown_task_raises(self):
+        with self.assertRaises(KeyError):
+            resolve_target_task(
+                dict(task_id='nope', archive='artifacts/llm_demo/raw/w'), self.path)
 
 
 if __name__ == '__main__':

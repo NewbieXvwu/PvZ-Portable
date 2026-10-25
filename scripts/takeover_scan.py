@@ -446,13 +446,46 @@ def update_design(design_path: Path, lines: list) -> bool:
     return True
 
 
+def resolve_target_task(document: dict, manifest_path: Path) -> tuple[str, dict | None]:
+    """结果该登记到哪个 task_id；返回 (族名, 既有 demo_start 或 None)。
+
+    task87 先例：本机种子的 LLM 局与人类示范共用 base task_id，登记为 ``_llm`` 后缀族。
+    按 archive 匹配已有 demo_start 最可靠；base 名已被人类示范占用时用 ``_llm``。
+    """
+    document = dict(document)
+    tasks = json.loads(manifest_path.read_text(encoding='utf-8')).get('tasks') or []
+    for task in tasks:
+        if (task.get('demo_start') or {}).get('archive') == document['archive']:
+            return task['task_id'], task['demo_start']
+    base = document['task_id']
+    candidates = [base, f'{base}_llm']
+    for candidate in candidates:
+        for task in tasks:
+            if task['task_id'] != candidate:
+                continue
+            if not task.get('demo_start'):
+                return candidate, None
+            raise ValueError(
+                f'{base}: 族 {candidate} 已被存档 {(task["demo_start"]["archive"])} 占用，'
+                f'需人工指定登记族')
+    raise KeyError(f'{base}: manifest 里没有可登记的族（试过 {candidates}）')
+
+
 def cmd_register(args) -> None:
     results = load_results(args.results)
     ledger = RegisterLedger(args.ledger, args.scan_ledger)
     manifest_path = args.manifest
     registered, skipped, report = [], [], []
     for document in results:
-        task_id = document['task_id']
+        base_id = document['task_id']
+        try:
+            task_id, existing = resolve_target_task(document, manifest_path)
+        except (KeyError, ValueError) as exc:
+            report.append(dict(task_id=base_id, seed=document['seed'], registered=False,
+                               reason=str(exc)))
+            skipped.append(base_id)
+            print(f'{base_id} s{document["seed"]}: 跳过 —— {exc}')
+            continue
         points = {int(d): data.get('teacher') for d, data in (document.get('points') or {}).items()
                   if data and data.get('teacher')}
         ladder = build_ladder(points)
@@ -461,6 +494,15 @@ def cmd_register(args) -> None:
                                registered=False, reason='老师全程 <50%'))
             skipped.append(task_id)
             print(f'{task_id} s{document["seed"]}: 老师 {len(points)} 点全程 <50%，不登记')
+            continue
+        if existing:
+            # 既有格不覆盖：已登记的阶梯来自全量扫描（task87 等），这里只核对与报告。
+            same = existing.get('decisions') == ladder['ladder']
+            print(f'{task_id}: 已有起点格（{len(existing.get("decisions") or [])} 档），'
+                  f'自适应阶梯 {ladder["ladder"]} —— {"一致" if same else "不一致（保留既有，见报告）"}')
+            report.append(dict(task_id=task_id, seed=document['seed'], registered=False,
+                               reason='已有起点格，保留既有', existing_decisions=existing.get('decisions'),
+                               adaptive_ladder=ladder['ladder'], l50=ladder['l50']))
             continue
         spec = dict(archive=document['archive'],
                     decisions=ladder['ladder'], index=0,
@@ -472,9 +514,8 @@ def cmd_register(args) -> None:
         else:
             start = ledger.allocate(args.register_base)
             spec['future_seed_start'] = start
-            changed = update_manifest(manifest_path, task_id, spec)
-            print(f'{task_id}: 阶梯 {ladder["ladder"]}（顶档 {ladder["top"]}），种子块 {start}–{start + REGISTER_BLOCK - 1}'
-                  f'{"，已写入清单" if changed else "，清单已是该阶梯"}')
+            update_manifest(manifest_path, task_id, spec)
+            print(f'{task_id}: 阶梯 {ladder["ladder"]}（顶档 {ladder["top"]}），种子块 {start}–{start + REGISTER_BLOCK - 1}，已写入清单')
             registered.append((task_id, spec, ladder))
         report.append(dict(task_id=task_id, seed=document['seed'], registered=bool(not args.dry_run),
                            ladder=ladder['ladder'], top=ladder['top'], top_is_full=ladder['top_is_full'],
