@@ -908,10 +908,15 @@ class DemoStartCellsTest(unittest.TestCase):
         if not all((ROOT / archive).is_dir() for archive in archives):
             self.skipTest('user demo archives are not in git; present only where they were recorded/fetched')
         cells, _ = load_demo_start_cells(manifest)
-        # task70 B6: the x-ray start cells are retired; the _hv2 family (human_v2 observation,
-        # same archives / ladders / future seed blocks) replaces them.
+        # task70 B6: fog start cells use the _hv2 family (human_v2 observation, same archives /
+        # ladders / future seed blocks); roof start cells have no fog and keep the base task id.
         self.assertEqual(set(cells), {'demo_fog_31_snow_m200_hv2', 'demo_fog_32_snow_m200_hv2',
-                                      'demo_fog_33_cactus_snow_m200_hv2', 'demo_fog_33_cattail_snow_m200_hv2'})
+                                      'demo_fog_33_cactus_snow_m200_hv2', 'demo_fog_33_cattail_snow_m200_hv2',
+                                      'demo_fog_34_cactus_snow_m200_hv2', 'demo_fog_39_cactus_snow_m200_hv2',
+                                      'demo_roof_42_melon_m200', 'demo_roof_43_melon_m200',
+                                      'demo_roof_44_melon_m200', 'demo_roof_42_gloommelon_m200',
+                                      'demo_roof_49_doom_m200', 'demo_roof_48_doom_m200',
+                                      'demo_roof_46_doom_m200'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
