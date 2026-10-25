@@ -44,6 +44,14 @@ task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stag
 - 2026-10-25：结论层 `state-hash-determinism.md` 与 `state-hash-determinism-results.json` 提交并推送。交接复核：最终构建 8 份整局 trace 的 SHA256 全同（`5fb2c460…`）；四份示范修复后各 4 进程 trace 全同、修复前各 2 进程全异；回归测试从仓库根目录运行通过（测试自补 `python/` 与 `scripts/` 路径），协议 35 项 OK。Mac 探针脚本 `scripts/state_hash_mac_probe.sh` 交主控，台式机未执行。
 - 2026-10-25：接手复核（Claude）：工作树干净、HEAD 与 `origin/hashdet` 一致；最终二进制 sha256 `5e890b3a…` 与证据一致；`test_state_hash_determinism` 8 个独立进程回归通过（3.6 s），协议测试 35 项 OK；`artifacts/`、`logs/` 的 `check-ignore --no-index` 为空。Mac 侧仍待主控执行 `scripts/state_hash_mac_probe.sh`。
 
+## 完成核对
+
+1. 复现：deploy4 与 task81 静态引擎各 8 个独立进程 reset（分别 3 / 5 种开局哈希），再各跑同一示范前 2000 操作；两引擎首差都在 reset（操作 0）。Mac 侧由 `scripts/state_hash_mac_probe.sh` 交接，台式机未执行。
+2. 定位：Save4 按 chunk/成员分段并比对原始字节，三处未初始化成员；Memcheck `--track-origins` 指向 `Board` 创建 `Challenge` 的堆分配。非指针（残值为整数/浮点残值）、非时钟或种子（reset 重播种后相关分段一致）；静态链接/mimalloc 只改变残值出现频率。
+3. 影响：deploy4 8 局 + 静态 8 局共 16 局，827 个决策点 privileged 状态、事件与终局全同；最终构建另做 8 进程逐操作整局（39590 操作），8 份 trace 的 SHA256 全同。
+4. 修复：三处构造初始化（`5e7c90c7`、`e8ba7716`）；四份旧示范跨修复逐边界配对，行为会变的已测存档为空；未加开关、未改生产默认。
+5. 结论：`MEMORY/docs/state-hash-determinism.md` 与 `state-hash-determinism-results.json` 已提交并推送；Mac 8 次 reset 待主控执行。
+
 ## 问题
 
 - 原始存档来自不同引擎，原有跨二进制回放本就采用 tick/ok/outcome 校验。本任务另外比较完整 privileged 状态（含隐藏僵尸、RNG）和事件；不把旧存档的跨版本哈希变化误报为模拟变化。

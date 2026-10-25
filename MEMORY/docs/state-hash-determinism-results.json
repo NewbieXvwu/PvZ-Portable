@@ -725,5 +725,30 @@
       ]
     }
   },
-  "task": "task82"
+  "task": "task82",
+  "requirements": {
+    "1_reproduce": [
+      "reproduction_prefix_2000.deploy4",
+      "reproduction_prefix_2000.static",
+      "mac_handoff"
+    ],
+    "2_locate": [
+      "fixes",
+      "memcheck",
+      "field_encoding"
+    ],
+    "3_behavior_16_games": [
+      "full_games.deploy4_decisions_8",
+      "full_games.static_decisions_8",
+      "full_games.final_every_operation_8"
+    ],
+    "4_fix_and_old_archives": [
+      "fixes",
+      "pairing"
+    ],
+    "5_conclusion": [
+      "conclusion",
+      "hash_schema"
+    ]
+  }
 }
