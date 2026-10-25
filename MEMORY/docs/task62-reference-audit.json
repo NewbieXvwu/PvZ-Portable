@@ -5849,7 +5849,7 @@
   "deleted_c6_paths_still_missing": 18
  },
  "inventory_file": "task62-reference-audit.tsv",
- "inventory_sha256": "d70a144440a3f483be0324296fd0d192ad19ceb95dcd2dd5dbba08f28eddda48",
+ "inventory_sha256": "c510c84fcd4801dc99603e6307dba6a3375ce885c347e93dfc23da147a79b210",
  "audit_command": [
   "python3",
   "-B",
