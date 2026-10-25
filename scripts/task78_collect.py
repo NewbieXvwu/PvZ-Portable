@@ -1,7 +1,7 @@
 """Label one frozen qc archive at one horizon, using task43's audited teacher channel.
 
 Usage: absolute script path ARCHIVE_INDEX HORIZON. Each process owns one game;
-the caller may start at most four. No production options or defaults are added.
+the caller may start at most two (the amended task cap). No production defaults change.
 """
 from __future__ import annotations
 

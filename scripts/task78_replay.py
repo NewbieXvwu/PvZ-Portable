@@ -98,7 +98,7 @@ def main():
     results = []
     started = time.time()
     executable_sha = sha(executable)
-    with mp.get_context('fork').Pool(4) as pool:
+    with mp.get_context('fork').Pool(2) as pool:
         for result in pool.imap_unordered(verify_job, [(row, executable) for row in rows]):
             if sha(executable) != executable_sha:
                 raise ValueError('engine changed during root verification')
@@ -106,7 +106,7 @@ def main():
             print(json.dumps(result), flush=True)
             target = output
             target.write_text(json.dumps(dict(source_manifest_sha256=sha(manifest),
-                executable=str(executable), executable_sha256=executable_sha, workers=4,
+                executable=str(executable), executable_sha256=executable_sha, workers=2,
                 complete=len(results)==len(rows),
                 passed=len(results)==len(rows) and all(r['status']=='verified' for r in results),
                 wall_seconds=time.time()-started, results=results), indent=1)+'\n')

@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 from pathlib import Path
 import sys
 import time
@@ -139,17 +140,19 @@ def main():
             args.old_data, held)
         sources['old_decision'] = Rows(old_boards, old_scalars, old_won, old_seeds, old_stop)
     ep = load_episodes(args.episodes)
-    sources['old_episode'] = Rows(*ep)
-    dropped = [] if old_shards else ['old_decision']
-    for name in list(sources):
+    sources['old_episode'] = Rows(*ep[:5])
+    if not old_shards:
+        raise ValueError('old decision corpus is required; refusing to train a different mixture')
+    for name in sources:
         if len(sources[name].fit) == 0 or len(sources[name].val) == 0:
-            # A cohort that produced no non-terminal row cannot carry its pre-registered
-            # share. Drop it and renormalise the remaining weights; the checkpoint records it.
-            dropped.append(name)
-            del sources[name]
-    if 'fog' not in sources or 'roof' not in sources:
-        print(f'warning: new-region sources present: {sorted(sources)}; dropped {dropped}', flush=True)
+            raise ValueError(f'{name}: fit and validation rows are both required; refusing to drop a source')
+    dropped = []
 
+    # The process, including CUDA allocation and validation, cannot outlive the
+    # user's one-hour GPU limit. SIGALRM terminates it even if an epoch stalls.
+    if args.device.startswith('cuda'):
+        available = require_memory()
+        signal.alarm(3600)
     model = load_value_net(args.init).to(args.device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=args.lr, weight_decay=1e-4)
     validation = {name: rng.choice(src.val, min(len(src.val), 8192), replace=False)
@@ -181,7 +184,8 @@ def main():
         print(json.dumps(entry), flush=True)
         if total < best - args.min_improvement:
             best, best_epoch, stale = total, epoch, 0
-            used = sorted(set().union(*(src.seeds for src in sources.values())))
+            initial = torch.load(args.init, map_location='cpu', weights_only=False)
+            used = sorted(set(initial.get('trained_on', [])) | set().union(*(src.seeds for src in sources.values())))
             torch.save(dict(
                 state_dict={k: v.detach().cpu().clone() for k, v in model.state_dict().items()},
                 encoder=2, width=model.conv[0].out_channels, context=True,
@@ -203,7 +207,9 @@ def main():
             if stale >= args.patience:
                 print(f'early stop at epoch {epoch}', flush=True)
                 break
-    (out/'train_log.json').write_text(json.dumps(dict(history=history, best_epoch=best_epoch,
+    if args.device.startswith('cuda'):
+        signal.alarm(0)
+    (out/'train_log.json').write_text(json.dumps(dict(complete=True, history=history, best_epoch=best_epoch,
         best_validation=best, mix=MIX, dropped_sources=dropped, wall_seconds=time.time()-started,
         sources={name: dict(rows=len(src.fit)+len(src.val), fit=len(src.fit), val=len(src.val))
                  for name, src in sources.items()}), indent=1)+'\n')

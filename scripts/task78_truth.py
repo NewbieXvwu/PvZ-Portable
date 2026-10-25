@@ -6,7 +6,7 @@ script replays the demo archive to the same decision, checks the tick identity, 
 the teacher search with each arm. Only the leaf value net changes; candidates and the common
 future schedule are the search's own, so the arms are paired on identical states.
 
-Workers own one game each; the caller starts at most four.
+Workers own one game each; the task's amended cap is two.
 """
 from __future__ import annotations
 
@@ -127,18 +127,27 @@ def agreement(rows, arm):
 
 
 def cluster_bootstrap(rows, arms, seed=780, draws=10000):
-    """Paired improvement in agreement, resampling independent worlds (task+decision)."""
+    """Resample whole future trajectories, keeping decisions from a world together.
+
+    The original rows omit the takeover point. Grouping all occurrences of the same
+    task/future together is conservative; decisions are never independent clusters.
+    """
     import numpy as np
     groups = {}
     for row in rows:
         if not row.get('truth_pair'):
             continue
-        groups.setdefault((row['task'], row['decision']), []).append(row)
+        groups.setdefault((row['task'], row['seed']), []).append(row)
     keys = sorted(groups)
     per_world = []
     for key in keys:
         world = groups[key]
         per_world.append([agreement(world, arm) for arm in arms])
+    if not per_world:
+        return dict(draws=0, worlds=0, seed=seed, lower=None, upper=None,
+                    status='insufficient_evidence', reason='no truth pairs meet the preregistered gap')
+    if any(a['pairs'] != b['pairs'] for a,b in per_world):
+        raise ValueError('arms do not cover the same terminal-truth pairs')
     rng = np.random.default_rng(seed)
     deltas = []
     for _ in range(draws):
@@ -154,11 +163,20 @@ def cluster_bootstrap(rows, arms, seed=780, draws=10000):
 
 def report(path, arms):
     document = json.loads(Path(path).read_text())
+    if document.get('complete') is not True or document.get('passed') is not True:
+        raise ValueError('all frozen truth-state jobs must finish successfully before reporting')
     rows = [row for result in document['results'] if result['status'] == 'ok' for row in result['rows']]
+    frozen = [json.loads(line) for line in
+              (ROOT/'MEMORY/docs/task72b-probe-rows.jsonl').read_text().splitlines() if line.strip()]
+    identity = lambda r: (r['task'], r['seed'], r['decision'], r['tick'])
+    if len(rows) != len(frozen) or {identity(r) for r in rows} != {identity(r) for r in frozen}:
+        raise ValueError('truth report must cover all 94 original state identities exactly once')
     summary = {arm: agreement(rows, arm) for arm in arms}
     boot = cluster_bootstrap(rows, list(arms))
+    rates = [summary[name]['rate'] for name in arms]
     out = dict(horizon=document['horizon'], arms=summary, bootstrap=boot,
-               improvement=summary[list(arms)[1]]['rate'] - summary[list(arms)[0]]['rate'])
+               improvement=rates[1]-rates[0] if all(v is not None for v in rates) else None,
+               status='scored' if all(v is not None for v in rates) else 'insufficient_evidence')
     Path(path).with_name(f"agreement_h{document['horizon']}.json").write_text(json.dumps(out, indent=1)+'\n')
     print(json.dumps(out, indent=1))
 
@@ -170,8 +188,10 @@ def main():
     parser.add_argument('--arms', default='v5=/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt,'
                                          f'v6={ROOT}/artifacts/task78/v6/model.pt')
     parser.add_argument('--out', default=str(ROOT/'artifacts/task78/truth'))
-    parser.add_argument('--workers', type=int, default=4)
+    parser.add_argument('--workers', type=int, default=2)
     args = parser.parse_args()
+    if not 1 <= args.workers <= 2:
+        parser.error('task78 currently permits at most two game processes')
     arms = dict(spec.split('=', 1) for spec in args.arms.split(','))
     if args.report:
         return report(Path(args.out)/f"h{args.horizon}.json", arms)

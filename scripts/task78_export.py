@@ -61,40 +61,124 @@ def stop_set(archives, old):
     return flags, added
 
 
-def shard(index, horizon, row, stop, output):
+def collection_horizons(row, old=False):
+    """Whole-cohort resource amendments recorded before the affected collection."""
+    return (2500, 4000, 6000) if not old and row['group'] == 'fog_l31_human' else (2500,)
+
+
+def audit_labels(index, horizon, row, manifest, replay):
+    """Recompute coverage/identity from raw labels before trusting complete.json."""
+    from value_teacher_feasibility import group_summary
+    from value_teacher_feasibility_report import validate_income
+    _, labels = paths(manifest)
+    directory = labels/f'archive_{index:02d}/h{horizon}'
+    complete_path = directory/'complete.json'
+    if not complete_path.is_file():
+        raise ValueError(f'incomplete labels: {directory}')
+    complete = json.loads(complete_path.read_text())
+    identity = complete['identity']
+    expected = dict(source_manifest_sha256=sha(manifest), source=row, horizon=horizon,
+                    executable_sha256=replay['executable_sha256'])
+    for name, value in expected.items():
+        if identity.get(name) != value:
+            raise ValueError(f'{directory}: wrong {name}')
+    for name in ('teacher_source', 'label_channel'):
+        filename = 'search_play.py' if name == 'teacher_source' else 'value_teacher_feasibility.py'
+        if identity[name+'_sha256'] != sha(ROOT/'scripts'/filename):
+            raise ValueError(f'{directory}: changed {name}')
+    if set(identity['models']) != {'value', 'rollout_policy', 'static_value'}:
+        raise ValueError(f'{directory}: missing frozen model identities')
+    for name, value in identity['models'].items():
+        if sha(value['path']) != value['sha256']:
+            raise ValueError(f'{directory}: changed model {name}')
+    if sha(row['frames_path']) != row['frames_sha256'] or sha(Path(row['archive'])/'meta.json') != row['meta_sha256']:
+        raise ValueError(f'{directory}: source archive changed')
+    expected_roots = {r['frame']: r for r in row['roots']}
+    root_dirs = {int(p.name[5:]): p for p in directory.glob('root_*') if p.is_dir()}
+    summaries = complete['roots']
+    if (len(summaries) != len(expected_roots) or {r['frame'] for r in summaries} != set(expected_roots)
+            or set(root_dirs) != set(expected_roots)):
+        raise ValueError(f'{directory}: root coverage differs from source manifest')
+    verified = next(r for r in replay['results'] if r['archive'] == row['archive'])
+    verified_roots = {r['frame']: r for r in verified['roots']}
+    artifacts = {str(complete_path): sha(complete_path)}
+    output = []
+    for frame, root_dir in sorted(root_dirs.items()):
+        root_path = root_dir/'root.json'
+        root = json.loads(root_path.read_text())
+        original = expected_roots[frame]
+        if (root['root_frame']['tick'], root['root_frame']['wave']) != (original['tick'], original['wave']):
+            raise ValueError(f'{root_dir}: root tick/wave differs')
+        if root['root_state_sha256'] != verified_roots[frame]['engine_sha256']:
+            raise ValueError(f'{root_dir}: root engine state differs from replay')
+        validate_income(root, root['root_frame']['tick'])
+        records = [json.loads(p.read_text()) for p in sorted(root_dir.glob('candidate_[0-9]*.json'))]
+        count = len(root['candidates'])
+        if len(records) != count or {r['candidate'] for r in records} != set(range(count)):
+            raise ValueError(f'{root_dir}: candidate coverage differs')
+        for record in records:
+            candidate = record['candidate']
+            outcome = record['outcome']
+            if (record['action'] != root['candidates'][candidate]
+                    or record['common_future'] != root['common_future']
+                    or record['continuation_seed_base'] != root['decision_seed']+5000):
+                raise ValueError(f'{root_dir}: candidate identity differs')
+            if (outcome.get('terminal') is not True or type(outcome.get('won')) is not bool
+                    or outcome['result'] not in (1, 2) or outcome['won'] != (outcome['result'] == 1)):
+                raise ValueError(f'{root_dir}: invalid terminal truth')
+            checks = record['history_checks']
+            required = ('frame', 'income', 'income_start')
+            if not record['leaf_frame']['terminal']:
+                required += ('engine_state',)
+            if any(checks.get(k) is not True for k in required):
+                raise ValueError(f'{root_dir}: incomplete history/leaf validation')
+            validate_income(record, record['leaf_frame']['tick'])
+            trace = root_dir/f'candidate_{candidate}_teacher.jsonl'
+            actions = [json.loads(line) for line in trace.read_text().splitlines()]
+            if [a['decision'] for a in actions] != list(range(outcome['decisions'])):
+                raise ValueError(f'{root_dir}: incomplete teacher action trace')
+            if (any(b['tick'] < a['tick'] for a,b in zip(actions, actions[1:]))
+                    or actions and (actions[0]['tick'] < record['leaf_frame']['tick']
+                                    or actions[-1]['tick'] > outcome['tick'])):
+                raise ValueError(f'{root_dir}: invalid teacher trace timeline')
+            artifacts[str(trace)] = sha(trace)
+            label = root_dir/f'candidate_{candidate}.json'
+            artifacts[str(label)] = sha(label)
+            output.append((frame, root, record))
+        recomputed = group_summary(records)
+        saved = json.loads((root_dir/'summary.json').read_text())
+        if any(saved.get(k) != v for k,v in recomputed.items()):
+            raise ValueError(f'{root_dir}: raw labels and summary disagree')
+        artifacts[str(root_path)] = sha(root_path)
+    return output, artifacts
+
+
+def shard(index, horizon, row, stop, output, manifest, replay):
     import torch
     from pvz_value_net import encode_frame
-    _, labels = paths(ROOT/'artifacts/task78/sources.json')
-    directory = labels/f'archive_{index:02d}/h{horizon}'
-    if not (directory/'complete.json').exists():
-        raise ValueError(f'incomplete labels: {directory}')
+    records, provenance = audit_labels(index, horizon, row, manifest, replay)
     boards, scalars, legacy, won, positions, candidates, packets = [], [], [], [], [], [], []
     terminal = 0
-    for root in sorted(directory.glob('root_*')):
-        root_record = json.loads((root/'root.json').read_text())
+    for position, root_record, record in records:
         context = torch.tensor(root_record['context'], dtype=torch.float32)
-        position = int(root.name.split('_')[1])
-        for path in sorted(root.glob('candidate_[0-9]*.json')):
-            record = json.loads(path.read_text())
-            frame = record['leaf_frame']
-            if frame.get('terminal'):
-                terminal += 1
-                continue
-            outcome = record['outcome']
-            if outcome.get('terminal') is not True or type(outcome.get('won')) is not bool:
-                raise ValueError(f'{path}: no terminal label')
-            board, scalars_v2 = encode_frame(frame, 2)
-            _, scalars_v1 = encode_frame(frame, 1)
-            boards.append(board.half())
-            scalars.append(torch.cat([scalars_v2, context]))
-            legacy.append(torch.cat([scalars_v1, context]))
-            won.append(float(outcome['won']))
-            positions.append(position)
-            candidates.append(int(record['candidate']))
-            packets.append(int(record['action'].get('packet', -1)))
+        frame = record['leaf_frame']
+        if frame.get('terminal'):
+            terminal += 1
+            continue
+        outcome = record['outcome']
+        board, scalars_v2 = encode_frame(frame, 2)
+        _, scalars_v1 = encode_frame(frame, 1)
+        boards.append(board.half())
+        scalars.append(torch.cat([scalars_v2, context]))
+        legacy.append(torch.cat([scalars_v1, context]))
+        won.append(float(outcome['won']))
+        positions.append(position)
+        candidates.append(int(record['candidate']))
+        packets.append(int(record['action'].get('packet', -1)))
     if not boards:
         return dict(archive_index=index, group=row['group'], horizon=horizon, rows=0,
-                    wins=0, terminal_dropped=terminal, skipped='all leaves terminal')
+                    wins=0, stop=bool(stop), world=row['world'],
+                    terminal_dropped=terminal, skipped='all leaves terminal', provenance=provenance)
     n = len(boards)
     target = output/f'archive_{index:02d}_h{horizon}.pt'
     tmp = target.with_suffix('.pt.tmp')
@@ -113,7 +197,7 @@ def shard(index, horizon, row, stop, output):
     tmp.replace(target)
     return dict(archive_index=index, group=row['group'], horizon=horizon, world=row['world'],
                 stop=bool(stop), rows=n, wins=int(sum(won)), terminal_dropped=terminal,
-                path=str(target), sha256=sha(target))
+                path=str(target), sha256=sha(target), provenance=provenance)
 
 
 def main():
@@ -136,10 +220,10 @@ def main():
         if args.only is not None and index != args.only:
             continue
         stop = stops[index]
-        for horizon in ((2500,) if old else (2500, 4000, 6000)):
-            result = shard(index, horizon, row, stop, output)
+        for horizon in collection_horizons(row, old):
+            result = shard(index, horizon, row, stop, output, manifest, replay)
             shards.append(result)
-            print(json.dumps(result), flush=True)
+            print(json.dumps({k:v for k,v in result.items() if k != 'provenance'}), flush=True)
     total = dict(shards=len(shards), rows=sum(s['rows'] for s in shards),
                  wins=sum(s['wins'] for s in shards),
                  terminal_dropped=sum(s['terminal_dropped'] for s in shards),
@@ -156,6 +240,7 @@ def main():
     name = 'export_old.json' if old else 'export.json'
     write_json(ROOT/f'artifacts/task78/{name}',
                dict(source_manifest=str(manifest), source_manifest_sha256=sha(manifest),
+                    complete=args.only is None, selection='frozen whole-cohort horizon amendments',
                     stopping_archives=sorted(i for i, v in stops.items() if v),
                     stopping_floor_added=added,
                     total=total, by_group=summary, shards=shards))
