@@ -46,8 +46,8 @@
       "fog79_l39_snow_blover_v2_m200"
     ],
     "E": [
-      "demo_conv_30_orig_m100",
-      "demo_conv_40_orig_m100"
+      "demo_pool_30_orig_m100",
+      "demo_storm_40_orig_m100"
     ]
   },
   "tasks": {
@@ -1353,7 +1353,7 @@
       81030038,
       81030039
     ],
-    "demo_conv_30_orig_m100": [
+    "demo_pool_30_orig_m100": [
       81031000,
       81031001,
       81031002,
@@ -1395,7 +1395,7 @@
       81031038,
       81031039
     ],
-    "demo_conv_40_orig_m100": [
+    "demo_storm_40_orig_m100": [
       81032000,
       81032001,
       81032002,

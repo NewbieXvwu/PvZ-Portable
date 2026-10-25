@@ -23,7 +23,7 @@
 | **B** | 屋顶 L42–L44 的全部卡组变体 + L41，2.0 倍 | `demo_roof_42_{melon,gloom,gloommelon,kernel}_m200`、`demo_roof_43_{melon,gloom,kernel}_m200`、`demo_roof_44_{melon,gloom,kernel}_m200`、`demo_roof_41_doom_m200` |
 | **C** | 屋顶 L46–L49，毁灭菇套，**3.0 / 4.0 倍** | `demo_roof_{46,47,48,49}_doom_m300`、`demo_roof_{46,47,48,49}_doom_m400` |
 | **D** | 雾夜 L36–L39，**2.0 倍** | `fog79_l36_snow_{magnet,split}_v2_m200`、`fog79_l37_snow_{magnet,split}_v2_m200`、`fog79_l38_snow_{magnet,tall}_v2_m200`、`fog79_l39_snow_{cactus,blover}_v2_m200` |
-| **E** | 原生传送带 L30 / L40 | `demo_conv_30_orig_m100`、`demo_conv_40_orig_m100` |
+| **E** | 原生传送带 L30 / L40 | `demo_pool_30_orig_m100`、`demo_storm_40_orig_m100` |
 
 - 每层里按表格顺序打；一层做完立刻进入下一层。
 - 只打清单里**存在**的任务。清单里没有的关卡不要自己造任务，跳过即可。

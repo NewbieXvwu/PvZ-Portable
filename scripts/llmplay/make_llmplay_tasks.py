@@ -57,7 +57,9 @@ LAYERS = {
           'fog79_l37_snow_magnet_v2_m200', 'fog79_l37_snow_split_v2_m200',
           'fog79_l38_snow_magnet_v2_m200', 'fog79_l38_snow_tall_v2_m200',
           'fog79_l39_snow_cactus_v2_m200', 'fog79_l39_snow_blover_v2_m200'],
-    'E': ['demo_conv_30_orig_m100', 'demo_conv_40_orig_m100'],
+    # E 层命名对齐主控：task85c 在 boss50 上登记的是 demo_pool_30_orig_m100 /
+    # demo_boss_50_orig_m100，这里 L30 用同一个名字，避免两条线合并后出现两个同义族。
+    'E': ['demo_pool_30_orig_m100', 'demo_storm_40_orig_m100'],
 }
 
 # 需要新建的族：id -> 复制来源（None = 自己写全字段）
@@ -80,11 +82,17 @@ NEW_FAMILIES = {
     'fog79_l39_snow_cactus_v2_m200': ('fog79_l39_snow_cactus_v2', dict(zombie_count_multiplier=2.0)),
     'fog79_l39_snow_blover_v2_m200': ('fog79_l39_snow_blover_v2', dict(zombie_count_multiplier=2.0)),
     # 原生传送带：卡由引擎发，任务没有卡组（pvz_tasks.deck_for_level 的约定）。
-    'demo_conv_30_orig_m100': (None, dict(level=30, deck=[], conveyor_start='original',
+    # L50 的 demo_boss_50_orig_m100 等 boss50 合入后再加。
+    'demo_pool_30_orig_m100': (None, dict(level=30, deck=[], conveyor_start='original',
                                           zombie_count_multiplier=1.0)),
-    'demo_conv_40_orig_m100': (None, dict(level=40, deck=[], conveyor_start='original',
-                                          zombie_count_multiplier=1.0)),
+    'demo_storm_40_orig_m100': (None, dict(level=40, deck=[], conveyor_start='original',
+                                           zombie_count_multiplier=1.0)),
 }
+
+
+# 一次性改名遗留（2026-10-26）：E 层原来叫 demo_conv_*，与 task85c 的
+# demo_pool_30_orig_m100 同义；生成器会把旧条目从清单里清掉。
+LEGACY_TASK_IDS = {'demo_conv_30_orig_m100', 'demo_conv_40_orig_m100'}
 
 
 def ordered_tasks():
@@ -188,7 +196,7 @@ def main() -> int:
     args = parser.parse_args()
 
     document = read_manifest()
-    tasks = document['tasks']
+    tasks = [task for task in document['tasks'] if task['task_id'] not in LEGACY_TASK_IDS]
     known = {task['task_id']: task for task in tasks}
     missing = build_missing(known)
     print('已有 %d 条，新增 %d 条：%s' % (len(tasks), len(missing),
@@ -214,7 +222,8 @@ def main() -> int:
 
     # 机械核对：新块与仓库其它所有清单不相交。
     others = all_seeds_except({SEEDS})
-    other_values = set(others) - {seed for task in missing for seed in task['seeds']}
+    # 本方案自己的种子（含清单里 33 个任务的默认种子）不算「外来」。
+    other_values = set(others) - set(flat)
     clash = sorted(set(flat) & other_values)
     if clash:
         raise SystemExit('新块与现有清单冲突：%s（例 %s）' % (len(clash), clash[:5]))
@@ -231,7 +240,7 @@ def main() -> int:
             print('  %s 层 %d 任务：%s' % (layer, len(ids), ', '.join(ids)))
         return 0
 
-    if missing:
+    if missing or len(tasks) != len(document['tasks']):
         write_manifest(document, tasks + missing)
     SEEDS.write_text(json.dumps(dict(
         schema='llmplay_seeds_v1',

@@ -11,7 +11,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -25,6 +27,10 @@ def main() -> int:
     parser.add_argument('--executable')
     parser.add_argument('--resource-dir')
     args = parser.parse_args()
+
+    # 核对脚本不测预算/墙钟：用一次性会话文件，避免宿主 ~/.llmplay_session 的
+    # 遗留墙钟把所有新开局拒掉（budget.py 的会话固定在主目录、不随 cwd 变）。
+    os.environ.setdefault('PVZ_LLMPLAY_SESSION', str(Path(tempfile.mkdtemp(prefix='llmplay_check_')) / 'budget.json'))
 
     plan = json.loads((ROOT / 'configs' / 'llmplay_seeds.json').read_text(encoding='utf-8'))
     failures = []

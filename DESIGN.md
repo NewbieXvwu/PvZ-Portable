@@ -1197,9 +1197,10 @@ GPT Pro 的离线沙箱用 llmplay 接口打冒险模式。task81c 把任务单�
   只改 `zombie_count_multiplier`（3.0 / 4.0）。
 - **D 层**（雾夜 L36–L39 fog79 提到 2.0 倍）：新族 `fog79_l3{6,7,8,9}_*_v2_m200` 共 8 个，
   保留 `fog_observation: human_v2`。
-- **E 层**（原生传送带）：新族 `demo_conv_30_orig_m100` / `demo_conv_40_orig_m100`，
-  `deck: []` + `conveyor_start: "original"`（卡由引擎发）。命名刻意避开 task75 的
-  `pool_l30_orig_*` / `storm_l40_orig_*`，两者并存不覆盖。L50 待 boss50 分支合入后再登记。
+- **E 层**（原生传送带）：新族 `demo_pool_30_orig_m100` / `demo_storm_40_orig_m100`，
+  `deck: []` + `conveyor_start: "original"`（卡由引擎发）。L30 的名字与 task85c 在
+  boss50 上登记的 `demo_pool_30_orig_m100` 一致，避免两条线合并后出现同义族；
+  L50 的 `demo_boss_50_orig_m100` 待 boss50 合入后再加。
 
 **种子**：新独立块 **81,000,000–81,032,039**（33 个任务 × 40，每任务步长 1000），
 每个任务第一个种子同时写进 `configs/human_demo_tasks.json` 作默认种子，完整 40 个写在

@@ -84,7 +84,7 @@
     {"task_id":"fog79_l38_snow_tall_v2_m200","level":38,"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,5,3],"fog_observation":"human_v2","seeds":[81028000]},
     {"task_id":"fog79_l39_snow_cactus_v2_m200","level":39,"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,26,5],"fog_observation":"human_v2","seeds":[81029000]},
     {"task_id":"fog79_l39_snow_blover_v2_m200","level":39,"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,27,5],"fog_observation":"human_v2","seeds":[81030000]},
-    {"task_id":"demo_conv_30_orig_m100","level":30,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[81031000]},
-    {"task_id":"demo_conv_40_orig_m100","level":40,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[81032000]}
+    {"task_id":"demo_pool_30_orig_m100","level":30,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[81031000]},
+    {"task_id":"demo_storm_40_orig_m100","level":40,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[81032000]}
   ]
 }

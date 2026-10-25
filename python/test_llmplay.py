@@ -109,8 +109,9 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(by_id['demo_roof_41_doom_m200']['level'], 41)
         self.assertEqual(by_id['demo_roof_49_doom_m400']['zombie_count_multiplier'], 4.0)
         self.assertEqual(by_id['fog79_l39_snow_blover_v2_m200']['zombie_count_multiplier'], 2.0)
-        self.assertEqual(by_id['demo_conv_30_orig_m100']['conveyor_start'], 'original')
-        self.assertEqual(by_id['demo_conv_30_orig_m100']['deck'], [])
+        self.assertEqual(by_id['demo_pool_30_orig_m100']['conveyor_start'], 'original')
+        self.assertEqual(by_id['demo_pool_30_orig_m100']['deck'], [])
+        self.assertEqual(by_id['demo_storm_40_orig_m100']['conveyor_start'], 'original')
 
     def test_task_manifest_registers_roof_46_and_47(self):
         """§G.1：L46/L47 的族已由主控登记，包里的任务清单必须带上。"""
