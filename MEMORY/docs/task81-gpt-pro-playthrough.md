@@ -60,8 +60,15 @@
 
 - 2026-10-25 17:05 接口骨架 + 打包器 + 单测（commit 58656c0a，已推 llmplay）：`scripts/llmplay/` 的 Game/observe/legal/summary/rewind/branch/save/load/export_archive，任务书 PROMPT.md，build_package.py，`python/test_llmplay.py` 8 条全过。合法动作直接取引擎 lean 观测里的 `legal_actions`（Board::CanPlantAt），不在 Python 里重写种植规则。
 - 2026-10-25 17:05 构建环境：Docker 不可用（Docker Desktop 未对本 WSL 发行版开集成，`docker.exe` 走 vsock 报错）。改用 ubuntu 22.04 rootfs（ubuntu-base-22.04.5）chroot；jammy 的 GCC 11 编不过引擎（`#include <format>` 是 C++20，libstdc++ 11 没有），于是改为宿主 GCC 15 + 全静态链接（`-static`）——静态二进制不依赖目标机 glibc，比"在 22.04 里编"更稳。静态 SDL2 另编（只留 dummy 视频/音频后端，见下一条）。
+- 2026-10-25 18:00 **探路包已出**（§F）：`~/pvz-logs/llmplay_pkg/probe/llmplay_probe.zip`，52,078,406 字节，SHA256 `5c97b0fc08680e6ef193109adc3832ccc080f0d5bfba5391edc3f1ad159809b8`，825 个文件，源码 rev `8bf65b19`。断网（`unshare -n`）实测：`build.sh` 用 GCC 15.2 + cmake 4.2.3 编译 72 秒成功；`selfcheck.py` 对新编引擎与预编静态二进制各跑一遍，4 局人类示范全部 PASS（时间线 39,590–57,596 个操作逐条一致、每个决策点的阳光/波次/植物数/僵尸数一致、终局 tick/波数/结果一致）。判据按 §F 改成"结果一致"，state_hash 只作诊断。
+- 2026-10-25 18:05 接口 §A/§B/§D 重写（commit 5d0d14a7）：observe 改为状态行 + 局面头 + 5×9 网格 + 逐行明细 + 卡片 + 事件 + timeline；预算/检查点/rewind 上限/2:45 门禁全部落在 `llmplay_session/budget.json`，开场实测吞吐（约 650–3000 tick/s）换算 25 分钟搜索预算；脚本退出时自动打印一次完整 observe。测试 13 条全过。
+- 2026-10-25 18:10 **正式包已出**：`~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，44,641,913 字节，SHA256 `cab13d75795228cd6830d44d4e27e0c20b3f044ba713900a4affb43ebcf388cc`，30 个文件（接口 + 引擎 + 资源 + 5 个常量来源 C++ 文件 + 任务清单 + PROMPT.md + 示例）。密钥扫描 0 命中（`hf_` / `sk-` / `AIza` / `ghp_` / `token` / `password`，命中值是函数调用的一律过滤）。断网 `selfcheck.py` 通过（L41 走 200 步、189 个操作、导出存档），这份存档回台式机用正式引擎 `human_demo.py verify` 通过（tick 9955 / wave 4 / result 2，与导出时一致）。任务书 `scripts/llmplay/PROMPT.md`。
 
 ## 问题
+
+- **Docker 不可用**（Docker Desktop 未对本 WSL 发行版开集成）。§E 要求的 `docker run --network none ubuntu:22.04` 没法照做，改用两条等价性够用的路径：① `unshare -n` 断网跑；② 早先试过 ubuntu-base-22.04.5 rootfs chroot，但 jammy 的 GCC 11 编不过引擎（`#include <format>` 要 GCC 13+），所以"在 22.04 里编"这件事本身在台式机上做不出来 —— 这正是探路包要在目标沙箱里测的。
+- **截图（§C）跑不通**：`LawnApp::EnvironmentScreenshot` 要求非 headless（有窗口）并从 GL framebuffer 读回。实测 `SDL_VIDEODRIVER=dummy` 下引擎能起来、RESET_V2 正常，但 `SCREENSHOT` 返回 `ok:false`（静态 SDL2 只编了 dummy 视频后端，没有 GL）。要做成需要一套 EGL/Mesa 软件 GL + 带该后端的 SDL 构建。按 §C 的兜底：只用文字观测，不拖住主线。
+- **`state_hash` 跨进程不可复现**：同一个二进制、同一个任务，两次 reset 得到的开局哈希就不同（实测 `d3ec36d5…` / `83328bcc…` / `cefd2775…`）。所以它不能当门槛，导出的存档也不能假装哈希一致（见结果里 export_archive 的处理）。
 
 ## 主控追加（2026-10-25 17:30，用户审阅后修订；与上文冲突时以本节为准）
 用户指出两个问题：① LLM 没有时间观念，用分钟约束它等于没约束；② “只打印简短摘要”信息不够，它上下文很长，应该给足信息，而且要让它看清某一帧场上的空间分布。

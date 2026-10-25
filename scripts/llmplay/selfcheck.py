@@ -30,6 +30,11 @@ def main() -> int:
     if problems:
         print("SELFCHECK FAILED: " + "; ".join(problems))
         return 1
+    # 解压工具不一定保留可执行位（Python 的 zipfile 就不保留）。
+    try:
+        exe.chmod(exe.stat().st_mode | 0o111)
+    except OSError:
+        pass
 
     tasks = list_tasks()
     print("任务数：%d" % len(tasks))

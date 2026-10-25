@@ -25,6 +25,10 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import pvz_tasks  # noqa: E402
 
 PYTHON_MODULES = ["pvz_env.py", "pvz_common.py"]
+# pvz_constants.py 是**从 C++ 源码现场解析**常量表的（AGENTS 的约定：不许手抄表），
+# 所以包里必须带上它读的那几个文件，否则 import 阶段就抛"常量来源文件不存在"。
+CONSTANT_SOURCES = ["src/ConstEnums.h", "src/Lawn/Plant.cpp", "src/Lawn/Zombie.cpp",
+                    "src/Lawn/Board.cpp", "src/SexyAppFramework/SexyAppBase.cpp"]
 SCRIPT_MODULES = ["pvz_constants.py", "pvz_tasks.py", "render_episode.py", "episode_query.py"]
 RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
 DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay_pkg"
@@ -77,7 +81,15 @@ def copy_modules(stage: Path) -> None:
     for name in SCRIPT_MODULES:
         shutil.copyfile(ROOT / "scripts" / name, stage / "scripts" / name)
     shutil.copytree(ROOT / "scripts" / "llmplay", stage / "llmplay",
-                    ignore=shutil.ignore_patterns("__pycache__", "build_package.py"))
+                    ignore=shutil.ignore_patterns("__pycache__", "build_package.py",
+                                                  "build_probe.py", "probe"))
+
+
+def copy_constant_sources(stage: Path) -> None:
+    for relative in CONSTANT_SOURCES:
+        target = stage / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copyfile(ROOT / relative, target)
 
 
 def copy_resources(stage: Path, resource_dir: Path) -> None:
@@ -97,8 +109,14 @@ def scan(stage: Path) -> list:
             continue
         data = path.read_bytes()
         for pattern in SECRET_PATTERNS:
-            if pattern.search(data):
-                hits.append("%s: %s" % (path.relative_to(stage), pattern.pattern.decode("utf-8", "replace")))
+            for match in pattern.finditer(data):
+                # 误报过滤：token = some_function(action) 这类是函数调用，不是凭据。
+                # 命中的下一字符是 '(' 就跳过。
+                if data[match.end():match.end() + 1] == b"(":
+                    continue
+                hits.append("%s: %s" % (path.relative_to(stage),
+                                        pattern.pattern.decode("utf-8", "replace")))
+                break
     return hits
 
 
@@ -108,6 +126,7 @@ def build(executable: Path, out: Path, *, resource_dir: Path = RESOURCE_DIR) -> 
     stage = out / "stage"
     stage.mkdir(parents=True)
     copy_modules(stage)
+    copy_constant_sources(stage)
     (stage / "build").mkdir()
     shutil.copyfile(executable, stage / "build" / "pvz-portable")
     (stage / "build" / "pvz-portable").chmod(0o755)
