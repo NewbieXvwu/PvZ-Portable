@@ -2,6 +2,10 @@
 
 > 主控 2026-10-25 写。执行者：台式机 Codex（plus 号，tmux `codex-llmplay`，task81 收尾后接）。工作树自建 `/home/newbiexvwu/PvZ-search/.claude/worktrees/hashdet`（分支 `hashdet`，从 origin/pvz-env 拉出）。每个任务最多 2 个游戏进程；**不碰 tmux `qc`、cq、别的工作树**。
 
+## 交接给下一个代理（2026-10-25 23:30，CodeBuddy）
+
+五项已完成，证据见「完成核对」与 `state-hash-determinism.md`；**不要重做**。分支已 push 到 `origin/hashdet`（HEAD `45a34888`）。剩余只有主控侧动作：合并到当前 `pvz-env`（预演仅日志文件冲突）后复验，以及在 Mac 上运行 `scripts/state_hash_mac_probe.sh`。
+
 ## 现象
 task81 在台式机上用全静态链接的引擎（`~/pvz-logs/llmplay_pkg/stage` 里的 `pvz-portable`）观察到：同一个二进制、同一个任务，每次 reset 得到的开局 `state_hash` 都不一样（`d3ec36d5…` / `83328bcc…` / `cefd2775…`）。另一方面，Mac 录制的人类示范存档在录制和 verify 时都做了逐操作哈希校验，并且通过了（`hash_schema=portable_snapshot_v1_without_draw_statistics`）。
 
