@@ -149,5 +149,32 @@ class SearchHotpathEvidenceTest(unittest.TestCase):
                     bench.audit_abba(args)
 
 
+    def test_hotspot_categories_are_disjoint_and_keep_unlisted_samples(self):
+        import json
+        import tempfile
+        from types import SimpleNamespace
+        import task77_search_hotpath as bench
+        self.assertEqual(bench.hotspot_category('pvz-portable:DataArray<Reanimation>::Iterator::operator++'),
+                         'data_array')
+        self.assertEqual(bench.hotspot_category('pvz-portable:Reanimation::Update'), 'animation')
+        self.assertEqual(bench.hotspot_category('libopenblas.so.0:sgemm_kernel_HASWELL'), 'openblas')
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            bench.save(root / 'profile_summary.json', {'cells': {'day': {
+                'samples': 100, 'invalid_sample_files': [],
+                'cpp_samples': [['pvz-portable:Reanimation::Update', 30],
+                                ['libopenblas.so.0:sgemm_kernel_HASWELL', 20]]}}})
+            bench.hotspots(SimpleNamespace(out=root))
+            summary = json.loads((root / 'hotspots.json').read_text())
+            self.assertEqual(summary['samples'], 100)
+            self.assertAlmostEqual(summary['categories']['animation'], .3)
+            self.assertAlmostEqual(summary['categories']['unlisted'], .5)
+            self.assertAlmostEqual(sum(summary['categories'].values()), 1.0)
+            bench.save(root / 'profile_summary.json', {'cells': {'day': {
+                'samples': 0, 'invalid_sample_files': [], 'cpp_samples': []}}})
+            with self.assertRaisesRegex(ValueError, 'no symbolized samples'):
+                bench.hotspots(SimpleNamespace(out=root))
+
+
 if __name__ == '__main__':
     unittest.main()

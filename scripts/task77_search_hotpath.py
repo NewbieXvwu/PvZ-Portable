@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import cProfile
+from collections import Counter
 import hashlib
 import json
 import os
@@ -294,6 +295,73 @@ def profile_summary(args):
             'valid_sample_files': valid_samples, 'invalid_sample_files': invalid_samples}
     save(args.out / 'profile_summary.json', evidence)
     print(json.dumps({k: v['milliseconds_per_decision'] for k, v in evidence['cells'].items()}, indent=1))
+
+
+HOTSPOT_CATEGORIES = (
+    ('openblas', ('libopenblas',)),
+    ('particles', ('Particle',)),
+    ('data_array', ('DataArray',)),
+    ('animation', ('Reanimation', 'EnvTrack', 'FloatTrack', 'CurveEvaluate', 'TrackVelocity', 'TrackMemoHit')),
+    ('value_net', ('EnvironmentValueNet', 'EnvironmentRollout::Convolve')),
+    ('libc', ('libc.so',)),
+)
+
+
+HOTSPOT_NAMES = tuple(name for name, _ in HOTSPOT_CATEGORIES) + ('other', 'unlisted')
+
+
+def hotspot_category(symbol):
+    """Bucket a symbolized sample by the subsystem that owns it (first match wins)."""
+    for name, needles in HOTSPOT_CATEGORIES:
+        if any(needle in symbol for needle in needles):
+            return name
+    return 'other'
+
+
+def hotspots(args):
+    """Aggregate the symbolized samples already stored by profile-summary.
+
+    Flat sampling cannot attribute a shared BLAS kernel to its caller, so these shares
+    describe the engine process as a whole; per-component times stay in the report §3.
+    """
+    evidence = json.loads((args.out / 'profile_summary.json').read_text())
+    total = sum(cell['samples'] for cell in evidence['cells'].values())
+    if not total:
+        raise ValueError('no symbolized samples to aggregate')
+    aggregate, categories = Counter(), Counter()
+    cells = {}
+    for cell, values in evidence['cells'].items():
+        if not values['samples']:
+            raise ValueError(f'{cell}: no symbolized samples')
+        counts = Counter(dict(values['cpp_samples']))
+        aggregate.update(counts)
+        for symbol, count in counts.items():
+            categories[hotspot_category(symbol)] += count
+        # profile-summary keeps only the 45 heaviest symbols per cell; the rest are not
+        # classified and must not be silently dropped from the shares.
+        categories['unlisted'] += values['samples'] - sum(counts.values())
+        cells[cell] = {
+            'samples': values['samples'],
+            'invalid_sample_files': values['invalid_sample_files'],
+            'top': [{'symbol': symbol, 'samples': count, 'share': count / values['samples']}
+                    for symbol, count in counts.most_common(12)],
+            'categories': {name: sum(count for symbol, count in counts.items()
+                                     if hotspot_category(symbol) == name)
+                           for name in HOTSPOT_NAMES if name != 'unlisted'},
+        }
+        cells[cell]['categories']['unlisted'] = values['samples'] - sum(counts.values())
+    summary = {
+        'samples': total,
+        'categories': {name: categories[name] / total for name in HOTSPOT_NAMES},
+        'top': [{'symbol': symbol, 'samples': count, 'share': count / total}
+                for symbol, count in aggregate.most_common(20)],
+        'cells': cells,
+    }
+    save(args.out / 'hotspots.json', summary)
+    print(f'{total} samples')
+    for row in summary['top']:
+        print(f"{row['share'] * 100:6.2f}%  {row['samples']:7d}  {row['symbol']}")
+    print(json.dumps({k: round(v * 100, 2) for k, v in summary['categories'].items()}))
 
 
 def recover_samples(args):
@@ -687,8 +755,8 @@ def main():
         driver(sys.argv[2:])
         return
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'recover-samples',
-                                         'gate', 'verify', 'abba', 'abba-verify'))
+    parser.add_argument('phase', choices=('prepare', 'profile', 'profile-summary', 'hotspots',
+                                         'recover-samples', 'gate', 'verify', 'abba', 'abba-verify'))
     parser.add_argument('--out', type=Path, default=OUT)
     parser.add_argument('--workers', type=int, choices=(1, 2), default=2)
     parser.add_argument('--candidate', type=Path)
@@ -700,7 +768,7 @@ def main():
     if not args.out.is_absolute():
         parser.error('--out must be absolute')
     {'prepare': prepare, 'profile': profile, 'profile-summary': profile_summary,
-     'recover-samples': recover_samples,
+     'hotspots': hotspots, 'recover-samples': recover_samples,
      'gate': gate, 'verify': verify, 'abba': abba, 'abba-verify': audit_abba}[args.phase](args)
 
 
