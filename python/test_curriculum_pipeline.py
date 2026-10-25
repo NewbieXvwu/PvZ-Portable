@@ -11,7 +11,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import curriculum_queue as queue
 from pvz_recipe import write_recipe
-from pvz_promotion import PANEL_TASKS, decide, freeze_panel
+from pvz_promotion import GATE_VERSION, PANEL_TASKS, decide, freeze_panel
 from promotion_gate import contract_key, sha
 
 
@@ -24,7 +24,7 @@ def setup(root):
                            workers=2, stop_flag=root / 'stop', out=root / 'runs',
                            executable=root / 'engine', value=root / 'value.pt', resource_dir=root / 'resources',
                            promotion_panel=root / 'panel.json', beta_threshold=0.1, starved_beta=0.5,
-                           probe_interval=3)
+                           probe_interval=3, seed_ledger=root / 'gate_ledger.json')
     args.rollout_policy.write_bytes(b'initial')
     args.executable.write_bytes(b'engine')
     args.value.write_bytes(b'value')
@@ -44,7 +44,8 @@ def setup(root):
 
 def certificate(pipeline, job, approved=True):
     frozen = pipeline.evaluation_contract(job)
-    manifest = freeze_panel(json.loads(pipeline.args.promotion_panel.read_text()))
+    manifest = freeze_panel(json.loads(pipeline.args.promotion_panel.read_text()),
+                            version=GATE_VERSION, seed_block=frozen.get('seed_block'))
     pairs = [dict(task_id=t['task_id'], zone=manifest['groups'][t['task_id']], seed=seed,
                   candidate=approved, incumbent=not approved) for t in manifest['tasks'] for seed in t['seeds']]
     return {**decide(pairs, manifest), 'contract': frozen, 'contract_key': contract_key(frozen), 'paired': pairs}
@@ -54,8 +55,11 @@ def write_evaluation(pipeline, command, approved=True):
     out = Path(command[command.index('--out') + 1])
     out.mkdir(parents=True, exist_ok=True)
     job = dict(model=command[command.index('--candidate') + 1])
+    if '--seed-block' in command:
+        job['seed_block'] = [int(x) for x in command[command.index('--seed-block') + 1].split(',')]
     report = certificate(pipeline, job, approved)
-    manifest = freeze_panel(json.loads(pipeline.args.promotion_panel.read_text()))
+    manifest = freeze_panel(json.loads(pipeline.args.promotion_panel.read_text()),
+                            version=GATE_VERSION, seed_block=report['contract'].get('seed_block'))
     files = {}
     for task in manifest['tasks']:
         for side, won in [('candidate', approved), ('incumbent', not approved)]:
