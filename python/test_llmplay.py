@@ -385,6 +385,21 @@ class RobustnessTest(unittest.TestCase):
             _drive_policy(idle, lambda g: None, limit_tick=100)
         self.assertIn('没有推进', str(caught.exception))
 
+    def test_internal_trial_does_not_record_wave_progress(self):
+        """稳健性试打的波数不能算进「最远存活波」，否则会骗过止损判据。"""
+        session = budget.reset_session(Path(tempfile.mkdtemp(prefix='llmplay-trial-')) / 'budget.json')
+        ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='aa')]
+        trial = Game('demo_roof_49_doom_m200', ops=ops, tick=60, _internal=True)
+        trial.session = session
+        before = dict(session.level(49))
+        trial.obs = dict(wave=30, sun=50, plants=[])
+        trial.tick = 60
+        trial._close_wave(30)
+        after = dict(session.level(49))
+        self.assertEqual(after['last_progress_wave'], before['last_progress_wave'])
+        self.assertEqual(after['max_wave'], before['max_wave'])
+        trial.close()
+
     def test_wave_tick_comes_from_wave_history(self):
         ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='aa')]
         game = Game('demo_roof_49_doom_m200', ops=ops, tick=60)

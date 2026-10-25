@@ -425,7 +425,10 @@ class Game:
                                       mowers=stats["mowers"]))
         self._wave_stats = dict(kills=0, lost=0, mowers=0)
         self.max_wave = max(self.max_wave, wave)
-        self.session.record_wave(self.spec.level, wave)
+        if not self._internal:
+            # 内部试打局走的是 RESEED 换过的未来，不能算进「最远存活波」——
+            # 否则稳健性试打会把止损判据骗过去（§A 的检查点看的就是这个数）。
+            self.session.record_wave(self.spec.level, wave)
 
     def _replay_to(self, target: int) -> None:
         """reset 后重放到 tick target，并把 ops / frames 截断到那一点。
@@ -518,7 +521,8 @@ class Game:
         self._note_events(action, ok, before_plants, before_zombies, before_mowers, before_wave)
         self.session.note_ticks(level, self.tick - before, self.session.mode(level))
         self._dirty = True
-        _mark_active(self)
+        if not self._internal:
+            _mark_active(self)
         # 精简观测的响应不带 state_hash（那是给搜索用的轻量路径），存档要逐操作哈希，
         # 所以缺了就单独问一次。一次命令的代价，比关掉精简观测便宜得多。
         state_hash = self.env._last_response.get("state_hash") or self.env.state_hash()
@@ -770,7 +774,8 @@ class Game:
         self.tick = int(self.obs["tick"])
         self.terminal = bool(self.obs.get("terminal"))
         self.max_wave = max(self.max_wave, int(self.obs.get("wave") or 0))
-        self.session.record_wave(self.spec.level, int(self.obs.get("wave") or 0))
+        if not self._internal:
+            self.session.record_wave(self.spec.level, int(self.obs.get("wave") or 0))
 
     def observe(self, level: str = "full") -> str:
         """完整文字局面（§B）。第一行永远是状态行，末尾是事件，最后清空事件。"""
