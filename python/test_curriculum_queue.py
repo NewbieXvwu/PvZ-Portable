@@ -35,10 +35,10 @@ class CurriculumRulesTest(unittest.TestCase):
         ids = training_base_ids()
         self.assertEqual({name for name in ids if name.startswith('roof_')},
                          {'roof_l41_train_r7'})
-        # task68: only fog_user L31 is admitted; fog_user_v2 is registered but held out until the
-        # paired human/human_v2 cold start (task70); the task45 fog_f8/f8p families stay out.
+        # task70 B6: fog_user_v2 (human_v2 observation) replaces fog_user in the curriculum;
+        # the task45 fog_f8/f8p families and the superseded fog_user stay out.
         self.assertEqual({name for name in ids if name.startswith('fog_')},
-                         {'fog_user_l31_snow'})
+                         {'fog_user_v2_l31_snow'})
 
     def test_parse_task_id(self):
         self.assertEqual(parse_task_id('day_l7_train_d7_m150', NAMES), ('day_l7_train_d7', 1.5))
@@ -904,8 +904,10 @@ class DemoStartCellsTest(unittest.TestCase):
         if not all((ROOT / archive).is_dir() for archive in archives):
             self.skipTest('user demo archives are not in git; present only where they were recorded/fetched')
         cells, _ = load_demo_start_cells(manifest)
-        self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_32_snow_m200',
-                                      'demo_fog_33_cactus_snow_m200', 'demo_fog_33_cattail_snow_m200'})
+        # task70 B6: the x-ray start cells are retired; the _hv2 family (human_v2 observation,
+        # same archives / ladders / future seed blocks) replaces them.
+        self.assertEqual(set(cells), {'demo_fog_31_snow_m200_hv2', 'demo_fog_32_snow_m200_hv2',
+                                      'demo_fog_33_cactus_snow_m200_hv2', 'demo_fog_33_cattail_snow_m200_hv2'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
