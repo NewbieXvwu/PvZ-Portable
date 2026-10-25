@@ -623,6 +623,20 @@ class PvZEnv:
         if not response.get("ok"):
             raise RuntimeError("key injection requires a visible demonstration session")
 
+    def demo_click_packet(self, index: int) -> None:
+        if type(index) is not int:
+            raise TypeError("packet index must be an integer")
+        response = self._command(f"DEMO_CLICK_PACKET {index}")
+        if not response.get("ok"):
+            raise RuntimeError("packet injection requires a visible demonstration session")
+
+    def demo_click_cell(self, col: int, row: int) -> None:
+        if type(col) is not int or type(row) is not int:
+            raise TypeError("cell coordinates must be integers")
+        response = self._command(f"DEMO_CLICK_CELL {col} {row}")
+        if not response.get("ok"):
+            raise RuntimeError("cell injection requires a visible demonstration session")
+
     def screenshot(self, path: str | Path) -> None:
         """Save the presented frame as a PNG (visible runs only, task66 calibration)."""
         response = self._command(f'SCREENSHOT "{Path(path).resolve()}"')

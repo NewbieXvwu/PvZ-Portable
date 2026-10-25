@@ -7,6 +7,7 @@
 #include "Lawn/SeedPacket.h"
 #include "Lawn/Projectile.h"
 #include "Lawn/Coin.h"
+#include "PvzpLib/Reanimator.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -93,13 +94,13 @@ void EnvironmentRollout::Load(const std::string& path)
 		input.read(reinterpret_cast<char*>(&embedding), 4);
 	}
 	else embedding = size;
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 5 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 6 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	std::vector<size_t> counts = {
-		nextWidth * (Channels + (observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
-		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation >= 3 ? 7 : observation == 2)), nextWidth,
+		nextWidth * (Channels + (observation == 6 ? 14 : observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
+		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 6 ? 9 : observation >= 3 ? 7 : observation == 2)), nextWidth,
 		nextContext, 1, packetHead ? nextWidth * (nextContext + embedding + 3) : 10 * nextContext,
 		packetHead ? nextWidth : 10, (packetHead ? 54 : 10) * embedding,
 		nextWidth * (nextWidth + embedding + nextContext), nextWidth, nextWidth, 1};
@@ -125,6 +126,7 @@ void EnvironmentRollout::Load(const std::string& path)
 	v2 = observation >= 3;
 	fogChannel = observation == 4;
 	sizeChannel = observation == 5;
+	bossChannel = observation == 6;
 	weights = std::move(loaded);
 	// LOAD_ROLLOUT_NET can replace a model in an existing process, including with
 	// another model of the same layout. Channel sets and dimensions do not identify
@@ -158,8 +160,8 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	std::vector<float>& board, std::vector<float>& scalars, History& history)
 {
 	Board* state = app->mBoard;
-	board.assign((Channels + ((fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
-	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + (v2 ? 7 : v2lite), 0.0f);
+	board.assign((Channels + (bossChannel ? 14 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
+	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + (bossChannel ? 9 : v2 ? 7 : v2lite), 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
 		{
@@ -194,6 +196,28 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		for (int col = 1; col < 9; ++col) uniform &= state->mGridSquareType[col][row] == terrain;
 		if (uniform && (terrain == GridSquareType::GRIDSQUARE_GRASS || terrain == GridSquareType::GRIDSQUARE_POOL))
 			std::fill_n(board.data() + 91 * Cells + row * 10, 10, 1.0f);
+	}
+	if (bossChannel)
+	{
+		const Zombie* boss = state->GetBossZombie();
+		const int start = Channels + 9;
+		if (boss && !boss->mDead)
+		{
+			const auto phase = boss->mZombiePhase;
+			const bool head = phase == ZombiePhase::PHASE_BOSS_HEAD_ENTER || phase == ZombiePhase::PHASE_BOSS_HEAD_IDLE_BEFORE_SPIT || phase == ZombiePhase::PHASE_BOSS_HEAD_SPIT || phase == ZombiePhase::PHASE_BOSS_HEAD_IDLE_AFTER_SPIT || phase == ZombiePhase::PHASE_BOSS_HEAD_LEAVE;
+			board[start * Cells] = head;
+			Reanimation* ball = app->ReanimationTryToGet(boss->mBossFireBallReanimID);
+			if (ball)
+			{
+				const int col = std::clamp(static_cast<int>(std::floor((ball->mOverlayMatrix.m02 - 40.0f) / 80.0f)), 0, 9);
+				const int row = std::clamp(boss->mFireballRow, 0, 5);
+				board[(start + (boss->mIsFireBall ? 1 : 2)) * Cells + row * 10 + col] = 1.0f;
+			}
+			if (phase == ZombiePhase::PHASE_BOSS_SPAWNING || phase == ZombiePhase::PHASE_BOSS_STOMPING || phase == ZombiePhase::PHASE_BOSS_BUNGEES_ENTER || phase == ZombiePhase::PHASE_BOSS_BUNGEES_DROP || phase == ZombiePhase::PHASE_BOSS_BUNGEES_LEAVE || phase == ZombiePhase::PHASE_BOSS_DROP_RV)
+				board[(start + 3) * Cells + std::clamp(boss->mTargetRow, 0, 5) * 10 + std::clamp(boss->mTargetCol, 0, 9)] = 1.0f;
+			scalars[Scalars + (taskContext ? TaskContext : 0) + 7] = boss->mBossMode / 2.0f;
+			scalars[Scalars + (taskContext ? TaskContext : 0) + 8] = boss->mFireballRow / 5.0f;
+		}
 	}
 	if (fogChannel)
 		for (int row = 0; row < 6; ++row)

@@ -246,6 +246,7 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
         **({"v2": obs["v2"]} if "v2" in obs else {}),
+        **({"boss": obs["boss"]} if "boss" in obs else {}),
         **({"fog_amount": obs["fog_amount"]} if "fog_amount" in obs else {}),
         # 只有原版传送带开局的观测带这个键；旧任务/旧档案的帧逐字节不变。
         **({"conveyor_start": obs["conveyor_start"]} if obs.get("conveyor_start") else {}),

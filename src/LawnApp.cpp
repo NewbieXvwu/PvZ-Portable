@@ -1922,6 +1922,47 @@ static void WriteObservationFog(std::ostream& out, const LawnApp* app)
 	out << ']';
 }
 
+static void WriteObservationBoss(std::ostream& out, LawnApp* app)
+{
+	Zombie* boss = app->mBoard->GetBossZombie();
+	if (!boss) return;
+	out << ",\"boss\":{\"active\":" << (boss && !boss->mDead ? "true" : "false");
+	if (!boss || boss->mDead)
+	{
+		out << ",\"stage\":-1,\"head\":false,\"action\":\"none\",\"target_row\":-1,\"target_col\":-1,\"projectile\":null}";
+		return;
+	}
+	const auto phase = boss->mZombiePhase;
+	const bool head = phase == ZombiePhase::PHASE_BOSS_HEAD_ENTER ||
+		phase == ZombiePhase::PHASE_BOSS_HEAD_IDLE_BEFORE_SPIT ||
+		phase == ZombiePhase::PHASE_BOSS_HEAD_SPIT ||
+		phase == ZombiePhase::PHASE_BOSS_HEAD_IDLE_AFTER_SPIT ||
+		phase == ZombiePhase::PHASE_BOSS_HEAD_LEAVE;
+	const char* action = "idle";
+	if (phase == ZombiePhase::PHASE_BOSS_SPAWNING) action = "summon";
+	else if (phase == ZombiePhase::PHASE_BOSS_STOMPING) action = "stomp";
+	else if (phase == ZombiePhase::PHASE_BOSS_BUNGEES_ENTER || phase == ZombiePhase::PHASE_BOSS_BUNGEES_DROP || phase == ZombiePhase::PHASE_BOSS_BUNGEES_LEAVE) action = "bungee";
+	else if (phase == ZombiePhase::PHASE_BOSS_DROP_RV) action = "rv";
+	else if (head) action = "head";
+	out << ",\"stage\":" << boss->mBossMode << ",\"head\":" << (head ? "true" : "false")
+		<< ",\"action\":\"" << action << "\",\"target_row\":"
+		<< ((action[0] == 'i' || action[0] == 'h') ? -1 : boss->mTargetRow)
+		<< ",\"target_col\":" << ((action[0] == 'b' || action[0] == 'r') ? boss->mTargetCol : -1)
+		<< ",\"projectile\":";
+	Reanimation* ball = app->ReanimationTryToGet(boss->mBossFireBallReanimID);
+	if (!ball)
+	{
+		out << "null";
+	}
+	else
+	{
+		out << "{\"type\":\"" << (boss->mIsFireBall ? "fire" : "ice") << "\",\"row\":"
+			<< boss->mFireballRow << ",\"x\":" << ball->mOverlayMatrix.m02 << ",\"y\":"
+			<< ball->mOverlayMatrix.m12 << '}';
+	}
+	out << '}';
+}
+
 static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged = false)
 {
 	Board* board = app->mBoard;
@@ -1972,7 +2013,9 @@ static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged 
 		first = false;
 		out << '[' << projectile->mRow << ',' << projectile->mPosX << ',' << projectile->GetProjectileDef().mDamage << ']';
 	}
-	out << "]}";
+	out << "]";
+	WriteObservationBoss(out, app);
+	out << '}';
 }
 
 std::string LawnApp::EnvironmentLeanObservation()
@@ -2088,6 +2131,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 	out << "]}";
 	WriteObservationV2(out, this);
 	WriteObservationFog(out, this);
+	WriteObservationBoss(out, this);
 	out << '}';
 	return out.str();
 }
@@ -2443,6 +2487,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		WriteObservationV2(out, this, privileged);
 	if (!privileged || mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::Storm)
 		WriteObservationFog(out, this);
+	WriteObservationBoss(out, this);
 	if (privileged)
 	{
 		// Loss attribution is diagnostic only; it never reaches either policy arm.

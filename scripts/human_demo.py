@@ -47,7 +47,8 @@ class Recorder:
         self.observation, _ = env.reset(deck=deck, task=task)
         options = env.deck_options()
         warnings = env.deck_warnings(deck)['warnings']
-        if set(deck) - set(options['available_plants']) or warnings:
+        original_conveyor = task.conveyor_start == 'original' and not deck
+        if set(deck) - set(options['available_plants']) or (warnings and not original_conveyor):
             raise ValueError(f'deck contains locked plants or engine warnings: {warnings}')
         archive.mkdir(parents=True, exist_ok=False)
         self.operations = 0
