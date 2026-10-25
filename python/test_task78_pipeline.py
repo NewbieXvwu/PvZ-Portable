@@ -221,6 +221,35 @@ def test_frozen_panel_rejects_retrospective_seed_edit(tmp_path,monkeypatch):
         ab.frozen_panel(root)
 
 
+def test_diagnostic_mixture_preserves_the_preregistered_old_new_split():
+    import task78_train as train
+    assert sum(train.MIX_DIAGNOSTIC.values())==512
+    assert train.MIX_DIAGNOSTIC['old_episode']==sum(v for k,v in train.MIX.items() if k.startswith('old_'))
+    for name in ('fog','roof'):
+        assert train.MIX_DIAGNOSTIC[name]==train.MIX[name]
+    assert set(train.MIX_DIAGNOSTIC)=={'old_episode','fog','roof'}
+
+
+def test_reconstructed_corpus_requires_a_marked_substitute_cache(tmp_path,monkeypatch):
+    import numpy as np
+    import torch
+    import task78_train as train
+    init=tmp_path/'model.pt'
+    torch.save(dict(state_dict={}),init)
+    episodes=tmp_path/'episodes';episodes.mkdir()
+    (episodes/'episodes.json').write_text(json.dumps(dict(rows=2)))
+    monkeypatch.setattr(train,'BASELINE_SHA',train.sha(init))
+    with pytest.raises(ValueError,match='substitute'):
+        train.reconstructed_sources(init,episodes)
+    monkeypatch.setattr(train,'load_episodes',lambda directory: (
+        torch.zeros(2,1),torch.zeros(2,1),torch.zeros(2),
+        np.array([11,12]),np.array([True,False]),['day_d7','day_d7']))
+    (episodes/'episodes.json').write_text(json.dumps(dict(rows=2,substitute_for='x')))
+    sources,initial,provenance=train.reconstructed_sources(init,episodes)
+    assert set(sources)=={'old_episode'} and provenance['preregistered_corpus'] is False
+    assert (len(sources['old_episode'].fit),len(sources['old_episode'].val))==(1,1)
+
+
 def test_terminal_panel_sources_cannot_overwrite_training_labels(tmp_path):
     from task78_collect import paths
     manifest=tmp_path/'roof_truth/k1/sources.json'

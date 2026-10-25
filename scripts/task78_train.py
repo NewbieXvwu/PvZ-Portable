@@ -24,6 +24,11 @@ from value_widen_audit import seed_key
 from task78_data import sha
 
 MIX = dict(old_episode=64, old_branch=192, old_decision=128, fog=64, roof=64)
+# Diagnostic fallback only: the v5 branch/decision shards and episode cache are absent on
+# this machine, so their 320/512 share is carried by the same-source rebuilt episode cache.
+# 75/12.5/12.5 old/new exposure is preserved; a model trained this way is never the
+# preregistered candidate and says so in its checkpoint.
+MIX_DIAGNOSTIC = dict(old_episode=384, fog=64, roof=64)
 BASELINE_SHA = '8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4'
 
 
@@ -252,8 +257,28 @@ def original_sources(init,decision_directory,episode_directory):
     return sources,initial,dict(descriptor=str(descriptor_path),sha256=sha(descriptor_path))
 
 
+def reconstructed_sources(init,episode_directory):
+    """Same-source rebuilt old-region episodes, explicitly not the v5 corpus."""
+    if sha(init)!=BASELINE_SHA:
+        raise ValueError('v6 must start from the frozen adopted v5 checkpoint')
+    initial=torch.load(init,map_location='cpu',weights_only=False)
+    meta=json.loads((Path(episode_directory)/'episodes.json').read_text())
+    if 'substitute_for' not in meta:
+        raise ValueError('reconstructed mode requires a cache marked as a substitute')
+    rows=Rows(*load_episodes(episode_directory)[:5])
+    provenance=dict(mode='reconstructed',episodes=str(Path(episode_directory)),
+                    sha256=sha(Path(episode_directory)/'episodes.json'),
+                    preregistered_corpus=False,
+                    deviation=('original v5 branch, pool-decision and episode sources are '
+                               'unrecoverable on this machine; their 320/512 share is carried '
+                               'by the rebuilt episode cache (task78_episode.py)'))
+    return dict(old_episode=rows),initial,provenance
+
+
 def main():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--corpus', choices=['original','reconstructed'], default='original',
+                        help='reconstructed = documented diagnostic fallback, not the preregistered corpus')
     parser.add_argument('--new-data', default=str(ROOT/'artifacts/task78/data'))
     parser.add_argument('--old-data', default=str(ROOT/'artifacts/task78/original_v5/decision'))
     parser.add_argument('--episodes', default=str(ROOT/'artifacts/task78/original_v5/episodes'))
@@ -273,9 +298,16 @@ def main():
     torch.manual_seed(args.seed)
     rng = np.random.default_rng(args.seed)
 
-    sources,initial,original_provenance=original_sources(args.init,args.old_data,args.episodes)
+    if args.corpus=='original':
+        sources,initial,original_provenance=original_sources(args.init,args.old_data,args.episodes)
+        mix=dict(MIX)
+    else:
+        sources,initial,original_provenance=reconstructed_sources(args.init,args.episodes)
+        mix=dict(MIX_DIAGNOSTIC)
     added,new_provenance=new_sources(args.new_data)
     sources.update(added)
+    if set(sources)!=set(mix):
+        raise ValueError(f'sources {sorted(sources)} do not match the frozen mixture {sorted(mix)}')
     world_seeds={int(v) for w in new_provenance['worlds'] for v in w.values() if v is not None}
     used=sorted(set(initial.get('trained_on',[])) | world_seeds |
                 set().union(*(src.seeds for src in sources.values())))
@@ -301,14 +333,14 @@ def main():
                   for name, src in sources.items()}
     started = time.time()
     run_identity=dict(pid=os.getpid(),started=time.time(),init_sha256=sha(args.init),
-                      inputs=dict(original=original_provenance,new=new_provenance),mix=MIX)
+                      inputs=dict(original=original_provenance,new=new_provenance),mix=mix)
     (out/'run.json').write_text(json.dumps(run_identity,indent=1)+'\n')
     best, best_epoch, stale, history = float('inf'), None, 0, []
     for epoch in range(args.epochs):
         model.train()
         losses = []
         for _ in range(args.steps):
-            parts = [src.batch(src.sample(rng,max(1,round(MIX[name]*args.batch_size/512))),
+            parts = [src.batch(src.sample(rng,max(1,round(mix[name]*args.batch_size/512))),
                                args.device) for name, src in sources.items()]
             b = torch.cat([p[0] for p in parts])
             s = torch.cat([p[1] for p in parts])
@@ -320,7 +352,7 @@ def main():
             losses.append(loss.item())
         components = {name: src.loss(model, validation[name], args.batch_size, args.device)
                       for name, src in sources.items()}
-        total = sum(MIX[name]*components[name] for name in sources)/sum(MIX.values())
+        total = sum(mix[name]*components[name] for name in sources)/sum(mix.values())
         entry = dict(epoch=epoch, fit=float(np.mean(losses)), validation=total,
                      components=components, seconds=time.time()-started)
         history.append(entry)
@@ -332,7 +364,8 @@ def main():
                 encoder=2, width=model.conv[0].out_channels, context=True,
                 trained_on=used, init=args.init, epoch=epoch,
                 validation=total, components=components,
-                mix=MIX, dropped_sources=dropped,
+                mix=mix, dropped_sources=dropped,
+                preregistered_corpus=original_provenance.get('preregistered_corpus',True),
                 sources={name: dict(fit=len(src.fit), val=len(src.val))
                          for name, src in sources.items()},
                 hyper=dict(lr=args.lr, weight_decay=1e-4, epochs=args.epochs, steps=args.steps,
@@ -343,7 +376,9 @@ def main():
                     ['git', '-C', str(ROOT), 'rev-parse', 'HEAD'], text=True).strip(),
                 input_provenance=dict(original=original_provenance,new=new_provenance),
                 trained_worlds=new_provenance['worlds'],
-                source='task78 fog/roof decision labels + complete original v5 corpus'),
+                source=('task78 fog/roof decision labels + complete original v5 corpus'
+                        if args.corpus=='original' else
+                        'DIAGNOSTIC: task78 fog/roof labels + rebuilt old-region episodes')),
                 out/'model.pt.tmp')
             (out/'model.pt.tmp').replace(out/'model.pt')
         else:
@@ -356,7 +391,8 @@ def main():
     if args.device.startswith('cuda'):
         signal.alarm(0)
     (out/'train_log.json').write_text(json.dumps(dict(complete=True, history=history, best_epoch=best_epoch,
-        best_validation=best, mix=MIX, dropped_sources=dropped, wall_seconds=time.time()-started,
+        best_validation=best, mix=mix, dropped_sources=dropped, wall_seconds=time.time()-started,
+        preregistered_corpus=original_provenance.get('preregistered_corpus',True),
         sources={name: dict(rows=len(src.fit)+len(src.val), fit=len(src.fit), val=len(src.val))
                  for name, src in sources.items()}), indent=1)+'\n')
     print(json.dumps(dict(best_epoch=best_epoch, best_validation=best), indent=1))

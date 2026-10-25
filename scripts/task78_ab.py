@@ -217,7 +217,7 @@ def runtime_plan(root):
     """Freeze all model, code, engine and demo inputs before either arm starts."""
     import torch
     from pvz_frame_store import frame_path
-    from task78_train import MIX,BASELINE_SHA
+    from task78_train import MIX,MIX_DIAGNOSTIC,BASELINE_SHA
     main=Path('/home/newbiexvwu/PvZ-search')
     panel=frozen_panel(root)
     model_paths=dict(v5=main/'artifacts/value_net/v5/model.pt',v6=ROOT/'artifacts/task78/v6/model.pt',
@@ -234,8 +234,16 @@ def runtime_plan(root):
         checkpoint=torch.load(model_paths[arm],map_location='cpu',weights_only=False)
         if evaluation & set(checkpoint['trained_on']):
             raise ValueError(f'{arm}: training overlaps frozen evaluation identities')
-        if arm=='v6' and (checkpoint['mix']!=MIX or 'original' not in checkpoint['input_provenance']):
-            raise ValueError('candidate did not use the complete original-corpus recipe')
+        if arm=='v6':
+            provenance=checkpoint['input_provenance'].get('original',{})
+            if checkpoint['mix'] not in (MIX,MIX_DIAGNOSTIC) or 'original' not in checkpoint['input_provenance']:
+                raise ValueError('candidate did not use the complete original-corpus recipe')
+            # A diagnostic fallback is allowed to run, but it can never pass as the
+            # preregistered candidate: the receipt has to match the mixture exactly.
+            if checkpoint['mix']==MIX and provenance.get('preregistered_corpus') is not True:
+                raise ValueError('original mixture must carry the preregistered corpus receipt')
+            if checkpoint['mix']==MIX_DIAGNOSTIC and provenance.get('preregistered_corpus') is not False:
+                raise ValueError('diagnostic mixture must be marked as not preregistered')
     source=json.loads((ROOT/'artifacts/task78/sources.json').read_text())
     demos={}
     for cell in panel:
@@ -375,10 +383,14 @@ def main():
         acc['mcnemar_p'] = mcnemar(acc['gain'], acc['harm'])
         acc['conservative_lower'] = (clopper_lower(acc['gain'], n) - clopper_upper(acc['harm'], n)) if n else None
     gates=game_gates(results,pooled,panel)
+    import torch
+    candidate=torch.load(ROOT/'artifacts/task78/v6/model.pt',map_location='cpu',weights_only=False)
+    diagnostic=not candidate.get('preregistered_corpus',True)
     document=dict(cells=results,terrain=pooled,gates=gates,
                   complete=all(v['status']=='evaluated' for v in gates.values()),
                   all_game_gates_pass=all(v['passed'] is True for v in gates.values()),
-                  includes_terminal_and_stability_gates=False)
+                  includes_terminal_and_stability_gates=False,
+                  diagnostic=diagnostic,preregistered_recipe_met=not diagnostic)
     out = root/'paired.json'
     out.write_text(json.dumps(document,indent=1)+'\n')
     print(json.dumps(document,indent=1))
