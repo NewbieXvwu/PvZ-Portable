@@ -669,3 +669,8 @@
     - 老师改动作的比例：L30 7%、L50 3%（L25 18%、L40 37%）；
     - 推演发牌与真实续走逐 tick 一致，排除 (c)。
     - 叶值在必输局面上分不出好坏，与 L30 / L50 需要人类示范的判断一致。
+- 2026-10-26 03:30（台式机时间）：
+  - **GPT Pro 包定版为 `d5ba9900…`**：B 层已去掉玉米，共 31 个任务。主控复验：CRC 正常，凭据 0 命中，断网 selfcheck OK。已拷到 Mac `~/pvz-llmplay/`（zip 加 PROMPT.md），**等用户上传**。
+  - 合并 llmplay 与 llmimport 进 pvz-env，DESIGN §14.31–14.34 去重，全量 710 项测试通过。task81c 从调度池移除。
+  - B8 纠偏消息第一次没有提交出去（CodeBuddy 忙时要再按一次 Enter），已补发。
+  - 06:21 Codex 恢复后，codex-mem / hashdet / perf / llmplay 四个会话没有任务，等 task84 的结论再决定派什么。
