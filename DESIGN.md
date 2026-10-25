@@ -1259,4 +1259,6 @@ C/D/E 槽位前移，生成器把清单默认种子同步为当前块首），
 **无头 reset**：`scripts/llmplay/check_tasks.py` 对 31 个任务各 reset + 120 tick，
 全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波，
 L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
+### 14.35 学生挑选保留种子块（task92，2026-10-26）
 
+独立保留 `[120000000, 120006000)` 给每轮学生挑选；与门禁两段、训练/采集/评估清单及示范未来块机械核对不相交。六个既有任务（day L7 d7、heldout L7 d7p1、night L12 n10、pool L21 p9k、fog L31 user snow human、roof L41 r7）卡组与语义不变，各用每 1000 槽内前 32 个种子。清单 `configs/student_selection.json`，开跑前审计 `MEMORY/docs/multiseed-select-seed-audit.json`。按实战总胜局挑选，再进入原门禁；不改门禁合同。

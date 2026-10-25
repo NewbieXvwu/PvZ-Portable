@@ -45,5 +45,7 @@
 
 ## 结果
 
+- 2026-10-26：读完任务与后台 pack/train/evaluate、select_student 和 learn/06 挑选说明；冻结六区各 32 局的独立挑选面板，120M 保留块机械核对无交集，开跑前登记与种子审计已写入。A/D2/C 源模型只读，离线评估将使用复制件；生产流水线状态未写。
+
 ## 问题
 - 2026-10-26 07:1x（CodeBuddy 接手）：步骤 1 完成。一轮耗时构成（round 12–17 complete.json 实测）：pack 0.3–10 min、train 36–130 min（d3 旁证实测 ~170 s/epoch × 12）、门禁评估 2–46 min；后台串行单线程，采集 744 局/轮约 45–105 min，round 16/17 train（7768/6153 s）已成瓶颈——K 种子若串行会进一步拖慢轮节奏，倾向并行 2 训练。训练种子在 recipe 的 "seed" 字段（现值 1），K 种子 = 每轮 K 份配方（不同 seed、不同 out 目录 round_*/student_s*）。select_student.py 口径 = search_play --arms fast 按 wins 总和选，selection.json 已记录全部候选得分可复用为"落选记录"。search_play 无 CUDA 引用（纯 CPU），GPU 只有训练用；RTX 5080 16 GB。GATE_VERSION=3，门禁种子走 seed ledger（allocate_seed_block），挑选面板种子需与之机械核对不相交。

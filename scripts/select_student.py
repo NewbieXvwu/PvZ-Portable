@@ -30,6 +30,7 @@ def main() -> None:
     p.add_argument("--workers", type=int, default=16)
     p.add_argument("--value", default=str(ROOT / "artifacts/value_net/v2/model.pt"), help="unused by the fast arm")
     p.add_argument("--resource-dir")
+    p.add_argument("--executable", type=Path, default=ROOT / 'build/pvz-portable')
     args = p.parse_args()
     paths = sorted({q for pattern in args.candidates.split(",") for q in glob.glob(pattern)})
     if not paths:
@@ -42,6 +43,7 @@ def main() -> None:
             task, offset, count = spec.split(":")
             out = work / f"c{i}_{task}"
             cmd = [sys.executable, str(ROOT / "scripts/search_play.py"), "--rollout-policy", path, "--value", args.value,
+                   "--executable", str(args.executable),
                    "--manifest", args.manifest, "--task-id", task, "--seed-offset", offset, "--seeds", count,
                    "--arms", "fast", "--workers", str(args.workers), "--out", str(out)]
             if args.resource_dir:
