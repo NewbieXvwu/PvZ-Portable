@@ -1092,3 +1092,9 @@ L31 `demo_fog_31_snow_m200` **N=142**（第 3 波）。冷启动三局全 0/8。
   （`~/pvz-logs/curriculum_state.json` 的 `cells.demo_fog_33_*`）。
 - **回滚**：把清单里的 `demo_start` 去掉（或给 `--demo-start-manifest` 指一份没有它的清单），
   `reconcile_start_cells` 会把三个格退休到 `retired_cells`，面板格与倍率阶梯完全不受影响。
+- **task71b（2026-10-25）**：L32 `demo_fog_32_snow_m200` 加入。12 点扫描：老师 50% 线 **N=225**（第 25 波附近，4/8）、
+  8/8 线 **N=560**；学生 50% 线 N=672、8/8 线 N=895。N=336 是 3/8（低于 50%，不入阶梯，8 未来共享前史的噪声带）。
+  破防**无气球**（老师 26 输局：普通 30、路障 19、橄榄 3）——与 task67 的 L32 归因（开局经济）同型，
+  用户打法（雾里坚果防线、前面垫零费小喷菇）不改变这一点。阶梯 `1231..225` 共 9 档，
+  种子块 44,300,000–44,300,255（与现有段不相交）；起点格 42 → 43，
+  `test_registered_manifest_start_cells` 的期望集合同步加它。扫描正文见 [demo-start-states.md](MEMORY/docs/demo-start-states.md) §6.6。

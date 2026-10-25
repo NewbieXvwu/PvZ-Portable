@@ -83,3 +83,16 @@
 1. 照第 1 步做 12 点接手扫描（老师/学生各 8 局，`--future-seeds`），报老师过 50% 与 8/8 的最早点、输局归因（用户说后期是在雾里布坚果防线、前面垫零费小喷菇）。
 2. 在 `configs/human_demo_tasks.json` 给它加 `demo_start`（阶梯取扫描结果，种子块与现有全部段不相交），照第 2 步的测试与 DESIGN 登记；提交并 push origin demo。部署由主控做。
 - 追加（同日）：用户又打通 L34 `demo_fog_34_cactus_snow_m200`（30 波、1198 动作、被吃 29 其中零费 28、0 小推车，verified；打法：开局看到有气球就在第三列种仙人掌，再上寒冰射手和大喷菇）。存档 `/Users/newbiexvwu/PvZAgent/artifacts/human_demo/raw/seed_20261034/demo_fog_34_cactus_snow_m200`。L32 做完后对它做同样的扫描与起点格。
+
+## 结果（task71b，2026-10-25）
+
+- **第 1 步（L32 接手扫描）**：12 点 × 8 未来 × 2 臂 = 192 局。老师 50% 线 **N=225**（4/8）、
+  8/8 线 **N=560**；学生 50% 线 N=672、8/8 线 N=895。破防**无气球**（老师 26 输局：普通 30、
+  路障 19、橄榄 3），早期输局在第 7–13 波——与 task67 的 L32 开局经济归因同型。
+  N=336 的 3/8 低于 N=225（8 未来共享前史的噪声带，不入阶梯）。正文见
+  [demo-start-states.md](demo-start-states.md) §6.6。
+- **第 2 步（登记）**：`configs/human_demo_tasks.json` 给 `demo_fog_32_snow_m200` 加 `demo_start`
+  （阶梯 `1231..225` 共 9 档降序，N=336 低于 50% 不入；种子块 44,300,000–44,300,255，256 个，
+  与现有全部段不相交）。`test_registered_manifest_start_cells` 期望集合同步加它，
+  `python/test_curriculum_queue.py` 54 项通过。DESIGN §14.26 加 task71b 条目。
+- **提交**：`git push origin demo`（本步）。
