@@ -359,6 +359,16 @@ class RobustnessTest(unittest.TestCase):
             child.close()
             parent.close()
 
+    def test_rewind_invalidates_assessment_of_the_old_trajectory(self):
+        from unittest.mock import patch
+        game = Game('demo_roof_49_doom_m200', tick=60,
+                    robustness={'passed': True, 'checkpoints': {'10': {'wins': 8, 'k': 8}}})
+        with patch.object(game, '_start'), patch.object(game, '_replay_to'):
+            game.rewind(30)
+        self.assertTrue(game.manual_patch)
+        self.assertIsNone(game.robustness_report)
+        game.close()
+
     def test_internal_trials_cannot_rewind_branch_or_export(self):
         from unittest.mock import patch
         trial = Game('demo_roof_49_doom_m200', tick=60, ops=[dict(end_tick=60)], _internal=True)
@@ -401,8 +411,10 @@ class RobustnessTest(unittest.TestCase):
         class Trial:
             tick = 0
             terminal = True
+            ops = []
             def __init__(self): self.env = Env()
             def _start(self): pass
+            def _seek_wave_start(self, wave, tick): pass
             def _reset_bookkeeping(self, obs): self.obs = obs
             def close(self): pass
         def policy(game): game.wait(30)
@@ -417,6 +429,32 @@ class RobustnessTest(unittest.TestCase):
                 self.assertEqual(report['passed'], passed)
                 self.assertEqual(report['k'], k if k is not None else 8)
                 parent.close()
+
+    def test_wave_start_is_first_tick_inside_a_coarse_wait(self):
+        class Env:
+            tick = 10
+            _last_response = {'state_hash': 'diagnostic'}
+            def observe(self):
+                return dict(tick=self.tick, wave=9 if self.tick < 17 else 10,
+                            terminal=False, result=0, plants=[], zombies=[], defenses=[])
+            def snapshot_fast(self): return self.tick
+            def restore_fast(self, tick): self.tick = tick
+            def release_snapshot(self, snapshot): pass
+            def step(self, action):
+                self.tick += action['ticks']
+                return self.observe(), 0, False, False, dict(ok=True, events={})
+            def close(self): pass
+        prefix = dict(action=dict(type='wait', ticks=10), tick=0, end_tick=10,
+                      ok=True, state_hash='diagnostic')
+        trial = Game('demo_roof_49_doom_m200', ops=[prefix], tick=10, _internal=True)
+        trial.env = Env()
+        trial._reset_bookkeeping(trial.env.observe())
+        trial._seek_wave_start(10, 35)
+        self.assertEqual(trial.tick, 17)
+        self.assertEqual(trial.obs['wave'], 10)
+        self.assertEqual(trial.ops[-1]['action'], dict(type='wait', ticks=7))
+        self.assertGreater(trial.session.level(49)['search_ticks'], 7)
+        trial.close()
 
     def test_policy_source_unavailable_is_not_replaced_by_a_name(self):
         from unittest.mock import patch

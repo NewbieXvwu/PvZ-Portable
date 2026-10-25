@@ -4,7 +4,7 @@
 1. **可复现**：同一打法、同一检查点种子，两次 `robustness()` 的胜局数逐字相同。
 2. **RESEED 只改未来**：换种子前后当前状态（tick / 阳光 / 植物数）不变，
    但之后出的僵尸不同。
-3. **预算计数**：一次 `robustness()` 至少记 k × max_ticks 个搜索 tick。
+3. **预算计数**：两次检查点 0 试打，精确记 2 × k × max_ticks 个搜索 tick。
 
     python3 scripts/llmplay/robustness_check.py [--executable PATH] [--resource-dir DIR]
 """
@@ -26,11 +26,6 @@ def policy(game):
     game.wait(30)
 
 
-def zombie_types(game):
-    return sorted({int(z[0]) if isinstance(z, list) else int(z['type'])
-                   for z in (game.obs.get('zombies') or [])})
-
-
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument('--executable')
@@ -50,23 +45,25 @@ def main() -> int:
         failures.append('同一打法两次结果不同')
 
     spent = after['search_ticks'] - before['search_ticks']
-    want = 2 * 300
-    print('预算：搜索 tick +%d（至少 %d）%s' % (spent, want, 'OK' if spent >= want else 'FAILED'))
-    if spent < want:
-        failures.append('搜索预算少记')
+    want = 2 * 2 * 300
+    print('预算：搜索 tick +%d（应为 %d）%s' % (spent, want, 'OK' if spent == want else 'FAILED'))
+    if spent != want:
+        failures.append('搜索预算不符')
 
     state = []
     futures = []
     for seed in (83_000_000, 83_000_001):
         trial = Game(TASK, executable=args.executable, resource_dir=args.resource_dir)
         trial.wait(600)
-        state.append((trial.tick, trial.obs.get('sun'), len(trial.obs.get('plants') or [])))
+        before_reseed = trial.env.observe()
         trial.env.reseed(seed)
         trial.obs = trial.env.observe()
+        visible = ('tick', 'sun', 'plants', 'zombies', 'defenses', 'packets')
+        state.append(all(before_reseed.get(key) == trial.obs.get(key) for key in visible))
         trial.wait(2400)
-        futures.append(zombie_types(trial))
+        futures.append(trial.obs.get('zombies') or [])
         trial.close()
-    same_state = state[0] == state[1]
+    same_state = all(state)
     different_future = futures[0] != futures[1]
     print('RESEED 只改未来：状态不变 %s / 未来不同 %s'
           % ('OK' if same_state else 'FAILED', 'OK' if different_future else 'FAILED'))

@@ -688,13 +688,49 @@ class Game:
                                % operation)
 
     def _wave_tick(self, wave: int) -> int | None:
-        """第 wave 波开始时的 tick（wave 0 = 开局）。没打到这一波就返回 None。"""
+        """首次观测到该波的 tick（定位上界；wave 0 = 开局）；未到达返回 None。"""
         if wave <= 0:
             return 0
         for row in self.wave_history:
             if int(row["wave"]) == int(wave):
                 return int(row["tick"])
         return None
+
+    def _seek_wave_start(self, wave: int, upper_tick: int) -> None:
+        """在包含波次切换的 wait 内定位首 tick；仅供内部评估重放使用。"""
+        assert self._internal and self.env is not None
+        if int(self.obs.get("wave") or 0) >= wave:
+            return
+        start = self.tick
+        limit = int(upper_tick) - start
+        if limit < 1:
+            raise RuntimeError("检查点重放未达到第 %s 波" % wave)
+        prefix = [dict(op) for op in self.ops]
+        snapshot = self.env.snapshot_fast()
+
+        def advance(ticks):
+            self.env.restore_fast(snapshot)
+            self.ops = [dict(op) for op in prefix]
+            self.frames = []
+            self._reset_bookkeeping(self.env.observe())
+            self.wait(ticks)
+
+        try:
+            advance(limit)
+            if int(self.obs.get("wave") or 0) < wave:
+                raise RuntimeError("检查点重放未复现第 %s 波，请先核对任务与操作日志" % wave)
+            low, high = 1, limit
+            while low < high:
+                middle = (low + high) // 2
+                advance(middle)
+                if int(self.obs.get("wave") or 0) >= wave:
+                    high = middle
+                else:
+                    low = middle + 1
+            advance(low)
+        finally:
+            if self.env is not None:
+                self.env.release_snapshot(snapshot)
 
     def robustness(self, policy, *, k: int | None = None, checkpoints=None,
                    max_ticks: int = 90000, seed_config=None) -> dict:
@@ -735,13 +771,25 @@ class Game:
                                                         note="还没打到这一波（或没有配置种子）")
                 continue
             kept = _truncate_ops(self.ops, tick)
+            replay_tick = tick
+            if wave > 0:
+                # 先停在切换所在的 wait 之前；同 tick 的后续种植也不应混入检查点。
+                for index, op in enumerate(self.ops):
+                    if op["tick"] < tick <= op["end_tick"]:
+                        kept = [dict(entry) for entry in self.ops[:index]]
+                        replay_tick = int(op["tick"])
+                        break
             trial = Game(self.task_id, seed=self.seed, manifest=self.manifest,
                          executable=self.executable, resource_dir=self.resource_dir,
-                         ops=kept, frames=[], tick=tick, _internal=True)
+                         ops=kept, frames=[], tick=replay_tick, _internal=True)
             wins = 0
             try:
                 trial._start()
                 assert trial.env is not None
+                if wave > 0:
+                    trial._seek_wave_start(wave, tick)
+                    kept = [dict(op) for op in trial.ops]
+                    tick = trial.tick
                 snapshot = trial.env.snapshot_fast()
                 try:
                     for seed in seeds:
@@ -762,7 +810,7 @@ class Game:
                         trial.env.release_snapshot(snapshot)
             finally:
                 trial.close()
-            result["checkpoints"][str(wave)] = dict(wins=wins, k=len(seeds), reached=True)
+            result["checkpoints"][str(wave)] = dict(wins=wins, k=len(seeds), reached=True, tick=tick)
         wave10 = result["checkpoints"].get("10") or {}
         if wave10.get("reached"):
             # 任务书 §task81d：第 10 波检查点 8 个新未来至少赢 5 个才算「稳」。
