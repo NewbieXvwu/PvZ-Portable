@@ -909,7 +909,8 @@ class DemoStartCellsTest(unittest.TestCase):
                                       'demo_fog_34_cactus_snow_m200', 'demo_fog_39_cactus_snow_m200',
                                       'demo_roof_42_melon_m200', 'demo_roof_43_melon_m200',
                                       'demo_roof_44_melon_m200', 'demo_roof_42_gloommelon_m200',
-                                      'demo_roof_49_doom_m200'})
+                                      'demo_roof_49_doom_m200', 'demo_roof_48_doom_m200',
+                                      'demo_roof_46_doom_m200'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
