@@ -1,0 +1,232 @@
+{
+ "schema_version": 1,
+ "task": 76,
+ "inputs": {
+  "engine": {
+   "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/pvz-portable",
+   "sha256": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+   "bytes": 10396392
+  },
+  "student": {
+   "source": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/student.pt",
+   "sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+   "bytes": 722094
+  },
+  "value": {
+   "source": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/value.pt",
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+   "bytes": 611739
+  },
+  "static": {
+   "source": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/static.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+   "bytes": 584603
+  },
+  "v4_control": {
+   "source": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/frozen/v4_control.pt",
+   "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+   "bytes": 611163
+  }
+ },
+ "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/roof_panel.json",
+ "manifest_sha256": "8ab8d4da0457575bc085904350fa2a2d8388033894cf7ddce0e0b6db363401af",
+ "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+ "student_round_at_freeze": 11,
+ "curriculum_round_at_freeze": 12,
+ "code_sha256": {
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/scripts/search_play.py": "98193f51ad5a1960bcf9c47f1492bd654419b25648f080a11264652f10a1d45a",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/python/pvz_env.py": "735d012e46f45641b0f33a861054b7a8ad08e47b975e77e574e6ded9fa185821",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/python/pvz_event_env.py": "027dfd9c0771b5b1a69de2e47f9500bf8dc61a778d97a03d4c9c578efa64fd89",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/python/pvz_rollout_policy.py": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/scripts/pvz_tasks.py": "61279b49f572a4b1232d4b39a6b7349a36385e2b8e3e7081d61826c1096519bf",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/scripts/render_episode.py": "8b5fd19d8a94ae339f6c0c7f9e367255e1521faa085fb919ede2eab8332f9311",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/scripts/make_roof_panel.py": "e4c7ca3ed2fbacb4337186816f8a5436692a9f6bb676f0c4964ca2fd2972075c",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/scripts/zone_panel.py": "7d2eef6b36c08cce34f822beb3151bfb4c3b21abc5e3d26b473b71986515577f"
+ },
+ "deck_checks": [
+  {
+   "level": 41,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 25
+  },
+  {
+   "level": 42,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 20
+  },
+  {
+   "level": 43,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  },
+  {
+   "level": 44,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  },
+  {
+   "level": 45,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  },
+  {
+   "level": 46,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  },
+  {
+   "level": 47,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  },
+  {
+   "level": 48,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  },
+  {
+   "level": 49,
+   "warnings": [],
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    32,
+    35,
+    33
+   ],
+   "starting_sun": 50,
+   "starting_pots": 15
+  }
+ ],
+ "workers": 6,
+ "teacher": {
+  "per_card": 1,
+  "student_candidates": 2,
+  "samples": 3,
+  "verify_samples": 9,
+  "horizon": 2500,
+  "min_gap": 300,
+  "rollout_sim_skip": 61,
+  "dagger_beta": 1.0,
+  "margin": 0.02
+ },
+ "initial_levels": [
+  42,
+  43
+ ],
+ "seeds_per_level": 32,
+ "expansion": "Every roof level in L42-L49 with task74 teacher win rate <50%; request authoritative task74 result; do not infer from v4.",
+ "arms": [
+  "production",
+  "all_plants",
+  "all_legal"
+ ],
+ "contrasts": {
+  "primary": "all_plants vs production isolates omission of legal planting cells",
+  "supplementary": "all_legal additionally includes legal shovels; report action-space effects separately"
+ },
+ "coverage": "Record every game decision before action, every legal plant and shovel, production candidates, all halving rounds and verification; packet slots mapped to actual plant types.",
+ "terminal_probe": {
+  "futures_per_action": 8,
+  "actions": "Every legal plant and shovel plus canonical wait at each frozen probe root",
+  "continuation": "Frozen greedy student C++ ROLLOUT until_tick=0, matching task72b; explicitly distinct from task46 search-teacher terminal continuation",
+  "selection": "After paired panels finish, first two losing production seeds per required level; four time-spaced scheduled legal roots (0/one-third/two-thirds/latest) per loss; terminal outcomes never used to choose roots.",
+  "leaf_futures": 9,
+  "horizons": [
+   2500,
+   4000,
+   6000
+  ],
+  "v4_control": "Same roots/futures/h2500 where v4 exists; also report historical task46 53.9% as protocol-different reference."
+ },
+ "production_changes": false,
+ "protected_tree_writes": false,
+ "historical_v4_reference": "MEMORY/docs/task46-roof-zone.md: won 53.9%, cluster95%47.1-60.9; different roots, model, two futures and teacher continuation"
+}
