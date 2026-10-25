@@ -261,6 +261,12 @@ def refresh(*, destination=DESTINATION, state=STATE, labels=None, legacy_reports
             elif (old and old.get('archive_sha256') == remote_sha
                   and local_matches(destination, label, old)):
                 result = {**old, 'refresh_added_files': 0, 'reused_verified_package': True}
+            elif old and old.get('recovered_local_receipt'):
+                # A local corpus digest cannot reconstruct the original compressed package
+                # digest. Never silently redownload/reimport a package after journal loss.
+                raise ValueError(f'{label}: recovered receipt cannot verify this remote package; '
+                                 'automatic re-import refused; reconcile the original package '
+                                 'SHA256 and local corpus explicitly')
             else:
                 # Persist intent first so a crash during a new z label cannot freeze a partial import.
                 introduced.add(label + '_fast_search')

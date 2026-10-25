@@ -1,0 +1,37 @@
+{
+  "labels": 377,
+  "local_episodes_hashed": 51014,
+  "known_original_package_hash": 77,
+  "historical_frozen_selection": 40,
+  "unknown_original_package_hash_blocked": 260,
+  "sample_behaviors": [
+    {
+      "label": "d10dag4b",
+      "result": "reused_verified_package",
+      "download_calls": 0
+    },
+    {
+      "label": "z15dag10b",
+      "result": "frozen_selection",
+      "download_calls": 0
+    },
+    {
+      "label": "d1dag1m",
+      "result": "blocked_pending_original_remote_hash_reconciliation",
+      "download_calls": 0
+    }
+  ],
+  "snapshot_journal_sha256": {
+    "/home/newbiexvwu/PvZ-search/artifacts/mac_import/mac_import.json": "d87895ea8818f3e7f2600b36a1cdc50eb3e939279574f04b78edf2d618f3a9f6",
+    "/home/newbiexvwu/PvZ-search/artifacts/mac_import/mac_package_journal.json": "77d9c0bbc14efa8050fde41cf7550aa38163969ff5d825b0919dbf3ffda07ebe"
+  },
+  "canonical_journal_rows_at_snapshot": 418,
+  "unit_tests": "python/test_import_mac_labels.py: 13 passed",
+  "network_access": false,
+  "corpus_writes": 0,
+  "compatibility_entry": "/home/newbiexvwu/PvZ-search/.claude/worktrees/macpool/scripts/import_mac_labels.py",
+  "tests": "13 passed in 0.52s; includes refusing to overwrite an existing journal",
+  "live_import_entry": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/import_mac_labels.py",
+  "live_entry_guard_deployed": true,
+  "import_loop_restarted_by_recovery": false
+}

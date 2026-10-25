@@ -171,3 +171,46 @@ def test_missing_requested_label_and_import_lock(tmp_path):
     with mac.import_lock(tmp_path / 'state'):
         with pytest.raises(RuntimeError, match='another Mac importer'):
             refresh(tmp_path, FakeHF({}))
+
+
+def test_recovered_local_receipt_blocks_unverifiable_remote_without_download(tmp_path):
+    hf = FakeHF({'p21w1m': package(tmp_path, 'p21w1m')})
+    receipt = mac.import_archive(hf.packages['p21w1m'], tmp_path / 'frames_v2',
+                                 'p21w1m', disk_check=lambda *a: None)
+    receipt.pop('archive_sha256')
+    mac.write(tmp_path / 'state/mac_package_journal.json',
+              dict(repo='fake/repo', destination=str(tmp_path / 'frames_v2'),
+                   rounds=[dict(label='p21w1m', recovered_local_receipt=True, **receipt)]))
+    with pytest.raises(ValueError, match='automatic re-import refused'):
+        refresh(tmp_path, hf)
+    assert hf.downloads == []
+
+
+def test_rebuilt_receipts_reuse_known_package_and_preserve_unknown_hash(tmp_path):
+    import rebuild_mac_import_journal as recovery
+    hf = FakeHF({label: package(tmp_path, label) for label in ('d1dag1m', 'p21w1m')})
+    destination = tmp_path / 'frames_v2'
+    known = mac.import_archive(hf.packages['d1dag1m'], destination, 'd1dag1m',
+                               disk_check=lambda *a: None)
+    mac.import_archive(hf.packages['p21w1m'], destination, 'p21w1m', disk_check=lambda *a: None)
+    legacy = tmp_path / 'legacy.json'
+    mac.write(legacy, dict(repo='fake/repo', destination=str(destination),
+                           rounds=[dict(label='d1dag1m', **known)]))
+    markers, labels = tmp_path / 'paths.txt', tmp_path / 'labels.txt'
+    markers.write_text('transfer/d1dag1m.tgz\ntransfer/p21w1m.tgz\n')
+    labels.write_text('')
+    report = recovery.rebuild(remote_paths=markers, labels_file=labels,
+                              destination=destination, state=tmp_path / 'state',
+                              legacy_reports=[legacy])
+    assert [row['archives'] for row in report['rounds']] == [1, 1]
+    assert 'archive_sha256' not in report['rounds'][1]
+    before = (tmp_path / 'state/mac_package_journal.json').read_bytes()
+    with pytest.raises(ValueError, match='refuse to overwrite'):
+        recovery.rebuild(remote_paths=markers, labels_file=labels,
+                         destination=destination, state=tmp_path / 'state',
+                         legacy_reports=[legacy])
+    assert (tmp_path / 'state/mac_package_journal.json').read_bytes() == before
+    assert refresh(tmp_path, hf, labels=['d1dag1m'])['added_files_this_refresh'] == 0
+    with pytest.raises(ValueError, match='automatic re-import refused'):
+        refresh(tmp_path, hf, labels=['p21w1m'])
+    assert hf.downloads == []

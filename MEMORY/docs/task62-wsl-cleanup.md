@@ -976,6 +976,22 @@ Mac副本只作交叉核对：恢复的白天26项逐任务与Mac一致；恢复
 
 完整六份哈希、精确argv及43格逐组证据索引见 [结构化恢复记录](task62-stage4-recovery.json)。主控据上述结果于21:35重启qc；执行者不再负责或操作qc运行。
 
+### mac_import journal恢复与防重复导入（2026-10-25）
+
+从`~/pvz-logs/imported_remote_paths.txt`的379条路径（377个支持的标签、2条旧归档变体）及空的`imported_labels.txt`恢复历史收据；同时读取幸存的dw4/task23和dw5/task27旧收据。扫描正式`frames_v2`，逐份核对并计算51,014组frames.npz/meta.json的文件哈希与标签ledger；不改正式帧，不访问网络。恢复377标签，其中77个保留旧收据原包SHA256，40个保持历史z筛选集，260个原压缩包哈希未知，未用本地ledger冒充原包哈希。
+
+恢复命令（在cleanup工作树执行，已执行一次；脚本现在拒绝覆盖现存journal，不能对活动目录重跑）：
+
+```bash
+/home/newbiexvwu/.venvs/ml/bin/python3 -B scripts/rebuild_mac_import_journal.py --remote-paths /home/newbiexvwu/pvz-logs/imported_remote_paths.txt --labels-file /home/newbiexvwu/pvz-logs/imported_labels.txt
+```
+
+原路径`~/PvZ-search/artifacts/mac_import/mac_import.json`与`mac_package_journal.json`已恢复。恢复时两份SHA256分别为`d87895ea8818f3e7f2600b36a1cdc50eb3e939279574f04b78edf2d618f3a9f6`和`1a17d73616be15d048440c1065d5e7d9ce2c6d7d8476611f4eaaa972ba94f27e`。之后活动导入器正常追加新标签，验证快照已有418条journal记录，不能再以377为整个活动journal总数，也不能用旧快照覆盖新记录。
+
+导入器增加恢复收据保护：原包哈希与本地ledger均一致才直接复用；历史z筛选沿用冻结策略；恢复记录缺原包哈希或核验不符时明确报错并拒绝下载/重导，须先对账。新标签继续走原有导入流程。主控已把小时循环入口改为cq脚本，执行者将同一保护补丁同步到`cq/scripts/import_mac_labels.py`，只改该独立导入文件，未操作qc或重启导入循环。此前还为被退役macpool的旧脚本路径补了指向cleanup导入器的兼容软链；它不是注册工作树。
+
+复制journal到独立验证目录、使用模拟远端（真实正式帧只读）抽查三种行为：已知哈希复用、冻结筛选复用、未知哈希拒绝；下载调用均0，正式帧写入0。回归测试`python/test_import_mac_labels.py`共13项通过（0.52s），包含拒绝覆盖现有journal。详细快照与结果见[收据恢复核验](task62-mac-journal-recovery.json)。
+
 ### 今后删除判定
 
 凡 `source_paths`、recipes、state或生产脚本默认路径出现的路径，均视为在用；包括惰性读取、输出父目录及其仍被引用的子路径。先解析这些权威引用及传递依赖，再谈处置；不得用“ignored”“暂时未打开fd”或“没有符号链接”替代引用核对。主控当前明确禁止继续删除任何东西。
