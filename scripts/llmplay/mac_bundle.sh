@@ -69,7 +69,10 @@ if [ "$MODE" = docker ]; then
     echo "没有 docker。装 Docker Desktop，或 ./run.sh local <Mach-O 引擎>" >&2
     exit 2
   fi
-  exec docker run --rm -v "$HERE":/w -w /w python:3.11-slim bash -c \
+  # 包里的引擎是 x86_64 ELF；Apple Silicon 默认拉 arm64 镜像，会 exec format error。
+  PLAT=""
+  case "$(uname -m)" in arm64|aarch64) PLAT="--platform linux/amd64" ;; esac
+  exec docker run --rm $PLAT -v "$HERE":/w -w /w python:3.11-slim bash -c \
     "pip install -q numpy && bash /w/run.sh local /w/pkg/build/pvz-portable"
 fi
 
