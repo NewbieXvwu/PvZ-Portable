@@ -54,3 +54,11 @@ Mac 上的模型路径：静态网 `/Users/newbiexvwu/PvZAgent/artifacts/hard/va
 - 2026-10-25：补跑 L40 的 storm vs xray 对照（同种子 61200000–61200031）：storm 5/32（15.6%，Wilson 6.9–31.8）对 xray 6/32（18.8%，8.9–35.3），末波 18.69 vs 20.78，气球破防 19 vs 21。差值不显著，黑幕的信息成本量不出来；原先「黑屏看不见气球」的假设被否掉，L40 的瓶颈在气球处理。两族逐种子胜局零重叠，配对比较无意义。已写入 `MEMORY/docs/native-conveyor.md`。
 - 2026-10-25（交回主控）：task75 五项全部做完——原生族登记、观测审查（L25 体型 / L40 storm / L30 原生 vs p9k）、96 局老师冷启动、测试（49 passed / 47 subtests）、结论进 `MEMORY/docs/native-conveyor.md`。工作树干净，`conveyor2` 与 origin 一致（HEAD 393c5a2d）。未做的两项对照（L30 的 p9k、L40 的 storm vs xray）记在"问题"。
 - 2026-10-25 最终审计：当前 `HEAD=ce29b238` 与 `origin/conveyor2` 一致；`python -m pytest python -q` 为 605 passed / 19 skipped / 133 subtests，`coldstart3` 的三关原始记录核验为 96/96 局，结论文档、L30 p9k 配对和 L40 storm/xray 对照均已在仓库历史中。
+
+## 主控追加（2026-10-25 20:45，task75b：用倍率阶梯把三关接进课程）
+task75 已合入 pvz-env（f85a35c5）。三关老师冷启动都不到 50%（L25 28%、L30 0%、L40 16%）。照课程的一贯做法，把它们从低倍率接入，不等示范：
+1. 先 `git merge origin/pvz-env`。
+2. 对三个原生族，用同一套生产老师参数扫倍率 0.5 / 0.75（L30 再加 0.25）。每档 16 局，种子从各自评估段里取未用的。报胜率、Wilson 区间、输局末波与破防僵尸。
+3. 老师 ≥50% 的最高一档作为起始倍率，照 `make_multiplier_tasks.py` 的现有方式登记阶梯（CURRICULUM_LEVELS 等）。种子段与现有段不相交，要机械核对；同时登记 DESIGN。测试照 test_zones 那组的写法补上。
+4. 0.25 档仍到不了 50% 的关单独写明，不登记，交主控决定是否请用户示范。
+5. 结果写进本文件和 `MEMORY/docs/native-conveyor.md`，`git push origin conveyor2`。部署由主控做。Mac 上每个任务最多 6 个游戏进程。
