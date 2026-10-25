@@ -113,6 +113,11 @@ $PY $P/scripts/task77_value_kernel_check.py --time
 - **day 的静态值明显偏重**（6.85 + 6.62 = 13.5 ms/决策，8.4%）：白天族的 `STATIC_SCORES` 调用最多
   （引擎 CPU 42.1 s，其余族 5–22 s）。也就是说值网络这条路的优化只在白天族有可观收益。
 - **屋顶与雾的 Python 侧更高**（10.0% / 7.0%）：对局短、决策少，固定开销摊不薄。
+- **Python 侧没有单一可优化点。** 8 局的 `cProfile` 里 90.8% 的 tottime 落在
+  `pvz_env.py:376 _read_message`——那是阻塞读、在等引擎算完，属于命令内时间而不是 Python 计算。
+  去掉这一项后剩下的 143 s / 8 局（cProfile 放大约 1.8 倍，对应 worker CPU 9.9 s/局）分散在
+  `torch.conv2d` 0.42%、json 解码 0.39%、`_io.open` 0.39%、`v2_extra` 0.18% 等，最大一项不到半成；
+  worker CPU 只占整局墙钟 5.8%（9.87 s / 170 s）。所以这一层没有“改一处省一截”的空间。
 
 ## 4. 采样热点（最终版，`hotspots` 阶段重算）
 

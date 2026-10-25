@@ -42,6 +42,8 @@
 
 - [libc 归因] `libc6-dbg` 在本机装不上（apt 走代理 403），改为新增 `scripts/task77_libc_classify.py`：按模块统计 libc 占 4.71%（26,664 / 566,659），再用采样地址的指令窗口分类——memset 26.9%（占全部 1.26%）、AVX 向量拷/写 19.8%（0.93%）、`rep movs` 4.6%（0.22%）、其余 48.7%（2.29%）。与被否决的 im2col 缓冲拆分一致（零边重建只占 memset 的一部分）。报告 §4/§8 已更新，14 项证据测试通过。
 
+- [Python 侧归因] 8 局 cProfile：90.8% 的 tottime 在 `pvz_env._read_message`（阻塞等引擎，属命令内），扣除后剩 143 s/8 局（cProfile 放大 ~1.8×，对应 worker CPU 9.9 s/局）分散在 torch.conv2d 0.42%、json 0.39%、_io.open 0.39% 等，最大项不到半成；worker CPU 仅占墙钟 5.8%。结论：Python 侧无单点可优化，报告 §3 已记。
+
 ## 问题
 
 - redeploy/build 已由 task70 B5 重建，不能当原 deploy4；正式基线只读复制生产 cq/build4（SHA 与 task70 deploy4 一致）。系统无 perf，采用现有 SIGPROF 采样器并结合 cProfile。
