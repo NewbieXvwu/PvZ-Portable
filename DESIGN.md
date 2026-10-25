@@ -1054,6 +1054,7 @@ L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学�
 
 **影响面**：完整、lean、v2 与 C++ 学生输入走同一个 `EnvironmentZombieVisible` / `EnvironmentProjectileVisible`，不会出现两套可见性。雾区族目前不在 qc 训练集合里；task58（记忆探针）以"现行规则隐藏"作标签，换到 `human_v2` 前需要主控决定是否重新打标签。
 
+**修订（task70 B5，2026-10-25）：雾中己方植物的内部状态遮蔽。** 用户标注发现人**看不到雾里的己方植物**——只能靠落子记忆和"拿卡去点、点不下去就说明有植物"。原 human_v2 却把雾中植物的 `mPlantHealth/mPlantMaxHealth` 与状态计时 `mState/mStateCountdown/mDoSpecialCountdown/mLaunchCounter` 原样报出，比人多。修订：植物所在格锚点的渲染不透明度 `>= τ(0.925)`（与僵尸同一阈值）时，观测**保留行/列/种类**（记忆加落子校验可得，植物也从不被从公开清单里删掉），上述六个字段改为固定值 **-1**（沿用 `target_zombie_id` 的未知约定；`launch_rate` 是类型常数、`squished` 等不在列举内，保持原值）。完整、lean、v2 与 C++ 学生输入四处走同一个 `EnvironmentPlantFogHidden`；C++ 学生输入对被遮蔽植物按 JSON 同值的 -1 字段计算（血量通道记 -1.0，土豆/樱桃进度与发射倒计时公式原样作用于 -1），与 python 解码器逐位一致。`human` / `xray` 与非雾关卡逐位不变（对拍脚本 `python/test_fog_plant_masking.py`，对拍基线 `artifacts/task70/deploy4_pre_b5/`）。学生现在对雾中植物**知道的比人少的那部分不再偷看**；已知残留：`shooting_counter`/`wake_up_counter` 未在主控列举内，暂保持原值。
 ### 14.26 示范起点倒推课程：`demo_start` 格（task71，2026-10-24 登记，AGENTS.md §8 第 4 条）
 
 **为什么**：task67 用 12 个卡组族 × 32 个配对种子证明雾区 L32–L34 不是卡组问题（用户卡组 0–9.4%，与对照 0/32 无差异），

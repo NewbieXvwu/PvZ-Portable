@@ -16,7 +16,7 @@ import torch
 import torch.nn.functional as F
 ROOT=Path(__file__).resolve().parents[1]
 sys.path[:0]=[str(ROOT/'python'),str(ROOT/'scripts')]
-from pvz_frame_store import frame_path,read_frames
+from pvz_frame_store import archive_seed,frame_path,read_frames
 from pvz_value_net import SCALARS, CONTEXT, ENCODER_V2, ValueNet, encode_frame, context_vector, load_value_net
 from value_widen_audit import cohort, seed_key
 
@@ -62,7 +62,7 @@ def prepare(args):
     groups=defaultdict(lambda:defaultdict(list))
     for sd in args.data.iterdir():
         if not sd.is_dir() or not sd.name.startswith('seed_'):continue
-        seed=int(sd.name[5:])
+        seed=archive_seed(sd.name)
         if seed in excluded:continue
         for a in sd.iterdir():
             group=cohort(a.name)

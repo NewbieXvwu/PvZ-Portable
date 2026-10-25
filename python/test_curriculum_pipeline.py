@@ -150,13 +150,10 @@ def test_background_failure_is_saved_and_can_be_retried():
              patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
             pipeline = queue.TrainingPipeline(args, state)
             pipeline.enqueue()
-            try:
-                pipeline.close()
-                assert False, 'failure must reach the controller'
-            except RuntimeError as error:
-                assert 'pack failed' in str(error)
+            pipeline.close()   # task70 B7: one failure during the final drain is logged, not raised
         saved = json.loads(args.state.read_text())
         assert saved['round'] == 1 and saved['training_jobs'][0]['status'] == 'failed'
+        assert 'pack failed' in saved['training_jobs'][0]['error']
         def success(self, command, logfile):
             if logfile.name == 'train.log':
                 model = logfile.parent / 'student/model.pt'

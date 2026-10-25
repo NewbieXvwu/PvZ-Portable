@@ -133,16 +133,18 @@ FAMILIES = (
 # task68: fog_user L31 is admitted at multiplier 1.0 (task67 teacher 25/32 = 78.1%, paired
 # p<1e-6 against 0/32 for the fog_f8 deck on the same seeds). The task45 fog_f8/f8p families
 # stay outside the curriculum: they were never measured above 50%.
-# task70: fog_user_v2 is registered but NOT admitted yet: its first teacher cold start on deploy4
-# was 8/32 (25%) against 25/32 for fog_user on other seeds/engine; a paired human vs human_v2
-# comparison on the same seeds decides before it replaces fog_user (2026-10-25).
-CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user': (31,),
-                     'fog_user_v2': (), 'fog79b': (36, 37, 38),
+# task70: fog_user_v2 replaces fog_user in the curriculum now that its own teacher cold start
+# is on file (B5 revision, 31/32 on deploy4 with production v5+branch1; paired human control
+# 29/32, exact McNemar p=0.625 -- the observation is not what separates them). The old family
+# keeps its manifest, seeds and data.
+# task79b: the measured L36-L38 human_v2 bases; task75b: native L25 from 0.5x.
+CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user_v2': (31,),
+                     'fog79b': (36, 37, 38),
                      'native_l25': (25,), 'native_l30': (), 'native_l40': ()}
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
 # 依据：task31 / DESIGN §14.14 —— n10p 换掉 8/9 号卡的局是结构性输局。
-SUPERSEDED = {'night_n10p': 'night_n10q'}
+SUPERSEDED = {'night_n10p': 'night_n10q', 'fog_user': 'fog_user_v2'}
 
 
 def variant_id(base_id: str, suffix: str) -> str:

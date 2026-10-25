@@ -36,9 +36,10 @@ class CurriculumRulesTest(unittest.TestCase):
         ids = training_base_ids()
         self.assertEqual({name for name in ids if name.startswith('roof_')},
                          {'roof_l41_train_r7'})
-        # task79b admits the measured L36-L38 human_v2 bases; L39 remains demonstration-only.
+        # task70 B6: fog_user_v2 (human_v2) replaces fog_user; task79b admits the measured L36-L38
+        # human_v2 bases; L39 remains demonstration-only; fog_f8/f8p stay out.
         self.assertEqual({name for name in ids if name.startswith('fog')},
-                         {'fog_user_l31_snow', 'fog79b_l36_best', 'fog79b_l37_best',
+                         {'fog_user_v2_l31_snow', 'fog79b_l36_best', 'fog79b_l37_best',
                           'fog79b_l38_best'})
         self.assertIn('pool_l25_orig_train', ids)
         self.assertEqual(CURRICULUM_LADDERS['native_l25'], [0.5, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
@@ -907,8 +908,10 @@ class DemoStartCellsTest(unittest.TestCase):
         if not all((ROOT / archive).is_dir() for archive in archives):
             self.skipTest('user demo archives are not in git; present only where they were recorded/fetched')
         cells, _ = load_demo_start_cells(manifest)
-        self.assertEqual(set(cells), {'demo_fog_31_snow_m200', 'demo_fog_32_snow_m200',
-                                      'demo_fog_33_cactus_snow_m200', 'demo_fog_33_cattail_snow_m200'})
+        # task70 B6: the x-ray start cells are retired; the _hv2 family (human_v2 observation,
+        # same archives / ladders / future seed blocks) replaces them.
+        self.assertEqual(set(cells), {'demo_fog_31_snow_m200_hv2', 'demo_fog_32_snow_m200_hv2',
+                                      'demo_fog_33_cactus_snow_m200_hv2', 'demo_fog_33_cattail_snow_m200_hv2'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
