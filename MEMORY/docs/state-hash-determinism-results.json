@@ -798,5 +798,28 @@
       "demo_fog_33_cactus_snow_m200": 2,
       "demo_fog_33_cattail_snow_m200": 2
     }
+  },
+  "terrain_generalisation": {
+    "archive": "/home/newbiexvwu/pvz-logs/llmplay_pkg/final_audit/llmplay_out/demo_roof_46_doom_m200_tick300",
+    "level": 46,
+    "operations": 5,
+    "final": {
+      "executable_sha256": "5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f",
+      "repeats": 4,
+      "unique_reset_hashes": 1,
+      "unique_logical_sha256": 1,
+      "outcome": "tick 300 / wave 0 / result 0"
+    },
+    "before": {
+      "executable_sha256": "87b9495c4b1630c6e574fa81433fed893719d509da4d6f19bb4562aef4544a4e",
+      "repeats": 8,
+      "unique_reset_hashes": 1,
+      "unique_logical_sha256": 1,
+      "note": "short archive does not expose the uninitialised fields, so this is not a positive control"
+    },
+    "out": {
+      "final": "/home/newbiexvwu/pvz-logs/task82/roof_final",
+      "before": "/home/newbiexvwu/pvz-logs/task82/roof_before8"
+    }
   }
 }
