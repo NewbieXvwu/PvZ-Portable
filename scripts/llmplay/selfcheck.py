@@ -42,7 +42,7 @@ def main() -> int:
         print("SELFCHECK FAILED: 任务清单是空的")
         return 1
 
-    task_id = "smoke_roof_41" if "smoke_roof_41" in tasks else sorted(tasks)[0]
+    task_id = "demo_roof_41_doom_m200" if "demo_roof_41_doom_m200" in tasks else sorted(tasks)[0]
     out = Path(tempfile.mkdtemp(prefix="llmplay-selfcheck-"))
     try:
         with Game(task_id) as game:
@@ -62,12 +62,25 @@ def main() -> int:
                         continue
                 game.wait(60)
             print(game.summary())
+
+            # task81d：稳健性接口。只验形状与可复现，不要求这一小局能赢。
+            def policy(trial):
+                trial.wait(30)
+
+            first = game.robustness(policy, k=2, checkpoints=[0], max_ticks=300)
+            second = game.robustness(policy, k=2, checkpoints=[0], max_ticks=300)
+            assert first == second, "robustness() 同一打法同一种子不可复现"
+            assert first["checkpoints"]["0"]["reached"] is True
+            print("稳健性：%s" % json.dumps(first, sort_keys=True))
+
             archive = game.export_archive(out / "archive")
             print("存档：%s（%d 个操作）" % (archive, len(game.ops)))
         meta = json.loads((out / "archive" / "meta.json").read_text(encoding="utf-8"))
         assert meta["schema"] == "episode_archive_v1"
         assert meta["label_source"] == "llm_gpt_pro"
         assert meta["operations"] > 0
+        assert meta["robustness"]["checkpoints"]["0"]["reached"] is True
+        assert meta["manual_patch"] is False
         print("SELFCHECK OK")
         return 0
     finally:

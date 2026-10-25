@@ -22,8 +22,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-import pvz_tasks  # noqa: E402
-
 PYTHON_MODULES = ["pvz_env.py", "pvz_common.py"]
 # pvz_constants.py 是**从 C++ 源码现场解析**常量表的（AGENTS 的约定：不许手抄表），
 # 所以包里必须带上它读的那几个文件，否则 import 阶段就抛"常量来源文件不存在"。
@@ -32,7 +30,9 @@ CONSTANT_SOURCES = ["src/ConstEnums.h", "src/Lawn/Plant.cpp", "src/Lawn/Zombie.c
 SCRIPT_MODULES = ["pvz_constants.py", "pvz_tasks.py", "render_episode.py", "episode_query.py"]
 RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
 DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay_pkg"
-TARGET_LEVELS = (41, 42, 43, 44, 45, 46, 47, 48, 49, 50)
+SEED_PLAN = ROOT / "configs" / "llmplay_seeds.json"
+ROBUSTNESS_PLAN = ROOT / "configs" / "llmplay_robustness.json"
+LAYERS = ("A", "B", "C", "D", "E")
 
 SECRET_PATTERNS = [re.compile(pattern) for pattern in
                    (rb"hf_[A-Za-z0-9]{20,}", rb"sk-[A-Za-z0-9]{20,}", rb"AIza[A-Za-z0-9_-]{30,}",
@@ -48,28 +48,45 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def task_manifest() -> dict:
-    """包里给的任务：屋顶各族（41..50 里已登记的）+ L41 冒烟任务。
+def seed_plan() -> dict:
+    """task81c 的五层任务与 40 种子块（`configs/llmplay_seeds.json`，机械生成）。"""
+    document = json.loads(SEED_PLAN.read_text(encoding="utf-8"))
+    if document.get("schema") != "llmplay_seeds_v1":
+        raise SystemExit("不是 llmplay_seeds_v1：%s" % SEED_PLAN)
+    return document
 
-    卡组不手写：L41 用 pvz_tasks.deck_for_level(41) 现解析（AGENTS §8）。
+
+def task_manifest() -> dict:
+    """包里给的任务：task81c 的五层（A 屋顶 L46–49 → B L42–44 变体 + L41 →
+    C 3.0/4.0 倍 → D 雾夜 L36–39 2.0 倍 → E 原生传送带）。
+
+    任务定义与种子全部来自 `configs/llmplay_seeds.json`（`scripts/llmplay/
+    make_llmplay_tasks.py` 生成）；卡组不在这里手写（AGENTS §8）。
     """
     repo = json.loads((ROOT / "configs" / "human_demo_tasks.json").read_text(encoding="utf-8"))
-    tasks = [task for task in repo["tasks"]
-             if task["level"] in TARGET_LEVELS and task["task_id"].startswith("demo_roof_")]
-    if not any(task["level"] == 41 for task in tasks):
-        tasks.append(dict(task_id="smoke_roof_41", level=41, seeds=[20261041],
-                          zombie_count_multiplier=1.0,
-                          deck=list(pvz_tasks.deck_for_level(41))))
-    tasks.sort(key=lambda task: (task["level"], task["task_id"]))
+    by_id = {task["task_id"]: task for task in repo["tasks"]}
+    plan = seed_plan()
+    order = [task_id for layer in LAYERS for task_id in plan["layers"][layer]]
+    missing = [task_id for task_id in order if task_id not in by_id]
+    if missing:
+        raise SystemExit("任务清单缺这些族，先跑 scripts/llmplay/make_llmplay_tasks.py：%s" % missing)
+    tasks = []
+    for task_id in order:
+        task = dict(by_id[task_id])
+        task["seeds"] = [plan["tasks"][task_id][0]]      # 默认种子 = 本任务块的第一个
+        tasks.append(task)
     return dict(schema=repo.get("schema", "human_demo_tasks_v1"), tasks=tasks)
 
 
 def extra_seeds(manifest: dict) -> dict:
-    """同一关卡再打几个种子的清单（默认种子 +1 / +2）。"""
+    """每个任务 40 个种子（新独立块 81,000,000 起，每任务步长 1000）。"""
+    plan = seed_plan()
     out = {}
     for task in manifest["tasks"]:
-        base = task["seeds"][0]
-        out[task["task_id"]] = [base, base + 1, base + 2]
+        seeds = plan["tasks"].get(task["task_id"])
+        if not seeds:
+            raise SystemExit("种子块里没有任务 %s" % task["task_id"])
+        out[task["task_id"]] = list(seeds)
     return out
 
 
@@ -148,6 +165,8 @@ def build(executable: Path, out: Path, *, resource_dir: Path = RESOURCE_DIR) -> 
         json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (stage / "configs" / "extra_seeds.json").write_text(
         json.dumps(extra_seeds(manifest), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    shutil.copyfile(SEED_PLAN, stage / "configs" / "llmplay_seeds.json")
+    shutil.copyfile(ROBUSTNESS_PLAN, stage / "configs" / "llmplay_robustness.json")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "PROMPT.md", stage / "PROMPT.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "README.md", stage / "README.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "selfcheck.py", stage / "selfcheck.py")

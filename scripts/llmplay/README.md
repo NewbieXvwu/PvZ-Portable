@@ -15,5 +15,6 @@
     g.wait(300)
     print(g.summary())
     g.export_archive("/mnt/data/out/l49_seed20261049")
+    g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 换 8 个新未来还能赢几个
 
 细节见 PROMPT.md。一局 = (任务, 操作序列)；rewind 就是从开局重放。

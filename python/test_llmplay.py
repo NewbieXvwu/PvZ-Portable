@@ -97,17 +97,20 @@ class LogRoundTripTest(unittest.TestCase):
 
 
 class PackageTest(unittest.TestCase):
-    def test_task_manifest_is_roof_only_and_covers_level_41(self):
+    def test_task_manifest_covers_all_five_layers(self):
+        """task81c：包里必须是 A–E 五层，L41 由登记族提供（不再临时造 smoke 任务）。"""
         manifest = build_package.task_manifest()
         ids = [task['task_id'] for task in manifest['tasks']]
-        self.assertTrue(all(task_id.startswith('demo_roof_') or task_id == 'smoke_roof_41'
-                            for task_id in ids))
-        smoke = [task for task in manifest['tasks'] if task['task_id'] == 'smoke_roof_41']
-        self.assertEqual(len(smoke), 1)
-        self.assertEqual(smoke[0]['level'], 41)
-        # 卡组不手写：必须等于 deck_for_level(41)
-        import pvz_tasks
-        self.assertEqual(smoke[0]['deck'], list(pvz_tasks.deck_for_level(41)))
+        plan = json.loads((ROOT / 'configs' / 'llmplay_seeds.json').read_text(encoding='utf-8'))
+        expected = [task_id for layer in ('A', 'B', 'C', 'D', 'E')
+                    for task_id in plan['layers'][layer]]
+        self.assertEqual(ids, expected)
+        by_id = {task['task_id']: task for task in manifest['tasks']}
+        self.assertEqual(by_id['demo_roof_41_doom_m200']['level'], 41)
+        self.assertEqual(by_id['demo_roof_49_doom_m400']['zombie_count_multiplier'], 4.0)
+        self.assertEqual(by_id['fog79_l39_snow_blover_v2_m200']['zombie_count_multiplier'], 2.0)
+        self.assertEqual(by_id['demo_conv_30_orig_m100']['conveyor_start'], 'original')
+        self.assertEqual(by_id['demo_conv_30_orig_m100']['deck'], [])
 
     def test_task_manifest_registers_roof_46_and_47(self):
         """§G.1：L46/L47 的族已由主控登记，包里的任务清单必须带上。"""
@@ -115,12 +118,19 @@ class PackageTest(unittest.TestCase):
         self.assertIn('demo_roof_46_doom_m200', ids)
         self.assertIn('demo_roof_47_doom_m200', ids)
 
-    def test_extra_seeds_are_disjoint_from_default(self):
+    def test_extra_seeds_are_forty_per_task_and_disjoint(self):
+        """task81c：每任务 40 个种子，块内不重复，且第一个就是清单默认种子。"""
         manifest = build_package.task_manifest()
         seeds = build_package.extra_seeds(manifest)
+        flat = []
         for task in manifest['tasks']:
-            self.assertEqual(seeds[task['task_id']][0], task['seeds'][0])
-            self.assertEqual(len(set(seeds[task['task_id']])), 3)
+            values = seeds[task['task_id']]
+            self.assertEqual(len(values), 40)
+            self.assertEqual(values[0], task['seeds'][0])
+            self.assertEqual(len(set(values)), 40)
+            flat.extend(values)
+        self.assertEqual(len(set(flat)), len(flat))
+        self.assertTrue(all(81_000_000 <= seed < 81_100_000 for seed in flat))
 
     def test_package_root_is_repo_root(self):
         self.assertEqual(PACKAGE_ROOT, ROOT)
@@ -322,6 +332,90 @@ class GridTest(unittest.TestCase):
                            [{'type': 23, 'x': 800.0}, {'type': 24, 'x': 820.0}])
         self.assertEqual(len(cell), scene.CELL_WIDTH)
         self.assertTrue(cell.startswith('Mel85'))
+
+
+
+
+class RobustnessTest(unittest.TestCase):
+    """task81d：换未来也能赢 —— 种子块、闭环循环、meta 记录。"""
+
+    def test_seed_block_is_fixed_and_disjoint_from_task_seeds(self):
+        from llmplay.game import robustness_seeds
+        plan = robustness_seeds()
+        self.assertEqual(sorted(plan), [0, 10, 20, 30])
+        self.assertTrue(all(len(seeds) == 8 for seeds in plan.values()))
+        flat = [seed for seeds in plan.values() for seed in seeds]
+        self.assertTrue(all(83_000_000 <= seed < 83_000_400 for seed in flat))
+        self.assertEqual(len(set(flat)), 32)
+        task_seeds = {seed for seeds in json.loads(
+            (ROOT / 'configs' / 'llmplay_seeds.json').read_text(encoding='utf-8'))['tasks'].values()
+            for seed in seeds}
+        self.assertFalse(set(flat) & task_seeds)
+
+    def test_truncate_ops_splits_wait_at_target(self):
+        from llmplay.game import _truncate_ops
+        ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='a'),
+               dict(action=dict(type='wait', ticks=60), tick=60, end_tick=120, ok=True, state_hash='b')]
+        kept = _truncate_ops(ops, 90)
+        self.assertEqual(len(kept), 2)
+        self.assertEqual(kept[0]['end_tick'], 60)
+        self.assertEqual(kept[1]['action'], dict(type='wait', ticks=30))
+        self.assertEqual(kept[1]['end_tick'], 90)
+        self.assertEqual(_truncate_ops(ops, 0), [])
+
+    def test_drive_policy_stops_at_limit_and_requires_progress(self):
+        from llmplay.game import _drive_policy
+
+        class Fake:
+            def __init__(self):
+                self.terminal = False
+                self.tick = 0
+                self.ops = []
+
+        def bump(game):
+            game.tick += 10
+            game.ops.append(1)
+
+        game = Fake()
+        _drive_policy(game, bump, limit_tick=35)
+        self.assertEqual(game.tick, 40)          # 允许最后一次越过上限
+
+        idle = Fake()
+        with self.assertRaises(RuntimeError) as caught:
+            _drive_policy(idle, lambda g: None, limit_tick=100)
+        self.assertIn('没有推进', str(caught.exception))
+
+    def test_wave_tick_comes_from_wave_history(self):
+        ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='aa')]
+        game = Game('demo_roof_49_doom_m200', ops=ops, tick=60)
+        self.assertEqual(game._wave_tick(0), 0)
+        self.assertIsNone(game._wave_tick(10))
+        game.wave_history = [dict(wave=0, tick=0), dict(wave=10, tick=5000)]
+        self.assertEqual(game._wave_tick(10), 5000)
+
+    def test_policy_source_hash_is_stable(self):
+        from llmplay.game import _policy_source
+        def policy(game):
+            game.wait(10)
+        first = _policy_source(policy)
+        self.assertEqual(first, _policy_source(policy))
+        self.assertIn('game.wait(10)', first)
+
+    def test_log_and_archive_meta_carry_robustness(self):
+        report = dict(policy_sha256='ab' * 32, k=8, passed=True,
+                      checkpoints={'10': dict(wins=6, k=8, reached=True)})
+        ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='aa')]
+        game = Game('demo_roof_49_doom_m200', ops=ops, tick=60, robustness=report)
+        game.manual_patch = True
+        document = game.log()
+        self.assertEqual(document['robustness'], report)
+        self.assertTrue(document['manual_patch'])
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'run.json'
+            game.save(path)
+            loaded = Game.load(path)
+        self.assertEqual(loaded.robustness_report, report)
+        self.assertTrue(loaded.manual_patch)
 
 
 class AutoObserveTest(unittest.TestCase):

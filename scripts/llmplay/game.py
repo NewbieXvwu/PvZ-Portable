@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import atexit
 import hashlib
+import inspect
 import json
 import os
 import sys
@@ -80,6 +81,8 @@ ARCHIVE_SCHEMA = "episode_archive_v1"
 LABEL_SOURCE = "llm_gpt_pro"
 FRAME_INTERVAL = 60          # 与 human_demo 的帧节奏一致（每 60 tick 一帧）
 DEFAULT_MANIFEST = ROOT / "configs" / "human_demo_tasks.json"
+ROBUSTNESS_CONFIG = ROOT / "configs" / "llmplay_robustness.json"
+ROBUSTNESS_SCHEMA = "llmplay_robustness_v1"
 
 
 def _default_resource_dir() -> Path:
@@ -133,11 +136,70 @@ def task_spec(task: dict, seed=None):
     return spec, deck, actual_seed
 
 
+
+
+def robustness_seeds(path: str | Path | None = None) -> dict:
+    """稳健性检查点 -> 新未来种子（包里 `configs/llmplay_robustness.json`）。
+
+    这块种子与任务种子分开（task81d）：任务是「已知未来」的局，稳健性是「换一个同样
+    合理的未来还能不能赢」。种子值写死在配置里，模型改不了，也不能拿任务种子代替。
+    """
+    document = json.loads(Path(path or ROBUSTNESS_CONFIG).read_text(encoding="utf-8"))
+    if document.get("schema") != ROBUSTNESS_SCHEMA:
+        raise ValueError("不是 %s 配置：%s" % (ROBUSTNESS_SCHEMA, path or ROBUSTNESS_CONFIG))
+    return {int(entry["checkpoint"]): [int(seed) for seed in entry["seeds"]]
+            for entry in document.get("seeds") or []}
+
+
+def _truncate_ops(ops, tick: int) -> list:
+    """把操作日志截到 tick（跨越目标 tick 的 wait 切成两段），语义与 _replay_to 一致。"""
+    kept = []
+    for op in ops:
+        if op["end_tick"] <= tick:
+            kept.append(dict(op))
+            continue
+        if op["action"].get("type") == "wait" and op["tick"] < tick:
+            kept.append(dict(op, action={"type": "wait", "ticks": tick - op["tick"]}, end_tick=tick))
+        break
+    return kept
+
+
+def _policy_source(policy) -> str:
+    """打法函数的源码（拿不到源码时退回限定名）。稳健性 meta 里只记哈希。"""
+    try:
+        return inspect.getsource(policy)
+    except (OSError, TypeError):
+        return "%s.%s" % (getattr(policy, "__module__", "?"), getattr(policy, "__qualname__", repr(policy)))
+
+
+def _drive_policy(game, policy, *, limit_tick: int, max_calls: int = 100000) -> None:
+    """让闭环打法函数一步接一步地推进，直到终局或到 tick 上限。
+
+    「闭环」是硬要求：每一步只能看当前局面决定动作。函数必须通过 game.plant /
+    game.shovel / game.wait 之类的接口推进局面；一次调用什么都不做就直接报错，
+    否则外层循环会空转。
+    """
+    calls = 0
+    while not game.terminal and game.tick < limit_tick:
+        before = (game.tick, len(game.ops))
+        policy(game)
+        calls += 1
+        if game.terminal:
+            return
+        if (game.tick, len(game.ops)) == before:
+            raise RuntimeError(
+                "闭环打法函数第 %d 次调用后局面没有推进（tick 与操作数都没变）。"
+                "每次调用至少要 plant / shovel / wait 一次。" % calls)
+        if calls >= max_calls:
+            raise RuntimeError("闭环打法函数调用次数超过 %d，疑似死循环。" % max_calls)
+
+
 class Game:
     """一局。构造时只读任务，第一次用引擎时才真正 reset + 重放。"""
 
     def __init__(self, task_id: str, *, seed=None, manifest=None, executable=None,
-                 resource_dir=None, ops=None, frames=None, tick=None, note: str = ""):
+                 resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
+                 robustness=None, manual_patch: bool = False, _internal: bool = False):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
@@ -170,11 +232,20 @@ class Game:
         self._observed_at = None
         self._dirty = False
         self._is_branch = False
+        # task81d：稳健性结果与「是否用 rewind 手工补救过」。导出存档时写进 meta。
+        # 属性不能叫 robustness —— 那是方法名，会被这个赋值遮住。
+        self.robustness_report = robustness
+        self.manual_patch = bool(manual_patch)
+        # RESEED 过的局不能再按操作日志重放（未来已经换过），所以内部试打局带这个标记。
+        self._reseeded = None
+        # 内部试打局（robustness 的 k 个新未来）不写「最远进度」、不进自动 observe。
+        self._internal = bool(_internal)
         self.session = budget.session()
-        if not self.ops and not tick:
+        if not self._internal and not self.ops and not tick:
             # 真正的新开局才受 2:45 门禁限制；读档/重放不受影响（§A）。
             self.session.require_new_game_allowed()
-        _LIVE_GAMES.append(self)
+        if not self._internal:
+            _LIVE_GAMES.append(self)
 
     # ------------------------------------------------------------ 引擎生命周期
 
@@ -363,6 +434,10 @@ class Game:
         所以这里同时改写 ops（跨越目标 tick 的 wait 会被切成两段）。
         """
         assert self.env is not None
+        if self._reseeded is not None:
+            raise RuntimeError(
+                "这局用 RESEED %d 换过未来，操作日志已经不能重放（未来变了）。"
+                "稳健性试打局不能 rewind / save / export；请新建一局。" % self._reseeded)
         cached = self._cache
         start_ops = 0
         if cached and cached["tick"] <= target and self.ops[:cached["n"]] == cached["ops"]:
@@ -455,7 +530,8 @@ class Game:
         return ok
 
     def _persist_best(self):
-        if self.env is None or self.obs is None:
+        # 内部试打局走的是换过的未来，写进「最远进度」会把真局的纪录冲掉。
+        if self._internal or self.env is None or self.obs is None:
             return None
         return self.session.save_best_log(self.spec.level, self.log(), wave=self.max_wave,
                                           won=int(self.obs.get("result") or 0) == 1)
@@ -563,6 +639,8 @@ class Game:
             raise ValueError("不能向前 rewind：当前 tick %d，目标 %d" % (self.tick, target))
         # 同一段第 9 次重写直接拒绝（§A）：计数在 budget.json 里，模型绕不过。
         self.session.note_rewind(self.spec.level, target, self.tick)
+        # task81d：用 rewind 改写过的局在 meta 里标 manual_patch。
+        self.manual_patch = True
         self._persist_best()
         self._replay_to(target)
 
@@ -581,6 +659,86 @@ class Game:
         self.session.note_branch(self.spec.level, +1)
         child._is_branch = True
         return child
+
+
+    # ------------------------------------------------------------ 稳健性（task81d）
+
+    def _wave_tick(self, wave: int) -> int | None:
+        """第 wave 波开始时的 tick（wave 0 = 开局）。没打到这一波就返回 None。"""
+        if wave <= 0:
+            return 0
+        for row in self.wave_history:
+            if int(row["wave"]) == int(wave):
+                return int(row["tick"])
+        return None
+
+    def robustness(self, policy, *, k: int | None = None, checkpoints=None,
+                   max_ticks: int = 90000, seed_config=None) -> dict:
+        """换一个同样合理的未来，这套**闭环打法**还能不能赢（task81d）。
+
+        policy 是一个函数：`policy(game)`，每一步只看当前局面决定动作，通过
+        `game.plant / game.shovel / game.wait ...` 推进。外层会反复调用它，
+        直到终局或超过 max_ticks。
+
+        对每个检查点（默认 0 / 10 / 20 / 30 波，取已经打到的）：
+        读档到那一波开始的 tick，`RESEED` 成 k 个新未来（种子来自包里独立的
+        稳健性块，不是任务种子），用同一个 policy 打到终局，数胜局。
+
+        这一步消耗搜索预算（重放 + 试打都是模拟 tick）。返回的 dict 同时写进
+        `game.robustness`，`export_archive()` 会把它写进 meta。
+        """
+        self._start()
+        plan = robustness_seeds(seed_config)
+        waves = sorted(plan) if checkpoints is None else [int(w) for w in checkpoints]
+        if not waves:
+            raise ValueError("checkpoints 不能为空")
+        source = _policy_source(policy)
+        policy_sha = hashlib.sha256(source.encode("utf-8")).hexdigest()
+        result = dict(policy_sha256=policy_sha, k=k, manual_patch=bool(self.manual_patch),
+                      checkpoints={}, passed=False)
+        for wave in waves:
+            tick = self._wave_tick(wave)
+            seeds = plan.get(wave) or []
+            if k is not None:
+                seeds = seeds[:int(k)]
+            if tick is None or not seeds:
+                result["checkpoints"][str(wave)] = dict(wins=None, k=len(seeds), reached=False,
+                                                        note="还没打到这一波（或没有配置种子）")
+                continue
+            kept = _truncate_ops(self.ops, tick)
+            trial = Game(self.task_id, seed=self.seed, manifest=self.manifest,
+                         executable=self.executable, resource_dir=self.resource_dir,
+                         ops=kept, frames=[], tick=tick, _internal=True)
+            wins = 0
+            try:
+                trial._start()
+                assert trial.env is not None
+                snapshot = trial.env.snapshot_fast()
+                try:
+                    for seed in seeds:
+                        trial.env.restore_fast(snapshot)
+                        trial._reseeded = int(seed)
+                        trial.ops = [dict(op) for op in kept]
+                        trial.frames = []
+                        trial._reset_bookkeeping(trial.env.observe())
+                        trial.env.reseed(int(seed))
+                        trial.obs = trial.env.observe()
+                        trial._reset_bookkeeping(trial.obs)
+                        start = trial.tick
+                        _drive_policy(trial, policy, limit_tick=start + int(max_ticks))
+                        if int((trial.obs or {}).get("result") or 0) == 1:
+                            wins += 1
+                finally:
+                    trial.env.release_snapshot(snapshot)
+            finally:
+                trial.close()
+            result["checkpoints"][str(wave)] = dict(wins=wins, k=len(seeds), reached=True)
+        wave10 = result["checkpoints"].get("10") or {}
+        if wave10.get("reached"):
+            # 任务书 §task81d：第 10 波检查点 8 个新未来至少赢 5 个才算「稳」。
+            result["passed"] = int(wave10["wins"]) >= 5
+        self.robustness_report = result
+        return result
 
     def snapshot(self) -> None:
         """在当前状态留一个进程内快照（rewind 回到这里时免重放）。可选。"""
@@ -659,7 +817,8 @@ class Game:
     def log(self) -> dict:
         return dict(schema=SCHEMA, task_id=self.task_id, seed=self.seed, deck=self.deck,
                     note=self.note, tick=self.tick, ops=self.ops,
-                    frames=self.frames, totals=self.totals)
+                    frames=self.frames, totals=self.totals,
+                    robustness=self.robustness_report, manual_patch=bool(self.manual_patch))
 
     def save(self, path) -> Path:
         target = Path(path)
@@ -677,7 +836,8 @@ class Game:
             raise ValueError("不是 %s 存档：%s" % (SCHEMA, path))
         return cls(doc["task_id"], seed=doc["seed"], ops=doc.get("ops") or [],
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
-                   note=doc.get("note", ""), **kwargs)
+                   note=doc.get("note", ""), robustness=doc.get("robustness"),
+                   manual_patch=bool(doc.get("manual_patch", False)), **kwargs)
 
     def export_archive(self, directory, *, note=None) -> Path:
         """导出 episode_archive_v1 存档（ticks.jsonl / frames.jsonl / meta.json）。
@@ -724,6 +884,9 @@ class Game:
                          roster=roster),
             hash_schema="portable_snapshot_v1_without_draw_statistics_nonreproducible_across_processes",
             initial_state_hash=self.initial_hash,
+            # task81d：稳健性 = 每个检查点 k 个新未来里的胜局数 + 打法函数源码哈希。
+            # manual_patch=True 表示这局用 rewind 手工补救过；稳健性按补救前的闭环打法算。
+            robustness=self.robustness_report, manual_patch=bool(self.manual_patch),
             sun_collection="environment_auto", verified=False,
             frame_count=len(self.frames), operations=len(self.ops), totals=self.totals,
             outcome=dict(result=result, won=result == 1,

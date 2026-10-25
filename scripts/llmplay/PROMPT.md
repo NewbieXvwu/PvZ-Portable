@@ -7,27 +7,32 @@
 这是一个按请求计费的会话：**一次请求里可以连续工作约 3 小时**，也可以并行开 3 个子代理。
 中途用户可能粘贴补充信息，照着调整。
 
+**这些对局会被当成教学用的中盘局面，交给另一个玩家接着打。我们要的是一个强玩家会觉得
+「稳」的局面：火力和经济留有余量，不靠恰好知道下一波来什么。**
+
 ---
 
 ## 1. 目标
 
-从开局打到通关，按下面的顺序推进（全部 2.0 倍僵尸数）：
+从开局打到通关。任务分成五层，**按顺序推进**；前一层里每个任务至少拿到 5 个种子通关
+（其中至少 3 个达到第 4 节的稳健标准）之后，才进入下一层。
 
-| 顺序 | 关卡 | 任务 id（见 `configs/human_demo_tasks.json`） |
+| 层 | 内容 | 任务 id（见 `configs/human_demo_tasks.json`） |
 |---|---|---|
-| 1 | L49 | `demo_roof_49_doom_m200` |
-| 2 | L48 | `demo_roof_48_doom_m200` |
-| 3 | L47 | `demo_roof_47_doom_m200` |
-| 4 | L46 | `demo_roof_46_doom_m200` |
-| 5 | L45 | 未登记，跳过 |
-| 6 | L50 | 未登记，跳过 |
+| **A** | 屋顶 L46–L49，毁灭菇套，2.0 倍 | `demo_roof_46_doom_m200`、`demo_roof_47_doom_m200`、`demo_roof_48_doom_m200`、`demo_roof_49_doom_m200` |
+| **B** | 屋顶 L42–L44 的全部卡组变体 + L41，2.0 倍 | `demo_roof_42_{melon,gloom,gloommelon,kernel}_m200`、`demo_roof_43_{melon,gloom,kernel}_m200`、`demo_roof_44_{melon,gloom,kernel}_m200`、`demo_roof_41_doom_m200` |
+| **C** | 屋顶 L46–L49，毁灭菇套，**3.0 / 4.0 倍** | `demo_roof_{46,47,48,49}_doom_m300`、`demo_roof_{46,47,48,49}_doom_m400` |
+| **D** | 雾夜 L36–L39，**2.0 倍** | `fog79_l36_snow_{magnet,split}_v2_m200`、`fog79_l37_snow_{magnet,split}_v2_m200`、`fog79_l38_snow_{magnet,tall}_v2_m200`、`fog79_l39_snow_{cactus,blover}_v2_m200` |
+| **E** | 原生传送带 L30 / L40 | `demo_conv_30_orig_m100`、`demo_conv_40_orig_m100` |
 
+- 每层里按表格顺序打；一层做完立刻进入下一层。
 - 只打清单里**存在**的任务。清单里没有的关卡不要自己造任务，跳过即可。
-- 3 个子代理各拿一关并行：第 1 个 L49，第 2 个 L48，第 3 个先 L47、完了接 L46
-  （两关都是同一套毁灭菇卡组）。
-- 通关一关后**不要停**：用 `configs/extra_seeds.json` 里同一任务的其它种子再打，
-  或者换同关卡的另一套卡组（`demo_roof_43_melon_m200` / `demo_roof_43_gloom_m200` 这类）。
-- 任务单要做到**在这个会话里干不完**。
+- 3 个子代理可以各拿**同一层里的不同任务**并行（例如 A 层：L49 / L48 / L47→L46）。
+  同一任务最多 2 个游戏进程。
+- 每个任务有 **40 个种子**（`configs/extra_seeds.json`，与 `configs/llmplay_seeds.json`
+  是同一个块）。用 `Game(task_id, seed=...)` 指定。
+- **本会话的任务单设计为 3 小时内不可能做完。状态行显示 2:45 之前，不允许写「任务完成」。**
+- 一层做完立刻进入下一层；所有层都做完，就把每个任务的种子数再翻倍（见第 8 节）。
 
 ## 2. 包里有什么
 
@@ -40,7 +45,9 @@ llmplay_pkg/
   res/main.pak           ← 游戏资源
   res/properties/        ← 资源配套文件
   configs/human_demo_tasks.json  ← 任务（关卡 / 种子 / 卡组 / 倍率）
-  configs/extra_seeds.json       ← 同一任务的追加种子
+  configs/extra_seeds.json       ← 每个任务 40 个种子
+  configs/llmplay_seeds.json     ← 五层任务清单 + 种子块（层号在这里）
+  configs/llmplay_robustness.json ← 稳健性检查点的未来种子（第 4 节用）
   llmplay/               ← Python 接口（纯标准库）
   python/ scripts/       ← 接口依赖的模块（纯标准库，原样拷贝）
   examples/play.py       ← 示例脚本
@@ -81,6 +88,8 @@ h = g.branch()                            # 复制一份独立的局（搜索用
 g.save("/mnt/data/out/run.json")          # 存操作日志
 g2 = Game.load("/mnt/data/out/run.json")  # 读回来（会从开局重放到当时的位置）
 g.export_archive("/mnt/data/out/l49_seed20261049")   # 导出可校验存档
+
+g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来还能不能赢
 ```
 
 ### 3.1 observe() 给什么
@@ -131,7 +140,50 @@ g.export_archive("/mnt/data/out/l49_seed20261049")   # 导出可校验存档
   tick。在那之前 `game.obs` 是 `None`，先调一次 `observe()` 再读它。
 - 引擎的可执行位由接口自己补（解压工具可能不保留），不需要你 `chmod`。
 
-## 4. 搜索与手动：止损由接口执行，不靠你掐表
+## 4. 稳健性：换个未来还能不能赢
+
+只求通关的局会靠读档得来的「先知」在最后一刻救场（例如看准时机放樱桃），局面很脆。
+我们的衡量办法**不是**战损公式，而是胜率本身：**换一个同样合理的未来，这套打法还能不能赢。**
+
+引擎有 `RESEED`（`PvzEnv.reseed`）：从当前状态重抽所有**还没开始**的波次与局内随机。
+接口把它包成 `robustness()`：
+
+```python
+def policy(game):                 # 闭环打法：每一步只看当前局面
+    if game.obs["sun"] >= 100 and game.legal()["plants"]:
+        first = game.legal()["plants"][0]
+        if first["cells"]:
+            row, col = first["cells"][0]
+            game.plant(first["packet"], row, col)
+            return
+    game.wait(30)
+
+report = g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])
+print(report)
+# {'policy_sha256': '...', 'k': 8, 'passed': True, 'manual_patch': False,
+#  'checkpoints': {'0': {'wins': 6, 'k': 8, 'reached': True},
+#                  '10': {'wins': 7, 'k': 8, 'reached': True}, ...}}
+```
+
+- `policy` 必须是**闭环函数**（每一步按当前局面决定动作）。固定的动作序列在新未来里没有意义。
+- 检查点取「开局 / 第 10 / 20 / 30 波开始时」，**只算你已经打到的那些**；没打到的返回 `reached: False`。
+- 种子来自包里独立的稳健性块（`configs/llmplay_robustness.json`），与任务种子不重叠。
+- **调用计入搜索预算**（重放和试打都是模拟 tick），别在没必要的局上反复调。
+- 结果会记在 `game.robustness_report`，`export_archive()` 自动写进 `meta.json` 的
+  `robustness` 字段。
+
+**一局算真正完成，需要：通关，并且 `robustness()` 在第 10 波检查点上 8 个新未来至少赢 5 个。
+只通关、不够稳的局仍然要交，但只算半个。**
+
+**通关之后，用剩余预算提高稳健性，再进入下一个种子。尽量用不知道未来也会这样做的打法，
+少用 rewind 补救；补救局要在 report 里写明。**
+
+用 `rewind` 手工补救过的局照样可以导出，但接口会自动在 meta 里标 `manual_patch: true`；
+稳健性按补救前的闭环打法计算。
+
+战损、丢车、被吃株数这些数，只在 report 里描述，**不进入任何目标或排序**。
+
+## 5. 搜索与手动：止损由接口执行，不靠你掐表
 
 你可以写任何脚本（穷举、贪心、束搜索、随机重启……）来挑动作。**但预算和止损是接口
 自己数的，写在磁盘上，你绕不过，也不需要记住数字。** 你要做的是读懂它给的三样东西：
@@ -154,7 +206,7 @@ g.export_archive("/mnt/data/out/l49_seed20261049")   # 导出可校验存档
   换下一关，有余力再回来。
 - 墙钟到 2:45 后新开局入口会拒绝执行：那时只做打包与说明。
 
-## 5. 纪律（会被机器检查）
+## 6. 纪律（会被机器检查）
 
 - **不改引擎，不碰内存与状态。** 所有影响只能通过上面的 API 动作发生。
   不要 patch 二进制、不要改 `main.pak`、不要伪造存档里的哈希。
@@ -162,20 +214,24 @@ g.export_archive("/mnt/data/out/l49_seed20261049")   # 导出可校验存档
 - 不要试图读别的进程内存、不要改 `ticks.jsonl`。存档里的每一行都会和重放结果比对
   （动作是否被接受、每个操作结束的 tick、终局）。
 - 存档里的 `state_hash` 只是诊断信息：它跨进程本来就不可复现，我们不会拿它当门槛。
+- 同一关的多个种子**不要只用同一组参数一路通吃**：每通关一个种子就记一份参数
+  （主力植物、布阵、节奏），鼓励换打法（不同的主力植物、不同的布阵），在 report 里分开统计。
 
-## 6. 交付
+## 7. 交付
 
 - **持续交付**：每通关一关、每打出新的最远纪录，就立刻把存档追加进 `/mnt/data/out/`
   并重新打包成 `/mnt/data/out/out.zip`（`cd /mnt/data && zip -r out/out.zip out` 之类）。
   用户会在中途取走这个 zip —— **不要等到最后才打包**。
 - 到 **2 小时 45 分**时停止开新局，只做打包与说明。
 - 交付物：
-  1. 每关的存档目录（`export_archive` 的产物）；
-  2. `report.md`：每关结果（通没通、末波、剩余小推车）、用了搜索还是手动、
-     卡在哪一波、怎么解决的、花了多少时间；
+  1. 每关的存档目录（`export_archive` 的产物，含稳健性）；
+  2. `report.md`：每关结果（通没通、末波、剩余小推车）、**稳健性（第 10 波几个未来赢）**、
+     用了搜索还是手动、卡在哪一波、怎么解决的、每个种子的参数与打法差异、哪些局用了
+     rewind 补救；
   3. 你写过的搜索/脚本代码（只用于我们分析，不进生产）。
 
-## 7. 时间
+## 8. 时间
 
-**把这个会话用满。** 状态行没到 2:45 不要主动结束；清单上的都做完了，就按
-`configs/extra_seeds.json` 换种子继续打，或换同关卡的其它卡组。
+**把这个会话用满。** 状态行没到 2:45 不要主动结束，也不要在 2:45 之前写「任务完成」。
+五层都做完了，就把每个任务的种子数再翻倍：`configs/extra_seeds.json` 里每个任务 40 个
+用完后，用 `Game(task_id, seed=<下一个数>)` 继续往后取（同一块内步长 1，不要跳回任务默认种子）。
