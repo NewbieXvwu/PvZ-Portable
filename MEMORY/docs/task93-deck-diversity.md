@@ -29,5 +29,12 @@
 - 每完成一小步就提交、push，在“结果”里记一行；有疑问写进“问题”，按最佳判断继续。
 
 ## 结果
+- 2026-10-26 CodeBuddy 接手扫描（未改代码），交回 Codex。已查明的机制，续做时不必重查：
+  - 运行时每种子卡组解析在 `scripts/render_episode.py:288`（`training_task_kwargs` → `pvz_tasks.deck_for_seed`，纯函数）。随机族建议在 `pvz_tasks.py` 加 `deck_rand` spec：清单构建时离线生成、逐个过引擎 `PvZEnv.deck_warnings`（`python/pvz_env.py:838`），把通过的 种子→卡组 表存进清单，运行时纯查表——整组警告无法像 swap 扰动那样穷举（`deck_rand` 空间是组合数），但逐个查询在生成期可行。
+  - 候选卡池来源照 `scripts/perturb_family.py` 的 `engine_family`：`PvZEnv.deck_pool`（Crazy Dave 候选）∩ `deck_options().not_recommended` 为 0 ∩ `0 <= p < 40`（排除升级/特殊卡）；泳池族再强制含睡莲 16（`terrain_covered`）；夜间不手写规则，只靠引擎警告过滤（无阳光生产者的整组警告会自动拒掉）。
+  - heldout 排除先例：`perturb_family.py` 生成的 `split='heldout_deck'` 任务（如 `day_l7_eval_d7p_holdout1`，卡组 [0,1,2,27,5,32,3]），生成后把全部 heldout 签名写进 `excluded_decks`；随机族照此机械排除并断言。
+  - 任务清单是本地派生不入 git（`/home/newbiexvwu/PvZ-search/artifacts/stage4/*.json` 等）；新种子段必须扫描全部现有清单防撞（`perturb_family.run_family` 的 `scan_paths` 模式），候选块 90_000_000 起待核对。
+  - 建议基任务复制非卡组字段自现行课程族：`day_l7_train_d7` / `night_l12_train_n10q` / `pool_l21_train_p9k`（各 1 关，playthrough 2，倍率 1.0）。
+  - 下一步：写 `scripts/make_rand_deck_panel.py` 生成三族清单（第 1 步），然后冷启动 32 局/族（第 2 步）。
 
 ## 问题
