@@ -2,7 +2,7 @@
 
 > 2026-10-25。工作树 `perf2`（分支 `perf2`，从 origin/pvz-env 拉出）。
 > 原始数据只在 ignored 的 `artifacts/task77/`；本文件放结论与复核口径。
-> 工具：`scripts/task77_search_hotpath.py`（prepare / profile / profile-summary / gate / verify / abba）、
+> 工具：`scripts/task77_search_hotpath.py`（prepare / profile / profile-summary / hotspots / gate / verify / abba）、
 > `scripts/task77_value_kernel_check.py`（离线逐位检查）、`python/test_search_hotpath.py`（证据回归）。
 
 ## 1. 结论
@@ -22,6 +22,12 @@
    值网络卷积的核打包缓存 + 无填充 memcpy、`DataArray` 取值改走 `get()`、`Reanimation::Update` 模式判断前置。
    离线核检查的 value/static 各 480 个 logit（各含 3 遍）输出 SHA256 完全相同；
    该工具验证数值，未持久化微基准计时，性能结论只采用完整 ABBA。
+6. **结论是否定的：这三处改动逐位不变（门禁 48/48 对局；ABBA 12 对、36 次完整帧比较全部一致），但没有可测的加速。**
+   六族 12 对 ABBA 的每局耗时比 geomean **0.993**（配对 bootstrap 95% [0.948, 1.035]），
+   稳定负载子集（conveyor/roof/fog，6 对）**1.005**（[0.998, 1.012]）。这与被改代码的占比吻合：
+   两处 `Convolve` 合计只占引擎样本 2.47%（§4），`DataArray` 取值 7.25%、动画 8.52% 上的改动每次只省一条
+   间接寻址或一个分支。**不要为提速上线这个补丁**；要提速只能动 rollout 引擎步与学生前向（合计 76–86%），
+   而那需要新的浮点保序方案，不在本任务范围（§8）。
 
 ## 2. 冻结输入与复现
 
@@ -57,6 +63,7 @@ PY=/home/newbiexvwu/.venvs/ml/bin/python3
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py prepare --out $P/artifacts/task77
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py profile --out $P/artifacts/task77
 $PY $P/scripts/task77_search_hotpath.py profile-summary --out $P/artifacts/task77
+$PY $P/scripts/task77_search_hotpath.py hotspots --out $P/artifacts/task77
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py gate --out $P/artifacts/task77 --candidate $P/artifacts/task77/frozen/pvz-portable-candidate
 PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/task77/abba_final --candidate $P/artifacts/task77/frozen/pvz-portable-candidate --baseline $P/artifacts/task77/frozen/pvz-portable-release-before --workers 2 --count 2
 ```
@@ -94,33 +101,58 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
   （引擎 CPU 42.1 s，其余族 5–22 s）。也就是说值网络这条路的优化只在白天族有可观收益。
 - **屋顶与雾的 Python 侧更高**（10.0% / 7.0%）：对局短、决策少，固定开销摊不薄。
 
-## 4. 采样热点（下表待采样格式审计后重算）
+## 4. 采样热点（最终版，`hotspots` 阶段重算）
 
-审计发现泳池 `pcs.522801.bin` 的两段数组长度不一致（多 4 字节）。旧读法丢尾后可能错认数组边界，
-不能当成有效证据。已修复 SIGPROF 导出期间计数仍增长的问题，读取器严格拒绝坏长度/模块号；
-原文件保留、明确排除，待用修复后的采样器补采 1 局。下表是旧汇总，最终版将替换。
+审计发现泳池 `pcs.522801.bin` 的两段数组长度不一致（多 4 字节），旧读法丢尾后可能错认数组边界。
+已修复 SIGPROF 导出期间计数仍增长的问题，读取器严格拒绝坏长度/模块号；原文件保留、明确排除
+（`invalid_sample_files`），并用修复后的采样器按同一任务与种子补采 1 局（`profile_recovery/`）。
+最终样本 = day 4 + night 4（`profile_complete/`）+ pool 3 + 补采 1 + fog 4 + roof 4 = 20 局，
+**566,659 个样本**，由 `hotspots` 阶段从 `profile_summary.json` 汇总成 `artifacts/task77/hotspots.json`。
+类别互斥、按首次匹配归类；每格只保留最重的 45 个符号，其余记为 `unlisted`（31.4%），
+所以下表类别份额是**下界**。
 
-| 占比 | 累计 | 符号 |
+| 占比 | 样本 | 符号 |
 |---|---|---|
-| 11.40% | 11.40% | libopenblas `sgemm_kernel_HASWELL` |
-| 4.99% | 16.38% | `Reanimation::Update` |
-| 3.53% | 19.92% | `PvzpParticleEmitter::UpdateParticle` |
-| 3.29% | 23.21% | `Reanimation::Update` 的 track lambda（`operator()`，nm 显示落在 `Reanimation::Update` 内） |
-| 2.90% | 26.11% | libc 内部函数（addr2line 只能落到最近的导出符号 `_dl_mcount_wrapper`） |
-| 2.86% | 28.97% | `DataArray<Zombie>::Iterator::operator++` |
-| 2.60% | 31.57% | `Sexy::MTRand::NextNoAssert` |
-| 2.04% | 33.61% | `DataArray<Plant>::Iterator::operator++` |
-| 2.00% | 35.61% | libopenblas `sgemm_oncopy_HASWELL`（打包开销） |
-| 1.71% | 37.32% | `Zombie::IsTangleKelpTarget` |
-| 1.48% | 38.80% | `PvzpParticleEmitter::Update` |
-| 1.44% | 40.24% | `Plant::Animate` |
+| 14.64% | 82969 | libopenblas `sgemm_kernel_HASWELL` |
+| 4.81% | 27284 | `Reanimation::Update` |
+| 3.37% | 19074 | libc 内部函数（addr2line 只能落到最近的导出符号 `_dl_mcount_wrapper`） |
+| 3.02% | 17138 | `Reanimation::Update` 的 track lambda（`operator()`，nm 显示落在 `Reanimation::Update` 内） |
+| 2.37% | 13415 | libopenblas `sgemm_oncopy_HASWELL`（打包开销） |
+| 2.21% | 12539 | `DataArray<Zombie>::Iterator::operator++` |
+| 2.08% | 11786 | `DataArray<Plant>::Iterator::operator++` |
+| 1.95% | 11046 | `PvzpParticleEmitter::UpdateParticle` |
+| 1.88% | 10642 | `Sexy::MTRand::NextNoAssert` |
+| 1.56% | 8833 | `Plant::Animate` |
+| 1.34% | 7572 | libopenblas `dgemm_kernel_HASWELL` |
+| 1.32% | 7501 | `EnvironmentRollout::Convolve` |
+| 1.25% | 7096 | `PvzpParticleEmitter::Update` |
+| 1.25% | 7078 | `Reanimation::NextEnvTrack` |
+| 1.17% | 6647 | libopenblas `sgemm_itcopy_HASWELL` |
+| 1.15% | 6509 | `EnvironmentValueNet::Convolve` |
+| 1.13% | 6395 | `Plant::UpdateAbilities` |
+| 1.12% | 6331 | `DataArray<Reanimation>::DataArrayTryToGet` |
+| 1.05% | 5976 | `DataArray<Reanimation>::Iterator::operator++` |
+| 1.03% | 5861 | libopenblas `dgemm_incopy_HASWELL` |
 
-- openblas 包含学生与值网络的矩阵运算；平面采样不能区分共享内核的调用者。
-- 动画合计约 12.5%：`Reanimation::Update` + lambda + `NextEnvTrack` + `FloatTrackEvaluate` +
-  `PvzpCurveEvaluate` + `GetTrackVelocity` + `TrackMemoHit`。
-- 粒子合计约 7.5%：**不能跳**（共享 RNG）。
-- `DataArray` 迭代器与查找合计 8.2%：2026-10-23 已做过四槽一判的扫描优化，这里是剩余成本。
+按类别（互斥，占全部样本）：
+
+| 类别 | 合计 | day | night | pool | fog | roof |
+|---|---|---|---|---|---|---|
+| openblas | 20.55% | 25.6% | 24.6% | 16.0% | 16.0% | 15.3% |
+| 动画 | 8.52% | 7.5% | 7.6% | 9.3% | 9.7% | 10.4% |
+| `DataArray` | 7.25% | 6.0% | 7.0% | 7.8% | 8.3% | 8.3% |
+| 粒子 | 4.62% | 2.7% | 3.7% | 7.7% | 3.3% | 1.2% |
+| 值网络卷积 | 2.47% | 3.3% | 3.0% | 1.7% | 1.9% | 2.2% |
+| libc | 4.17% | 5.3% | 4.4% | 3.4% | 3.6% | 4.8% |
+
+- openblas 包含学生与值网络的矩阵运算；平面采样不能区分共享内核的调用者，二者分别耗时以 §3 的计数器为准。
+- 动画合计 8.52%（`Reanimation::Update` + lambda + `NextEnvTrack` + `FloatTrackEvaluate` +
+  `PvzpCurveEvaluate` + `GetTrackVelocity` + `TrackMemoHit`）：**不能跳**（共享 RNG，见 §1.4）。
+- 粒子合计 4.62%：**不能跳**（共享 RNG）。
+- `DataArray` 迭代器与查找合计 7.25%：2026-10-23 已做过四槽一判的扫描优化，这里是剩余成本。
+- 两处 `Convolve` 合计 2.47%——**这就是值网络那两处优化的收益天花板**，与 §7.2 的计时一致。
 - `_dl_mcount_wrapper` 不是 `-pg`：二进制里 `mcount` 符号计数为 0，这是 libc 无 debug 符号时的误标。
+- 上一版表格（11.40% sgemm、动画 12.5% 等）是采样审计前只含 day/night 的汇总，已作废。
 
 ## 5. 改了什么（都只改实现，不改搜索）
 
@@ -167,28 +199,66 @@ PVZ_NO_POPUP=1 $PY $P/scripts/task77_search_hotpath.py abba --out $P/artifacts/t
 - 旧臂的老师那 20 局（5 族 × 4）直接复用 §3 的剖析局：同一冻结输入、同一任务与同一批种子，
   重打只会得到同一局。传送带没有剖析局，旧臂老师现场打。
 
-### 7.2 ABBA 配对计时（正在跑）
+### 7.2 ABBA 配对计时（六族 × 2 种子 × A-B-B-A）
 
-按主控 2026-10-25 14:57 的指令（Codex 额度恢复、交回执行权）在 3 个 block 后停止，**没有产出配对比值**：
-旧轮次没有完整证据。当前已在全新 `artifacts/task77/abba_final/` 启动完整一轮：
-六族各 2 种子 × A-B-B-A，共 48 个完整老师局，`--workers 2 --count 2`。
+`artifacts/task77/abba_final/`：48 个完整老师局（6 族 × 2 种子 × 4 臂），`--workers 2 --count 2`。
+A 臂 = 同 flags 的改前二进制 `51949eff…`，B 臂 = 候选 `b4999d65…`；四臂 config 除可执行文件外逐项相同。
+`abba-verify` 审计通过：12 对全部逐位一致（36 次完整帧比较、40,686 帧；只排除 `verification.seconds`），
+`state_hash` 12/36 不同（按 §7.1 的口径单独报告，不作策略门禁）。
 
-- 已落盘的只是**未完成的 block**：`abba_0_A`（day，A 臂 3 局）、`abba_1_B`（day，B 臂 3 局）、
-  `abba_2_B` 进行到 2/3 局被中断。同一 block 必须 A-B-B-A 四臂齐全才能配对，所以这些数字不能当证据用。
-- 复跑命令见 §2，两条硬约束：`--workers 2`（主控 2026-10-25 起本任务同时最多 2 个游戏进程）；
-  A 臂必须显式传 `--baseline …/pvz-portable-release-before`，工具现已拒绝缺省回落到生产 PGO 二进制。
-- 本轮结束后将报告每局 B/A 比值及配对 bootstrap 95% 区间，并核验四臂结果/标签与后台 qc 负载。
-- 负载监测已观察到原 qc 控制器退出；当前计时继续保留，待主控说明后续负载安排，
-  不能把无 qc 的窗口写成恒定生产负载。只读负载序列另存 `abba_final/load_monitor.jsonl`。
-- 已核对 day/night 的 8 个 block：同一个真实 Python qc 控制器在每个 block 的前后均存在，
-  因此这两族可单独形成“qc 正常运行期”的 4 对 ABBA；worker 负载仍会随生产阶段变化。
-  最终同时报告这个子集与完整六族结果，按负载状态划分，不按耗时结果筛选。
+| 族 | 每局比 B/A（种子 1 / 2） | geomean | 计时窗口 loadavg | 窗口内 qc 引擎数 |
+|---|---|---|---|---|
+| day | 1.123 / 1.086 | 1.104 | 11.9 – 34.3 | 13 – 21 |
+| night | 0.865 / 0.838 | 0.851 | 14.4 – 29.2 | 8 – 19 |
+| pool | 1.009 / 1.005 | 1.007 | 8.4 – 14.4 | 2 – 8 |
+| conveyor | 1.018 / 1.016 | 1.017 | 6.6 – 8.5 | 0 – 2 |
+| roof | 1.000 / 1.000 | 1.000 | 6.4 – 6.6 | 0 |
+| fog | 0.996 / 1.000 | 0.998 | 6.1 – 6.6 | 0 |
+
+- **六族合一**：geomean **0.993**，中位 1.003，配对 bootstrap 95% **[0.948, 1.035]**；
+  按族整体重采样（同族两粒种子共享负载窗口）的 95% 区间 [0.926, 1.052]。区间覆盖 1。
+- **qc 正常运行子集**（day + night，同一控制器 `508104` 在 8 个 block 边界都在场）：4 对，
+  geomean 0.970，95% [0.851, 1.104]。
+- **稳定负载子集**（conveyor + roof + fog，窗口内 loadavg 6.1–8.5、qc 引擎 0–2）：6 对，
+  geomean **1.005**，95% **[0.998, 1.012]**，按族 [0.998, 1.017]。
+  这一层不是按结果挑的，是按"ABBA 的恒定负载假设成立"挑的；它把"能快多少"的上界压到 **< 1.7%**。
+- roof 的两个 ABBA 种子是短局（2.4–2.6 s、199/207 决策、第 4 波就输），`seconds` 只有 0.1 s 分辨率，
+  所以 roof 的 1.000 是量化产物、不携带信息；它留在表里是为了不事后剔除。
+
+**day/night 的 ±10–15% 不是补丁效应。** 每臂原始耗时（秒）：
+
+| 种子 | A1 | B1 | B2 | A2 |
+|---|---|---|---|---|
+| day 5012288 | 111.4 | 135.5 | 138.6 | 132.7 |
+| day 5012289 | 138.6 | 173.0 | 154.2 | 162.8 |
+| night 5157696 | 221.2 | 147.8 | 173.7 | 150.6 |
+| night 5157697 | 256.2 | 167.7 | 186.7 | 166.5 |
+
+A 臂占 block 两端，两端的负载并不对称：day 的第一个 A 落在整块最轻的时刻（loadavg 11.9，其余 25–34），
+night 的第一个 A 落在最重的时刻（29.2，随后降到 14.4）。"两个 A 取均值"因此继承了这个偏置。
+night 更麻烦：B1 与 A1 同在 loadavg 29.2，却快 33%（147.8 vs 221.2），端点负载解释不了它；
+本轮没有把它归因于补丁，也没有再跑一轮去追（主控内存约束下同时最多 2 个游戏进程，
+再跑一轮 70–90 分钟仍是同一批外部负载）。结论只采用稳定负载子集与六族合一区间。
+
+**判定：逐位不变成立，提速不成立。** 稳定负载下 +0.5%（[0.998, 1.012]），
+与 §4 的"两处 `Convolve` 只占引擎样本 2.47%"一致——即使这三处改动全部命中，整局上限也在 1–2%。
+12 对的设计本身也只有 ±4.5% 的分辨率，**任何小于 4% 的效应在这套设计下都不可判定**；
+要判定 1% 量级需要 40 对以上（约 3–4 小时独占机器）。因此不把本补丁作为提速项上线，
+也不建议为它单独重建 PGO 引擎。
 
 ## 8. 局限与后续
 
 - **候选二进制不带 PGO。** 生产 deploy4 带本机 PGO（历史实测 18%）。ABBA 的 A 臂因此用同 flags 重编的
   `pvz-portable-release-before`，只量代码差异；真正上线要由主控按 PGO 两阶段重建，PGO 与补丁的交互收益尚未测量。
   **不要把本文的比值直接当成上线后的墙钟比。**
+- **计时分辨率不够判定 1% 量级。** 12 对 ABBA 的区间宽约 ±4.5%，稳定负载 6 对约 ±0.7%。
+  要在生产负载下判定 1% 需要 40 对以上、机器独占 3–4 小时；本轮在"同时最多 2 个游戏进程、qc 优先"的约束下没有做。
+  另外 `search_play` 记录的每局耗时是 `time.time()` 差、保留 0.1 s（`scripts/search_play.py:790`），
+  40–250 s 的对局对应 0.04–0.25% 的量化，短局（roof 2.4 s）则是 4%。
+- **外部负载无法控制。** 计时窗口内有别的 agent 在跑（`all_engines` 2–23），qc 引擎数也在变；
+  按负载分层只能缓解、不能消除。要得到干净结论应独占机器重跑，或改用引擎进程 CPU 时间而非墙钟作观测量
+  （本轮的 `load_monitor.jsonl` 已能支撑这种改法，但工具尚未实现）。
 - 后续可研究共享 BLAS 内核和动画 track 更新；本轮没有实现新的 GEMM，也没有跳过额外动画生命周期。
   任何后续方案都需独立验证浮点求和顺序与 track 重新激活行为，不能把移动零块或稀疏跳过直接当成保序优化。
-- 采样器的 libc 符号是误标的（无 debug 信息）。要看清 libc 那 2.9% 得装 `libc6-dbg` 或给 `addr2line` 指定 debug 路径。
+  按 §4 的占比，真正值得投入的仍是 rollout 引擎步（50–65%）与学生前向（20–32%）。
+- 采样器的 libc 符号是误标的（无 debug 信息）。要看清 libc 那 4.17% 得装 `libc6-dbg` 或给 `addr2line` 指定 debug 路径。
