@@ -100,13 +100,82 @@ def coverage_summary(rows):
         chosen_outside_production_rate=mean([r['chosen_outside_production'] for r in measures]))
 
 
+
+def audit_trace(rows,receipt,arm):
+    """Validate the complete recorded experiment, beyond the one-game smoke test."""
+    assert len(rows)==receipt['recorded_decisions']==receipt['outcome']['decisions']
+    assert sum(bool(r['searched']) for r in rows)==receipt['recorded_searches']
+    searches=0;legal_plants=0;legal_shovels=0;rollouts=0
+    for index,row in enumerate(rows):
+        assert row['decision']==index and not row['rejected']
+        assert row['frame']['tick']==row['tick'] and row['next_tick']>=row['tick']
+        legal={key(a) for a in row['legal_actions']}
+        assert len(legal)==len(row['legal_actions']), 'duplicate legal action'
+        assert key(dict(type='wait',ticks=60,until='timeout')) in legal
+        if not row['searched']:
+            continue
+        searches+=1
+        production={key(a) for a in row['production_candidates']}
+        evaluated={key(a) for a in row['evaluated_candidates']}
+        assert len(production)==len(row['production_candidates'])
+        assert len(evaluated)==len(row['evaluated_candidates'])
+        assert production<=evaluated<=legal, 'illegal or lost production candidate'
+        required={key(a) for a in row['legal_actions'] if arm=='all_legal' or a['type']!='shovel'}
+        if arm=='production':
+            assert row['evaluated_candidates']==row['production_candidates']
+        else:
+            assert required<=evaluated, 'expanded arm omitted a required legal action'
+        first=row['rounds'][0]
+        assert len(first)==len(evaluated) and {key(r['action']) for r in first}==evaluated
+        assert {r['future'] for r in first}=={(row['decision_seed']*1000)%2**32}, 'unpaired first-round futures'
+        for round_rows in row['rounds']:
+            assert all(key(r['action']) in evaluated and math.isfinite(r['value']) for r in round_rows)
+            rollouts+=len(round_rows)
+        assert key(row['executed']) in evaluated and key(row['policy']) in production
+        legal_plants+=sum(a['type']=='plant' for a in row['legal_actions'])
+        legal_shovels+=sum(a['type']=='shovel' for a in row['legal_actions'])
+    assert rows and rows[-1]['terminal'], 'complete receipt without terminal last transition'
+    return dict(games=1,decisions=len(rows),searched_roots=searches,
+                legal_plant_entries=legal_plants,legal_shovel_entries=legal_shovels,
+                scored_halving_entries=rollouts)
+
+
+def holm_adjust(p_values):
+    """Holm family-wise correction, preserving the level keys."""
+    ordered=sorted(p_values,key=p_values.get);last=0;adjusted={}
+    for i,k in enumerate(ordered):
+        last=max(last,min(1.,p_values[k]*(len(ordered)-i)))
+        adjusted[k]=last
+    return adjusted
+
+
+def seed_cluster_sign_test(deltas):
+    """Exact two-sided sign-flip of whole reset-seed clusters across levels.
+
+    Each cluster's integer delta is wins gained minus lost. Dynamic programming
+    avoids pretending the same reset seed on eight levels supplies eight units.
+    """
+    weights=[abs(v) for v in deltas.values() if v]
+    distribution=Counter({0:1})
+    for weight in weights:
+        updated=Counter()
+        for total,n in distribution.items():
+            updated[total-weight]+=n;updated[total+weight]+=n
+        distribution=updated
+    observed=abs(sum(deltas.values()))
+    p=sum(n for total,n in distribution.items() if abs(total)>=observed)/(2**len(weights))
+    return dict(reset_seed_clusters=len(deltas),nonzero_clusters=len(weights),
+        gained_minus_lost=sum(deltas.values()),exact_cluster_sign_flip_p=p,
+        assumption='Independent reset-seed clusters with symmetric paired treatment effect under the null; whole-seed swaps across all levels. Exploratory while the panel is incomplete.')
+
+
 def panel_report(levels,verify=False):
     plan=base.verify_plan();report=dict(schema_version=SCHEMA,task=76,levels=levels,
         inputs={k:v['sha256'] for k,v in plan['inputs'].items()},teacher=plan['teacher'],per_level={},
         coverage_method='Actual logged production_candidates including both extra student candidates; round-1 values only. Missing legal actions are unscored, not assumed poor. Global omissions only reported when every legal plant was scored. Tied maxima use set overlap.',
         historical_error='The prior reconstructed subset falsely counted recorded extra-student candidates as omitted. Its omission/regret numbers and causal conclusions are superseded.',
         task74={'commit':'0c543b8df5dd21595a96bdee3c705a8085587923','file':'MEMORY/docs/task74-cold-start-sweep.md','roof_levels_42_to_49':'all 0/16; all eight levels require expansion'})
-    overall=Counter();all_complete=True
+    overall=Counter();all_complete=True;seed_deltas=Counter();trace_audit=Counter()
     for level in levels:
         cell=dict(arms={},paired={})
         outcomes={}
@@ -117,8 +186,7 @@ def panel_report(levels,verify=False):
             traces=[];finals=[];econ=defaultdict(Counter);plantings=Counter();means=[]
             for receipt in receipts:
                 seed=receipt['identity']['seed'];rows=base.trace_rows(level,arm,seed)
-                assert len(rows)==receipt['recorded_decisions']==receipt['outcome']['decisions']
-                assert all(r['decision']==i and not r['rejected'] for i,r in enumerate(rows))
+                trace_audit.update(audit_trace(rows,receipt,arm))
                 for row in rows:
                     legal_packets={a['packet'] for a in row['legal_actions'] if a['type']=='plant'}
                     for packet in row['packets']:
@@ -147,10 +215,21 @@ def panel_report(levels,verify=False):
             down=sum(outcomes['production'][s]['won'] and not outcomes[arm][s]['won'] for s in shared)
             cell['paired'][arm]=dict(pairs=len(shared),gained=up,lost=down,
                 exact_mcnemar_p=base.binom_two_sided(min(up,down),up+down))
-            if arm=='all_plants':overall.update(pairs=len(shared),gained=up,lost=down)
+            if arm=='all_plants':
+                overall.update(pairs=len(shared),gained=up,lost=down)
+                for seed in shared:
+                    seed_deltas[seed]+=int(outcomes[arm][seed]['won'])-int(outcomes['production'][seed]['won'])
         report['per_level'][str(level)]=cell
     report['complete']=all_complete
-    report['pooled_primary']=dict(overall,exact_mcnemar_p=base.binom_two_sided(min(overall['gained'],overall['lost']),overall['gained']+overall['lost']))
+    primary_p={str(level):report['per_level'][str(level)]['paired']['all_plants']['exact_mcnemar_p'] for level in levels}
+    adjusted=holm_adjust(primary_p)
+    for level,pvalue in adjusted.items():
+        report['per_level'][level]['paired']['all_plants']['holm_family_p']=pvalue
+    report['multiplicity']='Primary all_plants contrast across all required roof levels; Holm adjustment. No final inference from incomplete pairs.'
+    report['trace_audit']=dict(trace_audit,trace_sha256_verified=verify)
+    report['pooled_primary']=dict(overall,cluster_inference=seed_cluster_sign_test(seed_deltas),
+        exact_mcnemar_p_exploratory=base.binom_two_sided(min(overall['gained'],overall['lost']),overall['gained']+overall['lost']),
+        pooled_caveat='Naive pooled McNemar treats level-seed pairs independently; use whole-reset-seed clustered inference and per-level corrected tests for conclusions.')
     base.write(ROOT/'MEMORY/docs/task76-roof-candidates-v5-report.json',report)
     print(json.dumps({'complete':all_complete,'pooled_primary':report['pooled_primary'],
         'per_level':{k:{a:[v['games'],v['wins']] for a,v in c['arms'].items()} for k,c in report['per_level'].items()}}),flush=True)
@@ -347,12 +426,47 @@ def metrics(document,model='value',horizon=2500,representable=True):
         mean_prediction=mean(list(pred.values())),mean_truth=mean(list(truth.values())))
 
 
+
+def validate_terminal_root(root,replay,receipt,baseline,plan,level,seed,decision):
+    identity=root['identity']
+    expected_inputs={k:v['sha256'] for k,v in plan['inputs'].items()}
+    assert root['complete'] and identity['schema_version']==SCHEMA
+    assert (identity['level'],identity['seed'],identity['decision'])==(level,seed,decision)
+    assert identity['input_sha256']==expected_inputs==replay['input_sha256']
+    assert replay['complete_game_parity'] and replay['outcome']==base.semantic_game(receipt['outcome'])
+    assert identity['trace_sha256']==receipt['trace_sha256']
+    assert root['tick']==baseline['tick'] and root['production_candidates']==baseline['production_candidates']
+    assert root['production_choice']==baseline['executed'] and root['policy']==baseline['policy']
+    assert root['static_selected_keys']==sorted(static_keys(baseline))
+    assert root['root_restore_verified'] and root['income_history_verified'] and root['student_history_verified']
+    assert identity['terminal_futures']==8 and identity['leaf_futures']==9
+    assert identity['horizons']==[2500,4000,6000]
+    hashes=identity['native_model_bin_sha256']
+    assert set(hashes)=={'value','v4_control'} and hashes['value']!=hashes['v4_control']
+    world=future_seeds(level,seed,decision,'terminal',8)
+    leaf=future_seeds(level,seed,decision,'leaf',9)
+    assert root['terminal_world_seeds']==world and root['leaf_world_seeds']==leaf
+    actions=root['actions'];keys={key(r['action']) for r in actions}
+    assert len(keys)==len(actions) and keys=={key(a) for a in baseline['legal_actions']}, 'terminal action coverage incomplete'
+    for action in actions:
+        terminal=action['terminal']
+        assert len(terminal)==8 and [r['future'] for r in terminal]==world
+        assert all(type(r['won']) is bool and r['tick']>=root['tick'] for r in terminal)
+        assert set(action['leaf'])=={'value','v4_control'}
+        for model,horizons in [('value',[2500,4000,6000]),('v4_control',[2500])]:
+            assert set(action['leaf'][model])=={str(h) for h in horizons}
+            for horizon in horizons:
+                values=action['leaf'][model][str(horizon)]
+                assert len(values)==9 and all(math.isfinite(v) and 0<=v<=1 for v in values)
+
+
 def terminal_report(levels):
     report=dict(schema_version=SCHEMA,task=76,complete=False,per_level={},
         method='Shared eight terminal futures for every legal action at identical current-v5-teacher roots; current student history passed after proposal; true terminal checked; nine independent shared leaf futures. v4 loaded explicitly for identical roots/futures; v5 horizons2500/4000/6000.',
         historical_comparison='task46 v4 53.9% (95%47.1-60.9): different roots, models, two futures and search-teacher continuation, so no direct before/after claim. Matched v4/v5 numbers below isolate leaf model under task72b student continuation.',
         invalidated_legacy='artifacts/task76/terminal schema1 used preloaded v5 for v4_control, pre-proposal history and action-specific futures; excluded in full.',
         root_evidence=[],good_action_coverage={})
+    plan=base.verify_plan()
     complete=True;clusters=defaultdict(list);coverage=Counter()
     for level in levels:
         seeds=base.probe_seeds(level,2);expected=[(seed,d) for seed in seeds for d in base.probe_targets(level,seed)]
@@ -362,9 +476,9 @@ def terminal_report(levels):
             if not path.exists() or not replay.exists():complete=False;continue
             root=base.read(path);replay_record=base.read(replay)
             if replay_record.get('root_sha256',{}).get(str(path))!=base.sha(path):complete=False;continue
-            assert root['complete'] and root['identity']['schema_version']==SCHEMA
-            assert len(root['actions'])==len({key(a['action']) for a in root['actions']})
-            assert all(len(a['terminal'])==8 and [r['future'] for r in a['terminal']]==root['terminal_world_seeds'] for a in root['actions'])
+            receipt=read_receipt(level,'production',seed,True)
+            baseline=base.trace_rows(level,'production',seed)[d]
+            validate_terminal_root(root,replay_record,receipt,baseline,plan,level,seed,d)
             summary={}
             for model,horizon in [('value',2500),('value',4000),('value',6000),('v4_control',2500)]:
                 name=f'{model}_h{horizon}'
@@ -391,15 +505,19 @@ def terminal_report(levels):
             n=sum(v['pairs'] for v in sample)
             if n:boot.append(sum(v['pair_score'] for v in sample)/n)
         boot.sort()
-        pooled[f'{model}_h{horizon}']=dict(roots=len(values),reset_seed_clusters=len(cohorts),pairs=pairs,
+        pooled[f'{model}_h{horizon}']=dict(roots=len(values),level_seed_clusters=len(cohorts),
+            unique_reset_seeds=len({k[3] for k in clusters if k[:2]==(model,horizon)}),pairs=pairs,
             pairwise_accuracy=score/pairs if pairs else None,
-            reset_seed_bootstrap95=[boot[int(.025*(len(boot)-1))],boot[int(.975*(len(boot)-1))]] if boot else None,
+            level_seed_bootstrap95_exploratory=[boot[int(.025*(len(boot)-1))],boot[int(.975*(len(boot)-1))]] if boot else None,
             all_actions_zero_wins_roots=sum(v['all_actions_zero_wins'] for v in values),
             discriminating_roots=sum(v['discriminating'] for v in values),
             argmax_overlap_on_discriminating=mean([v['tie_aware_argmax_overlap'] for v in values if v['discriminating']]),
             mean_root_mae=mean([v['mae'] for v in values]),mean_root_prediction=mean([v['mean_prediction'] for v in values]),
             mean_root_truth=mean([v['mean_truth'] for v in values]))
     report['pooled']=pooled;report['complete']=complete;report['good_action_coverage']=dict(coverage)
+    report['uncertainty']='Bootstrap intervals treat (level, reset seed) as clusters and are exploratory; the same two reset seeds are reused across levels. They do not establish a population-level model improvement. Eight sampled futures do not prove any state is unwinnable.'
+    v5=pooled['value_h2500']['pairwise_accuracy'];v4=pooled['v4_control_h2500']['pairwise_accuracy']
+    report['matched_v5_minus_v4_accuracy']=(v5-v4) if v5 is not None and v4 is not None else None
     if coverage['observed_improving_plant_actions']:
         report['good_action_coverage'].update(static_miss_rate=coverage['static_missed']/coverage['observed_improving_plant_actions'],
             production_miss_rate=coverage['production_missed']/coverage['observed_improving_plant_actions'])

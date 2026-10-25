@@ -3,7 +3,13 @@
  "task": 76,
  "levels": [
   42,
-  43
+  43,
+  44,
+  45,
+  46,
+  47,
+  48,
+  49
  ],
  "inputs": {
   "engine": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
@@ -263,7 +269,8 @@
      "pairs": 32,
      "gained": 4,
      "lost": 0,
-     "exact_mcnemar_p": 0.125
+     "exact_mcnemar_p": 0.125,
+     "holm_family_p": 1.0
     },
     "all_legal": {
      "pairs": 32,
@@ -514,10 +521,1515 @@
      "pairs": 32,
      "gained": 0,
      "lost": 0,
-     "exact_mcnemar_p": 1.0
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
     },
     "all_legal": {
      "pairs": 32,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0
+    }
+   }
+  },
+  "44": {
+   "arms": {
+    "production": {
+     "games": 24,
+     "wins": 0,
+     "median_final_wave": 5.0,
+     "median_final_tick": 14655.5,
+     "mean_planted_types": {
+      "33": 20.583333333333332,
+      "1": 10.333333333333334,
+      "3": 4.291666666666667,
+      "32": 4.25,
+      "0": 0.5416666666666666,
+      "2": 0.08333333333333333
+     },
+     "coverage": {
+      "search_decisions": 1465,
+      "full_legal_scoring_roots": 150,
+      "unscored_legal_plants": 29268,
+      "mean_legal_plants": 23.977474402730376,
+      "mean_production_candidates": 4.999317406143344,
+      "global_best_omission_rate": 0,
+      "static_global_best_omission_rate": 0.15333333333333332,
+      "global_regret_above_margin": 0,
+      "chosen_outside_production_rate": 0
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 8609,
+       "unaffordable": 8104,
+       "legal": 177,
+       "no_legal_cell_or_other_engine_restriction": 144,
+       "inactive_or_cooldown": 184
+      },
+      "1": {
+       "observations": 8609,
+       "legal": 1562,
+       "unaffordable": 3531,
+       "inactive_or_cooldown": 3334,
+       "no_legal_cell_or_other_engine_restriction": 182
+      },
+      "2": {
+       "observations": 8609,
+       "inactive_or_cooldown": 1766,
+       "unaffordable": 6815,
+       "no_legal_cell_or_other_engine_restriction": 23,
+       "legal": 5
+      },
+      "3": {
+       "observations": 8609,
+       "inactive_or_cooldown": 6323,
+       "unaffordable": 1672,
+       "legal": 572,
+       "no_legal_cell_or_other_engine_restriction": 42
+      },
+      "32": {
+       "observations": 8609,
+       "unaffordable": 6980,
+       "legal": 146,
+       "inactive_or_cooldown": 1417,
+       "no_legal_cell_or_other_engine_restriction": 66
+      },
+      "33": {
+       "observations": 8609,
+       "legal": 1359,
+       "inactive_or_cooldown": 6781,
+       "unaffordable": 469
+      },
+      "35": {
+       "observations": 8609,
+       "unaffordable": 7576,
+       "no_legal_cell_or_other_engine_restriction": 1033
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 27.541666666666668,
+      "occupied_cells": 17,
+      "non_pot_cells": 10.541666666666666
+     }
+    },
+    "all_plants": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 12,
+     "median_final_tick": 26712,
+     "mean_planted_types": {
+      "1": 16.82608695652174,
+      "33": 34.52173913043478,
+      "3": 7.608695652173913,
+      "32": 13.521739130434783,
+      "2": 0.21739130434782608,
+      "0": 1.9565217391304348
+     },
+     "coverage": {
+      "search_decisions": 2490,
+      "full_legal_scoring_roots": 2490,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 17.923694779116467,
+      "mean_production_candidates": 4.8506024096385545,
+      "global_best_omission_rate": 0.45502008032128516,
+      "static_global_best_omission_rate": 0.6642570281124498,
+      "global_regret_above_margin": 0.20883534136546184,
+      "chosen_outside_production_rate": 0.13172690763052208
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 13870,
+       "unaffordable": 12379,
+       "legal": 551,
+       "no_legal_cell_or_other_engine_restriction": 288,
+       "inactive_or_cooldown": 652
+      },
+      "1": {
+       "observations": 13870,
+       "legal": 3037,
+       "inactive_or_cooldown": 5417,
+       "unaffordable": 4826,
+       "no_legal_cell_or_other_engine_restriction": 590
+      },
+      "2": {
+       "observations": 13870,
+       "inactive_or_cooldown": 1933,
+       "unaffordable": 11875,
+       "no_legal_cell_or_other_engine_restriction": 43,
+       "legal": 19
+      },
+      "3": {
+       "observations": 13870,
+       "inactive_or_cooldown": 10416,
+       "unaffordable": 2373,
+       "legal": 963,
+       "no_legal_cell_or_other_engine_restriction": 118
+      },
+      "32": {
+       "observations": 13870,
+       "unaffordable": 8809,
+       "legal": 465,
+       "inactive_or_cooldown": 4397,
+       "no_legal_cell_or_other_engine_restriction": 199
+      },
+      "33": {
+       "observations": 13870,
+       "legal": 2002,
+       "unaffordable": 821,
+       "inactive_or_cooldown": 11047
+      },
+      "35": {
+       "observations": 13870,
+       "unaffordable": 11064,
+       "no_legal_cell_or_other_engine_restriction": 2806
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 46,
+      "occupied_cells": 24.73913043478261,
+      "non_pot_cells": 21.26086956521739
+     }
+    },
+    "all_legal": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 9,
+     "median_final_tick": 27485,
+     "mean_planted_types": {
+      "1": 14.391304347826088,
+      "33": 28.304347826086957,
+      "3": 6.130434782608695,
+      "32": 8.130434782608695,
+      "0": 0.391304347826087
+     },
+     "coverage": {
+      "search_decisions": 2234,
+      "full_legal_scoring_roots": 2234,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 22.162488809310652,
+      "mean_production_candidates": 5.111906893464638,
+      "global_best_omission_rate": 0.4722470904207699,
+      "static_global_best_omission_rate": 0.7193375111906893,
+      "global_regret_above_margin": 0.22470904207699194,
+      "chosen_outside_production_rate": 0.2170993733213966
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 12054,
+       "unaffordable": 11573,
+       "legal": 333,
+       "no_legal_cell_or_other_engine_restriction": 18,
+       "inactive_or_cooldown": 130
+      },
+      "1": {
+       "observations": 12054,
+       "legal": 2738,
+       "inactive_or_cooldown": 4599,
+       "unaffordable": 4660,
+       "no_legal_cell_or_other_engine_restriction": 57
+      },
+      "2": {
+       "observations": 12054,
+       "inactive_or_cooldown": 1509,
+       "unaffordable": 10545
+      },
+      "3": {
+       "observations": 12054,
+       "inactive_or_cooldown": 8512,
+       "unaffordable": 2403,
+       "legal": 1087,
+       "no_legal_cell_or_other_engine_restriction": 52
+      },
+      "32": {
+       "observations": 12054,
+       "unaffordable": 9096,
+       "legal": 309,
+       "inactive_or_cooldown": 2632,
+       "no_legal_cell_or_other_engine_restriction": 17
+      },
+      "33": {
+       "observations": 12054,
+       "legal": 2041,
+       "unaffordable": 878,
+       "inactive_or_cooldown": 9135
+      },
+      "35": {
+       "observations": 12054,
+       "unaffordable": 10294,
+       "no_legal_cell_or_other_engine_restriction": 1760
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 30.52173913043478,
+      "occupied_cells": 17.217391304347824,
+      "non_pot_cells": 13.304347826086957
+     }
+    }
+   },
+   "paired": {
+    "all_plants": {
+     "pairs": 23,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
+    },
+    "all_legal": {
+     "pairs": 23,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0
+    }
+   }
+  },
+  "45": {
+   "arms": {
+    "production": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 19,
+     "median_final_tick": 37282,
+     "mean_planted_types": {
+      "33": 27.130434782608695,
+      "1": 1.0,
+      "32": 1.0,
+      "2": 12.173913043478262,
+      "3": 1.0,
+      "6": 27.391304347826086,
+      "0": 1.0,
+      "30": 18.695652173913043
+     },
+     "coverage": {
+      "search_decisions": 2671,
+      "full_legal_scoring_roots": 517,
+      "unscored_legal_plants": 40363,
+      "mean_legal_plants": 18.995881692250094,
+      "mean_production_candidates": 4.884312991388993,
+      "global_best_omission_rate": 0,
+      "static_global_best_omission_rate": 0.2978723404255319,
+      "global_regret_above_margin": 0,
+      "chosen_outside_production_rate": 0
+     },
+     "economic_availability": {
+      "-1": {
+       "observations": 80969,
+       "no_legal_cell_or_other_engine_restriction": 80969
+      },
+      "0": {
+       "observations": 276,
+       "legal": 276
+      },
+      "1": {
+       "observations": 46,
+       "legal": 46
+      },
+      "2": {
+       "observations": 3256,
+       "inactive_or_cooldown": 46,
+       "legal": 2235,
+       "no_legal_cell_or_other_engine_restriction": 975
+      },
+      "3": {
+       "observations": 184,
+       "inactive_or_cooldown": 46,
+       "legal": 138
+      },
+      "6": {
+       "observations": 2915,
+       "legal": 2195,
+       "no_legal_cell_or_other_engine_restriction": 720
+      },
+      "30": {
+       "observations": 2976,
+       "legal": 2976
+      },
+      "32": {
+       "observations": 92,
+       "legal": 92
+      },
+      "33": {
+       "observations": 1518,
+       "legal": 1518
+      },
+      "35": {
+       "observations": 15372,
+       "no_legal_cell_or_other_engine_restriction": 15372
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 39.91304347826087,
+      "occupied_cells": 15.782608695652174,
+      "non_pot_cells": 14.217391304347826
+     }
+    },
+    "all_plants": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 19,
+     "median_final_tick": 38337,
+     "mean_planted_types": {
+      "33": 28.304347826086957,
+      "1": 1.0,
+      "32": 1.0,
+      "2": 12.826086956521738,
+      "3": 1.0,
+      "6": 28.52173913043478,
+      "0": 1.0,
+      "30": 19.652173913043477
+     },
+     "coverage": {
+      "search_decisions": 2779,
+      "full_legal_scoring_roots": 2779,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 18.67362360561353,
+      "mean_production_candidates": 4.866138898884491,
+      "global_best_omission_rate": 0.5034184958618207,
+      "static_global_best_omission_rate": 0.7524289312702411,
+      "global_regret_above_margin": 0.015473191795609931,
+      "chosen_outside_production_rate": 0.0014393666786613889
+     },
+     "economic_availability": {
+      "-1": {
+       "observations": 84801,
+       "no_legal_cell_or_other_engine_restriction": 84801
+      },
+      "0": {
+       "observations": 276,
+       "legal": 276
+      },
+      "1": {
+       "observations": 46,
+       "legal": 46
+      },
+      "2": {
+       "observations": 3431,
+       "inactive_or_cooldown": 46,
+       "legal": 2386,
+       "no_legal_cell_or_other_engine_restriction": 999
+      },
+      "3": {
+       "observations": 184,
+       "inactive_or_cooldown": 46,
+       "legal": 138
+      },
+      "6": {
+       "observations": 2981,
+       "legal": 2230,
+       "no_legal_cell_or_other_engine_restriction": 751
+      },
+      "30": {
+       "observations": 2906,
+       "legal": 2906
+      },
+      "32": {
+       "observations": 92,
+       "legal": 92
+      },
+      "33": {
+       "observations": 1577,
+       "legal": 1577
+      },
+      "35": {
+       "observations": 16049,
+       "no_legal_cell_or_other_engine_restriction": 16049
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 40.43478260869565,
+      "occupied_cells": 15.782608695652174,
+      "non_pot_cells": 14.304347826086957
+     }
+    },
+    "all_legal": {
+     "games": 22,
+     "wins": 0,
+     "median_final_wave": 19.0,
+     "median_final_tick": 37809.5,
+     "mean_planted_types": {
+      "33": 28.272727272727273,
+      "1": 1.0,
+      "32": 1.0,
+      "2": 12.409090909090908,
+      "3": 1.0,
+      "6": 27.727272727272727,
+      "0": 1.0,
+      "30": 19.045454545454547
+     },
+     "coverage": {
+      "search_decisions": 2597,
+      "full_legal_scoring_roots": 2597,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 18.88717751251444,
+      "mean_production_candidates": 4.903735078937236,
+      "global_best_omission_rate": 0.5078937235271467,
+      "static_global_best_omission_rate": 0.7551020408163265,
+      "global_regret_above_margin": 0.016557566422795534,
+      "chosen_outside_production_rate": 0.0023103581055063534
+     },
+     "economic_availability": {
+      "-1": {
+       "observations": 79569,
+       "no_legal_cell_or_other_engine_restriction": 79569
+      },
+      "0": {
+       "observations": 264,
+       "legal": 264
+      },
+      "1": {
+       "observations": 44,
+       "legal": 44
+      },
+      "2": {
+       "observations": 3117,
+       "inactive_or_cooldown": 44,
+       "legal": 2171,
+       "no_legal_cell_or_other_engine_restriction": 902
+      },
+      "3": {
+       "observations": 176,
+       "inactive_or_cooldown": 44,
+       "legal": 132
+      },
+      "6": {
+       "observations": 2774,
+       "legal": 2088,
+       "no_legal_cell_or_other_engine_restriction": 686
+      },
+      "30": {
+       "observations": 2795,
+       "legal": 2795
+      },
+      "32": {
+       "observations": 88,
+       "legal": 88
+      },
+      "33": {
+       "observations": 1437,
+       "legal": 1437
+      },
+      "35": {
+       "observations": 15044,
+       "no_legal_cell_or_other_engine_restriction": 15044
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 40.04545454545455,
+      "occupied_cells": 15.727272727272727,
+      "non_pot_cells": 14.181818181818182
+     }
+    }
+   },
+   "paired": {
+    "all_plants": {
+     "pairs": 23,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
+    },
+    "all_legal": {
+     "pairs": 22,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0
+    }
+   }
+  },
+  "46": {
+   "arms": {
+    "production": {
+     "games": 23,
+     "wins": 1,
+     "median_final_wave": 5,
+     "median_final_tick": 14036,
+     "mean_planted_types": {
+      "1": 12.130434782608695,
+      "33": 23.347826086956523,
+      "3": 4.826086956521739,
+      "32": 6.6521739130434785,
+      "0": 0.30434782608695654,
+      "2": 0.043478260869565216
+     },
+     "coverage": {
+      "search_decisions": 1483,
+      "full_legal_scoring_roots": 239,
+      "unscored_legal_plants": 25023,
+      "mean_legal_plants": 20.76196898179366,
+      "mean_production_candidates": 4.888739042481457,
+      "global_best_omission_rate": 0,
+      "static_global_best_omission_rate": 0.19665271966527198,
+      "global_regret_above_margin": 0,
+      "chosen_outside_production_rate": 0
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 9186,
+       "unaffordable": 8763,
+       "legal": 216,
+       "inactive_or_cooldown": 99,
+       "no_legal_cell_or_other_engine_restriction": 108
+      },
+      "1": {
+       "observations": 9186,
+       "legal": 1489,
+       "inactive_or_cooldown": 3842,
+       "unaffordable": 3612,
+       "no_legal_cell_or_other_engine_restriction": 243
+      },
+      "2": {
+       "observations": 9186,
+       "inactive_or_cooldown": 1599,
+       "unaffordable": 7570,
+       "no_legal_cell_or_other_engine_restriction": 14,
+       "legal": 3
+      },
+      "3": {
+       "observations": 9186,
+       "inactive_or_cooldown": 6747,
+       "legal": 551,
+       "unaffordable": 1830,
+       "no_legal_cell_or_other_engine_restriction": 58
+      },
+      "32": {
+       "observations": 9186,
+       "unaffordable": 6805,
+       "legal": 199,
+       "inactive_or_cooldown": 2116,
+       "no_legal_cell_or_other_engine_restriction": 66
+      },
+      "33": {
+       "observations": 9186,
+       "legal": 1132,
+       "unaffordable": 661,
+       "inactive_or_cooldown": 7393
+      },
+      "35": {
+       "observations": 9186,
+       "unaffordable": 7996,
+       "no_legal_cell_or_other_engine_restriction": 1190
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 31.304347826086957,
+      "occupied_cells": 18.695652173913043,
+      "non_pot_cells": 12.608695652173912
+     }
+    },
+    "all_plants": {
+     "games": 23,
+     "wins": 1,
+     "median_final_wave": 9,
+     "median_final_tick": 24510,
+     "mean_planted_types": {
+      "1": 18.52173913043478,
+      "33": 40.73913043478261,
+      "3": 9.130434782608695,
+      "32": 16.695652173913043,
+      "2": 0.17391304347826086,
+      "0": 1.2608695652173914
+     },
+     "coverage": {
+      "search_decisions": 2708,
+      "full_legal_scoring_roots": 2708,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 16.043943870014772,
+      "mean_production_candidates": 4.738921713441655,
+      "global_best_omission_rate": 0.3892171344165436,
+      "static_global_best_omission_rate": 0.6104135893648449,
+      "global_regret_above_margin": 0.19719350073855244,
+      "chosen_outside_production_rate": 0.12850812407680945
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 15736,
+       "unaffordable": 14399,
+       "legal": 580,
+       "no_legal_cell_or_other_engine_restriction": 334,
+       "inactive_or_cooldown": 423
+      },
+      "1": {
+       "observations": 15736,
+       "legal": 3385,
+       "inactive_or_cooldown": 5961,
+       "unaffordable": 5642,
+       "no_legal_cell_or_other_engine_restriction": 748
+      },
+      "2": {
+       "observations": 15736,
+       "inactive_or_cooldown": 1896,
+       "unaffordable": 13761,
+       "no_legal_cell_or_other_engine_restriction": 61,
+       "legal": 18
+      },
+      "3": {
+       "observations": 15736,
+       "inactive_or_cooldown": 12358,
+       "unaffordable": 2312,
+       "legal": 930,
+       "no_legal_cell_or_other_engine_restriction": 136
+      },
+      "32": {
+       "observations": 15736,
+       "unaffordable": 9541,
+       "legal": 480,
+       "inactive_or_cooldown": 5493,
+       "no_legal_cell_or_other_engine_restriction": 222
+      },
+      "33": {
+       "observations": 15736,
+       "legal": 1730,
+       "unaffordable": 955,
+       "inactive_or_cooldown": 13051
+      },
+      "35": {
+       "observations": 15736,
+       "unaffordable": 12761,
+       "no_legal_cell_or_other_engine_restriction": 2975
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 38.391304347826086,
+      "occupied_cells": 21.130434782608695,
+      "non_pot_cells": 17.26086956521739
+     }
+    },
+    "all_legal": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 8,
+     "median_final_tick": 20735,
+     "mean_planted_types": {
+      "1": 12.73913043478261,
+      "33": 23.869565217391305,
+      "3": 5.565217391304348,
+      "32": 4.173913043478261,
+      "0": 0.21739130434782608
+     },
+     "coverage": {
+      "search_decisions": 1790,
+      "full_legal_scoring_roots": 1790,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 24.20949720670391,
+      "mean_production_candidates": 5.109497206703911,
+      "global_best_omission_rate": 0.4849162011173184,
+      "static_global_best_omission_rate": 0.7452513966480447,
+      "global_regret_above_margin": 0.2759776536312849,
+      "chosen_outside_production_rate": 0.2910614525139665
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 10258,
+       "unaffordable": 10007,
+       "legal": 181,
+       "inactive_or_cooldown": 70
+      },
+      "1": {
+       "observations": 10258,
+       "legal": 1883,
+       "inactive_or_cooldown": 4038,
+       "unaffordable": 4324,
+       "no_legal_cell_or_other_engine_restriction": 13
+      },
+      "2": {
+       "observations": 10258,
+       "inactive_or_cooldown": 1528,
+       "unaffordable": 8730
+      },
+      "3": {
+       "observations": 10258,
+       "inactive_or_cooldown": 7694,
+       "unaffordable": 1822,
+       "legal": 740,
+       "no_legal_cell_or_other_engine_restriction": 2
+      },
+      "32": {
+       "observations": 10258,
+       "unaffordable": 8694,
+       "legal": 181,
+       "inactive_or_cooldown": 1383
+      },
+      "33": {
+       "observations": 10258,
+       "legal": 1760,
+       "unaffordable": 820,
+       "inactive_or_cooldown": 7678
+      },
+      "35": {
+       "observations": 10258,
+       "unaffordable": 9209,
+       "no_legal_cell_or_other_engine_restriction": 1049
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 21.304347826086957,
+      "occupied_cells": 12.217391304347826,
+      "non_pot_cells": 9.08695652173913
+     }
+    }
+   },
+   "paired": {
+    "all_plants": {
+     "pairs": 23,
+     "gained": 1,
+     "lost": 1,
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
+    },
+    "all_legal": {
+     "pairs": 23,
+     "gained": 0,
+     "lost": 1,
+     "exact_mcnemar_p": 1.0
+    }
+   }
+  },
+  "47": {
+   "arms": {
+    "production": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 6,
+     "median_final_tick": 15989,
+     "mean_planted_types": {
+      "1": 14.695652173913043,
+      "33": 32.21739130434783,
+      "3": 7.304347826086956,
+      "32": 12.956521739130435,
+      "0": 0.782608695652174,
+      "2": 0.30434782608695654
+     },
+     "coverage": {
+      "search_decisions": 2317,
+      "full_legal_scoring_roots": 514,
+      "unscored_legal_plants": 33913,
+      "mean_legal_plants": 18.51014242555028,
+      "mean_production_candidates": 4.873543375053949,
+      "global_best_omission_rate": 0,
+      "static_global_best_omission_rate": 0.24319066147859922,
+      "global_regret_above_margin": 0,
+      "chosen_outside_production_rate": 0
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 12946,
+       "unaffordable": 11948,
+       "legal": 465,
+       "no_legal_cell_or_other_engine_restriction": 269,
+       "inactive_or_cooldown": 264
+      },
+      "1": {
+       "observations": 12946,
+       "legal": 2895,
+       "inactive_or_cooldown": 4704,
+       "unaffordable": 4839,
+       "no_legal_cell_or_other_engine_restriction": 508
+      },
+      "2": {
+       "observations": 12946,
+       "inactive_or_cooldown": 2110,
+       "unaffordable": 10739,
+       "no_legal_cell_or_other_engine_restriction": 78,
+       "legal": 19
+      },
+      "3": {
+       "observations": 12946,
+       "inactive_or_cooldown": 9885,
+       "unaffordable": 2023,
+       "legal": 902,
+       "no_legal_cell_or_other_engine_restriction": 136
+      },
+      "32": {
+       "observations": 12946,
+       "unaffordable": 8166,
+       "legal": 387,
+       "inactive_or_cooldown": 4232,
+       "no_legal_cell_or_other_engine_restriction": 161
+      },
+      "33": {
+       "observations": 12946,
+       "legal": 1937,
+       "unaffordable": 692,
+       "inactive_or_cooldown": 10317
+      },
+      "35": {
+       "observations": 12946,
+       "unaffordable": 10442,
+       "no_legal_cell_or_other_engine_restriction": 2504
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 34.43478260869565,
+      "occupied_cells": 19.73913043478261,
+      "non_pot_cells": 14.695652173913043
+     }
+    },
+    "all_plants": {
+     "games": 22,
+     "wins": 0,
+     "median_final_wave": 8.0,
+     "median_final_tick": 19763.5,
+     "mean_planted_types": {
+      "1": 16.272727272727273,
+      "33": 33.22727272727273,
+      "3": 7.2272727272727275,
+      "32": 13.681818181818182,
+      "0": 1.0454545454545454,
+      "2": 0.18181818181818182
+     },
+     "coverage": {
+      "search_decisions": 2281,
+      "full_legal_scoring_roots": 2281,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 18.25032880315651,
+      "mean_production_candidates": 4.8478737395879,
+      "global_best_omission_rate": 0.4458570802279702,
+      "static_global_best_omission_rate": 0.6488382288469969,
+      "global_regret_above_margin": 0.2135028496273564,
+      "chosen_outside_production_rate": 0.12932924156071898
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 12856,
+       "unaffordable": 11699,
+       "legal": 499,
+       "inactive_or_cooldown": 331,
+       "no_legal_cell_or_other_engine_restriction": 327
+      },
+      "1": {
+       "observations": 12856,
+       "legal": 2688,
+       "inactive_or_cooldown": 4982,
+       "unaffordable": 4635,
+       "no_legal_cell_or_other_engine_restriction": 551
+      },
+      "2": {
+       "observations": 12856,
+       "inactive_or_cooldown": 1834,
+       "unaffordable": 10935,
+       "legal": 17,
+       "no_legal_cell_or_other_engine_restriction": 70
+      },
+      "3": {
+       "observations": 12856,
+       "inactive_or_cooldown": 9691,
+       "unaffordable": 2135,
+       "legal": 880,
+       "no_legal_cell_or_other_engine_restriction": 150
+      },
+      "32": {
+       "observations": 12856,
+       "unaffordable": 7959,
+       "legal": 401,
+       "inactive_or_cooldown": 4319,
+       "no_legal_cell_or_other_engine_restriction": 177
+      },
+      "33": {
+       "observations": 12856,
+       "legal": 1891,
+       "unaffordable": 784,
+       "inactive_or_cooldown": 10181
+      },
+      "35": {
+       "observations": 12856,
+       "unaffordable": 10227,
+       "no_legal_cell_or_other_engine_restriction": 2629
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 33.04545454545455,
+      "occupied_cells": 19.272727272727273,
+      "non_pot_cells": 13.772727272727273
+     }
+    },
+    "all_legal": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 7,
+     "median_final_tick": 18015,
+     "mean_planted_types": {
+      "1": 11.565217391304348,
+      "33": 23.47826086956522,
+      "3": 5.3478260869565215,
+      "32": 5.260869565217392,
+      "0": 0.21739130434782608
+     },
+     "coverage": {
+      "search_decisions": 1831,
+      "full_legal_scoring_roots": 1831,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 24.3801201529219,
+      "mean_production_candidates": 5.134898962315675,
+      "global_best_omission_rate": 0.4871654833424358,
+      "static_global_best_omission_rate": 0.732386673948662,
+      "global_regret_above_margin": 0.2528672856362643,
+      "chosen_outside_production_rate": 0.2632441288913162
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 10376,
+       "unaffordable": 10078,
+       "legal": 221,
+       "inactive_or_cooldown": 71,
+       "no_legal_cell_or_other_engine_restriction": 6
+      },
+      "1": {
+       "observations": 10376,
+       "legal": 2216,
+       "inactive_or_cooldown": 3625,
+       "unaffordable": 4514,
+       "no_legal_cell_or_other_engine_restriction": 21
+      },
+      "2": {
+       "observations": 10376,
+       "inactive_or_cooldown": 1533,
+       "unaffordable": 8843
+      },
+      "3": {
+       "observations": 10376,
+       "inactive_or_cooldown": 7397,
+       "unaffordable": 2076,
+       "legal": 896,
+       "no_legal_cell_or_other_engine_restriction": 7
+      },
+      "32": {
+       "observations": 10376,
+       "unaffordable": 8488,
+       "legal": 217,
+       "inactive_or_cooldown": 1666,
+       "no_legal_cell_or_other_engine_restriction": 5
+      },
+      "33": {
+       "observations": 10376,
+       "legal": 1972,
+       "unaffordable": 878,
+       "inactive_or_cooldown": 7526
+      },
+      "35": {
+       "observations": 10376,
+       "unaffordable": 9095,
+       "no_legal_cell_or_other_engine_restriction": 1281
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 22.391304347826086,
+      "occupied_cells": 12.956521739130435,
+      "non_pot_cells": 9.434782608695652
+     }
+    }
+   },
+   "paired": {
+    "all_plants": {
+     "pairs": 22,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
+    },
+    "all_legal": {
+     "pairs": 23,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0
+    }
+   }
+  },
+  "48": {
+   "arms": {
+    "production": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 6,
+     "median_final_tick": 17397,
+     "mean_planted_types": {
+      "1": 12.26086956521739,
+      "33": 23.73913043478261,
+      "3": 5.173913043478261,
+      "32": 6.869565217391305,
+      "0": 0.5652173913043478
+     },
+     "coverage": {
+      "search_decisions": 1546,
+      "full_legal_scoring_roots": 207,
+      "unscored_legal_plants": 27124,
+      "mean_legal_plants": 21.464424320827945,
+      "mean_production_candidates": 4.9197930142302715,
+      "global_best_omission_rate": 0,
+      "static_global_best_omission_rate": 0.13526570048309178,
+      "global_regret_above_margin": 0,
+      "chosen_outside_production_rate": 0
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 9441,
+       "unaffordable": 8915,
+       "legal": 229,
+       "no_legal_cell_or_other_engine_restriction": 110,
+       "inactive_or_cooldown": 187
+      },
+      "1": {
+       "observations": 9441,
+       "legal": 1486,
+       "inactive_or_cooldown": 3897,
+       "unaffordable": 3817,
+       "no_legal_cell_or_other_engine_restriction": 241
+      },
+      "2": {
+       "observations": 9441,
+       "inactive_or_cooldown": 1503,
+       "unaffordable": 7913,
+       "no_legal_cell_or_other_engine_restriction": 20,
+       "legal": 5
+      },
+      "3": {
+       "observations": 9441,
+       "inactive_or_cooldown": 7198,
+       "unaffordable": 1647,
+       "legal": 527,
+       "no_legal_cell_or_other_engine_restriction": 69
+      },
+      "32": {
+       "observations": 9441,
+       "unaffordable": 6955,
+       "legal": 200,
+       "inactive_or_cooldown": 2212,
+       "no_legal_cell_or_other_engine_restriction": 74
+      },
+      "33": {
+       "observations": 9441,
+       "legal": 1186,
+       "unaffordable": 763,
+       "inactive_or_cooldown": 7492
+      },
+      "35": {
+       "observations": 9441,
+       "unaffordable": 8259,
+       "no_legal_cell_or_other_engine_restriction": 1182
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 34.82608695652174,
+      "occupied_cells": 20.217391304347824,
+      "non_pot_cells": 14.608695652173912
+     }
+    },
+    "all_plants": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 10,
+     "median_final_tick": 26256,
+     "mean_planted_types": {
+      "1": 17.130434782608695,
+      "33": 32.52173913043478,
+      "3": 7.260869565217392,
+      "32": 13.08695652173913,
+      "0": 0.9565217391304348,
+      "2": 0.21739130434782608
+     },
+     "coverage": {
+      "search_decisions": 2173,
+      "full_legal_scoring_roots": 2173,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 18.076392084675565,
+      "mean_production_candidates": 4.860561435803037,
+      "global_best_omission_rate": 0.42843994477680625,
+      "static_global_best_omission_rate": 0.6484123331799355,
+      "global_regret_above_margin": 0.2383801196502531,
+      "chosen_outside_production_rate": 0.15462494247583985
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 12793,
+       "unaffordable": 11602,
+       "legal": 455,
+       "inactive_or_cooldown": 321,
+       "no_legal_cell_or_other_engine_restriction": 415
+      },
+      "1": {
+       "observations": 12793,
+       "legal": 2230,
+       "inactive_or_cooldown": 5501,
+       "unaffordable": 4293,
+       "no_legal_cell_or_other_engine_restriction": 769
+      },
+      "2": {
+       "observations": 12793,
+       "inactive_or_cooldown": 1938,
+       "unaffordable": 10746,
+       "no_legal_cell_or_other_engine_restriction": 87,
+       "legal": 22
+      },
+      "3": {
+       "observations": 12793,
+       "inactive_or_cooldown": 9941,
+       "unaffordable": 1875,
+       "legal": 848,
+       "no_legal_cell_or_other_engine_restriction": 129
+      },
+      "32": {
+       "observations": 12793,
+       "unaffordable": 7915,
+       "legal": 389,
+       "inactive_or_cooldown": 4266,
+       "no_legal_cell_or_other_engine_restriction": 223
+      },
+      "33": {
+       "observations": 12793,
+       "legal": 1483,
+       "unaffordable": 837,
+       "inactive_or_cooldown": 10473
+      },
+      "35": {
+       "observations": 12793,
+       "unaffordable": 10306,
+       "no_legal_cell_or_other_engine_restriction": 2487
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 41.30434782608695,
+      "occupied_cells": 22.26086956521739,
+      "non_pot_cells": 19.043478260869566
+     }
+    },
+    "all_legal": {
+     "games": 22,
+     "wins": 0,
+     "median_final_wave": 7.0,
+     "median_final_tick": 16712.5,
+     "mean_planted_types": {
+      "1": 12.409090909090908,
+      "33": 23.545454545454547,
+      "3": 5.2272727272727275,
+      "32": 5.454545454545454,
+      "0": 0.045454545454545456,
+      "2": 0.045454545454545456
+     },
+     "coverage": {
+      "search_decisions": 1681,
+      "full_legal_scoring_roots": 1681,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 22.992861392028555,
+      "mean_production_candidates": 5.07733491969066,
+      "global_best_omission_rate": 0.455086258179655,
+      "static_global_best_omission_rate": 0.7108863771564545,
+      "global_regret_above_margin": 0.23438429506246283,
+      "chosen_outside_production_rate": 0.2498512790005949
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 9563,
+       "unaffordable": 9331,
+       "legal": 196,
+       "no_legal_cell_or_other_engine_restriction": 22,
+       "inactive_or_cooldown": 14
+      },
+      "1": {
+       "observations": 9563,
+       "legal": 1860,
+       "inactive_or_cooldown": 3758,
+       "unaffordable": 3889,
+       "no_legal_cell_or_other_engine_restriction": 56
+      },
+      "2": {
+       "observations": 9563,
+       "inactive_or_cooldown": 1474,
+       "unaffordable": 8081,
+       "no_legal_cell_or_other_engine_restriction": 6,
+       "legal": 2
+      },
+      "3": {
+       "observations": 9563,
+       "inactive_or_cooldown": 7019,
+       "unaffordable": 1815,
+       "legal": 717,
+       "no_legal_cell_or_other_engine_restriction": 12
+      },
+      "32": {
+       "observations": 9563,
+       "unaffordable": 7665,
+       "legal": 191,
+       "inactive_or_cooldown": 1685,
+       "no_legal_cell_or_other_engine_restriction": 22
+      },
+      "33": {
+       "observations": 9563,
+       "legal": 1586,
+       "unaffordable": 703,
+       "inactive_or_cooldown": 7274
+      },
+      "35": {
+       "observations": 9563,
+       "unaffordable": 8447,
+       "no_legal_cell_or_other_engine_restriction": 1116
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 23.59090909090909,
+      "occupied_cells": 13.727272727272727,
+      "non_pot_cells": 9.863636363636363
+     }
+    }
+   },
+   "paired": {
+    "all_plants": {
+     "pairs": 23,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
+    },
+    "all_legal": {
+     "pairs": 22,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0
+    }
+   }
+  },
+  "49": {
+   "arms": {
+    "production": {
+     "games": 23,
+     "wins": 0,
+     "median_final_wave": 5,
+     "median_final_tick": 14737,
+     "mean_planted_types": {
+      "33": 20.217391304347824,
+      "1": 10.173913043478262,
+      "32": 4.695652173913044,
+      "3": 4.217391304347826,
+      "0": 0.5217391304347826,
+      "2": 0.043478260869565216
+     },
+     "coverage": {
+      "search_decisions": 1384,
+      "full_legal_scoring_roots": 137,
+      "unscored_legal_plants": 27671,
+      "mean_legal_plants": 24.021676300578033,
+      "mean_production_candidates": 5.0281791907514455,
+      "global_best_omission_rate": 0,
+      "static_global_best_omission_rate": 0.26277372262773724,
+      "global_regret_above_margin": 0,
+      "chosen_outside_production_rate": 0
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 8249,
+       "unaffordable": 7859,
+       "legal": 170,
+       "inactive_or_cooldown": 175,
+       "no_legal_cell_or_other_engine_restriction": 45
+      },
+      "1": {
+       "observations": 8249,
+       "legal": 1485,
+       "unaffordable": 3520,
+       "inactive_or_cooldown": 3161,
+       "no_legal_cell_or_other_engine_restriction": 83
+      },
+      "2": {
+       "observations": 8249,
+       "inactive_or_cooldown": 1596,
+       "unaffordable": 6640,
+       "legal": 5,
+       "no_legal_cell_or_other_engine_restriction": 8
+      },
+      "3": {
+       "observations": 8249,
+       "inactive_or_cooldown": 5909,
+       "unaffordable": 1740,
+       "legal": 584,
+       "no_legal_cell_or_other_engine_restriction": 16
+      },
+      "32": {
+       "observations": 8249,
+       "unaffordable": 6601,
+       "legal": 154,
+       "inactive_or_cooldown": 1477,
+       "no_legal_cell_or_other_engine_restriction": 17
+      },
+      "33": {
+       "observations": 8249,
+       "legal": 1384,
+       "inactive_or_cooldown": 6369,
+       "unaffordable": 496
+      },
+      "35": {
+       "observations": 8249,
+       "unaffordable": 7289,
+       "no_legal_cell_or_other_engine_restriction": 960
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 27.043478260869566,
+      "occupied_cells": 16.782608695652176,
+      "non_pot_cells": 10.26086956521739
+     }
+    },
+    "all_plants": {
+     "games": 22,
+     "wins": 0,
+     "median_final_wave": 9.0,
+     "median_final_tick": 25246.5,
+     "mean_planted_types": {
+      "1": 18.363636363636363,
+      "33": 37.77272727272727,
+      "3": 8.5,
+      "32": 15.045454545454545,
+      "0": 1.2727272727272727,
+      "2": 0.18181818181818182
+     },
+     "coverage": {
+      "search_decisions": 2563,
+      "full_legal_scoring_roots": 2563,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 17.326960593055013,
+      "mean_production_candidates": 4.783847054233321,
+      "global_best_omission_rate": 0.42684354272337105,
+      "static_global_best_omission_rate": 0.6348029652750683,
+      "global_regret_above_margin": 0.17323449083105735,
+      "chosen_outside_production_rate": 0.12095200936402653
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 14470,
+       "unaffordable": 13221,
+       "legal": 536,
+       "inactive_or_cooldown": 403,
+       "no_legal_cell_or_other_engine_restriction": 310
+      },
+      "1": {
+       "observations": 14470,
+       "legal": 3031,
+       "inactive_or_cooldown": 5678,
+       "unaffordable": 5069,
+       "no_legal_cell_or_other_engine_restriction": 692
+      },
+      "2": {
+       "observations": 14470,
+       "inactive_or_cooldown": 1832,
+       "unaffordable": 12555,
+       "legal": 17,
+       "no_legal_cell_or_other_engine_restriction": 66
+      },
+      "3": {
+       "observations": 14470,
+       "inactive_or_cooldown": 11025,
+       "legal": 1041,
+       "unaffordable": 2293,
+       "no_legal_cell_or_other_engine_restriction": 111
+      },
+      "32": {
+       "observations": 14470,
+       "unaffordable": 9102,
+       "legal": 444,
+       "inactive_or_cooldown": 4702,
+       "no_legal_cell_or_other_engine_restriction": 222
+      },
+      "33": {
+       "observations": 14470,
+       "legal": 2053,
+       "unaffordable": 809,
+       "inactive_or_cooldown": 11608
+      },
+      "35": {
+       "observations": 14470,
+       "unaffordable": 11688,
+       "no_legal_cell_or_other_engine_restriction": 2782
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 34.04545454545455,
+      "occupied_cells": 19.045454545454547,
+      "non_pot_cells": 15
+     }
+    },
+    "all_legal": {
+     "games": 22,
+     "wins": 0,
+     "median_final_wave": 8.5,
+     "median_final_tick": 22844.0,
+     "mean_planted_types": {
+      "1": 14.181818181818182,
+      "33": 29.59090909090909,
+      "3": 6.5,
+      "32": 6.7272727272727275,
+      "0": 0.2727272727272727
+     },
+     "coverage": {
+      "search_decisions": 2147,
+      "full_legal_scoring_roots": 2147,
+      "unscored_legal_plants": 0,
+      "mean_legal_plants": 23.292035398230087,
+      "mean_production_candidates": 5.12249650675361,
+      "global_best_omission_rate": 0.4816022356776898,
+      "static_global_best_omission_rate": 0.759198882161155,
+      "global_regret_above_margin": 0.231951560316721,
+      "chosen_outside_production_rate": 0.2850489054494644
+     },
+     "economic_availability": {
+      "0": {
+       "observations": 12233,
+       "unaffordable": 11875,
+       "legal": 260,
+       "inactive_or_cooldown": 84,
+       "no_legal_cell_or_other_engine_restriction": 14
+      },
+      "1": {
+       "observations": 12233,
+       "legal": 2644,
+       "inactive_or_cooldown": 4305,
+       "unaffordable": 5226,
+       "no_legal_cell_or_other_engine_restriction": 58
+      },
+      "2": {
+       "observations": 12233,
+       "inactive_or_cooldown": 1455,
+       "unaffordable": 10775,
+       "legal": 3
+      },
+      "3": {
+       "observations": 12233,
+       "inactive_or_cooldown": 8781,
+       "legal": 1046,
+       "unaffordable": 2396,
+       "no_legal_cell_or_other_engine_restriction": 10
+      },
+      "32": {
+       "observations": 12233,
+       "unaffordable": 9881,
+       "legal": 258,
+       "inactive_or_cooldown": 2080,
+       "no_legal_cell_or_other_engine_restriction": 14
+      },
+      "33": {
+       "observations": 12233,
+       "legal": 2132,
+       "unaffordable": 963,
+       "inactive_or_cooldown": 9138
+      },
+      "35": {
+       "observations": 12233,
+       "unaffordable": 10865,
+       "no_legal_cell_or_other_engine_restriction": 1368
+      }
+     },
+     "final_preterminal_occupancy": {
+      "records": 21.954545454545453,
+      "occupied_cells": 13,
+      "non_pot_cells": 8.954545454545455
+     }
+    }
+   },
+   "paired": {
+    "all_plants": {
+     "pairs": 22,
+     "gained": 0,
+     "lost": 0,
+     "exact_mcnemar_p": 1.0,
+     "holm_family_p": 1.0
+    },
+    "all_legal": {
+     "pairs": 22,
      "gained": 0,
      "lost": 0,
      "exact_mcnemar_p": 1.0
@@ -532,11 +2044,29 @@
   "file": "MEMORY/docs/task74-cold-start-sweep.md",
   "roof_levels_42_to_49": "all 0/16; all eight levels require expansion"
  },
- "complete": true,
+ "complete": false,
+ "multiplicity": "Primary all_plants contrast across all required roof levels; Holm adjustment. No final inference from incomplete pairs.",
+ "trace_audit": {
+  "games": 602,
+  "decisions": 334047,
+  "searched_roots": 57999,
+  "legal_plant_entries": 1138306,
+  "legal_shovel_entries": 1248608,
+  "scored_halving_entries": 2318991,
+  "trace_sha256_verified": true
+ },
  "pooled_primary": {
-  "pairs": 64,
-  "gained": 4,
-  "lost": 0,
-  "exact_mcnemar_p": 0.125
+  "pairs": 200,
+  "gained": 5,
+  "lost": 1,
+  "cluster_inference": {
+   "reset_seed_clusters": 32,
+   "nonzero_clusters": 6,
+   "gained_minus_lost": 4,
+   "exact_cluster_sign_flip_p": 0.21875,
+   "assumption": "Independent reset-seed clusters with symmetric paired treatment effect under the null; whole-seed swaps across all levels. Exploratory while the panel is incomplete."
+  },
+  "exact_mcnemar_p_exploratory": 0.21875,
+  "pooled_caveat": "Naive pooled McNemar treats level-seed pairs independently; use whole-reset-seed clustered inference and per-level corrected tests for conclusions."
  }
 }

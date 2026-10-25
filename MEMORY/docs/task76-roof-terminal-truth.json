@@ -1,0 +1,112 @@
+{
+ "schema_version": 2,
+ "task": 76,
+ "complete": false,
+ "per_level": {
+  "42": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "43": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "44": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "45": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "46": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "47": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "48": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  },
+  "49": {
+   "expected_roots": 8,
+   "completed_roots": 0,
+   "roots": []
+  }
+ },
+ "method": "Shared eight terminal futures for every legal action at identical current-v5-teacher roots; current student history passed after proposal; true terminal checked; nine independent shared leaf futures. v4 loaded explicitly for identical roots/futures; v5 horizons2500/4000/6000.",
+ "historical_comparison": "task46 v4 53.9% (95%47.1-60.9): different roots, models, two futures and search-teacher continuation, so no direct before/after claim. Matched v4/v5 numbers below isolate leaf model under task72b student continuation.",
+ "invalidated_legacy": "artifacts/task76/terminal schema1 used preloaded v5 for v4_control, pre-proposal history and action-specific futures; excluded in full.",
+ "root_evidence": [],
+ "good_action_coverage": {},
+ "pooled": {
+  "value_h2500": {
+   "roots": 0,
+   "level_seed_clusters": 0,
+   "unique_reset_seeds": 0,
+   "pairs": 0,
+   "pairwise_accuracy": null,
+   "level_seed_bootstrap95_exploratory": null,
+   "all_actions_zero_wins_roots": 0,
+   "discriminating_roots": 0,
+   "argmax_overlap_on_discriminating": null,
+   "mean_root_mae": null,
+   "mean_root_prediction": null,
+   "mean_root_truth": null
+  },
+  "value_h4000": {
+   "roots": 0,
+   "level_seed_clusters": 0,
+   "unique_reset_seeds": 0,
+   "pairs": 0,
+   "pairwise_accuracy": null,
+   "level_seed_bootstrap95_exploratory": null,
+   "all_actions_zero_wins_roots": 0,
+   "discriminating_roots": 0,
+   "argmax_overlap_on_discriminating": null,
+   "mean_root_mae": null,
+   "mean_root_prediction": null,
+   "mean_root_truth": null
+  },
+  "value_h6000": {
+   "roots": 0,
+   "level_seed_clusters": 0,
+   "unique_reset_seeds": 0,
+   "pairs": 0,
+   "pairwise_accuracy": null,
+   "level_seed_bootstrap95_exploratory": null,
+   "all_actions_zero_wins_roots": 0,
+   "discriminating_roots": 0,
+   "argmax_overlap_on_discriminating": null,
+   "mean_root_mae": null,
+   "mean_root_prediction": null,
+   "mean_root_truth": null
+  },
+  "v4_control_h2500": {
+   "roots": 0,
+   "level_seed_clusters": 0,
+   "unique_reset_seeds": 0,
+   "pairs": 0,
+   "pairwise_accuracy": null,
+   "level_seed_bootstrap95_exploratory": null,
+   "all_actions_zero_wins_roots": 0,
+   "discriminating_roots": 0,
+   "argmax_overlap_on_discriminating": null,
+   "mean_root_mae": null,
+   "mean_root_prediction": null,
+   "mean_root_truth": null
+  }
+ },
+ "uncertainty": "Bootstrap intervals treat (level, reset seed) as clusters and are exploratory; the same two reset seeds are reused across levels. They do not establish a population-level model improvement. Eight sampled futures do not prove any state is unwinnable.",
+ "matched_v5_minus_v4_accuracy": null
+}

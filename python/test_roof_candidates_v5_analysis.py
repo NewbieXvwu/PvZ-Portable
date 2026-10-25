@@ -88,3 +88,133 @@ def test_full_global_budget_starts_no_game(monkeypatch):
     monkeypatch.setattr(audit.base, 'native_game_processes', lambda: [dict(pid=1), dict(pid=2)])
     with pytest.raises(RuntimeError, match='no task76 game started'):
         audit.base.require_game_capacity(1)
+
+
+def test_holm_controls_the_whole_required_level_family():
+    assert audit.holm_adjust({'a':.01,'b':.02,'c':.5})=={'a':.03,'b':.04,'c':.5}
+    assert audit.holm_adjust({'a':.7,'b':.8})=={'a':1.,'b':1.}
+
+
+def test_shared_reset_seeds_are_not_counted_as_independent_levels():
+    # Eight gains sharing one reset seed yield one sign-flip unit, not eight.
+    same=audit.seed_cluster_sign_test({1:8})
+    separate=audit.seed_cluster_sign_test({i:1 for i in range(8)})
+    assert same['exact_cluster_sign_flip_p']==1
+    assert separate['exact_cluster_sign_flip_p']==2/256
+    assert audit.seed_cluster_sign_test({1:0,2:0})['exact_cluster_sign_flip_p']==1
+
+
+def audited_rows(arm='all_plants'):
+    r=row([A,WAIT],[A,WAIT,B],[(A,.1),(WAIT,.05),(B,.3)],B)
+    r.update(searched=True,frame={'tick':0},next_tick=60,decision_seed=7,
+             rejected=False,terminal=True,policy=A)
+    for entry in r['rounds'][0]:entry['future']=7000
+    receipt=dict(recorded_decisions=1,recorded_searches=1,outcome={'decisions':1})
+    return [r],receipt
+
+
+def test_expanded_trace_audit_checks_every_required_action_and_future():
+    import pytest
+    rows,receipt=audited_rows()
+    result=audit.audit_trace(rows,receipt,'all_plants')
+    assert result['searched_roots']==1 and result['scored_halving_entries']==3
+    rows[0]['evaluated_candidates'].remove(B)
+    rows[0]['rounds'][0].pop()
+    with pytest.raises(AssertionError,match='omitted'):
+        audit.audit_trace(rows,receipt,'all_plants')
+
+
+def test_trace_audit_rejects_unpaired_futures_and_missing_terminal():
+    import pytest
+    rows,receipt=audited_rows()
+    rows[0]['rounds'][0][0]['future']=7001
+    with pytest.raises(AssertionError,match='unpaired'):
+        audit.audit_trace(rows,receipt,'all_plants')
+    rows[0]['rounds'][0][0]['future']=7000
+    rows[0]['terminal']=False
+    with pytest.raises(AssertionError,match='terminal'):
+        audit.audit_trace(rows,receipt,'all_plants')
+
+
+class ProbeEnv:
+    def __init__(self,unfinished=False):
+        self._sun_production_history=[];self._sun_history_start_tick=0
+        self.model=None;self.calls=[];self.unfinished=unfinished
+
+    def restore_fast(self,root):
+        assert root==17
+
+    def state_hash(self):return 'root-state'
+
+    def branch_snapshot(self,root,actions,retain_snapshots):
+        assert root==17 and not retain_snapshots
+        return [{'ok':True}]
+
+    def load_value_net(self,path):self.model=path
+
+    def rollout(self,action,until_tick,**options):
+        assert options['snapshot_id']==17
+        self.calls.append((audit.key(action),until_tick,self.model,options))
+        if until_tick==0:
+            return dict(terminal=not self.unfinished,result=1,wave=5,tick=9999)
+        return dict(terminal=False,value=.25 if self.model=='v5.bin' else .75)
+
+
+def setup_probe(monkeypatch):
+    import search_play as teacher
+    plan={'inputs':{},'teacher':{'rollout_sim_skip':61}}
+    r={'tick':500,'production_candidates':[A,WAIT],'static_scores':[],
+       'executed':A,'policy':A,'legal_actions':[A,WAIT]}
+    monkeypatch.setattr(audit.base,'trace_rows',lambda *args:[r])
+    monkeypatch.setattr(audit.base,'probe_targets',lambda *args:[0])
+    monkeypatch.setattr(audit.base,'all_actions',lambda obs:[WAIT,A])
+    monkeypatch.setattr(audit.base,'sha',lambda path:str(path))
+    monkeypatch.setattr(audit,'history_sha',lambda state:'current-history')
+    monkeypatch.setitem(teacher._W,'student_history',{'phase':'after-current-proposal'})
+    monkeypatch.setattr(Path,'exists',lambda path:False)
+    documents=[]
+    monkeypatch.setattr(audit.base,'write',lambda path,document:documents.append(document))
+    observer=audit.PairedProbe(plan,42,45000000,{'value':'v5.bin','v4_control':'v4.bin'})
+    observer.decision=0;observer.fast_state={}
+    return observer,documents
+
+
+def test_probe_uses_eight_common_terminal_futures_and_explicit_matched_models(monkeypatch):
+    observer,documents=setup_probe(monkeypatch);env=ProbeEnv()
+    observer.probe(env,dict(tick=500,wave=1,sun=50,packets=[]),17,[A,WAIT],A)
+    assert len(documents)==1 and documents[0]['root_restore_verified']
+    actions=documents[0]['actions']
+    assert len(actions)==2 and all(len(r['terminal'])==8 for r in actions)
+    assert [r['future'] for r in actions[0]['terminal']]==[r['future'] for r in actions[1]['terminal']]
+    assert all(r['leaf']['value']['2500']==[.25]*9 for r in actions)
+    assert all(r['leaf']['v4_control']['2500']==[.75]*9 for r in actions)
+    assert len(env.calls)==2*(8+9*4) and env.model=='v5.bin'
+    assert all(c[3]['student_history']=={'phase':'after-current-proposal'} for c in env.calls)
+    assert all(c[3]['score_value'] for c in env.calls if c[1])
+
+
+def test_unfinished_terminal_future_writes_no_root_and_restores_model(monkeypatch):
+    import pytest
+    observer,documents=setup_probe(monkeypatch);env=ProbeEnv(unfinished=True)
+    with pytest.raises(AssertionError,match='unfinished'):
+        observer.probe(env,dict(tick=500),17,[A,WAIT],A)
+    assert not documents and env.model=='v5.bin'
+
+
+def test_terminal_evidence_validator_requires_full_action_coverage_and_replay(monkeypatch):
+    import pytest
+    observer,documents=setup_probe(monkeypatch);env=ProbeEnv()
+    observer.probe(env,dict(tick=500,wave=1,sun=50,packets=[]),17,[A,WAIT],A)
+    document=documents[0];baseline=audit.base.trace_rows(42,'production',45000000)[0]
+    receipt={'outcome':{'terminal':True,'won':False,'seconds':3},
+             'trace_sha256':document['identity']['trace_sha256']}
+    replay={'complete_game_parity':True,'input_sha256':{},
+            'outcome':audit.base.semantic_game(receipt['outcome'])}
+    arguments=(document,replay,receipt,baseline,observer.plan,42,45000000,0)
+    audit.validate_terminal_root(*arguments)
+    replay['complete_game_parity']=False
+    with pytest.raises(AssertionError):audit.validate_terminal_root(*arguments)
+    replay['complete_game_parity']=True
+    document['actions'].pop()
+    with pytest.raises(AssertionError,match='coverage incomplete'):
+        audit.validate_terminal_root(*arguments)
