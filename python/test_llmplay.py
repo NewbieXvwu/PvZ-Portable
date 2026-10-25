@@ -82,6 +82,12 @@ class PackageTest(unittest.TestCase):
         import pvz_tasks
         self.assertEqual(smoke[0]['deck'], list(pvz_tasks.deck_for_level(41)))
 
+    def test_task_manifest_registers_roof_46_and_47(self):
+        """§G.1：L46/L47 的族已由主控登记，包里的任务清单必须带上。"""
+        ids = {task['task_id'] for task in build_package.task_manifest()['tasks']}
+        self.assertIn('demo_roof_46_doom_m200', ids)
+        self.assertIn('demo_roof_47_doom_m200', ids)
+
     def test_extra_seeds_are_disjoint_from_default(self):
         manifest = build_package.task_manifest()
         seeds = build_package.extra_seeds(manifest)
