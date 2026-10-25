@@ -36,6 +36,9 @@
 ## 结果
 
 - 2026-10-26：入口 `scripts/import_llm_run.py`（安全解压、发现、校验、分档、新族登记、扫描清单、报告）+ `python/test_import_llm_run.py` 17 项测试全过（zip 穿越、meta 自相矛盾、分档、新族命名、种子块、幂等）。
+- 2026-10-26：补 frames.jsonl 行数与 meta.frame_count 一致性校验（CodeBuddy 接手，ec86a598）。
+- 2026-10-26：真实 zip 管道测试（--no-verify）通过：发现 102/102 份存档、12 通关全档 half（免费模型存档无 robustness 检查点记录）、288 条扫描作业、种子块 84.0M 起与现有段不相交；task87 已登记的 8 个 `_s2026` 族幂等跳过（registered=[]）。修 `resolve_family`：族与种子均已登记时不再标为新族（01a11c33，18 项测试）。
+- 2026-10-26：端到端（带引擎校验）全过：102/102 verify 通过，12 份通关入库且名单与包内 report.md / task87 表一致，坏输入两种（zip 穿越、meta 不一致）均正确拒绝（exit 1）。结论写 `MEMORY/docs/llm-run-import.md`。
 
 ## 问题
 
