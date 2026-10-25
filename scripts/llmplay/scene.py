@@ -1,123 +1,444 @@
-"""局面渲染：把引擎观测变成一屏文字。
+"""局面渲染：把引擎观测变成模型能一屏读完的文字局面（task81 §B）。
 
-渲染本身不在这里发明 —— 场景解释复用 episode_query._fmt_scene（地形/能不能种），
-棋盘复用 render_episode._board_ascii（大小写 = 满血/受伤的约定就写在那边的注释里）。
-这里只负责把它们排成模型一屏能读完的样子。
+格式由主控 2026-10-25 定，顺序固定：
+1. 状态行（预算/墙钟，来自 budget.Session）
+2. 局面头：关卡、第几波、tick、距下一波、阳光、每行小推车、本关出怪类型
+3. 空间网格：行 × 9 列，每格固定宽度，植物短代码 + 血量百分比，僵尸按实际位置计数
+4. 逐行明细：每行的植物（列/类型/血量/状态）与僵尸（类型/列号一位小数/本体+护具血量/
+   减速冰冻/特殊状态），以及最前面那只多久到下一个植物列、多久到小推车
+5. 卡片：费用、冷却、买不买得起、能种在哪些格
+6. 事件：自上次 observe 以来发生了什么（种下/被吃/被偷/被砸/击杀/新波/小推车）
+7. timeline()：每波一行的历史
+
+这里不发明任何打法规则：植物/僵尸名字与短代码是常量表，能不能种走引擎的
+legal_actions（Board::CanPlantAt），到小推车的 tick 数是 距离 / 当前速度。
 """
 from __future__ import annotations
 
 from pvz_constants import PLANT_NAME, ZOMBIE_NAME
-from render_episode import _board_ascii, _frame, _lane_rows
+from render_episode import (_frame, _col_of, lane_indices, LAWN_XMIN, CELL_PX, GRID_COLS,
+                            SHOOTER_TYPES)
 from episode_query import _fmt_scene
 
+CELL_WIDTH = 10          # 网格里每格固定宽度：植物 6 格 + 僵尸 4 格
+PLANT_PART = 6
 MOWER_STATE = {0: "已用", 1: "待命", 2: "启动", 3: "行驶"}
 
+# 短代码：3 个字母 + 血量百分比（Mel85 = 西瓜剩 85% 血）。
+PLANT_CODE = {
+    0: "Pea", 1: "Sun", 2: "Chr", 3: "Wal", 4: "Pto", 5: "Sno", 6: "Chm", 7: "Rep",
+    8: "Puf", 9: "ShS", 10: "Fum", 11: "GrB", 12: "Hyp", 13: "Scd", 14: "IcS",
+    15: "Doo", 16: "Lil", 17: "Squ", 18: "Thr", 19: "Tng", 20: "Jal", 21: "Spk",
+    22: "Tor", 23: "Tal", 24: "Sea", 25: "Pln", 26: "Cac", 27: "Blo", 28: "Spl",
+    29: "Sta", 30: "Pmp", 31: "Mag", 32: "Cbg", 33: "Flp", 34: "Krn", 35: "Cof",
+    36: "Gar", 37: "Umb", 38: "Mar", 39: "Mel", 40: "Gat", 41: "Twn", 42: "Glm",
+    43: "Cat", 44: "Wml", 45: "Gld", 46: "Spr", 47: "Cob", 48: "Imi",
+}
 
-def _plant_name(seed_type: int) -> str:
+# PlantState 全表，顺序照 src/Lawn/Plant.h:49 的 enum（值就是下标）。
+PLANT_STATE = {
+    0: "待装填", 1: "就绪", 2: "特殊动作", 3: "窝瓜看目标", 4: "窝瓜起跳前",
+    5: "窝瓜上升", 6: "窝瓜下落", 7: "窝瓜落地", 8: "墓碑吞噬者落地",
+    9: "墓碑吞噬者啃食", 10: "大嘴花咬", 11: "大嘴花咬中", 12: "大嘴花咬空",
+    13: "大嘴花消化", 14: "大嘴花吞咽", 15: "土豆雷出土", 16: "土豆雷已就绪",
+    17: "土豆雷被压扁", 18: "地刺攻击", 19: "地刺攻击2", 20: "胆小菇缩下",
+    21: "胆小菇躲藏", 22: "胆小菇抬起", 23: "阳光菇幼体", 24: "阳光菇生长",
+    25: "阳光菇成年", 26: "磁力菇吸铁", 27: "磁力菇充能", 28: "保龄球上升",
+    29: "保龄球下落", 30: "仙人掌低", 31: "仙人掌抬起", 32: "仙人掌高",
+    33: "仙人掌落下", 34: "缠绕水草抓取", 35: "玉米炮装填", 36: "玉米炮装弹",
+    37: "玉米炮就绪", 38: "玉米炮发射", 39: "玉米投手黄油", 40: "保护伞触发",
+    41: "保护伞反弹", 42: "模仿者变形", 43: "禅境浇水", 44: "禅境有需求",
+    45: "禅境满意", 46: "金盏花结束", 47: "花盆（无敌）", 48: "睡莲（无敌）",
+}
+
+ZOMBIE_LADDER = 21
+ZOMBIE_BUNGEE = 20
+ZOMBIE_CATAPULT = 22
+ZOMBIE_GARGANTUAR = (23, 32)
+
+
+def _pct(health, max_health) -> int:
+    try:
+        health, max_health = float(health), float(max_health)
+    except (TypeError, ValueError):
+        return 0
+    if max_health <= 0:
+        return 0
+    return max(0, min(100, int(round(100.0 * health / max_health))))
+
+
+def _plant_code(seed_type) -> str:
+    return PLANT_CODE.get(int(seed_type), "t%02d" % int(seed_type))
+
+
+def _plant_name(seed_type) -> str:
     return PLANT_NAME.get(int(seed_type), "type%s" % seed_type)
 
 
-def _zombie_name(zombie_type: int) -> str:
+def _zombie_name(zombie_type) -> str:
     return ZOMBIE_NAME.get(int(zombie_type), "type%s" % zombie_type)
 
 
-def _packet_line(frame: dict) -> str:
-    parts = []
-    for index, seed_type, active, cooldown, refresh, cost in frame.get("packets") or []:
-        ready = bool(active) and int(cooldown) == 0
-        state = "就绪" if ready else "冷却%d" % int(cooldown)
-        parts.append("[%d]%s %d☀ %s" % (index, _plant_name(seed_type), int(cost), state))
-    return "卡槽：" + " | ".join(parts)
+def _plants(obs) -> list:
+    return [p for p in (obs.get("plants") or []) if not p.get("squished")]
 
 
-def _lane_line(frame: dict, game) -> str:
-    parts = []
-    for row in _lane_rows(frame):
-        front = "—" if row["front_col"] is None else "c%d" % row["front_col"]
-        mower = row["mower"] if game.saw_mowers else "本关无"
-        parts.append("r%d 火力%d/僵尸%d 最前%s 割草机%s"
-                     % (row["row"], row["shooters"], row["zombies"], front, mower))
-    return "路况：" + "｜".join(parts)
+def _zombies(obs) -> list:
+    return list(obs.get("zombies") or [])
 
 
-def _header(frame: dict, game) -> str:
+def _lane_list(obs) -> list:
+    return lane_indices(_frame(obs))
+
+
+# ---------------------------------------------------------------- 2. 局面头
+
+def header(game) -> str:
     obs = game.obs or {}
-    bits = ["tick %s" % frame["tick"],
-            "波 %s/%s" % (obs.get("wave"), obs.get("wave_count")),
-            "阳光 %s" % frame["sun"],
-            "植物 %d" % len(frame["plants"]),
-            "僵尸 %d" % sum(1 for z in frame["zombies"] if z[5])]
+    frame = _frame(obs)
+    wave, wave_count = obs.get("wave"), obs.get("wave_count")
+    timer = obs.get("wave_timer")
+    bits = ["L%s" % obs.get("level"), "第 %s/%s 波" % (wave, wave_count),
+            "tick %s" % obs.get("tick")]
+    if timer is not None:
+        bits.append("距下一波约 %s tick" % int(timer))
+    bits.append("阳光 %s" % obs.get("sun"))
+    mowers = {int(d["row"]): int(d["state"]) for d in (obs.get("defenses") or [])}
+    lanes = _lane_list(obs)
+    if mowers:
+        bits.append("小推车 " + " ".join(
+            "r%d:%s" % (r, MOWER_STATE.get(mowers.get(r), "无")) for r in lanes))
+    else:
+        bits.append("本关无小推车")
+    roster = (obs.get("loadout_context") or {}).get("zombie_roster") or []
+    if roster:
+        names = [_zombie_name(z) for z in roster]
+        bits.append("本关出怪 " + "、".join(names))
+    result = obs.get("result")
     if obs.get("terminal"):
-        result = obs.get("result")
         bits.append("**终局：%s**" % ("通关" if result == 1 else "失败"))
     else:
         bits.append("进行中")
     return " ".join(bits)
 
 
-def render(game, level: str = "brief") -> str:
-    """brief：场景 + 棋盘 + 卡槽 + 路况；full：再加僵尸密度、逐路明细、全量僵尸表。"""
-    frame = _frame(game.obs)
-    lines = [_header(frame, game), "", _fmt_scene(frame), "",
-             "棋盘（植物；大写=满血，小写=受伤；~ = 水路）：",
-             _board_ascii(frame, "plant"), "",
-             _packet_line(frame), _lane_line(frame, game)]
-    if level == "full":
-        lines += ["", "棋盘（僵尸密度；数字=该格僵尸数，9 表示 9 只以上）：",
-                  _board_ascii(frame, "zombie")]
-        if frame.get("graves"):
-            lines.append("占位物（墓碑/花瓶等，这些格种不了）：%s"
-                         % ", ".join("(%d,%d)类型%s" % (g[0], g[1], g[2]) for g in frame["graves"]))
-        lines += ["", "僵尸明细（行 类型 x坐标 血量 在场上 正在啃食 冰冻）："]
-        for z in frame["zombies"]:
-            if not z[5]:
-                continue
-            lines.append("  r%d %s x=%.1f 血%d%s%s"
-                         % (z[0], _zombie_name(z[1]), z[2], z[4],
-                            " 啃食中" if z[6] else "",
-                            " 冰冻%d" % z[8] if z[8] else ""))
-        totals = frame.get("totals") or {}
-        lines += ["", "全盘计数：生产者 %s · 射手 %s · 睡莲 %s · 香蒲 %s"
-                  % (totals.get("producers"), totals.get("shooters"),
-                     totals.get("lilypads"), totals.get("cattails"))]
+# ---------------------------------------------------------------- 3. 空间网格
+
+def _cell(plant, zombies) -> str:
+    if plant is None:
+        left = "  ..  "
+    else:
+        left = ("%s%3d" % (_plant_code(plant["type"]), _pct(plant.get("health"),
+                                                          plant.get("max_health"))))
+        left = left[:PLANT_PART].ljust(PLANT_PART)
+    if not zombies:
+        return (left + "    ")[:CELL_WIDTH]
+    if len(zombies) == 1:
+        tag = "z"
+    else:
+        tag = "z%d" % min(len(zombies), 9)
+    return (left + (" " + tag).ljust(CELL_WIDTH - PLANT_PART))[:CELL_WIDTH]
+
+
+def grid(game) -> str:
+    obs = game.obs or {}
+    lanes = _lane_list(obs)
+    grid_rows = obs.get("grid") or []
+    plants = _plants(obs)
+    zombies = [z for z in _zombies(obs) if z.get("on_board")]
+    by_cell = {}
+    for plant in plants:
+        by_cell.setdefault((int(plant["row"]), int(plant["col"])), []).append(plant)
+    zcell = {}
+    for zombie in zombies:
+        cell = (int(zombie["row"]), _col_of(float(zombie["x"])))
+        if 0 <= cell[1] < GRID_COLS:
+            zcell.setdefault(cell, []).append(zombie)
+    lines = ["       " + "".join("c%-9d" % c for c in range(GRID_COLS))]
+    for row in lanes:
+        cells = []
+        for col in range(GRID_COLS):
+            here = by_cell.get((row, col))
+            plant = here[0] if here else None
+            if plant is None and len(here or []) > 1:
+                plant = here[0]
+            pool = False
+            if row < len(grid_rows) and col < len(grid_rows[row]):
+                pool = int(grid_rows[row][col]) == 3
+            text = _cell(plant, zcell.get((row, col)))
+            if plant is None and pool:
+                text = ("  ~~  " + text[PLANT_PART:])[:CELL_WIDTH]
+            cells.append(text)
+        lines.append("  r%-2d   " % row + "".join(cells))
+    outside = [z for z in _zombies(obs) if not z.get("on_board")]
+    if outside:
+        per_row = {}
+        for zombie in outside:
+            per_row.setdefault(int(zombie["row"]), []).append(zombie)
+        parts = []
+        for row in sorted(per_row):
+            names = {}
+            for zombie in per_row[row]:
+                names[_zombie_name(zombie["type"])] = names.get(_zombie_name(zombie["type"]), 0) + 1
+            parts.append("r%d %s" % (row, "、".join("%sx%d" % (k, v) for k, v in names.items())))
+        lines.append("  场外来袭（还没走到棋盘上）：" + "；".join(parts))
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------- 4. 逐行明细
+
+# 有"装填"概念的植物（射手与投手）：STATE_NOTREADY 对它们才叫"待装填"。
+# 花盆/睡莲/坚果这类永远停在 STATE_NOTREADY，翻译成"待装填"会误导。
+RELOAD_TYPES = set(SHOOTER_TYPES) | {32, 34, 39, 44, 47}
+
+
+def _plant_state(plant) -> str:
+    if plant.get("asleep"):
+        left = int(plant.get("wake_up_counter") or 0)
+        return "睡着（约 %d tick 后醒）" % left if left > 0 else "睡着"
+    if int(plant.get("bungee_state") or 0):
+        return "被蹦极吊起"
+    state = int(plant.get("state") or 0)
+    if state == 0 and int(plant.get("type") or -1) not in RELOAD_TYPES:
+        return "正常"
+    return PLANT_STATE.get(state, "状态%d" % state)
+
+
+def _zombie_line(zombie) -> str:
+    kind = int(zombie["type"])
+    bits = [_zombie_name(kind), "c%.1f" % (_col_of(float(zombie["x"])) + 0.5)]
+    body = "%d/%d" % (int(zombie.get("body_health") or 0), int(zombie.get("body_max_health") or 0))
+    text = "本体%s" % body
+    helm_max = int(zombie.get("helm_max_health") or 0)
+    if helm_max:
+        text += " 护具%d/%d" % (int(zombie.get("helm_health") or 0), helm_max)
+    shield_max = int(zombie.get("shield_max_health") or 0)
+    if shield_max:
+        text += " 盾%d/%d" % (int(zombie.get("shield_health") or 0), shield_max)
+    bits.append(text)
+    extra = []
+    if kind == ZOMBIE_LADDER:
+        extra.append("梯子已搭" if not zombie.get("has_object") else "梯子未搭")
+    if kind == ZOMBIE_BUNGEE:
+        extra.append("目标 r%sc%s" % (zombie.get("target_row"), zombie.get("target_col")))
+    if kind == ZOMBIE_CATAPULT:
+        extra.append("弹药 %s" % zombie.get("summon_counter"))
+    if kind in ZOMBIE_GARGANTUAR:
+        extra.append("已扔小鬼" if not zombie.get("has_object") else "小鬼还在手上")
+    if int(zombie.get("chilled") or 0):
+        extra.append("减速")
+    if int(zombie.get("ice_trap") or 0):
+        extra.append("冰冻")
+    if int(zombie.get("buttered") or 0):
+        extra.append("黄油定住")
+    if zombie.get("is_eating"):
+        extra.append("啃食中")
+    if not zombie.get("has_head"):
+        extra.append("无头")
+    if extra:
+        bits.append(" ".join(extra))
+    return " ".join(bits)
+
+
+def _eta(zombie, plants) -> str:
+    speed = float(zombie.get("velocity_x") or 0)
+    x = float(zombie.get("x") or 0)
+    row = int(zombie["row"])
+    col = _col_of(x)
+    ahead = sorted({int(p["col"]) for p in plants
+                    if int(p["row"]) == row and int(p["col"]) < col}, reverse=True)
+    pieces = []
+    if speed < 0.02:
+        return "停住" + ("（正在啃食）" if zombie.get("is_eating") else "")
+    if ahead:
+        target = ahead[0]
+        ticks = max(0, int((x - (LAWN_XMIN + target * CELL_PX + CELL_PX * 0.5)) / speed))
+        pieces.append("约 %d tick 到第 %d 列" % (ticks, target))
+    else:
+        pieces.append("这一路前面没有植物")
+    ticks = max(0, int((x - LAWN_XMIN) / speed))
+    pieces.append("约 %d tick 到小推车" % ticks)
+    return "，".join(pieces)
+
+
+def rows(game) -> str:
+    obs = game.obs or {}
+    lanes = _lane_list(obs)
+    plants = _plants(obs)
+    zombies = _zombies(obs)
+    lines = []
+    for row in lanes:
+        row_plants = sorted([p for p in plants if int(p["row"]) == row], key=lambda p: int(p["col"]))
+        row_zombies = [z for z in zombies if int(z["row"]) == row]
+        on_board = [z for z in row_zombies if z.get("on_board")]
+        if row_plants:
+            text = " · ".join(
+                "c%d %s %d/%d %s" % (int(p["col"]), _plant_name(p["type"]),
+                                     int(p.get("health") or 0), int(p.get("max_health") or 0),
+                                     _plant_state(p))
+                for p in row_plants)
+        else:
+            text = "（没有植物）"
+        lines.append("  r%d 植物: %s" % (row, text))
+        if on_board:
+            lines.append("     僵尸: " + " | ".join(_zombie_line(z) for z in sorted(
+                on_board, key=lambda z: float(z["x"]))))
+            front = min(on_board, key=lambda z: float(z["x"]))
+            lines.append("     最前: %s %s" % (_zombie_name(front["type"]), _eta(front, plants)))
+        else:
+            lines.append("     僵尸: 无")
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------- 5. 卡片
+
+def _packet_cells(obs, packet_index) -> list:
+    cells = []
+    for action in (obs.get("legal_actions") or {}).get("plants") or []:
+        if int(action["packet"]) == int(packet_index):
+            cells.append((int(action["row"]), int(action["col"])))
+    return sorted(set(cells))
+
+
+def cards(game) -> str:
+    obs = game.obs or {}
+    sun = int(obs.get("sun") or 0)
+    lines = []
+    for packet in obs.get("packets") or []:
+        index = int(packet["index"])
+        seed = int(packet.get("type") or -1)
+        if seed < 0:
+            lines.append("  [%d] （空槽）" % index)
+            continue
+        cost = int(packet.get("cost") or 0)
+        cooldown = int(packet.get("cooldown") or 0)
+        active = bool(packet.get("active"))
+        ready = active and cooldown == 0
+        cells = _packet_cells(obs, index)
+        afford = "买得起" if sun >= cost else "阳光不够（差 %d）" % (cost - sun)
+        if cells:
+            sample = "、".join("r%dc%d" % cell for cell in cells[:4])
+            where = "可种 %d 格（例 %s）" % (len(cells), sample)
+        else:
+            where = "此刻没有可种的格"
+        if ready:
+            state = "就绪"
+        elif cooldown > 0:
+            state = "冷却剩 %d tick" % cooldown
+        else:
+            state = "未激活"
+        lines.append("  [%d] %s %d☀ %s %s %s"
+                     % (index, _plant_name(seed), cost, state, afford, where))
+    return "\n".join(lines) if lines else "  （没有卡槽）"
+
+
+# ---------------------------------------------------------------- 6. 事件
+
+EVENT_ORDER = ("wave", "plant", "lost", "kill", "mower", "sun")
+
+
+def events(game) -> str:
+    log = getattr(game, "events", None) or []
+    if not log:
+        return "  （自上次 observe 以来没有值得记的事件）"
+    planted, lost, kills, waves, mowers = [], [], {}, [], []
+    for item in log:
+        kind = item.get("kind")
+        if kind == "plant":
+            planted.append("r%dc%d %s" % (item["row"], item["col"], _plant_name(item["plant"])))
+        elif kind == "lost":
+            lost.append("r%dc%d %s（%s）" % (item["row"], item["col"],
+                                            _plant_name(item["plant"]), item.get("reason", "消失")))
+        elif kind == "kill":
+            name = _zombie_name(item["zombie"])
+            kills[name] = kills.get(name, 0) + 1
+        elif kind == "wave":
+            waves.append(str(item["wave"]))
+        elif kind == "mower":
+            mowers.append("r%d" % item["row"])
+    lines = []
+    if planted:
+        lines.append("  种下: " + "、".join(planted))
+    if lost:
+        lines.append("  失去: " + "、".join(lost))
+    if kills:
+        lines.append("  击杀: " + "、".join("%sx%d" % (k, v) for k, v in kills.items()))
+    if waves:
+        lines.append("  新波: 第 %s 波开始" % "、".join(waves))
+    if mowers:
+        lines.append("  小推车触发: " + "、".join(mowers))
+    return "\n".join(lines)
+
+
+# ---------------------------------------------------------------- 组装
+
+def legend() -> str:
+    return ("图例：网格每格 = 植物短代码+血量百分比（Mel85 = 西瓜剩 85% 血）与僵尸只数"
+            "（z1/z2…）；.. = 空地，~~ = 水路；r0–r5 = 行，c0–c8 = 列（c0 最左，僵尸从右往左走）。"
+            "血量都是当前/上限，位置列号保留一位小数。")
+
+
+def render(game, level: str = "full") -> str:
+    from . import budget
+    session = budget.session()
+    first = not session.data.get("legend_shown")
+    lines = [session.status_line(game.spec.level), header(game), ""]
+    if first:
+        lines += [legend(), ""]
+        session.data["legend_shown"] = True
+        session.save()
+    lines += ["空间网格（植物 + 该格僵尸数）：", grid(game), "",
+              "逐行明细：", rows(game), "",
+              "卡片：", cards(game), "",
+              "事件（自上次 observe 以来）：", events(game)]
     return "\n".join(lines)
 
 
 def legal(game) -> dict:
-    """引擎给的合法动作。plants 按卡槽归组；shovels 是当前有植物、可以铲的格。"""
     obs = game.obs or {}
     actions = (obs.get("legal_actions") or {}).get("plants") or []
-    grouped: dict[int, list] = {}
+    packets = {int(p["index"]): int(p["type"]) for p in (obs.get("packets") or [])}
+    grouped = {}
     for action in actions:
         grouped.setdefault(int(action["packet"]), []).append([int(action["row"]), int(action["col"])])
-    frame = _frame(obs)
-    packets = {int(p[0]): int(p[1]) for p in frame["packets"]}
     plants = [{"packet": packet, "type": _plant_name(packets.get(packet, -1)),
-               "cells": cells}
+               "cells": sorted(cells)}
               for packet, cells in sorted(grouped.items())]
-    shovels = sorted({(int(p[0]), int(p[1])) for p in frame["plants"]})
+    shovels = sorted({(int(p["row"]), int(p["col"])) for p in _plants(obs)})
     return {"plants": plants, "shovels": [list(cell) for cell in shovels]}
 
 
 def summary(game) -> dict:
-    """当前波 / 最远存活波 / 剩余小推车 / 阳光 / 各行威胁。"""
     obs = game.obs or {}
-    frame = _frame(obs)
     defenses = obs.get("defenses") or []
-    mowers_left = sum(1 for d in defenses if int(d[1]) == 1)
     lanes = []
-    for row in _lane_rows(frame):
-        lanes.append(dict(row=row["row"], shooters=row["shooters"], zombies=row["zombies"],
-                          front_col=row["front_col"],
-                          mower=row["mower"] if game.saw_mowers else "本关无",
-                          zombie_hp=row["zombie_hp"]))
+    for row in _lane_list(obs):
+        row_zombies = [z for z in _zombies(obs) if int(z["row"]) == row and z.get("on_board")]
+        front = min(row_zombies, key=lambda z: float(z["x"])) if row_zombies else None
+        lanes.append(dict(row=row,
+                          plants=sum(1 for p in _plants(obs) if int(p["row"]) == row),
+                          zombies=len(row_zombies),
+                          front_col=None if front is None else round(_col_of(float(front["x"])) + 0.5, 1),
+                          front_type=None if front is None else _zombie_name(front["type"])))
     result = obs.get("result")
-    return dict(tick=frame["tick"], level=obs.get("level"),
-                wave=obs.get("wave"), wave_count=obs.get("wave_count"),
-                max_wave=game.max_wave, sun=frame["sun"],
-                mowers_left=mowers_left, mowers_total=len(defenses),
-                plants=len(frame["plants"]),
-                zombies=sum(1 for z in frame["zombies"] if z[5]),
-                terminal=bool(obs.get("terminal")),
-                won=result == 1, result=result,
+    return dict(tick=obs.get("tick"), level=obs.get("level"), wave=obs.get("wave"),
+                wave_count=obs.get("wave_count"), max_wave=game.max_wave,
+                sun=obs.get("sun"),
+                mowers_left=sum(1 for d in defenses if int(d["state"]) == 1),
+                mowers_total=len(defenses),
+                plants=len(_plants(obs)),
+                zombies=sum(1 for z in _zombies(obs) if z.get("on_board")),
+                terminal=bool(obs.get("terminal")), won=result == 1, result=result,
                 lanes=lanes)
+
+
+def timeline(game) -> str:
+    history = getattr(game, "wave_history", None) or []
+    if not history:
+        return "  （还没有跨过任何一波）"
+    lines = ["  波  tick   阳光  植物  击杀  失去  小推车"]
+    for row in history:
+        lines.append("  %-3s %-6s %-5s %-5s %-5s %-5s %s"
+                     % (row.get("wave"), row.get("tick"), row.get("sun"), row.get("plants"),
+                        row.get("kills"), row.get("lost"), row.get("mowers")))
+    return "\n".join(lines)

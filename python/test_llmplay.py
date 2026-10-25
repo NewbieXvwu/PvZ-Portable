@@ -1,5 +1,6 @@
 """task81 llmplay 接口的纯逻辑测试：不需要引擎二进制。"""
 import json
+import os
 import sys
 import tempfile
 import unittest
@@ -10,8 +11,12 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 sys.path.insert(0, str(ROOT / 'scripts' / 'llmplay'))
 sys.path.insert(0, str(ROOT / 'python'))
 
+# 测试不许在仓库里留会话文件：预算状态写到临时目录。
+_SESSION_DIR = tempfile.mkdtemp(prefix='llmplay-test-')
+os.environ['PVZ_LLMPLAY_SESSION'] = str(Path(_SESSION_DIR) / 'budget.json')
+
 from llmplay.game import Game, ROOT as PACKAGE_ROOT, load_tasks, task_spec  # noqa: E402
-from llmplay import build_package  # noqa: E402
+from llmplay import budget, build_package  # noqa: E402
 from pvz_tasks import profile_for_deck  # noqa: E402
 from pvz_env import TaskSpec  # noqa: E402
 
@@ -86,6 +91,59 @@ class PackageTest(unittest.TestCase):
 
     def test_package_root_is_repo_root(self):
         self.assertEqual(PACKAGE_ROOT, ROOT)
+
+
+class BudgetTest(unittest.TestCase):
+    """§A：止损由接口计数，模型绕不过。"""
+
+    def setUp(self):
+        self.dir = tempfile.mkdtemp(prefix='llmplay-budget-')
+        self.session = budget.reset_session(Path(self.dir) / 'budget.json')
+
+    def test_search_closes_after_budget_and_names_the_next_step(self):
+        self.session.calibrate(1000, 1.0)          # 1000 tick/s
+        level = 49
+        self.session.note_ticks(level, self.session.search_limit + 1, 'search')
+        self.assertTrue(self.session.level(level)['search_closed'])
+        with self.assertRaises(RuntimeError) as caught:
+            self.session.require_search(level, 'branch()')
+        self.assertIn('按波手动推进', str(caught.exception))
+
+    def test_three_flat_checkpoints_mark_search_bad(self):
+        self.session.calibrate(1000, 1.0)
+        level = 48
+        limit = self.session.search_limit
+        for fraction in (0.4, 0.8, 1.0):
+            self.session.note_ticks(level, int(fraction * limit) - self.session.level(level)['search_ticks'], 'search')
+        state = self.session.level(level)
+        self.assertEqual(len(state['checkpoints']), 3)
+        self.assertTrue(state['search_bad'])
+
+    def test_wave_progress_resets_rewrite_counter(self):
+        self.session.calibrate(1000, 1.0)
+        level = 49
+        self.session.note_rewind(level, 100, 900)
+        self.session.note_rewind(level, 100, 900)
+        self.assertEqual(self.session.level(level)['segment_rewrites'], 2)
+        self.session.record_wave(level, 5)
+        self.assertEqual(self.session.level(level)['segment_rewrites'], 0)
+
+    def test_ninth_rewrite_in_one_segment_is_refused(self):
+        self.session.calibrate(1000, 1.0)
+        level = 49
+        for _ in range(budget.SEGMENT_REWRITES):
+            self.session.note_rewind(level, 100, 900)
+        with self.assertRaises(RuntimeError) as caught:
+            self.session.note_rewind(level, 100, 900)
+        self.assertIn('退回更早的一段', str(caught.exception))
+
+    def test_status_line_has_every_field(self):
+        self.session.calibrate(1000, 1.0)
+        self.session.note_ticks(49, 500, 'search')
+        self.session.record_wave(49, 12)
+        line = self.session.status_line(49)
+        for piece in ('已用', '/ 3:00', '本关 L49', '模式=搜索', '搜索预算', '最远 12 波', '本段重写'):
+            self.assertIn(piece, line)
 
 
 if __name__ == '__main__':

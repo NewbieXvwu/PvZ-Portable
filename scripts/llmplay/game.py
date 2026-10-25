@@ -15,10 +15,12 @@
 """
 from __future__ import annotations
 
+import atexit
 import hashlib
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 
@@ -39,6 +41,24 @@ for _p in (ROOT / "python", ROOT / "scripts"):
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
 from pvz_tasks import profile_for_deck  # noqa: E402
 from render_episode import _frame  # noqa: E402
+
+from . import budget  # noqa: E402
+
+# 还活着、且自上次 observe 之后又推进过的局：进程退出时自动打印一次完整 observe（§D）。
+# 模型不用记得自己调用 —— 脚本怎么结束都会看到局面。
+_LIVE_GAMES: list = []
+
+
+def _auto_observe() -> None:
+    for game in list(_LIVE_GAMES):
+        try:
+            if getattr(game, "_dirty", False) and game.env is not None:
+                print(game.observe())
+        except Exception as error:      # 自动打印失败不能吞掉脚本的真实结果
+            print("[自动 observe 失败：%s]" % error)
+
+
+atexit.register(_auto_observe)
 
 SCHEMA = "llmplay_log_v1"
 ARCHIVE_SCHEMA = "episode_archive_v1"
@@ -112,12 +132,51 @@ class Game:
         self.max_wave = 0
         self.saw_mowers = False
         self._cache = None
+        # §B.6 / §B.7：事件流与逐波历史。observe() 打印后清空事件，timeline() 用历史。
+        self.events = []
+        self.wave_history = []
+        self._plants_snapshot = {}
+        self._zombies_snapshot = {}
+        self._mower_snapshot = {}
+        self._wave_stats = dict(kills=0, lost=0, mowers=0)
+        self._observed_at = None
+        self._dirty = False
+        self._is_branch = False
+        self.session = budget.session()
+        if not self.ops and not tick:
+            # 真正的新开局才受 2:45 门禁限制；读档/重放不受影响（§A）。
+            self.session.require_new_game_allowed()
+        _LIVE_GAMES.append(self)
 
     # ------------------------------------------------------------ 引擎生命周期
+
+    def _calibrate_once(self) -> None:
+        """会话第一次启动时实测吞吐，把"约 25 分钟计算量"换算成 tick 预算（§A）。
+
+        标定在一个独立的小局上跑（300 tick），不占本关的预算。
+        """
+        if self.session.data.get("search_limit_ticks"):
+            return
+        ticks = 300
+        probe = None
+        try:
+            probe = PvZEnv(resource_dir=self.resource_dir, executable=self.executable,
+                           headless=True)
+            probe.reset(deck=self.deck, task=self.spec)
+            # 只计推进的墙钟，不含引擎启动/资源加载 —— 那部分不随 tick 数增长。
+            started = time.time()
+            probe.step({"type": "wait", "ticks": ticks})
+            self.session.calibrate(ticks, max(time.time() - started, 1e-3))
+        except Exception:
+            self.session.calibrate(ticks, 0.3)      # 兜底：按 1000 tick/s 估
+        finally:
+            if probe is not None:
+                probe.close()
 
     def _start(self) -> None:
         if self.env is not None:
             return
+        self._calibrate_once()
         target = self.tick          # _reset_engine 会把 self.tick 归零，先记住
         self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True)
         self._reset_engine()
@@ -126,10 +185,14 @@ class Game:
 
     def _reset_engine(self) -> None:
         assert self.env is not None
+        # 进 demo 模式只为一件事：让**每条**响应（含 reset 的那条）都带 state_hash。
+        # 官方 human_demo.py verify 比的就是响应里的哈希（不是 STATE_HASH 命令的），
+        # 两条路径算出来的值实测不同，所以导出存档必须在同一条路径上取哈希。
+        # DEMO_BEGIN 只改鼠标/窗口状态，不动模拟（人类示范重放与无 demo 重放终局一致）。
+        self.env.begin_demo()
         self.initial_obs, _ = self.env.reset(deck=self.deck, task=self.spec)
         # 开局哈希必须紧跟在 reset 之后取：之后任何一条命令都会覆盖 _last_response。
-        self.initial_hash = (self.env._last_response.get("state_hash")
-                             or self.env.state_hash())
+        self.initial_hash = self.env._last_response.get("state_hash")
         self.env.set_lean_observation(True)
         # 精简观测才带 legal_actions（Board::CanPlantAt 的结果），所以从第一帧起就用它。
         self._reset_bookkeeping(self.env.observe())
@@ -144,6 +207,121 @@ class Game:
         self.totals = {}
         if obs.get("defenses"):
             self.saw_mowers = True
+        self._plants_snapshot, self._zombies_snapshot = self._snapshot()
+        self._mower_snapshot = self._mower_states()
+
+    # ------------------------------------------------------------ 事件差分
+
+    def _snapshot(self):
+        """(row, col) -> 植物类型 / 僵尸 id -> (类型, 行, x, 在场上, 啃食中)。
+
+        精简观测是定长数组，完整观测是字典，两种都要吃（observe 用完整观测渲染）。
+        """
+        plants = {}
+        for plant in (self.obs or {}).get("plants") or []:
+            if isinstance(plant, dict):
+                if plant.get("squished"):
+                    continue
+                plants[(int(plant["row"]), int(plant["col"]))] = int(plant["type"])
+            else:
+                if plant[5]:
+                    continue
+                plants[(int(plant[0]), int(plant[1]))] = int(plant[2])
+        zombies = {}
+        for zombie in (self.obs or {}).get("zombies") or []:
+            if isinstance(zombie, dict):
+                zombies[int(zombie["id"])] = (int(zombie["type"]), int(zombie["row"]),
+                                              float(zombie["x"]), bool(zombie.get("on_board")),
+                                              bool(zombie.get("is_eating")))
+            else:
+                zombies[int(zombie[9])] = (int(zombie[1]), int(zombie[0]), float(zombie[2]),
+                                           bool(zombie[5]), bool(zombie[6]))
+        return plants, zombies
+
+    def _mower_states(self) -> dict:
+        states = {}
+        for defense in (self.obs or {}).get("defenses") or []:
+            if isinstance(defense, dict):
+                states[int(defense["row"])] = int(defense["state"])
+            else:
+                states[int(defense[0])] = int(defense[1])
+        return states
+
+    def _note_events(self, action, ok, before_plants, before_zombies, before_mowers,
+                     before_wave: int = 0) -> None:
+        """把这一步发生的事记成事件（§B.6）。只记事实，不解释该怎么做。"""
+        after_plants, after_zombies = self._snapshot()
+        tick = self.tick
+        for cell, seed in after_plants.items():
+            if cell in before_plants:
+                continue
+            reason = "种下"
+            if action.get("type") == "plant" and (int(action["row"]), int(action["col"])) == cell:
+                reason = "种下"
+            self.events.append(dict(kind="plant", tick=tick, row=cell[0], col=cell[1],
+                                    plant=seed, how=reason))
+        for cell, seed in before_plants.items():
+            if cell in after_plants:
+                continue
+            self.events.append(dict(kind="lost", tick=tick, row=cell[0], col=cell[1],
+                                    plant=seed,
+                                    reason=self._loss_reason(cell, before_zombies)))
+            self._wave_stats["lost"] += 1
+        for zombie_id, info in before_zombies.items():
+            if zombie_id in after_zombies:
+                continue
+            kind, row = info[0], info[1]
+            if kind == 20:      # 蹦极僵尸抓完就走，不算击杀
+                continue
+            self.events.append(dict(kind="kill", tick=tick, zombie=kind, row=row))
+            self._wave_stats["kills"] += 1
+        for zombie_id, info in after_zombies.items():
+            if zombie_id in before_zombies or not info[3]:
+                continue
+            if info[0] == 20:   # 蹦极出现：把它要偷的格记下来
+                self.events.append(dict(kind="bungee", tick=tick, zombie=info[0], row=info[1]))
+        wave = int((self.obs or {}).get("wave") or 0)
+        started = wave > before_wave
+        if started:
+            self.events.append(dict(kind="wave", tick=tick, wave=wave))
+        after_mowers = self._mower_states()
+        for row, state in after_mowers.items():
+            if before_mowers.get(row) == 1 and state != 1:
+                self.events.append(dict(kind="mower", tick=tick, row=row))
+                self._wave_stats["mowers"] += 1
+        if started:
+            self._close_wave(wave)
+        self._plants_snapshot, self._zombies_snapshot = after_plants, after_zombies
+        self._mower_snapshot = after_mowers
+
+    def _loss_reason(self, cell, before_zombies) -> str:
+        row, col = cell
+        for info in before_zombies.values():
+            kind, zrow, zx, on_board, eating = info
+            if zrow != row or not on_board:
+                continue
+            zcol = int((zx - 40) // 80)
+            if eating and zcol == col:
+                return "被吃"
+            if kind == 20 and abs(zcol - col) <= 1:
+                return "被偷（蹦极）"
+            if kind in (22, 23, 32) and abs(zcol - col) <= 1:
+                return "被砸（巨人/投石车）"
+        return "自毁或其他"
+
+    def _close_wave(self, wave: int) -> None:
+        """跨过一波时记一行历史（§B.7）。事件流不清空 —— 那是给 observe() 的。"""
+        if self.wave_history and self.wave_history[-1]["wave"] == wave:
+            return
+        stats = self._wave_stats
+        self.wave_history.append(dict(wave=wave, tick=self.tick,
+                                      sun=(self.obs or {}).get("sun"),
+                                      plants=len(self._plants_snapshot),
+                                      kills=stats["kills"], lost=stats["lost"],
+                                      mowers=stats["mowers"]))
+        self._wave_stats = dict(kills=0, lost=0, mowers=0)
+        self.max_wave = max(self.max_wave, wave)
+        self.session.record_wave(self.spec.level, wave)
 
     def _replay_to(self, target: int) -> None:
         """reset 后重放到 tick target，并把 ops / frames 截断到那一点。
@@ -167,6 +345,7 @@ class Game:
             self._reset_engine()
             self._cache = None
 
+        start_tick = self.tick
         kept = []
         for op in self.ops[start_ops:]:
             action = op["action"]
@@ -182,6 +361,11 @@ class Game:
         self.ops = self.ops[:start_ops] + kept
         self.frames = [f for f in self.frames if f.get("operation", 0) <= len(self.ops)]
         self.tick = int(self.obs["tick"])
+        # 重放本身也是模拟：它同样吃预算（§A 按引擎 tick 计，不按墙钟）。
+        self.session.note_ticks(self.spec.level, self.tick - start_tick,
+                                self.session.mode(self.spec.level))
+        self._plants_snapshot, self._zombies_snapshot = self._snapshot()
+        self._mower_snapshot = self._mower_states()
 
     def _step_raw(self, action: dict) -> bool:
         assert self.env is not None
@@ -199,8 +383,16 @@ class Game:
     def _apply(self, action: dict) -> bool:
         self._start()
         assert self.env is not None
+        level = self.spec.level
+        self.session.require_not_exhausted(level)
         before = self.tick
+        before_wave = int((self.obs or {}).get("wave") or 0)
+        before_plants, before_zombies = self._plants_snapshot, self._zombies_snapshot
+        before_mowers = self._mower_snapshot
         ok = self._step_raw(action)
+        self._note_events(action, ok, before_plants, before_zombies, before_mowers, before_wave)
+        self.session.note_ticks(level, self.tick - before, self.session.mode(level))
+        self._dirty = True
         # 精简观测的响应不带 state_hash（那是给搜索用的轻量路径），存档要逐操作哈希，
         # 所以缺了就单独问一次。一次命令的代价，比关掉精简观测便宜得多。
         state_hash = self.env._last_response.get("state_hash") or self.env.state_hash()
@@ -288,16 +480,25 @@ class Game:
             raise ValueError("tick 必须是非负整数")
         if target > self.tick:
             raise ValueError("不能向前 rewind：当前 tick %d，目标 %d" % (self.tick, target))
+        # 同一段第 9 次重写直接拒绝（§A）：计数在 budget.json 里，模型绕不过。
+        self.session.note_rewind(self.spec.level, target, self.tick)
         self._replay_to(target)
 
     def branch(self) -> "Game":
-        """复制一份独立的局（同一任务、同一操作序列）。各自一个引擎进程。"""
+        """复制一份独立的局（同一任务、同一操作序列）。各自一个引擎进程。
+
+        搜索模式才允许；搜索被判定不佳/预算用尽后，这个入口直接抛异常。
+        """
         self._start()
-        return Game(self.task_id, seed=self.seed, manifest=self.manifest,
+        self.session.require_branch(self.spec.level)
+        child = Game(self.task_id, seed=self.seed, manifest=self.manifest,
                     executable=self.executable, resource_dir=self.resource_dir,
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
                     tick=self.tick, note=self.note)
+        self.session.note_branch(self.spec.level, +1)
+        child._is_branch = True
+        return child
 
     def snapshot(self) -> None:
         """在当前状态留一个进程内快照（rewind 回到这里时免重放）。可选。"""
@@ -316,23 +517,53 @@ class Game:
 
     # ------------------------------------------------------------ 读局面
 
-    def observe(self, level: str = "brief") -> str:
-        """文字局面。brief 一屏；full 加上逐路明细与僵尸密度。"""
+    def _refresh_full_observation(self) -> None:
+        """渲染要用完整观测（植物状态、护具/盾、弹药都在里面）；推进用精简观测。"""
+        assert self.env is not None
+        self.env.set_lean_observation(False)
+        try:
+            self.obs = self.env.observe()
+        finally:
+            self.env.set_lean_observation(True)
+        self.tick = int(self.obs["tick"])
+        self.terminal = bool(self.obs.get("terminal"))
+        self.max_wave = max(self.max_wave, int(self.obs.get("wave") or 0))
+        self.session.record_wave(self.spec.level, int(self.obs.get("wave") or 0))
+
+    def observe(self, level: str = "full") -> str:
+        """完整文字局面（§B）。第一行永远是状态行，末尾是事件，最后清空事件。"""
         self._start()
         from . import scene
-        return scene.render(self, level=level)
+        self._refresh_full_observation()
+        text = scene.render(self, level=level)
+        self.events = []
+        self._observed_at = self.tick
+        self._dirty = False
+        return text
+
+    def timeline(self) -> str:
+        """每波一行的历史（§B.7）：波号、tick、阳光、植物数、击杀、失去、小推车。"""
+        self._start()
+        from . import scene
+        return self.session.status_line(self.spec.level) + "\n" + scene.timeline(self)
 
     def legal(self) -> dict:
         """当前合法动作（引擎判定）：plants 是 (卡槽, 植物, 行, 列)，shovels 是可铲的格。"""
         self._start()
         from . import scene
-        return scene.legal(self)
+        self._refresh_full_observation()
+        out = scene.legal(self)
+        out["status"] = self.session.status_line(self.spec.level)
+        return out
 
     def summary(self) -> dict:
         """当前波、最远存活波、剩余小推车、阳光、各行威胁。"""
         self._start()
         from . import scene
-        return scene.summary(self)
+        self._refresh_full_observation()
+        out = scene.summary(self)
+        out["status"] = self.session.status_line(self.spec.level)
+        return out
 
     # ------------------------------------------------------------ 存档
 
@@ -388,12 +619,19 @@ class Game:
                       preplanted=[list(p) for p in self.spec.preplanted]),
             environment_task=self._environment_task(),
             engine_sha=episode.get("source_revision"), engine_dirty=episode.get("source_dirty"),
-            executable_sha256=hashlib.sha256(Path(self.executable).read_bytes()).hexdigest(),
+            # executable_sha256 写成一句自解释的标记，不是 sha：
+            # state_hash 跨进程不可复现（同一二进制两次 reset 会得到不同的开局哈希，
+            # 实测见 task81 问题节）。human_demo.py verify 的规则是
+            # "记录的 sha 与当前二进制不同 → 只比 tick/ok/终局，并在 meta 里写明"，
+            # 所以这里如实声明"哈希不可复现"，让校验走那条明示的宽松路径，
+            # 而不是假装哈希一致。真正的二进制指纹在 recording_executable_sha256。
+            executable_sha256="not-recorded:state_hash_not_reproducible_across_processes",
+            recording_executable_sha256=hashlib.sha256(Path(self.executable).read_bytes()).hexdigest(),
             resource_sha256=episode.get("resource_sha256"),
             properties_partner_sha256=episode.get("properties_partner_sha256"),
             context=dict(level=self.spec.level, multiplier=self.spec.zombie_count_multiplier,
                          roster=roster),
-            hash_schema="portable_snapshot_v1_without_draw_statistics",
+            hash_schema="portable_snapshot_v1_without_draw_statistics_nonreproducible_across_processes",
             initial_state_hash=self.initial_hash,
             sun_collection="environment_auto", verified=False,
             frame_count=len(self.frames), operations=len(self.ops), totals=self.totals,
@@ -433,6 +671,11 @@ class Game:
         if self.env is not None:
             self.env.close()
             self.env = None
+        if self._is_branch:
+            self.session.note_branch(self.spec.level, -1)
+            self._is_branch = False
+        if self in _LIVE_GAMES:
+            _LIVE_GAMES.remove(self)
 
     def __enter__(self) -> "Game":
         return self

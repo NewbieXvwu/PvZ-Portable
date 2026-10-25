@@ -25,7 +25,7 @@ DEMO_NAMES = [
     ("seed_20261033", "demo_fog_33_cactus_snow_m200"),
     ("seed_20261033", "demo_fog_33_cattail_snow_m200"),
 ]
-SOURCE_REVISION = "5287dc41"   # deploy4（引擎 SHA 16989f23）的源码树
+SOURCE_REVISION = "8bf65b19"   # deploy4 源码树 + task81 的 summon_counter 字段
 MIMALLOC_SOURCE = Path("/home/newbiexvwu/llmplay-build/hostbuild2/_deps/mimalloc-src")
 
 
