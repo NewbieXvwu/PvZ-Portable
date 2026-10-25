@@ -117,3 +117,34 @@ B5 收到：human_v2 修订后老师 31/32，作为 fog_user_v2 的 teacher_rate
 2. 全仓库再扫一遍按目录名解析种子的地方（`seed_` + `split`/`removeprefix`），凡是会碰到示范起点局目录的，统一改用 `archive_seed`。
 3. 测试：注入一个会失败的后台任务，断言采集继续、重试恰好一次、第二次失败才退出。
 B7 和 B6 一起进 deploy14。
+
+## 主控追加（2026-10-25 22:30，B8：deploy14 一次性集成）
+主控已把要上线的分支全部合进 pvz-env **a8d00858**，Mac 全量 pytest 569 通过。包含：
+- redeploy：B5 / B6 / B7；
+- gatepower：task73c 门禁 v3；
+- demo：13 个示范起点格，雾夜格按 B6 改成 `_hv2`，屋顶 L42–L49 7 格；
+- conveyor2：task75 / 75b，原生 L25 0.5 倍进课程，另有三头豌豆段错误的 C++ 修复；
+- fog36：task79 / 79b，L36–L38 厚雾族进课程。
+
+示范存档已拷到 cq 的 `artifacts/human_demo/raw/`（新增 seed_20261039 / 42 / 43 / 44 / 46 / 48 / 49，校验和与 Mac 一致）。B8 要做：
+1. 在 redeploy 工作树 `git merge origin/pvz-env`（目标 a8d00858），把示范存档同步到这个树。
+2. **引擎**：a8d00858 的 src 相比 6264aaf4 多了 task75 的 C++ 改动（L25 体型字段、L40 storm 遮挡、三头豌豆修复）。按 A1 的 PGO 流程构建 deploy5b，记 SHA，然后：
+   - 照 A2 对 6264aaf4 做逐位门禁：六族 × 老师 / 学生 × 8 种子；
+   - 照 A4 做吞吐 ABBA；
+   - 门禁不过就停下写原因，不要带病上线。
+3. **清单**：重新生成 `artifacts/stage4/multiplier_panel.json`，旧任务逐项不变，只能新增。用 generation_audit 机械核对种子不相交。
+4. **teacher_rates 增量**：列出新进课程的格和它们的底数来源：
+   - fog_user_v2 L31：31/32；
+   - fog79b L36 / L37 / L38：task79 的 r11 数；
+   - native_l25 0.5 倍：13/16；
+   - 13 个示范起点格：B6.4 的做法。
+   给出写入 `~/pvz-logs/teacher_rates.json` 的 JSON 片段。
+5. **dry-run**：用新清单 + 新引擎 + 新 scripts 跑 `curriculum_queue.py --dry-run`，确认能读现行 `curriculum_state.json`。门禁 v3 首次运行时要能正确领种子，并在新区（fog / roof）上评估现役。在本树 `--state` 的拷贝上试，不碰正式 state。
+6. 写一份 `~/pvz-logs/qc_deploy14.sh`，结构照 `qc_deploy13.sh`：
+   - 组边界等待，备份 state；
+   - checkout a8d00858（或 B8 合并后的提交）的 scripts / python / recipes / configs 到 cq；
+   - 拷引擎到 `cq/build5/`；
+   - 先 dry-run，失败就回滚；
+   - 重启，并写 curriculum.log。
+   **只写脚本、不执行**，由主控执行。
+7. 结果写本文件，`git push origin redeploy`。每个任务最多 2 个游戏进程。
