@@ -106,3 +106,4 @@
 - [task76 终局真值报告](docs/task76-roof-terminal-truth.json)
 - [2026-10-25](2026-10-25.md)
 - [2026-10-26](2026-10-26.md)
+- [task118 气球关卡组检验](docs/task118-balloon-decks.md)
