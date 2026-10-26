@@ -79,7 +79,7 @@ Mac r11 学生单臂全量测量采用每关 32 种子、2 个游戏进程，运
 
 2026-10-26 接手复核：Codex 额度中断时已完成全部实现与 Mac 测量，改动仅暂存未提交、分支未推送。接手后逐项复核：7 项测试通过；记分板 JSON 重算得学生 814/1440（56.53%）、task101 408/720（56.67%）、平均 Wilson95% 宽度 18.19% vs 27.33%（缩窄 33.44%）、逐关区间分离 0/45、L23 −21.875pp 与 L38 +21.875pp、22 关学生≥80%、L25 分类已更正，均与正文一致；暂存区无 .pt/.npz/.log，artifacts 忽略自查为空。未重跑任何对局，直接提交并推送 scoreboard2。
 
-2026-10-26：台式机命令按实机核对后重写（只读检查，未动 tmux qc）。查出三处会直接失败的地方：`~/PvZ-search/build5/pvz-portable` 不存在（deploy14 在役引擎在 cq 工作树的 `build5/`，SHA `76ff36dc…`）；系统 `/usr/bin/python3` 没有 torch，须走 `~/.venvs/ml/bin/python3`；台式机没有 scoreboard2 工作树，需先 `git worktree add`。叶值 `8a636d33…`、静态网 `24858410…` 与 Mac r11-32 同字节，只有引擎不同（`76ff36dc…` vs `6f7d2c3f…`）。
+2026-10-26：台式机命令按实机核对后重写（只读检查，未动 tmux qc）。查出三处会直接失败的地方：`~/PvZ-search/build5/pvz-portable` 不存在（deploy14 在役引擎在 cq 工作树的 `build5/`，SHA `76ff36dc…`）；系统 `/usr/bin/python3` 没有 torch，须走 `~/.venvs/ml/bin/python3`；台式机没有 scoreboard2 工作树，需先 `git worktree add`。叶值 `8a636d33…`、静态网 `24858410…` 与 Mac r11-32 同字节，只有引擎不同（`76ff36dc…` vs `6f7d2c3f…`）。台式机本地还没有 scoreboard2 ref（`ls-remote` 能看到），所以命令先 `fetch` 再 `worktree add -b`；资源目录与 `main.pak` 已在位。
 
 2026-10-26：修正台式机命令的引擎路径。qc 从 cq 工作树跑、deploy14 把引擎拷到 `cq/build5/`，原命令写的 `~/PvZ-search/build5/` 少了一层 cq 工作树；同时把 `REPO` 改为 `git rev-parse --show-toplevel`，避免在 search-wt 工作树里执行本分支的脚本。命令块已过 `bash -n`，并补了跑完先核 `engine_sha256`/`model_sha256` 的说明（台式机引擎与 Mac 不同，跨引擎差异不能全归给模型）。
 
