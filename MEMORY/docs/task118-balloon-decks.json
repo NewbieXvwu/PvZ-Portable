@@ -1,0 +1,583 @@
+{
+ "task": "task118",
+ "generated": "2026-10-26",
+ "engine_sha256": "6f7d2c3f93cb93b070fa908cb8f9470ea842f21900a95b0f207ab1c5de83f344",
+ "model_sha256": {
+  "student": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+  "value": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+  "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+ },
+ "seeds_per_cell": 16,
+ "seed_offset": 16,
+ "cells": [
+  {
+   "level": 33,
+   "variant": "control",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    7
+   ],
+   "wins": 5,
+   "games": 16,
+   "wilson95": [
+    0.1416,
+    0.556
+   ],
+   "balloon_losses": 11,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     21,
+     8
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 32.3
+  },
+  {
+   "level": 33,
+   "variant": "cactus",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    26,
+    27,
+    7
+   ],
+   "wins": 3,
+   "games": 16,
+   "wilson95": [
+    0.0659,
+    0.4301
+   ],
+   "balloon_losses": 13,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     15,
+     8
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 30.4,
+   "vs_control": {
+    "control_only_win": 3,
+    "candidate_only_win": 1,
+    "mcnemar_p": 0.625
+   }
+  },
+  {
+   "level": 33,
+   "variant": "cattail",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    43,
+    27,
+    7
+   ],
+   "wins": 6,
+   "games": 16,
+   "wilson95": [
+    0.1848,
+    0.6136
+   ],
+   "balloon_losses": 10,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     24,
+     7
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 34.7,
+   "vs_control": {
+    "control_only_win": 3,
+    "candidate_only_win": 4,
+    "mcnemar_p": 1.0
+   }
+  },
+  {
+   "level": 33,
+   "variant": "nutcactus",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    26,
+    17,
+    19,
+    2,
+    27,
+    7
+   ],
+   "wins": 4,
+   "games": 16,
+   "wilson95": [
+    0.1018,
+    0.495
+   ],
+   "balloon_losses": 12,
+   "planted": {
+    "26": [
+     1,
+     1
+    ],
+    "27": [
+     24,
+     8
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 34.5,
+   "vs_control": {
+    "control_only_win": 3,
+    "candidate_only_win": 2,
+    "mcnemar_p": 1.0
+   }
+  },
+  {
+   "level": 34,
+   "variant": "control",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    7
+   ],
+   "wins": 0,
+   "games": 16,
+   "wilson95": [
+    0.0,
+    0.1936
+   ],
+   "balloon_losses": 16,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     21,
+     8
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 36.1
+  },
+  {
+   "level": 34,
+   "variant": "cactus",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    26,
+    27,
+    7
+   ],
+   "wins": 0,
+   "games": 16,
+   "wilson95": [
+    0.0,
+    0.1936
+   ],
+   "balloon_losses": 16,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     25,
+     12
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 37.7,
+   "vs_control": {
+    "control_only_win": 0,
+    "candidate_only_win": 0,
+    "mcnemar_p": 1.0
+   }
+  },
+  {
+   "level": 34,
+   "variant": "cattail",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    43,
+    27,
+    7
+   ],
+   "wins": 0,
+   "games": 16,
+   "wilson95": [
+    0.0,
+    0.1936
+   ],
+   "balloon_losses": 16,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     22,
+     8
+    ],
+    "43": [
+     1,
+     1
+    ]
+   },
+   "mean_seconds": 37.8,
+   "vs_control": {
+    "control_only_win": 0,
+    "candidate_only_win": 0,
+    "mcnemar_p": 1.0
+   }
+  },
+  {
+   "level": 34,
+   "variant": "nutcactus",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    26,
+    17,
+    19,
+    2,
+    27,
+    7
+   ],
+   "wins": 0,
+   "games": 16,
+   "wilson95": [
+    0.0,
+    0.1936
+   ],
+   "balloon_losses": 16,
+   "planted": {
+    "26": [
+     1,
+     1
+    ],
+    "27": [
+     38,
+     11
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 46.1,
+   "vs_control": {
+    "control_only_win": 0,
+    "candidate_only_win": 0,
+    "mcnemar_p": 1.0
+   }
+  },
+  {
+   "level": 39,
+   "variant": "control",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    5
+   ],
+   "wins": 3,
+   "games": 16,
+   "wilson95": [
+    0.0659,
+    0.4301
+   ],
+   "balloon_losses": 13,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     37,
+     11
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 51.9
+  },
+  {
+   "level": 39,
+   "variant": "cactus",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    26,
+    27,
+    5
+   ],
+   "wins": 0,
+   "games": 16,
+   "wilson95": [
+    0.0,
+    0.1936
+   ],
+   "balloon_losses": 16,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     25,
+     11
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 35.7,
+   "vs_control": {
+    "control_only_win": 3,
+    "candidate_only_win": 0,
+    "mcnemar_p": 0.25
+   }
+  },
+  {
+   "level": 39,
+   "variant": "cattail",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    43,
+    27,
+    5
+   ],
+   "wins": 4,
+   "games": 16,
+   "wilson95": [
+    0.1018,
+    0.495
+   ],
+   "balloon_losses": 10,
+   "planted": {
+    "26": [
+     0,
+     0
+    ],
+    "27": [
+     47,
+     11
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 57.0,
+   "vs_control": {
+    "control_only_win": 2,
+    "candidate_only_win": 3,
+    "mcnemar_p": 1.0
+   }
+  },
+  {
+   "level": 39,
+   "variant": "nutcactus",
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    26,
+    17,
+    19,
+    2,
+    27,
+    5
+   ],
+   "wins": 1,
+   "games": 16,
+   "wilson95": [
+    0.0111,
+    0.2833
+   ],
+   "balloon_losses": 12,
+   "planted": {
+    "26": [
+     1,
+     1
+    ],
+    "27": [
+     34,
+     10
+    ],
+    "43": [
+     0,
+     0
+    ]
+   },
+   "mean_seconds": 44.1,
+   "vs_control": {
+    "control_only_win": 3,
+    "candidate_only_win": 1,
+    "mcnemar_p": 0.625
+   }
+  }
+ ],
+ "control_slot_usage": [
+  {
+   "slot": 0,
+   "card": 9,
+   "plants": 1738,
+   "games_with": 48
+  },
+  {
+   "slot": 1,
+   "card": 8,
+   "plants": 2517,
+   "games_with": 48
+  },
+  {
+   "slot": 2,
+   "card": 10,
+   "plants": 526,
+   "games_with": 48
+  },
+  {
+   "slot": 3,
+   "card": 16,
+   "plants": 1352,
+   "games_with": 48
+  },
+  {
+   "slot": 4,
+   "card": 23,
+   "plants": 29,
+   "games_with": 18
+  },
+  {
+   "slot": 5,
+   "card": 17,
+   "plants": 409,
+   "games_with": 48
+  },
+  {
+   "slot": 6,
+   "card": 19,
+   "plants": 519,
+   "games_with": 48
+  },
+  {
+   "slot": 7,
+   "card": 2,
+   "plants": 1,
+   "games_with": 1
+  },
+  {
+   "slot": 8,
+   "card": 27,
+   "plants": 79,
+   "games_with": 27
+  },
+  {
+   "slot": 9,
+   "card": 5,
+   "plants": 1,
+   "games_with": 1
+  },
+  {
+   "slot": 9,
+   "card": 7,
+   "plants": 0,
+   "games_with": 0
+  }
+ ]
+}
