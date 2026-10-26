@@ -30,4 +30,6 @@ deploy14 上线后，主控已经发现一个“格在却不采”的 bug：原�
 
 ## 结果
 
+- 2026-10-26：完成18个新增格、v3 fog/roof与全55个active格的首轮只读对账；确认L25误退、L31/L32的48局漏入r18配方、v3旧雾观测差异；报告见 [curriculum-audit.md](curriculum-audit.md)。r18热补后训练与首次v3结果继续观察。
+
 ## 问题
