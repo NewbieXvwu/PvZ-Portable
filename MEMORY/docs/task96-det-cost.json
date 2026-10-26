@@ -1,0 +1,107 @@
+{
+ "task": 96,
+ "iterations": 200,
+ "blocks": 6,
+ "gpu_before": {
+  "used_mib": 7361,
+  "free_mib": 8619,
+  "utilization": 46
+ },
+ "environment": {
+  "torch": "2.14.0+cu132",
+  "cuda": "13.2",
+  "gpu": "NVIDIA GeForce RTX 5080"
+ },
+ "blocks_measured": [
+  {
+   "block": 0,
+   "mode": "default",
+   "seconds": 0.13696149899624288,
+   "per_iteration_ms": 0.6848074949812144
+  },
+  {
+   "block": 0,
+   "mode": "deterministic",
+   "seconds": 0.07200543204089627,
+   "per_iteration_ms": 0.36002716020448133
+  },
+  {
+   "block": 1,
+   "mode": "default",
+   "seconds": 0.05442746699554846,
+   "per_iteration_ms": 0.2721373349777423
+  },
+  {
+   "block": 1,
+   "mode": "deterministic",
+   "seconds": 0.07140863098902628,
+   "per_iteration_ms": 0.3570431549451314
+  },
+  {
+   "block": 2,
+   "mode": "default",
+   "seconds": 0.05434550601057708,
+   "per_iteration_ms": 0.2717275300528854
+  },
+  {
+   "block": 2,
+   "mode": "deterministic",
+   "seconds": 0.07514661096502095,
+   "per_iteration_ms": 0.3757330548251048
+  },
+  {
+   "block": 3,
+   "mode": "default",
+   "seconds": 0.0636312150163576,
+   "per_iteration_ms": 0.318156075081788
+  },
+  {
+   "block": 3,
+   "mode": "deterministic",
+   "seconds": 0.08957791299326345,
+   "per_iteration_ms": 0.44788956496631727
+  },
+  {
+   "block": 4,
+   "mode": "default",
+   "seconds": 0.08531424903776497,
+   "per_iteration_ms": 0.42657124518882483
+  },
+  {
+   "block": 4,
+   "mode": "deterministic",
+   "seconds": 0.07603710104012862,
+   "per_iteration_ms": 0.3801855052006431
+  },
+  {
+   "block": 5,
+   "mode": "default",
+   "seconds": 0.055028457019943744,
+   "per_iteration_ms": 0.2751422850997187
+  },
+  {
+   "block": 5,
+   "mode": "deterministic",
+   "seconds": 0.06734897597925738,
+   "per_iteration_ms": 0.3367448798962869
+  }
+ ],
+ "summary": {
+  "default_median_ms": 0.29664918009075336,
+  "deterministic_median_ms": 0.36788010751479305,
+  "ratio": 1.2401184031664882,
+  "default_range": [
+   0.2717275300528854,
+   0.6848074949812144
+  ],
+  "deterministic_range": [
+   0.3367448798962869,
+   0.44788956496631727
+  ]
+ },
+ "gpu_after": {
+  "used_mib": 7423,
+  "free_mib": 8557,
+  "utilization": 58
+ }
+}
