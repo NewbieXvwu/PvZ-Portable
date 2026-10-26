@@ -2,7 +2,7 @@
 
 Existing full default repeats and small operator probes are never repeated here.
 This adds the missing full-pack deterministic control and a bracketing cost pair.
-No game or production process is controlled. /proc admission works even when WSL
+No game or production process is controlled. Only qc and this task affect training admission; other tasks are recorded as timing context. /proc admission works even when WSL
 omits CUDA clients from nvidia-smi. All mutations stay in this worktree.
 """
 import argparse
@@ -66,8 +66,11 @@ def resources():
 def admission():
     peers = training_peers()
     usage = resources()
-    return dict(peers=peers, resources=usage,
-                admitted=not peers and usage['mem_available_bytes'] >= 10*1024**3
+    priority=[peer for peer in peers if any('/.claude/worktrees/cq/scripts/train_rollout_policy.py' in arg
+              or 'curriculum_state.pipeline/round_' in arg for arg in peer['argv'])
+              or (str(Path(__file__).resolve()) in peer['argv'] and 'child' in peer['argv'])]
+    return dict(peers=peers, priority_peers=priority, resources=usage,
+                admitted=not priority and usage['mem_available_bytes'] >= 10*1024**3
                 and usage['gpu_free_mib'] >= 3072)
 
 
@@ -160,12 +163,12 @@ def child(case):
         if now-checked<2:
             return
         checked=now;guard_start=time.monotonic()
-        peers=training_peers()
-        if peers:
-            trace['priority_yield_peers']=peers
-            raise RuntimeError('task96 yields: another trainer became active; no production process was changed')
+        gate=admission()
+        if gate['priority_peers']:
+            trace['priority_yield_peers']=gate['priority_peers']
+            raise RuntimeError('task96 yields: qc or another task96 trainer became active; no production process was changed')
         if step%1000<100:
-            trace['resource_samples'].append(dict(step=step,**resources()))
+            trace['resource_samples'].append(dict(step=step,peers=gate['peers'],**gate['resources']))
         trace['qc_guard_seconds']+=time.monotonic()-guard_start
         if step%500<50:
             print(json.dumps(dict(case=case,step=step,loss=loss)),flush=True)

@@ -117,7 +117,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 
 新增 `scripts/task96_full_pack.py` 读完整348段/16,982,931行；使用冻结bec2b9e6训练器，原batch2048、seed1、epoch1、workspace=:4096:8，按strict/default/strict顺序控制。所有memmap/输出/telemetry只写repro，现有输入只读，source_rows须与原控制SHA一致。每个子进程最多900秒；逐次记录初始权重、完整randperm摘要、实际张量与loss摘要、运行源码/资源回执。该控制针对尚未验证的全量路径，不重跑小段诊断。
 
-准入直接枚举/proc中的实际Python训练进程，不依赖WSL可能漏报的GPU客户端列表；有qc或其他训练则等待，训练中出现其它训练则退出让行。至少10GiB可用内存、3GiB空闲显存才启动。当前等待deckvar训练PID916578结束，未控制它或qc。
+准入直接枚举/proc中的实际Python训练进程，不依赖WSL可能漏报的GPU客户端列表；qc训练优先、本任务最多一个GPU训练。其他任务照常运行，不作为阻塞条件，仅在资源回执中记录其负载，计时比必须带共享主机负载限制。至少10GiB可用内存、3GiB空闲显存才启动。没有控制其他任务或qc。
 
 ## 冻结与修法建议（生产未改）
 
