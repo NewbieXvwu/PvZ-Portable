@@ -114,6 +114,7 @@ TRAIN_ANON_EXTRA = 2 * GIB
 TRAIN_GPU_BYTES = int(1.5 * GIB)  # measured reserved 1.2 GiB/seed, rounded up
 GPU_RESERVE_BYTES = GIB
 DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
+MIN_PLAUSIBLE_WORKER_BYTES = GIB // 4  # a real python + engine worker is ~0.4-0.9 GiB
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
 
@@ -276,6 +277,12 @@ def startup_worker_estimate(args, plan: list[dict]) -> int:
         measured = measure_worker_bytes(args, plan[0])
     except (OSError, RuntimeError) as error:
         log_line(args.log, f'worker probe failed ({error}); assuming {DEFAULT_WORKER_BYTES / GIB:.1f} GiB/worker')
+        return DEFAULT_WORKER_BYTES
+    if measured < MIN_PLAUSIBLE_WORKER_BYTES:
+        # 10-26: a demo start-cell probe ended in 2 s and measured 0.02 GiB; admission then ran 16 workers
+        # (real ~0.43 GiB each) and the background trainer swapped at a tenth of its normal speed.
+        log_line(args.log, f'worker probe measured {measured / GIB:.2f} GiB in {time.time() - started:.0f}s, '
+                           f'implausibly small; assuming {DEFAULT_WORKER_BYTES / GIB:.1f} GiB/worker')
         return DEFAULT_WORKER_BYTES
     log_line(args.log, f'worker estimate: {max(measured, 1) / GIB:.2f} GiB peak RSS (python+engine), '
                        f'{time.time() - started:.0f}s probe')
