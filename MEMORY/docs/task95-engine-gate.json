@@ -566,5 +566,317 @@
     "src_diff_vs_built_tip": "empty",
     "checked": "2026-10-26 19:50 CST",
     "note": "origin/pvz-env advanced past a630fbd8 only outside src; the built src equals the current tip src"
+  },
+  "logic_gate_build4": {
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+    "seeds": 8,
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      }
+    ],
+    "state_hash": {
+      "compared": 96,
+      "differ": 96
+    },
+    "pass": true
+  },
+  "candidate_build4": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+    "sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+    "bytes": 10655664,
+    "source_fix_commit": "acc3b43115c61d71342f3b692e5105c32175790d",
+    "status": "logic and L50 passed; ABBA running; hash suite scheduled"
+  },
+  "boss_l50_build4": {
+    "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50.json",
+    "sha256": "e471011f4d2228dc93c110ba49dc5fd6916a6ae5ca9ac77626e73a3d1a98b3e1",
+    "pass": true,
+    "checks": {
+      "new_boss_fields_present": true,
+      "logical_fields_match": true,
+      "action_streams_match": true,
+      "all_terminal": true
+    },
+    "task_id": "boss_l50_orig_eval",
+    "seeds": [
+      85000000,
+      85000001,
+      85000002,
+      85000003
+    ],
+    "commands": {
+      "old": {
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/scripts/search_play.py",
+          "--rollout-policy",
+          "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "--verify-samples",
+          "9",
+          "--student-candidates",
+          "2",
+          "--static-value",
+          "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+          "--value",
+          "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+          "--manifest",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task85/boss_panel.json",
+          "--task-id",
+          "boss_l50_orig_eval",
+          "--seed-offset",
+          "0",
+          "--seeds",
+          "4",
+          "--executable",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+          "--dagger-beta",
+          "0",
+          "--workers",
+          "2",
+          "--resource-dir",
+          "/home/newbiexvwu/.cache/pvz-research-resources",
+          "--frames",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_frames_old",
+          "--frames-label",
+          "boss_l50_old",
+          "--out",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_runs_old/boss_l50_old_4"
+        ],
+        "executable_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
+        "models": {
+          "rollout_policy": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+          "value": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+          "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+        },
+        "manifest_sha256": "a50dce80177cf069de8c9f387dab9e6a513b8dd68d66c4dd0814332e3849396b"
+      },
+      "new": {
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/scripts/search_play.py",
+          "--rollout-policy",
+          "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "--verify-samples",
+          "9",
+          "--student-candidates",
+          "2",
+          "--static-value",
+          "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+          "--value",
+          "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+          "--manifest",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task85/boss_panel.json",
+          "--task-id",
+          "boss_l50_orig_eval",
+          "--seed-offset",
+          "0",
+          "--seeds",
+          "4",
+          "--executable",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+          "--dagger-beta",
+          "0",
+          "--workers",
+          "2",
+          "--resource-dir",
+          "/home/newbiexvwu/.cache/pvz-research-resources",
+          "--frames",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_frames_new",
+          "--frames-label",
+          "boss_l50_new",
+          "--out",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_runs_new/boss_l50_new_4"
+        ],
+        "executable_sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+        "models": {
+          "rollout_policy": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+          "value": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+          "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+        },
+        "manifest_sha256": "a50dce80177cf069de8c9f387dab9e6a513b8dd68d66c4dd0814332e3849396b"
+      }
+    },
+    "reused_old_control_from": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/boss_l50_command_old.json",
+    "games": [
+      {
+        "seed": 85000000,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 144,
+          "new": 144
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 144,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 7720,
+        "won": false,
+        "decisions": 143
+      },
+      {
+        "seed": 85000001,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 127,
+          "new": 127
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 127,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 6658,
+        "won": false,
+        "decisions": 126
+      },
+      {
+        "seed": 85000002,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 119,
+          "new": 119
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 119,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 6416,
+        "won": false,
+        "decisions": 118
+      },
+      {
+        "seed": 85000003,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 107,
+          "new": 107
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 107,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 5895,
+        "won": false,
+        "decisions": 106
+      }
+    ]
   }
 }
