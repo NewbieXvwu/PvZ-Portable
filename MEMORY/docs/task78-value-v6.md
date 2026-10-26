@@ -186,6 +186,8 @@
 
 - 2026-10-27 07:55：**需要主控提供的输入（已写进 [语料要求](task78-v5-corpus-requirements.json)）**。①v5 原 442,601 行语料：`artifacts/hard/branch/z13_384.pt`、`artifacts/hard/branch3/z15d_shards/` 96 分片、`artifacts/task43/sparse64/data` 64 分片、episode 缓存、`artifacts/task30/full_audit_manifest.json`（任一可用副本即可，含 descriptor）；②原 task72b 探针：脚本或其精确 source revision 与参数、每个状态 8 个真值对应的 future 种子/噪声日程、`values` 里 3 个采样 future、三个视界相对决策 tick 的偏移定义。拿到 ①即可训练正式候选并按预登记跑正式 A/B；拿到 ②才能给 94 态打分。两样都没有时，本任务的可执行范围已经到顶，继续硬做只会产出不可信数字。
 
+- 2026-10-27 08:10：**语料恢复改成机械判定**。新增 tracked `scripts/task78_corpus_check.py`（5 项测试）：`--paths` 校验 97 个原 branch 文件、64 个决策分片、审计清单；默认模式按冻结 schema 校验 `original_v5/corpus.json` 的 baseline/分支数/逐文件 SHA/决策分片数/审计清单/四个 episode 文件，任一不符即 rc=1。当前实测：`--paths` 97/97 缺失、0/64 分片、审计清单缺失；descriptor 不存在，rc=1、`ready=false`。所以"语料是否恢复"不再靠肉眼判断——主控或别的机器把文件放回来，跑这一条命令就能定。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
