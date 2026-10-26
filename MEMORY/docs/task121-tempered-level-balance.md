@@ -126,4 +126,4 @@ deploy14g 的 `source_weight.level_balance`（`python/pvz_training_rows.py` 约 
 ### 未做
 
 按任务书要求：没写部署脚本、没动台式机 qc、没跑训练、没改旧配方文件、没做全量重放。
-DESIGN §14.40 登记了新配方与两个参数（并入 pvz-env 时该节顺延为 §14.41，那里 task119 已占 14.40）。
+DESIGN §14.41 登记了新配方与两个参数（task119 在 pvz-env 已占 §14.40，这里直接编为 §14.41，合并时不再顺延）。
