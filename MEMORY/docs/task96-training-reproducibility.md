@@ -46,6 +46,7 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 Codex按主控最新澄清：每任务游戏进程上限，不套全机限制。收回全量控制额外的“等待其他任务训练”准入，只保留qc训练优先、本任务GPU互斥、内存/显存余量；其他任务仅作为计时负载记录，不控制、不阻塞。现有队列尚未启动子训练，核实无子进程后只重启本任务等待器以加载新准入策略，不重跑任何已完成实验。
 
+- 10-26 CodeBuddy 续接（第三段）：把中尺度控制扩到 9 例，补交替对照 default_p1 → strict_q1 → default_p2 → strict_q2（同数据同 seed）。结果更强：固定 `:4096:8` 的 5 例（含压 4 GiB 显存的、含交替重复的）最终张量与逐步 loss 全同；未固定的 4 例两两不同，其中 default_p1/default_p2 同一进程序列、报告空闲显存相同（11793 MiB）仍不同。→ 结论从“显存少会改数”改为“未固定 workspace 时结果依赖运行时状态、每次可能不同，固定后消失”。成本交替对照 strict/default = 1.065，但 default 自身两遍差 1.55 倍，测不出准确比值。证据 `task96-scale-probe.json`（9 例 + cost_pairs），报告已更新。
 - 10-26 CodeBuddy 续接（第二段）：复核 Codex 的全量控制并执行。`strict_a` 17:03 启动，读完 348 段后稳定 0.099 步/秒、700 s 内 read_bytes 542 GB（page cache 装不下 9.6 GB spill），折算约 23 h/epoch，900 s 上限触发，未写 trace；证据留在 `artifacts/task96/full_pack/strict_a*`，未重跑。改用同一 348 段的固定子集（前 30 段 / 1,046,710 行，461 步，冻结 bec2b9e6 训练器、batch2048、seed1、epoch1）跑 5 个用例：strict 重复两次逐位相同（`78cfef547345…`，loss 序列 SHA 也相同）；把空闲显存从 9229 压到 4871 MiB 后，未固定 workspace 的 default 两例分叉（`1cf71d20337b…` vs `05b226f28628…`，val 4.7089 vs 4.6690），固定 `:4096:8` 的 strict 在同样压力下仍逐位不变。→ “环境漂移改数”第一次在真实训练里复现，且被固定 workspace 消掉；全量逐位复现仍未被证明（尺度差 16 倍），历史四次 run 的具体显存状态仍无回执。成本：五例 27.66/28.60/22.03/19.69/19.12 s，受顺序与缓存预热主导，测不出确定性开销。报告已更新 `MEMORY/docs/training-reproducibility.md`，新证据 `task96-scale-probe.json`，脚本 `scripts/task96_scale_probe.py`。
 
 ## 问题

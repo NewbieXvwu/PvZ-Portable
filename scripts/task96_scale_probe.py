@@ -31,11 +31,17 @@ OUT = ROOT/'artifacts/task96/scale_probe'
 SOURCE = Path('/tmp/exp96')
 SEGMENTS = 30
 # case, deterministic algorithms, pinned cuBLAS workspace, hold GPU memory
+# The last four are an interleaved default/strict/default/strict pair so that cache
+# warm-up and host load drift cancel instead of being mistaken for the determinism cost.
 CASES = [('strict_a', True, True, False),
          ('strict_b', True, True, False),
          ('default_c', False, False, False),
          ('default_squeeze_d', False, False, True),
-         ('strict_squeeze_e', True, True, True)]
+         ('strict_squeeze_e', True, True, True),
+         ('default_p1', False, False, False),
+         ('strict_q1', True, True, False),
+         ('default_p2', False, False, False),
+         ('strict_q2', True, True, False)]
 SQUEEZE_BYTES = 4*1024**3
 
 
@@ -110,7 +116,12 @@ def prepare():
                   purpose='Mid-scale determinism and free-memory sensitivity control; not a rerun of the full-index experiment and not a production cost measurement.')
     path = OUT/'plan.json'
     if path.exists():
-        assert read(path)['segments'] == segments, 'prior plan differs; preserve evidence'
+        prior = read(path)
+        assert prior['segments'] == segments, 'prior plan differs; preserve evidence'
+        if prior['cases'] != subset['cases']:
+            prior['cases'] = subset['cases']
+            prior['cases_note'] = 'extended with an interleaved cost pair after the first five cases completed'
+            write(path, prior)
     else:
         write(path, subset)
     print(json.dumps(dict(rows=subset['rows'], segments=len(segments), admission=admission())), flush=True)
@@ -270,6 +281,17 @@ def run():
                    train_loss={name: epoch[name]['train_loss'] for name in epoch},
                    epoch_seconds={name: epoch[name]['seconds'] for name in epoch},
                    gpu_free_mib={name: by[name]['gpu_free_mib_at_start'] for name in by})
+    if 'default_p1' in by:
+        default_seconds = [epoch[name]['seconds'] for name in ['default_p1', 'default_p2']]
+        strict_seconds = [epoch[name]['seconds'] for name in ['strict_q1', 'strict_q2']]
+        summary['cost_pairs'] = dict(
+            order=['default_p1', 'strict_q1', 'default_p2', 'strict_q2'],
+            default_seconds=default_seconds, strict_seconds=strict_seconds,
+            default_mean=sum(default_seconds)/2, strict_mean=sum(strict_seconds)/2,
+            ratio=(sum(strict_seconds)/2)/(sum(default_seconds)/2),
+            note='Interleaved to cancel cache warm-up and load drift; single host, other tasks running, one epoch each.')
+        summary['cost_pairs']['strict_repeats_tensor_equal'] = by['strict_q1']['tensor_sha256'] == by['strict_q2']['tensor_sha256']
+        summary['cost_pairs']['default_repeats_tensor_equal'] = by['default_p1']['tensor_sha256'] == by['default_p2']['tensor_sha256']
     write(ROOT/'MEMORY/docs/task96-scale-probe.json', summary)
     print(json.dumps({k: v for k, v in summary.items() if k not in ['cases', 'plan']}, indent=1), flush=True)
 
