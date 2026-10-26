@@ -42,7 +42,7 @@ def collisions(value, location='$'):
     return result
 
 
-def main():
+def main(output_directory=None):
     bases = [MAIN] + sorted((MAIN/'.claude/worktrees').iterdir())
     files = set()
     for base in bases:
@@ -76,7 +76,11 @@ def main():
                 archive_seeds.add(int(component))
     matches.extend(dict(path='frames_v2 directory identities', seed=x)
                    for x in sorted(archive_seeds & RESERVED))
-    output = ROOT/'artifacts/task78/seed_audit.json'
+    directory = ROOT/'artifacts/task78' if output_directory is None else Path(output_directory)
+    if not directory.is_absolute():
+        raise ValueError('absolute seed audit output directory required')
+    directory.mkdir(parents=True,exist_ok=True)
+    output = directory/'seed_audit.json'
     output.write_text(json.dumps(dict(files=records, errors=errors, collisions=matches), indent=1)+'\n')
     summary = dict(files=len(records), archive_seed_identities=len(archive_seeds),
                    file_groups=dict(Counter('panels' if 'stage4' in r['path'] else 'conclusions_or_configs'
@@ -86,7 +90,7 @@ def main():
                    scope='local stage4 panels, configs, merged JSON conclusions, archive seed/future identities, v5 trained_on',
                    unseen_remote_experiments_covered=False,
                    evidence=str(output), evidence_sha256=sha(output))
-    (ROOT/'artifacts/task78/seed_audit_summary.json').write_text(json.dumps(summary, indent=1)+'\n')
+    (directory/'seed_audit_summary.json').write_text(json.dumps(summary, indent=1)+'\n')
     print(json.dumps(summary, indent=1))
     if errors or matches:
         raise SystemExit(1)

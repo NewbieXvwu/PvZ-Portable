@@ -1,0 +1,174 @@
+{
+ "scope": "formal_original_corpus_paired_panel",
+ "tasks_sha256": "2b3487a44b42b88beee4b4b6825765482764e7f5f6cc69c4ab2698e937734dd7",
+ "parent_tasks_sha256": "863bae41c5656aa9cb4780896a18fcede1897f9a0df4512ecd28f63354df2b9d",
+ "parent_runtime_sha256": "305e181bb819bb0b8a1c06af8235a21e5c91270a7ab38d0109a26a6c8b6353ab",
+ "candidate": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6/model.pt",
+ "training_log": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6/train_log.json",
+ "new_export_sha256": "ee8c6e9238d46e22456f43fee706e1bf85a80165ebe08857dcb1004d7ab3cb9f",
+ "mix": {
+  "old_episode": 64,
+  "old_branch": 192,
+  "old_decision": 128,
+  "fog": 64,
+  "roof": 64
+ },
+ "hyper": {
+  "lr": 0.0001,
+  "weight_decay": 0.0001,
+  "epochs": 24,
+  "steps": 256,
+  "batch_size": 512,
+  "seed": 0,
+  "patience": 4,
+  "min_improvement": 0.0001
+ },
+ "source_splits": {
+  "old_branch": {
+   "fit": 324559,
+   "val": 29446
+  },
+  "old_decision": {
+   "fit": 3404,
+   "val": 456
+  },
+  "old_episode": {
+   "fit": 75136,
+   "val": 9600
+  },
+  "fog": {
+   "fit": 278,
+   "val": 126
+  },
+  "roof": {
+   "fit": 525,
+   "val": 58
+  }
+ },
+ "original_corpus_requirements_sha256": "de7296863f0f11e30faee53eecc07588622d4359ad4c20d41469e9ccab0a3fbd",
+ "identity_offset": 512,
+ "cells": [
+  {
+   "cell_id": "day_l7_d7",
+   "pairs": 64,
+   "seed_role": "environment",
+   "first": 78000512,
+   "last": 78000575
+  },
+  {
+   "cell_id": "night_l14_n10",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000576,
+   "last": 78000607
+  },
+  {
+   "cell_id": "night_l17_n10",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000608,
+   "last": 78000639
+  },
+  {
+   "cell_id": "night_l20_n10",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000640,
+   "last": 78000671
+  },
+  {
+   "cell_id": "pool_l21_p9k",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000672,
+   "last": 78000703
+  },
+  {
+   "cell_id": "pool_l22_p9k",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000704,
+   "last": 78000735
+  },
+  {
+   "cell_id": "pool_l23_p9k",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000736,
+   "last": 78000767
+  },
+  {
+   "cell_id": "pool_l24_p9k",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000768,
+   "last": 78000799
+  },
+  {
+   "cell_id": "fog_l31_snow_m100",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000800,
+   "last": 78000831
+  },
+  {
+   "cell_id": "roof_l41_r7",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000832,
+   "last": 78000863
+  },
+  {
+   "cell_id": "roof_l42_r7",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000864,
+   "last": 78000895
+  },
+  {
+   "cell_id": "roof_l43_r7",
+   "pairs": 32,
+   "seed_role": "environment",
+   "first": 78000896,
+   "last": 78000927
+  },
+  {
+   "cell_id": "fog_l33_cactus_d839",
+   "pairs": 32,
+   "seed_role": "future",
+   "first": 78100512,
+   "last": 78100543
+  },
+  {
+   "cell_id": "fog_l33_cactus_d762",
+   "pairs": 32,
+   "seed_role": "future",
+   "first": 78100544,
+   "last": 78100575
+  },
+  {
+   "cell_id": "fog_l33_cactus_d686",
+   "pairs": 32,
+   "seed_role": "future",
+   "first": 78100576,
+   "last": 78100607
+  }
+ ],
+ "pairs": 512,
+ "model_training_identity_overlaps": {
+  "v5": [],
+  "student": null,
+  "static": [],
+  "new_region_worlds_and_label_futures": [],
+  "diagnostic_v6": []
+ },
+ "model_seed_metadata_missing": [
+  "student"
+ ],
+ "broad_seed_audit_summary_sha256": "e38cf05fd0ee0e37ee04744e79fc4d4ebbd40d9b596beac1578221699fe0149f",
+ "historical_audit": "Local-only broad audit refreshed at registration and again before first formal runtime freeze; undisclosed remote experiments are not covered.",
+ "training_started": false,
+ "engine_processes_started": 0,
+ "independent_truth": "Existing frozen-v5 roof labels may be rescored with the formal candidate; no diagnostic-model scores are substituted.",
+ "training_source_sha256": "f963561eb25127927078071e9eec94c6fd826b39eb1b1e83555dcd75da72c3de"
+}

@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T01:34:08.407436+00:00",
+ "at_utc": "2026-10-26T02:05:44.452107+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -165,8 +165,9 @@
     "student": {
      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
-     "declared_training_identities": 0,
-     "future_identity_overlap": []
+     "declared_training_identities": null,
+     "future_identity_overlap": null,
+     "training_seed_metadata_available": false
     },
     "static": {
      "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
@@ -186,12 +187,18 @@
    "mapping_complete": false,
    "rescore_eligible": false,
    "note": "Checks the recorded future identifiers only, not exact state reconstruction, undisclosed training inputs, or the missing original probe noise schedule.",
-   "report_sha256": "2dfa006e98108cae08bc96e76b6e4db753f91b50b19280ddcda6732ec94565e2"
+   "model_seed_metadata_missing": [
+    "student"
+   ],
+   "metadata_scope_corrected_at_utc": "2026-10-26T01:58:35.313779+00:00",
+   "superseded_report_sha256": "2dfa006e98108cae08bc96e76b6e4db753f91b50b19280ddcda6732ec94565e2",
+   "correction": "Student checkpoint contains label names but no trained_on list; absent metadata is unknown, not a verified empty identity set.",
+   "report_sha256": "75ebca61725cf977018d7ed9b6fb7d2a709600437e102f1eda18702b840a3363"
   }
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 3,
+  "completed_label_jobs": 19,
   "replay_completed_k": [
    0
   ],
@@ -331,5 +338,35 @@
   "terminal_game_records": 48,
   "report_sha256": "232770f2bb42d5198eb57f0a6505a4a4a053b6d63754e6c6004bb65f4bd8df86",
   "receipt_audit_sha256": "7fd4a43033aaff3fbf619934a0defa4ca5f2a381092091477ee2dcc1ce0b2ff0"
+ },
+ "formal_evaluation_preparation": {
+  "registered": true,
+  "registration_sha256": "4fd1f1f37df09ac7ca8b08bb69b4cd19b8d021b4f6a30195b44621b7bce2af53",
+  "tasks_sha256": "2b3487a44b42b88beee4b4b6825765482764e7f5f6cc69c4ab2698e937734dd7",
+  "candidate": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6/model.pt",
+  "pairs": 512,
+  "cells": 15,
+  "broad_local_seed_audit": {
+   "files": 226,
+   "archive_seed_identities": 118566,
+   "file_groups": {
+    "panels": 17,
+    "conclusions_or_configs": 209
+   },
+   "error_count": 0,
+   "collision_count": 0,
+   "passed": true,
+   "scope": "local stage4 panels, configs, merged JSON conclusions, archive seed/future identities, v5 trained_on",
+   "unseen_remote_experiments_covered": false,
+   "evidence": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_ab/registration_seed_audit/seed_audit.json",
+   "evidence_sha256": "40beb70f83cddfbc19617940fe867019a25377ce0516c654e2d2d8074ae1f59b"
+  },
+  "model_seed_metadata_missing": [
+   "student"
+  ],
+  "training_started": false,
+  "engine_processes_started": 0,
+  "missing_candidate_refused": true,
+  "preflight_report_complete": false
  }
 }

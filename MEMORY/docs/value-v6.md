@@ -156,6 +156,21 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
 
 69个历史错误任务及192任务完整链已修正。仍须恢复/精确重建原task72b探针及94态，完成独立屋顶三共同未来标签和三视界评估。首条N306/f101重建轨迹到终局，但0态精确匹配；其d14 tick15438与原15498不符，同tick仍有阳光110/135和合法格差异。续作发现该旧批次使用台式机静态网，原task72/72b使用Mac静态网，二者SHA不同；原Mac权重已在本机核验，修正后的24轨迹另存`task72_rebuild_mac_branch1/`，旧批次完整保留。输入修订见[证据](task78-task72-reconstruction-amendment.json)；该差异可能影响轨迹，但不能单凭换回原权重断言精确重建成功。不移索引、不改种子凑值；原共同未来协议与v5探针值未验证，不能评分v6。原94态全部已标注候选对均无0.25阈值的有效对，不调低阈值；原26态掩码不能由这次终局信号集合或另算的叶值阈值集合替代。
 
-原94态记录的未来身份101–108已与v5、诊断v6、学生及原Mac静态网声明的`trained_on`机械核对，四者均零交集；原94行与检查点SHA及范围说明见`task78-stage-status.json`的`task72_reconstruction.future_identity_preflight`。此检查不验证原状态映射、探针噪声日程或未披露的训练输入。
+原94态未来身份101–108与v5、诊断v6和原Mac静态网的`trained_on`均零交集。学生dw4i_s1只记录训练labels、没有种子清单，学生交集现明确记null而非空集合；此前四者均零交集的表述已纠正，旧回执另存保留。原94行、检查点SHA与覆盖限制见`task78-stage-status.json`的`task72_reconstruction.future_identity_preflight`。此检查不验证原状态映射、探针噪声日程、学生完整历史或未披露的训练输入。屋顶身份预检也已作同样范围修正，384份原始root记录的审计结果不变。
+
+正式候选的独立评估入口已准备：[task78_formal_ab.py](../../scripts/task78_formal_ab.py)与[正式预登记](task78-formal-ab-plan.json)。它保留原15格/512对、卡组、接手点、对局参数和统计门，另用普通种子78000512–78000927、示范future78100512–78100607；候选只读`artifacts/task78/formal_v6/model.pt`，输出隔离至`formal_ab/`，不修改诊断入口及其512对回执。新的本地广域审计覆盖226份文件、118566个档案身份，0碰撞0读取错误；学生缺失种子元数据及未覆盖远端历史的限制单列，不由空集合冒充完整独立性证明。
+
+正式入口要求原五类配比、原v5初始化、完整修正后192任务导出、原split、超参及完整训练回执；GPU训练须满足10GiB与单进程一小时限制。缺正式候选时freeze已实测拒绝，空报告五地形均incomplete/passed=null，未训练、未开正式游戏。58项相关测试通过，诊断、独立屋顶和修正94态计划的冻结输入仍逐项匹配。原语料恢复并通过训练源检查后，正式路径为：
+
+```bash
+PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_train.py --corpus original --out /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6 --device cuda
+/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_formal_ab.py freeze
+# 后续v5/v6阶段仍须等当前游戏链退出，锁保护同时最多2游戏。
+PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_formal_ab.py v5
+PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_formal_ab.py v6
+/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_formal_ab.py report
+```
+
+屋顶的冻结v5终局标签可用现有`task78_roof_score.py --candidate`读取正式权重并另存报告，不能挪用诊断模型的分数；原94态仍须原协议与精确映射。
 
 诊断候选配对512对及补充示范24对均已完成。屋顶k0的24世界重放已通过，但首次标签任务因可用内存低于10GiB让位，supervisor6及原task72_resume7依约停止，未开始原94态重建。现由`resume8.py`等待可用内存恢复且本任务无活游戏后接续：按来源/引擎SHA及24世界全部root核对后复用已有重放，只对明确的资源让位自动续跑；其他错误仍停止。屋顶成功回执后才启动修正后的24条重建轨迹。句柄见ignored的`artifacts/task78/resume8_handle.json`，不降低内存门、不与现有游戏争用配额。正式候选身份与现诊断候选不同，须另行冻结并完整评估，不能拼接两种模型的对局。并发限制只影响执行顺序与耗时，不授权缩减任何交付范围。
