@@ -67,9 +67,9 @@
 4. 观察 2–3 轮：`grep 'seeds renewed' ~/pvz-logs/curriculum.log`；确认没有格因为
    `seeds exhausted` 被退休；确认 `~/pvz-logs/start_cell_seed_ledger.json` 的 `allocated` 每段只出现一次。
 5. **不要**对 `demo_fog_32_snow_m200`（deploy14 退休的旧 L32）用 `--restore-start-cell`：
-   它和 `demo_fog_32_snow_m200_hv2` 共用同一块 `44300000..44300255`，恢复会在 offset 216 之后
-   继续用 hv2 将来也要用的种子（恢复逻辑会打 WARNING）。L32 由在跑的 `_hv2` 承载，续领后它不会再退休。
-   恢复参数留给“将来确实因为种子用完退休、且块不冲突”的格。
+   它与 `_hv2` 共用块 `44300000..44300255`，且清单条目没有 `fog_observation: human_v2`
+   （重放会回到 x-ray）。L32 由在跑的 `_hv2` 承载，续领后它不会再退休。恢复参数留给
+   “将来确实因为种子用完退休、且块与观测契约都不冲突”的格；恢复时脚本会打重叠 WARNING。
 6. 回滚注意：旧代码不认识 `seed_blocks`，重启时 `reconcile_start_cells` 会用清单块覆盖种子表，
    offset ≥ 256 的格会被重新判为用完并退休。回滚前先确认没有格的 offset 落在续领段里，
    或把 state 备份后再回滚。
@@ -84,10 +84,13 @@
 2. **8 位窗口的字面量复核会被僵尸 id 污染。** `frames.jsonl` 的 `zombies[i][9]` 是引擎僵尸 id，
    实测在 `[90,000,000, 91,000,000)` 命中 30,990 次（按字段分类全是 id，不是种子）。9 位窗口没有这一类；
    但 9 位仍可能命中 `rss_bytes` 之类的十进制大数，命中必须按字段甄别（task88 也踩过 rss/hash）。
-3. **deploy14 退休的旧 L32 `demo_fog_32_snow_m200` 与在跑的 `_hv2` 共用块
-   `44300000..44300255`**（同存档、同阶梯、只是观测模式不同）。因此上线步骤里**不建议**用
-   `--restore-start-cell` 恢复旧 id：它会在 offset 216 之后继续用 hv2 将来也要用的种子。
-   恢复参数留给“块不冲突”的退休格；恢复时脚本会打 `WARNING future seeds overlap …`。
+3. **deploy14 退休的旧 L32 `demo_fog_32_snow_m200` 不能直接恢复，原因有两条**：
+   - 它与在跑的 `_hv2` 共用块 `44300000..44300255`（同存档、同阶梯），offset 216 之后会用
+     hv2 将来也要用的种子；恢复时脚本会打 `WARNING future seeds overlap …`。
+   - 它的清单条目（`configs/human_demo_tasks.json` 第 18 行）**没有 `fog_observation: human_v2`**，
+     重放会回到 x-ray 观测——这正是 task70 B6 退役它、另建 `_hv2` 的原因。
+   所以 L32 由 `_hv2` 承载（同存档、同阶梯，offset 72），续领后它不会再退休；`--restore-start-cell`
+   留给“块不冲突、观测契约仍有效”的退休格。若以后确实要恢复某个旧 id，先确认这两条都过。
 
 ## 边界与未做
 
