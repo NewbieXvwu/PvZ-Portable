@@ -1264,3 +1264,5 @@ L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
 独立保留 `[120000000, 120006000)` 给每轮学生挑选；与门禁两段、训练/采集/评估清单及示范未来块机械核对不相交。六个既有任务（day L7 d7、heldout L7 d7p1、night L12 n10、pool L21 p9k、fog L31 user snow human、roof L41 r7）卡组与语义不变，各用每 1000 槽内前 32 个种子。清单 `configs/student_selection.json`，开跑前审计 `MEMORY/docs/multiseed-select-seed-audit.json`。按实战总胜局挑选，再进入原门禁；不改门禁合同。
 
 task92b v2 离线候选面板另保留 `[126000000,126020000)`：从 qc 快照中机械筛选 r11 β=0 窗口胜率 30%–80% 的16个既有任务/倍率格，加 task93 已登记的 day L7/night L12/pool L21 随机卡组族，共19格×20局=380局/模型；每格1000槽取前20。卡组族语义不变，随机族新种子逐个过引擎合法性校验，heldout 卡组机械排除。全机登记与数值记录扫描无真实种子碰撞（4个原始数字命中均为监控计数，字段分类留证）。冻结清单 `configs/student_selection_v2.json`、预登记 `MEMORY/docs/multiseed-select-v2-preregister.json`；范围解释及判据见 `MEMORY/docs/multiseed-select.md` 的task92b节。这里只新增独立面板，生产默认仍由主控决定；门禁合同不变。
+
+task92c 生产准备另保留选择专池 `[130000000,140000000)`，与门禁池独立。每轮通过 task88 同一加锁分配器从 `~/pvz-logs/selection_seed_ledger.json` 领取384个连续种子，余数也烧掉，不回绕、不复用；轮内按格均分、不超过384局。入队冻结当轮现役与课程状态/源任务，后台在训练前机械筛30%–80%的现役β=0窗口并加入三个随机族、生成合法卡组收据；面板/输入/SHA落轮目录。双训练统一准入、资源不足回退串行并保留模式历史；单种子失败隔离，B7及原门禁不变。池审计见 `MEMORY/docs/multiseed-select-c-seed-audit.json`。本段只登记候选实现，部署尚未执行，等task84b结论由主控决定。

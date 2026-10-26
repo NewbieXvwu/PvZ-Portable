@@ -1,0 +1,26 @@
+{
+  "pool": {
+    "low": 130000000,
+    "high": 140000000,
+    "size": 10000000,
+    "disjoint": true,
+    "overlaps": []
+  },
+  "scan": {
+    "files_seen": 127868,
+    "files_parsed": 3393,
+    "segments": 2102,
+    "quick": false
+  },
+  "seed_fields": {
+    "scope": "All seed/future_seed integer fields in JSON/JSONL; same roots and frame exclusions as task88",
+    "low": 130000000,
+    "high": 140000000,
+    "files": 137231,
+    "hits": []
+  },
+  "sources_sha256": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92c/seed_inventory.full.json": "09a2901717fa7b809637cdb4626c02b2828f6c7cdc41a42ae891907a51de82af",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92c/seed_field_audit.json": "dfb323d6f585f2e15ddb5989a8b7a240beb39a00cbca3dbc079d63b236223107"
+  }
+}

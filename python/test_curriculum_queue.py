@@ -247,9 +247,10 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertEqual(plan[0]['task_id'], 'day_l7_train_d7')
         self.assertEqual(plan[0]['offset'], 0)
         state['offsets']['day_l7_train_d7'] = 15
-        with self.assertRaises(SystemExit):
-            plan_round(state, tasks, NAMES, VALUES, manifests,
-                       budget=10, per_group=10)
+        plan, changes = plan_round(state, tasks, NAMES, VALUES, manifests,
+                                   budget=10, per_group=10)
+        self.assertEqual(plan, [])
+        self.assertTrue(any('seeds exhausted' in change and 'group skipped' in change for change in changes))
 
     def test_stop_flag_stops_before_any_group(self):
         import curriculum_queue as queue
@@ -821,8 +822,11 @@ class DemoStartCellsTest(unittest.TestCase):
         plan, _ = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan[0]['future_seeds'], [905])       # 只剩一个未来种子
         state['offsets'][self.BASE] = 6
-        with self.assertRaises(SystemExit):
-            plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        plan, changes = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        self.assertEqual(plan, [])
+        self.assertNotIn(self.BASE, state['cells'])
+        self.assertIn(self.BASE, state['retired_cells'])
+        self.assertTrue(any('start cell retired' in change for change in changes))
 
     def test_start_command_is_deterministic_and_carries_the_start(self):
         args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),

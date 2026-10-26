@@ -7,6 +7,7 @@ import threading
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
@@ -14,6 +15,25 @@ import curriculum_queue as queue
 from pvz_recipe import write_recipe
 from pvz_promotion import GATE_VERSION, PANEL_TASKS_V3, decide, freeze_panel
 from promotion_gate import contract_key, sha
+
+
+@pytest.fixture(autouse=True)
+def prepared_selection_without_real_games(monkeypatch):
+    # Existing queue tests use synthetic collection rows and /manifest. Exercise
+    # their lifecycle without opening real game engines or production files.
+    def prepare(self, job):
+        if 'selection_refresh' not in job:
+            return dict(manifest_sha256=job['selection_manifest_sha256'])
+        path = Path(job['selection_manifest'])
+        if not path.exists():
+            panel = json.loads((ROOT / 'configs/student_selection.json').read_text())
+            first = job['selection_refresh']['seed_block'][0]
+            for index, task in enumerate(panel['tasks']):
+                task['seeds'] = list(range(first + index * 64, first + (index + 1) * 64))
+            path.write_text(json.dumps(panel))
+        return dict(manifest_sha256=sha(path))
+    monkeypatch.setattr(queue.TrainingPipeline, '_prepare_selection', prepare)
+    monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: None)  # legacy tests remain serial
 
 
 def setup(root):
@@ -493,4 +513,3 @@ def test_all_seeds_failed_still_reaches_the_B7_retriable_failure():
             args.pipeline = queue.TrainingPipeline(args, state)
             args.pipeline.close()
         assert state['training_jobs'][0]['status'] == 'done'
-

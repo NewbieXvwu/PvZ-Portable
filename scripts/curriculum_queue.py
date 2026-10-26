@@ -79,6 +79,8 @@ from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segm
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
+from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
+                                   make_plan as selection_plan, validate_random_tasks)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -109,6 +111,8 @@ PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与�
 # 紧凑语料；系数取 0.25 留余量，常数 2 GiB 覆盖 torch 模型/优化器/批次。
 TRAIN_ANON_FACTOR = 0.25
 TRAIN_ANON_EXTRA = 2 * GIB
+TRAIN_GPU_BYTES = int(1.5 * GIB)  # measured reserved 1.2 GiB/seed, rounded up
+GPU_RESERVE_BYTES = GIB
 DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
@@ -136,6 +140,16 @@ def mem_total_bytes() -> int | None:
         if line.startswith('MemTotal:'):
             return int(line.split()[1]) * 1024
     return None
+
+
+def gpu_free_bytes() -> int | None:
+    """Read the single production GPU without importing torch or allocating CUDA memory."""
+    try:
+        result = subprocess.run(['nvidia-smi', '--query-gpu=memory.free', '--format=csv,noheader,nounits'],
+                                capture_output=True, text=True, check=True, timeout=5)
+        return int(result.stdout.splitlines()[0].strip()) * (1 << 20)
+    except (OSError, ValueError, IndexError, subprocess.SubprocessError):
+        return None
 
 
 def worker_count(available: int | None, per_worker: int, upper: int, background: int = 0) -> int:
@@ -696,6 +710,9 @@ class TrainingPipeline:
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
         self.lock = threading.Lock()
         self.process = None
+        self.processes = {}
+        self.train_parallelism = 1
+        self.training_admission = False
         self.lock_fd = None
         self.failed = False
         self.futures = []
@@ -822,7 +839,7 @@ class TrainingPipeline:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
-        return max(self.build_peak, train_peak)
+        return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
         """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
@@ -874,10 +891,12 @@ class TrainingPipeline:
         if not self.pending():
             return 0
         with self.lock:
-            process = self.process
             table = _proc_table()
-            rss = 0 if process is None else (table.get(process.pid, (0, 0))[1]
-                                             + _descendant_rss(process.pid, table))
+            processes = list(getattr(self, 'processes', {}).values())
+            if not processes and self.process is not None:
+                processes = [self.process]
+            rss = sum(table.get(process.pid, (0, 0))[1] + _descendant_rss(process.pid, table)
+                      for process in processes)
         return max(0, self.estimate_peak() - rss)
 
     def enqueue(self):
@@ -899,24 +918,96 @@ class TrainingPipeline:
                    status='queued')
         # Freeze the plan on the durable job. Historical jobs without this field
         # retain their original single-seed training/resume semantics.
-        selection_source = ROOT / 'configs/student_selection.json'
-        selection = json.loads(selection_source.read_text())
-        from pvz_promotion import SEED_POOLS_V2
-        reserved = list(SEED_POOLS_V2)
-        for source in (getattr(self.args, 'manifest', None), getattr(self.args, 'promotion_panel', None),
-                       ROOT / 'configs/human_demo_tasks.json'):
-            if source is not None and Path(source).is_file():
-                reserved.extend(seed_spans(json.loads(Path(source).read_text())))
-        assert_disjoint(selection, reserved)
-        selection_path = folder / 'selection_manifest.json'
-        selection_path.write_text(json.dumps(selection, indent=2) + '\n')
-        job.update(training_seeds=list(TRAINING_SEEDS), selection_manifest=str(selection_path),
-                   selection_manifest_sha256=file_sha(selection_path))
+        self._snapshot_selection(job, folder)
         self.state['training_jobs'].append(job)
         self._seeded(job)
         save_state(self.args.state, self.state)  # durable before the worker is submitted
         log_line(self.args.log, f'background round {round_index} queued: {path}')
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
+
+    def _snapshot_selection(self, job, folder):
+        incumbent = self.incumbent()
+        snapshot = folder / 'selection_state.json'
+        self._marker(snapshot, self.state)
+        inputs = folder / 'selection_inputs'
+        inputs.mkdir(exist_ok=True)
+        sources = {}
+        for rnd in self.state.get('log', []):
+            for group in rnd['groups']:
+                source = group.get('manifest')
+                if group.get('student') != str(incumbent) or source in sources:
+                    continue
+                if source is not None:
+                    try:
+                        data = Path(source).read_bytes()
+                    except OSError as error:
+                        sources[source] = dict(error=str(error))
+                        continue  # diagnosed by the B7-protected background, not the collector
+                    digest = __import__('hashlib').sha256(data).hexdigest()
+                    target = inputs / f'{digest}.json'
+                    target.write_bytes(data)
+                    sources[source] = dict(path=str(target), sha256=digest)
+        templates = inputs / 'templates.json'
+        templates.write_bytes((ROOT / 'configs/student_selection_v2.json').read_bytes())
+        ledger = getattr(self.args, 'selection_seed_ledger', self.args.state.parent / 'selection_seed_ledger.json')
+        block = allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS)
+        job.update(training_seeds=list(TRAINING_SEEDS), selection_manifest=str(folder / 'selection_manifest.json'),
+                   selection_refresh=dict(snapshot=str(snapshot), snapshot_sha256=file_sha(snapshot),
+                       incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent), runs=str(self.args.out),
+                       templates=str(templates), templates_sha256=file_sha(templates), sources=sources,
+                       executable_sha256=file_sha(self.args.executable), seed_block=list(block), ledger=str(ledger)))
+
+    def _validate_selection_panel(self, panel):
+        from pvz_env import PvZEnv
+        self._admit()
+        with PvZEnv(resource_dir=self.args.resource_dir, executable=self.args.executable, headless=True) as env:
+            return validate_random_tasks(panel, env)
+
+    def _prepare_selection(self, job):
+        if 'selection_refresh' not in job:
+            return dict(manifest_sha256=job['selection_manifest_sha256'])  # historical task92 jobs
+        frozen = job['selection_refresh']
+        refresh_sha = __import__('hashlib').sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
+        for name in ('snapshot', 'templates', 'incumbent'):
+            if file_sha(Path(frozen[name])) != frozen[name + '_sha256']:
+                raise ValueError(f'frozen selection {name} changed')
+        if file_sha(self.args.executable) != frozen['executable_sha256']:
+            raise ValueError('selection engine changed since enqueue')
+        folder = Path(job['recipe']).parent
+        ready, manifest = folder / 'selection_ready.json', Path(job['selection_manifest'])
+        if ready.exists():
+            receipt = json.loads(ready.read_text())
+            if (receipt['snapshot_sha256'] != frozen['snapshot_sha256']
+                    or receipt['refresh_sha256'] != refresh_sha
+                    or receipt['manifest_sha256'] != file_sha(manifest)
+                    or receipt['plan_sha256'] != file_sha(folder / 'selection_plan.json')
+                    or receipt['executable_sha256'] != frozen['executable_sha256']):
+                raise ValueError('saved selection preparation changed')
+            return receipt
+        documents = {}
+        for source, meta in frozen['sources'].items():
+            if 'error' in meta:
+                raise ValueError(f'selection source unavailable at enqueue: {source}: {meta["error"]}')
+            if file_sha(Path(meta['path'])) != meta['sha256']:
+                raise ValueError('frozen selection source changed')
+            documents[source] = json.loads(Path(meta['path']).read_text())
+        state = json.loads(Path(frozen['snapshot']).read_text())
+        panel = selection_plan(state, frozen['incumbent'], frozen['runs'],
+                               json.loads(Path(frozen['templates']).read_text()), documents, frozen['seed_block'])
+        plan_path = folder / 'selection_plan.json'
+        self._marker(plan_path, panel)
+        from pvz_promotion import SEED_POOLS_V2
+        reserved = list(SEED_POOLS_V2)
+        for document in [*documents.values(), json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())]:
+            reserved.extend(seed_spans(document))
+        assert_disjoint(panel, reserved)
+        panel = self._validate_selection_panel(panel)
+        self._marker(manifest, panel)
+        receipt = dict(snapshot_sha256=frozen['snapshot_sha256'], refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
+                       manifest_sha256=file_sha(manifest), executable_sha256=frozen['executable_sha256'],
+                       prepared=time.time())
+        self._marker(ready, receipt)
+        return receipt
 
     def _prepare_corpus(self, labels):
         """An append-only local view of recipe archives + collected archives, without copying bytes.
@@ -954,6 +1045,9 @@ class TrainingPipeline:
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                        pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             with self.lock:
+                if not hasattr(self, 'processes'):
+                    self.processes = {}
+                self.processes[process.pid] = process
                 self.process = process
             peak = 0
             try:
@@ -965,14 +1059,32 @@ class TrainingPipeline:
                     time.sleep(2)
             finally:
                 with self.lock:
-                    self.process = None
+                    self.processes.pop(process.pid, None)
+                    self.process = next(iter(self.processes.values()), None)
         if code:
             raise RuntimeError(f'exit {code}; see {log}')
         return peak
 
     def _admit(self):
-        required = MEMORY_RESERVE_BYTES + self.estimate_peak()
         total = mem_total_bytes()
+        # Group admission happens before either CUDA process starts. A failed
+        # two-worker admission falls back immediately rather than waiting for two.
+        available, gpu = mem_available_bytes(), None
+        if getattr(self, 'training_admission', False):
+            gpu = gpu_free_bytes()
+            required = MEMORY_RESERVE_BYTES + self.estimate_peak()
+            reasons = []
+            if self.train_parallelism > 1:
+                if available is None or available < required or total is not None and total < required:
+                    reasons.append('host_memory')
+                if gpu is None or gpu < GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES:
+                    reasons.append('gpu_memory_unknown_or_insufficient')
+                if reasons:
+                    self.train_parallelism = 1
+            self.train_admission_record = dict(workers=self.train_parallelism,
+                mode='parallel' if self.train_parallelism > 1 else 'serial', fallback_reasons=reasons,
+                available_bytes=available, gpu_free_bytes=gpu, required_bytes=MEMORY_RESERVE_BYTES + self.estimate_peak())
+        required = MEMORY_RESERVE_BYTES + self.estimate_peak()
         if total is not None and required > total:
             # 不可能满足的需求不能静默死等（task61）：让该训练任务失败退出、写明原因，
             # poll() 会把它变成控制器可见的错误，停止标志与控制器退出不再被卡住。
@@ -986,11 +1098,27 @@ class TrainingPipeline:
             # Current game workers are already excluded from MemAvailable. Future groups
             # separately subtract reservation(), so adding their RSS here would count twice.
             required = MEMORY_RESERVE_BYTES + self.estimate_peak()
-            if available is None or available >= required:
+            gpu_ok = True
+            if getattr(self, 'training_admission', False):
+                gpu = gpu_free_bytes()
+                if self.train_parallelism > 1 and ((available is not None and available < required)
+                        or gpu is None or gpu < GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES):
+                    self.train_parallelism = 1
+                    required = MEMORY_RESERVE_BYTES + self.estimate_peak()
+                    self.train_admission_record.update(workers=1, mode='serial', required_bytes=required,
+                        available_bytes=available, gpu_free_bytes=gpu)
+                    self.train_admission_record['fallback_reasons'].append('resources_changed_before_launch')
+                gpu_ok = gpu is None or gpu >= GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES
+            if (available is None or available >= required) and gpu_ok:
                 return
             if time.monotonic() - last_log > 30:
-                log_line(self.args.log, f'background waiting for memory: available={available / GIB:.2f} GiB '
-                                       f'required={required / GIB:.2f} GiB')
+                shown = 'unknown' if available is None else f'{available / GIB:.2f} GiB'
+                gpu_shown = ''
+                if getattr(self, 'training_admission', False):
+                    free = 'unknown' if gpu is None else f'{gpu / GIB:.2f} GiB'
+                    gpu_shown = f' gpu_free={free} gpu_required={(GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES) / GIB:.2f} GiB'
+                log_line(self.args.log, f'background waiting for memory: available={shown} '
+                                       f'required={required / GIB:.2f} GiB{gpu_shown}')
                 last_log = time.monotonic()
             time.sleep(1)
 
@@ -1073,7 +1201,7 @@ class TrainingPipeline:
         temporary.replace(path)
 
     def _train_selected(self, job):
-        """One packed corpus, serial independent seeds, then a single gate candidate.
+        """One corpus, resource-admitted independent seeds, then a single gate candidate.
 
         A failed seed is local to its candidate. Only an entirely failed round
         reaches the existing B7 retry/stop mechanism in _run/poll.
@@ -1082,6 +1210,7 @@ class TrainingPipeline:
         folder = recipe_path.parent
         recipe = load_recipe(recipe_path, 'training')
         report = dict(round=job['round'], model=job['model'])
+        report['selection_preparation'] = self._prepare_selection(job)
         pack_marker = folder / 'packed.json'
         if pack_marker.is_file():
             packed = json.loads(pack_marker.read_text())
@@ -1102,9 +1231,8 @@ class TrainingPipeline:
             packed['pack_finished'] = time.time()
             self._marker(pack_marker, packed)
         report.update({key: value for key, value in packed.items() if key.startswith('pack_')})
-        candidates = []
         python = str(self.args.python) if self.args.python.exists() else sys.executable
-        for seed in job['training_seeds']:
+        def train_seed(seed, admitted=False):
             directory = folder / 'seeds' / f'seed_{seed:06d}'
             directory.mkdir(parents=True, exist_ok=True)
             path = directory / 'recipe.json'
@@ -1122,7 +1250,8 @@ class TrainingPipeline:
             else:
                 candidate = dict(seed=seed, model=str(model), recipe=str(path), train_started=time.time())
                 try:
-                    self._admit()
+                    if not admitted:
+                        self._admit()
                     candidate['train_peak_anon_bytes'] = self._command(
                         [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
                         directory / 'train.log')
@@ -1136,12 +1265,35 @@ class TrainingPipeline:
                     self._marker(directory / 'failed.json', candidate)
                     log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
                                             f'continuing other seeds: {error}')
-            candidates.append(candidate)
-            self._marker(folder / 'candidates.json', dict(candidates=candidates))
+            return candidate
+        pending = [seed for seed in job['training_seeds']
+                   if not (folder / 'seeds' / f'seed_{seed:06d}' / 'trained.json').is_file()]
+        self.train_parallelism = min(2, max(1, len(pending)))
+        self.training_admission = bool(pending)
+        try:
+            if pending:
+                self._admit()
+                mode = dict(self.train_admission_record)
+            else:
+                mode = dict(workers=0, mode='reused', fallback_reasons=[])
+            mode_path = folder / 'training_mode.json'
+            previous = json.loads(mode_path.read_text()) if mode_path.exists() else None
+            history = [] if previous is None else previous.get('attempt_history', [previous])
+            mode['attempt_history'] = history + [dict(mode, recorded=time.time())]
+            self._marker(mode_path, mode)
+            if mode['workers'] > 1:
+                with ThreadPoolExecutor(max_workers=2, thread_name_prefix='student-seed') as trainers:
+                    futures = [trainers.submit(train_seed, seed, True) for seed in job['training_seeds']]
+                    candidates = [future.result() for future in futures]
+            else:
+                candidates = [train_seed(seed) for seed in job['training_seeds']]
+        finally:
+            self.train_parallelism, self.training_admission = 1, False
+        self._marker(folder / 'candidates.json', dict(candidates=candidates))
         trained = [candidate for candidate in candidates if candidate['status'] == 'trained']
         if not trained:
             raise RuntimeError('all training seeds failed; see candidates.json')
-        report.update(candidates=candidates, training_seeds=job['training_seeds'],
+        report.update(candidates=candidates, training_seeds=job['training_seeds'], training_mode=mode,
                       train_started=min(candidate['train_started'] for candidate in candidates),
                       train_finished=max(candidate['train_finished'] for candidate in candidates),
                       train_peak_anon_bytes=max(candidate.get('train_peak_anon_bytes', 0) or 0
@@ -1152,7 +1304,8 @@ class TrainingPipeline:
 
     def _select(self, job, candidates):
         manifest = Path(job['selection_manifest'])
-        if file_sha(manifest) != job['selection_manifest_sha256']:
+        expected_sha = self._prepare_selection(job)['manifest_sha256']
+        if file_sha(manifest) != expected_sha:
             raise ValueError('frozen selection panel changed')
         panel = json.loads(manifest.read_text())
         sets = ','.join(f'{task["task_id"]}:0:{len(task["seeds"])}' for task in panel['tasks'])
@@ -1174,7 +1327,7 @@ class TrainingPipeline:
         best = receipt['best']
         if (best not in eligible or receipt['model_sha256'] != eligible[best]['model_sha256']
                 or file_sha(job['model']) != receipt['model_sha256']
-                or receipt['manifest_sha256'] != job['selection_manifest_sha256']):
+                or receipt['manifest_sha256'] != expected_sha):
             raise ValueError('selected candidate does not match its training/panel receipt')
         return dict(selection=receipt, selection_started=started, selection_finished=time.time(),
                     selection_peak_anon_bytes=peak, selection_units=units)
@@ -1288,7 +1441,11 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         seeds = cell['seeds'] if start else tasks[task_id]['seeds']
         offset = state['offsets'].get(task_id, 0)
         if offset + games > len(seeds):
-            raise SystemExit(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)})')
+            if start:
+                state.setdefault('retired_cells', {})[base] = state['cells'].pop(base)
+            changes.append(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)}); '
+                           + ('start cell retired' if start else 'group skipped'))
+            continue
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
                     games=games, manifest=str(manifests[task_id]),
                     label=label_for(state['round'] + 1, base, multiplier,
@@ -1464,6 +1621,8 @@ def main() -> None:
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
+    parser.add_argument('--selection-seed-ledger', type=Path, default=SELECTION_LEDGER,
+                        help='independent locked ledger for fresh per-round selection seeds')
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
@@ -1477,8 +1636,8 @@ def main() -> None:
         value = getattr(args, name)
         if not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
-    if not args.seed_ledger.is_absolute():
-        parser.error('--seed-ledger must be absolute')
+    if not args.seed_ledger.is_absolute() or not args.selection_seed_ledger.is_absolute():
+        parser.error('seed ledger paths must be absolute')
     try:
         probe = None
         if GATE_VERSION >= 2:
@@ -1525,6 +1684,20 @@ def main() -> None:
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
         if labels:
             print('pack: ' + ' '.join(pack_command(args, labels)))
+        incumbent = Path(state.get('student') or args.rollout_policy)
+        documents = {}
+        for rnd in state.get('log', []):
+            for group in rnd['groups']:
+                source = group.get('manifest')
+                if group.get('student') == str(incumbent) and source is not None and source not in documents:
+                    documents[source] = json.loads(Path(source).read_text())
+        preview = selection_plan(state, incumbent, args.out,
+            json.loads((ROOT / 'configs/student_selection_v2.json').read_text()), documents,
+            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE))
+        print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
+            eligible_cells=len(preview['cells']), random_families=3,
+            games=sum(len(task['seeds']) for task in preview['tasks']),
+            pools=SELECTION_POOLS, ledger=str(args.selection_seed_ledger))))
         return
     args.metrics = Metrics("curriculum_queue").start()
     args.metrics.update(games=0, decisions=0, round=state["round"])
