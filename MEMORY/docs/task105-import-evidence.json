@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-26T23:17:31.028275+00:00",
+ "generated": "2026-10-26T23:26:00.849101+00:00",
  "input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "engine_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
  "archives": 191,
@@ -1199,12 +1199,32 @@
     "games": 8
    },
    "reason": ""
+  },
+  {
+   "task_id": "demo_roof_42_gloom_m200_s81006038_a59f59d59f0a8",
+   "seed": 81006038,
+   "games": 88,
+   "l50": 1066,
+   "top": 1173,
+   "decisions": [
+    1173,
+    1066
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 138000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
   }
  ],
  "scan_expected": 191,
- "scanned": 48,
- "registered": 48,
+ "scanned": 49,
+ "registered": 49,
  "deployed": 0,
- "scan_games": 4128,
+ "scan_games": 4216,
  "complete": false
 }
