@@ -1266,3 +1266,39 @@ L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
 task92b v2 离线候选面板另保留 `[126000000,126020000)`：从 qc 快照中机械筛选 r11 β=0 窗口胜率 30%–80% 的16个既有任务/倍率格，加 task93 已登记的 day L7/night L12/pool L21 随机卡组族，共19格×20局=380局/模型；每格1000槽取前20。卡组族语义不变，随机族新种子逐个过引擎合法性校验，heldout 卡组机械排除。全机登记与数值记录扫描无真实种子碰撞（4个原始数字命中均为监控计数，字段分类留证）。冻结清单 `configs/student_selection_v2.json`、预登记 `MEMORY/docs/multiseed-select-v2-preregister.json`；范围解释及判据见 `MEMORY/docs/multiseed-select.md` 的task92b节。这里只新增独立面板，生产默认仍由主控决定；门禁合同不变。
 
 task92c 生产准备另保留选择专池 `[130000000,140000000)`，与门禁池独立。每轮通过 task88 同一加锁分配器从 `~/pvz-logs/selection_seed_ledger.json` 领取384个连续种子，余数也烧掉，不回绕、不复用；轮内按格均分、不超过384局。入队冻结当轮现役与课程状态/源任务，后台在训练前机械筛30%–80%的现役β=0窗口并加入三个随机族、生成合法卡组收据；面板/输入/SHA落轮目录。双训练统一准入、资源不足回退串行并保留模式历史；单种子失败隔离，B7及原门禁不变。池审计见 `MEMORY/docs/multiseed-select-c-seed-audit.json`。本段只登记候选实现，部署尚未执行，等task84b结论由主控决定。
+### 14.36 用户示范起点格：原生传送带 L30 / L40 / L50（task107，2026-10-26 登记）
+
+用户 2026-10-26 在 Mac 录完三局原生传送带（全部通关）：`demo_pool_30_orig_m100`（种子 20261030，32,600 操作，被吃 5）、
+`demo_boss_50_orig_m100`（种子 20261050，33,294 操作，被吃 4）、`demo_storm_40_orig_m100`（种子 81029000，46,457 操作，被吃 24）。
+存档在 `artifacts/human_demo/raw/seed_<种子>/<task_id>/`（不入 git）。入库关口：每局用 deploy14 引擎
+（cq `build5/pvz-portable`）`human_demo.py verify` **一次**，三局全部通过（32600 / 33294 / 46457 操作，
+tick 32520 / 33200 / 46319，均 result 1；boss 层 obs wave=0 与存档终局一致）。
+
+三个任务条目各加 `demo_start`（结构照 task71 / task87 起点格）：
+
+- `demo_pool_30_orig_m100`：阶梯 `624..264`（6 档，步距 72，帧数 664），未来种子块 **45,300,000** 起 256；
+- `demo_boss_50_orig_m100`：阶梯 `656..256`（6 档，步距 80，帧数 696），未来种子块 **45,400,000** 起 256；
+- `demo_storm_40_orig_m100`：阶梯 `900..336`（7 档，步距 ~94，帧数 956），未来种子块 **45,500,000** 起 256。
+
+未来种子三块与门禁池、训练/采集/评估清单、既有示范未来块（44.0M–45.2M、46.0M–47.0M、60M–62M、81M–83M、85M）
+及 `panel_v3_source.json` / `multiplier_panel.json` 机械核对不相交。**没做接手扫描**（任务书不要求）：
+起点 `index=0` 落在示范后段（老师稳定会赢的一侧），由 qc 的 0.85 / 0.5 升降档自动往前推，
+推到老师接不住的档位会被 0.5 规则按回来——阶梯只决定可推的范围。
+
+**L40 可见性口径**：`demo_storm_40_orig_m100` 条目补 `fog_observation: "storm"`，与 task75 的
+`storm_l40_orig_eval/train` 同口径（按暴风雨绘制状态遮挡）。纯表现层（task70 B6），不改状态哈希、
+不影响 verify 与重放，也不构成换任务族（AGENTS §8 第 4 条的例外字段，`search_play` 对它显式豁免）。
+
+`test_registered_manifest_start_cells` 期望集合同步（起点格 31 → 34）。本工作树无示范存档，该测试按既有约定 skip；
+`load_demo_start_cells` 已在 cq 存档根上实测加载 34 格全过。`python/test_curriculum_queue.py` 其余 53 项通过，
+2 项失败（pack/recipe）在基线 `fd1a0b61` 上同样失败，与本次无关。
+
+**部署清单（主控，组边界随 task108 / deploy14d 上线，本次不执行）**：
+
+1. 存档到位：三个 `artifacts/human_demo/raw/<seed>/<task_id>/` 目录（cq 工作树已有；meta 已由本次 verify 置 `verified: true`）。
+   `load_demo_start_cells` 启动时校验存在与 verified，缺了直接报错退出。
+2. `--demo-start-manifest` 缺省即 `configs/human_demo_tasks.json`，不用加参数；qc 启动时 `reconcile_start_cells`
+   自动加三格（日志 `start cell added: ... (N rungs)`）。
+3. `teacher_rates.json` 不需要补条目：三格按未知处理，只按学生胜率排序，第一轮窗口出来后照常升降档。
+4. 回滚：删掉清单里的 `demo_start`（或把 `--demo-start-manifest` 指向没有它的清单），三格自动进 `retired_cells`。
+

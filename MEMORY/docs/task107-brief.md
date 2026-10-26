@@ -30,3 +30,4 @@
 （待填）
 
 - 2026-10-26 verify（deploy14 引擎 = cq build5/pvz-portable，每局一次）：demo_pool_30_orig_m100 32600 ops / tick 32520 / wave 30 / result 1；demo_boss_50_orig_m100 33294 ops / tick 33200 / result 1（boss 层 obs wave=0，与存档终局一致）；demo_storm_40_orig_m100 46457 ops / tick 46319 / wave 30 / result 1。三局 verified=true。
+- 2026-10-26 起点格登记：configs/human_demo_tasks.json 三条目加 demo_start（pool 624..264 / boss 656..256 / storm 900..336，未来种子 45300000/45400000/45500000 各 256，index=0 由 qc 自动往前推）；storm 条目补 fog_observation=storm（task75 口径，纯表现层）；测试期望 31→34；DESIGN.md §14.36 登记 + 主控部署清单（不执行，随 task108/deploy14d 上线）。分支 convdemo 已推送（78ca7023）。
