@@ -114,6 +114,11 @@
 - **deploy15 的 preflight 会拒绝**：`qc_deploy15.sh` 里有
   `git -C "$W" diff --quiet 0b8dcc26 -- scripts python recipes configs || abort`；合并 task99 后
   这条必然失败，task99 的部署脚本要么换 REV（= startseeds 合并提交），要么去掉这条 pin。
+- **与生产代码的差异只剩 task99 本身**（2026-10-26 实测）：`diff cq/scripts/curriculum_queue.py
+  startseeds/scripts/curriculum_queue.py` 只有续领相关的增删（imports、清单块入池闸、`seed_blocks`、
+  `renew_start_seeds`、`plan_round` 的续领分支、两个 CLI 参数、dry-run 预览），archive 判据已一致；
+  `pvz_promotion.py` 只多 `START_SEED_POOL`/`START_SEED_LEDGER_DEFAULT`/`START_SEED_BLOCK` 三行。
+  **没有任何格用完 256 个之前，qc 行为与现在完全一致。**
 - **本任务改的文件**：`scripts/curriculum_queue.py`、`python/pvz_promotion.py`、
   `scripts/gate_seed_inventory.py`、`python/test_curriculum_queue.py`（+ 文档/盘点 json）。
 
