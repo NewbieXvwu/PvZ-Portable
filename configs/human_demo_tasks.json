@@ -94,8 +94,8 @@
     {"task_id":"fog79_l38_snow_tall_v2_m200","level":38,"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,5,3],"fog_observation":"human_v2","seeds":[81025000]},
     {"task_id":"fog79_l39_snow_cactus_v2_m200","level":39,"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,26,5],"fog_observation":"human_v2","seeds":[81026000]},
     {"task_id":"fog79_l39_snow_blover_v2_m200","level":39,"zombie_count_multiplier":2.0,"deck":[9,8,10,16,23,17,19,2,27,5],"fog_observation":"human_v2","seeds":[81027000]},
-    {"task_id":"demo_pool_30_orig_m100","level":30,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[20261030,81028000]},
-    {"task_id":"demo_storm_40_orig_m100","level":40,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[81029000]},
-    {"task_id":"demo_boss_50_orig_m100","level":50,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[20261050,81030000]}
+    {"task_id":"demo_pool_30_orig_m100","level":30,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[20261030,81028000],"demo_start":{"archive":"artifacts/human_demo/raw/seed_20261030/demo_pool_30_orig_m100","decisions":[624,552,480,408,336,264],"index":0,"future_seed_start":45300000,"future_seed_count":256}},
+    {"task_id":"demo_storm_40_orig_m100","level":40,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"fog_observation":"storm","seeds":[81029000],"demo_start":{"archive":"artifacts/human_demo/raw/seed_81029000/demo_storm_40_orig_m100","decisions":[900,806,712,618,524,430,336],"index":0,"future_seed_start":45500000,"future_seed_count":256}},
+    {"task_id":"demo_boss_50_orig_m100","level":50,"deck":[],"conveyor_start":"original","zombie_count_multiplier":1.0,"seeds":[20261050,81030000],"demo_start":{"archive":"artifacts/human_demo/raw/seed_20261050/demo_boss_50_orig_m100","decisions":[656,576,496,416,336,256],"index":0,"future_seed_start":45400000,"future_seed_count":256}}
   ]
 }

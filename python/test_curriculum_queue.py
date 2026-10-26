@@ -949,7 +949,10 @@ class DemoStartCellsTest(unittest.TestCase):
                                       'demo_roof_47_doom_m200', 'demo_roof_47_doom_m200_s20261048',
                                       'demo_roof_47_doom_m200_s20261049',
                                       'demo_roof_48_doom_m200_s20261049', 'demo_roof_48_doom_m200_s20261050',
-                                      'demo_roof_49_doom_m200_s20261050', 'demo_roof_49_doom_m200_s20261051'})
+                                      'demo_roof_49_doom_m200_s20261050', 'demo_roof_49_doom_m200_s20261051',
+                                      # task107: 原生传送带用户示范起点格（L40 沿用 task75 的 storm 口径）
+                                      'demo_pool_30_orig_m100', 'demo_storm_40_orig_m100',
+                                      'demo_boss_50_orig_m100'})
         for task_id, spec in cells.items():
             self.assertGreaterEqual(len(spec['ladder']), 1, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
