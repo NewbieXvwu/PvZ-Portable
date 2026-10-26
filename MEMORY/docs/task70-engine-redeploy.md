@@ -161,7 +161,7 @@ B7 和 B6 一起进 deploy14。
 | 六族门禁 | **候选83aed3be PASS**：6族×老师/学生×8种子、每引擎96局。候选臂17:03–18:44跑完，96对完整动作流（非截断前缀）与全部逻辑字段0差异；旧臂36个`games.jsonl`与192个帧档复用原门禁副本，`diff -rq`逐字节一致。state_hash新旧差96/96属task82初始化字段（见下行）。原07703a57同样96对0差异，结论保留。证据`artifacts/task95/gate_b2/gate_evidence.json`。 |
 | 同引擎确定性 | 07703a57与83aed3be均通过L7 seed30000探针：各8个独立进程的reset/60/660tick哈希线全部相同，各同进程4次reset后60tick也全同；旧引擎此次对照分别3种哈希线、4种哈希。此结论限于该探针，不宣称已穷尽所有关卡。 |
 | 吞吐ABBA | **83aed3be完整16对PASS**：逐对old/new中位数0.9934474352≥0.98，决策数16/16相同。续跑保留已落盘9对及第10对new臂，运行产物与归档SHA相同，未重测已完成记录。07703a57两次完整实测0.9477023114与0.9687719632均失败，全部保留。静态/动态链接偏差已确认，函数尺寸不能单独排除源码性能影响；最终验收使用完整ABBA。[逐对数字与输入指纹](task95-throughput.json)。 |
-| L50 | 仍未运行（待候选定案后对最终二进制跑）。`boss_l50_orig_eval`种子85000000..3，旧/新引擎均用相同A2学生策略完整运行；候选必须有Boss字段，比较动作流、逻辑字段及终局。 |
+| L50 | **候选83aed3be PASS**：`boss_l50_orig_eval` 种子85000000..3，旧/新引擎各4局，同用A2 `dw4i_s1`、beta=0、`conveyor_start=original` 生产形态命令。4/4 逐帧动作流一致，全部逻辑字段（终局、final_tick 5895–7720、决策数、mowers 等）一致；候选Boss块存在且字段齐全（active/stage/head/action/target_row/target_col/projectile，107–144帧/局，动作含head/idle/summon），旧引擎无该块。四局均到终局（均输），结论不依赖是否读取Boss字段。证据`artifacts/task95/boss_l50.json`。 |
 
 模型固定为A2夹具：`dw4i_s1`、`value_net/v4`、`value_branch1`，不把旧夹具标成现役v5。二进制/模型指纹、逐族统计及新旧探针数值见[task95-engine-gate.json](task95-engine-gate.json)。吞吐原始记录留在本地`artifacts/task95/`，未提交二进制、帧归档或日志。
 

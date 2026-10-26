@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [5完成，2026-10-26 18:45 CST] 候选83aed3be在boss_l50_orig_eval上四种子85000000..3对拍PASS：4/4逐帧动作流、全部逻辑字段与终局一致（final_tick 5895–7720，均输但terminal=true）；候选Boss块存在、七个字段齐全（107–144帧/局，动作head/idle/summon），旧引擎无Boss块。证据`artifacts/task95/boss_l50.json`。
+
 - [3b完成，2026-10-26 18:44 CST] 候选83aed3be六族门禁96局完成：6族×老师/学生×8种子，完整动作流与逻辑字段0差异，PASS。旧臂36个games.jsonl与192个帧档经`diff -rq`确认与原始门禁副本逐字节一致后复用，未重跑；state_hash差96/96属task82初始化字段变化。证据`artifacts/task95/gate_b2/gate_evidence.json`。同一驱动已顺序启动L50四种子对拍。
 
 - [3b-验证链续接] 六族确定性补充检查已接到现有六族门禁→L50作业之后：等待已核实的验证主进程退出，核对两阶段均结束且没有本任务残留游戏进程，再串行运行task95_hash_suite.py。状态写入artifacts/task95/hash_suite_queue_status.json；不会与当前2个游戏进程并跑。
