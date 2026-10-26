@@ -21,6 +21,39 @@ task101 一次性测出了 45 关 × 16 种子 × 学生 / 老师的记分板，
 
 最多 8 个游戏进程。不要手写规则。
 
+## 台式机运行命令
+
+主控换上 qc 现役学生后，将其绝对路径传入 `STUDENT_MODEL`，在本分支执行以下命令。本任务按主控最新指示使用 2 个游戏进程。默认同时测学生与老师，两臂同种子。
+
+```bash
+STUDENT_MODEL=/主控指定的现役学生/model.pt
+python3 /home/newbiexvwu/PvZ-search/scripts/adventure_scoreboard.py \
+  --student "$STUDENT_MODEL" \
+  --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt \
+  --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt \
+  --executable /home/newbiexvwu/PvZ-search/build5/pvz-portable \
+  --resource-dir /home/newbiexvwu/.cache/pvz-research-resources \
+  --seeds 32 --workers 2 \
+  --previous /home/newbiexvwu/PvZ-search/MEMORY/docs/adventure-scoreboard-r11-32.json \
+  --out /home/newbiexvwu/PvZ-search/artifacts/task103/qc-scoreboard
+```
+
+`--student-only` / `--teacher-only` 分别只测一臂。台式机实际运行由主控安排，本任务不切换 qc。
+
 ## 结果
 
-（待填）
+2026-10-26：已实现可重复入口与冻结任务清单，支持分臂测量、逐关差异比较和 Wilson95% 区间分离判定。种子块 [103000000,103500000) 已审计并登记 DESIGN §14.35。差异比较及汇总测试 7 项通过，L1/L12 × 2 种子 × 双臂冒烟共 8 局全部到终局，JSON/MD 已生成。
+
+Mac r11 学生单臂全量测量采用每关 32 种子、2 个游戏进程，运行目录为 `artifacts/task103/r11-32/`。主控解冻原进程树 PID 90913 后继续完成，未重启。2026-10-26 09:23（America/New_York）确认进程退出，45关共1440局全部到终局。正式结果为 [JSON](adventure-scoreboard-r11-32.json) 与 [记分板及逐关对比](adventure-scoreboard-r11-32.md)，保留 task101 的独立样本。
+
+与 task101 学生臂相比，总胜局由408/720（56.67%）变为814/1440（56.53%），相差−0.14个百分点。45关 Wilson95% 平均区间宽度由27.33个百分点缩至18.19个百分点，缩窄33.44%，逐关区间分离0/45。最大胜率变化为 L23 −21.875个百分点（15/16→23/32）与 L38 +21.875个百分点（11/16→29/32），两关区间均重叠。新旧种子独立，未将区间重叠解读为配对显著性结论。本次22关学生胜率≥80%，老师臂未重测。
+
+按 task110 调查结论更正 L25 为“原生已接入，本面板未测”，同步 task101 的 JSON/MD 与生成器。保留45关冻结任务清单、跳过关卡记录及 task55旧状态列，没有新增 L25 样本。7项统计测试通过，既有 L1/L12 × 2种子 × 双臂冒烟结果保留，不重复开局。
+
+## 问题
+
+此前 Mac 出行暂停时主控以 SIGSTOP 冻结 PID 90913，落盘719/1440局。该暂停已由主控解除，原进程续跑及剩余721局汇总均已完成。
+
+本任务 Mac 测量、正式汇总与 task101 对比已完成。台式机 qc 测量仍按上方命令由主控安排，本分支未切换 qc、未启动台式机测量。
+
+2026-10-26 接手复核：Codex 额度中断时已完成全部实现与 Mac 测量，改动仅暂存未提交、分支未推送。接手后逐项复核：7 项测试通过；记分板 JSON 重算得学生 814/1440（56.53%）、task101 408/720（56.67%）、平均 Wilson95% 宽度 18.19% vs 27.33%（缩窄 33.44%）、逐关区间分离 0/45、L23 −21.875pp 与 L38 +21.875pp、22 关学生≥80%、L25 分类已更正，均与正文一致；暂存区无 .pt/.npz/.log，artifacts 忽略自查为空。未重跑任何对局，直接提交并推送 scoreboard2。
