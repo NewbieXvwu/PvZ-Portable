@@ -30,6 +30,7 @@
 - 接手扫描完成34/191份，登记34格，其中0格已出现在生产qc清单。其余已登记格可由主控组边界部署；本任务未执行部署脚本。
 - 原adaptive→register链继续，最多2个游戏进程、qc优先。已移除额外审计、全包重导入、重复register、全机种子复查等尾链。
 - 策略仅留本机原zip参考；存档、游戏资源未进git、未上传HF。
+- 03:09 交接：34/191 已登记并推送（HEAD ce887d9e）。第35份 `demo_roof_49_doom_m200_s81003022_a406030af1bed` 的 adaptive 仍在跑（`scripts/task105_pipeline.py` pid 927583，workers 2），register 未落盘；接手先看 `artifacts/task105/pipeline_status.json` 与 `artifacts/task105/registration` 数量（当前 34），不要另起同一任务。
 
 | 层 | 任务 | 通关种子 | 稳健种子 | 拒绝份数 |
 |---|---|---|---|---|
