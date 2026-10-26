@@ -51,6 +51,8 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 续接（第四段）：把分歧定位到张量级。`task96_localize.py` 前 6 步模块哈希：两次未固定 run 的输入哈希 6 步全同、第 1–3 步 loss 全同，第 2 步起 22 个模块里第一个不同的是 `packet_embedding`，第 4 步 loss 才出现末位差；固定配置两次对照全同。`task96_grad_probe.py`：trainer 在 backward 前回调 observer，所以第 2 次回调拿到的是第 1 步梯度——两次未固定 run 第 1 步 forward/loss 逐位相同，**梯度里只有 `packet_embedding.weight` 不同**（其余 20+ 参数全同），第 1 次更新后参数也只有它不同。→ 分歧进入点是 embedding 表的散射累加（重复 packet id 的 index-add），不是初始化/洗牌/前向/workspace；实测 2048 行 batch 平均只有 8.4 个不同 packet id（约 2040 行撞同一批表行），解释了为何 20+ 参数里唯独它先分叉。补的“只开确定性不固定 workspace”两例被 qc 训练（round_000020）连续占用 GPU 90 分钟，按让行规则未启动，已停等待器并记入问题。
 
+- 10-26 CodeBuddy 续接（第五段）：用两个微探针把机制压到算子层。`task96_embedding_shapes.py`（41×64 表、2048 行、8 种重复 id、各 10 次）：`[2048,10]` 查表（`packet_logits` 用的正是这个形状）默认模式 **10 次 10 种梯度**，确定性模式 **1 种**且不报错；`[2048]` 平铺与 6×54 expand 两种形状在两种模式下都是 1 种。`task96_embedding_probe.py`：裸 `index_add_`（2048→8 行）默认 5 次 5 种、确定性 1 种。→ “embedding 梯度先分叉”从推断变成算子层可复现事实，并说明修法必须开确定性开关而非只固定 workspace。证据 `task96-embedding-shapes.json`、`task96-embedding-probe.json`（各几 KB，GPU 每次不到 1 秒，qc 训练未受影响）。
+
 ## 问题
 - 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。没有记录workspace申请失败或具体内核，耗时也不能单独证明GPU竞争；资源/算法变化保留为假设，不能据此断言历史原因。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。
@@ -59,4 +61,4 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 - 全量 16,982,931 行的逐位复现仍未证明：中尺度只到 1,046,710 行 / 461 步。全量控制两次尝试（17:03 完整用例、18:20 的 200 步速率探针）都在 9.6 GB spill 进不了 page cache 后退化：10 s/步 / 18 分钟读盘 650 GB，需要 `MemAvailable ≥ 14 GiB` 且无其他 10 GiB 级训练进程才能重试。这是环境限制，不是“全量不可复现”的结论；另因本机 earlyoom `--prefer` 含 python3，继续压内存有杀掉其他任务训练的风险，故主动停止。
 - “空闲显存 → 数值”的因果链只观测到两端（压 4 GiB 显存前后张量不同、固定 workspace 后相同），没有采到 cuBLASLt 选核或 workspace 申请失败的 API 回执，机制仍是推断。
 - “只开确定性、不固定 workspace”的对照（`det_only_a/b`）被 qc 训练阻塞未跑：等待 90 分钟期间 qc 的 round_000020 训练进程一直在，按“GPU 训练让 qc 先”未启动，等待器已停。该对照用来判断第一步的 embedding 梯度分叉是否单靠确定性开关就能消除。
-- 分歧定位仍停在张量级：知道是 `packet_embedding.weight` 的梯度先不同，但没有 kernel trace 证明是 atomicAdd 顺序，也没有证明确定性开关走的是哪条替换实现。
+- 分歧定位已到算子层（哪种形状、哪个开关），但仍无 kernel trace：不知道默认路径具体走 atomicAdd 还是别的不确定实现，也不知道确定性路径换成了哪条。

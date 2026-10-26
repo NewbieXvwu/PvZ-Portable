@@ -1,0 +1,132 @@
+{
+ "task": 96,
+ "table_rows": 41,
+ "dim": 64,
+ "batch": 2048,
+ "repeats": 10,
+ "distinct_types": 8,
+ "gpu_before": {
+  "used_mib": 7341,
+  "free_mib": 8639,
+  "utilization": 38
+ },
+ "environment": {
+  "torch": "2.14.0+cu132",
+  "cuda": "13.2",
+  "gpu": "NVIDIA GeForce RTX 5080"
+ },
+ "default": {
+  "flat": {
+   "ids": [
+    2048
+   ],
+   "grad": [
+    2048,
+    64
+   ],
+   "distinct": 1,
+   "hashes": [
+    "4cd2ab09c5be7a9bb94b75021e1cca27c50809acd9b8801c29ed30835f0ed704",
+    "4cd2ab09c5be7a9bb94b75021e1cca27c50809acd9b8801c29ed30835f0ed704",
+    "4cd2ab09c5be7a9bb94b75021e1cca27c50809acd9b8801c29ed30835f0ed704"
+   ],
+   "errors": []
+  },
+  "packet_head": {
+   "ids": [
+    2048,
+    10
+   ],
+   "grad": [
+    2048,
+    10,
+    64
+   ],
+   "distinct": 10,
+   "hashes": [
+    "5f09a036ace7bded3ccdeea81d8b351103b02d002d815c897e23f87c536fbe5d",
+    "14b722cbdb6b64286fcd20515ce33a4f482265ef2eb28f2e74243d0f7ad4be5b",
+    "84583d57e4e08cbcee19d6decb2648ce76d2e6d06b6068816748ab276c952d1c"
+   ],
+   "errors": []
+  },
+  "cell_expand": {
+   "ids": [
+    2048
+   ],
+   "grad": [
+    2048,
+    64,
+    6,
+    54
+   ],
+   "distinct": 1,
+   "hashes": [
+    "ecf0914012b64cc51ec311d451381121a6c2b54058034dfb74a48754c8c38035",
+    "ecf0914012b64cc51ec311d451381121a6c2b54058034dfb74a48754c8c38035",
+    "ecf0914012b64cc51ec311d451381121a6c2b54058034dfb74a48754c8c38035"
+   ],
+   "errors": []
+  }
+ },
+ "deterministic": {
+  "flat": {
+   "ids": [
+    2048
+   ],
+   "grad": [
+    2048,
+    64
+   ],
+   "distinct": 1,
+   "hashes": [
+    "98cdb56981662286305bd68dbc9cc59aa0b27a8adee4b56a92c87d3a9ad5dff4",
+    "98cdb56981662286305bd68dbc9cc59aa0b27a8adee4b56a92c87d3a9ad5dff4",
+    "98cdb56981662286305bd68dbc9cc59aa0b27a8adee4b56a92c87d3a9ad5dff4"
+   ],
+   "errors": []
+  },
+  "packet_head": {
+   "ids": [
+    2048,
+    10
+   ],
+   "grad": [
+    2048,
+    10,
+    64
+   ],
+   "distinct": 1,
+   "hashes": [
+    "d64f522c17cb010379b764284d838775149f45992783a0284504894c573ce851",
+    "d64f522c17cb010379b764284d838775149f45992783a0284504894c573ce851",
+    "d64f522c17cb010379b764284d838775149f45992783a0284504894c573ce851"
+   ],
+   "errors": []
+  },
+  "cell_expand": {
+   "ids": [
+    2048
+   ],
+   "grad": [
+    2048,
+    64,
+    6,
+    54
+   ],
+   "distinct": 1,
+   "hashes": [
+    "ad1c287ebdcca56216653076acd55b6daf2f0b7c4393fad3cdcd06719377f085",
+    "ad1c287ebdcca56216653076acd55b6daf2f0b7c4393fad3cdcd06719377f085",
+    "ad1c287ebdcca56216653076acd55b6daf2f0b7c4393fad3cdcd06719377f085"
+   ],
+   "errors": []
+  }
+ },
+ "gpu_after": {
+  "used_mib": 7585,
+  "free_mib": 8395,
+  "utilization": 40
+ },
+ "finished": 1793018544.5300467
+}

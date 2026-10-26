@@ -1,0 +1,64 @@
+{
+ "task": 96,
+ "rows": 2048,
+ "distinct_ids": 8,
+ "table_rows": 41,
+ "embedding_dim": 64,
+ "repeats": 5,
+ "gpu_before": {
+  "used_mib": 7402,
+  "free_mib": 8578,
+  "utilization": 46
+ },
+ "environment": {
+  "torch": "2.14.0+cu132",
+  "cuda": "13.2",
+  "gpu": "NVIDIA GeForce RTX 5080"
+ },
+ "default": {
+  "deterministic": false,
+  "embedding": [
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716"
+  ],
+  "index_add": [
+   "590cd39f91fac5e8f41c5245d2076b0b7ecf3bccd90b6c162ba9eab31d5e2a8e",
+   "f0700b7b33d39dddc6a4039f08772a09a62357af40616ea1a46785dec6c16afd",
+   "b943156b6b0d5e93a2753999938b9dc849841da3f52648a69ed4ea2b6e353ce5",
+   "e6ee9672bfaa51c98d838fa51fef85080e716ff27b41424ed529d407eaa5a70f",
+   "48071915331ae977ed7a11cb732f9f7eb8b7bbce9e9b932f7ea8c62b02c67f58"
+  ],
+  "errors": [],
+  "embedding_distinct": 1,
+  "index_add_distinct": 5
+ },
+ "deterministic": {
+  "deterministic": true,
+  "embedding": [
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716",
+   "82f8a12cc6bea9bde1540b47d03293a6e8cd713f739f0a15d8ef5872fd019716"
+  ],
+  "index_add": [
+   "4a8bc8bd38efcc203be6f86d3a5c09e64751267286bcc8c98a44a8436bdc2719",
+   "4a8bc8bd38efcc203be6f86d3a5c09e64751267286bcc8c98a44a8436bdc2719",
+   "4a8bc8bd38efcc203be6f86d3a5c09e64751267286bcc8c98a44a8436bdc2719",
+   "4a8bc8bd38efcc203be6f86d3a5c09e64751267286bcc8c98a44a8436bdc2719",
+   "4a8bc8bd38efcc203be6f86d3a5c09e64751267286bcc8c98a44a8436bdc2719"
+  ],
+  "errors": [],
+  "embedding_distinct": 1,
+  "index_add_distinct": 1
+ },
+ "gpu_after": {
+  "used_mib": 7402,
+  "free_mib": 8578,
+  "utilization": 47
+ },
+ "finished": 1793018488.061708
+}

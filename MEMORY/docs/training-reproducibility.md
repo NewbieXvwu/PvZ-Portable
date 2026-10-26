@@ -175,10 +175,20 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 
 含义：
 
-- 分歧进入点不是初始化、不是洗牌、不是前向、也不是 loss，而是 **embedding 表的梯度累加**——同一 batch 里重复的 packet id 要把梯度散射累加回表行，这个累加顺序在 CUDA 上不固定（`index_add`/`scatter_add` 式原子累加）。前向的查表是确定性的，所以第 1 步前向和 loss 完全相同；梯度先分叉，第 2 步的查表结果才跟着变。
+- 分歧进入点不是初始化、不是洗牌、不是前向、也不是 loss，而是 **embedding 表的梯度累加**——同一 batch 里重复的 packet id 要把梯度散射累加回表行，这个累加顺序在 CUDA 上不固定。前向的查表是确定性的，所以第 1 步前向和 loss 完全相同；梯度先分叉，第 2 步的查表结果才跟着变。
+- **这条机制已经用微探针在算子层复现**（`scripts/task96_embedding_shapes.py`、`scripts/task96_embedding_probe.py`，各 10 / 5 次重复，几秒钟 GPU）：
+
+  | 形状（41×64 表，2048 行 batch，8 种重复 id） | 默认模式 | 确定性模式 |
+  | --- | --- | --- |
+  | `[2048]` ids，grad `[2048,64]`（cell 路径的平铺版） | 1 种 | 1 种 |
+  | `[2048,10]` ids，grad `[2048,10,64]`（**`packet_logits` 用的就是这个**） | **10 次 10 种** | **1 种** |
+  | `[2048]` ids，grad `[2048,64,6,54]`（cell 的 expand 版） | 1 种 | 1 种 |
+  | 裸 `index_add_`（2048 行 → 8 行） | **5 次 5 种** | 1 种 |
+
+  也就是说：不是所有 embedding backward 都不确定，**只有 `[B,10]` 这次查表（20,480 次索引）在默认模式下每次都不同**，而它正是 `packet_logits` 那条路径；`torch.use_deterministic_algorithms(True)` 把它变成逐位相同，且**不报错**（不是靠抛异常拦住，而是换了确定性实现）。这与训练里的观测完全对齐：前向/loss 相同、唯独 `packet_embedding.weight` 的梯度先不同。
 - 这个模型里重复度极高，不是理论上的边角情况：`packet_embedding`（`python/pvz_rollout_policy.py:111`，表大小 = `PACKETS` 或 `PlantTypes`）在 2048 行的 batch 里平均只有 **8.4 个不同的 packet id**，也就是约 2040 行在同一批里撞同一批表行。这解释了为什么 20 多个参数里唯独它的梯度先分叉。
 - 这与“cuBLAS workspace 换算法”是**两条不同的路径**：embedding 的梯度是散射累加，不走 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它。所以单靠固定 workspace 不足以覆盖本次定位到的第一步分叉，`torch.use_deterministic_algorithms(True)` 这类开关才是针对这一条的手段（它会把 embedding backward 换成确定性实现）。**“只开确定性、不固定 workspace”的两例对照没跑成**：从 18:5x 起 qc 的训练进程（round_000020）连续占用 GPU 90 分钟，本任务的准入按规则让行，等待期间一例未启动，已停掉等待器。想补就跑：`task96_scale_probe.py run`（新用例名 `det_only_a/b` 已写进 plan，qc 训练结束时才会启动）。
-- 仍未拿到内核级回执（没有 atomicAdd / 排序实现的 kernel trace），所以“原子累加顺序”是**与观测相容的机制解释**，不是已证明的内核行为。
+- 仍未拿到内核级回执：微探针把“哪种形状不确定、哪个开关能修”测到了算子层（10/10 vs 1/10），但没有 kernel trace 证明默认路径走的是 atomicAdd、确定性路径走的是哪种排序/分段实现。
 
 ## 冻结与修法建议（生产未改）
 
@@ -192,7 +202,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
    - 挑选时**必须**把 `CUBLAS_WORKSPACE_CONFIG` 与确定性开关固定住。否则各种子落在不同显存/算法状态上，挑选结果里混进的是环境差异，不是种子效应，多训几个种子再挑也挑不出真实方差。
    - 对 42/192 的 heldout 落差，仍需要多个完整训练 + 新种子配对评估，不能用单个 r11 称“幸运”就认定原因。
 
-7. **确定性开关要真打开，不能只固定 workspace。** 本次定位到第一步分叉在 `packet_embedding` 的梯度（散射累加），这条路径不经 GEMM，`CUBLAS_WORKSPACE_CONFIG` 碰不到；`torch.use_deterministic_algorithms(True)` 才是覆盖它的开关。两者一起开的那 5 次全同，说明组合有效；只开确定性、不固定 workspace 的对照因 qc 占卡未跑，所以“哪一半在起作用”仍是推断。
+7. **确定性开关要真打开，不能只固定 workspace。** 本次定位到第一步分叉在 `packet_embedding` 的梯度（`[B,10]` 查表的散射累加），这条路径不经 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它；微探针实测 `torch.use_deterministic_algorithms(True)` 能把这条路径从“10 次 10 种”变成逐位相同且不报错。两者一起开的那 5 次全同说明组合有效；只开确定性、不固定 workspace 的整轮对照因 qc 占卡未跑，所以“整轮里各占多少”仍未测。
 ## 复核命令
 
 所有新写入均在 repro 内；`/tmp/exp96` 只是 CodeBuddy 已留的冻结只读训练代码快照。执行前保持 qc GPU 优先。
