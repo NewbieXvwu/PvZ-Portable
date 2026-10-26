@@ -25,7 +25,7 @@ for run in ('a_s1', 'a_s2', 'b_s1', 'b_s2'):
     while True:
         busy = trainers()
         available = guard.available()
-        if not busy and available >= 11 * 1024 * 1024:
+        if not busy and available >= 14 * 1024 * 1024:
             if ready_since is None:
                 ready_since = time.monotonic()
             if time.monotonic() - ready_since >= 30:
