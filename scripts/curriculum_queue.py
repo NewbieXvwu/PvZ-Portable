@@ -436,7 +436,7 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
             if first is None:
                 raise ValueError(f'{task["task_id"]}: demo_start needs future_seeds or future_seed_start')
             seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
-        if seeds and seeds[0] < START_SEED_POOL[1] and START_SEED_POOL[0] <= seeds[-1]:
+        if any(START_SEED_POOL[0] <= seed < START_SEED_POOL[1] for seed in seeds):
             # 清单块必须在续领池之外：续领块由账本保证唯一，清单块不在账本里，一旦落进池里
             # 就可能和将来发出的块撞上，而且撞了也查不出来。
             raise ValueError(f'{task["task_id"]}: demo_start future seeds {seeds[0]}..{seeds[-1]} '
@@ -448,14 +448,24 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
             raise ValueError(f'{task["task_id"]}: demo_start archive missing: {archive}')
         if not json.loads((archive / 'meta.json').read_text()).get('verified'):
             raise ValueError(f'{task["task_id"]}: demo_start archive is not verified: {archive}')
-        contiguous = seeds == list(range(seeds[0], seeds[-1] + 1))
         cells[task['task_id']] = dict(
             family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
             last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
             archive=str(archive), seeds=seeds,
-            seed_blocks=[[seeds[0], seeds[-1] + 1]] if contiguous else [])
+            seed_blocks=start_seed_segments(seeds))
         manifests[task['task_id']] = path
     return cells, manifests
+
+
+def start_seed_segments(seeds: list[int]) -> list[list[int]]:
+    """Encode contiguous runs without changing the manifest's seed order."""
+    blocks = []
+    for seed in seeds:
+        if blocks and blocks[-1][1] == seed:
+            blocks[-1][1] = seed + 1
+        else:
+            blocks.append([seed, seed + 1])
+    return blocks
 
 
 def renew_start_seeds(cell: dict, ledger_path: Path, size: int = START_SEED_BLOCK) -> list[int]:
@@ -466,9 +476,7 @@ def renew_start_seeds(cell: dict, ledger_path: Path, size: int = START_SEED_BLOC
     """
     if not cell.get('seed_blocks') and cell.get('seeds'):
         # 旧状态没有分段记录：把清单里的第一段补上，日志与状态都从两段起算。
-        first = list(cell['seeds'])
-        if first == list(range(first[0], first[-1] + 1)):
-            cell['seed_blocks'] = [[first[0], first[-1] + 1]]
+        cell['seed_blocks'] = start_seed_segments(cell['seeds'])
     block = allocate_seed_block(ledger_path, size, pool=START_SEED_POOL)
     cell.setdefault('seed_blocks', []).append([int(block[0]), int(block[1])])
     cell['seeds'] = list(cell['seeds']) + list(range(int(block[0]), int(block[1])))
@@ -518,6 +526,10 @@ def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | N
     for base, spec in sorted(specs.items()):
         cell = cells.get(base)
         if cell is None:
+            if base in retired:
+                # Re-adding a retired cell from the manifest would discard its
+                # renewed table, windows and rung. Explicit restore above keeps them.
+                continue
             cells[base] = dict(spec, windows=dict((windows or {}).get(base, {})))
             lines.append(f'start cell added: {base} ({len(spec["ladder"])} rungs)')
             continue
@@ -1216,7 +1228,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         task_id = cell['task_id'] if start else task_id_for(base, multiplier, tasks, names)
         seeds = cell['seeds'] if start else tasks[task_id]['seeds']
         offset = state['offsets'].get(task_id, 0)
-        if start and offset + games > len(seeds) and start_seed_ledger is not None:
+        while start and offset + games > len(seeds) and start_seed_ledger is not None:
             # task99: a start cell's future seeds are renewable. Renew before giving the cell up —
             # the first block in the manifest is only segment one; the offset keeps counting from
             # the head of the table, so old groups and their labels stay comparable.
@@ -1226,6 +1238,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                 # 池耗尽、账本损坏/池不符、账本目录不可写：都只是这一格领不到，不能让 qc 停在
                 # plan 阶段（task98 的教训：单点异常不该终止整个采集）。错误原文进日志。
                 changes.append(f'{task_id}: seed renewal failed ({error})')
+                break
             else:
                 seeds = cell['seeds']
                 changes.append(f'{task_id}: seeds renewed +{block[1] - block[0]} from '

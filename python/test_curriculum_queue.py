@@ -1001,6 +1001,33 @@ class StartSeedRenewalTest(unittest.TestCase):
             self.assertEqual(cell['seed_blocks'], [[0, 256], first, second])
             self.assertEqual(json.loads(ledger.read_text())['allocated'], [first, second])
 
+    def test_large_group_renews_until_enough_seeds_are_available(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            state = dict(round=0, offsets={self.BASE: 240}, cells={self.BASE: self.cell()})
+            plan, _ = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                 budget=300, per_group=300, start_seed_ledger=ledger)
+            self.assertEqual(len(plan), 1)
+            self.assertEqual(len(plan[0]['future_seeds']), 300)
+            self.assertEqual(len(json.loads(ledger.read_text())['allocated']), 2)
+            self.assertNotIn(self.BASE, state.get('retired_cells', {}))
+
+    def test_explicit_seed_order_survives_renewal_and_restart(self):
+        from check_start_seed_state import check_state
+        with tempfile.TemporaryDirectory() as tmp:
+            cell = dict(self.cell(), seeds=[8, 9, 2, 3, 6], seed_blocks=[])
+            spec = dict(cell)
+            state = dict(round=0, offsets={self.BASE: 3}, cells={self.BASE: cell})
+            ledger = Path(tmp) / 'start_ledger.json'
+            plan, _ = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                 budget=10, per_group=10, start_seed_ledger=ledger)
+            state = json.loads(json.dumps(state))
+            reconcile_start_cells(state, {self.BASE: spec})
+            self.assertEqual(state['cells'][self.BASE]['seeds'][:5], spec['seeds'])
+            self.assertEqual(plan[0]['future_seeds'][:2], [3, 6])
+            blocks = [tuple(block) for block in json.loads(ledger.read_text())['allocated']]
+            self.assertEqual(check_state(state, blocks), ([], []))
+
     def test_two_cells_never_get_the_same_block(self):
         with tempfile.TemporaryDirectory() as tmp:
             ledger = Path(tmp) / 'start_ledger.json'
@@ -1025,6 +1052,11 @@ class StartSeedRenewalTest(unittest.TestCase):
             with self.assertRaises(ValueError) as caught:
                 load_demo_start_cells(manifest)
             self.assertIn('renewal pool', str(caught.exception))
+            document = json.loads(manifest.read_text())
+            document['tasks'][0]['demo_start']['future_seeds'] = [9, START_SEED_POOL[0], 3]
+            manifest.write_text(json.dumps(document))
+            with self.assertRaisesRegex(ValueError, 'renewal pool'):
+                load_demo_start_cells(manifest)
 
     def test_pool_is_outside_every_registered_segment(self):
         inventory = json.loads((ROOT / 'MEMORY/docs/gate-seed-inventory.json').read_text())
@@ -1110,6 +1142,23 @@ class StartSeedRenewalTest(unittest.TestCase):
             self.assertEqual(plan[0]['future_seeds'][40:],
                              list(range(START_SEED_POOL[0], START_SEED_POOL[0] + 8)))
             self.assertTrue(any('seeds renewed' in line for line in changes))
+
+    def test_retired_multiblock_cell_is_only_restored_explicitly(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            cell = self.cell()
+            renew_start_seeds(cell, Path(tmp) / 'start_ledger.json')
+            cell['mult_index'] = 1
+            cell['windows'] = {'1119': {'wins': 2, 'games': 3, 'recent': [1, 0, 1]}}
+            state = dict(round=0, offsets={self.BASE: 300}, cells={},
+                         retired_cells={self.BASE: cell})
+            state = json.loads(json.dumps(state))
+            original = json.loads(json.dumps(state))
+            self.assertEqual(reconcile_start_cells(state, {self.BASE: self.spec()}), [])
+            self.assertEqual(state, original)
+            reconcile_start_cells(state, {self.BASE: self.spec()}, restore=(self.BASE,))
+            self.assertEqual(state['cells'][self.BASE], original['retired_cells'][self.BASE])
+            self.assertEqual(state['offsets'][self.BASE], 300)
+            self.assertNotIn(self.BASE, state['retired_cells'])
 
     def test_restore_warns_when_future_seeds_overlap_a_live_cell(self):
         state = dict(round=0, offsets={self.BASE: 216},

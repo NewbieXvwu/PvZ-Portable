@@ -24,9 +24,11 @@
    文件不存在时第一次领取才创建。与门禁账本分开，互不影响（池不同，混用会触发 ledger 的池校验）。
 3. **多段种子表**：格子里 `seeds` 仍是扁平列表（偏移语义不变：offset 是从表头数的绝对下标），
    新增 `seed_blocks` 记录每一段的 `[low, high)`。清单里的块**永远是第一段**，旧数据的
-   offset / label / 抽样契约都不变。
+   offset / label / 抽样契约都不变。显式 `future_seeds` 若不连续或不按数值排序，则按原顺序
+   编成多个连续小段；不排序、不改偏移。段与段无需数值相邻（原块与池相隔很远，其他格也会穿插领块）。
 4. **qc 侧**：`plan_round` 发现 `offset + games > len(seeds)` 时先续领 256 个接到表尾，
-   再排这一组；续领写进 state（`seed_blocks`）和 changes 日志（`seeds renewed +256 from [lo,hi) ...`）。
+   再排这一组；若单组需要超过一块，连续领块直到够用。续领写进 state（`seed_blocks`）和
+   changes 日志（`seeds renewed +256 from [lo,hi) ...`）。
    只有领不到才退休，并记 `retired_reason='seeds exhausted'`。领不到包括池耗尽、账本损坏/池不符、
    账本目录不可写（`SeedPoolExhausted` / `ValueError` / `OSError`）——这几种都只让这一格退休，
    **不会让 qc 停在 plan 阶段**，错误原文写进 changes 日志。
@@ -35,7 +37,8 @@
 5. **重启**：`reconcile_start_cells` 只在“状态里的表不再以清单块开头”（清单换了块）时重置，
    否则保留续领段。已退休的起点格可用 `--restore-start-cell <task_id>` 从 `retired_cells`
    原样取回（保留偏移、续领段、档位）；清单里已经没有的格标 `legacy_restored`，否则下一次重启
-   会被当成“已删的格”再退休。恢复时若它的未来种子与在跑的格重叠，日志里打
+   会被当成“已删的格”再退休。普通重启不会把仍在清单里的退休格重新建成初始格，避免丢掉已续领的表和窗口。
+   恢复时若它的未来种子与在跑的格重叠，日志里打
    `WARNING future seeds overlap ...`（种子跨格复用会让证据不独立）。
 6. **盘点**：`scripts/gate_seed_inventory.py` 把新池（常量）与它的账本都算进占用，
    `--ignore-start-pool` 用来审“新池本身”是否与旧段不相交。
@@ -43,20 +46,24 @@
 ## 证据
 
 - 上线核对脚本 `scripts/check_start_seed_state.py`（只读）：池 vs 盘点、清单块 vs 池、
-  账本形状、state 的 `seeds`/`seed_blocks`/offset 一致性、跨格未用种子重叠；9 项单测
+  账本形状、state 的 `seeds`/`seed_blocks`/offset 一致性、格内重复及跨格未用种子重叠；11 项单测
   `python/test_check_start_seed_state.py` 全过。
 - 测试（`/home/newbiexvwu/.venvs/ml/bin/python3`）：
-  `python/test_curriculum_queue.py` **68 passed, 1 skipped**（新增 13 项：续领后排 48 局且偏移不变、
+  `python/test_curriculum_queue.py` **71 passed, 1 skipped**（包含：续领后排 48 局且偏移不变、
   两段有序不相交、两格续领拿到的块也不相交、池在全部已登记段之外、重启保留多段表、
   清单换块才重置、退休格恢复后续领、恢复时重叠告警、legacy 恢复不被二次退休、池耗尽退休、
   清单块落进续领池时启动即拒绝、12 轮续领 + 每轮重启的长跑（576 个种子零重复、长到第三段）、
   账本损坏时退休而不是让 qc 停在 plan 阶段）；
-  八个相关测试文件合计 **128 passed, 2 skipped**。
-- 池不相交（full scan，274,472 个 JSON/JSONL + 全部声明段）：`MEMORY/docs/gate-seed-inventory.json`
+  以及单组多次续领、显式乱序表续领与重启、退休多段表只在显式恢复时取回。
+  九个相关文件最终合计 **142 passed, 2 skipped**：`test_curriculum_queue`、`test_curriculum_pipeline`、
+  `test_promotion`、`test_promotion_evaluation`、`test_compact_loader`、`test_incremental_pack`、
+  `test_qc_pack_bench`、`test_compact_boards`、`test_check_start_seed_state`（均在 `python/`）。
+- 池不相交（声明扫描遍历 257,159 文件；字面量复核遍历 274,472 文件）：`MEMORY/docs/gate-seed-inventory.json`
   的 `candidate` = `{low: 200000000, high: 201000000, overlaps: [[200000000, 201000000]],
   self_registered: true}` —— 唯一的“重叠”是池自己（它已作为占用段登记）；再跑
-  `python3 scripts/gate_seed_inventory.py --quick --ignore-start-pool --candidate 200000000 201000000`
+  `python3 scripts/gate_seed_inventory.py --quick --ignore-start-pool --candidate 200000000 201000000 --summary-out /tmp/task99-seed-quick-summary.json`
   → `disjoint: true`，`overlaps: []`。最高占用段是 `[130,000,000,140,000,000)`，池在其上方。
+  复核时显式指定临时输出，避免用 quick 结果覆盖已提交的 full scan 证据。
 - 全机字面量复核（`--verify-lo 200000000 --verify-hi 201000000`）：**31 命中，全部是
   `~/pvz-logs/metrics/*.jsonl` 的 `rss_bytes` / `io.read_bytes` / `io.rchar`（8 个文件），
   零种子声明**（task88 也遇到过 rss/哈希这类误报）。
@@ -73,8 +80,10 @@
    （例如同一块被多个任务登记）。2026-10-26 在生产 state 上实测输出
    `ok    pool [200000000, 201000000], 0 ledger block(s), 13 start cell(s)`，
    外加三条共享块 note（见“问题”第 4 条）。
-1. 把 `startseeds` 合进生产 `cq` 工作树（merge，不手抄），确认 `git diff --stat` 只含
-   `python/pvz_promotion.py`、`scripts/curriculum_queue.py`、`scripts/gate_seed_inventory.py` 与测试。
+1. 与 task98 一起准备合并，逐项审核待上线差异：本任务包含续领、核对脚本、plane_of 打包修复及测试/文档。
+   分支继承了其他任务的清单变更，不能把整个分支差异视为只有 task99；先处理下述新增格共享块问题，
+   并确认目标工作树里每个 `demo_start.archive/meta.json` 都存在且 verified。原始存档不随 git 传递，
+   本工作树没有完整 raw 目录，完整清单启动测试因此跳过。合并到 cq 的操作由主控执行。
 2. 在组边界停 qc：`touch ~/pvz-logs/stop_curr`，等当前组跑完（`stop` 只在组间检查）。
 3. 用新代码启动，**不需要新参数**：`--start-seed-ledger` 默认就是
    `/home/newbiexvwu/pvz-logs/start_cell_seed_ledger.json`。第一次有格用完 256 个时账本自动创建，
@@ -86,7 +95,7 @@
    （重放会回到 x-ray）。L32 由在跑的 `_hv2` 承载，续领后它不会再退休。恢复参数留给
    “将来确实因为种子用完退休、且块与观测契约都不冲突”的格；恢复时脚本会打重叠 WARNING。
 6. 重启后再跑一次 `python3 scripts/check_start_seed_state.py`：这次要看到起点格数量、
-   `seed_blocks` 与账本一致；之后每轮结束（组间）都可以再跑，只读、秒级。
+  `seed_blocks` 与账本一致；之后每轮结束（组间）都可以再跑，只读、秒级。
 7. 回滚注意：旧代码不认识 `seed_blocks`，重启时 `reconcile_start_cells` 会用清单块覆盖种子表，
    offset ≥ 256 的格会被重新判为用完并退休。回滚前先确认没有格的 offset 落在续领段里，
    或把 state 备份后再回滚。
@@ -134,17 +143,18 @@
   `pvz_promotion.py` 只多 `START_SEED_POOL`/`START_SEED_LEDGER_DEFAULT`/`START_SEED_BLOCK` 三行。
   **没有任何格用完 256 个之前，qc 行为与现在完全一致。**
 - **本任务改的文件**：`scripts/curriculum_queue.py`、`python/pvz_promotion.py`、
-  `scripts/gate_seed_inventory.py`、`python/test_curriculum_queue.py`（+ 文档/盘点 json）。
+  `scripts/gate_seed_inventory.py`、`scripts/check_start_seed_state.py`、`scripts/train_rollout_policy.py`、
+  `scripts/pack_training_rows.py`，以及对应测试、文档和 KB 级证据 JSON。
 
-4. **部署会把起点格从 13 个变成 31 个，其中 10 个与兄弟格共用同一块**：cq 现在的
-   `configs/human_demo_tasks.json` 只有 13 个 `demo_start`，startseeds 有 31 个
-   （task87/89 的 8 个 LLM 格各占独立块；另有 10 个旧倍率变体共用 3 个块：
+4. **当前清单比生产多 18 个起点格，其中 7 个新增格会复用在跑格的原块**：生产 state 现在有
+   13 个起点格，startseeds 的 `configs/human_demo_tasks.json` 有 31 个 `demo_start`
+   （共 10 个条目共享 3 个块，其中 3 个已在跑、7 个会新增：
    `45000000` × 3、`45100000` × 3、`45200000` × 4，其中 `demo_roof_41_doom_m200`
    实际指向 L46 的存档）。`reconcile_start_cells` 会把它们全部加成格子，而每个 task 的
    offset 从 0 起 → 同一块会被重复采。核对脚本对“清单里共享块”只打 `note`（旧注释
-   “跨档共用同一块”表明可能是有意的），但**上线前应由主控决定**：删掉这 10 个变体、
+   “跨档共用同一块”表明可能是有意的），但**上线前应由主控决定**：排除这 7 个新增重复格、
    给它们各自分块（= 换任务族，按 AGENTS §8 登记）、或接受重复采集。当前生产 state 里
-   没有这些格，所以现在的核对是干净的。
+   没有这 7 个新增重复格，所以现在的核对是干净的。这是原块的历史问题，新增续领块仍由加锁账本保证跨格不相交。
 
 ## 边界与未做
 

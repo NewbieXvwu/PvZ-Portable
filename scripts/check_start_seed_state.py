@@ -63,7 +63,7 @@ def check_config(config: dict | None) -> tuple[list[str], list[str]]:
         if not seeds:
             first = int(start.get('future_seed_start'))
             seeds = list(range(first, first + int(start.get('future_seed_count', 256))))
-        if seeds[0] < START_SEED_POOL[1] and START_SEED_POOL[0] <= seeds[-1]:
+        if any(START_SEED_POOL[0] <= seed < START_SEED_POOL[1] for seed in seeds):
             problems.append(f'config: {task["task_id"]} block {seeds[0]}..{seeds[-1]} is inside '
                             f'the renewal pool {list(START_SEED_POOL)}')
         owners.setdefault((seeds[0], seeds[-1] + 1), []).append(task['task_id'])
@@ -122,20 +122,24 @@ def check_state(state: dict | None, ledger_blocks: list[tuple]) -> tuple[list[st
             if flat != seeds:
                 problems.append(f'state: {name} seeds != seed_blocks concatenation '
                                 f'({len(seeds)} seeds, {sum(high - low for low, high in blocks)} in blocks)')
-            for left, right in zip(blocks, blocks[1:]):
-                if left[1] != right[0]:
-                    problems.append(f'state: {name} blocks {list(left)} and {list(right)} are not adjacent')
-            for block in blocks[1:]:
+            # Blocks are concatenated in table order, not numeric order: the original
+            # manifest and the renewal pool are far apart; other cells can allocate
+            # between two renewals of this cell.
+            for block in blocks:
+                if block[1] <= START_SEED_POOL[0] or START_SEED_POOL[1] <= block[0]:
+                    continue
                 if block not in ledger_blocks:
                     problems.append(f'state: {name} segment {list(block)} is not in the ledger')
-        elif seeds != list(range(seeds[0], seeds[-1] + 1)):
-            problems.append(f'state: {name} has no seed_blocks and a non-contiguous table')
+        elif any(START_SEED_POOL[0] <= seed < START_SEED_POOL[1] for seed in seeds):
+            problems.append(f'state: {name} has renewed seeds but no seed_blocks')
+        if len(set(seeds)) != len(seeds):
+            problems.append(f'state: {name} seed table contains duplicate seeds')
         offset = int(offsets.get(cell.get('task_id') or name, 0))
         if offset > len(seeds):
             problems.append(f'state: {name} offset {offset} exceeds its {len(seeds)} seeds')
         elif offset == len(seeds):
             notes.append(f'state: {name} is exactly at the end ({offset}); next plan must renew')
-    referenced = {tuple(block) for cell in cells.values() for block in (cell.get('seed_blocks') or [])[1:]}
+    referenced = {tuple(block) for cell in cells.values() for block in (cell.get('seed_blocks') or [])}
     for block in ledger_blocks:
         if block not in referenced:
             notes.append(f'ledger: block {list(block)} is not referenced by any start cell (wasted, never reused)')

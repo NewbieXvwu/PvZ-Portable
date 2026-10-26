@@ -31,6 +31,20 @@ class StartSeedPreflightTest(unittest.TestCase):
         problems, _ = check_state(dict(cells={'demo_x': cell}, offsets={}), [])
         self.assertTrue(any('seed_blocks concatenation' in line for line in problems))
 
+    def test_renewed_tables_need_not_have_adjacent_blocks(self):
+        low = START_SEED_POOL[0]
+        # Another cell reserved the intervening renewal block.
+        blocks = [[44000000, 44000256], [low, low + 256], [low + 512, low + 768]]
+        cell = state_cell([seed for a, b in blocks for seed in range(a, b)], blocks=blocks)
+        ledger = [tuple(block) for block in blocks[1:]]
+        problems, notes = check_state(dict(cells={'demo_x': cell}, offsets={'demo_x': 300}), ledger)
+        self.assertEqual((problems, notes), ([], []))
+
+    def test_duplicate_seeds_within_a_cell_fail(self):
+        cell = state_cell([1, 2, 1, 2], blocks=[[1, 3], [1, 3]])
+        problems, _ = check_state(dict(cells={'demo_x': cell}, offsets={}), [])
+        self.assertTrue(any('duplicate seeds' in line for line in problems))
+
     def test_renewed_segment_must_be_in_the_ledger(self):
         cell = state_cell(range(512), blocks=[[0, 256], [START_SEED_POOL[0], START_SEED_POOL[0] + 256]])
         problems, _ = check_state(dict(cells={'demo_x': cell}, offsets={}), [])
@@ -59,6 +73,9 @@ class StartSeedPreflightTest(unittest.TestCase):
         problems, _ = check_config({'tasks': [dict(
             task_id='demo_x', demo_start=dict(future_seed_start=START_SEED_POOL[0],
                                               future_seed_count=256))]})
+        self.assertTrue(any('inside the renewal pool' in line for line in problems))
+        problems, _ = check_config({'tasks': [dict(
+            task_id='demo_x', demo_start=dict(future_seeds=[9, START_SEED_POOL[0], 3]))]})
         self.assertTrue(any('inside the renewal pool' in line for line in problems))
 
     def test_shared_config_block_is_only_a_note(self):
