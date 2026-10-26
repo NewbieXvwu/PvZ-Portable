@@ -1260,3 +1260,28 @@ C/D/E 槽位前移，生成器把清单默认种子同步为当前块首），
 全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波，
 L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
 
+
+### 14.35 随机卡组任务族（task93，2026-10-26，AGENTS §8 第 4 条）
+
+背景：heldout 卡组里的卷心菜(32)、三叶草(27) 只出现在一份冻结的 legacy 扰动数据里
+（行占比 4.31%，r11 起零增长），换训练种子 heldout 在 124–169/192 之间抽签（task84）。
+修复思路是让训练数据覆盖整个引擎合法卡组空间，而不是手写卡组或调数据权重。
+
+三个新族 `day_l7_train_rand` / `night_l12_train_rand` / `pool_l21_train_rand`（白天 L7 /
+夜间 L12 / 泳池 L21，各 1 关、playthrough 2、倍率 1.0）：每种子独立均匀抽长度 6–10，
+再从候选池无放回均匀抽有序样本。候选池照 `perturb_family.engine_family` 先例：
+Dave 候选 ∩ [0,40) ∩ 引擎 `not_recommended==0`，**无任何手写强度规则**；整组合法性
+只靠引擎 `deck_warnings`，泳池强制睡莲(16)，`heldout_deck` 全签名机械排除。
+生成期逐种子过引擎校验并把 `{attempt, deck}` 收据冻结进清单，运行时
+`deck_for_seed`（`scripts/pvz_tasks.py` 的 `deck_random` 分支）回放收据并断言逐位一致。
+生成脚本 `scripts/make_random_deck_tasks.py`，清单
+`artifacts/stage4/random_deck_panel.json`（本地派生不入 git），provenance 记引擎
+b642614f（=生产 cq）。
+
+**种子**（对全仓 90M+ 数字扫描 0 撞车）：cold 93_000_000/93_010_000/93_020_000 起
+各 32；tiers 各 16（+32）；train 各 48（93_x0x_100 起）。
+
+**冷启动**（2026-10-26，r11 + 生产老师，32 局/族）：老师 17/32（day，53%）、5/32
+（night）、7/32（pool）。课程接入方案与 heldout 预测见
+`MEMORY/docs/deck-diversity.md`（只写方案，未改 qc）。已知缺口：三叶草(27) 被引擎
+`not_recommended` 在三关候选池全滤掉，heldout 的 27 暂无新覆盖，交主控裁定。
