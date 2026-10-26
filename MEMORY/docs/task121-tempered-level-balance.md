@@ -134,6 +134,9 @@ DESIGN §14.41 登记了新配方与两个参数（task119 在 pvz-env 已占 §
 git merge-tree 实测为 add/add 冲突。合并时取本分支版本（它是 pvz-env 那版的超集），
 不要取 pvz-env 那侧，否则下面的结果整段丢失。除此之外两个分支没有其他冲突。
 
-追加（2026-10-26）：`scripts/qc_deploy14h.sh` 已交付到台式机 `~/pvz-logs/qc_deploy14h.sh`（SHA256 `f1c6e5fa9f5c3f03fae276d5debe4d3be13e360950a16845c613fddd7da1a0fc`，未执行）。
-照 14g 模式：REV=082a648e，CODE_FILES 增加 `recipes/dw4i2_rebalanced_p05.json`，`start_qc` 与 dry-run 的 `--alternate-recipe` 改成 p05，回滚回 deploy14g 代码与参数；
+追加（2026-10-26）：`scripts/qc_deploy14h.sh` 已交付到台式机 `~/pvz-logs/qc_deploy14h.sh`（未执行）。
+照 14g 模式：REV=082a648e，CODE_FILES 增加 `recipes/dw4i2_rebalanced_p05.json`；`start_qc` 的 rebalance 分支与 dry-run 的 `--alternate-recipe` 用 p05，
+else 分支（mode 文件不存在或回滚后）保持现役 deploy14g 参数 `--alternate-recipe $W/recipes/dw4i2_rebalanced.json --opening-manifest $OPENING`
+——看门狗会用最新 `qc_deploy*.sh` 的 `start_qc` 重启 qc，这一支若丢掉 A/B 与开局专项会被静默降级；回滚回 deploy14g 代码与参数；
 preflight 基线取 cq 工作树当前 6 个文件的 SHA256（与 7592889a 逐位一致，p05 记为 null）。只做 `bash -n`。
+主控在台式机上直接修了 else 分支，仓库版本已同步为同一份内容（SHA256 `259b00656a948f12894a0d4fd04bcbab7bce5b3a626a6fbafa29e38548679816`，与台式机副本逐字节一致）。
