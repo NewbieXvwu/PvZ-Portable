@@ -49,6 +49,9 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 - [4-归因] 排除源码回归：逐函数对比两引擎的机器码大小，游戏代码逐项相同（`Board::Update` 0xa25 相同、`Plant::Update` 0x1367 相同、`RunEnvironment` 0x31b7→0x31ed、`Zombie::Update` 0xde3→0xac8），mimalloc 159 个符号逐个同尺寸。差异在**构建配置**：`/usr/local/lib/libopenmpt.a`（10-25 17:02 新装）让 `find_library` 选中静态 libopenmpt，候选 68.7 MB / .text 4.55 MB，deploy14 是 10.4 MB / 2.48 MB，且候选不再 `NEEDED libopenmpt.so.0`。bench 引擎净吞吐（低负载时段 8 对）old 232 688 / new 235 859 ticks·CPU-s⁻¹，说明慢的部分来自负载下的布局/内存足迹，不是每 tick 的指令数。
 - [2b] 按 deploy14 的链接配置重建对照候选：`build2`，显式 `-DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so`，PGO 两阶段同 build_pgo.sh 流程（插桩 → bench workload → 141 份 .gcda → profile-use），profile 目录 `artifacts/perf/pgo2`。SHA256 `83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029`，10.65 MB / .text 2.70 MB，`NEEDED` 与 deploy14 完全一致（含 `libopenmpt.so.0`、`libz.so.1`）；构建完成即留档 `artifacts/task95/engine/pvz-portable-build2`。引擎净吞吐配对 bench（8 次交替）old 282 762 / build2 281 321 ticks·CPU-s⁻¹（比 0.995）。
 
+- [2b-吞吐，进行中被叫停] build2 对 deploy14 的 ABBA 跑到 **7/16 对**（全是 day 段）时主控通知 Codex 额度恢复、要求交还：中位 new/old **1.004**（即 old/new 0.996），7 对决策数全同；pool 段未跑，**不作判定**。部分记录留在 `artifacts/task95/abba3/run.log`。后台进程已停，未留下本任务的 pvz 进程。
+
 ## 问题
 
+- **剩余待办（交还 Codex）**：① `artifacts/task95/abba3/` 补完剩余 9 对（会复用已完成的 7 对，目录已存在）后判定；② build2 的六族逐位门禁：`artifacts/task95/gate_b2/` 已放好 old 臂与 `frames_old`，只需用 `scripts/task70_redeploy_gate.py --old …deploy14-pvz-portable --new …pvz-portable-build2 --out artifacts/task95/gate_b2` 跑 new 臂（约 80 分钟，2 进程）；③ L50 四局（`scripts/task95_boss_l50_gate.py --old … --new …pvz-portable-build2`）；④ 若 build2 全过，B9 与 `scripts/qc_deploy15.sh` 的 `ENGINE_SHA` 从 07703a57 换成 83aed3be，否则退回“候选不可部署”的结论。
 - **吞吐差 3–5%，两次 ABBA 都不过 0.98。** 已定位到构建配置（静态 libopenmpt 把二进制从 10.4 MB 撑到 68.7 MB），不是 task82/task85 的源码行为；处理办法是照 deploy14 的共享库链接重建，重建后必须重跑六族逐位门禁与 L50 才能算候选。原始 07703a57 仍留档，不覆盖。
