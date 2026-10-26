@@ -55,5 +55,14 @@
   要点：day 族 1.0 倍直接登记（53%）；night/pool 先扫 0.5/0.75（各 16 局）再定；三族合计 ~4% 行占比起步、
   label_weight 1.0 平权（task84 B 证明加权冻结数据无效）；heldout 预测均值回典型簇、方差缩小。
   第 4 步已开工：144 局老师 frames 采集中（deploy4 引擎，labels rand_d7/rand_n12/rand_p21）。
+- 2026-10-26 主控换手：task93 交 Business 号 Codex。CodeBuddy 到此为止（代码与文档已全部提交推送，工作树干净）。
+  **交接状态**：第 1–3 步完成；第 4 步进行中——144 局老师 frames 后台采集中（后台任务未停，输出在
+  `artifacts/task93/collect/<族>/` 与 `artifacts/task93/frames/`，deploy4 引擎 cq/build4 16989f23，
+  labels rand_d7 / rand_n12 / rand_p21，种子 93_x0x_100..147，完成后自动退出）。
+  采集完成后的下一步：pack（见 `MEMORY/docs/deck-diversity.md` 验证节：task84 A 语料 + 3 新标签，
+  symlink 农场复用 task84 段缓存）→ seed 1/2 各训一次（train_rollout_policy --recipe，~45 分钟/个）→
+  照 `gatepower/scripts/task84_ablation_eval.py` 在 heldout 192 + 对照 d7 192 配对评估（deploy4、fast、dagger-beta 0，
+  r11 配对局在 `~/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent/`）。
+  基线：A 124/172、D2 169/178、r11 166/168。
 
 ## 问题
