@@ -736,3 +736,6 @@
     - 已补拷，并在临时目录用新代码跑 dry-run，退出码 0。
   - 08:44 第二次执行 deploy14，`REV=0b8dcc26`，正在等组边界。
   - agent_pool 把 task96 的恢复时间误解析成 06:21（取了旧提示），已手动改为 11:31。
+- 2026-10-26 09:05（台式机时间）：**deploy14 上线成功**。08:50 切换，08:55 首组 rc=0。qc 跑在 0b8dcc26 加引擎 build5（`76ff36dc`）上，门禁 v3 生效；雾夜 `_hv2` 示范格已开始采集，L33 cactus 一组 24/24。
+  - 合并到 pvz-env 时差点出事：deploy14fix 的祖先里有 redeploy 的 revert 提交（撤销 seedpool + hashdet），直接 merge 会把 task82 的 C++ 修复和种子池代码删掉。已重置，改为只 cherry-pick 种子用完的修复（0b8dcc26）与 B8 的面板脚本（91559d83），task70 文档从 redeploy 取。以后 redeploy 分支不要整枝合并。
+  - Mac 全量测试 732 过、1 失败：`test_human_demo_conveyor` 在全量负载下偶发失败，单独跑两次都通过，记为不稳定测试。
