@@ -965,5 +965,33 @@
    "archive_sha256": "07b2ce3d00a97b028a0ac843484c6108acb8d981d37fc2ddcdcd4ee06118b6e2",
    "receipt_sha256": "b90a5f705d4f77e3737ed05ebf46fb009e933cab2d3b38358f0f75ac84fc924a"
   }
- ]
+ ],
+ "scan_progress": {
+  "task_id": "demo_roof_48_doom_m200_s81002031_a7adc1574be88",
+  "complete": false,
+  "checked_games": 40,
+  "snapshot_sha256": "b91eb432ed66bc435620694dfdf529f49b78e24562afcdb1f8cceb2716dd36af",
+  "teacher_points": {
+   "1": {
+    "wins": 0,
+    "games": 8
+   },
+   "337": {
+    "wins": 0,
+    "games": 8
+   },
+   "588": {
+    "wins": 3,
+    "games": 8
+   },
+   "756": {
+    "wins": 8,
+    "games": 8
+   },
+   "924": {
+    "wins": 8,
+    "games": 8
+   }
+  }
+ }
 }
