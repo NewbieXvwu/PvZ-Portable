@@ -38,5 +38,7 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 Codex：348段元数据已逐项关联回标签与source_rows计数，两份source_rows原文件SHA同为fd0f9c12…；初版training-reproducibility.md整理已完成数据/代码/双跑结论与冻结方案，明确GPU诊断尚在等qc，不把旧双跑耗时当确定性成本。
 
+- 10-26 CodeBuddy 续接：修好诊断脚本三处无法启动的问题（labels 传字符串、单文件 read_pack 丢 packet store、label_weight 含集外键），CPU 冒烟通过。GPU 9 个用例跑完：初始权重与 randperm 摘要 9/9 相同，未设 workspace 与 `:4096:8` 7 次逐位相同（含 deterministic 关闭），**只把 workspace 换成 `:16:8` 就从第 2 步起分叉**（最终张量 77a3093b vs 282009e3）。即同配置内无 run-to-run 随机性、跨配置才分叉；r11/A/run1/run2 的 epoch1 差 0.1%–1.2% 与“第 2 步级别扰动被 132k 步放大”一致。8-epoch 计时 4 次最终张量全同，strict 10.44/9.30s vs default 7.74/17.05s，qc 并发下测不出确定性开销。结论已写入 `MEMORY/docs/training-reproducibility.md`（含 task92 前提需改写）。未证实的一环：具体哪个环境差异让三次全量跑落到不同算法（cuBLAS 显存不足回退是最可能触发点，但没为复现去压 qc 的显存）。
+
 ## 问题
 - r11 trained.json仅记录模型/配方sha与时间，没有trainer运行revision；recipe.provenance是配方来源，不等于实际训练源码。已用部署日志和评估SHA定位当时部署版本4f4d217b，但未记录的训练时单文件覆盖无法靠事后Git证明不存在；不能据主检出HEAD归因代码漂移。

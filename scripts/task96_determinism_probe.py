@@ -66,8 +66,10 @@ def prepare():
     if destination.exists():assert sha(destination)==expected
     else:shutil.copyfile(selected,destination)
     assert sha(destination)==sha(selected)==expected
-    recipe.update(data=str(OUT),labels=label,source_row_report=False,batch_size=128,
-                  validation_batch_size=128,max_steps=None,epochs=1)
+    # label_weight must name a subset of the new single-label list; this label was never weighted.
+    recipe.update(data=str(OUT),labels=[label],source_row_report=False,batch_size=128,
+                  validation_batch_size=128,max_steps=None,epochs=1,cache=False,
+                  label_weight={k:v for k,v in recipe.get('label_weight',{}).items() if k==label})
     write(OUT/'recipe.json',recipe)
     write(OUT/'input.json',dict(source_index=str(index),source_index_sha256=sha(index),
         source_segment=str(selected),segment_sha256=expected,rows=rows,seeds=len(seeds),label=label,
@@ -78,8 +80,10 @@ def prepare():
 def child(case):
     # Set the workspace before importing torch or creating any CUDA context.
     strict=case.startswith('strict')
-    if case=='strict_no_workspace':os.environ.pop('CUBLAS_WORKSPACE_CONFIG',None)
+    if case=='strict_no_workspace' or case.startswith('nows'):os.environ.pop('CUBLAS_WORKSPACE_CONFIG',None)
     else:os.environ['CUBLAS_WORKSPACE_CONFIG']=':4096:8'
+    # Extra cases: does the cuBLAS workspace size alone change the arithmetic?
+    if os.environ.get('TASK96_WORKSPACE'):os.environ['CUBLAS_WORKSPACE_CONFIG']=os.environ['TASK96_WORKSPACE']
     for name in ('OMP_NUM_THREADS','OPENBLAS_NUM_THREADS','MKL_NUM_THREADS'):os.environ[name]='1'
     os.environ['PVZ_NO_POPUP']='1'
     sys.path[:0]=[str(SOURCE/'scripts'),str(SOURCE/'python'),str(ROOT/'scripts')]
@@ -89,12 +93,17 @@ def child(case):
     expected=read(ROOT/'MEMORY/docs/task96-existing-runs.json')['source_snapshot']
     assert all(sha(SOURCE/entry['path'])==entry['sha256'] for entry in expected), 'frozen trainer source changed'
     from task96_existing_runs import tensor_digest
-    if qc_gpu_active():raise RuntimeError('qc GPU priority: no task96 training started')
+    uses_gpu=os.environ.get('TASK96_DEVICE',read(OUT/'recipe.json')['device']).startswith('cuda')
+    if uses_gpu and qc_gpu_active():raise RuntimeError('qc GPU priority: no task96 training started')
     torch.use_deterministic_algorithms(strict)
     torch.backends.cudnn.deterministic=strict
     torch.backends.cudnn.benchmark=False
     folder=OUT/case;folder.mkdir(parents=True,exist_ok=True)
     recipe=read(OUT/'recipe.json');recipe['out']=str(folder)
+    # Smoke-only overrides; the recorded cases never set them.
+    if os.environ.get('TASK96_DEVICE'):recipe['device']=os.environ['TASK96_DEVICE']
+    if os.environ.get('TASK96_MAX_STEPS'):recipe['max_steps']=int(os.environ['TASK96_MAX_STEPS'])
+    if os.environ.get('TASK96_EPOCHS'):recipe['epochs']=int(os.environ['TASK96_EPOCHS'])
     write(folder/'recipe.json',recipe)
     trace=dict(case=case,strict=strict,torch_version=torch.__version__,cuda=torch.version.cuda,
                cudnn=torch.backends.cudnn.version(),workspace=os.environ.get('CUBLAS_WORKSPACE_CONFIG'),
@@ -110,7 +119,9 @@ def child(case):
         trace['initial_tensor_sha256']=tensor_digest(net.state_dict())
         return net
     trainer.RolloutNet=network
-    trainer.load=lambda *args,**kwargs:trainer.read_pack(OUT/'segment.npz',data=None)
+    # read_segments, not read_pack: a single-file read_pack drops the packet-head store that the
+    # identity head needs. The segment carries the same packet columns the merged pack had.
+    trainer.load=lambda *args,**kwargs:trainer.read_segments([OUT/'segment.npz'],None)
     original_perm=torch.randperm
     def permutation(*args,**kwargs):
         result=original_perm(*args,**kwargs)
@@ -121,7 +132,7 @@ def child(case):
     trainer.Metrics=lambda *args,**kwargs:original_metrics(*args,directory=folder/'telemetry',**kwargs)
     def observe(step,loss):
         guard_started=time.monotonic()
-        active=qc_gpu_active()
+        active=uses_gpu and qc_gpu_active()
         trace['qc_guard_seconds']+=time.monotonic()-guard_started
         if active:raise RuntimeError('qc GPU priority: task96 yields before its next optimiser step')
         trace['steps'].append(dict(step=step,loss=loss))
@@ -152,12 +163,14 @@ def wait_for_qc():
 
 def run():
     wait_for_qc()
-    cases=['strict_no_workspace','default1','strict1','strict2','default2']
+    cases=['strict_no_workspace','default1','strict1','strict2','default2','ws16_a','ws16_b','nows_a','nows_b']
     for case in cases:
         wait_for_qc()
         command=[sys.executable,'-B',str(Path(__file__).resolve()),'child','--case',case]
+        extra=dict(os.environ)
+        if case.startswith('ws16'):extra['TASK96_WORKSPACE']=':16:8'
         with (OUT/(case+'.log')).open('w') as log:
-            subprocess.run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=150)
+            subprocess.run(command,cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True,timeout=150,env=extra)
         assert read(OUT/case/'trace.json')['status']!='yielded_to_qc', 'qc took GPU priority; diagnostic case is incomplete, not an operator error'
     traces=[read(OUT/case/'trace.json') for case in cases]
     summary=dict(task=96,scope=read(OUT/'input.json'),cases=traces,

@@ -1,0 +1,1151 @@
+{
+ "task": 96,
+ "scope": {
+  "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+  "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+  "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+  "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+  "rows": 2368,
+  "seeds": 32,
+  "label": "n20o1_fast_search",
+  "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+ },
+ "cases": [
+  {
+   "case": "strict_no_workspace",
+   "strict": true,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": null,
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 0.9993996221455745,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": true,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 3.102036872995086
+     }
+    ],
+    "seconds": 3.482098340988159,
+    "load_seconds": 0.03991556167602539,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.612107319990173
+  },
+  {
+   "case": "default1",
+   "strict": false,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": ":4096:8",
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 1.0254995881114155,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": false,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 2.972757031035144
+     }
+    ],
+    "seconds": 3.356097459793091,
+    "load_seconds": 0.04564833641052246,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.4516320870025083
+  },
+  {
+   "case": "strict1",
+   "strict": true,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": ":4096:8",
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 1.2667723881313577,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": true,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 3.385823578981217
+     }
+    ],
+    "seconds": 3.786834955215454,
+    "load_seconds": 0.02585911750793457,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.8936065600137226
+  },
+  {
+   "case": "strict2",
+   "strict": true,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": ":4096:8",
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 1.3140044879401103,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": true,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 3.3680101910140365
+     }
+    ],
+    "seconds": 3.785003185272217,
+    "load_seconds": 0.04105639457702637,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.8840389720280655
+  },
+  {
+   "case": "default2",
+   "strict": false,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": ":4096:8",
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 1.2560955840162933,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": false,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 3.77600936696399
+     }
+    ],
+    "seconds": 4.129189968109131,
+    "load_seconds": 0.015452384948730469,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 4.189244288019836
+  },
+  {
+   "case": "ws16_a",
+   "strict": false,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": ":16:8",
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.84398889541626
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224612236022949
+    },
+    {
+     "step": 5,
+     "loss": 6.638699531555176
+    },
+    {
+     "step": 6,
+     "loss": 6.6985249519348145
+    },
+    {
+     "step": 7,
+     "loss": 6.644467353820801
+    },
+    {
+     "step": 8,
+     "loss": 6.799570083618164
+    },
+    {
+     "step": 9,
+     "loss": 6.438684940338135
+    },
+    {
+     "step": 10,
+     "loss": 6.277696132659912
+    },
+    {
+     "step": 11,
+     "loss": 6.320905685424805
+    },
+    {
+     "step": 12,
+     "loss": 6.419618606567383
+    },
+    {
+     "step": 13,
+     "loss": 6.642949104309082
+    },
+    {
+     "step": 14,
+     "loss": 6.148489952087402
+    },
+    {
+     "step": 15,
+     "loss": 6.329929828643799
+    },
+    {
+     "step": 16,
+     "loss": 6.444971561431885
+    },
+    {
+     "step": 17,
+     "loss": 7.1772966384887695
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 0.9015286099165678,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": false,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "282009e3e01a86b202e2ed5530085abb4d6313fc5677b183cf4fcf1f884b482a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620113781014304,
+      "val_loss": 6.571697440102835,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 2.7372177420184016
+     }
+    ],
+    "seconds": 3.1011335849761963,
+    "load_seconds": 0.0212860107421875,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.1768093910068274
+  },
+  {
+   "case": "ws16_b",
+   "strict": false,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": ":16:8",
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.84398889541626
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224612236022949
+    },
+    {
+     "step": 5,
+     "loss": 6.638699531555176
+    },
+    {
+     "step": 6,
+     "loss": 6.6985249519348145
+    },
+    {
+     "step": 7,
+     "loss": 6.644467353820801
+    },
+    {
+     "step": 8,
+     "loss": 6.799570083618164
+    },
+    {
+     "step": 9,
+     "loss": 6.438684940338135
+    },
+    {
+     "step": 10,
+     "loss": 6.277696132659912
+    },
+    {
+     "step": 11,
+     "loss": 6.320905685424805
+    },
+    {
+     "step": 12,
+     "loss": 6.419618606567383
+    },
+    {
+     "step": 13,
+     "loss": 6.642949104309082
+    },
+    {
+     "step": 14,
+     "loss": 6.148489952087402
+    },
+    {
+     "step": 15,
+     "loss": 6.329929828643799
+    },
+    {
+     "step": 16,
+     "loss": 6.444971561431885
+    },
+    {
+     "step": 17,
+     "loss": 7.1772966384887695
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 1.1637635768274777,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": false,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "282009e3e01a86b202e2ed5530085abb4d6313fc5677b183cf4fcf1f884b482a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620113781014304,
+      "val_loss": 6.571697440102835,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 2.9789075090084225
+     }
+    ],
+    "seconds": 3.3339052200317383,
+    "load_seconds": 0.022188663482666016,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.418981007998809
+  },
+  {
+   "case": "nows_a",
+   "strict": false,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": null,
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 1.2458943569799885,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": false,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 3.2653976169531234
+     }
+    ],
+    "seconds": 3.599128484725952,
+    "load_seconds": 0.02555251121520996,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.695446098980028
+  },
+  {
+   "case": "nows_b",
+   "strict": false,
+   "torch_version": "2.14.0+cu132",
+   "cuda": "13.2",
+   "cudnn": 92400,
+   "workspace": null,
+   "data": {
+    "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+    "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+    "source_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/segments/2a84b8fdf067fe74.npz",
+    "segment_sha256": "806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854",
+    "rows": 2368,
+    "seeds": 32,
+    "label": "n20o1_fast_search",
+    "scope": "One real label segment; operator/seed diagnosis only, not a reproduction of the full 16,982,931-row experiment"
+   },
+   "steps": [
+    {
+     "step": 1,
+     "loss": 7.16928768157959
+    },
+    {
+     "step": 2,
+     "loss": 6.843989372253418
+    },
+    {
+     "step": 3,
+     "loss": 6.418006896972656
+    },
+    {
+     "step": 4,
+     "loss": 7.224495887756348
+    },
+    {
+     "step": 5,
+     "loss": 6.638527870178223
+    },
+    {
+     "step": 6,
+     "loss": 6.697404861450195
+    },
+    {
+     "step": 7,
+     "loss": 6.644674301147461
+    },
+    {
+     "step": 8,
+     "loss": 6.800361633300781
+    },
+    {
+     "step": 9,
+     "loss": 6.439655780792236
+    },
+    {
+     "step": 10,
+     "loss": 6.277899265289307
+    },
+    {
+     "step": 11,
+     "loss": 6.321229934692383
+    },
+    {
+     "step": 12,
+     "loss": 6.419747352600098
+    },
+    {
+     "step": 13,
+     "loss": 6.643270969390869
+    },
+    {
+     "step": 14,
+     "loss": 6.148150444030762
+    },
+    {
+     "step": 15,
+     "loss": 6.330841064453125
+    },
+    {
+     "step": 16,
+     "loss": 6.445036888122559
+    },
+    {
+     "step": 17,
+     "loss": 7.178997993469238
+    }
+   ],
+   "permutations": [
+    "391b1dcc9ea5f707007d3e1d1cf8df18a27f933fcd782e7a5279c8084bb3ee4c"
+   ],
+   "qc_guard_seconds": 0.9423446340369992,
+   "gpu": "NVIDIA GeForce RTX 5080",
+   "cudnn_deterministic": false,
+   "cudnn_benchmark": false,
+   "matmul_precision": "highest",
+   "fill_uninitialized_memory": true,
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "tensor_sha256": "77a3093bb40dd3d4afcc6f86b585a60005520976c0e76f36a28357616475ca1a",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 6.620326858598431,
+      "val_loss": 6.57243852526228,
+      "type_acc": 0.8827598167357044,
+      "plant_recall": 0.0,
+      "packet_acc": 0.5409875136112499,
+      "cell_acc": 0.14595382792927394,
+      "seconds": 2.746775612991769
+     }
+    ],
+    "seconds": 3.055119276046753,
+    "load_seconds": 0.02473163604736328,
+    "data_memory": {
+     "rows": 2368,
+     "board_bytes": 231128,
+     "scalar_bytes": 204822,
+     "cand_bytes": 118020,
+     "value_bytes": 92084,
+     "tensor_bytes": 23680,
+     "packet_bytes": 165760
+    }
+   },
+   "wall_seconds": 3.1177313469816
+  }
+ ],
+ "cost_limit_seconds": 750,
+ "production_changes": false
+}

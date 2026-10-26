@@ -1,6 +1,6 @@
 # task96：r11 重训复现审计
 
-2026-10-26，repro 分支。生产代码、qc、门禁、其他工作树均未修改。本文的确定性诊断尚在等待 qc 释放 GPU，最终算子与成本结论待补。
+2026-10-26，repro 分支。生产代码、qc、门禁、其他工作树均未修改。受限 GPU 诊断已跑完（9 个用例 + 4 个 8-epoch 计时用例），结论是：**同一份配置下训练逐位可复现；把 cuBLAS workspace 换掉就从第 2 步开始分叉**。也就是说，r11→A 的落差属于环境/内核选择漂移，不是种子没固定住。
 
 ## 已有证据支持什么
 
@@ -62,13 +62,54 @@
 
 训练没有 DataLoader。`precompute_workers=8` 指预计算，并非训练 DataLoader worker；读现成 pack 时不是训练洗牌来源。入口先 `torch.manual_seed(seed)`，训练每 epoch 用 CPU `torch.randperm`；验证由排好序的 seed 集与私有 `random.Random(validation.seed)` 划分。受限诊断会记录初始参数和实际 permutation SHA，检验“同 seed”是否真的给出同初始化与同顺序。
 
-## 受限 GPU 算子诊断（排队中）
+## 受限 GPU 算子诊断（已跑完）
 
-脚本 [task96_determinism_probe.py](../../scripts/task96_determinism_probe.py) 使用上述冻结训练器和一个真实标签段：`n20o1_fast_search`，2368 行、32 seeds，段 SHA `806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854`。输入复制并验证到 repro 自己的 ignored artifacts，加载器只替换成读这个段；其余调用实际 trainer.main，batch=128，1 epoch。该实验用来定位算子/种子，不能替代全量训练或泛化测量。
+脚本 [task96_determinism_probe.py](../../scripts/task96_determinism_probe.py) 使用上述冻结训练器和一个真实标签段：`n20o1_fast_search`，2368 行、32 seeds，段 SHA `806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854`。输入复制并验证到 repro 自己的 ignored artifacts，加载器只替换成读这个段；其余调用实际 trainer.main，batch=128。该实验用来定位算子/种子，不能替代全量训练或泛化测量。
 
-按顺序启动独立子进程：strict 无 workspace → default1 → strict1 → strict2 → default2。strict 设置 deterministic algorithms、cuDNN deterministic、benchmark=False；除首个报错探查外，在 import torch 前设置 `CUBLAS_WORKSPACE_CONFIG=:4096:8`。记录实际 traceback、每步 loss、初始/最终张量摘要、permutation 摘要、环境与耗时；ABBA 次序减少首轮启动偏差。
+11:59 的首版脚本跑不起来（`labels` 传了字符串而非列表；`read_pack` 单文件分支丢掉 identity head 需要的 packet store；`label_weight` 含新标签集之外的键），已改成 `labels=[label]`、`read_segments([segment])`、只保留本标签的权重，并先用 CPU 冒烟跑通（同一 seed 两次逐位相同）。
 
-每子进程最多150秒、总训练主动时间上限750秒；同任务最多一个 GPU 训练，qc 正在 GPU 训练时排队，运行中检测到 qc 就退出让行。诊断不启动游戏。结果到齐后补齐报错位置、复现性及成本；含每步 qc 准入检查的短样本耗时只代表该诊断，不能外推全部语料的生产开销。
+正式用例（独立子进程，每次 import torch 前设好 workspace；strict 另开 deterministic algorithms、cuDNN deterministic、benchmark=False）：
+
+| 用例 | workspace | 初始张量 SHA | 最终张量 SHA | 第1步 loss | val loss |
+| --- | --- | --- | --- | ---: | ---: |
+| strict_no_workspace | 未设 | `2624c16674ce…` | `77a3093bb40d…` | 7.1692876816 | 6.5724385253 |
+| default1 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
+| strict1 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
+| strict2 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
+| default2 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
+| ws16_a | :16:8 | 同上 | `282009e3e01a…` | 同上 | 6.5716974401 |
+| ws16_b | :16:8 | 同上 | `282009e3e01a…` | 同上 | 6.5716974401 |
+| nows_a | 未设 | 同上 | `77a3093bb40d…` | 同上 | 6.5724385253 |
+| nows_b | 未设 | 同上 | `77a3093bb40d…` | 同上 | 6.5724385253 |
+
+读法：
+
+- **初始权重与 shuffle 顺序在所有 9 次里完全相同**（初始化张量 SHA 一致、`randperm` 摘要 `391b1dcc…` 一致）。`torch.manual_seed(seed)` 确实同时决定了初始化和训练排列，不存在“同 seed 不同初始化”的问题。
+- **未设 workspace 与 `:4096:8` 逐位相同**（7 次全部一致，含 deterministic 关掉的 default 两次）。strict 打开后没有抛任何 nondeterministic 算子错误，说明这条训练路径里没有 PyTorch 判定为非确定的算子，包括 embedding 反向。
+- **只把 workspace 从 `:4096:8` 换成 `:16:8`，最终权重和 loss 就变了**：第 1 步 loss 仍相同，**第 2 步开始出现差异**（6.843989372253418 vs 6.84398889541626），17 步后训练 loss 6.6203269 vs 6.6201138、val 6.5724385 vs 6.5716974。同一 workspace 下重复（ws16_a/ws16_b）逐位相同。
+- 也就是说：**同配置内没有 run-to-run 随机性，跨配置有**。cuBLAS 按可用 workspace 选不同 GEMM 算法，浮点求和顺序随之改变；差异在几步内进入混沌放大。
+- 环境：torch 2.14.0+cu132、CUDA 13.2、cuDNN 92400、RTX 5080、driver 617.14、`float32_matmul_precision=highest`（TF32 关闭）。torch 包安装于 2026-09-27，早于 r11 与 A，两轮之间库版本没变。
+
+### 与三次全量结果对照
+
+同一 pack、同一 seed、同一 trainer 的三次全量训练，第 1 个 epoch 就已经互不相同：
+
+| 全量 run | epoch1 train | epoch1 val | epoch 秒 |
+| --- | ---: | ---: | ---: |
+| r11 | 4.3446921 | 3.8311677 | 221 |
+| A | 4.3403805 | 3.8103482 | 224 |
+| CodeBuddy run1 | 4.2911644 | 3.7510763 | 890 |
+| CodeBuddy run2 | 4.3041004 | 3.7643171 | 334 |
+
+按上面的机制，这不需要“训练本身随机”来解释：任何在第 2 步级别的微小数值差，经过 132k 步都会被放大到 0.1%–1% 的 epoch 均值差。r11 与 A 只差 0.1%，run1 差 1.2%，与“扰动大小不同”一致，而不是三种独立的随机抽样。
+
+**未能证实的一环**：具体是哪个环境差异让三次全量跑落到不同 workspace/算法。cuBLAS 在 workspace 申请失败时会退化到更小的 workspace，而 run1 的 890s/epoch（对 221–334s）说明它当时确实在和别的负载抢 GPU，这是最可能的触发点；但为了不给 qc 制造显存压力，本次**没有**人为压低空闲显存去复现，所以这条只是假设，不是结论。三次全量跑也都没有留下环境回执（见问题）。
+
+### 确定性训练的成本
+
+同一段数据跑 8 个 epoch（136 步）四遍：strict 两遍 10.44s / 9.30s，default 两遍 7.74s / 17.05s，**四遍最终张量 SHA 完全相同**（`d115b228…`）。qc 同时在跑，计时噪声（7.7–17.0s）远大于任何 strict 开销，**这个尺度上测不出确定性模式的代价**。这既不能说明生产上零成本，也不能说明有成本；真要上生产，应在完整一个 epoch 上量一次。
+
+结论：本项目这条路径打开 deterministic algorithms + 固定 `CUBLAS_WORKSPACE_CONFIG` 不会引入新的算子（没有报错、没有回退），所以预期开销很小，但**必须实测**后再写进生产。
 
 ## 冻结与修法建议（生产未改）
 
@@ -76,7 +117,8 @@
 2. `round_*/runtime.json` 记录实际命令、resolved recipe SHA、Git revision、dirty diff SHA、训练链各源码 SHA（含导入依赖），以及 Python/numpy/PyTorch/CUDA/cuDNN/驱动/GPU、精度与确定性设置、CUBLAS workspace。配方来源 revision 与实际训练运行 revision 分开保存。
 3. 显式独立的 CPU generator 管理模型初始化与训练 permutation，验证 split 使用独立 seed；存启动 generator 状态摘要、初始化张量 SHA、各 epoch permutation SHA。以后即使引入 DataLoader，再显式配置 generator/worker_init_fn 以及 Python/numpy RNG；当前不存在 worker 需要补种子的证据。
 4. 验收比较实际张量与 loss，模型文件 SHA另作文件完整性校验；不能因 metadata/输出路径差异误判权重不同。相同库/设备下检查逐位复现，跨版本/跨设备另设数值容差与行为评估。
-5. task92 可以处理可测的训练方差，但不能代替数据/代码/环境冻结。先把确定性诊断完成并测清作用；对于 42/192 的 heldout 落差，仍需多个完整训练及新种子配对评估，不能用单个 r11 称“幸运”就认定原因。
+5. 生产训练固定 `CUBLAS_WORKSPACE_CONFIG`（配合 deterministic algorithms / cuDNN deterministic / benchmark=False）写进 `runtime.json` 与启动脚本，作为“同配置可复现”的前提。诊断显示换 workspace 就换算法、换结果；不写死它，“同配方同 seed 重训”这句话本身没有定义。改动前先在一个完整 epoch 上量开销。
+6. **task92 的前提要改写。** 它假设“训练随机性是主要来源”，但本次证据是：同配置内 9/9 逐位相同，跨配置才分叉。所以多种子挑选测到的是**种子方差**（不同 seed → 不同初始化与排列，这是真的），不是“同 seed 重训的抖动”。若不在多种子之间固定运行配置，种子比较会把环境漂移混进去，挑选结论会被一个偶然落到慢 workspace 的种子污染。对 42/192 的 heldout 落差，仍需要多个完整训练 + 新种子配对评估，不能用单个 r11 称“幸运”就认定原因。
 
 ## 复核命令
 
@@ -87,4 +129,9 @@
 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_provenance.py
 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_determinism_probe.py prepare
 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_determinism_probe.py run
+
+# 计时用例（8 epoch，strict 与 default 各两遍；结果在 artifacts/task96/determinism_probe/{strict_cost_*,cost_*}/trace.json）
+TASK96_EPOCHS=8 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_determinism_probe.py child --case strict_cost_a
 ```
+
+`run` 现在跑 9 个用例（含 `:16:8` 与未设 workspace 各两遍），全部完成后写 [task96-determinism-probe.json](task96-determinism-probe.json)。
