@@ -261,6 +261,17 @@ def test_patterns_environment_paths_and_disk_guard(tmp_path, monkeypatch):
     assert mac.check_disk(100) == mac.MIN_FREE + 100
 
 
+@pytest.mark.parametrize('label', ['d7dag93m100', 'n12dag93m050', 'p21w93m050'])
+def test_multiplier_suffixed_packages_import_and_cleanup(tmp_path, label):
+    hf = FakeHF({label: package(tmp_path, label, seed=93005000)})
+    report = refresh(tmp_path, hf, labels=[label])
+    record = report['rounds'][0]
+    assert record['label'] == label
+    assert record['archives'] == 1 and record['rows'] == 2
+    assert mac.local_matches(tmp_path/'frames_v2', label, record)
+    assert hf.deletions == [f'transfer/{label}.tgz']
+
+
 def test_missing_requested_label_and_import_lock(tmp_path):
     with pytest.raises(ValueError, match='missing from HF'):
         refresh(tmp_path, FakeHF({}), labels=['p21w1m'])

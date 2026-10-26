@@ -1286,3 +1286,13 @@ b642614f（=生产 cq）。
 （night）、7/32（pool）。课程接入方案与 heldout 预测见
 `MEMORY/docs/deck-diversity.md`（只写方案，未改 qc）。已知缺口：三叶草(27) 被引擎
 `not_recommended` 在三关候选池全滤掉，heldout 的 27 暂无新覆盖，交主控裁定。
+
+**task93b扩采（Mac，2026-10-26）**：另登记`day_l7_train_rand_expand` /
+`night_l12_train_rand_expand` / `pool_l21_train_rand_expand`，卡池与均匀采样机制沿用上述冻结定义，
+倍率分别1.0/0.5/0.5，playthrough 2，192局/族；档案实际种子分别93_000_500–691 /
+93_010_500–691 / 93_020_500–691，与原288个收据种子不交叠。标签`d7dag93m100` /
+`n12dag93m050` / `p21w93m050`（目录加`_fast_search`），已导入共享`artifacts/student/frames_v2`，
+HF取用后三包已删除。台式机按档案重算老师胜104/75/114；未来课程建议白天1.0、泳池0.5，
+夜间0.5仍39.06%暂缓。当前仅并入课程方案，不改qc，也不改变原144局双种子验证。
+数字、完整覆盖、来源与删除回执见`MEMORY/docs/task93b-desktop-import.json`，
+方案与尚缺Mac引擎清单/配置的限制见`MEMORY/docs/deck-diversity.md`。

@@ -29,9 +29,9 @@ LEGACY_REPORTS = (
 )
 LABEL_PATTERNS = {
     'high_difficulty': re.compile(r'z\d+dag\d+[bc]'),
-    'day': re.compile(r'd\d+(?:dag\d+[bm]|p\d+m)'),
-    'night': re.compile(r'n\d+dag\d+m'),
-    'pool': re.compile(r'p\d+w\d+m'),
+    'day': re.compile(r'd\d+(?:dag\d+(?:b|m\d*)|p\d+m)'),
+    'night': re.compile(r'n\d+dag\d+m\d*'),
+    'pool': re.compile(r'p\d+w\d+m\d*'),
 }
 MIN_FREE = 15 * 1024**3
 
