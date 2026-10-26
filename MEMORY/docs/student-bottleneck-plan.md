@@ -867,3 +867,7 @@
   - **台式机 SSH（UURemote 隧道）约 17:55 起握手超时**，至今没恢复。
     - 时间上紧挨着 cbp-task104 在台式机跑 `gate_seed_inventory.py`：全机种子扫描跑了 15 分钟没完，Agent 把本地 ssh kill 了，远端进程可能还在。这是第二个形式主义审计的例子，写进 task106。
     - 已令 cbp-task104 跳过全机扫描，不用 pvz-f1，断线期间只做文档与代码。
+- 2026-10-26 18:25（台式机时间）：台式机重新连上，qc 在断线期间一直运行，全机种子扫描进程已经不在了。
+  - 台式机 `~/.codex` 与 `~/.codex-plus` 的 AGENTS.md 已加反形式主义校验一节，并已广播给 11 个 Codex 会话。
+  - **task106** 已派给 cb-qcbench（DeepSeek）。
+  - plus 号额度又用完（21:51 恢复）。task81h 的后半段（resume 连摘要也不算）在工作树里改了一半没提交，由 cbp-task81h（CodeBuddy 账号 3）手动接手。
