@@ -31,6 +31,8 @@
 - 2026-10-26 qc 侧对齐（离线、不起进程）：`load_demo_start_cells` → `make_state` 在两格上生成起点格，档位分别落在 624 / 920（阶梯 0 号 = 示范后段），再次 `reconcile_start_cells` 返回空（幂等）；`command_for` 带 `--demo-decision 624` / `920` 与 `--future-seeds 45600000..45600007` / `45700000..45700007`。
 - 2026-10-26 测试与 DESIGN：`test_registered_manifest_start_cells` 期望 34 → 36；`test_curriculum_queue` 63 过 1 skip，`test_student_selection` 的 1 项失败在基线 `cc8cc4ed` 同样失败。DESIGN §14.36 追加 task112 条目与部署清单（不执行，随 deploy14e）。
 
+- 2026-10-26 旁路核对（静态、不起进程）：两条新任务不进入倍率面板（`make_multiplier_tasks.py` 只读 day/night/pool/roof/fog/native 各面板文件）、不进入原生传送带面板（`make_native_conveyor_panel.py` 关卡硬编码 25/30/40，且不读本清单）、不进 llmplay 任务表（`make_llmplay_tasks.py` 的 E 层是显式字典）；学生挑选面板与本清单的种子不重叠由 `test_student_selection` 覆盖（已通过）。
+
 ## 问题
 
 1. **本工作树没有示范存档**，`test_registered_manifest_start_cells` 按既有约定 skip；改用主检出存档根单独加载两个新格（阶梯 / 256 个未来种子 / verified 存档）通过。存档不入 git。
