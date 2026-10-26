@@ -188,6 +188,8 @@
 
 - 2026-10-27 08:10：**语料恢复改成机械判定**。新增 tracked `scripts/task78_corpus_check.py`（5 项测试）：`--paths` 校验 97 个原 branch 文件、64 个决策分片、审计清单；默认模式按冻结 schema 校验 `original_v5/corpus.json` 的 baseline/分支数/逐文件 SHA/决策分片数/审计清单/四个 episode 文件，任一不符即 rc=1。当前实测：`--paths` 97/97 缺失、0/64 分片、审计清单缺失；descriptor 不存在，rc=1、`ready=false`。所以"语料是否恢复"不再靠肉眼判断——主控或别的机器把文件放回来，跑这一条命令就能定。
 
+- 2026-10-27 08:30：**正式路径收敛成一条可恢复命令**。新增 tracked `scripts/task78_formal_run.py`（5 项测试）：`corpus → train --corpus original → freeze → v5 → v6 → report`，逐步独立进程、断点续跑（train 见 `formal_v6/model.pt` 即跳过，面板工具本身按 seed 去重/写一次）。实测现在跑它会**在第一步语料门就停**（rc=1，不占 GPU、不开游戏），并指到 `artifacts/task78/formal_run.log`。另实测新区域数据可被正式加载器读出：雾 fit278/val126、屋顶 fit525/val58、49 个世界——即"新数据这一半"已就绪，只等旧语料。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
