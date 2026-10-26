@@ -460,13 +460,14 @@ observe 格式基本可以，探路包和正式包都收到。还要改三处，
   - 引擎与251份缓存内容未变，81f的5次计时结论继续适用。资源不进git、不上HF；两个文件必须配对使用。Mac `~/pvz-llmplay/` 的拷贝由主控核对后执行。
 - 真实证据：`~/pvz-logs/llmplay_task81g/{release-selfcheck.txt,release-portable-check.txt,portable-audit.json}`；紧凑结论并入 [验收记录](task81-resource-cache-audit.json)。
 
-## task81h：摘要快速续跑（2026-10-26）
+## task81h：续跑直接按旧进度恢复（2026-10-26）
 
-- `resume(source, verify="fast")` 默认只对来源 `archives/<sha>` 中摘要匹配、且来源progress记录valid的存档沿用记录；共用 `_store` 的摘要算法。没有记录、记录无效或摘要不符时才重放；`verify="full"` 重放全部。线程池workers取CPU核数，信号量将实际引擎并发限制为2，每完成10份复验打印进度，结果按原有排序发布。预算、run_id、任务选择与原子交付保留。
-- 仅resume发布用低压缩级别，且已校验的私有zip解压文件直接移入内容库，避免额外哈希/复制；用户提供的原zip与目录均不移走。普通export交付路径不变。
-- 86项原有及新增llmplay测试全过：快路verify调用0、篡改单份仅该份复验并作废、无效旧记录回退、full串行/并行结果一致、实际复验并发峰值2与每10份进度。新包冷解压后在 `unshare -Urn` 断网命名空间运行selfcheck，`SELFCHECK OK`。
-- 使用 `/home/newbiexvwu/llm_runs/gptpro_438cb30a_0446.zip` 从新包断网实测：**11.908秒**（含解压约737MB、摘要核验、恢复与重新发布out.zip），**verify调用0，191/191有效**，恢复文件及目录摘要再次逐份核验通过；**A 4/4、B 8/8、C 3/8**，run_id保持 `438cb30ac4e143368a5cb47a8569066b`。191份真实full对照按任务书允许跳过。
-- 新包位于 `/home/newbiexvwu/pvz-logs/llmplay_dist/`，仅接口zip中的delivery.py与PROMPT.md变化，资源zip逐字节不变；CRC、包间资源SHA与引擎SHA匹配检查通过。源码提交 `798f09fe` 已推送origin/llmplay。
-  - `llmplay_pkg.zip`：11,840,935字节；SHA256 `9422ab5b2224ae1b674fc81bcd1a822861f99f6218ca223a07ec04a3a5dcf11a`。
-  - `llmplay_res.zip`：34,258,402字节；SHA256 `0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e`。
-- 证据：`/home/newbiexvwu/pvz-logs/task81h-selfcheck.log`、`task81h-resume-benchmark.json`；交付目录另有 `task81h.json`、`SHA256SUMS`。资源及zip不进git、不上传HF，Mac拷贝由主控执行。此前只读观察已按用户取消，自己的监测会话已停止。
+- 按主控 18:05 追加：默认 `resume(source)` **不算摘要、不重放**。直接读来源 `progress.json`，按记录的相对路径把存档原样恢复到内容库，沿用旧 progress 条目（valid/won/robust/run_id 原值）、预算与策略/脚本文件；zip 解压自带 CRC 兜底传输损坏，下游主控导入时会全量重放，因此沙箱侧默认路径不降低最终可信度。
+- `verify="full"` 保留旧行为：逐份用包内引擎重放，线程池按 CPU 核数建立、信号量把实际引擎并发限为 2，每完成 10 份打印进度。来源没有 progress.json 时默认路径直接报错并提示用 full 导入，不静默回退重放。
+- 88 项 llmplay 单测全过：默认路径把 `_archive_digest` / `verify_archive` 都 patch 成抛错，调用数 0；篡改一份存档默认原样恢复、full 下该份被判作废；full 并行与串行结果逐字段一致；缺 progress 报错且不调用 verify。
+- 用 `/home/newbiexvwu/llm_runs/gptpro_438cb30a_0446.zip`（191 档）从新包实测：**13.8 秒**（另两次 11.75 / 11.98 秒；含解压约 737MB、恢复 191 个存档目录与 351 个策略/脚本文件、重新发布 out.zip），**verify 调用 0、摘要计算 0、191/191 有效**；**A 4/4、B 8/8、C 3/8**，run_id 保持 `438cb30ac4e143368a5cb47a8569066b`，progress 的 archives/tasks 与来源逐字段相同，预算已恢复。191 份 full 对照按任务书允许跳过。
+- 重打包一次：接口包 29 个成员与上一交付包 `9422ab5b…` 仅 `llmplay/delivery.py` 一行不同（`sorted(restored)` → `list(restored)`，保持旧 progress 的存档顺序），其余 CRC 全同。`llmplay_res.zip` **逐字节不变**；接口包内 `configs/llmplay_package.json` 的资源 SHA 指回这份既有资源包（重建只会改变 4 个成员的 zip 时间戳，255/255 CRC 相同），两包仍然配对。
+- 新包位于 `/home/newbiexvwu/pvz-logs/llmplay_dist/`：
+  - `llmplay_pkg.zip`：11,766,759 字节；SHA256 `3059d819cae79e612fe7853df45367130cdf1afee863f2edf78cdb31e8d58206`。
+  - `llmplay_res.zip`：34,258,402 字节；SHA256 `0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e`。
+- 证据：`/home/newbiexvwu/pvz-logs/task81h-resume-benchmark-final.json`、`task81h-bench4/`；交付目录另有 `task81h.json`、`SHA256SUMS`。源码提交 `947c4fc1` 已推送 origin/llmplay。资源及 zip 不进 git、不上 HF，Mac 拷贝由主控执行。
