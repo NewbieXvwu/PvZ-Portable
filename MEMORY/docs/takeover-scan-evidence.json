@@ -170,6 +170,36 @@
    ],
    "frozen_trace_verified": true,
    "raw_rows_verified": true
+  },
+  {
+   "task_id": "demo_roof_48_doom_m200",
+   "seed": 20261048,
+   "adaptive_l50": 473,
+   "full_l50": 473,
+   "delta": 0,
+   "teacher_points": 9,
+   "scan_games": 88,
+   "full_two_arm_games": 192,
+   "passed": true,
+   "result_sha256": "b989eef3bdd158d6c73a465cd94bc84ae5712acbcb280d59b27947c4eae7bf24",
+   "raw_cache_manifest_sha256": "507f4dbd6205ca18496805d538732f875761991f0053bbefbae5d5bc400f887e",
+   "future_seed_start": 86001000,
+   "grid": [
+    1,
+    95,
+    190,
+    284,
+    379,
+    473,
+    568,
+    662,
+    757,
+    851,
+    946,
+    1040
+   ],
+   "frozen_trace_verified": true,
+   "raw_rows_verified": true
   }
  ]
 }
