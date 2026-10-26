@@ -127,3 +127,9 @@ deploy14g 的 `source_weight.level_balance`（`python/pvz_training_rows.py` 约 
 
 按任务书要求：没写部署脚本、没动台式机 qc、没跑训练、没改旧配方文件、没做全量重放。
 DESIGN §14.41 登记了新配方与两个参数（task119 在 pvz-env 已占 §14.40，这里直接编为 §14.41，合并时不再顺延）。
+
+### 合并注意
+
+本文件在 rebalance2 与 pvz-env 上各自新增（pvz-env 是任务书原文，本分支是原文＋结果），
+git merge-tree 实测为 add/add 冲突。合并时取本分支版本（它是 pvz-env 那版的超集），
+不要取 pvz-env 那侧，否则下面的结果整段丢失。除此之外两个分支没有其他冲突。
