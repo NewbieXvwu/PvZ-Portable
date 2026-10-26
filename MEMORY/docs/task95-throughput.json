@@ -1,0 +1,546 @@
+{
+  "candidate": "shared_build2",
+  "threshold": 0.98,
+  "ratio": "old_worker_seconds / new_worker_seconds",
+  "criterion": "median of the 16 paired throughput ratios >= 0.98; decisions identical",
+  "workload": "A4 day8 + pool8, serial alternating old/new then new/old",
+  "resume": "First 9 complete pairs and the new arm of pair 10 reused after handoff; same build2 SHA checked before resuming. Completed records were not remeasured.",
+  "inputs": {
+    "old": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+      "sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a"
+    },
+    "new": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
+      "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
+    },
+    "manifest": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/stage4/multiplier_panel.json",
+      "sha256": "68b37b98d3e29e83ac583fa5897372e7ed248213ec633d79edcf33e01eae26c3"
+    }
+  },
+  "models": {
+    "artifacts/student/dw4i_s1/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "artifacts/value_net/v4/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+      "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+    },
+    "artifacts/hard/value_branch1/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    }
+  },
+  "trials": [
+    {
+      "label": "initial_static",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/throughput_abba.json",
+      "sha256": "511c738323abce6a862808f5aed8f1e5a63c77627c6b90e75db8ee5ef63e720d",
+      "median_throughput_ratio": 0.9477023113673366,
+      "pass": false,
+      "games": [
+        {
+          "cell": "day",
+          "seed": 5012288,
+          "order": "oldnew",
+          "old_seconds": 125.0,
+          "old_decisions": 1257,
+          "new_seconds": 146.2,
+          "new_decisions": 1257,
+          "ratio": 1.1696
+        },
+        {
+          "cell": "day",
+          "seed": 5012289,
+          "order": "newold",
+          "new_seconds": 170.8,
+          "new_decisions": 1234,
+          "old_seconds": 159.2,
+          "old_decisions": 1234,
+          "ratio": 1.0728643216080402
+        },
+        {
+          "cell": "day",
+          "seed": 5012290,
+          "order": "oldnew",
+          "old_seconds": 158.8,
+          "old_decisions": 1069,
+          "new_seconds": 132.9,
+          "new_decisions": 1069,
+          "ratio": 0.8369017632241813
+        },
+        {
+          "cell": "day",
+          "seed": 5012291,
+          "order": "newold",
+          "new_seconds": 158.3,
+          "new_decisions": 1164,
+          "old_seconds": 155.9,
+          "old_decisions": 1164,
+          "ratio": 1.0153944836433613
+        },
+        {
+          "cell": "day",
+          "seed": 5012292,
+          "order": "oldnew",
+          "old_seconds": 155.6,
+          "old_decisions": 1141,
+          "new_seconds": 162.9,
+          "new_decisions": 1141,
+          "ratio": 1.0469151670951158
+        },
+        {
+          "cell": "day",
+          "seed": 5012293,
+          "order": "newold",
+          "new_seconds": 112.9,
+          "new_decisions": 995,
+          "old_seconds": 134.3,
+          "old_decisions": 995,
+          "ratio": 0.8406552494415488
+        },
+        {
+          "cell": "day",
+          "seed": 5012294,
+          "order": "oldnew",
+          "old_seconds": 107.3,
+          "old_decisions": 1147,
+          "new_seconds": 116.6,
+          "new_decisions": 1147,
+          "ratio": 1.086672879776328
+        },
+        {
+          "cell": "day",
+          "seed": 5012295,
+          "order": "newold",
+          "new_seconds": 134.9,
+          "new_decisions": 968,
+          "old_seconds": 139.4,
+          "old_decisions": 968,
+          "ratio": 0.9677187948350072
+        },
+        {
+          "cell": "pool",
+          "seed": 5309248,
+          "order": "oldnew",
+          "old_seconds": 17.3,
+          "old_decisions": 410,
+          "new_seconds": 18.4,
+          "new_decisions": 410,
+          "ratio": 1.0635838150289016
+        },
+        {
+          "cell": "pool",
+          "seed": 5309249,
+          "order": "newold",
+          "new_seconds": 19.5,
+          "new_decisions": 417,
+          "old_seconds": 19.2,
+          "old_decisions": 417,
+          "ratio": 1.015625
+        },
+        {
+          "cell": "pool",
+          "seed": 5309250,
+          "order": "oldnew",
+          "old_seconds": 34.7,
+          "old_decisions": 609,
+          "new_seconds": 34.0,
+          "new_decisions": 609,
+          "ratio": 0.9798270893371757
+        },
+        {
+          "cell": "pool",
+          "seed": 5309251,
+          "order": "newold",
+          "new_seconds": 15.3,
+          "new_decisions": 385,
+          "old_seconds": 13.6,
+          "old_decisions": 385,
+          "ratio": 1.125
+        },
+        {
+          "cell": "pool",
+          "seed": 5309252,
+          "order": "oldnew",
+          "old_seconds": 10.9,
+          "old_decisions": 377,
+          "new_seconds": 17.1,
+          "new_decisions": 377,
+          "ratio": 1.5688073394495414
+        },
+        {
+          "cell": "pool",
+          "seed": 5309253,
+          "order": "newold",
+          "new_seconds": 19.7,
+          "new_decisions": 398,
+          "old_seconds": 17.5,
+          "old_decisions": 398,
+          "ratio": 1.1257142857142857
+        },
+        {
+          "cell": "pool",
+          "seed": 5309254,
+          "order": "oldnew",
+          "old_seconds": 21.7,
+          "old_decisions": 438,
+          "new_seconds": 21.6,
+          "new_decisions": 438,
+          "ratio": 0.9953917050691246
+        },
+        {
+          "cell": "pool",
+          "seed": 5309255,
+          "order": "newold",
+          "new_seconds": 18.6,
+          "new_decisions": 403,
+          "old_seconds": 17.3,
+          "old_decisions": 403,
+          "ratio": 1.0751445086705202
+        }
+      ]
+    },
+    {
+      "label": "static_independent_repeat",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/abba2/throughput_abba.json",
+      "sha256": "cfd1c3852bba979c146b058d77d86e46fa803d5c7ef205622da5bf11d6e26c24",
+      "median_throughput_ratio": 0.9687719632355274,
+      "pass": false,
+      "games": [
+        {
+          "cell": "day",
+          "seed": 5012288,
+          "order": "oldnew",
+          "old_seconds": 139.4,
+          "old_decisions": 1257,
+          "new_seconds": 144.3,
+          "new_decisions": 1257,
+          "ratio": 1.0351506456241033
+        },
+        {
+          "cell": "day",
+          "seed": 5012289,
+          "order": "newold",
+          "new_seconds": 168.0,
+          "new_decisions": 1234,
+          "old_seconds": 149.1,
+          "old_decisions": 1234,
+          "ratio": 1.1267605633802817
+        },
+        {
+          "cell": "day",
+          "seed": 5012290,
+          "order": "oldnew",
+          "old_seconds": 123.5,
+          "old_decisions": 1069,
+          "new_seconds": 136.4,
+          "new_decisions": 1069,
+          "ratio": 1.1044534412955467
+        },
+        {
+          "cell": "day",
+          "seed": 5012291,
+          "order": "newold",
+          "new_seconds": 135.3,
+          "new_decisions": 1164,
+          "old_seconds": 131.0,
+          "old_decisions": 1164,
+          "ratio": 1.0328244274809162
+        },
+        {
+          "cell": "day",
+          "seed": 5012292,
+          "order": "oldnew",
+          "old_seconds": 129.7,
+          "old_decisions": 1141,
+          "new_seconds": 118.6,
+          "new_decisions": 1141,
+          "ratio": 0.9144178874325367
+        },
+        {
+          "cell": "day",
+          "seed": 5012293,
+          "order": "newold",
+          "new_seconds": 95.9,
+          "new_decisions": 995,
+          "old_seconds": 113.3,
+          "old_decisions": 995,
+          "ratio": 0.8464254192409533
+        },
+        {
+          "cell": "day",
+          "seed": 5012294,
+          "order": "oldnew",
+          "old_seconds": 107.1,
+          "old_decisions": 1147,
+          "new_seconds": 110.0,
+          "new_decisions": 1147,
+          "ratio": 1.027077497665733
+        },
+        {
+          "cell": "day",
+          "seed": 5012295,
+          "order": "newold",
+          "new_seconds": 107.9,
+          "new_decisions": 968,
+          "old_seconds": 126.4,
+          "old_decisions": 968,
+          "ratio": 0.8536392405063291
+        },
+        {
+          "cell": "pool",
+          "seed": 5309248,
+          "order": "oldnew",
+          "old_seconds": 15.3,
+          "old_decisions": 410,
+          "new_seconds": 15.7,
+          "new_decisions": 410,
+          "ratio": 1.026143790849673
+        },
+        {
+          "cell": "pool",
+          "seed": 5309249,
+          "order": "newold",
+          "new_seconds": 18.1,
+          "new_decisions": 417,
+          "old_seconds": 17.3,
+          "old_decisions": 417,
+          "ratio": 1.046242774566474
+        },
+        {
+          "cell": "pool",
+          "seed": 5309250,
+          "order": "oldnew",
+          "old_seconds": 33.3,
+          "old_decisions": 609,
+          "new_seconds": 34.4,
+          "new_decisions": 609,
+          "ratio": 1.033033033033033
+        },
+        {
+          "cell": "pool",
+          "seed": 5309251,
+          "order": "newold",
+          "new_seconds": 15.3,
+          "new_decisions": 385,
+          "old_seconds": 15.2,
+          "old_decisions": 385,
+          "ratio": 1.0065789473684212
+        },
+        {
+          "cell": "pool",
+          "seed": 5309252,
+          "order": "oldnew",
+          "old_seconds": 14.8,
+          "old_decisions": 377,
+          "new_seconds": 15.4,
+          "new_decisions": 377,
+          "ratio": 1.0405405405405406
+        },
+        {
+          "cell": "pool",
+          "seed": 5309253,
+          "order": "newold",
+          "new_seconds": 16.3,
+          "new_decisions": 398,
+          "old_seconds": 15.8,
+          "old_decisions": 398,
+          "ratio": 1.0316455696202531
+        },
+        {
+          "cell": "pool",
+          "seed": 5309254,
+          "order": "oldnew",
+          "old_seconds": 22.3,
+          "old_decisions": 438,
+          "new_seconds": 23.0,
+          "new_decisions": 438,
+          "ratio": 1.0313901345291479
+        },
+        {
+          "cell": "pool",
+          "seed": 5309255,
+          "order": "newold",
+          "new_seconds": 18.5,
+          "new_decisions": 403,
+          "old_seconds": 17.8,
+          "old_decisions": 403,
+          "ratio": 1.0393258426966292
+        }
+      ]
+    },
+    {
+      "label": "shared_build2",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/abba3/throughput_abba.json",
+      "sha256": "23a13a4bdf27b5e425675b1b17b1148425b06b51a4372ff67b582307fac00009",
+      "median_throughput_ratio": 0.9934474352316658,
+      "pass": true,
+      "games": [
+        {
+          "cell": "day",
+          "seed": 5012288,
+          "order": "oldnew",
+          "old_seconds": 126.7,
+          "old_decisions": 1257,
+          "new_seconds": 127.2,
+          "new_decisions": 1257,
+          "ratio": 1.0039463299131808
+        },
+        {
+          "cell": "day",
+          "seed": 5012289,
+          "order": "newold",
+          "new_seconds": 135.7,
+          "new_decisions": 1234,
+          "old_seconds": 150.3,
+          "old_decisions": 1234,
+          "ratio": 0.9028609447771123
+        },
+        {
+          "cell": "day",
+          "seed": 5012290,
+          "order": "oldnew",
+          "old_seconds": 186.9,
+          "old_decisions": 1069,
+          "new_seconds": 171.6,
+          "new_decisions": 1069,
+          "ratio": 0.9181380417335473
+        },
+        {
+          "cell": "day",
+          "seed": 5012291,
+          "order": "newold",
+          "new_seconds": 156.6,
+          "new_decisions": 1164,
+          "old_seconds": 164.5,
+          "old_decisions": 1164,
+          "ratio": 0.9519756838905775
+        },
+        {
+          "cell": "day",
+          "seed": 5012292,
+          "order": "oldnew",
+          "old_seconds": 158.8,
+          "old_decisions": 1141,
+          "new_seconds": 166.0,
+          "new_decisions": 1141,
+          "ratio": 1.0453400503778336
+        },
+        {
+          "cell": "day",
+          "seed": 5012293,
+          "order": "newold",
+          "new_seconds": 132.7,
+          "new_decisions": 995,
+          "old_seconds": 102.6,
+          "old_decisions": 995,
+          "ratio": 1.293372319688109
+        },
+        {
+          "cell": "day",
+          "seed": 5012294,
+          "order": "oldnew",
+          "old_seconds": 108.5,
+          "old_decisions": 1147,
+          "new_seconds": 139.0,
+          "new_decisions": 1147,
+          "ratio": 1.2811059907834101
+        },
+        {
+          "cell": "day",
+          "seed": 5012295,
+          "order": "newold",
+          "new_seconds": 165.1,
+          "new_decisions": 968,
+          "old_seconds": 140.6,
+          "old_decisions": 968,
+          "ratio": 1.17425320056899
+        },
+        {
+          "cell": "pool",
+          "seed": 5309248,
+          "order": "oldnew",
+          "old_seconds": 15.3,
+          "old_decisions": 410,
+          "new_seconds": 21.5,
+          "new_decisions": 410,
+          "ratio": 1.4052287581699345
+        },
+        {
+          "cell": "pool",
+          "seed": 5309249,
+          "order": "newold",
+          "new_seconds": 13.8,
+          "new_decisions": 417,
+          "old_seconds": 24.9,
+          "old_decisions": 417,
+          "ratio": 0.5542168674698795
+        },
+        {
+          "cell": "pool",
+          "seed": 5309250,
+          "order": "oldnew",
+          "old_seconds": 49.9,
+          "old_decisions": 609,
+          "new_seconds": 52.1,
+          "new_decisions": 609,
+          "ratio": 1.0440881763527055
+        },
+        {
+          "cell": "pool",
+          "seed": 5309251,
+          "order": "newold",
+          "new_seconds": 22.6,
+          "new_decisions": 385,
+          "old_seconds": 21.7,
+          "old_decisions": 385,
+          "ratio": 1.0414746543778803
+        },
+        {
+          "cell": "pool",
+          "seed": 5309252,
+          "order": "oldnew",
+          "old_seconds": 27.2,
+          "old_decisions": 377,
+          "new_seconds": 21.0,
+          "new_decisions": 377,
+          "ratio": 0.7720588235294118
+        },
+        {
+          "cell": "pool",
+          "seed": 5309253,
+          "order": "newold",
+          "new_seconds": 21.8,
+          "new_decisions": 398,
+          "old_seconds": 21.6,
+          "old_decisions": 398,
+          "ratio": 1.0092592592592593
+        },
+        {
+          "cell": "pool",
+          "seed": 5309254,
+          "order": "oldnew",
+          "old_seconds": 25.7,
+          "old_decisions": 438,
+          "new_seconds": 24.8,
+          "new_decisions": 438,
+          "ratio": 0.9649805447470817
+        },
+        {
+          "cell": "pool",
+          "seed": 5309255,
+          "order": "newold",
+          "new_seconds": 21.3,
+          "new_decisions": 403,
+          "old_seconds": 21.7,
+          "old_decisions": 403,
+          "ratio": 0.9815668202764978
+        }
+      ]
+    }
+  ],
+  "pass": true
+}

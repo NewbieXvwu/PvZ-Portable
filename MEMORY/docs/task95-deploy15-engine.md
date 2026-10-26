@@ -27,6 +27,9 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [4b完成，2026-10-26 17:03 CST] 共享库候选83aed3be补齐完整16对串行ABBA，逐对old/new中位数0.9934474352≥0.98，决策数16/16相同，PASS。接续保留原9对及第10对new臂，未重测已完成记录；三次完整实测及输入指纹见task95-throughput.json，原07703a57两次失败均保留。
+- [3b进行中，2026-10-26 17:03 CST] 83aed3be同进程/多进程探针各1种哈希，通过。gate_b2的old臂36个文件、frames_old的192个文件与原始门禁副本逐字节一致；复用96局旧结果，已启动候选96局（workers=2），后续按序运行L50完整对拍，本任务始终最多2个游戏进程。
+
 - [7-进行中，2026-10-26 12:14 CST] task70新增B9节，已写入源差异、PGO归档指纹、96对零差异、确定性探针及仅换引擎脚本的证据；吞吐与L50明确标记待实测，不提前判定候选通过。
 
 - [6-复核] 部署脚本已纳入本分支scripts/qc_deploy15.sh并同步到指定外部路径，两份bash -n通过、内容一致，未执行。以当前qc_deploy14.sh的deploy14fix 0b8dcc26作为代码基线（保留seeds-exhausted修复，不退回早期7722c0d1）；仅复制已留档07703a57引擎，生产代码/面板/rates均不改。执行前强制检查六族门禁、严格吞吐、4种子Boss和哈希探针，首组判定必须出现新增rc记录；任一门禁未完成或失败即拒绝部署。
@@ -55,5 +58,5 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 - [续做核实，2026-10-26 16:55 CST] 磁盘实际已有9对完整build2 ABBA记录及第10对new臂，已校验build2与归档均为83aed3be并续跑，不重采已有记录。静态/动态libopenmpt链接差异已经确认，但函数尺寸相同不能单独排除源码性能回归；最终仍以build2完整16对吞吐和独立逻辑门禁为准。
 
-- **剩余待办（交还 Codex）**：① `artifacts/task95/abba3/` 补完剩余 9 对（会复用已完成的 7 对，目录已存在）后判定；② build2 的六族逐位门禁：`artifacts/task95/gate_b2/` 已放好 old 臂与 `frames_old`，只需用 `scripts/task70_redeploy_gate.py --old …deploy14-pvz-portable --new …pvz-portable-build2 --out artifacts/task95/gate_b2` 跑 new 臂（约 80 分钟，2 进程）；③ L50 四局（`scripts/task95_boss_l50_gate.py --old … --new …pvz-portable-build2`）；④ 若 build2 全过，B9 与 `scripts/qc_deploy15.sh` 的 `ENGINE_SHA` 从 07703a57 换成 83aed3be，否则退回“候选不可部署”的结论。
+- **剩余待办（17:03更新）**：build2吞吐16对已通过；六族逐位门禁候选臂已启动（2进程），之后顺序运行L50四种子对拍。若build2全过，更新B9、结论指纹与qc_deploy15.sh的候选SHA和证据路径，否则保持“候选不可部署”；脚本仍只写不执行。
 - **吞吐差 3–5%，两次 ABBA 都不过 0.98。** 已定位到构建配置（静态 libopenmpt 把二进制从 10.4 MB 撑到 68.7 MB），不是 task82/task85 的源码行为；处理办法是照 deploy14 的共享库链接重建，重建后必须重跑六族逐位门禁与 L50 才能算候选。原始 07703a57 仍留档，不覆盖。

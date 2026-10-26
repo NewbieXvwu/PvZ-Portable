@@ -158,9 +158,9 @@ B7 和 B6 一起进 deploy14。
 | 源码差异 | a8d00858至a630fbd842f6e8a2493f09de3d433608bd71a254，src共7文件、+137/-11；task82初始化、task85增量Boss观测、task81特权增量字段及demo测试缝。具体逐项影响见task95结果；预期不改现有策略的游戏逻辑。 |
 | PGO留档 | 首建`artifacts/task95/engine/pvz-portable`，SHA256 `07703a5781e70d2c3b1b3ad7b0c473ddfaf2a313ac2ce4f5724035ba44e184be`，141份profile，Release/O3/LTO、ffp-contract=off。**该构建吞吐不过（见下行），不作候选**：`/usr/local/lib/libopenmpt.a`（10-25 17:02 新装）让`find_library`选中静态库，二进制68.7 MB、`.text` 4.55 MB，deploy14是10.4 MB / 2.48 MB。按deploy14的共享库链接重建`artifacts/task95/engine/pvz-portable-build2`，SHA256 `83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029`（10.65 MB、`.text` 2.70 MB、`NEEDED`含`libopenmpt.so.0`）。原构建保留不覆盖。 |
 | 旧引擎 | 本任务留档`artifacts/task95/engine/deploy14-pvz-portable`，SHA256 `76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a`。 |
-| 六族门禁 | 复用已完成的6族×老师/学生×8种子、每引擎96局，再运行纯比较；96对逐帧动作和逻辑字段均0差异。完整state_hash新旧差96/96，符合初始化修复预期。 |
-| 同引擎确定性 | L7 seed30000探针：新引擎8个独立进程的reset/60/660tick哈希线全部相同，同进程4次reset后60tick也全部相同；旧引擎此次对照分别3种哈希线、4种哈希。此结论限于该探针，不宣称已穷尽所有关卡。 |
-| 吞吐ABBA | **07703a57 两次完整实测都不过**：0.9477（12:41）与0.9688（15:20–15:56，重跑确认非复用旧记录），16/16决策数相同，门槛0.98。逐函数机器码对比显示游戏代码逐项同尺寸（`Board::Update` 0xa25、`Plant::Update` 0x1367 相同），所以不是源码回归而是构建布局。`build2` 的配对bench引擎净吞吐0.995（282 762 vs 281 321 ticks·CPU-s⁻¹）；ABBA只跑到7/16对（全day，中位new/old 1.004）即交还Codex，**未判定**。 |
+| 六族门禁 | 原07703a57：6族×老师/学生×8种子、每引擎96局；96对动作和逻辑字段0差异，完整state_hash新旧差96/96。共享库候选83aed3be不能沿用原候选结论：已逐文件核对并复用96局old臂及帧档，17:03启动候选96局，待判定。 |
+| 同引擎确定性 | 07703a57与83aed3be均通过L7 seed30000探针：各8个独立进程的reset/60/660tick哈希线全部相同，各同进程4次reset后60tick也全同；旧引擎此次对照分别3种哈希线、4种哈希。此结论限于该探针，不宣称已穷尽所有关卡。 |
+| 吞吐ABBA | **83aed3be完整16对PASS**：逐对old/new中位数0.9934474352≥0.98，决策数16/16相同。续跑保留已落盘9对及第10对new臂，运行产物与归档SHA相同，未重测已完成记录。07703a57两次完整实测0.9477023114与0.9687719632均失败，全部保留。静态/动态链接偏差已确认，函数尺寸不能单独排除源码性能影响；最终验收使用完整ABBA。[逐对数字与输入指纹](task95-throughput.json)。 |
 | L50 | 仍未运行（待候选定案后对最终二进制跑）。`boss_l50_orig_eval`种子85000000..3，旧/新引擎均用相同A2学生策略完整运行；候选必须有Boss字段，比较动作流、逻辑字段及终局。 |
 
 模型固定为A2夹具：`dw4i_s1`、`value_net/v4`、`value_branch1`，不把旧夹具标成现役v5。二进制/模型指纹、逐族统计及新旧探针数值见[task95-engine-gate.json](task95-engine-gate.json)。吞吐原始记录留在本地`artifacts/task95/`，未提交二进制、帧归档或日志。
