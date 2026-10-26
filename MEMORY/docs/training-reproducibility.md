@@ -222,6 +222,7 @@ torch.backends.cudnn.benchmark = False
 ```
 
 并把 `os.environ["CUBLAS_WORKSPACE_CONFIG"]`、`torch.are_deterministic_algorithms_enabled()`、`torch.__version__`、`torch.version.cuda`、`torch.backends.cudnn.version()`、Git revision、recipe SHA 一起写进 `metrics.json`（或轮目录的 `runtime.json`）。成本参照：单算子 +24%、整轮外推 +0.3%（见上节）；风险是若某个算子没有确定性实现会直接抛错，本模型在 1.05M 行尺度上没有抛，全量路径未验证，所以第一次上线建议先在单轮观察一次，别默默改成 `warn_only=True`（那等于把不确定性吞回去）。
+
 ## 复核命令
 
 所有新写入均在 repro 内；`/tmp/exp96` 只是 CodeBuddy 已留的冻结只读训练代码快照。执行前保持 qc GPU 优先。
