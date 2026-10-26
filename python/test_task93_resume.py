@@ -42,3 +42,65 @@ def test_finished_games_are_reused_only_with_matching_model_and_task(tmp_path):
     games.write_text(json.dumps({**rows[0], 'terminal': False}))
     with pytest.raises(ValueError, match='not a terminal'):
         queue.complete_evaluation(games, task, model)
+
+
+def test_qc_pending_requires_a_live_controller_and_valid_observation(tmp_path, monkeypatch):
+    state = tmp_path/'qc.json'
+    monkeypatch.setattr(queue, 'QC_STATE', state)
+    monkeypatch.setattr(queue, 'qc_controllers', lambda: [123])
+    state.write_text(json.dumps({'training_jobs': [{'status': 'queued'}]}))
+    assert queue.qc_pending() is True
+    state.write_text(json.dumps({'training_jobs': [{'status': 'done'}, {'status': 'failed'}]}))
+    assert queue.qc_pending() is False
+    state.write_text('{')
+    assert queue.qc_pending() is None
+    state.write_text('null')
+    assert queue.qc_pending() is None
+    monkeypatch.setattr(queue, 'qc_controllers', lambda: [])
+    state.write_text(json.dumps({'training_jobs': [{'status': 'queued'}]}))
+    assert queue.qc_pending() is False
+
+
+def test_only_priority_preemption_retries_the_same_recipe(tmp_path, monkeypatch):
+    monkeypatch.setattr(queue, 'DATA', tmp_path)
+    folder = tmp_path/'seed_2'
+    (folder/'student').mkdir(parents=True)
+    (folder/'recipe.json').write_text('{}')
+    calls = []
+
+    def run(command, name, **kwargs):
+        calls.append(command)
+        if len(calls) == 1:
+            raise queue.QCPreempted('priority yield')
+        (folder/'student/model.pt').write_bytes(b'test fixture')
+        (folder/'student/metrics.json').write_text(json.dumps({'history': [{}]*12}))
+        return 999999999
+
+    monkeypatch.setattr(queue, 'run', run)
+    queue.train_seed(2)
+    assert len(calls) == 2 and calls[0] == calls[1]
+    assert queue.complete_model(2)
+
+
+def test_real_training_error_does_not_retry(tmp_path, monkeypatch):
+    monkeypatch.setattr(queue, 'DATA', tmp_path)
+    calls = []
+
+    def fail(*args, **kwargs):
+        calls.append(args)
+        raise RuntimeError('real loader failure')
+
+    monkeypatch.setattr(queue, 'run', fail)
+    with pytest.raises(RuntimeError, match='real loader failure'):
+        queue.train_seed(2)
+    assert len(calls) == 1
+
+
+def test_uncertified_weights_are_never_overwritten(tmp_path, monkeypatch):
+    monkeypatch.setattr(queue, 'DATA', tmp_path)
+    model = tmp_path/'seed_2/student/model.pt'
+    model.parent.mkdir(parents=True)
+    model.write_bytes(b'preserve for verification')
+    with pytest.raises(ValueError, match='requires verification'):
+        queue.train_seed(2)
+    assert model.read_bytes() == b'preserve for verification'

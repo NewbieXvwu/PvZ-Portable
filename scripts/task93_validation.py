@@ -24,6 +24,7 @@ ENGINE = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-porta
 VALUE = Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt')
 INCUMBENT = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent')
 LOCK_FD = None
+QC_STATE = Path.home()/'pvz-logs/curriculum_state.json'
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from pvz_tasks import deck_for_seed
 from task93_analyze import evaluation_config, load_games
@@ -50,6 +51,34 @@ def student_training():
 def qc_training():
     return [pid for pid, text in student_training()
             if '/cq/' in text or 'curriculum_state.pipeline' in text]
+
+
+class QCPreempted(RuntimeError):
+    """Only an actual priority preemption may retry a training attempt."""
+
+
+def qc_controllers():
+    found = []
+    for path in Path('/proc').glob('[0-9]*/cmdline'):
+        try:
+            argv = path.read_bytes().split(b'\0')
+        except OSError:
+            continue
+        if any(arg.endswith(b'/curriculum_queue.py') and b'/cq/' in arg
+               and b' ' not in arg and b'\n' not in arg for arg in argv):
+            found.append(int(path.parent.name))
+    return found
+
+
+def qc_pending():
+    # A stale state file alone is not evidence of a queued production job.
+    if not qc_controllers():
+        return False
+    try:
+        state = json.loads(QC_STATE.read_text())
+        return any(job.get('status') == 'queued' for job in state.get('training_jobs', []))
+    except (OSError, ValueError, TypeError, AttributeError):
+        return None  # retry the observation; do not terminate a worker on a read failure
 
 
 def training_memory_requirement():
@@ -103,10 +132,12 @@ def run(command, name, *, gpu=False):
         available = next(int(line.split()[1])*1024 for line in Path('/proc/meminfo').read_text().splitlines()
                          if line.startswith('MemAvailable:'))
         required = training_memory_requirement()
-        if not active and available >= required:
+        pending = qc_pending()
+        if not active and pending is False and available >= required:
             break
         status('waiting_for_qc_or_memory', training_pids=[pid for pid, _ in active],
-               qc_pids=qc_training(), available_bytes=available, required_bytes=required, next=name)
+               qc_pids=qc_training(), qc_pending=pending,
+               available_bytes=available, required_bytes=required, next=name)
         time.sleep(10)
     print(name, flush=True)
     environment = {**os.environ, 'PVZ_NO_POPUP': '1', 'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'}
@@ -117,7 +148,7 @@ def run(command, name, *, gpu=False):
                                  pass_fds=() if LOCK_FD is None else (LOCK_FD,))
         status(name, child_pid=child.pid, command=command)
         while child.poll() is None:
-            if gpu and qc_training():
+            if gpu and (qc_training() or qc_pending() is True):
                 # Yield only our process. Do not signal or modify the production queue.
                 child.terminate()
                 try:
@@ -125,7 +156,10 @@ def run(command, name, *, gpu=False):
                 except subprocess.TimeoutExpired:
                     child.kill()
                     child.wait()
-                raise RuntimeError(f'{name}: yielded to QC; no completed model claimed')
+                with (DATA/'preemptions.jsonl').open('a') as record:
+                    record.write(json.dumps(dict(phase=name, training_pid=child.pid,
+                        reason='yielded to QC', time=time.time(), complete_model=False))+'\n')
+                raise QCPreempted(f'{name}: yielded to QC; no completed model claimed')
             time.sleep(5)
         if child.returncode:
             raise RuntimeError(f'{name}: exit {child.returncode}; see {DATA/name}.log')
@@ -145,6 +179,32 @@ def complete_model(seed):
             or len(json.loads(metrics.read_text())['history']) != 12):
         raise ValueError(f'invalid saved training proof: {folder}')
     return True
+
+
+def train_seed(seed):
+    folder = DATA/f'seed_{seed}'
+    while not complete_model(seed):
+        if any((folder/'student'/name).exists() for name in ('model.pt', 'metrics.json')):
+            raise ValueError('uncertified training output requires verification before retraining')
+        try:
+            training_pid = run(['nice', '-n', '10', sys.executable,
+                str(ROOT/'scripts/train_rollout_policy.py'),
+                '--recipe', str(folder/'recipe.json')], f'train_seed_{seed}', gpu=True)
+        except QCPreempted as error:
+            status('waiting_for_qc_or_memory', next=f'train_seed_{seed}',
+                   reason=str(error), retry_same_frozen_recipe=True)
+            continue
+        metrics = json.loads((folder/'student/metrics.json').read_text())
+        if len(metrics['history']) != 12:
+            raise ValueError('incomplete training history')
+        proof = dict(model_sha256=sha(folder/'student/model.pt'),
+                     recipe_sha256=sha(folder/'recipe.json'), epochs=12, training_pid=training_pid)
+        telemetry = Path.home()/f'pvz-logs/metrics/train_rollout_policy-{training_pid}.jsonl'
+        if telemetry.exists():
+            samples = [json.loads(line) for line in telemetry.read_text().splitlines()]
+            proof.update(observed_peak_rss_bytes=max(row.get('rss_bytes') or 0 for row in samples),
+                         rss_telemetry_sha256=sha(telemetry))
+        (folder/'trained.json').write_text(json.dumps(proof, indent=2)+'\n')
 
 
 def experiment():
@@ -174,20 +234,7 @@ pack(data,options,cache_dir=Path(r['cache_dir']),read_cache_dir=Path(r['read_cac
     baseline_rows = json.loads((CONTROL/'variant_a/student/source_rows.json').read_text())
     for seed in (1, 2):
         folder = DATA/f'seed_{seed}'
-        if not complete_model(seed):
-            training_pid = run(['nice', '-n', '10', python, str(ROOT/'scripts/train_rollout_policy.py'),
-                 '--recipe', str(folder/'recipe.json')], f'train_seed_{seed}', gpu=True)
-            metrics = json.loads((folder/'student/metrics.json').read_text())
-            if len(metrics['history']) != 12:
-                raise ValueError('incomplete training history')
-            proof = dict(model_sha256=sha(folder/'student/model.pt'),
-                         recipe_sha256=sha(folder/'recipe.json'), epochs=12, training_pid=training_pid)
-            telemetry = Path.home()/f'pvz-logs/metrics/train_rollout_policy-{training_pid}.jsonl'
-            if telemetry.exists():
-                samples = [json.loads(line) for line in telemetry.read_text().splitlines()]
-                proof.update(observed_peak_rss_bytes=max(row.get('rss_bytes') or 0 for row in samples),
-                             rss_telemetry_sha256=sha(telemetry))
-            (folder/'trained.json').write_text(json.dumps(proof, indent=2)+'\n')
+        train_seed(seed)
         rows = json.loads((folder/'student/source_rows.json').read_text())
         for label, old in baseline_rows['sources'].items():
             # New seeds can change the validation split; retained row counts must be identical.
