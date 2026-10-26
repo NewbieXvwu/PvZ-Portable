@@ -60,6 +60,8 @@
   生产扫描（12 份全量 adaptive + register）与人类示范同块回测（存档在 Mac）待接手方执行。
   注意：本分支 llmimport 相对 origin/pvz-env behind 3（上游有新提交），合并由主控决定。
 
+- 2026-10-26（CodeBuddy 接管片段）：接手时人类示范回测（launcher PID 793563 / adaptive PID 793571，adaptive→run→compare 全自动链）仍在跑，按主控指示不打断；截至 07:58 第 1 份（L46 s20261046）adaptive 完成并落 results，第 2 份（L48 s20261048）进行中。生产扫描（12 份 adaptive + register）未启动，本会话无代码改动。task91 交回 Business 号 Codex 继续盯完回测并做生产扫描。
+
 ## 问题
 
 - 已解决：本任务原先没有L46/L48/L49目录，但task70部署记录注明cq已有副本；已只读复制并开始回测。不再需要主控另传存档。
