@@ -73,18 +73,26 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 
 `python/test_human_demo.py:HumanDemoExportTest` 使用纯合成帧检查：显式保留所有成功等待与种植，拒绝行和铲子不作标签，但被筛掉的帧继续更新历史。直接打包与缓存打包均与完整历史逐行特征比对，同时验证等待权重不因 `wait_keep=0.01` 放大。还覆盖相同任务/种子的人类与 LLM 标签共存，以及原始元数据不被修改。`python/test_recipe.py` 补充 LLM 来源权重和默认不加入示范的配方测试。两项纯数据测试已在 Mac 通过，没有启动游戏或训练。台式机真实引擎测试尚未返回终态。
 
+### 真实引擎测试结果与 r11 来源拆分（2026-10-26 17:30）
+
+**真实引擎测试：失败，且与 task104 改动无关。** 台式机 `demorows` 工作树已同步到 198e91b7，用 cq 的现行引擎（BuildNum 3069，`build/pvz-portable` 软链到 `cq/build5`）跑 `python.test_human_demo`：数据层 `HumanDemoExportTest` 通过，`HumanDemoTest` 三个真实引擎用例全部因 `demonstration initial state hash differs` 失败（`scripts/human_demo.py:173`，即录制时的初始状态哈希在新进程 / 新 env 里对不上）。为排除本分支引入，在同一台机器上对分支基点 144a7dce 另开临时工作树跑同一文件：`test_record_replay_export_and_restore` 以**同一错误**失败，所以这是既有问题，不是示范行改动带来的。本分支对 `human_demo.py` 的改动只在 `export`（新增 `--label` 与 `training_rows`），`replay` / `verify` 一行未动。
+
+独立复现指向引擎侧偶发不确定性：同一进程里先录制 200 tick、关闭，再新建 env 执行同一 reset，初始哈希一次给出 `c3a398ae87fdcc6f`，而录制侧与新进程都是 `39d2656c1d3dea21`；随后四次重跑又全部一致。两次独立进程的 `STATE_BYTES` 全量转储逐字节相同（78,331 字节，board 75,772 + rand 2,500 + 9 个标量），说明 reset 路径本身确定，差异只出现在「同一进程内多次 reset」这一路。形态与 task63 记录的地址种子类问题（粒子 FIELD_SHAKE 用堆地址种 rand）一致：地址随分配变化，哈希就偶发漂移。**结论：示范行的监督标签不依赖引擎重放**——导出只读已录制帧、拒绝位取录制时的 `ok`，所以真实引擎测试的失败不阻塞本任务的训练与评估；但它意味着「用新进程重新 `verify` 一份旧示范」在这台机器上不可靠，已记入问题。临时工作树 `/tmp/t104base` 用后即删。
+
+**r11 来源拆分（human / LLM / teacher 分列）。** `r11.source_rows.json` 的 348 个来源、16,982,931 行里：人类示范标签 0 行、LLM 示范标签 0 行（`human_` / `llm_` 前缀均为空）。名字里带 `user` 的只有两个来源 `c7foguserl31snowm100_fast_search` 与 `c8foguserl31snowm100_fast_search`，共 17,286 行（16,393 训练 / 893 验证，占 0.10%）；读其档案 `meta.json` 确认 `label_source=teacher`、`task.task_id=fog_user_l31_snow`、`arm=fast_search`、`policy=student`，是老师在这个用户示范任务上的标注，不是人类决策。按 `configs/human_demo_tasks.json` 里 31 个带 `demo_start` 的任务 id 机械匹配，r11 的来源里**一个都没有**——屋顶与雾区起点格在本轮语料里完全没有出现。因此「示范自身的决策行从未进过训练包」对 r11 成立，而且不是被抽样掉，是从来没被当作来源。
 ## 问题
 
 **同一工作树上有另一个会话在并行写。** 2026-10-26 16:50–17:00（+08:00），台式机 `artifacts/task104/` 下出现本会话之外产出的 `data_a` / `data_b` / `recipes` / `training_inputs.json` / `r11.source_rows.json`，来源不是本会话的进程（本会话当时只建了 `corpus/`）。之后该会话不再写文件（截至 17:15 无新产物、无训练进程）。本会话按"不覆盖别人产物"处理：先只读核对，A/B 两份语料的行数与段字节都验过（见上节），再据此继续。若该会话恢复并开始训练，两个 1,700 万行的训练同时上卡会超出 16 GB 显存，需要先确认谁持有 GPU 再启动。
 
+**新进程重验旧示范在这台机器上不可靠（既有问题，非本分支引入）。** `python.test_human_demo.HumanDemoTest` 的三个真实引擎用例在 HEAD 与基点 144a7dce 上都以 `demonstration initial state hash differs` 失败；独立复现显示同一进程内第二次 reset 偶发给出不同初始哈希，而两次独立进程的 `STATE_BYTES` 全量转储逐字节相同。因为 qc 的起点格要求档案 `verified`，这意味着「录制机之外、或同一进程里重跑 verify」可能失败；本次不修（修它要动引擎的哈希面，超出 task104 范围），示范行的导出与训练不受影响。
 ## 执行状态
 
 2026-10-26 主控补充：冻结仅针对 Mac 本机，保持其游戏与训练进程原状。台式机经 SSH 的只读查看、代码工作及最多两个游戏进程的实验可以继续，GPU 训练仍须先确认 qc 未在训练。本分支代码与预登记已推送，台式机建立独立 `demorows` 工作树，未修改 qc/cq。已启动台式机数据测试与真实引擎测试，结果待返回。
 
 剩余工作：
 
-1. 等待台式机已启动的 `python.test_human_demo.HumanDemoTest` 真实引擎测试结果。纯数据测试已通过，每次真实引擎测试只用一个游戏进程，不碰 Mac 冻结中的任务。
-2. 只读核实 r11 与最近完成轮的配方、实际包和 `source_rows.json`，把 human / LLM 自身决策行数及 teacher 起点续局行数分开填回。台式机经既有 `~/.pvz-dist/dsk.sh` 访问；不得修改 tmux qc、cq 或生产数据。
+1. ~~等待台式机已启动的 `python.test_human_demo.HumanDemoTest` 真实引擎测试结果。~~ 已返回：失败，且基点 144a7dce 上同样失败，属既有的初始哈希偶发不一致，见「结果」。
+2. ~~只读核实 r11 与最近完成轮的配方、实际包和 `source_rows.json`，把 human / LLM 自身决策行数及 teacher 起点续局行数分开填回。~~ 已填回：r11 的 human / LLM 行数均为 0，teacher 在 user 任务上的标注 17,286 行，`demo_start` 任务 0 个来源。
 3. 在本树 `artifacts/task104/` 建私有语料视图，冻结 r11 段、示范清单与两臂配方，用现有 `human_demo.py export --label ...` 导入，再用 `pack_training_rows.py` 按配方打包。审计旧段内容与 A/B 共有行未变，示范包实际保留索引与成功决策清单逐项相同。
 4. 获取并冻结 task92b v2 清单，核对预留新种子后提交输入身份，再按上述判据完成四次从零训练、384 局屋顶评估及非屋顶回归。训练前确认 GPU 准入或记录 MPS 后端决定，不与 qc 抢训练。
 5. 填写结果与结论，追加当天项目记忆。检查暂存区不含模型、帧与日志，只提交代码和 KB 级证据，推送 `demorows`，不合并、不部署。
