@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T23:40:27.114806+00:00",
+ "at_utc": "2026-10-26T23:41:38.624198+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -903,11 +903,11 @@
    "worlds": 49
   },
   "watcher": "scripts/task78_watch_corpus.py",
-  "watcher_sha256": "67cc688635994c5486fcf02b98a2d23c2522b4a5385baabd295bee6a94a1833c",
-  "watcher_pid": 1118545,
-  "watcher_handle": "hYwjOc",
+  "watcher_sha256": "cfa7a4616b0a9600f200fafa6f3af415427698b18903f0bc80b92d22dba4e235",
+  "watcher_pid": 1118895,
+  "watcher_handle": "fyQf8L",
   "watcher_log": "artifacts/task78/corpus_watch.log",
   "watcher_stop": "touch artifacts/task78/corpus_watch.stop",
-  "watcher_behaviour": "polls the acceptance check every 600 s with unbuffered logging; on success runs task78_formal_run.py once"
+  "watcher_behaviour": "polls every 600 s; reports whether the raw files or the descriptor are missing; on success runs task78_formal_run.py once"
  }
 }

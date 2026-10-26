@@ -25,9 +25,16 @@ STOP = ROOT / "artifacts/task78/corpus_watch.stop"
 
 
 def corpus_ready():
+    """True only when the descriptor check passes; otherwise explain which half is missing."""
     result = subprocess.run([PY, str(SCRIPTS / "task78_corpus_check.py")],
                             capture_output=True, text=True)
-    return result.returncode == 0, (result.stdout or result.stderr)[-2000:]
+    if result.returncode == 0:
+        return True, "descriptor accepted"
+    paths = subprocess.run([PY, str(SCRIPTS / "task78_corpus_check.py"), "--paths"],
+                           capture_output=True, text=True)
+    if paths.returncode == 0:
+        return False, "PATHS_READY descriptor missing (write artifacts/task78/original_v5/corpus.json)"
+    return False, "files and descriptor both missing"
 
 
 def run_formal():
@@ -53,7 +60,7 @@ def main():
         if ready:
             print("CORPUS_READY; starting the formal path", flush=True)
             return run_formal()
-        print("CORPUS_MISSING %s" % time.strftime("%Y-%m-%dT%H:%M:%S"), flush=True)
+        print("CORPUS_MISSING %s %s" % (time.strftime("%Y-%m-%dT%H:%M:%S"), detail), flush=True)
         if args.once:
             print(detail)
             return 1
