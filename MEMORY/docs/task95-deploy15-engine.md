@@ -47,7 +47,7 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 - [4] 吞吐 ABBA 实测**未达标**，两次独立测量一致：首跑（12:41，原 A4 工作目录）16 对中位 old/new **0.9477**；重跑（15:20–15:56，新目录 `artifacts/task95/abba2/`，已确认每局都是重新跑的，不是复用旧记录）中位 **0.9688**（new/old 1.0322，min 0.846 / max 1.127）。两次均 <0.98，16/16 局决策数相同。证据 `artifacts/task95/throughput_abba.json`、`artifacts/task95/abba2/throughput_abba.json`。
 - [4-归因] 排除源码回归：逐函数对比两引擎的机器码大小，游戏代码逐项相同（`Board::Update` 0xa25 相同、`Plant::Update` 0x1367 相同、`RunEnvironment` 0x31b7→0x31ed、`Zombie::Update` 0xde3→0xac8），mimalloc 159 个符号逐个同尺寸。差异在**构建配置**：`/usr/local/lib/libopenmpt.a`（10-25 17:02 新装）让 `find_library` 选中静态 libopenmpt，候选 68.7 MB / .text 4.55 MB，deploy14 是 10.4 MB / 2.48 MB，且候选不再 `NEEDED libopenmpt.so.0`。bench 引擎净吞吐（低负载时段 8 对）old 232 688 / new 235 859 ticks·CPU-s⁻¹，说明慢的部分来自负载下的布局/内存足迹，不是每 tick 的指令数。
-- [2b] 按 deploy14 的链接配置重建对照候选（build2 + 显式 `-DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so`，PGO 两阶段同 build_pgo.sh 流程，profile 目录 `artifacts/perf/pgo2`），构建中；结果与是否替换候选见下一条。
+- [2b] 按 deploy14 的链接配置重建对照候选：`build2`，显式 `-DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so`，PGO 两阶段同 build_pgo.sh 流程（插桩 → bench workload → 141 份 .gcda → profile-use），profile 目录 `artifacts/perf/pgo2`。SHA256 `83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029`，10.65 MB / .text 2.70 MB，`NEEDED` 与 deploy14 完全一致（含 `libopenmpt.so.0`、`libz.so.1`）；构建完成即留档 `artifacts/task95/engine/pvz-portable-build2`。引擎净吞吐配对 bench（8 次交替）old 282 762 / build2 281 321 ticks·CPU-s⁻¹（比 0.995）。
 
 ## 问题
 
