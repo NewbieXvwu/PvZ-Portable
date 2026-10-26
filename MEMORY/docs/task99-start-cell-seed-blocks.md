@@ -27,6 +27,9 @@
 
 - 2026-10-26 第 1–3 步（账本 + qc 侧 + 测试）：起点格未来种子改为按需续领。专用池 `START_SEED_POOL=[200,000,000, 201,000,000)`（`pvz_promotion`；full scan 核对与全部门禁/示范/llmplay/120–140M 段不相交，字面量复核 31 命中全是 metrics 的 rss/io 字段），账本 `~/pvz-logs/start_cell_seed_ledger.json`（git 外、`fcntl` 锁、块只发一次、复用 task88 的 `allocate_seed_block`）；`plan_round` 在块不够时先领 256 个接到种子表尾部，领不到才退休，续领写进 state 的 `seed_blocks` 与 changes 日志；`reconcile_start_cells` 重启保留多段表（只有清单换块才重置）；`--restore-start-cell` 从 `retired_cells` 恢复已退休的起点格并保留偏移（与在跑格种子重叠时打 WARNING）。9 项新测试（含不相交、重启恢复、退休再激活、池耗尽退休、清单换块重置）+ 原有测试全过（`/home/newbiexvwu/.venvs/ml/bin/python3`）。第一版候选 [90M,91M) 因 task89 的 e2e 测试已用 90,000,000 起而废弃（见“问题”）。
 
+- 2026-10-26 第 3 步（测试收尾）：8 个相关测试文件共 **123 passed, 2 skipped**（含续领 9 项）；`test_curriculum_queue.py` 单文件 63 passed。干跑（生产 state 副本、L32 `_hv2` 偏移 240）实测续领 `[200000000,200000256)`、24 局拿 `44300240..44300255 + 200000000..200000007`，预览账本在临时目录、生产账本未创建。
+- 2026-10-26 第 4 步（上线步骤 + 结论）：结论写 `MEMORY/docs/start-cell-seed-blocks.md`，含池依据与两次盘点、多段种子表语义、重启/恢复规则、与 task98 一起在组边界上线的 6 步（无需新参数）、回滚注意，以及三个问题（90M 与 task89 e2e 冲突、8 位僵尸 id 误报、旧 L32 与 `_hv2` 共用块）。**未跑游戏进程、未动生产 state/账本/tmux qc/cq**。task99 四项全部完成。
+
 ## 问题
 
 ## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of
