@@ -5,6 +5,7 @@ No deployment is performed. Raw archives, engine images, model files and policie
 remain local. The committed evidence contains only hashes and numerical summaries.
 """
 import argparse
+import ast
 import collections
 import json
 import re
@@ -25,6 +26,19 @@ BASELINE = '4645d578aefe119cca587e743c22bb3e5dc92f2c'
 def require(condition, message):
     if not condition:
         raise ValueError(message)
+
+
+def expected_start_ids(text):
+    methods = [node for node in ast.walk(ast.parse(text)) if isinstance(node, ast.FunctionDef)
+               and node.name == 'test_registered_manifest_start_cells']
+    require(len(methods) == 1, 'start-cell test method is missing or ambiguous')
+    target = ast.dump(ast.parse('set(cells)', mode='eval').body)
+    candidates = [node.args[1] for node in ast.walk(methods[0]) if isinstance(node, ast.Call)
+                  and isinstance(node.func, ast.Attribute) and node.func.attr == 'assertEqual'
+                  and len(node.args) >= 2 and ast.dump(node.args[0]) == target
+                  and isinstance(node.args[1], ast.Set)]
+    require(len(candidates) == 1, 'start-cell test expectation is missing or ambiguous')
+    return ast.literal_eval(candidates[0])
 
 
 def main():
@@ -191,6 +205,11 @@ def main():
     import curriculum_queue
     cells, _ = curriculum_queue.load_demo_start_cells(subset)
     require(set(cells) == {t['task_id'] for t in additions}, 'new curriculum cells cannot load')
+    old_test = subprocess.check_output(
+        ['git', '-C', str(ROOT), 'show', BASELINE + ':python/test_curriculum_queue.py'], text=True)
+    require(expected_start_ids((ROOT / 'python/test_curriculum_queue.py').read_text())
+            == expected_start_ids(old_test) | set(cells),
+            'curriculum test expectations omit new start cells or changed historical expectations')
     stable_paths = [ROOT / name for name in ('configs/human_demo_tasks.json', 'DESIGN.md',
                                              'python/test_curriculum_queue.py')]
     stable_paths.append(importer.DEFAULT_SEED_LEDGER)
