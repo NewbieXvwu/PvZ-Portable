@@ -67,6 +67,10 @@ ENGINE=/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable
 
 因此学生 / 叶值 / 静态网三项与 Mac 那份可比，**只有引擎不同**（台式机 `76ff36dc…` vs Mac `6f7d2c3f…`）。跑完先核 `scoreboard.json` 的 `engine_sha256`：跨引擎的胜率差不能全归给模型。
 
+**2026-10-26 台式机实跑冒烟**：按上面命令建好检出后，用 `--levels 1 --seeds 1 --seed-offset 9000 --workers 1 --student-only` 跑了 1 局（学生用台式机现役 `dw4i_s1`），RC=0、1 胜，`scoreboard.json`/`.md` 正常生成，记录的 `engine_sha256` 为 `76ff36dc…`、叶值与静态网为 `8a636d33…`/`24858410…`，与 Mac 同字节。命令本身已验证可跑，正式测量只剩换 `STUDENT_MODEL` 与种子数。
+
+注意：**台式机上没有 r11 的检查点**（Mac 那份在 `worktrees/fog36/artifacts/task79/models/r11/`，台式机三个候选路径都不存在），现役学生是 `dw4i_s1`（`12270380…`）。正式测量时 `STUDENT_MODEL` 必须传主控指定的现役路径，不要照抄 Mac 的 r11 路径。
+
 ## 结果
 
 2026-10-26：已实现可重复入口与冻结任务清单，支持分臂测量、逐关差异比较和 Wilson95% 区间分离判定。种子块 [103000000,103500000) 已审计并登记 DESIGN §14.35。差异比较及汇总测试 7 项通过，L1/L12 × 2 种子 × 双臂冒烟共 8 局全部到终局，JSON/MD 已生成。
@@ -78,6 +82,8 @@ Mac r11 学生单臂全量测量采用每关 32 种子、2 个游戏进程，运
 按 task110 调查结论更正 L25 为“原生已接入，本面板未测”，同步 task101 的 JSON/MD 与生成器。保留45关冻结任务清单、跳过关卡记录及 task55旧状态列，没有新增 L25 样本。7项统计测试通过，既有 L1/L12 × 2种子 × 双臂冒烟结果保留，不重复开局。
 
 2026-10-26 接手复核：Codex 额度中断时已完成全部实现与 Mac 测量，改动仅暂存未提交、分支未推送。接手后逐项复核：7 项测试通过；记分板 JSON 重算得学生 814/1440（56.53%）、task101 408/720（56.67%）、平均 Wilson95% 宽度 18.19% vs 27.33%（缩窄 33.44%）、逐关区间分离 0/45、L23 −21.875pp 与 L38 +21.875pp、22 关学生≥80%、L25 分类已更正，均与正文一致；暂存区无 .pt/.npz/.log，artifacts 忽略自查为空。未重跑任何对局，直接提交并推送 scoreboard2。
+
+2026-10-26：台式机命令实跑冒烟通过。按文档建好 scoreboard2 检出后，1 关 × 1 种子 × 学生单臂、`--seed-offset 9000`、1 worker，RC=0 且 1 胜，json/md 正常生成；记录的 `engine_sha256` 为 `76ff36dc…`（deploy14 在役引擎），叶值 `8a636d33…`、静态网 `24858410…` 与 Mac 同字节。顺带确认台式机上没有 r11 检查点，现役是 `dw4i_s1`，正式测量须由主控指定 `STUDENT_MODEL`。
 
 2026-10-26：台式机命令按实机核对后重写（只读检查，未动 tmux qc）。查出三处会直接失败的地方：`~/PvZ-search/build5/pvz-portable` 不存在（deploy14 在役引擎在 cq 工作树的 `build5/`，SHA `76ff36dc…`）；系统 `/usr/bin/python3` 没有 torch，须走 `~/.venvs/ml/bin/python3`；台式机没有 scoreboard2 工作树，需先 `git worktree add`。叶值 `8a636d33…`、静态网 `24858410…` 与 Mac r11-32 同字节，只有引擎不同（`76ff36dc…` vs `6f7d2c3f…`）。台式机本地还没有 scoreboard2 ref（`ls-remote` 能看到），所以命令先 `fetch` 再 `worktree add -b`；资源目录与 `main.pak` 已在位。
 
