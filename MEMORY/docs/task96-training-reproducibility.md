@@ -46,8 +46,8 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 Codex按主控最新澄清：每任务游戏进程上限，不套全机限制。收回全量控制额外的“等待其他任务训练”准入，只保留qc训练优先、本任务GPU互斥、内存/显存余量；其他任务仅作为计时负载记录，不控制、不阻塞。现有队列尚未启动子训练，核实无子进程后只重启本任务等待器以加载新准入策略，不重跑任何已完成实验。
 
-- 10-26 CodeBuddy 续接（第三段）：把中尺度控制扩到 9 例，补交替对照 default_p1 → strict_q1 → default_p2 → strict_q2（同数据同 seed）。结果更强：固定 `:4096:8` 的 5 例（含压 4 GiB 显存的、含交替重复的）最终张量与逐步 loss 全同；未固定的 4 例两两不同，其中 default_p1/default_p2 同一进程序列、报告空闲显存相同（11793 MiB）仍不同。→ 结论从“显存少会改数”改为“未固定 workspace 时结果依赖运行时状态、每次可能不同，固定后消失”。成本交替对照 strict/default = 1.065，但 default 自身两遍差 1.55 倍，测不出准确比值。证据 `task96-scale-probe.json`（9 例 + cost_pairs），报告已更新。
 - 10-26 CodeBuddy 续接（第二段）：复核 Codex 的全量控制并执行。`strict_a` 17:03 启动，读完 348 段后稳定 0.099 步/秒、700 s 内 read_bytes 542 GB（page cache 装不下 9.6 GB spill），折算约 23 h/epoch，900 s 上限触发，未写 trace；证据留在 `artifacts/task96/full_pack/strict_a*`，未重跑。改用同一 348 段的固定子集（前 30 段 / 1,046,710 行，461 步，冻结 bec2b9e6 训练器、batch2048、seed1、epoch1）跑 5 个用例：strict 重复两次逐位相同（`78cfef547345…`，loss 序列 SHA 也相同）；把空闲显存从 9229 压到 4871 MiB 后，未固定 workspace 的 default 两例分叉（`1cf71d20337b…` vs `05b226f28628…`，val 4.7089 vs 4.6690），固定 `:4096:8` 的 strict 在同样压力下仍逐位不变。→ “环境漂移改数”第一次在真实训练里复现，且被固定 workspace 消掉；全量逐位复现仍未被证明（尺度差 16 倍），历史四次 run 的具体显存状态仍无回执。成本：五例 27.66/28.60/22.03/19.69/19.12 s，受顺序与缓存预热主导，测不出确定性开销。报告已更新 `MEMORY/docs/training-reproducibility.md`，新证据 `task96-scale-probe.json`，脚本 `scripts/task96_scale_probe.py`。
+- 10-26 CodeBuddy 续接（第三段）：把中尺度控制扩到 9 例，补交替对照 default_p1 → strict_q1 → default_p2 → strict_q2（同数据同 seed）。结果更强：固定 `:4096:8` 的 5 例（含压 4 GiB 显存的、含交替重复的）最终张量与逐步 loss 全同；未固定的 4 例两两不同，其中 default_p1/default_p2 同一进程序列、报告空闲显存相同（11793 MiB）仍不同。→ 结论从“显存少会改数”改为“未固定 workspace 时结果依赖运行时状态、每次可能不同，固定后消失”。成本交替对照 strict/default = 1.065，但 default 自身两遍差 1.55 倍，测不出准确比值。证据 `task96-scale-probe.json`（9 例 + cost_pairs），报告已更新。
 
 - 10-26 CodeBuddy 续接（第四段）：把分歧定位到张量级。`task96_localize.py` 前 6 步模块哈希：两次未固定 run 的输入哈希 6 步全同、第 1–3 步 loss 全同，第 2 步起 22 个模块里第一个不同的是 `packet_embedding`，第 4 步 loss 才出现末位差；固定配置两次对照全同。`task96_grad_probe.py`：trainer 在 backward 前回调 observer，所以第 2 次回调拿到的是第 1 步梯度——两次未固定 run 第 1 步 forward/loss 逐位相同，**梯度里只有 `packet_embedding.weight` 不同**（其余 20+ 参数全同），第 1 次更新后参数也只有它不同。→ 分歧进入点是 embedding 表的散射累加（重复 packet id 的 index-add），不是初始化/洗牌/前向/workspace；实测 2048 行 batch 平均只有 8.4 个不同 packet id（约 2040 行撞同一批表行），解释了为何 20+ 参数里唯独它先分叉。补的“只开确定性不固定 workspace”两例被 qc 训练（round_000020）连续占用 GPU 90 分钟，按让行规则未启动，已停等待器并记入问题。
 
@@ -60,7 +60,7 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 - 10-26 CodeBuddy 续接（第八段）：独立复核代码来源（`git show <rev>:<path> | sha256sum`，未进其他工作树）：4f4d217b 与 bec2b9e6 的 `train_rollout_policy.py` 同为 `5cc2f208…`，recipe/pack/value_net 也逐字节相同；唯一不同的 `pvz_rollout_policy.py` diff 仅是 `export_student` 的 obs 版本号多了 `v2size` 分支（4→5），不涉及训练。与报告一致。
 
 ## 问题
-- 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。没有记录workspace申请失败或具体内核，耗时也不能单独证明GPU竞争；资源/算法变化保留为假设，不能据此断言历史原因。
+- r11 / A / run1 / run2 四次全量 run 的运行时状态都没有回执，所以“当时是 workspace 还是确定性开关在起作用”无法回溯判定。现有定位是：第一步分叉来自 `packet_embedding` 的 `[B,10]` 查表梯度（默认模式 10 次 10 种，确定性开关可消除），cuBLAS workspace 是另一条已观测的轴（影响后续 GEMM 步）。历史四次 run 既没固定 workspace 也没开确定性，两者都可能参与，不能区分；epoch 耗时（221/224/890/334s）只能说明负载不同。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。
 - 生产没有改：所有新写入都在 repro 的 `artifacts/task96/`（ignored）与 `MEMORY/docs/`；`/tmp/exp96` 只是冻结只读快照。
 - r11 trained.json仅记录模型/配方sha与时间，没有trainer运行revision；recipe.provenance是配方来源，不等于实际训练源码。已用部署日志和评估SHA定位当时部署版本4f4d217b，但未记录的训练时单文件覆盖无法靠事后Git证明不存在；不能据主检出HEAD归因代码漂移。
