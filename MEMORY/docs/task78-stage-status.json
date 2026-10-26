@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T23:17:16.795892+00:00",
+ "at_utc": "2026-10-26T23:35:49.859199+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -873,5 +873,34 @@
   "pre_change_wrapper_sha256": "21587af2908518f3e27dd4648d72f145ef6a09b98d4fb0380db757140495f342",
   "post_change_wrapper_sha256": "6a154aaa5820c2c4b43429872f269b52780335385dcadf72364be8435da33b62",
   "report_sha256": "9a715cce129d6eea32b765d54724a46d6b8ee9eb4e298d744dbd882ca12ba151"
+ },
+ "formal_path": {
+  "runner": "scripts/task78_formal_run.py",
+  "runner_sha256": "6605db632d22f46e6c178a428b2a57077356c1d9f87d8f5f292d3adcd32588e9",
+  "acceptance_check": "scripts/task78_corpus_check.py",
+  "acceptance_check_sha256": "72e399aa863d048e43b5db904d66c1564fe921488e1bab3e2f5d388f34e1d578",
+  "steps": [
+   "corpus",
+   "train --corpus original",
+   "freeze",
+   "v5",
+   "v6",
+   "report"
+  ],
+  "ready_to_run": true,
+  "blocked_on": "original v5 corpus (97 branch files, 64 decision shards, audit manifest, descriptor)",
+  "dry_run": "python scripts/task78_formal_run.py --dry-run",
+  "current_behaviour": "stops at the corpus gate with rc=1; starts no GPU work and no game",
+  "new_data_loads": {
+   "fog": {
+    "fit": 278,
+    "validation": 126
+   },
+   "roof": {
+    "fit": 525,
+    "validation": 58
+   },
+   "worlds": 49
+  }
  }
 }
