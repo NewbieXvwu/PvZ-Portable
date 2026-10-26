@@ -729,3 +729,10 @@
     - codex-perf / codex-v6 / codex-llmplay 到 11:31 还要再派任务。
   - **Mac plus2 号**：codex-plus2 做 task86c；codex-plus2b 改派 **task93b**（夜间 / 泳池随机卡组倍率扫描与扩采，工作树 deckvar-mac）。Mac agent_pool 已更新。
   - 以后每次巡检都列出三个号各自的额度和会话。
+- 2026-10-26 08:50（台式机时间）：**qc 06:50 停机，主控 07:05、07:40 两次巡检都没发现**（只看了 curriculum.log 的最后一行，没有确认 tmux qc 还活着）。
+  - **原因**：`demo_fog_32_snow_m200` 的 256 个未来种子用完，`plan_round` 抛 SystemExit，qc 直接退出。
+  - **修复** `0b8dcc26`（分支 deploy14fix，基于 7722c0d1）：种子块用完时，起点格退休、普通格跳过本组，qc 不退出。测试 63 项通过。
+  - **deploy14 第一次执行（08:37）**：dry-run 失败后自动回滚到 deploy13，qc 因此恢复运行。失败原因是 cq 缺两份派生清单 `task79b/fog79b_panel.json` 与 `task75/native_conveyor_panel.json`，B8 在 redeploy 树里有，没拷进 cq。
+    - 已补拷，并在临时目录用新代码跑 dry-run，退出码 0。
+  - 08:44 第二次执行 deploy14，`REV=0b8dcc26`，正在等组边界。
+  - agent_pool 把 task96 的恢复时间误解析成 06:21（取了旧提示），已手动改为 11:31。
