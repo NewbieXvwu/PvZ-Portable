@@ -16,7 +16,8 @@ from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMO
                               WINDOW, _descendant_rss,
                               adjust, allocate, build_plan, cell_level, command_for, label_for,
                               load_demo_start_cells, load_teacher_rates, make_state, pack_command,
-                              pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
+                              pack_labels, parse_levels, parse_task_id, plan_round, rate,
+                              reconcile_cells, save_candidates_for,
                               reconcile_start_cells, renew_start_seeds, startup_worker_estimate,
                               student_rate, training_base_ids, worker_count)
 from pvz_promotion import START_SEED_BLOCK, START_SEED_POOL
@@ -253,6 +254,52 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertEqual(plan, [])
         self.assertTrue(any('seeds exhausted' in line and 'group skipped' in line for line in changes))
         self.assertIn('day_l7_train_d7', state['cells'])
+
+    def test_save_candidates_switch_is_zone_level_with_per_task_override(self):
+        self.assertEqual(parse_levels('31-40'), frozenset(range(31, 41)))
+        self.assertEqual(parse_levels('31,32,37'), frozenset({31, 32, 37}))
+        self.assertEqual(parse_levels(''), frozenset())
+        with self.assertRaises(ValueError):
+            parse_levels('40-31')
+        levels = parse_levels('31-40')
+        self.assertEqual(save_candidates_for(dict(level=32), None, levels), 1)
+        self.assertEqual(save_candidates_for(dict(level=7), None, levels), 0)
+        self.assertEqual(save_candidates_for(dict(level=7), dict(save_candidates=1), levels), 1)
+        self.assertEqual(save_candidates_for(dict(level=32), dict(save_candidates=0), levels), 0)
+
+    def test_command_for_passes_save_candidates_only_when_on(self):
+        args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
+                               static_value=Path('/sv.pt'), value=Path('/v.pt'), workers=3,
+                               executable=Path('/exe'), resource_dir=Path('/res'),
+                               frames=Path('/frames'), out=Path('/out'))
+        off = command_for(args, Path('/panel.json'), 'fog_l32_train', 0, 2, 'c1fogm100')
+        self.assertNotIn('--save-candidates', off)
+        on = command_for(args, Path('/panel.json'), 'fog_l32_train', 0, 2, 'c1fogm100',
+                         save_candidates=1)
+        self.assertEqual(on[on.index('--save-candidates') + 1], '1')
+
+    def test_plan_round_marks_fog_cells_and_keeps_other_zones_off(self):
+        tasks = {}
+        for base, level in (('day_l7_train_d7', 7), ('fog_user_v2_l31_snow', 32)):
+            for mult, suffix in [(1.0, ''), (1.25, '_m125')]:
+                task_id = base + suffix
+                tasks[task_id] = dict(task_id=task_id, level=level, deck=[0, 1, 2, 3, 4, 5, 7],
+                                      zombie_count_multiplier=mult, seeds=list(range(40)))
+        state = dict(round=0, offsets={}, cells={'day_l7_train_d7': cell(5, 10, level=7),
+                                                 'fog_user_v2_l31_snow': cell(5, 10, level=32)})
+        manifests = {task_id: Path('/tmp/panel.json') for task_id in tasks}
+        plan, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=20, per_group=10,
+                             save_candidates_levels=parse_levels('31-40'))
+        marks = {item['base']: item['save_candidates'] for item in plan}
+        self.assertEqual(marks, {'day_l7_train_d7': 0, 'fog_user_v2_l31_snow': 1})
+        # 清单逐格覆盖优先于区段默认：关掉雾格、打开日格。
+        tasks['fog_user_v2_l31_snow']['save_candidates'] = 0
+        tasks['day_l7_train_d7']['save_candidates'] = 1
+        state['round'] = 1
+        plan, _ = plan_round(state, tasks, NAMES, VALUES, manifests, budget=20, per_group=10,
+                             save_candidates_levels=parse_levels('31-40'))
+        self.assertEqual({item['base']: item['save_candidates'] for item in plan},
+                         {'day_l7_train_d7': 1, 'fog_user_v2_l31_snow': 0})
 
     def test_native_ladder_cell_is_not_a_start_cell(self):
         # 10-26: native L25 carries a multiplier ladder too; reconcile_start_cells retired it and

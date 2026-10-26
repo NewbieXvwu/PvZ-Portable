@@ -312,7 +312,8 @@ def measure_worker_bytes(args, item: dict) -> int:
     with tempfile.TemporaryDirectory(prefix='pvz-oom-probe-', dir=args.state.parent) as tmp:
         tmp_path = Path(tmp)
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'], 1,
-                              'oomprobe', workers=1, frames=tmp_path / 'frames', out=tmp_path)
+                              'oomprobe', workers=1, frames=tmp_path / 'frames', out=tmp_path,
+                              save_candidates=item.get('save_candidates', 0))
         process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                    text=True)
         peak = 0
@@ -806,11 +807,39 @@ def label_for(round_index: int, base: str, multiplier: float, start: int | None 
     return f'c{round_index}{short}m%03d' % round(multiplier * 100)
 
 
+def parse_levels(text: str) -> frozenset[int]:
+    """`31-40`, `31,32,37` or `` -> the levels whose cells get --save-candidates."""
+    levels: set[int] = set()
+    for part in (piece.strip() for piece in text.split(',')):
+        if not part:
+            continue
+        low, _, high = part.partition('-')
+        start, stop = int(low), int(high or low)
+        if stop < start:
+            raise ValueError(f'invalid level range: {part}')
+        levels.update(range(start, stop + 1))
+    return frozenset(levels)
+
+
+def save_candidates_for(cell: dict, task: dict | None, levels) -> int:
+    """Per-cell switch for search_play --save-candidates (task120).
+
+    A manifest task may declare `save_candidates` itself; otherwise the zone list decides.
+    Default is the fog night curriculum 31-40: task120 measured the teacher's blind spot there
+    (first 150+ cards ever planted in L32/L37) and the wall-clock cost lands on those cells.
+    """
+    declared = (task or {}).get('save_candidates')
+    if declared is not None:
+        return int(declared)
+    return 1 if cell.get('level') in levels else 0
+
+
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
                 out: Path | None = None, beta: float = 0.0,
                 demo_archive: str | None = None, demo_decision: int | None = None,
-                future_seeds: list[int] | None = None) -> list[str]:
+                future_seeds: list[int] | None = None,
+                save_candidates: int = 0) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -827,6 +856,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
             '--verify-samples', '9', '--student-candidates', '2',
+            *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
             '--manifest', str(manifest), '--task-id', task_id,
             *seed_args,
@@ -1685,7 +1715,8 @@ def _write_state(path: Path, state: dict) -> None:
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
-               renew_size: int = START_SEED_BLOCK) -> tuple[list[dict], list[str]]:
+               renew_size: int = START_SEED_BLOCK,
+               save_candidates_levels=frozenset()) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -1759,7 +1790,9 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
                     games=games, manifest=manifest,
                     label=label_for(state['round'] + 1, base, multiplier,
-                                    start=int(multiplier) if start else None))
+                                    start=int(multiplier) if start else None),
+                    save_candidates=save_candidates_for(cell, tasks.get(task_id),
+                                                        save_candidates_levels))
         if start:
             item.update(demo_archive=cell['archive'], demo_decision=int(multiplier),
                         future_seeds=seeds[offset:offset + games])
@@ -1790,7 +1823,8 @@ def _run_group(args, state, item, round_index, per_worker):
     per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
     log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                        f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
-                       f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
+                       f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB) '
+                       f'save={item.get("save_candidates", 0)}')
     cell = state['cells'][item['base']]
     student = student_rate(cell, item['multiplier'])
     starved = student is not None and student < args.beta_threshold
@@ -1806,7 +1840,8 @@ def _run_group(args, state, item, round_index, per_worker):
                           item['games'], item['label'], workers=workers, beta=beta,
                           demo_archive=item.get('demo_archive'),
                           demo_decision=item.get('demo_decision'),
-                          future_seeds=item.get('future_seeds'))
+                          future_seeds=item.get('future_seeds'),
+                          save_candidates=item.get('save_candidates', 0))
     started = time.time()
     item.update(collection_started=started, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
@@ -1935,7 +1970,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             save_state(args.state, state)
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher,
-                                       start_seed_ledger=getattr(args, 'start_seed_ledger', None))
+                                       start_seed_ledger=getattr(args, 'start_seed_ledger', None),
+                                       save_candidates_levels=args.save_candidates_levels)
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -2001,6 +2037,10 @@ def main() -> None:
                         help='β 混合格的 dagger-beta：该比例的步由搜索执行，标签仍全部来自搜索')
     parser.add_argument('--probe-interval', type=int, default=3,
                         help='全败格每这么多个组保留一个 β=0 探针组（测真实学生胜率），其余 β 混合')
+    parser.add_argument('--save-candidates-levels', default='31-40', metavar='LEVELS',
+                        help='这些关的采集格给 search_play 传 --save-candidates 1（task120：让搜索'
+                             '评估"攒够再种"的卡）；清单任务里写 save_candidates 可逐格覆盖。'
+                             '默认雾夜区 31-40，空串 = 全关关闭')
     parser.add_argument('--rounds', type=int, default=1)
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
@@ -2034,6 +2074,10 @@ def main() -> None:
         parser.error('--workers must be positive')
     if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
         parser.error('rounds and game budgets must be positive')
+    try:
+        args.save_candidates_levels = parse_levels(args.save_candidates_levels)
+    except ValueError as error:
+        parser.error(str(error))
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
                  'promotion_panel', 'teacher_rates', 'demo_start_manifest'):
@@ -2101,7 +2145,8 @@ def main() -> None:
             if args.start_seed_ledger.exists():
                 ledger.write_bytes(args.start_seed_ledger.read_bytes())
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                       args.games_per_group, teacher, start_seed_ledger=ledger)
+                                       args.games_per_group, teacher, start_seed_ledger=ledger,
+                                       save_candidates_levels=args.save_candidates_levels)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
@@ -2109,7 +2154,8 @@ def main() -> None:
                                                        beta=item.get('beta', 0.0),
                                                        demo_archive=item.get('demo_archive'),
                                                        demo_decision=item.get('demo_decision'),
-                                                       future_seeds=item.get('future_seeds'))))
+                                                       future_seeds=item.get('future_seeds'),
+                                                       save_candidates=item.get('save_candidates', 0))))
         # The pack command this controller would run at the end of the round: reviewable before
         # a round is spent, and the only place the recipe's row options become a real command.
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
