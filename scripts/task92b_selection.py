@@ -41,6 +41,33 @@ def write(path, value):
     temporary.replace(path)
 
 
+def classify_literal_hits(hits):
+    """Keep raw hits; distinguish exact metrics counters from actual seed fields."""
+    classified = []
+    for path, value in sorted({(hit['path'], hit['value']) for hit in hits}):
+        file = Path(path)
+        if file.parent.name != 'metrics' or not file.name.startswith('train_rollout_policy-'):
+            raise ValueError(f'unclassified seed-window literal: {path}/{value}')
+        fields = []
+        def visit(item, keys=()):
+            if isinstance(item, dict):
+                for key, child in item.items():
+                    visit(child, keys + (key,))
+            elif isinstance(item, list):
+                for index, child in enumerate(item):
+                    visit(child, keys + (index,))
+            elif type(item) is int and item == value:
+                fields.append(keys)
+        for line in file.read_text().splitlines():
+            if str(value) in line:
+                visit(json.loads(line))
+        if not fields or any(field not in {('progress', 'rows'), ('io', 'rchar')} for field in fields):
+            raise ValueError(f'seed-window literal is not an audited numeric counter: {path}/{value}/{fields}')
+        classified.append(dict(path=path, value=value, fields=[list(field) for field in fields],
+                               source_sha256=sha(file), classification='metrics count, not a game seed'))
+    return classified
+
+
 def eligible_windows(state, runs=RUNS, r11=R11):
     """Use only r11's beta-zero suffix of each state window, never older students."""
     if Path(state['student']).resolve() != r11.resolve() or state['student_round'] != 11:
@@ -86,8 +113,11 @@ def prepare():
     inventory = json.loads(inventory_path.read_text())
     if (inventory['candidate']['low'], inventory['candidate']['high']) != BLOCK:
         raise ValueError('inventory audited a different block')
-    if not inventory['candidate']['disjoint'] or inventory['verification']['hit_count']:
+    if not inventory['candidate']['disjoint']:
         raise ValueError('new seed block is occupied')
+    if len(inventory['verification']['hits']) != inventory['verification']['hit_count']:
+        raise ValueError('literal hit list was truncated; cannot audit all hits')
+    literal_classification = classify_literal_hits(inventory['verification']['hits'])
     if PANEL.exists() or PLAN.exists():
         raise ValueError('panel already preregistered; do not regenerate after observing scores')
     snapshot = OUT / 'curriculum_state.snapshot.json'
@@ -111,10 +141,13 @@ def prepare():
              for i, (_, name) in enumerate(FAMILIES)}
     with PvZEnv(resource_dir=Path.home() / '.cache/pvz-research-resources', executable=ENGINE, headless=True) as env:
         random_panel = generate(env, excluded=excluded, selection_seeds=seeds)
+    option_additions = {}
     for task in random_panel['tasks']:
         old = next(t for t in old_random['tasks'] if t['task_id'] == task['task_id'])
-        if task['deck_random']['engine_options'] != old['deck_random']['engine_options']:
+        previous, current = old['deck_random']['engine_options'], task['deck_random']['engine_options']
+        if any(current.get(key) != value for key, value in previous.items()):
             raise ValueError('random family differs from task93 engine candidate pool')
+        option_additions[task['task_id']] = {key: value for key, value in current.items() if key not in previous}
     tasks.extend(random_panel['tasks'])
     panel = dict(schema_version=1, panel_version='selection-task92b-v2', tasks=tasks,
                  purpose='r11 beta-zero 30%-80% windows plus three required task93 random-deck families; equal games')
@@ -157,6 +190,7 @@ def prepare():
                      random_families=[name for _, name in FAMILIES], games_per_cell=count,
                      games_per_model=sum(len(t['seeds']) for t in tasks), models=models,
                      random_generation_audit=random_panel['generation_audit'],
+                     random_options_additional_metadata=option_additions,
                      rule='maximum total wins; stable a,c,d2,r11 path order breaks ties',
                      threshold_scope='30%-80% applies to existing r11 beta-zero curriculum windows. '
                                      'All three required random families are added without outcome screening; '
@@ -166,7 +200,8 @@ def prepare():
                      bootstrap=dict(draws=50000, seed=2026102602, stratified_by_task=True, paired_by_seed=True),
                      heldout_wins=dict(zip(NAMES, QUALITY)), sources_sha256=sources,
                      heldout_files=heldout_files,
-                     seed_audit=dict(candidate=inventory['candidate'], verification=inventory['verification'])))
+                     seed_audit=dict(candidate=inventory['candidate'], verification=inventory['verification'],
+                                     literal_classification=literal_classification, real_seed_hits=0)))
     print(json.dumps(dict(cells=len(tasks), per_cell=count, games=count * len(tasks), panel_sha256=sha(PANEL))))
 
 

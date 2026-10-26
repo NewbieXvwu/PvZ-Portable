@@ -1,0 +1,641 @@
+{
+  "panel_sha256": "16bcfa2d8d42fb3ec13794525b68f0ed08a167e49ba8d3cf6c1ea0e434bedc10",
+  "seed_block": [
+    126000000,
+    126020000
+  ],
+  "cells": [
+    {
+      "base": "day_l1_train_d7",
+      "multiplier": 2.5,
+      "wins": 33,
+      "games": 48,
+      "rate": 0.6875,
+      "window_games": 240,
+      "task_id": "day_l1_train_d7_m250",
+      "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+    },
+    {
+      "base": "day_l3_train_d7",
+      "multiplier": 2.5,
+      "wins": 61,
+      "games": 144,
+      "rate": 0.4236111111111111,
+      "window_games": 256,
+      "task_id": "day_l3_train_d7_m250",
+      "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+    },
+    {
+      "base": "day_l4_train_d7",
+      "multiplier": 2.5,
+      "wins": 43,
+      "games": 96,
+      "rate": 0.4479166666666667,
+      "window_games": 256,
+      "task_id": "day_l4_train_d7_m250",
+      "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+    },
+    {
+      "base": "day_l7_train_d7",
+      "multiplier": 1.75,
+      "wins": 55,
+      "games": 72,
+      "rate": 0.7638888888888888,
+      "window_games": 192,
+      "task_id": "day_l7_train_d7_m175",
+      "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+    },
+    {
+      "base": "day_l8_train_d7q",
+      "multiplier": 1.0,
+      "wins": 18,
+      "games": 24,
+      "rate": 0.75,
+      "window_games": 256,
+      "task_id": "day_l8_train_d7q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json"
+    },
+    {
+      "base": "day_l9_train_d7q",
+      "multiplier": 1.0,
+      "wins": 47,
+      "games": 72,
+      "rate": 0.6527777777777778,
+      "window_games": 256,
+      "task_id": "day_l9_train_d7q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json"
+    },
+    {
+      "base": "night_l11_train_n10q",
+      "multiplier": 1.75,
+      "wins": 54,
+      "games": 72,
+      "rate": 0.75,
+      "window_games": 144,
+      "task_id": "night_l11_train_n10q_m175",
+      "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+    },
+    {
+      "base": "night_l12_train_n10q",
+      "multiplier": 1.0,
+      "wins": 79,
+      "games": 144,
+      "rate": 0.5486111111111112,
+      "window_games": 256,
+      "task_id": "night_l12_train_n10q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json"
+    },
+    {
+      "base": "night_l14_train_n10q",
+      "multiplier": 1.0,
+      "wins": 55,
+      "games": 96,
+      "rate": 0.5729166666666666,
+      "window_games": 256,
+      "task_id": "night_l14_train_n10q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json"
+    },
+    {
+      "base": "night_l16_train_n10",
+      "multiplier": 1.5,
+      "wins": 90,
+      "games": 144,
+      "rate": 0.625,
+      "window_games": 256,
+      "task_id": "night_l16_train_n10_m150",
+      "manifest": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json"
+    },
+    {
+      "base": "night_l17_train_n10q",
+      "multiplier": 1.0,
+      "wins": 68,
+      "games": 144,
+      "rate": 0.4722222222222222,
+      "window_games": 256,
+      "task_id": "night_l17_train_n10q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json"
+    },
+    {
+      "base": "night_l18_train_n10q",
+      "multiplier": 1.0,
+      "wins": 19,
+      "games": 24,
+      "rate": 0.7916666666666666,
+      "window_games": 144,
+      "task_id": "night_l18_train_n10q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json"
+    },
+    {
+      "base": "night_l19_train_n10",
+      "multiplier": 1.0,
+      "wins": 31,
+      "games": 48,
+      "rate": 0.6458333333333334,
+      "window_games": 256,
+      "task_id": "night_l19_train_n10",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json"
+    },
+    {
+      "base": "night_l19_train_n10q",
+      "multiplier": 1.0,
+      "wins": 72,
+      "games": 192,
+      "rate": 0.375,
+      "window_games": 256,
+      "task_id": "night_l19_train_n10q",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json"
+    },
+    {
+      "base": "pool_l26_train_p9k",
+      "multiplier": 1.0,
+      "wins": 109,
+      "games": 192,
+      "rate": 0.5677083333333334,
+      "window_games": 256,
+      "task_id": "pool_l26_train_p9k",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json"
+    },
+    {
+      "base": "pool_l27_train_p9k",
+      "multiplier": 1.0,
+      "wins": 62,
+      "games": 192,
+      "rate": 0.3229166666666667,
+      "window_games": 256,
+      "task_id": "pool_l27_train_p9k",
+      "manifest": "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json"
+    }
+  ],
+  "random_families": [
+    "day_l7_train_rand",
+    "night_l12_train_rand",
+    "pool_l21_train_rand"
+  ],
+  "games_per_cell": 20,
+  "games_per_model": 380,
+  "models": {
+    "a": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/models/a.pt",
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/models/a.pt",
+      "sha256": "a398423908eca3db8f2d4ec0c30a341bd2ef1e941c84560d3714e776f78faa6b"
+    },
+    "c": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/models/c.pt",
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/models/c.pt",
+      "sha256": "8f0bb096a0e1cdb13b3adb34c9fe9cd73c1221d0afcfe8bfab85d22cde2c9c3f"
+    },
+    "d2": {
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/models/d2.pt",
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/models/d2.pt",
+      "sha256": "5cb2f8eae96bbad06f641343062959e1d24992f94a5c44944956d7338f0fd1f5"
+    },
+    "r11": {
+      "source": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/models/r11.pt",
+      "sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c"
+    }
+  },
+  "random_generation_audit": {
+    "day_l7_train_rand": {
+      "seeds": 20,
+      "length_counts": {
+        "6": 7,
+        "8": 4,
+        "10": 7,
+        "7": 1,
+        "9": 1
+      },
+      "plant_counts": {
+        "0": 4,
+        "1": 20,
+        "2": 6,
+        "3": 10,
+        "4": 6,
+        "5": 2,
+        "6": 6,
+        "7": 7,
+        "17": 10,
+        "18": 5,
+        "20": 8,
+        "21": 7,
+        "22": 6,
+        "23": 4,
+        "26": 7,
+        "28": 3,
+        "29": 7,
+        "30": 6,
+        "32": 5,
+        "34": 9,
+        "35": 7,
+        "36": 4,
+        "38": 8,
+        "39": 3
+      },
+      "rejected": {
+        "sun": 25
+      },
+      "all_engine_warnings_empty": true,
+      "all_reset_profiles_valid": true,
+      "heldout_matches": 0
+    },
+    "night_l12_train_rand": {
+      "seeds": 20,
+      "length_counts": {
+        "10": 5,
+        "6": 5,
+        "7": 6,
+        "9": 3,
+        "8": 1
+      },
+      "plant_counts": {
+        "0": 5,
+        "1": 12,
+        "2": 6,
+        "3": 5,
+        "4": 3,
+        "5": 4,
+        "6": 2,
+        "7": 6,
+        "8": 8,
+        "9": 10,
+        "10": 5,
+        "11": 4,
+        "12": 5,
+        "13": 7,
+        "14": 4,
+        "15": 4,
+        "17": 5,
+        "18": 2,
+        "20": 4,
+        "21": 6,
+        "22": 4,
+        "23": 5,
+        "26": 4,
+        "28": 6,
+        "29": 2,
+        "30": 4,
+        "31": 7,
+        "32": 3,
+        "34": 1,
+        "36": 7,
+        "38": 4,
+        "39": 3
+      },
+      "rejected": {
+        "sun": 30
+      },
+      "all_engine_warnings_empty": true,
+      "all_reset_profiles_valid": true,
+      "heldout_matches": 0
+    },
+    "pool_l21_train_rand": {
+      "seeds": 20,
+      "length_counts": {
+        "9": 4,
+        "8": 2,
+        "10": 7,
+        "6": 4,
+        "7": 3
+      },
+      "plant_counts": {
+        "0": 5,
+        "1": 20,
+        "2": 4,
+        "3": 7,
+        "4": 5,
+        "5": 1,
+        "6": 5,
+        "7": 5,
+        "16": 20,
+        "17": 5,
+        "18": 4,
+        "19": 6,
+        "20": 6,
+        "21": 5,
+        "22": 4,
+        "23": 6,
+        "26": 6,
+        "28": 6,
+        "29": 5,
+        "30": 7,
+        "32": 7,
+        "34": 3,
+        "35": 5,
+        "36": 7,
+        "38": 6,
+        "39": 7
+      },
+      "rejected": {
+        "terrain_or_heldout": 207,
+        "sun": 66
+      },
+      "all_engine_warnings_empty": true,
+      "all_reset_profiles_valid": true,
+      "heldout_matches": 0
+    }
+  },
+  "random_options_additional_metadata": {
+    "day_l7_train_rand": {
+      "first_adventure_available": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    },
+    "night_l12_train_rand": {
+      "first_adventure_available": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9
+      ]
+    },
+    "pool_l21_train_rand": {
+      "first_adventure_available": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14,
+        15,
+        16
+      ]
+    }
+  },
+  "rule": "maximum total wins; stable a,c,d2,r11 path order breaks ties",
+  "threshold_scope": "30%-80% applies to existing r11 beta-zero curriculum windows. All three required random families are added without outcome screening; night/pool have no qc window and cold-start student rates below 30%.",
+  "acceptance": "Panel ranking equals heldout ranking D2>r11>C>A, or chooses D2/r11 and never A. No post-score panel changes. Compare v1/v2 with four identical models.",
+  "bootstrap": {
+    "draws": 50000,
+    "seed": 2026102602,
+    "stratified_by_task": true,
+    "paired_by_seed": true
+  },
+  "heldout_wins": {
+    "a": 124,
+    "c": 135,
+    "d2": 169,
+    "r11": 166
+  },
+  "sources_sha256": {
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d10origm300_24/config.json": "51ef17dec1396ff8f5072c0f5a67d3709b86c3f9f5caa0b3823e4b43ad2f298b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d10origm300_24/games.jsonl": "e411e1b43e38400575b8b7a6ba9ca51ec21c20e5c727c3d228f3ab2ea29145ac",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16d10d7qm250_24/config.json": "73704584cb79f68e1b9d5033e8573433555a05bcf88288ac0a99212efa24b2bd",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16d10d7qm250_24/games.jsonl": "7a06f0c632085748ff627bc3cf09808293a8793ac8a60d6418ae603cfbbe313b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d1d7m250_48/config.json": "33f451b9b3e2be6742f55588f0b6f23c34a49e86043316164fd27d58e3e8a132",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d1d7m250_48/games.jsonl": "b80eb1c68e384084b1011990dd54ddd46e71890652474d6fa1807d6f35bdf1fb",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d3d7m250_48/config.json": "f00f30c0af7b0cd06c11b3dcf0899a96797d34bd3345572f3eda788dce45058b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d3d7m250_48/games.jsonl": "b889f8331cc2370aa236013ef06146333b69ed03e478f9501ed3d39d45afb431",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15d3d7m250_48/config.json": "e9eae95c3f2d34a3e743d2cd1ce08ccdd9b7290250bd28c6435dccb8fde2c7a7",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15d3d7m250_48/games.jsonl": "7fb2692f409c4b9744f1ce1e8c3e932a39eb511c606f9545633423109cfa18e4",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d3d7m250_48/config.json": "debb05e1acd72f44f3db93fe7642a03aac997c9ddf7b0a683e851b3cea912bff",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d3d7m250_48/games.jsonl": "f7bbec5f7c4d56fd210c8ce15e452ed5d052e5ef1151b2e899bbaa725b425eca",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d4d7m250_48/config.json": "f20dd8af6e4714c8f28f5418e2d5d382a9e8b449a6f6ecfe0a5e9381581eefed",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d4d7m250_48/games.jsonl": "2d0dea8c41163ab4dcb4d83e5289826a0b0673b6822a6ad81bcee8aa9051a77e",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16d4d7m250_48/config.json": "774e822905c57b8db67d9b22076a52b51d925b64b0859954be570faa0f2d2337",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16d4d7m250_48/games.jsonl": "eb10710f9399cbf76115be26dd261b805e9761b7e952d85e6e5d4f35b6f717fe",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d6d7m250_48/config.json": "d18d9e2b0d3ad034aa279ce359e04311708d3fd8696bc715c9693c52565c08a4",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d6d7m250_48/games.jsonl": "7f543bb709eb8e1dbf436802f6412a4d2c6571508afd2417fe21fa012f257641",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16d6d7m250_48/config.json": "8864015dfb3d5eedde72ff60015151c36add85dd50bba4dcdb56ece5f6ff08a2",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16d6d7m250_48/games.jsonl": "881a0a86a74e3d75aa04a38e2ca596050c42fc0041f5f82fda95fd8c54d101f0",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d7d7m175_48/config.json": "093c6bd41cd7cc4c3a644e40e9349dd5d317e8db12e66b5857ff7f3a55282284",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d7d7m175_48/games.jsonl": "bac40e4f6cefdc03259e499eacfe6501e36200becb1707266ec686c4e6b0c386",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d7d7m175_24/config.json": "c8ce83aba3c6cabc61ef9b106f12cd4a4359de20917e9ca7337010a3e8dff230",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d7d7m175_24/games.jsonl": "bcfd584cea6d3639fe4fcee1a3b500bedd8f9a18ad2b090e39fe3e831dd1bb78",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d8d7qm100_24/config.json": "c739d5e81a1e5caa5c7847a2deb129d3701946eed6316c0d0e98ecf765d59073",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14d8d7qm100_24/games.jsonl": "ee0791b4ce6d377c8ef5272a68bfa13088bb4483ad769e8846b9a987f579272a",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d9d7m150_48/config.json": "0a9a4dfa360fc9424a1a9e2e03a7c71813e0fcab3da33493747fbc53022609b2",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d9d7m150_48/games.jsonl": "97713af7199afa8297c74fab5dd466b3ec44d467b322491f9e40d791704f6f0b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d9d7m150_24/config.json": "ca35ff3bef5cbe495760b3c17961e02c67060693c4d9be4710e2e8e6ea432d58",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d9d7m150_24/games.jsonl": "4066171b5f2879bb4fd2a335598bb6fb7aff96a08e4759c014ca41a550c12c4d",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d9d7qm100_48/config.json": "56e49a2d2e5ff134378a1eaa490c22557807e9ca5d7379ee9aa9236d8a26e3f5",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13d9d7qm100_48/games.jsonl": "00361775117fc4437147c55d8f93095051a603308fac2f679d92aad90f6bac82",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d9d7qm100_24/config.json": "1a36523d215bee94ddc31cc40eb89c7214b33331b695ee0e75e0d168cc2e4109",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17d9d7qm100_24/games.jsonl": "339f97502cd64622b55f4090d5f26d6fb5625a16711664ac0063a277cfae7e6f",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n11n10m175_24/config.json": "faf80361b32af6c67daf1786724908c391a3c8cfad0200a94376f5741bae2cde",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n11n10m175_24/games.jsonl": "fb8f3e17141cd884437df8ae2612d6240df6d33f72a7e0f75f09b41243934237",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n11n10qm175_48/config.json": "e4704a4475dfd4b8b2e87f911be06c05295769c1d3a29e4d9dc0cb8d07a91256",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n11n10qm175_48/games.jsonl": "782c917d20ad1e5dc77d0c442bc73bf06367f28f3a007298a6de3c5ac49fc721",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n11n10qm175_24/config.json": "9083109ea046fd0a270bd400fdca6280e4ad18210b81de51719f36951fa54d40",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n11n10qm175_24/games.jsonl": "77f01ae83307d32c3a9a48be692c16398e201a607ae6017435fe03874eb96bd7",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n12n10m100_24/config.json": "5db7d991d99218c685760bfc9c929524ab432a063b08d8bf270530c01d317d29",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n12n10m100_24/games.jsonl": "8df72a6c75caff59911ac8c8ebc090b8195f2d4afffcc2aa7db0201a27f049bb",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n12n10qm100_48/config.json": "0a3f5dc148f4c4e2d04a92ade13370d3736042dfe1fe365af38173d6d9c75c5f",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n12n10qm100_48/games.jsonl": "0a7eef4517ed8b7050b511ba1ba7d5a15a7559ac17b29132b4367b7b588e9162",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n12n10qm100_48/config.json": "2e0cea5120b944512586e1e2fae5e32e670f9290f0995b8cd2fbf85e6a74cb24",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n12n10qm100_48/games.jsonl": "76a538fd8d5ebc5cfd0e04a2afb993b6bf25244d2d5181beab31bba3668d2b1c",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n12n10qm100_48/config.json": "c5e7942e694b8d206de8bf2b902c631cf6084a81a7e818ec181a8840982f69c4",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n12n10qm100_48/games.jsonl": "30acdf9a01aebc2048fa128b67adf772aa9e016672984215bbf36bd2b39c1f46",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n13n10m150_48/config.json": "ca55649c57a703b0469197e78ba08b20ea5e4b5fdfaeb763eeab4b0ab77c1e46",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n13n10m150_48/games.jsonl": "c076a98a7e9211a11398b0fa14dbfcc11d51b8dfe9c45fc1b7ead1d055d14d6e",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n13n10m150_24/config.json": "4d16a87c32a8bb8dd19d61adaf51bffc67ba9f3aeccf8d744e83a0813d164d0e",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n13n10m150_24/games.jsonl": "7991f8d13574ccf726c1e1142fe1aef2b7284215442b5055b163ce7f1adce7fe",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n13n10qm125_48/config.json": "8c5f426a80f2d1db8abc03c3c8736ccb04dbba42ccdf44d9db95426f5def087c",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n13n10qm125_48/games.jsonl": "166bbcad56118c1365f52475862839ec66a3e3ee88bd7fdcaede5ae03c1cecd0",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n13n10qm125_24/config.json": "41e018826abac4765db20e3a42f8770087bc0526f995a98bf4cb773478b09140",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n13n10qm125_24/games.jsonl": "2259c772b29232fd247e64bc4acabbd635d189357d5d12aae42773e459d175a4",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n14n10m100_24/config.json": "7bc92d7cb4063a47dd527a632f18901b6d61bbdf2cad204a43859afad7aa88f7",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n14n10m100_24/games.jsonl": "312c1d538de93680d88c8013ec0720b37aa7341e8b6b23ed7886ca10b7b30425",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n14n10qm100_48/config.json": "5a1db4e71d14ce76e166cf0aba76adcf0a9041978ab5533fa2ae4fda668642d8",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n14n10qm100_48/games.jsonl": "410fdc6c912fcbec03e60b324d6d03e29bb0ff08ba78731028dc027c3fe819af",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n14n10qm100_48/config.json": "e9af9662b370316da06cde77e2ae049720720591b497fa5381874ed2d444a2fa",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n14n10qm100_48/games.jsonl": "8ff3dacba27818d9c5d377e9daba90d0d89573402ae36a127b838dedde99ee40",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n16n10m150_48/config.json": "2d9205627428b29a01ed86f840fab3178cfc035bac7c5418ab6a0c29b434fd84",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n16n10m150_48/games.jsonl": "9ad45541bcd8a4de43e6244954ca3f9faed12370ffa59dbc5245dc579adc022b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n16n10m150_48/config.json": "15a8b9c7aef7a810aefbacc20e1014018f5696fd94b5ef177e3dcdbee6f54efe",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n16n10m150_48/games.jsonl": "87df82941e9e46bbdc72f17007da73ac5a8e74efc7e9b42ccff335fea027c984",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n16n10m150_48/config.json": "2c33a500a31d0a3573af60558bbae71bd1f6e51fb2e617fe31cef7e26e056bea",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n16n10m150_48/games.jsonl": "9aa4a16818b48e0be46e4ded3e83a8e5ec8994c6e0f7db3d73ad859270ddde72",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n16n10qm125_48/config.json": "86d7a4fe2080437fdcadf47559c37d4aef00b8e4ac6e2587ae9da326ee90e80e",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n16n10qm125_48/games.jsonl": "8cf09140c4e2ede28ed69b9c741938a57126bb4638fa5f27fc2eac6f65164ce7",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n16n10qm125_24/config.json": "b1cb41d3f9a05e8d4a1be3604e7670ee8d88367586fcbbf38a4d9e42bbc46a07",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n16n10qm125_24/games.jsonl": "4c4200e1f190becce53e9d7d26c16992b8286399a99375297c953a2eb53edc48",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n17n10m100_24/config.json": "b2e73f06370101b542dccb876bad8eda81e2cf83f726caddb77fe6a58511087c",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n17n10m100_24/games.jsonl": "a4c51aedd155b90b3a89d5bfd97a8fb1eab1d6cd57ef6f3ec9dbee4dfd1a92e0",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n17n10qm100_48/config.json": "dc266fe3594841a7bd570db3526a9e2af91ca2b341aa771fe853a8d1bdc6b378",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n17n10qm100_48/games.jsonl": "7f6b2d9b325300cec88e8bcdeafc2fdd92d323dac8770928b7f67ab7282febfd",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n17n10qm100_48/config.json": "c554b897908f767cbeebfc8ffe9dd21562fb9b0617d278e56f0c9cba57430154",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n17n10qm100_48/games.jsonl": "0764da59e4d9023b1b689a149606925bdef5ea95927d909a77ab6e391b04db87",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n17n10qm100_48/config.json": "f6e05471c130d4805767a8a4c831156d3641ea33e7193fff21746bbfa3281d55",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n17n10qm100_48/games.jsonl": "bf1b10273f21bcd4af4454a66b1d7c432b6e725d789a57f85beec0d1e99a349a",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n18n10m125_48/config.json": "819737e339429ca9cbcf14d934c95159cd573bc86e691fe771afcdc1a6aa4f82",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n18n10m125_48/games.jsonl": "1cbcd976b220aaa71d8d6723f26db9019c3ab6030eb9b9cf477c6818d42dc3ae",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n18n10m125_24/config.json": "3ca0b3170ea18fdc083373d70f1a1d10624e5239b15f8657c7bb7a6139b8a4c0",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n18n10m125_24/games.jsonl": "a0cbc55220e39faa7a021b5efdd1b76f77368142f7d03b2ade08467a9f8bf0c4",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n18n10qm100_24/config.json": "abca9512dc8c5f9184a5bd84d57f9f084c8fda3d293ed6b61f71952d487c5e82",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n18n10qm100_24/games.jsonl": "4e1b53e55fd7dbb2695ffe1a989b72d66bc1cde15660d29a9a2f4655ef85c650",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n19n10m100_48/config.json": "b08fcc807bb7e4dc4d9a1cd7c9ea0aca5c81b5cd47234b46539db8ff1853d4f3",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n19n10m100_48/games.jsonl": "a1386bb8e003a02d7ff69e5f8b9a55690f0b63f4d17a01b95fdaec267e2287d5",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n19n10qm100_48/config.json": "3d92405a6fc963d314a2d5ec0b9c475ea5ad5ec4c69bb3fc819885f21261cc9e",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14n19n10qm100_48/games.jsonl": "8a757659dd965da9c883da92ca80472b9a35d91d985102f28360014cb8b16fdf",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n19n10qm100_48/config.json": "e95a9f416a1d1954e172d02f8e63ffa418beacea2aa17669f18c9176c1c9b4e3",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15n19n10qm100_48/games.jsonl": "a55f4884a6da8d204debf6cc0448b3fb7ce9595c6b2d9634f9f3a4002ca613c3",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n19n10qm100_48/config.json": "01f18df39479b0603617e7386de77d6f269194ab27f829486c23184dca3fbaea",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16n19n10qm100_48/games.jsonl": "627f484d3c69caf6f1807c69a88a214081a727bfde8a6b09d52155e9245dcea5",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n19n10qm100_48/config.json": "30b7d11e78295cb6798cad9122d210d1cc558f04aac8aa8b8cf31ce80920461c",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17n19n10qm100_48/games.jsonl": "b20c41004a6e09db6f63074843e4531ad13ba8cbd039dc09db7bea83041ad3e9",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n20n10origm100_48/config.json": "b3a67581e47c5be93bc8e2909bc75d92d6d6c847c88d03842d0b58014dc7b214",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13n20n10origm100_48/games.jsonl": "746cd2495f335e4606f7dc886d7a55b2036352fca07fe87daab71fde732f6e38",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13p21p9km100_48/config.json": "3fc3079e15639f6d9e928432b926c1d1a5e4302cfa86be84b2a7fa55b172d1ca",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13p21p9km100_48/games.jsonl": "ece4ef73bf8ed36a1de0cb9a20e697ca3ed159f1f3ca6c116824b6f1902f7ca5",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14p26p9km100_48/config.json": "a915b80dea2d7b1d567c07bfb46911733542ea5af092058e02942fd2ed1899de",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14p26p9km100_48/games.jsonl": "dfb302038d77ceabc613c39f7c00be36ed657057a34d42e346f85ce632f56f70",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15p26p9km100_48/config.json": "7e620ab4b72d391f2e1cdfba45de3d27963a4fa0c38e2e317c680a2d23b46e1f",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15p26p9km100_48/games.jsonl": "a84594e6a7711c0c67304fe04dfb2927e6202737c3bd9f23b761cd988dbc323f",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16p26p9km100_48/config.json": "b8b0c292f603dea7b503e669ab54e29f2cb4a9516e84ef07ab2199a36015f83d",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16p26p9km100_48/games.jsonl": "4666575e432a7423eac6e0ef62256b45cf096aa871638584b6094cfa53296102",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17p26p9km100_48/config.json": "8e7c526769de43ac8061f42b28ff2914dafecab267bca12f312e0aab96ee026f",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17p26p9km100_48/games.jsonl": "bed874ff17647a2a6765a6ab0767996fc7bd1bfc8132129f9ec9fc3303ee5d84",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14p27p9km100_48/config.json": "82fe512dbc3a82c578745954f606cdc6e1a9edd389bc9df1da5332cd58fa7cd3",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14p27p9km100_48/games.jsonl": "a42cbb0426d76e3da66e276b4f92430c522fa00bcda8ba0d665a0454dada929c",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15p27p9km100_48/config.json": "9588aa36ffe9da2e9e465d00f9840ac70a0ad2eecf03020cd4a3e4b3fff6f22c",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15p27p9km100_48/games.jsonl": "8c3213cda3d16b3965fe2cedbca61bb45e0c2734db67ac890e5914926c3edf19",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16p27p9km100_48/config.json": "b9ea7b1902df78c1988c43afceb73eeb9809cbee43993793985d60471cc18f79",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16p27p9km100_48/games.jsonl": "96f4180e1f18297d4765694a6f9da8f87e98cc456933975d3688b20a19ca74e5",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17p27p9km100_48/config.json": "f1fab0c370be1433969bfb69fe0c576506d0c7c62728a1558af4cc0af4e37e5e",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17p27p9km100_48/games.jsonl": "86ac02ef189783e924b2faafef6e76e321d268d3a235da27196f52b3b83ae74b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14p29p9km100_48/config.json": "e9aff2427f36065660856f1ea36cd2caef659598ace6488e5b9c542c7d2f1e21",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c14p29p9km100_48/games.jsonl": "d19016191de92f00d97b6459543db1096eab00d0236934e3b5a335cc171118cd",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17p29p9km100_48/config.json": "01b82dbcf1ce86cacb8db482a503f2a6c3bdd7a174447afad0bd5d5dcc75a4a2",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17p29p9km100_48/games.jsonl": "99f929fdcce7322bef5d0cc38c74c432c80b564876f03bf598917f5eebf0900b",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13roofl41r7m100_48/config.json": "f9d85c580898535a29b415e2507374d413daeb1aa6c30d1e7ee4b46767aeaf7d",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c13roofl41r7m100_48/games.jsonl": "0cdc10d7321d0a882691015670cac52e6d4d6617793507c737c58339dd187f67",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15roofl41r7m100_48/config.json": "fb485c2aa2a9bf9cdcb50cff6ea9580af8f51f26bd33831f17f4bc82c5028387",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c15roofl41r7m100_48/games.jsonl": "ba7f9f3079998c51893fc05ba7eab1da3b4587df959bbee1fcf11fec1ad45dea",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16roofl41r7m100_48/config.json": "ae5b4bc78779df811147ded89b7584f02d8029554c812e8850921189d47603c2",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c16roofl41r7m100_48/games.jsonl": "ef6305c0bea311e95a2e2d7e49702cd5beebe477fb6768b50b4277f2cca9d3d6",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17roofl41r7m100_48/config.json": "373dab97d3d6a4d02df89d111c4be262debf63dbaac89da3f0f2dfb04fbcd5cb",
+    "/home/newbiexvwu/PvZ-search/artifacts/hard/c17roofl41r7m100_48/games.jsonl": "774b399fed55f4ec18b93d845c740ae831c60413c55f2c410d4be58d851c03b2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json": "68b37b98d3e29e83ac583fa5897372e7ed248213ec633d79edcf33e01eae26c3",
+    "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json": "ea0f8c0348cafd6a897bc0defde239e4a15cf702126779edc76d3d2f236cfc8f",
+    "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10q.json": "ab856b0e1213d64fd526574e4523ece8a68ee5fb032d3d3c9509559d9a662fae",
+    "/home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel.json": "f77536507e22544196ea048751629d8394bd7959f6dd44567bf0efde8e2a138f",
+    "/home/newbiexvwu/PvZ-search/artifacts/stage4/pool_panel.json": "10ebc1b404a15aa96e44e705747c99fdb6b3aaf90a9d930ac9f51f61cda1b0fb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/curriculum_state.snapshot.json": "f503bb533287605094e707ec8383224d4e20d347279eeed8f4ed2a759d9ae999",
+    "/home/newbiexvwu/PvZ-search/artifacts/stage4/random_deck_panel.json": "dbf6a1f657c511cec3faffce8a50ead475f6f8e82d3604477d4510ab0e9ab285",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/seed_inventory.full.json": "e9e8732ba02cff33d005d46cc1ae70ac6512e8bb627242b72bf30b8d9a67a8e5",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable": "16989f23cdce3d67e862f4fb4279b423d22ec532d066eea8aa1565dbe76a1fd2",
+    "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "heldout_files": {
+    "a": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/eval_day_l7_eval_d7p_holdout1/games.jsonl",
+      "sha256": "23cb542d79908e5ac2022aafea0ffeb562effb71bd2139dbcda4d3c4b2abd5ae"
+    },
+    "c": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_c/eval_day_l7_eval_d7p_holdout1/games.jsonl",
+      "sha256": "5cacf3a5760d8a422a305866d7035a7e59f5f3b4d118dc93e81be227d2756b0a"
+    },
+    "d2": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_d2/eval_day_l7_eval_d7p_holdout1/games.jsonl",
+      "sha256": "0c06069f13957d53f2ce7447c811dc56c5c0e57a30189d4b9a7a98844bb99d3b"
+    },
+    "r11": {
+      "path": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent/day_l7_eval_d7p_holdout1/games.jsonl",
+      "sha256": "1b6809424acb635b3de2ce0a63d0764aff188d7a0d8c93a80d5452bd2e33c9b5"
+    }
+  },
+  "seed_audit": {
+    "candidate": {
+      "low": 126000000,
+      "high": 126020000,
+      "size": 20000,
+      "disjoint": true,
+      "overlaps": []
+    },
+    "verification": {
+      "low": 126000000,
+      "high": 126020000,
+      "files": 135728,
+      "hits": [
+        {
+          "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-732761.jsonl",
+          "value": 126003688
+        },
+        {
+          "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-732761.jsonl",
+          "value": 126009832
+        },
+        {
+          "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-732761.jsonl",
+          "value": 126018024
+        },
+        {
+          "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-233017.jsonl",
+          "value": 126017173
+        }
+      ],
+      "hit_count": 4
+    },
+    "literal_classification": [
+      {
+        "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-233017.jsonl",
+        "value": 126017173,
+        "fields": [
+          [
+            "io",
+            "rchar"
+          ]
+        ],
+        "source_sha256": "96f66118d3dbd2147bc73fd6ae7bc78b1e2e781bdd5b66a2b506ea44624e6588",
+        "classification": "metrics count, not a game seed"
+      },
+      {
+        "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-732761.jsonl",
+        "value": 126003688,
+        "fields": [
+          [
+            "progress",
+            "rows"
+          ]
+        ],
+        "source_sha256": "faac5ca597640c12af95540e1fe0095715864aa9445fb0a41e7a31981478738e",
+        "classification": "metrics count, not a game seed"
+      },
+      {
+        "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-732761.jsonl",
+        "value": 126009832,
+        "fields": [
+          [
+            "progress",
+            "rows"
+          ]
+        ],
+        "source_sha256": "faac5ca597640c12af95540e1fe0095715864aa9445fb0a41e7a31981478738e",
+        "classification": "metrics count, not a game seed"
+      },
+      {
+        "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-732761.jsonl",
+        "value": 126018024,
+        "fields": [
+          [
+            "progress",
+            "rows"
+          ]
+        ],
+        "source_sha256": "faac5ca597640c12af95540e1fe0095715864aa9445fb0a41e7a31981478738e",
+        "classification": "metrics count, not a game seed"
+      }
+    ],
+    "real_seed_hits": 0
+  }
+}

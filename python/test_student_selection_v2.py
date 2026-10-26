@@ -7,9 +7,11 @@ import numpy as np
 import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from task92b_selection import eligible_windows, kendall_tau, summarize
+from task92b_selection import classify_literal_hits, eligible_windows, kendall_tau, summarize
 from pvz_tasks import deck_for_seed, random_deck_covered, random_deck_draws
 from gate_seed_inventory import scan_json, scan_roots_once, verify_window
+from pvz_student_selection import assert_disjoint, seed_spans
+from pvz_promotion import SEED_POOLS_V2
 
 
 def test_kendall_handles_ties_and_reversed_order():
@@ -29,6 +31,36 @@ def test_seed_audit_deduplicates_nested_roots_without_losing_records(tmp_path):
     verification = verify_window(roots, 126000000, 126020000)
     assert verification['files'] == 1
     assert [hit['value'] for hit in verification['hits']] == [126000001]
+
+
+def test_literal_hit_classification_never_discards_a_seed_field(tmp_path):
+    folder = tmp_path / 'metrics'
+    folder.mkdir()
+    file = folder / 'train_rollout_policy-1.jsonl'
+    file.write_text('{"progress":{"rows":126000001},"io":{"rchar":126000002}}\n')
+    hits = [dict(path=str(file), value=126000001)]
+    assert classify_literal_hits(hits)[0]['fields'] == [['progress', 'rows']]
+    file.write_text('{"progress":{"rows":126000001},"seed":126000001}\n')
+    with pytest.raises(ValueError, match='not an audited numeric counter'):
+        classify_literal_hits(hits)
+
+
+def test_frozen_v2_budget_seed_isolation_and_random_receipts():
+    root = Path(__file__).resolve().parents[1]
+    panel = json.loads((root / 'configs/student_selection_v2.json').read_text())
+    prereg = json.loads((root / 'MEMORY/docs/multiseed-select-v2-preregister.json').read_text())
+    assert len(panel['tasks']) == len(prereg['cells']) + 3 == 19
+    assert sum(len(t['seeds']) for t in panel['tasks']) == prereg['games_per_model'] == 380
+    assert {len(t['seeds']) for t in panel['tasks']} == {20}
+    old = json.loads((root / 'configs/student_selection.json').read_text())
+    reserved = list(SEED_POOLS_V2) + list(seed_spans(old)) + [(93000000, 93030000)]
+    assert_disjoint(panel, reserved)
+    random_tasks = [task for task in panel['tasks'] if 'deck_random' in task]
+    assert {task['task_id'] for task in random_tasks} == set(prereg['random_families'])
+    for task in random_tasks:
+        for seed in task['seeds']:
+            assert list(deck_for_seed(task, seed)) == task['deck_random']['validated_decks'][str(seed)]['deck']
+    assert all(.3 <= cell['rate'] <= .8 for cell in prereg['cells'])
 
 
 def test_bootstrap_keeps_policy_outcomes_paired_and_stable_ties():

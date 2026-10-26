@@ -77,4 +77,6 @@ pack 0.3–10 min；train 36–130 min（d3 旁证 ~170 s/epoch × 12）；门�
 
 执行入口 `scripts/task92b_selection.py prepare/evaluate/analyse`；已有完整游戏按原配置核对后续跑缺失局，避免重复。生产后台仍引用 v1，本次只交付独立 v2 清单及离线验证结果，供主控决定是否切换。
 
+冻结清单 SHA `16bcfa2d8d42fb3ec13794525b68f0ed08a167e49ba8d3cf6c1ea0e434bedc10`。种子全机审计扫描126,807份JSON、解析3,147份登记文件、收集1,873个区间；额外扫描135,728份JSON/JSONL。原始数字扫描4次命中，逐条解析均为监控字段 `progress.rows`（3次）与 `io.rchar`（1次），无真实种子冲突；原始命中、字段位置和文件SHA均保留于预登记，不按路径一概豁免。随机三族各20个新种子的候选池及原引擎警告字段与task93逐字段相等；deploy4额外返回的 `first_adventure_available` 只作为新增元数据记录，未用于采样。60个卡组均通过引擎警告/reset校验，泳池20/20含睡莲，heldout签名碰撞为0。
+
 （预登记完成后的实测结果待填。）
