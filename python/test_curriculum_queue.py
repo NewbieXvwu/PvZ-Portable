@@ -1015,7 +1015,8 @@ class StartSeedRenewalTest(unittest.TestCase):
             reloaded['offsets'][self.BASE] = 300              # 偏移继续在续领段里走
             plan, _ = plan_round(reloaded, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
                                  budget=10, per_group=10)
-            self.assertEqual(plan[0]['future_seeds'], list(range(90000044, 90000054)))
+            self.assertEqual(plan[0]['future_seeds'],
+                             list(range(START_SEED_POOL[0] + 44, START_SEED_POOL[0] + 54)))
 
     def test_spec_block_change_resets_the_table(self):
         state = dict(round=0, offsets={}, cells={self.BASE: self.cell()})
@@ -1043,8 +1044,17 @@ class StartSeedRenewalTest(unittest.TestCase):
                                        budget=48, per_group=48, start_seed_ledger=ledger)
             self.assertEqual(len(plan), 1)
             self.assertEqual(len(plan[0]['future_seeds']), 48)
-            self.assertEqual(plan[0]['future_seeds'][40:], list(range(90000000, 90000008)))
+            self.assertEqual(plan[0]['future_seeds'][40:],
+                             list(range(START_SEED_POOL[0], START_SEED_POOL[0] + 8)))
             self.assertTrue(any('seeds renewed' in line for line in changes))
+
+    def test_restore_warns_when_future_seeds_overlap_a_live_cell(self):
+        state = dict(round=0, offsets={self.BASE: 216},
+                     cells={'other': dict(self.cell(), task_id='other')},
+                     retired_cells={self.BASE: self.cell()})
+        specs = {self.BASE: self.spec(), 'other': dict(self.spec(), task_id='other')}
+        lines = reconcile_start_cells(state, specs, restore=(self.BASE,))
+        self.assertTrue(any('WARNING future seeds overlap other' in line for line in lines))
 
     def test_legacy_restore_survives_the_next_restart(self):
         state = dict(round=0, offsets={}, cells={}, retired_cells={self.BASE: self.cell()})

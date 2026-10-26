@@ -6,6 +6,9 @@
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/cleanup",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/d14c",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5",
@@ -14,18 +17,22 @@
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmplay",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/memprobe",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/perf2",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/qcwatch",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/repro",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/seedpool",
+  "/home/newbiexvwu/PvZ-search/.claude/worktrees/startseeds",
   "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6",
   "/home/newbiexvwu/pvz-logs"
  ],
  "scan": {
-  "files_seen": 241314,
-  "files_parsed": 4310,
-  "segments": 2339,
+  "files_seen": 257159,
+  "files_parsed": 6771,
+  "segments": 4388,
   "quick": false
  },
  "occupied": [
@@ -126,6 +133,10 @@
    20261034
   ],
   [
+   20261046,
+   20261052
+  ],
+  [
    20261101,
    20261132
   ],
@@ -155,43 +166,43 @@
   ],
   [
    44400000,
-   44400255
+   44400256
   ],
   [
    44500000,
-   44500255
+   44500256
   ],
   [
    44600000,
-   44600255
+   44600256
   ],
   [
    44700000,
-   44700255
+   44700256
   ],
   [
    44800000,
-   44800255
+   44800256
   ],
   [
    44900000,
-   44900255
+   44900256
   ],
   [
    45000000,
-   45000255
+   45000256
   ],
   [
    45100000,
-   45100255
+   45100256
   ],
   [
    45200000,
-   45200255
+   45200256
   ],
   [
    46000000,
-   46000002
+   47000255
   ],
   [
    49100000,
@@ -224,6 +235,10 @@
   [
    78000000,
    78000416
+  ],
+  [
+   78000512,
+   78000928
   ],
   [
    78100000,
@@ -272,9 +287,149 @@
   [
    83000000,
    83000308
+  ],
+  [
+   84000000,
+   84000096
+  ],
+  [
+   84001000,
+   84001096
+  ],
+  [
+   84002000,
+   84002096
+  ],
+  [
+   84003000,
+   84003096
+  ],
+  [
+   84004000,
+   84004096
+  ],
+  [
+   84005000,
+   84005096
+  ],
+  [
+   84006000,
+   84006096
+  ],
+  [
+   84007000,
+   84007096
+  ],
+  [
+   84008000,
+   84008096
+  ],
+  [
+   84009000,
+   84009096
+  ],
+  [
+   84010000,
+   84010096
+  ],
+  [
+   84011000,
+   84011096
+  ],
+  [
+   85000000,
+   85000031
+  ],
+  [
+   85100000,
+   85108191
+  ],
+  [
+   86000000,
+   86000096
+  ],
+  [
+   86001000,
+   86001096
+  ],
+  [
+   86002000,
+   86002096
+  ],
+  [
+   87000000,
+   87000255
+  ],
+  [
+   90000000,
+   90000096
+  ],
+  [
+   90001000,
+   90001096
+  ],
+  [
+   90002000,
+   90002096
+  ],
+  [
+   90003000,
+   90003096
+  ],
+  [
+   90004000,
+   90004096
+  ],
+  [
+   90005000,
+   90005096
+  ],
+  [
+   90006000,
+   90006096
+  ],
+  [
+   90007000,
+   90007096
+  ],
+  [
+   90008000,
+   90008096
+  ],
+  [
+   90009000,
+   90009096
+  ],
+  [
+   90010000,
+   90010096
+  ],
+  [
+   90011000,
+   90011096
+  ],
+  [
+   100000000,
+   101000000
+  ],
+  [
+   120000000,
+   120006000
+  ],
+  [
+   126000000,
+   126020000
+  ],
+  [
+   130000000,
+   140000000
+  ],
+  [
+   200000000,
+   201000000
   ]
  ],
- "occupied_seeds": 4958611,
+ "occupied_seeds": 17996364,
  "free_gaps_ge_1m": [
   {
    "low": 130640,
@@ -297,9 +452,9 @@
    "size": 22738868
   },
   {
-   "low": 46000002,
+   "low": 47000255,
    "high": 49100000,
-   "size": 3099998
+   "size": 2099745
   },
   {
    "low": 49100032,
@@ -322,45 +477,143 @@
    "size": 1800000
   },
   {
-   "low": 83000308,
+   "low": 87000255,
+   "high": 90000000,
+   "size": 2999745
+  },
+  {
+   "low": 90011096,
+   "high": 100000000,
+   "size": 9988904
+  },
+  {
+   "low": 101000000,
+   "high": 120000000,
+   "size": 19000000
+  },
+  {
+   "low": 120006000,
+   "high": 126000000,
+   "size": 5994000
+  },
+  {
+   "low": 126020000,
+   "high": 130000000,
+   "size": 3980000
+  },
+  {
+   "low": 140000000,
+   "high": 200000000,
+   "size": 60000000
+  },
+  {
+   "low": 201000000,
    "high": 4294967296,
-   "size": 4211966988
+   "size": 4093967296
   }
  ],
  "sources_by_kind": {
   "task seeds": {
-   "declarations": 2299,
+   "declarations": 4104,
    "low": 30000,
    "high": 83000308
   },
   "design range": {
-   "declarations": 1313,
+   "declarations": 2073,
    "low": 30000,
-   "high": 83000307
+   "high": 140000000
   },
   "declared block": {
-   "declarations": 28,
+   "declarations": 108,
    "low": 30512,
-   "high": 36272
+   "high": 126020000
   },
   "gate ledger": {
-   "declarations": 6,
+   "declarations": 10,
    "low": 31024,
    "high": 65536
   },
   "future seeds": {
-   "declarations": 6,
-   "low": 44100000,
-   "high": 44100256
+   "declarations": 154,
+   "low": 44000000,
+   "high": 90011096
   },
   "seed block": {
-   "declarations": 6,
+   "declarations": 22,
    "low": 81000000,
    "high": 81001000
+  },
+  "start cell pool": {
+   "declarations": 1,
+   "low": 200000000,
+   "high": 201000000
   }
  },
  "widest_segments": [
   {
+   "name": "[130000000,140000000)",
+   "kind": "design range",
+   "low": 130000000,
+   "high": 140000000,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "[130000000,140000000)",
+   "kind": "design range",
+   "low": 130000000,
+   "high": 140000000,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
+   "name": "5585728\u20139104159",
+   "kind": "design range",
+   "low": 5585728,
+   "high": 9104159,
+   "source": "DESIGN.md"
+  },
+  {
    "name": "5585728\u20139104159",
    "kind": "design range",
    "low": 5585728,
@@ -557,303 +810,170 @@
    "source": "DESIGN.md"
   },
   {
-   "name": "5,000,000\u20137,932,127",
+   "name": "5651264\u20139169695",
    "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
+   "low": 5651264,
+   "high": 9169695,
    "source": "DESIGN.md"
   },
   {
-   "name": "5,000,000\u20137,932,127",
+   "name": "5651264\u20139169695",
    "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
+   "low": 5651264,
+   "high": 9169695,
    "source": "DESIGN.md"
   },
   {
-   "name": "5,000,000\u20137,932,127",
+   "name": "5651264\u20139169695",
    "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
-   "source": "DESIGN.md"
-  },
-  {
-   "name": "5,000,000\u20137,932,127",
-   "kind": "design range",
-   "low": 5000000,
-   "high": 7932127,
+   "low": 5651264,
+   "high": 9169695,
    "source": "DESIGN.md"
   }
  ],
  "candidate": {
-  "low": 100000000,
-  "high": 101000000,
+  "low": 200000000,
+  "high": 201000000,
   "size": 1000000,
-  "disjoint": true,
-  "overlaps": []
+  "disjoint": false,
+  "overlaps": [
+   [
+    200000000,
+    201000000
+   ]
+  ],
+  "self_registered": true
  },
  "verification": {
-  "low": 100000000,
-  "high": 101000000,
-  "files": 251774,
+  "low": 200000000,
+  "high": 201000000,
+  "files": 274472,
   "hits": [
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-323267.jsonl",
+    "value": 200110080
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-822528.jsonl",
+    "value": 200257536
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-822528.jsonl",
+    "value": 200257536
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-366620.jsonl",
+    "value": 200016970
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume_rebaselined/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-366620.jsonl",
+    "value": 200094732
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v2/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/raw/raw/seed_20261031/demo_fog_31_fume_rebaselined/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/replace/artifacts/task69/human-demo/batch-v1/validated/demo_fog_31_fume_rebaselined/ticks.jsonl",
-    "value": 100845635
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-626824.jsonl",
+    "value": 200859648
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_deploy4/trace_2.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_deploy4/trace_0.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/decisions_static/trace_4.jsonl",
-    "value": 100298519
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/decisions_static/trace_7.jsonl",
-    "value": 100298519
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_2.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_4.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_1.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_3.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_6.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_5.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_7.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_final/trace_0.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-399538.2026-10-24.jsonl",
+    "value": 200208384
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_static/trace_2.jsonl",
-    "value": 100298519
+    "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-872372.jsonl",
+    "value": 200780224
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/task82/full_static/trace_1.jsonl",
-    "value": 100618984
+    "path": "/home/newbiexvwu/pvz-logs/metrics/search_play-413819.jsonl",
+    "value": 200087300
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/mac_bundle/demos/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
+    "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-311615.jsonl",
+    "value": 200260356
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/mac_bundle/demos/seed_20261032/demo_fog_32_snow_m200/ticks.jsonl",
-    "value": 100070718
+    "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-311615.jsonl",
+    "value": 200265416
    },
    {
-    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/probe/stage/demos/demo_fog_32_snow_m200/ticks.jsonl",
-    "value": 100070718
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/maccheck_archives/seed_20261031/demo_fog_31_snow_m200/ticks.jsonl",
-    "value": 100387332
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/llmplay_pkg/maccheck_archives/seed_20261032/demo_fog_32_snow_m200/ticks.jsonl",
-    "value": 100070718
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-413642.jsonl",
-    "value": 100968848
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
-   },
-   {
-    "path": "/home/newbiexvwu/pvz-logs/metrics/curriculum_queue-232026.2026-10-23.jsonl",
-    "value": 100270080
+    "path": "/home/newbiexvwu/pvz-logs/metrics/train_rollout_policy-311615.jsonl",
+    "value": 200270476
    }
   ],
-  "hit_count": 108
+  "hit_count": 31
  }
 }

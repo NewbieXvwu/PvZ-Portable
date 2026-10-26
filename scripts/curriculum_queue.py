@@ -498,8 +498,17 @@ def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | N
         if base not in specs:
             cell['legacy_restored'] = True
         cells[base] = cell
+        offset = int(state.get('offsets', {}).get(base, 0))
+        seeds = list(cell.get('seeds') or [])
+        remaining = set(seeds[offset:])
+        clashes = sorted(other for other, live in cells.items()
+                         if other != base and remaining & set(live.get('seeds') or []))
         lines.append(f'start cell restored: {base} (retired {cell.get("retired_reason", "unknown")}, '
-                     f'offset {state.get("offsets", {}).get(base, 0)}/{len(cell.get("seeds") or [])})')
+                     f'offset {offset}/{len(seeds)})')
+        if clashes:
+            # 恢复的格若与在跑的格共用未来种子，采出来的证据不独立（L32 的旧格与 _hv2 就是同一块）。
+            lines.append(f'start cell restored: {base} WARNING future seeds overlap '
+                         f'{", ".join(clashes)}; renew or drop it before collecting')
     for base, spec in sorted(specs.items()):
         cell = cells.get(base)
         if cell is None:

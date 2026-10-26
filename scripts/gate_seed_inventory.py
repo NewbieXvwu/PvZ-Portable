@@ -275,7 +275,8 @@ def main():
             low, high = args.candidate
             overlap = [[max(low, a), min(high, b)] for a, b in result['occupied'] if a < high and low < b]
             result['candidate'] = dict(low=low, high=high, size=high - low,
-                                       disjoint=not overlap, overlaps=overlap)
+                                       disjoint=not overlap, overlaps=overlap,
+                                       self_registered=[low, high] == list(START_SEED_POOL))
         args.summary_out.parent.mkdir(parents=True, exist_ok=True)
         args.summary_out.write_text(json.dumps(compact(result), indent=1) + '\n')
         print(json.dumps(result.get('candidate', {}), indent=1))
@@ -334,7 +335,8 @@ def main():
         low, high = args.candidate
         overlap = [[max(low, a), min(high, b)] for a, b in occupied if a < high and low < b]
         result['candidate'] = dict(low=low, high=high, size=high - low,
-                                   disjoint=not overlap, overlaps=overlap)
+                                   disjoint=not overlap, overlaps=overlap,
+                                   self_registered=[low, high] == list(START_SEED_POOL))
     if args.verify_lo is not None:
         result['verification'] = dict(low=args.verify_lo, high=args.verify_hi,
                                       **verify_window(roots, args.verify_lo, args.verify_hi))

@@ -73,10 +73,13 @@ SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/gate_seed_ledger.json'
 # demo_start.future_seed_start). The block written in the manifest stays the first
 # segment forever, so old rows stay comparable; when a cell's offset reaches the end
 # of its table, qc renews it from this dedicated pool through its own out-of-git
-# ledger. Disjoint from every registered segment (gate pools above, demo 2026xxxx
-# and 44,000,000-47,000,000, llmplay 83,000,000+); checked with
-# scripts/gate_seed_inventory.py.
-START_SEED_POOL = (90_000_000, 91_000_000)
+# ledger. Checked with scripts/gate_seed_inventory.py (full scan, not --quick: only
+# the full scan parses the JSON manifests). Above every declared segment (highest is
+# [130,000,000, 140,000,000)); 9 digits, like the gate's second window.
+# The first candidate [90,000,000, 91,000,000) was rejected: task89's llm-run-import
+# e2e test had already declared and played future seeds from 90,000,000 upward
+# (worktree llmimport, artifacts/e2e/scan_jobs.json + scan_out/*/games.jsonl).
+START_SEED_POOL = (200_000_000, 201_000_000)
 START_SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/start_cell_seed_ledger.json'
 START_SEED_BLOCK = 256
 
