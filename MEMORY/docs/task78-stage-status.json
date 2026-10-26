@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T09:46:59.001519+00:00",
+ "at_utc": "2026-10-26T09:50:01.872235+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -359,6 +359,31 @@
    "guard_cases_passed": 3,
    "wrapper_sha256": "aa982455c1c67b3c3d6d929d74545ce8d7f73f4cdee861b380373ab0a7091774",
    "previous_wrapper_sha256": "390a60f066a9a0f5fb10ca2d060c069ecd29ada12bb9ebffff32fdc106d69ba5"
+  },
+  "current_cross_horizon_identity_audit": {
+   "at_utc": "2026-10-26T09:49:21.500622+00:00",
+   "scope": "current_k0_complete_worlds_cross_horizon_root_identity",
+   "worlds": 18,
+   "roots": 36,
+   "root_horizon_views": 108,
+   "completed_jobs": 54,
+   "raw_only_views": 108,
+   "canonical_views": 0,
+   "root_identity_history_context_equal_across_horizons": true,
+   "candidate_actions_equal_across_horizons": true,
+   "root_signature_source_sha256": "d6612970a404893680e3d29ec42b2a81b193d162d7c34af204ca6ae41bd4b015",
+   "identity_helper_sha256": "19197f53e9bae322fa40669273ee931b496c5bee8982620dcffd5d8b14d917b1",
+   "previous_raw_chain_audit_sha256": "a8f0741ecdc1494ba24522402df4e9f3a8f2fc9b92b9b96d15332ca85a4b4770",
+   "common_future_indices": [
+    0
+   ],
+   "overall_panel_complete": false,
+   "gate_evaluated": false,
+   "models_scored": false,
+   "training_eligible": false,
+   "engine_processes_started": 0,
+   "report": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k0/cross_horizon_identity_run5.json",
+   "report_sha256": "10c1c7116de098f12d9462114b3f6347215aa5d438b22f154671debd8bbe4721"
   }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
