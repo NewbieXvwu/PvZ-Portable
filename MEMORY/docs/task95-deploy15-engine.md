@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [6b-代码基线复核，2026-10-26 19:05 CST] 发现生产代码在 16:15 已由 deploy14c 前移：`cq` 的 `scripts python recipes configs` 相对 deploy14fix `0b8dcc26` 恰好只差五个文件（curriculum_queue / pvz_tasks / search_play / select_student / train_rollout_policy），且五个 blob 与 `fd1a0b61` 逐一相同；`qc_setup.log` 记录 deploy14c 16:15:52 用该代码重启、引擎/面板/rates/state 未动。原脚本的`diff --quiet 0b8dcc26`守卫会因此拒绝部署，若照 deploy14 结构checkout则会把 deploy14c 撤掉。已改为只读断言：改动集必须恰好这五个文件、五个 blob 必须等于 `fd1a0b61` 的版本，不 checkout 代码；在真实 `cq` 上逐条验证通过。脚本仍只写未执行。
+
 - [3b-确定性完成，2026-10-26 18:46 CST] 六族正式任务确定性核验PASS：候选83aed3be在6/6族（每族8独立进程+同进程4次reset，0/60/660tick）均为1条哈希线且两模式一致；旧引擎同法6/6族不稳定（多进程2–4种、同进程1–2种）。deck由A2清单按地形推导（pool含16、roof含33、fog含16）。证据`artifacts/task95/state_hash_suite_build2.json`，汇总写入`MEMORY/docs/task95-engine-gate.json`的`six_family_hash_suite`。
 
 - [6-定稿，2026-10-26 18:47 CST] `scripts/qc_deploy15.sh`切到最终候选build2：`ENGINE`指向`pvz-portable-build2`、`ENGINE_SHA` 83aed3be，前置检查改读`gate_b2/gate_evidence.json`、`abba3/throughput_abba.json`，并新增六族哈希suite断言（pass、6族stable、引擎路径一致）。按脚本参数单独运行前置Python块通过（只读，未执行部署），两份脚本`bash -n`通过且内容一致，已同步`~/pvz-logs/qc_deploy15.sh`；**仍只写未执行**。
@@ -71,6 +73,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 - [2b-吞吐，进行中被叫停] build2 对 deploy14 的 ABBA 跑到 **7/16 对**（全是 day 段）时主控通知 Codex 额度恢复、要求交还：中位 new/old **1.004**（即 old/new 0.996），7 对决策数全同；pool 段未跑，**不作判定**。部分记录留在 `artifacts/task95/abba3/run.log`。后台进程已停，未留下本任务的 pvz 进程。
 
 ## 问题
+
+- [代码基线前移，2026-10-26 19:05 CST] task95 脚本 17:08 定稿后，deploy14c 在 16:15 已把生产代码从 deploy14fix 换成 `0b8dcc26`+`fd1a0b61` 五文件（日志时间戳早于定稿，但当时未核对）。因此“代码沿用 deploy14”的字面做法（checkout `0b8dcc26`）现在会**回退**正在运行的 deploy14c。按“只换引擎”的本意，deploy15 保留当前生产代码、只换引擎；守卫改为断言当前代码恰为 deploy14c 状态。新引擎的六族/L50/吞吐证据是在 deploy15 树的固定 A2 夹具上取得的，与 cq 的策略侧代码无关；若主控希望先回退到 deploy14fix 再部署，需要另跑门禁，不能直接执行本脚本。
 
 - [续做核实，2026-10-26 16:55 CST] 磁盘实际已有9对完整build2 ABBA记录及第10对new臂，已校验build2与归档均为83aed3be并续跑，不重采已有记录。静态/动态libopenmpt链接差异已经确认，但函数尺寸相同不能单独排除源码性能回归；最终仍以build2完整16对吞吐和独立逻辑门禁为准。
 

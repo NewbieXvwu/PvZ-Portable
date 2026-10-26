@@ -1,12 +1,16 @@
 #!/bin/bash
 # task95: engine-only deployment. Written for the main controller; never auto-executed.
-# Keep deploy14fix code, panel, recipe and rates; deploy the archived PGO binary.
+# Keep the deployed deploy14c code, panel, recipe and rates; deploy the archived PGO binary.
 set -u
 R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
 SRC=$R/.claude/worktrees/deploy15
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=0b8dcc26 # Current qc_deploy14.sh: 7722c0d1 plus the seeds-exhausted fix.
+REV=0b8dcc26 # deploy14fix base: 7722c0d1 plus the seeds-exhausted fix.
+# deploy14c (code-only, 2026-10-26 16:15) put these five files from fd1a0b61 on top of REV.
+# Production code is checked, never checked out: this deploy changes the engine only.
+PATCH_REV=fd1a0b61ffb7e74b7b835e3adb8ffbe001e27c1c
+CODE_FILES="scripts/curriculum_queue.py scripts/pvz_tasks.py scripts/search_play.py scripts/select_student.py scripts/train_rollout_policy.py"
 ENGINE_SHA=83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029
 OLD_SHA=76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a
 ENGINE=$SRC/artifacts/task95/engine/pvz-portable-build2
@@ -40,7 +44,13 @@ rollback() {
 # Read-only preflight. Refuse code drift rather than checking out an older scripts tree.
 [ "$(sha256sum "$ENGINE" | cut -d' ' -f1)" = "$ENGINE_SHA" ] || abort "archived engine SHA mismatch"
 [ "$(sha256sum "$OLDEXE" | cut -d' ' -f1)" = "$OLD_SHA" ] || abort "deploy14 rollback engine SHA mismatch"
-git -C "$W" diff --quiet "$REV" -- scripts python recipes configs || abort "code differs from deploy14fix $REV"
+diff -q <(git -C "$W" diff --name-only "$REV" -- scripts python recipes configs | sort) \
+        <(printf '%s\n' $CODE_FILES | sort) >/dev/null \
+  || abort "cq code differs from deploy14c state (deploy14fix $REV + five files)"
+for f in $CODE_FILES; do
+  [ "$(git -C "$W" hash-object "$W/$f")" = "$(git -C "$W" rev-parse "$PATCH_REV:$f")" ] \
+    || abort "cq $f differs from $PATCH_REV"
+done
 "$PY" - "$SRC" "$ENGINE" "$ENGINE_SHA" "$OLD_SHA" <<'PY' || abort "task95 gate evidence missing, incomplete or failed"
 from collections import Counter
 import json
@@ -93,7 +103,7 @@ cp "$ENGINE" "$NEWEXE" || rollback "engine copy failed"
 timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --executable "$NEWEXE" --promotion-panel "$PANEL3" > "$O/dryrun.out" 2>&1 || rollback "dry-run failed"
 n0=$(grep -c ' rc=' /home/newbiexvwu/pvz-logs/curriculum.log)
 start_qc "$NEWEXE"
-log "deploy15: restarted with archived 83aed3be (build2); deploy14fix code/panel/rates retained"
+log "deploy15: restarted with archived 83aed3be (build2); deploy14c code/panel/rates retained"
 for i in $(seq 1 120); do
   sleep 30
   [ "$(grep -c ' rc=' /home/newbiexvwu/pvz-logs/curriculum.log)" -gt "$n0" ] && break
