@@ -168,34 +168,6 @@ L25 是传送带关（`conveyor_start=original`、`deck=[]`），所以先排除
 
 另外，这次重启正好落在组边界上，且发生在 12 组完成之后——它是“组标签账本丢失面”一节的现场样本：round 20 重启前的 13 个已完成组（含 15:37:38 刚结束的 `demo_fog_33_cactus`）都没有进 `state['log']`，等 round 20 收尾时可以从配方里直接核对它们是否缺席。
 
-## 证据指纹与复核位置
-
-生产日志/模型/npz均未加入git。快照关键文件SHA256：
-
-| 文件（绝对路径） | SHA256 |
-|---|---|
-| /home/newbiexvwu/pvz-logs/curriculum_state.json | `ab162a899171f5905d66a55fa3026b3ef5e989e4ff62f295e478c326feed819b` |
-| /home/newbiexvwu/pvz-logs/curriculum.log | `ce4f3d9cedac1c85d10e44924da5d89146f456298846987b6576f83784c2dc78` |
-| /home/newbiexvwu/pvz-logs/teacher_rates.json | `8763a6f6faa5ba3ddc67635e858de6587b1c88aadfbb74c1687195edf2c065ae` |
-| /home/newbiexvwu/pvz-logs/gate_seed_ledger.json | `b99286d8ff806301a48b0778169cd0c12194ff9b3ed74fea9a981833a6971687` |
-| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/configs/human_demo_tasks.json | `73061e547426087cb022244b5424dfe05df6d9b6e52a5ebc71174ce85dd21805` |
-| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task73c/panel_v3_source.json | `bb0a9129b88023fe8c7722f267f1d184883ddea538860354421f6664d8e2f636` |
-| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/curriculum_queue.py | `37d235b30b970bb1d2c3a065d9165fabce2a901f282072a4ec59c5f2385ca17d` |
-| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/train_rollout_policy.py | `6bffc3e5cbf10c57d5dea7e84a3e465f6c78c31ff5934ac8ad9c9ace91d2ca59` |
-| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/python/pvz_promotion.py | `6a28c360fac4acded269370995861284b00e97ad03de151c36f2cfc8157cdfd6` |
-
-动态文件后续会增长，以上指纹对应本次快照。后续运行结果另记观测时间，不覆盖初始证据。
-
-15:10 完成核验用的第二批指纹（state 停在 15:05:10，round=19）：
-
-| 文件（绝对路径） | SHA256 |
-|---|---|
-| /home/newbiexvwu/pvz-logs/curriculum_state.json | `699fe315582d455238c2dd097aa400c67b28ef5823255dd5d9e7ba5cec3e404f` |
-| /home/newbiexvwu/pvz-logs/gate_seed_ledger.json | `250ba7b9b07892a5639905cfeb2ee7e7ff5f304e87fbb6a6ba769c734778978f` |
-| …/round_000018/complete.json | `598eaef49f1a24b464d06f35079a10aa6db19952e1701f42c4b1f26aa4eb0a0c` |
-| …/round_000018/evaluations/5324917e2314ca2e713d/decision.json | `fb7cd67936efb0703cffd1e4401e97587a95bb0e626c820946860de84081504f` |
-| …/round_000019/complete.json | `cb30b5b48dceac32e427b76a877c5e08c08c646d3b42908b5c72ab6c15cf1018` |
-
 ## 11:59 补充核验
 
 在隔离内存副本执行纯函数：deploy14提交0b8dcc26的 `reconcile_start_cells` 对原生L25产生误退，磁盘热补副本保留该格；当前 `pack_labels` 对实际state快照稳定漏出L31/L32两标签；复制的 `freeze_panel` 对job18块生成1920个互不重复种子，fog/roof分片与上文一致。未调用领号、保存状态或采集入口。
@@ -233,3 +205,31 @@ L25 是传送带关（`conveyor_start=original`、`deck=[]`），所以先排除
 15格合计 32390 训练行。示范L33香蒲的验证行是0，但训练行310；这不是未采/漏读。L48保留84行、训练71/验证13，与异常段行数一致；不能把读兼容解释为丢掉整个标签。
 
 源文件SHA256：`5ba4063682461c4088915881fb74d1250da5423c8c08e1e6a6e2539f69de6e2b`（/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000018/student/source_rows.json）。
+
+## 证据指纹与复核位置
+
+生产日志/模型/npz均未加入git。快照关键文件SHA256：
+
+| 文件（绝对路径） | SHA256 |
+|---|---|
+| /home/newbiexvwu/pvz-logs/curriculum_state.json | `ab162a899171f5905d66a55fa3026b3ef5e989e4ff62f295e478c326feed819b` |
+| /home/newbiexvwu/pvz-logs/curriculum.log | `ce4f3d9cedac1c85d10e44924da5d89146f456298846987b6576f83784c2dc78` |
+| /home/newbiexvwu/pvz-logs/teacher_rates.json | `8763a6f6faa5ba3ddc67635e858de6587b1c88aadfbb74c1687195edf2c065ae` |
+| /home/newbiexvwu/pvz-logs/gate_seed_ledger.json | `b99286d8ff806301a48b0778169cd0c12194ff9b3ed74fea9a981833a6971687` |
+| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/configs/human_demo_tasks.json | `73061e547426087cb022244b5424dfe05df6d9b6e52a5ebc71174ce85dd21805` |
+| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task73c/panel_v3_source.json | `bb0a9129b88023fe8c7722f267f1d184883ddea538860354421f6664d8e2f636` |
+| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/curriculum_queue.py | `37d235b30b970bb1d2c3a065d9165fabce2a901f282072a4ec59c5f2385ca17d` |
+| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/scripts/train_rollout_policy.py | `6bffc3e5cbf10c57d5dea7e84a3e465f6c78c31ff5934ac8ad9c9ace91d2ca59` |
+| /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/python/pvz_promotion.py | `6a28c360fac4acded269370995861284b00e97ad03de151c36f2cfc8157cdfd6` |
+
+动态文件后续会增长，以上指纹对应本次快照。后续运行结果另记观测时间，不覆盖初始证据。
+
+15:10 完成核验用的第二批指纹（state 停在 15:05:10，round=19）：
+
+| 文件（绝对路径） | SHA256 |
+|---|---|
+| /home/newbiexvwu/pvz-logs/curriculum_state.json | `699fe315582d455238c2dd097aa400c67b28ef5823255dd5d9e7ba5cec3e404f` |
+| /home/newbiexvwu/pvz-logs/gate_seed_ledger.json | `250ba7b9b07892a5639905cfeb2ee7e7ff5f304e87fbb6a6ba769c734778978f` |
+| …/round_000018/complete.json | `598eaef49f1a24b464d06f35079a10aa6db19952e1701f42c4b1f26aa4eb0a0c` |
+| …/round_000018/evaluations/5324917e2314ca2e713d/decision.json | `fb7cd67936efb0703cffd1e4401e97587a95bb0e626c820946860de84081504f` |
+| …/round_000019/complete.json | `cb30b5b48dceac32e427b76a877c5e08c08c646d3b42908b5c72ab6c15cf1018` |
