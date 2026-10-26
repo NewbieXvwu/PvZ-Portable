@@ -82,4 +82,8 @@
   `scripts/task93_validation.py` 已通过 pidfd 绑定现存采集 shell，待其退出并验证144局后串行打包、训练seed1/2和评估；
   独立锁与模型/配方回执避免重复工作，运行中遇qc训练只让本实验退出。状态见 `artifacts/task93/validation_status.json`。
 
+- 2026-10-26 Codex：第4步144局训练数据采集完成，三族均48终局，老师胜局 day29/night11/pool21；
+  卷心菜卡组18/10/14，三叶草仍0；完整种子、卡组、heldout排除逐局核验通过，原采集及其游戏进程已退出。
+  隔离语料准备成功，408份既有不可变分片已硬链接复用，正在打包。当前活进程句柄见 validation_status.json；不要重开采集。
+
 ## 问题

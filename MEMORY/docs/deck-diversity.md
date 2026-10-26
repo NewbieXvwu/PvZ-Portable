@@ -106,7 +106,21 @@
 
 复核工具 `scripts/task93_analyze.py` 可从冷启动原始双臂记录重算 0–47 每种植物的出现次数与 Wilson 区间；`compare` 子命令要求完整 192 种子、fast 单臂、无重复、终局及卡组一致，再输出各候选相对各基线的 McNemar、配对区间与 draw 间统计。禁止只取种子交集或按 heldout 挑选训练种子。
 
-（结果待填）
+训练段 144 局采集完成（2026-10-26，r11 + v5/branch1，beta=1、verify=9、student-candidates=2，
+deploy4 引擎 SHA `16989f23`，始终最多 2 游戏进程）：
+
+| 训练族 | 终局数 | 老师胜局 | 含卷心菜(32)卡组 | 含三叶草(27)卡组 |
+|---|---:|---:|---:|---:|
+| day L7 | 48 | 29（60.42%） | 18 | 0 |
+| night L12 | 48 | 11（22.92%） | 10 | 0 |
+| pool L21 | 48 | 21（43.75%） | 14 | 0 |
+
+逐局核验完整训练种子集、终局、冻结卡组逐位一致与 heldout 签名排除；碰撞为 0。
+新数据的 42/144 个卡组含卷心菜，三叶草缺口保持不变。原采集进程已退出，游戏进程归零。
+数值帧在 `artifacts/task93/frames`，复核统计及逐族记录 SHA 在 ignored
+`artifacts/task93/collection_audit.json`。这批训练段胜率不替代前面独立冷启动结果。
+
+（训练、实际行占比与配对评估结果待填。）
 
 2026-10-26 验证准备：`scripts/task93_prepare_training.py --baseline-recipe
 /home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/recipe.json
