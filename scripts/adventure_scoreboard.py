@@ -145,6 +145,20 @@ def sha256(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
+def finished(run, expected):
+    """该关的 games.jsonl 是否已完整覆盖 expected（臂, 种子）且全部终局。"""
+    path = run / 'games.jsonl'
+    if not path.exists():
+        return False
+    try:
+        rows = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    except ValueError:
+        return False
+    return (len(rows) == len(expected)
+            and {(row.get('arm'), row.get('seed')) for row in rows} == expected
+            and all(row.get('terminal') is True for row in rows))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--student', required=True, type=Path)
@@ -203,17 +217,20 @@ def main():
     manifest_path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + '\n')
     for task in tasks:
         run = args.out / 'runs' / task['task_id']
-        command = [sys.executable, str(ROOT / 'scripts/search_play.py'),
-            '--rollout-policy', str(models['student']), '--value', str(models['value']),
-            '--static-value', str(models['static_value']), '--executable', str(executable),
-            '--resource-dir', str(args.resource_dir.resolve()), '--manifest', str(manifest_path),
-            '--task-id', task['task_id'], '--seeds', str(args.seeds), '--workers', str(args.workers),
-            '--arms', ','.join(ARMS[arm] for arm in arms), '--dagger-beta', '1',
-            '--verify-samples', '9', '--student-candidates', '2', '--out', str(run)]
-        print(f"L{task['level']}：{args.seeds} 种子 × {len(arms)} 臂", flush=True)
-        subprocess.run(command, check=True, env=dict(os.environ, PVZ_NO_POPUP='1'))
-        rows = [json.loads(line) for line in (run / 'games.jsonl').read_text().splitlines()]
         expected = {(ARMS[arm], seed) for arm in arms for seed in task['seeds']}
+        if finished(run, expected):
+            print(f"L{task['level']}：{len(expected)} 局已完成，跳过", flush=True)
+        else:
+            command = [sys.executable, str(ROOT / 'scripts/search_play.py'),
+                '--rollout-policy', str(models['student']), '--value', str(models['value']),
+                '--static-value', str(models['static_value']), '--executable', str(executable),
+                '--resource-dir', str(args.resource_dir.resolve()), '--manifest', str(manifest_path),
+                '--task-id', task['task_id'], '--seeds', str(args.seeds), '--workers', str(args.workers),
+                '--arms', ','.join(ARMS[arm] for arm in arms), '--dagger-beta', '1',
+                '--verify-samples', '9', '--student-candidates', '2', '--out', str(run)]
+            print(f"L{task['level']}：{args.seeds} 种子 × {len(arms)} 臂", flush=True)
+            subprocess.run(command, check=True, env=dict(os.environ, PVZ_NO_POPUP='1'))
+        rows = [json.loads(line) for line in (run / 'games.jsonl').read_text().splitlines()]
         if (len(rows) != len(expected) or {(row['arm'], row['seed']) for row in rows} != expected
                 or any(row.get('terminal') is not True for row in rows)):
             raise ValueError(f'{run}: 对局缺失、重复、非终局或臂/种子不符')

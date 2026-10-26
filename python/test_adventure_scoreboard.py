@@ -1,12 +1,14 @@
 """记分板差异比较的行为测试。"""
 import copy
+import json
 from pathlib import Path
 import sys
+import tempfile
 import unittest
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
-from adventure_scoreboard import arm_stats, compare_scoreboards, markdown
+from adventure_scoreboard import arm_stats, compare_scoreboards, finished, markdown
 
 
 def board(wins, games=32, arm='student'):
@@ -78,3 +80,38 @@ class ScoreboardTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class ResumeTest(unittest.TestCase):
+    def setUp(self):
+        self.dir = Path(tempfile.mkdtemp())
+        self.run = self.dir / 'runs' / 'task101_l1_day_d7'
+        self.run.mkdir(parents=True)
+        self.expected = {('fast', 103000000), ('fast', 103000001)}
+
+    def write(self, rows):
+        (self.run / 'games.jsonl').write_text(''.join(json.dumps(row) + '\n' for row in rows))
+
+    def test_complete_level_is_skipped(self):
+        self.write([dict(arm='fast', seed=103000000, terminal=True),
+                    dict(arm='fast', seed=103000001, terminal=True)])
+        self.assertTrue(finished(self.run, self.expected))
+
+    def test_partial_duplicate_or_unfinished_is_not_skipped(self):
+        cases = {
+            'partial': [dict(arm='fast', seed=103000000, terminal=True)],
+            'duplicate': [dict(arm='fast', seed=103000000, terminal=True)] * 2,
+            'unfinished': [dict(arm='fast', seed=103000000, terminal=False),
+                           dict(arm='fast', seed=103000001, terminal=True)],
+            'wrong_arm': [dict(arm='fast_search', seed=103000000, terminal=True),
+                          dict(arm='fast', seed=103000001, terminal=True)],
+        }
+        for name, rows in cases.items():
+            with self.subTest(name=name):
+                self.write(rows)
+                self.assertFalse(finished(self.run, self.expected))
+
+    def test_missing_or_corrupt_file_is_not_skipped(self):
+        self.assertFalse(finished(self.run, self.expected))
+        (self.run / 'games.jsonl').write_text('{not json\n')
+        self.assertFalse(finished(self.run, self.expected))
+
