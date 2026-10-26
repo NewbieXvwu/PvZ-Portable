@@ -22,6 +22,7 @@ import hashlib
 import json
 import sys
 import time
+import zipfile
 from pathlib import Path
 
 import numpy as np
@@ -40,7 +41,7 @@ from pvz_frame_store import (CELL_CANDIDATES, archive_seed, cache_aux, cache_can
 from pvz_rollout_policy import (LAWN_COLS, PACKETS, features, identity_scalars,  # noqa: E402
                                 packet_features)
 from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,  # noqa: E402
-                                  _episode_context, constant_plane)
+                                  _episode_context, _member_array, _member_header, constant_plane)
 
 from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_paths, pack_options,
                                pack_path, segment_options, segment_path, training_rows)  # noqa: E402
@@ -48,8 +49,12 @@ from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_pa
 
 def _store_arrays(store) -> dict:
     planes = store.planes
+    plane_of = (store.plane_of if store.plane_of is not None
+                else np.full(store.shape[0], -1, np.int32))
+    if plane_of.shape != (store.shape[0],):
+        raise ValueError('packed plane ids must have exactly one entry per row')
     return {"indices": store.indices, "values": store.values, "offsets": store.offsets,
-            "plane_of": store.plane_of if store.plane_of is not None else np.zeros(0, np.int32),
+            "plane_of": plane_of,
             "plane_cells": np.concatenate([p[0] for p in planes]) if planes else np.zeros(0, np.int32),
             "plane_values": (np.concatenate([p[1] for p in planes]) if planes
                              else np.zeros(0, store.dtype)),
@@ -344,6 +349,25 @@ def pack_memory_limit(available: int, jobs: list[tuple]) -> int:
     return max(1, (available - 6 * 1024**3) // (2 * 1024**3 + heavy))
 
 
+def segment_plane_shapes_valid(path: Path, rows: int) -> bool:
+    """Do not reuse the old short-archive bug; inspect headers, not large CSR data.
+
+    Empty plane ids remain valid for legacy stores with no planes. New writers
+    emit an explicit -1 per row even in that case. Sampling/version stays v2.
+    """
+    with zipfile.ZipFile(path) as archive:
+        for prefix in ('board', 'scalar'):
+            shape, _ = _member_header(archive, prefix + '_plane_of')
+            offsets, _ = _member_header(archive, prefix + '_plane_offsets')
+            _, plane_dtype = _member_header(archive, prefix + '_plane_values')
+            expected_dtype = np.dtype(str(_member_array(archive, prefix + '_dtype')))
+            if plane_dtype != expected_dtype:
+                return False
+            if shape != (rows,) and not (shape == (0,) and offsets == (1,)):
+                return False
+    return True
+
+
 def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
          read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False,
          rebuild: bool = False) -> Path:
@@ -369,7 +393,8 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
         valid = False
         if target.is_file() and not rebuild:
             with np.load(target, allow_pickle=False) as stored:
-                valid = json.loads(str(stored['meta'])) == contract
+                valid = (json.loads(str(stored['meta'])) == contract
+                         and segment_plane_shapes_valid(target, int(stored['rows'])))
         if not valid:
             jobs.append((data, contract, cache_dir, read_cache_dir, paths))
     # Each label worker includes Python/torch and a label's compact rows; its peak grows with
