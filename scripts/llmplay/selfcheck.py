@@ -16,7 +16,9 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(ROOT))
 
-from llmplay import Game, list_tasks  # noqa: E402
+from llmplay import Game, list_tasks, resume, progress, next_task  # noqa: E402
+from llmplay import budget  # noqa: E402
+from llmplay.delivery import verify_archive  # noqa: E402
 
 
 def main() -> int:
@@ -36,6 +38,10 @@ def main() -> int:
     except OSError:
         pass
 
+    # 自检使用完全独立的预算/交付目录，不能污染或受用户已完成任务影响。
+    out = Path(tempfile.mkdtemp(prefix="llmplay-selfcheck-"))
+    os.environ["PVZ_LLMPLAY_OUT"] = str(out / "delivery")
+    budget.reset_session(out / "budget.json")
     tasks = list_tasks()
     print("任务数：%d" % len(tasks))
     if not tasks:
@@ -43,7 +49,6 @@ def main() -> int:
         return 1
 
     task_id = "demo_roof_41_doom_m200" if "demo_roof_41_doom_m200" in tasks else sorted(tasks)[0]
-    out = Path(tempfile.mkdtemp(prefix="llmplay-selfcheck-"))
     try:
         with Game(task_id) as game:
             print("开局：%s" % task_id)
@@ -68,6 +73,8 @@ def main() -> int:
                 trial.wait(30)
 
             first = game.robustness(policy, k=2, checkpoints=[0], max_ticks=300)
+            assert (out / "delivery" / "out.zip").is_file(), "robustness 没有自动交付"
+            assert progress()["archives"][-1]["robustness"] == first
             second = game.robustness(policy, k=2, checkpoints=[0], max_ticks=300)
             assert first == second, "robustness() 同一打法同一种子不可复现"
             assert first["checkpoints"]["0"]["reached"] is True
@@ -81,6 +88,30 @@ def main() -> int:
         assert meta["operations"] > 0
         assert meta["robustness"]["checkpoints"]["0"]["reached"] is True
         assert meta["manual_patch"] is False
+        assert (out / "delivery" / "out.zip").is_file()
+        assert len(progress()["archives"]) >= 1, "robustness/export 没有自动交付"
+        verify_archive(out / "archive")
+        # 从 zip 恢复到另一目录，必须实际经包内引擎核验。
+        previous_zip = out / "delivery" / "out.zip"
+        os.environ["PVZ_LLMPLAY_OUT"] = str(out / "resumed")
+        resume(previous_zip)
+        assert all(entry["valid"] for entry in progress()["archives"])
+        with Game.load_archive(out / "archive") as restored:
+            restored._start()
+            assert restored.tick == meta["outcome"]["final_tick"]
+        # 损坏一条操作结束 tick，识别为作废，不能跳过对应任务/种子。
+        damaged = out / "damaged"
+        shutil.copytree(out / "archive", damaged)
+        tape = (damaged / "ticks.jsonl").read_text().splitlines()
+        entry = json.loads(tape[0])
+        entry["end_tick"] += 1
+        tape[0] = json.dumps(entry)
+        (damaged / "ticks.jsonl").write_text("\n".join(tape) + "\n")
+        os.environ["PVZ_LLMPLAY_OUT"] = str(out / "invalid-resume")
+        resume(damaged)
+        assert progress()["archives"][0]["valid"] is False
+        assert next_task() is not None
+        print("持续交付 / 断点续跑 / 损坏存档识别：OK")
         print("SELFCHECK OK")
         return 0
     finally:

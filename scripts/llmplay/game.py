@@ -22,7 +22,6 @@ import copy
 import json
 import os
 import sys
-import time
 from pathlib import Path
 
 
@@ -244,42 +243,17 @@ class Game:
         # 内部试打局（robustness 的 k 个新未来）不写「最远进度」、不进自动 observe。
         self._internal = bool(_internal)
         self.session = budget.session()
-        if not self._internal and not self.ops and not tick:
-            # 真正的新开局才受 2:45 门禁限制；读档/重放不受影响（§A）。
-            self.session.require_new_game_allowed()
+        self.budget_key = self.task_id
+        self.session.register_task(self.budget_key, self.spec.level)
         if not self._internal:
             _LIVE_GAMES.append(self)
 
     # ------------------------------------------------------------ 引擎生命周期
 
-    def _calibrate_once(self) -> None:
-        """会话第一次启动时实测吞吐，把"约 25 分钟计算量"换算成 tick 预算（§A）。
-
-        标定在一个独立的小局上跑（300 tick），不占本关的预算。
-        """
-        if self.session.data.get("search_limit_ticks"):
-            return
-        ticks = 300
-        probe = None
-        try:
-            probe = PvZEnv(resource_dir=self.resource_dir, executable=self.executable,
-                           headless=True)
-            probe.reset(deck=self.deck, task=self.spec)
-            # 只计推进的墙钟，不含引擎启动/资源加载 —— 那部分不随 tick 数增长。
-            started = time.time()
-            probe.step({"type": "wait", "ticks": ticks})
-            self.session.calibrate(ticks, max(time.time() - started, 1e-3))
-        except Exception:
-            self.session.calibrate(ticks, 0.3)      # 兜底：按 1000 tick/s 估
-        finally:
-            if probe is not None:
-                probe.close()
-
     def _start(self) -> None:
         if self.env is not None:
             return
         _ensure_executable(self.executable)
-        self._calibrate_once()
         target = self.tick          # _reset_engine 会把 self.tick 归零，先记住
         self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True)
         self._reset_engine()
@@ -431,7 +405,7 @@ class Game:
         if not self._internal:
             # 内部试打局走的是 RESEED 换过的未来，不能算进「最远存活波」——
             # 否则稳健性试打会把止损判据骗过去（§A 的检查点看的就是这个数）。
-            self.session.record_wave(self.spec.level, wave)
+            self.session.record_wave(self.budget_key, wave)
 
     def _replay_to(self, target: int) -> None:
         """reset 后重放到 tick target，并把 ops / frames 截断到那一点。
@@ -488,8 +462,8 @@ class Game:
         self.frames = [f for f in self.frames if f.get("operation", 0) <= len(self.ops)]
         self.tick = int(self.obs["tick"])
         # 重放本身也是模拟：它同样吃预算（§A 按引擎 tick 计，不按墙钟）。
-        self.session.note_ticks(self.spec.level, self.tick - start_tick,
-                                "search" if self._internal else self.session.mode(self.spec.level))
+        self.session.note_ticks(self.budget_key, self.tick - start_tick,
+                                "search" if self._internal else self.session.mode(self.budget_key))
         self._plants_snapshot, self._zombies_snapshot = self._snapshot()
         self._mower_snapshot = self._mower_states()
 
@@ -509,14 +483,7 @@ class Game:
     def _apply(self, action: dict) -> bool:
         self._start()
         assert self.env is not None
-        level = self.spec.level
-        self.session.refresh()
-        if self.session.level(level)["exhausted"]:
-            # §A：单关总预算用尽时，接口自己把最远进度存下来，再告诉模型换关。
-            saved = self._auto_export_best()
-            raise RuntimeError(
-                "本关总预算（搜索 + 手动）已用尽。最远进度的存档已经自动导出到 %s，"
-                "现在换下一关，有余力再回来。" % saved)
+        level = self.budget_key
         before = self.tick
         before_wave = int((self.obs or {}).get("wave") or 0)
         before_plants, before_zombies = self._plants_snapshot, self._zombies_snapshot
@@ -542,36 +509,8 @@ class Game:
         # 内部试打局走的是换过的未来，写进「最远进度」会把真局的纪录冲掉。
         if self._internal or self.env is None or self.obs is None:
             return None
-        return self.session.save_best_log(self.spec.level, self.log(), wave=self.max_wave,
+        return self.session.save_best_log(self.budget_key, self.log(), wave=self.max_wave,
                                           won=int(self.obs.get("result") or 0) == 1)
-
-    def _auto_export_best(self) -> str:
-        """从磁盘上的最远操作日志导出，不能用当前较差的分支覆盖纪录。"""
-        best = None
-        try:
-            if self._internal:
-                # 父局仍在运行；先关试打引擎，再开重放引擎，始终最多两个。
-                self.close()
-                self.session.refresh()
-                path = self.session.level(self.spec.level).get("best_log")
-            else:
-                path = self._persist_best()
-            best = Game.load(path, manifest=self.manifest, executable=self.executable,
-                             resource_dir=self.resource_dir)
-            out = Path.cwd() / "llmplay_out"
-            target = out / ("%s_tick%d" % (best.task_id, best.tick))
-            index = 1
-            while target.exists():
-                target = out / ("%s_tick%d_%d" % (best.task_id, best.tick, index))
-                index += 1
-            best.export_archive(target)
-            self.session.record_best_archive(self.spec.level, target)
-            return str(target)
-        except Exception as error:      # 存档失败不能掩盖"预算用尽"这件事
-            return "(自动导出失败：%s)" % error
-        finally:
-            if best is not None:
-                best.close()
 
     def _maybe_frame(self, action: dict, ok: bool) -> None:
         if action.get("type") != "wait":
@@ -654,7 +593,7 @@ class Game:
         if target > self.tick:
             raise ValueError("不能向前 rewind：当前 tick %d，目标 %d" % (self.tick, target))
         # 同一段第 9 次重写直接拒绝（§A）：计数在 budget.json 里，模型绕不过。
-        self.session.note_rewind(self.spec.level, target, self.tick)
+        self.session.note_rewind(self.budget_key, target, self.tick)
         # task81d：用 rewind 改写过的局在 meta 里标 manual_patch。
         self.manual_patch = True
         self.robustness_report = None
@@ -668,14 +607,14 @@ class Game:
         """
         self._require_primary("branch()")
         self._start()
-        self.session.require_branch(self.spec.level)
+        self.session.require_branch(self.budget_key)
         child = Game(self.task_id, seed=self.seed, manifest=self.manifest,
                     executable=self.executable, resource_dir=self.resource_dir,
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
                     tick=self.tick, note=self.note, manual_patch=self.manual_patch,
                     robustness=copy.deepcopy(self.robustness_report))
-        self.session.note_branch(self.spec.level, +1)
+        self.session.note_branch(self.budget_key, +1)
         child._is_branch = True
         return child
 
@@ -816,6 +755,8 @@ class Game:
             # 任务书 §task81d：第 10 波检查点 8 个新未来至少赢 5 个才算「稳」。
             result["passed"] = int(wave10["k"]) == 8 and int(wave10["wins"]) >= 5
         self.robustness_report = result
+        if self.env is not None:
+            self._deliver()
         return result
 
     def snapshot(self) -> None:
@@ -849,7 +790,7 @@ class Game:
         self.terminal = bool(self.obs.get("terminal"))
         self.max_wave = max(self.max_wave, int(self.obs.get("wave") or 0))
         if not self._internal:
-            self.session.record_wave(self.spec.level, int(self.obs.get("wave") or 0))
+            self.session.record_wave(self.budget_key, int(self.obs.get("wave") or 0))
 
     def observe(self, level: str = "full") -> str:
         """完整文字局面（§B）。第一行永远是状态行，末尾是事件，最后清空事件。"""
@@ -865,13 +806,13 @@ class Game:
     def legend(self) -> str:
         """网格与明细里那些短代码是什么意思（第一次 observe 会自动附一次）。"""
         from . import scene
-        return self.session.status_line(self.spec.level) + "\n" + scene.legend()
+        return self.session.status_line(self.budget_key) + "\n" + scene.legend()
 
     def timeline(self) -> str:
         """每波一行的历史（§B.7）：波号、tick、阳光、植物数、击杀、失去、小推车。"""
         self._start()
         from . import scene
-        return self.session.status_line(self.spec.level) + "\n" + scene.timeline(self)
+        return self.session.status_line(self.budget_key) + "\n" + scene.timeline(self)
 
     def legal(self) -> dict:
         """当前合法动作（引擎判定）：plants 是 (卡槽, 植物, 行, 列)，shovels 是可铲的格。"""
@@ -879,7 +820,7 @@ class Game:
         from . import scene
         self._refresh_full_observation()
         out = scene.legal(self)
-        out["status"] = self.session.status_line(self.spec.level)
+        out["status"] = self.session.status_line(self.budget_key)
         return out
 
     def summary(self) -> dict:
@@ -888,7 +829,7 @@ class Game:
         from . import scene
         self._refresh_full_observation()
         out = scene.summary(self)
-        out["status"] = self.session.status_line(self.spec.level)
+        out["status"] = self.session.status_line(self.budget_key)
         return out
 
     # ------------------------------------------------------------ 存档
@@ -918,6 +859,25 @@ class Game:
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
                    note=doc.get("note", ""), robustness=doc.get("robustness"),
                    manual_patch=bool(doc.get("manual_patch", False)), **kwargs)
+
+    @classmethod
+    def load_archive(cls, directory, **kwargs) -> "Game":
+        """恢复已导出的局，使用存档中的任务定义（旧卡组不受现行任务变动影响）。"""
+        archive = Path(directory)
+        meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
+        ops = [json.loads(line) for line in (archive / "ticks.jsonl").read_text(encoding="utf-8").splitlines()]
+        frames = [json.loads(line) for line in (archive / "frames.jsonl").read_text(encoding="utf-8").splitlines()]
+        task = meta["task"]
+        game = cls(task["id"], seed=task["seed"], ops=ops, frames=frames,
+                   tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
+                   robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False), **kwargs)
+        from pvz_env import PlayerProfileContext
+        config = dict(meta["environment_task"])
+        config["profile"] = PlayerProfileContext(**config["profile"])
+        config["preplanted"] = tuple(tuple(p) for p in config.get("preplanted", ()))
+        game.spec = TaskSpec(**config)
+        game.deck = list(task["deck"])
+        return game
 
     def export_archive(self, directory, *, note=None) -> Path:
         """导出 episode_archive_v1 存档（ticks.jsonl / frames.jsonl / meta.json）。
@@ -979,7 +939,22 @@ class Game:
         )
         (target / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
                                           encoding="utf-8")
+        from .delivery import record_archive
+        record_archive(target, session=self.session)
         return target
+
+    def _deliver(self) -> None:
+        """稳健性完成即导出当前局面并发布交付；内部试打不交付。"""
+        from .delivery import output_dir
+        import tempfile
+        import shutil
+        root = output_dir()
+        root.mkdir(parents=True, exist_ok=True)
+        temporary = Path(tempfile.mkdtemp(prefix=".capture-", dir=root))
+        try:
+            self.export_archive(temporary / "archive")
+        finally:
+            shutil.rmtree(temporary)
 
     def _environment_task(self) -> dict:
         spec = self.spec
@@ -1010,7 +985,7 @@ class Game:
                 self.env.close()
                 self.env = None
         if self._is_branch:
-            self.session.note_branch(self.spec.level, -1)
+            self.session.note_branch(self.budget_key, -1)
             self._is_branch = False
         if self in _LIVE_GAMES:
             _LIVE_GAMES.remove(self)

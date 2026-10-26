@@ -385,3 +385,13 @@ observe 格式基本可以，探路包和正式包都收到。还要改三处，
    - 重打正式包，冷解压后断网跑 selfcheck；
    - 记录 SHA，`git push origin llmplay`。
    - 主控核对后拷到 Mac `~/pvz-llmplay/`。
+
+### task81e 执行结果（2026-10-26）
+
+- **已实现**：删除墙钟封锁、倒计时提示、按运行吞吐标定与单关总模拟量封锁；已用时间只作参考。搜索为固定 4,000,000 模拟 tick，40%/80%/100% 进度检查与同段 8 次重写保留，按任务族隔离并跨续跑延续。
+- **自动持续交付**：`export_archive()` 和完成的 `robustness()` 自动更新 `/mnt/data/out/progress.json`、`report.md`、`budget.json`、`out.zip`。存档按内容寻址；四个入口指向同代不可变文件，写完临时 zip 后原子切换 current，多进程加锁。压缩或最终发布失败均保留上一份完整交付。报告记录逐局胜负、第10波稳健性、手工补救和 note 中的打法参数。
+- **续跑**：`llmplay.resume(zip或目录)` 逐份用包内引擎核对所有操作 tick/ok、操作数与终局，损坏/缺失档作废；不相信旧进度中的完成标记。恢复策略代码、已保存日志及预算，重复导入不重复计数、不缩减已有搜索/重写计数。`next_task()` / `list_tasks()` 跳过已完成部分；`Game.load_archive()` 可接回中盘并使用存档中的卡组与环境定义。
+- **完成标准不变**：五层每任务至少 5 个种子通关，其中至少 3 个第10波达到 5/8；重复导出同一种子只计一次。PROMPT 加续跑入口，删除限时与翻倍扩容收尾要求，保留多样性、现有任务清单、子代理分工及每任务最多两个游戏进程。
+- **验收**：64 项单测通过，覆盖多年墙钟不拒绝新局、并发交付、压缩/rename 失败保留旧快照且可重试、目录/zip 续跑跳过达标任务、坏档与缺档、预算不回退、策略/日志恢复。31/31 任务 reset + 120 tick 通过。真实引擎稳健性可复现、RESEED 当前状态不变且未来不同、精确搜索计数 +1200 tick 全通过。
+- **最终包冷解压后断网实测**：`unshare -rn python3 selfcheck.py` → `SELFCHECK OK`；L41 共181操作，tick9441，wave3，result2（自检无打法，预期不要求通关）。同时实际验证 robustness 自动交付、包内引擎验证、zip续跑、中盘load_archive、损坏操作识别作废。包中接口与工作树逐字相同、ZIP CRC正常、凭据0命中、禁入路径0。
+- **正式交付**：`~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,657,852 字节 / 29 文件**，SHA256 **`01d977539dbfe84998a507fdf21aadb0b6274d9265ca6f07df0fc39ef7e77055`**。引擎未变；包与资源仅保存在本机，不进 git、不上 HF。本轮未创建容器/镜像，测试解压副本已清理。证据在 `~/pvz-logs/llmplay_task81e/{final-selfcheck,robustness-check,task-check}.txt`。Mac 拷贝由主控核对后执行。
