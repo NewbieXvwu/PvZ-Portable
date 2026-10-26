@@ -23,6 +23,7 @@ PANEL = Path('/home/newbiexvwu/PvZ-search/artifacts/stage4/random_deck_panel.jso
 ENGINE = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable')
 VALUE = Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt')
 INCUMBENT = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent')
+MEMORY_BYTES = None  # explicit admission override for a dose run measured on the same corpus shape
 LOCK_FD = None
 QC_STATE = Path.home()/'pvz-logs/curriculum_state.json'
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
@@ -82,6 +83,8 @@ def qc_pending():
 
 
 def training_memory_requirement():
+    if MEMORY_BYTES is not None:
+        return MEMORY_BYTES
     proof = DATA/'seed_1/trained.json'
     peak = json.loads(proof.read_text()).get('observed_peak_rss_bytes') if proof.exists() else None
     # Same corpus, model, batch size and loader for seed2. Use measured resident
@@ -207,12 +210,15 @@ def train_seed(seed):
         (folder/'trained.json').write_text(json.dumps(proof, indent=2)+'\n')
 
 
-def experiment():
+def experiment(prepare='frozen'):
     python = sys.executable
-    plan = DATA/'training_plan.json'
+    plan = DATA/('expand_plan.json' if prepare == 'expand' else 'training_plan.json')
     if not plan.exists() or not json.loads(plan.read_text()).get('prepared'):
-        run([python, str(ROOT/'scripts/task93_prepare_training.py'), '--baseline-recipe',
-             str(CONTROL/'variant_a/recipe.json'), '--manifest', str(PANEL)], 'prepare')
+        if prepare == 'expand':
+            run([python, str(ROOT/'scripts/task93_expand_prepare.py'), '--root', str(DATA)], 'prepare')
+        else:
+            run([python, str(ROOT/'scripts/task93_prepare_training.py'), '--baseline-recipe',
+                 str(CONTROL/'variant_a/recipe.json'), '--manifest', str(PANEL)], 'prepare')
     recipes = [json.loads((DATA/f'seed_{seed}/recipe.json').read_text()) for seed in (1, 2)]
     if (recipes[1] != {**recipes[0], 'seed': 2, 'out': str(DATA/'seed_2/student')}
             or recipes[0]['seed'] != 1):
@@ -273,10 +279,17 @@ pack(data,options,cache_dir=Path(r['cache_dir']),read_cache_dir=Path(r['read_cac
 
 
 def main():
-    global LOCK_FD
+    global LOCK_FD, DATA
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--collector-pid', type=int, help='attach to the existing serial collection shell')
+    parser.add_argument('--root', type=Path, default=DATA, help='experiment directory (dose runs use a new one)')
+    parser.add_argument('--prepare', choices=('frozen', 'expand'), default='frozen')
+    parser.add_argument('--memory-bytes', type=int,
+                        help='admission floor for this run (default: this root\'s measured peak + 15%%, else 16 GiB)')
     args = parser.parse_args()
+    global MEMORY_BYTES
+    MEMORY_BYTES = args.memory_bytes
+    DATA = args.root
     DATA.mkdir(parents=True, exist_ok=True)
     with (DATA/'validation.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
@@ -293,7 +306,7 @@ def main():
                         pass
                 finally:
                     os.close(handle)
-            experiment()
+            experiment(args.prepare)
         except Exception as error:
             status('failed', error=str(error))
             raise
