@@ -755,3 +755,9 @@
     - **task98**（codex-perf，qcwatch）：主循环异常分类处理，加 qc 看门狗；
     - **task99**（codex-v6，startseeds）：起点格未来种子块按需续期。
     - codex-llmplay 留给 GPT Pro 交回后的入库扫描；没等到之前，由主控再派。
+- 2026-10-26 11:20（台式机时间）：**用户反馈 GPT Pro 干得很好**，但 2:45 的限制让它提前停下打包。用户决定：不设任何时间上限，唯一的停止条件是全部任务完成，被系统时限打断后从交付文件续跑。派 **task81e**（Business 号新会话 codexb-llmplay）：
+  - 删掉墙钟上限；
+  - 每完成一局，接口自动原子更新 `progress.json`、`out.zip`、`report.md`；
+  - 新增 `llmplay.resume()`；
+  - PROMPT 改为“只有全部完成才停”，并加续跑说明。
+  - 搜索止损（按尝试次数计）保留。
