@@ -180,6 +180,16 @@
   （照 `expand/randcold/seed_1_0173/config.json` 的 argv，只改 `--rollout-policy` 与 `--out` 为 seed_1_0875 / seed_2_0875）
   → 写结论并按三条预登记判据判定。
 
+- 2026-10-26 Codex恢复接手：交接记录中的expand控制器936153/训练936571均已消失，最后遥测为第1轮4375步，无模型/metrics/完成回执；死因无退出状态可证，不计完成。
+  保留attempt2日志快照，以同一冻结配方恢复唯一控制器（start_new_session，当前句柄见expand/controller_launch.json），避免依赖交互终端。
+  准入按原完整seed1实测RSS乘扩采行数比例后加15%余量，约13.07GiB，训练轮数/数据/种子/判据不变，qc优先。
+  同时核验并校正结论：A/D2实际配方仅seed/out与来源元数据不同；0.173%档相对其双种子均值+3.39pp，样本SD11.79 vs16.57pp，仅描述性改善。
+  三叶草仅在新增随机数据缺失，旧冻结扰动已有覆盖；32卡组面板全部含向日葵，删除与档案不符的解释。
+
+- 2026-10-26 Codex：新增task93_randcold.py，pidfd绑定现存expand主控制器；主验证成功且模型完成回执齐全后，持同一实验锁串行补两个模型各32局，workers2，冻结首批config，旧96局校验复用。
+  首批r11/0.173%两种子独立重算11/13/13通过。对训练包354分片全部17,132,763行packet植物ID检查，与32评估卡组碰撞0；不依赖缺deck的51,191份旧metadata。
+  主训练与补充等待器均已核实存活，当前句柄分别在expand/controller_launch.json与expand/randcold/controller_launch.json；51项相关回归通过。
+
 ## 问题
 
 - 第 4 步在 0.173% 剂量上判据未达成（seed1 137 / seed2 169）。是否批准用 expand 族做约 4% 的第二轮验证
