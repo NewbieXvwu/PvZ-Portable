@@ -90,7 +90,20 @@ def main():
                 'scan futures differ from the reserved block')
         trace = result['adaptive_trace']
         require(trace['complete'] and trace['algorithm'] == 'coarse4_guard_budget9_v2', 'adaptive trace missing')
+        require(trace['grid'] == entry['decisions'] and trace['future_seeds'] == entry['future_seeds'],
+                'adaptive grid/future inputs differ from plan')
         require(trace['teacher_points'] <= 9 and trace['scan_games'] < 96, 'adaptive budget exceeded')
+        algorithm = scan.AdaptiveScan(entry['decisions'], equidistant=4)
+        for decision in trace['teacher_decisions']:
+            require(algorithm.next_teacher_point() == decision, 'adaptive teacher point order differs')
+            algorithm.observe(decision, 'teacher', trace['points'][str(decision)]['teacher'])
+        require(algorithm.next_teacher_point() is None, 'adaptive teacher stage ended early')
+        for decision in algorithm.finish()['student_points']:
+            require('student' in trace['points'][str(decision)], 'adaptive student endpoint missing')
+            algorithm.observe(decision, 'student', trace['points'][str(decision)]['student'])
+        reconstructed = algorithm.finish()
+        require(reconstructed['points'] == trace['points']
+                and reconstructed['scan_games'] == trace['scan_games'], 'adaptive trace reconstruction differs')
         games = 0
         for decision, bucket in trace['points'].items():
             for arm, summary in bucket.items():
@@ -130,6 +143,7 @@ def main():
         seeds.append((entry['future_seed_start'], entry['future_seed_start'] + 95, task_id + ':scan'))
         outcomes.append(dict(task_id=task_id, base_task_id=row['base_task_id'], seed=entry['seed'],
                              archive_sha256=row['archive_sha256'], result_sha256=file_sha(path),
+                             receipt_sha256=file_sha(receipts / f'{row["archive_sha256"]}.json'),
                              l50=ladder['l50'] if ladder else None,
                              decisions=ladder['ladder'] if ladder else [], games=games,
                              top_is_full=ladder['top_is_full'] if ladder else False,
@@ -141,6 +155,8 @@ def main():
     # Compare each new block against every pre-existing global reservation, omitting only
     # this task's own exact ledger keys.
     ledger = json.loads(importer.DEFAULT_SEED_LEDGER.read_text())['reservations']
+    if scan.LEGACY_REGISTER_LEDGER.exists():
+        ledger = {**json.loads(scan.LEGACY_REGISTER_LEDGER.read_text())['reservations'], **ledger}
     own_archives = {r['archive'] for r in rows if r['archive']}
     for key, reservation in ledger.items():
         try:
@@ -175,7 +191,10 @@ def main():
     cells, _ = curriculum_queue.load_demo_start_cells(subset)
     require(set(cells) == {t['task_id'] for t in additions}, 'new curriculum cells cannot load')
     evidence = dict(schema='task105_evidence_v1', audit_passed=True, input_sha256=file_sha(args.input),
-                    engine_sha256=ENGINE_SHA, archives=len(rows), tasks=summary, scans=outcomes,
+                    engine_sha256=ENGINE_SHA, verification_context=expected_context,
+                    archives=len(rows), tasks=summary, scans=outcomes,
+                    rejected=[{k: r[k] for k in ('archive_sha256', 'base_task_id', 'seed', 'note')}
+                              for r in rows if r['verify'] != '通过'],
                     registered=len(additions), scan_games=sum(r['games'] for r in outcomes), deployed=False)
     save(out / 'audit.json', evidence)
     save(ROOT / 'MEMORY/docs/task105-import-evidence.json', evidence)

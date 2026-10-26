@@ -25,6 +25,51 @@
 
 ## 结果
 
+- 导入阶段已完成：191/191在deploy14上verify通过，拒绝0份（无拒绝原因）。
+  191个不同内容SHA，涉及19个任务、87个不同(任务,种子)；49份full、142份half。
+  稳健存档按同任务同种子去重后为48个稳健种子，依据随包第10波检查点k=8且≥5胜的记录；
+  本机老师接手胜率由后续adaptive另行测量，不混作同一指标。
+  真实重导入191/191复用回执，新增族0、复用扫描种子块；191份存档各自保留独立版本族，避免相互覆盖。
+  首份adaptive已启动（workers=2），尚未完成接手扫描/起点格登记，暂未向qc部署。
+  导入阶段紧凑证据见[task105-import-evidence.json](task105-import-evidence.json)，其中`audit_passed=false`
+  明确表示全链路审计未完成。
+
+| 层 | 任务 | 通关种子 | 稳健种子 | 拒绝份数 |
+|---|---|---|---|---|
+| A | demo_roof_46_doom_m200 | 5 | 3 | 0 |
+| A | demo_roof_47_doom_m200 | 5 | 3 | 0 |
+| A | demo_roof_48_doom_m200 | 5 | 3 | 0 |
+| A | demo_roof_49_doom_m200 | 5 | 3 | 0 |
+| B | demo_roof_41_doom_m200 | 5 | 3 | 0 |
+| B | demo_roof_42_melon_m200 | 5 | 3 | 0 |
+| B | demo_roof_42_gloom_m200 | 5 | 3 | 0 |
+| B | demo_roof_42_gloommelon_m200 | 5 | 3 | 0 |
+| B | demo_roof_43_melon_m200 | 5 | 3 | 0 |
+| B | demo_roof_43_gloom_m200 | 5 | 3 | 0 |
+| B | demo_roof_44_melon_m200 | 5 | 3 | 0 |
+| B | demo_roof_44_gloom_m200 | 5 | 3 | 0 |
+| C | demo_roof_46_doom_m300 | 5 | 3 | 0 |
+| C | demo_roof_46_doom_m400 | 4 | 2 | 0 |
+| C | demo_roof_47_doom_m300 | 5 | 3 | 0 |
+| C | demo_roof_47_doom_m400 | 2 | 0 | 0 |
+| C | demo_roof_48_doom_m300 | 6 | 3 | 0 |
+| C | demo_roof_48_doom_m400 | 2 | 1 | 0 |
+| C | demo_roof_49_doom_m300 | 3 | 0 | 0 |
+| C | demo_roof_49_doom_m400 | 0 | 0 | 0 |
+| D | fog79_l36_snow_magnet_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l36_snow_split_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l37_snow_magnet_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l37_snow_split_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l38_snow_magnet_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l38_snow_tall_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l39_snow_cactus_v2_m200 | 0 | 0 | 0 |
+| D | fog79_l39_snow_blover_v2_m200 | 0 | 0 | 0 |
+| E | demo_pool_30_orig_m100 | 0 | 0 | 0 |
+| E | demo_storm_40_orig_m100 | 0 | 0 | 0 |
+| E | demo_boss_50_orig_m100 | 0 | 0 | 0 |
+
+零份任务表示本包未交付该任务的存档，并非校验拒绝。以上计数按本包所有通过版本的种子并集计算。
+
 - 2026-10-26：完整读取原任务书并核实 zip SHA256 为
   `676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7`。
   实际包含191份存档、87个不同的(任务,种子)，348份`.py`和260份`.pyc`；策略只留本机原zip作参考。
@@ -33,7 +78,7 @@
 - 补充`import_llm_run.py --content-addressed`：数值存档规范内容SHA（只排除验证器写入的两个字段）
   寻址，同种子不同版本分别保留并用SHA后缀建立独立族；逐档原子保存校验回执、输入/引擎/资源/验证器指纹。
   同档重导入复用回执与种子块，不覆盖旧起点格；引擎或验证依赖变化须重新verify。
-  70项导入器/扫描器测试通过。真实逐档verify已串行启动，尚未完成；adaptive/register/部署脚本待后续步骤。
+  初始70项导入器/扫描器测试通过；后续扩到79项（1跳过）。逐档verify现已全部完成。
 
 ## 本机续跑入口
 
