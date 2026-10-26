@@ -129,7 +129,11 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 
 **实测结论：这个控制在本机当前内存状态下跑不完，与确定性无关。** 10-26 17:03 启动 `strict_a`：17:04 读完 348 段（16,982,931 行，`source_rows.json` 已写出），随后训练稳定在 **0.099 步/秒（10 s/步）**，700 s 内进程 `read_bytes` 累计 **542 GB**——一个 epoch 只需读 5.5 GB board，这说明 9.6 GB spill 的随机行访问几乎全部落在 page cache 外。按 461 步/1.05M 行换算，全量 8,292 步需约 **23 小时/epoch**，与历史全量 221–224 s/epoch 差两个数量级。900 s 子进程上限触发，`strict_a` 未写出 `trace.json`；`artifacts/task96/full_pack/strict_a/{recipe.json,source_rows.json,telemetry/}` 与 `strict_a.log` 保留为这次失败的证据，未重跑。
 
-原因不是代码而是宿主：本机 25 GiB 内存，实验时其他任务（deckvar 训练 11 GiB RSS、qc/llmimport 的 search_play 与游戏进程）占用 16 GiB，可用 8 GiB，装不下 9.6 GB 工作集；r11 当年 221 s/epoch 说明那时缓存装得下。**在内存让出之前不要重试全量控制**，重试只会再烧一小时。可行的启动条件是 `MemAvailable ≥ 12 GiB` 且没有其他训练在读大数据集。
+原因不是代码而是宿主：本机 25 GiB 内存，实验时其他任务（deckvar 训练 11 GiB RSS、qc/llmimport 的 search_play 与游戏进程）占用 16 GiB，可用 8 GiB，装不下 9.6 GB 工作集；r11 当年 221 s/epoch 说明那时缓存装得下。
+
+18:20 又在 `MemAvailable` 回到 13 GiB 时用 `task96_full_pack.py rate`（只跑 200 步就停）复测了一次，结论相同：训练阶段 18 分钟内 mmap 读盘累计 **650 GB**，进程 RSS 涨到 10.9 GB，200 步没跑完（> 5.4 s/步，全量 epoch 下界 > 12 h），随后主动 TERM 掉。原因是本机 `earlyoom` 的 `--prefer` 列表含 `python3`，再跑下去有杀掉其他任务训练的风险（deckvar 那个进程 RSS 10 GiB），不值得。
+
+**在内存让出之前不要再试全量控制**。可行的启动条件是 `MemAvailable ≥ 14 GiB`、其他任务不占 10 GiB 级 RSS，且接受单次 4 分钟级 epoch；满足不了就只保留中尺度结论。
 
 ## 中尺度控制（本次，已跑完）
 

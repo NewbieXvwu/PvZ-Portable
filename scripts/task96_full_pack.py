@@ -193,6 +193,44 @@ def child(case):
     print(json.dumps({k:trace.get(k) for k in ['case','status','tensor_sha256','error','wall_seconds']}),flush=True)
 
 
+def rate():
+    """Bounded throughput probe: 200 steps of the real full index, then stop."""
+    plan = read(OUT/'plan.json')
+    folder = OUT/'rate_probe'
+    assert not (folder/'trace.json').exists(), 'never overwrite a previous receipt'
+    os.environ['CUBLAS_WORKSPACE_CONFIG'] = ':4096:8'
+    for name in ['OMP_NUM_THREADS', 'OPENBLAS_NUM_THREADS', 'MKL_NUM_THREADS']:
+        os.environ[name] = '1'
+    sys.path[:0] = [str(SOURCE/'scripts'), str(SOURCE/'python'), str(ROOT/'scripts')]
+    import numpy as np
+    import torch
+    import train_rollout_policy as trainer
+    assert Path(trainer.__file__).resolve() == SOURCE/'scripts/train_rollout_policy.py'
+    torch.use_deterministic_algorithms(True)
+    recipe = dict(plan['recipe'])
+    recipe.update(data=str(folder/'input'), out=str(folder), source_row_report=False, max_steps=200)
+    write(folder/'recipe.json', recipe)
+    paths = [Path(entry['path']) for entry in plan['segments']]
+    trainer.load = lambda *a, **k: trainer.read_segments(paths, data=folder/'input', row_observer=k.get('row_observer'))
+    stamps = []
+    def observe(step, loss):
+        stamps.append((step, time.monotonic()))
+    sys.argv = [str(SOURCE/'scripts/train_rollout_policy.py'), '--recipe', str(folder/'recipe.json')]
+    began = time.monotonic()
+    trainer.main(step_observer=observe)
+    elapsed = time.monotonic()-began
+    io = {line.split(':')[0]: int(line.split()[1]) for line in Path('/proc/self/io').read_text().splitlines()}
+    steps = len(stamps)
+    window = stamps[-1][1]-stamps[0][1] if steps > 1 else float('nan')
+    per_step = window/(steps-1) if steps > 1 else float('nan')
+    trace = dict(task=96, mode='rate_probe', steps=steps, elapsed_seconds=elapsed,
+                 seconds_per_step=per_step, steps_per_second=(1/per_step if per_step else None),
+                 predicted_epoch_seconds=per_step*plan['rows']//2048 if per_step else None,
+                 rows=plan['rows'], read_bytes=io['read_bytes'], write_bytes=io['write_bytes'],
+                 resources=resources(), admission=admission(), finished=time.time())
+    write(folder/'trace.json', trace)
+    print(json.dumps(trace, indent=1), flush=True)
+
 def run():
     plan=read(OUT/'plan.json')
     for case,_ in CASES:
@@ -231,6 +269,6 @@ def run():
 
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('mode',choices=['prepare','run','child']);parser.add_argument('--case',choices=dict(CASES))
+    parser.add_argument('mode',choices=['prepare','run','child','rate']);parser.add_argument('--case',choices=dict(CASES))
     args=parser.parse_args()
     globals()[args.mode](args.case) if args.mode=='child' else globals()[args.mode]()
