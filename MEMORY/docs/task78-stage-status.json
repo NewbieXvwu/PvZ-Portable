@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T00:37:52.211468+00:00",
+ "at_utc": "2026-10-26T01:08:58.815184+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -138,12 +138,17 @@
    "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
    "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c"
   },
-  "queued_after": "supervisor6 successful roof_resume5 completion",
-  "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_resume7_handle.json"
+  "queued_after": "resume8 successful independent roof completion",
+  "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json"
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 0
+  "completed_label_jobs": 0,
+  "replay_completed_k": [
+   0
+  ],
+  "collection_status": "waiting_for_available_memory_at_least_10_GiB",
+  "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json"
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
@@ -179,5 +184,42 @@
   "preserved": true,
   "eligible_as_original_input_reconstruction": false
  },
- "supplemental_demo_start_status": "running after full paired-panel completion"
+ "supplemental_demo_start": {
+  "complete": true,
+  "diagnostic_only": true,
+  "preregistered_gate_eligible": false,
+  "plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
+  "cells": [
+   {
+    "task_id": "demo_fog_31_snow_m200",
+    "demo_decision": 777,
+    "pairs": 8,
+    "old_wins": 8,
+    "new_wins": 8,
+    "gain": 0,
+    "harm": 0
+   },
+   {
+    "task_id": "demo_fog_32_snow_m200",
+    "demo_decision": 1231,
+    "pairs": 8,
+    "old_wins": 8,
+    "new_wins": 8,
+    "gain": 0,
+    "harm": 0
+   },
+   {
+    "task_id": "demo_fog_33_cattail_snow_m200",
+    "demo_decision": 867,
+    "pairs": 8,
+    "old_wins": 8,
+    "new_wins": 8,
+    "gain": 0,
+    "harm": 0
+   }
+  ],
+  "terminal_game_records": 48,
+  "report_sha256": "232770f2bb42d5198eb57f0a6505a4a4a053b6d63754e6c6004bb65f4bd8df86",
+  "receipt_audit_sha256": "7fd4a43033aaff3fbf619934a0defa4ca5f2a381092091477ee2dcc1ce0b2ff0"
+ }
 }
