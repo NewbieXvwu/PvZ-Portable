@@ -121,6 +121,10 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 ### 判据可复算（2026-10-26 19:50）
 
 把预登记判据写成代码 `scripts/task104_verdict.py`：读两套面板的 `summary.json`，输出每训练种子的屋顶 A→B 胜局、两种子平均净提高、逐关两种子平均净变化、非屋顶总体与分区净变化，并按四条判据给 `verdict`（`demonstration rows help` / `not proven; do not deploy`）。用 `Fraction` 算，避免浮点边界把 1/32 判错。`python/test_task104_verdict.py` 六项分支（通过、单种子持平、增益不足、单关受损、回归受损、缺模型）在 Mac 全过。这样四个检查点一出来，结论就是跑一条命令、把 `verdict` 抄进「结果」，不靠手算也不靠事后改阈值。
+### 窗口抓到，a_s2 开训（2026-10-27 00:26 台式机）
+
+deckvar 的 task93 expand 第二个种子在 00:25 前结束，可用内存从 11 GB 回到 13 GB、GPU 空出，`task104_train.py` 的准入循环连续 30 秒满足条件后自己起了 a_s2（PID 1040945，配方 `artifacts/task104/recipes/a_s2.json`）。第 1 个 epoch 实测 64,860 行/s，按 15.3 M 训练行算约 235 秒一个 epoch，12 个 epoch 约 47 分钟。这一步没有人工干预，也没有动 deckvar 或 qc 的任何进程。
+
 ### 进度（2026-10-27 00:23，主控叫停时）
 
 a_s1 已训完：12 个 epoch、16,982,931 条决策、检查点 `artifacts/task104/a_s1/model.pt`（台式机 22:37:46），训练中实测 34 → 9.6 step/s、19.5k 行/s，显存 7.1 GB。a_s2 / b_s1 / b_s2 尚未开训：它们排在 `task104_train.py` 的准入循环里，条件是「无他人训练 + 可用内存 ≥ 14 GiB 连续 30 秒」。23:39 起 deckvar 的 task93 expand 连续训练（seed 1 于 23:37 结束，seed 2 随即在 23:39 起跑），同时 cq / task78 / llmimport / scoreboard2 的采集进程常驻，可用内存一直在 11–12 GB，14 GiB 窗口再没出现。按预登记「发现其他任务训练就让 qc 优先」，没有降阈值抢跑，也没有动别人的进程。
