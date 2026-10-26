@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T03:03:21.297168+00:00",
+ "at_utc": "2026-10-26T09:46:59.001519+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 32,
+  "completed_label_jobs": 54,
   "replay_completed_k": [
    0
   ],
@@ -319,7 +319,47 @@
    "engine_processes_started": 0,
    "terminal_leaf_truth_consistency_checked": 3
   },
-  "k0_l41_collection_audit_sha256": "9665897097b7fb40cba417b4b5df7c5665a5e59e4eaec939d769dcc309a34fe3"
+  "k0_l41_collection_audit_sha256": "9665897097b7fb40cba417b4b5df7c5665a5e59e4eaec939d769dcc309a34fe3",
+  "current_replay_raw_chain_audit": {
+   "at_utc": "2026-10-26T09:45:37.430188+00:00",
+   "scope": "current_complete_k0_jobs_against_refreshed_replay",
+   "replay_sha256": "5a5017f6610014ddc64c877add4badef65d597a71f1eafd009445cab56abb4d1",
+   "source_manifest_sha256": "f137d8a427a5825439ed87b4c64a61e515654fb48646005ff966f3c7bc324384",
+   "checked": 54,
+   "passed": 54,
+   "failed": 0,
+   "overall_panel_complete": false,
+   "gate_evaluated": false,
+   "engine_processes_started": 0,
+   "report_sha256": "a8f0741ecdc1494ba24522402df4e9f3a8f2fc9b92b9b96d15332ca85a4b4770",
+   "report": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k0/raw_identity_preflight_run5.json"
+  },
+  "continuation": {
+   "pid": 941146,
+   "process_start_ticks": "27820907",
+   "script": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8.py",
+   "script_sha256": "ad637c701b22b582430a1c4d981792e5d1c08567d5e799fe9428b14eda671507",
+   "log": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_run5.log",
+   "started_at_utc": "2026-10-26T09:43:15.939150+00:00",
+   "nice": 19,
+   "detached_session": true,
+   "previous_handle_backup": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle_before_run5.json"
+  },
+  "root_identity": {
+   "method": "verified raw equality or matching masked state; compare replay masked digest across horizons/futures",
+   "masked_fields": [
+    "grid_items[*].state"
+   ],
+   "student_history_and_context_comparison": "strict equality",
+   "tests_passed": 50
+  },
+  "legacy_recollection_guard": {
+   "raw_only_labels_may_be_recollected": true,
+   "masked_mismatch_stops": true,
+   "guard_cases_passed": 3,
+   "wrapper_sha256": "aa982455c1c67b3c3d6d929d74545ce8d7f73f4cdee861b380373ab0a7091774",
+   "previous_wrapper_sha256": "390a60f066a9a0f5fb10ca2d060c069ecd29ada12bb9ebffff32fdc106d69ba5"
+  }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [

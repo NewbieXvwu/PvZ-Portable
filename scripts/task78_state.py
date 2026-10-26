@@ -37,3 +37,19 @@ def masked_state(state):
 
 def state_digest(state):
     return canonical_digest(masked_state(state))
+
+
+def verified_root_digest(root, replayed):
+    """Return one reproducible identity after proving this label matches its replay.
+
+    A legacy label has no masked digest. An exact raw match still proves its
+    identity, and lets us use the independently replayed masked digest when present.
+    """
+    raw = root.get('root_state_sha256')
+    masked = root.get('root_state_canonical_sha256')
+    expected_masked = replayed.get('engine_canonical_sha256')
+    if raw and raw == replayed.get('engine_sha256'):
+        return expected_masked or raw
+    if masked and expected_masked and masked == expected_masked:
+        return masked
+    raise ValueError('root engine state differs from replay')

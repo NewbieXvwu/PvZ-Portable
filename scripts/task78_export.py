@@ -18,6 +18,7 @@ sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import sha
 from task78_collect import paths
 from task78_student_context import context_identity, expected_histories, validate_root_history
+from task78_state import verified_root_digest
 from value_teacher_feasibility import write_json
 from value_widen_audit import seed_key
 
@@ -114,14 +115,10 @@ def audit_labels(index, horizon, row, manifest, replay):
         original = expected_roots[frame]
         if (root['root_frame']['tick'], root['root_frame']['wave']) != (original['tick'], original['wave']):
             raise ValueError(f'{root_dir}: root tick/wave differs')
-        if root['root_state_sha256'] != verified_roots[frame]['engine_sha256']:
-            # grid_items[*].state is never assigned in src/, so the raw privileged digest
-            # carries uninitialised heap and differs between cold replays (2026-10-26).
-            # Fall back to the masked digest, which two independent replays reproduce.
-            masked = root.get('root_state_canonical_sha256')
-            expected = verified_roots[frame].get('engine_canonical_sha256')
-            if not (masked and expected and masked == expected):
-                raise ValueError(f'{root_dir}: root engine state differs from replay')
+        try:
+            verified_root_digest(root, verified_roots[frame])
+        except ValueError as error:
+            raise ValueError(f'{root_dir}: {error}') from error
         if row.get('demo_archive'):
             saved = root['history']['history']
             obs = saved['obs'] if saved is not None else 'v1'

@@ -11,6 +11,35 @@ sys.path[:0]=[str(ROOT/'python'),str(ROOT/'scripts')]
 import task78_roof_score as roof
 
 
+def test_root_signatures_pair_raw_only_and_masked_labels_across_futures():
+    legacy=dict(root_state_sha256='raw-first',history={'inputs':[1,2]},context=[3])
+    replayed=dict(engine_sha256='raw-first',engine_canonical_sha256='stable')
+    current=dict(legacy,root_state_sha256='raw-second',root_state_canonical_sha256='stable')
+    another_replay=dict(engine_sha256='raw-third',engine_canonical_sha256='stable')
+    assert roof.root_signature(legacy,replayed)==roof.root_signature(current,another_replay)
+    assert roof.root_signature(legacy,replayed)[0]=='stable'
+    assert roof.root_signature(legacy,dict(engine_sha256='raw-first'))[0]=='raw-first'
+
+
+@pytest.mark.parametrize('fault',['different_state','missing_mask','missing_replay_mask'])
+def test_root_signatures_reject_unproven_state_identity(fault):
+    root=dict(root_state_sha256='raw-first',root_state_canonical_sha256='stable',history={},context=[])
+    replayed=dict(engine_sha256='raw-second',engine_canonical_sha256='stable')
+    if fault=='different_state':root['root_state_canonical_sha256']='different'
+    elif fault=='missing_mask':root.pop('root_state_canonical_sha256')
+    else:replayed.pop('engine_canonical_sha256')
+    with pytest.raises(ValueError,match='root engine state differs from replay'):
+        roof.root_signature(root,replayed)
+
+
+@pytest.mark.parametrize('field',['history','context'])
+def test_root_signatures_keep_student_history_and_context_distinct(field):
+    root=dict(root_state_sha256='raw',history={'inputs':[1]},context=[2])
+    changed=deepcopy(root);changed[field]=[]
+    replayed=dict(engine_sha256='raw',engine_canonical_sha256='stable')
+    assert roof.root_signature(root,replayed)!=roof.root_signature(changed,replayed)
+
+
 @pytest.fixture
 def futures():
     result=[]

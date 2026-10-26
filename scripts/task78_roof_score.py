@@ -18,6 +18,7 @@ sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import sha
 from task78_export import audit_labels
 from task78_roof_truth import OUT, frozen
+from task78_state import verified_root_digest
 from value_teacher_feasibility import write_json
 
 HORIZONS = (2500, 4000, 6000)
@@ -28,6 +29,10 @@ EPS = 1e-9
 
 def action_key(action):
     return json.dumps(action, sort_keys=True, separators=(',', ':'))
+
+
+def root_signature(root, replayed):
+    return [verified_root_digest(root, replayed), root['history'], root['context']]
 
 
 def paired_candidates(futures):
@@ -218,6 +223,8 @@ def evaluate(candidate, target):
         for index,row in enumerate(source['archives']):
             world=json.dumps(row['world'],sort_keys=True)
             root_order=sorted(r['frame'] for r in row['roots'])
+            verified_roots={r['frame']:r for result in replay['results']
+                            if result['archive']==row['archive'] for r in result['roots']}
             for horizon in HORIZONS:
                 records,hashes=audit_labels(index,horizon,row,manifest,replay)
                 provenance.update(hashes)
@@ -226,7 +233,7 @@ def evaluate(candidate, target):
                     if (root['decision_seed']!=seed or root['common_future']!=(seed*1000)%2**32):
                         raise ValueError('roof common-future schedule differs from frozen manifest')
                     entry=by_root[(world,frame,horizon)].setdefault(k,dict(
-                        signature=[root['root_state_sha256'],root['history'],root['context']],rows=[]))
+                        signature=root_signature(root,verified_roots[frame]),rows=[]))
                     record['values']=score_leaf(record,root['context'],models)
                     entry['rows'].append(record)
     horizons = {}

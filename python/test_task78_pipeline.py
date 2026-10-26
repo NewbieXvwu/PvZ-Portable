@@ -114,6 +114,18 @@ def test_export_audits_complete_raw_label_chain(label_fixture):
     assert len(rows) == 1 and len(hashes) == 4
 
 
+def test_export_accepts_reproducible_mask_but_rejects_a_different_state(label_fixture):
+    row,replay,root = label_fixture
+    path=root/'root.json';record=json.loads(path.read_text())
+    record.update(root_state_sha256='allocator-differs',root_state_canonical_sha256='stable')
+    path.write_text(json.dumps(record))
+    replay['results'][0]['roots'][0]['engine_canonical_sha256']='stable'
+    assert len(export.audit_labels(0,2500,row,Path('/sources.json'),replay)[0])==1
+    record['root_state_canonical_sha256']='different';path.write_text(json.dumps(record))
+    with pytest.raises(ValueError,match='root engine state differs from replay'):
+        export.audit_labels(0,2500,row,Path('/sources.json'),replay)
+
+
 @pytest.mark.parametrize('corruption', ['missing_candidate','bad_history','missing_trace','changed_root'])
 def test_export_rejects_corruption_even_with_complete_marker(label_fixture, corruption):
     row,replay,root = label_fixture
