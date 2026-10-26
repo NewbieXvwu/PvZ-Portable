@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T01:24:23.761064+00:00",
+ "at_utc": "2026-10-26T01:34:08.407436+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -139,7 +139,55 @@
    "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c"
   },
   "queued_after": "resume8 successful independent roof completion",
-  "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json"
+  "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json",
+  "future_identity_preflight": {
+   "at_utc": "2026-10-26T01:34:08.407436+00:00",
+   "scope": "task72b_original_future_identifiers_vs_declared_checkpoint_trained_on",
+   "reference_sha256": "b0e52098921ff018dbdb7ccaee35a6b51a52c69d92c30619b54cdcb60cc7ab63",
+   "states": 94,
+   "future_seeds": [
+    101,
+    102,
+    103,
+    104,
+    105,
+    106,
+    107,
+    108
+   ],
+   "models": {
+    "value": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+     "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+     "declared_training_identities": 3661,
+     "future_identity_overlap": []
+    },
+    "student": {
+     "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+     "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+     "declared_training_identities": 0,
+     "future_identity_overlap": []
+    },
+    "static": {
+     "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
+     "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c",
+     "declared_training_identities": 383,
+     "future_identity_overlap": []
+    },
+    "diagnostic_v6": {
+     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/v6/model.pt",
+     "sha256": "4df43aea69e22098d555219c2a79892e8332cdf4cefdf18da3e0f65c0421e4cb",
+     "declared_training_identities": 4268,
+     "future_identity_overlap": []
+    }
+   },
+   "engine_processes_started": 0,
+   "original_probe_protocol_verified": false,
+   "mapping_complete": false,
+   "rescore_eligible": false,
+   "note": "Checks the recorded future identifiers only, not exact state reconstruction, undisclosed training inputs, or the missing original probe noise schedule.",
+   "report_sha256": "2dfa006e98108cae08bc96e76b6e4db753f91b50b19280ddcda6732ec94565e2"
+  }
  },
  "independent_roof": {
   "expected_label_jobs": 216,
