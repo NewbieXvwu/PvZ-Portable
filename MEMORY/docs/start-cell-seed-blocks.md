@@ -42,6 +42,9 @@
 
 ## 证据
 
+- 上线核对脚本 `scripts/check_start_seed_state.py`（只读）：池 vs 盘点、清单块 vs 池、
+  账本形状、state 的 `seeds`/`seed_blocks`/offset 一致性、跨格未用种子重叠；9 项单测
+  `python/test_check_start_seed_state.py` 全过。
 - 测试（`/home/newbiexvwu/.venvs/ml/bin/python3`）：
   `python/test_curriculum_queue.py` **68 passed, 1 skipped**（新增 13 项：续领后排 48 局且偏移不变、
   两段有序不相交、两格续领拿到的块也不相交、池在全部已登记段之外、重启保留多段表、
@@ -64,6 +67,12 @@
 
 ## 上线步骤（与 task98 一起，组边界）
 
+0. **先跑只读核对** `python3 scripts/check_start_seed_state.py`（默认读
+   `~/pvz-logs/curriculum_state.json`、续领账本、`configs/human_demo_tasks.json` 与
+   `MEMORY/docs/gate-seed-inventory.json`）：`FAIL` 行必须为零才继续；`note` 行是提示
+   （例如同一块被多个任务登记）。2026-10-26 在生产 state 上实测输出
+   `ok    pool [200000000, 201000000], 0 ledger block(s), 13 start cell(s)`，
+   外加三条共享块 note（见“问题”第 4 条）。
 1. 把 `startseeds` 合进生产 `cq` 工作树（merge，不手抄），确认 `git diff --stat` 只含
    `python/pvz_promotion.py`、`scripts/curriculum_queue.py`、`scripts/gate_seed_inventory.py` 与测试。
 2. 在组边界停 qc：`touch ~/pvz-logs/stop_curr`，等当前组跑完（`stop` 只在组间检查）。
@@ -76,7 +85,9 @@
    它与 `_hv2` 共用块 `44300000..44300255`，且清单条目没有 `fog_observation: human_v2`
    （重放会回到 x-ray）。L32 由在跑的 `_hv2` 承载，续领后它不会再退休。恢复参数留给
    “将来确实因为种子用完退休、且块与观测契约都不冲突”的格；恢复时脚本会打重叠 WARNING。
-6. 回滚注意：旧代码不认识 `seed_blocks`，重启时 `reconcile_start_cells` 会用清单块覆盖种子表，
+6. 重启后再跑一次 `python3 scripts/check_start_seed_state.py`：这次要看到起点格数量、
+   `seed_blocks` 与账本一致；之后每轮结束（组间）都可以再跑，只读、秒级。
+7. 回滚注意：旧代码不认识 `seed_blocks`，重启时 `reconcile_start_cells` 会用清单块覆盖种子表，
    offset ≥ 256 的格会被重新判为用完并退休。回滚前先确认没有格的 offset 落在续领段里，
    或把 state 备份后再回滚。
 
@@ -124,6 +135,16 @@
   **没有任何格用完 256 个之前，qc 行为与现在完全一致。**
 - **本任务改的文件**：`scripts/curriculum_queue.py`、`python/pvz_promotion.py`、
   `scripts/gate_seed_inventory.py`、`python/test_curriculum_queue.py`（+ 文档/盘点 json）。
+
+4. **部署会把起点格从 13 个变成 31 个，其中 10 个与兄弟格共用同一块**：cq 现在的
+   `configs/human_demo_tasks.json` 只有 13 个 `demo_start`，startseeds 有 31 个
+   （task87/89 的 8 个 LLM 格各占独立块；另有 10 个旧倍率变体共用 3 个块：
+   `45000000` × 3、`45100000` × 3、`45200000` × 4，其中 `demo_roof_41_doom_m200`
+   实际指向 L46 的存档）。`reconcile_start_cells` 会把它们全部加成格子，而每个 task 的
+   offset 从 0 起 → 同一块会被重复采。核对脚本对“清单里共享块”只打 `note`（旧注释
+   “跨档共用同一块”表明可能是有意的），但**上线前应由主控决定**：删掉这 10 个变体、
+   给它们各自分块（= 换任务族，按 AGENTS §8 登记）、或接受重复采集。当前生产 state 里
+   没有这些格，所以现在的核对是干净的。
 
 ## 边界与未做
 

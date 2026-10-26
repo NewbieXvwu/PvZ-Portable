@@ -38,6 +38,8 @@
 
 - 2026-10-26 续领失败面收窄：`plan_round` 现在把 `SeedPoolExhausted` / `ValueError`（账本损坏、池不符）/ `OSError`（账本不可写）都当作“这一格领不到”→ 退休并记日志，不再让 qc 停在 plan 阶段（task98 的单点异常原则）。新增 `test_corrupt_ledger_retires_instead_of_crashing`；单文件 68 passed，八个相关文件 128 passed。
 
+- 2026-10-26 上线核对脚本：新增只读的 `scripts/check_start_seed_state.py`（池 vs 盘点、清单块 vs 池、账本形状、state 的 seeds/seed_blocks/offset 一致性、跨格未用种子重叠）+ 9 项单测。在生产 state 上实测：`ok pool [200000000,201000000], 0 ledger block(s), 13 start cell(s)`，另有 3 条“同一块被多个任务登记”的 note。**由此发现部署会让起点格从 13 个变 31 个，其中 10 个旧倍率变体共用 3 个块**（45200000×4 / 45100000×3 / 45000000×3），需主控在合并前决定删格、分块还是接受重复采集——已写进结论文档“问题”第 4 条。
+
 ## 问题
 
 ## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of
