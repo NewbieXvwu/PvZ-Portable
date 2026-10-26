@@ -53,5 +53,7 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 问题
 
+- [续做核实，2026-10-26 16:55 CST] 磁盘实际已有9对完整build2 ABBA记录及第10对new臂，已校验build2与归档均为83aed3be并续跑，不重采已有记录。静态/动态libopenmpt链接差异已经确认，但函数尺寸相同不能单独排除源码性能回归；最终仍以build2完整16对吞吐和独立逻辑门禁为准。
+
 - **剩余待办（交还 Codex）**：① `artifacts/task95/abba3/` 补完剩余 9 对（会复用已完成的 7 对，目录已存在）后判定；② build2 的六族逐位门禁：`artifacts/task95/gate_b2/` 已放好 old 臂与 `frames_old`，只需用 `scripts/task70_redeploy_gate.py --old …deploy14-pvz-portable --new …pvz-portable-build2 --out artifacts/task95/gate_b2` 跑 new 臂（约 80 分钟，2 进程）；③ L50 四局（`scripts/task95_boss_l50_gate.py --old … --new …pvz-portable-build2`）；④ 若 build2 全过，B9 与 `scripts/qc_deploy15.sh` 的 `ENGINE_SHA` 从 07703a57 换成 83aed3be，否则退回“候选不可部署”的结论。
 - **吞吐差 3–5%，两次 ABBA 都不过 0.98。** 已定位到构建配置（静态 libopenmpt 把二进制从 10.4 MB 撑到 68.7 MB），不是 task82/task85 的源码行为；处理办法是照 deploy14 的共享库链接重建，重建后必须重跑六族逐位门禁与 L50 才能算候选。原始 07703a57 仍留档，不覆盖。
