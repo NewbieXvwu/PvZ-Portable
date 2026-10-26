@@ -78,6 +78,7 @@
 - [automations/938705e9-…](automations/938705e9-2dd7-4c5b-80e5-2ffbc2a64aac/memory.md)
 
 - [teacher-candidate-coverage.md](docs/teacher-candidate-coverage.md)
+- [同配方同种子重训为什么不能复现 r11](docs/training-reproducibility.md)
 
 - [static-value-branch1-compare.md](docs/static-value-branch1-compare.md)
 
