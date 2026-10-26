@@ -446,5 +446,118 @@
     ],
     "pass": true
   },
-  "build_flags_build2": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo2 -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch; -DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so"
+  "build_flags_build2": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo2 -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch; -DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so",
+  "boss_l50": {
+    "file": "artifacts/task95/boss_l50.json",
+    "sha256": "8c09282959ef1bf45ae0653de27f6ab7492bbfff7fe1eba5cfec35893635defa",
+    "task_id": "boss_l50_orig_eval",
+    "seeds": [
+      85000000,
+      85000001,
+      85000002,
+      85000003
+    ],
+    "policy": "unchanged A2 dw4i_s1, beta=0",
+    "checks": {
+      "new_boss_fields_present": true,
+      "logical_fields_match": true,
+      "action_streams_match": true,
+      "all_terminal": true
+    },
+    "pass": true,
+    "games": [
+      {
+        "seed": 85000000,
+        "old_final_tick": 7720,
+        "new_final_tick": 7720,
+        "old_won": false,
+        "old_decisions": 143,
+        "new_decisions": 143,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 144,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      },
+      {
+        "seed": 85000001,
+        "old_final_tick": 6658,
+        "new_final_tick": 6658,
+        "old_won": false,
+        "old_decisions": 126,
+        "new_decisions": 126,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 127,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      },
+      {
+        "seed": 85000002,
+        "old_final_tick": 6416,
+        "new_final_tick": 6416,
+        "old_won": false,
+        "old_decisions": 118,
+        "new_decisions": 118,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 119,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      },
+      {
+        "seed": 85000003,
+        "old_final_tick": 5895,
+        "new_final_tick": 5895,
+        "old_won": false,
+        "old_decisions": 106,
+        "new_decisions": 106,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 107,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      }
+    ],
+    "executables": {
+      "old": {
+        "sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a"
+      },
+      "new": {
+        "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
+      }
+    }
+  }
 }
