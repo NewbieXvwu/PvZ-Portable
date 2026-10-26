@@ -226,7 +226,7 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/demorows
 
 评估摘要新增每个游戏种子的胜负，完成记录须与面板种子集合及数量相同。判定器复用 `value_widen_ab.paired`，同时输出屋顶及非屋顶逐关、逐训练种子的 gain/harm，以及两次训练结果的范围。11 项面板与判定测试通过，原四条数值判据保持不变。
 
-训练后的 `task104-eval` 会话已排队：等待本任务四次训练结束，确认四个检查点均存在后，按顺序运行屋顶 384 局、非屋顶 608 局，再生成 `artifacts/task104/verdict.json`。评估统一禁用 CUDA，最多两个游戏进程，完整输出在 `artifacts/task104/logs/eval_pipeline.log`。任一步失败即停止后续命令，实际成绩仍待运行产生。
+`task104-eval` 已改为逐个接续已完成模型：等该模型的训练退出码为 0，就运行其屋顶 96 局与非屋顶 152 局，与其余模型训练交叠。四模型完成后复用现成断点续跑读取已完成游戏，汇总全部屋顶 384 局及非屋顶 608 局，再生成 `artifacts/task104/verdict.json`。台式机执行文件为 `artifacts/task104/eval_ready_models.sh`，仍只用原评估脚本。评估统一禁用 CUDA，同一时刻最多两个游戏进程，完整输出在 `artifacts/task104/logs/eval_pipeline.log`。任一步失败即停止后续命令。a_s1 已完成 12 轮且训练退出码为 0，已开始其冻结面板评估，后续模型仍在训练或排队，实际判定尚未产生。
 
 ### Mac 解冻后的执行选择（2026-10-26）
 
