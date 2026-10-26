@@ -162,4 +162,3 @@ PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 /home/newbiex
 
 实测每份 26–32 分钟（12 点网格，9 老师点 + 2 学生点 = 88 局）；全部 191 份约需 90 小时以上
 连续算力，期间不并发多份。
-| 5 | `demo_roof_42_gloommelon_m200_s81007027_ae96b4ef6e882` | 1195 / 761 | 92000000–92000255 | pending |
