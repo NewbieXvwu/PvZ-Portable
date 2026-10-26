@@ -644,6 +644,14 @@ def update_design(design_path: Path, lines: list) -> bool:
     stamp = dt.date.today().isoformat()
     numbers = [int(match.group(1)) for match in re.finditer(r'^### 14\.(\d+)', text, re.M)]
     section = max(numbers, default=34) + 1
+    if re.search(r'_a[0-9a-f]{12}`', block):
+        marker = '<!-- /task105 start cells -->'
+        if marker in text:
+            text = text.replace(marker, block + '\n\n' + marker)
+        else:
+            text = text.rstrip('\n') + f'\n\n### 14.{section} GPT Pro 接手起点格（task105，{stamp}）\n\n' + block + '\n\n' + marker + '\n'
+        design_path.write_text(text, encoding='utf-8')
+        return True
     text = text.rstrip('\n') + f"\n\n### 14.{section} 接手扫描运行器登记（task91，{stamp}）\n\n{block}\n"
     design_path.write_text(text, encoding='utf-8')
     return True

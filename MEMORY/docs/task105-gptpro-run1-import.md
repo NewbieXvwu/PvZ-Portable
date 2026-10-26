@@ -37,6 +37,13 @@
 
 ## 本机续跑入口
 
+- 第二小步：新增`task105_pipeline.py`续跑器（等待原校验进程后重导入检查幂等，再逐档adaptive→register→测试→审计），
+  `audit_task105.py`独立逐局/指纹/种子避让验收器，以及`deploy_task105.py`部署脚本。
+  部署默认只读，`--apply`要求qc已排空，合并新增项而不覆盖生产既有任务，并保留回滚副本；**未执行部署**。
+  当前79项针对性测试通过（1项历史Mac存档缺失跳过；最终审计另用真实课程装载器验证所有新增格）。
+  DESIGN自动登记压成两张表，避免逐存档重复建节；课程测试接受本包的`llm_agent`来源。
+  以上工具的真实全量扫描/最终审计仍待输入校验完成，不作为已验收结果。
+
 ```bash
 P=/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport
 PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 /home/newbiexvwu/.venvs/ml/bin/python3 "$P/scripts/import_llm_run.py" /home/newbiexvwu/llm_runs/gptpro_438cb30a_0446.zip --content-addressed --dest "$P/artifacts/task105/import" --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable --report "$P/artifacts/task105/import_report.md" --scan-out "$P/artifacts/task105/scan_jobs.json"
@@ -44,3 +51,14 @@ PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 /home/newbiex
 
 逐档进度与回执在ignored的`artifacts/task105/import/`；运行日志在`~/pvz-logs/task105-import.out`。
 尚未向生产qc写入任何任务105课程配置，也未上传HF。
+
+全链路续跑（同样只改本工作树，原进程活着时不要另起第二份）：
+
+```bash
+PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 /home/newbiexvwu/.venvs/ml/bin/python3 "$P/scripts/task105_pipeline.py" /home/newbiexvwu/llm_runs/gptpro_438cb30a_0446.zip
+```
+
+状态在`artifacts/task105/pipeline_status.json`；每份完成后写`completed_scans.json`，
+扫描/登记与原始逐局数据均在同目录下。每次adaptive最多2个游戏进程，原逐档verify与扫描串行。
+验收通过后生成`deployment_plan.json`，主控可先运行`$P/scripts/deploy_task105.py`预览，
+在组边界排空qc后再用同一脚本的`--apply`；脚本不重启qc。

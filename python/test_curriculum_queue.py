@@ -934,7 +934,7 @@ class DemoStartCellsTest(unittest.TestCase):
             # 起点之前的示范动作走 human 导出，不走起点格（task87 起 LLM 示范格 label_source=llm_gpt_pro）
             meta = json.loads((Path(spec['archive']) / 'meta.json').read_text())
             self.assertTrue(meta['verified'], task_id)
-            self.assertIn(meta['label_source'], ('human', 'llm_gpt_pro'), task_id)
+            self.assertIn(meta['label_source'], ('human', 'llm_gpt_pro', 'llm_agent'), task_id)
 
 
 if __name__ == '__main__':

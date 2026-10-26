@@ -10,9 +10,21 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 from llm_import_sha import archive_sha, run_sha
 from python.test_import_llm_run import _meta, _write_archive
+from deploy_task105 import merge_tasks
 
 
 class ShaImportTest(unittest.TestCase):
+    def test_deployment_merge_preserves_current_tasks_and_rejects_conflicts(self):
+        current = {'tasks': [{'task_id': 'live', 'demo_start': {'index': 3}}], 'new_field': True}
+        addition = {'task_id': 'new', 'demo_start': {'index': 0}}
+        merged = merge_tasks(current, [addition])
+        self.assertEqual(merged['tasks'][0], current['tasks'][0])
+        self.assertEqual(len(current['tasks']), 1)
+        self.assertTrue(merged['new_field'])
+        self.assertEqual(merge_tasks(merged, [addition]), merged)
+        with self.assertRaisesRegex(ValueError, 'conflict'):
+            merge_tasks(merged, [{'task_id': 'new', 'demo_start': {'index': 4}}])
+
     def test_verifier_fields_are_ignored_but_robustness_and_tape_are_not(self):
         with tempfile.TemporaryDirectory() as directory:
             a = _write_archive(Path(directory), 'a', _meta())

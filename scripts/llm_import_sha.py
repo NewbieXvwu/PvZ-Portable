@@ -9,6 +9,7 @@ from __future__ import annotations
 import fcntl
 import hashlib
 import json
+import re
 import shutil
 import tempfile
 from pathlib import Path
@@ -55,8 +56,39 @@ def verification_context(executable: Path, resources: Path) -> dict:
         ('scripts/human_demo.py', 'python/pvz_env.py', 'python/pvz_event_env.py')})
 
 
+def compact_design(path: Path, tasks: dict) -> None:
+    """Keep SHA families in one table instead of one generated section per archive."""
+    text = path.read_text() if path.exists() else ''
+    blocks = re.split(r'(?=^### )', text, flags=re.M)
+    blocks = [block for block in blocks if not (
+        block.startswith('### task89：LLM 存档自动登记的新族')
+        and re.search(r'_a[0-9a-f]{12}`', block))]
+    text = ''.join(blocks)
+    begin, end = '<!-- task105 SHA families -->', '<!-- /task105 SHA families -->'
+    entries = [t for t in tasks.values() if re.search(r'_a[0-9a-f]{12}$', t['task_id'])]
+    if not entries:
+        return
+    lines = [begin, '| task_id | 关卡 | 种子 | 倍率 | 卡组（存档 meta） |',
+             '|---|---|---|---|---|']
+    for entry in sorted(entries, key=lambda t: t['task_id']):
+        lines.append(f'| `{entry["task_id"]}` | {entry["level"]} | {entry["seeds"]} | '
+                     f'{entry["zombie_count_multiplier"]} | {entry["deck"]} |')
+    block = '\n'.join(lines + [end])
+    if begin in text:
+        text = re.sub(re.escape(begin) + r'.*?' + re.escape(end), lambda _: block, text, flags=re.S)
+    else:
+        numbers = [int(n) for n in re.findall(r'^### 14\.(\d+)', text, re.M)]
+        text = text.rstrip() + f'\n\n### 14.{max(numbers, default=35) + 1} GPT Pro SHA 存档族（task105）\n\n' + block + '\n'
+    if not path.exists() or path.read_text() != text:
+        path.write_text(text)
+
+
 def run_sha(input_path, dest, manifest, layers_path, resources, executable,
             future_base, seed_ledger):
+    if input_path.is_dir() and (input_path.resolve() == dest.resolve()
+                               or input_path.resolve() in dest.resolve().parents
+                               or dest.resolve() in input_path.resolve().parents):
+        raise ValueError('输入与dest不得互相包含')
     dest.mkdir(parents=True, exist_ok=True)
     # Shared dest lock covers receipts and incremental family/plan mutations.
     with (dest / 'import.lock').open('a') as lock:
@@ -66,9 +98,6 @@ def run_sha(input_path, dest, manifest, layers_path, resources, executable,
             if input_path.is_file():
                 source = Path(directory)
                 legacy.safe_extract(input_path, source)
-            elif (input_path.resolve() == dest.resolve() or input_path.resolve() in dest.resolve().parents
-                  or dest.resolve() in input_path.resolve().parents):
-                raise ValueError('输入与dest不得互相包含')
             archives = legacy.discover(source)
             if not archives:
                 raise ValueError('没有episode_archive_v1存档')
@@ -135,4 +164,5 @@ def run_sha(input_path, dest, manifest, layers_path, resources, executable,
                 print(f'[{len(rows)}/{len(archives)}] {base} s{seed} {sha[:12]} '
                       f'{row["verify"]} {reason}', flush=True)
             plan = legacy.scan_plan(rows, layer_of, future_base, ledger_path=seed_ledger)
+            compact_design(manifest.parent.parent / 'DESIGN.md', tasks)
             return dict(rows=rows, layers=layer_of, plan=plan, registered=entries)

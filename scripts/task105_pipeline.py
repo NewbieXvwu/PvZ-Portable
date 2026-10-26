@@ -1,0 +1,91 @@
+#!/usr/bin/env python3
+"""Resume task105 import → adaptive → register, without touching production qc.
+
+Run with the ML venv. --wait-import-pid can attach to an existing import instead
+of launching a second copy. Registration is local to this worktree; deployment
+is a separate, explicitly invoked operation for the controller.
+"""
+import argparse
+import fcntl
+import json
+import os
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+from llm_import_sha import archive_sha, file_sha, save
+
+ROOT = Path(__file__).resolve().parents[1]
+ENGINE = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable')
+ENGINE_SHA = '76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a'
+
+
+def process_identity(pid):
+    try:
+        stat = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
+        return stat[19] if stat[0] != 'Z' else None
+    except FileNotFoundError:
+        return None
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('input', type=Path)
+    parser.add_argument('--wait-import-pid', type=int)
+    args = parser.parse_args()
+    out = ROOT / 'artifacts/task105'
+    out.mkdir(parents=True, exist_ok=True)
+    lock = (out / 'pipeline.lock').open('a')
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    status = out / 'pipeline_status.json'
+    env = dict(os.environ, PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
+
+    def run(stage, command, accepted=(0,)):
+        save(status, dict(stage=stage, state='running', command=command, pid=os.getpid()))
+        with (out / f'{stage}.out').open('a') as stream:
+            result = subprocess.run(command, cwd=ROOT, env=env, stdout=stream, stderr=subprocess.STDOUT)
+        if result.returncode not in accepted:
+            save(status, dict(stage=stage, state='failed', returncode=result.returncode))
+            raise SystemExit(result.returncode)
+
+    if file_sha(ENGINE) != ENGINE_SHA:
+        raise ValueError('deploy14 engine SHA mismatch')
+    if args.wait_import_pid:
+        identity = process_identity(args.wait_import_pid)
+        if identity is None:
+            raise ValueError('requested import PID is not live; inspect its terminal result first')
+        save(status, dict(stage='wait_import', state='running', pid=os.getpid(),
+                          import_pid=args.wait_import_pid, import_start=identity))
+        while process_identity(args.wait_import_pid) == identity:
+            time.sleep(10)
+    # Also checks incrementality: existing receipts are reused, changed SHA is new work.
+    run('import', [sys.executable, str(ROOT / 'scripts/import_llm_run.py'), str(args.input),
+                   '--content-addressed', '--dest', str(out / 'import'), '--executable', str(ENGINE),
+                   '--report', str(out / 'import_report.md'), '--scan-out', str(out / 'scan_jobs.json')], (0, 1))
+    rows = json.loads((out / 'import/import_progress.json').read_text())['archives']
+    for row in rows:
+        if row['archive'] and archive_sha(ROOT / row['archive']) != row['archive_sha256']:
+            raise ValueError('import SHA mismatch')
+    plan = json.loads((out / 'scan_jobs.json').read_text())
+    completed = []
+    for entry in plan['archives']:
+        task = entry['task_id']
+        run(f'adaptive_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'adaptive',
+             str(out / 'scan_jobs.json'), '--out', str(out / 'scan'), '--task-id', task,
+             '--executable', str(ENGINE), '--workers', '2'])
+        result = out / 'scan/results' / f'{task}_s{entry["seed"]}.json'
+        run(f'register_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'register',
+             str(result), '--out', str(out / 'registration' / task)])
+        completed.append(task)
+        save(out / 'completed_scans.json', dict(completed=completed, total=len(plan['archives'])))
+    run('tests', [sys.executable, '-m', 'unittest', 'python.test_llm_import_sha',
+                 'python.test_import_llm_run', 'python.test_takeover_scan',
+                 'python.test_curriculum_queue.DemoStartCellsTest'])
+    run('audit', [sys.executable, str(ROOT / 'scripts/audit_task105.py'), str(args.input)])
+    save(status, dict(stage='done', state='complete', imported=len(rows),
+                      scanned=len(completed), deployed=False))
+
+
+if __name__ == '__main__':
+    main()
