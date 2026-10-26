@@ -356,7 +356,7 @@
  },
  "production": {
   "archives_total": 12,
-  "archives_complete": 8,
+  "archives_complete": 9,
   "stage": "adaptive",
   "plan_sha256": "a5e3374214dae1fed930d02c7ed79f626fb56f1428f7a0eb0f99095396ecf12a",
   "entries": [
@@ -537,6 +537,28 @@
     "result_sha256": "ee3a93d2940f77db78ae7975b58ee4ad53522387cc1672e313b39040c1ae42b9",
     "trace_frozen_sha256": "a2b9f20735f6084a4e021d59582624c5ccf60164ce2bd52bcfdcc84c976af033",
     "raw_cache_manifest_sha256": "401776b59884d6021d225e8dea1e79f40c246a47a1ced035c468ad65ee22cfa0",
+    "raw_rows_verified": true
+   },
+   {
+    "task_id": "demo_roof_48_doom_m200_s20261050",
+    "seed": 20261050,
+    "l50": 630,
+    "top": 1154,
+    "teacher_points": 9,
+    "scan_games": 88,
+    "adaptive_ladder": [
+     1154,
+     735,
+     630
+    ],
+    "registration_ladder": [
+     1154,
+     735,
+     630
+    ],
+    "result_sha256": "419a378bd2b0390ff0109b99a7e864e1c9a1ce5ca31ab40f2501ad6a1f26045e",
+    "trace_frozen_sha256": "705602dce17f7131137a372669eda3d2dc4dc1e20dda2017372a81399cd3a89c",
+    "raw_cache_manifest_sha256": "8cfa491ea2e40eb25724d474e9b568f04a4190a91fc2e979859d2271e886817a",
     "raw_rows_verified": true
    }
   ]
