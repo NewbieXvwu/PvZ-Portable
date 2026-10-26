@@ -554,7 +554,7 @@ static void RunEnvironment(LawnApp* app)
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":4,\"sparse_tracks_version\":1}" << std::endl;
+		<< ",\"rollout_version\":5,\"sparse_tracks_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -761,7 +761,7 @@ static void RunEnvironment(LawnApp* app)
 				if (ok)
 				{
 					std::ifstream features(path, std::ios::binary);
-					std::vector<float> board(EnvironmentValueNet::Channels * EnvironmentValueNet::Cells), scalars(valueNets[slot].ScalarCount());
+					std::vector<float> board(valueNets[slot].ChannelCount() * EnvironmentValueNet::Cells), scalars(valueNets[slot].ScalarCount());
 					for (int index = 0; ok && index < count; ++index)
 					{
 						features.read(reinterpret_cast<char*>(board.data()), board.size() * sizeof(float));

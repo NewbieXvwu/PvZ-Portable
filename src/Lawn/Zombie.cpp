@@ -5579,6 +5579,14 @@ void Zombie::DrawBungeeReanim(Graphics* g)
 	aBodyReanim->DrawRenderGroup(g, RENDER_GROUP_ARMS);
 }
 
+bool Zombie::BungeeTargetSettled()
+{
+	return IsOnBoard() && !mApp->IsFinalBossLevel() &&
+		mZombiePhase != ZombiePhase::PHASE_BUNGEE_HIT_OUCHY &&
+		mZombiePhase != ZombiePhase::PHASE_BUNGEE_RISING &&
+		mRelatedZombieID == ZombieID::ZOMBIEID_NULL && mAltitude <= BUNGEE_ZOMBIE_HEIGHT - 400;
+}
+
 void Zombie::DrawBungeeTarget(Graphics* g)
 {
 	if (!IsOnBoard() || mApp->IsFinalBossLevel())

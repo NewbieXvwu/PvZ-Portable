@@ -33,16 +33,17 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "python"))
 
 from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
-from pvz_value_net import ValueNet, context_vector, featurize, potential_phi  # noqa: E402
+from pvz_value_net import ValueNet, context_vector, encode_frame, potential_phi  # noqa: E402
 from train_rollout_policy import CompactBoards  # noqa: E402
 
 SHOOTER_TYPES = {0, 5, 7, 40}
 FRAME_STRIDE = 3
 CONTEXT = False           # --context: append each game's multiplier + zombie roster (meta.json "context")
+ENCODER_VERSION = 1
 
 
 def _features(frame: dict, game_context) -> tuple[torch.Tensor, torch.Tensor]:
-    b, s = featurize(frame)
+    b, s = encode_frame(frame, ENCODER_VERSION)
     if game_context is not None:
         s = torch.cat([s, torch.from_numpy(game_context)])
     return b, s
@@ -156,7 +157,7 @@ def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: 
     stop_mask = np.array([g in train_games and seeds_of_game[g] in stop_seeds for g in game_of])
     fit_idx, stop_idx = np.nonzero(fit_mask)[0], np.nonzero(stop_mask)[0]
 
-    model = ValueNet(context=CONTEXT).to(device)
+    model = ValueNet(context=CONTEXT, encoder_version=ENCODER_VERSION).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     best, best_state, patience = float("inf"), None, 0
 
@@ -229,13 +230,14 @@ def per_wave_report(games, rows, scores_by_name: dict[str, np.ndarray], boot: in
 
 
 def main() -> None:
-    global FRAME_STRIDE, CONTEXT
+    global FRAME_STRIDE, CONTEXT, ENCODER_VERSION
     # task34: train after collection, but before the controller and the WSL access path.
     set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--data", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--folds", type=int, default=4)
+    p.add_argument("--encoder-version", type=int, choices=(1, 2, 3), default=1)
     p.add_argument("--epochs", type=int, default=30)
     p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     p.add_argument("--bootstrap", type=int, default=1000)
@@ -250,6 +252,7 @@ def main() -> None:
     metrics.update(step=0, rows=0)
     FRAME_STRIDE = args.frame_stride
     CONTEXT = args.context
+    ENCODER_VERSION = args.encoder_version
     started = time.time()
 
     games, train = load_games(args.data)
@@ -284,7 +287,7 @@ def main() -> None:
     # Final model on every seed, for later use by search.
     final = train_model(t, set(range(len(games))), args.device, args.epochs, seed=99, metrics=metrics)
     args.out.mkdir(parents=True, exist_ok=True)
-    torch.save({"state_dict": final.state_dict(), "encoder": "pvz_value_net.featurize v1", "context": CONTEXT,
+    torch.save({"state_dict": final.state_dict(), "encoder": f"pvz_value_net.featurize v{ENCODER_VERSION}", "context": CONTEXT,
                 "trained_on": sorted({g["seed"] for g in games}), "games": len(games)},
                args.out / "model.pt")
     oof_rows = [{"seed": games[g]["seed"], "checkpoint": games[g]["checkpoint"], "won": games[g]["won"],

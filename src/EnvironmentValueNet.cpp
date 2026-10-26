@@ -1,4 +1,5 @@
 #include "EnvironmentValueNet.h"
+#include "EnvironmentRollout.h"
 #include "LawnApp.h"
 #include "Lawn/Board.h"
 #include "Lawn/Plant.h"
@@ -30,10 +31,10 @@ void EnvironmentValueNet::Load(const std::string& path)
 	input.read(reinterpret_cast<char*>(&version), 4);
 	input.read(reinterpret_cast<char*>(&contextSize), 4);
 	if (!input || std::string(magic, 8) != "PVZVN001" || std::endian::native != std::endian::little ||
-		size < 1 || size > 512 || (version != 1 && version != 2) || (contextSize != 0 && contextSize != TaskContext))
+		size < 1 || size > 512 || (version < 1 || version > 3) || (contextSize != 0 && contextSize != TaskContext))
 		throw std::runtime_error("invalid value network header");
-	const size_t w = size, s = Scalars + (version == 2 ? 6 : 0) + contextSize;
-	const std::vector<size_t> counts = {w * Channels * 9, w, w * w * 9, w, w * w * 3, w,
+	const size_t w = size, s = Scalars + (version >= 2 ? 6 : 0) + contextSize;
+	const std::vector<size_t> counts = {w * (Channels + (version == 3 ? 6 : 0)) * 9, w, w * w * 9, w, w * w * 3, w,
 		w * s, w, w * w * 8, w, w, 1};
 	std::vector<std::vector<float>> loaded;
 	for (size_t count : counts)
@@ -56,7 +57,8 @@ void EnvironmentValueNet::Load(const std::string& path)
 void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<float>& b, std::vector<float>& s) const
 {
 	Board* state = app->mBoard;
-	b.assign(Channels * Cells, 0.0f); s.assign(ScalarCount(), 0.0f);
+	b.assign(ChannelCount() * Cells, 0.0f); s.assign(ScalarCount(), 0.0f);
+	if (encoder == 3) EnvironmentRollout::BungeeFeatures(app, b.data() + Channels * Cells);
 	// numpy's cell += scalar casts each term to float32 first, then accumulates in float32;
 	// rounding the term before the add is what reproduces that bit-exactly.
 	for (const Plant* plant : state->mPlants)
@@ -99,15 +101,15 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 	{
 		const SeedPacket& p = state->mSeedBank->mSeedPackets[index];
 		const int kind = std::min(static_cast<int>(p.mPacketType), 53);
-		if (encoder == 2 && kind < 0) continue;
+		if (encoder >= 2 && kind < 0) continue;
 		const int cost = p.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(p.mPacketType, p.mImitaterType);
-		const float ready = p.mActive && ((encoder == 2 && conveyor) || state->mSunMoney >= cost);
+		const float ready = p.mActive && ((encoder >= 2 && conveyor) || state->mSunMoney >= cost);
 		const float progress = std::min(1.0, p.mActive || !p.mRefreshTime ? 1.0 : static_cast<double>(p.mRefreshCounter) / p.mRefreshTime);
 		// Encoding 1 deliberately preserves the historical empty-slot scalar alias.
-		s[5 + kind] = encoder == 2 ? std::max(s[5 + kind], ready) : ready;
-		s[59 + kind] = encoder == 2 ? std::max(s[59 + kind], progress) : progress;
+		s[5 + kind] = encoder >= 2 ? std::max(s[5 + kind], ready) : ready;
+		s[59 + kind] = encoder >= 2 ? std::max(s[59 + kind], progress) : progress;
 	}
-	if (encoder == 2)
+	if (encoder >= 2)
 	{
 		s[113] = state->StageIsNight(); s[114] = state->StageHasPool();
 		s[115] = state->StageHasFog(); s[116] = state->StageHasRoof(); s[117] = conveyor;
@@ -117,7 +119,7 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 	}
 	if (context)
 	{
-		const int start = Scalars + (encoder == 2 ? 6 : 0);
+		const int start = Scalars + (encoder >= 2 ? 6 : 0);
 		s[start] = app->mEnvironmentTaskSpec.zombieCountMultiplier / 3.0;
 		for (int type = 0; type < NUM_ZOMBIE_TYPES && type < 100; ++type)
 			if (state->mZombieAllowed[type]) s[start + 1 + std::min(type, 33)] = 1.0f;
@@ -165,9 +167,9 @@ void EnvironmentValueNet::Convolve(const std::vector<float>& input, int channels
 float EnvironmentValueNet::Logit(const std::vector<float>& b, const std::vector<float>& s)
 {
 	const auto started = std::chrono::steady_clock::now();
-	if (!Loaded() || b.size() != Channels * Cells || s.size() != static_cast<size_t>(ScalarCount()))
+	if (!Loaded() || b.size() != ChannelCount() * Cells || s.size() != static_cast<size_t>(ScalarCount()))
 		throw std::runtime_error("invalid value network input");
-	Convolve(b, Channels, 3, 0, first); Convolve(first, width, 3, 2, second); Convolve(second, width, 1, 4, first);
+	Convolve(b, ChannelCount(), 3, 0, first); Convolve(first, width, 3, 2, second); Convolve(second, width, 1, 4, first);
 	for (int ch = 0; ch < width; ++ch)
 	{
 		float sum = 0;
