@@ -1052,6 +1052,35 @@ class StartSeedRenewalTest(unittest.TestCase):
             self.assertEqual(plan[0]['future_seeds'],
                              list(range(START_SEED_POOL[0] + 44, START_SEED_POOL[0] + 54)))
 
+    def test_twelve_rounds_of_renewals_survive_restarts(self):
+        # 长跑：每轮 48 局、每轮都重启一次；种子表要按需长到第三段，且全程不退休、不重采。
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            state = dict(round=0, offsets={}, cells={self.BASE: self.cell()})
+            used = []
+            for round_index in range(12):
+                state['round'] = round_index
+                plan, _ = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                     budget=48, per_group=48, start_seed_ledger=ledger)
+                self.assertEqual(len(plan), 1, round_index)
+                item = plan[0]
+                self.assertEqual(len(item['future_seeds']), item['games'])
+                used.extend(item['future_seeds'])
+                state['offsets'][self.BASE] = item['offset'] + item['games']
+                state['cells'][self.BASE]['last_round'] = round_index + 1   # run_round 的落盘
+                state = json.loads(json.dumps(state))            # 落盘
+                reconcile_start_cells(state, {self.BASE: self.spec()})   # 重启
+            cell = state['cells'][self.BASE]
+            self.assertNotIn(self.BASE, state.get('retired_cells', {}))
+            self.assertEqual(len(cell['seed_blocks']), 3)        # 256 + 256 + 256 ≥ 576
+            self.assertEqual(cell['seeds'], [seed for low, high in cell['seed_blocks']
+                                             for seed in range(low, high)])
+            self.assertEqual(json.loads(ledger.read_text())['allocated'], cell['seed_blocks'][1:])
+            self.assertEqual(state['offsets'][self.BASE], len(used))
+            self.assertEqual(len(set(used)), len(used))           # 一个种子都没重复
+            self.assertGreater(len(used), 512)                    # 确实用到了第三段
+            self.assertLessEqual(len(used), len(cell['seeds']))
+
     def test_spec_block_change_resets_the_table(self):
         state = dict(round=0, offsets={}, cells={self.BASE: self.cell()})
         with tempfile.TemporaryDirectory() as tmp:

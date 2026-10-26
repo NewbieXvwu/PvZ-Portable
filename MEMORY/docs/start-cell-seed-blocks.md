@@ -41,11 +41,11 @@
 ## 证据
 
 - 测试（`/home/newbiexvwu/.venvs/ml/bin/python3`）：
-  `python/test_curriculum_queue.py` **66 passed, 1 skipped**（新增 11 项：续领后排 48 局且偏移不变、
+  `python/test_curriculum_queue.py` **67 passed, 1 skipped**（新增 12 项：续领后排 48 局且偏移不变、
   两段有序不相交、两格续领拿到的块也不相交、池在全部已登记段之外、重启保留多段表、
   清单换块才重置、退休格恢复后续领、恢复时重叠告警、legacy 恢复不被二次退休、池耗尽退休、
-  清单块落进续领池时启动即拒绝）；
-  八个相关测试文件合计 **126 passed, 2 skipped**。
+  清单块落进续领池时启动即拒绝、12 轮续领 + 每轮重启的长跑（576 个种子零重复、长到第三段））；
+  八个相关测试文件合计 **127 passed, 2 skipped**。
 - 池不相交（full scan，274,472 个 JSON/JSONL + 全部声明段）：`MEMORY/docs/gate-seed-inventory.json`
   的 `candidate` = `{low: 200000000, high: 201000000, overlaps: [[200000000, 201000000]],
   self_registered: true}` —— 唯一的“重叠”是池自己（它已作为占用段登记）；再跑
