@@ -16,8 +16,8 @@ from pvz_promotion import summarize, _wilson
 from pvz_tasks import deck_for_seed
 
 
-def load_games(path, seeds, arm, decks, *, legacy_decks=None):
-    """Never silently intersect seeds, collapse duplicate rows, or mix arms."""
+def load_games(path, seeds, arm, decks, *, legacy_decks=None, require_complete=True):
+    """Strict comparisons by default; explicit queue probes may inspect valid partial rows."""
     rows = {}
     for line in Path(path).read_text().splitlines():
         if not line.strip():
@@ -38,7 +38,7 @@ def load_games(path, seeds, arm, decks, *, legacy_decks=None):
         if seed not in decks or deck != list(decks[seed]):
             raise ValueError(f'{path}: unexpected seed/deck: {seed}')
         rows[seed] = row
-    if set(rows) != set(seeds):
+    if require_complete and set(rows) != set(seeds):
         raise ValueError(f'{path}: incomplete seed set; missing={sorted(set(seeds)-set(rows))}')
     return rows
 
