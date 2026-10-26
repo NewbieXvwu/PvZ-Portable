@@ -769,7 +769,8 @@ def _play(job: dict, observer=None) -> dict:
             if demo_sha is None:
                 demo_sha = _W['demo_sha'] = _archive_sha256(frame_path(Path(demo_archive)))
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
-        if (demo_archive or 'deck_perturb' in task_definition or task_definition.get('conveyor_start') == 'original'
+        if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
+                or task_definition.get('conveyor_start') == 'original'
                 or task_definition.get('fog_observation')):
             import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
@@ -791,6 +792,7 @@ def _play(job: dict, observer=None) -> dict:
             "context": task_context,
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
+            **({'deck': list(kw['deck'])} if 'deck_random' in task_definition else {}),
             **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
                 'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
