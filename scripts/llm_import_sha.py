@@ -116,10 +116,16 @@ def run_sha(input_path, dest, manifest, layers_path, resources, executable,
                 receipt_path = dest / 'receipts' / f'{sha}.json'
                 receipt = json.loads(receipt_path.read_text()) if receipt_path.exists() else None
                 if not target.exists():
-                    target.mkdir(parents=True)
-                    for name in FILES:
-                        if (archive / name).is_file():
-                            shutil.copyfile(archive / name, target / name)
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    with tempfile.TemporaryDirectory(prefix='.staging_', dir=target.parent) as copy_directory:
+                        staged = Path(copy_directory) / 'archive'
+                        staged.mkdir()
+                        for name in FILES:
+                            if (archive / name).is_file():
+                                shutil.copyfile(archive / name, staged / name)
+                        if archive_sha(staged) != sha:
+                            raise ValueError(f'存档复制SHA不符：{archive}')
+                        staged.rename(target)
                 if archive_sha(target) != sha:
                     raise ValueError(f'库内存档SHA不符：{target}')
                 problems = legacy.archive_problems(meta, archive)
