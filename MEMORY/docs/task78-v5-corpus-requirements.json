@@ -161,5 +161,64 @@
   ]
  },
  "training_started": false,
- "original_corpus_received": false
+ "original_corpus_received": false,
+ "search_evidence": {
+  "at_utc": "2026-10-26T23:19:37.061594+00:00",
+  "scope": "exhaustive, not a fixed-path probe",
+  "huggingface": {
+   "repo": "realnewbiexvwu/pvz-agent-artifacts",
+   "repo_type": "model",
+   "branches": 72,
+   "tags": 0,
+   "unique_paths_enumerated": 114688,
+   "keywords": [
+    "z13",
+    "z15",
+    "sparse64",
+    "full_audit_manifest",
+    "branch3",
+    "hard/branch",
+    "task43",
+    "task30",
+    "value_net/v5"
+   ],
+   "hits": 0,
+   "other_repos": "the account exposes no dataset repo and no other model repo"
+  },
+  "local": {
+   "roots": [
+    "/home",
+    "/mnt"
+   ],
+   "names": [
+    "z13_384.pt",
+    "z15d_shards",
+    "sparse64",
+    "full_audit_manifest.json"
+   ],
+   "hits": 0,
+   "git_history_references": 0
+  },
+  "conclusion": "the 442,601-row original corpus is absent from every accessible location; this is not a wrong-path problem"
+ },
+ "task72b_probe_requirements": {
+  "why": "the 94-state ranking and horizon-stability gates need v6 leaf values on the probe states",
+  "already_have": {
+   "identity_binding": "94/94 unique (scripts/task78_task72_bind2.py, bindings_v2.json)",
+   "trajectories": "24 Mac-branch1 reconstructions, all terminal, signatures sealed",
+   "v5_values": "recorded per candidate per horizon in MEMORY/docs/task72b-probe-rows.jsonl",
+   "truth": "recorded per candidate (8 futures); 0 candidate pairs reach the 0.25 gap rule"
+  },
+  "missing": [
+   "the original probe script (it lived in /tmp/task72b and was deleted) or its exact source revision and arguments",
+   "the future seeds / noise schedule behind the 8 recorded wins per state",
+   "the 3 sample futures averaged into each recorded value",
+   "confirmation of how the 2500/4000/6000 horizons are offset from the decision tick"
+  ],
+  "why_not_improvised": [
+   "scoring a decision-point frame directly fails: the value net needs the leaf context vector (observed 119 inputs vs 154 expected weights)",
+   "candidate leaves must be produced by rolling the candidate action out to each horizon; the reconstruction only replayed the action the teacher actually chose",
+   "without the original futures the direction sign can flip, so a re-simulation with new futures would not answer the preregistered question"
+  ]
+ }
 }
