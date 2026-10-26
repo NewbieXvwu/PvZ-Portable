@@ -127,6 +127,7 @@ L31 `_hv2` 首组实际在 08:39:35–08:43:19 完成 24/24；L32 首组在 08:4
 5. **`day_l9_train_d7` 的 offset=3584 不是越界。** 它的 1.0 档来自 `artifacts/stage4/day_panel.json`，该任务有 8192 个种子，余 4608。这里特意写出来是因为按“面板变体 2048”去套会算出 −1536 的假越界；容量必须按当前档实际所属清单取（base 任务 8192 / 变体 2048 / 示范 256）。
 6. **11 个 active 格已经 3 轮没被排过**（last_round ≤ 17）：`day_l7_train_d7`、`day_l9_train_d7`、`day_l3_train_d7`、`day_l10_orig_train`、`night_l13_train_n10`、`night_l17_train_n10`、`night_l18_train_n10`、`day_l9_train_d7q`、`night_l11_train_n10q`、`night_l13_train_n10q`、`night_l16_train_n10q`。每轮 768 局摊 55 格，必然有格轮空，这不必然是 bug；但如果它们里有本该优先的格，说明 `allocate` 的排序把它们压得太死（其中 9 个正是上文“无 base 也无 level 底数”的格，默认 1.0 参与排名）。
 7. **55 个 active 格的 `mult_index` 刷新后仍全部落在合法区间**（示范格对 `len(ladder)`、普通格对 7 档）；本快照没有新的越界。
+
 ## 证据指纹与复核位置
 
 生产日志/模型/npz均未加入git。快照关键文件SHA256：
