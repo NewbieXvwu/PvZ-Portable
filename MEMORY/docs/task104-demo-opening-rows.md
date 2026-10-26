@@ -97,6 +97,13 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 台式机 18:19 恢复连接。先按主控要求核对遗留扫描：`gate_seed_inventory.py` 已无进程；GPU 上 deckvar 的 task93 expand 训练仍在跑（7.0 GB / 37%），等到 18:23 它结束、显存回到 4.5 GB / 0% 才开训，没有与 qc 或别人的训练抢卡。
 
 `tmux t104` 跑 `~/pvz-logs/t104_train.sh`，四个配方顺序训练。a_s1 已载入 **16,982,931 条决策 / 55,773 个种子 / 1,704,229 条验证行**，与 A 索引 `7d15b915a2192805` 的行数逐位相同；`data_memory` 报 board 5.56 GB、scalar 1.85 GB、packet 1.19 GB。训练前数据层测试在台式机通过（`HumanDemoExportTest` + `test_recipe` 共 10 项）。
+### 训练受阻于内存：换页抖动，改为内存准入（2026-10-26 18:42）
+
+18:23 启动的 a_s1 在 18:41 被停掉：`metrics` 显示 **0.07 step/s、135 行/s**，按这个速度一个 epoch 要 35 小时（r11 当年 200 秒一个 epoch）。同时 `read_bytes` 累计到 562 GB，而 `rchar` 只有 14.7 GB——进程 RSS 3.4 GB 却被换出，说明 9.5 GB 的训练数据在 swap 里来回换页，不是算得慢。
+
+现场内存账（18:41）：`search_play` 7.1 GB + `pvz-portable` 6.5 GB（qc 采集 16 个 worker）= 13.6 GB，别人的 `task96_full_pack.py` 3.5 GB，node 2.7 GB，我的训练 3.2 GB，25 GB 机器 + 8 GB swap 全满。r11 当年训练时机器上没有 `task96_full_pack` 这类额外作业，所以同一配方能 200 秒一个 epoch。这不是配方问题，也不该靠调小 batch 掩盖（那会破坏与 r11 的可比性）。
+
+处置：`~/pvz-logs/t104_train.sh` 改成**内存准入**版——`MemAvailable ≥ 11 GB` 连续 3 次采样才开训，训练中若可用内存连续 4 分钟低于 4 GB 就中止该次并重新等窗口（每次都会写 `ABORTED` 进对应 log）。这样只在自然空档里跑，不去 kill qc 的采集进程、也不改任何生产配置。tmux 会话 `t104` 已在 18:42 起来，当前 avail 8 GB，处于等待。
 ### 开训与评估的运行清单（台式机，连接恢复后按序执行）
 
 全部路径写绝对路径，工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows`（分支 demorows）。
