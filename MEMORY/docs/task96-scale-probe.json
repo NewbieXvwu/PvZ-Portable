@@ -1,0 +1,976 @@
+{
+ "task": 96,
+ "scope": "30 segments / 1046710 real rows, seed1, epoch1, batch2048; same frozen trainer as the historical runs. Not the full index and not a production cost measurement.",
+ "plan": {
+  "schema": 1,
+  "task": 96,
+  "source_plan": "artifacts/task96/full_pack/plan.json",
+  "source_plan_sha256": "82ca2b6de34d0e40bc3ac3bc69cf649008edcab6a2c9ce81e35d0e1fc94f6b52",
+  "source_index": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/frames/packs/7d15b915a2192805.npz",
+  "source_index_sha256": "1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb",
+  "selection": "first 30 segments by path, identical for every case",
+  "rows": 1046710,
+  "cases": [
+   [
+    "strict_a",
+    true,
+    true,
+    false
+   ],
+   [
+    "strict_b",
+    true,
+    true,
+    false
+   ],
+   [
+    "default_c",
+    false,
+    false,
+    false
+   ],
+   [
+    "default_squeeze_d",
+    false,
+    false,
+    true
+   ],
+   [
+    "strict_squeeze_e",
+    true,
+    true,
+    true
+   ]
+  ],
+  "squeeze_bytes": 4294967296,
+  "purpose": "Mid-scale determinism and free-memory sensitivity control; not a rerun of the full-index experiment and not a production cost measurement."
+ },
+ "cases": [
+  {
+   "task": 96,
+   "case": "strict_a",
+   "strict": true,
+   "pinned_workspace": true,
+   "squeeze": false,
+   "workspace": ":4096:8",
+   "plan_sha256": "30cc3d1984c4c2eeed599feeaf66abbef28c1bb04e5177ac4e742a4a9d1a13ab",
+   "admission": {
+    "peers": [
+     {
+      "pid": 943041,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 10656849920,
+     "gpu_free_mib": 9229,
+     "gpu_used_mib": 7074,
+     "gpu_utilization_percent": 31
+    },
+    "admitted": true
+   },
+   "started": 1793009661.6175094,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 9229,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9026719744,
+     "gpu_free_mib": 8147,
+     "gpu_used_mib": 8156,
+     "gpu_utilization_percent": 0
+    },
+    {
+     "step": 67,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 8760524800,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 22
+    },
+    {
+     "step": 206,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9642905600,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 25
+    },
+    {
+     "step": 349,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9312059392,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 24
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "bb024bdbc49baff4c8133982f13a42671b79ad5346d41a009a9693701714c3b9",
+   "tensor_sha256": "78cfef54734572ec67ff05d7ea8923b99b04e791a534819a41a30ea18734d399",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.386195094296365,
+      "val_loss": 4.782072849631087,
+      "type_acc": 0.8756294414720536,
+      "plant_recall": 0.5549240610039532,
+      "packet_acc": 0.6783295851296792,
+      "cell_acc": 0.2771650970576825,
+      "seconds": 27.661266379989684
+     }
+    ],
+    "seconds": 34.93408823013306,
+    "load_seconds": 3.9637675285339355,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 35.169052682002075,
+   "finished": 1793009697.8293414,
+   "final_resources": {
+    "mem_available_bytes": 8977027072,
+    "gpu_free_mib": 6764,
+    "gpu_used_mib": 9539,
+    "gpu_utilization_percent": 0
+   },
+   "losses_sha256": "09a4dd885f8f90f5fb273ecf4b92f3b9fc5eaf584bcc1aad0bd0c1300f421415",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.658308029174805,
+    7.396268844604492
+   ],
+   "last_losses": [
+    4.894651412963867,
+    4.777276039123535,
+    4.91843318939209,
+    5.033071041107178,
+    4.741128921508789
+   ]
+  },
+  {
+   "task": 96,
+   "case": "strict_b",
+   "strict": true,
+   "pinned_workspace": true,
+   "squeeze": false,
+   "workspace": ":4096:8",
+   "plan_sha256": "30cc3d1984c4c2eeed599feeaf66abbef28c1bb04e5177ac4e742a4a9d1a13ab",
+   "admission": {
+    "peers": [
+     {
+      "pid": 943041,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 10783506432,
+     "gpu_free_mib": 9266,
+     "gpu_used_mib": 7037,
+     "gpu_utilization_percent": 0
+    },
+    "admitted": true
+   },
+   "started": 1793009704.6533494,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 9229,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9492860928,
+     "gpu_free_mib": 8147,
+     "gpu_used_mib": 8156,
+     "gpu_utilization_percent": 3
+    },
+    {
+     "step": 28,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9479528448,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 32
+    },
+    {
+     "step": 163,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9621118976,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 12
+    },
+    {
+     "step": 311,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9649709056,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 17
+    },
+    {
+     "step": 438,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 10417700864,
+     "gpu_free_mib": 7649,
+     "gpu_used_mib": 8654,
+     "gpu_utilization_percent": 17
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "188bf851a58d9189793e0c5608ead7f1eee061ec4c2c5599d386e770eb2f1654",
+   "tensor_sha256": "78cfef54734572ec67ff05d7ea8923b99b04e791a534819a41a30ea18734d399",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.386195094296365,
+      "val_loss": 4.782072849631087,
+      "type_acc": 0.8756294414720536,
+      "plant_recall": 0.5549240610039532,
+      "packet_acc": 0.6783295851296792,
+      "cell_acc": 0.2771650970576825,
+      "seconds": 28.601244273944758
+     }
+    ],
+    "seconds": 35.01965379714966,
+    "load_seconds": 3.5381486415863037,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 35.35397841304075,
+   "finished": 1793009740.480824,
+   "final_resources": {
+    "mem_available_bytes": 10433548288,
+    "gpu_free_mib": 6727,
+    "gpu_used_mib": 9576,
+    "gpu_utilization_percent": 3
+   },
+   "losses_sha256": "09a4dd885f8f90f5fb273ecf4b92f3b9fc5eaf584bcc1aad0bd0c1300f421415",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.658308029174805,
+    7.396268844604492
+   ],
+   "last_losses": [
+    4.894651412963867,
+    4.777276039123535,
+    4.91843318939209,
+    5.033071041107178,
+    4.741128921508789
+   ]
+  },
+  {
+   "task": 96,
+   "case": "default_c",
+   "strict": false,
+   "pinned_workspace": false,
+   "squeeze": false,
+   "workspace": null,
+   "plan_sha256": "30cc3d1984c4c2eeed599feeaf66abbef28c1bb04e5177ac4e742a4a9d1a13ab",
+   "admission": {
+    "peers": [
+     {
+      "pid": 943041,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 12222640128,
+     "gpu_free_mib": 9229,
+     "gpu_used_mib": 7074,
+     "gpu_utilization_percent": 0
+    },
+    "admitted": true
+   },
+   "started": 1793009746.8678637,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 9229,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9853853696,
+     "gpu_free_mib": 8117,
+     "gpu_used_mib": 8186,
+     "gpu_utilization_percent": 0
+    },
+    {
+     "step": 96,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9489829888,
+     "gpu_free_mib": 7587,
+     "gpu_used_mib": 8716,
+     "gpu_utilization_percent": 10
+    },
+    {
+     "step": 254,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9207361536,
+     "gpu_free_mib": 7587,
+     "gpu_used_mib": 8716,
+     "gpu_utilization_percent": 24
+    },
+    {
+     "step": 393,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9465671680,
+     "gpu_free_mib": 7587,
+     "gpu_used_mib": 8716,
+     "gpu_utilization_percent": 21
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "85166bb210e626afa8f5d69b6617a29a942b54f116bf4e97fc76199217fd8d25",
+   "tensor_sha256": "1cf71d20337b69840c3c45028ddc1fb0c712ef68a018fcf6bffea2623c497d34",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.344855055576516,
+      "val_loss": 4.708879234270016,
+      "type_acc": 0.879731121331516,
+      "plant_recall": 0.5556894197288508,
+      "packet_acc": 0.6741592713390083,
+      "cell_acc": 0.2945339819033048,
+      "seconds": 22.03368222498102
+     }
+    ],
+    "seconds": 29.432722091674805,
+    "load_seconds": 3.9475173950195312,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 29.638353768037632,
+   "finished": 1793009776.9125922,
+   "final_resources": {
+    "mem_available_bytes": 9143566336,
+    "gpu_free_mib": 6665,
+    "gpu_used_mib": 9638,
+    "gpu_utilization_percent": 14
+   },
+   "losses_sha256": "e9f4523a06f39080b9e1074e98b2ec11ecb4f7768582db412d9156c6ea40e3f2",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.6583099365234375,
+    7.3962531089782715
+   ],
+   "last_losses": [
+    4.920342445373535,
+    4.759893417358398,
+    4.841919898986816,
+    4.988337516784668,
+    4.5864105224609375
+   ]
+  },
+  {
+   "task": 96,
+   "case": "default_squeeze_d",
+   "strict": false,
+   "pinned_workspace": false,
+   "squeeze": true,
+   "workspace": null,
+   "plan_sha256": "30cc3d1984c4c2eeed599feeaf66abbef28c1bb04e5177ac4e742a4a9d1a13ab",
+   "admission": {
+    "peers": [
+     {
+      "pid": 943041,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 10925293568,
+     "gpu_free_mib": 9229,
+     "gpu_used_mib": 7074,
+     "gpu_utilization_percent": 0
+    },
+    "admitted": true
+   },
+   "started": 1793009782.9728546,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 4871,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9435156480,
+     "gpu_free_mib": 4021,
+     "gpu_used_mib": 12282,
+     "gpu_utilization_percent": 1
+    },
+    {
+     "step": 116,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9674899456,
+     "gpu_free_mib": 3491,
+     "gpu_used_mib": 12812,
+     "gpu_utilization_percent": 25
+    },
+    {
+     "step": 271,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9457913856,
+     "gpu_free_mib": 3491,
+     "gpu_used_mib": 12812,
+     "gpu_utilization_percent": 23
+    },
+    {
+     "step": 409,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9285718016,
+     "gpu_free_mib": 3491,
+     "gpu_used_mib": 12812,
+     "gpu_utilization_percent": 29
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "85dab6f65c44e6a447172646759007137ac191a05e62570dba3cef25b1ac153e",
+   "tensor_sha256": "05b226f286282af4bf95614936b6ad1b50173726399216a50bbe9ab1916ac732",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.323521371085312,
+      "val_loss": 4.668976047456388,
+      "type_acc": 0.8764878480924285,
+      "plant_recall": 0.5473964372483902,
+      "packet_acc": 0.6809435355170764,
+      "cell_acc": 0.2893787734057365,
+      "seconds": 19.685830504982732
+     }
+    ],
+    "seconds": 26.261571645736694,
+    "load_seconds": 3.6936819553375244,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 26.471077516966034,
+   "finished": 1793009809.4550123,
+   "final_resources": {
+    "mem_available_bytes": 9349144576,
+    "gpu_free_mib": 2569,
+    "gpu_used_mib": 13734,
+    "gpu_utilization_percent": 0
+   },
+   "losses_sha256": "d5ad30e21417bd43e3a5d261dfbe4128a34c0ec5818c81a7882aa14363a8542a",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.658308982849121,
+    7.396270275115967
+   ],
+   "last_losses": [
+    4.842917442321777,
+    4.6013689041137695,
+    4.847332000732422,
+    4.967052936553955,
+    4.539453506469727
+   ]
+  },
+  {
+   "task": 96,
+   "case": "strict_squeeze_e",
+   "strict": true,
+   "pinned_workspace": true,
+   "squeeze": true,
+   "workspace": ":4096:8",
+   "plan_sha256": "30cc3d1984c4c2eeed599feeaf66abbef28c1bb04e5177ac4e742a4a9d1a13ab",
+   "admission": {
+    "peers": [
+     {
+      "pid": 943041,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 11113771008,
+     "gpu_free_mib": 9229,
+     "gpu_used_mib": 7074,
+     "gpu_utilization_percent": 0
+    },
+    "admitted": true
+   },
+   "started": 1793009816.3272002,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 4807,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9565388800,
+     "gpu_free_mib": 4051,
+     "gpu_used_mib": 12252,
+     "gpu_utilization_percent": 5
+    },
+    {
+     "step": 132,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9324724224,
+     "gpu_free_mib": 3553,
+     "gpu_used_mib": 12750,
+     "gpu_utilization_percent": 34
+    },
+    {
+     "step": 274,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9323749376,
+     "gpu_free_mib": 3553,
+     "gpu_used_mib": 12750,
+     "gpu_utilization_percent": 34
+    },
+    {
+     "step": 427,
+     "peers": [
+      {
+       "pid": 943041,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/recipe.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9302695936,
+     "gpu_free_mib": 3553,
+     "gpu_used_mib": 12750,
+     "gpu_utilization_percent": 7
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "3689bfa5f9c7648a23829783da4f7f5b4708eb973653b2221b434b2a84142151",
+   "tensor_sha256": "78cfef54734572ec67ff05d7ea8923b99b04e791a534819a41a30ea18734d399",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.386195094296365,
+      "val_loss": 4.782072849631087,
+      "type_acc": 0.8756294414720536,
+      "plant_recall": 0.5549240610039532,
+      "packet_acc": 0.6783295851296792,
+      "cell_acc": 0.2771650970576825,
+      "seconds": 19.12261048197979
+     }
+    ],
+    "seconds": 24.612114667892456,
+    "load_seconds": 2.9444127082824707,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 24.891482244012877,
+   "finished": 1793009841.2291157,
+   "final_resources": {
+    "mem_available_bytes": 9253822464,
+    "gpu_free_mib": 2631,
+    "gpu_used_mib": 13672,
+    "gpu_utilization_percent": 0
+   },
+   "losses_sha256": "09a4dd885f8f90f5fb273ecf4b92f3b9fc5eaf584bcc1aad0bd0c1300f421415",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.658308029174805,
+    7.396268844604492
+   ],
+   "last_losses": [
+    4.894651412963867,
+    4.777276039123535,
+    4.91843318939209,
+    5.033071041107178,
+    4.741128921508789
+   ]
+  }
+ ],
+ "same_config_repeats_bitwise": true,
+ "initial_tensors_equal": true,
+ "permutations_equal": true,
+ "pinned_survives_memory_pressure": true,
+ "unpinned_changes_with_memory_pressure": true,
+ "val_loss": {
+  "strict_a": 4.782072849631087,
+  "strict_b": 4.782072849631087,
+  "default_c": 4.708879234270016,
+  "default_squeeze_d": 4.668976047456388,
+  "strict_squeeze_e": 4.782072849631087
+ },
+ "train_loss": {
+  "strict_a": 5.386195094296365,
+  "strict_b": 5.386195094296365,
+  "default_c": 5.344855055576516,
+  "default_squeeze_d": 5.323521371085312,
+  "strict_squeeze_e": 5.386195094296365
+ },
+ "epoch_seconds": {
+  "strict_a": 27.661266379989684,
+  "strict_b": 28.601244273944758,
+  "default_c": 22.03368222498102,
+  "default_squeeze_d": 19.685830504982732,
+  "strict_squeeze_e": 19.12261048197979
+ },
+ "gpu_free_mib": {
+  "strict_a": 9229,
+  "strict_b": 9229,
+  "default_c": 9229,
+  "default_squeeze_d": 4871,
+  "strict_squeeze_e": 4807
+ }
+}
