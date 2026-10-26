@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T16:05:08.199391+00:00",
+ "at_utc": "2026-10-26T17:54:25.374699+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 121,
+  "completed_label_jobs": 144,
   "replay_completed_k": [
    0
   ],
@@ -436,7 +436,7 @@
    1,
    2
   ],
-  "active_common_future_index": 1,
+  "active_common_future_index": 2,
   "completed_common_future_exports": {
    "k0": {
     "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k0/export.json",
@@ -471,6 +471,41 @@
      }
     },
     "normal_export_attempt": 0,
+    "extra_audit_performed": false,
+    "scored": false
+   },
+   "k1": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k1/export.json",
+    "sha256": "7a252df211e4192087359ccc341bdadc1cd461c3d54c8de542bf83bb8ef5f27c",
+    "complete": true,
+    "training_eligible": false,
+    "total": {
+     "shards": 72,
+     "rows": 672,
+     "wins": 297,
+     "terminal_dropped": 3,
+     "skipped": 0
+    },
+    "by_group": {
+     "roof_l41": {
+      "rows": 222,
+      "wins": 201,
+      "archives": 8,
+      "stop_archives": 2
+     },
+     "roof_l42": {
+      "rows": 225,
+      "wins": 59,
+      "archives": 8,
+      "stop_archives": 0
+     },
+     "roof_l43": {
+      "rows": 225,
+      "wins": 37,
+      "archives": 8,
+      "stop_archives": 0
+     }
+    },
     "extra_audit_performed": false,
     "scored": false
    }
@@ -579,11 +614,11 @@
    }
   },
   "collection_progress": {
-   "at_utc": "2026-10-26T16:05:08.199391+00:00",
-   "completed_label_jobs": 121,
+   "at_utc": "2026-10-26T17:54:25.374699+00:00",
+   "completed_label_jobs": 144,
    "by_future": {
     "k0": 72,
-    "k1": 49,
+    "k1": 72,
     "k2": 0
    },
    "completion_markers_by_level": {
@@ -595,11 +630,11 @@
     "k1": {
      "41": 24,
      "42": 24,
-     "43": 1
+     "43": 24
     },
     "k2": {}
    },
-   "scope": "normal complete.json markers only; k1 export and full downstream label audit pending",
+   "scope": "normal complete.json markers; k0 and k1 normal exports complete; full three-future downstream scoring pending",
    "controller_pid": 991266,
    "controller_process_start_ticks": "29124877",
    "games": 2,
