@@ -3,9 +3,9 @@
 > 2026-10-26。入口 `scripts/takeover_scan.py`（run / adaptive / register），测试
 > `python/test_takeover_scan.py`。任务书：[task91-takeover-scan-runner.md](task91-takeover-scan-runner.md)。
 >
-> 当前状态：工具、LLM同块回测和两份端到端已验证；**首轮人类回测L46/L48通过，L49发现单点漏探导致档差2，已修复并用缓存重建v2轨迹**。
-> v1生产监督器因回测失败正确停止；v2补完L49新L50的学生臂后，三份严格同块比较全部通过才接12份生产adaptive与register。
-> 修复复核状态见ignored的`artifacts/task91/audit/guard_v2_status.json`，生产阶段见`continuation_status.json`；部分结果不代表验收完成。
+> 当前状态：工具、两份端到端及**v2全部六份同块回测通过**：人类L46/L48/L49与LLM L46三份档差均0，每份88局。
+> 首轮L49漏档已修复且失败证据保留；v2真实CLI复核通过后已自动接上12份生产adaptive，尚待扫描/登记/测试全部完成。
+> 生产阶段见ignored的`artifacts/task91/audit/continuation_status.json`，v2复核回执见`guard_v2_comparisons.json`；部分结果不代表生产验收完成。
 > 紧凑证据：[takeover-scan-evidence.json](takeover-scan-evidence.json)。
 
 ## 用法
@@ -82,27 +82,34 @@ task87 的扫描块相比，三份的 L50 分别差 1 / 2 / 2 档（如 s2026104
 含义：`demo_start` 阶梯档位只应依赖**同一块**的实测（本工具自洽满足）；不要拿不同块的
 两次扫描逐档对比，也不要把 4/8 vs 6/8 的边界差读成趋势。
 
-**人类回测进行中**：沿task70部署记录定位到cq工作树中的L46/L48/L49副本，只读复制到本任务
+**人类回测完成**：沿task70部署记录定位到cq工作树中的L46/L48/L49副本，只读复制到本任务
 `artifacts/human_demo/raw/`并逐文件SHA核验。当前r11按task89生成的12点网格执行adaptive，
-再补齐同一未来块的12点老师对照；结果出来后登记下表。历史Mac胜率表不充作本次逐局证据。
+再补齐同一未来块的12点老师对照；v2结果如下。历史Mac胜率表不充作本次逐局证据。
 扫描计划与原始证据位于ignored的`artifacts/task91/audit/human_*`；本任务最多2个游戏进程。
 
-首轮（v1）人类adaptive与同块12点老师对照：
+当前（v2）人类adaptive与同块12点老师对照：
 
 | 人类存档 | adaptive L50 | 老师点数 | 自适应续走数 | 同块12点验收 |
 |---|---|---|---|---|
 | L46 s20261046 | 418 | 9 | 88 | full L50=418，档差0，通过 |
 | L48 s20261048 | 473 | 9 | 88 | full L50=473，档差0，通过 |
-| L49 s20261049 | 1347 | 8 | 80 | full L50=1078，档差2，未通过 |
+| L49 s20261049 | 1078 | 9 | 88 | full L50=1078，档差0，通过 |
 
-自适应轨迹单独冻结在ignored的`human_adaptive_frozen.json`；紧凑证据记录逐份规范JSON哈希与整个快照哈希。
+当前六份自适应轨迹单独冻结在ignored的`guard_v2_adaptive_frozen.json`；紧凑证据记录逐份规范JSON哈希与快照哈希。
 自适应局数证明成本达标；档差≤1逐份以完整同块逐局证据确认。
-L46/L48已完成完整比较，并核对冻结轨迹与原始games逐局内容。L49的d943/d1213均为3/8，
+六份已完成完整比较，并核对冻结轨迹与原始games逐局内容。首轮L49的d943/d1213均为3/8，
 中间唯一未测点d1078为4/8；v1只补探网格间隔>2的失败区间，漏掉了此处，不能据首轮宣布任务通过。
 现将补探扩大到间隔>1，覆盖仅剩单个未测点的区间，轨迹标记为`coarse4_guard_budget9_v2`。
-仍先4等距、老师最多9点、学生最多2点；六份完整老师曲线缓存试算档差均0。
-首轮失败证据保留在ignored的`human_v1_failure/`，新CLI仅需补此前未跑的L49 d1078学生臂，
-完成后再登记v2比较与原始对局未改证明。这不是对任意非单调曲线的精度保证。
+仍先4等距、老师最多9点、学生最多2点；六份真实CLI复核档差均0、各88局。
+首轮失败证据保留在ignored的`human_v1_failure/`。新CLI只新增此前未跑的L49 d1078学生臂8局（0/8），
+99份旧games的SHA与mtime均不变，原始对局未重跑。这不是对任意非单调曲线的精度保证。
+
+## 生产扫描（进行中）
+
+六份v2回测通过后，监督器串行执行12份导入存档的adaptive→登记预览→register→针对性测试。
+前三份LLM L46全部复用缓存；新扫描从L47继续，每任务最多2个游戏进程。
+登记前保存清单/DESIGN/课程测试/共享账本四类快照，之后核对已有起点格未覆盖、原始games既有内容未改。
+阶段和逐步日志在ignored的`artifacts/task91/audit/continuation_status.json`与`production_*.txt`。
 
 ## 端到端（task89 包 2 份，独立 dest/账本/临时清单，未来块 90M 起）
 

@@ -1,6 +1,6 @@
 {
  "schema": "takeover_scan_evidence_v1",
- "status": "guard_v2_recheck_running_production_pending",
+ "status": "six_same_block_backtests_passed_production_running",
  "tests": {
   "takeover_passed": 35,
   "importer_passed": 30,
@@ -18,8 +18,26 @@
    "scan_games": 88,
    "full_two_arm_games": 192,
    "passed": true,
-   "raw_cache_manifest_sha256": "9d46ca7cf38229561e1066fd165b047dc00d2f620633396ffccdd223d6e74306",
-   "result_sha256": "f203013e368eaea8665cd5593ba501d319a504c936ed5d61e1f31cef11df49da"
+   "algorithm": "coarse4_guard_budget9_v2",
+   "result_sha256": "a13eec2820c3f89618949619a1b4aad4da4589ac938ca3caeab2f04a9211f999",
+   "raw_cache_manifest_sha256": "a4ecf1572d4350643145592d2996371d04f1294d3b736ffadbcaf4f10be14e5b",
+   "future_seed_start": 84000000,
+   "grid": [
+    1,
+    91,
+    182,
+    272,
+    363,
+    453,
+    544,
+    634,
+    725,
+    815,
+    906,
+    996
+   ],
+   "frozen_trace_verified": true,
+   "raw_rows_verified": true
   },
   {
    "task_id": "demo_roof_46_doom_m200_s20261047",
@@ -31,8 +49,26 @@
    "scan_games": 88,
    "full_two_arm_games": 192,
    "passed": true,
-   "raw_cache_manifest_sha256": "16e2c7084bd8d23e1af4094798d99bc80075f7096bf8ab1e28304001707aa26b",
-   "result_sha256": "3d620d61c089360157dd35b5574fefcfdc49af631461b31dad70cd1d21fcb2d3"
+   "algorithm": "coarse4_guard_budget9_v2",
+   "result_sha256": "e7d9192ccf9bdfa7fa1ae8b15b4c1412908354d02526df23deb309df2202376e",
+   "raw_cache_manifest_sha256": "dd77432d63083c468630de6baf506f3e63895471085f30006cf43b8ca54179da",
+   "future_seed_start": 84001000,
+   "grid": [
+    1,
+    100,
+    199,
+    298,
+    397,
+    496,
+    594,
+    693,
+    792,
+    891,
+    990,
+    1089
+   ],
+   "frozen_trace_verified": true,
+   "raw_rows_verified": true
   },
   {
    "task_id": "demo_roof_46_doom_m200_s20261048",
@@ -44,8 +80,26 @@
    "scan_games": 88,
    "full_two_arm_games": 192,
    "passed": true,
-   "raw_cache_manifest_sha256": "706fb1cba1fd4b70575dc5634d10c9a642270e105b2f2ffdc40a316ff3af5735",
-   "result_sha256": "61068893fb4439930ebf66c90c4fe3e271c2805226f4e36180210baf1a0babc5"
+   "algorithm": "coarse4_guard_budget9_v2",
+   "result_sha256": "9f40da41c61d0cf54ed825f0d03d4f0777cee209017210b5d77440d2d9caeb6b",
+   "raw_cache_manifest_sha256": "6fbf3b98fc8d3cb4e3ff3bba4b424befba6400e138e1b341272746780b936b9c",
+   "future_seed_start": 84002000,
+   "grid": [
+    1,
+    104,
+    208,
+    311,
+    415,
+    518,
+    622,
+    725,
+    829,
+    932,
+    1036,
+    1139
+   ],
+   "frozen_trace_verified": true,
+   "raw_rows_verified": true
   }
  ],
  "resume": {
@@ -122,7 +176,7 @@
    "teacher_points": 9,
    "scan_games": 88,
    "future_seed_start": 86000000,
-   "trace_sha256": "d92120a02deb3a1e9f56ae115b2cb1f5f61991d519caf3b6b73e49a3c5833a76"
+   "trace_sha256": "ef9583248ae7848822a06eb557cc276cd61c09f1c0f4677e7a7dd61543433b7c"
   },
   {
    "task_id": "demo_roof_48_doom_m200",
@@ -132,20 +186,19 @@
    "teacher_points": 9,
    "scan_games": 88,
    "future_seed_start": 86001000,
-   "trace_sha256": "e1734a5501b78a2dc0244b0ccc1a751c503f6e8359087c49b1e4ccabdaf5419b"
+   "trace_sha256": "13f8c5e36e6d42020e7313ab7a811fc11bbf9d29ede8a25b3077a4d4f6b6b9d5"
   },
   {
    "task_id": "demo_roof_49_doom_m200",
    "seed": 20261049,
-   "l50": 1347,
+   "l50": 1078,
    "top": 1482,
-   "teacher_points": 8,
-   "scan_games": 80,
+   "teacher_points": 9,
+   "scan_games": 88,
    "future_seed_start": 86002000,
-   "trace_sha256": "c928b335fd749bd1f9aedef6384b2e44b636babb0543a8918e4c460d8a3cb971"
+   "trace_sha256": "47a0f957df2674543822fa9607d87c66621cfda8f919013f7478b6ca8a4315f5"
   }
  ],
- "human_adaptive_frozen_sha256": "c8f616372b9dd71e264494efbf8f654d33bed1e3b2bd535acf6ef7860f19fb6f",
  "human_backtest": [
   {
    "task_id": "demo_roof_46_doom_m200",
@@ -157,7 +210,8 @@
    "scan_games": 88,
    "full_two_arm_games": 192,
    "passed": true,
-   "result_sha256": "48fb6de9dcb996ddbc018c54e1f657ae167cf6751094d81ddc8dcbb0cf0ad518",
+   "algorithm": "coarse4_guard_budget9_v2",
+   "result_sha256": "fb866b1af92a57bbe0638eed65605b36b93201d815f78ba3bd4636af991f2fce",
    "raw_cache_manifest_sha256": "52f5dece955d1c7022ce626631ca47d1d862c3506f2e8fc3ff13424488839125",
    "future_seed_start": 86000000,
    "grid": [
@@ -175,7 +229,12 @@
     918
    ],
    "frozen_trace_verified": true,
-   "raw_rows_verified": true
+   "raw_rows_verified": true,
+   "archive_sha256": {
+    "meta.json": "0055e66530804b3e217bbfe50b24a1304c60913782df2454d604e987202832d2",
+    "ticks.jsonl": "0c8f7bedf5e9e7b30ddac7272aeee43f8b77375f17dfa75ebac0ae62e3cd25c8",
+    "frames.jsonl": "0cf0294adf5199873adb1da6180808bac5971b60e1aff3634b630944267d8a6b"
+   }
   },
   {
    "task_id": "demo_roof_48_doom_m200",
@@ -187,7 +246,8 @@
    "scan_games": 88,
    "full_two_arm_games": 192,
    "passed": true,
-   "result_sha256": "b989eef3bdd158d6c73a465cd94bc84ae5712acbcb280d59b27947c4eae7bf24",
+   "algorithm": "coarse4_guard_budget9_v2",
+   "result_sha256": "4471355bf2004cc26ca7a536ff2ebc9dc459ccdcf00f521f1d1547a34a706e7d",
    "raw_cache_manifest_sha256": "507f4dbd6205ca18496805d538732f875761991f0053bbefbae5d5bc400f887e",
    "future_seed_start": 86001000,
    "grid": [
@@ -205,7 +265,48 @@
     1040
    ],
    "frozen_trace_verified": true,
-   "raw_rows_verified": true
+   "raw_rows_verified": true,
+   "archive_sha256": {
+    "meta.json": "943bb19ad1d20d6429ec5144aa49d86d764f5c47ea4550a36ed6ff80f7ea2ccb",
+    "ticks.jsonl": "4bbb3e91e93033485570e8b05cc7a3083ccaafe17a4b8e848ae5b3c9f77f2e85",
+    "frames.jsonl": "5388a4b9f0fb48779665c511f586186ac14ff431ac76980704dc9b4c9118717a"
+   }
+  },
+  {
+   "task_id": "demo_roof_49_doom_m200",
+   "seed": 20261049,
+   "adaptive_l50": 1078,
+   "full_l50": 1078,
+   "delta": 0,
+   "teacher_points": 9,
+   "scan_games": 88,
+   "full_two_arm_games": 192,
+   "passed": true,
+   "algorithm": "coarse4_guard_budget9_v2",
+   "result_sha256": "4263331adf9b941d62ca088418564dc2270ebff375b59579d84e7aee8ba9d7f1",
+   "raw_cache_manifest_sha256": "62cd497af9ab6210d4258fe8328b3da2810dd843d006b7f87cb90dd1fc6e92b1",
+   "future_seed_start": 86002000,
+   "grid": [
+    1,
+    136,
+    270,
+    405,
+    540,
+    674,
+    809,
+    943,
+    1078,
+    1213,
+    1347,
+    1482
+   ],
+   "frozen_trace_verified": true,
+   "raw_rows_verified": true,
+   "archive_sha256": {
+    "meta.json": "4fa794017491b432911514acf5ea6a51c51666dad1d1c2ea7baa3db39d21a85b",
+    "ticks.jsonl": "a14848bd846afac5e19d15263df8ba203efc6be505e0bf77af1933b5041c33fe",
+    "frames.jsonl": "0f88a176c99436855fcb24a8b95491c43a3786b69f5d16263bd9405367394329"
+   }
   }
  ],
  "human_v1_failure": {
@@ -221,6 +322,16 @@
   "algorithm": "coarse4_guard_budget9_v1",
   "result_sha256": "21ed0f953c06a6db9efd8463336dc1b421ab96c91bebda1b1b29e74152d7fae5"
  },
- "human_adaptive_algorithm": "coarse4_guard_budget9_v1",
- "guard_v2_status_path": "artifacts/task91/audit/guard_v2_status.json"
+ "human_adaptive_algorithm": "coarse4_guard_budget9_v2",
+ "guard_v2_status_path": "artifacts/task91/audit/guard_v2_status.json",
+ "human_v1_frozen_sha256": "c8f616372b9dd71e264494efbf8f654d33bed1e3b2bd535acf6ef7860f19fb6f",
+ "guard_v2_frozen_sha256": "60e7758861b7ac92b2d0f4266b8794dc2d5fbe43b3fbfbe58824350cec9baeed",
+ "guard_v2_recheck": {
+  "old_game_files_unchanged": 99,
+  "new_student_games": 8,
+  "comparisons_sha256": "c8f64fc6fa2c7ac98c55bb5d6ee6e8a1960497af1f22cf72f881c92f47050df6",
+  "pre_recheck_manifest_sha256": "4191c6630a96415bf99fc95ee0d68d03b96422d4c709bcc753d5388363067d56"
+ },
+ "human_plan_sha256": "77602e83d8d32245bd63d19313d80554899c3cce5a77eb3356f7a0facdd2aae9",
+ "game_workers_per_task": 2
 }
