@@ -157,6 +157,7 @@
 ### 结果（接手复核，2026-10-26）
 
 - 接手 Codex 的收尾：三问与全部测量已在 `origin/blindspot`（62d55c75），没有重跑任何对局。复核 `--save-candidates` 在 `scripts/search_play.py` 默认 0（关）、探针期间 `env.episode` 置空，`python/test_save_candidates.py` 6 项 pytest 通过（0.01 s）；测量臂 `scripts/save_candidate_arm.py` 已按文档删除。补写"问题"一节交主控。
+- 主控叫停（Codex 额度恢复）：工作树干净、`origin/blindspot` 无未推送提交，本任务停在交付态，不再跑对局。核对证据与文中数字逐格一致（`artifacts/task120/{ab,prod,gap}/*/summary.json`），结论与"问题"一节可直接由主控评审合并。
 
 
 ## 问题（交主控）
