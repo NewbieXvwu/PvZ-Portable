@@ -361,5 +361,18 @@
       "demo_roof_49_doom_m200_s20261051"
     ],
     "new_gate_ledger_created": false
+  },
+  "handoff": {
+    "script": "/home/newbiexvwu/pvz-logs/qc_deploy14b.sh",
+    "versioned_script": "scripts/qc_deploy14b.sh",
+    "script_sha256": "fe348ebad98e497f04065e5d9d02d94feb884abbebaaa6aa0315ce7975a277e1",
+    "bash_syntax": true,
+    "embedded_python_syntax_blocks": 3,
+    "readonly_preflight": true,
+    "changed_baseline_rejected": true,
+    "rates_merge_preserves_old_fields": true,
+    "start_qc_verbatim_deploy14": true,
+    "executed": false,
+    "report": "MEMORY/docs/task70-engine-redeploy.md B10"
   }
 }

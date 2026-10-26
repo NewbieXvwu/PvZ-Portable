@@ -97,6 +97,34 @@
   4. **B7.3 测试**：`python/test_background_failure_retry.py` 3 项——首败仅记录（status/error/attempts 落 state）且组边界照常推进；重试恰好一次；第二次连败 raise（"2 times" + "stopping qc" 日志）；重试成功则整轮照常 done；close 不重试、不挂起。回归 test_curriculum_queue + test_multiplier_tasks + test_compact_loader **71 passed**。
   5. **deploy14 增量**：无引擎变化（仍 6264aaf4）；scripts 树换到含 B7 的 redeploy 最新提交即可，curriculum_queue.py 的失败语义随部署生效。回滚：revert 本提交即回到"后台失败即退"旧行为。
 
+### B10. task97：11 个 LLM 屋顶起点格的 deploy14b 交付（2026-10-26）
+
+准备完成，**仅写脚本，未执行部署**。主控执行入口为 `/home/newbiexvwu/pvz-logs/qc_deploy14b.sh`；版本化副本为 [scripts/qc_deploy14b.sh](../../scripts/qc_deploy14b.sh)。deploy14 曾于 08:37 回滚，但之后重跑成功，`qc_setup.log` 的 08:55:47 行已确认 `deploy14: first group after restart rc=0, OK`，因此可以继续 task97。11:43 的训练 `plane_of` 热修复保留。
+
+1. **存档与既有工作**：沿用 CodeBuddy 的 `919240a4`、`15b55764`、`92ee8bbc`，未重跑对局。cq 中 12 份存档均有 build5 的逐操作 tick/ok/outcome verify 成功记录，12 份 `ticks.jsonl` SHA 与源 `/home/newbiexvwu/pvz-logs/task89/llm_free_out_numeric.zip` 的 12 个通关局逐份匹配；11 个起点格引用的路径、卡组、关卡均能解析。存档不入 git。逐档 SHA、原始局与模型的 SHA、种子、决策号见 [task97-deploy14b-audit.json](task97-deploy14b-audit.json)。
+2. **配置与面板**：冻结交付配置为 [configs/deploy14b/human_demo_tasks.json](../../configs/deploy14b/human_demo_tasks.json)，由 deploy14 现行配置仅合入指定 11 格：67→77 任务，其中既有 `demo_roof_47_doom_m200` 只增加 `demo_start`，旧字段保持相同，其余旧任务逐项不变。只激活原有 13 格 + 新 11 格，共 24 个起点格，排除 redeploy 后续 task81 的 7 个倍率起点格。469 项 multiplier_panel 原样沿用（0 增、0 删、0 变），原 generation_audit.seed_overlap=0；11 个未来块共 2816 种子，彼此、与旧起点块及 960512 个面板种子均不相交。门禁 v3 面板与门禁账本保持原样。
+3. **teacher_rates 增量**：使用 CodeBuddy 已完成的 build5 `76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a`，生产 dw4i_s1 + 叶值 v5 + 台式机 branch1，β=1、每格阶梯 index 0、8 个未来、workers=2。已重新核对 88 条原始记录的终局、未来种子与 config 的起点决策，以及三份模型 SHA。可直接合并进正式 rates 的 `bases` 的 JSON 片段在 [teacher_rates.delta.json](../../configs/deploy14b/teacher_rates.delta.json)，保留全部旧底数与顶层元数据。
+
+   | 起点格 | 老师胜局 |
+   |---|---|
+   | `demo_roof_46_doom_m200_llm` | 7/8 |
+   | `demo_roof_46_doom_m200_s20261047` | 8/8 |
+   | `demo_roof_46_doom_m200_s20261048` | 8/8 |
+   | `demo_roof_47_doom_m200` | 8/8 |
+   | `demo_roof_47_doom_m200_s20261048` | 8/8 |
+   | `demo_roof_47_doom_m200_s20261049` | 8/8 |
+   | `demo_roof_48_doom_m200_llm` | 8/8 |
+   | `demo_roof_48_doom_m200_s20261049` | 8/8 |
+   | `demo_roof_48_doom_m200_s20261050` | 8/8 |
+   | `demo_roof_49_doom_m200_s20261050` | 1/8 |
+   | `demo_roof_49_doom_m200_s20261051` | 7/8 |
+
+   `49_s20261050` 的 1/8 如实保留并交主控评估；任务书要求 11 格，本任务不擅自摘除、不调整种子或阶梯来改善结果。
+4. **dry-run 与脚本检查**：在本树 `artifacts/task97/` 的正式 state 拷贝上，使用 cq 现行控制器、build5、上述冻结配置/候选 rates、原 469 面板与 gate v3，`--dry-run` EXIT=0，11 格全部 `start cell added`（档数分别为 3/6/6/6/5/5/7/6/7/2/1）；log/stop/seed-ledger 全部为隔离路径，未创建门禁账本。`bash -n`、三个内嵌 Python 语法检查、只读预检、基底 SHA 改变拒绝、隔离 rates 保留旧数据 +11 合并检查均通过。`start_qc` 与 deploy14 脚本逐字一致，含同一 build5 和 `--promotion-panel`；版本化副本与交付脚本字节一致。
+5. **主控执行与回滚**：执行 `/usr/bin/bash /home/newbiexvwu/pvz-logs/qc_deploy14b.sh`。脚本先核验 deploy14 最新成功状态、引擎/配置/面板/存档/交付文件 SHA，再在组边界等待 qc 自然结束。备份到本机 `pvz-logs/deploy14b.XXXXXX/`（路径写入 qc_setup.log），仅安装配置并合并 rates；再次隔离 state dry-run，11 格注册齐全才按 deploy14 原命令重启。只有启动后的新组 rc=0 才记成功；失败恢复部署前的 deploy14 配置、rates、state，再以同一 build5 与现行代码重启。**不 checkout scripts/python/recipes，不覆盖训练热修复，不拷引擎，不切回 deploy13**。若主控在交付后更新了配置/存档，SHA 预检会停止，须先重新核对交付基底。
+
+本次续做未启动任何游戏或 GPU 训练、未调用 tmux qc、未写 cq 或正式 state/rates。接手时已有的 `python/test_curriculum_queue.py` 改动保留在工作区，未混入 task97 提交。
+
 ## 问题
 
 - **示范起点格数量对不上（B6.1）**：主控追加里说"现有 5 个示范起点格（含 task71b 的 L34）"，但 redeploy 树的 `configs/human_demo_tasks.json` 在 B6.1 之前只有 **4** 个 demo_start 格（L31 snow、L32 snow、L33 cactus/cattail）。task71b 的 L34 格（`demo_fog_34_cactus_snow_m200`，提交 a6becca3）只在 `origin/demo` 分支上，未合入 redeploy/pvz-env，本次未处理。若要 L34 也去透视：先合 a6becca3，再照同样模式加 `_hv2`（archive 与决策阶梯见 MEMORY/docs/demo-start-states.md），teacher_rates 按同法补测 8 局。

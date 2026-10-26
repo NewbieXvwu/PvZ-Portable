@@ -24,6 +24,8 @@
 
 ## 结果
 
+- 2026-10-26 11:55：第 5 步完成，B10 已写入 `MEMORY/docs/task70-engine-redeploy.md`，含 11 格底数、JSON 增量、最小配置、面板不变证明、dry-run、执行入口与 deploy14 回滚说明。第 4 步提交 `b39a92c1` 已 push；部署仍由主控执行，本任务未调用 tmux qc、未写 cq 或正式 state/rates，未新增游戏/GPU 任务。
+
 - 2026-10-26 11:51：第 4 步完成，`scripts/qc_deploy14b.sh` 已原样安装到 `/home/newbiexvwu/pvz-logs/qc_deploy14b.sh`，仅写入，未执行。沿用 deploy14 的 `start_qc` 原文、build5、469 项面板、gate v3 与现行代码/训练热修复；预检锁定 baseline/config/rates/引擎/12 存档 SHA。组边界停妥后备份配置/rates/state，合并 11 格；隔离 state dry-run 全注册后重启，只有新完成组 rc=0 才记成功；失败回滚到部署前 deploy14 数据，代码与引擎保持原样。`bash -n`、3 个内嵌 Python 语法检查、只读预检、启动函数逐字一致检查通过；隔离 rates 合并保留全部旧字段/底数，基底 SHA 不匹配正确拒绝。上一小步提交 `1b11647c` 已 push。
 
 - 2026-10-26 11:47（Codex 续做）：已读 CodeBuddy 三笔交付，不重跑对局。qc_setup.log 确认 deploy14 在 08:55:47 首组 rc=0 成功，08:37 的回滚阻塞已解除。复核 cq 12 份 verified 存档的 ticks SHA 与原 zip 的 12 个通关局逐份相符；11 格 ×8 原始 games/config 与生产模型 SHA、起点决策、未来种子和终局逐项一致。冻结 `configs/deploy14b/`：以 cq 的 deploy14 配置为底，仅合入 11 个 LLM 起点格（67→77 个任务，已有 L47 只增加 demo_start），不夹带 task81 的 7 个倍率起点格。469 项面板原样不变，新增未来块 2816 种子彼此、与旧起点块和面板均不相交。用 cq 现行控制器、build5、冻结配置/rates、正式 state 的本树拷贝 dry-run EXIT=0，11/11 全注册，未创建门禁账本。结论和输入 SHA 见 `task97-deploy14b-audit.json`。
