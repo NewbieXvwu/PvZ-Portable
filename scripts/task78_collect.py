@@ -16,6 +16,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import MAIN, sha
+from task78_state import state_digest
 from task78_replay import equal, open_archive, physical
 from task78_student_context import initial_state, context_identity
 from value_teacher_feasibility import sample_root, stats_new, write_json
@@ -142,6 +143,13 @@ def main():
                                                           stats_new(), output/f'root_{i}')
                             finally:
                                 teacher._rollout_policy = formal
+                            # sample_root leaves the engine exactly at the root, so this is
+                            # the same instant as root_state_sha256, minus the never-written
+                            # GridItem field that a cold replay cannot reproduce.
+                            root_path = output/f'root_{i}'/'root.json'
+                            record = json.loads(root_path.read_text())
+                            record['root_state_canonical_sha256'] = state_digest(env.privileged_state())
+                            write_json(root_path, record)
                             results.append(dict(frame=i, **summary))
                             print(json.dumps(results[-1]), flush=True)
                             break

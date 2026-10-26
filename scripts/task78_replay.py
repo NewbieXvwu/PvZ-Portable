@@ -10,6 +10,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import sha
+from task78_state import state_digest
 
 
 def physical(frame):
@@ -72,7 +73,8 @@ def verify(row, executable, observe_input=None):
             if observe_input is not None:
                 observe_input(env, obs, i)
             if i in {r['frame'] for r in row['roots']}:
-                roots.append(dict(frame=i, tick=obs['tick'], engine_sha256=env._debug_state_sha256()))
+                roots.append(dict(frame=i, tick=obs['tick'], engine_sha256=env._debug_state_sha256(),
+                                  engine_canonical_sha256=state_digest(env.privileged_state())))
             if i == stop:
                 break
             if frames[i+1].get('targets'):
