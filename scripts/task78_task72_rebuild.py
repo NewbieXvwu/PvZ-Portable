@@ -18,7 +18,11 @@ sys.path[:0]=[str(ROOT/'python'),str(ROOT/'scripts')]
 from task78_data import MAIN,sha
 from value_teacher_feasibility import history_record,write_json
 
-OUT=ROOT/'artifacts/task78/task72_rebuild'
+# The earlier attempt used the desktop static net. Keep its plan and trajectory
+# intact; task72/72b used the different Mac branch1 checkpoint.
+OUT=ROOT/'artifacts/task78/task72_rebuild_mac_branch1'
+ORIGINAL_STATIC=Path('/home/newbiexvwu/pvz-logs/mac_branch1/model.pt')
+ORIGINAL_STATIC_SHA256='91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c'
 REFERENCE=ROOT/'MEMORY/docs/task72b-probe-rows.jsonl'
 TASK='demo_fog_33_cactus_snow_m200'
 TAKEOVERS=(229,306,382)
@@ -39,11 +43,13 @@ def identity(row):
 
 def inputs():
     from pvz_frame_store import frame_path
+    if sha(ORIGINAL_STATIC)!=ORIGINAL_STATIC_SHA256:
+        raise ValueError('task72b reconstruction requires the original Mac branch1 checkpoint')
     paths=dict(reference=REFERENCE,demo_frames=frame_path(DEMO),demo_meta=DEMO/'meta.json',
         task_config=ROOT/'configs/human_demo_tasks.json',
         value=MAIN/'artifacts/value_net/v5/model.pt',
         student=MAIN/'artifacts/student/dw4i_s1/model.pt',
-        static=MAIN/'artifacts/hard/value_branch1/model.pt',executable=ROOT/'build/pvz-portable')
+        static=ORIGINAL_STATIC,executable=ROOT/'build/pvz-portable')
     return {k:dict(path=str(path),sha256=sha(path)) for k,path in paths.items()}
 
 

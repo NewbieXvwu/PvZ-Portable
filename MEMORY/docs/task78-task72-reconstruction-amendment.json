@@ -1,0 +1,29 @@
+{
+ "at_utc": "2026-10-26T00:13:46.110213+00:00",
+ "reason": "Original task72/72b used Mac branch1, while the initial reconstruction used the desktop branch1.",
+ "source_evidence": [
+  "MEMORY/docs/static-candidates-antiair.md",
+  "MEMORY/docs/static-value-branch1-plan.json"
+ ],
+ "old_attempt": {
+  "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild",
+  "plan_sha256": "489da5f0b000ced92aed18a9567f8c8f256fce2ca5fb6d993f78398da5d11c83",
+  "static_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "completed_trajectories": 1,
+  "exactly_matched_states": 0,
+  "preserved": true
+ },
+ "corrected_attempt": {
+  "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild_mac_branch1",
+  "plan_sha256": "ff0651c777c2a0f85bc8f8732be2673c142811ed6a17b6612fcdc91d8249b010",
+  "static": {
+   "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
+   "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c"
+  },
+  "jobs": 24,
+  "trajectories_started": 0,
+  "original_probe_protocol_verified": false,
+  "rescore_eligible": false
+ },
+ "note": "Changing the static checkpoint may affect the continuation and static-best signatures. It does not prove that the missing probe protocol or original states have been recovered."
+}

@@ -11,6 +11,21 @@ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'python')]
 import task78_task72_rebuild as rebuild
 
 
+def test_reconstruction_binds_the_original_mac_static_checkpoint(monkeypatch):
+    monkeypatch.setattr(rebuild,'sha',lambda path:rebuild.ORIGINAL_STATIC_SHA256
+                        if path==rebuild.ORIGINAL_STATIC else 'other input')
+    assert rebuild.inputs()['static']==dict(path=str(rebuild.ORIGINAL_STATIC),
+                                           sha256=rebuild.ORIGINAL_STATIC_SHA256)
+    assert rebuild.OUT.name=='task72_rebuild_mac_branch1'
+
+
+def test_desktop_static_checkpoint_cannot_substitute_for_task72b(monkeypatch):
+    monkeypatch.setattr(rebuild,'sha',lambda path:
+        '2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314')
+    with pytest.raises(ValueError,match='original Mac branch1'):
+        rebuild.inputs()
+
+
 @pytest.fixture
 def signature():
     return dict(task=rebuild.TASK,seed=102,decision=113,tick=17083,wave=7,sun=135,
