@@ -121,6 +121,8 @@ def build_missing(known: dict) -> list[dict]:
             source = known[source_id]
             entry = dict(source)
             entry.pop('seeds', None)
+            # A demonstration belongs to its original task/seed/environment.
+            entry.pop('demo_start', None)
             entry.update(overrides)
             entry['task_id'] = task_id
         missing.append(entry)
