@@ -57,6 +57,8 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 续接（第七段）：把确定性开销从“测不出”降到单算子可测。`task96_det_cost.py`：`[2048,10]` 查表 backward 200 次一组、default/deterministic 交替 6 组取中位数 → 0.297 ms vs 0.368 ms（1.24 倍），折算每 epoch +0.6 s、占 221 s 的 0.3%。整轮交替仍缺（需 qc 空闲 + 内存 ≥14 GiB），所以这是单算子外推。证据 `task96-det-cost.json`。
 
+- 10-26 CodeBuddy 续接（第八段）：独立复核代码来源（`git show <rev>:<path> | sha256sum`，未进其他工作树）：4f4d217b 与 bec2b9e6 的 `train_rollout_policy.py` 同为 `5cc2f208…`，recipe/pack/value_net 也逐字节相同；唯一不同的 `pvz_rollout_policy.py` diff 仅是 `export_student` 的 obs 版本号多了 `v2size` 分支（4→5），不涉及训练。与报告一致。
+
 ## 问题
 - 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。没有记录workspace申请失败或具体内核，耗时也不能单独证明GPU竞争；资源/算法变化保留为假设，不能据此断言历史原因。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。

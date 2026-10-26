@@ -46,6 +46,8 @@
 
 [task96-code-provenance.json](task96-code-provenance.json) 保存部署日志关键行、完整训练链 diff、源码 SHA 与评估交叉核验结果。部署记录比主检出 HEAD 更可靠，但没有训练启动时的逐文件 receipt，无法绝对排除未记录的临时覆盖。此处明确区分已记录部署版本与逐次实际运行源码。
 
+本次又独立复核了一遍（`git show <rev>:<path> | sha256sum`，10-26 21:00）：`scripts/train_rollout_policy.py` 两版同为 `5cc2f208…`，`pvz_recipe.py` / `pvz_training_pack.py` / `pvz_value_net.py` 也逐字节相同；训练链里唯一不同的是 `python/pvz_rollout_policy.py`，diff 只有 `export_student` 里 `obs` 版本号多了一个 `v2size` 分支（4→5），训练语义不变。
+
 `encoder_signature` 只覆盖 features/featurize_numpy/_col_of/target_values/encode_frames 以及选定数值常量；v2 又有冻结语义签名。它不是训练链签名，不覆盖 optimizer、训练循环、所有 merge/read 路径、网络实现或运行库。即使未来 (c) 发生，它也不保证发现。
 
 ## 已完成的全量双跑
