@@ -604,7 +604,12 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
                 store.indices[nnz_at:nnz_at + (hi - lo)] = part_store.indices[lo:hi]
                 store.values[nnz_at:nnz_at + (hi - lo)] = part_store.values[lo:hi]
                 if store.plane_of is not None:
-                    ids = (np.full(span, -1, np.int32) if part_store.plane_of is None
+                    # A segment whose plane ids do not cover every row (10-26: a demo-start label whose
+                    # games start 8 decisions before the end, 72 ids for 84 rows) is read without planes
+                    # instead of stopping training; pack_training_rows is fixed separately.
+                    ids = (np.full(span, -1, np.int32)
+                           if part_store.plane_of is None
+                           or len(part_store.plane_of) != len(part_store.offsets) - 1
                            else part_store.plane_of[start:stop])
                     store.plane_of[pos:pos + span] = np.where(
                         ids >= 0, ids + plane_base, -1).astype(np.int32)
