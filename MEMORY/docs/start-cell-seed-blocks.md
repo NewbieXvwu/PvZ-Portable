@@ -76,6 +76,12 @@
 
 ## 问题（按最佳判断处理，记录备查）
 
+**合并前发现**：startseeds 缺 `391c8a64`（archive 识别起点格），已 cherry-pick 进 `08cc5c72`。
+不并的话，task99 上线会把 deploy14c 的修复覆盖掉，`pool_l25_orig_train` 又会被当起点格退休。
+冲突解决：retire 判据同时保留 task99 的 `legacy_restored` 例外；恢复也按 `archive` 判定。
+相关测试 124 passed。
+
+
 1. **第一版候选 90,000,000 与 task89 的 e2e 测试种子冲突。** 发现路径：full scan 的 `occupied`
    里出现了 `[90,000,000, …)`，来源是 `llmimport` 工作树的 `artifacts/e2e/scan_jobs.json`
    （声明了 90,000,000 / 90,001,000 … 的 future_seed_start）和 `scan_out/*/games.jsonl`
@@ -91,6 +97,22 @@
      重放会回到 x-ray 观测——这正是 task70 B6 退役它、另建 `_hv2` 的原因。
    所以 L32 由 `_hv2` 承载（同存档、同阶梯，offset 72），续领后它不会再退休；`--restore-start-cell`
    留给“块不冲突、观测契约仍有效”的退休格。若以后确实要恢复某个旧 id，先确认这两条都过。
+
+## 上线前核对（2026-10-26 实测，只读）
+
+- **合并方向**：`git merge-base startseeds cq` = `c84ad7d1`（cq 的 HEAD），startseeds 领先 692 个
+  提交、cq 领先 0 个；`git merge-tree --write-tree startseeds cq` rc=0，**可以 fast-forward**。
+- **必须带上 `391c8a64`（origin/deploy14c）**：起点格改以 `archive` 识别，因为原生倍率阶梯格
+  （`pool_l25_orig_train`）也带 `ladder`，用 `ladder` 判定会把它当起点格退休（deploy14 后一直没采）。
+  startseeds 原来没有这个提交，已在 `08cc5c72` 并入（含 `test_native_ladder_cell_is_not_a_start_cell`）。
+- **cq 的工作树不能直接 ff**：`git -C cq status --short` 有约 130 个已暂存文件（运行中的
+  deploy14fix 副本），相对 `0b8dcc26` 唯一实质差异就是那 11 行 archive 补丁（现已并入 startseeds）。
+  ff 前必须先备份并清理 cq 的索引/工作树（`git -C cq diff --cached --stat` 逐项确认没有别的未提交改动）。
+- **deploy15 的 preflight 会拒绝**：`qc_deploy15.sh` 里有
+  `git -C "$W" diff --quiet 0b8dcc26 -- scripts python recipes configs || abort`；合并 task99 后
+  这条必然失败，task99 的部署脚本要么换 REV（= startseeds 合并提交），要么去掉这条 pin。
+- **本任务改的文件**：`scripts/curriculum_queue.py`、`python/pvz_promotion.py`、
+  `scripts/gate_seed_inventory.py`、`python/test_curriculum_queue.py`（+ 文档/盘点 json）。
 
 ## 边界与未做
 
