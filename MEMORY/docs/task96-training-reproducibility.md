@@ -28,5 +28,6 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 ## 结果
 - 10-26 CodeBuddy：定位变体 A 产物在 gatepower 工作树 `artifacts/task84/variant_a/`。步骤 1 部分完成：recipe.json 与 r11 逐字段相同（仅 data/out 路径不同，348 标签同集合）；source_rows.json 逐标签行数完全一致（总 16,982,931 行）。但 metrics 显示同 seed 下两轮训练逐 epoch loss 均不同（epoch12：r11 train 3.7252/val 3.5927，A 3.7131/3.5853）——训练确实分叉。r11 训练时间 2026-10-25 08:30–09:12（pack 21 建 + 327 复用）。待办：内容哈希级对比两份 frames（~10.2 GB vs ~10.4 GB）、代码提交差异、确定性实验。
 - 10-26 CodeBuddy：两份 recipe.resolved.json 逐字段一致（仅 data/out 路径不同），且两轮 pack 指纹同名 `7d15b915a2192805.npz`（16,982,931 行同）——但该 pack 在 r11 的 frames/packs 里已不存在（pack.log 显示其后有 prune 记录），gatepower 侧现存同名文件仅 81 KB（元数据级，非全量数据 pack），pack 指纹依据待查（大概率是标签行数/元数据而非内容哈希）；下一步需直接对两份 frames 的标签内容做哈希级对比。
+- 10-26 CodeBuddy：**(b) 标签内容变更已排除**——pack `7d15b915a2192805` 引用的 348 个段在 r11 与 A 两份 frames 里 sha256 全部相同（~9.6G 实测，无一处差异）；且两轮 train.log 的数据统计逐项一致（rows/plants/seeds/val rows、board_bytes 等、packet/spread 权重）。另发现 pack/段文件名 = sha1(选项字典)（labels/wait_keep/obs/sources 等），不含内容哈希——同名 ≠ 同内容，"pack 指纹进轮目录"方案应改为记录内容 sha256。**(c) 代码已变**——r11 用主仓 `930d776d`（10-17），A 用 gatepower `bec2b9e6`（10-25）：训练器 `scripts/train_rollout_policy.py` 重写（933 行 diff），关键差异：看板数据新增 float16 存储（旧版 fp32）、episode 顺序 shuffle 种子从硬编码 `Random(0)` 改为 `Random(validation.seed)`、行采样/CSR 拷贝路径重写。正在做步骤 3：同 pack 同 seed 双跑 1-epoch（/tmp/exp96/detexp，代码取 bec2b9e6 干净副本），以分辨剩余分歧是否纯非确定（a）。
 
 ## 问题
