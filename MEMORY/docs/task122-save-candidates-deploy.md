@@ -71,3 +71,5 @@ task120（分支 blindspot，`MEMORY/docs/task120-teacher-blind-spot.md`）：�
 ### 未做
 
 没跑对局、没执行部署脚本、没动台式机 qc 与看门狗、没改引擎、没改旧配方。
+
+追加（2026-10-26）：`origin/trainspeed`（task123 共享映射 + 训练准入计入映射数据）已合进 rebalance2（合并提交 `9be26526`，唯一冲突是 `MEMORY/2026-10-26.md` 两边都追加，已保留双方），`scripts/qc_deploy14h.sh` 的 REV 改 9be26526、CODE_FILES 补 `python/test_incremental_pack.py` 与 `python/test_multiseed_production.py`（loader 本体在已在列表里的 `scripts/train_rollout_policy.py`），台式机副本已同步（SHA256 `2016ac0276627f130f306f2832b73b313d40a08a0fa0bdfdeee51ddfca4bf709`，未执行，start_qc 两分支未动）；相关测试 135 passed / 2 skipped。
