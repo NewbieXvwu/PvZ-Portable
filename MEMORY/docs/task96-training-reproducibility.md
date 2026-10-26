@@ -42,8 +42,10 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 交还 Codex：task96 五步全部完成，`20fe2cdb` 已 push origin/repro，工作区干净、生产未改。交付物 `MEMORY/docs/training-reproducibility.md`（9 个 GPU 用例 + 4 个 8-epoch 计时用例 + 数据/代码/双跑审计 + 6 条修法），证据 `task96-determinism-probe.json` 等四份。唯一遗留写进“问题”：四次全量 run 落到不同 cuBLAS 算法的具体环境差异未证实（最可能：workspace 申请失败回退，run1 890s/epoch 佐证抢 GPU），闭环需固定 `CUBLAS_WORKSPACE_CONFIG` 后重跑一个完整 epoch，qc 优先。
 
+- 10-26 Codex再续接：已读CodeBuddy全部新增提交，不重跑9个小段用例。收紧报告中“历史落差已归因workspace”“同配置全量无随机性”“无报错等于无回退”的超证据结论；纠正12epoch步数为89,532而非132k。短样本计时受并发干扰，成本项尚未闭环。新增完整348段的strict/default/strict控制（固定workspace、每次≤900秒，源数据只读、写入全在repro、proc训练进程准入与让行），等待现有deckvar训练结束后补全量结果。
+
 ## 问题
-- 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。cuBLAS workspace 申请失败会退化成更小 workspace，这是最可能的触发点，但本次没有为复现去压低空闲显存（qc 在用），所以是假设不是结论。
+- 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。没有记录workspace申请失败或具体内核，耗时也不能单独证明GPU竞争；资源/算法变化保留为假设，不能据此断言历史原因。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。
 - 生产没有改：所有新写入都在 repro 的 `artifacts/task96/`（ignored）与 `MEMORY/docs/`；`/tmp/exp96` 只是冻结只读快照。
 - r11 trained.json仅记录模型/配方sha与时间，没有trainer运行revision；recipe.provenance是配方来源，不等于实际训练源码。已用部署日志和评估SHA定位当时部署版本4f4d217b，但未记录的训练时单文件覆盖无法靠事后Git证明不存在；不能据主检出HEAD归因代码漂移。
