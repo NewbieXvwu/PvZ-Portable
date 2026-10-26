@@ -176,7 +176,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 含义：
 
 - 分歧进入点不是初始化、不是洗牌、不是前向、也不是 loss，而是 **embedding 表的梯度累加**——同一 batch 里重复的 packet id 要把梯度散射累加回表行，这个累加顺序在 CUDA 上不固定（`index_add`/`scatter_add` 式原子累加）。前向的查表是确定性的，所以第 1 步前向和 loss 完全相同；梯度先分叉，第 2 步的查表结果才跟着变。
-- 这与“cuBLAS workspace 换算法”是**两条不同的路径**：embedding 梯度不走 GEMM。之前观测到的 workspace 敏感性影响的是后面的 GEMM 步；本次定位到的第一步分叉与 workspace 无关，所以单靠固定 `CUBLAS_WORKSPACE_CONFIG` 未必够，`torch.use_deterministic_algorithms` 这类开关才是针对这一条的手段（正在用“只开确定性、不固定 workspace”的两例做对照，qc 训练优先，排队中）。
+- 这与“cuBLAS workspace 换算法”是**两条不同的路径**：embedding 的梯度是散射累加，不走 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它。所以单靠固定 workspace 不足以覆盖本次定位到的第一步分叉，`torch.use_deterministic_algorithms(True)` 这类开关才是针对这一条的手段（它会把 embedding backward 换成确定性实现）。**“只开确定性、不固定 workspace”的两例对照没跑成**：从 18:5x 起 qc 的训练进程（round_000020）连续占用 GPU 90 分钟，本任务的准入按规则让行，等待期间一例未启动，已停掉等待器。想补就跑：`task96_scale_probe.py run`（新用例名 `det_only_a/b` 已写进 plan，qc 训练结束时才会启动）。
 - 仍未拿到内核级回执（没有 atomicAdd / 排序实现的 kernel trace），所以“原子累加顺序”是**与观测相容的机制解释**，不是已证明的内核行为。
 ## 冻结与修法建议（生产未改）
 
