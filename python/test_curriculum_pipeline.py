@@ -107,6 +107,7 @@ def write_selection(pipeline, command, best_index=0):
     shutil.copyfile(best, out / 'model.pt')
     (out / 'selection.json').write_text(json.dumps(
         dict(best=best, model_sha256=sha(best), manifest_sha256=sha(manifest),
+             scores={path: dict(total=10 - index) for index, path in enumerate(candidates)},
              rejected=[path for path in candidates if path != best])))
 
 

@@ -686,9 +686,10 @@ def main(*, step_observer=None) -> None:
         row_plan = RowWeights(args.row_weights, args.data)
     source_counts = None
     observer = row_plan.observe if row_plan else None
-    if args.source_row_report:
+    level_cap = args.source_weight.get('level_balance')
+    if args.source_row_report or level_cap:
         from pvz_training_rows import SourceRowCounts
-        source_counts = SourceRowCounts()
+        source_counts = SourceRowCounts(balance=bool(level_cap))
         def observer(path, rows):
             source_counts.observe(path, rows)
             if row_plan: row_plan.observe(path, rows)
@@ -706,7 +707,7 @@ def main(*, step_observer=None) -> None:
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
-    if source_counts:
+    if source_counts and args.source_row_report:
         source_counts.finish(len(plant), val_seeds, args.source_row_report)
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
           f"{int(is_val.sum())} validation rows", flush=True)
@@ -742,6 +743,10 @@ def main(*, step_observer=None) -> None:
         row_plan.apply(weight)
         print(json.dumps({"row_intervention":row_plan.metadata(),
                           "positive_weight_rows":int((weight>0).sum())}),flush=True)
+    if level_cap:
+        shares = source_counts.rebalance(weight, is_val, level_cap)
+        (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
+        print(json.dumps({'level_balance': shares}), flush=True)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:

@@ -25,8 +25,9 @@ def no_game_engine(monkeypatch):
     monkeypatch.setattr(queue, 'mem_total_bytes', lambda: 64 * queue.GIB)
 
 
-def run_round(root, monkeypatch, trainer):
+def run_round(root, monkeypatch, trainer, alternate=None):
     args, state = setup(root)
+    args.alternate_recipe = alternate
     state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
     calls = []
     def command(self, command, logfile):
@@ -51,6 +52,26 @@ def save_model(command, logfile):
     model = logfile.parent / 'student/model.pt'
     model.parent.mkdir(parents=True, exist_ok=True)
     model.write_bytes(logfile.parent.name.encode())
+
+
+def test_two_recipes_share_one_pack_and_record_each_selection_score(tmp_path, monkeypatch):
+    from pvz_recipe import load_recipe, write_recipe
+    alternate = tmp_path / 'balanced.json'
+    write_recipe(alternate, dict(schema_version=1, kind='training', data=str(tmp_path / 'frames'),
+                                labels=['base'], out=str(tmp_path / 'unused'), epochs=2,
+                                precompute_workers=2, source_weight=dict(level_balance=.25)))
+    seen = []
+    def train(command, logfile):
+        seen.append(load_recipe(Path(command[command.index('--recipe') + 1])))
+        save_model(command, logfile)
+    _, job, calls = run_round(tmp_path, monkeypatch, train, alternate)
+    assert calls.count('pack.log') == 1
+    assert sorted(recipe['source_weight'].get('level_balance', 0) for recipe in seen) == [0, .25]
+    assert len({recipe['data'] for recipe in seen}) == 1
+    candidates = job['timing']['candidates']
+    assert [candidate['selection_score']['total'] for candidate in candidates] == [10, 9]
+    assert candidates[1]['source_recipe'] == str(alternate)
+    assert job['promotion_approved']
 
 
 def test_two_trainers_overlap_failure_is_local_and_selection_precedes_gate(tmp_path, monkeypatch):

@@ -459,7 +459,8 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                     windows_from_runs: dict) -> list[str]:
     """把状态里的格子对齐到当前训练集合；返回日志行，由调用方逐行写 curriculum.log。"""
     lines = []
-    training = training_base_ids()
+    training = training_base_ids() | {task_id for task_id, task in tasks.items()
+                                     if task.get('opening_specialist')}
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     wanted = {}
@@ -493,6 +494,8 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                     mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
         if family in CURRICULUM_LADDERS:
             cell['ladder'] = CURRICULUM_LADDERS[family]
+        if task.get('opening_specialist'):
+            cell.update(opening_specialist=True, ladder=[1.0])
         cells[base] = cell
         lines.append(f'cell added: {base}')
     return lines
@@ -1102,6 +1105,20 @@ class TrainingPipeline:
         write_recipe(path, recipe)
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
+        alternate = getattr(self.args, 'alternate_recipe', None)
+        if alternate:
+            variant = load_recipe(alternate, 'training')
+            variant.update({key: recipe[key] for key in
+                            ('labels', 'data', 'out', 'cache_dir', 'precompute_workers')})
+            base_options, variant_options = training_row_options(recipe), training_row_options(variant)
+            base_options.pop('source_weight', None)
+            variant_options.pop('source_weight', None)
+            if base_options != variant_options:
+                raise ValueError('A/B recipes must share pack row options')
+            variant_path = folder / 'recipe_b.json'
+            write_recipe(variant_path, variant)
+            job['candidate_recipes'] = [dict(recipe=str(path), source_recipe=str(self.args.recipe)),
+                                        dict(recipe=str(variant_path), source_recipe=str(alternate))]
         # Freeze the plan on the durable job. Historical jobs without this field
         # retain their original single-seed training/resume semantics.
         self._snapshot_selection(job, folder)
@@ -1426,7 +1443,10 @@ class TrainingPipeline:
             directory = folder / 'seeds' / f'seed_{seed:06d}'
             directory.mkdir(parents=True, exist_ok=True)
             path = directory / 'recipe.json'
-            child_recipe = dict(recipe, seed=seed, out=str(directory / 'student'))
+            variant = (job['candidate_recipes'][job['training_seeds'].index(seed)]
+                       if 'candidate_recipes' in job else dict(recipe=str(recipe_path)))
+            child_recipe = dict(load_recipe(Path(variant['recipe']), 'training'),
+                                seed=seed, out=str(directory / 'student'))
             if path.exists():
                 if load_recipe(path, 'training') != child_recipe:
                     raise ValueError('saved seed recipe changed')
@@ -1438,7 +1458,9 @@ class TrainingPipeline:
                 if candidate['recipe_sha256'] != file_sha(path) or candidate['model_sha256'] != file_sha(model):
                     raise ValueError('saved seed candidate changed')
             else:
-                candidate = dict(seed=seed, model=str(model), recipe=str(path), train_started=time.time())
+                candidate = dict(seed=seed, model=str(model), recipe=str(path),
+                                 source_recipe=variant.get('source_recipe', str(recipe_path)),
+                                 train_started=time.time())
                 try:
                     if not admitted:
                         self._admit()
@@ -1490,6 +1512,9 @@ class TrainingPipeline:
                                                 for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
         report.update(self._select(job, trained))
+        for candidate in candidates:
+            candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])
+        self._marker(folder / 'candidates.json', dict(candidates=candidates))
         return report
 
     def _select(self, job, candidates):
@@ -1663,7 +1688,23 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                renew_size: int = START_SEED_BLOCK) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
-    picks = allocate(state['cells'], values, budget, per_group, state['round'] + 1, teacher)
+    specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
+    ordinary = {base: cell for base, cell in state['cells'].items()
+                if base not in specialists and (not specialists or cell['level'] != 7)}
+    reserved = 24 * len(specialists)
+    if reserved > budget:
+        raise ValueError('round budget cannot cover opening specialists')
+    completed = state.get('completed_groups', []) if specialists else []
+    completed_betas = {base: {group.get('beta') for group in completed if group['base'] == base}
+                       for base in specialists}
+    special_picks = [(base, 1.0, 12 * (2 - len(completed_betas[base])))
+                     for base in sorted(specialists) if len(completed_betas[base]) < 2]
+    remaining = budget - sum(group['games'] for group in completed)
+    pending_special = sum(games for _, _, games in special_picks)
+    if specialists and pending_special > remaining:
+        return [], changes + ['opening specialists start next round: partial-round budget already spent']
+    picks = special_picks + allocate(ordinary, values, remaining - pending_special,
+                                    per_group, state['round'] + 1, teacher)
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
@@ -1722,7 +1763,14 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         if start:
             item.update(demo_archive=cell['archive'], demo_decision=int(multiplier),
                         future_seeds=seeds[offset:offset + games])
-        plan.append(item)
+        if cell.get('opening_specialist'):
+            for index, beta in enumerate((0.0, 0.5)):
+                if beta not in completed_betas[base]:
+                    plan.append(dict(item, games=12, offset=offset,
+                                     beta=beta, label=item['label'] + f'_b{index}'))
+                    offset += 12
+        else:
+            plan.append(item)
     return plan, changes
 
 
@@ -1752,6 +1800,7 @@ def _run_group(args, state, item, round_index, per_worker):
         beta = args.starved_beta
     else:
         beta = 0.0
+    beta = item.get('beta', beta)
     item['beta'] = beta
     command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
                           item['games'], item['label'], workers=workers, beta=beta,
@@ -1958,6 +2007,10 @@ def main() -> None:
     parser.add_argument('--dry-run', action='store_true')
     parser.add_argument('--recipe', type=Path, default=ROOT / 'recipes/dw4i.json',
                         help='training recipe for the collection student; supplies every pack row option')
+    parser.add_argument('--alternate-recipe', type=Path,
+                        help='second K=2 candidate recipe, sharing the first candidate pack')
+    parser.add_argument('--opening-manifest', type=Path,
+                        help='fixed 1.0x cold-start specialists, 12 beta=0 + 12 beta=0.5 per cell')
     parser.add_argument('--promotion-panel', type=Path,
                         default=Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest']),
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
@@ -1973,6 +2026,8 @@ def main() -> None:
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
+        if args.alternate_recipe:
+            load_recipe(args.alternate_recipe, 'training')
     except (OSError, ValueError) as error:
         parser.error(str(error))
     if args.workers < 1:
@@ -1997,6 +2052,10 @@ def main() -> None:
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
+    if args.opening_manifest:
+        opening = load_tasks(args.opening_manifest)
+        tasks.update(opening)
+        manifests.update({task_id: args.opening_manifest for task_id in opening})
     start_cells, start_manifests = ({}, {})
     if args.demo_start_manifest.exists():
         start_cells, start_manifests = load_demo_start_cells(args.demo_start_manifest)
@@ -2047,6 +2106,7 @@ def main() -> None:
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
                                                        item['offset'], item['games'], item['label'],
+                                                       beta=item.get('beta', 0.0),
                                                        demo_archive=item.get('demo_archive'),
                                                        demo_decision=item.get('demo_decision'),
                                                        future_seeds=item.get('future_seeds'))))

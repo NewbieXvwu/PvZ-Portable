@@ -10,8 +10,11 @@ from pvz_frame_store import archive_seed
 
 class SourceRowCounts:
     """Count actual retained cached rows without changing sampling, weights or RNG state."""
-    def __init__(self):
+    def __init__(self, balance=False):
         self.sources = {}
+        self.balance = balance
+        self.spans = []
+        self.observed = 0
 
     def observe(self, path, rows):
         path = Path(path)
@@ -19,6 +22,49 @@ class SourceRowCounts:
         record['archives'] += 1
         seed = archive_seed(path.parent.parent.name)
         record['seeds'][seed] = record['seeds'].get(seed, 0)+len(rows)
+        if self.balance:
+            meta = json.loads((path.parent / 'meta.json').read_text())
+            level = int(meta['context']['level'])
+            self.spans.append((level, self.observed, self.observed + len(rows)))
+        self.observed += len(rows)
+
+    def rebalance(self, weights, is_val, cap):
+        levels = {}
+        for level, start, stop in self.spans:
+            training = ~is_val[start:stop]
+            record = levels.setdefault(level, dict(rows=0, original_weight=0.0))
+            record['rows'] += int(training.sum())
+            record['original_weight'] += float(weights[start:stop][training].sum())
+        active = {level: record for level, record in levels.items()
+                  if record['rows'] and record['original_weight'] > 0}
+        if len(active) * cap < 1 - 1e-9:
+            raise ValueError('too few training levels for source_weight.level_balance cap')
+        total_rows = sum(record['rows'] for record in active.values())
+        total_weight = sum(record['original_weight'] for record in active.values())
+        for record in active.values():
+            record['inverse_rows'] = total_rows / (len(active) * record['rows'])
+        masses = {level: record['original_weight'] * record['inverse_rows']
+                  for level, record in active.items()}
+        shares = {}
+        while masses:
+            remaining = 1 - sum(shares.values())
+            total = sum(masses.values())
+            capped = [level for level, mass in masses.items() if remaining * mass / total > cap]
+            if not capped:
+                shares.update({level: remaining * mass / total for level, mass in masses.items()})
+                break
+            for level in capped:
+                shares[level] = cap
+                del masses[level]
+        for level, record in active.items():
+            record.update(effective_share=shares[level],
+                          multiplier=total_weight * shares[level] / record['original_weight'])
+        for level, start, stop in self.spans:
+            if level in active:
+                training = ~is_val[start:stop]
+                part = weights[start:stop]
+                part[training] *= active[level]['multiplier']
+        return dict(cap=cap, levels=active)
 
     def finish(self, total, validation_seeds, destination):
         result = {}
