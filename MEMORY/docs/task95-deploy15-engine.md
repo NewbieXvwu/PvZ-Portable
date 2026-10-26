@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [6e-工具参数化，2026-10-26 21:30 CST] `scripts/task95_hash_suite.py` 增加 `--old/--new/--out`，默认仍指向 deploy14 与 build2 的归档并继续校验其 SHA，用于复核修复后的候选；4 项单测通过，默认行为不变。
+
 - [5b-观测路径核对，2026-10-26 20:05 CST] 发现 `observation=6` 向量路径不一致（详见“问题”）：C++ 按 106 通道加载/分配但 `Encode` 只传 101，Boss 4 个空间通道被丢弃；Python `v2boss` 为 105。当前无 obs=6 模型，故不影响 build2 对现有策略的门禁结论，但 v2boss 学生暂不可用：用 `RolloutNet(obs='v2boss')` 导出的模型被 build2 以 `invalid rollout network weights` 拒绝（已复现）。修复已在 `task95-bossfix` 分支用临时构建验证（v2boss 可加载并前向），但 deploy15 仍以 build2 为候选，PGO 重建与重跑未做。
 
 - [1b-源码范围复核，2026-10-26 19:50 CST] 对照当前 `origin/pvz-env`（tip `e0faf684`）：`a8d00858..origin/pvz-env -- src` 仍是 7 文件 +137/−11，与[1]一致；`a630fbd8..origin/pvz-env -- src` 为空、部署树 `HEAD` 的 `src` 与 `a630fbd8` 也为空差异。即构建所用源码等于当前远端 tip 的 `src`（tip 只在 src 之外前进），候选引擎未落后。已记入 `task95-engine-gate.json` 的 `source_src_tip_verified_against`。

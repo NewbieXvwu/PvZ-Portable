@@ -7,6 +7,7 @@ The legacy L7 probe is retained separately. No policy or production defaults cha
 from __future__ import annotations
 
 from dataclasses import asdict
+import argparse
 import hashlib
 import json
 import os
@@ -63,13 +64,20 @@ def case_spec(manifest: Path, task_id: str) -> tuple[TaskSpec, list[int]]:
 
 
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--old', type=Path, help='control engine (default: the archived deploy14 build)')
+    parser.add_argument('--new', type=Path, help='candidate engine (default: the archived build2)')
+    parser.add_argument('--out', type=Path, default=OUT)
+    args = parser.parse_args()
     os.environ.update(PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
     evidence = {'scope': 'six A2 tasks, first seed; reset and waits of 60 then 600 ticks',
                 'engines': {}}
     for tag, (filename, expected_sha) in ENGINES.items():
-        binary = ROOT / 'artifacts/task95/engine' / filename
+        default = (ROOT / 'artifacts/task95/engine' / filename).resolve()
+        binary = (args.old if tag == 'old' else args.new)
+        binary = binary.resolve() if binary else default
         actual_sha = hashlib.sha256(binary.read_bytes()).hexdigest()
-        if actual_sha != expected_sha:
+        if binary == default and actual_sha != expected_sha:
             raise ValueError(f'{tag} archive SHA changed')
         report = {'executable': str(binary), 'sha256': actual_sha, 'cells': []}
         for cell, task_id, manifest in CELLS:
@@ -92,9 +100,9 @@ def main() -> int:
                   'same distinct', item['same_distinct'], 'stable', item['stable'], flush=True)
         evidence['engines'][tag] = report
         # Keep completed control/candidate evidence if a later case is interrupted.
-        OUT.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
+        args.out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
     evidence['pass'] = all(cell['stable'] for cell in evidence['engines']['new']['cells'])
-    OUT.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
+    args.out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
     print('SIX FAMILY HASH', 'PASS' if evidence['pass'] else 'FAIL', flush=True)
     return 0 if evidence['pass'] else 1
 
