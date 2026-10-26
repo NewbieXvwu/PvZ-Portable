@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [5b-观测路径核对，2026-10-26 20:05 CST] 发现 `observation=6` 向量路径不一致（详见“问题”）：C++ 按 106 通道加载/分配但 `Encode` 只传 101，Boss 4 个空间通道被丢弃；Python `v2boss` 为 105。当前无 obs=6 模型，故不影响 build2 对现有策略的门禁结论，但 v2boss 学生暂不可用，需新任务修复后重建重跑。
+
 - [1b-源码范围复核，2026-10-26 19:50 CST] 对照当前 `origin/pvz-env`（tip `e0faf684`）：`a8d00858..origin/pvz-env -- src` 仍是 7 文件 +137/−11，与[1]一致；`a630fbd8..origin/pvz-env -- src` 为空、部署树 `HEAD` 的 `src` 与 `a630fbd8` 也为空差异。即构建所用源码等于当前远端 tip 的 `src`（tip 只在 src 之外前进），候选引擎未落后。已记入 `task95-engine-gate.json` 的 `source_src_tip_verified_against`。
 
 - [6d-端到端前置检查，2026-10-26 19:45 CST] 把脚本截到 preflight 结束（仅函数定义+只读检查，`L`/`O` 重定向到 `/tmp`）用 bash 实跑：exit 0，日志写出“preflight passed”。覆盖引擎 SHA、回滚引擎 SHA（`cq/build5` 仍为 76ff36dc）、deploy14c 代码守卫（改动集恰五文件 + 五个 blob 同哈希）与四条证据断言（六族、吞吐、L50、哈希suite）。仓库脚本与`~/pvz-logs`副本未改动，未触碰 qc。
@@ -79,6 +81,12 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 - [2b-吞吐，进行中被叫停] build2 对 deploy14 的 ABBA 跑到 **7/16 对**（全是 day 段）时主控通知 Codex 额度恢复、要求交还：中位 new/old **1.004**（即 old/new 0.996），7 对决策数全同；pool 段未跑，**不作判定**。部分记录留在 `artifacts/task95/abba3/run.log`。后台进程已停，未留下本任务的 pvz 进程。
 
 ## 问题
+
+- **[Boss 向量观测不一致，2026-10-26 20:05 CST]** 核对 `observation=6`（v2boss）时发现 C++ 与 Python 通道数不一致，且 C++ 编码时丢掉 Boss 通道：
+  - C++ `src/EnvironmentRollout.cpp:102` 按 `Channels+14` 读取首层权重、`:163` 按 106 通道分配 buffer、`:203` Boss 起点 `Channels+9` 只写到 `+12`（4 个通道），`+13` 空置；但 `:477` `Encode()` 首层卷积传入 `Channels+9`（101），Boss 的 4 个空间通道从不进入网络，且 kernel 的 `target*channels` 步长与 106 通道权重不匹配。
+  - Python `python/pvz_student_observation.py:8` 定义 `v2boss=(13,9)`，`:67-77` 写 4 个 Boss 通道（9..12），首层权重 105 通道；`MEMORY/docs/boss-l50.md` 也写“Python 与 C++ 使用 4 个 Boss 空间通道”。
+  - 后果：Python 训出的 v2boss 模型（105 通道）在引擎里会因权重多读 1 个通道被拒；即便手工做 106 通道模型，`Encode` 只用 101，Boss 特征被丢弃、卷积索引错位。**observation=6 目前不可用**。
+  - 影响与处置：当前无任何 obs=6 模型（`dw4i_s1` 是 v2/101，两个 value 网 92，artifacts 内无 v2boss），生产网络 ≤5，因此 build2 对现有策略无影响，六族与 L50 门禁结论不变；但 task85 的“L50 学生观测”尚不能用。修复需改 C++ 三处 14→13 与 `Encode` 的通道数，再重建 PGO 并重跑六族+L50+吞吐，属于新任务；本次不擅自改源码，否则作废已门禁的二进制与全部证据。
 
 - [代码基线前移，2026-10-26 19:05 CST] task95 脚本 17:08 定稿后，deploy14c 在 16:15 已把生产代码从 deploy14fix 换成 `0b8dcc26`+`fd1a0b61` 五文件（日志时间戳早于定稿，但当时未核对）。因此“代码沿用 deploy14”的字面做法（checkout `0b8dcc26`）现在会**回退**正在运行的 deploy14c。按“只换引擎”的本意，deploy15 保留当前生产代码、只换引擎；守卫改为断言当前代码恰为 deploy14c 状态。新引擎的六族/L50/吞吐证据是在 deploy15 树的固定 A2 夹具上取得的，与 cq 的策略侧代码无关；若主控希望先回退到 deploy14fix 再部署，需要另跑门禁，不能直接执行本脚本。
 
