@@ -125,7 +125,7 @@ deploy14g 的 `source_weight.level_balance`（`python/pvz_training_rows.py` 约 
 
 ### 未做
 
-按任务书要求：没写部署脚本、没动台式机 qc、没跑训练、没改旧配方文件、没做全量重放。
+按任务书要求：部署脚本只交主控、不执行；没动台式机 qc、没跑训练、没改旧配方文件、没做全量重放。
 DESIGN §14.41 登记了新配方与两个参数（task119 在 pvz-env 已占 §14.40，这里直接编为 §14.41，合并时不再顺延）。
 
 ### 合并注意
@@ -133,3 +133,7 @@ DESIGN §14.41 登记了新配方与两个参数（task119 在 pvz-env 已占 §
 本文件在 rebalance2 与 pvz-env 上各自新增（pvz-env 是任务书原文，本分支是原文＋结果），
 git merge-tree 实测为 add/add 冲突。合并时取本分支版本（它是 pvz-env 那版的超集），
 不要取 pvz-env 那侧，否则下面的结果整段丢失。除此之外两个分支没有其他冲突。
+
+追加（2026-10-26）：`scripts/qc_deploy14h.sh` 已交付到台式机 `~/pvz-logs/qc_deploy14h.sh`（SHA256 `f1c6e5fa9f5c3f03fae276d5debe4d3be13e360950a16845c613fddd7da1a0fc`，未执行）。
+照 14g 模式：REV=082a648e，CODE_FILES 增加 `recipes/dw4i2_rebalanced_p05.json`，`start_qc` 与 dry-run 的 `--alternate-recipe` 改成 p05，回滚回 deploy14g 代码与参数；
+preflight 基线取 cq 工作树当前 6 个文件的 SHA256（与 7592889a 逐位一致，p05 记为 null）。只做 `bash -n`。
