@@ -177,6 +177,9 @@
 
 - 2026-10-27 06:54：**原 94 态重建 24/24 完成，映射 26/94**。`bind()` 逐字段比对 94 个参考态：26 个唯一命中、68 个无命中、0 个多命中（分未来 f101 6/12、f102 6/12、f103 4/10、f104 3/12、f105 2/12、f106 4/12、f107 0/12、f108 1/12），`mapping_complete=false`、`original_probe_protocol_verified=false`、`rescore_eligible=false`。24 条轨迹全部到终局，输入签名逐决策落盘；报告 `task72_rebuild_mac_branch1/bindings.json`，摘要已写进 [当前回执](task78-stage-status.json)。因此原 94 态仍不能给 v6 评分。本轮可执行的采集/重建项到此全部结束；剩余只有原 v5 语料与正式候选训练（均未取得）。
 
+- 2026-10-27 07:30：**94 态身份映射修正为 94/94（此前 26/94 是比对口径错误，不是状态不同）**。冻结的 bind 用 int(x) 截断比较 balloon_x（plan 里也这么写的），但用保留的全精度 frame 重算可见原探针用的是四舍五入：int(round(x)) 对上全部 94 个记录的 balloon_x，截断只对 26 个、ceil 只对 22 个，且两者**只差 balloon_x 一个字段**（tick/wave/sun/cells/static_best/动作逐项相同，94 个状态在同一 (seed,decision,tick) 上全部存在）。新增 tracked 模块 `scripts/task78_task72_bind2.py`：按全精度 frame 重算气球位置后比对，`unique_matches=94`、`unmatched=0`、`multiple=0`、`mapping_complete=true`；未改轨迹/种子/tick/动作/plan/模型，frozen() 仍通过。报告 `task72_rebuild_mac_branch1/bindings_v2.json`。
+- 2026-10-27 07:30：**映射修好不等于 94 态门禁可评分**。预登记要的是 v6 在每个状态上的叶值：这些叶值是"对每个候选动作按探针协议 rollout 到三个视界后的叶子"，重建只重放了老师实际选的那一步，没有其它候选的叶子；原探针的噪声日程仍未验证，因此不能凭空补分。另外真值侧已核过：250 个已标注候选对里 236 对真值相同、14 对差 0.125，**没有一对达到 0.25 阈值**，所以终局排序一致率对任何模型都只能是"证据不足"。`original_probe_protocol_verified=false`、`rescore_eligible=false` 保持。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。

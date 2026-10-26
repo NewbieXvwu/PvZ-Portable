@@ -23,7 +23,10 @@
   "jobs": 24,
   "trajectories_started": 0,
   "original_probe_protocol_verified": false,
-  "rescore_eligible": false
+  "rescore_eligible": false,
+  "completed_trajectories": 24,
+  "exactly_matched_states": 94,
+  "mapping_complete": true
  },
  "note": "Changing the static checkpoint may affect the continuation and static-best signatures. It does not prove that the missing probe protocol or original states have been recovered.",
  "source_revision_comparison": {
@@ -32,16 +35,24 @@
   "reference_scope": "Git commit containing the task72b report; not an attestation of the exact Mac runtime checkout",
   "compared_head": "3f3bb4be3e35fa1465065b8217c50310fff69c95",
   "identical_git_objects": [
-   "src", "CMake", "CMakeLists.txt", "python/pvz_env.py",
-   "python/pvz_event_env.py", "python/pvz_rollout_policy.py",
-   "python/pvz_student_observation.py", "scripts/pvz_tasks.py",
-   "scripts/render_episode.py", "python/pvz_value_net.py",
+   "src",
+   "CMake",
+   "CMakeLists.txt",
+   "python/pvz_env.py",
+   "python/pvz_event_env.py",
+   "python/pvz_rollout_policy.py",
+   "python/pvz_student_observation.py",
+   "scripts/pvz_tasks.py",
+   "scripts/render_episode.py",
+   "python/pvz_value_net.py",
    "scripts/export_value_net.py"
   ],
   "search_play": {
    "reference_sha256": "2254e8ac1c22178485a45833b981141d2737cbfc2702751448c86fa685885206",
    "current_sha256": "98193f51ad5a1960bcf9c47f1492bd654419b25648f080a11264652f10a1d45a",
-   "changed_common_functions": ["_play"],
+   "changed_common_functions": [
+    "_play"
+   ],
    "play_ast_identical_after_removing_final_state_hash_field": true,
    "added_function": "final_state_hash",
    "change_scope": "Additional final-state hash query and output after game termination"
@@ -56,5 +67,30 @@
   "rescore_eligible": false,
   "engine_processes_started": 0,
   "conclusion": "The compared Git revisions do not expose a continuation-policy source change beyond final reporting. This does not establish cross-platform engine equivalence, the original runtime checkout, probe side effects, noise schedule, or exact state recovery. No frozen code, model, reconstruction plan, or seed was changed."
+ },
+ "balloon_rounding_amendment": {
+  "at_utc": "2026-10-26T23:17:12.747452+00:00",
+  "reason": "The frozen binder compared the stored balloon_x with int(x) truncation, which the plan recorded as the reconstruction convention. Re-deriving balloon positions from the retained full-precision frames shows the original probe rounded: int(round(x)) reproduces all 94 recorded balloon_x values, truncation reproduces 26 and ceil 22.",
+  "scope": "comparison rule only; no trajectory, seed, tick, action, plan or model was changed",
+  "evidence": {
+   "reference_sha256": "b0e52098921ff018dbdb7ccaee35a6b51a52c69d92c30619b54cdcb60cc7ab63",
+   "bindings_v2_sha256": "5f61b64d376315b6bba467ea9b294ce04698c0acc7f9cf21228e879af3c6235e",
+   "frozen_bindings_sha256": "3fb1134783f9ec438af393d0957fd9602a83339c3210569f6802626cbaf35252",
+   "rounded_matches": 94,
+   "truncated_matches": 26,
+   "ceil_matches": 22,
+   "differing_field": "balloon_x only"
+  },
+  "module": "scripts/task78_task72_bind2.py",
+  "result": {
+   "states": 94,
+   "unique_matches": 94,
+   "unmatched": 0,
+   "multiple": 0,
+   "mapping_complete": true,
+   "original_probe_protocol_verified": false,
+   "task72b_evaluation_complete": false,
+   "note": "identity is complete; scoring v6 on these states still needs the probe leaves (the original noise schedule is not verified)"
+  }
  }
 }

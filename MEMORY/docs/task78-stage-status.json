@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T22:57:37.698782+00:00",
+ "at_utc": "2026-10-26T23:17:16.795892+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -128,8 +128,8 @@
  "task72_reconstruction": {
   "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild_mac_branch1",
   "completed_trajectories": 24,
-  "exactly_matched_states": 26,
-  "mapping_complete": false,
+  "exactly_matched_states": 94,
+  "mapping_complete": true,
   "original_probe_protocol_verified": false,
   "rescore_eligible": false,
   "plan_sha256": "ff0651c777c2a0f85bc8f8732be2673c142811ed6a17b6612fcdc91d8249b010",
@@ -195,7 +195,7 @@
    "correction": "Student checkpoint contains label names but no trained_on list; absent metadata is unknown, not a verified empty identity set.",
    "report_sha256": "75ebca61725cf977018d7ed9b6fb7d2a709600437e102f1eda18702b840a3363"
   },
-  "unmatched_states": 68,
+  "unmatched_states": 0,
   "matched_per_future": {
    "101": {
     "matched": 6,
@@ -229,7 +229,9 @@
     "matched": 1,
     "total": 12
    }
-  }
+  },
+  "binding_report_v2_sha256": "5f61b64d376315b6bba467ea9b294ce04698c0acc7f9cf21228e879af3c6235e",
+  "binding_rule": "balloon_x compared as int(round(float x)) re-derived from the retained full-precision frame; the frozen binder truncated and therefore matched only 26"
  },
  "independent_roof": {
   "expected_label_jobs": 216,
