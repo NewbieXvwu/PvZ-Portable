@@ -27,6 +27,9 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [3] 接手续做时发现六族×老师/学生×8种子的192局已经落盘，复用现有动作归档重跑纯比较，96对逻辑字段与动作流全部0差异，不重跑对局。对照76ff36dc已核实并复制到本任务留档目录，新引擎仍为07703a57；跨新旧完整state_hash差96/96属于初始化字段变化，不作为逻辑失败。保留已完成的新引擎探针（多进程/同进程各1条哈希线），补存旧引擎对照记录（此次多进程3条、同进程4条）。结论及指纹见task95-engine-gate.json。
+- [4-准备] 新增task95_throughput_abba.py，原样调用A4的16对串行ABBA工作负载，按每对old_seconds/new_seconds的中位数≥0.98验收，并要求决策数相同；不沿用历史new/old≤1.03的较松门槛。阈值、配对完整性与决策差异等5项纯单测通过。
+
 - [1] src/ 改动清单（`git diff a8d00858 origin/pvz-env -- src`，7 文件 +137/−11），逐项影响判定（预期全部为“无”，证实）：
   1. **task82 三处未初始化字段**：`Challenge.cpp` `mCloudsCounter[6]=0`（SaveGame 每种模式都序列化该数组；TreeOfWisdomInit 在首次 update 前赋玩法值 → 纯哈希稳定性，无逻辑影响）；`Coin.cpp` `mCollectX/Y=0`（Collect() 用前必赋值；快照保存未收集金币 → 仅哈希）；`Projectile.cpp` `mLastPortalX=-1`（冒险局只有 SaveGame 读；DataArray 槽复用 → 仅哈希）。效果：同二进制跨进程 state_hash 稳定。
   2. **task85 Boss 观测**：`EnvironmentRollout.cpp/.h` 新增 observation=6（v2boss）布局（棋盘 +4 Boss 空间通道=14、标量 +2=9），只在加载 observation=6 的网络时激活——生产网络全部 ≤5，行为不变；头部校验放宽 observation ≤6。`LawnApp.cpp` `WriteObservationBoss` 给 lean / v2 / 完整观测追加 `"boss":{...}` JSON 块（仅 L50 `GetBossZombie()` 非空时输出）；特权僵尸观测加增量字段 `summon_counter`（task81 投石车弹药，纯增量，Python 不校验版本号）。

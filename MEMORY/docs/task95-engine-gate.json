@@ -1,0 +1,209 @@
+{
+  "logic_gate": {
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable",
+    "seeds": 8,
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      }
+    ],
+    "state_hash": {
+      "compared": 96,
+      "differ": 96
+    },
+    "pass": true
+  },
+  "state_hash_probe": {
+    "new": {
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable",
+      "multi_process": {
+        "hashes": [
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ]
+        ],
+        "distinct": 1
+      },
+      "same_process": {
+        "hashes": [
+          "5089151349873973",
+          "5089151349873973",
+          "5089151349873973",
+          "5089151349873973"
+        ],
+        "distinct": 1
+      }
+    },
+    "old": {
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+      "multi_process": {
+        "hashes": [
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "f31a3842d29c5a66",
+            "1d701bd213d41f7",
+            "b977d6c6e42e5d9e"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "3f254bdc52fd08e",
+            "aefe1195a2a9b06f",
+            "33523766074914b4"
+          ]
+        ],
+        "distinct": 3
+      },
+      "same_process": {
+        "hashes": [
+          "5089151349873973",
+          "c7169fb3960265ea",
+          "745ac62261e64343",
+          "c875c2472aec60f4"
+        ],
+        "distinct": 4
+      }
+    }
+  },
+  "binaries": {
+    "old": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+      "bytes": 10412136,
+      "sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a"
+    },
+    "new": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable",
+      "bytes": 68684000,
+      "sha256": "07703a5781e70d2c3b1b3ad7b0c473ddfaf2a313ac2ce4f5724035ba44e184be"
+    }
+  },
+  "models": {
+    "artifacts/student/dw4i_s1/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "artifacts/value_net/v4/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+      "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+    },
+    "artifacts/hard/value_branch1/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    }
+  },
+  "source_src_base": "a8d00858",
+  "source_src_tip": "a630fbd842f6e8a2493f09de3d433608bd71a254",
+  "pgo_profile_files": 141,
+  "build_flags": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch",
+  "verification": "Reused all 192 completed game records and action archives; comparison rerun without native games. New determinism probe preserved; missing old control evidence added."
+}
