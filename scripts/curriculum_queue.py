@@ -1222,7 +1222,9 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
             # the head of the table, so old groups and their labels stay comparable.
             try:
                 block = renew_start_seeds(cell, start_seed_ledger, renew_size)
-            except SeedPoolExhausted as error:
+            except (SeedPoolExhausted, ValueError, OSError) as error:
+                # 池耗尽、账本损坏/池不符、账本目录不可写：都只是这一格领不到，不能让 qc 停在
+                # plan 阶段（task98 的教训：单点异常不该终止整个采集）。错误原文进日志。
                 changes.append(f'{task_id}: seed renewal failed ({error})')
             else:
                 seeds = cell['seeds']

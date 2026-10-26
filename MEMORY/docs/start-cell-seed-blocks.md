@@ -27,7 +27,9 @@
    offset / label / 抽样契约都不变。
 4. **qc 侧**：`plan_round` 发现 `offset + games > len(seeds)` 时先续领 256 个接到表尾，
    再排这一组；续领写进 state（`seed_blocks`）和 changes 日志（`seeds renewed +256 from [lo,hi) ...`）。
-   只有领不到（池耗尽）才退休，并记 `retired_reason='seeds exhausted'`。
+   只有领不到才退休，并记 `retired_reason='seeds exhausted'`。领不到包括池耗尽、账本损坏/池不符、
+   账本目录不可写（`SeedPoolExhausted` / `ValueError` / `OSError`）——这几种都只让这一格退休，
+   **不会让 qc 停在 plan 阶段**，错误原文写进 changes 日志。
    清单块**必须落在续领池之外**：`load_demo_start_cells` 在启动时就检查，落进
    `[200,000,000, 201,000,000)` 直接 `ValueError`（清单块不在账本里，撞了也查不出来）。
 5. **重启**：`reconcile_start_cells` 只在“状态里的表不再以清单块开头”（清单换了块）时重置，
@@ -41,11 +43,12 @@
 ## 证据
 
 - 测试（`/home/newbiexvwu/.venvs/ml/bin/python3`）：
-  `python/test_curriculum_queue.py` **67 passed, 1 skipped**（新增 12 项：续领后排 48 局且偏移不变、
+  `python/test_curriculum_queue.py` **68 passed, 1 skipped**（新增 13 项：续领后排 48 局且偏移不变、
   两段有序不相交、两格续领拿到的块也不相交、池在全部已登记段之外、重启保留多段表、
   清单换块才重置、退休格恢复后续领、恢复时重叠告警、legacy 恢复不被二次退休、池耗尽退休、
-  清单块落进续领池时启动即拒绝、12 轮续领 + 每轮重启的长跑（576 个种子零重复、长到第三段））；
-  八个相关测试文件合计 **127 passed, 2 skipped**。
+  清单块落进续领池时启动即拒绝、12 轮续领 + 每轮重启的长跑（576 个种子零重复、长到第三段）、
+  账本损坏时退休而不是让 qc 停在 plan 阶段）；
+  八个相关测试文件合计 **128 passed, 2 skipped**。
 - 池不相交（full scan，274,472 个 JSON/JSONL + 全部声明段）：`MEMORY/docs/gate-seed-inventory.json`
   的 `candidate` = `{low: 200000000, high: 201000000, overlaps: [[200000000, 201000000]],
   self_registered: true}` —— 唯一的“重叠”是池自己（它已作为占用段登记）；再跑

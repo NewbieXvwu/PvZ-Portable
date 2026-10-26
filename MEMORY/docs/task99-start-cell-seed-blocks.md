@@ -36,6 +36,8 @@
 
 - 2026-10-26 长跑测试：12 轮、每轮 48 局、每轮都重启（落盘 → `reconcile_start_cells`），种子表按需长到第三段、576 个种子零重复、全程不退休。单文件 67 passed，八个相关文件 127 passed。
 
+- 2026-10-26 续领失败面收窄：`plan_round` 现在把 `SeedPoolExhausted` / `ValueError`（账本损坏、池不符）/ `OSError`（账本不可写）都当作“这一格领不到”→ 退休并记日志，不再让 qc 停在 plan 阶段（task98 的单点异常原则）。新增 `test_corrupt_ledger_retires_instead_of_crashing`；单文件 68 passed，八个相关文件 128 passed。
+
 ## 问题
 
 ## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of

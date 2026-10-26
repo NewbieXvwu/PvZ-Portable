@@ -1127,6 +1127,20 @@ class StartSeedRenewalTest(unittest.TestCase):
         self.assertIn(self.BASE, state['cells'])
         self.assertNotIn(self.BASE, state['retired_cells'])
 
+    def test_corrupt_ledger_retires_instead_of_crashing(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            ledger.write_text(json.dumps(dict(pool=list(START_SEED_POOL),
+                                              pools=[list(START_SEED_POOL)],
+                                              allocated=[[1, 2]])))   # 块不在池里 → 账本损坏
+            state = dict(round=0, offsets={self.BASE: 250}, cells={self.BASE: self.cell()})
+            plan, changes = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                       budget=10, per_group=10, start_seed_ledger=ledger)
+            self.assertEqual(plan, [])
+            self.assertIn(self.BASE, state['retired_cells'])
+            self.assertTrue(any('seed renewal failed' in line and 'corrupt' in line
+                                for line in changes))
+
     def test_exhausted_pool_retires_the_cell(self):
         with tempfile.TemporaryDirectory() as tmp:
             ledger = Path(tmp) / 'start_ledger.json'
