@@ -1302,3 +1302,39 @@ tick 32520 / 33200 / 46319，均 result 1；boss 层 obs wave=0 与存档终局�
 3. `teacher_rates.json` 不需要补条目：三格按未知处理，只按学生胜率排序，第一轮窗口出来后照常升降档。
 4. 回滚：删掉清单里的 `demo_start`（或把 `--demo-start-manifest` 指向没有它的清单），三格自动进 `retired_cells`。
 
+
+**task112 追加（2026-10-26）：L25 小僵尸泳池 / L45 蹦极闪电战**
+
+用户 2026-10-26 又录两局原生传送带（均通关）：`demo_pool_25_orig_m100`（种子 20261025，32,648 操作，668 帧，被吃 14）、
+`demo_roof_45_orig_m100`（种子 20261045，46,960 操作，966 帧，被吃 28）。两关的任务条目由 task111 在 `pvz-env` 登记
+（空牌组、`conveyor_start: "original"`、倍率 1.0）；本分支把它们并入清单并各加 `demo_start`。
+
+入库关口：每局用 Mac 本机引擎 `build/pvz-portable`（sha256 `6f7d2c3f…`，与录制时同一个二进制）`human_demo.py verify`
+**一次**，两局并行、各一个游戏进程。两局都走逐操作状态哈希校验：32,648 / 46,960 操作，tick 32,567 / 46,835，
+wave 30 / 30，result 1，`verified: true`。台式机部署时生产 dry-run 会再加载一遍，不另加复验。
+
+- `demo_pool_25_orig_m100`：阶梯 `624..264`（6 档，步距 72；668 帧，顶档离终局 44 帧），未来种子块 **45,600,000** 起 256；
+- `demo_roof_45_orig_m100`：阶梯 `920..380`（7 档，步距 90；966 帧，顶档离终局 46 帧），未来种子块 **45,700,000** 起 256。
+
+阶梯形状照 task107（同帧数量级的 pool / storm 两格），`index=0` 落在示范后段，由 qc 的 0.85 / 0.5 升降档自动往前推；
+同样**没做接手扫描**（任务书不要求）。两块未来种子与 44.0M–45.5M（含 task107 的 45.3M / 45.4M / 45.5M）、
+46.0M–47.0M 及其余既有段机械核对不相交。
+
+**L45 蹦极口径**：task110 的结论是「原生传送带与种植接口已有，缺模型中的可见蹦极状态（落点红靶 / 空投目标）」。
+本格**不新增观测字段**，任务字段与现有原生任务完全一致（空牌组、`conveyor_start: "original"`、倍率 1.0、无
+`fog_observation`）。也就是说示范里的蹦极落点对模型不可见这一缺口保持原状，补它属于 task110 估计的 2–3 人日，
+不在本次登记范围。
+
+`test_registered_manifest_start_cells` 期望集合同步（起点格 34 → 36）。本工作树没有示范存档，该测试按既有约定 skip；
+`load_demo_start_cells` 已用主检出存档根单独加载这两个新格（阶梯、种子块 256、archive 已 verified）通过。
+`python/test_curriculum_queue.py` 63 项通过、1 skip；`test_student_selection` 的 1 项失败在基线 `cc8cc4ed` 上同样失败，与本次无关。
+
+**部署清单（主控，随 deploy14e 上线，本次不执行）**：
+
+1. 存档到位：两个 `artifacts/human_demo/raw/seed_{20261025,20261045}/<task_id>/` 目录（meta 已由本次 verify 置 `verified: true`）。
+2. `--demo-start-manifest` 缺省即 `configs/human_demo_tasks.json`；qc 启动时 `reconcile_start_cells` 自动加两格。
+3. `teacher_rates.json` 不需要补条目：两格按未知处理，第一轮窗口出来后照常升降档。
+4. 回滚：删掉清单里的 `demo_start`，两格自动进 `retired_cells`。
+5. 合并去重：本分支已自行登记这两条原生任务（字段与 `pvz-env` 的 task111 版本相同，外加 `demo_start`）。
+   若 `pvz-env` 先合入 deploy14e，按 `task_id` 去重，只保留带 `demo_start` 的那条，别留下两份。
+
