@@ -124,6 +124,8 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 
 现场准备：本机 `~/pvz-logs/t104_watch.sh` 每 30 秒探测一次，一通就把 `hostname` / `date` / `nvidia-smi` / `free` / `tmux ls` / `pgrep task104` / `pgrep train_rollout_policy` 落到 `~/pvz-logs/t104_watch.log`，不写远端任何状态。台式机恢复后按「开训与评估的运行清单」逐条执行，先确认没有遗留 `gate_seed_inventory.py`，再按 GPU 与内存准入决定是否开训。
 
+随后把探测器升级成恢复即接手：`~/pvz-logs/t104_boot.sh` 经 `ssh ... 'wsl -e bash -s'` 从标准输入执行，不做任何引号拼接。它只做三件事——打印 HEAD / 脏文件数 / 遗留进程 / GPU / 内存 / `tmux ls` / 四个检查点是否存在；若 `task104-train` 会话已存在或 `artifacts/task104/train.lock` 已被别的启动者占住就直接退出，不重复开训；否则建锁并 `tmux new-session -d -s task104-train` 起 `scripts/task104_train.py`。该驱动本身带 GPU 与内存准入（无他人训练、显存无计算进程、可用内存 ≥ 14 GiB 连续 30 秒才开训，运行中遇他人训练即暂停），所以提前起会话不会和 qc 抢卡，只是排队等待。
+
 台式机 18:19 恢复连接。先按主控要求核对遗留扫描：`gate_seed_inventory.py` 已无进程；GPU 上 deckvar 的 task93 expand 训练仍在跑（7.0 GB / 37%），等到 18:23 它结束、显存回到 4.5 GB / 0% 才开训，没有与 qc 或别人的训练抢卡。
 
 `tmux t104` 跑 `~/pvz-logs/t104_train.sh`，四个配方顺序训练。a_s1 已载入 **16,982,931 条决策 / 55,773 个种子 / 1,704,229 条验证行**，与 A 索引 `7d15b915a2192805` 的行数逐位相同；`data_memory` 报 board 5.56 GB、scalar 1.85 GB、packet 1.19 GB。训练前数据层测试在台式机通过（`HumanDemoExportTest` + `test_recipe` 共 10 项）。
