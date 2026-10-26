@@ -28,6 +28,7 @@
 
 - 2026-10-26 verify（Mac 本机引擎 `/Users/newbiexvwu/PvZAgent/build/pvz-portable`，sha256 `6f7d2c3f…`，与录制时同一二进制 → 逐操作状态哈希）：两局并行、各一个游戏进程。`demo_pool_25_orig_m100` 32,648 操作 / tick 32,567 / wave 30 / result 1；`demo_roof_45_orig_m100` 46,960 操作 / tick 46,835 / wave 30 / result 1。两局 `verified: true`。
 - 2026-10-26 起点格登记：`configs/human_demo_tasks.json` 新增两条原生任务（字段照 task111 的 `pvz-env` 版本）并各加 `demo_start`——pool 阶梯 `624..264`（6 档，步距 72，668 帧）、roof 阶梯 `920..380`（7 档，步距 90，966 帧），均 `index=0`；未来种子块 45,600,000 / 45,700,000 各 256，与 44.0M–45.5M、46.0M–47.0M 等既有段机械核对不相交。L45 不新增观测字段（task110 的可见蹦极状态缺口保持原状）。
+- 2026-10-26 qc 侧对齐（离线、不起进程）：`load_demo_start_cells` → `make_state` 在两格上生成起点格，档位分别落在 624 / 920（阶梯 0 号 = 示范后段），再次 `reconcile_start_cells` 返回空（幂等）；`command_for` 带 `--demo-decision 624` / `920` 与 `--future-seeds 45600000..45600007` / `45700000..45700007`。
 - 2026-10-26 测试与 DESIGN：`test_registered_manifest_start_cells` 期望 34 → 36；`test_curriculum_queue` 63 过 1 skip，`test_student_selection` 的 1 项失败在基线 `cc8cc4ed` 同样失败。DESIGN §14.36 追加 task112 条目与部署清单（不执行，随 deploy14e）。
 
 ## 问题
