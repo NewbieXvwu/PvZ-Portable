@@ -89,6 +89,9 @@
   DESIGN自动登记压成两张表，避免逐存档重复建节；课程测试接受本包的`llm_agent`来源。
   以上工具的真实全量扫描/最终审计仍待输入校验完成，不作为已验收结果。
 
+- 后续验收补充：全量扫描结束后，审计器会实际重试import和register，要求所有校验回执/扫描种子块复用，
+  清单、DESIGN、课程测试、种子账本四类文件字节不变，重复登记0；当前尚未执行最终重试验收。
+
 ```bash
 P=/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport
 PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 /home/newbiexvwu/.venvs/ml/bin/python3 "$P/scripts/import_llm_run.py" /home/newbiexvwu/llm_runs/gptpro_438cb30a_0446.zip --content-addressed --dest "$P/artifacts/task105/import" --executable /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable --report "$P/artifacts/task105/import_report.md" --scan-out "$P/artifacts/task105/scan_jobs.json"

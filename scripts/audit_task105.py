@@ -9,6 +9,7 @@ import collections
 import json
 import re
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -190,11 +191,39 @@ def main():
     import curriculum_queue
     cells, _ = curriculum_queue.load_demo_start_cells(subset)
     require(set(cells) == {t['task_id'] for t in additions}, 'new curriculum cells cannot load')
+    stable_paths = [ROOT / name for name in ('configs/human_demo_tasks.json', 'DESIGN.md',
+                                             'python/test_curriculum_queue.py')]
+    stable_paths.append(importer.DEFAULT_SEED_LEDGER)
+    before_retry = {str(path): file_sha(path) for path in stable_paths}
+    # Exercise the public import/register CLIs against the completed real dataset.
+    # The already-checked receipts guarantee that this import needs no new games.
+    retry_plan = out / 'reimport_scan_jobs.json'
+    with (out / 'reimport_retry.out').open('w') as stream:
+        retry = subprocess.run([sys.executable, str(ROOT / 'scripts/import_llm_run.py'), str(args.input),
+             '--content-addressed', '--dest', str(out / 'import'), '--executable', str(ENGINE),
+             '--scan-out', str(retry_plan)], cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT)
+    require(retry.returncode in (0, 1), 'incremental import retry failed')
+    retried_rows = json.loads((out / 'import/import_progress.json').read_text())['archives']
+    require(len(retried_rows) == len(rows) and all(r['verification_reused'] for r in retried_rows),
+            'incremental retry did not reuse all verification receipts')
+    require(all(a['reused_reservation'] for a in json.loads(retry_plan.read_text())['archives']),
+            'incremental retry allocated a new scan block')
+    retry_index = max((out / 'import').glob('llm_import_*.json'), key=lambda p: p.stat().st_mtime_ns)
+    require(not json.loads(retry_index.read_text())['registered'], 'incremental retry registered another family')
+    with (out / 'register_retry.out').open('w') as stream:
+        subprocess.run([sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'register',
+                        str(out / 'scan/results'), '--out', str(out / 'register_retry')],
+                       cwd=ROOT, stdout=stream, stderr=subprocess.STDOUT, check=True)
+    require(before_retry == {str(path): file_sha(path) for path in stable_paths},
+            'incremental import/register changed manifest, DESIGN, tests or seed ledger')
+    require(json.loads((out / 'register_retry/register_report.json').read_text())['registered'] == 0,
+            'register retry added another start cell')
     evidence = dict(schema='task105_evidence_v1', audit_passed=True, input_sha256=file_sha(args.input),
                     engine_sha256=ENGINE_SHA, verification_context=expected_context,
                     archives=len(rows), tasks=summary, scans=outcomes,
                     rejected=[{k: r[k] for k in ('archive_sha256', 'base_task_id', 'seed', 'note')}
                               for r in rows if r['verify'] != '通过'],
+                    retry_idempotent=True, preserved_baseline_tasks=len(old),
                     registered=len(additions), scan_games=sum(r['games'] for r in outcomes), deployed=False)
     save(out / 'audit.json', evidence)
     save(ROOT / 'MEMORY/docs/task105-import-evidence.json', evidence)
