@@ -31,3 +31,17 @@
 ## 结果
 
 ## 问题
+
+## 主控追加（2026-10-26 08:20，task93b：Mac 侧做倍率扫描并扩采）
+执行者：Mac Codex（plus2 号，tmux `codex-plus2b`）。工作树是 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/deckvar-mac`（分支 `deckvar-mac`，从 origin/deckvar 拉出）。台式机的三族清单已拷到该树的 `artifacts/stage4/random_deck_panel.json`。Mac 上每个任务最多 6 个游戏进程。台式机那边的第 4 步验证由 Business 号 Codex 继续做，**两边不重复**。
+1. **夜间 / 泳池倍率扫描**：照第 3 步方案，对 `night_l12_train_rand` 与 `pool_l21_train_rand` 各扫 0.5 倍和 0.75 倍。
+   - 每档 16 局，生产老师，学生 r11；
+   - r11 路径：`/Users/newbiexvwu/PvZAgent/.claude/worktrees/fog36/artifacts/task79/models/r11/model.pt`；
+   - 叶值 v5：`/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt`；
+   - branch1：`/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt`。
+   报胜率与 Wilson 区间，按 task75b 的规则定起步档。
+2. **扩采**：
+   - 三族各再采 192 局老师 frames。白天 1.0 倍；夜间、泳池用第 1 步定的档。
+   - 种子用 93_000_000 段里台式机没用过的子段：从 93_x05_000 起，先机械核对台式机清单与已用段。
+   - 照 Mac 现有的标签导入管道打包，经 HF `transfer/` 送到台式机（参考 `scripts/import_mac_labels.py` 的命名规则）。只传数值标签，台式机取用后删除。
+3. 结果写回本任务书的“结果”节，标明 Mac 侧；`git push origin deckvar-mac`。合并由主控做。
