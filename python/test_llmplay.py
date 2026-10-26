@@ -945,7 +945,7 @@ class DeliveryTest(unittest.TestCase):
         record_archive(self.archive(81000001))
         self.assertEqual(len(json.loads((self.out/'progress.json').read_text())['archives']), 2)
 
-    def test_fast_resume_trusts_valid_digest_and_skips_completed_task(self):
+    def test_default_resume_uses_progress_without_hash_or_replay(self):
         from unittest.mock import patch
         from llmplay import resume, next_task, list_tasks
         from llmplay.delivery import record_archive
@@ -953,11 +953,16 @@ class DeliveryTest(unittest.TestCase):
         self.session.note_rewind(self.task, 10, 20)
         for n in range(5): record_archive(self.archive(81000000 + n, robust=n < 3))
         source = self.out / 'out.zip'
+        previous = json.loads((self.out/'progress.json').read_text())
         os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
         target_session = budget.reset_session(self.base / 'new-budget.json')
-        with patch('llmplay.delivery.verify_archive', return_value=True) as verify:
+        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')) as digest, \
+                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')) as verify:
             document = resume(source)
+        self.assertEqual(digest.call_count, 0)
         self.assertEqual(verify.call_count, 0)
+        self.assertEqual(document['archives'], previous['archives'])
+        self.assertEqual(document['tasks'], previous['tasks'])
         self.assertTrue(document['tasks'][self.task]['complete'])
         self.assertEqual(next_task()['task_id'], 'demo_roof_47_doom_m200')
         self.assertNotIn(self.task, list_tasks())
@@ -966,7 +971,7 @@ class DeliveryTest(unittest.TestCase):
         with patch('llmplay.delivery.verify_archive', return_value=True): resume(source)
         self.assertEqual(target_session.level(self.task)['search_ticks'], 345)
 
-    def test_fast_resume_replays_only_tampered_archive(self):
+    def test_tampered_archive_is_restored_by_default_and_checked_only_in_full(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive, resume
         import zipfile
@@ -977,16 +982,25 @@ class DeliveryTest(unittest.TestCase):
         damaged = source/'out'/prior['archives'][1]['archive']
         (damaged/'ticks.jsonl').write_text('tampered\n')
         os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
-        with patch('llmplay.delivery.verify_archive', side_effect=ValueError('tick mismatch')) as verify:
+        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
+                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')) as verify:
             document = resume(source)
-        self.assertEqual(verify.call_count, 1)
-        self.assertEqual(verify.call_args.args[0], damaged)
+        self.assertEqual(verify.call_count, 0)
+        self.assertEqual(sum(e['valid'] for e in document['archives']), 3)
+        self.assertEqual((Path(os.environ['LLMPLAY_OUT'])/prior['archives'][1]['archive']/'ticks.jsonl').read_text(), 'tampered\n')
+        def replay(archive, **kwargs):
+            if archive == damaged: raise ValueError('tick mismatch')
+            return True
+        os.environ['LLMPLAY_OUT'] = str(self.base/'full')
+        with patch('llmplay.delivery.verify_archive', side_effect=replay) as verify:
+            document = resume(source, verify='full')
+        self.assertEqual(verify.call_count, 3)
         self.assertEqual(sum(e['valid'] for e in document['archives']), 2)
         invalid = next(e for e in document['archives'] if not e['valid'])
         self.assertEqual(invalid['seed'], 81000001)
         self.assertIn('tick mismatch', invalid['invalid_reason'])
 
-    def test_fast_resume_replays_invalid_prior_record(self):
+    def test_default_resume_preserves_invalid_record_and_full_can_revalidate(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive, resume
         import zipfile
@@ -996,10 +1010,19 @@ class DeliveryTest(unittest.TestCase):
         p = source/'out/progress.json'
         prior = json.loads(p.read_text())
         prior['archives'][0]['valid'] = False
+        prior['archives'][0]['won'] = False
+        prior['archives'][0]['robust'] = False
         p.write_text(json.dumps(prior))
         os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
-        with patch('llmplay.delivery.verify_archive', return_value=True) as verify:
+        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
+                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')) as verify:
             document = resume(source)
+        self.assertEqual(verify.call_count, 0)
+        self.assertEqual(document['archives'], prior['archives'])
+        self.assertEqual(document['tasks'][self.task]['wins'], 0)
+        os.environ['LLMPLAY_OUT'] = str(self.base/'full')
+        with patch('llmplay.delivery.verify_archive', return_value=True) as verify:
+            document = resume(source, verify='full')
         self.assertEqual(verify.call_count, 1)
         self.assertTrue(document['archives'][0]['valid'])
 
@@ -1045,6 +1068,41 @@ class DeliveryTest(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'verify'):
             resume(self.base, verify='other')
 
+    def test_default_resume_needs_progress_and_does_not_fall_back_to_replay(self):
+        from unittest.mock import patch
+        from llmplay import resume
+        archive = self.archive(81000000)
+        with patch('llmplay.delivery.verify_archive') as replay:
+            with self.assertRaisesRegex(ValueError, 'progress.json'):
+                resume(archive)
+        replay.assert_not_called()
+
+    def test_default_resume_preserves_non_digest_path_and_ignores_unlisted_archive(self):
+        from unittest.mock import patch
+        from llmplay.delivery import record_archive, resume
+        import shutil
+        import zipfile
+        record_archive(self.archive(81000000))
+        source = self.base/'source'
+        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
+        p = source/'out/progress.json'
+        prior = json.loads(p.read_text())
+        archive = source/'out'/prior['archives'][0]['archive']
+        relative = 'archives/saved-archive'
+        archive.rename(source/'out'/relative)
+        prior['archives'][0]['archive'] = relative
+        p.write_text(json.dumps(prior))
+        (source/'out'/relative/'meta.json').write_text('opaque metadata')
+        shutil.copytree(self.archive(81000001), source/'out/archives/unlisted')
+        os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
+        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
+                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')), \
+                patch('llmplay.delivery._entry', side_effect=AssertionError('no metadata validation')):
+            document = resume(source)
+        self.assertEqual(document['archives'], prior['archives'])
+        self.assertEqual((Path(os.environ['LLMPLAY_OUT'])/relative/'meta.json').read_text(), 'opaque metadata')
+        self.assertFalse((Path(os.environ['LLMPLAY_OUT'])/'archives/unlisted').exists())
+
     def test_resume_invalid_archive_does_not_count_and_seed_is_retried(self):
         from unittest.mock import patch
         from llmplay import resume, next_task
@@ -1053,7 +1111,7 @@ class DeliveryTest(unittest.TestCase):
         record_archive(archive)
         os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
         with patch('llmplay.delivery.verify_archive', side_effect=ValueError('tick mismatch')):
-            document = resume(archive)
+            document = resume(archive, verify='full')
         self.assertEqual(document['tasks'][self.task]['wins'], 0)
         self.assertFalse(document['archives'][0]['valid'])
         self.assertIn('tick mismatch', document['archives'][0]['invalid_reason'])
@@ -1094,7 +1152,7 @@ class DeliveryTest(unittest.TestCase):
         from llmplay import resume
         archive = self.archive(81000000)
         (archive/'ticks.jsonl').unlink()
-        document = resume(archive)
+        document = resume(archive, verify='full')
         entry = document['archives'][0]
         self.assertEqual(entry['task_id'], self.task)
         self.assertEqual(entry['seed'], 81000000)

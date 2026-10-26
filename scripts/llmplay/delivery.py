@@ -185,9 +185,14 @@ def _archive_digest(archive):
 
 def _store(archive, root, *, digest=None, consume=False):
     relative = Path("archives") / (digest or _archive_digest(archive))
+    return _restore_archive(archive, root, relative, consume=consume)
+
+
+def _restore_archive(archive, root, relative, *, consume=False):
+    relative = Path(relative)
     target = root / relative
     if not target.is_dir():
-        target.parent.mkdir(exist_ok=True)
+        target.parent.mkdir(parents=True, exist_ok=True)
         tmp = Path(tempfile.mkdtemp(prefix=".archive-", dir=target.parent))
         try:
             for name in FILES:
@@ -333,7 +338,7 @@ def _extract(source, target):
 
 
 def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict:
-    """摘要匹配且原进度有效的内容寻址存档直接恢复；full 并行重放全部存档。"""
+    """默认按旧progress直接恢复，不算摘要、不重放；full才并行重放全部存档。"""
     if verify not in ("fast", "full"):
         raise ValueError('verify 必须是 "fast" 或 "full"')
     root = output_dir()
@@ -345,13 +350,13 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
             source = Path(directory)
         if not source.is_dir():
             raise ValueError("续跑来源必须是 out.zip 或目录")
-        candidates = sorted(p.parent for p in source.rglob("meta.json")
-                            if not any(part.startswith(".") for part in p.relative_to(source).parts))
         missing, prior_run_ids, prior_entries = [], set(), {}
+        progress_found = False
         for path in source.rglob("progress.json"):
             if any(part.startswith(".") for part in path.relative_to(source).parts):
                 continue
             prior = json.loads(path.read_text(encoding="utf-8"))
+            progress_found = True
             if prior.get("run_id"):
                 prior_run_ids.add(prior["run_id"])
             for entry in prior.get("archives", []):
@@ -359,27 +364,21 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
                 if relative.is_absolute() or ".." in relative.parts or "\\" in entry["archive"]:
                     raise ValueError("progress.json 中含不安全存档路径")
                 archive = path.parent / entry["archive"]
-                if relative.parts == ("archives", archive.name):
-                    prior_entries.setdefault(archive, []).append(entry)
-                if archive not in candidates:
+                prior_entries.setdefault(archive, []).append(entry)
+                if not archive.is_dir():
                     invalid = dict(entry, valid=False, won=False, robust=False,
-                                   invalid_reason="进度引用的存档缺失，无法 verify")
+                                   invalid_reason="进度引用的存档缺失，无法恢复")
                     missing.append(invalid)
         if len(prior_run_ids) > 1:
             raise ValueError("续跑来源含多个 run_id，请指定一份 out.zip 或对应的 out 目录")
-        trusted, pending = {}, []
-        for archive in candidates:
-            records = prior_entries.get(archive, [])
-            try:
-                match = (verify == "fast" and records
-                         and all(e.get("valid") is True for e in records)
-                         and _archive_digest(archive) == archive.name)
-            except OSError:
-                match = False
-            if match:
-                trusted[archive] = dict(records[-1])
-            else:
-                pending.append(archive)
+        if verify == "fast" and not progress_found:
+            raise ValueError('续跑来源缺少progress.json；独立存档请用verify="full"导入')
+        restored = ({archive: dict(records[-1]) for archive, records in prior_entries.items()
+                     if archive.is_dir()} if verify == "fast" else {})
+        candidates = (list(restored) if verify == "fast" else
+                      sorted(p.parent for p in source.rglob("meta.json")
+                             if not any(part.startswith(".") for part in p.relative_to(source).parts)))
+        pending = candidates if verify == "full" else []
 
         def replay(archive):
             try:
@@ -392,8 +391,8 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
         verified = {}
         if pending:
             workers = os.cpu_count() or 1
-            print("resume: %d 摘要可信，%d 份重放复验（workers=%d，最多2个游戏进程）" %
-                  (len(trusted), len(pending), workers), flush=True)
+            print("resume: %d 份重放复验（workers=%d，最多2个游戏进程）" %
+                  (len(pending), workers), flush=True)
             with ThreadPoolExecutor(max_workers=workers) as pool:
                 futures = {pool.submit(replay, archive): archive for archive in pending}
                 for count, future in enumerate(as_completed(futures), 1):
@@ -401,7 +400,7 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
                     if count % 10 == 0:
                         print("resume verify: %d/%d" % (count, len(pending)), flush=True)
         imported = [(archive, *(verified.get(archive, (True, None)))) for archive in candidates]
-        if not prior_run_ids:
+        if not prior_run_ids and verify == "full":
             for archive, valid, error in imported:
                 if valid:
                     run_id = json.loads((archive / "meta.json").read_text()).get("run_id")
@@ -416,12 +415,13 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
             for archive, valid, error in imported:
                 relative = None
                 try:
-                    # 已校验的私有zip解压文件可直接移入，避免再哈希和复制数百MB。
-                    adopt = extracted and archive in trusted
-                    relative = _store(archive, root, digest=archive.name if adopt else None,
-                                      consume=adopt)
-                    entry = (dict(trusted[archive], archive=relative) if archive in trusted else
-                             _entry(archive, relative, valid=valid, error=error))
+                    if archive in restored:
+                        relative = restored[archive]["archive"]
+                        relative = _restore_archive(archive, root, relative, consume=extracted)
+                        entry = dict(restored[archive], archive=relative)
+                    else:
+                        relative = _store(archive, root)
+                        entry = _entry(archive, relative, valid=valid, error=error)
                 except (OSError, KeyError, ValueError, TypeError) as exc:
                     # 不可解析的存档同样保留作废记录，不能中止其他局的恢复。
                     relative = relative or "invalid/" + hashlib.sha256(str(archive.relative_to(source)).encode()).hexdigest()

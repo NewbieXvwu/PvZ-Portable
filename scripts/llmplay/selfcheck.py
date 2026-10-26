@@ -126,7 +126,7 @@ def main() -> int:
         assert (out / "delivery" / "out.zip").is_file()
         assert len(progress()["archives"]) >= 1, "robustness/export 没有自动交付"
         verify_archive(out / "archive")
-        # 从 zip 恢复到另一目录，必须实际经包内引擎核验。
+        # 默认按旧progress从zip直接恢复；引擎重放已在上面的verify_archive执行。
         previous_zip = out / "delivery" / "out.zip"
         os.environ["LLMPLAY_OUT"] = str(out / "resumed")
         resume(previous_zip)
@@ -144,7 +144,7 @@ def main() -> int:
         tape[0] = json.dumps(entry)
         (damaged / "ticks.jsonl").write_text("\n".join(tape) + "\n")
         os.environ["LLMPLAY_OUT"] = str(out / "invalid-resume")
-        resume(damaged)
+        resume(damaged, verify="full")
         assert progress()["archives"][0]["valid"] is False
         assert next_task() is not None
         print("持续交付 / 断点续跑 / 损坏存档识别：OK")

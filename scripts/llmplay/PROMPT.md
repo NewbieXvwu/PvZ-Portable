@@ -42,7 +42,7 @@ print(llmplay.progress())
 print(llmplay.next_task())
 ```
 
-resume 默认快速导入：摘要匹配且原进度有效的存档直接恢复，通常几秒完成，无需 full；其余存档自动复验，搜索预算和同段重写次数延续。
+resume 默认直接按旧 progress.json 恢复存档、进度、预算与策略文件，不算摘要、不重放，无需 full；只有显式指定 verify="full" 才会重放复验。
 `next_task()` 返回下一项的 `task_id`、`seed`、`layer`、`action` 与已有 `archive` 路径；
 `list_tasks()` 只列未达标任务及尚未稳健完成的种子。需要接着中盘打时，`Game.load_archive(path)`
 可恢复已导出的操作日志，策略代码也会从旧交付恢复。
