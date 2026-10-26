@@ -1,0 +1,150 @@
+{
+ "task": 96,
+ "r11_deployment_revision": "4f4d217b1bcdd8244f8e9c45709cc0695eb07c89",
+ "a_revision": "bec2b9e6a4b585cc5548392a5ec7de85eb3f56c7",
+ "deployment_log": "/home/newbiexvwu/pvz-logs/qc_setup.log",
+ "deployment_evidence": [
+  "2026-10-24T19:37:46+08:00 deploy11: stop_curr set",
+  "2026-10-24T19:47:18+08:00 deploy11: cq took 4f4d217b, fog_user cell manifest (420 tasks, old 414 identical), teacher rate 25/32",
+  "2026-10-24T19:47:18+08:00 deploy11: qc restarted on 4f4d217b",
+  "2026-10-24T19:48:48+08:00 deploy11: first group after restart rc=0, OK",
+  "2026-10-24T21:35:17+08:00 restart qc after stage4 restore (task62 incident)",
+  "2026-10-25T10:09:21+08:00 deploy12: preflight OK, stop_curr set",
+  "2026-10-25T10:48:24+08:00 deploy12: cq took 1613ecdc, panel 426 (old 420 identical), demo_start x3, teacher rates +3, engine deploy4",
+  "2026-10-25T10:48:24+08:00 deploy12: dry-run schedules demo_start cells",
+  "2026-10-25T10:48:24+08:00 deploy12: qc restarted on 1613ecdc + deploy4",
+  "2026-10-25T10:50:24+08:00 deploy12: first group after restart rc=0, OK"
+ ],
+ "training_receipt": {
+  "round": 11,
+  "model": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+  "pack_started": 1792887849.0878825,
+  "pack_peak_anon_bytes": 2529038336,
+  "pack_finished": 1792888210.7544441,
+  "train_started": 1792888210.7598813,
+  "train_peak_anon_bytes": 3766628352,
+  "train_finished": 1792890754.3541267,
+  "model_sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+  "recipe_sha256": "56512928694e5dd99e1bd01bfcd18b73f8de0e06d414f1755cc646e9aaa11427"
+ },
+ "evaluation_receipts": [
+  {
+   "path": "scripts/search_play.py",
+   "sha256": "61f05051a16076756b6d9150d404343e378f038d6acbe604dace5cbd8610806b",
+   "matches_deployment": true
+  },
+  {
+   "path": "python/pvz_promotion.py",
+   "sha256": "dcc4b53435e09688628743426ad5e6e8a9c96ab33ca530382f83fec9788f4905",
+   "matches_deployment": true
+  },
+  {
+   "path": "scripts/promotion_gate.py",
+   "sha256": "2bf0ec0142f5df4d4aeb16ddb7fd446d20e0d23b07b876802c8094e43268043a",
+   "matches_deployment": true
+  }
+ ],
+ "files": [
+  {
+   "path": "scripts/train_rollout_policy.py",
+   "r11_deployment_sha256": "5cc2f20803dc3f525640c76194d0ab6d70b51419d32352719e3dc09c93bc5b4c",
+   "a_sha256": "5cc2f20803dc3f525640c76194d0ab6d70b51419d32352719e3dc09c93bc5b4c",
+   "same": true,
+   "diff": ""
+  },
+  {
+   "path": "scripts/pack_training_rows.py",
+   "r11_deployment_sha256": "8dc7a02172cc1ed2f7744ed2374101aeaa4ced86ca58e0b0bb6fa3268b96f2e2",
+   "a_sha256": "de5e9d01a47f15acf45a2be9977b7924aa1cad7fbeb63676ccf9a4e5acc44274",
+   "same": false,
+   "diff": "diff --git a/scripts/pack_training_rows.py b/scripts/pack_training_rows.py\nindex d95d242e..7b4966e2 100644\n--- a/scripts/pack_training_rows.py\n+++ b/scripts/pack_training_rows.py\n@@ -35,5 +35,5 @@ import random  # noqa: E402\n import torch  # noqa: E402\n \n-from pvz_frame_store import (CELL_CANDIDATES, cache_aux, cache_candidates, cache_episode,  # noqa: E402\n+from pvz_frame_store import (CELL_CANDIDATES, archive_seed, cache_aux, cache_candidates, cache_episode,  # noqa: E402\n                              cache_identity_scene, cache_packets, candidate_cells, frame_bytes,\n                              frame_paths, read_frames, row_damage_labels, target_values)\n@@ -143,5 +143,5 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,\n     n = 0\n     for archive_index, path in enumerate(paths):\n-        seed = int(path.parent.parent.name.split(\"_\")[-1])\n+        seed = archive_seed(path.parent.parent.name)\n         scale = (label_weight or {}).get(path.parent.name, 1.0)\n         retention = wait_keep if explicit_rows[path] is None else 1.0\n"
+  },
+  {
+   "path": "python/pvz_frame_store.py",
+   "r11_deployment_sha256": "e32cc260b9e0251539dadce75b4ea054d40c9711c9a241b2bc58d6e72ee7c5e4",
+   "a_sha256": "55eb1928ab75ef0dab53873338eaa243b4d6ec2761cd7d7f496ba7626b446a58",
+   "same": false,
+   "diff": "diff --git a/python/pvz_frame_store.py b/python/pvz_frame_store.py\nindex dacd6042..ff71eb39 100644\n--- a/python/pvz_frame_store.py\n+++ b/python/pvz_frame_store.py\n@@ -19,4 +19,10 @@ def frame_paths(data: Path):\n \n \n+def archive_seed(directory: str) -> int:\n+    \"\"\"Seed of a `seed_<n>` archive directory; demo-start games are `seed_<demo>_f<future>` and go by the future seed.\"\"\"\n+    tag = directory.removeprefix(\"seed_\").rsplit(\"_f\", 1)[-1]\n+    return int(tag)\n+\n+\n def frame_path(archive: Path) -> Path:\n     binary = archive / \"frames.npz\"\n@@ -208,5 +214,5 @@ def encoder_signature(obs: str = \"v1\") -> str:\n     if obs == \"v1\":\n         return signature\n-    if obs not in (\"v2lite\", \"v2\", \"v2fog\", \"v2fogstack4\"):\n+    if obs not in (\"v2lite\", \"v2\", \"v2fog\", \"v2fogstack4\", \"v2size\"):\n         raise ValueError(f\"unknown student observation version: {obs}\")\n     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared\n@@ -218,4 +224,6 @@ def encoder_signature(obs: str = \"v1\") -> str:\n             'v2lite': 'b6020e4131d35d7ff9ef0fb0996f877e6f3ffd2122045a65bd5e87be2c065aa5',\n             'v2': '5031d93614db9ecff271dcaa6aa8645d7a799452f170e5ebf699cc2fb8c1df91',\n+            'v2fog': '17aba0780afb4005daeb1cff6f50ca6048179a7c83b4fae0bbde35437e4036e8',\n+            'v2fogstack4': '072d07ab4bba3b373abe9d09d832c17f4a476c2a49d325b69de2196a1fcd84b5',\n         }\n         if obs in frozen:\n"
+  },
+  {
+   "path": "python/pvz_training_pack.py",
+   "r11_deployment_sha256": "f9a0e8402dfbc63ca5f8139660fd765a5fdf80757743f3e375526fb183a18991",
+   "a_sha256": "f9a0e8402dfbc63ca5f8139660fd765a5fdf80757743f3e375526fb183a18991",
+   "same": true,
+   "diff": ""
+  },
+  {
+   "path": "python/pvz_recipe.py",
+   "r11_deployment_sha256": "00d365caabbff518703ecdf669420afd56943b9d92c91a729fed772634a45f53",
+   "a_sha256": "00d365caabbff518703ecdf669420afd56943b9d92c91a729fed772634a45f53",
+   "same": true,
+   "diff": ""
+  },
+  {
+   "path": "python/pvz_rollout_policy.py",
+   "r11_deployment_sha256": "0be5910f6483448e0ee6bf68d80b785d5e0553bd11034df564f851b70d1cdd41",
+   "a_sha256": "521aef82e290a30af60ab3df78dfbdc3425d85714bcf2a8255859cfc29a420d9",
+   "same": false,
+   "diff": "diff --git a/python/pvz_rollout_policy.py b/python/pvz_rollout_policy.py\nindex 909a1bd4..22e65f38 100644\n--- a/python/pvz_rollout_policy.py\n+++ b/python/pvz_rollout_policy.py\n@@ -310,5 +310,5 @@ def export_student(net: RolloutNet, path) -> None:\n             stream.write(struct.pack(\"<I\", int(net.context)))\n         if identity or net.row_pool or net.obs != \"v1\":\n-            stream.write(struct.pack(\"<I\", 4 if net.obs == \"v2fog\" else 3 if net.obs == \"v2\" else 2 if net.obs == \"v2lite\" else 1))\n+            stream.write(struct.pack(\"<I\", 5 if net.obs == \"v2size\" else 4 if net.obs == \"v2fog\" else 3 if net.obs == \"v2\" else 2 if net.obs == \"v2lite\" else 1))\n         if identity or net.row_pool:\n             stream.write(struct.pack(\"<I\", int(net.row_pool)))\n"
+  },
+  {
+   "path": "python/pvz_student_observation.py",
+   "r11_deployment_sha256": "2b54aa473f9b2eecaf74fd514d2c6f460fba7468ed6361a26c2cedacf0b1cbc5",
+   "a_sha256": "3ca7b1da7725b518ee8d8881d991c0faa44de8604af9690e3ba1bba78f8b3424",
+   "same": false,
+   "diff": "diff --git a/python/pvz_student_observation.py b/python/pvz_student_observation.py\nindex 42bf39ea..d7afa038 100644\n--- a/python/pvz_student_observation.py\n+++ b/python/pvz_student_observation.py\n@@ -7,5 +7,5 @@ from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of\n SPEED_SCALE = 1.0\n OBS_EXTRA = {\"v1\": (0, 0), \"v2lite\": (4, 1), \"v2\": (9, 7), \"v2fog\": (10, 7),\n-             \"v2fogstack4\": (112, 7)}\n+             \"v2fogstack4\": (112, 7), \"v2size\": (10, 7)}\n \n \n@@ -36,5 +36,5 @@ def v2_extra(frame: dict, wave_tick: int) -> tuple[np.ndarray, np.ndarray]:\n         maximum[row, col] = max(maximum[row, col], velocity / 0.7)\n         if raw is not None:\n-            has_object, helm, shield = raw[\"zombies\"][index]\n+            has_object, helm, shield = raw[\"zombies\"][index][:3]\n             if kind == 3 and has_object:\n                 board[3, row, col] += health / 200.0\n@@ -80,6 +80,13 @@ class StudentHistory:\n         if frame[\"wave\"] != self.wave:\n             self.wave, self.wave_tick = frame[\"wave\"], tick\n-        if self.obs in (\"v2\", \"v2fog\", \"v2fogstack4\"):\n+        if self.obs in (\"v2\", \"v2fog\", \"v2fogstack4\", \"v2size\"):\n             board, scalars = v2_extra(frame, self.wave_tick)\n+            if self.obs == 'v2size':\n+                size = np.zeros((1, ROWS, COLS), dtype=np.float32)\n+                for zombie in frame['zombies']:\n+                    row, _kind, position, _velocity, _health, on_board = zombie[:6]\n+                    if on_board and 0 <= row < ROWS:\n+                        size[0, row, _col_of(position)] += zombie[10] if len(zombie) > 10 else 1.0\n+                board = np.concatenate([board, size])\n             if self.obs in (\"v2fog\", \"v2fogstack4\"):\n                 board = np.concatenate([board, fog_channel(frame)])\n"
+  },
+  {
+   "path": "python/pvz_training_rows.py",
+   "r11_deployment_sha256": "5f6cc2514a8e72e341e44e8c06166a7e680295b3a1d46c245a381ab26707b6fe",
+   "a_sha256": "e01cc8afce1eb6b5d7ea7e8fa9936f2a4b028fd1134fd7d96b88048ffee09571",
+   "same": false,
+   "diff": "diff --git a/python/pvz_training_rows.py b/python/pvz_training_rows.py\nindex 275eeefe..c1e9c241 100644\n--- a/python/pvz_training_rows.py\n+++ b/python/pvz_training_rows.py\n@@ -6,4 +6,6 @@ from pathlib import Path\n import numpy as np\n \n+from pvz_frame_store import archive_seed\n+\n \n class SourceRowCounts:\n@@ -16,5 +18,5 @@ class SourceRowCounts:\n         record = self.sources.setdefault(path.parent.name, dict(archives=0, seeds={}))\n         record['archives'] += 1\n-        seed = int(path.parent.parent.name.split('_')[-1])\n+        seed = archive_seed(path.parent.parent.name)\n         record['seeds'][seed] = record['seeds'].get(seed, 0)+len(rows)\n \n"
+  },
+  {
+   "path": "python/pvz_value_net.py",
+   "r11_deployment_sha256": "32d015ce28466cab7b71ecaecc3a5c3fadf8d98260740e49d2d3a4a5107cb9e7",
+   "a_sha256": "32d015ce28466cab7b71ecaecc3a5c3fadf8d98260740e49d2d3a4a5107cb9e7",
+   "same": true,
+   "diff": ""
+  }
+ ],
+ "selected_semantics": [
+  {
+   "path": "python/pvz_rollout_policy.py",
+   "symbol": "RolloutNet",
+   "same_ast": true
+  },
+  {
+   "path": "python/pvz_rollout_policy.py",
+   "symbol": "features",
+   "same_ast": true
+  },
+  {
+   "path": "python/pvz_frame_store.py",
+   "symbol": "encode_frames",
+   "same_ast": true
+  },
+  {
+   "path": "python/pvz_frame_store.py",
+   "symbol": "encode_student_frames",
+   "same_ast": true
+  },
+  {
+   "path": "python/pvz_frame_store.py",
+   "symbol": "target_values",
+   "same_ast": true
+  },
+  {
+   "path": "python/pvz_value_net.py",
+   "symbol": "featurize_numpy",
+   "same_ast": true
+  },
+  {
+   "path": "python/pvz_value_net.py",
+   "symbol": "_col_of",
+   "same_ast": true
+  }
+ ],
+ "inference": "Deployment log identifies 4f4d217b during r11, corroborated by three evaluation source hashes. Trainer bytes are identical to A. This is stronger than the CQ HEAD reflog; an unrecorded per-file override during training cannot be excluded without a per-run receipt."
+}
