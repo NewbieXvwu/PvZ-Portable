@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T17:54:25.374699+00:00",
+ "at_utc": "2026-10-26T18:49:11.682484+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 144,
+  "completed_label_jobs": 168,
   "replay_completed_k": [
    0
   ],
@@ -614,12 +614,12 @@
    }
   },
   "collection_progress": {
-   "at_utc": "2026-10-26T17:54:25.374699+00:00",
-   "completed_label_jobs": 144,
+   "at_utc": "2026-10-26T18:49:11.682484+00:00",
+   "completed_label_jobs": 168,
    "by_future": {
     "k0": 72,
     "k1": 72,
-    "k2": 0
+    "k2": 24
    },
    "completion_markers_by_level": {
     "k0": {
@@ -632,9 +632,11 @@
      "42": 24,
      "43": 24
     },
-    "k2": {}
+    "k2": {
+     "41": 24
+    }
    },
-   "scope": "normal complete.json markers; k0 and k1 normal exports complete; full three-future downstream scoring pending",
+   "scope": "normal complete.json markers; k2 L41 complete and L42 collecting; k0/k1 exports complete; full three-future scoring pending",
    "controller_pid": 991266,
    "controller_process_start_ticks": "29124877",
    "games": 2,
