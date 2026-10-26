@@ -64,6 +64,18 @@
     true,
     true,
     false
+   ],
+   [
+    "det_only_a",
+    true,
+    false,
+    false
+   ],
+   [
+    "det_only_b",
+    true,
+    false,
+    false
    ]
   ],
   "squeeze_bytes": 4294967296,
@@ -1455,6 +1467,338 @@
     5.033071041107178,
     4.741128921508789
    ]
+  },
+  {
+   "task": 96,
+   "case": "det_only_a",
+   "strict": true,
+   "pinned_workspace": false,
+   "squeeze": false,
+   "workspace": null,
+   "plan_sha256": "ab67eb41123c50f350fc46d2df28344ce251c75ef43838124017aadf777beedb",
+   "admission": {
+    "peers": [
+     {
+      "pid": 998257,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 11494330368,
+     "gpu_free_mib": 9229,
+     "gpu_used_mib": 7074,
+     "gpu_utilization_percent": 39
+    },
+    "admitted": true
+   },
+   "started": 1793023508.276121,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 9229,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 10125615104,
+     "gpu_free_mib": 8115,
+     "gpu_used_mib": 8188,
+     "gpu_utilization_percent": 21
+    },
+    {
+     "step": 123,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9671643136,
+     "gpu_free_mib": 7585,
+     "gpu_used_mib": 8718,
+     "gpu_utilization_percent": 22
+    },
+    {
+     "step": 304,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 9054625792,
+     "gpu_free_mib": 7585,
+     "gpu_used_mib": 8718,
+     "gpu_utilization_percent": 39
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "e5da9ed4d7dd5da9668054f23621c37be4e6ff37383f3ccf0368b471e6bbb9dc",
+   "tensor_sha256": "78cfef54734572ec67ff05d7ea8923b99b04e791a534819a41a30ea18734d399",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.386195094296365,
+      "val_loss": 4.782072849631087,
+      "type_acc": 0.8756294414720536,
+      "plant_recall": 0.5549240610039532,
+      "packet_acc": 0.6783295851296792,
+      "cell_acc": 0.2771650970576825,
+      "seconds": 17.53315782698337
+     }
+    ],
+    "seconds": 22.352839469909668,
+    "load_seconds": 2.869096040725708,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 22.48232550697867,
+   "finished": 1793023531.4411662,
+   "final_resources": {
+    "mem_available_bytes": 13640486912,
+    "gpu_free_mib": 6663,
+    "gpu_used_mib": 9640,
+    "gpu_utilization_percent": 10
+   },
+   "losses_sha256": "09a4dd885f8f90f5fb273ecf4b92f3b9fc5eaf584bcc1aad0bd0c1300f421415",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.658308029174805,
+    7.396268844604492
+   ],
+   "last_losses": [
+    4.894651412963867,
+    4.777276039123535,
+    4.91843318939209,
+    5.033071041107178,
+    4.741128921508789
+   ]
+  },
+  {
+   "task": 96,
+   "case": "det_only_b",
+   "strict": true,
+   "pinned_workspace": false,
+   "squeeze": false,
+   "workspace": null,
+   "plan_sha256": "ab67eb41123c50f350fc46d2df28344ce251c75ef43838124017aadf777beedb",
+   "admission": {
+    "peers": [
+     {
+      "pid": 998257,
+      "argv": [
+       "/home/newbiexvwu/.venvs/ml/bin/python3",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+       "--recipe",
+       "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+      ]
+     }
+    ],
+    "priority_peers": [],
+    "resources": {
+     "mem_available_bytes": 14945304576,
+     "gpu_free_mib": 9229,
+     "gpu_used_mib": 7074,
+     "gpu_utilization_percent": 5
+    },
+    "admitted": true
+   },
+   "started": 1793023537.24261,
+   "environment": {
+    "torch": "2.14.0+cu132",
+    "cuda": "13.2",
+    "cudnn": 92400,
+    "gpu": "NVIDIA GeForce RTX 5080",
+    "matmul_precision": "highest",
+    "allow_tf32": false
+   },
+   "gpu_free_mib_before_squeeze": 9229,
+   "gpu_free_mib_at_start": 9229,
+   "permutations": [
+    {
+     "rows": 943072,
+     "sha256": "379d1ca57e03d1336df20bbf02da39d03c7ce31a7e6d990033bcc9f975791246"
+    }
+   ],
+   "resource_samples": [
+    {
+     "step": 1,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 13341323264,
+     "gpu_free_mib": 8115,
+     "gpu_used_mib": 8188,
+     "gpu_utilization_percent": 0
+    },
+    {
+     "step": 121,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 12882415616,
+     "gpu_free_mib": 7585,
+     "gpu_used_mib": 8718,
+     "gpu_utilization_percent": 33
+    },
+    {
+     "step": 274,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 12769292288,
+     "gpu_free_mib": 7585,
+     "gpu_used_mib": 8718,
+     "gpu_utilization_percent": 38
+    },
+    {
+     "step": 417,
+     "peers": [
+      {
+       "pid": 998257,
+       "argv": [
+        "/home/newbiexvwu/.venvs/ml/bin/python3",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/scripts/train_rollout_policy.py",
+        "--recipe",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows/artifacts/task104/recipes/a_s1.json"
+       ]
+      }
+     ],
+     "mem_available_bytes": 13485658112,
+     "gpu_free_mib": 7585,
+     "gpu_used_mib": 8718,
+     "gpu_utilization_percent": 32
+    }
+   ],
+   "initial_tensor_sha256": "2624c16674ce24636a91c9321bfb8f33f2d1c09148a4a0a5e0da65912763c8ce",
+   "status": "complete",
+   "model_file_sha256": "1ae75bd9c759b7b6ba015b72dd381d960f5d1b05e7853ba5608e585a5c3cd757",
+   "tensor_sha256": "78cfef54734572ec67ff05d7ea8923b99b04e791a534819a41a30ea18734d399",
+   "metrics": {
+    "history": [
+     {
+      "epoch": 1,
+      "train_loss": 5.386195094296365,
+      "val_loss": 4.782072849631087,
+      "type_acc": 0.8756294414720536,
+      "plant_recall": 0.5549240610039532,
+      "packet_acc": 0.6783295851296792,
+      "cell_acc": 0.2771650970576825,
+      "seconds": 20.522076570021454
+     }
+    ],
+    "seconds": 27.217822313308716,
+    "load_seconds": 3.9615848064422607,
+    "data_memory": {
+     "rows": 1046710,
+     "board_bytes": 340787488,
+     "scalar_bytes": 111920793,
+     "cand_bytes": 24061338,
+     "value_bytes": 18914354,
+     "tensor_bytes": 10467100,
+     "packet_bytes": 73269700
+    }
+   },
+   "source_rows_sha256": "449bd1175e06b0f61d3b5016ae8021dc852afa71f942183225e21bcfceb640b1",
+   "wall_seconds": 27.370441603998188,
+   "finished": 1793023565.1415894,
+   "final_resources": {
+    "mem_available_bytes": 13495324672,
+    "gpu_free_mib": 6663,
+    "gpu_used_mib": 9640,
+    "gpu_utilization_percent": 20
+   },
+   "losses_sha256": "09a4dd885f8f90f5fb273ecf4b92f3b9fc5eaf584bcc1aad0bd0c1300f421415",
+   "steps": 461,
+   "first_losses": [
+    7.7060017585754395,
+    7.716070175170898,
+    7.519401550292969,
+    7.658308029174805,
+    7.396268844604492
+   ],
+   "last_losses": [
+    4.894651412963867,
+    4.777276039123535,
+    4.91843318939209,
+    5.033071041107178,
+    4.741128921508789
+   ]
   }
  ],
  "same_config_repeats_bitwise": true,
@@ -1471,7 +1815,9 @@
   "default_p1": 4.711075122791806,
   "strict_q1": 4.782072849631087,
   "default_p2": 4.713722827629208,
-  "strict_q2": 4.782072849631087
+  "strict_q2": 4.782072849631087,
+  "det_only_a": 4.782072849631087,
+  "det_only_b": 4.782072849631087
  },
  "train_loss": {
   "strict_a": 5.386195094296365,
@@ -1482,7 +1828,9 @@
   "default_p1": 5.348970010976263,
   "strict_q1": 5.386195094296365,
   "default_p2": 5.352067369118887,
-  "strict_q2": 5.386195094296365
+  "strict_q2": 5.386195094296365,
+  "det_only_a": 5.386195094296365,
+  "det_only_b": 5.386195094296365
  },
  "epoch_seconds": {
   "strict_a": 27.661266379989684,
@@ -1493,7 +1841,9 @@
   "default_p1": 13.512100771011319,
   "strict_q1": 18.70225875999313,
   "default_p2": 20.929856684000697,
-  "strict_q2": 17.975557276047766
+  "strict_q2": 17.975557276047766,
+  "det_only_a": 17.53315782698337,
+  "det_only_b": 20.522076570021454
  },
  "gpu_free_mib": {
   "strict_a": 9229,
@@ -1504,7 +1854,9 @@
   "default_p1": 11793,
   "strict_q1": 11793,
   "default_p2": 11793,
-  "strict_q2": 11793
+  "strict_q2": 11793,
+  "det_only_a": 9229,
+  "det_only_b": 9229
  },
  "cost_pairs": {
   "order": [

@@ -1,273 +1,87 @@
-# task96：r11 重训复现审计
+# task96：同配方、同 seed 的训练复现
 
-2026-10-26，repro 分支。生产代码、qc、门禁、其他工作树均未修改。小样本（9 个用例 + 4 个 8-epoch 计时）与中尺度（30 段 / 1,046,710 行，5 个用例）两轮诊断给出的结论是：
+2026-10-26，repro 分支。**已确认现行训练存在 CUDA embedding 梯度非确定性；未发现训练输入漂移，训练器重写的旧归因不成立。建议开启确定性配置，再让 task92 比较不同 seed。** 本任务没有修改生产或操作 qc；所有诊断顺序运行，没有启动游戏进程。
 
-- **同一份数据、同一份代码、同一 seed，在固定运行配置下逐位复现**（小样本 7 次、中尺度 2 次，张量与 loss 全同）。
-- **不固定运行配置时，同样的训练每次结果都不同**：中尺度 4 次未固定配置（workspace 未设、确定性关）的最终张量两两不同，含两次同进程序列、报告空闲显存相同的重复；而固定 `:4096:8` + 确定性的 5 次（含压显存 4 GiB 的两次）**逐位相同**。
-- **第一步分叉已定位到具体算子**：前向与 loss 逐位相同，梯度里只有 `packet_embedding.weight` 不同；微探针在 41×64 表上复现——`[2048,10]` 查表（`packet_logits` 的形状）默认模式 10 次 10 种、确定性模式 1 种。也就是说 `torch.use_deterministic_algorithms` 是这条路径的开关，`CUBLAS_WORKSPACE_CONFIG` 管不到它（那条路径不走 GEMM）。
-- 完整 348 段（16,982,931 行）的固定 workspace 控制在**当前主机内存状态下不可行**：9.6 GB spill 进不了 page cache，实测退化到 10 s/步（约 23 h/epoch），不是确定性带来的开销。因此全量逐位复现仍**未被证明**，只能写到“1.05M 行尺度已证明，与历史 221 s/epoch 的量级差一致”。
+历史 r11→A 的 heldout 从166/192降至124/192，不能把这42局全部归因于某个算子或某次显存状态：历史训练缺少 GPU/确定性配置回执，亦未在本任务中重新评估泛化。
 
-历史 r11/A 落差的归因仍然**不成立**到“具体某次 run 的空闲显存是多少”这一层：四次全量 run 都没留环境回执。但现在有可复现的机制，不再是纯假设。
+## 数据与代码
 
-## 已有证据支持什么
+r11/A 都有348标签、16,982,931行、6,605,039株、55,773个seed，验证1,704,229行。两份 `source_rows.json` 逐标签计数相同，文件SHA256同为 `fd0f9c12901b4e4c7015cdf40515b3167c6ba39c791d86145e441d93f1500039`。CodeBuddy已对348个引用段做过内容SHA比较，全部相同；本次沿用该结果，没有再读9.6GB重算。补充元数据显示大小全同、独立inode，r11段mtime都早于训练。[逐标签证据](task96-data-metadata.json)保留行数与mtime；原内容检查未提交逐段摘要清单，这是历史证据限制。
 
-- **已有同seed全量训练分叉，具体来源尚未闭环。** CodeBuddy 已完成的同数据、同配方、seed=1、1 epoch 双跑，21/21 个实际权重张量不同，val loss 为 3.7510763180 / 3.7643170536。不能用 `.pt` 文件 SHA 不同代替张量比较；本次两者都核验了。受限诊断的9次初始化与排列相同；未设workspace/4096组7次最终张量相同，16组2次彼此相同但与前组不同。它定位一个可行的分叉触发条件，没有覆盖全量训练全部路径。
-- **现存输入没有发现标签漂移。** r11 与 A 的 348 标签逐项行数、训练/验证分配一致；CodeBuddy 已比较 348 个引用段 SHA256，全部相同。追加元数据审计显示段大小全同、不是硬链接，r11 的全部段 mtime 均早于训练。
-- **“r11 使用 930d776d，训练器重写导致落差”是错误归因。** 该旧版本没有 r11 已使用的 recipe/identity 功能。部署日志定位当时部署版本为 **4f4d217b**，与 A 的 **bec2b9e6** 相比，训练器源码、配方解析、pack 指纹算法、value encoder 完全相同；网络类 AST 也相同。
-- 仍不能把 heldout 的 **166→124 / 192** 全部归因于训练随机性，更不能从两次 1 epoch loss 推算胜率方差。r11 的逐次运行源码/环境回执缺失；task84 的多种子完整训练及配对评估才负责量化泛化波动。
+两轮名义pack均为 `7d15b915a2192805.npz`；r11侧索引已被prune，A侧81KB文件是正常段索引。**pack名字不是内容指纹**：`archive_fingerprint`依据相对路径、大小和可选训练行清单；pack名再哈希行选项，不哈希实际数据内容。同名等长重标可能逃过它。
 
-## 数据与冻结证据
+部署日志表明r11训练时部署的是 **4f4d217b**，后续评估的三份源码SHA与该提交吻合。把主检出的930d776d当成r11运行版本是错误归因：它连r11已用的recipe/identity入口都没有。4f4d217b与A的bec2b9e6相比：
 
-两轮总计 16,982,931 行，6,605,039 株，55,773 个 seed，验证 1,704,229 行。两份 `source_rows.json` 的文件 SHA256 都是：
-
-`fd0f9c12901b4e4c7015cdf40515b3167c6ba39c791d86145e441d93f1500039`
-
-名义 corpus index 为 `7d15b915a2192805.npz`。r11 侧 index 已被正常 prune，A 侧是 81KB 的段索引，不是损坏或缺数据。A 索引 SHA256：
-
-`1351618d6c10459e9d30b5a2aa70a3a73ddbb05db239fc01bab75a5b6b02b4cb`
-
-逐标签段名、archives/rows/training_rows/validation_rows、大小、双方纳秒 mtime、是否独立 inode 见 [task96-data-metadata.json](task96-data-metadata.json)。348 段内容 SHA 相等沿用 CodeBuddy 在 `9ffc611a` 已完成的 ~9.6GB 检查，本次没有重复全量哈希；该次未提交逐段摘要清单，这是证据保存限制。现存文件与较早 mtime 支持没有漂移，但不能补造训练启动时的不可变内容快照。
-
-`archive_fingerprint` 实际哈希相对路径、文件大小及可选 `training_rows`；故意不含 mtime，也不含文件内容 SHA。pack 名再由 sources 与 labels/wait_keep/obs/cells/aux/packet_head/context/label_weight 等选项导出。**同名只能证明选项/路径/大小摘要相同，不能证明内容相同**；等长重标可能逃过它。
-
-## 代码来源与差异
-
-`qc_setup.log` 记录 10-24 19:47 部署 4f4d217b，21:35 stage4 恢复后重启；下一次 deploy12 是 10-25 10:48。r11 训练在 10-25 08:30–09:12，其后评估回执中的 `search_play.py`、`pvz_promotion.py`、`promotion_gate.py` 三个源码 SHA 都与 4f4d217b 一致。CQ 分支 HEAD 没有因按路径 checkout 而移动，所以只看 cq reflog 会误判。
-
-| 训练链文件：4f4d217b → bec2b9e6 | 实际差异与本次相关性 |
+| 训练链 | 差异 |
 | --- | --- |
-| `scripts/train_rollout_policy.py` | 完全相同，SHA `5cc2f20803dc3f525640c76194d0ab6d70b51419d32352719e3dc09c93bc5b4c` |
-| `python/pvz_recipe.py`、`pvz_training_pack.py`、`pvz_value_net.py` | 完全相同 |
-| `scripts/pack_training_rows.py` | 普通 seed 解析改为 `archive_seed`，兼容 `seed_<demo>_f<future>`；本次直接读已生成且相同的段 |
-| `python/pvz_frame_store.py` | 新增 archive_seed、v2size 注册、冻结 fog 签名；encode_frames/encode_student_frames/target_values AST 相同 |
-| `python/pvz_rollout_policy.py` | 只改 v2size 原生导出版本号；RolloutNet/features AST 相同 |
-| `python/pvz_student_observation.py` | 新增 v2size；raw zombie 三字段读取兼容追加字段；相同已编码段不重编码 |
-| `python/pvz_training_rows.py` | SourceRowCounts 使用 archive_seed；完整 diff 见证据，无优化器改动 |
+| train_rollout_policy、pvz_recipe、pvz_training_pack、pvz_value_net | 字节完全相同 |
+| RolloutNet、features、encode_frames/encode_student_frames/target_values | 对应AST相同 |
+| pack_training_rows / pvz_training_rows | 归档seed解析兼容示范起点目录；本次读取的是相同已编码段 |
+| pvz_rollout_policy | 导出版本号增加v2size，不涉及训练网络 |
+| pvz_student_observation / pvz_frame_store | 新增观测版本、兼容追加字段与签名登记；已有段未重编码 |
 
-[task96-code-provenance.json](task96-code-provenance.json) 保存部署日志关键行、完整训练链 diff、源码 SHA 与评估交叉核验结果。部署记录比主检出 HEAD 更可靠，但没有训练启动时的逐文件 receipt，无法绝对排除未记录的临时覆盖。此处明确区分已记录部署版本与逐次实际运行源码。
+[源码与部署证据](task96-code-provenance.json)保留完整diff。部署版本得到交叉支持，但未记录的训练时单文件覆盖无法事后绝对排除。`encoder_signature`仅覆盖部分特征/目标编码函数和常量，v2还有冻结语义签名；它不覆盖训练循环、优化器、整个加载链或运行库，不能充当训练源码指纹。
 
-本次又独立复核了一遍（`git show <rev>:<path> | sha256sum`，10-26 21:00）：`scripts/train_rollout_policy.py` 两版同为 `5cc2f208…`，`pvz_recipe.py` / `pvz_training_pack.py` / `pvz_value_net.py` 也逐字节相同；训练链里唯一不同的是 `python/pvz_rollout_policy.py`，diff 只有 `export_student` 里 `obs` 版本号多了一个 `v2size` 分支（4→5），训练语义不变。
+## 已有完整pack双跑
 
-`encoder_signature` 只覆盖 features/featurize_numpy/_col_of/target_values/encode_frames 以及选定数值常量；v2 又有冻结语义签名。它不是训练链签名，不覆盖 optimizer、训练循环、所有 merge/read 路径、网络实现或运行库。即使未来 (c) 发生，它也不保证发现。
-
-## 已完成的全量双跑
-
-复用 CodeBuddy 的两个产物，没有重跑 1698 万行。七个训练链源码文件逐字节匹配 bec2b9e6。两次除输出路径外的配方相同。
+任务书要求的同pack、seed1、各1epoch双跑已由CodeBuddy完成，未重跑。除输出路径外配方相同；实际比较21个权重张量，**21/21不同**。
 
 | 项 | run1 | run2 |
 | --- | ---: | ---: |
-| seed / epoch | 1 / 1 | 1 / 1 |
 | train loss | 4.2911643558 | 4.3041004138 |
 | val loss | 3.7510763180 | 3.7643170536 |
-| epoch 秒 | 890.387 | 334.052 |
-| 包含读取的总秒 | 1224.317 | 591.676 |
+| epoch秒 | 890.387 | 334.052 |
+| 含加载总秒 | 1224.317 | 591.676 |
+| 规范张量SHA前缀 | 5d52761abc8b… | 148fa6bef2ee… |
 
-规范张量 SHA（按名称、dtype、shape、实际数值序列化）：
+[双跑证据](task96-existing-runs.json)含完整张量摘要和差异。第一轮epoch在15分钟内，但含加载超过15分钟；如实记录，不为补齐时限而重训。两次耗时不能作为确定性开销比。
 
-- run1 `5d52761abc8b3240506771a252beee316312ab7d066500ce266db5392bc5722e`
-- run2 `148fa6bef2eef889a98a0ae62f3fbdf3d4e441c60d8f16db4750c4c0f8d46f6e`
+**比较必须分组。** r11与A均为12epoch；上述诊断均为1epoch。训练器的cosine调度周期依赖总步数，所以诊断第1epoch与历史第1epoch的学习率轨迹不同；四个run的loss不能跨组当作同配置对照。有效比较是r11↔A、run1↔run2各自组内。
 
-逐张量差异与原始配方/metrics 见 [task96-existing-runs.json](task96-existing-runs.json)。第一轮 epoch 在 15 分钟内，但含加载共 20.4 分钟，超过任务要求的总时限；没有为了合规而重复实验。两轮未捕获 deterministic 标志及启动环境，资源竞争不同，**1224/592 或 890/334 不是确定性训练成本**。
+训练入口先 `torch.manual_seed(seed)`，每epoch使用CPU `torch.randperm`；验证使用排序seed集合与独立 `random.Random(validation.seed)`。**没有DataLoader**；precompute_workers不是其worker数。后续控制实测初始化、排列及输入相同，分歧发生在反向梯度。
 
-训练没有 DataLoader。`precompute_workers=8` 指预计算，并非训练 DataLoader worker；读现成 pack 时不是训练洗牌来源。入口先 `torch.manual_seed(seed)`，训练每 epoch 用 CPU `torch.randperm`；验证由排好序的 seed 集与私有 `random.Random(validation.seed)` 划分。受限诊断已记录初始参数和实际 permutation SHA，检验“同 seed”是否真的给出同初始化与同顺序。
+## 分歧来源与确定性开关
 
-## 受限 GPU 算子诊断（已跑完）
+在原pack固定30段、1,046,710行、batch2048、seed1、1epoch/461步上，使用冻结bec2b9e6训练器。已有的9例未重跑；本次仅补2例未设workspace的确定性配置，总训练墙时约50秒。完整结果见 [中尺度控制](task96-scale-probe.json)。
 
-脚本 [task96_determinism_probe.py](../../scripts/task96_determinism_probe.py) 使用上述冻结训练器和一个真实标签段：`n20o1_fast_search`，2368 行、32 seeds，段 SHA `806fbdfce4ffa8003eb9a84433a6b911edd3c060ea6cd388864863de23527854`。输入复制并验证到 repro 自己的 ignored artifacts，加载器只替换成读这个段；其余调用实际 trainer.main，batch=128。该实验用来定位算子/种子，不能替代全量训练或泛化测量。
+| 配置 | 次数 | 结果 |
+| --- | ---: | --- |
+| 确定性配置 + workspace=:4096:8 | 5 | 最终张量与逐步loss全同，含此前显存压力用例 |
+| 默认配置、未设workspace | 4 | 最终张量两两不同；其中两次报告相同空闲显存仍不同 |
+| 确定性配置、未设workspace（本次补充） | 2 | 相互相同，且与上述5例完全相同 |
 
-11:59 的首版脚本跑不起来（`labels` 传了字符串而非列表；`read_pack` 单文件分支丢掉 identity head 需要的 packet store；`label_weight` 含新标签集之外的键），已改成 `labels=[label]`、`read_segments([segment])`、只保留本标签的权重，并先用 CPU 冒烟跑通（同一 seed 两次逐位相同）。
+七次确定性配置的张量SHA均为 `78cfef54734572ec67ff05d7ea8923b99b04e791a534819a41a30ea18734d399`，逐步loss摘要也相同。补充两例epoch17.53/20.52秒、val loss均4.7820728496，无确定性报错。“确定性配置”在此为 `use_deterministic_algorithms(True)`、cuDNN deterministic=True、benchmark=False；不是只改变workspace。
 
-正式用例（独立子进程，每次 import torch 前设好 workspace；strict 另开 deterministic algorithms、cuDNN deterministic、benchmark=False）：
+定位得到的第一处分叉：
 
-| 用例 | workspace | 初始张量 SHA | 最终张量 SHA | 第1步 loss | val loss |
-| --- | --- | --- | --- | ---: | ---: |
-| strict_no_workspace | 未设 | `2624c16674ce…` | `77a3093bb40d…` | 7.1692876816 | 6.5724385253 |
-| default1 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
-| strict1 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
-| strict2 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
-| default2 | :4096:8 | 同上 | 同上 | 同上 | 同上 |
-| ws16_a | :16:8 | 同上 | `282009e3e01a…` | 同上 | 6.5716974401 |
-| ws16_b | :16:8 | 同上 | `282009e3e01a…` | 同上 | 6.5716974401 |
-| nows_a | 未设 | 同上 | `77a3093bb40d…` | 同上 | 6.5724385253 |
-| nows_b | 未设 | 同上 | `77a3093bb40d…` | 同上 | 6.5724385253 |
+- 同一批数据、相同初始化下，第1步forward/loss相同；反向后唯独 `packet_embedding.weight` 梯度不同，第一次更新后也只有它的参数不同。证据：[模块定位](task96-localize.json)、[梯度定位](task96-grad-probe.json)。
+- `[B,10]` 的packet查表反向要把重复id梯度归并到表行。独立算子控制中，`[2048,10]` 默认10次得到10种梯度，开启确定性后只剩1种且不报错；裸index_add默认5次5种、确定性1种。证据：[查表形状](task96-embedding-shapes.json)、[归并算子](task96-embedding-probe.json)。因此**没有报错不等于没有非确定路径**：PyTorch可以直接选择确定性实现。
+- 原来的小段控制另显示workspace从4096改为16也能改变后续数值。[小段证据](task96-determinism-probe.json)。它是另一条配置轴，不能解释embedding梯度本身，也不能从“确定性+workspace”组合对照声称workspace单独修好了问题。本次两例证明：本中尺度路径未固定workspace也能在确定性配置下复现。
 
-读法：
+未采kernel trace，不声称已证明具体atomicAdd或cuBLAS选核过程。当前环境为torch2.14.0+cu132、CUDA13.2、cuDNN92400、RTX5080。结果限定于实际运行的样本与环境，不外推跨库版本、跨设备或完整1698万行都逐位一致。
 
-- **初始权重与 shuffle 顺序在所有 9 次里完全相同**（初始化张量 SHA 一致、`randperm` 摘要 `391b1dcc…` 一致）。`torch.manual_seed(seed)` 确实同时决定了初始化和训练排列，不存在“同 seed 不同初始化”的问题。
-- **未设 workspace 与 `:4096:8` 逐位相同**（7 次全部一致，含 deterministic 关掉的 default 两次）。strict 打开后没有抛任何 nondeterministic 算子错误，只说明该样本实际经过的路径未触发确定性错误，不能证明内核未切换、没有内部回退，也不能替代全量检查。
-- **只把 workspace 从 `:4096:8` 换成 `:16:8`，最终权重和 loss 就变了**：第 1 步 loss 仍相同，**第 2 步开始出现差异**（6.843989372253418 vs 6.84398889541626），17 步后训练 loss 6.6203269 vs 6.6201138、val 6.5724385 vs 6.5716974。同一 workspace 下重复（ws16_a/ws16_b）逐位相同。
-- 本段观察到**组内复现、workspace组间分叉**。这与GEMM算法/浮点归约路径改变相容；尚未采集内核轨迹，不能把具体内核选择与后续放大量写成已证事实。
-- 环境：torch 2.14.0+cu132、CUDA 13.2、cuDNN 92400、RTX 5080、driver 617.14、`float32_matmul_precision=highest`（TF32 关闭）。当前包安装元数据早于r11/A，但没有两次历史运行环境回执，不能只凭mtime证明期间未发生环境变化。
+## 成本与建议
 
-### 与全量结果对照
+已有中尺度交替对照 default→strict→default→strict，epoch均值17.22秒→18.34秒，**观察比值1.065**；但default自身13.51/20.93秒相差1.55倍，宿主噪声大于6.5%。因此这是带负载噪声的测量，不能当作精确生产开销，也不能据此做“无显著开销”的统计断言。
 
-同一 pack、同一 seed、同一 trainer 的四个全量 run（r11、A，以及 CodeBuddy 的两遍 1-epoch），第 1 个 epoch 就已经互不相同：
+[算子计时](task96-det-cost.json)测得上述查表backward中位数0.297→0.368毫秒，**1.24倍、每次约多0.071毫秒**。完整训练15,278,702行、batch2048，7461步/epoch；若只累加这一处，约多0.53秒，相对历史221秒约0.24%。这只是单算子外推，未包含其他确定性实现、I/O和调度成本，**不是整轮实测**。
 
-| 全量 run | epoch1 train | epoch1 val | epoch 秒 |
-| --- | ---: | ---: | ---: |
-| r11 | 4.3446921 | 3.8311677 | 221 |
-| A | 4.3403805 | 3.8103482 | 224 |
-| CodeBuddy run1 | 4.2911644 | 3.7510763 | 890 |
-| CodeBuddy run2 | 4.3041004 | 3.7643171 | 334 |
-
-workspace实验提供了一个微小数值扰动的实例；尚未用完整训练证明它足以产生这四次全量run的loss或胜率差。全量每epoch为7461个优化步（15,278,702训练行，batch2048），12epoch共89,532步；旧文“132k步”计算无依据，已纠正。不能把差异量级相容当作历史归因。
-
-### 并行负载（qc.out 回执，本次补）
-
-之前说“四个 run 都没留环境回执”，这句话只对 GPU 成立：`~/pvz-logs/qc.out` 逐条记录了课程队列的并发负载（worker 数、`MemAvailable`），可以还原每次训练时机器上还有什么在跑（提取脚本与原始行见 [task96-concurrency.json](task96-concurrency.json)）：
-
-| run | 训练窗口 | qc 游戏 worker | MemAvailable | epoch 秒 |
-| --- | --- | --- | --- | ---: |
-| r11 | 10-25 08:30–09:12 | 14–15 / 16 | 17.3–17.6 GiB | 212（12 epoch 均值） |
-| 变体 A | 10-26 00:24–01:09 | 4–10 / 16，另有后台 round 15 评估跑到 00:46 | 12.5–14.8 GiB | 223.7（epoch 1） |
-| CodeBuddy run1 | 10-26 08:47–09:08 | 8–11 / 16 | 12.1–14.5 GiB | 890.4 |
-| CodeBuddy run2 | 10-26 09:08–09:18 | 8–12 / 16 | 12.2–15.4 GiB | 334.1 |
-
-读法：
-
-- **四次都不是独占机器**，负载构成还不一样：r11 是 14–15 个游戏 worker 但内存最宽裕；A 是 worker 少 + 一个 46 分钟的后台评估；两次 1-epoch 重跑负载相近。
-- **run1 与 run2 的宿主负载几乎相同，epoch 却差 2.7 倍**（890 vs 334 s）。所以“epoch 慢”不能只用并发 worker 数解释，页缓存冷热（run1 冷、run2 紧接着热）、GPU 上其他客户端、进程内分配状态都可能参与，事后无法区分。这修正了之前“run1 当时在抢 GPU”的说法——负载相同也能出现 2.7 倍差。
-- 把 epoch 秒折成每步（8,292 步）：r11 25.6 ms、A 27.0 ms、run1 107 ms、run2 40 ms。本次全量尝试在同一个 spill 机制下是 **10,000 ms/步**（约 100 倍），说明这个量级的快慢完全可以用“9.6 GB spill 有没有待在 page cache 里”解释，不需要假设“在抢 GPU”。换言之：**epoch 慢不能当作算法切换的证据**，两边是两回事。
-- 仍然没有 GPU 侧回执（qc.out 不记显存/驱动状态），所以“哪次 run 落在哪种算法或确定性状态”依旧不能回溯判定。
-**未能证实的一环（本次已收窄）**：具体是哪个环境差异让这四个 run 落到不同算法。中尺度控制（见下节）已把“未固定 workspace → 每次结果不同；固定后 → 逐位相同”做成可复现观测，形状与历史四次 run 一致；仍未证实的是这四次 run 当时的 GPU 侧状态——`qc.out` 能还原并发负载（见下节），但不记显存与驱动状态，事后无法补。run1 的 890s/epoch 也不能只用并发 worker 数解释：run2 的负载与之相近，却只用了 334 s。
-
-### 确定性训练的成本
-
-同一段数据跑 8 个 epoch（136 步）四遍：strict 两遍 10.44s / 9.30s，default 两遍 7.74s / 17.05s，**四遍最终张量 SHA 完全相同**（`d115b228…`）。qc 同时在跑，计时噪声（7.7–17.0s）远大于任何 strict 开销，**这个尺度上测不出确定性模式的代价**。这既不能说明生产上零成本，也不能说明有成本；真要上生产，应在完整一个 epoch 上量一次。
-
-本次短样本无法给出可靠的确定性成本比。“未报错”不证明没有算法切换或回退，不能据此预告零成本或小开销。
-
-中尺度控制补了一组**交替**对照（default_p1 → strict_q1 → default_p2 → strict_q2，同数据同 seed，让缓存预热与负载漂移在两种配置间对消）：default 13.51 / 20.93 s（均值 17.22），strict 18.70 / 17.98 s（均值 18.34），**比值 1.065**。但 default 自身两遍就差 1.55 倍（13.5 vs 20.9 s），噪声远大于 6.5%，所以整轮尺度只能说“**没有观测到显著开销，也测不出准确比值**”。
-
-整轮测不准，就单独量那个真正被改动的算子（`scripts/task96_det_cost.py`，证据 [task96-det-cost.json](task96-det-cost.json)）：`[2048,10]` 查表的 backward，200 次一组、default/deterministic 交替 6 组，取中位数——**0.297 ms vs 0.368 ms，比值 1.24**。折算到训练：每步多约 0.07 ms，一个 epoch 8,292 步就是 **+0.6 s**，占 221 s epoch 的 **0.3%**。所以“开确定性很贵”在这个模型上不成立，代价集中在一个只占极小时的算子上；整轮 1.065 的比值也与之相容。
-
-仍未做的是**整轮 strict/default 交替**（要 qc 空闲 + 内存 ≥14 GiB），所以“+0.3%”是单算子外推，不是整轮实测。
-
-运行注意：WSL 下 `nvidia-smi --query-compute-apps` 返回空，脚本里“检测到 qc 就让行”的守卫实际看不到 qc 的 `search_play`（它占 4.5GB 显存）。本次 13 个用例每个 3–10 秒、严格串行、不启动游戏进程，跑完 qc 仍在正常运行（进程数 27、显存占用不变）；但这说明该守卫在本机形同虚设，不能当作“已让行”的证据。
-
-### 全量控制（已尝试，本机内存状态下不可行）
-
-新增 `scripts/task96_full_pack.py` 读完整348段/16,982,931行；使用冻结bec2b9e6训练器，原batch2048、seed1、epoch1、workspace=:4096:8，按strict/default/strict顺序控制。所有memmap/输出/telemetry只写repro，现有输入只读，source_rows须与原控制SHA一致。每个子进程最多900秒；逐次记录初始权重、完整randperm摘要、实际张量与loss摘要、运行源码/资源回执。该控制针对尚未验证的全量路径，不重跑小段诊断。
-
-准入直接枚举/proc中的实际Python训练进程，不依赖WSL可能漏报的GPU客户端列表；qc训练优先、本任务最多一个GPU训练。其他任务照常运行，不作为阻塞条件，仅在资源回执中记录其负载，计时比必须带共享主机负载限制。至少10GiB可用内存、3GiB空闲显存才启动。没有控制其他任务或qc。
-
-**实测结论：这个控制在本机当前内存状态下跑不完，与确定性无关。** 10-26 17:03 启动 `strict_a`：17:04 读完 348 段（16,982,931 行，`source_rows.json` 已写出），随后训练稳定在 **0.099 步/秒（10 s/步）**，700 s 内进程 `read_bytes` 累计 **542 GB**——一个 epoch 只需读 5.5 GB board，这说明 9.6 GB spill 的随机行访问几乎全部落在 page cache 外。按 461 步/1.05M 行换算，全量 8,292 步需约 **23 小时/epoch**，与历史全量 221–224 s/epoch 差两个数量级。900 s 子进程上限触发，`strict_a` 未写出 `trace.json`；`artifacts/task96/full_pack/strict_a/{recipe.json,source_rows.json,telemetry/}` 与 `strict_a.log` 保留为这次失败的证据，未重跑。
-
-原因不是代码而是宿主：本机 25 GiB 内存，实验时其他任务（deckvar 训练 11 GiB RSS、qc/llmimport 的 search_play 与游戏进程）占用 16 GiB，可用 8 GiB，装不下 9.6 GB 工作集；r11 当年 221 s/epoch 说明那时缓存装得下。
-
-18:20 又在 `MemAvailable` 回到 13 GiB 时用 `task96_full_pack.py rate`（只跑 200 步就停）复测了一次，结论相同：训练阶段 18 分钟内 mmap 读盘累计 **650 GB**，进程 RSS 涨到 10.9 GB，200 步没跑完（> 5.4 s/步，全量 epoch 下界 > 12 h），随后主动 TERM 掉。原因是本机 `earlyoom` 的 `--prefer` 列表含 `python3`，再跑下去有杀掉其他任务训练的风险（deckvar 那个进程 RSS 10 GiB），不值得。
-
-**同时满足两个条件才值得再试全量控制**：(1) `MemAvailable ≥ 14 GiB`、其他任务不占 10 GiB 级 RSS；(2) qc 的训练进程空闲（GPU 让 qc 先）。10-26 20:40 内存条件已满足（16 GiB），但 qc 的 round_000020 训练已连续占卡两小时，所以仍未启动。满足不了就只保留中尺度 + 算子层结论。
-
-## 中尺度控制（本次，已跑完）
-
-全量控制在内存上不可行，于是改用同一份 348 段里的**固定子集**做尺度更大的控制：按路径排序取前 30 段，1,046,710 行（是受限诊断那一段的 442 倍），其余全部沿用历史 run 的冻结训练器与配方（batch 2048、seed 1、epoch 1、461 步）。脚本 `scripts/task96_scale_probe.py`，原始回执 `artifacts/task96/scale_probe/<case>/trace.json`，汇总 [task96-scale-probe.json](task96-scale-probe.json)。共 9 个用例：5 个固定配置（含压显存、含两次交替重复），4 个未固定配置。
-
-| 用例 | deterministic | workspace | 启动时空闲显存 | 最终张量 SHA | train / val loss | epoch 秒 |
-| --- | --- | --- | ---: | --- | --- | ---: |
-| strict_a | 开 | `:4096:8` | 9229 MiB | `78cfef547345…` | 5.3861950943 / 4.7820728496 | 27.66 |
-| strict_b（重复） | 开 | `:4096:8` | 9229 MiB | `78cfef547345…` | 同上 | 28.60 |
-| strict_squeeze_e（压显存） | 开 | `:4096:8` | 4807 MiB | `78cfef547345…` | 同上 | 19.12 |
-| strict_q1（交替） | 开 | `:4096:8` | 11793 MiB | `78cfef547345…` | 同上 | 18.70 |
-| strict_q2（交替重复） | 开 | `:4096:8` | 11793 MiB | `78cfef547345…` | 同上 | 17.98 |
-| default_c | 关 | 未设 | 9229 MiB | `1cf71d20337b…` | 5.3448550556 / 4.7088792343 | 22.03 |
-| default_squeeze_d（压显存） | 关 | 未设 | 4871 MiB | `05b226f28628…` | 5.3235213711 / 4.6689760475 | 19.69 |
-| default_p1（交替） | 关 | 未设 | 11793 MiB | `b6e8942cc9d0…` | 5.3489700110 / 4.7110751228 | 13.51 |
-| default_p2（交替重复） | 关 | 未设 | 11793 MiB | `9b9f594e2ed9…` | 5.3520673691 / 4.7137228276 | 20.93 |
-
-`squeeze` 的做法：在模型创建前占用 4 GiB 显存（`torch.empty(4 GiB, uint8, device='cuda')`），把空闲显存压到约 4.8 GiB，训练结束后释放。没有触碰 qc 进程，占用期间 qc 一直正常。交替四例（default_p1 → strict_q1 → default_p2 → strict_q2）是为了让缓存预热与负载漂移在两种配置间对消。
-
-读法：
-
-- **固定配置：5 次全同。** strict_a/b/e/q1/q2 的最终张量都是 `78cfef547345…`，每一步 loss 也逐位相同（`losses_sha256` 一致）；初始张量 SHA 与 `randperm` 摘要在全部 9 例里相同。跨 4807–11793 MiB 三种空闲显存都一样。到 1.05M 行 / 461 步为止，固定配置下没有 run-to-run 随机性。
-- **未固定配置：4 次全不同。** default_c / default_squeeze_d / default_p1 / default_p2 的最终张量两两不同，val loss 4.7089 / 4.6690 / 4.7111 / 4.7137。其中 **default_p1 与 default_p2 是同一进程序列、同一份数据、同一 seed、报告的空闲显存也相同（11793 MiB）**，结果仍然不同。所以不是“显存少就一定变、显存一样就一定同”，而是**不固定 workspace 时结果依赖运行时状态**，空闲显存只是其中一条已观测到的轴。
-- **固定 workspace 就免疫。** strict_squeeze_e 与 strict_a 逐位相同、strict_q1/q2 与 strict_a 逐位相同。修法 5（把 `CUBLAS_WORKSPACE_CONFIG` 写死）不只是让配置可比较，它确实消掉了这个已观测到的、可重复出现的漂移。
-- **这正是历史四次全量 run 的形状**：同数据、同代码、同 seed，四个结果互不相同。当时的 run 没有固定 workspace，也没有留环境回执，与这里“未固定 → 每次不同”的行为一致。**但仍不能说已证明历史原因**——没有当时的环境回执，只能说机制相容且已在本机复现。
-- **机制仍是推断**：只观测到“运行时状态 → 数值”的因果链两端，没有采到 cuBLASLt 选核或 workspace 申请失败的 API 回执。可以写“与库在运行时状态不同时选择不同实现相容”，不能写“已证明是 cuBLASLt 换核”。
-
-局限（必须一起读）：
-
-- 只有 1.05M 行 / 461 步，不是 16.98M 行 / 8,292 步。它证明的是“这个尺度上固定配置可复现、未固定配置每次都变”，不能外推成“全量逐位可复现”。
-- 子集是“按路径排序前 30 段”，不是随机抽样；不同标签的混合比例与全量不同，loss 绝对值不能与全量表对比，只能用例间对比。
-
-## 分歧定位（本次，已跑完）
-
-前面只证明了“未固定就跑不一样”。为了说清**差在哪一步、哪个张量**，在同样的 30 段子集上做了两组更细的观测（`scripts/task96_localize.py`、`scripts/task96_grad_probe.py`，证据 [task96-localize.json](task96-localize.json)、[task96-grad-probe.json](task96-grad-probe.json)）：
-
-1. **模块级（前 6 步）**：两次未固定 run 的模型输入哈希在第 1–6 步全部相同，第 1–3 步 loss 逐位相同；**第 2 步起 `packet_embedding` 的输出哈希不同**（22 个模块里第一个不同的），第 4 步 loss 才出现末位差异（7.658308506 vs 7.658308029）。固定配置的两次对照：6 步 22 个模块全同。
-2. **梯度级（第 1 步）**：trainer 在 `loss.backward()` 之前调用 `step_observer`，所以第 2 次回调时手里的梯度正是第 1 步的。两次未固定 run 的第 1 步 forward 与 loss 逐位相同，**梯度里只有 `packet_embedding.weight` 不同，其余 20 多个参数全同**；做完第 1 次更新后，参数里也只有它不同。固定配置的两次对照：梯度一个都不同。
-
-含义：
-
-- 分歧进入点不是初始化、不是洗牌、不是前向、也不是 loss，而是 **embedding 表的梯度累加**——同一 batch 里重复的 packet id 要把梯度散射累加回表行，这个累加顺序在 CUDA 上不固定。前向的查表是确定性的，所以第 1 步前向和 loss 完全相同；梯度先分叉，第 2 步的查表结果才跟着变。
-- **这条机制已经用微探针在算子层复现**（`scripts/task96_embedding_shapes.py`、`scripts/task96_embedding_probe.py`，各 10 / 5 次重复，几秒钟 GPU）：
-
-  | 形状（41×64 表，2048 行 batch，8 种重复 id） | 默认模式 | 确定性模式 |
-  | --- | --- | --- |
-  | `[2048]` ids，grad `[2048,64]`（cell 路径的平铺版） | 1 种 | 1 种 |
-  | `[2048,10]` ids，grad `[2048,10,64]`（**`packet_logits` 用的就是这个**） | **10 次 10 种** | **1 种** |
-  | `[2048]` ids，grad `[2048,64,6,54]`（cell 的 expand 版） | 1 种 | 1 种 |
-  | 裸 `index_add_`（2048 行 → 8 行） | **5 次 5 种** | 1 种 |
-
-  也就是说：不是所有 embedding backward 都不确定，**只有 `[B,10]` 这次查表（20,480 次索引）在默认模式下每次都不同**，而它正是 `packet_logits` 那条路径；`torch.use_deterministic_algorithms(True)` 把它变成逐位相同，且**不报错**（不是靠抛异常拦住，而是换了确定性实现）。这与训练里的观测完全对齐：前向/loss 相同、唯独 `packet_embedding.weight` 的梯度先不同。
-- 这个模型里重复度极高，不是理论上的边角情况：`packet_embedding`（`python/pvz_rollout_policy.py:111`，表大小 = `PACKETS` 或 `PlantTypes`）在 2048 行的 batch 里平均只有 **8.4 个不同的 packet id**，也就是约 2040 行在同一批里撞同一批表行。这解释了为什么 20 多个参数里唯独它的梯度先分叉。
-- 这与“cuBLAS workspace 换算法”是**两条不同的路径**：embedding 的梯度是散射累加，不走 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它。所以单靠固定 workspace 不足以覆盖本次定位到的第一步分叉，`torch.use_deterministic_algorithms(True)` 这类开关才是针对这一条的手段（它会把 embedding backward 换成确定性实现）。**“只开确定性、不固定 workspace”的两例对照没跑成**：从 18:5x 起 qc 的训练进程（round_000020）连续占用 GPU 90 分钟，本任务的准入按规则让行，等待期间一例未启动，已停掉等待器。想补就跑：`task96_scale_probe.py run`（新用例名 `det_only_a/b` 已写进 plan，qc 训练结束时才会启动）。
-- 仍未拿到内核级回执：微探针把“哪种形状不确定、哪个开关能修”测到了算子层（10/10 vs 1/10），但没有 kernel trace 证明默认路径走的是 atomicAdd、确定性路径走的是哪种排序/分段实现。
-
-## 冻结与修法建议（生产未改）
-
-1. 每轮先固定标签快照；对 frames/meta/显式训练行清单以及 pack index 和每个引用段保存内容 SHA256。内容清单写入 `round_*/inputs.json`，训练前后核验。不把路径、大小或 mtime 当内容身份。现有不可变段可按内容地址复用，避免重复复制整库；保留到评估回执已固定其依赖。
-2. `round_*/runtime.json` 记录实际命令、resolved recipe SHA、Git revision、dirty diff SHA、训练链各源码 SHA（含导入依赖），以及 Python/numpy/PyTorch/CUDA/cuDNN/驱动/GPU、精度与确定性设置、CUBLAS workspace。配方来源 revision 与实际训练运行 revision 分开保存。
-3. 显式独立的 CPU generator 管理模型初始化与训练 permutation，验证 split 使用独立 seed；存启动 generator 状态摘要、初始化张量 SHA、各 epoch permutation SHA。以后即使引入 DataLoader，再显式配置 generator/worker_init_fn 以及 Python/numpy RNG；当前不存在 worker 需要补种子的证据。
-4. 验收比较实际张量与 loss，模型文件 SHA另作文件完整性校验；不能因 metadata/输出路径差异误判权重不同。相同库/设备下检查逐位复现，跨版本/跨设备另设数值容差与行为评估。
-5. 生产训练固定 `CUBLAS_WORKSPACE_CONFIG`（配合 deterministic algorithms / cuDNN deterministic / benchmark=False）写进 `runtime.json` 与启动脚本，作为“同配置可复现”的前提。诊断显示换 workspace 就换算法、换结果；中尺度控制还显示**未固定时同一配置 4 次跑出 4 个不同结果**（val 4.7089 / 4.6690 / 4.7111 / 4.7137，其中两次报告空闲显存相同），固定后 5 次（含压 4 GiB 显存）逐位不变。不写死它，“同配方同 seed 重训”这句话本身没有定义，而且共享主机上任何一次重训都可能落在不同显存状态。改动前先在一个完整 epoch 上量开销。
-6. **task92 的前提要改写。** “训练随机性是主要来源”在已观测的两个尺度上都不成立：固定配置的重复训练逐位相同（小样本 7 次、1.05M 行 2 次）。四次全量 run 互不相同，与“未固定 workspace + 不同空闲显存”相容。所以：
-   - 多种子挑选测的是**种子方差**（不同 seed → 不同初始化与不同排列，这是真的），不是“同 seed 重训的抖动”。
-   - 挑选时**必须**把 `CUBLAS_WORKSPACE_CONFIG` 与确定性开关固定住。否则各种子落在不同显存/算法状态上，挑选结果里混进的是环境差异，不是种子效应，多训几个种子再挑也挑不出真实方差。
-   - 对 42/192 的 heldout 落差，仍需要多个完整训练 + 新种子配对评估，不能用单个 r11 称“幸运”就认定原因。
-
-7. **确定性开关要真打开，不能只固定 workspace。** 本次定位到第一步分叉在 `packet_embedding` 的梯度（`[B,10]` 查表的散射累加），这条路径不经 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它；微探针实测 `torch.use_deterministic_algorithms(True)` 能把这条路径从“10 次 10 种”变成逐位相同且不报错。两者一起开的那 5 次全同说明组合有效；只开确定性、不固定 workspace 的整轮对照因 qc 占卡未跑，所以“整轮里各占多少”仍未测。
-   **现行生产没有这两条**：`scripts/train_rollout_policy.py` 里 grep 不到 `use_deterministic_algorithms`、`CUBLAS_WORKSPACE_CONFIG`、`cudnn.deterministic`，也就是说每轮学生训练都落在本次测到的“未固定”区间；反倒是已退役的研究线 `python/pvz_research.py:435-440` 设了这两项。要落地就从训练入口加这两行开始，并在 `runtime.json` 里回执。
-### 落地补丁（建议，未应用）
-
-生产未改。如果决定采纳修法 5+7，最小改动是在 `scripts/train_rollout_policy.py` 的 `main()` 里、建模型之前加三行（位置等价于 `python/pvz_research.py:435-440` 的旧做法）：
+建议采用确定性配置作为同seed复现与task92种子比较的基线，并固定/记录workspace。task92仍可比较不同初始化与排列产生的种子方差；它不能代替消除或记录同seed数值漂移。历史42/192的泛化落差仍需由多种子训练与行为评估量化，本任务不把它定性为“r11幸运”。生产未改；建议入口设置为：
 
 ```python
-os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+# 在首次CUDA上下文/库初始化前固定环境；随后设置训练开关。
+os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 ```
 
-并把 `os.environ["CUBLAS_WORKSPACE_CONFIG"]`、`torch.are_deterministic_algorithms_enabled()`、`torch.__version__`、`torch.version.cuda`、`torch.backends.cudnn.version()`、Git revision、recipe SHA 一起写进 `metrics.json`（或轮目录的 `runtime.json`）。成本参照：单算子 +24%、整轮外推 +0.3%（见上节）；风险是若某个算子没有确定性实现会直接抛错，本模型在 1.05M 行尺度上没有抛，全量路径未验证，所以第一次上线建议先在单轮观察一次，别默默改成 `warn_only=True`（那等于把不确定性吞回去）。
+冻结方案：每轮保存resolved recipe、实际源码版本/dirty diff摘要、训练链源码SHA、环境与上述开关、初始化与排列摘要；保存标签/pack索引和引用段的**内容指纹清单**，复用现有不可变段，不复制整库囤积。配方来源revision与运行源码revision分开记录。文件SHA负责完整性，张量摘要负责比较实际权重。
 
-## 复核命令
+## 范围与保留限制
 
-所有新写入均在 repro 内；`/tmp/exp96` 只是 CodeBuddy 已留的冻结只读训练代码快照。执行前保持 qc GPU 优先。
+完整pack的额外strict/default/strict控制曾因缺页退化至约10秒/步，并触及900秒上限；另一次速率尝试亦失败。按7461步估算约21小时/epoch，继续重跑会争用采集/训练资源。按用户新规不再追加这项额外全量验收：原任务的完整双跑已有结果，原因定位与开关控制已有独立证据；**完整pack在严格模式下逐位复现及生产整轮开销仍未证明**，如实作为限制，不用中尺度结果冒充。
 
-```sh
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_existing_runs.py
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_provenance.py
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_determinism_probe.py prepare
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_determinism_probe.py run
+[历史并发记录](task96-concurrency.json)恢复了worker数和MemAvailable，未恢复GPU配置。run1/run2宿主负载相近而耗时差2.7倍，不能用epoch时间反推workspace或GPU争用。确定性机制已在现行训练路径复现；具体历史run受到哪种配置/负载影响无法回溯。
 
-# 计时用例（8 epoch，strict 与 default 各两遍；结果在 artifacts/task96/determinism_probe/{strict_cost_*,cost_*}/trace.json）
-TASK96_EPOCHS=8 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_determinism_probe.py child --case strict_cost_a
-
-# 中尺度控制（30 段 / 1,046,710 行，5 个用例，约 3 分钟；已跑完，重复执行会因 trace.json 存在而拒绝覆盖）
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_scale_probe.py prepare
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_scale_probe.py run
-
-# 分歧定位（30 段子集；各约 1–3 分钟）
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_localize.py run
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_grad_probe.py run
-
-# 算子层微探针与单算子开销（各几秒 GPU）
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_embedding_probe.py
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_embedding_shapes.py
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_det_cost.py
-
-# 全量控制（348 段）：内存 < 14 GiB 或 qc 训练在跑时不要启动，会退化到 10 s/步
-/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_full_pack.py prepare
-```
-
-`run` 现在跑 9 个用例（含 `:16:8` 与未设 workspace 各两遍），全部完成后写 [task96-determinism-probe.json](task96-determinism-probe.json)。
+复核原始数值可直接读上述JSON及 `artifacts/task96/` 回执，无需再次训练、全量重哈希或重放游戏。诊断脚本保留在本分支；不会部署或自动启动生产训练。
