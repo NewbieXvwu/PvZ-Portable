@@ -137,6 +137,9 @@
 
 - 2026-10-26 15:40：**修复验证通过**。archive_15 重采后两个 root 的私有状态 SHA 与冻结 replay 完全一致（1020：62864767…）；未受影响的 archive_08 两个 root 全部候选/摘要/root 记录与旧标签逐项相同（仅忽略计时字段），archive_15 root_335 亦相同 —— 新代码不改变有效数据，可与已采任务混用。k0 现 55 个任务审计通过、17 个待采、0 个失败。已启动 resume8.py 串行链（2 游戏、nice19、每任务 8 GiB 准入）：k0 补 17 → k1 replay+72 → k2 replay+72 → 三份导出合并 → roof_score → gates → task72 24 条轨迹重建 + bind。
 
+- 2026-10-26 16:20：**更正上一条的归因**。按 root 隔离重采 17/19/21/22/23 后，第二个 root 仍与 replay 不符，说明“搜索污染后续前缀”不是原因。进一步实测：同一档案（17，frame 650）连续两次**冷重放**得到的私有状态 SHA 互不相同（d84c6cba… / 5ea3f48d…），而 replay.json 记录的是第三个值（93237f35…）；逐字段 diff 显示两者**只差 grid_items[1].state**（2052151040 vs −1613670656）。`grep mGridItemState src/` 只有 LawnApp.cpp 的序列化一处，**整个 src/ 从不写这个成员**，所以它是未初始化堆内容；而 `_frame` 只保留 grid item 的 row/col/type，这个值到不了任何策略或标签。因此 root 身份不能再用未掩码的私有状态 SHA。
+- 2026-10-26 16:20：新增 `scripts/task78_state.py`：把 `grid_items[*].state` 掩掉后做 canonical 摘要。实测同一档案两次冷重放在该 root 上的掩码摘要完全一致（73686749…）。replay 现在每个 root 同时记 `engine_canonical_sha256`，采集器在 sample_root 结束、引擎仍停在 root 的同一时刻记 `root_state_canonical_sha256`；导出改为原始 SHA 相同即通过、否则要求掩码摘要相同。已通过的两份数据（54 个 k0 任务）不受影响，失败的 18 个任务整目录移到 ignored 的 `labels_before_rootfix`/`labels_before_rootmask` 并重采。**撤销**按 root 隔离的改动（未被证实，且会让新标签与 192 任务训练语料的生成路径不同）。62 项测试通过；提交 9502b8ff、51ddeba0。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-26 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。k0/L41八世界24任务齐且原始链与跨视界身份核验通过；L42由`resume8.py`继续调度，屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
