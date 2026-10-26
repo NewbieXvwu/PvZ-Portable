@@ -24,4 +24,6 @@
 
 ## 结果
 
+- 2026-10-26 08:2x（CodeBuddy 接手 cbp-task97）：合并 origin/pvz-env 进 redeploy（4 个 MEMORY/docs 文档与 student-bottleneck-plan 取 origin 版、2026-10-25/26 日志取并集），push 5dda229f。deploy14 状态：qc_deploy14.sh 在跑（07:41 preflight OK + stop_curr set，等 qc 当前轮结束重启），尚未见 first group rc=0。第 1 步完成：llm_free_out_numeric.zip 里 12 份通关存档（full/half 判定）经 scripts/import_llm_run.py 入库 cq/artifacts/llm_demo/raw/seed_<种子>/<task_id>/，deploy14 引擎 verify 12/12 通过，无新族登记（manifest 未动）；configs/human_demo_tasks.json 里 11 个 LLM demo_start 格引用路径 11/11 全解析。
+
 ## 问题
