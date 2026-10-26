@@ -118,7 +118,7 @@
 
 ## 预登记（2026-10-25，训练前冻结）
 
-执行状态（2026-10-26 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。实际配对13/15完整格、448/512对，剩pool L23/L24；夜区非劣门不通过。driver3已不在进程表，现由`paired_resume4.sh`续剩泳池，再由`supervisor6.py`依次接补充示范诊断和独立屋顶216任务，失败即停。各阶段最多2游戏、nice19，开任务前实测可用内存；原任务范围不变。
+执行状态（2026-10-26 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。实际配对14/15完整格（480对），L24另完成12/32，共492/512对；夜区非劣门不通过，泳池L22/L23也已低于逐格底线，但仍须补完L24。driver3已不在进程表，现由`paired_resume4.sh`续剩泳池，再由`supervisor6.py`依次接补充示范诊断和独立屋顶216任务，失败即停。修正后的原94态重建批次由`task72_resume7.py`等supervisor6退出且屋顶成功后再接，旧错误静态网批次保留。各阶段最多2游戏、nice19，开任务前实测可用内存；原任务范围不变。
 
 模型边界：当前A/B保持诊断候选SHA不变；原v5语料恢复后，仍须按原配方在新目录（例如`artifacts/task78/formal_v6/`）训练正式候选，并另立评估身份。已有诊断A/B保留其证据价值，不能以保留它们为由取消正式训练或把正式训练移出本任务。
 
@@ -170,3 +170,4 @@
 - 2026-10-26 07:30（CodeBuddy 接手）：核对链路存活——paired_resume4.sh（PID 789111）已完 pool L22 双臂、L23 v5，L23 v6 在跑；supervisor6.py（PID 790915）待命将接示范起点诊断与屋顶 216 任务链（含 score + gates_corrected）。剩余：L23 v6 → L24 双臂 → report → 示范诊断 → 屋顶 replay/216 采集/导出/score/gates。接手者只监控不干预，跑完后据 paired.json、demo_start_diag/report.json、roof_truth/export.json、roof_score 输出与 gates_corrected.json 写 §4 门禁汇总与 MEMORY/docs/value-v6.md。
 - 2026-10-26 08:05（CodeBuddy 交回）：配对面板 pool L23 双臂完成、L24 v5 完成（08:03）、L24 v6 在跑（07:32 起已核验 resume4/supervisor6 进程存活）；88 项 task78 测试全绿。此后 task78 交 Business 号 Codex，本代理停止监控，后台链路（paired_resume4 → supervisor6 → 示范诊断 → 屋顶 216 任务链）不打断、继续自动推进。
 - 2026-10-26 Codex续作：发现原task72/72b指定Mac静态branch1（SHA `91e562a0…`），旧重建却冻结台式机branch1（`24858410…`）。本机`/home/newbiexvwu/pvz-logs/mac_branch1/model.pt`实测完整SHA与原记录一致；入口改为强制原静态网，新24轨迹计划另存`artifacts/task78/task72_rebuild_mac_branch1/`，旧`task72_rebuild/`计划、N306/f101终局轨迹与0匹配回执全部保留。19项定向测试通过。修订证据见[重建输入修订](task78-task72-reconstruction-amendment.json)；仅纠正已知输入差异，不声称因此恢复原探针协议或94态。
+- 2026-10-26 Codex续作回执：完整14/15格、480对，L24另12/32，当前492/512对；新完成L23为v5 30/32、v6 26/32，gain1/harm5，逐格非劣底线未过。L24 v6及supervisor6均实测存活，未重启已有批次。修正重建的后继进程`task72_resume7.py`（PID810388，句柄`artifacts/task78/task72_resume7_handle.json`）已启动等待，严格核对前驱PID/启动时间与屋顶成功标记后才开游戏，失败即停。

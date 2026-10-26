@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-25T22:52:27.597521+00:00",
+ "at_utc": "2026-10-26T00:16:50.358359+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -20,9 +20,9 @@
  "formal_candidate_training_complete": false,
  "paired_diagnostic": {
   "complete": false,
-  "complete_cells": 13,
-  "paired_games": 448,
-  "sha256": "d35b43ba9355d81f3fe33992e723e24f272644b01a3804050ad0aa48a4a30f57",
+  "complete_cells": 14,
+  "paired_games": 492,
+  "sha256": "cff23ddd5171f0612cc943490603e9143261a017b40d76d68495daf2e3d3fd90",
   "terrain": {
    "day": {
     "pairs": 64,
@@ -45,14 +45,14 @@
     "conservative_lower": -0.1108797452766956
    },
    "pool": {
-    "pairs": 64,
-    "old_wins": 52,
-    "new_wins": 51,
-    "gain": 11,
-    "harm": 12,
-    "net": -1,
-    "mcnemar_p": 1.0,
-    "conservative_lower": -0.2155738773660454
+    "pairs": 108,
+    "old_wins": 90,
+    "new_wins": 86,
+    "gain": 16,
+    "harm": 20,
+    "net": -4,
+    "mcnemar_p": 0.617719317029696,
+    "conservative_lower": -0.18429480475370777
    },
    "fog": {
     "pairs": 128,
@@ -106,16 +106,24 @@
     "mcnemar_p": 1.0,
     "direction_met": false
    }
-  }
+  },
+  "complete_cell_pairs": 480
  },
  "task72_reconstruction": {
-  "completed_trajectories": 1,
+  "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild_mac_branch1",
+  "completed_trajectories": 0,
   "exactly_matched_states": 0,
   "mapping_complete": false,
   "original_probe_protocol_verified": false,
   "rescore_eligible": false,
-  "plan_sha256": "489da5f0b000ced92aed18a9567f8c8f256fce2ca5fb6d993f78398da5d11c83",
-  "binding_report_sha256": "f4730135581d5ce214090f94809e43314145e23377519c248d217add643b00eb"
+  "plan_sha256": "ff0651c777c2a0f85bc8f8732be2673c142811ed6a17b6612fcdc91d8249b010",
+  "binding_report_sha256": "45aee6cdb30d5f622298e8b304eef5fac8532735c1829e0f27a513eea17c66d0",
+  "static": {
+   "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
+   "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c"
+  },
+  "queued_after": "supervisor6 successful roof_resume5 completion",
+  "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_resume7_handle.json"
  },
  "independent_roof": {
   "expected_label_jobs": 216,
@@ -142,5 +150,18 @@
   "original_corpus_available": false,
   "formal_training_started": false,
   "sha256": "c1bb3cfb4241bdbac691ccd7182bfd1874da4304ab1b89221f8be7300c75c504"
+ },
+ "task72_reconstruction_previous_attempt": {
+  "completed_trajectories": 1,
+  "exactly_matched_states": 0,
+  "mapping_complete": false,
+  "original_probe_protocol_verified": false,
+  "rescore_eligible": false,
+  "plan_sha256": "489da5f0b000ced92aed18a9567f8c8f256fce2ca5fb6d993f78398da5d11c83",
+  "binding_report_sha256": "f4730135581d5ce214090f94809e43314145e23377519c248d217add643b00eb",
+  "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild",
+  "static_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+  "preserved": true,
+  "eligible_as_original_input_reconstruction": false
  }
 }
