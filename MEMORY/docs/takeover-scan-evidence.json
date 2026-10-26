@@ -110,13 +110,18 @@
  "e2e": {
   "imports": 2,
   "verified": 2,
+  "import_and_verification_reused": true,
+  "prior_e2e_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8",
+  "input_sha256": "0d967acb7441dec516629fdd25687476a5ddc548b8c8b38025f556237d3fe083",
   "futures": 2,
   "continuation_games": 20,
   "scan_games_reused": true,
+  "new_game_processes": 0,
   "registered": 2,
+  "missing_llm_family_created": true,
+  "dry_run_did_not_change_files": true,
   "retry_did_not_change_files": true,
   "production_files_unchanged": true,
-  "input_sha256": "0d967acb7441dec516629fdd25687476a5ddc548b8c8b38025f556237d3fe083",
   "report": {
    "schema": "takeover_scan_register_v1",
    "registered": 2,
@@ -133,7 +138,8 @@
      "top": 996,
      "top_is_full": true,
      "l50": 906,
-     "future_seed_start": 86000000
+     "future_seed_start": 87000000,
+     "created_family": true
     },
     {
      "task_id": "demo_roof_46_doom_m200_s20261047",
@@ -145,18 +151,19 @@
      "top": 1089,
      "top_is_full": true,
      "l50": 1089,
-     "future_seed_start": 87000000
+     "future_seed_start": 88000000,
+     "created_family": false
     }
    ]
   },
   "source_sha256": {
-   "scripts/takeover_scan.py": "dd54ee9e04f3cf517728acab5899808d8edc44fef3ee8c869033d64e2b9c131f",
+   "scripts/takeover_scan.py": "aff15e082e8bdc7ebcdf13a27eaec498f6383e8dbd42f06a9f141f571cdb8240",
    "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
    "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
-   "python/test_takeover_scan.py": "252aa12a20f81415a9da5e873dd7455dc8ce558e5fe58e1bf6bdc8e7590ac554"
+   "python/test_takeover_scan.py": "8375831fee7184c16af9f6def05c1b4d649442bf21ffa2a6c3df8bcee48f06de"
   }
  },
- "e2e_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8",
+ "e2e_sha256": "a8054ac9327520c828e2590d79cfd2fb242100ee46ef1be14ac97ace704380b6",
  "raw_evidence_directory": "artifacts/task91/audit",
  "source_sha256": {
   "scripts/takeover_scan.py": "aff15e082e8bdc7ebcdf13a27eaec498f6383e8dbd42f06a9f141f571cdb8240",
@@ -511,5 +518,6 @@
     "raw_rows_verified": true
    }
   ]
- }
+ },
+ "e2e_prior_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8"
 }
