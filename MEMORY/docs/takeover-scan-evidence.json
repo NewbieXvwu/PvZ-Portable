@@ -2,7 +2,7 @@
  "schema": "takeover_scan_evidence_v1",
  "status": "six_same_block_backtests_passed_production_running",
  "tests": {
-  "takeover_passed": 35,
+  "takeover_passed": 38,
   "importer_passed": 30,
   "curriculum_start_cell_tests": 8,
   "curriculum_skipped_for_missing_archives": 1
@@ -159,10 +159,10 @@
  "e2e_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8",
  "raw_evidence_directory": "artifacts/task91/audit",
  "source_sha256": {
-  "scripts/takeover_scan.py": "9ce0e8448db8bc62953d25b73e2c65ea065cb40a531c7b4e3faf3694f2b8bb56",
+  "scripts/takeover_scan.py": "aff15e082e8bdc7ebcdf13a27eaec498f6383e8dbd42f06a9f141f571cdb8240",
   "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
   "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
-  "python/test_takeover_scan.py": "12ebfc93f68b2b98f6c3858d534e6fcc7bf241adf0596aba75b83001280790f7"
+  "python/test_takeover_scan.py": "8375831fee7184c16af9f6def05c1b4d649442bf21ffa2a6c3df8bcee48f06de"
  },
  "human_archives_available": true,
  "human_copies_sha256": "4bd3697ed07deb50975ff699c7e7bd0be246db18326ffc8893548441b2fdec1a",
@@ -333,5 +333,18 @@
   "pre_recheck_manifest_sha256": "4191c6630a96415bf99fc95ee0d68d03b96422d4c709bcc753d5388363067d56"
  },
  "human_plan_sha256": "77602e83d8d32245bd63d19313d80554899c3cce5a77eb3356f7a0facdd2aae9",
- "game_workers_per_task": 2
+ "game_workers_per_task": 2,
+ "backtest_source_sha256": {
+  "scripts/takeover_scan.py": "9ce0e8448db8bc62953d25b73e2c65ea065cb40a531c7b4e3faf3694f2b8bb56",
+  "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
+  "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
+  "python/test_takeover_scan.py": "12ebfc93f68b2b98f6c3858d534e6fcc7bf241adf0596aba75b83001280790f7"
+ },
+ "registration_missing_llm_family": {
+  "preflight_target": "demo_roof_49_doom_m200_llm",
+  "creation_requires_teacher_pass": true,
+  "dry_run_and_failure_do_not_create_family": true,
+  "retry_preserves_four_files": true,
+  "production_pre_registration_files_unchanged": true
+ }
 }

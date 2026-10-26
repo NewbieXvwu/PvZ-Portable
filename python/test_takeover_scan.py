@@ -364,6 +364,74 @@ class SharedSeedLedgerTest(unittest.TestCase):
                                     b['start'] + b['count'] <= a['start'])
 
 
+class RegisterNewLlmFamilyTest(unittest.TestCase):
+    def fixture(self, directory, won=True):
+        root = Path(directory)
+        base = dict(task_id='base', level=49, seeds=[42], deck=[1, 33, 39, 44, 15, 3],
+                    zombie_count_multiplier=2.0, preplanted=[{'type': 33, 'row': 0, 'col': 0}],
+                    demo_start=dict(archive='human', decisions=[9], future_seed_start=100,
+                                    future_seed_count=256, index=0))
+        manifest, design, tests, ledger = [root / name for name in
+                                          ('tasks.json', 'design.md', 'test_cells.py', 'ledger.json')]
+        manifest.write_text(json.dumps(dict(tasks=[base])))
+        design.write_text('### 14.34 Existing tasks\n')
+        tests.write_text("self.assertEqual(set(cells), {'base'})\n")
+        result = root / 'scan.json'
+        rows = [dict(future_seed=future, won=won) for future in (10, 11)]
+        result.write_text(json.dumps(dict(schema=scan.RESULT_SCHEMA, task_id='base', seed=42,
+                                         archive='llm', complete=True, future_seeds=[10, 11],
+                                         points={'8': {'teacher': dict(wins=2 if won else 0,
+                                                                       games=2, rows=rows)}})))
+        args = scan.parser().parse_args(['register', str(result), '--manifest', str(manifest),
+                                        '--design', str(design), '--tests', str(tests),
+                                        '--ledger', str(ledger), '--scan-ledger', str(ledger),
+                                        '--out', str(root / 'out')])
+        return args, base
+
+    def test_missing_llm_family_dry_run_registration_and_retry(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, base = self.fixture(directory)
+            files = [args.manifest, args.design, args.tests]
+            before = {path: path.read_bytes() for path in files}
+            with patch.object(scan, 'occupied_seed_ranges', return_value=[]), \
+                    patch.object(scan, 'LEGACY_REGISTER_LEDGER', Path(directory) / 'legacy.json'), \
+                    patch('builtins.print'):
+                args.dry_run = True
+                scan.cmd_register(args)
+                self.assertEqual({path: path.read_bytes() for path in files}, before)
+                self.assertFalse(args.ledger.exists())
+                args.dry_run = False
+                scan.cmd_register(args)
+                tasks = json.loads(args.manifest.read_text())['tasks']
+                self.assertEqual(tasks[0], base)
+                new = tasks[1]
+                self.assertEqual(new['task_id'], 'base_llm')
+                for key in ('level', 'seeds', 'deck', 'preplanted', 'zombie_count_multiplier'):
+                    self.assertEqual(new[key], base[key])
+                self.assertEqual(new['demo_start']['archive'], 'llm')
+                self.assertEqual(new['demo_start']['decisions'], [8])
+                self.assertIn('`base_llm`', args.design.read_text())
+                self.assertIn("'base_llm'", args.tests.read_text())
+                report = json.loads((args.out / 'register_report.json').read_text())
+                self.assertEqual(report['registered'], 1)
+                self.assertTrue(report['entries'][0]['created_family'])
+                files.append(args.ledger)
+                registered = {path: path.read_bytes() for path in files}
+                scan.cmd_register(args)
+                self.assertEqual({path: path.read_bytes() for path in files}, registered)
+
+    def test_failing_archive_does_not_create_a_family_or_reserve_seeds(self):
+        with tempfile.TemporaryDirectory() as directory:
+            args, _ = self.fixture(directory, won=False)
+            files = [args.manifest, args.design, args.tests]
+            before = {path: path.read_bytes() for path in files}
+            with patch.object(scan, 'occupied_seed_ranges', return_value=[]), patch('builtins.print'):
+                scan.cmd_register(args)
+            self.assertEqual({path: path.read_bytes() for path in files}, before)
+            self.assertFalse(args.ledger.exists())
+            self.assertEqual(json.loads((args.out / 'register_report.json').read_text())['registered'], 0)
+
+
 class ResolveTargetTaskTest(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -402,6 +470,12 @@ class ResolveTargetTaskTest(unittest.TestCase):
             dict(task_id='base', archive='artifacts/llm_demo/raw/x'), self.path)
         self.assertEqual(task_id, 'base_llm')
         self.assertIsNone(existing)
+
+    def test_missing_llm_family_is_proposed_from_an_existing_base(self):
+        self.path.write_text(json.dumps({'tasks': [
+            {'task_id': 'base', 'demo_start': {'archive': 'human'}}]}))
+        self.assertEqual(resolve_target_task(dict(task_id='base', archive='llm'), self.path),
+                         ('base_llm', None))
 
     def test_unknown_task_raises(self):
         with self.assertRaises(KeyError):

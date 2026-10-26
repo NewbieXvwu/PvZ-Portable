@@ -40,7 +40,8 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
   跳过已完局；takeover_scan 再按结果文件里已有的完整点跳过整点。实测重跑 0.08s 零重跑。
 - **登记族解析**（`resolve_target_task`）：按存档路径匹配清单里已有的 demo_start 最可靠；
   本机种子 LLM 局与人类示范共用 base task_id 时落 `base_llm` 族（task87 先例）；base 被别的
-  存档占用则报错留人工，绝不静默覆盖既有起点格。
+  存档占用且`base_llm`缺失时，只有老师过线才复制原族配置创建新族并同步DESIGN与测试；
+  两个候选都被其他存档占用则只报告冲突。dry-run不建族，不覆盖既有起点格。
 - **登记种子账本**：默认与 task89 共用 `artifacts/llm_demo/scan_seed_ledger.json` 及同一个文件锁，
   同时接受扫描96块与登记256块。旧 `register_seed_ledger.json` 只作为兼容占用来源参与避让；
   清单/盘点也参与检查，登记从86M起。按存档绑定分配，失败重试复用已有块。
@@ -50,7 +51,7 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
 - **自适应预算**：最多9个老师点、2个不同学生点，8未来时最多88局（<192/2）。失败区间补探降低漏掉非单调隆起的风险，
   不能保证发现任意未测点的孤立过线；没有发现过线时报告“已测点均<50%”，不冒充全网格皆失败。
   每点原子保存；中断状态不可登记。独立 `adaptive_trace` 保留本次取点顺序、逐局结果和真实预算。
-- **测试**：`python/test_takeover_scan.py` 当前35项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
+- **测试**：`python/test_takeover_scan.py` 当前38项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
   族名解析、清单/测试期望的文件更新）。
   实际课程测试模板里有多个 `set(cells)` 断言，更新器按AST定位 `test_registered_manifest_start_cells`，
   不再误改临时样例。`DemoStartCellsTest` 8项中7项通过、1项因人类示范缺失跳过。
@@ -110,6 +111,9 @@ task87 的扫描块相比，三份的 L50 分别差 1 / 2 / 2 档（如 s2026104
 前三份LLM L46全部复用缓存；新扫描从L47继续，每任务最多2个游戏进程。
 登记前保存清单/DESIGN/课程测试/共享账本四类快照，之后核对已有起点格未覆盖、原始games既有内容未改。
 阶段和逐步日志在ignored的`artifacts/task91/audit/continuation_status.json`与`production_*.txt`。
+预检发现L49本机LLM的`_llm`族尚不存在；已补齐过线后自动复制原任务配置的新族登记路径，
+当前没有预先新增生产族或起点格。完整register测试覆盖dry-run零写入、失败局不建族/不领块、
+成功登记与四文件重试幂等；运行中扫描未重启，后续register会加载此修复。
 
 ## 端到端（task89 包 2 份，独立 dest/账本/临时清单，未来块 90M 起）
 

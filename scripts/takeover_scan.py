@@ -588,7 +588,7 @@ def validate_result(document: dict) -> list:
     return futures or []
 
 
-def update_manifest(manifest_path: Path, task_id: str, spec: dict) -> bool:
+def update_manifest(manifest_path: Path, task_id: str, spec: dict, *, family: dict | None = None) -> bool:
     document = json.loads(manifest_path.read_text(encoding='utf-8'))
     for task in document.get('tasks') or []:
         if task['task_id'] == task_id:
@@ -601,7 +601,11 @@ def update_manifest(manifest_path: Path, task_id: str, spec: dict) -> bool:
             manifest_path.write_text(json.dumps(document, ensure_ascii=False, indent=1) + '\n',
                                      encoding='utf-8')
             return True
-    raise KeyError(f'{task_id} 不在 {manifest_path}')
+    if family is None or family.get('task_id') != task_id or family.get('demo_start'):
+        raise KeyError(f'{task_id} 不在 {manifest_path}')
+    document['tasks'].append(dict(family, demo_start=spec))
+    write_json(manifest_path, document)
+    return True
 
 
 def update_test_expectations(test_path: Path, task_ids: list) -> bool:
@@ -649,7 +653,8 @@ def resolve_target_task(document: dict, manifest_path: Path) -> tuple[str, dict 
     """结果该登记到哪个 task_id；返回 (族名, 既有 demo_start 或 None)。
 
     task87 先例：本机种子的 LLM 局与人类示范共用 base task_id，登记为 ``_llm`` 后缀族。
-    按 archive 匹配已有 demo_start 最可靠；base 名已被人类示范占用时用 ``_llm``。
+    按 archive 匹配已有 demo_start 最可靠；base 名已被人类示范占用时用 ``_llm``，
+    该族尚未存在则由 register 在确认过线后创建。
     """
     document = dict(document)
     tasks = json.loads(manifest_path.read_text(encoding='utf-8')).get('tasks') or []
@@ -666,6 +671,9 @@ def resolve_target_task(document: dict, manifest_path: Path) -> tuple[str, dict 
                 return candidate, None
             occupied = (candidate, task['demo_start']['archive'])
             break
+    if (any(task['task_id'] == base for task in tasks)
+            and not any(task['task_id'] == f'{base}_llm' for task in tasks)):
+        return f'{base}_llm', None
     if occupied:
         raise ValueError(
             f'{base}: 候选族 {occupied[0]} 已被存档 {occupied[1]} 占用，需人工指定登记族')
@@ -676,7 +684,7 @@ def cmd_register(args) -> None:
     results = load_results(args.results)
     ledger = RegisterLedger(args.ledger, args.scan_ledger)
     manifest_path = args.manifest
-    registered, skipped, report = [], [], []
+    registered, skipped, report, created_families = [], [], [], []
     dry_ranges = ledger._ranges() if args.dry_run else []
     for document in results:
         base_id = document['task_id']
@@ -710,21 +718,30 @@ def cmd_register(args) -> None:
         spec = dict(archive=document['archive'],
                     decisions=ladder['ladder'], index=0,
                     future_seed_start=None, future_seed_count=REGISTER_BLOCK)
+        tasks = json.loads(manifest_path.read_text(encoding='utf-8'))['tasks']
+        family = None
+        if not any(task['task_id'] == task_id for task in tasks):
+            base = next(task for task in tasks if task['task_id'] == base_id)
+            family = {key: value for key, value in base.items() if key != 'demo_start'}
+            family.update(task_id=task_id, seeds=[document['seed']])
         if args.dry_run:
             start = allocate_future_block(dry_ranges, args.register_base, REGISTER_BLOCK)
             dry_ranges.append((start, start + REGISTER_BLOCK - 1))
             print(f'[dry run] {task_id}: 阶梯 {ladder["ladder"]}（顶档 {ladder["top"]}'
-                  f'{"，全胜" if ladder["top_is_full"] else "，非全胜"}），种子块 {start} 起')
+                  f'{"，全胜" if ladder["top_is_full"] else "，非全胜"}），种子块 {start} 起'
+                  f'{"，新增同配置_llm族" if family else ""}')
         else:
             key = json.dumps(['register', task_id, document['archive']], ensure_ascii=False)
             start = ledger.allocate(args.register_base, key=key)
             spec['future_seed_start'] = start
-            update_manifest(manifest_path, task_id, spec)
+            update_manifest(manifest_path, task_id, spec, family=family)
+            if family:
+                created_families.append((base_id, family))
             print(f'{task_id}: 阶梯 {ladder["ladder"]}（顶档 {ladder["top"]}），种子块 {start}–{start + REGISTER_BLOCK - 1}，已写入清单')
             registered.append((task_id, spec, ladder))
         report.append(dict(task_id=task_id, seed=document['seed'], registered=bool(not args.dry_run),
                            ladder=ladder['ladder'], top=ladder['top'], top_is_full=ladder['top_is_full'],
-                           l50=ladder['l50'], future_seed_start=start))
+                           l50=ladder['l50'], future_seed_start=start, created_family=bool(family)))
     if args.dry_run:
         return
     if registered:
@@ -733,6 +750,10 @@ def cmd_register(args) -> None:
         design_lines += [f"  - `{task_id}` 阶梯 {ladder['ladder']}，未来种子块 {spec['future_seed_start']}–"
                          f"{spec['future_seed_start'] + REGISTER_BLOCK - 1}"
                          for task_id, spec, ladder in registered]
+        design_lines += [f"  - 新族 `{family['task_id']}` 复制 `{base_id}` 的任务配置（保留原族起点格），"
+                         f"关卡 {family.get('level')}，种子 {family['seeds']}，"
+                         f"倍率 {family.get('zombie_count_multiplier', 1.0)}，卡组 {family.get('deck', [])}。"
+                         for base_id, family in created_families]
         update_design(args.design, design_lines)
     args.out.mkdir(parents=True, exist_ok=True)
     report_path = args.out / 'register_report.json'
