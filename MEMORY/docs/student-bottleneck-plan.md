@@ -858,3 +858,12 @@
     - Mac agent_pool 的接手目标已加冻结说明（新增 `note` 字段）。
   - OpenAI 侧 Sol 多次报 “at capacity” 或 429，agent_pool 会自动续上。
   - qc 第 20 轮仍在采集。
+- 2026-10-26 18:15（台式机时间）：
+  - **用户定规**：禁止挡在关键路径上的形式主义验证，写入 AGENTS.md §6.5（含 Agent 验收与改动规模相称的第 6 条）。同样内容已加进 Mac 的 `~/.codex/AGENTS.md`；台式机的 `~/.codex` 和 `~/.codex-plus` 等连上后补。
+  - 派 **task106**：校验成本清查，只出报告，由 CodeBuddy DeepSeek 执行，等台式机恢复后派。
+  - **llmplay 快速续跑**：新包 9422ab5b 恢复 191 份存档实测 11.9 秒，已拷到 Mac。
+    - 随后定口径：默认连摘要也不算，只靠 zip 自带的 CRC 和下游全量重放兜底。
+    - codex-llmplay 在改，plus 号 5 小时额度剩 7%，未必能改完。
+  - **台式机 SSH（UURemote 隧道）约 17:55 起握手超时**，至今没恢复。
+    - 时间上紧挨着 cbp-task104 在台式机跑 `gate_seed_inventory.py`：全机种子扫描跑了 15 分钟没完，Agent 把本地 ssh kill 了，远端进程可能还在。这是第二个形式主义审计的例子，写进 task106。
+    - 已令 cbp-task104 跳过全机扫描，不用 pvz-f1，断线期间只做文档与代码。
