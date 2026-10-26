@@ -1,8 +1,8 @@
 {
  "schema": "takeover_scan_evidence_v1",
- "status": "human_full_backtest_running_production_queued",
+ "status": "guard_v2_recheck_running_production_pending",
  "tests": {
-  "takeover_passed": 34,
+  "takeover_passed": 35,
   "importer_passed": 30,
   "curriculum_start_cell_tests": 8,
   "curriculum_skipped_for_missing_archives": 1
@@ -94,15 +94,21 @@
      "future_seed_start": 87000000
     }
    ]
+  },
+  "source_sha256": {
+   "scripts/takeover_scan.py": "dd54ee9e04f3cf517728acab5899808d8edc44fef3ee8c869033d64e2b9c131f",
+   "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
+   "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
+   "python/test_takeover_scan.py": "252aa12a20f81415a9da5e873dd7455dc8ce558e5fe58e1bf6bdc8e7590ac554"
   }
  },
  "e2e_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8",
  "raw_evidence_directory": "artifacts/task91/audit",
  "source_sha256": {
-  "scripts/takeover_scan.py": "dd54ee9e04f3cf517728acab5899808d8edc44fef3ee8c869033d64e2b9c131f",
+  "scripts/takeover_scan.py": "9ce0e8448db8bc62953d25b73e2c65ea065cb40a531c7b4e3faf3694f2b8bb56",
   "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
   "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
-  "python/test_takeover_scan.py": "252aa12a20f81415a9da5e873dd7455dc8ce558e5fe58e1bf6bdc8e7590ac554"
+  "python/test_takeover_scan.py": "12ebfc93f68b2b98f6c3858d534e6fcc7bf241adf0596aba75b83001280790f7"
  },
  "human_archives_available": true,
  "human_copies_sha256": "4bd3697ed07deb50975ff699c7e7bd0be246db18326ffc8893548441b2fdec1a",
@@ -201,5 +207,20 @@
    "frozen_trace_verified": true,
    "raw_rows_verified": true
   }
- ]
+ ],
+ "human_v1_failure": {
+  "task_id": "demo_roof_49_doom_m200",
+  "seed": 20261049,
+  "adaptive_l50": 1347,
+  "full_l50": 1078,
+  "delta": 2,
+  "teacher_points": 8,
+  "scan_games": 80,
+  "full_two_arm_games": 192,
+  "passed": false,
+  "algorithm": "coarse4_guard_budget9_v1",
+  "result_sha256": "21ed0f953c06a6db9efd8463336dc1b421ab96c91bebda1b1b29e74152d7fae5"
+ },
+ "human_adaptive_algorithm": "coarse4_guard_budget9_v1",
+ "guard_v2_status_path": "artifacts/task91/audit/guard_v2_status.json"
 }

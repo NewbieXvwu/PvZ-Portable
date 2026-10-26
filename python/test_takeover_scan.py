@@ -191,6 +191,20 @@ class AdaptiveScanTest(unittest.TestCase):
         self.assertEqual(scanner.finish()['l50'], grid[6])
         self.assertLess((count + len(scanner.finish()['student_points'])) * 8, 96)
 
+    def test_single_unmeasured_point_from_real_human_l49_curve(self):
+        # d943/d1213 both fail, but their only unmeasured point d1078 passes.
+        # Ignoring gaps of two grid intervals returned d1347, two grid positions late.
+        grid = [1, 136, 270, 405, 540, 674, 809, 943, 1078, 1213, 1347, 1482]
+        wins = [0, 0, 0, 0, 0, 1, 2, 3, 4, 3, 4, 8]
+        scanner = AdaptiveScan(grid)
+        count = drive(scanner, lambda d: (wins[grid.index(d)], 8))
+        state = scanner.finish()
+        self.assertEqual(state['l50'], 1078)
+        self.assertEqual(state['top'], 1482)
+        self.assertEqual(list(scanner.wins)[:4], [1, 540, 943, 1482])
+        self.assertLessEqual(count, 9)
+        self.assertLess((count + len(state['student_points'])) * 8, 96)
+
     def test_budget_is_below_half_of_full_scan_for_all_binary_curves(self):
         grid = grid12()
         for bits in range(1 << len(grid)):

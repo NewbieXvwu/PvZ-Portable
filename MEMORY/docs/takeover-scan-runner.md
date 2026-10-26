@@ -3,9 +3,9 @@
 > 2026-10-26。入口 `scripts/takeover_scan.py`（run / adaptive / register），测试
 > `python/test_takeover_scan.py`。任务书：[task91-takeover-scan-runner.md](task91-takeover-scan-runner.md)。
 >
-> 当前状态：工具、LLM同块回测和两份端到端已验证；**已从部署记录定位人类L46/L48/L49副本，当前正在执行第2步同块回测**。
-> 人类回测原链继续运行；串行监督器已排队，三份严格同块比较全部通过后接12份生产adaptive与register。
-> 阶段状态见ignored的`artifacts/task91/audit/continuation_status.json`；队列启动不代表回测或生产验收完成。
+> 当前状态：工具、LLM同块回测和两份端到端已验证；**首轮人类回测L46/L48通过，L49发现单点漏探导致档差2，已修复并用缓存重建v2轨迹**。
+> v1生产监督器因回测失败正确停止；v2补完L49新L50的学生臂后，三份严格同块比较全部通过才接12份生产adaptive与register。
+> 修复复核状态见ignored的`artifacts/task91/audit/guard_v2_status.json`，生产阶段见`continuation_status.json`；部分结果不代表验收完成。
 > 紧凑证据：[takeover-scan-evidence.json](takeover-scan-evidence.json)。
 
 ## 用法
@@ -50,7 +50,7 @@ $PY $P/scripts/takeover_scan.py register $P/artifacts/llm_demo/scan_out/results
 - **自适应预算**：最多9个老师点、2个不同学生点，8未来时最多88局（<192/2）。失败区间补探降低漏掉非单调隆起的风险，
   不能保证发现任意未测点的孤立过线；没有发现过线时报告“已测点均<50%”，不冒充全网格皆失败。
   每点原子保存；中断状态不可登记。独立 `adaptive_trace` 保留本次取点顺序、逐局结果和真实预算。
-- **测试**：`python/test_takeover_scan.py` 当前34项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
+- **测试**：`python/test_takeover_scan.py` 当前35项，另有导入器30项通过（阶梯规则、自适应取点顺序的合成驱动、
   族名解析、清单/测试期望的文件更新）。
   实际课程测试模板里有多个 `set(cells)` 断言，更新器按AST定位 `test_registered_manifest_start_cells`，
   不再误改临时样例。`DemoStartCellsTest` 8项中7项通过、1项因人类示范缺失跳过。
@@ -87,17 +87,22 @@ task87 的扫描块相比，三份的 L50 分别差 1 / 2 / 2 档（如 s2026104
 再补齐同一未来块的12点老师对照；结果出来后登记下表。历史Mac胜率表不充作本次逐局证据。
 扫描计划与原始证据位于ignored的`artifacts/task91/audit/human_*`；本任务最多2个游戏进程。
 
-三份人类adaptive已完成，原链正在补齐12点老师对照：
+首轮（v1）人类adaptive与同块12点老师对照：
 
 | 人类存档 | adaptive L50 | 老师点数 | 自适应续走数 | 同块12点验收 |
 |---|---|---|---|---|
 | L46 s20261046 | 418 | 9 | 88 | full L50=418，档差0，通过 |
 | L48 s20261048 | 473 | 9 | 88 | full L50=473，档差0，通过 |
-| L49 s20261049 | 1347 | 8 | 80 | 待完整对照 |
+| L49 s20261049 | 1347 | 8 | 80 | full L50=1078，档差2，未通过 |
 
 自适应轨迹单独冻结在ignored的`human_adaptive_frozen.json`；紧凑证据记录逐份规范JSON哈希与整个快照哈希。
 自适应局数证明成本达标；档差≤1逐份以完整同块逐局证据确认。
-L46/L48已完成完整比较，并核对冻结轨迹与原始games逐局内容；L49仍待完整对照。
+L46/L48已完成完整比较，并核对冻结轨迹与原始games逐局内容。L49的d943/d1213均为3/8，
+中间唯一未测点d1078为4/8；v1只补探网格间隔>2的失败区间，漏掉了此处，不能据首轮宣布任务通过。
+现将补探扩大到间隔>1，覆盖仅剩单个未测点的区间，轨迹标记为`coarse4_guard_budget9_v2`。
+仍先4等距、老师最多9点、学生最多2点；六份完整老师曲线缓存试算档差均0。
+首轮失败证据保留在ignored的`human_v1_failure/`，新CLI仅需补此前未跑的L49 d1078学生臂，
+完成后再登记v2比较与原始对局未改证明。这不是对任意非单调曲线的精度保证。
 
 ## 端到端（task89 包 2 份，独立 dest/账本/临时清单，未来块 90M 起）
 

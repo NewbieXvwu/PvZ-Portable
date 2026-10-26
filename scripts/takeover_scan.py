@@ -381,11 +381,11 @@ class AdaptiveScan:
         return min(passing) if passing else None
 
     def _plan_guard(self) -> None:
-        """在已知50%线之前的失败区间补一个中点，防止漏掉非单调隆起。"""
+        """在已知50%线之前的失败区间补中点，包括仅剩一个未测点的区间。"""
         tested = sorted((self._grid_index(d), d) for d in self.wins if 'teacher' in self.wins[d])
         limit = self._l50_index()
         gaps = [(ia, ib) for (ia, da), (ib, db) in zip(tested, tested[1:])
-                if ib - ia > 2 and not self._passing(da) and not self._passing(db)
+                if ib - ia > 1 and not self._passing(da) and not self._passing(db)
                 and (limit is None or ib < limit)]
         if gaps:
             ia, ib = max(gaps, key=lambda gap: gap[1])
@@ -472,7 +472,7 @@ def cmd_adaptive(args) -> None:
             merged = {d: dict(bucket) for d, bucket in cached.items()}
             for decision, bucket in state['points'].items():
                 merged.setdefault(decision, {}).update(bucket)
-            trace = dict(algorithm=f'coarse{args.equidistant}_guard_budget9_v1', complete=complete,
+            trace = dict(algorithm=f'coarse{args.equidistant}_guard_budget9_v2', complete=complete,
                          grid=entry['decisions'], future_seeds=futures,
                          teacher_decisions=[d for d, bucket in scanner.wins.items() if 'teacher' in bucket],
                          l50=state['l50'], top=state['top'], points=state['points'],
