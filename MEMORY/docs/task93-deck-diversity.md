@@ -65,4 +65,10 @@
   r11 配对局在 `~/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent/`）。
   基线：A 124/172、D2 169/178、r11 166/168。
 
+- 2026-10-26 Codex 续做：现场确认第 3 步已提交 2fb1e925、第 4 步采集存活，沿用同一 144 局作业，未重开游戏。
+  新增 `scripts/task93_analyze.py`：逐份核验冷启动 192 局完整终局/卡组/双臂，0–47 覆盖全表补入结论文档；
+  训练后严格按完整 192 对比较 A / D2 / r11，输出配对区间、McNemar、draw 间均值/标准差/极差。
+  修正统计单位：A / D2 的 45 胜局极差实际为 23.44pp，双 draw 只能提供方差改善初步证据；
+  4% 目标行占比不能由 144 局直接推定，须核对实际 source_rows。相关回归 17 passed，未改 qc。
+
 ## 问题
