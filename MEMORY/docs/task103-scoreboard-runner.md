@@ -23,22 +23,29 @@ task101 一次性测出了 45 关 × 16 种子 × 学生 / 老师的记分板，
 
 ## 台式机运行命令
 
-主控换上 qc 现役学生后，将其绝对路径传入 `STUDENT_MODEL`，在本分支执行以下命令。本任务按主控最新指示使用 2 个游戏进程。默认同时测学生与老师，两臂同种子。
+主控换上 qc 现役学生后，将其绝对路径传入 `STUDENT_MODEL`，在 **scoreboard2 的检出目录**执行（不是 `~/PvZ-search`——那是 search-wt 分支的工作树）。本任务按主控最新指示使用 2 个游戏进程。默认同时测学生与老师，两臂同种子。
 
 ```bash
+REPO=$(git rev-parse --show-toplevel)          # scoreboard2 的检出目录
 STUDENT_MODEL=/主控指定的现役学生/model.pt
-python3 /home/newbiexvwu/PvZ-search/scripts/adventure_scoreboard.py \
+ENGINE=/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable   # deploy14 在役引擎
+
+python3 "$REPO/scripts/adventure_scoreboard.py" \
   --student "$STUDENT_MODEL" \
   --value /home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt \
   --static-value /home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt \
-  --executable /home/newbiexvwu/PvZ-search/build5/pvz-portable \
+  --executable "$ENGINE" \
   --resource-dir /home/newbiexvwu/.cache/pvz-research-resources \
   --seeds 32 --workers 2 \
-  --previous /home/newbiexvwu/PvZ-search/MEMORY/docs/adventure-scoreboard-r11-32.json \
-  --out /home/newbiexvwu/PvZ-search/artifacts/task103/qc-scoreboard
+  --previous "$REPO/MEMORY/docs/adventure-scoreboard-r11-32.json" \
+  --out "$REPO/artifacts/task103/qc-scoreboard"
 ```
 
 `--student-only` / `--teacher-only` 分别只测一臂。台式机实际运行由主控安排，本任务不切换 qc。
+
+引擎路径说明：qc 从 cq 工作树跑，deploy14 把引擎拷到 `cq/build5/`（见 `MEMORY/docs/task70-engine-redeploy.md`）；仓库文档里没有 `~/PvZ-search/build5/`，早先那版命令少了一层 cq 工作树，已改。要换引擎就改 `ENGINE`，脚本会把实际 SHA256 记进 `scoreboard.json`。
+
+跑完先核 `scoreboard.json` 的 `engine_sha256` 与 `model_sha256`：台式机引擎与 Mac 那份 r11-32（`6f7d2c3f…`）不同，跨引擎的差异不能全归给模型；学生 / 叶值 / 静态网三项 SHA 应与 r11-32 的 `1cf82f5e…` / `8a636d33…` / `24858410…` 逐项对照。
 
 ## 结果
 
@@ -55,5 +62,7 @@ Mac r11 学生单臂全量测量采用每关 32 种子、2 个游戏进程，运
 此前 Mac 出行暂停时主控以 SIGSTOP 冻结 PID 90913，落盘719/1440局。该暂停已由主控解除，原进程续跑及剩余721局汇总均已完成。
 
 本任务 Mac 测量、正式汇总与 task101 对比已完成。台式机 qc 测量仍按上方命令由主控安排，本分支未切换 qc、未启动台式机测量。
+
+2026-10-26：修正台式机命令的引擎路径。qc 从 cq 工作树跑、deploy14 把引擎拷到 `cq/build5/`，原命令写的 `~/PvZ-search/build5/` 少了一层 cq 工作树；同时把 `REPO` 改为 `git rev-parse --show-toplevel`，避免在 search-wt 工作树里执行本分支的脚本。命令块已过 `bash -n`，并补了跑完先核 `engine_sha256`/`model_sha256` 的说明（台式机引擎与 Mac 不同，跨引擎差异不能全归给模型）。
 
 2026-10-26 接手复核：Codex 额度中断时已完成全部实现与 Mac 测量，改动仅暂存未提交、分支未推送。接手后逐项复核：7 项测试通过；记分板 JSON 重算得学生 814/1440（56.53%）、task101 408/720（56.67%）、平均 Wilson95% 宽度 18.19% vs 27.33%（缩窄 33.44%）、逐关区间分离 0/45、L23 −21.875pp 与 L38 +21.875pp、22 关学生≥80%、L25 分类已更正，均与正文一致；暂存区无 .pt/.npz/.log，artifacts 忽略自查为空。未重跑任何对局，直接提交并推送 scoreboard2。
