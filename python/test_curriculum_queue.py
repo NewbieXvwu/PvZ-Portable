@@ -247,9 +247,23 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertEqual(plan[0]['task_id'], 'day_l7_train_d7')
         self.assertEqual(plan[0]['offset'], 0)
         state['offsets']['day_l7_train_d7'] = 15
-        with self.assertRaises(SystemExit):
-            plan_round(state, tasks, NAMES, VALUES, manifests,
-                       budget=10, per_group=10)
+        plan, changes = plan_round(state, tasks, NAMES, VALUES, manifests,
+                                   budget=10, per_group=10)
+        self.assertEqual(plan, [])
+        self.assertTrue(any('seeds exhausted' in line and 'group skipped' in line for line in changes))
+        self.assertIn('day_l7_train_d7', state['cells'])
+
+    def test_exhausted_start_cell_is_retired_not_fatal(self):
+        state = dict(round=0, offsets={'demo_x_m200_start': 250},
+                     cells={'demo_x_m200': dict(cell(5, 10), ladder=[400, 300], mult_index=0,
+                                                task_id='demo_x_m200_start', seeds=list(range(256)),
+                                                archive='/a', family='f', level=32)})
+        plan, changes = plan_round(state, {}, NAMES, VALUES, {'demo_x_m200_start': Path('/tmp/p.json')},
+                                   budget=10, per_group=10)
+        self.assertEqual(plan, [])
+        self.assertNotIn('demo_x_m200', state['cells'])
+        self.assertIn('demo_x_m200', state['retired_cells'])
+        self.assertTrue(any('start cell retired' in line for line in changes))
 
     def test_stop_flag_stops_before_any_group(self):
         import curriculum_queue as queue
@@ -821,8 +835,9 @@ class DemoStartCellsTest(unittest.TestCase):
         plan, _ = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan[0]['future_seeds'], [905])       # 只剩一个未来种子
         state['offsets'][self.BASE] = 6
-        with self.assertRaises(SystemExit):
-            plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        plan, changes = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        self.assertEqual(plan, [])                              # 用完的起点格退休，qc 不退出
+        self.assertIn(self.BASE, state['retired_cells'])
 
     def test_start_command_is_deterministic_and_carries_the_start(self):
         args = SimpleNamespace(python=Path('/nonexistent/python'), rollout_policy=Path('/m.pt'),
