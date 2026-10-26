@@ -108,6 +108,16 @@
 
 （结果待填）
 
+2026-10-26 验证准备：`scripts/task93_prepare_training.py --baseline-recipe
+/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/recipe.json
+--manifest /home/newbiexvwu/PvZ-search/artifacts/stage4/random_deck_panel.json --plan-only`
+已生成 `artifacts/task93/seed_{1,2}/recipe.json`，逐字段验证保留旧超参数、348 旧标签及旧权重，
+只添加 `rand_d7_fast_search` / `rand_n12_fast_search` / `rand_p21_fast_search` 三标签，显式平权 1.0。
+不带 `--plan-only` 时先核对全部 144 局与数值帧归档，再建立 `training_frames` 视图与私有缓存；
+旧 task84 不可变打包分片通过硬链接复用，不写 cq 或生产语料。当前数据未齐时已验证会拒绝准备。
+数据齐后打包、核对新增实际行占比，检查 qc 无 GPU 训练冲突，再串行运行原训练入口
+`scripts/train_rollout_policy.py --recipe <上述绝对配置路径>`；两种子都训练和评估，不按 heldout 选优。
+
 ## 问题
 
 - 三叶草(27) 候选池缺口（见上），需主控裁定是否补第四族。
