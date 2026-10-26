@@ -1001,6 +1001,31 @@ class StartSeedRenewalTest(unittest.TestCase):
             self.assertEqual(cell['seed_blocks'], [[0, 256], first, second])
             self.assertEqual(json.loads(ledger.read_text())['allocated'], [first, second])
 
+    def test_two_cells_never_get_the_same_block(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            first, second = self.cell(), dict(self.cell(), task_id='other')
+            left = renew_start_seeds(first, ledger)
+            right = renew_start_seeds(second, ledger)
+            self.assertLessEqual(left[1], right[0])            # 相邻块，跨格也不相交
+            self.assertFalse(set(first['seeds'][256:]) & set(second['seeds'][256:]))
+            self.assertEqual(json.loads(ledger.read_text())['allocated'], [left, right])
+
+    def test_manifest_block_inside_the_renewal_pool_is_rejected(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            archive = Path(tmp) / 'archive'
+            archive.mkdir()
+            (archive / 'meta.json').write_text(json.dumps({'verified': True, 'label_source': 'human'}))
+            manifest = Path(tmp) / 'manifest.json'
+            manifest.write_text(json.dumps({'tasks': [dict(
+                task_id='demo_x_m200', level=32, seeds=[1], zombie_count_multiplier=2.0,
+                deck=[0, 1, 2, 3, 4, 5],
+                demo_start=dict(archive=str(archive), decisions=[800, 600], index=0,
+                                future_seed_start=START_SEED_POOL[0], future_seed_count=256))]}))
+            with self.assertRaises(ValueError) as caught:
+                load_demo_start_cells(manifest)
+            self.assertIn('renewal pool', str(caught.exception))
+
     def test_pool_is_outside_every_registered_segment(self):
         inventory = json.loads((ROOT / 'MEMORY/docs/gate-seed-inventory.json').read_text())
         overlaps = [[max(START_SEED_POOL[0], low), min(START_SEED_POOL[1], high)]

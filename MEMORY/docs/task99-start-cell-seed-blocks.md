@@ -32,6 +32,8 @@
 
 - 2026-10-26 上线前核对（只读）：`merge-base(startseeds, cq)` = cq 的 HEAD `c84ad7d1`，startseeds 领先 692、落后 0，`merge-tree` rc=0 → 可 fast-forward。但发现 startseeds 缺 deploy14c 的 `391c8a64`（起点格以 `archive` 识别，否则原生阶梯格 `pool_l25_orig_train` 会被当起点格退休），已 cherry-pick 进 `08cc5c72`（124 passed）。另记两条部署注意：cq 工作树有约 130 个已暂存文件（ff 前须清理/备份），deploy15 的 `diff --quiet 0b8dcc26` pin 合并后必失败、需换 REV。全部写进 `start-cell-seed-blocks.md` 的“上线前核对”。
 
+- 2026-10-26 测试补齐（任务书第 3 条的两个缺口）：新增“两格续领拿到的块也不相交”（跨格不相交）与“清单块落进续领池时启动即拒绝”（`load_demo_start_cells` 的 `ValueError` 硬闸，清单块不在账本里、撞了查不出来）。`test_curriculum_queue.py` 66 passed；八个相关文件合计 126 passed, 2 skipped。
+
 ## 问题
 
 ## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of

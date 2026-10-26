@@ -436,6 +436,11 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
             if first is None:
                 raise ValueError(f'{task["task_id"]}: demo_start needs future_seeds or future_seed_start')
             seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
+        if seeds and seeds[0] < START_SEED_POOL[1] and START_SEED_POOL[0] <= seeds[-1]:
+            # 清单块必须在续领池之外：续领块由账本保证唯一，清单块不在账本里，一旦落进池里
+            # 就可能和将来发出的块撞上，而且撞了也查不出来。
+            raise ValueError(f'{task["task_id"]}: demo_start future seeds {seeds[0]}..{seeds[-1]} '
+                             f'overlap the renewal pool {list(START_SEED_POOL)}')
         archive = Path(start['archive'])
         archive = archive if archive.is_absolute() else ROOT / archive
         # 起点格没有存档就跑不了：启动时就报，别等到组里 replay 才 FileNotFoundError。
