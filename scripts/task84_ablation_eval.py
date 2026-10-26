@@ -24,12 +24,14 @@ MODELS = {"a": ROOT / "artifacts/task84/variant_a/student/model.pt",
           "b": ROOT / "artifacts/task84/variant_b/student/model.pt",
           "c": ROOT / "artifacts/task84/variant_c/student/model.pt",
           "d2": ROOT / "artifacts/task84/variant_d2/student/model.pt",
-          "d3": ROOT / "artifacts/task84/variant_d3/student/model.pt"}
+          "d3": ROOT / "artifacts/task84/variant_d3/student/model.pt",
+          "r13s2": ROOT / "artifacts/task84/variant_r13s2/student/model.pt",
+          "r13s3": ROOT / "artifacts/task84/variant_r13s3/student/model.pt"}
 
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("variant", choices=("a", "b", "c", "d2", "d3"))
+    parser.add_argument("variant", choices=("a", "b", "c", "d2", "d3", "r13s2", "r13s3"))
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--control", action="store_true", help="standard-deck day_l7 control task instead")
     args = parser.parse_args()
