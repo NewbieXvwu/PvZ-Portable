@@ -136,8 +136,9 @@ deploy4 引擎 SHA `16989f23`，始终最多 2 游戏进程）：
 本次仍保持预登记数据量与权重；结果只评价这一剂量的补充数据。
 真实训练入口的 `seed_1/student/source_rows.json` 已与分片统计交叉核验，证据在
 ignored `artifacts/task93/pack_row_audit.json`。seed1已进入训练，seed2及两组配对评估尚未完成。
-seed1第6轮曾因另一离线训练并发、swap耗尽而SIGSTOP让行699秒；对方完成后已SIGCONT同一训练进程，
-优化步连续增长。模型及优化器状态保留，没有重训；训练日志的墙钟耗时包含这次资源等待。
+seed1第6轮曾因另一实验的两个单轮训练并发、swap耗尽而两次SIGSTOP让行，分别699/310秒、合计1009秒；
+对方各自完成后均已SIGCONT同一训练进程，优化步连续增长。模型及优化器状态保留，没有重训；
+训练日志的墙钟耗时包含这些资源等待。
 
 2026-10-26 验证准备：`scripts/task93_prepare_training.py --baseline-recipe
 /home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/recipe.json
