@@ -1,0 +1,37 @@
+{
+ "schema": "qc_resilience_evidence_v1",
+ "status": "prepared_not_deployed",
+ "audit_baseline": "e9515a40",
+ "explicit_baseline_exit_sites": 26,
+ "tests": {
+  "passed": 99,
+  "skipped": 1,
+  "subtests_passed": 4,
+  "resilience_cases": 23,
+  "watchdog_cases": 13,
+  "seconds": 12.89,
+  "command": "PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python3 -m pytest -q python/test_curriculum_queue.py python/test_curriculum_pipeline.py python/test_qc_resilience.py python/test_qc_watchdog.py",
+  "skip_reason": "Original registered-demo test requires numeric archives absent from this worktree"
+ },
+ "game_processes_started": 0,
+ "real_tmux_commands_executed": 0,
+ "watchdog_started": false,
+ "source_sha256": {
+  "scripts/curriculum_queue.py": "eff7fc2152bd87a8c8aa42c7880a9a5b27005e582be95c1abdac7f908a91ac47",
+  "scripts/qc_watchdog.sh": "0b0989bddeb94f6d4c78865a93960741dd2ea7853d1f1dc5a35d6f5eaa474233",
+  "python/test_qc_resilience.py": "5a3af27c8c2af556bb4572064dc02143c5be3e94a80851776ecd0af4ed2d8396",
+  "python/test_qc_watchdog.py": "98e8e057daaeca9345d2100e30902066d5843e8e24d92e3fd49bbd35a5efc6d1"
+ },
+ "installed_watchdog": {
+  "path": "/home/newbiexvwu/pvz-logs/qc_watchdog.sh",
+  "sha256": "0b0989bddeb94f6d4c78865a93960741dd2ea7853d1f1dc5a35d6f5eaa474233",
+  "executable": true
+ },
+ "latest_deployment": {
+  "path": "/home/newbiexvwu/pvz-logs/qc_deploy15.sh",
+  "sha256": "82bdac555129fae3542bb78d1dc6ff08efd0450433c6d59deecc45c02f175055",
+  "extracted_start_sha256": "7c6b64c0f4c455f7d1d9f8a30336c09f814a4a2eaf2605beba8422efef7978b8",
+  "syntax_checked": true,
+  "executed": false
+ }
+}

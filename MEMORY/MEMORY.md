@@ -105,3 +105,4 @@
 - [task76 终局真值报告](docs/task76-roof-terminal-truth.json)
 - [2026-10-25](2026-10-25.md)
 - [2026-10-26](2026-10-26.md)
+- [qc 异常隔离与看门狗](docs/qc-resilience.md)

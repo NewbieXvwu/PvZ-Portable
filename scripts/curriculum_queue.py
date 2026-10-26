@@ -150,7 +150,7 @@ def isolate_cells(state, values):
         try:
             if not isinstance(cell, dict):
                 raise ValueError('cell must be an object')
-            ladder = cell.get('ladder') or values
+            ladder = cell.get('ladder', values)
             if not isinstance(ladder, list) or not ladder or any(
                     type(value) not in (int, float) or not math.isfinite(value) or value <= 0
                     for value in ladder):
@@ -445,7 +445,7 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
             continue
         wanted[base] = task
     for base in sorted(cells):
-        if base in training or cells[base].get('ladder'):
+        if base in training or cells[base].get('archive'):
             continue   # 示范起点格（task71）由 reconcile_start_cells 管，不看训练集合
         retired[base] = cells.pop(base)
         family = family_of(base)
@@ -453,7 +453,11 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                   else 'not in the training set')
         lines.append(f'cell retired: {base} ({reason})')
     for base in sorted(retired):
-        if base not in training or base in state.get('cell_errors', {}) or retired[base].get('ladder'):
+        if not isinstance(retired[base], dict):
+            state.setdefault('cell_errors', {})[base] = 'invalid retired cell object'
+            lines.append(f'cell remains retired: {base}: invalid retired cell object')
+            continue
+        if base not in training or base in state.get('cell_errors', {}) or retired[base].get('archive'):
             continue
         cells[base] = retired.pop(base)
         lines.append(f'cell restored: {base}')
@@ -529,7 +533,7 @@ def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | N
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     for base in sorted(cells):
-        if cells[base].get('ladder') and base not in specs:
+        if cells[base].get('archive') and base not in specs:
             retired[base] = cells.pop(base)
             lines.append(f'start cell retired: {base}')
     for base, spec in sorted(specs.items()):
@@ -779,7 +783,7 @@ class TrainingPipeline:
     def __init__(self, args, state):
         self.args, self.state = args, state
         self.directory = args.state.parent / (args.state.stem + '.pipeline')
-        self.directory.mkdir(parents=True, exist_ok=True)
+        retry_io(self.directory.mkdir)(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
         self.lock = threading.Lock()
         self.process = None
@@ -792,16 +796,27 @@ class TrainingPipeline:
         self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
         self.foreground_workers = 0 # 前台当前组正在跑的游戏 worker 数
+        for index, job in enumerate(state.setdefault('training_jobs', [])):
+            if (not isinstance(job, dict) or type(job.get('round')) is not int
+                    or not isinstance(job.get('recipe'), str) or not isinstance(job.get('model'), str)
+                    or not isinstance(job.get('status'), str)):
+                state['training_jobs'][index] = dict(round=-1, status='failed', isolated=True,
+                    invalid_job=job, error='invalid saved training job')
         for job in reversed(state.get('training_jobs', [])):
             timing = job.get('timing') or {}
+            if not isinstance(timing, dict):
+                continue
             value = timing.get('train_peak_anon_bytes')
             if value:
-                self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+                try:
+                    self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+                except (ValueError, TypeError):
+                    pass
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
                     builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
-                except (OSError, ValueError, KeyError):
+                except (OSError, ValueError, KeyError, TypeError):
                     pass
             if self.last_train_peak and self.last_pack_peak:
                 break
@@ -1154,9 +1169,16 @@ class TrainingPipeline:
         # a submitted future. Recover it before polling, without duplicating workers.
         for job in self.state.get('training_jobs', []):
             if job['status'] == 'queued' and not any(saved is job for saved, _ in self.futures):
-                self._seeded(job)
-                save_state(self.args.state, self.state)
-                self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
+                try:
+                    self._seeded(job)
+                    save_state(self.args.state, self.state)
+                    self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
+                except StateWriteError:
+                    raise
+                except (Exception, SystemExit) as error:
+                    job.update(status='failed', isolated=True, error=str(error))
+                    save_state(self.args.state, self.state)
+                    log_line(self.args.log, f'background round {job["round"]} recovery isolated: {error}')
         for index, (job, future) in enumerate(list(self.futures)):
             if job['status'] in ('done', 'failed') or not future.done():
                 continue
@@ -1286,7 +1308,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
-        start = cell.get('ladder') is not None
+        start = bool(cell.get('archive'))
         try:
             task_id = cell['task_id'] if start else task_id_for(base, multiplier, tasks, names)
             seeds = cell['seeds'] if start else tasks[task_id]['seeds']
@@ -1369,6 +1391,8 @@ def _run_group(args, state, item, round_index, per_worker):
         rows = [json.loads(line) for line in retry_io((folder / 'games.jsonl').read_text)().splitlines() if line.strip()]
         games = len(rows)
         wins = sum(1 for row in rows if row.get('won'))
+    if games != item['games'] or any(type(row.get('won')) is not bool for row in rows):
+        raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}')
     metrics = getattr(args, 'metrics', None)
     if metrics is not None:
         args.metrics_games += games

@@ -55,6 +55,19 @@ def test_missing_task_only_retires_its_cell():
     assert 'bad' in s['retired_cells']
 
 
+def test_plain_native_multiplier_ladder_is_not_a_demo_start():
+    base = 'pool_l25_orig_train'
+    c = dict(cell(), level=25, ladder=[.5, 1., 1.25])
+    s = dict(round=0, offsets={}, cells={base: c}, retired_cells={}, log=[])
+    q.reconcile_start_cells(s, {})
+    assert base in s['cells']
+    tasks = {base + '_m050': dict(level=25, seeds=[1, 2])}
+    jobs, _ = q.plan_round(s, tasks, {'m050': .5}, [1., 1.25],
+                            {base + '_m050': Path('/m')}, 2, 2)
+    assert len(jobs) == 1 and 'demo_archive' not in jobs[0]
+    assert jobs[0]['multiplier'] == .5
+
+
 def test_exhaustion_is_not_resurrected_on_reconcile():
     s = state()
     spec = dict(cell(), ladder=[100, 50], seeds=list(range(256)), task_id='bad',
@@ -94,7 +107,7 @@ def test_optional_teacher_entries_are_independent(tmp_path):
     assert q.load_teacher_rates(p) == {}
 
 
-@pytest.mark.parametrize('failure', ['exit', 'system_exit', 'bad_json'])
+@pytest.mark.parametrize('failure', ['exit', 'system_exit', 'bad_json', 'missing_results'])
 def test_bad_group_is_saved_and_next_group_runs(tmp_path, failure):
     a, s, jobs = args(tmp_path), state(), plan()
     seen = []
@@ -104,10 +117,12 @@ def test_bad_group_is_saved_and_next_group_runs(tmp_path, failure):
         assert json.loads(a.state.read_text())['offsets'][task] == 2
         if task == 'bad' and failure == 'system_exit':
             raise SystemExit('bad group')
+        if task == 'bad' and failure == 'missing_results':
+            return SimpleNamespace(returncode=0)
         folder = a.out / f'c1{task}_2'
         folder.mkdir(parents=True)
         (folder / 'games.jsonl').write_text('broken' if task == 'bad' and failure == 'bad_json'
-                                           else '{"won":true,"decisions":2}\n')
+                                           else '{"won":true,"decisions":2}\n' * 2)
         return SimpleNamespace(returncode=1 if task == 'bad' and failure == 'exit' else 0)
     with patch.object(q, 'command_for', side_effect=lambda *p, **kw: [p[2]]), \
          patch.object(q.subprocess, 'run', side_effect=collect), \
@@ -166,6 +181,43 @@ def test_configuration_errors_still_fail_at_startup():
         with pytest.raises(SystemExit) as error:
             q.main()
     assert error.value.code == 2
+
+
+def test_bad_retired_cell_does_not_break_reconcile():
+    s = state()
+    s.update(cells={}, retired_cells={'bad': 'broken'})
+    with patch.object(q, 'training_base_ids', return_value={'bad'}):
+        q.reconcile_cells(s, {'bad': {'level': 1}}, {}, {})
+    assert not s['cells'] and 'bad' in s['cell_errors']
+
+
+def test_bad_saved_jobs_are_isolated_without_training(tmp_path):
+    from test_curriculum_pipeline import setup
+    a, s = setup(tmp_path)
+    s['training_jobs'] = [42, {'status': 'running'}]
+    p = q.TrainingPipeline(a, s)
+    p.close()
+    assert all(j['isolated'] and j['status'] == 'failed' for j in s['training_jobs'])
+
+
+def test_gate_ledger_io_retries_once(tmp_path):
+    p = object.__new__(q.TrainingPipeline)
+    p.args = SimpleNamespace(seed_ledger=tmp_path / 'ledger.json')
+    job = {}
+    with patch.object(q, 'allocate_seed_block', side_effect=[OSError('temporary'), (1, 3)]) as allocate:
+        p._seeded(job)
+    assert allocate.call_count == 2 and job['seed_block'] == [1, 3]
+
+
+def test_orphaned_snapshot_recovery_failure_isolated(tmp_path):
+    from test_curriculum_pipeline import setup
+    a, s = setup(tmp_path)
+    p = q.TrainingPipeline(a, s)
+    s['training_jobs'].append(dict(round=1, status='queued', recipe='/r', model='/m'))
+    with patch.object(p, '_seeded', side_effect=ValueError('pool exhausted')):
+        p.poll()
+    p.close()
+    assert s['training_jobs'][0]['isolated']
 
 
 def test_twice_failed_background_snapshot_does_not_poison_next_round(tmp_path):
