@@ -1,0 +1,680 @@
+{
+  "schema": "gate_seed_inventory_v1",
+  "roots": [
+    "/Users/newbiexvwu/PvZAgent",
+    "/tmp/task101-scoreboard"
+  ],
+  "scan": {
+    "files_seen": 67896,
+    "files_parsed": 2125,
+    "segments": 982,
+    "quick": false
+  },
+  "occupied": [
+    [
+      30000,
+      31023
+    ],
+    [
+      31024,
+      65536
+    ],
+    [
+      80256,
+      80320
+    ],
+    [
+      130000,
+      130640
+    ],
+    [
+      1350256,
+      1350320
+    ],
+    [
+      1350640,
+      1350704
+    ],
+    [
+      1400000,
+      1405000
+    ],
+    [
+      1500000,
+      1501023
+    ],
+    [
+      1600000,
+      1601023
+    ],
+    [
+      1601024,
+      1602047
+    ],
+    [
+      1602048,
+      1604095
+    ],
+    [
+      1604096,
+      1608191
+    ],
+    [
+      1608192,
+      1612287
+    ],
+    [
+      1612288,
+      1616383
+    ],
+    [
+      1700000,
+      1704095
+    ],
+    [
+      1710000,
+      1775535
+    ],
+    [
+      1800000,
+      1878191
+    ],
+    [
+      1880000,
+      1888191
+    ],
+    [
+      1900000,
+      1998191
+    ],
+    [
+      2000000,
+      2088191
+    ],
+    [
+      2100000,
+      2108191
+    ],
+    [
+      2120000,
+      2128191
+    ],
+    [
+      2130000,
+      2138191
+    ],
+    [
+      2150000,
+      2158191
+    ],
+    [
+      2200000,
+      2298191
+    ],
+    [
+      5000000,
+      9169695
+    ],
+    [
+      20261031,
+      20261034
+    ],
+    [
+      20261101,
+      20261132
+    ],
+    [
+      43000000,
+      43008191
+    ],
+    [
+      43700000,
+      43700031
+    ],
+    [
+      44000000,
+      44000255
+    ],
+    [
+      44100000,
+      44100255
+    ],
+    [
+      44200000,
+      44200255
+    ],
+    [
+      44300000,
+      44300255
+    ],
+    [
+      44400000,
+      44400255
+    ],
+    [
+      44500000,
+      44500255
+    ],
+    [
+      44600000,
+      44600255
+    ],
+    [
+      44700000,
+      44700255
+    ],
+    [
+      44800000,
+      44800255
+    ],
+    [
+      44900000,
+      44900255
+    ],
+    [
+      45000000,
+      45000255
+    ],
+    [
+      45100000,
+      45100255
+    ],
+    [
+      45200000,
+      45200255
+    ],
+    [
+      46000000,
+      47000255
+    ],
+    [
+      60000000,
+      60008191
+    ],
+    [
+      60100000,
+      60108191
+    ],
+    [
+      60200000,
+      60208191
+    ],
+    [
+      61000000,
+      61000031
+    ],
+    [
+      61100000,
+      61100031
+    ],
+    [
+      61200000,
+      61200031
+    ],
+    [
+      79000000,
+      79000032
+    ],
+    [
+      79010000,
+      79010032
+    ],
+    [
+      79020000,
+      79020032
+    ],
+    [
+      79030000,
+      79030032
+    ],
+    [
+      79040000,
+      79040032
+    ],
+    [
+      79050000,
+      79050032
+    ],
+    [
+      79060000,
+      79060032
+    ],
+    [
+      79070000,
+      79070032
+    ],
+    [
+      79100000,
+      79124575
+    ],
+    [
+      81000000,
+      81200000
+    ],
+    [
+      83000000,
+      83000308
+    ],
+    [
+      85000000,
+      85000031
+    ],
+    [
+      85100000,
+      85108191
+    ],
+    [
+      91000000,
+      91000008
+    ],
+    [
+      91010000,
+      91010008
+    ],
+    [
+      91020000,
+      91020008
+    ],
+    [
+      91030000,
+      91030008
+    ],
+    [
+      93000400,
+      93020691
+    ],
+    [
+      100000000,
+      101000000
+    ]
+  ],
+  "occupied_seeds": 6991988,
+  "free_gaps_ge_1m": [
+    {
+      "low": 130640,
+      "high": 1350256,
+      "size": 1219616
+    },
+    {
+      "low": 2298191,
+      "high": 5000000,
+      "size": 2701809
+    },
+    {
+      "low": 9169695,
+      "high": 20261031,
+      "size": 11091336
+    },
+    {
+      "low": 20261132,
+      "high": 43000000,
+      "size": 22738868
+    },
+    {
+      "low": 47000255,
+      "high": 60000000,
+      "size": 12999745
+    },
+    {
+      "low": 61200031,
+      "high": 79000000,
+      "size": 17799969
+    },
+    {
+      "low": 79124575,
+      "high": 81000000,
+      "size": 1875425
+    },
+    {
+      "low": 81200000,
+      "high": 83000000,
+      "size": 1800000
+    },
+    {
+      "low": 83000308,
+      "high": 85000000,
+      "size": 1999692
+    },
+    {
+      "low": 85108191,
+      "high": 91000000,
+      "size": 5891809
+    },
+    {
+      "low": 91030008,
+      "high": 93000400,
+      "size": 1970392
+    },
+    {
+      "low": 93020691,
+      "high": 100000000,
+      "size": 6979309
+    },
+    {
+      "low": 101000000,
+      "high": 4294967296,
+      "size": 4193967296
+    }
+  ],
+  "sources_by_kind": {
+    "task seeds": {
+      "declarations": 974,
+      "low": 30000,
+      "high": 93020048
+    },
+    "design range": {
+      "declarations": 105,
+      "low": 30000,
+      "high": 101000000
+    },
+    "declared block": {
+      "declarations": 2,
+      "low": 30512,
+      "high": 93020691
+    },
+    "seed block": {
+      "declarations": 6,
+      "low": 81000000,
+      "high": 81001000
+    }
+  },
+  "widest_segments": [
+    {
+      "name": "5585728–9104159",
+      "kind": "design range",
+      "low": 5585728,
+      "high": 9104159,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "5651264–9169695",
+      "kind": "design range",
+      "low": 5651264,
+      "high": 9169695,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "5,000,000–7,932,127",
+      "kind": "design range",
+      "low": 5000000,
+      "high": 7932127,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "46,000,000–47,000,255",
+      "kind": "design range",
+      "low": 46000000,
+      "high": 47000255,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "[100000000, 101000000)",
+      "kind": "design range",
+      "low": 100000000,
+      "high": 101000000,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "[81,000,000, 81,200,000)",
+      "kind": "design range",
+      "low": 81000000,
+      "high": 81200000,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1900000–1998191",
+      "kind": "design range",
+      "low": 1900000,
+      "high": 1998191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1900000–1998191",
+      "kind": "design range",
+      "low": 1900000,
+      "high": 1998191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1900000–1998191",
+      "kind": "design range",
+      "low": 1900000,
+      "high": 1998191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "2200000–2298191",
+      "kind": "design range",
+      "low": 2200000,
+      "high": 2298191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "2000000–2088191",
+      "kind": "design range",
+      "low": 2000000,
+      "high": 2088191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "2000000–2088191",
+      "kind": "design range",
+      "low": 2000000,
+      "high": 2088191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1800000–1878191",
+      "kind": "design range",
+      "low": 1800000,
+      "high": 1878191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1800000–1878191",
+      "kind": "design range",
+      "low": 1800000,
+      "high": 1878191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1800000–1878191",
+      "kind": "design range",
+      "low": 1800000,
+      "high": 1878191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1800000–1878191",
+      "kind": "design range",
+      "low": 1800000,
+      "high": 1878191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1710000–1775535",
+      "kind": "design range",
+      "low": 1710000,
+      "high": 1775535,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1800000–1838191",
+      "kind": "design range",
+      "low": 1800000,
+      "high": 1838191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1840000–1878191",
+      "kind": "design range",
+      "low": 1840000,
+      "high": 1878191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "[31024, 65536)",
+      "kind": "design range",
+      "low": 31024,
+      "high": 65536,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "81,000,000–81,030,039",
+      "kind": "design range",
+      "low": 81000000,
+      "high": 81030039,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "79,100,000–79,124,575",
+      "kind": "design range",
+      "low": 79100000,
+      "high": 79124575,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": ".claude/worktrees/deckvar-mac/artifacts/task93b/random_deck_panel.json.provenance",
+      "kind": "declared block",
+      "low": 93000400,
+      "high": 93020691,
+      "source": "random_deck_panel.json"
+    },
+    {
+      "name": "1718192–1726383",
+      "kind": "design range",
+      "low": 1718192,
+      "high": 1726383,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1800000–1808191",
+      "kind": "design range",
+      "low": 1800000,
+      "high": 1808191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1810000–1818191",
+      "kind": "design range",
+      "low": 1810000,
+      "high": 1818191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1820000–1828191",
+      "kind": "design range",
+      "low": 1820000,
+      "high": 1828191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1830000–1838191",
+      "kind": "design range",
+      "low": 1830000,
+      "high": 1838191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1840000–1848191",
+      "kind": "design range",
+      "low": 1840000,
+      "high": 1848191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1850000–1858191",
+      "kind": "design range",
+      "low": 1850000,
+      "high": 1858191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1860000–1868191",
+      "kind": "design range",
+      "low": 1860000,
+      "high": 1868191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1870000–1878191",
+      "kind": "design range",
+      "low": 1870000,
+      "high": 1878191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1880000–1888191",
+      "kind": "design range",
+      "low": 1880000,
+      "high": 1888191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1880000–1888191",
+      "kind": "design range",
+      "low": 1880000,
+      "high": 1888191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1880000–1888191",
+      "kind": "design range",
+      "low": 1880000,
+      "high": 1888191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1900000–1908191",
+      "kind": "design range",
+      "low": 1900000,
+      "high": 1908191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "1990000–1998191",
+      "kind": "design range",
+      "low": 1990000,
+      "high": 1998191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "2000000–2008191",
+      "kind": "design range",
+      "low": 2000000,
+      "high": 2008191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "2080000–2088191",
+      "kind": "design range",
+      "low": 2080000,
+      "high": 2088191,
+      "source": "DESIGN.md"
+    },
+    {
+      "name": "2100000–2108191",
+      "kind": "design range",
+      "low": 2100000,
+      "high": 2108191,
+      "source": "DESIGN.md"
+    }
+  ],
+  "candidate": {
+    "low": 103000000,
+    "high": 103500000,
+    "size": 500000,
+    "disjoint": true,
+    "overlaps": []
+  },
+  "verification": {
+    "low": 103000000,
+    "high": 103500000,
+    "files": 69498,
+    "hits": [],
+    "hit_count": 0
+  },
+  "additional_worktree_designs_checked": 24,
+  "additional_design_conflicts": [],
+  "baseline_seed_rule": "task101: 101000000 + level * 100 + [0,16)"
+}

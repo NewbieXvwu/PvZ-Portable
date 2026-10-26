@@ -1154,11 +1154,11 @@
       "level": 25,
       "task_id": null,
       "deck": null,
-      "family": "未接入",
+      "family": "native",
       "student": null,
       "teacher": null,
       "old_status": "未接入",
-      "category": "未接入"
+      "category": "原生已接入，本面板未测"
     },
     {
       "level": 26,
