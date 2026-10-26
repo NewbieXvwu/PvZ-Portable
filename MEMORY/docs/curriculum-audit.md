@@ -90,3 +90,31 @@ L31 `_hv2` 首组实际在 08:39:35–08:43:19 完成 24/24；L32 首组在 08:4
 11:59只读 `/proc/861864` 确认r18训练仍为同一活进程（父PID860060），train.log已记epoch1完成，seconds=274.316；尚无 `student/model.pt`、`complete.json` 或首次v3评估结果。继续观察该进程，不因等待超时启动另一份任务。
 
 12:00后续轮询：同一训练PID仍存活，epoch2完成（213.524秒，val_loss=3.72647），job18仍queued且seed_block未变。当前“等待”有活进程和新增epoch日志支持；尚不能验收最终训练或门禁。
+
+## 训练输入逐格复核
+
+以r18学生目录的 `source_rows.json` 核验训练实际读取，而不只检查recipe声明。L25未采，无该格标签；17个已采新格中，L31/L32缺失，其余15个均被读取且training_rows>0：
+
+| 格 | 读入档案数 | 保留决策行 | 训练行 | 验证行 |
+|---|---:|---:|---:|---:|
+| `demo_fog_31_snow_m200_hv2` | 缺失 | — | — | — |
+| `demo_fog_32_snow_m200_hv2` | 缺失 | — | — | — |
+| `demo_fog_33_cactus_snow_m200_hv2` | 24 | 575 | 509 | 66 |
+| `demo_fog_33_cattail_snow_m200_hv2` | 24 | 310 | 310 | 0 |
+| `demo_fog_34_cactus_snow_m200_hv2` | 24 | 632 | 550 | 82 |
+| `demo_fog_39_cactus_snow_m200_hv2` | 24 | 738 | 648 | 90 |
+| `demo_roof_42_gloommelon_m200` | 24 | 316 | 293 | 23 |
+| `demo_roof_42_melon_m200` | 24 | 757 | 687 | 70 |
+| `demo_roof_43_melon_m200` | 24 | 579 | 533 | 46 |
+| `demo_roof_44_melon_m200` | 24 | 619 | 505 | 114 |
+| `demo_roof_46_doom_m200` | 24 | 746 | 650 | 96 |
+| `demo_roof_48_doom_m200` | 24 | 84 | 71 | 13 |
+| `demo_roof_49_doom_m200` | 24 | 1455 | 1212 | 243 |
+| `fog79b_l36_best` | 24 | 5684 | 4516 | 1168 |
+| `fog79b_l37_best` | 24 | 8034 | 7030 | 1004 |
+| `fog79b_l38_best` | 24 | 5368 | 4674 | 694 |
+| `fog_user_v2_l31_snow` | 48 | 11397 | 10202 | 1195 |
+
+15格合计 32390 训练行。示范L33香蒲的验证行是0，但训练行310；这不是未采/漏读。L48保留84行、训练71/验证13，与异常段行数一致；不能把读兼容解释为丢掉整个标签。
+
+源文件SHA256：`5ba4063682461c4088915881fb74d1250da5423c8c08e1e6a6e2539f69de6e2b`（/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000018/student/source_rows.json）。
