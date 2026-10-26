@@ -124,11 +124,25 @@ def json_segments(document, label):
     return found
 
 
+def scan_roots_once(roots):
+    """A main checkout already contains its nested worktrees; visit each tree once.
+
+    Keep the original root list for per-worktree DESIGN registration, but avoid
+    traversing the same JSON/JSONL trees twice in the two filesystem scans.
+    """
+    unique = sorted({str(Path(root).resolve()) for root in roots}, key=lambda root: (len(Path(root).parts), root))
+    selected = []
+    for root in unique:
+        if not any(Path(root).is_relative_to(parent) for parent in selected):
+            selected.append(root)
+    return selected
+
+
 def scan_json(roots):
     """Walk every JSON file that carries seed-bearing keys."""
     files = parsed = 0
     segments = []
-    for root in roots:
+    for root in scan_roots_once(roots):
         for folder, subfolders, names in os.walk(root):
             subfolders[:] = [name for name in subfolders if name not in SKIP_DIRS]
             if any(part in folder for part in SKIP_PARTS):
@@ -191,7 +205,7 @@ def verify_window(roots, low, high):
     # hash with a digit run becomes a false hit (measured 1688 -> real hits).
     pattern = re.compile((r'(?<![\d.\w])\d{%d}(?![\d.])' % width).encode())
     hits, files = [], 0
-    for root in roots:
+    for root in scan_roots_once(roots):
         for folder, subfolders, names in os.walk(root):
             subfolders[:] = [name for name in subfolders if name not in SKIP_DIRS]
             if any(part in folder for part in SKIP_PARTS):

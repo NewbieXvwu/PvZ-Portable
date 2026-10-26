@@ -9,6 +9,7 @@ import pytest
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 from task92b_selection import eligible_windows, kendall_tau, summarize
 from pvz_tasks import deck_for_seed, random_deck_covered, random_deck_draws
+from gate_seed_inventory import scan_json, scan_roots_once, verify_window
 
 
 def test_kendall_handles_ties_and_reversed_order():
@@ -16,6 +17,18 @@ def test_kendall_handles_ties_and_reversed_order():
     assert kendall_tau([1, 2, 3, 4], [1, 2, 3, 4]) == 1
     assert kendall_tau([1, 1, 1, 1], [1, 2, 3, 4]) is None
     assert kendall_tau([1, 2, 2, 4], [1, 2, 3, 4]) == pytest.approx(np.sqrt(5 / 6))
+
+
+def test_seed_audit_deduplicates_nested_roots_without_losing_records(tmp_path):
+    child = tmp_path / 'worktrees/child'
+    child.mkdir(parents=True)
+    (child / 'manifest.json').write_text('{"tasks":[{"seeds":[126000001]}]}')
+    roots = [str(child), str(tmp_path), str(child)]
+    assert scan_roots_once(roots) == [str(tmp_path)]
+    assert scan_json(roots)['files_parsed'] == 1
+    verification = verify_window(roots, 126000000, 126020000)
+    assert verification['files'] == 1
+    assert [hit['value'] for hit in verification['hits']] == [126000001]
 
 
 def test_bootstrap_keeps_policy_outcomes_paired_and_stable_ties():
