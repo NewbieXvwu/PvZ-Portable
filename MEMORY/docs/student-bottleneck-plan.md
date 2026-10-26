@@ -719,3 +719,13 @@
     - 第 13–17 轮的采集都跑在这个引擎上。各组 rc 全为 0，局都正常完成，但这个引擎没有经过逐位门禁，PGO 也没开，速度更慢。
     - 两份配方只差 1 个标签，而管线每轮都会重写配方，影响很小。
     - deploy14 会换成门禁过的 build5。**教训：手动重启 qc 必须照抄最近一次部署脚本里的 `start_qc` 命令。**
+- 2026-10-26 08:30（台式机时间）：**用户指出 Mac plus2 号和 Business 号一直闲着**（主控失职）。已改正：
+  - **Business 号**（台式机默认 `~/.codex`，有额度）新开 4 个会话 `codexb-task78 / 91 / 92 / 93`，从 CodeBuddy 手里接过这四个任务。agent_pool 已改为盯这些会话。
+    - cbp-task93 暂时保留：它下面挂着 144 局采集，杀会话会把采集一起杀掉；采完再关。
+  - **plus 号**（11:31 恢复）预派三个新任务，现在先由 CodeBuddy 做，恢复后自动交还 plus：
+    - **task95**（codex-mem）：deploy15 引擎，把 task82 / 85 的 C++ 过门禁；
+    - **task96**（codex-clean）：同配方同种子为什么复现不了 r11；
+    - **task97**（codex-hashdet）：deploy14b，11 个 LLM 起点格。
+    - codex-perf / codex-v6 / codex-llmplay 到 11:31 还要再派任务。
+  - **Mac plus2 号**：codex-plus2 做 task86c；codex-plus2b 改派 **task93b**（夜间 / 泳池随机卡组倍率扫描与扩采，工作树 deckvar-mac）。Mac agent_pool 已更新。
+  - 以后每次巡检都列出三个号各自的额度和会话。
