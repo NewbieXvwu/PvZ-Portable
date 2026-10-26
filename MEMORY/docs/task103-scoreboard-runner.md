@@ -28,8 +28,9 @@ task101 一次性测出了 45 关 × 16 种子 × 学生 / 老师的记分板，
 台式机目前**没有** scoreboard2 工作树，第一次运行先建检出（不合并 pvz-env）：
 
 ```bash
-git -C /home/newbiexvwu/PvZ-search worktree add \
-  /home/newbiexvwu/PvZ-search/.claude/worktrees/scoreboard2 scoreboard2
+git -C /home/newbiexvwu/PvZ-search fetch origin scoreboard2
+git -C /home/newbiexvwu/PvZ-search worktree add -b scoreboard2 \
+  /home/newbiexvwu/PvZ-search/.claude/worktrees/scoreboard2 origin/scoreboard2
 ```
 
 ```bash
@@ -61,6 +62,8 @@ ENGINE=/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable
 | `value_net/v5/model.pt` | 存在，SHA `8a636d33…`，与 Mac r11-32 的叶值同字节 |
 | `hard/value_branch1/model.pt` | 存在，SHA `24858410…`，与 Mac 的静态网同字节 |
 | `/usr/bin/python3` | 有，但**没有 torch**，必须走 `~/.venvs/ml` |
+| 台式机本地 `scoreboard2` ref | 无；`ls-remote` 能看到 `baf2d443`，所以先 `fetch` 再 `worktree add -b` |
+| `~/.cache/pvz-research-resources` | 存在，含 `main.pak` |
 
 因此学生 / 叶值 / 静态网三项与 Mac 那份可比，**只有引擎不同**（台式机 `76ff36dc…` vs Mac `6f7d2c3f…`）。跑完先核 `scoreboard.json` 的 `engine_sha256`：跨引擎的胜率差不能全归给模型。
 
