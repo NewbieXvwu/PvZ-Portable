@@ -254,6 +254,15 @@ class CurriculumRulesTest(unittest.TestCase):
         self.assertTrue(any('seeds exhausted' in line and 'group skipped' in line for line in changes))
         self.assertIn('day_l7_train_d7', state['cells'])
 
+    def test_native_ladder_cell_is_not_a_start_cell(self):
+        # 10-26: native L25 carries a multiplier ladder too; reconcile_start_cells retired it and
+        # plan_round planned it as a demo start. Start cells are recognised by their archive.
+        state = dict(round=0, offsets={}, cells={'pool_l25_orig_train': dict(
+            cell(5, 10), ladder=list(CURRICULUM_LADDERS['native_l25']), mult_index=0)})
+        self.assertEqual(reconcile_start_cells(state, {}), [])
+        self.assertIn('pool_l25_orig_train', state['cells'])
+        self.assertNotIn('pool_l25_orig_train', state.get('retired_cells', {}))
+
     def test_exhausted_start_cell_is_retired_not_fatal(self):
         state = dict(round=0, offsets={'demo_x_m200_start': 250},
                      cells={'demo_x_m200': dict(cell(5, 10), ladder=[400, 300], mult_index=0,
