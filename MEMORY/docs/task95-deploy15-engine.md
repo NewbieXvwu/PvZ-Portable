@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [6f-交还 Codex，2026-10-26 22:00 CST] 主控通知额度恢复、要求交还，已停后台验证链（无残留游戏进程）。本轮完成：v2boss 修复（分支 `task95-bossfix`，`acc3b431`，三处通道数 14→13）与非 PGO 验证；按 build2 同一 PGO 流程（`artifacts/perf/pgo4` 141 份 profile、共享 libopenmpt）重建候选 **build4**，SHA256 `de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845`，10,655,664 B、`.text` 2,696,915、`NEEDED` 与 deploy14 一致，已留档 `artifacts/task95/engine/pvz-portable-build4`；同一 v2boss 模型在 build4 上加载并 `rollout_predict` 成功。build4 六族门禁跑到 37 帧（4 个完整 8 局组 + 1 个部分组，old 臂复用 `gate_b2` 的 96 局逐字节副本），L50/哈希/吞吐未跑。**deploy15 候选仍是 build2，部署脚本未改**。续做：`task70_redeploy_gate.py --old deploy14 --new build4 --out artifacts/task95/gate_b4 --workers 2 --seeds 8`（自动跳过完整组）→ `b4/boss_l50.json` → `state_hash_suite_build4.json` → `abba4`，全过后再合并 `task95-bossfix` 并把 `qc_deploy15.sh` 指到 build4。
+
 - [6e-工具参数化，2026-10-26 21:30 CST] `scripts/task95_hash_suite.py` 增加 `--old/--new/--out`，默认仍指向 deploy14 与 build2 的归档并继续校验其 SHA，用于复核修复后的候选；4 项单测通过，默认行为不变。
 
 - [5b-观测路径核对，2026-10-26 20:05 CST] 发现 `observation=6` 向量路径不一致（详见“问题”）：C++ 按 106 通道加载/分配但 `Encode` 只传 101，Boss 4 个空间通道被丢弃；Python `v2boss` 为 105。当前无 obs=6 模型，故不影响 build2 对现有策略的门禁结论，但 v2boss 学生暂不可用：用 `RolloutNet(obs='v2boss')` 导出的模型被 build2 以 `invalid rollout network weights` 拒绝（已复现）。修复已在 `task95-bossfix` 分支用临时构建验证（v2boss 可加载并前向），但 deploy15 仍以 build2 为候选，PGO 重建与重跑未做。
