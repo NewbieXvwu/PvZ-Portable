@@ -87,12 +87,25 @@ def qc_pending():
             if not job.get('recipe'):
                 return True
             recipe = Path(job['recipe'])
-            trained = recipe.with_name('trained.json')
-            if not trained.is_file():
-                return True
-            proof = json.loads(trained.read_text())
-            if not proof.get('model_sha256') or proof.get('recipe_sha256') != sha(recipe):
-                return True
+            if job.get('training_seeds'):
+                parent = json.loads(recipe.read_text())
+                recipes = []
+                for seed in job['training_seeds']:
+                    folder = recipe.parent/'seeds'/f'seed_{seed:06d}'
+                    child = folder/'recipe.json'
+                    expected = dict(parent, seed=seed, out=str(folder/'student'))
+                    if not child.is_file() or json.loads(child.read_text()) != expected:
+                        return True
+                    recipes.append(child)
+            else:
+                recipes = [recipe]
+            for candidate_recipe in recipes:
+                trained = candidate_recipe.with_name('trained.json')
+                if not trained.is_file():
+                    return True
+                proof = json.loads(trained.read_text())
+                if not proof.get('model_sha256') or proof.get('recipe_sha256') != sha(candidate_recipe):
+                    return True
         return False
     except (OSError, ValueError, TypeError, AttributeError):
         return None  # retry the observation; do not terminate a worker on a read failure
