@@ -132,4 +132,13 @@
   扩采纳入后续课程方案：白天1.0、泳池0.5可提议起步，夜间0.5仍39.06%暂缓；原144局/两种子剂量保持冻结，seed2继续按qc优先排队。
   DESIGN登记expand族；完整覆盖与SHA见task93b-desktop-import.json。Mac扫描数字来源于git提交，原引擎清单/采集配置未随包传来，生产接入前须补齐，未改qc。
 
+- 2026-10-26 CodeBuddy（接手 Business Codex 后收尾）：先核实现场，第 4 步已自行跑完——seed2 训练完成 12 轮
+  （模型 SHA 3013f860…，第 3 轮让行那次无模型/回执，不计入），heldout 192 + 对照 192 全齐，
+  validation_status 为 complete，无存活游戏进程属本任务。独立重跑 `task93_analyze.py compare` 两次，
+  生成的两份 JSON 与入库文件逐字节相同；两 seed 的 resolved 配方只差 seed/out，source_rows 全等。
+  结论写入 deck-diversity.md：判据“两种子都≥166”**未达成**（seed1 137 / seed2 169），
+  均值 153.0 高于 A(124)、低于 D2(169) 与 r11(166)，种子极差 16.67pp 无方差改善证据；
+  0.173% 剂量不构成对 4% 的检验。建议 144 局剂量不进生产课程，走 expand 族补到 4% 再按同一判据复验。
+  同时提交 Codex 遗留的 task93b Mac 导入（576 局、19 项测试通过）。DESIGN 已补结论；工作树干净并 push。
+
 ## 问题
