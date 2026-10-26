@@ -37,5 +37,52 @@
  },
  "primary_gate": "point improvement > 0 and 95% interval lower >= 0; incomplete or no eligible pairs cannot pass",
  "overall_task_complete": false,
- "engine_processes_started": 0
+ "engine_processes_started": 0,
+ "input_identity_preflight": {
+  "at_utc": "2026-10-26T00:23:07.706558+00:00",
+  "status": "passed",
+  "engine_processes_started": 0,
+  "roof_world_seeds": 24,
+  "roof_root_futures": 144,
+  "training_root_records_verified": 384,
+  "training_root_futures": 128,
+  "training_source_world_or_future_identities": 67,
+  "training_identity_overlap": [],
+  "models": {
+   "v5": {
+    "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+    "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+    "declared_trained_on": 3661,
+    "overlap": []
+   },
+   "v6": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/v6/model.pt",
+    "sha256": "4df43aea69e22098d555219c2a79892e8332cdf4cefdf18da3e0f65c0421e4cb",
+    "declared_trained_on": 4268,
+    "overlap": []
+   },
+   "student": {
+    "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+    "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+    "declared_trained_on": 0,
+    "overlap": []
+   },
+   "static": {
+    "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+    "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
+    "declared_trained_on": 256,
+    "overlap": []
+   }
+  },
+  "source_manifest_sha256": "b3b86e2996e9e6b1173ac48264eb6858c00ee3a51470280b3b069b8976c2edf0",
+  "export_sha256": "ee8c6e9238d46e22456f43fee706e1bf85a80165ebe08857dcb1004d7ab3cb9f",
+  "roof_plan_sha256": "4afca60e9217c79b8b5eb90ed41550bf734ef2a88db66f483481f3d32592668b",
+  "roof_sources_sha256": {
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k0/sources.json": "f137d8a427a5825439ed87b4c64a61e515654fb48646005ff966f3c7bc324384",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k1/sources.json": "f68ecfb8e1acd8508d5991fd25150fc6c89063536a2dc31572bd792abd03b51f",
+   "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k2/sources.json": "cf0063ead8b948962ca09a4405c59701c8c8697fa2a5d0829b63002d092caed4"
+  },
+  "scope": "Declared checkpoint trained_on identities and audited new-region raw root future/world identities; does not certify undisclosed historical inputs or collected roof terminal labels.",
+  "full_report_sha256": "8a3bef1786d060d7820ab8d5b043d03d88c27b73c8ab386ec68df8fc6e217dbe"
+ }
 }
