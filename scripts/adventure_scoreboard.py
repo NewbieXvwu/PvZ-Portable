@@ -159,10 +159,12 @@ def main():
     selection = parser.add_mutually_exclusive_group()
     selection.add_argument('--student-only', action='store_true')
     selection.add_argument('--teacher-only', action='store_true')
+    parser.add_argument('--panel', type=Path, default=PANEL,
+                        help='任务面板（默认 configs/adventure_scoreboard.json）')
     parser.add_argument('--previous', type=Path)
     parser.add_argument('--out', required=True, type=Path, help='运行目录，内含 scoreboard.json / scoreboard.md')
     args = parser.parse_args()
-    panel = json.loads(PANEL.read_text())
+    panel = json.loads(args.panel.resolve().read_text())
     if args.seeds < 1 or args.seed_offset < 0 or args.seed_offset + args.seeds > panel['stride']:
         parser.error('种子数与起点必须落在每关已登记的 10000 个种子内')
     try:
