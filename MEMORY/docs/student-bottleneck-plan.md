@@ -890,3 +890,14 @@
     - 派 **task107**（台式机 cbp-task107，CodeBuddy 账号 0 GLM，分支 convdemo）：verify 一次，然后建起点格，部署脚本不执行。
   - 第 20 轮 K=2 训练因 `resources_changed_before_launch` 回落成串行，训练时间翻倍，task92c 的资源判定要再看。
   - task103 从 Mac 调度池移除，等解冻后再续跑测量。
+- 2026-10-26 20:15（台式机时间）：
+  - **task108 完成**（roundlog 8df8ff96）：
+    - 根因修复：每组完成时就把组记进 `completed_groups`，轮末合并写入日志。
+    - 回填脚本 `backfill_round_log.py`：预演可补历史 41 组 / 1584 局（第 6 轮 2 组、13 轮 16、14 轮 2、18 轮 2、19 轮 2、20 轮 17），另有当前第 21 轮 12 组；补完后 suffix 失配为 0，挑选可用格 9 → 19。
+  - **task107 完成**（convdemo 4a0b87a1）：
+    - 三局示范在 deploy14 引擎上 verify 通过。
+    - 起点格阶梯：pool 624→264、storm 900→336、boss 656→256；未来种子块 4530 / 4540 / 4550 万。
+  - **deploy14d = cefb9989**（fd1a0b61 + roundlog + convdemo），qc / 选择相关 87 项测试通过。
+    - `qc_deploy14d.sh` 在 14c 的基础上加了回填步骤：dry-run 通过后，先备份 state，再预演、写入回填，然后做第二次 dry-run；任何一步失败都还原 state 并回滚代码。
+    - tmux `deploy14d` 等第 20 轮门禁出结论后自动执行，避免停采集干等后台训练。
+  - 第 12–19 轮门禁全部拒绝，现役仍是 r11。第 20 轮是第一个 K=2 挑选的轮次。
