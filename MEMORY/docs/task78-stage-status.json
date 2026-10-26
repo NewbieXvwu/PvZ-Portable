@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T10:21:42.583664+00:00",
+ "at_utc": "2026-10-26T10:48:46.898088+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 55,
+  "completed_label_jobs": 57,
   "replay_completed_k": [
    0
   ],
@@ -406,6 +406,13 @@
    "second_root_masked_sha256": "628647674258fab0850082519f22672ddf3f5dc611a5c03a628644af63fa412b",
    "full_raw_chain_validation": "deferred to normal downstream export/scoring",
    "additional_masked_fields": []
+  },
+  "k0_l42_collection": {
+   "worlds": 8,
+   "expected_jobs": 24,
+   "collection_complete": true,
+   "downstream_export_status": "pending",
+   "gate_evaluated": false
   }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
