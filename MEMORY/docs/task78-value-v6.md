@@ -168,6 +168,8 @@
 
 - 2026-10-27 03:45（CodeBuddy 接手）：核对交接状态——分支 `v6` 与 origin 同步、工作区干净；屋顶 k2 采集仍在跑（本树 2 个 `task78_collect`，k2 已完成 12 档案 ×3 视界，累计 214/216 个 `rc=0` 任务，剩 archive_12 的 h4000/h6000 与 archive_13–23 共 33 项），resume8/roof_resume5 链存活，符合并发上限。**新增证据（原语料阻塞复核）**：此前只查过 HF HEAD 57 文件与两个历史 revision；本轮改用公开只读 API 遍历该仓库**全部 72 个分支**（`list_repo_refs`），逐分支探测 `artifacts/hard/branch/z13_384.pt`、`artifacts/hard/branch3/z15d_shards`、`artifacts/task43/sparse64/data`、`artifacts/task30/full_audit_manifest.json`、`artifacts/value_net/v5/model.pt` 五条路径，**命中 0**（分支清单全是 PPO 期 evidence-* 分支）。因此“原 v5 442,601 行语料在本机与 HF 均不可得”不再只依赖 HEAD 快照，正式候选（`--corpus original`）在本轮仍无法训练；未改冻结输入、未开游戏。
 
+- 2026-10-27 05:35（CodeBuddy 接手）：核对链存活——`resume8.py`（PID 991266）→ `roof_resume5.sh` → `xargs -P 2`（PID 1056871）仍在采 k2，本树恰 2 个游戏进程（archive_20 的 h4000/h6000），符合并发上限；工作区干净、HEAD `cac88d33` = origin/v6。k2 实测 61/72（archive_00–19 各 3 项齐、archive_20 仅 h2500），剩 11 项 = archive_20 的 h4000/h6000 + archive_21/22/23 各 3 项，按当前约 2 项/5–6 分钟估计约半小时。k0/k1 各 72 项已正常导出（SHA 996c0d50… / 7a252df2…）。`task72_rebuild_mac_branch1` 计划 24 个轨迹、0 个已完成，`resume8` 会在屋顶链（含 merge/roof_score/gates）rc=0 后串行接上（rebuild 自身要求本树无其他 task78 游戏，故不能并行提速）。本轮未开新游戏、未改冻结输入。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
