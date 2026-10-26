@@ -1,6 +1,12 @@
 {
   "method": "Reconstruct trainer global seed shuffle from all selected segment seed arrays, then verify every source validation_rows against actual training receipts.",
   "index_sha256": "fed7e1e1c20d5fd5929339d35514f0d32f2469373d576253bc4ae47d2d990156",
+  "evaluation_card_set_overlap": {
+    "method": "Exact card-ID multisets in every retained packet-identity input across all scenes, including training and validation rows; not full-task equivalence.",
+    "checked_rows": 17132763,
+    "heldout_retained_rows": 0,
+    "control_retained_rows": 12029996
+  },
   "datasets": {
     "A": {
       "labels": 348,
