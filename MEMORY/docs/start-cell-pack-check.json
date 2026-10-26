@@ -1,0 +1,37 @@
+{
+ "label": "c18demoroof48doomm200s1100_fast_search",
+ "source_segment": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/segments/ce3ce4006691a0e1.npz",
+ "source_sha256": "3d0bea65e882db58e1f1b0429b3139951d19cefa9126dab21f82915964f083e2",
+ "source_unchanged": true,
+ "archives": 24,
+ "before": {
+  "rows": 84,
+  "board_plane_of": 72,
+  "scalar_plane_of": 0
+ },
+ "after": {
+  "rows": 84,
+  "board_plane_of": 84,
+  "scalar_plane_of": 84,
+  "board_planes": 1,
+  "leading_plane_ids": [
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1,
+   -1
+  ]
+ },
+ "repaired_segment": "/home/newbiexvwu/PvZ-search/.claude/worktrees/startseeds/artifacts/task99/repack/frames/packs/segments/ce3ce4006691a0e1.npz",
+ "repaired_sha256": "20a692b40f9d32d921cfe07c728433ca8aa12030e26440812e1be2d60911b0a7",
+ "cached_and_uncached_payloads_bit_identical": true,
+ "engine_processes_started": 0,
+ "production_pack_modified": false
+}

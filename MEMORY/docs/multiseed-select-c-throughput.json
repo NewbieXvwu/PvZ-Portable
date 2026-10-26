@@ -1,0 +1,563 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "round": 12,
+      "collection_seconds": 5884.787876367569,
+      "pack_seconds": 444.23435068130493,
+      "single_train_seconds": 2149.0476174354553,
+      "gate_seconds": 98.13370275497437,
+      "parallel_train_seconds": 3415.4622191106896,
+      "selection_seconds": 508.6584165096283,
+      "parallel_service_seconds": 4466.488689056598,
+      "serial_fallback_service_seconds": 5349.121704816818,
+      "estimated_wait_seconds": 0.0
+    },
+    {
+      "round": 13,
+      "collection_seconds": 10715.667250394821,
+      "pack_seconds": 20.818793535232544,
+      "single_train_seconds": 2752.0315079689026,
+      "gate_seconds": 2547.1761417388916,
+      "parallel_train_seconds": 4394.820125774707,
+      "selection_seconds": 508.6584165096283,
+      "parallel_service_seconds": 7471.473477558459,
+      "serial_fallback_service_seconds": 8580.716367721558,
+      "estimated_wait_seconds": 0.0
+    },
+    {
+      "round": 14,
+      "collection_seconds": 7523.6742062568665,
+      "pack_seconds": 315.7323868274689,
+      "single_train_seconds": 3295.232625722885,
+      "gate_seconds": 2609.742113351822,
+      "parallel_train_seconds": 5277.079698431708,
+      "selection_seconds": 508.6584165096283,
+      "parallel_service_seconds": 8711.212615120627,
+      "serial_fallback_service_seconds": 10024.59816813469,
+      "estimated_wait_seconds": 0.0
+    },
+    {
+      "round": 15,
+      "collection_seconds": 9360.999084949493,
+      "pack_seconds": 620.2415492534637,
+      "single_train_seconds": 4258.061597585678,
+      "gate_seconds": 2776.8462977409363,
+      "parallel_train_seconds": 6840.892896699411,
+      "selection_seconds": 508.6584165096283,
+      "parallel_service_seconds": 10746.639160203438,
+      "serial_fallback_service_seconds": 12421.869458675385,
+      "estimated_wait_seconds": 0.0
+    },
+    {
+      "round": 16,
+      "collection_seconds": 10354.852638721466,
+      "pack_seconds": 472.89395689964294,
+      "single_train_seconds": 7767.750682353973,
+      "gate_seconds": 2305.5736100673676,
+      "parallel_train_seconds": 12541.28026867277,
+      "selection_seconds": 508.6584165096283,
+      "parallel_service_seconds": 15828.406252149409,
+      "serial_fallback_service_seconds": 18822.627348184586,
+      "estimated_wait_seconds": 391.7865214819758
+    },
+    {
+      "round": 17,
+      "collection_seconds": 9133.213133096695,
+      "pack_seconds": 300.8979926109314,
+      "single_train_seconds": 6152.693555116653,
+      "gate_seconds": 2033.045810699463,
+      "parallel_train_seconds": 9918.127325275509,
+      "selection_seconds": 508.6584165096283,
+      "parallel_service_seconds": 12760.729545095532,
+      "serial_fallback_service_seconds": 15147.98933005333,
+      "estimated_wait_seconds": 7086.979640534686
+    }
+  ],
+  "assumptions": "Apply 256-step dual/single optimizer speedup to historical train time after subtracting the measured single load; add parallel load. Reuse historical packing/gate durations. Selection is average of all pairs of fixed task92b four-model per-task driver durations, two game workers and 380 games/model. Future panel has <=384 games; import overhead and random-deck preparation are not included. Active collection durations omit downtime between groups; simulate a FIFO starting empty before round12, not actual historical queue state.",
+  "dual_training_speedup": 1.2313861693063544,
+  "load_single_seconds": 107.39553206801065,
+  "load_double_seconds": 99.43977829098003,
+  "selection_wall_by_model": {
+    "d2": 253.2682957649231,
+    "c": 259.3741092681885,
+    "a": 242.30597758293152,
+    "r11": 262.3684504032135
+  },
+  "selection_pair_range_seconds": [
+    495.5742733478546,
+    521.742559671402
+  ],
+  "selection_mtime_measurements": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l7_train_rand": {
+      "config_mtime_ns": 1792980337016197223,
+      "driver_mtime_ns": 1792980344463388809
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l17_train_n10q": {
+      "config_mtime_ns": 1792979963805796476,
+      "driver_mtime_ns": 1792979976576392941
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l4_train_d7_m250": {
+      "config_mtime_ns": 1792979608945100492,
+      "driver_mtime_ns": 1792979618705852392
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l21_train_rand": {
+      "config_mtime_ns": 1792980350142254999,
+      "driver_mtime_ns": 1792980356644783884
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l18_train_n10q": {
+      "config_mtime_ns": 1792980246401459064,
+      "driver_mtime_ns": 1792980256742314575
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l11_train_n10q_m175": {
+      "config_mtime_ns": 1792979662955567194,
+      "driver_mtime_ns": 1792979675569416092
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l27_train_p9k": {
+      "config_mtime_ns": 1792980042888787878,
+      "driver_mtime_ns": 1792980072321489232
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l18_train_n10q": {
+      "config_mtime_ns": 1792979729268770243,
+      "driver_mtime_ns": 1792979737686173967
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l26_train_p9k": {
+      "config_mtime_ns": 1792979770425013835,
+      "driver_mtime_ns": 1792979785730631245
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l27_train_p9k": {
+      "config_mtime_ns": 1792979786004739624,
+      "driver_mtime_ns": 1792979808329020882
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l12_train_n10q": {
+      "config_mtime_ns": 1792979675970633845,
+      "driver_mtime_ns": 1792979692295274135
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l11_train_n10q_m175": {
+      "config_mtime_ns": 1792980175866834086,
+      "driver_mtime_ns": 1792980188273746744
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l16_train_n10_m150": {
+      "config_mtime_ns": 1792980472603997951,
+      "driver_mtime_ns": 1792980491188989738
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l12_train_n10q": {
+      "config_mtime_ns": 1792979921789388901,
+      "driver_mtime_ns": 1792979937175725354
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l1_train_d7_m250": {
+      "config_mtime_ns": 1792980358097787820,
+      "driver_mtime_ns": 1792980371798981276
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l7_train_d7_m175": {
+      "config_mtime_ns": 1792979869091893401,
+      "driver_mtime_ns": 1792979888449648294
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l26_train_p9k": {
+      "config_mtime_ns": 1792980552952343535,
+      "driver_mtime_ns": 1792980572278281775
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l18_train_n10q": {
+      "config_mtime_ns": 1792979976900151294,
+      "driver_mtime_ns": 1792979987554145705
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l12_train_rand": {
+      "config_mtime_ns": 1792979817412646646,
+      "driver_mtime_ns": 1792979822876159612
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l16_train_n10_m150": {
+      "config_mtime_ns": 1792979952529938608,
+      "driver_mtime_ns": 1792979963493736864
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l14_train_n10q": {
+      "config_mtime_ns": 1792979937507042499,
+      "driver_mtime_ns": 1792979952201313753
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l19_train_n10": {
+      "config_mtime_ns": 1792979987876417535,
+      "driver_mtime_ns": 1792980005597265777
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l14_train_n10q": {
+      "config_mtime_ns": 1792980204679813249,
+      "driver_mtime_ns": 1792980219318159457
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l26_train_p9k": {
+      "config_mtime_ns": 1792980021656413664,
+      "driver_mtime_ns": 1792980042543057027
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l21_train_rand": {
+      "config_mtime_ns": 1792980620919739890,
+      "driver_mtime_ns": 1792980627247890754
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l7_train_rand": {
+      "config_mtime_ns": 1792980073839751380,
+      "driver_mtime_ns": 1792980083639251418
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l3_train_d7_m250": {
+      "config_mtime_ns": 1792980109522904722,
+      "driver_mtime_ns": 1792980121969710669
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l9_train_d7q": {
+      "config_mtime_ns": 1792980162675630959,
+      "driver_mtime_ns": 1792980175501033862
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l16_train_n10_m150": {
+      "config_mtime_ns": 1792979706627160349,
+      "driver_mtime_ns": 1792979717202707905
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l4_train_d7_m250": {
+      "config_mtime_ns": 1792979857628032578,
+      "driver_mtime_ns": 1792979868786302286
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l19_train_n10q": {
+      "config_mtime_ns": 1792980005940483734,
+      "driver_mtime_ns": 1792980021307023982
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l18_train_n10q": {
+      "config_mtime_ns": 1792980507013430158,
+      "driver_mtime_ns": 1792980517652641845
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l8_train_d7q": {
+      "config_mtime_ns": 1792980409589139596,
+      "driver_mtime_ns": 1792980419117259008
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l8_train_d7q": {
+      "config_mtime_ns": 1792979888781016995,
+      "driver_mtime_ns": 1792979897860702893
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l9_train_d7q": {
+      "config_mtime_ns": 1792979649384776575,
+      "driver_mtime_ns": 1792979662573773071
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l12_train_n10q": {
+      "config_mtime_ns": 1792980443238503700,
+      "driver_mtime_ns": 1792980458198970531
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l21_train_rand": {
+      "config_mtime_ns": 1792980090033434604,
+      "driver_mtime_ns": 1792980096779913854
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l12_train_n10q": {
+      "config_mtime_ns": 1792980188701201512,
+      "driver_mtime_ns": 1792980204339804775
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l14_train_n10q": {
+      "config_mtime_ns": 1792980458507368994,
+      "driver_mtime_ns": 1792980472251672937
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l7_train_d7_m175": {
+      "config_mtime_ns": 1792980133746324937,
+      "driver_mtime_ns": 1792980152174704251
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l3_train_d7_m250": {
+      "config_mtime_ns": 1792980372260003669,
+      "driver_mtime_ns": 1792980383173173399
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l27_train_p9k": {
+      "config_mtime_ns": 1792980309897764307,
+      "driver_mtime_ns": 1792980336651565470
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l3_train_d7_m250": {
+      "config_mtime_ns": 1792979842773822264,
+      "driver_mtime_ns": 1792979856633598999
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l7_train_rand": {
+      "config_mtime_ns": 1792980606177492123,
+      "driver_mtime_ns": 1792980614401800202
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l19_train_n10": {
+      "config_mtime_ns": 1792979737943918743,
+      "driver_mtime_ns": 1792979753027946241
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l8_train_d7q": {
+      "config_mtime_ns": 1792979638786790067,
+      "driver_mtime_ns": 1792979649095905949
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l3_train_d7_m250": {
+      "config_mtime_ns": 1792979597276893679,
+      "driver_mtime_ns": 1792979608648917741
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l7_train_rand": {
+      "config_mtime_ns": 1792979808806879972,
+      "driver_mtime_ns": 1792979817078460028
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l26_train_p9k": {
+      "config_mtime_ns": 1792980290174800115,
+      "driver_mtime_ns": 1792980309582977574
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l9_train_d7q": {
+      "config_mtime_ns": 1792980419448080182,
+      "driver_mtime_ns": 1792980431056991715
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l12_train_rand": {
+      "config_mtime_ns": 1792980084028000568,
+      "driver_mtime_ns": 1792980089695469477
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l8_train_d7q": {
+      "config_mtime_ns": 1792980152539466546,
+      "driver_mtime_ns": 1792980162282367825
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l19_train_n10q": {
+      "config_mtime_ns": 1792980537374004692,
+      "driver_mtime_ns": 1792980552634706494
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l21_train_rand": {
+      "config_mtime_ns": 1792979823189345204,
+      "driver_mtime_ns": 1792979829206636039
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l1_train_d7_m250": {
+      "config_mtime_ns": 1792979578859368366,
+      "driver_mtime_ns": 1792979596878121832
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l17_train_n10q": {
+      "config_mtime_ns": 1792980492010788781,
+      "driver_mtime_ns": 1792980506695090516
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l12_train_rand": {
+      "config_mtime_ns": 1792980344820120676,
+      "driver_mtime_ns": 1792980349816963385
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l7_train_d7_m175": {
+      "config_mtime_ns": 1792980392385746346,
+      "driver_mtime_ns": 1792980409256611183
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l14_train_n10q": {
+      "config_mtime_ns": 1792979692646770329,
+      "driver_mtime_ns": 1792979706351861159
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l17_train_n10q": {
+      "config_mtime_ns": 1792979717480453627,
+      "driver_mtime_ns": 1792979729013112864
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l16_train_n10_m150": {
+      "config_mtime_ns": 1792980219701738691,
+      "driver_mtime_ns": 1792980232139434991
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l19_train_n10q": {
+      "config_mtime_ns": 1792980274634140221,
+      "driver_mtime_ns": 1792980289813876918
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l11_train_n10q_m175": {
+      "config_mtime_ns": 1792980431376829007,
+      "driver_mtime_ns": 1792980442897545517
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l9_train_d7q": {
+      "config_mtime_ns": 1792979898169134607,
+      "driver_mtime_ns": 1792979909410586442
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l19_train_n10q": {
+      "config_mtime_ns": 1792979755512002350,
+      "driver_mtime_ns": 1792979770165154238
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l4_train_d7_m250": {
+      "config_mtime_ns": 1792980122265491823,
+      "driver_mtime_ns": 1792980133413767300
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l4_train_d7_m250": {
+      "config_mtime_ns": 1792980383473034182,
+      "driver_mtime_ns": 1792980392109196525
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l1_train_d7_m250": {
+      "config_mtime_ns": 1792980097131726606,
+      "driver_mtime_ns": 1792980109200981851
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l11_train_n10q_m175": {
+      "config_mtime_ns": 1792979909702689370,
+      "driver_mtime_ns": 1792979921477463381
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l19_train_n10": {
+      "config_mtime_ns": 1792980517951959937,
+      "driver_mtime_ns": 1792980537009446211
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l1_train_d7_m250": {
+      "config_mtime_ns": 1792979829543877768,
+      "driver_mtime_ns": 1792979842357095774
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l27_train_p9k": {
+      "config_mtime_ns": 1792980572875193544,
+      "driver_mtime_ns": 1792980605742242826
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l12_train_rand": {
+      "config_mtime_ns": 1792980614691977481,
+      "driver_mtime_ns": 1792980620604379452
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l19_train_n10": {
+      "config_mtime_ns": 1792980257054446219,
+      "driver_mtime_ns": 1792980274324169880
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l17_train_n10q": {
+      "config_mtime_ns": 1792980232470283247,
+      "driver_mtime_ns": 1792980246057142153
+    },
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l7_train_d7_m175": {
+      "config_mtime_ns": 1792979619131619202,
+      "driver_mtime_ns": 1792979638499301915
+    }
+  },
+  "average_collection_seconds": 8828.86569829782,
+  "average_parallel_service_seconds": 9997.491623197344,
+  "service_to_arrival_ratio": 1.1323642203691957,
+  "sources_sha256": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/curriculum_state.snapshot.json": "f503bb533287605094e707ec8383224d4e20d347279eeed8f4ed2a759d9ae999",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/gpu_single/result.json": "8cd05aaba45b1b7fdd136cbd80df6f4d08030d8bc943bdd34bf4d78299da1d36",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/gpu_parallel2/result.json": "4bfeb82cd4a81954074902440ae2dd0a2b583ce5d3a0f8eb4084160c37f623ea",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l7_train_rand/config.json": "721c825328ed1be12f9c1c21a02261a7589b21d86cfc79bf205b946574cfa57e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l7_train_rand/driver.out": "f2b4283c05d7355282274cc31cf73e953f24d7b3c4c01e1e545fbf8aab68ac42",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l17_train_n10q/config.json": "27f33155bd010594cfe5f52f4b856a1ef87ca76f938c946cfd6f15f9216967a7",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l17_train_n10q/driver.out": "a1e8f71cef92cb6dc2892e3af0f0140543becaba3720281549e2218e9c110025",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l4_train_d7_m250/config.json": "14c9c17cc1424db06d555b07e66c352ddd76fd0a4bc6ffa22a1ebc7b0c251c61",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l4_train_d7_m250/driver.out": "1c72b211c9fce19bcacba6ee7e319d7a1d4ae6803c45f495fb754cb17070d2ed",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l21_train_rand/config.json": "548aea65229624d9b9cd37b2186782f095b8bcf4fabb4dc22a49812fa6afb0cb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l21_train_rand/driver.out": "8e17c1db40584692d8763cb1faba9de79cc7b9edfbdd855baa01a504a6923b61",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l18_train_n10q/config.json": "671736fc01244c0f22f550bee17a06a8c1c045ab059c85aa7237843ec268d546",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l18_train_n10q/driver.out": "e157b30b0ca513dab99219da1bac5e29abf9520bb5669519974d7202f750b5be",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l11_train_n10q_m175/config.json": "e27cd17b2d02958295939f9024cbd00d55ca3432cc20e6736ea0aea8556a3ecc",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l11_train_n10q_m175/driver.out": "bc17b8c8f2a6e936d95ab04895b657f5fe2b511254038b0c5f59fe0da613cd6c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l27_train_p9k/config.json": "4567a2a6695cfbe4cd9994202c65a1d830d0c3cf174a4f1e254647923bc6a3a0",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l27_train_p9k/driver.out": "d37d62c6aeec42a50e0330b1a0d37a739a92a22fb9702cfe1b0e26fc00c4ee41",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l18_train_n10q/config.json": "1a8e6740468927cea59510c2f8fe4ab12a14b0477f225b3d49fac11d82556974",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l18_train_n10q/driver.out": "ff5f0f4937997f12fb50ea300db338a60290939bc8402438357a35fdbb7b27b1",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l26_train_p9k/config.json": "0d3fa866f0e3b1de979d73a490a285f0bed57b79babb51ab4cb5e570f53b6314",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l26_train_p9k/driver.out": "6eb3d361ec867a9cd465799dec4e5d4794292af05e17679a9f07a149a69c7545",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l27_train_p9k/config.json": "d2d31bc3e0dee83148796ee2191771c05b49410cc042bf90a88b6db950071b1a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l27_train_p9k/driver.out": "2ec2680832f6e74fa8e25647b0357967d1bc32358f9644821a9943b89fe4d908",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l12_train_n10q/config.json": "c27392f72fa891ce58a78e4d53443ced0a68ee21cae1e11f75c9e6d7a8e5f31f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l12_train_n10q/driver.out": "8f40f47552050ff189cfe59cc7cc113907f52a77143b12270df99c102e8d1f3a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l11_train_n10q_m175/config.json": "86444e45139b6e02ebf0fddc18f024505aa44ad13b757a91feb30b308332309b",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l11_train_n10q_m175/driver.out": "8bb9a0ccc660db0639f6fbaef8472c5ad3d921a79bd90a9c5433caffe4ca178f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l16_train_n10_m150/config.json": "d8e90ba893f0b55cbec481d6384c7a7e46edaaf60662b95577fbd73856f2ae35",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l16_train_n10_m150/driver.out": "16826940c9aedeea25e518f5572fd684d7d2ceb8a845f68be29af2c70c762f46",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l12_train_n10q/config.json": "05a645c3a4d4b9cba936eb849cd21a2d8d8ec486ddbfb8ff48d972646fc932fb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l12_train_n10q/driver.out": "58860a31002d3719c7e10fd3cd8b00616dbe06129e3c320b43eb0023768490e6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l1_train_d7_m250/config.json": "bff03df6181afb5c4a4e24978d8f27d1628af54ddcc36619353439de4bd3cb2d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l1_train_d7_m250/driver.out": "4ac7d9b4e638c0b26daa92f2285c2f751e46585d21f3f95b7fb39d8bbb24113a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l7_train_d7_m175/config.json": "0c0698e60b73641dccf7f3beae03b157b41b38d26dabc294f01f136d28df4929",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l7_train_d7_m175/driver.out": "ebd13dd2bd223b51a328883b9edd2d035ef9bc24301cede6c9e6a7835b657893",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l26_train_p9k/config.json": "218958aa1b7f9d8b128c228e6279400585be5b308f1b1cd1f3679674bfc3400e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l26_train_p9k/driver.out": "dd5a175436dd1d752c7f749203ee910b62df7a186aba419273cdd1d3be78033e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l18_train_n10q/config.json": "49ecea01c74ecd59723aa568b1a017e2ebfe35838cff783a2a8eb80f9e7c3c3e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l18_train_n10q/driver.out": "2376398851866c37fcfe893b1b5d37d5a71bd19c919124e6e180c04a3b32fbd6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l12_train_rand/config.json": "99cc29524475a50b232e7265946b9387bd928dd1ebb7722d76cdec2f2b2bab44",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l12_train_rand/driver.out": "1aeeedac9c355aea39fe2710072dc96d3269a7334fa43c3172980b7b04d4a00d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l16_train_n10_m150/config.json": "fc1f8d72af57ac1f8d5be9d80e03f84cf8b947dffa16d9bd3cf0991a5ce168b0",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l16_train_n10_m150/driver.out": "3e3a9acf421a6e6f295f8488b11d663b27a3f5748427bba38e5ff01a4a9e2211",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l14_train_n10q/config.json": "04bc7b284774a7f98d019d0b10a813fe3a13d308d73d45ef18f710e95dd9cd44",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l14_train_n10q/driver.out": "576112a15ad6a5ae93e68e5993ac4b23ae819ea5e8361070ba14134400540655",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l19_train_n10/config.json": "d417bb62dffc33ae95bb93289825a5298fe73cf335b8f95abb41eb874fda73fe",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l19_train_n10/driver.out": "b7244ccc61d68dbe84b33cdcc6e8fb83d4db0e9851f09fcb98c643ce55612a73",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l14_train_n10q/config.json": "dad8fbb49af25ae96f5f3ebd50f091280720bd9ac91f127255e3a50247569e28",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l14_train_n10q/driver.out": "35f5d3664a0de11a7229798f6370a8cc91147d3cac9f1d24ee2cca30d6d32974",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l26_train_p9k/config.json": "b591d507fc051ffadc7c06f58ecfb52793bc5b32a475acea49d4496b1440f0c7",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l26_train_p9k/driver.out": "a667893b62707131edc394eecfc98851a4c821547805f03b6e7701c9074d63cd",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l21_train_rand/config.json": "91fa413a556a3772eb90c9bf8f928efee6e9173e07c5bb4b9b059a8e34061d1c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l21_train_rand/driver.out": "2e337e04df18770d1280f7bac60b0caf14d17db38d5de2a011f3382f0d0f1975",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l7_train_rand/config.json": "782edd71eb712c11b94b45ef8eb3638245d22019d73487f7ec18731c5b469ff6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l7_train_rand/driver.out": "0a2d91177b5ce2c181ffc9d25ac2d053622de31441b74d64da8ff382311fb602",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l3_train_d7_m250/config.json": "25a12de08fe5a067d6d4a4a00c327c98566902e4b2780e900dbc4528b99659be",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l3_train_d7_m250/driver.out": "1f974370ae60926d899c55ea91731582fa7817d6237c54a1699ff38a87c7a0a2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l9_train_d7q/config.json": "51dc5787b8e3ce0d08d9d25c851ce7d5f02ca90bd796269ea99b3704e9ecfd09",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l9_train_d7q/driver.out": "e708e83a0c525c7957de61fc08eb9cc4a1bba01e248486ceff36f65b3bbd99e0",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l16_train_n10_m150/config.json": "d8aa0d20e5cb40dc1b91bd78df72c84a46b1b3f8689e7eaf5eaf656a56b06a4a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l16_train_n10_m150/driver.out": "a623ad9e49731eb23541a8caeeeabcfbca282e9b65435389ff95172a2c201f87",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l4_train_d7_m250/config.json": "8e968a0b50b04f5832be37aeaa2764567c5e4564905b99fd4da8e9dacd51b32a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l4_train_d7_m250/driver.out": "018f90b40b133977c0a2d0a141c6eef9107f5363397eb388a792f3641804d0fb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l19_train_n10q/config.json": "9c44ed35905e58572f39fc1a262ef10607d81d76f864883cc466fb8a80aa543f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l19_train_n10q/driver.out": "1038686b67a0482f4e660be7ddb8bb5dff82b64dd4a22a9c9ab8359cc2216880",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l18_train_n10q/config.json": "da474a7aa6a4ea4f3e1910240e00188e3e01e55f02d4d06a5ee0ec63187feb82",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l18_train_n10q/driver.out": "82a877d2263a2615ac03a6675b96b3f02c69057f742f2bc03af8fc976eeda200",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l8_train_d7q/config.json": "376da0c1587874809358653526b7a055adfbd622c4eb359f35661a7fc1265a61",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l8_train_d7q/driver.out": "9166af1183935d196e8de9eeb5d7f36f8fbeaed3666c9f2898e4078696b5cfe9",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l8_train_d7q/config.json": "0ad7e2438cb2e216ffa346d99ea148de924358d20a535062655cf94adde6d9b6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l8_train_d7q/driver.out": "8978f9188b7993c3bfdb8efc5920800ae4cf6f5652a0e0670e076d571703c264",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l9_train_d7q/config.json": "ee7e79f1fbb72b5c0e60dd59bba9f3f5141ce30ff92a737ce779cad99e21f0e7",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l9_train_d7q/driver.out": "2e53b2aa20c004b0e820011bb26902b05312b32783c9d673fdcf7f287f81856c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l12_train_n10q/config.json": "7b1bde3d28b2823818ab429e1d0a22297a828dceabc814a8e63c5e4eb1458e3e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l12_train_n10q/driver.out": "9a5f32387501a423340e1672d1f3cf4279944179f0162a7bef2d37149827d65a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l21_train_rand/config.json": "061e17ecf6770981a70e06721a9c181af1d8f2098a9a35ac38b508f8d19f5707",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_pool_l21_train_rand/driver.out": "e6e45200f59ffb652e9240e25332be0d3e97f15c62700224d2b45fb7d0aba867",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l12_train_n10q/config.json": "816dec6d7e82bfada2f9996d97b9306946db3785251409f187564415418a9e39",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l12_train_n10q/driver.out": "ba16572855333586c50787de50dbf70b0ca0c22bacb9a058e3eb1759e7c81fd4",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l14_train_n10q/config.json": "9fc8ff560924ce8ee4281327b579487cbbdf789d28dc94c8eef696fd8d2c850e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l14_train_n10q/driver.out": "34dc48c1b88652162ce27ef95878adc338e8329173450ce9ec3e0da4295ab42b",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l7_train_d7_m175/config.json": "c0579b2e274f8ee1278242ccf4790be0484b97c9cc83fe4512b3e41945c2e04d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l7_train_d7_m175/driver.out": "f36bcbd428500b139191d7bccafece0dd7e2f17faf92bdad4c92019677b9402c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l3_train_d7_m250/config.json": "309b88b7283b58675791e5da23ed7c94fa46412681f81234faa7c00edb6ea03f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l3_train_d7_m250/driver.out": "76418366a49bbd1934af281a8a2a795629c9692154124d319920b55678d6b246",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l27_train_p9k/config.json": "c52089ee10abd0ce3312069cb0362ae37fa7a4eb6b67883d94a5b21bfd184d63",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l27_train_p9k/driver.out": "bfbd4796babd3a0e86a52c1c6f25f350e9e4f2c79f35f57ec25f4982d4fc9498",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l3_train_d7_m250/config.json": "c643d368641c7c73f9a16d50d5780ebc5d77b3e58bdac4dc0e0809edb3362bc8",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l3_train_d7_m250/driver.out": "a8cdd394a64cd8037765fdf580288192a1c23ff56cfbce8c45b0aca4a85a382f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l7_train_rand/config.json": "ba1df96c80611f57310bd3d5662feaa910a18d3d243a9ddc3fd3ae6b07daa2f9",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l7_train_rand/driver.out": "4578daa655a4fd1dd24ba22a14ea7c08ac2b3169dd18d4fdde714300ff9b8e87",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l19_train_n10/config.json": "221708d0984b005cb254a0ec2f2452850b795a24d5fd43224199007df10b8daf",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l19_train_n10/driver.out": "6489f7203c3140a0108bf5824c1252d52e9dfcb28c58525ae32c183d3f2e6b24",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l8_train_d7q/config.json": "2c139dccabd1e761259c2d9b43a290b6625de4ffc9d11d248e403e1cdcc73bdb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l8_train_d7q/driver.out": "d7773c6ee4fe6c3df6312bab836b24177cb253a2866a7274769c24f250c6e907",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l3_train_d7_m250/config.json": "8c6163f926f660ddcafad858d8f197d26a8b3ffab55219af96aabab03302fb34",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l3_train_d7_m250/driver.out": "8550a520653887c01cdea31d54bd482e9f75ec6b0438cbf3d13235257a8993c2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l7_train_rand/config.json": "e1d8a4830193b38d370965a58aaa3514ec2f8cdab73fec6de7a9c299e08f2ec2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l7_train_rand/driver.out": "374ddce798711db78a64a271a6de3deb0b7e5ac7226193097161f05a5a9bbbcf",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l26_train_p9k/config.json": "330b5319d72f16945d63d7580fc6e4cafbb9795b393ad99f0ed57257e53d99ed",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_pool_l26_train_p9k/driver.out": "3e1d61b722f4a039054de19ac6d3ffea46803ed5780a2249c924acfd5d949dcb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l9_train_d7q/config.json": "7ef688071f06c8b66349d9b8447952b19434dc5eb4370ba0aab51b103fc2b3c3",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l9_train_d7q/driver.out": "0021cd61a0d4a1d3c44ee6477392a9a2db103cebf1d50116e5a49e15604c9e3a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l12_train_rand/config.json": "8a0094b33036915030018a647767c3e57f4e03a7f12e4e8ad8d9d92a2893830e",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l12_train_rand/driver.out": "88acc9667b2b73e8e0f4f235f9b1a2cfc2816f283af3acec8ffaa119c575ed93",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l8_train_d7q/config.json": "480ff8f14e3b8db0a3c3c5a25d3af252c105ea47eb39f8c2ea11af0d2f12d481",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l8_train_d7q/driver.out": "028ebea1027e46ec961a33f197ac7fb98cafe7964173327b427afab8a4cfc857",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l19_train_n10q/config.json": "900932fba3bb49fc52ccdcb425bff9154e9d2271bfcd1e10ec69cdf95f480272",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l19_train_n10q/driver.out": "d52e49eda171d2df0a29dc2eeaf8db7ae33ceaeb9a592adbd3eb3fe6c29021fa",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l21_train_rand/config.json": "998dbb8e1233b3f03415f9264ef78c1f03c39117d1d936cb8c88fdcd58354a2f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_pool_l21_train_rand/driver.out": "480639b7beeb0ce8e13a9d0982338aad4f553620ed62989d93f2c70a2627fe17",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l1_train_d7_m250/config.json": "9e0a756c67212906dbc51023ce0c54b58dc829e93c769d2154a85ef6474b784b",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l1_train_d7_m250/driver.out": "e1c55e5c495b4b1c1d60b1d38ff777fababb3743078da9f077f541b4e323be74",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l17_train_n10q/config.json": "2ae4d4fdf7c8d33d2cae476090cac041eb0cc086766724e8b05c04279f4e35b0",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l17_train_n10q/driver.out": "fa94c100c6fb77b19a4e671be0d69e6f0d4f4ade84a3c736c2728d62ecfa0e14",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l12_train_rand/config.json": "f7ad43adf4238e798f7dc6deab1d47d0d8ea8db56984cd028da7d1c9a2df7849",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l12_train_rand/driver.out": "1c1110e8be86d424c139e1b4458128bbbf57d27511be52e3749277171866c423",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l7_train_d7_m175/config.json": "00c957f8d20c56c36b448158e8aa9ce08ae288228cca75d408c62af2a59b9752",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l7_train_d7_m175/driver.out": "991b25dfd57989bb87f8774ef0387d58bcdb97f2879d1e32c9e22dbb11e79786",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l14_train_n10q/config.json": "cc33c414931610073c3b321e4ccc586096717638eea3c1192cf8f506288c0248",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l14_train_n10q/driver.out": "67fba4078789f5d836862af2d0464d2bc4f1df698522aaa8938df44b9877c2aa",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l17_train_n10q/config.json": "4ca1bb8f5437a9b868497274f295b938d5ebd3ea427e8c14d9679392bbd5cb7a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l17_train_n10q/driver.out": "6f75f89377fff9042e8385afd4fab48b179892e6a162ac5ce1151c49f15aad5c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l16_train_n10_m150/config.json": "0a4ee5e0f70c9633b3e2ef1e8aeac556cc77337003c26e5cc93ae7339f0a6ed4",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l16_train_n10_m150/driver.out": "f25003c04515378f24f3850c4d803343db5c5fa619757a102d92b806d8a197bf",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l19_train_n10q/config.json": "bcd53d8f9b9a55fccf56da453db14ff711d32858aef9f0160459174050791358",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l19_train_n10q/driver.out": "24249bd0249e85372b193e784ae8dc0876c42f0e327cee850dcb1371456f823c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l11_train_n10q_m175/config.json": "206ce23d43316ad886b18c5ccccfd71c0bc21b46703d66b26f255bf3ee6d90f2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l11_train_n10q_m175/driver.out": "bc696573486f1521c28829ec9624bb37b40649bc961eac89644aadde89a72565",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l9_train_d7q/config.json": "756b4c78697ff572e7555f1d2c28db704b54c34101b38ded4599d59dad82e027",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l9_train_d7q/driver.out": "40d4e56af1115d087d9d15fd23001154f06d42b30aa8f88386ea6784899cb4b1",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l19_train_n10q/config.json": "b8b0abb67190b210102fca48d5fcbd69dfce947d49c243691cc766f530019e16",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_night_l19_train_n10q/driver.out": "860f0b34a7f2e7910670f0abc31dff21ba2240ba0ba9102b50d7d1de89526a71",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l4_train_d7_m250/config.json": "06a13a2aac963d97492554acda42d5c25d1e905c8aa9e956669a99d3db331fb4",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l4_train_d7_m250/driver.out": "0ad37a47438114c7dbc64e85a49ed15e0b7db5670975445d642475d356defe6c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l4_train_d7_m250/config.json": "3c1304b50fc64f30639d451e5a08a24a2a1f1a3be28d327f994599f2e397c526",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_day_l4_train_d7_m250/driver.out": "e0ba134777299d1633d1c1ae79fbe3a12b82ac5f2397653a181dbf6b80668614",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l1_train_d7_m250/config.json": "1c332901fc8e16ea9fbbd3b7feb0caa1057a88af890d7b5529efb624f37f643d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_day_l1_train_d7_m250/driver.out": "525ccb305f1272f9806992a5d8ad753cefecd47aee5921f49ffa1afc10a1d421",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l11_train_n10q_m175/config.json": "18dc2a4de117aa234a15f825e4bb0f35a4bd89a197c7d6fd770b2ffa7d50fc59",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_night_l11_train_n10q_m175/driver.out": "e18fa7bdc922b842e89d6d7aa162991da8159a89b27566db2785f114602d85da",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l19_train_n10/config.json": "bf86a2fe6dc32588038371961497103c3c2d172fff51033a36a50874e77c7224",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l19_train_n10/driver.out": "f9f833af5263496dfb80a9db46ad427936a48fde07f7fa41ed05e1efc8c1b1fb",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l1_train_d7_m250/config.json": "6ecbe4f1e572fd8e988584b260e849013d4e23933f102bfa32646d4a901472e6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/8f0bb096a0e1cdb1_day_l1_train_d7_m250/driver.out": "270b7b6adfb83125cfa8502b59153f439a6f456f84922071dcc85d6f011bc8ee",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l27_train_p9k/config.json": "c04c8da8d96b12e0de5c3dec66a35e6684a4ecf74e31ec43253e88cefcf54533",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_pool_l27_train_p9k/driver.out": "b234a3c26487cf02f879fd5ab0cc27fc585dbe0f49aee18b30c4cac6d3691058",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l12_train_rand/config.json": "a5d501b672b2102929d7669cadd42cf13e7fc3c9aa6df55fe8c8f7c85aac9d18",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/1cf82f5e6cf7994c_night_l12_train_rand/driver.out": "33fd31bdc753b0b0de1ec45b908ab88963dd5fde3a8284c0e9233a96191cdbc8",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l19_train_n10/config.json": "9ea955cc8a065baa9f9630992d105902320fe4b7df45ee4f265da010c73a349b",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l19_train_n10/driver.out": "d789f060439e6de7b6f465cb361003a25d166f17e39fbe7827b63a8e5a7954de",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l17_train_n10q/config.json": "35da161003d0bd87e861559f3ed374a95687cc134ba2dbe6fd13861a041dfcda",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/5cb2f8eae96bbad0_night_l17_train_n10q/driver.out": "cd2d73a982f6bc7c5da549f43537b0de53a5ee084ef6d7fad002ab70b3efadf0",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l7_train_d7_m175/config.json": "0c410ed9d5f6227bfc4f6d0429688d4193c190ed8ee80a0c601cc9e5e91448a6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92b/v2/selection/a398423908eca3db_day_l7_train_d7_m175/driver.out": "b105f5f8cea688d4780a8e88016cc97168b09ee4a0d22525be2192a22d94eddf",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000012/complete.json": "a8b024b3d1d3cc0b7391186f6a1a9bc69f8dd4c7fabefd62040dbd93c252c868",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/complete.json": "d94d1969c06abbb8a43e0c261194b373b1a5ce184b25559e4423f4619ea668a2",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000014/complete.json": "0bfb69fe3e24de4b3dfb970d5f6bbc3da3595c6c7d86281ac016ac4e7ff886c0",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000015/complete.json": "ccf491eded32b7ab5aeb2ca91877542595a585c85193bb8a7c717b16f92f8b84",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000016/complete.json": "45db455bd9e2d916dd2fdc5c30daaeea82e8eb1ce4e1daa5558a0a9afdef5396",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000017/complete.json": "9f2b0b2b3ca3733f54cabfc530ecc4982c4ccbdc793d0838b784b8a8ae0bcde0"
+  }
+}

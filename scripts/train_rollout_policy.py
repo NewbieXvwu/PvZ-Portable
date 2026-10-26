@@ -107,6 +107,15 @@ class CompactBoards:
         for target, chunk in zip((self.indices, self.values, self.offsets), chunks):
             target.extend(chunk)
         if plane is not None:
+            # A plane replaces CSR values, so it must use the same precision.
+            # The uncached featurizer supplies float32 boards; keeping those
+            # plane values would silently disagree with cached float16 rows.
+            plane = (np.asarray(plane[0], dtype=np.int32), np.asarray(plane[1], dtype=self.dtype))
+            if not self.planes:
+                # Short leading archives may have no hoistable plane. Once a
+                # later archive creates one, their already-stored CSR rows still
+                # need an explicit no-plane entry to keep row identities aligned.
+                self._plane_ids.extend(np.full(self.shape[0], -1, dtype=np.int32).tobytes())
             key = plane[0].tobytes() + plane[1].tobytes()
             identity = self._plane_index.setdefault(key, len(self.planes))
             if identity == len(self.planes):
@@ -118,6 +127,8 @@ class CompactBoards:
         self.shape = (self.shape[0] + len(boards), *self.shape[1:])
 
     def finish(self):
+        if self.planes and len(self._plane_ids) != self.shape[0] * np.dtype(np.int32).itemsize:
+            raise ValueError('compact plane ids must cover every stored row')
         self.indices = np.frombuffer(self.indices, dtype=self.index_dtype)
         self.values = np.frombuffer(self.values, dtype=self.dtype)
         self.offsets = np.frombuffer(self.offsets, dtype=np.int64)

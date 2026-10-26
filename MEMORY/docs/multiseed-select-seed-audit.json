@@ -1,0 +1,24 @@
+{
+  "panel_sha256": "57a1eabb472f5999e4c3862ef8064e2f6dab6dce7c9b87cd476826261fd173f4",
+  "reserved_intervals": 229,
+  "gate_pools": [
+    [
+      31024,
+      65536
+    ],
+    [
+      100000000,
+      101000000
+    ]
+  ],
+  "disjoint": true,
+  "sources": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/unified_v2.json": "a03243d6f7f55f30e4fdc500e06e36e9c44fb95357d976d82104edac532f862f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/configs/llmplay_seeds.json": "6ecad3d5bc7712edd3ea095bba3ac5020f2e005d8c951464461e59af15cb298c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/configs/llmplay_robustness.json": "facc1adc76692ae880a2388aed142d796135e034d2fba5ab0e3c859612645052",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/configs/human_demo_tasks.json": "10ed63756aa1af2c3ce03fec914195e2581622dba0c0d86554327d6c8396b712",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/MEMORY/docs/gate-seed-inventory.json": "518371486484b03d66b4aa32d12d0e0c00d40afd18c115e0a16504260d122b78"
+  },
+  "per_task": 32,
+  "games": 192
+}

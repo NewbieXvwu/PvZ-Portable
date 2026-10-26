@@ -51,8 +51,10 @@ from __future__ import annotations
 
 import argparse
 import copy
+import functools
 import glob
 import json
+import math
 import os
 import shlex
 import subprocess
@@ -71,13 +73,18 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
                                    load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
-from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, policy as promotion_policy, freeze_panel
-from promotion_gate import (allocate_seed_block, contract as promotion_contract, contract_key,
-                            sha as file_sha, valid_certificate)
+from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, START_SEED_BLOCK,
+                           START_SEED_LEDGER_DEFAULT, START_SEED_POOL,
+                           policy as promotion_policy, freeze_panel)
+from promotion_gate import (SeedPoolExhausted, allocate_seed_block, contract as promotion_contract,
+                            contract_key, sha as file_sha, valid_certificate)
 from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
+from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
+from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
+                                   make_plan as selection_plan, validate_random_tasks)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -100,7 +107,7 @@ DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
 
 GIB = 1024 ** 3
-MAX_BACKGROUND_ATTEMPTS = 2   # task70 B7: 同一轮后台任务连败 2 次才停 qc（首次失败只标记并在组边界重试一次）
+MAX_BACKGROUND_ATTEMPTS = 2   # task98: 同一快照最多尝试两次，失败保留证据，采集继续
 MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
 PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 # 训练阶段的不可回收峰值 = 匿名内存（read_segments 的目标数组是文件后备 memmap，task61）。
@@ -108,9 +115,72 @@ PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与�
 # 紧凑语料；系数取 0.25 留余量，常数 2 GiB 覆盖 torch 模型/优化器/批次。
 TRAIN_ANON_FACTOR = 0.25
 TRAIN_ANON_EXTRA = 2 * GIB
+TRAIN_GPU_BYTES = int(1.5 * GIB)  # measured reserved 1.2 GiB/seed, rounded up
+GPU_RESERVE_BYTES = GIB
 DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 worker 的 Python + 引擎）
+MIN_PLAUSIBLE_WORKER_BYTES = GIB // 4  # a real python + engine worker is ~0.4-0.9 GiB
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
+
+
+class StateWriteError(OSError):
+    """No new games may start until the seed reservation is durable."""
+
+
+def retry_io(operation):
+    """Retry an IO operation once; never rerun a completed game on a nonzero exit."""
+    @functools.wraps(operation)
+    def call(*args, **kwargs):
+        try:
+            return operation(*args, **kwargs)
+        except OSError as error:
+            if isinstance(error, StateWriteError):
+                raise
+            print(f'WARN {operation.__name__}: IO retry once: {error}', file=sys.stderr, flush=True)
+            return operation(*args, **kwargs)
+    return call
+
+
+def read_json(path):
+    return json.loads(retry_io(path.read_text)())
+
+
+def retire_cell(state, base, error):
+    state.setdefault('retired_cells', {})[base] = state['cells'].pop(base)
+    state.setdefault('cell_errors', {})[base] = str(error)
+    return f'cell retired: {base}: {type(error).__name__}: {error}'
+
+
+def isolate_cells(state, values):
+    """Validate individual saved cells before shared sorting/adjustment/reconciliation."""
+    changes = []
+    for base, cell in list(state['cells'].items()):
+        try:
+            if not isinstance(cell, dict):
+                raise ValueError('cell must be an object')
+            ladder = cell.get('ladder', values)
+            if not isinstance(ladder, list) or not ladder or any(
+                    type(value) not in (int, float) or not math.isfinite(value) or value <= 0
+                    for value in ladder):
+                raise ValueError('invalid ladder')
+            index = cell['mult_index']
+            if type(index) is not int or not 0 <= index < len(ladder):
+                raise ValueError('invalid mult_index')
+            if type(cell['last_round']) is not int or type(cell['level']) is not int:
+                raise ValueError('invalid last_round/level')
+            if not isinstance(cell['windows'], dict):
+                raise ValueError('windows must be an object')
+            for bucket in cell['windows'].values():
+                recent = bucket.get('recent', [])
+                if not isinstance(recent, list) or any(value not in (0, 1) for value in recent):
+                    raise ValueError('invalid recent outcomes')
+                for counter in ('games', 'wins'):
+                    if type(bucket.get(counter, 0)) is not int or bucket.get(counter, 0) < 0:
+                        raise ValueError(f'invalid {counter}')
+            cell_level(cell, values)
+        except (AttributeError, KeyError, IndexError, TypeError, ValueError) as error:
+            changes.append(retire_cell(state, base, error))
+    return changes
 
 
 def mem_available_bytes() -> int | None:
@@ -135,6 +205,16 @@ def mem_total_bytes() -> int | None:
         if line.startswith('MemTotal:'):
             return int(line.split()[1]) * 1024
     return None
+
+
+def gpu_free_bytes() -> int | None:
+    """Read the single production GPU without importing torch or allocating CUDA memory."""
+    try:
+        result = subprocess.run(['nvidia-smi', '--query-gpu=memory.free', '--format=csv,noheader,nounits'],
+                                capture_output=True, text=True, check=True, timeout=5)
+        return int(result.stdout.splitlines()[0].strip()) * (1 << 20)
+    except (OSError, ValueError, IndexError, subprocess.SubprocessError):
+        return None
 
 
 def worker_count(available: int | None, per_worker: int, upper: int, background: int = 0) -> int:
@@ -262,11 +342,18 @@ def startup_worker_estimate(args, plan: list[dict]) -> int:
     except (OSError, RuntimeError) as error:
         log_line(args.log, f'worker probe failed ({error}); assuming {DEFAULT_WORKER_BYTES / GIB:.1f} GiB/worker')
         return DEFAULT_WORKER_BYTES
+    if measured < MIN_PLAUSIBLE_WORKER_BYTES:
+        # 10-26: a demo start-cell probe ended in 2 s and measured 0.02 GiB; admission then ran 16 workers
+        # (real ~0.43 GiB each) and the background trainer swapped at a tenth of its normal speed.
+        log_line(args.log, f'worker probe measured {measured / GIB:.2f} GiB in {time.time() - started:.0f}s, '
+                           f'implausibly small; assuming {DEFAULT_WORKER_BYTES / GIB:.1f} GiB/worker')
+        return DEFAULT_WORKER_BYTES
     log_line(args.log, f'worker estimate: {max(measured, 1) / GIB:.2f} GiB peak RSS (python+engine), '
                        f'{time.time() - started:.0f}s probe')
     return max(measured, 1)
 
 
+@retry_io
 def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
     """返回 (任务表, 倍率档, 后缀->倍率, 任务->它所在的清单)。
 
@@ -327,17 +414,22 @@ def init_from_runs(patterns: list[str], names: dict[str, float]) -> tuple[dict, 
             if config_path.name != 'config.json':
                 continue
             try:
-                config = json.loads(config_path.read_text())
+                config = read_json(config_path)
                 games_path = config_path.parent / 'games.jsonl'
                 if not games_path.exists():
                     continue
-                rows = [json.loads(line) for line in games_path.read_text().splitlines() if line.strip()]
-            except (json.JSONDecodeError, OSError):
+                rows = [json.loads(line) for line in retry_io(games_path.read_text)().splitlines() if line.strip()]
+                if not isinstance(config, dict) or any(not isinstance(row, dict) for row in rows):
+                    raise ValueError('run config/rows must be objects')
+                multiplier = float(config.get('zombie_count_multiplier') or 1.0)
+                if not math.isfinite(multiplier):
+                    raise ValueError('nonfinite multiplier')
+                task_id = config.get('task_id')
+                if not isinstance(task_id, str):
+                    continue
+            except (ValueError, TypeError, OSError) as error:
+                print(f'WARN history run skipped {config_path}: {error}', file=sys.stderr)
                 continue
-            task_id = config.get('task_id')
-            if not task_id:
-                continue
-            multiplier = float(config.get('zombie_count_multiplier') or 1.0)
             base = cell_of(task_id, names)
             if base not in base_ids:
                 continue
@@ -385,12 +477,16 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                   else 'not in the training set')
         lines.append(f'cell retired: {base} ({reason})')
     for base in sorted(retired):
-        if base not in training or retired[base].get('archive'):
+        if not isinstance(retired[base], dict):
+            state.setdefault('cell_errors', {})[base] = 'invalid retired cell object'
+            lines.append(f'cell remains retired: {base}: invalid retired cell object')
+            continue
+        if base not in training or base in state.get('cell_errors', {}) or retired[base].get('archive'):
             continue
         cells[base] = retired.pop(base)
         lines.append(f'cell restored: {base}')
     for base, task in wanted.items():
-        if base in cells:
+        if base in cells or base in state.get('cell_errors', {}):
             continue
         family = family_of(base)
         cell = dict(family=base.rsplit('_train', 1)[0], level=int(task['level']),
@@ -402,6 +498,7 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
     return lines
 
 
+@retry_io
 def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]:
     """示范起点格（task71）：任务清单里带 demo_start 的任务 -> (格定义, 任务 -> 清单)。
 
@@ -434,44 +531,110 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
             if first is None:
                 raise ValueError(f'{task["task_id"]}: demo_start needs future_seeds or future_seed_start')
             seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
+        if any(START_SEED_POOL[0] <= seed < START_SEED_POOL[1] for seed in seeds):
+            # 清单块必须在续领池之外：续领块由账本保证唯一，清单块不在账本里，一旦落进池里
+            # 就可能和将来发出的块撞上，而且撞了也查不出来。
+            raise ValueError(f'{task["task_id"]}: demo_start future seeds {seeds[0]}..{seeds[-1]} '
+                             f'overlap the renewal pool {list(START_SEED_POOL)}')
         archive = Path(start['archive'])
         archive = archive if archive.is_absolute() else ROOT / archive
-        # 起点格没有存档就跑不了：启动时就报，别等到组里 replay 才 FileNotFoundError。
-        if not (archive / 'meta.json').is_file():
-            raise ValueError(f'{task["task_id"]}: demo_start archive missing: {archive}')
-        if not json.loads((archive / 'meta.json').read_text()).get('verified'):
-            raise ValueError(f'{task["task_id"]}: demo_start archive is not verified: {archive}')
+        # Archive checks belong to planning: a bad cell must not abort qc startup.
         cells[task['task_id']] = dict(
             family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
             last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
-            archive=str(archive), seeds=seeds)
+            archive=str(archive), seeds=seeds,
+            seed_blocks=start_seed_segments(seeds))
         manifests[task['task_id']] = path
     return cells, manifests
 
 
-def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | None = None) -> list[str]:
+def start_seed_segments(seeds: list[int]) -> list[list[int]]:
+    """Encode contiguous runs without changing the manifest's seed order."""
+    blocks = []
+    for seed in seeds:
+        if blocks and blocks[-1][1] == seed:
+            blocks[-1][1] = seed + 1
+        else:
+            blocks.append([seed, seed + 1])
+    return blocks
+
+
+def renew_start_seeds(cell: dict, ledger_path: Path, size: int = START_SEED_BLOCK) -> list[int]:
+    """给起点格续领一段未来种子，接到种子表尾部（task99）。
+
+    偏移语义不变：offset 仍是从种子表头数的绝对下标，续领只是把表变长。领到的块记进
+    格子的 seed_blocks（第一段永远是清单里原来的块），账本在 git 外、带文件锁，块只发一次。
+    """
+    if not cell.get('seed_blocks') and cell.get('seeds'):
+        # 旧状态没有分段记录：把清单里的第一段补上，日志与状态都从两段起算。
+        cell['seed_blocks'] = start_seed_segments(cell['seeds'])
+    block = allocate_seed_block(ledger_path, size, pool=START_SEED_POOL)
+    cell.setdefault('seed_blocks', []).append([int(block[0]), int(block[1])])
+    cell['seeds'] = list(cell['seeds']) + list(range(int(block[0]), int(block[1])))
+    return [int(block[0]), int(block[1])]
+
+
+def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | None = None,
+                          restore: tuple[str, ...] = ()) -> list[str]:
     """把状态里的示范起点格对齐到清单：新增、更新阶梯/种子块、撤掉已删的格。
 
     普通格的 reconcile_cells 会把不在训练集合里的格退休；起点格的 base 是示范任务 id
     （如 demo_fog_33_cactus_snow_m200），永远不在 training_base_ids 里，所以它由这里管，
     并且 reconcile_cells 会跳过带 ladder 的格。
+
+    task99：种子表可以有多段（续领）。清单里的块只是第一段，重启时**不能**用它覆盖
+    已续领的表——只有当状态里的表不再以清单块开头（清单换了块）才重置。restore 里的格
+    从 retired_cells 原样取回（保留偏移/续领段/档位）；清单里已经没有的格标 legacy_restored，
+    否则下一次重启会被当成“已删的格”再退休一次。
     """
     lines = []
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     for base in sorted(cells):
         # 起点格以 archive 识别：原生倍率阶梯格（task75b）也带 ladder，不能被当成起点格退休。
-        if cells[base].get('archive') and base not in specs:
+        if (cells[base].get('archive') and base not in specs
+                and not cells[base].get('legacy_restored')):
             retired[base] = cells.pop(base)
             lines.append(f'start cell retired: {base}')
+    for base in sorted(set(restore)):
+        cell = retired.pop(base, None)
+        if cell is None or not cell.get('archive'):
+            continue
+        if base not in specs:
+            cell['legacy_restored'] = True
+        cells[base] = cell
+        offset = int(state.get('offsets', {}).get(base, 0))
+        seeds = list(cell.get('seeds') or [])
+        remaining = set(seeds[offset:])
+        clashes = sorted(other for other, live in cells.items()
+                         if other != base and remaining & set(live.get('seeds') or []))
+        lines.append(f'start cell restored: {base} (retired {cell.get("retired_reason", "unknown")}, '
+                     f'offset {offset}/{len(seeds)})')
+        if clashes:
+            # 恢复的格若与在跑的格共用未来种子，采出来的证据不独立（L32 的旧格与 _hv2 就是同一块）。
+            lines.append(f'start cell restored: {base} WARNING future seeds overlap '
+                         f'{", ".join(clashes)}; renew or drop it before collecting')
     for base, spec in sorted(specs.items()):
+        if base in state.get('cell_errors', {}):
+            continue
         cell = cells.get(base)
         if cell is None:
+            if base in retired:
+                # Re-adding a retired cell from the manifest would discard its
+                # renewed table, windows and rung. Explicit restore above keeps them.
+                continue
             cells[base] = dict(spec, windows=dict((windows or {}).get(base, {})))
             lines.append(f'start cell added: {base} ({len(spec["ladder"])} rungs)')
             continue
-        changed = [key for key in ('ladder', 'seeds', 'archive') if cell.get(key) != spec[key]]
-        cell.update({key: spec[key] for key in ('ladder', 'seeds', 'archive', 'family', 'level', 'task_id')})
+        seeds = list(cell.get('seeds') or [])
+        if seeds[:len(spec['seeds'])] != list(spec['seeds']):
+            seeds = list(spec['seeds'])                      # 清单换了块：回到第一段
+            cell['seed_blocks'] = list(spec.get('seed_blocks') or [])
+        changed = [key for key in ('ladder', 'archive') if cell.get(key) != spec[key]]
+        if seeds != cell.get('seeds'):
+            changed.append('seeds')
+        cell.update({key: spec[key] for key in ('ladder', 'archive', 'family', 'level', 'task_id')})
+        cell['seeds'] = seeds
         cell['mult_index'] = min(int(cell.get('mult_index', 0)), len(spec['ladder']) - 1)
         if changed:
             lines.append(f'start cell updated: {base} ({", ".join(changed)})')
@@ -598,17 +761,28 @@ def load_teacher_rates(path: Path) -> dict:
            生成方把关（见 MEMORY/docs/task57 的生成脚本），这里照单全收。
     """
     try:
-        document = json.loads(path.read_text())
+        document = read_json(path)
     except (OSError, ValueError):
+        return {}
+    if not isinstance(document, dict):
         return {}
     rates: dict[str, float] = {}
     for kind in ('bases', 'levels'):
-        for name, value in (document.get(kind) or {}).items():
-            if isinstance(value, dict):
-                games = value.get('games', 0)
-                value = value.get('wins', 0) / games if games else 1.0
-            key = name if kind == 'bases' else f'level:{name}'
-            rates[key] = min(1.0, max(0.0, float(value)))
+        entries = document.get(kind) or {}
+        if not isinstance(entries, dict):
+            continue
+        for name, value in entries.items():
+            try:
+                if isinstance(value, dict):
+                    games = value.get('games', 0)
+                    value = value.get('wins', 0) / games if games else 1.0
+                key = name if kind == 'bases' else f'level:{name}'
+                value = float(value)
+                if not math.isfinite(value):
+                    raise ValueError('nonfinite rate')
+                rates[key] = min(1.0, max(0.0, value))
+            except (TypeError, ValueError, ZeroDivisionError) as error:
+                print(f'WARN teacher-rate entry skipped {kind}.{name}: {error}', file=sys.stderr)
     return rates
 
 
@@ -663,7 +837,8 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
 def pack_labels(state: dict, extra: str = '') -> list[str]:
     """Every label this queue has written so far, plus ``extra`` (the base corpus training also uses)."""
     labels = {group.get('frame_label', group['label'] + '_fast_search')
-              for entry in state['log'] for group in entry['groups']}
+              for entry in state['log'] for group in entry['groups']
+              if group.get('status', 'done') == 'done'}
     labels.update(name for name in extra.split(',') if name)
     return sorted(labels)
 
@@ -692,10 +867,13 @@ class TrainingPipeline:
     def __init__(self, args, state):
         self.args, self.state = args, state
         self.directory = args.state.parent / (args.state.stem + '.pipeline')
-        self.directory.mkdir(parents=True, exist_ok=True)
+        retry_io(self.directory.mkdir)(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
         self.lock = threading.Lock()
         self.process = None
+        self.processes = {}
+        self.train_parallelism = 1
+        self.training_admission = False
         self.lock_fd = None
         self.failed = False
         self.futures = []
@@ -705,20 +883,33 @@ class TrainingPipeline:
         self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
         self.foreground_workers = 0 # 前台当前组正在跑的游戏 worker 数
+        for index, job in enumerate(state.setdefault('training_jobs', [])):
+            if (not isinstance(job, dict) or type(job.get('round')) is not int
+                    or not isinstance(job.get('recipe'), str) or not isinstance(job.get('model'), str)
+                    or not isinstance(job.get('status'), str)):
+                state['training_jobs'][index] = dict(round=-1, status='failed', isolated=True,
+                    invalid_job=job, error='invalid saved training job')
         for job in reversed(state.get('training_jobs', [])):
             timing = job.get('timing') or {}
+            if not isinstance(timing, dict):
+                continue
             value = timing.get('train_peak_anon_bytes')
             if value:
-                self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+                try:
+                    self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
+                except (ValueError, TypeError):
+                    pass
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
                     builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
-                except (OSError, ValueError, KeyError):
+                except (OSError, ValueError, KeyError, TypeError):
                     pass
             if self.last_train_peak and self.last_pack_peak:
                 break
-        queued = [job for job in state.setdefault('training_jobs', []) if job['status'] != 'done']
+        queued = [job for job in state.setdefault('training_jobs', [])
+                  if job['status'] != 'done' and not job.get('isolated')
+                  and job.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS]
         if queued:
             try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
                 self._plan_build(load_recipe(Path(queued[-1]['recipe']), 'training'))
@@ -730,9 +921,14 @@ class TrainingPipeline:
                 raise RuntimeError(f'saved collection student is missing: {model}')
             args.rollout_policy = model
         for job in state.setdefault('training_jobs', []):
-            if job['status'] != 'done':
+            if job in queued:
                 job['status'] = 'queued'
-                self._seeded(job)
+                try:
+                    self._seeded(job)
+                except (Exception, SystemExit) as error:
+                    job.update(status='failed', isolated=True, error=str(error))
+                    log_line(args.log, f'background round {job["round"]} rejected: {error}')
+                    continue
                 save_state(self.args.state, self.state)
                 self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
@@ -750,22 +946,27 @@ class TrainingPipeline:
         with self.lock:
             return Path(self.args.rollout_policy)
 
+    @property
+    def gate_version(self):
+        return getattr(self.args, 'gate_version', GATE_VERSION)
+
     def evaluation_contract(self, job):
         source = getattr(self.args, 'promotion_panel', None)
         if source is None:
             source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
         return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
-                                  self.args.value, self.args.resource_dir, version=GATE_VERSION,
+                                  self.args.value, self.args.resource_dir, version=self.gate_version,
                                   seed_block=job.get('seed_block'))
 
+    @retry_io
     def _seeded(self, job):
         """task73b: one fresh-seed block per evaluation job, allocated on the
         persisted job dict (never on the _run copy), so resumed and stale re-evaluations
         reuse the same block and the ledger is never double-spent. Pool exhaustion
         raises and closes the gate; seeds are never wrapped around and reused."""
-        if GATE_VERSION >= 2 and 'seed_block' not in job:
+        if self.gate_version >= 2 and 'seed_block' not in job:
             job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
-                                                         promotion_policy(GATE_VERSION)['pair_count']))
+                                                         promotion_policy(self.gate_version)['pair_count']))
         return job
 
     def _evaluate(self, job):
@@ -785,8 +986,8 @@ class TrainingPipeline:
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
-                   '--eval-units', str(units), '--gate-version', str(GATE_VERSION)]
-        if GATE_VERSION >= 2:
+                   '--eval-units', str(units), '--gate-version', str(self.gate_version)]
+        if self.gate_version >= 2:
             command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                         '--seed-ledger', str(self.args.seed_ledger)]
         started = time.time()
@@ -799,7 +1000,7 @@ class TrainingPipeline:
                 raise ValueError('promotion certificate does not match the registered comparison')
         except Exception as error:
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
-            decision = dict(version=GATE_VERSION, approved=False, policy=promotion_policy(),
+            decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
             out.mkdir(parents=True, exist_ok=True)
             (out / 'error.json').write_text(json.dumps(decision, indent=2) + '\n')
@@ -822,7 +1023,7 @@ class TrainingPipeline:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
-        return max(self.build_peak, train_peak)
+        return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
         """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
@@ -870,16 +1071,20 @@ class TrainingPipeline:
         log_line(self.args.log, f'pack plan: {len(pending)} pending segments, '
                                 f'workers={self.build_workers}, peak~{self.build_peak / GIB:.1f} GiB')
 
+    @retry_io
     def reservation(self):
         if not self.pending():
             return 0
         with self.lock:
-            process = self.process
             table = _proc_table()
-            rss = 0 if process is None else (table.get(process.pid, (0, 0))[1]
-                                             + _descendant_rss(process.pid, table))
+            processes = list(getattr(self, 'processes', {}).values())
+            if not processes and self.process is not None:
+                processes = [self.process]
+            rss = sum(table.get(process.pid, (0, 0))[1] + _descendant_rss(process.pid, table)
+                      for process in processes)
         return max(0, self.estimate_peak() - rss)
 
+    @retry_io
     def enqueue(self):
         round_index = self.state['round']
         if any(job['round'] == round_index for job in self.state['training_jobs']):
@@ -897,11 +1102,104 @@ class TrainingPipeline:
         write_recipe(path, recipe)
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
+        # Freeze the plan on the durable job. Historical jobs without this field
+        # retain their original single-seed training/resume semantics.
+        self._snapshot_selection(job, folder)
         self.state['training_jobs'].append(job)
-        self._seeded(job)
+        try:
+            self._seeded(job)
+        except (Exception, SystemExit) as error:
+            job.update(status='failed', isolated=True, error=str(error))
+            save_state(self.args.state, self.state)
+            raise
         save_state(self.args.state, self.state)  # durable before the worker is submitted
         log_line(self.args.log, f'background round {round_index} queued: {path}')
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
+
+    def _snapshot_selection(self, job, folder):
+        incumbent = self.incumbent()
+        snapshot = folder / 'selection_state.json'
+        self._marker(snapshot, self.state)
+        inputs = folder / 'selection_inputs'
+        inputs.mkdir(exist_ok=True)
+        sources = {}
+        for rnd in self.state.get('log', []):
+            for group in rnd['groups']:
+                source = group.get('manifest')
+                if (group.get('status', 'done') != 'done'
+                        or group.get('student') != str(incumbent) or source in sources):
+                    continue
+                if source is not None:
+                    try:
+                        data = Path(source).read_bytes()
+                    except OSError as error:
+                        sources[source] = dict(error=str(error))
+                        continue  # diagnosed by the B7-protected background, not the collector
+                    digest = __import__('hashlib').sha256(data).hexdigest()
+                    target = inputs / f'{digest}.json'
+                    target.write_bytes(data)
+                    sources[source] = dict(path=str(target), sha256=digest)
+        templates = inputs / 'templates.json'
+        templates.write_bytes((ROOT / 'configs/student_selection_v2.json').read_bytes())
+        ledger = getattr(self.args, 'selection_seed_ledger', self.args.state.parent / 'selection_seed_ledger.json')
+        block = allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS)
+        job.update(training_seeds=list(TRAINING_SEEDS), selection_manifest=str(folder / 'selection_manifest.json'),
+                   selection_refresh=dict(snapshot=str(snapshot), snapshot_sha256=file_sha(snapshot),
+                       incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent), runs=str(self.args.out),
+                       templates=str(templates), templates_sha256=file_sha(templates), sources=sources,
+                       executable_sha256=file_sha(self.args.executable), seed_block=list(block), ledger=str(ledger)))
+
+    def _validate_selection_panel(self, panel):
+        from pvz_env import PvZEnv
+        self._admit()
+        with PvZEnv(resource_dir=self.args.resource_dir, executable=self.args.executable, headless=True) as env:
+            return validate_random_tasks(panel, env)
+
+    def _prepare_selection(self, job):
+        if 'selection_refresh' not in job:
+            return dict(manifest_sha256=job['selection_manifest_sha256'])  # historical task92 jobs
+        frozen = job['selection_refresh']
+        refresh_sha = __import__('hashlib').sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
+        for name in ('snapshot', 'templates', 'incumbent'):
+            if file_sha(Path(frozen[name])) != frozen[name + '_sha256']:
+                raise ValueError(f'frozen selection {name} changed')
+        if file_sha(self.args.executable) != frozen['executable_sha256']:
+            raise ValueError('selection engine changed since enqueue')
+        folder = Path(job['recipe']).parent
+        ready, manifest = folder / 'selection_ready.json', Path(job['selection_manifest'])
+        if ready.exists():
+            receipt = json.loads(ready.read_text())
+            if (receipt['snapshot_sha256'] != frozen['snapshot_sha256']
+                    or receipt['refresh_sha256'] != refresh_sha
+                    or receipt['manifest_sha256'] != file_sha(manifest)
+                    or receipt['plan_sha256'] != file_sha(folder / 'selection_plan.json')
+                    or receipt['executable_sha256'] != frozen['executable_sha256']):
+                raise ValueError('saved selection preparation changed')
+            return receipt
+        documents = {}
+        for source, meta in frozen['sources'].items():
+            if 'error' in meta:
+                raise ValueError(f'selection source unavailable at enqueue: {source}: {meta["error"]}')
+            if file_sha(Path(meta['path'])) != meta['sha256']:
+                raise ValueError('frozen selection source changed')
+            documents[source] = json.loads(Path(meta['path']).read_text())
+        state = json.loads(Path(frozen['snapshot']).read_text())
+        panel = selection_plan(state, frozen['incumbent'], frozen['runs'],
+                               json.loads(Path(frozen['templates']).read_text()), documents, frozen['seed_block'])
+        plan_path = folder / 'selection_plan.json'
+        self._marker(plan_path, panel)
+        from pvz_promotion import SEED_POOLS_V2
+        reserved = list(SEED_POOLS_V2)
+        for document in [*documents.values(), json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())]:
+            reserved.extend(seed_spans(document))
+        assert_disjoint(panel, reserved)
+        panel = self._validate_selection_panel(panel)
+        self._marker(manifest, panel)
+        receipt = dict(snapshot_sha256=frozen['snapshot_sha256'], refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
+                       manifest_sha256=file_sha(manifest), executable_sha256=frozen['executable_sha256'],
+                       prepared=time.time())
+        self._marker(ready, receipt)
+        return receipt
 
     def _prepare_corpus(self, labels):
         """An append-only local view of recipe archives + collected archives, without copying bytes.
@@ -939,6 +1237,9 @@ class TrainingPipeline:
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                        pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             with self.lock:
+                if not hasattr(self, 'processes'):
+                    self.processes = {}
+                self.processes[process.pid] = process
                 self.process = process
             peak = 0
             try:
@@ -950,14 +1251,32 @@ class TrainingPipeline:
                     time.sleep(2)
             finally:
                 with self.lock:
-                    self.process = None
+                    self.processes.pop(process.pid, None)
+                    self.process = next(iter(self.processes.values()), None)
         if code:
             raise RuntimeError(f'exit {code}; see {log}')
         return peak
 
     def _admit(self):
-        required = MEMORY_RESERVE_BYTES + self.estimate_peak()
         total = mem_total_bytes()
+        # Group admission happens before either CUDA process starts. A failed
+        # two-worker admission falls back immediately rather than waiting for two.
+        available, gpu = mem_available_bytes(), None
+        if getattr(self, 'training_admission', False):
+            gpu = gpu_free_bytes()
+            required = MEMORY_RESERVE_BYTES + self.estimate_peak()
+            reasons = []
+            if self.train_parallelism > 1:
+                if available is None or available < required or total is not None and total < required:
+                    reasons.append('host_memory')
+                if gpu is None or gpu < GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES:
+                    reasons.append('gpu_memory_unknown_or_insufficient')
+                if reasons:
+                    self.train_parallelism = 1
+            self.train_admission_record = dict(workers=self.train_parallelism,
+                mode='parallel' if self.train_parallelism > 1 else 'serial', fallback_reasons=reasons,
+                available_bytes=available, gpu_free_bytes=gpu, required_bytes=MEMORY_RESERVE_BYTES + self.estimate_peak())
+        required = MEMORY_RESERVE_BYTES + self.estimate_peak()
         if total is not None and required > total:
             # 不可能满足的需求不能静默死等（task61）：让该训练任务失败退出、写明原因，
             # poll() 会把它变成控制器可见的错误，停止标志与控制器退出不再被卡住。
@@ -971,17 +1290,31 @@ class TrainingPipeline:
             # Current game workers are already excluded from MemAvailable. Future groups
             # separately subtract reservation(), so adding their RSS here would count twice.
             required = MEMORY_RESERVE_BYTES + self.estimate_peak()
-            if available is None or available >= required:
+            gpu_ok = True
+            if getattr(self, 'training_admission', False):
+                gpu = gpu_free_bytes()
+                if self.train_parallelism > 1 and ((available is not None and available < required)
+                        or gpu is None or gpu < GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES):
+                    self.train_parallelism = 1
+                    required = MEMORY_RESERVE_BYTES + self.estimate_peak()
+                    self.train_admission_record.update(workers=1, mode='serial', required_bytes=required,
+                        available_bytes=available, gpu_free_bytes=gpu)
+                    self.train_admission_record['fallback_reasons'].append('resources_changed_before_launch')
+                gpu_ok = gpu is None or gpu >= GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES
+            if (available is None or available >= required) and gpu_ok:
                 return
             if time.monotonic() - last_log > 30:
-                log_line(self.args.log, f'background waiting for memory: available={available / GIB:.2f} GiB '
-                                       f'required={required / GIB:.2f} GiB')
+                shown = 'unknown' if available is None else f'{available / GIB:.2f} GiB'
+                gpu_shown = ''
+                if getattr(self, 'training_admission', False):
+                    free = 'unknown' if gpu is None else f'{gpu / GIB:.2f} GiB'
+                    gpu_shown = f' gpu_free={free} gpu_required={(GPU_RESERVE_BYTES + self.train_parallelism * TRAIN_GPU_BYTES) / GIB:.2f} GiB'
+                log_line(self.args.log, f'background waiting for memory: available={shown} '
+                                       f'required={required / GIB:.2f} GiB{gpu_shown}')
                 last_log = time.monotonic()
             time.sleep(1)
 
     def _run(self, job):
-        if self.failed:
-            raise RuntimeError('earlier background training failed; snapshot remains queued')
         recipe_path = Path(job['recipe'])
         folder = recipe_path.parent
         done = folder / 'complete.json'
@@ -1006,6 +1339,8 @@ class TrainingPipeline:
                     # Pre-A completion is proof of training only, never a quality approval.
                     report = {k: v for k, v in old.items() if k not in
                               ('promotion', 'evaluation_started', 'evaluation_finished', 'evaluation_directory')}
+                elif job.get('training_seeds'):
+                    report = self._train_selected(job)
                 else:
                     self._admit()
                     local_args = copy.copy(self.args)
@@ -1049,65 +1384,228 @@ class TrainingPipeline:
             self.failed = True
             raise
 
+    @staticmethod
+    def _marker(path, document):
+        temporary = path.with_suffix('.building')
+        temporary.write_text(json.dumps(document, indent=2) + '\n')
+        temporary.replace(path)
+
+    def _train_selected(self, job):
+        """One corpus, resource-admitted independent seeds, then a single gate candidate.
+
+        A failed seed is local to its candidate. Only an entirely failed round
+        reaches the existing B7 retry/stop mechanism in _run/poll.
+        """
+        recipe_path = Path(job['recipe'])
+        folder = recipe_path.parent
+        recipe = load_recipe(recipe_path, 'training')
+        report = dict(round=job['round'], model=job['model'])
+        report['selection_preparation'] = self._prepare_selection(job)
+        pack_marker = folder / 'packed.json'
+        if pack_marker.is_file():
+            packed = json.loads(pack_marker.read_text())
+            if packed['recipe_sha256'] != file_sha(recipe_path):
+                raise ValueError('saved packed recipe changed')
+            self.build_peak = 0
+        else:
+            self._admit()
+            local_args = copy.copy(self.args)
+            local_args.recipe, local_args.frames = recipe_path, Path(recipe['data'])
+            packed = dict(pack_started=time.time(), recipe_sha256=file_sha(recipe_path))
+            try:
+                self._prepare_corpus(recipe['labels'])
+                packed['pack_peak_anon_bytes'] = self._command(
+                    pack_command(local_args, recipe['labels']), folder / 'pack.log')
+            finally:
+                self.build_peak = 0
+            packed['pack_finished'] = time.time()
+            self._marker(pack_marker, packed)
+        report.update({key: value for key, value in packed.items() if key.startswith('pack_')})
+        python = str(self.args.python) if self.args.python.exists() else sys.executable
+        def train_seed(seed, admitted=False):
+            directory = folder / 'seeds' / f'seed_{seed:06d}'
+            directory.mkdir(parents=True, exist_ok=True)
+            path = directory / 'recipe.json'
+            child_recipe = dict(recipe, seed=seed, out=str(directory / 'student'))
+            if path.exists():
+                if load_recipe(path, 'training') != child_recipe:
+                    raise ValueError('saved seed recipe changed')
+            else:
+                write_recipe(path, child_recipe)
+            model, marker = directory / 'student/model.pt', directory / 'trained.json'
+            if marker.is_file():
+                candidate = json.loads(marker.read_text())
+                if candidate['recipe_sha256'] != file_sha(path) or candidate['model_sha256'] != file_sha(model):
+                    raise ValueError('saved seed candidate changed')
+            else:
+                candidate = dict(seed=seed, model=str(model), recipe=str(path), train_started=time.time())
+                try:
+                    if not admitted:
+                        self._admit()
+                    candidate['train_peak_anon_bytes'] = self._command(
+                        [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
+                        directory / 'train.log')
+                    if not model.is_file():
+                        raise RuntimeError(f'trainer did not publish {model}')
+                    candidate.update(status='trained', train_finished=time.time(),
+                                     model_sha256=file_sha(model), recipe_sha256=file_sha(path))
+                    self._marker(marker, candidate)
+                except Exception as error:
+                    candidate.update(status='failed', train_finished=time.time(), error=str(error))
+                    self._marker(directory / 'failed.json', candidate)
+                    log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
+                                            f'continuing other seeds: {error}')
+            return candidate
+        pending = [seed for seed in job['training_seeds']
+                   if not (folder / 'seeds' / f'seed_{seed:06d}' / 'trained.json').is_file()]
+        self.train_parallelism = min(2, max(1, len(pending)))
+        self.training_admission = bool(pending)
+        try:
+            if pending:
+                self._admit()
+                mode = dict(self.train_admission_record)
+            else:
+                mode = dict(workers=0, mode='reused', fallback_reasons=[])
+            mode_path = folder / 'training_mode.json'
+            previous = json.loads(mode_path.read_text()) if mode_path.exists() else None
+            history = [] if previous is None else previous.get('attempt_history', [previous])
+            mode['attempt_history'] = history + [dict(mode, recorded=time.time())]
+            self._marker(mode_path, mode)
+            if mode['workers'] > 1:
+                with ThreadPoolExecutor(max_workers=2, thread_name_prefix='student-seed') as trainers:
+                    futures = [trainers.submit(train_seed, seed, True) for seed in job['training_seeds']]
+                    candidates = [future.result() for future in futures]
+            else:
+                candidates = [train_seed(seed) for seed in job['training_seeds']]
+        finally:
+            self.train_parallelism, self.training_admission = 1, False
+        self._marker(folder / 'candidates.json', dict(candidates=candidates))
+        trained = [candidate for candidate in candidates if candidate['status'] == 'trained']
+        if not trained:
+            raise RuntimeError('all training seeds failed; see candidates.json')
+        report.update(candidates=candidates, training_seeds=job['training_seeds'], training_mode=mode,
+                      train_started=min(candidate['train_started'] for candidate in candidates),
+                      train_finished=max(candidate['train_finished'] for candidate in candidates),
+                      train_peak_anon_bytes=max(candidate.get('train_peak_anon_bytes', 0) or 0
+                                                for candidate in trained))
+        self.last_train_peak = report['train_peak_anon_bytes']
+        report.update(self._select(job, trained))
+        return report
+
+    def _select(self, job, candidates):
+        manifest = Path(job['selection_manifest'])
+        expected_sha = self._prepare_selection(job)['manifest_sha256']
+        if file_sha(manifest) != expected_sha:
+            raise ValueError('frozen selection panel changed')
+        panel = json.loads(manifest.read_text())
+        sets = ','.join(f'{task["task_id"]}:0:{len(task["seeds"])}' for task in panel['tasks'])
+        folder = Path(job['recipe']).parent
+        self._admit()
+        units = min(2, worker_count(mem_available_bytes(), self.per_worker_bytes,
+                                   max(1, self.args.workers - self.foreground_workers), 0))
+        self.eval_units = units
+        command = [str(self.args.python) if self.args.python.exists() else sys.executable,
+                   str(ROOT / 'scripts/select_student.py'), '--candidates',
+                   ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
+                   '--manifest', str(manifest), '--sets', sets, '--workers', str(units),
+                   '--value', str(self.args.value), '--executable', str(self.args.executable),
+                   '--resource-dir', str(self.args.resource_dir)]
+        started = time.time()
+        peak = self._command(command, folder / 'selection.log')
+        receipt = json.loads((folder / 'student/selection.json').read_text())
+        eligible = {candidate['model']: candidate for candidate in candidates}
+        best = receipt['best']
+        if (best not in eligible or receipt['model_sha256'] != eligible[best]['model_sha256']
+                or file_sha(job['model']) != receipt['model_sha256']
+                or receipt['manifest_sha256'] != expected_sha):
+            raise ValueError('selected candidate does not match its training/panel receipt')
+        return dict(selection=receipt, selection_started=started, selection_finished=time.time(),
+                    selection_peak_anon_bytes=peak, selection_units=units)
+
     def poll(self, retry: bool = True):
+        # A failed state write after enqueue may have left a durable job without
+        # a submitted future. Recover it before polling, without duplicating workers.
+        for job in self.state.get('training_jobs', []):
+            if job['status'] == 'queued' and not any(saved is job for saved, _ in self.futures):
+                try:
+                    self._seeded(job)
+                    save_state(self.args.state, self.state)
+                    self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
+                except StateWriteError:
+                    raise
+                except (Exception, SystemExit) as error:
+                    job.update(status='failed', isolated=True, error=str(error))
+                    save_state(self.args.state, self.state)
+                    log_line(self.args.log, f'background round {job["round"]} recovery isolated: {error}')
         for index, (job, future) in enumerate(list(self.futures)):
-            if job['status'] == 'done' or not future.done():
+            if job['status'] in ('done', 'failed') or not future.done():
                 continue
             try:
-                report = future.result()
-            except BaseException as error:
-                # task70 B7: a background failure must not kill collection. Record it,
-                # retry once; only a second consecutive failure of the same round stops qc.
-                job['status'] = 'failed'
-                job['error'] = str(error)
-                job['attempts'] = job.get('attempts', 0) + 1
+                retry_io(self._poll_job)(index, job, future, retry)
+            except StateWriteError:
+                raise
+            except (Exception, SystemExit) as error:
+                job.update(status='failed', isolated=True, error=f'{type(error).__name__}: {error}')
+                self.failed = False
                 save_state(self.args.state, self.state)
-                if retry and job['attempts'] < MAX_BACKGROUND_ATTEMPTS:
-                    log_line(self.args.log, f'background round {job["round"]} failed '
-                                            f'(attempt {job["attempts"]}/{MAX_BACKGROUND_ATTEMPTS}); '
-                                            f'retrying once: {error}')
-                    self.failed = False
-                    job['status'] = 'queued'
-                    self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
-                    continue
-                if job['attempts'] >= MAX_BACKGROUND_ATTEMPTS:
-                    log_line(self.args.log, f'background round {job["round"]} failed '
-                                            f'{job["attempts"]} times; stopping qc: {error}')
-                raise RuntimeError(f'background round {job["round"]} failed '
-                                   f'{job["attempts"]} times; stopping: {error}') from error
-            promotion = report.get('promotion', {})
-            current_contract = self.evaluation_contract(job)
-            invalid = False
-            if (promotion.get('version') != GATE_VERSION or promotion.get('policy') != promotion_policy()
-                    or type(promotion.get('approved')) is not bool):
-                invalid = True
-            elif promotion.get('contract') != current_contract:
-                job['status'] = 'queued'
-                log_line(self.args.log, f'background round {job["round"]} comparison stale; re-evaluate current student')
-                self._seeded(job)
-                self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
-                save_state(self.args.state, self.state)
-                continue
-            elif not any(reason.startswith('evaluation_error:') for reason in promotion.get('reasons', [])):
-                invalid = not valid_certificate(promotion, current_contract, report.get('evaluation_directory'))
-            if invalid:
-                promotion = dict(version=GATE_VERSION, approved=False, policy=promotion_policy(),
-                                 contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
-                report['promotion'] = promotion
-                completed = Path(job['recipe']).parent / 'complete.json'
-                temporary = completed.with_suffix('.building')
-                temporary.write_text(json.dumps(report, indent=2) + '\n')
-                temporary.replace(completed)
-            job.update(status='done', timing=report, promotion_approved=promotion['approved'],
-                       promotion_reasons=promotion['reasons'])
-            if promotion['approved'] and job['round'] > self.state.get('student_round', 0):
-                with self.lock:
-                    self.args.rollout_policy = Path(job['model'])
-                    self.state.update(student=job['model'], student_round=job['round'])
-                log_line(self.args.log, f'student activated at group boundary: round {job["round"]} {job["model"]}')
-            elif not promotion['approved']:
-                log_line(self.args.log, f'student retained: round {job["round"]} rejected {promotion["reasons"]}')
+                log_line(self.args.log, f'background round {job["round"]} isolated: {job["error"]}')
+
+    def _poll_job(self, index, job, future, retry):
+        try:
+            report = future.result()
+        except BaseException as error:
+            # task70 B7: a background failure must not kill collection. Record it,
+            # retry once; task98 isolates the snapshot after its second failure.
+            job['status'] = 'failed'
+            job['error'] = str(error)
+            job['attempts'] = job.get('attempts', 0) + 1
             save_state(self.args.state, self.state)
+            if retry and job['attempts'] < MAX_BACKGROUND_ATTEMPTS:
+                log_line(self.args.log, f'background round {job["round"]} failed '
+                                        f'(attempt {job["attempts"]}/{MAX_BACKGROUND_ATTEMPTS}); '
+                                        f'retrying once: {error}')
+                self.failed = False
+                job['status'] = 'queued'
+                self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
+                return
+            self.failed = False
+            job['isolated'] = job['attempts'] >= MAX_BACKGROUND_ATTEMPTS
+            log_line(self.args.log, f'background round {job["round"]} failed '
+                                    f'{job["attempts"]} times; snapshot isolated, collection continues: {error}')
+            return
+        promotion = report.get('promotion', {})
+        current_contract = self.evaluation_contract(job)
+        invalid = False
+        if (promotion.get('version') != self.gate_version or promotion.get('policy') != promotion_policy(self.gate_version)
+                or type(promotion.get('approved')) is not bool):
+            invalid = True
+        elif promotion.get('contract') != current_contract:
+            job['status'] = 'queued'
+            log_line(self.args.log, f'background round {job["round"]} comparison stale; re-evaluate current student')
+            self._seeded(job)
+            self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
+            save_state(self.args.state, self.state)
+            return
+        elif not any(reason.startswith('evaluation_error:') for reason in promotion.get('reasons', [])):
+            invalid = not valid_certificate(promotion, current_contract, report.get('evaluation_directory'))
+        if invalid:
+            promotion = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
+                             contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
+            report['promotion'] = promotion
+            completed = Path(job['recipe']).parent / 'complete.json'
+            temporary = completed.with_suffix('.building')
+            temporary.write_text(json.dumps(report, indent=2) + '\n')
+            temporary.replace(completed)
+        job.update(status='done', timing=report, promotion_approved=promotion['approved'],
+                   promotion_reasons=promotion['reasons'])
+        if promotion['approved'] and job['round'] > self.state.get('student_round', 0):
+            with self.lock:
+                self.args.rollout_policy = Path(job['model'])
+                self.state.update(student=job['model'], student_round=job['round'])
+            log_line(self.args.log, f'student activated at group boundary: round {job["round"]} {job["model"]}')
+        elif not promotion['approved']:
+            log_line(self.args.log, f'student retained: round {job["round"]} rejected {promotion["reasons"]}')
+        save_state(self.args.state, self.state)
 
     def close(self):
         # poll may schedule a stale comparison again; drain it before closing the executor.
@@ -1131,13 +1629,27 @@ class TrainingPipeline:
 
 def log_line(path: Path, message: str) -> None:
     stamp = datetime.now().isoformat(timespec='seconds')
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open('a') as handle:
-        handle.write(f'{stamp} {message}\n')
+    @retry_io
+    def append():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open('a') as handle:
+            handle.write(f'{stamp} {message}\n')
+    try:
+        append()
+    except OSError as error:
+        print(f'ERROR curriculum log unavailable: {error}', file=sys.stderr, flush=True)
     print(f'{stamp} {message}', flush=True)
 
 
 def save_state(path: Path, state: dict) -> None:
+    try:
+        _write_state(path, state)
+    except OSError as error:
+        raise StateWriteError(str(error)) from error
+
+
+@retry_io
+def _write_state(path: Path, state: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     state['updated'] = datetime.now().isoformat(timespec='seconds')
     temporary = path.with_suffix(path.suffix + '.building')
@@ -1147,26 +1659,64 @@ def save_state(path: Path, state: dict) -> None:
 
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
-               teacher: dict | None = None) -> tuple[list[dict], list[str]]:
-    changes = adjust(state['cells'], values)
+               teacher: dict | None = None, start_seed_ledger: Path | None = None,
+               renew_size: int = START_SEED_BLOCK) -> tuple[list[dict], list[str]]:
+    changes = isolate_cells(state, values)
+    changes += adjust(state['cells'], values)
     picks = allocate(state['cells'], values, budget, per_group, state['round'] + 1, teacher)
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
         start = cell.get('archive') is not None
-        task_id = cell['task_id'] if start else task_id_for(base, multiplier, tasks, names)
-        seeds = cell['seeds'] if start else tasks[task_id]['seeds']
-        offset = state['offsets'].get(task_id, 0)
+        try:
+            task_id = cell['task_id'] if start else task_id_for(base, multiplier, tasks, names)
+            seeds = cell['seeds'] if start else tasks[task_id]['seeds']
+            offset = state['offsets'].get(task_id, 0)
+            if not isinstance(seeds, list) or type(offset) is not int or offset < 0:
+                raise ValueError('invalid seeds/offset')
+            manifest = str(manifests[task_id])
+            if start and (offset + games <= len(seeds) or start_seed_ledger is not None):
+                archive = cell['archive']
+                if not isinstance(archive, str):
+                    raise ValueError('invalid archive')
+                try:
+                    meta = read_json(Path(archive) / 'meta.json')
+                except FileNotFoundError:
+                    raise ValueError(f'configuration invalid: demo_start archive missing: {archive}') from None
+                if not meta.get('verified'):
+                    raise ValueError(f'configuration invalid: demo_start archive is not verified: {archive}')
+                demo_seed = meta['task']['seed']
+                if demo_seed not in tasks[task_id]['seeds']:
+                    raise ValueError(f'configuration invalid: demo_start seed {demo_seed} is outside task seeds')
+
+        except (OSError, KeyError, TypeError, ValueError) as error:
+            changes.append(retire_cell(state, base, error))
+            continue
+        while start and offset + games > len(seeds) and start_seed_ledger is not None:
+            # task99: a start cell's future seeds are renewable. Renew before giving the cell up —
+            # the first block in the manifest is only segment one; the offset keeps counting from
+            # the head of the table, so old groups and their labels stay comparable.
+            try:
+                block = renew_start_seeds(cell, start_seed_ledger, renew_size)
+            except (SeedPoolExhausted, ValueError, OSError) as error:
+                # 池耗尽、账本损坏/池不符、账本目录不可写：都只是这一格领不到，不能让 qc 停在
+                # plan 阶段（task98 的教训：单点异常不该终止整个采集）。错误原文进日志。
+                changes.append(f'{task_id}: seed renewal failed ({error})')
+                break
+            else:
+                seeds = cell['seeds']
+                changes.append(f'{task_id}: seeds renewed +{block[1] - block[0]} from '
+                               f'[{block[0]},{block[1]}) (table {len(seeds)}, '
+                               f'segments {len(cell.get("seed_blocks") or [])})')
         if offset + games > len(seeds):
-            # An exhausted seed block must not stop qc (10-26 06:50: demo_fog_32 ran out of its 256
-            # future seeds and qc exited). A start cell is retired; a plain task's group is skipped.
             if start:
+                cell['retired_reason'] = 'seeds exhausted'
                 state.setdefault('retired_cells', {})[base] = state['cells'].pop(base)
             changes.append(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)}); '
                            + ('start cell retired' if start else 'group skipped'))
             continue
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
-                    games=games, manifest=str(manifests[task_id]),
+                    games=games, manifest=manifest,
                     label=label_for(state['round'] + 1, base, multiplier,
                                     start=int(multiplier) if start else None))
         if start:
@@ -1176,107 +1726,134 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     return plan, changes
 
 
-def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
-    """跑一轮；返回 False 表示看到停止标志。"""
-    round_index = state['round'] + 1
-    for item in plan:
-        pipeline = getattr(args, 'pipeline', None)
-        if pipeline is not None:
-            pipeline.poll()
-        if getattr(args, 'stop_flag', STOP_FLAG).exists():
-            log_line(args.log, f'round {round_index}: stop flag seen before {item["label"]}; stopping at group boundary')
-            return False
-        state['offsets'][item['task_id']] = item['offset'] + item['games']
-        save_state(args.state, state)          # 先占偏移，崩溃也不会重采
-        available = mem_available_bytes()
-        background = pipeline.reservation() if pipeline is not None else 0
-        upper = pipeline.foreground_limit() if pipeline is not None else args.workers
-        workers = worker_count(available, per_worker, upper, background)
-        if pipeline is not None:
-            # 评估分配 units 时要扣除前台在跑的组宽（task73c）；启动探针后这里也补上
-            # 单 worker 实测 RSS，供 _evaluate 的内存准入使用。
-            pipeline.per_worker_bytes = per_worker
-            pipeline.foreground_workers = workers
-        per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
-        log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
-                           f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
-                           f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
-        cell = state['cells'][item['base']]
-        student = student_rate(cell, item['multiplier'])
-        starved = student is not None and student < args.beta_threshold
-        if starved and cell.get('mixed_since_probe', 0) >= max(1, args.probe_interval) - 1:
-            beta = 0.0    # 探针：每 probe_interval 组保留一个 β=0 组，测真实学生胜率
-        elif starved:
-            beta = args.starved_beta
-        else:
-            beta = 0.0
-        item['beta'] = beta
-        command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
-                              item['games'], item['label'], workers=workers, beta=beta,
-                              demo_archive=item.get('demo_archive'),
-                              demo_decision=item.get('demo_decision'),
-                              future_seeds=item.get('future_seeds'))
-        started = time.time()
-        item.update(collection_started=started, student=str(args.rollout_policy),
-                    student_round=state.get('student_round', 0), workers=workers)
-        result = subprocess.run(command, cwd=ROOT)
+def _run_group(args, state, item, round_index, per_worker):
+    pipeline = getattr(args, 'pipeline', None)
+    state['offsets'][item['task_id']] = item['offset'] + item['games']
+    save_state(args.state, state)          # 先占偏移，崩溃也不会重采
+    available = mem_available_bytes()
+    background = pipeline.reservation() if pipeline is not None else 0
+    upper = pipeline.foreground_limit() if pipeline is not None else args.workers
+    workers = worker_count(available, per_worker, upper, background)
+    if pipeline is not None:
+        # 评估分配 units 时要扣除前台在跑的组宽（task73c）；启动探针后这里也补上
+        # 单 worker 实测 RSS，供 _evaluate 的内存准入使用。
+        pipeline.per_worker_bytes = per_worker
+        pipeline.foreground_workers = workers
+    per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
+    log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
+                       f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
+                       f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
+    cell = state['cells'][item['base']]
+    student = student_rate(cell, item['multiplier'])
+    starved = student is not None and student < args.beta_threshold
+    if starved and cell.get('mixed_since_probe', 0) >= max(1, args.probe_interval) - 1:
+        beta = 0.0    # 探针：每 probe_interval 组保留一个 β=0 组，测真实学生胜率
+    elif starved:
+        beta = args.starved_beta
+    else:
+        beta = 0.0
+    item['beta'] = beta
+    command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
+                          item['games'], item['label'], workers=workers, beta=beta,
+                          demo_archive=item.get('demo_archive'),
+                          demo_decision=item.get('demo_decision'),
+                          future_seeds=item.get('future_seeds'))
+    started = time.time()
+    item.update(collection_started=started, student=str(args.rollout_policy),
+                student_round=state.get('student_round', 0), workers=workers)
+    try:
+        result = retry_io(subprocess.run)(command, cwd=ROOT)
+    finally:
         item['collection_finished'] = time.time()
         if pipeline is not None:
             pipeline.foreground_workers = 0
-        seconds = time.time() - started
-        folder = args.out / f'{item["label"]}_{item["games"]}'
-        wins = games = 0
-        rows = []
-        if (folder / 'games.jsonl').exists():
-            rows = [json.loads(line) for line in (folder / 'games.jsonl').read_text().splitlines() if line.strip()]
-            games = len(rows)
-            wins = sum(1 for row in rows if row.get('won'))
-        metrics = getattr(args, 'metrics', None)
-        if metrics is not None:
-            args.metrics_games += games
-            args.metrics_decisions += sum(row.get('decisions', 0) for row in rows)
+    seconds = time.time() - started
+    folder = args.out / f'{item["label"]}_{item["games"]}'
+    wins = games = 0
+    rows = []
+    if (folder / 'games.jsonl').exists():
+        rows = [json.loads(line) for line in retry_io((folder / 'games.jsonl').read_text)().splitlines() if line.strip()]
+        games = len(rows)
+        wins = sum(1 for row in rows if row.get('won'))
+    if games != item['games'] or any(type(row.get('won')) is not bool for row in rows):
+        raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}')
+    metrics = getattr(args, 'metrics', None)
+    if metrics is not None:
+        args.metrics_games += games
+        args.metrics_decisions += sum(row.get('decisions', 0) for row in rows)
+        try:
             metrics.update(games=args.metrics_games, decisions=args.metrics_decisions, round=round_index)
-        bucket = cell['windows'].setdefault(
-            str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
-        if beta > 0:
-            # β 混合组的胜负不是学生的胜率（一部分步是搜索在走）：不进学生窗口，另存 mixed；
-            # 否则 adjust/allocate/student_rate 会把混合胜率当学生胜率——全败格被误升档、
-            # 可教差距被算小、student_rate 在阈值附近来回振荡（task59 修正 2b）。
-            target = bucket.setdefault('mixed', {'recent': [], 'wins': 0, 'games': 0})
-            cell['mixed_since_probe'] = cell.get('mixed_since_probe', 0) + 1
-        else:
-            target = bucket
-            cell['mixed_since_probe'] = 0
-        target['recent'] = (target['recent'] + [1 if row.get('won') else 0
-                                                for row in rows])[-WINDOW:]
-        target['wins'] += wins
-        target['games'] += games
-        log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} '
-                           f'mult={item["multiplier"]:g}'
-                           + (f' start={item["demo_decision"]}' if 'demo_decision' in item else '') +
-                           f' offset={item["offset"]} games={games} wins={wins} '
-                           f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
-                           f'rc={result.returncode} {seconds:.0f}s')
-        if result.returncode != 0:
-            raise SystemExit(f'{item["label"]}: search_play exited {result.returncode}')
-        state['cells'][item['base']]['last_round'] = round_index
-        save_state(args.state, state)   # 组完成即落盘：组间崩溃重启不重采、防遗忘轮转不丢（task59）
+        except Exception as error:
+            log_line(args.log, f'metrics update skipped: {error}')
+    log_line(args.log, f'round {round_index} {item["label"]} {item["task_id"]} '
+                       f'mult={item["multiplier"]:g}'
+                       + (f' start={item["demo_decision"]}' if 'demo_decision' in item else '') +
+                       f' offset={item["offset"]} games={games} wins={wins} '
+                       f'rate={(wins / games if games else 0):.2f} beta={beta:g} '
+                       f'rc={result.returncode} {seconds:.0f}s')
+    if result.returncode != 0:
+        raise RuntimeError(f'{item["label"]}: search_play exited {result.returncode}')
+    bucket = cell['windows'].setdefault(
+        str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
+    if beta > 0:
+        # β 混合组的胜负不是学生的胜率（一部分步是搜索在走）：不进学生窗口，另存 mixed；
+        # 否则 adjust/allocate/student_rate 会把混合胜率当学生胜率——全败格被误升档、
+        # 可教差距被算小、student_rate 在阈值附近来回振荡（task59 修正 2b）。
+        target = bucket.setdefault('mixed', {'recent': [], 'wins': 0, 'games': 0})
+        cell['mixed_since_probe'] = cell.get('mixed_since_probe', 0) + 1
+    else:
+        target = bucket
+        cell['mixed_since_probe'] = 0
+    target['recent'] = (target['recent'] + [1 if row.get('won') else 0
+                                            for row in rows])[-WINDOW:]
+    target['wins'] += wins
+    target['games'] += games
+    state['cells'][item['base']]['last_round'] = round_index
+
+
+def pipeline_action(args, action):
+    pipeline = getattr(args, 'pipeline', None)
+    if pipeline is None:
+        return
+    try:
+        getattr(pipeline, action)()
+    except StateWriteError:
+        raise
+    except (Exception, SystemExit) as error:
+        log_line(args.log, f'background {action} isolated; collector retained: {type(error).__name__}: {error}')
+        save_state(args.state, pipeline.state)
+
+
+def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
+    """Group failures do not stop other cells; offsets are durable before collection."""
+    round_index = state['round'] + 1
+    for item in plan:
+        pipeline_action(args, 'poll')
+        if getattr(args, 'stop_flag', STOP_FLAG).exists():
+            log_line(args.log, f'round {round_index}: stop flag seen before {item["label"]}; stopping at group boundary')
+            return False
+        try:
+            _run_group(args, state, item, round_index, per_worker)
+            item['status'] = 'done'
+        except StateWriteError:
+            raise
+        except (Exception, SystemExit) as error:
+            item.update(status='failed', error=f'{type(error).__name__}: {error}',
+                        collection_finished=time.time())
+            log_line(args.log, f'round {round_index} {item["label"]}: group skipped: {item["error"]}')
+            if item['base'] in state['cells']:
+                state['cells'][item['base']]['last_round'] = round_index
+        state.setdefault('completed_groups', []).append(dict(item))
+        save_state(args.state, state)
     state['round'] = round_index
-    state['log'].append(dict(round=round_index,
-                             groups=[{**{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',
-                                                             'manifest', 'label', 'collection_started',
-                                                             'collection_finished', 'student', 'student_round',
-                                                             'workers', 'beta')},
-                                       **{k: item[k] for k in ('demo_archive', 'demo_decision', 'future_seeds')
-                                          if k in item}}
-                                     for item in plan],
-                             changes=changes))
+    groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
+    state['log'].append(dict(round=round_index, groups=groups, changes=changes))
     save_state(args.state, state)
-    log_line(args.log, f'round {round_index} done: {len(plan)} groups, '
-                       f'{sum(item["games"] for item in plan)} games, changes={len(changes)}'
+    log_line(args.log, f'round {round_index} done: {len(groups)} groups, '
+                       f'{sum(group["games"] for group in groups)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
-    if getattr(args, 'pipeline', None) is not None:
-        args.pipeline.enqueue()  # no wait: next round collects immediately with the last published student
+    if groups:
+        pipeline_action(args, 'enqueue')
     return True
 
 
@@ -1296,11 +1873,57 @@ def print_plan(state: dict, plan: list[dict], changes: list[str]) -> None:
             print('  ' + change)
 
 
+def collect_rounds(args, state, tasks, names, values, manifests, teacher):
+    per_worker = -1
+    completed = 0
+    while completed < args.rounds:
+        if args.stop_flag.exists():
+            log_line(args.log, 'stop flag seen at round boundary')
+            break
+        try:
+            # Also the recovery barrier after an IO failure: no collection may run
+            # with an uncommitted reservation left from a previous attempt.
+            save_state(args.state, state)
+            plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
+                                       args.games_per_group, teacher,
+                                       start_seed_ledger=getattr(args, 'start_seed_ledger', None))
+            print_plan(state, plan, changes)
+            if per_worker < 0:
+                if args.stop_flag.exists():
+                    break
+                per_worker = startup_worker_estimate(args, plan)
+            if not run_round(args, state, plan, changes, per_worker):
+                break
+            completed += 1
+        except (Exception, SystemExit) as error:
+            # KeyboardInterrupt and process termination are deliberately not caught.
+            log_line(args.log, f'ERROR round boundary paused; retry in 120s: {type(error).__name__}: {error}')
+            time.sleep(120)
+
+
+def set_gate_version(state: dict, version: int) -> None:
+    """A policy change may not cross an issued gate: queued/running jobs keep the version they were issued with.
+
+    A partly collected round is fine: its gate contract is only issued when its training job is queued at the
+    round's end, so collected groups carry no gate version (draining a whole round under the old policy would
+    idle collection for hours).
+    """
+    previous = state.get('gate_version', 3)  # all pre-task113 states used v3
+    pending = any(job.get('status') != 'done' and not job.get('isolated')
+                  for job in state.get('training_jobs', []))
+    if version != previous and pending:
+        raise ValueError(f'gate v{previous} -> v{version} requires a drained pipeline; '
+                         f'let the queued jobs finish with --gate-version {previous}')
+    state['gate_version'] = version
+
+
 def main() -> None:
     # task34: die after the workers and training, but before the WSL access path.
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
+                        help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
@@ -1340,6 +1963,13 @@ def main() -> None:
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
+    parser.add_argument('--selection-seed-ledger', type=Path, default=SELECTION_LEDGER,
+                        help='independent locked ledger for fresh per-round selection seeds')
+    parser.add_argument('--start-seed-ledger', type=Path, default=Path(START_SEED_LEDGER_DEFAULT),
+                        help='out-of-git ledger for renewed demo-start future seed blocks (task99)')
+    parser.add_argument('--restore-start-cell', action='append', default=[], metavar='TASK_ID',
+                        help='reactivate a start cell retired for seed exhaustion, keeping its offset '
+                             'and renewed segments (task99); repeatable, one-off')
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
@@ -1347,19 +1977,23 @@ def main() -> None:
         parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
+    if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
+        parser.error('rounds and game budgets must be positive')
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
                  'promotion_panel', 'teacher_rates', 'demo_start_manifest'):
         value = getattr(args, name)
         if not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
-    if not args.seed_ledger.is_absolute():
-        parser.error('--seed-ledger must be absolute')
+    if not args.seed_ledger.is_absolute() or not args.selection_seed_ledger.is_absolute():
+        parser.error('seed ledger paths must be absolute')
+    if not args.start_seed_ledger.is_absolute():
+        parser.error('--start-seed-ledger must be absolute')
     try:
         probe = None
-        if GATE_VERSION >= 2:
-            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(GATE_VERSION)['pair_count'])
-        freeze_panel(json.loads(args.promotion_panel.read_text()), version=GATE_VERSION, seed_block=probe)
+        if args.gate_version >= 2:
+            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(args.gate_version)['pair_count'])
+        freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
@@ -1376,19 +2010,39 @@ def main() -> None:
                                   str(MAIN / 'artifacts/task28/*/config.json'),
                                   str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
     if args.state.exists():
-        state = json.loads(args.state.read_text())
+        state = read_json(args.state)
+        if (not isinstance(state, dict) or type(state.get('round')) is not int or state['round'] < 0
+                or not isinstance(state.get('cells'), dict) or not isinstance(state.get('offsets'), dict)
+                or not isinstance(state.get('log'), list) or not isinstance(state.get('training_jobs', []), list)):
+            parser.error('invalid global curriculum state structure')
+        for line in isolate_cells(state, values):
+            log_line(args.log, line)
         # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
         windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
         for line in reconcile_cells(state, tasks, names, windows):
             log_line(args.log, line)
-        for line in reconcile_start_cells(state, start_cells, windows):
+        for line in reconcile_start_cells(state, start_cells, windows,
+                                          restore=tuple(args.restore_start_cell)):
             log_line(args.log, line)
+        for base in args.restore_start_cell:
+            if base not in state['cells']:
+                parser.error(f'--restore-start-cell {base}: not a retired start cell in {args.state}')
+            manifests.setdefault(base, args.demo_start_manifest)
     else:
         windows, offsets = init_from_runs(patterns, names)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
+    try:
+        set_gate_version(state, args.gate_version)
+    except ValueError as error:
+        parser.error(str(error))
     if args.dry_run:
-        plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                   args.games_per_group, teacher)
+        # 预览也要走续领逻辑，但不能真花种子：在账本副本上领，块与生产下次会拿到的一致。
+        with tempfile.TemporaryDirectory() as preview_dir:
+            ledger = Path(preview_dir) / args.start_seed_ledger.name
+            if args.start_seed_ledger.exists():
+                ledger.write_bytes(args.start_seed_ledger.read_bytes())
+            plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
+                                       args.games_per_group, teacher, start_seed_ledger=ledger)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
@@ -1401,34 +2055,46 @@ def main() -> None:
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
         if labels:
             print('pack: ' + ' '.join(pack_command(args, labels)))
+        incumbent = Path(state.get('student') or args.rollout_policy)
+        documents = {}
+        for rnd in state.get('log', []):
+            for group in rnd['groups']:
+                source = group.get('manifest')
+                if (group.get('status', 'done') == 'done'
+                        and group.get('student') == str(incumbent) and source is not None and source not in documents):
+                    documents[source] = json.loads(Path(source).read_text())
+        preview = selection_plan(state, incumbent, args.out,
+            json.loads((ROOT / 'configs/student_selection_v2.json').read_text()), documents,
+            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE))
+        print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
+            eligible_cells=len(preview['cells']), random_families=3,
+            games=sum(len(task['seeds']) for task in preview['tasks']),
+            pools=SELECTION_POOLS, ledger=str(args.selection_seed_ledger))))
         return
-    args.metrics = Metrics("curriculum_queue").start()
-    args.metrics.update(games=0, decisions=0, round=state["round"])
+    args.metrics = None
+    try:
+        args.metrics = Metrics("curriculum_queue").start()
+        args.metrics.update(games=0, decisions=0, round=state["round"])
+    except Exception as error:
+        log_line(args.log, f'metrics unavailable: {error}')
     args.metrics_games = args.metrics_decisions = 0
     args.pipeline = TrainingPipeline(args, state)
     try:
         # Recover the saved last round if a previous controller died before enqueuing it.
         if state['round'] and state['log']:
-            args.pipeline.enqueue()
-        per_worker = -1
-        for _ in range(args.rounds):
-            plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                       args.games_per_group, teacher)
-            print_plan(state, plan, changes)
-            if per_worker < 0:
-                if args.stop_flag.exists():
-                    log_line(args.log, f'round {state["round"] + 1}: stop flag seen before the worker probe; stopping')
-                    break
-                per_worker = startup_worker_estimate(args, plan)
-            if not run_round(args, state, plan, changes, per_worker):
-                break
+            pipeline_action(args, 'enqueue')
+        collect_rounds(args, state, tasks, names, values, manifests, teacher)
     finally:
         # Finite invocations and stop flags drain already saved snapshots; games are never
         # killed to switch students, and a final training failure remains visible in state.
         try:
-            args.pipeline.close()
+            pipeline_action(args, 'close')
         finally:
-            args.metrics.close()
+            if args.metrics is not None:
+                try:
+                    args.metrics.close()
+                except Exception as error:
+                    log_line(args.log, f'metrics close skipped: {error}')
 
 
 if __name__ == '__main__':

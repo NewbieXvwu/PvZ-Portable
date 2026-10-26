@@ -1,11 +1,13 @@
 """task49: overlap, group-boundary publication, memory headroom and durable failures."""
 import json
+import shutil
 import sys
 import tempfile
 import threading
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
@@ -13,6 +15,25 @@ import curriculum_queue as queue
 from pvz_recipe import write_recipe
 from pvz_promotion import GATE_VERSION, PANEL_TASKS_V3, decide, freeze_panel
 from promotion_gate import contract_key, sha
+
+
+@pytest.fixture(autouse=True)
+def prepared_selection_without_real_games(monkeypatch):
+    # Existing queue tests use synthetic collection rows and /manifest. Exercise
+    # their lifecycle without opening real game engines or production files.
+    def prepare(self, job):
+        if 'selection_refresh' not in job:
+            return dict(manifest_sha256=job['selection_manifest_sha256'])
+        path = Path(job['selection_manifest'])
+        if not path.exists():
+            panel = json.loads((ROOT / 'configs/student_selection.json').read_text())
+            first = job['selection_refresh']['seed_block'][0]
+            for index, task in enumerate(panel['tasks']):
+                task['seeds'] = list(range(first + index * 64, first + (index + 1) * 64))
+            path.write_text(json.dumps(panel))
+        return dict(manifest_sha256=sha(path))
+    monkeypatch.setattr(queue.TrainingPipeline, '_prepare_selection', prepare)
+    monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: None)  # legacy tests remain serial
 
 
 def setup(root):
@@ -75,6 +96,20 @@ def write_evaluation(pipeline, command, approved=True):
     (out / 'decision.json').write_text(json.dumps(report))
 
 
+def write_selection(pipeline, command, best_index=0):
+    # task92: emulate scripts/select_student.py -- the frozen panel picks one candidate;
+    # only that copy is published as the round's gate candidate.
+    candidates = command[command.index('--candidates') + 1].split(',')
+    out = Path(command[command.index('--out') + 1])
+    manifest = Path(command[command.index('--manifest') + 1])
+    best = candidates[best_index]
+    out.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(best, out / 'model.pt')
+    (out / 'selection.json').write_text(json.dumps(
+        dict(best=best, model_sha256=sha(best), manifest_sha256=sha(manifest),
+             rejected=[path for path in candidates if path != best])))
+
+
 def plan(round_index):
     return [dict(base=name, multiplier=1., task_id=name, offset=(round_index - 1) * 8,
                  games=8, manifest='/manifest', label=f'c{round_index}{name}') for name in ('a', 'b')]
@@ -100,6 +135,8 @@ def test_collection_overlaps_both_phases_and_switches_only_between_groups():
                 model = logfile.parent / 'student/model.pt'
                 model.parent.mkdir(parents=True)
                 model.write_bytes(b'trained')
+            if logfile.name == 'selection.log':
+                write_selection(self, command)
             if logfile.name == 'evaluation.log':
                 write_evaluation(self, command)
         def command(_args, manifest, task, offset, games, label, **kwargs):
@@ -159,6 +196,8 @@ def test_background_failure_is_saved_and_can_be_retried():
                 model = logfile.parent / 'student/model.pt'
                 model.parent.mkdir(parents=True)
                 model.write_bytes(b'retried')
+            if logfile.name == 'selection.log':
+                write_selection(self, command)
             if logfile.name == 'evaluation.log':
                 write_evaluation(self, command)
         with patch.object(queue.TrainingPipeline, '_command', success), \
@@ -221,6 +260,8 @@ def test_rejection_keeps_student_and_next_round_still_accumulates_data():
                 model = logfile.parent / 'student/model.pt'
                 model.parent.mkdir(parents=True)
                 model.write_bytes(b'weak')
+            if logfile.name == 'selection.log':
+                write_selection(self, command)
             if logfile.name == 'evaluation.log':
                 write_evaluation(self, command, approved=False)
         def collect(command, **kwargs):
@@ -253,11 +294,15 @@ def test_stale_comparator_is_reevaluated_without_retraining_on_close():
         state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
         calls = []
         def background(self, command, logfile):
-            calls.append((logfile.parent.name, logfile.name))
+            # Seed trainers log inside seeds/seed_NNNNNN/; attribute them to the round folder.
+            calls.append((logfile.parents[2].name if logfile.parent.name.startswith('seed_')
+                          else logfile.parent.name, logfile.name))
             if logfile.name == 'train.log':
                 model = logfile.parent / 'student/model.pt'
                 model.parent.mkdir(parents=True)
                 model.write_bytes(logfile.parent.name.encode())
+            if logfile.name == 'selection.log':
+                write_selection(self, command)
             if logfile.name == 'evaluation.log':
                 write_evaluation(self, command)
         with patch.object(queue.TrainingPipeline, '_command', background), \
@@ -273,8 +318,8 @@ def test_stale_comparator_is_reevaluated_without_retraining_on_close():
             assert state.get('student_round', 0) == 0
             pipeline.close()
         assert state['student_round'] == 2
-        assert calls.count(('round_000001', 'train.log')) == 1
-        assert calls.count(('round_000002', 'train.log')) == 1
+        assert sum(1 for c in calls if c == ('round_000001', 'train.log')) == 2
+        assert sum(1 for c in calls if c == ('round_000002', 'train.log')) == 2
         assert calls.count(('round_000002', 'evaluation.log')) == 2
         assert state['training_jobs'][1]['timing']['promotion']['contract']['incumbent'].endswith('round_000001/student/model.pt')
 
@@ -313,6 +358,8 @@ def test_evaluation_failure_is_closed_gate_but_does_not_poison_training_queue():
                 model = logfile.parent / 'student/model.pt'
                 model.parent.mkdir(parents=True)
                 model.write_bytes(b'trained')
+            if logfile.name == 'selection.log':
+                write_selection(self, command)
             if logfile.name == 'evaluation.log':
                 raise RuntimeError('evaluation engine failure')
         with patch.object(queue.TrainingPipeline, '_command', background), \
@@ -340,6 +387,8 @@ def test_corruption_after_evaluation_before_group_boundary_cannot_promote():
                 model = logfile.parent / 'student/model.pt'
                 model.parent.mkdir(parents=True)
                 model.write_bytes(b'trained')
+            if logfile.name == 'selection.log':
+                write_selection(self, command)
             if logfile.name == 'evaluation.log':
                 write_evaluation(self, command)
         with patch.object(queue.TrainingPipeline, '_command', background), \
@@ -357,3 +406,110 @@ def test_corruption_after_evaluation_before_group_boundary_cannot_promote():
         assert state['training_jobs'][0]['status'] == 'done'
         assert not state['training_jobs'][0]['promotion_approved']
         assert 'invalid paired evaluation artifacts' in state['training_jobs'][0]['promotion_reasons'][0]
+
+
+def test_multiseed_trains_each_seed_in_its_own_directory_and_gates_only_the_selected():
+    # task92: K packed-once seeds train independently, all candidates are scored on the
+    # frozen panel, and only the selected copy becomes the gate candidate.
+    with tempfile.TemporaryDirectory() as folder:
+        args, state = setup(Path(folder))
+        state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
+        def background(self, command, logfile):
+            if logfile.name == 'train.log':
+                model = logfile.parent / 'student/model.pt'
+                model.parent.mkdir(parents=True)
+                # Distinct weights per seed: the selector must copy the winner, not a sibling.
+                model.write_bytes(logfile.parent.name.encode())
+            elif logfile.name == 'selection.log':
+                write_selection(self, command)
+            elif logfile.name == 'evaluation.log':
+                write_evaluation(self, command)
+        with patch.object(queue.TrainingPipeline, '_command', background), \
+             patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
+            args.pipeline = queue.TrainingPipeline(args, state)
+            args.pipeline.enqueue()
+            args.pipeline.futures[0][1].result(timeout=5)
+            args.pipeline.poll()
+            args.pipeline.close()
+        job = state['training_jobs'][0]
+        folder = Path(job['recipe']).parent
+        seeds = folder / 'seeds'
+        assert sorted(p.name for p in seeds.iterdir()) == ['seed_000001', 'seed_000002']
+        assert (seeds / 'seed_000001/student/model.pt').read_bytes() == b'seed_000001'
+        assert (seeds / 'seed_000002/student/model.pt').read_bytes() == b'seed_000002'
+        candidates = job['timing']['candidates']
+        assert [c['seed'] for c in candidates] == [1, 2]
+        assert all(c['status'] == 'trained' for c in candidates)
+        selection = job['timing']['selection']
+        assert selection['best'] == str(seeds / 'seed_000001/student/model.pt')
+        assert selection['rejected'] == [str(seeds / 'seed_000002/student/model.pt')]
+        assert (folder / 'candidates.json').is_file()
+        # The gate ran on the selected copy, not on any per-seed directory.
+        assert job['promotion_approved'] is True
+        assert job['timing']['promotion']['contract']['candidate'].endswith('round_000001/student/model.pt')
+        assert (folder / 'student/model.pt').read_bytes() == b'seed_000001'
+        assert args.rollout_policy == folder / 'student/model.pt'
+
+
+def test_failed_seed_does_not_block_remaining_seeds_or_the_round():
+    # task92: one seed failing is local to its candidate; the rest are still selected from.
+    with tempfile.TemporaryDirectory() as folder:
+        args, state = setup(Path(folder))
+        state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
+        def background(self, command, logfile):
+            if logfile.name == 'train.log' and logfile.parent.name == 'seed_000002':
+                raise RuntimeError('seed 2 OOM')
+            if logfile.name == 'train.log':
+                model = logfile.parent / 'student/model.pt'
+                model.parent.mkdir(parents=True)
+                model.write_bytes(b'trained')
+            elif logfile.name == 'selection.log':
+                write_selection(self, command)
+            elif logfile.name == 'evaluation.log':
+                write_evaluation(self, command)
+        with patch.object(queue.TrainingPipeline, '_command', background), \
+             patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
+            args.pipeline = queue.TrainingPipeline(args, state)
+            args.pipeline.enqueue()
+            args.pipeline.futures[0][1].result(timeout=5)
+            args.pipeline.poll()
+            args.pipeline.close()
+        job = state['training_jobs'][0]
+        assert job['status'] == 'done' and job['promotion_approved'] is True
+        candidates = job['timing']['candidates']
+        assert [c['status'] for c in candidates] == ['trained', 'failed']
+        assert 'seed 2 OOM' in candidates[1]['error']
+        assert job['timing']['selection']['best'].endswith('seed_000001/student/model.pt')
+        assert (Path(job['recipe']).parent / 'seeds/seed_000002/failed.json').is_file()
+
+
+def test_all_seeds_failed_still_reaches_the_B7_retriable_failure():
+    # task92: an entirely failed round keeps the pre-existing B7 retry/stop semantics.
+    with tempfile.TemporaryDirectory() as folder:
+        args, state = setup(Path(folder))
+        state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
+        def background(self, command, logfile):
+            if logfile.name == 'train.log':
+                raise RuntimeError('every seed failed')
+        with patch.object(queue.TrainingPipeline, '_command', background), \
+             patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
+            args.pipeline = queue.TrainingPipeline(args, state)
+            args.pipeline.enqueue()
+            args.pipeline.close()   # B7: logged, not raised
+        job = state['training_jobs'][0]
+        assert job['status'] == 'failed'
+        assert 'all training seeds failed' in job['error']
+        def success(self, command, logfile):
+            if logfile.name == 'train.log':
+                model = logfile.parent / 'student/model.pt'
+                model.parent.mkdir(parents=True)
+                model.write_bytes(b'retried')
+            elif logfile.name == 'selection.log':
+                write_selection(self, command)
+            elif logfile.name == 'evaluation.log':
+                write_evaluation(self, command)
+        with patch.object(queue.TrainingPipeline, '_command', success), \
+             patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
+            args.pipeline = queue.TrainingPipeline(args, state)
+            args.pipeline.close()
+        assert state['training_jobs'][0]['status'] == 'done'

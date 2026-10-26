@@ -150,7 +150,7 @@ def test_v2_policy_records_fresh_seed_design_and_v1_stays_byte_compatible():
                         'zone_veto', 'pair_count', 'episode_count', 'seeds_per_task', 'tasks']
     assert v1['pair_count'] == 64 and v1['version'] == 1 and v1['seeds_per_task'] == 8
     with pytest.raises(ValueError):
-        policy(4)
+        policy(5)
 
 
 def test_v2_panel_partitions_block_and_decide_covers_1536_pairs():
@@ -259,3 +259,76 @@ def test_v3_decision_uses_zone_veto_on_new_zones_too():
     assert not result['approved']
     assert sorted(result['reasons']) == ['significant_zone_regression:fog',
                                          'significant_zone_regression:roof']
+
+
+# Actual round-20 decision b4e85c41a983bbe8121a (both_win, gain, harm, both_lose).
+# /home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/evaluations/
+# b4e85c41a983bbe8121a/decision.json; numerical fixture, no game replay needed.
+ROUND20 = {'day': (336, 16, 30, 2), 'fog': (186, 1, 5, 0),
+           'heldout': (274, 42, 52, 16), 'night': (355, 14, 15, 0),
+           'pool': (220, 68, 47, 49), 'roof': (0, 18, 6, 168)}
+
+
+def paired_tables(panel, tables):
+    pairs = outcomes(panel, False, False)
+    for zone, counts in tables.items():
+        rows = [row for row in pairs if row['zone'] == zone]
+        assert len(rows) == sum(counts)
+        values = [(True, True), (True, False), (False, True), (False, False)]
+        offset = 0
+        for count, (candidate, incumbent) in zip(counts, values):
+            for row in rows[offset:offset + count]:
+                row.update(candidate=candidate, incumbent=incumbent)
+            offset += count
+    return pairs
+
+
+def test_v4_round20_holm_accepts_without_changing_overall_or_legacy_decision():
+    v3 = v3_panel()
+    v4 = freeze_panel(v3_source_document(), version=4, seed_block=v3['seed_block'])
+    assert v4['tasks'] == v3['tasks'] and v4['groups'] == v3['groups']
+    pairs = paired_tables(v4, ROUND20)
+    old, new = decide(pairs, v3), decide(pairs, v4)
+    assert old['reasons'] == ['significant_zone_regression:day']
+    assert new['approved'] and new['version'] == 4
+    assert new['overall'] == old['overall']
+    assert new['overall']['gain'] == 159 and new['overall']['harm'] == 155
+    assert new['zones']['day']['mcnemar_worse_p'] == pytest.approx(.027038015929434778)
+    assert new['zones']['day']['holm_adjusted_p'] == pytest.approx(6 * .027038015929434778)
+    expected = dict(policy(3), version=4, zone_veto=policy(4)['zone_veto'])
+    assert policy(4) == expected and 'Holm–Bonferroni' in policy(4)['zone_veto']
+
+
+def test_v4_strong_zone_regression_still_vetoes_and_overall_rule_is_unchanged():
+    panel = freeze_panel(v3_source_document(), version=4, seed_block=(31024, 32944))
+    pairs = outcomes(panel, True, False)
+    for row in [row for row in pairs if row['zone'] == 'day'][:8]:
+        row.update(candidate=False, incumbent=True)
+    # Leave day with exactly eight harms, zero gains: p = 1/256 < .05/6.
+    for row in [row for row in pairs if row['zone'] == 'day'][8:]:
+        row.update(candidate=True, incumbent=True)
+    result = decide(pairs, panel)
+    assert result['overall']['ci95'][0] > -.03
+    assert result['zones']['day']['mcnemar_worse_p'] == 1/256
+    assert result['reasons'] == ['significant_zone_regression:day']
+    assert 'overall_ci_lower_not_above_minus_3pp' in decide(outcomes(panel, False, True), panel)['reasons']
+
+
+def test_v4_holm_is_stepdown_and_stops_after_first_nonrejection():
+    panel = freeze_panel(v3_source_document(), version=4, seed_block=(31024, 32944))
+    tables = {zone: (sum(ROUND20[zone]) - harms, 0, harms, 0)
+              for zone, harms in zip(V3_ZONES, (8, 7, 6, 5, 4, 3))}
+    result = decide(paired_tables(panel, tables), panel)
+    # p=1/64 fails .05/4; later p=1/8 must stay accepted even at the final .05 threshold.
+    assert result['reasons'] == ['significant_zone_regression:day', 'significant_zone_regression:fog']
+    assert result['zones']['fog']['holm_adjusted_p'] == 5/128
+    assert result['zones']['heldout']['holm_adjusted_p'] == 4/64
+
+    # After the first failure (.010742 >= .05/5), later equal p values must
+    # remain accepted even though they are below their individual thresholds.
+    tables = {zone: (sum(ROUND20[zone]) - 10, 1, 9, 0) for zone in V3_ZONES}
+    tables['day'] = (376, 0, 8, 0)
+    result = decide(paired_tables(panel, tables), panel)
+    assert [r for r in result['reasons'] if r.startswith('significant_zone_regression:')] == [
+        'significant_zone_regression:day']
+    assert result['zones']['roof']['holm_adjusted_p'] == 5 * 11/1024

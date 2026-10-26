@@ -10,6 +10,8 @@ Gate versions:
 - 2 (task73b): fresh seeds every round from the gate-dedicated pool
   [31024, 65536) via an out-of-git ledger, 1536 pairs, incumbent re-evaluated
   on the same fresh seeds (no cached incumbent outcomes).
+- 4 (task113): same panel, seeds and overall noninferiority as v3; zone vetoes
+  use Holm–Bonferroni step-down correction at family-wise alpha 0.05.
 - 3 (task73c): panel extended with the zones the curriculum actually practices -
   fog (fog_user L31, human observation) and roof (L41 r7) - and the floor
   day_l9 holdout replaced by a measured in-band holdout. 1920 pairs. Decision
@@ -27,7 +29,7 @@ import copy
 import math
 from statistics import NormalDist
 
-GATE_VERSION = 3
+GATE_VERSION = 4
 ALPHA = .05
 MARGIN = .03
 SEEDS_PER_TASK = 8
@@ -57,7 +59,8 @@ PANEL_TASKS_V3 = (
 V1_PANEL = 'v2-task49A'
 V2_PANEL = 'v2-task73b'
 V3_PANEL = 'v3-task73c'
-VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2, V3_PANEL: 3}
+V4_PANEL = 'v4-task113'
+VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2, V3_PANEL: 3, V4_PANEL: 4}
 V1_POOL = (30000, 30128)
 # task88: ordered pool list. [31024, 65536) was registered for task73b and is
 # nearly spent (ledger allocated up to 36272 on 2026-10-26); the second window is
@@ -69,6 +72,19 @@ SEED_POOL_V2 = SEED_POOLS_V2[0]  # legacy name: the window v2/v3 were registered
 V2_SEEDS_PER_TASK = 192
 V3_SEEDS_PER_TASK = 192
 SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/gate_seed_ledger.json'
+# task99: future seed blocks of the demo start cells (configs/human_demo_tasks.json
+# demo_start.future_seed_start). The block written in the manifest stays the first
+# segment forever, so old rows stay comparable; when a cell's offset reaches the end
+# of its table, qc renews it from this dedicated pool through its own out-of-git
+# ledger. Checked with scripts/gate_seed_inventory.py (full scan, not --quick: only
+# the full scan parses the JSON manifests). Above every declared segment (highest is
+# [130,000,000, 140,000,000)); 9 digits, like the gate's second window.
+# The first candidate [90,000,000, 91,000,000) was rejected: task89's llm-run-import
+# e2e test had already declared and played future seeds from 90,000,000 upward
+# (worktree llmimport, artifacts/e2e/scan_jobs.json + scan_out/*/games.jsonl).
+START_SEED_POOL = (200_000_000, 201_000_000)
+START_SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/start_cell_seed_ledger.json'
+START_SEED_BLOCK = 256
 
 
 def policy(version=GATE_VERSION):
@@ -116,6 +132,12 @@ def policy(version=GATE_VERSION):
                     incumbent_rerun='both sides are evaluated on the round seeds; '
                                     'cached incumbent outcomes are never used',
                     tasks=[dict(zone=zone, task_id=name) for zone, name in PANEL_TASKS_V3])
+    if version == 4:
+        result = policy(3)
+        result.update(version=4, zone_veto='one-sided exact McNemar p across all panel groups; '
+                      'Holm–Bonferroni step-down correction, family-wise alpha = 0.05; '
+                      'veto while ordered p < 0.05 / (group_count - rank + 1)')
+        return result
     raise ValueError(f'unknown gate version: {version}')
 
 
@@ -180,6 +202,11 @@ def freeze_panel(document, version=GATE_VERSION, seed_block=None):
             document, PANEL_TASKS_V3, seed_block, V3_SEEDS_PER_TASK, V3_PANEL, 3,
             'task73c fresh-seed 1920-pair student promotion subset covering the '
             'practiced fog and roof zones; block allocated from the out-of-git gate seed ledger')
+    if version == 4:
+        return _freeze_ledger_panel(
+            document, PANEL_TASKS_V3, seed_block, V3_SEEDS_PER_TASK, V4_PANEL, 4,
+            'task113 fresh-seed 1920-pair student promotion subset; v3 panel and seed pools, '
+            'Holm–Bonferroni zone veto at family-wise alpha 0.05')
     raise ValueError(f'unknown gate version: {version}')
 
 
@@ -246,8 +273,19 @@ def decide(pairs, manifest):
     reasons = []
     if overall['ci95'][0] <= -MARGIN:
         reasons.append('overall_ci_lower_not_above_minus_3pp')
-    for zone, result in zones.items():
-        if result['mcnemar_worse_p'] < ALPHA:
-            reasons.append('significant_zone_regression:' + zone)
+    if version >= 4:
+        # The family includes every zone, including those with no discordant pairs.
+        # Cumulative maximum implements Holm's stop-at-first-nonrejection rule.
+        adjusted = 0.
+        ordered = sorted(zones, key=lambda zone: (zones[zone]['mcnemar_worse_p'], zone))
+        for rank, zone in enumerate(ordered):
+            adjusted = max(adjusted, min(1., (len(zones) - rank) * zones[zone]['mcnemar_worse_p']))
+            zones[zone]['holm_adjusted_p'] = adjusted
+            if adjusted < ALPHA:
+                reasons.append('significant_zone_regression:' + zone)
+    else:
+        for zone, result in zones.items():
+            if result['mcnemar_worse_p'] < ALPHA:
+                reasons.append('significant_zone_regression:' + zone)
     return dict(version=version, approved=not reasons, reasons=reasons,
                 policy=policy(version), overall=overall, zones=zones)

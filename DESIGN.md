@@ -1261,8 +1261,140 @@ C/D/E 槽位前移，生成器把清单默认种子同步为当前块首），
 **无头 reset**：`scripts/llmplay/check_tasks.py` 对 31 个任务各 reset + 120 tick，
 全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波，
 L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
+### 14.35 学生挑选保留种子块（task92，2026-10-26）
 
-### 14.35 可重复冒险记分板（task103，2026-10-26）
+独立保留 `[120000000, 120006000)` 给每轮学生挑选；与门禁两段、训练/采集/评估清单及示范未来块机械核对不相交。六个既有任务（day L7 d7、heldout L7 d7p1、night L12 n10、pool L21 p9k、fog L31 user snow human、roof L41 r7）卡组与语义不变，各用每 1000 槽内前 32 个种子。清单 `configs/student_selection.json`，开跑前审计 `MEMORY/docs/multiseed-select-seed-audit.json`。按实战总胜局挑选，再进入原门禁；不改门禁合同。
+
+task92b v2 离线候选面板另保留 `[126000000,126020000)`：从 qc 快照中机械筛选 r11 β=0 窗口胜率 30%–80% 的16个既有任务/倍率格，加 task93 已登记的 day L7/night L12/pool L21 随机卡组族，共19格×20局=380局/模型；每格1000槽取前20。卡组族语义不变，随机族新种子逐个过引擎合法性校验，heldout 卡组机械排除。全机登记与数值记录扫描无真实种子碰撞（4个原始数字命中均为监控计数，字段分类留证）。冻结清单 `configs/student_selection_v2.json`、预登记 `MEMORY/docs/multiseed-select-v2-preregister.json`；范围解释及判据见 `MEMORY/docs/multiseed-select.md` 的task92b节。这里只新增独立面板，生产默认仍由主控决定；门禁合同不变。
+
+task92c 生产准备另保留选择专池 `[130000000,140000000)`，与门禁池独立。每轮通过 task88 同一加锁分配器从 `~/pvz-logs/selection_seed_ledger.json` 领取384个连续种子，余数也烧掉，不回绕、不复用；轮内按格均分、不超过384局。入队冻结当轮现役与课程状态/源任务，后台在训练前机械筛30%–80%的现役β=0窗口并加入三个随机族、生成合法卡组收据；面板/输入/SHA落轮目录。双训练统一准入、资源不足回退串行并保留模式历史；单种子失败隔离，B7及原门禁不变。池审计见 `MEMORY/docs/multiseed-select-c-seed-audit.json`。本段只登记候选实现，部署尚未执行，等task84b结论由主控决定。
+### 14.36 用户示范起点格：原生传送带 L30 / L40 / L50（task107，2026-10-26 登记）
+
+用户 2026-10-26 在 Mac 录完三局原生传送带（全部通关）：`demo_pool_30_orig_m100`（种子 20261030，32,600 操作，被吃 5）、
+`demo_boss_50_orig_m100`（种子 20261050，33,294 操作，被吃 4）、`demo_storm_40_orig_m100`（种子 81029000，46,457 操作，被吃 24）。
+存档在 `artifacts/human_demo/raw/seed_<种子>/<task_id>/`（不入 git）。入库关口：每局用 deploy14 引擎
+（cq `build5/pvz-portable`）`human_demo.py verify` **一次**，三局全部通过（32600 / 33294 / 46457 操作，
+tick 32520 / 33200 / 46319，均 result 1；boss 层 obs wave=0 与存档终局一致）。
+
+三个任务条目各加 `demo_start`（结构照 task71 / task87 起点格）：
+
+- `demo_pool_30_orig_m100`：阶梯 `624..264`（6 档，步距 72，帧数 664），未来种子块 **45,300,000** 起 256；
+- `demo_boss_50_orig_m100`：阶梯 `656..256`（6 档，步距 80，帧数 696），未来种子块 **45,400,000** 起 256；
+- `demo_storm_40_orig_m100`：阶梯 `900..336`（7 档，步距 ~94，帧数 956），未来种子块 **45,500,000** 起 256。
+
+未来种子三块与门禁池、训练/采集/评估清单、既有示范未来块（44.0M–45.2M、46.0M–47.0M、60M–62M、81M–83M、85M）
+及 `panel_v3_source.json` / `multiplier_panel.json` 机械核对不相交。**没做接手扫描**（任务书不要求）：
+起点 `index=0` 落在示范后段（老师稳定会赢的一侧），由 qc 的 0.85 / 0.5 升降档自动往前推，
+推到老师接不住的档位会被 0.5 规则按回来——阶梯只决定可推的范围。
+
+**L40 可见性口径**：`demo_storm_40_orig_m100` 条目补 `fog_observation: "storm"`，与 task75 的
+`storm_l40_orig_eval/train` 同口径（按暴风雨绘制状态遮挡）。纯表现层（task70 B6），不改状态哈希、
+不影响 verify 与重放，也不构成换任务族（AGENTS §8 第 4 条的例外字段，`search_play` 对它显式豁免）。
+
+`test_registered_manifest_start_cells` 期望集合同步（起点格 31 → 34）。本工作树无示范存档，该测试按既有约定 skip；
+`load_demo_start_cells` 已在 cq 存档根上实测加载 34 格全过。`python/test_curriculum_queue.py` 其余 53 项通过，
+2 项失败（pack/recipe）在基线 `fd1a0b61` 上同样失败，与本次无关。
+
+**部署清单（主控，组边界随 task108 / deploy14d 上线，本次不执行）**：
+
+1. 存档到位：三个 `artifacts/human_demo/raw/<seed>/<task_id>/` 目录（cq 工作树已有；meta 已由本次 verify 置 `verified: true`）。
+   `load_demo_start_cells` 启动时校验存在与 verified，缺了直接报错退出。
+2. `--demo-start-manifest` 缺省即 `configs/human_demo_tasks.json`，不用加参数；qc 启动时 `reconcile_start_cells`
+   自动加三格（日志 `start cell added: ... (N rungs)`）。
+3. `teacher_rates.json` 不需要补条目：三格按未知处理，只按学生胜率排序，第一轮窗口出来后照常升降档。
+4. 回滚：删掉清单里的 `demo_start`（或把 `--demo-start-manifest` 指向没有它的清单），三格自动进 `retired_cells`。
+
+
+**task112 追加（2026-10-26）：L25 小僵尸泳池 / L45 蹦极闪电战**
+
+用户 2026-10-26 又录两局原生传送带（均通关）：`demo_pool_25_orig_m100`（种子 20261025，32,648 操作，668 帧，被吃 14）、
+`demo_roof_45_orig_m100`（种子 20261045，46,960 操作，966 帧，被吃 28）。两关的任务条目由 task111 在 `pvz-env` 登记
+（空牌组、`conveyor_start: "original"`、倍率 1.0）；本分支把它们并入清单并各加 `demo_start`。
+
+入库关口：每局用 Mac 本机引擎 `build/pvz-portable`（sha256 `6f7d2c3f…`，与录制时同一个二进制）`human_demo.py verify`
+**一次**，两局并行、各一个游戏进程。两局都走逐操作状态哈希校验：32,648 / 46,960 操作，tick 32,567 / 46,835，
+wave 30 / 30，result 1，`verified: true`。台式机部署时生产 dry-run 会再加载一遍，不另加复验。
+
+- `demo_pool_25_orig_m100`：阶梯 `624..264`（6 档，步距 72；668 帧，顶档离终局 44 帧），未来种子块 **45,600,000** 起 256；
+- `demo_roof_45_orig_m100`：阶梯 `920..380`（7 档，步距 90；966 帧，顶档离终局 46 帧），未来种子块 **45,700,000** 起 256。
+
+阶梯形状照 task107（同帧数量级的 pool / storm 两格），`index=0` 落在示范后段，由 qc 的 0.85 / 0.5 升降档自动往前推；
+同样**没做接手扫描**（任务书不要求）。两块未来种子与 44.0M–45.5M（含 task107 的 45.3M / 45.4M / 45.5M）、
+46.0M–47.0M 及其余既有段机械核对不相交。
+
+**L45 蹦极口径**：task110 的结论是「原生传送带与种植接口已有，缺模型中的可见蹦极状态（落点红靶 / 空投目标）」。
+本格**不新增观测字段**，任务字段与现有原生任务完全一致（空牌组、`conveyor_start: "original"`、倍率 1.0、无
+`fog_observation`）。也就是说示范里的蹦极落点对模型不可见这一缺口保持原状，补它属于 task110 估计的 2–3 人日，
+不在本次登记范围。
+
+`test_registered_manifest_start_cells` 期望集合同步（起点格 34 → 36）。本工作树没有示范存档，该测试按既有约定 skip；
+`load_demo_start_cells` 已用主检出存档根单独加载这两个新格（阶梯、种子块 256、archive 已 verified）通过。
+`python/test_curriculum_queue.py` 63 项通过、1 skip；`test_student_selection` 的 1 项失败在基线 `cc8cc4ed` 上同样失败，与本次无关。
+
+**部署清单（主控，随 deploy14e 上线，本次不执行）**：
+
+1. 存档到位：两个 `artifacts/human_demo/raw/seed_{20261025,20261045}/<task_id>/` 目录（meta 已由本次 verify 置 `verified: true`）。
+2. `--demo-start-manifest` 缺省即 `configs/human_demo_tasks.json`；qc 启动时 `reconcile_start_cells` 自动加两格。
+3. `teacher_rates.json` 不需要补条目：两格按未知处理，第一轮窗口出来后照常升降档。
+4. 回滚：删掉清单里的 `demo_start`，两格自动进 `retired_cells`。
+5. 合并去重：本分支已自行登记这两条原生任务（字段与 `pvz-env` 的 task111 版本相同，外加 `demo_start`）。
+   若 `pvz-env` 先合入 deploy14e，按 `task_id` 去重，只保留带 `demo_start` 的那条，别留下两份。
+
+
+
+### 14.37 门禁 v4 与 deploy14e 单格隔离（task113，2026-10-26）
+
+v4 沿用 v3 的十任务六区面板、每任务 192 对（共 1920 对）、有序种子池与总体
+Newcombe 配对区间下界 > −3pp；仅将区否决改为六区单侧 exact McNemar 的
+Holm–Bonferroni 逐步校正，族错误率 0.05。按原始 p 升序，第 i 个与
+0.05/(m−i+1) 比较，遇首个不显著即停止拒绝；等价地以单调累计最大校正 p < 0.05 否决。
+所有区均进入检验族。v1–v3 的 policy 文本、冻结面板与决策保持原样，旧契约继续可验。
+
+原因：第 20 轮总体 +0.208pp，95% CI [−1.605, +2.022]pp，day 原始 p=0.027038
+在六次未校正检验中触发否决；v4 校正后为 0.162228，六区均不否决。
+这只作为离线回归，历史第 20 轮的决策和模型不回填、不追认。
+主控 10-26 后续决定：切换只要求没有已排队/运行的门禁任务，半轮采集组可直接继续。
+门禁契约在轮末入队时才签发，不为切换另采一整轮 v3；所有旧评估依旧按旧版本读取。
+
+示范起点格在规划时只读取小型 meta.json：缺存档、未验证、示范种子不属于任务 seeds
+时记 configuration invalid、退休并记录 cell_errors，不派采集组，不拖停其他格。
+未来 RESEED 种子无需属于示范任务 seeds。llmplay 派生族只继承环境、地形与卡组，
+不再继承源族 demo_start；已有七条错误配置由 deploy14d/cbd96daf 热补清理。
+L25/L45 示范起点格随 demo2545 合入，不更改其种子块、阶梯和原任务定义。
+
+
+### 14.38 deploy14f：起点种子续期与 build4（task114，2026-10-26）
+
+基于 deploy14e/47e31d23，仅移入 task99/78aa9156 的续期、打包根因修复与相关工具，
+保留门禁 v4、单格/单组隔离、completed_groups 和 K=2 多种子挑选。
+起点未来种子池 `[200000000,201000000)`，默认每次独立领 256，账本
+`~/pvz-logs/start_cell_seed_ledger.json` 加锁且不回绕；旧清单块仍是表首，offset 仍为绝对下标。
+重启保留续领表与 seed_blocks；格子已跑到清单末端也保持可续领。失败只退休该格。
+dry-run 在临时账本副本上走相同规划，不修改真实账本、state 或 offset。
+plane_of 修复在首次出现常量平面时补齐此前无平面的行，同时统一存储精度；旧坏段按头信息识别后
+按标签重建，不全量重打包。
+
+**不共享种子块的主控决定**：task99 的 10 个共享条目属于当时旧清单，其中 3 个原格保留初始块，
+7 个错误继承的派生起点已由 cbd96daf 退役，且生成器 e87d7f18 已去掉 demo_start 复制。
+当前清单与生产 state 均为 29 个起点格，29×256 初始种子零交叉；原格的块与偏移不改，
+不复活无效的七格，也不从 startseeds 引入旧清单。现行 LLM 新格各有 46000000–47000000
+的独立块；所有续领也由独立账本逐格发块，永不跨格共用。
+
+引擎使用 task95/9f1db5d9 已验收的 build4，SHA256
+`de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845`，共享库链接。
+本树源码与其对应版本 src/ 完全一致；本次仅需并入 EnvironmentRollout.cpp 的三处
+v2boss 附加通道 13、总通道 105 修复，Python pvz_env.py 已与 deploy15 相同。
+直接引用 [task95 证据](MEMORY/docs/task95-engine-gate.json)：六族 96 对零逻辑/动作差异、
+L50 四对、六族状态哈希及 16 对 ABBA 中位吞吐 1.021813 全过；本次不重跑。
+
+`scripts/qc_deploy14f.sh` 只准备并交主控执行：按 cq 当前 SHA 覆盖代码，把已归档 build4
+复制到 cq/build6，核对 SHA 后重启；原 build5 保留。只要求没有已排队/运行的门禁任务，
+不补 v3 轮、不等采集轮结束、不回填。看门狗读取持久化的引擎选择，脚本未激活时使用 build5，
+激活后使用 build6，回滚后继续使用 build5。首个新组成功前失败可恢复旧代码；新采集已经开始后
+回滚仅退引擎、保留续期兼容代码，防止旧控制器截断新种子表；任何回滚都保留 state/offset/账本。
+
+
+### 14.39 可重复冒险记分板（task103，2026-10-26）
 
 `scripts/adventure_scoreboard.py` 复用 `search_play.py` 的学生 `fast` 与老师 `fast_search`，
 老师固定 beta=1、verify=9、student-candidates=2。`configs/adventure_scoreboard.json` 冻结

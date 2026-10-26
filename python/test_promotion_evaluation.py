@@ -30,7 +30,7 @@ def arguments(root):
 def fake_games(args, command, **kwargs):
     # Preregistration must exist before the first episode starts.
     registration = gate.read(args.out / 'registration.json')
-    if registration['version'] == 3:
+    if registration['version'] in (3, 4):
         assert registration['policy']['pair_count'] == 1920
         block = registration['seed_block']
         assert block[1] - block[0] == 10 * 192
@@ -277,3 +277,27 @@ def test_two_hundred_fifty_rounds_are_pairwise_disjoint_across_both_windows():
         assert sum(high - low for low, high in blocks) == 250 * 1920
         assert any(low >= pvz_promotion.SEED_POOLS_V2[1][0] for low, _ in blocks)
         assert gate.read(ledger)['allocated'][-1] == list(blocks[-1])
+
+
+def test_v4_issues_and_resumes_a_version_pinned_certificate(tmp_path):
+    args = arguments(tmp_path)
+    args.gate_version = 4
+    with patch.object(gate.subprocess, 'run', side_effect=lambda cmd, **kw: fake_games(args, cmd, **kw)) as run:
+        result = gate.evaluate(args)
+        assert result['version'] == 4 and result['approved']
+        assert gate.valid_certificate(result, result['contract'], args.out)
+        gate.evaluate(args)
+        assert run.call_count == V3_UNITS
+
+
+def test_controller_can_finish_an_old_round_using_explicit_v3(tmp_path):
+    from curriculum_queue import TrainingPipeline
+    common, state = setup(tmp_path)
+    common.gate_version = 3
+    pipeline = TrainingPipeline(common, state)
+    try:
+        job = dict(model=str(common.rollout_policy), seed_block=[31024, 32944])
+        frozen = pipeline.evaluation_contract(job)
+        assert frozen['version'] == 3 and frozen['policy'] == gate.policy(3)
+    finally:
+        pipeline.close()
