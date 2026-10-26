@@ -16,7 +16,8 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
 from task78_data import MAIN, sha
-from task78_state import state_digest
+from pvz_common import canonical_digest
+from task78_state import state_digest, verified_root_digest
 from task78_replay import equal, open_archive, physical
 from task78_student_context import initial_state, context_identity
 from value_teacher_feasibility import sample_root, stats_new, write_json
@@ -76,6 +77,8 @@ def main():
         models = dict(value=MAIN/'artifacts/value_net/v5/model.pt',
                       rollout_policy=MAIN/'artifacts/student/dw4i_s1/model.pt',
                       static_value=MAIN/'artifacts/hard/value_branch1/model.pt')
+        run['root_initializer'] = 'cold_archive_per_root_v1'
+        run['collector_source_sha256'] = sha(Path(__file__))
         run['models'] = {k:dict(path=str(p), sha256=sha(p)) for k,p in models.items()}
         if row.get('demo_archive'):
             run['student_context'] = context_identity(row)
@@ -105,12 +108,6 @@ def main():
             if sha(row['frames_path']) != row['frames_sha256']:
                 raise ValueError('archive frames changed')
             frames = read_frames(Path(row['frames_path']))
-            env, obs, _ = open_archive(row, executable)
-            teacher._W['env'] = env
-            env.load_rollout_net(teacher._W['rollout_file'])
-            env.load_value_net(bins[0])
-            env.load_value_net(bins[1], static=True)
-            teacher._W['context'] = observation_context(obs)
             teacher._W['demo_actions'] = []
             if row['demo_archive']:
                 from pvz_frame_store import frame_path
@@ -118,43 +115,69 @@ def main():
                 teacher._W['demo_actions'] = [(before['tick'], after['action'])
                     for before, after in zip(prefix, prefix[1:])
                     if (after.get('action') or {}).get('type') == 'plant']
-            roots = {r['frame'] for r in row['roots']}
-            state, results = initial_state(row, teacher._W['fast'].obs), []
-            for i in range(max(roots)+1):
-                if not equal(physical(_frame(obs)), physical(frames[i])):
-                    raise ValueError(f'prefix changed at input frame {i}')
-                teacher._fast_action(obs, state)
-                teacher._W['student_history'] = state.get('history')
-                if i in roots:
-                    # A fresh search at the frozen source root. Common world/noise
-                    # schedules are identical across the three horizons.
-                    decision_seed = int(manifest.get('seed_base', 78200000)) + index*100 + sorted(roots).index(i)
-                    formal = teacher._rollout_policy
-                    try:
-                        teacher._rollout_policy = full_leaf_rollout
-                        _, summary = sample_root(env, obs, deepcopy(state), args, decision_seed,
-                                                  stats_new(), output/f'root_{i}')
-                    finally:
-                        teacher._rollout_policy = formal
-                    # sample_root leaves the engine exactly at the root, so this is the same
-                    # instant as root_state_sha256, minus the never-written GridItem field
-                    # that a cold replay cannot reproduce.
-                    root_path = output/f'root_{i}'/'root.json'
-                    record = json.loads(root_path.read_text())
-                    record['root_state_canonical_sha256'] = state_digest(env.privileged_state())
-                    write_json(root_path, record)
-                    results.append(dict(frame=i, **summary))
-                    print(json.dumps(results[-1]), flush=True)
-                if i == max(roots):
-                    break
-                if frames[i+1].get('targets'):
-                    root = env.snapshot_fast(); env.restore(root); env.release_snapshot(root)
-                action = frames[i+1]['action']; state['action'] = action
-                obs, *_, info = env.step(action)
-                if not info.get('ok'):
-                    if not frames[i+1].get('action_rejected'):
-                        raise ValueError('prefix action unexpectedly rejected')
-                    obs, *_ = env.step(dict(type='wait', ticks=60))
+            roots = sorted({r['frame'] for r in row['roots']})
+            verified_roots={r['frame']:r for a in replay['results']
+                            if a['archive']==row['archive'] for r in a['roots']}
+            results = []
+            for position, target in enumerate(roots):
+                # Recover every root directly from its frozen archive, without earlier
+                # label work in that engine. Private identity is checked before sampling;
+                # no unproven state difference is accepted or retried here.
+                env, obs, _ = open_archive(row, executable)
+                try:
+                    teacher._W['env'] = env
+                    env.load_rollout_net(teacher._W['rollout_file'])
+                    env.load_value_net(bins[0])
+                    env.load_value_net(bins[1], static=True)
+                    teacher._W['context'] = observation_context(obs)
+                    state = initial_state(row, teacher._W['fast'].obs)
+                    for i in range(target+1):
+                        if not equal(physical(_frame(obs)), physical(frames[i])):
+                            raise ValueError(f'prefix changed at input frame {i}')
+                        teacher._fast_action(obs, state)
+                        teacher._W['student_history'] = state.get('history')
+                        if i == target:
+                            privileged=env.privileged_state()
+                            root_identity=dict(root_state_sha256=canonical_digest(privileged),
+                                root_state_canonical_sha256=state_digest(privileged))
+                            try:
+                                verified_root_digest(root_identity,verified_roots[i])
+                            except ValueError as error:
+                                write_json(output/f'root_identity_mismatch_{i}.json',dict(
+                                    frame=i,observed=root_identity,expected=verified_roots[i],
+                                    privileged_state=privileged))
+                                raise ValueError(f'root {i} differs before labelling') from error
+                            # A fresh search at the frozen source root. Common world/noise
+                            # schedules are identical across the three horizons.
+                            decision_seed = int(manifest.get('seed_base', 78200000)) + index*100 + position
+                            formal = teacher._rollout_policy
+                            try:
+                                teacher._rollout_policy = full_leaf_rollout
+                                _, summary = sample_root(env, obs, deepcopy(state), args, decision_seed,
+                                                          stats_new(), output/f'root_{i}')
+                            finally:
+                                teacher._rollout_policy = formal
+                            root_path=output/f'root_{i}'/'root.json'
+                            record=json.loads(root_path.read_text())
+                            if record['root_state_sha256']!=root_identity['root_state_sha256']:
+                                raise ValueError(f'root {i} changed before sampling')
+                            record['root_state_canonical_sha256']=root_identity['root_state_canonical_sha256']
+                            write_json(root_path,record)
+                            results.append(dict(frame=i, **summary))
+                            print(json.dumps(results[-1]), flush=True)
+                            break
+                        if frames[i+1].get('targets'):
+                            root = env.snapshot_fast(); env.restore(root); env.release_snapshot(root)
+                        action = frames[i+1]['action']; state['action'] = action
+                        obs, *_, info = env.step(action)
+                        if not info.get('ok'):
+                            if not frames[i+1].get('action_rejected'):
+                                raise ValueError('prefix action unexpectedly rejected')
+                            obs, *_ = env.step(dict(type='wait', ticks=60))
+                finally:
+                    env.close()
+                    env = None
+                    teacher._W['env'] = None
             write_json(output/'complete.json', dict(identity=identity, roots=results,
                 finished=time.time(), wall_seconds=time.time()-run['started']))
         finally:
