@@ -170,6 +170,16 @@
   默认 16 GiB 在当前 12–13 GB 可用内存下永远无法准入；依据是 144 局档实测峰值 11.29 GiB（语料比本档小 0.7%）
   与调度器既有的 12 GiB 下界。重启后 seed1 第 1 轮已起（child 936571），本任务无游戏进程。
 
+- 2026-10-26 CodeBuddy 交回 Codex（主控：额度恢复，提交并停）。交接时刻现场：控制器 pid **936153**、
+  训练子进程 **936571**（17:28 起，第 1 轮中，RSS ≈ 9.4 GB），流水线状态在
+  `artifacts/task93/expand/validation_status.json`，日志 `expand/train_seed_1.log`（前 6 行 epoch 属
+  attempt1，已另存 `train_seed_1.attempt1.log`）。未重采集、未改配方、未改判据、未动 qc。
+  **风险提示**：该训练是本会话的后台子进程；若会话结束把它带走（首轮正是这样死的，且无中间检查点），
+  按同一配方重启即可，不要重训已有 `trained.json` 的模型。剩余待办：seed1 12 轮 → seed2 12 轮 →
+  各跑 heldout 192 + d7 对照 192 → `task93_analyze.py compare` → 给 0.875% 两个模型补 32 卡组补充端点
+  （照 `expand/randcold/seed_1_0173/config.json` 的 argv，只改 `--rollout-policy` 与 `--out` 为 seed_1_0875 / seed_2_0875）
+  → 写结论并按三条预登记判据判定。
+
 ## 问题
 
 - 第 4 步在 0.173% 剂量上判据未达成（seed1 137 / seed2 169）。是否批准用 expand 族做约 4% 的第二轮验证
