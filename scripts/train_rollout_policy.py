@@ -687,6 +687,8 @@ def main(*, step_observer=None) -> None:
     source_counts = None
     observer = row_plan.observe if row_plan else None
     level_cap = args.source_weight.get('level_balance')
+    level_power = args.source_weight.get('level_balance_power', 1.0)
+    level_max_multiplier = args.source_weight.get('level_balance_max_multiplier')
     if args.source_row_report or level_cap:
         from pvz_training_rows import SourceRowCounts
         source_counts = SourceRowCounts(balance=bool(level_cap))
@@ -744,7 +746,7 @@ def main(*, step_observer=None) -> None:
         print(json.dumps({"row_intervention":row_plan.metadata(),
                           "positive_weight_rows":int((weight>0).sum())}),flush=True)
     if level_cap:
-        shares = source_counts.rebalance(weight, is_val, level_cap)
+        shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,

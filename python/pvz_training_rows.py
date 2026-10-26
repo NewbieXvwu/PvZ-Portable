@@ -8,6 +8,47 @@ import numpy as np
 from pvz_frame_store import archive_seed
 
 
+def balance_levels(levels, cap, power=1.0, max_multiplier=None):
+    """Per-level training-row multipliers from retained rows and original weights.
+
+    power=1 weights each level by the exact inverse of its retained training rows, which
+    makes every level carry nearly the same effective share. power<1 tempers that: a level
+    with a thousandth of the rows is only raised by 1/sqrt(1000) at power=.5, so the few
+    hundred-row levels stop dominating the gradient with a handful of samples. power=0
+    drops the inverse-rows term, so only the cap below can still move a level.
+    max_multiplier caps the per-level multiplier; whatever the cap removes is simply not
+    allocated, so the total training weight may end up below its original value.
+    """
+    total_rows = sum(record['rows'] for record in levels.values())
+    total_weight = sum(record['original_weight'] for record in levels.values())
+    for record in levels.values():
+        record['inverse_rows'] = total_rows / (len(levels) * record['rows'])
+    masses = {level: record['original_weight'] * (record['inverse_rows'] if power == 1.0
+                                                  else record['inverse_rows'] ** power)
+              for level, record in levels.items()}
+    shares = {}
+    while masses:
+        remaining = 1 - sum(shares.values())
+        total = sum(masses.values())
+        capped = [level for level, mass in masses.items() if remaining * mass / total > cap]
+        if not capped:
+            shares.update({level: remaining * mass / total for level, mass in masses.items()})
+            break
+        for level in capped:
+            shares[level] = cap
+            del masses[level]
+    for level, record in levels.items():
+        record.update(effective_share=shares[level],
+                      multiplier=total_weight * shares[level] / record['original_weight'])
+        if max_multiplier is not None and record['multiplier'] > max_multiplier:
+            record['multiplier_capped_from'] = record['multiplier']
+            record['multiplier'] = max_multiplier
+    allocated = (sum(record['multiplier'] * record['original_weight'] for record in levels.values())
+                 if max_multiplier is not None else total_weight)
+    return dict(total_weight=total_weight, allocated_weight=allocated,
+                allocated_weight_ratio=allocated / total_weight)
+
+
 class SourceRowCounts:
     """Count actual retained cached rows without changing sampling, weights or RNG state."""
     def __init__(self, balance=False):
@@ -28,7 +69,7 @@ class SourceRowCounts:
             self.spans.append((level, self.observed, self.observed + len(rows)))
         self.observed += len(rows)
 
-    def rebalance(self, weights, is_val, cap):
+    def rebalance(self, weights, is_val, cap, power=1.0, max_multiplier=None):
         levels = {}
         for level, start, stop in self.spans:
             training = ~is_val[start:stop]
@@ -39,32 +80,13 @@ class SourceRowCounts:
                   if record['rows'] and record['original_weight'] > 0}
         if len(active) * cap < 1 - 1e-9:
             raise ValueError('too few training levels for source_weight.level_balance cap')
-        total_rows = sum(record['rows'] for record in active.values())
-        total_weight = sum(record['original_weight'] for record in active.values())
-        for record in active.values():
-            record['inverse_rows'] = total_rows / (len(active) * record['rows'])
-        masses = {level: record['original_weight'] * record['inverse_rows']
-                  for level, record in active.items()}
-        shares = {}
-        while masses:
-            remaining = 1 - sum(shares.values())
-            total = sum(masses.values())
-            capped = [level for level, mass in masses.items() if remaining * mass / total > cap]
-            if not capped:
-                shares.update({level: remaining * mass / total for level, mass in masses.items()})
-                break
-            for level in capped:
-                shares[level] = cap
-                del masses[level]
-        for level, record in active.items():
-            record.update(effective_share=shares[level],
-                          multiplier=total_weight * shares[level] / record['original_weight'])
+        totals = balance_levels(active, cap, power, max_multiplier)
         for level, start, stop in self.spans:
             if level in active:
                 training = ~is_val[start:stop]
                 part = weights[start:stop]
                 part[training] *= active[level]['multiplier']
-        return dict(cap=cap, levels=active)
+        return dict(cap=cap, power=power, max_multiplier=max_multiplier, levels=active, **totals)
 
     def finish(self, total, validation_seeds, destination):
         result = {}

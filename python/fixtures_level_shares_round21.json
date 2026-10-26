@@ -1,0 +1,327 @@
+{
+  "cap": 0.25,
+  "levels": {
+    "7": {
+      "rows": 9488977,
+      "original_weight": 42356088.62496948,
+      "inverse_rows": 0.040491195387988656,
+      "effective_share": 0.02040543281951601,
+      "multiplier": 0.03463930418619337
+    },
+    "8": {
+      "rows": 447799,
+      "original_weight": 1675909.9622192383,
+      "inverse_rows": 0.8580189364851875,
+      "effective_share": 0.017108696406316626,
+      "multiplier": 0.7340158435342479
+    },
+    "9": {
+      "rows": 1595754,
+      "original_weight": 5385627.878051758,
+      "inverse_rows": 0.240776474155246,
+      "effective_share": 0.015428359762153565,
+      "multiplier": 0.20597884180067394
+    },
+    "10": {
+      "rows": 1292589,
+      "original_weight": 4847040.345825195,
+      "inverse_rows": 0.297248407451348,
+      "effective_share": 0.01714215965540752,
+      "multiplier": 0.2542893067469959
+    },
+    "11": {
+      "rows": 164190,
+      "original_weight": 502538.03353881836,
+      "inverse_rows": 2.3400939261777847,
+      "effective_share": 0.013991735601559996,
+      "multiplier": 2.001897562085344
+    },
+    "12": {
+      "rows": 485581,
+      "original_weight": 1498082.7093048096,
+      "inverse_rows": 0.791258351828285,
+      "effective_share": 0.014103388290945785,
+      "multiplier": 0.6769036694573978
+    },
+    "13": {
+      "rows": 199788,
+      "original_weight": 678453.9435272217,
+      "inverse_rows": 1.9231386356494407,
+      "effective_share": 0.01552388183997509,
+      "multiplier": 1.6452017174144224
+    },
+    "14": {
+      "rows": 513329,
+      "original_weight": 1775302.4614105225,
+      "inverse_rows": 0.748486880225217,
+      "effective_share": 0.015809783105333788,
+      "multiplier": 0.6403136404114956
+    },
+    "16": {
+      "rows": 243017,
+      "original_weight": 826120.185760498,
+      "inverse_rows": 1.5810417449772256,
+      "effective_share": 0.015540176082485256,
+      "multiplier": 1.3525455450392057
+    },
+    "17": {
+      "rows": 524385,
+      "original_weight": 1897163.397491455,
+      "inverse_rows": 0.7327059731669107,
+      "effective_share": 0.01653879383484056,
+      "multiplier": 0.626813430435258
+    },
+    "18": {
+      "rows": 133107,
+      "original_weight": 414783.9775238037,
+      "inverse_rows": 2.8865500818073464,
+      "effective_share": 0.014245261738195406,
+      "multiplier": 2.4693784753528565
+    },
+    "19": {
+      "rows": 537150,
+      "original_weight": 1846716.3481445312,
+      "inverse_rows": 0.7152937200765715,
+      "effective_share": 0.015716432455065345,
+      "multiplier": 0.6119176407312531
+    },
+    "21": {
+      "rows": 45677,
+      "original_weight": 161193.98370361328,
+      "inverse_rows": 8.411673746943329,
+      "effective_share": 0.016132460587259024,
+      "multiplier": 7.195997125879384
+    },
+    "22": {
+      "rows": 53295,
+      "original_weight": 178895.68182373047,
+      "inverse_rows": 7.209307097084725,
+      "effective_share": 0.015344853546387168,
+      "multiplier": 6.167399581926872
+    },
+    "23": {
+      "rows": 51140,
+      "original_weight": 169738.97067260742,
+      "inverse_rows": 7.513101715665437,
+      "effective_share": 0.015172955956378062,
+      "multiplier": 6.427289024614639
+    },
+    "25": {
+      "rows": 10382,
+      "original_weight": 35956.41145706177,
+      "inverse_rows": 37.00828566163845,
+      "effective_share": 0.01583232417217828,
+      "multiplier": 31.659753488614204
+    },
+    "30": {
+      "rows": 364,
+      "original_weight": 2503.7006759643555,
+      "inverse_rows": 1055.5495102723364,
+      "effective_share": 0.031443463645746246,
+      "multiplier": 902.9987931834964
+    },
+    "31": {
+      "rows": 77705,
+      "original_weight": 364722.5758113861,
+      "inverse_rows": 4.944598439471468,
+      "effective_share": 0.02145670539188574,
+      "multiplier": 4.229992416431281
+    },
+    "32": {
+      "rows": 26568,
+      "original_weight": 136668.10717773438,
+      "inverse_rows": 14.461759324718852,
+      "effective_share": 0.023515687143866586,
+      "multiplier": 12.37170884969861
+    },
+    "33": {
+      "rows": 47312,
+      "original_weight": 205927.5458445549,
+      "inverse_rows": 8.120984564996839,
+      "effective_share": 0.019897224186151998,
+      "multiplier": 6.947319088577796
+    },
+    "34": {
+      "rows": 11421,
+      "original_weight": 50976.309730529785,
+      "inverse_rows": 33.64153942204101,
+      "effective_share": 0.020403920278553117,
+      "multiplier": 28.779578033341448
+    },
+    "39": {
+      "rows": 14374,
+      "original_weight": 71214.37168884277,
+      "inverse_rows": 26.730208831162546,
+      "effective_share": 0.02264849577044151,
+      "multiplier": 22.86709063022072
+    },
+    "42": {
+      "rows": 22996,
+      "original_weight": 112888.98190307617,
+      "inverse_rows": 16.70812409719649,
+      "effective_share": 0.02244133108127896,
+      "multiplier": 14.293423235292774
+    },
+    "43": {
+      "rows": 12498,
+      "original_weight": 90358.85940551758,
+      "inverse_rows": 30.74252054241722,
+      "effective_share": 0.03305061738611495,
+      "multiplier": 26.299532782748653
+    },
+    "44": {
+      "rows": 7479,
+      "original_weight": 47326.863162994385,
+      "inverse_rows": 51.373181139073466,
+      "effective_share": 0.02892767594134228,
+      "multiplier": 43.94859750217845
+    },
+    "45": {
+      "rows": 1165,
+      "original_weight": 6476.168434143066,
+      "inverse_rows": 329.80259376749393,
+      "effective_share": 0.025412159163246545,
+      "multiplier": 282.13867872857736
+    },
+    "46": {
+      "rows": 11062,
+      "original_weight": 85377.79522705078,
+      "inverse_rows": 34.733323245265815,
+      "effective_share": 0.035282604623857405,
+      "multiplier": 29.713574463821427
+    },
+    "47": {
+      "rows": 1871,
+      "original_weight": 14078.593658447266,
+      "inverse_rows": 205.3554365254572,
+      "effective_share": 0.034398130793139046,
+      "multiplier": 175.67694319550648
+    },
+    "48": {
+      "rows": 5858,
+      "original_weight": 74963.94352912903,
+      "inverse_rows": 65.58894191518102,
+      "effective_share": 0.05849953502084022,
+      "multiplier": 56.109860143187554
+    },
+    "49": {
+      "rows": 8540,
+      "original_weight": 125028.1983718872,
+      "inverse_rows": 44.9906348640668,
+      "effective_share": 0.0669267073378923,
+      "multiplier": 38.48847315208345
+    },
+    "50": {
+      "rows": 276,
+      "original_weight": 918.8513517379761,
+      "inverse_rows": 1392.1015280403276,
+      "effective_share": 0.015218979538787944,
+      "multiplier": 1190.9114518796832
+    },
+    "24": {
+      "rows": 56971,
+      "original_weight": 190722.58993530273,
+      "inverse_rows": 6.744133361519553,
+      "effective_share": 0.015303742500828969,
+      "multiplier": 5.76945394531942
+    },
+    "26": {
+      "rows": 231671,
+      "original_weight": 809151.4474487305,
+      "inverse_rows": 1.6584726691693412,
+      "effective_share": 0.015966418140459827,
+      "multiplier": 1.4187859538690324
+    },
+    "27": {
+      "rows": 293688,
+      "original_weight": 1045705.3694458008,
+      "inverse_rows": 1.3082591789216123,
+      "effective_share": 0.016276929893061755,
+      "multiplier": 1.1191862136648165
+    },
+    "28": {
+      "rows": 160297,
+      "original_weight": 545033.0146789551,
+      "inverse_rows": 2.3969258422748427,
+      "effective_share": 0.015543426792500151,
+      "multiplier": 2.050515984196789
+    },
+    "29": {
+      "rows": 272795,
+      "original_weight": 969688.3610992432,
+      "inverse_rows": 1.4084569795602209,
+      "effective_share": 0.016249691996936225,
+      "multiplier": 1.2049031716812721
+    },
+    "20": {
+      "rows": 77602,
+      "original_weight": 498546.9022216797,
+      "inverse_rows": 4.9511613326864055,
+      "effective_share": 0.029368547268659416,
+      "multiplier": 4.235606823519918
+    },
+    "41": {
+      "rows": 42490,
+      "original_weight": 193629.23670196533,
+      "inverse_rows": 9.04259877004308,
+      "effective_share": 0.020832124337575815,
+      "multiplier": 7.7357392496773985
+    },
+    "1": {
+      "rows": 96798,
+      "original_weight": 361974.0453491211,
+      "inverse_rows": 3.9692971108817376,
+      "effective_share": 0.017094657497906757,
+      "multiplier": 3.3956441323043105
+    },
+    "3": {
+      "rows": 104093,
+      "original_weight": 405288.84802246094,
+      "inverse_rows": 3.6911225705775648,
+      "effective_share": 0.01779887221928063,
+      "multiplier": 3.1576720886014686
+    },
+    "4": {
+      "rows": 112623,
+      "original_weight": 431981.64849853516,
+      "inverse_rows": 3.4115591108310954,
+      "effective_share": 0.0175342648597538,
+      "multiplier": 2.9185118556493133
+    },
+    "6": {
+      "rows": 102434,
+      "original_weight": 408792.8182525635,
+      "inverse_rows": 3.750903232707211,
+      "effective_share": 0.01824351348502944,
+      "multiplier": 3.2088130964210384
+    },
+    "36": {
+      "rows": 26505,
+      "original_weight": 123249.03079223633,
+      "inverse_rows": 14.4961336253209,
+      "effective_share": 0.021257151160422556,
+      "multiplier": 12.40111528839059
+    },
+    "37": {
+      "rows": 37064,
+      "original_weight": 171914.81280517578,
+      "inverse_rows": 10.366393852232097,
+      "effective_share": 0.021203637367068352,
+      "multiplier": 8.868216078102543
+    },
+    "38": {
+      "rows": 23165,
+      "original_weight": 105600.13998413086,
+      "inverse_rows": 16.586230163571354,
+      "effective_share": 0.020839224149208427,
+      "multiplier": 14.18914572496407
+    },
+    "40": {
+      "rows": 276,
+      "original_weight": 1384.2780886888504,
+      "inverse_rows": 1392.1015280403276,
+      "effective_share": 0.022927865174165566,
+      "multiplier": 1190.9114518796835
+    }
+  }
+}
