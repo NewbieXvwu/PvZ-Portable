@@ -41,21 +41,40 @@ rollback() {
 [ "$(sha256sum "$ENGINE" | cut -d' ' -f1)" = "$ENGINE_SHA" ] || abort "archived engine SHA mismatch"
 [ "$(sha256sum "$OLDEXE" | cut -d' ' -f1)" = "$OLD_SHA" ] || abort "deploy14 rollback engine SHA mismatch"
 git -C "$W" diff --quiet "$REV" -- scripts python recipes configs || abort "code differs from deploy14fix $REV"
-"$PY" - "$SRC" <<'PY' || abort "task95 gate evidence missing, incomplete or failed"
+"$PY" - "$SRC" "$ENGINE" "$ENGINE_SHA" "$OLD_SHA" <<'PY' || abort "task95 gate evidence missing, incomplete or failed"
+from collections import Counter
 import json
+import math
 from pathlib import Path
+import statistics
 import sys
 root = Path(sys.argv[1])
+engine = Path(sys.argv[2]).resolve()
+new_sha, old_sha = sys.argv[3:5]
 gate = json.loads((root / 'artifacts/task95/gate/gate_evidence.json').read_text())
 speed = json.loads((root / 'artifacts/task95/throughput_abba.json').read_text())
 boss = json.loads((root / 'artifacts/task95/boss_l50.json').read_text())
 probe = json.loads((root / 'MEMORY/docs/task95-engine-gate.json').read_text())['state_hash_probe']['new']
 assert gate['pass'] is True and gate['seeds'] == 8 and len(gate['cells']) == 6
-assert sum(cell['games'] for cell in gate['cells']) == 96
+assert {cell['cell'] for cell in gate['cells']} == {'day', 'night', 'pool', 'conveyor', 'roof', 'fog'}
+assert all(cell['games'] == 16 for cell in gate['cells'])
 assert all(not cell['mismatches'] for cell in gate['cells'])
+assert Path(gate['new_executable']).resolve() == engine
 assert speed['pass'] is True and len(speed['games']) == 16
+assert Path(speed['new']).resolve() == engine
+assert Counter(row['cell'] for row in speed['games']) == {'day': 8, 'pool': 8}
+assert len({(row['cell'], row['seed']) for row in speed['games']}) == 16
+assert all(math.isfinite(row[tag + '_seconds']) and row[tag + '_seconds'] > 0
+           for row in speed['games'] for tag in ('old', 'new'))
+assert all(row['old_decisions'] == row['new_decisions'] for row in speed['games'])
+median = statistics.median(row['old_seconds'] / row['new_seconds'] for row in speed['games'])
+assert median >= 0.98 and abs(median - speed['median_throughput_ratio']) < 1e-12
 assert speed['median_throughput_ratio'] >= 0.98 and not speed['decision_mismatch']
 assert boss['pass'] is True and len(boss['games']) == 4 and all(boss['checks'].values())
+assert boss['task_id'] == 'boss_l50_orig_eval' and boss['seeds'] == list(range(85000000, 85000004))
+assert boss['commands']['new']['executable_sha256'] == new_sha
+assert boss['commands']['old']['executable_sha256'] == old_sha
+assert Path(probe['executable']).resolve() == engine
 assert probe['multi_process']['distinct'] == probe['same_process']['distinct'] == 1
 PY
 log "deploy15: preflight passed; waiting for qc group boundary"
