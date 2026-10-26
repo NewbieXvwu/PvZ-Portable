@@ -739,3 +739,6 @@
 - 2026-10-26 09:05（台式机时间）：**deploy14 上线成功**。08:50 切换，08:55 首组 rc=0。qc 跑在 0b8dcc26 加引擎 build5（`76ff36dc`）上，门禁 v3 生效；雾夜 `_hv2` 示范格已开始采集，L33 cactus 一组 24/24。
   - 合并到 pvz-env 时差点出事：deploy14fix 的祖先里有 redeploy 的 revert 提交（撤销 seedpool + hashdet），直接 merge 会把 task82 的 C++ 修复和种子池代码删掉。已重置，改为只 cherry-pick 种子用完的修复（0b8dcc26）与 B8 的面板脚本（91559d83），task70 文档从 redeploy 取。以后 redeploy 分支不要整枝合并。
   - Mac 全量测试 732 过、1 失败：`test_human_demo_conveyor` 在全量负载下偶发失败，单独跑两次都通过，记为不稳定测试。
+- 2026-10-26 09:40（台式机时间）：qc 在 deploy14 上运行稳定，屋顶示范格 24/24。Business 号 4 个会话、Mac plus2 号 2 个会话都在干活；plus 号的 3 个任务由 CodeBuddy 先做，11:31 交还。
+  - **task92 v1 结论**：K=2 串行训练在硬件上可行（双训并行快 1.23 倍，显存 2.4 GiB）。但挑选面板选中了 C 而不是 D2：6 区里有 4 区贴着天花板或地板，C 只比 D2 多 1 局，heldout 却差 34 局。执行者撤回了自己先前给出的 +10 局收益估计。
+  - 已派 **task92b**：挑选面板 v2，只取 r11 胜率在 30–80% 的格，再加随机卡组族；用 A / C / D2 / r11 四个模型验证排序。multiseed 暂不上线。
