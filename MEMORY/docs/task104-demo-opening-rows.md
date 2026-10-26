@@ -96,7 +96,7 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 
 台式机 18:19 恢复连接。先按主控要求核对遗留扫描：`gate_seed_inventory.py` 已无进程；GPU 上 deckvar 的 task93 expand 训练仍在跑（7.0 GB / 37%），等到 18:23 它结束、显存回到 4.5 GB / 0% 才开训，没有与 qc 或别人的训练抢卡。
 
-`tmux t104` 跑 `~/pvz-logs/t104_train.sh`，四个配方顺序训练。a_s1 已载入 **16,982,931 条决策 / 5,5773 个种子 / 1,704,229 条验证行**，与 A 索引 `7d15b915a2192805` 的行数逐位相同；`data_memory` 报 board 5.56 GB、scalar 1.85 GB、packet 1.19 GB。训练前数据层测试在台式机通过（`HumanDemoExportTest` + `test_recipe` 共 10 项）。
+`tmux t104` 跑 `~/pvz-logs/t104_train.sh`，四个配方顺序训练。a_s1 已载入 **16,982,931 条决策 / 55,773 个种子 / 1,704,229 条验证行**，与 A 索引 `7d15b915a2192805` 的行数逐位相同；`data_memory` 报 board 5.56 GB、scalar 1.85 GB、packet 1.19 GB。训练前数据层测试在台式机通过（`HumanDemoExportTest` + `test_recipe` 共 10 项）。
 ### 开训与评估的运行清单（台式机，连接恢复后按序执行）
 
 全部路径写绝对路径，工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows`（分支 demorows）。
