@@ -945,7 +945,7 @@ class DeliveryTest(unittest.TestCase):
         record_archive(self.archive(81000001))
         self.assertEqual(len(json.loads((self.out/'progress.json').read_text())['archives']), 2)
 
-    def test_resume_verifies_every_archive_and_skips_completed_task(self):
+    def test_fast_resume_trusts_valid_digest_and_skips_completed_task(self):
         from unittest.mock import patch
         from llmplay import resume, next_task, list_tasks
         from llmplay.delivery import record_archive
@@ -957,7 +957,7 @@ class DeliveryTest(unittest.TestCase):
         target_session = budget.reset_session(self.base / 'new-budget.json')
         with patch('llmplay.delivery.verify_archive', return_value=True) as verify:
             document = resume(source)
-        self.assertEqual(verify.call_count, 5)
+        self.assertEqual(verify.call_count, 0)
         self.assertTrue(document['tasks'][self.task]['complete'])
         self.assertEqual(next_task()['task_id'], 'demo_roof_47_doom_m200')
         self.assertNotIn(self.task, list_tasks())
@@ -965,6 +965,85 @@ class DeliveryTest(unittest.TestCase):
         self.assertEqual(target_session.level(self.task)['segment_rewrites'], 1)
         with patch('llmplay.delivery.verify_archive', return_value=True): resume(source)
         self.assertEqual(target_session.level(self.task)['search_ticks'], 345)
+
+    def test_fast_resume_replays_only_tampered_archive(self):
+        from unittest.mock import patch
+        from llmplay.delivery import record_archive, resume
+        import zipfile
+        for n in range(3): record_archive(self.archive(81000000 + n))
+        source = self.base/'source'
+        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
+        prior = json.loads((source/'out/progress.json').read_text())
+        damaged = source/'out'/prior['archives'][1]['archive']
+        (damaged/'ticks.jsonl').write_text('tampered\n')
+        os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
+        with patch('llmplay.delivery.verify_archive', side_effect=ValueError('tick mismatch')) as verify:
+            document = resume(source)
+        self.assertEqual(verify.call_count, 1)
+        self.assertEqual(verify.call_args.args[0], damaged)
+        self.assertEqual(sum(e['valid'] for e in document['archives']), 2)
+        invalid = next(e for e in document['archives'] if not e['valid'])
+        self.assertEqual(invalid['seed'], 81000001)
+        self.assertIn('tick mismatch', invalid['invalid_reason'])
+
+    def test_fast_resume_replays_invalid_prior_record(self):
+        from unittest.mock import patch
+        from llmplay.delivery import record_archive, resume
+        import zipfile
+        record_archive(self.archive(81000000))
+        source = self.base/'source'
+        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
+        p = source/'out/progress.json'
+        prior = json.loads(p.read_text())
+        prior['archives'][0]['valid'] = False
+        p.write_text(json.dumps(prior))
+        os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
+        with patch('llmplay.delivery.verify_archive', return_value=True) as verify:
+            document = resume(source)
+        self.assertEqual(verify.call_count, 1)
+        self.assertTrue(document['archives'][0]['valid'])
+
+    def test_parallel_full_resume_matches_serial_and_caps_engines(self):
+        from unittest.mock import patch
+        from contextlib import redirect_stdout
+        import io
+        import threading
+        import time
+        from llmplay.delivery import record_archive, resume
+        for n in range(12): record_archive(self.archive(81000000 + n))
+        source = self.out/'out.zip'
+        active, peak = 0, 0
+        lock = threading.Lock()
+        def verify(archive, **kwargs):
+            nonlocal active, peak
+            with lock:
+                active += 1
+                peak = max(peak, active)
+            try:
+                time.sleep(.01)
+                if json.loads((archive/'meta.json').read_text())['task']['seed'] % 3 == 0:
+                    raise ValueError('test invalid')
+                return True
+            finally:
+                with lock: active -= 1
+        results = []
+        for workers in (1, 8):
+            peak = 0
+            os.environ['LLMPLAY_OUT'] = str(self.base/f'resumed-{workers}')
+            output = io.StringIO()
+            with patch('llmplay.delivery.os.cpu_count', return_value=workers), \
+                    patch('llmplay.delivery.verify_archive', side_effect=verify) as replay, redirect_stdout(output):
+                results.append(resume(source, verify='full'))
+            self.assertEqual(replay.call_count, 12)
+            self.assertEqual(peak, min(workers, 2))
+            self.assertIn('resume verify: 10/12', output.getvalue())
+        for key in ('archives', 'tasks', 'layers', 'run_id', 'complete'):
+            self.assertEqual(results[0][key], results[1][key])
+
+    def test_resume_rejects_unknown_verify_mode(self):
+        from llmplay import resume
+        with self.assertRaisesRegex(ValueError, 'verify'):
+            resume(self.base, verify='other')
 
     def test_resume_invalid_archive_does_not_count_and_seed_is_retried(self):
         from unittest.mock import patch

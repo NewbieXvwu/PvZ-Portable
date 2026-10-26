@@ -12,8 +12,10 @@ import shutil
 import tempfile
 import uuid
 import zipfile
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
+from threading import BoundedSemaphore
 
 from . import budget
 from .runtime import output_path
@@ -24,6 +26,7 @@ FILES = ("meta.json", "ticks.jsonl", "frames.jsonl")
 LAYERS = ("A", "B", "C", "D", "E")
 REQUIRED_WINS = 5
 REQUIRED_ROBUST = 3
+_VERIFY_SLOTS = BoundedSemaphore(2)
 
 
 def output_dir() -> Path:
@@ -167,7 +170,7 @@ def _report(document):
     return "\n".join(lines) + "\n"
 
 
-def _store(archive, root):
+def _archive_digest(archive):
     digest = hashlib.sha256()
     for name in FILES:
         digest.update(name.encode())
@@ -177,7 +180,11 @@ def _store(archive, root):
         with (archive / name).open("rb") as stream:
             for block in iter(lambda: stream.read(1 << 20), b""):
                 digest.update(block)
-    relative = Path("archives") / digest.hexdigest()
+    return digest.hexdigest()
+
+
+def _store(archive, root, *, digest=None, consume=False):
+    relative = Path("archives") / (digest or _archive_digest(archive))
     target = root / relative
     if not target.is_dir():
         target.parent.mkdir(exist_ok=True)
@@ -185,7 +192,10 @@ def _store(archive, root):
         try:
             for name in FILES:
                 if (archive / name).is_file():
-                    shutil.copyfile(archive / name, tmp / name)
+                    if consume:
+                        shutil.move(str(archive / name), str(tmp / name))
+                    else:
+                        shutil.copyfile(archive / name, tmp / name)
             os.replace(tmp, target)
         finally:
             if tmp.exists():
@@ -193,7 +203,7 @@ def _store(archive, root):
     return relative.as_posix()
 
 
-def _publish(root, entries, session, *, run_id=None):
+def _publish(root, entries, session, *, run_id=None, compresslevel=None):
     run_id = run_id or _read_progress(root).get("run_id") or uuid.uuid4().hex
     document = _derive(entries, run_id)
     generations = root / ".delivery"
@@ -206,7 +216,7 @@ def _publish(root, entries, session, *, run_id=None):
         (generation / "report.md").write_text(_report(document), encoding="utf-8")
         (generation / "budget.json").write_text(json.dumps(session.snapshot(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         temporary = generation / "out.zip.tmp"
-        with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED) as bundle:
+        with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED, compresslevel=compresslevel) as bundle:
             for name in ("progress.json", "report.md", "budget.json"):
                 bundle.write(generation / name, "out/" + name)
             for relative in sorted({e["archive"] for e in entries}):
@@ -322,27 +332,22 @@ def _extract(source, target):
         bundle.extractall(target)
 
 
-def resume(source, *, executable=None, resource_dir=None) -> dict:
-    """导入旧 out.zip/目录；逐份验证，失败记录为作废且不计完成度。"""
+def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict:
+    """摘要匹配且原进度有效的内容寻址存档直接恢复；full 并行重放全部存档。"""
+    if verify not in ("fast", "full"):
+        raise ValueError('verify 必须是 "fast" 或 "full"')
     root = output_dir()
     with tempfile.TemporaryDirectory(prefix="llmplay-resume-") as directory:
         source = Path(source).expanduser().resolve()
-        if source.is_file():
+        extracted = source.is_file()
+        if extracted:
             _extract(source, directory)
             source = Path(directory)
         if not source.is_dir():
             raise ValueError("续跑来源必须是 out.zip 或目录")
-        candidates = [p.parent for p in source.rglob("meta.json")
-                      if not any(part.startswith(".") for part in p.relative_to(source).parts)]
-        imported = []
-        for archive in sorted(candidates):
-            try:
-                verify_archive(archive, executable=executable, resource_dir=resource_dir)
-                valid, error = True, None
-            except Exception as exc:
-                valid, error = False, str(exc)
-            imported.append((archive, valid, error))
-        missing, prior_run_ids = [], set()
+        candidates = sorted(p.parent for p in source.rglob("meta.json")
+                            if not any(part.startswith(".") for part in p.relative_to(source).parts))
+        missing, prior_run_ids, prior_entries = [], set(), {}
         for path in source.rglob("progress.json"):
             if any(part.startswith(".") for part in path.relative_to(source).parts):
                 continue
@@ -351,15 +356,51 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
                 prior_run_ids.add(prior["run_id"])
             for entry in prior.get("archives", []):
                 relative = PurePosixPath(entry["archive"])
-                if relative.is_absolute() or ".." in relative.parts:
+                if relative.is_absolute() or ".." in relative.parts or "\\" in entry["archive"]:
                     raise ValueError("progress.json 中含不安全存档路径")
                 archive = path.parent / entry["archive"]
+                if relative.parts == ("archives", archive.name):
+                    prior_entries.setdefault(archive, []).append(entry)
                 if archive not in candidates:
                     invalid = dict(entry, valid=False, won=False, robust=False,
                                    invalid_reason="进度引用的存档缺失，无法 verify")
                     missing.append(invalid)
         if len(prior_run_ids) > 1:
             raise ValueError("续跑来源含多个 run_id，请指定一份 out.zip 或对应的 out 目录")
+        trusted, pending = {}, []
+        for archive in candidates:
+            records = prior_entries.get(archive, [])
+            try:
+                match = (verify == "fast" and records
+                         and all(e.get("valid") is True for e in records)
+                         and _archive_digest(archive) == archive.name)
+            except OSError:
+                match = False
+            if match:
+                trusted[archive] = dict(records[-1])
+            else:
+                pending.append(archive)
+
+        def replay(archive):
+            try:
+                with _VERIFY_SLOTS:
+                    verify_archive(archive, executable=executable, resource_dir=resource_dir)
+                return True, None
+            except Exception as exc:
+                return False, str(exc)
+
+        verified = {}
+        if pending:
+            workers = os.cpu_count() or 1
+            print("resume: %d 摘要可信，%d 份重放复验（workers=%d，最多2个游戏进程）" %
+                  (len(trusted), len(pending), workers), flush=True)
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                futures = {pool.submit(replay, archive): archive for archive in pending}
+                for count, future in enumerate(as_completed(futures), 1):
+                    verified[futures[future]] = future.result()
+                    if count % 10 == 0:
+                        print("resume verify: %d/%d" % (count, len(pending)), flush=True)
+        imported = [(archive, *(verified.get(archive, (True, None)))) for archive in candidates]
         if not prior_run_ids:
             for archive, valid, error in imported:
                 if valid:
@@ -375,8 +416,12 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
             for archive, valid, error in imported:
                 relative = None
                 try:
-                    relative = _store(archive, root)
-                    entry = _entry(archive, relative, valid=valid, error=error)
+                    # 已校验的私有zip解压文件可直接移入，避免再哈希和复制数百MB。
+                    adopt = extracted and archive in trusted
+                    relative = _store(archive, root, digest=archive.name if adopt else None,
+                                      consume=adopt)
+                    entry = (dict(trusted[archive], archive=relative) if archive in trusted else
+                             _entry(archive, relative, valid=valid, error=error))
                 except (OSError, KeyError, ValueError, TypeError) as exc:
                     # 不可解析的存档同样保留作废记录，不能中止其他局的恢复。
                     relative = relative or "invalid/" + hashlib.sha256(str(archive.relative_to(source)).encode()).hexdigest()
@@ -403,4 +448,4 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
                 if not destination.exists():
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(path, destination)
-            return _publish(root, entries, session, run_id=restored_run_id)
+            return _publish(root, entries, session, run_id=restored_run_id, compresslevel=1)
