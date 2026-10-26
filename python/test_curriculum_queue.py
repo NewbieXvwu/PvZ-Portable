@@ -293,6 +293,63 @@ class CurriculumRulesTest(unittest.TestCase):
             finally:
                 queue.STOP_FLAG = original
 
+    def test_round_log_keeps_completed_groups_across_restart(self):
+        import curriculum_queue as queue
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root,
+                                   stop_flag=root / 'stop', workers=2,
+                                   rollout_policy=Path('/m.pt'), beta_threshold=0.1,
+                                   starved_beta=0.5, probe_interval=3)
+            plan = [dict(base=f'base{index}', multiplier=1.0, task_id=f'task{index}',
+                         offset=0, games=2, manifest='/manifest', label=f'group{index}')
+                    for index in range(4)]
+            plan[0].update(demo_archive='/demo', demo_decision=100, future_seeds=[10, 11])
+            state = dict(round=0, offsets={}, log=[],
+                         cells={item['base']: cell(0, 0) for item in plan})
+            calls = []
+
+            def collect(_command, **_kwargs):
+                item = plan[len(calls)]
+                folder = root / f'{item["label"]}_2'
+                folder.mkdir()
+                (folder / 'games.jsonl').write_text('{"won":true}\n{"won":false}\n')
+                calls.append(item['label'])
+                if len(calls) == 2:
+                    args.stop_flag.touch()
+                return SimpleNamespace(returncode=0)
+
+            with mock.patch.object(queue, 'command_for', return_value=[]), \
+                    mock.patch.object(queue.subprocess, 'run', side_effect=collect), \
+                    mock.patch.object(queue, 'mem_available_bytes', return_value=None):
+                self.assertFalse(queue.run_round(args, state, plan, []))
+                state = json.loads(args.state.read_text())
+                self.assertEqual(state['round'], 0)
+                self.assertEqual(len(state['completed_groups']), 2)
+                saved_cells = copy.deepcopy(state['cells'])
+                saved_offsets = dict(state['offsets'])
+                state['completed_groups'].append(copy.deepcopy(state['completed_groups'][0]))
+                args.stop_flag.unlink()
+                args.pipeline = mock.Mock()
+                args.pipeline.reservation.return_value = 0
+                args.pipeline.foreground_limit.return_value = 2
+                self.assertTrue(queue.run_round(args, state, plan[2:], []))
+            stored = json.loads(args.state.read_text())
+            groups = stored['log'][0]['groups']
+            self.assertEqual(stored['round'], 1)
+            self.assertEqual([group['label'] for group in groups], calls)
+            self.assertEqual(len(groups), 4)
+            self.assertEqual(groups[0]['future_seeds'], [10, 11])
+            self.assertNotIn('completed_groups', stored)
+            for base, saved in saved_cells.items():
+                if base in ('base0', 'base1'):
+                    self.assertEqual(stored['cells'][base], saved)
+            for task, offset in saved_offsets.items():
+                self.assertEqual(stored['offsets'][task], offset)
+            self.assertEqual(pack_labels(stored), sorted(label + '_fast_search' for label in calls))
+            args.pipeline.enqueue.assert_called_once_with()
+            self.assertIn('done: 4 groups, 8 games', args.log.read_text())
+
     def test_student_rate_uses_current_window_then_latest(self):
         self.assertAlmostEqual(student_rate(cell(2, 10), VALUES[0]), 0.2)
         # 刚换档还没数据：退回最近一个非空窗口（执行现实）。

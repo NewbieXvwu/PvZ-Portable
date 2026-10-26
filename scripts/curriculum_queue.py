@@ -1542,20 +1542,20 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
         if result.returncode != 0:
             raise SystemExit(f'{item["label"]}: search_play exited {result.returncode}')
         state['cells'][item['base']]['last_round'] = round_index
+        state.setdefault('completed_groups', []).append(
+            {**{key: item[key] for key in ('base', 'multiplier', 'task_id', 'offset', 'games',
+                                          'manifest', 'label', 'collection_started',
+                                          'collection_finished', 'student', 'student_round',
+                                          'workers', 'beta')},
+             **{key: item[key] for key in ('demo_archive', 'demo_decision', 'future_seeds')
+                if key in item}})
         save_state(args.state, state)   # 组完成即落盘：组间崩溃重启不重采、防遗忘轮转不丢（task59）
     state['round'] = round_index
-    state['log'].append(dict(round=round_index,
-                             groups=[{**{k: item[k] for k in ('base', 'multiplier', 'task_id', 'offset', 'games',
-                                                             'manifest', 'label', 'collection_started',
-                                                             'collection_finished', 'student', 'student_round',
-                                                             'workers', 'beta')},
-                                       **{k: item[k] for k in ('demo_archive', 'demo_decision', 'future_seeds')
-                                          if k in item}}
-                                     for item in plan],
-                             changes=changes))
+    groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
+    state['log'].append(dict(round=round_index, groups=groups, changes=changes))
     save_state(args.state, state)
-    log_line(args.log, f'round {round_index} done: {len(plan)} groups, '
-                       f'{sum(item["games"] for item in plan)} games, changes={len(changes)}'
+    log_line(args.log, f'round {round_index} done: {len(groups)} groups, '
+                       f'{sum(group["games"] for group in groups)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
     if getattr(args, 'pipeline', None) is not None:
         args.pipeline.enqueue()  # no wait: next round collects immediately with the last published student
