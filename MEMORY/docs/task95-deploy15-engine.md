@@ -27,4 +27,10 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [1] src/ 改动清单（`git diff a8d00858 origin/pvz-env -- src`，7 文件 +137/−11），逐项影响判定（预期全部为“无”，证实）：
+  1. **task82 三处未初始化字段**：`Challenge.cpp` `mCloudsCounter[6]=0`（SaveGame 每种模式都序列化该数组；TreeOfWisdomInit 在首次 update 前赋玩法值 → 纯哈希稳定性，无逻辑影响）；`Coin.cpp` `mCollectX/Y=0`（Collect() 用前必赋值；快照保存未收集金币 → 仅哈希）；`Projectile.cpp` `mLastPortalX=-1`（冒险局只有 SaveGame 读；DataArray 槽复用 → 仅哈希）。效果：同二进制跨进程 state_hash 稳定。
+  2. **task85 Boss 观测**：`EnvironmentRollout.cpp/.h` 新增 observation=6（v2boss）布局（棋盘 +4 Boss 空间通道=14、标量 +2=9），只在加载 observation=6 的网络时激活——生产网络全部 ≤5，行为不变；头部校验放宽 observation ≤6。`LawnApp.cpp` `WriteObservationBoss` 给 lean / v2 / 完整观测追加 `"boss":{...}` JSON 块（仅 L50 `GetBossZombie()` 非空时输出）；特权僵尸观测加增量字段 `summon_counter`（task81 投石车弹药，纯增量，Python 不校验版本号）。
+  3. **main.cpp**：DEMO_INPUT 块纯缩进变化；新增 `DEMO_CLICK_PACKET` / `DEMO_CLICK_CELL` 测试缝（只在 demo && visible 会话生效，rollout/评估协议不用）。
+  对六族门禁与全部现行任务的预期影响：逻辑零。
+
 ## 问题
