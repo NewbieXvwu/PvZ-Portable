@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "code_revision": "c6e2f2bd60504c2af44dfd23e0ca05a74b0c376a",
+  "script_sha256": "7d73ca9cdb1f9e6fc707745e9859b50b9b3ad19450f74e714cdc300b5ac56756",
+  "requested_script": "/home/newbiexvwu/pvz-logs/qc_deploy14c.sh",
+  "repository_script": "scripts/qc_deploy14c.sh",
+  "checks": {
+    "shell_syntax": true,
+    "embedded_python_ast": true,
+    "start_qc_identical_to_deploy14": true,
+    "code_overlay_matches_pinned_commit": true,
+    "current_cq_still_matches_deploy14_baseline": true,
+    "engine_and_panels_match_deploy14": true
+  },
+  "verification_scope": "Read-only hashes, bash -n and AST/static tests. Neither deployment script nor production dry-run was executed.",
+  "deployment_executed": false,
+  "code_files": {
+    "scripts/curriculum_queue.py": {
+      "deploy14_sha256": "58a93196087c4b296acfa8ba0f528880116f604c45ca1fb12bfb9f366c650736",
+      "candidate_sha256": "15cfa2aa5ee4be8770e87dd7c3256f4ecaf1ab9076e14ec9bde86e6be2aba486"
+    },
+    "scripts/select_student.py": {
+      "deploy14_sha256": "6162eb46076b794f8ef3d2dac38ee6c4ba12d55aeb484c821db3c0e436ec99b3",
+      "candidate_sha256": "e636c6d3de99fb47c6f7d707a99f96d8febc76dda0f5db9e08018a92009d69be"
+    },
+    "scripts/pvz_tasks.py": {
+      "deploy14_sha256": "61279b49f572a4b1232d4b39a6b7349a36385e2b8e3e7081d61826c1096519bf",
+      "candidate_sha256": "8e2bb60d233357a921827f552e325b6aee810907d5f429e6ac754ee81fa93e78"
+    },
+    "scripts/search_play.py": {
+      "deploy14_sha256": "1e7f07c687acc89ebb380af7e8dac90a947c0a46bc3f692e6780d8d09b4116c5",
+      "candidate_sha256": "52d00f236a6b2a66e3e83305602582896aa9103ea8098a7c21ab6a7a40f9e00f"
+    },
+    "python/pvz_student_selection.py": {
+      "deploy14_sha256": null,
+      "candidate_sha256": "a85192537e2e0b95393f01deaa10118a55096877319f8353655eb2d08cc18d84"
+    },
+    "python/pvz_selection_refresh.py": {
+      "deploy14_sha256": null,
+      "candidate_sha256": "7c94f01425d23945e5f0771f72c6a0732e16a9f168cf40d02058dce8fdc2111b"
+    },
+    "configs/student_selection_v2.json": {
+      "deploy14_sha256": null,
+      "candidate_sha256": "16bcfa2d8d42fb3ec13794525b68f0ed08a167e49ba8d3cf6c1ea0e434bedc10"
+    }
+  },
+  "unchanged_engine_and_panels": {
+    "build5/pvz-portable": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
+    "artifacts/stage4/multiplier_panel.json": "68b37b98d3e29e83ac583fa5897372e7ed248213ec633d79edcf33e01eae26c3",
+    "artifacts/task73c/panel_v3_source.json": "bb0a9129b88023fe8c7722f267f1d184883ddea538860354421f6664d8e2f636"
+  }
+}
