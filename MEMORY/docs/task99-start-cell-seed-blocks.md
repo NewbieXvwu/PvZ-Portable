@@ -30,6 +30,8 @@
 - 2026-10-26 第 3 步（测试收尾）：8 个相关测试文件共 **123 passed, 2 skipped**（含续领 9 项）；`test_curriculum_queue.py` 单文件 63 passed。干跑（生产 state 副本、L32 `_hv2` 偏移 240）实测续领 `[200000000,200000256)`、24 局拿 `44300240..44300255 + 200000000..200000007`，预览账本在临时目录、生产账本未创建。
 - 2026-10-26 第 4 步（上线步骤 + 结论）：结论写 `MEMORY/docs/start-cell-seed-blocks.md`，含池依据与两次盘点、多段种子表语义、重启/恢复规则、与 task98 一起在组边界上线的 6 步（无需新参数）、回滚注意，以及三个问题（90M 与 task89 e2e 冲突、8 位僵尸 id 误报、旧 L32 与 `_hv2` 共用块）。**未跑游戏进程、未动生产 state/账本/tmux qc/cq**。task99 四项全部完成。
 
+- 2026-10-26 上线前核对（只读）：`merge-base(startseeds, cq)` = cq 的 HEAD `c84ad7d1`，startseeds 领先 692、落后 0，`merge-tree` rc=0 → 可 fast-forward。但发现 startseeds 缺 deploy14c 的 `391c8a64`（起点格以 `archive` 识别，否则原生阶梯格 `pool_l25_orig_train` 会被当起点格退休），已 cherry-pick 进 `08cc5c72`（124 passed）。另记两条部署注意：cq 工作树有约 130 个已暂存文件（ff 前须清理/备份），deploy15 的 `diff --quiet 0b8dcc26` pin 合并后必失败、需换 REV。全部写进 `start-cell-seed-blocks.md` 的“上线前核对”。
+
 ## 问题
 
 ## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of
