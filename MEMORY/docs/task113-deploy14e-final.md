@@ -34,3 +34,15 @@
 - 最多 2 个游戏进程。
 - 遵守 AGENTS.md §6.5。
 - 推送 deploy14e，结果写进本文件末尾（合并时同步到 pvz-env 的同名文件）。
+
+
+## 结果（2026-10-26，task113）
+
+- deploy14e 已合并 origin/deploy14d 的 cbd96daf（合并 1fc6a1b7）及已推送的 demo2545/13a005c2（合并 4aab1c96）。L25/L45 两格随之进入清单；七条错误继承 demo_start 的热补保留。
+- 核心实现 3573ea37：GATE_VERSION=4、独立 v4-task113 面板标识；任务、1920 配对、种子池和总体非劣 3pp 与 v3 相同。六区单侧 exact McNemar 使用 Holm–Bonferroni，族错误率 0.05；policy(1..3) 和旧决策路径不改，证书继续按签发版本核对。DESIGN §14.37 已登记理由。
+- 第20轮实际 decision.json（b4e85c41a983bbe8121a）的六区计数已写入数值回归：day (both_win,gain,harm,both_lose)=(336,16,30,2)，原始 p=0.027038015929434778，v4 校正 p=0.16222809557660867；总体仍 +0.208pp，CI [−1.605,+2.022]pp，v4 不否决，v3 仍否决。8 次净 harm 的构造 p=1/256<0.05/6 仍否决，另覆盖逐步阈值及首次不显著后停止拒绝。未重跑第20轮、未回填历史决策。
+- 示范格加载不再因缺存档全局退出；规划只读小型 meta.json，缺存档、未 verified、示范 seed 不在任务 seeds 时退休该格，持久化 cell_errors 并记录日志，不派组，其余格继续。未来 RESEED 块不需属于示范任务 seeds。测试覆盖缺存档/错种子/未验证、退休不复活、种子耗尽仍可扩块续跑。
+- 生成器根因补丁 e87d7f18：派生任务剔除源 seeds 与 demo_start，不改源任务、卡组、地形。已同步 llmplay（28e01d19）；pvz-env 通过基于远端最新版本的独立检出接入同一补丁（6e1a4813），避免触碰本机旧 pvz-env 检出的既有删除。
+- 仅运行相关门禁、控制器、pipeline、多种子、看门狗和生成器测试：153 passed、1 skipped、4 subtests passed（32.66s）。跳过的是本工作树不含未入 git 的用户示范档。随后新增的显式 v3 与轮边界保护用例 3 项通过；Holm 停止规则的补充用例通过。初次使用系统 Python 的两项 torch 依赖失败，改用项目 ml 环境后通过。
+- scripts/qc_deploy14e.sh 固定运行时代码 REV=3573ea37，CODE_FILES 七项和基线 SHA 按 cq 现有文件重算，引擎和两套源面板 SHA 保留并核实。无回填步骤；代码覆盖后先以显式 --gate-version 3 完成遗留半轮及后台排空，再在轮边界以缺省 v4 启动。控制器另设门禁版本切换保护，半轮或旧后台未排空时拒绝切换。首个新组成功后启动 qc-watchdog。脚本复制到 ~/pvz-logs/qc_deploy14e.sh；只做 shell 语法和 start_qc 提取检查，未执行部署或启动看门狗。
+- 本任务未启动游戏/训练进程，未写生产 state、offset、种子账本或 teacher_rates。deploy14e 与生成器补丁按任务要求推送；本结果同步至 MEMORY/docs/task113-deploy14e-final.md 与 pvz-env 同名任务书。
