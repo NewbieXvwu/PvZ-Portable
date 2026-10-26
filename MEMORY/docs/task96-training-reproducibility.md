@@ -40,6 +40,8 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 续接：修好诊断脚本三处无法启动的问题（labels 传字符串、单文件 read_pack 丢 packet store、label_weight 含集外键），CPU 冒烟通过。GPU 9 个用例跑完：初始权重与 randperm 摘要 9/9 相同，未设 workspace 与 `:4096:8` 7 次逐位相同（含 deterministic 关闭），**只把 workspace 换成 `:16:8` 就从第 2 步起分叉**（最终张量 77a3093b vs 282009e3）。即同配置内无 run-to-run 随机性、跨配置才分叉；r11/A/run1/run2 的 epoch1 差 0.1%–1.2% 与“第 2 步级别扰动被 132k 步放大”一致。8-epoch 计时 4 次最终张量全同，strict 10.44/9.30s vs default 7.74/17.05s，qc 并发下测不出确定性开销。结论已写入 `MEMORY/docs/training-reproducibility.md`（含 task92 前提需改写）。未证实的一环：具体哪个环境差异让三次全量跑落到不同算法（cuBLAS 显存不足回退是最可能触发点，但没为复现去压 qc 的显存）。
 
+- 10-26 CodeBuddy 交还 Codex：task96 五步全部完成，`20fe2cdb` 已 push origin/repro，工作区干净、生产未改。交付物 `MEMORY/docs/training-reproducibility.md`（9 个 GPU 用例 + 4 个 8-epoch 计时用例 + 数据/代码/双跑审计 + 6 条修法），证据 `task96-determinism-probe.json` 等四份。唯一遗留写进“问题”：四次全量 run 落到不同 cuBLAS 算法的具体环境差异未证实（最可能：workspace 申请失败回退，run1 890s/epoch 佐证抢 GPU），闭环需固定 `CUBLAS_WORKSPACE_CONFIG` 后重跑一个完整 epoch，qc 优先。
+
 ## 问题
 - 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。cuBLAS workspace 申请失败会退化成更小 workspace，这是最可能的触发点，但本次没有为复现去压低空闲显存（qc 在用），所以是假设不是结论。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。
