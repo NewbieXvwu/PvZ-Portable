@@ -79,7 +79,21 @@ def qc_pending():
         return False
     try:
         state = json.loads(QC_STATE.read_text())
-        return any(job.get('status') == 'queued' for job in state.get('training_jobs', []))
+        for job in state.get('training_jobs', []):
+            if job.get('status') != 'queued':
+                continue
+            # QC keeps status=queued while running CPU promotion evaluations.
+            # Its atomic trained.json receipt marks the end of GPU training.
+            if not job.get('recipe'):
+                return True
+            recipe = Path(job['recipe'])
+            trained = recipe.with_name('trained.json')
+            if not trained.is_file():
+                return True
+            proof = json.loads(trained.read_text())
+            if not proof.get('model_sha256') or proof.get('recipe_sha256') != sha(recipe):
+                return True
+        return False
     except (OSError, ValueError, TypeError, AttributeError):
         return None  # retry the observation; do not terminate a worker on a read failure
 

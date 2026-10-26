@@ -82,6 +82,21 @@ def test_only_priority_preemption_retries_the_same_recipe(tmp_path, monkeypatch)
     assert queue.complete_model(2)
 
 
+def test_qc_cpu_evaluation_does_not_reserve_the_gpu(tmp_path, monkeypatch):
+    state = tmp_path/'qc.json'
+    recipe = tmp_path/'recipe.json'
+    recipe.write_text('{"seed": 1}')
+    monkeypatch.setattr(queue, 'QC_STATE', state)
+    monkeypatch.setattr(queue, 'qc_controllers', lambda: [123])
+    state.write_text(json.dumps({'training_jobs': [{'status': 'queued', 'recipe': str(recipe)}]}))
+    assert queue.qc_pending() is True
+    proof = recipe.with_name('trained.json')
+    proof.write_text(json.dumps({'model_sha256': 'producer receipt', 'recipe_sha256': queue.sha(recipe)}))
+    assert queue.qc_pending() is False
+    recipe.write_text('{"seed": 2}')
+    assert queue.qc_pending() is True
+
+
 def test_real_training_error_does_not_retry(tmp_path, monkeypatch):
     monkeypatch.setattr(queue, 'DATA', tmp_path)
     calls = []
