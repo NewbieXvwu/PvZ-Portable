@@ -80,3 +80,11 @@ L31 `_hv2` 首组实际在 08:39:35–08:43:19 完成 24/24；L32 首组在 08:4
 | /home/newbiexvwu/PvZ-search/.claude/worktrees/cq/python/pvz_promotion.py | `6a28c360fac4acded269370995861284b00e97ad03de151c36f2cfc8157cdfd6` |
 
 动态文件后续会增长，以上指纹对应本次快照。后续运行结果另记观测时间，不覆盖初始证据。
+
+## 11:59 补充核验
+
+在隔离内存副本执行纯函数：deploy14提交0b8dcc26的 `reconcile_start_cells` 对原生L25产生误退，磁盘热补副本保留该格；当前 `pack_labels` 对实际state快照稳定漏出L31/L32两标签；复制的 `freeze_panel` 对job18块生成1920个互不重复种子，fog/roof分片与上文一致。未调用领号、保存状态或采集入口。
+
+退休格余量补齐：`demo_fog_31_snow_m200`、`demo_fog_32_snow_m200`、`demo_fog_33_cactus_snow_m200`、`demo_fog_33_cattail_snow_m200` 都是216/256、余40，均不足3轮。它们已由 `_hv2` 替换；task99不应将这些历史族一概重新激活。前四个新旧雾族还共享各自同一未来种子区间（44000000、44300000、44100000、44200000起，各256），新族从偏移0重采；因此“新族余232”是任务语义下的偏移余量，并非232个从未在旧族用过的全局新种子。续领账本需要明确族/存档/观测语义，避免误算新鲜度。
+
+11:59只读 `/proc/861864` 确认r18训练仍为同一活进程（父PID860060），train.log已记epoch1完成，seconds=274.316；尚无 `student/model.pt`、`complete.json` 或首次v3评估结果。继续观察该进程，不因等待超时启动另一份任务。
