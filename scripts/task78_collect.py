@@ -104,12 +104,6 @@ def main():
             if sha(row['frames_path']) != row['frames_sha256']:
                 raise ValueError('archive frames changed')
             frames = read_frames(Path(row['frames_path']))
-            env, obs, _ = open_archive(row, executable)
-            teacher._W['env'] = env
-            env.load_rollout_net(teacher._W['rollout_file'])
-            env.load_value_net(bins[0])
-            env.load_value_net(bins[1], static=True)
-            teacher._W['context'] = observation_context(obs)
             teacher._W['demo_actions'] = []
             if row['demo_archive']:
                 from pvz_frame_store import frame_path
@@ -117,36 +111,52 @@ def main():
                 teacher._W['demo_actions'] = [(before['tick'], after['action'])
                     for before, after in zip(prefix, prefix[1:])
                     if (after.get('action') or {}).get('type') == 'plant']
-            roots = {r['frame'] for r in row['roots']}
-            state, results = initial_state(row, teacher._W['fast'].obs), []
-            for i in range(max(roots)+1):
-                if not equal(physical(_frame(obs)), physical(frames[i])):
-                    raise ValueError(f'prefix changed at input frame {i}')
-                teacher._fast_action(obs, state)
-                teacher._W['student_history'] = state.get('history')
-                if i in roots:
-                    # A fresh search at the frozen source root. Common world/noise
-                    # schedules are identical across the three horizons.
-                    decision_seed = int(manifest.get('seed_base', 78200000)) + index*100 + sorted(roots).index(i)
-                    formal = teacher._rollout_policy
-                    try:
-                        teacher._rollout_policy = full_leaf_rollout
-                        _, summary = sample_root(env, obs, deepcopy(state), args, decision_seed,
-                                                  stats_new(), output/f'root_{i}')
-                    finally:
-                        teacher._rollout_policy = formal
-                    results.append(dict(frame=i, **summary))
-                    print(json.dumps(results[-1]), flush=True)
-                if i == max(roots):
-                    break
-                if frames[i+1].get('targets'):
-                    root = env.snapshot_fast(); env.restore(root); env.release_snapshot(root)
-                action = frames[i+1]['action']; state['action'] = action
-                obs, *_, info = env.step(action)
-                if not info.get('ok'):
-                    if not frames[i+1].get('action_rejected'):
-                        raise ValueError('prefix action unexpectedly rejected')
-                    obs, *_ = env.step(dict(type='wait', ticks=60))
+            roots = sorted({r['frame'] for r in row['roots']})
+            results = []
+            for position, target in enumerate(roots):
+                # One fresh engine per root. A search at an earlier root leaves hidden state
+                # that SNAPSHOT does not restore, so a later root in the same process can
+                # differ from the frozen replay (roof L42/L43, 2026-10-26). Replaying the
+                # prefix in a new process reproduces the verified root bit for bit.
+                env, obs, _ = open_archive(row, executable)
+                try:
+                    teacher._W['env'] = env
+                    env.load_rollout_net(teacher._W['rollout_file'])
+                    env.load_value_net(bins[0])
+                    env.load_value_net(bins[1], static=True)
+                    teacher._W['context'] = observation_context(obs)
+                    state = initial_state(row, teacher._W['fast'].obs)
+                    for i in range(target+1):
+                        if not equal(physical(_frame(obs)), physical(frames[i])):
+                            raise ValueError(f'prefix changed at input frame {i}')
+                        teacher._fast_action(obs, state)
+                        teacher._W['student_history'] = state.get('history')
+                        if i == target:
+                            # A fresh search at the frozen source root. Common world/noise
+                            # schedules are identical across the three horizons.
+                            decision_seed = int(manifest.get('seed_base', 78200000)) + index*100 + position
+                            formal = teacher._rollout_policy
+                            try:
+                                teacher._rollout_policy = full_leaf_rollout
+                                _, summary = sample_root(env, obs, deepcopy(state), args, decision_seed,
+                                                          stats_new(), output/f'root_{i}')
+                            finally:
+                                teacher._rollout_policy = formal
+                            results.append(dict(frame=i, **summary))
+                            print(json.dumps(results[-1]), flush=True)
+                            break
+                        if frames[i+1].get('targets'):
+                            root = env.snapshot_fast(); env.restore(root); env.release_snapshot(root)
+                        action = frames[i+1]['action']; state['action'] = action
+                        obs, *_, info = env.step(action)
+                        if not info.get('ok'):
+                            if not frames[i+1].get('action_rejected'):
+                                raise ValueError('prefix action unexpectedly rejected')
+                            obs, *_ = env.step(dict(type='wait', ticks=60))
+                finally:
+                    env.close()
+                    env = None
+                    teacher._W['env'] = None
             write_json(output/'complete.json', dict(identity=identity, roots=results,
                 finished=time.time(), wall_seconds=time.time()-run['started']))
         finally:
