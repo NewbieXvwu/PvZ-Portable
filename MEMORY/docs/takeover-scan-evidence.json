@@ -139,5 +139,37 @@
    "trace_sha256": "c928b335fd749bd1f9aedef6384b2e44b636babb0543a8918e4c460d8a3cb971"
   }
  ],
- "human_adaptive_frozen_sha256": "c8f616372b9dd71e264494efbf8f654d33bed1e3b2bd535acf6ef7860f19fb6f"
+ "human_adaptive_frozen_sha256": "c8f616372b9dd71e264494efbf8f654d33bed1e3b2bd535acf6ef7860f19fb6f",
+ "human_backtest": [
+  {
+   "task_id": "demo_roof_46_doom_m200",
+   "seed": 20261046,
+   "adaptive_l50": 418,
+   "full_l50": 418,
+   "delta": 0,
+   "teacher_points": 9,
+   "scan_games": 88,
+   "full_two_arm_games": 192,
+   "passed": true,
+   "result_sha256": "48fb6de9dcb996ddbc018c54e1f657ae167cf6751094d81ddc8dcbb0cf0ad518",
+   "raw_cache_manifest_sha256": "52f5dece955d1c7022ce626631ca47d1d862c3506f2e8fc3ff13424488839125",
+   "future_seed_start": 86000000,
+   "grid": [
+    1,
+    84,
+    168,
+    251,
+    334,
+    418,
+    501,
+    585,
+    668,
+    751,
+    835,
+    918
+   ],
+   "frozen_trace_verified": true,
+   "raw_rows_verified": true
+  }
+ ]
 }
