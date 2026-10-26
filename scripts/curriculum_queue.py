@@ -1157,7 +1157,13 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         seeds = cell['seeds'] if start else tasks[task_id]['seeds']
         offset = state['offsets'].get(task_id, 0)
         if offset + games > len(seeds):
-            raise SystemExit(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)})')
+            # An exhausted seed block must not stop qc (10-26 06:50: demo_fog_32 ran out of its 256
+            # future seeds and qc exited). A start cell is retired; a plain task's group is skipped.
+            if start:
+                state.setdefault('retired_cells', {})[base] = state['cells'].pop(base)
+            changes.append(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)}); '
+                           + ('start cell retired' if start else 'group skipped'))
+            continue
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
                     games=games, manifest=str(manifests[task_id]),
                     label=label_for(state['round'] + 1, base, multiplier,
