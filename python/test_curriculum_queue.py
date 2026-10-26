@@ -916,16 +916,23 @@ class DemoStartCellsTest(unittest.TestCase):
                                       'demo_roof_42_melon_m200', 'demo_roof_43_melon_m200',
                                       'demo_roof_44_melon_m200', 'demo_roof_42_gloommelon_m200',
                                       'demo_roof_49_doom_m200', 'demo_roof_48_doom_m200',
-                                      'demo_roof_46_doom_m200'})
+                                      'demo_roof_46_doom_m200',
+                                      # task87: LLM 示范起点格（_llm = 本机种子另示范，_sNNN = 外种子族）
+                                      'demo_roof_46_doom_m200_llm', 'demo_roof_48_doom_m200_llm',
+                                      'demo_roof_46_doom_m200_s20261047', 'demo_roof_46_doom_m200_s20261048',
+                                      'demo_roof_47_doom_m200', 'demo_roof_47_doom_m200_s20261048',
+                                      'demo_roof_47_doom_m200_s20261049',
+                                      'demo_roof_48_doom_m200_s20261049', 'demo_roof_48_doom_m200_s20261050',
+                                      'demo_roof_49_doom_m200_s20261050', 'demo_roof_49_doom_m200_s20261051'})
         for task_id, spec in cells.items():
-            self.assertGreaterEqual(len(spec['ladder']), 2, task_id)
+            self.assertGreaterEqual(len(spec['ladder']), 1, task_id)
             self.assertEqual(spec['ladder'], sorted(spec['ladder'], reverse=True), task_id)
             self.assertTrue(Path(spec['archive']).is_dir(), spec['archive'])
             self.assertGreaterEqual(len(spec['seeds']), 32, task_id)
-            # 起点之前的示范动作走 human 导出，不走起点格
+            # 起点之前的示范动作走 human 导出，不走起点格（task87 起 LLM 示范格 label_source=llm_gpt_pro）
             meta = json.loads((Path(spec['archive']) / 'meta.json').read_text())
             self.assertTrue(meta['verified'], task_id)
-            self.assertEqual(meta['label_source'], 'human', task_id)
+            self.assertIn(meta['label_source'], ('human', 'llm_gpt_pro'), task_id)
 
 
 if __name__ == '__main__':

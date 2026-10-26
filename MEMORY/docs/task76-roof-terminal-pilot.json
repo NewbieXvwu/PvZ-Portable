@@ -1,0 +1,27 @@
+{
+ "task": 76,
+ "schema_version": 3,
+ "complete": true,
+ "root_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/terminal_v3/pilot_evidence/root_0.json",
+ "root_sha256": "ee213acde5c3ac0f05b4f8be83a357161bcb06d3c2d2655d0cd41e05be89bfa7",
+ "replay_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/terminal_v3/pilot_evidence/replay-complete.json",
+ "replay_sha256": "117f55287fa6ff22e1eb2d2bd819bc053c4a60a8c2453c2b8234212ca6b7be39",
+ "actions": 66,
+ "true_terminal_futures": 528,
+ "native_model_bin_sha256": {
+  "value": "f022ed6b33ec1082f268889b3fc9efb109b576e8c60beccd611edcbb0591acb2",
+  "v4_control": "1f56f50c69325e704026d821ac95dd9d8a9617db31076c800b9d598a92dc6d70"
+ },
+ "current_history_verified": true,
+ "root_restored": true,
+ "canonical_root_sha256": "ba00286a2bfd486ec4e6c5b8ab7d41411b21c35eb53341a3912e7b6fac78c495",
+ "canonical_final_sha256": "089402d34a5d5dd0aa5e2e9b1490391f9981526c9825dc6296b4e3164eb2184c",
+ "all_original_gameplay_fields_match": true,
+ "original_native_hash": "2f0f4dd6a8d142c5",
+ "baseline_native_hash": "a4334811f7014e54",
+ "probe_native_hash": "a4334811f7014e54",
+ "state_protocol": "task76-replay-state-audit.json; only uninitialised unused Tree-of-Wisdom cloud counters and dependent CRC normalised",
+ "continuation": "Frozen student; current v5 teacher prefix; unchanged common terminal8/leaf9 futures namespace",
+ "inference": "Single-root pilot validates the collector, not the roof research conclusion",
+ "acknowledged_original_root_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/roofcand/artifacts/task76/terminal_v3/l42/45000000/root_0.json"
+}
