@@ -128,6 +128,24 @@ L31 `_hv2` 首组实际在 08:39:35–08:43:19 完成 24/24；L32 首组在 08:4
 6. **11 个 active 格已经 3 轮没被排过**（last_round ≤ 17）：`day_l7_train_d7`、`day_l9_train_d7`、`day_l3_train_d7`、`day_l10_orig_train`、`night_l13_train_n10`、`night_l17_train_n10`、`night_l18_train_n10`、`day_l9_train_d7q`、`night_l11_train_n10q`、`night_l13_train_n10q`、`night_l16_train_n10q`。每轮 768 局摊 55 格，必然有格轮空，这不必然是 bug；但如果它们里有本该优先的格，说明 `allocate` 的排序把它们压得太死（其中 9 个正是上文“无 base 也无 level 底数”的格，默认 1.0 参与排名）。
 7. **55 个 active 格的 `mult_index` 刷新后仍全部落在合法区间**（示范格对 `len(ladder)`、普通格对 7 档）；本快照没有新的越界。
 
+## 组标签账本：丢失面比 r18 那一例更大（代码级复核）
+
+r18 丢两组曾被解释成“提前完成组在重启后不被计入”。读 `curriculum_queue.py` 后，实际机制更宽，值得单列：
+
+- `run_round` 每组完成后只落 `cells`（windows / last_round）与 `offsets`（`state['offsets'][task_id] = offset + games` 后立刻 `save_state`，:1189–1190），**组的 log 条目要等整轮 plan 全部跑完才 append**（:1265–1275，`groups=[... for item in plan]`，只含本次 plan）。
+- `pack_labels` 只从 `state['log']` 的 groups 取标签（:663–666），没有任何“扫帧目录”的兜底。
+- 结论：**任何轮内重启都会丢掉该轮已完成组的标签**，不只是“提前完成”的那几个。偏移已推进所以不会重采，帧也在磁盘上，丢的只是“这些帧该进训练”的记录。r18 只是碰巧丢得少（重启发生在两组之后）。
+
+现场暴露（15:31 快照）：round 20 从 15:05 起已 rc=0 完成 **12 组 / 480 局**，而 `state['log']` 里**没有 round 20 条目**（`state.updated=15:26:54` 但 `round` 字段仍是 19）。此刻重启，这 12 组的标签会全部缺席下一份配方——与 r18 的 48 局同型，只是规模 10 倍。
+
+加剧因素：生产 cq 的 `run_round` 在任一组 `rc!=0` 时直接 `raise SystemExit`（:1261）；task98 的按格/按组隔离只在 qcwatch 工作树里，未部署。所以“一次组失败 → 整条队列退出 → 重启 → 丢当轮已完成组标签”是一条真实可达的路径，不是理论风险。
+
+补一条正面核验：deploy14 的 24 个组（round 18–20，18 个新格）在 `artifacts/student/frames_v2/` 下都能按 label 找到**恰好 games 个帧目录且无一为空**（0 处不符）。也就是说丢的从来不是采集数据，只是账本——这让修复有明确落点：
+
+1. 组完成时就把该组 dict 追加进本轮 log 条目（没有条目就新建），而不是等整轮结束一次性写；
+2. 或在 `pack_labels` 里回填“本轮 plan 中已完成、但 log 里没有”的组（组完成时 cells 已带 last_round，可与 plan 对账）；
+3. 回归测试按组边界崩溃重启：断言已完成组的标签仍出现在下一份配方里，而不只是断言偏移没重采。
+
 ## 证据指纹与复核位置
 
 生产日志/模型/npz均未加入git。快照关键文件SHA256：
