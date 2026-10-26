@@ -1,14 +1,14 @@
 #!/bin/bash
 # task113 deploy14e = deploy14d/cbd96daf + watchdog/isolation + gate v4 + demo2545.
 # Prepared for the controller only; do not execute as part of task113.
-# First drain any partial round under explicit v3, then start the next round under v4.
+# Switch to v4 at a group boundary when no gate job is queued (controller 10-26: no v3 drain round).
 # Historical decisions are never backfilled or reinterpreted.
 # Watchdog starts in tmux qc-watchdog after the first new successful group.
 # Code-only overlay on deploy14; keep its engine, collection panel and gate panel.
 # No recipes, teacher rates, state, offsets or seed ledgers are restored on rollback.
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search; W=$R/.claude/worktrees/cq; PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=3573ea374bc463b66637ee1a9cf4b899213b7cb7
+REV=5500e8df56c59ec3643a098b3e6def440fd5bb3e
 ENGINE_SHA=76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a
 NEWEXE=$W/build5/pvz-portable
 PANEL3=$W/artifacts/task73c/panel_v3_source.json
@@ -96,8 +96,6 @@ elif action in ('pending-round', 'boundary'):
     state = json.loads((logs / 'curriculum_state.json').read_text())
     if action == 'pending-round':
         raise SystemExit(0 if state.get('completed_groups') else 1)
-    if state.get('completed_groups'):
-        raise SystemExit('gate switch refused: partial round still has completed_groups')
     if any(job.get('status') != 'done' and not job.get('isolated')
            for job in state.get('training_jobs', [])):
         raise SystemExit('gate switch refused: old background jobs have not drained')
@@ -148,29 +146,15 @@ git -C "$W" restore --source "$REV" --worktree -- "${CODE_FILES[@]}"
 code_state installed
 
 # --- dry-run with deploy14 arguments; no seed allocation or training ---
-timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --gate-version 3 --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --executable "$NEWEXE" --promotion-panel "$PANEL3" > "$O/dryrun.out" 2>&1 || rollback 'dry-run failed'
+timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --executable "$NEWEXE" --promotion-panel "$PANEL3" > "$O/dryrun.out" 2>&1 || rollback 'dry-run failed'
 grep -q 'selection preview (no allocation, no engine, no state write)' "$O/dryrun.out" || rollback 'selection preview missing'
 code_state unchanged
 log 'dry-run passed; engine/panels/rates/state/ledgers unchanged'
 
-# A group-boundary stop can leave a partial collection round. Finish it using
-# the new resilience code but the OLD gate policy; the finite invocation drains
-# its background pipeline before exiting. No v4 decision exists before boundary.
-if code_state pending-round; then
-  log 'partial round retained; finishing one round with gate v3 before v4 switch'
-  start_qc "$NEWEXE" 1 '--gate-version 3'
-  drained=0
-  for ((i=0; i<720; i++)); do
-    if ! tmux has-session -t =qc 2>/dev/null; then drained=1; break; fi
-    sleep 30
-  done
-  if [ "$drained" != 1 ]; then
-    log 'ABORT: v3 boundary drain exceeded six hours; left live qc and code intact; v4 not started'
-    exit 1
-  fi
-fi
+# The gate contract of a round is issued when its training job is queued at the round's end, so a
+# partly collected round can switch to v4 directly; only queued/running jobs must keep their version.
 code_state boundary
-log 'round boundary and old background drain reached; next round uses gate v4'
+log 'no queued gate jobs; switching to gate v4 (partial round continues under v4)'
 
 # --- restart and require a NEW completed group, not a stale rc=0 line ---
 n0=$(grep -c ' rc=' /home/newbiexvwu/pvz-logs/curriculum.log || true)
