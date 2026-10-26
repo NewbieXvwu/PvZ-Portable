@@ -92,6 +92,11 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 **同一工作树上有另一个会话在并行写。** 2026-10-26 16:50–17:00（+08:00），台式机 `artifacts/task104/` 下出现本会话之外产出的 `data_a` / `data_b` / `recipes` / `training_inputs.json` / `r11.source_rows.json`，来源不是本会话的进程（本会话当时只建了 `corpus/`）。之后该会话不再写文件（截至 17:15 无新产物、无训练进程）。本会话按"不覆盖别人产物"处理：先只读核对，A/B 两份语料的行数与段字节都验过（见上节），再据此继续。若该会话恢复并开始训练，两个 1,700 万行的训练同时上卡会超出 16 GB 显存，需要先确认谁持有 GPU 再启动。
 
 **新进程重验旧示范在这台机器上不可靠（既有问题，非本分支引入）。** `python.test_human_demo.HumanDemoTest` 的三个真实引擎用例在 HEAD 与基点 144a7dce 上都以 `demonstration initial state hash differs` 失败；独立复现显示同一进程内第二次 reset 偶发给出不同初始哈希，而两次独立进程的 `STATE_BYTES` 全量转储逐字节相同。因为 qc 的起点格要求档案 `verified`，这意味着「录制机之外、或同一进程里重跑 verify」可能失败；本次不修（修它要动引擎的哈希面，超出 task104 范围），示范行的导出与训练不受影响。
+### 训练启动（2026-10-26 18:23）
+
+台式机 18:19 恢复连接。先按主控要求核对遗留扫描：`gate_seed_inventory.py` 已无进程；GPU 上 deckvar 的 task93 expand 训练仍在跑（7.0 GB / 37%），等到 18:23 它结束、显存回到 4.5 GB / 0% 才开训，没有与 qc 或别人的训练抢卡。
+
+`tmux t104` 跑 `~/pvz-logs/t104_train.sh`，四个配方顺序训练。a_s1 已载入 **16,982,931 条决策 / 5,5773 个种子 / 1,704,229 条验证行**，与 A 索引 `7d15b915a2192805` 的行数逐位相同；`data_memory` 报 board 5.56 GB、scalar 1.85 GB、packet 1.19 GB。训练前数据层测试在台式机通过（`HumanDemoExportTest` + `test_recipe` 共 10 项）。
 ### 开训与评估的运行清单（台式机，连接恢复后按序执行）
 
 全部路径写绝对路径，工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows`（分支 demorows）。
