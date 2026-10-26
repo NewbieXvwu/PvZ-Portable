@@ -1335,4 +1335,6 @@ wave 30 / 30，result 1，`verified: true`。台式机部署时生产 dry-run �
 2. `--demo-start-manifest` 缺省即 `configs/human_demo_tasks.json`；qc 启动时 `reconcile_start_cells` 自动加两格。
 3. `teacher_rates.json` 不需要补条目：两格按未知处理，第一轮窗口出来后照常升降档。
 4. 回滚：删掉清单里的 `demo_start`，两格自动进 `retired_cells`。
+5. 合并去重：本分支已自行登记这两条原生任务（字段与 `pvz-env` 的 task111 版本相同，外加 `demo_start`）。
+   若 `pvz-env` 先合入 deploy14e，按 `task_id` 去重，只保留带 `demo_start` 的那条，别留下两份。
 
