@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T02:05:44.452107+00:00",
+ "at_utc": "2026-10-26T02:26:16.572498+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 19,
+  "completed_label_jobs": 25,
   "replay_completed_k": [
    0
   ],
@@ -265,7 +265,61 @@
    "training_eligible": false,
    "engine_processes_started": 0
   },
-  "first_world_horizon_audit_sha256": "03e8cbae060508a9c2d40f3d00754ec0d1ba50e1674f4084a9f5304db6e35b7e"
+  "first_world_horizon_audit_sha256": "03e8cbae060508a9c2d40f3d00754ec0d1ba50e1674f4084a9f5304db6e35b7e",
+  "k0_l41_collection_audit": {
+   "at_utc": "2026-10-26T02:26:16.572498+00:00",
+   "scope": "partial_independent_roof_k0_l41_collection_audit",
+   "common_future_index": 0,
+   "level": 41,
+   "worlds": 8,
+   "roots": 16,
+   "root_horizon_views": 48,
+   "completed_jobs": 24,
+   "world_seeds": [
+    78000320,
+    78000321,
+    78000322,
+    78000323,
+    78000324,
+    78000325,
+    78000326,
+    78000327
+   ],
+   "by_horizon": {
+    "2500": {
+     "jobs": 8,
+     "roots": 16,
+     "candidate_records": 75,
+     "nonterminal_leaves": 75,
+     "terminal_leaves": 0
+    },
+    "4000": {
+     "jobs": 8,
+     "roots": 16,
+     "candidate_records": 75,
+     "nonterminal_leaves": 75,
+     "terminal_leaves": 0
+    },
+    "6000": {
+     "jobs": 8,
+     "roots": 16,
+     "candidate_records": 75,
+     "nonterminal_leaves": 72,
+     "terminal_leaves": 3
+    }
+   },
+   "root_state_history_context_equal_across_horizons": true,
+   "roots_with_changed_candidate_actions_across_horizons": 0,
+   "source_manifest_sha256": "f137d8a427a5825439ed87b4c64a61e515654fb48646005ff966f3c7bc324384",
+   "replay_sha256": "4b78d6cb37e745fbe6b0f6ba9c2e5d369917c293c9c32870c88a743d2b062ffb",
+   "overall_panel_complete": false,
+   "three_common_futures_complete": false,
+   "gate_evaluated": false,
+   "training_eligible": false,
+   "engine_processes_started": 0,
+   "terminal_leaf_truth_consistency_checked": 3
+  },
+  "k0_l41_collection_audit_sha256": "9665897097b7fb40cba417b4b5df7c5665a5e59e4eaec939d769dcc309a34fe3"
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
