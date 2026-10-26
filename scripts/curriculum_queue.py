@@ -286,11 +286,7 @@ def _anon_bytes(pid: int) -> int:
 
 
 def _tree_anon_bytes(root: int) -> int:
-    """root 及其所有后代的匿名常驻字节之和。
-
-    后台训练的不可回收峰值就是这个口径：read_segments 的语料数组是文件后备 memmap
-    （task61），文件页可被内核回收，不算需求；匿名内存才必须留足。
-    """
+    """root 及其所有后代的匿名常驻字节之和，不含文件映射页。"""
     table = _proc_table()
     children: dict[int, list[int]] = {}
     for pid, (ppid, _rss) in table.items():
@@ -301,6 +297,14 @@ def _tree_anon_bytes(root: int) -> int:
         total += _anon_bytes(pid)
         stack.extend(children.get(pid, ()))
     return total
+
+
+def training_data_bytes(model: Path) -> int:
+    metrics = model.with_name('metrics.json')
+    if not metrics.is_file():
+        return 0
+    memory = json.loads(metrics.read_text()).get('data_memory', {})
+    return sum(value for name, value in memory.items() if name.endswith('_bytes'))
 
 
 def measure_worker_bytes(args, item: dict) -> int:
@@ -882,6 +886,7 @@ class TrainingPipeline:
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
+        self.last_train_data_bytes = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
         self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
@@ -902,13 +907,16 @@ class TrainingPipeline:
                     self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
                 except (ValueError, TypeError):
                     pass
+            if timing and not self.last_train_data_bytes:
+                model = (timing.get('selection') or {}).get('best', job['model'])
+                self.last_train_data_bytes = timing.get('train_data_bytes', 0) or training_data_bytes(Path(model))
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
                     builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
                 except (OSError, ValueError, KeyError, TypeError):
                     pass
-            if self.last_train_peak and self.last_pack_peak:
+            if self.last_train_peak and self.last_pack_peak and self.last_train_data_bytes:
                 break
         queued = [job for job in state.setdefault('training_jobs', [])
                   if job['status'] != 'done' and not job.get('isolated')
@@ -1018,14 +1026,12 @@ class TrainingPipeline:
         # 后台流水线的峰值 = max(打包阶段, 训练阶段)。打包按 _plan_build 的待建段估算
         # （并发建造者 × 单建造者实测优先峰值），且只在打包进行时有值——_run 的 pack
         # 一结束（成败都算）就清零，训练/评估阶段只按训练估算（task61 追加）；
-        # 训练加载段加合并紧凑 CSR 的峰值约为紧凑语料的 3 倍，再加 2 GiB 的
-        # Python/优化器/批次。MemAvailable 已含后台现有 RSS，
-        # reservation() 只补 estimate 与现有 RSS 的差额。
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
         if self.last_train_peak:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
+        train_peak += getattr(self, 'last_train_data_bytes', 0) or compact_bytes
         return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
@@ -1383,6 +1389,7 @@ class TrainingPipeline:
                                 self.build_peak = 0
                         if phase == 'train':
                             self.last_train_peak = report[phase + '_peak_anon_bytes']
+                            self.last_train_data_bytes = report['train_data_bytes'] = training_data_bytes(Path(job['model']))
                         report[phase + '_finished'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} done: '
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
@@ -1467,6 +1474,7 @@ class TrainingPipeline:
                     candidate['train_peak_anon_bytes'] = self._command(
                         [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
                         directory / 'train.log')
+                    candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():
                         raise RuntimeError(f'trainer did not publish {model}')
                     candidate.update(status='trained', train_finished=time.time(),
@@ -1509,8 +1517,11 @@ class TrainingPipeline:
                       train_started=min(candidate['train_started'] for candidate in candidates),
                       train_finished=max(candidate['train_finished'] for candidate in candidates),
                       train_peak_anon_bytes=max(candidate.get('train_peak_anon_bytes', 0) or 0
-                                                for candidate in trained))
+                                                for candidate in trained),
+                      train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
+                                           for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
+        self.last_train_data_bytes = report['train_data_bytes']
         report.update(self._select(job, trained))
         for candidate in candidates:
             candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])

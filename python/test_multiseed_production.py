@@ -241,6 +241,55 @@ def test_reservation_counts_both_live_training_trees(tmp_path, monkeypatch):
         pipeline.close()
 
 
+def test_mapped_training_data_forces_serial_admission(tmp_path, monkeypatch):
+    args, state = setup(tmp_path)
+    pipeline = queue.TrainingPipeline(args, state)
+    pipeline.last_train_peak = int(3.5 * queue.GIB)
+    pipeline.last_train_data_bytes = 11 * queue.GIB
+    pipeline.train_parallelism, pipeline.training_admission = 2, True
+    monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 24 * queue.GIB)
+    monkeypatch.setattr(queue, 'mem_total_bytes', lambda: 25 * queue.GIB)
+    try:
+        assert pipeline.estimate_peak() == 29 * queue.GIB
+        pipeline._admit()
+        assert pipeline.train_parallelism == 1
+        assert pipeline.train_admission_record['fallback_reasons'] == ['host_memory']
+        assert pipeline.train_admission_record['required_bytes'] == int(20.5 * queue.GIB)
+    finally:
+        pipeline.close()
+
+
+def test_restart_recovers_data_bytes_from_selected_candidate_metrics(tmp_path):
+    args, state = setup(tmp_path)
+    model = tmp_path / 'seed_000001/student/model.pt'
+    model.parent.mkdir(parents=True)
+    (model.parent / 'metrics.json').write_text(json.dumps(dict(data_memory=dict(
+        rows=19649496, board_bytes=6 * queue.GIB, scalar_bytes=2 * queue.GIB,
+        packet_bytes=queue.GIB, tensor_bytes=queue.GIB))))
+    state['training_jobs'] = [dict(round=1, status='done', recipe=str(args.recipe),
+        model=str(tmp_path / 'selected/model.pt'), timing=dict(
+            train_peak_anon_bytes=3 * queue.GIB, selection=dict(best=str(model))))]
+    pipeline = queue.TrainingPipeline(args, state)
+    try:
+        assert pipeline.last_train_data_bytes == 10 * queue.GIB
+        assert pipeline.estimate_peak() == 13 * queue.GIB
+    finally:
+        pipeline.close()
+
+
+def test_first_training_reserves_pack_bytes_as_well_as_anonymous_peak(tmp_path):
+    args, state = setup(tmp_path)
+    pipeline = queue.TrainingPipeline(args, state)
+    segments = pipeline.directory / 'frames/packs/segments'
+    segments.mkdir(parents=True)
+    (segments / 'one.npz').write_bytes(b'pack data')
+    pipeline.last_train_peak = 3 * queue.GIB
+    try:
+        assert pipeline.estimate_peak() == 3 * queue.GIB + len(b'pack data')
+    finally:
+        pipeline.close()
+
+
 def test_resources_changing_during_admission_still_fall_back(tmp_path, monkeypatch):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
