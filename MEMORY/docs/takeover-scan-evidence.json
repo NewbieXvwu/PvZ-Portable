@@ -585,10 +585,21 @@
     "registration_ladder": [
      1417
     ],
-    "result_sha256": "4b20cc64434c7c0129fcf630eb666435385e682ab6d95cfece67bfb4fed874ff",
+    "result_sha256": "5116a6b0ddcfea29c16bb70a1c8f8d6bc84d0ecafe88cfa433f4eefeac093212",
     "trace_frozen_sha256": "a8aa0a6a6f5104578a998d8f0460a99b38d858a04c3f7edf006c74d38656ca35",
-    "raw_cache_manifest_sha256": "735dec6e869cf54fe98457350138138d871b4924b0ce1a97f7d63fdb11d8e6c1",
-    "raw_rows_verified": true
+    "raw_cache_manifest_sha256": "8201be755612cad31bd783075210c2f11c984f8534206f239029c2115e7d40bb",
+    "raw_rows_verified": true,
+    "registration_same_block": {
+     "adaptive_l50": 1417,
+     "full_l50": 1417,
+     "delta": 0,
+     "teacher_points": 9,
+     "scan_games": 80,
+     "full_two_arm_games": 192,
+     "passed": true,
+     "comparison_sha256": "107975790650225d797e3f152ed3082074e56611f8f4a644c31d108859e7f97b",
+     "note": "同存档同未来块(84009xxx)补齐12点老师；全网格只有d1417=4/8过线，阶梯与登记一致"
+    }
    },
    {
     "task_id": "demo_roof_49_doom_m200_s20261050",
@@ -634,14 +645,14 @@
    }
   ],
   "final_audit": {
-   "sha256": "658410360968efe32933355f405a3f55442c8a1b7e1ca1c58da30845a74cc86b",
+   "sha256": "17bd63166c54f10a42c9e7d3489fb4759fd41cd3f4c5d0cc2dc394be41bc5f4f",
    "schema": "task91_final_audit_v1",
    "archives": 12,
    "adaptive_games": 1040,
-   "stored_games": 1112,
-   "new_production_games": 667,
+   "stored_games": 1136,
+   "new_production_games": 691,
    "registered": 1,
-   "jobs_with_input_fingerprints": 139
+   "jobs_with_input_fingerprints": 142
   }
  },
  "e2e_prior_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8"
