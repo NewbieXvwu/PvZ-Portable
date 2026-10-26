@@ -272,7 +272,12 @@ def test_window_that_disagrees_with_incumbent_records_sits_out(tmp_path):
     (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(won=bool(w), terminal=True)) for w in [1, 0]))
     group = dict(base='t', multiplier=1., beta=0, student=str(model.resolve()), label='g', games=2,
                  task_id='t', manifest='/m.json')
-    state = dict(log=[dict(groups=[group])], cells=dict(t=dict(windows={'1.0': dict(recent=[1, 1, 1, 0])})))
+    failed = dict(group, label='failed', status='failed')
+    broken = tmp_path / 'failed_2'
+    broken.mkdir()
+    (broken / 'games.jsonl').write_text('broken')
+    state = dict(log=[dict(groups=[group, failed, dict(failed, label='missing')])],
+                 cells=dict(t=dict(windows={'1.0': dict(recent=[1, 1, 1, 0])})))
     cells, _, excluded = current_cells(state, model, tmp_path)
     assert [c['rate'] for c in cells] == [.5]
     state['cells']['t']['windows']['1.0']['recent'][-1] = 1

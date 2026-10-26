@@ -28,7 +28,8 @@ def current_cells(state, incumbent, runs):
             outcomes, last = [], None
             for rnd in state.get('log', []):
                 for group in rnd['groups']:
-                    if (group['base'] != base or float(group['multiplier']) != float(multiplier)
+                    if (group.get('status', 'done') != 'done'
+                            or group['base'] != base or float(group['multiplier']) != float(multiplier)
                             or group.get('beta', 0) != 0 or group.get('student') != incumbent):
                         continue
                     folder = Path(runs) / f'{group["label"]}_{group["games"]}'
