@@ -14,6 +14,7 @@
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)
+- [学生架构远期升级：个体 + 注意力](notes/student-architecture.md)
 
 ## 每日日志
 
