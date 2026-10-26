@@ -211,6 +211,17 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 
 7. **确定性开关要真打开，不能只固定 workspace。** 本次定位到第一步分叉在 `packet_embedding` 的梯度（`[B,10]` 查表的散射累加），这条路径不经 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它；微探针实测 `torch.use_deterministic_algorithms(True)` 能把这条路径从“10 次 10 种”变成逐位相同且不报错。两者一起开的那 5 次全同说明组合有效；只开确定性、不固定 workspace 的整轮对照因 qc 占卡未跑，所以“整轮里各占多少”仍未测。
    **现行生产没有这两条**：`scripts/train_rollout_policy.py` 里 grep 不到 `use_deterministic_algorithms`、`CUBLAS_WORKSPACE_CONFIG`、`cudnn.deterministic`，也就是说每轮学生训练都落在本次测到的“未固定”区间；反倒是已退役的研究线 `python/pvz_research.py:435-440` 设了这两项。要落地就从训练入口加这两行开始，并在 `runtime.json` 里回执。
+### 落地补丁（建议，未应用）
+
+生产未改。如果决定采纳修法 5+7，最小改动是在 `scripts/train_rollout_policy.py` 的 `main()` 里、建模型之前加三行（位置等价于 `python/pvz_research.py:435-440` 的旧做法）：
+
+```python
+os.environ.setdefault("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
+torch.use_deterministic_algorithms(True)
+torch.backends.cudnn.benchmark = False
+```
+
+并把 `os.environ["CUBLAS_WORKSPACE_CONFIG"]`、`torch.are_deterministic_algorithms_enabled()`、`torch.__version__`、`torch.version.cuda`、`torch.backends.cudnn.version()`、Git revision、recipe SHA 一起写进 `metrics.json`（或轮目录的 `runtime.json`）。成本参照：单算子 +24%、整轮外推 +0.3%（见上节）；风险是若某个算子没有确定性实现会直接抛错，本模型在 1.05M 行尺度上没有抛，全量路径未验证，所以第一次上线建议先在单轮观察一次，别默默改成 `warn_only=True`（那等于把不确定性吞回去）。
 ## 复核命令
 
 所有新写入均在 repro 内；`/tmp/exp96` 只是 CodeBuddy 已留的冻结只读训练代码快照。执行前保持 qc GPU 优先。
