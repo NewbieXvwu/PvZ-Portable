@@ -629,10 +629,11 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
 
 
 def main_with(args) -> int:
-    if getattr(args, 'content_addressed', False):
+    if not args.no_verify:
         from llm_import_sha import run_sha
         result = run_sha(args.input, args.dest, args.manifest, args.layers,
-                         args.resource_dir, args.executable, args.future_base, args.seed_ledger)
+                         args.resource_dir, args.executable or ROOT / 'build/pvz-portable',
+                         args.future_base, args.seed_ledger)
     else:
         result = run(args.input, args.dest, args.manifest, args.layers, args.resource_dir,
                      args.executable, not args.no_verify, args.future_base, seed_ledger=args.seed_ledger)
@@ -670,15 +671,15 @@ def main() -> int:
     parser.add_argument('--executable', type=Path)
     parser.add_argument('--no-verify', action='store_true', help='只入库不校验（测试用）')
     parser.add_argument('--content-addressed', action='store_true',
-                        help='按存档内容SHA增量导入，保留同种子的不同版本（必须显式指定引擎）')
+                        help='兼容选项；正常导入现已默认按SHA缓存首次verify，最多2个游戏进程')
     parser.add_argument('--report', type=Path, help='把 markdown 报告写到这里')
     parser.add_argument('--scan-out', type=Path, help='扫描作业清单 json')
     parser.add_argument('--future-base', type=int, default=DEFAULT_FUTURE_BASE)
     parser.add_argument('--seed-ledger', type=Path, default=DEFAULT_SEED_LEDGER,
                         help='扫描种子分配账本；默认各次导入共用，不随 dest 改变')
     args = parser.parse_args()
-    if args.content_addressed and (args.no_verify or not args.executable):
-        parser.error('--content-addressed 必须指定 --executable，且不得 --no-verify')
+    if args.content_addressed and args.no_verify:
+        parser.error('--content-addressed 不得与测试用 --no-verify 同用')
     return main_with(args)
 
 

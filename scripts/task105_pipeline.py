@@ -14,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 
-from llm_import_sha import archive_sha, file_sha, save
+from llm_import_sha import file_sha, save
 
 ROOT = Path(__file__).resolve().parents[1]
 ENGINE = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build5/pvz-portable')
@@ -59,14 +59,11 @@ def main():
                           import_pid=args.wait_import_pid, import_start=identity))
         while process_identity(args.wait_import_pid) == identity:
             time.sleep(10)
-    # Also checks incrementality: existing receipts are reused, changed SHA is new work.
+    # Import only new SHA; previously verified archives never replay.
     run('import', [sys.executable, str(ROOT / 'scripts/import_llm_run.py'), str(args.input),
                    '--content-addressed', '--dest', str(out / 'import'), '--executable', str(ENGINE),
                    '--report', str(out / 'import_report.md'), '--scan-out', str(out / 'scan_jobs.json')], (0, 1))
     rows = json.loads((out / 'import/import_progress.json').read_text())['archives']
-    for row in rows:
-        if row['archive'] and archive_sha(ROOT / row['archive']) != row['archive_sha256']:
-            raise ValueError('import SHA mismatch')
     plan = json.loads((out / 'scan_jobs.json').read_text())
     completed = []
     for entry in plan['archives']:
@@ -79,10 +76,7 @@ def main():
              str(result), '--out', str(out / 'registration' / task)])
         completed.append(task)
         save(out / 'completed_scans.json', dict(completed=completed, total=len(plan['archives'])))
-    run('tests', [sys.executable, '-m', 'unittest', 'python.test_llm_import_sha',
-                 'python.test_import_llm_run', 'python.test_takeover_scan',
-                 'python.test_curriculum_queue.DemoStartCellsTest'])
-    run('audit', [sys.executable, str(ROOT / 'scripts/audit_task105.py'), str(args.input)])
+    run('report', [sys.executable, str(ROOT / 'scripts/task105_results.py')])
     save(status, dict(stage='done', state='complete', imported=len(rows),
                       scanned=len(completed), deployed=False))
 

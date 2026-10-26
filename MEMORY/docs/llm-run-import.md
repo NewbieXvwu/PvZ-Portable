@@ -1,5 +1,7 @@
 # LLM 存档一键入库（task89）结论
 
+2026-10-26更新（task106）：正常CLI导入现默认按SHA缓存，首次verify用2个进程；已有回执直接复用，绝不因引擎或脚本变化二次重放。下文task89旧实现记录仅作历史参考；`--no-verify`仅供测试。
+
 2026-10-26。入口：`scripts/import_llm_run.py`，测试：`python/test_import_llm_run.py`（接续复核后 30 项）。
 
 ## 用法

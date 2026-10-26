@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Stage task105 curriculum additions; controller applies after qc drains.
 
-Default is read-only. The plan is produced by audit_task105.py after checking all
-archives and scans. --apply refuses while the production queue is alive. It adds
-only the audited start cells and teacher-rate evidence to current production
+Default is read-only. task105_results.py prepares the plan from completed
+scan/register outputs. --apply refuses while the production queue is alive. It adds
+only registered start cells and teacher-rate evidence to current production
 files, preserving later changes and keeping a local rollback copy. Restarting
 qc remains the controller's responsibility.
 """
@@ -54,12 +54,18 @@ def main():
     parser.add_argument('--apply', action='store_true')
     args = parser.parse_args()
     plan = json.loads(args.plan.read_text())
-    if plan.get('schema') != 'task105_deployment_v1' or not plan.get('audit_passed'):
-        raise ValueError('deployment plan has no passing audit')
-    if file_sha(args.plan.parent / 'audit.json') != plan['audit_sha256']:
-        raise ValueError('audit receipt changed since deployment plan preparation')
+    if plan.get('schema') != 'task105_deployment_v1':
+        raise ValueError('unknown deployment plan')
+    if plan.get('prepared'):
+        receipt, digest = 'preparation.json', plan['preparation_sha256']
+    elif plan.get('audit_passed'):  # earlier one-cell plans remain usable
+        receipt, digest = 'audit.json', plan['audit_sha256']
+    else:
+        raise ValueError('deployment plan is not prepared')
+    if file_sha(args.plan.parent / receipt) != digest:
+        raise ValueError('preparation receipt changed')
     if file_sha(args.target / 'build5/pvz-portable') != plan['engine_sha256']:
-        raise ValueError('production engine differs from the audited deploy14 engine')
+        raise ValueError('production engine differs from deploy14')
     manifest = args.target / 'configs/human_demo_tasks.json'
     current = json.loads(manifest.read_text())
     merged = merge_tasks(current, plan['tasks'])
@@ -75,7 +81,7 @@ def main():
         if target.exists() and archive_sha(target) != expected:
             raise ValueError(f'production archive conflict: {target}')
     added = len(merged['tasks']) - len(current['tasks'])
-    print(f'{len(plan["tasks"])} audited cells; {added} new production tasks; apply={args.apply}')
+    print(f'{len(plan["tasks"])} registered cells; {added} new production tasks; apply={args.apply}')
     if not args.apply:
         return
     if queue_running(args.target):

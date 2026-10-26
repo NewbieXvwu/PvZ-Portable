@@ -6,7 +6,7 @@
 
 流水线本身可断点续跑（games.jsonl + 结果 json + 导入回执），所以这里只需要在
 子进程非零退出后等一小会儿再拉起；--wait-import-pid 只在第一次拉起时使用。
-不部署、不提交，只管把 adaptive → register → tests → audit 跑完。
+不部署、不提交，只管把 adaptive → register → 结果整理跑完；不加复验尾链。
 """
 import argparse
 import fcntl

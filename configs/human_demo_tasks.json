@@ -3493,7 +3493,16 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/5eb948eac49b0053aed8a7a654f85b3e7c015a522572d20658067c2bb9b0c74c",
+    "decisions": [
+     1220
+    ],
+    "index": 0,
+    "future_seed_start": 105000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_44_gloom_m200_s81011006_adbf7fee25b97",
@@ -3513,7 +3522,17 @@
     2,
     3,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/dbf7fee25b978d27dc4cf23d62e678adc8bd01b46e9968e007556416fc114d37",
+    "decisions": [
+     1356,
+     1233
+    ],
+    "index": 0,
+    "future_seed_start": 106000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_49_doom_m300_s81018038_a5859ba200e02",

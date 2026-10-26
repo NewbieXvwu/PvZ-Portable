@@ -3,18 +3,63 @@ import json
 import shutil
 import sys
 import tempfile
+import threading
+import time
 import unittest
 from pathlib import Path
 from unittest.mock import patch
+from concurrent.futures import ThreadPoolExecutor
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from llm_import_sha import archive_sha, run_sha
+from llm_import_sha import archive_sha, run_sha as production_run_sha
 from python.test_import_llm_run import _meta, _write_archive
 from deploy_task105 import merge_tasks
 
 
+def run_sha(*args):
+    return production_run_sha(*args, executor_factory=ThreadPoolExecutor)
+
+
 class ShaImportTest(unittest.TestCase):
+    def test_first_verification_uses_two_workers_and_cached_sha_never_replays(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            source = root / 'source'
+            for index in range(3):
+                _write_archive(source, str(index), _meta(wins=5 + index))
+            manifest = root / 'configs/tasks.json'
+            manifest.parent.mkdir()
+            manifest.write_text(json.dumps({'tasks': []}))
+            layers = root / 'layers.json'
+            layers.write_text(json.dumps({'layers': {}}))
+            args = (source, root / 'dest', manifest, layers, root, root / 'engine',
+                    84_000_000, root / 'ledger.json')
+            lock, barrier = threading.Lock(), threading.Barrier(2)
+            active, peak, calls = 0, 0, 0
+
+            def verify(*unused):
+                nonlocal active, peak, calls
+                with lock:
+                    calls += 1
+                    first_pair = calls <= 2
+                    active += 1
+                    peak = max(peak, active)
+                if first_pair:
+                    barrier.wait(timeout=1)
+                time.sleep(.01)
+                with lock:
+                    active -= 1
+                return {'verified': True}
+
+            with patch('llm_import_sha.verification_context', return_value={'engine': 'one'}), \
+                 patch('llm_import_sha.legacy.verify_copy', side_effect=verify):
+                run_sha(*args)
+            self.assertEqual((calls, peak), (3, 2))
+            with patch('llm_import_sha.verification_context', side_effect=AssertionError('cached provenance is enough')), \
+                 patch('llm_import_sha.legacy.verify_copy', side_effect=AssertionError('must not replay')):
+                result = run_sha(*args)
+            self.assertTrue(all(row['verification_reused'] for row in result['rows']))
     def test_interrupted_copy_leaves_no_partial_sha_target_and_can_retry(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -112,11 +157,11 @@ class ShaImportTest(unittest.TestCase):
             with patch('llm_import_sha.verification_context', return_value={'engine': 'two'}), \
                  patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}) as verify:
                 run_sha(*args)
-                self.assertEqual(verify.call_count, 3)
+                self.assertEqual(verify.call_count, 0)
             target = root / 'dest/sha256' / archive_sha(source / 'a') / 'ticks.jsonl'
             target.write_text('corrupt')
             with patch('llm_import_sha.verification_context', return_value={'engine': 'two'}):
-                with self.assertRaisesRegex(ValueError, 'SHA不符'):
+                with self.assertRaisesRegex(ValueError, '大小不符'):
                     run_sha(*args)
 
 
