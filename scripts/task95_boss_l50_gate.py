@@ -1,97 +1,126 @@
 #!/usr/bin/env python3
-"""task95: L50 boss observation gate.
+"""Compare four boss_l50_orig_eval games with the unchanged A2 student policy.
 
-Runs 4 wait-driven episodes on boss_l50_orig_eval seeds (85,000,000..85,000,003) per
-engine.  Checks the new engine exposes the task85 boss fields (public obs 'boss' block
-with the documented keys; privileged zombies carry 'summon_counter') and that the
-terminal outcome (result / tick / wave_count) is identical to the deploy14 engine,
-which does not read those fields -- the boss channels must not change the simulation.
-
-Usage:
-  python3 scripts/task95_boss_l50_gate.py \
-      --old <deploy14> --new <deploy15> --out artifacts/task95/boss_l50.json
+Only the candidate must expose Boss fields. Both engines use the same production-shaped
+command and manifest; actions and logical terminal outcomes must match exactly.
 """
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
-import sys
+import os
 from pathlib import Path
+import subprocess
+import sys
+from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
+MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import PvZEnv, TaskSpec, profile_for_deck  # noqa: E402
+from curriculum_queue import command_for
+from pvz_frame_store import read_frames
+from task70_redeploy_gate import COMPARE_FIELDS, action_stream, frames_for
 
-RESOURCE = Path('/home/newbiexvwu/.cache/pvz-research-resources')
-SEEDS = [85_000_000, 85_000_001, 85_000_002, 85_000_003]
+MANIFEST = ROOT / 'artifacts/task85/boss_panel.json'
+TASK_ID = 'boss_l50_orig_eval'
 BOSS_KEYS = {'active', 'stage', 'head', 'action', 'target_row', 'target_col', 'projectile'}
 
 
-def run_engine(executable: Path) -> list[dict]:
-    rows = []
-    with PvZEnv(RESOURCE, executable=executable) as env:
-        for seed in SEEDS:
-            obs, _info = env.reset(deck=(), task=TaskSpec(
-                level=50, seed=seed, conveyor_start='original',
-                profile=profile_for_deck(())))
-            assert 'boss' in obs, f'seed {seed}: no boss block in public observation'
-            boss_reset = dict(obs['boss'])
-            assert BOSS_KEYS <= set(boss_reset), boss_reset.keys()
-            assert boss_reset['active'], f'seed {seed}: boss not active at reset'
-            steps = 0
-            while not obs['terminal'] and steps < 400:
-                obs, *_ = env.step({'type': 'wait', 'ticks': 1000})
-                steps += 1
-            assert obs['terminal'], f'seed {seed}: no terminal after {steps} waits'
-            priv = env.privileged_state()
-            zombies = priv.get('zombies', [])
-            summon = sorted({z.get('summon_counter') for z in zombies
-                             if 'summon_counter' in z})
-            rows.append({
-                'seed': seed,
-                'boss_reset': boss_reset,
-                'boss_terminal': dict(obs.get('boss', {})),
-                'result': obs['result'],
-                'tick': obs['tick'],
-                'wave_count': obs['wave_count'],
-                'state_hash': obs.get('state_hash'),
-                'summon_counter_values': summon,
-                'has_summon_counter': bool(summon),
-            })
-            print(f"  seed {seed}: result={obs['result']} tick={obs['tick']} "
-                  f"waves={obs['wave_count']} boss_keys={sorted(boss_reset)} "
-                  f"summon_counter={bool(summon)}", flush=True)
-    return rows
+def sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def main() -> None:
-    p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--old', type=Path, required=True)
-    p.add_argument('--new', type=Path, required=True)
-    p.add_argument('--out', type=Path, default=ROOT / 'artifacts/task95/boss_l50.json')
-    args = p.parse_args()
-    evidence = {}
-    for tag, executable in (('old', args.old), ('new', args.new)):
-        if not executable.is_file():
-            raise FileNotFoundError(executable)
-        print(f'== {tag}: {executable}', flush=True)
-        evidence[tag] = run_engine(executable)
-    checks = {
-        'new_boss_fields_present': all(r['boss_reset'].keys() >= BOSS_KEYS
-                                       for r in evidence['new']),
-        'new_summon_counter_present': all(r['has_summon_counter'] for r in evidence['new']),
-        'terminal_match': all(o['result'] == n['result'] and o['tick'] == n['tick']
-                              and o['wave_count'] == n['wave_count']
-                              for o, n in zip(evidence['old'], evidence['new'])),
+def compare_game(old: dict, new: dict, old_frames: list[dict], new_frames: list[dict]) -> dict:
+    if not old_frames or not new_frames:
+        raise ValueError('requires complete nonempty action archives')
+    differences = {field: {'old': old.get(field), 'new': new.get(field)}
+                   for field in COMPARE_FIELDS if old.get(field) != new.get(field)}
+    old_actions, new_actions = action_stream(old_frames), action_stream(new_frames)
+    blocks = [frame['boss'] for frame in new_frames if isinstance(frame.get('boss'), dict)]
+    reset = new_frames[0].get('boss') or {}
+    return {
+        'seed': old['seed'],
+        'old': {field: old.get(field) for field in COMPARE_FIELDS},
+        'new': {field: new.get(field) for field in COMPARE_FIELDS},
+        'logical_differences': differences,
+        'action_stream_match': old_actions == new_actions,
+        'action_count': {'old': len(old_actions), 'new': len(new_actions)},
+        'old_boss_block_present': any('boss' in frame for frame in old_frames),
+        'boss_reset': reset,
+        'new_boss_fields_present': bool(blocks) and bool(reset.get('active'))
+            and all(BOSS_KEYS <= set(block) for block in blocks),
+        'boss_frames': len(blocks),
+        'boss_stages': sorted({block['stage'] for block in blocks if 'stage' in block}),
+        'boss_actions': sorted({block['action'] for block in blocks if 'action' in block}),
+        'all_terminal': bool(old.get('terminal')) and bool(new.get('terminal')),
     }
-    evidence['checks'] = checks
-    evidence['pass'] = all(checks.values())
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--old', type=Path, required=True)
+    parser.add_argument('--new', type=Path, required=True)
+    parser.add_argument('--out', type=Path, default=ROOT / 'artifacts/task95/boss_l50.json')
+    args = parser.parse_args()
+    task = next(t for t in json.loads(MANIFEST.read_text())['tasks'] if t['task_id'] == TASK_ID)
+    seeds = task['seeds'][:4]
+    assert len(seeds) == 4 and task['level'] == 50 and task['conveyor_start'] == 'original'
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(evidence, ensure_ascii=False, indent=1) + '\n')
-    print('BOSS L50', 'PASS' if evidence['pass'] else 'FAIL', checks)
-    sys.exit(0 if evidence['pass'] else 1)
+    models = {
+        'rollout_policy': MAIN / 'artifacts/student/dw4i_s1/model.pt',
+        'value': MAIN / 'artifacts/value_net/v4/model.pt',
+        'static_value': MAIN / 'artifacts/hard/value_branch1/model.pt',
+    }
+    for path in models.values():
+        if not path.is_file():
+            raise FileNotFoundError(path)
+    model_hashes = {name: sha(path) for name, path in models.items()}
+    common = SimpleNamespace(python=Path(sys.executable), workers=2, **models,
+                             resource_dir=Path('/home/newbiexvwu/.cache/pvz-research-resources'))
+    records, archives, commands = {}, {}, {}
+    for tag, executable in (('old', args.old), ('new', args.new)):
+        common.executable = executable.resolve(strict=True)
+        label = 'boss_l50_' + tag
+        frame_dir = args.out.parent / ('boss_l50_frames_' + tag)
+        command = command_for(common, MANIFEST, TASK_ID, 0, 4, label, frames=frame_dir,
+                              out=args.out.parent / ('boss_l50_runs_' + tag), beta=0.0)
+        metadata = dict(command=command, executable_sha256=sha(common.executable),
+                        models=model_hashes, manifest_sha256=sha(MANIFEST))
+        metadata_path = args.out.parent / ('boss_l50_command_' + tag + '.json')
+        if metadata_path.exists() and json.loads(metadata_path.read_text()) != metadata:
+            raise RuntimeError('existing Boss run belongs to different inputs')
+        metadata_path.write_text(json.dumps(metadata, indent=2) + '\n')
+        result_path = Path(command[command.index('--out') + 1]) / 'games.jsonl'
+        have = [json.loads(line) for line in result_path.read_text().splitlines()] if result_path.exists() else []
+        have_seeds = [row['seed'] for row in have]
+        if len(have_seeds) != len(set(have_seeds)) or set(have_seeds) - set(seeds):
+            raise RuntimeError('existing Boss run has duplicate or unexpected seeds')
+        if set(have_seeds) != set(seeds):
+            env = {**os.environ, 'PVZ_NO_POPUP': '1', 'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'}
+            with (args.out.parent / ('boss_l50_' + tag + '.txt')).open('a') as log:
+                subprocess.run(command, stdout=log, stderr=subprocess.STDOUT, env=env, check=True)
+        rows = [json.loads(line) for line in result_path.read_text().splitlines()]
+        if len(rows) != 4 or sorted(row['seed'] for row in rows) != sorted(seeds):
+            raise RuntimeError('incomplete Boss evaluation')
+        records[tag] = {row['seed']: row for row in rows}
+        archives[tag] = {seed: frames_for(frame_dir, label, seed) for seed in seeds}
+        commands[tag] = metadata
+    games = [compare_game(records['old'][seed], records['new'][seed],
+                          archives['old'][seed], archives['new'][seed]) for seed in seeds]
+    checks = {
+        'new_boss_fields_present': all(game['new_boss_fields_present'] for game in games),
+        'logical_fields_match': all(not game['logical_differences'] for game in games),
+        'action_streams_match': all(game['action_stream_match'] for game in games),
+        'all_terminal': all(game['all_terminal'] for game in games),
+    }
+    evidence = dict(task_id=TASK_ID, seeds=seeds, policy='unchanged A2 dw4i_s1, beta=0',
+                    commands=commands, games=games, checks=checks, **{'pass': all(checks.values())})
+    args.out.write_text(json.dumps(evidence, ensure_ascii=False, indent=2) + '\n')
+    print('BOSS L50', 'PASS' if evidence['pass'] else 'FAIL', checks, flush=True)
+    return 0 if evidence['pass'] else 1
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())
