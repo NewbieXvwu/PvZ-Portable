@@ -2,6 +2,9 @@
 
 > 2026-10-26，工作树 `deckvar`。前情：heldout 卡组 `[0,1,2,27,5,32,3]` 的卷心菜(32)、三叶草(27) 主要依赖冻结的旧扰动数据（legacy d7p/d8p/d9p/d10p，r14报告行占比4.31%、r11起零增长）；卷心菜另有少量r7屋顶数据。换训练种子时 heldout 在124–169/192间摆动（典型簇166–169及灾难左尾）。本任务在冻结的引擎候选池内持续随机采集卡组，扩大训练覆盖；候选池已排除升级卡和引擎标记不推荐的卡，不能称为全部合法卡组空间。
 
+**当前结果**：0.173%档heldout为137/169胜，未达“两种子都≥166”的接入判据。
+0.875%档仍等待qc资源，结果未完成；生产课程未改动。
+
 ## 已建成（2026-10-26，提交 6b978c39 起）
 
 三个新任务族（AGENTS §8 第 4 条登记，见 DESIGN §14.35）：
@@ -210,17 +213,10 @@ Mac 原始引擎校验清单与采集配置仍未随包传来，第二轮采集�
 - 用途：**描述性**。主判据仍是 heldout 那三条；这个端点只回答“换 32 个没见过的卡组会不会崩”，
   不参与接入决定。
 
-清单在 ignored `artifacts/task93/eval_rand_decks_manifest.json`，构造时核验
-`training_task_kwargs` 与 `deck_for_seed` 对 32 个种子逐一致。
-
-Codex续核：旧档案中51,191份元数据没有显式deck，不能只查metadata便宣称未见。
-已直接扫描354个选中训练分片的全部17,132,763行`packet_col0`（植物ID，空槽−1），
-逐行排序后与32个评估卡组比较，碰撞0；该检查也覆盖验证行，原0.173%档是此语料的子集。
-回执在`expand/randcold/pack_deck_overlap_audit.json`，索引SHA `fed7e1e1…`。
-补充端点用`scripts/task93_randcold.py --root <expand绝对路径> --wait-for-pid <主控制器PID>`衔接：
-通过pidfd等待主控制器实际退出，仅主验证complete且两模型SHA/12轮回执齐全后运行；
-持有同一实验锁，两个模型串行、每次2游戏进程，逐项核对首批config，仅允许模型和输出路径变化。
-已完成的r11与0.173%两模型32局通过完整性核验复用；全部完成后输出`randcold/comparison_all_doses.json`。
+清单在`artifacts/task93/eval_rand_decks_manifest.json`。32个组合未出现在训练包的保留输入中，
+来源见`expand/randcold/pack_deck_overlap_audit.json`。
+`scripts/task93_randcold.py`在主验证完成后串行补齐扩采两模型的64局；既有96局复用，
+最终结果在`expand/randcold/comparison_all_doses.json`，每次最多2个游戏进程。
 
 **补充端点第一批结果（0.173% 的两个种子 + r11，2026-10-26）**：32 个未见卡组各一局：
 
@@ -323,60 +319,10 @@ deploy4 引擎 SHA `16989f23`，始终最多 2 游戏进程）：
 新数据共29,496行，原始占比 **0.17338%**；按配置的 `label_weight` 折算占比 **0.15458%**
 （此口径不包含各损失项及packet平衡的后续权重）。144局预算远未达到课程方案的4%目标，
 本次仍保持预登记数据量与权重；结果只评价这一剂量的补充数据。
-真实训练入口的 `seed_1/student/source_rows.json` 已与分片统计交叉核验，证据在
-ignored `artifacts/task93/pack_row_audit.json`。seed1/seed2 训练及各自两组 192 局评估均已完成（见下）。
-seed1第6轮曾因另一实验的两个单轮训练并发、swap耗尽而两次SIGSTOP让行，分别699/310秒、合计1009秒；
-对方各自完成后均已SIGCONT同一训练进程，优化步连续增长。模型及优化器状态保留，没有重训；
-训练日志的墙钟耗时包含这些资源等待。
-
-seed1已完成12轮、89,772优化步；模型SHA `e9f2cb8f093afc67baa5c239d065b99b60b3f675569052f27fb5abf17193e381`，
-模型内配方SHA与冻结配置相符，`seed=1`、`init=None`、历史1–12轮齐全，参数全为有限值。
-最终验证损失3.60139。heldout与d7对照均已完成192终局，逐种子和任务契约严格匹配：
-
-| seed1对局集 | 新模型 | A | D2 | r11 |
-|---|---:|---:|---:|---:|
-| heldout | **137/192** | 124/192 | 169/192 | 166/192 |
-| d7对照 | **174/192** | 172/192 | 178/192 | 168/192 |
-
-seed1相对r11：heldout净−29局、−15.10pp，配对95%区间[−23.08,−6.92]pp，
-gain/harm=19/48，双侧McNemar p=0.000522；d7对照净+6局、+3.125pp，
-区间[−3.42,+9.70]pp，gain/harm=23/17，p=0.4296。
-相对A的heldout净+13局，p=0.1875，未显示显著改善；相对D2净−32局，p=0.0000773。
-这些为未做多重校正的逐模型配对统计。原始来源、SHA和完整表在 ignored
-`artifacts/task93/seed_1/interim_comparison.json`。
-
-首个种子已低于166，因此本次不能满足预登记“两个种子都≥166”的接入支持判据。
-仍须完成seed2以报告均值和样本离散程度，不能据此重抽seed1、改门槛或单看对照持平便宣布改善。
-seed2 第一次尝试由流水线在资源满足后自动启动，读取同一打包文件，resolved 配方与 seed1 除 seed/out 外逐字段全等
-（seed=2、12轮、351标签、init=None、CUDA），`source_rows.json` 也逐项全等，均为 17,012,427 行；
-首个模型和 384 局结果均严格复用，没有重跑。随后 qc 恢复训练，该次尝试在第 3 轮按优先机制终止，
-无模型、无 12 轮回执、无评估，**不计入两模型分析**。调度器恢复排队后，资源释放时按同一冻结 seed2 配方重跑完成：
-12 轮、模型 SHA `3013f860…`、`trained.json` 带完成回执；其 heldout 192 + 对照 192 也已完成。
-两种子汇总、配对统计与最终结论见本节末的「两种子结果」。
-
-2026-10-26 验证准备：`scripts/task93_prepare_training.py --baseline-recipe
-/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/recipe.json
---manifest /home/newbiexvwu/PvZ-search/artifacts/stage4/random_deck_panel.json --plan-only`
-已生成 `artifacts/task93/seed_{1,2}/recipe.json`，逐字段验证保留旧超参数、348 旧标签及旧权重，
-只添加 `rand_d7_fast_search` / `rand_n12_fast_search` / `rand_p21_fast_search` 三标签，显式平权 1.0。
-不带 `--plan-only` 时先核对全部 144 局与数值帧归档，再建立 `training_frames` 视图与私有缓存；
-旧 task84 不可变打包分片通过硬链接复用，不写 cq 或生产语料。当前数据未齐时已验证会拒绝准备。
-数据齐后打包、核对新增实际行占比，检查 qc 无 GPU 训练冲突，再串行运行原训练入口
-`scripts/train_rollout_policy.py --recipe <上述绝对配置路径>`；两种子都训练和评估，不按 heldout 选优。
-
-`scripts/task93_validation.py --collector-pid <现存采集 shell PID>` 将后续阶段串行衔接，
-用 pidfd 等待该进程退出而不另开采集；完整性检查不通过即停止。私有文件锁防重复流水线，
-训练有模型/配方 SHA 与 12 epoch 回执后才可复用；游戏评估使用 `--workers 2`。
-训练启动前等待其他学生训练及有活动控制器的qc排队任务退出并预留可用内存，运行中若qc恢复则仅终止本实验子进程，
-记录优先让行后重新排队同一配方；真实训练错误仍停止，发现无完成回执的模型文件则拒绝覆盖、要求先核验。
-不动生产。进度与子进程句柄在 ignored `artifacts/task93/validation_status.json`；续做先核实其中进程，
-不可仅凭状态文件或观察超时重启。最终两个比较 JSON 仍需人工读数、核对数据占比并写结论。
-
-seed1完成后校准了私人调度门槛：其30秒遥测采样RSS峰值为12,118,224,896字节（约11.29GiB），
-同配方seed2按该峰值加15%余量、且不少于12GiB准入，当前为约12.98GiB；没有实测时仍用16GiB。
-门槛只影响任务调度，不修改配方、数据、轮数或评估。启动时避开所有正在运行的学生训练，减少两个大语料同时驻留造成的swap竞争。
-恢复路径校验打包契约及分片、模型SHA、任务/模型/种子/终局，再复用已完成阶段；部分对局只用于识别尚缺的种子，
-统计入口仍默认要求完整192对。恢复与统计相关23项测试通过；已核实旧控制器因qc让行退出后再恢复，未重跑seed1训练、打包或384局评估。
+两模型均已完成训练和两组192局评估。准备与执行入口为`scripts/task93_prepare_training.py`、
+`scripts/task93_validation.py`；配置及完成回执在`artifacts/task93/seed_{1,2}/`。
+配对结果、区间与来源在`artifacts/task93/comparison_day_l7_eval_d7p_holdout1.json`和
+`artifacts/task93/comparison_day_l7_eval_d7.json`。资源等待与中断历史留在任务书，不计入完成模型数。
 
 ### 两种子结果（2026-10-26 完成）
 
@@ -416,8 +362,6 @@ seed1完成后校准了私人调度门槛：其30秒遥测采样RSS峰值为12,1
 5. 剂量：本次新增 29,496 行只占 0.17338%，比课程方案的 4% 低约 23 倍。所以这不是对“4% 随机卡组”的检验，
    而是对极低剂量的检验；它既不能证明 4% 有效，也不构成对 4% 的反证。按预登记，扩大采集是下一个待验证假设。
 6. 已知缺口不变：三族候选池都被引擎 `not_recommended` 滤掉了三叶草(27)，heldout 里含 27 的卡组仍只有旧冻结数据覆盖。
-7. 复现：重跑 `scripts/task93_analyze.py compare` 生成的 heldout / 对照两份 JSON 与已入库文件逐字节相同；
-   两个模型 SHA 与各自 `trained.json` 一致；两个 run 的 `recipe.resolved.json` 只差 `seed` / `out`。
 
 **建议（交主控裁定，不改 qc）**：本次 144 局剂量不进生产课程。若继续这条线，用已导入的 Mac expand 族
 （白天 1.0 / 泳池 0.5 起步，夜间 0.5 仍 39.06% 暂缓），按 `wait_keep` 后的实际保留行补到约 4%，
