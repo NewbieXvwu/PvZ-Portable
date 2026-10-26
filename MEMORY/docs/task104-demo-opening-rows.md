@@ -97,6 +97,12 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 ### 交接前清理（19:20）
 
 台式机 `demorows` 工作树同步到 `46c90c1a`（与 `origin/demorows` 一致，工作区干净）；我之前被 kill 的全机扫描在树里留了一份 `MEMORY/docs/gate-seed-inventory.json` 的改动（加了新工作树根），已 `git checkout --` 还原，不把这份半成品留给你。本任务在这台机器上没有遗留进程：`t104` 会话已删，`train_rollout_policy.py`、`gate_seed_inventory.py` 都没有残留；`artifacts/task104/a_s1/` 只有 `recipe.resolved.json` 与 `source_rows.json`，没有检查点、不占显存。
+### 交接时机器状态快照（19:26 核对）
+
+- `demorows` 工作树：`0a527ba7` 之后的 `46c90c1a` 基线，工作区干净；`artifacts/task104/a_s1/` 无检查点，`data_a` / `data_b` / 两套配方 / 两套面板齐全。
+- 没有本任务的训练进程：`pgrep -af task104/recipes` 为空，`tmux t104` 已删。**Codex 尚未开跑**（`codex` 进程在，但没有 task104 的训练）。
+- GPU 与内存现况：qc 自己的管线训练在跑（`round_000020/seeds/seed_000001`），显存 7.7 GB / 利用率 1%，可用内存 7 GB。也就是说，此刻即使启动本任务训练，也仍然是和 qc 训练叠在同一张卡、同一份内存上。
+- 结论：本任务的四次训练要等一个 qc 不训练且可用内存 ≥ 11 GB 的窗口；`~/pvz-logs/t104_train.sh` 已按这个条件写好（三采样准入 + 挤压自动中止），直接 `tmux new-session -d -s t104 /home/newbiexvwu/pvz-logs/t104_train.sh` 即可。
 ## 问题
 
 **同一工作树上有另一个会话在并行写。** 2026-10-26 16:50–17:00（+08:00），台式机 `artifacts/task104/` 下出现本会话之外产出的 `data_a` / `data_b` / `recipes` / `training_inputs.json` / `r11.source_rows.json`，来源不是本会话的进程（本会话当时只建了 `corpus/`）。之后该会话不再写文件（截至 17:15 无新产物、无训练进程）。本会话按"不覆盖别人产物"处理：先只读核对，A/B 两份语料的行数与段字节都验过（见上节），再据此继续。若该会话恢复并开始训练，两个 1,700 万行的训练同时上卡会超出 16 GB 显存，需要先确认谁持有 GPU 再启动。
