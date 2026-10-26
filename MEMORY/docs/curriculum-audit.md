@@ -51,6 +51,8 @@ L31 `_hv2` 首组实际在 08:39:35–08:43:19 完成 24/24；L32 首组在 08:4
 
 `day_l8_train_d7`, `day_l9_train_d7`, `day_l1_train_d7`, `day_l3_train_d7`, `day_l4_train_d7`, `day_l6_train_d7`, `day_l10_orig_train`, `night_l11_train_n10`, `night_l12_train_n10`, `night_l13_train_n10`, `night_l16_train_n10`, `night_l18_train_n10`, `night_l19_train_n10`, `pool_l26_train_p9k`, `pool_l27_train_p9k`, `pool_l28_train_p9k`, `pool_l29_train_p9k`, `day_l8_train_d7q`, `day_l9_train_d7q`, `day_l10_train_d7q`, `night_l11_train_n10q`, `night_l12_train_n10q`, `night_l13_train_n10q`, `night_l16_train_n10q`, `night_l18_train_n10q`, `night_l19_train_n10q`.
 
+15:40 复核：按 `teacher.get(base, teacher.get(f'level:{level}', 1.0))` 的同一查找规则（`curriculum_queue.py:581`）在 15:05 快照上重算，缺底数仍是同样的 26 格，18 个新格与 13 个示范格全部 base 命中——不是靠“读过配置文件”下的结论，而是同一条查找路径算出来的。
+
 建议主控按采集优先级补老师底数。现有底数是base级而非档位级：fog v2 31/32及fog79b数据源为1.0，升到1.25后仍沿用；示范底数也是特定起点的小样本，不能声称每个新档都已测老师。
 
 同秒重复 added 日志并不等于重复执行采样：08:50:46 两套初始化与 deploy14 dry-run/启动吻合；只有 L25 的误退在11:43仍复现，其余新增格的窗口/offset没有被清空。后续应按实际组标签与偏移核验，不能数added行当组数。
