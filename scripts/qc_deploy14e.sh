@@ -1,12 +1,14 @@
 #!/bin/bash
-# deploy14e DRAFT = deploy14d (cefb9989) + task98 failure isolation and watchdog.
-# Prepared for the controller only; task109 must not execute this script.
+# task113 deploy14e = deploy14d/cbd96daf + watchdog/isolation + gate v4 + demo2545.
+# Prepared for the controller only; do not execute as part of task113.
+# First drain any partial round under explicit v3, then start the next round under v4.
+# Historical decisions are never backfilled or reinterpreted.
 # Watchdog starts in tmux qc-watchdog after the first new successful group.
 # Code-only overlay on deploy14; keep its engine, collection panel and gate panel.
 # No recipes, teacher rates, state, offsets or seed ledgers are restored on rollback.
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search; W=$R/.claude/worktrees/cq; PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=b7120205c88b8e02fafafaf3d55f5ca5a9990f00
+REV=3573ea374bc463b66637ee1a9cf4b899213b7cb7
 ENGINE_SHA=76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a
 NEWEXE=$W/build5/pvz-portable
 PANEL3=$W/artifacts/task73c/panel_v3_source.json
@@ -14,9 +16,9 @@ L=/home/newbiexvwu/pvz-logs/qc_setup.log
 O=/home/newbiexvwu/pvz-logs/deploy14e_$(date +%Y%m%dT%H%M%S)
 STOP_FLAG=/home/newbiexvwu/pvz-logs/stop_curr
 STOPPED=0; SAVED=0; OWN_STOP=0
-CODE_FILES=(scripts/curriculum_queue.py python/pvz_selection_refresh.py scripts/qc_watchdog.sh)
+CODE_FILES=(scripts/curriculum_queue.py python/pvz_selection_refresh.py scripts/qc_watchdog.sh python/pvz_promotion.py scripts/promotion_gate.py configs/human_demo_tasks.json scripts/llmplay/make_llmplay_tasks.py)
 log() { echo "$(date -Iseconds) deploy14e: $*" >> "$L"; }
-start_qc() { tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $W/recipes/dw4i2.json --executable $1 --promotion-panel $PANEL3 2>&1 | tee -a ~/pvz-logs/qc.out"; }
+start_qc() { tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds ${2:-100} ${3:-} --workers 16 --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $W/recipes/dw4i2.json --executable $1 --promotion-panel $PANEL3 2>&1 | tee -a ~/pvz-logs/qc.out"; }
 start_watchdog() {
   if ! tmux has-session -t =qc-watchdog 2>/dev/null; then
     tmux new-session -d -s qc-watchdog -x 200 -y 50 "bash $W/scripts/qc_watchdog.sh >> /home/newbiexvwu/pvz-logs/qc_watchdog.out 2>&1"
@@ -48,7 +50,7 @@ import sys
 
 action, root, output, revision = sys.argv[1:]
 root, output = Path(root), Path(output)
-baseline = json.loads(r'''{"scripts/curriculum_queue.py":"749efb24d1ec71250557219d930ca70034aeff6a3b6135a880d164f0eea9063f","python/pvz_selection_refresh.py":"7f1582c1a90f6159877316066008fade271bec2d97aa57d9b1b3934bc53efb2f","scripts/qc_watchdog.sh":null}''')
+baseline = json.loads(r'''{"scripts/curriculum_queue.py":"2ddb44d9163519097c0af94c64c456e94e37a60d6e4425e3e1b0e979103b1ef1","python/pvz_selection_refresh.py":"7f1582c1a90f6159877316066008fade271bec2d97aa57d9b1b3934bc53efb2f","scripts/qc_watchdog.sh":null,"python/pvz_promotion.py":"6a28c360fac4acded269370995861284b00e97ad03de151c36f2cfc8157cdfd6","scripts/promotion_gate.py":"c94f6de7ccc6dbf385e1baa17e8fed94cb2e543d3b78f808b1f871d3ec3ebb9d","configs/human_demo_tasks.json":"91e5ab26e29ec1d5bee3e82c8f7ebc6ca70a87d77585b5c41dbb64f9d826e4f3","scripts/llmplay/make_llmplay_tasks.py":null}''')
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
 immutable = {
@@ -90,6 +92,17 @@ elif action == 'installed':
         content = subprocess.check_output(['git', '-C', str(root), 'show', f'{revision}:{name}'])
         if sha(root / name) != hashlib.sha256(content).hexdigest():
             raise SystemExit(f'candidate overlay mismatch: {name}')
+elif action in ('pending-round', 'boundary'):
+    state = json.loads((logs / 'curriculum_state.json').read_text())
+    if action == 'pending-round':
+        raise SystemExit(0 if state.get('completed_groups') else 1)
+    if state.get('completed_groups'):
+        raise SystemExit('gate switch refused: partial round still has completed_groups')
+    if any(job.get('status') != 'done' and not job.get('isolated')
+           for job in state.get('training_jobs', [])):
+        raise SystemExit('gate switch refused: old background jobs have not drained')
+    (output / 'gate_switch.json').write_text(json.dumps(dict(
+        completed_round=state['round'], from_version=3, to_version=4), indent=2))
 elif action == 'unchanged':
     before = json.loads((output / 'critical.before.json').read_text())
     after = {name: sha(Path(name)) for name in critical}
@@ -135,10 +148,29 @@ git -C "$W" restore --source "$REV" --worktree -- "${CODE_FILES[@]}"
 code_state installed
 
 # --- dry-run with deploy14 arguments; no seed allocation or training ---
-timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --executable "$NEWEXE" --promotion-panel "$PANEL3" > "$O/dryrun.out" 2>&1 || rollback 'dry-run failed'
+timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --gate-version 3 --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --executable "$NEWEXE" --promotion-panel "$PANEL3" > "$O/dryrun.out" 2>&1 || rollback 'dry-run failed'
 grep -q 'selection preview (no allocation, no engine, no state write)' "$O/dryrun.out" || rollback 'selection preview missing'
 code_state unchanged
 log 'dry-run passed; engine/panels/rates/state/ledgers unchanged'
+
+# A group-boundary stop can leave a partial collection round. Finish it using
+# the new resilience code but the OLD gate policy; the finite invocation drains
+# its background pipeline before exiting. No v4 decision exists before boundary.
+if code_state pending-round; then
+  log 'partial round retained; finishing one round with gate v3 before v4 switch'
+  start_qc "$NEWEXE" 1 '--gate-version 3'
+  drained=0
+  for ((i=0; i<720; i++)); do
+    if ! tmux has-session -t =qc 2>/dev/null; then drained=1; break; fi
+    sleep 30
+  done
+  if [ "$drained" != 1 ]; then
+    log 'ABORT: v3 boundary drain exceeded six hours; left live qc and code intact; v4 not started'
+    exit 1
+  fi
+fi
+code_state boundary
+log 'round boundary and old background drain reached; next round uses gate v4'
 
 # --- restart and require a NEW completed group, not a stale rc=0 line ---
 n0=$(grep -c ' rc=' /home/newbiexvwu/pvz-logs/curriculum.log || true)
