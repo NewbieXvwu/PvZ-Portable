@@ -1,0 +1,630 @@
+{
+  "task": "task93",
+  "completed_date": "2026-10-27",
+  "corpus": {
+    "teacher_games": 720,
+    "original_games": 144,
+    "mac_games": 576,
+    "labels": 354,
+    "retained_rows": 17132763,
+    "new_retained_rows": 149832,
+    "new_training_rows": 134035,
+    "new_validation_rows": 15797,
+    "raw_new_share_pct": 0.8745349480407801,
+    "label_weight_scaled_new_share_pct": 0.7802852875118655,
+    "pack_index_sha256": "fed7e1e1c20d5fd5929339d35514f0d32f2469373d576253bc4ae47d2d990156"
+  },
+  "models": {
+    "seed_1": {
+      "model_sha256": "95fe9031f0fc1b5a7507ae73e395fa367899c8eaf3d9e789f54deaceea85f49b",
+      "recipe_sha256": "6546dd0b9d851aa056d99c928effc386ad7563c184e2e3234c8747c263f034ed",
+      "epochs": 12,
+      "training_pid": 1011963,
+      "recovery_resumes": 0,
+      "observed_peak_rss_bytes": 11558199296,
+      "rss_telemetry_sha256": "c6c5f3f6c25175514eb8d7f83b4b11459c5dfa2ab87fbd2a825d12f90a5af6e6"
+    },
+    "seed_2": {
+      "model_sha256": "90d6a5e53a81cd67b89704ed5fb74daab90785839c12dce24e694d742f36adca",
+      "recipe_sha256": "e93fffcf355a1edecb64f6926cad9330811b3a5ca104bba04fc0610f2bec3ba7",
+      "epochs": 12,
+      "training_pid": 1029432,
+      "recovery_resumes": 0,
+      "observed_peak_rss_bytes": 12381159424,
+      "rss_telemetry_sha256": "5d77c2bd3c95ee758009723d99abd7d5611a7b393d80cd3270b9d20c14faa1c5"
+    }
+  },
+  "main": {
+    "heldout": {
+      "task_id": "day_l7_eval_d7p_holdout1",
+      "pairs": 192,
+      "candidates": {
+        "seed_1": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/day_l7_eval_d7p_holdout1/games.jsonl",
+          "sha256": "d5f5635e1dc326d651127a8089878ab34bd370ac616b10af00e7a0fcd48cce1c",
+          "config_sha256": "a38101495012a65b09ee3b16a4b67c7e02210bdc8a88197d51abdea234743a35",
+          "manifest_sha256": "2f74caea835c43e86a2850b124ca886750de5e9d06fde34845015c2cd9168448",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        },
+        "seed_2": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_2/day_l7_eval_d7p_holdout1/games.jsonl",
+          "sha256": "11f9904e444d13ea6345e3cdcf096252daad462cd41685f527253ca87eabcec2",
+          "config_sha256": "c442652c962acdacaff02c969fc3d2d669ea1bce14bf80c069391c559a44db5c",
+          "manifest_sha256": "2f74caea835c43e86a2850b124ca886750de5e9d06fde34845015c2cd9168448",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        }
+      },
+      "baselines": {
+        "A": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/eval_day_l7_eval_d7p_holdout1/games.jsonl",
+          "sha256": "23cb542d79908e5ac2022aafea0ffeb562effb71bd2139dbcda4d3c4b2abd5ae",
+          "config_sha256": "92990be91f612de31cf72160cca35e6edd060a6610fcbeacdd40693bf37499be",
+          "manifest_sha256": "2f74caea835c43e86a2850b124ca886750de5e9d06fde34845015c2cd9168448",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        },
+        "D2": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_d2/eval_day_l7_eval_d7p_holdout1/games.jsonl",
+          "sha256": "0c06069f13957d53f2ce7447c811dc56c5c0e57a30189d4b9a7a98844bb99d3b",
+          "config_sha256": "4f7ecf766eb2297dd96c9a6009e40d4055f4c6538802fdf49d0d7cb8a27064cd",
+          "manifest_sha256": "2f74caea835c43e86a2850b124ca886750de5e9d06fde34845015c2cd9168448",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        }
+      },
+      "paired": {
+        "seed_1": {
+          "A": {
+            "pairs": 192,
+            "candidate_wins": 33,
+            "incumbent_wins": 124,
+            "gain": 13,
+            "harm": 104,
+            "both_win": 20,
+            "both_lose": 55,
+            "delta_rate": -0.4739583333333333,
+            "ci95": [
+              -0.5548073253204242,
+              -0.3803499913841059
+            ],
+            "mcnemar_worse_p": 4.2450109030645785e-19,
+            "mcnemar_exact_two_sided": 8.490021806129157e-19
+          },
+          "D2": {
+            "pairs": 192,
+            "candidate_wins": 33,
+            "incumbent_wins": 169,
+            "gain": 4,
+            "harm": 140,
+            "both_win": 29,
+            "both_lose": 19,
+            "delta_rate": -0.7083333333333334,
+            "ci95": [
+              -0.7690693514963401,
+              -0.6280864624807503
+            ],
+            "mcnemar_worse_p": 7.926488932380923e-37,
+            "mcnemar_exact_two_sided": 1.5852977864761847e-36
+          }
+        },
+        "seed_2": {
+          "A": {
+            "pairs": 192,
+            "candidate_wins": 87,
+            "incumbent_wins": 124,
+            "gain": 28,
+            "harm": 65,
+            "both_win": 59,
+            "both_lose": 40,
+            "delta_rate": -0.19270833333333334,
+            "ci95": [
+              -0.28439676115299156,
+              -0.09587089133548848
+            ],
+            "mcnemar_worse_p": 7.87853938955427e-05,
+            "mcnemar_exact_two_sided": 0.0001575707877910854
+          },
+          "D2": {
+            "pairs": 192,
+            "candidate_wins": 87,
+            "incumbent_wins": 169,
+            "gain": 11,
+            "harm": 93,
+            "both_win": 76,
+            "both_lose": 12,
+            "delta_rate": -0.4270833333333333,
+            "ci95": [
+              -0.5066149113742082,
+              -0.3376495358939663
+            ],
+            "mcnemar_worse_p": 1.2433122542128048e-17,
+            "mcnemar_exact_two_sided": 2.4866245084256097e-17
+          }
+        }
+      },
+      "incumbent_source": {
+        "path": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent/day_l7_eval_d7p_holdout1/games.jsonl",
+        "sha256": "1b6809424acb635b3de2ce0a63d0764aff188d7a0d8c93a80d5452bd2e33c9b5",
+        "config_sha256": "60690e51d7276928882627b405ac202731234290ff6ac30c132fea5c592bdb3c",
+        "manifest_sha256": "e8fce06c27f0920990f03c14d084fbe196c6fda62cb202418ae0ad63a7be21dd",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+      },
+      "incumbent_paired": {
+        "seed_1": {
+          "pairs": 192,
+          "candidate_wins": 33,
+          "incumbent_wins": 166,
+          "gain": 3,
+          "harm": 136,
+          "both_win": 30,
+          "both_lose": 23,
+          "delta_rate": -0.6927083333333334,
+          "ci95": [
+            -0.753898946143429,
+            -0.6127558090744847
+          ],
+          "mcnemar_worse_p": 6.424466928102473e-37,
+          "mcnemar_exact_two_sided": 1.2848933856204945e-36
+        },
+        "seed_2": {
+          "pairs": 192,
+          "candidate_wins": 87,
+          "incumbent_wins": 166,
+          "gain": 11,
+          "harm": 90,
+          "both_win": 76,
+          "both_lose": 15,
+          "delta_rate": -0.4114583333333333,
+          "ci95": [
+            -0.49140257573508966,
+            -0.3219326803248437
+          ],
+          "mcnemar_worse_p": 7.11795588259026e-17,
+          "mcnemar_exact_two_sided": 1.423591176518052e-16
+        }
+      },
+      "candidate_spread": {
+        "draws": 2,
+        "wins": [
+          33,
+          87
+        ],
+        "mean_pct": 31.25,
+        "sample_std_pp": 19.88737822087165,
+        "range_pp": 28.125
+      },
+      "baseline_spread": {
+        "draws": 2,
+        "wins": [
+          124,
+          169
+        ],
+        "mean_pct": 76.30208333333333,
+        "sample_std_pp": 16.572815184059706,
+        "range_pp": 23.4375
+      },
+      "limitation": "Two training draws provide descriptive spread, not proof that tail risk is eliminated."
+    },
+    "control": {
+      "task_id": "day_l7_eval_d7",
+      "pairs": 192,
+      "candidates": {
+        "seed_1": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/day_l7_eval_d7/games.jsonl",
+          "sha256": "410a2939c1a5943e7a82115a78a8b9493d3800847778b750758b3a10eda68109",
+          "config_sha256": "ca38b30f379e7d65c139bd484812fd31f7f5103a04b97ee8e92897cc18d01b99",
+          "manifest_sha256": "965c4d0daeb4284b4515a872db7abcaddb24d848d476b3b50c27488ecce7f4db",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        },
+        "seed_2": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_2/day_l7_eval_d7/games.jsonl",
+          "sha256": "0bcb0fb52e65d32d053090ebf9c4bc9a24ae188dde7e526251d053b267cc1125",
+          "config_sha256": "ceb685022dbbfda00916da87b41f30c5768256eb3460228b49ed1eee767dae13",
+          "manifest_sha256": "965c4d0daeb4284b4515a872db7abcaddb24d848d476b3b50c27488ecce7f4db",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        }
+      },
+      "baselines": {
+        "A": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/eval_day_l7_eval_d7/games.jsonl",
+          "sha256": "1b60814f5e8d57fca4a44a44be579ea0a9608bba9fc57d74fb00efe86762c12f",
+          "config_sha256": "ffdda241892e3ea7a4b6b5a23697e5827829a24506b52fb72d34eb70645a92c7",
+          "manifest_sha256": "965c4d0daeb4284b4515a872db7abcaddb24d848d476b3b50c27488ecce7f4db",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        },
+        "D2": {
+          "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_d2/eval_day_l7_eval_d7/games.jsonl",
+          "sha256": "9448476d39d02434113089018845e1011d7cee2c4f9069d3226d03c6d335d7ae",
+          "config_sha256": "c7eb137b8d6a72bea8666e5a462a5bdd81c2fc9ffc86a6e6f9084d25059085d3",
+          "manifest_sha256": "965c4d0daeb4284b4515a872db7abcaddb24d848d476b3b50c27488ecce7f4db",
+          "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+        }
+      },
+      "paired": {
+        "seed_1": {
+          "A": {
+            "pairs": 192,
+            "candidate_wins": 168,
+            "incumbent_wins": 172,
+            "gain": 17,
+            "harm": 21,
+            "both_win": 151,
+            "both_lose": 3,
+            "delta_rate": -0.020833333333333332,
+            "ci95": [
+              -0.08578965602025986,
+              0.04389583701153528
+            ],
+            "mcnemar_worse_p": 0.31355128507857444,
+            "mcnemar_exact_two_sided": 0.6271025701571489
+          },
+          "D2": {
+            "pairs": 192,
+            "candidate_wins": 168,
+            "incumbent_wins": 178,
+            "gain": 12,
+            "harm": 22,
+            "both_win": 156,
+            "both_lose": 2,
+            "delta_rate": -0.052083333333333336,
+            "ci95": [
+              -0.11359646629675191,
+              0.008381941538016809
+            ],
+            "mcnemar_worse_p": 0.06072474247775972,
+            "mcnemar_exact_two_sided": 0.12144948495551944
+          }
+        },
+        "seed_2": {
+          "A": {
+            "pairs": 192,
+            "candidate_wins": 168,
+            "incumbent_wins": 172,
+            "gain": 19,
+            "harm": 23,
+            "both_win": 149,
+            "both_lose": 1,
+            "delta_rate": -0.020833333333333332,
+            "ci95": [
+              -0.08805710715737607,
+              0.04627314948095686
+            ],
+            "mcnemar_worse_p": 0.32198447818518616,
+            "mcnemar_exact_two_sided": 0.6439689563703723
+          },
+          "D2": {
+            "pairs": 192,
+            "candidate_wins": 168,
+            "incumbent_wins": 178,
+            "gain": 13,
+            "harm": 23,
+            "both_win": 155,
+            "both_lose": 1,
+            "delta_rate": -0.052083333333333336,
+            "ci95": [
+              -0.11474718985064701,
+              0.009725989546116268
+            ],
+            "mcnemar_worse_p": 0.06624908198136836,
+            "mcnemar_exact_two_sided": 0.13249816396273673
+          }
+        }
+      },
+      "incumbent_source": {
+        "path": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent/day_l7_eval_d7/games.jsonl",
+        "sha256": "6ed327f4832ee76da8e9673ebc721f3b0dec1ae269aa2e14bc2a7a661bc07be0",
+        "config_sha256": "98527a065645125f9350af4a8e872ffc7816d12482c4e3c1807cc2611ff3df83",
+        "manifest_sha256": "e8fce06c27f0920990f03c14d084fbe196c6fda62cb202418ae0ad63a7be21dd",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable"
+      },
+      "incumbent_paired": {
+        "seed_1": {
+          "pairs": 192,
+          "candidate_wins": 168,
+          "incumbent_wins": 168,
+          "gain": 19,
+          "harm": 19,
+          "both_win": 149,
+          "both_lose": 5,
+          "delta_rate": 0.0,
+          "ci95": [
+            -0.06481319807431762,
+            0.06481319807431762
+          ],
+          "mcnemar_worse_p": 0.564292660317733,
+          "mcnemar_exact_two_sided": 1.0
+        },
+        "seed_2": {
+          "pairs": 192,
+          "candidate_wins": 168,
+          "incumbent_wins": 168,
+          "gain": 21,
+          "harm": 21,
+          "both_win": 147,
+          "both_lose": 3,
+          "delta_rate": 0.0,
+          "ci95": [
+            -0.06713596131667261,
+            0.06713596131667261
+          ],
+          "mcnemar_worse_p": 0.5611928356238423,
+          "mcnemar_exact_two_sided": 1.0
+        }
+      },
+      "candidate_spread": {
+        "draws": 2,
+        "wins": [
+          168,
+          168
+        ],
+        "mean_pct": 87.5,
+        "sample_std_pp": 0.0,
+        "range_pp": 0.0
+      },
+      "baseline_spread": {
+        "draws": 2,
+        "wins": [
+          172,
+          178
+        ],
+        "mean_pct": 91.14583333333333,
+        "sample_std_pp": 2.209708691207961,
+        "range_pp": 3.125
+      },
+      "limitation": "Two training draws provide descriptive spread, not proof that tail risk is eliminated."
+    }
+  },
+  "supplement": {
+    "task_id": "day_l7_eval_randcold",
+    "total": 32,
+    "wins": {
+      "r11": 11,
+      "seed_1_0173": 13,
+      "seed_2_0173": 13,
+      "seed_1_0875": 12,
+      "seed_2_0875": 12
+    },
+    "sources": {
+      "r11": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/randcold/r11/games.jsonl",
+        "sha256": "a17506c0f72e3c5751e395c632ceb79fc1f105435bdb1d16b7d2d7a7c6782d28",
+        "config_sha256": "8652120425302cc65e40a005f43e76fd402c00257688571cde64032cbb805b40",
+        "manifest_sha256": "1804c2d168a9c7d814a602f651630b6e3fcf2e7994ee5fe58b310a3e224cc002",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+        "model": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+        "model_sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c"
+      },
+      "seed_1_0173": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/randcold/seed_1_0173/games.jsonl",
+        "sha256": "9dc8f7a771cbbf5203a372ca5e0736864b62fa7ce0f6664655a3ee80f51d9e2d",
+        "config_sha256": "0bdded7bb6b792abacc0a2c2d52ee09d2ac53e25e8444324db21154edf26693c",
+        "manifest_sha256": "1804c2d168a9c7d814a602f651630b6e3fcf2e7994ee5fe58b310a3e224cc002",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+        "model": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/seed_1/student/model.pt",
+        "model_sha256": "e9f2cb8f093afc67baa5c239d065b99b60b3f675569052f27fb5abf17193e381"
+      },
+      "seed_2_0173": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/randcold/seed_2_0173/games.jsonl",
+        "sha256": "1f513378f14482ba8f1bee290389906deb48805113e6e0437cf44d4cb75e93b0",
+        "config_sha256": "cf52bae722be5ce30e97d5bd213ba211f12f6fbb76f06b5e73ddeccdffc81c12",
+        "manifest_sha256": "1804c2d168a9c7d814a602f651630b6e3fcf2e7994ee5fe58b310a3e224cc002",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+        "model": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/seed_2/student/model.pt",
+        "model_sha256": "3013f860fe848aafd55cc424ff7f20a27bf8147ee57a781418866e6ca4ac0061"
+      },
+      "seed_1_0875": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/randcold/seed_1_0875/games.jsonl",
+        "sha256": "4dca6bf9729c762416ade781b4026d7af512c3e3023f5fb22abdc9f3b8715a41",
+        "config_sha256": "8a46a63b13e4f0d12f0cb875f4ee95b10c05d40533a572c70e15d57819c3c714",
+        "manifest_sha256": "1804c2d168a9c7d814a602f651630b6e3fcf2e7994ee5fe58b310a3e224cc002",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+        "model": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_1/student/model.pt",
+        "model_sha256": "95fe9031f0fc1b5a7507ae73e395fa367899c8eaf3d9e789f54deaceea85f49b"
+      },
+      "seed_2_0875": {
+        "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/randcold/seed_2_0875/games.jsonl",
+        "sha256": "d2a26cf7ddda8c8a31053b9c1e68309a7c462fb03a1de7b2e3acb54ee35b8cec",
+        "config_sha256": "175551ba19f00f96a44be81d6ccaa98462b2b4fd84064bd95bc5f0ff4055e49a",
+        "manifest_sha256": "1804c2d168a9c7d814a602f651630b6e3fcf2e7994ee5fe58b310a3e224cc002",
+        "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-portable",
+        "model": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deckvar/artifacts/task93/expand/seed_2/student/model.pt",
+        "model_sha256": "90d6a5e53a81cd67b89704ed5fb74daab90785839c12dce24e694d742f36adca"
+      }
+    },
+    "paired": {
+      "r11_minus_seed_1_0173": {
+        "pairs": 32,
+        "candidate_wins": 11,
+        "incumbent_wins": 13,
+        "gain": 0,
+        "harm": 2,
+        "both_win": 11,
+        "both_lose": 19,
+        "delta_rate": -0.0625,
+        "ci95": [
+          -0.16335131669039898,
+          0.04012291498559195
+        ],
+        "mcnemar_worse_p": 0.25,
+        "mcnemar_exact_two_sided": 0.5
+      },
+      "r11_minus_seed_2_0173": {
+        "pairs": 32,
+        "candidate_wins": 11,
+        "incumbent_wins": 13,
+        "gain": 2,
+        "harm": 4,
+        "both_win": 9,
+        "both_lose": 17,
+        "delta_rate": -0.0625,
+        "ci95": [
+          -0.21408605712519654,
+          0.09417195794125827
+        ],
+        "mcnemar_worse_p": 0.34375,
+        "mcnemar_exact_two_sided": 0.6875
+      },
+      "r11_minus_seed_1_0875": {
+        "pairs": 32,
+        "candidate_wins": 11,
+        "incumbent_wins": 12,
+        "gain": 2,
+        "harm": 3,
+        "both_win": 9,
+        "both_lose": 18,
+        "delta_rate": -0.03125,
+        "ci95": [
+          -0.17478863802457933,
+          0.11436493505018835
+        ],
+        "mcnemar_worse_p": 0.5,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "r11_minus_seed_2_0875": {
+        "pairs": 32,
+        "candidate_wins": 11,
+        "incumbent_wins": 12,
+        "gain": 2,
+        "harm": 3,
+        "both_win": 9,
+        "both_lose": 18,
+        "delta_rate": -0.03125,
+        "ci95": [
+          -0.17478863802457933,
+          0.11436493505018835
+        ],
+        "mcnemar_worse_p": 0.5,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "seed_1_0173_minus_seed_2_0173": {
+        "pairs": 32,
+        "candidate_wins": 13,
+        "incumbent_wins": 13,
+        "gain": 2,
+        "harm": 2,
+        "both_win": 11,
+        "both_lose": 17,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.1309603105884181,
+          0.1309603105884181
+        ],
+        "mcnemar_worse_p": 0.6875,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "seed_1_0173_minus_seed_1_0875": {
+        "pairs": 32,
+        "candidate_wins": 13,
+        "incumbent_wins": 12,
+        "gain": 3,
+        "harm": 2,
+        "both_win": 10,
+        "both_lose": 17,
+        "delta_rate": 0.03125,
+        "ci95": [
+          -0.1132779636896234,
+          0.17338156653325157
+        ],
+        "mcnemar_worse_p": 0.8125,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "seed_1_0173_minus_seed_2_0875": {
+        "pairs": 32,
+        "candidate_wins": 13,
+        "incumbent_wins": 12,
+        "gain": 2,
+        "harm": 1,
+        "both_win": 11,
+        "both_lose": 18,
+        "delta_rate": 0.03125,
+        "ci95": [
+          -0.08724380587621389,
+          0.14807592609448625
+        ],
+        "mcnemar_worse_p": 0.875,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "seed_2_0173_minus_seed_1_0875": {
+        "pairs": 32,
+        "candidate_wins": 13,
+        "incumbent_wins": 12,
+        "gain": 5,
+        "harm": 4,
+        "both_win": 8,
+        "both_lose": 15,
+        "delta_rate": 0.03125,
+        "ci95": [
+          -0.15471621414318137,
+          0.21375356873201037
+        ],
+        "mcnemar_worse_p": 0.74609375,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "seed_2_0173_minus_seed_2_0875": {
+        "pairs": 32,
+        "candidate_wins": 13,
+        "incumbent_wins": 12,
+        "gain": 3,
+        "harm": 2,
+        "both_win": 10,
+        "both_lose": 17,
+        "delta_rate": 0.03125,
+        "ci95": [
+          -0.1132779636896234,
+          0.17338156653325157
+        ],
+        "mcnemar_worse_p": 0.8125,
+        "mcnemar_exact_two_sided": 1.0
+      },
+      "seed_1_0875_minus_seed_2_0875": {
+        "pairs": 32,
+        "candidate_wins": 12,
+        "incumbent_wins": 12,
+        "gain": 2,
+        "harm": 2,
+        "both_win": 10,
+        "both_lose": 18,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.13215411840354147,
+          0.13215411840354147
+        ],
+        "mcnemar_worse_p": 0.6875,
+        "mcnemar_exact_two_sided": 1.0
+      }
+    },
+    "interpretation": "Descriptive, 32 card sets with one environment seed each; not an admission criterion.",
+    "complete": true
+  },
+  "preregistered_gates": {
+    "each_heldout_at_least_166": {
+      "observed": [
+        33,
+        87
+      ],
+      "passed": false
+    },
+    "each_heldout_vs_r11_one_sided_worse_p_at_least_0_05": {
+      "observed": [
+        6.424466928102473e-37,
+        7.11795588259026e-17
+      ],
+      "passed": false
+    },
+    "each_control_at_least_169": {
+      "observed": [
+        168,
+        168
+      ],
+      "passed": false
+    }
+  },
+  "decision": "Failed all three preregistered gates; no production enrollment and no automatic extra dose, collection, or seed draws.",
+  "limitations": [
+    "Main endpoints each use one fixed card set over 192 environment seeds.",
+    "Two training seeds only; spread is descriptive.",
+    "Old train/validation membership changes when seeds are added; whole-pipeline comparison, not isolated coverage or dose effect.",
+    "Expansion changes card-set count and adds Mac night/pool data at multiplier 0.5.",
+    "Mac engine validation manifest/config was not transferred.",
+    "Supplement has 32 distinct card sets, one environment seed each, all with sunflower; descriptive only.",
+    "Label-weight-scaled row share is not gradient share."
+  ]
+}
