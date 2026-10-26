@@ -27,3 +27,5 @@
 - 2026-10-26 08:2x（CodeBuddy 接手 cbp-task97）：合并 origin/pvz-env 进 redeploy（4 个 MEMORY/docs 文档与 student-bottleneck-plan 取 origin 版、2026-10-25/26 日志取并集），push 5dda229f。deploy14 状态：qc_deploy14.sh 在跑（07:41 preflight OK + stop_curr set，等 qc 当前轮结束重启），尚未见 first group rc=0。第 1 步完成：llm_free_out_numeric.zip 里 12 份通关存档（full/half 判定）经 scripts/import_llm_run.py 入库 cq/artifacts/llm_demo/raw/seed_<种子>/<task_id>/，deploy14 引擎 verify 12/12 通过，无新族登记（manifest 未动）；configs/human_demo_tasks.json 里 11 个 LLM demo_start 格引用路径 11/11 全解析。
 
 ## 问题
+
+- 2026-10-26 08:35（cbp-task97）：**deploy14 卡住，非本任务原因**。qc 于 06:50 在 deploy14 启动（07:41）之前自行退出，qc.out 末行 `demo_fog_32_snow_m200: seeds exhausted (offset 216 + 48 > 256)`（控制器 planning 失败退出，tmux 会话消失）。qc_deploy14.sh（PID 803586）的 stop_qc 死等 curriculum.log 末尾出现 "stopping"，而 qc 已死不会再打——脚本卡在第一个等待循环 50+ 分钟，永远到不了完成或 ROLLBACK。不碰 tmux qc、不代执行部署；已挂监听，若主控侧解除卡住（qc_setup.log 出现 deploy14 新行）即继续。处置：qc 已死、无资源争用，第 2 步 teacher_rates（自用 2 进程）先行。
