@@ -279,6 +279,7 @@ def summarize(outcomes, draws=50000, seed=2026102602):
     winners = np.argmax(samples, axis=1)
     winner = NAMES[int(np.argmax(totals))]
     return dict(totals=dict(zip(NAMES, map(int, totals))),
+                games_per_model=sum(len(rows) for rows in outcomes),
                 ranking=sorted(NAMES, key=lambda name: -totals[NAMES.index(name)]),
                 kendall_tau_b=kendall_tau(totals, QUALITY), selected=winner,
                 bootstrap_winner_probability=dict(zip(NAMES, (np.bincount(winners, minlength=4) / draws).tolist())),
@@ -289,7 +290,12 @@ def summarize(outcomes, draws=50000, seed=2026102602):
 
 def analyse():
     plan = json.loads(PLAN.read_text())
+    if sha(PANEL) != plan['panel_sha256']:
+        raise ValueError('panel differs from preregistration')
     sources = {str(PLAN): sha(PLAN), str(PANEL): sha(PANEL)}
+    original_path = ROOT / 'artifacts/task92/offline/selection.json'
+    original = json.loads(original_path.read_text())
+    sources[str(original_path)] = sha(original_path)
     all_outcomes, task_scores = {}, {}
     for version, manifest in [('v1', ROOT / 'configs/student_selection.json'), ('v2', PANEL)]:
         tasks = json.loads(manifest.read_text())['tasks']
@@ -306,7 +312,10 @@ def analyse():
                     folder = ROOT / 'artifacts/task92/offline/selection' / f'c{index}_{task["task_id"]}'
                     games = folder / 'games.jsonl'
                 else:
-                    games = Path(receipt['scores'][model['path']]['games'][task['task_id']]['path'])
+                    evidence = receipt['scores'][model['path']]['games'][task['task_id']]
+                    games = Path(evidence['path'])
+                    if sha(games) != evidence['sha256']:
+                        raise ValueError('selection game receipt SHA mismatch')
                 config = games.parent / 'config.json'
                 settings = json.loads(config.read_text())
                 if (sha(Path(settings['rollout_policy'])) != model['sha256']
@@ -314,7 +323,11 @@ def analyse():
                         or sha(Path(settings['manifest'])) != sha(manifest)
                         or sha(Path(settings['executable'])) != plan['sources_sha256'][str(ENGINE)]):
                     raise ValueError(f'played policy/task/engine differs from frozen comparison: {config}')
-                score_rows(games, task['seeds'])
+                wins = score_rows(games, task['seeds'])
+                scored = (next(score for path, score in original['scores'].items() if Path(path).stem == name)
+                          if version == 'v1' and name != 'r11' else receipt['scores'][model['path']])
+                if wins != scored['wins'][task['task_id']]:
+                    raise ValueError('recomputed games disagree with selection score')
                 rows = {row['seed']: row for row in (json.loads(line) for line in games.read_text().splitlines() if line.strip())}
                 if 'deck_random' in task and any(tuple(rows[s]['deck']) != deck_for_seed(task, s) for s in task['seeds']):
                     raise ValueError('played random deck does not match preregistered receipt')
@@ -325,13 +338,25 @@ def analyse():
             scores_by_task[task['task_id']] = dict(zip(NAMES, map(int, outcome.sum(axis=0))))
             outcomes.append(outcome)
         all_outcomes[version] = summarize(outcomes, **{k: plan['bootstrap'][k] for k in ('draws', 'seed')})
+        if version == 'v2' and Path(receipt['best']).stem != all_outcomes[version]['selected']:
+            raise ValueError('recomputed winner disagrees with selection receipt')
         task_scores[version] = scores_by_task
     report = dict(schema_version=1, heldout_wins=dict(zip(NAMES, QUALITY)),
+                  preregistration_commit=subprocess.check_output(
+                      ['git', 'log', '-1', '--format=%H', '--', 'configs/student_selection_v2.json'],
+                      cwd=ROOT, text=True).strip(),
                   bootstrap=plan['bootstrap'], panels=all_outcomes, per_task=task_scores,
                   scope='Four fixed historical models; paired resampling within tasks only. '
                         'V1 uses 192 games/model and V2 380; differences include both allocation and budget. '
                         'Selection success does not establish future training gain or replace the promotion gate.',
                   sources_sha256=sources)
+    watch = OUT / 'runtime_watch.json'
+    if watch.exists():
+        runtime = json.loads(watch.read_text())
+        if not runtime['finished'] or runtime['peak_observed_game_processes'] > 2:
+            raise ValueError('runtime monitor did not confirm a completed two-process run')
+        report['runtime_monitor'] = runtime
+        report['sources_sha256'][str(watch)] = sha(watch)
     write(OUT / 'comparison.json', report)
     print(json.dumps(report['panels'], indent=2))
 
