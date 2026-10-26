@@ -813,19 +813,55 @@ def main(*, step_observer=None) -> None:
                 # Historical reports compare these metadata keys; both experiments are retired.
                 "soft_weight": 0.0, "ema": 0.0,
                 "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
+                **({"recovery_resumes": recovery.resumes} if recovery.path else {}),
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 
     completed_steps=0
     completed_rows=0
+    from pvz_training_recovery import TrainingRecovery, epoch_permutation
+    recovery_path = os.environ.get('PVZ_TRAIN_RECOVERY')
+    if recovery_path and Path(recovery_path).resolve() != (args.out/'recovery.pt').resolve():
+        raise ValueError('PVZ_TRAIN_RECOVERY must name this output directory/recovery.pt')
+    recovery = TrainingRecovery(recovery_path, dict(recipe_sha256=args.recipe_sha256,
+        rows=len(plant), training_rows=len(train_idx), validation_rows=len(val_idx), steps=steps),
+        cuda=str(args.device).startswith('cuda'))
+    restored = recovery.load(net, opt, schedule)
+    first_epoch = 1
+    if restored:
+        completed_steps, completed_rows = restored['steps'], restored['rows']
+        first_epoch, history = restored['epoch'], restored['history']
+        print(json.dumps(dict(recovery='resumed', steps=completed_steps, epoch=first_epoch,
+                              next_start=restored['next_start'])), flush=True)
+
+    def save_recovery(epoch, next_start, epoch_rng, train_loss, elapsed, rng=None):
+        recovery.save(net, opt, schedule, dict(epoch=epoch, next_start=next_start,
+            epoch_rng=epoch_rng, train_loss=train_loss, elapsed=elapsed,
+            steps=completed_steps, rows=completed_rows, history=list(history)), rng=rng)
+
+    def yield_recovery(epoch, next_start, epoch_rng, train_loss, elapsed, rng=None):
+        if recovery.requested:
+            save_recovery(epoch, next_start, epoch_rng, train_loss, elapsed, rng)
+            print(json.dumps(dict(recovery='saved', steps=completed_steps, epoch=epoch)), flush=True)
+            metrics.update(phase='yielded', step=completed_steps, rows=completed_rows, epoch=epoch)
+            metrics.close()
+            recovery.close()
+            raise SystemExit(143)
+
     metrics.update(phase="training")
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(first_epoch, args.epochs + 1):
         epoch_started = time.perf_counter()
+        partial = restored if restored and epoch == first_epoch else None
+        elapsed_before = partial['elapsed'] if partial else 0.0
         metrics.update(phase="training")
         net.train()
-        perm = train_idx[torch.randperm(len(train_idx))]
-        train_loss = 0.0
-        for start in range(0, len(perm), args.batch_size):
+        perm, epoch_rng = epoch_permutation(train_idx, partial['epoch_rng'] if partial else None)
+        train_loss = partial['train_loss'] if partial else 0.0
+        next_start = partial['next_start'] if partial else 0
+        for start in range(next_start, len(perm), args.batch_size):
+            yield_recovery(epoch, start, epoch_rng, train_loss, elapsed_before+time.perf_counter()-epoch_started)
+            if completed_steps >= steps:
+                break
             loss, _ = batch_loss(perm[start:start + args.batch_size], True)
             if step_observer is not None:
                 step_observer(completed_steps + 1, float(loss.detach()))
@@ -836,22 +872,34 @@ def main(*, step_observer=None) -> None:
             completed_steps+=1
             completed_rows += len(perm[start:start + args.batch_size])
             metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
+            next_start = min(start+args.batch_size, len(perm))
+            yield_recovery(epoch, next_start, epoch_rng, train_loss, elapsed_before+time.perf_counter()-epoch_started)
             if completed_steps>=steps:
                 break
         metrics.update(phase="validation")
         net.eval()
+        validation_rng = recovery.rng_state() if recovery.path else None
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
         # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
         with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
+            parts = []
+            for chunk in val_idx.split(args.validation_batch_size):
+                parts.append((len(chunk), *batch_loss(chunk, False)))
+                yield_recovery(epoch, next_start, epoch_rng, train_loss,
+                               elapsed_before+time.perf_counter()-epoch_started, validation_rng)
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
         history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": float(vl),
-                        **vs, "seconds": time.perf_counter() - epoch_started})
+                        **vs, "seconds": elapsed_before+time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
+        save_recovery(epoch+1, 0, None, 0.0, 0.0)
+        if recovery.requested:
+            metrics.close()
+            recovery.close()
+            raise SystemExit(143)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)
             torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
@@ -860,9 +908,11 @@ def main(*, step_observer=None) -> None:
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
-                                                       "load_seconds": load_seconds, "data_memory": memory}, indent=1))
+                                                       "load_seconds": load_seconds, "data_memory": memory,
+                                                       **({"recovery_resumes": recovery.resumes} if recovery.path else {})}, indent=1))
     metrics.update(phase="complete")
     metrics.close()
+    recovery.close()
     print(f"wrote {args.out} ({time.time() - started:.0f}s)")
 
 

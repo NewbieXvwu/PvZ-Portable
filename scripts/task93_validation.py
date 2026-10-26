@@ -24,6 +24,8 @@ ENGINE = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build4/pvz-porta
 VALUE = Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt')
 INCUMBENT = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent')
 MEMORY_BYTES = None  # explicit admission override for a dose run measured on the same corpus shape
+RECOVER_TRAINING = False
+TRAIN_NICE = 10
 LOCK_FD = None
 QC_STATE = Path.home()/'pvz-logs/curriculum_state.json'
 sys.path[:0] = [str(ROOT/'python'), str(ROOT/'scripts')]
@@ -108,18 +110,20 @@ def complete_evaluation(games, task, model):
 def complete_pack(recipe):
     import numpy as np
     from pvz_recipe import training_row_options
-    from pvz_training_pack import archive_fingerprint, pack_options, pack_path
+    from pvz_training_pack import pack_options
     data = Path(recipe['data'])
     options = training_row_options(recipe)
     options.pop('source_weight', None)
-    options = pack_options(**options, sources=archive_fingerprint(data, set(recipe['labels'])))
-    path = pack_path(data, options)
-    if not path.exists():
-        return False
-    with np.load(path, allow_pickle=False) as stored:
-        if json.loads(str(stored['meta'])) != options:
-            raise ValueError('pack row contract differs')
-        return all((path.parent/str(segment)).is_file() for segment in stored['segments'])
+    # The trainer itself checks raw source fingerprints. Do not traverse tens of
+    # thousands of archives a second time before letting it start.
+    for path in sorted((data/'packs').glob('*.npz')):
+        with np.load(path, allow_pickle=False) as stored:
+            meta = json.loads(str(stored['meta']))
+            if meta != pack_options(**options, sources=meta['sources']):
+                continue
+            if all((path.parent/str(segment)).is_file() for segment in stored['segments']):
+                return True
+    return False
 
 
 def status(phase, **extra):
@@ -146,6 +150,8 @@ def run(command, name, *, gpu=False):
     environment = {**os.environ, 'PVZ_NO_POPUP': '1', 'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'}
     if not gpu:
         environment['CUDA_VISIBLE_DEVICES'] = ''
+    elif RECOVER_TRAINING:
+        environment['PVZ_TRAIN_RECOVERY'] = str(DATA/name.removeprefix('train_')/'student/recovery.pt')
     with (DATA/f'{name}.log').open('a') as log:
         child = subprocess.Popen(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, env=environment,
                                  pass_fds=() if LOCK_FD is None else (LOCK_FD,))
@@ -161,7 +167,8 @@ def run(command, name, *, gpu=False):
                     child.wait()
                 with (DATA/'preemptions.jsonl').open('a') as record:
                     record.write(json.dumps(dict(phase=name, training_pid=child.pid,
-                        reason='yielded to QC', time=time.time(), complete_model=False))+'\n')
+                        reason='yielded to QC', time=time.time(), complete_model=False,
+                        recovery_available=RECOVER_TRAINING and Path(environment['PVZ_TRAIN_RECOVERY']).is_file()))+'\n')
                 raise QCPreempted(f'{name}: yielded to QC; no completed model claimed')
             time.sleep(5)
         if child.returncode:
@@ -190,7 +197,7 @@ def train_seed(seed):
         if any((folder/'student'/name).exists() for name in ('model.pt', 'metrics.json')):
             raise ValueError('uncertified training output requires verification before retraining')
         try:
-            training_pid = run(['nice', '-n', '10', sys.executable,
+            training_pid = run(['nice', '-n', str(TRAIN_NICE), sys.executable,
                 str(ROOT/'scripts/train_rollout_policy.py'),
                 '--recipe', str(folder/'recipe.json')], f'train_seed_{seed}', gpu=True)
         except QCPreempted as error:
@@ -202,12 +209,16 @@ def train_seed(seed):
             raise ValueError('incomplete training history')
         proof = dict(model_sha256=sha(folder/'student/model.pt'),
                      recipe_sha256=sha(folder/'recipe.json'), epochs=12, training_pid=training_pid)
+        if RECOVER_TRAINING:
+            proof['recovery_resumes'] = metrics.get('recovery_resumes', 0)
         telemetry = Path.home()/f'pvz-logs/metrics/train_rollout_policy-{training_pid}.jsonl'
         if telemetry.exists():
             samples = [json.loads(line) for line in telemetry.read_text().splitlines()]
             proof.update(observed_peak_rss_bytes=max(row.get('rss_bytes') or 0 for row in samples),
                          rss_telemetry_sha256=sha(telemetry))
         (folder/'trained.json').write_text(json.dumps(proof, indent=2)+'\n')
+        if RECOVER_TRAINING:
+            (folder/'student/recovery.pt').unlink(missing_ok=True)
 
 
 def experiment(prepare='frozen'):
@@ -286,9 +297,12 @@ def main():
     parser.add_argument('--prepare', choices=('frozen', 'expand'), default='frozen')
     parser.add_argument('--memory-bytes', type=int,
                         help='admission floor for this run (default: this root\'s measured peak + 15%%, else 16 GiB)')
+    parser.add_argument('--recover-training', action='store_true', help='preserve optimizer progress when yielding to QC')
+    parser.add_argument('--train-nice', type=int, choices=range(0, 20), default=10)
     args = parser.parse_args()
-    global MEMORY_BYTES
+    global MEMORY_BYTES, RECOVER_TRAINING, TRAIN_NICE
     MEMORY_BYTES = args.memory_bytes
+    RECOVER_TRAINING, TRAIN_NICE = args.recover_training, args.train_nice
     DATA = args.root
     DATA.mkdir(parents=True, exist_ok=True)
     with (DATA/'validation.lock').open('a') as lock:
