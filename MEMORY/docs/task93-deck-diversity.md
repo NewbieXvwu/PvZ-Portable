@@ -160,7 +160,15 @@
   `task93_validation.py` 增加 `--root` / `--prepare expand`，其余流程（qc 让行、内存准入、12 轮回执、
   384 局评估、配对比较）原样复用。判据三条已预登记；下一步按预登记跑 seed1/2 训练与评估。
 
-## 问题
+- 2026-10-26 CodeBuddy 接手（Codex 额度用尽后第二次换手）：现场核实 expand 档 seed1 **训练已死在第 6 轮之后**——
+  控制器 pid 914256 与子进程 916578 均不存在，系统里没有任何 `train_rollout_policy.py`；`dmesg` 无 OOM 记录；
+  `seed_1/student/` 只有 `recipe.resolved.json` 与 `source_rows.json`，没有 `model.pt` / `metrics.json` / `trained.json`。
+  因此**不能算完成、也没有可续的检查点**（训练器不存中间模型）。6 轮日志已另存为 `train_seed_1.attempt1.log`
+  （第 6 轮 1817 秒，对比第 2–3 轮 230–237 秒，说明当时有明显资源争用；但无 OOM 证据，死因未定）。
+- 2026-10-26 CodeBuddy：用**同一冻结配方、同一打包文件**（`4197e0ba5f6e919d`，17,132,763 行）重启流水线，
+  不重采集、不改配方、不改判据。准入内存显式给 12 GiB：该 root 没有 `trained.json` 实测峰值，
+  默认 16 GiB 在当前 12–13 GB 可用内存下永远无法准入；依据是 144 局档实测峰值 11.29 GiB（语料比本档小 0.7%）
+  与调度器既有的 12 GiB 下界。重启后 seed1 第 1 轮已起（child 936571），本任务无游戏进程。
 
 ## 问题
 
