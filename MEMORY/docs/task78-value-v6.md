@@ -132,6 +132,9 @@
 
 - 2026-10-26 11:03 Codex资源调度修正：任务书10GiB要求针对GPU训练；当前两CPU采集任务的Python/游戏进程VmHWM之和实测2.24GiB。保留resume8整批恢复门10GiB，后续CPU工作项准入改为8GiB，低于8仍以原资源让位码停止排新任务；GPU训练仍10GiB/一小时，最多2游戏、nice19、qc优先。只改ignored的`roof_collect5.sh`一处资源比较，保存旧包装及前后SHA到`cpu_resource_policy.json`，没有重启现有采集或改模型/引擎/标签/统计阈值；[当前回执](task78-stage-status.json)记录测量与策略。
 
+- 2026-10-26 15:10（CodeBuddy 接手）：**独立屋顶 k0 导出失败的真因已定位并修复**。task78_export.py 在 archive_15 root_1020 报 root engine state differs from replay。核对 72 个 k0 任务：18 个不符（6 档案 × 3 视界），**全部是每档案的第二个 root**。先排除引擎不确定性——同一档案用未改引擎连续重放两次，335/1020 两个 root 的私有状态 SHA 逐位相同（62864767…），与冻结 replay 一致。因此差异来自采集器本身：同一进程里第一个 root 的搜索留下的隐藏状态（SNAPSHOT 不覆盖）污染了之后的前缀重放。采集器改为**每个 root 开一个新引擎、从头重放前缀**（root 内的标签流程、决策种子、身份字段一律不变）；44 项 task78 测试通过，提交 c624ca51 并推送。受影响 6 档案（15/17/19/21/22/23）原标签整目录移到 ignored 的 roof_truth/labels_before_rootfix/，正在用新采集器重采 18 个任务；同时用未受影响的 archive_08 复采比对，验证旧标签在新代码下是否逐字节可复现（决定是否要整批重采）。
+- 2026-10-26 15:10：task78_roof_truth.py sources 已生成 k1/k2 的冻结源清单（与 k0 同 24 档案、同 48 root，只换 seed_base 78410000/78420000 与 common_future_index），training_eligible=false 不变。k1/k2 各自仍需按协议先跑 replay 验证再采集 72 个任务。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-26 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。k0/L41八世界24任务齐且原始链与跨视界身份核验通过；L42由`resume8.py`继续调度，屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
