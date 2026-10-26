@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [6c-证据适用性，2026-10-26 19:15 CST] 核对门禁证据能否套用到 deploy14c 代码：`command_for` 在部署树与 cq 当前代码中**逐字节相同**（AST 源片段 SHA 一致）；`search_play.py` 与 `pvz_tasks.py` 的差异全部在 `deck_random` 分支（`deck_for_seed` 无该字段时提前返回原路径），四个生产清单（stage4 倍率、boss_l50、roof、fog）`deck_random` 出现次数均为 0。因此六族与 L50 的门禁命令、牌组与生产实际一致，build2 的门禁结论可直接用于部署；`select_student` / `train_rollout_policy` 不在引擎对局路径上。
+
 - [6b-代码基线复核，2026-10-26 19:05 CST] 发现生产代码在 16:15 已由 deploy14c 前移：`cq` 的 `scripts python recipes configs` 相对 deploy14fix `0b8dcc26` 恰好只差五个文件（curriculum_queue / pvz_tasks / search_play / select_student / train_rollout_policy），且五个 blob 与 `fd1a0b61` 逐一相同；`qc_setup.log` 记录 deploy14c 16:15:52 用该代码重启、引擎/面板/rates/state 未动。原脚本的`diff --quiet 0b8dcc26`守卫会因此拒绝部署，若照 deploy14 结构checkout则会把 deploy14c 撤掉。已改为只读断言：改动集必须恰好这五个文件、五个 blob 必须等于 `fd1a0b61` 的版本，不 checkout 代码；在真实 `cq` 上逐条验证通过。脚本仍只写未执行。
 
 - [3b-确定性完成，2026-10-26 18:46 CST] 六族正式任务确定性核验PASS：候选83aed3be在6/6族（每族8独立进程+同进程4次reset，0/60/660tick）均为1条哈希线且两模式一致；旧引擎同法6/6族不稳定（多进程2–4种、同进程1–2种）。deck由A2清单按地形推导（pool含16、roof含33、fog含16）。证据`artifacts/task95/state_hash_suite_build2.json`，汇总写入`MEMORY/docs/task95-engine-gate.json`的`six_family_hash_suite`。
