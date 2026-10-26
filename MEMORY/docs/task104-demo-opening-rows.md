@@ -190,8 +190,10 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/demorows
 
 [task104-training-inputs.json](task104-training-inputs.json) 冻结 r11 配方与来源报告哈希、348 个共有段的哈希、A/B 索引和四份训练配方。原 r11 索引已被生产裁剪，按原配方与不变段重建，恢复相同索引键及来源行数。26 份示范的实际 `source_row` 与导出元数据逐项相同，索引哈希、种植数与全部行权重 1 均通过。A 为 15,278,702 训练行 / 1,704,229 验证行，55,773 个种子。B 为 15,305,552 训练行 / 1,709,421 验证行，55,787 个种子。两臂完整训练及验证种子列表在台式机 `artifacts/task104/split_a.json` / `split_b.json`，哈希记在冻结文件。
 
-私有 `build/pvz-portable` 已改指向台式机现成的 `hashdet/build/pvz-portable`，SHA256 为 `5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f`。使用该引擎，`python.test_human_demo.HumanDemoTest` 三项在 19.236 秒内全部通过。没有修改引擎源码或 qc/cq 的二进制，未放宽哈希校验。后续四模型评估统一使用此私有入口。
+私有 `build/pvz-portable` 已复制并冻结台式机现成的 `hashdet/build/pvz-portable`，SHA256 为 `5e890b3a392c343478e0db0633bd47104e2e94a33b802f8cbd023e9b1536102f`。使用该引擎，`python.test_human_demo.HumanDemoTest` 三项在 19.236 秒内全部通过。复制后再次核对哈希相同，入口为独立文件，其他工作树后续重建不影响本实验。没有修改引擎源码或 qc/cq 的二进制，未放宽哈希校验。后续四模型评估统一使用此私有入口。
 
 仅检查内存的旧 `t104` 等待器已停用，改用 `scripts/task104_train.py`，同时检查训练进程、GPU 与内存，运行期间复用 `dagger_experiment_runner` 的暂停/恢复守卫。启动命令为 `tmux new-session -d -s task104-train '/home/newbiexvwu/.venvs/ml/bin/python3 -u scripts/task104_train.py'`，工作目录为上述台式机私有树。四份配方与预登记不变。
 
 评估摘要新增每个游戏种子的胜负，完成记录须与面板种子集合及数量相同。判定器复用 `value_widen_ab.paired`，同时输出屋顶及非屋顶逐关、逐训练种子的 gain/harm，以及两次训练结果的范围。11 项面板与判定测试通过，原四条数值判据保持不变。
+
+训练后的 `task104-eval` 会话已排队：等待本任务四次训练结束，确认四个检查点均存在后，按顺序运行屋顶 384 局、非屋顶 608 局，再生成 `artifacts/task104/verdict.json`。评估统一禁用 CUDA，最多两个游戏进程，完整输出在 `artifacts/task104/logs/eval_pipeline.log`。任一步失败即停止后续命令，实际成绩仍待运行产生。
