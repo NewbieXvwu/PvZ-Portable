@@ -226,7 +226,16 @@ TASK96_EPOCHS=8 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-s
 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_scale_probe.py prepare
 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_scale_probe.py run
 
-# 全量控制（348 段）：当前内存状态下会退化到 10 s/步，别在 MemAvailable < 12 GiB 时启动
+# 分歧定位（30 段子集；各约 1–3 分钟）
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_localize.py run
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_grad_probe.py run
+
+# 算子层微探针与单算子开销（各几秒 GPU）
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_embedding_probe.py
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_embedding_shapes.py
+/home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_det_cost.py
+
+# 全量控制（348 段）：内存 < 14 GiB 或 qc 训练在跑时不要启动，会退化到 10 s/步
 /home/newbiexvwu/.venvs/ml/bin/python3 -B /home/newbiexvwu/PvZ-search/.claude/worktrees/repro/scripts/task96_full_pack.py prepare
 ```
 
