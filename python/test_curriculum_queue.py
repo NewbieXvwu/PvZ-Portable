@@ -1023,3 +1023,18 @@ class DemoStartCellsTest(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class WorkerProbeFloorTest(unittest.TestCase):
+    def test_implausibly_small_probe_falls_back_to_default(self):
+        import curriculum_queue as queue
+        args = SimpleNamespace(log=Path(tempfile.mkdtemp()) / 'log')
+        measure, memory = queue.measure_worker_bytes, queue.mem_available_bytes
+        queue.mem_available_bytes = lambda: 16 * queue.GIB
+        try:
+            queue.measure_worker_bytes = lambda _args, _item: 20 * 1024 * 1024
+            self.assertEqual(queue.startup_worker_estimate(args, [dict()]), queue.DEFAULT_WORKER_BYTES)
+            queue.measure_worker_bytes = lambda _args, _item: queue.GIB // 2
+            self.assertEqual(queue.startup_worker_estimate(args, [dict()]), queue.GIB // 2)
+        finally:
+            queue.measure_worker_bytes, queue.mem_available_bytes = measure, memory
