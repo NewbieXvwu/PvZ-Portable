@@ -120,7 +120,7 @@ deploy4 引擎 SHA `16989f23`，始终最多 2 游戏进程）：
 数值帧在 `artifacts/task93/frames`，复核统计及逐族记录 SHA 在 ignored
 `artifacts/task93/collection_audit.json`。这批训练段胜率不替代前面独立冷启动结果。
 
-（训练、实际行占比与配对评估结果待填。）
+（两种子汇总及最终结论待填。）
 
 打包已完成：`training_frames/packs/42026737724281f9.npz`，**仅新建3份分片，复用348份旧分片**。
 总行数17,012,427；旧行数16,982,931，348标签的保留行数和归档数与A逐标签全等。
@@ -139,6 +139,26 @@ ignored `artifacts/task93/pack_row_audit.json`。seed1已进入训练，seed2及
 seed1第6轮曾因另一实验的两个单轮训练并发、swap耗尽而两次SIGSTOP让行，分别699/310秒、合计1009秒；
 对方各自完成后均已SIGCONT同一训练进程，优化步连续增长。模型及优化器状态保留，没有重训；
 训练日志的墙钟耗时包含这些资源等待。
+
+seed1已完成12轮、89,772优化步；模型SHA `e9f2cb8f093afc67baa5c239d065b99b60b3f675569052f27fb5abf17193e381`，
+模型内配方SHA与冻结配置相符，`seed=1`、`init=None`、历史1–12轮齐全，参数全为有限值。
+最终验证损失3.60139。heldout与d7对照均已完成192终局，逐种子和任务契约严格匹配：
+
+| seed1对局集 | 新模型 | A | D2 | r11 |
+|---|---:|---:|---:|---:|
+| heldout | **137/192** | 124/192 | 169/192 | 166/192 |
+| d7对照 | **174/192** | 172/192 | 178/192 | 168/192 |
+
+seed1相对r11：heldout净−29局、−15.10pp，配对95%区间[−23.08,−6.92]pp，
+gain/harm=19/48，双侧McNemar p=0.000522；d7对照净+6局、+3.125pp，
+区间[−3.42,+9.70]pp，gain/harm=23/17，p=0.4296。
+相对A的heldout净+13局，p=0.1875，未显示显著改善；相对D2净−32局，p=0.0000773。
+这些为未做多重校正的逐模型配对统计。原始来源、SHA和完整表在 ignored
+`artifacts/task93/seed_1/interim_comparison.json`。
+
+首个种子已低于166，因此本次不能满足预登记“两个种子都≥166”的接入支持判据。
+仍须完成seed2以报告均值和样本离散程度，不能据此重抽seed1、改门槛或单看对照持平便宣布改善。
+seed2当前尚未训练，流水线正等待内存余量；无qc训练冲突。
 
 2026-10-26 验证准备：`scripts/task93_prepare_training.py --baseline-recipe
 /home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/recipe.json
