@@ -1,0 +1,46 @@
+{
+ "schema": "task104_ab_corpus_verify_v1",
+ "base_round": "round_000011",
+ "base_recipe_sha256": null,
+ "arm_a": {
+  "index": "7d15b915a2192805.npz",
+  "rows": 16982931,
+  "segments": 348
+ },
+ "arm_b": {
+  "index": "304f0c00f0edf7ae.npz",
+  "rows": 17014973,
+  "segments": 366
+ },
+ "delta_rows": 32042,
+ "demo_segments": 18,
+ "demo_rows": 32042,
+ "shared_segments": 348,
+ "shared_segments_with_differing_bytes": 0,
+ "option_keys_that_differ": [
+  "labels",
+  "sources",
+  "label_weight"
+ ],
+ "demo_decisions": {
+  "human": 15419,
+  "llm_gpt_pro": 16623
+ },
+ "source_row_reports": {
+  "round_000011": {
+   "labels": 348,
+   "rows": 16982931,
+   "demo_labels": 0
+  },
+  "round_000015": {
+   "labels": 415,
+   "rows": 17883072,
+   "demo_labels": 0
+  },
+  "round_000019": {
+   "labels": 497,
+   "rows": 18598230,
+   "demo_labels": 0
+  }
+ }
+}
