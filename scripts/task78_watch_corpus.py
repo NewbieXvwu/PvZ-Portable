@@ -47,13 +47,13 @@ def main():
     args = parser.parse_args()
     while True:
         if STOP.exists():
-            print("STOP file present; leaving the watch loop")
+            print("STOP file present; leaving the watch loop", flush=True)
             return 0
         ready, detail = corpus_ready()
         if ready:
-            print("CORPUS_READY; starting the formal path")
+            print("CORPUS_READY; starting the formal path", flush=True)
             return run_formal()
-        print("CORPUS_MISSING %s" % time.strftime("%Y-%m-%dT%H:%M:%S"))
+        print("CORPUS_MISSING %s" % time.strftime("%Y-%m-%dT%H:%M:%S"), flush=True)
         if args.once:
             print(detail)
             return 1

@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T23:39:48.845334+00:00",
+ "at_utc": "2026-10-26T23:40:27.114806+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -903,11 +903,11 @@
    "worlds": 49
   },
   "watcher": "scripts/task78_watch_corpus.py",
-  "watcher_sha256": "f71a562a46b8c0417ca6fac1a4b2a793216a997b8c0c11671aade8a4a9647dc7",
-  "watcher_pid": 1118300,
-  "watcher_handle": "fVOuoI",
+  "watcher_sha256": "67cc688635994c5486fcf02b98a2d23c2522b4a5385baabd295bee6a94a1833c",
+  "watcher_pid": 1118545,
+  "watcher_handle": "hYwjOc",
   "watcher_log": "artifacts/task78/corpus_watch.log",
   "watcher_stop": "touch artifacts/task78/corpus_watch.stop",
-  "watcher_behaviour": "polls the acceptance check every 600 s; on success runs task78_formal_run.py once"
+  "watcher_behaviour": "polls the acceptance check every 600 s with unbuffered logging; on success runs task78_formal_run.py once"
  }
 }
