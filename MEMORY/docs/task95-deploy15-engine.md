@@ -45,4 +45,10 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 - [6] `~/pvz-logs/qc_deploy15.sh` 已写（只写未执行）：结构照 qc_deploy14.sh，仅换引擎（ENGINE_SHA 07703a57…，preflight 校验 `artifacts/task95/gate/gate_evidence.json` pass）；代码 REV 7722c0d1、469 任务面板、teacher_rates 全部沿用 deploy14，回滚目标改为 deploy14（build5 76ff36dc）。
 - [3-探针] `scripts/task95_state_hash_probe.py`（新增）：同任务（L7 seed30000）8 个独立进程 reset + 2 个等待点、另加同进程连续 4 次 reset。**新引擎：多进程 8/8 全同、同进程 4/4 全同（各 1 种哈希）**；旧引擎 76ff36dc 对照：多进程 8 次 4 种哈希线、同进程 4 次 4 种——task82 之前的不稳定完整复现，task82 效果确认。证据 `artifacts/task95/state_hash_probe.json`。
 
+- [4] 吞吐 ABBA 实测**未达标**，两次独立测量一致：首跑（12:41，原 A4 工作目录）16 对中位 old/new **0.9477**；重跑（15:20–15:56，新目录 `artifacts/task95/abba2/`，已确认每局都是重新跑的，不是复用旧记录）中位 **0.9688**（new/old 1.0322，min 0.846 / max 1.127）。两次均 <0.98，16/16 局决策数相同。证据 `artifacts/task95/throughput_abba.json`、`artifacts/task95/abba2/throughput_abba.json`。
+- [4-归因] 排除源码回归：逐函数对比两引擎的机器码大小，游戏代码逐项相同（`Board::Update` 0xa25 相同、`Plant::Update` 0x1367 相同、`RunEnvironment` 0x31b7→0x31ed、`Zombie::Update` 0xde3→0xac8），mimalloc 159 个符号逐个同尺寸。差异在**构建配置**：`/usr/local/lib/libopenmpt.a`（10-25 17:02 新装）让 `find_library` 选中静态 libopenmpt，候选 68.7 MB / .text 4.55 MB，deploy14 是 10.4 MB / 2.48 MB，且候选不再 `NEEDED libopenmpt.so.0`。bench 引擎净吞吐（低负载时段 8 对）old 232 688 / new 235 859 ticks·CPU-s⁻¹，说明慢的部分来自负载下的布局/内存足迹，不是每 tick 的指令数。
+- [2b] 按 deploy14 的链接配置重建对照候选（build2 + 显式 `-DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so`，PGO 两阶段同 build_pgo.sh 流程，profile 目录 `artifacts/perf/pgo2`），构建中；结果与是否替换候选见下一条。
+
 ## 问题
+
+- **吞吐差 3–5%，两次 ABBA 都不过 0.98。** 已定位到构建配置（静态 libopenmpt 把二进制从 10.4 MB 撑到 68.7 MB），不是 task82/task85 的源码行为；处理办法是照 deploy14 的共享库链接重建，重建后必须重跑六族逐位门禁与 L50 才能算候选。原始 07703a57 仍留档，不覆盖。
