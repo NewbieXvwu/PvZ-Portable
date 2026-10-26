@@ -27,6 +27,10 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [3b-确定性完成，2026-10-26 18:46 CST] 六族正式任务确定性核验PASS：候选83aed3be在6/6族（每族8独立进程+同进程4次reset，0/60/660tick）均为1条哈希线且两模式一致；旧引擎同法6/6族不稳定（多进程2–4种、同进程1–2种）。deck由A2清单按地形推导（pool含16、roof含33、fog含16）。证据`artifacts/task95/state_hash_suite_build2.json`，汇总写入`MEMORY/docs/task95-engine-gate.json`的`six_family_hash_suite`。
+
+- [6-定稿，2026-10-26 18:47 CST] `scripts/qc_deploy15.sh`切到最终候选build2：`ENGINE`指向`pvz-portable-build2`、`ENGINE_SHA` 83aed3be，前置检查改读`gate_b2/gate_evidence.json`、`abba3/throughput_abba.json`，并新增六族哈希suite断言（pass、6族stable、引擎路径一致）。按脚本参数单独运行前置Python块通过（只读，未执行部署），两份脚本`bash -n`通过且内容一致，已同步`~/pvz-logs/qc_deploy15.sh`；**仍只写未执行**。
+
 - [5完成，2026-10-26 18:45 CST] 候选83aed3be在boss_l50_orig_eval上四种子85000000..3对拍PASS：4/4逐帧动作流、全部逻辑字段与终局一致（final_tick 5895–7720，均输但terminal=true）；候选Boss块存在、七个字段齐全（107–144帧/局，动作head/idle/summon），旧引擎无Boss块。证据`artifacts/task95/boss_l50.json`。
 
 - [3b完成，2026-10-26 18:44 CST] 候选83aed3be六族门禁96局完成：6族×老师/学生×8种子，完整动作流与逻辑字段0差异，PASS。旧臂36个games.jsonl与192个帧档经`diff -rq`确认与原始门禁副本逐字节一致后复用，未重跑；state_hash差96/96属task82初始化字段变化。证据`artifacts/task95/gate_b2/gate_evidence.json`。同一驱动已顺序启动L50四种子对拍。
@@ -70,5 +74,5 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 - [续做核实，2026-10-26 16:55 CST] 磁盘实际已有9对完整build2 ABBA记录及第10对new臂，已校验build2与归档均为83aed3be并续跑，不重采已有记录。静态/动态libopenmpt链接差异已经确认，但函数尺寸相同不能单独排除源码性能回归；最终仍以build2完整16对吞吐和独立逻辑门禁为准。
 
-- **剩余待办**：build2吞吐16对已通过；六族逐位门禁候选臂运行中（2进程），同一验证作业之后自动顺序运行L50四种子对拍。六族确定性补充核验也已排入，等前述作业退出后串行1引擎自动运行。核对全部实际结果后更新B9、结论指纹与qc_deploy15.sh的候选SHA和证据路径，否则保持“候选不可部署”；脚本仍只写不执行。
+- **待办已清空**：build2（83aed3be）六族96对0差异、L50四种子、六族哈希suite、16对吞吐全部通过；B9、结论指纹与`qc_deploy15.sh`的候选SHA/证据路径均已切到build2。脚本仍只写未执行，等主控决定部署窗口。
 - **吞吐差 3–5%，两次 ABBA 都不过 0.98。** 已定位到构建配置（静态 libopenmpt 把二进制从 10.4 MB 撑到 68.7 MB），不是 task82/task85 的源码行为；处理办法是照 deploy14 的共享库链接重建，重建后必须重跑六族逐位门禁与 L50 才能算候选。原始 07703a57 仍留档，不覆盖。
