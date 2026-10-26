@@ -118,6 +118,12 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 **新进程重验旧示范在这台机器上不可靠（既有问题，非本分支引入）。** `python.test_human_demo.HumanDemoTest` 的三个真实引擎用例在 HEAD 与基点 144a7dce 上都以 `demonstration initial state hash differs` 失败；独立复现显示同一进程内第二次 reset 偶发给出不同初始哈希，而两次独立进程的 `STATE_BYTES` 全量转储逐字节相同。因为 qc 的起点格要求档案 `verified`，这意味着「录制机之外、或同一进程里重跑 verify」可能失败；本次不修（修它要动引擎的哈希面，超出 task104 范围），示范行的导出与训练不受影响。
 ### 训练启动（2026-10-26 18:23）
 
+**台式机隧道再次断线，剩余工作全部卡在这台机器上（2026-10-26 Mac 09:34 起）。** Mac 侧轮询 `ssh -p 22222 newbiexvwu@127.0.0.1` 从 09:34 到 10:02 连续失败：TCP 能连上（UU 远程在本机 `127.0.0.1:22222` 有监听）但等不到 SSH banner，说明台式机那端关机、睡眠或 UU 客户端掉线，不是本仓库或密钥的问题。局域网 192.168.0.112 / 114 的 22 端口能连但立即关闭，没有可用密钥通路。
+
+影响面：四次训练、384 局屋顶、608 局回归、判定全部只能在台式机上跑。Mac 侧无 r11 语料——`artifacts/` 下 62,285 个 npz 全是评估分片，没有任何 `packs/segments` 目录；HF `realnewbiexvwu/pvz-agent-artifacts` 的 55 个文件里也没有 r11 段（只有 task69 的 transfer 目录）。所以「Mac 用 MPS 训练」这条路仍和之前记录的一样，需要先把约 10 GB 的 A/B 语料从台式机转出来，本身也依赖台式机先上线。
+
+现场准备：本机 `~/pvz-logs/t104_watch.sh` 每 30 秒探测一次，一通就把 `hostname` / `date` / `nvidia-smi` / `free` / `tmux ls` / `pgrep task104` / `pgrep train_rollout_policy` 落到 `~/pvz-logs/t104_watch.log`，不写远端任何状态。台式机恢复后按「开训与评估的运行清单」逐条执行，先确认没有遗留 `gate_seed_inventory.py`，再按 GPU 与内存准入决定是否开训。
+
 台式机 18:19 恢复连接。先按主控要求核对遗留扫描：`gate_seed_inventory.py` 已无进程；GPU 上 deckvar 的 task93 expand 训练仍在跑（7.0 GB / 37%），等到 18:23 它结束、显存回到 4.5 GB / 0% 才开训，没有与 qc 或别人的训练抢卡。
 
 `tmux t104` 跑 `~/pvz-logs/t104_train.sh`，四个配方顺序训练。a_s1 已载入 **16,982,931 条决策 / 55,773 个种子 / 1,704,229 条验证行**，与 A 索引 `7d15b915a2192805` 的行数逐位相同；`data_memory` 报 board 5.56 GB、scalar 1.85 GB、packet 1.19 GB。训练前数据层测试在台式机通过（`HumanDemoExportTest` + `test_recipe` 共 10 项）。
