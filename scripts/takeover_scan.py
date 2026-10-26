@@ -630,7 +630,9 @@ def update_test_expectations(test_path: Path, task_ids: list) -> bool:
     lines = text.splitlines(keepends=True)
     start = sum(map(len, lines[:target.lineno - 1])) + len(lines[target.lineno - 1].encode()[:target.col_offset].decode()) + 1
     inserted = ''.join(f"                                      {task_id!r},\n" for task_id in missing)
-    text = text[:start] + '\n' + inserted + ' ' * 38 + text[start:]
+    suffix = text[start:]
+    suffix = suffix[1:] if suffix.startswith('\n') else ' ' * 38 + suffix
+    text = text[:start] + '\n' + inserted + suffix
     ast.parse(text)
     test_path.write_text(text, encoding='utf-8')
     return True

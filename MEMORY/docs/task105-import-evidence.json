@@ -993,5 +993,33 @@
     "games": 8
    }
   }
- }
+ },
+ "scanned": 1,
+ "registered": 1,
+ "scan_games": 88,
+ "completed_scan_results": [
+  {
+   "task_id": "demo_roof_48_doom_m200_s81002031_a7adc1574be88",
+   "seed": 81002031,
+   "l50": 672,
+   "decisions": [
+    924,
+    756,
+    672
+   ],
+   "teacher_top_wins": 8,
+   "teacher_l50_wins": 5,
+   "student_l50_wins": 0,
+   "student_top_wins": 6,
+   "future_seed_start": 89000000,
+   "future_seed_count": 256,
+   "games": 88,
+   "result_sha256": "9ea61cf63539410b8761e402b721cee469ff2e0d6b862c7ac3c8d8368d778e85",
+   "snapshot_sha256": "cd871f9a1e45d4efd4ce071c1fd15474b4e4aa8f313a5cbf3342ac313ff76782",
+   "retry_idempotent": true,
+   "deployed": false,
+   "deployment_plan_sha256": "1cb57cf9b9bd26b7d91c54258381caa3cd43d248495b84daeadb1cfb1b5e16ef",
+   "cell_audit_sha256": "b87ca7026c694c221ba02f84338d21487ba42dc04e6fbbe4a07796f2da23bc73"
+  }
+ ]
 }
