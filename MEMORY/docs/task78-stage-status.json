@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T02:26:16.572498+00:00",
+ "at_utc": "2026-10-26T03:03:21.297168+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 25,
+  "completed_label_jobs": 32,
   "replay_completed_k": [
    0
   ],
@@ -422,5 +422,45 @@
   "engine_processes_started": 0,
   "missing_candidate_refused": true,
   "preflight_report_complete": false
+ },
+ "cpu_resource_policy": {
+  "at_utc": "2026-10-26T03:03:21.297168+00:00",
+  "scope": "CPU label collection resource admission; no statistical/model/engine change",
+  "observed_processes": [
+   {
+    "pid": 851334,
+    "name": "python3",
+    "rss_kib": 594640,
+    "peak_rss_kib": 594640
+   },
+   {
+    "pid": 851335,
+    "name": "python3",
+    "rss_kib": 599056,
+    "peak_rss_kib": 599056
+   },
+   {
+    "pid": 851365,
+    "name": "pvz-portable",
+    "rss_kib": 360624,
+    "peak_rss_kib": 578836
+   },
+   {
+    "pid": 851367,
+    "name": "pvz-portable",
+    "rss_kib": 356496,
+    "peak_rss_kib": 578124
+   }
+  ],
+  "sum_process_peak_rss_gib": 2.24176025390625,
+  "batch_resume_available_gib": 10,
+  "next_cpu_job_available_gib": 8,
+  "gpu_training_available_gib": 10,
+  "maximum_games": 2,
+  "nice": 19,
+  "live_controller_restarted": false,
+  "pre_change_wrapper_sha256": "21587af2908518f3e27dd4648d72f145ef6a09b98d4fb0380db757140495f342",
+  "post_change_wrapper_sha256": "6a154aaa5820c2c4b43429872f269b52780335385dcadf72364be8435da33b62",
+  "report_sha256": "9a715cce129d6eea32b765d54724a46d6b8ee9eb4e298d744dbd882ca12ba151"
  }
 }
