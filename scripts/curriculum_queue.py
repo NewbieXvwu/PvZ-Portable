@@ -531,11 +531,7 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
             seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
         archive = Path(start['archive'])
         archive = archive if archive.is_absolute() else ROOT / archive
-        # 起点格没有存档就跑不了：启动时就报，别等到组里 replay 才 FileNotFoundError。
-        if not (archive / 'meta.json').is_file():
-            raise ValueError(f'{task["task_id"]}: demo_start archive missing: {archive}')
-        if not json.loads((archive / 'meta.json').read_text()).get('verified'):
-            raise ValueError(f'{task["task_id"]}: demo_start archive is not verified: {archive}')
+        # Archive checks belong to planning: a bad cell must not abort qc startup.
         cells[task['task_id']] = dict(
             family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
             last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
@@ -885,12 +881,16 @@ class TrainingPipeline:
         with self.lock:
             return Path(self.args.rollout_policy)
 
+    @property
+    def gate_version(self):
+        return getattr(self.args, 'gate_version', GATE_VERSION)
+
     def evaluation_contract(self, job):
         source = getattr(self.args, 'promotion_panel', None)
         if source is None:
             source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
         return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
-                                  self.args.value, self.args.resource_dir, version=GATE_VERSION,
+                                  self.args.value, self.args.resource_dir, version=self.gate_version,
                                   seed_block=job.get('seed_block'))
 
     @retry_io
@@ -899,9 +899,9 @@ class TrainingPipeline:
         persisted job dict (never on the _run copy), so resumed and stale re-evaluations
         reuse the same block and the ledger is never double-spent. Pool exhaustion
         raises and closes the gate; seeds are never wrapped around and reused."""
-        if GATE_VERSION >= 2 and 'seed_block' not in job:
+        if self.gate_version >= 2 and 'seed_block' not in job:
             job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
-                                                         promotion_policy(GATE_VERSION)['pair_count']))
+                                                         promotion_policy(self.gate_version)['pair_count']))
         return job
 
     def _evaluate(self, job):
@@ -921,8 +921,8 @@ class TrainingPipeline:
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
-                   '--eval-units', str(units), '--gate-version', str(GATE_VERSION)]
-        if GATE_VERSION >= 2:
+                   '--eval-units', str(units), '--gate-version', str(self.gate_version)]
+        if self.gate_version >= 2:
             command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                         '--seed-ledger', str(self.args.seed_ledger)]
         started = time.time()
@@ -935,7 +935,7 @@ class TrainingPipeline:
                 raise ValueError('promotion certificate does not match the registered comparison')
         except Exception as error:
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
-            decision = dict(version=GATE_VERSION, approved=False, policy=promotion_policy(),
+            decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
             out.mkdir(parents=True, exist_ok=True)
             (out / 'error.json').write_text(json.dumps(decision, indent=2) + '\n')
@@ -1511,7 +1511,7 @@ class TrainingPipeline:
         promotion = report.get('promotion', {})
         current_contract = self.evaluation_contract(job)
         invalid = False
-        if (promotion.get('version') != GATE_VERSION or promotion.get('policy') != promotion_policy()
+        if (promotion.get('version') != self.gate_version or promotion.get('policy') != promotion_policy(self.gate_version)
                 or type(promotion.get('approved')) is not bool):
             invalid = True
         elif promotion.get('contract') != current_contract:
@@ -1524,7 +1524,7 @@ class TrainingPipeline:
         elif not any(reason.startswith('evaluation_error:') for reason in promotion.get('reasons', [])):
             invalid = not valid_certificate(promotion, current_contract, report.get('evaluation_directory'))
         if invalid:
-            promotion = dict(version=GATE_VERSION, approved=False, policy=promotion_policy(),
+            promotion = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                              contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
             report['promotion'] = promotion
             completed = Path(job['recipe']).parent / 'complete.json'
@@ -1609,11 +1609,21 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
             if not isinstance(seeds, list) or type(offset) is not int or offset < 0:
                 raise ValueError('invalid seeds/offset')
             manifest = str(manifests[task_id])
-            if start:
+            if start and offset + games <= len(seeds):
                 archive = cell['archive']
                 if not isinstance(archive, str):
                     raise ValueError('invalid archive')
-        except (KeyError, TypeError, ValueError) as error:
+                try:
+                    meta = read_json(Path(archive) / 'meta.json')
+                except FileNotFoundError:
+                    raise ValueError(f'configuration invalid: demo_start archive missing: {archive}') from None
+                if not meta.get('verified'):
+                    raise ValueError(f'configuration invalid: demo_start archive is not verified: {archive}')
+                demo_seed = meta['task']['seed']
+                if demo_seed not in tasks[task_id]['seeds']:
+                    raise ValueError(f'configuration invalid: demo_start seed {demo_seed} is outside task seeds')
+
+        except (OSError, KeyError, TypeError, ValueError) as error:
             changes.append(retire_cell(state, base, error))
             continue
         if offset + games > len(seeds):
@@ -1807,11 +1817,24 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             time.sleep(120)
 
 
+def set_gate_version(state: dict, version: int) -> None:
+    """A policy change may only cross a completed round with no old work in flight."""
+    previous = state.get('gate_version', 3)  # all pre-task113 states used v3
+    pending = any(job.get('status') != 'done' and not job.get('isolated')
+                  for job in state.get('training_jobs', []))
+    if version != previous and (state.get('completed_groups') or pending):
+        raise ValueError(f'gate v{previous} -> v{version} requires a round boundary and drained pipeline; '
+                         f'finish the current round with --gate-version {previous}')
+    state['gate_version'] = version
+
+
 def main() -> None:
     # task34: die after the workers and training, but before the WSL access path.
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
+                        help='promotion policy; change only after a complete round and pipeline drain')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
@@ -1872,9 +1895,9 @@ def main() -> None:
         parser.error('seed ledger paths must be absolute')
     try:
         probe = None
-        if GATE_VERSION >= 2:
-            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(GATE_VERSION)['pair_count'])
-        freeze_panel(json.loads(args.promotion_panel.read_text()), version=GATE_VERSION, seed_block=probe)
+        if args.gate_version >= 2:
+            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(args.gate_version)['pair_count'])
+        freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest)
@@ -1907,6 +1930,10 @@ def main() -> None:
     else:
         windows, offsets = init_from_runs(patterns, names)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
+    try:
+        set_gate_version(state, args.gate_version)
+    except ValueError as error:
+        parser.error(str(error))
     if args.dry_run:
         plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                    args.games_per_group, teacher)

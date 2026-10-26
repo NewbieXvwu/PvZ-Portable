@@ -333,7 +333,7 @@ def main():
     parser.add_argument('--eval-units', type=int, default=1,
                         help='concurrent search_play children (task73c); execution detail, '
                              'never part of the contract, outcomes are identical for any value')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3), default=GATE_VERSION,
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
                         help='1 = task49A fixed 64-pair panel; 2 = task73b fresh-seed 1536-pair panel; '
                              '3 = task73c fog/roof 1920-pair panel')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),

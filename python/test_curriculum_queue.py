@@ -859,13 +859,19 @@ class TrainingRestartTest(unittest.TestCase):
 class DemoStartCellsTest(unittest.TestCase):
     """task71：示范起点格——档位是起点决策号，未来随机流走 RESEED。"""
 
+    def setUp(self):
+        self.archive_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.archive_dir.cleanup)
+        self.archive = Path(self.archive_dir.name)
+        (self.archive / 'meta.json').write_text(json.dumps({'verified': True, 'task': {'seed': 42}}))
+
     BASE = 'demo_fog_33_cactus_snow_m200'
     LADDER = [800, 600, 400]
 
     def start_cell(self, mult_index=0, windows=None):
         return dict(family='demo_start', level=33, mult_index=mult_index, last_round=0,
                     windows=windows or {}, ladder=list(self.LADDER), task_id=self.BASE,
-                    archive='/archives/demo', seeds=[900 + index for index in range(6)])
+                    archive=str(self.archive), seeds=[900 + index for index in range(6)])
 
     def test_ladder_promotes_earlier_and_demotes_later(self):
         cells = {'start': self.start_cell(windows={'800': {'recent': [1] * 10, 'wins': 10, 'games': 10}})}
@@ -890,7 +896,7 @@ class DemoStartCellsTest(unittest.TestCase):
     def test_plan_round_slices_the_future_seed_block(self):
         state = dict(round=0, offsets={}, cells={self.BASE: self.start_cell()})
         manifests = {self.BASE: Path('/tmp/human_demo_tasks.json')}
-        plan, _ = plan_round(state, {}, NAMES, VALUES, manifests, budget=2, per_group=2)
+        plan, _ = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=2, per_group=2)
         self.assertEqual(len(plan), 1)
         item = plan[0]
         self.assertEqual((item['task_id'], item['demo_decision'], item['offset']), (self.BASE, 800, 0))
@@ -898,10 +904,10 @@ class DemoStartCellsTest(unittest.TestCase):
         self.assertEqual(item['label'], 'c1demofog33cactussnowm200s800')
         self.assertEqual(item['multiplier'], 800)             # 档位 = 起点决策号
         state['offsets'][self.BASE] = 5
-        plan, _ = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        plan, _ = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan[0]['future_seeds'], [905])       # 只剩一个未来种子
         state['offsets'][self.BASE] = 6
-        plan, changes = plan_round(state, {}, NAMES, VALUES, manifests, budget=1, per_group=1)
+        plan, changes = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan, [])
         self.assertNotIn(self.BASE, state['cells'])
         self.assertIn(self.BASE, state['retired_cells'])
@@ -952,13 +958,12 @@ class DemoStartCellsTest(unittest.TestCase):
             path.write_text(json.dumps(document))
             with self.assertRaises(ValueError):
                 load_demo_start_cells(path)
-            # 存档不在就没有起点可恢复：启动时就报，而不是组里 replay 才炸
+            # Missing archives are loaded as specs; planning retires the affected cell.
             document['tasks'][0]['demo_start']['decisions'] = self.LADDER
             document['tasks'][0]['demo_start']['archive'] = str(Path(tmp) / 'none')
             path.write_text(json.dumps(document))
-            with self.assertRaises(ValueError) as raised:
-                load_demo_start_cells(path)
-            self.assertIn('archive missing', str(raised.exception))
+            cells, _ = load_demo_start_cells(path)
+            self.assertIn(self.BASE, cells)
 
     def test_reconcile_leaves_panel_cells_byte_identical(self):
         tasks = {f'night_l{level}_train_n10q': dict(task_id=f'night_l{level}_train_n10q', level=level,

@@ -262,3 +262,46 @@ def test_twice_failed_background_snapshot_does_not_poison_next_round(tmp_path):
         p.close()
     assert s['training_jobs'][1]['status'] == 'done'
     assert a.rollout_policy == tmp_path / 'initial.pt'
+
+
+@pytest.mark.parametrize('problem', ['missing', 'wrong_seed', 'unverified'])
+def test_bad_demo_configuration_retires_only_its_cell_before_dispatch(tmp_path, problem):
+    archive = tmp_path / 'demo'
+    if problem != 'missing':
+        archive.mkdir()
+        (archive / 'meta.json').write_text(json.dumps(
+            dict(verified=problem != 'unverified', task=dict(seed=99))))
+    manifest = tmp_path / 'tasks.json'
+    manifest.write_text(json.dumps(dict(tasks=[dict(
+        task_id='bad', level=1, seeds=[42], demo_start=dict(
+            archive=str(archive), decisions=[100, 50], future_seeds=[900, 901]))])))
+    specs, manifests = q.load_demo_start_cells(manifest)
+    s = state()
+    s['cells']['bad'] = specs['bad']
+    tasks = dict(bad=dict(seeds=[42]), good=dict(seeds=[1, 2]))
+    manifests['good'] = manifest
+    jobs, changes = q.plan_round(s, tasks, {}, [1.], manifests, 4, 2)
+    assert [job['base'] for job in jobs] == ['good']
+    assert 'bad' in s['retired_cells'] and 'bad' not in s['cells']
+    assert 'configuration invalid' in s['cell_errors']['bad']
+    assert any('cell retired: bad:' in line for line in changes)
+    # A restart must leave the configuration error retired.
+    q.reconcile_start_cells(s, specs)
+    assert 'bad' not in s['cells']
+
+
+@pytest.mark.parametrize('pending', ['groups', 'background'])
+def test_gate_switch_requires_round_boundary_and_old_jobs_drained(pending):
+    s = state()
+    if pending == 'groups':
+        s['completed_groups'] = plan()
+    else:
+        s['training_jobs'] = [dict(round=1, status='queued')]
+    with pytest.raises(ValueError, match='round boundary'):
+        q.set_gate_version(s, 4)
+    assert 'gate_version' not in s
+    q.set_gate_version(s, 3)
+    s['completed_groups'] = []
+    s['training_jobs'] = [dict(round=1, status='done')]
+    q.set_gate_version(s, 4)
+    assert s['gate_version'] == 4
