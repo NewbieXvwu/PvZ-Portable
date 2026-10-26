@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T12:17:10.299212+00:00",
+ "at_utc": "2026-10-26T12:57:04.891015+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,11 +198,11 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 72,
+  "completed_label_jobs": 81,
   "replay_completed_k": [
    0
   ],
-  "collection_status": "collecting",
+  "collection_status": "stopped_leaf_history_mismatch",
   "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json",
   "first_completed_job_audit": {
    "at_utc": "2026-10-26T01:15:33.534439+00:00",
@@ -343,7 +343,8 @@
    "started_at_utc": "2026-10-26T10:18:45.310342+00:00",
    "nice": 19,
    "detached_session": true,
-   "previous_handle_backup": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle_before_run6.json"
+   "previous_handle_backup": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle_before_run6.json",
+   "live": false
   },
   "root_identity": {
    "method": "verified raw equality or matching masked state; compare replay masked digest across horizons/futures",
@@ -474,6 +475,56 @@
     "extra_audit_performed": false,
     "scored": false
    }
+  },
+  "export_reuse": {
+   "at_utc": "2026-10-26T12:41:18.157707+00:00",
+   "normal_export_success_log": "EXPORT_RETRY_OK attempts=0 before k1 entry 2026-10-26T20:36:34+08:00",
+   "export_sha256": "996c0d50fc829c79d48de2ec0981049e78a02947af7106dc973f6939fbaaf158",
+   "metadata_files": 2064,
+   "seal_and_lookup_seconds": 0.05872455198550597,
+   "helper_sha256": "8b7f6fc3b7a7c56f07fe6b42c6bb9cd8b27004a4bbb8dd8a3ed1d51a259da068",
+   "previous_wrapper_sha256": "aa982455c1c67b3c3d6d929d74545ce8d7f73f4cdee861b380373ab0a7091774",
+   "wrapper_sha256": "683bc179483e4da7a9c1bb86633179dea17422516f1fb4eab5662c3988875ea0",
+   "raw_label_scoring_unchanged": true,
+   "controller_restarted": false,
+   "targeted_tests_passed": 4,
+   "raw_directories_included": true,
+   "finalized_at_utc": "2026-10-26T12:57:04.891015+00:00"
+  },
+  "leaf_history_failure": {
+   "common_future_index": 1,
+   "archive_index": 2,
+   "horizon": 6000,
+   "root_frame": 605,
+   "candidate": 0,
+   "public_frame_equal": true,
+   "engine_state_equal": false,
+   "collector_stopped": true,
+   "probe_report": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/leaf_k1_a02_probe/report.json",
+   "probe": {
+    "root": 605,
+    "candidate": 0,
+    "decision_seed": 78410201,
+    "action": {
+     "type": "plant",
+     "packet": 1,
+     "col": 5,
+     "row": 0
+    },
+    "raw_equal": false,
+    "masked_equal": false,
+    "public_equal": true,
+    "differences": [
+     {
+      "path": "/hidden/reanimations",
+      "native_length": 82,
+      "replay_length": 120
+     }
+    ],
+    "wall_seconds": 2.8940743720158935,
+    "teacher_terminal_games": 0
+   },
+   "reconstruction_accepted": false
   }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
