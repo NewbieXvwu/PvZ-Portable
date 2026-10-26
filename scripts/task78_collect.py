@@ -20,7 +20,9 @@ from pvz_common import canonical_digest
 from task78_state import state_digest, verified_root_digest
 from task78_replay import equal, open_archive, physical
 from task78_student_context import initial_state, context_identity
-from value_teacher_feasibility import sample_root, stats_new, write_json
+from value_teacher_feasibility import stats_new, write_json
+from task78_native_labels import sample_root
+from task78_native_history import POLICY
 import search_play as teacher
 
 
@@ -73,7 +75,12 @@ def main():
         run = dict(pid=os.getpid(), started=time.time(), source_manifest_sha256=sha(source),
                    source=row, horizon=horizon, executable_sha256=sha(executable),
                    teacher_source_sha256=sha(ROOT/'scripts/search_play.py'),
-                   label_channel_sha256=sha(ROOT/'scripts/value_teacher_feasibility.py'))
+                   label_channel_sha256=sha(ROOT/'scripts/task78_native_labels.py'))
+        run.update(leaf_history_policy=POLICY,
+            legacy_label_helpers_sha256=sha(ROOT/'scripts/value_teacher_feasibility.py'),
+            native_history_helper_sha256=sha(ROOT/'scripts/task78_native_history.py'),
+            student_history_source_sha256=sha(ROOT/'python/pvz_student_observation.py'),
+            student_features_source_sha256=sha(ROOT/'python/pvz_rollout_policy.py'))
         models = dict(value=MAIN/'artifacts/value_net/v5/model.pt',
                       rollout_policy=MAIN/'artifacts/student/dw4i_s1/model.pt',
                       static_value=MAIN/'artifacts/hard/value_branch1/model.pt')

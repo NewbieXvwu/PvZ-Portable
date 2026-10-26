@@ -66,8 +66,11 @@ def seal(manifest, out_dir, export, offset):
     files.update(str(W / 'scripts' / name) for name in (
         'task78_export.py', 'task78_collect.py', 'task78_data.py', 'task78_state.py',
         'task78_student_context.py', 'search_play.py', 'value_teacher_feasibility.py',
+        'task78_native_history.py', 'task78_native_labels.py',
         'value_teacher_feasibility_report.py', 'value_widen_audit.py'))
     files.add(str(W / 'python/pvz_value_net.py'))
+    files.add(str(W / 'python/pvz_student_observation.py'))
+    files.add(str(W / 'python/pvz_rollout_policy.py'))
     files.add(str(Path(__file__).resolve()))
     saved = dict(request=request(manifest, out_dir, export, offset),
                  normal_export_complete=True, export_sha256=digest(export),

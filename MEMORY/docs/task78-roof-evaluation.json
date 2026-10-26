@@ -107,5 +107,55 @@
   "actual_root_pre_label_checks_retained": true,
   "required_label_jobs": 216,
   "full_downstream_export_and_scoring_retained": true
+ },
+ "native_history_amendment_20261026": {
+  "at_utc": "2026-10-26T13:24:49.366258+00:00",
+  "policy": "native_student_trace_v1",
+  "reason": "Parallel Python leaf replay differed in hidden prompt-text reanimations; actual native leaf and native input history are retained instead.",
+  "teacher_and_engine_unchanged": true,
+  "worlds_seeds_decks_and_horizons_unchanged": true,
+  "root_identity_mask_unchanged": true,
+  "native_leaf_snapshot_identity_checked": true,
+  "history_checks": "Native TRACE temporal-history and previous-action inputs compared as float32 bits once during collection; export binds proof and lossless compressed trace without repeating recovery.",
+  "action_context": "Only previous decision tick and accepted-plant flag are student inputs; unrecorded packet/cell actions are not fabricated.",
+  "source_sha256": {
+   "task78_collect.py": "34acd580b4c21fa49c3143e2b83327190d83bdd43c8c4dcf142f12a510bee662",
+   "task78_native_labels.py": "700f67cc2e1b39131dd196e8fc34d7156c609eb375d026480fe58f8cd7ddb741",
+   "task78_native_history.py": "0f3194687e73b38520f3e73725264848bc6a08154f73e6857fd7ee0289d8c10b",
+   "task78_export.py": "6c578cb9447b6f75121ceb4f3469b852c322dce933b6526ea7b77b0fc37ae2c5"
+  },
+  "probe": {
+   "wall_seconds": 4.3035811969893984,
+   "teacher_terminal_games": 0,
+   "native_snapshot_checks_passed": true,
+   "decisions": 117,
+   "compared_history_float32": 351,
+   "compressed_trace_bytes": 156279
+  },
+  "failed_job_preservation": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/native_history_preservation_run7.json",
+  "reused_terminal_candidates": 4,
+  "repaired_job": {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k1/labels/archive_02/h6000/complete.json",
+   "sha256": "fe43ff4f8872e3cc79c6445c6d819eaffc7e4c9467099093680eae120d860307",
+   "wall_seconds": 20.869337797164917
+  },
+  "targeted_tests_passed": 41,
+  "continuation": {
+   "pid": 991266,
+   "process_start_ticks": "29124877",
+   "script": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8.py",
+   "script_sha256": "ad637c701b22b582430a1c4d981792e5d1c08567d5e799fe9428b14eda671507",
+   "log": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_run7.log",
+   "started_at_utc": "2026-10-26T13:20:35.633532+00:00",
+   "nice": 19,
+   "detached_session": true,
+   "previous_handle_backup": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle_before_run7.json"
+  },
+  "completed_label_jobs": 84,
+  "by_future": {
+   "k0": 72,
+   "k1": 12,
+   "k2": 0
+  }
  }
 }

@@ -114,6 +114,19 @@ def test_export_audits_complete_raw_label_chain(label_fixture):
     assert len(rows) == 1 and len(hashes) == 4
 
 
+def test_native_history_channel_requires_its_trace_proof(label_fixture):
+    from task78_native_history import POLICY
+    row, replay, root = label_fixture
+    path = root.parent/'complete.json'
+    complete = json.loads(path.read_text())
+    complete['identity'].update(leaf_history_policy=POLICY,
+        legacy_label_helpers_sha256='frozen', native_history_helper_sha256='frozen',
+        student_history_source_sha256='frozen', student_features_source_sha256='frozen')
+    path.write_text(json.dumps(complete))
+    with pytest.raises(ValueError, match='native student history proof'):
+        export.audit_labels(0,2500,row,Path('/sources.json'),replay)
+
+
 def test_export_accepts_reproducible_mask_but_rejects_a_different_state(label_fixture):
     row,replay,root = label_fixture
     path=root/'root.json';record=json.loads(path.read_text())

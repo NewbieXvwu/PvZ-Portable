@@ -19,6 +19,7 @@ from task78_data import sha
 from task78_collect import paths
 from task78_student_context import context_identity, expected_histories, validate_root_history
 from task78_state import verified_root_digest
+from task78_native_history import POLICY, audit_record as audit_native_history
 from value_teacher_feasibility import write_json
 from value_widen_audit import seed_key
 
@@ -84,10 +85,22 @@ def audit_labels(index, horizon, row, manifest, replay):
     for name, value in expected.items():
         if identity.get(name) != value:
             raise ValueError(f'{directory}: wrong {name}')
-    for name in ('teacher_source', 'label_channel'):
-        filename = 'search_play.py' if name == 'teacher_source' else 'value_teacher_feasibility.py'
-        if identity[name+'_sha256'] != sha(ROOT/'scripts'/filename):
-            raise ValueError(f'{directory}: changed {name}')
+    if identity['teacher_source_sha256'] != sha(ROOT/'scripts/search_play.py'):
+        raise ValueError(f'{directory}: changed teacher_source')
+    native_history = identity.get('leaf_history_policy') == POLICY
+    channel = 'task78_native_labels.py' if native_history else 'value_teacher_feasibility.py'
+    if (identity.get('leaf_history_policy') not in (None, POLICY)
+            or identity['label_channel_sha256'] != sha(ROOT/'scripts'/channel)):
+        raise ValueError(f'{directory}: changed label_channel')
+    if native_history:
+        expected_sources = dict(
+            legacy_label_helpers_sha256=ROOT/'scripts/value_teacher_feasibility.py',
+            native_history_helper_sha256=ROOT/'scripts/task78_native_history.py',
+            student_history_source_sha256=ROOT/'python/pvz_student_observation.py',
+            student_features_source_sha256=ROOT/'python/pvz_rollout_policy.py')
+        if (identity.get('leaf_history_policy') != POLICY or any(
+                identity.get(k) != sha(p) for k,p in expected_sources.items())):
+            raise ValueError(f'{directory}: changed native history recovery sources')
     if set(identity['models']) != {'value', 'rollout_policy', 'static_value'}:
         raise ValueError(f'{directory}: missing frozen model identities')
     for name, value in identity['models'].items():
@@ -146,6 +159,8 @@ def audit_labels(index, horizon, row, manifest, replay):
                 required += ('engine_state',)
             if any(checks.get(k) is not True for k in required):
                 raise ValueError(f'{root_dir}: incomplete history/leaf validation')
+            if native_history:
+                artifacts.update(audit_native_history(record, root, root_dir))
             validate_income(record, record['leaf_frame']['tick'])
             trace = root_dir/f'candidate_{candidate}_teacher.jsonl'
             actions = [json.loads(line) for line in trace.read_text().splitlines()]
