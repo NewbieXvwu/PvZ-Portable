@@ -32,5 +32,7 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
   2. **task85 Boss 观测**：`EnvironmentRollout.cpp/.h` 新增 observation=6（v2boss）布局（棋盘 +4 Boss 空间通道=14、标量 +2=9），只在加载 observation=6 的网络时激活——生产网络全部 ≤5，行为不变；头部校验放宽 observation ≤6。`LawnApp.cpp` `WriteObservationBoss` 给 lean / v2 / 完整观测追加 `"boss":{...}` JSON 块（仅 L50 `GetBossZombie()` 非空时输出）；特权僵尸观测加增量字段 `summon_counter`（task81 投石车弹药，纯增量，Python 不校验版本号）。
   3. **main.cpp**：DEMO_INPUT 块纯缩进变化；新增 `DEMO_CLICK_PACKET` / `DEMO_CLICK_CELL` 测试缝（只在 demo && visible 会话生效，rollout/评估协议不用）。
   对六族门禁与全部现行任务的预期影响：逻辑零。
+- [2] PGO 两阶段构建完成（build_pgo.sh 流程；phase1 插桩 + bench workload 141 份 .gcda + phase2 profile-use，接续原脚本中断处手动跑完 workload 与 phase2，flags 与脚本一致）。新引擎 SHA256 `07703a5781e70d2c3b1b3ad7b0c473ddfaf2a313ac2ce4f5724035ba44e184be`，**构建完成立即留档** `artifacts/task95/engine/pvz-portable`（SHA 已核对一致）。
+- [3-探针] `scripts/task95_state_hash_probe.py`（新增）：同任务（L7 seed30000）8 个独立进程 reset + 2 个等待点、另加同进程连续 4 次 reset。**新引擎：多进程 8/8 全同、同进程 4/4 全同（各 1 种哈希）**；旧引擎 76ff36dc 对照：多进程 8 次 4 种哈希线、同进程 4 次 4 种——task82 之前的不稳定完整复现，task82 效果确认。证据 `artifacts/task95/state_hash_probe.json`。
 
 ## 问题
