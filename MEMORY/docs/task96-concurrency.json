@@ -1,0 +1,107 @@
+{
+ "task": 96,
+ "source": "/home/newbiexvwu/pvz-logs/qc.out",
+ "note": "qc.out records the co-running curriculum workload (worker count and MemAvailable) but no GPU state.",
+ "runs": {
+  "r11": {
+   "window": [
+    "2026-10-25T08:30",
+    "2026-10-25T09:13"
+   ],
+   "epoch_seconds": 212.0,
+   "note": "12 epochs, 2543.6 s total",
+   "workers_range": [
+    14,
+    15
+   ],
+   "mem_available_gib_range": [
+    17.3,
+    17.6
+   ],
+   "samples": 9,
+   "lines": [
+    "2026-10-25T08:30:10 background round 11 train started",
+    "2026-10-25T08:36:24 round 12 c12p26p9km100: workers=15/16 (MemAvailable 17.6 GiB, per-worker 0.77 GiB, background headroom 0.00 GiB)",
+    "2026-10-25T08:43:36 round 12 c12p27p9km100: workers=14/16 (MemAvailable 17.5 GiB, per-worker 0.77 GiB, background headroom 0.00 GiB)",
+    "2026-10-25T08:54:43 round 12 c12n19n10qm100: workers=15/16 (MemAvailable 17.6 GiB, per-worker 0.77 GiB, background headroom 0.00 GiB)",
+    "2026-10-25T09:01:14 round 12 c12d3d7m250: workers=14/16 (MemAvailable 17.5 GiB, per-worker 0.77 GiB, background headroom 0.00 GiB)",
+    "2026-10-25T09:04:56 round 12 c12n16n10m150: workers=14/16 (MemAvailable 17.5 GiB, per-worker 0.77 GiB, background headroom 0.00 GiB)",
+    "2026-10-25T09:10:24 round 12 c12p28p9km100: workers=14/16 (MemAvailable 17.3 GiB, per-worker 0.77 GiB, background headroom 0.00 GiB)",
+    "2026-10-25T09:12:34 background round 11 train done: 2543.594s",
+    "2026-10-25T09:12:34 background round 11 evaluate started against 5da539c2c5153ef23f41ba73ca657e6425bf7447db84075477eb55d39f0aa98d"
+   ]
+  },
+  "variantA": {
+   "window": [
+    "2026-10-26T00:24",
+    "2026-10-26T01:10"
+   ],
+   "epoch_seconds": 223.7,
+   "note": "epoch 1 of 12",
+   "workers_range": [
+    4,
+    10
+   ],
+   "mem_available_gib_range": [
+    12.5,
+    14.8
+   ],
+   "samples": 6,
+   "lines": [
+    "2026-10-26T00:30:16 round 16 c16n19n10qm100: workers=4/16 (MemAvailable 12.8 GiB, per-worker 0.88 GiB, background headroom 2.45 GiB)",
+    "2026-10-26T00:46:16 background round 15 evaluate done: 2776.846s approved=False reasons=['overall_ci_lower_not_above_minus_3pp', 'significant_zone_regression:heldout']",
+    "2026-10-26T00:48:33 round 16 c16d4d7m250: workers=7/16 (MemAvailable 12.5 GiB, per-worker 0.88 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T00:55:03 round 16 c16n17n10qm100: workers=10/16 (MemAvailable 14.8 GiB, per-worker 0.88 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T01:04:33 round 16 c16roofl41r7m100: workers=9/16 (MemAvailable 14.0 GiB, per-worker 0.88 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T01:05:19 round 16 c16n12n10qm100: workers=8/16 (MemAvailable 13.5 GiB, per-worker 0.88 GiB, background headroom 0.00 GiB)"
+   ]
+  },
+  "run1": {
+   "window": [
+    "2026-10-26T08:47",
+    "2026-10-26T09:09"
+   ],
+   "epoch_seconds": 890.4,
+   "note": "1 epoch",
+   "workers_range": [
+    8,
+    11
+   ],
+   "mem_available_gib_range": [
+    12.1,
+    14.5
+   ],
+   "samples": 5,
+   "lines": [
+    "2026-10-26T08:51:20 round 18 c18demofog33cactussnowm200hv2s839: workers=9/16 (MemAvailable 12.9 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T08:55:45 round 18 c18demofog33cattailsnowm200hv2s867: workers=10/16 (MemAvailable 13.8 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T08:58:34 round 18 c18demofog34cactussnowm200hv2s1126: workers=8/16 (MemAvailable 12.1 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T09:03:37 round 18 c18demofog39cactussnowm200hv2s1513: workers=9/16 (MemAvailable 13.5 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T09:09:05 round 18 c18demoroof42gloommelonm200s1276: workers=11/16 (MemAvailable 14.5 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)"
+   ]
+  },
+  "run2": {
+   "window": [
+    "2026-10-26T09:08",
+    "2026-10-26T09:19"
+   ],
+   "epoch_seconds": 334.1,
+   "note": "1 epoch",
+   "workers_range": [
+    8,
+    12
+   ],
+   "mem_available_gib_range": [
+    12.2,
+    15.4
+   ],
+   "samples": 4,
+   "lines": [
+    "2026-10-26T09:09:05 round 18 c18demoroof42gloommelonm200s1276: workers=11/16 (MemAvailable 14.5 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T09:13:04 round 18 c18demoroof42melonm200s1422: workers=8/16 (MemAvailable 12.2 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T09:17:02 round 18 c18demoroof43melonm200s1061: workers=8/16 (MemAvailable 12.3 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)",
+    "2026-10-26T09:19:43 round 18 c18demoroof44melonm200s1352: workers=12/16 (MemAvailable 15.4 GiB, per-worker 0.75 GiB, background headroom 0.00 GiB)"
+   ]
+  }
+ }
+}
