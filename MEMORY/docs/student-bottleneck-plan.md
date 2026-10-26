@@ -929,3 +929,13 @@
     - 派 **task112**（分支 demo2545，基于 deploy14d）：建起点格，随 deploy14e 上线。plus2 号额度又用完（00:20 恢复），已由 Mac 上的 cbp-task112 接手。
   - 台式机 SSH 又连不上，两局存档还没拷到台式机 cq；连上后补拷，打包好的文件在 `$CLAUDE_JOB_DIR/tmp/demos2545.tgz`。
   - 冒险模式里能录的示范都录完了，只剩 L5 / L35，要先改环境。
+- 2026-10-26 22:30（台式机时间）：
+  - **deploy14d 22:03 上线**：回填已写入，dry-run 两次都通过；worker 探针正常（0.85 / 0.70 GiB，12 个 worker）。L50 / L30 示范格首组都是 24/24。
+  - **22:08 qc 停了**：7 个 llmplay 层任务（L41 doom，L46 / 48 / 49 的 m300 / m400）从源族继承了 `demo_start`，但它们的种子不含示范种子，search_play 报 rc=2，按 deploy14d 规则 qc 退出。
+    - 热补 cbd96daf（deploy14d 分支，cq 同步）：去掉这 7 项的 `demo_start`。22:20 用 deploy14d 的 start_qc 重启，7 格自动退休，采集恢复。
+    - 停了 12 分钟。这类单格错误由 task109（deploy14e）的单点隔离兜住。
+    - 生成器 `make_llmplay_tasks.py` 复制 `demo_start` 是根因，待修。
+  - **第 20 轮（首个 K=2 轮）**：选择面板选中种子 2（218 对 203）。
+    - 门禁：总体 +0.2pp [−1.6, +2.0]；pool +5.5pp；day −3.6pp（p = 0.027）显著退步，被拒。现役仍是 r11，已连续 9 轮被拒。
+    - 主控意见：6 个区逐区做退步检验，却没有做多重比较校正，p = 0.027 在 Holm / Bonferroni（0.05 / 6 ≈ 0.008）下不显著。拟在 deploy14e 改为 Holm 校正，先向用户说明。
+  - L25 / L45 示范已拷到台式机 cq。
