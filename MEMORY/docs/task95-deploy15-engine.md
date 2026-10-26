@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [1b-源码范围复核，2026-10-26 19:50 CST] 对照当前 `origin/pvz-env`（tip `e0faf684`）：`a8d00858..origin/pvz-env -- src` 仍是 7 文件 +137/−11，与[1]一致；`a630fbd8..origin/pvz-env -- src` 为空、部署树 `HEAD` 的 `src` 与 `a630fbd8` 也为空差异。即构建所用源码等于当前远端 tip 的 `src`（tip 只在 src 之外前进），候选引擎未落后。已记入 `task95-engine-gate.json` 的 `source_src_tip_verified_against`。
+
 - [6d-端到端前置检查，2026-10-26 19:45 CST] 把脚本截到 preflight 结束（仅函数定义+只读检查，`L`/`O` 重定向到 `/tmp`）用 bash 实跑：exit 0，日志写出“preflight passed”。覆盖引擎 SHA、回滚引擎 SHA（`cq/build5` 仍为 76ff36dc）、deploy14c 代码守卫（改动集恰五文件 + 五个 blob 同哈希）与四条证据断言（六族、吞吐、L50、哈希suite）。仓库脚本与`~/pvz-logs`副本未改动，未触碰 qc。
 
 - [6c-证据适用性，2026-10-26 19:15 CST] 核对门禁证据能否套用到 deploy14c 代码：`command_for` 在部署树与 cq 当前代码中**逐字节相同**（AST 源片段 SHA 一致）；`search_play.py` 与 `pvz_tasks.py` 的差异全部在 `deck_random` 分支（`deck_for_seed` 无该字段时提前返回原路径），四个生产清单（stage4 倍率、boss_l50、roof、fog）`deck_random` 出现次数均为 0。因此六族与 L50 的门禁命令、牌组与生产实际一致，build2 的门禁结论可直接用于部署；`select_student` / `train_rollout_policy` 不在引擎对局路径上。

@@ -559,5 +559,12 @@
         "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
       }
     }
+  },
+  "source_src_tip_verified_against": {
+    "ref": "origin/pvz-env",
+    "commit": "e0faf684",
+    "src_diff_vs_built_tip": "empty",
+    "checked": "2026-10-26 19:50 CST",
+    "note": "origin/pvz-env advanced past a630fbd8 only outside src; the built src equals the current tip src"
   }
 }
