@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T18:49:11.682484+00:00",
+ "at_utc": "2026-10-26T22:57:37.698782+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -127,18 +127,18 @@
  },
  "task72_reconstruction": {
   "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild_mac_branch1",
-  "completed_trajectories": 0,
-  "exactly_matched_states": 0,
+  "completed_trajectories": 24,
+  "exactly_matched_states": 26,
   "mapping_complete": false,
   "original_probe_protocol_verified": false,
   "rescore_eligible": false,
   "plan_sha256": "ff0651c777c2a0f85bc8f8732be2673c142811ed6a17b6612fcdc91d8249b010",
-  "binding_report_sha256": "45aee6cdb30d5f622298e8b304eef5fac8532735c1829e0f27a513eea17c66d0",
+  "binding_report_sha256": "3fb1134783f9ec438af393d0957fd9602a83339c3210569f6802626cbaf35252",
   "static": {
    "path": "/home/newbiexvwu/pvz-logs/mac_branch1/model.pt",
    "sha256": "91e562a051c462f9bf3426b035b7b87187bda3c8b5f3e88094f2478a61a7926c"
   },
-  "queued_after": "resume8 successful independent roof completion",
+  "queued_after": "done (resource yields retried by artifacts/task78/rebuild_resume9.py)",
   "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json",
   "future_identity_preflight": {
    "at_utc": "2026-10-26T01:34:08.407436+00:00",
@@ -194,15 +194,50 @@
    "superseded_report_sha256": "2dfa006e98108cae08bc96e76b6e4db753f91b50b19280ddcda6732ec94565e2",
    "correction": "Student checkpoint contains label names but no trained_on list; absent metadata is unknown, not a verified empty identity set.",
    "report_sha256": "75ebca61725cf977018d7ed9b6fb7d2a709600437e102f1eda18702b840a3363"
+  },
+  "unmatched_states": 68,
+  "matched_per_future": {
+   "101": {
+    "matched": 6,
+    "total": 12
+   },
+   "102": {
+    "matched": 6,
+    "total": 12
+   },
+   "103": {
+    "matched": 4,
+    "total": 10
+   },
+   "104": {
+    "matched": 3,
+    "total": 12
+   },
+   "105": {
+    "matched": 2,
+    "total": 12
+   },
+   "106": {
+    "matched": 4,
+    "total": 12
+   },
+   "107": {
+    "matched": 0,
+    "total": 12
+   },
+   "108": {
+    "matched": 1,
+    "total": 12
+   }
   }
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 168,
+  "completed_label_jobs": 216,
   "replay_completed_k": [
    0
   ],
-  "collection_status": "collecting",
+  "collection_status": "complete",
   "continuation_handle": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/resume8_handle.json",
   "first_completed_job_audit": {
    "at_utc": "2026-10-26T01:15:33.534439+00:00",
@@ -642,12 +677,55 @@
    "games": 2,
    "nice": 19,
    "extra_raw_label_audit_performed": false
+  },
+  "merged_export_sha256": "a2f862319878c70703f28724cd166abdf37f8c9b31b56f52c4b0f61ecc5d7e67",
+  "scored_report_sha256": "6d8d2d42a122d33c752e7a7f411d5b4671e229200828546cdd19b24c8b184e79",
+  "scoring": {
+   "complete": true,
+   "roots": 48,
+   "horizons": [
+    "2500",
+    "4000",
+    "6000"
+   ],
+   "primary_horizon": 2500,
+   "primary_gate_passed": false,
+   "by_horizon": {
+    "2500": {
+     "pairs": 162,
+     "v5": 76.0,
+     "v6": 84.0,
+     "point": 0.04938271604938271,
+     "lower": -0.020103040454799246,
+     "upper": 0.12865641827340626,
+     "passed": false
+    },
+    "4000": {
+     "pairs": 162,
+     "v5": 95.0,
+     "v6": 93.0,
+     "point": -0.012345679012345734,
+     "lower": -0.06976744186046512,
+     "upper": 0.04081632653061224,
+     "passed": false
+    },
+    "6000": {
+     "pairs": 154,
+     "v5": 71.0,
+     "v6": 74.0,
+     "point": 0.019480519480519487,
+     "lower": -0.09821428571428571,
+     "upper": 0.1428776683087025,
+     "passed": false
+    }
+   },
+   "candidate_preregistered_corpus": false,
+   "training_eligible": false
   }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
   "original v5 corpus and formal merged-corpus training",
-  "independent roof terminal labels and scoring",
   "original task72b states/probe protocol and horizon stability"
  ],
  "training_source_preflight": {
