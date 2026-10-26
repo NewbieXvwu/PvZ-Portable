@@ -94,6 +94,9 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 - 已完成：DESIGN.md §14.35 登记屋顶种子块 104,000,000–104,000,231；`MEMORY/docs/task104-roof-panel.json`（3 关 × 32 种子 = 96 局）与 `MEMORY/docs/task104-regression-panel.json`（19 任务 × 8 种子 = 152 局）；`scripts/task104_panel_eval.py`（多模型 × 显式种子、纯学生臂、2 进程）；台式机数据层测试 10 项全过；B 语料 26 段示范、32,042 行、18 个标签与冻结清单逐项相同。
 - 未完成：四次从零训练（a_s1/a_s2/b_s1/b_s2）。a_s1 两次启动都卡在第一个 epoch 之前——不是配方问题：9.5 GB 训练数据在 25 GB 机器上与 qc 采集（13.6 GB）共存时被换出，实测 600 行/s（r11 约 85,000 行/s，200 秒一个 epoch），`read_bytes` 累计 562 GB 而 `rchar` 仅 14.7 GB。已停掉 tmux `t104` 与训练进程，`artifacts/task104/a_s1/` 里只有 `recipe.resolved.json` 与 `source_rows.json`，**没有检查点**，不占显存也不留半成品。
 - 接手要点：`~/pvz-logs/t104_train.sh` 是内存准入版启动器（avail≥11 GB 三采样开训、掉到 4 GB 持续 4 分钟自动中止重等），但实测 qc 采集会把窗口吃掉，靠自然空档不可行；要么由主控给一个 qc 暂停的 4 小时窗口，要么把 qc worker 降下来。384 局屋顶 + 608 局非屋顶回归只跑学生臂、2 个游戏进程，内存需求小，可以和采集并行，但必须等四个检查点存在。
+### 交接前清理（19:20）
+
+台式机 `demorows` 工作树同步到 `46c90c1a`（与 `origin/demorows` 一致，工作区干净）；我之前被 kill 的全机扫描在树里留了一份 `MEMORY/docs/gate-seed-inventory.json` 的改动（加了新工作树根），已 `git checkout --` 还原，不把这份半成品留给你。本任务在这台机器上没有遗留进程：`t104` 会话已删，`train_rollout_policy.py`、`gate_seed_inventory.py` 都没有残留；`artifacts/task104/a_s1/` 只有 `recipe.resolved.json` 与 `source_rows.json`，没有检查点、不占显存。
 ## 问题
 
 **同一工作树上有另一个会话在并行写。** 2026-10-26 16:50–17:00（+08:00），台式机 `artifacts/task104/` 下出现本会话之外产出的 `data_a` / `data_b` / `recipes` / `training_inputs.json` / `r11.source_rows.json`，来源不是本会话的进程（本会话当时只建了 `corpus/`）。之后该会话不再写文件（截至 17:15 无新产物、无训练进程）。本会话按"不覆盖别人产物"处理：先只读核对，A/B 两份语料的行数与段字节都验过（见上节），再据此继续。若该会话恢复并开始训练，两个 1,700 万行的训练同时上卡会超出 16 GB 显存，需要先确认谁持有 GPU 再启动。
