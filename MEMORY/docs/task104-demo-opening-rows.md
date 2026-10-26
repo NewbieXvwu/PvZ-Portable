@@ -92,6 +92,38 @@ qc 现在用示范做“起点格”，也就是从示范第 N 步的局面开�
 **同一工作树上有另一个会话在并行写。** 2026-10-26 16:50–17:00（+08:00），台式机 `artifacts/task104/` 下出现本会话之外产出的 `data_a` / `data_b` / `recipes` / `training_inputs.json` / `r11.source_rows.json`，来源不是本会话的进程（本会话当时只建了 `corpus/`）。之后该会话不再写文件（截至 17:15 无新产物、无训练进程）。本会话按"不覆盖别人产物"处理：先只读核对，A/B 两份语料的行数与段字节都验过（见上节），再据此继续。若该会话恢复并开始训练，两个 1,700 万行的训练同时上卡会超出 16 GB 显存，需要先确认谁持有 GPU 再启动。
 
 **新进程重验旧示范在这台机器上不可靠（既有问题，非本分支引入）。** `python.test_human_demo.HumanDemoTest` 的三个真实引擎用例在 HEAD 与基点 144a7dce 上都以 `demonstration initial state hash differs` 失败；独立复现显示同一进程内第二次 reset 偶发给出不同初始哈希，而两次独立进程的 `STATE_BYTES` 全量转储逐字节相同。因为 qc 的起点格要求档案 `verified`，这意味着「录制机之外、或同一进程里重跑 verify」可能失败；本次不修（修它要动引擎的哈希面，超出 task104 范围），示范行的导出与训练不受影响。
+### 开训与评估的运行清单（台式机，连接恢复后按序执行）
+
+全部路径写绝对路径，工作树 `/home/newbiexvwu/PvZ-search/.claude/worktrees/demorows`（分支 demorows，已同步到 c1b37696 之后）。
+
+1. **先清掉遗留扫描**：`pgrep -af gate_seed_inventory.py`，有就 `kill`；再 `pgrep -af 'task104|train_rollout_policy'` 确认没有本任务遗留进程。
+2. **GPU 准入**：`nvidia-smi --query-gpu=memory.used,memory.total --format=csv,noheader` + `pgrep -af train_rollout_policy`。qc 在训练（存在别人的 `train_rollout_policy.py`）就让路，不排队抢卡。
+3. **四次训练**（顺序跑，不并行；每份 12 epoch、`init=null`、seed 1/2）：
+
+```bash
+cd /home/newbiexvwu/PvZ-search/.claude/worktrees/demorows
+for run in a_s1 a_s2 b_s1 b_s2; do
+  PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 /home/newbiexvwu/.venvs/ml/bin/python3 \
+    scripts/train_rollout_policy.py --recipe artifacts/task104/recipes/$run.json \
+    > artifacts/task104/logs/train_$run.log 2>&1
+done
+```
+
+配方里已带 `data` / `out` / `epochs` / `seed` / `label_weight` / `source_weight`，命令行不再覆盖任何字段。A 两臂指向 `data_a`，B 两臂指向 `data_b`，索引键 7d15b915a2192805 / 304f0c00f0edf7ae 已在 `task104-ab-verify.json` 核对。
+
+4. **屋顶评估**（4 个模型 × 3 关 × 32 种子 = 384 局，`--workers 2`）：
+
+```bash
+python3 scripts/task104_panel_eval.py \
+  --panel MEMORY/docs/task104-roof-panel.json \
+  --model a_s1=artifacts/task104/recipes/../train/a_s1/student/model.pt \
+  --model a_s2=... --model b_s1=... --model b_s2=... \
+  --value <生产价值网> --workers 2 --out artifacts/task104/eval/roof
+```
+
+5. **非屋顶回归**（同四个模型 × 19 任务 × 8 种子 = 608 局），把 `--panel` 换成 `MEMORY/docs/task104-regression-panel.json`、`--out` 换成 `artifacts/task104/eval/regression`。
+
+评估只跑学生臂（`--arms fast`），无 `--demo-archive`、无 `--verify-samples`，四个模型同任务同种子配对；`search_play` 会跳过已完成的种子，中断可续。
 ## 执行状态
 
 2026-10-26 主控补充：冻结仅针对 Mac 本机，保持其游戏与训练进程原状。台式机经 SSH 的只读查看、代码工作及最多两个游戏进程的实验可以继续，GPU 训练仍须先确认 qc 未在训练。本分支代码与预登记已推送，台式机建立独立 `demorows` 工作树，未修改 qc/cq。已启动台式机数据测试与真实引擎测试，结果待返回。
