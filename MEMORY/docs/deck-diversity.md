@@ -139,7 +139,7 @@ deploy4 引擎 SHA `16989f23`，始终最多 2 游戏进程）：
 （此口径不包含各损失项及packet平衡的后续权重）。144局预算远未达到课程方案的4%目标，
 本次仍保持预登记数据量与权重；结果只评价这一剂量的补充数据。
 真实训练入口的 `seed_1/student/source_rows.json` 已与分片统计交叉核验，证据在
-ignored `artifacts/task93/pack_row_audit.json`。seed1已进入训练，seed2及两组配对评估尚未完成。
+ignored `artifacts/task93/pack_row_audit.json`。seed1训练及两组192局评估已完成（见下），seed2训练已启动、其评估尚未完成。
 seed1第6轮曾因另一实验的两个单轮训练并发、swap耗尽而两次SIGSTOP让行，分别699/310秒、合计1009秒；
 对方各自完成后均已SIGCONT同一训练进程，优化步连续增长。模型及优化器状态保留，没有重训；
 训练日志的墙钟耗时包含这些资源等待。
@@ -162,7 +162,9 @@ gain/harm=19/48，双侧McNemar p=0.000522；d7对照净+6局、+3.125pp，
 
 首个种子已低于166，因此本次不能满足预登记“两个种子都≥166”的接入支持判据。
 仍须完成seed2以报告均值和样本离散程度，不能据此重抽seed1、改门槛或单看对照持平便宣布改善。
-seed2当前尚未训练，流水线正等待内存余量；无qc训练冲突。
+seed2已在资源条件满足后由现存流水线自动启动；读取同一打包文件，实际resolved配方与seed1除seed/out外逐字段全等
+（seed=2、12轮、351标签、init=None、CUDA），`source_rows.json`也逐项全等，均为17,012,427行。
+首个模型和384局结果均严格复用，没有重跑。第二个模型及最终均值/离散程度结论仍待完成。
 
 2026-10-26 验证准备：`scripts/task93_prepare_training.py --baseline-recipe
 /home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/recipe.json
