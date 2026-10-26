@@ -158,6 +158,17 @@ cd /home/newbiexvwu/PvZ-search/.claude/worktrees/demorows
 5. **非屋顶回归**（同四模型 × 19 任务 × 8 种子 = 608 局）：`--panel` 换 `MEMORY/docs/task104-regression-panel.json`，
    `--out` 换 `artifacts/task104/eval/regression`，其余同上。
 
+6. **判定**（预登记判据的机械实现，读两份 summary）：
+
+```bash
+/home/newbiexvwu/.venvs/ml/bin/python3 scripts/task104_verdict.py \
+  --roof artifacts/task104/eval/roof/summary.json \
+  --regression artifacts/task104/eval/regression/summary.json \
+  --out artifacts/task104/verdict.json
+```
+
+四条判据（两种子屋顶都提高、平均净提高 >= 10 个百分点、任一屋顶关两种子平均净降 <= 1/32、非屋顶总体 <= 3 且任一区 <= 5 个百分点）写在 `scripts/task104_verdict.py` 里，`python/test_task104_verdict.py` 用合成数据覆盖了通过、单种子持平、增益不足、单关受损、回归受损、缺模型六种分支（Mac 已过）。输出 JSON 的 `verdict` 直接抄进「结果」，不手算、不调阈值。
+
 评估只跑学生臂（`--arms fast`），无 `--demo-archive`、无 `--verify-samples`，四模型同任务同种子配对；
 `search_play` 会跳过已完成的种子，中断可续。
 ## 执行状态
