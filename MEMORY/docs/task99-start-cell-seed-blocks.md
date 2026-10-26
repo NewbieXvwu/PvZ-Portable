@@ -25,6 +25,8 @@
 
 - 2026-10-26 打包根因已修复：首次平面出现在后续存档时，为此前无平面的行回填-1；平面值按存储dtype规范化，缓存/无缓存输入一致。新段逐行保存plane_of，复用前用npz头检查长度和精度，损坏旧段自动重建，不升PACK_VERSION、不改变抽样。实际ce3ce400标签24份存档在隔离目录重打包：84行、board/scalar plane_of均84，前12行为-1，缓存与无缓存payload逐字节相同；线上段与源存档SHA不变。证据见`start-cell-pack-check.json`。未来种子块续期与部署步骤仍在实施。
 
+- 2026-10-26 第 1–3 步（账本 + qc 侧 + 测试）：起点格未来种子改为按需续领。专用池 `START_SEED_POOL=[90,000,000, 91,000,000)`（`pvz_promotion`，机械核对与全部门禁/示范/llmplay 段不相交），账本 `~/pvz-logs/start_cell_seed_ledger.json`（git 外、`fcntl` 锁、块只发一次、复用 task88 的 `allocate_seed_block`）；`plan_round` 在块不够时先领 256 个接到种子表尾部，领不到才退休，续领写进 state 的 `seed_blocks` 与 changes 日志；`reconcile_start_cells` 重启保留多段表（只有清单换块才重置）；`--restore-start-cell` 从 `retired_cells` 恢复已退休的起点格并保留偏移。8 项新测试（含不相交、重启恢复、退休再激活、池耗尽退休）+ 原有测试全过（`/home/newbiexvwu/.venvs/ml/bin/python3`）。commit f143aea9。
+
 ## 问题
 
 ## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of
