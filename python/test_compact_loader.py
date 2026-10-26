@@ -84,6 +84,33 @@ class CompactBoardsTest(unittest.TestCase):
         self.assertTrue(torch.equal(hoisted.batch(np.arange(6), "cpu").to(torch.float16).view(torch.int16),
                                     torch.from_numpy(boards).view(torch.int16)))
 
+    def test_first_plane_after_short_archives_backfills_their_row_ids(self):
+        early = np.arange(24, dtype=np.float16).reshape(2, 2, 6)
+        early[0, 0, 0] = np.float16(-0.0)
+        middle = np.full((4, 2, 6), .75, dtype=np.float16)
+        tail = np.full((1, 2, 6), .25, dtype=np.float16)
+        store = CompactBoards((2, 6))
+        store.append(early[:1])
+        store.append(early[1:])
+        plane, covered = constant_plane(middle)
+        store.append(middle, covered=covered, plane=plane)
+        store.append(tail)
+        store.finish()
+        np.testing.assert_array_equal(store.plane_of, [-1, -1, 0, 0, 0, 0, -1])
+        original = np.concatenate([early, middle, tail])
+        self.assertTrue(torch.equal(store.batch(np.arange(7), 'cpu').half().view(torch.int16),
+                                    torch.from_numpy(original).view(torch.int16)))
+
+    def test_uncached_float32_plane_obeys_board_float16_precision(self):
+        boards = np.full((4, 2, 6), .1, dtype=np.float32)
+        plane, covered = constant_plane(boards)
+        store = CompactBoards((2, 6))
+        store.append(boards, covered=covered, plane=plane)
+        store.finish()
+        self.assertEqual(store.planes[0][1].dtype, np.dtype(np.float16))
+        self.assertTrue(torch.equal(store.batch(np.arange(4), 'cpu'),
+                                    torch.from_numpy(boards.astype(np.float16)).float()))
+
     def test_packet_columns_widen_back_exactly(self):
         store = PacketStore(3, 4)
         block = np.array([[[1, 1, 500 / 750, 0]] * 4,

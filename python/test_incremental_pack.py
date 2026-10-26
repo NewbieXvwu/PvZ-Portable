@@ -79,6 +79,38 @@ def test_two_epoch_training_is_bitwise_identical():
                                                obs='v2', cells=True, packet_head='identity'))
 
 
+@pytest.mark.parametrize('cached', [False, True])
+@pytest.mark.parametrize('corruption', ['plane_ids', 'plane_precision'])
+def test_short_demo_start_before_longer_archives_keeps_plane_ids_aligned(tmp_path, cached, corruption):
+    data=tmp_path/'data'
+    label='demo_near_terminal_fast_search'
+    for future,count in ((100,3),(101,9)):
+        target=data/f'seed_20261048_f{future}'/label/'frames.npz'
+        target.parent.mkdir(parents=True)
+        write_frames(target,game_frames(count))
+    contract=options(data,[label],obs='v2',wait_keep=1.,packet_head='identity')
+    index=pack(data,contract,tmp_path/'cache' if cached else None)
+    with np.load(index,allow_pickle=False) as stored:
+        segment=index.parent/str(stored['segments'][0])
+    with np.load(segment,allow_pickle=False) as stored:
+        assert int(stored['rows'])==10
+        assert len(stored['board_plane_of'])==len(stored['scalar_plane_of'])==10
+        np.testing.assert_array_equal(stored['board_plane_of'][:2],[-1,-1])
+        # Simulate a pre-fix immutable segment with otherwise matching metadata.
+        arrays={key:stored[key] for key in stored.files}
+    if corruption=='plane_ids':
+        arrays['board_plane_of']=arrays['board_plane_of'][2:]
+    else:
+        arrays['board_plane_values']=arrays['board_plane_values'].astype(np.float32)
+    np.savez(segment,**arrays)
+    pack(data,contract,tmp_path/'cache' if cached else None)
+    with np.load(segment,allow_pickle=False) as repaired:
+        assert len(repaired['board_plane_of'])==int(repaired['rows'])
+        assert repaired['board_plane_values'].dtype==np.dtype(str(repaired['board_dtype']))
+    full=pack_monolithic(data,contract,out=tmp_path/'full.npz')
+    assert_payload_equal(trainer.read_pack(full),trainer.read_pack(index))
+
+
 def _merge_oracle(paths):
     """The old read_segments semantics, written out plainly: load everything, concat per chunk."""
     import torch

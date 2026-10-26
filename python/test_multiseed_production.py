@@ -239,11 +239,21 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
     args.state.write_text(json.dumps(state))
     before = args.state.read_bytes()
     selection_ledger, gate_ledger = tmp_path / 'selection.json', tmp_path / 'gate.json'
+    start_ledger = tmp_path / 'start.json'
+    start_ledger.write_text(json.dumps({'pool': list(queue.START_SEED_POOL),
+                                      'allocated': [[200000000, 200000256]]}))
+    start_before = start_ledger.read_bytes()
     monkeypatch.setattr(queue, 'set_oom_score_adj', lambda _: None)
     monkeypatch.setattr(queue, 'load_panel', lambda _: ({}, [1.], {}, {}))
     monkeypatch.setattr(queue, 'reconcile_cells', lambda *a: [])
     monkeypatch.setattr(queue, 'load_teacher_rates', lambda _: {'a': .5})
-    monkeypatch.setattr(queue, 'plan_round', lambda *a: ([], []))
+    def preview(*args, start_seed_ledger):
+        assert start_seed_ledger != start_ledger
+        assert start_seed_ledger.read_bytes() == start_before
+        # The planner may reserve blocks, but only on the disposable ledger copy.
+        queue.allocate_seed_block(start_seed_ledger, 256, pool=queue.START_SEED_POOL)
+        return [], []
+    monkeypatch.setattr(queue, 'plan_round', preview)
     def forbidden(*args, **kwargs):
         raise AssertionError('dry-run must not start a process')
     monkeypatch.setattr(queue.subprocess, 'Popen', forbidden)
@@ -253,8 +263,9 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
         '--frames', str(args.frames), '--out', str(args.out), '--rollout-policy', str(args.rollout_policy),
         '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
         '--demo-start-manifest', str(tmp_path / 'absent.json'), '--selection-seed-ledger', str(selection_ledger),
-        '--seed-ledger', str(gate_ledger)])
+        '--seed-ledger', str(gate_ledger), '--start-seed-ledger', str(start_ledger)])
     queue.main()
+    assert start_ledger.read_bytes() == start_before
     assert args.state.read_bytes() == before
     assert not selection_ledger.exists() and not gate_ledger.exists()
     assert 'selection preview (no allocation, no engine, no state write)' in capsys.readouterr().out

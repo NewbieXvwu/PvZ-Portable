@@ -80,9 +80,10 @@ def test_exhaustion_is_not_resurrected_on_reconcile():
     assert [j['base'] for j in jobs] == ['good']
     q.reconcile_start_cells(s, {'bad': spec})
     assert 'bad' not in s['cells']
-    # An explicitly extended block can be resumed without wrapping the old one.
+    # task99 preserves the retired table until an explicit restore; extension
+    # then resumes at the old absolute offset without wrapping.
     spec['seeds'] += [256, 257]
-    q.reconcile_start_cells(s, {'bad': spec})
+    q.reconcile_start_cells(s, {'bad': spec}, restore=('bad',))
     assert s['offsets']['bad'] == 256 and 'bad' in s['cells']
 
 

@@ -1,0 +1,1060 @@
+{
+  "logic_gate": {
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable",
+    "seeds": 8,
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      }
+    ],
+    "state_hash": {
+      "compared": 96,
+      "differ": 96
+    },
+    "pass": true
+  },
+  "state_hash_probe": {
+    "new": {
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable",
+      "multi_process": {
+        "hashes": [
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ]
+        ],
+        "distinct": 1
+      },
+      "same_process": {
+        "hashes": [
+          "5089151349873973",
+          "5089151349873973",
+          "5089151349873973",
+          "5089151349873973"
+        ],
+        "distinct": 1
+      }
+    },
+    "old": {
+      "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+      "multi_process": {
+        "hashes": [
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "f31a3842d29c5a66",
+            "1d701bd213d41f7",
+            "b977d6c6e42e5d9e"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "547e9dffa7de14b4",
+            "5089151349873973",
+            "833e9dffc2b30ec5"
+          ],
+          [
+            "3f254bdc52fd08e",
+            "aefe1195a2a9b06f",
+            "33523766074914b4"
+          ]
+        ],
+        "distinct": 3
+      },
+      "same_process": {
+        "hashes": [
+          "5089151349873973",
+          "c7169fb3960265ea",
+          "745ac62261e64343",
+          "c875c2472aec60f4"
+        ],
+        "distinct": 4
+      }
+    }
+  },
+  "binaries": {
+    "old": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+      "bytes": 10412136,
+      "sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a"
+    },
+    "new": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable",
+      "bytes": 68684000,
+      "sha256": "07703a5781e70d2c3b1b3ad7b0c473ddfaf2a313ac2ce4f5724035ba44e184be"
+    },
+    "build2": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
+      "bytes": 10650944,
+      "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
+    },
+    "build4": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+      "sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+      "bytes": 10655664
+    }
+  },
+  "models": {
+    "artifacts/student/dw4i_s1/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "artifacts/value_net/v4/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+      "sha256": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d"
+    },
+    "artifacts/hard/value_branch1/model.pt": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    }
+  },
+  "source_src_base": "a8d00858",
+  "source_src_tip": "a630fbd842f6e8a2493f09de3d433608bd71a254",
+  "pgo_profile_files": 141,
+  "build_flags": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch",
+  "verification": "Final build4 passed the six-family logic/action gate, four L50 pairs, 16-pair A4 ABBA and six-family determinism. Existing old controls and completed build4 gate sets reused; final build4 ABBA ran once. Earlier candidate evidence retained under its original keys.",
+  "logic_gate_build2": {
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
+    "seeds": 8,
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      }
+    ],
+    "state_hash": {
+      "compared": 96,
+      "differ": 96
+    },
+    "pass": true
+  },
+  "state_hash_probe_build2": {
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
+    "multi_process": {
+      "hashes": [
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ],
+        [
+          "547e9dffa7de14b4",
+          "5089151349873973",
+          "833e9dffc2b30ec5"
+        ]
+      ],
+      "distinct": 1
+    },
+    "same_process": {
+      "hashes": [
+        "5089151349873973",
+        "5089151349873973",
+        "5089151349873973",
+        "5089151349873973"
+      ],
+      "distinct": 1
+    }
+  },
+  "six_family_hash_suite": {
+    "file": "artifacts/task95/state_hash_suite_build2.json",
+    "sha256": "395696eb9bf20e3de2d49bd522678e38039b882acd753ea45c52ce92e2d9afd6",
+    "scope": "six A2 tasks, first seed; reset and waits of 60 then 600 ticks",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7
+        ],
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 1,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          11
+        ],
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 3,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          16,
+          19
+        ],
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 2,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "deck": [],
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 4,
+        "old_same_distinct": 1,
+        "stable": true
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          32,
+          35,
+          33
+        ],
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 2,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          3,
+          5
+        ],
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 3,
+        "old_same_distinct": 2,
+        "stable": true
+      }
+    ],
+    "pass": true
+  },
+  "build_flags_build2": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo2 -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch; -DOPENMPT_LIBRARY=/usr/lib/x86_64-linux-gnu/libopenmpt.so",
+  "boss_l50": {
+    "file": "artifacts/task95/boss_l50.json",
+    "sha256": "8c09282959ef1bf45ae0653de27f6ab7492bbfff7fe1eba5cfec35893635defa",
+    "task_id": "boss_l50_orig_eval",
+    "seeds": [
+      85000000,
+      85000001,
+      85000002,
+      85000003
+    ],
+    "policy": "unchanged A2 dw4i_s1, beta=0",
+    "checks": {
+      "new_boss_fields_present": true,
+      "logical_fields_match": true,
+      "action_streams_match": true,
+      "all_terminal": true
+    },
+    "pass": true,
+    "games": [
+      {
+        "seed": 85000000,
+        "old_final_tick": 7720,
+        "new_final_tick": 7720,
+        "old_won": false,
+        "old_decisions": 143,
+        "new_decisions": 143,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 144,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      },
+      {
+        "seed": 85000001,
+        "old_final_tick": 6658,
+        "new_final_tick": 6658,
+        "old_won": false,
+        "old_decisions": 126,
+        "new_decisions": 126,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 127,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      },
+      {
+        "seed": 85000002,
+        "old_final_tick": 6416,
+        "new_final_tick": 6416,
+        "old_won": false,
+        "old_decisions": 118,
+        "new_decisions": 118,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 119,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      },
+      {
+        "seed": 85000003,
+        "old_final_tick": 5895,
+        "new_final_tick": 5895,
+        "old_won": false,
+        "old_decisions": 106,
+        "new_decisions": 106,
+        "action_stream_match": true,
+        "logical_differences": {},
+        "boss_frames": 107,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "new_boss_fields_present": true,
+        "old_boss_block_present": false
+      }
+    ],
+    "executables": {
+      "old": {
+        "sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a"
+      },
+      "new": {
+        "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
+      }
+    }
+  },
+  "source_src_tip_verified_against": {
+    "ref": "origin/pvz-env",
+    "commit": "e0faf684",
+    "src_diff_vs_built_tip": "empty",
+    "checked": "2026-10-26 19:50 CST",
+    "note": "origin/pvz-env advanced past a630fbd8 only outside src; the built src equals the current tip src"
+  },
+  "logic_gate_build4": {
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+    "seeds": 8,
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "games": 16,
+        "mismatches": [],
+        "state_hash_same": 0,
+        "state_hash_differ": 16
+      }
+    ],
+    "state_hash": {
+      "compared": 96,
+      "differ": 96
+    },
+    "pass": true
+  },
+  "candidate_build4": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+    "sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+    "bytes": 10655664,
+    "source_fix_commit": "acc3b43115c61d71342f3b692e5105c32175790d",
+    "status": "validated final candidate; deployment script written only",
+    "pass": true
+  },
+  "boss_l50_build4": {
+    "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50.json",
+    "sha256": "e471011f4d2228dc93c110ba49dc5fd6916a6ae5ca9ac77626e73a3d1a98b3e1",
+    "pass": true,
+    "checks": {
+      "new_boss_fields_present": true,
+      "logical_fields_match": true,
+      "action_streams_match": true,
+      "all_terminal": true
+    },
+    "task_id": "boss_l50_orig_eval",
+    "seeds": [
+      85000000,
+      85000001,
+      85000002,
+      85000003
+    ],
+    "commands": {
+      "old": {
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/scripts/search_play.py",
+          "--rollout-policy",
+          "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "--verify-samples",
+          "9",
+          "--student-candidates",
+          "2",
+          "--static-value",
+          "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+          "--value",
+          "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+          "--manifest",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task85/boss_panel.json",
+          "--task-id",
+          "boss_l50_orig_eval",
+          "--seed-offset",
+          "0",
+          "--seeds",
+          "4",
+          "--executable",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+          "--dagger-beta",
+          "0",
+          "--workers",
+          "2",
+          "--resource-dir",
+          "/home/newbiexvwu/.cache/pvz-research-resources",
+          "--frames",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_frames_old",
+          "--frames-label",
+          "boss_l50_old",
+          "--out",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_runs_old/boss_l50_old_4"
+        ],
+        "executable_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
+        "models": {
+          "rollout_policy": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+          "value": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+          "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+        },
+        "manifest_sha256": "a50dce80177cf069de8c9f387dab9e6a513b8dd68d66c4dd0814332e3849396b"
+      },
+      "new": {
+        "command": [
+          "/home/newbiexvwu/.venvs/ml/bin/python",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/scripts/search_play.py",
+          "--rollout-policy",
+          "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+          "--verify-samples",
+          "9",
+          "--student-candidates",
+          "2",
+          "--static-value",
+          "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+          "--value",
+          "/home/newbiexvwu/PvZ-search/artifacts/value_net/v4/model.pt",
+          "--manifest",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task85/boss_panel.json",
+          "--task-id",
+          "boss_l50_orig_eval",
+          "--seed-offset",
+          "0",
+          "--seeds",
+          "4",
+          "--executable",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+          "--dagger-beta",
+          "0",
+          "--workers",
+          "2",
+          "--resource-dir",
+          "/home/newbiexvwu/.cache/pvz-research-resources",
+          "--frames",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_frames_new",
+          "--frames-label",
+          "boss_l50_new",
+          "--out",
+          "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50_runs_new/boss_l50_new_4"
+        ],
+        "executable_sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+        "models": {
+          "rollout_policy": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375",
+          "value": "14c372e19dcd73fd7ee0493600907efefa0f7edafa7b884e1fdecd875008cd8d",
+          "static_value": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+        },
+        "manifest_sha256": "a50dce80177cf069de8c9f387dab9e6a513b8dd68d66c4dd0814332e3849396b"
+      }
+    },
+    "reused_old_control_from": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/boss_l50_command_old.json",
+    "games": [
+      {
+        "seed": 85000000,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 144,
+          "new": 144
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 144,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 7720,
+        "won": false,
+        "decisions": 143
+      },
+      {
+        "seed": 85000001,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 127,
+          "new": 127
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 127,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 6658,
+        "won": false,
+        "decisions": 126
+      },
+      {
+        "seed": 85000002,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 119,
+          "new": 119
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 119,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 6416,
+        "won": false,
+        "decisions": 118
+      },
+      {
+        "seed": 85000003,
+        "logical_differences": {},
+        "action_stream_match": true,
+        "action_count": {
+          "old": 107,
+          "new": 107
+        },
+        "old_boss_block_present": false,
+        "boss_reset": {
+          "active": true,
+          "stage": 0,
+          "head": false,
+          "action": "idle",
+          "target_row": -1,
+          "target_col": -1,
+          "projectile": null
+        },
+        "new_boss_fields_present": true,
+        "boss_frames": 107,
+        "boss_stages": [
+          0
+        ],
+        "boss_actions": [
+          "head",
+          "idle",
+          "summon"
+        ],
+        "all_terminal": true,
+        "final_tick": 5895,
+        "won": false,
+        "decisions": 106
+      }
+    ]
+  },
+  "six_family_hash_suite_build4": {
+    "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/state_hash_suite_build4.json",
+    "sha256": "a842b3346e0183fbd2cab9b593867c143db6434efa2bc14b7ee2b8051623251a",
+    "scope": "six A2 tasks, first seed; reset and waits of 60 then 600 ticks",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+    "old_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
+    "reused_control_from": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/state_hash_suite_build2.json",
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 1,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          11
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 3,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          16,
+          19
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 2,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "deck": [],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 4,
+        "old_same_distinct": 1,
+        "stable": true
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          32,
+          35,
+          33
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 2,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          3,
+          5
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 3,
+        "old_same_distinct": 2,
+        "stable": true
+      }
+    ],
+    "pass": true
+  },
+  "throughput_build4": {
+    "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/abba4/throughput_abba.json",
+    "sha256": "921d2e6dd26b3aead5c8d2983bed6cf214f85226a2dd699fe296cf7dc4358dfb",
+    "pairs": 16,
+    "ratio": "old_worker_seconds / new_worker_seconds",
+    "median": 1.0218131659056318,
+    "minimum": 0.98,
+    "decision_mismatch": [],
+    "pass": true
+  },
+  "selected_candidate": "build4",
+  "source_final": {
+    "source_commit": "acc3b43115c61d71342f3b692e5105c32175790d",
+    "base": "a8d00858",
+    "files": 7,
+    "insertions": 138,
+    "deletions": 12,
+    "extra_fix": "v2boss load/features use 13 added channels; Encode consumes the same 105 total channels",
+    "existing_policy_impact": "no action or logical differences in the full 96-pair gate"
+  },
+  "build_flags_build4": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo4 -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch",
+  "pipeline_build4": {
+    "gate": {
+      "returncode": 0,
+      "finished_epoch": 1793025519.8048155
+    },
+    "boss": {
+      "returncode": 0,
+      "finished_epoch": 1793025540.0918279
+    },
+    "abba": {
+      "returncode": 0,
+      "finished_epoch": 1793028494.4515045
+    },
+    "hash": {
+      "returncode": 0,
+      "finished_epoch": 1793028518.3584125
+    }
+  }
+}

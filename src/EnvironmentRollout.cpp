@@ -99,7 +99,7 @@ void EnvironmentRollout::Load(const std::string& path)
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	std::vector<size_t> counts = {
-		nextWidth * (Channels + (observation == 6 ? 14 : observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
+		nextWidth * (Channels + (observation == 6 ? 13 : observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
 		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 6 ? 9 : observation >= 3 ? 7 : observation == 2)), nextWidth,
 		nextContext, 1, packetHead ? nextWidth * (nextContext + embedding + 3) : 10 * nextContext,
 		packetHead ? nextWidth : 10, (packetHead ? 54 : 10) * embedding,
@@ -160,7 +160,7 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	std::vector<float>& board, std::vector<float>& scalars, History& history)
 {
 	Board* state = app->mBoard;
-	board.assign((Channels + (bossChannel ? 14 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
+	board.assign((Channels + (bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
 	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + (bossChannel ? 9 : v2 ? 7 : v2lite), 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
@@ -474,7 +474,7 @@ static float IdentityLinear(const float* input, const float* weight, int count, 
 
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
-	Convolve(board, Channels + ((fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
+	Convolve(board, Channels + (bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
 	if (rowPool)

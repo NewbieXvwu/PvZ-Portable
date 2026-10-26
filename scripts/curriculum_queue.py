@@ -73,9 +73,11 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
                                    load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
-from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, policy as promotion_policy, freeze_panel
-from promotion_gate import (allocate_seed_block, contract as promotion_contract, contract_key,
-                            sha as file_sha, valid_certificate)
+from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, START_SEED_BLOCK,
+                           START_SEED_LEDGER_DEFAULT, START_SEED_POOL,
+                           policy as promotion_policy, freeze_panel)
+from promotion_gate import (SeedPoolExhausted, allocate_seed_block, contract as promotion_contract,
+                            contract_key, sha as file_sha, valid_certificate)
 from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
@@ -529,47 +531,110 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
             if first is None:
                 raise ValueError(f'{task["task_id"]}: demo_start needs future_seeds or future_seed_start')
             seeds = list(range(int(first), int(first) + int(start.get('future_seed_count', 256))))
+        if any(START_SEED_POOL[0] <= seed < START_SEED_POOL[1] for seed in seeds):
+            # 清单块必须在续领池之外：续领块由账本保证唯一，清单块不在账本里，一旦落进池里
+            # 就可能和将来发出的块撞上，而且撞了也查不出来。
+            raise ValueError(f'{task["task_id"]}: demo_start future seeds {seeds[0]}..{seeds[-1]} '
+                             f'overlap the renewal pool {list(START_SEED_POOL)}')
         archive = Path(start['archive'])
         archive = archive if archive.is_absolute() else ROOT / archive
         # Archive checks belong to planning: a bad cell must not abort qc startup.
         cells[task['task_id']] = dict(
             family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
             last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
-            archive=str(archive), seeds=seeds)
+            archive=str(archive), seeds=seeds,
+            seed_blocks=start_seed_segments(seeds))
         manifests[task['task_id']] = path
     return cells, manifests
 
 
-def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | None = None) -> list[str]:
+def start_seed_segments(seeds: list[int]) -> list[list[int]]:
+    """Encode contiguous runs without changing the manifest's seed order."""
+    blocks = []
+    for seed in seeds:
+        if blocks and blocks[-1][1] == seed:
+            blocks[-1][1] = seed + 1
+        else:
+            blocks.append([seed, seed + 1])
+    return blocks
+
+
+def renew_start_seeds(cell: dict, ledger_path: Path, size: int = START_SEED_BLOCK) -> list[int]:
+    """给起点格续领一段未来种子，接到种子表尾部（task99）。
+
+    偏移语义不变：offset 仍是从种子表头数的绝对下标，续领只是把表变长。领到的块记进
+    格子的 seed_blocks（第一段永远是清单里原来的块），账本在 git 外、带文件锁，块只发一次。
+    """
+    if not cell.get('seed_blocks') and cell.get('seeds'):
+        # 旧状态没有分段记录：把清单里的第一段补上，日志与状态都从两段起算。
+        cell['seed_blocks'] = start_seed_segments(cell['seeds'])
+    block = allocate_seed_block(ledger_path, size, pool=START_SEED_POOL)
+    cell.setdefault('seed_blocks', []).append([int(block[0]), int(block[1])])
+    cell['seeds'] = list(cell['seeds']) + list(range(int(block[0]), int(block[1])))
+    return [int(block[0]), int(block[1])]
+
+
+def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | None = None,
+                          restore: tuple[str, ...] = ()) -> list[str]:
     """把状态里的示范起点格对齐到清单：新增、更新阶梯/种子块、撤掉已删的格。
 
     普通格的 reconcile_cells 会把不在训练集合里的格退休；起点格的 base 是示范任务 id
     （如 demo_fog_33_cactus_snow_m200），永远不在 training_base_ids 里，所以它由这里管，
     并且 reconcile_cells 会跳过带 ladder 的格。
+
+    task99：种子表可以有多段（续领）。清单里的块只是第一段，重启时**不能**用它覆盖
+    已续领的表——只有当状态里的表不再以清单块开头（清单换了块）才重置。restore 里的格
+    从 retired_cells 原样取回（保留偏移/续领段/档位）；清单里已经没有的格标 legacy_restored，
+    否则下一次重启会被当成“已删的格”再退休一次。
     """
     lines = []
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     for base in sorted(cells):
         # 起点格以 archive 识别：原生倍率阶梯格（task75b）也带 ladder，不能被当成起点格退休。
-        if cells[base].get('archive') and base not in specs:
+        if (cells[base].get('archive') and base not in specs
+                and not cells[base].get('legacy_restored')):
             retired[base] = cells.pop(base)
             lines.append(f'start cell retired: {base}')
+    for base in sorted(set(restore)):
+        cell = retired.pop(base, None)
+        if cell is None or not cell.get('archive'):
+            continue
+        if base not in specs:
+            cell['legacy_restored'] = True
+        cells[base] = cell
+        offset = int(state.get('offsets', {}).get(base, 0))
+        seeds = list(cell.get('seeds') or [])
+        remaining = set(seeds[offset:])
+        clashes = sorted(other for other, live in cells.items()
+                         if other != base and remaining & set(live.get('seeds') or []))
+        lines.append(f'start cell restored: {base} (retired {cell.get("retired_reason", "unknown")}, '
+                     f'offset {offset}/{len(seeds)})')
+        if clashes:
+            # 恢复的格若与在跑的格共用未来种子，采出来的证据不独立（L32 的旧格与 _hv2 就是同一块）。
+            lines.append(f'start cell restored: {base} WARNING future seeds overlap '
+                         f'{", ".join(clashes)}; renew or drop it before collecting')
     for base, spec in sorted(specs.items()):
         if base in state.get('cell_errors', {}):
             continue
-        if state.get('offsets', {}).get(spec['task_id'], 0) >= len(spec['seeds']):
-            if base in cells:
-                state.setdefault('retired_cells', {})[base] = cells.pop(base)
-            lines.append(f'start cell remains retired: {base}: seeds exhausted')
-            continue
         cell = cells.get(base)
         if cell is None:
+            if base in retired:
+                # Re-adding a retired cell from the manifest would discard its
+                # renewed table, windows and rung. Explicit restore above keeps them.
+                continue
             cells[base] = dict(spec, windows=dict((windows or {}).get(base, {})))
             lines.append(f'start cell added: {base} ({len(spec["ladder"])} rungs)')
             continue
-        changed = [key for key in ('ladder', 'seeds', 'archive') if cell.get(key) != spec[key]]
-        cell.update({key: spec[key] for key in ('ladder', 'seeds', 'archive', 'family', 'level', 'task_id')})
+        seeds = list(cell.get('seeds') or [])
+        if seeds[:len(spec['seeds'])] != list(spec['seeds']):
+            seeds = list(spec['seeds'])                      # 清单换了块：回到第一段
+            cell['seed_blocks'] = list(spec.get('seed_blocks') or [])
+        changed = [key for key in ('ladder', 'archive') if cell.get(key) != spec[key]]
+        if seeds != cell.get('seeds'):
+            changed.append('seeds')
+        cell.update({key: spec[key] for key in ('ladder', 'archive', 'family', 'level', 'task_id')})
+        cell['seeds'] = seeds
         cell['mult_index'] = min(int(cell.get('mult_index', 0)), len(spec['ladder']) - 1)
         if changed:
             lines.append(f'start cell updated: {base} ({", ".join(changed)})')
@@ -1594,7 +1659,8 @@ def _write_state(path: Path, state: dict) -> None:
 
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
-               teacher: dict | None = None) -> tuple[list[dict], list[str]]:
+               teacher: dict | None = None, start_seed_ledger: Path | None = None,
+               renew_size: int = START_SEED_BLOCK) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     picks = allocate(state['cells'], values, budget, per_group, state['round'] + 1, teacher)
@@ -1609,7 +1675,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
             if not isinstance(seeds, list) or type(offset) is not int or offset < 0:
                 raise ValueError('invalid seeds/offset')
             manifest = str(manifests[task_id])
-            if start and offset + games <= len(seeds):
+            if start and (offset + games <= len(seeds) or start_seed_ledger is not None):
                 archive = cell['archive']
                 if not isinstance(archive, str):
                     raise ValueError('invalid archive')
@@ -1626,8 +1692,25 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         except (OSError, KeyError, TypeError, ValueError) as error:
             changes.append(retire_cell(state, base, error))
             continue
+        while start and offset + games > len(seeds) and start_seed_ledger is not None:
+            # task99: a start cell's future seeds are renewable. Renew before giving the cell up —
+            # the first block in the manifest is only segment one; the offset keeps counting from
+            # the head of the table, so old groups and their labels stay comparable.
+            try:
+                block = renew_start_seeds(cell, start_seed_ledger, renew_size)
+            except (SeedPoolExhausted, ValueError, OSError) as error:
+                # 池耗尽、账本损坏/池不符、账本目录不可写：都只是这一格领不到，不能让 qc 停在
+                # plan 阶段（task98 的教训：单点异常不该终止整个采集）。错误原文进日志。
+                changes.append(f'{task_id}: seed renewal failed ({error})')
+                break
+            else:
+                seeds = cell['seeds']
+                changes.append(f'{task_id}: seeds renewed +{block[1] - block[0]} from '
+                               f'[{block[0]},{block[1]}) (table {len(seeds)}, '
+                               f'segments {len(cell.get("seed_blocks") or [])})')
         if offset + games > len(seeds):
             if start:
+                cell['retired_reason'] = 'seeds exhausted'
                 state.setdefault('retired_cells', {})[base] = state['cells'].pop(base)
             changes.append(f'{task_id}: seeds exhausted (offset {offset} + {games} > {len(seeds)}); '
                            + ('start cell retired' if start else 'group skipped'))
@@ -1802,7 +1885,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             # with an uncommitted reservation left from a previous attempt.
             save_state(args.state, state)
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                       args.games_per_group, teacher)
+                                       args.games_per_group, teacher,
+                                       start_seed_ledger=getattr(args, 'start_seed_ledger', None))
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -1839,7 +1923,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
     parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
-                        help='promotion policy; change only after a complete round and pipeline drain')
+                        help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
@@ -1881,6 +1965,11 @@ def main() -> None:
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
     parser.add_argument('--selection-seed-ledger', type=Path, default=SELECTION_LEDGER,
                         help='independent locked ledger for fresh per-round selection seeds')
+    parser.add_argument('--start-seed-ledger', type=Path, default=Path(START_SEED_LEDGER_DEFAULT),
+                        help='out-of-git ledger for renewed demo-start future seed blocks (task99)')
+    parser.add_argument('--restore-start-cell', action='append', default=[], metavar='TASK_ID',
+                        help='reactivate a start cell retired for seed exhaustion, keeping its offset '
+                             'and renewed segments (task99); repeatable, one-off')
     args = parser.parse_args()
     try:
         load_recipe(args.recipe, 'training')
@@ -1898,6 +1987,8 @@ def main() -> None:
             parser.error(f'all paths must be absolute: {name}')
     if not args.seed_ledger.is_absolute() or not args.selection_seed_ledger.is_absolute():
         parser.error('seed ledger paths must be absolute')
+    if not args.start_seed_ledger.is_absolute():
+        parser.error('--start-seed-ledger must be absolute')
     try:
         probe = None
         if args.gate_version >= 2:
@@ -1930,8 +2021,13 @@ def main() -> None:
         windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
         for line in reconcile_cells(state, tasks, names, windows):
             log_line(args.log, line)
-        for line in reconcile_start_cells(state, start_cells, windows):
+        for line in reconcile_start_cells(state, start_cells, windows,
+                                          restore=tuple(args.restore_start_cell)):
             log_line(args.log, line)
+        for base in args.restore_start_cell:
+            if base not in state['cells']:
+                parser.error(f'--restore-start-cell {base}: not a retired start cell in {args.state}')
+            manifests.setdefault(base, args.demo_start_manifest)
     else:
         windows, offsets = init_from_runs(patterns, names)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
@@ -1940,8 +2036,13 @@ def main() -> None:
     except ValueError as error:
         parser.error(str(error))
     if args.dry_run:
-        plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                   args.games_per_group, teacher)
+        # 预览也要走续领逻辑，但不能真花种子：在账本副本上领，块与生产下次会拿到的一致。
+        with tempfile.TemporaryDirectory() as preview_dir:
+            ledger = Path(preview_dir) / args.start_seed_ledger.name
+            if args.start_seed_ledger.exists():
+                ledger.write_bytes(args.start_seed_ledger.read_bytes())
+            plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
+                                       args.games_per_group, teacher, start_seed_ledger=ledger)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
