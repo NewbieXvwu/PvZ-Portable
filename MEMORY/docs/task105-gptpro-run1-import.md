@@ -145,3 +145,19 @@ PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 15 /home/newbiex
 扫描/登记与原始逐局数据均在同目录下。每次adaptive最多2个游戏进程，原逐档verify与扫描串行。
 验收通过后生成`deployment_plan.json`，主控可先运行`$P/scripts/deploy_task105.py`预览，
 在组边界排空qc后再用同一脚本的`--apply`；脚本不重启qc。
+
+## 扫描登记进度（2026-10-26 续跑）
+
+流水线 `scripts/task105_pipeline.py` 按 `scan_jobs.json` 顺序跑 adaptive → register；
+断点靠逐局 `games.jsonl` + 结果 json + 导入回执。看守进程 `scripts/task105_supervise.py`
+在流水线非零退出后自动续跑（提交 bbf8c604）。同一时刻最多 2 个游戏进程。
+
+| # | 存档 task_id | 阶梯（晚→早） | 未来种子块 | 提交 |
+|---|---|---|---|---|
+| 1 | `demo_roof_48_doom_m200_s81002031_a7adc1574be88` | 924 / 756 / 672 | 89000000–89000255 | 2e6fa80d |
+| 2 | `demo_roof_47_doom_m300_s81014013_a2957adb511d3` | 1019 / 834 / 741 | 90000000–90000255 | 973404ea |
+| 3 | `demo_roof_48_doom_m200_s81002017_a1a1248a2dd03` | 813 / 518 / 444 / 370 | 91000000–91000255 | ef27965c |
+
+实测每份 26–32 分钟（12 点网格，9 老师点 + 2 学生点 = 88 局）；全部 191 份约需 90 小时以上
+连续算力，期间不并发多份。
+
