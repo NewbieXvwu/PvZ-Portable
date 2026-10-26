@@ -1,0 +1,365 @@
+{
+  "schema": "task97_deploy14b_audit_v1",
+  "deploy14_success": "2026-10-26T08:55:47+08:00 deploy14: first group after restart rc=0, OK",
+  "source_zip_sha256": "d199f51129eec00b40d52caf37cbb2e03e84e93a90da97ddc4d89c67d1f7a801",
+  "baseline_config_sha256": "73061e547426087cb022244b5424dfe05df6d9b6e52a5ebc71174ce85dd21805",
+  "new_config_sha256": "d773be3b554b8492048b933de2750ded5918da8356461d56e4cbff390a069971",
+  "rates_delta_sha256": "f6f4d3c9789b2b7bee6436b801cef3fd56c3b0ac20c262f4a805c61fec9213fa",
+  "engine_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
+  "models": {
+    "rollout_policy": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+      "sha256": "122703803804ab7e1e5aeda4ec382420d45acc349d74fe85344b859a8d760375"
+    },
+    "value": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+    },
+    "static_value": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    }
+  },
+  "panel_tasks": 469,
+  "panel_sha256": "68b37b98d3e29e83ac583fa5897372e7ed248213ec633d79edcf33e01eae26c3",
+  "panel_added": 0,
+  "panel_changed": 0,
+  "panel_seed_overlap": 0,
+  "new_future_count": 2816,
+  "new_future_overlap": 0,
+  "config_tasks_before": 67,
+  "config_tasks_after": 77,
+  "new_start_cells": 11,
+  "existing_task_only_adds_demo_start": [
+    "demo_roof_47_doom_m200"
+  ],
+  "archives": [
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261046/demo_roof_46_doom_m200",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "3650c9c06b7c2cef98c9ad2a7e0582229ebd90d2a6d41227ece5cc4aa53712d2",
+      "ticks_sha256": "fae6ef9881db2585a68e5378e220d76d77eca66197f6657b01b00bc9e72d8f30"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261047/demo_roof_46_doom_m200_s20261047",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "0686ce4712874874c841295bce92cefa65a1f70843c54e529bcb8e10bdac8108",
+      "ticks_sha256": "97c5e637994a27a78bb82077f5cb5cde5f1394ffc9cc325f4e7ec5d0ea38497b"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261047/demo_roof_47_doom_m200",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "cfe48caee1ee03c618d1e7d79718cb6ecda0a1cb7df976dd7e072f61c9d6be81",
+      "ticks_sha256": "0a96c1c3fe2e55d91d3dda7079282d4e055763a497ceacbe0b2e1e490d9f875c"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261048/demo_roof_46_doom_m200_s20261048",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "cdf2a3038ba763ffdb34e8a85aab6c0d390b7181aca12aea11a0a7674a3e8890",
+      "ticks_sha256": "3e1c0ccff9c4e65effe46578904dca9664301389ce4cd7c6883d2b0659f89362"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261048/demo_roof_47_doom_m200_s20261048",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "3bdc0dd8e16cc2f565236148e079fd2da2b8ed31cbef04286e6191803c113f5c",
+      "ticks_sha256": "0e2bad5e7764d8d90c7fa2d53e0f04b8495320d255e277c1a625b6a7b7e6232c"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261048/demo_roof_48_doom_m200",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "ea105560e2d4fbadf7fe5f6cd411c3a432eb0b207fd36809806a506c37af7698",
+      "ticks_sha256": "a887eb7621fa72518a30a4c6fb4e7c482f5fbc939296d46dc9da01b625d445c9"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261049/demo_roof_47_doom_m200_s20261049",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "834e66092837ca84fda2c22d25290c4f1f9f591a8f14c4da5eb44c960ffa9eee",
+      "ticks_sha256": "48daa1f65b825e1c8720201aabfc09f2f97cc4ee5f32dd861e5793d20cf38183"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261049/demo_roof_48_doom_m200_s20261049",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "b1d63e53710fac50a6c8bba3d3340e953738c345f59bc202e70ad036836db8f0",
+      "ticks_sha256": "66e9a40d03b7af55bd38bf6b126f5188db00079911d38850c9dbede737eea31c"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261049/demo_roof_49_doom_m200",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "1d3d1768e30cdbf96093459d5f5c73e3d95c9d77bee6b987f364730cc9581f8d",
+      "ticks_sha256": "70cf5abda67257ca3c806389667a5d84d754996cdd9fe3ad9ef8ff1db59e43d7"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261050/demo_roof_48_doom_m200_s20261050",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "6281120eb2eb68d247476a57ad78a03a871b23bbda09f99bd2c55ade2cfde5bf",
+      "ticks_sha256": "05f4c96811b77d7888b63837bb57ce272f329f970a2f9f6c628a6acf423e18c1"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261050/demo_roof_49_doom_m200_s20261050",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "18e7bb9d573c627aa21a4c807c4e24434b6d0ccf76805bd95ebcc9c621b5d3c9",
+      "ticks_sha256": "8b1835b1d1cedb8153e55fa19627c6141486b77f79159f17dcc3b83ef6072faf"
+    },
+    {
+      "archive": "artifacts/llm_demo/raw/seed_20261051/demo_roof_49_doom_m200_s20261051",
+      "verified": true,
+      "verification_mode": "tick/ok/outcome only: archive recorded by engine not-recorded, replayed by 76ff36dc026f",
+      "meta_sha256": "a36af8e2ed6bfd827f44a1101492ae18deaa71970d42f5fa6a06da44d14699c0",
+      "ticks_sha256": "f442437c7e65356e43caae5612db66c4ef2f64dd4068b9cbed00dfd04fdf56d2"
+    }
+  ],
+  "cells": {
+    "demo_roof_47_doom_m200": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1391,
+      "future_seeds": [
+        46300000,
+        46300001,
+        46300002,
+        46300003,
+        46300004,
+        46300005,
+        46300006,
+        46300007
+      ],
+      "games_sha256": "d588068e014af637ec32a6aee8fbe3c81d67349fd87510c002edc88a9aa66958",
+      "config_sha256": "5dba7e15300679384f0b7a88638cda984c33e7c617e7ecf91d9e45a2900837f8",
+      "archive": "artifacts/llm_demo/raw/seed_20261047/demo_roof_47_doom_m200",
+      "meta_sha256": "cfe48caee1ee03c618d1e7d79718cb6ecda0a1cb7df976dd7e072f61c9d6be81",
+      "ticks_sha256": "0a96c1c3fe2e55d91d3dda7079282d4e055763a497ceacbe0b2e1e490d9f875c"
+    },
+    "demo_roof_46_doom_m200_s20261047": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1089,
+      "future_seeds": [
+        46100000,
+        46100001,
+        46100002,
+        46100003,
+        46100004,
+        46100005,
+        46100006,
+        46100007
+      ],
+      "games_sha256": "0ed94fbea1e544ea58d38a5a6c5c4d3669b88af73fd3a663599e35c3dbd4625f",
+      "config_sha256": "225a6af6a0e39270ef3b107f8a4c7fe0c247c13eaac1e8facdc755f5f82d1f9e",
+      "archive": "artifacts/llm_demo/raw/seed_20261047/demo_roof_46_doom_m200_s20261047",
+      "meta_sha256": "0686ce4712874874c841295bce92cefa65a1f70843c54e529bcb8e10bdac8108",
+      "ticks_sha256": "97c5e637994a27a78bb82077f5cb5cde5f1394ffc9cc325f4e7ec5d0ea38497b"
+    },
+    "demo_roof_46_doom_m200_s20261048": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1138,
+      "future_seeds": [
+        46200000,
+        46200001,
+        46200002,
+        46200003,
+        46200004,
+        46200005,
+        46200006,
+        46200007
+      ],
+      "games_sha256": "3320eed2717ff5f2aecd43219fbba5037f4ff44f47151c850477fefe6a1a04a8",
+      "config_sha256": "0f1bfc9786d1a8b99fb6c509080c65a5f64f843c1783af632e8339ba6f2f4d6a",
+      "archive": "artifacts/llm_demo/raw/seed_20261048/demo_roof_46_doom_m200_s20261048",
+      "meta_sha256": "cdf2a3038ba763ffdb34e8a85aab6c0d390b7181aca12aea11a0a7674a3e8890",
+      "ticks_sha256": "3e1c0ccff9c4e65effe46578904dca9664301389ce4cd7c6883d2b0659f89362"
+    },
+    "demo_roof_47_doom_m200_s20261048": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1367,
+      "future_seeds": [
+        46400000,
+        46400001,
+        46400002,
+        46400003,
+        46400004,
+        46400005,
+        46400006,
+        46400007
+      ],
+      "games_sha256": "322f60978d4220de855fba19d9e8efedd16194a11e983ca8dc56ac7fddd002b1",
+      "config_sha256": "106d86e6fef3d34152e637e1e554e31e5cdffa30fb2047a164d6d6981859f27d",
+      "archive": "artifacts/llm_demo/raw/seed_20261048/demo_roof_47_doom_m200_s20261048",
+      "meta_sha256": "3bdc0dd8e16cc2f565236148e079fd2da2b8ed31cbef04286e6191803c113f5c",
+      "ticks_sha256": "0e2bad5e7764d8d90c7fa2d53e0f04b8495320d255e277c1a625b6a7b7e6232c"
+    },
+    "demo_roof_47_doom_m200_s20261049": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1434,
+      "future_seeds": [
+        46500000,
+        46500001,
+        46500002,
+        46500003,
+        46500004,
+        46500005,
+        46500006,
+        46500007
+      ],
+      "games_sha256": "c7d1d9179cf6bce9ad5eab1a3852917142df727dca126204eb3d88fc76d12ece",
+      "config_sha256": "dad9526d95403b963ff2eb9b1dd9f51b1018d279bbe2ad779e281547d31e6a96",
+      "archive": "artifacts/llm_demo/raw/seed_20261049/demo_roof_47_doom_m200_s20261049",
+      "meta_sha256": "834e66092837ca84fda2c22d25290c4f1f9f591a8f14c4da5eb44c960ffa9eee",
+      "ticks_sha256": "48daa1f65b825e1c8720201aabfc09f2f97cc4ee5f32dd861e5793d20cf38183"
+    },
+    "demo_roof_48_doom_m200_s20261049": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1131,
+      "future_seeds": [
+        46700000,
+        46700001,
+        46700002,
+        46700003,
+        46700004,
+        46700005,
+        46700006,
+        46700007
+      ],
+      "games_sha256": "65d395d0c3240ed44233ebcc70bcf272ce8997b39809891ce74648850da2880b",
+      "config_sha256": "6b971be2d150d3c58fc460a16fe4998cce16976e5bf18510baa718a8a64e03ab",
+      "archive": "artifacts/llm_demo/raw/seed_20261049/demo_roof_48_doom_m200_s20261049",
+      "meta_sha256": "b1d63e53710fac50a6c8bba3d3340e953738c345f59bc202e70ad036836db8f0",
+      "ticks_sha256": "66e9a40d03b7af55bd38bf6b126f5188db00079911d38850c9dbede737eea31c"
+    },
+    "demo_roof_48_doom_m200_s20261050": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1153,
+      "future_seeds": [
+        46800000,
+        46800001,
+        46800002,
+        46800003,
+        46800004,
+        46800005,
+        46800006,
+        46800007
+      ],
+      "games_sha256": "ca63df4cf064f4c15031abeb104bf6e60bb087435879c8594e91a7c380a809b6",
+      "config_sha256": "2acd7a53885942ec5c0b446b1bc628dcc2e87b862ed6c1a144ed6c7c1be64b5a",
+      "archive": "artifacts/llm_demo/raw/seed_20261050/demo_roof_48_doom_m200_s20261050",
+      "meta_sha256": "6281120eb2eb68d247476a57ad78a03a871b23bbda09f99bd2c55ade2cfde5bf",
+      "ticks_sha256": "05f4c96811b77d7888b63837bb57ce272f329f970a2f9f6c628a6acf423e18c1"
+    },
+    "demo_roof_49_doom_m200_s20261050": {
+      "wins": 1,
+      "games": 8,
+      "decision": 1588,
+      "future_seeds": [
+        46900000,
+        46900001,
+        46900002,
+        46900003,
+        46900004,
+        46900005,
+        46900006,
+        46900007
+      ],
+      "games_sha256": "7bff2e9fdf18b9dcf2b7dbff3f23ccb6f0039b99cc7c4bad535168f40e3c801d",
+      "config_sha256": "4cd5ebe891e86b5826bde08f917e82e7404480aa8b3bb6bbc4afa5078ee0c8e1",
+      "archive": "artifacts/llm_demo/raw/seed_20261050/demo_roof_49_doom_m200_s20261050",
+      "meta_sha256": "18e7bb9d573c627aa21a4c807c4e24434b6d0ccf76805bd95ebcc9c621b5d3c9",
+      "ticks_sha256": "8b1835b1d1cedb8153e55fa19627c6141486b77f79159f17dcc3b83ef6072faf"
+    },
+    "demo_roof_49_doom_m200_s20261051": {
+      "wins": 7,
+      "games": 8,
+      "decision": 1529,
+      "future_seeds": [
+        47000000,
+        47000001,
+        47000002,
+        47000003,
+        47000004,
+        47000005,
+        47000006,
+        47000007
+      ],
+      "games_sha256": "29a1d45f052b094c39173d44fc866968bce03df82b83514e5b12baa4596f6ecb",
+      "config_sha256": "97c0e855b338dd38e8ab2a58f40fb2f78a419fb62110b92fbfc3a8840765e124",
+      "archive": "artifacts/llm_demo/raw/seed_20261051/demo_roof_49_doom_m200_s20261051",
+      "meta_sha256": "a36af8e2ed6bfd827f44a1101492ae18deaa71970d42f5fa6a06da44d14699c0",
+      "ticks_sha256": "f442437c7e65356e43caae5612db66c4ef2f64dd4068b9cbed00dfd04fdf56d2"
+    },
+    "demo_roof_46_doom_m200_llm": {
+      "wins": 7,
+      "games": 8,
+      "decision": 724,
+      "future_seeds": [
+        46000000,
+        46000001,
+        46000002,
+        46000003,
+        46000004,
+        46000005,
+        46000006,
+        46000007
+      ],
+      "games_sha256": "b66ad828a7f8e26c35940f6459692f4dda3804c3b09128013c99bf4f2fbeeb18",
+      "config_sha256": "82cf2476d354c40d57b8b6383a6f8f79b7f9bfb71625709b59fde8f7891a9040",
+      "archive": "artifacts/llm_demo/raw/seed_20261046/demo_roof_46_doom_m200",
+      "meta_sha256": "3650c9c06b7c2cef98c9ad2a7e0582229ebd90d2a6d41227ece5cc4aa53712d2",
+      "ticks_sha256": "fae6ef9881db2585a68e5378e220d76d77eca66197f6657b01b00bc9e72d8f30"
+    },
+    "demo_roof_48_doom_m200_llm": {
+      "wins": 8,
+      "games": 8,
+      "decision": 1253,
+      "future_seeds": [
+        46600000,
+        46600001,
+        46600002,
+        46600003,
+        46600004,
+        46600005,
+        46600006,
+        46600007
+      ],
+      "games_sha256": "fa94cb488672fdb590e9fd64b0c87552c54ffb0823e0d3ef860a28ed9b6acda7",
+      "config_sha256": "51d97c74e6e5e07e5bb3fde813956684260a097f7b09692e6833058348469cd0",
+      "archive": "artifacts/llm_demo/raw/seed_20261048/demo_roof_48_doom_m200",
+      "meta_sha256": "ea105560e2d4fbadf7fe5f6cd411c3a432eb0b207fd36809806a506c37af7698",
+      "ticks_sha256": "a887eb7621fa72518a30a4c6fb4e7c482f5fbc939296d46dc9da01b625d445c9"
+    }
+  },
+  "dry_run": {
+    "exit_code": 0,
+    "script": "cq/scripts/curriculum_queue.py (deploy14 + current hotfix, read-only)",
+    "state_copy_sha256": "2e59322d50a315d3f425626911fc71cfc1bb89ef141f9d1f2515fece34a59c4b",
+    "output_sha256": "fdf59326945ccb87c01f3015316ab5aa4dce6289bc1c947d6ce40ddcecf85665",
+    "log_sha256": "191d86dd8da2fc42dd0a8ea012ac98c890a1dbe499251bc08fa6cf54d67fd6d5",
+    "added_llm_cells": [
+      "demo_roof_46_doom_m200_llm",
+      "demo_roof_46_doom_m200_s20261047",
+      "demo_roof_46_doom_m200_s20261048",
+      "demo_roof_47_doom_m200",
+      "demo_roof_47_doom_m200_s20261048",
+      "demo_roof_47_doom_m200_s20261049",
+      "demo_roof_48_doom_m200_llm",
+      "demo_roof_48_doom_m200_s20261049",
+      "demo_roof_48_doom_m200_s20261050",
+      "demo_roof_49_doom_m200_s20261050",
+      "demo_roof_49_doom_m200_s20261051"
+    ],
+    "new_gate_ledger_created": false
+  }
+}

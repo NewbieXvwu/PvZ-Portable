@@ -1,0 +1,68 @@
+{
+  "demo_roof_47_doom_m200": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_46_doom_m200_s20261047": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_46_doom_m200_s20261048": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_47_doom_m200_s20261048": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_47_doom_m200_s20261049": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_48_doom_m200_s20261049": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_48_doom_m200_s20261050": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_49_doom_m200_s20261050": {
+    "wins": 1,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_49_doom_m200_s20261051": {
+    "wins": 7,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_46_doom_m200_llm": {
+    "wins": 7,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  },
+  "demo_roof_48_doom_m200_llm": {
+    "wins": 8,
+    "games": 8,
+    "model": "dw4i_s1 + v5 + desktop branch1",
+    "source": "T97"
+  }
+}
