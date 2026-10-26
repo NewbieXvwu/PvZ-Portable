@@ -20,7 +20,9 @@ def panel(rows):
     for (arm, seed), tasks in rows.items():
         models[f'{arm}_s{seed}'] = {
             'won': sum(t[2] for t in tasks), 'games': sum(t[3] for t in tasks),
-            'tasks': [{'task_id': t[0], 'terrain': t[1], 'won': t[2], 'games': t[3]} for t in tasks],
+            'tasks': [{'task_id': t[0], 'terrain': t[1], 'won': t[2], 'games': t[3],
+                       'seeds': list(range(t[3])),
+                       'outcomes': {str(index): index < t[2] for index in range(t[3])}} for t in tasks],
             'terrains': {}}
         for task in models[f'{arm}_s{seed}']['tasks']:
             bucket = models[f'{arm}_s{seed}']['terrains'].setdefault(task['terrain'], {'won': 0, 'games': 0})
@@ -79,6 +81,22 @@ class VerdictTest(unittest.TestCase):
     def test_missing_model_raises(self):
         with self.assertRaises(KeyError):
             verdict.compare({'models': {}}, panel(regression_rows(4, 4)))
+
+    def test_paired_gain_and_harm_are_kept_separate(self):
+        roof = panel(roof_rows(2, 2))
+        roof['models']['b_s1']['tasks'][0]['outcomes'].update({'0': False, '2': True})
+        result = verdict.compare(roof, panel(regression_rows(4, 4)))
+        row = next(row for row in result['roof_paired']
+                   if row['training_seed'] == 1 and row['task_id'] == 'l42')
+        self.assertEqual((row['pairs'], row['gain'], row['harm'], row['delta_wins']), (32, 1, 1, 0))
+        self.assertEqual(result['roof_training_seed_ranges_pp']['gain'], [0, 0])
+        self.assertEqual(len(result['regression']['paired']), 4)
+
+    def test_unpaired_outcomes_raise(self):
+        roof = panel(roof_rows(2, 10))
+        del roof['models']['b_s1']['tasks'][0]['outcomes']['0']
+        with self.assertRaises(ValueError):
+            verdict.compare(roof, panel(regression_rows(4, 4)))
 
 
 if __name__ == '__main__':

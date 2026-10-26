@@ -3,6 +3,8 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
@@ -47,6 +49,22 @@ class PanelManifestTest(unittest.TestCase):
             with self.assertRaises(ValueError):
                 panel_eval.manifest_for({'tasks': [{'task_id': 'c', 'level': 1, 'deck': [1]}]},
                                         Path(directory) / 'o.json', None)
+
+    def test_completed_games_must_match_frozen_seeds(self):
+        args = SimpleNamespace(value=Path('value.pt'), manifest=Path('manifest.json'), workers=2,
+                               static_value=None, resource_dir=None, executable=None)
+        task = {'task_id': 'roof_l42', 'seeds': [7, 8]}
+        for seeds in ([7, 8], [7], [7, 7], [7, 9]):
+            with self.subTest(seeds=seeds), tempfile.TemporaryDirectory() as directory:
+                out = Path(directory)
+                (out / 'games.jsonl').write_text(''.join(
+                    json.dumps({'arm': 'fast', 'seed': seed, 'won': False}) + '\n' for seed in seeds))
+                with patch.object(panel_eval.subprocess, 'run'):
+                    if seeds == [7, 8]:
+                        self.assertEqual(len(panel_eval.run_task(args, Path('model.pt'), task, out)), 2)
+                    else:
+                        with self.assertRaises(ValueError):
+                            panel_eval.run_task(args, Path('model.pt'), task, out)
 
 
 if __name__ == '__main__':

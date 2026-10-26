@@ -70,7 +70,10 @@ def run_task(args, model_path: Path, task: dict, out: Path) -> list[dict]:
         command += ["--executable", str(args.executable)]
     print("+ " + " ".join(command), flush=True)
     subprocess.run(command, check=True)
-    return read_games(out / "games.jsonl")
+    games = [row for row in read_games(out / "games.jsonl") if row.get("arm") == "fast"]
+    if len(games) != len(task["seeds"]) or {row["seed"] for row in games} != set(task["seeds"]):
+        raise ValueError(f'{task["task_id"]}: completed games differ from frozen seeds')
+    return games
 
 
 def main() -> None:
@@ -115,7 +118,8 @@ def main() -> None:
             row = {"task_id": task["task_id"], "level": task["level"],
                    "terrain": next((t.get("terrain") for t in panel["tasks"]
                                     if t["task_id"] == task["task_id"]), None),
-                   "seeds": task["seeds"], **summarize(games)}
+                   "seeds": task["seeds"], **summarize(games),
+                   "outcomes": {str(game["seed"]): bool(game["won"]) for game in games}}
             per_task.append(row)
             print(f"{label} {task['task_id']}: {row.get('won', 0)}/{row.get('games', 0)}", flush=True)
         won = sum(row.get("won", 0) for row in per_task)

@@ -21,6 +21,8 @@ import json
 from fractions import Fraction
 from pathlib import Path
 
+from value_widen_ab import paired
+
 SEEDS = ('1', '2')
 MIN_MEAN_GAIN = Fraction(10, 100)
 MAX_LEVEL_DROP = Fraction(1, 32)
@@ -45,12 +47,31 @@ def collect(summary: dict, arm: str, seed: str) -> dict:
     return summary['models'][name]
 
 
-def by_level(model: dict) -> dict[str, tuple[int, int]]:
-    return {task['task_id']: (task['won'], task['games']) for task in model['tasks']}
+def by_level(model: dict) -> dict[str, dict]:
+    return {task['task_id']: task for task in model['tasks']}
 
 
 def by_region(model: dict) -> dict[str, tuple[int, int]]:
     return {region: (bucket['won'], bucket['games']) for region, bucket in model['terrains'].items()}
+
+
+def paired_tasks(summary: dict) -> list[dict]:
+    rows = []
+    for seed in SEEDS:
+        a, b = by_level(collect(summary, 'a', seed)), by_level(collect(summary, 'b', seed))
+        for task_id in sorted(set(a) | set(b)):
+            if task_id not in a or task_id not in b:
+                raise KeyError(f'task {task_id} missing from one arm')
+            if a[task_id]['seeds'] != b[task_id]['seeds']:
+                raise ValueError(f'task {task_id}: paired seeds differ')
+            for task in (a[task_id], b[task_id]):
+                if set(task['outcomes']) != {str(seed) for seed in task['seeds']}:
+                    raise ValueError(f'task {task_id}: outcomes differ from frozen seeds')
+            rows.append({'training_seed': int(seed), 'task_id': task_id,
+                         'a': f'{a[task_id]["won"]}/{a[task_id]["games"]}',
+                         'b': f'{b[task_id]["won"]}/{b[task_id]["games"]}',
+                         **paired(a[task_id]['outcomes'], b[task_id]['outcomes'])})
+    return rows
 
 
 def compare(roof: dict, regression: dict) -> dict:
@@ -72,15 +93,7 @@ def compare(roof: dict, regression: dict) -> dict:
     if mean_gain < MIN_MEAN_GAIN:
         failures.append(f'两种子平均净提高 {float(mean_gain * 100):+.1f} 个百分点，低于 10')
 
-    levels = []
-    for seed in SEEDS:
-        a, b = by_level(collect(roof, 'a', seed)), by_level(collect(roof, 'b', seed))
-        for task_id in sorted(set(a) | set(b)):
-            if task_id not in a or task_id not in b:
-                raise KeyError(f'roof task {task_id} missing from one arm')
-            levels.append({'training_seed': int(seed), 'task_id': task_id,
-                           'a': f'{a[task_id][0]}/{a[task_id][1]}', 'b': f'{b[task_id][0]}/{b[task_id][1]}',
-                           'delta': float(rate(*b[task_id]) - rate(*a[task_id]))})
+    levels = paired_tasks(roof)
     per_level = {}
     for row in levels:
         per_level.setdefault(row['task_id'], []).append(Fraction(row['b'].split('/')[0]) / Fraction(row['b'].split('/')[1])
@@ -124,9 +137,14 @@ def compare(roof: dict, regression: dict) -> dict:
                          'max_level_drop_games_of_32': float(MAX_LEVEL_DROP * 32),
                          'max_regression_drop_pp': float(MAX_REGRESSION_DROP * 100),
                          'max_region_drop_pp': float(MAX_REGION_DROP * 100)},
-            'roof': rows, 'roof_levels': level_summary,
+            'roof': rows, 'roof_levels': level_summary, 'roof_paired': levels,
+            'roof_training_seed_ranges_pp': {
+                key: [min(row[field] for row in rows) * factor, max(row[field] for row in rows) * factor]
+                for key, field, factor in [('a', 'a_rate', 100), ('b', 'b_rate', 100), ('gain', 'gain_pp', 1)]},
             'regression': {'overall_pp': [float(x * 100) for x in overall],
                            'overall_mean_pp': float(overall_mean * 100),
+                           'training_seed_gain_range_pp': [float(min(overall) * 100), float(max(overall) * 100)],
+                           'paired': paired_tasks(regression),
                            'regions': region_summary,
                            'region_means_pp': {k: float(sum(v) / len(v) * 100) for k, v in region_means.items()}},
             'failures': failures,
