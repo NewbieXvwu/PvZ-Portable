@@ -1,18 +1,18 @@
 {
-  "candidate": "shared_build2",
+  "candidate": "shared_build4_v2boss_fixed",
   "threshold": 0.98,
   "ratio": "old_worker_seconds / new_worker_seconds",
   "criterion": "median of the 16 paired throughput ratios >= 0.98; decisions identical",
   "workload": "A4 day8 + pool8, serial alternating old/new then new/old",
-  "resume": "First 9 complete pairs and the new arm of pair 10 reused after handoff; same build2 SHA checked before resuming. Completed records were not remeasured.",
+  "resume": "Final build4 trial ran all 16 pairs once, serial ABBA; no repeated or discarded measurements.",
   "inputs": {
     "old": {
       "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
       "sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a"
     },
     "new": {
-      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
-      "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+      "sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845"
     },
     "manifest": {
       "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/stage4/multiplier_panel.json",
@@ -539,8 +539,179 @@
           "old_decisions": 403,
           "ratio": 0.9815668202764978
         }
+      ],
+      "resume": "First 9 complete pairs and the new arm of pair 10 reused after handoff; same build2 SHA checked before resuming. Completed records were not remeasured."
+    },
+    {
+      "label": "shared_build4_v2boss_fixed",
+      "source": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/abba4/throughput_abba.json",
+      "sha256": "921d2e6dd26b3aead5c8d2983bed6cf214f85226a2dd699fe296cf7dc4358dfb",
+      "median_throughput_ratio": 1.0218131659056318,
+      "pass": true,
+      "games": [
+        {
+          "cell": "day",
+          "seed": 5012288,
+          "order": "oldnew",
+          "old_seconds": 222.7,
+          "old_decisions": 1257,
+          "new_seconds": 203.4,
+          "new_decisions": 1257,
+          "ratio": 0.9133363268971711
+        },
+        {
+          "cell": "day",
+          "seed": 5012289,
+          "order": "newold",
+          "new_seconds": 201.4,
+          "new_decisions": 1234,
+          "old_seconds": 193.0,
+          "old_decisions": 1234,
+          "ratio": 1.0435233160621762
+        },
+        {
+          "cell": "day",
+          "seed": 5012290,
+          "order": "oldnew",
+          "old_seconds": 159.8,
+          "old_decisions": 1069,
+          "new_seconds": 165.2,
+          "new_decisions": 1069,
+          "ratio": 1.0337922403003754
+        },
+        {
+          "cell": "day",
+          "seed": 5012291,
+          "order": "newold",
+          "new_seconds": 162.9,
+          "new_decisions": 1164,
+          "old_seconds": 154.9,
+          "old_decisions": 1164,
+          "ratio": 1.051646223369916
+        },
+        {
+          "cell": "day",
+          "seed": 5012292,
+          "order": "oldnew",
+          "old_seconds": 125.3,
+          "old_decisions": 1141,
+          "new_seconds": 167.6,
+          "new_decisions": 1141,
+          "ratio": 1.3375897845171587
+        },
+        {
+          "cell": "day",
+          "seed": 5012293,
+          "order": "newold",
+          "new_seconds": 127.4,
+          "new_decisions": 995,
+          "old_seconds": 113.3,
+          "old_decisions": 995,
+          "ratio": 1.124448367166814
+        },
+        {
+          "cell": "day",
+          "seed": 5012294,
+          "order": "oldnew",
+          "old_seconds": 119.3,
+          "old_decisions": 1147,
+          "new_seconds": 116.8,
+          "new_decisions": 1147,
+          "ratio": 0.9790444258172674
+        },
+        {
+          "cell": "day",
+          "seed": 5012295,
+          "order": "newold",
+          "new_seconds": 113.1,
+          "new_decisions": 968,
+          "old_seconds": 139.3,
+          "old_decisions": 968,
+          "ratio": 0.8119167264895907
+        },
+        {
+          "cell": "pool",
+          "seed": 5309248,
+          "order": "oldnew",
+          "old_seconds": 19.1,
+          "old_decisions": 410,
+          "new_seconds": 18.6,
+          "new_decisions": 410,
+          "ratio": 0.9738219895287958
+        },
+        {
+          "cell": "pool",
+          "seed": 5309249,
+          "order": "newold",
+          "new_seconds": 20.1,
+          "new_decisions": 417,
+          "old_seconds": 20.3,
+          "old_decisions": 417,
+          "ratio": 0.9901477832512315
+        },
+        {
+          "cell": "pool",
+          "seed": 5309250,
+          "order": "oldnew",
+          "old_seconds": 35.9,
+          "old_decisions": 609,
+          "new_seconds": 32.9,
+          "new_decisions": 609,
+          "ratio": 0.9164345403899722
+        },
+        {
+          "cell": "pool",
+          "seed": 5309251,
+          "order": "newold",
+          "new_seconds": 18.0,
+          "new_decisions": 385,
+          "old_seconds": 18.4,
+          "old_decisions": 385,
+          "ratio": 0.9782608695652175
+        },
+        {
+          "cell": "pool",
+          "seed": 5309252,
+          "order": "oldnew",
+          "old_seconds": 17.8,
+          "old_decisions": 377,
+          "new_seconds": 16.8,
+          "new_decisions": 377,
+          "ratio": 0.9438202247191011
+        },
+        {
+          "cell": "pool",
+          "seed": 5309253,
+          "order": "newold",
+          "new_seconds": 19.6,
+          "new_decisions": 398,
+          "old_seconds": 17.9,
+          "old_decisions": 398,
+          "ratio": 1.0949720670391063
+        },
+        {
+          "cell": "pool",
+          "seed": 5309254,
+          "order": "oldnew",
+          "old_seconds": 24.1,
+          "old_decisions": 438,
+          "new_seconds": 23.0,
+          "new_decisions": 438,
+          "ratio": 0.954356846473029
+        },
+        {
+          "cell": "pool",
+          "seed": 5309255,
+          "order": "newold",
+          "new_seconds": 20.5,
+          "new_decisions": 403,
+          "old_seconds": 23.6,
+          "old_decisions": 403,
+          "ratio": 0.8686440677966101
+        }
       ]
     }
   ],
-  "pass": true
+  "pass": true,
+  "selection_note": "build2 passed the legacy-policy panel but rejected v2boss weights; build4 includes the channel fix and is the validated final candidate."
 }

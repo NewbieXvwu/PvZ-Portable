@@ -11,9 +11,9 @@ REV=0b8dcc26 # deploy14fix base: 7722c0d1 plus the seeds-exhausted fix.
 # Production code is checked, never checked out: this deploy changes the engine only.
 PATCH_REV=fd1a0b61ffb7e74b7b835e3adb8ffbe001e27c1c
 CODE_FILES="scripts/curriculum_queue.py scripts/pvz_tasks.py scripts/search_play.py scripts/select_student.py scripts/train_rollout_policy.py"
-ENGINE_SHA=83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029
+ENGINE_SHA=de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845
 OLD_SHA=76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a
-ENGINE=$SRC/artifacts/task95/engine/pvz-portable-build2
+ENGINE=$SRC/artifacts/task95/engine/pvz-portable-build4
 NEWEXE=$W/build6/pvz-portable
 OLDEXE=$W/build5/pvz-portable
 O=/home/newbiexvwu/pvz-logs/deploy15
@@ -61,12 +61,11 @@ import sys
 root = Path(sys.argv[1])
 engine = Path(sys.argv[2]).resolve()
 new_sha, old_sha = sys.argv[3:5]
-gate = json.loads((root / 'artifacts/task95/gate_b2/gate_evidence.json').read_text())
-speed = json.loads((root / 'artifacts/task95/abba3/throughput_abba.json').read_text())
-boss = json.loads((root / 'artifacts/task95/boss_l50.json').read_text())
+gate = json.loads((root / 'artifacts/task95/gate_b4/gate_evidence.json').read_text())
+speed = json.loads((root / 'artifacts/task95/abba4/throughput_abba.json').read_text())
+boss = json.loads((root / 'artifacts/task95/b4/boss_l50.json').read_text())
 evidence = json.loads((root / 'MEMORY/docs/task95-engine-gate.json').read_text())
-probe = evidence['state_hash_probe_build2']
-suite = evidence['six_family_hash_suite']
+suite = evidence['six_family_hash_suite_build4']
 assert gate['pass'] is True and gate['seeds'] == 8 and len(gate['cells']) == 6
 assert {cell['cell'] for cell in gate['cells']} == {'day', 'night', 'pool', 'conveyor', 'roof', 'fog'}
 assert all(cell['games'] == 16 for cell in gate['cells'])
@@ -86,11 +85,10 @@ assert boss['pass'] is True and len(boss['games']) == 4 and all(boss['checks'].v
 assert boss['task_id'] == 'boss_l50_orig_eval' and boss['seeds'] == list(range(85000000, 85000004))
 assert boss['commands']['new']['executable_sha256'] == new_sha
 assert boss['commands']['old']['executable_sha256'] == old_sha
-assert Path(probe['executable']).resolve() == engine
-assert probe['multi_process']['distinct'] == probe['same_process']['distinct'] == 1
 assert suite['pass'] is True and len(suite['cells']) == 6
 assert all(cell['stable'] for cell in suite['cells'])
 assert Path(suite['new_executable']).resolve() == engine
+assert suite['new_sha256'] == new_sha and suite['old_sha256'] == old_sha
 PY
 log "deploy15: preflight passed; waiting for qc group boundary"
 stop_qc
@@ -103,7 +101,7 @@ cp "$ENGINE" "$NEWEXE" || rollback "engine copy failed"
 timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --executable "$NEWEXE" --promotion-panel "$PANEL3" > "$O/dryrun.out" 2>&1 || rollback "dry-run failed"
 n0=$(grep -c ' rc=' /home/newbiexvwu/pvz-logs/curriculum.log)
 start_qc "$NEWEXE"
-log "deploy15: restarted with archived 83aed3be (build2); deploy14c code/panel/rates retained"
+log "deploy15: restarted with archived de952714 (build4); deploy14c code/panel/rates retained"
 for i in $(seq 1 120); do
   sleep 30
   [ "$(grep -c ' rc=' /home/newbiexvwu/pvz-logs/curriculum.log)" -gt "$n0" ] && break

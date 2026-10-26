@@ -190,6 +190,11 @@
       "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
       "bytes": 10650944,
       "sha256": "83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029"
+    },
+    "build4": {
+      "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+      "sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+      "bytes": 10655664
     }
   },
   "models": {
@@ -210,7 +215,7 @@
   "source_src_tip": "a630fbd842f6e8a2493f09de3d433608bd71a254",
   "pgo_profile_files": 141,
   "build_flags": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch",
-  "verification": "Candidate 83aed3be: 96/96 six-family games bit-exact (old arm reused after byte-identical check), full L50 four-seed match with Boss fields, 16/16 ABBA pairs >= 0.98, and all six A2 tasks deterministic in both process modes. 07703a57 records kept as the rejected first build.",
+  "verification": "Final build4 passed the six-family logic/action gate, four L50 pairs, 16-pair A4 ABBA and six-family determinism. Existing old controls and completed build4 gate sets reused; final build4 ABBA ran once. Earlier candidate evidence retained under its original keys.",
   "logic_gate_build2": {
     "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
     "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build2",
@@ -632,7 +637,8 @@
     "sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
     "bytes": 10655664,
     "source_fix_commit": "acc3b43115c61d71342f3b692e5105c32175790d",
-    "status": "logic and L50 passed; ABBA running; hash suite scheduled"
+    "status": "validated final candidate; deployment script written only",
+    "pass": true
   },
   "boss_l50_build4": {
     "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/b4/boss_l50.json",
@@ -878,5 +884,177 @@
         "decisions": 106
       }
     ]
+  },
+  "six_family_hash_suite_build4": {
+    "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/state_hash_suite_build4.json",
+    "sha256": "a842b3346e0183fbd2cab9b593867c143db6434efa2bc14b7ee2b8051623251a",
+    "scope": "six A2 tasks, first seed; reset and waits of 60 then 600 ticks",
+    "new_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4",
+    "old_executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/deploy14-pvz-portable",
+    "new_sha256": "de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845",
+    "old_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
+    "reused_control_from": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/state_hash_suite_build2.json",
+    "cells": [
+      {
+        "cell": "day",
+        "task_id": "day_l7_train_d7_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 1,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "night",
+        "task_id": "night_l14_train_n10_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          8,
+          9,
+          11
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 3,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "pool",
+        "task_id": "pool_l24_train_p9k_m125",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          7,
+          16,
+          19
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 2,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "conveyor",
+        "task_id": "day_l10_orig_train_m125",
+        "deck": [],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 4,
+        "old_same_distinct": 1,
+        "stable": true
+      },
+      {
+        "cell": "roof",
+        "task_id": "roof_l41_train_r7",
+        "deck": [
+          0,
+          1,
+          2,
+          3,
+          32,
+          35,
+          33
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 2,
+        "old_same_distinct": 2,
+        "stable": true
+      },
+      {
+        "cell": "fog",
+        "task_id": "fog_user_l31_snow",
+        "deck": [
+          9,
+          8,
+          10,
+          16,
+          23,
+          17,
+          19,
+          2,
+          3,
+          5
+        ],
+        "new_multi_samples": 8,
+        "new_same_samples": 4,
+        "new_multi_distinct": 1,
+        "new_same_distinct": 1,
+        "old_multi_distinct": 3,
+        "old_same_distinct": 2,
+        "stable": true
+      }
+    ],
+    "pass": true
+  },
+  "throughput_build4": {
+    "file": "/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/abba4/throughput_abba.json",
+    "sha256": "921d2e6dd26b3aead5c8d2983bed6cf214f85226a2dd699fe296cf7dc4358dfb",
+    "pairs": 16,
+    "ratio": "old_worker_seconds / new_worker_seconds",
+    "median": 1.0218131659056318,
+    "minimum": 0.98,
+    "decision_mismatch": [],
+    "pass": true
+  },
+  "selected_candidate": "build4",
+  "source_final": {
+    "source_commit": "acc3b43115c61d71342f3b692e5105c32175790d",
+    "base": "a8d00858",
+    "files": 7,
+    "insertions": 138,
+    "deletions": 12,
+    "extra_fix": "v2boss load/features use 13 added channels; Encode consumes the same 105 total channels",
+    "existing_policy_impact": "no action or logical differences in the full 96-pair gate"
+  },
+  "build_flags_build4": "FLAGS = -O3 -DNDEBUG -std=c++20 -flto=auto -fno-fat-lto-objects -ffp-contract=off -g1 -fprofile-use=/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/perf/pgo4 -fprofile-correction -Wno-missing-profile -Wno-error=coverage-mismatch",
+  "pipeline_build4": {
+    "gate": {
+      "returncode": 0,
+      "finished_epoch": 1793025519.8048155
+    },
+    "boss": {
+      "returncode": 0,
+      "finished_epoch": 1793025540.0918279
+    },
+    "abba": {
+      "returncode": 0,
+      "finished_epoch": 1793028494.4515045
+    },
+    "hash": {
+      "returncode": 0,
+      "finished_epoch": 1793028518.3584125
+    }
   }
 }

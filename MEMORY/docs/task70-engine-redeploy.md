@@ -149,22 +149,18 @@ B7 和 B6 一起进 deploy14。
    **只写脚本、不执行**，由主控执行。
 7. 结果写本文件，`git push origin redeploy`。每个任务最多 2 个游戏进程。
 
-## B9：task95 / deploy15 引擎（2026-10-26，build2已验收，v2boss修复版build4验证中）
+## B9：task95 / deploy15 引擎（2026-10-26 23:30，验收完成）
 
-本节对应[task95任务书](task95-deploy15-engine.md)。只准备引擎与部署脚本；不执行部署，不操作生产qc/cq。本任务游戏进程上限2；吞吐阶段串行运行1个游戏进程，其他任务不作调整。
+最终候选为 **build4 / de952714**，已通过任务书验收；部署脚本只写未执行。源码包含task82初始化、task85 Boss观测，以及本次发现并修复的v2boss通道不一致：加载、特征缓冲和Encode统一为13个附加空间通道（总105），Python导出的v2boss模型可加载并前向。修复提交为`acc3b431`，随本次合并进入deploy15；现有A2模型行为不变。
 
-22:40续做：build2虽通过现有策略门禁，但不能加载Python导出的v2boss模型。三处通道修复acc3b431已用于PGO归档build4（de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845），可加载并前向；build4六族96对动作/逻辑0差异、L50四种子对拍均PASS，正在串行ABBA，随后补候选哈希。下表暂保留build2历史结果，最终候选与脚本待build4整体验收后统一更新。
-
-| 项目 | 证据与结论 |
+| 项目 | 结果 |
 |---|---|
-| 源码差异 | a8d00858至a630fbd842f6e8a2493f09de3d433608bd71a254，src共7文件、+137/-11；task82初始化、task85增量Boss观测、task81特权增量字段及demo测试缝。具体逐项影响见task95结果；预期不改现有策略的游戏逻辑。 |
-| PGO留档 | 首建`artifacts/task95/engine/pvz-portable`，SHA256 `07703a5781e70d2c3b1b3ad7b0c473ddfaf2a313ac2ce4f5724035ba44e184be`，141份profile，Release/O3/LTO、ffp-contract=off。**该构建吞吐不过（见下行），不作候选**：`/usr/local/lib/libopenmpt.a`（10-25 17:02 新装）让`find_library`选中静态库，二进制68.7 MB、`.text` 4.55 MB，deploy14是10.4 MB / 2.48 MB。按deploy14的共享库链接重建`artifacts/task95/engine/pvz-portable-build2`，SHA256 `83aed3bed2b74392b20367915d84908faf9384a986a115893baecdccf65f2029`（10.65 MB、`.text` 2.70 MB、`NEEDED`含`libopenmpt.so.0`）。原构建保留不覆盖。 |
-| 旧引擎 | 本任务留档`artifacts/task95/engine/deploy14-pvz-portable`，SHA256 `76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a`。 |
-| 六族门禁 | **候选83aed3be PASS**：6族×老师/学生×8种子、每引擎96局。候选臂17:03–18:44跑完，96对完整动作流（非截断前缀）与全部逻辑字段0差异；旧臂36个`games.jsonl`与192个帧档复用原门禁副本，`diff -rq`逐字节一致。state_hash新旧差96/96属task82初始化字段（见下行）。原07703a57同样96对0差异，结论保留。门禁命令由`command_for`生成，该函数在部署树与当前 cq 代码中逐字节相同；`search_play`/`pvz_tasks` 的差异只在`deck_random`分支，四个生产清单无此字段，故门禁命令与牌组同生产一致。证据`artifacts/task95/gate_b2/gate_evidence.json`。 |
-| 同引擎确定性 | L7 seed30000探针：07703a57与83aed3be各8个独立进程的reset/60/660tick哈希线全部相同，同进程4次reset后60tick也全同；旧引擎对照分别3种哈希线、4种哈希。**六族正式任务复核（候选83aed3be）**：按A2六族清单首种子、地形匹配deck，每族8独立进程+同进程4次reset、三个时间点（0/60/660tick），候选在6/6族、两种模式下均只有1条哈希线，且两模式相互一致（PASS）；旧引擎同法6/6族不稳定（多进程2–4种、同进程1–2种），task82的效果在全部六族上成立。证据`artifacts/task95/state_hash_suite_build2.json`。 |
-| 吞吐ABBA | **83aed3be完整16对PASS**：逐对old/new中位数0.9934474352≥0.98，决策数16/16相同。续跑保留已落盘9对及第10对new臂，运行产物与归档SHA相同，未重测已完成记录。07703a57两次完整实测0.9477023114与0.9687719632均失败，全部保留。静态/动态链接偏差已确认，函数尺寸不能单独排除源码性能影响；最终验收使用完整ABBA。[逐对数字与输入指纹](task95-throughput.json)。 |
-| L50 | **候选83aed3be PASS**：`boss_l50_orig_eval` 种子85000000..3，旧/新引擎各4局，同用A2 `dw4i_s1`、beta=0、`conveyor_start=original` 生产形态命令。4/4 逐帧动作流一致，全部逻辑字段（终局、final_tick 5895–7720、决策数、mowers 等）一致；候选Boss块存在且字段齐全（active/stage/head/action/target_row/target_col/projectile，107–144帧/局，动作含head/idle/summon），旧引擎无该块。四局均到终局（均输），结论不依赖是否读取Boss字段。证据`artifacts/task95/boss_l50.json`。**边界**：本行只证明 JSON `boss` 块与终局一致；`observation=6` 向量路径有通道数不一致（C++ 按 106 加载/分配、`Encode` 只传 101，Python 为 105），当前无 v2boss 模型，且 Python 导出的 v2boss 模型已被 build2 以`invalid rollout network weights`拒绝（已复现），故不宣称 v2boss 学生可用；修复分支`task95-bossfix`已在非 PGO 临时构建上验证可加载并前向，生产候选仍是 build2；详见 task95 问题。 |
+| 源码与PGO | 相对a8d00858共7个src文件、+138/-12；沿用Release/O3/LTO、ffp-contract=off及共享libopenmpt，141份profile。构建完成立即留档，验收后不重新构建替换。 |
+| 六族逻辑门禁 | 老师/学生各8种子，每引擎96局；96对完整动作流及逻辑字段零差异。旧引擎对照复用。新旧完整state_hash差96/96，符合初始化修复。 |
+| 同引擎确定性 | 六族正式任务首种子，每族8个独立进程、同进程4次重置，在reset及两段等待后均只有1条哈希线，两模式相同。旧对照六族均出现不稳定，复用已完成记录。 |
+| 吞吐ABBA | day8+pool8，共16对串行ABBA；逐对old_seconds/new_seconds中位数 **1.0218131659 ≥ 0.98**，决策数零差异。全部配对保留。 |
+| L50 | boss_l50_orig_eval四种子85000000..3，动作与逻辑终局4/4一致（均到终局、均输）；候选Boss七字段齐全，107–144帧/局。旧学生不读新增Boss字段。 |
 
-模型固定为A2夹具：`dw4i_s1`、`value_net/v4`、`value_branch1`，不把旧夹具标成现役v5。二进制/模型指纹、逐族统计及新旧探针数值见[task95-engine-gate.json](task95-engine-gate.json)。吞吐原始记录留在本地`artifacts/task95/`，未提交二进制、帧归档或日志。
+最终引擎留档：`/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy15/artifacts/task95/engine/pvz-portable-build4`，10,655,664 B，SHA256 `de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845`。旧引擎为本任务留档的deploy14，SHA256 `76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a`。模型沿用A2夹具dw4i_s1 / value_net v4 / value_branch1；结论与指纹见[task95-engine-gate.json](task95-engine-gate.json)，逐对用时见[task95-throughput.json](task95-throughput.json)。原07703a57因吞吐不达标退出，build2因v2boss不可用退出；历史证据保留。
 
-部署脚本版本见[scripts/qc_deploy15.sh](../../scripts/qc_deploy15.sh)，与`/home/newbiexvwu/pvz-logs/qc_deploy15.sh`内容一致，两份`bash -n`均通过，**只写、未执行**。以**当前生产代码**为基线：deploy14c 已于 16:15 上线 deploy14fix `0b8dcc26` + `fd1a0b61` 的五个文件（`curriculum_queue` / `pvz_tasks` / `search_play` / `select_student` / `train_rollout_policy`），面板、teacher_rates、state 未动。deploy15 **不 checkout 代码**（deploy14 有这一步；本任务只换引擎，回退代码会撤掉 deploy14c），改为只读断言：`0b8dcc26` 之后 `scripts python recipes configs` 的改动集必须恰好是这五个文件，且五个 blob 与 `fd1a0b61` 逐一同哈希，否则拒绝部署。不更换面板/teacher_rates/配方，只复制归档候选至`cq/build6/`并切换引擎路径。执行前验证六族、吞吐、Boss与哈希证据；未完成或失败即拒绝部署。回滚仅换回`cq/build5/`旧引擎。**最终候选为83aed3be（build2）**：`ENGINE_SHA`、归档路径与四条证据路径（`gate_b2/gate_evidence.json`、`abba3/throughput_abba.json`、`boss_l50.json`、`task95-engine-gate.json` 的 `state_hash_probe_build2` 与 `six_family_hash_suite`）已全部指向build2；07703a57因吞吐不过被排除，记录保留。前置检查的Python块已按脚本参数单独运行通过（只读断言，未执行部署），两份脚本`bash -n`通过且内容一致。`~/pvz-logs/qc_deploy15.sh` 仍**只写、未执行**，等主控执行。
+[部署脚本](../../scripts/qc_deploy15.sh)已同步到`/home/newbiexvwu/pvz-logs/qc_deploy15.sh`，**只写、未执行**。仅复制此归档引擎至cq/build6并切换引擎路径，保留deploy14c代码、面板、teacher_rates和配方；代码守卫沿用0b8dcc26加fd1a0b61五文件，绝不checkout或回退代码。脚本绑定build4的gate_b4、abba4、b4/boss_l50及六族哈希证据，失败即拒绝部署；回滚只换回cq/build5旧引擎。验证期间每任务最多2个游戏进程，未操作生产qc或其他任务。
