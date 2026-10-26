@@ -179,6 +179,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 - 这个模型里重复度极高，不是理论上的边角情况：`packet_embedding`（`python/pvz_rollout_policy.py:111`，表大小 = `PACKETS` 或 `PlantTypes`）在 2048 行的 batch 里平均只有 **8.4 个不同的 packet id**，也就是约 2040 行在同一批里撞同一批表行。这解释了为什么 20 多个参数里唯独它的梯度先分叉。
 - 这与“cuBLAS workspace 换算法”是**两条不同的路径**：embedding 的梯度是散射累加，不走 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它。所以单靠固定 workspace 不足以覆盖本次定位到的第一步分叉，`torch.use_deterministic_algorithms(True)` 这类开关才是针对这一条的手段（它会把 embedding backward 换成确定性实现）。**“只开确定性、不固定 workspace”的两例对照没跑成**：从 18:5x 起 qc 的训练进程（round_000020）连续占用 GPU 90 分钟，本任务的准入按规则让行，等待期间一例未启动，已停掉等待器。想补就跑：`task96_scale_probe.py run`（新用例名 `det_only_a/b` 已写进 plan，qc 训练结束时才会启动）。
 - 仍未拿到内核级回执（没有 atomicAdd / 排序实现的 kernel trace），所以“原子累加顺序”是**与观测相容的机制解释**，不是已证明的内核行为。
+
 ## 冻结与修法建议（生产未改）
 
 1. 每轮先固定标签快照；对 frames/meta/显式训练行清单以及 pack index 和每个引用段保存内容 SHA256。内容清单写入 `round_*/inputs.json`，训练前后核验。不把路径、大小或 mtime 当内容身份。现有不可变段可按内容地址复用，避免重复复制整库；保留到评估回执已固定其依赖。
@@ -191,6 +192,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
    - 挑选时**必须**把 `CUBLAS_WORKSPACE_CONFIG` 与确定性开关固定住。否则各种子落在不同显存/算法状态上，挑选结果里混进的是环境差异，不是种子效应，多训几个种子再挑也挑不出真实方差。
    - 对 42/192 的 heldout 落差，仍需要多个完整训练 + 新种子配对评估，不能用单个 r11 称“幸运”就认定原因。
 
+7. **确定性开关要真打开，不能只固定 workspace。** 本次定位到第一步分叉在 `packet_embedding` 的梯度（散射累加），这条路径不经 GEMM，`CUBLAS_WORKSPACE_CONFIG` 碰不到；`torch.use_deterministic_algorithms(True)` 才是覆盖它的开关。两者一起开的那 5 次全同，说明组合有效；只开确定性、不固定 workspace 的对照因 qc 占卡未跑，所以“哪一半在起作用”仍是推断。
 ## 复核命令
 
 所有新写入均在 repro 内；`/tmp/exp96` 只是 CodeBuddy 已留的冻结只读训练代码快照。执行前保持 qc GPU 优先。
