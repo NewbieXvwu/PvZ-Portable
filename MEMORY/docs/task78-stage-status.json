@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T13:24:49.366258+00:00",
+ "at_utc": "2026-10-26T16:05:08.199391+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 84,
+  "completed_label_jobs": 121,
   "replay_completed_k": [
    0
   ],
@@ -577,6 +577,34 @@
     "k1": 12,
     "k2": 0
    }
+  },
+  "collection_progress": {
+   "at_utc": "2026-10-26T16:05:08.199391+00:00",
+   "completed_label_jobs": 121,
+   "by_future": {
+    "k0": 72,
+    "k1": 49,
+    "k2": 0
+   },
+   "completion_markers_by_level": {
+    "k0": {
+     "41": 24,
+     "42": 24,
+     "43": 24
+    },
+    "k1": {
+     "41": 24,
+     "42": 24,
+     "43": 1
+    },
+    "k2": {}
+   },
+   "scope": "normal complete.json markers only; k1 export and full downstream label audit pending",
+   "controller_pid": 991266,
+   "controller_process_start_ticks": "29124877",
+   "games": 2,
+   "nice": 19,
+   "extra_raw_label_audit_performed": false
   }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
