@@ -64,6 +64,9 @@
   照 `gatepower/scripts/task84_ablation_eval.py` 在 heldout 192 + 对照 d7 192 配对评估（deploy4、fast、dagger-beta 0，
   r11 配对局在 `~/pvz-logs/curriculum_state.pipeline/round_000013/evaluations/a41fdfa96075ae608a40/incumbent/`）。
   基线：A 124/172、D2 169/178、r11 166/168。
+- 2026-10-26 补记：**采集已完成（自行跑完，非 CodeBuddy 操作）**——3 族 × 48 局老师局全齐，
+  存档 `artifacts/task93/frames/seed_*/{rand_d7,rand_n12,rand_p21}_fast_search` 各 48（逐局结果在 `artifacts/task93/collect/`）。
+  Codex 从 pack 步骤接着做即可（上方交手行里“采集中”字样已过时）。CodeBuddy 保持停止。
 
 - 2026-10-26 Codex 续做：现场确认第 3 步已提交 2fb1e925、第 4 步采集存活，沿用同一 144 局作业，未重开游戏。
   新增 `scripts/task93_analyze.py`：逐份核验冷启动 192 局完整终局/卡组/双臂，0–47 覆盖全表补入结论文档；
