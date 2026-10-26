@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T10:54:11.850518+00:00",
+ "at_utc": "2026-10-26T11:04:58.503607+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 57,
+  "completed_label_jobs": 59,
   "replay_completed_k": [
    0
   ],
@@ -413,7 +413,29 @@
    "collection_complete": true,
    "downstream_export_status": "pending",
    "gate_evaluated": false
-  }
+  },
+  "prefix_replay_reuse": {
+   "at_utc": "2026-10-26T11:04:58.503607+00:00",
+   "policy": "Reuse the k0 prefix replay for identical k1/k2 frozen archives and roots; only labelling future seeds differ.",
+   "source_replay_sha256": "5a5017f6610014ddc64c877add4badef65d597a71f1eafd009445cab56abb4d1",
+   "derived_receipts": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k1/replay.json": "07f75b3835b8e7c162e42f024a8bf422cd84c8c91b767756d4750c51b0a6185c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k2/replay.json": "2d66cb56972a94277cc5d93d16502402fffb30c5e11b11a31473295ffe36232a"
+   },
+   "prefix_worlds": 24,
+   "prefix_roots": 48,
+   "new_engine_processes": 0,
+   "metadata_seconds": 0.057794868014752865,
+   "avoided_repeat_replay_seconds": 168.01898336410522,
+   "actual_root_pre_label_checks_retained": true,
+   "required_label_jobs": 216,
+   "full_downstream_export_and_scoring_retained": true
+  },
+  "replay_proof_available_k": [
+   0,
+   1,
+   2
+  ]
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
