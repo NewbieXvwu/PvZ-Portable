@@ -10,7 +10,7 @@
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
-- [分工与 codex / CUDA 执行记录约定](notes/workflow.md)
+- [分工与 codex / CUDA 执行记录 / 每任务并发与交付约定](notes/workflow.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)
@@ -106,3 +106,4 @@
 - [2026-10-25](2026-10-25.md)
 - [2026-10-26](2026-10-26.md)
 - [qc 异常隔离与看门狗](docs/qc-resilience.md)
+- [deploy14课程审计](docs/curriculum-audit.md)
