@@ -2,7 +2,7 @@
 
 用法（在包根目录下）：
 
-    from llmplay import Game, list_tasks
+    from llmplay import Game, list_tasks, out_dir
 
     print(list_tasks())
     g = Game("demo_roof_49_doom_m200")
@@ -11,12 +11,19 @@
     g.plant(0, 0, 0)
     g.wait(300)
     print(g.summary())
-    g.export_archive("/mnt/data/out/l49_seed20261049")
+    g.export_archive(out_dir() / "l49_seed_example")
 """
 from .game import Game, load_tasks, task_spec, ROOT
-from .delivery import resume, progress, next_task
+from .delivery import resume, progress, next_task, ensure_run_id, output_dir as out_dir
+from .runtime import paths
+from .resources import install as _install_resources, app_data as _app_data
 
-__all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "progress", "next_task"]
+_resources = _install_resources(ROOT)
+if _resources is not None:
+    _app_data(ROOT / "build" / "pvz-portable", _resources)
+    ensure_run_id()
+
+__all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "progress", "next_task", "out_dir", "paths"]
 
 
 def list_tasks() -> dict:

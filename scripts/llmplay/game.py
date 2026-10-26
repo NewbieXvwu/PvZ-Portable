@@ -78,7 +78,7 @@ atexit.register(_auto_observe)
 
 SCHEMA = "llmplay_log_v1"
 ARCHIVE_SCHEMA = "episode_archive_v1"
-LABEL_SOURCE = "llm_gpt_pro"
+LABEL_SOURCE = "llm_agent"
 FRAME_INTERVAL = 60          # 与 human_demo 的帧节奏一致（每 60 tick 一帧）
 DEFAULT_MANIFEST = ROOT / "configs" / "human_demo_tasks.json"
 ROBUSTNESS_CONFIG = ROOT / "configs" / "llmplay_robustness.json"
@@ -201,12 +201,18 @@ class Game:
 
     def __init__(self, task_id: str, *, seed=None, manifest=None, executable=None,
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
-                 robustness=None, manual_patch: bool = False, _internal: bool = False):
+                 robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
         self.task_id = task_id
         self.task_definition = tasks[task_id]
+        from .delivery import ensure_run_id, progress
+        self.run_id = run_id or ensure_run_id()
+        if seed is None:
+            pending = progress()["tasks"].get(task_id, {}).get("available_seeds")
+            if pending:
+                seed = pending[0]
         self.spec, self.deck, self.seed = task_spec(self.task_definition, seed)
         self.manifest = Path(manifest) if manifest else DEFAULT_MANIFEST
         self.executable = Path(executable) if executable else _default_executable()
@@ -255,7 +261,9 @@ class Game:
             return
         _ensure_executable(self.executable)
         target = self.tick          # _reset_engine 会把 self.tick 归零，先记住
-        self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True)
+        from .resources import app_data
+        self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True,
+                          save_dir=app_data(self.executable, self.resource_dir, self.session))
         self._reset_engine()
         if self.ops or target:
             self._replay_to(target)
@@ -613,6 +621,7 @@ class Game:
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
                     tick=self.tick, note=self.note, manual_patch=self.manual_patch,
+                    run_id=self.run_id,
                     robustness=copy.deepcopy(self.robustness_report))
         self.session.note_branch(self.budget_key, +1)
         child._is_branch = True
@@ -720,7 +729,7 @@ class Game:
                         break
             trial = Game(self.task_id, seed=self.seed, manifest=self.manifest,
                          executable=self.executable, resource_dir=self.resource_dir,
-                         ops=kept, frames=[], tick=replay_tick, _internal=True)
+                         ops=kept, frames=[], tick=replay_tick, run_id=self.run_id, _internal=True)
             wins = 0
             try:
                 trial._start()
@@ -836,6 +845,7 @@ class Game:
 
     def log(self) -> dict:
         return dict(schema=SCHEMA, task_id=self.task_id, seed=self.seed, deck=self.deck,
+                    run_id=self.run_id,
                     note=self.note, tick=self.tick, ops=self.ops,
                     frames=self.frames, totals=self.totals,
                     robustness=self.robustness_report, manual_patch=bool(self.manual_patch))
@@ -858,6 +868,7 @@ class Game:
         return cls(doc["task_id"], seed=doc["seed"], ops=doc.get("ops") or [],
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
                    note=doc.get("note", ""), robustness=doc.get("robustness"),
+                   run_id=doc.get("run_id"),
                    manual_patch=bool(doc.get("manual_patch", False)), **kwargs)
 
     @classmethod
@@ -871,6 +882,7 @@ class Game:
         game = cls(task["id"], seed=task["seed"], ops=ops, frames=frames,
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False), **kwargs)
+        game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
         config["profile"] = PlayerProfileContext(**config["profile"])
@@ -899,10 +911,12 @@ class Game:
             for frame in self.frames:
                 stream.write(json.dumps(frame, separators=(",", ":")) + "\n")
         episode = self.env.episode or {}
+        from .runtime import environment_fingerprint
         result = int(self.obs.get("result") or 0)
         roster = (self.initial_obs.get("loadout_context") or {}).get("zombie_roster")
         meta = dict(
             schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE,
+            run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
             task=dict(id=self.task_id, level=self.spec.level, seed=self.spec.seed,
                       deck=list(self.deck), policy="llm", playthrough=self.spec.playthrough,

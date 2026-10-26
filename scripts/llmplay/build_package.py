@@ -1,9 +1,9 @@
 """把"LLM 打全程"沙箱包打出来：引擎 + 资源 + 接口 + 任务书。
 
-    python3 scripts/llmplay/build_package.py --executable <静态引擎> [--out DIR]
+    python3 scripts/llmplay/build_package.py --executable <静态引擎> --cache-dir <full-appdata> [--out DIR]
 
 产物落在 ~/pvz-logs/llmplay_pkg/（不进 git、不上 HF）：
-llmplay_pkg.zip 与解压后的 stage/（方便自查与复现）。
+llmplay_pkg.zip（接口/引擎）与 llmplay_res.zip（资源/缓存），以及对应的 stage/ 与 resources/。
 
 包里只有：纯 Python 接口、引擎二进制、游戏资源、任务清单、任务书、示例。
 不打包 .git / artifacts / 日志 / 权重 / 密钥；打包前会扫一遍。
@@ -16,6 +16,8 @@ import json
 import re
 import shutil
 import sys
+import os
+import tempfile
 import zipfile
 from pathlib import Path
 
@@ -105,7 +107,8 @@ def copy_modules(stage: Path) -> None:
                                                   "PROMPT.md", "README.md", "examples",
                                                   "verify_archive.py", "mac_check.sh",
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
-                                                  "check_tasks.py", "robustness_check.py"))
+                                                  "check_tasks.py", "robustness_check.py",
+                                                  "cache_prepare.py", "cache_profile.py"))
 
 
 def copy_constant_sources(stage: Path) -> None:
@@ -143,22 +146,41 @@ def scan(stage: Path) -> list:
     return hits
 
 
-def build(executable: Path, out: Path, *, resource_dir: Path = RESOURCE_DIR) -> Path:
-    # 只清自己的产物：out 下面还住着探路包（probe/），整个 rmtree 会把它删掉
-    # ——2026-10-25 已经删过一次，探路包的 zip 就这么没的。
-    stage = out / "stage"
-    if stage.exists():
-        shutil.rmtree(stage)
-    for leftover in (out / "llmplay_pkg.zip", out / "secret_scan.txt"):
-        if leftover.exists():
-            leftover.unlink()
-    stage.mkdir(parents=True)
+def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = RESOURCE_DIR) -> Path:
+    """分别打接口包与资源包；使用临时构建树，不能提前删除旧包/输入引擎。"""
+    from llmplay.cache_prepare import audit_cache
+    from llmplay.resources import MANIFEST, PACKAGE
+    executable, cache_dir = Path(executable).resolve(), Path(cache_dir).resolve()
+    audit = audit_cache(cache_dir)
+    evidence = json.loads((cache_dir.parent / "cache-audit.json").read_text())
+    engine_sha = sha256(executable)
+    if (evidence["engine_sha256"] != engine_sha or evidence["levels_reset"] != 50
+            or evidence["tasks_reset"] != len(seed_plan()["tasks"])):
+        raise ValueError("缓存缺少同引擎、全部50关/全部任务的 reset 验收证据")
+    out.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".package-build-", dir=out) as temporary:
+        return _build(executable, out, cache_dir, resource_dir, Path(temporary), audit,
+                      engine_sha, MANIFEST, PACKAGE)
+
+
+def _build(executable, out, cache_dir, resource_dir, temporary, audit, engine_sha, manifest_name, package_name):
+    stage = temporary / "stage"
+    stage.mkdir()
     copy_modules(stage)
     copy_constant_sources(stage)
     (stage / "build").mkdir()
     shutil.copyfile(executable, stage / "build" / "pvz-portable")
     (stage / "build" / "pvz-portable").chmod(0o755)
-    copy_resources(stage, resource_dir)
+    resource_stage = temporary / "resources"
+    copy_resources(resource_stage, resource_dir)
+    shutil.copytree(cache_dir / "cache64", resource_stage / "res" / "cache64")
+    files = {p.relative_to(resource_stage / "res").as_posix(): sha256(p)
+             for p in sorted((resource_stage / "res").rglob("*")) if p.is_file()}
+    resource_manifest = dict(schema="llmplay_resources_v1", engine_sha256=engine_sha,
+                             definitions=audit["actual"], files=files)
+    (resource_stage / "res" / manifest_name).write_text(json.dumps(resource_manifest, indent=2) + "\n")
+    resource_zip = temporary / "llmplay_res.zip"
+    _zip_tree(resource_stage, resource_zip)
 
     manifest = task_manifest()
     (stage / "configs").mkdir()
@@ -168,27 +190,51 @@ def build(executable: Path, out: Path, *, resource_dir: Path = RESOURCE_DIR) -> 
         json.dumps(extra_seeds(manifest), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     shutil.copyfile(SEED_PLAN, stage / "configs" / "llmplay_seeds.json")
     shutil.copyfile(ROBUSTNESS_PLAN, stage / "configs" / "llmplay_robustness.json")
+    (stage / "configs" / package_name).write_text(json.dumps(dict(
+        schema="llmplay_package_v1", engine_sha256=engine_sha,
+        resource_zip_sha256=sha256(resource_zip)), indent=2) + "\n")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "PROMPT.md", stage / "PROMPT.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "README.md", stage / "README.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "selfcheck.py", stage / "selfcheck.py")
     shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
 
-    hits = scan(stage)
+    hits = scan(stage) + scan(resource_stage)
     (out / "secret_scan.txt").write_text(
         ("命中 %d 处\n" % len(hits)) + "".join(hit + "\n" for hit in hits), encoding="utf-8")
     if hits:
         raise SystemExit("包里命中密钥模式，停止打包（见 secret_scan.txt）：\n" + "\n".join(hits))
 
+    interface_zip = temporary / "llmplay_pkg.zip"
+    _zip_tree(stage, interface_zip, prefix="llmplay_pkg")
+    for path in (interface_zip, resource_zip):
+        if path.stat().st_size >= 512 * 1024 * 1024:
+            raise ValueError("上传包超出512MB：%s" % path.name)
+    # 所有构建/扫描/压缩完成后才替换正式文件；原 stage 内引擎作输入也安全。
+    old_stage = out / "stage.previous"
+    if old_stage.exists(): shutil.rmtree(old_stage)
+    if (out / "stage").exists(): os.replace(out / "stage", old_stage)
+    os.replace(stage, out / "stage")
+    old_resources = out / "resources.previous"
+    if old_resources.exists(): shutil.rmtree(old_resources)
+    if (out / "resources").exists(): os.replace(out / "resources", old_resources)
+    os.replace(resource_stage, out / "resources")
+    os.replace(resource_zip, out / "llmplay_res.zip")
+    os.replace(interface_zip, out / "llmplay_pkg.zip")
+    for old in (old_stage, old_resources):
+        if old.exists(): shutil.rmtree(old)
     archive = out / "llmplay_pkg.zip"
-    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
-        for path in sorted(stage.rglob("*")):
-            if path.is_file():
-                bundle.write(path, Path("llmplay_pkg") / path.relative_to(stage))
-    print(json.dumps(dict(zip=str(archive), size=archive.stat().st_size,
-                          sha256=sha256(archive),
-                          files=sum(1 for p in stage.rglob("*") if p.is_file()),
-                          secret_hits=0), ensure_ascii=False, indent=2))
+    print(json.dumps(dict(packages=[dict(zip=str(out / name), size=(out / name).stat().st_size,
+                                        sha256=sha256(out / name))
+                                   for name in ("llmplay_pkg.zip", "llmplay_res.zip")],
+                          compiled_definitions=audit["actual"], secret_hits=0), ensure_ascii=False, indent=2))
     return archive
+
+
+def _zip_tree(directory, archive, prefix=""):
+    with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as bundle:
+        for path in sorted(directory.rglob("*")):
+            if path.is_file():
+                bundle.write(path, Path(prefix) / path.relative_to(directory))
 
 
 def main() -> int:
@@ -196,8 +242,10 @@ def main() -> int:
     parser.add_argument("--executable", type=Path, required=True)
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
+    parser.add_argument("--cache-dir", type=Path, required=True,
+                        help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
     args = parser.parse_args()
-    build(args.executable, args.out, resource_dir=args.resource_dir)
+    build(args.executable, args.out, resource_dir=args.resource_dir, cache_dir=args.cache_dir)
     return 0
 
 

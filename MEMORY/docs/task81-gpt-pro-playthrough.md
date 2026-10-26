@@ -395,3 +395,67 @@ observe 格式基本可以，探路包和正式包都收到。还要改三处，
 - **验收**：64 项单测通过，覆盖多年墙钟不拒绝新局、并发交付、压缩/rename 失败保留旧快照且可重试、目录/zip 续跑跳过达标任务、坏档与缺档、预算不回退、策略/日志恢复。31/31 任务 reset + 120 tick 通过。真实引擎稳健性可复现、RESEED 当前状态不变且未来不同、精确搜索计数 +1200 tick 全通过。
 - **最终包冷解压后断网实测**：`unshare -rn python3 selfcheck.py` → `SELFCHECK OK`；L41 共181操作，tick9441，wave3，result2（自检无打法，预期不要求通关）。同时实际验证 robustness 自动交付、包内引擎验证、zip续跑、中盘load_archive、损坏操作识别作废。包中接口与工作树逐字相同、ZIP CRC正常、凭据0命中、禁入路径0。
 - **正式交付**：`~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`，**44,657,852 字节 / 29 文件**，SHA256 **`01d977539dbfe84998a507fdf21aadb0b6274d9265ca6f07df0fc39ef7e77055`**。引擎未变；包与资源仅保存在本机，不进 git、不上 HF。本轮未创建容器/镜像，测试解压副本已清理。证据在 `~/pvz-logs/llmplay_task81e/{final-selfcheck,robustness-check,task-check}.txt`。Mac 拷贝由主控核对后执行。
+
+## 主控追加（2026-10-26 11:30，task81f：本地预编译资源缓存，单独打资源包）
+用户观察到：云沙箱性能远不如我们的机器，每次启动都要花很多时间编译资源。要求在本地把资源编译好，单独打一个资源包上传（单文件有大小上限）。
+
+背景：引擎启动时把 `reanim/*.reanim` 等 XML 定义编译成 `compiled/<路径>.compiled`。
+- 路径函数：`DefinitionGetCompiledFilePathFromXMLFilePath`；
+- 缓存位置：`GetAppDataPath(aCacheRoot + 路径)`，读不到时回落到相对路径，见 `src/PvzpLib/Definition.cpp` 约 560–600 行；
+- 缓存里带 cookie 与大小校验。
+
+要做的（与 task81e 一起交付）：
+1. **找出慢在哪**：
+   - 在台式机上，用包内引擎 `a84f10cf` 冷启动（app-data 目录为空）与热启动（缓存已在）各计时 5 次，按阶段分解启动耗时：编译定义、解包 `main.pak`、图片、字体等；
+   - 核对 llmplay 每开一个游戏进程（包括 `robustness()` / `branch` 起的子进程），app-data 目录是否每次都是新的，从而导致每个进程重复编译。如果是，先改成整个会话共用一个持久目录。
+2. **预编译**：用**与包内完全相同的引擎二进制**（x86_64 Linux）在本地生成完整缓存。所有关卡、所有任务都 reset 一遍，跑够 tick，触发全部定义的编译；然后核对缓存文件清单是否覆盖引擎会读的全部定义。
+3. **两个包**：
+   - `llmplay_pkg.zip`：接口代码、引擎、配置、PROMPT、selfcheck；
+   - `llmplay_res.zip`：`main.pak`、`properties/` 等游戏资源，加上预编译缓存。
+   每个包都要远低于上传上限（按 512 MB 设计，实际越小越好）。
+4. **安装**：接口首次导入时，自动把资源包解到资源目录，把缓存放到引擎的 app-data 缓存路径上，不需要模型手工操作。PROMPT 的上手说明改为“上传两个文件”，并写清楚解压顺序；没有资源包时给出清晰报错。
+5. **验收**：
+   - 冷解压两个包，断网跑 selfcheck 通过；
+   - 启动日志里不再出现 `compile ... .compiled`；
+   - 报告启动耗时：冷启动对比预编译后，各 5 次的中位数；
+   - 记录两个包的 SHA。
+   - 主控核对后，把两个包都拷到 Mac `~/pvz-llmplay/`。
+6. 游戏资源只放进这两个包，交给用户手动上传；**不进 git、不上 HF**。
+
+### task81f 执行结果（2026-10-26，与 task81e 合并交付）
+
+- **原因已确认**：`PvZEnv._start()` 默认创建 `pvz-env-*` 临时 app-data，退出即删。原 llmplay 的主局、branch、robustness 内部局和验证都没有传持久 `save_dir`，因此每次冷启动重复编译117定义。现在四条入口共用 `<预算文件父目录>/appdata/<引擎SHA256>/`，全会话持久化；缓存安装加锁并逐文件原子替换，按引擎隔离，不复用其它引擎的 ABI 缓存。未改通用 PvZEnv 的默认行为。
+- **完整预编译**：运行的是包内同一份 x86_64 Linux ELF（`a84f10cf…`），未改二进制。用同 BuildID 的未剥离符号，逐字验证 `.text`/`.rodata` 相同后，经 GDB 调用该 ELF 的原生预加载函数，补齐正常 reset 不会触发的片尾等定义。随后所有50关和清单31任务各 reset + 3000 tick。源表机械核对 **144动画 + 106粒子 + 1轨迹 = 251**，实际251，缺项0；每个缓存的 cookie、解压大小通过，原生缓存读取与最终自检也通过。GDB 仅用于本机生成/诊断，用户包不需要它。
+- **两包与安装**：接口包只有代码/引擎/任务/说明/自检，不含资源；资源包含 `main.pak`、`properties/`、251份 `cache64/compiled/` 与 SHA 清单。首次 import 自动查找接口目录旁的 `llmplay_res.zip`（或 `$PVZ_LLMPLAY_RES_ZIP`），验证两包配对 SHA 后原子安装到 `res/`，再放入会话 app-data。资源包缺失/损坏/配对错误均清晰报错。PROMPT 改为上传两个文件，只解压接口包。
+- **启动计时（无调试器，Popen→ready，app-data 冷/热各5次，不清操作系统页缓存）**：
+
+  | 模式 | 5次中位数 | 每次定义编译数 |
+  |---|---:|---|
+  | app-data为空 | **102.913 ms** | 117 / 117 / 117 / 117 / 117 |
+  | 自然热缓存 | **31.793 ms** | 0 / 0 / 0 / 0 / 0 |
+  | 预编译缓存安装后 | **30.179 ms** | 0 / 0 / 0 / 0 / 0 |
+
+  本机预编译启动约为冷启动的 **3.41倍速度**，不能直接外推云沙箱。原生日志的编译耗时中位数69ms→0，图片+字体整组加载7ms→6ms。
+- **阶段归因（另跑冷/预编译各5次）**：同一 ELF 加匹配符号断点，读取目标线程 scheduler CPU 纳秒，不包含 GDB 等待墙时。中位数：定义加载/编译 **103.623→24.465ms**，图片 **12.679→11.962ms**，字体 **7.740→8.499ms**，PAK映射/索引 **1.471→1.567ms**。PAK 并非整包解压到磁盘，而是 mmap + 索引、按需 XOR 读取。**这些数含断点开销，且定义加载包含内部图片/字体查找，不能相加，也不能替代上表无调试器墙时。** 原始5次样本与方法见 [紧凑验收记录](task81-resource-cache-audit.json)。
+- **验收**：72项单测通过；两个包冷解压（只解接口包、首次import自动解资源），`unshare -rn python3 selfcheck.py` → `SELFCHECK OK`，全日志编译0条。task81e的自动交付、zip续跑、坏档作废仍通过；真实 branch 共用 app-data，子局推进与独立重放结果一致，编译0条。最终包代码与工作树逐字一致，两包 SHA 配对、ELF SHA、ZIP CRC 全通过，凭据0命中。
+- **正式包（取代 task81e 单包 `01d97753…`）**：
+  - `~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`：**11,762,491字节**，SHA256 **`2736933942edb313c488630e4d2645ed616f92268dbda9df9bec8d50c6b6205d`**。
+  - `~/pvz-logs/llmplay_pkg/llmplay_res.zip`：**34,258,402字节**，SHA256 **`5e48ce31f0a0f5994bbd602d22caa1631ee5c4c98ba388082f33ab9b49da67bc`**。
+  - 两个包均远低于512MB，资源只在本机与用户手动上传的包内，不进git、不上HF。主控核对后将**两个文件一起**拷到 Mac `~/pvz-llmplay/`。
+- **复现入口**：`scripts/llmplay/cache_prepare.py`（匹配符号原生预加载、50关/31任务reset、cookie/覆盖与无调试器计时）、`cache_profile.py`（阶段诊断）、`build_package.py --executable <同一ELF> --cache-dir <full-appdata>`（两包）。原始本地证据在 `~/pvz-logs/llmplay_task81f/` 的 `cache-audit.json`、`startup-benchmark.json`、`phases/phase-profile.json`、`cold-selfcheck.txt`、`branch-check.txt`。本轮未创建容器/镜像；临时解压树与诊断工具清理，完整缓存保留供重打包。
+
+## 主控追加 task81g（2026-10-26 12:10，多平台通用，含随后更正）
+
+同一双包在不同平台运行，不做平台专属适配。交付路径按 `LLMPLAY_OUT` → 存在可写的默认沙箱目录 → 包旁 `out/` 选择，`paths()` 展示实际路径，例子用 `out_dir()`，resume 接受任意路径。首次运行生成持久随机 run_id，40种子按它排序，续跑沿用；meta记录运行ID和CPU/核数/Python环境指纹。接口不含联网代码，selfcheck扫描断言；**按主控随后更正，PROMPT不对上传或联网行为作规定**。入口步骤通用化，selfcheck先检查 Python>=3.10 与 x86_64 Linux。与81e/81f一起验收双包，主控核对后拷Mac。
+
+### task81g 执行结果（81e/81f/81g 最终合并交付）
+
+- **路径**：新增 `llmplay.out_dir()` / `paths()`；唯一保留的沙箱绝对路径是选择器中的条件回退候选。PROMPT、README、示例和资源查找无固定绝对目录。实机在含空格目录测试：未设置变量时选择包旁out，设置 `LLMPLAY_OUT` 后切换到任意指定目录；目录和zip续跑均可用。
+- **运行身份**：第一次导入正式包即原子发布带UUID4 `run_id` 的progress；并发子进程共享同一个ID。每任务40种子按 SHA256(run_id/task_id/seed) 排序，跨Python版本稳定。`Game`默认种子、`next_task`、`list_tasks`顺序一致；独立运行的ID和种子顺序不同；resume保留原ID、顺序及预算。分支/操作日志/存档延续ID。meta新增CPU型号、逻辑核数、可用核数、Python版本及系统/架构；新产物用通用 `llm_agent` 标签，旧档仍兼容。
+- **入口与自检**：通用的两个输入文件、解接口包、import和paths步骤；Python<3.10或非x86_64 Linux在导入接口前清晰报错。selfcheck在导入接口/安装资源前扫描随包接口Python AST（不扫描用户额外脚本），检查 socket/urllib/requests等联网模块导入。PROMPT仅保留输入、运行、任务与交付文件说明，未加入上传/联网行为规定。
+- **验收**：82项单测通过（路径优先级/不可写回退、随机ID持久化与并发、不同运行排序、空进度续跑保留ID、默认种子一致、联网import扫描、旧Python/架构报错，加此前81e/f全部回归）。最终两个包冷解压至含空格目录，断网 `unshare -rn python3 selfcheck.py` → **SELFCHECK OK**，**定义编译0条、联网import0命中**；真实数值存档验证、自动交付、zip续跑、坏档识别、run_id与环境指纹断言均通过。另行断网实测默认/指定out、独立ID与顺序、有效档从任意目录续跑并保留ID/顺序，全部PASS。最终接口源码与工作树逐字一致，两包配对SHA、ELF SHA、ZIP CRC通过。
+- **最终双包（取代81f的27369339… / 5e48ce31…）**：
+  - `~/pvz-logs/llmplay_pkg/llmplay_pkg.zip`：**11,766,005字节**，SHA256 **`27ec2248c186900025c62f26bad2f4bf92c50566c4dc2e44147a4593245fe3b8`**。
+  - `~/pvz-logs/llmplay_pkg/llmplay_res.zip`：**34,258,402字节**，SHA256 **`0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e`**。
+  - 引擎与251份缓存内容未变，81f的5次计时结论继续适用。资源不进git、不上HF；两个文件必须配对使用。Mac `~/pvz-llmplay/` 的拷贝由主控核对后执行。
+- 真实证据：`~/pvz-logs/llmplay_task81g/{release-selfcheck.txt,release-portable-check.txt,portable-audit.json}`；紧凑结论并入 [验收记录](task81-resource-cache-audit.json)。

@@ -16,6 +16,7 @@ from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
 
 from . import budget
+from .runtime import output_path
 from .game import (ROOT, ARCHIVE_SCHEMA, _default_executable, _default_resource_dir,
                    _ensure_executable, load_tasks)
 
@@ -26,7 +27,22 @@ REQUIRED_ROBUST = 3
 
 
 def output_dir() -> Path:
-    return Path(os.environ.get("PVZ_LLMPLAY_OUT", "/mnt/data/out")).resolve()
+    return output_path(ROOT)
+
+
+def seed_order(task_id, run_id, seeds):
+    """按运行ID散列排序，跨 Python/平台稳定，不依赖共享协调服务。"""
+    return sorted(seeds, key=lambda seed: hashlib.sha256(
+        (str(run_id) + ":" + task_id + ":" + str(seed)).encode("utf-8")).digest())
+
+
+def ensure_run_id():
+    root = output_dir()
+    with _lock(root):
+        document = _read_progress(root)
+        if not document.get("run_id"):
+            document = _publish(root, document["archives"], budget.session(), run_id=uuid.uuid4().hex)
+        return document["run_id"]
 
 
 @contextmanager
@@ -62,10 +78,11 @@ def _entry(archive, relative, *, valid=True, error=None):
                 outcome=outcome, robustness=meta.get("robustness"),
                 archive=relative, manual_patch=bool(meta.get("manual_patch")),
                 note=meta.get("note", ""), valid=valid, invalid_reason=error,
-                won=won, robust=bool(won and _robust(meta)))
+                won=won, robust=bool(won and _robust(meta)), run_id=meta.get("run_id"),
+                environment_fingerprint=meta.get("environment_fingerprint"))
 
 
-def _derive(entries):
+def _derive(entries, run_id=None):
     plan = json.loads((ROOT / "configs" / "llmplay_seeds.json").read_text(encoding="utf-8"))
     existing = load_tasks()
     tasks, layers = {}, {}
@@ -85,26 +102,27 @@ def _derive(entries):
             wins = sum(e["won"] for e in seeds.values())
             robust = sum(e["robust"] for e in seeds.values())
             tasks[task_id] = dict(layer=layer, seeds=seeds,
-                                 available_seeds=[seed for seed in plan["tasks"][task_id]
+                                 available_seeds=[seed for seed in seed_order(task_id, run_id, plan["tasks"][task_id])
                                                   if not seeds.get(str(seed), {}).get("robust")],
                                  wins=wins, robust=robust,
                                  complete=wins >= REQUIRED_WINS and robust >= REQUIRED_ROBUST)
         done = sum(tasks[task]["complete"] for task in ids)
         layers[layer] = dict(completed=done, total=len(ids), complete=done == len(ids))
-    return dict(schema="llmplay_progress_v1", requirements=dict(wins=REQUIRED_WINS,
+    return dict(schema="llmplay_progress_v1", run_id=run_id, requirements=dict(wins=REQUIRED_WINS,
                 robust=REQUIRED_ROBUST), archives=entries, tasks=tasks, layers=layers,
                 complete=all(layer["complete"] for layer in layers.values()))
 
 
 def progress() -> dict:
     """读取已发布的完整快照；首次使用时返回五层零进度。"""
-    return _derive(_read_progress(output_dir())["archives"])
+    ensure_run_id()
+    document = _read_progress(output_dir())
+    return _derive(document["archives"], document["run_id"])
 
 
 def next_task() -> dict | None:
     """按层返回下一任务/种子及已有存档；只有全部任务达标时返回 None。"""
     document = progress()
-    plan = json.loads((ROOT / "configs" / "llmplay_seeds.json").read_text(encoding="utf-8"))
     for task_id, task in document["tasks"].items():
         if task["complete"]:
             continue
@@ -115,12 +133,12 @@ def next_task() -> dict | None:
                     return dict(task_id=task_id, seed=entry["seed"], layer=task["layer"],
                                 archive=str(output_dir() / entry["archive"]),
                                 action="improve_robustness")
-        for seed in plan["tasks"][task_id]:
+        for seed in task["available_seeds"]:
             if str(seed) not in seeds:
                 return dict(task_id=task_id, seed=seed, layer=task["layer"],
                             archive=None, action="play")
         # 40 个种子都试过仍未达标时重试未完成种子，不偷偷创造新任务或扩大种子块。
-        for seed in plan["tasks"][task_id]:
+        for seed in task["available_seeds"]:
             entry = seeds[str(seed)]
             if not entry["robust"]:
                 return dict(task_id=task_id, seed=seed, layer=task["layer"],
@@ -129,7 +147,8 @@ def next_task() -> dict | None:
 
 
 def _report(document):
-    lines = ["# LLM 对局进度", "", "接口自动生成；详细结果以 progress.json 为准。", "",
+    lines = ["# LLM 对局进度", "", "运行ID：%s" % document["run_id"], "",
+             "接口自动生成；详细结果以 progress.json 为准。", "",
              "全部任务达标。" if document["complete"] else "尚未全部完成，继续 next_task()。", "",
              "每任务至少 %d 个种子通关，其中 %d 个第10波达到5/8稳健标准。" %
              (REQUIRED_WINS, REQUIRED_ROBUST), "", "| 层 | 达标任务 |", "|---|---|"]
@@ -174,8 +193,9 @@ def _store(archive, root):
     return relative.as_posix()
 
 
-def _publish(root, entries, session):
-    document = _derive(entries)
+def _publish(root, entries, session, *, run_id=None):
+    run_id = run_id or _read_progress(root).get("run_id") or uuid.uuid4().hex
+    document = _derive(entries, run_id)
     generations = root / ".delivery"
     generations.mkdir(exist_ok=True)
     generation = generations / uuid.uuid4().hex
@@ -264,7 +284,10 @@ def verify_archive(archive, *, executable=None, resource_dir=None):
     spec = TaskSpec(**config)
     exe = Path(executable) if executable else _default_executable()
     _ensure_executable(exe)
-    with PvZEnv(resource_dir=resource_dir or _default_resource_dir(), executable=exe, headless=True) as env:
+    from .resources import app_data
+    resources = resource_dir or _default_resource_dir()
+    with PvZEnv(resource_dir=resources, executable=exe, headless=True,
+                save_dir=app_data(exe, resources, budget.session())) as env:
         env.begin_demo()
         obs, _ = env.reset(deck=task["deck"], task=spec)
         env.set_lean_observation(True)
@@ -303,7 +326,7 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
     """导入旧 out.zip/目录；逐份验证，失败记录为作废且不计完成度。"""
     root = output_dir()
     with tempfile.TemporaryDirectory(prefix="llmplay-resume-") as directory:
-        source = Path(source).resolve()
+        source = Path(source).expanduser().resolve()
         if source.is_file():
             _extract(source, directory)
             source = Path(directory)
@@ -319,11 +342,13 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
             except Exception as exc:
                 valid, error = False, str(exc)
             imported.append((archive, valid, error))
-        missing = []
+        missing, prior_run_ids = [], set()
         for path in source.rglob("progress.json"):
             if any(part.startswith(".") for part in path.relative_to(source).parts):
                 continue
             prior = json.loads(path.read_text(encoding="utf-8"))
+            if prior.get("run_id"):
+                prior_run_ids.add(prior["run_id"])
             for entry in prior.get("archives", []):
                 relative = PurePosixPath(entry["archive"])
                 if relative.is_absolute() or ".." in relative.parts:
@@ -333,6 +358,15 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
                     invalid = dict(entry, valid=False, won=False, robust=False,
                                    invalid_reason="进度引用的存档缺失，无法 verify")
                     missing.append(invalid)
+        if len(prior_run_ids) > 1:
+            raise ValueError("续跑来源含多个 run_id，请指定一份 out.zip 或对应的 out 目录")
+        if not prior_run_ids:
+            for archive, valid, error in imported:
+                if valid:
+                    run_id = json.loads((archive / "meta.json").read_text()).get("run_id")
+                    if run_id:
+                        prior_run_ids.add(run_id)
+        restored_run_id = next(iter(prior_run_ids)) if len(prior_run_ids) == 1 else None
         with _lock(root):
             entries = _read_progress(root)["archives"]
             for entry in missing:
@@ -369,4 +403,4 @@ def resume(source, *, executable=None, resource_dir=None) -> dict:
                 if not destination.exists():
                     destination.parent.mkdir(parents=True, exist_ok=True)
                     shutil.copyfile(path, destination)
-            return _publish(root, entries, session)
+            return _publish(root, entries, session, run_id=restored_run_id)
