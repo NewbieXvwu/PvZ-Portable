@@ -766,3 +766,17 @@
   - 用包内引擎在本地预编译全部 `compiled/*.compiled`；
   - 拆成 `llmplay_pkg.zip`（代码与引擎）和 `llmplay_res.zip`（资源与缓存）两个包，接口首次导入时自动安装；
   - 验收要求启动日志里不再出现编译行。
+- 2026-10-26 12:00（台式机时间）：**qc 11:33 又停了**。第 18 轮后台训练失败两次，B7 按规则停了 qc。
+  - **原因**：起点格段 `ce3ce400`（`c18demoroof48doomm200s1100`）的 `plane_of` 只有 72 个，行数是 84，`read_segments` broadcast 失败。
+  - **处理**：
+    - 热补 570f5e7d：行数不符的段按无平面读。11:44 用 deploy14 的 start_qc 重启 qc，第 18 轮重新打包、训练。
+    - 打包的根因修复追加给 task99。
+  - **另查出一个 deploy14 的 bug**：原生 L25 格带倍率阶梯 `ladder`，被起点格逻辑当成起点格退休，从没采过。
+    - 修复 43458aa8：起点格以 `archive` 识别，加测试。
+    - 已放进 cq，下次重启 qc 生效。
+  - 两个修复都已 cherry-pick 进 pvz-env。
+  - **plus 号 11:31 恢复后**：task95 / 96 / 97 交还 Codex；另派三个任务：
+    - **task98**（codex-perf）：qc 遇到单点异常不再整体停机，并加看门狗；
+    - **task99**（codex-v6）：起点格种子续期，加上打包根因；
+    - **task100**（codex-llmplay）：deploy14 课程审计，逐个检查新格是否真的在采。
+  - 现在三个号共 13 个 Codex 会话：Business 5、plus 6、plus2 2。
