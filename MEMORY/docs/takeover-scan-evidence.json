@@ -1,6 +1,6 @@
 {
  "schema": "takeover_scan_evidence_v1",
- "status": "pending_human_same_block_backtest",
+ "status": "human_backtest_running_production_queued",
  "tests": {
   "takeover_passed": 34,
   "importer_passed": 30,
@@ -97,25 +97,14 @@
   }
  },
  "e2e_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8",
- "missing_human_archives": [
-  {
-   "task_id": "demo_roof_46_doom_m200",
-   "archive": "artifacts/human_demo/raw/seed_20261046/demo_roof_46_doom_m200"
-  },
-  {
-   "task_id": "demo_roof_48_doom_m200",
-   "archive": "artifacts/human_demo/raw/seed_20261048/demo_roof_48_doom_m200"
-  },
-  {
-   "task_id": "demo_roof_49_doom_m200",
-   "archive": "artifacts/human_demo/raw/seed_20261049/demo_roof_49_doom_m200"
-  }
- ],
  "raw_evidence_directory": "artifacts/task91/audit",
  "source_sha256": {
   "scripts/takeover_scan.py": "dd54ee9e04f3cf517728acab5899808d8edc44fef3ee8c869033d64e2b9c131f",
   "scripts/import_llm_run.py": "308d8ac8998e1c190636799eac092adee0523c4859190868f2ef8dc5d2cb377d",
   "scripts/compare_same_block.py": "fa32950a4e4cd9a1ac9ab2e5a77135a7c254f3158d568cfad0d248a9b5946405",
   "python/test_takeover_scan.py": "252aa12a20f81415a9da5e873dd7455dc8ce558e5fe58e1bf6bdc8e7590ac554"
- }
+ },
+ "human_archives_available": true,
+ "human_copies_sha256": "4bd3697ed07deb50975ff699c7e7bd0be246db18326ffc8893548441b2fdec1a",
+ "continuation_status_path": "artifacts/task91/audit/continuation_status.json"
 }

@@ -4,6 +4,8 @@
 > `python/test_takeover_scan.py`。任务书：[task91-takeover-scan-runner.md](task91-takeover-scan-runner.md)。
 >
 > 当前状态：工具、LLM同块回测和两份端到端已验证；**已从部署记录定位人类L46/L48/L49副本，当前正在执行第2步同块回测**。
+> 人类回测原链继续运行；串行监督器已排队，三份严格同块比较全部通过后接12份生产adaptive与register。
+> 阶段状态见ignored的`artifacts/task91/audit/continuation_status.json`；队列启动不代表回测或生产验收完成。
 > 紧凑证据：[takeover-scan-evidence.json](takeover-scan-evidence.json)。
 
 ## 用法
