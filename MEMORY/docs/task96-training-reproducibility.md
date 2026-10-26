@@ -61,6 +61,8 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 续接（第九段）：从 `~/pvz-logs/qc.out` 补回四次 run 的宿主并发负载（此前记为“无回执”，那只对 GPU 成立）：r11 训练窗口 14–15 个游戏 worker、MemAvailable 17.3–17.6 GiB、212 s/epoch 均值；变体 A 4–10 worker + 后台评估、12.5–14.8 GiB、223.7 s；run1 8–11 worker、12.1–14.5 GiB、890.4 s；run2 8–12 worker、12.2–15.4 GiB、334.1 s。关键新事实：**run1 与 run2 宿主负载几乎相同却差 2.7 倍**，所以“run1 在抢 GPU”这一推断站不住，页缓存冷热/GPU 客户端/进程内状态都可能参与。证据 `task96-concurrency.json`（含原始日志行）。
 
+- 10-26 CodeBuddy 交还 Codex（主控通知 Codex 额度已恢复）：本轮工作区干净、HEAD `ec631160` 已 push origin/repro，生产未改。五步全部有证据：数据（348 段内容 SHA 全同、source_rows 同）、代码（4f4d217b 与 bec2b9e6 训练器逐字节同，已独立复核）、确定性（小样本 7 次 / 中尺度 5 次固定配置逐位同、4 次未固定全不同）、机制（第一步分叉定位到 `packet_embedding` 的 `[B,10]` 查表梯度，微探针默认 10 次 10 种、确定性 1 种）、成本（单算子 1.24 倍、整轮外推 +0.3%）、历史负载（qc.out 还原四次 run 的并发，run1/run2 同负载差 2.7 倍，epoch 时间不能当算法证据）。**留给 Codex 的两项**：(1) 全量 348 段 strict/default/strict 控制（脚本 `task96_full_pack.py`，需 MemAvailable ≥14 GiB 且 qc 训练空闲）；(2) 整轮 `det_only_a/b`（`task96_scale_probe.py run`，用例已写进 plan，只需 qc 空闲）。两项都是环境阻塞，不是未完成的分析。
+
 ## 问题
 - r11 / A / run1 / run2 四次全量 run 都没有 GPU 侧回执（`qc.out` 只记并发 worker 数与 MemAvailable，可还原宿主负载但记不到显存/驱动），所以“当时是 workspace 还是确定性开关在起作用”无法回溯判定。现有定位是：第一步分叉来自 `packet_embedding` 的 `[B,10]` 查表梯度（默认模式 10 次 10 种，确定性开关可消除），cuBLAS workspace 是另一条已观测的轴（影响后续 GEMM 步）。历史四次 run 既没固定 workspace 也没开确定性，两者都可能参与，不能区分；epoch 耗时（221/224/890/334s）只能说明负载不同。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。
