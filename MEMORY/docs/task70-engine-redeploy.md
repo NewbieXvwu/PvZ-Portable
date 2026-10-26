@@ -148,3 +148,21 @@ B7 和 B6 一起进 deploy14。
    - 重启，并写 curriculum.log。
    **只写脚本、不执行**，由主控执行。
 7. 结果写本文件，`git push origin redeploy`。每个任务最多 2 个游戏进程。
+
+## B9：task95 / deploy15 引擎（2026-10-26，验收进行中）
+
+本节对应[task95任务书](task95-deploy15-engine.md)。只准备引擎与部署脚本；不执行部署，不操作生产qc/cq。本任务游戏进程上限2；吞吐阶段串行运行1个游戏进程，其他任务不作调整。
+
+| 项目 | 证据与结论 |
+|---|---|
+| 源码差异 | a8d00858至a630fbd842f6e8a2493f09de3d433608bd71a254，src共7文件、+137/-11；task82初始化、task85增量Boss观测、task81特权增量字段及demo测试缝。具体逐项影响见task95结果；预期不改现有策略的游戏逻辑。 |
+| PGO留档 | 141份profile，Release/O3/LTO、ffp-contract=off；新引擎`artifacts/task95/engine/pvz-portable`，SHA256 `07703a5781e70d2c3b1b3ad7b0c473ddfaf2a313ac2ce4f5724035ba44e184be`。不重新构建替换验收产物。 |
+| 旧引擎 | 本任务留档`artifacts/task95/engine/deploy14-pvz-portable`，SHA256 `76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a`。 |
+| 六族门禁 | 复用已完成的6族×老师/学生×8种子、每引擎96局，再运行纯比较；96对逐帧动作和逻辑字段均0差异。完整state_hash新旧差96/96，符合初始化修复预期。 |
+| 同引擎确定性 | L7 seed30000探针：新引擎8个独立进程的reset/60/660tick哈希线全部相同，同进程4次reset后60tick也全部相同；旧引擎此次对照分别3种哈希线、4种哈希。此结论限于该探针，不宣称已穷尽所有关卡。 |
+| 吞吐ABBA | 进行中。沿用A4的day8+pool8配对、串行ABBA，使用逐对`old_worker_seconds/new_worker_seconds`中位数≥0.98，并要求决策数一致；必须完整16对后判定。 |
+| L50 | 待吞吐完成后运行。`boss_l50_orig_eval`种子85000000..3，旧/新引擎均用相同A2学生策略完整运行；候选必须有Boss字段，比较动作流、逻辑字段及终局。 |
+
+模型固定为A2夹具：`dw4i_s1`、`value_net/v4`、`value_branch1`，不把旧夹具标成现役v5。二进制/模型指纹、逐族统计及新旧探针数值见[task95-engine-gate.json](task95-engine-gate.json)。吞吐原始记录留在本地`artifacts/task95/`，未提交二进制、帧归档或日志。
+
+部署脚本版本见[scripts/qc_deploy15.sh](../../scripts/qc_deploy15.sh)，与`/home/newbiexvwu/pvz-logs/qc_deploy15.sh`内容一致，两份`bash -n`均通过，**只写、未执行**。以当前deploy14脚本的deploy14fix代码`0b8dcc26`为基线，保留seeds-exhausted修复；不checkout代码，不更换面板/teacher_rates/配方，只复制归档候选至`cq/build6/`并切换引擎路径。执行前验证六族、吞吐、Boss与哈希证据；未完成或失败即拒绝部署。回滚仅换回`cq/build5/`旧引擎。吞吐与L50验收尚未齐备，当前不能据本节认定候选通过。
