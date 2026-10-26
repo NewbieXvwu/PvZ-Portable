@@ -59,8 +59,10 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 续接（第八段）：独立复核代码来源（`git show <rev>:<path> | sha256sum`，未进其他工作树）：4f4d217b 与 bec2b9e6 的 `train_rollout_policy.py` 同为 `5cc2f208…`，recipe/pack/value_net 也逐字节相同；唯一不同的 `pvz_rollout_policy.py` diff 仅是 `export_student` 的 obs 版本号多了 `v2size` 分支（4→5），不涉及训练。与报告一致。
 
+- 10-26 CodeBuddy 续接（第九段）：从 `~/pvz-logs/qc.out` 补回四次 run 的宿主并发负载（此前记为“无回执”，那只对 GPU 成立）：r11 训练窗口 14–15 个游戏 worker、MemAvailable 17.3–17.6 GiB、212 s/epoch 均值；变体 A 4–10 worker + 后台评估、12.5–14.8 GiB、223.7 s；run1 8–11 worker、12.1–14.5 GiB、890.4 s；run2 8–12 worker、12.2–15.4 GiB、334.1 s。关键新事实：**run1 与 run2 宿主负载几乎相同却差 2.7 倍**，所以“run1 在抢 GPU”这一推断站不住，页缓存冷热/GPU 客户端/进程内状态都可能参与。证据 `task96-concurrency.json`（含原始日志行）。
+
 ## 问题
-- r11 / A / run1 / run2 四次全量 run 的运行时状态都没有回执，所以“当时是 workspace 还是确定性开关在起作用”无法回溯判定。现有定位是：第一步分叉来自 `packet_embedding` 的 `[B,10]` 查表梯度（默认模式 10 次 10 种，确定性开关可消除），cuBLAS workspace 是另一条已观测的轴（影响后续 GEMM 步）。历史四次 run 既没固定 workspace 也没开确定性，两者都可能参与，不能区分；epoch 耗时（221/224/890/334s）只能说明负载不同。
+- r11 / A / run1 / run2 四次全量 run 都没有 GPU 侧回执（`qc.out` 只记并发 worker 数与 MemAvailable，可还原宿主负载但记不到显存/驱动），所以“当时是 workspace 还是确定性开关在起作用”无法回溯判定。现有定位是：第一步分叉来自 `packet_embedding` 的 `[B,10]` 查表梯度（默认模式 10 次 10 种，确定性开关可消除），cuBLAS workspace 是另一条已观测的轴（影响后续 GEMM 步）。历史四次 run 既没固定 workspace 也没开确定性，两者都可能参与，不能区分；epoch 耗时（221/224/890/334s）只能说明负载不同。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。
 - 生产没有改：所有新写入都在 repro 的 `artifacts/task96/`（ignored）与 `MEMORY/docs/`；`/tmp/exp96` 只是冻结只读快照。
 - r11 trained.json仅记录模型/配方sha与时间，没有trainer运行revision；recipe.provenance是配方来源，不等于实际训练源码。已用部署日志和评估SHA定位当时部署版本4f4d217b，但未记录的训练时单文件覆盖无法靠事后Git证明不存在；不能据主检出HEAD归因代码漂移。
