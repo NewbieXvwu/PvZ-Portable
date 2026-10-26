@@ -1901,7 +1901,7 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
     log_line(args.log, f'round {round_index} done: {len(groups)} groups, '
                        f'{sum(group["games"] for group in groups)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
-    if groups:
+    if groups and not getattr(args, 'stop_flag', STOP_FLAG).exists():
         pipeline_action(args, 'enqueue')
     return True
 

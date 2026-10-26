@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 
 import torch
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
@@ -62,3 +63,20 @@ def test_opening_cells_keep_decks_fixed_beta_and_resume_within_budget():
     same = [item for item in resumed if item['base'] == first['base']]
     assert [(item['offset'], item['beta']) for item in same] == [(12, .5)]
     assert sum(item['games'] for item in resumed) + 12 == 192
+
+
+@pytest.mark.parametrize('stop_at_boundary', [False, True])
+def test_last_group_stop_does_not_enqueue_a_new_training_round(tmp_path, monkeypatch, stop_at_boundary):
+    from types import SimpleNamespace
+    calls = []
+    args = SimpleNamespace(state=tmp_path / 'state.json', log=tmp_path / 'log',
+                           stop_flag=tmp_path / 'stop',
+                           pipeline=SimpleNamespace(poll=lambda: None, enqueue=lambda: calls.append('enqueue')))
+    state = dict(round=0, log=[], cells={}, offsets={})
+    def collect(*_):
+        if stop_at_boundary:
+            args.stop_flag.touch()
+    monkeypatch.setattr(queue, '_run_group', collect)
+    assert queue.run_round(args, state, [dict(base='a', label='a', games=12)], [])
+    assert state['round'] == 1
+    assert calls == ([] if stop_at_boundary else ['enqueue'])
