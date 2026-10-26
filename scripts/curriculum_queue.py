@@ -392,15 +392,15 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
             continue
         wanted[base] = task
     for base in sorted(cells):
-        if base in training or cells[base].get('ladder'):
-            continue   # 示范起点格（task71）由 reconcile_start_cells 管，不看训练集合
+        if base in training or cells[base].get('archive'):
+            continue   # 示范起点格（task71，带 archive）由 reconcile_start_cells 管，不看训练集合
         retired[base] = cells.pop(base)
         family = family_of(base)
         reason = (f'superseded by {SUPERSEDED[family]}' if family in SUPERSEDED
                   else 'not in the training set')
         lines.append(f'cell retired: {base} ({reason})')
     for base in sorted(retired):
-        if base not in training or retired[base].get('ladder'):
+        if base not in training or retired[base].get('archive'):
             continue
         cells[base] = retired.pop(base)
         lines.append(f'cell restored: {base}')
@@ -475,7 +475,8 @@ def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | N
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     for base in sorted(cells):
-        if cells[base].get('ladder') and base not in specs:
+        # 起点格以 archive 识别：原生倍率阶梯格（task75b）也带 ladder，不能被当成起点格退休。
+        if cells[base].get('archive') and base not in specs:
             retired[base] = cells.pop(base)
             lines.append(f'start cell retired: {base}')
     for base, spec in sorted(specs.items()):
@@ -1436,7 +1437,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
-        start = cell.get('ladder') is not None
+        start = cell.get('archive') is not None
         task_id = cell['task_id'] if start else task_id_for(base, multiplier, tasks, names)
         seeds = cell['seeds'] if start else tasks[task_id]['seeds']
         offset = state['offsets'].get(task_id, 0)

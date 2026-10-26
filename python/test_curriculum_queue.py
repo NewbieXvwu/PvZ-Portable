@@ -250,7 +250,29 @@ class CurriculumRulesTest(unittest.TestCase):
         plan, changes = plan_round(state, tasks, NAMES, VALUES, manifests,
                                    budget=10, per_group=10)
         self.assertEqual(plan, [])
-        self.assertTrue(any('seeds exhausted' in change and 'group skipped' in change for change in changes))
+        self.assertTrue(any('seeds exhausted' in line and 'group skipped' in line for line in changes))
+        self.assertIn('day_l7_train_d7', state['cells'])
+
+    def test_native_ladder_cell_is_not_a_start_cell(self):
+        # 10-26: native L25 carries a multiplier ladder too; reconcile_start_cells retired it and
+        # plan_round planned it as a demo start. Start cells are recognised by their archive.
+        state = dict(round=0, offsets={}, cells={'pool_l25_orig_train': dict(
+            cell(5, 10), ladder=list(CURRICULUM_LADDERS['native_l25']), mult_index=0)})
+        self.assertEqual(reconcile_start_cells(state, {}), [])
+        self.assertIn('pool_l25_orig_train', state['cells'])
+        self.assertNotIn('pool_l25_orig_train', state.get('retired_cells', {}))
+
+    def test_exhausted_start_cell_is_retired_not_fatal(self):
+        state = dict(round=0, offsets={'demo_x_m200_start': 250},
+                     cells={'demo_x_m200': dict(cell(5, 10), ladder=[400, 300], mult_index=0,
+                                                task_id='demo_x_m200_start', seeds=list(range(256)),
+                                                archive='/a', family='f', level=32)})
+        plan, changes = plan_round(state, {}, NAMES, VALUES, {'demo_x_m200_start': Path('/tmp/p.json')},
+                                   budget=10, per_group=10)
+        self.assertEqual(plan, [])
+        self.assertNotIn('demo_x_m200', state['cells'])
+        self.assertIn('demo_x_m200', state['retired_cells'])
+        self.assertTrue(any('start cell retired' in line for line in changes))
 
     def test_stop_flag_stops_before_any_group(self):
         import curriculum_queue as queue
