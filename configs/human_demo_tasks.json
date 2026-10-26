@@ -3825,7 +3825,16 @@
     2,
     17,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/ecccba486c27726ce4467936093d23623d6ab704bf24c157a48e1916695e6e67",
+    "decisions": [
+     1441
+    ],
+    "index": 0,
+    "future_seed_start": 116000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_48_doom_m300_s81016036_af1a4518f8fcd",
