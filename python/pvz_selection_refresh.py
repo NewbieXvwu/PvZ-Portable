@@ -47,7 +47,11 @@ def current_cells(state, incumbent, runs):
             recent = bucket.get('recent', [])
             outcomes = outcomes[-len(recent):] if recent else []
             if outcomes and outcomes != recent[-len(outcomes):]:
-                raise ValueError(f'current-policy records do not match window suffix: {base}/{multiplier}')
+                # The window holds games the log cannot attribute (e.g. groups from before a restart);
+                # a mixed window is not evidence about the incumbent, so this cell sits out the panel.
+                excluded.append(dict(base=base, multiplier=float(multiplier),
+                                     reason='current-policy records do not match window suffix'))
+                continue
             if outcomes and .3 <= sum(outcomes) / len(outcomes) <= .8:
                 cells.append(dict(base=base, multiplier=float(multiplier), wins=sum(outcomes),
                                   games=len(outcomes), rate=sum(outcomes) / len(outcomes),

@@ -258,3 +258,24 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
     assert args.state.read_bytes() == before
     assert not selection_ledger.exists() and not gate_ledger.exists()
     assert 'selection preview (no allocation, no engine, no state write)' in capsys.readouterr().out
+
+
+def test_window_that_disagrees_with_incumbent_records_sits_out(tmp_path):
+    # 10-26 production dry-run: six windows held games the log could not attribute; one bad
+    # window must drop that cell from the panel, not abort the whole selection.
+    from pvz_selection_refresh import current_cells
+    model = tmp_path / 'r11.pt'
+    model.write_bytes(b'r11')
+    folder = tmp_path / 'g_2'
+    folder.mkdir()
+    (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=str(model), dagger_beta='0', task_id='t')))
+    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(won=bool(w), terminal=True)) for w in [1, 0]))
+    group = dict(base='t', multiplier=1., beta=0, student=str(model.resolve()), label='g', games=2,
+                 task_id='t', manifest='/m.json')
+    state = dict(log=[dict(groups=[group])], cells=dict(t=dict(windows={'1.0': dict(recent=[1, 1, 1, 0])})))
+    cells, _, excluded = current_cells(state, model, tmp_path)
+    assert [c['rate'] for c in cells] == [.5]
+    state['cells']['t']['windows']['1.0']['recent'][-1] = 1
+    cells, _, excluded = current_cells(state, model, tmp_path)
+    assert cells == []
+    assert excluded[-1]['reason'] == 'current-policy records do not match window suffix'
