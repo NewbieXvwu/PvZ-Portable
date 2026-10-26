@@ -785,3 +785,15 @@
   - 每个会话有自己的 `run_id`，种子推进顺序随 `run_id` 变，避免多个平台撞车；
   - 接口不含任何联网代码，PROMPT 写明只写本地 out 目录；
   - 入口说明不依赖平台。
+- 2026-10-26 12:40（台式机时间）：
+  - **多平台 llmplay 包定版**：
+    - `llmplay_pkg.zip`：11.8 MB，SHA `27ec2248…`；
+    - `llmplay_res.zip`：34.3 MB，SHA `0005bb8e…`，内含 main.pak 与预编译缓存 `cache64`。
+    - 主控复验：CRC 正常，凭据 0 命中，两包冷解压后断网 selfcheck OK（含持续交付、断点续跑、损坏存档识别）。PROMPT 不再有时间上限，也不提上传或联网。
+    - 已拷到 Mac `~/pvz-llmplay/`。
+  - **Codex 周额度快见底**：Business 剩不到 5%，plus 剩不到 25%（16:41 恢复 5 小时窗口）。已关闭做完的 codexb-llmplay；之后各任务由 agent_pool 交 CodeBuddy 接手。
+  - **task86c 失败，task86 整线关闭**：kind1 3.8 万行，格点一致率 0.526，低于 branch1 的 0.539，雾夜与 storm 分区也没过。静态候选网不是瓶颈，不再投入。
+  - **task93b 完成**：Mac 三族各 192 局，胜 104 / 75 / 114，已传 HF，已告知 codexb-task93 导入。
+  - Mac 新派两个任务：
+    - **task93c**（plus2b）：随机卡组扩到雾夜 / 屋顶，并查三叶草为何被 `not_recommended` 滤掉；
+    - **task101**（plus2）：冒险模式 50 关实测记分板。
