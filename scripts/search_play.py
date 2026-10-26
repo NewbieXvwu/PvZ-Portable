@@ -39,6 +39,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import math
 import random
 import json
 import multiprocessing as mp
@@ -472,9 +473,115 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
                             policy_index, policy_action, args, decision_seed, stats)
 
 
+def _save_value(env, obs: dict, action: dict, snapshot: int, seed: int, until_tick: int) -> float:
+    leaf = _rollout_policy(env, obs, action, until_tick, snapshot, seed)
+    terminal = _score_terminal_or_value(leaf)
+    if terminal is not None:
+        return terminal
+    return _leaf_values([leaf])[0]
+
+
+def _save_probe(env, obs: dict, root: int, packet: int, cost: int, args, decision_seed: int,
+                until_tick: int) -> dict | None:
+    """Wait in the engine until `packet` is affordable, then score planting it there.
+
+    The engine only lists plant actions the player can pay for, so a card above the sun the
+    policy ever holds is invisible to the candidate set (task120: a 125 card had a legal cell in
+    0.5% of decisions, a 300 card in none). This probe answers "what would it be worth if we
+    saved for it" without touching the candidate set: restore the decision root, wait, and roll
+    the plant out from the future state. The caller restores the root again afterwards.
+    """
+    waited = 0
+    current = obs
+    env.restore_fast(root)
+    while current['sun'] < cost and waited < args.save_max_wait and not current['terminal']:
+        step = min(args.save_chunk, args.save_max_wait - waited)
+        current, _reward, _done, _truncated, info = env.step({'type': 'wait', 'ticks': step})
+        advanced = int(info.get('ticks_advanced') or 0)
+        if advanced <= 0:
+            break
+        waited += advanced
+    if current['terminal'] or current['sun'] < cost:
+        return None
+    actions = [{'type': 'plant', 'packet': entry['packet'], 'col': entry['col'], 'row': entry['row']}
+               for entry in (current.get('legal_actions') or {}).get('plants') or []
+               if entry['packet'] == packet]
+    if not actions:
+        return None
+    future = env.snapshot_fast()
+    try:
+        scores = env.static_scores(future, actions, current.get('sun_income_rate') or 0.0)
+        pairs = [(score, action) for score, action in zip(scores, actions) if score is not None]
+        if not pairs:
+            return None
+        action = max(pairs, key=lambda item: item[0])[1]
+        # The normal candidates are decided after --samples + --verify-samples futures; a plan with
+        # fewer would win against them on noise alone.
+        samples = max(1, args.samples + max(0, args.verify_samples))
+        values = [_save_value(env, current, action, future,
+                              (decision_seed * 1000 + k) % 2 ** 32, until_tick) for k in range(samples)]
+    finally:
+        env.release_snapshot(future)
+    return dict(packet=packet, cost=cost, ticks=waited, cell=[action['col'], action['row']],
+                value=sum(values) / len(values), sun=int(current['sun']), samples=samples)
+
+
+def _save_plan(env, obs: dict, root: int, candidates: list[dict], totals: list[float], args,
+               decision_seed: int, stats: dict) -> dict | None:
+    """The best "save up and plant it" plan, when it beats every current candidate by MARGIN."""
+    if not getattr(args, 'save_candidates', 0):
+        return None
+    present = {candidate.get('packet') for candidate in candidates if candidate['type'] == 'plant'}
+    # obs['packets'] is in deck order: the slot index is the action's packet field, while
+    # entry['type'] is the SeedType (a different numbering).
+    costs = {slot: entry.get('cost') or 0 for slot, entry in enumerate(obs.get('packets') or [])
+             if entry.get('type', -1) >= 0}
+    last = stats.setdefault('save_last_probe', {})
+    reachable = [(packet, cost) for packet, cost in costs.items()
+                 if packet not in present and cost > obs['sun']
+                 and obs['sun'] >= getattr(args, 'save_share', 0.5) * cost
+                 and obs['tick'] - last.get(packet, -10 ** 9) >= getattr(args, 'save_interval', 600)]
+    if not reachable:
+        return None
+    reachable.sort(key=lambda item: item[1])
+    # The probe advances the engine and restores it; keep it out of the export operation stream so
+    # a recording run cannot replay it as if the teacher had waited.
+    episode = env.episode
+    env.episode = None
+    plans = []
+    try:
+        for packet, cost in reachable[: args.save_candidates]:
+            last[packet] = obs['tick']
+            plan = _save_probe(env, obs, root, packet, cost, args, decision_seed,
+                               obs['tick'] + args.horizon)
+            env.restore_fast(root)
+            if plan is not None:
+                plans.append(plan)
+    finally:
+        env.episode = episode
+    stats['save_probes'] = stats.get('save_probes', 0) + len(plans)
+    finite = [float(value) for value in totals if math.isfinite(float(value))]
+    if not plans or not finite:
+        return None
+    plan = max(plans, key=lambda item: item['value'])
+    if plan['value'] > max(finite) + MARGIN:
+        stats['save_overrides'] = stats.get('save_overrides', 0) + 1
+        stats['save_wait_ticks'] = stats.get('save_wait_ticks', 0) + plan['ticks']
+        return plan
+    return None
+
+
 def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
                      counts: list[int], best: int, policy_index: int, policy_action: dict,
                      args, decision_seed: int, stats: dict, *, fresh: bool = False) -> dict:
+    if not fresh:
+        plan = _save_plan(env, obs, root, candidates, totals, args, decision_seed, stats)
+        if plan is not None:
+            stats['last_targets'] = None
+            wait = {'type': 'wait', 'ticks': plan['ticks'], 'until': 'timeout'}
+            _probe_decision(args, obs, candidates, totals, wait, decision_seed, policy_action,
+                            best, policy_index)
+            return wait
     before = fresh or (best != policy_index and totals[best] - totals[policy_index] > MARGIN)
     samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
     if fresh:
@@ -853,6 +960,17 @@ def parser():
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
                         "candidates; 0 = off, which is the old candidate set exactly")
+    p.add_argument("--save-candidates", type=int, default=0,
+                   help="cards the player cannot afford yet but has at least --save-share of the cost for: "
+                        "wait in the engine until they are affordable and score the plant from that future "
+                        "state; the decision becomes the wait when it beats the best candidate. "
+                        "0 = off (task120)")
+    p.add_argument("--save-share", type=float, default=0.5,
+                   help="only probe a card once the current sun reaches this share of its cost")
+    p.add_argument("--save-max-wait", type=int, default=1800, help="longest wait a save probe may simulate")
+    p.add_argument("--save-chunk", type=int, default=300, help="wait step of a save probe")
+    p.add_argument("--save-interval", type=int, default=600,
+                   help="minimum ticks between two probes of the same card")
     p.add_argument("--samples", type=int, default=3)
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
@@ -886,6 +1004,12 @@ def main() -> None:
         p.error("--verify-samples must be nonnegative")
     if args.student_candidates < 0:
         p.error("--student-candidates must be nonnegative")
+    if args.save_candidates < 0:
+        p.error("--save-candidates must be nonnegative")
+    if not 0 < args.save_share <= 1:
+        p.error("--save-share must be in (0, 1]")
+    if args.save_max_wait <= 0 or args.save_chunk <= 0 or args.save_interval < 0:
+        p.error("--save-max-wait and --save-chunk must be positive, --save-interval nonnegative")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
