@@ -32,6 +32,9 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT / 'python'))
+from pvz_promotion import START_SEED_LEDGER_DEFAULT, START_SEED_POOL  # noqa: E402
+
 MAIN_CHECKOUT = Path.home() / "PvZ-search"
 LOG_ROOT = Path.home() / "pvz-logs"
 SEED_LIMIT = 1 << 32
@@ -218,8 +221,12 @@ def compact(result, widest=40):
 
     The full per-declaration table is a scan artifact (thousands of task rows, a
     megabyte of JSON); what a reviewer needs in the repository is the merged
-    occupancy, the per-source counts and the widest named segments.
+    occupancy, the per-source counts and the widest named segments. A document
+    that is already compact (the committed summary) is returned unchanged, so
+    --from-inventory works on it instead of raising KeyError on 'sources'.
     """
+    if 'sources' not in result:
+        return result
     by_kind = {}
     for segment in result['sources']:
         entry = by_kind.setdefault(segment['kind'], dict(declarations=0, low=segment['low'],
@@ -258,6 +265,9 @@ def main():
     parser.add_argument('--verify-hi', type=int, default=None)
     parser.add_argument('--candidate', type=int, nargs=2, default=None,
                         help='LO HI candidate pool to report against the free gaps')
+    parser.add_argument('--ignore-start-pool', action='store_true',
+                        help='drop the task99 start-cell pool and its ledger from occupancy; use it '
+                             'to audit a candidate that is itself a registered pool')
     args = parser.parse_args()
     if args.from_inventory is not None:
         result = json.loads(args.from_inventory.read_text())
@@ -290,10 +300,23 @@ def main():
             ledger.append(dict(name=f'gate ledger block {index}', low=block[0], high=block[1],
                                source=str(ledger_path), kind='gate ledger'))
 
+    # task99: the start-cell renewal pool is registered here as a constant (not only as a
+    # ledger) so a scan run before the first renewal still reports it as occupied.
+    start_segments = [dict(name='start cell renewal pool', low=START_SEED_POOL[0],
+                           high=START_SEED_POOL[1], kind='start cell pool',
+                           source=str(ROOT / 'python/pvz_promotion.py'))]
+    start_ledger_path = Path(START_SEED_LEDGER_DEFAULT)
+    if start_ledger_path.exists():
+        document = json.loads(start_ledger_path.read_text())
+        for index, block in enumerate(document.get('allocated') or []):
+            start_segments.append(dict(name=f'start cell ledger block {index}', low=block[0],
+                                       high=block[1], kind='start cell ledger',
+                                       source=str(start_ledger_path)))
+
     scanned = dict(files_seen=0, files_parsed=0, segments=[])
     if not args.quick:
         scanned = scan_json(roots)
-    segments = design + ledger + scanned['segments']
+    segments = design + ledger + ([] if args.ignore_start_pool else start_segments) + scanned['segments']
     occupied = merge((segment['low'], segment['high']) for segment in segments)
     gaps = free_gaps(occupied, SEED_LIMIT, 1_000_000)
 

@@ -69,6 +69,16 @@ SEED_POOL_V2 = SEED_POOLS_V2[0]  # legacy name: the window v2/v3 were registered
 V2_SEEDS_PER_TASK = 192
 V3_SEEDS_PER_TASK = 192
 SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/gate_seed_ledger.json'
+# task99: future seed blocks of the demo start cells (configs/human_demo_tasks.json
+# demo_start.future_seed_start). The block written in the manifest stays the first
+# segment forever, so old rows stay comparable; when a cell's offset reaches the end
+# of its table, qc renews it from this dedicated pool through its own out-of-git
+# ledger. Disjoint from every registered segment (gate pools above, demo 2026xxxx
+# and 44,000,000-47,000,000, llmplay 83,000,000+); checked with
+# scripts/gate_seed_inventory.py.
+START_SEED_POOL = (90_000_000, 91_000_000)
+START_SEED_LEDGER_DEFAULT = '/home/newbiexvwu/pvz-logs/start_cell_seed_ledger.json'
+START_SEED_BLOCK = 256
 
 
 def policy(version=GATE_VERSION):

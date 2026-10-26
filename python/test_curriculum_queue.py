@@ -17,8 +17,9 @@ from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMO
                               adjust, allocate, build_plan, cell_level, command_for, label_for,
                               load_demo_start_cells, load_teacher_rates, make_state, pack_command,
                               pack_labels, parse_task_id, plan_round, rate, reconcile_cells,
-                              reconcile_start_cells, startup_worker_estimate, student_rate,
-                              training_base_ids, worker_count)
+                              reconcile_start_cells, renew_start_seeds, startup_worker_estimate,
+                              student_rate, training_base_ids, worker_count)
+from pvz_promotion import START_SEED_BLOCK, START_SEED_POOL
 
 VALUES = [1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]
 NAMES = {'m125': 1.25, 'm150': 1.5, 'm175': 1.75, 'm200': 2.0, 'm250': 2.5, 'm300': 3.0}
@@ -948,6 +949,124 @@ class DemoStartCellsTest(unittest.TestCase):
             meta = json.loads((Path(spec['archive']) / 'meta.json').read_text())
             self.assertTrue(meta['verified'], task_id)
             self.assertIn(meta['label_source'], ('human', 'llm_gpt_pro'), task_id)
+
+
+class StartSeedRenewalTest(unittest.TestCase):
+    """task99：起点格的未来种子按需续领（多段种子表），不再用完即退休。"""
+
+    BASE = 'demo_fog_32_snow_m200'
+
+    def cell(self, size=256):
+        seeds = list(range(size))
+        return dict(family='demo_start', level=32, mult_index=0, last_round=0, windows={},
+                    ladder=[1231, 1119], task_id=self.BASE, archive='/archives/demo',
+                    seeds=seeds, seed_blocks=[[0, size]])
+
+    def spec(self, size=256):
+        return dict(self.cell(size), windows={})
+
+    def test_plan_round_renews_before_retiring(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            state = dict(round=0, offsets={self.BASE: 240}, cells={self.BASE: self.cell()})
+            plan, changes = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                       budget=48, per_group=48, start_seed_ledger=ledger)
+            block = [START_SEED_POOL[0], START_SEED_POOL[0] + START_SEED_BLOCK]
+            self.assertEqual(len(plan), 1)
+            self.assertEqual(plan[0]['offset'], 240)          # 偏移语义不变：仍是表头绝对下标
+            self.assertEqual(plan[0]['future_seeds'],
+                             list(range(240, 256)) + list(range(block[0], block[0] + 32)))
+            self.assertEqual(state['cells'][self.BASE]['seed_blocks'], [[0, 256], block])
+            self.assertNotIn(self.BASE, state.get('retired_cells', {}))
+            self.assertTrue(any('seeds renewed +256' in line for line in changes))
+            self.assertEqual(json.loads(ledger.read_text())['allocated'], [block])
+
+    def test_renewed_blocks_are_disjoint_and_ordered(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            cell = self.cell()
+            first = renew_start_seeds(cell, ledger)
+            second = renew_start_seeds(cell, ledger)
+            self.assertEqual(first[1], second[0])             # 相邻但不相交，从不复用
+            self.assertEqual(cell['seeds'][256:], list(range(*first)) + list(range(*second)))
+            self.assertEqual(cell['seed_blocks'], [[0, 256], first, second])
+            self.assertEqual(json.loads(ledger.read_text())['allocated'], [first, second])
+
+    def test_pool_is_outside_every_registered_segment(self):
+        inventory = json.loads((ROOT / 'MEMORY/docs/gate-seed-inventory.json').read_text())
+        overlaps = [[max(START_SEED_POOL[0], low), min(START_SEED_POOL[1], high)]
+                    for low, high in inventory['occupied']
+                    if (low, high) != START_SEED_POOL and low < START_SEED_POOL[1]
+                    and START_SEED_POOL[0] < high]
+        self.assertEqual(overlaps, [])
+
+    def test_restart_keeps_the_renewed_segments(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            state = dict(round=0, offsets={}, cells={self.BASE: self.cell()})
+            renew_start_seeds(state['cells'][self.BASE], ledger)
+            path = Path(tmp) / 'state.json'
+            path.write_text(json.dumps(state))
+            reloaded = json.loads(path.read_text())
+            lines = reconcile_start_cells(reloaded, {self.BASE: self.spec()})
+            self.assertEqual(lines, [])                       # 清单块仍是第一段：不覆盖、不报改动
+            self.assertEqual(len(reloaded['cells'][self.BASE]['seeds']), 512)
+            self.assertEqual(len(reloaded['cells'][self.BASE]['seed_blocks']), 2)
+            reloaded['offsets'][self.BASE] = 300              # 偏移继续在续领段里走
+            plan, _ = plan_round(reloaded, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                 budget=10, per_group=10)
+            self.assertEqual(plan[0]['future_seeds'], list(range(90000044, 90000054)))
+
+    def test_spec_block_change_resets_the_table(self):
+        state = dict(round=0, offsets={}, cells={self.BASE: self.cell()})
+        with tempfile.TemporaryDirectory() as tmp:
+            renew_start_seeds(state['cells'][self.BASE], Path(tmp) / 'start_ledger.json')
+        spec = self.spec()
+        spec['seeds'] = list(range(500, 756))
+        spec['seed_blocks'] = [[500, 756]]
+        lines = reconcile_start_cells(state, {self.BASE: spec})
+        self.assertEqual(state['cells'][self.BASE]['seeds'], list(range(500, 756)))
+        self.assertEqual(state['cells'][self.BASE]['seed_blocks'], [[500, 756]])
+        self.assertTrue(any('seeds' in line for line in lines))
+
+    def test_retired_start_cell_reactivates_and_renews(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            retired = dict(self.cell(), retired_reason='seeds exhausted')
+            state = dict(round=0, offsets={self.BASE: 216}, cells={},
+                         retired_cells={self.BASE: retired})
+            lines = reconcile_start_cells(state, {self.BASE: self.spec()}, restore=(self.BASE,))
+            self.assertIn(self.BASE, state['cells'])
+            self.assertNotIn(self.BASE, state['retired_cells'])
+            self.assertTrue(any('start cell restored' in line for line in lines))
+            plan, changes = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                       budget=48, per_group=48, start_seed_ledger=ledger)
+            self.assertEqual(len(plan), 1)
+            self.assertEqual(len(plan[0]['future_seeds']), 48)
+            self.assertEqual(plan[0]['future_seeds'][40:], list(range(90000000, 90000008)))
+            self.assertTrue(any('seeds renewed' in line for line in changes))
+
+    def test_legacy_restore_survives_the_next_restart(self):
+        state = dict(round=0, offsets={}, cells={}, retired_cells={self.BASE: self.cell()})
+        reconcile_start_cells(state, {}, restore=(self.BASE,))
+        self.assertTrue(state['cells'][self.BASE]['legacy_restored'])
+        reconcile_start_cells(state, {})                      # 清单里没有它，也不能再退休
+        self.assertIn(self.BASE, state['cells'])
+        self.assertNotIn(self.BASE, state['retired_cells'])
+
+    def test_exhausted_pool_retires_the_cell(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            ledger = Path(tmp) / 'start_ledger.json'
+            ledger.write_text(json.dumps(dict(pool=list(START_SEED_POOL), pools=[list(START_SEED_POOL)],
+                                              allocated=[list(START_SEED_POOL)])))
+            state = dict(round=0, offsets={self.BASE: 250}, cells={self.BASE: self.cell()})
+            plan, changes = plan_round(state, {}, NAMES, VALUES, {self.BASE: Path('/tmp/p.json')},
+                                       budget=10, per_group=10, start_seed_ledger=ledger)
+            self.assertEqual(plan, [])
+            self.assertIn(self.BASE, state['retired_cells'])
+            self.assertEqual(state['retired_cells'][self.BASE]['retired_reason'], 'seeds exhausted')
+            self.assertTrue(any('seed renewal failed' in line for line in changes))
+            self.assertTrue(any('start cell retired' in line for line in changes))
 
 
 if __name__ == '__main__':
