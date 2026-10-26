@@ -24,3 +24,9 @@
 ## 结果
 
 ## 问题
+
+## 主控追加（2026-10-26 11:55）：起点格打包丢 plane_of
+第 18 轮训练失败两次，qc 因此停机（11:33）。原因是段 `ce3ce4006691a0e1`（标签 `c18demoroof48doomm200s1100_fast_search`，L48 起点在 1100，存档总共 1108 个决策）的 `board_plane_of` 只有 72 个，行数却是 84。训练读段时 broadcast 失败。
+- 主控已热补 `train_rollout_policy.read_segments`（570f5e7d）：行数不符的段按“无平面”读。这只是止血。
+- 请在 `pack_training_rows` 里找到起点格（尤其是离终局只差几步的起点）为什么会少记 plane id，从根上修好，并加测试：起点格的段，plane_of 长度必须等于行数。
+- 修好后，在 ce3ce400 对应的标签上重新打包，验证长度一致。
