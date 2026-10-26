@@ -1,10 +1,11 @@
 #!/bin/bash
-# task121/122: prepared for the controller; do not execute during delivery.
+# task121/122/123: prepared for the controller; do not execute during delivery.
 # Tempered level balancing (p=0.5, 20x ceiling) is recipe B; fog night cells (L31-40) get
-# search_play --save-candidates 1 by the controller default (task122). Python search only: no engine change.
+# search_play --save-candidates 1 by the controller default (task122). task123 shares one segment
+# mapping between the two students and counts it in training admission. Python only: no engine change.
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search; W=$R/.claude/worktrees/cq; PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=9afe653685c60997abe1f165dd0758d50dc846d7
+REV=9be26526c6d9c0a4d69b4492b15fec9dc5922132
 ENGINE_SHA=de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845
 NEWEXE=$W/build6/pvz-portable
 OLDEXE=$W/build6/pvz-portable
@@ -15,7 +16,7 @@ L=/home/newbiexvwu/pvz-logs/qc_setup.log
 O=/home/newbiexvwu/pvz-logs/deploy14h_$(date +%Y%m%dT%H%M%S)
 STOP_FLAG=/home/newbiexvwu/pvz-logs/stop_curr
 STOPPED=0; SAVED=0; OWN_STOP=0; STARTED=0
-CODE_FILES=(scripts/curriculum_queue.py scripts/train_rollout_policy.py python/pvz_recipe.py python/pvz_training_rows.py scripts/make_rebalance_panel.py recipes/dw4i2_rebalanced.json recipes/dw4i2_rebalanced_p05.json scripts/search_play.py python/test_save_candidates.py)
+CODE_FILES=(scripts/curriculum_queue.py scripts/train_rollout_policy.py python/pvz_recipe.py python/pvz_training_rows.py scripts/make_rebalance_panel.py recipes/dw4i2_rebalanced.json recipes/dw4i2_rebalanced_p05.json scripts/search_play.py python/test_save_candidates.py python/test_incremental_pack.py python/test_multiseed_production.py)
 log() { echo "$(date -Iseconds) deploy14h: $*" >> "$L"; }
 start_qc() {
   if [ -f "$MODE_CHOICE" ] && grep -qx rebalance "$MODE_CHOICE"; then
@@ -57,7 +58,7 @@ import sys
 
 action, root, output, revision = sys.argv[1:]
 root, output = Path(root), Path(output)
-baseline = json.loads(r'''{"scripts/curriculum_queue.py":"f1bbebd6a401324c89bdc22de5c974d17a0191d84f52e836af83df1b3cc52bae","scripts/train_rollout_policy.py":"4de501a0548e2f3198fbc5b002fb834c4faa676d02c2515226fbcfcb4d8c412d","python/pvz_recipe.py":"e067c9e3f45bb61f27276ddc85e045b3ba61424ccc4dd4d98a28e16420e188cd","python/pvz_training_rows.py":"e83fe2f2df5464886499344aa693e34469a2f7ea08b4e392589cc8679de215ea","scripts/make_rebalance_panel.py":"435a7ff0c9f9cde8cb12aaed6f4446beba43bca435c86055dff231243d26a038","recipes/dw4i2_rebalanced.json":"fa9bf3767a55f0ff63f57a25b653422a704a1815d6ca80e275c95a1eb5e20028","recipes/dw4i2_rebalanced_p05.json":null,"scripts/search_play.py":"52d00f236a6b2a66e3e83305602582896aa9103ea8098a7c21ab6a7a40f9e00f","python/test_save_candidates.py":null}''')
+baseline = json.loads(r'''{"scripts/curriculum_queue.py":"f1bbebd6a401324c89bdc22de5c974d17a0191d84f52e836af83df1b3cc52bae","scripts/train_rollout_policy.py":"4de501a0548e2f3198fbc5b002fb834c4faa676d02c2515226fbcfcb4d8c412d","python/pvz_recipe.py":"e067c9e3f45bb61f27276ddc85e045b3ba61424ccc4dd4d98a28e16420e188cd","python/pvz_training_rows.py":"e83fe2f2df5464886499344aa693e34469a2f7ea08b4e392589cc8679de215ea","scripts/make_rebalance_panel.py":"435a7ff0c9f9cde8cb12aaed6f4446beba43bca435c86055dff231243d26a038","recipes/dw4i2_rebalanced.json":"fa9bf3767a55f0ff63f57a25b653422a704a1815d6ca80e275c95a1eb5e20028","recipes/dw4i2_rebalanced_p05.json":null,"scripts/search_play.py":"52d00f236a6b2a66e3e83305602582896aa9103ea8098a7c21ab6a7a40f9e00f","python/test_save_candidates.py":null,"python/test_incremental_pack.py":"6232dbb46e3319e77992405c3dca64552f2c1da6c195658283a2053aa51067aa","python/test_multiseed_production.py":null}''')
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
 immutable = {
