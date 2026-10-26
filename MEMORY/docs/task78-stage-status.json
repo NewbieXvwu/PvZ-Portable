@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T11:04:58.503607+00:00",
+ "at_utc": "2026-10-26T12:17:10.299212+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -198,7 +198,7 @@
  },
  "independent_roof": {
   "expected_label_jobs": 216,
-  "completed_label_jobs": 59,
+  "completed_label_jobs": 72,
   "replay_completed_k": [
    0
   ],
@@ -435,7 +435,46 @@
    0,
    1,
    2
-  ]
+  ],
+  "active_common_future_index": 1,
+  "completed_common_future_exports": {
+   "k0": {
+    "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/roof_truth/k0/export.json",
+    "sha256": "996c0d50fc829c79d48de2ec0981049e78a02947af7106dc973f6939fbaaf158",
+    "complete": true,
+    "training_eligible": false,
+    "total": {
+     "shards": 72,
+     "rows": 672,
+     "wins": 268,
+     "terminal_dropped": 3,
+     "skipped": 0
+    },
+    "by_group": {
+     "roof_l41": {
+      "rows": 222,
+      "wins": 198,
+      "archives": 8,
+      "stop_archives": 2
+     },
+     "roof_l42": {
+      "rows": 225,
+      "wins": 44,
+      "archives": 8,
+      "stop_archives": 0
+     },
+     "roof_l43": {
+      "rows": 225,
+      "wins": 26,
+      "archives": 8,
+      "stop_archives": 0
+     }
+    },
+    "normal_export_attempt": 0,
+    "extra_audit_performed": false,
+    "scored": false
+   }
+  }
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
