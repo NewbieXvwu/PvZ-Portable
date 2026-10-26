@@ -118,6 +118,13 @@
 数据齐后打包、核对新增实际行占比，检查 qc 无 GPU 训练冲突，再串行运行原训练入口
 `scripts/train_rollout_policy.py --recipe <上述绝对配置路径>`；两种子都训练和评估，不按 heldout 选优。
 
+`scripts/task93_validation.py --collector-pid <现存采集 shell PID>` 将后续阶段串行衔接，
+用 pidfd 等待该进程退出而不另开采集；完整性检查不通过即停止。私有文件锁防重复流水线，
+训练有模型/配方 SHA 与 12 epoch 回执后才可复用；游戏评估使用 `--workers 2`。
+训练启动前等待 qc GPU 训练退出并预留可用内存，运行中若 qc 开始训练则仅终止本实验子进程并留失败状态，
+不动生产。进度与子进程句柄在 ignored `artifacts/task93/validation_status.json`；续做先核实其中进程，
+不可仅凭状态文件或观察超时重启。最终两个比较 JSON 仍需人工读数、核对数据占比并写结论。
+
 ## 问题
 
 - 三叶草(27) 候选池缺口（见上），需主控裁定是否补第四族。
