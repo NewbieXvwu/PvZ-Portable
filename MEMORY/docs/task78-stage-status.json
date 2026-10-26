@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T10:48:46.898088+00:00",
+ "at_utc": "2026-10-26T10:54:11.850518+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -515,7 +515,15 @@
   "training_started": false,
   "engine_processes_started": 0,
   "missing_candidate_refused": true,
-  "preflight_report_complete": false
+  "preflight_report_complete": false,
+  "runtime_seed_audit_policy": {
+   "broad_scan_at_launch": false,
+   "evidence_scope": "registration_snapshot",
+   "runtime_actual_checkpoint_training_intersections": true,
+   "post_registration_global_experiments_covered": false,
+   "reason": "User 2026-10-26: reuse completed checks and avoid duplicate global scans",
+   "frozen_registration_unchanged": true
+  }
  },
  "cpu_resource_policy": {
   "at_utc": "2026-10-26T03:03:21.297168+00:00",

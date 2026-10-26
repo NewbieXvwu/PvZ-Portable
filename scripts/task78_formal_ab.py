@@ -128,7 +128,7 @@ def prepare():
         pairs=512,model_training_identity_overlaps=overlaps,
         model_seed_metadata_missing=[name for name,value in overlaps.items() if value is None],
         broad_seed_audit_summary_sha256=sha(audit_summary),
-        historical_audit='Local-only broad audit refreshed at registration and again before first formal runtime freeze; undisclosed remote experiments are not covered.',
+        historical_audit='Local-only broad audit at registration; runtime reuses this snapshot and checks actual checkpoint training identities. Undisclosed remote experiments are not covered.',
         training_started=False,engine_processes_started=0,
         independent_truth='Existing frozen-v5 roof labels may be rescored with the formal candidate; no diagnostic-model scores are substituted.')
     write_once(REGISTRATION,registration)
@@ -173,6 +173,20 @@ def validate_training(checkpoint,training,registration):
         raise ValueError('formal training device or GPU memory/time limit is unverified')
 
 
+def registered_seed_audit(registration):
+    """Reuse the sealed registration receipt; do not rescan unrelated experiments."""
+    summary=OUT/'registration_seed_audit/seed_audit_summary.json'
+    digest=sha(summary)
+    if digest!=registration['broad_seed_audit_summary_sha256']:
+        raise ValueError('registration seed audit summary changed')
+    audit=json.loads(summary.read_text())
+    if audit.get('passed') is not True:
+        raise ValueError('registration seed audit did not pass')
+    if sha(audit['evidence'])!=audit['evidence_sha256']:
+        raise ValueError('registration seed audit evidence changed')
+    return digest
+
+
 def runtime_plan():
     import torch
     registration=json.loads(REGISTRATION.read_text());panel=frozen_panel()
@@ -208,14 +222,8 @@ def runtime_plan():
     result.update(panel_sha256=sha(OUT/'tasks.json'),registration_sha256=sha(REGISTRATION),
                   training_log_sha256=sha(log),original_descriptor_sha256=original['sha256'],
                   model_seed_metadata_missing=missing_metadata)
-    launch_audit=OUT/'launch_seed_audit/seed_audit_summary.json'
-    if not (OUT/'runtime.json').exists():
-        from task78_seed_audit import main as seed_audit
-        seed_audit(launch_audit.parent)
-    audit=json.loads(launch_audit.read_text())
-    if audit.get('passed') is not True or sha(audit['evidence'])!=audit['evidence_sha256']:
-        raise ValueError('formal launch seed audit is missing or changed')
-    result['launch_seed_audit_summary_sha256']=sha(launch_audit)
+    result['registration_seed_audit_summary_sha256']=registered_seed_audit(registration)
+    result['historical_seed_audit_scope']='registration_snapshot'
     for name in ('task78_formal_ab.py','task78_train.py','task78_seed_audit.py'):
         path=ROOT/'scripts'/name;result['code'][str(path)]=sha(path)
     write_once(OUT/'runtime.json',result)

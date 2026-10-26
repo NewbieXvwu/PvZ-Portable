@@ -11,6 +11,38 @@ sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'python')]
 import task78_formal_ab as formal
 
 
+@pytest.fixture
+def seed_receipt(tmp_path,monkeypatch):
+    monkeypatch.setattr(formal,'OUT',tmp_path)
+    directory=tmp_path/'registration_seed_audit';directory.mkdir()
+    evidence=directory/'seed_audit.json';evidence.write_text('{"collision_count":0}')
+    summary=directory/'seed_audit_summary.json'
+    summary.write_text(json.dumps(dict(passed=True,evidence=str(evidence),
+                                       evidence_sha256=formal.sha(evidence))))
+    return summary,evidence,dict(broad_seed_audit_summary_sha256=formal.sha(summary))
+
+
+def test_formal_runtime_reuses_registration_evidence_without_global_rescan(seed_receipt,monkeypatch):
+    import task78_seed_audit
+    summary,_,registration=seed_receipt
+    monkeypatch.setattr(task78_seed_audit,'main',
+                        lambda *a,**kw:pytest.fail('duplicate global seed scan'))
+    assert formal.registered_seed_audit(registration)==formal.sha(summary)
+
+
+@pytest.mark.parametrize('fault',['changed_summary','changed_evidence','failed_registration'])
+def test_registration_receipt_reuse_still_rejects_changed_or_failed_evidence(seed_receipt,fault):
+    summary,evidence,registration=seed_receipt
+    if fault=='changed_summary':summary.write_text('{}')
+    elif fault=='changed_evidence':evidence.write_text('{"collision_count":1}')
+    else:
+        audit=json.loads(summary.read_text());audit['passed']=False
+        summary.write_text(json.dumps(audit))
+        registration['broad_seed_audit_summary_sha256']=formal.sha(summary)
+    with pytest.raises(ValueError,match='registration seed audit'):
+        formal.registered_seed_audit(registration)
+
+
 def test_absent_student_seed_list_is_unknown_instead_of_a_verified_empty_set():
     assert formal.declared_overlap(dict(labels='source_a,source_b'),{78100512},'student') is None
     assert formal.declared_overlap(dict(trained_on=[78100512]),{78100512},'v6')==[78100512]

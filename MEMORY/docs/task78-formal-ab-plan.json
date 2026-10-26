@@ -170,5 +170,13 @@
  "training_started": false,
  "engine_processes_started": 0,
  "independent_truth": "Existing frozen-v5 roof labels may be rescored with the formal candidate; no diagnostic-model scores are substituted.",
- "training_source_sha256": "f963561eb25127927078071e9eec94c6fd826b39eb1b1e83555dcd75da72c3de"
+ "training_source_sha256": "f963561eb25127927078071e9eec94c6fd826b39eb1b1e83555dcd75da72c3de",
+ "execution_policy_amendment_20261026": {
+  "broad_scan_at_launch": false,
+  "evidence_scope": "registration_snapshot",
+  "runtime_actual_checkpoint_training_intersections": true,
+  "post_registration_global_experiments_covered": false,
+  "reason": "User 2026-10-26: reuse completed checks and avoid duplicate global scans",
+  "frozen_registration_unchanged": true
+ }
 }
