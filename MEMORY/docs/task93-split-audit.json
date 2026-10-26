@@ -1,0 +1,74 @@
+{
+  "method": "Reconstruct trainer global seed shuffle from all selected segment seed arrays, then verify every source validation_rows against actual training receipts.",
+  "index_sha256": "fed7e1e1c20d5fd5929339d35514f0d32f2469373d576253bc4ae47d2d990156",
+  "datasets": {
+    "A": {
+      "labels": 348,
+      "rows": 16982931,
+      "seeds": 55773,
+      "validation_seeds": 5577,
+      "validation_options": {
+        "seed": 0,
+        "fraction": 0.1
+      },
+      "recipe_sha256": "8e9c8719a0a20c48c6de757877e5020b31923f21705f7ea6dda7e415f1c6d8f8",
+      "source_rows_sha256": "fd0f9c12901b4e4c7015cdf40515b3167c6ba39c791d86145e441d93f1500039"
+    },
+    "frozen": {
+      "labels": 351,
+      "rows": 17012427,
+      "seeds": 55917,
+      "validation_seeds": 5591,
+      "validation_options": {
+        "seed": 0,
+        "fraction": 0.1
+      },
+      "recipe_sha256": "2a3e4efa08efd5104b192d6474632cb298c7d6f8c41fe4589f399af6a82dfc99",
+      "source_rows_sha256": "edf39b8fba38f219b57d36d6ce648edbc63eb6ba80027ab3981dc20a07d90cee"
+    },
+    "expand": {
+      "labels": 354,
+      "rows": 17132763,
+      "seeds": 56493,
+      "validation_seeds": 5649,
+      "validation_options": {
+        "seed": 0,
+        "fraction": 0.1
+      },
+      "recipe_sha256": "6546dd0b9d851aa056d99c928effc386ad7563c184e2e3234c8747c263f034ed",
+      "source_rows_sha256": "1d2c8d002391d0d0d942b9519e8cf95004428a0f3f4631aadea1772ef28cfd8f"
+    }
+  },
+  "contrasts": {
+    "A_to_frozen": {
+      "shared_labels": 348,
+      "shared_rows": 16982931,
+      "training_to_validation_seeds": 3793,
+      "validation_to_training_seeds": 3797,
+      "training_to_validation_rows": 1130509,
+      "validation_to_training_rows": 1145439,
+      "changed_partition_rows": 2275948,
+      "changed_partition_fraction": 0.1340138519081306
+    },
+    "A_to_expand": {
+      "shared_labels": 348,
+      "shared_rows": 16982931,
+      "training_to_validation_seeds": 3917,
+      "validation_to_training_seeds": 3924,
+      "training_to_validation_rows": 1179154,
+      "validation_to_training_rows": 1181533,
+      "changed_partition_rows": 2360687,
+      "changed_partition_fraction": 0.13900350887605914
+    },
+    "frozen_to_expand": {
+      "shared_labels": 351,
+      "shared_rows": 17012427,
+      "training_to_validation_seeds": 3933,
+      "validation_to_training_seeds": 3935,
+      "training_to_validation_rows": 1180696,
+      "validation_to_training_rows": 1167312,
+      "changed_partition_rows": 2348008,
+      "changed_partition_fraction": 0.1380172270540823
+    }
+  }
+}
