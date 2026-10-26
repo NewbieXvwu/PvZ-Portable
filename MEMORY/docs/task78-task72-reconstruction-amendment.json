@@ -25,5 +25,36 @@
   "original_probe_protocol_verified": false,
   "rescore_eligible": false
  },
- "note": "Changing the static checkpoint may affect the continuation and static-best signatures. It does not prove that the missing probe protocol or original states have been recovered."
+ "note": "Changing the static checkpoint may affect the continuation and static-best signatures. It does not prove that the missing probe protocol or original states have been recovered.",
+ "source_revision_comparison": {
+  "at_utc": "2026-10-26T03:54:47.988077+00:00",
+  "reference_commit": "202a1d51",
+  "reference_scope": "Git commit containing the task72b report; not an attestation of the exact Mac runtime checkout",
+  "compared_head": "3f3bb4be3e35fa1465065b8217c50310fff69c95",
+  "identical_git_objects": [
+   "src", "CMake", "CMakeLists.txt", "python/pvz_env.py",
+   "python/pvz_event_env.py", "python/pvz_rollout_policy.py",
+   "python/pvz_student_observation.py", "scripts/pvz_tasks.py",
+   "scripts/render_episode.py", "python/pvz_value_net.py",
+   "scripts/export_value_net.py"
+  ],
+  "search_play": {
+   "reference_sha256": "2254e8ac1c22178485a45833b981141d2737cbfc2702751448c86fa685885206",
+   "current_sha256": "98193f51ad5a1960bcf9c47f1492bd654419b25648f080a11264652f10a1d45a",
+   "changed_common_functions": ["_play"],
+   "play_ast_identical_after_removing_final_state_hash_field": true,
+   "added_function": "final_state_hash",
+   "change_scope": "Additional final-state hash query and output after game termination"
+  },
+  "task_config": {
+   "task_id": "demo_fog_33_cactus_snow_m200",
+   "identical": true
+  },
+  "human_demo_change_scope": "Replay selects hash-verification mode from engine identity and permits an explicit strict_hashes override; tick/ok/outcome checks remain. A separate interactive recording-note prompt was added.",
+  "original_binary_equivalence_verified": false,
+  "original_probe_protocol_verified": false,
+  "rescore_eligible": false,
+  "engine_processes_started": 0,
+  "conclusion": "The compared Git revisions do not expose a continuation-policy source change beyond final reporting. This does not establish cross-platform engine equivalence, the original runtime checkout, probe side effects, noise schedule, or exact state recovery. No frozen code, model, reconstruction plan, or seed was changed."
+ }
 }
