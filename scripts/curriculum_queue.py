@@ -1818,13 +1818,18 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
 
 
 def set_gate_version(state: dict, version: int) -> None:
-    """A policy change may only cross a completed round with no old work in flight."""
+    """A policy change may not cross an issued gate: queued/running jobs keep the version they were issued with.
+
+    A partly collected round is fine: its gate contract is only issued when its training job is queued at the
+    round's end, so collected groups carry no gate version (draining a whole round under the old policy would
+    idle collection for hours).
+    """
     previous = state.get('gate_version', 3)  # all pre-task113 states used v3
     pending = any(job.get('status') != 'done' and not job.get('isolated')
                   for job in state.get('training_jobs', []))
-    if version != previous and (state.get('completed_groups') or pending):
-        raise ValueError(f'gate v{previous} -> v{version} requires a round boundary and drained pipeline; '
-                         f'finish the current round with --gate-version {previous}')
+    if version != previous and pending:
+        raise ValueError(f'gate v{previous} -> v{version} requires a drained pipeline; '
+                         f'let the queued jobs finish with --gate-version {previous}')
     state['gate_version'] = version
 
 

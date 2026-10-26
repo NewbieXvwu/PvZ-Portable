@@ -290,18 +290,14 @@ def test_bad_demo_configuration_retires_only_its_cell_before_dispatch(tmp_path, 
     assert 'bad' not in s['cells']
 
 
-@pytest.mark.parametrize('pending', ['groups', 'background'])
-def test_gate_switch_requires_round_boundary_and_old_jobs_drained(pending):
+def test_gate_switch_waits_for_issued_jobs_but_not_for_a_partial_round():
     s = state()
-    if pending == 'groups':
-        s['completed_groups'] = plan()
-    else:
-        s['training_jobs'] = [dict(round=1, status='queued')]
-    with pytest.raises(ValueError, match='round boundary'):
+    s['training_jobs'] = [dict(round=1, status='queued')]
+    with pytest.raises(ValueError, match='drained pipeline'):
         q.set_gate_version(s, 4)
     assert 'gate_version' not in s
     q.set_gate_version(s, 3)
-    s['completed_groups'] = []
     s['training_jobs'] = [dict(round=1, status='done')]
+    s['completed_groups'] = plan()    # mid-round: no gate contract has been issued for these groups
     q.set_gate_version(s, 4)
     assert s['gate_version'] == 4
