@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T00:16:50.358359+00:00",
+ "at_utc": "2026-10-26T00:37:52.211468+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -19,10 +19,10 @@
  "original_v5_corpus_received": false,
  "formal_candidate_training_complete": false,
  "paired_diagnostic": {
-  "complete": false,
-  "complete_cells": 14,
-  "paired_games": 492,
-  "sha256": "cff23ddd5171f0612cc943490603e9143261a017b40d76d68495daf2e3d3fd90",
+  "complete": true,
+  "complete_cells": 15,
+  "paired_games": 512,
+  "sha256": "9ee2d1a762cb86604daa5d6abae39e161772ba03ac3eb80d61f8b82a9e95f69c",
   "terrain": {
    "day": {
     "pairs": 64,
@@ -45,14 +45,14 @@
     "conservative_lower": -0.1108797452766956
    },
    "pool": {
-    "pairs": 108,
-    "old_wins": 90,
-    "new_wins": 86,
-    "gain": 16,
-    "harm": 20,
-    "net": -4,
-    "mcnemar_p": 0.617719317029696,
-    "conservative_lower": -0.18429480475370777
+    "pairs": 128,
+    "old_wins": 104,
+    "new_wins": 103,
+    "gain": 21,
+    "harm": 22,
+    "net": -1,
+    "mcnemar_p": 1.0,
+    "conservative_lower": -0.1440562717731148
    },
    "fog": {
     "pairs": 128,
@@ -89,8 +89,10 @@
     "cell_floors_met": false
    },
    "pool": {
-    "status": "incomplete",
-    "passed": null
+    "status": "evaluated",
+    "passed": false,
+    "conservative_lower": -0.1440562717731148,
+    "cell_floors_met": false
    },
    "fog": {
     "status": "evaluated",
@@ -107,7 +109,21 @@
     "direction_met": false
    }
   },
-  "complete_cell_pairs": 480
+  "complete_cell_pairs": 512,
+  "final_receipt_audit": {
+   "at_utc": "2026-10-26T00:37:52.211468+00:00",
+   "complete": true,
+   "diagnostic_only": true,
+   "cells": 15,
+   "pairs": 512,
+   "terminal_game_records": 1024,
+   "paired_sha256": "9ee2d1a762cb86604daa5d6abae39e161772ba03ac3eb80d61f8b82a9e95f69c",
+   "runtime_sha256": "305e181bb819bb0b8a1c06af8235a21e5c91270a7ab38d0109a26a6c8b6353ab",
+   "tasks_sha256": "863bae41c5656aa9cb4780896a18fcede1897f9a0df4512ecd28f63354df2b9d",
+   "candidate_sha256": "4df43aea69e22098d555219c2a79892e8332cdf4cefdf18da3e0f65c0421e4cb",
+   "engine_processes_started": 0
+  },
+  "final_receipt_audit_sha256": "ed8819b2e9b9c6ea5c856e3b005ec93e142068909d52d76f5f669ee11c8a017a"
  },
  "task72_reconstruction": {
   "directory": "/home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/task72_rebuild_mac_branch1",
@@ -132,7 +148,6 @@
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
   "original v5 corpus and formal merged-corpus training",
-  "remaining paired evaluations",
   "independent roof terminal labels and scoring",
   "original task72b states/probe protocol and horizon stability"
  ],
@@ -163,5 +178,6 @@
   "static_sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314",
   "preserved": true,
   "eligible_as_original_input_reconstruction": false
- }
+ },
+ "supplemental_demo_start_status": "running after full paired-panel completion"
 }
