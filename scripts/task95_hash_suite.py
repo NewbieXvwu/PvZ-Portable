@@ -79,6 +79,19 @@ def main() -> int:
         actual_sha = hashlib.sha256(binary.read_bytes()).hexdigest()
         if binary == default and actual_sha != expected_sha:
             raise ValueError(f'{tag} archive SHA changed')
+        if tag == 'old' and binary == default and args.out.resolve() != OUT.resolve() and OUT.exists():
+            cached = json.loads(OUT.read_text()).get('engines', {}).get('old', {})
+            wanted = []
+            for cell, task_id, manifest in CELLS:
+                task, deck = case_spec(manifest, task_id)
+                wanted.append((cell, task_id, deck, json.loads(json.dumps(asdict(task)))))
+            have = [(row['cell'], row['task_id'], row['deck'], row['environment_task'])
+                    for row in cached.get('cells', [])]
+            if cached.get('sha256') == actual_sha and have == wanted:
+                evidence['engines']['old'] = cached
+                evidence['reused_control_from'] = str(OUT)
+                print('Reusing completed old control:', OUT, flush=True)
+                continue
         report = {'executable': str(binary), 'sha256': actual_sha, 'cells': []}
         for cell, task_id, manifest in CELLS:
             task, deck = case_spec(manifest, task_id)

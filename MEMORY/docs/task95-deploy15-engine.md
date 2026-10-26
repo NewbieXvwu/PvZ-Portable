@@ -27,6 +27,8 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 ## 结果
 
+- [build4续做，2026-10-26 22:05 CST] 从37/96局接续六族门禁，跳过已完整的4组、部分组续补缺种子；随后自动顺序运行L50→串行16对ABBA→候选哈希检查。余下门禁按旧记录约32分钟（负载可能延长），ABBA约35–45分钟，均后台运行、每任务最多2游戏进程；不碰qc或其他任务。L50旧4局及哈希旧六族对照沿用已完成的同引擎同输入记录，候选侧仍实测，不重复旧对照。
+
 - [6f-交还 Codex，2026-10-26 22:00 CST] 主控通知额度恢复、要求交还，已停后台验证链（无残留游戏进程）。本轮完成：v2boss 修复（分支 `task95-bossfix`，`acc3b431`，三处通道数 14→13）与非 PGO 验证；按 build2 同一 PGO 流程（`artifacts/perf/pgo4` 141 份 profile、共享 libopenmpt）重建候选 **build4**，SHA256 `de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845`，10,655,664 B、`.text` 2,696,915、`NEEDED` 与 deploy14 一致，已留档 `artifacts/task95/engine/pvz-portable-build4`；同一 v2boss 模型在 build4 上加载并 `rollout_predict` 成功。build4 六族门禁跑到 37 帧（4 个完整 8 局组 + 1 个部分组，old 臂复用 `gate_b2` 的 96 局逐字节副本），L50/哈希/吞吐未跑。**deploy15 候选仍是 build2，部署脚本未改**。续做：`task70_redeploy_gate.py --old deploy14 --new build4 --out artifacts/task95/gate_b4 --workers 2 --seeds 8`（自动跳过完整组）→ `b4/boss_l50.json` → `state_hash_suite_build4.json` → `abba4`，全过后再合并 `task95-bossfix` 并把 `qc_deploy15.sh` 指到 build4。
 
 - [6e-工具参数化，2026-10-26 21:30 CST] `scripts/task95_hash_suite.py` 增加 `--old/--new/--out`，默认仍指向 deploy14 与 build2 的归档并继续校验其 SHA，用于复核修复后的候选；4 项单测通过，默认行为不变。
@@ -98,5 +100,5 @@ deploy14 的引擎 `76ff36dc` 是用 a8d00858 的源码编的。在那之后，p
 
 - [续做核实，2026-10-26 16:55 CST] 磁盘实际已有9对完整build2 ABBA记录及第10对new臂，已校验build2与归档均为83aed3be并续跑，不重采已有记录。静态/动态libopenmpt链接差异已经确认，但函数尺寸相同不能单独排除源码性能回归；最终仍以build2完整16对吞吐和独立逻辑门禁为准。
 
-- **待办已清空**：build2（83aed3be）六族96对0差异、L50四种子、六族哈希suite、16对吞吐全部通过；B9、结论指纹与`qc_deploy15.sh`的候选SHA/证据路径均已切到build2。脚本仍只写未执行，等主控决定部署窗口。
+- **当前待办**：build2的原验收已完成，但随后发现v2boss向量路径缺陷。修复已在task95-bossfix/acc3b431及归档build4（de952714）验证可加载前向；build4的剩余六族门禁、L50、吞吐与候选哈希检查正在接续。全部通过后合并修复，更新B9、结论指纹及部署脚本到build4；只写脚本，不执行部署。已完成的旧引擎对照不重跑。
 - **吞吐差 3–5%，两次 ABBA 都不过 0.98（已解决）。** 已定位到构建配置（静态 libopenmpt 把二进制从 10.4 MB 撑到 68.7 MB），不是 task82/task85 的源码行为；照 deploy14 的共享库链接重建 build2（83aed3be）后，重跑六族逐位门禁、L50、六族哈希suite与完整16对ABBA，全部通过。原始 07703a57 仍留档，不覆盖。
