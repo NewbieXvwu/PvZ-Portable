@@ -20,6 +20,63 @@ RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/Users/newbiexvwu/Downloads/
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 
 
+class HumanDemoExportTest(unittest.TestCase):
+    def test_exact_rows_preserve_history_with_and_without_cache(self):
+        import numpy as np
+        import torch
+        from pack_training_rows import build_from_archives
+        from pvz_rollout_policy import identity_scalars
+        from pvz_student_observation import StudentHistory
+        from test_compact_loader import game_frames
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = root / 'raw'
+            archive.mkdir()
+            frames = game_frames(25)
+            for index, frame in enumerate(frames):
+                frame.pop('targets', None)
+                frame['action'] = dict(type='wait', ticks=60) if index else None
+                frame['wave'] = 1 if index < 4 else 2
+            frames[1]['action'] = dict(type='plant', packet=1, row=0, col=0)
+            frames[4].update(action=None, input_action=dict(type='shovel', row=0, col=0))
+            frames[6]['action'] = dict(type='plant', packet=1, row=0, col=0)
+            frames[6]['action_rejected'] = True
+            meta = dict(verified=True, label_source='human', task=dict(seed=271, id='demo_test'))
+            (archive / 'meta.json').write_text(json.dumps(meta))
+            (archive / 'frames.jsonl').write_text(''.join(json.dumps(frame) + '\n' for frame in frames))
+            data = root / 'data'
+            target = export(archive, data, 'human_demo_test')
+            selected = [index for index in range(1, len(frames)) if index not in (4, 6)]
+            exported_meta = json.loads((target / 'meta.json').read_text())
+            self.assertEqual(exported_meta['training_rows'], selected)
+            self.assertEqual(read_frames(target / 'frames.npz'), frames)
+            self.assertNotIn('training_rows', json.loads((archive / 'meta.json').read_text()))
+            history = StudentHistory('v2')
+            expected_boards, expected_scalars = [], []
+            for index in range(1, len(frames)):
+                board, scalar = history.features(frames[index - 1], frames[index - 2] if index >= 2 else None)
+                if index in selected:
+                    expected_boards.append(board)
+                    expected_scalars.append(identity_scalars(frames[index - 1], scalar))
+            for cache in (None, root / 'cache'):
+                loaded, _, _, rows = build_from_archives(data, {'human_demo_test'}, wait_keep=.01,
+                                                        obs='v2', packet_head='identity', cache_dir=cache)
+                np.testing.assert_array_equal(rows, selected)
+                indices = np.arange(len(selected))
+                torch.testing.assert_close(loaded[0].batch(indices, 'cpu'),
+                                           torch.stack(expected_boards).half().float(), rtol=0, atol=0)
+                torch.testing.assert_close(loaded[1].batch(indices, 'cpu'),
+                                           torch.stack(expected_scalars), rtol=0, atol=0)
+                torch.testing.assert_close(loaded[5], torch.ones(len(selected)))
+            meta['label_source'] = 'llm_gpt_pro'
+            (archive / 'meta.json').write_text(json.dumps(meta))
+            llm = export(archive, data, 'llm_demo_test')
+            self.assertEqual(json.loads((llm / 'meta.json').read_text())['label_source'], 'llm_gpt_pro')
+            self.assertTrue((target / 'frames.npz').is_file())
+            with self.assertRaises(ValueError):
+                export(archive, data, '../escape')
+
+
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')
 class HumanDemoTest(unittest.TestCase):
     def test_record_replay_export_and_restore(self):

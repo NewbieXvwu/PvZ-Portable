@@ -281,13 +281,20 @@ def rebaseline(archive: Path, out: Path, resource_dir, executable=None):
     return verify(out, resource_dir, executable)
 
 
-def export(archive: Path, data: Path):
+def export(archive: Path, data: Path, label: str | None = None):
     meta = json.loads((archive / 'meta.json').read_text())
     if not meta.get('verified'):
         raise ValueError('verify the demonstration before exporting training data')
-    target = data / f'seed_{meta["task"]["seed"]}' / meta['task']['id']
+    label = meta['task']['id'] if label is None else label
+    if not label or Path(label).name != label or label in ('.', '..') or ',' in label:
+        raise ValueError('label must be a single nonempty directory name without commas')
+    frames = read_frames(frame_path(archive))
+    meta['training_rows'] = [index for index, frame in enumerate(frames) if index > 0
+                             and (frame.get('action') or {}).get('type') in ('plant', 'wait')
+                             and not frame.get('action_rejected')]
+    target = data / f'seed_{meta["task"]["seed"]}' / label
     target.mkdir(parents=True, exist_ok=False)
-    write_frames(target / 'frames.npz', read_frames(frame_path(archive)))
+    write_frames(target / 'frames.npz', frames)
     (target / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
     return target
 
@@ -311,6 +318,7 @@ def main():
     convert = commands.add_parser('export')
     convert.add_argument('--archive', type=Path, required=True)
     convert.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/frames_v2')
+    convert.add_argument('--label', help='training label, allowing human and LLM archives of the same task and seed')
     args = parser.parse_args()
     if args.command == 'verify':
         print(json.dumps(verify(args.archive, args.resource_dir, args.executable)))
@@ -319,7 +327,7 @@ def main():
         print(json.dumps(rebaseline(args.archive, args.out, args.resource_dir, args.executable)))
         return
     if args.command == 'export':
-        print(export(args.archive, args.out))
+        print(export(args.archive, args.out, args.label))
         return
     spec = load_training_task(args.manifest, args.task)
     kw = training_task_kwargs(spec, args.seed)

@@ -146,7 +146,7 @@ def validate(document, kind=None):
         _object(result['label_weight'], set(labels), 'label_weight')
         for name, weight in result['label_weight'].items():
             _number(weight, f'label_weight.{name}')
-        _object(result['source_weight'], {'human', 'teacher'}, 'source_weight')
+        _object(result['source_weight'], {'human', 'teacher', 'llm_gpt_pro'}, 'source_weight')
         for name, weight in result['source_weight'].items():
             _number(weight, f'source_weight.{name}')
         _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)

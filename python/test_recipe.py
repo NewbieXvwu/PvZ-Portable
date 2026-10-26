@@ -22,6 +22,13 @@ class RecipeTests(unittest.TestCase):
             with self.subTest(update=update), self.assertRaises(ValueError):
                 validate({**self.base(), **update})
 
+    def test_demo_sources_are_opt_in_and_have_recipe_weights(self):
+        recipe = validate(self.base())
+        self.assertEqual(recipe['labels'], ['one'])
+        self.assertEqual(recipe['source_weight'], {})
+        weights = {'human': 2.0, 'llm_gpt_pro': .5, 'teacher': 1.0}
+        self.assertEqual(validate({**self.base(), 'source_weight': weights})['source_weight'], weights)
+
     def test_reject_bad_types_ranges_versions_and_paths(self):
         for update in [dict(schema_version=2), dict(data=None), dict(out=''),
                        dict(epochs=True), dict(epochs=0), dict(wait_keep=0), dict(wait_keep=2),
