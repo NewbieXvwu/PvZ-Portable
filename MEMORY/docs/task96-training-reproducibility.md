@@ -53,6 +53,8 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 CodeBuddy 续接（第五段）：用两个微探针把机制压到算子层。`task96_embedding_shapes.py`（41×64 表、2048 行、8 种重复 id、各 10 次）：`[2048,10]` 查表（`packet_logits` 用的正是这个形状）默认模式 **10 次 10 种梯度**，确定性模式 **1 种**且不报错；`[2048]` 平铺与 6×54 expand 两种形状在两种模式下都是 1 种。`task96_embedding_probe.py`：裸 `index_add_`（2048→8 行）默认 5 次 5 种、确定性 1 种。→ “embedding 梯度先分叉”从推断变成算子层可复现事实，并说明修法必须开确定性开关而非只固定 workspace。证据 `task96-embedding-shapes.json`、`task96-embedding-probe.json`（各几 KB，GPU 每次不到 1 秒，qc 训练未受影响）。
 
+- 10-26 CodeBuddy 续接（第六段）：查了现行生产入口——`scripts/train_rollout_policy.py` 没有任何确定性设置（`use_deterministic_algorithms` / `CUBLAS_WORKSPACE_CONFIG` / `cudnn.deterministic` 全无），已退役的 `python/pvz_research.py:435-440` 反而有。即现行每轮学生训练都在“未固定”区间，本次观测到的漂移对生产是现行的、不是历史的。全量控制的阻塞条件也随之改写：内存已够（16 GiB），现在只卡 qc 训练占卡。
+
 ## 问题
 - 具体是哪个环境差异把 r11 / A / run1 / run2 推到不同 cuBLAS 算法，仍无定论：三次全量跑都没留环境回执，只能从 epoch 耗时（221/224/890/334s）推断 run1 当时在抢 GPU。没有记录workspace申请失败或具体内核，耗时也不能单独证明GPU竞争；资源/算法变化保留为假设，不能据此断言历史原因。
 - 诊断只用一个 2368 行段：它能证明“同配置逐位复现、换 workspace 就分叉”，但不能证明 1698 万行上不存在其它规模相关的非确定算子；严格说全量结论仍是“与观测到的分叉量级一致”。

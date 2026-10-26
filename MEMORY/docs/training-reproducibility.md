@@ -133,7 +133,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 
 18:20 又在 `MemAvailable` 回到 13 GiB 时用 `task96_full_pack.py rate`（只跑 200 步就停）复测了一次，结论相同：训练阶段 18 分钟内 mmap 读盘累计 **650 GB**，进程 RSS 涨到 10.9 GB，200 步没跑完（> 5.4 s/步，全量 epoch 下界 > 12 h），随后主动 TERM 掉。原因是本机 `earlyoom` 的 `--prefer` 列表含 `python3`，再跑下去有杀掉其他任务训练的风险（deckvar 那个进程 RSS 10 GiB），不值得。
 
-**在内存让出之前不要再试全量控制**。可行的启动条件是 `MemAvailable ≥ 14 GiB`、其他任务不占 10 GiB 级 RSS，且接受单次 4 分钟级 epoch；满足不了就只保留中尺度结论。
+**同时满足两个条件才值得再试全量控制**：(1) `MemAvailable ≥ 14 GiB`、其他任务不占 10 GiB 级 RSS；(2) qc 的训练进程空闲（GPU 让 qc 先）。10-26 20:40 内存条件已满足（16 GiB），但 qc 的 round_000020 训练已连续占卡两小时，所以仍未启动。满足不了就只保留中尺度 + 算子层结论。
 
 ## 中尺度控制（本次，已跑完）
 
@@ -203,6 +203,7 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
    - 对 42/192 的 heldout 落差，仍需要多个完整训练 + 新种子配对评估，不能用单个 r11 称“幸运”就认定原因。
 
 7. **确定性开关要真打开，不能只固定 workspace。** 本次定位到第一步分叉在 `packet_embedding` 的梯度（`[B,10]` 查表的散射累加），这条路径不经 GEMM，`CUBLAS_WORKSPACE_CONFIG` 在机制上碰不到它；微探针实测 `torch.use_deterministic_algorithms(True)` 能把这条路径从“10 次 10 种”变成逐位相同且不报错。两者一起开的那 5 次全同说明组合有效；只开确定性、不固定 workspace 的整轮对照因 qc 占卡未跑，所以“整轮里各占多少”仍未测。
+   **现行生产没有这两条**：`scripts/train_rollout_policy.py` 里 grep 不到 `use_deterministic_algorithms`、`CUBLAS_WORKSPACE_CONFIG`、`cudnn.deterministic`，也就是说每轮学生训练都落在本次测到的“未固定”区间；反倒是已退役的研究线 `python/pvz_research.py:435-440` 设了这两项。要落地就从训练入口加这两行开始，并在 `runtime.json` 里回执。
 ## 复核命令
 
 所有新写入均在 repro 内；`/tmp/exp96` 只是 CodeBuddy 已留的冻结只读训练代码快照。执行前保持 qc GPU 优先。
