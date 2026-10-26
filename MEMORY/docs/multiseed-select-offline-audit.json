@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "candidates": [
+    "a",
+    "c",
+    "d2"
+  ],
+  "heldout_wins": [
+    124,
+    135,
+    169
+  ],
+  "heldout_source": "MEMORY/docs/task92-multiseed-select.md: task84 evidence table",
+  "scope": "Conditional illustration from three heterogeneous fixed policies, not a production gain forecast. Heldout counts are fixed; bootstrap intervals cover panel resampling only. No new training or games; original panel and selection rule unchanged.",
+  "sources_sha256": {
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection.json": "fba290542d68d692b8daba27b2424f144f42247063bf6b5845aacfce3ade2fe7",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/configs/student_selection.json": "57a1eabb472f5999e4c3862ef8064e2f6dab6dce7c9b87cd476826261fd173f4",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_day_l7_eval_d7/games.jsonl": "1138e865bebdce6e4b8a4ac1c9015a0e96173beeef549db6e4a242767ea84ca8",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_day_l7_eval_d7/config.json": "274f8cee50aa6d2d6ac91b04dd8d78b239943d83c9b94cbf19d97161edd12f17",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_day_l7_eval_d7/games.jsonl": "61a7636893d418fab7c3531e0425ec087d294ef61adb80e805ddd84516c5b98d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_day_l7_eval_d7/config.json": "0c52c0cf4295222f9755e213550f99fb755363450de479bbfa27e33c86ff3a79",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_day_l7_eval_d7/games.jsonl": "6d4c69de73bf85d624984c1a8b09bf348868287a7619ebcb55a161d03089f15d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_day_l7_eval_d7/config.json": "48c2d0c43cac8489ab7351243e9e0df48c5db694e359deb3cba53b6d4414fca9",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_day_l7_eval_d7p_holdout1/games.jsonl": "dd56d94f4c7e0689d71b556df6d791c64126a30edbcda7a4556599126137cb7c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_day_l7_eval_d7p_holdout1/config.json": "e886fdcf4ed7ba554b90a41be64594851f7aef7cade386918714028debd8847d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_day_l7_eval_d7p_holdout1/games.jsonl": "656f1ff7843a5c7296a3ee377e7d7bf8189b644b566e2d8370d8467b23039c8d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_day_l7_eval_d7p_holdout1/config.json": "f1437da0603e100a789dfbe0125c32df52e7cea13c77fb70ab9a47e9ed319342",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_day_l7_eval_d7p_holdout1/games.jsonl": "a2a80909571e2f36f6976adfd8fc7e973198129c039cd6788633fd1c5527c66d",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_day_l7_eval_d7p_holdout1/config.json": "86cda67c7dae1652d16791fecd916c4fc17b5a9e2800dd7594ca800982632f51",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_night_l12_eval_n10/games.jsonl": "3c6be6bf9779a222425af3a412142d88da6a4e350de0c31ae968d930600fe166",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_night_l12_eval_n10/config.json": "3b8caa70d71a2f9925bf574fc3d79dfad7be93416c9caa8e516814fb849341a6",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_night_l12_eval_n10/games.jsonl": "425717c49acc91fdd9989385a6cf9dd27b10324d1462a301a7a8b2c22ec921cc",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_night_l12_eval_n10/config.json": "ca38cfd5b5533555c2cf3b9b2992d958e76f8cf005df7dfa1a6b042bbf326b51",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_night_l12_eval_n10/games.jsonl": "95cbf41d6f6a809d01544b2b2d43ef18ad6683db1f25d08b86f64a21b942af41",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_night_l12_eval_n10/config.json": "c94a2a1c40f97dcd5f3c6771d3b57aa309843a237d775b72bdf3048cc15edf01",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_pool_l21_eval_p9k/games.jsonl": "b11f21cb0a989853788fd38366c27643875928bac2b7a224019b146ad5a32367",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_pool_l21_eval_p9k/config.json": "894f50f1f7c2bb6fd10e600e1643bdce8e6d45cd7f8341ccce74b0a36f88be0b",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_pool_l21_eval_p9k/games.jsonl": "0386d3cf00c4e9f6eacd3e8319da784713aadb99d9d07c11abdb7fdcaae4087c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_pool_l21_eval_p9k/config.json": "8db7aec2fe6187f6a2d456bc04621ab6b3776146d8d199caf3117b0ac8158a0f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_pool_l21_eval_p9k/games.jsonl": "ba2b0471779e6844e0b806ea54f34ee922e60f4d368e27ce1f7cdf1ff8e1495c",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_pool_l21_eval_p9k/config.json": "f6b17e4ec97010c0822dc6c11064f1e8fb3a7c0c6d0b9dc898abfa4c1e55ea18",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_fog_user_l31_snow/games.jsonl": "b720f8485498f3e140efc903012107327843e62cc70b974e6db2433739d22189",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_fog_user_l31_snow/config.json": "b3eab0fddea8a648fb727861d6c4f95210d8e25ef9626973d75b98838017776a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_fog_user_l31_snow/games.jsonl": "f4ff7ef77cc6ca9ae87524db9752149323507a33147679b87963c63ab5c9ceb2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_fog_user_l31_snow/config.json": "0f65eb7ca572a408551686b462ed6cad4be371994989ab51578cfee8b8a9256a",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_fog_user_l31_snow/games.jsonl": "a55e28ad1c024783e8d03cb44a0e0d4a6c700dcc7c9ad17b0838570675818bc9",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_fog_user_l31_snow/config.json": "9b6d18c8c6f56e9a2d19e74026bbe69bdc96706b59bd4720d8fa29a603b5704f",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_roof_l41_train_r7/games.jsonl": "7251411a20b946b273a65cd48cdb27cfce210f806e94b442911306e0f0951ac2",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c0_roof_l41_train_r7/config.json": "928b82d8016d57488d06e83409cb2b5cd139260eb6311562f96485de33c11286",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_roof_l41_train_r7/games.jsonl": "dc4cc02a58fd0395d5d7f1efcb6030b317a66de71bcdbd2d6e4ad72a9d32f3b4",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c1_roof_l41_train_r7/config.json": "7d12e180edcd012b80dfb92712317e160e89eb945077a50948505f41c2c5a8fe",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_roof_l41_train_r7/games.jsonl": "3531ef96d7d93c197205cdd2ce719f776c8809586467f75036d5559648e8fc59",
+    "/home/newbiexvwu/PvZ-search/.claude/worktrees/multiseed/artifacts/task92/offline/selection/c2_roof_l41_train_r7/config.json": "691c63ee49cd8d73cca60eb1488c332cf3e586f60f7090699802978be5d0160b"
+  },
+  "draws": 20000,
+  "random_seed": 20261026,
+  "totals": [
+    144,
+    148,
+    147
+  ],
+  "bootstrap_winner_probability": [
+    0.11795,
+    0.5429,
+    0.33915
+  ],
+  "paired_difference_sd": {
+    "a-c": 5.073651099934934,
+    "a-d2": 4.734908113016522,
+    "c-d2": 5.270122726121954
+  },
+  "empirical_candidate_draws": {
+    "2": {
+      "observed_panel_gain": 2.4444444444444446,
+      "bootstrap_mean_gain": 2.53845,
+      "bootstrap_gain_interval95": [
+        -10.0,
+        10.0
+      ],
+      "bootstrap_optimal_probability": 0.76775
+    },
+    "3": {
+      "observed_panel_gain": 0.7407407407407413,
+      "bootstrap_mean_gain": 3.4479518518518524,
+      "bootstrap_gain_interval95": [
+        -14.148148148148149,
+        15.851851851851857
+      ],
+      "bootstrap_optimal_probability": 0.6293444444444444
+    }
+  }
+}
