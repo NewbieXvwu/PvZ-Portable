@@ -459,3 +459,14 @@ observe 格式基本可以，探路包和正式包都收到。还要改三处，
   - `~/pvz-logs/llmplay_pkg/llmplay_res.zip`：**34,258,402字节**，SHA256 **`0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e`**。
   - 引擎与251份缓存内容未变，81f的5次计时结论继续适用。资源不进git、不上HF；两个文件必须配对使用。Mac `~/pvz-llmplay/` 的拷贝由主控核对后执行。
 - 真实证据：`~/pvz-logs/llmplay_task81g/{release-selfcheck.txt,release-portable-check.txt,portable-audit.json}`；紧凑结论并入 [验收记录](task81-resource-cache-audit.json)。
+
+## task81h：摘要快速续跑（2026-10-26）
+
+- `resume(source, verify="fast")` 默认只对来源 `archives/<sha>` 中摘要匹配、且来源progress记录valid的存档沿用记录；共用 `_store` 的摘要算法。没有记录、记录无效或摘要不符时才重放；`verify="full"` 重放全部。线程池workers取CPU核数，信号量将实际引擎并发限制为2，每完成10份复验打印进度，结果按原有排序发布。预算、run_id、任务选择与原子交付保留。
+- 仅resume发布用低压缩级别，且已校验的私有zip解压文件直接移入内容库，避免额外哈希/复制；用户提供的原zip与目录均不移走。普通export交付路径不变。
+- 86项原有及新增llmplay测试全过：快路verify调用0、篡改单份仅该份复验并作废、无效旧记录回退、full串行/并行结果一致、实际复验并发峰值2与每10份进度。新包冷解压后在 `unshare -Urn` 断网命名空间运行selfcheck，`SELFCHECK OK`。
+- 使用 `/home/newbiexvwu/llm_runs/gptpro_438cb30a_0446.zip` 从新包断网实测：**11.908秒**（含解压约737MB、摘要核验、恢复与重新发布out.zip），**verify调用0，191/191有效**，恢复文件及目录摘要再次逐份核验通过；**A 4/4、B 8/8、C 3/8**，run_id保持 `438cb30ac4e143368a5cb47a8569066b`。191份真实full对照按任务书允许跳过。
+- 新包位于 `/home/newbiexvwu/pvz-logs/llmplay_dist/`，仅接口zip中的delivery.py与PROMPT.md变化，资源zip逐字节不变；CRC、包间资源SHA与引擎SHA匹配检查通过。源码提交 `798f09fe` 已推送origin/llmplay。
+  - `llmplay_pkg.zip`：11,840,935字节；SHA256 `9422ab5b2224ae1b674fc81bcd1a822861f99f6218ca223a07ec04a3a5dcf11a`。
+  - `llmplay_res.zip`：34,258,402字节；SHA256 `0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e`。
+- 证据：`/home/newbiexvwu/pvz-logs/task81h-selfcheck.log`、`task81h-resume-benchmark.json`；交付目录另有 `task81h.json`、`SHA256SUMS`。资源及zip不进git、不上传HF，Mac拷贝由主控执行。此前只读观察已按用户取消，自己的监测会话已停止。
