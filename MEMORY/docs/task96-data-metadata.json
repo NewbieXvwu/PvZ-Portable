@@ -7,6 +7,13 @@
  "segments": [
   {
    "segment": "segments/8fbe9f8f78a483ae.npz",
+   "label": "c10d3d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10461,
+    "training_rows": 8870,
+    "validation_rows": 1591
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5561109,
@@ -18,6 +25,13 @@
   },
   {
    "segment": "segments/350afebbca8c6e8c.npz",
+   "label": "c10d7d7m175_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 8073,
+    "training_rows": 6899,
+    "validation_rows": 1174
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4805984,
@@ -29,6 +43,13 @@
   },
   {
    "segment": "segments/2cb7d8181cda144c.npz",
+   "label": "c10d7d7qm100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 6886,
+    "training_rows": 6316,
+    "validation_rows": 570
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3739317,
@@ -40,6 +61,13 @@
   },
   {
    "segment": "segments/eae921dff035c4ea.npz",
+   "label": "c10d8d7m200_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 6167,
+    "training_rows": 5123,
+    "validation_rows": 1044
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3372420,
@@ -51,6 +79,13 @@
   },
   {
    "segment": "segments/c483e0131e2cbceb.npz",
+   "label": "c10d8d7qm100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 5480,
+    "training_rows": 4768,
+    "validation_rows": 712
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2761243,
@@ -62,6 +97,13 @@
   },
   {
    "segment": "segments/dcc9e64e152e7935.npz",
+   "label": "c10d9d7m150_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 8842,
+    "training_rows": 8164,
+    "validation_rows": 678
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5096023,
@@ -73,6 +115,13 @@
   },
   {
    "segment": "segments/da4b51cd010fd1df.npz",
+   "label": "c10d9d7qm100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 6673,
+    "training_rows": 5976,
+    "validation_rows": 697
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3501872,
@@ -84,6 +133,13 @@
   },
   {
    "segment": "segments/044ea28a3ef4bd2e.npz",
+   "label": "c10n11n10m175_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 8698,
+    "training_rows": 8009,
+    "validation_rows": 689
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5023477,
@@ -95,6 +151,13 @@
   },
   {
    "segment": "segments/a5b239e2100aa7c5.npz",
+   "label": "c10n11n10qm175_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7148,
+    "training_rows": 6846,
+    "validation_rows": 302
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4079685,
@@ -106,6 +169,13 @@
   },
   {
    "segment": "segments/1850b93cdecd198f.npz",
+   "label": "c10n12n10m100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 12583,
+    "training_rows": 12100,
+    "validation_rows": 483
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7677317,
@@ -117,6 +187,13 @@
   },
   {
    "segment": "segments/a725fc31622de210.npz",
+   "label": "c10n12n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20401,
+    "training_rows": 18141,
+    "validation_rows": 2260
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 12108731,
@@ -128,6 +205,13 @@
   },
   {
    "segment": "segments/d762899f8fdb0632.npz",
+   "label": "c10n13n10m150_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 8858,
+    "training_rows": 6963,
+    "validation_rows": 1895
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5000091,
@@ -139,6 +223,13 @@
   },
   {
    "segment": "segments/16f27fe937cfdc04.npz",
+   "label": "c10n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20100,
+    "training_rows": 17821,
+    "validation_rows": 2279
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11699904,
@@ -150,6 +241,13 @@
   },
   {
    "segment": "segments/13f25f1d3090e642.npz",
+   "label": "c10n16n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16803,
+    "training_rows": 15027,
+    "validation_rows": 1776
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9364654,
@@ -161,6 +259,13 @@
   },
   {
    "segment": "segments/4273170520059e18.npz",
+   "label": "c10n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19532,
+    "training_rows": 18116,
+    "validation_rows": 1416
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11158302,
@@ -172,6 +277,13 @@
   },
   {
    "segment": "segments/08178fde7d3d4d12.npz",
+   "label": "c10n19n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25605,
+    "training_rows": 24465,
+    "validation_rows": 1140
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15383458,
@@ -183,6 +295,13 @@
   },
   {
    "segment": "segments/abaf16000404b3b0.npz",
+   "label": "c10n19n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19719,
+    "training_rows": 16903,
+    "validation_rows": 2816
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11481483,
@@ -194,6 +313,13 @@
   },
   {
    "segment": "segments/f53ba86dfe751e9e.npz",
+   "label": "c10p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16116,
+    "training_rows": 12783,
+    "validation_rows": 3333
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9994036,
@@ -205,6 +331,13 @@
   },
   {
    "segment": "segments/1c98c899343d85c3.npz",
+   "label": "c10p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 21338,
+    "training_rows": 20436,
+    "validation_rows": 902
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14092471,
@@ -216,6 +349,13 @@
   },
   {
    "segment": "segments/d66a7b9ff535f190.npz",
+   "label": "c10p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15662,
+    "training_rows": 13361,
+    "validation_rows": 2301
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9794382,
@@ -227,6 +367,13 @@
   },
   {
    "segment": "segments/02b7dcadc724e7dc.npz",
+   "label": "c10p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 22250,
+    "training_rows": 21278,
+    "validation_rows": 972
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14646235,
@@ -238,6 +385,13 @@
   },
   {
    "segment": "segments/eb35cf3de69f577f.npz",
+   "label": "c11d4d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 9991,
+    "training_rows": 9122,
+    "validation_rows": 869
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5256176,
@@ -249,6 +403,13 @@
   },
   {
    "segment": "segments/148de691f0a547cf.npz",
+   "label": "c11d6d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 8507,
+    "training_rows": 7742,
+    "validation_rows": 765
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4314401,
@@ -260,6 +421,13 @@
   },
   {
    "segment": "segments/f752a5532b50684a.npz",
+   "label": "c11n12n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20512,
+    "training_rows": 19010,
+    "validation_rows": 1502
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 12117243,
@@ -271,6 +439,13 @@
   },
   {
    "segment": "segments/8013f3c96654ca57.npz",
+   "label": "c11n13n10qm125_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7610,
+    "training_rows": 7410,
+    "validation_rows": 200
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4330157,
@@ -282,6 +457,13 @@
   },
   {
    "segment": "segments/ae7887fd16f24799.npz",
+   "label": "c11n14n10m100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 12371,
+    "training_rows": 11911,
+    "validation_rows": 460
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7367050,
@@ -293,6 +475,13 @@
   },
   {
    "segment": "segments/839b75b7cd1adc1a.npz",
+   "label": "c11n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20154,
+    "training_rows": 17622,
+    "validation_rows": 2532
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11771108,
@@ -304,6 +493,13 @@
   },
   {
    "segment": "segments/b078b1a1b74263bd.npz",
+   "label": "c11n16n10qm125_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7507,
+    "training_rows": 6858,
+    "validation_rows": 649
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4254219,
@@ -315,6 +511,13 @@
   },
   {
    "segment": "segments/af9305197c5e2045.npz",
+   "label": "c11n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20423,
+    "training_rows": 19221,
+    "validation_rows": 1202
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11723753,
@@ -326,6 +529,13 @@
   },
   {
    "segment": "segments/9f34a87e3f0af477.npz",
+   "label": "c11n18n10m125_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 8915,
+    "training_rows": 7847,
+    "validation_rows": 1068
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5162398,
@@ -337,6 +547,13 @@
   },
   {
    "segment": "segments/5fd1f864b59b3387.npz",
+   "label": "c11n18n10qm100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7107,
+    "training_rows": 6150,
+    "validation_rows": 957
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4058444,
@@ -348,6 +565,13 @@
   },
   {
    "segment": "segments/ba5fc5478cc94353.npz",
+   "label": "c11n19n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25919,
+    "training_rows": 20881,
+    "validation_rows": 5038
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15616458,
@@ -359,6 +583,13 @@
   },
   {
    "segment": "segments/70014f56e113dafc.npz",
+   "label": "c11n19n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20600,
+    "training_rows": 19282,
+    "validation_rows": 1318
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 12062707,
@@ -370,6 +601,13 @@
   },
   {
    "segment": "segments/614d3d749382fe79.npz",
+   "label": "c11p21p9km100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 5970,
+    "training_rows": 5340,
+    "validation_rows": 630
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3431254,
@@ -381,6 +619,13 @@
   },
   {
    "segment": "segments/a24fa42317527b5f.npz",
+   "label": "c11p22p9km100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7778,
+    "training_rows": 6955,
+    "validation_rows": 823
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4833979,
@@ -392,6 +637,13 @@
   },
   {
    "segment": "segments/2edde2fab3f4c614.npz",
+   "label": "c11p23p9km100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7244,
+    "training_rows": 6144,
+    "validation_rows": 1100
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4424687,
@@ -403,6 +655,13 @@
   },
   {
    "segment": "segments/ff728842fa60c3fe.npz",
+   "label": "c11p24p9km100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 9043,
+    "training_rows": 7934,
+    "validation_rows": 1109
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5901441,
@@ -414,6 +673,13 @@
   },
   {
    "segment": "segments/fc55ce7c3b696a6c.npz",
+   "label": "c11p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13211,
+    "training_rows": 12297,
+    "validation_rows": 914
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7754952,
@@ -425,6 +691,13 @@
   },
   {
    "segment": "segments/3db581755244ab91.npz",
+   "label": "c11p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19408,
+    "training_rows": 18443,
+    "validation_rows": 965
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 12596755,
@@ -436,6 +709,13 @@
   },
   {
    "segment": "segments/831cc2ffc14c13b9.npz",
+   "label": "c11p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16087,
+    "training_rows": 15596,
+    "validation_rows": 491
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10107057,
@@ -447,6 +727,13 @@
   },
   {
    "segment": "segments/512583069c64f6a3.npz",
+   "label": "c11p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15749,
+    "training_rows": 14142,
+    "validation_rows": 1607
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9828525,
@@ -458,6 +745,13 @@
   },
   {
    "segment": "segments/71a91de9f6a2d89f.npz",
+   "label": "c11roofl41r7m100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 3600,
+    "training_rows": 3394,
+    "validation_rows": 206
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 1714852,
@@ -469,6 +763,13 @@
   },
   {
    "segment": "segments/e7cb989a6367151e.npz",
+   "label": "c1d10d7qm125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13220,
+    "training_rows": 12151,
+    "validation_rows": 1069
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7347429,
@@ -480,6 +781,13 @@
   },
   {
    "segment": "segments/bb0f5b6cc4fa680c.npz",
+   "label": "c1d10origm150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13444,
+    "training_rows": 12338,
+    "validation_rows": 1106
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7926384,
@@ -491,6 +799,13 @@
   },
   {
    "segment": "segments/c75cec25c71d2c38.npz",
+   "label": "c1d1d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10332,
+    "training_rows": 9438,
+    "validation_rows": 894
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5498400,
@@ -502,6 +817,13 @@
   },
   {
    "segment": "segments/4dc837f4e1ebd314.npz",
+   "label": "c1d3d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11108,
+    "training_rows": 9494,
+    "validation_rows": 1614
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5939780,
@@ -513,6 +835,13 @@
   },
   {
    "segment": "segments/1dbb33e7b4e49b7a.npz",
+   "label": "c1d4d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11219,
+    "training_rows": 10065,
+    "validation_rows": 1154
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5998497,
@@ -524,6 +853,13 @@
   },
   {
    "segment": "segments/2db968cd50ec1915.npz",
+   "label": "c1d6d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10669,
+    "training_rows": 9733,
+    "validation_rows": 936
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5658313,
@@ -535,6 +871,13 @@
   },
   {
    "segment": "segments/926b3e733ab6782a.npz",
+   "label": "c1d7d7m125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14836,
+    "training_rows": 13311,
+    "validation_rows": 1525
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8395604,
@@ -546,6 +889,13 @@
   },
   {
    "segment": "segments/4b79c38a37f9985f.npz",
+   "label": "c1d7d7qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13008,
+    "training_rows": 11756,
+    "validation_rows": 1252
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6966184,
@@ -557,6 +907,13 @@
   },
   {
    "segment": "segments/d35dae8106b790af.npz",
+   "label": "c1d8d7m125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12002,
+    "training_rows": 10195,
+    "validation_rows": 1807
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6045237,
@@ -568,6 +925,13 @@
   },
   {
    "segment": "segments/b1868ba3cd107426.npz",
+   "label": "c1d8d7qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10163,
+    "training_rows": 9155,
+    "validation_rows": 1008
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4953412,
@@ -579,6 +943,13 @@
   },
   {
    "segment": "segments/6f3a543a8c460e4a.npz",
+   "label": "c1d9d7m125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16053,
+    "training_rows": 15341,
+    "validation_rows": 712
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8782212,
@@ -590,6 +961,13 @@
   },
   {
    "segment": "segments/7346df6d48b84e98.npz",
+   "label": "c1d9d7qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12708,
+    "training_rows": 11601,
+    "validation_rows": 1107
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6603209,
@@ -601,6 +979,13 @@
   },
   {
    "segment": "segments/3124c2450226dead.npz",
+   "label": "c1n11n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14112,
+    "training_rows": 12647,
+    "validation_rows": 1465
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8124295,
@@ -612,6 +997,13 @@
   },
   {
    "segment": "segments/4bf93f1ea8a55100.npz",
+   "label": "c1n12n10m100_fast_search",
+   "source_counts": {
+    "archives": 96,
+    "rows": 49284,
+    "training_rows": 42897,
+    "validation_rows": 6387
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 29727094,
@@ -623,6 +1015,13 @@
   },
   {
    "segment": "segments/530cc3de01148a3f.npz",
+   "label": "c1n14n10m100_fast_search",
+   "source_counts": {
+    "archives": 96,
+    "rows": 49202,
+    "training_rows": 43584,
+    "validation_rows": 5618
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 29031820,
@@ -634,6 +1033,13 @@
   },
   {
    "segment": "segments/a405bbe3ef1d1590.npz",
+   "label": "c1n17n10m100_fast_search",
+   "source_counts": {
+    "archives": 96,
+    "rows": 48976,
+    "training_rows": 45331,
+    "validation_rows": 3645
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 28655204,
@@ -645,6 +1051,13 @@
   },
   {
    "segment": "segments/55ce5e3c6de2b7f7.npz",
+   "label": "c2d10d7qm150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13889,
+    "training_rows": 12978,
+    "validation_rows": 911
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7970660,
@@ -656,6 +1069,13 @@
   },
   {
    "segment": "segments/ef92bcb469ad6fd9.npz",
+   "label": "c2d10origm175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14062,
+    "training_rows": 13182,
+    "validation_rows": 880
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8492705,
@@ -667,6 +1087,13 @@
   },
   {
    "segment": "segments/d2ae4c2108ed158f.npz",
+   "label": "c2d1d7m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10758,
+    "training_rows": 9337,
+    "validation_rows": 1421
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5769825,
@@ -678,6 +1105,13 @@
   },
   {
    "segment": "segments/ab95e14647642bf9.npz",
+   "label": "c2d3d7m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11446,
+    "training_rows": 10160,
+    "validation_rows": 1286
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6225044,
@@ -689,6 +1123,13 @@
   },
   {
    "segment": "segments/ee8e052c4b35dab2.npz",
+   "label": "c2d4d7m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11183,
+    "training_rows": 10499,
+    "validation_rows": 684
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6063761,
@@ -700,6 +1141,13 @@
   },
   {
    "segment": "segments/43e4cdb0178ac049.npz",
+   "label": "c2d6d7m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10864,
+    "training_rows": 9250,
+    "validation_rows": 1614
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5809820,
@@ -711,6 +1159,13 @@
   },
   {
    "segment": "segments/d376a95145569341.npz",
+   "label": "c2d7d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15784,
+    "training_rows": 15123,
+    "validation_rows": 661
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9172474,
@@ -722,6 +1177,13 @@
   },
   {
    "segment": "segments/d3e0d223ea6d6d5a.npz",
+   "label": "c2d7d7qm100_fast_search",
+   "source_counts": {
+    "archives": 336,
+    "rows": 91041,
+    "training_rows": 82414,
+    "validation_rows": 8627
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 48756752,
@@ -733,6 +1195,13 @@
   },
   {
    "segment": "segments/1f4ad64405416798.npz",
+   "label": "c2d8d7qm100_fast_search",
+   "source_counts": {
+    "archives": 258,
+    "rows": 55084,
+    "training_rows": 49247,
+    "validation_rows": 5837
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 26934541,
@@ -744,6 +1213,13 @@
   },
   {
    "segment": "segments/9ba2090307b7193e.npz",
+   "label": "c2d9d7qm100_fast_search",
+   "source_counts": {
+    "archives": 336,
+    "rows": 96861,
+    "training_rows": 87083,
+    "validation_rows": 9778
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 50997394,
@@ -755,6 +1231,13 @@
   },
   {
    "segment": "segments/2b40783e8cd7b228.npz",
+   "label": "c2n12n10m100_fast_search",
+   "source_counts": {
+    "archives": 288,
+    "rows": 147587,
+    "training_rows": 136997,
+    "validation_rows": 10590
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 88665316,
@@ -766,6 +1249,13 @@
   },
   {
    "segment": "segments/3791e495f3e85109.npz",
+   "label": "c2n13n10qm100_fast_search",
+   "source_counts": {
+    "archives": 144,
+    "rows": 41339,
+    "training_rows": 35918,
+    "validation_rows": 5421
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22719165,
@@ -777,6 +1267,13 @@
   },
   {
    "segment": "segments/3c7d453d3634a6da.npz",
+   "label": "c2n14n10m100_fast_search",
+   "source_counts": {
+    "archives": 336,
+    "rows": 170621,
+    "training_rows": 151672,
+    "validation_rows": 18949
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 100765285,
@@ -788,6 +1285,13 @@
   },
   {
    "segment": "segments/5b7931a2d11ec70e.npz",
+   "label": "c2n16n10qm100_fast_search",
+   "source_counts": {
+    "archives": 96,
+    "rows": 28338,
+    "training_rows": 24609,
+    "validation_rows": 3729
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15634370,
@@ -799,6 +1303,13 @@
   },
   {
    "segment": "segments/92b0e98306ee4dd6.npz",
+   "label": "c2n17n10m100_fast_search",
+   "source_counts": {
+    "archives": 240,
+    "rows": 122546,
+    "training_rows": 111623,
+    "validation_rows": 10923
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 71880721,
@@ -810,6 +1321,13 @@
   },
   {
    "segment": "segments/5c4dedd2c99959b6.npz",
+   "label": "c2n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 18713,
+    "training_rows": 17794,
+    "validation_rows": 919
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10368302,
@@ -821,6 +1339,13 @@
   },
   {
    "segment": "segments/6ae07941a4738bc8.npz",
+   "label": "c3n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 51,
+    "rows": 18070,
+    "training_rows": 16110,
+    "validation_rows": 1960
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9816381,
@@ -832,6 +1357,13 @@
   },
   {
    "segment": "segments/cb82233f7c9f2576.npz",
+   "label": "c3n19n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 24870,
+    "training_rows": 22090,
+    "validation_rows": 2780
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14809435,
@@ -843,6 +1375,13 @@
   },
   {
    "segment": "segments/cf2c43cf6909762a.npz",
+   "label": "c3p21p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11087,
+    "training_rows": 10295,
+    "validation_rows": 792
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6344491,
@@ -854,6 +1393,13 @@
   },
   {
    "segment": "segments/3b3c02cf8867499e.npz",
+   "label": "c3p22p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14502,
+    "training_rows": 12249,
+    "validation_rows": 2253
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8955772,
@@ -865,6 +1411,13 @@
   },
   {
    "segment": "segments/5adf2c8025494061.npz",
+   "label": "c3p23p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15819,
+    "training_rows": 15061,
+    "validation_rows": 758
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9927316,
@@ -876,6 +1429,13 @@
   },
   {
    "segment": "segments/6b6afd8be6db2abb.npz",
+   "label": "c3p24p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16435,
+    "training_rows": 14621,
+    "validation_rows": 1814
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10525279,
@@ -887,6 +1447,13 @@
   },
   {
    "segment": "segments/3936743453dc9c09.npz",
+   "label": "c4d3d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 9270,
+    "training_rows": 7820,
+    "validation_rows": 1450
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4793550,
@@ -898,6 +1465,13 @@
   },
   {
    "segment": "segments/40434d2ab42ef544.npz",
+   "label": "c4d4d7m200_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11779,
+    "training_rows": 10848,
+    "validation_rows": 931
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6464215,
@@ -909,6 +1483,13 @@
   },
   {
    "segment": "segments/95363c464bf37a8b.npz",
+   "label": "c4d6d7m200_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11262,
+    "training_rows": 10382,
+    "validation_rows": 880
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6102126,
@@ -920,6 +1501,13 @@
   },
   {
    "segment": "segments/b7f9ebf28bb7e122.npz",
+   "label": "c4d7d7m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15906,
+    "training_rows": 13777,
+    "validation_rows": 2129
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9224994,
@@ -931,6 +1519,13 @@
   },
   {
    "segment": "segments/0d714fb61fb0d996.npz",
+   "label": "c4d8d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11954,
+    "training_rows": 11467,
+    "validation_rows": 487
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6304013,
@@ -942,6 +1537,13 @@
   },
   {
    "segment": "segments/b6329ad58a3119d9.npz",
+   "label": "c4d9d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16752,
+    "training_rows": 14618,
+    "validation_rows": 2134
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9487291,
@@ -953,6 +1555,13 @@
   },
   {
    "segment": "segments/79a0639ab63f4107.npz",
+   "label": "c4n11n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17139,
+    "training_rows": 14641,
+    "validation_rows": 2498
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9758937,
@@ -964,6 +1573,13 @@
   },
   {
    "segment": "segments/cd32e21840aeb0d3.npz",
+   "label": "c4n11n10qm125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12882,
+    "training_rows": 11961,
+    "validation_rows": 921
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7317089,
@@ -975,6 +1591,13 @@
   },
   {
    "segment": "segments/352a5fb0ca37e78d.npz",
+   "label": "c4n13n10m125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17612,
+    "training_rows": 14552,
+    "validation_rows": 3060
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10013602,
@@ -986,6 +1609,13 @@
   },
   {
    "segment": "segments/8e1272b96a3cab85.npz",
+   "label": "c4n16n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16891,
+    "training_rows": 15168,
+    "validation_rows": 1723
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9321684,
@@ -997,6 +1627,13 @@
   },
   {
    "segment": "segments/55eab8e0ba1c9cb0.npz",
+   "label": "c4n18n10m125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17632,
+    "training_rows": 16128,
+    "validation_rows": 1504
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10009904,
@@ -1008,6 +1645,13 @@
   },
   {
    "segment": "segments/4b7d21dd64f13ebc.npz",
+   "label": "c4n20n10origm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12798,
+    "training_rows": 11223,
+    "validation_rows": 1575
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6296394,
@@ -1019,6 +1663,13 @@
   },
   {
    "segment": "segments/d2b21832c12b77a4.npz",
+   "label": "c4p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12301,
+    "training_rows": 11188,
+    "validation_rows": 1113
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7151530,
@@ -1030,6 +1681,13 @@
   },
   {
    "segment": "segments/0cde49595b0f835c.npz",
+   "label": "c4p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14916,
+    "training_rows": 12409,
+    "validation_rows": 2507
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9192571,
@@ -1041,6 +1699,13 @@
   },
   {
    "segment": "segments/6ddf9cd705ef3353.npz",
+   "label": "c4p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15074,
+    "training_rows": 12035,
+    "validation_rows": 3039
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9428119,
@@ -1052,6 +1717,13 @@
   },
   {
    "segment": "segments/f75f499d08849bb0.npz",
+   "label": "c4p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12548,
+    "training_rows": 9894,
+    "validation_rows": 2654
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7489972,
@@ -1063,6 +1735,13 @@
   },
   {
    "segment": "segments/c3d069b0c5e98be4.npz",
+   "label": "c5d10origm300_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14526,
+    "training_rows": 13889,
+    "validation_rows": 637
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9439328,
@@ -1074,6 +1753,13 @@
   },
   {
    "segment": "segments/ab494710122600e4.npz",
+   "label": "c5d4d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 9399,
+    "training_rows": 7990,
+    "validation_rows": 1409
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4839270,
@@ -1085,6 +1771,13 @@
   },
   {
    "segment": "segments/d1220f839e1d239f.npz",
+   "label": "c5d6d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 7853,
+    "training_rows": 7243,
+    "validation_rows": 610
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3863814,
@@ -1096,6 +1789,13 @@
   },
   {
    "segment": "segments/de3f885f7d0a4fe2.npz",
+   "label": "c5d8d7m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 12432,
+    "training_rows": 10507,
+    "validation_rows": 1925
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6633576,
@@ -1107,6 +1807,13 @@
   },
   {
    "segment": "segments/f17ddf19df0e8847.npz",
+   "label": "c5n11n10m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17658,
+    "training_rows": 15818,
+    "validation_rows": 1840
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10025753,
@@ -1118,6 +1825,13 @@
   },
   {
    "segment": "segments/154dc6c277caeb2b.npz",
+   "label": "c5n11n10qm150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14398,
+    "training_rows": 12362,
+    "validation_rows": 2036
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8315152,
@@ -1129,6 +1843,13 @@
   },
   {
    "segment": "segments/58b6dbf6a6d6b892.npz",
+   "label": "c5n12n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20052,
+    "training_rows": 18227,
+    "validation_rows": 1825
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11766331,
@@ -1140,6 +1861,13 @@
   },
   {
    "segment": "segments/85718df041a230ea.npz",
+   "label": "c5n13n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17699,
+    "training_rows": 15512,
+    "validation_rows": 2187
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9905139,
@@ -1151,6 +1879,13 @@
   },
   {
    "segment": "segments/5de973a3d4a4e1e3.npz",
+   "label": "c5n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 21381,
+    "training_rows": 18981,
+    "validation_rows": 2400
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 12418636,
@@ -1162,6 +1897,13 @@
   },
   {
    "segment": "segments/b4a870fa1d7e61c1.npz",
+   "label": "c5n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19954,
+    "training_rows": 18211,
+    "validation_rows": 1743
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11325356,
@@ -1173,6 +1915,13 @@
   },
   {
    "segment": "segments/6630ff7bc4562c33.npz",
+   "label": "c5n19n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19056,
+    "training_rows": 17963,
+    "validation_rows": 1093
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10870121,
@@ -1184,6 +1933,13 @@
   },
   {
    "segment": "segments/6c7e014206376c2e.npz",
+   "label": "c5n20n10origm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 5473,
+    "training_rows": 4928,
+    "validation_rows": 545
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2138117,
@@ -1195,6 +1951,13 @@
   },
   {
    "segment": "segments/e2a3c1b7abd15e31.npz",
+   "label": "c5p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 7235,
+    "training_rows": 6086,
+    "validation_rows": 1149
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3397173,
@@ -1206,6 +1969,13 @@
   },
   {
    "segment": "segments/d89eef76701a9b7b.npz",
+   "label": "c5p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 7526,
+    "training_rows": 6936,
+    "validation_rows": 590
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3522913,
@@ -1217,6 +1987,13 @@
   },
   {
    "segment": "segments/46884a72c5a9ccb5.npz",
+   "label": "c5p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 7239,
+    "training_rows": 6377,
+    "validation_rows": 862
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3352286,
@@ -1228,6 +2005,13 @@
   },
   {
    "segment": "segments/78d25fe30aad3773.npz",
+   "label": "c5p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 7219,
+    "training_rows": 6967,
+    "validation_rows": 252
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3304453,
@@ -1239,6 +2023,13 @@
   },
   {
    "segment": "segments/789792950421151c.npz",
+   "label": "c6d10d7qm150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13900,
+    "training_rows": 12755,
+    "validation_rows": 1145
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7952109,
@@ -1250,6 +2041,13 @@
   },
   {
    "segment": "segments/3bfbcb3242006903.npz",
+   "label": "c6d3d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10441,
+    "training_rows": 9300,
+    "validation_rows": 1141
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5561161,
@@ -1261,6 +2059,13 @@
   },
   {
    "segment": "segments/81ab43a9d731c037.npz",
+   "label": "c6d7d7qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13619,
+    "training_rows": 12610,
+    "validation_rows": 1009
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7285400,
@@ -1272,6 +2077,13 @@
   },
   {
    "segment": "segments/2852b248dd0d29b3.npz",
+   "label": "c6d8d7qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11140,
+    "training_rows": 10521,
+    "validation_rows": 619
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5655298,
@@ -1283,6 +2095,13 @@
   },
   {
    "segment": "segments/db5d0f579e5d461c.npz",
+   "label": "c6d9d7m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17187,
+    "training_rows": 15896,
+    "validation_rows": 1291
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9854644,
@@ -1294,6 +2113,13 @@
   },
   {
    "segment": "segments/0f7144ff2871061f.npz",
+   "label": "c6d9d7qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15268,
+    "training_rows": 15268,
+    "validation_rows": 0
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8153476,
@@ -1305,6 +2131,13 @@
   },
   {
    "segment": "segments/aa132724a9ec4e65.npz",
+   "label": "c6n11n10m175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17745,
+    "training_rows": 15551,
+    "validation_rows": 2194
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10191142,
@@ -1316,6 +2149,13 @@
   },
   {
    "segment": "segments/c0ae4585f9a4d2f7.npz",
+   "label": "c6n12n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25369,
+    "training_rows": 22324,
+    "validation_rows": 3045
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15423779,
@@ -1327,6 +2167,13 @@
   },
   {
    "segment": "segments/a4cdd40fa12d7749.npz",
+   "label": "c6n13n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17940,
+    "training_rows": 15274,
+    "validation_rows": 2666
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10157557,
@@ -1338,6 +2185,13 @@
   },
   {
    "segment": "segments/df319c646d8c36aa.npz",
+   "label": "c6n13n10qm125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14698,
+    "training_rows": 14350,
+    "validation_rows": 348
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8168458,
@@ -1349,6 +2203,13 @@
   },
   {
    "segment": "segments/52e9d07cf86b0760.npz",
+   "label": "c6n14n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25574,
+    "training_rows": 23966,
+    "validation_rows": 1608
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15213212,
@@ -1360,6 +2221,13 @@
   },
   {
    "segment": "segments/c4451d780cc38ddf.npz",
+   "label": "c6n16n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16670,
+    "training_rows": 15343,
+    "validation_rows": 1327
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9246813,
@@ -1371,6 +2239,13 @@
   },
   {
    "segment": "segments/abfcb2bae0974ea5.npz",
+   "label": "c6n18n10m125_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 18148,
+    "training_rows": 15501,
+    "validation_rows": 2647
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10393824,
@@ -1382,6 +2257,13 @@
   },
   {
    "segment": "segments/df5f3bdd22a559df.npz",
+   "label": "c6n18n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14664,
+    "training_rows": 13618,
+    "validation_rows": 1046
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8372785,
@@ -1393,6 +2275,13 @@
   },
   {
    "segment": "segments/53cd40f54bdda07f.npz",
+   "label": "c6p22p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 18270,
+    "training_rows": 17097,
+    "validation_rows": 1173
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11862716,
@@ -1404,6 +2293,13 @@
   },
   {
    "segment": "segments/637d3c698301af84.npz",
+   "label": "c6p23p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17413,
+    "training_rows": 13994,
+    "validation_rows": 3419
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11312120,
@@ -1415,6 +2311,13 @@
   },
   {
    "segment": "segments/d27065f395df763f.npz",
+   "label": "c7d10d7qm175_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14462,
+    "training_rows": 12574,
+    "validation_rows": 1888
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8586467,
@@ -1426,6 +2329,13 @@
   },
   {
    "segment": "segments/afb6a3b71c5233b5.npz",
+   "label": "c7d1d7m200_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 5629,
+    "training_rows": 4718,
+    "validation_rows": 911
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3143914,
@@ -1437,6 +2347,13 @@
   },
   {
    "segment": "segments/ac94e29f4af6ab92.npz",
+   "label": "c7d4d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 9741,
+    "training_rows": 8930,
+    "validation_rows": 811
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5103422,
@@ -1448,6 +2365,13 @@
   },
   {
    "segment": "segments/5fa1deb1cbe3cfc2.npz",
+   "label": "c7d6d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 8883,
+    "training_rows": 7562,
+    "validation_rows": 1321
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4496969,
@@ -1459,6 +2383,13 @@
   },
   {
    "segment": "segments/dc2b15ab8317a839.npz",
+   "label": "c7foguserl31snowm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 8635,
+    "training_rows": 8449,
+    "validation_rows": 186
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3925812,
@@ -1470,6 +2401,13 @@
   },
   {
    "segment": "segments/9201f5e5652689e7.npz",
+   "label": "c7n12n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19950,
+    "training_rows": 16869,
+    "validation_rows": 3081
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11664065,
@@ -1481,6 +2419,13 @@
   },
   {
    "segment": "segments/deabde00ea1aa83b.npz",
+   "label": "c7n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 18745,
+    "training_rows": 16907,
+    "validation_rows": 1838
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10606711,
@@ -1492,6 +2437,13 @@
   },
   {
    "segment": "segments/4e9403db54f06b4e.npz",
+   "label": "c7n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19981,
+    "training_rows": 18041,
+    "validation_rows": 1940
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11464607,
@@ -1503,6 +2455,13 @@
   },
   {
    "segment": "segments/a6397d6d8e92c4da.npz",
+   "label": "c7n19n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 26142,
+    "training_rows": 24201,
+    "validation_rows": 1941
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15721492,
@@ -1514,6 +2473,13 @@
   },
   {
    "segment": "segments/e0fe38328849dfdd.npz",
+   "label": "c7n19n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19026,
+    "training_rows": 15898,
+    "validation_rows": 3128
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11026631,
@@ -1525,6 +2491,13 @@
   },
   {
    "segment": "segments/0375d563d33b53e7.npz",
+   "label": "c7n20n10origm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11752,
+    "training_rows": 10564,
+    "validation_rows": 1188
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5894113,
@@ -1536,6 +2509,13 @@
   },
   {
    "segment": "segments/602a43b9e24831ca.npz",
+   "label": "c7p21p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10813,
+    "training_rows": 9597,
+    "validation_rows": 1216
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6076267,
@@ -1547,6 +2527,13 @@
   },
   {
    "segment": "segments/38d7d3cf0083771a.npz",
+   "label": "c7p24p9km100_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 11551,
+    "training_rows": 10076,
+    "validation_rows": 1475
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7902942,
@@ -1558,6 +2545,13 @@
   },
   {
    "segment": "segments/18b03a30aeaac02f.npz",
+   "label": "c7p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16446,
+    "training_rows": 15951,
+    "validation_rows": 495
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10295711,
@@ -1569,6 +2563,13 @@
   },
   {
    "segment": "segments/3102438320023130.npz",
+   "label": "c7p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 22142,
+    "training_rows": 20040,
+    "validation_rows": 2102
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14687173,
@@ -1580,6 +2581,13 @@
   },
   {
    "segment": "segments/f79199b47ff4a26b.npz",
+   "label": "c7p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17624,
+    "training_rows": 15364,
+    "validation_rows": 2260
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11343894,
@@ -1591,6 +2599,13 @@
   },
   {
    "segment": "segments/a88a6d8885e85e8d.npz",
+   "label": "c7p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19969,
+    "training_rows": 17331,
+    "validation_rows": 2638
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 13020261,
@@ -1602,6 +2617,13 @@
   },
   {
    "segment": "segments/5f236556e1f2db3e.npz",
+   "label": "c8d10d7qm200_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14724,
+    "training_rows": 12921,
+    "validation_rows": 1803
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8891783,
@@ -1613,6 +2635,13 @@
   },
   {
    "segment": "segments/d2f3c6f3b3601143.npz",
+   "label": "c8d1d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 10756,
+    "training_rows": 10244,
+    "validation_rows": 512
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5732576,
@@ -1624,6 +2653,13 @@
   },
   {
    "segment": "segments/25d9f466559e59c8.npz",
+   "label": "c8d3d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 9769,
+    "training_rows": 8844,
+    "validation_rows": 925
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5174120,
@@ -1635,6 +2671,13 @@
   },
   {
    "segment": "segments/ec1db925334cee3a.npz",
+   "label": "c8foguserl31snowm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 8651,
+    "training_rows": 7944,
+    "validation_rows": 707
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3940611,
@@ -1646,6 +2689,13 @@
   },
   {
    "segment": "segments/52c76f49784603d3.npz",
+   "label": "c8n12n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19898,
+    "training_rows": 17133,
+    "validation_rows": 2765
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11692772,
@@ -1657,6 +2707,13 @@
   },
   {
    "segment": "segments/6da374c928b4a01c.npz",
+   "label": "c8n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19773,
+    "training_rows": 16520,
+    "validation_rows": 3253
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11443253,
@@ -1668,6 +2725,13 @@
   },
   {
    "segment": "segments/2bd0fdb8bb10c1c9.npz",
+   "label": "c8n16n10m150_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 17188,
+    "training_rows": 15364,
+    "validation_rows": 1824
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9572449,
@@ -1679,6 +2743,13 @@
   },
   {
    "segment": "segments/5e55cc66d9baf6c1.npz",
+   "label": "c8n17n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25362,
+    "training_rows": 21909,
+    "validation_rows": 3453
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15007449,
@@ -1690,6 +2761,13 @@
   },
   {
    "segment": "segments/8e7d8a44a932e7e5.npz",
+   "label": "c8n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19771,
+    "training_rows": 16984,
+    "validation_rows": 2787
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11368462,
@@ -1701,6 +2779,13 @@
   },
   {
    "segment": "segments/1890cc4a2bf381d2.npz",
+   "label": "c8n19n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25352,
+    "training_rows": 22944,
+    "validation_rows": 2408
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15233192,
@@ -1712,6 +2797,13 @@
   },
   {
    "segment": "segments/872af66814868126.npz",
+   "label": "c8n19n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20790,
+    "training_rows": 19053,
+    "validation_rows": 1737
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 12262150,
@@ -1723,6 +2815,13 @@
   },
   {
    "segment": "segments/4722ffdf0831b8db.npz",
+   "label": "c8n20n10origm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11471,
+    "training_rows": 10381,
+    "validation_rows": 1090
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5639950,
@@ -1734,6 +2833,13 @@
   },
   {
    "segment": "segments/417f58cb8f37a803.npz",
+   "label": "c8p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 13599,
+    "training_rows": 12229,
+    "validation_rows": 1370
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7870491,
@@ -1745,6 +2851,13 @@
   },
   {
    "segment": "segments/872acf74c8f409a9.npz",
+   "label": "c8p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20208,
+    "training_rows": 17973,
+    "validation_rows": 2235
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 13165943,
@@ -1756,6 +2869,13 @@
   },
   {
    "segment": "segments/350a6bc26acc2f41.npz",
+   "label": "c8p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 15765,
+    "training_rows": 14453,
+    "validation_rows": 1312
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9905237,
@@ -1767,6 +2887,13 @@
   },
   {
    "segment": "segments/f4865a5c25beeb55.npz",
+   "label": "c8p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16586,
+    "training_rows": 14858,
+    "validation_rows": 1728
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10534934,
@@ -1778,6 +2905,13 @@
   },
   {
    "segment": "segments/0747afdf5e95bdd9.npz",
+   "label": "c9d10d7qm250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 14641,
+    "training_rows": 12785,
+    "validation_rows": 1856
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 9077890,
@@ -1789,6 +2923,13 @@
   },
   {
    "segment": "segments/c59b7492ccf83609.npz",
+   "label": "c9d10origm300_fast_search",
+   "source_counts": {
+    "archives": 24,
+    "rows": 7320,
+    "training_rows": 7016,
+    "validation_rows": 304
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4708660,
@@ -1800,6 +2941,13 @@
   },
   {
    "segment": "segments/084f4db6d077aa9a.npz",
+   "label": "c9d1d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11125,
+    "training_rows": 9891,
+    "validation_rows": 1234
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5916158,
@@ -1811,6 +2959,13 @@
   },
   {
    "segment": "segments/7aa58475e5ce3329.npz",
+   "label": "c9d4d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 9731,
+    "training_rows": 8684,
+    "validation_rows": 1047
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5046991,
@@ -1822,6 +2977,13 @@
   },
   {
    "segment": "segments/97c3282693bd231b.npz",
+   "label": "c9d6d7m250_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 8648,
+    "training_rows": 7424,
+    "validation_rows": 1224
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 4358938,
@@ -1833,6 +2995,13 @@
   },
   {
    "segment": "segments/d6fc9ffcdaaca10d.npz",
+   "label": "c9n12n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19867,
+    "training_rows": 15901,
+    "validation_rows": 3966
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11717641,
@@ -1844,6 +3013,13 @@
   },
   {
    "segment": "segments/7d2c0d03916b0adc.npz",
+   "label": "c9n14n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20095,
+    "training_rows": 17324,
+    "validation_rows": 2771
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11755919,
@@ -1855,6 +3031,13 @@
   },
   {
    "segment": "segments/9a687ed082c1da04.npz",
+   "label": "c9n17n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 25550,
+    "training_rows": 20791,
+    "validation_rows": 4759
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15102288,
@@ -1866,6 +3049,13 @@
   },
   {
    "segment": "segments/27d66e312cfc12da.npz",
+   "label": "c9n17n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19949,
+    "training_rows": 15648,
+    "validation_rows": 4301
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11561839,
@@ -1877,6 +3067,13 @@
   },
   {
    "segment": "segments/c4f4ce2cd5a402c0.npz",
+   "label": "c9n19n10m100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 26206,
+    "training_rows": 20823,
+    "validation_rows": 5383
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15785924,
@@ -1888,6 +3085,13 @@
   },
   {
    "segment": "segments/ec1c8e5c92f50570.npz",
+   "label": "c9n19n10qm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 19182,
+    "training_rows": 18104,
+    "validation_rows": 1078
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 11138958,
@@ -1899,6 +3103,13 @@
   },
   {
    "segment": "segments/0fc875c97328e08a.npz",
+   "label": "c9n20n10origm100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 11732,
+    "training_rows": 10441,
+    "validation_rows": 1291
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5766649,
@@ -1910,6 +3121,13 @@
   },
   {
    "segment": "segments/510954a779ae0533.npz",
+   "label": "c9p26p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16716,
+    "training_rows": 14513,
+    "validation_rows": 2203
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10411340,
@@ -1921,6 +3139,13 @@
   },
   {
    "segment": "segments/0bed0866a4281d6f.npz",
+   "label": "c9p27p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20362,
+    "training_rows": 16786,
+    "validation_rows": 3576
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 13411280,
@@ -1932,6 +3157,13 @@
   },
   {
    "segment": "segments/b9923a081f9358ce.npz",
+   "label": "c9p28p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 16387,
+    "training_rows": 15415,
+    "validation_rows": 972
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10346598,
@@ -1943,6 +3175,13 @@
   },
   {
    "segment": "segments/5e13d756ed444349.npz",
+   "label": "c9p29p9km100_fast_search",
+   "source_counts": {
+    "archives": 48,
+    "rows": 20731,
+    "training_rows": 18038,
+    "validation_rows": 2693
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 13477656,
@@ -1954,6 +3193,13 @@
   },
   {
    "segment": "segments/a0394afb44314dba.npz",
+   "label": "d10dag1_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 72546,
+    "training_rows": 65475,
+    "validation_rows": 7071
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 35873385,
@@ -1965,6 +3211,13 @@
   },
   {
    "segment": "segments/97972a0e0fb16967.npz",
+   "label": "d10dag1b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 118035,
+    "training_rows": 105250,
+    "validation_rows": 12785
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 58261730,
@@ -1976,6 +3229,13 @@
   },
   {
    "segment": "segments/4a2912f7d98cfd78.npz",
+   "label": "d10dag21_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 31991,
+    "training_rows": 28634,
+    "validation_rows": 3357
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 18012399,
@@ -1987,6 +3247,13 @@
   },
   {
    "segment": "segments/0c636273715981be.npz",
+   "label": "d10dag22_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 32063,
+    "training_rows": 29319,
+    "validation_rows": 2744
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 18004624,
@@ -1998,6 +3265,13 @@
   },
   {
    "segment": "segments/022e07842d378f58.npz",
+   "label": "d10dag23_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 31985,
+    "training_rows": 28447,
+    "validation_rows": 3538
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 18042672,
@@ -2009,6 +3283,13 @@
   },
   {
    "segment": "segments/d77bddc2b9825b30.npz",
+   "label": "d10dag24_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 32392,
+    "training_rows": 29053,
+    "validation_rows": 3339
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 18214445,
@@ -2020,6 +3301,13 @@
   },
   {
    "segment": "segments/59ef9440653af4b4.npz",
+   "label": "d10dag25_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 32043,
+    "training_rows": 28167,
+    "validation_rows": 3876
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 17965632,
@@ -2031,6 +3319,13 @@
   },
   {
    "segment": "segments/fc2b9df62b05f04f.npz",
+   "label": "d10dag26_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 31827,
+    "training_rows": 28115,
+    "validation_rows": 3712
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 17886084,
@@ -2042,6 +3337,13 @@
   },
   {
    "segment": "segments/c9f76a74a021fbfa.npz",
+   "label": "d10dag27_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 32423,
+    "training_rows": 29063,
+    "validation_rows": 3360
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 18247240,
@@ -2053,6 +3355,13 @@
   },
   {
    "segment": "segments/87f396c411398e97.npz",
+   "label": "d10dag28_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 32111,
+    "training_rows": 28716,
+    "validation_rows": 3395
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 18171374,
@@ -2064,6 +3373,13 @@
   },
   {
    "segment": "segments/4cb317c2fe3a3ab0.npz",
+   "label": "d10dag3b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 154540,
+    "training_rows": 143131,
+    "validation_rows": 11409
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 84417235,
@@ -2075,6 +3391,13 @@
   },
   {
    "segment": "segments/946fa3aee44c4545.npz",
+   "label": "d10dag4b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 158797,
+    "training_rows": 146803,
+    "validation_rows": 11994
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 87442841,
@@ -2086,6 +3409,13 @@
   },
   {
    "segment": "segments/e45e7eaa68001c98.npz",
+   "label": "d10dag5_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 31125,
+    "training_rows": 28257,
+    "validation_rows": 2868
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 17195126,
@@ -2097,6 +3427,13 @@
   },
   {
    "segment": "segments/b27c3242ad245555.npz",
+   "label": "d10dag5b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 159721,
+    "training_rows": 141961,
+    "validation_rows": 17760
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 89768075,
@@ -2108,6 +3445,13 @@
   },
   {
    "segment": "segments/94d5cb0bc147cac2.npz",
+   "label": "d10dag6_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 31055,
+    "training_rows": 28528,
+    "validation_rows": 2527
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 16977988,
@@ -2119,6 +3463,13 @@
   },
   {
    "segment": "segments/83e8e471fdcb7e1a.npz",
+   "label": "d10orig1_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 28756,
+    "training_rows": 25614,
+    "validation_rows": 3142
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 16107441,
@@ -2130,6 +3481,13 @@
   },
   {
    "segment": "segments/c3220f761c0f86f0.npz",
+   "label": "d10orig2_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 29214,
+    "training_rows": 27864,
+    "validation_rows": 1350
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 16397019,
@@ -2141,6 +3499,13 @@
   },
   {
    "segment": "segments/5341359659ba03b5.npz",
+   "label": "d10p1d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 15916,
+    "training_rows": 14412,
+    "validation_rows": 1504
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8609650,
@@ -2152,6 +3517,13 @@
   },
   {
    "segment": "segments/0c6addde0038051d.npz",
+   "label": "d10p1m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39006,
+    "training_rows": 34620,
+    "validation_rows": 4386
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 21068535,
@@ -2163,6 +3535,13 @@
   },
   {
    "segment": "segments/da3f96aaa1757c1e.npz",
+   "label": "d10p2d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 16140,
+    "training_rows": 13660,
+    "validation_rows": 2480
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8742773,
@@ -2174,6 +3553,13 @@
   },
   {
    "segment": "segments/56d4becb9b689093.npz",
+   "label": "d10p2m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39578,
+    "training_rows": 36039,
+    "validation_rows": 3539
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 21246605,
@@ -2185,6 +3571,13 @@
   },
   {
    "segment": "segments/c50d01e2f9ec53eb.npz",
+   "label": "d10p3d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 15866,
+    "training_rows": 15120,
+    "validation_rows": 746
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8565018,
@@ -2196,6 +3589,13 @@
   },
   {
    "segment": "segments/e698a27d2d033dbc.npz",
+   "label": "d10p3m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39404,
+    "training_rows": 35071,
+    "validation_rows": 4333
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 21212155,
@@ -2207,6 +3607,13 @@
   },
   {
    "segment": "segments/2858918015e0bbf1.npz",
+   "label": "d10p4m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 38917,
+    "training_rows": 35012,
+    "validation_rows": 3905
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20875610,
@@ -2218,6 +3625,13 @@
   },
   {
    "segment": "segments/c8f41b248836a03f.npz",
+   "label": "d7dag1_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 36907,
+    "training_rows": 33093,
+    "validation_rows": 3814
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20939075,
@@ -2229,6 +3643,13 @@
   },
   {
    "segment": "segments/2a874f3710424d8a.npz",
+   "label": "d7dag21_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18539,
+    "training_rows": 16650,
+    "validation_rows": 1889
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10396104,
@@ -2240,6 +3661,13 @@
   },
   {
    "segment": "segments/55e46967c6f5e137.npz",
+   "label": "d7dag22_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18734,
+    "training_rows": 15478,
+    "validation_rows": 3256
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10430999,
@@ -2251,6 +3679,13 @@
   },
   {
    "segment": "segments/f72c7af176d2c6ab.npz",
+   "label": "d7dag23_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18389,
+    "training_rows": 16420,
+    "validation_rows": 1969
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10264521,
@@ -2262,6 +3697,13 @@
   },
   {
    "segment": "segments/10dcffc1d90047be.npz",
+   "label": "d7dag24_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18477,
+    "training_rows": 17056,
+    "validation_rows": 1421
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10333935,
@@ -2273,6 +3715,13 @@
   },
   {
    "segment": "segments/62647a3f3ffee5fd.npz",
+   "label": "d7dag25_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18402,
+    "training_rows": 16066,
+    "validation_rows": 2336
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10244477,
@@ -2284,6 +3733,13 @@
   },
   {
    "segment": "segments/432d2ddbbd336d62.npz",
+   "label": "d7dag26_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18572,
+    "training_rows": 16095,
+    "validation_rows": 2477
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10379041,
@@ -2295,6 +3751,13 @@
   },
   {
    "segment": "segments/f9f736adc53c33c9.npz",
+   "label": "d7dag27_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 18680,
+    "training_rows": 16394,
+    "validation_rows": 2286
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10420726,
@@ -2306,6 +3769,13 @@
   },
   {
    "segment": "segments/f8ccd5afe025dc90.npz",
+   "label": "d7dag2_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 37225,
+    "training_rows": 35385,
+    "validation_rows": 1840
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 21147938,
@@ -2317,6 +3787,13 @@
   },
   {
    "segment": "segments/77667845983860b6.npz",
+   "label": "d7p1d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14337,
+    "training_rows": 12019,
+    "validation_rows": 2318
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7351942,
@@ -2328,6 +3805,13 @@
   },
   {
    "segment": "segments/5a6794a75774d82c.npz",
+   "label": "d7p1m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 38538,
+    "training_rows": 33239,
+    "validation_rows": 5299
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20250638,
@@ -2339,6 +3823,13 @@
   },
   {
    "segment": "segments/3b43a6aa80307266.npz",
+   "label": "d7p2d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14843,
+    "training_rows": 12961,
+    "validation_rows": 1882
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7811043,
@@ -2350,6 +3841,13 @@
   },
   {
    "segment": "segments/5061105c0afaeabc.npz",
+   "label": "d7p2m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39867,
+    "training_rows": 33926,
+    "validation_rows": 5941
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 21209716,
@@ -2361,6 +3859,13 @@
   },
   {
    "segment": "segments/8916e65bcecd8711.npz",
+   "label": "d7p3d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 16323,
+    "training_rows": 15476,
+    "validation_rows": 847
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8609933,
@@ -2372,6 +3877,13 @@
   },
   {
    "segment": "segments/3db52caf0cb88dab.npz",
+   "label": "d7p3m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39251,
+    "training_rows": 33362,
+    "validation_rows": 5889
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20886139,
@@ -2383,6 +3895,13 @@
   },
   {
    "segment": "segments/f2ff1b3319c0f4d7.npz",
+   "label": "d7p4m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 40467,
+    "training_rows": 36027,
+    "validation_rows": 4440
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 21465431,
@@ -2394,6 +3913,13 @@
   },
   {
    "segment": "segments/2417dafc24b80cb3.npz",
+   "label": "d8dag1_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 28746,
+    "training_rows": 25857,
+    "validation_rows": 2889
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14938295,
@@ -2405,6 +3931,13 @@
   },
   {
    "segment": "segments/5f3d6cccfd9650a7.npz",
+   "label": "d8dag21_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14566,
+    "training_rows": 13168,
+    "validation_rows": 1398
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7408650,
@@ -2416,6 +3949,13 @@
   },
   {
    "segment": "segments/f202561357995b82.npz",
+   "label": "d8dag22_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14671,
+    "training_rows": 13281,
+    "validation_rows": 1390
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7465868,
@@ -2427,6 +3967,13 @@
   },
   {
    "segment": "segments/a4230730fcc4e3dd.npz",
+   "label": "d8dag23_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14511,
+    "training_rows": 12594,
+    "validation_rows": 1917
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7374121,
@@ -2438,6 +3985,13 @@
   },
   {
    "segment": "segments/a72207074febcb80.npz",
+   "label": "d8dag24_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14754,
+    "training_rows": 13110,
+    "validation_rows": 1644
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7459916,
@@ -2449,6 +4003,13 @@
   },
   {
    "segment": "segments/6940ccca6615586d.npz",
+   "label": "d8dag25_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14578,
+    "training_rows": 13685,
+    "validation_rows": 893
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7392207,
@@ -2460,6 +4021,13 @@
   },
   {
    "segment": "segments/5d96fd102e695b3c.npz",
+   "label": "d8dag26_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14593,
+    "training_rows": 12830,
+    "validation_rows": 1763
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7455796,
@@ -2471,6 +4039,13 @@
   },
   {
    "segment": "segments/20710954057102ff.npz",
+   "label": "d8dag27_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 14665,
+    "training_rows": 12746,
+    "validation_rows": 1919
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7447861,
@@ -2482,6 +4057,13 @@
   },
   {
    "segment": "segments/c14d1356d19bb6cd.npz",
+   "label": "d8dag2_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 28142,
+    "training_rows": 25568,
+    "validation_rows": 2574
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14549085,
@@ -2493,6 +4075,13 @@
   },
   {
    "segment": "segments/63a25ea4c0ad7e16.npz",
+   "label": "d8p1d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 12215,
+    "training_rows": 10807,
+    "validation_rows": 1408
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 5764208,
@@ -2504,6 +4093,13 @@
   },
   {
    "segment": "segments/56b17e6204caca5b.npz",
+   "label": "d8p1m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 32016,
+    "training_rows": 29033,
+    "validation_rows": 2983
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15385865,
@@ -2515,6 +4111,13 @@
   },
   {
    "segment": "segments/e818d6649aa88f46.npz",
+   "label": "d8p2d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 13243,
+    "training_rows": 10800,
+    "validation_rows": 2443
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6365256,
@@ -2526,6 +4129,13 @@
   },
   {
    "segment": "segments/ccc82e04cdf10af3.npz",
+   "label": "d8p2m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 30471,
+    "training_rows": 27192,
+    "validation_rows": 3279
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14315369,
@@ -2537,6 +4147,13 @@
   },
   {
    "segment": "segments/5ceed637ae4b9a74.npz",
+   "label": "d8p3d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 13109,
+    "training_rows": 11625,
+    "validation_rows": 1484
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 6385212,
@@ -2548,6 +4165,13 @@
   },
   {
    "segment": "segments/ba43cf467dd96ce4.npz",
+   "label": "d8p3m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 30461,
+    "training_rows": 28097,
+    "validation_rows": 2364
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 14648146,
@@ -2559,6 +4183,13 @@
   },
   {
    "segment": "segments/39595ce9a68b0158.npz",
+   "label": "d8p4m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 31886,
+    "training_rows": 29321,
+    "validation_rows": 2565
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 15330566,
@@ -2570,6 +4201,13 @@
   },
   {
    "segment": "segments/ee6497be28788263.npz",
+   "label": "d9dag1_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 117529,
+    "training_rows": 108966,
+    "validation_rows": 8563
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 65422897,
@@ -2581,6 +4219,13 @@
   },
   {
    "segment": "segments/2ebc4d394b3621d0.npz",
+   "label": "d9dag1b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 194763,
+    "training_rows": 176674,
+    "validation_rows": 18089
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 108135082,
@@ -2592,6 +4237,13 @@
   },
   {
    "segment": "segments/8fb725cbe2c28d8e.npz",
+   "label": "d9dag21_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41408,
+    "training_rows": 38047,
+    "validation_rows": 3361
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22531597,
@@ -2603,6 +4255,13 @@
   },
   {
    "segment": "segments/de1c5fc53441ed72.npz",
+   "label": "d9dag22_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41279,
+    "training_rows": 36866,
+    "validation_rows": 4413
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22404591,
@@ -2614,6 +4273,13 @@
   },
   {
    "segment": "segments/45bb13208b559095.npz",
+   "label": "d9dag23_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41614,
+    "training_rows": 37941,
+    "validation_rows": 3673
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22767858,
@@ -2625,6 +4291,13 @@
   },
   {
    "segment": "segments/c1c8f1807aef2718.npz",
+   "label": "d9dag24_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 40534,
+    "training_rows": 37643,
+    "validation_rows": 2891
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22104646,
@@ -2636,6 +4309,13 @@
   },
   {
    "segment": "segments/37b53b5053c614c2.npz",
+   "label": "d9dag25_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41051,
+    "training_rows": 37843,
+    "validation_rows": 3208
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22368499,
@@ -2647,6 +4327,13 @@
   },
   {
    "segment": "segments/42aaae7f47d4e26d.npz",
+   "label": "d9dag26_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41334,
+    "training_rows": 36594,
+    "validation_rows": 4740
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22502134,
@@ -2658,6 +4345,13 @@
   },
   {
    "segment": "segments/b7b2e7ae8fc2e971.npz",
+   "label": "d9dag27_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41205,
+    "training_rows": 38031,
+    "validation_rows": 3174
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22424778,
@@ -2669,6 +4363,13 @@
   },
   {
    "segment": "segments/02cfe35e4fec54ee.npz",
+   "label": "d9dag28_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41154,
+    "training_rows": 36062,
+    "validation_rows": 5092
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22353967,
@@ -2680,6 +4381,13 @@
   },
   {
    "segment": "segments/ea36a1ebe89c9d12.npz",
+   "label": "d9dag3b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 205203,
+    "training_rows": 185789,
+    "validation_rows": 19414
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 113328593,
@@ -2691,6 +4399,13 @@
   },
   {
    "segment": "segments/b65d671ea192a7bf.npz",
+   "label": "d9dag4b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 203333,
+    "training_rows": 182223,
+    "validation_rows": 21110
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 112355883,
@@ -2702,6 +4417,13 @@
   },
   {
    "segment": "segments/0feb493bd0a30ed2.npz",
+   "label": "d9dag5_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 40894,
+    "training_rows": 36202,
+    "validation_rows": 4692
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22615882,
@@ -2713,6 +4435,13 @@
   },
   {
    "segment": "segments/c14120a41e65d261.npz",
+   "label": "d9dag5b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 205419,
+    "training_rows": 186269,
+    "validation_rows": 19150
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 111816995,
@@ -2724,6 +4453,13 @@
   },
   {
    "segment": "segments/b58b89194711d88d.npz",
+   "label": "d9dag6_fast_search",
+   "source_counts": {
+    "archives": 128,
+    "rows": 41094,
+    "training_rows": 35738,
+    "validation_rows": 5356
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 22701549,
@@ -2735,6 +4471,13 @@
   },
   {
    "segment": "segments/3441ec7314118518.npz",
+   "label": "d9p1d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 16474,
+    "training_rows": 16006,
+    "validation_rows": 468
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8487634,
@@ -2746,6 +4489,13 @@
   },
   {
    "segment": "segments/17948d853c683447.npz",
+   "label": "d9p1m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39814,
+    "training_rows": 36862,
+    "validation_rows": 2952
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20406208,
@@ -2757,6 +4507,13 @@
   },
   {
    "segment": "segments/b07cfd0ee224e495.npz",
+   "label": "d9p2d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 15515,
+    "training_rows": 13557,
+    "validation_rows": 1958
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 7817001,
@@ -2768,6 +4525,13 @@
   },
   {
    "segment": "segments/a229eefbc183c596.npz",
+   "label": "d9p2m_fast_search",
+   "source_counts": {
+    "archives": 81,
+    "rows": 21071,
+    "training_rows": 18953,
+    "validation_rows": 2118
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 10990932,
@@ -2779,6 +4543,13 @@
   },
   {
    "segment": "segments/a6aff8c4c6b9f02f.npz",
+   "label": "d9p3d_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 16079,
+    "training_rows": 14808,
+    "validation_rows": 1271
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 8375765,
@@ -2790,6 +4561,13 @@
   },
   {
    "segment": "segments/28d2948de2d2225d.npz",
+   "label": "d9p3m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39654,
+    "training_rows": 35746,
+    "validation_rows": 3908
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20166886,
@@ -2801,6 +4579,13 @@
   },
   {
    "segment": "segments/49c72a828c1e9029.npz",
+   "label": "d9p4m_fast_search",
+   "source_counts": {
+    "archives": 160,
+    "rows": 39950,
+    "training_rows": 35725,
+    "validation_rows": 4225
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 20507078,
@@ -2812,6 +4597,13 @@
   },
   {
    "segment": "segments/f3703ccc24de528c.npz",
+   "label": "n11dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 8714,
+    "training_rows": 8184,
+    "validation_rows": 530
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2960145,
@@ -2823,6 +4615,13 @@
   },
   {
    "segment": "segments/37bbc2d8020e3e75.npz",
+   "label": "n11dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 8688,
+    "training_rows": 7552,
+    "validation_rows": 1136
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2912302,
@@ -2834,6 +4633,13 @@
   },
   {
    "segment": "segments/ed2fcb8dfffe01a2.npz",
+   "label": "n11dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 8406,
+    "training_rows": 7362,
+    "validation_rows": 1044
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2770580,
@@ -2845,6 +4651,13 @@
   },
   {
    "segment": "segments/0ef6cafab75a981d.npz",
+   "label": "n12dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9761,
+    "training_rows": 8837,
+    "validation_rows": 924
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3440937,
@@ -2856,6 +4669,13 @@
   },
   {
    "segment": "segments/d173ef46ca69db8e.npz",
+   "label": "n12dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9749,
+    "training_rows": 8840,
+    "validation_rows": 909
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3440675,
@@ -2867,6 +4687,13 @@
   },
   {
    "segment": "segments/07355e9d7ba39370.npz",
+   "label": "n12dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10004,
+    "training_rows": 9148,
+    "validation_rows": 856
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3729833,
@@ -2878,6 +4705,13 @@
   },
   {
    "segment": "segments/26ad131f67126f99.npz",
+   "label": "n13dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9352,
+    "training_rows": 8892,
+    "validation_rows": 460
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3190975,
@@ -2889,6 +4723,13 @@
   },
   {
    "segment": "segments/d9d59f2d7c3f6af1.npz",
+   "label": "n13dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 8634,
+    "training_rows": 8060,
+    "validation_rows": 574
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2823409,
@@ -2900,6 +4741,13 @@
   },
   {
    "segment": "segments/c2633d59384c0886.npz",
+   "label": "n13dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9973,
+    "training_rows": 8840,
+    "validation_rows": 1133
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3475081,
@@ -2911,6 +4759,13 @@
   },
   {
    "segment": "segments/fd1f33079aef3088.npz",
+   "label": "n14dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9804,
+    "training_rows": 9263,
+    "validation_rows": 541
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3454172,
@@ -2922,6 +4777,13 @@
   },
   {
    "segment": "segments/089ff47a51ca5c4d.npz",
+   "label": "n14dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9228,
+    "training_rows": 8194,
+    "validation_rows": 1034
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3138078,
@@ -2933,6 +4795,13 @@
   },
   {
    "segment": "segments/9a845b416dcf8de8.npz",
+   "label": "n14dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9758,
+    "training_rows": 8961,
+    "validation_rows": 797
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3509946,
@@ -2944,6 +4813,13 @@
   },
   {
    "segment": "segments/61afd92ea3e179c7.npz",
+   "label": "n16dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9639,
+    "training_rows": 8986,
+    "validation_rows": 653
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3338410,
@@ -2955,6 +4831,13 @@
   },
   {
    "segment": "segments/e5f0489b2d33a840.npz",
+   "label": "n16dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9601,
+    "training_rows": 8334,
+    "validation_rows": 1267
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3338323,
@@ -2966,6 +4849,13 @@
   },
   {
    "segment": "segments/df9f36f273ab26c1.npz",
+   "label": "n16dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 8992,
+    "training_rows": 8422,
+    "validation_rows": 570
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 2988439,
@@ -2977,6 +4867,13 @@
   },
   {
    "segment": "segments/d9eed0e7ada90cac.npz",
+   "label": "n17dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10266,
+    "training_rows": 9115,
+    "validation_rows": 1151
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3664954,
@@ -2988,6 +4885,13 @@
   },
   {
    "segment": "segments/7a7ed61602db3ca2.npz",
+   "label": "n17dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10277,
+    "training_rows": 9470,
+    "validation_rows": 807
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3760085,
@@ -2999,6 +4903,13 @@
   },
   {
    "segment": "segments/2fc422b987fe89bf.npz",
+   "label": "n17dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10230,
+    "training_rows": 9286,
+    "validation_rows": 944
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3716530,
@@ -3010,6 +4921,13 @@
   },
   {
    "segment": "segments/c8be1a84754cc727.npz",
+   "label": "n18dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9822,
+    "training_rows": 8799,
+    "validation_rows": 1023
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3444987,
@@ -3021,6 +4939,13 @@
   },
   {
    "segment": "segments/bd562012493dabd4.npz",
+   "label": "n18dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10129,
+    "training_rows": 8945,
+    "validation_rows": 1184
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3633889,
@@ -3032,6 +4957,13 @@
   },
   {
    "segment": "segments/c069810d1358e213.npz",
+   "label": "n18dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9653,
+    "training_rows": 8777,
+    "validation_rows": 876
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3377591,
@@ -3043,6 +4975,13 @@
   },
   {
    "segment": "segments/10eb79a3b24c8249.npz",
+   "label": "n19dag1_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10609,
+    "training_rows": 9727,
+    "validation_rows": 882
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3888248,
@@ -3054,6 +4993,13 @@
   },
   {
    "segment": "segments/36bff2d73c9fd810.npz",
+   "label": "n19dag2_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 10361,
+    "training_rows": 9608,
+    "validation_rows": 753
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3797740,
@@ -3065,6 +5011,13 @@
   },
   {
    "segment": "segments/85fdbea32adc7fce.npz",
+   "label": "n19dag3_fast_search",
+   "source_counts": {
+    "archives": 64,
+    "rows": 9552,
+    "training_rows": 8338,
+    "validation_rows": 1214
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 3319572,
@@ -3076,6 +5029,13 @@
   },
   {
    "segment": "segments/2a84b8fdf067fe74.npz",
+   "label": "n20o1_fast_search",
+   "source_counts": {
+    "archives": 32,
+    "rows": 2368,
+    "training_rows": 2012,
+    "validation_rows": 356
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 858540,
@@ -3087,6 +5047,13 @@
   },
   {
    "segment": "segments/3dd155d72e183df5.npz",
+   "label": "z13dag3_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 60706,
+    "training_rows": 55668,
+    "validation_rows": 5038
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 31415454,
@@ -3098,6 +5065,13 @@
   },
   {
    "segment": "segments/3212213528a5a5db.npz",
+   "label": "z13dag4_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 61021,
+    "training_rows": 54729,
+    "validation_rows": 6292
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 31580517,
@@ -3109,6 +5083,13 @@
   },
   {
    "segment": "segments/a7960052b2e178e6.npz",
+   "label": "z14dag5_fast_search",
+   "source_counts": {
+    "archives": 768,
+    "rows": 129754,
+    "training_rows": 117302,
+    "validation_rows": 12452
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 67786621,
@@ -3120,6 +5101,13 @@
   },
   {
    "segment": "segments/c82050adc747d260.npz",
+   "label": "z15dag10_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 110694,
+    "training_rows": 99088,
+    "validation_rows": 11606
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 61894202,
@@ -3131,6 +5119,13 @@
   },
   {
    "segment": "segments/ba4259ad14c48aec.npz",
+   "label": "z15dag10b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 183059,
+    "training_rows": 163014,
+    "validation_rows": 20045
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 102312640,
@@ -3142,6 +5137,13 @@
   },
   {
    "segment": "segments/6d7c9a2b050d527c.npz",
+   "label": "z15dag11_fast_search",
+   "source_counts": {
+    "archives": 383,
+    "rows": 111746,
+    "training_rows": 103189,
+    "validation_rows": 8557
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 62609845,
@@ -3153,6 +5155,13 @@
   },
   {
    "segment": "segments/7bd5af1541b96ab3.npz",
+   "label": "z15dag11b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 185161,
+    "training_rows": 165591,
+    "validation_rows": 19570
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 103732344,
@@ -3164,6 +5173,13 @@
   },
   {
    "segment": "segments/e24f9b6b107500f0.npz",
+   "label": "z15dag12_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 112601,
+    "training_rows": 100791,
+    "validation_rows": 11810
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 62994760,
@@ -3175,6 +5191,13 @@
   },
   {
    "segment": "segments/ddc03eb19f598562.npz",
+   "label": "z15dag12b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 186151,
+    "training_rows": 166715,
+    "validation_rows": 19436
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 104198471,
@@ -3186,6 +5209,13 @@
   },
   {
    "segment": "segments/3414756c913a067f.npz",
+   "label": "z15dag13_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 113070,
+    "training_rows": 102909,
+    "validation_rows": 10161
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 63620306,
@@ -3197,6 +5227,13 @@
   },
   {
    "segment": "segments/cf493ea4d982b667.npz",
+   "label": "z15dag13b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 186146,
+    "training_rows": 169640,
+    "validation_rows": 16506
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 104373382,
@@ -3208,6 +5245,13 @@
   },
   {
    "segment": "segments/bae04b5033cdbfe6.npz",
+   "label": "z15dag14_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 101688,
+    "training_rows": 92384,
+    "validation_rows": 9304
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 55883920,
@@ -3219,6 +5263,13 @@
   },
   {
    "segment": "segments/dee574d6f6ef3331.npz",
+   "label": "z15dag14b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 168220,
+    "training_rows": 147675,
+    "validation_rows": 20545
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 92060217,
@@ -3230,6 +5281,13 @@
   },
   {
    "segment": "segments/5370cef6bee62d1f.npz",
+   "label": "z15dag15_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 119262,
+    "training_rows": 108591,
+    "validation_rows": 10671
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 68788228,
@@ -3241,6 +5299,13 @@
   },
   {
    "segment": "segments/9431c49d2c9ce6d7.npz",
+   "label": "z15dag15b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 194883,
+    "training_rows": 178387,
+    "validation_rows": 16496
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 112437266,
@@ -3252,6 +5317,13 @@
   },
   {
    "segment": "segments/37b6e5fbc0671b96.npz",
+   "label": "z15dag15c_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 195473,
+    "training_rows": 180662,
+    "validation_rows": 14811
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 112693136,
@@ -3263,6 +5335,13 @@
   },
   {
    "segment": "segments/a90f8382927f702c.npz",
+   "label": "z15dag16b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 195071,
+    "training_rows": 174651,
+    "validation_rows": 20420
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 112420885,
@@ -3274,6 +5353,13 @@
   },
   {
    "segment": "segments/363f52b7a1c41421.npz",
+   "label": "z15dag17_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 107393,
+    "training_rows": 97188,
+    "validation_rows": 10205
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 59819932,
@@ -3285,6 +5371,13 @@
   },
   {
    "segment": "segments/63af8bd79175df7d.npz",
+   "label": "z15dag17b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 178485,
+    "training_rows": 161016,
+    "validation_rows": 17469
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 99112135,
@@ -3296,6 +5389,13 @@
   },
   {
    "segment": "segments/4f65ce0bafa33a0d.npz",
+   "label": "z15dag18_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 113327,
+    "training_rows": 102959,
+    "validation_rows": 10368
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 64401789,
@@ -3307,6 +5407,13 @@
   },
   {
    "segment": "segments/d0700a68343bbcfa.npz",
+   "label": "z15dag3_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 69394,
+    "training_rows": 63558,
+    "validation_rows": 5836
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 36171070,
@@ -3318,6 +5425,13 @@
   },
   {
    "segment": "segments/dbcbd949e629ff94.npz",
+   "label": "z15dag4_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 70739,
+    "training_rows": 63626,
+    "validation_rows": 7113
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 37115968,
@@ -3329,6 +5443,13 @@
   },
   {
    "segment": "segments/897d1c0ab5be88ed.npz",
+   "label": "z15dag6_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 72797,
+    "training_rows": 65067,
+    "validation_rows": 7730
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 38261315,
@@ -3340,6 +5461,13 @@
   },
   {
    "segment": "segments/0f0005e3a28ca902.npz",
+   "label": "z15dag6b_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 74041,
+    "training_rows": 67811,
+    "validation_rows": 6230
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 38906296,
@@ -3351,6 +5479,13 @@
   },
   {
    "segment": "segments/dcd7ef4455735d96.npz",
+   "label": "z15dag6c_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 72831,
+    "training_rows": 65529,
+    "validation_rows": 7302
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 38045365,
@@ -3362,6 +5497,13 @@
   },
   {
    "segment": "segments/86f94cd58db58042.npz",
+   "label": "z15dag7_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 75252,
+    "training_rows": 69040,
+    "validation_rows": 6212
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 39864321,
@@ -3373,6 +5515,13 @@
   },
   {
    "segment": "segments/db03bfea3da9374f.npz",
+   "label": "z15dag8_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 109876,
+    "training_rows": 99299,
+    "validation_rows": 10577
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 61042483,
@@ -3384,6 +5533,13 @@
   },
   {
    "segment": "segments/f3be191d1797de68.npz",
+   "label": "z15dag8b_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 107642,
+    "training_rows": 95526,
+    "validation_rows": 12116
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 59813558,
@@ -3395,6 +5551,13 @@
   },
   {
    "segment": "segments/1436fdc1cb62a343.npz",
+   "label": "z15dag8c_fast_search",
+   "source_counts": {
+    "archives": 256,
+    "rows": 72685,
+    "training_rows": 64465,
+    "validation_rows": 8220
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 40391039,
@@ -3406,6 +5569,13 @@
   },
   {
    "segment": "segments/6262e22195ec0fd8.npz",
+   "label": "z15dag9_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 109841,
+    "training_rows": 100567,
+    "validation_rows": 9274
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 61371296,
@@ -3417,6 +5587,13 @@
   },
   {
    "segment": "segments/6b77b00e45f15402.npz",
+   "label": "z15dag9b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 184091,
+    "training_rows": 167857,
+    "validation_rows": 16234
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 102728949,
@@ -3428,6 +5605,13 @@
   },
   {
    "segment": "segments/b43871f4d8955e58.npz",
+   "label": "z16dag18b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 189795,
+    "training_rows": 172915,
+    "validation_rows": 16880
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 107268816,
@@ -3439,6 +5623,13 @@
   },
   {
    "segment": "segments/c6c195154aa64392.npz",
+   "label": "z16dag19_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 115994,
+    "training_rows": 104486,
+    "validation_rows": 11508
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 65774543,
@@ -3450,6 +5641,13 @@
   },
   {
    "segment": "segments/8c1c693b580c8124.npz",
+   "label": "z17dag20_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 114097,
+    "training_rows": 103301,
+    "validation_rows": 10796
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 64183790,
@@ -3461,6 +5659,13 @@
   },
   {
    "segment": "segments/0a8a857b7636d251.npz",
+   "label": "z17dag20b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 186645,
+    "training_rows": 164405,
+    "validation_rows": 22240
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 105010529,
@@ -3472,6 +5677,13 @@
   },
   {
    "segment": "segments/94e38688d922a307.npz",
+   "label": "z17dag21_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 115298,
+    "training_rows": 104173,
+    "validation_rows": 11125
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 65254202,
@@ -3483,6 +5695,13 @@
   },
   {
    "segment": "segments/3140a18d0ea8ec26.npz",
+   "label": "z17dag21b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 188644,
+    "training_rows": 166299,
+    "validation_rows": 22345
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 106723018,
@@ -3494,6 +5713,13 @@
   },
   {
    "segment": "segments/9eac341d5658bfe5.npz",
+   "label": "z17dag22_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 117913,
+    "training_rows": 104695,
+    "validation_rows": 13218
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 66978505,
@@ -3505,6 +5731,13 @@
   },
   {
    "segment": "segments/5a7935b1b718d39c.npz",
+   "label": "z17dag22b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 190500,
+    "training_rows": 170358,
+    "validation_rows": 20142
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 107941306,
@@ -3516,6 +5749,13 @@
   },
   {
    "segment": "segments/6e0a71a5f9ebb55e.npz",
+   "label": "z17dag23_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 117012,
+    "training_rows": 105615,
+    "validation_rows": 11397
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 66482551,
@@ -3527,6 +5767,13 @@
   },
   {
    "segment": "segments/f57445ed67c8aaa1.npz",
+   "label": "z17dag23b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 196156,
+    "training_rows": 177126,
+    "validation_rows": 19030
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 111569621,
@@ -3538,6 +5785,13 @@
   },
   {
    "segment": "segments/102606dcb642491c.npz",
+   "label": "z17dag24_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 117547,
+    "training_rows": 107506,
+    "validation_rows": 10041
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 66957061,
@@ -3549,6 +5803,13 @@
   },
   {
    "segment": "segments/a2bbcc9b04c491c9.npz",
+   "label": "z17dag24b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 196519,
+    "training_rows": 174965,
+    "validation_rows": 21554
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 112296298,
@@ -3560,6 +5821,13 @@
   },
   {
    "segment": "segments/59e1995f5c882881.npz",
+   "label": "z17dag25_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 124521,
+    "training_rows": 112937,
+    "validation_rows": 11584
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 71603810,
@@ -3571,6 +5839,13 @@
   },
   {
    "segment": "segments/3f75d8af5ca56679.npz",
+   "label": "z17dag25b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 206136,
+    "training_rows": 182882,
+    "validation_rows": 23254
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 118524430,
@@ -3582,6 +5857,13 @@
   },
   {
    "segment": "segments/4e854fbbf938e958.npz",
+   "label": "z17dag26s_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 209182,
+    "training_rows": 189459,
+    "validation_rows": 19723
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 122733124,
@@ -3593,6 +5875,13 @@
   },
   {
    "segment": "segments/9b2e5c7b6842a9e1.npz",
+   "label": "z17dag26t_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 126048,
+    "training_rows": 115409,
+    "validation_rows": 10639
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 74014285,
@@ -3604,6 +5893,13 @@
   },
   {
    "segment": "segments/c2266ad92284a6a8.npz",
+   "label": "z17dag26u_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 212431,
+    "training_rows": 194333,
+    "validation_rows": 18098
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 124769605,
@@ -3615,6 +5911,13 @@
   },
   {
    "segment": "segments/87cc6f3694c97421.npz",
+   "label": "z17dag26v_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 210269,
+    "training_rows": 191578,
+    "validation_rows": 18691
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 123309208,
@@ -3626,6 +5929,13 @@
   },
   {
    "segment": "segments/d556b1978ca6f09d.npz",
+   "label": "z17dag27_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 122807,
+    "training_rows": 107287,
+    "validation_rows": 15520
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 71617318,
@@ -3637,6 +5947,13 @@
   },
   {
    "segment": "segments/4a667450f21567f3.npz",
+   "label": "z17dag27b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 204902,
+    "training_rows": 182960,
+    "validation_rows": 21942
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 119447495,
@@ -3648,6 +5965,13 @@
   },
   {
    "segment": "segments/e6427a2641839c90.npz",
+   "label": "z17dag27c_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 204645,
+    "training_rows": 183117,
+    "validation_rows": 21528
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 119606725,
@@ -3659,6 +5983,13 @@
   },
   {
    "segment": "segments/ca3d68603328fb0a.npz",
+   "label": "z17dag28_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 122638,
+    "training_rows": 112245,
+    "validation_rows": 10393
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 71791472,
@@ -3670,6 +6001,13 @@
   },
   {
    "segment": "segments/9e785ec32e025719.npz",
+   "label": "z17dag28b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 203800,
+    "training_rows": 182319,
+    "validation_rows": 21481
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 119141946,
@@ -3681,6 +6019,13 @@
   },
   {
    "segment": "segments/af75eb1e4f40b820.npz",
+   "label": "z17dag28g_fast_search",
+   "source_counts": {
+    "archives": 256,
+    "rows": 81786,
+    "training_rows": 74027,
+    "validation_rows": 7759
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 47837521,
@@ -3692,6 +6037,13 @@
   },
   {
    "segment": "segments/65fd7d6d945d0b79.npz",
+   "label": "z17dag29_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 124002,
+    "training_rows": 112615,
+    "validation_rows": 11387
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 73143202,
@@ -3703,6 +6055,13 @@
   },
   {
    "segment": "segments/7a7f4a7eda6f5f90.npz",
+   "label": "z17dag29b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 209501,
+    "training_rows": 182862,
+    "validation_rows": 26639
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 123756872,
@@ -3714,6 +6073,13 @@
   },
   {
    "segment": "segments/415797084f25fced.npz",
+   "label": "z17dag29c_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 209241,
+    "training_rows": 190702,
+    "validation_rows": 18539
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 123793188,
@@ -3725,6 +6091,13 @@
   },
   {
    "segment": "segments/273a2bb4707b9872.npz",
+   "label": "z17dag30_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 124355,
+    "training_rows": 108449,
+    "validation_rows": 15906
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 73598690,
@@ -3736,6 +6109,13 @@
   },
   {
    "segment": "segments/06c7bb11ab198117.npz",
+   "label": "z17dag31_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 124500,
+    "training_rows": 112556,
+    "validation_rows": 11944
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 73397964,
@@ -3747,6 +6127,13 @@
   },
   {
    "segment": "segments/b2256c00cc4f9e89.npz",
+   "label": "z17dag31b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 207838,
+    "training_rows": 192597,
+    "validation_rows": 15241
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 122611964,
@@ -3758,6 +6145,13 @@
   },
   {
    "segment": "segments/79dc9150b54ff5ef.npz",
+   "label": "z17dag32_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 123938,
+    "training_rows": 108879,
+    "validation_rows": 15059
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 73604176,
@@ -3769,6 +6163,13 @@
   },
   {
    "segment": "segments/6433bdf7a5b501bf.npz",
+   "label": "z17dag32b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 206430,
+    "training_rows": 184424,
+    "validation_rows": 22006
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 122142550,
@@ -3780,6 +6181,13 @@
   },
   {
    "segment": "segments/b16675ab66761a46.npz",
+   "label": "z17dag33_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 125769,
+    "training_rows": 112010,
+    "validation_rows": 13759
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 74932373,
@@ -3791,6 +6199,13 @@
   },
   {
    "segment": "segments/8e1c99c5bb459968.npz",
+   "label": "z17dag33b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 209395,
+    "training_rows": 187788,
+    "validation_rows": 21607
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 124304819,
@@ -3802,6 +6217,13 @@
   },
   {
    "segment": "segments/27b9e4f04a3033a3.npz",
+   "label": "z17dag34b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 209100,
+    "training_rows": 186250,
+    "validation_rows": 22850
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 123915560,
@@ -3813,6 +6235,13 @@
   },
   {
    "segment": "segments/3b3e63925a60c128.npz",
+   "label": "z17dag35_fast_search",
+   "source_counts": {
+    "archives": 384,
+    "rows": 126278,
+    "training_rows": 113444,
+    "validation_rows": 12834
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 75071685,
@@ -3824,6 +6253,13 @@
   },
   {
    "segment": "segments/85c42b7ffa9b5244.npz",
+   "label": "z17dag35b_fast_search",
+   "source_counts": {
+    "archives": 640,
+    "rows": 209035,
+    "training_rows": 186145,
+    "validation_rows": 22890
+   },
    "r11_exists": true,
    "a_exists": true,
    "r11_bytes": 124648856,
@@ -3834,6 +6270,18 @@
    "r11_mtime_after_training": false
   }
  ],
+ "source_rows": [
+  {
+   "path": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/source_rows.json",
+   "sha256": "fd0f9c12901b4e4c7015cdf40515b3167c6ba39c791d86145e441d93f1500039"
+  },
+  {
+   "path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatepower/artifacts/task84/variant_a/student/source_rows.json",
+   "sha256": "fd0f9c12901b4e4c7015cdf40515b3167c6ba39c791d86145e441d93f1500039"
+  }
+ ],
+ "source_rows_equal": true,
+ "total_rows": 16982931,
  "counts": {
   "segments": 348,
   "missing": 0,

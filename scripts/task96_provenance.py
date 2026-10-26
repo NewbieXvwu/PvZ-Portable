@@ -72,6 +72,10 @@ def main():
     recipe=audit['completed_existing_runs'][0]['recipe']
     a_root=Path(recipe['data']); r11_root=Path(json.loads((r11/'recipe.json').read_text())['data'])
     index=a_root/'packs/7d15b915a2192805.npz'
+    a_output=a_root.parent/'variant_a/student'
+    row_files=[r11/'student/source_rows.json', a_output/'source_rows.json']
+    reports=[json.loads(path.read_text()) for path in row_files]
+    assert reports[0]==reports[1], 'per-label source rows changed'
     rows=[]
     with np.load(index, allow_pickle=False) as data:
         segments=[str(name) for name in data['segments']]
@@ -79,15 +83,23 @@ def main():
         a_path=a_root/'packs'/segment; old_path=r11_root/'packs'/segment
         assert a_path.is_file() and old_path.is_file()
         a=a_path.stat(); old=old_path.stat()
-        rows.append(dict(segment=segment,r11_exists=True,a_exists=True,r11_bytes=old.st_size,
+        with np.load(a_path,allow_pickle=False) as stored:
+            options=json.loads(str(stored['meta']))
+            assert len(options['labels'])==1
+            label=options['labels'][0]
+            assert int(stored['rows'])==reports[0]['sources'][label]['rows']
+        rows.append(dict(segment=segment,label=label,source_counts=reports[0]['sources'][label],r11_exists=True,a_exists=True,r11_bytes=old.st_size,
                          a_bytes=a.st_size,r11_mtime_ns=old.st_mtime_ns,a_mtime_ns=a.st_mtime_ns,
                          same_inode=(old.st_dev,old.st_ino)==(a.st_dev,a.st_ino),
                          r11_mtime_after_training=old.st_mtime>training['train_started']))
+    assert set(row['label'] for row in rows)==set(reports[0]['sources'])
     counts=dict(segments=len(rows),missing=0,size_differences=sum(r['r11_bytes']!=r['a_bytes'] for r in rows),
                 same_inode=sum(r['same_inode'] for r in rows),
                 r11_mtime_after_training=sum(r['r11_mtime_after_training'] for r in rows))
     metadata=dict(task=96,scope='Metadata-only follow-up; CodeBuddy already compared all 348 segment SHA256, so no repeat full-data hashing.',
                   index=str(index),index_sha256=sha(index.read_bytes()),r11_root=str(r11_root),segments=rows,
+                  source_rows=[dict(path=str(path),sha256=sha(path.read_bytes())) for path in row_files],
+                  source_rows_equal=True,total_rows=reports[0]['rows'],
                   counts=counts,content_hash_evidence='CodeBuddy result committed in 9ffc611a; 348/348 referenced segment SHA256 identical. No per-segment digest manifest was committed then.',
                   limitation='Current surviving files and pre-training mtimes support unchanged inputs; there is no immutable per-run content manifest recorded at r11 launch.')
     (ROOT/'MEMORY/docs/task96-data-metadata.json').write_text(json.dumps(metadata,ensure_ascii=False,indent=1)+'\n')

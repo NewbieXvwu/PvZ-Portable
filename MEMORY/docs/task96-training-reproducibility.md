@@ -36,5 +36,7 @@ task84 的变体 A：r11 的 348 个标签，配方与 r11 逐字段相同，see
 
 - 10-26 Codex：metadata补查348段均存在、大小相同、独立inode，r11段mtime全部早于训练；复用CodeBuddy的348段内容SHA结论，不重复9.6GB哈希。qc_setup.log显示10-24 19:47部署4f4d217b，直到r11训练完成后10-25 10:48才deploy12；r11评估的search_play/pvz_promotion/promotion_gate三份源码SHA全部与4f4d217b一致。4f4d217b与A bec2b9e6的train_rollout_policy/pvz_recipe/pvz_training_pack/pvz_value_net字节完全相同，RolloutNet/特征函数AST相同；其余训练链差异见task96-code-provenance.json，不能再把trainer重写当原因。CPU审计脚本task96_provenance.py已保存。另准备单个真实2368行段的受限诊断（最多5个顺序子进程、每个150s），只写repro artifacts，当前等待qc GPU空闲；用它查确定性报错/初始权重/洗牌，不冒充全量数据重训或生产成本测量。
 
+- 10-26 Codex：348段元数据已逐项关联回标签与source_rows计数，两份source_rows原文件SHA同为fd0f9c12…；初版training-reproducibility.md整理已完成数据/代码/双跑结论与冻结方案，明确GPU诊断尚在等qc，不把旧双跑耗时当确定性成本。
+
 ## 问题
 - r11 trained.json仅记录模型/配方sha与时间，没有trainer运行revision；recipe.provenance是配方来源，不等于实际训练源码。已用部署日志和评估SHA定位当时部署版本4f4d217b，但未记录的训练时单文件覆盖无法靠事后Git证明不存在；不能据主检出HEAD归因代码漂移。
