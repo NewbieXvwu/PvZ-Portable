@@ -166,6 +166,18 @@ workspace实验提供了一个微小数值扰动的实例；尚未用完整训�
 - 只有 1.05M 行 / 461 步，不是 16.98M 行 / 8,292 步。它证明的是“这个尺度上固定配置可复现、未固定配置每次都变”，不能外推成“全量逐位可复现”。
 - 子集是“按路径排序前 30 段”，不是随机抽样；不同标签的混合比例与全量不同，loss 绝对值不能与全量表对比，只能用例间对比。
 
+## 分歧定位（本次，已跑完）
+
+前面只证明了“未固定就跑不一样”。为了说清**差在哪一步、哪个张量**，在同样的 30 段子集上做了两组更细的观测（`scripts/task96_localize.py`、`scripts/task96_grad_probe.py`，证据 [task96-localize.json](task96-localize.json)、[task96-grad-probe.json](task96-grad-probe.json)）：
+
+1. **模块级（前 6 步）**：两次未固定 run 的模型输入哈希在第 1–6 步全部相同，第 1–3 步 loss 逐位相同；**第 2 步起 `packet_embedding` 的输出哈希不同**（22 个模块里第一个不同的），第 4 步 loss 才出现末位差异（7.658308506 vs 7.658308029）。固定配置的两次对照：6 步 22 个模块全同。
+2. **梯度级（第 1 步）**：trainer 在 `loss.backward()` 之前调用 `step_observer`，所以第 2 次回调时手里的梯度正是第 1 步的。两次未固定 run 的第 1 步 forward 与 loss 逐位相同，**梯度里只有 `packet_embedding.weight` 不同，其余 20 多个参数全同**；做完第 1 次更新后，参数里也只有它不同。固定配置的两次对照：梯度一个都不同。
+
+含义：
+
+- 分歧进入点不是初始化、不是洗牌、不是前向、也不是 loss，而是 **embedding 表的梯度累加**——同一 batch 里重复的 packet id 要把梯度散射累加回表行，这个累加顺序在 CUDA 上不固定（`index_add`/`scatter_add` 式原子累加）。前向的查表是确定性的，所以第 1 步前向和 loss 完全相同；梯度先分叉，第 2 步的查表结果才跟着变。
+- 这与“cuBLAS workspace 换算法”是**两条不同的路径**：embedding 梯度不走 GEMM。之前观测到的 workspace 敏感性影响的是后面的 GEMM 步；本次定位到的第一步分叉与 workspace 无关，所以单靠固定 `CUBLAS_WORKSPACE_CONFIG` 未必够，`torch.use_deterministic_algorithms` 这类开关才是针对这一条的手段（正在用“只开确定性、不固定 workspace”的两例做对照，qc 训练优先，排队中）。
+- 仍未拿到内核级回执（没有 atomicAdd / 排序实现的 kernel trace），所以“原子累加顺序”是**与观测相容的机制解释**，不是已证明的内核行为。
 ## 冻结与修法建议（生产未改）
 
 1. 每轮先固定标签快照；对 frames/meta/显式训练行清单以及 pack index 和每个引用段保存内容 SHA256。内容清单写入 `round_*/inputs.json`，训练前后核验。不把路径、大小或 mtime 当内容身份。现有不可变段可按内容地址复用，避免重复复制整库；保留到评估回执已固定其依赖。

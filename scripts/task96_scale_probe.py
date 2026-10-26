@@ -41,7 +41,9 @@ CASES = [('strict_a', True, True, False),
          ('default_p1', False, False, False),
          ('strict_q1', True, True, False),
          ('default_p2', False, False, False),
-         ('strict_q2', True, True, False)]
+         ('strict_q2', True, True, False),
+         ('det_only_a', True, False, False),
+         ('det_only_b', True, False, False)]
 SQUEEZE_BYTES = 4*1024**3
 
 
