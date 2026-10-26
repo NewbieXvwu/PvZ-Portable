@@ -971,3 +971,9 @@
   - **task114 完成**（deploy14f ad651176，pvz-env 4c9ca857）。主控审过部署脚本：只叠加代码、复制 build4、读 task95 已有证据，不重放对局，符合 §6.5。00:09 执行 `qc_deploy14f.sh`（tmux deploy14f），等第 21 轮当前组结束的组边界后切到 build4；看门狗在部署期间自动让路。
   - Mac 15 核空闲（负载 3.5）。主控直接开 **task115**：r11 老师臂补测，覆盖记分板上学生 <80% 的 24 关，每关 16 种子（与学生臂同种子配对），两路 tmux `t115a` / `t115b` 各 6 进程，输出 `artifacts/task115/`。目的：把弱关分成“老师能赢、学生没学会”（蒸馏问题）和“老师也赢不了”（搜索 / 卡组 / 起点问题，AGENTS §8 先查卡组）。
   - 额度：plus 剩 6%（03:03 重置），task105 导入 24/191；Business 周额度 20%，task78 / task93 在做；plus2 00:20 重置。
+- 2026-10-27 01:00（台式机时间）：
+  - deploy14f 00:15 切到 build4，00:20 首组 rc=0，看门狗在跑。
+  - **task116 完成并合入 pvz-env**（4eefcd65）：L45 可见蹦极状态（学生 `v2bungee`、价值编码器 v3），Python/C++ 逐位一致。上线要重建引擎、学生用新 obs 重训，随下一次部署安排。
+  - **task115 完成**（`MEMORY/docs/task115-teacher-arm-weak-levels.md`）：蒸馏缺口 L19/23/24/26/28/29/32/37（L29 老师 13/16、学生 4/32）；老师也输：屋顶、L50、L30/40、气球关 L33/34/39。
+  - 派 **task117**（Mac codex-plus2b，distillgap）：蒸馏缺口诊断 → 数据 / 课程改法。派 **task118**（Mac CodeBuddy，balloondeck）：气球关卡组覆盖检查（AGENTS §8），用 Mac 空闲 CPU。
+  - task104 00:31 已交还 codex-plus2。
