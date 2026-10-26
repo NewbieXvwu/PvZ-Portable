@@ -357,7 +357,7 @@
  "production": {
   "archives_total": 12,
   "archives_complete": 12,
-  "stage": "register_complete_pending_final_audit",
+  "stage": "final_audit_passed",
   "plan_sha256": "a5e3374214dae1fed930d02c7ed79f626fb56f1428f7a0eb0f99095396ecf12a",
   "entries": [
    {
@@ -381,7 +381,8 @@
     "result_sha256": "a13eec2820c3f89618949619a1b4aad4da4589ac938ca3caeab2f04a9211f999",
     "trace_frozen_sha256": "c676ac73596189d839bf6d6a1c555037c6f6e9664370980202030aee58f823fa",
     "raw_rows_verified": true,
-    "raw_cache_manifest_sha256": "a4ecf1572d4350643145592d2996371d04f1294d3b736ffadbcaf4f10be14e5b"
+    "raw_cache_manifest_sha256": "a4ecf1572d4350643145592d2996371d04f1294d3b736ffadbcaf4f10be14e5b",
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_46_doom_m200_s20261047",
@@ -404,7 +405,8 @@
     "result_sha256": "e7d9192ccf9bdfa7fa1ae8b15b4c1412908354d02526df23deb309df2202376e",
     "trace_frozen_sha256": "07a992618143506f2b609561f2e4510e08537df094fca6553a77f94c77f68940",
     "raw_rows_verified": true,
-    "raw_cache_manifest_sha256": "dd77432d63083c468630de6baf506f3e63895471085f30006cf43b8ca54179da"
+    "raw_cache_manifest_sha256": "dd77432d63083c468630de6baf506f3e63895471085f30006cf43b8ca54179da",
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_46_doom_m200_s20261048",
@@ -429,7 +431,8 @@
     "result_sha256": "9f40da41c61d0cf54ed825f0d03d4f0777cee209017210b5d77440d2d9caeb6b",
     "trace_frozen_sha256": "232879e7e235daaa34c306f13b29409882879ffdd76c2f07b5ab7fecc4f48341",
     "raw_rows_verified": true,
-    "raw_cache_manifest_sha256": "6fbf3b98fc8d3cb4e3ff3bba4b424befba6400e138e1b341272746780b936b9c"
+    "raw_cache_manifest_sha256": "6fbf3b98fc8d3cb4e3ff3bba4b424befba6400e138e1b341272746780b936b9c",
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_47_doom_m200",
@@ -451,7 +454,8 @@
     "result_sha256": "765788c557d6acceb14a36c98d86aead4814933538cb5e4986ba93efeb52af27",
     "trace_frozen_sha256": "581a93ddf83a7d4773cbe74a2aa3317dcaaf45cd72831bc1e2f62f202d334b00",
     "raw_rows_verified": true,
-    "raw_cache_manifest_sha256": "3dd2ffab5fa63dbc661656f2405a6771c85b3f6c279310b41b7acbfdd60e1722"
+    "raw_cache_manifest_sha256": "3dd2ffab5fa63dbc661656f2405a6771c85b3f6c279310b41b7acbfdd60e1722",
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_47_doom_m200_s20261048",
@@ -471,7 +475,8 @@
     "result_sha256": "2bf306104e7fcb18246a6fa5514f742f79af258631cafd8c9edf66f549b18980",
     "trace_frozen_sha256": "b051be5a54d810093223ae052d99e81fed2e6853fd4adabc8c7672e1e8c6f071",
     "raw_cache_manifest_sha256": "a1bb42f79f1afc6e9be2b51aa2fc7e517b362b26d0029908a6dc2f9b3014fb43",
-    "raw_rows_verified": true
+    "raw_rows_verified": true,
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_47_doom_m200_s20261049",
@@ -491,7 +496,8 @@
     "result_sha256": "3332f3f9a9fe4ee180260b53d1615e8f9afea0dae250d9bcccc8da1564f6822b",
     "trace_frozen_sha256": "ec42a013c855968ae34650f92c4e911482a6887a2dfabfe0b27f5609ae6dee39",
     "raw_cache_manifest_sha256": "64982068cd475988e271aeebc456d2bc04213aa24b007a13dda1c4eda08b10e0",
-    "raw_rows_verified": true
+    "raw_rows_verified": true,
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_48_doom_m200",
@@ -515,7 +521,8 @@
     "result_sha256": "7c69c10221784f778d2c8978868c74641d4aea404dd1104620c751acc4ead01a",
     "trace_frozen_sha256": "156f4d97ac9e188a3187a7a461765e101777846a82df7073e6c7b2645d741dad",
     "raw_cache_manifest_sha256": "56984342a3e83339a7743e64521e4f5fb45c9c24de42681b4edca24b624d7b97",
-    "raw_rows_verified": true
+    "raw_rows_verified": true,
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_48_doom_m200_s20261049",
@@ -537,7 +544,8 @@
     "result_sha256": "ee3a93d2940f77db78ae7975b58ee4ad53522387cc1672e313b39040c1ae42b9",
     "trace_frozen_sha256": "a2b9f20735f6084a4e021d59582624c5ccf60164ce2bd52bcfdcc84c976af033",
     "raw_cache_manifest_sha256": "401776b59884d6021d225e8dea1e79f40c246a47a1ced035c468ad65ee22cfa0",
-    "raw_rows_verified": true
+    "raw_rows_verified": true,
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_48_doom_m200_s20261050",
@@ -559,7 +567,8 @@
     "result_sha256": "419a378bd2b0390ff0109b99a7e864e1c9a1ce5ca31ab40f2501ad6a1f26045e",
     "trace_frozen_sha256": "705602dce17f7131137a372669eda3d2dc4dc1e20dda2017372a81399cd3a89c",
     "raw_cache_manifest_sha256": "8cfa491ea2e40eb25724d474e9b568f04a4190a91fc2e979859d2271e886817a",
-    "raw_rows_verified": true
+    "raw_rows_verified": true,
+    "top_teacher_wins": 8
    },
    {
     "task_id": "demo_roof_49_doom_m200",
@@ -611,7 +620,7 @@
     "teacher_points": 9,
     "scan_games": 80,
     "top_is_full": false,
-    "top_teacher_wins": null,
+    "top_teacher_wins": 6,
     "adaptive_ladder": [
      1529
     ],
@@ -623,7 +632,17 @@
     "raw_cache_manifest_sha256": "7fda76699506a7265486d06bac8fae0ee765e137b4eba738153d78a47bc30ea3",
     "raw_rows_verified": true
    }
-  ]
+  ],
+  "final_audit": {
+   "sha256": "658410360968efe32933355f405a3f55442c8a1b7e1ca1c58da30845a74cc86b",
+   "schema": "task91_final_audit_v1",
+   "archives": 12,
+   "adaptive_games": 1040,
+   "stored_games": 1112,
+   "new_production_games": 667,
+   "registered": 1,
+   "jobs_with_input_fingerprints": 139
+  }
  },
  "e2e_prior_sha256": "1d88cd4cb18f13fa9ee6f43eddfe0ca7c779cb3a3ff602caf8786c6a026cabc8"
 }
