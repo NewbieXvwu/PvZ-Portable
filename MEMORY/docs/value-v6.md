@@ -240,6 +240,8 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
 
 **语料恢复的机械枚举（2026-10-27 17:55 补做，只读）**：在既有"精确文件名 + 全 72 分支 + 全量文件树"证据之外又查了四条——① `/home/newbiexvwu` 全深度按大小列 >20 MB 的 `.pt/.npz/.pth/.tar/.zip/.7z`（40 个最大文件全是 `frames/packs/segments` 帧包与一个 LLM 运行 zip，无分片）；② `/home/newbiexvwu` 全深度按 `z13*`/`z15*`/`sparse64*`/`full_audit_manifest*`/`branch3*` 名称匹配（只命中 `frames_v2` 的 z13dag3/z15dag* 学生帧目录）；③ HF 本地缓存整个 7.4 MB，无大 blob；④ git 对象库最大 blob 为 45 MB 的 `.update_000073_*` zip（CLI 自更新包），非语料；⑤ `/mnt/c|d|e|f` 深度 6 内按上述名称搜索 0 命中。结论不变：原语料不在本机可枚举范围内。
 
+**"从原始帧重建"这条路也走不通（2026-10-27 18:40 实测边界）**：v5 检查点的 `trained_on` 有 3,661 个种子，其中 **3,242 个（88.6%）在本机 `artifacts/student/frames_v2/seed_*/<task>_fast_search/frames.npz` 里仍有原始行**（每个 npz 带 `boards (N,92,6,10)`、`scalars (N,115)`、`values (N,11)`、`rows/plant/packet/cell/hints`，正是分支语料的载荷），缺的 419 个集中在 **1610000–1610355**（Mac branch3 那批，对应 96 个 `z15d_shards`）以及 1886xxx(15)/2000xxx(16)/2296xxx(32) 三小批。（种子与缺口的机械清单见 [原始行覆盖](task78-v5-raw-coverage.json)）。三条独立理由说明重建仍不能替代原语料：① **缺 11.4% 种子的源行**，任何重建都必然不完整；② 写出 shard 的脚本不在 v5 的代码提交 `cbaa051c` 里——仓库里只有读者（`train_value_widen.Branches` 期望 `boards/scalars/won/seed/position/candidate/packet/kind` + `config.task_id` 以 `day_l7_` 开头），没有任何工具能产出该 schema；③ `frames_v2` 是 observation-backfill v2 的重导出，每局行数已与当年不同（z13dag4 单任务按 `held()` 切分得 fit 341,548 / val 29,694，而 v5 回执是 324,559 / 29,446），所以连那 88.6% 也无法证明行级同一。结论：**必须拿到原 97 个分片文件本身**；重建最多是又一个诊断代理，而它连"完整"都做不到。
+
 2026-10-26：屋顶已完成84/216（k0=72、k1=12），k0已正常导出。原生TRACE现直接提供叶的学生历史，保留实际原生叶快照的状态/帧/收入检查，原私有动画差异及失败数据完整保留。原失败任务已补完并复用四份完成候选，PID991266以两游戏/nice19继续原链；执行修订与当前进度见`task78-roof-evaluation.json`、`task78-stage-status.json`。
 
 2026-10-27 00:05进度：正常完成标记已达121/216（k0=72、k1=49、k2=0）；k1的L41/L42各24项收齐，L43继续。k1尚未导出、完整三未来面板未齐，仍不能据此评分或宣称门禁完成；采集保持两游戏/nice19，未新增上游原始标签审计。

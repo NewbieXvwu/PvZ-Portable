@@ -1,0 +1,90 @@
+{
+ "scope": "can the v5 branch corpus be rebuilt from retained raw per-seed archives",
+ "baseline_checkpoint_sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4",
+ "trained_on_seeds": 3661,
+ "seeds_with_raw_archive": 3242,
+ "seeds_without_raw_archive": 419,
+ "coverage": 0.8856,
+ "missing_ranges": [
+  [
+   1610000,
+   1610014
+  ],
+  [
+   1610016,
+   1610034
+  ],
+  [
+   1610036,
+   1610124
+  ],
+  [
+   1610126,
+   1610308
+  ],
+  [
+   1610310,
+   1610344
+  ],
+  [
+   1610346,
+   1610348
+  ],
+  [
+   1610350,
+   1610353
+  ],
+  [
+   1610355,
+   1610355
+  ],
+  [
+   1886145,
+   1886153
+  ],
+  [
+   1886155,
+   1886155
+  ],
+  [
+   1886157,
+   1886158
+  ],
+  [
+   1886161,
+   1886162
+  ],
+  [
+   1886164,
+   1886172
+  ],
+  [
+   1886174,
+   1886175
+  ],
+  [
+   2000112,
+   2000127
+  ],
+  [
+   2296144,
+   2296145
+  ],
+  [
+   2296147,
+   2296161
+  ],
+  [
+   2296164,
+   2296175
+  ]
+ ],
+ "raw_archive_schema": "frames.npz per seed/task: boards (N,92,6,10) float16, scalars (N,115) float32, values (N,11) float32, rows/plant/packet/cell/hints",
+ "blockers": [
+  "11.4% of seeds have no raw rows at all (mostly 1610000-1610355, the Mac branch3 batch behind the 96 z15d_shards)",
+  "no script in the v5 code commit cbaa051c writes the branch shard schema (boards/scalars/won/seed/position/candidate/packet/kind + config.task_id day_l7_*); only the reader train_value_widen.Branches exists",
+  "frames_v2 is an observation-backfill v2 re-export, so per-game row counts no longer match v5's receipt (z13dag4 held-split gives fit 341548 / val 29694 vs required 324559 / 29446)"
+ ],
+ "verdict": "a rebuilt corpus is provably incomplete and cannot be shown to be row-identical; the original 97 shard files are still required",
+ "measured_at": "2026-10-27T10:40:00+00:00"
+}
