@@ -222,7 +222,7 @@ class Game:
 
     def __init__(self, task_id: str, *, seed=None, manifest=None, executable=None,
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
-                 deck=None, reason="", strategy="", deck_review="", abandon_reason=None,
+                 deck=None, reason="", strategy="", deck_review="", abandon_reason=None, attempt_id=None,
                  robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
@@ -240,6 +240,7 @@ class Game:
         self.spec, self.deck, self.seed = task_spec(self.task_definition, seed, deck)
         self.deck_reason, self.strategy, self.deck_review = reason, strategy, deck_review
         self.abandon_reason = abandon_reason
+        self.attempt_id = attempt_id or uuid.uuid4().hex
         self.manifest = Path(manifest) if manifest else DEFAULT_MANIFEST
         self.executable = Path(executable) if executable else _default_executable()
         self.resource_dir = Path(resource_dir) if resource_dir else _default_resource_dir()
@@ -251,7 +252,7 @@ class Game:
         self.obs = None
         self.initial_obs = None
         self.initial_hash = None
-        self.terminal = False
+        self.terminal = abandon_reason is not None
         self.totals = {}
         self.max_wave = 0
         self.saw_mowers = False
@@ -665,7 +666,7 @@ class Game:
         self._start()
         self.session.require_branch(self.budget_key)
         child = Game(self.task_id, seed=self.seed, manifest=self.manifest,
-                    deck=self.deck, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
+                    deck=self.deck, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review, attempt_id=self.attempt_id,
                     executable=self.executable, resource_dir=self.resource_dir,
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
@@ -904,7 +905,7 @@ class Game:
         return dict(schema=SCHEMA, task_id=self.task_id, seed=self.seed, deck=self.deck,
                     run_id=self.run_id,
                     note=self.note, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
-                    abandon_reason=self.abandon_reason, tick=self.tick, ops=self.ops,
+                    abandon_reason=self.abandon_reason, attempt_id=self.attempt_id, tick=self.tick, ops=self.ops,
                     frames=self.frames, totals=self.totals,
                     robustness=self.robustness_report, manual_patch=bool(self.manual_patch))
 
@@ -927,7 +928,7 @@ class Game:
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
                    note=doc.get("note", ""), robustness=doc.get("robustness"),
                    deck=doc.get("deck"), reason=doc.get("reason", ""), strategy=doc.get("strategy", ""),
-                   deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"),
+                   deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"), attempt_id=doc.get("attempt_id"),
                    run_id=doc.get("run_id"),
                    manual_patch=bool(doc.get("manual_patch", False)), **kwargs)
 
@@ -943,7 +944,7 @@ class Game:
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
                    deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
-                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), **kwargs)
+                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"), **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
@@ -981,7 +982,7 @@ class Game:
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
             deck_reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
-            abandoned=self.abandon_reason is not None, abandon_reason=self.abandon_reason,
+            abandoned=self.abandon_reason is not None, abandon_reason=self.abandon_reason, attempt_id=self.attempt_id,
             task=dict(id=self.task_id, level=self.spec.level, seed=self.spec.seed,
                       deck=list(self.deck), policy="llm", playthrough=self.spec.playthrough,
                       zombie_count_multiplier=self.spec.zombie_count_multiplier,

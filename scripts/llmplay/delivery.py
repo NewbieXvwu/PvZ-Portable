@@ -85,6 +85,7 @@ def _entry(archive, relative, *, valid=True, error=None):
                 level=task["level"], deck=task["deck"], deck_reason=meta.get("deck_reason", ""),
                 strategy=meta.get("strategy", ""), deck_review=meta.get("deck_review", ""),
                 abandoned=bool(meta.get("abandoned")), abandon_reason=meta.get("abandon_reason"),
+                attempt_id=meta.get("attempt_id"),
                 archive=relative, manual_patch=bool(meta.get("manual_patch")),
                 note=meta.get("note", ""), valid=valid, invalid_reason=error,
                 won=won, robust=bool(won and _robust(meta)), run_id=meta.get("run_id"),
@@ -94,7 +95,9 @@ def _entry(archive, relative, *, valid=True, error=None):
 def _deck_progress(entries):
     """每套按植物集合去重、每个种子只记一次胜；全部尝试仍留在 archives。"""
     decks = {}
-    for entry in entries:
+    attempts = {entry.get("attempt_id") or entry.get("archive") or str(index): entry
+                for index, entry in enumerate(entries)}
+    for entry in attempts.values():
         key = ",".join(map(str, sorted(entry.get("deck") or [])))
         group = decks.setdefault(key, dict(deck=sorted(entry.get("deck") or []),
                                           winning_seeds=set(), robust_seeds=set(), attempts=0,
@@ -204,8 +207,6 @@ def _report(document):
     lines = ["# LLM 对局进度", "", "运行ID：%s" % document["run_id"], "",
              "接口自动生成；详细结果以 progress.json 为准。", "",
              "全部任务达标。" if document["complete"] else "尚未全部完成，继续 next_task()。", "",
-             "每任务至少 %d 个种子通关，其中 %d 个第10波达到5/8稳健标准。" %
-             (REQUIRED_WINS, REQUIRED_ROBUST),
              "自选卡任务：三套卡组各赢≥2种子、合计≥6不同种子胜、≥3种子稳健；两两换≥3张，核心思路由模型声明并供主控复核。",
              "", "| 层 | 达标任务 |", "|---|---|"]
     lines += ["| %s | %d/%d |" % (layer, info["completed"], info["total"])

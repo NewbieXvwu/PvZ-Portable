@@ -12,10 +12,10 @@
 
 ## 开始
 
-1. 将 `llmplay_pkg.zip`（接口、引擎、配置）和 `llmplay_res.zip`（资源与预编译缓存）
+1. 将 `llmplay_pkg.7z.001` 等全部分卷（接口、引擎、配置）和 `llmplay_res.zip`（资源与预编译缓存）
    放在你选择的同一个目录，只解压接口包，进入生成的 `llmplay_pkg/`。
 2. 资源 zip 保持原样放在接口目录旁边。首次 `import llmplay`（自检也会导入）自动安装
-   资源和缓存；两个文件必须来自同一批。资源 zip 在其它位置时，可设置
+   资源和缓存；接口与资源必须配对。资源 zip 在其它位置时，可设置
    `PVZ_LLMPLAY_RES_ZIP` 为它的实际路径。
 3. 先执行 `python3 selfcheck.py`，最后一行必须是 `SELFCHECK OK`。
    **如果你的环境 Python 版本 < 3.10 或没有 x86_64 Linux，先运行 `selfcheck.py`，
@@ -49,28 +49,26 @@ resume 默认直接按旧 progress.json 恢复存档、进度、预算与策略�
 
 ## 1. 目标
 
-从开局打到通关。任务分成五层，**按顺序推进**；前一层里每个任务至少拿到 5 个种子通关
-（其中至少 3 个达到第 4 节的稳健标准）之后，才进入下一层。
+从开局打到通关。按 F → H 推进；G 层并入 F 的多卡组要求。
 
-| 层 | 内容 | 任务 id（见 `configs/human_demo_tasks.json`） |
+| 层 | 内容 | 任务 id |
 |---|---|---|
-| **A** | 屋顶 L46–L49，毁灭菇套，2.0 倍 | `demo_roof_46_doom_m200`、`demo_roof_47_doom_m200`、`demo_roof_48_doom_m200`、`demo_roof_49_doom_m200` |
-| **B** | 屋顶 L42–L44 的 melon / gloom / gloommelon 变体 + L41，2.0 倍 | `demo_roof_42_{melon,gloom,gloommelon}_m200`、`demo_roof_43_{melon,gloom}_m200`、`demo_roof_44_{melon,gloom}_m200`、`demo_roof_41_doom_m200` |
-| **C** | 屋顶 L46–L49，毁灭菇套，**3.0 / 4.0 倍** | `demo_roof_{46,47,48,49}_doom_m300`、`demo_roof_{46,47,48,49}_doom_m400` |
-| **D** | 雾夜 L36–L39，**2.0 倍** | `fog79_l36_snow_{magnet,split}_v2_m200`、`fog79_l37_snow_{magnet,split}_v2_m200`、`fog79_l38_snow_{magnet,tall}_v2_m200`、`fog79_l39_snow_{cactus,blover}_v2_m200` |
-| **E** | 原生传送带 L30 / L40 / L50（僵王博士） | `demo_pool_30_orig_m100`、`demo_storm_40_orig_m100`、`demo_boss_50_orig_m100` |
+| **F** | 屋顶 L42、L43、L44、L45、L47、L48、L49，原版 1.0 倍 | `llmplay2_f_l{42,43,44,45,47,48,49}_m100` |
+| **H** | 白天 L2/L6/L8、夜间 L12/L16/L18、泳池 L22/L26/L28、雾夜 L32/L36/L38，原版 1.0 倍 | `llmplay2_h_l{2,6,8,12,16,18,22,26,28,32,36,38}_m100` |
 
-- 每层里按表格顺序打；一层做完立刻进入下一层。
-- 只打清单里**存在**的任务。清单里没有的关卡不要自己造任务，跳过即可。
-- 3 个子代理可以各拿**同一层里的不同任务**并行（例如 A 层：L49 / L48 / L47→L46）。
-  同一任务最多 2 个游戏进程。
-- 每个任务有 **40 个种子**（`configs/extra_seeds.json`，与 `configs/llmplay_seeds.json`
-  是同一个块）。每次新运行生成随机 `run_id`，任务内种子顺序按它散列排序；
-  `next_task()` / `list_tasks()` 和不指定 seed 的 `Game(task_id)` 都遵循该顺序。
-  `resume` 沿用原 `run_id`，继续原顺序。用 `Game(task_id, seed=...)` 也可明确指定。
-  `progress.json` 和存档 meta 都记录运行ID；meta 另有 CPU 型号、核数和 Python 版本。
-- **停止条件只有一个：全部五层、每个任务都达到完成标准（至少 5 个种子通关，其中至少 3 个稳健）。没做完就一直做，不要主动收尾，不要写「任务完成」。**
-- `next_task()` 只在全部任务达标后返回 `None`；已完成任务自动跳过。
+每关至少 **3 套彼此明显不同的卡组，各赢至少 2 个不同种子**，全关合计至少 **6 个不同种子胜**；
+其中至少 3 个种子达到第 4 节稳健标准。两套卡组至少更换 3 张卡，且主力输出或核心思路不同。
+例如投手、蘑菇夜战、毁灭菇爆破、忧郁菇加大蒜、地刺阵。用 `strategy` 写清核心思路；
+程序按卡片集合统计差异，核心思路的实际区别由你的评价和主控复核。
+
+- 卡组由你自己选，`reference_deck` 是记分板参考，第一次可以先试它，不强制。
+- 打到一半觉得该换阵型，可 `game.abandon(reason="...")`，随后同一种子换卡重开。
+  放弃会保存全部动作和理由，只算一次未通关；不会扣预算或施加其他处罚。
+- 若参考卡组连续 3 个种子失败，写出缺少什么，再换卡组继续；不要用同一套卡刷够数。
+- 只打本清单里的任务。19 关 × 3 套至少 57 套卡组的胜局，足够持续推进。
+- 子代理可拿**同一层的不同任务**并行；最多 3 个子代理，每个任务最多 2 个游戏进程，其他任务独立。
+- 每任务有 40 个种子，见 `configs/extra_seeds.json`；`Game(task_id, seed=...)` 可指定。
+- 持续推进各层；全部任务达标后，继续扩充新卡组和种子。
 
 ## 2. 包里有什么
 
@@ -81,9 +79,9 @@ llmplay_pkg/
   selfcheck.py           ← 离线自检，先跑它
   build/pvz-portable     ← 引擎（x86_64 Linux，静态链接）
   configs/llmplay_package.json  ← 两包配对与引擎指纹
-  configs/human_demo_tasks.json  ← 任务（关卡 / 种子 / 卡组 / 倍率）
+  configs/human_demo_tasks.json  ← 任务（关卡 / 种子 / 参考卡组 / 倍率）
   configs/extra_seeds.json       ← 每个任务 40 个种子
-  configs/llmplay_seeds.json     ← 五层任务清单 + 种子块（层号在这里）
+  configs/llmplay_seeds.json     ← F/H 任务清单 + 种子块（层号在这里）
   configs/llmplay_robustness.json ← 稳健性检查点的未来种子（第 4 节用）
   llmplay/               ← Python 接口（纯标准库）
   python/ scripts/       ← 接口依赖的模块（纯标准库，原样拷贝）
@@ -95,7 +93,7 @@ llmplay_pkg/
 
 ## 3. 接口速查
 
-一局 = **(任务, 操作序列)**。所有动作都记在操作日志上；`save()` 把它写到磁盘。
+一局 = **(任务, 卡组, 操作序列)**。所有动作都记在操作日志上；`save()` 把它写到磁盘。
 工具调用之间进程可能被回收，**磁盘上的日志才是唯一的真相**。
 
 ```python
@@ -104,7 +102,9 @@ from llmplay import Game, list_tasks
 
 print(list_tasks())                       # 有哪些任务
 
-g = Game("demo_roof_49_doom_m200")        # 或 Game(task_id, seed=...)
+g = Game("llmplay2_f_l42_m100", deck=[1,33,32,34,2,3,17],
+         reason="先试经济较省的双投手", strategy="双投手")
+g.deck_review = "前期便宜；群怪输出需观察"  # 每套卡组至少一句优缺点评价，随导出写入报告
 print(g.observe())                        # 完整文字局面（默认就是完整版）
 print(g.legal())                          # 当前合法动作：每个卡槽能种哪些格 + 能铲哪些格
 print(g.summary())                        # 波 / 最远存活波 / 剩余小推车 / 阳光 / 各行威胁
@@ -122,10 +122,30 @@ g.save(llmplay.out_dir() / "run.json")          # 存操作日志
 g2 = Game.load(llmplay.out_dir() / "run.json")  # 读回来（会从开局重放到当时的位置）
 g.export_archive(llmplay.out_dir() / "l49_seed_example")   # 导出可校验存档
 
-g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来还能不能赢
+g.robustness(policy, k=8, checkpoints=[10])   # 第 4 节：换未来还能不能赢
 ```
 
-### 3.1 observe() 给什么
+#### 3.1 自选卡、换卡和存档
+
+`Game(task_id, deck=[植物编号...], reason="选卡理由", strategy="核心流派")`。
+卡组只受游戏硬约束：6–10 张、不重复、已解锁植物；升级植物自动声明已购买；泳池/雾要睡莲(16)，屋顶要花盆(33)。
+本轮沿用二周目：普通植物全解锁，升级植物视为已购买。L45 按修订改为自选卡种卡模式，保留关卡自身出怪。
+没有 v5 卡组黑白名单，废卡是否值得带由你决定。`list_tasks()` 给出参考卡组和关卡说明。
+
+换卡示例：
+
+```python
+g.abandon(reason="前排扛不住，改用爆破")  # 自动保存操作、卡组和理由，释放引擎
+# 同一种子重开，不靠读存档替换卡组
+h = Game(g.task_id, seed=g.seed, deck=[1,33,32,15,35,2,17],
+         reason="加入毁灭菇清场", strategy="毁灭菇爆破")
+```
+
+`save`、`load`、`load_archive`、`branch`、稳健测试均保留原局卡组。放弃后的局可读、可导出，不能继续推进。
+评价在导出前赋给 `game.deck_review`；`strategy` 请用真实的核心流派，不要给相同打法换名字凑数。
+自动报告按每个关卡汇总所有试过的卡组、胜负、理由和评价。
+
+### 3.2 observe() 给什么
 
 每次输出的**第一行是状态行**，例如：
 
@@ -155,7 +175,7 @@ g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来
 信息量以「人类玩家此刻在屏幕上能看到的东西」为上限：血量、位置、状态都给；
 **不给**未来的出怪表和随机数状态。精确数值以文字为准（本会话没有截图）。
 
-### 3.2 一次调用跑多步
+### 3.3 一次调用跑多步
 
 写 Python 脚本，一次跑几十到几百步。**脚本结束时（进程退出）接口会自动打印一次完整的
 `observe()`**，你不用记得自己调用。想在某个条件成立后再行动，就用
@@ -168,7 +188,7 @@ g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来
 - 动作时间轴完全自由：**任意 tick 都能做动作**，不需要等任何决策点。
 - 阳光自动收集（和人类示范一致），你不需要点阳光。
 - `export_archive` 写 `ticks.jsonl` / `frames.jsonl` / `meta.json`，`label_source` 是
-  `llm_agent`。**每通关一关就导出一份。**
+  `llm_agent`。**每次通关或放弃都导出；放弃由 abandon() 自动导出。**
 - `Game.load()` 是惰性的：第一次 `observe()` / `summary()` / `wait()` 时才会从开局重放到存档的
   tick。在那之前 `game.obs` 是 `None`，先调一次 `observe()` 再读它。
 - 引擎的可执行位由接口自己补（解压工具可能不保留），不需要你 `chmod`。
@@ -191,7 +211,7 @@ def policy(game):                 # 闭环打法：每一步只看当前局面
             return
     game.wait(30)
 
-report = g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])
+report = g.robustness(policy, k=8, checkpoints=[10])
 print(report)
 # {'policy_sha256': '...', 'k': 8, 'passed': True, 'manual_patch': False,
 #  'checkpoints': {'0': {'wins': 6, 'k': 8, 'reached': True},
@@ -200,15 +220,15 @@ print(report)
 
 - `policy` 必须是**闭环函数**（每一步按当前局面决定动作）。固定的动作序列在新未来里没有意义。
 - 将 `policy` 写入 `.py` 文件再导入，接口会对实际源码取哈希；无法读取源码时会拒绝评估。`k<8` 可用于试跑，正式通过固定要求 8 个未来。
-- 检查点取「开局 / 第 10 / 20 / 30 波开始时」，**只算你已经打到的那些**；没打到的返回 `reached: False`。
+- 本轮正式只需第 10 波检查点。稳健复现使用这一局保存的卡组，不能换卡复现。没到检查点则 `reached: False`。
+- 旧 Boss L50 的 wave 恒为 0，接口默认改用 `tick:6000`（6000 tick 时刻的状态）作为稳健检查点；8 个未来赢≥5仍相同。新任务包没有 Boss 任务。
 - 连续推进跨过波次时，接口重放定位该波的首个 tick；结果中的 `tick` 是实际检查点，定位的模拟量也计入预算。
 - 种子来自包里独立的稳健性块（`configs/llmplay_robustness.json`），与任务种子不重叠。
 - **调用计入搜索预算**（重放和试打都是模拟 tick），别在没必要的局上反复调。
 - 结果会记在 `game.robustness_report`，`export_archive()` 自动写进 `meta.json` 的
   `robustness` 字段。
 
-**一局算真正完成，需要：通关，并且 `robustness()` 在第 10 波检查点上 8 个新未来至少赢 5 个。
-只通关、不够稳的局仍然要交，但只算半个。**
+**通关照常记胜；某个种子另达到第10波 k=8、赢≥5 时，再记为稳健种子。每关至少3个稳健种子，三套卡组仍须各自赢≥2种子。**
 
 **通关之后，用剩余预算提高稳健性，再进入下一个种子。尽量用不知道未来也会这样做的打法，
 少用 rewind 补救；补救局要在 report 里写明。**
@@ -257,7 +277,7 @@ print(report)
 `robustness()` 完成，接口都会更新 `llmplay.out_dir()` 中的：
 
 - `progress.json`：每任务的种子、结果、稳健性、存档路径、`manual_patch` 和各层完成度；
-- `report.md`：从进度自动生成的逐局结果和打法说明；
+- `report.md`：逐关试过的卡组、各自胜负、选卡理由和一句话优缺点评价，以及逐局结果；
 - `budget.json`：续跑时延续的搜索与重写计数；
 - `out.zip`：含存档、进度、报告、预算及 out 下的策略代码。先写临时文件再原子发布，
   失败时上一份交付完整保留。
@@ -269,4 +289,4 @@ print(report)
 战损、丢车、被吃株数可以写进 note，只用于描述，不作为目标或排序。
 
 系统中断后，用户可下载任意一份 `out.zip` 并在下一次请求附上；按开头的续跑步骤继续。
-只有 `progress()["complete"]` 为真、五层全部达到标准后，才能报告任务完成。
+只有 `progress()["complete"]` 为真、F/H 两层全部达到标准后，才能报告任务完成。

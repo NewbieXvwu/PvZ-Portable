@@ -34,7 +34,7 @@ RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
 DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay_pkg"
 SEED_PLAN = ROOT / "configs" / "llmplay_seeds.json"
 ROBUSTNESS_PLAN = ROOT / "configs" / "llmplay_robustness.json"
-LAYERS = ("A", "B", "C", "D", "E")
+LAYERS = ("F", "H")
 
 SECRET_PATTERNS = [re.compile(pattern) for pattern in
                    (rb"hf_[A-Za-z0-9]{20,}", rb"sk-[A-Za-z0-9]{20,}", rb"AIza[A-Za-z0-9_-]{30,}",
@@ -59,12 +59,7 @@ def seed_plan() -> dict:
 
 
 def task_manifest() -> dict:
-    """包里给的任务：task81c 的五层（A 屋顶 L46–49 → B L42–44 变体 + L41 →
-    C 3.0/4.0 倍 → D 雾夜 L36–39 2.0 倍 → E 原生传送带）。
-
-    任务定义与种子全部来自 `configs/llmplay_seeds.json`（`scripts/llmplay/
-    make_llmplay_tasks.py` 生成）；卡组不在这里手写（AGENTS §8）。
-    """
+    """按独立种子计划打包本轮 F/H 新族；参考卡组来自冻结记分板。"""
     repo = json.loads((ROOT / "configs" / "human_demo_tasks.json").read_text(encoding="utf-8"))
     by_id = {task["task_id"]: task for task in repo["tasks"]}
     plan = seed_plan()
@@ -108,7 +103,7 @@ def copy_modules(stage: Path) -> None:
                                                   "verify_archive.py", "mac_check.sh",
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
                                                   "check_tasks.py", "robustness_check.py",
-                                                  "cache_prepare.py", "cache_profile.py"))
+                                                  "cache_prepare.py", "cache_profile.py", "make_llmplay2_tasks.py"))
 
 
 def copy_constant_sources(stage: Path) -> None:
@@ -161,6 +156,63 @@ def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = 
     with tempfile.TemporaryDirectory(prefix=".package-build-", dir=out) as temporary:
         return _build(executable, out, cache_dir, resource_dir, Path(temporary), audit,
                       engine_sha, MANIFEST, PACKAGE)
+
+
+def repack_interface(previous: Path, out: Path) -> list[Path]:
+    """复用已交付引擎及资源契约，只重打接口，不重建资源、不重复逐关 reset。
+
+    previous 是上一包的 stage；大文件留在本机，不进入 git。py7zr 仅构建时需要。
+    """
+    import py7zr
+    from llmplay.resources import PACKAGE
+    previous, out = previous.resolve(), out.resolve()
+    out.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=".interface-build-", dir=out) as temporary:
+        stage = Path(temporary) / "llmplay_pkg"
+        stage.mkdir()
+        copy_modules(stage)
+        copy_constant_sources(stage)
+        (stage / "build").mkdir()
+        engine = previous / "build" / "pvz-portable"
+        contract = json.loads((previous / "configs" / PACKAGE).read_text())
+        # 只读 37MB 引擎一次（<1秒），防止误将另一引擎与旧缓存配对。
+        if sha256(engine) != contract["engine_sha256"]:
+            raise ValueError("复用引擎与原资源契约不匹配")
+        shutil.copyfile(engine, stage / "build" / "pvz-portable")
+        (stage / "build" / "pvz-portable").chmod(0o755)
+        (stage / "configs").mkdir()
+        manifest = task_manifest()
+        for name, document in (("human_demo_tasks.json", manifest),
+                               ("extra_seeds.json", extra_seeds(manifest))):
+            (stage / "configs" / name).write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
+        for path in (SEED_PLAN, ROBUSTNESS_PLAN, previous / "configs" / PACKAGE,
+                     ROOT / "configs" / "adventure_scoreboard.json", ROOT / "configs" / "gate_v5_panel.json"):
+            shutil.copyfile(path, stage / "configs" / path.name)
+        for name in ("PROMPT.md", "README.md", "selfcheck.py"):
+            shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
+        shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
+        hits = scan(stage)
+        if hits:
+            raise ValueError("接口包命中密钥模式：%s" % hits)
+        archive = Path(temporary) / "llmplay_pkg.7z"
+        with py7zr.SevenZipFile(archive, "w", filters=[dict(id=py7zr.FILTER_LZMA2, preset=6)]) as bundle:
+            bundle.writeall(stage, arcname="llmplay_pkg")
+        volumes = []
+        # 标准 7z 分卷为连续字节切片；体积远低于每卷 100 MB 的上限。
+        with archive.open("rb") as stream:
+            index = 1
+            while block := stream.read(20_000_000):
+                target = out / ("llmplay_pkg.7z.%03d" % index)
+                target.write_bytes(block)
+                volumes.append(target)
+                index += 1
+        destination = out / "llmplay_pkg"
+        if destination.exists():
+            shutil.rmtree(destination)
+        os.replace(stage, destination)
+        print(json.dumps([dict(file=str(path), bytes=path.stat().st_size, sha256=sha256(path))
+                          for path in volumes], indent=2))
+        return volumes
 
 
 def _build(executable, out, cache_dir, resource_dir, temporary, audit, engine_sha, manifest_name, package_name):
@@ -239,12 +291,18 @@ def _zip_tree(directory, archive, prefix=""):
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--executable", type=Path, required=True)
+    parser.add_argument("--executable", type=Path)
+    parser.add_argument("--reuse-package", type=Path, help="复用上一包 stage，仅重打接口为7z分卷")
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
-    parser.add_argument("--cache-dir", type=Path, required=True,
+    parser.add_argument("--cache-dir", type=Path,
                         help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
     args = parser.parse_args()
+    if args.reuse_package:
+        repack_interface(args.reuse_package, args.out)
+        return 0
+    if not args.executable or not args.cache_dir:
+        parser.error("首次构建需要 --executable 和 --cache-dir")
     build(args.executable, args.out, resource_dir=args.resource_dir, cache_dir=args.cache_dir)
     return 0
 

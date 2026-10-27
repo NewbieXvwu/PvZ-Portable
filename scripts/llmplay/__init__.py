@@ -31,6 +31,7 @@ def list_tasks() -> dict:
     document = progress()
     return {task_id: dict(level=task["level"], seeds=document["tasks"][task_id]["available_seeds"],
                           multiplier=task.get("zombie_count_multiplier"),
-                          deck=task.get("deck"), progress=document["tasks"].get(task_id))
+                          deck=task.get("deck"), reference_deck=task.get("reference_deck"),
+                          description=task.get("description"), unlock_field=task.get("unlock_field"), progress=document["tasks"].get(task_id))
             for task_id, task in load_tasks().items()
             if task_id in document["tasks"] and not document["tasks"][task_id]["complete"]}
