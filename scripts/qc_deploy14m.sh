@@ -10,13 +10,13 @@ R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
 PACKAGE=$R/.claude/worktrees/obsup
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=c59b7e4d293e01bd9c83162962d2f031f2bd0725
+REV=d1053e84f7dfd4954a0144ffc9aa1a840d91ffbc
 FILES=(scripts/search_play.py scripts/curriculum_queue.py scripts/growable_pool.py
        python/test_growable_pool.py)
 NEW_SHAS=(4f4ba54165bb6aeeb6fc5e6eeff22bd588e2b9b643fb64798e4130d13382c9f8
           f98df24cbb5d8af69a237df6465da5c2fba77e55b8b231907544fdb7d68c76e9
-          ea02f564714b12d92acf0d5161ce6a81e6f1120a696eaeaf3977323d0c23b051
-          77311dfcb63c39e1a9207783c03f1c3af78ad5e6db14ed2b123467c44c335771)
+          933487655638ecdc2045fa3d251d2fb7b17d0b1bda50e1a9bc4fd3de0f3078d3
+          a309b2f1d99b1f4636ebd3363750f1045b9dfc563c4c85a71257a7bd3bd65246)
 # What production may be before the switch: deploy14l (task137) or this deploy.
 BASELINE_SEARCH_SHAS=(6f9103447dd4e5d066c6b6b26ff516b7165c3d8a89f4c67ea3cf5f63540acf01
                       4f4ba54165bb6aeeb6fc5e6eeff22bd588e2b9b643fb64798e4130d13382c9f8)
@@ -102,9 +102,11 @@ assert len(panel['tasks']) == 144
 PY
   fi
 }
-# Desktop stop_qc: kill the session, no drain. Orphaned search_play children of this
-# worktree are reaped so the next group does not share the machine with them.
+# Desktop stop_qc: kill the session, no drain. Only *orphaned* search_play workers of
+# this worktree are reaped (parent is init): a gate evaluation started by the dead
+# controller still has its own parent and is left alone.
 stop_qc() {
+  local pid ppid
   if ! tmux has-session -t =qc 2>/dev/null; then return; fi
   tmux kill-session -t =qc
   for ((attempt=0; attempt<60; attempt++)); do
@@ -112,10 +114,13 @@ stop_qc() {
     sleep 2
   done
   for ((attempt=0; attempt<30; attempt++)); do
-    if ! pgrep -f "$W/scripts/search_play.py" >/dev/null 2>&1; then break; fi
+    if ! pgrep -f "$W/scripts/search_play.py" >/dev/null 2>&1; then return; fi
+    for pid in $(pgrep -f "$W/scripts/search_play.py" || true); do
+      ppid=$(ps -o ppid= -p "$pid" 2>/dev/null | tr -d ' ')
+      if [ "${ppid:-0}" = "1" ]; then kill -TERM "$pid" 2>/dev/null || true; fi
+    done
     sleep 2
   done
-  pkill -f "$W/scripts/search_play.py" 2>/dev/null || true
 }
 restore_files() {
   local index

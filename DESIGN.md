@@ -1586,7 +1586,9 @@ K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整
 主控只好杀 qc 重开。task134 修的是余量口径，没有改“开工定死”。
 
 **做法**：`scripts/growable_pool.py` 取代 `search_play.py` 里的 `multiprocessing.Pool`。
-队列、每 worker 初始化、一局一结果、`games.jsonl` 语义全部不变；父进程每 `--grow-interval`
+每 worker 初始化、一局一结果、`games.jsonl` 语义全部不变；作业改成父进程派活（每个 worker
+一条私有 `SimpleQueue`，父进程记着 `worker id -> 手上那局`），所以 worker 被 OOM 杀掉时
+父进程能认出“这局丢了”并报错退出，而不是像共享队列那样永久挂住。父进程每 `--grow-interval`
 （默认 30 s）重读一次 `MemAvailable`，用控制器自己的准入公式
 
     clamp((MemAvailable − reserve − background) // per_worker, 1, upper)
