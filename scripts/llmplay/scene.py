@@ -430,7 +430,7 @@ def render(game, level: str = "full") -> str:
     from . import budget
     session = budget.session()
     first = session.claim_legend()
-    lines = [session.status_line(game.spec.level), header(game), ""]
+    lines = [session.status_line(game.budget_key), header(game), ""]
     if first:
         lines += [legend(), ""]
     lines += ["空间网格（植物 + 该格僵尸）：", grid(game), "",

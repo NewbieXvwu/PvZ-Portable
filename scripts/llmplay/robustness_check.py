@@ -36,10 +36,10 @@ def main() -> int:
     game = Game(TASK, executable=args.executable, resource_dir=args.resource_dir)
     game.wait(600)
 
-    before = dict(game.session.level(game.spec.level))
+    before = dict(game.session.level(game.budget_key))
     first = game.robustness(policy, k=2, checkpoints=[0], max_ticks=300)
     second = game.robustness(policy, k=2, checkpoints=[0], max_ticks=300)
-    after = dict(game.session.level(game.spec.level))
+    after = dict(game.session.level(game.budget_key))
     print('可复现：%s' % ('OK' if first == second else 'FAILED'))
     if first != second:
         failures.append('同一打法两次结果不同')

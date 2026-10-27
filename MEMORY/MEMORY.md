@@ -109,3 +109,4 @@
 - [task118 气球关卡组检验](docs/task118-balloon-decks.md)
 - [2026-10-27](2026-10-27.md)
 - [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)
+- [task81 GPT Pro 对局包与持续续跑约定](docs/task81-gpt-pro-playthrough.md)

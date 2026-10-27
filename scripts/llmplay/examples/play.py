@@ -11,14 +11,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from llmplay import Game  # noqa: E402
+from llmplay import Game, out_dir  # noqa: E402
 
 
 def main() -> int:
     task_id = sys.argv[1] if len(sys.argv) > 1 else "demo_roof_49_doom_m200"
     seed = int(sys.argv[2]) if len(sys.argv) > 2 else None
-    out = Path("/mnt/data/out") / ("%s_seed%s" % (task_id, seed if seed is not None else "default"))
     with Game(task_id, seed=seed) as game:
+        out = out_dir() / ("%s_seed%s" % (task_id, game.seed))
         print(game.observe())
         print(json.dumps(game.legal(), ensure_ascii=False)[:2000])
         # 这里换成你自己的策略：读局面 -> 选动作 -> 推进 -> 再读。

@@ -1,15 +1,51 @@
 # 任务：用沙箱里的引擎把《植物大战僵尸》的指定关卡打通，交回操作序列
 
-你拿到的是一个**离线**、无窗口的《植物大战僵尸》1.2.0.1073 复刻引擎，以及一层 Python 接口。
+你拿到的是一个无窗口的《植物大战僵尸》1.2.0.1073 复刻引擎，以及一层 Python 接口。
 你的产物是**每关一份操作序列存档**：在什么 tick、用什么卡、种在哪一格。存档会被拿回我们的
 机器上用同一个引擎重放校验，所以它必须是引擎真正接受的动作。
 
-这是一个按请求计费的会话：**一次请求里可以连续工作约 3 小时**，也可以并行开 3 个子代理。
-中途用户可能粘贴补充信息，照着调整。
+可以并行开 3 个子代理。中途用户可能粘贴补充信息，照着调整。
 
 **这些对局会被当成教学用的中盘局面，交给另一个玩家接着打。我们要的是一个强玩家会觉得‘稳’的局面：火力和经济留有余量，不靠恰好知道下一波来什么。**
 
 ---
+
+## 开始
+
+1. 将 `llmplay_pkg.zip`（接口、引擎、配置）和 `llmplay_res.zip`（资源与预编译缓存）
+   放在你选择的同一个目录，只解压接口包，进入生成的 `llmplay_pkg/`。
+2. 资源 zip 保持原样放在接口目录旁边。首次 `import llmplay`（自检也会导入）自动安装
+   资源和缓存；两个文件必须来自同一批。资源 zip 在其它位置时，可设置
+   `PVZ_LLMPLAY_RES_ZIP` 为它的实际路径。
+3. 先执行 `python3 selfcheck.py`，最后一行必须是 `SELFCHECK OK`。
+   **如果你的环境 Python 版本 < 3.10 或没有 x86_64 Linux，先运行 `selfcheck.py`，
+   按它的报错说明处理。**
+4. 导入接口并查看实际路径：
+
+```python
+import llmplay
+llmplay.paths()
+print(llmplay.out_dir())
+```
+
+接口按以下顺序选择交付目录：`LLMPLAY_OUT` 环境变量；否则使用存在且可写的默认沙箱目录；
+否则使用包目录旁的 `out/`。以 `paths()` 的实际输出为准，所有交付路径用 `out_dir()` 拼接。
+
+## 如果这是续跑
+
+用户会附上上次的 `out.zip`。先导入，再继续做：
+
+```python
+import llmplay
+llmplay.resume(llmplay.out_dir().parent / "previous_out.zip")  # 换成旧 zip 或目录的实际路径
+print(llmplay.progress())
+print(llmplay.next_task())
+```
+
+resume 默认直接按旧 progress.json 恢复存档、进度、预算与策略文件，不算摘要、不重放，无需 full；只有显式指定 verify="full" 才会重放复验。
+`next_task()` 返回下一项的 `task_id`、`seed`、`layer`、`action` 与已有 `archive` 路径；
+`list_tasks()` 只列未达标任务及尚未稳健完成的种子。需要接着中盘打时，`Game.load_archive(path)`
+可恢复已导出的操作日志，策略代码也会从旧交付恢复。
 
 ## 1. 目标
 
@@ -29,20 +65,22 @@
 - 3 个子代理可以各拿**同一层里的不同任务**并行（例如 A 层：L49 / L48 / L47→L46）。
   同一任务最多 2 个游戏进程。
 - 每个任务有 **40 个种子**（`configs/extra_seeds.json`，与 `configs/llmplay_seeds.json`
-  是同一个块）。用 `Game(task_id, seed=...)` 指定。
-- **本会话的任务单设计为 3 小时内不可能做完。状态行显示 2:45 之前，不允许写「任务完成」。**
-- 一层做完立刻进入下一层；所有层都做完，就把每个任务的种子数再翻倍（见第 8 节）。
+  是同一个块）。每次新运行生成随机 `run_id`，任务内种子顺序按它散列排序；
+  `next_task()` / `list_tasks()` 和不指定 seed 的 `Game(task_id)` 都遵循该顺序。
+  `resume` 沿用原 `run_id`，继续原顺序。用 `Game(task_id, seed=...)` 也可明确指定。
+  `progress.json` 和存档 meta 都记录运行ID；meta 另有 CPU 型号、核数和 Python 版本。
+- **停止条件只有一个：全部五层、每个任务都达到完成标准（至少 5 个种子通关，其中至少 3 个稳健）。没做完就一直做，不要主动收尾，不要写「任务完成」。**
+- `next_task()` 只在全部任务达标后返回 `None`；已完成任务自动跳过。
 
 ## 2. 包里有什么
 
 ```
 llmplay_pkg/
   PROMPT.md              ← 本文件
-  README.md              ← 一分钟上手
+  README.md              ← 上手说明
   selfcheck.py           ← 离线自检，先跑它
   build/pvz-portable     ← 引擎（x86_64 Linux，静态链接）
-  res/main.pak           ← 游戏资源
-  res/properties/        ← 资源配套文件
+  configs/llmplay_package.json  ← 两包配对与引擎指纹
   configs/human_demo_tasks.json  ← 任务（关卡 / 种子 / 卡组 / 倍率）
   configs/extra_seeds.json       ← 每个任务 40 个种子
   configs/llmplay_seeds.json     ← 五层任务清单 + 种子块（层号在这里）
@@ -52,13 +90,8 @@ llmplay_pkg/
   examples/play.py       ← 示例脚本
 ```
 
-先跑一次自检（不需要网络）：
-
-```bash
-cd llmplay_pkg && python3 selfcheck.py
-```
-
-最后一行必须是 `SELFCHECK OK`。不是的话先修环境（Python ≥ 3.9），别往下走。
+资源自动安装到 `llmplay_pkg/res/`，缓存安装到会话持久 app-data。
+主局、分支和稳健性试打共用缓存。缺资源包或版本不匹配时，接口会明确报错。
 
 ## 3. 接口速查
 
@@ -66,6 +99,7 @@ cd llmplay_pkg && python3 selfcheck.py
 工具调用之间进程可能被回收，**磁盘上的日志才是唯一的真相**。
 
 ```python
+import llmplay
 from llmplay import Game, list_tasks
 
 print(list_tasks())                       # 有哪些任务
@@ -84,9 +118,9 @@ g.wait_until(lambda game: game.obs["sun"] >= 300)
 
 g.rewind(4200)                            # 回到 tick 4200，之后的操作覆盖原来的后续
 h = g.branch()                            # 复制一份独立的局（搜索用）
-g.save("/mnt/data/out/run.json")          # 存操作日志
-g2 = Game.load("/mnt/data/out/run.json")  # 读回来（会从开局重放到当时的位置）
-g.export_archive("/mnt/data/out/l49_seed20261049")   # 导出可校验存档
+g.save(llmplay.out_dir() / "run.json")          # 存操作日志
+g2 = Game.load(llmplay.out_dir() / "run.json")  # 读回来（会从开局重放到当时的位置）
+g.export_archive(llmplay.out_dir() / "l49_seed_example")   # 导出可校验存档
 
 g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来还能不能赢
 ```
@@ -96,10 +130,10 @@ g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来
 每次输出的**第一行是状态行**，例如：
 
 ```
-[已用 1:12 / 3:00 | 本关 L49 模式=手动 | 搜索预算 0% | 最远 23/40 波 | 本段重写 3/8]
+[已用 1:12 | 本关 L49 模式=手动 | 搜索预算 0% | 最远 23/40 波 | 本段重写 3/8]
 ```
 
-它由接口从磁盘上的 `~/.llmplay_session/budget.json` 现算（换工作目录也不会重置），你不需要记时间。后面依次是：
+它由接口从磁盘上的 `~/.llmplay_session/budget.json` 现算（换工作目录也不会重置），已用时间只作参考，不会封锁任何入口。后面依次是：
 
 1. **局面头**：关卡、第几波 / 总波数、当前 tick、距下一波约多少 tick、阳光、
    每行小推车是否还在、本关会出哪些僵尸。
@@ -134,7 +168,7 @@ g.robustness(policy, k=8, checkpoints=[0, 10, 20, 30])   # 第 4 节：换未来
 - 动作时间轴完全自由：**任意 tick 都能做动作**，不需要等任何决策点。
 - 阳光自动收集（和人类示范一致），你不需要点阳光。
 - `export_archive` 写 `ticks.jsonl` / `frames.jsonl` / `meta.json`，`label_source` 是
-  `llm_gpt_pro`。**每通关一关就导出一份。**
+  `llm_agent`。**每通关一关就导出一份。**
 - `Game.load()` 是惰性的：第一次 `observe()` / `summary()` / `wait()` 时才会从开局重放到存档的
   tick。在那之前 `game.obs` 是 `None`，先调一次 `observe()` 再读它。
 - 引擎的可执行位由接口自己补（解压工具可能不保留），不需要你 `chmod`。
@@ -192,7 +226,7 @@ print(report)
 - **状态行**（每次输出第一行）：已用墙钟 / 本关模式 / 搜索预算用了多少 / 最远存活波 /
   本段重写次数。
 - **异常消息**：搜索预算用尽、连续两个检查点最远波没有提升、同一段 rewind 次数用完、
-  本关总预算用尽、墙钟到 2:45 —— 这些情况下对应的入口会直接抛异常，异常消息里就是
+  这些情况下对应的搜索或重写入口会直接抛异常，异常消息里就是
   **下一步该怎么做**。
 - **检查点**：接口每用掉一段搜索预算就记一次「最远存活波」，不需要你记。
 
@@ -203,9 +237,8 @@ print(report)
   接下来 1–3 波的脚本 → 执行 → 看结果 → 不满意就 `rewind()` 重写这一段。
 - 手动模式下允许**局部**小搜索（同一段少量变体），但同一段 `rewind()` 次数有上限；
   超了会拒绝执行并提示「退回更早一段」。
-- 单关总预算（搜索 + 手动）用尽时，接口会提示先 `export_archive()` 保存最远进度、
-  换下一关，有余力再回来。
-- 墙钟到 2:45 后新开局入口会拒绝执行：那时只做打包与说明。
+- 搜索额度为固定模拟 tick 数，不受机器速度影响；没有会话或单关总时间上限。
+  搜索止损后继续按波手动推进，直到完成。
 
 ## 6. 纪律（会被机器检查）
 
@@ -218,21 +251,22 @@ print(report)
 - 同一关的多个种子**不要只用同一组参数一路通吃**：每通关一个种子就记一份参数
   （主力植物、布阵、节奏），鼓励换打法（不同的主力植物、不同的布阵），在 report 里分开统计。
 
-## 7. 交付
+## 7. 持续交付
 
-- **持续交付**：每通关一关、每打出新的最远纪录，就立刻把存档追加进 `/mnt/data/out/`
-  并重新打包成 `/mnt/data/out/out.zip`（`cd /mnt/data && zip -r out/out.zip out` 之类）。
-  用户会在中途取走这个 zip —— **不要等到最后才打包**。
-- 到 **2 小时 45 分**时停止开新局，只做打包与说明。
-- 交付物：
-  1. 每关的存档目录（`export_archive` 的产物，含稳健性）；
-  2. `report.md`：每关结果（通没通、末波、剩余小推车）、**稳健性（第 10 波几个未来赢）**、
-     用了搜索还是手动、卡在哪一波、怎么解决的、每个种子的参数与打法差异、哪些局用了
-     rewind 补救；
-  3. 你写过的搜索/脚本代码（只用于我们分析，不进生产）。
+交付文件由接口自动维护，随时都是最新的，被中断也不丢。每次 `export_archive()` 或
+`robustness()` 完成，接口都会更新 `llmplay.out_dir()` 中的：
 
-## 8. 时间
+- `progress.json`：每任务的种子、结果、稳健性、存档路径、`manual_patch` 和各层完成度；
+- `report.md`：从进度自动生成的逐局结果和打法说明；
+- `budget.json`：续跑时延续的搜索与重写计数；
+- `out.zip`：含存档、进度、报告、预算及 out 下的策略代码。先写临时文件再原子发布，
+  失败时上一份交付完整保留。
 
-**把这个会话用满。** 状态行没到 2:45 不要主动结束，也不要在 2:45 之前写「任务完成」。
-五层都做完了，就把每个任务的种子数再翻倍：`configs/extra_seeds.json` 里每个任务 40 个
-用完后，用 `Game(task_id, seed=<下一个数>)` 继续往后取（同一块内步长 1，不要跳回任务默认种子）。
+每通关一局立刻 `export_archive()`；稳健性检查完成会自动导出并更新交付。
+不要自行覆盖这四个自动文件。每种打法的参数、布阵和差异写进 `Game(..., note=...)`
+或 `export_archive(..., note=...)`；报告会自动列出这些说明和手工补救标记。
+将策略和搜索脚本持续保存到 `llmplay.out_dir()`，它们会随下一次接口交付一起打包。
+战损、丢车、被吃株数可以写进 note，只用于描述，不作为目标或排序。
+
+系统中断后，用户可下载任意一份 `out.zip` 并在下一次请求附上；按开头的续跑步骤继续。
+只有 `progress()["complete"]` 为真、五层全部达到标准后，才能报告任务完成。

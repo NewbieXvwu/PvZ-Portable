@@ -1,0 +1,350 @@
+{
+  "schema": "task81f_resource_cache_audit_v1",
+  "engine_sha256": "a84f10cf20bd6bb6ba445da389dd282b95e60a2105acee8cf00ee1142cd6f0eb",
+  "executable_sections": {
+    ".text": "e90ab4b2a98d973100eb9aa170ec7901516f7e987be9216f5d35f0add598d657",
+    ".rodata": "afc7fce94950e4afed10d05093290194c95d1a35867489904ab4e235941b86cc"
+  },
+  "cache": {
+    "expected": 251,
+    "actual": 251,
+    "missing": [],
+    "cookie_and_uncompressed_sizes": "all pass",
+    "reanimations": 144,
+    "particles": 106,
+    "trails": 1
+  },
+  "levels_reset": 50,
+  "tasks_reset": 31,
+  "ticks_per_reset": 3000,
+  "benchmark": {
+    "samples": [
+      {
+        "mode": "cold",
+        "index": 0,
+        "seconds": 0.10890433899476193,
+        "compile_count": 117,
+        "compile_ms": 74,
+        "native_loading_ms": {
+          "resources": 8,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "cold",
+        "index": 1,
+        "seconds": 0.10131704100058414,
+        "compile_count": 117,
+        "compile_ms": 67,
+        "native_loading_ms": {
+          "resources": 7,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "cold",
+        "index": 2,
+        "seconds": 0.10291346700978465,
+        "compile_count": 117,
+        "compile_ms": 72,
+        "native_loading_ms": {
+          "resources": 7,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "cold",
+        "index": 3,
+        "seconds": 0.09541924099903554,
+        "compile_count": 117,
+        "compile_ms": 66,
+        "native_loading_ms": {
+          "resources": 7,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "cold",
+        "index": 4,
+        "seconds": 0.10417068301467225,
+        "compile_count": 117,
+        "compile_ms": 69,
+        "native_loading_ms": {
+          "resources": 8,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "hot",
+        "index": 0,
+        "seconds": 0.04070040801889263,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 8,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "hot",
+        "index": 1,
+        "seconds": 0.03179315599845722,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 9,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "hot",
+        "index": 2,
+        "seconds": 0.0327125109906774,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 10,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "hot",
+        "index": 3,
+        "seconds": 0.028588166984263808,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 7,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "hot",
+        "index": 4,
+        "seconds": 0.029135054996004328,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 8,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "precompiled",
+        "index": 0,
+        "seconds": 0.030566545989131555,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 7,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "precompiled",
+        "index": 1,
+        "seconds": 0.027834768028697,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 6,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "precompiled",
+        "index": 2,
+        "seconds": 0.030179016990587115,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 6,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "precompiled",
+        "index": 3,
+        "seconds": 0.03368007700191811,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 8,
+          "stuff": 0,
+          "trail": 0
+        }
+      },
+      {
+        "mode": "precompiled",
+        "index": 4,
+        "seconds": 0.030114082008367404,
+        "compile_count": 0,
+        "compile_ms": 0,
+        "native_loading_ms": {
+          "resources": 6,
+          "stuff": 0,
+          "trail": 0
+        }
+      }
+    ],
+    "medians": {
+      "cold": 0.10291346700978465,
+      "hot": 0.03179315599845722,
+      "precompiled": 0.030179016990587115
+    }
+  },
+  "phase_profile": {
+    "metric": "target_thread_scheduler_cpu_ms_under_gdb; diagnostic_only",
+    "note": "definitions = load compiled cache or compile XML, includes nested image/font lookups; phases are not additive",
+    "medians": {
+      "cold": {
+        "definitions": 103.62261900000001,
+        "images": 12.679116999999994,
+        "fonts": 7.739839,
+        "main_pak": 1.470918
+      },
+      "precompiled": {
+        "definitions": 24.465216,
+        "images": 11.962060999999993,
+        "fonts": 8.498805,
+        "main_pak": 1.567269
+      }
+    }
+  },
+  "acceptance": {
+    "cold_two_package_offline_selfcheck": "SELFCHECK OK",
+    "compile_lines": 0,
+    "branch_shared_appdata_and_trajectory": "PASS",
+    "missing_resource_error": "PASS",
+    "unit_tests": 82,
+    "task81g": {
+      "offline_release_selfcheck": "SELFCHECK OK",
+      "network_import_hits": 0,
+      "compile_lines": 0,
+      "network_scan_before_import": true,
+      "scan_scope": "shipped SDK sources and examples; excludes unrelated user scripts",
+      "portable_path_run_id_order_and_directory_resume": "PASS",
+      "environment_fingerprint": {
+        "cpu_model": "12th Gen Intel(R) Core(TM) i7-12700F",
+        "cpu_count": 20,
+        "available_cpu_count": 20,
+        "python_version": "3.14.4",
+        "machine": "x86_64",
+        "system": "Linux"
+      },
+      "source_run_id": "055056612c19409b90e784bd92a4dac4",
+      "independent_run_id": "af46b28929ed41b1a09ffb126b85534e",
+      "source_seed_order": [
+        81000014,
+        81000028,
+        81000031,
+        81000007,
+        81000026,
+        81000011,
+        81000015,
+        81000008,
+        81000025,
+        81000004,
+        81000005,
+        81000001,
+        81000032,
+        81000037,
+        81000030,
+        81000039,
+        81000020,
+        81000023,
+        81000022,
+        81000021,
+        81000035,
+        81000038,
+        81000017,
+        81000006,
+        81000013,
+        81000012,
+        81000000,
+        81000016,
+        81000009,
+        81000003,
+        81000027,
+        81000033,
+        81000010,
+        81000036,
+        81000024,
+        81000029,
+        81000018,
+        81000034,
+        81000019,
+        81000002
+      ],
+      "independent_seed_order": [
+        81000016,
+        81000030,
+        81000004,
+        81000023,
+        81000027,
+        81000031,
+        81000024,
+        81000038,
+        81000035,
+        81000006,
+        81000036,
+        81000034,
+        81000039,
+        81000001,
+        81000021,
+        81000002,
+        81000003,
+        81000037,
+        81000022,
+        81000033,
+        81000013,
+        81000011,
+        81000017,
+        81000019,
+        81000026,
+        81000012,
+        81000005,
+        81000029,
+        81000008,
+        81000015,
+        81000014,
+        81000028,
+        81000009,
+        81000000,
+        81000032,
+        81000007,
+        81000025,
+        81000020,
+        81000018,
+        81000010
+      ],
+      "prompt_has_no_upload_or_network_rules": true
+    }
+  },
+  "note": "Wall time is uninstrumented Popen-to-ready; OS page cache was not flushed. GDB phase CPU is a separate diagnostic, contains breakpoint overhead and overlapping work, and must not be summed or substituted for wall time. Cache produced by calling native preload functions in the identical packaged ELF; debug-symbol .text/.rodata verified identical. Resource binaries remain local, outside git/HF.",
+  "packages": [
+    {
+      "name": "llmplay_pkg.zip",
+      "bytes": 11766005,
+      "sha256": "27ec2248c186900025c62f26bad2f4bf92c50566c4dc2e44147a4593245fe3b8"
+    },
+    {
+      "name": "llmplay_res.zip",
+      "bytes": 34258402,
+      "sha256": "0005bb8e31ad2e2ca7649bc0b6128211ff13c8f1c333c2163984302d7d65d94e"
+    }
+  ]
+}

@@ -1,21 +1,7 @@
-"""会话预算与止损：全部由接口计数、写磁盘，模型无法绕过（task81 §A）。
+"""持久化搜索止损：固定模拟 tick 预算、进度检查点与同段八次重写。
 
-主控 2026-10-25 17:30 的修订：LLM 没有时间观念，所以"用分钟约束它"等于没约束。
-这里把墙钟和搜索预算都变成**接口自己的状态**：
-
-- 会话第一次启动时把开始时间写进 `budget.json`；
-- 搜索预算按"模拟的引擎 tick 总数"计（不是墙钟）—— 开场先跑一次标定，
-  用实测吞吐把"约 25 分钟的计算量"换算成 tick 数；
-- 每用掉 40% 搜索预算记一个检查点（最远存活波）。连续两个检查点没有提升 ≥1 波
-  就判定搜索不佳；
-- 判定不佳或预算用尽后，搜索类入口（`branch()`）对这一关直接抛异常，
-  异常消息就是下一步怎么做；
-- 手动段的重写次数也在这里数：同一段第 9 次 rewind 拒绝执行；
-- 单关总预算（搜索 + 手动）用尽时，提示保存最远进度并换下一关；
-- 墙钟到 2:45 后新开局入口开始拒绝执行。
-
-时间单位说明：引擎 100 tick ≈ 1 秒游戏时间，但**预算按 tick 计**是为了跟机器速度
-解耦 —— 同一份预算在快慢机器上是同样的"计算量"。
+task81e：墙钟仅显示已用时间，没有会话或单关总上限。搜索止损后仍可手动推进。
+状态按任务族保存，跨脚本、跨续跑延续；旧会话的搜索 tick 额度照常保留。
 """
 from __future__ import annotations
 
@@ -30,10 +16,7 @@ try:
 except ImportError:          # Windows 开发机：没有 flock，退化为单进程
     fcntl = None
 
-WALL_LIMIT_SECONDS = 3 * 60 * 60
-STOP_NEW_GAME_SECONDS = (2 * 60 + 45) * 60  # 2 小时 45 分之后不许开新局
-SEARCH_MINUTES = 25                       # 每关先给搜索的时间预算（换算成 tick）
-LEVEL_MINUTES = 70                        # 单关总预算（搜索 + 手动）
+SEARCH_LIMIT_TICKS = 4_000_000             # 固定模拟量；不再由机器墙钟吞吐决定
 CHECKPOINT_FRACTION = 0.40                # 每用掉 40% 搜索预算记一次最远波
 SEGMENT_REWRITES = 8                      # 同一段允许 rewind 的次数
 BRANCH_LIMIT_SEARCH = 8                   # 搜索模式下同时存在的分支持数上限
@@ -64,8 +47,7 @@ class Session:
             return
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.data = dict(schema="llmplay_budget_v1", started_at=time.time(),
-                         calibrated_rate=None, search_limit_ticks=None,
-                         level_limit_ticks=None, levels={}, out_dir=None)
+                         search_limit_ticks=SEARCH_LIMIT_TICKS, levels={}, out_dir=None)
         self.save()
 
     def save(self) -> None:
@@ -116,48 +98,66 @@ class Session:
 
     @property
     def stop_new_games(self) -> bool:
-        return self.elapsed >= STOP_NEW_GAME_SECONDS
+        return False
 
     def require_new_game_allowed(self) -> None:
-        self.refresh()
-        if self.stop_new_games:
-            raise RuntimeError(
-                "墙钟已到 2:45：立即停止开新局。现在只做三件事 —— "
-                "把现有存档打包成 out.zip、写 report.md、结束。")
+        # 兼容旧调用方；墙钟只作参考，永远不封锁新局。
+        return
 
     # ------------------------------------------------------------ 标定
 
     def calibrate(self, ticks: int, seconds: float) -> None:
-        """用一次实测把'约 25 分钟的计算量'换算成 tick 预算。"""
+        """兼容旧脚本：搜索预算现为固定模拟量，参数不影响预算。"""
         with self._transaction():
-            if self.data.get("calibrated_rate") and self.data.get("search_limit_ticks"):
+            if self.data.get("search_limit_ticks"):
                 return
-            rate = max(1.0, float(ticks) / max(seconds, 1e-3))
-            self.data["calibrated_rate"] = rate
-            self.data["search_limit_ticks"] = int(rate * SEARCH_MINUTES * 60)
-            self.data["level_limit_ticks"] = int(rate * LEVEL_MINUTES * 60)
+            self.data["search_limit_ticks"] = SEARCH_LIMIT_TICKS
 
     @property
     def search_limit(self) -> int:
-        return int(self.data.get("search_limit_ticks") or 4_000_000)
-
-    @property
-    def level_limit(self) -> int:
-        return int(self.data.get("level_limit_ticks") or 12_000_000)
+        return int(self.data.get("search_limit_ticks") or SEARCH_LIMIT_TICKS)
 
     # ------------------------------------------------------------ 每关状态
 
     def level(self, level) -> dict:
-        key = str(int(level))
+        key = str(level)
         levels = self.data.setdefault("levels", {})
         if key not in levels:
-            levels[key] = dict(level=int(level), mode="search", search_ticks=0,
+            levels[key] = dict(level=level, mode="search", search_ticks=0,
                                manual_ticks=0, total_ticks=0, max_wave=0,
                                checkpoints=[], search_bad=False, search_closed=False,
                                segment_rewrites=0, segment_start=0,
                                last_progress_wave=0, best_archive=None,
                                exhausted=False)
         return levels[key]
+
+    def register_task(self, task_id: str, level: int) -> None:
+        with self._transaction():
+            self.level(task_id)["level"] = int(level)
+
+    def snapshot(self) -> dict:
+        with self._transaction():
+            return json.loads(json.dumps(self.data))
+
+    def import_budget(self, document: dict) -> None:
+        """合并续跑计数，同一份交付重复导入不会重复计数或缩减既有预算。"""
+        with self._transaction():
+            self.data["started_at"] = min(self.data["started_at"],
+                                          float(document.get("started_at", self.data["started_at"])))
+            if document.get("search_limit_ticks"):
+                self.data["search_limit_ticks"] = document["search_limit_ticks"]
+            for key, incoming in document.get("levels", {}).items():
+                state = self.level(key)
+                for field in ("search_ticks", "manual_ticks", "total_ticks", "max_wave",
+                              "last_progress_wave", "segment_rewrites"):
+                    state[field] = max(state[field], incoming.get(field, 0))
+                for field in ("search_bad", "search_closed"):
+                    state[field] = bool(state[field] or incoming.get(field))
+                state["level"] = incoming.get("level", state["level"])
+                state["segment_start"] = incoming.get("segment_start", state["segment_start"])
+                state["checkpoints"] = max((state["checkpoints"], incoming.get("checkpoints", [])), key=len)
+                if state["search_closed"] or incoming.get("mode") == "manual":
+                    state["mode"] = "manual"
 
     def note_ticks(self, level, ticks: int, mode: str) -> None:
         if ticks <= 0:
@@ -168,8 +168,6 @@ class Session:
             state["search_ticks" if mode == "search" else "manual_ticks"] += int(ticks)
             if mode == "search":
                 self._maybe_checkpoint(state)
-            if state["total_ticks"] >= self.level_limit:
-                state["exhausted"] = True
 
     def _maybe_checkpoint(self, state: dict) -> None:
         """用掉 40% / 80% / 100% 搜索预算时各记一次最远波（§A）。"""
@@ -218,7 +216,7 @@ class Session:
             previous = state.get("best_log")
             if previous and Path(previous).is_file() and score <= state.get("best_score", []):
                 return Path(previous)
-            path = self.path.parent / "best" / ("L%s.json" % int(level))
+            path = self.path.parent / "best" / ("%s.json" % level)
             path.parent.mkdir(parents=True, exist_ok=True)
             tmp = path.with_suffix(".tmp")
             tmp.write_text(json.dumps(log, ensure_ascii=False, separators=(",", ":")) + "\n",
@@ -280,20 +278,11 @@ class Session:
                         "退回更早的一段重写（rewind 到一个更早的 tick）。"
                         % SEGMENT_REWRITES)
 
-    def require_not_exhausted(self, level) -> None:
-        self.refresh()
-        state = self.level(level)
-        if state["exhausted"]:
-            raise RuntimeError(
-                "本关总预算（搜索 + 手动）已用尽：先 export_archive() 保存最远进度的存档，"
-                "换下一关。有余力再回来。")
-
     # ------------------------------------------------------------ 状态行
 
     def status_line(self, level=None) -> str:
         self.refresh()
-        left = max(0, WALL_LIMIT_SECONDS - self.elapsed)
-        head = "[已用 %s / 3:00" % _clock(self.elapsed)
+        head = "[已用 %s" % _clock(self.elapsed)
         if level is None:
             return head + " | 未开局" + self._tail(None) + "]"
         state = self.level(level)
@@ -302,10 +291,6 @@ class Session:
         line = (head + " | 本关 L%s 模式=%s | 搜索预算 %d%% | 最远 %s 波 | 本段重写 %d/%d"
                 % (state["level"], "手动" if state["mode"] == "manual" else "搜索",
                    percent, state["max_wave"], state["segment_rewrites"], SEGMENT_REWRITES))
-        if self.stop_new_games:
-            line += " | **已到 2:45：停止开新局，打包 out.zip 并写 report.md**"
-        elif left < 900:
-            line += " | 剩 %s" % _clock(left)
         return line + "]"
 
     def _tail(self, _level) -> str:
