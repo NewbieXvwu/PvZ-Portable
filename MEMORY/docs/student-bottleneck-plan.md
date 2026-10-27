@@ -1018,3 +1018,6 @@
 - task130 交付（sleepinput f9fe20c4：学生 v2sleep / 价值编码器 v4，13 项对拍通过）。上线卡在热启动：首层通道变了 → 派 task131（台式机 codex-t125，分支 obsup）：加宽零初始化热启动 + build7 + `qc_deploy15.sh`（只准备）。
 - task129 原 CodeBuddy 会话 429 额度用尽到 17:26，实际未开工 → 转交 Mac codex-plus2（分支 deckrules）。
 - 15:15 用户带 Mac 外出：SIGSTOP 冻结 Mac 上 task127 seed_variance（40217/71359/42639），codex-plus2(b) 已通知暂停开局；回来后 `kill -CONT` 并通知“解冻”。台式机驱动更新窗口约 16:45（r24 门禁 + deploy14i 之后）。deploy14i-wait 曾因 argv 含 qc_deploy 路径导致看门狗一直“suppressed”，已改为无参数启动。
+- 16:50 r24 被 v4 否决（16:14：overall CI、heldout、day 三项）。r25 训练作业 15:40 已入队、早于 r24 门禁结束 → 流水线没有自然空档，原等待器可能永远等不到。改用 `deploy14i_drive.sh`（tmux deploy14i-drive）：自然空档就跑 14i；若下一轮采集先到 700/768 局，主动置 stop_curr 让 qc 在组边界停下并排空（qc 的 close() 会等排队作业训完、门禁跑完），再清标志跑 14i。
+- task131 交付（obsup 5423811f）：加宽热启动、旧缓存补零复用、build7、`qc_deploy15.sh`（start_qc 非 15 分支与 14i 逐字一致，已核对；看门狗会用它）。15 等 14i 跑过至少一轮 v5 再上，避免门禁与输入两个变量混在一起。
+- 派 task132（codex-t125，demoweight）：示范行 / 示范起点格行加权的配方开关，只做代码。
