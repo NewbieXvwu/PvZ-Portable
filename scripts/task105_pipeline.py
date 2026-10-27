@@ -66,15 +66,23 @@ def main():
     rows = json.loads((out / 'import/import_progress.json').read_text())['archives']
     plan = json.loads((out / 'scan_jobs.json').read_text())
     completed = []
+    failures = []
     for entry in plan['archives']:
         task = entry['task_id']
-        # --skip-complete：续跑包里已完成的存档不重放；register 自身幂等，仍会补齐漏登记。
-        run(f'adaptive_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'adaptive',
-             str(out / 'scan_jobs.json'), '--out', str(out / 'scan'), '--task-id', task,
-             '--executable', str(ENGINE), '--workers', '2', '--skip-complete'])
         result = out / 'scan/results' / f'{task}_s{entry["seed"]}.json'
-        run(f'register_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'register',
-             str(result), '--out', str(out / 'registration' / task)])
+        try:
+            # --skip-complete：续跑包里已完成的存档不重放；register 自身幂等，仍会补齐漏登记。
+            run(f'adaptive_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'adaptive',
+                 str(out / 'scan_jobs.json'), '--out', str(out / 'scan'), '--task-id', task,
+                 '--executable', str(ENGINE), '--workers', '2', '--skip-complete'])
+            run(f'register_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'register',
+                 str(result), '--out', str(out / 'registration' / task)])
+        except SystemExit as error:
+            # 引擎被 earlyoom 等外部压力打断时不要整条链停摆：记账后继续，下次重跑从这里续。
+            failures.append(dict(task=task, returncode=getattr(error, 'code', 1)))
+            save(out / 'failures.json', dict(schema='task105_failures_v1', failures=failures))
+            print(f'{task} 失败（{getattr(error, "code", 1)}），继续下一份', flush=True)
+            continue
         completed.append(task)
         save(out / 'completed_scans.json', dict(completed=completed, total=len(plan['archives'])))
     run('report', [sys.executable, str(ROOT / 'scripts/task105_results.py')])

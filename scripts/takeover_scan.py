@@ -471,6 +471,10 @@ def cmd_adaptive(args) -> None:
             print(f"{entry['task_id']} s{entry['seed']} 已完成，跳过", flush=True)
             continue
         cached = cached_points_for_futures(previous.get('points', {}), futures)
+        for decision, bucket in cached.items():     # 断点续跑：已测点不重放
+            for arm, summary in bucket.items():
+                if arm in ('teacher', 'student'):
+                    scanner.observe(int(decision), arm, summary)
         def checkpoint(complete):
             state = scanner.finish()
             merged = {d: dict(bucket) for d, bucket in cached.items()}
@@ -497,6 +501,8 @@ def cmd_adaptive(args) -> None:
             checkpoint(False)
         state = scanner.finish()
         for decision in state['student_points']:
+            if 'student' in scanner.wins.get(decision, {}):
+                continue
             summary = run_point(jobs, decision, 'student', ('student',), args)
             scanner.observe(decision, 'student', summary)
             checkpoint(False)

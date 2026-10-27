@@ -90,6 +90,24 @@ class ResumeTest(unittest.TestCase):
                 scan.cmd_run(self.args)
         run.assert_not_called()
 
+    def test_partial_scan_resumes_without_replaying_cached_points(self):
+        entry = dict(self.entry, decisions=[100, 200])
+        (self.root / 'jobs.json').write_text(json.dumps(dict(schema='llm_scan_jobs_v1', archives=[entry])))
+        self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'),
+                                              '--out', str(self.root / 'out')])
+        path = self.args.out / 'results/t_s42.json'
+        cached = dict(task_id='t', seed=42, archive=self.job['archive'], complete=False,
+                      future_seeds=[20, 21],
+                      points={'100': {'teacher': scan.point_summary([self.row(20), self.row(21)])}})
+        scan.write_json(path, cached)
+        with patch.object(scan, 'run_point', return_value=dict(wins=0, games=2, rows=[])) as run:
+            scan.cmd_adaptive(self.args)
+        calls = {(call.args[1], call.args[2]) for call in run.call_args_list}
+        self.assertNotIn((100, 'teacher'), calls)
+        self.assertIn((200, 'teacher'), calls)
+        result = json.loads(path.read_text())
+        self.assertIn('100', result['points'])
+
     def test_complete_scan_is_skipped_when_futures_match(self):
         self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'),
                                               '--out', str(self.root / 'out'), '--skip-complete'])
