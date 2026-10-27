@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-27T09:58:00+00:00",
+ "at_utc": "2026-10-27T10:47:00+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -1068,6 +1068,14 @@
   },
   "rebuild_verdict": "a rebuilt corpus is provably incomplete and cannot be shown to be row-identical; the original 97 shard files are still required",
   "detail": "MEMORY/docs/task78-v5-raw-coverage.json",
-  "at_utc": "2026-10-27T09:52:00+00:00"
+  "at_utc": "2026-10-27T09:52:00+00:00",
+  "huggingface_history": {
+   "commits_enumerated": 1141,
+   "unique_paths": 115246,
+   "hits": 0,
+   "scope": "every historical tree, not only the 72 branch heads that earlier runs enumerated"
+  },
+  "blocking_input": "z13_384.pt, 96 z15d_shards, 64 sparse64 decision shards, the four episode cache files and full_audit_manifest.json",
+  "resume_command": "python scripts/task78_watch_corpus.py --source-root <dir>  (hash -> row-count gate -> train -> freeze -> v5/v6 -> report)"
  }
 }
