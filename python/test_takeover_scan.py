@@ -90,6 +90,26 @@ class ResumeTest(unittest.TestCase):
                 scan.cmd_run(self.args)
         run.assert_not_called()
 
+    def test_complete_scan_is_skipped_when_futures_match(self):
+        self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'),
+                                              '--out', str(self.root / 'out'), '--skip-complete'])
+        path = self.args.out / 'results/t_s42.json'
+        scan.write_json(path, dict(task_id='t', seed=42, archive=self.job['archive'],
+                                   complete=True, future_seeds=[20, 21], points={}))
+        with patch.object(scan, 'run_point') as run:
+            scan.cmd_adaptive(self.args)
+        run.assert_not_called()
+
+    def test_complete_scan_with_other_futures_reruns(self):
+        self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'),
+                                              '--out', str(self.root / 'out'), '--skip-complete'])
+        path = self.args.out / 'results/t_s42.json'
+        scan.write_json(path, dict(task_id='t', seed=42, archive=self.job['archive'],
+                                   complete=True, future_seeds=[10, 11], points={}))
+        with patch.object(scan, 'run_point', return_value=dict(wins=0, games=2, rows=[])) as run:
+            scan.cmd_adaptive(self.args)
+        run.assert_called()
+
     def test_fresh_adaptive_creates_results_directory(self):
         self.args = scan.parser().parse_args(['adaptive', str(self.root / 'jobs.json'), '--out', str(self.root / 'fresh')])
         with patch.object(scan, 'run_point', return_value=dict(wins=0, games=2, rows=[])):

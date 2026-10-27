@@ -466,6 +466,10 @@ def cmd_adaptive(args) -> None:
         previous = json.loads(path.read_text()) if path.exists() else {}
         if previous:
             validate_cached_identity(previous, entry)
+        if (args.skip_complete and previous.get('complete') is True
+                and previous.get('future_seeds') == futures):
+            print(f"{entry['task_id']} s{entry['seed']} 已完成，跳过", flush=True)
+            continue
         cached = cached_points_for_futures(previous.get('points', {}), futures)
         def checkpoint(complete):
             state = scanner.finish()
@@ -806,6 +810,8 @@ def parser() -> argparse.ArgumentParser:
     adaptive = sub.add_parser('adaptive', help='自适应取点（4 等距 → 二分 → 补档）')
     adaptive.add_argument('jobs', type=Path)
     adaptive.add_argument('--equidistant', type=int, choices=(4, 5), default=4)
+    adaptive.add_argument('--skip-complete', action='store_true',
+                          help='已有完整结果且未来种子一致时跳过（增量导入）')
     common(adaptive)
     adaptive.set_defaults(func=cmd_adaptive)
 

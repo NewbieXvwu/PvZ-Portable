@@ -68,9 +68,10 @@ def main():
     completed = []
     for entry in plan['archives']:
         task = entry['task_id']
+        # --skip-complete：续跑包里已完成的存档不重放；register 自身幂等，仍会补齐漏登记。
         run(f'adaptive_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'adaptive',
              str(out / 'scan_jobs.json'), '--out', str(out / 'scan'), '--task-id', task,
-             '--executable', str(ENGINE), '--workers', '2'])
+             '--executable', str(ENGINE), '--workers', '2', '--skip-complete'])
         result = out / 'scan/results' / f'{task}_s{entry["seed"]}.json'
         run(f'register_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'register',
              str(result), '--out', str(out / 'registration' / task)])
