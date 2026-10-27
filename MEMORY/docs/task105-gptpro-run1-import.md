@@ -32,6 +32,18 @@
 - 新登记 36 个任务族（`demo_roof_46/47/48/49_doom_m300/m400` 变体），已写入 `configs/human_demo_tasks.json` 与 `DESIGN.md`；`demo_roof_49_doom_m400` 为本包新出现的任务，暂无通关。
 - 扫描作业清单扩到 227 份（191 + 36 个新通关存档）；已完成的 67 份用 `--skip-complete` 跳过，不重放；新增存档的扫描照旧 2 个游戏进程。
 
+## 暂停（主控 2026-10-27 18:20 通知）
+
+- 生产训练（门禁 v5 首轮）内存不足，主控要求 task105 全线暂停：不要重启、不要恢复、不要起新扫描，只做不耗内存的整理。
+- 现状：主控已 SIGSTOP `task105_pipeline.py`（1192659）并杀掉正在跑的扫描；本任务另外 SIGSTOP 了看守进程
+  `task105_supervise.py`（1204276），避免流水线被 earlyoom 杀掉后看守立刻拉起新一轮扫描。
+  `takeover_scan.py`（1254424，被中断的 `demo_roof_49_doom_m200_s81003027_adb4448e57500`）停在 T 状态。
+- 恢复顺序（等主控通知后）：`kill -CONT 1204276`（看守）→ `kill -CONT 1254424`（在跑的子进程）→
+  `kill -CONT 1192659`（流水线）。子进程不 CONT 的话，流水线会一直卡在 `subprocess.run` 上。
+- 断点：`scan/results` 已完成 95 份、`scan_jobs.json` 共 227 份；被中断的 `adb4448e57500` 已有 9 个老师点目录，
+  续跑按 `games.jsonl` 续测，不重放已完成对局。上一份失败项 `demo_roof_48_doom_m400_s81017009_aae0cdc7c8c70`
+  仍记在 `failures.json`，由流水线下一遍自动补跑。
+
 ## 结果
 
 - 本包263份存档：deploy14 verify通过263份、拒绝0份；按(任务,种子)去重为94个通关种子、53个稳健种子。稳健按随包第10波k=8且≥5胜记录。
