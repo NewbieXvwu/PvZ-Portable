@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-27T07:27:07.058259+00:00",
+ "generated": "2026-10-27T07:45:22.223301+00:00",
  "input_sha256": "4cc5dd7398f60059a2b8ef2fe286e3bfe61296d2229cffef6295196803a7649f",
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "input_path": "/home/newbiexvwu/llm_runs/gptpro_438cb30a_resume00099.zip",
@@ -1217,6 +1217,25 @@
    "reason": ""
   },
   {
+   "task_id": "demo_roof_49_doom_m300_s81018025_a7807ae2af9c0",
+   "seed": 81018025,
+   "games": 80,
+   "l50": 1220,
+   "top": 1220,
+   "decisions": [
+    1220
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 170000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
+  },
+  {
    "task_id": "demo_roof_48_doom_m200_s81002026_a0a99a572aeb0",
    "seed": 81002026,
    "games": 88,
@@ -1838,9 +1857,9 @@
   }
  ],
  "scan_expected": 227,
- "scanned": 80,
- "registered": 80,
+ "scanned": 81,
+ "registered": 81,
  "deployed": 0,
- "scan_games": 6856,
+ "scan_games": 6936,
  "complete": false
 }
