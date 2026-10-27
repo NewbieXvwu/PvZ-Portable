@@ -2,7 +2,7 @@
   "schema": "task104_training_results_v1",
   "backend": "cuda",
   "frozen_inputs": "task104-training-inputs.json",
-  "status": "awaiting_b_s2",
+  "status": "complete",
   "models": {
     "a_s1": {
       "checkpoint": "artifacts/task104/a_s1/model.pt",
@@ -90,6 +90,36 @@
         "seconds": 221.09189017204335
       },
       "resources": {"returncode": 0, "wall_s": 2707.07409911399, "peak_rss_kib": 11404632, "peak_swap_kib": 351096, "minimum_available_kib": 7092264}
+    },
+    "b_s2": {
+      "checkpoint": "artifacts/task104/b_s2/model.pt",
+      "model_sha256": "69224448e4ab48775678d71e74cb1a8089b8970b0900bc174e665f64f4d10413",
+      "bytes": 725358,
+      "seed": 2,
+      "init": null,
+      "epochs": 12,
+      "recipe_sha256": "10e543787cd7a138b3dc9b9d657b8f04e8cc8fe6b933fdcb1e99d5ab0f0f8653",
+      "source_report_sha256": "0e37313e4181f39ff95c31ec9e6b5edf4730b702800f6d663fefc308c54e7584",
+      "sources": 366,
+      "source_rows": {"human": 15419, "llm_gpt_pro": 16623, "teacher": 16982931},
+      "rows": 17014973,
+      "training_rows": 15305552,
+      "validation_rows": 1709421,
+      "load_seconds": 181.75845313072205,
+      "trainer_seconds": 8405.787232637405,
+      "epoch_seconds": [204.73729896498844, 251.52766750898445, 224.12533398903906, 208.27335882099578, 191.9599666229915, 199.0958152479725, 198.31037429801654, 194.6957367559662, 5905.7296839500195, 194.82801654899959, 189.40391454700148, 217.26630189700518],
+      "timing_note": "第9轮耗时与总耗时包含为生产第22轮训练让路的暂停时间。",
+      "final_metrics": {
+        "epoch": 12,
+        "train_loss": 3.7460451800539203,
+        "val_loss": 3.6054844010599356,
+        "type_acc": 0.9221790070223413,
+        "plant_recall": 0.7414815247253538,
+        "packet_acc": 0.7677232832156803,
+        "cell_acc": 0.49265791809953485,
+        "seconds": 217.26630189700518
+      },
+      "resources": {"returncode": 0, "wall_s": 8424.515982786019, "peak_rss_kib": 12269384, "peak_swap_kib": 1706388, "minimum_available_kib": 8800148}
     }
   }
 }
