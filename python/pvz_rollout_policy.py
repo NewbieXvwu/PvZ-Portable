@@ -309,7 +309,7 @@ def export_student(net: RolloutNet, path) -> None:
         if identity or net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))
         if identity or net.row_pool or net.obs != "v1":
-            stream.write(struct.pack("<I", 7 if net.obs == "v2bungee" else 6 if net.obs == "v2boss" else 5 if net.obs == "v2size" else 4 if net.obs == "v2fog" else 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
+            stream.write(struct.pack("<I", 8 if net.obs == "v2sleep" else 7 if net.obs == "v2bungee" else 6 if net.obs == "v2boss" else 5 if net.obs == "v2size" else 4 if net.obs == "v2fog" else 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
         if identity or net.row_pool:
             stream.write(struct.pack("<I", int(net.row_pool)))
         if identity:

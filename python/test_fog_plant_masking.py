@@ -118,7 +118,7 @@ def test_masked_plant_fields_are_the_unknown_sentinel_in_every_form():
         env.set_lean_observation(True)
         lean = env.observe()
         env.set_lean_observation(False)
-        for row, col, kind, health, max_health, squished in lean['plants']:
+        for row, col, kind, health, max_health, squished, *_ in lean['plants']:
             if (row, col, kind) in masked_keys:
                 assert health == -1 and max_health == -1
         v2 = {(row, col, kind): (state_field, countdown, special, launch)

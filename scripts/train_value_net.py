@@ -237,7 +237,7 @@ def main() -> None:
     p.add_argument("--data", type=Path, required=True)
     p.add_argument("--out", type=Path, required=True)
     p.add_argument("--folds", type=int, default=4)
-    p.add_argument("--encoder-version", type=int, choices=(1, 2, 3), default=1)
+    p.add_argument("--encoder-version", type=int, choices=(1, 2, 3, 4), default=1)
     p.add_argument("--epochs", type=int, default=30)
     p.add_argument("--device", default="mps" if torch.backends.mps.is_available() else "cpu")
     p.add_argument("--bootstrap", type=int, default=1000)
