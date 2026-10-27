@@ -1,10 +1,10 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-27T02:46:08.156444+00:00",
+ "generated": "2026-10-27T03:23:11.921014+00:00",
  "input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "engine_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
- "archives": 191,
- "verified": 191,
+ "archives": 263,
+ "verified": 263,
  "rejected": 0,
  "tasks": {
   "demo_roof_46_doom_m200": {
@@ -99,9 +99,9 @@
    "reasons": []
   },
   "demo_roof_46_doom_m400": {
-   "archives": 19,
-   "won": 4,
-   "robust": 2,
+   "archives": 27,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
@@ -113,8 +113,8 @@
    "reasons": []
   },
   "demo_roof_47_doom_m400": {
-   "archives": 7,
-   "won": 2,
+   "archives": 24,
+   "won": 3,
    "robust": 0,
    "rejected": 0,
    "reasons": []
@@ -127,21 +127,21 @@
    "reasons": []
   },
   "demo_roof_48_doom_m400": {
-   "archives": 16,
-   "won": 2,
-   "robust": 1,
+   "archives": 29,
+   "won": 4,
+   "robust": 2,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_49_doom_m300": {
-   "archives": 18,
-   "won": 3,
-   "robust": 0,
+   "archives": 44,
+   "won": 6,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_49_doom_m400": {
-   "archives": 0,
+   "archives": 8,
    "won": 0,
    "robust": 0,
    "rejected": 0,
@@ -1578,12 +1578,33 @@
     "games": 8
    },
    "reason": ""
+  },
+  {
+   "task_id": "demo_roof_49_doom_m200_s81003013_a4e6fcb5e4996",
+   "seed": 81003013,
+   "games": 88,
+   "l50": 550,
+   "top": 1008,
+   "decisions": [
+    1008,
+    642,
+    550
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 157000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
   }
  ],
- "scan_expected": 191,
- "scanned": 67,
- "registered": 67,
+ "scan_expected": 227,
+ "scanned": 68,
+ "registered": 68,
  "deployed": 0,
- "scan_games": 5760,
+ "scan_games": 5848,
  "complete": false
 }
