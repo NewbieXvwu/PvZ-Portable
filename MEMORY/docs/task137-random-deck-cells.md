@@ -63,8 +63,9 @@ L7 的早期波都是单只，所以 0.5 在 L7 前 3 波没有效果 —— 低
   追加 `--extra-manifest`。
 - **需要重启采集一次**：控制器在启动时读清单，`--extra-manifest` 只能在启动参数里给；走既有 `stop_qc`
   的组边界排空（不 SIGTERM、不丢组）。后台训练 / 打包流水线**不需要排空**。
-- 回滚 = 删 `~/pvz-logs/qc_deploy14l.mode` + 恢复 5 个文件 + 不带 `--extra-manifest` 重启，
-  state / offsets / 账本全部保留。
+- 回滚两条路：脚本内失败自动回滚；手动回滚跑 `qc_deploy14l.sh --rollback`（取最新
+  `~/pvz-logs/deploy14l_*` 备份、恢复 5 个文件、删 `qc_deploy14l.mode`、不带 `--extra-manifest`
+  重启），state / offsets / 账本全部保留。
 - 部署前检查很便宜：控制器 sha256（未变，仍为 admitfix cf94a8cb 的 72e57…）、选择器 sha 属于
   {deploy14k 版, admitfix 版} 之一、5 个新文件与 REV 的 sha256 一致、`--check` 重放登记表、
   面板计数 144 / 16 / 294912 个种子。全是本地哈希与纯 Python，不跑引擎、不读全量清单。

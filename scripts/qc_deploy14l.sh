@@ -12,7 +12,10 @@ PACKAGE=$R/.claude/worktrees/obsup
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
 REV=9aa61709b82c7cf50d7049bdaed74b8a0e9448c4
 # Production controller has not changed since deploy14j (admitfix cf94a8cb).
+# The second value is this deploy's own controller, so a re-run after activation
+# (including --rollback) does not abort at the baseline check.
 CONTROLLER_SHA=72e5732db6755798a1ac2206a597e423b6e5a7507170e04df2cf5ea0d6e2a6dd
+CONTROLLER_SHAS=($CONTROLLER_SHA a9d028fe2109f6039d6c373b0b47f8f757e8d4b020148337f962b40bcbb8886b)
 FILES=(scripts/curriculum_queue.py python/pvz_selection_refresh.py
        scripts/deck_rules.py scripts/make_random_deck_cells.py
        configs/random_deck_cells_v5.json)
@@ -55,8 +58,13 @@ start_qc() {
 log() { printf '%s deploy14l: %s\n' "$(date -Iseconds)" "$*" >> "$L"; }
 cleanup() { if [ "$OWN_STOP" = 1 ]; then rm -f "$STOP_FLAG"; fi; }
 check_baseline() {
-  printf '%s  %s\n' "$CONTROLLER_SHA" "$W/scripts/curriculum_queue.py" | sha256sum -c -
   local current sha accepted=0
+  current=$(sha256sum "$W/scripts/curriculum_queue.py" | cut -d' ' -f1)
+  for sha in "${CONTROLLER_SHAS[@]}"; do
+    if [ "$current" = "$sha" ]; then accepted=1; fi
+  done
+  [ "$accepted" = 1 ] || { log "ABORT: controller sha $current is neither admitfix nor deploy14l"; return 1; }
+  accepted=0
   current=$(sha256sum "$W/python/pvz_selection_refresh.py" | cut -d' ' -f1)
   for sha in "${SELECTION_SHAS[@]}"; do
     if [ "$current" = "$sha" ]; then accepted=1; fi
@@ -128,6 +136,21 @@ trap cleanup EXIT
 trap 'on_error $LINENO' ERR
 
 [ ! -e "$STOP_FLAG" ] || { log 'ABORT: another stop request exists'; exit 1; }
+if [ "${1:-}" = "--rollback" ]; then
+  # Manual rollback: newest backup, mode removed, start_qc without --extra-manifest.
+  O=$(ls -dt "$LOG_DIR"/deploy14l_* 2>/dev/null | head -1)
+  [ -n "${O:-}" ] && [ -d "$O" ] || { log 'ABORT: no deploy14l backup directory'; exit 1; }
+  log "manual rollback from $O"
+  stop_qc; STOPPED=1
+  for file in "${FILES[@]}"; do
+    if [ -e "$O/$file.before" ]; then cp -p "$O/$file.before" "$W/$file"; else rm -f "$W/$file"; fi
+  done
+  rm -f "$MODE14L"; EXTRA_ARG=""
+  check_baseline || exit 1
+  start_qc
+  log 'rolled back to the previous controller; state, offsets and ledgers retained'
+  exit 0
+fi
 check_baseline
 check_new_files
 [ -x "$PY" ]
