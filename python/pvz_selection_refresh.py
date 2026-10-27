@@ -3,9 +3,11 @@
 task128: the body of the selection panel is the same adventure set the gate
 measures (original 1.0x, scoreboard decks) on independent seeds, so the
 candidate that gets picked is the one that plays the game's own levels best.
-The three registered random-deck families stay as a guard against deck-specific
-overfitting. The task126 unseen-deck cells stay as evidence only: their wins are
-recorded in the round report but never enter the selection total (`score_only`).
+task137: the eight fixed v5 evaluation decks from configs/random_deck_cells_v5.json
+are the guard against deck-specific overfitting; they are disjoint from the 16
+training decks and never collected. The task126 unseen-deck cells stay as evidence
+only: their wins are recorded in the round report but never enter the selection
+total (`score_only`).
 
 The old 30%-80% window screening is gone with the body it calibrated: selection
 no longer reads the collector's windows, so a window whose games cannot be
@@ -21,9 +23,44 @@ from pathlib import Path
 SELECTION_POOLS = ((130_000_000, 140_000_000),)
 SELECTION_BLOCK_SIZE = 512
 SELECTION_LEDGER = Path.home() / 'pvz-logs/selection_seed_ledger.json'
-RANDOM_TASKS = ('day_l7_train_rand', 'night_l12_train_rand', 'pool_l21_train_rand')
-PANEL_VERSION = 'selection-task136-v5'
+# task137: the three deck_random families were themselves curriculum material, so a
+# candidate could be scored on decks it had been trained on. Selection now uses the
+# fixed v5 evaluation decks from the task137 registry: same rule, disjoint from the
+# 16 training decks and never collected.
+RANDOM_DECK_REGISTRY = 'configs/random_deck_cells_v5.json'
+PANEL_VERSION = 'selection-task137-v5'
 GATE_PANEL_VERSION = 'v5'
+
+
+def random_deck_tasks(root):
+    """task137 evaluation decks -> selection cells (seeds assigned per round)."""
+    from pvz_tasks import profile_for_deck, terrain_covered
+    registry = json.loads((Path(root) / RANDOM_DECK_REGISTRY).read_text())
+    training = {tuple(sorted(task['deck'])) for task in registry['tasks'] if task['split'] == 'train'}
+    tasks, seen = [], set()
+    for entry in registry['tasks']:
+        if entry['split'] != 'eval':
+            continue
+        deck = tuple(entry['deck'])
+        signature = tuple(sorted(deck))
+        if signature in training or signature in seen:
+            raise ValueError(f'random-deck evaluation set is not disjoint: {entry["task_id"]}')
+        if not 6 <= len(deck) <= 10 or len(set(deck)) != len(deck):
+            raise ValueError(f'invalid random-deck evaluation deck: {entry["task_id"]}')
+        if not terrain_covered(entry['level'], deck):
+            raise ValueError(f'random-deck evaluation deck misses terrain: {entry["task_id"]}')
+        if profile_for_deck(deck).seed_slot_count != len(deck):
+            raise ValueError(f'random-deck evaluation profile slot count differs: {entry["task_id"]}')
+        task = dict(task_id=entry['task_id'], level=entry['level'], terrain=entry['terrain'],
+                    deck=list(deck), playthrough=2, zombie_count_multiplier=1.0, seeds=[],
+                    selection_group='random_deck')
+        if entry['terrain'] == 'fog':
+            task['fog_observation'] = 'human_v2'
+        tasks.append(task)
+        seen.add(signature)
+    if not tasks:
+        raise ValueError('random-deck registry has no evaluation decks')
+    return tasks
 
 
 def selection_templates(holdout_manifest=None, promotion_panel=None):
@@ -35,8 +72,6 @@ def selection_templates(holdout_manifest=None, promotion_panel=None):
     if document.get('panel_version') != GATE_PANEL_VERSION:
         raise ValueError(f'selection requires the registered gate-v5 panel, got '
                          f'{document.get("panel_version")!r}')
-    registered = json.loads((root / 'configs/student_selection_v2.json').read_text())
-    table = {task['task_id']: task for task in registered['tasks']}
     monitor = set(document.get('monitor') or ())
     tasks = []
     for task in document['tasks']:
@@ -46,15 +81,17 @@ def selection_templates(holdout_manifest=None, promotion_panel=None):
         task['seeds'] = []            # assigned per round from the selection ledger
         task['selection_group'] = 'adventure'
         tasks.append(task)
-    for name in RANDOM_TASKS:
-        tasks.append(copy.deepcopy(table[name]))
+    tasks.extend(random_deck_tasks(root))
     templates = dict(schema_version=1, panel_version=PANEL_VERSION, tasks=tasks,
-                     purpose='adventure levels of the gate-v5 panel on independent seeds, plus the three '
-                             'registered random families; unseen decks are score-only')
+                     purpose='adventure levels of the gate-v5 panel on independent seeds, plus the eight '
+                             'task137 v5 evaluation decks (never trained); unseen decks are score-only')
     if holdout_manifest is None:
         return templates
     from pvz_tasks import profile_for_deck, terrain_covered
     extra = json.loads(Path(holdout_manifest).read_text())['tasks']
+    registry = json.loads((root / RANDOM_DECK_REGISTRY).read_text())
+    training_decks = {tuple(sorted(task['deck'])) for task in registry['tasks']
+                      if task['split'] == 'train'}
     names = {task['task_id'] for task in tasks}
     gate_names = {task['task_id'] for task in document['tasks']}
     gate_decks = {tuple(sorted(task['deck'])) for task in document['tasks']}
@@ -70,13 +107,10 @@ def selection_templates(holdout_manifest=None, promotion_panel=None):
             raise ValueError('selection holdout must be a distinct, terrain-covered fixed card set without seeds')
         if profile_for_deck(tuple(deck)).seed_slot_count != len(deck):
             raise ValueError('selection holdout profile slot count differs from deck')
+        if signature in training_decks:
+            raise ValueError('selection holdout reuses a task137 training deck')
         names.add(task['task_id'])
         signatures.add(signature)
-        # These are pre-existing training exclusions, not newly withheld training data.
-        for random_task in templates['tasks']:
-            if 'deck_random' in random_task and signature not in {
-                    tuple(sorted(cards)) for cards in random_task['deck_random']['excluded_decks']}:
-                raise ValueError('selection holdout is not excluded by the registered random training families')
         task['score_only'] = True
         tasks.append(task)
     return templates

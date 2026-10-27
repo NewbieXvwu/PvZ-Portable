@@ -1598,6 +1598,9 @@ class TrainingPipeline:
         panel = json.loads(Path(job['selection_manifest']).read_text())
         holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
                     if task.get('selection_group') == 'unseen_deck'}
+        # task137: 随机卡组格的胜局单独记一份，便于看卡组泛化（仍计入 selection 总分）。
+        random_decks = {task['task_id']: len(task['seeds']) for task in panel['tasks']
+                        if task.get('selection_group') == 'random_deck'}
         for candidate in candidates:
             candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])
             if holdouts and candidate['selection_score'] is not None:
@@ -1605,6 +1608,12 @@ class TrainingPipeline:
                 candidate['selection_unseen_deck'] = dict(
                     wins=sum(wins[name] for name in holdouts), games=sum(holdouts.values()),
                     tasks={name: dict(wins=wins[name], games=games) for name, games in holdouts.items()})
+            if random_decks and candidate['selection_score'] is not None:
+                wins = candidate['selection_score']['wins']
+                candidate['selection_random_deck'] = dict(
+                    wins=sum(wins[name] for name in random_decks), games=sum(random_decks.values()),
+                    tasks={name: dict(wins=wins[name], games=games)
+                           for name, games in random_decks.items()})
         self._marker(folder / 'candidates.json', dict(candidates=candidates))
         return report
 
