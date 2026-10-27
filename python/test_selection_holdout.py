@@ -184,3 +184,48 @@ SAVED=1; STARTED=1; rollback injected
                              capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
     subprocess.run(['bash', '-n'], input=result.stdout, text=True, check=True)
+
+def test_deploy14i_switches_to_gate_v5_and_falls_back_to_the_in_service_args(tmp_path):
+    script = ROOT / 'scripts/qc_deploy14i.sh'
+    source = script.read_text().split('# --- preflight:', 1)[0].replace('/home/newbiexvwu', str(tmp_path))
+    functions = tmp_path / 'functions.sh'
+    functions.write_text(source)
+    logs = tmp_path / 'pvz-logs'
+    logs.mkdir()
+    runner = tmp_path / 'run.sh'
+    runner.write_text('''source "$1"
+tmux() { if [ "$1" = has-session ]; then return 1; fi; printf '%s\\n' "$*" >> "$MODE14I.calls"; }
+code_state() { :; }
+start_qc
+choose_mode gatev5
+start_qc
+rm -f "$MODE14I"
+start_qc
+SAVED=1; STARTED=1; rollback injected
+''')
+    result = subprocess.run(['bash', str(runner), str(functions)], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 1, result.stderr
+    calls = (logs / 'qc_deploy14i.mode.calls').read_text().splitlines()
+    assert len(calls) == 4                      # start, activated, rollback, rollback restart
+    # No 14i marker and no 14h marker: deploy14g is in service, before and after rollback.
+    for call in (calls[0], calls[2], calls[3]):
+        assert 'dw4i2_rebalanced.json' in call
+        assert '--candidates-per-recipe' not in call and '--gate-version' not in call
+        assert 'gate_v5_panel.json' not in call and 'panel_v3_source.json' in call
+    assert 'dw4i2_rebalanced_p05.json' in calls[1]
+    assert '--candidates-per-recipe 2' in calls[1] and '--training-parallelism 1' in calls[1]
+    assert '--gate-version 5' in calls[1] and 'gate_v5_panel.json' in calls[1]
+    assert '--selection-holdout-manifest' in calls[1]
+    # deploy14h in service instead: the un-activated branch must reproduce its arguments.
+    (logs / 'qc_deploy14h.mode').write_text('rebalance\n')
+    (logs / 'qc_deploy14i.mode.calls').unlink()
+    subprocess.run(['bash', str(runner), str(functions)], capture_output=True, text=True, timeout=10)
+    calls = (logs / 'qc_deploy14i.mode.calls').read_text().splitlines()
+    for call in (calls[0], calls[2], calls[3]):
+        assert 'dw4i2_rebalanced_p05.json' in call and '--candidates-per-recipe 2' in call
+        assert '--gate-version' not in call and 'panel_v3_source.json' in call
+    result = subprocess.run(['bash', '-c', 'source "$1"; watchdog_extract_start "$2"',
+                             'test', str(ROOT / 'scripts/qc_watchdog.sh'), str(script)],
+                            capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+    subprocess.run(['bash', '-n'], input=result.stdout, text=True, check=True)
