@@ -1032,3 +1032,4 @@
 - 注意：`pgrep -f curriculum_queue.py` 的第一个结果是 tmux 服务器（它的 argv 是 12:49 那次 new-session 的旧命令），不是 qc 本身；核对参数要看 python 进程的 /proc/PID/cmdline。
 - 10-28 00:35 r27 训练准入又卡（要 20.59 GiB）、采集连续两组只有 1 worker。发现台式机 `/tmp` 是 tmpfs，被旧临时文件占了 7.5 GiB 内存；清理了 6 小时以上没人引用的条目（3.7 GiB）。**主控失误**：清理顺带删了 tmux 套接字 `/tmp/tmux-1000`，短暂起了第二个 tmux 服务器和 qc，约 2 分钟内杀掉，没有写状态；用 SIGUSR1 让旧服务器重建套接字，会话都在。**热修**：`cq/scripts/curriculum_queue.py` 的 `MEMORY_RESERVE_BYTES` 从 6 改为 3 GiB（备份在 `~/pvz-logs/curriculum_queue.py.before_reserve_hotfix`），按 14i 参数重启 qc，00:41 r27 开始打包。task134 要以此为基线，正式替换。
 - r26 门禁 v5 分区：day 359 vs 383（gain 24 / harm 48，−5.8pp，显著）、night −2.7pp、pool +8.4pp、fog +1.5pp、roof 2/90 vs 0/90，overall +0.4pp。
+- 00:26 task133 交付（llmplay2 c60e40e0）：任务 `llmplay2_f_l{42..49}_m100`（7 个屋顶关）+ `llmplay2_h_l{2,...,38}_m100`（12 个），卡组自选、可 abandon 重开、按“卡组×种子”计 6 胜、每关 3 套卡组。包在 Mac `~/pvz-llmplay2/`（pkg 7z 5.3 MB + res zip 34 MB，res 与第一轮相同）。task132 也交付（demoweight 0f6c3ca0）。codex-t125 周额度只剩 4%（16:51 重置）。
