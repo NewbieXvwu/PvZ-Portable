@@ -4669,7 +4669,17 @@
     23,
     2,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/c0ca2bebd54de6a0bb38c36e1ce75574ffa74556bd3271251bd270e3f04883ff",
+    "decisions": [
+     1063,
+     966
+    ],
+    "index": 0,
+    "future_seed_start": 144000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_42_melon_m200_s81005023_a44f4df7bdd32",
