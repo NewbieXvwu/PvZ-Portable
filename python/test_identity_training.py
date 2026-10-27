@@ -134,6 +134,46 @@ class IdentityTrainingTest(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'empty packet slot'):
                 packed_load(root / 'data', {'example'}, obs='v2', packet_head='identity', rebuild=True)
 
+    def test_ema_checkpoint_and_validation_use_averaged_weights(self):
+        from unittest.mock import patch
+        from torch.optim.swa_utils import AveragedModel
+        from pvz_recipe import write_recipe
+        import train_rollout_policy as trainer
+        updates, evaluated = [], []
+        original_update = AveragedModel.update_parameters
+        original_forward = trainer.RolloutNet.forward
+
+        def update(averaged, net):
+            updates.append({key: value.detach().clone() for key, value in net.state_dict().items()})
+            return original_update(averaged, net)
+
+        def forward(net, *args, **kwargs):
+            if not net.training:
+                evaluated.append(net)
+            return original_forward(net, *args, **kwargs)
+
+        with tempfile.TemporaryDirectory() as folder:
+            root = Path(folder)
+            self.fixture(root / 'data')
+            packed_load(root / 'data', {'example'}, obs='v2', packet_head='identity', cells=True, rebuild=True)
+            write_recipe(root / 'recipe.json', dict(schema_version=1, kind='training', data=str(root / 'data'),
+                labels=['example'], out=str(root / 'model'), width=8, epochs=2, seed=1, obs='v2',
+                packet_head='identity', cell_soft_weight=3, ema_decay=.5))
+            with patch.object(sys, 'argv', ['train', '--recipe', str(root / 'recipe.json')]), \
+                 patch.object(AveragedModel, 'update_parameters', update), \
+                 patch.object(trainer.RolloutNet, 'forward', forward):
+                trainer.main()
+            checkpoint = torch.load(root / 'model/model.pt', map_location='cpu', weights_only=True)
+            self.assertEqual(len(updates), 2)
+            self.assertEqual(checkpoint['ema'], .5)
+            self.assertTrue(evaluated)
+            for key, value in checkpoint['state_dict'].items():
+                torch.testing.assert_close(value, (updates[0][key] + updates[1][key]) / 2)
+                torch.testing.assert_close(value, evaluated[-1].state_dict()[key], rtol=0, atol=0)
+            self.assertTrue(any(not torch.equal(value, updates[-1][key])
+                                for key, value in checkpoint['state_dict'].items()))
+            self.assertEqual(load_student(root / 'model/model.pt').packet_head, 'identity')
+
 
 if __name__ == '__main__':
     unittest.main()

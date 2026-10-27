@@ -17,6 +17,8 @@ class RecipeTests(unittest.TestCase):
 
     def test_defaults_and_reject_typos_at_every_level(self):
         self.assertEqual(validate(self.base())['optimizer']['lr'], .002)
+        self.assertEqual(validate(self.base())['ema_decay'], 0.0)
+        self.assertEqual(validate(dict(self.base(), ema_decay=.999))['ema_decay'], .999)
         for update in [dict(epohs=1), dict(optimizer=dict(lrr=.1)),
                        dict(validation=dict(fracton=.1)), dict(label_weight=dict(missing=2))]:
             with self.subTest(update=update), self.assertRaises(ValueError):
@@ -27,7 +29,8 @@ class RecipeTests(unittest.TestCase):
                        dict(epochs=True), dict(epochs=0), dict(wait_keep=0), dict(wait_keep=2),
                        dict(labels=['one', 'one']), dict(row_pool='false'), dict(packet_head='other'),
                        dict(validation=dict(fraction=1)), dict(optimizer=dict(betas=[1,.9])),
-                       dict(optimizer=dict(lr=float('nan'))),dict(cache=False,source_row_report=True)]:
+                       dict(optimizer=dict(lr=float('nan'))),dict(cache=False,source_row_report=True),
+                       dict(ema_decay=-.1), dict(ema_decay=1), dict(ema_decay=float('nan'))]:
             with self.subTest(update=update), self.assertRaises(ValueError):
                 validate({**self.base(), **update})
 

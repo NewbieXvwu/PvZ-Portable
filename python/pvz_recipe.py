@@ -21,7 +21,7 @@ TRAIN_DEFAULTS = dict(
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
-    save_epochs=0, lr_schedule='constant', init=None, cache=True,
+    save_epochs=0, lr_schedule='constant', ema_decay=0.0, init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
     source_row_report=False, max_steps=None, batch_size=2048, validation_batch_size=4096,
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
@@ -164,6 +164,9 @@ def validate(document, kind=None):
                 else:
                     _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
         _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
+        _number(result['ema_decay'], 'ema_decay', maximum=1)
+        if result['ema_decay'] >= 1:
+            raise ValueError('ema_decay: must be below 1')
         for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight'):
             _number(result[name], name)
         for name in ('soft_temperature', 'spread_cap'):

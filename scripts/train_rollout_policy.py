@@ -809,6 +809,11 @@ def main(*, step_observer=None) -> None:
             weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 103))
         net.load_state_dict(weights)
     net = net.to(args.device)
+    averaged = None
+    if args.ema_decay:
+        from torch.optim.swa_utils import AveragedModel, get_ema_multi_avg_fn
+        averaged = AveragedModel(net, multi_avg_fn=get_ema_multi_avg_fn(args.ema_decay))
+    evaluation_net = averaged.module if averaged is not None else net
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
     pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
@@ -822,7 +827,7 @@ def main(*, step_observer=None) -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
-        out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
+        out = (net if train else evaluation_net)(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
@@ -871,13 +876,12 @@ def main(*, step_observer=None) -> None:
     history = []
 
     def checkpoint() -> dict:
-        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+        return {"state_dict": {k: v.cpu() for k, v in evaluation_net.state_dict().items()}, "labels": args.labels, "width": args.width,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
                 "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
-                # Historical reports compare these metadata keys; both experiments are retired.
-                "soft_weight": 0.0, "ema": 0.0,
+                "soft_weight": 0.0, "ema": args.ema_decay,
                 "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
@@ -897,6 +901,8 @@ def main(*, step_observer=None) -> None:
                 step_observer(completed_steps + 1, float(loss.detach()))
             train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
             opt.zero_grad(); loss.backward(); opt.step()
+            if averaged is not None:
+                averaged.update_parameters(net)
             if schedule is not None:
                 schedule.step()
             completed_steps+=1
@@ -905,7 +911,7 @@ def main(*, step_observer=None) -> None:
             if completed_steps>=steps:
                 break
         metrics.update(phase="validation")
-        net.eval()
+        evaluation_net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
