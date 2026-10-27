@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-27T10:47:00+00:00",
+ "at_utc": "2026-10-27T10:58:00+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -1060,7 +1060,7 @@
   "artifacts": "ignored artifacts/task78/task72_probe94 (v5r9/, v69/, v6f192r9/, score_original_protocol.json, score_full192_9sample*.json); code scripts/task78_fog94_probe.py, python/test_task78_fog94_probe.py"
  },
  "v5_corpus_recovery": {
-  "filesystem_sweep_2026_10_27": "home-wide size/name sweep, HF cache, git object store, /mnt/c-f depth 6: 0 hits",
+  "filesystem_sweep_2026_10_27": "home-wide size sweep (>20 MB model/archive files), untruncated name sweep excluding frames_v2, every .tgz/.tar/.tar.gz in the home tree (largest is a 48 MB Mac fog-demo bundle, 67 entries, no branch/shard files), the root filesystem outside /home, the HF local cache, the git object store, and /mnt/c-f depth 6: 0 hits for the corpus",
   "raw_row_coverage": {
    "seeds_with_raw_archive": 3242,
    "seeds_without_raw_archive": 419,
@@ -1068,7 +1068,7 @@
   },
   "rebuild_verdict": "a rebuilt corpus is provably incomplete and cannot be shown to be row-identical; the original 97 shard files are still required",
   "detail": "MEMORY/docs/task78-v5-raw-coverage.json",
-  "at_utc": "2026-10-27T09:52:00+00:00",
+  "at_utc": "2026-10-27T10:58:00+00:00",
   "huggingface_history": {
    "commits_enumerated": 1141,
    "unique_paths": 115246,
