@@ -99,7 +99,7 @@ def test_two_trainers_overlap_failure_is_local_and_selection_precedes_gate(tmp_p
 def test_insufficient_resources_fall_back_to_serial(tmp_path, monkeypatch, resource):
     threads = set()
     if resource == 'host_memory':
-        monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 9 * queue.GIB)
+        monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 6 * queue.GIB)
     else:
         monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: 3 * queue.GIB)  # one fits, two do not
     def train(command, logfile):
@@ -246,7 +246,7 @@ def test_training_admission_uses_anonymous_peak(tmp_path, monkeypatch):
         pipeline._admit()
         assert pipeline.train_parallelism == 2
         assert pipeline.train_admission_record['fallback_reasons'] == []
-        assert pipeline.train_admission_record['required_bytes'] == 13 * queue.GIB
+        assert pipeline.train_admission_record['required_bytes'] == 10 * queue.GIB
     finally:
         pipeline.close()
 
@@ -285,7 +285,7 @@ def test_pack_size_does_not_add_to_measured_anonymous_peak(tmp_path):
 def test_resources_changing_during_admission_still_fall_back(tmp_path, monkeypatch):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
-    values = iter([64 * queue.GIB, 9 * queue.GIB])
+    values = iter([64 * queue.GIB, 6 * queue.GIB])
     monkeypatch.setattr(queue, 'mem_available_bytes', lambda: next(values))
     pipeline.train_parallelism, pipeline.training_admission = 2, True
     try:

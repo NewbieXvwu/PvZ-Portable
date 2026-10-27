@@ -108,7 +108,7 @@ DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / nump
 
 GIB = 1024 ** 3
 MAX_BACKGROUND_ATTEMPTS = 2   # task98: 同一快照最多尝试两次，失败保留证据，采集继续
-MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
+MEMORY_RESERVE_BYTES = 3 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
 PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 # 训练阶段的不可回收峰值 = 匿名内存（read_segments 的目标数组是文件后备 memmap，task61）。
 # 实测（2026-10-24，round 2 全量 7.73 GiB 段）：读入 + 建批 RssAnon 峰值 1.59 GiB = 0.205×

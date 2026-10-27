@@ -212,7 +212,7 @@ def test_memory_forecast_counts_only_background_headroom():
         args, state = setup(Path(folder))
         pipeline = queue.TrainingPipeline(args, state)
         try:
-            assert queue.worker_count(16 * queue.GIB, queue.GIB, 16, background=4 * queue.GIB) == 6
+            assert queue.worker_count(16 * queue.GIB, queue.GIB, 16, background=4 * queue.GIB) == 9
             pending = SimpleNamespace(done=lambda: False)
             pipeline.futures.append(({}, pending))
             pipeline.process = SimpleNamespace(pid=123)
@@ -241,7 +241,7 @@ def test_candidate_transition_keeps_collection_workers():
                 pipeline.process = None
                 assert pipeline.reservation() == peak
                 assert queue.worker_count(22 * queue.GIB, queue.GIB, 16,
-                                          pipeline.reservation()) == 13
+                                          pipeline.reservation()) == 16
                 pipeline.process = SimpleNamespace(pid=123)
                 assert pipeline.reservation() == peak - resident
             pipeline.futures.clear()

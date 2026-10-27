@@ -711,11 +711,11 @@ class ReconcileCellsTest(unittest.TestCase):
 class WorkerCountTest(unittest.TestCase):
     def test_scales_with_available_memory(self):
         per_worker = 900 * 1024 ** 2          # 0.9 GiB
-        self.assertEqual(worker_count(20 * GIB, per_worker, 16), 15)    # (20-6)/0.9 = 15.5
-        self.assertEqual(worker_count(10 * GIB, per_worker, 16), 4)     # (10-6)/0.9 = 4.4
+        self.assertEqual(worker_count(20 * GIB, per_worker, 16), 16)
+        self.assertEqual(worker_count(10 * GIB, per_worker, 16), 7)
         self.assertEqual(worker_count(28 * GIB, 512 * 1024 ** 2, 8), 8)  # 上限
-        self.assertEqual(worker_count(4 * GIB, per_worker, 16), 1)      # 低于保留也不为 0
-        self.assertEqual(MEMORY_RESERVE_BYTES, 6 * GIB)
+        self.assertEqual(worker_count(2 * GIB, per_worker, 16), 1)
+        self.assertEqual(MEMORY_RESERVE_BYTES, 3 * GIB)
 
     def test_unknown_memory_or_estimate_keeps_the_upper_limit(self):
         self.assertEqual(worker_count(None, 900 * 1024 ** 2, 16), 16)   # 没有 /proc
