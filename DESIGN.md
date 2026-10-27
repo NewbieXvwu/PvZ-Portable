@@ -1578,3 +1578,41 @@ K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整
 **部署**：`scripts/qc_deploy14l.sh`（只交主控执行）换控制器与清单；控制器在启动时读清单，
 所以需要按组边界重启一次采集（`stop_qc` 的既有排空路径），后台训练 / 打包流水线不排空。
 
+### 14.46 采集组开工后扩容：组宽不再在开工时定死（task138，2026-10-28）
+
+**问题**：一组的 worker 数在开工那一刻按 `MemAvailable` 和后台余量算出来，之后整组不变。
+开工时内存临时紧张（打包、门禁评估、换候选的空档），整组就只有 1–5 个 worker，48 局的组能拖
+一小时以上。10-27 21:48 有一组 2 worker、57 分钟只打 20 局；10-28 05:14 有一组 1 worker，
+主控只好杀 qc 重开。task134 修的是余量口径，没有改“开工定死”。
+
+**做法**：`scripts/growable_pool.py` 取代 `search_play.py` 里的 `multiprocessing.Pool`。
+队列、每 worker 初始化、一局一结果、`games.jsonl` 语义全部不变；父进程每 `--grow-interval`
+（默认 30 s）重读一次 `MemAvailable`，用控制器自己的准入公式
+
+    clamp((MemAvailable − reserve − background) // per_worker, 1, upper)
+
+决定现在能开几个，多出来就 `Process.start()` 补上。**只增不减，在跑的局不杀。**
+`upper` 就是 `--workers`（`pipeline.foreground_limit()`，已扣掉可能开始的评估进程）；
+开工宽度改走新参数 `--initial-workers`，`--worker-memory-bytes` / `--memory-headroom-bytes`
+把控制器当时用的单 worker RSS 与后台预留原样带进去。没实测 RSS 或没有 `/proc`（macOS）时
+不扩容 —— 按未知成本加进程正是 OOM 的来源。
+
+**控制器**：`command_for()` 新增 `growth_args()`，把“开工宽度”和“上限”分开传。
+只给 `workers=` 的调用方（OOM 探针、一次性诊断）仍是固定宽度，行为与 task138 之前逐字相同。
+
+**日志**：`N games on W workers` 仍是开工宽度（`qc_log_throughput.py` 的正则不变），
+宽度变化另打一行 `workers 1->4 (120s)`，不匹配任何既有正则。
+
+**成本**：每 30 s 一次 `/proc/meminfo` 读取，可忽略；新 worker 在 Linux 上 fork 父进程，
+继承已加载的 torch 与权重页（`_init_worker` 的 `if "fast" not in _W` 分支），不再从磁盘加载。
+
+**部署**：`scripts/qc_deploy14m.sh`（只交主控执行）换 `search_play.py` + 控制器 + 新增
+`growable_pool.py`，然后重启 qc。未激活 / 回滚分支照抄台式机最新 deploy14l 的 `start_qc`：
+`--extra-manifest` 由 `qc_deploy14l.mode` 决定，`stop_qc` 直接 `kill-session`（不排空），
+并额外清掉本工作树遗留的 `search_play` 子进程。预检只有 sha256、`ast.parse`、`--help` 里的新
+参数、task137 面板的 144 条计数，加一个 1.5 s 的进程级池测试；不跑引擎、不重放存档。
+
+**边界**：`pipeline.foreground_workers` 仍记开工宽度，所以评估的进程数上限按开工宽度算；
+内存上限由评估自己那次 `worker_count(MemAvailable)` 兜底，扩容和评估都不会越过当时的可用内存。
+
+
