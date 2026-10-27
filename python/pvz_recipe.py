@@ -21,6 +21,7 @@ TRAIN_DEFAULTS = dict(
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
+    demo_row_weight=1.0, demo_start_row_weight=1.0,
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
     source_row_report=False, max_steps=None, micro_batch_size=None, train_row_fraction=1.0, batch_size=2048, validation_batch_size=4096,
@@ -169,7 +170,8 @@ def validate(document, kind=None):
                     _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
         _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
         _number(result['train_row_fraction'], 'train_row_fraction', maximum=1, positive=True)
-        for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight'):
+        for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight',
+                     'demo_row_weight', 'demo_start_row_weight'):
             _number(result[name], name)
         for name in ('soft_temperature', 'spread_cap'):
             _number(result[name], name, positive=True)

@@ -772,6 +772,18 @@ def main(*, step_observer=None) -> None:
         def observer(path, rows):
             source_counts.observe(path, rows)
             if row_plan: row_plan.observe(path, rows)
+    demo_plan = None
+    if args.demo_row_weight != 1.0 or args.demo_start_row_weight != 1.0:
+        from pvz_training_rows import DemoRowWeights
+        demo_plan = DemoRowWeights(args.demo_row_weight, args.demo_start_row_weight)
+        def observer(path, rows):
+            # Reuse this small metadata read for the already-enabled level counter.
+            # No frame decoding, replay, new pack generation or corpus preflight.
+            meta_path = Path(path).parent / 'meta.json'
+            meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
+            demo_plan.observe(path, rows, meta)
+            if source_counts: source_counts.observe(path, rows, meta)
+            if row_plan: row_plan.observe(path, rows)
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
@@ -848,6 +860,10 @@ def main(*, step_observer=None) -> None:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
+    if demo_plan:
+        # Final source boosts deliberately do not participate in earlier factor caps.
+        demo_plan.apply(weight)
+        print(json.dumps({'demo_row_weights': demo_plan.metadata()}), flush=True)
     net = create_student(args.arch, width=args.width, pool=args.pool, context=args.context, obs=args.obs, row_pool=args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
