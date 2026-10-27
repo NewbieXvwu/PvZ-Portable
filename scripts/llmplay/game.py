@@ -116,11 +116,13 @@ def load_tasks(manifest: str | Path | None = None) -> dict:
     return {task["task_id"]: task for task in doc.get("tasks") or []}
 
 
-def task_spec(task: dict, seed=None):
+def task_spec(task: dict, seed=None, deck=None):
     """任务定义 -> (TaskSpec, 卡组, 种子)。与 human_demo 用同一套推导。"""
     seeds = task.get("seeds") or []
     actual_seed = int(seed if seed is not None else (seeds[0] if seeds else 0))
-    deck = [int(card) for card in task["deck"]]
+    deck = list(task.get("deck", []) if deck is None else deck)
+    if task.get("deck_selection") == "player":
+        validate_deck(task, deck)
     extra = {"wave_cap": task.get("wave_cap"),
              "zombie_count_multiplier": task.get("zombie_count_multiplier")}
     preplanted = tuple(tuple(int(v) for v in p) for p in (task.get("preplanted") or ()))
@@ -136,6 +138,25 @@ def task_spec(task: dict, seed=None):
     return spec, deck, actual_seed
 
 
+
+
+def validate_deck(task, deck):
+    """仅校验游戏硬约束；解锁范围在 reset 后直接问引擎。"""
+    from pvz_constants import background_for_level
+    if not 6 <= len(deck) <= 10 or any(type(card) is not int for card in deck):
+        raise ValueError("卡组须为 6–10 个植物整数编号")
+    if len(set(deck)) != len(deck) or any(not 0 <= card <= 47 for card in deck):
+        raise ValueError("卡组不能重复，植物编号须为 0..47（不含需指定模仿目标的模仿者）")
+    scene = background_for_level(int(task["level"]))
+    if scene in ("BACKGROUND_3_POOL", "BACKGROUND_4_FOG") and 16 not in deck:
+        raise ValueError("水路卡组必须带睡莲(16)")
+    if scene in ("BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS") and 33 not in deck:
+        raise ValueError("屋顶卡组必须带花盆(33)")
+
+
+def required_checkpoint(task):
+    """无波次关卡使用明确的 tick 检查点，不以不存在的 wave 10 判稳健。"""
+    return task.get("robustness_checkpoint", "tick:6000" if int(task["level"]) == 50 else "10")
 
 
 def robustness_seeds(path: str | Path | None = None) -> dict:
@@ -201,6 +222,7 @@ class Game:
 
     def __init__(self, task_id: str, *, seed=None, manifest=None, executable=None,
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
+                 deck=None, reason="", strategy="", deck_review="", abandon_reason=None,
                  robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
@@ -213,7 +235,11 @@ class Game:
             pending = progress()["tasks"].get(task_id, {}).get("available_seeds")
             if pending:
                 seed = pending[0]
-        self.spec, self.deck, self.seed = task_spec(self.task_definition, seed)
+        if self.task_definition.get("deck_selection") == "player" and not reason.strip():
+            raise ValueError("自选卡组请填写 reason 选卡理由")
+        self.spec, self.deck, self.seed = task_spec(self.task_definition, seed, deck)
+        self.deck_reason, self.strategy, self.deck_review = reason, strategy, deck_review
+        self.abandon_reason = abandon_reason
         self.manifest = Path(manifest) if manifest else DEFAULT_MANIFEST
         self.executable = Path(executable) if executable else _default_executable()
         self.resource_dir = Path(resource_dir) if resource_dir else _default_resource_dir()
@@ -264,9 +290,16 @@ class Game:
         from .resources import app_data
         self.env = PvZEnv(resource_dir=self.resource_dir, executable=self.executable, headless=True,
                           save_dir=app_data(self.executable, self.resource_dir, self.session))
-        self._reset_engine()
-        if self.ops or target:
-            self._replay_to(target)
+        try:
+            self._reset_engine()
+            if self.ops or target:
+                self._replay_to(target)
+            if self.abandon_reason is not None:
+                self.terminal = True
+        except BaseException:
+            self.env.close()
+            self.env = None
+            raise
 
     def _reset_engine(self) -> None:
         assert self.env is not None
@@ -278,6 +311,13 @@ class Game:
         self.initial_obs, _ = self.env.reset(deck=self.deck, task=self.spec)
         # 开局哈希必须紧跟在 reset 之后取：之后任何一条命令都会覆盖 _last_response。
         self.initial_hash = self.env._last_response.get("state_hash")
+        if self.task_definition.get("deck_selection") == "player":
+            options = self.env.deck_options()
+            field = self.task_definition.get("unlock_field", "first_adventure_available")
+            available = set(options[field]) | set(range(40, 48))
+            locked = sorted(set(self.deck) - available)
+            if locked:
+                raise ValueError("该关尚未解锁的植物：%s" % locked)
         self.env.set_lean_observation(True)
         # 精简观测才带 legal_actions（Board::CanPlantAt 的结果），所以从第一帧起就用它。
         self._reset_bookkeeping(self.env.observe())
@@ -489,6 +529,8 @@ class Game:
         return bool(info["ok"])
 
     def _apply(self, action: dict) -> bool:
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请用 Game(task_id, deck=..., reason=...) 重开")
         self._start()
         assert self.env is not None
         level = self.budget_key
@@ -540,6 +582,8 @@ class Game:
 
     def plant(self, card: int, row: int, col: int) -> bool:
         """种下第 card 个卡槽的植物。card 是 observe()/legal() 里的卡槽序号。"""
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
         self._start()
         packets = (self.obs or {}).get("packets") or []
         if not 0 <= int(card) < len(packets):
@@ -554,6 +598,8 @@ class Game:
 
     def wait(self, ticks: int) -> None:
         """推进 ticks 个 tick。内部按 60 tick 分块（每块落一帧，便于事后回看）。"""
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
         self._start()
         remaining = int(ticks)
         if remaining < 0:
@@ -568,6 +614,8 @@ class Game:
 
         wave= 关键字等价于 "wave:N"。条件不成立时最多再推进 max_ticks。
         """
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
         self._start()
         assert self.obs is not None
         if wave is not None:
@@ -617,6 +665,7 @@ class Game:
         self._start()
         self.session.require_branch(self.budget_key)
         child = Game(self.task_id, seed=self.seed, manifest=self.manifest,
+                    deck=self.deck, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
                     executable=self.executable, resource_dir=self.resource_dir,
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
@@ -631,6 +680,8 @@ class Game:
     # ------------------------------------------------------------ 稳健性（task81d）
 
     def _require_primary(self, operation: str) -> None:
+        if self.abandon_reason is not None and operation not in ("save()", "export_archive()"):
+            raise RuntimeError("已放弃的局不能调用 %s" % operation)
         if self._internal:
             raise RuntimeError("稳健性试打局只允许观察与正常动作，不能调用 %s；换过未来的操作日志不能独立重放。"
                                % operation)
@@ -697,7 +748,8 @@ class Game:
         """
         self._require_primary("robustness()")
         plan = robustness_seeds(seed_config)
-        waves = sorted(plan) if checkpoints is None else [int(w) for w in checkpoints]
+        required = str(required_checkpoint(self.task_definition))
+        waves = ([required] if required.startswith("tick:") else sorted(plan)) if checkpoints is None else list(checkpoints)
         if not waves:
             raise ValueError("checkpoints 不能为空")
         source = _policy_source(policy)
@@ -708,14 +760,18 @@ class Game:
         self._persist_best()
         policy_sha = hashlib.sha256(source.encode("utf-8")).hexdigest()
         result = dict(policy_sha256=policy_sha, k=k, manual_patch=bool(self.manual_patch),
-                      checkpoints={}, passed=False)
-        for wave in waves:
-            tick = self._wave_tick(wave)
-            seeds = plan.get(wave) or []
+                      checkpoints={}, required_checkpoint=required, deck=list(self.deck), passed=False)
+        for checkpoint in waves:
+            key = str(checkpoint)
+            is_tick = key.startswith("tick:")
+            wave = 0 if is_tick else int(key)
+            target_tick = int(key.split(":", 1)[1]) if is_tick else None
+            tick = (target_tick if target_tick <= self.tick else None) if is_tick else self._wave_tick(wave)
+            seeds = plan.get(10 if is_tick else wave) or []
             if k is not None:
                 seeds = seeds[:int(k)]
             if tick is None or not seeds:
-                result["checkpoints"][str(wave)] = dict(wins=None, k=len(seeds), reached=False,
+                result["checkpoints"][key] = dict(wins=None, k=len(seeds), reached=False,
                                                         note="还没打到这一波（或没有配置种子）")
                 continue
             kept = _truncate_ops(self.ops, tick)
@@ -729,7 +785,8 @@ class Game:
                         break
             trial = Game(self.task_id, seed=self.seed, manifest=self.manifest,
                          executable=self.executable, resource_dir=self.resource_dir,
-                         ops=kept, frames=[], tick=replay_tick, run_id=self.run_id, _internal=True)
+                         ops=kept, frames=[], tick=replay_tick, run_id=self.run_id, _internal=True,
+                         deck=self.deck, reason=self.deck_reason, strategy=self.strategy)
             wins = 0
             try:
                 trial._start()
@@ -758,8 +815,8 @@ class Game:
                         trial.env.release_snapshot(snapshot)
             finally:
                 trial.close()
-            result["checkpoints"][str(wave)] = dict(wins=wins, k=len(seeds), reached=True, tick=tick)
-        wave10 = result["checkpoints"].get("10") or {}
+            result["checkpoints"][key] = dict(wins=wins, k=len(seeds), reached=True, tick=tick)
+        wave10 = result["checkpoints"].get(required) or {}
         if wave10.get("reached"):
             # 任务书 §task81d：第 10 波检查点 8 个新未来至少赢 5 个才算「稳」。
             result["passed"] = int(wave10["k"]) == 8 and int(wave10["wins"]) >= 5
@@ -796,7 +853,7 @@ class Game:
         finally:
             self.env.set_lean_observation(True)
         self.tick = int(self.obs["tick"])
-        self.terminal = bool(self.obs.get("terminal"))
+        self.terminal = self.abandon_reason is not None or bool(self.obs.get("terminal"))
         self.max_wave = max(self.max_wave, int(self.obs.get("wave") or 0))
         if not self._internal:
             self.session.record_wave(self.budget_key, int(self.obs.get("wave") or 0))
@@ -846,7 +903,8 @@ class Game:
     def log(self) -> dict:
         return dict(schema=SCHEMA, task_id=self.task_id, seed=self.seed, deck=self.deck,
                     run_id=self.run_id,
-                    note=self.note, tick=self.tick, ops=self.ops,
+                    note=self.note, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
+                    abandon_reason=self.abandon_reason, tick=self.tick, ops=self.ops,
                     frames=self.frames, totals=self.totals,
                     robustness=self.robustness_report, manual_patch=bool(self.manual_patch))
 
@@ -868,6 +926,8 @@ class Game:
         return cls(doc["task_id"], seed=doc["seed"], ops=doc.get("ops") or [],
                    frames=doc.get("frames") or [], tick=doc.get("tick"),
                    note=doc.get("note", ""), robustness=doc.get("robustness"),
+                   deck=doc.get("deck"), reason=doc.get("reason", ""), strategy=doc.get("strategy", ""),
+                   deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"),
                    run_id=doc.get("run_id"),
                    manual_patch=bool(doc.get("manual_patch", False)), **kwargs)
 
@@ -881,7 +941,9 @@ class Game:
         task = meta["task"]
         game = cls(task["id"], seed=task["seed"], ops=ops, frames=frames,
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
-                   robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False), **kwargs)
+                   robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
+                   deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
+                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
@@ -918,6 +980,8 @@ class Game:
             schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE,
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
+            deck_reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
+            abandoned=self.abandon_reason is not None, abandon_reason=self.abandon_reason,
             task=dict(id=self.task_id, level=self.spec.level, seed=self.spec.seed,
                       deck=list(self.deck), policy="llm", playthrough=self.spec.playthrough,
                       zombie_count_multiplier=self.spec.zombie_count_multiplier,
@@ -945,7 +1009,8 @@ class Game:
             sun_collection="environment_auto", verified=False,
             frame_count=len(self.frames), operations=len(self.ops), totals=self.totals,
             outcome=dict(result=result, won=result == 1,
-                         reason="通关" if result == 1 else ("僵尸进屋" if self.obs.get("terminal") else "中途结束"),
+                         reason=self.abandon_reason if self.abandon_reason is not None else ("通关" if result == 1 else ("僵尸进屋" if self.obs.get("terminal") else "中途结束")),
+                         abandoned=self.abandon_reason is not None,
                          final_wave=self.obs.get("wave"), wave_count=self.obs.get("wave_count"),
                          final_tick=self.obs.get("tick"), actions=max(len(self.frames) - 1, 0),
                          plants_eaten=self.totals.get("plants_eaten", 0),
@@ -990,6 +1055,21 @@ class Game:
         if spec.fog_observation:
             out["fog_observation"] = spec.fog_observation
         return out
+
+    def abandon(self, *, reason):
+        """保存真实操作序列和放弃理由，自动交付后释放本局引擎。"""
+        self._require_primary("abandon()")
+        if not reason.strip():
+            raise ValueError("请填写放弃理由")
+        self._start()
+        if self.terminal:
+            raise RuntimeError("本局已结束")
+        self.abandon_reason = reason
+        self.terminal = True
+        try:
+            self._deliver()
+        finally:
+            self.close()
 
     def close(self) -> None:
         if self.env is not None:

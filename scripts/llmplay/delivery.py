@@ -5,6 +5,7 @@
 """
 from __future__ import annotations
 
+from itertools import combinations
 import hashlib
 import json
 import os
@@ -20,7 +21,7 @@ from threading import BoundedSemaphore
 from . import budget
 from .runtime import output_path
 from .game import (ROOT, ARCHIVE_SCHEMA, _default_executable, _default_resource_dir,
-                   _ensure_executable, load_tasks)
+                   _ensure_executable, load_tasks, required_checkpoint)
 
 FILES = ("meta.json", "ticks.jsonl", "frames.jsonl")
 LAYERS = ("A", "B", "C", "D", "E")
@@ -68,7 +69,9 @@ def _read_progress(root):
 
 def _robust(meta):
     report = meta.get("robustness") or {}
-    cp = (report.get("checkpoints") or {}).get("10") or {}
+    task = meta.get("task") or {}
+    required = required_checkpoint(dict(level=task.get("level", 0)))
+    cp = (report.get("checkpoints") or {}).get(str(required)) or {}
     return bool(report.get("policy_sha256") and cp.get("reached")
                 and cp.get("k") == 8 and 5 <= int(cp.get("wins") or 0) <= 8)
 
@@ -76,20 +79,57 @@ def _robust(meta):
 def _entry(archive, relative, *, valid=True, error=None):
     meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
     task, outcome = meta["task"], meta["outcome"]
-    won = valid and outcome.get("result") == 1 and bool(outcome.get("won"))
+    won = valid and not meta.get("abandoned") and outcome.get("result") == 1 and bool(outcome.get("won"))
     return dict(task_id=task["id"], seed=int(task["seed"]), result=outcome["result"],
                 outcome=outcome, robustness=meta.get("robustness"),
+                level=task["level"], deck=task["deck"], deck_reason=meta.get("deck_reason", ""),
+                strategy=meta.get("strategy", ""), deck_review=meta.get("deck_review", ""),
+                abandoned=bool(meta.get("abandoned")), abandon_reason=meta.get("abandon_reason"),
                 archive=relative, manual_patch=bool(meta.get("manual_patch")),
                 note=meta.get("note", ""), valid=valid, invalid_reason=error,
                 won=won, robust=bool(won and _robust(meta)), run_id=meta.get("run_id"),
                 environment_fingerprint=meta.get("environment_fingerprint"))
 
 
+def _deck_progress(entries):
+    """每套按植物集合去重、每个种子只记一次胜；全部尝试仍留在 archives。"""
+    decks = {}
+    for entry in entries:
+        key = ",".join(map(str, sorted(entry.get("deck") or [])))
+        group = decks.setdefault(key, dict(deck=sorted(entry.get("deck") or []),
+                                          winning_seeds=set(), robust_seeds=set(), attempts=0,
+                                          losses=0, strategy="", reason="", review=""))
+        group["attempts"] += 1
+        group["losses"] += not entry["won"]
+        for target, source in (("strategy", "strategy"), ("reason", "deck_reason"), ("review", "deck_review")):
+            if entry.get(source):
+                group[target] = entry[source]
+        if entry["won"]:
+            group["winning_seeds"].add(entry["seed"])
+        if entry["robust"]:
+            group["robust_seeds"].add(entry["seed"])
+    eligible = [key for key, group in decks.items() if len(group["winning_seeds"]) >= 2 and group["strategy"].strip()]
+    selected = None
+    for triple in combinations(eligible, 3):
+        if len({decks[key]["strategy"].strip() for key in triple}) != 3:
+            continue
+        if all(max(len(set(decks[a]["deck"]) - set(decks[b]["deck"])),
+                   len(set(decks[b]["deck"]) - set(decks[a]["deck"]))) >= 3
+               for a, b in combinations(triple, 2)):
+            selected = list(triple)
+            break
+    for group in decks.values():
+        group["wins"] = len(group["winning_seeds"])
+        group["winning_seeds"] = sorted(group["winning_seeds"])
+        group["robust_seeds"] = sorted(group["robust_seeds"])
+    return decks, selected
+
+
 def _derive(entries, run_id=None):
     plan = json.loads((ROOT / "configs" / "llmplay_seeds.json").read_text(encoding="utf-8"))
     existing = load_tasks()
     tasks, layers = {}, {}
-    for layer in LAYERS:
+    for layer in plan["layers"]:
         ids = [task for task in plan["layers"][layer] if task in existing]
         for task_id in ids:
             seeds = {}
@@ -104,15 +144,21 @@ def _derive(entries, run_id=None):
                     seeds[key] = entry
             wins = sum(e["won"] for e in seeds.values())
             robust = sum(e["robust"] for e in seeds.values())
-            tasks[task_id] = dict(layer=layer, seeds=seeds,
+            selectable = existing[task_id].get("deck_selection") == "player"
+            attempts = [entry for entry in entries if entry["task_id"] == task_id and entry["valid"]]
+            decks, diverse = _deck_progress(attempts) if selectable else ({}, None)
+            complete = (wins >= 6 and robust >= REQUIRED_ROBUST and diverse is not None) if selectable else (wins >= REQUIRED_WINS and robust >= REQUIRED_ROBUST)
+            tasks[task_id] = dict(layer=layer, seeds=seeds, decks=decks, diverse_decks=diverse,
+                                 deck_selection=selectable,
                                  available_seeds=[seed for seed in seed_order(task_id, run_id, plan["tasks"][task_id])
                                                   if not seeds.get(str(seed), {}).get("robust")],
                                  wins=wins, robust=robust,
-                                 complete=wins >= REQUIRED_WINS and robust >= REQUIRED_ROBUST)
+                                 complete=complete)
         done = sum(tasks[task]["complete"] for task in ids)
         layers[layer] = dict(completed=done, total=len(ids), complete=done == len(ids))
     return dict(schema="llmplay_progress_v1", run_id=run_id, requirements=dict(wins=REQUIRED_WINS,
-                robust=REQUIRED_ROBUST), archives=entries, tasks=tasks, layers=layers,
+                robust=REQUIRED_ROBUST, player_decks=3, wins_per_deck=2, player_wins=6,
+                min_card_changes=3, core_strategy="model-declared; reviewer assesses semantic difference"), archives=entries, tasks=tasks, layers=layers,
                 complete=all(layer["complete"] for layer in layers.values()))
 
 
@@ -130,7 +176,12 @@ def next_task() -> dict | None:
         if task["complete"]:
             continue
         seeds = task["seeds"]
-        if task["wins"] >= REQUIRED_WINS:
+        if task.get("deck_selection") and task.get("diverse_decks") is None:
+            seed = next((seed for seed in task["available_seeds"] if str(seed) not in seeds), task["available_seeds"][0])
+            return dict(task_id=task_id, seed=seed, layer=task["layer"], archive=None,
+                        action="play_diverse_decks", decks=task["decks"],
+                        note="每套至少2个种子胜；三套两两换至少3张且核心思路不同，填写strategy与deck_review")
+        if task["wins"] >= (6 if task.get("deck_selection") else REQUIRED_WINS):
             for entry in seeds.values():
                 if entry["won"] and not entry["robust"]:
                     return dict(task_id=task_id, seed=entry["seed"], layer=task["layer"],
@@ -154,18 +205,28 @@ def _report(document):
              "接口自动生成；详细结果以 progress.json 为准。", "",
              "全部任务达标。" if document["complete"] else "尚未全部完成，继续 next_task()。", "",
              "每任务至少 %d 个种子通关，其中 %d 个第10波达到5/8稳健标准。" %
-             (REQUIRED_WINS, REQUIRED_ROBUST), "", "| 层 | 达标任务 |", "|---|---|"]
+             (REQUIRED_WINS, REQUIRED_ROBUST),
+             "自选卡任务：三套卡组各赢≥2种子、合计≥6不同种子胜、≥3种子稳健；两两换≥3张，核心思路由模型声明并供主控复核。",
+             "", "| 层 | 达标任务 |", "|---|---|"]
     lines += ["| %s | %d/%d |" % (layer, info["completed"], info["total"])
               for layer, info in document["layers"].items()]
-    lines += ["", "| 任务 | 种子 | 结果 | 第10波胜局 | 手工补救 | 存档 | 打法/参数说明 |",
+    lines += ["", "| 任务 | 试过的卡组 | 核心思路 | 胜种子数/未通关尝试 | 选卡理由 | 优缺点评价 |",
+              "|---|---|---|---|---|---|"]
+    for task_id, task in document["tasks"].items():
+        for group in task.get("decks", {}).values():
+            cells = [task_id, str(group["deck"]), group["strategy"],
+                     "%s/%s" % (group["wins"], group["losses"]), group["reason"], group["review"] or "待模型补充"]
+            lines.append("| " + " | ".join(str(c).replace("|", "\\|").replace("\n", " ") for c in cells) + " |")
+    lines += ["", "| 任务 | 种子 | 结果 | 稳健检查点胜局 | 手工补救 | 存档 | 打法/参数说明 |",
               "|---|---|---|---|---|---|---|"]
     for entry in document["archives"]:
-        cp = ((entry.get("robustness") or {}).get("checkpoints") or {}).get("10") or {}
+        checkpoint = required_checkpoint(dict(level=entry.get("level", 0)))
+        cp = ((entry.get("robustness") or {}).get("checkpoints") or {}).get(str(checkpoint)) or {}
         status = "作废：" + str(entry.get("invalid_reason")) if not entry["valid"] else (
-            "通关稳健" if entry["robust"] else "通关待稳健" if entry["won"] else "未通关")
+            "通关稳健" if entry["robust"] else "通关待稳健" if entry["won"] else "放弃：" + str(entry.get("abandon_reason")) if entry.get("abandoned") else "未通关")
         cells = [entry["task_id"], str(entry["seed"]), status,
                  "%s/%s" % (cp.get("wins", "—"), cp.get("k", "—")),
-                 str(entry["manual_patch"]), entry["archive"], entry["note"]]
+                 str(entry["manual_patch"]), entry["archive"], str(entry.get("deck", [])) + " " + entry["note"]]
         lines.append("| " + " | ".join(str(c).replace("|", "\\|").replace("\n", " ") for c in cells) + " |")
     return "\n".join(lines) + "\n"
 
