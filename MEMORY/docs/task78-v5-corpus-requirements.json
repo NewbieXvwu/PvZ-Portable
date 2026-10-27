@@ -199,7 +199,25 @@
    "hits": 0,
    "git_history_references": 0
   },
-  "conclusion": "the 442,601-row original corpus is absent from every accessible location; this is not a wrong-path problem"
+  "conclusion": "the 442,601-row original corpus is absent from every accessible location; this is not a wrong-path problem",
+  "huggingface_history": {
+   "method": "list_repo_commits for every one of the 72 branches, then list_repo_tree(recursive=True) at each unique commit id, paced under the public 500 req / 300 s budget",
+   "commits_enumerated": 1141,
+   "unique_paths_over_all_history": 115246,
+   "keywords": [
+    "z13",
+    "z15d",
+    "sparse64",
+    "full_audit_manifest",
+    "branch3",
+    "task43",
+    "task30",
+    "value_net/v5"
+   ],
+   "hits": 0,
+   "scope": "every historical tree, not only the 72 branch heads that earlier runs enumerated",
+   "at_utc": "2026-10-27T10:30:00+00:00"
+  }
  },
  "task72b_probe_requirements": {
   "why": "the 94-state ranking and horizon-stability gates need v6 leaf values on the probe states",

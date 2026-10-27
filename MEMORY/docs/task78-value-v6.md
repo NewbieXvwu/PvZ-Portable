@@ -215,6 +215,8 @@
 
 - 2026-10-27 18:35（CodeBuddy）：**语料验收补上行级证明**。`task78_corpus_check.py --verify-rows` 现在会逐分片 `torch.load(mmap)` 读出 `seed`，按 v5 训练器的口径（先用审计清单排除种子、再 `held(seed)=sha256('value-widen:<seed>')[:8]%10==0` 切验证集）重算三类行数，并与冻结的 branch 324,559/29,446、decision 3,404/456、episode 75,136/9,600 逐项比对——文件名对得上但内容不对的语料会在这里被挡住（此前 descriptor 的 splits 只是自报）。episode 走 `rows.npz` 的 `seeds`。新增 2 项测试（合成分片复现切分、缺审计清单即拒绝），corpus_check 共 10 项、task78 共 165 项测试通过。未改任何阈值或语料要求。
 
+- 2026-10-27 18:55（CodeBuddy）：**HF 侧的"历史"也查空了，负证据从"分支头"升级到"全部提交"**。此前只枚举 72 个分支头的 114,688 条路径；本轮用 `list_repo_commits` 遍历 72 个分支得到 **1,141 个唯一提交**，再对每个提交 `list_repo_tree(recursive=True)`（公开配额 500 req/300 s，限速 4 并发，两轮把 1,141/1,141 全部跑完，失败 0），累计 **115,246 条唯一历史路径**，对 `z13/z15d/sparse64/full_audit_manifest/branch3/task43/task30/value_net/v5` 检索 **0 命中**。也就是说即使当初上传过又删掉，Git 历史里也没有。证据写进 [语料要求](task78-v5-corpus-requirements.json) 的 `search_evidence.huggingface_history` 与 `value-v6.md` §8。只读 API，未下载任何 blob、未开游戏、未占 GPU。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
