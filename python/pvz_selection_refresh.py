@@ -12,6 +12,45 @@ SELECTION_LEDGER = Path.home() / 'pvz-logs/selection_seed_ledger.json'
 RANDOM_TASKS = ('day_l7_train_rand', 'night_l12_train_rand', 'pool_l21_train_rand')
 
 
+def selection_templates(holdout_manifest=None, promotion_panel=None):
+    """Opt-in templates frozen at enqueue; historical jobs keep their original panel."""
+    root = Path(__file__).resolve().parents[1]
+    templates = json.loads((root / 'configs/student_selection_v2.json').read_text())
+    if holdout_manifest is None:
+        return templates
+    from pvz_tasks import profile_for_deck, terrain_covered
+    from pvz_promotion import PANEL_TASKS_V3
+    extra = json.loads(Path(holdout_manifest).read_text())['tasks']
+    names = {task['task_id'] for task in templates['tasks']}
+    gate_names = {name for _, name in PANEL_TASKS_V3}
+    gate_decks = set()
+    if promotion_panel is not None:
+        gate_decks = {tuple(sorted(task['deck'])) for task in
+                      json.loads(Path(promotion_panel).read_text())['tasks']
+                      if task['task_id'] in gate_names}
+    signatures = set()
+    for task in extra:
+        deck = task['deck']
+        signature = tuple(sorted(deck))
+        if (task['task_id'] in names | gate_names or signature in gate_decks | signatures
+                or task.get('selection_group') != 'unseen_deck'
+                or task.get('seeds') or 'deck_random' in task or 'deck_perturb' in task
+                or not 6 <= len(deck) <= 10 or len(set(deck)) != len(deck)
+                or not terrain_covered(task['level'], deck)):
+            raise ValueError('selection holdout must be a distinct, terrain-covered fixed card set without seeds')
+        if profile_for_deck(tuple(deck)).seed_slot_count != len(deck):
+            raise ValueError('selection holdout profile slot count differs from deck')
+        names.add(task['task_id'])
+        signatures.add(signature)
+        # These are pre-existing training exclusions, not newly withheld training data.
+        for random_task in templates['tasks']:
+            if 'deck_random' in random_task and signature not in {
+                    tuple(sorted(cards)) for cards in random_task['deck_random']['excluded_decks']}:
+                raise ValueError('selection holdout is not excluded by the registered random training families')
+    templates['tasks'].extend(extra)
+    return templates
+
+
 def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
@@ -63,7 +102,8 @@ def current_cells(state, incumbent, runs):
 def make_plan(state, incumbent, runs, templates, source_documents, block):
     """Pure planning. No engine, ledger write, score or training is performed here."""
     cells, sources, excluded = current_cells(state, incumbent, runs)
-    count = SELECTION_BLOCK_SIZE // (len(cells) + len(RANDOM_TASKS))
+    holdouts = [task for task in templates['tasks'] if task.get('selection_group') == 'unseen_deck']
+    count = SELECTION_BLOCK_SIZE // (len(cells) + len(RANDOM_TASKS) + len(holdouts))
     if count < 1 or block[1] - block[0] != SELECTION_BLOCK_SIZE:
         raise ValueError('selection cells exceed the 384-game budget or block size is invalid')
     tasks = []
@@ -78,16 +118,22 @@ def make_plan(state, incumbent, runs, templates, source_documents, block):
         task = copy.deepcopy(table[name])
         task['deck_random']['validated_decks'] = {}
         tasks.append(task)
+    tasks.extend(copy.deepcopy(holdouts))
     for index, task in enumerate(tasks):
         start = block[0] + index * count
         task['seeds'] = list(range(start, start + count))
         if 'deck_random' in task:
             task['splits'] = dict(selection=task['seeds'])
-    return dict(schema_version=1, panel_version='selection-task92c-v2-refresh',
+    panel = dict(schema_version=1, panel_version='selection-task92c-v2-refresh',
                 tasks=tasks, cells=cells, window_sources_sha256=sources, excluded=excluded,
                 incumbent=str(incumbent), incumbent_sha256=sha(incumbent),
                 seed_block=list(block), games_per_cell=count,
                 purpose='30%-80% current-policy multiplier windows plus three required random families; equal games')
+    if holdouts:
+        panel.update(panel_version='selection-task126-v3-refresh',
+                     selection_holdout_tasks=[task['task_id'] for task in holdouts],
+                     purpose=panel['purpose'] + '; selection-only unseen decks at the same games per task')
+    return panel
 
 
 def validate_random_tasks(panel, env):

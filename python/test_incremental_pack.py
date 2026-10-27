@@ -79,6 +79,34 @@ def test_two_epoch_training_is_bitwise_identical():
                                                obs='v2', cells=True, packet_head='identity'))
 
 
+def test_shared_merge_reuses_payload_and_isolates_weights(tmp_path):
+    data = tmp_path / 'data'
+    fixture(data, ['a', 'b'])
+    settings = dict(obs='v2', cells=True, packet_head='identity')
+    index = pack(data, options(data, ['a', 'b'], **settings))
+    with np.load(index, allow_pickle=False) as stored:
+        paths = [index.parent / name for name in stored['segments'].tolist()]
+    oracle = trainer.read_segments(paths)
+    observed = []
+    def observe(path, rows):
+        observed.append((str(path), rows.tolist()))
+    first = trainer.read_segments(paths, data, observe, {'teacher': 2.0})
+    torch.testing.assert_close(first[5], oracle[5] * 2, rtol=0, atol=0)
+    first[5].zero_()
+    identity = Path(first[0].values.filename).stat().st_ino
+    first_observed = list(observed)
+    observed.clear()
+    with patch.object(trainer, 'read_pack', side_effect=AssertionError('payload loaded twice')):
+        second = trainer.read_segments(paths, data, observe)
+    assert Path(second[0].values.filename).stat().st_ino == identity
+    assert observed == first_observed
+    assert_payload_equal(oracle, second)
+    fixture(data, ['c'])
+    expanded = pack(data, options(data, ['a', 'b', 'c'], **settings))
+    assert len(trainer.read_pack(expanded, data)[2]) > len(second[2])
+    assert_payload_equal(oracle, second)
+
+
 @pytest.mark.parametrize('cached', [False, True])
 @pytest.mark.parametrize('corruption', ['plane_ids', 'plane_precision'])
 def test_short_demo_start_before_longer_archives_keeps_plane_ids_aligned(tmp_path, cached, corruption):

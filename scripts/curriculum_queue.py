@@ -84,7 +84,7 @@ from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
 from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
-                                   make_plan as selection_plan, validate_random_tasks)
+                                   make_plan as selection_plan, selection_templates, validate_random_tasks)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -286,11 +286,7 @@ def _anon_bytes(pid: int) -> int:
 
 
 def _tree_anon_bytes(root: int) -> int:
-    """root 及其所有后代的匿名常驻字节之和。
-
-    后台训练的不可回收峰值就是这个口径：read_segments 的语料数组是文件后备 memmap
-    （task61），文件页可被内核回收，不算需求；匿名内存才必须留足。
-    """
+    """root 及其所有后代的匿名常驻字节之和，不含文件映射页。"""
     table = _proc_table()
     children: dict[int, list[int]] = {}
     for pid, (ppid, _rss) in table.items():
@@ -303,6 +299,14 @@ def _tree_anon_bytes(root: int) -> int:
     return total
 
 
+def training_data_bytes(model: Path) -> int:
+    metrics = model.with_name('metrics.json')
+    if not metrics.is_file():
+        return 0
+    memory = json.loads(metrics.read_text()).get('data_memory', {})
+    return sum(value for name, value in memory.items() if name.endswith('_bytes'))
+
+
 def measure_worker_bytes(args, item: dict) -> int:
     """用一个单 worker 的真实对局测一个 worker 的 Python + 引擎峰值 RSS。
 
@@ -312,7 +316,8 @@ def measure_worker_bytes(args, item: dict) -> int:
     with tempfile.TemporaryDirectory(prefix='pvz-oom-probe-', dir=args.state.parent) as tmp:
         tmp_path = Path(tmp)
         command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'], 1,
-                              'oomprobe', workers=1, frames=tmp_path / 'frames', out=tmp_path)
+                              'oomprobe', workers=1, frames=tmp_path / 'frames', out=tmp_path,
+                              save_candidates=item.get('save_candidates', 0))
         process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                    text=True)
         peak = 0
@@ -806,11 +811,39 @@ def label_for(round_index: int, base: str, multiplier: float, start: int | None 
     return f'c{round_index}{short}m%03d' % round(multiplier * 100)
 
 
+def parse_levels(text: str) -> frozenset[int]:
+    """`31-40`, `31,32,37` or `` -> the levels whose cells get --save-candidates."""
+    levels: set[int] = set()
+    for part in (piece.strip() for piece in text.split(',')):
+        if not part:
+            continue
+        low, _, high = part.partition('-')
+        start, stop = int(low), int(high or low)
+        if stop < start:
+            raise ValueError(f'invalid level range: {part}')
+        levels.update(range(start, stop + 1))
+    return frozenset(levels)
+
+
+def save_candidates_for(cell: dict, task: dict | None, levels) -> int:
+    """Per-cell switch for search_play --save-candidates (task120).
+
+    A manifest task may declare `save_candidates` itself; otherwise the zone list decides.
+    Default is the fog night curriculum 31-40: task120 measured the teacher's blind spot there
+    (first 150+ cards ever planted in L32/L37) and the wall-clock cost lands on those cells.
+    """
+    declared = (task or {}).get('save_candidates')
+    if declared is not None:
+        return int(declared)
+    return 1 if cell.get('level') in levels else 0
+
+
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
                 out: Path | None = None, beta: float = 0.0,
                 demo_archive: str | None = None, demo_decision: int | None = None,
-                future_seeds: list[int] | None = None) -> list[str]:
+                future_seeds: list[int] | None = None,
+                save_candidates: int = 0) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -827,6 +860,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
             '--verify-samples', '9', '--student-candidates', '2',
+            *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
             '--manifest', str(manifest), '--task-id', task_id,
             *seed_args,
@@ -882,6 +916,7 @@ class TrainingPipeline:
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
+        self.last_train_data_bytes = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
         self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
@@ -902,13 +937,16 @@ class TrainingPipeline:
                     self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
                 except (ValueError, TypeError):
                     pass
+            if timing and not self.last_train_data_bytes:
+                model = (timing.get('selection') or {}).get('best', job['model'])
+                self.last_train_data_bytes = timing.get('train_data_bytes', 0) or training_data_bytes(Path(model))
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
                     builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
                 except (OSError, ValueError, KeyError, TypeError):
                     pass
-            if self.last_train_peak and self.last_pack_peak:
+            if self.last_train_peak and self.last_pack_peak and self.last_train_data_bytes:
                 break
         queued = [job for job in state.setdefault('training_jobs', [])
                   if job['status'] != 'done' and not job.get('isolated')
@@ -1018,14 +1056,12 @@ class TrainingPipeline:
         # 后台流水线的峰值 = max(打包阶段, 训练阶段)。打包按 _plan_build 的待建段估算
         # （并发建造者 × 单建造者实测优先峰值），且只在打包进行时有值——_run 的 pack
         # 一结束（成败都算）就清零，训练/评估阶段只按训练估算（task61 追加）；
-        # 训练加载段加合并紧凑 CSR 的峰值约为紧凑语料的 3 倍，再加 2 GiB 的
-        # Python/优化器/批次。MemAvailable 已含后台现有 RSS，
-        # reservation() 只补 estimate 与现有 RSS 的差额。
         compact_bytes = sum(p.stat().st_size for p in (self.directory / 'frames/packs/segments').glob('*.npz'))
         if self.last_train_peak:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
+        train_peak += getattr(self, 'last_train_data_bytes', 0) or compact_bytes
         return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
@@ -1117,8 +1153,13 @@ class TrainingPipeline:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
             write_recipe(variant_path, variant)
-            job['candidate_recipes'] = [dict(recipe=str(path), source_recipe=str(self.args.recipe)),
-                                        dict(recipe=str(variant_path), source_recipe=str(alternate))]
+            repeats = getattr(self.args, 'candidates_per_recipe', 1)
+            job['candidate_recipes'] = [
+                dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
+                for candidate_path, source, family in ((path, self.args.recipe, 'A'),
+                                                       (variant_path, alternate, 'B'))
+                for _ in range(repeats)]
+            job['training_seeds'] = list(range(1, len(job['candidate_recipes']) + 1))
         # Freeze the plan on the durable job. Historical jobs without this field
         # retain their original single-seed training/resume semantics.
         self._snapshot_selection(job, folder)
@@ -1157,10 +1198,13 @@ class TrainingPipeline:
                     target.write_bytes(data)
                     sources[source] = dict(path=str(target), sha256=digest)
         templates = inputs / 'templates.json'
-        templates.write_bytes((ROOT / 'configs/student_selection_v2.json').read_bytes())
+        templates.write_text(json.dumps(selection_templates(
+            getattr(self.args, 'selection_holdout_manifest', None), self.args.promotion_panel)))
         ledger = getattr(self.args, 'selection_seed_ledger', self.args.state.parent / 'selection_seed_ledger.json')
         block = allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS)
-        job.update(training_seeds=list(TRAINING_SEEDS), selection_manifest=str(folder / 'selection_manifest.json'),
+        job.update(training_seeds=job.get('training_seeds', list(TRAINING_SEEDS)),
+                   training_parallelism=getattr(self.args, 'training_parallelism', 2),
+                   selection_manifest=str(folder / 'selection_manifest.json'),
                    selection_refresh=dict(snapshot=str(snapshot), snapshot_sha256=file_sha(snapshot),
                        incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent), runs=str(self.args.out),
                        templates=str(templates), templates_sha256=file_sha(templates), sources=sources,
@@ -1383,6 +1427,7 @@ class TrainingPipeline:
                                 self.build_peak = 0
                         if phase == 'train':
                             self.last_train_peak = report[phase + '_peak_anon_bytes']
+                            self.last_train_data_bytes = report['train_data_bytes'] = training_data_bytes(Path(job['model']))
                         report[phase + '_finished'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} done: '
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
@@ -1460,6 +1505,7 @@ class TrainingPipeline:
             else:
                 candidate = dict(seed=seed, model=str(model), recipe=str(path),
                                  source_recipe=variant.get('source_recipe', str(recipe_path)),
+                                 recipe_family=variant.get('recipe_family', 'A'),
                                  train_started=time.time())
                 try:
                     if not admitted:
@@ -1467,6 +1513,7 @@ class TrainingPipeline:
                     candidate['train_peak_anon_bytes'] = self._command(
                         [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
                         directory / 'train.log')
+                    candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():
                         raise RuntimeError(f'trainer did not publish {model}')
                     candidate.update(status='trained', train_finished=time.time(),
@@ -1480,7 +1527,7 @@ class TrainingPipeline:
             return candidate
         pending = [seed for seed in job['training_seeds']
                    if not (folder / 'seeds' / f'seed_{seed:06d}' / 'trained.json').is_file()]
-        self.train_parallelism = min(2, max(1, len(pending)))
+        self.train_parallelism = min(job.get('training_parallelism', 2), max(1, len(pending)))
         self.training_admission = bool(pending)
         try:
             if pending:
@@ -1509,11 +1556,22 @@ class TrainingPipeline:
                       train_started=min(candidate['train_started'] for candidate in candidates),
                       train_finished=max(candidate['train_finished'] for candidate in candidates),
                       train_peak_anon_bytes=max(candidate.get('train_peak_anon_bytes', 0) or 0
-                                                for candidate in trained))
+                                                for candidate in trained),
+                      train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
+                                           for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
+        self.last_train_data_bytes = report['train_data_bytes']
         report.update(self._select(job, trained))
+        panel = json.loads(Path(job['selection_manifest']).read_text())
+        holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
+                    if task.get('selection_group') == 'unseen_deck'}
         for candidate in candidates:
             candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])
+            if holdouts and candidate['selection_score'] is not None:
+                wins = candidate['selection_score']['wins']
+                candidate['selection_unseen_deck'] = dict(
+                    wins=sum(wins[name] for name in holdouts), games=sum(holdouts.values()),
+                    tasks={name: dict(wins=wins[name], games=games) for name, games in holdouts.items()})
         self._marker(folder / 'candidates.json', dict(candidates=candidates))
         return report
 
@@ -1685,7 +1743,8 @@ def _write_state(path: Path, state: dict) -> None:
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
-               renew_size: int = START_SEED_BLOCK) -> tuple[list[dict], list[str]]:
+               renew_size: int = START_SEED_BLOCK,
+               save_candidates_levels=frozenset()) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -1759,7 +1818,9 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
                     games=games, manifest=manifest,
                     label=label_for(state['round'] + 1, base, multiplier,
-                                    start=int(multiplier) if start else None))
+                                    start=int(multiplier) if start else None),
+                    save_candidates=save_candidates_for(cell, tasks.get(task_id),
+                                                        save_candidates_levels))
         if start:
             item.update(demo_archive=cell['archive'], demo_decision=int(multiplier),
                         future_seeds=seeds[offset:offset + games])
@@ -1790,7 +1851,8 @@ def _run_group(args, state, item, round_index, per_worker):
     per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
     log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                        f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
-                       f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB)')
+                       f'per-worker {per_worker_shown}, background headroom {background / GIB:.2f} GiB) '
+                       f'save={item.get("save_candidates", 0)}')
     cell = state['cells'][item['base']]
     student = student_rate(cell, item['multiplier'])
     starved = student is not None and student < args.beta_threshold
@@ -1806,7 +1868,8 @@ def _run_group(args, state, item, round_index, per_worker):
                           item['games'], item['label'], workers=workers, beta=beta,
                           demo_archive=item.get('demo_archive'),
                           demo_decision=item.get('demo_decision'),
-                          future_seeds=item.get('future_seeds'))
+                          future_seeds=item.get('future_seeds'),
+                          save_candidates=item.get('save_candidates', 0))
     started = time.time()
     item.update(collection_started=started, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
@@ -1935,7 +1998,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             save_state(args.state, state)
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher,
-                                       start_seed_ledger=getattr(args, 'start_seed_ledger', None))
+                                       start_seed_ledger=getattr(args, 'start_seed_ledger', None),
+                                       save_candidates_levels=args.save_candidates_levels)
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -2001,6 +2065,10 @@ def main() -> None:
                         help='β 混合格的 dagger-beta：该比例的步由搜索执行，标签仍全部来自搜索')
     parser.add_argument('--probe-interval', type=int, default=3,
                         help='全败格每这么多个组保留一个 β=0 探针组（测真实学生胜率），其余 β 混合')
+    parser.add_argument('--save-candidates-levels', default='31-40', metavar='LEVELS',
+                        help='这些关的采集格给 search_play 传 --save-candidates 1（task120：让搜索'
+                             '评估"攒够再种"的卡）；清单任务里写 save_candidates 可逐格覆盖。'
+                             '默认雾夜区 31-40，空串 = 全关关闭')
     parser.add_argument('--rounds', type=int, default=1)
     parser.add_argument('--init-glob', action='append', default=None,
                         help='用于初始化胜率/已用偏移的 config.json glob（可重复）')
@@ -2008,7 +2076,13 @@ def main() -> None:
     parser.add_argument('--recipe', type=Path, default=ROOT / 'recipes/dw4i.json',
                         help='training recipe for the collection student; supplies every pack row option')
     parser.add_argument('--alternate-recipe', type=Path,
-                        help='second K=2 candidate recipe, sharing the first candidate pack')
+                        help='recipe B candidates, sharing recipe A pack row options')
+    parser.add_argument('--candidates-per-recipe', type=int, choices=(1, 2), default=1,
+                        help='A/B independent training counts; 2 gives A seeds 1/2 and B seeds 3/4')
+    parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
+                        help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
+    parser.add_argument('--selection-holdout-manifest', type=Path,
+                        help='selection-only fixed unseen decks, frozen per job; never changes promotion panel')
     parser.add_argument('--opening-manifest', type=Path,
                         help='fixed 1.0x cold-start specialists, 12 beta=0 + 12 beta=0.5 per cell')
     parser.add_argument('--promotion-panel', type=Path,
@@ -2032,8 +2106,16 @@ def main() -> None:
         parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
+    if args.candidates_per_recipe > 1 and args.alternate_recipe is None:
+        parser.error('--candidates-per-recipe 2 requires --alternate-recipe')
+    if args.selection_holdout_manifest is not None and not args.selection_holdout_manifest.is_absolute():
+        parser.error('--selection-holdout-manifest must be absolute')
     if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
         parser.error('rounds and game budgets must be positive')
+    try:
+        args.save_candidates_levels = parse_levels(args.save_candidates_levels)
+    except ValueError as error:
+        parser.error(str(error))
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
                  'promotion_panel', 'teacher_rates', 'demo_start_manifest'):
@@ -2101,7 +2183,8 @@ def main() -> None:
             if args.start_seed_ledger.exists():
                 ledger.write_bytes(args.start_seed_ledger.read_bytes())
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
-                                       args.games_per_group, teacher, start_seed_ledger=ledger)
+                                       args.games_per_group, teacher, start_seed_ledger=ledger,
+                                       save_candidates_levels=args.save_candidates_levels)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
@@ -2109,7 +2192,8 @@ def main() -> None:
                                                        beta=item.get('beta', 0.0),
                                                        demo_archive=item.get('demo_archive'),
                                                        demo_decision=item.get('demo_decision'),
-                                                       future_seeds=item.get('future_seeds'))))
+                                                       future_seeds=item.get('future_seeds'),
+                                                       save_candidates=item.get('save_candidates', 0))))
         # The pack command this controller would run at the end of the round: reviewable before
         # a round is spent, and the only place the recipe's row options become a real command.
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
@@ -2124,10 +2208,13 @@ def main() -> None:
                         and group.get('student') == str(incumbent) and source is not None and source not in documents):
                     documents[source] = json.loads(Path(source).read_text())
         preview = selection_plan(state, incumbent, args.out,
-            json.loads((ROOT / 'configs/student_selection_v2.json').read_text()), documents,
+            selection_templates(args.selection_holdout_manifest, args.promotion_panel), documents,
             (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE))
         print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
             eligible_cells=len(preview['cells']), random_families=3,
+            unseen_deck_tasks=preview.get('selection_holdout_tasks', []),
+            candidates=(2 * args.candidates_per_recipe if args.alternate_recipe else len(TRAINING_SEEDS)),
+            training_parallelism=args.training_parallelism,
             games=sum(len(task['seeds']) for task in preview['tasks']),
             pools=SELECTION_POOLS, ledger=str(args.selection_seed_ledger))))
         return

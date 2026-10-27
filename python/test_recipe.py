@@ -31,6 +31,33 @@ class RecipeTests(unittest.TestCase):
             with self.subTest(update=update), self.assertRaises(ValueError):
                 validate({**self.base(), **update})
 
+    def test_level_balance_tempering_parameters(self):
+        base = dict(self.base(), source_weight=dict(level_balance=.25))
+        self.assertEqual(validate(dict(base, source_weight=dict(
+            level_balance=.25, level_balance_power=.5, level_balance_max_multiplier=20)))['source_weight'],
+            dict(level_balance=.25, level_balance_power=.5, level_balance_max_multiplier=20))
+        for power in (-.1, 1.5, float('nan'), 'half'):
+            with self.subTest(power=power), self.assertRaises(ValueError):
+                validate(dict(base, source_weight=dict(level_balance=.25, level_balance_power=power)))
+        for ceiling in (0, -20, float('inf')):
+            with self.subTest(ceiling=ceiling), self.assertRaises(ValueError):
+                validate(dict(base, source_weight=dict(level_balance=.25,
+                                                       level_balance_max_multiplier=ceiling)))
+        for update in [dict(level_balance_power=.5), dict(level_balance_max_multiplier=20)]:
+            with self.subTest(update=update), self.assertRaisesRegex(ValueError, 'requires'):
+                validate(dict(self.base(), source_weight=update))
+
+    def test_tempered_recipe_only_changes_the_level_balance(self):
+        reference = load_recipe(ROOT/'recipes/dw4i2_rebalanced.json', 'training')
+        tempered = load_recipe(ROOT/'recipes/dw4i2_rebalanced_p05.json', 'training')
+        self.assertEqual(tempered['source_weight'],
+                         dict(level_balance=.25, level_balance_power=.5, level_balance_max_multiplier=20))
+        self.assertEqual(tempered['out'], str(repository_root()/'artifacts/student/dw4i2_rebalanced_p05'))
+        for field in ('labels', 'data', 'cache_dir', 'read_cache_dir', 'wait_keep', 'packet_balance'):
+            self.assertEqual(tempered[field], reference[field])
+        document = json.loads((ROOT/'recipes/dw4i2_rebalanced_p05.json').read_text())
+        self.assertFalse(Path(document['out']).is_absolute())
+
     def test_json_duplicates_and_operational_overrides(self):
         with tempfile.TemporaryDirectory() as folder:
             path = Path(folder)/'r.json'

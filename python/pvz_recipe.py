@@ -146,12 +146,23 @@ def validate(document, kind=None):
         _object(result['label_weight'], set(labels), 'label_weight')
         for name, weight in result['label_weight'].items():
             _number(weight, f'label_weight.{name}')
-        _object(result['source_weight'], {'human', 'teacher', 'level_balance'}, 'source_weight')
+        _object(result['source_weight'], {'human', 'teacher', 'level_balance',
+                                          'level_balance_power', 'level_balance_max_multiplier'},
+                'source_weight')
         for name, weight in result['source_weight'].items():
             _number(weight, f'source_weight.{name}')
         if 'level_balance' in result['source_weight']:
             _number(result['source_weight']['level_balance'], 'source_weight.level_balance',
                     positive=True, maximum=1)
+        for name in ('level_balance_power', 'level_balance_max_multiplier'):
+            if name in result['source_weight']:
+                if 'level_balance' not in result['source_weight']:
+                    raise ValueError(f'source_weight.{name}: requires source_weight.level_balance')
+                if name == 'level_balance_power':
+                    # 1 is the exact inverse of retained rows, 0 leaves the weights untouched.
+                    _number(result['source_weight'][name], f'source_weight.{name}', maximum=1)
+                else:
+                    _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
         _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
         for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight'):
             _number(result[name], name)

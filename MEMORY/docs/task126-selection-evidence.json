@@ -1,0 +1,179 @@
+{
+  "tasks": [
+    {
+      "task_id": "day_l7_select_d7p_holdout3",
+      "selection_group": "unseen_deck",
+      "split": "selection_unseen_deck",
+      "terrain": "day",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        7,
+        37
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": []
+    },
+    {
+      "task_id": "day_l9_select_d7p_holdout4",
+      "selection_group": "unseen_deck",
+      "split": "selection_unseen_deck",
+      "terrain": "day",
+      "level": 9,
+      "deck": [
+        3,
+        7,
+        29,
+        4,
+        5,
+        1,
+        0
+      ],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": []
+    }
+  ],
+  "training_exclusion_sources": {
+    "day_panel_identity": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_identity.json",
+      "sha256": "2b019fdf9a8660ba05a67aeacc29d3e20c4fe20c3a55e0e99ddc5550399c33be",
+      "representative_family": "day_l7_train_d7p",
+      "proof": {
+        "day_l7_select_d7p_holdout3": {
+          "explicitly_excluded": true,
+          "unavailable_additions": []
+        },
+        "day_l9_select_d7p_holdout4": {
+          "explicitly_excluded": true,
+          "unavailable_additions": []
+        }
+      }
+    },
+    "day_panel_d7q": {
+      "path": "/home/newbiexvwu/PvZ-search/artifacts/stage4/day_panel_d7q.json",
+      "sha256": "ea0f8c0348cafd6a897bc0defde239e4a15cf702126779edc76d3d2f236cfc8f",
+      "representative_family": "day_l7_train_d7q",
+      "proof": {
+        "day_l7_select_d7p_holdout3": {
+          "explicitly_excluded": false,
+          "unavailable_additions": [
+            37
+          ]
+        },
+        "day_l9_select_d7p_holdout4": {
+          "explicitly_excluded": true,
+          "unavailable_additions": []
+        }
+      }
+    }
+  },
+  "random_training_exclusions": {
+    "day_l7_train_rand": {
+      "day_l7_select_d7p_holdout3": true,
+      "day_l9_select_d7p_holdout4": true
+    },
+    "night_l12_train_rand": {
+      "day_l7_select_d7p_holdout3": true,
+      "day_l9_select_d7p_holdout4": true
+    },
+    "pool_l21_train_rand": {
+      "day_l7_select_d7p_holdout3": true,
+      "day_l9_select_d7p_holdout4": true
+    }
+  },
+  "training_estimate": {
+    "source": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/seeds/seed_000002/student/metrics.json",
+    "sha256": "db1ff51dd00bfca50ab0ac128cd01eaf7d446f3c90ac818ba51a270a0c8d923a",
+    "measured_seconds_including_load": 2363.005896806717,
+    "measured_load_seconds": 104.89908599853516,
+    "measured_rows": 18811791,
+    "projected_rows": 19799497,
+    "safety_factor": 1.2,
+    "estimated_seconds_including_load": 2984.48955752104,
+    "threshold_seconds": 4200,
+    "candidates": 4,
+    "mode": "serial",
+    "assumption": "task123 admission prevents duplicate working-set paging; not a new full-training measurement"
+  },
+  "dry_run": {
+    "returncode": 0,
+    "seconds": 1.3181052909931168,
+    "preview": "selection preview (no allocation, no engine, no state write): {\"eligible_cells\": 25, \"random_families\": 3, \"unseen_deck_tasks\": [\"day_l7_select_d7p_holdout3\", \"day_l9_select_d7p_holdout4\"], \"candidates\": 4, \"training_parallelism\": 1, \"games\": 360, \"pools\": [[130000000, 140000000]], \"ledger\": \"/home/newbiexvwu/pvz-logs/selection_seed_ledger.json\"}",
+    "startup_retry": "linked missing ignored source manifests; initial attempt stopped before planning",
+    "command": [
+      "/home/newbiexvwu/.venvs/ml/bin/python",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/scripts/curriculum_queue.py",
+      "--dry-run",
+      "--rounds",
+      "100",
+      "--workers",
+      "16",
+      "--round-games",
+      "768",
+      "--games-per-group",
+      "48",
+      "--state",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/artifacts/task126/state.snapshot.json",
+      "--manifest",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/stage4/multiplier_panel.json",
+      "--recipe",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/recipes/dw4i2.json",
+      "--alternate-recipe",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/recipes/dw4i2_rebalanced_p05.json",
+      "--candidates-per-recipe",
+      "2",
+      "--training-parallelism",
+      "1",
+      "--selection-holdout-manifest",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/configs/student_selection_holdout.json",
+      "--opening-manifest",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task119/opening_panel.json",
+      "--demo-start-manifest",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/configs/human_demo_tasks.json",
+      "--executable",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+      "--promotion-panel",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/artifacts/task73c/panel_v3_source.json",
+      "--log",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/selheldout/artifacts/task126/dryrun.log"
+    ]
+  },
+  "tests": [
+    {
+      "files": [
+        "python/test_selection_holdout.py",
+        "python/test_multiseed_production.py",
+        "python/test_curriculum_pipeline.py",
+        "python/test_student_selection.py"
+      ],
+      "passed": 39
+    },
+    {
+      "files": [
+        "python/test_selection_holdout.py"
+      ],
+      "passed": 5,
+      "note": "after adding two legality-only engine resets; four earlier cases overlap"
+    }
+  ],
+  "production_status": {
+    "deployment_executed": false,
+    "qc_tmux_touched": false,
+    "production_state_or_ledgers_written": false,
+    "full_training_started": false,
+    "full_games_played": 0,
+    "legality_only_engine_resets": 2
+  }
+}

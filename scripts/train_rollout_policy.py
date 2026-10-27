@@ -462,6 +462,29 @@ def _member_array(archive, name):
 
 
 def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
+    """Share one merged generation between trainers, keeping their row weights private."""
+    if data is None:
+        return _read_segments(paths, data, row_observer, source_weight)
+    import fcntl
+    import hashlib
+    directory = Path(data) / '.merge' / 'shared-v1'
+    directory.mkdir(parents=True, exist_ok=True)
+    signature = hashlib.sha256(json.dumps([
+        (str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns)
+        for path in paths]).encode()).hexdigest()
+    with (directory.parent / 'shared.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        marker = directory / 'complete'
+        reuse = marker.is_file() and marker.read_text() == signature
+        if not reuse:
+            for previous in directory.iterdir():
+                previous.unlink()
+        result = _read_segments(paths, data, row_observer, source_weight, directory, reuse)
+        marker.write_text(signature)
+    return result
+
+
+def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=False):
     """Merge compact slices in global archive order, without decompressing game frames.
 
     Labels interleave by seed in frame_paths. Simply concatenating label segments would change
@@ -470,18 +493,22 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
 
     task61: two passes keep the peak near one segment instead of the whole corpus twice. Pass
     one reads only per-row metadata and every member's npy header (no big array is decompressed),
-    lays the chunks out in global archive order and preallocates the targets -- file backed
-    _spilled_array memmaps when data names a directory (anonymous memory then stays around one
-    segment), plain arrays otherwise. Pass two loads one segment at a time, copies each chunk
+    lays the chunks out in global archive order and preallocates the targets -- shared file-backed
+    memmaps when a spill directory is supplied, plain arrays otherwise.
+    Pass two loads one segment at a time, copies each chunk
     to its precomputed position and releases it. The result is bitwise identical to the previous
     concatenate-everything implementation (tests compare every column, plus hashes over a real
     round-2 pack subset).
     """
-    spill = Path(data) / ".merge" if data is not None else None
-
+    allocated = []
     def allocate(name, dtype, shape):
         if spill is not None:
-            return _spilled_array(spill, name, np.dtype(dtype), shape)
+            path = spill / f'{name}.npy'
+            if reuse:
+                return np.load(path, mmap_mode='c', allow_pickle=False)
+            store = np.lib.format.open_memmap(path, mode='w+', dtype=dtype, shape=shape)
+            allocated.append(store)
+            return store
         return np.zeros(shape, dtype=np.dtype(dtype))
 
     # Pass one: the chunk layout comes from per-row metadata and the (small) offsets/counts
@@ -592,9 +619,21 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
                        "cand_entries": allocate("cand_entries", headers["cand_entries"][1],
                                                 (totals["cand"], *headers["cand_entries"][0][1:]))}
     packets = PacketStore(total_rows, headers["packet_col0"][0][1]) if has_packets else None
+    if packets is not None:
+        packets.columns = [allocate(f'packet_col{index}', column.dtype, column.shape)
+                           for index, column in enumerate(packets.columns)]
 
     # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
     for index, layout in enumerate(layouts):
+        if reuse:
+            with np.load(layout['path'], allow_pickle=False) as stored:
+                for store, name in zip(stores, ('board', 'scalar')):
+                    cells = stored[name + '_plane_cells']
+                    values = stored[name + '_plane_values']
+                    offsets = stored[name + '_plane_offsets']
+                    store.planes.extend((cells[lo:hi], values[lo:hi])
+                                        for lo, hi in zip(offsets[:-1], offsets[1:]))
+            continue
         part = read_pack(layout["path"])
         for store, name, part_store in ((stores[0], "board", part[0]), (stores[1], "scalar", part[1])):
             descriptor = descriptors[name]
@@ -643,6 +682,10 @@ def read_segments(paths: list[Path], data: Path | None = None, row_observer=None
                     target_column[pos:pos + span] = np.asarray(column)[start:stop]
         del part
 
+    for store in allocated:
+        store.flush()
+    if spill is not None:
+        dense_targets['weight'] = dense_targets['weight'].copy()
     result = (stores[0], stores[1],
               *(torch.from_numpy(dense_targets[name]) for name in dense_names),
               seed_target, ValueStore.from_arrays(value_arrays),
@@ -687,6 +730,8 @@ def main(*, step_observer=None) -> None:
     source_counts = None
     observer = row_plan.observe if row_plan else None
     level_cap = args.source_weight.get('level_balance')
+    level_power = args.source_weight.get('level_balance_power', 1.0)
+    level_max_multiplier = args.source_weight.get('level_balance_max_multiplier')
     if args.source_row_report or level_cap:
         from pvz_training_rows import SourceRowCounts
         source_counts = SourceRowCounts(balance=bool(level_cap))
@@ -744,7 +789,7 @@ def main(*, step_observer=None) -> None:
         print(json.dumps({"row_intervention":row_plan.metadata(),
                           "positive_weight_rows":int((weight>0).sum())}),flush=True)
     if level_cap:
-        shares = source_counts.rebalance(weight, is_val, level_cap)
+        shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,

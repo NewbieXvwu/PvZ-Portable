@@ -1,0 +1,177 @@
+"""task126: selection-only decks, four frozen candidates, serial resume and deployment isolation."""
+import json
+from pathlib import Path
+import subprocess
+import sys
+
+import pytest
+
+ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
+import curriculum_queue as queue
+from pvz_recipe import load_recipe, write_recipe
+from pvz_selection_refresh import make_plan, selection_templates, SELECTION_POOLS, SELECTION_BLOCK_SIZE
+from pvz_student_selection import assert_disjoint, seed_spans
+from test_curriculum_pipeline import setup, write_evaluation, write_selection
+
+HOLDOUT = ROOT / 'configs/student_selection_holdout.json'
+
+
+def test_equal_shares_and_existing_exclusions_without_changing_frozen_v2(tmp_path):
+    old = selection_templates()
+    templates = selection_templates(HOLDOUT)
+    assert len(templates['tasks']) == len(old['tasks']) + 2
+    assert templates['tasks'][:-2] == old['tasks']
+    holds = templates['tasks'][-2:]
+    signatures = {tuple(sorted(t['deck'])) for t in holds}
+    # d7q cannot draw the umbrella set (37 is outside its pool); the starfruit
+    # set is explicitly excluded. d7p exclusions are documented from its source manifest.
+    q = next(t for t in old['tasks'] if t['task_id'] == 'day_l8_train_d7q')['deck_perturb']
+    for sig in signatures:
+        assert sig in {tuple(sorted(d)) for d in q['excluded_decks']} or not set(sig) <= set(q['pool'])
+    model = tmp_path / 'model.pt'
+    model.write_bytes(b'incumbent')
+    block = (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE)
+    panel = make_plan(dict(cells={}, log=[]), model, tmp_path, templates, {}, block)
+    assert panel['panel_version'] == 'selection-task126-v3-refresh'
+    assert len(panel['tasks']) == 5
+    assert len(panel['selection_holdout_tasks']) == 2
+    assert len({len(t['seeds']) for t in panel['tasks']}) == 1
+    assert sum(len(t['seeds']) for t in panel['tasks']) <= SELECTION_BLOCK_SIZE
+    assert_disjoint(panel, [(31024, 65536), (100_000_000, 101_000_000),
+                            (103_000_000, 104_000_000), (200_000_000, 201_000_000),
+                            *seed_spans(old)])
+    legacy = make_plan(dict(cells={}, log=[]), model, tmp_path, old, {}, block)
+    assert len(legacy['tasks']) == 3
+    assert 'selection_holdout_tasks' not in legacy
+
+
+def test_gate_card_sets_are_rejected_even_under_new_names(tmp_path):
+    gate = tmp_path / 'gate.json'
+    tasks = json.loads(HOLDOUT.read_text())['tasks']
+    gate.write_text(json.dumps(dict(tasks=[dict(tasks[0], task_id='day_l7_eval_d7p_holdout1')])))
+    with pytest.raises(ValueError, match='distinct'):
+        selection_templates(HOLDOUT, gate)
+
+
+def test_two_new_decks_reset_in_the_engine_without_playing_a_game():
+    from pvz_env import PvZEnv, TaskSpec
+    from pvz_tasks import profile_for_deck
+    executable = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable')
+    resources = Path.home() / '.cache/pvz-research-resources'
+    if not executable.exists() or not resources.exists():
+        pytest.skip('requires local build6 and resources for two legality-only resets')
+    with PvZEnv(resource_dir=resources, executable=executable, headless=True) as env:
+        for task in json.loads(HOLDOUT.read_text())['tasks']:
+            deck = tuple(task['deck'])
+            env.reset(deck=deck, task=TaskSpec(level=task['level'], seed=0,
+                playthrough=2, profile=profile_for_deck(deck)))
+            assert not env.deck_warnings(deck)['warnings']
+
+
+def test_four_candidates_are_serial_frozen_and_resume_without_retraining(tmp_path, monkeypatch):
+    args, state = setup(tmp_path)
+    alternate = tmp_path / 'b.json'
+    write_recipe(alternate, dict(load_recipe(args.recipe), source_weight=dict(level_balance=.25)))
+    args.alternate_recipe = alternate
+    args.candidates_per_recipe = 2
+    args.training_parallelism = 1
+    args.selection_holdout_manifest = HOLDOUT
+    state.update(round=1, log=[dict(groups=[dict(label='c1a')])])
+    monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 64 * queue.GIB)
+    monkeypatch.setattr(queue, 'mem_total_bytes', lambda: 64 * queue.GIB)
+    monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: 16 * queue.GIB)
+    def prepare(self, job):
+        path = Path(job['selection_manifest'])
+        if not path.exists():
+            templates = json.loads(Path(job['selection_refresh']['templates']).read_text())
+            panel = make_plan(dict(cells={}, log=[]), args.rollout_policy, tmp_path, templates, {},
+                              job['selection_refresh']['seed_block'])
+            path.write_text(json.dumps(panel))
+        return dict(manifest_sha256=queue.file_sha(path))
+    monkeypatch.setattr(queue.TrainingPipeline, '_prepare_selection', prepare)
+    seen, calls = [], []
+    interrupted = False
+    def command(self, command, logfile):
+        nonlocal interrupted
+        calls.append(logfile.name)
+        if logfile.name == 'train.log':
+            assert self.train_parallelism == 1
+            recipe = load_recipe(Path(command[command.index('--recipe') + 1]))
+            seen.append(recipe)
+            model = logfile.parent / 'student/model.pt'
+            model.parent.mkdir(parents=True, exist_ok=True)
+            model.write_bytes(str(recipe['seed']).encode())
+        elif logfile.name == 'selection.log':
+            if not interrupted:
+                interrupted = True
+                raise RuntimeError('selection interrupted')
+            write_selection(self, command)
+            out = Path(command[command.index('--out') + 1]) / 'selection.json'
+            receipt = json.loads(out.read_text())
+            panel = json.loads(Path(command[command.index('--manifest') + 1]).read_text())
+            for score in receipt['scores'].values():
+                score['wins'] = {t['task_id']: 1 for t in panel['tasks']}
+            out.write_text(json.dumps(receipt))
+        elif logfile.name == 'evaluation.log':
+            write_evaluation(self, command)
+        return queue.GIB
+    monkeypatch.setattr(queue.TrainingPipeline, '_command', command)
+    pipeline = queue.TrainingPipeline(args, state)
+    try:
+        pipeline.enqueue()
+        job = state['training_jobs'][0]
+        with pytest.raises(RuntimeError, match='selection interrupted'):
+            pipeline.futures[0][1].result(timeout=10)
+        # Deployment/default changes cannot rewrite an already enqueued job.
+        args.candidates_per_recipe, args.training_parallelism = 1, 2
+        pipeline.poll()
+        pipeline.futures[0][1].result(timeout=10)
+        pipeline.poll()
+    finally:
+        pipeline.close()
+    assert job['training_seeds'] == [1, 2, 3, 4]
+    assert [r['seed'] for r in seen] == [1, 2, 3, 4]
+    assert [r['source_weight'].get('level_balance', 0) for r in seen] == [0, 0, .25, .25]
+    assert calls.count('pack.log') == 1 and calls.count('train.log') == 4
+    assert [c['recipe_family'] for c in job['timing']['candidates']] == ['A', 'A', 'B', 'B']
+    assert [c['seed'] for c in job['timing']['candidates']] == [1, 2, 3, 4]
+    assert all(c['selection_unseen_deck']['wins'] == 2 for c in job['timing']['candidates'])
+    assert all(len(c['selection_unseen_deck']['tasks']) == 2 for c in job['timing']['candidates'])
+    assert job['timing']['training_mode']['attempt_history'][0]['mode'] == 'serial'
+    assert job['status'] == 'done'
+    assert len(json.loads((tmp_path / 'selection_seed_ledger.json').read_text())['allocated']) == 1
+
+
+def test_deploy14h_activation_rollback_and_watchdog_extraction(tmp_path):
+    script = ROOT / 'scripts/qc_deploy14h.sh'
+    source = script.read_text().split('# --- preflight:', 1)[0].replace('/home/newbiexvwu', str(tmp_path))
+    functions = tmp_path / 'functions.sh'
+    functions.write_text(source)
+    logs = tmp_path / 'pvz-logs'
+    logs.mkdir()
+    result = subprocess.run(['bash', '-c', '''
+source "$1"
+tmux() { if [ "$1" = has-session ]; then return 1; fi; printf '%s\n' "$*" >> "$MODE_CHOICE.calls"; }
+code_state() { :; }
+start_qc
+choose_mode rebalance
+start_qc
+SAVED=1; STARTED=1; rollback injected
+''', 'test', str(functions)], capture_output=True, text=True, timeout=10)
+    assert result.returncode == 1, result.stderr
+    calls = (logs / 'qc_deploy14h.mode.calls').read_text().splitlines()
+    assert len(calls) == 3
+    for call in (calls[0], calls[2]):
+        assert 'dw4i2_rebalanced.json' in call
+        assert '--selection-holdout-manifest' not in call
+        assert '--candidates-per-recipe' not in call and '--training-parallelism' not in call
+    assert 'dw4i2_rebalanced_p05.json' in calls[1]
+    assert '--candidates-per-recipe 2' in calls[1]
+    assert '--training-parallelism 1' in calls[1]
+    assert '--selection-holdout-manifest' in calls[1]
+    result = subprocess.run(['bash', '-c', 'source "$1"; watchdog_extract_start "$2"',
+                              'test', str(ROOT / 'scripts/qc_watchdog.sh'), str(script)],
+                             capture_output=True, text=True, timeout=10)
+    assert result.returncode == 0, result.stderr
+    subprocess.run(['bash', '-n'], input=result.stdout, text=True, check=True)

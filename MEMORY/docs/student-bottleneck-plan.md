@@ -1002,3 +1002,4 @@
   - 新增训练标签只有 c21 本轮与 task108 回填的组（各约 0.1%），没有 task93 随机卡组数据。deploy14f 的打包改动是修“短档案无平面时行 / 平面 id 错位”的 bug，第 21 轮因此全量重打包——r11 / r20 可能是在错位数据上训练的。
   - 派 **task125**（台式机 plus 新会话 codex-t125；Business 周额度已用完）：查 heldout 崩塌根因。
 - 2026-10-27 09:45（台式机时间）：**task125 完成**（heldout21）：不是打包 bug（旧错位只坏 42 行，r11 不含；r22 不需重打包）。heldout 是**训练种子抽签**：L7 换卡组同 32 种子，r20 两个种子 4 vs 28 胜，r21 A 5、B 0、r11 26。首处分叉在同卡落点头与牌包排序。挑选面板没有换卡组任务，K=2 又是 A/B 各一，筛不掉坏种子。派 **task126**（codex-t125，selheldout）：挑选面板加换卡组任务（与门禁卡组不同）、K=4（A×2 + B p05×2）串行，并入 deploy14h。
+- 2026-10-27 10:10（台式机时间）：**task126 完成**（selheldout 4d26acb2，已合入 pvz-env）：挑选面板加 `day_l7_select_d7p_holdout3` / `day_l9_select_d7p_holdout4`（DESIGN §14.42，占挑选总分 6.67%），K=4（A×2 + B p05×2）串行，单学生估 50 分钟。deploy14h 已更新（REV 4d26acb2）。主控在台式机挂 tmux `deploy14h-wait`（`~/pvz-logs/deploy_when_idle.sh`：流水线无排队训练时自动执行 deploy14h），并挂 `serialize-r23` / `serialize-r24` 防止部署前的轮次 K=2 并行抖动。task125 的 cbp 接手会话已关。
