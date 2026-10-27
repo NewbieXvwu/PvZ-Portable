@@ -156,3 +156,44 @@ def test_builder_reports_an_episode_cache_without_the_required_names(tmp_path):
     build_tree(tmp_path, episodes=False)
     _, problems = check.build_descriptor(build_spec(tmp_path, ["a.pt", "b.pt"]), tmp_path)
     assert any("episode cache" in item for item in problems)
+
+
+def test_verify_rows_reproduces_the_v5_split(tmp_path):
+    import numpy as np
+    import torch
+    seeds = [1, 2, 3, 4]
+    audit = tmp_path / "audit.json"
+    audit.write_text(json.dumps([{"seed": 2}]))
+    branch = tmp_path / "z13.pt"
+    torch.save(dict(seed=torch.tensor(seeds), boards=torch.zeros(len(seeds), 1),
+                    scalars=torch.zeros(len(seeds), 1), won=torch.zeros(len(seeds))), branch)
+    decision = tmp_path / "d0.pt"
+    torch.save(dict(seed=torch.tensor(seeds)), decision)
+    rows = tmp_path / "rows.npz"
+    np.savez(rows, seeds=np.array(seeds))
+    fit = sum(1 for s in seeds if s != 2 and not check.held(s))
+    val = sum(1 for s in seeds if s != 2 and check.held(s))
+    efit = sum(1 for s in seeds if not check.held(s))
+    eval_ = sum(1 for s in seeds if check.held(s))
+    document = dict(branches=[dict(path=str(branch))], decision_shards=[dict(path=str(decision))],
+                    audit_manifest=dict(path=str(audit)),
+                    episode_files=[dict(path=str(rows))])
+    path = tmp_path / "corpus.json"
+    path.write_text(json.dumps(document))
+    spec = dict(required_splits=dict(branch=dict(fit=fit, validation=val),
+                                     decision=dict(fit=fit, validation=val),
+                                     episode=dict(fit=efit, validation=eval_)))
+    report = check.verify_rows(spec, path)
+    assert report["ok"] is True, report["problems"]
+    spec["required_splits"]["branch"]["fit"] += 1
+    report = check.verify_rows(spec, path)
+    assert any("branch split" in item for item in report["problems"])
+
+
+def test_verify_rows_needs_the_audit_manifest(tmp_path):
+    document = dict(branches=[], decision_shards=[], audit_manifest=dict(path=str(tmp_path / "no.json")),
+                    episode_files=[])
+    path = tmp_path / "corpus.json"
+    path.write_text(json.dumps(document))
+    report = check.verify_rows(dict(required_splits={}), path)
+    assert report["ok"] is False and "audit manifest missing" in report["problems"][0]

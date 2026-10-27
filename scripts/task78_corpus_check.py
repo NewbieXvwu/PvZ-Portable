@@ -195,10 +195,92 @@ def build_descriptor(spec, root, decision_dir=None, episodes_dir=None):
     return document, problems
 
 
+
+def held(seed):
+    """The v5 split: sha256('value-widen:<seed>')[:8] % 10 == 0 is held out for validation."""
+    return int(hashlib.sha256(("value-widen:%d" % int(seed)).encode()).hexdigest()[:8], 16) % 10 == 0
+
+
+def _split_counts(seeds, excluded):
+    import numpy as np
+    seed = np.asarray(seeds)
+    mask = ~np.isin(seed, list(excluded))
+    stop = np.array([held(v) for v in seed])
+    return int((mask & ~stop).sum()), int((mask & stop).sum())
+
+
+def verify_rows(spec, descriptor_path):
+    """Load every shard and reproduce v5's fit/validation row counts.
+
+    The file-level check cannot tell a right corpus from a wrong one with the same names;
+    this recomputes the split the v5 trainer used (audit seeds excluded, then held() by
+    seed) and compares the totals with the frozen 324,559 / 29,446 (branch),
+    3,404 / 456 (decision) and 75,136 / 9,600 (episode).
+    """
+    try:
+        import numpy as np
+        import torch
+    except ImportError as exc:
+        return dict(ok=False, problems=["torch/numpy required: %s" % exc])
+    path = Path(descriptor_path)
+    if not path.is_file():
+        return dict(ok=False, problems=["descriptor missing"])
+    document = json.loads(path.read_text())
+    problems = []
+    audit = document.get("audit_manifest") or {}
+    audit_path = Path(str(audit.get("path", "")))
+    if not audit_path.is_file():
+        return dict(ok=False, problems=["audit manifest missing, cannot exclude audit seeds"])
+    excluded = {int(row["seed"]) for row in json.loads(audit_path.read_text())}
+
+    counts = {}
+    for kind, rows in (("branch", document.get("branches") or []),
+                       ("decision", document.get("decision_shards") or [])):
+        fit = val = 0
+        for row in rows:
+            shard = Path(str(row.get("path", "")))
+            if not shard.is_file():
+                problems.append("missing %s shard %s" % (kind, shard))
+                continue
+            payload = torch.load(shard, map_location="cpu", weights_only=False, mmap=True)
+            if "seed" not in payload:
+                problems.append("%s shard lacks seed: %s" % (kind, shard))
+                continue
+            a, b = _split_counts(payload["seed"].numpy(), excluded)
+            fit += a
+            val += b
+        counts[kind] = dict(fit=fit, validation=val)
+
+    episodes = document.get("episode_files") or []
+    rows_npz = next((Path(str(r.get("path"))) for r in episodes
+                     if Path(str(r.get("path"))).name == "rows.npz"), None)
+    if rows_npz is None or not rows_npz.is_file():
+        problems.append("episode rows.npz missing")
+    else:
+        with np.load(rows_npz) as archive:
+            if "seeds" not in archive.files:
+                problems.append("episode rows.npz lacks seeds")
+            else:
+                a, b = _split_counts(archive["seeds"], set())
+                counts["episode"] = dict(fit=a, validation=b)
+
+    expected = spec["required_splits"]
+    for kind, want in expected.items():
+        got = counts.get(kind)
+        if got is None:
+            problems.append("%s: no rows counted" % kind)
+        elif got["fit"] != want["fit"] or got["validation"] != want["validation"]:
+            problems.append("%s split %d/%d != %d/%d"
+                            % (kind, got["fit"], got["validation"], want["fit"], want["validation"]))
+    return dict(ok=not problems, counts=counts, expected=expected, problems=problems)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--descriptor", type=Path,
                         default=ROOT / "artifacts/task78/original_v5/corpus.json")
+    parser.add_argument("--verify-rows", action="store_true",
+                        help="also load every shard and reproduce v5's fit/validation row counts")
     parser.add_argument("--paths", action="store_true",
                         help="only check the original absolute paths, no descriptor")
     parser.add_argument("--write-descriptor", action="store_true",
@@ -227,6 +309,10 @@ def main():
         args.descriptor.write_text(json.dumps(document, indent=1) + "\n")
         report["build"]["written"] = str(args.descriptor)
     report.update(check_paths(spec) if args.paths else check_descriptor(spec, args.descriptor))
+    if args.verify_rows:
+        rows = verify_rows(spec, args.descriptor)
+        report["rows"] = rows
+        report["ok"] = bool(report.get("ok")) and rows["ok"]
     report["ready"] = bool(report.get("ok"))
     print(json.dumps(report, indent=1))
     return 0 if report["ready"] else 1

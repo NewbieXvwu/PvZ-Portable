@@ -278,6 +278,8 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
     --write-descriptor --source-root /path/to/restored
 # 0) 语料放回后先机械验收（97 分支 / 64 分片 / 审计清单 / descriptor 哈希与 split）
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_corpus_check.py
+# 0b) 再加 --verify-rows：逐分片重算 v5 的 fit/val 行数（324,559/29,446、3,404/456、75,136/9,600）
+/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_corpus_check.py --verify-rows
 PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_train.py --corpus original --out /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6 --device cuda
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_formal_ab.py freeze
 # 后续v5/v6阶段仍须等当前游戏链退出，锁保护同时最多2游戏。

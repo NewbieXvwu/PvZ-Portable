@@ -213,6 +213,8 @@
 
 - 2026-10-27 17:58（CodeBuddy）：**结论文档与回执之间的对账改成可重跑的工具**。新增 tracked `scripts/task78_reconcile_docs.py`：从 `ab/paired.json`（白天/夜间/泳池下界、雾与屋顶 gain/net/p、512 对）、`roof_truth/scored.json`（主视界 162 对/48 root、0.4691→0.5185、主门 false）、`task72_probe94/score_original_protocol.json`（47/93、0.505）、`score_full192_9sample.json`（46/93、0.495、差 −0.011、CI [−0.119,+0.083]）、`gates.json`（0.7146/0.8230）重算 16 项关键数字，逐项断言它们仍以原样出现在 `value-v6.md`；回执不在时 rc=3 拒绝运行（附 1 项测试）。实测 **RECONCILED**、0 漂移，task78 全量 **163 项**测试通过。此前 15:15 的人工对账结论因此可复现。
 
+- 2026-10-27 18:35（CodeBuddy）：**语料验收补上行级证明**。`task78_corpus_check.py --verify-rows` 现在会逐分片 `torch.load(mmap)` 读出 `seed`，按 v5 训练器的口径（先用审计清单排除种子、再 `held(seed)=sha256('value-widen:<seed>')[:8]%10==0` 切验证集）重算三类行数，并与冻结的 branch 324,559/29,446、decision 3,404/456、episode 75,136/9,600 逐项比对——文件名对得上但内容不对的语料会在这里被挡住（此前 descriptor 的 splits 只是自报）。episode 走 `rows.npz` 的 `seeds`。新增 2 项测试（合成分片复现切分、缺审计清单即拒绝），corpus_check 共 10 项、task78 共 165 项测试通过。未改任何阈值或语料要求。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
