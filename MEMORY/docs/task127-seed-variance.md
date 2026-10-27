@@ -42,3 +42,4 @@ task125：同数据同配方，第 20 轮两个训练种子在 L7 换卡组同 3
 
 - 2026-10-27：接手（前代理 Codex 额度用尽，代码与预登记均未提交）。核对工作树后补提交：`ema_decay` 配方参数、训练器平均权重、`scripts/seed_variance.py`、DESIGN §14.43 种子登记、两个相关测试（recipe 10 项、EMA 用例 1 项均通过）。
 - 2026-10-27：训练仍在跑，`serial/models/` 已完成 base_s1、base_s2、ema_s1、ema_s2 四份，base_s3 在第 8/12 轮；剩余 base_s3、base_s4、ema_s3、ema_s4。
+- 2026-10-27：主控通知 Codex 额度恢复，当前进度已提交并推送 `seedvar`（40cb22c9），训练与后续评估交回 Codex 接管；已完成四份模型（base_s1/s2、ema_s1/s2），base_s3 在跑。
