@@ -35,7 +35,7 @@ def arguments(root):
 def fake_games(args, command, **kwargs):
     # Preregistration must exist before the first episode starts.
     registration = gate.read(args.out / 'registration.json')
-    if registration['version'] in (3, 4):
+    if registration['version'] in (3, 4, 5):
         assert registration['policy']['pair_count'] == 1920
         block = registration['seed_block']
         assert block[1] - block[0] == 10 * 192
@@ -57,8 +57,24 @@ def fake_games(args, command, **kwargs):
     (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=model, task_id=name, arms='fast',
         dagger_beta='0', executable=str(args.executable), workers='1')))
     (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(seed=seed, arm='fast', searched=0,
-        won=model == str(args.candidate))) for seed in task['seeds']))
+        won=(model == str(args.candidate)) != (registration['version'] == 5 and
+            name in gate.read(args.out / 'manifest.json').get('monitor', [])))) for seed in task['seeds']))
     return SimpleNamespace(returncode=0)
+
+
+def test_v5_roof_panel_issues_resumes_and_records_heldout_collapse(tmp_path):
+    args = arguments(tmp_path)
+    args.gate_version = 5
+    args.source_panel = Path(__file__).resolve().parents[1] / 'configs/gate_v5_panel.json'
+    with patch.object(gate.subprocess, 'run', side_effect=lambda cmd, **kw: fake_games(args, cmd, **kw)) as run:
+        result = gate.evaluate(args)
+        assert run.call_count == 80                       # 40 tasks, both sides
+        assert result['approved'] and result['overall']['pairs'] == 1728
+        assert result['zones']['roof']['pairs'] == 90
+        assert all(cell['harm'] == 96 for cell in result['monitor'].values())
+        assert gate.valid_certificate(result, result['contract'], args.out)
+        gate.evaluate(args)
+        assert run.call_count == 80                       # resume uses the issued block
 
 
 def test_complete_evaluation_resumes_and_rechecks_raw_episode_certificates():

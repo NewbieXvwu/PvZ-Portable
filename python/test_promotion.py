@@ -352,8 +352,8 @@ def test_v5_policy_and_committed_source_panel_are_the_same_adventure_set():
     assert GATE_VERSION == 5
     v5 = policy(5)
     assert v5['pair_count'] == 1920 and v5['episode_count'] == 3840
-    assert v5['seeds_per_task'] == 48 and v5['monitor_seeds_per_task'] == 96
-    assert len(v5['tasks']) == 38 and sum(task['seeds'] for task in v5['tasks']) == 1920
+    assert v5['seeds_per_task'] == 45 and v5['monitor_seeds_per_task'] == 96
+    assert len(v5['tasks']) == 40 and sum(task['seeds'] for task in v5['tasks']) == 1920
     assert [task['task_id'] for task in v5['tasks'] if task['monitor']] == list(V5_MONITOR_TASKS)
     assert 'monitor only' in v5['heldout'] and 'never enters the overall rate' in v5['heldout']
     document = v5_source()
@@ -370,17 +370,19 @@ def test_v5_panel_partitions_one_block_and_scores_only_adventure_pairs():
     assert panel['panel_version'] == 'v5-task128'
     assert len(seeds) == len(set(seeds)) == 1920
     assert min(seeds) == 100_000_000 and max(seeds) == 100_001_919
-    assert sorted(set(panel['groups'].values())) == ['day', 'fog', 'heldout', 'night', 'pool']
-    assert 'roof' not in set(panel['groups'].values())      # no roof level has a recorded win
+    assert sorted(set(panel['groups'].values())) == ['day', 'fog', 'heldout', 'night', 'pool', 'roof']
+    counts = [len(task['seeds']) for task in panel['tasks'] if task['task_id'] not in V5_MONITOR_TASKS]
+    assert sorted(counts) == [45] * 20 + [46] * 18
     result = decide(outcomes(panel, True, False), panel)
     assert result['version'] == 5 and result['approved']
     assert result['overall']['pairs'] == 1728                # heldout never enters the overall rate
-    assert sorted(result['zones']) == ['day', 'fog', 'night', 'pool']
+    assert sorted(result['zones']) == ['day', 'fog', 'night', 'pool', 'roof']
     assert sorted(result['monitor']) == list(V5_MONITOR_TASKS)
     assert all(cell['pairs'] == 96 for cell in result['monitor'].values())
 
 
-def test_v5_heldout_collapse_never_vetoes_while_a_zone_collapse_still_does():
+@pytest.mark.parametrize('zone', ['pool', 'roof'])
+def test_v5_heldout_collapse_never_vetoes_while_a_zone_collapse_still_does(zone):
     panel = v5_panel()
     pairs = outcomes(panel, True, True)
     for row in pairs:
@@ -391,10 +393,10 @@ def test_v5_heldout_collapse_never_vetoes_while_a_zone_collapse_still_does():
     assert all(cell['harm'] == 96 for cell in result['monitor'].values())
     assert result['overall']['harm'] == 0 and result['overall']['pairs'] == 1728
     for row in pairs:
-        if row['zone'] == 'pool':
+        if row['zone'] == zone:
             row.update(candidate=False, incumbent=True)
     reasons = decide(pairs, panel)['reasons']
-    assert 'significant_zone_regression:pool' in reasons
+    assert 'significant_zone_regression:' + zone in reasons
     assert not any('heldout' in reason for reason in reasons)
 
 

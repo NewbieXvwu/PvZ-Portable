@@ -8,19 +8,17 @@ the subset where the incumbent reference can win at all -- "all-loss cells have
 no discriminative power" -- measured as
 
     r11 student wins >= 1 on the 32-seed scoreboard  OR
-    teacher wins >= 1 in the task115 weak-level arm.
+    teacher wins >= 1 on the original scoreboard or in task115.
 
 Sources (SHA-pinned below, so the panel is reproducible from git):
 
 - `configs/adventure_scoreboard.json`   task definitions, 45 levels, 1.0x.
 - `MEMORY/docs/adventure-scoreboard-r11-32.json`  per-level r11 student wins
   (45 levels x 32 seeds, Mac engine 6f7d2c3f, task103).
+- `MEMORY/docs/adventure-scoreboard.json`  original task101 scoreboard,
+  per-level teacher results: roof L41 3/16 and L46 2/16 qualify.
 - `MEMORY/docs/task115-teacher-arm-weak-levels.md`  teacher arm, 16 seeds per
-  weak level. The roof block (L41-44, L46-49) is only reported as an aggregate
-  "0-1/16" and is therefore *not* attributable per level; those levels are
-  recorded as unqualified pending per-level evidence or an explicit scope
-  decision. The aggregate does not establish that every roof level lost all
-  games. L50 (Boss) is 0/16 teacher and 0/32 student -> excluded.
+  weak level. Its unattributed roof aggregate is not used as a per-level count.
 
 The two heldout cells are carried over field-for-field from the registered v3
 source panel (`artifacts/task73c/panel_v3_source.json`); v5 keeps running them
@@ -43,17 +41,19 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 SCOREBOARD = 'configs/adventure_scoreboard.json'
 STUDENT_RESULTS = 'MEMORY/docs/adventure-scoreboard-r11-32.json'
+TEACHER_RESULTS = 'MEMORY/docs/adventure-scoreboard.json'
 TEACHER_DOC = 'MEMORY/docs/task115-teacher-arm-weak-levels.md'
 OUTPUT = 'configs/gate_v5_panel.json'
 SCOREBOARD_SHA256 = '5213bf9fef5a22f676ba4a9f90cf9d73c6a0d36d5393b6efe07392e9b07946cc'
 STUDENT_RESULTS_SHA256 = 'de0c68c16c5f7582c8962916bc2334cd6f2e8e5877f5bb4f0ab0c48ae641b288'
+TEACHER_RESULTS_SHA256 = '71ac8475cb42ac4018adfd2626272b886d2b4afd52e4bbf6cdfa99e475de1976'
 
 # task115 teacher arm, 16 seeds per measured weak level (None = not measured).
 TEACHER_WINS = {19: 16, 23: 15, 24: 16, 26: 13, 27: 9, 28: 16, 29: 13, 30: 1,
                 32: 13, 33: 5, 34: 1, 37: 16, 39: 3, 40: 4, 50: 0}
 TEACHER_GAMES = 16
 # task115 reports the roof block only in aggregate ("0-1/16" across L41-44, L46-49),
-# so no per-level teacher count exists. Kept as an explicit reason, not a guess.
+# so it adds no per-level count. The original scoreboard supplies roof counts.
 UNMEASURED_BLOCKS = {41: 'task115 reports the roof block 41-44/46-49 only in aggregate (0-1/16)',
                      42: 'task115 reports the roof block 41-44/46-49 only in aggregate (0-1/16)',
                      43: 'task115 reports the roof block 41-44/46-49 only in aggregate (0-1/16)',
@@ -97,6 +97,13 @@ def build() -> dict:
         raise SystemExit(f'{SCOREBOARD} changed; re-freeze the v5 panel deliberately')
     if sha(results) != STUDENT_RESULTS_SHA256:
         raise SystemExit(f'{STUDENT_RESULTS} changed; re-freeze the v5 panel deliberately')
+    teacher_results = ROOT / TEACHER_RESULTS
+    if sha(teacher_results) != TEACHER_RESULTS_SHA256:
+        raise SystemExit(f'{TEACHER_RESULTS} changed; re-freeze the v5 panel deliberately')
+    teacher_document = json.loads(teacher_results.read_text())
+    if teacher_document['multiplier'] != 1.0:
+        raise SystemExit('teacher qualification must use original-difficulty games')
+    previous = {row['level']: row for row in teacher_document['levels']}
     definitions = json.loads(scoreboard.read_text())['tasks']
     student = {level['level']: level.get('student') or {}
                for level in json.loads(results.read_text())['levels']}
@@ -106,13 +113,21 @@ def build() -> dict:
     for definition in definitions:
         level = int(definition['level'])
         wins, games = int(student.get(level, {}).get('wins') or 0), int(student.get(level, {}).get('games') or 0)
-        teacher = TEACHER_WINS.get(level)
+        prior = previous[level]
+        if prior['task_id'] != definition['task_id'] or prior['deck'] != definition['deck']:
+            raise SystemExit(f'teacher scoreboard task differs at level {level}')
+        evidence = {TEACHER_RESULTS: prior['teacher']}
+        if level in TEACHER_WINS:
+            evidence[TEACHER_DOC] = dict(wins=TEACHER_WINS[level], games=TEACHER_GAMES)
+        teacher = max(evidence.values(), key=lambda result: result['wins'])
         zone = zone_of(level)
         record = dict(zone=zone, student_wins=wins, student_games=games,
-                      teacher_wins=teacher, teacher_games=TEACHER_GAMES if teacher is not None else None)
+                      teacher_wins=teacher['wins'], teacher_games=teacher['games'],
+                      teacher_sources={name: dict(wins=result['wins'], games=result['games'])
+                                       for name, result in evidence.items()})
         if level in UNMEASURED_BLOCKS:
             record['note'] = UNMEASURED_BLOCKS[level]
-        if wins < 1 and not (teacher and teacher >= 1):
+        if wins < 1 and teacher['wins'] < 1:
             excluded.append(dict(level=level, task_id=definition['task_id'], **record,
                                  reason='no recorded win for the r11 student or the teacher'))
             continue
@@ -141,10 +156,10 @@ def build() -> dict:
         groups[task['task_id']] = 'heldout'
         qualification[task['task_id']] = dict(zone='heldout', monitor_only=True)
     zones = sorted({groups[task['task_id']] for task in tasks})
-    if len(tasks) != 38 or zones != ['day', 'fog', 'heldout', 'night', 'pool']:
+    if len(tasks) != 40 or zones != ['day', 'fog', 'heldout', 'night', 'pool', 'roof']:
         raise SystemExit(f'unexpected v5 panel: {len(tasks)} tasks, zones {zones}')
     counts = {zone: sum(1 for task in tasks if groups[task['task_id']] == zone) for zone in zones}
-    if counts != {'day': 9, 'fog': 9, 'heldout': 2, 'night': 9, 'pool': 9}:
+    if counts != {'day': 9, 'fog': 9, 'heldout': 2, 'night': 9, 'pool': 9, 'roof': 2}:
         raise SystemExit(f'unexpected zone counts: {counts}')
     return dict(schema_version=1, panel_version='v5',
                 purpose='task128 gate-v5 source panel: the adventure levels the game actually plays '
@@ -152,8 +167,10 @@ def build() -> dict:
                         'two registered heldout cells for monitoring only. Seeds are assigned per round from '
                         'the out-of-git gate seed ledger; the seed lists below are never used.',
                 rule='include a level when the r11 student won >= 1 of its 32 scoreboard seeds or the teacher '
-                     'won >= 1 of its 16 task115 seeds; all-loss cells have no discriminative power',
+                     'won >= 1 on the original scoreboard or task115; '
+                     'all-loss cells have no discriminative power',
                 sources={SCOREBOARD: SCOREBOARD_SHA256, STUDENT_RESULTS: STUDENT_RESULTS_SHA256,
+                         TEACHER_RESULTS: TEACHER_RESULTS_SHA256,
                          TEACHER_DOC: sha(ROOT / TEACHER_DOC)},
                 groups=groups, monitor=[task['task_id'] for task in HOLDOUT_TASKS],
                 zone_counts=counts, qualification=qualification, excluded=excluded, tasks=tasks)

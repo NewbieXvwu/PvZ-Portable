@@ -23,7 +23,7 @@ def test_adventure_body_and_score_only_unseen_decks(tmp_path):
     templates = selection_templates(HOLDOUT, source)
     adventure = [t for t in templates['tasks'] if t.get('selection_group') == 'adventure']
     assert {t['task_id'] for t in adventure} == {t['task_id'] for t in document['tasks']} - set(document['monitor'])
-    assert len(adventure) == 36 and all(t['seeds'] == [] for t in adventure)
+    assert len(adventure) == 38 and all(t['seeds'] == [] for t in adventure)
     assert len([t for t in templates['tasks'] if 'deck_random' in t]) == 3
     holds = [t for t in templates['tasks'] if t.get('selection_group') == 'unseen_deck']
     assert len(holds) == 2 and all(t['score_only'] for t in holds)
@@ -38,8 +38,8 @@ def test_adventure_body_and_score_only_unseen_decks(tmp_path):
     block = (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE)
     panel = make_plan(templates, block, model)
     assert panel['panel_version'] == 'selection-task128-v4'
-    assert len(panel['tasks']) == 41 and len(panel['adventure_tasks']) == 36
-    assert {len(t['seeds']) for t in panel['tasks']} == {SELECTION_BLOCK_SIZE // 41}
+    assert len(panel['tasks']) == 43 and len(panel['adventure_tasks']) == 38
+    assert {len(t['seeds']) for t in panel['tasks']} == {SELECTION_BLOCK_SIZE // 43}
     assert sum(len(t['seeds']) for t in panel['tasks']) <= SELECTION_BLOCK_SIZE
     assert panel['score_only'] == panel['selection_holdout_tasks'] == [t['task_id'] for t in holds]
     assert_disjoint(panel, [(31024, 65536), (100_000_000, 101_000_000),

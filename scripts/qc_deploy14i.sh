@@ -33,6 +33,7 @@ CODE_FILES=(scripts/curriculum_queue.py scripts/train_rollout_policy.py python/p
 # make_gate_v5_panel --check reads these frozen inputs after the overlay. They
 # are absent from both prior deployment packages; restore removes them again.
 CODE_FILES+=(MEMORY/docs/adventure-scoreboard-r11-32.json MEMORY/docs/task115-teacher-arm-weak-levels.md)
+CODE_FILES+=(MEMORY/docs/adventure-scoreboard.json)
 log() { echo "$(date -Iseconds) deploy14i: $*" >> "$L"; }
 service() { if [ -f "$MODE14H" ] && grep -qx rebalance "$MODE14H"; then printf 'h'; else printf 'g'; fi; }
 start_qc() {
@@ -85,6 +86,7 @@ baseline = {'g': BASELINE_G, 'h': BASELINE_H}[service]
 baseline.update({
     'MEMORY/docs/adventure-scoreboard-r11-32.json': None,
     'MEMORY/docs/task115-teacher-arm-weak-levels.md': None,
+    'MEMORY/docs/adventure-scoreboard.json': None,
 })
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest() if path.exists() else None
@@ -191,9 +193,9 @@ code_state installed
 # --- dry-run with the gate-v5 arguments; no seed allocation or training ---
 timeout 300 env PVZ_NO_POPUP=1 "$PY" "$W/scripts/curriculum_queue.py" --dry-run --rounds 100 --workers 16 --round-games 768 --games-per-group 48 --manifest "$W/artifacts/stage4/multiplier_panel.json" --recipe "$W/recipes/dw4i2.json" --alternate-recipe "$W/recipes/dw4i2_rebalanced_p05.json" --candidates-per-recipe 2 --training-parallelism 1 --selection-holdout-manifest "$W/configs/student_selection_holdout.json" --opening-manifest "$OPENING" --log "$O/dryrun.log" --executable "$NEWEXE" --promotion-panel "$PANEL5" --gate-version 5 > "$O/dryrun.out" 2>&1 || rollback 'dry-run failed'
 grep -q 'selection preview (no allocation, no engine, no state write)' "$O/dryrun.out" || rollback 'selection preview missing'
-grep -q '"adventure_tasks": 36' "$O/dryrun.out" || rollback 'adventure selection body missing'
+grep -q '"adventure_tasks": 38' "$O/dryrun.out" || rollback 'adventure selection body missing'
 code_state unchanged
-log 'dry-run passed; 36 adventure levels x 9 games per candidate + 3 random families + 2 score-only unseen decks; production state unchanged'
+log 'dry-run passed; 38 adventure levels x 8 games per candidate + 3 random families + 2 score-only unseen decks; production state unchanged'
 
 # Partial-round groups continue unchanged. Only issued queued/running jobs must
 # finish before switching arguments; there is no new drain round or backfill.

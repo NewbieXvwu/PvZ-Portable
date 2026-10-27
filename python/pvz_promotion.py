@@ -13,7 +13,7 @@ Gate versions:
 - 4 (task113): same panel, seeds and overall noninferiority as v3; zone vetoes
   use Holm–Bonferroni step-down correction at family-wise alpha 0.05.
 - 5 (task128): the panel is the adventure set the game actually plays (original
-  1.0x, scoreboard decks, 36 levels x 48 pairs) instead of synthetic curriculum
+  1.0x, scoreboard decks, 38 levels x 45-46 pairs) instead of synthetic curriculum
   cells; the two registered heldout cells keep running at 96 pairs each for
   monitoring only. The overall -3pp rule and the Holm-Bonferroni zone veto are
   computed on the adventure pairs alone; heldout never vetoes and never enters
@@ -65,53 +65,54 @@ PANEL_TASKS_V3 = (
 # task128 (gate v5): the panel is the adventure set, not synthetic curriculum cells.
 # Levels come from configs/adventure_scoreboard.json (task103: 45 levels, 1.0x,
 # scoreboard decks) and enter only when the r11 student or the teacher has a win
-# there (scripts/make_gate_v5_panel.py). Roof L41-49 and the L50 boss are 0/32 for
-# the student; task115 only gives an unattributed roof aggregate of 0-1/16.
-# Roof eligibility is unresolved; the current panel omits it (DESIGN §14.43).
+# there (scripts/make_gate_v5_panel.py). The original scoreboard qualifies roof
+# L41 (teacher 3/16) and L46 (2/16), despite the later unattributed task115 summary.
 # The two registered heldout cells run for monitoring only.
 PANEL_TASKS_V5 = (
-    ('day', 'task101_l1_day_d7', 48),
-    ('day', 'task101_l2_day_d7', 48),
-    ('day', 'task101_l3_day_d7', 48),
-    ('day', 'task101_l4_day_d7', 48),
-    ('day', 'task101_l6_day_d7', 48),
-    ('day', 'task101_l7_day_d7', 48),
-    ('day', 'task101_l8_day_d7', 48),
-    ('day', 'task101_l9_day_d7', 48),
-    ('day', 'task101_l10_day_d7', 48),
-    ('night', 'task101_l11_night_n10', 48),
-    ('night', 'task101_l12_night_n10', 48),
-    ('night', 'task101_l13_night_n10', 48),
-    ('night', 'task101_l14_night_n10', 48),
-    ('night', 'task101_l16_night_n10', 48),
-    ('night', 'task101_l17_night_n10', 48),
-    ('night', 'task101_l18_night_n10', 48),
-    ('night', 'task101_l19_night_n10', 48),
-    ('night', 'task101_l20_night_n10', 48),
-    ('pool', 'task101_l21_pool_p9k', 48),
-    ('pool', 'task101_l22_pool_p9k', 48),
-    ('pool', 'task101_l23_pool_p9k', 48),
-    ('pool', 'task101_l24_pool_p9k', 48),
-    ('pool', 'task101_l26_pool_p9k', 48),
-    ('pool', 'task101_l27_pool_p9k', 48),
-    ('pool', 'task101_l28_pool_p9k', 48),
-    ('pool', 'task101_l29_pool_p9k', 48),
-    ('pool', 'task101_l30_native', 48),
-    ('fog', 'task101_l31_fog_selected', 48),
-    ('fog', 'task101_l32_fog_selected', 48),
-    ('fog', 'task101_l33_fog_selected', 48),
-    ('fog', 'task101_l34_fog_selected', 48),
-    ('fog', 'task101_l36_fog_selected', 48),
-    ('fog', 'task101_l37_fog_selected', 48),
-    ('fog', 'task101_l38_fog_selected', 48),
-    ('fog', 'task101_l39_fog_selected', 48),
-    ('fog', 'task101_l40_native', 48),
+    ('day', 'task101_l1_day_d7', 46),
+    ('day', 'task101_l2_day_d7', 46),
+    ('day', 'task101_l3_day_d7', 46),
+    ('day', 'task101_l4_day_d7', 46),
+    ('day', 'task101_l6_day_d7', 46),
+    ('day', 'task101_l7_day_d7', 46),
+    ('day', 'task101_l8_day_d7', 46),
+    ('day', 'task101_l9_day_d7', 46),
+    ('day', 'task101_l10_day_d7', 46),
+    ('night', 'task101_l11_night_n10', 46),
+    ('night', 'task101_l12_night_n10', 46),
+    ('night', 'task101_l13_night_n10', 46),
+    ('night', 'task101_l14_night_n10', 46),
+    ('night', 'task101_l16_night_n10', 46),
+    ('night', 'task101_l17_night_n10', 46),
+    ('night', 'task101_l18_night_n10', 46),
+    ('night', 'task101_l19_night_n10', 46),
+    ('night', 'task101_l20_night_n10', 46),
+    ('pool', 'task101_l21_pool_p9k', 45),
+    ('pool', 'task101_l22_pool_p9k', 45),
+    ('pool', 'task101_l23_pool_p9k', 45),
+    ('pool', 'task101_l24_pool_p9k', 45),
+    ('pool', 'task101_l26_pool_p9k', 45),
+    ('pool', 'task101_l27_pool_p9k', 45),
+    ('pool', 'task101_l28_pool_p9k', 45),
+    ('pool', 'task101_l29_pool_p9k', 45),
+    ('pool', 'task101_l30_native', 45),
+    ('fog', 'task101_l31_fog_selected', 45),
+    ('fog', 'task101_l32_fog_selected', 45),
+    ('fog', 'task101_l33_fog_selected', 45),
+    ('fog', 'task101_l34_fog_selected', 45),
+    ('fog', 'task101_l36_fog_selected', 45),
+    ('fog', 'task101_l37_fog_selected', 45),
+    ('fog', 'task101_l38_fog_selected', 45),
+    ('fog', 'task101_l39_fog_selected', 45),
+    ('fog', 'task101_l40_native', 45),
+    ('roof', 'task101_l41_roof_demo', 45),
+    ('roof', 'task101_l46_roof_demo', 45),
     ('heldout', 'day_l7_eval_d7p_holdout1', 96),
     ('heldout', 'day_l9_eval_d7p_holdout2', 96),
 )
 V5_PANEL = 'v5-task128'
 V5_MONITOR_TASKS = ('day_l7_eval_d7p_holdout1', 'day_l9_eval_d7p_holdout2')
-V5_SEEDS_PER_TASK = 48
+V5_SEEDS_PER_TASK = 45
 V5_MONITOR_SEEDS_PER_TASK = 96
 V1_PANEL = 'v2-task49A'
 V2_PANEL = 'v2-task73b'
@@ -204,6 +205,7 @@ def policy(version=GATE_VERSION):
                     pair_count=sum(count for _, _, count in PANEL_TASKS_V5),
                     episode_count=2 * sum(count for _, _, count in PANEL_TASKS_V5),
                     seeds_per_task=V5_SEEDS_PER_TASK,
+                    seed_assignment="1728 adventure pairs evenly divided: first 18 tasks take 46, remaining 20 take 45",
                     monitor_seeds_per_task=V5_MONITOR_SEEDS_PER_TASK,
                     seed_pool=list(SEED_POOL_V2),
                     seed_ledger=SEED_LEDGER_DEFAULT,
@@ -251,7 +253,7 @@ def _freeze_ledger_panel(document, spec, seed_block, per_task, panel_name, versi
 def _freeze_adventure_panel(document, seed_block):
     """task128: partition one ledger block across the registered adventure panel.
 
-    Adventure tasks take V5_SEEDS_PER_TASK pairs each and the two monitoring
+    Adventure tasks take 45 or 46 pairs each and the two monitoring
     cells V5_MONITOR_SEEDS_PER_TASK; the block must be exactly the registered
     size, so a stale source panel cannot silently shrink or grow the gate.
     """
