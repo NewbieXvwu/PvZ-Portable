@@ -338,6 +338,7 @@ def write_frames(path: Path, frames: list[dict]):
 
 def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: Path | None = None) -> Path:
     signature = encoder_signature(obs)
+    base_directory = directory
     if obs != "v1":
         directory = directory / obs
     if path.suffix == ".npz":
@@ -356,6 +357,26 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
             with np.load(candidate, allow_pickle=False) as stored:
                 if str(stored["digest"]) == digest:
                     return candidate
+    # Old v2 archives have none of the newly observed fields. Reuse their
+    # already encoded rows, adding zero channels, instead of featurizing every
+    # decision again. Bytes are read here anyway to compute the cache digest.
+    # Escaped JSON keys and archives with any new field take the normal encoder.
+    if obs == 'v2sleep' and not any(token in source for token in
+                                   (b'"boss"', b'"bungee"', b'"sleep"', b'\\u')):
+        old_digest = hashlib.sha256(encoder_signature('v2').encode() + source).hexdigest()
+        old_roots = [base_directory] if read_directory is None else [read_directory, base_directory]
+        for root in old_roots:
+            candidate = root / 'v2' / target.name
+            if not candidate.is_file():
+                continue
+            with np.load(candidate, allow_pickle=False) as stored:
+                if str(stored['digest']) != old_digest:
+                    continue
+                encoded = {name: stored[name] for name in stored.files if name != 'digest'}
+            encoded['boards'] = np.pad(encoded['boards'], ((0, 0), (0, 12), (0, 0), (0, 0)))
+            encoded['scalars'] = np.pad(encoded['scalars'], ((0, 0), (0, 2)))
+            _save(target, digest=digest, **encoded)
+            return target
     frames = [json.loads(line) for line in source.splitlines()]
     encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)
     _save(target, digest=digest, **encoded)

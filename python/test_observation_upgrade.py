@@ -48,3 +48,35 @@ def test_widening_rejects_semantically_different_inputs():
         warm_start_student(RolloutNet(8, obs='v2sleep'), RolloutNet(8, obs='v2fog'))
     with pytest.raises(ValueError, match='context'):
         warm_start_student(RolloutNet(8, context=True, obs='v2sleep'), RolloutNet(8, obs='v2'))
+
+
+@pytest.mark.parametrize('new_fields', [False, True])
+def test_sleep_cache_reuses_only_missing_field_v2_rows(tmp_path, monkeypatch, new_fields):
+    import numpy as np
+    import pvz_frame_store as store
+    from test_bungee_inputs import frame
+
+    first = frame()
+    first.pop('bungee')
+    if new_fields:
+        first['sleep'] = [[0, 1, 1, 0]]
+    second = copy.deepcopy(first)
+    second.update(tick=160, action=dict(type='wait', ticks=60))
+    path = tmp_path / 'seed_30000/example/frames.npz'
+    store.write_frames(path, [first, second])
+    old = store.cache_episode(path, tmp_path / 'cache', 'v2')
+    source = store.frame_bytes(path)
+    expected = store.encode_student_frames([first, second], source, 'v2sleep')
+    original = store.encode_student_frames
+    calls = []
+    def encode(*args):
+        calls.append(args[-1])
+        return original(*args)
+    monkeypatch.setattr(store, 'encode_student_frames', encode)
+    upgraded = store.cache_episode(path, tmp_path / 'cache', 'v2sleep')
+    assert calls == (['v2sleep'] if new_fields else [])
+    with np.load(upgraded, allow_pickle=False) as actual:
+        for name, array in expected.items():
+            np.testing.assert_array_equal(actual[name], array)
+    assert old.exists() and old != upgraded
+    assert store.cache_episode(path, tmp_path / 'cache', 'v2sleep') == upgraded
