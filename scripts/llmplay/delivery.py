@@ -150,6 +150,8 @@ def _derive(entries, run_id=None):
             selectable = existing[task_id].get("deck_selection") == "player"
             attempts = [entry for entry in entries if entry["task_id"] == task_id and entry["valid"]]
             decks, diverse = _deck_progress(attempts) if selectable else ({}, None)
+            if selectable:
+                wins = sum(group["wins"] for group in decks.values())
             complete = (wins >= 6 and robust >= REQUIRED_ROBUST and diverse is not None) if selectable else (wins >= REQUIRED_WINS and robust >= REQUIRED_ROBUST)
             tasks[task_id] = dict(layer=layer, seeds=seeds, decks=decks, diverse_decks=diverse,
                                  deck_selection=selectable,
@@ -180,7 +182,8 @@ def next_task() -> dict | None:
             continue
         seeds = task["seeds"]
         if task.get("deck_selection") and task.get("diverse_decks") is None:
-            seed = next((seed for seed in task["available_seeds"] if str(seed) not in seeds), task["available_seeds"][0])
+            pool = task["available_seeds"] or [int(seed) for seed in seeds]
+            seed = next((seed for seed in pool if str(seed) not in seeds), pool[0])
             return dict(task_id=task_id, seed=seed, layer=task["layer"], archive=None,
                         action="play_diverse_decks", decks=task["decks"],
                         note="每套至少2个种子胜；三套两两换至少3张且核心思路不同，填写strategy与deck_review")
@@ -207,7 +210,7 @@ def _report(document):
     lines = ["# LLM 对局进度", "", "运行ID：%s" % document["run_id"], "",
              "接口自动生成；详细结果以 progress.json 为准。", "",
              "全部任务达标。" if document["complete"] else "尚未全部完成，继续 next_task()。", "",
-             "自选卡任务：三套卡组各赢≥2种子、合计≥6不同种子胜、≥3种子稳健；两两换≥3张，核心思路由模型声明并供主控复核。",
+             "自选卡任务：三套卡组各赢≥2种子、合计≥6胜（按卡组×种子计数）、≥3种子稳健；两两换≥3张，核心思路由模型声明并供主控复核。",
              "", "| 层 | 达标任务 |", "|---|---|"]
     lines += ["| %s | %d/%d |" % (layer, info["completed"], info["total"])
               for layer, info in document["layers"].items()]

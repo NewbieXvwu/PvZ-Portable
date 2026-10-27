@@ -751,7 +751,7 @@ class Game:
         self._require_primary("robustness()")
         plan = robustness_seeds(seed_config)
         required = str(required_checkpoint(self.task_definition))
-        waves = ([required] if required.startswith("tick:") else sorted(plan)) if checkpoints is None else list(checkpoints)
+        waves = ([required] if required.startswith("tick:") or self.task_definition.get("deck_selection") == "player" else sorted(plan)) if checkpoints is None else list(checkpoints)
         if not waves:
             raise ValueError("checkpoints 不能为空")
         source = _policy_source(policy)
