@@ -86,6 +86,20 @@ def takeover_states(takeover):
             for row in reference_rows() if (row["seed"], row["decision"], row["tick"]) in keys}
 
 
+def recorded_actions(takeover, future):
+    """The actions the frozen reconstruction executed, one per decision.
+
+    The frame archive stores one line per decision boundary (frames[0] is the state the
+    takeover starts in), and each line carries the action that produced the next one.
+    Replaying them keeps the trajectory identical whatever value net is loaded, so the
+    two arms differ only in the leaf scores the preregistered gate compares.
+    """
+    from pvz_frame_store import frame_path, read_frames
+    path = REBUILD / "frames" / f"seed_{SEED}_f{future}" / f"task72b_n{takeover}_fast_search"
+    frames = read_frames(frame_path(path))
+    return [frames[index + 1]["action"] for index in range(len(frames) - 1)]
+
+
 def resource_check():
     available = int(next(line.split()[1] for line in Path("/proc/meminfo").read_text().splitlines()
                          if line.startswith("MemAvailable:"))) * 1024
@@ -111,18 +125,25 @@ def probe(takeover, future, value, label, out=OUT, slot=0, sim_skip=61):
     if takeover not in TAKEOVERS or future not in FUTURES:
         raise ValueError("only the original takeovers and futures are supported")
     states = takeover_states(takeover)
+    recorded = recorded_actions(takeover, future)
     import search_play as teacher
 
     rows = []
     original_search = teacher._search
 
     def search(env, obs, policy_action, args, decision_seed, stats):
-        result = original_search(env, obs, policy_action, args, decision_seed, stats)
-        state = states.get((decision_seed // 10000, decision_seed % 10000, int(obs["tick"])))
+        index = decision_seed % 10000
+        if index >= len(recorded):
+            raise ValueError("recorded actions ended at decision %d" % index)
+        action = recorded[index]
+        state = states.get((decision_seed // 10000, index, int(obs["tick"])))
         if state is None:
-            return result
+            return action
+        chosen = state["chosen"] if isinstance(state["chosen"], dict) else json.loads(state["chosen"])
+        if action != chosen:
+            raise ValueError("replayed action differs from the reference at decision %d" % index)
         actions = cells_of(obs)
-        if sorted(a["row"] for a in actions) != sorted(c[0] for c in state["cells"]):
+        if sorted([a["row"], a["col"]] for a in actions) != sorted([list(c) for c in state["cells"]]):
             raise ValueError("cell list differs from the reference at decision %d" % state["decision"])
         root = env.snapshot_fast()
         try:
@@ -141,7 +162,7 @@ def probe(takeover, future, value, label, out=OUT, slot=0, sim_skip=61):
         finally:
             env.restore_fast(root)
             env.release_snapshot(root)
-        return result
+        return action
 
     args = teacher.parser().parse_args([
         "--manifest", str(MANIFEST), "--task-id", TASK, "--out", str(out / label / f"n{takeover}_f{future}"),
@@ -178,21 +199,22 @@ def load(label, out=OUT):
     rows = []
     for path in sorted((out / label).glob("n*_f*.jsonl")):
         rows.extend(json.loads(line) for line in path.read_text().splitlines() if line.strip())
-    if len({(r["takeover"], r["seed"], r["decision"]) for r in rows}) != len(rows):
+    if len({(r["takeover"], r["seed"], r["decision"], r["tick"]) for r in rows}) != len(rows):
         raise ValueError("duplicate probe states in " + label)
     return rows
 
 
 def compare(label, horizon, out=OUT):
     """Diff the measured wait/static_best values against task72b's recorded ones."""
-    measured = {(r["takeover"], r["seed"], r["decision"]): r for r in load(label, out)}
+    measured = {(r["takeover"], r["seed"], r["decision"], r["tick"]): r for r in load(label, out)}
     diffs, missing, cells = [], [], []
     for row in reference_rows():
-        takeover = next((t for t in TAKEOVERS if (t, row["seed"], row["decision"]) in measured), None)
+        key_state = (row["seed"], row["decision"], row["tick"])
+        takeover = next((t for t in TAKEOVERS if (t,) + key_state in measured), None)
         if takeover is None:
-            missing.append([row["seed"], row["decision"], row["tick"]])
+            missing.append(list(key_state))
             continue
-        got = measured[(takeover, row["seed"], row["decision"])]["values"][str(horizon)]
+        got = measured[(takeover,) + key_state]["values"][str(horizon)]
         expected = row["values"][str(horizon)]
         if sorted(expected) != sorted(got):
             cells.append([row["seed"], row["decision"], sorted(expected), sorted(got)])
@@ -232,19 +254,19 @@ def signs(values, static_best):
     return out
 
 
-def score(labels=("v5", "v6"), out=OUT):
+def score(labels=("v5r", "v6"), out=OUT):
     """The preregistered stability gate: direction flips across 2500/4000/6000 for v5 and v6."""
-    measured = {label: {(r["takeover"], r["seed"], r["decision"]): r for r in load(label, out)}
+    measured = {label: {(r["takeover"], r["seed"], r["decision"], r["tick"]): r for r in load(label, out)}
                 for label in labels}
     per_state = []
     for row in reference_rows():
+        key_state = (row["seed"], row["decision"], row["tick"])
         entry = dict(seed=row["seed"], decision=row["decision"], tick=row["tick"],
-                     takeover=next((t for t in TAKEOVERS
-                                    if (t, row["seed"], row["decision"]) in measured[labels[0]]), None))
+                     takeover=next((t for t in TAKEOVERS if (t,) + key_state in measured[labels[0]]), None))
         if entry["takeover"] is None:
             continue
         for label in labels:
-            entry[label] = signs(measured[label][(entry["takeover"], row["seed"], row["decision"])]["values"],
+            entry[label] = signs(measured[label][(entry["takeover"],) + key_state]["values"],
                                  row["static_best"])
         per_state.append(entry)
     report = dict(states=len(reference_rows()), measured_states=len(per_state), arms={})
