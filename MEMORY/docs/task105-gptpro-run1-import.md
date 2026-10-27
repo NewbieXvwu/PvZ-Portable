@@ -152,6 +152,7 @@
 ## 继续运行与交付
 
 已有进程活着时不另起同一任务。入口：`scripts/task105_pipeline.py <zip>`；状态和断点在`artifacts/task105/`。
+同一 run_id 的续跑包直接换 zip 重跑入口即可：按存档 SHA 增量导入（旧回执复用、不重放），`adaptive --skip-complete` 跳过已完成的扫描，register 幂等。
 结果整理入口`scripts/task105_results.py`只读取已有小JSON，不解压、不重放、不复跑。
 部署脚本为`scripts/deploy_task105.py`；当前计划为`artifacts/task105/deployment_plan.json`，仅含已登记且尚未在qc清单中的格。
 主控在组边界排空qc后才应用；本任务不执行该脚本（含预览）。
