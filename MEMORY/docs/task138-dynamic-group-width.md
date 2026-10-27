@@ -75,7 +75,11 @@
   单测进生产只为了预检能在本机跑一次真进程的池子，不参与采集）。
 - `start_qc` 照抄台式机最新 deploy14l：`--extra-manifest` 由 `qc_deploy14l.mode` 决定
   （`deckcells` 才加），未激活 / 回滚分支与现网一致；`stop_qc` 按台式机版本直接
-  `tmux kill-session -t =qc`，不排空，并额外清掉本工作树遗留的 `search_play` 子进程。
+  `tmux kill-session -t =qc`，不排空，并额外只清掉**孤儿**的 `search_play` 子进程（父进程是
+  init 的那些；正在跑的评估有自己的父进程，不动）。
+- **注意**：`~/pvz-logs/qc_deploy14l.sh` 在 Mac 上读不到，`start_qc` 的文本是按仓库里的
+  deploy14l + 任务书描述的两点改动（EXTRA_ARG 由 mode 文件决定、stop_qc 直接杀）重建的。
+  执行前请把这份 `start_qc` 与台式机现网版本 diff 一次，只该差这两处。
 - **需要重启一次采集**：控制器把新参数写进组命令，重启后第一组生效；state / offsets / 账本
   全部保留，被打断的那一组按既有合同重采。后台训练 / 打包不排空。
 - 预检（便宜、不跑引擎）：`search_play.py` 与控制器 sha256 必须属于 {deploy14l, deploy14m}；
