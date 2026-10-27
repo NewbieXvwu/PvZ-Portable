@@ -236,7 +236,7 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
 | 正式 A/B（独立种子段） | **未开始**：依赖上项 | [正式预登记](task78-formal-ab-plan.json) |
 | 结论文档 | 本文件 | — |
 
-测量类交付已全部执行完毕；未完成的只有依赖原 v5 语料的两步（正式训练、正式 A/B），语料落盘后 `task78_watch_corpus.py` 会自动走完本节末尾的命令链。
+测量类交付已全部执行完毕；未完成的只有依赖原 v5 语料的两步（正式训练、正式 A/B），语料落盘后 `task78_watch_corpus.py` 会自动走完本节末尾的命令链；若文件被放到别的目录，用 `task78_watch_corpus.py --source-root <目录>` 启动，它会先 hash 出 descriptor、再要求行数复核通过，才启动正式链。
 
 本文的四类门禁数字不再靠人工抄写：`scripts/task78_reconcile_docs.py` 从 `ab/paired.json`、`roof_truth/scored.json`、`task72_probe94/score_original_protocol.json`、`score_full192_9sample.json`、`gates.json` 重算 16 项关键数字并逐项断言它们仍以原样出现在本文（回执缺失时以 rc=3 拒绝运行）。2026-10-27 17:58 实测 **RECONCILED**，无漂移。
 
