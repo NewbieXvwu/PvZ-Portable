@@ -11,6 +11,7 @@ import json
 import re
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -121,7 +122,14 @@ def main():
         return
     print(git('diff', '--cached', '--numstat').stdout, end='')
     if not args.no_push:
-        git('fetch', '-q', 'origin', 'llmimport')
+        # 网络抖动时 fetch 会偶发失败；重试两次再放弃，避免漏提交。
+        for attempt in range(3):
+            if git('fetch', '-q', 'origin', 'llmimport', check=False).returncode == 0:
+                break
+            time.sleep(10)
+        else:
+            git('reset', '-q')
+            raise SystemExit('fetch 连续三次失败，已撤销暂存')
         behind = git('rev-list', '--count', 'HEAD..origin/llmimport').stdout.strip()
         if behind != '0':
             git('reset', '-q')
