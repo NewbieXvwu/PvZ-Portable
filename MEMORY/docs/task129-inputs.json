@@ -1,0 +1,27 @@
+{
+  "manifest_sha256": "56427dfc407fbd8c6e28dbfc119cb66b54d3b47c1ec2e25e17015ef31c0fb687",
+  "inputs": {
+    "rollout-policy": {
+      "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/fog36/artifacts/task79/models/r11/model.pt",
+      "sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c"
+    },
+    "value": {
+      "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt",
+      "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+    },
+    "static-value": {
+      "path": "/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt",
+      "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+    },
+    "executable": {
+      "path": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/sleepinput/build/pvz-portable",
+      "sha256": "0aa3352628bb95c90e30bc03aacbd41c208e2df58f413f75825107f64abf2175"
+    }
+  },
+  "resource_dir": "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN",
+  "teacher": {
+    "dagger_beta": 1,
+    "verify_samples": 9,
+    "student_candidates": 2
+  }
+}
