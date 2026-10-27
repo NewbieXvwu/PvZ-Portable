@@ -1,0 +1,49 @@
+{
+  "archives": 71213,
+  "rows": 20136685,
+  "labels": 699,
+  "existing_segments_bytes": 11450359336,
+  "final_cache_strategy": "digest-checked zero-padding view; no dense re-compression",
+  "view_samples": [
+    {
+      "seconds": 0.054623516043648124,
+      "bytes": 917,
+      "zero_padding_view": true
+    },
+    {
+      "seconds": 0.034306326997466385,
+      "bytes": 917,
+      "zero_padding_view": true
+    },
+    {
+      "seconds": 0.023712191032245755,
+      "bytes": 916,
+      "zero_padding_view": true
+    },
+    {
+      "seconds": 0.024209423980209976,
+      "bytes": 921,
+      "zero_padding_view": true
+    }
+  ],
+  "sample_build_seconds": 0.374,
+  "sample_retained_rows": 1149,
+  "two_workers_first_pack_hours_estimate": 0.93,
+  "new_feature_cache_bytes_estimate": 65355731,
+  "sample_peak_rss_kib": 615956,
+  "estimate_scope": "4 old archives, warm filesystem, two builders; allow 1-2 hours including label I/O; no full repack performed",
+  "engine_sha256": "c35633bc71b10890d9fa2a7025ac45f88d4ef759d945f8b84c7572a3c141dec8",
+  "old_student_game": {
+    "parent": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+    "level": 7,
+    "seed": 103060000,
+    "won": true,
+    "decisions": 1176,
+    "seconds": 1.0
+  },
+  "old_value_encoders": [
+    2,
+    1
+  ],
+  "runtime_revision": "f928321899bc56868ea4d00efcf6e4f64714a18f"
+}
