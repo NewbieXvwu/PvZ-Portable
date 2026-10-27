@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "panel_version": "selection-task126-unseen-decks",
+  "purpose": "Selection-only initial card sets; distinct from promotion heldout1/2 and excluded from training samplers",
+  "tasks": [
+    {
+      "task_id": "day_l7_select_d7p_holdout3",
+      "selection_group": "unseen_deck",
+      "split": "selection_unseen_deck",
+      "terrain": "day",
+      "level": 7,
+      "deck": [0, 1, 2, 3, 4, 7, 37],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": []
+    },
+    {
+      "task_id": "day_l9_select_d7p_holdout4",
+      "selection_group": "unseen_deck",
+      "split": "selection_unseen_deck",
+      "terrain": "day",
+      "level": 9,
+      "deck": [3, 7, 29, 4, 5, 1, 0],
+      "zombie_count_multiplier": 1.0,
+      "wave_cap": null,
+      "sun_start": 50,
+      "preplanted": [],
+      "playthrough": 2,
+      "seeds": []
+    }
+  ]
+}

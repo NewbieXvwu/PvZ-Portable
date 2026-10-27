@@ -105,3 +105,5 @@
 - [task76 终局真值报告](docs/task76-roof-terminal-truth.json)
 - [2026-10-25](2026-10-25.md)
 - [2026-10-26](2026-10-26.md)
+- [2026-10-27](2026-10-27.md)
+- [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)

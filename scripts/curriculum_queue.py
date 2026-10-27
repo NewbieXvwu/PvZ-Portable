@@ -84,7 +84,7 @@ from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
 from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
-                                   make_plan as selection_plan, validate_random_tasks)
+                                   make_plan as selection_plan, selection_templates, validate_random_tasks)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -1153,8 +1153,13 @@ class TrainingPipeline:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
             write_recipe(variant_path, variant)
-            job['candidate_recipes'] = [dict(recipe=str(path), source_recipe=str(self.args.recipe)),
-                                        dict(recipe=str(variant_path), source_recipe=str(alternate))]
+            repeats = getattr(self.args, 'candidates_per_recipe', 1)
+            job['candidate_recipes'] = [
+                dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
+                for candidate_path, source, family in ((path, self.args.recipe, 'A'),
+                                                       (variant_path, alternate, 'B'))
+                for _ in range(repeats)]
+            job['training_seeds'] = list(range(1, len(job['candidate_recipes']) + 1))
         # Freeze the plan on the durable job. Historical jobs without this field
         # retain their original single-seed training/resume semantics.
         self._snapshot_selection(job, folder)
@@ -1193,10 +1198,13 @@ class TrainingPipeline:
                     target.write_bytes(data)
                     sources[source] = dict(path=str(target), sha256=digest)
         templates = inputs / 'templates.json'
-        templates.write_bytes((ROOT / 'configs/student_selection_v2.json').read_bytes())
+        templates.write_text(json.dumps(selection_templates(
+            getattr(self.args, 'selection_holdout_manifest', None), self.args.promotion_panel)))
         ledger = getattr(self.args, 'selection_seed_ledger', self.args.state.parent / 'selection_seed_ledger.json')
         block = allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS)
-        job.update(training_seeds=list(TRAINING_SEEDS), selection_manifest=str(folder / 'selection_manifest.json'),
+        job.update(training_seeds=job.get('training_seeds', list(TRAINING_SEEDS)),
+                   training_parallelism=getattr(self.args, 'training_parallelism', 2),
+                   selection_manifest=str(folder / 'selection_manifest.json'),
                    selection_refresh=dict(snapshot=str(snapshot), snapshot_sha256=file_sha(snapshot),
                        incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent), runs=str(self.args.out),
                        templates=str(templates), templates_sha256=file_sha(templates), sources=sources,
@@ -1497,6 +1505,7 @@ class TrainingPipeline:
             else:
                 candidate = dict(seed=seed, model=str(model), recipe=str(path),
                                  source_recipe=variant.get('source_recipe', str(recipe_path)),
+                                 recipe_family=variant.get('recipe_family', 'A'),
                                  train_started=time.time())
                 try:
                     if not admitted:
@@ -1518,7 +1527,7 @@ class TrainingPipeline:
             return candidate
         pending = [seed for seed in job['training_seeds']
                    if not (folder / 'seeds' / f'seed_{seed:06d}' / 'trained.json').is_file()]
-        self.train_parallelism = min(2, max(1, len(pending)))
+        self.train_parallelism = min(job.get('training_parallelism', 2), max(1, len(pending)))
         self.training_admission = bool(pending)
         try:
             if pending:
@@ -1553,8 +1562,16 @@ class TrainingPipeline:
         self.last_train_peak = report['train_peak_anon_bytes']
         self.last_train_data_bytes = report['train_data_bytes']
         report.update(self._select(job, trained))
+        panel = json.loads(Path(job['selection_manifest']).read_text())
+        holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
+                    if task.get('selection_group') == 'unseen_deck'}
         for candidate in candidates:
             candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])
+            if holdouts and candidate['selection_score'] is not None:
+                wins = candidate['selection_score']['wins']
+                candidate['selection_unseen_deck'] = dict(
+                    wins=sum(wins[name] for name in holdouts), games=sum(holdouts.values()),
+                    tasks={name: dict(wins=wins[name], games=games) for name, games in holdouts.items()})
         self._marker(folder / 'candidates.json', dict(candidates=candidates))
         return report
 
@@ -2059,7 +2076,13 @@ def main() -> None:
     parser.add_argument('--recipe', type=Path, default=ROOT / 'recipes/dw4i.json',
                         help='training recipe for the collection student; supplies every pack row option')
     parser.add_argument('--alternate-recipe', type=Path,
-                        help='second K=2 candidate recipe, sharing the first candidate pack')
+                        help='recipe B candidates, sharing recipe A pack row options')
+    parser.add_argument('--candidates-per-recipe', type=int, choices=(1, 2), default=1,
+                        help='A/B independent training counts; 2 gives A seeds 1/2 and B seeds 3/4')
+    parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
+                        help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
+    parser.add_argument('--selection-holdout-manifest', type=Path,
+                        help='selection-only fixed unseen decks, frozen per job; never changes promotion panel')
     parser.add_argument('--opening-manifest', type=Path,
                         help='fixed 1.0x cold-start specialists, 12 beta=0 + 12 beta=0.5 per cell')
     parser.add_argument('--promotion-panel', type=Path,
@@ -2083,6 +2106,10 @@ def main() -> None:
         parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
+    if args.candidates_per_recipe > 1 and args.alternate_recipe is None:
+        parser.error('--candidates-per-recipe 2 requires --alternate-recipe')
+    if args.selection_holdout_manifest is not None and not args.selection_holdout_manifest.is_absolute():
+        parser.error('--selection-holdout-manifest must be absolute')
     if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
         parser.error('rounds and game budgets must be positive')
     try:
@@ -2181,10 +2208,13 @@ def main() -> None:
                         and group.get('student') == str(incumbent) and source is not None and source not in documents):
                     documents[source] = json.loads(Path(source).read_text())
         preview = selection_plan(state, incumbent, args.out,
-            json.loads((ROOT / 'configs/student_selection_v2.json').read_text()), documents,
+            selection_templates(args.selection_holdout_manifest, args.promotion_panel), documents,
             (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE))
         print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
             eligible_cells=len(preview['cells']), random_families=3,
+            unseen_deck_tasks=preview.get('selection_holdout_tasks', []),
+            candidates=(2 * args.candidates_per_recipe if args.alternate_recipe else len(TRAINING_SEEDS)),
+            training_parallelism=args.training_parallelism,
             games=sum(len(task['seeds']) for task in preview['tasks']),
             pools=SELECTION_POOLS, ledger=str(args.selection_seed_ledger))))
         return
