@@ -209,6 +209,8 @@
 
 - 2026-10-27 18:40（CodeBuddy）：**查清"用本机原始帧重建 v5 语料"这条路的边界**（只读，未开游戏、未占 GPU）。v5 检查点 `trained_on` 3,661 个种子里 **3,242 个（88.6%）的原始行还在** `artifacts/student/frames_v2/seed_*/<task>_fast_search/frames.npz`（`boards (N,92,6,10)`、`scalars (N,115)`、`values (N,11)`、`rows/plant/packet/cell/hints` 全在，就是分支语料的载荷）；缺的 419 个集中在 1610000–1610355（Mac branch3，对应 96 个 `z15d_shards`）与 1886xxx/2000xxx/2296xxx 三小批。但重建仍不能替代原语料，三条独立理由：①缺 11.4% 种子源行，必然不完整；②写出该 schema 的脚本不在 v5 代码提交 `cbaa051c` 里（仓库只有读者 `train_value_widen.Branches`，期望 `boards/scalars/won/seed/position/candidate/packet/kind` + `config.task_id day_l7_*`）；③`frames_v2` 是 observation-backfill v2 重导出，每局行数已变（z13dag4 按 `held()` 切分 fit 341,548/val 29,694，v5 回执 324,559/29,446），连那 88.6% 也无法证明行级同一。清单落 [原始行覆盖](task78-v5-raw-coverage.json)，结论写进 `value-v6.md` §8：**原 97 个分片文件本身仍是必需输入**。
 
+- 2026-10-27 19:05（CodeBuddy）：**把"语料到位后手工写 descriptor"这一步自动化**。`task78_corpus_check.py` 新增 `--write-descriptor --source-root DIR`：按冻结清单的文件名在目录树里逐一定位（重名或缺失即拒绝），逐文件算 SHA256，决策分片优先取名为 `data`/`sparse64` 的目录，episode 缓存必须四个名字齐全，写完后立刻用原 `check_descriptor` 按冻结 schema 复核；空目录实测 rc=1、不写文件（fail-closed）。新增 3 项测试（成功生成并通过校验、缺文件/重名拒绝、episode 缺名拒绝），task78 全量 **162 项**测试通过。用法已写进 `value-v6.md` §8 命令链第 0a 步。未改任何校验阈值、语料要求或训练配方。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。

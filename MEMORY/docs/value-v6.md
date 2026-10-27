@@ -271,6 +271,9 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
 正式入口要求原五类配比、原v5初始化、完整修正后192任务导出、原split、超参及完整训练回执；GPU训练须满足10GiB与单进程一小时限制。缺正式候选时freeze已实测拒绝，空报告五地形均incomplete/passed=null，未训练、未开正式游戏。58项相关测试通过，诊断、独立屋顶和修正94态计划的冻结输入仍逐项匹配。原语料恢复并通过训练源检查后，正式路径为：
 
 ```bash
+# 0a) 文件散落在某个目录下时先生成 descriptor（逐文件 SHA，生成即按冻结 schema 校验；缺/重复文件会拒绝写）
+/home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_corpus_check.py \
+    --write-descriptor --source-root /path/to/restored
 # 0) 语料放回后先机械验收（97 分支 / 64 分片 / 审计清单 / descriptor 哈希与 split）
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_corpus_check.py
 PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_train.py --corpus original --out /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6 --device cuda

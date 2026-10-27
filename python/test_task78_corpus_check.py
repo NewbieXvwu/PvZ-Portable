@@ -98,3 +98,61 @@ def test_paths_mode_reports_missing_original_locations(tmp_path):
     report = check.check_paths(document)
     assert report["ok"] is False and report["missing_branches"] == 1
     assert report["rows"][-1]["kind"] == "external_audit" and report["rows"][-1]["exists"] is False
+
+
+def build_tree(root, branches=("a.pt", "b.pt"), shards=2, audit=True, episodes=True, duplicate=False):
+    for name in branches:
+        path = root / "corpus" / "branch" / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(name.encode())
+    if duplicate:
+        (root / "copy").mkdir(parents=True, exist_ok=True)
+        (root / "copy" / branches[0]).write_bytes(b"dup")
+    for i in range(shards):
+        path = root / "corpus" / "sparse64" / "data" / ("s%02d.pt" % i)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"shard%d" % i)
+    if audit:
+        (root / "corpus" / "audit" / "full_audit_manifest.json").parent.mkdir(parents=True, exist_ok=True)
+        (root / "corpus" / "audit" / "full_audit_manifest.json").write_bytes(b"[]")
+    if episodes:
+        for name in ("episodes.json", "boards.npy"):
+            path = root / "corpus" / "episodes" / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(b"e")
+
+
+def build_spec(root, branches):
+    return dict(baseline_sha256="baseline",
+                original_branch_paths=[str(root / "corpus" / "branch" / name) for name in branches],
+                original_external_audit=str(root / "corpus" / "audit" / "full_audit_manifest.json"),
+                decision_shards=2,
+                required_episode_cache=["episodes.json", "boards.npy"],
+                required_splits=dict(branch=dict(fit=1, validation=1)))
+
+
+def test_builder_writes_a_descriptor_that_passes_the_check(tmp_path):
+    build_tree(tmp_path)
+    document, problems = check.build_descriptor(build_spec(tmp_path, ["a.pt", "b.pt"]), tmp_path)
+    assert problems == [], problems
+    path = tmp_path / "corpus.json"
+    path.write_text(json.dumps(document))
+    report = check.check_descriptor(build_spec(tmp_path, ["a.pt", "b.pt"]), path)
+    assert report["ok"] is True, report["problems"]
+    assert len(document["branches"]) == 2 and len(document["decision_shards"]) == 2
+    assert document["branches"][0]["sha256"] == digest(tmp_path / "corpus" / "branch" / "a.pt")
+
+
+def test_builder_refuses_a_missing_or_ambiguous_file(tmp_path):
+    build_tree(tmp_path, audit=False)
+    _, problems = check.build_descriptor(build_spec(tmp_path, ["a.pt", "b.pt"]), tmp_path)
+    assert any("audit manifest" in item for item in problems)
+    build_tree(tmp_path, duplicate=True)
+    _, problems = check.build_descriptor(build_spec(tmp_path, ["a.pt", "b.pt"]), tmp_path)
+    assert any("branch a.pt: 2 matches" in item for item in problems)
+
+
+def test_builder_reports_an_episode_cache_without_the_required_names(tmp_path):
+    build_tree(tmp_path, episodes=False)
+    _, problems = check.build_descriptor(build_spec(tmp_path, ["a.pt", "b.pt"]), tmp_path)
+    assert any("episode cache" in item for item in problems)
