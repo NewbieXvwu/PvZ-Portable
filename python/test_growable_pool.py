@@ -35,6 +35,14 @@ def failing(job):
     raise ValueError(f'boom {job["seed"]}')
 
 
+def dying(job):
+    """A hard crash (what an OOM kill looks like): no exception, no result."""
+    if job['die']:
+        os._exit(1)
+    time.sleep(job['sleep'])
+    return dict(seed=job['seed'], pid=os.getpid())
+
+
 class TargetTest(unittest.TestCase):
     def test_admission_formula(self):
         self.assertEqual(target_workers(40 * GIB, 2 * GIB, 16), 16)
@@ -87,6 +95,13 @@ class PoolTest(unittest.TestCase):
         jobs = [dict(seed=index, sleep=0.15) for index in range(6)]
         list(pool.run(jobs))
         self.assertEqual(pool.max_workers, 3)      # (40 - 3 - 30) // 2
+
+    def test_a_worker_that_dies_mid_game_does_not_hang_the_parent(self):
+        pool = GrowablePool(self.context, dying, initial=2, upper=2, interval=0.05,
+                            available=readings([40 * GIB]), per_worker=2 * GIB)
+        jobs = [dict(seed=1, die=True, sleep=0), dict(seed=2, die=False, sleep=0.3)]
+        with self.assertRaises(RuntimeError):
+            list(pool.run(jobs))
 
     def test_worker_failure_reaches_the_parent(self):
         pool = GrowablePool(self.context, failing, initial=1, upper=2, interval=0.05,
