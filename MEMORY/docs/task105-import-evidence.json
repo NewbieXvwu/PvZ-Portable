@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-27T14:15:37.947197+00:00",
+ "generated": "2026-10-27T14:21:28.114822+00:00",
  "input_sha256": "4cc5dd7398f60059a2b8ef2fe286e3bfe61296d2229cffef6295196803a7649f",
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "input_path": "/home/newbiexvwu/llm_runs/gptpro_438cb30a_resume00099.zip",
@@ -2516,12 +2516,33 @@
     "games": 8
    },
    "reason": ""
+  },
+  {
+   "task_id": "demo_roof_42_gloommelon_m200_s81007033_addc40552585a",
+   "seed": 81007033,
+   "games": 88,
+   "l50": 922,
+   "top": 1268,
+   "decisions": [
+    1268,
+    1038,
+    922
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 204000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
   }
  ],
  "scan_expected": 227,
- "scanned": 114,
- "registered": 114,
+ "scanned": 115,
+ "registered": 115,
  "deployed": 0,
- "scan_games": 9760,
+ "scan_games": 9848,
  "complete": false
 }
