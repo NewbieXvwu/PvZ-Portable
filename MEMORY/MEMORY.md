@@ -105,3 +105,5 @@
 - [task76 终局真值报告](docs/task76-roof-terminal-truth.json)
 - [2026-10-25](2026-10-25.md)
 - [2026-10-26](2026-10-26.md)
+- [2026-10-27](2026-10-27.md)
+- [task125：第 21 轮 heldout −33pp 根因（任务书 + 结论）](docs/task125-heldout-collapse.md)
