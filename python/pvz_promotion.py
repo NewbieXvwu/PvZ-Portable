@@ -375,24 +375,8 @@ def summarize(pairs):
                 mcnemar_worse_p=p_worse)
 
 
-def decide(pairs, manifest):
-    try:
-        version = VERSION_BY_PANEL[manifest['panel_version']]
-    except (KeyError, TypeError):
-        raise ValueError(f'unknown promotion manifest: {manifest.get("panel_version")!r}') from None
-    expected = {(task['task_id'], seed) for task in manifest['tasks'] for seed in task['seeds']}
-    actual = {(row['task_id'], row['seed']) for row in pairs}
-    if len(pairs) != len(expected) or len(actual) != len(expected) or actual != expected:
-        raise ValueError('promotion requires every registered pair exactly once')
-    for row in pairs:
-        if row['zone'] != manifest['groups'][row['task_id']]:
-            raise ValueError('paired outcome has the wrong zone')
-    # task128: the heldout cells are monitoring only. They are still evaluated and
-    # must be complete, but they neither veto nor move the overall rate.
-    monitor = tuple(manifest.get('monitor') or ()) if version >= 5 else ()
-    if version >= 5 and not monitor:
-        raise ValueError('gate v5 manifest has no monitoring cells')
-    scored = [row for row in pairs if row['task_id'] not in set(monitor)]
+def decide_scored(scored, version=GATE_VERSION):
+    """Shared statistical decision for scored pairs, independent of panel size."""
     overall = summarize(scored)
     zones = {zone: summarize([row for row in scored if row['zone'] == zone])
              for zone in sorted({row['zone'] for row in scored})}
@@ -413,8 +397,26 @@ def decide(pairs, manifest):
         for zone, result in zones.items():
             if result['mcnemar_worse_p'] < ALPHA:
                 reasons.append('significant_zone_regression:' + zone)
-    result = dict(version=version, approved=not reasons, reasons=reasons,
-                  policy=policy(version), overall=overall, zones=zones)
+    return dict(version=version, approved=not reasons, reasons=reasons,
+                policy=policy(version), overall=overall, zones=zones)
+
+
+def decide(pairs, manifest):
+    try:
+        version = VERSION_BY_PANEL[manifest['panel_version']]
+    except (KeyError, TypeError):
+        raise ValueError(f'unknown promotion manifest: {manifest.get("panel_version")!r}') from None
+    expected = {(task['task_id'], seed) for task in manifest['tasks'] for seed in task['seeds']}
+    actual = {(row['task_id'], row['seed']) for row in pairs}
+    if len(pairs) != len(expected) or len(actual) != len(expected) or actual != expected:
+        raise ValueError('promotion requires every registered pair exactly once')
+    for row in pairs:
+        if row['zone'] != manifest['groups'][row['task_id']]:
+            raise ValueError('paired outcome has the wrong zone')
+    monitor = tuple(manifest.get('monitor') or ()) if version >= 5 else ()
+    if version >= 5 and not monitor:
+        raise ValueError('gate v5 manifest has no monitoring cells')
+    result = decide_scored([row for row in pairs if row['task_id'] not in set(monitor)], version)
     if version >= 5:
         result['monitor'] = {name: summarize([row for row in pairs if row['task_id'] == name])
                              for name in monitor}
