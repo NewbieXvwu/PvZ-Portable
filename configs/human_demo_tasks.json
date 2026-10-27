@@ -4999,7 +4999,17 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/b55ca5144a6f05d1340051cef5b6e15f285be1806fcd0509909a7fb826901bf5",
+    "decisions": [
+     979,
+     623
+    ],
+    "index": 0,
+    "future_seed_start": 155000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_47_doom_m200_s81001034_ac69cb1230821",
