@@ -1133,6 +1133,11 @@ class TrainingPipeline:
         if any(job['round'] == round_index for job in self.state['training_jobs']):
             return
         recipe = load_recipe(self.args.recipe, 'training')
+        # task131: the upgraded observation must retain the current policy's
+        # learned function. Persist its parent in the round recipe, so a retry
+        # cannot silently pick a newer incumbent or start from random weights.
+        if recipe['obs'] == 'v2sleep':
+            recipe['init'] = str(self.incumbent())
         recipe['labels'] = pack_labels(self.state, ','.join(recipe['labels']))
         recipe['data'] = str(self.directory / 'frames')
         folder = self.directory / f'round_{round_index:06d}'
@@ -1150,6 +1155,8 @@ class TrainingPipeline:
             variant = load_recipe(alternate, 'training')
             variant.update({key: recipe[key] for key in
                             ('labels', 'data', 'out', 'cache_dir', 'precompute_workers')})
+            if recipe['obs'] == 'v2sleep':
+                variant['init'] = recipe['init']
             base_options, variant_options = training_row_options(recipe), training_row_options(variant)
             base_options.pop('source_weight', None)
             variant_options.pop('source_weight', None)
