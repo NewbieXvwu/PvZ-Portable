@@ -1048,6 +1048,10 @@ class TrainingPipeline:
         finished = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate done: {finished-started:.3f}s '
                                f'approved={decision["approved"]} reasons={decision["reasons"]}')
+        if decision.get('monitor'):
+            # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
+            log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
+                f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
         return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
                     evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
@@ -1175,28 +1179,12 @@ class TrainingPipeline:
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
     def _snapshot_selection(self, job, folder):
+        """task128: freeze the adventure selection templates and one independent
+        seed block on the durable job. The panel no longer reads collector
+        windows, so no state/run snapshot is frozen with it."""
         incumbent = self.incumbent()
-        snapshot = folder / 'selection_state.json'
-        self._marker(snapshot, self.state)
         inputs = folder / 'selection_inputs'
         inputs.mkdir(exist_ok=True)
-        sources = {}
-        for rnd in self.state.get('log', []):
-            for group in rnd['groups']:
-                source = group.get('manifest')
-                if (group.get('status', 'done') != 'done'
-                        or group.get('student') != str(incumbent) or source in sources):
-                    continue
-                if source is not None:
-                    try:
-                        data = Path(source).read_bytes()
-                    except OSError as error:
-                        sources[source] = dict(error=str(error))
-                        continue  # diagnosed by the B7-protected background, not the collector
-                    digest = __import__('hashlib').sha256(data).hexdigest()
-                    target = inputs / f'{digest}.json'
-                    target.write_bytes(data)
-                    sources[source] = dict(path=str(target), sha256=digest)
         templates = inputs / 'templates.json'
         templates.write_text(json.dumps(selection_templates(
             getattr(self.args, 'selection_holdout_manifest', None), self.args.promotion_panel)))
@@ -1205,9 +1193,8 @@ class TrainingPipeline:
         job.update(training_seeds=job.get('training_seeds', list(TRAINING_SEEDS)),
                    training_parallelism=getattr(self.args, 'training_parallelism', 2),
                    selection_manifest=str(folder / 'selection_manifest.json'),
-                   selection_refresh=dict(snapshot=str(snapshot), snapshot_sha256=file_sha(snapshot),
-                       incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent), runs=str(self.args.out),
-                       templates=str(templates), templates_sha256=file_sha(templates), sources=sources,
+                   selection_refresh=dict(incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent),
+                       templates=str(templates), templates_sha256=file_sha(templates),
                        executable_sha256=file_sha(self.args.executable), seed_block=list(block), ledger=str(ledger)))
 
     def _validate_selection_panel(self, panel):
@@ -1221,7 +1208,7 @@ class TrainingPipeline:
             return dict(manifest_sha256=job['selection_manifest_sha256'])  # historical task92 jobs
         frozen = job['selection_refresh']
         refresh_sha = __import__('hashlib').sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
-        for name in ('snapshot', 'templates', 'incumbent'):
+        for name in ('templates', 'incumbent'):
             if file_sha(Path(frozen[name])) != frozen[name + '_sha256']:
                 raise ValueError(f'frozen selection {name} changed')
         if file_sha(self.args.executable) != frozen['executable_sha256']:
@@ -1230,33 +1217,28 @@ class TrainingPipeline:
         ready, manifest = folder / 'selection_ready.json', Path(job['selection_manifest'])
         if ready.exists():
             receipt = json.loads(ready.read_text())
-            if (receipt['snapshot_sha256'] != frozen['snapshot_sha256']
-                    or receipt['refresh_sha256'] != refresh_sha
+            if (receipt['refresh_sha256'] != refresh_sha
                     or receipt['manifest_sha256'] != file_sha(manifest)
                     or receipt['plan_sha256'] != file_sha(folder / 'selection_plan.json')
                     or receipt['executable_sha256'] != frozen['executable_sha256']):
                 raise ValueError('saved selection preparation changed')
             return receipt
-        documents = {}
-        for source, meta in frozen['sources'].items():
-            if 'error' in meta:
-                raise ValueError(f'selection source unavailable at enqueue: {source}: {meta["error"]}')
-            if file_sha(Path(meta['path'])) != meta['sha256']:
-                raise ValueError('frozen selection source changed')
-            documents[source] = json.loads(Path(meta['path']).read_text())
-        state = json.loads(Path(frozen['snapshot']).read_text())
-        panel = selection_plan(state, frozen['incumbent'], frozen['runs'],
-                               json.loads(Path(frozen['templates']).read_text()), documents, frozen['seed_block'])
+        templates = json.loads(Path(frozen['templates']).read_text())
+        panel = selection_plan(templates, frozen['seed_block'], frozen['incumbent'])
         plan_path = folder / 'selection_plan.json'
         self._marker(plan_path, panel)
         from pvz_promotion import SEED_POOLS_V2
         reserved = list(SEED_POOLS_V2)
-        for document in [*documents.values(), json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())]:
+        # The adventure definitions are scored on the frozen scoreboard seed block
+        # outside the gate; keep the selection block off it as well.
+        for document in (json.loads((ROOT / 'configs/adventure_scoreboard.json').read_text()),
+                         json.loads((ROOT / 'configs/human_demo_tasks.json').read_text()),
+                         templates):
             reserved.extend(seed_spans(document))
         assert_disjoint(panel, reserved)
         panel = self._validate_selection_panel(panel)
         self._marker(manifest, panel)
-        receipt = dict(snapshot_sha256=frozen['snapshot_sha256'], refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
+        receipt = dict(refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
                        manifest_sha256=file_sha(manifest), executable_sha256=frozen['executable_sha256'],
                        prepared=time.time())
         self._marker(ready, receipt)
@@ -2035,7 +2017,7 @@ def main() -> None:
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
                         help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
@@ -2200,19 +2182,13 @@ def main() -> None:
         if labels:
             print('pack: ' + ' '.join(pack_command(args, labels)))
         incumbent = Path(state.get('student') or args.rollout_policy)
-        documents = {}
-        for rnd in state.get('log', []):
-            for group in rnd['groups']:
-                source = group.get('manifest')
-                if (group.get('status', 'done') == 'done'
-                        and group.get('student') == str(incumbent) and source is not None and source not in documents):
-                    documents[source] = json.loads(Path(source).read_text())
-        preview = selection_plan(state, incumbent, args.out,
-            selection_templates(args.selection_holdout_manifest, args.promotion_panel), documents,
-            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE))
+        preview = selection_plan(
+            selection_templates(args.selection_holdout_manifest, args.promotion_panel),
+            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE), incumbent)
         print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
-            eligible_cells=len(preview['cells']), random_families=3,
+            adventure_tasks=len(preview['adventure_tasks']), random_families=3,
             unseen_deck_tasks=preview.get('selection_holdout_tasks', []),
+            score_only_tasks=preview.get('score_only', []),
             candidates=(2 * args.candidates_per_recipe if args.alternate_recipe else len(TRAINING_SEEDS)),
             training_parallelism=args.training_parallelism,
             games=sum(len(task['seeds']) for task in preview['tasks']),

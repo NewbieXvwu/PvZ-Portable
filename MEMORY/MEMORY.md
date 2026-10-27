@@ -10,7 +10,7 @@
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
-- [分工 / 按任务计数的游戏进程上限 / CUDA 执行记录](notes/workflow.md)
+- [分工 / 每任务独立计算的游戏进程上限 / CUDA 执行记录](notes/workflow.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)
@@ -109,3 +109,4 @@
 - [task118 气球关卡组检验](docs/task118-balloon-decks.md)
 - [2026-10-27](2026-10-27.md)
 - [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)
+- [task128：门禁 v5（冒险模式实际关卡与卡组）](docs/task128-gate-v5.md)

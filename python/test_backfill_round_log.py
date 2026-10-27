@@ -13,7 +13,6 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from backfill_round_log import backfill
 from curriculum_queue import pack_labels, run_round
-from pvz_selection_refresh import current_cells
 
 
 class BackfillRoundLogTest(unittest.TestCase):
@@ -62,8 +61,6 @@ class BackfillRoundLogTest(unittest.TestCase):
         self.add_group('demo', 72, 5, [1, 1], demo=True)
         self.state['log'][0]['groups'] = [first, last]
         before = copy.deepcopy(self.state)
-        self.assertTrue(any('suffix' in item['reason'] for item in current_cells(
-            self.state, self.student, self.runs)[2]))
         added, skipped = backfill(self.state, self.qc_out, self.runs)
         self.assertEqual(skipped, [])
         self.assertEqual([group['label'] for group in self.state['log'][0]['groups']],
@@ -77,9 +74,6 @@ class BackfillRoundLogTest(unittest.TestCase):
         self.assertEqual(self.state['cells'], before['cells'])
         self.assertEqual(self.state['offsets'], before['offsets'])
         self.assertEqual(self.state['log'][0]['changes'], ['kept'])
-        cells, _, excluded = current_cells(self.state, self.student, self.runs)
-        self.assertEqual(excluded, [])
-        self.assertEqual((cells[0]['wins'], cells[0]['games']), (3, 6))
         self.assertEqual(len(pack_labels(self.state)), 5)
         self.assertEqual(backfill(self.state, self.qc_out, self.runs), ([], []))
         self.add_group('pending', 74, 6, [1, 1], demo=True, round_index=2)

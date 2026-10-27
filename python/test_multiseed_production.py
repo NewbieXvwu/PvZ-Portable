@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 import curriculum_queue as queue
-from pvz_selection_refresh import make_plan, SELECTION_POOLS, SELECTION_BLOCK_SIZE
+from pvz_selection_refresh import make_plan, selection_templates, SELECTION_POOLS, SELECTION_BLOCK_SIZE
 from pvz_student_selection import assert_disjoint, seed_spans
 from promotion_gate import allocate_seed_block
 from test_curriculum_pipeline import setup, write_evaluation, write_selection
@@ -155,32 +155,24 @@ def test_each_round_allocates_once_and_panels_never_overlap(tmp_path, monkeypatc
     ledger = json.loads((tmp_path / 'selection_seed_ledger.json').read_text())
     assert len(ledger['allocated']) == 2
     assert all(high - low == SELECTION_BLOCK_SIZE for low, high in ledger['allocated'])
-    assert all((Path(job['recipe']).parent / 'selection_state.json').is_file() for job in jobs)
     assert all((Path(job['recipe']).parent / 'selection_plan.json').is_file() for job in jobs)
 
 
-def test_current_incumbent_windows_refresh_eligible_cells(tmp_path):
+def test_consecutive_rounds_score_the_adventure_body_on_disjoint_seeds(tmp_path):
+    # task128: the panel no longer follows the incumbent's windows; every round
+    # re-plans the same adventure body on a fresh block from the selection ledger.
     model = tmp_path / 'new_incumbent.pt'
     model.write_bytes(b'new policy')
-    source = '/original_panel.json'
-    task = dict(task_id='t', level=7, deck=[0, 1, 2, 3, 4, 5], seeds=[30000])
-    templates = json.loads((ROOT / 'configs/student_selection_v2.json').read_text())
-    def state_with(label, wins):
-        folder = tmp_path / f'{label}_2'
-        folder.mkdir()
-        (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=str(model), dagger_beta=0, task_id='t')))
-        (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(won=bool(v), terminal=True)) for v in wins))
-        group = dict(base='t', multiplier=1, beta=0, student=str(model), label=label, games=2,
-                     task_id='t', manifest=source)
-        return dict(cells=dict(t=dict(windows={'1.0': dict(recent=wins)})), log=[dict(groups=[group])])
+    templates = selection_templates(ROOT / 'configs/student_selection_holdout.json',
+                                    ROOT / 'configs/gate_v5_panel.json')
     ledger = tmp_path / 'ledger.json'
-    first_block = allocate_seed_block(ledger, 384, pools=SELECTION_POOLS)
-    second_block = allocate_seed_block(ledger, 384, pools=SELECTION_POOLS)
-    first = make_plan(state_with('one', [1, 0]), model, tmp_path, templates, {source: dict(tasks=[task])}, first_block)
-    second = make_plan(state_with('two', [1, 1]), model, tmp_path, templates, {source: dict(tasks=[task])}, second_block)
-    assert len(first['cells']) == 1 and len(second['cells']) == 0
-    assert len(first['tasks']) == 4 and len(second['tasks']) == 3
+    first = make_plan(templates, allocate_seed_block(ledger, 384, pools=SELECTION_POOLS), model)
+    second = make_plan(templates, allocate_seed_block(ledger, 384, pools=SELECTION_POOLS), model)
+    assert len(first['adventure_tasks']) == 38
+    assert len(first['tasks']) == 43                      # 38 adventure + 3 random + 2 unseen
+    assert {len(task['seeds']) for task in first['tasks']} == {384 // 43}
     assert_disjoint(first, list(seed_spans(second)))
+    assert first['score_only'] == first['selection_holdout_tasks']
 
 
 def test_locked_selection_ledger_handles_simultaneous_allocations(tmp_path):
@@ -339,29 +331,3 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
     assert args.state.read_bytes() == before
     assert not selection_ledger.exists() and not gate_ledger.exists()
     assert 'selection preview (no allocation, no engine, no state write)' in capsys.readouterr().out
-
-
-def test_window_that_disagrees_with_incumbent_records_sits_out(tmp_path):
-    # 10-26 production dry-run: six windows held games the log could not attribute; one bad
-    # window must drop that cell from the panel, not abort the whole selection.
-    from pvz_selection_refresh import current_cells
-    model = tmp_path / 'r11.pt'
-    model.write_bytes(b'r11')
-    folder = tmp_path / 'g_2'
-    folder.mkdir()
-    (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=str(model), dagger_beta='0', task_id='t')))
-    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(won=bool(w), terminal=True)) for w in [1, 0]))
-    group = dict(base='t', multiplier=1., beta=0, student=str(model.resolve()), label='g', games=2,
-                 task_id='t', manifest='/m.json')
-    failed = dict(group, label='failed', status='failed')
-    broken = tmp_path / 'failed_2'
-    broken.mkdir()
-    (broken / 'games.jsonl').write_text('broken')
-    state = dict(log=[dict(groups=[group, failed, dict(failed, label='missing')])],
-                 cells=dict(t=dict(windows={'1.0': dict(recent=[1, 1, 1, 0])})))
-    cells, _, excluded = current_cells(state, model, tmp_path)
-    assert [c['rate'] for c in cells] == [.5]
-    state['cells']['t']['windows']['1.0']['recent'][-1] = 1
-    cells, _, excluded = current_cells(state, model, tmp_path)
-    assert cells == []
-    assert excluded[-1]['reason'] == 'current-policy records do not match window suffix'

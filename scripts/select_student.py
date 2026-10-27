@@ -41,7 +41,11 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
     paths = sorted({str(Path(path).resolve()) for path in candidates})
     if not paths:
         raise ValueError('no candidates')
-    table = {task['task_id']: task for task in json.loads(Path(manifest).read_text())['tasks']}
+    document = json.loads(Path(manifest).read_text())
+    table = {task['task_id']: task for task in document['tasks']}
+    # task128: unseen-deck cells are evidence only. Their wins are recorded, but the
+    # pick stays "most wins on the scored tasks" so they cannot dominate the total.
+    score_only = {task['task_id'] for task in document['tasks'] if task.get('score_only')}
     work = Path(out) / 'selection'
     work.mkdir(parents=True, exist_ok=True)
     scores = {}
@@ -67,7 +71,10 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
             files[task] = dict(path=str(games), sha256=sha(games))
         if sha(path) != model_sha:
             raise ValueError(f'candidate changed during selection: {path}')
-        scores[path] = dict(wins=wins, total=sum(wins.values()), model_sha256=model_sha, games=files)
+        scores[path] = dict(wins=wins, total=sum(value for name, value in wins.items() if name not in score_only),
+                            score_only=dict(wins={name: wins[name] for name in sorted(score_only)},
+                                            total=sum(wins[name] for name in score_only)),
+                            model_sha256=model_sha, games=files)
         print(json.dumps(dict(candidate=path, **scores[path])), flush=True)
     best = max(paths, key=lambda path: scores[path]['total'])
     temporary = Path(out) / 'model.building'
@@ -76,7 +83,8 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
     result = dict(best=best, sets=sets, scores=scores, manifest=str(manifest),
                   manifest_sha256=sha(manifest), model_sha256=sha(best),
                   executable=str(executable), executable_sha256=sha(executable),
-                  rule='maximum total wins; stable candidate-path order breaks ties',
+                  rule='maximum total wins over scored tasks (score-only unseen decks excluded); '
+                       'stable candidate-path order breaks ties',
                   rejected=[path for path in paths if path != best])
     temporary = Path(out) / 'selection.building'
     temporary.write_text(json.dumps(result, indent=2) + '\n')
