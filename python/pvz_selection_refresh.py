@@ -1,4 +1,16 @@
-"""Per-round selection plans from incumbent-only windows and a separate seed ledger."""
+"""Per-round selection plans from the gate-v5 adventure panel and a separate seed ledger.
+
+task128: the body of the selection panel is the same adventure set the gate
+measures (original 1.0x, scoreboard decks) on independent seeds, so the
+candidate that gets picked is the one that plays the game's own levels best.
+The three registered random-deck families stay as a guard against deck-specific
+overfitting. The task126 unseen-deck cells stay as evidence only: their wins are
+recorded in the round report but never enter the selection total (`score_only`).
+
+The old 30%-80% window screening is gone with the body it calibrated: selection
+no longer reads the collector's windows, so a window whose games cannot be
+attributed to the incumbent can no longer silently drop a cell.
+"""
 from __future__ import annotations
 
 import copy
@@ -10,24 +22,42 @@ SELECTION_POOLS = ((130_000_000, 140_000_000),)
 SELECTION_BLOCK_SIZE = 384
 SELECTION_LEDGER = Path.home() / 'pvz-logs/selection_seed_ledger.json'
 RANDOM_TASKS = ('day_l7_train_rand', 'night_l12_train_rand', 'pool_l21_train_rand')
+PANEL_VERSION = 'selection-task128-v4'
+GATE_PANEL_VERSION = 'v5'
 
 
 def selection_templates(holdout_manifest=None, promotion_panel=None):
-    """Opt-in templates frozen at enqueue; historical jobs keep their original panel."""
+    """Adventure body + random families + score-only unseen decks, frozen at enqueue."""
     root = Path(__file__).resolve().parents[1]
-    templates = json.loads((root / 'configs/student_selection_v2.json').read_text())
+    if promotion_panel is None:
+        raise ValueError('selection requires the gate-v5 adventure panel (--promotion-panel)')
+    document = json.loads(Path(promotion_panel).read_text())
+    if document.get('panel_version') != GATE_PANEL_VERSION:
+        raise ValueError(f'selection requires the registered gate-v5 panel, got '
+                         f'{document.get("panel_version")!r}')
+    registered = json.loads((root / 'configs/student_selection_v2.json').read_text())
+    table = {task['task_id']: task for task in registered['tasks']}
+    monitor = set(document.get('monitor') or ())
+    tasks = []
+    for task in document['tasks']:
+        if task['task_id'] in monitor:
+            continue
+        task = copy.deepcopy(task)
+        task['seeds'] = []            # assigned per round from the selection ledger
+        task['selection_group'] = 'adventure'
+        tasks.append(task)
+    for name in RANDOM_TASKS:
+        tasks.append(copy.deepcopy(table[name]))
+    templates = dict(schema_version=1, panel_version=PANEL_VERSION, tasks=tasks,
+                     purpose='adventure levels of the gate-v5 panel on independent seeds, plus the three '
+                             'registered random families; unseen decks are score-only')
     if holdout_manifest is None:
         return templates
     from pvz_tasks import profile_for_deck, terrain_covered
-    from pvz_promotion import PANEL_TASKS_V3
     extra = json.loads(Path(holdout_manifest).read_text())['tasks']
-    names = {task['task_id'] for task in templates['tasks']}
-    gate_names = {name for _, name in PANEL_TASKS_V3}
-    gate_decks = set()
-    if promotion_panel is not None:
-        gate_decks = {tuple(sorted(task['deck'])) for task in
-                      json.loads(Path(promotion_panel).read_text())['tasks']
-                      if task['task_id'] in gate_names}
+    names = {task['task_id'] for task in tasks}
+    gate_names = {task['task_id'] for task in document['tasks']}
+    gate_decks = {tuple(sorted(task['deck'])) for task in document['tasks']}
     signatures = set()
     for task in extra:
         deck = task['deck']
@@ -47,7 +77,8 @@ def selection_templates(holdout_manifest=None, promotion_panel=None):
             if 'deck_random' in random_task and signature not in {
                     tuple(sorted(cards)) for cards in random_task['deck_random']['excluded_decks']}:
                 raise ValueError('selection holdout is not excluded by the registered random training families')
-    templates['tasks'].extend(extra)
+        task['score_only'] = True
+        tasks.append(task)
     return templates
 
 
@@ -55,85 +86,29 @@ def sha(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def current_cells(state, incumbent, runs):
-    """Screen the current policy's beta-zero suffix; never attribute older windows to it."""
-    incumbent = str(Path(incumbent).resolve())
-    sources, cells, excluded = {}, [], []
-    for base, cell in sorted(state['cells'].items()):
-        if cell.get('archive') or cell.get('ladder') and cell.get('kind') == 'demo_start':
-            excluded.append(dict(base=base, reason='demonstration decision axis is not a multiplier cell'))
-            continue
-        for multiplier, bucket in sorted(cell.get('windows', {}).items(), key=lambda item: float(item[0])):
-            outcomes, last = [], None
-            for rnd in state.get('log', []):
-                for group in rnd['groups']:
-                    if (group.get('status', 'done') != 'done'
-                            or group['base'] != base or float(group['multiplier']) != float(multiplier)
-                            or group.get('beta', 0) != 0 or group.get('student') != incumbent):
-                        continue
-                    folder = Path(runs) / f'{group["label"]}_{group["games"]}'
-                    config, games = folder / 'config.json', folder / 'games.jsonl'
-                    settings = json.loads(config.read_text())
-                    if (str(Path(settings['rollout_policy']).resolve()) != incumbent
-                            or float(settings['dagger_beta']) != 0 or settings['task_id'] != group['task_id']):
-                        raise ValueError(f'selection window policy/config mismatch: {config}')
-                    rows = [json.loads(line) for line in games.read_text().splitlines() if line.strip()]
-                    if len(rows) != group['games'] or any(type(row.get('won')) is not bool
-                                                        or row.get('terminal') is not True for row in rows):
-                        raise ValueError(f'incomplete selection window group: {games}')
-                    outcomes.extend(int(row['won']) for row in rows)
-                    last = group
-                    sources[str(config)], sources[str(games)] = sha(config), sha(games)
-            recent = bucket.get('recent', [])
-            outcomes = outcomes[-len(recent):] if recent else []
-            if outcomes and outcomes != recent[-len(outcomes):]:
-                # The window holds games the log cannot attribute (e.g. groups from before a restart);
-                # a mixed window is not evidence about the incumbent, so this cell sits out the panel.
-                excluded.append(dict(base=base, multiplier=float(multiplier),
-                                     reason='current-policy records do not match window suffix'))
-                continue
-            if outcomes and .3 <= sum(outcomes) / len(outcomes) <= .8:
-                cells.append(dict(base=base, multiplier=float(multiplier), wins=sum(outcomes),
-                                  games=len(outcomes), rate=sum(outcomes) / len(outcomes),
-                                  task_id=last['task_id'], manifest=last['manifest']))
-    return cells, sources, excluded
-
-
-def make_plan(state, incumbent, runs, templates, source_documents, block):
+def make_plan(templates, block, incumbent):
     """Pure planning. No engine, ledger write, score or training is performed here."""
-    cells, sources, excluded = current_cells(state, incumbent, runs)
-    holdouts = [task for task in templates['tasks'] if task.get('selection_group') == 'unseen_deck']
-    count = SELECTION_BLOCK_SIZE // (len(cells) + len(RANDOM_TASKS) + len(holdouts))
+    tasks = [copy.deepcopy(task) for task in templates['tasks']]
+    if not tasks:
+        raise ValueError('selection panel is empty')
+    count = SELECTION_BLOCK_SIZE // len(tasks)
     if count < 1 or block[1] - block[0] != SELECTION_BLOCK_SIZE:
-        raise ValueError('selection cells exceed the 384-game budget or block size is invalid')
-    tasks = []
-    for cell in cells:
-        document = source_documents[cell['manifest']]
-        task = copy.deepcopy(next(task for task in document['tasks'] if task['task_id'] == cell['task_id']))
-        if task.get('demo_start'):
-            raise ValueError('demonstration start cannot be replayed as a multiplier selection cell')
-        tasks.append(task)
-    table = {task['task_id']: task for task in templates['tasks']}
-    for name in RANDOM_TASKS:
-        task = copy.deepcopy(table[name])
-        task['deck_random']['validated_decks'] = {}
-        tasks.append(task)
-    tasks.extend(copy.deepcopy(holdouts))
+        raise ValueError('selection tasks exceed the 384-game budget or block size is invalid')
     for index, task in enumerate(tasks):
         start = block[0] + index * count
         task['seeds'] = list(range(start, start + count))
         if 'deck_random' in task:
             task['splits'] = dict(selection=task['seeds'])
-    panel = dict(schema_version=1, panel_version='selection-task92c-v2-refresh',
-                tasks=tasks, cells=cells, window_sources_sha256=sources, excluded=excluded,
+    return dict(schema_version=1, panel_version=templates['panel_version'], tasks=tasks,
                 incumbent=str(incumbent), incumbent_sha256=sha(incumbent),
                 seed_block=list(block), games_per_cell=count,
-                purpose='30%-80% current-policy multiplier windows plus three required random families; equal games')
-    if holdouts:
-        panel.update(panel_version='selection-task126-v3-refresh',
-                     selection_holdout_tasks=[task['task_id'] for task in holdouts],
-                     purpose=panel['purpose'] + '; selection-only unseen decks at the same games per task')
-    return panel
+                score_only=[task['task_id'] for task in tasks if task.get('score_only')],
+                selection_holdout_tasks=[task['task_id'] for task in tasks
+                                         if task.get('selection_group') == 'unseen_deck'],
+                adventure_tasks=[task['task_id'] for task in tasks
+                                 if task.get('selection_group') == 'adventure'],
+                purpose='adventure levels of the gate-v5 panel on independent seeds; equal games per task; '
+                        'unseen-deck cells are recorded but never scored')
 
 
 def validate_random_tasks(panel, env):

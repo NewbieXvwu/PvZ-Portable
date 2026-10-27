@@ -17,39 +17,49 @@ from test_curriculum_pipeline import setup, write_evaluation, write_selection
 HOLDOUT = ROOT / 'configs/student_selection_holdout.json'
 
 
-def test_equal_shares_and_existing_exclusions_without_changing_frozen_v2(tmp_path):
-    old = selection_templates()
-    templates = selection_templates(HOLDOUT)
-    assert len(templates['tasks']) == len(old['tasks']) + 2
-    assert templates['tasks'][:-2] == old['tasks']
-    holds = templates['tasks'][-2:]
-    signatures = {tuple(sorted(t['deck'])) for t in holds}
+def test_adventure_body_and_score_only_unseen_decks(tmp_path):
+    source = ROOT / 'configs/gate_v5_panel.json'
+    document = json.loads(source.read_text())
+    templates = selection_templates(HOLDOUT, source)
+    adventure = [t for t in templates['tasks'] if t.get('selection_group') == 'adventure']
+    assert {t['task_id'] for t in adventure} == {t['task_id'] for t in document['tasks']} - set(document['monitor'])
+    assert len(adventure) == 36 and all(t['seeds'] == [] for t in adventure)
+    assert len([t for t in templates['tasks'] if 'deck_random' in t]) == 3
+    holds = [t for t in templates['tasks'] if t.get('selection_group') == 'unseen_deck']
+    assert len(holds) == 2 and all(t['score_only'] for t in holds)
     # d7q cannot draw the umbrella set (37 is outside its pool); the starfruit
     # set is explicitly excluded. d7p exclusions are documented from its source manifest.
-    q = next(t for t in old['tasks'] if t['task_id'] == 'day_l8_train_d7q')['deck_perturb']
-    for sig in signatures:
-        assert sig in {tuple(sorted(d)) for d in q['excluded_decks']} or not set(sig) <= set(q['pool'])
+    registered = json.loads((ROOT / 'configs/student_selection_v2.json').read_text())
+    q = next(t for t in registered['tasks'] if t['task_id'] == 'day_l8_train_d7q')['deck_perturb']
+    for signature in {tuple(sorted(t['deck'])) for t in holds}:
+        assert signature in {tuple(sorted(d)) for d in q['excluded_decks']} or not set(signature) <= set(q['pool'])
     model = tmp_path / 'model.pt'
     model.write_bytes(b'incumbent')
     block = (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE)
-    panel = make_plan(dict(cells={}, log=[]), model, tmp_path, templates, {}, block)
-    assert panel['panel_version'] == 'selection-task126-v3-refresh'
-    assert len(panel['tasks']) == 5
-    assert len(panel['selection_holdout_tasks']) == 2
-    assert len({len(t['seeds']) for t in panel['tasks']}) == 1
+    panel = make_plan(templates, block, model)
+    assert panel['panel_version'] == 'selection-task128-v4'
+    assert len(panel['tasks']) == 41 and len(panel['adventure_tasks']) == 36
+    assert {len(t['seeds']) for t in panel['tasks']} == {SELECTION_BLOCK_SIZE // 41}
     assert sum(len(t['seeds']) for t in panel['tasks']) <= SELECTION_BLOCK_SIZE
+    assert panel['score_only'] == panel['selection_holdout_tasks'] == [t['task_id'] for t in holds]
     assert_disjoint(panel, [(31024, 65536), (100_000_000, 101_000_000),
-                            (103_000_000, 104_000_000), (200_000_000, 201_000_000),
-                            *seed_spans(old)])
-    legacy = make_plan(dict(cells={}, log=[]), model, tmp_path, old, {}, block)
-    assert len(legacy['tasks']) == 3
-    assert 'selection_holdout_tasks' not in legacy
+                            (103_000_000, 103_500_000), (200_000_000, 201_000_000)])
+
+
+def test_selection_requires_the_gate_v5_adventure_panel(tmp_path):
+    legacy = tmp_path / 'legacy.json'
+    legacy.write_text(json.dumps(dict(panel_version='v2', groups={}, tasks=[])))
+    with pytest.raises(ValueError, match='gate-v5'):
+        selection_templates(HOLDOUT, legacy)
+    with pytest.raises(ValueError, match='gate-v5'):
+        selection_templates()
 
 
 def test_gate_card_sets_are_rejected_even_under_new_names(tmp_path):
     gate = tmp_path / 'gate.json'
-    tasks = json.loads(HOLDOUT.read_text())['tasks']
-    gate.write_text(json.dumps(dict(tasks=[dict(tasks[0], task_id='day_l7_eval_d7p_holdout1')])))
+    task = json.loads(HOLDOUT.read_text())['tasks'][0]
+    gate.write_text(json.dumps(dict(panel_version='v5', monitor=[], groups={'adv_l7': 'day'},
+                                    tasks=[dict(task, task_id='adv_l7')])))
     with pytest.raises(ValueError, match='distinct'):
         selection_templates(HOLDOUT, gate)
 
@@ -85,8 +95,7 @@ def test_four_candidates_are_serial_frozen_and_resume_without_retraining(tmp_pat
         path = Path(job['selection_manifest'])
         if not path.exists():
             templates = json.loads(Path(job['selection_refresh']['templates']).read_text())
-            panel = make_plan(dict(cells={}, log=[]), args.rollout_policy, tmp_path, templates, {},
-                              job['selection_refresh']['seed_block'])
+            panel = make_plan(templates, job['selection_refresh']['seed_block'], args.rollout_policy)
             path.write_text(json.dumps(panel))
         return dict(manifest_sha256=queue.file_sha(path))
     monkeypatch.setattr(queue.TrainingPipeline, '_prepare_selection', prepare)
