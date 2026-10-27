@@ -9,6 +9,7 @@ import subprocess
 import sys
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 PANEL = ROOT / 'configs/gate_v5_panel.json'
 
 
@@ -35,3 +36,28 @@ def test_panel_is_the_adventure_set_with_all_loss_cells_excluded():
             if document['qualification'][task['task_id']]['student_wins'] == 0} == {30, 34, 39}
     assert document['zone_counts'] == {'day': 9, 'fog': 9, 'heldout': 2, 'night': 9, 'pool': 9}
     assert all(record['zone'] != 'roof' for record in document['qualification'].values())
+
+
+def test_gate_and_selection_keep_scoreboard_game_semantics(tmp_path):
+    from pvz_promotion import freeze_panel
+    from pvz_selection_refresh import selection_templates, make_plan, SELECTION_POOLS, SELECTION_BLOCK_SIZE
+    from render_episode import training_task_kwargs
+
+    source = json.loads(PANEL.read_text())
+    gate = freeze_panel(source, version=5, seed_block=(100_000_000, 100_001_920))
+    model = tmp_path / 'model.pt'
+    model.write_bytes(b'incumbent')
+    start = SELECTION_POOLS[0][0]
+    selection = make_plan(selection_templates(ROOT / 'configs/student_selection_holdout.json', PANEL),
+                          (start, start + SELECTION_BLOCK_SIZE), model)
+    definitions = json.loads((ROOT / 'configs/adventure_scoreboard.json').read_text())['tasks']
+    for panel in (gate, selection):
+        table = {task['task_id']: task for task in panel['tasks']}
+        for definition in definitions:
+            if definition['task_id'] not in table:
+                continue
+            task = table[definition['task_id']]
+            assert all(task[key] == value for key, value in definition.items())
+            # Compare the actual reset arguments, including fog and conveyor
+            # modes, at an identical seed. No game replay is needed.
+            assert training_task_kwargs(task, 42) == training_task_kwargs(definition, 42)

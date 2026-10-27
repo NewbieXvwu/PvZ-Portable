@@ -18,9 +18,9 @@ Sources (SHA-pinned below, so the panel is reproducible from git):
 - `MEMORY/docs/task115-teacher-arm-weak-levels.md`  teacher arm, 16 seeds per
   weak level. The roof block (L41-44, L46-49) is only reported as an aggregate
   "0-1/16" and is therefore *not* attributable per level; those levels are
-  recorded as unqualified, which is also what the rule above gives them once
-  the aggregate is read as "the teacher loses there too" (task115 files them
-  under `老师也输`). L50 (Boss) is 0/16 teacher and 0/32 student -> excluded.
+  recorded as unqualified pending per-level evidence or an explicit scope
+  decision. The aggregate does not establish that every roof level lost all
+  games. L50 (Boss) is 0/16 teacher and 0/32 student -> excluded.
 
 The two heldout cells are carried over field-for-field from the registered v3
 source panel (`artifacts/task73c/panel_v3_source.json`); v5 keeps running them
@@ -123,9 +123,10 @@ def build() -> dict:
             raise SystemExit(f'scoreboard deck does not cover level {level} terrain (AGENTS §8)')
         if deck and profile_for_deck(tuple(deck)).seed_slot_count != len(deck):
             raise SystemExit(f'profile slot count differs from the deck at level {level}')
-        task = dict(task_id=definition['task_id'], terrain=zone, level=level, deck=deck,
-                    zombie_count_multiplier=float(definition['zombie_count_multiplier']),
-                    wave_cap=None, playthrough=2, preplanted=[])
+        # The scoreboard's observation and conveyor modes are task semantics,
+        # just like its deck. Keep every frozen field when assigning gate seeds.
+        task = dict(definition)
+        task.update(terrain=zone, wave_cap=None, playthrough=2, preplanted=[])
         if float(task['zombie_count_multiplier']) != 1.0:
             raise SystemExit(f'promotion needs original difficulty, level {level} is '
                              f'{task["zombie_count_multiplier"]}')

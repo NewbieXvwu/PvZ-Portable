@@ -66,8 +66,8 @@ PANEL_TASKS_V3 = (
 # Levels come from configs/adventure_scoreboard.json (task103: 45 levels, 1.0x,
 # scoreboard decks) and enter only when the r11 student or the teacher has a win
 # there (scripts/make_gate_v5_panel.py). Roof L41-49 and the L50 boss are 0/32 for
-# the student and 0-1/16 for the teacher, so no adventure cell of theirs carries a
-# regression signal; they are therefore absent from v5 (see DESIGN §14.43).
+# the student; task115 only gives an unattributed roof aggregate of 0-1/16.
+# Roof eligibility is unresolved; the current panel omits it (DESIGN §14.43).
 # The two registered heldout cells run for monitoring only.
 PANEL_TASKS_V5 = (
     ('day', 'task101_l1_day_d7', 48),

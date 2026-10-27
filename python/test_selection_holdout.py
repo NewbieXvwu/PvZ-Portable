@@ -229,3 +229,26 @@ SAVED=1; STARTED=1; rollback injected
                             capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
     subprocess.run(['bash', '-n'], input=result.stdout, text=True, check=True)
+
+
+def test_deploy14i_supplies_panel_generation_inputs(tmp_path, monkeypatch):
+    import shutil
+    import make_gate_v5_panel as generator
+
+    # A deployment overlays selected paths, not the whole branch. Regenerate
+    # against that overlay so sources available only in the dev tree cannot
+    # hide missing files on the production tree.
+    script = ROOT / 'scripts/qc_deploy14i.sh'
+    functions = tmp_path / 'functions.sh'
+    functions.write_text(script.read_text().split('# --- preflight:', 1)[0])
+    result = subprocess.run(['bash', '-c', 'source "$1"; printf "%s\\n" "${CODE_FILES[@]}"',
+                             'test', str(functions)], capture_output=True, text=True, check=True)
+    overlay = tmp_path / 'overlay'
+    for name in result.stdout.splitlines():
+        if name.startswith(('configs/', 'MEMORY/')):
+            target = overlay / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(ROOT / name, target)
+    monkeypatch.setattr(generator, 'ROOT', overlay)
+    generated = json.dumps(generator.build(), indent=1) + '\n'
+    assert generated == (overlay / generator.OUTPUT).read_text()
