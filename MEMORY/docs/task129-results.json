@@ -1,0 +1,8395 @@
+{
+  "status": "complete",
+  "games": 432,
+  "won": 63,
+  "completed_decks": 54,
+  "tasks": [
+    {
+      "task_id": "deck129_v5_l07_d01",
+      "level": 7,
+      "deck": [
+        6,
+        1,
+        8,
+        35,
+        32,
+        7,
+        36,
+        4,
+        18
+      ],
+      "card_names": [
+        "大嘴花",
+        "向日葵",
+        "小喷菇",
+        "咖啡豆",
+        "卷心菜投手",
+        "双发射手",
+        "大蒜",
+        "土豆雷",
+        "三线射手"
+      ],
+      "mean_card_cost": 108.33333333333333,
+      "games": 8,
+      "won": 0,
+      "seconds": 112.0,
+      "planted_types": {
+        "1": 86,
+        "8": 285,
+        "36": 242,
+        "4": 79,
+        "35": 12,
+        "32": 37
+      },
+      "losses": [
+        {
+          "seed": 129000000,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -100.534,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129000001,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -100.295,
+              "health": 150
+            }
+          ]
+        },
+        {
+          "seed": 129000002,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -100.205,
+              "health": 320
+            }
+          ]
+        },
+        {
+          "seed": 129000003,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 3,
+              "x": -150.405,
+              "health": 300
+            }
+          ]
+        },
+        {
+          "seed": 129000004,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 9,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.288,
+              "health": 240
+            }
+          ]
+        },
+        {
+          "seed": 129000005,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -100.29,
+              "health": 480
+            }
+          ]
+        },
+        {
+          "seed": 129000006,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -100.269,
+              "health": 580
+            }
+          ]
+        },
+        {
+          "seed": 129000007,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.364,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 3,
+        "2": 4,
+        "3": 1
+      },
+      "first_mower_waves": {
+        "5": 1,
+        "3": 2,
+        "6": 3,
+        "9": 1,
+        "8": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l07_d02",
+      "level": 7,
+      "deck": [
+        1,
+        2,
+        21,
+        18,
+        46,
+        41,
+        30,
+        0,
+        6,
+        32
+      ],
+      "card_names": [
+        "向日葵",
+        "樱桃炸弹",
+        "地刺",
+        "三线射手",
+        "地刺王",
+        "双子向日葵",
+        "南瓜头",
+        "豌豆射手",
+        "大嘴花",
+        "卷心菜投手"
+      ],
+      "mean_card_cost": 137.5,
+      "games": 8,
+      "won": 6,
+      "seconds": 162.5,
+      "planted_types": {
+        "1": 138,
+        "21": 221,
+        "32": 136,
+        "30": 17,
+        "46": 4,
+        "6": 1,
+        "0": 4,
+        "41": 2
+      }
+    },
+    {
+      "task_id": "deck129_v5_l07_d03",
+      "level": 7,
+      "deck": [
+        36,
+        1,
+        7,
+        35,
+        32,
+        4,
+        40,
+        10
+      ],
+      "card_names": [
+        "大蒜",
+        "向日葵",
+        "双发射手",
+        "咖啡豆",
+        "卷心菜投手",
+        "土豆雷",
+        "机枪射手",
+        "大喷菇"
+      ],
+      "mean_card_cost": 103.125,
+      "games": 8,
+      "won": 0,
+      "seconds": 39.1,
+      "planted_types": {
+        "36": 203,
+        "1": 135,
+        "4": 80,
+        "10": 47,
+        "35": 3,
+        "32": 3
+      },
+      "losses": [
+        {
+          "seed": 129000200,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.306,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129000201,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 1,
+              "x": -100.382,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129000202,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -100.294,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129000203,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.274,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129000204,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -100.24,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129000205,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.024,
+              "health": 190
+            }
+          ]
+        },
+        {
+          "seed": 129000206,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -100.246,
+              "health": 600
+            }
+          ]
+        },
+        {
+          "seed": 129000207,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -100.361,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 4,
+        "1": 1,
+        "2": 3
+      },
+      "first_mower_waves": {
+        "6": 2,
+        "3": 1,
+        "5": 2,
+        "4": 1,
+        "7": 1,
+        "8": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l07_d04",
+      "level": 7,
+      "deck": [
+        29,
+        15,
+        34,
+        26,
+        46,
+        1,
+        21,
+        35
+      ],
+      "card_names": [
+        "杨桃",
+        "毁灭菇",
+        "玉米投手",
+        "仙人掌",
+        "地刺王",
+        "向日葵",
+        "地刺",
+        "咖啡豆"
+      ],
+      "mean_card_cost": 103.125,
+      "games": 8,
+      "won": 8,
+      "seconds": 120.10000000000001,
+      "planted_types": {
+        "1": 198,
+        "34": 85,
+        "29": 65,
+        "21": 243,
+        "26": 1,
+        "46": 34,
+        "15": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l07_d05",
+      "level": 7,
+      "deck": [
+        1,
+        22,
+        40,
+        17,
+        5,
+        2,
+        7,
+        34
+      ],
+      "card_names": [
+        "向日葵",
+        "火炬树桩",
+        "机枪射手",
+        "窝瓜",
+        "寒冰射手",
+        "樱桃炸弹",
+        "双发射手",
+        "玉米投手"
+      ],
+      "mean_card_cost": 143.75,
+      "games": 8,
+      "won": 8,
+      "seconds": 186.5,
+      "planted_types": {
+        "1": 177,
+        "17": 156,
+        "34": 335,
+        "2": 44,
+        "5": 17,
+        "22": 60,
+        "7": 12
+      }
+    },
+    {
+      "task_id": "deck129_v5_l07_d06",
+      "level": 7,
+      "deck": [
+        17,
+        7,
+        39,
+        34,
+        36,
+        0,
+        30,
+        1,
+        23
+      ],
+      "card_names": [
+        "窝瓜",
+        "双发射手",
+        "西瓜投手",
+        "玉米投手",
+        "大蒜",
+        "豌豆射手",
+        "南瓜头",
+        "向日葵",
+        "高坚果"
+      ],
+      "mean_card_cost": 122.22222222222223,
+      "games": 8,
+      "won": 0,
+      "seconds": 141.8,
+      "planted_types": {
+        "1": 237,
+        "36": 324,
+        "17": 123,
+        "23": 30,
+        "34": 78,
+        "0": 27,
+        "30": 36,
+        "39": 7,
+        "7": 5
+      },
+      "losses": [
+        {
+          "seed": 129000500,
+          "final_wave": 26,
+          "terminal": true,
+          "first_mower_wave": 22,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.365,
+              "health": 210
+            }
+          ]
+        },
+        {
+          "seed": 129000501,
+          "final_wave": 17,
+          "terminal": true,
+          "first_mower_wave": 11,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 3,
+              "x": -150.276,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129000502,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 26,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.142,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129000503,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -100.395,
+              "health": 580
+            }
+          ]
+        },
+        {
+          "seed": 129000504,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 30,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -100.275,
+              "health": 600
+            }
+          ]
+        },
+        {
+          "seed": 129000505,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 14,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.196,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129000506,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.294,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129000507,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -100.471,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 3,
+        "3": 1,
+        "2": 4
+      },
+      "first_mower_waves": {
+        "22": 1,
+        "11": 1,
+        "26": 1,
+        "4": 1,
+        "30": 1,
+        "14": 1,
+        "8": 1,
+        "7": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l09_d01",
+      "level": 9,
+      "deck": [
+        32,
+        36,
+        20,
+        21,
+        26,
+        23,
+        1,
+        4
+      ],
+      "card_names": [
+        "卷心菜投手",
+        "大蒜",
+        "火爆辣椒",
+        "地刺",
+        "仙人掌",
+        "高坚果",
+        "向日葵",
+        "土豆雷"
+      ],
+      "mean_card_cost": 87.5,
+      "games": 8,
+      "won": 2,
+      "seconds": 134.1,
+      "planted_types": {
+        "1": 124,
+        "36": 241,
+        "4": 83,
+        "32": 40,
+        "21": 41,
+        "20": 21,
+        "23": 11,
+        "26": 1
+      },
+      "losses": [
+        {
+          "seed": 129001000,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 13,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 4,
+              "x": -100.547,
+              "health": 830
+            }
+          ]
+        },
+        {
+          "seed": 129001001,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 11,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -100.356,
+              "health": 440
+            }
+          ]
+        },
+        {
+          "seed": 129001002,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.221,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001003,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -100.245,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129001006,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -100.28,
+              "health": 620
+            }
+          ]
+        },
+        {
+          "seed": 129001007,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.293,
+              "health": 190
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "4": 1,
+        "2": 3,
+        "0": 2
+      },
+      "first_mower_waves": {
+        "13": 1,
+        "11": 1,
+        "8": 1,
+        "4": 1,
+        "6": 1,
+        "3": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l09_d02",
+      "level": 9,
+      "deck": [
+        12,
+        1,
+        26,
+        0,
+        14,
+        6,
+        8,
+        35
+      ],
+      "card_names": [
+        "魅惑菇",
+        "向日葵",
+        "仙人掌",
+        "豌豆射手",
+        "寒冰菇",
+        "大嘴花",
+        "小喷菇",
+        "咖啡豆"
+      ],
+      "mean_card_cost": 81.25,
+      "games": 8,
+      "won": 0,
+      "seconds": 188.6,
+      "planted_types": {
+        "8": 476,
+        "1": 343,
+        "12": 114,
+        "14": 70,
+        "0": 98,
+        "35": 73,
+        "26": 26,
+        "6": 7
+      },
+      "losses": [
+        {
+          "seed": 129001100,
+          "final_wave": 21,
+          "terminal": true,
+          "first_mower_wave": 14,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 4,
+              "x": -100.229,
+              "health": 910
+            }
+          ]
+        },
+        {
+          "seed": 129001101,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.287,
+              "health": 250
+            }
+          ]
+        },
+        {
+          "seed": 129001102,
+          "final_wave": 20,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -100.195,
+              "health": 168
+            }
+          ]
+        },
+        {
+          "seed": 129001103,
+          "final_wave": 26,
+          "terminal": true,
+          "first_mower_wave": 9,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 4,
+              "x": -100.25,
+              "health": 1210
+            }
+          ]
+        },
+        {
+          "seed": 129001104,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -100.45,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001105,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 4,
+              "x": -100.244,
+              "health": 470
+            }
+          ]
+        },
+        {
+          "seed": 129001106,
+          "final_wave": 28,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.343,
+              "health": 620
+            }
+          ]
+        },
+        {
+          "seed": 129001107,
+          "final_wave": 18,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 4,
+              "x": -100.262,
+              "health": 450
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "4": 4,
+        "0": 2,
+        "2": 2
+      },
+      "first_mower_waves": {
+        "14": 1,
+        "4": 1,
+        "3": 5,
+        "9": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l09_d03",
+      "level": 9,
+      "deck": [
+        32,
+        35,
+        2,
+        12,
+        10,
+        34,
+        41,
+        4,
+        1,
+        36
+      ],
+      "card_names": [
+        "卷心菜投手",
+        "咖啡豆",
+        "樱桃炸弹",
+        "魅惑菇",
+        "大喷菇",
+        "玉米投手",
+        "双子向日葵",
+        "土豆雷",
+        "向日葵",
+        "大蒜"
+      ],
+      "mean_card_cost": 85.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 42.7,
+      "planted_types": {
+        "1": 137,
+        "36": 204,
+        "4": 79,
+        "10": 30,
+        "12": 31,
+        "35": 5,
+        "34": 1,
+        "32": 6
+      },
+      "losses": [
+        {
+          "seed": 129001200,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.305,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001201,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -100.234,
+              "health": 300
+            }
+          ]
+        },
+        {
+          "seed": 129001202,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 1,
+              "x": -100.362,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001203,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 3,
+              "x": -150.32,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129001204,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -100.141,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001205,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.269,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001206,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 4,
+              "x": -100.222,
+              "health": 1370
+            }
+          ]
+        },
+        {
+          "seed": 129001207,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 9,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.539,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 3,
+        "2": 2,
+        "1": 1,
+        "3": 1,
+        "4": 1
+      },
+      "first_mower_waves": {
+        "6": 3,
+        "4": 2,
+        "7": 2,
+        "9": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l09_d04",
+      "level": 9,
+      "deck": [
+        39,
+        0,
+        8,
+        13,
+        7,
+        35,
+        1
+      ],
+      "card_names": [
+        "西瓜投手",
+        "豌豆射手",
+        "小喷菇",
+        "胆小菇",
+        "双发射手",
+        "咖啡豆",
+        "向日葵"
+      ],
+      "mean_card_cost": 107.14285714285714,
+      "games": 8,
+      "won": 0,
+      "seconds": 157.7,
+      "planted_types": {
+        "1": 274,
+        "8": 315,
+        "13": 363,
+        "35": 40,
+        "0": 73,
+        "7": 2
+      },
+      "losses": [
+        {
+          "seed": 129001300,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -100.317,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001301,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.154,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129001302,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -100.342,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001303,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 3,
+              "x": -150.306,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129001304,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 3,
+              "x": -150.152,
+              "health": 220
+            }
+          ]
+        },
+        {
+          "seed": 129001305,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.211,
+              "health": 320
+            }
+          ]
+        },
+        {
+          "seed": 129001306,
+          "final_wave": 20,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 4,
+              "x": -100.395,
+              "health": 110
+            }
+          ]
+        },
+        {
+          "seed": 129001307,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 4,
+              "x": -100.306,
+              "health": 1330
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 2,
+        "3": 3,
+        "2": 1,
+        "4": 2
+      },
+      "first_mower_waves": {
+        "5": 1,
+        "4": 1,
+        "3": 6
+      }
+    },
+    {
+      "task_id": "deck129_v5_l09_d05",
+      "level": 9,
+      "deck": [
+        3,
+        17,
+        28,
+        1,
+        0,
+        39,
+        6
+      ],
+      "card_names": [
+        "坚果墙",
+        "窝瓜",
+        "裂荚射手",
+        "向日葵",
+        "豌豆射手",
+        "西瓜投手",
+        "大嘴花"
+      ],
+      "mean_card_cost": 117.85714285714286,
+      "games": 8,
+      "won": 8,
+      "seconds": 223.7,
+      "planted_types": {
+        "1": 275,
+        "17": 147,
+        "3": 125,
+        "28": 236,
+        "0": 113,
+        "6": 31,
+        "39": 7
+      }
+    },
+    {
+      "task_id": "deck129_v5_l09_d06",
+      "level": 9,
+      "deck": [
+        1,
+        41,
+        0,
+        8,
+        15,
+        30,
+        7,
+        6,
+        35
+      ],
+      "card_names": [
+        "向日葵",
+        "双子向日葵",
+        "豌豆射手",
+        "小喷菇",
+        "毁灭菇",
+        "南瓜头",
+        "双发射手",
+        "大嘴花",
+        "咖啡豆"
+      ],
+      "mean_card_cost": 108.33333333333333,
+      "games": 8,
+      "won": 1,
+      "seconds": 372.1,
+      "planted_types": {
+        "1": 474,
+        "8": 494,
+        "35": 118,
+        "0": 124,
+        "6": 76,
+        "30": 72,
+        "15": 62,
+        "41": 33,
+        "7": 1
+      },
+      "losses": [
+        {
+          "seed": 129001500,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 24,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 4,
+              "x": -100.235,
+              "health": 830
+            }
+          ]
+        },
+        {
+          "seed": 129001501,
+          "final_wave": 23,
+          "terminal": true,
+          "first_mower_wave": 17,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.444,
+              "health": 190
+            }
+          ]
+        },
+        {
+          "seed": 129001503,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 25,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -100.195,
+              "health": 420
+            }
+          ]
+        },
+        {
+          "seed": 129001504,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 23,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.247,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129001505,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 23,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 4,
+              "x": -100.335,
+              "health": 990
+            }
+          ]
+        },
+        {
+          "seed": 129001506,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 24,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 4,
+              "x": -100.236,
+              "health": 370
+            }
+          ]
+        },
+        {
+          "seed": 129001507,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 23,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 4,
+              "x": -100.101,
+              "health": 510
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "4": 4,
+        "0": 2,
+        "2": 1
+      },
+      "first_mower_waves": {
+        "24": 2,
+        "17": 1,
+        "25": 1,
+        "23": 3
+      }
+    },
+    {
+      "task_id": "deck129_v5_l14_d01",
+      "level": 14,
+      "deck": [
+        39,
+        10,
+        9,
+        23,
+        8,
+        36,
+        15
+      ],
+      "card_names": [
+        "西瓜投手",
+        "大喷菇",
+        "阳光菇",
+        "高坚果",
+        "小喷菇",
+        "大蒜",
+        "毁灭菇"
+      ],
+      "mean_card_cost": 100.0,
+      "games": 8,
+      "won": 6,
+      "seconds": 168.1,
+      "planted_types": {
+        "8": 241,
+        "9": 235,
+        "36": 201,
+        "10": 84,
+        "23": 87,
+        "39": 77,
+        "15": 48
+      }
+    },
+    {
+      "task_id": "deck129_v5_l14_d02",
+      "level": 14,
+      "deck": [
+        36,
+        6,
+        32,
+        14,
+        5,
+        29,
+        9,
+        7,
+        20,
+        13
+      ],
+      "card_names": [
+        "大蒜",
+        "大嘴花",
+        "卷心菜投手",
+        "寒冰菇",
+        "寒冰射手",
+        "杨桃",
+        "阳光菇",
+        "双发射手",
+        "火爆辣椒",
+        "胆小菇"
+      ],
+      "mean_card_cost": 105.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 37.8,
+      "planted_types": {
+        "13": 130,
+        "9": 83,
+        "36": 11,
+        "32": 1
+      },
+      "losses": [
+        {
+          "seed": 129002100,
+          "final_wave": 28,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -100.575,
+              "health": 160
+            }
+          ]
+        },
+        {
+          "seed": 129002101,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.674,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002102,
+          "final_wave": 16,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 6,
+              "x": -100.229,
+              "health": 530
+            }
+          ]
+        },
+        {
+          "seed": 129002103,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.228,
+              "health": 90
+            }
+          ]
+        },
+        {
+          "seed": 129002104,
+          "final_wave": 23,
+          "terminal": true,
+          "first_mower_wave": 19,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 6,
+              "x": -100.324,
+              "health": 650
+            }
+          ]
+        },
+        {
+          "seed": 129002105,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 6,
+              "x": -100.183,
+              "health": 1090
+            }
+          ]
+        },
+        {
+          "seed": 129002106,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 1,
+              "x": -100.619,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002107,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 3,
+              "x": -150.486,
+              "health": 500
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 1,
+        "0": 2,
+        "6": 3,
+        "1": 1,
+        "3": 1
+      },
+      "first_mower_waves": {
+        "4": 1,
+        "5": 2,
+        "8": 1,
+        "19": 1,
+        "6": 3
+      }
+    },
+    {
+      "task_id": "deck129_v5_l14_d03",
+      "level": 14,
+      "deck": [
+        11,
+        10,
+        26,
+        0,
+        9,
+        39,
+        1,
+        42
+      ],
+      "card_names": [
+        "墓碑吞噬者",
+        "大喷菇",
+        "仙人掌",
+        "豌豆射手",
+        "阳光菇",
+        "西瓜投手",
+        "向日葵",
+        "忧郁菇"
+      ],
+      "mean_card_cost": 112.5,
+      "games": 8,
+      "won": 0,
+      "seconds": 18.1,
+      "planted_types": {
+        "9": 226,
+        "1": 43,
+        "10": 50,
+        "11": 8
+      },
+      "losses": [
+        {
+          "seed": 129002200,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.263,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002201,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -100.229,
+              "health": 110
+            }
+          ]
+        },
+        {
+          "seed": 129002202,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.569,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129002203,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -100.25,
+              "health": 180
+            }
+          ]
+        },
+        {
+          "seed": 129002204,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 3,
+              "x": -150.38,
+              "health": 220
+            }
+          ]
+        },
+        {
+          "seed": 129002205,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 3,
+              "x": -150.293,
+              "health": 180
+            }
+          ]
+        },
+        {
+          "seed": 129002206,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -100.464,
+              "health": 260
+            }
+          ]
+        },
+        {
+          "seed": 129002207,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.181,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "3": 3,
+        "0": 3,
+        "2": 2
+      },
+      "first_mower_waves": {
+        "3": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l14_d04",
+      "level": 14,
+      "deck": [
+        28,
+        17,
+        36,
+        1,
+        32,
+        31,
+        20,
+        12
+      ],
+      "card_names": [
+        "裂荚射手",
+        "窝瓜",
+        "大蒜",
+        "向日葵",
+        "卷心菜投手",
+        "磁力菇",
+        "火爆辣椒",
+        "魅惑菇"
+      ],
+      "mean_card_cost": 84.375,
+      "games": 8,
+      "won": 0,
+      "seconds": 2.4,
+      "planted_types": {
+        "1": 8,
+        "17": 18
+      },
+      "losses": [
+        {
+          "seed": 129002300,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.124,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129002301,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -100.441,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002302,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.384,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002303,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 3,
+              "x": -150.603,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002304,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.435,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002305,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -100.402,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129002306,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -100.267,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129002307,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 6,
+              "x": -100.437,
+              "health": 1370
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 3,
+        "0": 1,
+        "3": 3,
+        "6": 1
+      },
+      "first_mower_waves": {
+        "4": 5,
+        "5": 2,
+        "3": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l14_d05",
+      "level": 14,
+      "deck": [
+        26,
+        36,
+        12,
+        1,
+        2,
+        4,
+        41
+      ],
+      "card_names": [
+        "仙人掌",
+        "大蒜",
+        "魅惑菇",
+        "向日葵",
+        "樱桃炸弹",
+        "土豆雷",
+        "双子向日葵"
+      ],
+      "mean_card_cost": 89.28571428571429,
+      "games": 8,
+      "won": 0,
+      "seconds": 3.9,
+      "planted_types": {
+        "1": 16,
+        "4": 48,
+        "36": 9
+      },
+      "losses": [
+        {
+          "seed": 129002400,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -100.511,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002401,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -100.295,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002402,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 6,
+              "x": -100.015,
+              "health": 1370
+            }
+          ]
+        },
+        {
+          "seed": 129002403,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.266,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002404,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.577,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002405,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 3,
+              "x": -150.297,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002406,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -100.192,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002407,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.379,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 5,
+        "6": 1,
+        "3": 2
+      },
+      "first_mower_waves": {
+        "3": 1,
+        "4": 1,
+        "6": 4,
+        "5": 1,
+        "2": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l14_d06",
+      "level": 14,
+      "deck": [
+        9,
+        30,
+        2,
+        32,
+        18,
+        26,
+        31,
+        0,
+        36,
+        28
+      ],
+      "card_names": [
+        "阳光菇",
+        "南瓜头",
+        "樱桃炸弹",
+        "卷心菜投手",
+        "三线射手",
+        "仙人掌",
+        "磁力菇",
+        "豌豆射手",
+        "大蒜",
+        "裂荚射手"
+      ],
+      "mean_card_cost": 122.5,
+      "games": 8,
+      "won": 0,
+      "seconds": 9.1,
+      "planted_types": {
+        "9": 170,
+        "36": 57
+      },
+      "losses": [
+        {
+          "seed": 129002500,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -100.296,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129002501,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -100.322,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002502,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 3,
+              "x": -150.36,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002503,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.25,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002504,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.237,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129002505,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.31,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002506,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -100.388,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129002507,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 3,
+              "x": -150.282,
+              "health": 500
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 1,
+        "0": 4,
+        "3": 3
+      },
+      "first_mower_waves": {
+        "3": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l24_d01",
+      "level": 24,
+      "deck": [
+        21,
+        19,
+        17,
+        16,
+        35,
+        1,
+        13
+      ],
+      "card_names": [
+        "地刺",
+        "缠绕水草",
+        "窝瓜",
+        "睡莲",
+        "咖啡豆",
+        "向日葵",
+        "胆小菇"
+      ],
+      "mean_card_cost": 50.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 28.3,
+      "planted_types": {
+        "16": 46,
+        "13": 207,
+        "19": 44,
+        "1": 11,
+        "17": 11
+      },
+      "losses": [
+        {
+          "seed": 129003000,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.264,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129003001,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 5,
+              "x": -180.211,
+              "health": 420
+            }
+          ]
+        },
+        {
+          "seed": 129003002,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.097,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003003,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.1,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003004,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.474,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003005,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 3,
+              "x": -230.436,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129003006,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.196,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129003007,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.48,
+              "health": 270
+            },
+            {
+              "row": 5,
+              "type": 0,
+              "x": -100.283,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 2,
+        "5": 1,
+        "0": 5,
+        "3": 1
+      },
+      "first_mower_waves": {
+        "3": 3,
+        "5": 2,
+        "4": 1,
+        "6": 1,
+        "2": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l24_d02",
+      "level": 24,
+      "deck": [
+        22,
+        18,
+        17,
+        29,
+        1,
+        16,
+        23,
+        26,
+        3
+      ],
+      "card_names": [
+        "火炬树桩",
+        "三线射手",
+        "窝瓜",
+        "杨桃",
+        "向日葵",
+        "睡莲",
+        "高坚果",
+        "仙人掌",
+        "坚果墙"
+      ],
+      "mean_card_cost": 116.66666666666667,
+      "games": 8,
+      "won": 8,
+      "seconds": 645.5,
+      "planted_types": {
+        "16": 449,
+        "1": 226,
+        "17": 213,
+        "23": 114,
+        "29": 382,
+        "3": 104,
+        "26": 53,
+        "22": 3
+      }
+    },
+    {
+      "task_id": "deck129_v5_l24_d03",
+      "level": 24,
+      "deck": [
+        14,
+        1,
+        4,
+        24,
+        31,
+        16,
+        35,
+        10
+      ],
+      "card_names": [
+        "寒冰菇",
+        "向日葵",
+        "土豆雷",
+        "海蘑菇",
+        "磁力菇",
+        "睡莲",
+        "咖啡豆",
+        "大喷菇"
+      ],
+      "mean_card_cost": 53.125,
+      "games": 8,
+      "won": 0,
+      "seconds": 94.2,
+      "planted_types": {
+        "1": 130,
+        "16": 143,
+        "24": 57,
+        "4": 59,
+        "14": 27,
+        "10": 88,
+        "35": 12,
+        "31": 8
+      },
+      "losses": [
+        {
+          "seed": 129003200,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 3,
+              "x": -230.443,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129003201,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 5,
+              "x": -180.221,
+              "health": 420
+            }
+          ]
+        },
+        {
+          "seed": 129003202,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 3,
+              "x": -230.203,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129003203,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 5,
+              "x": -180.164,
+              "health": 420
+            }
+          ]
+        },
+        {
+          "seed": 129003204,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 3,
+              "x": -230.371,
+              "health": 500
+            }
+          ]
+        },
+        {
+          "seed": 129003205,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.625,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003206,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.116,
+              "health": 620
+            }
+          ]
+        },
+        {
+          "seed": 129003207,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.261,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "3": 3,
+        "5": 2,
+        "0": 1,
+        "2": 2
+      },
+      "first_mower_waves": {
+        "4": 3,
+        "3": 2,
+        "2": 1,
+        "5": 2
+      }
+    },
+    {
+      "task_id": "deck129_v5_l24_d04",
+      "level": 24,
+      "deck": [
+        16,
+        0,
+        30,
+        1,
+        22,
+        19,
+        26,
+        34,
+        29,
+        36
+      ],
+      "card_names": [
+        "睡莲",
+        "豌豆射手",
+        "南瓜头",
+        "向日葵",
+        "火炬树桩",
+        "缠绕水草",
+        "仙人掌",
+        "玉米投手",
+        "杨桃",
+        "大蒜"
+      ],
+      "mean_card_cost": 90.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 19.2,
+      "planted_types": {
+        "36": 82,
+        "19": 38
+      },
+      "losses": [
+        {
+          "seed": 129003300,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.342,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003301,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.417,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003302,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.375,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003303,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.163,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003304,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.031,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003305,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.221,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003306,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.574,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003307,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 3,
+              "x": -230.226,
+              "health": 500
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 7,
+        "3": 1
+      },
+      "first_mower_waves": {
+        "3": 7,
+        "2": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l24_d05",
+      "level": 24,
+      "deck": [
+        6,
+        18,
+        0,
+        16,
+        22,
+        7,
+        1
+      ],
+      "card_names": [
+        "大嘴花",
+        "三线射手",
+        "豌豆射手",
+        "睡莲",
+        "火炬树桩",
+        "双发射手",
+        "向日葵"
+      ],
+      "mean_card_cost": 146.42857142857142,
+      "games": 8,
+      "won": 3,
+      "seconds": 472.1,
+      "planted_types": {
+        "16": 505,
+        "1": 494,
+        "0": 204,
+        "6": 151,
+        "22": 90,
+        "7": 2
+      }
+    },
+    {
+      "task_id": "deck129_v5_l24_d06",
+      "level": 24,
+      "deck": [
+        34,
+        35,
+        16,
+        32,
+        26,
+        31,
+        41,
+        1
+      ],
+      "card_names": [
+        "玉米投手",
+        "咖啡豆",
+        "睡莲",
+        "卷心菜投手",
+        "仙人掌",
+        "磁力菇",
+        "双子向日葵",
+        "向日葵"
+      ],
+      "mean_card_cost": 90.625,
+      "games": 8,
+      "won": 1,
+      "seconds": 259.2,
+      "planted_types": {
+        "16": 302,
+        "1": 158,
+        "32": 268,
+        "34": 12,
+        "31": 50,
+        "35": 14
+      },
+      "losses": [
+        {
+          "seed": 129003500,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.295,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129003502,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 4,
+              "x": -180.135,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129003503,
+          "final_wave": 38,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 3,
+              "x": -230.269,
+              "health": 300
+            }
+          ]
+        },
+        {
+          "seed": 129003504,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.22,
+              "health": 440
+            }
+          ]
+        },
+        {
+          "seed": 129003505,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.511,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129003506,
+          "final_wave": 36,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 4,
+              "x": -180.188,
+              "health": 1370
+            }
+          ]
+        },
+        {
+          "seed": 129003507,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.274,
+              "health": 160
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 1,
+        "4": 2,
+        "3": 1,
+        "2": 3
+      },
+      "first_mower_waves": {
+        "3": 4,
+        "2": 2,
+        "5": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l26_d01",
+      "level": 26,
+      "deck": [
+        22,
+        16,
+        0,
+        17,
+        1,
+        2,
+        3,
+        39
+      ],
+      "card_names": [
+        "火炬树桩",
+        "睡莲",
+        "豌豆射手",
+        "窝瓜",
+        "向日葵",
+        "樱桃炸弹",
+        "坚果墙",
+        "西瓜投手"
+      ],
+      "mean_card_cost": 112.5,
+      "games": 8,
+      "won": 8,
+      "seconds": 436.1,
+      "planted_types": {
+        "16": 359,
+        "1": 393,
+        "17": 168,
+        "3": 151,
+        "0": 176,
+        "2": 64,
+        "22": 124
+      }
+    },
+    {
+      "task_id": "deck129_v5_l26_d02",
+      "level": 26,
+      "deck": [
+        2,
+        39,
+        35,
+        16,
+        19,
+        1,
+        4,
+        3,
+        18,
+        15
+      ],
+      "card_names": [
+        "樱桃炸弹",
+        "西瓜投手",
+        "咖啡豆",
+        "睡莲",
+        "缠绕水草",
+        "向日葵",
+        "土豆雷",
+        "坚果墙",
+        "三线射手",
+        "毁灭菇"
+      ],
+      "mean_card_cost": 115.0,
+      "games": 8,
+      "won": 1,
+      "seconds": 349.7,
+      "planted_types": {
+        "16": 423,
+        "1": 285,
+        "19": 144,
+        "4": 141,
+        "3": 125,
+        "15": 72,
+        "35": 37,
+        "2": 65,
+        "39": 21,
+        "18": 9
+      },
+      "losses": [
+        {
+          "seed": 129004101,
+          "final_wave": 28,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 13,
+              "x": -180.263,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004102,
+          "final_wave": 22,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.536,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004103,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 22,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.197,
+              "health": 192
+            }
+          ]
+        },
+        {
+          "seed": 129004104,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 13,
+              "x": -180.175,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004105,
+          "final_wave": 27,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 13,
+              "x": -180.283,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004106,
+          "final_wave": 28,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.183,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004107,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 18,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 13,
+              "x": -180.162,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "13": 4,
+        "0": 2,
+        "2": 1
+      },
+      "first_mower_waves": {
+        "3": 2,
+        "22": 1,
+        "2": 1,
+        "6": 1,
+        "5": 1,
+        "18": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l26_d03",
+      "level": 26,
+      "deck": [
+        35,
+        16,
+        34,
+        14,
+        1,
+        24,
+        21,
+        20,
+        26
+      ],
+      "card_names": [
+        "咖啡豆",
+        "睡莲",
+        "玉米投手",
+        "寒冰菇",
+        "向日葵",
+        "海蘑菇",
+        "地刺",
+        "火爆辣椒",
+        "仙人掌"
+      ],
+      "mean_card_cost": 75.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 96.3,
+      "planted_types": {
+        "16": 184,
+        "1": 118,
+        "24": 63,
+        "14": 38,
+        "21": 71,
+        "34": 8,
+        "20": 8,
+        "26": 3,
+        "35": 11
+      },
+      "losses": [
+        {
+          "seed": 129004200,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.263,
+              "health": 150
+            }
+          ]
+        },
+        {
+          "seed": 129004201,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.258,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004202,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.146,
+              "health": 400
+            }
+          ]
+        },
+        {
+          "seed": 129004203,
+          "final_wave": 26,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180.171,
+              "health": 250
+            }
+          ]
+        },
+        {
+          "seed": 129004204,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.279,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004205,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.415,
+              "health": 360
+            }
+          ]
+        },
+        {
+          "seed": 129004206,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.17,
+              "health": 110
+            }
+          ]
+        },
+        {
+          "seed": 129004207,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.091,
+              "health": 110
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 6,
+        "2": 2
+      },
+      "first_mower_waves": {
+        "3": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l26_d04",
+      "level": 26,
+      "deck": [
+        19,
+        35,
+        43,
+        4,
+        30,
+        16,
+        2,
+        1,
+        13
+      ],
+      "card_names": [
+        "缠绕水草",
+        "咖啡豆",
+        "香蒲",
+        "土豆雷",
+        "南瓜头",
+        "睡莲",
+        "樱桃炸弹",
+        "向日葵",
+        "胆小菇"
+      ],
+      "mean_card_cost": 80.55555555555556,
+      "games": 8,
+      "won": 0,
+      "seconds": 16.8,
+      "planted_types": {
+        "16": 101,
+        "13": 111,
+        "19": 41
+      },
+      "losses": [
+        {
+          "seed": 129004300,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.229,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004301,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.277,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004302,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.326,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004303,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.564,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004304,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.324,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004305,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.249,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004306,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.229,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004307,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.206,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 4,
+        "2": 4
+      },
+      "first_mower_waves": {
+        "3": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l26_d05",
+      "level": 26,
+      "deck": [
+        20,
+        9,
+        34,
+        10,
+        16,
+        35,
+        1,
+        8,
+        5,
+        0
+      ],
+      "card_names": [
+        "火爆辣椒",
+        "阳光菇",
+        "玉米投手",
+        "大喷菇",
+        "睡莲",
+        "咖啡豆",
+        "向日葵",
+        "小喷菇",
+        "寒冰射手",
+        "豌豆射手"
+      ],
+      "mean_card_cost": 75.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 33.4,
+      "planted_types": {
+        "1": 9,
+        "8": 248,
+        "9": 126,
+        "16": 182
+      },
+      "losses": [
+        {
+          "seed": 129004400,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.27,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004401,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.191,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004402,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.287,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004403,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.354,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004404,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.205,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004405,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.025,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004406,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.314,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004407,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.302,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 5,
+        "2": 3
+      },
+      "first_mower_waves": {
+        "3": 4,
+        "4": 4
+      }
+    },
+    {
+      "task_id": "deck129_v5_l26_d06",
+      "level": 26,
+      "deck": [
+        43,
+        34,
+        16,
+        10,
+        30,
+        35,
+        1,
+        17,
+        28
+      ],
+      "card_names": [
+        "香蒲",
+        "玉米投手",
+        "睡莲",
+        "大喷菇",
+        "南瓜头",
+        "咖啡豆",
+        "向日葵",
+        "窝瓜",
+        "裂荚射手"
+      ],
+      "mean_card_cost": 94.44444444444444,
+      "games": 8,
+      "won": 0,
+      "seconds": 127.5,
+      "planted_types": {
+        "16": 181,
+        "1": 175,
+        "17": 86,
+        "10": 148,
+        "35": 33,
+        "34": 20,
+        "28": 9
+      },
+      "losses": [
+        {
+          "seed": 129004500,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 12,
+              "x": -255.105,
+              "health": 1350
+            }
+          ]
+        },
+        {
+          "seed": 129004501,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.32,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004502,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -180.308,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004503,
+          "final_wave": 15,
+          "terminal": true,
+          "first_mower_wave": 12,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180.341,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004504,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 6,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.317,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004505,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 9,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -180.339,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129004506,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 1,
+              "x": -180.447,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129004507,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 17,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 13,
+              "x": -180.218,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "12": 1,
+        "0": 3,
+        "2": 2,
+        "1": 1,
+        "13": 1
+      },
+      "first_mower_waves": {
+        "8": 1,
+        "4": 1,
+        "6": 2,
+        "12": 1,
+        "9": 1,
+        "5": 1,
+        "17": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l33_d01",
+      "level": 33,
+      "deck": [
+        14,
+        1,
+        27,
+        34,
+        12,
+        39,
+        16,
+        8
+      ],
+      "card_names": [
+        "寒冰菇",
+        "向日葵",
+        "三叶草",
+        "玉米投手",
+        "魅惑菇",
+        "西瓜投手",
+        "睡莲",
+        "小喷菇"
+      ],
+      "mean_card_cost": 90.625,
+      "games": 8,
+      "won": 0,
+      "seconds": 53.2,
+      "planted_types": {
+        "16": 43,
+        "8": 225,
+        "1": 3
+      },
+      "losses": [
+        {
+          "seed": 129005000,
+          "final_wave": 10,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180.4,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005001,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 16,
+              "x": -180.577,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005002,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -180.299,
+              "health": 200
+            }
+          ]
+        },
+        {
+          "seed": 129005003,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 16,
+              "x": -180.405,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005004,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 16,
+              "x": -180.631,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005005,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 16,
+              "x": -180.394,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005006,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.291,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005007,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 16,
+              "x": -180.527,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 2,
+        "16": 5,
+        "2": 1
+      },
+      "first_mower_waves": {
+        "3": 2,
+        "4": 2,
+        "8": 2,
+        "7": 2
+      }
+    },
+    {
+      "task_id": "deck129_v5_l33_d02",
+      "level": 33,
+      "deck": [
+        0,
+        24,
+        1,
+        26,
+        20,
+        16,
+        4,
+        8
+      ],
+      "card_names": [
+        "豌豆射手",
+        "海蘑菇",
+        "向日葵",
+        "仙人掌",
+        "火爆辣椒",
+        "睡莲",
+        "土豆雷",
+        "小喷菇"
+      ],
+      "mean_card_cost": 56.25,
+      "games": 8,
+      "won": 0,
+      "seconds": 72.2,
+      "planted_types": {
+        "16": 16,
+        "8": 308,
+        "24": 66
+      },
+      "losses": [
+        {
+          "seed": 129005100,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 16,
+              "x": -180.4,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005101,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 16,
+              "x": -180.515,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005102,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 16,
+              "x": -180.329,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005103,
+          "final_wave": 11,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 16,
+              "x": -180.427,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005104,
+          "final_wave": 13,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 16,
+              "x": -180.418,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005105,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 16,
+              "x": -180.396,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005106,
+          "final_wave": 12,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 16,
+              "x": -180.427,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005107,
+          "final_wave": 17,
+          "terminal": true,
+          "first_mower_wave": 8,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 16,
+              "x": -180.526,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "16": 8
+      },
+      "first_mower_waves": {
+        "8": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l33_d03",
+      "level": 33,
+      "deck": [
+        16,
+        27,
+        9,
+        26,
+        29,
+        21,
+        24,
+        12
+      ],
+      "card_names": [
+        "睡莲",
+        "三叶草",
+        "阳光菇",
+        "仙人掌",
+        "杨桃",
+        "地刺",
+        "海蘑菇",
+        "魅惑菇"
+      ],
+      "mean_card_cost": 71.875,
+      "games": 8,
+      "won": 0,
+      "seconds": 18.3,
+      "planted_types": {
+        "16": 49,
+        "9": 32,
+        "24": 28
+      },
+      "losses": [
+        {
+          "seed": 129005200,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 16,
+              "x": -180.566,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005201,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.345,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005202,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 16,
+              "x": -180.391,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005203,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.583,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005204,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 16,
+              "x": -180.735,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005205,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.302,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005206,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.214,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005207,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.391,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "16": 3,
+        "0": 2,
+        "2": 3
+      },
+      "first_mower_waves": {
+        "3": 4,
+        "2": 4
+      }
+    },
+    {
+      "task_id": "deck129_v5_l33_d04",
+      "level": 33,
+      "deck": [
+        12,
+        4,
+        6,
+        9,
+        26,
+        7,
+        16,
+        34
+      ],
+      "card_names": [
+        "魅惑菇",
+        "土豆雷",
+        "大嘴花",
+        "阳光菇",
+        "仙人掌",
+        "双发射手",
+        "睡莲",
+        "玉米投手"
+      ],
+      "mean_card_cost": 90.625,
+      "games": 8,
+      "won": 0,
+      "seconds": 10.4,
+      "planted_types": {
+        "16": 59,
+        "9": 34,
+        "4": 8
+      },
+      "losses": [
+        {
+          "seed": 129005300,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 16,
+              "x": -180.536,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005301,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.468,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005302,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.226,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005303,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 16,
+              "x": -180.561,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005304,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.307,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005305,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.266,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005306,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 16,
+              "x": -180.299,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005307,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.146,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "16": 3,
+        "0": 2,
+        "2": 3
+      },
+      "first_mower_waves": {
+        "3": 5,
+        "2": 3
+      }
+    },
+    {
+      "task_id": "deck129_v5_l33_d05",
+      "level": 33,
+      "deck": [
+        43,
+        16,
+        14,
+        34,
+        19,
+        41,
+        12,
+        1
+      ],
+      "card_names": [
+        "香蒲",
+        "睡莲",
+        "寒冰菇",
+        "玉米投手",
+        "缠绕水草",
+        "双子向日葵",
+        "魅惑菇",
+        "向日葵"
+      ],
+      "mean_card_cost": 90.625,
+      "games": 8,
+      "won": 0,
+      "seconds": 13.7,
+      "planted_types": {
+        "1": 6,
+        "16": 15,
+        "19": 16
+      },
+      "losses": [
+        {
+          "seed": 129005400,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.246,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005401,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.35,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005402,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.181,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005403,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.415,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005404,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 16,
+              "x": -180.484,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005405,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.313,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005406,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.52,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005407,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.348,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 6,
+        "16": 1,
+        "0": 1
+      },
+      "first_mower_waves": {
+        "3": 6,
+        "2": 2
+      }
+    },
+    {
+      "task_id": "deck129_v5_l33_d06",
+      "level": 33,
+      "deck": [
+        16,
+        43,
+        34,
+        13,
+        1,
+        3,
+        6
+      ],
+      "card_names": [
+        "睡莲",
+        "香蒲",
+        "玉米投手",
+        "胆小菇",
+        "向日葵",
+        "坚果墙",
+        "大嘴花"
+      ],
+      "mean_card_cost": 89.28571428571429,
+      "games": 8,
+      "won": 0,
+      "seconds": 3.0,
+      "planted_types": {
+        "16": 8,
+        "13": 8
+      },
+      "losses": [
+        {
+          "seed": 129005500,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.402,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005501,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 4,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180.292,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005502,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.284,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005503,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.319,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005504,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.323,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005505,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.24,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129005506,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 5,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.396,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129005507,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.402,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 2,
+        "0": 6
+      },
+      "first_mower_waves": {
+        "3": 4,
+        "4": 1,
+        "2": 2,
+        "5": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l37_d01",
+      "level": 37,
+      "deck": [
+        36,
+        7,
+        9,
+        16,
+        29,
+        28,
+        17,
+        26,
+        24,
+        8
+      ],
+      "card_names": [
+        "大蒜",
+        "双发射手",
+        "阳光菇",
+        "睡莲",
+        "杨桃",
+        "裂荚射手",
+        "窝瓜",
+        "仙人掌",
+        "海蘑菇",
+        "小喷菇"
+      ],
+      "mean_card_cost": 72.5,
+      "games": 8,
+      "won": 2,
+      "seconds": 816.4,
+      "planted_types": {
+        "16": 377,
+        "9": 559,
+        "8": 732,
+        "24": 151,
+        "17": 126,
+        "36": 244,
+        "28": 30,
+        "29": 10,
+        "26": 5,
+        "7": 4
+      },
+      "losses": [
+        {
+          "seed": 129006000,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 27,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 4,
+              "x": -180.257,
+              "health": 650
+            }
+          ]
+        },
+        {
+          "seed": 129006001,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 27,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 4,
+              "x": -180.405,
+              "health": 1110
+            }
+          ]
+        },
+        {
+          "seed": 129006002,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 30,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.392,
+              "health": 110
+            }
+          ]
+        },
+        {
+          "seed": 129006004,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 25,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.365,
+              "health": 190
+            }
+          ]
+        },
+        {
+          "seed": 129006005,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 25,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 4,
+              "x": -180.277,
+              "health": 650
+            }
+          ]
+        },
+        {
+          "seed": 129006006,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.378,
+              "health": 560
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "4": 3,
+        "0": 2,
+        "2": 1
+      },
+      "first_mower_waves": {
+        "27": 2,
+        "30": 1,
+        "25": 2,
+        "3": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l37_d02",
+      "level": 37,
+      "deck": [
+        17,
+        27,
+        9,
+        20,
+        2,
+        36,
+        43,
+        16
+      ],
+      "card_names": [
+        "窝瓜",
+        "三叶草",
+        "阳光菇",
+        "火爆辣椒",
+        "樱桃炸弹",
+        "大蒜",
+        "香蒲",
+        "睡莲"
+      ],
+      "mean_card_cost": 93.75,
+      "games": 8,
+      "won": 0,
+      "seconds": 2.4,
+      "planted_types": {
+        "36": 8
+      },
+      "losses": [
+        {
+          "seed": 129006100,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.191,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006101,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.141,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006102,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.437,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006103,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.186,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006104,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.296,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006105,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.182,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006106,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.317,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006107,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.334,
+              "health": 640
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 4,
+        "0": 4
+      },
+      "first_mower_waves": {
+        "3": 5,
+        "2": 3
+      }
+    },
+    {
+      "task_id": "deck129_v5_l37_d03",
+      "level": 37,
+      "deck": [
+        7,
+        1,
+        41,
+        34,
+        39,
+        43,
+        16
+      ],
+      "card_names": [
+        "双发射手",
+        "向日葵",
+        "双子向日葵",
+        "玉米投手",
+        "西瓜投手",
+        "香蒲",
+        "睡莲"
+      ],
+      "mean_card_cost": 150.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 2.8,
+      "planted_types": {
+        "16": 16
+      },
+      "losses": [
+        {
+          "seed": 129006200,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.173,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006201,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 2,
+              "x": -180.483,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006202,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.17,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006203,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.294,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006204,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.453,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006205,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.284,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006206,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.476,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006207,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.27,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 4,
+        "2": 4
+      },
+      "first_mower_waves": {
+        "2": 3,
+        "3": 5
+      }
+    },
+    {
+      "task_id": "deck129_v5_l37_d04",
+      "level": 37,
+      "deck": [
+        21,
+        25,
+        17,
+        16,
+        18,
+        9,
+        32,
+        8,
+        34,
+        46
+      ],
+      "card_names": [
+        "地刺",
+        "路灯花",
+        "窝瓜",
+        "睡莲",
+        "三线射手",
+        "阳光菇",
+        "卷心菜投手",
+        "小喷菇",
+        "玉米投手",
+        "地刺王"
+      ],
+      "mean_card_cost": 87.5,
+      "games": 8,
+      "won": 1,
+      "seconds": 722.3,
+      "planted_types": {
+        "16": 434,
+        "9": 482,
+        "8": 725,
+        "25": 153,
+        "17": 131,
+        "21": 58,
+        "32": 9,
+        "34": 4
+      },
+      "losses": [
+        {
+          "seed": 129006300,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 29,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 4,
+              "x": -180.299,
+              "health": 1330
+            }
+          ]
+        },
+        {
+          "seed": 129006301,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 27,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 1,
+              "x": -180.644,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006302,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 26,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 4,
+              "x": -180.421,
+              "health": 590
+            }
+          ]
+        },
+        {
+          "seed": 129006303,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 7,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 4,
+              "x": -180.198,
+              "health": 690
+            }
+          ]
+        },
+        {
+          "seed": 129006304,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 29,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 4,
+              "x": -180.283,
+              "health": 1330
+            }
+          ]
+        },
+        {
+          "seed": 129006305,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 28,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -180.308,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006306,
+          "final_wave": 30,
+          "terminal": true,
+          "first_mower_wave": 26,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -180.226,
+              "health": 140
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "4": 4,
+        "1": 1,
+        "2": 2
+      },
+      "first_mower_waves": {
+        "29": 2,
+        "27": 1,
+        "26": 2,
+        "7": 1,
+        "28": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l37_d05",
+      "level": 37,
+      "deck": [
+        10,
+        9,
+        16,
+        26,
+        8,
+        0,
+        13
+      ],
+      "card_names": [
+        "大喷菇",
+        "阳光菇",
+        "睡莲",
+        "仙人掌",
+        "小喷菇",
+        "豌豆射手",
+        "胆小菇"
+      ],
+      "mean_card_cost": 53.57142857142857,
+      "games": 8,
+      "won": 0,
+      "seconds": 159.1,
+      "planted_types": {
+        "13": 57,
+        "8": 384,
+        "9": 24,
+        "16": 100
+      },
+      "losses": [
+        {
+          "seed": 129006400,
+          "final_wave": 17,
+          "terminal": true,
+          "first_mower_wave": 9,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 4,
+              "x": -180.276,
+              "health": 1070
+            }
+          ]
+        },
+        {
+          "seed": 129006401,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 10,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -180.209,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006402,
+          "final_wave": 19,
+          "terminal": true,
+          "first_mower_wave": 16,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.447,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006403,
+          "final_wave": 29,
+          "terminal": true,
+          "first_mower_wave": 26,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180.211,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006404,
+          "final_wave": 14,
+          "terminal": true,
+          "first_mower_wave": 10,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.28,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006405,
+          "final_wave": 23,
+          "terminal": true,
+          "first_mower_wave": 14,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 2,
+              "x": -180.392,
+              "health": 380
+            }
+          ]
+        },
+        {
+          "seed": 129006406,
+          "final_wave": 17,
+          "terminal": true,
+          "first_mower_wave": 12,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 4,
+              "x": -180.195,
+              "health": 1250
+            }
+          ]
+        },
+        {
+          "seed": 129006407,
+          "final_wave": 23,
+          "terminal": true,
+          "first_mower_wave": 18,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180.175,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "4": 2,
+        "2": 2,
+        "0": 4
+      },
+      "first_mower_waves": {
+        "9": 1,
+        "10": 2,
+        "16": 1,
+        "26": 1,
+        "14": 1,
+        "12": 1,
+        "18": 1
+      }
+    },
+    {
+      "task_id": "deck129_v5_l37_d06",
+      "level": 37,
+      "deck": [
+        31,
+        16,
+        18,
+        24,
+        39,
+        25,
+        1,
+        23
+      ],
+      "card_names": [
+        "磁力菇",
+        "睡莲",
+        "三线射手",
+        "海蘑菇",
+        "西瓜投手",
+        "路灯花",
+        "向日葵",
+        "高坚果"
+      ],
+      "mean_card_cost": 118.75,
+      "games": 8,
+      "won": 0,
+      "seconds": 31.0,
+      "planted_types": {
+        "1": 10,
+        "16": 14,
+        "25": 13,
+        "24": 7
+      },
+      "losses": [
+        {
+          "seed": 129006500,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 2,
+              "x": -180.173,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006501,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180.331,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006502,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 2,
+              "x": -180.213,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006503,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 2,
+              "x": -180.236,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129006504,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180.602,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006505,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": 2,
+          "crossed_zombies": [
+            {
+              "row": 5,
+              "type": 0,
+              "x": -180.429,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006506,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180.301,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129006507,
+          "final_wave": 9,
+          "terminal": true,
+          "first_mower_wave": 3,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180.167,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "2": 3,
+        "0": 5
+      },
+      "first_mower_waves": {
+        "3": 6,
+        "2": 2
+      }
+    },
+    {
+      "task_id": "deck129_v5_l42_d01",
+      "level": 42,
+      "deck": [
+        3,
+        14,
+        9,
+        1,
+        34,
+        23,
+        33,
+        35,
+        0
+      ],
+      "card_names": [
+        "坚果墙",
+        "寒冰菇",
+        "阳光菇",
+        "向日葵",
+        "玉米投手",
+        "高坚果",
+        "花盆",
+        "咖啡豆",
+        "豌豆射手"
+      ],
+      "mean_card_cost": 69.44444444444444,
+      "games": 8,
+      "won": 0,
+      "seconds": 5.3,
+      "planted_types": {
+        "33": 82,
+        "9": 68
+      },
+      "losses": [
+        {
+          "seed": 129007000,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007001,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007002,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007003,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007004,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007005,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007006,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007007,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l42_d02",
+      "level": 42,
+      "deck": [
+        0,
+        33,
+        6,
+        39,
+        1,
+        8,
+        28,
+        35,
+        30
+      ],
+      "card_names": [
+        "豌豆射手",
+        "花盆",
+        "大嘴花",
+        "西瓜投手",
+        "向日葵",
+        "小喷菇",
+        "裂荚射手",
+        "咖啡豆",
+        "南瓜头"
+      ],
+      "mean_card_cost": 105.55555555555556,
+      "games": 8,
+      "won": 0,
+      "seconds": 19.0,
+      "planted_types": {
+        "33": 123,
+        "8": 139,
+        "1": 106,
+        "0": 18,
+        "28": 1
+      },
+      "losses": [
+        {
+          "seed": 129007100,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129007101,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 190
+            }
+          ]
+        },
+        {
+          "seed": 129007102,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007103,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007104,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007105,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007106,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007107,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l42_d03",
+      "level": 42,
+      "deck": [
+        35,
+        0,
+        13,
+        33,
+        32,
+        6,
+        36,
+        3,
+        9,
+        1
+      ],
+      "card_names": [
+        "咖啡豆",
+        "豌豆射手",
+        "胆小菇",
+        "花盆",
+        "卷心菜投手",
+        "大嘴花",
+        "大蒜",
+        "坚果墙",
+        "阳光菇",
+        "向日葵"
+      ],
+      "mean_card_cost": 65.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 6.1,
+      "planted_types": {
+        "13": 69,
+        "9": 10,
+        "33": 73
+      },
+      "losses": [
+        {
+          "seed": 129007200,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007201,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007202,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007203,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007204,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007205,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007206,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007207,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l42_d04",
+      "level": 42,
+      "deck": [
+        39,
+        44,
+        23,
+        22,
+        1,
+        26,
+        6,
+        0,
+        33,
+        3
+      ],
+      "card_names": [
+        "西瓜投手",
+        "冰西瓜",
+        "高坚果",
+        "火炬树桩",
+        "向日葵",
+        "仙人掌",
+        "大嘴花",
+        "豌豆射手",
+        "花盆",
+        "坚果墙"
+      ],
+      "mean_card_cost": 130.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 11.5,
+      "planted_types": {
+        "33": 116,
+        "1": 94,
+        "3": 16,
+        "0": 12,
+        "23": 2,
+        "26": 1
+      },
+      "losses": [
+        {
+          "seed": 129007300,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007301,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129007302,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007303,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007304,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007305,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007306,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007307,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l42_d05",
+      "level": 42,
+      "deck": [
+        1,
+        18,
+        23,
+        33,
+        26,
+        32,
+        31,
+        35
+      ],
+      "card_names": [
+        "向日葵",
+        "三线射手",
+        "高坚果",
+        "花盆",
+        "仙人掌",
+        "卷心菜投手",
+        "磁力菇",
+        "咖啡豆"
+      ],
+      "mean_card_cost": 115.625,
+      "games": 8,
+      "won": 0,
+      "seconds": 7.4,
+      "planted_types": {
+        "33": 106,
+        "1": 71,
+        "23": 1,
+        "32": 9,
+        "31": 1
+      },
+      "losses": [
+        {
+          "seed": 129007400,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007401,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 230
+            }
+          ]
+        },
+        {
+          "seed": 129007402,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007403,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007404,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007405,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007406,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007407,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l42_d06",
+      "level": 42,
+      "deck": [
+        34,
+        35,
+        1,
+        33,
+        37,
+        31,
+        41,
+        4
+      ],
+      "card_names": [
+        "玉米投手",
+        "咖啡豆",
+        "向日葵",
+        "花盆",
+        "叶子保护伞",
+        "磁力菇",
+        "双子向日葵",
+        "土豆雷"
+      ],
+      "mean_card_cost": 78.125,
+      "games": 8,
+      "won": 0,
+      "seconds": 9.7,
+      "planted_types": {
+        "33": 121,
+        "1": 69,
+        "4": 31,
+        "34": 7,
+        "37": 2
+      },
+      "losses": [
+        {
+          "seed": 129007500,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007501,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007502,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007503,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007504,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007505,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007506,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129007507,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 230
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l48_d01",
+      "level": 48,
+      "deck": [
+        23,
+        33,
+        17,
+        1,
+        7,
+        26,
+        39
+      ],
+      "card_names": [
+        "高坚果",
+        "花盆",
+        "窝瓜",
+        "向日葵",
+        "双发射手",
+        "仙人掌",
+        "西瓜投手"
+      ],
+      "mean_card_cost": 125.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 10.3,
+      "planted_types": {
+        "33": 146,
+        "1": 58,
+        "17": 35,
+        "23": 4
+      },
+      "losses": [
+        {
+          "seed": 129008000,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008001,
+          "final_wave": 7,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008002,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008003,
+          "final_wave": 8,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 2,
+              "x": -180,
+              "health": 640
+            }
+          ]
+        },
+        {
+          "seed": 129008004,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008005,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008006,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008007,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 7,
+        "2": 1
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l48_d02",
+      "level": 48,
+      "deck": [
+        33,
+        20,
+        34,
+        36,
+        28,
+        23,
+        32,
+        1,
+        7
+      ],
+      "card_names": [
+        "花盆",
+        "火爆辣椒",
+        "玉米投手",
+        "大蒜",
+        "裂荚射手",
+        "高坚果",
+        "卷心菜投手",
+        "向日葵",
+        "双发射手"
+      ],
+      "mean_card_cost": 100.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 7.6,
+      "planted_types": {
+        "33": 101,
+        "1": 55,
+        "36": 33
+      },
+      "losses": [
+        {
+          "seed": 129008100,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008101,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008102,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008103,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008104,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008105,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008106,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008107,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l48_d03",
+      "level": 48,
+      "deck": [
+        35,
+        32,
+        2,
+        1,
+        33,
+        13,
+        4,
+        41
+      ],
+      "card_names": [
+        "咖啡豆",
+        "卷心菜投手",
+        "樱桃炸弹",
+        "向日葵",
+        "花盆",
+        "胆小菇",
+        "土豆雷",
+        "双子向日葵"
+      ],
+      "mean_card_cost": 75.0,
+      "games": 8,
+      "won": 0,
+      "seconds": 8.4,
+      "planted_types": {
+        "1": 15,
+        "33": 94,
+        "13": 78,
+        "4": 15
+      },
+      "losses": [
+        {
+          "seed": 129008200,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008201,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008202,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008203,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008204,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008205,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008206,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008207,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l48_d04",
+      "level": 48,
+      "deck": [
+        9,
+        33,
+        35,
+        6,
+        1,
+        30,
+        17,
+        32,
+        4,
+        34
+      ],
+      "card_names": [
+        "阳光菇",
+        "花盆",
+        "咖啡豆",
+        "大嘴花",
+        "向日葵",
+        "南瓜头",
+        "窝瓜",
+        "卷心菜投手",
+        "土豆雷",
+        "玉米投手"
+      ],
+      "mean_card_cost": 72.5,
+      "games": 8,
+      "won": 0,
+      "seconds": 5.5,
+      "planted_types": {
+        "33": 89,
+        "9": 49,
+        "4": 21
+      },
+      "losses": [
+        {
+          "seed": 129008300,
+          "final_wave": 3,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008301,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008302,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008303,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008304,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008305,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008306,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008307,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l48_d05",
+      "level": 48,
+      "deck": [
+        4,
+        9,
+        17,
+        1,
+        35,
+        34,
+        0,
+        33,
+        5,
+        8
+      ],
+      "card_names": [
+        "土豆雷",
+        "阳光菇",
+        "窝瓜",
+        "向日葵",
+        "咖啡豆",
+        "玉米投手",
+        "豌豆射手",
+        "花盆",
+        "寒冰射手",
+        "小喷菇"
+      ],
+      "mean_card_cost": 62.5,
+      "games": 8,
+      "won": 0,
+      "seconds": 12.7,
+      "planted_types": {
+        "33": 87,
+        "8": 98,
+        "9": 60,
+        "4": 14
+      },
+      "losses": [
+        {
+          "seed": 129008400,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008401,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008402,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008403,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008404,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008405,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008406,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 4,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008407,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    },
+    {
+      "task_id": "deck129_v5_l48_d06",
+      "level": 48,
+      "deck": [
+        39,
+        1,
+        29,
+        36,
+        33,
+        6,
+        20,
+        4
+      ],
+      "card_names": [
+        "西瓜投手",
+        "向日葵",
+        "杨桃",
+        "大蒜",
+        "花盆",
+        "大嘴花",
+        "火爆辣椒",
+        "土豆雷"
+      ],
+      "mean_card_cost": 106.25,
+      "games": 8,
+      "won": 0,
+      "seconds": 11.7,
+      "planted_types": {
+        "33": 122,
+        "1": 35,
+        "4": 30,
+        "36": 46
+      },
+      "losses": [
+        {
+          "seed": 129008500,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008501,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008502,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008503,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 3,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008504,
+          "final_wave": 6,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008505,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 1,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008506,
+          "final_wave": 5,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 2,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        },
+        {
+          "seed": 129008507,
+          "final_wave": 4,
+          "terminal": true,
+          "first_mower_wave": null,
+          "crossed_zombies": [
+            {
+              "row": 0,
+              "type": 0,
+              "x": -180,
+              "health": 270
+            }
+          ]
+        }
+      ],
+      "crossed_types": {
+        "0": 8
+      },
+      "first_mower_waves": {
+        "None": 8
+      }
+    }
+  ],
+  "by_level": {
+    "7": {
+      "games": 48,
+      "won": 22
+    },
+    "9": {
+      "games": 48,
+      "won": 11
+    },
+    "14": {
+      "games": 48,
+      "won": 6
+    },
+    "24": {
+      "games": 48,
+      "won": 12
+    },
+    "26": {
+      "games": 48,
+      "won": 9
+    },
+    "33": {
+      "games": 48,
+      "won": 0
+    },
+    "37": {
+      "games": 48,
+      "won": 3
+    },
+    "42": {
+      "games": 48,
+      "won": 0
+    },
+    "48": {
+      "games": 48,
+      "won": 0
+    }
+  },
+  "cards": {
+    "0": {
+      "name": "豌豆射手",
+      "with_decks": 19,
+      "without_decks": 35,
+      "with_win_rate": 0.17105263157894737,
+      "without_win_rate": 0.13214285714285715,
+      "within_level_delta_pp": {
+        "7": -12.5,
+        "9": 15.625,
+        "14": -18.75,
+        "24": -9.375,
+        "26": 46.875,
+        "33": 0.0,
+        "37": -7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 1.5972222222222223
+    },
+    "1": {
+      "name": "向日葵",
+      "with_decks": 45,
+      "without_decks": 9,
+      "with_win_rate": 0.15,
+      "without_win_rate": 0.125,
+      "within_level_delta_pp": {
+        "14": -25.0,
+        "33": 0.0,
+        "37": -9.375
+      },
+      "mean_within_level_delta_pp": -11.458333333333334
+    },
+    "2": {
+      "name": "樱桃炸弹",
+      "with_decks": 10,
+      "without_decks": 44,
+      "with_win_rate": 0.2875,
+      "without_win_rate": 0.11363636363636363,
+      "within_level_delta_pp": {
+        "7": 62.5,
+        "9": -27.500000000000004,
+        "14": -18.75,
+        "26": 37.5,
+        "37": -7.5,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 7.708333333333333
+    },
+    "3": {
+      "name": "坚果墙",
+      "with_decks": 8,
+      "without_decks": 46,
+      "with_win_rate": 0.390625,
+      "without_win_rate": 0.10326086956521739,
+      "within_level_delta_pp": {
+        "9": 92.5,
+        "24": 90.0,
+        "26": 56.25,
+        "33": 0.0,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 47.75
+    },
+    "4": {
+      "name": "土豆雷",
+      "with_decks": 15,
+      "without_decks": 39,
+      "with_win_rate": 0.025,
+      "without_win_rate": 0.19230769230769232,
+      "within_level_delta_pp": {
+        "7": -68.75,
+        "9": -15.625,
+        "14": -15.0,
+        "24": -30.0,
+        "26": -18.75,
+        "33": 0.0,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -18.515625
+    },
+    "5": {
+      "name": "寒冰射手",
+      "with_decks": 4,
+      "without_decks": 50,
+      "with_win_rate": 0.25,
+      "without_win_rate": 0.1375,
+      "within_level_delta_pp": {
+        "7": 65.0,
+        "14": -15.0,
+        "26": -22.5,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 6.875
+    },
+    "6": {
+      "name": "大嘴花",
+      "with_decks": 14,
+      "without_decks": 40,
+      "with_win_rate": 0.16071428571428573,
+      "without_win_rate": 0.140625,
+      "within_level_delta_pp": {
+        "7": -12.5,
+        "9": 29.166666666666668,
+        "14": -15.0,
+        "24": 15.0,
+        "33": 0.0,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 2.380952380952381
+    },
+    "7": {
+      "name": "双发射手",
+      "with_decks": 13,
+      "without_decks": 41,
+      "with_win_rate": 0.1346153846153846,
+      "without_win_rate": 0.14939024390243902,
+      "within_level_delta_pp": {
+        "7": -62.5,
+        "9": -25.0,
+        "14": -15.0,
+        "24": 15.0,
+        "33": 0.0,
+        "37": 9.375,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -11.160714285714286
+    },
+    "8": {
+      "name": "小喷菇",
+      "with_decks": 13,
+      "without_decks": 41,
+      "with_win_rate": 0.09615384615384616,
+      "without_win_rate": 0.16158536585365854,
+      "within_level_delta_pp": {
+        "7": -55.00000000000001,
+        "9": -37.5,
+        "14": 75.0,
+        "26": -22.5,
+        "33": 0.0,
+        "37": 12.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -3.437500000000001
+    },
+    "9": {
+      "name": "阳光菇",
+      "with_decks": 15,
+      "without_decks": 39,
+      "with_win_rate": 0.075,
+      "without_win_rate": 0.17307692307692307,
+      "within_level_delta_pp": {
+        "14": 18.75,
+        "26": -22.5,
+        "33": 0.0,
+        "37": 9.375,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 0.9375
+    },
+    "10": {
+      "name": "大喷菇",
+      "with_decks": 8,
+      "without_decks": 46,
+      "with_win_rate": 0.09375,
+      "without_win_rate": 0.15489130434782608,
+      "within_level_delta_pp": {
+        "7": -55.00000000000001,
+        "9": -27.500000000000004,
+        "14": 37.5,
+        "24": -30.0,
+        "26": -28.125,
+        "37": -7.5
+      },
+      "mean_within_level_delta_pp": -18.437500000000004
+    },
+    "11": {
+      "name": "墓碑吞噬者",
+      "with_decks": 1,
+      "without_decks": 53,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.14858490566037735,
+      "within_level_delta_pp": {
+        "14": -15.0
+      },
+      "mean_within_level_delta_pp": -15.0
+    },
+    "12": {
+      "name": "魅惑菇",
+      "with_decks": 8,
+      "without_decks": 46,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.17119565217391305,
+      "within_level_delta_pp": {
+        "9": -34.375,
+        "14": -18.75,
+        "33": 0.0
+      },
+      "mean_within_level_delta_pp": -17.708333333333332
+    },
+    "13": {
+      "name": "胆小菇",
+      "with_decks": 8,
+      "without_decks": 46,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.17119565217391305,
+      "within_level_delta_pp": {
+        "9": -27.500000000000004,
+        "14": -15.0,
+        "24": -30.0,
+        "26": -22.5,
+        "33": 0.0,
+        "37": -7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -12.8125
+    },
+    "14": {
+      "name": "寒冰菇",
+      "with_decks": 7,
+      "without_decks": 47,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.1675531914893617,
+      "within_level_delta_pp": {
+        "9": -27.500000000000004,
+        "14": -15.0,
+        "24": -30.0,
+        "26": -22.5,
+        "33": 0.0,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": -15.833333333333334
+    },
+    "15": {
+      "name": "毁灭菇",
+      "with_decks": 4,
+      "without_decks": 50,
+      "with_win_rate": 0.5,
+      "without_win_rate": 0.1175,
+      "within_level_delta_pp": {
+        "7": 65.0,
+        "9": -12.5,
+        "14": 75.0,
+        "26": -7.500000000000001
+      },
+      "mean_within_level_delta_pp": 30.0
+    },
+    "16": {
+      "name": "睡莲",
+      "with_decks": 24,
+      "without_decks": 30,
+      "with_win_rate": 0.125,
+      "without_win_rate": 0.1625,
+      "within_level_delta_pp": {},
+      "mean_within_level_delta_pp": null
+    },
+    "17": {
+      "name": "窝瓜",
+      "with_decks": 14,
+      "without_decks": 40,
+      "with_win_rate": 0.3125,
+      "without_win_rate": 0.0875,
+      "within_level_delta_pp": {
+        "7": 6.25,
+        "9": 92.5,
+        "14": -15.0,
+        "24": 37.5,
+        "26": 46.875,
+        "37": 12.5,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 25.803571428571427
+    },
+    "18": {
+      "name": "三线射手",
+      "with_decks": 9,
+      "without_decks": 45,
+      "with_win_rate": 0.2638888888888889,
+      "without_win_rate": 0.12222222222222222,
+      "within_level_delta_pp": {
+        "7": -12.5,
+        "14": -15.0,
+        "24": 65.625,
+        "26": -7.500000000000001,
+        "37": 0.0,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 5.104166666666667
+    },
+    "19": {
+      "name": "缠绕水草",
+      "with_decks": 5,
+      "without_decks": 49,
+      "with_win_rate": 0.025,
+      "without_win_rate": 0.15816326530612246,
+      "within_level_delta_pp": {
+        "24": -37.5,
+        "26": -18.75,
+        "33": 0.0
+      },
+      "mean_within_level_delta_pp": -18.75
+    },
+    "20": {
+      "name": "火爆辣椒",
+      "with_decks": 9,
+      "without_decks": 45,
+      "with_win_rate": 0.027777777777777776,
+      "without_win_rate": 0.16944444444444445,
+      "within_level_delta_pp": {
+        "9": 2.4999999999999996,
+        "14": -18.75,
+        "26": -28.125,
+        "33": 0.0,
+        "37": -7.5,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -8.645833333333334
+    },
+    "21": {
+      "name": "地刺",
+      "with_decks": 7,
+      "without_decks": 47,
+      "with_win_rate": 0.30357142857142855,
+      "without_win_rate": 0.12234042553191489,
+      "within_level_delta_pp": {
+        "7": 62.5,
+        "9": 2.4999999999999996,
+        "24": -30.0,
+        "26": -22.5,
+        "33": 0.0,
+        "37": 7.5
+      },
+      "mean_within_level_delta_pp": 3.3333333333333335
+    },
+    "22": {
+      "name": "火炬树桩",
+      "with_decks": 6,
+      "without_decks": 48,
+      "with_win_rate": 0.5625,
+      "without_win_rate": 0.09375,
+      "within_level_delta_pp": {
+        "7": 65.0,
+        "24": 41.666666666666664,
+        "26": 97.5,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 51.041666666666664
+    },
+    "23": {
+      "name": "高坚果",
+      "with_decks": 10,
+      "without_decks": 44,
+      "with_win_rate": 0.2,
+      "without_win_rate": 0.13352272727272727,
+      "within_level_delta_pp": {
+        "7": -55.00000000000001,
+        "9": 2.4999999999999996,
+        "14": 75.0,
+        "24": 90.0,
+        "37": -7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 14.999999999999998
+    },
+    "24": {
+      "name": "海蘑菇",
+      "with_decks": 6,
+      "without_decks": 48,
+      "with_win_rate": 0.041666666666666664,
+      "without_win_rate": 0.15885416666666666,
+      "within_level_delta_pp": {
+        "24": -30.0,
+        "26": -22.5,
+        "33": 0.0,
+        "37": 9.375
+      },
+      "mean_within_level_delta_pp": -10.78125
+    },
+    "25": {
+      "name": "路灯花",
+      "with_decks": 2,
+      "without_decks": 52,
+      "with_win_rate": 0.0625,
+      "without_win_rate": 0.14903846153846154,
+      "within_level_delta_pp": {
+        "37": 0.0
+      },
+      "mean_within_level_delta_pp": 0.0
+    },
+    "26": {
+      "name": "仙人掌",
+      "with_decks": 18,
+      "without_decks": 36,
+      "with_win_rate": 0.14583333333333334,
+      "without_win_rate": 0.14583333333333334,
+      "within_level_delta_pp": {
+        "7": 65.0,
+        "9": -15.625,
+        "14": -25.0,
+        "24": 25.0,
+        "26": -22.5,
+        "33": 0.0,
+        "37": 9.375,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 4.027777777777778
+    },
+    "27": {
+      "name": "三叶草",
+      "with_decks": 3,
+      "without_decks": 51,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.15441176470588236,
+      "within_level_delta_pp": {
+        "33": 0.0,
+        "37": -7.5
+      },
+      "mean_within_level_delta_pp": -3.75
+    },
+    "28": {
+      "name": "裂荚射手",
+      "with_decks": 7,
+      "without_decks": 47,
+      "with_win_rate": 0.17857142857142858,
+      "without_win_rate": 0.14095744680851063,
+      "within_level_delta_pp": {
+        "9": 92.5,
+        "14": -18.75,
+        "26": -22.5,
+        "37": 22.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 12.291666666666666
+    },
+    "29": {
+      "name": "杨桃",
+      "with_decks": 7,
+      "without_decks": 47,
+      "with_win_rate": 0.32142857142857145,
+      "without_win_rate": 0.1196808510638298,
+      "within_level_delta_pp": {
+        "7": 65.0,
+        "14": -15.0,
+        "24": 37.5,
+        "33": 0.0,
+        "37": 22.5,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 18.333333333333332
+    },
+    "30": {
+      "name": "南瓜头",
+      "with_decks": 9,
+      "without_decks": 45,
+      "with_win_rate": 0.09722222222222222,
+      "without_win_rate": 0.15555555555555556,
+      "within_level_delta_pp": {
+        "7": -12.5,
+        "9": -12.5,
+        "14": -15.0,
+        "24": -30.0,
+        "26": -28.125,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -14.017857142857142
+    },
+    "31": {
+      "name": "磁力菇",
+      "with_decks": 7,
+      "without_decks": 47,
+      "with_win_rate": 0.017857142857142856,
+      "without_win_rate": 0.16489361702127658,
+      "within_level_delta_pp": {
+        "14": -18.75,
+        "24": -28.125,
+        "37": -7.5,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": -13.59375
+    },
+    "32": {
+      "name": "卷心菜投手",
+      "with_decks": 15,
+      "without_decks": 39,
+      "with_win_rate": 0.08333333333333333,
+      "without_win_rate": 0.16987179487179488,
+      "within_level_delta_pp": {
+        "7": -41.666666666666664,
+        "9": -15.625,
+        "14": -25.0,
+        "24": -15.000000000000002,
+        "37": 7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -12.827380952380953
+    },
+    "33": {
+      "name": "花盆",
+      "with_decks": 12,
+      "without_decks": 42,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.1875,
+      "within_level_delta_pp": {},
+      "mean_within_level_delta_pp": null
+    },
+    "34": {
+      "name": "玉米投手",
+      "with_decks": 20,
+      "without_decks": 34,
+      "with_win_rate": 0.1125,
+      "without_win_rate": 0.16544117647058823,
+      "within_level_delta_pp": {
+        "7": 41.666666666666664,
+        "9": -27.500000000000004,
+        "24": -28.125,
+        "26": -37.5,
+        "33": 0.0,
+        "37": 0.0,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -6.432291666666668
+    },
+    "35": {
+      "name": "咖啡豆",
+      "with_decks": 23,
+      "without_decks": 31,
+      "with_win_rate": 0.059782608695652176,
+      "without_win_rate": 0.20967741935483872,
+      "within_level_delta_pp": {
+        "7": -25.000000000000007,
+        "9": -59.375,
+        "24": -41.666666666666664,
+        "26": -97.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -37.25694444444445
+    },
+    "36": {
+      "name": "大蒜",
+      "with_decks": 16,
+      "without_decks": 38,
+      "with_win_rate": 0.078125,
+      "without_win_rate": 0.17434210526315788,
+      "within_level_delta_pp": {
+        "7": -91.66666666666666,
+        "9": -15.625,
+        "14": 15.0,
+        "24": -30.0,
+        "37": 9.375,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -16.13095238095238
+    },
+    "37": {
+      "name": "叶子保护伞",
+      "with_decks": 1,
+      "without_decks": 53,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.14858490566037735,
+      "within_level_delta_pp": {
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 0.0
+    },
+    "39": {
+      "name": "西瓜投手",
+      "with_decks": 14,
+      "without_decks": 40,
+      "with_win_rate": 0.20535714285714285,
+      "without_win_rate": 0.125,
+      "within_level_delta_pp": {
+        "7": -55.00000000000001,
+        "9": 40.625,
+        "14": 37.5,
+        "26": 56.25,
+        "33": 0.0,
+        "37": -9.375,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 8.75
+    },
+    "40": {
+      "name": "机枪射手",
+      "with_decks": 2,
+      "without_decks": 52,
+      "with_win_rate": 0.5,
+      "without_win_rate": 0.13221153846153846,
+      "within_level_delta_pp": {
+        "7": 6.25
+      },
+      "mean_within_level_delta_pp": 6.25
+    },
+    "41": {
+      "name": "双子向日葵",
+      "with_decks": 9,
+      "without_decks": 45,
+      "with_win_rate": 0.1111111111111111,
+      "without_win_rate": 0.1527777777777778,
+      "within_level_delta_pp": {
+        "7": 35.0,
+        "9": -25.0,
+        "14": -15.0,
+        "24": -15.000000000000002,
+        "33": 0.0,
+        "37": -7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -3.4375
+    },
+    "42": {
+      "name": "忧郁菇",
+      "with_decks": 1,
+      "without_decks": 53,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.14858490566037735,
+      "within_level_delta_pp": {
+        "14": -15.0
+      },
+      "mean_within_level_delta_pp": -15.0
+    },
+    "43": {
+      "name": "香蒲",
+      "with_decks": 6,
+      "without_decks": 48,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.1640625,
+      "within_level_delta_pp": {
+        "26": -28.125,
+        "33": 0.0,
+        "37": -9.375
+      },
+      "mean_within_level_delta_pp": -12.5
+    },
+    "44": {
+      "name": "冰西瓜",
+      "with_decks": 1,
+      "without_decks": 53,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.14858490566037735,
+      "within_level_delta_pp": {
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 0.0
+    },
+    "46": {
+      "name": "地刺王",
+      "with_decks": 3,
+      "without_decks": 51,
+      "with_win_rate": 0.625,
+      "without_win_rate": 0.11764705882352941,
+      "within_level_delta_pp": {
+        "7": 62.5,
+        "37": 7.5
+      },
+      "mean_within_level_delta_pp": 35.0
+    }
+  },
+  "components": {
+    "机枪射手+底座或配套": {
+      "with_decks": 2,
+      "without_decks": 52,
+      "with_win_rate": 0.5,
+      "without_win_rate": 0.13221153846153846,
+      "within_level_delta_pp": {
+        "7": 6.25
+      },
+      "mean_within_level_delta_pp": 6.25
+    },
+    "双子向日葵+底座或配套": {
+      "with_decks": 9,
+      "without_decks": 45,
+      "with_win_rate": 0.1111111111111111,
+      "without_win_rate": 0.1527777777777778,
+      "within_level_delta_pp": {
+        "7": 35.0,
+        "9": -25.0,
+        "14": -15.0,
+        "24": -15.000000000000002,
+        "33": 0.0,
+        "37": -7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -3.4375
+    },
+    "忧郁菇+底座或配套": {
+      "with_decks": 1,
+      "without_decks": 53,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.14858490566037735,
+      "within_level_delta_pp": {
+        "14": -15.0
+      },
+      "mean_within_level_delta_pp": -15.0
+    },
+    "香蒲+底座或配套": {
+      "with_decks": 6,
+      "without_decks": 48,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.1640625,
+      "within_level_delta_pp": {
+        "26": -28.125,
+        "33": 0.0,
+        "37": -9.375
+      },
+      "mean_within_level_delta_pp": -12.5
+    },
+    "冰西瓜+底座或配套": {
+      "with_decks": 1,
+      "without_decks": 53,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.14858490566037735,
+      "within_level_delta_pp": {
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 0.0
+    },
+    "地刺王+底座或配套": {
+      "with_decks": 3,
+      "without_decks": 51,
+      "with_win_rate": 0.625,
+      "without_win_rate": 0.11764705882352941,
+      "within_level_delta_pp": {
+        "7": 62.5,
+        "37": 7.5
+      },
+      "mean_within_level_delta_pp": 35.0
+    },
+    "火炬树桩+底座或配套": {
+      "with_decks": 6,
+      "without_decks": 48,
+      "with_win_rate": 0.5625,
+      "without_win_rate": 0.09375,
+      "within_level_delta_pp": {
+        "7": 65.0,
+        "24": 41.666666666666664,
+        "26": 97.5,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": 51.041666666666664
+    },
+    "咖啡豆+蘑菇": {
+      "with_decks": 23,
+      "without_decks": 31,
+      "with_win_rate": 0.059782608695652176,
+      "without_win_rate": 0.20967741935483872,
+      "within_level_delta_pp": {
+        "7": -25.000000000000007,
+        "9": -59.375,
+        "24": -41.666666666666664,
+        "26": -97.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": -37.25694444444445
+    },
+    "投手+坚果或南瓜": {
+      "with_decks": 20,
+      "without_decks": 34,
+      "with_win_rate": 0.19375,
+      "without_win_rate": 0.11764705882352941,
+      "within_level_delta_pp": {
+        "7": -12.5,
+        "9": 59.375,
+        "14": 37.5,
+        "24": -30.0,
+        "26": 37.5,
+        "33": 0.0,
+        "37": -7.5,
+        "42": 0.0,
+        "48": 0.0
+      },
+      "mean_within_level_delta_pp": 9.375
+    },
+    "寒冰菇+咖啡豆": {
+      "with_decks": 4,
+      "without_decks": 50,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.1575,
+      "within_level_delta_pp": {
+        "9": -27.500000000000004,
+        "24": -30.0,
+        "26": -22.5,
+        "42": 0.0
+      },
+      "mean_within_level_delta_pp": -20.0
+    },
+    "大喷菇+咖啡豆": {
+      "with_decks": 5,
+      "without_decks": 49,
+      "with_win_rate": 0.0,
+      "without_win_rate": 0.16071428571428573,
+      "within_level_delta_pp": {
+        "7": -55.00000000000001,
+        "9": -27.500000000000004,
+        "24": -30.0,
+        "26": -28.125
+      },
+      "mean_within_level_delta_pp": -35.15625
+    },
+    "忧郁菇+大蒜": {
+      "with_decks": 0,
+      "without_decks": 54,
+      "with_win_rate": null,
+      "without_win_rate": 0.14583333333333334,
+      "within_level_delta_pp": {},
+      "mean_within_level_delta_pp": null
+    }
+  },
+  "evidence_note": "破防按Zombie::CheckForBoardEdge的类型阈值筛选终局越界者，多只时不指定唯一触发者。首次用车波次取决策帧首次观测。关联为描述性，按关差值仅使用同关同时有/无该卡或组件的卡组。"
+}
