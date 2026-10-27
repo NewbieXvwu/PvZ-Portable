@@ -150,14 +150,22 @@ class GrowablePool:
         finally:
             self.close()
 
-    def close(self) -> None:
+    def close(self, budget: float = 30.0) -> None:
+        """Sentinel every worker, then wait at most budget seconds in total.
+
+        The normal path is instant: all jobs are done, every worker is blocked on
+        the queue and takes its sentinel at once, so finalizers reap the simulator
+        children and RUSAGE_CHILDREN counts them exactly once.  An interrupted run
+        waits at most budget seconds and then terminates, like Pool.__exit__.
+        """
         for _ in self.processes:
             self._tasks.put(None)
+        deadline = time.monotonic() + budget
         for process in self.processes:
-            process.join(timeout=60)
+            process.join(timeout=max(0.0, deadline - time.monotonic()))
             if process.is_alive():
                 process.terminate()
-                process.join(timeout=10)
+                process.join(timeout=5)
         self.processes = []
 
     def __enter__(self):
