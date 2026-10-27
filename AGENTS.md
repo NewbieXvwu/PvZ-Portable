@@ -201,6 +201,12 @@ git ls-files -z artifacts logs | git check-ignore -z --stdin --no-index
    清单里登记、并且旧存档的 `whatif` 重放不受影响（重放走存档里记录的
    deck，不读现行规则）。
 
+5. **戴夫推荐卡（`CrazyDavePickSeeds`）是随机的，不能当“这张卡在这关有用”的依据。**
+   生成卡组（扰动族、留出族、挑选 / 门禁卡组）时，用手写的**按地形黑名单 / 白名单**
+   排除废卡（例：白天无气球无雾时的三叶草、只产钱的金盏花），并在 DESIGN 登记名单。
+   用户 2026-10-27 明确允许：这属于任务设计，不属于被禁止的“手写策略规则”。
+   曾因此出错两次：d7q 用戴夫候选当卡池；门禁 heldout1（L7 带三叶草）连续否决 9 轮晋升。
+
 配套实现（改卡组规则只改这里，别处引用）：
 `scripts/pvz_tasks.py` 的 `deck_for_level` / `profile_for_deck`；
 场景文字渲染在 `scripts/episode_query.py` 的 `_fmt_scene`。
