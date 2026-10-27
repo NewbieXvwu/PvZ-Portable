@@ -1026,3 +1026,7 @@
 - 待办：训练期间采集 worker 数受余量限制（K=4 串行 ≈ 3 小时+），需评估 `MEMORY_RESERVE_BYTES` 6 GiB 与训练估计是否过保守；task105 流水线在 r26 训练后 SIGCONT。
 - 19:55 GPT Pro run1 沙箱 16:05 被回收；Drive 最新完整快照 15:35（29/31，1200 份存档，SHA f16b3177 已核对），已拼好放在 Mac `~/Downloads/gptpro_out_153532/out_20261027_153532.zip`，回家后传台式机交 task105 增量导入。与用户商定**停掉 4 倍死磕**：门禁 v5 只看原版难度，屋顶 9 关里只有 L41/L46 两关在记分板卡组下有人赢过。GPT Pro 第二轮改打原版难度屋顶 + 门禁卡组（task133，llmplay2，待派）。
 - 20:10 又收到较弱模型的 llmplay 产物（后又补一份 run dfb4fe9c：5/31 达标、453 份存档，含僵王 8 胜）：run 91b658fa（A/B 全达标，326 文件）与 run e6f6ae76（26/31 达标，含雾夜与原生传送带，169 文件）。三份 run 一起放在 Mac `~/Downloads/llmplay_imports/`，回家后传台式机交 task105 增量导入（台式机导入时会全量重放，非法 / 坏档自然被剔除）。用户报告 L50 稳健判定 bug（wave 恒 0），记入 task133。
+- 22:12 **r26 是第一个按门禁 v5 评的学生**：只剩 `significant_zone_regression:day` 一项不过（overall 过了；heldout 只监测：L7 15/96、L9 87/96）。下一步查 r26 白天哪几关退步。
+- 21:48 又一次换候选空档开出 2-worker 组（48 局，57 分钟只打 20 局）。22:52 主控在 r26 作业跑完后杀 qc 重启（看门狗没拉起，手动按 qc_deploy15 的 14i 分支启动，核对参数为 gate v5）。重启后该组报 `incomplete/invalid game results: 70/48` 被跳过：重跑组时旧的部分结果没清，记给 task134 一起看。task134 改派 Mac codex-plus2，task129 暂停。
+- 23:55 四份 llmplay run 都已到台式机 `~/llm_runs/`（3 份经 HF transfer 中转，取完已删），task105 已收到“追加输入 2”。00:03 task133 交给 codex-t125（额度刚恢复）。
+- 注意：`pgrep -f curriculum_queue.py` 的第一个结果是 tmux 服务器（它的 argv 是 12:49 那次 new-session 的旧命令），不是 qc 本身；核对参数要看 python 进程的 /proc/PID/cmdline。
