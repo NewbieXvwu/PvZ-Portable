@@ -52,6 +52,8 @@ def main() -> None:
     parser.add_argument('input', type=Path)
     parser.add_argument('--max-restarts', type=int, default=50)
     parser.add_argument('--sleep', type=int, default=60)
+    parser.add_argument('--skip-import', action='store_true',
+                        help='拉起流水线时复用合并后的 scan_jobs.json，不重新导入')
     args = parser.parse_args()
     env = dict(os.environ, PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
     log = OUT / 'supervise.out'
@@ -72,8 +74,10 @@ def main() -> None:
         with log.open('a') as stream:
             stream.write(f'--- restart {restarts} at {time.strftime("%F %T")} ---\n')
             stream.flush()
-            code = subprocess.run([sys.executable, str(ROOT / 'scripts/task105_pipeline.py'),
-                                   str(args.input)], cwd=ROOT, env=env,
+            command = [sys.executable, str(ROOT / 'scripts/task105_pipeline.py'), str(args.input)]
+            if args.skip_import:
+                command.append('--skip-import')
+            code = subprocess.run(command, cwd=ROOT, env=env,
                                   stdout=stream, stderr=subprocess.STDOUT).returncode
         if code == 0 and state() == 'complete':
             print('pipeline complete', flush=True)

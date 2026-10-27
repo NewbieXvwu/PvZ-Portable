@@ -9,6 +9,8 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import task105_pipeline as pipeline
 import task105_supervise as supervisor
+import task105_import_batch as batch
+import task105_results as results
 
 
 class ResumeTest(unittest.TestCase):
@@ -67,3 +69,62 @@ class ResumeTest(unittest.TestCase):
             pipeline.record_input(source, self.out)
             digest.assert_called_once_with(source)
         self.assertEqual(json.loads((self.out / 'input_receipt.json').read_text())['sha256'], 'sha-updated')
+
+    def test_skip_import_uses_union_and_never_launches_import(self):
+        out = self.out / 'artifacts/task105'
+        (out / 'import').mkdir(parents=True)
+        (out / 'import/merged_progress.json').write_text(json.dumps({'archives': [{}, {}]}))
+        (out / 'import/import_progress.json').write_text(json.dumps({'archives': [{}]}))
+        (out / 'scan_jobs.json').write_text(json.dumps({'archives': []}))
+        (self.out / 'configs').mkdir()
+        (self.out / 'configs/human_demo_tasks.json').write_text(json.dumps({'tasks': []}))
+        with patch.object(pipeline, 'ROOT', self.out), \
+             patch.object(pipeline, 'file_sha', return_value=pipeline.ENGINE_SHA), \
+             patch.object(sys, 'argv', ['pipeline', 'unused.zip', '--skip-import']), \
+             patch.object(pipeline.subprocess, 'run') as run:
+            run.return_value.returncode = 0
+            pipeline.main()
+        self.assertTrue(all('task105_results.py' in call.args[0][1] for call in run.call_args_list))
+        self.assertEqual(json.loads((out / 'pipeline_status.json').read_text())['imported'], 2)
+
+    def test_package_union_preserves_old_scan_context_and_sha_variants(self):
+        old = dict(task_id='t_abc', archive='sha256/abc', future_seeds=[10, 11])
+        variant = dict(task_id='t_def', archive='sha256/def', future_seeds=[20, 21])
+        rows, plan = batch.merge([dict(archive_sha256='abc')],
+            dict(schema='jobs', archives=[old]),
+            [dict(archives=[dict(archive_sha256='abc'), dict(archive_sha256='def')],
+                  plan=dict(archives=[{**old, 'reused_reservation': True}, variant]))])
+        self.assertEqual(len(rows['archives']), 2)
+        self.assertEqual(plan['archives'], [old, variant])
+        with self.assertRaisesRegex(ValueError, 'conflicting saved scan context'):
+            batch.merge([], dict(schema='jobs', archives=[old]),
+                        [dict(archives=[], plan=dict(archives=[{**old, 'future_seeds': [30]}]))])
+
+    def test_controller_addendum_survives_generated_result_replacement(self):
+        text = '# task\n\n## 结果\nold results\n\n## 追加输入 2\nnew inputs\n'
+        prefix = results.report_prefix(text)
+        self.assertIn('## 追加输入 2\nnew inputs', prefix)
+        self.assertNotIn('old results', prefix)
+        self.assertEqual(results.report_prefix(prefix + '## 结果\nnew results'), prefix)
+
+    def test_cached_package_is_not_imported_again_before_union_resume(self):
+        out = self.out / 'batch'
+        (out / 'import').mkdir(parents=True)
+        (out / 'import_packages').mkdir()
+        source = self.out / 'one.zip'
+        source.write_bytes(b'input')
+        old = dict(task_id='t_abc', archive='sha256/abc', future_seeds=[10])
+        package = dict(identity=batch.identity(source), archives=[dict(archive_sha256='abc', verify='通过')],
+                       plan=dict(schema='jobs', archives=[old]))
+        (out / 'import_packages/one.json').write_text(json.dumps(package))
+        (out / 'import/progress_resume00099.json').write_text(json.dumps({'archives': package['archives']}))
+        (out / 'scan_jobs_resume00099.json').write_text(json.dumps(package['plan']))
+        with patch.object(batch, 'OUT', out), \
+             patch.object(sys, 'argv', ['batch', str(source)]), \
+             patch.object(batch.subprocess, 'run') as run, \
+             patch.object(batch.os, 'execve') as resume:
+            batch.main()
+        self.assertEqual(run.call_count, 1)
+        self.assertIn('task105_results.py', run.call_args.args[0][1])
+        self.assertEqual(json.loads((out / 'scan_jobs.json').read_text())['archives'], [old])
+        self.assertIn('--skip-import', resume.call_args.args[1])

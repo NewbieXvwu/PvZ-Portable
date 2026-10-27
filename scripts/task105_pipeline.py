@@ -60,6 +60,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', type=Path)
     parser.add_argument('--wait-import-pid', type=int)
+    parser.add_argument('--skip-import', action='store_true',
+                        help='复用已有 scan_jobs.json 与导入回执：多包增量导入后合并扫描，不再解压/校验')
     args = parser.parse_args()
     out = ROOT / 'artifacts/task105'
     out.mkdir(parents=True, exist_ok=True)
@@ -87,11 +89,18 @@ def main():
         while process_identity(args.wait_import_pid) == identity:
             time.sleep(10)
     # Import only new SHA; previously verified archives never replay.
-    run('import', [sys.executable, str(ROOT / 'scripts/import_llm_run.py'), str(args.input),
-                   '--content-addressed', '--dest', str(out / 'import'), '--executable', str(ENGINE),
-                   '--report', str(out / 'import_report.md'), '--scan-out', str(out / 'scan_jobs.json')], (0, 1))
-    record_input(args.input, out)
-    rows = json.loads((out / 'import/import_progress.json').read_text())['archives']
+    if args.skip_import:
+        # 多包增量导入后作业清单已合并；这里只续扫，不重放导入与校验。
+        save(status, dict(stage='skip_import', state='running', pid=os.getpid()))
+    else:
+        run('import', [sys.executable, str(ROOT / 'scripts/import_llm_run.py'), str(args.input),
+                       '--content-addressed', '--dest', str(out / 'import'), '--executable', str(ENGINE),
+                       '--report', str(out / 'import_report.md'), '--scan-out', str(out / 'scan_jobs.json')], (0, 1))
+        record_input(args.input, out)
+    progress = out / 'import/import_progress.json'
+    if args.skip_import and (out / 'import/merged_progress.json').exists():
+        progress = out / 'import/merged_progress.json'
+    rows = json.loads(progress.read_text())['archives'] if progress.exists() else []
     plan = json.loads((out / 'scan_jobs.json').read_text())
     completed = []
     failures = []
