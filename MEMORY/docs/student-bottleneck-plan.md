@@ -1017,3 +1017,4 @@
 - task128 交付（58872f22，38 个冒险关 / 1920 对，含屋顶 L41/L46 老师胜局）。审 `qc_deploy14i.sh`：三层 start_qc（14i→14h→14g）与各自在线参数一致，boundary 检查无排队门禁作业才切。14i 代码是 14h（4d26acb2）的超集，所以**空档等待器直接改指 14i**（tmux `deploy14i-wait`），跳过单独上 14h，少等一个空档。
 - task130 交付（sleepinput f9fe20c4：学生 v2sleep / 价值编码器 v4，13 项对拍通过）。上线卡在热启动：首层通道变了 → 派 task131（台式机 codex-t125，分支 obsup）：加宽零初始化热启动 + build7 + `qc_deploy15.sh`（只准备）。
 - task129 原 CodeBuddy 会话 429 额度用尽到 17:26，实际未开工 → 转交 Mac codex-plus2（分支 deckrules）。
+- 15:15 用户带 Mac 外出：SIGSTOP 冻结 Mac 上 task127 seed_variance（40217/71359/42639），codex-plus2(b) 已通知暂停开局；回来后 `kill -CONT` 并通知“解冻”。台式机驱动更新窗口约 16:45（r24 门禁 + deploy14i 之后）。deploy14i-wait 曾因 argv 含 qc_deploy 路径导致看门狗一直“suppressed”，已改为无参数启动。
