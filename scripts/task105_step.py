@@ -120,12 +120,14 @@ def main():
         print('没有变更，跳过提交')
         return
     print(git('diff', '--cached', '--numstat').stdout, end='')
-    git('commit', '-q', '-m', f"task105: register scan {result['scanned']} and refresh results")
     if not args.no_push:
         git('fetch', '-q', 'origin', 'llmimport')
         behind = git('rev-list', '--count', 'HEAD..origin/llmimport').stdout.strip()
         if behind != '0':
-            raise SystemExit(f'远端领先 {behind} 个提交，先人工处理再推送')
+            git('reset', '-q')
+            raise SystemExit(f'远端领先 {behind} 个提交，已撤销暂存，先人工处理再推送')
+    git('commit', '-q', '-m', f"task105: register scan {result['scanned']} and refresh results")
+    if not args.no_push:
         git('push', '-q', 'origin', 'llmimport')
     print(git('log', '--oneline', '-1').stdout.strip())
 
