@@ -27,7 +27,8 @@ def die(job):
 class WorkersTest(unittest.TestCase):
     def test_completed_games_are_yielded(self):
         with patch.object(search_play, '_init_worker', initialize), patch.object(search_play, '_play', play):
-            rows = list(search_play._play_parallel([1, 2, 3], 2, 'fork', ()))
+            with search_play._play_parallel([1, 2, 3], 2, 'fork', ()) as results:
+                rows = list(results)
         self.assertEqual(sorted(row['seed'] for row in rows), [1, 2, 3])
 
     def test_killed_worker_exits_instead_of_replacing_and_hanging(self):
@@ -40,7 +41,8 @@ sys.path.insert(0, 'python')
 from test_search_play_workers import search_play, initialize, die
 with patch.object(search_play, '_init_worker', initialize), patch.object(search_play, '_play', die):
     try:
-        list(search_play._play_parallel([1, 2], 2, 'fork', ()))
+        with search_play._play_parallel([1, 2], 2, 'fork', ()) as results:
+            list(results)
     except BrokenProcessPool:
         pass
     else:

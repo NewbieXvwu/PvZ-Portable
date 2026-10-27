@@ -40,6 +40,7 @@ from __future__ import annotations
 
 import argparse
 from concurrent.futures import ProcessPoolExecutor, as_completed
+from contextlib import contextmanager
 import random
 import json
 import multiprocessing as mp
@@ -80,14 +81,14 @@ def _close_worker_env():
         env.close()
 
 
+@contextmanager
 def _play_parallel(jobs, workers, start_method, initargs):
     # Pool silently replaces a killed worker, losing its in-flight job forever. The
     # executor reports BrokenProcessPool instead, so callers can resume saved games.
     with ProcessPoolExecutor(max_workers=workers, mp_context=mp.get_context(start_method),
                              initializer=_init_worker, initargs=initargs) as pool:
         futures = [pool.submit(_play, job) for job in jobs]
-        for future in as_completed(futures):
-            yield future.result()
+        yield (future.result() for future in as_completed(futures))
 
 
 def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None) -> None:
@@ -945,12 +946,13 @@ def main() -> None:
         job['metrics_index'] = index
     metrics = None
     try:
-        with results_path.open("a") as out:
+        initargs = (value_files[0], args.rollout_policy, args.rollout_sim_skip, value_files[1], counters)
+        # Start all forked workers before Metrics starts a background thread.
+        with results_path.open("a") as out, _play_parallel(jobs, args.workers, start_method, initargs) as results:
             from pvz_metrics import Metrics
             metrics = Metrics("search_play", progress_source=lambda: dict(
                 games=sum(counters[::2]), decisions=sum(counters[1::2]))).start()
-            initargs = (value_files[0], args.rollout_policy, args.rollout_sim_skip, value_files[1], counters)
-            for i, res in enumerate(_play_parallel(jobs, args.workers, start_method, initargs), 1):
+            for i, res in enumerate(results, 1):
                 out.write(json.dumps(res) + "\n"); out.flush()
                 if i % 10 == 0 or i == len(jobs):
                     print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
