@@ -11,7 +11,7 @@
 - [文档结构 / 仓库约定 / 验收纪律](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
 - [分工与 codex / CUDA 执行记录约定](notes/workflow.md)
-- [每任务游戏进程上限](notes/workflow.md#游戏进程上限)
+- [每任务游戏进程上限](notes/workflow.md#游戏进程上限主控-2026-10-26-澄清)
 - [校验与导入闸门](notes/workflow.md#校验与导入闸门)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
