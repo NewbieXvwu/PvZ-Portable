@@ -1024,3 +1024,4 @@
 - 18:28 **门禁 v5 上线**（deploy14i 自然空档触发：r25 门禁 18:21 结束，r26 采集 18:28 完成，在 stop 标志下 r26 训练作业于重启后按 v5 入队）。r25 被 v4 否决（overall、fog、heldout）。
 - 18:33 新问题：task123 的训练准入要 MemAvailable ≥ 20.59 GiB（6 GiB 预留 + 训练估计），采集为它预留 14.6 GiB 余量只剩 workers=1，训练又因 task105 扫描占 ~2 GiB 进不去 → 双饿。处理：SIGSTOP task105_pipeline（1192659/1254424）、杀掉其扫描，18:38 训练准入。终止 deploy14i 的首组 rc 等待（1 worker 的首组可能超 60 分钟触发误回滚），v5 保持，首组 rc 由主控核对。
 - 待办：训练期间采集 worker 数受余量限制（K=4 串行 ≈ 3 小时+），需评估 `MEMORY_RESERVE_BYTES` 6 GiB 与训练估计是否过保守；task105 流水线在 r26 训练后 SIGCONT。
+- 19:55 GPT Pro run1 沙箱 16:05 被回收；Drive 最新完整快照 15:35（29/31，1200 份存档，SHA f16b3177 已核对），已拼好放在 Mac `~/Downloads/gptpro_out_153532/out_20261027_153532.zip`，回家后传台式机交 task105 增量导入。与用户商定**停掉 4 倍死磕**：门禁 v5 只看原版难度，屋顶 9 关里只有 L41/L46 两关在记分板卡组下有人赢过。GPT Pro 第二轮改打原版难度屋顶 + 门禁卡组（task133，llmplay2，待派）。
