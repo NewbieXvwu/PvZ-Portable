@@ -63,7 +63,7 @@
 ### 5. 部署 `scripts/qc_deploy14m.sh`（未执行，交主控）
 
 - 只换 4 个文件：`scripts/search_play.py`、`scripts/curriculum_queue.py`、新增
-  `scripts/growable_pool.py`，外加它的单测 `python/test_growable_pool.py`（REV `e66ee8d6`；
+  `scripts/growable_pool.py`，外加它的单测 `python/test_growable_pool.py`（REV `c59b7e4d`；
   单测进生产只为了预检能在本机跑一次真进程的池子，不参与采集）。
 - `start_qc` 照抄台式机最新 deploy14l：`--extra-manifest` 由 `qc_deploy14l.mode` 决定
   （`deckcells` 才加），未激活 / 回滚分支与现网一致；`stop_qc` 按台式机版本直接

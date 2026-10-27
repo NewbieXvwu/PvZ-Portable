@@ -10,12 +10,12 @@ R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
 PACKAGE=$R/.claude/worktrees/obsup
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=e66ee8d6dda4dacde3d2a9d079e73bf5645c3e76
+REV=c59b7e4d293e01bd9c83162962d2f031f2bd0725
 FILES=(scripts/search_play.py scripts/curriculum_queue.py scripts/growable_pool.py
        python/test_growable_pool.py)
 NEW_SHAS=(4f4ba54165bb6aeeb6fc5e6eeff22bd588e2b9b643fb64798e4130d13382c9f8
           f98df24cbb5d8af69a237df6465da5c2fba77e55b8b231907544fdb7d68c76e9
-          6b9da78bcfd0eb07e8d2c22bbc554f798490d15d443d02e5b363d970af6b99f9
+          ea02f564714b12d92acf0d5161ce6a81e6f1120a696eaeaf3977323d0c23b051
           77311dfcb63c39e1a9207783c03f1c3af78ad5e6db14ed2b123467c44c335771)
 # What production may be before the switch: deploy14l (task137) or this deploy.
 BASELINE_SEARCH_SHAS=(6f9103447dd4e5d066c6b6b26ff516b7165c3d8a89f4c67ea3cf5f63540acf01
