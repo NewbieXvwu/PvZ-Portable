@@ -39,6 +39,8 @@ def generate(unlock_field, roof45_mode):
             if level == 45:
                 task["reference_task_id"] = "demo_roof_45_orig_m100"
                 task["description"] += " L45 原参考为蹦极闪电战原生传送带，无固定参考卡组。"
+                if roof45_mode == "fixed":
+                    task["description"] += " 本新族按修订1改为自选卡种卡模式，旧原生传送带族保留。"
                 if roof45_mode == "original":
                     task.pop("deck_selection")
                     task["conveyor_start"] = "original"

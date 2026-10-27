@@ -110,3 +110,5 @@
 - [2026-10-27](2026-10-27.md)
 - [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)
 - [task81 GPT Pro 对局包与持续续跑约定](docs/task81-gpt-pro-playthrough.md)
+
+- [task133 LLMPlay第二轮自选卡交付](docs/task133-llmplay2.md)
