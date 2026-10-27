@@ -211,6 +211,8 @@
 
 - 2026-10-27 19:05（CodeBuddy）：**把"语料到位后手工写 descriptor"这一步自动化**。`task78_corpus_check.py` 新增 `--write-descriptor --source-root DIR`：按冻结清单的文件名在目录树里逐一定位（重名或缺失即拒绝），逐文件算 SHA256，决策分片优先取名为 `data`/`sparse64` 的目录，episode 缓存必须四个名字齐全，写完后立刻用原 `check_descriptor` 按冻结 schema 复核；空目录实测 rc=1、不写文件（fail-closed）。新增 3 项测试（成功生成并通过校验、缺文件/重名拒绝、episode 缺名拒绝），task78 全量 **162 项**测试通过。用法已写进 `value-v6.md` §8 命令链第 0a 步。未改任何校验阈值、语料要求或训练配方。
 
+- 2026-10-27 19:20（CodeBuddy）：**结论文档与回执之间的对账改成可重跑的工具**。新增 tracked `scripts/task78_reconcile_docs.py`：从 `ab/paired.json`（白天/夜间/泳池下界、雾与屋顶 gain/net/p、512 对）、`roof_truth/scored.json`（主视界 162 对/48 root、0.4691→0.5185、主门 false）、`task72_probe94/score_original_protocol.json`（47/93、0.505）、`score_full192_9sample.json`（46/93、0.495、差 −0.011、CI [−0.119,+0.083]）、`gates.json`（0.7146/0.8230）重算 16 项关键数字，逐项断言它们仍以原样出现在 `value-v6.md`；回执不在时 rc=3 拒绝运行（附 1 项测试）。实测 **RECONCILED**、0 漂移，task78 全量 **163 项**测试通过。此前 15:15 的人工对账结论因此可复现。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
