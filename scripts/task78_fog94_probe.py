@@ -107,10 +107,10 @@ def resource_check():
         raise RuntimeError("yield to qc: probe requires available memory >=8 GiB")
 
 
-def leaf_value(teacher, env, obs, root, action, horizon, decision_seed):
+def leaf_value(teacher, env, obs, root, action, horizon, decision_seed, samples=SAMPLES):
     """The value search_play assigns a candidate: mean of --samples terminal-or-leaf scores."""
     scores = []
-    for k in range(SAMPLES):
+    for k in range(samples):
         leaf = teacher._rollout_policy(env, obs, action, obs["tick"] + horizon, root,
                                        (decision_seed * 1000 + k) % 2 ** 32)
         terminal = teacher._score_terminal_or_value(leaf)
@@ -120,7 +120,7 @@ def leaf_value(teacher, env, obs, root, action, horizon, decision_seed):
     return sum(scores) / len(scores)
 
 
-def probe(takeover, future, value, label, out=OUT, slot=0, sim_skip=61):
+def probe(takeover, future, value, label, out=OUT, slot=0, sim_skip=61, samples=SAMPLES):
     """Play the frozen reconstruction trajectory once and score wait/static_best at its states."""
     if takeover not in TAKEOVERS or future not in FUTURES:
         raise ValueError("only the original takeovers and futures are supported")
@@ -156,7 +156,8 @@ def probe(takeover, future, value, label, out=OUT, slot=0, sim_skip=61):
                           takeover=takeover, static_best=list(state["static_best"]), values={})
             for horizon in HORIZONS:
                 record["values"][str(horizon)] = {
-                    cell_key(c): leaf_value(teacher, env, obs, root, c, horizon, decision_seed)
+                    cell_key(c): leaf_value(teacher, env, obs, root, c, horizon, decision_seed,
+                                            samples)
                     for c in candidates}
             rows.append(record)
         finally:
@@ -326,6 +327,8 @@ def main(argv=None):
     run.add_argument("--label", required=True)
     run.add_argument("--slot", type=int, default=0)
     run.add_argument("--sim-skip", type=int, default=61)
+    run.add_argument("--samples", type=int, default=SAMPLES,
+                     help="rollout futures per candidate/horizon; the original task72b probe used 9")
     tally = sub.add_parser("score")
     tally.add_argument("--out", default=str(OUT))
     check = sub.add_parser("compare")
@@ -334,7 +337,7 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.command == "probe":
         path, count, states = probe(args.takeover, args.future, args.value, args.label,
-                                    slot=args.slot, sim_skip=args.sim_skip)
+                                    slot=args.slot, sim_skip=args.sim_skip, samples=args.samples)
         print(json.dumps(dict(path=str(path), states=count, expected=len(states))))
     elif args.command == "compare":
         print(json.dumps(compare(args.label, args.horizon), indent=1))
