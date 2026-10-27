@@ -1,123 +1,169 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-27T16:12:03.053168+00:00",
- "input_sha256": "4cc5dd7398f60059a2b8ef2fe286e3bfe61296d2229cffef6295196803a7649f",
+ "generated": "2026-10-27T16:24:02.622621+00:00",
+ "input_sha256": null,
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
- "input_path": "/home/newbiexvwu/llm_runs/gptpro_438cb30a_resume00099.zip",
+ "input_path": "/home/newbiexvwu/llm_runs/run_dfb4fe9c_out.zip",
+ "input_packages": [
+  {
+   "identity": {
+    "path": "/home/newbiexvwu/llm_runs/run_438cb30a_out_153532.zip",
+    "size": 353512118,
+    "mtime_ns": 1793116556887062711
+   },
+   "archives": 400,
+   "reused": 276,
+   "verified": 400,
+   "rejected": 0
+  },
+  {
+   "identity": {
+    "path": "/home/newbiexvwu/llm_runs/run_e6f6ae76_out.zip",
+    "size": 10922148,
+    "mtime_ns": 1793103724823618505
+   },
+   "archives": 47,
+   "reused": 0,
+   "verified": 47,
+   "rejected": 0
+  },
+  {
+   "identity": {
+    "path": "/home/newbiexvwu/llm_runs/run_91b658fa_out.zip",
+    "size": 30797051,
+    "mtime_ns": 1793111522747288477
+   },
+   "archives": 103,
+   "reused": 0,
+   "verified": 103,
+   "rejected": 0
+  },
+  {
+   "identity": {
+    "path": "/home/newbiexvwu/llm_runs/run_dfb4fe9c_out.zip",
+    "size": 32410673,
+    "mtime_ns": 1793116502787064936
+   },
+   "archives": 151,
+   "reused": 0,
+   "verified": 151,
+   "rejected": 0
+  }
+ ],
  "engine_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
- "archives": 263,
- "verified": 263,
+ "archives": 701,
+ "verified": 701,
  "rejected": 0,
  "tasks": {
   "demo_roof_46_doom_m200": {
-   "archives": 9,
-   "won": 5,
-   "robust": 3,
+   "archives": 32,
+   "won": 20,
+   "robust": 11,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_47_doom_m200": {
-   "archives": 9,
-   "won": 5,
-   "robust": 3,
+   "archives": 15,
+   "won": 11,
+   "robust": 6,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_48_doom_m200": {
-   "archives": 9,
-   "won": 5,
-   "robust": 3,
+   "archives": 61,
+   "won": 18,
+   "robust": 7,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_49_doom_m200": {
-   "archives": 11,
-   "won": 5,
-   "robust": 3,
+   "archives": 25,
+   "won": 15,
+   "robust": 6,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_41_doom_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 31,
+   "won": 24,
+   "robust": 11,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_42_melon_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 42,
+   "won": 14,
+   "robust": 7,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_42_gloom_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 13,
+   "won": 9,
+   "robust": 6,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_42_gloommelon_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 13,
+   "won": 9,
+   "robust": 6,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_43_melon_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 28,
+   "won": 17,
+   "robust": 12,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_43_gloom_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 13,
+   "won": 8,
+   "robust": 5,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_44_melon_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 20,
+   "won": 14,
+   "robust": 7,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_44_gloom_m200": {
-   "archives": 8,
-   "won": 5,
-   "robust": 3,
+   "archives": 13,
+   "won": 10,
+   "robust": 7,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_46_doom_m300": {
-   "archives": 9,
-   "won": 5,
+   "archives": 21,
+   "won": 9,
    "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_46_doom_m400": {
-   "archives": 27,
-   "won": 5,
-   "robust": 3,
+   "archives": 44,
+   "won": 6,
+   "robust": 4,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_47_doom_m300": {
-   "archives": 8,
-   "won": 5,
+   "archives": 18,
+   "won": 7,
    "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_47_doom_m400": {
-   "archives": 24,
-   "won": 3,
-   "robust": 0,
+   "archives": 50,
+   "won": 6,
+   "robust": 1,
    "rejected": 0,
    "reasons": []
   },
@@ -129,100 +175,100 @@
    "reasons": []
   },
   "demo_roof_48_doom_m400": {
-   "archives": 29,
-   "won": 4,
-   "robust": 2,
+   "archives": 50,
+   "won": 8,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_49_doom_m300": {
-   "archives": 44,
-   "won": 6,
+   "archives": 47,
+   "won": 7,
    "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "demo_roof_49_doom_m400": {
-   "archives": 8,
-   "won": 0,
+   "archives": 10,
+   "won": 1,
    "robust": 0,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l36_snow_magnet_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 7,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l36_snow_split_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 9,
+   "won": 6,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l37_snow_magnet_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 10,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l37_snow_split_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 15,
+   "won": 6,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l38_snow_magnet_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 8,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l38_snow_tall_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 8,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l39_snow_cactus_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 8,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "fog79_l39_snow_blover_v2_m200": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 8,
+   "won": 5,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   },
   "demo_pool_30_orig_m100": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 19,
+   "won": 15,
+   "robust": 12,
    "rejected": 0,
    "reasons": []
   },
   "demo_storm_40_orig_m100": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 24,
+   "won": 17,
+   "robust": 12,
    "rejected": 0,
    "reasons": []
   },
   "demo_boss_50_orig_m100": {
-   "archives": 0,
-   "won": 0,
-   "robust": 0,
+   "archives": 27,
+   "won": 16,
+   "robust": 3,
    "rejected": 0,
    "reasons": []
   }
@@ -2753,7 +2799,7 @@
    "reason": ""
   }
  ],
- "scan_expected": 227,
+ "scan_expected": 625,
  "scanned": 126,
  "registered": 125,
  "deployed": 0,

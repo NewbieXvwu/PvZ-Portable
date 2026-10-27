@@ -32,6 +32,13 @@
 - 新登记 36 个任务族（`demo_roof_46/47/48/49_doom_m300/m400` 变体），已写入 `configs/human_demo_tasks.json` 与 `DESIGN.md`；`demo_roof_49_doom_m400` 为本包新出现的任务，暂无通关。
 - 扫描作业清单扩到 227 份（191 + 36 个新通关存档）；已完成的 67 份用 `--skip-complete` 跳过，不重放；新增存档的扫描照旧 2 个游戏进程。
 
+## 追加输入 2（llmplay 四份产物，主控 2026-10-28 00:00）
+
+- `~/llm_runs/run_438cb30a_out_153532.zip`（400份，其中263份旧SHA、137份新SHA）；另有`run_e6f6ae76_out.zip`（47份）、`run_91b658fa_out.zip`（103份）、`run_dfb4fe9c_out.zip`（151份）。
+- 四包共701份、新SHA 438份。按包串行导入，每包最多2个游戏进程；旧回执复用、不二次重放。
+- 每包账本和扫描清单单独保存，按SHA合并账本、按任务族合并作业并保留既有227份的未来种子；随后用`--skip-import`续扫。
+- 2026-10-28 00:24四包导入完成：701份均通过、拒绝0份，新增438份SHA完成首次verify（含中断前13份已有回执）；按(任务,种子)统计309个通关种子、162个稳健种子。新增398个通关存档族，扫描清单并集为625份；原126份扫描不重放，正在补跑此前中断项。
+
 ## 暂停期间交付链核对（2026-10-27 19:05，只读）
 
 - 导入账本 263 份：`result==1` 227 份（通关）、`==2` 32 份、`==0` 4 份；扫描作业 `scan_jobs.json` 的 227 个
@@ -71,45 +78,45 @@
 
 ## 结果
 
-- 本包263份存档：deploy14 verify通过263份、拒绝0份；按(任务,种子)去重为94个通关种子、53个稳健种子。稳健按随包第10波k=8且≥5胜记录。
+- 累计701份SHA去重存档：deploy14 verify通过701份、拒绝0份；按(任务,种子)去重为309个通关种子、162个稳健种子。稳健按随包第10波k=8且≥5胜记录。
 - verify结果按存档SHA持久化。后续新SHA用2个游戏进程并行首次verify；已有成功或失败回执直接复用，绝不二次重放。
-- 接手扫描完成126/227份，登记125格，其中0格已出现在生产qc清单。其余已登记格可由主控组边界部署；本任务未执行部署脚本。
+- 接手扫描完成126/625份，登记125格，其中0格已出现在生产qc清单。其余已登记格可由主控组边界部署；本任务未执行部署脚本。
 - 原adaptive→register链继续，最多2个游戏进程、qc优先。已移除额外审计、全包重导入、重复register、全机种子复查等尾链。
 - 策略仅留本机原zip参考；存档、游戏资源未进git、未上传HF。
 
 | 层 | 任务 | 通关种子 | 稳健种子 | 拒绝份数 |
 |---|---|---|---|---|
-| A | demo_roof_46_doom_m200 | 5 | 3 | 0 |
-| A | demo_roof_47_doom_m200 | 5 | 3 | 0 |
-| A | demo_roof_48_doom_m200 | 5 | 3 | 0 |
-| A | demo_roof_49_doom_m200 | 5 | 3 | 0 |
-| B | demo_roof_41_doom_m200 | 5 | 3 | 0 |
-| B | demo_roof_42_melon_m200 | 5 | 3 | 0 |
-| B | demo_roof_42_gloom_m200 | 5 | 3 | 0 |
-| B | demo_roof_42_gloommelon_m200 | 5 | 3 | 0 |
-| B | demo_roof_43_melon_m200 | 5 | 3 | 0 |
-| B | demo_roof_43_gloom_m200 | 5 | 3 | 0 |
-| B | demo_roof_44_melon_m200 | 5 | 3 | 0 |
-| B | demo_roof_44_gloom_m200 | 5 | 3 | 0 |
-| C | demo_roof_46_doom_m300 | 5 | 3 | 0 |
-| C | demo_roof_46_doom_m400 | 5 | 3 | 0 |
-| C | demo_roof_47_doom_m300 | 5 | 3 | 0 |
-| C | demo_roof_47_doom_m400 | 3 | 0 | 0 |
+| A | demo_roof_46_doom_m200 | 20 | 11 | 0 |
+| A | demo_roof_47_doom_m200 | 11 | 6 | 0 |
+| A | demo_roof_48_doom_m200 | 18 | 7 | 0 |
+| A | demo_roof_49_doom_m200 | 15 | 6 | 0 |
+| B | demo_roof_41_doom_m200 | 24 | 11 | 0 |
+| B | demo_roof_42_melon_m200 | 14 | 7 | 0 |
+| B | demo_roof_42_gloom_m200 | 9 | 6 | 0 |
+| B | demo_roof_42_gloommelon_m200 | 9 | 6 | 0 |
+| B | demo_roof_43_melon_m200 | 17 | 12 | 0 |
+| B | demo_roof_43_gloom_m200 | 8 | 5 | 0 |
+| B | demo_roof_44_melon_m200 | 14 | 7 | 0 |
+| B | demo_roof_44_gloom_m200 | 10 | 7 | 0 |
+| C | demo_roof_46_doom_m300 | 9 | 3 | 0 |
+| C | demo_roof_46_doom_m400 | 6 | 4 | 0 |
+| C | demo_roof_47_doom_m300 | 7 | 3 | 0 |
+| C | demo_roof_47_doom_m400 | 6 | 1 | 0 |
 | C | demo_roof_48_doom_m300 | 6 | 3 | 0 |
-| C | demo_roof_48_doom_m400 | 4 | 2 | 0 |
-| C | demo_roof_49_doom_m300 | 6 | 3 | 0 |
-| C | demo_roof_49_doom_m400 | 0 | 0 | 0 |
-| D | fog79_l36_snow_magnet_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l36_snow_split_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l37_snow_magnet_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l37_snow_split_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l38_snow_magnet_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l38_snow_tall_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l39_snow_cactus_v2_m200 | 0 | 0 | 0 |
-| D | fog79_l39_snow_blover_v2_m200 | 0 | 0 | 0 |
-| E | demo_pool_30_orig_m100 | 0 | 0 | 0 |
-| E | demo_storm_40_orig_m100 | 0 | 0 | 0 |
-| E | demo_boss_50_orig_m100 | 0 | 0 | 0 |
+| C | demo_roof_48_doom_m400 | 8 | 3 | 0 |
+| C | demo_roof_49_doom_m300 | 7 | 3 | 0 |
+| C | demo_roof_49_doom_m400 | 1 | 0 | 0 |
+| D | fog79_l36_snow_magnet_v2_m200 | 5 | 3 | 0 |
+| D | fog79_l36_snow_split_v2_m200 | 6 | 3 | 0 |
+| D | fog79_l37_snow_magnet_v2_m200 | 5 | 3 | 0 |
+| D | fog79_l37_snow_split_v2_m200 | 6 | 3 | 0 |
+| D | fog79_l38_snow_magnet_v2_m200 | 5 | 3 | 0 |
+| D | fog79_l38_snow_tall_v2_m200 | 5 | 3 | 0 |
+| D | fog79_l39_snow_cactus_v2_m200 | 5 | 3 | 0 |
+| D | fog79_l39_snow_blover_v2_m200 | 5 | 3 | 0 |
+| E | demo_pool_30_orig_m100 | 15 | 12 | 0 |
+| E | demo_storm_40_orig_m100 | 17 | 12 | 0 |
+| E | demo_boss_50_orig_m100 | 16 | 3 | 0 |
 
 拒绝原因：无。
 
@@ -248,9 +255,10 @@
 
 已有进程活着时不另起同一任务。入口：`scripts/task105_pipeline.py <zip>`；状态和断点在`artifacts/task105/`。
 同一 run_id 的续跑包直接换 zip 重跑入口即可：按存档 SHA 增量导入（旧回执复用、不重放），`adaptive --skip-complete` 跳过已完成的扫描，register 幂等。
+多包入口`scripts/task105_import_batch.py <zip>...`串行增量导入，按SHA合并账本和作业；每包完成后保存路径、大小和mtime回执，续跑直接复用。随后以`--skip-import`续扫并跳过已完成结果。
 引擎进程会被 earlyoom 打断（其他工作树的 pytest 峰值 12–17 GB）。单份失败不整链停摆，记入`artifacts/task105/failures.json` 后继续；重跑时已测点从结果 JSON 续跑，不重放。
 `search_play`使用ProcessPoolExecutor，worker意外退出时报错，避免替补worker卡死后无限等待。续跑直接跳过已扫描且已登记的条目；有失败项时流水线记为incomplete，不能冒充整包完成。
-`scripts/task105_supervise.py <zip>`可接管已有流水线，等待其退出后补跑未完成项；看守进程使用独立锁，不并起同一任务。台式机现由`pvz-task105-supervise.service`看守。
+`scripts/task105_supervise.py <zip>`可接管已有流水线，等待其退出后补跑未完成项；看守进程使用独立锁，不并起同一任务；多包入口在导入完成后直接转为看守进程。
 结果整理入口`scripts/task105_results.py`只读取已有小JSON，不解压、不重放、不复跑。
 部署脚本为`scripts/deploy_task105.py`；当前计划为`artifacts/task105/deployment_plan.json`，仅含已登记且尚未在qc清单中的格。
 主控在组边界排空qc后才应用；本任务不执行该脚本（含预览）。
