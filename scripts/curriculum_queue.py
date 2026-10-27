@@ -1792,7 +1792,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
                     games=games, manifest=manifest,
                     label=label_for(state['round'] + 1, base, multiplier,
-                                    start=int(multiplier) if start else None),
+                                    start=int(multiplier) if start else None) + f'_o{offset}',
                     save_candidates=save_candidates_for(cell, tasks.get(task_id),
                                                         save_candidates_levels))
         if start:

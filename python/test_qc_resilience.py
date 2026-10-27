@@ -148,6 +148,49 @@ def test_bad_group_is_saved_and_next_group_runs(tmp_path, failure, restart):
     assert saved['cells']['bad']['windows'] == {}
 
 
+@pytest.mark.parametrize('legacy_label', [False, True])
+def test_restart_after_partial_group_isolates_new_seed_results(tmp_path, legacy_label):
+    arguments, current = args(tmp_path), state()
+    current['cells'].pop('bad')
+    tasks = {'good': dict(seeds=list(range(8)))}
+
+    def replan():
+        return q.plan_round(current, tasks, {}, [1.], {'good': Path('/manifest')}, 2, 2)[0]
+
+    first = replan()
+    if legacy_label:
+        first[0]['label'] = first[0]['label'].removesuffix('_o0')
+    old_results = arguments.out / f'{first[0]["label"]}_2' / 'games.jsonl'
+
+    def collect(command, **kwargs):
+        results = arguments.out / f'{command[0]}_2' / 'games.jsonl'
+        results.parent.mkdir(parents=True, exist_ok=True)
+        with results.open('a') as output:
+            output.write('{"won":true}\n' * (1 if results == old_results else 2))
+        if results == old_results:
+            raise KeyboardInterrupt
+        return SimpleNamespace(returncode=0)
+
+    with patch.object(q, 'command_for', side_effect=lambda *pos, **kw: [pos[5]]), \
+         patch.object(q.subprocess, 'run', side_effect=collect), \
+         patch.object(q, 'mem_available_bytes', return_value=None):
+        with pytest.raises(KeyboardInterrupt):
+            q.run_round(arguments, current, first, [])
+        current = json.loads(arguments.state.read_text())
+        assert current['offsets']['good'] == 2
+        restarted = replan()
+        assert q.run_round(arguments, current, restarted, [])
+
+    completed = current['log'][0]['groups'][0]
+    new_results = arguments.out / f'{completed["label"]}_2' / 'games.jsonl'
+    assert completed['status'] == 'done'
+    assert completed['offset'] == 2 and current['offsets']['good'] == 4
+    assert new_results != old_results
+    assert len(old_results.read_text().splitlines()) == 1
+    assert len(new_results.read_text().splitlines()) == 2
+    assert q.pack_labels(current) == [completed['label'] + '_fast_search']
+
+
 def test_state_io_retries_once_without_starting_a_game(tmp_path):
     original = Path.replace
     calls = []

@@ -949,11 +949,12 @@ class DemoStartCellsTest(unittest.TestCase):
         item = plan[0]
         self.assertEqual((item['task_id'], item['demo_decision'], item['offset']), (self.BASE, 800, 0))
         self.assertEqual(item['future_seeds'], [900, 901])
-        self.assertEqual(item['label'], 'c1demofog33cactussnowm200s800')
+        self.assertEqual(item['label'], 'c1demofog33cactussnowm200s800_o0')
         self.assertEqual(item['multiplier'], 800)             # 档位 = 起点决策号
         state['offsets'][self.BASE] = 5
         plan, _ = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan[0]['future_seeds'], [905])       # 只剩一个未来种子
+        self.assertEqual(plan[0]['label'], 'c1demofog33cactussnowm200s800_o5')
         state['offsets'][self.BASE] = 6
         plan, changes = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan, [])
