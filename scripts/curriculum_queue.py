@@ -98,6 +98,10 @@ DEFAULT_LOG = Path.home() / 'pvz-logs/curriculum.log'
 CURRICULUM_LADDERS = {
     'native_l25': [0.5, 1.0] + [m for m, _ in MULTIPLIERS],
 }
+# task137: v5 随机卡组格的阶梯写在清单里（每个任务带 curriculum_ladder），
+# 起点 0.5 让老师先能赢，再按 PROMOTE_ABOVE / DEMOTE_BELOW 往上走。
+RANDOM_DECK_SHARE = 0.15   # 随机卡组格每轮最多占 round-games 的 15%
+
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
@@ -358,21 +362,38 @@ def startup_worker_estimate(args, plan: list[dict]) -> int:
     return max(measured, 1)
 
 
+def _panel_names(tasks) -> dict[str, float]:
+    names: dict[str, float] = {}
+    for task in tasks:
+        if '_m' in task['task_id']:
+            suffix = 'm' + task['task_id'].rsplit('_m', 1)[1]
+            names[suffix] = float(task['zombie_count_multiplier'])
+    return names
+
+
 @retry_io
-def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
+def load_panel(path: Path, extras=()) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
     """返回 (任务表, 倍率档, 后缀->倍率, 任务->它所在的清单)。
 
     1.0 档不是新任务：它们就是各源清单里的原任务，所以每个任务的清单要单独记，
     `search_play --manifest` 必须拿到含这个 task_id 的那一份。
+
+    task137: `extras` 是额外登记的清单（随机卡组族），只并进任务表 / 后缀 / 清单映射。
+    全局倍率表 values 不动 —— 0.5 / 0.75 这类 <1 档只对自带 ladder 的格子有意义，
+    混进 values 会改变所有老格子的 mult_index 语义。
     """
     document = json.loads(path.read_text())
     tasks = {task['task_id']: task for task in document['tasks']}
     manifests = {task['task_id']: path for task in document['tasks']}
-    names: dict[str, float] = {}
-    for task in document['tasks']:
-        if '_m' in task['task_id']:
-            suffix = 'm' + task['task_id'].rsplit('_m', 1)[1]
-            names[suffix] = float(task['zombie_count_multiplier'])
+    names = _panel_names(document['tasks'])
+    for extra in extras:
+        extra_document = json.loads(Path(extra).read_text())
+        for task in extra_document['tasks']:
+            if task['task_id'] in tasks:
+                raise ValueError(f'extra manifest duplicates task {task["task_id"]}: {extra}')
+            tasks[task['task_id']] = task
+            manifests[task['task_id']] = Path(extra)
+        names.update(_panel_names(extra_document['tasks']))
     for path_ in source_paths({}).values():
         for task_id, task in load_tasks(path_).items():
             if task_id not in tasks:
@@ -408,11 +429,12 @@ def cell_of(task_id: str, names: dict[str, float]) -> str:
     return parse_task_id(task_id, names)[0]
 
 
-def init_from_runs(patterns: list[str], names: dict[str, float]) -> tuple[dict, dict]:
+def init_from_runs(patterns: list[str], names: dict[str, float],
+                   extra_bases=()) -> tuple[dict, dict]:
     """从已有 run 的 config.json / games.jsonl 初始化窗口胜率与已用偏移。"""
     windows: dict[str, dict[str, dict]] = {}
     offsets: dict[str, int] = {}
-    base_ids = training_base_ids()
+    base_ids = training_base_ids() | set(extra_bases)
     for pattern in patterns:
         for path in glob.glob(pattern, recursive=True):
             config_path = Path(path)
@@ -464,8 +486,10 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                     windows_from_runs: dict) -> list[str]:
     """把状态里的格子对齐到当前训练集合；返回日志行，由调用方逐行写 curriculum.log。"""
     lines = []
-    training = training_base_ids() | {task_id for task_id, task in tasks.items()
-                                     if task.get('opening_specialist')}
+    # task137: 随机卡组族的 base id 不在 FAMILIES 里，由清单自己的 random_deck_cell 标记认领。
+    training = (training_base_ids()
+                | {task_id for task_id, task in tasks.items()
+                   if task.get('opening_specialist') or task.get('random_deck_cell')})
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     wanted = {}
@@ -499,6 +523,11 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                     mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
         if family in CURRICULUM_LADDERS:
             cell['ladder'] = CURRICULUM_LADDERS[family]
+        if task.get('curriculum_ladder'):
+            # task137: 随机卡组格自带 0.5..3.0 的阶梯（0.5 起）。
+            cell['ladder'] = list(task['curriculum_ladder'])
+        if task.get('random_deck_cell'):
+            cell['random_deck_cell'] = True
         if task.get('opening_specialist'):
             cell.update(opening_specialist=True, ladder=[1.0])
         cells[base] = cell
@@ -713,7 +742,8 @@ def adjust(cells: dict, values: list[float]) -> list[str]:
 
 
 def allocate(cells: dict, values: list[float], budget: int, per_group: int,
-             round_index: int, teacher: dict | None = None) -> list[tuple[str, float, int]]:
+             round_index: int, teacher: dict | None = None,
+             random_deck_cap: int | None = None) -> list[tuple[str, float, int]]:
     """返回 [(base, multiplier, games)]，总局数不超过 budget。
 
     1) 保底（防饿死）：超过 FLOOR_ROUNDS 轮没被采过（含 last_round=0 从未采过）的格，
@@ -733,15 +763,42 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
     picks: list[tuple[str, float, int]] = []
     picked: set[str] = set()
     spent = 0
+    # task137: 随机卡组格单独限流，别挤掉现有课程（默认每轮 <= 15% 局数）。
+    random_spent = 0
+
+    def fits(base: str, games: int) -> bool:
+        if not cells[base].get('random_deck_cell'):
+            return True
+        return random_deck_cap is None or random_spent + games <= random_deck_cap
+
+    def take(base: str, multiplier: float, games: int) -> None:
+        nonlocal random_spent
+        picks.append((base, multiplier, games))
+        picked.add(base)
+        if cells[base].get('random_deck_cell'):
+            random_spent += games
     floor_games = max(1, per_group // FLOOR_SHARE)
     floor_budget = min(budget, -(-len(cells) // FLOOR_ROUNDS) * floor_games)
     for base in sorted(cells, key=lambda name: (cells[name]['last_round'], name)):
         if spent + floor_games > floor_budget or cells[base]['last_round'] > round_index - FLOOR_ROUNDS:
             break
-        current = cell_level(cells[base], values)
-        picks.append((base, current, floor_games))
-        picked.add(base)
+        if not fits(base, floor_games):
+            continue
+        take(base, cell_level(cells[base], values), floor_games)
         spent += floor_games
+    # 随机卡组格在保底排序里永远排在最后（名字以 rd 开头，同 age 时 alphabetical 落后），
+    # 单靠上面那一轮会被现有课程饿死。这里给它一份独立预算：按最久没采轮转，
+    # 每轮最多 random_deck_cap 局（默认 = round-games 的 15%）。
+    if random_deck_cap:
+        for base in sorted((name for name, value in cells.items()
+                            if value.get('random_deck_cell') and name not in picked
+                            and (value['last_round'] == 0
+                                 or value['last_round'] <= round_index - FLOOR_ROUNDS)),
+                           key=lambda name: (cells[name]['last_round'], name)):
+            if random_spent + floor_games > random_deck_cap or spent + floor_games > budget:
+                break
+            take(base, cell_level(cells[base], values), floor_games)
+            spent += floor_games
     scored = []
     for base, cell in cells.items():
         if base in picked or cells[base]['last_round'] == round_index:
@@ -756,7 +813,9 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
     for _gap, _age, base, multiplier in sorted(scored):
         if remaining < per_group:
             break
-        picks.append((base, multiplier, per_group))
+        if not fits(base, per_group):
+            continue
+        take(base, multiplier, per_group)
         remaining -= per_group
     return picks
 
@@ -1718,7 +1777,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                manifests: dict[str, Path], budget: int, per_group: int,
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
                renew_size: int = START_SEED_BLOCK,
-               save_candidates_levels=frozenset()) -> tuple[list[dict], list[str]]:
+               save_candidates_levels=frozenset(),
+               random_deck_share: float = RANDOM_DECK_SHARE) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -1737,7 +1797,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     if specialists and pending_special > remaining:
         return [], changes + ['opening specialists start next round: partial-round budget already spent']
     picks = special_picks + allocate(ordinary, values, remaining - pending_special,
-                                    per_group, state['round'] + 1, teacher)
+                                    per_group, state['round'] + 1, teacher,
+                                    random_deck_cap=int(budget * random_deck_share))
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
@@ -1973,7 +2034,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher,
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
-                                       save_candidates_levels=args.save_candidates_levels)
+                                       save_candidates_levels=args.save_candidates_levels,
+                                       random_deck_share=args.random_deck_share)
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -2009,6 +2071,10 @@ def main() -> None:
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
+    parser.add_argument('--extra-manifest', type=Path, action='append', default=[],
+                        help='additional registered training panel (task137 random-deck cells); repeatable')
+    parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
+                        help='max share of the round budget for random-deck cells (default 0.15)')
     parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
                         help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
@@ -2100,6 +2166,13 @@ def main() -> None:
         parser.error('seed ledger paths must be absolute')
     if not args.start_seed_ledger.is_absolute():
         parser.error('--start-seed-ledger must be absolute')
+    for extra in args.extra_manifest:
+        if not extra.is_absolute():
+            parser.error('all paths must be absolute: extra_manifest')
+        if not extra.is_file():
+            parser.error(f'--extra-manifest does not exist: {extra}')
+    if not 0.0 <= args.random_deck_share <= 1.0:
+        parser.error('--random-deck-share must be within 0..1')
     try:
         probe = None
         if args.gate_version >= 2:
@@ -2107,7 +2180,9 @@ def main() -> None:
         freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
-    tasks, values, names, manifests = load_panel(args.manifest)
+    tasks, values, names, manifests = load_panel(args.manifest, args.extra_manifest)
+    extra_bases = {cell_of(task_id, names) for task_id, task in tasks.items()
+                   if task.get('random_deck_cell')}
     if args.opening_manifest:
         opening = load_tasks(args.opening_manifest)
         tasks.update(opening)
@@ -2133,7 +2208,8 @@ def main() -> None:
         for line in isolate_cells(state, values):
             log_line(args.log, line)
         # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
-        windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
+        windows = (init_from_runs(args.init_glob, names, extra_bases)[0]
+                   if args.init_glob else {})
         for line in reconcile_cells(state, tasks, names, windows):
             log_line(args.log, line)
         for line in reconcile_start_cells(state, start_cells, windows,
@@ -2144,7 +2220,7 @@ def main() -> None:
                 parser.error(f'--restore-start-cell {base}: not a retired start cell in {args.state}')
             manifests.setdefault(base, args.demo_start_manifest)
     else:
-        windows, offsets = init_from_runs(patterns, names)
+        windows, offsets = init_from_runs(patterns, names, extra_bases)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
     try:
         set_gate_version(state, args.gate_version)
@@ -2158,7 +2234,8 @@ def main() -> None:
                 ledger.write_bytes(args.start_seed_ledger.read_bytes())
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
-                                       save_candidates_levels=args.save_candidates_levels)
+                                       save_candidates_levels=args.save_candidates_levels,
+                                       random_deck_share=args.random_deck_share)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],

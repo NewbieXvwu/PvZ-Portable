@@ -11,6 +11,7 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
+import curriculum_queue
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
                               CURRICULUM_LADDERS, MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE,
                               WINDOW, _descendant_rss,
@@ -1376,3 +1377,108 @@ class WorkerProbeFloorTest(unittest.TestCase):
             self.assertEqual(queue.startup_worker_estimate(args, [dict()]), queue.GIB // 2)
         finally:
             queue.measure_worker_bytes, queue.mem_available_bytes = measure, memory
+
+
+class RandomDeckCellsTest(unittest.TestCase):
+    """task137：随机卡组格（0.5 起步的阶梯、每轮份额上限、挑选/训练两批卡组）。"""
+
+    def setUp(self):
+        import make_random_deck_cells as generator
+        registry = json.loads((ROOT / 'configs/random_deck_cells_v5.json').read_text())
+        panels = generator.build_panels(registry)
+        self.tasks = {task['task_id']: task for task in panels['training_panel']['tasks']}
+        self.names = {'m%03d' % round(m * 100): m for m in generator.LADDER if m != 1.0}
+        self.one_cell = {task_id: task for task_id, task in self.tasks.items()
+                         if task_id.startswith('rd137_l7_train_d01')}
+
+    def test_load_panel_merges_extra_manifest(self):
+        from curriculum_queue import load_panel
+        with tempfile.TemporaryDirectory() as directory:
+            main = Path(directory) / 'main.json'
+            main.write_text(json.dumps(dict(tasks=[dict(task_id='day_l7_train_d7', level=7,
+                                                        zombie_count_multiplier=1.0, seeds=[1])])))
+            extra = Path(directory) / 'extra.json'
+            extra.write_text(json.dumps(dict(tasks=list(self.one_cell.values()))))
+            with mock.patch.object(curriculum_queue, 'source_paths', lambda overrides: {}):
+                tasks, values, names, manifests = load_panel(main, [extra])
+        self.assertEqual(values, [1.0])                      # <1 档不进全局倍率表
+        self.assertEqual(names['m050'], 0.5)
+        self.assertIn('rd137_l7_train_d01_m050', tasks)
+        self.assertEqual(manifests['rd137_l7_train_d01'], extra)
+        self.assertEqual(manifests['day_l7_train_d7'], main)
+
+    def test_load_panel_rejects_duplicate_task(self):
+        from curriculum_queue import load_panel
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'p.json'
+            document = dict(tasks=list(self.one_cell.values()))
+            path.write_text(json.dumps(document))
+            with mock.patch.object(curriculum_queue, 'source_paths', lambda overrides: {}):
+                with self.assertRaises(ValueError):
+                    load_panel(path, [path])
+
+    def test_cells_start_at_half_and_follow_the_manifest_ladder(self):
+        state = dict(cells={}, retired_cells={})
+        reconcile_cells(state, self.tasks, self.names, {})
+        cell_state = state['cells']['rd137_l7_train_d01']
+        self.assertEqual(cell_state['ladder'], [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
+        self.assertEqual(cell_state['mult_index'], 0)
+        self.assertTrue(cell_state['random_deck_cell'])
+        self.assertEqual(cell_level(cell_state, VALUES), 0.5)
+
+    def test_random_cells_are_retired_when_the_extra_panel_is_dropped(self):
+        state = dict(cells={}, retired_cells={})
+        reconcile_cells(state, self.tasks, self.names, {})
+        self.assertIn('rd137_l7_train_d01', state['cells'])
+        lines = reconcile_cells(state, {'day_l7_train_d7': self.tasks['rd137_l7_train_d01']},
+                                self.names, {})
+        self.assertNotIn('rd137_l7_train_d01', state['cells'])
+        self.assertIn('rd137_l7_train_d01', state['retired_cells'])
+        self.assertTrue(any('cell retired' in line for line in lines))
+
+    def test_half_multiplier_demotes_and_floor_holds(self):
+        ladder = [0.5, 0.75, 1.0, 1.25]
+        cells = {
+            'top': dict(family='f', level=7, mult_index=2, last_round=0, random_deck_cell=True,
+                        ladder=list(ladder),
+                        windows={'1.0': {'recent': [0] * 10, 'wins': 0, 'games': 10}}),
+            'bottom': dict(family='f', level=7, mult_index=0, last_round=0, random_deck_cell=True,
+                           ladder=list(ladder),
+                           windows={'0.5': {'recent': [0] * 10, 'wins': 0, 'games': 10}}),
+        }
+        adjust(cells, VALUES)
+        self.assertEqual(cells['top']['mult_index'], 1)     # 1.0 -> 0.75
+        self.assertEqual(cells['bottom']['mult_index'], 0)  # 0.5 不再降
+
+    def test_allocation_keeps_random_cells_under_the_share_cap(self):
+        cells = {f'day_l{i}_train_d7': cell(0, 10, last_round=0) for i in range(12)}
+        cells.update({f'rd137_l7_train_d0{i}': dict(family='f', level=7, mult_index=0, last_round=0,
+                                                    random_deck_cell=True, windows={})
+                      for i in range(1, 5)})
+        picks = allocate(cells, VALUES, budget=100, per_group=10, round_index=3,
+                         random_deck_cap=15)
+        random_games = sum(games for base, _m, games in picks
+                           if cells[base].get('random_deck_cell'))
+        self.assertLessEqual(random_games, 15)
+        self.assertGreater(random_games, 0)
+        # 预算是上限：15 局保底 + 8 个整组 80 局，剩 5 局不够一组。
+        self.assertLessEqual(sum(games for _b, _m, games in picks), 100)
+
+    def test_zero_cap_excludes_random_cells(self):
+        cells = {f'day_l{i}_train_d7': cell(0, 10, last_round=0) for i in range(4)}
+        cells['rd137_l7_train_d01'] = dict(family='f', level=7, mult_index=0, last_round=0,
+                                           random_deck_cell=True, windows={})
+        picks = allocate(cells, VALUES, budget=20, per_group=10, round_index=1,
+                         random_deck_cap=0)
+        self.assertNotIn('rd137_l7_train_d01', {base for base, _m, _g in picks})
+
+    def test_plan_round_uses_fifteen_percent_of_the_budget(self):
+        state = make_state(self.tasks, self.names, {}, {}, 'panel')
+        plan, _changes = plan_round(state, self.tasks, self.names, VALUES,
+                                    {task_id: Path('/tmp/panel.json') for task_id in self.tasks},
+                                    budget=200, per_group=10)
+        random_games = sum(item['games'] for item in plan if item['base'].startswith('rd137_'))
+        self.assertLessEqual(random_games, int(200 * 0.15))
+        self.assertEqual({item['multiplier'] for item in plan if item['base'].startswith('rd137_')},
+                         {0.5})
+
