@@ -273,6 +273,33 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
     return out
 
 
+def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
+    """Copy a parent's function into a wider, semantically compatible input.
+
+    Only prefix encodings may be widened: fog/size/lite inputs carry different
+    features and cannot be reinterpreted as boss/bungee/sleep channels.
+    """
+    for name in ('pool', 'context', 'row_pool', 'packet_head', 'plant_embedding_dim'):
+        if getattr(net, name) != getattr(initial, name):
+            raise ValueError(f'warm-start architecture differs: {name}')
+    upgrades = {('v1', 'v2'), ('v2', 'v2fog'), ('v2', 'v2fogstack4')}
+    upgrades.update((obs, 'v2sleep') for obs in ('v1', 'v2', 'v2boss', 'v2bungee'))
+    if net.obs != initial.obs and (initial.obs, net.obs) not in upgrades:
+        raise ValueError(f'no function-preserving input upgrade: {initial.obs} -> {net.obs}')
+    weights = dict(initial.state_dict())
+    target = net.state_dict()
+    for name in ('trunk.0.weight', 'scalar.0.weight'):
+        old, new = weights[name], target[name]
+        if old.shape[0] != new.shape[0] or old.shape[2:] != new.shape[2:] or old.shape[1] > new.shape[1]:
+            raise ValueError(f'warm-start layer shape differs: {name}')
+        expanded = old.new_zeros(new.shape)
+        expanded[:, :old.shape[1]] = old
+        weights[name] = expanded
+    if net.aux is not None and initial.aux is None:
+        weights.update({name: value for name, value in target.items() if name.startswith('aux.')})
+    net.load_state_dict(weights)
+
+
 def load_student(path) -> RolloutNet:
     """A student or fast_ppo checkpoint as a RolloutNet in eval mode (width read from the weights;
     fast_ppo's value head is dropped)."""
