@@ -223,6 +223,8 @@
 
 - 2026-10-27 18:52（CodeBuddy）：**语料恢复的最后一轮枚举也空了**（只读）。补查四类此前没覆盖或结果被截断的位置：① 名称搜索去掉 `frames_v2` 后重跑（此前 `head -30` 被帧目录占满）——只剩各工作树的 `teacher-diag-v*-z15-*.md` 文档与 `task104` 的帧目录；② home 下所有 `.tgz/.tar/.tar.gz`（最大是 48 MB 的 `pvz-logs/llmplay_pkg/mac_bundle.tar.gz`，67 个条目，只有雾区示范的 frames/ticks，无分片）；③ 根文件系统 `/home` 之外（排除 /proc /sys /mnt /tmp）按四个精确名搜索 0 命中；④ Windows 侧 `Downloads/Desktop/Documents/OneDrive` 里 >10 MB 的模型/压缩文件（只有系统与聊天附件）。结论写进回执 `v5_corpus_recovery`。至此本机、HF 分支头、HF 全历史、Windows 盘、归档文件五条线全部为 0 命中。
 
+- 2026-10-27 18:58（CodeBuddy）：**验收门做了端到端正例验证**（此前只有 4 个种子的小单测）。在 `/tmp/synth_corpus` 造了一份**只有 seed 张量、没有任何游戏数据**的合成语料：97 个 branch 分片共 354,005 行、64 个 decision 分片共 3,860 行、episode `rows.npz` 84,736 行，按 `held()` 切分正好等于冻结的 324,559/29,446、3,404/456、75,136/9,600，外加 4 个 episode 文件名与空审计清单。`task78_corpus_check.py --descriptor ... --verify-rows` 实测 `ready=true`、`rows.ok=true`、`problems=[]`；只补 3 个 episode 文件前则准确报 `episode cache lacks episodes.json/boards.npy/scalars.npy` 并拒绝。说明行级门**不会**把格式正确、行数正确的语料误判为坏语料（这是真语料到位时最可能踩的坑），同时缺件仍 fail-closed。合成件只在 /tmp，未进仓库、未进监控器路径，验证后已删除。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。
