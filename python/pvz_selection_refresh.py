@@ -19,10 +19,10 @@ import json
 from pathlib import Path
 
 SELECTION_POOLS = ((130_000_000, 140_000_000),)
-SELECTION_BLOCK_SIZE = 384
+SELECTION_BLOCK_SIZE = 512
 SELECTION_LEDGER = Path.home() / 'pvz-logs/selection_seed_ledger.json'
 RANDOM_TASKS = ('day_l7_train_rand', 'night_l12_train_rand', 'pool_l21_train_rand')
-PANEL_VERSION = 'selection-task128-v4'
+PANEL_VERSION = 'selection-task136-v5'
 GATE_PANEL_VERSION = 'v5'
 
 
@@ -91,24 +91,33 @@ def make_plan(templates, block, incumbent):
     tasks = [copy.deepcopy(task) for task in templates['tasks']]
     if not tasks:
         raise ValueError('selection panel is empty')
-    count = SELECTION_BLOCK_SIZE // len(tasks)
-    if count < 1 or block[1] - block[0] != SELECTION_BLOCK_SIZE:
-        raise ValueError('selection tasks exceed the 384-game budget or block size is invalid')
-    for index, task in enumerate(tasks):
-        start = block[0] + index * count
-        task['seeds'] = list(range(start, start + count))
+    current = templates['panel_version'] == PANEL_VERSION
+    budget = SELECTION_BLOCK_SIZE if current else 384
+    count = 8 if current else budget // len(tasks)
+    if count < 1 or block[1] - block[0] != budget:
+        raise ValueError('selection tasks exceed the seed budget or block size is invalid')
+    cursor = block[0]
+    for task in tasks:
+        games = 16 if (current and task.get('selection_group') == 'adventure'
+                       and task['terrain'] == 'day') else count
+        task['seeds'] = list(range(cursor, cursor + games))
+        cursor += games
         if 'deck_random' in task:
             task['splits'] = dict(selection=task['seeds'])
+    if cursor > block[1]:
+        raise ValueError('selection tasks exceed the seed budget')
     return dict(schema_version=1, panel_version=templates['panel_version'], tasks=tasks,
                 incumbent=str(incumbent), incumbent_sha256=sha(incumbent),
                 seed_block=list(block), games_per_cell=count,
+                games_per_task={task['task_id']: len(task['seeds']) for task in tasks},
                 score_only=[task['task_id'] for task in tasks if task.get('score_only')],
                 selection_holdout_tasks=[task['task_id'] for task in tasks
                                          if task.get('selection_group') == 'unseen_deck'],
                 adventure_tasks=[task['task_id'] for task in tasks
                                  if task.get('selection_group') == 'adventure'],
-                purpose='adventure levels of the gate-v5 panel on independent seeds; equal games per task; '
-                        'unseen-deck cells are recorded but never scored')
+                purpose=('adventure levels of the gate-v5 panel on independent seeds; '
+                         + ('ordinary day levels take 16 games, other tasks 8; ' if current else 'equal games per task; ')
+                         + 'unseen-deck cells are recorded but never scored'))
 
 
 def validate_random_tasks(panel, env):

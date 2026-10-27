@@ -37,13 +37,29 @@ def test_adventure_body_and_score_only_unseen_decks(tmp_path):
     model.write_bytes(b'incumbent')
     block = (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE)
     panel = make_plan(templates, block, model)
-    assert panel['panel_version'] == 'selection-task128-v4'
+    assert panel['panel_version'] == 'selection-task136-v5'
     assert len(panel['tasks']) == 43 and len(panel['adventure_tasks']) == 38
-    assert {len(t['seeds']) for t in panel['tasks']} == {SELECTION_BLOCK_SIZE // 43}
-    assert sum(len(t['seeds']) for t in panel['tasks']) <= SELECTION_BLOCK_SIZE
+    day = [t for t in panel['tasks'] if t.get('selection_group') == 'adventure' and t['terrain'] == 'day']
+    assert len(day) == 9 and all(len(t['seeds']) == 16 for t in day)
+    assert all(len(t['seeds']) == 8 for t in panel['tasks'] if t not in day)
+    assert sum(len(t['seeds']) for t in panel['tasks']) == 416 <= SELECTION_BLOCK_SIZE
+    assert panel['games_per_task'] == {t['task_id']: len(t['seeds']) for t in panel['tasks']}
     assert panel['score_only'] == panel['selection_holdout_tasks'] == [t['task_id'] for t in holds]
     assert_disjoint(panel, [(31024, 65536), (100_000_000, 101_000_000),
                             (103_000_000, 103_500_000), (200_000_000, 201_000_000)])
+
+
+def test_frozen_task128_selection_plan_retains_its_original_384_seed_block(tmp_path):
+    templates = selection_templates(HOLDOUT, ROOT / 'configs/gate_v5_panel.json')
+    templates['panel_version'] = 'selection-task128-v4'
+    model = tmp_path / 'model.pt'
+    model.write_bytes(b'incumbent')
+    start = SELECTION_POOLS[0][0]
+    panel = make_plan(templates, (start, start + 384), model)
+    assert panel['panel_version'] == 'selection-task128-v4'
+    assert all(len(task['seeds']) == 8 for task in panel['tasks'])
+    assert panel['tasks'][0]['seeds'] == list(range(start, start + 8))
+    assert panel['tasks'][-1]['seeds'] == list(range(start + 42 * 8, start + 43 * 8))
 
 
 def test_selection_requires_the_gate_v5_adventure_panel(tmp_path):

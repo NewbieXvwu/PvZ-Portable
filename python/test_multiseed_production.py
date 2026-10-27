@@ -166,11 +166,12 @@ def test_consecutive_rounds_score_the_adventure_body_on_disjoint_seeds(tmp_path)
     templates = selection_templates(ROOT / 'configs/student_selection_holdout.json',
                                     ROOT / 'configs/gate_v5_panel.json')
     ledger = tmp_path / 'ledger.json'
-    first = make_plan(templates, allocate_seed_block(ledger, 384, pools=SELECTION_POOLS), model)
-    second = make_plan(templates, allocate_seed_block(ledger, 384, pools=SELECTION_POOLS), model)
+    first = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
+    second = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
     assert len(first['adventure_tasks']) == 38
     assert len(first['tasks']) == 43                      # 38 adventure + 3 random + 2 unseen
-    assert {len(task['seeds']) for task in first['tasks']} == {384 // 43}
+    assert {len(task['seeds']) for task in first['tasks']} == {8, 16}
+    assert sum(len(task['seeds']) for task in first['tasks']) == 416
     assert_disjoint(first, list(seed_spans(second)))
     assert first['score_only'] == first['selection_holdout_tasks']
 
