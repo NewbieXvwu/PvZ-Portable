@@ -45,6 +45,17 @@ def scan_finished(entry, out, tasks):
     return spec.get('archive') == entry['archive'] and spec.get('decisions') == ladder['ladder']
 
 
+def record_input(path, out):
+    if not path.is_file():
+        return
+    stat = path.stat()
+    identity = dict(path=str(path.resolve()), size=stat.st_size, mtime_ns=stat.st_mtime_ns)
+    receipt = out / 'input_receipt.json'
+    previous = json.loads(receipt.read_text()) if receipt.exists() else {}
+    if previous.get('identity') != identity:
+        save(receipt, dict(identity=identity, sha256=file_sha(path)))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', type=Path)
@@ -79,6 +90,7 @@ def main():
     run('import', [sys.executable, str(ROOT / 'scripts/import_llm_run.py'), str(args.input),
                    '--content-addressed', '--dest', str(out / 'import'), '--executable', str(ENGINE),
                    '--report', str(out / 'import_report.md'), '--scan-out', str(out / 'scan_jobs.json')], (0, 1))
+    record_input(args.input, out)
     rows = json.loads((out / 'import/import_progress.json').read_text())['archives']
     plan = json.loads((out / 'scan_jobs.json').read_text())
     completed = []

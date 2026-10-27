@@ -67,8 +67,13 @@ def collect():
                                   model='r11 + v5 + branch1', source='task105 deploy14 adaptive top')
     evidence_path = ROOT / 'MEMORY/docs/task105-import-evidence.json'
     previous = json.loads(evidence_path.read_text()) if evidence_path.exists() else {}
+    input_receipt = out / 'input_receipt.json'
+    source = json.loads(input_receipt.read_text()) if input_receipt.exists() else {}
     result = dict(schema='task105_results_v1', generated=dt.datetime.now(dt.timezone.utc).isoformat(),
-                  input_sha256=previous.get('input_sha256'), engine_sha256=ENGINE_SHA,
+                  input_sha256=source.get('sha256', previous.get('input_sha256')),
+                  initial_input_sha256=previous.get('initial_input_sha256', previous.get('input_sha256')),
+                  input_path=source.get('identity', {}).get('path', previous.get('input_path')),
+                  engine_sha256=ENGINE_SHA,
                   archives=len(rows), verified=sum(r['verify'] == '通过' for r in rows),
                   rejected=sum(r['verify'] in ('失败', '拒绝') for r in rows), tasks=summary, scans=scans,
                   scan_expected=len(plan['archives']), scanned=len(scans),

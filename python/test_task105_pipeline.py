@@ -54,3 +54,16 @@ class ResumeTest(unittest.TestCase):
             for complete in (False, True):
                 (self.out / 'delivery_summary.json').write_text(json.dumps(dict(complete=complete)))
                 self.assertEqual(supervisor.state(), 'complete' if complete else 'incomplete')
+
+    def test_input_receipt_hashes_only_when_input_changes(self):
+        source = self.out / 'run.zip'
+        source.write_bytes(b'first')
+        with patch.object(pipeline, 'file_sha', return_value='sha-first') as digest:
+            pipeline.record_input(source, self.out)
+            pipeline.record_input(source, self.out)
+            digest.assert_called_once_with(source)
+        source.write_bytes(b'updated-run')
+        with patch.object(pipeline, 'file_sha', return_value='sha-updated') as digest:
+            pipeline.record_input(source, self.out)
+            digest.assert_called_once_with(source)
+        self.assertEqual(json.loads((self.out / 'input_receipt.json').read_text())['sha256'], 'sha-updated')
