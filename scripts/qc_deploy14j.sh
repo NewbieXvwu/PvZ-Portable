@@ -1,15 +1,15 @@
 #!/bin/bash
 # task134: prepared for the controller; do not execute during delivery.
-# Overlay only curriculum_queue.py from deploy14i. Keep all current mode files.
+# Overlay only curriculum_queue.py over deploy14i with its 3 GiB reserve hotfix.
 # start_qc is copied verbatim from the current ~/pvz-logs/qc_deploy15.sh.
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
 PACKAGE=$R/.claude/worktrees/obsup
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=26a80f6674593103f2417ff8a2224d98b0592219
-BASE_SHA=0559cdd4edaeb6bf1f4ccb5d48177fea4676eb5768bac4796d2345f46f17bfb8
-NEW_SHA=195fc4bdc602201170350e45fc5eb81bee93a51919899b9b5e1c3594a23675eb
+REV=cf94a8cb9c4a1b21f495c6facd88589d911ecd77
+BASE_SHA=1b0c62f7f281d5994831a49cb51bfff6f079b2e2963d8ab6bc12c9f425b2d1ea
+NEW_SHA=72e5732db6755798a1ac2206a597e423b6e5a7507170e04df2cf5ea0d6e2a6dd
 NEWEXE=$W/build6/pvz-portable
 EXE15=$PACKAGE/build7/pvz-portable
 MODE14I=/home/newbiexvwu/pvz-logs/qc_deploy14i.mode
@@ -84,7 +84,7 @@ else
   [ -x "$NEWEXE" ]
 fi
 mkdir -p "$O"
-log "preflight passed for deploy14i controller; overlay $REV; no corpus replay or pack warmup"
+log "preflight passed for deploy14i controller with 3 GiB reserve hotfix; overlay $REV; no corpus replay or pack warmup"
 stop_qc; STOPPED=1
 printf '%s  %s\n' "$BASE_SHA" "$CODE" | sha256sum -c -
 cp -p "$CODE" "$BACKUP"; SAVED=1
