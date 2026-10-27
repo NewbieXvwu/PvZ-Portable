@@ -11,10 +11,12 @@ W=$R/.claude/worktrees/cq
 PACKAGE=$R/.claude/worktrees/obsup
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
 REV=e66ee8d6dda4dacde3d2a9d079e73bf5645c3e76
-FILES=(scripts/search_play.py scripts/curriculum_queue.py scripts/growable_pool.py)
+FILES=(scripts/search_play.py scripts/curriculum_queue.py scripts/growable_pool.py
+       python/test_growable_pool.py)
 NEW_SHAS=(4f4ba54165bb6aeeb6fc5e6eeff22bd588e2b9b643fb64798e4130d13382c9f8
           f98df24cbb5d8af69a237df6465da5c2fba77e55b8b231907544fdb7d68c76e9
-          6b9da78bcfd0eb07e8d2c22bbc554f798490d15d443d02e5b363d970af6b99f9)
+          6b9da78bcfd0eb07e8d2c22bbc554f798490d15d443d02e5b363d970af6b99f9
+          77311dfcb63c39e1a9207783c03f1c3af78ad5e6db14ed2b123467c44c335771)
 # What production may be before the switch: deploy14l (task137) or this deploy.
 BASELINE_SEARCH_SHAS=(6f9103447dd4e5d066c6b6b26ff516b7165c3d8a89f4c67ea3cf5f63540acf01
                       4f4ba54165bb6aeeb6fc5e6eeff22bd588e2b9b643fb64798e4130d13382c9f8)
@@ -73,15 +75,22 @@ check_baseline() {
   [ "$accepted" = 1 ] || { log "ABORT: controller sha $current is neither deploy14l nor deploy14m"; return 1; }
 }
 check_new_files() {
-  local index
+  local index blob
   for ((index=0; index<${#FILES[@]}; index++)); do
-    git -C "$W" show "${REV}:${FILES[index]}" | sha256sum | grep -q "^${NEW_SHAS[index]} "
+    blob=$(git -C "$W" show "${REV}:${FILES[index]}" | sha256sum | cut -d' ' -f1)
+    [ "$blob" = "${NEW_SHAS[index]}" ] || {
+      log "ABORT: ${FILES[index]} at ${REV} has sha $blob, expected ${NEW_SHAS[index]}"; return 1; }
   done
+  # The blob, not the installed file: preflight runs before the switch. grep -c reads
+  # the whole stream, so pipefail cannot trip on an early exit.
+  git -C "$W" show "${REV}:scripts/search_play.py" | grep -c -- '--initial-workers' >/dev/null
+  git -C "$W" show "${REV}:scripts/curriculum_queue.py" | grep -c -- 'def growth_args' >/dev/null
+  git -C "$W" show "${REV}:scripts/growable_pool.py" | grep -c -- 'def target_workers' >/dev/null
 }
 # Cheap: the registry check is pure Python, and the pool test uses trivial jobs.
 check_pool() {
-  "$PY" "$W/scripts/search_play.py" --help | grep -q -- '--initial-workers'
-  "$PY" "$W/scripts/curriculum_queue.py" --help | grep -q -- '--extra-manifest'
+  "$PY" "$W/scripts/search_play.py" --help | grep -c -- '--initial-workers' >/dev/null
+  "$PY" "$W/scripts/curriculum_queue.py" --help | grep -c -- '--extra-manifest' >/dev/null
   ( cd "$W" && "$PY" python/test_growable_pool.py ) >/dev/null
 }
 check_extra_panel() {
@@ -164,10 +173,9 @@ else
   [ -x "$NEWEXE" ]
 fi
 check_extra_panel
-check_pool
 log "preflight passed for $REV (pool growth; search_play + controller + growable_pool)"
 stop_qc; STOPPED=1
-mkdir -p "$O/scripts"
+mkdir -p "$O/scripts" "$O/python"
 for file in "${FILES[@]}"; do
   if [ -e "$W/$file" ]; then cp -p "$W/$file" "$O/$file.before"; fi
 done
