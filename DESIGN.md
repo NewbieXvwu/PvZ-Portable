@@ -1489,3 +1489,21 @@ A=`dw4i2`用seed1/2，B=`dw4i2_rebalanced_p05`用seed3/4，目录仍为四个独
 训练串行，沿用task123共享映射与工作集准入，只打包一次。候选失败隔离，已训候选重启复用；
 轮报告逐候选记录配方族/来源、seed、总挑选分、逐任务胜局及换卡组小计，按原总胜局规则挑选，门禁不改。
 未激活和回滚启动参数仍为deploy14g的A+B(p=1)、原开局格、K=2，不开启新选择族。
+
+
+### task132：示范行权重开关（仅代码，2026-10-28）
+
+训练配方增加 `demo_row_weight` 与 `demo_start_row_weight`，均默认1.0，允许非负有限数。
+前者只匹配存档meta的label_source=human；后者匹配teacher（含历史缺省）且demo_archive非空的课程续打。
+不按demo_*任务名或帧目录名猜来源；llm_agent/llm_gpt_pro与counterfactual不自动视为人类操作。
+利用现有包的source/source_archive/source_row回调，不改打包、特征缓存、pack_options或共享合并签名。
+默认不启用来源观察器，不新增元数据I/O或浮点乘法；启用时与已开的关卡计数共用一次meta读取。
+
+顺序：wait保留补偿与label_weight → source_weight → packet_balance（自身20倍cap）→ spread（自身spread_cap）
+→ row_weights行干预 → 关卡平衡（share cap、power、max_multiplier）→ 本任务两个最终来源乘数。
+**示范倍数不参与cap或重新归一化；最终关卡份额可能高于关卡平衡的cap。**
+level_shares.json描述加权之前的关卡平衡阶段；demo_row_weights打印匹配行数与最终乘数。
+验证行与训练行按同一来源规则乘权，切分与行次序不变。
+
+草稿：`recipes/dw4i2_rebalanced_p05_demo4_start2.json`，人类示范×4、示范起点课程×2，
+其余沿用旧配方；不启动训练或部署，由主控另行选实验数据和安排运行。
