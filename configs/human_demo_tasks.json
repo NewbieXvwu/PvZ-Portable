@@ -5836,7 +5836,17 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/43a27d580e94baf2f28434335a57bd098355ec0b89d3752842615ea9c1b5d5aa",
+    "decisions": [
+     965,
+     614
+    ],
+    "index": 0,
+    "future_seed_start": 203000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_42_gloommelon_m200_s81007033_addc40552585a",
