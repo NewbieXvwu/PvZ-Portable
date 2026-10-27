@@ -31,10 +31,10 @@ void EnvironmentValueNet::Load(const std::string& path)
 	input.read(reinterpret_cast<char*>(&version), 4);
 	input.read(reinterpret_cast<char*>(&contextSize), 4);
 	if (!input || std::string(magic, 8) != "PVZVN001" || std::endian::native != std::endian::little ||
-		size < 1 || size > 512 || (version < 1 || version > 3) || (contextSize != 0 && contextSize != TaskContext))
+		size < 1 || size > 512 || (version < 1 || version > 4) || (contextSize != 0 && contextSize != TaskContext))
 		throw std::runtime_error("invalid value network header");
 	const size_t w = size, s = Scalars + (version >= 2 ? 6 : 0) + contextSize;
-	const std::vector<size_t> counts = {w * (Channels + (version == 3 ? 6 : 0)) * 9, w, w * w * 9, w, w * w * 3, w,
+	const std::vector<size_t> counts = {w * (Channels + (version == 4 ? 8 : version == 3 ? 6 : 0)) * 9, w, w * w * 9, w, w * w * 3, w,
 		w * s, w, w * w * 8, w, w, 1};
 	std::vector<std::vector<float>> loaded;
 	for (size_t count : counts)
@@ -58,7 +58,8 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 {
 	Board* state = app->mBoard;
 	b.assign(ChannelCount() * Cells, 0.0f); s.assign(ScalarCount(), 0.0f);
-	if (encoder == 3) EnvironmentRollout::BungeeFeatures(app, b.data() + Channels * Cells);
+	if (encoder >= 3) EnvironmentRollout::BungeeFeatures(app, b.data() + Channels * Cells);
+	if (encoder == 4) EnvironmentRollout::SleepFeatures(app, b.data() + (Channels + 6) * Cells);
 	// numpy's cell += scalar casts each term to float32 first, then accumulates in float32;
 	// rounding the term before the add is what reproduces that bit-exactly.
 	for (const Plant* plant : state->mPlants)

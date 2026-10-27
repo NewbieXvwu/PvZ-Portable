@@ -118,6 +118,7 @@ def featurize_numpy(frame: dict) -> tuple[np.ndarray, np.ndarray]:
 ENCODER_V1 = "pvz_value_net.featurize v1"
 ENCODER_V2 = "pvz_value_net.featurize v2"
 ENCODER_V3 = "pvz_value_net.featurize v3"
+ENCODER_V4 = "pvz_value_net.featurize v4"
 scene_scalar_count = 6  # night, pool, fog, roof, original conveyor, public grave count / 45
 
 
@@ -137,11 +138,20 @@ def bungee_features(frame: dict) -> np.ndarray:
     return board
 
 
+def sleep_features(frame: dict) -> np.ndarray:
+    board = np.zeros((2, ROWS, COLS), dtype=np.float32)
+    for row, col, asleep, wake_up_counter in frame.get('sleep', []):
+        if 0 <= row < ROWS and 0 <= col < COLS - 1:
+            board[0, row, col] = max(float(board[0, row, col]), float(asleep > 0))
+            board[1, row, col] = max(float(board[1, row, col]), float(wake_up_counter > 0))
+    return board
+
+
 def encode_frame(frame: dict, version: int = 1) -> tuple[torch.Tensor, torch.Tensor]:
     """Versioned value-only encoding; existing students keep the frozen v1 entrypoint."""
     if version == 1:
         return featurize(frame)
-    if version not in (2, 3):
+    if version not in (2, 3, 4):
         raise ValueError(f"unknown value encoder version: {version}")
     # Start without packets: negative empty types must never alias global/cooldown scalars.
     board, scalars = featurize_numpy({**frame, "packets": []})
@@ -160,8 +170,10 @@ def encode_frame(frame: dict, version: int = 1) -> tuple[torch.Tensor, torch.Ten
     scene = frame["scene"]
     extra = np.array([float(bool(scene.get(k))) for k in ("night", "pool", "fog", "roof")]
                      + [float(conveyor), len(frame.get("graves", [])) / 45.0], dtype=np.float32)
-    if version == 3:
+    if version >= 3:
         board = np.concatenate([board, bungee_features(frame)])
+    if version == 4:
+        board = np.concatenate([board, sleep_features(frame)])
     return torch.from_numpy(board), torch.from_numpy(np.concatenate([scalars, extra]))
 
 
@@ -220,12 +232,12 @@ class ValueNet(nn.Module):
 
     def __init__(self, width: int = 64, context: bool = False, encoder_version: int = 1):
         super().__init__()
-        if encoder_version not in (1, 2, 3):
+        if encoder_version not in (1, 2, 3, 4):
             raise ValueError(f"unknown value encoder version: {encoder_version}")
         self.encoder_version = encoder_version
         self.context = context        # scalars then carry SCALARS + CONTEXT values
         self.conv = nn.Sequential(
-            nn.Conv2d(BOARD_CHANNELS + (6 if encoder_version == 3 else 0), width, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(BOARD_CHANNELS + (8 if encoder_version == 4 else 6 if encoder_version == 3 else 0), width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 3), padding=(0, 1)), nn.ReLU(),
         )
@@ -247,7 +259,7 @@ def load_value_net(path) -> ValueNet:
     """A value checkpoint in eval mode; ``net.context`` says whether it expects the task context."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     encoder = checkpoint.get("encoder", ENCODER_V1)
-    versions = {ENCODER_V1: 1, ENCODER_V2: 2, ENCODER_V3: 3}
+    versions = {ENCODER_V1: 1, ENCODER_V2: 2, ENCODER_V3: 3, ENCODER_V4: 4}
     if encoder not in versions:
         raise ValueError(f"unsupported value encoder: {encoder!r}")
     net = ValueNet(width=int(checkpoint.get("width", 64)), context=bool(checkpoint.get("context", False)),

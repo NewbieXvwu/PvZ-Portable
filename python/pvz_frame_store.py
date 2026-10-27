@@ -213,7 +213,7 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee"):
+    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep"):
         raise ValueError(f"unknown student observation version: {obs}")
     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared
     # module must not invalidate all historical archives and rewrite every pack.
@@ -227,12 +227,14 @@ def encoder_signature(obs: str = "v1") -> str:
             'v2fogstack4': '072d07ab4bba3b373abe9d09d832c17f4a476c2a49d325b69de2196a1fcd84b5',
             'v2size': '400d14ae3def3b970f2e19593b11c5f0a54a9d00da596fa2f5ce19710be75886',
             'v2boss': 'b5d77ca232300a2d7331ae572ace07ef1c58757f3ef5e2818c3fb5a691df3bc4',
+            'v2bungee': '82609c46ed14655cead5910457ee9c0a627d77948b896c8afef09b012a2bdb6f',
         }
         if obs in frozen:
             return frozen[obs]
     import pvz_student_observation
     return hashlib.sha256((signature + obs + inspect.getsource(pvz_student_observation)
-                           + inspect.getsource(encode_student_frames)).encode()).hexdigest()
+                           + inspect.getsource(encode_student_frames)
+                           + (inspect.getsource(pvz_value_net.sleep_features) if obs == 'v2sleep' else '')).encode()).hexdigest()
 
 
 # LZMA instead of zlib: on a sample of 12 archives, ZIP_LZMA is 59.6% of np.savez_compressed
