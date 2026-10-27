@@ -1,5 +1,6 @@
 """Lossless episode archives with precomputed student training rows."""
 from functools import lru_cache
+from contextlib import contextmanager
 import hashlib
 import inspect
 import io
@@ -336,6 +337,32 @@ def write_frames(path: Path, frames: list[dict]):
           **encode_frames(frames, source))
 
 
+class _ZeroPaddedV2Cache:
+    def __init__(self, stored):
+        self.stored = stored
+
+    def __getitem__(self, name):
+        value = self.stored[name]
+        if name == 'boards':
+            return np.pad(value, ((0, 0), (0, 12), (0, 0), (0, 0)))
+        if name == 'scalars':
+            return np.pad(value, ((0, 0), (0, 2)))
+        return value
+
+
+@contextmanager
+def read_episode_cache(path: Path):
+    """Read ordinary rows or a zero-padding view over an immutable v2 cache."""
+    with np.load(path, allow_pickle=False) as stored:
+        if 'zero_pad_from' not in stored.files:
+            yield stored
+            return
+        with np.load(str(stored['zero_pad_from']), allow_pickle=False) as parent:
+            if str(parent['digest']) != str(stored['parent_digest']):
+                raise ValueError(f'zero-padding cache parent changed: {path}')
+            yield _ZeroPaddedV2Cache(parent)
+
+
 def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: Path | None = None) -> Path:
     signature = encoder_signature(obs)
     base_directory = directory
@@ -356,6 +383,13 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
         if candidate.exists():
             with np.load(candidate, allow_pickle=False) as stored:
                 if str(stored["digest"]) == digest:
+                    if 'zero_pad_from' in stored.files:
+                        parent = Path(str(stored['zero_pad_from']))
+                        if not parent.is_file():
+                            continue
+                        with np.load(parent, allow_pickle=False) as previous:
+                            if str(previous['digest']) != str(stored['parent_digest']):
+                                continue
                     return candidate
     # Old v2 archives have none of the newly observed fields. Reuse their
     # already encoded rows, adding zero channels, instead of featurizing every
@@ -372,10 +406,9 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
             with np.load(candidate, allow_pickle=False) as stored:
                 if str(stored['digest']) != old_digest:
                     continue
-                encoded = {name: stored[name] for name in stored.files if name != 'digest'}
-            encoded['boards'] = np.pad(encoded['boards'], ((0, 0), (0, 12), (0, 0), (0, 0)))
-            encoded['scalars'] = np.pad(encoded['scalars'], ((0, 0), (0, 2)))
-            _save(target, digest=digest, **encoded)
+            # A small view avoids recompressing all dense historical boards.
+            # The old cache remains untouched; absent/changed parents rebuild.
+            _save(target, digest=digest, zero_pad_from=str(candidate.resolve()), parent_digest=old_digest)
             return target
     frames = [json.loads(line) for line in source.splitlines()]
     encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)

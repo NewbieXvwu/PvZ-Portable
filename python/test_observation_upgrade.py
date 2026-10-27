@@ -75,8 +75,43 @@ def test_sleep_cache_reuses_only_missing_field_v2_rows(tmp_path, monkeypatch, ne
     monkeypatch.setattr(store, 'encode_student_frames', encode)
     upgraded = store.cache_episode(path, tmp_path / 'cache', 'v2sleep')
     assert calls == (['v2sleep'] if new_fields else [])
-    with np.load(upgraded, allow_pickle=False) as actual:
+    with store.read_episode_cache(upgraded) as actual:
         for name, array in expected.items():
             np.testing.assert_array_equal(actual[name], array)
+    with np.load(upgraded, allow_pickle=False) as actual:
+        assert ('zero_pad_from' in actual.files) is not new_fields
     assert old.exists() and old != upgraded
     assert store.cache_episode(path, tmp_path / 'cache', 'v2sleep') == upgraded
+
+
+def test_curriculum_recipe_trains_one_step_from_old_parent(tmp_path, monkeypatch):
+    import train_rollout_policy as trainer
+    from pvz_frame_store import write_frames, cache_episode
+    from pvz_recipe import write_recipe
+    from pack_training_rows import packed_load
+    from test_bungee_inputs import frame
+
+    old = RolloutNet(8, 'meanmax', False, 'v2', row_pool=True, packet_head='identity')
+    parent = tmp_path / 'parent.pt'
+    torch.save(dict(state_dict=old.state_dict(), pool='meanmax', obs='v2', row_pool=True,
+                    packet_head='identity'), parent)
+    for seed in (30000, 30001):
+        first = frame()
+        first.pop('bungee')
+        second = copy.deepcopy(first)
+        second.update(tick=160, action=dict(type='wait', ticks=60))
+        path = tmp_path / f'data/seed_{seed}/example/frames.npz'
+        write_frames(path, [first, second])
+        cache_episode(path, tmp_path / 'cache', 'v2')
+    packed_load(tmp_path / 'data', {'example'}, obs='v2sleep', packet_head='identity',
+                cache_dir=tmp_path / 'cache')
+    recipe = tmp_path / 'recipe.json'
+    write_recipe(recipe, dict(schema_version=1, kind='training', data=str(tmp_path / 'data'),
+        labels=['example'], out=str(tmp_path / 'out'), init=str(parent), obs='v2sleep',
+        width=8, pool='meanmax', row_pool=True, packet_head='identity', device='cpu',
+        epochs=1, max_steps=1, validation=dict(seed=0, fraction=.5)))
+    monkeypatch.setattr(sys, 'argv', ['train_rollout_policy.py', '--recipe', str(recipe)])
+    trainer.main()
+    checkpoint = torch.load(tmp_path / 'out/model.pt', weights_only=False)
+    assert checkpoint['obs'] == 'v2sleep'
+    assert checkpoint['state_dict']['trunk.0.weight'].shape[1] == 113
