@@ -1,5 +1,7 @@
 # task125：第 21 轮学生 heldout −33pp 的根因（紧急）
 
+> Codex最终补充与因果边界见[首处分叉和同种子补测](task125-heldout-followup.md)，数值及42条受影响源行见[结论层JSON](task125-heldout-evidence.json)。本页早期“完全排除打包因果影响”“−33pp唯一归因于种子”等绝对表述，以补充中的限定结论为准：未发现新增打包回归，旧代码下已出现弱模型；各训练因素的贡献未通过控制重训分离。r21候选池为A/seed1与B/seed2，并非A配方两个种子。
+
 主控 2026-10-27 09:15 派给台式机 codexb-task93（Business）。只读生产文件，不动 tmux qc；分支 `heldout21`，基于 `origin/deploy14f`。
 
 ## 现象

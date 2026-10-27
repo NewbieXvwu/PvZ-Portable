@@ -1,0 +1,1659 @@
+{
+  "pack": {
+    "label": "c18demoroof48doomm200s1100_fast_search",
+    "archives": 24,
+    "rows": 84,
+    "old_plane_ids": 72,
+    "new_plane_ids": 84,
+    "changed_rows": [
+      12,
+      13,
+      14,
+      15,
+      19,
+      20,
+      21,
+      22,
+      29,
+      30,
+      31,
+      32,
+      39,
+      40,
+      41,
+      42,
+      46,
+      47,
+      48,
+      49,
+      50,
+      51,
+      52,
+      53,
+      54,
+      55,
+      56,
+      57,
+      58,
+      59,
+      60,
+      61,
+      62,
+      72,
+      73,
+      74,
+      75,
+      76,
+      80,
+      81,
+      82,
+      83
+    ],
+    "changed_cells": 4326,
+    "changed_channels": [
+      1,
+      33,
+      39,
+      44,
+      89,
+      91,
+      93,
+      94
+    ],
+    "equal": {
+      "scalar": true,
+      "plant": true,
+      "packet": true,
+      "cell": true,
+      "weight": true,
+      "seed": true,
+      "packet_columns": true,
+      "source_rows": true,
+      "production_repaired_board": true,
+      "csr_indices": true,
+      "csr_values": true,
+      "plane_values": true
+    },
+    "changed_sources": [
+      {
+        "source": "seed_20261048_f45100004/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 12
+      },
+      {
+        "source": "seed_20261048_f45100004/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 4,
+        "packed_row": 13
+      },
+      {
+        "source": "seed_20261048_f45100004/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 14
+      },
+      {
+        "source": "seed_20261048_f45100004/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 15
+      },
+      {
+        "source": "seed_20261048_f45100006/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 19
+      },
+      {
+        "source": "seed_20261048_f45100006/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 5,
+        "packed_row": 20
+      },
+      {
+        "source": "seed_20261048_f45100006/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 21
+      },
+      {
+        "source": "seed_20261048_f45100006/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 22
+      },
+      {
+        "source": "seed_20261048_f45100009/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 29
+      },
+      {
+        "source": "seed_20261048_f45100009/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 4,
+        "packed_row": 30
+      },
+      {
+        "source": "seed_20261048_f45100009/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 31
+      },
+      {
+        "source": "seed_20261048_f45100009/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 32
+      },
+      {
+        "source": "seed_20261048_f45100012/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 39
+      },
+      {
+        "source": "seed_20261048_f45100012/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 2,
+        "packed_row": 40
+      },
+      {
+        "source": "seed_20261048_f45100012/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 41
+      },
+      {
+        "source": "seed_20261048_f45100012/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 42
+      },
+      {
+        "source": "seed_20261048_f45100014/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 46
+      },
+      {
+        "source": "seed_20261048_f45100014/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 6,
+        "packed_row": 47
+      },
+      {
+        "source": "seed_20261048_f45100014/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 48
+      },
+      {
+        "source": "seed_20261048_f45100014/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 49
+      },
+      {
+        "source": "seed_20261048_f45100015/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 50
+      },
+      {
+        "source": "seed_20261048_f45100015/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 5,
+        "packed_row": 51
+      },
+      {
+        "source": "seed_20261048_f45100015/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 6,
+        "packed_row": 52
+      },
+      {
+        "source": "seed_20261048_f45100015/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 53
+      },
+      {
+        "source": "seed_20261048_f45100015/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 54
+      },
+      {
+        "source": "seed_20261048_f45100016/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 55
+      },
+      {
+        "source": "seed_20261048_f45100016/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 5,
+        "packed_row": 56
+      },
+      {
+        "source": "seed_20261048_f45100016/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 57
+      },
+      {
+        "source": "seed_20261048_f45100016/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 58
+      },
+      {
+        "source": "seed_20261048_f45100017/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 59
+      },
+      {
+        "source": "seed_20261048_f45100017/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 6,
+        "packed_row": 60
+      },
+      {
+        "source": "seed_20261048_f45100017/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 61
+      },
+      {
+        "source": "seed_20261048_f45100017/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 62
+      },
+      {
+        "source": "seed_20261048_f45100021/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 72
+      },
+      {
+        "source": "seed_20261048_f45100021/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 2,
+        "packed_row": 73
+      },
+      {
+        "source": "seed_20261048_f45100021/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 5,
+        "packed_row": 74
+      },
+      {
+        "source": "seed_20261048_f45100021/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 75
+      },
+      {
+        "source": "seed_20261048_f45100021/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 76
+      },
+      {
+        "source": "seed_20261048_f45100023/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 1,
+        "packed_row": 80
+      },
+      {
+        "source": "seed_20261048_f45100023/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 3,
+        "packed_row": 81
+      },
+      {
+        "source": "seed_20261048_f45100023/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 7,
+        "packed_row": 82
+      },
+      {
+        "source": "seed_20261048_f45100023/c18demoroof48doomm200s1100_fast_search/frames.npz",
+        "source_row": 8,
+        "packed_row": 83
+      }
+    ],
+    "first_difference": {
+      "index": [
+        12,
+        1,
+        0,
+        0
+      ],
+      "old": 0.0,
+      "new": 1.0
+    },
+    "production_path": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/segments/ce3ce4006691a0e1.npz",
+    "production_sha256": "20a692b40f9d32d921cfe07c728433ca8aa12030e26440812e1be2d60911b0a7",
+    "old_class_revision": "88cb4310^",
+    "new_class_revision": "ad651176",
+    "engine_processes_started": 0,
+    "training_runs_started": 0,
+    "production_files_written": 0
+  },
+  "common_sample": {
+    "label": "c10d7d7qm100_fast_search",
+    "source": "seed_2500528/c10d7d7qm100_fast_search/frames.npz",
+    "rows": 233,
+    "equal": {
+      "board": true,
+      "scalar": true,
+      "plant": true,
+      "packet": true,
+      "cell": true,
+      "weight": true,
+      "seed": true,
+      "packet_columns": true,
+      "source_rows": true
+    },
+    "old_board_plane_dtype": "float16",
+    "new_board_plane_dtype": "float16",
+    "first_difference": null
+  },
+  "metadata": {
+    "observed": "2026-10-27T09:17:46.380926+08:00",
+    "method": "NPY headers and small per-label metadata only; no CSR payload reads",
+    "rounds": {
+      "11": {
+        "labels": 348,
+        "rows": 16982931,
+        "segments": 348,
+        "bad_headers": [],
+        "bad_label_present": false,
+        "bad_label_source_counts": {
+          "round_000011/student/source_rows.json": null
+        },
+        "pack_log": [
+          "{\"pack\": \"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/7d15b915a2192805.npz\", \"rows\": 16982931, \"built\": 21, \"reused\": 327, \"workers\": 4, \"seconds\": 332.107}",
+          "{\"pruned\": [\"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/077991a0d364578e.npz\"]}"
+        ],
+        "recipe_sha256": "56512928694e5dd99e1bd01bfcd18b73f8de0e06d414f1755cc646e9aaa11427",
+        "model": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+        "model_sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+        "selection_best": null,
+        "candidates": []
+      },
+      "20": {
+        "labels": 513,
+        "rows": 18811791,
+        "segments": 513,
+        "bad_headers": [],
+        "bad_label_present": true,
+        "bad_label_source_counts": {
+          "round_000020/seeds/seed_000001/student/source_rows.json": {
+            "archives": 24,
+            "rows": 84,
+            "training_rows": 75,
+            "validation_rows": 9
+          },
+          "round_000020/seeds/seed_000002/student/source_rows.json": {
+            "archives": 24,
+            "rows": 84,
+            "training_rows": 75,
+            "validation_rows": 9
+          }
+        },
+        "pack_log": [
+          "{\"pack\": \"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/2d00e33ea8bbd0e1.npz\", \"rows\": 18811791, \"built\": 16, \"reused\": 497, \"workers\": 1, \"seconds\": 1299.469}",
+          "{\"pruned\": [\"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/770357355897a87a.npz\"]}"
+        ],
+        "recipe_sha256": "779b9e3ff2fe30e4c94c0507138cdf5cadc3965cf6afcc974da4caf1cab7e5a5",
+        "model": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/student/model.pt",
+        "model_sha256": "35b6d24ddbcbbd1fe103bc56a0d30d4effa86fb57fb19f54ff25a3d32d8a6025",
+        "selection_best": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/seeds/seed_000002/student/model.pt",
+        "candidates": [
+          {
+            "seed": 1,
+            "model_sha256": "d7366269437362a6cd96ce99b1662378e468d34b16ca69b970f170ead65f09da",
+            "source_recipe": null
+          },
+          {
+            "seed": 2,
+            "model_sha256": "35b6d24ddbcbbd1fe103bc56a0d30d4effa86fb57fb19f54ff25a3d32d8a6025",
+            "source_recipe": null
+          }
+        ]
+      },
+      "21": {
+        "labels": 613,
+        "rows": 19649496,
+        "segments": 613,
+        "bad_headers": [],
+        "bad_label_present": true,
+        "bad_label_source_counts": {
+          "round_000021/seeds/seed_000001/student/source_rows.json": {
+            "archives": 24,
+            "rows": 84,
+            "training_rows": 67,
+            "validation_rows": 17
+          },
+          "round_000021/seeds/seed_000002/student/source_rows.json": {
+            "archives": 24,
+            "rows": 84,
+            "training_rows": 67,
+            "validation_rows": 17
+          }
+        },
+        "pack_log": [
+          "{\"pack\": \"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/bb494900aa86a549.npz\", \"rows\": 19649496, \"built\": 101, \"reused\": 512, \"workers\": 3, \"seconds\": 1208.743}",
+          "{\"pruned\": [\"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/2d00e33ea8bbd0e1.npz\"]}"
+        ],
+        "recipe_sha256": "246c528fa6bc0898a26dd21487ece01dfb3dc2f0e7fe3df0bab9e9a70048fc30",
+        "model": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/student/model.pt",
+        "model_sha256": "6ee39ee707d4ee83763623fe99b6ea0065938a638d5d032f91180230f8065df9",
+        "selection_best": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/seeds/seed_000001/student/model.pt",
+        "candidates": [
+          {
+            "seed": 1,
+            "model_sha256": "6ee39ee707d4ee83763623fe99b6ea0065938a638d5d032f91180230f8065df9",
+            "source_recipe": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/dw4i2.json"
+          },
+          {
+            "seed": 2,
+            "model_sha256": "87aee407560fab5353fb6f47747d676ca127b77a99f476a51634646ef7c3d3e3",
+            "source_recipe": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/recipes/dw4i2_rebalanced.json"
+          }
+        ]
+      },
+      "22": {
+        "labels": 641,
+        "rows": 19799497,
+        "segments": 641,
+        "bad_headers": [],
+        "bad_label_present": true,
+        "bad_label_source_counts": {
+          "round_000022/seeds/seed_000001/student/source_rows.json": {
+            "archives": 24,
+            "rows": 84,
+            "training_rows": 81,
+            "validation_rows": 3
+          }
+        },
+        "pack_log": [
+          "{\"pack\": \"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/60c85378e76d973a.npz\", \"rows\": 19799497, \"built\": 28, \"reused\": 613, \"workers\": 3, \"seconds\": 250.59}",
+          "{\"pruned\": [\"/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/bb494900aa86a549.npz\"]}"
+        ],
+        "recipe_sha256": "28bbbbe94229e7e3399cc35ee92e182f412a4306ba90be43f8dd84c01189b7b6"
+      }
+    },
+    "added_labels": 100,
+    "added_by_round": {
+      "c13": {
+        "labels": 16,
+        "rows": 207300
+      },
+      "c21": {
+        "labels": 59,
+        "rows": 473266
+      },
+      "c20": {
+        "labels": 17,
+        "rows": 101397
+      },
+      "c14": {
+        "labels": 2,
+        "rows": 12594
+      },
+      "c18": {
+        "labels": 2,
+        "rows": 1061
+      },
+      "c19": {
+        "labels": 2,
+        "rows": 18953
+      },
+      "c6": {
+        "labels": 2,
+        "rows": 23134
+      }
+    },
+    "old_segments_modified_since_r21_pack": [
+      {
+        "label": "c18demoroof48doomm200s1100_fast_search",
+        "segment": "ce3ce4006691a0e1.npz",
+        "rows": 84,
+        "mtime": 1793038505.9018953,
+        "descriptors": {
+          "board": {
+            "ids": 84,
+            "planes": 1,
+            "values_dtype": "float16",
+            "dtype": "float16",
+            "valid_shape": true,
+            "valid_dtype": true
+          },
+          "scalar": {
+            "ids": 84,
+            "planes": 0,
+            "values_dtype": "float32",
+            "dtype": "float32",
+            "valid_shape": true,
+            "valid_dtype": true
+          }
+        }
+      }
+    ],
+    "old_common_unmodified": 512
+  },
+  "heldout": {
+    "tasks": {
+      "day_l7_eval_d7p_holdout1": {
+        "harm": 146,
+        "gain": 5,
+        "sides": {
+          "candidate": {
+            "wins": 31,
+            "harm_pair_planted_types": {
+              "0": 280,
+              "1": 2036,
+              "3": 1459,
+              "27": 3558,
+              "32": 1346
+            },
+            "loss_waves": {
+              "20": 5,
+              "15": 15,
+              "10": 9,
+              "13": 13,
+              "19": 14,
+              "9": 4,
+              "25": 2,
+              "16": 5,
+              "28": 3,
+              "17": 10,
+              "18": 6,
+              "12": 11,
+              "22": 3,
+              "14": 8,
+              "11": 8,
+              "30": 13,
+              "24": 7,
+              "27": 3,
+              "23": 9,
+              "21": 6,
+              "29": 4,
+              "26": 2,
+              "8": 1
+            }
+          },
+          "incumbent": {
+            "wins": 172,
+            "harm_pair_planted_types": {
+              "1": 1545,
+              "3": 1574,
+              "27": 2754,
+              "32": 5147,
+              "0": 118
+            },
+            "loss_waves": {
+              "26": 1,
+              "29": 4,
+              "30": 11,
+              "28": 1,
+              "27": 1,
+              "21": 1,
+              "25": 1
+            }
+          }
+        }
+      },
+      "day_l9_eval_d7p_holdout2": {
+        "harm": 12,
+        "gain": 25,
+        "sides": {
+          "candidate": {
+            "wins": 175,
+            "harm_pair_planted_types": {
+              "1": 132,
+              "2": 60,
+              "3": 90,
+              "4": 109,
+              "5": 60,
+              "7": 115,
+              "38": 219
+            },
+            "loss_waves": {
+              "29": 5,
+              "30": 7,
+              "16": 1,
+              "22": 1,
+              "27": 1,
+              "17": 1,
+              "26": 1
+            }
+          },
+          "incumbent": {
+            "wins": 162,
+            "harm_pair_planted_types": {
+              "1": 128,
+              "2": 65,
+              "3": 62,
+              "4": 67,
+              "5": 66,
+              "7": 147,
+              "38": 202
+            },
+            "loss_waves": {
+              "28": 2,
+              "18": 1,
+              "30": 15,
+              "25": 1,
+              "22": 2,
+              "29": 5,
+              "27": 2,
+              "23": 2
+            }
+          }
+        }
+      },
+      "day_l7_eval_d7": {
+        "harm": 18,
+        "gain": 18,
+        "sides": {
+          "candidate": {
+            "wins": 171,
+            "harm_pair_planted_types": {
+              "0": 244,
+              "1": 208,
+              "2": 28,
+              "3": 13,
+              "4": 64,
+              "5": 33,
+              "7": 24
+            },
+            "loss_waves": {
+              "29": 8,
+              "30": 12,
+              "28": 1
+            }
+          },
+          "incumbent": {
+            "wins": 171,
+            "harm_pair_planted_types": {
+              "0": 216,
+              "1": 226,
+              "2": 67,
+              "4": 71,
+              "5": 59,
+              "7": 74,
+              "3": 27
+            },
+            "loss_waves": {
+              "30": 10,
+              "28": 2,
+              "29": 7,
+              "27": 2
+            }
+          }
+        }
+      }
+    },
+    "trace_reproduction": [
+      {
+        "task": "day_l7_eval_d7p_holdout1",
+        "side": "candidate",
+        "seed": 45488,
+        "equal": {
+          "won": true,
+          "final_wave": true,
+          "final_tick": true,
+          "decisions": true,
+          "state_hash": true,
+          "planted_types": true
+        },
+        "outcome": {
+          "won": false,
+          "final_wave": 20,
+          "final_tick": 42070,
+          "decisions": 766
+        },
+        "frames_sha256": "6ba6fb0e1f33b9d7770c803564f35e1162c9ca19d0588fdcee54162ee81dd927"
+      },
+      {
+        "task": "day_l7_eval_d7p_holdout1",
+        "side": "candidate",
+        "seed": 45489,
+        "equal": {
+          "won": true,
+          "final_wave": true,
+          "final_tick": true,
+          "decisions": true,
+          "state_hash": true,
+          "planted_types": true
+        },
+        "outcome": {
+          "won": false,
+          "final_wave": 15,
+          "final_tick": 39675,
+          "decisions": 721
+        },
+        "frames_sha256": "aef27899a57ec321fd31c70513640eae6092c45f3826992e35e6736e294cee73"
+      },
+      {
+        "task": "day_l7_eval_d7p_holdout1",
+        "side": "incumbent",
+        "seed": 45488,
+        "equal": {
+          "won": true,
+          "final_wave": true,
+          "final_tick": true,
+          "decisions": true,
+          "state_hash": true,
+          "planted_types": true
+        },
+        "outcome": {
+          "won": true,
+          "final_wave": 30,
+          "final_tick": 65992,
+          "decisions": 1187
+        },
+        "frames_sha256": "574df7d9df953fde027d9bf297e2b5681ebca46caf1ac05a6a4361b68af6a45d"
+      },
+      {
+        "task": "day_l7_eval_d7p_holdout1",
+        "side": "incumbent",
+        "seed": 45489,
+        "equal": {
+          "won": true,
+          "final_wave": true,
+          "final_tick": true,
+          "decisions": true,
+          "state_hash": true,
+          "planted_types": true
+        },
+        "outcome": {
+          "won": true,
+          "final_wave": 30,
+          "final_tick": 66995,
+          "decisions": 1200
+        },
+        "frames_sha256": "82abed5886070fd167831c9ac1e26804cdb83fb089916d13ea5710bc3c06ebae"
+      },
+      {
+        "task": "day_l9_eval_d7p_holdout2",
+        "side": "candidate",
+        "seed": 45694,
+        "equal": {
+          "won": true,
+          "final_wave": true,
+          "final_tick": true,
+          "decisions": true,
+          "state_hash": true,
+          "planted_types": true
+        },
+        "outcome": {
+          "won": false,
+          "final_wave": 29,
+          "final_tick": 60763,
+          "decisions": 1071
+        },
+        "frames_sha256": "837df676b3d870ec3e8194027e035431b02fd7043511106fc53702be7f3d50af"
+      },
+      {
+        "task": "day_l9_eval_d7p_holdout2",
+        "side": "incumbent",
+        "seed": 45694,
+        "equal": {
+          "won": true,
+          "final_wave": true,
+          "final_tick": true,
+          "decisions": true,
+          "state_hash": true,
+          "planted_types": true
+        },
+        "outcome": {
+          "won": true,
+          "final_wave": 30,
+          "final_tick": 67046,
+          "decisions": 1169
+        },
+        "frames_sha256": "1b103ba0b681438732453332505580711f60fef56a61958428210845bddd6489"
+      }
+    ],
+    "first_action_differences": [
+      {
+        "task": "day_l7_eval_d7p_holdout1",
+        "seed": 45488,
+        "decision": 29,
+        "tick": 1560,
+        "wave": 0,
+        "sun": 75,
+        "candidate": {
+          "type": "plant",
+          "packet": 1,
+          "col": 0,
+          "row": 4
+        },
+        "incumbent": {
+          "type": "plant",
+          "packet": 1,
+          "col": 0,
+          "row": 0
+        },
+        "same_prior_frame": true
+      },
+      {
+        "task": "day_l7_eval_d7p_holdout1",
+        "seed": 45489,
+        "decision": 33,
+        "tick": 1800,
+        "wave": 1,
+        "sun": 50,
+        "candidate": {
+          "type": "plant",
+          "packet": 1,
+          "col": 0,
+          "row": 4
+        },
+        "incumbent": {
+          "type": "plant",
+          "packet": 1,
+          "col": 0,
+          "row": 0
+        },
+        "same_prior_frame": true
+      },
+      {
+        "task": "day_l9_eval_d7p_holdout2",
+        "seed": 45694,
+        "decision": 15,
+        "tick": 780,
+        "wave": 0,
+        "sun": 50,
+        "candidate": {
+          "type": "plant",
+          "packet": 5,
+          "col": 0,
+          "row": 1
+        },
+        "incumbent": {
+          "type": "plant",
+          "packet": 5,
+          "col": 5,
+          "row": 0
+        },
+        "same_prior_frame": true
+      }
+    ],
+    "shared_state_scores": [
+      {
+        "source": "artifacts/task125/traces/candidate/day_l7_eval_d7p_holdout1/frames/seed_45488/play_fast/frames.npz",
+        "input_frame": 28,
+        "tick": 1560,
+        "wave": 0,
+        "sun": 75,
+        "packets": [
+          [
+            0,
+            0,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            1,
+            1,
+            true,
+            0,
+            750,
+            50
+          ],
+          [
+            2,
+            2,
+            false,
+            1560,
+            3500,
+            150
+          ],
+          [
+            3,
+            27,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            4,
+            5,
+            true,
+            0,
+            0,
+            175
+          ],
+          [
+            5,
+            32,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            6,
+            3,
+            false,
+            1560,
+            2000,
+            50
+          ]
+        ],
+        "models": {
+          "r11": {
+            "plant_logit": 3.3523380756378174,
+            "packet_logits": {
+              "0": -18.147747039794922,
+              "1": -6.116710662841797,
+              "2": -34.747657775878906,
+              "27": -17.353382110595703,
+              "5": -19.80836296081543,
+              "32": -17.276344299316406,
+              "3": -22.498931884765625
+            },
+            "sunflower_r0c0": 45.28931427001953,
+            "sunflower_r4c0": 44.81084442138672,
+            "packet_permutation_max_error": 0.0,
+            "aggregate_permutation_max_error": 0.0
+          },
+          "r21_A": {
+            "plant_logit": 2.723830223083496,
+            "packet_logits": {
+              "0": -33.92713165283203,
+              "1": -21.677459716796875,
+              "2": -51.58125305175781,
+              "27": -31.2489070892334,
+              "5": -35.864723205566406,
+              "32": -31.744808197021484,
+              "3": -38.786903381347656
+            },
+            "sunflower_r0c0": 61.488929748535156,
+            "sunflower_r4c0": 61.70137023925781,
+            "packet_permutation_max_error": 0.0,
+            "aggregate_permutation_max_error": 0.0
+          }
+        }
+      },
+      {
+        "source": "artifacts/task125/traces/incumbent/day_l7_eval_d7p_holdout1/frames/seed_45488/play_fast/frames.npz",
+        "input_frame": 75,
+        "tick": 4140,
+        "wave": 1,
+        "sun": 100,
+        "packets": [
+          [
+            0,
+            0,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            1,
+            1,
+            true,
+            0,
+            750,
+            50
+          ],
+          [
+            2,
+            2,
+            true,
+            0,
+            3500,
+            150
+          ],
+          [
+            3,
+            27,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            4,
+            5,
+            true,
+            0,
+            0,
+            175
+          ],
+          [
+            5,
+            32,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            6,
+            3,
+            false,
+            1020,
+            3000,
+            50
+          ]
+        ],
+        "models": {
+          "r11": {
+            "plant_logit": 4.922685146331787,
+            "packet_logits": {
+              "0": -3.726675033569336,
+              "1": -4.871082305908203,
+              "2": -16.524372100830078,
+              "27": -4.036495208740234,
+              "5": -13.972735404968262,
+              "32": -3.417633056640625,
+              "3": -23.54401397705078
+            },
+            "sunflower_r0c0": 29.73564338684082,
+            "sunflower_r4c0": 30.64202117919922,
+            "packet_permutation_max_error": 0.0,
+            "aggregate_permutation_max_error": 0.0
+          },
+          "r21_A": {
+            "plant_logit": 5.711953163146973,
+            "packet_logits": {
+              "0": -17.867115020751953,
+              "1": -18.346771240234375,
+              "2": -31.740446090698242,
+              "27": -17.78567886352539,
+              "5": -31.828289031982422,
+              "32": -17.908512115478516,
+              "3": -37.40031814575195
+            },
+            "sunflower_r0c0": 45.530494689941406,
+            "sunflower_r4c0": 48.211387634277344,
+            "packet_permutation_max_error": 0.0,
+            "aggregate_permutation_max_error": 0.0
+          }
+        }
+      },
+      {
+        "source": "artifacts/task125/traces/candidate/day_l7_eval_d7p_holdout1/frames/seed_45489/play_fast/frames.npz",
+        "input_frame": 32,
+        "tick": 1800,
+        "wave": 1,
+        "sun": 50,
+        "packets": [
+          [
+            0,
+            0,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            1,
+            1,
+            true,
+            0,
+            750,
+            50
+          ],
+          [
+            2,
+            2,
+            false,
+            1800,
+            3500,
+            150
+          ],
+          [
+            3,
+            27,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            4,
+            5,
+            true,
+            0,
+            0,
+            175
+          ],
+          [
+            5,
+            32,
+            true,
+            0,
+            0,
+            100
+          ],
+          [
+            6,
+            3,
+            false,
+            1800,
+            2000,
+            50
+          ]
+        ],
+        "models": {
+          "r11": {
+            "plant_logit": 4.1869940757751465,
+            "packet_logits": {
+              "0": -17.32288360595703,
+              "1": -5.942935943603516,
+              "2": -34.450191497802734,
+              "27": -16.957172393798828,
+              "5": -19.450101852416992,
+              "32": -16.957988739013672,
+              "3": -21.17499351501465
+            },
+            "sunflower_r0c0": 45.01237869262695,
+            "sunflower_r4c0": 44.766761779785156,
+            "packet_permutation_max_error": 0.0,
+            "aggregate_permutation_max_error": 0.0
+          },
+          "r21_A": {
+            "plant_logit": 2.638124942779541,
+            "packet_logits": {
+              "0": -32.90557098388672,
+              "1": -21.05400848388672,
+              "2": -50.62150573730469,
+              "27": -30.970996856689453,
+              "5": -35.08633804321289,
+              "32": -31.007530212402344,
+              "3": -36.81399917602539
+            },
+            "sunflower_r0c0": 61.37574005126953,
+            "sunflower_r4c0": 61.88962936401367,
+            "packet_permutation_max_error": 0.0,
+            "aggregate_permutation_max_error": 0.0
+          }
+        }
+      }
+    ],
+    "same_first32_seeds": [
+      45488,
+      45489,
+      45490,
+      45491,
+      45492,
+      45493,
+      45494,
+      45495,
+      45496,
+      45497,
+      45498,
+      45499,
+      45500,
+      45501,
+      45502,
+      45503,
+      45504,
+      45505,
+      45506,
+      45507,
+      45508,
+      45509,
+      45510,
+      45511,
+      45512,
+      45513,
+      45514,
+      45515,
+      45516,
+      45517,
+      45518,
+      45519
+    ],
+    "first32_models": {
+      "r11": {
+        "wins": 26,
+        "games": 32,
+        "outcomes": {
+          "45488": true,
+          "45489": true,
+          "45490": true,
+          "45491": true,
+          "45492": true,
+          "45493": false,
+          "45494": true,
+          "45495": true,
+          "45496": true,
+          "45497": false,
+          "45498": true,
+          "45499": true,
+          "45500": true,
+          "45501": true,
+          "45502": true,
+          "45503": true,
+          "45504": false,
+          "45505": true,
+          "45506": true,
+          "45507": true,
+          "45508": true,
+          "45509": true,
+          "45510": false,
+          "45511": true,
+          "45512": false,
+          "45513": true,
+          "45514": true,
+          "45515": false,
+          "45516": true,
+          "45517": true,
+          "45518": true,
+          "45519": true
+        },
+        "games_sha256": "d8b08a53e75315787ad26eee5f32e3b4a5697ba84b4d03633ba31b381f81a0c3"
+      },
+      "r21_A_seed1": {
+        "wins": 5,
+        "games": 32,
+        "outcomes": {
+          "45488": false,
+          "45489": false,
+          "45490": false,
+          "45491": false,
+          "45492": false,
+          "45493": false,
+          "45494": false,
+          "45495": false,
+          "45496": false,
+          "45497": false,
+          "45498": false,
+          "45499": false,
+          "45500": false,
+          "45501": false,
+          "45502": false,
+          "45503": false,
+          "45504": false,
+          "45505": true,
+          "45506": true,
+          "45507": false,
+          "45508": false,
+          "45509": false,
+          "45510": false,
+          "45511": false,
+          "45512": false,
+          "45513": true,
+          "45514": false,
+          "45515": false,
+          "45516": false,
+          "45517": true,
+          "45518": false,
+          "45519": true
+        },
+        "games_sha256": "3448684dda15603685a9993cb63dc43b18f72ecd8719e66e0565584058dff69a"
+      },
+      "round20_seed1": {
+        "wins": 4,
+        "games": 32,
+        "outcomes": {
+          "45488": true,
+          "45489": false,
+          "45490": false,
+          "45491": false,
+          "45492": false,
+          "45493": false,
+          "45494": false,
+          "45495": false,
+          "45496": false,
+          "45497": false,
+          "45498": false,
+          "45499": true,
+          "45500": true,
+          "45501": false,
+          "45502": false,
+          "45503": false,
+          "45504": false,
+          "45505": true,
+          "45506": false,
+          "45507": false,
+          "45508": false,
+          "45509": false,
+          "45510": false,
+          "45511": false,
+          "45512": false,
+          "45513": false,
+          "45514": false,
+          "45515": false,
+          "45516": false,
+          "45517": false,
+          "45518": false,
+          "45519": false
+        },
+        "games_sha256": "0f9e9c40fe7490154f92b1704f066b35037529c3a26997a4976ecbd8628d0bf5"
+      },
+      "round20_seed2": {
+        "wins": 28,
+        "games": 32,
+        "outcomes": {
+          "45488": true,
+          "45489": true,
+          "45490": true,
+          "45491": true,
+          "45492": true,
+          "45493": true,
+          "45494": true,
+          "45495": false,
+          "45496": true,
+          "45497": true,
+          "45498": true,
+          "45499": true,
+          "45500": true,
+          "45501": true,
+          "45502": false,
+          "45503": true,
+          "45504": true,
+          "45505": true,
+          "45506": true,
+          "45507": true,
+          "45508": true,
+          "45509": false,
+          "45510": true,
+          "45511": true,
+          "45512": false,
+          "45513": true,
+          "45514": true,
+          "45515": true,
+          "45516": true,
+          "45517": true,
+          "45518": true,
+          "45519": true
+        },
+        "games_sha256": "6953242781479d11e15a58afc97e391da60b733c8d78977a5a870d939caf87a3"
+      },
+      "round21_recipeB_seed2": {
+        "wins": 0,
+        "games": 32,
+        "outcomes": {
+          "45488": false,
+          "45489": false,
+          "45490": false,
+          "45491": false,
+          "45492": false,
+          "45493": false,
+          "45494": false,
+          "45495": false,
+          "45496": false,
+          "45497": false,
+          "45498": false,
+          "45499": false,
+          "45500": false,
+          "45501": false,
+          "45502": false,
+          "45503": false,
+          "45504": false,
+          "45505": false,
+          "45506": false,
+          "45507": false,
+          "45508": false,
+          "45509": false,
+          "45510": false,
+          "45511": false,
+          "45512": false,
+          "45513": false,
+          "45514": false,
+          "45515": false,
+          "45516": false,
+          "45517": false,
+          "45518": false,
+          "45519": false
+        },
+        "games_sha256": "368e82c56777ae19ba36f6225a5d46d6bb5ee011b3454af9af6dcb3fa837b4ac"
+      }
+    },
+    "additional_native_games": 96,
+    "recorded_trace_games": 6,
+    "warning": "32-seed diagnostic sample; not a replacement promotion gate or causal retraining ablation"
+  },
+  "additional_plan": {
+    "task": "day_l7_eval_d7p_holdout1",
+    "seeds": [
+      45488,
+      45489,
+      45490,
+      45491,
+      45492,
+      45493,
+      45494,
+      45495,
+      45496,
+      45497,
+      45498,
+      45499,
+      45500,
+      45501,
+      45502,
+      45503,
+      45504,
+      45505,
+      45506,
+      45507,
+      45508,
+      45509,
+      45510,
+      45511,
+      45512,
+      45513,
+      45514,
+      45515,
+      45516,
+      45517,
+      45518,
+      45519
+    ],
+    "models": [
+      "round20_seed1",
+      "round21_recipeB_seed2",
+      "round20_seed2"
+    ],
+    "purpose": "diagnose selection/training variability; existing first32 gate seeds, no new seeds allocated; descriptive sample, no training or production changes",
+    "followup": "After observing round20_seed1=4/32, measure round20 selected seed2 on exactly the same 32 seeds; cohort unchanged."
+  },
+  "additional_commands": {
+    "round21_recipeB_seed2": [
+      "/home/newbiexvwu/.venvs/ml/bin/python",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+      "--rollout-policy",
+      "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/seeds/seed_000002/student/model.pt",
+      "--value",
+      "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "--manifest",
+      "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+      "--task-id",
+      "day_l7_eval_d7p_holdout1",
+      "--executable",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+      "--resource-dir",
+      "/home/newbiexvwu/.cache/pvz-research-resources",
+      "--seed-list",
+      "45488,45489,45490,45491,45492,45493,45494,45495,45496,45497,45498,45499,45500,45501,45502,45503,45504,45505,45506,45507,45508,45509,45510,45511,45512,45513,45514,45515,45516,45517,45518,45519",
+      "--workers",
+      "1",
+      "--arms",
+      "fast",
+      "--dagger-beta",
+      "0",
+      "--out",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/additional/round21_recipeB_seed2"
+    ],
+    "round20_seed2": [
+      "/home/newbiexvwu/.venvs/ml/bin/python",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+      "--rollout-policy",
+      "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/seeds/seed_000002/student/model.pt",
+      "--value",
+      "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "--manifest",
+      "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+      "--task-id",
+      "day_l7_eval_d7p_holdout1",
+      "--executable",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+      "--resource-dir",
+      "/home/newbiexvwu/.cache/pvz-research-resources",
+      "--seed-list",
+      "45488,45489,45490,45491,45492,45493,45494,45495,45496,45497,45498,45499,45500,45501,45502,45503,45504,45505,45506,45507,45508,45509,45510,45511,45512,45513,45514,45515,45516,45517,45518,45519",
+      "--workers",
+      "1",
+      "--arms",
+      "fast",
+      "--dagger-beta",
+      "0",
+      "--out",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/additional/round20_seed2"
+    ],
+    "round20_seed1": [
+      "/home/newbiexvwu/.venvs/ml/bin/python",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+      "--rollout-policy",
+      "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/seeds/seed_000001/student/model.pt",
+      "--value",
+      "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "--manifest",
+      "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+      "--task-id",
+      "day_l7_eval_d7p_holdout1",
+      "--executable",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+      "--resource-dir",
+      "/home/newbiexvwu/.cache/pvz-research-resources",
+      "--seed-list",
+      "45488,45489,45490,45491,45492,45493,45494,45495,45496,45497,45498,45499,45500,45501,45502,45503,45504,45505,45506,45507,45508,45509,45510,45511,45512,45513,45514,45515,45516,45517,45518,45519",
+      "--workers",
+      "1",
+      "--arms",
+      "fast",
+      "--dagger-beta",
+      "0",
+      "--out",
+      "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/additional/round20_seed1"
+    ]
+  },
+  "trace_commands": [
+    {
+      "task": "day_l7_eval_d7p_holdout1",
+      "side": "candidate",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+        "--rollout-policy",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/student/model.pt",
+        "--value",
+        "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+        "--manifest",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+        "--task-id",
+        "day_l7_eval_d7p_holdout1",
+        "--executable",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--seed-list",
+        "45488,45489",
+        "--workers",
+        "1",
+        "--arms",
+        "fast",
+        "--dagger-beta",
+        "0",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/candidate/day_l7_eval_d7p_holdout1",
+        "--frames",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/candidate/day_l7_eval_d7p_holdout1/frames"
+      ],
+      "returncode": 0
+    },
+    {
+      "task": "day_l7_eval_d7p_holdout1",
+      "side": "incumbent",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+        "--rollout-policy",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+        "--value",
+        "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+        "--manifest",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+        "--task-id",
+        "day_l7_eval_d7p_holdout1",
+        "--executable",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--seed-list",
+        "45488,45489",
+        "--workers",
+        "1",
+        "--arms",
+        "fast",
+        "--dagger-beta",
+        "0",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/incumbent/day_l7_eval_d7p_holdout1",
+        "--frames",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/incumbent/day_l7_eval_d7p_holdout1/frames"
+      ],
+      "returncode": 0
+    },
+    {
+      "task": "day_l9_eval_d7p_holdout2",
+      "side": "candidate",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+        "--rollout-policy",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/student/model.pt",
+        "--value",
+        "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+        "--manifest",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+        "--task-id",
+        "day_l9_eval_d7p_holdout2",
+        "--executable",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--seed-list",
+        "45694",
+        "--workers",
+        "1",
+        "--arms",
+        "fast",
+        "--dagger-beta",
+        "0",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/candidate/day_l9_eval_d7p_holdout2",
+        "--frames",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/candidate/day_l9_eval_d7p_holdout2/frames"
+      ],
+      "returncode": 0
+    },
+    {
+      "task": "day_l9_eval_d7p_holdout2",
+      "side": "incumbent",
+      "command": [
+        "/home/newbiexvwu/.venvs/ml/bin/python",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/scripts/search_play.py",
+        "--rollout-policy",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt",
+        "--value",
+        "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+        "--manifest",
+        "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/evaluations/40830e597d79325dc7fd/manifest.json",
+        "--task-id",
+        "day_l9_eval_d7p_holdout2",
+        "--executable",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable",
+        "--resource-dir",
+        "/home/newbiexvwu/.cache/pvz-research-resources",
+        "--seed-list",
+        "45694",
+        "--workers",
+        "1",
+        "--arms",
+        "fast",
+        "--dagger-beta",
+        "0",
+        "--out",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/incumbent/day_l9_eval_d7p_holdout2",
+        "--frames",
+        "/home/newbiexvwu/PvZ-search/.claude/worktrees/heldout21/artifacts/task125/traces/incumbent/day_l9_eval_d7p_holdout2/frames"
+      ],
+      "returncode": 0
+    }
+  ],
+  "source_sha256": {
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/recipe.json": "56512928694e5dd99e1bd01bfcd18b73f8de0e06d414f1755cc646e9aaa11427",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/pack.log": "f6e5473af8bb1b6deac773cb65643d0f232e2b943faf19aaa340fa8c12b2255c",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/trained.json": "07184360f6866734d40ad70945854a7baa8d7151da950602ebf2c9eacffc9ccf",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/complete.json": "3a3d6d72f4d6734971c89bcbad3a2efdca2bffa0d9ae92a93bcd79b3f8faa16e",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/recipe.json": "779b9e3ff2fe30e4c94c0507138cdf5cadc3965cf6afcc974da4caf1cab7e5a5",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/pack.log": "454d1b0e905fbe578642289a135c9f491690a2bc4af5c6f93279283fc06388dc",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/trained.json": "71891ab99d5202913178f498746b716c973eb2f29d75d7a2bab2b19b18f0d708",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000020/complete.json": "b5ef99f8ddee73aad2e0145a9916cde541c6ac9218e3d0b9e65126f0144b25d0",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/recipe.json": "246c528fa6bc0898a26dd21487ece01dfb3dc2f0e7fe3df0bab9e9a70048fc30",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/pack.log": "c63dc2ad4caaaacd004bd5b5a54137308843d7459a29bc2d1dde8614e25125a0",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/trained.json": "0b552a1224d78d2972abdb2537cdb366985ed4d430f0510a1fef7c3c419c17b6",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000021/complete.json": "c8499026ff72b2e32c13e49098ca934c427a71e70d38065632460138d8d24cda",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000022/recipe.json": "28bbbbe94229e7e3399cc35ee92e182f412a4306ba90be43f8dd84c01189b7b6",
+    "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000022/pack.log": "6c659c1904fe5d62c6be644073133c6c34959f0de53f63a287877fea8b24c9d3"
+  }
+}
