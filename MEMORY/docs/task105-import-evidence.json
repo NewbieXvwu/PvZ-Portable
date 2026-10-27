@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-27T00:26:26.663943+00:00",
+ "generated": "2026-10-27T00:38:12.275110+00:00",
  "input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "engine_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
  "archives": 191,
@@ -1339,12 +1339,32 @@
     "games": 8
    },
    "reason": ""
+  },
+  {
+   "task_id": "demo_roof_42_melon_m200_s81005023_a44f4df7bdd32",
+   "seed": 81005023,
+   "games": 88,
+   "l50": 752,
+   "top": 919,
+   "decisions": [
+    919,
+    752
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 145000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
   }
  ],
  "scan_expected": 191,
- "scanned": 55,
- "registered": 55,
+ "scanned": 56,
+ "registered": 56,
  "deployed": 0,
- "scan_games": 4736,
+ "scan_games": 4824,
  "complete": false
 }
