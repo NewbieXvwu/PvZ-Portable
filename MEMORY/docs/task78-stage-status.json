@@ -1058,5 +1058,16 @@
   },
   "conclusion": "under the reproduced original protocol v6 is exactly neutral on the 144-snapshot candidate (0.505 vs 0.505) and one flip better on the full-192 candidate (0.495 vs 0.505, CI [-0.119,+0.083]); the preregistered gate (v6 <= half of v5, upper bound <= 0) is not met by either, and after removing sub-rounding gaps v6 is slightly worse. No evidence that v6 reduces horizon flipping.",
   "artifacts": "ignored artifacts/task78/task72_probe94 (v5r9/, v69/, v6f192r9/, score_original_protocol.json, score_full192_9sample*.json); code scripts/task78_fog94_probe.py, python/test_task78_fog94_probe.py"
+ },
+ "v5_corpus_recovery": {
+  "filesystem_sweep_2026_10_27": "home-wide size/name sweep, HF cache, git object store, /mnt/c-f depth 6: 0 hits",
+  "raw_row_coverage": {
+   "seeds_with_raw_archive": 3242,
+   "seeds_without_raw_archive": 419,
+   "coverage": 0.8856
+  },
+  "rebuild_verdict": "a rebuilt corpus is provably incomplete and cannot be shown to be row-identical; the original 97 shard files are still required",
+  "detail": "MEMORY/docs/task78-v5-raw-coverage.json",
+  "at_utc": "2026-10-27T10:45:00+00:00"
  }
 }

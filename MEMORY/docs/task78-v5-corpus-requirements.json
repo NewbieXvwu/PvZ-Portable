@@ -220,5 +220,19 @@
    "candidate leaves must be produced by rolling the candidate action out to each horizon; the reconstruction only replayed the action the teacher actually chose",
    "without the original futures the direction sign can flip, so a re-simulation with new futures would not answer the preregistered question"
   ]
+ },
+ "rebuild_feasibility": {
+  "question": "can the 97 branch shard files be rebuilt from raw per-seed archives on this machine",
+  "raw_rows_present_for_seeds": 3242,
+  "raw_rows_missing_for_seeds": 419,
+  "trained_on_seeds": 3661,
+  "coverage": 0.8856,
+  "blockers": [
+   "11.4% of seeds have no raw rows at all (mostly 1610000-1610355, the Mac branch3 batch behind the 96 z15d_shards)",
+   "no script in the v5 code commit cbaa051c writes the branch shard schema (boards/scalars/won/seed/position/candidate/packet/kind + config.task_id day_l7_*); only the reader train_value_widen.Branches exists",
+   "frames_v2 is an observation-backfill v2 re-export, so per-game row counts no longer match v5's receipt (z13dag4 held-split gives fit 341548 / val 29694 vs required 324559 / 29446)"
+  ],
+  "verdict": "a rebuilt corpus is provably incomplete and cannot be shown to be row-identical; the original 97 shard files are still required",
+  "detail": "MEMORY/docs/task78-v5-raw-coverage.json"
  }
 }
