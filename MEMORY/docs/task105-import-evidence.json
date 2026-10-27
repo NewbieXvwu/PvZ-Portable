@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-27T21:58:11.405127+00:00",
+ "generated": "2026-10-27T22:15:27.935012+00:00",
  "input_sha256": null,
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "input_path": "/home/newbiexvwu/llm_runs/run_dfb4fe9c_out.zip",
@@ -3343,12 +3343,33 @@
     "games": 8
    },
    "reason": ""
+  },
+  {
+   "task_id": "demo_roof_44_melon_m200_s81010029_aef585f51192a",
+   "seed": 81010029,
+   "games": 88,
+   "l50": 565,
+   "top": 1035,
+   "decisions": [
+    1035,
+    659,
+    565
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 245000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
   }
  ],
  "scan_expected": 625,
- "scanned": 153,
- "registered": 152,
+ "scanned": 154,
+ "registered": 153,
  "deployed": 0,
- "scan_games": 13072,
+ "scan_games": 13160,
  "complete": false
 }

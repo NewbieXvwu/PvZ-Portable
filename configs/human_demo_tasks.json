@@ -6843,7 +6843,18 @@
     2,
     17,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/ef585f51192a075e9d8cf9a6e495f1503e724e13400a632461178a81d554b3a5",
+    "decisions": [
+     1035,
+     659,
+     565
+    ],
+    "index": 0,
+    "future_seed_start": 245000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_42_gloom_m200_s81006006_a0f5e0e8c7392",
