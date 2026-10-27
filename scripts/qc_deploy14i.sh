@@ -16,7 +16,7 @@
 # the baseline check fall back to the branch above; state/offsets/ledgers are retained.
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search; W=$R/.claude/worktrees/cq; PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=adbedd63ff5bd21336c3706b11ef920c65845f57
+REV=39103924ee83dcc1afa8d30524d7fee06323aa21
 ENGINE_SHA=de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845
 NEWEXE=$W/build6/pvz-portable
 OLDEXE=$W/build6/pvz-portable
