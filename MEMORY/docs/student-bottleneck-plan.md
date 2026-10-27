@@ -1021,3 +1021,6 @@
 - 16:50 r24 被 v4 否决（16:14：overall CI、heldout、day 三项）。r25 训练作业 15:40 已入队、早于 r24 门禁结束 → 流水线没有自然空档，原等待器可能永远等不到。改用 `deploy14i_drive.sh`（tmux deploy14i-drive）：自然空档就跑 14i；若下一轮采集先到 700/768 局，主动置 stop_curr 让 qc 在组边界停下并排空（qc 的 close() 会等排队作业训完、门禁跑完），再清标志跑 14i。
 - task131 交付（obsup 5423811f）：加宽热启动、旧缓存补零复用、build7、`qc_deploy15.sh`（start_qc 非 15 分支与 14i 逐字一致，已核对；看门狗会用它）。15 等 14i 跑过至少一轮 v5 再上，避免门禁与输入两个变量混在一起。
 - 派 task132（codex-t125，demoweight）：示范行 / 示范起点格行加权的配方开关，只做代码。
+- 18:28 **门禁 v5 上线**（deploy14i 自然空档触发：r25 门禁 18:21 结束，r26 采集 18:28 完成，在 stop 标志下 r26 训练作业于重启后按 v5 入队）。r25 被 v4 否决（overall、fog、heldout）。
+- 18:33 新问题：task123 的训练准入要 MemAvailable ≥ 20.59 GiB（6 GiB 预留 + 训练估计），采集为它预留 14.6 GiB 余量只剩 workers=1，训练又因 task105 扫描占 ~2 GiB 进不去 → 双饿。处理：SIGSTOP task105_pipeline（1192659/1254424）、杀掉其扫描，18:38 训练准入。终止 deploy14i 的首组 rc 等待（1 worker 的首组可能超 60 分钟触发误回滚），v5 保持，首组 rc 由主控核对。
+- 待办：训练期间采集 worker 数受余量限制（K=4 串行 ≈ 3 小时+），需评估 `MEMORY_RESERVE_BYTES` 6 GiB 与训练估计是否过保守；task105 流水线在 r26 训练后 SIGCONT。
