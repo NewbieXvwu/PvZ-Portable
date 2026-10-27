@@ -225,6 +225,7 @@ def test_reservation_counts_both_live_training_trees(tmp_path, monkeypatch):
     pipeline.processes = {1: SimpleNamespace(pid=1), 3: SimpleNamespace(pid=3)}
     monkeypatch.setattr(queue, '_proc_table', lambda: {1: (0, queue.GIB), 2: (1, queue.GIB),
                                                      3: (0, queue.GIB), 4: (3, queue.GIB)})
+    monkeypatch.setattr(queue, '_anon_bytes', lambda pid: queue.GIB)
     try:
         assert pipeline.estimate_peak() == 6 * queue.GIB
         assert pipeline.reservation() == 2 * queue.GIB
@@ -233,25 +234,24 @@ def test_reservation_counts_both_live_training_trees(tmp_path, monkeypatch):
         pipeline.close()
 
 
-def test_mapped_training_data_forces_serial_admission(tmp_path, monkeypatch):
+def test_training_admission_uses_anonymous_peak(tmp_path, monkeypatch):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
     pipeline.last_train_peak = int(3.5 * queue.GIB)
-    pipeline.last_train_data_bytes = 11 * queue.GIB
     pipeline.train_parallelism, pipeline.training_admission = 2, True
     monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 24 * queue.GIB)
     monkeypatch.setattr(queue, 'mem_total_bytes', lambda: 25 * queue.GIB)
     try:
-        assert pipeline.estimate_peak() == 29 * queue.GIB
+        assert pipeline.estimate_peak() == 7 * queue.GIB
         pipeline._admit()
-        assert pipeline.train_parallelism == 1
-        assert pipeline.train_admission_record['fallback_reasons'] == ['host_memory']
-        assert pipeline.train_admission_record['required_bytes'] == int(20.5 * queue.GIB)
+        assert pipeline.train_parallelism == 2
+        assert pipeline.train_admission_record['fallback_reasons'] == []
+        assert pipeline.train_admission_record['required_bytes'] == 13 * queue.GIB
     finally:
         pipeline.close()
 
 
-def test_restart_recovers_data_bytes_from_selected_candidate_metrics(tmp_path):
+def test_restart_reserves_anonymous_peak_without_mapped_data(tmp_path):
     args, state = setup(tmp_path)
     model = tmp_path / 'seed_000001/student/model.pt'
     model.parent.mkdir(parents=True)
@@ -260,16 +260,16 @@ def test_restart_recovers_data_bytes_from_selected_candidate_metrics(tmp_path):
         packet_bytes=queue.GIB, tensor_bytes=queue.GIB))))
     state['training_jobs'] = [dict(round=1, status='done', recipe=str(args.recipe),
         model=str(tmp_path / 'selected/model.pt'), timing=dict(
-            train_peak_anon_bytes=3 * queue.GIB, selection=dict(best=str(model))))]
+            train_peak_anon_bytes=3 * queue.GIB, train_data_bytes=10 * queue.GIB,
+            selection=dict(best=str(model))))]
     pipeline = queue.TrainingPipeline(args, state)
     try:
-        assert pipeline.last_train_data_bytes == 10 * queue.GIB
-        assert pipeline.estimate_peak() == 13 * queue.GIB
+        assert pipeline.estimate_peak() == 3 * queue.GIB
     finally:
         pipeline.close()
 
 
-def test_first_training_reserves_pack_bytes_as_well_as_anonymous_peak(tmp_path):
+def test_pack_size_does_not_add_to_measured_anonymous_peak(tmp_path):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
     segments = pipeline.directory / 'frames/packs/segments'
@@ -277,7 +277,7 @@ def test_first_training_reserves_pack_bytes_as_well_as_anonymous_peak(tmp_path):
     (segments / 'one.npz').write_bytes(b'pack data')
     pipeline.last_train_peak = 3 * queue.GIB
     try:
-        assert pipeline.estimate_peak() == 3 * queue.GIB + len(b'pack data')
+        assert pipeline.estimate_peak() == 3 * queue.GIB
     finally:
         pipeline.close()
 

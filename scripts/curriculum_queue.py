@@ -916,7 +916,6 @@ class TrainingPipeline:
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
-        self.last_train_data_bytes = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
         self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
@@ -937,16 +936,13 @@ class TrainingPipeline:
                     self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
                 except (ValueError, TypeError):
                     pass
-            if timing and not self.last_train_data_bytes:
-                model = (timing.get('selection') or {}).get('best', job['model'])
-                self.last_train_data_bytes = timing.get('train_data_bytes', 0) or training_data_bytes(Path(model))
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
                     builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
                 except (OSError, ValueError, KeyError, TypeError):
                     pass
-            if self.last_train_peak and self.last_pack_peak and self.last_train_data_bytes:
+            if self.last_train_peak and self.last_pack_peak:
                 break
         queued = [job for job in state.setdefault('training_jobs', [])
                   if job['status'] != 'done' and not job.get('isolated')
@@ -1065,7 +1061,6 @@ class TrainingPipeline:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
-        train_peak += getattr(self, 'last_train_data_bytes', 0) or compact_bytes
         return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
@@ -1119,13 +1114,11 @@ class TrainingPipeline:
         if not self.pending():
             return 0
         with self.lock:
-            table = _proc_table()
             processes = list(getattr(self, 'processes', {}).values())
             if not processes and self.process is not None:
                 processes = [self.process]
-            rss = sum(table.get(process.pid, (0, 0))[1] + _descendant_rss(process.pid, table)
-                      for process in processes)
-        return max(0, self.estimate_peak() - rss)
+            anonymous = sum(_tree_anon_bytes(process.pid) for process in processes)
+        return max(0, self.estimate_peak() - anonymous)
 
     @retry_io
     def enqueue(self):
@@ -1409,7 +1402,7 @@ class TrainingPipeline:
                                 self.build_peak = 0
                         if phase == 'train':
                             self.last_train_peak = report[phase + '_peak_anon_bytes']
-                            self.last_train_data_bytes = report['train_data_bytes'] = training_data_bytes(Path(job['model']))
+                            report['train_data_bytes'] = training_data_bytes(Path(job['model']))
                         report[phase + '_finished'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} done: '
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
@@ -1542,7 +1535,6 @@ class TrainingPipeline:
                       train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
                                            for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
-        self.last_train_data_bytes = report['train_data_bytes']
         report.update(self._select(job, trained))
         panel = json.loads(Path(job['selection_manifest']).read_text())
         holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']

@@ -216,8 +216,34 @@ def test_memory_forecast_counts_only_background_headroom():
             pending = SimpleNamespace(done=lambda: False)
             pipeline.futures.append(({}, pending))
             pipeline.process = SimpleNamespace(pid=123)
-            with patch.object(queue, '_proc_table', return_value={123: (1, queue.GIB // 2), 124: (123, queue.GIB // 2)}):
+            with patch.object(queue, '_proc_table', return_value={123: (1, 6 * queue.GIB), 124: (123, 6 * queue.GIB)}), \
+                    patch.object(queue, '_anon_bytes', return_value=queue.GIB // 2):
                 assert pipeline.reservation() == queue.GIB
+            pipeline.futures.clear()
+        finally:
+            pipeline.close()
+
+
+def test_candidate_transition_keeps_collection_workers():
+    with tempfile.TemporaryDirectory() as folder:
+        args, state = setup(Path(folder))
+        peak, resident = 2652 * 1024 ** 2, 1096 * 1024 ** 2
+        state['training_jobs'] = [dict(round=1, status='done', recipe=str(args.recipe),
+            model=str(args.rollout_policy), timing=dict(train_peak_anon_bytes=peak,
+                                                       train_data_bytes=12 * queue.GIB))]
+        pipeline = queue.TrainingPipeline(args, state)
+        try:
+            pipeline.futures.append(({}, SimpleNamespace(done=lambda: False)))
+            pipeline.process = SimpleNamespace(pid=123)
+            with patch.object(queue, '_proc_table', return_value={123: (1, 14 * queue.GIB)}), \
+                    patch.object(queue, '_anon_bytes', return_value=resident):
+                assert pipeline.reservation() == peak - resident
+                pipeline.process = None
+                assert pipeline.reservation() == peak
+                assert queue.worker_count(22 * queue.GIB, queue.GIB, 16,
+                                          pipeline.reservation()) == 13
+                pipeline.process = SimpleNamespace(pid=123)
+                assert pipeline.reservation() == peak - resident
             pipeline.futures.clear()
         finally:
             pipeline.close()
