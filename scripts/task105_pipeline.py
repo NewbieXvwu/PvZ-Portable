@@ -29,6 +29,22 @@ def process_identity(pid):
         return None
 
 
+def scan_finished(entry, out, tasks):
+    """Use the saved result and manifest; never launch a replay to resume."""
+    path = out / 'scan/results' / f'{entry["task_id"]}_s{entry["seed"]}.json'
+    if not path.exists():
+        return False
+    result = json.loads(path.read_text())
+    if (not result.get('complete') or result.get('archive') != entry['archive']
+            or result.get('future_seeds') != entry['future_seeds'][:8]):
+        return False
+    ladder = result.get('ladder')
+    if not ladder:
+        return True
+    spec = tasks.get(entry['task_id'], {}).get('demo_start', {})
+    return spec.get('archive') == entry['archive'] and spec.get('decisions') == ladder['ladder']
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', type=Path)
@@ -67,8 +83,12 @@ def main():
     plan = json.loads((out / 'scan_jobs.json').read_text())
     completed = []
     failures = []
+    tasks = {t['task_id']: t for t in json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())['tasks']}
     for entry in plan['archives']:
         task = entry['task_id']
+        if scan_finished(entry, out, tasks):
+            completed.append(task)
+            continue
         result = out / 'scan/results' / f'{task}_s{entry["seed"]}.json'
         try:
             # --skip-complete：续跑包里已完成的存档不重放；register 自身幂等，仍会补齐漏登记。
@@ -77,6 +97,9 @@ def main():
                  '--executable', str(ENGINE), '--workers', '2', '--skip-complete'])
             run(f'register_{task}', [sys.executable, str(ROOT / 'scripts/takeover_scan.py'), 'register',
                  str(result), '--out', str(out / 'registration' / task)])
+            tasks = {t['task_id']: t for t in json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())['tasks']}
+            if not scan_finished(entry, out, tasks):
+                raise SystemExit(1)
         except SystemExit as error:
             # 引擎被 earlyoom 等外部压力打断时不要整条链停摆：记账后继续，下次重跑从这里续。
             failures.append(dict(task=task, returncode=getattr(error, 'code', 1)))
@@ -85,9 +108,13 @@ def main():
             continue
         completed.append(task)
         save(out / 'completed_scans.json', dict(completed=completed, total=len(plan['archives'])))
+        run('report', [sys.executable, str(ROOT / 'scripts/task105_results.py')])
+    save(out / 'failures.json', dict(schema='task105_failures_v1', failures=failures))
     run('report', [sys.executable, str(ROOT / 'scripts/task105_results.py')])
-    save(status, dict(stage='done', state='complete', imported=len(rows),
-                      scanned=len(completed), deployed=False))
+    save(status, dict(stage='done', state='incomplete' if failures else 'complete', imported=len(rows),
+                      scanned=len(completed), failed=len(failures), deployed=False))
+    if failures:
+        raise SystemExit(2)
 
 
 if __name__ == '__main__':

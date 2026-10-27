@@ -5,7 +5,7 @@
   python3 scripts/task105_supervise.py <zip> [--max-restarts 50] [--sleep 60]
 
 流水线本身可断点续跑（games.jsonl + 结果 json + 导入回执），所以这里只需要在
-子进程非零退出后等一小会儿再拉起；--wait-import-pid 只在第一次拉起时使用。
+子进程非零退出后等一小会儿再拉起；已有流水线在跑时只等待。
 不部署、不提交，只管把 adaptive → register → 结果整理跑完；不加复验尾链。
 """
 import argparse
@@ -36,7 +36,13 @@ def pipeline_running() -> bool:
 
 def state() -> str | None:
     try:
-        return json.loads(STATUS.read_text()).get('state')
+        value = json.loads(STATUS.read_text()).get('state')
+        if value == 'complete':
+            # A legacy pipeline could exit zero despite failed individual scans.
+            summary = json.loads((OUT / 'delivery_summary.json').read_text())
+            if not summary.get('complete'):
+                return 'incomplete'
+        return value
     except FileNotFoundError:
         return None
 
@@ -50,6 +56,8 @@ def main() -> None:
     env = dict(os.environ, PVZ_NO_POPUP='1', OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1')
     log = OUT / 'supervise.out'
     OUT.mkdir(parents=True, exist_ok=True)
+    lock = (OUT / 'supervise.lock').open('a')
+    fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
     restarts = 0
     while True:
         if pipeline_running():

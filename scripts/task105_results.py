@@ -125,6 +125,10 @@ def write_report(result, layers):
               '`adaptive --skip-complete` 跳过已完成的扫描，register 幂等。',
               '引擎进程会被 earlyoom 打断（其他工作树的 pytest 峰值 12–17 GB）。单份失败不整链停摆，'
               '记入`artifacts/task105/failures.json` 后继续；重跑时已测点从结果 JSON 续跑，不重放。',
+              '`search_play`使用ProcessPoolExecutor，worker意外退出时报错，避免替补worker卡死后无限等待。'
+              '续跑直接跳过已扫描且已登记的条目；有失败项时流水线记为incomplete，不能冒充整包完成。',
+              '`scripts/task105_supervise.py <zip>`可接管已有流水线，等待其退出后补跑未完成项；'
+              '看守进程使用独立锁，不并起同一任务。台式机现由`pvz-task105-supervise.service`看守。',
               '结果整理入口`scripts/task105_results.py`只读取已有小JSON，不解压、不重放、不复跑。',
               '部署脚本为`scripts/deploy_task105.py`；当前计划为`artifacts/task105/deployment_plan.json`，仅含已登记且尚未在qc清单中的格。',
               '主控在组边界排空qc后才应用；本任务不执行该脚本（含预览）。', '']
