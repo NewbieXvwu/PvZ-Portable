@@ -25,7 +25,7 @@ for run in ('a_s1', 'a_s2', 'b_s1', 'b_s2'):
     while True:
         busy = trainers()
         available = guard.available()
-        if not busy and available >= 14 * 1024 * 1024:
+        if not busy and available >= 16 * 1024 * 1024:
             if ready_since is None:
                 ready_since = time.monotonic()
             if time.monotonic() - ready_since >= 30:
@@ -36,7 +36,7 @@ for run in ('a_s1', 'a_s2', 'b_s1', 'b_s2'):
         else:
             ready_since = None
         print(dict(run=run, foreign_trainers=busy, available_kib=available), flush=True)
-        time.sleep(10)
+        time.sleep(60)
     command = [sys.executable, str(ROOT / 'scripts/train_rollout_policy.py'),
                '--recipe', str(OUT / 'recipes' / f'{run}.json')]
     result = guard.run(command, run, cwd=ROOT,
