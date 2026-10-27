@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-26T23:41:38.624198+00:00",
+ "at_utc": "2026-10-27T04:10:00+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -909,5 +909,76 @@
   "watcher_log": "artifacts/task78/corpus_watch.log",
   "watcher_stop": "touch artifacts/task78/corpus_watch.stop",
   "watcher_behaviour": "polls every 600 s; reports whether the raw files or the descriptor are missing; on success runs task78_formal_run.py once"
+ },
+ "task72_probe94": {
+  "scope": "all 94 original task72b fog states, both arms on the replayed trajectory",
+  "protocol": {
+   "decision_seed": "future_seed * 10000 + decision",
+   "sample_futures": "decision_seed * 1000 + k, k in 0..2",
+   "candidates": "one plant per legal packet-8 cell plus wait, keyed row,col",
+   "trajectory": "actions replayed from task72_rebuild_mac_branch1/frames, so the loaded value net never steers the game"
+  },
+  "control": {
+   "states": 94,
+   "values": 3441,
+   "max_abs_diff_search_vs_replay": 0.0
+  },
+  "reproduction_vs_task72b": {
+   "states_matched": 94,
+   "candidate_set_mismatches": 0,
+   "median_abs_diff": 9.6e-05,
+   "share_within_5e-5": 0.366,
+   "share_within_1e-3": 0.725,
+   "direction_agreement": {
+    "2500": 0.755,
+    "4000": 0.649,
+    "6000": 0.691
+   },
+   "reference_v5_flip_rate": 0.34,
+   "reconstructed_v5_flip_rate": 0.613,
+   "original_probe_protocol_verified": false
+  },
+  "stability_gate": {
+   "evaluable_states": 94,
+   "directional_states": 93,
+   "zero_direction_states": 1,
+   "v5_flips": 57,
+   "v5_flip_rate": 0.6129,
+   "v6_flips": 48,
+   "v6_flip_rate": 0.5161,
+   "difference": -0.0968,
+   "bootstrap_ci95": [
+    -0.2143,
+    0.0
+   ],
+   "clusters": 8,
+   "resamples": 10000,
+   "seed": 780,
+   "at_most_half_of_v5": false,
+   "upper_bound_at_most_zero": true,
+   "passed": false
+  },
+  "robustness_dead_band": {
+   "5e-9": {
+    "states": 93,
+    "v5": 0.613,
+    "v6": 0.516,
+    "difference": -0.097
+   },
+   "5e-5": {
+    "states": 63,
+    "v5": 0.46,
+    "v6": 0.476,
+    "difference": 0.016
+   },
+   "1e-3": {
+    "states": 31,
+    "v5": 0.355,
+    "v6": 0.387,
+    "difference": 0.032
+   }
+  },
+  "conclusion": "no evidence that v6 reduces horizon flipping; the preregistered stability gate stays not passed, and the reconstruction does not reproduce the original probe directions closely enough to stand in for it",
+  "artifacts": "ignored artifacts/task78/task72_probe94 (v5r/, v6/, score.json); code scripts/task78_fog94_probe.py, python/test_task78_fog94_probe.py"
  }
 }
