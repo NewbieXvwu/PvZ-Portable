@@ -1048,6 +1048,10 @@ class TrainingPipeline:
         finished = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate done: {finished-started:.3f}s '
                                f'approved={decision["approved"]} reasons={decision["reasons"]}')
+        if decision.get('monitor'):
+            # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
+            log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
+                f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
         return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
                     evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
@@ -2035,7 +2039,7 @@ def main() -> None:
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
                         help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '

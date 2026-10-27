@@ -50,10 +50,9 @@ def setup(root):
     args.executable.write_bytes(b'engine')
     args.value.write_bytes(b'value')
     args.resource_dir.mkdir()
-    args.promotion_panel.write_text(json.dumps(dict(panel_version='v2',
-        groups={name: zone for zone, name in PANEL_TASKS_V3},
-        tasks=[dict(task_id=name, seeds=list(range(30000, 30128)), wave_cap=None,
-                    zombie_count_multiplier=1, level=1, deck=[0, 1, 2, 3, 4, 5]) for _, name in PANEL_TASKS_V3])))
+    # The pipeline runs the current gate version, so its panel is the committed v5
+    # adventure panel; older-version tests write their own v2/v3 panel.
+    args.promotion_panel.write_text((ROOT / 'configs/gate_v5_panel.json').read_text())
     for label in ('base', 'c1a_fast_search', 'c1b_fast_search', 'c2a_fast_search', 'c2b_fast_search'):
         archive = args.frames / 'seed_1' / label
         archive.mkdir(parents=True)

@@ -1,10 +1,15 @@
 """Quality promotion gates: paired inference, complete coverage and zone-specific regressions."""
 import copy
+import json
+from pathlib import Path
 
 import pytest
 
-from pvz_promotion import (PANEL_TASKS, PANEL_TASKS_V3, SEED_POOLS_V2, SEED_POOL_V2, decide,
-                           freeze_panel, paired_interval, policy, summarize)
+from pvz_promotion import (GATE_VERSION, PANEL_TASKS, PANEL_TASKS_V3, PANEL_TASKS_V5, SEED_POOLS_V2,
+                           SEED_POOL_V2, V5_MONITOR_TASKS, decide, freeze_panel, paired_interval,
+                           policy, summarize)
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 def manifest():
@@ -150,7 +155,7 @@ def test_v2_policy_records_fresh_seed_design_and_v1_stays_byte_compatible():
                         'zone_veto', 'pair_count', 'episode_count', 'seeds_per_task', 'tasks']
     assert v1['pair_count'] == 64 and v1['version'] == 1 and v1['seeds_per_task'] == 8
     with pytest.raises(ValueError):
-        policy(5)
+        policy(6)
 
 
 def test_v2_panel_partitions_block_and_decide_covers_1536_pairs():
@@ -332,3 +337,87 @@ def test_v4_holm_is_stepdown_and_stops_after_first_nonrejection():
     assert [r for r in result['reasons'] if r.startswith('significant_zone_regression:')] == [
         'significant_zone_regression:day']
     assert result['zones']['roof']['holm_adjusted_p'] == 5 * 11/1024
+
+# ---- task128: gate v5 (adventure panel, heldout monitored only) ----
+
+def v5_source():
+    return json.loads((ROOT / 'configs/gate_v5_panel.json').read_text())
+
+
+def v5_panel(start=100_000_000):
+    return freeze_panel(v5_source(), version=5, seed_block=(start, start + 1920))
+
+
+def test_v5_policy_and_committed_source_panel_are_the_same_adventure_set():
+    assert GATE_VERSION == 5
+    v5 = policy(5)
+    assert v5['pair_count'] == 1920 and v5['episode_count'] == 3840
+    assert v5['seeds_per_task'] == 48 and v5['monitor_seeds_per_task'] == 96
+    assert len(v5['tasks']) == 38 and sum(task['seeds'] for task in v5['tasks']) == 1920
+    assert [task['task_id'] for task in v5['tasks'] if task['monitor']] == list(V5_MONITOR_TASKS)
+    assert 'monitor only' in v5['heldout'] and 'never enters the overall rate' in v5['heldout']
+    document = v5_source()
+    assert [(task['task_id'], document['groups'][task['task_id']]) for task in document['tasks']] == \
+        [(name, zone) for zone, name, _ in PANEL_TASKS_V5]
+    # Older policies are embedded in issued certificates: byte-stable.
+    assert policy(4)['pair_count'] == 1920 and len(policy(4)['tasks']) == 10
+    assert policy(3)['seeds_per_task'] == 192
+
+
+def test_v5_panel_partitions_one_block_and_scores_only_adventure_pairs():
+    panel = v5_panel()
+    seeds = [seed for task in panel['tasks'] for seed in task['seeds']]
+    assert panel['panel_version'] == 'v5-task128'
+    assert len(seeds) == len(set(seeds)) == 1920
+    assert min(seeds) == 100_000_000 and max(seeds) == 100_001_919
+    assert sorted(set(panel['groups'].values())) == ['day', 'fog', 'heldout', 'night', 'pool']
+    assert 'roof' not in set(panel['groups'].values())      # no roof level has a recorded win
+    result = decide(outcomes(panel, True, False), panel)
+    assert result['version'] == 5 and result['approved']
+    assert result['overall']['pairs'] == 1728                # heldout never enters the overall rate
+    assert sorted(result['zones']) == ['day', 'fog', 'night', 'pool']
+    assert sorted(result['monitor']) == list(V5_MONITOR_TASKS)
+    assert all(cell['pairs'] == 96 for cell in result['monitor'].values())
+
+
+def test_v5_heldout_collapse_never_vetoes_while_a_zone_collapse_still_does():
+    panel = v5_panel()
+    pairs = outcomes(panel, True, True)
+    for row in pairs:
+        if row['task_id'] in V5_MONITOR_TASKS:
+            row.update(candidate=False, incumbent=True)
+    result = decide(pairs, panel)
+    assert result['approved'] and result['reasons'] == []
+    assert all(cell['harm'] == 96 for cell in result['monitor'].values())
+    assert result['overall']['harm'] == 0 and result['overall']['pairs'] == 1728
+    for row in pairs:
+        if row['zone'] == 'pool':
+            row.update(candidate=False, incumbent=True)
+    reasons = decide(pairs, panel)['reasons']
+    assert 'significant_zone_regression:pool' in reasons
+    assert not any('heldout' in reason for reason in reasons)
+
+
+def test_v5_freeze_pins_the_block_size_source_version_and_difficulty():
+    document = v5_source()
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=5)                                   # block required
+    with pytest.raises(ValueError, match='wrong size'):
+        freeze_panel(document, version=5, seed_block=(100_000_000, 100_001_919))
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=5, seed_block=(2_000_000_000, 2_000_001_920))
+    with pytest.raises(ValueError):
+        freeze_panel(v3_source_document(), version=5, seed_block=(100_000_000, 100_001_920))
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=4, seed_block=(100_000_000, 100_001_920))
+    swapped = copy.deepcopy(document)
+    swapped['groups']['task101_l7_day_d7'] = 'night'
+    with pytest.raises(ValueError, match='task101_l7_day_d7'):
+        freeze_panel(swapped, version=5, seed_block=(100_000_000, 100_001_920))
+    easier = copy.deepcopy(document)
+    easier['tasks'][0]['zombie_count_multiplier'] = 0.5
+    with pytest.raises(ValueError, match='original-difficulty'):
+        freeze_panel(easier, version=5, seed_block=(100_000_000, 100_001_920))
+    # A v5 panel is not a valid v2/v3/v4 source either: membership is version-pinned.
+    with pytest.raises(ValueError):
+        freeze_panel(document, version=3, seed_block=(100_000_000, 100_001_920))

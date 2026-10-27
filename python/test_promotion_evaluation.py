@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pvz_promotion import PANEL_TASKS, SEED_POOLS_V2
+from pvz_promotion import PANEL_TASKS, PANEL_TASKS_V3, SEED_POOLS_V2
 from test_curriculum_pipeline import setup
 import promotion_gate as gate
 
@@ -21,8 +21,13 @@ def arguments(root):
     common, _ = setup(root)
     candidate = root / 'candidate.pt'
     candidate.write_bytes(b'candidate')
+    # These tests issue v3/v4 certificates, whose panel membership is version-pinned.
+    panel = root / 'v3_panel.json'
+    panel.write_text(json.dumps(dict(panel_version='v2', groups={name: zone for zone, name in PANEL_TASKS_V3},
+        tasks=[dict(task_id=name, seeds=list(range(30000, 30128)), wave_cap=None,
+                    zombie_count_multiplier=1, level=1, deck=[0, 1, 2, 3, 4, 5]) for _, name in PANEL_TASKS_V3])))
     return SimpleNamespace(candidate=candidate, incumbent=common.rollout_policy,
-        source_panel=common.promotion_panel, executable=common.executable, value=common.value,
+        source_panel=panel, executable=common.executable, value=common.value,
         resource_dir=common.resource_dir, workers=1, out=root / 'evaluation',
         gate_version=3, seed_ledger=root / 'gate_ledger.json')
 
