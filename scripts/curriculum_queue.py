@@ -897,12 +897,32 @@ def save_candidates_for(cell: dict, task: dict | None, levels) -> int:
     return 1 if cell.get('level') in levels else 0
 
 
+def growth_args(args, workers, upper_workers, per_worker_bytes, headroom_bytes) -> list[str]:
+    """task138: --workers 是上限，开工宽度走 --initial-workers。
+
+    只有实测过单 worker RSS 才让 search_play 自己扩容；没实测时它保持开工宽度
+    （按未知成本加进程就是 OOM 的来源）。上限取 pipeline.foreground_limit()，
+    它已经扣掉了可能开始的评估进程。
+    """
+    initial = args.workers if workers is None else workers
+    # 没有声明上限 = 调用方要固定宽度（探针、一次性诊断），保持老语义。
+    if upper_workers is None:
+        return ['--workers', str(initial)]
+    upper = upper_workers
+    if initial >= upper and per_worker_bytes <= 0:
+        return ['--workers', str(initial)]
+    return ['--workers', str(upper), '--initial-workers', str(initial),
+            '--worker-memory-bytes', str(max(0, per_worker_bytes)),
+            '--memory-headroom-bytes', str(max(0, headroom_bytes))]
+
+
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
                 out: Path | None = None, beta: float = 0.0,
                 demo_archive: str | None = None, demo_decision: int | None = None,
                 future_seeds: list[int] | None = None,
-                save_candidates: int = 0) -> list[str]:
+                save_candidates: int = 0, upper_workers: int | None = None,
+                per_worker_bytes: int = 0, headroom_bytes: int = 0) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -924,7 +944,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--manifest', str(manifest), '--task-id', task_id,
             *seed_args,
             '--executable', str(args.executable), '--dagger-beta', f'{beta:g}',
-            '--workers', str(args.workers if workers is None else workers),
+            *growth_args(args, workers, upper_workers, per_worker_bytes, headroom_bytes),
             '--resource-dir', str(args.resource_dir),
             '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
             '--out', str((args.out if out is None else out) / f'{label}_{games}')]
@@ -1913,7 +1933,9 @@ def _run_group(args, state, item, round_index, per_worker):
                           demo_archive=item.get('demo_archive'),
                           demo_decision=item.get('demo_decision'),
                           future_seeds=item.get('future_seeds'),
-                          save_candidates=item.get('save_candidates', 0))
+                          save_candidates=item.get('save_candidates', 0),
+                          upper_workers=upper, per_worker_bytes=per_worker,
+                          headroom_bytes=background)
     started = time.time()
     item.update(collection_started=started, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)

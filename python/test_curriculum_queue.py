@@ -15,7 +15,7 @@ import curriculum_queue
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
                               CURRICULUM_LADDERS, MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE,
                               WINDOW, _descendant_rss,
-                              adjust, allocate, build_plan, cell_level, command_for, label_for,
+                              adjust, allocate, build_plan, cell_level, command_for, growth_args, label_for,
                               load_demo_start_cells, load_teacher_rates, make_state, pack_command,
                               pack_labels, parse_levels, parse_task_id, plan_round, rate,
                               reconcile_cells, save_candidates_for,
@@ -738,6 +738,32 @@ class WorkerCountTest(unittest.TestCase):
         self.assertEqual(command[command.index('--frames') + 1], '/tmp/probe-frames')
         self.assertEqual(command[command.index('--out') + 1], '/tmp/probe/oomprobe_1')
         self.assertEqual(command[command.index('--seed-offset') + 1], '5')
+
+    def test_group_command_admits_the_start_width_and_the_cap(self):
+        """task138: 一组开工时把'开工宽度'和'上限'分开传，池子才有扩容空间。"""
+        args = SimpleNamespace(python=Path('/nonexistent/python'), workers=16,
+                               rollout_policy=Path('/m/student.pt'), static_value=Path('/m/static.pt'),
+                               value=Path('/m/value.pt'), executable=Path('/m/pvz-portable'),
+                               resource_dir=Path('/m/resources'), frames=Path('/m/frames'),
+                               out=Path('/m/out'))
+        command = command_for(args, Path('/m/panel.json'), 'day_l7', 5, 48, 'c1d7m100',
+                              workers=2, upper_workers=16, per_worker_bytes=2 * GIB,
+                              headroom_bytes=4 * GIB)
+        self.assertEqual(command[command.index('--workers') + 1], '16')
+        self.assertEqual(command[command.index('--initial-workers') + 1], '2')
+        self.assertEqual(command[command.index('--worker-memory-bytes') + 1], str(2 * GIB))
+        self.assertEqual(command[command.index('--memory-headroom-bytes') + 1], str(4 * GIB))
+
+    def test_growth_args_keep_the_old_fixed_width(self):
+        args = SimpleNamespace(workers=16)
+        # 没有声明上限（探针、一次性诊断）= 固定宽度，行为与 task138 之前一致。
+        self.assertEqual(growth_args(args, 3, None, 0, 0), ['--workers', '3'])
+        # 上限已给但没实测 RSS：池子不扩容，参数仍写明上限供日志审计。
+        self.assertEqual(growth_args(args, 3, 16, 0, 0),
+                         ['--workers', '16', '--initial-workers', '3',
+                          '--worker-memory-bytes', '0', '--memory-headroom-bytes', '0'])
+        # 宽度已到上限且没有实测值：不必多传参数。
+        self.assertEqual(growth_args(args, 16, 16, 0, 0), ['--workers', '16'])
 
     def test_startup_estimate_without_probe(self):
         import curriculum_queue as queue
