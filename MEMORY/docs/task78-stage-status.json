@@ -1,5 +1,5 @@
 {
- "at_utc": "2026-10-27T04:10:00+00:00",
+ "at_utc": "2026-10-27T09:40:00+00:00",
  "overall_task_complete": false,
  "new_labels": {
   "complete": true,
@@ -727,8 +727,7 @@
  },
  "supplemental_demo_start_plan_sha256": "0e30f6ba1e13fae67525422143f56a5ada0597924dd4d1b1d35da0d0e436468b",
  "unresolved_requirements": [
-  "original v5 corpus and formal merged-corpus training",
-  "original task72b states/probe protocol and horizon stability"
+  "original v5 corpus and formal merged-corpus training"
  ],
  "training_source_preflight": {
   "new_sources": {
@@ -914,7 +913,7 @@
   "scope": "all 94 original task72b fog states, both arms on the replayed trajectory",
   "protocol": {
    "decision_seed": "future_seed * 10000 + decision",
-   "sample_futures": "decision_seed * 1000 + k, k in 0..2",
+   "sample_futures": "decision_seed * 1000 + k, k in 0..8 (9 rollout futures per candidate, as the original task72b probe did)",
    "candidates": "one plant per legal packet-8 cell plus wait, keyed row,col",
    "trajectory": "actions replayed from task72_rebuild_mac_branch1/frames, so the loaded value net never steers the game"
   },
@@ -923,62 +922,141 @@
    "values": 3441,
    "max_abs_diff_search_vs_replay": 0.0
   },
-  "reproduction_vs_task72b": {
-   "states_matched": 94,
-   "candidate_set_mismatches": 0,
-   "median_abs_diff": 9.6e-05,
-   "share_within_5e-5": 0.366,
-   "share_within_1e-3": 0.725,
-   "direction_agreement": {
-    "2500": 0.755,
-    "4000": 0.649,
-    "6000": 0.691
+  "original_protocol": {
+   "samples": 9,
+   "verified_against_task72b": {
+    "combinations": 24,
+    "max_abs_diff": 5e-05,
+    "note": "5.00e-05 is the rounding radius of the recorded 4-decimal values; v5r9 agrees with the recorded flip decisions on 62/62 common directional states"
    },
-   "reference_v5_flip_rate": 0.34,
-   "reconstructed_v5_flip_rate": 0.613,
-   "original_probe_protocol_verified": false
-  },
-  "stability_gate": {
-   "evaluable_states": 94,
-   "directional_states": 93,
-   "zero_direction_states": 1,
-   "v5_flips": 57,
-   "v5_flip_rate": 0.6129,
-   "v6_flips": 48,
-   "v6_flip_rate": 0.5161,
-   "difference": -0.0968,
+   "original_probe_protocol_verified": true,
+   "arms": {
+    "v5r9": {
+     "directional": 93,
+     "flips": 47,
+     "flip_rate": 0.5054
+    },
+    "v69": {
+     "directional": 93,
+     "flips": 47,
+     "flip_rate": 0.5054
+    }
+   },
+   "difference": 0.0,
    "bootstrap_ci95": [
-    -0.2143,
-    0.0
+    -0.1149,
+    0.1042
    ],
    "clusters": 8,
    "resamples": 10000,
    "seed": 780,
    "at_most_half_of_v5": false,
-   "upper_bound_at_most_zero": true,
-   "passed": false
+   "upper_bound_at_most_zero": false,
+   "passed": false,
+   "report": "ignored artifacts/task78/task72_probe94/score_original_protocol.json (48 games, rc=0)"
   },
-  "robustness_dead_band": {
-   "5e-9": {
-    "states": 93,
-    "v5": 0.613,
-    "v6": 0.516,
-    "difference": -0.097
+  "full192_original_protocol": {
+   "candidate_sha256": "83551195bcf19876f4f5fb0632fe59d2ec14c652c66cc2db08f4274ba7e26d0a",
+   "games": 24,
+   "arms": {
+    "v5r9": {
+     "directional": 93,
+     "flips": 47,
+     "flip_rate": 0.5054
+    },
+    "v6f192r9": {
+     "directional": 93,
+     "flips": 46,
+     "flip_rate": 0.4946
+    }
    },
-   "5e-5": {
-    "states": 63,
-    "v5": 0.46,
-    "v6": 0.476,
-    "difference": 0.016
+   "difference": -0.0108,
+   "bootstrap_ci95": [
+    -0.119,
+    0.0833
+   ],
+   "clusters": 8,
+   "resamples": 10000,
+   "seed": 780,
+   "at_most_half_of_v5": false,
+   "upper_bound_at_most_zero": false,
+   "passed": false,
+   "dead_band": {
+    "5e-5": {
+     "paired_states": 58,
+     "v5_flips": 27,
+     "v6_flips": 28,
+     "difference": -0.0172
+    },
+    "1e-3": {
+     "paired_states": 31,
+     "v5_flips": 12,
+     "v6_flips": 13,
+     "difference": -0.0323
+    }
    },
-   "1e-3": {
-    "states": 31,
-    "v5": 0.355,
-    "v6": 0.387,
-    "difference": 0.032
-   }
+   "report": "ignored artifacts/task78/task72_probe94/score_full192_9sample.json and score_full192_9sample_deadzone.json"
   },
-  "conclusion": "no evidence that v6 reduces horizon flipping; the preregistered stability gate stays not passed, and the reconstruction does not reproduce the original probe directions closely enough to stand in for it",
-  "artifacts": "ignored artifacts/task78/task72_probe94 (v5r/, v6/, score.json); code scripts/task78_fog94_probe.py, python/test_task78_fog94_probe.py"
+  "reconstruction_protocol_3sample_superseded": {
+   "note": "3-sample reconstruction protocol; its absolute values and flip rates are sampling artefacts (the original probe averaged 9 rollout futures), kept as historical evidence only",
+   "reproduction_vs_task72b": {
+    "states_matched": 94,
+    "candidate_set_mismatches": 0,
+    "median_abs_diff": 9.6e-05,
+    "share_within_5e-5": 0.366,
+    "share_within_1e-3": 0.725,
+    "direction_agreement": {
+     "2500": 0.755,
+     "4000": 0.649,
+     "6000": 0.691
+    },
+    "reference_v5_flip_rate": 0.34,
+    "reconstructed_v5_flip_rate": 0.613,
+    "original_probe_protocol_verified": false
+   },
+   "stability_gate": {
+    "evaluable_states": 94,
+    "directional_states": 93,
+    "zero_direction_states": 1,
+    "v5_flips": 57,
+    "v5_flip_rate": 0.6129,
+    "v6_flips": 48,
+    "v6_flip_rate": 0.5161,
+    "difference": -0.0968,
+    "bootstrap_ci95": [
+     -0.2143,
+     0.0
+    ],
+    "clusters": 8,
+    "resamples": 10000,
+    "seed": 780,
+    "at_most_half_of_v5": false,
+    "upper_bound_at_most_zero": true,
+    "passed": false
+   },
+   "robustness_dead_band": {
+    "5e-9": {
+     "states": 93,
+     "v5": 0.613,
+     "v6": 0.516,
+     "difference": -0.097
+    },
+    "5e-5": {
+     "states": 63,
+     "v5": 0.46,
+     "v6": 0.476,
+     "difference": 0.016
+    },
+    "1e-3": {
+     "states": 31,
+     "v5": 0.355,
+     "v6": 0.387,
+     "difference": 0.032
+    }
+   },
+   "report": "ignored artifacts/task78/task72_probe94/score.json"
+  },
+  "conclusion": "under the reproduced original protocol v6 is exactly neutral on the 144-snapshot candidate (0.505 vs 0.505) and one flip better on the full-192 candidate (0.495 vs 0.505, CI [-0.119,+0.083]); the preregistered gate (v6 <= half of v5, upper bound <= 0) is not met by either, and after removing sub-rounding gaps v6 is slightly worse. No evidence that v6 reduces horizon flipping.",
+  "artifacts": "ignored artifacts/task78/task72_probe94 (v5r9/, v69/, v6f192r9/, score_original_protocol.json, score_full192_9sample*.json); code scripts/task78_fog94_probe.py, python/test_task78_fog94_probe.py"
  }
 }
