@@ -1030,3 +1030,5 @@
 - 21:48 又一次换候选空档开出 2-worker 组（48 局，57 分钟只打 20 局）。22:52 主控在 r26 作业跑完后杀 qc 重启（看门狗没拉起，手动按 qc_deploy15 的 14i 分支启动，核对参数为 gate v5）。重启后该组报 `incomplete/invalid game results: 70/48` 被跳过：重跑组时旧的部分结果没清，记给 task134 一起看。task134 改派 Mac codex-plus2，task129 暂停。
 - 23:55 四份 llmplay run 都已到台式机 `~/llm_runs/`（3 份经 HF transfer 中转，取完已删），task105 已收到“追加输入 2”。00:03 task133 交给 codex-t125（额度刚恢复）。
 - 注意：`pgrep -f curriculum_queue.py` 的第一个结果是 tmux 服务器（它的 argv 是 12:49 那次 new-session 的旧命令），不是 qc 本身；核对参数要看 python 进程的 /proc/PID/cmdline。
+- 10-28 00:35 r27 训练准入又卡（要 20.59 GiB）、采集连续两组只有 1 worker。发现台式机 `/tmp` 是 tmpfs，被旧临时文件占了 7.5 GiB 内存；清理了 6 小时以上没人引用的条目（3.7 GiB）。**主控失误**：清理顺带删了 tmux 套接字 `/tmp/tmux-1000`，短暂起了第二个 tmux 服务器和 qc，约 2 分钟内杀掉，没有写状态；用 SIGUSR1 让旧服务器重建套接字，会话都在。**热修**：`cq/scripts/curriculum_queue.py` 的 `MEMORY_RESERVE_BYTES` 从 6 改为 3 GiB（备份在 `~/pvz-logs/curriculum_queue.py.before_reserve_hotfix`），按 14i 参数重启 qc，00:41 r27 开始打包。task134 要以此为基线，正式替换。
+- r26 门禁 v5 分区：day 359 vs 383（gain 24 / harm 48，−5.8pp，显著）、night −2.7pp、pool +8.4pp、fog +1.5pp、roof 2/90 vs 0/90，overall +0.4pp。
