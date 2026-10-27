@@ -25,7 +25,7 @@ LOG = ROOT / "artifacts/task78/formal_run.log"
 def plan():
     scripts = ROOT / "scripts"
     return [
-        ("corpus", [PY, str(scripts / "task78_corpus_check.py")]),
+        ("corpus", [PY, str(scripts / "task78_corpus_check.py"), "--verify-rows"]),
         ("train", [PY, str(scripts / "task78_train.py"), "--corpus", "original",
                    "--out", str(FORMAL), "--device", "cuda"]),
         ("freeze", [PY, str(scripts / "task78_formal_ab.py"), "freeze"]),

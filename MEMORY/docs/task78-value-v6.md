@@ -219,6 +219,8 @@
 
 - 2026-10-27 18:34（CodeBuddy）：**把"文件到了但没 descriptor"这一格也自动化，并给自动链加上行级门**。`task78_watch_corpus.py` 新增 `--source-root DIR`：descriptor 不存在时先调 `--write-descriptor` 把它 hash 出来；随后**必须**通过 `--verify-rows`（逐分片复现 324,559/29,446、3,404/456、75,136/9,600）才启动 `task78_formal_run.py`，文件齐但内容不对时仍继续等。新增 2 项测试（先建后验、建失败即等待），watcher 共 5 项、task78 共 **167 项**测试通过；`--once` 实测仍输出 `CORPUS_MISSING`。已按同一命令重启监控器（旧 PID 1123053 → 新 PID 1255443，18:34 起轮询），日志与停止文件路径不变。
 
+- 2026-10-27 18:45（CodeBuddy）：**正式链的语料门也改成行级**：`task78_formal_run.py` 的 `corpus` 步从裸 `task78_corpus_check.py` 改成带 `--verify-rows`（此前只有 watcher 走行级门，直接跑 formal_run 时不会）。补 1 项断言（corpus 步必须含 `--verify-rows`），formal_run 5 项测试通过；`task78_formal_run.py` 实测仍 `STOP corpus rc=1`（本机无语料）。另在 `value-v6.md` §8 命令链补了第 0c 步"2 步冒烟"（`--epochs 1 --steps 2`，真加载器/真配比/约 1 分钟），避免语料到位后第一次 1 小时训练才发现混料或显存问题。
+
 ## 预登记（2026-10-25，训练前冻结）
 
 执行状态（2026-10-27 02:49 当前回执）：69个历史错误任务已补齐，192任务完整导出987行/731胜；修正后192个示范root/视界历史检查全部通过。旧985行导出/分片与69个原始任务仍保留在ignored的`export_192_before_context_fix.json`、`data_192_before_context_fix/`、`labels_before_context_fix/`，映射与哈希见`context_label_preservation.json`。诊断配对15/15格、512/512对及补充示范24对均完成，只有白天非劣通过；夜间/泳池非劣及雾/屋顶改善均未过。屋顶已完成168/216，k0/k1各72任务已正常导出，分别672非终局叶/268胜及672非终局叶/297胜；k2的L41已收齐24项，L42继续采集，三共同未来未齐，尚不评分。屋顶成功后再接修正的24条原94态重建，旧错误静态网批次保留。整批恢复要求10GiB，后续CPU任务准入8GiB；GPU训练仍10GiB/一小时。最多2游戏、nice19；仅资源让位可自动重试，其他错误即停，原任务范围不变。

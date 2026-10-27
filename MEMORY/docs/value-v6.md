@@ -280,6 +280,9 @@ old branch 192 / old episode 64 混训，四类门禁（旧区非劣、新两区
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_corpus_check.py
 # 0b) 再加 --verify-rows：逐分片重算 v5 的 fit/val 行数（324,559/29,446、3,404/456、75,136/9,600）
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_corpus_check.py --verify-rows
+# 0c) 冒烟：真加载器 + 真五类配比跑 2 步（约 1 分钟、≤1 GiB 显存），确认混料与显存后再开正式训练
+PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_train.py \
+    --corpus original --out /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/smoke --epochs 1 --steps 2 --device cuda
 PVZ_NO_POPUP=1 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_train.py --corpus original --out /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/artifacts/task78/formal_v6 --device cuda
 /home/newbiexvwu/.venvs/ml/bin/python3 /home/newbiexvwu/PvZ-search/.claude/worktrees/v6/scripts/task78_formal_ab.py freeze
 # 后续v5/v6阶段仍须等当前游戏链退出，锁保护同时最多2游戏。

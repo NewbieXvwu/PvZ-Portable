@@ -12,6 +12,8 @@ def test_plan_is_corpus_then_train_then_the_four_panel_steps():
     assert [name for name, _ in steps] == ["corpus", "train", "freeze", "v5", "v6", "report"]
     train = dict(steps)["train"]
     assert "--corpus" in train and train[train.index("--corpus") + 1] == "original"
+    corpus = steps[0][1]
+    assert "--verify-rows" in corpus
     assert dict(steps)["v5"][-1] == "v5" and dict(steps)["report"][-1] == "report"
 
 
