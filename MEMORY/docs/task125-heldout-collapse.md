@@ -144,8 +144,9 @@ CodeBuddy 2026-10-27 接手（heldout21 @ `ad651176` = `origin/deploy14f`）。C
    r20 的两个种子数据完全相同，在 holdout1 上是 **4/32 vs 28/32（75pp）**；r21 的候选（5/32）正好落在
    r20 *没被选中* 的那个种子的水平上。门禁挑种子用的是训练选择集（`day_l1_train_d7_m250` 等），
    **不含 holdout1**，所以「挑最好的种子」救不了这个区。
-   （r11 的 26/32 与候选的 5/32 已用门禁自己的 `games.jsonl` 逐局复核一致；
-   回执 `artifacts/task125/heldout_probe.json`。）
+   （r11 的 26/32 与候选的 5/32 已用门禁自己的 `games.jsonl` **逐局**复核：
+   32/32 个种子判定完全一致，不只是总数一致；r20 两个种子之间 24/32 个种子判定不同。
+   回执 `artifacts/task125/heldout_probe.json`，生成脚本 `scripts/task125_trace_probe.py`。）
 
    → **−33pp 不能归因于那 84 行的打包修复**：同一份数据只换训练种子，这个任务就能掉 75pp。
 
