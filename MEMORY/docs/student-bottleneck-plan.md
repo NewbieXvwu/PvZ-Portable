@@ -1012,3 +1012,8 @@
 - 2026-10-27 12:50（台式机时间）：**qc 12:09 OOM 崩溃**，看门狗两次重启后 12:14 停机，停采约 35 分钟。12:09 MemAvailable 1.2 GiB，游戏进程输出 JSON 被截断，整组判无效，控制器被杀。主因：cbp-task128 在台式机跑 `pytest python/test_qc_resilience.py`（12:48 时已 17 GB 还在涨）；同时第 23 轮种子 2 12:03 恢复训练、task104 的训练也在。主控 12:44 手动用 deploy14g 参数重启 qc、重启看门狗，kill 掉失控的 pytest，通知 cbp-task128。AGENTS §6.5 第 7 条：台式机上测试只跑相关单测并限内存。task104 已训完四个模型、评估 992 局（demorows 6e3adf30），待主控读结论。
 - 2026-10-27 13:15（台式机时间）：**task104 关闭，不部署**（demorows 6e3adf30）：B 加 1.5 万条人类 + 1.7 万条 LLM 示范决策，屋顶 L42–44 冷启动四个模型全 0/96，零改善；非屋顶平均 −4.6pp（泳池 `pool_l21_train_rand` 8/8 → 0/8）。示范只占约 0.2% 的行，改变不了开局；屋顶继续走示范起点格（第 24 轮 roof44 melon 起点格 38/48）。派 **task130**（Mac codex-plus2，sleepinput）：蘑菇睡眠状态进输入，与 v2bungee 合成新版本。第 23 轮种子 2 训练中，第 24 轮 13:10 采完。
 - 2026-10-27 13:55（台式机时间）：**主控事故**：12:49 重启 qc 时用了 `pkill -f 'curriculum_queue.py --rounds 100'`，tmux 服务器的 argv 含这条命令，被一并杀掉，台式机全部 tmux 会话消失（看门狗、agent_pool、deploy14h-wait、serialize、所有 Codex / CodeBuddy / Qoder 会话），13:50 巡检才发现。qc 本身是随后新建的，一直在跑。已恢复：qc-watchdog、deploy14h-wait、serialize-r24/r25、agent-pool；重建 codex-import（task105，plus）、codex-t125（task128，plus）、codexb-task78（Business 无额度，由调度池转 CodeBuddy），都从分支状态接续。旧的空闲会话（Qoder、cb-qc*、已完成的 codex-*）不重建。教训已入长期记忆：停 tmux 托管的任务只用 `tmux kill-session -t =名` 或精确 PID。
+
+### 2026-10-27 14:50 主控
+- task128 交付（58872f22，38 个冒险关 / 1920 对，含屋顶 L41/L46 老师胜局）。审 `qc_deploy14i.sh`：三层 start_qc（14i→14h→14g）与各自在线参数一致，boundary 检查无排队门禁作业才切。14i 代码是 14h（4d26acb2）的超集，所以**空档等待器直接改指 14i**（tmux `deploy14i-wait`），跳过单独上 14h，少等一个空档。
+- task130 交付（sleepinput f9fe20c4：学生 v2sleep / 价值编码器 v4，13 项对拍通过）。上线卡在热启动：首层通道变了 → 派 task131（台式机 codex-t125，分支 obsup）：加宽零初始化热启动 + build7 + `qc_deploy15.sh`（只准备）。
+- task129 原 CodeBuddy 会话 429 额度用尽到 17:26，实际未开工 → 转交 Mac codex-plus2（分支 deckrules）。
