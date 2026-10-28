@@ -17,11 +17,33 @@ from python.test_import_llm_run import _meta, _write_archive
 from deploy_task105 import merge_tasks
 
 
-def run_sha(*args):
-    return production_run_sha(*args, executor_factory=ThreadPoolExecutor)
+def run_sha(*args, **kwargs):
+    return production_run_sha(*args, executor_factory=ThreadPoolExecutor, **kwargs)
 
 
 class ShaImportTest(unittest.TestCase):
+    def test_single_verifier_can_share_the_three_game_budget_with_scanning(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            for index in range(3):
+                _write_archive(root / 'source', str(index), _meta(wins=5 + index))
+            manifest = root / 'configs/tasks.json'
+            manifest.parent.mkdir()
+            manifest.write_text(json.dumps({'tasks': []}))
+            layers = root / 'layers.json'
+            layers.write_text(json.dumps({'layers': {}}))
+            with patch('llm_import_sha.verification_context', return_value={}), \
+                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}) as verify:
+                pools = []
+                def executor(**kwargs):
+                    pools.append(kwargs['max_workers'])
+                    return ThreadPoolExecutor(**kwargs)
+                production_run_sha(root / 'source', root / 'dest', manifest, layers,
+                                   root, root / 'engine', 84_000_000, root / 'ledger.json',
+                                   executor_factory=executor, verify_workers=1)
+            self.assertEqual(pools, [1])
+            self.assertEqual(verify.call_count, 3)
+
     def test_first_verification_uses_two_workers_and_cached_sha_never_replays(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

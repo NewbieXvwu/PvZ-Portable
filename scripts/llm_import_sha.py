@@ -98,7 +98,9 @@ def verify_once(target, resources, executable, receipt_path, sha, context, probl
 
 
 def run_sha(input_path, dest, manifest, layers_path, resources, executable,
-            future_base, seed_ledger, *, executor_factory=None):
+            future_base, seed_ledger, *, executor_factory=None, verify_workers=2):
+    if verify_workers not in (1, 2):
+        raise ValueError('verify_workers must be 1 or 2')
     if input_path.is_dir() and (input_path.resolve() == dest.resolve()
                                or input_path.resolve() in dest.resolve().parents
                                or dest.resolve() in input_path.resolve().parents):
@@ -168,8 +170,8 @@ def run_sha(input_path, dest, manifest, layers_path, resources, executable,
                         if context is None:
                             context = verification_context(executable, resources)
                         if pool is None:
-                            pool = (executor_factory(max_workers=2) if executor_factory else
-                                    ProcessPoolExecutor(max_workers=2,
+                            pool = (executor_factory(max_workers=verify_workers) if executor_factory else
+                                    ProcessPoolExecutor(max_workers=verify_workers,
                                         mp_context=multiprocessing.get_context('spawn')))
                         futures[sha] = (pool.submit(verify_once, target, resources, executable,
                                                    receipt_path, sha, context, problems), problems)

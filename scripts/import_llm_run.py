@@ -633,7 +633,8 @@ def main_with(args) -> int:
         from llm_import_sha import run_sha
         result = run_sha(args.input, args.dest, args.manifest, args.layers,
                          args.resource_dir, args.executable or ROOT / 'build/pvz-portable',
-                         args.future_base, args.seed_ledger)
+                         args.future_base, args.seed_ledger,
+                         verify_workers=getattr(args, 'verify_workers', 2))
     else:
         result = run(args.input, args.dest, args.manifest, args.layers, args.resource_dir,
                      args.executable, not args.no_verify, args.future_base, seed_ledger=args.seed_ledger)
@@ -672,6 +673,8 @@ def main() -> int:
     parser.add_argument('--no-verify', action='store_true', help='只入库不校验（测试用）')
     parser.add_argument('--content-addressed', action='store_true',
                         help='兼容选项；正常导入现已默认按SHA缓存首次verify，最多2个游戏进程')
+    parser.add_argument('--verify-workers', type=int, choices=(1, 2), default=2,
+                        help='首次verify的游戏进程数；与2进程扫描并行时用1')
     parser.add_argument('--report', type=Path, help='把 markdown 报告写到这里')
     parser.add_argument('--scan-out', type=Path, help='扫描作业清单 json')
     parser.add_argument('--future-base', type=int, default=DEFAULT_FUTURE_BASE)
