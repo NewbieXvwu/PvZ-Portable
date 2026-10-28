@@ -127,7 +127,7 @@ def write_report(result, layers):
              '- verify结果按存档SHA持久化。后续新SHA用2个游戏进程并行首次verify；已有成功或失败回执直接复用，绝不二次重放。',
              f"- 接手扫描完成{result['scanned']}/{result['scan_expected']}份，登记{result['registered']}格，"
              f"其中{result['deployed']}格已出现在生产qc清单。其余已登记格可由主控组边界部署；本任务未执行部署脚本。",
-             '- 原adaptive→register链继续，最多2个游戏进程、qc优先。已移除额外审计、全包重导入、重复register、全机种子复查等尾链。',
+             '- adaptive→register主线2个游戏进程，辅线1个，合计最多3个、qc优先。复用旧回执和已完成扫描，不运行额外审计或复验尾链。',
              '- 策略仅留本机原zip参考；存档、游戏资源未进git、未上传HF。', '',
              '| 层 | 任务 | 通关种子 | 稳健种子 | 拒绝份数 |', '|---|---|---|---|---|']
     for layer, ids in layers.items():
