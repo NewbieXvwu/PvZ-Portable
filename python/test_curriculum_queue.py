@@ -911,6 +911,7 @@ class DemoStartCellsTest(unittest.TestCase):
         # task70 B6: fog start cells use the _hv2 family (human_v2 observation, same archives /
         # ladders / future seed blocks); roof start cells have no fog and keep the base task id.
         self.assertEqual(set(cells), {
+                                      'llmplay3_a_l8_m100_s139011017_a0d40c9a13585',
                                       'llmplay3_a_l44_m100_s139003017_a58f865ccd903',
                                       'fog79_l38_snow_magnet_v2_m200_s81024007_ae2f2c0b739a0',
                                       'llmplay3_c_l7_d02_s139066022_a3fa0b8ae493a',

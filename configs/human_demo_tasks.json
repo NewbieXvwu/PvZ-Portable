@@ -29442,7 +29442,24 @@
     34,
     39,
     44
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/0d40c9a135853f3aeea511a7777ab099cf310f1d03903353b660a8dd8a91d290",
+    "decisions": [
+     684,
+     436,
+     374,
+     311,
+     249,
+     187,
+     125,
+     63,
+     1
+    ],
+    "index": 0,
+    "future_seed_start": 335000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "llmplay3_a_l44_m100_s139003017_a58f865ccd903",
