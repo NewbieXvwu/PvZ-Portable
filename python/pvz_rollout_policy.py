@@ -319,10 +319,6 @@ def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
-    if net.obs == 'v2timer':
-        # 引擎侧还没有第 9 号输入版本；先导出会在 C++ 学生里读成 v2sleep 的布局，
-        # 特征错位不会报错，只会静默变差。要上线得先加 C++ 通道（见任务书 §结论）。
-        raise ValueError('v2timer has no native input version yet; C++ export is not implemented')
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",
@@ -342,7 +338,7 @@ def export_student(net: RolloutNet, path) -> None:
         if identity or net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))
         if identity or net.row_pool or net.obs != "v1":
-            stream.write(struct.pack("<I", 8 if net.obs == "v2sleep" else 7 if net.obs == "v2bungee" else 6 if net.obs == "v2boss" else 5 if net.obs == "v2size" else 4 if net.obs == "v2fog" else 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
+            stream.write(struct.pack("<I", 9 if net.obs == "v2timer" else 8 if net.obs == "v2sleep" else 7 if net.obs == "v2bungee" else 6 if net.obs == "v2boss" else 5 if net.obs == "v2size" else 4 if net.obs == "v2fog" else 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
         if identity or net.row_pool:
             stream.write(struct.pack("<I", int(net.row_pool)))
         if identity:

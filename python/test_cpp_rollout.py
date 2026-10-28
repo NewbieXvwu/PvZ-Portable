@@ -12,7 +12,7 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from pvz_env import TaskSpec
+from pvz_env import TaskSpec, profile_for_deck
 from pvz_event_env import EventWaitEnv
 from pvz_rollout_policy import RolloutNet, act, export_student, features, load_student
 from pvz_value_net import observation_context
@@ -97,6 +97,54 @@ class CppRolloutTest(unittest.TestCase):
                     previous, previous_action = frame, action
                     self.obs, *_ = self.env.step(action)
         print(json.dumps({"rollout_max_abs_error": maximum_error, "configurations": 48}), flush=True)
+
+    def test_v2timer_continuation_features(self):
+        # task147: observation 9 = v2sleep + visible timers and the seed belt.
+        self._continuation_features("v2timer")
+
+    def _timer_channels(self, trace):
+        """Native board vs Python timer channels for the current public frame."""
+        self.env.rollout_predict(-1, False, trace_path=trace)
+        record = json.loads(Path(trace).read_text())
+        native = np.array(record["board"], np.float32).reshape(-1, 6, 10)
+        board, _ = StudentHistory("v2timer").features(_frame(record["observation"]), None, None)
+        return board, native
+
+    def test_v2timer_visible_timers_and_belt_on_a_constructed_board(self):
+        """Doom shroom / coffee bean / chomper countdowns and the seed belt, Python == C++."""
+        net = RolloutNet(width=8, obs="v2timer").eval()
+        export_student(net, self.path)
+        self.env.load_rollout_net(self.path)
+        deck = (0, 4, 6, 8, 15, 17, 35)
+        task = TaskSpec(level=1, seed=424242, profile=profile_for_deck(deck),
+                        preplanted=((6, 2, 6), (17, 3, 6), (8, 0, 5)))
+        self.obs, _ = self.env.reset(deck=deck, task=task)
+        trace = Path(self.directory.name) / "timer_features.jsonl"
+        seen = {"special": set(), "state": 0, "belt": 0}
+        planted = set()
+        # Level 1: the first zombie reaches the preplanted chomper around tick 5500, so the
+        # window has to cover a full bite (the chew alone is 4000 ticks).
+        for _ in range(400):
+            legal = self.obs["legal_actions"]["plants"]
+            for action in legal:
+                packet, row, col = action["packet"], action["row"], action["col"]
+                kind = deck[packet] if packet < len(deck) else None
+                if (kind == 15 and "doom" not in planted) or (kind == 35 and "coffee" not in planted
+                                                               and row == 0 and col == 5):
+                    planted.add("doom" if kind == 15 else "coffee")
+                    self.obs, *_ = self.env.step({"type": "plant", **action})
+                    break
+            board, native = self._timer_channels(trace)
+            np.testing.assert_array_equal(board[-4:].numpy().view(np.uint32), native[-4:].view(np.uint32))
+            seen["special"].update(float(value) for value in board[-4].flatten() if float(value) > 0)
+            seen["state"] = max(seen["state"], int((board[-3] > 0).sum()))
+            seen["belt"] = max(seen["belt"], int((board[-2] > 0).sum()))
+            if len(seen["special"]) >= 3 and seen["state"] and len(planted) == 2:
+                break
+            self.obs, *_ = self.env.step({"type": "wait", "ticks": 20})
+        self.assertGreaterEqual(len(seen["special"]), 3, "explosion countdown never reached the board")
+        self.assertGreater(seen["state"], 0, "no chomper/squash countdown frame was captured")
+        self.assertGreater(seen["belt"], 0)
 
     def test_v2lite_continuation_features_and_root_history(self):
         self._continuation_features("v2lite")

@@ -34,6 +34,7 @@ public:
 	void Load(const std::string& path);
 	static void BungeeFeatures(LawnApp* app, float* board);
 	static void SleepFeatures(LawnApp* app, float* board);
+	static void TimerFeatures(LawnApp* app, float* board);
 	bool Loaded() const { return width != 0; }
 	bool HasHistory() const { return v2lite || v2; }
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
@@ -60,6 +61,9 @@ private:
 	bool bossChannel = false;
 	bool bungeeChannel = false;
 	bool sleepChannel = false;
+	// task147: v2timer (observation 9) = v2sleep + visible action timers and the seed belt.
+	bool timerChannel = false;
+	int observationChannels = 0;
 	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	// Every buffer the forward pass needs is allocated once in Load(): a rollout runs the

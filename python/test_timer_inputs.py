@@ -124,10 +124,18 @@ class TimerInputsTest(unittest.TestCase):
         for name in expected:
             torch.testing.assert_close(actual[name], expected[name], rtol=1e-6, atol=1e-6)
 
-    def test_native_export_refuses_until_the_cpp_channel_exists(self):
+    def test_native_export_declares_observation_nine(self):
+        # task147: the C++ collector reads observation 9 as v2timer (v2sleep + 4 channels).
+        import struct
         net = RolloutNet(8, obs='v2timer').eval()
-        with self.assertRaises(ValueError):
-            export_student(net, '/tmp/task145-should-not-exist.bin')
+        path = '/tmp/task147-export.bin'
+        export_student(net, path)
+        with open(path, 'rb') as stream:
+            header = stream.read(24)
+        self.assertIn(header[:8], (b'PVZRN004', b'PVZRN005', b'PVZRN006'))
+        size, pool, context, observation = struct.unpack('<IIII', header[8:24])
+        self.assertEqual((size, observation), (8, 9))
+        self.assertEqual((pool, context), (0, 0))
 
 
 if __name__ == '__main__':
