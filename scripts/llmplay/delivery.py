@@ -116,26 +116,35 @@ def archive_requirements(task_id, strategy="", review="", abandoned=False, **kwa
     workflow.archive_requirements(task_id, strategy, review, abandoned, **kwargs)
 
 
-def diagnose(task_id, *, waves=None, missing="", note="") -> Path:
-    """C 层 5 个种子全输时的失败诊断；写完立刻重新发布交付。"""
+def diagnose(task_id, *, waves=None, missing="", note="", deck=None) -> Path:
+    """C/E 层失败诊断；E 层用 deck 绑定卡组，写完立刻接下一组。"""
     if not str(missing).strip():
         raise ValueError("失败诊断要写清楚缺什么（missing=...），例如「第 8 波后排水路缺群伤」")
     root = output_dir()
     with _lock(root):
         document = _read_progress(root)
         derived = _derive(document["archives"], document.get("run_id"))
-        item = workflow._view(derived)["challenge"]
-        if item["task_id"] != task_id or item["action"] != "diagnose":
-            raise ValueError("须先完成 C 轨当前卡组的 5 个真实终局，再为该项写诊断")
+        main, challenge = workflow._ordered(derived)
+        candidates = [item for item in main + challenge
+                      if item["task_id"] == task_id and item["action"] == "diagnose"
+                      and (deck is None or workflow.deck_key(item["deck"]) == workflow.deck_key(deck))]
+        if len(candidates) != 1:
+            raise ValueError("须先完成 C 轨指定终局或 E 层同一卡组同一倍数连续 5 个新种子的败局；E 层请传 deck")
+        item = candidates[0]
         if not waves or any(type(wave) is not int or wave < 0 for wave in waves):
             raise ValueError("waves 必须填写真实失败波次")
         folder = root / "diagnosis" / str(derived["cycle"])
         folder.mkdir(parents=True, exist_ok=True)
         payload = dict(schema="llmplay_diagnosis_v1", task_id=task_id, cycle=derived["cycle"],
                        waves=list(waves), missing=str(missing), note=str(note))
-        path = folder / (task_id + ".json")
+        suffix = ""
+        if item["layer"] == "E":
+            payload.update(deck=sorted(item["deck"]), multiplier=item["multiplier"])
+            suffix = "__" + workflow.deck_key(item["deck"])
+        path = folder / (task_id + suffix + ".json")
         path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         _publish(root, document["archives"], budget.session())
+        workflow.release(task_id, None)
     return path
 
 
@@ -313,19 +322,27 @@ def _carry_entry(entry) -> dict:
 
 
 def _restore_diagnoses(root, prior) -> None:
-    """C 层「5 个种子全输」的诊断只写在 detail.C 里；接进度时补回文件，判定才复现。"""
-    detail = (prior.get("detail") or {}).get("C") or {}
+    """接回 C/E 结论层中的诊断；E 诊断按任务、圈和卡组保留。"""
+    detail = prior.get("detail") or {}
     cycle = int(prior.get("cycle") or 1)
-    for task_id, item in detail.items():
+    items = list((detail.get("C") or {}).values())
+    items += [item for group in (detail.get("E") or {}).values()
+              for item in (group.get("items") or {}).values()]
+    for item in items:
         report = (item or {}).get("diagnosis") or {}
         if not (report.get("waves") and str(report.get("missing") or "").strip()):
             continue
+        task_id = item["task_id"]
         folder = root / "diagnosis" / str(cycle)
         folder.mkdir(parents=True, exist_ok=True)
         payload = dict(schema=DIAGNOSIS_SCHEMA, task_id=task_id, cycle=cycle,
                        waves=list(report["waves"]), missing=str(report["missing"]),
                        note=str(report.get("note") or ""))
-        (folder / (task_id + ".json")).write_text(
+        suffix = ""
+        if "multiplier" in item:
+            payload.update(deck=sorted(item["deck"]), multiplier=item["multiplier"])
+            suffix = "__" + workflow.deck_key(item["deck"])
+        (folder / (task_id + suffix + ".json")).write_text(
             json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
 

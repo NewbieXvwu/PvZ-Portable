@@ -9,7 +9,7 @@
 任务族
 ------
 A 层（自选卡组）：屋顶 L41–L49 共 9 关 + 白天/夜间/泳池/雾夜 12 关，共 21 关。
-E 层（加压）：每关 1.5 / 2.0 两档出怪倍数，卡组由 B 层下传。
+E 层（加压）：每关 1.25 / 1.5 两档出怪倍数（旧 2.0 族保留供前次进度计数），卡组由 B 层下传。
 C 层（指定卡组挑战）：`configs/llmplay3_challenge_decks.json` 的 50 条，
 按关卡分三批（batch 1/2/3），第 N 圈用 `(N-1) % 3 + 1` 批，种子按圈换窗口。
 第 1 圈 5 个种子全输的 `RETRY` 那几套在第 2 圈再给一次机会：任务 id 加 `_retry`、
@@ -50,8 +50,8 @@ REQUIREMENTS = {
           "note": "指定卡组每套 5 个种子里赢≥2；5 个全输就写失败诊断，也算完成"},
     "D": {"strategies": 3, "wins_per_strategy": 2,
           "note": "B 层下传的每套卡组，3 种声明的不同开局节奏各赢 2 个种子"},
-    "E": {"multipliers": [1.5, 2.0], "wins_per_multiplier": 2,
-          "note": "B 层下传的每套卡组，1.5 与 2.0 倍各赢 2 个种子"},
+    "E": {"multipliers": [1.25, 1.5], "wins_per_multiplier": 2, "loss_streak": 5,
+          "note": "B 层下传的每套卡组，1.25 与 1.5 倍各赢 2 个种子；连续 5 个新种子全输则写诊断完成"},
 }
 
 
@@ -79,15 +79,15 @@ def a_tasks(scoreboard):
     return out
 
 
-def e_tasks():
+def e_tasks(*, reduced=False):
     out = []
     for level in A_LEVELS:
-        for multiplier, tag in ((1.5, "m150"), (2.0, "m200")):
+        for multiplier, tag in (((1.25, "m125"),) if reduced else ((1.5, "m150"), (2.0, "m200"))):
             out.append(dict(task_id="llmplay3_e_l%d_%s" % (level, tag), level=level, deck=[],
                             deck_selection="player", unlock_field="available_plants", layer="E",
                             pair_task="llmplay3_a_l%d_m100" % level,
                             zombie_count_multiplier=multiplier,
-                            description="加压层：出怪 %.1f 倍，卡组必须用 B 层下传的那套；赢 2 个种子。" % multiplier))
+                            description="加压层：出怪 %g 倍，卡组必须用 B 层下传的那套；赢 2 个种子，或连续 5 个新种子全输写失败诊断。" % multiplier))
     return out
 
 
@@ -207,10 +207,11 @@ def main() -> int:
     a, e = a_tasks(scoreboard), e_tasks()
     c, c_order = c_tasks(challenges)
     retry = retry_tasks(c)
-    tasks = a + e + c + retry
+    reduced = e_tasks(reduced=True)
+    tasks = a + e + c + retry + reduced
     validate(tasks)
     # 重试任务排在最后：种子块按 order 序号分配，排在后面才拿得到没用过的新种子。
-    order = [task["task_id"] for task in a + e] + c_order + [task["task_id"] for task in retry]
+    order = [task["task_id"] for task in a + e] + c_order + [task["task_id"] for task in retry + reduced]
     if args.check:
         print(json.dumps(dict(A=len(a), E=len(e), C=len(c), retry=len(retry), total=len(tasks)),
                          ensure_ascii=False))

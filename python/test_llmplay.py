@@ -108,9 +108,10 @@ class PackageTest(unittest.TestCase):
         layers = {}
         for task in manifest['tasks']:
             layers[task['layer']] = layers.get(task['layer'], 0) + 1
-        self.assertEqual(layers, dict(A=21, C=56, E=42))    # 50 套指定卡组 + 6 个第 2 圈重试
+        self.assertEqual(layers, dict(A=21, C=56, E=63))    # 另保留 21 个旧 2.0 倍任务供 carry 计数
         self.assertEqual(by_id['llmplay3_a_l45_m100']['reference_task_id'], 'demo_roof_45_orig_m100')
         self.assertEqual(by_id['llmplay3_a_l32_m100']['fog_observation'], 'human_v2')
+        self.assertEqual(by_id['llmplay3_e_l42_m125']['zombie_count_multiplier'], 1.25)
         self.assertEqual(by_id['llmplay3_e_l42_m150']['zombie_count_multiplier'], 1.5)
         self.assertEqual(by_id['llmplay3_e_l42_m200']['zombie_count_multiplier'], 2.0)
         self.assertEqual(by_id['llmplay3_e_l42_m200']['pair_task'], 'llmplay3_a_l42_m100')

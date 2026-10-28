@@ -89,7 +89,7 @@ def ordered_tasks() -> list:
 
 
 def diagnoses() -> dict:
-    """C 层失败诊断：`out/diagnosis/<task_id>.json`。文件缺失即视为没写。"""
+    """C/E 层失败诊断；E 层另按卡组区分。文件缺失即视为没写。"""
     root = output_path(ROOT) / "diagnosis"
     found = {}
     if root.is_dir():
@@ -98,7 +98,10 @@ def diagnoses() -> dict:
                 document = json.loads(path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 continue
-            found[(document.get("task_id"), document.get("cycle"))] = document
+            key = (document.get("task_id"), document.get("cycle"))
+            if document.get("deck") is not None:
+                key += (deck_key(document["deck"]),)
+            found[key] = document
     return found
 
 
@@ -296,18 +299,27 @@ def _cycle(number, entries, tasks, req, run_id=None) -> dict:
                                  complete=bool(items) and all(item["complete"] for item in items.values()))
     d_complete = b_complete and all(item["complete"] for item in d_detail.values())
 
-    # ---- E 加压
+    # ---- E 加压：旧 2.0 倍成绩抵 1.25 倍；五败旧组只补诊断，不再开局。
     e_detail = {}
     for task_id in a_ids:
         items = {}
         for key in b_passed[task_id]:
-            for multiplier, e_task in sorted(e_tasks.get(task_id, {}).items()):
-                entries_e = [entry for entry in in_cycle
-                             if entry["task_id"] == e_task and deck_key(entry.get("deck")) == key]
-                wins = len({int(entry["seed"]) for entry in entries_e if entry.get("won")})
-                items["%s@%.1f" % (key, multiplier)] = dict(
-                    task_id=e_task, multiplier=multiplier, deck=a_detail[task_id]["decks"][key]["deck"],
-                    wins=wins, complete=wins >= int(req["E"]["wins_per_multiplier"]))
+            cards = a_detail[task_id]["decks"][key]["deck"]
+            for multiplier in req["E"]["multipliers"]:
+                e_task = e_tasks[task_id][float(multiplier)]
+                old = None
+                if float(multiplier) == 1.25 and 2.0 in e_tasks[task_id]:
+                    old_task = e_tasks[task_id][2.0]
+                    old = _pressure_group(old_task, 2.0, cards, in_cycle, diagnosis, number, req["E"])
+                if old and (old["wins"] >= int(req["E"]["wins_per_multiplier"]) or old["diagnosable"]):
+                    group = old
+                else:
+                    group = _pressure_group(e_task, multiplier, cards, in_cycle, diagnosis, number, req["E"])
+                    if old:
+                        group["prior_wins"] = old["wins"]
+                        group["wins"] += old["wins"]
+                        group["complete"] |= group["wins"] >= int(req["E"]["wins_per_multiplier"])
+                items["%s@%g" % (key, multiplier)] = group
         e_detail[task_id] = dict(task_id=task_id, items=items,
                                  complete=bool(items) and all(item["complete"] for item in items.values()))
     e_complete = b_complete and all(item["complete"] for item in e_detail.values())
@@ -322,6 +334,29 @@ def _cycle(number, entries, tasks, req, run_id=None) -> dict:
     return dict(number=number, batch=batch, complete=all(item["complete"] for item in layers.values()),
                 layers=layers,
                 detail=dict(A=a_detail, B=b_detail, C=c_detail, D=d_detail, E=e_detail))
+
+
+def _pressure_group(task_id, multiplier, cards, entries, diagnosis, cycle, req) -> dict:
+    key = deck_key(cards)
+    rows = [entry for entry in entries if entry["task_id"] == task_id
+            and deck_key(entry.get("deck")) == key and not entry.get("abandoned")
+            and entry.get("result") in (1, 2)]
+    wins = {int(entry["seed"]) for entry in rows if entry.get("won")}
+    seen, streak = set(), []
+    for entry in rows:
+        seed = int(entry["seed"])
+        if entry.get("won"):
+            streak = []
+        elif seed not in seen:
+            streak.append(seed)
+        seen.add(seed)
+    report = diagnosis.get((task_id, cycle, key))
+    if not (report and report.get("waves") and str(report.get("missing") or "").strip()):
+        report = None
+    diagnosable = len(streak) >= int(req["loss_streak"])
+    return dict(task_id=task_id, multiplier=multiplier, deck=cards, wins=len(wins),
+                loss_seeds=streak, diagnosable=diagnosable, diagnosis=report,
+                complete=len(wins) >= int(req["wins_per_multiplier"]) or (diagnosable and bool(report)))
 
 
 def _level(tasks, task_id) -> int:
@@ -360,9 +395,11 @@ def derive(entries, run_id=None) -> dict:
             item = cycle["detail"]["C"].get(task_id)
             complete = bool(item and item["complete"])
         elif kind == "E":
-            item = next((entry for group in cycle["detail"]["E"].values()
-                         for entry in group["items"].values() if entry["task_id"] == task_id), None)
-            complete = bool(item and item["complete"])
+            groups = [entry for group in cycle["detail"]["E"].values()
+                      for entry in group["items"].values() if entry["task_id"] == task_id]
+            item = groups[0] if groups else None
+            active = bool(groups)
+            complete = bool(groups) and all(group["complete"] for group in groups)
         else:
             item = cycle["detail"]["A"].get(task_id)
             complete = bool(item and item["complete"])
@@ -605,9 +642,14 @@ def _main_items(document) -> list:
                 deck = item["items"][key]
                 if deck["complete"]:
                     continue
+                if deck["diagnosable"]:
+                    groups.append([_item(document, deck["task_id"], "diagnose", deck=deck["deck"],
+                                         pair_task=task_id, multiplier=deck["multiplier"],
+                                         note="同一卡组同一倍数连续 5 个新种子全输：补写失败波次和缺什么，诊断后完成该组")])
+                    continue
                 groups.append([_item(document, deck["task_id"], "play", seed=seed, deck=deck["deck"],
                                      pair_task=task_id,
-                                     note="加压层：出怪 %.1f 倍，只能用 B 层下传的这套卡组" % deck["multiplier"])
+                                     note="加压层：出怪 %g 倍，只能用 B 层下传的这套卡组" % deck["multiplier"])
                                for seed in _fresh(deck["task_id"], cycle, archives, run_id)[:2]])
         return _interleave(groups)
     return out
@@ -751,6 +793,10 @@ def check(document, task_id, deck, strategy="", seed=None) -> dict:
         passed = document["detail"]["B"][task["pair_task"]]["items"]
         if deck_key(deck) not in {key for key, item in passed.items() if item["complete"]}:
             _refuse(document, "E 层只能用 B 层稳健复验通过的卡组")
+        group = next((item for item in document["detail"]["E"][task["pair_task"]]["items"].values()
+                      if item["task_id"] == task_id and deck_key(item["deck"]) == deck_key(deck)), None)
+        if not group or group["complete"] or group["diagnosable"]:
+            _refuse(document, "该加压组已完成或须写失败诊断，请接下一项")
         return context
     # A/B/D 三层共用 A 层的任务；当前层决定用哪套规则。
     seeds = plan()["tasks"].get(task_id) or []
@@ -862,7 +908,7 @@ def report(document) -> str:
                                                               "、".join(group["done"]) or "—"))
     for task_id, item in document["detail"]["E"].items():
         for key, group in item["items"].items():
-            lines.append("| E | %s | %s | %.1f 倍 胜 %d |" % (group["task_id"], group["deck"], group["multiplier"], group["wins"]))
+            lines.append("| E | %s | %s | %g 倍 胜 %d，连续败 %d，诊断%s |" % (group["task_id"], group["deck"], group["multiplier"], group["wins"], len(group["loss_seeds"]), "已写" if group["diagnosis"] else "待写" if group["diagnosable"] else "—"))
     lines += ["", "## 全部存档", "", "| 任务 | 种子 | 圈 | 结果 | 稳健 | 卡组 | 存档 | 说明 |", "|---|---|---|---|---|---|---|---|"]
     for entry in document["archives"]:
         status = ("放弃：" + str(entry.get("abandon_reason"))) if entry.get("abandoned") else ("通关" if entry["won"] else "未通关")

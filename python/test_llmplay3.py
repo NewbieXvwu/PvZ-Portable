@@ -63,7 +63,7 @@ def fill_cycle(cycle, *, skip_layer=None, robust=True):
                 for offset in (0, 1):
                     entries.append(entry(task_id, pool[8 + index * 6 + style * 2 + offset], cards,
                                          cycle=cycle, strategy=name, layer="D", opening=[style, 1, style]))
-            for multiplier, tag in ((1.5, "m150"), (2.0, "m200")):
+            for multiplier, tag in ((1.25, "m125"), (1.5, "m150")):
                 e_task = "llmplay3_e_l%d_%s" % (TASKS[task_id]["level"], tag)
                 for offset in (0, 1):
                     entries.append(entry(e_task, seeds_of(e_task, cycle)[index * 2 + offset], cards,
@@ -277,6 +277,38 @@ class GateTest(unittest.TestCase):
         for label in ("", "打法1", "随便打", "经济优先2"):
             with self.assertRaises(ValueError):
                 workflow.check(document, item["task_id"], item["deck"], label)
+
+
+class PressureExitTest(unittest.TestCase):
+    def test_next_task_moves_on_after_five_losses_and_diagnosis(self):
+        from llmplay import delivery
+        for tag in ("m125", "m150", "m200"):
+            with self.subTest(multiplier=tag), tempfile.TemporaryDirectory() as directory:
+                previous_out = os.environ["LLMPLAY_OUT"]
+                os.environ["LLMPLAY_OUT"] = directory
+                try:
+                    task_id = "llmplay3_e_l41_" + tag
+                    # 只留下 E 的一个待办组；m200 模拟 carry 里的旧 2.0 倍成绩。
+                    entries = fill_cycle(1)
+                    cards = deck(0)
+                    target = "llmplay3_e_l41_" + ("m125" if tag == "m200" else tag)
+                    entries = [row for row in entries if not (
+                        row["task_id"] == target and row["deck"] == cards)]
+                    pool = seeds_of(task_id, count=5)
+                    entries += [entry(task_id, seed, cards, won=False, layer="E") for seed in pool[:4]]
+                    if tag != "m200":
+                        before = workflow.next_task(workflow.derive(entries, "run"), claim=False)["item"]
+                        self.assertEqual((before["task_id"], before["action"]), (task_id, "play"))
+                    entries.append(entry(task_id, pool[4], cards, won=False, layer="E"))
+                    delivery._publish(Path(directory), entries, delivery.budget.session(), run_id="run")
+                    item = delivery.next_task()["item"]
+                    self.assertEqual((item["task_id"], item["action"]), (task_id, "diagnose"))
+                    path = delivery.diagnose(task_id, deck=item["deck"], waves=[8], missing="第 8 波缺群伤")
+                    self.assertEqual(json.loads(path.read_text())["deck"], sorted(cards))
+                    next_item = delivery.next_task()["item"]
+                    self.assertEqual((next_item["cycle"], next_item["layer"]), (2, "A"))
+                finally:
+                    os.environ["LLMPLAY_OUT"] = previous_out
 
 
 class CountTest(unittest.TestCase):
