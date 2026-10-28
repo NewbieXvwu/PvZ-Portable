@@ -119,6 +119,7 @@ ENCODER_V1 = "pvz_value_net.featurize v1"
 ENCODER_V2 = "pvz_value_net.featurize v2"
 ENCODER_V3 = "pvz_value_net.featurize v3"
 ENCODER_V4 = "pvz_value_net.featurize v4"
+ENCODER_V5 = "pvz_value_net.featurize v5"
 scene_scalar_count = 6  # night, pool, fog, roof, original conveyor, public grave count / 45
 
 
@@ -147,11 +148,65 @@ def sleep_features(frame: dict) -> np.ndarray:
     return board
 
 
+# task145: 屏幕上看得见的动作时长（tick）。数值取自引擎源码 src/Lawn/Plant.cpp ——
+# 每个 (植物, 状态) 的满值就是它刚进入该状态时赋给 mStateCountdown 的数。
+# 名字一律小写：encoder_signature 会把模块里的大写 int/float 常量算进指纹，
+# 加一个大写常量就会把 v1/v2 这些冻结版本一起改签名。
+_timer_state = {
+    (6, 10): 70,      # 大嘴花：咬下去（UpdateChomper）
+    (6, 13): 4000,    # 大嘴花：咀嚼（吃完才能再咬）
+    (17, 3): 80,      # 窝瓜：盯住目标（UpdateSquash）
+    (17, 4): 45,      # 窝瓜：起跳前
+    (17, 5): 50,      # 窝瓜：上升
+    (17, 6): 10,      # 窝瓜：下落
+    (17, 7): 100,     # 窝瓜：落地后的停顿
+    (47, 35): 500,    # 玉米加农炮：架设装填（PlantInitialize）
+}
+# 引爆/唤醒倒计时：樱桃、辣椒、毁灭菇、寒冰菇、咖啡豆都是 100 tick
+# （mDoSpecialCountdown，见 Plant.cpp 的 PlantInitialize 与 UpdateDoomShroom）。
+_timer_special = 100
+
+
+def timer_features(frame: dict) -> np.ndarray:
+    """可见动作倒计时与传送带卡序（task145，v2timer 新增的 4 个通道）。
+
+    通道 0 引爆/唤醒进度：1 - do_special_countdown / 100。与基础通道 6 的
+            樱桃/辣椒重复是有意的 —— 这个通道自成一套，任意 special > 0 的
+            植物都在里面（毁灭菇、寒冰菇、咖啡豆正是通道 6 漏掉的）。
+    通道 1 状态进度：1 - state_countdown / 该状态的满值，只覆盖大嘴花、窝瓜、
+            玉米加农炮（土豆雷的武装在通道 6 里）。
+    通道 2 传送带卡序：**行 0，列 = 卡槽位置**，(type + 1) / 48；0 表示这个位置是空的。
+            卡槽顺序就是屏幕上从左到右的排列，用掉一张后引擎会整体前移
+            （SeedBank::RemoveSeed），所以同一张卡的位置会变。
+    通道 3 传送带就绪：该位置这张卡现在能不能种（active 且冷却为 0）。
+
+    只用屏幕上看得见的量。雾里被遮住的植物在 v2 段里 state / countdown 是 -1，
+    这里保持 0（与通道 6 的"未知"处理一致），不猜。
+    """
+    board = np.zeros((4, ROWS, COLS), dtype=np.float32)
+    for row, col, kind, state, countdown, special, _launch, _rate in (frame.get('v2') or {}).get('plants', []):
+        if not (0 <= row < ROWS and 0 <= col < COLS - 1):
+            continue
+        if special > 0:
+            board[0, row, col] = max(float(board[0, row, col]),
+                                     min(1.0, max(0.0, 1.0 - special / _timer_special)))
+        full = _timer_state.get((kind, state))
+        if full and countdown >= 0:
+            board[1, row, col] = max(float(board[1, row, col]),
+                                     min(1.0, max(0.0, 1.0 - countdown / full)))
+    for index, kind, active, cooldown, _refresh, _cost in frame.get('packets', []):
+        if kind < 0 or not 0 <= index < COLS:
+            continue
+        board[2, 0, index] = (kind + 1) / 48.0
+        board[3, 0, index] = float(bool(active) and cooldown == 0)
+    return board
+
+
 def encode_frame(frame: dict, version: int = 1) -> tuple[torch.Tensor, torch.Tensor]:
     """Versioned value-only encoding; existing students keep the frozen v1 entrypoint."""
     if version == 1:
         return featurize(frame)
-    if version not in (2, 3, 4):
+    if version not in (2, 3, 4, 5):
         raise ValueError(f"unknown value encoder version: {version}")
     # Start without packets: negative empty types must never alias global/cooldown scalars.
     board, scalars = featurize_numpy({**frame, "packets": []})
@@ -172,8 +227,10 @@ def encode_frame(frame: dict, version: int = 1) -> tuple[torch.Tensor, torch.Ten
                      + [float(conveyor), len(frame.get("graves", [])) / 45.0], dtype=np.float32)
     if version >= 3:
         board = np.concatenate([board, bungee_features(frame)])
-    if version == 4:
+    if version >= 4:
         board = np.concatenate([board, sleep_features(frame)])
+    if version == 5:
+        board = np.concatenate([board, timer_features(frame)])
     return torch.from_numpy(board), torch.from_numpy(np.concatenate([scalars, extra]))
 
 
@@ -232,12 +289,13 @@ class ValueNet(nn.Module):
 
     def __init__(self, width: int = 64, context: bool = False, encoder_version: int = 1):
         super().__init__()
-        if encoder_version not in (1, 2, 3, 4):
+        if encoder_version not in (1, 2, 3, 4, 5):
             raise ValueError(f"unknown value encoder version: {encoder_version}")
         self.encoder_version = encoder_version
         self.context = context        # scalars then carry SCALARS + CONTEXT values
         self.conv = nn.Sequential(
-            nn.Conv2d(BOARD_CHANNELS + (8 if encoder_version == 4 else 6 if encoder_version == 3 else 0), width, 3, padding=1), nn.ReLU(),
+            # v3 = +蹦极 6；v4 = +睡眠 2；v5 = +可见计时与卡序 4。
+            nn.Conv2d(BOARD_CHANNELS + (12 if encoder_version == 5 else 8 if encoder_version == 4 else 6 if encoder_version == 3 else 0), width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 3), padding=(0, 1)), nn.ReLU(),
         )
@@ -259,7 +317,7 @@ def load_value_net(path) -> ValueNet:
     """A value checkpoint in eval mode; ``net.context`` says whether it expects the task context."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     encoder = checkpoint.get("encoder", ENCODER_V1)
-    versions = {ENCODER_V1: 1, ENCODER_V2: 2, ENCODER_V3: 3, ENCODER_V4: 4}
+    versions = {ENCODER_V1: 1, ENCODER_V2: 2, ENCODER_V3: 3, ENCODER_V4: 4, ENCODER_V5: 5}
     if encoder not in versions:
         raise ValueError(f"unsupported value encoder: {encoder!r}")
     net = ValueNet(width=int(checkpoint.get("width", 64)), context=bool(checkpoint.get("context", False)),

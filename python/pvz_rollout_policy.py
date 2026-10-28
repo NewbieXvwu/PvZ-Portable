@@ -284,6 +284,8 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
             raise ValueError(f'warm-start architecture differs: {name}')
     upgrades = {('v1', 'v2'), ('v2', 'v2fog'), ('v2', 'v2fogstack4')}
     upgrades.update((obs, 'v2sleep') for obs in ('v1', 'v2', 'v2boss', 'v2bungee'))
+    # v2timer 只是 v2sleep 后面再接 4 个通道，凡是它的前缀都能零权重加宽过来。
+    upgrades.update((obs, 'v2timer') for obs in ('v1', 'v2', 'v2boss', 'v2bungee', 'v2sleep'))
     if net.obs != initial.obs and (initial.obs, net.obs) not in upgrades:
         raise ValueError(f'no function-preserving input upgrade: {initial.obs} -> {net.obs}')
     weights = dict(initial.state_dict())
@@ -317,6 +319,10 @@ def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
+    if net.obs == 'v2timer':
+        # 引擎侧还没有第 9 号输入版本；先导出会在 C++ 学生里读成 v2sleep 的布局，
+        # 特征错位不会报错，只会静默变差。要上线得先加 C++ 通道（见任务书 §结论）。
+        raise ValueError('v2timer has no native input version yet; C++ export is not implemented')
     import struct
     names = ("trunk.0.weight", "trunk.0.bias", "trunk.2.weight", "trunk.2.bias",
              "trunk.4.weight", "trunk.4.bias", "scalar.0.weight", "scalar.0.bias",

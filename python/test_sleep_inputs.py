@@ -26,7 +26,7 @@ class SleepInputsTest(unittest.TestCase):
                             [2, 3, 0, 0], [3, 4, -1, -1], [9, 1, 1, 50]]
         old = {key: value for key, value in current.items() if key != 'sleep'}
         for version in OBS_EXTRA:
-            if version == 'v2sleep':
+            if version in ('v2sleep', 'v2timer'):
                 continue
             before = features(old, None) if version == 'v1' else StudentHistory(version).features(old, None)
             after = features(current, None) if version == 'v1' else StudentHistory(version).features(current, None)

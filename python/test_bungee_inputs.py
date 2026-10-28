@@ -40,7 +40,7 @@ class BungeeInputsTest(unittest.TestCase):
         current = frame()
         old = {key: value for key, value in current.items() if key != 'bungee'}
         for version in OBS_EXTRA:
-            if version in ('v2bungee', 'v2sleep'):
+            if version in ('v2bungee', 'v2sleep', 'v2timer'):
                 continue
             encode = features if version == 'v1' else StudentHistory(version).features
             left = encode(old, None)

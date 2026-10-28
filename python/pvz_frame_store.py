@@ -214,7 +214,8 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep"):
+    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep",
+                   "v2timer"):
         raise ValueError(f"unknown student observation version: {obs}")
     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared
     # module must not invalidate all historical archives and rewrite every pack.
@@ -229,13 +230,18 @@ def encoder_signature(obs: str = "v1") -> str:
             'v2size': '400d14ae3def3b970f2e19593b11c5f0a54a9d00da596fa2f5ce19710be75886',
             'v2boss': 'b5d77ca232300a2d7331ae572ace07ef1c58757f3ef5e2818c3fb5a691df3bc4',
             'v2bungee': '82609c46ed14655cead5910457ee9c0a627d77948b896c8afef09b012a2bdb6f',
+            # task145: v2sleep 冻结在这里，新增的 v2timer 分支不能改写已有 v2sleep 档案的签名。
+            'v2sleep': '309266015e12322c291071ddbf1c2e952fb1e7bc2f2248f4cac1ca9b38f41029',
         }
         if obs in frozen:
             return frozen[obs]
     import pvz_student_observation
+    # 每个版本把自己的特征函数源码也放进指纹：只有它变了，这个版本才该重建缓存。
+    extras = {'v2sleep': (pvz_value_net.sleep_features,),
+              'v2timer': (pvz_value_net.sleep_features, pvz_value_net.timer_features)}.get(obs, ())
     return hashlib.sha256((signature + obs + inspect.getsource(pvz_student_observation)
                            + inspect.getsource(encode_student_frames)
-                           + (inspect.getsource(pvz_value_net.sleep_features) if obs == 'v2sleep' else '')).encode()).hexdigest()
+                           + "".join(inspect.getsource(function) for function in extras)).encode()).hexdigest()
 
 
 # LZMA instead of zlib: on a sample of 12 archives, ZIP_LZMA is 59.6% of np.savez_compressed
