@@ -5,7 +5,6 @@
 """
 from __future__ import annotations
 
-from itertools import combinations
 import hashlib
 import json
 import os
@@ -19,14 +18,13 @@ from pathlib import Path, PurePosixPath
 from threading import BoundedSemaphore
 
 from . import budget
+from . import workflow
 from .runtime import output_path
 from .game import (ROOT, ARCHIVE_SCHEMA, _default_executable, _default_resource_dir,
                    _ensure_executable, load_tasks, required_checkpoint)
 
 FILES = ("meta.json", "ticks.jsonl", "frames.jsonl")
-LAYERS = ("A", "B", "C", "D", "E")
-REQUIRED_WINS = 5
-REQUIRED_ROBUST = 3
+LAYERS = workflow.LAYERS
 _VERIFY_SLOTS = BoundedSemaphore(2)
 
 
@@ -89,150 +87,60 @@ def _entry(archive, relative, *, valid=True, error=None):
                 archive=relative, manual_patch=bool(meta.get("manual_patch")),
                 note=meta.get("note", ""), valid=valid, invalid_reason=error,
                 won=won, robust=bool(won and _robust(meta)), run_id=meta.get("run_id"),
+                cycle=int(meta.get("cycle") or 1),
                 environment_fingerprint=meta.get("environment_fingerprint"))
 
 
-def _deck_progress(entries):
-    """每套按植物集合去重、每个种子只记一次胜；全部尝试仍留在 archives。"""
-    decks = {}
-    attempts = {entry.get("attempt_id") or entry.get("archive") or str(index): entry
-                for index, entry in enumerate(entries)}
-    for entry in attempts.values():
-        key = ",".join(map(str, sorted(entry.get("deck") or [])))
-        group = decks.setdefault(key, dict(deck=sorted(entry.get("deck") or []),
-                                          winning_seeds=set(), robust_seeds=set(), attempts=0,
-                                          losses=0, strategy="", reason="", review=""))
-        group["attempts"] += 1
-        group["losses"] += not entry["won"]
-        for target, source in (("strategy", "strategy"), ("reason", "deck_reason"), ("review", "deck_review")):
-            if entry.get(source):
-                group[target] = entry[source]
-        if entry["won"]:
-            group["winning_seeds"].add(entry["seed"])
-        if entry["robust"]:
-            group["robust_seeds"].add(entry["seed"])
-    eligible = [key for key, group in decks.items() if len(group["winning_seeds"]) >= 2 and group["strategy"].strip()]
-    selected = None
-    for triple in combinations(eligible, 3):
-        if len({decks[key]["strategy"].strip() for key in triple}) != 3:
-            continue
-        if all(max(len(set(decks[a]["deck"]) - set(decks[b]["deck"])),
-                   len(set(decks[b]["deck"]) - set(decks[a]["deck"]))) >= 3
-               for a, b in combinations(triple, 2)):
-            selected = list(triple)
-            break
-    for group in decks.values():
-        group["wins"] = len(group["winning_seeds"])
-        group["winning_seeds"] = sorted(group["winning_seeds"])
-        group["robust_seeds"] = sorted(group["robust_seeds"])
-    return decks, selected
-
-
 def _derive(entries, run_id=None):
-    plan = json.loads((ROOT / "configs" / "llmplay_seeds.json").read_text(encoding="utf-8"))
-    existing = load_tasks()
-    tasks, layers = {}, {}
-    for layer in plan["layers"]:
-        ids = [task for task in plan["layers"][layer] if task in existing]
-        for task_id in ids:
-            seeds = {}
-            for entry in entries:
-                if entry["task_id"] != task_id or not entry["valid"]:
-                    continue
-                key = str(entry["seed"])
-                previous = seeds.get(key)
-                rank = lambda e: (e["robust"], e["won"], bool(e["robustness"]),
-                                  int(e["outcome"].get("final_tick") or 0))
-                if previous is None or rank(entry) >= rank(previous):
-                    seeds[key] = entry
-            wins = sum(e["won"] for e in seeds.values())
-            robust = sum(e["robust"] for e in seeds.values())
-            selectable = existing[task_id].get("deck_selection") == "player"
-            attempts = [entry for entry in entries if entry["task_id"] == task_id and entry["valid"]]
-            decks, diverse = _deck_progress(attempts) if selectable else ({}, None)
-            if selectable:
-                wins = sum(group["wins"] for group in decks.values())
-            complete = (wins >= 6 and robust >= REQUIRED_ROBUST and diverse is not None) if selectable else (wins >= REQUIRED_WINS and robust >= REQUIRED_ROBUST)
-            tasks[task_id] = dict(layer=layer, seeds=seeds, decks=decks, diverse_decks=diverse,
-                                 deck_selection=selectable,
-                                 available_seeds=[seed for seed in seed_order(task_id, run_id, plan["tasks"][task_id])
-                                                  if not seeds.get(str(seed), {}).get("robust")],
-                                 wins=wins, robust=robust,
-                                 complete=complete)
-        done = sum(tasks[task]["complete"] for task in ids)
-        layers[layer] = dict(completed=done, total=len(ids), complete=done == len(ids))
-    return dict(schema="llmplay_progress_v1", run_id=run_id, requirements=dict(wins=REQUIRED_WINS,
-                robust=REQUIRED_ROBUST, player_decks=3, wins_per_deck=2, player_wins=6,
-                min_card_changes=3, core_strategy="model-declared; reviewer assesses semantic difference"), archives=entries, tasks=tasks, layers=layers,
-                complete=all(layer["complete"] for layer in layers.values()))
+    """判定交给 workflow：循环 / 分层 / 下传 / 每项还差什么都在那里算。"""
+    return workflow.derive(entries, run_id)
 
 
 def progress() -> dict:
-    """读取已发布的完整快照；首次使用时返回五层零进度。"""
+    """读取已发布的完整快照；首次使用时返回第 1 圈 A 层零进度。"""
     ensure_run_id()
     document = _read_progress(output_dir())
     return _derive(document["archives"], document["run_id"])
 
 
-def next_task() -> dict | None:
-    """按层返回下一任务/种子及已有存档；只有全部任务达标时返回 None。"""
-    document = progress()
-    for task_id, task in document["tasks"].items():
-        if task["complete"]:
-            continue
-        seeds = task["seeds"]
-        if task.get("deck_selection") and task.get("diverse_decks") is None:
-            pool = task["available_seeds"] or [int(seed) for seed in seeds]
-            seed = next((seed for seed in pool if str(seed) not in seeds), pool[0])
-            return dict(task_id=task_id, seed=seed, layer=task["layer"], archive=None,
-                        action="play_diverse_decks", decks=task["decks"],
-                        note="每套至少2个种子胜；三套两两换至少3张且核心思路不同，填写strategy与deck_review")
-        if task["wins"] >= (6 if task.get("deck_selection") else REQUIRED_WINS):
-            for entry in seeds.values():
-                if entry["won"] and not entry["robust"]:
-                    return dict(task_id=task_id, seed=entry["seed"], layer=task["layer"],
-                                archive=str(output_dir() / entry["archive"]),
-                                action="improve_robustness")
-        for seed in task["available_seeds"]:
-            if str(seed) not in seeds:
-                return dict(task_id=task_id, seed=seed, layer=task["layer"],
-                            archive=None, action="play")
-        # 40 个种子都试过仍未达标时重试未完成种子，不偷偷创造新任务或扩大种子块。
-        for seed in task["available_seeds"]:
-            entry = seeds[str(seed)]
-            if not entry["robust"]:
-                return dict(task_id=task_id, seed=seed, layer=task["layer"],
-                            archive=str(output_dir() / entry["archive"]), action="retry")
-    return None
+def next_task() -> dict:
+    """当前圈当前层的下一项。这个任务没有终点，所以永远不返回 None。"""
+    return workflow.next_task(progress())
+
+
+def check(task_id, deck, strategy="") -> None:
+    """Game() 建局前把关：层不对 / 卡组差 <3 张 / 打法重复 一律拒绝。"""
+    workflow.check(progress(), task_id, deck, strategy)
+
+
+def archive_requirements(task_id, strategy="", review="", abandoned=False) -> None:
+    """导出存档前的必填项（A/D 层的思路与评价）。"""
+    workflow.archive_requirements(task_id, strategy, review, abandoned)
+
+
+def current_cycle() -> int:
+    return progress()["cycle"]
+
+
+def diagnose(task_id, *, waves=None, missing="", note="") -> Path:
+    """C 层 5 个种子全输时的失败诊断；写完立刻重新发布交付。"""
+    if not str(missing).strip():
+        raise ValueError("失败诊断要写清楚缺什么（missing=...），例如「第 8 波后排水路缺群伤」")
+    root = output_dir()
+    folder = root / "diagnosis"
+    folder.mkdir(parents=True, exist_ok=True)
+    payload = dict(schema="llmplay_diagnosis_v1", task_id=task_id, cycle=current_cycle(),
+                   waves=[int(wave) for wave in (waves or [])], missing=str(missing), note=str(note))
+    path = folder / (task_id + ".json")
+    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    with _lock(root):
+        document = _read_progress(root)
+        _publish(root, document["archives"], budget.session())
+    return path
 
 
 def _report(document):
-    lines = ["# LLM 对局进度", "", "运行ID：%s" % document["run_id"], "",
-             "接口自动生成；详细结果以 progress.json 为准。", "",
-             "全部任务达标。" if document["complete"] else "尚未全部完成，继续 next_task()。", "",
-             "自选卡任务：三套卡组各赢≥2种子、合计≥6胜（按卡组×种子计数）、≥3种子稳健；两两换≥3张，核心思路由模型声明并供主控复核。",
-             "", "| 层 | 达标任务 |", "|---|---|"]
-    lines += ["| %s | %d/%d |" % (layer, info["completed"], info["total"])
-              for layer, info in document["layers"].items()]
-    lines += ["", "| 任务 | 试过的卡组 | 核心思路 | 胜种子数/未通关尝试 | 选卡理由 | 优缺点评价 |",
-              "|---|---|---|---|---|---|"]
-    for task_id, task in document["tasks"].items():
-        for group in task.get("decks", {}).values():
-            cells = [task_id, str(group["deck"]), group["strategy"],
-                     "%s/%s" % (group["wins"], group["losses"]), group["reason"], group["review"] or "待模型补充"]
-            lines.append("| " + " | ".join(str(c).replace("|", "\\|").replace("\n", " ") for c in cells) + " |")
-    lines += ["", "| 任务 | 种子 | 结果 | 稳健检查点胜局 | 手工补救 | 存档 | 打法/参数说明 |",
-              "|---|---|---|---|---|---|---|"]
-    for entry in document["archives"]:
-        checkpoint = required_checkpoint(dict(level=entry.get("level", 0)))
-        cp = ((entry.get("robustness") or {}).get("checkpoints") or {}).get(str(checkpoint)) or {}
-        status = "作废：" + str(entry.get("invalid_reason")) if not entry["valid"] else (
-            "通关稳健" if entry["robust"] else "通关待稳健" if entry["won"] else "放弃：" + str(entry.get("abandon_reason")) if entry.get("abandoned") else "未通关")
-        cells = [entry["task_id"], str(entry["seed"]), status,
-                 "%s/%s" % (cp.get("wins", "—"), cp.get("k", "—")),
-                 str(entry["manual_patch"]), entry["archive"], str(entry.get("deck", [])) + " " + entry["note"]]
-        lines.append("| " + " | ".join(str(c).replace("|", "\\|").replace("\n", " ") for c in cells) + " |")
-    return "\n".join(lines) + "\n"
+    return workflow.report(document)
 
 
 def _archive_digest(archive):

@@ -36,6 +36,15 @@ MANIFEST = ROOT / 'configs' / 'human_demo_tasks.json'
 SEEDS = ROOT / 'configs' / 'llmplay_seeds.json'
 ROBUSTNESS = ROOT / 'configs' / 'llmplay_robustness.json'
 
+
+def _refuse_cycle_plan():
+    """task139 起种子计划换了 schema；旧生成器再跑一次会静默毁掉循环计划。"""
+    if SEEDS.is_file():
+        schema = json.loads(SEEDS.read_text(encoding='utf-8')).get('schema')
+        if schema and schema != 'llmplay_seeds_v1':
+            raise SystemExit('configs/llmplay_seeds.json 现在是 %s；本脚本只写 llmplay_seeds_v1，'
+                             '新计划请用 scripts/llmplay/make_llmplay3_tasks.py。' % schema)
+
 BLOCK_BASE = 81_000_000
 BLOCK_STRIDE = 1_000
 SEEDS_PER_TASK = 40
@@ -202,6 +211,7 @@ def main() -> int:
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
 
+    _refuse_cycle_plan()
     document = read_manifest()
     tasks = [task for task in document['tasks'] if task['task_id'] not in LEGACY_TASK_IDS]
     known = {task['task_id']: task for task in tasks}

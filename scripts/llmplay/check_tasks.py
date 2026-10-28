@@ -32,26 +32,34 @@ def main() -> int:
     os.environ.setdefault('PVZ_LLMPLAY_SESSION', str(Path(tempfile.mkdtemp(prefix='llmplay_check_')) / 'budget.json'))
 
     plan = json.loads((ROOT / 'configs' / 'llmplay_seeds.json').read_text(encoding='utf-8'))
+    tasks = {task['task_id']: task for task in
+             json.loads((ROOT / 'configs' / 'human_demo_tasks.json').read_text(encoding='utf-8'))['tasks']}
     failures = []
-    for layer in ('A', 'B', 'C', 'D', 'E'):
-        for task_id in plan['layers'][layer]:
-            seed = plan['tasks'][task_id][0]
-            try:
-                game = Game(task_id, seed=seed, executable=args.executable,
-                            resource_dir=args.resource_dir)
-                game.wait(120)
-                spec = game.spec
-                print('%-4s %-32s L%-2d m=%-4s tick=%-5d wave=%-2d terminal=%s'
-                      % (layer, task_id, spec.level, spec.zombie_count_multiplier,
-                         game.tick, int(game.obs.get('wave') or 0), game.terminal))
-                game.close()
-            except Exception as error:      # noqa: BLE001 - 报错就是结论
-                failures.append((task_id, '%s: %s' % (type(error).__name__, error)))
-                print('FAIL %-4s %-32s %s' % (layer, task_id, failures[-1][1][:160]))
+    for task_id in plan['order']:
+        task = tasks[task_id]
+        layer = task.get('layer')
+        seed = plan['tasks'][task_id][0]
+        try:
+            # 逐关起局只验证任务本身；层序/卡组规则由 workflow 的单测覆盖。
+            deck = task.get('deck') or (task.get('reference_deck') or [])
+            if task.get('deck_selection') == 'player' and len(deck) < 6:
+                deck = [1, 33, 39, 44, 15, 3] if task['level'] >= 41 else [0, 1, 2, 3, 4, 5]
+            game = Game(task_id, seed=seed, deck=deck, reason='check_tasks 起局核对',
+                        strategy='核对', executable=args.executable,
+                        resource_dir=args.resource_dir, _gate=False)
+            game.wait(120)
+            spec = game.spec
+            print('%-4s %-32s L%-2d m=%-4s tick=%-5d wave=%-2d terminal=%s'
+                  % (layer, task_id, spec.level, spec.zombie_count_multiplier,
+                     game.tick, int(game.obs.get('wave') or 0), game.terminal))
+            game.close()
+        except Exception as error:      # noqa: BLE001 - 报错就是结论
+            failures.append((task_id, '%s: %s' % (type(error).__name__, error)))
+            print('FAIL %-4s %-32s %s' % (layer, task_id, failures[-1][1][:160]))
     if failures:
-        print('CHECK FAILED: %d/%d' % (len(failures), len(plan['tasks'])))
+        print('CHECK FAILED: %d/%d' % (len(failures), len(plan['order'])))
         return 1
-    print('CHECK OK: %d tasks' % len(plan['tasks']))
+    print('CHECK OK: %d tasks' % len(plan['order']))
     return 0
 
 

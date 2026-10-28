@@ -34,7 +34,6 @@ RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
 DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay_pkg"
 SEED_PLAN = ROOT / "configs" / "llmplay_seeds.json"
 ROBUSTNESS_PLAN = ROOT / "configs" / "llmplay_robustness.json"
-LAYERS = ("F", "H")
 
 SECRET_PATTERNS = [re.compile(pattern) for pattern in
                    (rb"hf_[A-Za-z0-9]{20,}", rb"sk-[A-Za-z0-9]{20,}", rb"AIza[A-Za-z0-9_-]{30,}",
@@ -51,22 +50,22 @@ def sha256(path: Path) -> str:
 
 
 def seed_plan() -> dict:
-    """task81c 的五层任务与 40 种子块（`configs/llmplay_seeds.json`，机械生成）。"""
+    """task139 的循环计划：任务顺序 + 每任务 160 个种子（`configs/llmplay_seeds.json`，机械生成）。"""
     document = json.loads(SEED_PLAN.read_text(encoding="utf-8"))
-    if document.get("schema") != "llmplay_seeds_v1":
-        raise SystemExit("不是 llmplay_seeds_v1：%s" % SEED_PLAN)
+    if document.get("schema") != "llmplay_cycle_v1":
+        raise SystemExit("不是 llmplay_cycle_v1：%s" % SEED_PLAN)
     return document
 
 
 def task_manifest() -> dict:
-    """按独立种子计划打包本轮 F/H 新族；参考卡组来自冻结记分板。"""
+    """按循环计划打包本轮 A/C/E 三层新族；参考卡组来自冻结记分板。"""
     repo = json.loads((ROOT / "configs" / "human_demo_tasks.json").read_text(encoding="utf-8"))
     by_id = {task["task_id"]: task for task in repo["tasks"]}
     plan = seed_plan()
-    order = [task_id for layer in LAYERS for task_id in plan["layers"][layer]]
+    order = list(plan["order"])
     missing = [task_id for task_id in order if task_id not in by_id]
     if missing:
-        raise SystemExit("任务清单缺这些族，先跑 scripts/llmplay/make_llmplay_tasks.py：%s" % missing)
+        raise SystemExit("任务清单缺这些族，先跑 scripts/llmplay/make_llmplay3_tasks.py：%s" % missing)
     tasks = []
     for task_id in order:
         task = dict(by_id[task_id])
@@ -76,7 +75,7 @@ def task_manifest() -> dict:
 
 
 def extra_seeds(manifest: dict) -> dict:
-    """每个任务 40 个种子（新独立块 81,000,000 起，每任务步长 1000）。"""
+    """每个任务 160 个种子（139,000,000 起，每任务步长 1000；每圈用 40 个窗口）。"""
     plan = seed_plan()
     out = {}
     for task in manifest["tasks"]:
@@ -103,7 +102,8 @@ def copy_modules(stage: Path) -> None:
                                                   "verify_archive.py", "mac_check.sh",
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
                                                   "check_tasks.py", "robustness_check.py",
-                                                  "cache_prepare.py", "cache_profile.py", "make_llmplay2_tasks.py"))
+                                                  "cache_prepare.py", "cache_profile.py",
+                                                  "make_llmplay2_tasks.py", "make_llmplay3_tasks.py"))
 
 
 def copy_constant_sources(stage: Path) -> None:

@@ -98,43 +98,46 @@ class LogRoundTripTest(unittest.TestCase):
 
 
 class PackageTest(unittest.TestCase):
-    def test_task_manifest_covers_all_five_layers(self):
-        """task81c：包里必须是 A–E 五层，L41 由登记族提供（不再临时造 smoke 任务）。"""
+    def test_task_manifest_matches_the_cycle_plan(self):
+        """task139：包里只有 A/C/E 三层，顺序与计划一致，参考卡组来自冻结记分板。"""
         manifest = build_package.task_manifest()
         ids = [task['task_id'] for task in manifest['tasks']]
         plan = json.loads((ROOT / 'configs' / 'llmplay_seeds.json').read_text(encoding='utf-8'))
-        expected = [task_id for layer in ('A', 'B', 'C', 'D', 'E')
-                    for task_id in plan['layers'][layer]]
-        self.assertEqual(ids, expected)
+        self.assertEqual(ids, plan['order'])
         by_id = {task['task_id']: task for task in manifest['tasks']}
-        self.assertEqual(by_id['demo_roof_41_doom_m200']['level'], 41)
-        self.assertEqual(by_id['demo_roof_49_doom_m400']['zombie_count_multiplier'], 4.0)
-        self.assertEqual(by_id['fog79_l39_snow_blover_v2_m200']['zombie_count_multiplier'], 2.0)
-        self.assertEqual(by_id['demo_pool_30_orig_m100']['conveyor_start'], 'original')
-        self.assertEqual(by_id['demo_pool_30_orig_m100']['deck'], [])
-        self.assertEqual(by_id['demo_storm_40_orig_m100']['conveyor_start'], 'original')
-        self.assertEqual(by_id['demo_boss_50_orig_m100']['level'], 50)
-        self.assertEqual(by_id['demo_boss_50_orig_m100']['deck'], [])
+        layers = {}
+        for task in manifest['tasks']:
+            layers[task['layer']] = layers.get(task['layer'], 0) + 1
+        self.assertEqual(layers, dict(A=21, C=50, E=42))
+        self.assertEqual(by_id['llmplay3_a_l45_m100']['reference_task_id'], 'demo_roof_45_orig_m100')
+        self.assertEqual(by_id['llmplay3_a_l32_m100']['fog_observation'], 'human_v2')
+        self.assertEqual(by_id['llmplay3_e_l42_m150']['zombie_count_multiplier'], 1.5)
+        self.assertEqual(by_id['llmplay3_e_l42_m200']['zombie_count_multiplier'], 2.0)
+        self.assertEqual(by_id['llmplay3_e_l42_m200']['pair_task'], 'llmplay3_a_l42_m100')
+        self.assertEqual(sorted(by_id['llmplay3_c_l7_hold']['deck']), [0, 1, 2, 3, 5, 27, 32])
+        self.assertEqual(by_id['llmplay3_c_l7_hold']['batch'], 1)
 
-    def test_task_manifest_registers_roof_46_and_47(self):
-        """§G.1：L46/L47 的族已由主控登记，包里的任务清单必须带上。"""
-        ids = {task['task_id'] for task in build_package.task_manifest()['tasks']}
-        self.assertIn('demo_roof_46_doom_m200', ids)
-        self.assertIn('demo_roof_47_doom_m200', ids)
+    def test_task_manifest_registers_roof_41_and_46(self):
+        """F 层从 L41 扩到 L49：L41 与 L46 这两关原来不在 19 关里。"""
+        by_id = {task['task_id']: task for task in build_package.task_manifest()['tasks']}
+        for level in (41, 46):
+            task = by_id['llmplay3_a_l%d_m100' % level]
+            self.assertEqual(task['level'], level)
+            self.assertEqual(task['deck_selection'], 'player')
 
-    def test_extra_seeds_are_forty_per_task_and_disjoint(self):
-        """task81c：每任务 40 个种子，块内不重复，且第一个就是清单默认种子。"""
+    def test_extra_seeds_are_160_per_task_and_disjoint(self):
+        """task139：每任务 160 个种子（每圈 40 个窗口），块内不重复，第一个就是默认种子。"""
         manifest = build_package.task_manifest()
         seeds = build_package.extra_seeds(manifest)
         flat = []
         for task in manifest['tasks']:
             values = seeds[task['task_id']]
-            self.assertEqual(len(values), 40)
+            self.assertEqual(len(values), 160)
             self.assertEqual(values[0], task['seeds'][0])
-            self.assertEqual(len(set(values)), 40)
+            self.assertEqual(len(set(values)), 160)
             flat.extend(values)
         self.assertEqual(len(set(flat)), len(flat))
-        self.assertTrue(all(81_000_000 <= seed < 81_100_000 for seed in flat))
+        self.assertTrue(all(139_000_000 <= seed < 139_200_000 for seed in flat))
 
     def test_package_root_is_repo_root(self):
         self.assertEqual(PACKAGE_ROOT, ROOT)
@@ -657,17 +660,20 @@ class PortableRuntimeTest(unittest.TestCase):
     def test_run_id_is_persisted_and_order_is_stable(self):
         from llmplay import progress,next_task,Game
         from llmplay.delivery import seed_order
+        from llmplay import workflow
         first=progress()
         run_id=first['run_id']
         self.assertEqual(len(run_id),32)
         self.assertEqual(json.loads((self.base/'out/progress.json').read_text())['run_id'],run_id)
         self.assertEqual(progress()['run_id'],run_id)
-        task='demo_roof_46_doom_m200'
+        task='llmplay3_a_l46_m100'
+        window=workflow.seeds_for(task,1)
         ordered=first['tasks'][task]['available_seeds']
-        self.assertEqual(set(ordered),set(range(81000000,81000040)))
-        self.assertEqual(ordered,seed_order(task,run_id,list(range(81000000,81000040))))
-        self.assertEqual(next_task()['seed'],ordered[0])
-        with Game(task) as game:
+        self.assertEqual(set(ordered),set(window))
+        self.assertEqual(ordered,seed_order(task,run_id,list(window)))
+        item=next_task()
+        self.assertIn(item['seed'],first['tasks'][item['task_id']]['available_seeds'])
+        with Game(task, seed=ordered[0], deck=[1,33,39,44,15,3], reason='跑通 run_id', strategy='投手') as game:
             self.assertEqual(game.run_id,run_id)
             self.assertEqual(game.seed,ordered[0])
             saved=game.save(self.base/'run.json')
@@ -679,7 +685,7 @@ class PortableRuntimeTest(unittest.TestCase):
         os.environ['LLMPLAY_OUT']=str(self.base/'another-out')
         second=progress()
         self.assertNotEqual(first['run_id'],second['run_id'])
-        task='demo_roof_46_doom_m200'
+        task='llmplay3_a_l46_m100'
         self.assertNotEqual(first['tasks'][task]['available_seeds'],second['tasks'][task]['available_seeds'])
 
     def test_concurrent_initialization_shares_one_run_id(self):
@@ -700,7 +706,7 @@ class PortableRuntimeTest(unittest.TestCase):
         self.assertNotEqual(progress()['run_id'],first['run_id'])
         result=resume(source)
         self.assertEqual(result['run_id'],first['run_id'])
-        task='demo_roof_46_doom_m200'
+        task='llmplay3_a_l46_m100'
         self.assertEqual(result['tasks'][task]['available_seeds'],first['tasks'][task]['available_seeds'])
 
     def test_offline_import_scanner_detects_nested_and_aliased_modules(self):
@@ -877,12 +883,14 @@ class DeliveryTest(unittest.TestCase):
         self.env.start()
         self.addCleanup(self.env.stop)
         self.session = budget.reset_session(self.base / 'budget.json')
-        self.task = 'demo_roof_46_doom_m200'
+        self.task = 'llmplay3_a_l46_m100'
+        self.seed = 139_005_000          # 该任务第 1 圈的窗口起点
 
     def archive(self, seed, *, won=True, robust=True, task=None):
         path = self.base / ('input-%s-%s' % (seed, task or self.task))
         path.mkdir(exist_ok=True)
-        meta = dict(schema='episode_archive_v1', task=dict(id=task or self.task, seed=seed),
+        meta = dict(schema='episode_archive_v1', cycle=1,
+                    task=dict(id=task or self.task, seed=seed, level=46, deck=[1,33,39,44,15,3]),
                     manual_patch=True, note='不同布阵参数 A=2', operations=1, frame_count=0,
                     outcome=dict(result=1 if won else 2, won=won, final_tick=60, final_wave=10),
                     robustness=dict(policy_sha256='ab'*32, passed=robust,
@@ -897,9 +905,9 @@ class DeliveryTest(unittest.TestCase):
         import zipfile
         from llmplay.delivery import record_archive
         self.session.note_ticks(self.task, 123, 'search')
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         document = json.loads((self.out / 'progress.json').read_text())
-        record = document['tasks'][self.task]['seeds']['81000000']
+        record = document['tasks'][self.task]['seeds'][str(self.seed)]
         self.assertTrue(record['manual_patch'])
         self.assertEqual(set(document['layers']), set('ABCDE'))
         self.assertIn('不同布阵参数', (self.out / 'report.md').read_text())
@@ -911,18 +919,18 @@ class DeliveryTest(unittest.TestCase):
     def test_compression_failure_preserves_previous_generation(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         before = {name: (self.out / name).read_bytes() for name in ('progress.json', 'report.md', 'out.zip', 'budget.json')}
         with patch('llmplay.delivery.zipfile.ZipFile.write', side_effect=OSError('disk full')):
             with self.assertRaisesRegex(OSError, 'disk full'):
-                record_archive(self.archive(81000001))
+                record_archive(self.archive(self.seed + 1))
         self.assertEqual(before, {name: (self.out / name).read_bytes() for name in before})
 
     def test_concurrent_delivery_keeps_both_seeds(self):
         import multiprocessing
         from llmplay.delivery import progress
         context = multiprocessing.get_context('fork')
-        inputs = [self.archive(81000000 + n) for n in range(3)]
+        inputs = [self.archive(self.seed + n) for n in range(3)]
         processes = [context.Process(target=_deliver_fixture, args=(str(path), str(self.out))) for path in inputs]
         for process in processes: process.start()
         for process in processes: process.join(30)
@@ -932,7 +940,7 @@ class DeliveryTest(unittest.TestCase):
     def test_publish_failure_preserves_snapshot_and_can_retry(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         before = {name: (self.out / name).read_bytes() for name in ('progress.json', 'report.md', 'out.zip')}
         replace = os.replace
         def fail_commit(source, target):
@@ -940,9 +948,9 @@ class DeliveryTest(unittest.TestCase):
             return replace(source, target)
         with patch('llmplay.delivery.os.replace', side_effect=fail_commit):
             with self.assertRaisesRegex(OSError, 'rename failed'):
-                record_archive(self.archive(81000001))
+                record_archive(self.archive(self.seed + 1))
         self.assertEqual(before, {name: (self.out / name).read_bytes() for name in before})
-        record_archive(self.archive(81000001))
+        record_archive(self.archive(self.seed + 1))
         self.assertEqual(len(json.loads((self.out/'progress.json').read_text())['archives']), 2)
 
     def test_default_resume_uses_progress_without_hash_or_replay(self):
@@ -951,7 +959,7 @@ class DeliveryTest(unittest.TestCase):
         from llmplay.delivery import record_archive
         self.session.note_ticks(self.task, 345, 'search')
         self.session.note_rewind(self.task, 10, 20)
-        for n in range(5): record_archive(self.archive(81000000 + n, robust=n < 3))
+        for n in range(5): record_archive(self.archive(self.seed + n, robust=n < 3))
         source = self.out / 'out.zip'
         previous = json.loads((self.out/'progress.json').read_text())
         os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
@@ -963,9 +971,9 @@ class DeliveryTest(unittest.TestCase):
         self.assertEqual(verify.call_count, 0)
         self.assertEqual(document['archives'], previous['archives'])
         self.assertEqual(document['tasks'], previous['tasks'])
-        self.assertTrue(document['tasks'][self.task]['complete'])
-        self.assertEqual(next_task()['task_id'], 'demo_roof_47_doom_m200')
-        self.assertNotIn(self.task, list_tasks())
+        self.assertFalse(document['tasks'][self.task]['complete'])
+        self.assertEqual(next_task()['layer'], 'A')
+        self.assertIn(self.task, list_tasks())
         self.assertEqual(target_session.level(self.task)['search_ticks'], 345)
         self.assertEqual(target_session.level(self.task)['segment_rewrites'], 1)
         with patch('llmplay.delivery.verify_archive', return_value=True): resume(source)
@@ -975,7 +983,7 @@ class DeliveryTest(unittest.TestCase):
         from unittest.mock import patch
         from llmplay.delivery import record_archive, resume
         import zipfile
-        for n in range(3): record_archive(self.archive(81000000 + n))
+        for n in range(3): record_archive(self.archive(self.seed + n))
         source = self.base/'source'
         with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
         prior = json.loads((source/'out/progress.json').read_text())
@@ -997,14 +1005,14 @@ class DeliveryTest(unittest.TestCase):
         self.assertEqual(verify.call_count, 3)
         self.assertEqual(sum(e['valid'] for e in document['archives']), 2)
         invalid = next(e for e in document['archives'] if not e['valid'])
-        self.assertEqual(invalid['seed'], 81000001)
+        self.assertEqual(invalid['seed'], self.seed + 1)
         self.assertIn('tick mismatch', invalid['invalid_reason'])
 
     def test_default_resume_preserves_invalid_record_and_full_can_revalidate(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive, resume
         import zipfile
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         source = self.base/'source'
         with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
         p = source/'out/progress.json'
@@ -1033,7 +1041,7 @@ class DeliveryTest(unittest.TestCase):
         import threading
         import time
         from llmplay.delivery import record_archive, resume
-        for n in range(12): record_archive(self.archive(81000000 + n))
+        for n in range(12): record_archive(self.archive(self.seed + n))
         source = self.out/'out.zip'
         active, peak = 0, 0
         lock = threading.Lock()
@@ -1071,7 +1079,7 @@ class DeliveryTest(unittest.TestCase):
     def test_default_resume_needs_progress_and_does_not_fall_back_to_replay(self):
         from unittest.mock import patch
         from llmplay import resume
-        archive = self.archive(81000000)
+        archive = self.archive(self.seed)
         with patch('llmplay.delivery.verify_archive') as replay:
             with self.assertRaisesRegex(ValueError, 'progress.json'):
                 resume(archive)
@@ -1082,7 +1090,7 @@ class DeliveryTest(unittest.TestCase):
         from llmplay.delivery import record_archive, resume
         import shutil
         import zipfile
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         source = self.base/'source'
         with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
         p = source/'out/progress.json'
@@ -1093,7 +1101,7 @@ class DeliveryTest(unittest.TestCase):
         prior['archives'][0]['archive'] = relative
         p.write_text(json.dumps(prior))
         (source/'out'/relative/'meta.json').write_text('opaque metadata')
-        shutil.copytree(self.archive(81000001), source/'out/archives/unlisted')
+        shutil.copytree(self.archive(self.seed + 1), source/'out/archives/unlisted')
         os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
         with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
                 patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')), \
@@ -1107,7 +1115,7 @@ class DeliveryTest(unittest.TestCase):
         from unittest.mock import patch
         from llmplay import resume, next_task
         from llmplay.delivery import record_archive
-        archive = self.archive(81000000)
+        archive = self.archive(self.seed)
         record_archive(archive)
         os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
         with patch('llmplay.delivery.verify_archive', side_effect=ValueError('tick mismatch')):
@@ -1115,14 +1123,15 @@ class DeliveryTest(unittest.TestCase):
         self.assertEqual(document['tasks'][self.task]['wins'], 0)
         self.assertFalse(document['archives'][0]['valid'])
         self.assertIn('tick mismatch', document['archives'][0]['invalid_reason'])
-        self.assertIn(81000000, document['tasks'][self.task]['available_seeds'])
-        self.assertEqual(next_task()['seed'], document['tasks'][self.task]['available_seeds'][0])
+        self.assertIn(self.seed, document['tasks'][self.task]['available_seeds'])
+        item = next_task()
+        self.assertIn(item['seed'], document['tasks'][item['task_id']]['available_seeds'])
 
     def test_resume_marks_missing_archive_invalid(self):
         import shutil
         from llmplay import resume
         from llmplay.delivery import record_archive
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         import zipfile
         source = self.base / 'missing'
         with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
@@ -1140,7 +1149,7 @@ class DeliveryTest(unittest.TestCase):
         self.out.mkdir()
         (self.out/'policy.py').write_text('def policy(g): g.wait(30)\n')
         (self.out/'run.json').write_text('{"tick": 120}\n')
-        record_archive(self.archive(81000000))
+        record_archive(self.archive(self.seed))
         source = self.out/'out.zip'
         target = self.base/'new'
         os.environ['LLMPLAY_OUT'] = str(target)
@@ -1150,50 +1159,45 @@ class DeliveryTest(unittest.TestCase):
 
     def test_resume_incomplete_archive_keeps_task_identity(self):
         from llmplay import resume
-        archive = self.archive(81000000)
+        archive = self.archive(self.seed)
         (archive/'ticks.jsonl').unlink()
         document = resume(archive, verify='full')
         entry = document['archives'][0]
         self.assertEqual(entry['task_id'], self.task)
-        self.assertEqual(entry['seed'], 81000000)
+        self.assertEqual(entry['seed'], self.seed)
         self.assertFalse(entry['valid'])
 
     def test_same_seed_multiple_exports_count_once_and_best_is_used(self):
         from llmplay.delivery import record_archive, progress
-        record_archive(self.archive(81000000, robust=False))
-        record_archive(self.archive(81000000, robust=True))
-        record_archive(self.archive(81000000, won=False))
+        record_archive(self.archive(self.seed, robust=False))
+        record_archive(self.archive(self.seed, robust=True))
+        record_archive(self.archive(self.seed, won=False))
         state = progress()['tasks'][self.task]
         self.assertEqual((state['wins'], state['robust']), (1, 1))
 
     def test_robustness_counts_actual_checkpoint_not_passed_flag(self):
         from llmplay.delivery import record_archive, progress
-        path = self.archive(81000000)
+        path = self.archive(self.seed)
         meta = json.loads((path / 'meta.json').read_text())
         meta['robustness']['checkpoints']['10']['k'] = 7
         (path / 'meta.json').write_text(json.dumps(meta))
         record_archive(path)
         self.assertEqual(progress()['tasks'][self.task]['robust'], 0)
 
-    def test_all_layers_must_meet_the_completion_standard(self):
-        from unittest.mock import patch
-        from llmplay.delivery import _derive, next_task
-        plan = json.loads((ROOT/'configs/llmplay_seeds.json').read_text())
-        entries = []
-        for task, seeds in plan['tasks'].items():
-            for seed in seeds[:5]:
-                entries.append(dict(task_id=task, seed=seed, valid=True, won=True, robust=True,
-                                    robustness={}, outcome={'final_tick': 1}))
-        document = _derive(entries)
-        self.assertTrue(document['complete'])
-        with patch('llmplay.delivery.progress', return_value=document): self.assertIsNone(next_task())
-        entries.pop()
-        document = _derive(entries)
+    def test_progress_never_reports_complete_and_advances_cycles(self):
+        """task139：循环式任务没有终点 —— 一圈做满就进下一圈，complete 永远是 False。"""
+        from llmplay.delivery import _derive
+        from test_llmplay3 import fill_cycle
+        document = _derive(fill_cycle(1))
         self.assertFalse(document['complete'])
-        with patch('llmplay.delivery.progress', return_value=document): self.assertEqual(next_task()['layer'], 'E')
+        self.assertEqual(document['cycle'], 2)
+        self.assertEqual(document['layer'], 'A')
+        document = _derive(fill_cycle(1) + fill_cycle(2))
+        self.assertFalse(document['complete'])
+        self.assertEqual(document['cycle'], 3)
 
     def test_budget_is_per_task_and_manual_never_exhausts(self):
-        first = Game(self.task)
+        first = Game(self.task, seed=self.seed, deck=[1,33,39,44,15,3], reason='预算隔离', strategy='投手')
         second = Game('demo_roof_46_doom_m300')
         self.session.note_ticks(first.budget_key, 10**12, 'manual')
         self.assertEqual(self.session.level(second.budget_key)['total_ticks'], 0)
@@ -1217,8 +1221,8 @@ class DeliveryTest(unittest.TestCase):
         from llmplay import list_tasks
         from llmplay.delivery import record_archive
         self.assertEqual(len(list_tasks()[self.task]['seeds']), 40)
-        record_archive(self.archive(81000000))
-        self.assertNotIn(81000000, list_tasks()[self.task]['seeds'])
+        record_archive(self.archive(self.seed))
+        self.assertNotIn(self.seed, list_tasks()[self.task]['seeds'])
         self.assertEqual(len(list_tasks()[self.task]['seeds']), 39)
 
     def test_resume_rejects_path_traversal(self):

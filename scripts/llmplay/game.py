@@ -224,7 +224,8 @@ class Game:
     def __init__(self, task_id: str, *, seed=None, manifest=None, executable=None,
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
                  deck=None, reason="", strategy="", deck_review="", abandon_reason=None, attempt_id=None,
-                 robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False):
+                 robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False,
+                 _gate: bool = True):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
@@ -276,6 +277,10 @@ class Game:
         self._reseeded = None
         # 内部试打局（robustness 的 k 个新未来）不写「最远进度」、不进自动 observe。
         self._internal = bool(_internal)
+        # task139：层序 / 卡组差异 / 打法重复的硬把关。稳健性试打与读档恢复不受限。
+        if _gate and not self._internal:
+            from .delivery import check
+            check(self.task_id, self.deck, self.strategy)
         self.session = budget.session()
         self.budget_key = self.task_id
         self.session.register_task(self.budget_key, self.spec.level)
@@ -672,7 +677,7 @@ class Game:
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
                     tick=self.tick, note=self.note, manual_patch=self.manual_patch,
-                    run_id=self.run_id,
+                    run_id=self.run_id, _gate=False,
                     robustness=copy.deepcopy(self.robustness_report))
         self.session.note_branch(self.budget_key, +1)
         child._is_branch = True
@@ -931,7 +936,7 @@ class Game:
                    deck=doc.get("deck"), reason=doc.get("reason", ""), strategy=doc.get("strategy", ""),
                    deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"), attempt_id=doc.get("attempt_id"),
                    run_id=doc.get("run_id"),
-                   manual_patch=bool(doc.get("manual_patch", False)), **kwargs)
+                   manual_patch=bool(doc.get("manual_patch", False)), _gate=False, **kwargs)
 
     @classmethod
     def load_archive(cls, directory, **kwargs) -> "Game":
@@ -945,7 +950,7 @@ class Game:
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
                    deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
-                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"), **kwargs)
+                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"), _gate=False, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
@@ -961,6 +966,11 @@ class Game:
         导出的存档可以直接被仓库的 scripts/human_demo.py verify 重放校验。
         """
         self._require_primary("export_archive()")
+        # task139：缺思路 / 缺评价的局不能进下一层，所以在写盘前就拦下来（不用重打）。
+        from .delivery import archive_requirements, current_cycle
+        archive_requirements(self.task_id, self.strategy, self.deck_review,
+                             abandoned=self.abandon_reason is not None)
+        cycle = current_cycle()
         self._start()
         assert self.env is not None and self.obs is not None and self.initial_obs is not None
         target = Path(directory)
@@ -979,7 +989,7 @@ class Game:
         result = int(self.obs.get("result") or 0)
         roster = (self.initial_obs.get("loadout_context") or {}).get("zombie_roster")
         meta = dict(
-            schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE,
+            schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE, cycle=int(cycle),
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
             deck_reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
