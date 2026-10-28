@@ -1526,5 +1526,11 @@ B/D 层不新增任务 id：它们是对 A 层任务的「卡组 × 稳健 / 卡
 旧的 `make_llmplay_tasks.py` 遇到 `llmplay_cycle_v1` 会拒绝执行，避免毁掉循环计划。
 
 判定与排序集中在 `scripts/llmplay/workflow.py`：`derive()` 算「第几圈/第几层/每项还差什么」，
-`next_task()` 只返回当前层未完成项，`check()` 在 `Game()` 建局时把关，`report()` 生成每层小结。
-`progress()["complete"]` 恒为 `False`：这个任务没有终点。
+`next_task()` 把主线与 C 挑战轨合成一条队列并写 `out/claims.json` 占位（多个子代理并发领取不会撞项，
+过期自动释放，全部被领走时返回 `busy` 而不阻塞），`check()` 在 `Game()` 建局时做计数判断，
+`report()` 生成每层小结。`progress()["complete"]` 恒为 `False`：这个任务没有终点。
+
+**只保留当场计数的规则**（层序、种子窗口、A 层卡组差≥3 张、D 层打法去重、放弃上限、C 轨必做量）。
+2026-10-28 第二轮删掉了全部「自己防自己」的校验：包内文件哈希清单（`llmplay_resources.json`）、
+`selfcheck.py` 启动自检、`verify_archive.py` 全量重放与 `resume(verify="full")`、
+存档逐操作 `state_hash` / `policy_sha256` / 二进制摘要。存档只当作动作序列使用。

@@ -12,10 +12,8 @@ import shutil
 import tempfile
 import uuid
 import zipfile
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
-from threading import BoundedSemaphore
 
 from . import budget
 from . import workflow
@@ -25,7 +23,6 @@ from .game import (ROOT, ARCHIVE_SCHEMA, _default_executable, _default_resource_
 
 FILES = ("meta.json", "ticks.jsonl", "frames.jsonl")
 LAYERS = workflow.LAYERS
-_VERIFY_SLOTS = BoundedSemaphore(2)
 
 
 def output_dir() -> Path:
@@ -70,8 +67,8 @@ def _robust(meta):
     task = meta.get("task") or {}
     required = required_checkpoint(dict(level=task.get("level", 0)))
     cp = (report.get("checkpoints") or {}).get(str(required)) or {}
-    return bool(report.get("policy_sha256") and cp.get("reached")
-                and cp.get("k") == 8 and 5 <= int(cp.get("wins") or 0) <= 8)
+    return bool(cp.get("reached") and cp.get("k") == 8
+                and 5 <= int(cp.get("wins") or 0) <= 8)
 
 
 def _entry(archive, relative, *, valid=True, error=None):
@@ -127,7 +124,7 @@ def diagnose(task_id, *, waves=None, missing="", note="") -> Path:
     with _lock(root):
         document = _read_progress(root)
         derived = _derive(document["archives"], document.get("run_id"))
-        item = workflow.next_task(derived)["challenge"]
+        item = workflow._view(derived)["challenge"]
         if item["task_id"] != task_id or item["action"] != "diagnose":
             raise ValueError("须先完成 C 轨当前卡组的 5 个真实终局，再为该项写诊断")
         if not waves or any(type(wave) is not int or wave < 0 for wave in waves):
@@ -252,57 +249,6 @@ def record_archive(archive, *, session=None):
         return _publish(root, entries, session or budget.session())
 
 
-def verify_archive(archive, *, executable=None, resource_dir=None):
-    """使用包内引擎逐操作核对 tick/接受结果/终局，哈希仅保留作诊断。"""
-    from pvz_env import PvZEnv, TaskSpec, PlayerProfileContext
-    archive = Path(archive)
-    meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
-    if meta.get("schema") != ARCHIVE_SCHEMA:
-        raise ValueError("存档 schema 不正确")
-    config = dict(meta["environment_task"])
-    task = meta["task"]
-    if any(config[key] != task[key] for key in ("level", "seed")):
-        raise ValueError("task 与 environment_task 不一致")
-    if config.get("zombie_count_multiplier") != task.get("zombie_count_multiplier"):
-        raise ValueError("task 与 environment_task 倍率不一致")
-    definition = load_tasks().get(task["id"])
-    if definition is not None and int(definition["level"]) != int(task["level"]):
-        raise ValueError("任务族与关卡不一致")
-    if bool(meta["outcome"]["won"]) != (meta["outcome"]["result"] == 1):
-        raise ValueError("won 与 result 不一致")
-    config["profile"] = PlayerProfileContext(**config["profile"])
-    config["preplanted"] = tuple(tuple(p) for p in config.get("preplanted", ()))
-    spec = TaskSpec(**config)
-    exe = Path(executable) if executable else _default_executable()
-    _ensure_executable(exe)
-    from .resources import app_data
-    resources = resource_dir or _default_resource_dir()
-    with PvZEnv(resource_dir=resources, executable=exe, headless=True,
-                save_dir=app_data(exe, resources, budget.session())) as env:
-        env.begin_demo()
-        obs, _ = env.reset(deck=task["deck"], task=spec)
-        env.set_lean_observation(True)
-        count = 0
-        with (archive / "ticks.jsonl").open(encoding="utf-8") as stream:
-            for count, line in enumerate(stream, 1):
-                entry = json.loads(line)
-                if obs["tick"] != entry["tick"]:
-                    raise ValueError("操作 %d 起始 tick 不同" % count)
-                obs, _, _, _, info = env.step(entry["action"])
-                if obs["tick"] != entry["end_tick"] or bool(info["ok"]) != entry["ok"]:
-                    raise ValueError("操作 %d tick/ok 不同" % count)
-        if count != meta["operations"]:
-            raise ValueError("操作数量不符")
-        outcome = meta["outcome"]
-        if (obs["tick"], obs["wave"], obs["result"]) != (outcome["final_tick"], outcome["final_wave"], outcome["result"]):
-            raise ValueError("终局不同")
-    with (archive / "frames.jsonl").open(encoding="utf-8") as stream:
-        frames = [json.loads(line) for line in stream]
-    if len(frames) != meta["frame_count"]:
-        raise ValueError("帧数量不符")
-    return True
-
-
 def _extract(source, target):
     with zipfile.ZipFile(source) as bundle:
         for entry in bundle.infolist():
@@ -313,10 +259,8 @@ def _extract(source, target):
         bundle.extractall(target)
 
 
-def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict:
-    """默认按旧progress直接恢复，不算摘要、不重放；full才并行重放全部存档。"""
-    if verify not in ("fast", "full"):
-        raise ValueError('verify 必须是 "fast" 或 "full"')
+def resume(source) -> dict:
+    """按旧 progress 恢复：只搬存档和结论，不算摘要、不重放、不复验。"""
     root = output_dir()
     with tempfile.TemporaryDirectory(prefix="llmplay-resume-") as directory:
         source = Path(source).expanduser().resolve()
@@ -326,13 +270,11 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
             source = Path(directory)
         if not source.is_dir():
             raise ValueError("续跑来源必须是 out.zip 或目录")
-        missing, prior_run_ids, prior_entries = [], set(), {}
-        progress_found = False
+        missing, prior_run_ids, prior_entries, loose = [], set(), {}, []
         for path in source.rglob("progress.json"):
             if any(part.startswith(".") for part in path.relative_to(source).parts):
                 continue
             prior = json.loads(path.read_text(encoding="utf-8"))
-            progress_found = True
             if prior.get("run_id"):
                 prior_run_ids.add(prior["run_id"])
             for entry in prior.get("archives", []):
@@ -342,69 +284,46 @@ def resume(source, verify="fast", *, executable=None, resource_dir=None) -> dict
                 archive = path.parent / entry["archive"]
                 prior_entries.setdefault(archive, []).append(entry)
                 if not archive.is_dir():
-                    invalid = dict(entry, valid=False, won=False, robust=False,
-                                   invalid_reason="进度引用的存档缺失，无法恢复")
-                    missing.append(invalid)
+                    missing.append(dict(entry, valid=False, won=False, robust=False,
+                                        invalid_reason="进度引用的存档缺失，无法恢复"))
         if len(prior_run_ids) > 1:
             raise ValueError("续跑来源含多个 run_id，请指定一份 out.zip 或对应的 out 目录")
-        if verify == "fast" and not progress_found:
-            raise ValueError('续跑来源缺少progress.json；独立存档请用verify="full"导入')
-        restored = ({archive: dict(records[-1]) for archive, records in prior_entries.items()
-                     if archive.is_dir()} if verify == "fast" else {})
-        candidates = (list(restored) if verify == "fast" else
-                      sorted(p.parent for p in source.rglob("meta.json")
-                             if not any(part.startswith(".") for part in p.relative_to(source).parts)))
-        pending = candidates if verify == "full" else []
-
-        def replay(archive):
-            try:
-                with _VERIFY_SLOTS:
-                    verify_archive(archive, executable=executable, resource_dir=resource_dir)
-                return True, None
-            except Exception as exc:
-                return False, str(exc)
-
-        verified = {}
-        if pending:
-            workers = os.cpu_count() or 1
-            print("resume: %d 份重放复验（workers=%d，最多2个游戏进程）" %
-                  (len(pending), workers), flush=True)
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                futures = {pool.submit(replay, archive): archive for archive in pending}
-                for count, future in enumerate(as_completed(futures), 1):
-                    verified[futures[future]] = future.result()
-                    if count % 10 == 0:
-                        print("resume verify: %d/%d" % (count, len(pending)), flush=True)
-        imported = [(archive, *(verified.get(archive, (True, None)))) for archive in candidates]
-        if not prior_run_ids and verify == "full":
-            for archive, valid, error in imported:
-                if valid:
-                    run_id = json.loads((archive / "meta.json").read_text()).get("run_id")
-                    if run_id:
-                        prior_run_ids.add(run_id)
+        if not prior_entries:
+            # 没有 progress.json：按目录里的存档直接导入（只读 meta.json，不重放）。
+            for path in sorted(source.rglob("meta.json")):
+                if any(part.startswith(".") for part in path.relative_to(source).parts):
+                    continue
+                loose.append(path.parent)
+        restored = {archive: dict(records[-1]) for archive, records in prior_entries.items()
+                    if archive.is_dir()}
         restored_run_id = next(iter(prior_run_ids)) if len(prior_run_ids) == 1 else None
         with _lock(root):
             entries = _read_progress(root)["archives"]
             for entry in missing:
                 entries = [e for e in entries if e["archive"] != entry["archive"]]
                 entries.append(entry)
-            for archive, valid, error in imported:
-                relative = None
+            for archive, record in restored.items():
                 try:
-                    if archive in restored:
-                        relative = restored[archive]["archive"]
-                        relative = _restore_archive(archive, root, relative, consume=extracted)
-                        entry = dict(restored[archive], archive=relative)
-                    else:
-                        relative = _store(archive, root)
-                        entry = _entry(archive, relative, valid=valid, error=error)
+                    relative = _restore_archive(archive, root, record["archive"], consume=extracted)
+                    entry = dict(record, archive=relative)
                 except (OSError, KeyError, ValueError, TypeError) as exc:
-                    # 不可解析的存档同样保留作废记录，不能中止其他局的恢复。
-                    relative = relative or "invalid/" + hashlib.sha256(str(archive.relative_to(source)).encode()).hexdigest()
+                    relative = "invalid/" + uuid.uuid4().hex
                     entry = dict(task_id="unknown", seed=0, result=None, outcome={}, robustness=None,
                                  archive=relative, manual_patch=False, note="", valid=False,
                                  invalid_reason=str(exc), won=False, robust=False)
                 entries = [e for e in entries if e["archive"] != relative]
+                entries.append(entry)
+            for archive in loose:
+                try:
+                    relative = _store(archive, root, consume=extracted)
+                    entry = _entry(archive, relative)
+                    if not restored_run_id and entry.get("run_id"):
+                        restored_run_id = entry["run_id"]
+                except (OSError, KeyError, ValueError, TypeError) as exc:
+                    entry = dict(task_id="unknown", seed=0, result=None, outcome={}, robustness=None,
+                                 archive="invalid/" + uuid.uuid4().hex, manual_patch=False, note="",
+                                 valid=False, invalid_reason=str(exc), won=False, robust=False)
+                entries = [e for e in entries if e["archive"] != entry["archive"]]
                 entries.append(entry)
             session = budget.session()
             for path in source.rglob("budget.json"):

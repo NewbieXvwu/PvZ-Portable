@@ -83,7 +83,7 @@ class CycleOrderTest(unittest.TestCase):
         document = workflow.derive([], "run")
         self.assertEqual((document["cycle"], document["layer"]), (1, "A"))
         self.assertFalse(document["complete"])
-        todo = workflow.next_task(document)
+        todo = workflow.next_task(document, claim=False)
         item = todo["main"]
         self.assertEqual(item["action"], "new_deck")
         self.assertEqual(item["task_id"], A_IDS[0])
@@ -95,7 +95,7 @@ class CycleOrderTest(unittest.TestCase):
         self.assertEqual(document["cycles"]["1"]["complete"], True)
         self.assertEqual(document["cycle"], 2)
         self.assertEqual(document["layer"], "A")
-        item = workflow.next_task(document)["main"]
+        item = workflow.next_task(document, claim=False)["main"]
         self.assertIsNotNone(item)
         self.assertEqual(item["cycle"], 2)
 
@@ -109,7 +109,7 @@ class CycleOrderTest(unittest.TestCase):
         entries = fill_cycle(1, robust=False)
         document = workflow.derive(entries, "run")
         self.assertEqual(document["layer"], "B")
-        item = workflow.next_task(document)["main"]
+        item = workflow.next_task(document, claim=False)["main"]
         self.assertEqual(item["action"], "improve_robustness")
         self.assertTrue(item["archive"])
 
@@ -118,8 +118,10 @@ class CycleOrderTest(unittest.TestCase):
         document = workflow.derive(entries, "run")
         self.assertEqual(document["cycle"], 1)
         self.assertTrue(all(document["layers"][layer]["complete"] for layer in workflow.MAIN_LAYERS))
-        todo = workflow.next_task(document)
-        self.assertEqual(todo["main"]["action"], "wait_challenge")
+        todo = workflow.next_task(document, claim=False)
+        self.assertIsNone(todo["main"])                       # 主线本圈已完成
+        self.assertEqual(todo["item"]["layer"], "C")           # 于是队列直接给 C 轨的项
+        self.assertEqual(todo["item"]["action"], "play")
         self.assertEqual(todo["challenge"]["action"], "play")
 
     def test_c_does_not_block_d_or_e(self):
@@ -130,14 +132,58 @@ class CycleOrderTest(unittest.TestCase):
         self.assertEqual(workflow.derive(entries, "run")["layer"], "E")
 
 
+class ClaimTest(unittest.TestCase):
+    """多子代理并发领任务：各领各的、过期自动释放、全被领走时返回 busy 不阻塞。"""
+
+    def setUp(self):
+        workflow._claims_path().unlink(missing_ok=True)
+
+    def tearDown(self):
+        workflow._claims_path().unlink(missing_ok=True)
+
+    def test_two_agents_get_different_items(self):
+        document = workflow.derive([], "run")
+        first = workflow.next_task(document)["item"]
+        second = workflow.next_task(document)["item"]
+        self.assertNotEqual((first["task_id"], first["seed"]), (second["task_id"], second["seed"]))
+        self.assertTrue(first["claim"] and second["claim"])
+        data = json.loads(workflow._claims_path().read_text(encoding="utf-8"))
+        self.assertEqual(len(data), 2)
+        self.assertTrue(all(row["expires"] > row["claimed_at"] for row in data.values()))
+
+    def test_expired_claim_is_released_automatically(self):
+        document = workflow.derive([], "run")
+        item = workflow.next_task(document, ttl=-1)["item"]
+        again = workflow.next_task(document)["item"]
+        self.assertEqual((again["task_id"], again["seed"]), (item["task_id"], item["seed"]))
+
+    def test_all_claimed_returns_busy_without_waiting(self):
+        document = workflow.derive([], "run")
+        for _ in range(400):
+            item = workflow.next_task(document)["item"]
+            if item.get("busy"):
+                break
+        self.assertTrue(item.get("busy"))
+        self.assertEqual(item["action"], "busy")
+
+    def test_release_puts_the_slot_back(self):
+        document = workflow.derive([], "run")
+        item = workflow.next_task(document)["item"]
+        workflow.release(item["task_id"], item["seed"])
+        again = workflow.next_task(document)["item"]
+        self.assertEqual((again["task_id"], again["seed"]), (item["task_id"], item["seed"]))
+
+
 class GateTest(unittest.TestCase):
     def test_later_layers_are_refused_while_layer_a_is_open(self):
         document = workflow.derive([], "run")
-        challenge = next(task for task in TASKS.values() if task.get("layer") == "C")
-        context = workflow.check(document, challenge["task_id"], challenge["deck"])
+        challenge = next(task for task in TASKS.values()
+                         if task.get("layer") == "C" and int(task.get("batch") or 1) == 1)
+        seed = workflow.seeds_for(challenge["task_id"], 1, "run")[0]
+        context = workflow.check(document, challenge["task_id"], challenge["deck"], seed=seed)
         self.assertEqual(context, dict(cycle=1, workflow_layer="C"))
         with self.assertRaises(ValueError):
-            workflow.check(document, "llmplay3_e_l42_m150", deck(0))
+            workflow.check(document, "llmplay3_e_l42_m150", deck(0), seed=seed)
 
     def test_new_deck_must_differ_by_three_cards(self):
         task_id = A_IDS[0]
@@ -146,12 +192,12 @@ class GateTest(unittest.TestCase):
         near = list(deck(0))
         near[0] = near[0] + 100
         with self.assertRaises(ValueError):
-            workflow.check(document, task_id, near)
+            workflow.check(document, task_id, near, seed=seed)
         near[1] += 100
         with self.assertRaises(ValueError):
-            workflow.check(document, task_id, near)
-        workflow.check(document, task_id, deck(0))     # 同卡组继续打同一个种子是允许的
-        workflow.check(document, task_id, deck(1))     # 差 6 张，允许
+            workflow.check(document, task_id, near, seed=seed)
+        workflow.check(document, task_id, deck(0), seed=seed)   # 同卡组继续打是允许的
+        workflow.check(document, task_id, deck(1), seed=seed)   # 差 6 张，允许
 
     def test_challenge_deck_cannot_be_swapped(self):
         entries = fill_cycle(1)
@@ -173,9 +219,10 @@ class GateTest(unittest.TestCase):
         passed = document["detail"]["B"][task_id]["items"]
         key = sorted(passed)[0]
         cards = passed[key]["deck"]
+        seed = seeds_of(task_id, 1)[24]
         with self.assertRaises(ValueError):
-            workflow.check(document, task_id, cards, "思路0")
-        workflow.check(document, task_id, cards, "经济优先")
+            workflow.check(document, task_id, cards, "思路0", seed=seed)
+        workflow.check(document, task_id, cards, "经济优先", seed=seed)
 
 
     def test_layer_d_allows_the_second_seed_of_the_same_strategy(self):
@@ -190,23 +237,23 @@ class GateTest(unittest.TestCase):
         entries = entries + [entry(task_id, seed, cards, strategy="经济优先")]
         document = workflow.derive(entries, "run")
         self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], [])
-        workflow.check(document, task_id, cards, "经济优先")     # 还差 1 个种子，允许继续
+        workflow.check(document, task_id, cards, "经济优先", seed=seed)   # 还差 1 个种子，允许继续
         entries[-1].update(workflow_layer="D", opening=[1, 2, 1])
         entries = entries + [entry(task_id, seed + 1, cards, strategy="经济优先", layer="D", opening=[1, 2, 1])]
         document = workflow.derive(entries, "run")
         self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], ["经济优先"])
         with self.assertRaises(ValueError):
-            workflow.check(document, task_id, cards, "经济优先")   # 已经够 2 胜，换打法
+            workflow.check(document, task_id, cards, "经济优先", seed=seed)   # 已经够 2 胜，换打法
 
-    def test_cannot_pick_easy_task_or_refresh_seed_or_old_family(self):
+    def test_cannot_pick_easy_task_or_use_seed_outside_window_or_old_family(self):
         document = workflow.derive([], "run")
-        item = workflow.next_task(document)["main"]
-        with self.assertRaises(ValueError):
+        item = workflow.next_task(document, claim=False)["main"]
+        with self.assertRaises(ValueError):        # 别的任务的种子块不能用
             workflow.check(document, A_IDS[-1], deck(0), seed=item["seed"])
-        with self.assertRaises(ValueError):
-            workflow.check(document, item["task_id"], deck(0), seed=item["seed"] + 1)
-        with self.assertRaises(ValueError):
-            workflow.check(document, "demo_roof_49_doom_m200", deck(0))
+        with self.assertRaises(ValueError):        # 窗口外（下一圈）的种子不能用
+            workflow.check(document, item["task_id"], deck(0), seed=item["seed"] + 1000)
+        with self.assertRaises(ValueError):        # 旧任务族不算本轮
+            workflow.check(document, "demo_roof_49_doom_m200", deck(0), seed=item["seed"])
         workflow.check(document, item["task_id"], deck(0), seed=item["seed"])
 
     def test_previous_cycle_decks_are_rejected_before_play(self):
@@ -217,7 +264,7 @@ class GateTest(unittest.TestCase):
     def test_d_rejects_vague_strategy_labels(self):
         entries = [item for item in fill_cycle(1) if item["workflow_layer"] != "D"]
         document = workflow.derive(entries, "run")
-        item = workflow.next_task(document)["main"]
+        item = workflow.next_task(document, claim=False)["main"]
         for label in ("", "打法1", "随便打", "经济优先2"):
             with self.assertRaises(ValueError):
                 workflow.check(document, item["task_id"], item["deck"], label)
@@ -252,7 +299,7 @@ class CountTest(unittest.TestCase):
         lost += [entry(task_id, seed, TASKS[task_id]["deck"], won=False, layer="C") for seed in pool]
         document = workflow.derive(lost, "run")
         self.assertFalse(document["detail"]["C"][task_id]["complete"])
-        self.assertEqual(workflow.next_task(document)["challenge"]["action"], "diagnose")
+        self.assertEqual(workflow.next_task(document, claim=False)["challenge"]["action"], "diagnose")
         folder = Path(os.environ["LLMPLAY_OUT"]) / "diagnosis"
         folder.mkdir(parents=True, exist_ok=True)
         (folder / (task_id + ".json")).write_text(json.dumps(
@@ -265,19 +312,19 @@ class CountTest(unittest.TestCase):
 
     def test_abandonment_does_not_complete_challenge_or_refresh_seed(self):
         document = workflow.derive([], "run")
-        item = workflow.next_task(document)["challenge"]
+        item = workflow.next_task(document, claim=False)["challenge"]
         entries = [entry(item["task_id"], seed, item["deck"], won=False, abandoned=True)
                    for seed in seeds_of(item["task_id"], count=5)]
         document = workflow.derive(entries, "run")
         self.assertEqual(document["detail"]["C"][item["task_id"]]["attempted"], [])
-        self.assertEqual(workflow.next_task(document)["challenge"]["seed"], item["seed"])
-        first = workflow.next_task(workflow.derive([], "run"))["main"]
+        self.assertEqual(workflow.next_task(document, claim=False)["challenge"]["seed"], item["seed"])
+        first = workflow.next_task(workflow.derive([], "run"), claim=False)["main"]
         abandoned = entry(first["task_id"], first["seed"], deck(0), won=False, abandoned=True)
         document = workflow.derive([abandoned], "run")
-        self.assertEqual(workflow.next_task(document)["main"]["seed"], first["seed"])
+        self.assertEqual(workflow.next_task(document, claim=False)["main"]["seed"], first["seed"])
         unfinished = dict(abandoned, abandoned=False, result=0)
         document = workflow.derive([unfinished], "run")
-        self.assertEqual(workflow.next_task(document)["main"]["seed"], first["seed"])
+        self.assertEqual(workflow.next_task(document, claim=False)["main"]["seed"], first["seed"])
 
     def test_reexporting_one_abandonment_is_one_attempt(self):
         task_id = A_IDS[0]
@@ -290,7 +337,7 @@ class CountTest(unittest.TestCase):
     def test_d_only_counts_declared_categories_and_distinct_actual_openings(self):
         entries = [item for item in fill_cycle(1) if item["workflow_layer"] != "D"]
         document = workflow.derive(entries, "run")
-        item = workflow.next_task(document)["main"]
+        item = workflow.next_task(document, claim=False)["main"]
         for style in ("经济优先", "防线优先", "打法3"):
             for seed in seeds_of(item["task_id"], count=2):
                 entries.append(entry(item["task_id"], seed, item["deck"], layer="D",

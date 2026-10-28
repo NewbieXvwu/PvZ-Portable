@@ -61,7 +61,7 @@ class LogRoundTripTest(unittest.TestCase):
         frames = [dict(tick=0, wave=1, sun=50, plants=[], zombies=[], mowers=[], packets=[],
                        scene={}, row_terrain=[], lanes=[], totals={}, graves=[],
                        action=None, action_rejected=False, label_source='llm_gpt_pro', operation=0)]
-        game = Game('demo_roof_49_doom_m200', ops=ops, frames=frames, tick=60)
+        game = Game('demo_roof_49_doom_m200', ops=ops, frames=frames, tick=60, _gate=False)
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'run.json'
             game.save(path)
@@ -295,7 +295,7 @@ class BudgetTest(unittest.TestCase):
             with self.subTest(elapsed=elapsed), patch.object(budget.time, 'time', return_value=started + elapsed):
                 self.session.require_new_game_allowed()
                 self.assertFalse(self.session.stop_new_games)
-                game = Game('demo_roof_49_doom_m200')
+                game = Game('demo_roof_49_doom_m200', _gate=False)
                 game.close()
                 line = self.session.status_line(49)
                 self.assertNotIn('/ 3:00', line)
@@ -353,7 +353,7 @@ class RobustnessTest(unittest.TestCase):
 
     def test_branch_preserves_manual_patch_and_copies_assessment(self):
         from unittest.mock import patch
-        parent = Game('demo_roof_49_doom_m200', tick=60, ops=[dict(end_tick=60)])
+        parent = Game('demo_roof_49_doom_m200', tick=60, ops=[dict(end_tick=60)], _gate=False)
         parent.manual_patch = True
         parent.robustness_report = {'checkpoints': {'10': {'wins': 5, 'k': 8}}}
         with patch.object(parent, '_start'):
@@ -369,7 +369,7 @@ class RobustnessTest(unittest.TestCase):
 
     def test_rewind_invalidates_assessment_of_the_old_trajectory(self):
         from unittest.mock import patch
-        game = Game('demo_roof_49_doom_m200', tick=60,
+        game = Game('demo_roof_49_doom_m200', tick=60, _gate=False,
                     robustness={'passed': True, 'checkpoints': {'10': {'wins': 8, 'k': 8}}})
         with patch.object(game, '_start'), patch.object(game, '_replay_to'):
             game.rewind(30)
@@ -428,7 +428,7 @@ class RobustnessTest(unittest.TestCase):
         def policy(game): game.wait(30)
         for k, wins, passed in [(None, 5, True), (8, 4, False), (7, 7, False), (5, 5, False)]:
             with self.subTest(k=k, wins=wins):
-                parent = Game('demo_roof_49_doom_m200', tick=60)
+                parent = Game('demo_roof_49_doom_m200', tick=60, _gate=False)
                 parent.wave_history = [dict(wave=10, tick=0)]
                 with patch.object(parent, '_start'), patch.object(parent, '_persist_best'), \
                         patch('llmplay.game.Game', return_value=Trial()), \
@@ -539,13 +539,13 @@ class RobustnessTest(unittest.TestCase):
 
     def test_wave_tick_comes_from_wave_history(self):
         ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='aa')]
-        game = Game('demo_roof_49_doom_m200', ops=ops, tick=60)
+        game = Game('demo_roof_49_doom_m200', ops=ops, tick=60, _gate=False)
         self.assertEqual(game._wave_tick(0), 0)
         self.assertIsNone(game._wave_tick(10))
         game.wave_history = [dict(wave=0, tick=0), dict(wave=10, tick=5000)]
         self.assertEqual(game._wave_tick(10), 5000)
 
-    def test_policy_source_hash_is_stable(self):
+    def test_policy_source_is_stable(self):
         from llmplay.game import _policy_source
         def policy(game):
             game.wait(10)
@@ -554,10 +554,9 @@ class RobustnessTest(unittest.TestCase):
         self.assertIn('game.wait(10)', first)
 
     def test_log_and_archive_meta_carry_robustness(self):
-        report = dict(policy_sha256='ab' * 32, k=8, passed=True,
-                      checkpoints={'10': dict(wins=6, k=8, reached=True)})
+        report = dict(k=8, passed=True, checkpoints={'10': dict(wins=6, k=8, reached=True)})
         ops = [dict(action=dict(type='wait', ticks=60), tick=0, end_tick=60, ok=True, state_hash='aa')]
-        game = Game('demo_roof_49_doom_m200', ops=ops, tick=60, robustness=report)
+        game = Game('demo_roof_49_doom_m200', ops=ops, tick=60, robustness=report, _gate=False)
         game.manual_patch = True
         document = game.log()
         self.assertEqual(document['robustness'], report)
@@ -709,67 +708,9 @@ class PortableRuntimeTest(unittest.TestCase):
         task='llmplay3_a_l46_m100'
         self.assertEqual(result['tasks'][task]['available_seeds'],first['tasks'][task]['available_seeds'])
 
-    def test_offline_import_scanner_detects_nested_and_aliased_modules(self):
-        import importlib.util
-        spec=importlib.util.spec_from_file_location('offline_selfcheck',ROOT/'scripts/llmplay/selfcheck.py')
-        module=importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        network_imports=module.network_imports
-        source=self.base/'bad.py'
-        source.write_text('def nested():\n    import socket as s\n    from urllib.request import urlopen\n    import requests\n')
-        self.assertEqual(len(network_imports([source])),3)
-        source.write_text('import json\nfrom pathlib import Path\n')
-        self.assertEqual(network_imports([source]),[])
-
-    def test_selfcheck_reports_unsupported_environment_before_import(self):
-        import importlib.util,contextlib,io
-        from unittest.mock import patch
-        spec=importlib.util.spec_from_file_location('portable_selfcheck',ROOT/'scripts/llmplay/selfcheck.py')
-        module=importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        for old_python in (True,False):
-            buffer=io.StringIO()
-            with patch.object(module.sys,'version_info',(3,9) if old_python else (3,10)), \
-                    patch.object(module.platform,'system',return_value='Linux' if old_python else 'Darwin'), \
-                    contextlib.redirect_stdout(buffer):
-                self.assertEqual(module.main(),1)
-            self.assertIn('Python >= 3.10' if old_python else 'x86_64 Linux',buffer.getvalue())
-
-    def test_selfcheck_scans_before_importing_or_installing_interface(self):
-        import importlib.util,contextlib,io
-        from unittest.mock import patch
-        spec=importlib.util.spec_from_file_location('scan_first_selfcheck',ROOT/'scripts/llmplay/selfcheck.py')
-        module=importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        (self.base/'llmplay').mkdir()
-        source=self.base/'llmplay/bad.py'
-        source.write_text('import socket\n')
-        buffer=io.StringIO()
-        with patch.object(module,'ROOT',self.base), \
-                patch.object(module.tempfile,'mkdtemp',side_effect=AssertionError('不能在扫描前初始化')), \
-                contextlib.redirect_stdout(buffer):
-            self.assertEqual(module.main(),1)
-        self.assertIn('接口含联网模块 import',buffer.getvalue())
-
-    def test_selfcheck_does_not_scan_unrelated_user_scripts(self):
-        import importlib.util,contextlib,io
-        from unittest.mock import patch
-        spec=importlib.util.spec_from_file_location('sdk_scope_selfcheck',ROOT/'scripts/llmplay/selfcheck.py')
-        module=importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        (self.base/'llmplay').mkdir()
-        (self.base/'llmplay/sdk.py').write_text('import json\n')
-        (self.base/'user_script.py').write_text('import socket\n')
-        with patch.object(module,'ROOT',self.base), \
-                patch.object(module.tempfile,'mkdtemp',side_effect=RuntimeError('扫描已通过')), \
-                contextlib.redirect_stdout(io.StringIO()):
-            with self.assertRaisesRegex(RuntimeError,'扫描已通过'):module.main()
-
-
 class ResourceTest(unittest.TestCase):
     def setUp(self):
         import zipfile
-        import hashlib
         self.tmp = tempfile.TemporaryDirectory(prefix='llmplay-resource-')
         self.addCleanup(self.tmp.cleanup)
         self.base = Path(self.tmp.name)
@@ -777,21 +718,15 @@ class ResourceTest(unittest.TestCase):
         (self.root/'configs').mkdir(parents=True)
         self.exe = self.root/'engine'
         self.exe.write_bytes(b'test-engine')
-        self.engine_sha = hashlib.sha256(self.exe.read_bytes()).hexdigest()
-        files = {'main.pak': b'pak', 'properties/partner.xml': b'<properties/>',
-                 'cache64/compiled/reanim/test.reanim.compiled': b'compiled-definition'}
-        manifest = dict(schema='llmplay_resources_v1', engine_sha256=self.engine_sha,
-                        files={name: hashlib.sha256(blob).hexdigest() for name,blob in files.items()})
+        self.files = {'main.pak': b'pak', 'properties/partner.xml': b'<properties/>',
+                      'cache64/compiled/reanim/test.reanim.compiled': b'compiled-definition'}
         self.zip = self.base/'llmplay_res.zip'
         with zipfile.ZipFile(self.zip,'w') as bundle:
-            for name,blob in files.items(): bundle.writestr('res/'+name,blob)
-            bundle.writestr('res/llmplay_resources.json',json.dumps(manifest))
+            for name,blob in self.files.items(): bundle.writestr('res/'+name,blob)
         self.set_marker()
 
     def set_marker(self):
-        from llmplay.resources import sha256
-        (self.root/'configs/llmplay_package.json').write_text(json.dumps(dict(
-            engine_sha256=self.engine_sha, resource_zip_sha256=sha256(self.zip))))
+        (self.root/'configs/llmplay_package.json').write_text(json.dumps(dict(schema='llmplay_package_v1')))
 
     def test_automatic_install_and_persistent_cache_directory(self):
         from llmplay.resources import install, app_data
@@ -810,25 +745,15 @@ class ResourceTest(unittest.TestCase):
         from llmplay.resources import install
         self.zip.unlink()
         with patch.dict(os.environ,PVZ_LLMPLAY_RES_ZIP=str(self.zip)):
-            with self.assertRaisesRegex(FileNotFoundError,'同时上传'): install(self.root)
+            with self.assertRaisesRegex(FileNotFoundError,'放在接口包目录旁'): install(self.root)
 
-    def test_zip_pair_mismatch_does_not_install(self):
-        from llmplay.resources import install
-        with self.zip.open('ab') as stream:stream.write(b'changed')
-        with self.assertRaisesRegex(ValueError,'SHA256'): install(self.root)
-        self.assertFalse((self.root/'res').exists())
-
-    def test_member_corruption_does_not_publish_partial_resources(self):
+    def test_install_does_not_verify_package_hashes(self):
+        # task139 第二轮：包内文件哈希校验已删除，换过的资源包照样装。
         import zipfile
         from llmplay.resources import install
-        with zipfile.ZipFile(self.zip) as source:
-            files={name:source.read(name) for name in source.namelist()}
-        files['res/main.pak']=b'bad'
-        with zipfile.ZipFile(self.zip,'w') as target:
-            for name,blob in files.items():target.writestr(name,blob)
-        self.set_marker()
-        with self.assertRaisesRegex(ValueError,'损坏'): install(self.root)
-        self.assertFalse((self.root/'res').exists())
+        with zipfile.ZipFile(self.zip,'w') as bundle:
+            for name,blob in self.files.items(): bundle.writestr('res/'+name, blob + b'-changed')
+        self.assertEqual((install(self.root)/'main.pak').read_bytes(), b'pak-changed')
 
     def test_unsafe_resource_zip_is_rejected(self):
         import zipfile
@@ -847,19 +772,23 @@ class ResourceTest(unittest.TestCase):
         self.assertTrue(all(p.exitcode==0 for p in processes))
         self.assertEqual((self.root/'res/main.pak').read_bytes(),b'pak')
 
-    def test_other_engine_does_not_reuse_incompatible_cache(self):
+    def test_other_engine_gets_its_own_app_data(self):
         from llmplay.resources import install,app_data
         resource=install(self.root)
-        self.exe.write_bytes(b'other-engine')
-        path=app_data(self.exe,resource,budget.Session(self.base/'budget.json'))
-        self.assertFalse((path/'cache64').exists())
+        first=app_data(self.exe,resource,budget.Session(self.base/'budget.json'))
+        self.exe.write_bytes(b'other-engine-bytes')
+        second=app_data(self.exe,resource,budget.Session(self.base/'budget.json'))
+        self.assertNotEqual(first,second)
+        self.assertEqual((second/'cache64/compiled/reanim/test.reanim.compiled').read_bytes(),
+                         b'compiled-definition')
 
     def test_game_and_internal_trial_use_the_same_app_data(self):
         from unittest.mock import patch
         from llmplay.resources import install
         resource=install(self.root)
         budget.reset_session(self.base/'game-budget.json')
-        games=[Game('demo_roof_46_doom_m200',executable=self.exe,resource_dir=resource,_internal=internal)
+        games=[Game('demo_roof_46_doom_m200',executable=self.exe,resource_dir=resource,
+                    _internal=internal,_gate=False)
                for internal in (False,True)]
         try:
             with patch('llmplay.game.PvZEnv') as env:
@@ -893,7 +822,7 @@ class DeliveryTest(unittest.TestCase):
                     task=dict(id=task or self.task, seed=seed, level=46, deck=[1,33,39,44,15,3]),
                     manual_patch=True, note='不同布阵参数 A=2', operations=1, frame_count=0,
                     outcome=dict(result=1 if won else 2, won=won, final_tick=60, final_wave=10),
-                    robustness=dict(policy_sha256='ab'*32, passed=robust,
+                    robustness=dict(passed=robust,
                                     checkpoints={'10': dict(wins=5 if robust else 4, k=8, reached=True)}))
         (path / 'meta.json').write_text(json.dumps(meta), encoding='utf-8')
         (path / 'ticks.jsonl').write_text(json.dumps(dict(action=dict(type='wait', ticks=60),
@@ -953,7 +882,7 @@ class DeliveryTest(unittest.TestCase):
         record_archive(self.archive(self.seed + 1))
         self.assertEqual(len(json.loads((self.out/'progress.json').read_text())['archives']), 2)
 
-    def test_default_resume_uses_progress_without_hash_or_replay(self):
+    def test_resume_uses_progress_without_hash_or_replay(self):
         from unittest.mock import patch
         from llmplay import resume, next_task, list_tasks
         from llmplay.delivery import record_archive
@@ -964,128 +893,59 @@ class DeliveryTest(unittest.TestCase):
         previous = json.loads((self.out/'progress.json').read_text())
         os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
         target_session = budget.reset_session(self.base / 'new-budget.json')
-        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')) as digest, \
-                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')) as verify:
+        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')) as digest:
             document = resume(source)
         self.assertEqual(digest.call_count, 0)
-        self.assertEqual(verify.call_count, 0)
         self.assertEqual(document['archives'], previous['archives'])
         self.assertEqual(document['tasks'], previous['tasks'])
         self.assertFalse(document['tasks'][self.task]['complete'])
-        self.assertEqual(next_task()['main']['layer'], 'A')
+        self.assertEqual(next_task()['item']['layer'], 'A')
         self.assertIn(self.task, list_tasks())
         self.assertEqual(target_session.level(self.task)['search_ticks'], 345)
         self.assertEqual(target_session.level(self.task)['segment_rewrites'], 1)
-        with patch('llmplay.delivery.verify_archive', return_value=True): resume(source)
+        resume(source)                      # 重复恢复不会重复计预算
         self.assertEqual(target_session.level(self.task)['search_ticks'], 345)
 
-    def test_tampered_archive_is_restored_by_default_and_checked_only_in_full(self):
-        from unittest.mock import patch
-        from llmplay.delivery import record_archive, resume
-        import zipfile
-        for n in range(3): record_archive(self.archive(self.seed + n))
-        source = self.base/'source'
-        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
-        prior = json.loads((source/'out/progress.json').read_text())
-        damaged = source/'out'/prior['archives'][1]['archive']
-        (damaged/'ticks.jsonl').write_text('tampered\n')
-        os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
-        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
-                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')) as verify:
-            document = resume(source)
-        self.assertEqual(verify.call_count, 0)
-        self.assertEqual(sum(e['valid'] for e in document['archives']), 3)
-        self.assertEqual((Path(os.environ['LLMPLAY_OUT'])/prior['archives'][1]['archive']/'ticks.jsonl').read_text(), 'tampered\n')
-        def replay(archive, **kwargs):
-            if archive == damaged: raise ValueError('tick mismatch')
-            return True
-        os.environ['LLMPLAY_OUT'] = str(self.base/'full')
-        with patch('llmplay.delivery.verify_archive', side_effect=replay) as verify:
-            document = resume(source, verify='full')
-        self.assertEqual(verify.call_count, 3)
-        self.assertEqual(sum(e['valid'] for e in document['archives']), 2)
-        invalid = next(e for e in document['archives'] if not e['valid'])
-        self.assertEqual(invalid['seed'], self.seed + 1)
-        self.assertIn('tick mismatch', invalid['invalid_reason'])
+    def test_resume_imports_loose_archives_without_progress(self):
+        """没有 progress.json 时按 meta.json 直接导入，不重放、不比对。"""
+        from llmplay import resume
+        os.environ['LLMPLAY_OUT'] = str(self.base / 'loose')
+        document = resume(self.archive(self.seed))
+        entry = document['archives'][0]
+        self.assertEqual((entry['task_id'], entry['seed']), (self.task, self.seed))
+        self.assertTrue(entry['valid'])
+        self.assertEqual(document['tasks'][self.task]['wins'], 1)
 
-    def test_default_resume_preserves_invalid_record_and_full_can_revalidate(self):
-        from unittest.mock import patch
-        from llmplay.delivery import record_archive, resume
-        import zipfile
+    def test_resume_marks_missing_archive_invalid(self):
+        import shutil
+        from llmplay import resume
+        from llmplay.delivery import record_archive
         record_archive(self.archive(self.seed))
-        source = self.base/'source'
+        import zipfile
+        source = self.base / 'missing'
         with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
-        p = source/'out/progress.json'
-        prior = json.loads(p.read_text())
-        prior['archives'][0]['valid'] = False
-        prior['archives'][0]['won'] = False
-        prior['archives'][0]['robust'] = False
-        p.write_text(json.dumps(prior))
-        os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
-        with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
-                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')) as verify:
-            document = resume(source)
-        self.assertEqual(verify.call_count, 0)
-        self.assertEqual(document['archives'], prior['archives'])
+        shutil.rmtree(source/'out'/'archives')
+        os.environ['LLMPLAY_OUT'] = str(self.base/'new')
+        document = resume(source)
         self.assertEqual(document['tasks'][self.task]['wins'], 0)
-        os.environ['LLMPLAY_OUT'] = str(self.base/'full')
-        with patch('llmplay.delivery.verify_archive', return_value=True) as verify:
-            document = resume(source, verify='full')
-        self.assertEqual(verify.call_count, 1)
-        self.assertTrue(document['archives'][0]['valid'])
+        self.assertFalse(document['archives'][0]['valid'])
+        self.assertIn('缺失', document['archives'][0]['invalid_reason'])
 
-    def test_parallel_full_resume_matches_serial_and_caps_engines(self):
-        from unittest.mock import patch
-        from contextlib import redirect_stdout
-        import io
-        import threading
-        import time
-        from llmplay.delivery import record_archive, resume
-        for n in range(12): record_archive(self.archive(self.seed + n))
+    def test_resume_restores_policy_and_saved_run_files(self):
+        from llmplay import resume
+        from llmplay.delivery import record_archive
+        self.out.mkdir()
+        (self.out/'policy.py').write_text('def policy(g): g.wait(30)\n')
+        (self.out/'run.json').write_text('{"tick": 120}\n')
+        record_archive(self.archive(self.seed))
         source = self.out/'out.zip'
-        active, peak = 0, 0
-        lock = threading.Lock()
-        def verify(archive, **kwargs):
-            nonlocal active, peak
-            with lock:
-                active += 1
-                peak = max(peak, active)
-            try:
-                time.sleep(.01)
-                if json.loads((archive/'meta.json').read_text())['task']['seed'] % 3 == 0:
-                    raise ValueError('test invalid')
-                return True
-            finally:
-                with lock: active -= 1
-        results = []
-        for workers in (1, 8):
-            peak = 0
-            os.environ['LLMPLAY_OUT'] = str(self.base/f'resumed-{workers}')
-            output = io.StringIO()
-            with patch('llmplay.delivery.os.cpu_count', return_value=workers), \
-                    patch('llmplay.delivery.verify_archive', side_effect=verify) as replay, redirect_stdout(output):
-                results.append(resume(source, verify='full'))
-            self.assertEqual(replay.call_count, 12)
-            self.assertEqual(peak, min(workers, 2))
-            self.assertIn('resume verify: 10/12', output.getvalue())
-        for key in ('archives', 'tasks', 'layers', 'run_id', 'complete'):
-            self.assertEqual(results[0][key], results[1][key])
+        target = self.base/'new'
+        os.environ['LLMPLAY_OUT'] = str(target)
+        resume(source)
+        self.assertEqual((target/'policy.py').read_bytes(), (self.out/'policy.py').read_bytes())
+        self.assertEqual((target/'run.json').read_bytes(), (self.out/'run.json').read_bytes())
 
-    def test_resume_rejects_unknown_verify_mode(self):
-        from llmplay import resume
-        with self.assertRaisesRegex(ValueError, 'verify'):
-            resume(self.base, verify='other')
-
-    def test_default_resume_needs_progress_and_does_not_fall_back_to_replay(self):
-        from unittest.mock import patch
-        from llmplay import resume
-        archive = self.archive(self.seed)
-        with patch('llmplay.delivery.verify_archive') as replay:
-            with self.assertRaisesRegex(ValueError, 'progress.json'):
-                resume(archive)
-        replay.assert_not_called()
-
-    def test_default_resume_preserves_non_digest_path_and_ignores_unlisted_archive(self):
+    def test_resume_preserves_non_digest_path_and_ignores_unlisted_archive(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive, resume
         import shutil
@@ -1104,68 +964,11 @@ class DeliveryTest(unittest.TestCase):
         shutil.copytree(self.archive(self.seed + 1), source/'out/archives/unlisted')
         os.environ['LLMPLAY_OUT'] = str(self.base/'resumed')
         with patch('llmplay.delivery._archive_digest', side_effect=AssertionError('no hashing')), \
-                patch('llmplay.delivery.verify_archive', side_effect=AssertionError('no replay')), \
                 patch('llmplay.delivery._entry', side_effect=AssertionError('no metadata validation')):
             document = resume(source)
         self.assertEqual(document['archives'], prior['archives'])
         self.assertEqual((Path(os.environ['LLMPLAY_OUT'])/relative/'meta.json').read_text(), 'opaque metadata')
         self.assertFalse((Path(os.environ['LLMPLAY_OUT'])/'archives/unlisted').exists())
-
-    def test_resume_invalid_archive_does_not_count_and_seed_is_retried(self):
-        from unittest.mock import patch
-        from llmplay import resume, next_task
-        from llmplay.delivery import record_archive
-        archive = self.archive(self.seed)
-        record_archive(archive)
-        os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
-        with patch('llmplay.delivery.verify_archive', side_effect=ValueError('tick mismatch')):
-            document = resume(archive, verify='full')
-        self.assertEqual(document['tasks'][self.task]['wins'], 0)
-        self.assertFalse(document['archives'][0]['valid'])
-        self.assertIn('tick mismatch', document['archives'][0]['invalid_reason'])
-        self.assertIn(self.seed, document['tasks'][self.task]['available_seeds'])
-        item = next_task()['main']
-        self.assertIn(item['seed'], document['tasks'][item['task_id']]['available_seeds'])
-
-    def test_resume_marks_missing_archive_invalid(self):
-        import shutil
-        from llmplay import resume
-        from llmplay.delivery import record_archive
-        record_archive(self.archive(self.seed))
-        import zipfile
-        source = self.base / 'missing'
-        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
-        shutil.rmtree(source/'out'/'archives')
-        os.environ['LLMPLAY_OUT'] = str(self.base/'new')
-        document = resume(source)
-        self.assertEqual(document['tasks'][self.task]['wins'], 0)
-        self.assertFalse(document['archives'][0]['valid'])
-        self.assertIn('缺失', document['archives'][0]['invalid_reason'])
-
-    def test_resume_restores_policy_and_saved_run_files(self):
-        from unittest.mock import patch
-        from llmplay import resume
-        from llmplay.delivery import record_archive
-        self.out.mkdir()
-        (self.out/'policy.py').write_text('def policy(g): g.wait(30)\n')
-        (self.out/'run.json').write_text('{"tick": 120}\n')
-        record_archive(self.archive(self.seed))
-        source = self.out/'out.zip'
-        target = self.base/'new'
-        os.environ['LLMPLAY_OUT'] = str(target)
-        with patch('llmplay.delivery.verify_archive', return_value=True): resume(source)
-        self.assertEqual((target/'policy.py').read_bytes(), (self.out/'policy.py').read_bytes())
-        self.assertEqual((target/'run.json').read_bytes(), (self.out/'run.json').read_bytes())
-
-    def test_resume_incomplete_archive_keeps_task_identity(self):
-        from llmplay import resume
-        archive = self.archive(self.seed)
-        (archive/'ticks.jsonl').unlink()
-        document = resume(archive, verify='full')
-        entry = document['archives'][0]
-        self.assertEqual(entry['task_id'], self.task)
-        self.assertEqual(entry['seed'], self.seed)
-        self.assertFalse(entry['valid'])
 
     def test_same_seed_multiple_exports_count_once_and_best_is_used(self):
         from llmplay.delivery import record_archive, progress
@@ -1188,17 +991,17 @@ class DeliveryTest(unittest.TestCase):
         """task139：循环式任务没有终点 —— 一圈做满就进下一圈，complete 永远是 False。"""
         from llmplay.delivery import _derive
         from test_llmplay3 import fill_cycle
-        document = _derive(fill_cycle(1))
+        document = _derive(fill_cycle(1), 'run')
         self.assertFalse(document['complete'])
         self.assertEqual(document['cycle'], 2)
         self.assertEqual(document['layer'], 'A')
-        document = _derive(fill_cycle(1) + fill_cycle(2))
+        document = _derive(fill_cycle(1) + fill_cycle(2), 'run')
         self.assertFalse(document['complete'])
         self.assertEqual(document['cycle'], 3)
 
     def test_budget_is_per_task_and_manual_never_exhausts(self):
         first = Game(self.task, seed=self.seed, deck=[1,33,39,44,15,3], reason='预算隔离', strategy='投手')
-        second = Game('demo_roof_46_doom_m300')
+        second = Game('demo_roof_46_doom_m300', _gate=False)
         self.session.note_ticks(first.budget_key, 10**12, 'manual')
         self.assertEqual(self.session.level(second.budget_key)['total_ticks'], 0)
         self.assertFalse(self.session.level(first.budget_key)['exhausted'])

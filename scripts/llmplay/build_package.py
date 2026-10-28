@@ -41,14 +41,6 @@ SECRET_PATTERNS = [re.compile(pattern) for pattern in
                     rb"(?i)token\s*[:=]\s*[A-Za-z0-9_\-]{16,}")]
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for block in iter(lambda: stream.read(1 << 20), b""):
-            digest.update(block)
-    return digest.hexdigest()
-
-
 def seed_plan() -> dict:
     """task139 的循环计划：任务顺序 + 每任务 160 个种子（`configs/llmplay_seeds.json`，机械生成）。"""
     document = json.loads(SEED_PLAN.read_text(encoding="utf-8"))
@@ -94,12 +86,12 @@ def copy_modules(stage: Path) -> None:
     for name in SCRIPT_MODULES:
         shutil.copyfile(ROOT / "scripts" / name, stage / "scripts" / name)
     # 只拷接口本体：PROMPT/README/examples 在包根目录已经有了，再拷一份会让人
-    # 分不清看哪个；verify_archive.py 依赖仓库里的 human_demo/pvz_event_env，包里没有。
+    # 分不清看哪个。
     shutil.copytree(ROOT / "scripts" / "llmplay", stage / "llmplay",
                     ignore=shutil.ignore_patterns("__pycache__", "build_package.py",
                                                   "build_probe.py", "probe",
                                                   "PROMPT.md", "README.md", "examples",
-                                                  "verify_archive.py", "mac_check.sh",
+                                                  "mac_check.sh",
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
                                                   "check_tasks.py", "robustness_check.py",
                                                   "cache_prepare.py", "cache_profile.py",
@@ -144,18 +136,12 @@ def scan(stage: Path) -> list:
 def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = RESOURCE_DIR) -> Path:
     """分别打接口包与资源包；使用临时构建树，不能提前删除旧包/输入引擎。"""
     from llmplay.cache_prepare import audit_cache
-    from llmplay.resources import MANIFEST, PACKAGE
+    from llmplay.resources import PACKAGE
     executable, cache_dir = Path(executable).resolve(), Path(cache_dir).resolve()
     audit = audit_cache(cache_dir)
-    evidence = json.loads((cache_dir.parent / "cache-audit.json").read_text())
-    engine_sha = sha256(executable)
-    if (evidence["engine_sha256"] != engine_sha or evidence["levels_reset"] != 50
-            or evidence["tasks_reset"] != len(seed_plan()["tasks"])):
-        raise ValueError("缓存缺少同引擎、全部50关/全部任务的 reset 验收证据")
     out.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".package-build-", dir=out) as temporary:
-        return _build(executable, out, cache_dir, resource_dir, Path(temporary), audit,
-                      engine_sha, MANIFEST, PACKAGE)
+        return _build(executable, out, cache_dir, resource_dir, Path(temporary), audit, PACKAGE)
 
 
 def repack_interface(previous: Path, out: Path) -> list[Path]:
@@ -174,10 +160,6 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
         copy_constant_sources(stage)
         (stage / "build").mkdir()
         engine = previous / "build" / "pvz-portable"
-        contract = json.loads((previous / "configs" / PACKAGE).read_text())
-        # 只读 37MB 引擎一次（<1秒），防止误将另一引擎与旧缓存配对。
-        if sha256(engine) != contract["engine_sha256"]:
-            raise ValueError("复用引擎与原资源契约不匹配")
         shutil.copyfile(engine, stage / "build" / "pvz-portable")
         (stage / "build" / "pvz-portable").chmod(0o755)
         (stage / "configs").mkdir()
@@ -188,7 +170,7 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
         for path in (SEED_PLAN, ROBUSTNESS_PLAN, previous / "configs" / PACKAGE,
                      ROOT / "configs" / "adventure_scoreboard.json", ROOT / "configs" / "gate_v5_panel.json"):
             shutil.copyfile(path, stage / "configs" / path.name)
-        for name in ("PROMPT.md", "README.md", "selfcheck.py"):
+        for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
         hits = scan(stage)
@@ -210,12 +192,12 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
         if destination.exists():
             shutil.rmtree(destination)
         os.replace(stage, destination)
-        print(json.dumps([dict(file=str(path), bytes=path.stat().st_size, sha256=sha256(path))
-                          for path in volumes], indent=2))
+        print(json.dumps([dict(file=str(path), bytes=path.stat().st_size) for path in volumes],
+                         indent=2))
         return volumes
 
 
-def _build(executable, out, cache_dir, resource_dir, temporary, audit, engine_sha, manifest_name, package_name):
+def _build(executable, out, cache_dir, resource_dir, temporary, audit, package_name):
     stage = temporary / "stage"
     stage.mkdir()
     copy_modules(stage)
@@ -226,11 +208,6 @@ def _build(executable, out, cache_dir, resource_dir, temporary, audit, engine_sh
     resource_stage = temporary / "resources"
     copy_resources(resource_stage, resource_dir)
     shutil.copytree(cache_dir / "cache64", resource_stage / "res" / "cache64")
-    files = {p.relative_to(resource_stage / "res").as_posix(): sha256(p)
-             for p in sorted((resource_stage / "res").rglob("*")) if p.is_file()}
-    resource_manifest = dict(schema="llmplay_resources_v1", engine_sha256=engine_sha,
-                             definitions=audit["actual"], files=files)
-    (resource_stage / "res" / manifest_name).write_text(json.dumps(resource_manifest, indent=2) + "\n")
     resource_zip = temporary / "llmplay_res.zip"
     _zip_tree(resource_stage, resource_zip)
 
@@ -243,11 +220,9 @@ def _build(executable, out, cache_dir, resource_dir, temporary, audit, engine_sh
     shutil.copyfile(SEED_PLAN, stage / "configs" / "llmplay_seeds.json")
     shutil.copyfile(ROBUSTNESS_PLAN, stage / "configs" / "llmplay_robustness.json")
     (stage / "configs" / package_name).write_text(json.dumps(dict(
-        schema="llmplay_package_v1", engine_sha256=engine_sha,
-        resource_zip_sha256=sha256(resource_zip)), indent=2) + "\n")
+        schema="llmplay_package_v1"), indent=2) + "\n")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "PROMPT.md", stage / "PROMPT.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "README.md", stage / "README.md")
-    shutil.copyfile(ROOT / "scripts" / "llmplay" / "selfcheck.py", stage / "selfcheck.py")
     shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
 
     hits = scan(stage) + scan(resource_stage)
@@ -275,8 +250,7 @@ def _build(executable, out, cache_dir, resource_dir, temporary, audit, engine_sh
     for old in (old_stage, old_resources):
         if old.exists(): shutil.rmtree(old)
     archive = out / "llmplay_pkg.zip"
-    print(json.dumps(dict(packages=[dict(zip=str(out / name), size=(out / name).stat().st_size,
-                                        sha256=sha256(out / name))
+    print(json.dumps(dict(packages=[dict(zip=str(out / name), size=(out / name).stat().st_size)
                                    for name in ("llmplay_pkg.zip", "llmplay_res.zip")],
                           compiled_definitions=audit["actual"], secret_hits=0), ensure_ascii=False, indent=2))
     return archive

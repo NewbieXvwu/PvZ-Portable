@@ -16,7 +16,6 @@
 from __future__ import annotations
 
 import atexit
-import hashlib
 import inspect
 import copy
 import json
@@ -100,7 +99,7 @@ def _default_executable() -> Path:
 def _ensure_executable(path: Path) -> None:
     """解压工具不一定保留可执行位（Python 的 zipfile 就不保留），跑引擎前补上。
 
-    沙箱里很常见：包用 zipfile 解开，selfcheck 之外的自写脚本直接 Popen 会报
+    沙箱里很常见：包用 zipfile 解开，直接 Popen 会报
     PermissionError。这里补一次，任何入口都不会因为这个卡住。
     """
     try:
@@ -256,7 +255,6 @@ class Game:
         self.env = None
         self.obs = None
         self.initial_obs = None
-        self.initial_hash = None
         self.terminal = abandon_reason is not None
         self.totals = {}
         self.max_wave = 0
@@ -281,11 +279,16 @@ class Game:
         # 内部试打局（robustness 的 k 个新未来）不写「最远进度」、不进自动 observe。
         self._internal = bool(_internal)
         # task139：层序 / 卡组差异 / 打法重复的硬把关。稳健性试打与读档恢复不受限。
+        self._claimed = False
         if _gate and not self._internal:
             from .delivery import check
+            from .workflow import hold
             context = check(self.task_id, self.deck, self.strategy, self.seed)
             self.cycle = context.get("cycle", self.cycle)
             self.workflow_layer = context.get("workflow_layer", self.workflow_layer)
+            # 队列占位：别的子代理不会领到同一项；进程崩了 30 分钟后自动释放。
+            hold(self.task_id, self.seed)
+            self._claimed = True
         self.session = budget.session()
         self.budget_key = self.task_id
         self.session.register_task(self.budget_key, self.spec.level)
@@ -315,14 +318,8 @@ class Game:
 
     def _reset_engine(self) -> None:
         assert self.env is not None
-        # 进 demo 模式只为一件事：让**每条**响应（含 reset 的那条）都带 state_hash。
-        # 官方 human_demo.py verify 比的就是响应里的哈希（不是 STATE_HASH 命令的），
-        # 两条路径算出来的值实测不同，所以导出存档必须在同一条路径上取哈希。
-        # DEMO_BEGIN 只改鼠标/窗口状态，不动模拟（人类示范重放与无 demo 重放终局一致）。
         self.env.begin_demo()
         self.initial_obs, _ = self.env.reset(deck=self.deck, task=self.spec)
-        # 开局哈希必须紧跟在 reset 之后取：之后任何一条命令都会覆盖 _last_response。
-        self.initial_hash = self.env._last_response.get("state_hash")
         if self.task_definition.get("deck_selection") == "player":
             options = self.env.deck_options()
             field = self.task_definition.get("unlock_field", "first_adventure_available")
@@ -557,11 +554,7 @@ class Game:
         self._dirty = True
         if not self._internal:
             _mark_active(self)
-        # 精简观测的响应不带 state_hash（那是给搜索用的轻量路径），存档要逐操作哈希，
-        # 所以缺了就单独问一次。一次命令的代价，比关掉精简观测便宜得多。
-        state_hash = self.env._last_response.get("state_hash") or self.env.state_hash()
-        self.ops.append(dict(action=action, tick=before, end_tick=self.tick, ok=ok,
-                             state_hash=state_hash))
+        self.ops.append(dict(action=action, tick=before, end_tick=self.tick, ok=ok))
         self._maybe_frame(action, ok)
         if self.terminal or int(self.obs.get("wave") or 0) > before_wave:
             self._persist_best()
@@ -571,6 +564,9 @@ class Game:
         # 内部试打局走的是换过的未来，写进「最远进度」会把真局的纪录冲掉。
         if self._internal or self.env is None or self.obs is None:
             return None
+        if self._claimed:
+            from .workflow import hold
+            hold(self.task_id, self.seed)
         return self.session.save_best_log(self.budget_key, self.log(), wave=self.max_wave,
                                           won=int(self.obs.get("result") or 0) == 1)
 
@@ -770,8 +766,7 @@ class Game:
             raise ValueError("k 必须在 1..8 之间；正式稳健标准固定为 8 个新未来")
         self._start()
         self._persist_best()
-        policy_sha = hashlib.sha256(source.encode("utf-8")).hexdigest()
-        result = dict(policy_sha256=policy_sha, k=k, manual_patch=bool(self.manual_patch),
+        result = dict(k=k, manual_patch=bool(self.manual_patch),
                       checkpoints={}, required_checkpoint=required, deck=list(self.deck), passed=False)
         for checkpoint in waves:
             key = str(checkpoint)
@@ -969,7 +964,7 @@ class Game:
     def export_archive(self, directory, *, note=None) -> Path:
         """导出 episode_archive_v1 存档（ticks.jsonl / frames.jsonl / meta.json）。
 
-        导出的存档可以直接被仓库的 scripts/human_demo.py verify 重放校验。
+        导出的存档是引擎真正接受的动作序列，可直接 load_archive 继续中盘打。
         """
         self._require_primary("export_archive()")
         # task139：缺思路 / 缺评价的局不能进下一层，所以在写盘前就拦下来（不用重打）。
@@ -989,8 +984,7 @@ class Game:
         with (target / "ticks.jsonl").open("w", encoding="utf-8") as tape:
             for op in self.ops:
                 tape.write(json.dumps(dict(action=op["action"], tick=op["tick"],
-                                           end_tick=op["end_tick"], ok=op["ok"],
-                                           state_hash=op["state_hash"]),
+                                           end_tick=op["end_tick"], ok=op["ok"]),
                                       separators=(",", ":")) + "\n")
         with (target / "frames.jsonl").open("w", encoding="utf-8") as stream:
             for frame in self.frames:
@@ -1013,20 +1007,8 @@ class Game:
                       preplanted=[list(p) for p in self.spec.preplanted]),
             environment_task=self._environment_task(),
             engine_sha=episode.get("source_revision"), engine_dirty=episode.get("source_dirty"),
-            # executable_sha256 写成一句自解释的标记，不是 sha：
-            # state_hash 跨进程不可复现（同一二进制两次 reset 会得到不同的开局哈希，
-            # 实测见 task81 问题节）。human_demo.py verify 的规则是
-            # "记录的 sha 与当前二进制不同 → 只比 tick/ok/终局，并在 meta 里写明"，
-            # 所以这里如实声明"哈希不可复现"，让校验走那条明示的宽松路径，
-            # 而不是假装哈希一致。真正的二进制指纹在 recording_executable_sha256。
-            executable_sha256="not-recorded:state_hash_not_reproducible_across_processes",
-            recording_executable_sha256=hashlib.sha256(Path(self.executable).read_bytes()).hexdigest(),
-            resource_sha256=episode.get("resource_sha256"),
-            properties_partner_sha256=episode.get("properties_partner_sha256"),
             context=dict(level=self.spec.level, multiplier=self.spec.zombie_count_multiplier,
                          roster=roster),
-            hash_schema="portable_snapshot_v1_without_draw_statistics_nonreproducible_across_processes",
-            initial_state_hash=self.initial_hash,
             # task81d：稳健性 = 每个检查点 k 个新未来里的胜局数 + 打法函数源码哈希。
             # manual_patch=True 表示这局用 rewind 手工补救过；稳健性按补救前的闭环打法算。
             robustness=self.robustness_report, manual_patch=bool(self.manual_patch),
@@ -1044,7 +1026,15 @@ class Game:
                                           encoding="utf-8")
         from .delivery import record_archive
         record_archive(target, session=self.session)
+        self._release_claim()
         return target
+
+    def _release_claim(self) -> None:
+        if not self._claimed:
+            return
+        from .workflow import release
+        release(self.task_id, self.seed)
+        self._claimed = False
 
     def _deliver(self) -> None:
         """稳健性完成即导出当前局面并发布交付；内部试打不交付。"""
@@ -1096,6 +1086,7 @@ class Game:
             self.close()
 
     def close(self) -> None:
+        self._release_claim()
         if self.env is not None:
             try:
                 self._persist_best()

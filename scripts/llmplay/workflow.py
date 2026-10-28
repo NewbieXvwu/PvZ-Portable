@@ -18,10 +18,19 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import time
+import uuid
+from contextlib import contextmanager
 from pathlib import Path
 
 from .game import ROOT, load_tasks, required_checkpoint
 from .runtime import output_path
+
+try:                                    # 只用来串行化 claims.json 的读改写
+    import fcntl as _FCNTL
+except ImportError:                     # Windows 上退化为无锁（占位记录本身容忍竞争）
+    _FCNTL = None
 
 LAYERS = ("A", "B", "C", "D", "E")
 MAIN_LAYERS = ("A", "B", "D", "E")
@@ -30,6 +39,9 @@ PLAN_PATH = ROOT / "configs" / "llmplay_seeds.json"
 SCHEMA = "llmplay_cycle_v1"
 PROGRESS_SCHEMA = "llmplay_progress_v2"
 NO_END_NOTE = "循环式任务没有终点：一圈做完自动进下一圈，停止只由用户决定。"
+PARALLEL = 4            # 同一个待办项最多同时放几个种子给不同子代理
+CLAIM_TTL = 900         # 领了还没建局：15 分钟后自动释放
+HOLD_TTL = 1800         # 建局后每次推进续期 30 分钟
 
 _CACHE: dict = {}
 
@@ -412,101 +424,267 @@ def _fresh(task_id, cycle, entries, run_id=None) -> list:
     return seed_order(task_id, run_id, later) if run_id else later
 
 
-def next_task(document) -> dict:
-    """两轨各给出下一项，主线完成后等待本圈挑战配额。"""
-    main = (_next_task(document) if document["layer"] in MAIN_LAYERS else
-            _item(document, None, "wait_challenge", note="主线已完成，等待 C 轨本圈配额，不能进下一圈"))
-    challenge = _next_task(dict(document, layer="C"))
-    return dict(cycle=document["cycle"], main=main, challenge=challenge,
-                challenge_quota=document["layers"]["C"], complete=False, note=NO_END_NOTE)
+def _slot(task_id, seed) -> str:
+    return "%s|%s" % (task_id, seed)
 
 
-def _next_task(document) -> dict:
+@contextmanager
+def _claim_lock():
+    path = _claims_path()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with (path.parent / ".claims.lock").open("a+b") as handle:
+        if _FCNTL is not None:
+            _FCNTL.flock(handle.fileno(), _FCNTL.LOCK_EX)
+        try:
+            yield
+        finally:
+            if _FCNTL is not None:
+                _FCNTL.flock(handle.fileno(), _FCNTL.LOCK_UN)
+
+
+def _claims_path() -> Path:
+    return output_path(ROOT) / "claims.json"
+
+
+def _read_claims() -> dict:
+    """读占位记录；过期的自动丢弃（进程崩了不会永久占着任务）。"""
+    try:
+        document = json.loads(_claims_path().read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    now = time.time()
+    return {key: value for key, value in document.items()
+            if float(value.get("expires") or 0) > now}
+
+
+def _write_claims(data) -> None:
+    path = _claims_path()
+    temporary = path.with_name("." + path.name + "." + uuid.uuid4().hex)
+    temporary.write_text(json.dumps(data, ensure_ascii=False), encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def held() -> dict:
+    """当前还没过期的占位记录，键是 task_id|seed。"""
+    return _read_claims()
+
+
+def hold(task_id, seed, ttl=None) -> None:
+    """建局后占住这一项并续期；游戏每推进一步都会再续一次。"""
+    ttl = float(ttl or os.environ.get("LLMPLAY_CLAIM_HOLD") or HOLD_TTL)
+    with _claim_lock():
+        data = _read_claims()
+        key = _slot(task_id, seed)
+        record = data.get(key) or dict(task_id=task_id, seed=seed, action="play",
+                                       token=uuid.uuid4().hex, claimed_at=time.time(),
+                                       pid=os.getpid())
+        record["expires"] = time.time() + ttl
+        data[key] = record
+        _write_claims(data)
+
+
+def release(task_id, seed) -> None:
+    """这一项打完了（导出/放弃/关闭）：把占位还回队列。"""
+    with _claim_lock():
+        data = _read_claims()
+        if data.pop(_slot(task_id, seed), None) is not None:
+            _write_claims(data)
+
+
+def claim_item(document=None, *, track=None, ttl=None) -> dict:
+    """领一项还没被领走的任务；全部被领走时返回 action=busy，不阻塞。"""
+    document = document if document is not None else _progress()
+    main_items, c_items = _ordered(document)
+    order = ([] if track == "C" else main_items) + ([] if track == "main" else c_items)
+    ttl = float(ttl or os.environ.get("LLMPLAY_CLAIM_TTL") or CLAIM_TTL)
+    with _claim_lock():
+        data = _read_claims()
+        for candidate in order:
+            key = _slot(candidate["task_id"], candidate.get("seed"))
+            if key in data:
+                continue
+            token = uuid.uuid4().hex
+            data[key] = dict(task_id=candidate["task_id"], seed=candidate.get("seed"),
+                             cycle=document["cycle"], layer=candidate["layer"],
+                             action=candidate["action"], token=token,
+                             claimed_at=time.time(), expires=time.time() + ttl, pid=os.getpid())
+            _write_claims(data)
+            return dict(candidate, claim=token)
+        return _busy(main_items + c_items) or _item(document, None, "blocked",
+                                                    note="本圈没有可推进的项")
+
+
+def _ordered(document) -> tuple:
+    """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞。"""
+    return _main_items(document), _challenge_items(document)
+
+
+def _interleave(groups) -> list:
+    """按任务轮流发牌：先让不同任务各领一项，再回头领第二项。"""
+    groups = [list(group) for group in groups if group]
+    out = []
+    for index in range(max((len(group) for group in groups), default=0)):
+        for group in groups:
+            if index < len(group):
+                out.append(group[index])
+    return out
+
+
+def _main_items(document) -> list:
     layer, cycle = document["layer"], document["cycle"]
-    detail = document["detail"]
-    archives = document["archives"]
-    req = document["requirements"]
+    detail, archives, req = document["detail"], document["archives"], document["requirements"]
+    run_id = document.get("run_id")
+    out = []
 
     if layer == "A":
+        groups = []
         for task_id in _ids(detail["A"]):
             item = detail["A"][task_id]
             if item["complete"]:
                 continue
-            fresh = _fresh(task_id, cycle, archives, document["run_id"])
+            fresh = _fresh(task_id, cycle, archives, run_id)
+            group = []
             for key in sorted(item["decks"]):
-                group = item["decks"][key]
-                if group["wins"] == 1 and group["strategy"] and group["review"] and fresh:
-                    return _item(document, task_id, "second_seed", seed=fresh[0], deck=group["deck"],
-                                 note="这套卡组已赢 1 个种子；同卡组再赢 1 个不同种子就满足 A 层的每套 2 胜")
-            if fresh:
-                return _item(document, task_id, "new_deck", seed=fresh[0],
-                             note="自选一套与已有卡组至少差 %d 张、核心思路不同的新卡组" % req["A"]["min_card_changes"])
-        return _item(document, None, "blocked", note="A 层还有任务没种子可用，请检查种子计划")
+                deck = item["decks"][key]
+                if deck["wins"] == 1 and deck["strategy"] and deck["review"]:
+                    for seed in fresh[:PARALLEL]:
+                        group.append(_item(document, task_id, "second_seed", seed=seed, deck=deck["deck"],
+                                           note="这套卡组已赢 1 个种子；同卡组再赢 1 个不同种子就满足 A 层的每套 2 胜"))
+            for seed in fresh[:PARALLEL]:
+                group.append(_item(document, task_id, "new_deck", seed=seed,
+                                   note="自选一套与已有卡组至少差 %d 张、核心思路不同的新卡组"
+                                        % req["A"]["min_card_changes"]))
+            groups.append(group)
+        return _interleave(groups)
 
     if layer == "B":
+        groups = []
         for task_id in _ids(detail["B"]):
             item = detail["B"][task_id]
             if item["complete"]:
                 continue
             for key in sorted(item["items"]):
-                group = item["items"][key]
-                if group["complete"]:
+                deck = item["items"][key]
+                if deck["complete"]:
                     continue
-                pending = [entry for entry in group["pending"] if entry["archive"]]
-                if pending:
-                    return _item(document, task_id, "improve_robustness", seed=pending[0]["seed"],
-                                 deck=group["deck"], archive=pending[0]["archive"],
-                                 note="这套卡组还差 %d 个稳健种子（第 10 波 k=8 赢≥5）；读这个存档，用闭环打法跑 robustness()"
-                                      % (group["need"] - len(group["robust_seeds"])))
-        return _item(document, None, "blocked", note="B 层没有可推进的项")
-
-    if layer == "C":
-        for task_id in _ids(detail["C"]):
-            item = detail["C"][task_id]
-            if item["complete"]:
-                continue
-            remaining = [seed for seed in item["window"] if seed not in set(item["attempted"])]
-            if remaining:
-                return _item(document, task_id, "play", seed=remaining[0], deck=item["deck"],
-                             note="指定卡组：不能换卡；5 个种子里赢 2 个。放弃不算尝试，必须同种子重开直到真实终局")
-            if not item["diagnosis"]:
-                return _item(document, task_id, "diagnose", deck=item["deck"],
-                             note="5 个种子都没赢 2 局：写失败诊断（卡在第几波、缺什么），用 llmplay.diagnose()")
-        return _item(document, None, "track_complete", note="C 轨本圈配额已完成，等待主线，下一圈继续挑战")
+                groups.append([_item(document, task_id, "improve_robustness", seed=row["seed"],
+                                     deck=deck["deck"], archive=row["archive"],
+                                     note="这套卡组还差 %d 个稳健种子（第 10 波 k=8 赢≥5）；"
+                                          "读这个存档，用闭环打法跑 robustness()"
+                                          % (deck["need"] - len(deck["robust_seeds"])))
+                               for row in deck["pending"] if row["archive"]])
+        return _interleave(groups)
 
     if layer == "D":
+        groups = []
         for task_id in _ids(detail["D"]):
             item = detail["D"][task_id]
             if item["complete"]:
                 continue
-            fresh = _fresh(task_id, cycle, archives, document["run_id"])
+            fresh = _fresh(task_id, cycle, archives, run_id)
             for key in sorted(item["items"]):
-                group = item["items"][key]
-                if group["complete"] or not fresh:
+                deck = item["items"][key]
+                if deck["complete"]:
                     continue
-                return _item(document, task_id, "new_strategy", seed=fresh[0], deck=group["deck"],
-                             used=sorted(group["strategies"]), done=sorted(group["done"]),
-                             strategies=[name for name in STRATEGIES if name not in group["done"]],
-                             note="这套卡组还差 %d 种开局节奏（经济优先 / 防线优先 / 速攻或爆发清场），"
-                                  "strategy 必须与已用的不重复"
-                                  % (int(req["D"]["strategies"]) - len(group["done"])))
-        return _item(document, None, "blocked", note="D 层没有可推进的项")
+                remaining = [name for name in STRATEGIES if name not in deck["done"]]
+                groups.append([_item(document, task_id, "new_strategy", seed=seed, deck=deck["deck"],
+                                     strategy=name, strategies=remaining, done=sorted(deck["done"]),
+                                     note="这套卡组还差 %d 种开局节奏；用返回的 strategy，每种赢 2 个种子"
+                                          % (int(req["D"]["strategies"]) - len(deck["done"])))
+                               for name in remaining for seed in fresh[:2]])
+        return _interleave(groups)
 
-    for task_id in _ids(detail["E"]):
-        item = detail["E"][task_id]
+    if layer == "E":
+        groups = []
+        for task_id in _ids(detail["E"]):
+            item = detail["E"][task_id]
+            if item["complete"]:
+                continue
+            for key in sorted(item["items"]):
+                deck = item["items"][key]
+                if deck["complete"]:
+                    continue
+                groups.append([_item(document, deck["task_id"], "play", seed=seed, deck=deck["deck"],
+                                     pair_task=task_id,
+                                     note="加压层：出怪 %.1f 倍，只能用 B 层下传的这套卡组" % deck["multiplier"])
+                               for seed in _fresh(deck["task_id"], cycle, archives, run_id)[:2]])
+        return _interleave(groups)
+    return out
+
+
+def _challenge_items(document) -> list:
+    track = dict(document, layer="C")
+    detail = document["detail"]["C"]
+    groups = []
+    for task_id in _ids(detail):
+        item = detail[task_id]
         if item["complete"]:
             continue
-        for key in sorted(item["items"]):
-            group = item["items"][key]
-            if group["complete"]:
-                continue
-            fresh = _fresh(group["task_id"], cycle, archives, document["run_id"])
-            if not fresh:
-                continue
-            return _item(document, group["task_id"], "play", seed=fresh[0], deck=group["deck"],
-                         pair_task=task_id,
-                         note="加压层：出怪 %.1f 倍，只能用 B 层下传的这套卡组" % group["multiplier"])
-    return _item(document, None, "blocked", note="E 层没有可推进的项")
+        attempted = set(item["attempted"])
+        remaining = [seed for seed in item["window"] if seed not in attempted]
+        group = [_item(track, task_id, "play", seed=seed, deck=item["deck"],
+                       note="指定卡组：不能换卡；5 个种子里赢 2 个。放弃不算尝试，必须同种子重开直到真实终局")
+                 for seed in remaining]
+        if not remaining and not item["diagnosis"]:
+            group.append(_item(track, task_id, "diagnose", deck=item["deck"],
+                               note="5 个种子都没赢 2 局：写失败诊断（卡在第几波、缺什么），用 llmplay.diagnose()"))
+        groups.append(group)
+    return _interleave(groups)
+
+
+def _first_free(items, claims):
+    for item in items:
+        if _slot(item["task_id"], item.get("seed")) not in claims:
+            return item
+    return None
+
+
+def _busy(items):
+    if not items:
+        return None
+    return dict(items[0], action="busy", busy=True,
+                note="当前所有待办项都已被其他子代理领走；手上没活就直接结束，不要轮询等待")
+
+
+def _pick(document, main, challenge, main_items, c_items):
+    if main is not None:
+        return main
+    if challenge is not None:
+        return challenge
+    for items in (main_items, c_items):
+        item = _busy(items)
+        if item:
+            return item
+    return _item(document, None, "blocked", note="本圈没有可推进的项")
+
+
+def _view(document, claims=None) -> dict:
+    """只读视图：两轨各自第一个还没被领走的项，不写占位记录。"""
+    main_items, c_items = _ordered(document)
+    claims = _read_claims() if claims is None else claims
+    main = _first_free(main_items, claims)
+    challenge = _first_free(c_items, claims)
+    return dict(cycle=document["cycle"], main=main, challenge=challenge,
+                item=_pick(document, main, challenge, main_items, c_items),
+                challenge_quota=document["layers"]["C"], complete=False, note=NO_END_NOTE)
+
+
+def next_task(document=None, *, track=None, claim=True, ttl=None) -> dict:
+    """领下一项：在 out/claims.json 里占位，多个子代理同时调用会各领到不同项。
+
+    主线与 C 轨合成一条队列（主线优先）；全部被领走时 item.action 是 busy，不阻塞。
+    claim=False 只查看队列，不占位（报告、测试用）。
+    """
+    document = document if document is not None else _progress()
+    view = _view(document)
+    if claim:
+        view["item"] = claim_item(document, track=track, ttl=ttl)
+    return view
+
+
+def _progress():
+    from .delivery import progress
+    return progress()
 
 
 def _ids(detail) -> list:
@@ -541,12 +719,12 @@ def describe(item) -> str:
 # ----------------------------------------------------------------- 建局把关
 
 def _refuse(document, reason) -> None:
-    todo = next_task(document)
-    raise ValueError("%s。主线：%s。C 轨：%s" % (reason, describe(todo["main"]), describe(todo["challenge"])))
+    view = _view(document)
+    raise ValueError("%s。主线：%s。C 轨：%s" % (reason, describe(view["main"]), describe(view["challenge"])))
 
 
 def check(document, task_id, deck, strategy="", seed=None) -> dict:
-    """Game() 建局前调用：层不对 / 卡组不合格 / 打法重复 一律拒绝，并指出当前该做什么。"""
+    """Game() 建局前调用：层序 / 种子窗口 / 卡组差异 / 打法去重，当场计数判断。"""
     tasks = load_tasks()
     task = tasks.get(task_id)
     if task is None or task_id not in (plan()["tasks"] or {}):
@@ -556,51 +734,49 @@ def check(document, task_id, deck, strategy="", seed=None) -> dict:
     layer, cycle = document["layer"], document["cycle"]
     kind = task.get("layer")
     req = document["requirements"]
-    next_item = next_task(document)["challenge" if kind == "C" else "main"]
-    if task_id != next_item["task_id"]:
-        _refuse(document, "请先完成本轨下一项，不能跳过难关或重复已完成的任务")
-    if seed is not None and int(seed) != next_item["seed"]:
-        _refuse(document, "种子由队列指定，放弃后须同种子重开，不能刷新种子")
     context = dict(cycle=cycle, workflow_layer="C" if kind == "C" else layer)
     if kind == "C":
         if int(task.get("batch") or 1) != document["batch"]:
             _refuse(document, "这套挑战卡组不在本圈的批次里")
+        window = set(seeds_for(task_id, cycle, document.get("run_id"))[:int(req["C"]["seeds"])])
+        if seed is None or int(seed) not in window:
+            _refuse(document, "C 轨只能用本圈指定的那 5 个种子")
         if sorted(deck or []) != sorted(task["deck"]):
             _refuse(document, "C 层是指定卡组任务，不能换卡")
         return context
     if kind == "E":
         if layer != "E":
             _refuse(document, "E 层现在不能建局（当前是 %s 层）" % layer)
-        passed = set(document["detail"]["B"][task["pair_task"]]["items"])
-        if deck_key(deck) not in {key for key in passed
-                                  if document["detail"]["B"][task["pair_task"]]["items"][key]["complete"]}:
+        passed = document["detail"]["B"][task["pair_task"]]["items"]
+        if deck_key(deck) not in {key for key, item in passed.items() if item["complete"]}:
             _refuse(document, "E 层只能用 B 层稳健复验通过的卡组")
-        if sorted(deck) != sorted(next_item["deck"]):
-            _refuse(document, "请先完成 E 层当前下传卡组")
         return context
-    if layer not in ("A", "B", "D"):
-        _refuse(document, "%s 层现在不能建局" % kind)
+    # A/B/D 三层共用 A 层的任务；当前层决定用哪套规则。
+    seeds = plan()["tasks"].get(task_id) or []
+    start = max(0, (int(cycle) - 1) * per_cycle())
+    if seed is None or int(seed) not in set(seeds[start:]):
+        _refuse(document, "种子由队列指定：只能用本圈窗口内的种子，不能自己挑或刷新")
     item = document["detail"]["A"].get(task_id) or {}
     key = deck_key(deck)
     if layer == "D":
-        if key not in set(document["detail"]["B"].get(task_id, {}).get("items") or {}):
+        group = (document["detail"]["B"].get(task_id, {}).get("items") or {}).get(key)
+        if not group:
             _refuse(document, "D 层只能用 B 层下传的卡组")
-        if not document["detail"]["B"][task_id]["items"][key]["complete"]:
+        if not group["complete"]:
             _refuse(document, "这套卡组还没通过 B 层稳健复验，D 层要用过了 B 的卡组")
         if (strategy or "").strip() not in STRATEGIES:
             _refuse(document, "D 层 strategy 只能选：经济优先 / 防线优先 / 速攻清场")
-        done = set((document["detail"]["D"].get(task_id, {}).get("items", {}).get(key) or {}).get("done") or [])
+        done = set(((document["detail"]["D"].get(task_id, {}).get("items", {}).get(key) or {})
+                    .get("done") or []))
         if strategy.strip() in done:
             _refuse(document, "这个打法在这套卡组上已经赢够 2 个种子了；D 层要 3 种不同的开局节奏，换一种")
-        if sorted(deck) != sorted(next_item["deck"]):
-            _refuse(document, "请先完成 D 层当前下传卡组")
         return context
     if layer == "B":
         if key not in set(item.get("passed") or []):
             _refuse(document, "B 层只复验 A 层胜局最多的 %d 套卡组" % int(req["B"]["decks"]))
-        if sorted(deck) != sorted(next_item["deck"]):
-            _refuse(document, "请先完成 B 层当前下传卡组")
         return context
+    if layer != "A":
+        _refuse(document, "%s 层任务现在不能建局（当前 %s 层）" % (kind, layer))
     decks = item.get("decks") or {}
     changes = int(req["A"]["min_card_changes"])
     if any(card_diff(deck, entry.get("deck")) < changes for entry in document["archives"]
@@ -645,13 +821,14 @@ def archive_requirements(task_id, strategy="", review="", abandoned=False, *, la
 # ----------------------------------------------------------------- 报告
 
 def report(document) -> str:
+    view = _view(document)
     lines = ["# LLM 对局进度（循环式）", "",
              "运行ID：%s" % document["run_id"], "",
              "第 **%d** 圈 · 当前层 **%s** · 本圈 C 层批次 %d" % (document["cycle"], document["layer"], document["batch"]),
              "", "接口自动生成；详细结果以 progress.json 为准。", "",
              "**这个任务没有终点。** 一圈做完自动进下一圈，不会出现「全部完成」。", "",
-             "## 现在该做什么", "", "- 主线：" + describe(next_task(document)["main"]),
-             "- C 轨：" + describe(next_task(document)["challenge"]), "",
+             "## 现在该做什么", "", "- 主线：" + describe(view["main"]),
+             "- C 轨：" + describe(view["challenge"]), "",
              "## 本圈各层", "", "| 层 | 完成项 | 总数 | 达标 |", "|---|---|---|---|"]
     for name in LAYERS:
         info = document["layers"][name]
