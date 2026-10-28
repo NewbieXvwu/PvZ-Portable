@@ -98,6 +98,12 @@ def copy_modules(stage: Path) -> None:
                                                   "make_llmplay2_tasks.py", "make_llmplay3_tasks.py"))
 
 
+def copy_reference(stage: Path) -> None:
+    """包里的静态参考表（task144）：阳光、冷却、可见动作时长，全部现解析源码。"""
+    from llmplay import reference
+    (stage / "PLANTS.md").write_text(reference.render_markdown(), encoding="utf-8")
+
+
 def copy_constant_sources(stage: Path) -> None:
     for relative in CONSTANT_SOURCES:
         target = stage / relative
@@ -174,6 +180,7 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
                                                              indent=2) + "\n")
         for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
+        copy_reference(stage)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
         hits = scan(stage)
         if hits:
@@ -225,6 +232,7 @@ def _build(executable, out, cache_dir, resource_dir, temporary, audit, package_n
         schema="llmplay_package_v1"), indent=2) + "\n")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "PROMPT.md", stage / "PROMPT.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "README.md", stage / "README.md")
+    copy_reference(stage)
     shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
 
     hits = scan(stage) + scan(resource_stage)

@@ -229,14 +229,68 @@ def grid(game) -> str:
 RELOAD_TYPES = {32, 34, 39, 44, 47}
 
 
-def _plant_state(plant) -> str:
+# 屏幕上看得到倒计时的植物（task144）。数值来自引擎源码，见包里的 PLANTS.md；
+# 这里只决定"哪个字段翻成哪句话"。引擎字段：mDoSpecialCountdown = 爆炸/唤醒倒计时，
+# mStateCountdown = 该状态剩余 tick，mWakeUpCounter = 睡眠剩余 tick。
+SPECIAL_LABEL = {2: "引爆倒计时", 20: "引爆倒计时", 15: "引爆倒计时", 14: "冰冻倒计时",
+                 35: "唤醒倒计时"}
+POTATO_MINE, CHOMPER, SQUASH, COB_CANNON, SUN_SHROOM = 4, 6, 17, 47, 9
+
+
+def _plant_timers(obs) -> dict:
+    """(行, 列) -> 完整观测 v2 段里的 mDoSpecialCountdown。
+
+    完整观测的 plants 字典没有这个字段（引擎把它放在 v2 段里），所以按格子补回来。
+    雾里被遮住的植物 v2 给 -1，这里原样保留"未知"。
+    """
+    out = {}
+    for entry in ((obs or {}).get("v2") or {}).get("plants") or []:
+        if len(entry) >= 6:
+            out[(int(entry[0]), int(entry[1]))] = int(entry[5])
+    return out
+
+
+def _plant_state(plant, special=None) -> str:
     if plant.get("asleep"):
         left = int(plant.get("wake_up_counter") or 0)
         return "睡着（约 %d tick 后醒）" % left if left > 0 else "睡着"
     if int(plant.get("bungee_state") or 0):
         return "被蹦极吊起"
+    kind = int(plant.get("type") or -1)
     state = int(plant.get("state") or 0)
-    if state == 0 and int(plant.get("type") or -1) not in RELOAD_TYPES:
+    left = int(plant.get("state_countdown") or 0)
+    if special is None:
+        special = -1
+    special = int(special)
+    # 爆炸类与咖啡豆：动画一开始就在播，倒计时归零才生效。
+    if special > 0 and kind in SPECIAL_LABEL:
+        return "%s 剩 %d tick" % (SPECIAL_LABEL[kind], special)
+    if left < 0 or state < 0:
+        return "状态未知（雾里）"
+    if kind == POTATO_MINE:
+        if state == 0:
+            return "武装中 剩 %d tick" % left
+        if state == 15:
+            return "出土中"
+        if state == 16:
+            return "已武装"
+    elif kind == CHOMPER:
+        if state == 10:
+            return "咬 剩 %d tick" % left
+        if state == 13:
+            return "咀嚼 剩 %d tick" % left
+        if state == 14:
+            return "吞咽"
+    elif kind == SQUASH:
+        if state == 3:
+            return "看目标 剩 %d tick" % left
+        if state == 4:
+            return "起跳前 剩 %d tick" % left
+    elif kind == COB_CANNON and state == 35:
+        return "装填中 剩 %d tick" % left
+    elif kind == SUN_SHROOM and state == 23:
+        return "幼体 剩 %d tick 长大" % left
+    if state == 0 and kind not in RELOAD_TYPES:
         return "正常"
     return PLANT_STATE.get(state, "状态%d" % state)
 
@@ -303,6 +357,7 @@ def rows(game) -> str:
     lanes = _lane_list(obs)
     plants = _plants(obs)
     zombies = _zombies(obs)
+    timers = _plant_timers(obs)
     lines = []
     for row in lanes:
         row_plants = sorted([p for p in plants if int(p["row"]) == row], key=lambda p: int(p["col"]))
@@ -314,7 +369,7 @@ def rows(game) -> str:
             text = " · ".join(
                 "c%d %s %d/%d %s" % (int(p["col"]), _plant_name(p["type"]),
                                      int(p.get("health") or 0), int(p.get("max_health") or 0),
-                                     _plant_state(p))
+                                     _plant_state(p, timers.get((int(p["row"]), int(p["col"])))))
                 for p in row_plants)
         else:
             text = "（没有植物）"
@@ -341,8 +396,12 @@ def _packet_cells(obs, packet_index) -> list:
 
 def cards(game) -> str:
     obs = game.obs or {}
+    from . import cards as card_names
     sun = int(obs.get("sun") or 0)
     lines = []
+    if obs.get("conveyor_start") == "original":
+        lines.append("  （传送带：左→右排列，用掉一张后后面的卡整体前移，槽位号会变；"
+                     "plant(card=\"名字\") 按名字种，不受影响）")
     for packet in obs.get("packets") or []:
         index = int(packet["index"])
         seed = int(packet["type"]) if packet.get("type") is not None else -1
@@ -366,8 +425,9 @@ def cards(game) -> str:
             state = "冷却剩 %d tick" % cooldown
         else:
             state = "未激活"
-        lines.append("  [%d] %s %d☀ %s %s %s"
-                     % (index, _plant_name(seed), cost, state, afford, where))
+        lines.append("  [%d] %s(%s) %d☀ %s %s %s"
+                     % (index, _plant_name(seed), card_names.slug(seed), cost,
+                        state, afford, where))
     return "\n".join(lines) if lines else "  （没有卡槽）"
 
 

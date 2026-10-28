@@ -588,16 +588,26 @@ class Game:
 
     # ------------------------------------------------------------ 动作
 
-    def plant(self, card: int, row: int, col: int) -> bool:
-        """种下第 card 个卡槽的植物。card 是 observe()/legal() 里的卡槽序号。"""
+    def plant(self, card, row: int, col: int) -> bool:
+        """种下卡片。card 可以是卡槽序号（int），也可以是卡片名（str）。
+
+        卡槽序号就是 observe()/legal() 里的 [0] [1] …。名字写法见 cards.py：
+        "doom_shroom" / "doomshroom" / "毁灭菇"。名字在**调用这一刻**才解析成卡槽，
+        所以传送带关用掉一张卡、后面的卡整体前移之后，名字依然指得对。
+        """
         if self.abandon_reason is not None:
             raise RuntimeError("本局已放弃，请重开")
         self._start()
+        from . import cards
+        if isinstance(card, str):
+            index = cards.slot_for(self.obs, card)
+        else:
+            index = int(card)
         packets = (self.obs or {}).get("packets") or []
-        if not 0 <= int(card) < len(packets):
+        if not 0 <= index < len(packets):
             raise ValueError("卡槽 %s 不存在；本局卡槽是 0..%d（见 observe() 的卡槽行）"
-                             % (card, len(packets) - 1))
-        return self._apply({"type": "plant", "packet": int(card),
+                             % (index, len(packets) - 1))
+        return self._apply({"type": "plant", "packet": index,
                             "col": int(col), "row": int(row)})
 
     def shovel(self, row: int, col: int) -> bool:

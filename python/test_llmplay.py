@@ -345,6 +345,94 @@ class GridTest(unittest.TestCase):
 
 
 
+class VisibleTimerTest(unittest.TestCase):
+    """task144：屏幕上看得见的倒计时进观测，卡片按名字种。"""
+
+    def test_explosion_countdown_is_printed(self):
+        from llmplay import scene
+        text = scene._plant_state({'type': 15, 'state': 2, 'state_countdown': 0}, 87)
+        self.assertEqual(text, '引爆倒计时 剩 87 tick')
+
+    def test_coffee_bean_wakeup_countdown_is_printed(self):
+        from llmplay import scene
+        self.assertEqual(scene._plant_state({'type': 35, 'state': 2, 'state_countdown': 0}, 40),
+                         '唤醒倒计时 剩 40 tick')
+
+    def test_potato_arming_and_chomper_digest(self):
+        from llmplay import scene
+        self.assertEqual(scene._plant_state({'type': 4, 'state': 0, 'state_countdown': 900}), '武装中 剩 900 tick')
+        self.assertEqual(scene._plant_state({'type': 6, 'state': 13, 'state_countdown': 4000}), '咀嚼 剩 4000 tick')
+
+    def test_squash_and_cobcannon_countdowns(self):
+        from llmplay import scene
+        self.assertEqual(scene._plant_state({'type': 17, 'state': 4, 'state_countdown': 45}), '起跳前 剩 45 tick')
+        self.assertEqual(scene._plant_state({'type': 47, 'state': 35, 'state_countdown': 500}), '装填中 剩 500 tick')
+
+    def test_fog_masked_plant_stays_unknown(self):
+        from llmplay import scene
+        self.assertIn('未知', scene._plant_state({'type': 15, 'state': -1, 'state_countdown': -1}, -1))
+
+    def test_card_name_follows_the_slot_after_the_belt_shifts(self):
+        from llmplay import cards
+        before = dict(packets=[dict(index=0, type=15, active=True, cooldown=0),
+                               dict(index=1, type=2, active=True, cooldown=0)])
+        after = dict(packets=[dict(index=0, type=2, active=True, cooldown=0),
+                              dict(index=1, type=15, active=True, cooldown=0)])
+        self.assertEqual(cards.slot_for(before, 'doom_shroom'), 0)
+        self.assertEqual(cards.slot_for(after, 'doom_shroom'), 1)
+
+    def test_card_name_accepts_chinese_and_missing_underscore(self):
+        from llmplay import cards
+        obs = dict(packets=[dict(index=0, type=15, active=True, cooldown=0)])
+        self.assertEqual(cards.slot_for(obs, '毁灭菇'), 0)
+        self.assertEqual(cards.slot_for(obs, 'doomshroom'), 0)
+
+    def test_missing_card_lists_the_current_belt(self):
+        from llmplay import cards
+        obs = dict(packets=[dict(index=0, type=2, active=True, cooldown=0)])
+        with self.assertRaises(ValueError) as caught:
+            cards.slot_for(obs, 'doom_shroom')
+        self.assertIn('cherry_bomb', str(caught.exception))
+
+    def test_cards_line_shows_the_name_to_use(self):
+        from types import SimpleNamespace
+        from llmplay import scene
+        game = SimpleNamespace(obs=dict(sun=200, conveyor_start='original',
+                                        packets=[dict(index=0, type=15, cost=125,
+                                                      cooldown=0, active=True)]))
+        text = scene.cards(game)
+        self.assertIn('doom_shroom', text)
+        self.assertIn('传送带', text)
+
+
+class ReferenceTableTest(unittest.TestCase):
+    """静态参考表的数字必须来自源码解析，不是手抄。"""
+
+    def test_every_plant_has_cost_and_recharge(self):
+        from llmplay import reference
+        import pvz_constants
+        rows = {row['type']: row for row in reference.rows()}
+        for definition in pvz_constants.plant_defs():
+            row = rows[definition['type']]
+            self.assertEqual(row['cost'], definition['cost'])
+            self.assertEqual(row['recharge'], definition['recharge'])
+
+    def test_action_durations_come_from_the_update_functions(self):
+        from llmplay import reference
+        timers = reference.timers()
+        self.assertEqual(timers['doomshroom'], [('do_special_countdown', 100)])
+        self.assertEqual(timers['instantcoffee'], [('do_special_countdown', 100)])
+        self.assertEqual(timers['potatomine'], [('state_countdown', 1500)])
+        self.assertIn(('state_countdown', 4000), timers['chomper'])
+
+    def test_markdown_lists_the_fields_the_observation_prints(self):
+        from llmplay import reference
+        text = reference.render_markdown()
+        self.assertIn('do_special_countdown', text)
+        self.assertIn('state_countdown', text)
+        self.assertIn('毁灭菇', text)
+
+
 class RobustnessTest(unittest.TestCase):
     """task81d：换未来也能赢 —— 种子块、闭环循环、meta 记录。"""
 
