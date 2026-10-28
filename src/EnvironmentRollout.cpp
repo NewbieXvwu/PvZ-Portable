@@ -94,13 +94,13 @@ void EnvironmentRollout::Load(const std::string& path)
 		input.read(reinterpret_cast<char*>(&embedding), 4);
 	}
 	else embedding = size;
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 6 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
+	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 8 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
 	std::vector<size_t> counts = {
-		nextWidth * (Channels + (observation == 6 ? 13 : observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
-		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation == 6 ? 9 : observation >= 3 ? 7 : observation == 2)), nextWidth,
+		nextWidth * (Channels + (observation == 8 ? 21 : observation == 7 ? 19 : observation == 6 ? 13 : observation >= 4 ? 10 : observation == 3 ? 9 : observation == 2 ? 4 : 0)) * 9, nextWidth, nextWidth * nextWidth * 9, nextWidth,
+		nextWidth * nextWidth * 5, nextWidth, nextWidth * (Scalars + (withContext ? TaskContext : 0) + (observation >= 6 ? 9 : observation >= 3 ? 7 : observation == 2)), nextWidth,
 		nextContext, 1, packetHead ? nextWidth * (nextContext + embedding + 3) : 10 * nextContext,
 		packetHead ? nextWidth : 10, (packetHead ? 54 : 10) * embedding,
 		nextWidth * (nextWidth + embedding + nextContext), nextWidth, nextWidth, 1};
@@ -126,7 +126,9 @@ void EnvironmentRollout::Load(const std::string& path)
 	v2 = observation >= 3;
 	fogChannel = observation == 4;
 	sizeChannel = observation == 5;
-	bossChannel = observation == 6;
+	bossChannel = observation >= 6;
+	bungeeChannel = observation >= 7;
+	sleepChannel = observation == 8;
 	weights = std::move(loaded);
 	// LOAD_ROLLOUT_NET can replace a model in an existing process, including with
 	// another model of the same layout. Channel sets and dimensions do not identify
@@ -156,11 +158,43 @@ void EnvironmentRollout::History::Update(LawnApp* app)
 	plants = std::move(current);
 }
 
+void EnvironmentRollout::BungeeFeatures(LawnApp* app, float* board)
+{
+	const auto state = app->EnvironmentBungees();
+	for (const auto& zombie : state.zombies)
+	{
+		const auto [row, col, target, phase, altitude] = zombie;
+		if (row < 0 || row >= 6 || col < 0 || col >= 9) continue;
+		const int cell = row * 10 + col;
+		board[cell] = std::max(board[cell], static_cast<float>(target));
+		if (phase >= 0 && phase <= 2)
+		{
+			board[Cells + cell] = std::max(board[Cells + cell], static_cast<float>(std::clamp(altitude, 0, 600) / 600.0));
+			board[(2 + phase) * Cells + cell] = 1.0f;
+		}
+	}
+	for (const auto& [row, col] : state.plants)
+		if (row >= 0 && row < 6 && col >= 0 && col < 9) board[5 * Cells + row * 10 + col] = 1.0f;
+}
+
+void EnvironmentRollout::SleepFeatures(LawnApp* app, float* board)
+{
+	for (const Plant* plant : app->mBoard->mPlants)
+		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() &&
+			!app->EnvironmentPlantFogHidden(plant) && plant->mRow >= 0 && plant->mRow < 6 &&
+			plant->mPlantCol >= 0 && plant->mPlantCol < 9)
+		{
+			const int cell = plant->mRow * 10 + plant->mPlantCol;
+			board[cell] = std::max(board[cell], static_cast<float>(plant->mIsAsleep));
+			board[Cells + cell] = std::max(board[Cells + cell], static_cast<float>(plant->mWakeUpCounter > 0));
+		}
+}
+
 void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick, bool previousPlant,
 	std::vector<float>& board, std::vector<float>& scalars, History& history)
 {
 	Board* state = app->mBoard;
-	board.assign((Channels + (bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
+	board.assign((Channels + (sleepChannel ? 21 : bungeeChannel ? 19 : bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0)) * Cells, 0.0f);
 	scalars.assign(Scalars + (taskContext ? TaskContext : 0) + (bossChannel ? 9 : v2 ? 7 : v2lite), 0.0f);
 	for (const Plant* plant : state->mPlants)
 		if (!plant->mDead && !plant->mSquished && !app->EnvironmentStormHidden() && plant->mRow >= 0 && plant->mRow < 6 && plant->mPlantCol >= 0 && plant->mPlantCol < 9)
@@ -219,6 +253,8 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 			scalars[Scalars + (taskContext ? TaskContext : 0) + 8] = boss->mFireballRow / 5.0f;
 		}
 	}
+	if (bungeeChannel) BungeeFeatures(app, board.data() + (Channels + 13) * Cells);
+	if (sleepChannel) SleepFeatures(app, board.data() + (Channels + 19) * Cells);
 	if (fogChannel)
 		for (int row = 0; row < 6; ++row)
 			for (int col = 0; col < 10; ++col)
@@ -235,7 +271,6 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		const SeedPacket& packet = state->mSeedBank->mSeedPackets[index];
 		const int kind = std::min(static_cast<int>(packet.mPacketType), 53);
 		const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
-		if (kind < 0) continue;
 		// Identity packet inputs follow the original-start engine flag, just like packet_features.
 		// Legacy slot students keep their established scalar encoding on every task.
 		const bool affordable = state->mSunMoney >= cost ||
@@ -243,6 +278,15 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 		const float ready = packet.mActive && affordable;
 		const float progress = std::min(1.0, packet.mActive || !packet.mRefreshTime ? 1.0 :
 			static_cast<double>(packet.mRefreshCounter) / packet.mRefreshTime);
+		if (kind < 0)
+		{
+			if (bungeeChannel && !identityPacket)
+			{
+				scalars[5 + kind] = ready;
+				scalars[59 + kind] = progress;
+			}
+			continue;
+		}
 		packetInfo[index] = {static_cast<float>(kind), static_cast<float>(packet.mActive), progress,
 			static_cast<float>(affordable)};
 		scalars[5 + kind] = identityPacket ? std::max(scalars[5 + kind], ready) : ready;
@@ -474,7 +518,7 @@ static float IdentityLinear(const float* input, const float* weight, int count, 
 
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
-	Convolve(board, Channels + (bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
+	Convolve(board, Channels + (sleepChannel ? 21 : bungeeChannel ? 19 : bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0), 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
 	if (rowPool)

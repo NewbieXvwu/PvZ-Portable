@@ -50,6 +50,39 @@
 - 2026-10-26（Codex 收尾审计）：未重跑训练/评估，复核预登记面板与来源 SHA、种子隔离、task84 原模型与 heldout 逐局数及已有冒烟收据。补可复现配对分析：A/C/D2=144/148/147 不变，K=2/3 条件重采样增益 +2.54/+3.45 局，区间均含负值；撤回旧 +10.1/+14.8 作为生产收益证据的表述，保留未选中 D2 的失败结果。相关回归 98 passed、1 skipped、4 subtests passed；结论与 KB 级审计 JSON 更新，合并上线仍交主控。
 
 ## 问题
+
+## 主控追加（2026-10-26 09:35，task92b：挑选面板 v2，换成有区分度的任务）
+v1 面板的问题已经查清：6 个区里有 4 个贴着天花板或地板，区分信息几乎都来自 d7p 与 pool，结果 C 和 D2 只差 1 局，heldout 却差 34 局。改进方向是**把局数花在有区分度的格上**：
+1. **面板 v2（训练前预登记）**：
+   - 只取现役 r11 胜率落在 30%–80% 的任务 / 倍率格，从 qc 的 `curriculum_state.json` 各格窗口里机械挑选，不手挑；
+   - 加入 task93 的随机卡组族（白天 / 夜间 / 泳池），种子取冷启动与训练都没用过的段。随机卡组正好衡量换卡组的泛化，又不是门禁的 heldout 族本身，不会对门禁过拟合；
+   - 总局数 ≤ 384，按格均分；
+   - 种子块新开，机械核对。
+2. **离线验证**：用 A / C / D2，再加 r11（`~/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt`）共 4 个模型，在 v2 面板上配对。
+   - 报告面板排序与 heldout 192 局排序的一致性（Kendall τ）；
+   - 用配对重采样给出“选中 heldout 最优”的比例，与 v1 对比。
+3. **判据（预登记）**：4 个模型的面板排序与 heldout 排序一致，或至少选中 D2 / r11 中的一个，且不选 A。不达标就照实写，不调面板去凑结果。
+4. 结论写回 `MEMORY/docs/multiseed-select.md` 新的一节，`git push origin multiseed`。每个任务最多 2 个游戏进程。
+
+## 主控追加（2026-10-26 10:30，task92c：生产化准备）
+v2 面板通过了预登记判据（选中 D2，τ 0.333 → 0.667，重采样选中 D2 的比例从 13% 升到 72%）。下面做上线准备，**只写不执行**，等 task84b 的结论出来再由主控决定：
+1. **K=2 并行训练**：在 task92 的串行实现上加并行。
+   - 两个种子同时训，显存与内存准入沿用 `_admit`；
+   - 内存不够时自动退回串行，并在轮目录里记下是哪种模式；
+   - 单种子失败的隔离语义不变。
+2. **面板 v2 每轮自动刷新**：“现役胜率在 30–80% 的格”从当轮的 `curriculum_state.json` 机械选出，加上随机卡组族的种子块。
+   - 每轮面板的种子块从新池领取，不复用；用 task88 的加锁账本或同类机制；
+   - 面板定义写进轮目录，可以复现；
+   - 测试：两轮面板的种子不相交；挑选在门禁之前；落选者也记录在轮目录。
+3. **吞吐估算**：用 round 12–17 的实测，估算 K=2 并行后每轮耗时，以及后台管线会不会积压。如果会积压，给出缓解办法，例如训练期间采集照常进行、只保留最新一轮待训。
+4. 写 `~/pvz-logs/qc_deploy14c.sh`：
+   - 结构照 `qc_deploy14.sh`；
+   - 引擎与面板沿用 deploy14，只换代码；
+   - 启动命令照抄 deploy14 的 `start_qc`；
+   - 先 dry-run，失败就回滚。
+   只写，不执行。
+5. 结果写回 `MEMORY/docs/multiseed-select.md`，`git push origin multiseed`。每个任务最多 2 个游戏进程，GPU 训练让 qc 先。
+
 - 2026-10-26 07:1x（CodeBuddy 接手）：步骤 1 完成。一轮耗时构成（round 12–17 complete.json 实测）：pack 0.3–10 min、train 36–130 min（d3 旁证实测 ~170 s/epoch × 12）、门禁评估 2–46 min；后台串行单线程，采集 744 局/轮约 45–105 min，round 16/17 train（7768/6153 s）已成瓶颈——K 种子若串行会进一步拖慢轮节奏，倾向并行 2 训练。训练种子在 recipe 的 "seed" 字段（现值 1），K 种子 = 每轮 K 份配方（不同 seed、不同 out 目录 round_*/student_s*）。select_student.py 口径 = search_play --arms fast 按 wins 总和选，selection.json 已记录全部候选得分可复用为"落选记录"。search_play 无 CUDA 引用（纯 CPU），GPU 只有训练用；RTX 5080 16 GB。GATE_VERSION=3，门禁种子走 seed ledger（allocate_seed_block），挑选面板种子需与之机械核对不相交。
 - 2026-10-26（CodeBuddy）：GPU 实测完成（round17 配方 256 步）：单训 0.526 s/步、CUDA 1.2 GiB；双训并行 0.854/0.703 s/步、+2.4 GiB、墙钟 1.23x → K=2 成立，实现取串行（并行留作加速项）。离线验证完成：面板 A=144/C=148/D2=147，选中 C，D2 以 1 局之差落选（预登记判据半过：A 未选中√、D2 未选中×，照实报告）；4/6 区饱和，面板逐局 sd≈3.5 局；K 增益 MC：K=2 +10.1 heldout 局（P 选对 0.94）、K=3 +14.8（0.90）→ 定 K=2。结论写入 MEMORY/docs/multiseed-select.md。
 - 2026-10-26（CodeBuddy）：数据接缝核对——离线 576 局全部为 (fast, terminal=True, searched=0, won=bool)，与新 select_student 的 score_rows 校验完全兼容。新版 CLI 真引擎端到端冒烟通过（2 候选 × day 2 局，种子 125000000/125000001，在全部已登记块之外不污染预登记面板）：每局落盘带 SHA、2/2 平局按稳定路径序取 a.pt、d2.pt 记入 rejected、model.pt 复制件 SHA 一致。产物 artifacts/task92/smoke_e2e/（不入 git）。

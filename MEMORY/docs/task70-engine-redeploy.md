@@ -148,3 +148,23 @@ B7 和 B6 一起进 deploy14。
    - 重启，并写 curriculum.log。
    **只写脚本、不执行**，由主控执行。
 7. 结果写本文件，`git push origin redeploy`。每个任务最多 2 个游戏进程。
+- [B8] deploy14 一次性集成（2026-10-26 完成；证据在本树 artifacts/task70/b8_*）：
+  1. **合并**：a8d00858（fast-forward，含 B5/B6/B7、门禁 v3、13 示范起点格、fog79b、native、task75 C++）。示范存档从 cq 树补齐 8 个新目录（seed_20261034/39/42/43/44/46/48/49），13 个 demo_start 格全部可解析。
+  2. **引擎**：deploy5c SHA256 `76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a`（a8d00858 src 的 PGO bench 构建；task75 的 C++：L25 体型字段、L40 storm 遮挡、三头豌豆修复）。**PGO 重建不可逐位复现**（.gcda 头带编译时间戳，代码布局随构建变化）：同源码两次构建得 64075ed8 ≠ 76ff36dc；64075ed8 未及时留档被覆盖，最终以 76ff36dc 重新过门禁。教训：新二进制构建后立即留档。
+  3. **逐位门禁 GATE PASS**：六族 × 师/生 × 8 种子 = 96 局配对，6 族全部 0 逻辑差异（b8_gate3/gate_evidence.json；state_hash 差 34/96 为已知重置粒子线）。期间 e6e3a00b（含 task82 C++ 的构建）及其门禁随合并撤销作废。
+  4. **吞吐 ABBA PASS**：16 局学生局串行 ABBA，中位配对比 **1.0**（min 0.893 / max 1.086），0 决策不一致（b8_abba.json）。
+  5. **面板**：469 任务 = 426 逐项不变 + 43 新增（native L25 ×8 / L30 ×9 / storm L40 ×8、fog79b L36/37/38 各 ×6），seed_overlap 0（扫描 286,829 份清单 805,644 种子）。生成器修正两处假阳性：multiplier_panel.json 自身副本（各树部署副本）与 task70/task77 重放证据目录不再进不相交扫描——它们记录的是面板自有任务自己的种子（自引用）；原生传送带（deck 空、引擎自带带子）豁免 §8 地形覆盖断言。
+  6. **teacher_rates**（引擎 76ff36dc，生产模型 dw4i_s1 + v5 + 台式机 branch1，β=1）：
+     - `fog_user_v2_l31_snow` 31/32（B3v5/B5 后重测，b3v5/v2_post_b5/）。
+     - `fog79b_l36_best` **32/32**、`fog79b_l37_best` **31/32**、`fog79b_l38_best` **32/32**（task79 r11 数）。
+     - `pool_l25_orig_train` **13/16**（task75b 0.5×，种子 61000032–47）。
+     - 13 个示范起点格（B6.4 方法，各 8 局，b8_teacher_rates/teacher_rates.json）：**12 个 8/8**，`demo_roof_49_doom_m200` **7/8**（输 45000002）。
+  7. **dry-run**：state 拷贝 + 469 面板 + 76ff36dc + `--promotion-panel` v3 → EXIT=0；fog_user 退役（superseded）、fog_user_v2/fog79b×3/pool_l25 入列、13 起点格注册（旧 4 格移入 retired_cells，数据保留）。
+  8. **部署脚本**：`~/pvz-logs/qc_deploy14.sh`（照 qc_deploy13.sh 结构，未执行）：边界等待 + state/面板/rates 备份 → checkout 7722c0d1 的 scripts/python/recipes/configs 到 cq → 引擎拷 build5/ → dry-run 失败即回滚 → 重启 + 首组 rc=0 检查。**启动命令必须带 `--promotion-panel <v3 面板>`**（v3 默认路径报 missing/wrong group 是有意设计）；task88 种子池第二段随本次上线（旧池 ~15 轮耗尽）。
+  9. **过程记事**：origin/seedpool 实际携带 task82 的 C++（三处未初始化字段），与"只改两个 py"不符；曾全量合并（facf0e18）并重建引擎，主控更正后 revert（fdbff390）改为 py-only（`git checkout origin/seedpool --` 四个文件，24 tests 过），task82 引擎修复顺延到下一次带门禁的引擎部署。
+
+## 问题
+
+- **seedpool 分支范围与表述不符（已处置）**：主控说 task88 "只改 python/pvz_promotion.py 与 scripts/promotion_gate.py"，但 origin/seedpool 还带 task82 的 C++ 与大量文档提交；已按更正 revert 合并、只摘 4 个 py 文件。
+- **PGO 构建不可逐位复现**：同一源码两次 PGO 构建 SHA 不同（.gcda 编译时间戳）。64075ed8 因此丢失（未留档即被下次构建覆盖），76ff36dc 重新过门禁顶上。今后新二进制构建完成立即拷贝留档到 artifacts/task70/。
+- **pvz-env 又前进（c6abbc76）**：task87 注册 11 个 LLM 屋顶起点格（合计 24 个）并关闭 task69——不在本次 deploy14 范围（主控 B8 说的是 a8d00858）。若要进部署，示范格 teacher_rates 与门禁按同法补测。

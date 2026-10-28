@@ -2,11 +2,11 @@
 import numpy as np
 import torch
 
-from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of
+from pvz_value_net import CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of, bungee_features, sleep_features
 
 SPEED_SCALE = 1.0
 OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7), "v2fog": (10, 7),
-             "v2fogstack4": (112, 7), "v2size": (10, 7), "v2boss": (13, 9)}
+             "v2fogstack4": (112, 7), "v2size": (10, 7), "v2boss": (13, 9), "v2bungee": (19, 9), "v2sleep": (21, 9)}
 
 
 def fog_channel(frame: dict) -> np.ndarray:
@@ -92,9 +92,13 @@ class StudentHistory:
         tick = frame["tick"]
         if frame["wave"] != self.wave:
             self.wave, self.wave_tick = frame["wave"], tick
-        if self.obs in ("v2", "v2fog", "v2fogstack4", "v2size", "v2boss"):
-            frame = {**frame, '_boss_features': self.obs == 'v2boss'}
+        if self.obs in ("v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep"):
+            frame = {**frame, '_boss_features': self.obs in ('v2boss', 'v2bungee', 'v2sleep')}
             board, scalars = v2_extra(frame, self.wave_tick)
+            if self.obs in ('v2bungee', 'v2sleep'):
+                board = np.concatenate([board, bungee_features(frame)])
+            if self.obs == 'v2sleep':
+                board = np.concatenate([board, sleep_features(frame)])
             if self.obs == 'v2size':
                 size = np.zeros((1, ROWS, COLS), dtype=np.float32)
                 for zombie in frame['zombies']:

@@ -37,7 +37,7 @@ import torch  # noqa: E402
 
 from pvz_frame_store import (CELL_CANDIDATES, archive_seed, cache_aux, cache_candidates, cache_episode,  # noqa: E402
                              cache_identity_scene, cache_packets, candidate_cells, frame_bytes,
-                             frame_paths, read_frames, row_damage_labels, target_values)
+                             frame_paths, read_frames, read_episode_cache, row_damage_labels, target_values)
 from pvz_rollout_policy import (LAWN_COLS, PACKETS, features, identity_scalars,  # noqa: E402
                                 packet_features)
 from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,  # noqa: E402
@@ -119,7 +119,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         if cache_dir is not None:
             if path not in cached:
                 cached[path] = cache_episode(path, cache_dir, obs, read_directory=read_cache_dir)
-            with np.load(cached[path], allow_pickle=False) as stored:
+            with read_episode_cache(cached[path]) as stored:
                 mask = [bool(hint) or rng.random() < wait_keep for hint in stored["hints"]]
             # Bit-packed: a python list of bools is 8 bytes a frame, and at wait_keep .1 there are ~3.5 frames
             # behind every kept row (task32).
@@ -151,7 +151,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         scale = (label_weight or {}).get(path.parent.name, 1.0)
         retention = wait_keep if explicit_rows[path] is None else 1.0
         if path in cached:
-            with np.load(cached[path], allow_pickle=False) as stored:
+            with read_episode_cache(cached[path]) as stored:
                 mask = np.unpackbits(keep[path])[:len(stored["hints"])].astype(bool)
                 selected = np.flatnonzero(mask[stored["rows"]])
                 count = len(selected)
@@ -523,7 +523,7 @@ def main() -> None:
     p.add_argument("--labels", required=True, help="comma separated <label> directory names")
     p.add_argument("--out", type=Path, help="pack path (default: <data>/packs/<key>.npz)")
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
-    p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4", "v2boss"], default="v1")
+    p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4", "v2boss", "v2bungee", "v2sleep"], default="v1")
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")

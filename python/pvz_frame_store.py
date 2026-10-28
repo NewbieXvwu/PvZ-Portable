@@ -1,5 +1,6 @@
 """Lossless episode archives with precomputed student training rows."""
 from functools import lru_cache
+from contextlib import contextmanager
 import hashlib
 import inspect
 import io
@@ -213,7 +214,7 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss"):
+    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep"):
         raise ValueError(f"unknown student observation version: {obs}")
     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared
     # module must not invalidate all historical archives and rewrite every pack.
@@ -225,12 +226,16 @@ def encoder_signature(obs: str = "v1") -> str:
             'v2': '5031d93614db9ecff271dcaa6aa8645d7a799452f170e5ebf699cc2fb8c1df91',
             'v2fog': '17aba0780afb4005daeb1cff6f50ca6048179a7c83b4fae0bbde35437e4036e8',
             'v2fogstack4': '072d07ab4bba3b373abe9d09d832c17f4a476c2a49d325b69de2196a1fcd84b5',
+            'v2size': '400d14ae3def3b970f2e19593b11c5f0a54a9d00da596fa2f5ce19710be75886',
+            'v2boss': 'b5d77ca232300a2d7331ae572ace07ef1c58757f3ef5e2818c3fb5a691df3bc4',
+            'v2bungee': '82609c46ed14655cead5910457ee9c0a627d77948b896c8afef09b012a2bdb6f',
         }
         if obs in frozen:
             return frozen[obs]
     import pvz_student_observation
     return hashlib.sha256((signature + obs + inspect.getsource(pvz_student_observation)
-                           + inspect.getsource(encode_student_frames)).encode()).hexdigest()
+                           + inspect.getsource(encode_student_frames)
+                           + (inspect.getsource(pvz_value_net.sleep_features) if obs == 'v2sleep' else '')).encode()).hexdigest()
 
 
 # LZMA instead of zlib: on a sample of 12 archives, ZIP_LZMA is 59.6% of np.savez_compressed
@@ -332,8 +337,35 @@ def write_frames(path: Path, frames: list[dict]):
           **encode_frames(frames, source))
 
 
+class _ZeroPaddedV2Cache:
+    def __init__(self, stored):
+        self.stored = stored
+
+    def __getitem__(self, name):
+        value = self.stored[name]
+        if name == 'boards':
+            return np.pad(value, ((0, 0), (0, 12), (0, 0), (0, 0)))
+        if name == 'scalars':
+            return np.pad(value, ((0, 0), (0, 2)))
+        return value
+
+
+@contextmanager
+def read_episode_cache(path: Path):
+    """Read ordinary rows or a zero-padding view over an immutable v2 cache."""
+    with np.load(path, allow_pickle=False) as stored:
+        if 'zero_pad_from' not in stored.files:
+            yield stored
+            return
+        with np.load(str(stored['zero_pad_from']), allow_pickle=False) as parent:
+            if str(parent['digest']) != str(stored['parent_digest']):
+                raise ValueError(f'zero-padding cache parent changed: {path}')
+            yield _ZeroPaddedV2Cache(parent)
+
+
 def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: Path | None = None) -> Path:
     signature = encoder_signature(obs)
+    base_directory = directory
     if obs != "v1":
         directory = directory / obs
     if path.suffix == ".npz":
@@ -351,7 +383,33 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
         if candidate.exists():
             with np.load(candidate, allow_pickle=False) as stored:
                 if str(stored["digest"]) == digest:
+                    if 'zero_pad_from' in stored.files:
+                        parent = Path(str(stored['zero_pad_from']))
+                        if not parent.is_file():
+                            continue
+                        with np.load(parent, allow_pickle=False) as previous:
+                            if str(previous['digest']) != str(stored['parent_digest']):
+                                continue
                     return candidate
+    # Old v2 archives have none of the newly observed fields. Reuse their
+    # already encoded rows, adding zero channels, instead of featurizing every
+    # decision again. Bytes are read here anyway to compute the cache digest.
+    # Escaped JSON keys and archives with any new field take the normal encoder.
+    if obs == 'v2sleep' and not any(token in source for token in
+                                   (b'"boss"', b'"bungee"', b'"sleep"', b'\\u')):
+        old_digest = hashlib.sha256(encoder_signature('v2').encode() + source).hexdigest()
+        old_roots = [base_directory] if read_directory is None else [read_directory, base_directory]
+        for root in old_roots:
+            candidate = root / 'v2' / target.name
+            if not candidate.is_file():
+                continue
+            with np.load(candidate, allow_pickle=False) as stored:
+                if str(stored['digest']) != old_digest:
+                    continue
+            # A small view avoids recompressing all dense historical boards.
+            # The old cache remains untouched; absent/changed parents rebuild.
+            _save(target, digest=digest, zero_pad_from=str(candidate.resolve()), parent_digest=old_digest)
+            return target
     frames = [json.loads(line) for line in source.splitlines()]
     encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)
     _save(target, digest=digest, **encoded)

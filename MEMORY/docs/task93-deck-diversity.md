@@ -31,3 +31,30 @@
 ## 结果
 
 ## 问题
+
+## 主控追加（2026-10-26 08:20，task93b：Mac 侧做倍率扫描并扩采）
+执行者：Mac Codex（plus2 号，tmux `codex-plus2b`）。工作树是 `/Users/newbiexvwu/PvZAgent/.claude/worktrees/deckvar-mac`（分支 `deckvar-mac`，从 origin/deckvar 拉出）。台式机的三族清单已拷到该树的 `artifacts/stage4/random_deck_panel.json`。Mac 上每个任务最多 6 个游戏进程。台式机那边的第 4 步验证由 Business 号 Codex 继续做，**两边不重复**。
+1. **夜间 / 泳池倍率扫描**：照第 3 步方案，对 `night_l12_train_rand` 与 `pool_l21_train_rand` 各扫 0.5 倍和 0.75 倍。
+   - 每档 16 局，生产老师，学生 r11；
+   - r11 路径：`/Users/newbiexvwu/PvZAgent/.claude/worktrees/fog36/artifacts/task79/models/r11/model.pt`；
+   - 叶值 v5：`/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt`；
+   - branch1：`/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt`。
+   报胜率与 Wilson 区间，按 task75b 的规则定起步档。
+2. **扩采**：
+   - 三族各再采 192 局老师 frames。白天 1.0 倍；夜间、泳池用第 1 步定的档。
+   - 种子用 93_000_000 段里台式机没用过的子段：从 93_x05_000 起，先机械核对台式机清单与已用段。
+   - 照 Mac 现有的标签导入管道打包，经 HF `transfer/` 送到台式机（参考 `scripts/import_mac_labels.py` 的命名规则）。只传数值标签，台式机取用后删除。
+3. 结果写回本任务书的“结果”节，标明 Mac 侧；`git push origin deckvar-mac`。合并由主控做。
+
+## 主控追加（2026-10-26 12:30，task93c：Mac 侧把随机卡组扩到雾夜与屋顶，并补齐植物覆盖）
+执行者：Mac Codex（plus2 号，`codex-plus2b`），工作树 deckvar-mac。Mac 上每个任务最多 6 个游戏进程。
+1. **两族新族**：照 task93 的做法登记 `fog_l31_train_rand` 和 `roof_l41_train_rand`。
+   - 雾夜用 `fog_observation: human_v2`，必须有睡莲；屋顶由引擎预置花盆。
+   - 卡组均匀随机，只按引擎合法性与地形覆盖过滤；heldout 卡组机械排除。
+   - 种子新开 93_x10_000 段，机械核对。
+   - 先各冷启动 32 局，生产老师加 r11。
+2. **植物覆盖**：统计 task93、93b 与本步全部随机卡组里，每种植物（0–47）出现的局数。
+   - 三叶草（27）被 `not_recommended` 过滤掉了。查清引擎的 `not_recommended` 是什么含义：Crazy Dave 的建议，还是合法性？
+   - 如果只是建议，给出“候选池改用全部合法植物”的方案，以及预期覆盖。不手写哪种植物该进哪关。
+3. **扩采**：两族各 192 局，按冷启动胜率定倍率档。照 task93b 打包，经 HF `transfer/` 送台式机。
+4. 结果写回本任务书“结果”节（标明 Mac task93c），`git push origin deckvar-mac`。

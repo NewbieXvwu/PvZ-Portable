@@ -32,6 +32,8 @@ public:
 		void Update(LawnApp* app);
 	};
 	void Load(const std::string& path);
+	static void BungeeFeatures(LawnApp* app, float* board);
+	static void SleepFeatures(LawnApp* app, float* board);
 	bool Loaded() const { return width != 0; }
 	bool HasHistory() const { return v2lite || v2; }
 	void Features(LawnApp* app, double income, int previousTick, bool previousPlant,
@@ -56,6 +58,8 @@ private:
 	bool fogChannel = false;
 	bool sizeChannel = false;
 	bool bossChannel = false;
+	bool bungeeChannel = false;
+	bool sleepChannel = false;
 	int networkCalls = 0;
 	std::vector<std::vector<float>> weights;
 	// Every buffer the forward pass needs is allocated once in Load(): a rollout runs the
