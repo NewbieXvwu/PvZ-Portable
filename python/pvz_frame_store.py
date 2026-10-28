@@ -355,11 +355,41 @@ class _ZeroPaddedV2Cache:
             return np.pad(value, ((0, 0), (0, 2)))
         return value
 
+    def __contains__(self, name):
+        return name in self.stored
+
+
+class _TimerCache:
+    """v2timer rows derived from a v2sleep cache: 4 computed channels appended on read.
+
+    task147: the only difference between the two versions is those four channels, and they can
+    be computed from the frame JSON without touching the 113 channels underneath. Storing them
+    next to a pointer avoids rewriting the 113 parent channels. Keep the parent cache
+    alongside the view, just as for the existing zero-padding views.
+    """
+    def __init__(self, stored, timer):
+        self.stored, self.timer = stored, timer
+
+    def __getitem__(self, name):
+        if name == 'timer':
+            return self.timer
+        value = self.stored[name]
+        return np.concatenate([value, self.timer], axis=1) if name == 'boards' else value
+
+    def __contains__(self, name):
+        if name == 'timer':
+            return True
+        return name in self.stored
+
 
 @contextmanager
 def read_episode_cache(path: Path):
-    """Read ordinary rows or a zero-padding view over an immutable v2 cache."""
+    """Read ordinary rows, a zero-padding view over a v2 cache, or a v2timer timer view."""
     with np.load(path, allow_pickle=False) as stored:
+        if 'timer_from' in stored.files:
+            with read_episode_cache(Path(str(stored['timer_from']))) as parent:
+                yield _TimerCache(parent, stored['timer'])
+            return
         if 'zero_pad_from' not in stored.files:
             yield stored
             return
@@ -367,6 +397,30 @@ def read_episode_cache(path: Path):
             if str(parent['digest']) != str(stored['parent_digest']):
                 raise ValueError(f'zero-padding cache parent changed: {path}')
             yield _ZeroPaddedV2Cache(parent)
+
+
+def _derive_timer_cache(source: bytes, digest: str, target: Path,
+                        base_directory: Path, read_directory: Path | None) -> Path | None:
+    """Write the v2timer view over an existing v2sleep cache, or None if there is no parent."""
+    from pvz_value_net import timer_features
+    parent_digest = hashlib.sha256(encoder_signature('v2sleep').encode() + source).hexdigest()
+    roots = [base_directory] if read_directory is None else [read_directory, base_directory]
+    for root in roots:
+        parent = root / 'v2sleep' / target.name
+        if not parent.is_file():
+            continue
+        with np.load(parent, allow_pickle=False) as stored:
+            if str(stored['digest']) != parent_digest:
+                continue
+        with read_episode_cache(parent) as stored:
+            rows = np.asarray(stored['rows'], dtype=np.int64)
+        lines = source.splitlines()
+        channels = np.empty((len(rows), 4, 6, 10), dtype=np.float16)
+        for offset, index in enumerate(rows):
+            channels[offset] = timer_features(json.loads(lines[index - 1]))
+        _save(target, digest=digest, timer_from=str(parent.resolve()), timer=channels)
+        return target
+    return None
 
 
 def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: Path | None = None) -> Path:
@@ -389,6 +443,8 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
         if candidate.exists():
             with np.load(candidate, allow_pickle=False) as stored:
                 if str(stored["digest"]) == digest:
+                    if 'timer_from' in stored.files and not Path(str(stored['timer_from'])).is_file():
+                        continue
                     if 'zero_pad_from' in stored.files:
                         parent = Path(str(stored['zero_pad_from']))
                         if not parent.is_file():
@@ -416,6 +472,14 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
             # The old cache remains untouched; absent/changed parents rebuild.
             _save(target, digest=digest, zero_pad_from=str(candidate.resolve()), parent_digest=old_digest)
             return target
+    # task147: v2timer is v2sleep plus four channels that come from the frame JSON alone. When the
+    # v2sleep cache exists, copy its row indices, compute only those four channels, and store a
+    # small view. The alternative -- featurizing and LZMA-compressing 117 channels per archive --
+    # is what made the cold rebuild 7-15 h (see MEMORY/docs/task145-obs-timer.md).
+    if obs == 'v2timer':
+        derived = _derive_timer_cache(source, digest, target, base_directory, read_directory)
+        if derived is not None:
+            return derived
     frames = [json.loads(line) for line in source.splitlines()]
     encoded = encode_frames(frames, source) if obs == "v1" else encode_student_frames(frames, source, obs)
     _save(target, digest=digest, **encoded)

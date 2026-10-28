@@ -1,9 +1,11 @@
 """task145：可见计时与传送带卡序进学生输入（v2timer，默认不启用）。
 
-只测新版本本身与"旧版本一位都没动"，不跑引擎（新版本还没有 C++ 输入号）。
+本文件测试 Python 输入、原生导出头和缓存复用；引擎对拍见 test_cpp_rollout.py。
 """
 import copy
+import tempfile
 import unittest
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -136,6 +138,85 @@ class TimerInputsTest(unittest.TestCase):
         size, pool, context, observation = struct.unpack('<IIII', header[8:24])
         self.assertEqual((size, observation), (8, 9))
         self.assertEqual((pool, context), (0, 0))
+
+
+class TimerCacheTest(unittest.TestCase):
+    """v2timer 的缓存从 v2sleep 派生，不再整份重编码（task147）。"""
+
+    def test_cache_is_a_small_view_over_the_sleep_cache(self):
+        import pvz_frame_store as store
+        first = timer_frame()
+        second = copy.deepcopy(first)
+        second.update(tick=160, action=dict(type='wait', ticks=60))
+        third = copy.deepcopy(first)
+        third.update(tick=220, action=dict(type='wait', ticks=60))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'seed_1' / 'example' / 'frames.npz'
+            store.write_frames(path, [first, second, third])
+            source = store.frame_bytes(path)
+            expected = store.encode_student_frames([first, second, third], source, 'v2timer')
+            store.cache_episode(path, root / 'cache', 'v2sleep')
+            original, calls = store.encode_student_frames, []
+
+            def encode(*args):
+                calls.append(args[-1])
+                return original(*args)
+
+            store.encode_student_frames = encode
+            try:
+                derived = store.cache_episode(path, root / 'cache', 'v2timer')
+            finally:
+                store.encode_student_frames = original
+            self.assertEqual(calls, [])
+            with store.read_episode_cache(derived) as actual:
+                for name, array in expected.items():
+                    np.testing.assert_array_equal(actual[name], array)
+            with np.load(derived, allow_pickle=False) as stored:
+                self.assertIn('timer_from', stored.files)
+                self.assertNotIn('boards', stored.files)
+                self.assertEqual(stored['timer'].shape, (len(expected['rows']), 4, 6, 10))
+            # 第二次调用命中已有视图，不再重算。
+            self.assertEqual(store.cache_episode(path, root / 'cache', 'v2timer'), derived)
+
+    def test_missing_parent_falls_back_to_the_full_encoder(self):
+        import pvz_frame_store as store
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'seed_1' / 'example' / 'frames.npz'
+            store.write_frames(path, [timer_frame(), timer_frame()])
+            encoded = store.cache_episode(path, root / 'cache', 'v2timer')
+            with np.load(encoded, allow_pickle=False) as stored:
+                self.assertIn('boards', stored.files)
+                self.assertNotIn('timer_from', stored.files)
+
+    def test_read_cache_can_reuse_a_zero_padded_sleep_parent(self):
+        import pvz_frame_store as store
+        first = timer_frame()
+        first.pop('bungee', None)
+        # Old archives have no sleep/boss/bungee keys; their sleep cache is itself a view.
+        second = copy.deepcopy(first)
+        second['action'] = dict(type='wait', ticks=60)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            path = root / 'seed_1' / 'example' / 'frames.npz'
+            store.write_frames(path, [first, second])
+            source = store.frame_bytes(path)
+            expected = store.encode_student_frames([first, second], source, 'v2timer')
+            store.cache_episode(path, root / 'shared', 'v2')
+            sleep = store.cache_episode(path, root / 'shared', 'v2sleep')
+            with np.load(sleep, allow_pickle=False) as stored:
+                self.assertIn('zero_pad_from', stored.files)
+            derived = store.cache_episode(path, root / 'local', 'v2timer', root / 'shared')
+            with store.read_episode_cache(derived) as actual:
+                self.assertIn('hints', actual)
+                for name, array in expected.items():
+                    np.testing.assert_array_equal(actual[name], array)
+            # Discarded parents cause the normal encoder to regenerate a standalone cache.
+            sleep.unlink()
+            store.cache_episode(path, root / 'local', 'v2timer', root / 'shared')
+            with store.read_episode_cache(derived) as actual:
+                np.testing.assert_array_equal(actual['boards'], expected['boards'])
 
 
 if __name__ == '__main__':
