@@ -117,7 +117,8 @@ def test_curriculum_recipe_trains_one_step_from_old_parent(tmp_path, monkeypatch
     assert checkpoint['state_dict']['trunk.0.weight'].shape[1] == 113
 
 
-def test_sleep_enqueue_trains_both_recipes_from_scratch(tmp_path, monkeypatch):
+@pytest.mark.parametrize('obs', ['v2sleep', 'v2timer'])
+def test_sleep_enqueue_trains_both_recipes_from_scratch(tmp_path, monkeypatch, obs):
     """task143: production trains every round from scratch; the queue must not
     couple a v2sleep round to whichever checkpoint happens to be incumbent."""
     import curriculum_queue as queue
@@ -125,7 +126,7 @@ def test_sleep_enqueue_trains_both_recipes_from_scratch(tmp_path, monkeypatch):
     from test_curriculum_pipeline import setup
 
     args, state = setup(tmp_path)
-    recipe = dict(load_recipe(args.recipe), obs='v2sleep', init=None)
+    recipe = dict(load_recipe(args.recipe), obs=obs, init=None)
     write_recipe(args.recipe, recipe)
     args.alternate_recipe = tmp_path / 'b.json'
     write_recipe(args.alternate_recipe, recipe)
