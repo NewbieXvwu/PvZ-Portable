@@ -8290,7 +8290,16 @@
     2,
     3,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/e9b79c5a518824b57a90aef6afcd47c0f7f1b5d6ef65990cbe876646f51dbc81",
+    "decisions": [
+     1482
+    ],
+    "index": 0,
+    "future_seed_start": 297000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_48_doom_m200_s81002026_a9d1a6841b4c1",
