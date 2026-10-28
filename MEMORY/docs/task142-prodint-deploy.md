@@ -32,7 +32,7 @@
 | `test_qc_resilience.py -k twice_failed_background_snapshot` | 1 passed |
 | `test_background_failure_retry.py` | 3 passed |
 
-四项改动之间没有行为冲突。合并本身没有引入运行时问题；失败的是三处**旧测试桩/旧断言没有跟上分支语义**，已在 prodint 上修好（4beab441）：
+四项改动之间没有行为冲突。合并本身没有引入运行时问题；失败的是四处**旧测试桩/旧断言没有跟上分支语义**，已在 prodint 上修好（4beab441）：
 
 1. `test_multiseed_production.py` 把 `load_panel` 桩成单参数，task137 改成 `load_panel(manifest, extra_manifest)` → 改成 `lambda *_`。
 2. `test_curriculum_pipeline.write_selection` 只写 `total`，task137 的 holdout / 随机卡组汇总要读 `score['wins']` → 桩现在按挑选面板写 `wins={task_id: 0}`。
@@ -55,7 +55,7 @@
 
 其余差异只有测试、`python/conftest.py`、部署脚本和文档，不参与生产运行，14p 不替换。本次不改 C++ 可执行文件。
 
-### `scripts/qc_deploy14p.sh` 要点（59cf2ed5）
+### `scripts/qc_deploy14p.sh` 要点（5bd236fb）
 
 - `REV=4beab441`（运行文件固定在该提交；已推送），逐文件用 `git show $REV:$file | sha256sum` 对照，并在预检加 `git cat-file -e $REV^{commit}`，**台式机需先 `git -C /home/newbiexvwu/PvZ-search fetch origin prodint`**，否则脚本只报 ABORT、不动机器。
 - 基线只核对 `live_prod_shas.txt` 的 6 个生产文件；控制器 / `pvz_selection_refresh.py` / `search_play.py` 额外接受本次自己的 sha（5ef3377f / 616b5d5e / 4f4ba541），所以激活后重跑或 `--rollback` 不会卡在基线。`select_student.py`、`pvz_promotion.py`、`pvz_training_rows.py` 不在替换列表，仍只接受生产 sha。
