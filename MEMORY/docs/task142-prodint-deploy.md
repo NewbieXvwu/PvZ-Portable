@@ -62,6 +62,7 @@
 - `start_qc` 逐字复制台式机现用 `live_qc_deploy14l.sh` 的四个分支（v2sleep / gatev5 / rebalance / 默认），只把 `EXTRA_ARG` 的来源从 `qc_deploy14l.mode` 换成 `qc_deploy14p.mode`；激活时写 `deckcells`，回滚时删除该文件，未激活分支参数与当前生产完全一致。
 - `stop_qc` 不排空：确认 `/tmp/tmux-1000/default` 存在 → `tmux kill-session -t =qc` → 按 PID `TERM` 掉 `search_play` / `train_rollout_policy`。
 - 首组 rc：等 120×30 秒；`rc=0` 成功退出；60 分钟还没出新组只记日志、qc 保持运行；只有 `rc != 0` 或 qc 退出才回滚（恢复备份文件、删模式文件、用生产参数重启）。
+- 备份目录在全部 `.before` 写完后落 `backed_up` 标记；手动 `--rollback` 必须先看到该标记，避免从不完整的备份目录误删生产文件。
 - 预检便宜：替换前只做文件 sha、提交存在性、可执行文件；替换后做 sha 校验、`ast.parse`、生成并核对面板条目（144 任务 / 16 格 / 294912 唯一 seed / 最低倍率 0.5）。没有 dry-run、对局或全量测试。
 - 14l/14m/14n/14o 保留在仓库作历史记录，不再用于部署。
 
