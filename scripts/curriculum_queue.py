@@ -132,10 +132,73 @@ ROUND_RETRY_SECONDS = 120              # 首次退避，之后翻倍
 ROUND_RETRY_MAX_SECONDS = 1800
 # 这些错误重试多少次都不会自己好：配置/接口写错、字段缺失。等下去只会刷日志。
 ROUND_FATAL_ERRORS = (AttributeError, TypeError, NameError, KeyError, AssertionError)
+ZERO_GAME_GROUP_LIMIT = 3
+GAME_RECOVERY_SECONDS = 180
 
 
 class StateWriteError(OSError):
     """No new games may start until the seed reservation is durable."""
+
+
+class GameRecoveryStopped(RuntimeError):
+    """A system-failed snapshot stays resumable when the controller stops."""
+
+
+def systemic_game_failure(error):
+    return isinstance(error, GameRecoveryStopped) or any(marker in str(error) for marker in (
+        'Inconsistency detected by ld.so', 'error while loading shared libraries',
+        'PvZ-Portable exited unexpectedly with code'))
+
+
+class GameHealth:
+    def __init__(self, args):
+        self.args = args
+        self.paused = threading.Event()
+        self.closed = threading.Event()
+        self.probe_lock = threading.Lock()
+        args.game_health = self
+
+    def pause(self, reason):
+        if not self.paused.is_set():
+            self.paused.set()
+            reason = ' '.join(str(reason).splitlines())
+            log_line(self.args.log, f'systemic game failure: collection/background paused at group boundary; '
+                                    f'one-game probe every {GAME_RECOVERY_SECONDS}s: {reason}')
+
+    def probe(self):
+        args = self.args
+        with tempfile.TemporaryDirectory(prefix='pvz-recovery-', dir=args.state.parent) as temporary:
+            folder = Path(temporary)
+            task = read_json(args.promotion_panel)['tasks'][0]
+            command = command_for(args, args.promotion_panel, task['task_id'], 0, 1,
+                                  'recovery', workers=1, frames=folder / 'frames', out=folder)
+            result = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL, timeout=PROBE_TIMEOUT_SECONDS)
+            if result.returncode:
+                return False
+            rows = (folder / 'recovery_1/games.jsonl').read_text().splitlines()
+            return len(rows) == 1 and type(json.loads(rows[0]).get('won')) is bool
+
+    def wait(self):
+        with self.probe_lock:
+            while self.paused.is_set():
+                if self.closed.is_set() or getattr(self.args, 'stop_flag', STOP_FLAG).exists():
+                    return False
+                if self.closed.wait(GAME_RECOVERY_SECONDS):
+                    return False
+                if getattr(self.args, 'stop_flag', STOP_FLAG).exists():
+                    return False
+                try:
+                    recovered = self.probe()
+                except (OSError, ValueError, subprocess.SubprocessError) as error:
+                    log_line(self.args.log, f'one-game recovery probe failed: {error}')
+                    continue
+                if recovered:
+                    self.paused.clear()
+                    log_line(self.args.log, 'one-game recovery probe succeeded; collection/background resumed')
+                else:
+                    log_line(self.args.log, 'one-game recovery probe failed; system remains paused')
+        return True
 
 
 def retry_io(operation):
@@ -989,6 +1052,7 @@ class TrainingPipeline:
 
     def __init__(self, args, state):
         self.args, self.state = args, state
+        self.game_health = getattr(args, 'game_health', None) or GameHealth(args)
         self.directory = args.state.parent / (args.state.stem + '.pipeline')
         retry_io(self.directory.mkdir)(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
@@ -1045,6 +1109,8 @@ class TrainingPipeline:
             args.rollout_policy = model
         for job in state.setdefault('training_jobs', []):
             if job in queued:
+                if job['status'] == 'paused':
+                    self.game_health.pause(job.get('error', 'saved background system failure'))
                 job['status'] = 'queued'
                 try:
                     self._seeded(job)
@@ -1071,7 +1137,7 @@ class TrainingPipeline:
             return None
         newer = [saved['round'] for saved in list(getattr(self, 'state', {}).get('training_jobs', []))
                  if type(saved.get('round')) is int and saved['round'] > round_index
-                 and (saved.get('status') in ('queued', 'running', 'done')
+                 and (saved.get('status') in ('queued', 'running', 'done', 'paused')
                       or (saved.get('status') == 'failed' and not saved.get('isolated')
                           and saved.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS))]
         return max(newer, default=None)
@@ -1140,6 +1206,8 @@ class TrainingPipeline:
             if not valid_certificate(decision, frozen, out):
                 raise ValueError('promotion certificate does not match the registered comparison')
         except Exception as error:
+            if systemic_game_failure(error):
+                raise
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
             decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
@@ -1373,7 +1441,11 @@ class TrainingPipeline:
                 target.symlink_to(source, target_is_directory=True)
 
     def _command(self, command, log):
+        health = getattr(self.args, 'game_health', None)
+        if health is not None and not health.wait():
+            raise GameRecoveryStopped('background stopped while waiting for game recovery')
         with log.open('a') as output:
+            offset = output.tell()
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                        pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             with self.lock:
@@ -1394,7 +1466,10 @@ class TrainingPipeline:
                     self.processes.pop(process.pid, None)
                     self.process = next(iter(self.processes.values()), None)
         if code:
-            raise RuntimeError(f'exit {code}; see {log}')
+            with log.open('rb') as output:
+                output.seek(max(offset, log.stat().st_size - 8192))
+                diagnostic = output.read().decode('utf-8', errors='replace')
+            raise RuntimeError(f'exit {code}; see {log}\n{diagnostic}')
         return peak
 
     def _admit(self):
@@ -1455,6 +1530,16 @@ class TrainingPipeline:
             time.sleep(1)
 
     def _run(self, job):
+        while self.game_health.wait():
+            try:
+                return self._run_snapshot(job)
+            except (Exception, SystemExit) as error:
+                if not systemic_game_failure(error):
+                    raise
+                self.game_health.pause(str(error))
+        raise GameRecoveryStopped('background stopped while waiting for game recovery')
+
+    def _run_snapshot(self, job):
         recipe_path = Path(job['recipe'])
         folder = recipe_path.parent
         done = folder / 'complete.json'
@@ -1604,6 +1689,8 @@ class TrainingPipeline:
                                      model_sha256=file_sha(model), recipe_sha256=file_sha(path))
                     self._marker(marker, candidate)
                 except Exception as error:
+                    if systemic_game_failure(error):
+                        raise
                     candidate.update(status='failed', train_finished=time.time(), error=str(error))
                     self._marker(directory / 'failed.json', candidate)
                     log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
@@ -1729,6 +1816,12 @@ class TrainingPipeline:
         try:
             report = future.result()
         except BaseException as error:
+            if systemic_game_failure(error):
+                job.update(status='paused', error=str(error))
+                self.failed = False
+                save_state(self.args.state, self.state)
+                log_line(self.args.log, f'background round {job["round"]} paused; retry budget retained: {error}')
+                return
             # task70 B7: a background failure must not kill collection. Record it,
             # retry once; task98 isolates the snapshot after its second failure.
             job['status'] = 'failed'
@@ -1789,6 +1882,9 @@ class TrainingPipeline:
         save_state(self.args.state, self.state)
 
     def close(self):
+        health = getattr(self.args, 'game_health', None)
+        if health is not None:
+            health.closed.set()
         # poll may schedule a stale comparison again; drain it before closing the executor.
         # B7: failed jobs stay failed here (no retry), so only wait on queued ones.
         try:
@@ -1852,7 +1948,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     reserved = 24 * len(specialists)
     if reserved > budget:
         raise ValueError('round budget cannot cover opening specialists')
-    completed = state.get('completed_groups', []) if specialists else []
+    completed = [group for group in state.get('completed_groups', [])
+                 if group.get('status', 'done') == 'done']
     completed_betas = {base: {group.get('beta') for group in completed if group['base'] == base}
                        for base in specialists}
     special_picks = [(base, 1.0, 12 * (2 - len(completed_betas[base])))
@@ -1973,7 +2070,7 @@ def _run_group(args, state, item, round_index, per_worker):
                           upper_workers=upper, per_worker_bytes=per_worker,
                           headroom_bytes=background)
     started = time.time()
-    item.update(collection_started=started, student=str(args.rollout_policy),
+    item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
     try:
         result = retry_io(subprocess.run)(command, cwd=ROOT)
@@ -1989,6 +2086,7 @@ def _run_group(args, state, item, round_index, per_worker):
         rows = [json.loads(line) for line in retry_io((folder / 'games.jsonl').read_text)().splitlines() if line.strip()]
         games = len(rows)
         wins = sum(1 for row in rows if row.get('won'))
+    item['valid_games'] = sum(type(row.get('won')) is bool for row in rows)
     if games != item['games'] or any(type(row.get('won')) is not bool for row in rows):
         raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}')
     metrics = getattr(args, 'metrics', None)
@@ -2038,35 +2136,53 @@ def pipeline_action(args, action):
         save_state(args.state, pipeline.state)
 
 
-def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
+def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool | None:
     """Group failures do not stop other cells; offsets are durable before collection."""
     round_index = state['round'] + 1
+    health = getattr(args, 'game_health', None) or GameHealth(args)
+    if state.get('zero_game_groups', 0) >= ZERO_GAME_GROUP_LIMIT:
+        health.pause('consecutive groups produced zero valid games before restart')
     for item in plan:
+        if not health.wait():
+            return False
         pipeline_action(args, 'poll')
+        if not health.wait():
+            return False
         if getattr(args, 'stop_flag', STOP_FLAG).exists():
             log_line(args.log, f'round {round_index}: stop flag seen before {item["label"]}; stopping at group boundary')
             return False
         try:
             _run_group(args, state, item, round_index, per_worker)
             item['status'] = 'done'
+            state['zero_game_groups'] = 0
         except StateWriteError:
             raise
         except (Exception, SystemExit) as error:
             item.update(status='failed', error=f'{type(error).__name__}: {error}',
                         collection_finished=time.time())
             log_line(args.log, f'round {round_index} {item["label"]}: group skipped: {item["error"]}')
-            if item['base'] in state['cells']:
+            if item.get('valid_games', 0) and item['base'] in state['cells']:
                 state['cells'][item['base']]['last_round'] = round_index
+            state['zero_game_groups'] = (state.get('zero_game_groups', 0) + 1
+                                         if item.get('valid_games') == 0 else 0)
         state.setdefault('completed_groups', []).append(dict(item))
         save_state(args.state, state)
+        if state['zero_game_groups'] >= ZERO_GAME_GROUP_LIMIT:
+            health.pause(f'{state["zero_game_groups"]} consecutive groups produced zero valid games')
+            if not health.wait():
+                return False
+            state['zero_game_groups'] = 0
+            save_state(args.state, state)
+            return None
     state['round'] = round_index
     groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
     state['log'].append(dict(round=round_index, groups=groups, changes=changes))
     save_state(args.state, state)
-    log_line(args.log, f'round {round_index} done: {len(groups)} groups, '
-                       f'{sum(group["games"] for group in groups)} games, changes={len(changes)}'
+    completed = [group for group in groups if group.get('status', 'done') == 'done']
+    log_line(args.log, f'round {round_index} done: {len(completed)} groups, '
+                       f'{sum(group["games"] for group in completed)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
-    if groups and not getattr(args, 'stop_flag', STOP_FLAG).exists():
+    if completed and not getattr(args, 'stop_flag', STOP_FLAG).exists():
         pipeline_action(args, 'enqueue')
     return True
 
@@ -2109,8 +2225,11 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                 if args.stop_flag.exists():
                     break
                 per_worker = startup_worker_estimate(args, plan)
-            if not run_round(args, state, plan, changes, per_worker):
+            finished = run_round(args, state, plan, changes, per_worker)
+            if finished is False:
                 break
+            if finished is None:
+                continue
             completed += 1
             failures = 0        # progress resets the retry budget
         except ROUND_FATAL_ERRORS as error:

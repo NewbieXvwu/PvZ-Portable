@@ -80,7 +80,7 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
                        '--arms', 'fast', '--workers', str(workers), '--out', str(folder)]
             if resource_dir:
                 command += ['--resource-dir', str(resource_dir)]
-            run_command(command, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            run_command(command, check=True, stdout=subprocess.DEVNULL)
             games = folder / 'games.jsonl'
             played = outcomes(games, expected)
             wins[task] = sum(played.values())

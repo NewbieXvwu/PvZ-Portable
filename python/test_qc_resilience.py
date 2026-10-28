@@ -152,6 +152,200 @@ def test_bad_group_is_saved_and_next_group_runs(tmp_path, failure, restart):
     assert saved['cells']['bad']['windows'] == {}
 
 
+def test_zero_valid_round_does_not_enqueue_or_mark_cells_completed(tmp_path):
+    arguments, current = args(tmp_path), state()
+    with patch.object(q, 'command_for', return_value=['collect']), \
+         patch.object(q.subprocess, 'run', return_value=SimpleNamespace(returncode=1)), \
+         patch.object(q, 'mem_available_bytes', return_value=None), \
+         patch.object(q, 'pipeline_action') as background:
+        assert q.run_round(arguments, current, plan(), [])
+    assert all(entry['last_round'] == 0 for entry in current['cells'].values())
+    assert all(group['valid_games'] == 0 for group in current['log'][0]['groups'])
+    assert 'round 1 done: 0 groups, 0 games' in arguments.log.read_text()
+    assert all(call.args[1] != 'enqueue' for call in background.call_args_list)
+
+
+def test_systemic_zero_groups_pause_and_resume_same_round_with_fresh_seeds(tmp_path):
+    arguments, current = args(tmp_path), state()
+    arguments.round_games = 8
+    current['cells'] = {name: cell() for name in ('a', 'b', 'c', 'd')}
+    tasks = {name: dict(seeds=list(range(20))) for name in current['cells']}
+    manifests = {name: Path('/manifest') for name in tasks}
+    health = q.GameHealth(arguments)
+    seen, probes = [], []
+
+    def collect(command, **kwargs):
+        task, offset, games, label = command
+        seen.append((task, offset))
+        if len(seen) > 3:
+            folder = arguments.out / f'{label}_{games}'
+            folder.mkdir(parents=True)
+            (folder / 'games.jsonl').write_text('{"won":false}\n' * games)
+        return SimpleNamespace(returncode=1 if len(seen) <= 3 else 0)
+
+    def probe():
+        assert len(seen) == 3
+        assert current['round'] == 0
+        assert all(entry['last_round'] == 0 for entry in current['cells'].values())
+        probes.append(1)
+        return len(probes) == 2
+
+    with patch.object(q, 'command_for', side_effect=lambda *pos, **kw: list(pos[2:6])), \
+         patch.object(q.subprocess, 'run', side_effect=collect), \
+         patch.object(q, 'mem_available_bytes', return_value=None), \
+         patch.object(health, 'probe', side_effect=probe), \
+         patch.object(health.closed, 'wait', return_value=False) as delay, \
+         patch.object(q, 'pipeline_action') as background:
+        q.collect_rounds(arguments, current, tasks, {}, [1.], manifests, {})
+    assert probes == [1, 1]
+    assert [call.args[0] for call in delay.call_args_list] == [180, 180]
+    assert len(seen) == 7 and len(set(seen)) == 7
+    assert current['round'] == 1
+    assert all(entry['last_round'] == 1 for entry in current['cells'].values())
+    assert sum(call.args[1] == 'enqueue' for call in background.call_args_list) == 1
+    assert 'round 1 done: 4 groups, 8 games' in arguments.log.read_text()
+
+
+def test_systemic_pause_survives_restart_and_honors_stop(tmp_path):
+    arguments, current = args(tmp_path), state()
+    current['zero_game_groups'] = 3
+    health = q.GameHealth(arguments)
+
+    def stop(seconds):
+        arguments.stop_flag.touch()
+        return False
+
+    with patch.object(health.closed, 'wait', side_effect=stop), \
+         patch.object(health, 'probe') as probe, \
+         patch.object(q, '_run_group') as collect:
+        assert q.run_round(arguments, current, plan(), []) is False
+    probe.assert_not_called()
+    collect.assert_not_called()
+    assert current['round'] == 0
+
+
+@pytest.mark.parametrize('result', ['valid', 'nonzero', 'empty', 'invalid'])
+def test_recovery_probe_uses_one_isolated_game(tmp_path, result):
+    arguments = args(tmp_path)
+    arguments.promotion_panel = tmp_path / 'panel.json'
+    arguments.promotion_panel.write_text('{"tasks":[{"task_id":"probe"}]}')
+    health = q.GameHealth(arguments)
+
+    def command(*pos, **kwargs):
+        assert pos[2:6] == ('probe', 0, 1, 'recovery')
+        assert kwargs['workers'] == 1
+        assert kwargs['out'] != arguments.out
+        folder = kwargs['out'] / 'recovery_1'
+        folder.mkdir()
+        (folder / 'games.jsonl').write_text(
+            '' if result == 'empty' else '{"won":null}\n' if result == 'invalid' else '{"won":false}\n')
+        return ['probe']
+
+    with patch.object(q, 'command_for', side_effect=command), \
+         patch.object(q.subprocess, 'run', return_value=SimpleNamespace(
+             returncode=1 if result == 'nonzero' else 0)) as process:
+        assert health.probe() is (result == 'valid')
+    assert process.call_args.kwargs['timeout'] == q.PROBE_TIMEOUT_SECONDS
+
+
+@pytest.mark.parametrize('failure', ['preparation', 'selection', 'pack', 'train', 'evaluation'])
+def test_systemic_background_failures_wait_without_spending_attempts(tmp_path, failure):
+    from test_curriculum_pipeline import setup, write_selection, write_evaluation
+    arguments, current = setup(tmp_path)
+    current.update(round=1, log=[dict(groups=[dict(label='c1a')])])
+    pipeline = q.TrainingPipeline(arguments, current)
+    failures = []
+    original_prepare = pipeline._prepare_selection
+
+    def fail(phase):
+        if phase == failure and len(failures) < 3:
+            failures.append(phase)
+            raise RuntimeError('PvZ-Portable exited unexpectedly with code 127')
+
+    def prepare(job):
+        fail('preparation')
+        return original_prepare(job)
+
+    def command(command, logfile):
+        fail(logfile.stem)
+        if logfile.name == 'train.log':
+            model = logfile.parent / 'student/model.pt'
+            model.parent.mkdir(parents=True)
+            model.write_bytes(b'trained')
+        elif logfile.name == 'selection.log':
+            write_selection(pipeline, command)
+        elif logfile.name == 'evaluation.log':
+            write_evaluation(pipeline, command, approved=False)
+        return 0
+
+    try:
+        with patch.object(pipeline, '_prepare_selection', side_effect=prepare), \
+             patch.object(pipeline, '_command', side_effect=command), \
+             patch.object(pipeline.game_health, 'probe', side_effect=[False, True] * 3) as probe, \
+             patch.object(pipeline.game_health.closed, 'wait', return_value=False):
+            pipeline.enqueue()
+            pipeline.futures[0][1].result(timeout=5)
+            pipeline.poll()
+        job = current['training_jobs'][0]
+        assert failures == [failure] * 3 and probe.call_count == 6
+        assert job.get('attempts', 0) == 0 and job['status'] == 'done'
+    finally:
+        pipeline.close()
+
+
+def test_systemic_background_stop_is_resumable_without_spending_attempts(tmp_path):
+    from test_curriculum_pipeline import setup
+    arguments, current = setup(tmp_path)
+    pipeline = q.TrainingPipeline(arguments, current)
+    job = dict(round=1, status='queued', attempts=1,
+               recipe=str(arguments.recipe), model=str(arguments.rollout_policy), seed_block=[1, 3])
+    current['training_jobs'].append(job)
+    with patch.object(pipeline, '_run_snapshot', side_effect=RuntimeError(
+            'PvZ-Portable exited unexpectedly with code 127')):
+        pipeline.game_health.closed.set()
+        future = pipeline.executor.submit(pipeline._run, dict(job))
+        pipeline.futures.append((job, future))
+        with pytest.raises(q.GameRecoveryStopped):
+            future.result(timeout=5)
+        pipeline.close()
+    assert job['status'] == 'paused' and job['attempts'] == 1
+    restored = json.loads(arguments.state.read_text())
+    del arguments.game_health
+    with patch.object(q.TrainingPipeline, '_run_snapshot', return_value=dict(superseded_by=2)), \
+         patch.object(q.GameHealth, 'probe', return_value=True) as probe, \
+         patch.object(q, 'GAME_RECOVERY_SECONDS', 0):
+        restarted = q.TrainingPipeline(arguments, restored)
+        restarted.futures[0][1].result(timeout=5)
+        restarted.close()
+    probe.assert_called_once()
+    assert restored['training_jobs'][0]['status'] == 'superseded'
+    assert restored['training_jobs'][0]['attempts'] == 1
+
+
+@pytest.mark.parametrize('stale', [False, True])
+def test_background_failure_diagnostics_only_use_current_attempt(tmp_path, stale):
+    from test_curriculum_pipeline import setup
+    arguments, current = setup(tmp_path)
+    pipeline = q.TrainingPipeline(arguments, current)
+    logfile = tmp_path / 'pack.log'
+    marker = 'Inconsistency detected by ld.so: Assertion failed'
+    if stale:
+        logfile.write_text(marker + '\n')
+
+    def process(command, **kwargs):
+        kwargs['stdout'].write('bad archive\n' if stale else marker + '\n')
+        kwargs['stdout'].flush()
+        return SimpleNamespace(pid=12345, poll=lambda: 1)
+
+    try:
+        with patch.object(q.subprocess, 'Popen', side_effect=process):
+            with pytest.raises(RuntimeError) as failure:
+                pipeline._command(['fail'], logfile)
+        assert q.systemic_game_failure(failure.value) is (not stale)
+    finally:
+        pipeline.close()
+
+
 @pytest.mark.parametrize('legacy_label', [False, True])
 def test_restart_after_partial_group_isolates_new_seed_results(tmp_path, legacy_label):
     arguments, current = args(tmp_path), state()
