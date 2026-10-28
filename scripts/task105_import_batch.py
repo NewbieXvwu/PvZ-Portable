@@ -7,13 +7,14 @@ verification continues to use llm_import_sha's permanent SHA receipts.
 """
 import argparse
 import fcntl
+import hashlib
 import json
 import os
 import subprocess
 import sys
 from pathlib import Path
 
-from llm_import_sha import compact_design, save
+from llm_import_sha import FILES, compact_design, save
 from import_llm_run import load_manifest, register_tasks
 from task105_pipeline import ENGINE, ROOT
 
@@ -22,6 +23,18 @@ OUT = ROOT / 'artifacts/task105'
 
 def identity(path):
     stat = path.stat()
+    if path.is_dir():
+        # Directory mtime alone misses edits to an archive's existing files.
+        # This is only a cheap metadata snapshot, never another content pass.
+        inventory = []
+        for name in FILES:
+            for item in path.rglob(name):
+                info = item.stat()
+                inventory.append((str(item.relative_to(path)), info.st_size, info.st_mtime_ns))
+        inventory.sort()
+        return dict(path=str(path.resolve()), kind='directory', size=sum(x[1] for x in inventory),
+                    mtime_ns=stat.st_mtime_ns, files=len(inventory),
+                    inventory_sha256=hashlib.sha256(json.dumps(inventory).encode()).hexdigest())
     return dict(path=str(path.resolve()), size=stat.st_size, mtime_ns=stat.st_mtime_ns)
 
 

@@ -146,6 +146,18 @@ class ResumeTest(unittest.TestCase):
         self.assertEqual(packages[-1]['archives'], 2)
         self.assertEqual(json.loads((out / 'pipeline_status.json').read_text())['state'], 'incomplete')
 
+    def test_directory_identity_notices_nested_archive_changes_without_content_reads(self):
+        archive = self.out / 'archives/one'
+        archive.mkdir(parents=True)
+        tape = archive / 'ticks.jsonl'
+        tape.write_bytes(b'one')
+        first = batch.identity(self.out)
+        tape.write_bytes(b'longer tape')
+        with patch.object(Path, 'read_bytes', side_effect=AssertionError('no content hashing')):
+            second = batch.identity(self.out)
+        self.assertNotEqual(first['inventory_sha256'], second['inventory_sha256'])
+        self.assertEqual(second['size'], len(b'longer tape'))
+
     def test_cached_package_is_not_imported_again_before_union_resume(self):
         out = self.out / 'batch'
         (out / 'import').mkdir(parents=True)
