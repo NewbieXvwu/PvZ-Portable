@@ -1973,7 +1973,7 @@ def _run_group(args, state, item, round_index, per_worker):
                           upper_workers=upper, per_worker_bytes=per_worker,
                           headroom_bytes=background)
     started = time.time()
-    item.update(collection_started=started, student=str(args.rollout_policy),
+    item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
     try:
         result = retry_io(subprocess.run)(command, cwd=ROOT)
@@ -1989,6 +1989,7 @@ def _run_group(args, state, item, round_index, per_worker):
         rows = [json.loads(line) for line in retry_io((folder / 'games.jsonl').read_text)().splitlines() if line.strip()]
         games = len(rows)
         wins = sum(1 for row in rows if row.get('won'))
+    item['valid_games'] = sum(type(row.get('won')) is bool for row in rows)
     if games != item['games'] or any(type(row.get('won')) is not bool for row in rows):
         raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}')
     metrics = getattr(args, 'metrics', None)
@@ -2055,7 +2056,7 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             item.update(status='failed', error=f'{type(error).__name__}: {error}',
                         collection_finished=time.time())
             log_line(args.log, f'round {round_index} {item["label"]}: group skipped: {item["error"]}')
-            if item['base'] in state['cells']:
+            if item.get('valid_games', 0) and item['base'] in state['cells']:
                 state['cells'][item['base']]['last_round'] = round_index
         state.setdefault('completed_groups', []).append(dict(item))
         save_state(args.state, state)
@@ -2063,10 +2064,11 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
     groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
     state['log'].append(dict(round=round_index, groups=groups, changes=changes))
     save_state(args.state, state)
-    log_line(args.log, f'round {round_index} done: {len(groups)} groups, '
-                       f'{sum(group["games"] for group in groups)} games, changes={len(changes)}'
+    completed = [group for group in groups if group.get('status', 'done') == 'done']
+    log_line(args.log, f'round {round_index} done: {len(completed)} groups, '
+                       f'{sum(group["games"] for group in completed)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
-    if groups and not getattr(args, 'stop_flag', STOP_FLAG).exists():
+    if completed and not getattr(args, 'stop_flag', STOP_FLAG).exists():
         pipeline_action(args, 'enqueue')
     return True
 

@@ -152,6 +152,19 @@ def test_bad_group_is_saved_and_next_group_runs(tmp_path, failure, restart):
     assert saved['cells']['bad']['windows'] == {}
 
 
+def test_zero_valid_round_does_not_enqueue_or_mark_cells_completed(tmp_path):
+    arguments, current = args(tmp_path), state()
+    with patch.object(q, 'command_for', return_value=['collect']), \
+         patch.object(q.subprocess, 'run', return_value=SimpleNamespace(returncode=1)), \
+         patch.object(q, 'mem_available_bytes', return_value=None), \
+         patch.object(q, 'pipeline_action') as background:
+        assert q.run_round(arguments, current, plan(), [])
+    assert all(entry['last_round'] == 0 for entry in current['cells'].values())
+    assert all(group['valid_games'] == 0 for group in current['log'][0]['groups'])
+    assert 'round 1 done: 0 groups, 0 games' in arguments.log.read_text()
+    assert all(call.args[1] != 'enqueue' for call in background.call_args_list)
+
+
 @pytest.mark.parametrize('legacy_label', [False, True])
 def test_restart_after_partial_group_isolates_new_seed_results(tmp_path, legacy_label):
     arguments, current = args(tmp_path), state()
