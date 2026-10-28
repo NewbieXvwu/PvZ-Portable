@@ -162,6 +162,12 @@ def write_report(result, layers):
               '结果整理入口`scripts/task105_results.py`只读取已有小JSON，不解压、不重放、不复跑。',
               '部署脚本为`scripts/deploy_task105.py`；当前计划为`artifacts/task105/deployment_plan.json`，仅含已登记且尚未在qc清单中的格。',
               '主控在组边界排空qc后才应用；本任务不执行该脚本（含预览）。', '']
+    remaining = result['scan_expected'] - result['scanned']
+    lines += ['## 交付结论', '',
+              f"- 已增量导入{result['archives']}个唯一SHA：{result['verified']}份通过、{result['rejected']}份拒绝。拒绝原因见上方结果节。",
+              f"- 接手扫描{result['scanned']}/{result['scan_expected']}份，已登记{result['registered']}格、生产qc清单{result['deployed']}格。"
+              + (f'剩余{remaining}份继续断点扫描。' if remaining else '全部接手扫描已完成。'),
+              '- 未执行部署；已登记且未部署的起点格由主控在组边界应用。存档、策略及游戏资源只留本机。', '']
     text = prefix + '\n'.join(lines)
     path.write_text(text)
     brief = Path('/home/newbiexvwu/pvz-logs/task105-brief.md')
