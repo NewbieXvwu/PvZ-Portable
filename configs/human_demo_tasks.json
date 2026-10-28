@@ -29519,7 +29519,17 @@
     34,
     39,
     44
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/a780cc5d7c8e54ab64188ea5157a5b7da5884bd0d1dda9f23562aed61e0c38da",
+    "decisions": [
+     1002,
+     638
+    ],
+    "index": 0,
+    "future_seed_start": 328000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "llmplay3_a_l44_m100_s139003035_a37e49e9af77c",
