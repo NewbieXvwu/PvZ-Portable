@@ -107,6 +107,45 @@ class ResumeTest(unittest.TestCase):
         self.assertNotIn('old results', prefix)
         self.assertEqual(results.report_prefix(prefix + '## 结果\nnew results'), prefix)
 
+    def test_staged_import_publication_preserves_scans_and_deduplicates_copies(self):
+        out = self.out / 'artifacts/task105'
+        (out / 'import').mkdir(parents=True)
+        (self.out / 'configs').mkdir()
+        source = self.out / 'llmplay3/out'
+        source.mkdir(parents=True)
+        manifest = self.out / 'configs/human_demo_tasks.json'
+        existing = dict(task_id='old', level=41, seeds=[1], zombie_count_multiplier=1.,
+                        deck=[1, 2], demo_start=dict(archive='sha/old', decisions=[90]))
+        added = dict(task_id='new', level=42, seeds=[2], zombie_count_multiplier=1., deck=[3, 4])
+        manifest.write_text(json.dumps(dict(tasks=[existing])))
+        staged = self.out / 'staged.json'
+        staged.write_text(json.dumps(dict(tasks=[{k: v for k, v in existing.items()
+                                                 if k != 'demo_start'}, added])))
+        old_job = dict(task_id='old', archive='sha/old', future_seeds=[10])
+        new_job = dict(task_id='new', archive='sha/new', future_seeds=[20])
+        (out / 'scan_jobs.json').write_text(json.dumps(dict(schema='jobs', archives=[old_job])))
+        old_row = dict(archive_sha256='old', verify='通过', archive='sha/old')
+        new_row = dict(archive_sha256='new', verify='通过', archive='sha/new')
+        (out / 'import/merged_progress.json').write_text(json.dumps(dict(archives=[old_row])))
+        old_package = dict(identity=dict(path='old.zip'), archives=1)
+        (out / 'input_packages.json').write_text(json.dumps(dict(packages=[old_package])))
+        plan_path = out / 'staged_plan.json'
+        plan_path.write_text(json.dumps(dict(schema='jobs', archives=[old_job, new_job])))
+        index = out / 'index.json'
+        index.write_text(json.dumps(dict(input=str(source), scan_plan=str(plan_path),
+                         archives=[old_row, new_row, {**new_row, 'archive': ''}])))
+        with patch.object(batch, 'ROOT', self.out), patch.object(batch, 'OUT', out):
+            for _ in range(2):
+                progress, plan = batch.append_completed_import(source, index, staged)
+        self.assertEqual(plan['archives'], [old_job, new_job])
+        self.assertEqual(progress['archives'], [old_row, new_row])
+        self.assertEqual(json.loads(manifest.read_text())['tasks'], [existing, added])
+        packages = json.loads((out / 'input_packages.json').read_text())['packages']
+        self.assertEqual(len(packages), 2)
+        self.assertEqual(packages[-1]['source_copies'], 3)
+        self.assertEqual(packages[-1]['archives'], 2)
+        self.assertEqual(json.loads((out / 'pipeline_status.json').read_text())['state'], 'incomplete')
+
     def test_cached_package_is_not_imported_again_before_union_resume(self):
         out = self.out / 'batch'
         (out / 'import').mkdir(parents=True)
