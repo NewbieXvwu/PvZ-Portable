@@ -1059,3 +1059,12 @@
 - 23:20 用户修好 WSL DNS（getent 已能解析）。r34 四个候选训完，23:13 起 select_student 在 CPU 上跑，显卡 0% → 通知用户现在更新驱动（之后 r35 训练会接上）。task144 完成（`origin/llmplay4`，包在台式机 `~/pvz-llmplay4/`；毁灭菇/咖啡豆等倒计时引擎早有、只是没渲染；按卡名种植；PLANTS.md 静态表；无运行时自校验）。学生特征缺这些计时 → 派 task145（分支 obstimer，基于 obsup2）给 cbp-task139。cbp-task105 只顾逐格提交 scan 登记（224/625），已改派去做 4 个 llmplay zip 的增量导入。
 - 23:40 GPT Pro 第二次会话（llmplay3 包）产物到手：连续 615 分钟后被系统强停。第 1 圈 A–D 层全部完成、E 层 2/21；877 局、621 胜，50 套不同胜利卡组，屋顶 L41–L49 原版每关 24–38 胜。C 层挑战卡组 31 套中 20 套达到 ≥2 胜，其中包括学生只赢 15/96 的 L7 留出卡组（2/2），11 套写了失败诊断。用户：以后的包都按 ≥10 小时设计（已存 memory）。分卷 scp 到台式机（约 0.5 MB/s，约 20 分钟），之后交 task105 导入。写 task146：llmplay4 带 carry/progress.json 接着做第 1 圈 E 层，再进第 2 圈。用户在下载新驱动，GPU 窗口仍开着（r34 选拔中）。
 - 23:50 GPT Pro r2 产物解包在台式机 `~/llm_runs/llmplay3_r2/out/`（4.4 GB，Mac 临时副本已删），已排给 cbp-task105 作为“追加输入 3”，导入后删原始目录。task146 派给新会话 cbp-task146（账号 0）。task145 完成（`origin/obstimer`：v2timer = v2sleep + 4 通道，旧签名不变，配方草稿 `recipes/dw4i2_rebalanced_p05_v2timer.json`）。冷缓存重编码估 7–15 h；C++ 侧还缺这个输入版本，所以暂时部署不了 → 派 task147（C++ 第 9 号输入版本 + 对拍 + 重编码提速）给 cbp-task139。
+- 10-29 00:00 事故：23:52 起驱动更新替换了系统库，所有游戏进程报 `ld.so dl-setup_hash` 断言失败。r36 尾部和 r37 全部 38 组被记作 skipped，空转 5 分钟；r34 选拔（4 个候选已训完）与 r35 打包同时失败，GPU 约 4 h 的训练白费。驱动装完机器黑屏，用户强制重启。重启后 CUDA 正常（驱动 621.01，RTX 5080）。
+  - **生产恢复**：清掉 10-27 留下的 `qc_watchdog.halted`（它让看门狗一直不能重启 qc），重开 qc-watchdog，qc 在 00:04 自动拉起。r38 采集 15 workers，后台训练已开始。
+  - **Mac 也重启了**，tmux 全没了。
+  - **Codex 额度重置**，三个号全用上：
+    - business（台式机 `~/.codex`）：codex-import = task105 导入（追加输入 2/3），codexb-t148 = task148 屋顶门禁卡组；
+    - A（台式机 `~/.codex-plus`）：codex-t147 = C++ v2timer，codex-t146 = task146 修订 1；
+    - plus2（Mac `~/.codex`）：codex-plus2 = task149，系统性失败时暂停采集（分支 sysfail）。
+  - **task146 修订 1**：E 层原先 70/72 组 0 胜，会卡死循环 → 倍数降为 1.25/1.5，并加诊断出口。
+  - CodeBuddy 会话全部关闭：账号 1–3 返回 403，账号 0 的会话卡在启动。新开 codex 会遇到更新提示，要按 3 跳过。
