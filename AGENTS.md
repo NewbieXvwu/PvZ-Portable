@@ -135,6 +135,11 @@ PPO 训练线（`python/pvz_research.py`、`train_pvz_ppo*.py`）连同它的检
 7. **台式机是生产机，测试不能抢生产内存。** 2026-10-27 12:09，一个 agent 在台式机跑 `pytest python/test_qc_resilience.py`，涨到 17 GB，把生产 qc 挤到 OOM 崩溃，看门狗两次重启后停机，停采约 35 分钟。
    在台式机上：只跑与改动直接相关的单个测试（`-k`），一律加内存上限（如 `ulimit -v 8000000`），并先看 `free -g`；需要大内存的测试放到 Mac 上跑。
 
+8. **Mac 同样不能被测试拖垮。** 2026-10-28，一个 agent 在 Mac 上同时两次整套运行 `test_curriculum_queue.py`、`test_curriculum_pipeline.py`、`test_qc_resilience.py`。其中 `test_persistent_state_error_*` 无限写 `curriculum.log`，三次共写出约 20 GB，把磁盘写满；同时内存暴涨，macOS 冻结了所有应用，经 Mac 中转的台式机连接也断了约 2.5 小时。
+   - **禁止整套运行这三个文件**，只能用 `-k` 跑与改动直接相关的用例。
+   - 每次运行都要加 `timeout 300` 和 `ulimit -f 2000000`（单个文件不超过约 1 GB）。
+   - 同一时间只能开一个 pytest。
+
 ## 7. 现有约定的权威顺序
 
 当文档之间冲突时，按这个顺序裁决：
