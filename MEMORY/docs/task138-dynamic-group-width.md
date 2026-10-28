@@ -99,4 +99,18 @@
   允许新增来兜底；已经在跑的 worker 不会被杀（这是任务书的要求）。
 - macOS 上 `mem_available_bytes()` 返回 `None`，所以本机跑永远是固定宽度；生产是 Linux。
 
+### 7. 接手复核（新会话，未改代码）
+
+上一会话在写完结论后中断，这一节只做复核，没有改动实现：
+
+- 重跑与本改动直接相关的用例（Mac，单次一个 pytest，`timeout 300` + `ulimit -f 2000000`）：
+  `test_growable_pool.py` 8 项全过；`test_curriculum_queue.py -k "growth_args or group_command_admits"` 2 项全过；
+  `test_qc_log_throughput.py` 14 项全过；`test_qc_resilience.py -k "bad_group_is_saved_and_next_group_runs or restart_after_partial_group"` 10 项全过。
+  （按 AGENTS §6.5 第 8 条，三个禁止整份跑的文件都只用 `-k`。）
+- `qc_deploy14m.sh` 的 `NEW_SHAS` 与 REV `d1053e84` 的 4 个 blob 逐个核对，一致。
+- `start_qc` 与仓库 `qc_deploy14l.sh` 逐行 diff：只差任务书要求的两处（`$EXTRA_ARG` 改成按 mode 文件算、
+  `stop_qc` 改成直接 kill 并清孤儿）。台式机现网版本仍需要主控 diff 一次（Mac 读不到）。
+- 顺手修了 DESIGN 14.46 的一个多余字符、日志里的用例数（7 → 8）。
+
+
 
