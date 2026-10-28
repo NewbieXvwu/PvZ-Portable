@@ -21,11 +21,11 @@
 
 集成树上的 width64 / meanmax / row_pool / identity 的未训练 v2timer 学生，原生 L7、seed150000 到 tick33549 终局。结果在工作树 `artifacts/task150/smoke.json`（不入 git），这是接口冒烟，不代表胜率。相关定向测试合计 24 passed，全部先看内存、`ulimit -v 8000000`、只选 `-k` 且 pytest 串行；没有整套测试或额外全量校验。
 
-## 后台缓存预构建（持续运行）
+## 后台缓存预构建（已完成）
 
 入口 `scripts/precompute_timer_cache.py`，使用新 A 配方所指的共享训练数据和缓存根；覆盖所有现有档案，A/B 共用同一份特征缓存。原缓存只有 v2，因此先生成 v2sleep 视图，再只补四个 timer 通道；缺旧缓存的档案才走普通编码。不重建段、不训练、不修改控制器状态。
 
-后台主 PID **16149**，nice **19**，**2 worker**；每进程 AS 8,000,000 KiB、DATA 2,000,000 KiB。较大的 AS 允许 libtorch 只读映射，DATA 单独限制数据分配。两 worker 加主进程 RSS 约 **1.25 GiB**，启动及观测时机器 MemAvailable 约 **14–15 GiB**。
+后台作业原主 PID **16149**，nice **19**，**2 worker**；每进程 AS 8,000,000 KiB、DATA 2,000,000 KiB。较大的 AS 允许 libtorch 只读映射，DATA 单独限制数据分配。运行中观测到两 worker 加主进程 RSS 约 **1.25 GiB**，启动及早期观测时机器 MemAvailable 约 **14–15 GiB**。
 
 - 数据：`/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames`
 - 缓存：`/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/cache`（新增 v2sleep/v2timer 命名空间）
@@ -33,6 +33,8 @@
 - 日志：`/home/newbiexvwu/pvz-logs/task150-precompute.txt`
 - PID 记录：`/home/newbiexvwu/pvz-logs/task150-precompute.pid`
 
-2026-10-29 00:58 上海时间的进度为 **1,933 / 80,141**，该时点 ETA **03:13**。这是早期吞吐外推，随目录、档案大小和生产负载变化；实时文件每 30 秒更新。进程与两个 worker 已实际存活并产出缓存，尚未全量完成。任务书末尾另有交付进度；缓存完成后仍需补记最终结果。
+**2026-10-29 02:51:31（上海时间）全部完成：80,141 / 80,141**，作业记录 `status=complete`，用时 **6,998.8 秒（约 1 小时 57 分钟）**，主进程已退出。覆盖启动时现有训练数据，A/B 可共用生成的 v2timer 缓存。00:58 的早期 ETA 为 03:13，已被实际完成时间取代；后续新增档案仍由正常打包路径补建。
+
+这是 episode 特征缓存预构建；新的 v2timer 训练段仍由正常后台训练管线按需打包。部署切换本身不等待段构建。没有为收尾重跑测试、重放存档或追加全量验算。
 
 本次只准备，没有执行部署，未操作 tmux qc、生产状态文件、看门狗或现役二进制。
