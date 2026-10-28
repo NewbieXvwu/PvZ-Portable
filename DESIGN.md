@@ -1656,3 +1656,22 @@ K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整
 deploy15只准备：使用独立build7与新配方，延续门禁v5、K=4串行；未激活/回滚
 逐参数保留14i→14h→14g启动分支，代码基线分别冻结。旧学生/旧值网可继续运行；
 价值编码器v4待新分布续走数据与切片缺陷证据足够后另行重训。本任务不部署。
+
+### 14.48 deploy15 刷新到 deploy14p 之上（task143）
+
+生产每轮都是从头训练（r29–r31 与 `recipe.resolved.json` 的 `init` 均为 null），
+所以 v2sleep 切换不带热启动：task131 在入队时冻结现役学生的那段代码已删除，
+控制器与 14p 逐字节相同；`warm_start_student` 只对显式写 `init` 的配方生效。
+首个 v2sleep 轮次既不带父权重，也不与历史轮次共享初始化，挑选与门禁口径不变。
+
+`scripts/qc_deploy15.sh`（只准备）以 14p 生效后的六个生产文件为基线，替换六个
+观测/值网模块、`pack_training_rows`、`train_rollout_policy` 与两份 v2sleep 配方；
+激活时 `--executable` 切 `obsup/build7/pvz-portable`（sha256 固定），继续带
+task137 的 `--extra-manifest` 与门禁 v5 参数。stop 直接杀、不排空；首组 60 分钟
+没结果只记日志；只有 `rc != 0` 或 qc 退出才回滚。
+
+切换后 874 个标签段全部重建（观测版本在段指纹里），旧段保留不回收，磁盘稳态
+净增约 11.2 GiB；v2 逐局缓存通过零填充视图复用（抽样 400 份档案无新字段），
+缓存只增约 73 MB。按近期 25 s/段/worker 计，配方默认的 2 个建造者约 3 小时，
+机器近期实际能跑 4–7 个建造者；采集在打包期间继续。详见
+[task143结论](MEMORY/docs/task143-deploy15-refresh.md)。

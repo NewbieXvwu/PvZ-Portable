@@ -1,87 +1,64 @@
-"""task131: prepared deploy15 preserves prior launches and restores its overlay."""
-import json
-import os
-from pathlib import Path
+"""task143: deploy15 starts the v2sleep curriculum on build7 on top of deploy14p."""
 import subprocess
-import sys
-from types import SimpleNamespace
-
-import pytest
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / 'scripts'))
-import qc_deploy15_state as state
 
 
-@pytest.mark.parametrize('service', ['g', 'h', 'i'])
-def test_deploy15_preserves_prior_launch_and_rollback(tmp_path, service):
-    logs = tmp_path / 'pvz-logs'
-    logs.mkdir()
-    if service in ('h', 'i'):
-        (logs / 'qc_deploy14h.mode').write_text('rebalance\n')
-    if service == 'i':
-        (logs / 'qc_deploy14i.mode').write_text('gatev5\n')
-    for version in ('14i', '15'):
-        text = (ROOT / f'scripts/qc_deploy{version}.sh').read_text().split('# --- preflight:', 1)[0]
-        functions = tmp_path / (version + '.sh')
-        functions.write_text(text.replace('/home/newbiexvwu', str(tmp_path)))
-    runner = '''
+def _functions(tmp_path):
+    text = (ROOT / 'scripts/qc_deploy15.sh').read_text().split('# --- preflight:', 1)[0]
+    path = tmp_path / 'functions.sh'
+    path.write_text(text.replace('/home/newbiexvwu', str(tmp_path)))
+    return path
+
+
+def _start(tmp_path, modes, pre):
+    _functions(tmp_path)
+    calls = tmp_path / 'calls'
+    runner = f'''
+{pre}
 source "$1"
-tmux() { if [ "$1" = has-session ]; then return 1; fi; printf '%s\\n' "$*" >> "$LOG_CALLS"; }
+tmux() {{ if [ "$1" = has-session ]; then return 1; fi; printf '%s\\n' "$*" >> "$LOG_CALLS"; }}
+MODE14P=$2; MODE15=$3; MODE14I=$4; MODE14H=$5; EXTRA=$6
+{modes}
 start_qc
 '''
-    expected = tmp_path / 'expected'
-    result = subprocess.run(['bash', '-c', runner, 'test', str(tmp_path / '14i.sh')],
-                            env={**os.environ, 'LOG_CALLS': str(expected)},
+    result = subprocess.run(['bash', '-c', runner, 'test', str(tmp_path / 'functions.sh'),
+                             str(tmp_path / '14p.mode'), str(tmp_path / '15.mode'),
+                             str(tmp_path / '14i.mode'), str(tmp_path / '14h.mode'),
+                             str(tmp_path / 'panel.json')],
+                            env={'LOG_CALLS': str(calls), 'PATH': '/usr/bin:/bin'},
                             capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
-    observed = tmp_path / 'observed'
-    result = subprocess.run(['bash', '-c', runner + '''
-printf 'v2sleep\\n' > "$MODE15"
-start_qc
-PREVIOUS=$(service); SAVED=0
-code_state() { :; }
-rollback injected
-''', 'test', str(tmp_path / '15.sh')],
-        env={**os.environ, 'LOG_CALLS': str(observed)},
-        capture_output=True, text=True, timeout=10)
-    assert result.returncode == 1, result.stderr
-    calls = observed.read_text().splitlines()
-    assert calls[0] == calls[2] == expected.read_text().strip()
-    assert 'build7/pvz-portable' in calls[1]
-    assert 'dw4i2_v2sleep.json' in calls[1] and 'dw4i2_rebalanced_p05_v2sleep.json' in calls[1]
-    assert '--gate-version 5' in calls[1] and '--training-parallelism 1' in calls[1]
-    assert not (logs / 'qc_deploy15.mode').exists()
+    return calls.read_text().splitlines()[0]
 
 
-@pytest.mark.parametrize('service', ['g', 'i'])
-def test_deploy15_baseline_checks_and_restores_code(tmp_path, service):
-    root, package, output = (tmp_path / name for name in ('cq', 'package', 'backup'))
-    for folder in (root / 'build6', package / 'build7', output):
-        folder.mkdir(parents=True)
-    (root / 'build6/pvz-portable').write_bytes(b'old engine')
-    (package / 'build7/pvz-portable').write_bytes(b'new engine')
-    (root / 'code.py').write_text('old ' + service)
-    original = state.sha(root / 'code.py')
-    baselines = tmp_path / 'baselines.json'
-    baselines.write_text(json.dumps(dict(old_engine_sha256=state.sha(root / 'build6/pvz-portable'),
-        new_engine_sha256=state.sha(package / 'build7/pvz-portable'),
-        baselines={service: {'code.py': original, 'new.json': None}})))
-    args = SimpleNamespace(root=root, package=package, output=output, baselines=baselines,
-                           service=service, revision='unused', action='preflight')
-    state.run(args)
-    args.action = 'save'
-    state.run(args)
-    (root / 'code.py').write_text('candidate')
-    (root / 'new.json').write_text('{}')
-    args.action = 'preflight'
-    with pytest.raises(ValueError, match='baseline changed'):
-        state.run(args)
-    args.action = 'restore'
-    state.run(args)
-    args.action = 'restored'
-    state.run(args)
-    assert state.sha(root / 'code.py') == original and not (root / 'new.json').exists()
+def test_deploy15_activation_uses_build7_v2sleep_and_deckcells(tmp_path):
+    (tmp_path / '14p.mode').write_text('deckcells\n')
+    (tmp_path / '15.mode').write_text('v2sleep\n')
+    call = _start(tmp_path, '', '')
+    assert 'build7/pvz-portable' in call
+    assert 'dw4i2_v2sleep.json' in call and 'dw4i2_rebalanced_p05_v2sleep.json' in call
+    assert '--gate-version 5' in call and '--training-parallelism 1' in call
+    assert '--extra-manifest' in call
+
+
+def test_deploy15_rollback_branch_keeps_build6_and_deckcells(tmp_path):
+    (tmp_path / '14p.mode').write_text('deckcells\n')
+    (tmp_path / '14i.mode').write_text('gatev5\n')
+    call = _start(tmp_path, '', '')
+    assert 'build6/pvz-portable' in call and 'build7/' not in call
+    assert '--extra-manifest' in call and '--gate-version 5' in call
+
+
+def test_deploy15_requires_deploy14p_and_always_passes_the_panel(tmp_path):
+    (tmp_path / '14i.mode').write_text('gatev5\n')
+    call = _start(tmp_path, '', '')
+    assert call.count('--extra-manifest') == 1
+
+    text = (ROOT / 'scripts/qc_deploy15.sh').read_text()
+    assert 'deploy14p (deckcells) is not active' in text
+    assert 'EXTRA=$W/artifacts/task137/training_panel.json' in text
 
 
 def test_deploy15_watchdog_extracts_only_the_launch_function():
@@ -90,4 +67,4 @@ def test_deploy15_watchdog_extracts_only_the_launch_function():
                             capture_output=True, text=True, timeout=10)
     assert result.returncode == 0, result.stderr
     subprocess.run(['bash', '-n'], input=result.stdout, text=True, check=True)
-    assert 'qc_deploy15_state.py' not in result.stdout
+    assert 'start_qc' in result.stdout and 'stop_qc' not in result.stdout
