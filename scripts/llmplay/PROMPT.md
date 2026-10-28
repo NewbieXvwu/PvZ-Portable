@@ -14,6 +14,8 @@
 - `progress()["complete"]` 永远是 `False`，这不是 bug。
 - **唯一的停止条件是用户在对话里说停。** 在此之前，你的默认行为就是继续打。
 - 自动报告和 `out.zip` 是每局持续更新的副产物，生成它们后立即接下一项，不能作为结束回复的理由。时间长、已做很多局、阶段达标都不构成结束条件。
+- **本次会话按 ≥10 小时的工作量设计**：先做完第 1 圈 E 层剩下的 19 项（72 组、还需 142 个新胜局），
+  再进第 2 圈整圈（A/B/C/D/E 全做）。做完了就自动开第 3 圈——这本来就是循环设计，不需要问。
 
 如果一次回复里只打了一局就停下问"要不要继续"，那等于没干活。
 
@@ -25,11 +27,16 @@
 2. 资源包 `llmplay_res.zip` 保持原样放在接口目录旁边。首次 `import llmplay` 会自动安装资源和缓存；
    接口与资源必须配对。资源 zip 在别处时可设 `PVZ_LLMPLAY_RES_ZIP`。
 3. 需要 Python >= 3.10、x86_64 Linux。
-4. 看当前该做什么：
+4. **前次进度就在包里**：`carry/progress.json` 是上一次会话的进度记录。第一次 `import llmplay`
+   会自动接上（out 里已经有进度就不动它）。接上后 `progress()` 是第 1 圈 A/B/C/D 已完成、E 层 2/21，
+   `next_task()` 直接给你 E 层的下一项。这些记录只当结论用：**不重放、不复验、不读旧存档**。
+   想接别的文件用 `llmplay.carry("路径")`。
+5. 看当前该做什么：
 
 ```python
 import llmplay
 llmplay.paths()            # 实际路径
+print(llmplay.progress()["cycle"], llmplay.progress()["layer"])   # 接上后应是 1 / E
 print(llmplay.next_task()) # 领一项：item 是给你的一项，main / challenge 是两轨的队列头
 ```
 
@@ -63,6 +70,10 @@ C 轨那个子代理固定调用 `next_task(track="C")`（C 优先，C 做完自
 下一圈：新种子（每圈一个 40 个种子的窗口，互不重叠）；A 层的 4 套卡组必须和**之前所有圈**
 用过的卡组都至少更换 3 张卡；删 1 张加 1 张只算换 1 张。C 轨换下一批挑战卡组（列表循环）。
 种子由队列指定，传入其他种子会被拒绝。放弃后仍须处理同一个种子，直到真实胜负终局。
+
+**第 2 圈的 C 轨是第 2 批，共 18 套**：12 套从没打过的卡组，加 6 套 `*_retry`
+（第 1 圈 5 个种子全输、已经写过失败诊断的那几套，换 5 个全新种子再给一次机会）。
+重试任务一样是"不能换卡、5 个种子里赢≥2"，再全输就再写一份诊断。
 
 从 `next_task()["item"]` 取一项，其中的 `action` 指定下一步：
 
@@ -261,6 +272,7 @@ report = g.robustness(policy, k=8, checkpoints=[10])
 或 `export_archive(..., note=...)`。策略和搜索脚本请持续保存到 `llmplay.out_dir()`，会随交付一起打包。
 战损、丢车、被吃株数可以写进 note，只用于描述，不作为目标或排序。
 
-**续跑**：用户会附上上次的 `out.zip`。先 `llmplay.resume(out_dir().parent / "previous_out.zip")`，
-再 `print(next_task())` 继续。resume 直接按旧 progress 恢复，不算摘要、不重放。
+**续跑**：前次进度已经在包里的 `carry/progress.json`，首次 `import llmplay` 自动接上，不需要额外动作。
+如果手上另有一份完整的 `out.zip`（存档也在里面），用 `llmplay.resume(路径)` 按旧 progress 恢复，
+不算摘要、不重放、不复验；接完 `print(next_task())` 继续。
 `Game.load_archive(path)` 可恢复已导出的局继续中盘打。

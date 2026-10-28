@@ -10,7 +10,7 @@
     g.export_archive(llmplay.out_dir() / "x")
 """
 from .game import Game, load_tasks, task_spec, ROOT
-from .delivery import (resume, progress, next_task, ensure_run_id, diagnose,
+from .delivery import (resume, carry, progress, next_task, ensure_run_id, diagnose,
                        output_dir as out_dir)
 from .runtime import paths
 from .resources import install as _install_resources, app_data as _app_data
@@ -18,10 +18,12 @@ from .resources import install as _install_resources, app_data as _app_data
 _resources = _install_resources(ROOT)
 if _resources is not None:
     _app_data(ROOT / "build" / "pvz-portable", _resources)
-    ensure_run_id()
+# 包内带 carry/progress.json 时，第一次用就接上前次进度（out 里已有进度则什么都不做）。
+carry()
+ensure_run_id()
 
-__all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "progress",
-           "next_task", "diagnose", "out_dir", "paths"]
+__all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "carry",
+           "progress", "next_task", "diagnose", "out_dir", "paths"]
 
 
 def list_tasks() -> dict:

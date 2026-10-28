@@ -259,6 +259,76 @@ def _extract(source, target):
         bundle.extractall(target)
 
 
+# ----------------------------------------------------------------- 前次进度
+
+CARRY_SCHEMA = "llmplay_progress_v2"
+CARRY_PATH = ("carry", "progress.json")
+DIAGNOSIS_SCHEMA = "llmplay_diagnosis_v1"
+
+
+def carry(source=None):
+    """接上一份 progress.json 开局：只读结论层，不重放、不复验、不碰存档。
+
+    source 默认是包内 `carry/progress.json`（给目录也行）。只信任文件里的记录：
+    已完成的层、用过的卡组与种子、B 层下传的卡组都从这些记录重算，存档本体不需要存在。
+    out 里已经有进度时什么都不做，所以重复 import / 重开会话都安全。
+    """
+    root = output_dir()
+    source = Path(source).expanduser() if source else ROOT.joinpath(*CARRY_PATH)
+    if source.is_dir():
+        source = source / CARRY_PATH[-1]
+    if not source.is_file():
+        return None
+    with _lock(root):
+        if _read_progress(root).get("archives"):
+            return None
+        prior = json.loads(source.read_text(encoding="utf-8"))
+        if prior.get("schema") != CARRY_SCHEMA:
+            raise ValueError("前次进度不是 %s：%s" % (CARRY_SCHEMA, source))
+        known = workflow.plan()["tasks"]
+        entries = [_carry_entry(entry) for entry in prior.get("archives") or []]
+        entries = [entry for entry in entries if entry["task_id"] in known]
+        _restore_diagnoses(root, prior)
+        return _publish(root, entries, budget.session(), run_id=prior.get("run_id"))
+
+
+def _carry_entry(entry) -> dict:
+    """把上一份 progress 的一条记录补成当前判定要用的形状；不做任何核对。"""
+    out = dict(entry)
+    out["seed"] = int(out["seed"])
+    out["cycle"] = int(out.get("cycle") or 1)
+    out["valid"] = bool(out.get("valid", True))
+    out["won"] = bool(out.get("won"))
+    out["robust"] = bool(out.get("robust"))
+    out["abandoned"] = bool(out.get("abandoned"))
+    out["deck"] = list(out.get("deck") or [])
+    out["opening"] = list(out.get("opening") or [])
+    for name in ("archive", "note", "strategy", "deck_reason", "deck_review"):
+        out[name] = out.get(name) or ""
+    for name, value in (("attempt_id", None), ("result", None), ("robustness", None),
+                        ("outcome", {}), ("level", 0), ("workflow_layer", None),
+                        ("manual_patch", False)):
+        out.setdefault(name, value)
+    return out
+
+
+def _restore_diagnoses(root, prior) -> None:
+    """C 层「5 个种子全输」的诊断只写在 detail.C 里；接进度时补回文件，判定才复现。"""
+    detail = (prior.get("detail") or {}).get("C") or {}
+    cycle = int(prior.get("cycle") or 1)
+    for task_id, item in detail.items():
+        report = (item or {}).get("diagnosis") or {}
+        if not (report.get("waves") and str(report.get("missing") or "").strip()):
+            continue
+        folder = root / "diagnosis" / str(cycle)
+        folder.mkdir(parents=True, exist_ok=True)
+        payload = dict(schema=DIAGNOSIS_SCHEMA, task_id=task_id, cycle=cycle,
+                       waves=list(report["waves"]), missing=str(report["missing"]),
+                       note=str(report.get("note") or ""))
+        (folder / (task_id + ".json")).write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
 def resume(source) -> dict:
     """按旧 progress 恢复：只搬存档和结论，不算摘要、不重放、不复验。"""
     root = output_dir()

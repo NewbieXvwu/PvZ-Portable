@@ -12,6 +12,8 @@ A 层（自选卡组）：屋顶 L41–L49 共 9 关 + 白天/夜间/泳池/雾�
 E 层（加压）：每关 1.5 / 2.0 两档出怪倍数，卡组由 B 层下传。
 C 层（指定卡组挑战）：`configs/llmplay3_challenge_decks.json` 的 50 条，
 按关卡分三批（batch 1/2/3），第 N 圈用 `(N-1) % 3 + 1` 批，种子按圈换窗口。
+第 1 圈 5 个种子全输的 `RETRY` 那几套在第 2 圈再给一次机会：任务 id 加 `_retry`、
+进 batch 2、排在种子计划末尾（种子块全新），原任务与其余批次一字不动。
 
 种子
 ----
@@ -130,6 +132,28 @@ def c_tasks(challenges):
     return out, order
 
 
+# 第 1 圈（batch 1）5 个指定种子全输、已写失败诊断的卡组：第 2 圈换新种子再给一次机会。
+RETRY = ("llmplay3_c_l14_d02", "llmplay3_c_l14_d03", "llmplay3_c_l24_d02",
+         "llmplay3_c_l42_d01", "llmplay3_c_l48_d02", "llmplay3_c_l48_d03")
+
+
+def retry_tasks(tasks):
+    """把 RETRY 里的卡组复制成 batch 2 的新任务：同一套卡、同一关，种子块全新。
+
+    不改原任务 id，也不动其它批次，历史存档与 carry 里的记录继续对得上。
+    """
+    by_id = {task["task_id"]: task for task in tasks}
+    out = []
+    for task_id in RETRY:
+        origin = by_id.get(task_id)
+        if origin is None:
+            raise SystemExit("重试任务找不到原卡组：%s" % task_id)
+        out.append(dict(origin, task_id=task_id + "_retry", batch=2, retry_of=task_id,
+                        description="第 2 圈重试（第 1 圈这套指定卡组 5 个种子全输并写了失败诊断）："
+                                    "不能换卡，换 5 个新种子，赢≥2 才算过；再全输就再写一份诊断。"))
+    return out
+
+
 def write_manifest(tasks):
     path = ROOT / "configs" / "human_demo_tasks.json"
     document = json.loads(path.read_text(encoding="utf-8"))
@@ -182,15 +206,18 @@ def main() -> int:
     challenges = json.loads((ROOT / "configs" / "llmplay3_challenge_decks.json").read_text(encoding="utf-8"))
     a, e = a_tasks(scoreboard), e_tasks()
     c, c_order = c_tasks(challenges)
-    tasks = a + e + c
+    retry = retry_tasks(c)
+    tasks = a + e + c + retry
     validate(tasks)
-    order = [task["task_id"] for task in a + e] + c_order
+    # 重试任务排在最后：种子块按 order 序号分配，排在后面才拿得到没用过的新种子。
+    order = [task["task_id"] for task in a + e] + c_order + [task["task_id"] for task in retry]
     if args.check:
-        print(json.dumps(dict(A=len(a), E=len(e), C=len(c), total=len(tasks)), ensure_ascii=False))
+        print(json.dumps(dict(A=len(a), E=len(e), C=len(c), retry=len(retry), total=len(tasks)),
+                         ensure_ascii=False))
         return 0
     write_manifest(tasks)
     plan = write_plan(order)
-    print(json.dumps(dict(A=len(a), E=len(e), C=len(c), total=len(tasks),
+    print(json.dumps(dict(A=len(a), E=len(e), C=len(c), retry=len(retry), total=len(tasks),
                           seeds=len(plan["tasks"]), per_task=PER_TASK), ensure_ascii=False))
     return 0
 

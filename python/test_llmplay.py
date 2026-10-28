@@ -108,7 +108,7 @@ class PackageTest(unittest.TestCase):
         layers = {}
         for task in manifest['tasks']:
             layers[task['layer']] = layers.get(task['layer'], 0) + 1
-        self.assertEqual(layers, dict(A=21, C=50, E=42))
+        self.assertEqual(layers, dict(A=21, C=56, E=42))    # 50 套指定卡组 + 6 个第 2 圈重试
         self.assertEqual(by_id['llmplay3_a_l45_m100']['reference_task_id'], 'demo_roof_45_orig_m100')
         self.assertEqual(by_id['llmplay3_a_l32_m100']['fog_observation'], 'human_v2')
         self.assertEqual(by_id['llmplay3_e_l42_m150']['zombie_count_multiplier'], 1.5)
@@ -116,6 +116,8 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(by_id['llmplay3_e_l42_m200']['pair_task'], 'llmplay3_a_l42_m100')
         self.assertEqual(sorted(by_id['llmplay3_c_l7_hold']['deck']), [0, 1, 2, 3, 5, 27, 32])
         self.assertEqual(by_id['llmplay3_c_l7_hold']['batch'], 1)
+        self.assertEqual(by_id['llmplay3_c_l48_d03_retry']['batch'], 2)
+        self.assertEqual(by_id['llmplay3_c_l48_d03_retry']['retry_of'], 'llmplay3_c_l48_d03')
 
     def test_task_manifest_registers_roof_41_and_46(self):
         """F 层从 L41 扩到 L49：L41 与 L46 这两关原来不在 19 关里。"""

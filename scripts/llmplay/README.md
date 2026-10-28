@@ -8,7 +8,7 @@
 接口只有一层：
 
     import llmplay
-    from llmplay import Game, next_task, progress, resume, diagnose, out_dir, paths
+    from llmplay import Game, next_task, progress, resume, carry, diagnose, out_dir, paths
 
     todo = next_task()      # 领一项：todo["item"] 已为你占位，永远不会返回 None
     item = todo["item"]
@@ -32,8 +32,13 @@
 导出存档或完成稳健性检查时，接口自动更新 `out_dir()` 中的 `progress.json`、`report.md`、
 `budget.json` 和 `out.zip`。原子发布失败时保留上一份。测试可用 `LLMPLAY_OUT` 指定交付目录。
 
-本轮 113 个任务：A 层 21 关（屋顶 L41–L49 + 12 个白天/夜间/泳池/雾夜关）、
-C 层 50 个指定卡组挑战（task129 里老师 ≤2/8 的 46 套 + 4 个留出卡组，按关卡分三批循环）、
+本轮 119 个任务：A 层 21 关（屋顶 L41–L49 + 12 个白天/夜间/泳池/雾夜关）、
+C 层 50 个指定卡组挑战（task129 里老师 ≤2/8 的 46 套 + 4 个留出卡组，按关卡分三批循环）
+加 6 个第 2 圈重试任务（第 1 圈 5 个种子全输的那几套，换新种子再给一次机会）、
 E 层 42 个加压任务（每关 1.5 / 2.0 倍）。每个任务 160 个种子，每圈用 40 个的窗口。
+
+包内 `carry/progress.json` 是上一次会话的进度记录：首次 `import llmplay` 自动接上
+（已完成的层、用过的卡组与种子、B 层下传的卡组都从它重算；不重放、不复验、不读旧存档）。
+out 里已经有进度时不动它。
 
 需要 Python >= 3.10、x86_64 Linux。

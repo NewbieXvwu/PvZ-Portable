@@ -98,6 +98,15 @@ def copy_modules(stage: Path) -> None:
                                                   "make_llmplay2_tasks.py", "make_llmplay3_tasks.py"))
 
 
+def copy_carry(stage: Path, carry: Path | None) -> None:
+    """把前次进度放进 carry/：首次 import 时接口自动接上，不用再传别的文件。"""
+    if carry is None:
+        return
+    target = stage / "carry" / "progress.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(carry, target)
+
+
 def copy_reference(stage: Path) -> None:
     """包里的静态参考表（task144）：阳光、冷却、可见动作时长，全部现解析源码。"""
     from llmplay import reference
@@ -139,7 +148,8 @@ def scan(stage: Path) -> list:
     return hits
 
 
-def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = RESOURCE_DIR) -> Path:
+def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = RESOURCE_DIR,
+          carry: Path | None = None) -> Path:
     """分别打接口包与资源包；使用临时构建树，不能提前删除旧包/输入引擎。"""
     from llmplay.cache_prepare import audit_cache
     from llmplay.resources import PACKAGE
@@ -147,10 +157,11 @@ def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = 
     audit = audit_cache(cache_dir)
     out.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".package-build-", dir=out) as temporary:
-        return _build(executable, out, cache_dir, resource_dir, Path(temporary), audit, PACKAGE)
+        return _build(executable, out, cache_dir, resource_dir, Path(temporary), audit, PACKAGE,
+                      carry=carry)
 
 
-def repack_interface(previous: Path, out: Path) -> list[Path]:
+def repack_interface(previous: Path, out: Path, carry: Path | None = None) -> list[Path]:
     """复用已交付引擎及资源契约，只重打接口，不重建资源、不重复逐关 reset。
 
     previous 是上一包的 stage；大文件留在本机，不进入 git。py7zr 仅构建时需要。
@@ -180,6 +191,7 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
                                                              indent=2) + "\n")
         for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
+        copy_carry(stage, carry)
         copy_reference(stage)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
         hits = scan(stage)
@@ -206,7 +218,7 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
         return volumes
 
 
-def _build(executable, out, cache_dir, resource_dir, temporary, audit, package_name):
+def _build(executable, out, cache_dir, resource_dir, temporary, audit, package_name, carry=None):
     stage = temporary / "stage"
     stage.mkdir()
     copy_modules(stage)
@@ -232,6 +244,7 @@ def _build(executable, out, cache_dir, resource_dir, temporary, audit, package_n
         schema="llmplay_package_v1"), indent=2) + "\n")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "PROMPT.md", stage / "PROMPT.md")
     shutil.copyfile(ROOT / "scripts" / "llmplay" / "README.md", stage / "README.md")
+    copy_carry(stage, carry)
     copy_reference(stage)
     shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
 
@@ -277,17 +290,19 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--executable", type=Path)
     parser.add_argument("--reuse-package", type=Path, help="复用上一包 stage，仅重打接口为7z分卷")
+    parser.add_argument("--carry", type=Path, help="前次 progress.json，打进包内 carry/ 供开局自动接上")
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--cache-dir", type=Path,
                         help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
     args = parser.parse_args()
     if args.reuse_package:
-        repack_interface(args.reuse_package, args.out)
+        repack_interface(args.reuse_package, args.out, carry=args.carry)
         return 0
     if not args.executable or not args.cache_dir:
         parser.error("首次构建需要 --executable 和 --cache-dir")
-    build(args.executable, args.out, resource_dir=args.resource_dir, cache_dir=args.cache_dir)
+    build(args.executable, args.out, resource_dir=args.resource_dir, cache_dir=args.cache_dir,
+          carry=args.carry)
     return 0
 
 
