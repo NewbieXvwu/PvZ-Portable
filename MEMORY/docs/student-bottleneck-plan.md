@@ -1051,3 +1051,4 @@
 - 13:10 task138（groupwidth：可扩容 worker 池）、task140（fixtest：持久化错误有界重试 + conftest 护栏；根因是测试把 sleep 打成 0 后死循环写日志，生产里则是永不放弃，看门狗没机会接管）、task141（coalesce：排队的旧训练作业标 superseded，只训最新一轮）都交付了。主控把它们和 task137 合进 `prodint`（b2b36cc9），撤掉 deploy14l-wait，派 Qoder 做 task142：跑相关测试、写合并部署脚本 `qc_deploy14p.sh`。
 - 13:35 deploy14p（prodint 4beab441）已复制到台式机，start_qc 与现用版本等价（只改了 extra 参数的写法），由 tmux deploy14p-wait 挂到下一次 'student activated/retained'（r29 已训 2/4，约 16:00）。派 task143（Qoder）：deploy15 刷新到 prodint，并核对是否从头训练。
 - 用户带 Mac 外出：Mac 上已没有训练 / 对局进程（task127 的 seed_variance 已结束），Qoder、CodeBuddy 都已打断并通知暂停。台式机从约 13:40 起无响应，修好的 14p（e2f8cc16 版）还没复制过去。
+- 16:35 用户换用 Tailscale：台式机 SSH 改为 `ssh newbiexvwu@100.120.155.85`（22 端口），不再走 UU 远程（127.0.0.1:22222）。13:40–16:30 的“台式机无响应”其实是 UU 隧道卡死，台式机这期间一直在线（已运行 5 天）。修好的 14p（e2f8cc16 版）已复制，prodint 已 fetch；r29 的 4 个候选 16:00 训完，正在挑选，门禁之后 deploy14p 自动执行。
