@@ -398,8 +398,9 @@ def cards(game) -> str:
     obs = game.obs or {}
     from . import cards as card_names
     sun = int(obs.get("sun") or 0)
+    conveyor = obs.get("conveyor_start") == "original"
     lines = []
-    if obs.get("conveyor_start") == "original":
+    if conveyor:
         lines.append("  （传送带：左→右排列，用掉一张后后面的卡整体前移，槽位号会变；"
                      "plant(card=\"名字\") 按名字种，不受影响）")
     for packet in obs.get("packets") or []:
@@ -413,7 +414,12 @@ def cards(game) -> str:
         active = bool(packet.get("active"))
         ready = active and cooldown == 0
         cells = _packet_cells(obs, index)
-        afford = "买得起" if sun >= cost else "阳光不够（差 %d）" % (cost - sun)
+        # 传送带关的卡不花阳光（Board::PlantSeed 对 HasConveyorBeltSeedBank 直接放行），
+        # 卡片上的价钱只是这株植物的市价，说"阳光不够"会把模型劝退。
+        if conveyor:
+            afford = "免费（传送带）"
+        else:
+            afford = "买得起" if sun >= cost else "阳光不够（差 %d）" % (cost - sun)
         if cells:
             sample = "、".join("r%dc%d" % cell for cell in cells[:4])
             where = "可种 %d 格（例 %s）" % (len(cells), sample)

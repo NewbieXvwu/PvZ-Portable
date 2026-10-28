@@ -403,6 +403,7 @@ class VisibleTimerTest(unittest.TestCase):
         text = scene.cards(game)
         self.assertIn('doom_shroom', text)
         self.assertIn('传送带', text)
+        self.assertNotIn('阳光不够', text)
 
 
 class ReferenceTableTest(unittest.TestCase):
