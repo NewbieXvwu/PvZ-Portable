@@ -29,13 +29,12 @@ RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/
 BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
 
 
-@unittest.skipUnless(BINARY.is_file() and (RESOURCE / "main.pak").is_file(), "requires simulator and game resources")
-
 def _build_up(obs: dict) -> dict:
     """A deterministic action stream that puts plants on the board: the first legal placement, else wait."""
     legal = obs["legal_actions"]["plants"]
     return {"type": "plant", **legal[0]} if legal else {"type": "wait", "ticks": 60}
 
+@unittest.skipUnless(BINARY.is_file() and (RESOURCE / "main.pak").is_file(), "requires simulator and game resources")
 class CppRolloutTest(unittest.TestCase):
     def setUp(self):
         torch.set_num_threads(1)
@@ -145,6 +144,47 @@ class CppRolloutTest(unittest.TestCase):
         self.assertGreaterEqual(len(seen["special"]), 3, "explosion countdown never reached the board")
         self.assertGreater(seen["state"], 0, "no chomper/squash countdown frame was captured")
         self.assertGreater(seen["belt"], 0)
+
+    def test_v2timer_cannon_and_fog_unknown(self):
+        export_student(RolloutNet(width=8, obs="v2timer").eval(), self.path)
+        self.env.load_rollout_net(self.path)
+        deck = (0, 2, 6, 8, 16, 47)
+        self.obs, _ = self.env.reset(deck=deck, task=TaskSpec(level=31, seed=424242,
+            profile=profile_for_deck(deck), fog_observation="human_v2",
+            preplanted=((34, 0, 0), (34, 0, 1), (47, 0, 0), (6, 1, 8))))
+        trace = Path(self.directory.name) / "fog_timer.json"
+        self.obs, *_ = self.env.step({"type": "wait", "ticks": 20})
+        board, native = self._timer_channels(trace)
+        np.testing.assert_array_equal(board[-4:].numpy().view(np.uint32), native[-4:].view(np.uint32))
+        self.assertGreater(float(board[-3, 0, 0]), 0, "cannon setup timer was not sampled")
+        self.obs, *_ = self.env.step({"type": "wait", "ticks": 1500})
+        hidden = next(p for p in _frame(self.obs)['v2']['plants'] if p[:3] == [1, 8, 6])
+        self.assertEqual(hidden[3:6], [-1, -1, -1])
+        board, native = self._timer_channels(trace)
+        np.testing.assert_array_equal(board[-4:].numpy().view(np.uint32), native[-4:].view(np.uint32))
+        self.assertEqual(float(board[-4:-2, 1, 8].abs().sum()), 0)
+
+    def test_v2timer_original_conveyor_shift(self):
+        export_student(RolloutNet(width=8, obs="v2timer", packet_head="identity").eval(), self.path)
+        self.env.load_rollout_net(self.path)
+        self.obs, _ = self.env.reset(deck=(), task=TaskSpec(level=10, seed=30000,
+            conveyor_start="original", profile=profile_for_deck(())))
+        trace = Path(self.directory.name) / "conveyor_timer.json"
+        for _ in range(100):
+            packets = [p for p in _frame(self.obs)['packets'] if p[1] >= 0]
+            board, native = self._timer_channels(trace)
+            np.testing.assert_array_equal(board[-4:].numpy().view(np.uint32), native[-4:].view(np.uint32))
+            legal = self.obs['legal_actions']['plants']
+            if len(packets) >= 2 and any(p['packet'] == 0 for p in legal):
+                action = next(p for p in legal if p['packet'] == 0)
+                next_kind = packets[1][1]
+                self.obs, *_ = self.env.step({'type': 'plant', **action})
+                board, native = self._timer_channels(trace)
+                np.testing.assert_array_equal(board[-4:].numpy().view(np.uint32), native[-4:].view(np.uint32))
+                self.assertEqual(float(board[-2, 0, 0]), float(np.float32((next_kind + 1) / 48)))
+                return
+            self.obs, *_ = self.env.step({'type': 'wait', 'ticks': 60})
+        self.fail('no legal conveyor shift was sampled')
 
     def test_v2lite_continuation_features_and_root_history(self):
         self._continuation_features("v2lite")
