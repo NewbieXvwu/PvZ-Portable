@@ -248,6 +248,31 @@ def test_recovery_probe_uses_one_isolated_game(tmp_path, result):
     assert process.call_args.kwargs['timeout'] == q.PROBE_TIMEOUT_SECONDS
 
 
+def test_recovery_probe_supplies_seed_for_production_panel(tmp_path):
+    from test_curriculum_pipeline import setup
+    arguments, _ = setup(tmp_path)
+    arguments.static_value = tmp_path / 'static.pt'
+    source = arguments.promotion_panel.read_bytes()
+    original = json.loads(source)['tasks'][0]
+    assert 'seeds' not in original
+
+    def collect(command, **kwargs):
+        manifest = Path(command[command.index('--manifest') + 1])
+        assert manifest != arguments.promotion_panel
+        task = json.loads(manifest.read_text())['tasks'][0]
+        assert task == dict(original, seeds=[0])
+        assert command[command.index('--seeds') + 1] == '1'
+        assert command[command.index('--workers') + 1] == '1'
+        folder = Path(command[command.index('--out') + 1])
+        folder.mkdir()
+        (folder / 'games.jsonl').write_text('{"won":false}\n')
+        return SimpleNamespace(returncode=0)
+
+    with patch.object(q.subprocess, 'run', side_effect=collect):
+        assert q.GameHealth(arguments).probe()
+    assert arguments.promotion_panel.read_bytes() == source
+
+
 @pytest.mark.parametrize('failure', ['preparation', 'selection', 'pack', 'train', 'evaluation'])
 def test_systemic_background_failures_wait_without_spending_attempts(tmp_path, failure):
     from test_curriculum_pipeline import setup, write_selection, write_evaluation
