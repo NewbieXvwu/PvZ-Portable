@@ -20,6 +20,43 @@ RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/Users/newbiexvwu/Downloads/
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 
 
+class HashlessReplayTest(unittest.TestCase):
+    def replay_fixture(self, root, *, initial_hash=None, end_tick=10, ok=True, outcome_tick=10,
+                       strict=None):
+        meta = dict(operations=1, outcome=dict(final_tick=outcome_tick, final_wave=1, result=0))
+        if initial_hash is not None:
+            meta['initial_state_hash'] = initial_hash
+        (root / 'meta.json').write_text(json.dumps(meta))
+        (root / 'ticks.jsonl').write_text(json.dumps(dict(tick=0, end_tick=end_tick, ok=ok,
+                                             action=dict(type='wait', ticks=10), state_hash='other')) + '\n')
+        start = dict(tick=0, wave=1, result=0, terminal=False, defenses=[])
+        end = {**start, 'tick': 10}
+        env = SimpleNamespace(_last_response={'state_hash': 'current'},
+                              step=lambda action: (end, None, None, None, dict(ok=True, events={})))
+        with patch('human_demo.reset_archive', return_value=start), \
+             patch('human_demo.read_frames', return_value=[dict(operation=1)]), \
+             patch('human_demo.frame_path', return_value=root / 'frames.jsonl'):
+            return replay(env, root, strict_hashes=strict)
+
+    def test_llmplay_without_state_hash_uses_tick_ok_outcome_mode(self):
+        with tempfile.TemporaryDirectory() as directory:
+            _, meta, _ = self.replay_fixture(Path(directory))
+        self.assertIn('tick/ok/outcome only', meta['hash_verification'])
+
+    def test_hashless_replay_still_rejects_tick_ok_and_terminal_drift(self):
+        with tempfile.TemporaryDirectory() as directory:
+            for kwargs in (dict(end_tick=11), dict(ok=False), dict(outcome_tick=11)):
+                with self.subTest(kwargs=kwargs), self.assertRaises(RuntimeError):
+                    self.replay_fixture(Path(directory), **kwargs)
+
+    def test_legacy_state_hash_is_still_enforced_and_explicit_strict_requires_it(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with self.assertRaisesRegex(RuntimeError, 'operation 1'):
+                self.replay_fixture(Path(directory), initial_hash='current')
+            with self.assertRaisesRegex(ValueError, 'initial_state_hash'):
+                self.replay_fixture(Path(directory), strict=True)
+
+
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')
 class HumanDemoTest(unittest.TestCase):
     def test_record_replay_export_and_restore(self):

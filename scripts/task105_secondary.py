@@ -30,6 +30,7 @@ def main():
         plan = json.loads(plan_path.read_text())
         tasks = load_manifest(ROOT / 'configs/human_demo_tasks.json')
         failures = []
+        save(OUT / 'secondary_failures.json', dict(failures=failures))
         for entry in pending(plan, tasks):
             task = entry['task_id']
             # The forward pipeline may have completed this entry since startup.
