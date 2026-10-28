@@ -35,12 +35,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--recipe', type=Path, required=True)
     parser.add_argument('--workers', type=int, choices=(1, 2), default=2)
-    parser.add_argument('--memory-kib', type=int, default=2500000,
-                        help='address-space cap per process, inherited by workers')
+    parser.add_argument('--memory-kib', type=int, default=8000000,
+                        help='virtual address-space cap, including libtorch mappings')
+    parser.add_argument('--data-kib', type=int, default=2000000,
+                        help='data allocation cap per process, inherited by workers')
     parser.add_argument('--progress', type=Path, required=True)
     args = parser.parse_args()
     limit = args.memory_kib * 1024
     resource.setrlimit(resource.RLIMIT_AS, (limit, limit))
+    data_limit = args.data_kib * 1024
+    resource.setrlimit(resource.RLIMIT_DATA, (data_limit, data_limit))
     recipe = load_recipe(args.recipe, 'training')
     if recipe['obs'] != 'v2timer':
         parser.error('--recipe must select v2timer')
