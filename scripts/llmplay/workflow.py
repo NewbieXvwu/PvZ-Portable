@@ -454,7 +454,7 @@ def next_task(document) -> dict:
                 if group["complete"] or not fresh:
                     continue
                 return _item(document, task_id, "new_strategy", seed=fresh[0], deck=group["deck"],
-                             used=sorted(group["strategies"]),
+                             used=sorted(group["strategies"]), done=sorted(group["done"]),
                              note="这套卡组还差 %d 种开局节奏（经济优先 / 防线优先 / 速攻或爆发清场），"
                                   "strategy 必须与已用的不重复"
                                   % (int(req["D"]["strategies"]) - len(group["done"])))
@@ -548,9 +548,9 @@ def check(document, task_id, deck, strategy="") -> None:
             _refuse(document, "这套卡组还没通过 B 层稳健复验，D 层要用过了 B 的卡组")
         if not (strategy or "").strip():
             _refuse(document, "D 层必须在 Game(..., strategy=\"...\") 里声明开局节奏")
-        used = set((item.get("decks") or {}).get(key, {}).get("strategies") or [])
-        if strategy.strip() in used:
-            _refuse(document, "这个打法名在这套卡组上已经用过；D 层要 3 种不同的开局节奏")
+        done = set((document["detail"]["D"].get(task_id, {}).get("items", {}).get(key) or {}).get("done") or [])
+        if strategy.strip() in done:
+            _refuse(document, "这个打法在这套卡组上已经赢够 2 个种子了；D 层要 3 种不同的开局节奏，换一种")
         return
     if layer == "B":
         if key not in set(item.get("passed") or []):
@@ -616,7 +616,7 @@ def report(document) -> str:
     for task_id, item in document["detail"]["D"].items():
         for key, group in item["items"].items():
             lines.append("| D | %s | %s | 打法 %d/%d（%s） |" % (task_id, group["deck"], len(group["done"]),
-                                                              len(document["requirements"]["D"]["strategies"]),
+                                                              int(document["requirements"]["D"]["strategies"]),
                                                               "、".join(group["done"]) or "—"))
     for task_id, item in document["detail"]["E"].items():
         for key, group in item["items"].items():

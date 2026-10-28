@@ -159,6 +159,26 @@ class GateTest(unittest.TestCase):
         workflow.check(document, task_id, cards, "经济优先")
 
 
+    def test_layer_d_allows_the_second_seed_of_the_same_strategy(self):
+        """同一打法赢 1 个种子后必须还能继续用它赢第 2 个，否则 D 层永远做不完。"""
+        entries = [item for item in fill_cycle(1) if item["strategy"] not in ("经济优先", "防线优先", "速攻清场")]
+        document = workflow.derive(entries, "run")
+        self.assertEqual(document["layer"], "D")
+        task_id = A_IDS[0]
+        key = sorted(document["detail"]["B"][task_id]["items"])[0]
+        cards = document["detail"]["B"][task_id]["items"][key]["deck"]
+        seed = seeds_of(task_id, 1)[24]
+        entries = entries + [entry(task_id, seed, cards, strategy="经济优先")]
+        document = workflow.derive(entries, "run")
+        self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], ["思路0"])
+        workflow.check(document, task_id, cards, "经济优先")     # 还差 1 个种子，允许继续
+        entries = entries + [entry(task_id, seed + 1, cards, strategy="经济优先")]
+        document = workflow.derive(entries, "run")
+        self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], ["思路0", "经济优先"])
+        with self.assertRaises(ValueError):
+            workflow.check(document, task_id, cards, "经济优先")   # 已经够 2 胜，换打法
+
+
 class CountTest(unittest.TestCase):
     def test_two_abandons_drop_the_pair(self):
         task_id = A_IDS[0]
