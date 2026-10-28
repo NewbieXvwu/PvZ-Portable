@@ -125,6 +125,13 @@ DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 w
 MIN_PLAUSIBLE_WORKER_BYTES = GIB // 4  # a real python + engine worker is ~0.4-0.9 GiB
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
+# task140: 轮边界重试必须有界。原来失败就 sleep(120) 后重来，永不放弃、也永不退出，
+# 2026-10-28 一次 pytest 用打了补丁的 sleep 跑这条路径，几十秒写出 20 GB 的 curriculum.log。
+ROUND_RETRY_LIMIT = 5                  # 连续失败这么多次就退出，交给看门狗重启
+ROUND_RETRY_SECONDS = 120              # 首次退避，之后翻倍
+ROUND_RETRY_MAX_SECONDS = 1800
+# 这些错误重试多少次都不会自己好：配置/接口写错、字段缺失。等下去只会刷日志。
+ROUND_FATAL_ERRORS = (AttributeError, TypeError, NameError, KeyError, AssertionError)
 
 
 class StateWriteError(OSError):
@@ -2054,6 +2061,7 @@ def print_plan(state: dict, plan: list[dict], changes: list[str]) -> None:
 def collect_rounds(args, state, tasks, names, values, manifests, teacher):
     per_worker = -1
     completed = 0
+    failures = 0
     while completed < args.rounds:
         if args.stop_flag.exists():
             log_line(args.log, 'stop flag seen at round boundary')
@@ -2075,10 +2083,21 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             if not run_round(args, state, plan, changes, per_worker):
                 break
             completed += 1
+            failures = 0        # progress resets the retry budget
+        except ROUND_FATAL_ERRORS as error:
+            log_line(args.log, f'FATAL round boundary: {type(error).__name__}: {error}')
+            raise
         except (Exception, SystemExit) as error:
             # KeyboardInterrupt and process termination are deliberately not caught.
-            log_line(args.log, f'ERROR round boundary paused; retry in 120s: {type(error).__name__}: {error}')
-            time.sleep(120)
+            failures += 1
+            if failures > ROUND_RETRY_LIMIT:
+                log_line(args.log, f'FATAL round boundary failed {failures} times in a row, giving up: '
+                                   f'{type(error).__name__}: {error}')
+                raise
+            delay = min(ROUND_RETRY_SECONDS * 2 ** (failures - 1), ROUND_RETRY_MAX_SECONDS)
+            log_line(args.log, f'ERROR round boundary paused; retry {failures}/{ROUND_RETRY_LIMIT} '
+                               f'in {delay}s: {type(error).__name__}: {error}')
+            time.sleep(delay)
 
 
 def set_gate_version(state: dict, version: int) -> None:
