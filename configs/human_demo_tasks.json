@@ -9962,7 +9962,17 @@
     26,
     5
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/dab6656b879c7c031f4fb32829916541ef200ba8f284a3fba9acfe42ef56a821",
+    "decisions": [
+     947,
+     775
+    ],
+    "index": 0,
+    "future_seed_start": 330000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l38_snow_magnet_v2_m200_s81024007_ae2f2c0b739a0",
