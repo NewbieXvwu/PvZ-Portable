@@ -34,6 +34,22 @@ def main():
             '--dagger-beta', '1', '--verify-samples', '9',
             '--student-candidates', '2', '--out', str(OUT / 'runs' / task['task_id'])
         ], check=True, env=env, cwd=ROOT)
+    results = []
+    for task in json.loads((OUT / 'manifest.json').read_text())['tasks']:
+        games = [json.loads(line) for line in
+                 (OUT / 'runs' / task['task_id'] / 'games.jsonl').read_text().splitlines()]
+        arms = {}
+        for name, arm in [('student', 'fast'), ('teacher', 'fast_search')]:
+            rows = [row for row in games if row['arm'] == arm]
+            arms[name] = dict(wins=sum(row['won'] for row in rows), games=len(rows),
+                              terminal_games=sum(row['terminal'] for row in rows))
+        results.append(dict(task=task, **arms, games=[
+            {key: row[key] for key in ('seed', 'arm', 'won', 'terminal', 'final_wave',
+                                      'final_tick', 'seconds', 'searched', 'overrides')}
+            for row in games]))
+    report = dict(schema_version=1, provenance=provenance, results=results)
+    (OUT / 'measurement.json').write_text(json.dumps(report, indent=2) + '\n')
+    print('Measurement written to ' + str(OUT / 'measurement.json'), flush=True)
 
 
 if __name__ == '__main__':
