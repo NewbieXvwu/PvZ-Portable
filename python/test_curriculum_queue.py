@@ -810,6 +810,69 @@ class TrainingRestartTest(unittest.TestCase):
             self.assertEqual(statuses, {1: 'queued', 2: 'queued', 3: 'done'})   # done 不动
             self.assertEqual(len(pipeline.futures), 2)
 
+    def test_supersede_targets_the_newest_waiting_round(self):
+        # task141：只有"会带来更新数据"的作业才使旧作业作废；isolated / 已 superseded 不算。
+        from curriculum_queue import TrainingPipeline
+        pipeline = TrainingPipeline.__new__(TrainingPipeline)
+        jobs = [dict(round=index, status='queued') for index in (28, 29, 30)]
+        pipeline.state = {'training_jobs': jobs}
+        self.assertEqual([pipeline._superseded_by(job) for job in jobs], [30, 30, None])
+        pipeline.state['training_jobs'].append(dict(round=31, status='failed', isolated=True))
+        pipeline.state['training_jobs'].append(dict(round=32, status='superseded'))
+        self.assertEqual(pipeline._superseded_by(jobs[0]), 30)
+        pipeline.state['training_jobs'].append(dict(round=31, status='failed', attempts=1))
+        self.assertEqual(pipeline._superseded_by(jobs[0]), 31)   # 会重试的新作业仍然算
+
+    def test_backlog_trains_only_the_newest_round(self):
+        # task141：队列 [28, 29, 30] 时执行器只训 30；28/29 标 superseded，记录被谁取代，
+        # 不训练不过门禁；重启后两者保持 superseded，不会被重新排队。
+        from curriculum_queue import GATE_VERSION, TrainingPipeline
+        with tempfile.TemporaryDirectory() as tmp:
+            jobs = [self._job(tmp, 'queued', index) for index in (28, 29, 30)]
+            for job in jobs:
+                job['seed_block'] = [1000, 1008]
+            state = {'training_jobs': jobs}
+            args = SimpleNamespace(state=Path(tmp) / 'state.json', log=Path(tmp) / 'log',
+                                   python=Path(sys.executable), seed_ledger=Path(tmp) / 'ledger.json',
+                                   gate_version=GATE_VERSION)
+            commands = []
+            def fake_command(self, command, log):
+                commands.append('pack' if command == ['pack'] else 'train')
+                return 0
+            def fake_evaluate(self, job):
+                return {'promotion': dict(version=GATE_VERSION,
+                                          policy=curriculum_queue.promotion_policy(GATE_VERSION),
+                                          approved=False, contract={},
+                                          reasons=['evaluation_error: stub'])}
+            with mock.patch.object(TrainingPipeline, '_plan_build', lambda self, recipe: None), \
+                    mock.patch.object(TrainingPipeline, '_admit', lambda self: None), \
+                    mock.patch.object(TrainingPipeline, '_prepare_corpus', lambda self, labels: None), \
+                    mock.patch.object(TrainingPipeline, '_command', fake_command), \
+                    mock.patch.object(TrainingPipeline, '_evaluate', fake_evaluate), \
+                    mock.patch.object(TrainingPipeline, 'evaluation_contract', lambda self, job: {}), \
+                    mock.patch.object(curriculum_queue, 'load_recipe',
+                                      lambda path, kind=None: {'labels': ['x'], 'data': '/tmp/frames'}), \
+                    mock.patch.object(curriculum_queue, 'pack_command', lambda args, labels: ['pack']):
+                pipeline = TrainingPipeline(args, state)
+                pipeline.executor.shutdown(wait=True)
+                pipeline.poll()
+                statuses = {job['round']: job['status'] for job in state['training_jobs']}
+                self.assertEqual(statuses, {28: 'superseded', 29: 'superseded', 30: 'done'})
+                self.assertEqual({job['round']: job.get('superseded_by')
+                                  for job in state['training_jobs'][:2]}, {28: 30, 29: 30})
+                self.assertEqual(commands, ['pack', 'train'])       # 只有第 30 轮真的训练
+                log = (Path(tmp) / 'log').read_text()
+                self.assertEqual(log.count('superseded by round 30'), 2)
+                self.assertFalse((Path(tmp) / 'ledger.json').exists())   # 种子账本未被写入
+                saved = json.loads((Path(tmp) / 'state.json').read_text())
+                self.assertEqual([job['status'] for job in saved['training_jobs']],
+                                 ['superseded', 'superseded', 'done'])
+                restarted = TrainingPipeline(args, saved)           # 重启：不复活旧作业
+                restarted.executor.shutdown(wait=True)
+                self.assertEqual(restarted.futures, [])
+                self.assertEqual([job['status'] for job in saved['training_jobs']],
+                                 ['superseded', 'superseded', 'done'])
+
     def test_run_reuses_trained_json_without_retraining(self):
         # 训练完成（trained.json 已写）、评估前被杀：重启后凭 sha 校验复用报告，直接进评估，
         # _admit/_command（重训入口）被调到即失败。
