@@ -132,10 +132,62 @@ ROUND_RETRY_SECONDS = 120              # 首次退避，之后翻倍
 ROUND_RETRY_MAX_SECONDS = 1800
 # 这些错误重试多少次都不会自己好：配置/接口写错、字段缺失。等下去只会刷日志。
 ROUND_FATAL_ERRORS = (AttributeError, TypeError, NameError, KeyError, AssertionError)
+ZERO_GAME_GROUP_LIMIT = 3
+GAME_RECOVERY_SECONDS = 180
 
 
 class StateWriteError(OSError):
     """No new games may start until the seed reservation is durable."""
+
+
+class GameHealth:
+    def __init__(self, args):
+        self.args = args
+        self.paused = threading.Event()
+        self.closed = threading.Event()
+        self.probe_lock = threading.Lock()
+        args.game_health = self
+
+    def pause(self, reason):
+        if not self.paused.is_set():
+            self.paused.set()
+            log_line(self.args.log, f'systemic game failure: collection/background paused at group boundary; '
+                                    f'one-game probe every {GAME_RECOVERY_SECONDS}s: {reason}')
+
+    def probe(self):
+        args = self.args
+        with tempfile.TemporaryDirectory(prefix='pvz-recovery-', dir=args.state.parent) as temporary:
+            folder = Path(temporary)
+            task = read_json(args.promotion_panel)['tasks'][0]
+            command = command_for(args, args.promotion_panel, task['task_id'], 0, 1,
+                                  'recovery', workers=1, frames=folder / 'frames', out=folder)
+            result = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL, timeout=PROBE_TIMEOUT_SECONDS)
+            if result.returncode:
+                return False
+            rows = (folder / 'recovery_1/games.jsonl').read_text().splitlines()
+            return len(rows) == 1 and type(json.loads(rows[0]).get('won')) is bool
+
+    def wait(self):
+        with self.probe_lock:
+            while self.paused.is_set():
+                if self.closed.is_set() or getattr(self.args, 'stop_flag', STOP_FLAG).exists():
+                    return False
+                if self.closed.wait(GAME_RECOVERY_SECONDS):
+                    return False
+                if getattr(self.args, 'stop_flag', STOP_FLAG).exists():
+                    return False
+                try:
+                    recovered = self.probe()
+                except (OSError, ValueError, subprocess.SubprocessError) as error:
+                    log_line(self.args.log, f'one-game recovery probe failed: {error}')
+                    continue
+                if recovered:
+                    self.paused.clear()
+                    log_line(self.args.log, 'one-game recovery probe succeeded; collection/background resumed')
+                else:
+                    log_line(self.args.log, 'one-game recovery probe failed; system remains paused')
+        return not self.closed.is_set()
 
 
 def retry_io(operation):
@@ -1852,7 +1904,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     reserved = 24 * len(specialists)
     if reserved > budget:
         raise ValueError('round budget cannot cover opening specialists')
-    completed = state.get('completed_groups', []) if specialists else []
+    completed = [group for group in state.get('completed_groups', [])
+                 if group.get('status', 'done') == 'done']
     completed_betas = {base: {group.get('beta') for group in completed if group['base'] == base}
                        for base in specialists}
     special_picks = [(base, 1.0, 12 * (2 - len(completed_betas[base])))
@@ -2039,17 +2092,25 @@ def pipeline_action(args, action):
         save_state(args.state, pipeline.state)
 
 
-def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
+def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool | None:
     """Group failures do not stop other cells; offsets are durable before collection."""
     round_index = state['round'] + 1
+    health = getattr(args, 'game_health', None) or GameHealth(args)
+    if state.get('zero_game_groups', 0) >= ZERO_GAME_GROUP_LIMIT:
+        health.pause('consecutive groups produced zero valid games before restart')
     for item in plan:
+        if not health.wait():
+            return False
         pipeline_action(args, 'poll')
+        if not health.wait():
+            return False
         if getattr(args, 'stop_flag', STOP_FLAG).exists():
             log_line(args.log, f'round {round_index}: stop flag seen before {item["label"]}; stopping at group boundary')
             return False
         try:
             _run_group(args, state, item, round_index, per_worker)
             item['status'] = 'done'
+            state['zero_game_groups'] = 0
         except StateWriteError:
             raise
         except (Exception, SystemExit) as error:
@@ -2058,8 +2119,17 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             log_line(args.log, f'round {round_index} {item["label"]}: group skipped: {item["error"]}')
             if item.get('valid_games', 0) and item['base'] in state['cells']:
                 state['cells'][item['base']]['last_round'] = round_index
+            state['zero_game_groups'] = (state.get('zero_game_groups', 0) + 1
+                                         if item.get('valid_games') == 0 else 0)
         state.setdefault('completed_groups', []).append(dict(item))
         save_state(args.state, state)
+        if state['zero_game_groups'] >= ZERO_GAME_GROUP_LIMIT:
+            health.pause(f'{state["zero_game_groups"]} consecutive groups produced zero valid games')
+            if not health.wait():
+                return False
+            state['zero_game_groups'] = 0
+            save_state(args.state, state)
+            return None
     state['round'] = round_index
     groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
     state['log'].append(dict(round=round_index, groups=groups, changes=changes))
@@ -2111,8 +2181,11 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                 if args.stop_flag.exists():
                     break
                 per_worker = startup_worker_estimate(args, plan)
-            if not run_round(args, state, plan, changes, per_worker):
+            finished = run_round(args, state, plan, changes, per_worker)
+            if finished is False:
                 break
+            if finished is None:
+                continue
             completed += 1
             failures = 0        # progress resets the retry budget
         except ROUND_FATAL_ERRORS as error:

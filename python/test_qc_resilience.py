@@ -165,6 +165,89 @@ def test_zero_valid_round_does_not_enqueue_or_mark_cells_completed(tmp_path):
     assert all(call.args[1] != 'enqueue' for call in background.call_args_list)
 
 
+def test_systemic_zero_groups_pause_and_resume_same_round_with_fresh_seeds(tmp_path):
+    arguments, current = args(tmp_path), state()
+    arguments.round_games = 8
+    current['cells'] = {name: cell() for name in ('a', 'b', 'c', 'd')}
+    tasks = {name: dict(seeds=list(range(20))) for name in current['cells']}
+    manifests = {name: Path('/manifest') for name in tasks}
+    health = q.GameHealth(arguments)
+    seen, probes = [], []
+
+    def collect(command, **kwargs):
+        task, offset, games, label = command
+        seen.append((task, offset))
+        if len(seen) > 3:
+            folder = arguments.out / f'{label}_{games}'
+            folder.mkdir(parents=True)
+            (folder / 'games.jsonl').write_text('{"won":false}\n' * games)
+        return SimpleNamespace(returncode=1 if len(seen) <= 3 else 0)
+
+    def probe():
+        assert len(seen) == 3
+        assert current['round'] == 0
+        assert all(entry['last_round'] == 0 for entry in current['cells'].values())
+        probes.append(1)
+        return len(probes) == 2
+
+    with patch.object(q, 'command_for', side_effect=lambda *pos, **kw: list(pos[2:6])), \
+         patch.object(q.subprocess, 'run', side_effect=collect), \
+         patch.object(q, 'mem_available_bytes', return_value=None), \
+         patch.object(health, 'probe', side_effect=probe), \
+         patch.object(health.closed, 'wait', return_value=False) as delay, \
+         patch.object(q, 'pipeline_action') as background:
+        q.collect_rounds(arguments, current, tasks, {}, [1.], manifests, {})
+    assert probes == [1, 1]
+    assert [call.args[0] for call in delay.call_args_list] == [180, 180]
+    assert len(seen) == 7 and len(set(seen)) == 7
+    assert current['round'] == 1
+    assert all(entry['last_round'] == 1 for entry in current['cells'].values())
+    assert sum(call.args[1] == 'enqueue' for call in background.call_args_list) == 1
+    assert 'round 1 done: 4 groups, 8 games' in arguments.log.read_text()
+
+
+def test_systemic_pause_survives_restart_and_honors_stop(tmp_path):
+    arguments, current = args(tmp_path), state()
+    current['zero_game_groups'] = 3
+    health = q.GameHealth(arguments)
+
+    def stop(seconds):
+        arguments.stop_flag.touch()
+        return False
+
+    with patch.object(health.closed, 'wait', side_effect=stop), \
+         patch.object(health, 'probe') as probe, \
+         patch.object(q, '_run_group') as collect:
+        assert q.run_round(arguments, current, plan(), []) is False
+    probe.assert_not_called()
+    collect.assert_not_called()
+    assert current['round'] == 0
+
+
+@pytest.mark.parametrize('result', ['valid', 'nonzero', 'empty', 'invalid'])
+def test_recovery_probe_uses_one_isolated_game(tmp_path, result):
+    arguments = args(tmp_path)
+    arguments.promotion_panel = tmp_path / 'panel.json'
+    arguments.promotion_panel.write_text('{"tasks":[{"task_id":"probe"}]}')
+    health = q.GameHealth(arguments)
+
+    def command(*pos, **kwargs):
+        assert pos[2:6] == ('probe', 0, 1, 'recovery')
+        assert kwargs['workers'] == 1
+        assert kwargs['out'] != arguments.out
+        folder = kwargs['out'] / 'recovery_1'
+        folder.mkdir()
+        (folder / 'games.jsonl').write_text(
+            '' if result == 'empty' else '{"won":null}\n' if result == 'invalid' else '{"won":false}\n')
+        return ['probe']
+
+    with patch.object(q, 'command_for', side_effect=command), \
+         patch.object(q.subprocess, 'run', return_value=SimpleNamespace(
+             returncode=1 if result == 'nonzero' else 0)) as process:
+        assert health.probe() is (result == 'valid')
+    assert process.call_args.kwargs['timeout'] == q.PROBE_TIMEOUT_SECONDS
+
+
 @pytest.mark.parametrize('legacy_label', [False, True])
 def test_restart_after_partial_group_isolates_new_seed_results(tmp_path, legacy_label):
     arguments, current = args(tmp_path), state()
