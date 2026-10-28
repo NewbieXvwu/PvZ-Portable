@@ -62,6 +62,21 @@ def fake_games(args, command, **kwargs):
     return SimpleNamespace(returncode=0)
 
 
+def test_systemic_unit_failure_keeps_engine_diagnostics(tmp_path):
+    args = arguments(tmp_path)
+    task = dict(task_id='failed', seeds=[1])
+    marker = 'Inconsistency detected by ld.so: Assertion failed'
+
+    def crash(command, **kwargs):
+        kwargs['stdout'].write(marker + '\n')
+        return SimpleNamespace(returncode=127)
+
+    with (tmp_path / 'lock').open('w') as lock, \
+         patch.object(gate.subprocess, 'run', side_effect=crash):
+        with pytest.raises(RuntimeError, match='Inconsistency detected by ld.so'):
+            gate._run_unit(args, lock, args.source_panel, task, 'candidate', args.candidate)
+
+
 def test_v5_roof_panel_issues_resumes_and_records_heldout_collapse(tmp_path):
     args = arguments(tmp_path)
     args.gate_version = 5

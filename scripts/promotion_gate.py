@@ -236,12 +236,17 @@ def _run_unit(args, lock, manifest_path, task, side, model):
         complete = len((folder / 'games.jsonl').read_text().splitlines()) == len(task['seeds'])
     if not complete:
         with (folder / 'run.log').open('a') as log:
+            offset = log.tell()
             result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
                                     pass_fds=(lock.fileno(),),
                                     env={**os.environ, 'CUDA_VISIBLE_DEVICES': '',
                                          'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
         if result.returncode:
-            raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; see {folder / "run.log"}')
+            with (folder / 'run.log').open('rb') as log:
+                log.seek(max(offset, (folder / 'run.log').stat().st_size - 8192))
+                diagnostic = log.read().decode('utf-8', errors='replace')
+            raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; '
+                               f'see {folder / "run.log"}\n{diagnostic}')
     rows = _task_rows(folder, task, model, args)
     print(f'{side} {task["task_id"]}: {sum(r["won"] for r in rows.values())}/{len(task["seeds"])}', flush=True)
     return side, task['task_id'], rows

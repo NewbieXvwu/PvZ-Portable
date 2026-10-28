@@ -140,6 +140,16 @@ class StateWriteError(OSError):
     """No new games may start until the seed reservation is durable."""
 
 
+class GameRecoveryStopped(RuntimeError):
+    """A system-failed snapshot stays resumable when the controller stops."""
+
+
+def systemic_game_failure(error):
+    return isinstance(error, GameRecoveryStopped) or any(marker in str(error) for marker in (
+        'Inconsistency detected by ld.so', 'error while loading shared libraries',
+        'PvZ-Portable exited unexpectedly with code'))
+
+
 class GameHealth:
     def __init__(self, args):
         self.args = args
@@ -151,6 +161,7 @@ class GameHealth:
     def pause(self, reason):
         if not self.paused.is_set():
             self.paused.set()
+            reason = ' '.join(str(reason).splitlines())
             log_line(self.args.log, f'systemic game failure: collection/background paused at group boundary; '
                                     f'one-game probe every {GAME_RECOVERY_SECONDS}s: {reason}')
 
@@ -187,7 +198,7 @@ class GameHealth:
                     log_line(self.args.log, 'one-game recovery probe succeeded; collection/background resumed')
                 else:
                     log_line(self.args.log, 'one-game recovery probe failed; system remains paused')
-        return not self.closed.is_set()
+        return True
 
 
 def retry_io(operation):
@@ -1041,6 +1052,7 @@ class TrainingPipeline:
 
     def __init__(self, args, state):
         self.args, self.state = args, state
+        self.game_health = getattr(args, 'game_health', None) or GameHealth(args)
         self.directory = args.state.parent / (args.state.stem + '.pipeline')
         retry_io(self.directory.mkdir)(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
@@ -1097,6 +1109,8 @@ class TrainingPipeline:
             args.rollout_policy = model
         for job in state.setdefault('training_jobs', []):
             if job in queued:
+                if job['status'] == 'paused':
+                    self.game_health.pause(job.get('error', 'saved background system failure'))
                 job['status'] = 'queued'
                 try:
                     self._seeded(job)
@@ -1123,7 +1137,7 @@ class TrainingPipeline:
             return None
         newer = [saved['round'] for saved in list(getattr(self, 'state', {}).get('training_jobs', []))
                  if type(saved.get('round')) is int and saved['round'] > round_index
-                 and (saved.get('status') in ('queued', 'running', 'done')
+                 and (saved.get('status') in ('queued', 'running', 'done', 'paused')
                       or (saved.get('status') == 'failed' and not saved.get('isolated')
                           and saved.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS))]
         return max(newer, default=None)
@@ -1192,6 +1206,8 @@ class TrainingPipeline:
             if not valid_certificate(decision, frozen, out):
                 raise ValueError('promotion certificate does not match the registered comparison')
         except Exception as error:
+            if systemic_game_failure(error):
+                raise
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
             decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
@@ -1425,7 +1441,11 @@ class TrainingPipeline:
                 target.symlink_to(source, target_is_directory=True)
 
     def _command(self, command, log):
+        health = getattr(self.args, 'game_health', None)
+        if health is not None and not health.wait():
+            raise GameRecoveryStopped('background stopped while waiting for game recovery')
         with log.open('a') as output:
+            offset = output.tell()
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                        pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             with self.lock:
@@ -1446,7 +1466,10 @@ class TrainingPipeline:
                     self.processes.pop(process.pid, None)
                     self.process = next(iter(self.processes.values()), None)
         if code:
-            raise RuntimeError(f'exit {code}; see {log}')
+            with log.open('rb') as output:
+                output.seek(max(offset, log.stat().st_size - 8192))
+                diagnostic = output.read().decode('utf-8', errors='replace')
+            raise RuntimeError(f'exit {code}; see {log}\n{diagnostic}')
         return peak
 
     def _admit(self):
@@ -1507,6 +1530,16 @@ class TrainingPipeline:
             time.sleep(1)
 
     def _run(self, job):
+        while self.game_health.wait():
+            try:
+                return self._run_snapshot(job)
+            except (Exception, SystemExit) as error:
+                if not systemic_game_failure(error):
+                    raise
+                self.game_health.pause(str(error))
+        raise GameRecoveryStopped('background stopped while waiting for game recovery')
+
+    def _run_snapshot(self, job):
         recipe_path = Path(job['recipe'])
         folder = recipe_path.parent
         done = folder / 'complete.json'
@@ -1656,6 +1689,8 @@ class TrainingPipeline:
                                      model_sha256=file_sha(model), recipe_sha256=file_sha(path))
                     self._marker(marker, candidate)
                 except Exception as error:
+                    if systemic_game_failure(error):
+                        raise
                     candidate.update(status='failed', train_finished=time.time(), error=str(error))
                     self._marker(directory / 'failed.json', candidate)
                     log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
@@ -1781,6 +1816,12 @@ class TrainingPipeline:
         try:
             report = future.result()
         except BaseException as error:
+            if systemic_game_failure(error):
+                job.update(status='paused', error=str(error))
+                self.failed = False
+                save_state(self.args.state, self.state)
+                log_line(self.args.log, f'background round {job["round"]} paused; retry budget retained: {error}')
+                return
             # task70 B7: a background failure must not kill collection. Record it,
             # retry once; task98 isolates the snapshot after its second failure.
             job['status'] = 'failed'
@@ -1841,6 +1882,9 @@ class TrainingPipeline:
         save_state(self.args.state, self.state)
 
     def close(self):
+        health = getattr(self.args, 'game_health', None)
+        if health is not None:
+            health.closed.set()
         # poll may schedule a stale comparison again; drain it before closing the executor.
         # B7: failed jobs stay failed here (no retry), so only wait on queued ones.
         try:
