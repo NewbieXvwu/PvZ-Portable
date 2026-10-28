@@ -225,7 +225,7 @@ class Game:
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
                  deck=None, reason="", strategy="", deck_review="", abandon_reason=None, attempt_id=None,
                  robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False,
-                 _gate: bool = True):
+                 _gate: bool = True, cycle=None, workflow_layer=None):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
@@ -241,6 +241,9 @@ class Game:
             raise ValueError("自选卡组请填写 reason 选卡理由")
         self.spec, self.deck, self.seed = task_spec(self.task_definition, seed, deck)
         self.deck_reason, self.strategy, self.deck_review = reason, strategy, deck_review
+        self._declared_strategy = strategy
+        self.cycle = int(cycle or 1)
+        self.workflow_layer = workflow_layer or self.task_definition.get("layer", "A")
         self.abandon_reason = abandon_reason
         self.attempt_id = attempt_id or uuid.uuid4().hex
         self.manifest = Path(manifest) if manifest else DEFAULT_MANIFEST
@@ -280,7 +283,9 @@ class Game:
         # task139：层序 / 卡组差异 / 打法重复的硬把关。稳健性试打与读档恢复不受限。
         if _gate and not self._internal:
             from .delivery import check
-            check(self.task_id, self.deck, self.strategy)
+            context = check(self.task_id, self.deck, self.strategy, self.seed)
+            self.cycle = context.get("cycle", self.cycle)
+            self.workflow_layer = context.get("workflow_layer", self.workflow_layer)
         self.session = budget.session()
         self.budget_key = self.task_id
         self.session.register_task(self.budget_key, self.spec.level)
@@ -677,7 +682,7 @@ class Game:
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
                     tick=self.tick, note=self.note, manual_patch=self.manual_patch,
-                    run_id=self.run_id, _gate=False,
+                    run_id=self.run_id, _gate=False, cycle=self.cycle, workflow_layer=self.workflow_layer,
                     robustness=copy.deepcopy(self.robustness_report))
         self.session.note_branch(self.budget_key, +1)
         child._is_branch = True
@@ -909,7 +914,7 @@ class Game:
 
     def log(self) -> dict:
         return dict(schema=SCHEMA, task_id=self.task_id, seed=self.seed, deck=self.deck,
-                    run_id=self.run_id,
+                    run_id=self.run_id, cycle=self.cycle, workflow_layer=self.workflow_layer,
                     note=self.note, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
                     abandon_reason=self.abandon_reason, attempt_id=self.attempt_id, tick=self.tick, ops=self.ops,
                     frames=self.frames, totals=self.totals,
@@ -935,7 +940,7 @@ class Game:
                    note=doc.get("note", ""), robustness=doc.get("robustness"),
                    deck=doc.get("deck"), reason=doc.get("reason", ""), strategy=doc.get("strategy", ""),
                    deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"), attempt_id=doc.get("attempt_id"),
-                   run_id=doc.get("run_id"),
+                   run_id=doc.get("run_id"), cycle=doc.get("cycle"), workflow_layer=doc.get("workflow_layer"),
                    manual_patch=bool(doc.get("manual_patch", False)), _gate=False, **kwargs)
 
     @classmethod
@@ -950,7 +955,8 @@ class Game:
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
                    deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
-                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"), _gate=False, **kwargs)
+                   deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"),
+                   cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"), _gate=False, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
@@ -967,10 +973,15 @@ class Game:
         """
         self._require_primary("export_archive()")
         # task139：缺思路 / 缺评价的局不能进下一层，所以在写盘前就拦下来（不用重打）。
-        from .delivery import archive_requirements, current_cycle
+        from itertools import islice
+        from .delivery import archive_requirements
+        opening = list(islice((self.deck[op["action"]["packet"]] for op in self.ops
+                               if op.get("ok") and op["action"].get("type") == "plant"), 6))
         archive_requirements(self.task_id, self.strategy, self.deck_review,
-                             abandoned=self.abandon_reason is not None)
-        cycle = current_cycle()
+                             abandoned=self.abandon_reason is not None, layer=self.workflow_layer,
+                             opening=opening, cycle=self.cycle, deck=self.deck)
+        if self.workflow_layer == "D" and self.strategy != self._declared_strategy:
+            raise ValueError("D 层打法在开局时固定，不能在导出时改名")
         self._start()
         assert self.env is not None and self.obs is not None and self.initial_obs is not None
         target = Path(directory)
@@ -989,7 +1000,8 @@ class Game:
         result = int(self.obs.get("result") or 0)
         roster = (self.initial_obs.get("loadout_context") or {}).get("zombie_roster")
         meta = dict(
-            schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE, cycle=int(cycle),
+            schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE, cycle=self.cycle,
+            workflow_layer=self.workflow_layer, opening=opening,
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
             deck_reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,

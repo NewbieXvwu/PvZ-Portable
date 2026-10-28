@@ -81,17 +81,16 @@ def _smoke(out: Path) -> int:
 
     tasks = load_tasks()
     print("任务数：%d（A 层 21、C 层 50、E 层 42）" % len(tasks))
-    item = next_task()
-    print("当前该做：%s" % json.dumps(item, ensure_ascii=False))
+    todo = next_task()
+    print("当前该做：%s" % json.dumps(todo, ensure_ascii=False))
+    item = todo["main"] if todo["main"]["task_id"] else todo["challenge"]
     task_id, seed = item["task_id"], item["seed"]
     reference = (tasks[task_id].get("reference_deck") or [])
     deck = list(reference) if len(reference) >= 6 else [1, 33, 39, 44, 15, 3]
     if task_id.startswith("llmplay3_c_"):
         deck = list(tasks[task_id]["deck"])
 
-    # 跳层必须被拒绝：此时 C 层的指定卡组任务一律不许建局。
-    challenge = next(task for task in tasks.values()
-                     if task.get("layer") == "C" and int(task.get("batch") or 1) == 1)
+    challenge = next(task for task in tasks.values() if task.get("layer") == "E")
     try:
         Game(challenge["task_id"], seed=challenge["seeds"][0], deck=challenge["deck"])
         print("SELFCHECK FAILED: 跳层没有被拒绝")

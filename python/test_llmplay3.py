@@ -7,6 +7,7 @@ import os
 import sys
 import tempfile
 import unittest
+import uuid
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -31,10 +32,12 @@ def deck(index):
 
 
 def entry(task_id, seed, cards, *, cycle=1, won=True, robust=False, abandoned=False,
-          strategy="推进", review="好用", reason="试卡"):
+          strategy="推进", review="好用", reason="试卡", layer="A", opening=None):
     return dict(task_id=task_id, seed=seed, deck=list(cards), cycle=cycle, won=won, robust=robust,
                 abandoned=abandoned, strategy=strategy, deck_review=review, deck_reason=reason,
-                valid=True, archive="archives/x%d" % seed, robustness={}, outcome=dict(final_tick=1))
+                workflow_layer=layer, opening=opening or [], result=0 if abandoned else 1 if won else 2,
+                attempt_id=uuid.uuid4().hex, valid=True, archive="archives/x%d" % seed,
+                robustness={}, outcome=dict(final_tick=1, final_wave=8))
 
 
 def seeds_of(task_id, cycle=1, count=40, run_id="run"):
@@ -56,18 +59,15 @@ def fill_cycle(cycle, *, skip_layer=None, robust=True):
         if skip_layer == "B" and robust:
             continue
         for index, cards in enumerate(chosen[:2]):
-            for offset in (0, 1):
-                entries.append(entry(task_id, pool[20 + index * 4 + offset], cards, cycle=cycle,
-                                     strategy="思路%d" % index))
-        for index, cards in enumerate(chosen[:2]):
-            for name in ("经济优先", "防线优先", "速攻清场"):
+            for style, name in enumerate(workflow.STRATEGIES):
                 for offset in (0, 1):
-                    entries.append(entry(task_id, pool[24 + index * 8 + len(name) + offset], cards,
-                                         cycle=cycle, strategy=name))
+                    entries.append(entry(task_id, pool[8 + index * 6 + style * 2 + offset], cards,
+                                         cycle=cycle, strategy=name, layer="D", opening=[style, 1, style]))
             for multiplier, tag in ((1.5, "m150"), (2.0, "m200")):
                 e_task = "llmplay3_e_l%d_%s" % (TASKS[task_id]["level"], tag)
                 for offset in (0, 1):
-                    entries.append(entry(e_task, pool[32 + offset], cards, cycle=cycle, strategy=name))
+                    entries.append(entry(e_task, seeds_of(e_task, cycle)[index * 2 + offset], cards,
+                                         cycle=cycle, strategy=name, layer="E"))
     batch = workflow.batch_for_cycle(cycle)
     for task_id, task in TASKS.items():
         if task.get("layer") != "C" or int(task.get("batch") or 1) != batch:
@@ -83,16 +83,19 @@ class CycleOrderTest(unittest.TestCase):
         document = workflow.derive([], "run")
         self.assertEqual((document["cycle"], document["layer"]), (1, "A"))
         self.assertFalse(document["complete"])
-        item = workflow.next_task(document)
+        todo = workflow.next_task(document)
+        item = todo["main"]
         self.assertEqual(item["action"], "new_deck")
         self.assertEqual(item["task_id"], A_IDS[0])
+        self.assertEqual(todo["challenge"]["layer"], "C")
+        self.assertEqual(todo["challenge_quota"]["total"], len(document["detail"]["C"]))
 
     def test_next_task_never_returns_none_and_wraps_into_next_cycle(self):
         document = workflow.derive(fill_cycle(1), "run")
         self.assertEqual(document["cycles"]["1"]["complete"], True)
         self.assertEqual(document["cycle"], 2)
         self.assertEqual(document["layer"], "A")
-        item = workflow.next_task(document)
+        item = workflow.next_task(document)["main"]
         self.assertIsNotNone(item)
         self.assertEqual(item["cycle"], 2)
 
@@ -106,18 +109,33 @@ class CycleOrderTest(unittest.TestCase):
         entries = fill_cycle(1, robust=False)
         document = workflow.derive(entries, "run")
         self.assertEqual(document["layer"], "B")
-        item = workflow.next_task(document)
+        item = workflow.next_task(document)["main"]
         self.assertEqual(item["action"], "improve_robustness")
         self.assertTrue(item["archive"])
+
+    def test_main_can_finish_but_c_quota_blocks_next_cycle(self):
+        entries = [item for item in fill_cycle(1) if TASKS[item["task_id"]]["layer"] != "C"]
+        document = workflow.derive(entries, "run")
+        self.assertEqual(document["cycle"], 1)
+        self.assertTrue(all(document["layers"][layer]["complete"] for layer in workflow.MAIN_LAYERS))
+        todo = workflow.next_task(document)
+        self.assertEqual(todo["main"]["action"], "wait_challenge")
+        self.assertEqual(todo["challenge"]["action"], "play")
+
+    def test_c_does_not_block_d_or_e(self):
+        entries = [item for item in fill_cycle(1) if TASKS[item["task_id"]]["layer"] != "C"
+                   and item["workflow_layer"] != "D"]
+        self.assertEqual(workflow.derive(entries, "run")["layer"], "D")
+        entries = [item for item in fill_cycle(1) if TASKS[item["task_id"]]["layer"] not in ("C", "E")]
+        self.assertEqual(workflow.derive(entries, "run")["layer"], "E")
 
 
 class GateTest(unittest.TestCase):
     def test_later_layers_are_refused_while_layer_a_is_open(self):
         document = workflow.derive([], "run")
         challenge = next(task for task in TASKS.values() if task.get("layer") == "C")
-        with self.assertRaises(ValueError) as caught:
-            workflow.check(document, challenge["task_id"], challenge["deck"])
-        self.assertIn("当前", str(caught.exception))
+        context = workflow.check(document, challenge["task_id"], challenge["deck"])
+        self.assertEqual(context, dict(cycle=1, workflow_layer="C"))
         with self.assertRaises(ValueError):
             workflow.check(document, "llmplay3_e_l42_m150", deck(0))
 
@@ -127,6 +145,9 @@ class GateTest(unittest.TestCase):
         document = workflow.derive([entry(task_id, seed, deck(0))], "run")
         near = list(deck(0))
         near[0] = near[0] + 100
+        with self.assertRaises(ValueError):
+            workflow.check(document, task_id, near)
+        near[1] += 100
         with self.assertRaises(ValueError):
             workflow.check(document, task_id, near)
         workflow.check(document, task_id, deck(0))     # 同卡组继续打同一个种子是允许的
@@ -144,8 +165,6 @@ class GateTest(unittest.TestCase):
     def test_duplicate_strategy_in_layer_d_is_refused(self):
         entries = fill_cycle(1)
         document = workflow.derive(entries, "run")
-        while document["layer"] != "D":
-            break
         # 用只差 D 层的一圈来观察 D 层：把 D 的打法删掉
         trimmed = [item for item in entries if item["strategy"] not in ("经济优先", "防线优先", "速攻清场")]
         document = workflow.derive(trimmed, "run")
@@ -170,13 +189,38 @@ class GateTest(unittest.TestCase):
         seed = seeds_of(task_id, 1)[24]
         entries = entries + [entry(task_id, seed, cards, strategy="经济优先")]
         document = workflow.derive(entries, "run")
-        self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], ["思路0"])
+        self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], [])
         workflow.check(document, task_id, cards, "经济优先")     # 还差 1 个种子，允许继续
-        entries = entries + [entry(task_id, seed + 1, cards, strategy="经济优先")]
+        entries[-1].update(workflow_layer="D", opening=[1, 2, 1])
+        entries = entries + [entry(task_id, seed + 1, cards, strategy="经济优先", layer="D", opening=[1, 2, 1])]
         document = workflow.derive(entries, "run")
-        self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], ["思路0", "经济优先"])
+        self.assertEqual(document["detail"]["D"][task_id]["items"][key]["done"], ["经济优先"])
         with self.assertRaises(ValueError):
             workflow.check(document, task_id, cards, "经济优先")   # 已经够 2 胜，换打法
+
+    def test_cannot_pick_easy_task_or_refresh_seed_or_old_family(self):
+        document = workflow.derive([], "run")
+        item = workflow.next_task(document)["main"]
+        with self.assertRaises(ValueError):
+            workflow.check(document, A_IDS[-1], deck(0), seed=item["seed"])
+        with self.assertRaises(ValueError):
+            workflow.check(document, item["task_id"], deck(0), seed=item["seed"] + 1)
+        with self.assertRaises(ValueError):
+            workflow.check(document, "demo_roof_49_doom_m200", deck(0))
+        workflow.check(document, item["task_id"], deck(0), seed=item["seed"])
+
+    def test_previous_cycle_decks_are_rejected_before_play(self):
+        document = workflow.derive(fill_cycle(1), "run")
+        with self.assertRaises(ValueError):
+            workflow.check(document, A_IDS[0], deck(0))
+
+    def test_d_rejects_vague_strategy_labels(self):
+        entries = [item for item in fill_cycle(1) if item["workflow_layer"] != "D"]
+        document = workflow.derive(entries, "run")
+        item = workflow.next_task(document)["main"]
+        for label in ("", "打法1", "随便打", "经济优先2"):
+            with self.assertRaises(ValueError):
+                workflow.check(document, item["task_id"], item["deck"], label)
 
 
 class CountTest(unittest.TestCase):
@@ -205,19 +249,79 @@ class CountTest(unittest.TestCase):
                        if task.get("layer") == "C" and int(task["batch"]) == batch)
         pool = seeds_of(task_id, 1, 5)
         lost = [item for item in entries if item["task_id"] != task_id]
-        lost += [entry(task_id, seed, TASKS[task_id]["deck"], won=False, abandoned=True) for seed in pool]
+        lost += [entry(task_id, seed, TASKS[task_id]["deck"], won=False, layer="C") for seed in pool]
         document = workflow.derive(lost, "run")
         self.assertFalse(document["detail"]["C"][task_id]["complete"])
-        self.assertEqual(workflow.next_task(document)["action"], "diagnose")
+        self.assertEqual(workflow.next_task(document)["challenge"]["action"], "diagnose")
         folder = Path(os.environ["LLMPLAY_OUT"]) / "diagnosis"
         folder.mkdir(parents=True, exist_ok=True)
         (folder / (task_id + ".json")).write_text(json.dumps(
-            dict(task_id=task_id, waves=[8], missing="第 8 波后排水路缺群伤")), encoding="utf-8")
+            dict(task_id=task_id, cycle=1, waves=[8], missing="第 8 波后排水路缺群伤")), encoding="utf-8")
         document = workflow.derive(lost, "run")
         # 诊断一写完这一圈就齐了：当前圈自动推进到第 2 圈。
         self.assertEqual(document["cycles"]["1"]["complete"], True)
         self.assertEqual(document["cycle"], 2)
         (folder / (task_id + ".json")).unlink()
+
+    def test_abandonment_does_not_complete_challenge_or_refresh_seed(self):
+        document = workflow.derive([], "run")
+        item = workflow.next_task(document)["challenge"]
+        entries = [entry(item["task_id"], seed, item["deck"], won=False, abandoned=True)
+                   for seed in seeds_of(item["task_id"], count=5)]
+        document = workflow.derive(entries, "run")
+        self.assertEqual(document["detail"]["C"][item["task_id"]]["attempted"], [])
+        self.assertEqual(workflow.next_task(document)["challenge"]["seed"], item["seed"])
+        first = workflow.next_task(workflow.derive([], "run"))["main"]
+        abandoned = entry(first["task_id"], first["seed"], deck(0), won=False, abandoned=True)
+        document = workflow.derive([abandoned], "run")
+        self.assertEqual(workflow.next_task(document)["main"]["seed"], first["seed"])
+        unfinished = dict(abandoned, abandoned=False, result=0)
+        document = workflow.derive([unfinished], "run")
+        self.assertEqual(workflow.next_task(document)["main"]["seed"], first["seed"])
+
+    def test_reexporting_one_abandonment_is_one_attempt(self):
+        task_id = A_IDS[0]
+        seed = seeds_of(task_id)[0]
+        abandoned = entry(task_id, seed, deck(0), won=False, abandoned=True)
+        entries = [abandoned, dict(abandoned, archive="archives/another"), entry(task_id, seed, deck(0))]
+        document = workflow.derive(entries, "run")
+        self.assertEqual(document["detail"]["A"][task_id]["decks"][workflow.deck_key(deck(0))]["wins"], 1)
+
+    def test_d_only_counts_declared_categories_and_distinct_actual_openings(self):
+        entries = [item for item in fill_cycle(1) if item["workflow_layer"] != "D"]
+        document = workflow.derive(entries, "run")
+        item = workflow.next_task(document)["main"]
+        for style in ("经济优先", "防线优先", "打法3"):
+            for seed in seeds_of(item["task_id"], count=2):
+                entries.append(entry(item["task_id"], seed, item["deck"], layer="D",
+                                     strategy=style, opening=[1, 1, 2]))
+        document = workflow.derive(entries, "run")
+        group = document["detail"]["D"][item["task_id"]]["items"][workflow.deck_key(item["deck"])]
+        self.assertEqual(group["done"], ["经济优先"])
+
+    def test_early_diagnosis_is_refused(self):
+        from unittest.mock import patch
+        from llmplay import delivery
+        with patch.object(delivery, "_read_progress", return_value=dict(archives=[], run_id="run")):
+            with self.assertRaises(ValueError):
+                delivery.diagnose(next(task_id for task_id in TASKS if TASKS[task_id]["layer"] == "C"),
+                                  waves=[8], missing="后排缺群伤")
+
+    def test_diagnosis_is_bound_to_cycle_and_old_reports_survive(self):
+        task_id = next(task_id for task_id in TASKS if TASKS[task_id]["layer"] == "C")
+        entries = [entry(task_id, seed, TASKS[task_id]["deck"], won=False, layer="C")
+                   for seed in seeds_of(task_id, count=5)]
+        folder = Path(os.environ["LLMPLAY_OUT"]) / "diagnosis"
+        folder.mkdir(parents=True, exist_ok=True)
+        paths = [folder / "cycle1-test.json", folder / "cycle4-test.json"]
+        try:
+            paths[1].write_text(json.dumps(dict(task_id=task_id, cycle=4, waves=[8], missing="缺群伤")))
+            self.assertFalse(workflow.derive(entries, "run")["detail"]["C"][task_id]["complete"])
+            paths[0].write_text(json.dumps(dict(task_id=task_id, cycle=1, waves=[8], missing="缺群伤")))
+            self.assertTrue(workflow.derive(entries, "run")["detail"]["C"][task_id]["complete"])
+        finally:
+            for path in paths:
+                path.unlink(missing_ok=True)
 
     def test_robust_flag_requires_checkpoint_ten_and_five_wins(self):
         report = dict(policy_sha256="x", checkpoints={"10": dict(wins=5, k=8, reached=True)})
@@ -236,7 +340,8 @@ class ExportTest(unittest.TestCase):
 
     def test_custom_deck_roundtrip_keeps_abandonment_and_rejects_more_actions(self):
         game = Game("demo_roof_49_doom_m200", seed=81000000,
-                    deck=[1, 33, 32, 34, 2, 3], reason="试双投手", strategy="投手", deck_review="经济较省")
+                    deck=[1, 33, 32, 34, 2, 3], reason="试双投手", strategy="投手", deck_review="经济较省",
+                    cycle=7, workflow_layer="D", _gate=False)
         game.abandon_reason = "换成蘑菇试试"
         path = Path(_TEMP.name) / "run.json"
         game.save(path)
@@ -245,6 +350,7 @@ class ExportTest(unittest.TestCase):
         self.assertEqual(restored.deck_reason, game.deck_reason)
         self.assertEqual(restored.deck_review, game.deck_review)
         self.assertEqual(restored.abandon_reason, game.abandon_reason)
+        self.assertEqual((restored.cycle, restored.workflow_layer), (7, "D"))
         with self.assertRaises(RuntimeError):
             restored.wait(1)
         game.close()
@@ -280,7 +386,7 @@ class ExportTest(unittest.TestCase):
 
         def policy(game): game.wait(30)
 
-        parent = Game("demo_boss_50_orig_m100", seed=81032000, tick=6100)
+        parent = Game("demo_boss_50_orig_m100", seed=81032000, tick=6100, _gate=False)
         from unittest.mock import patch
         with patch.object(parent, "_start"), patch.object(parent, "_persist_best"), \
                 patch("llmplay.game.Game", return_value=Trial()):

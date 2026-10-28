@@ -666,12 +666,12 @@ class PortableRuntimeTest(unittest.TestCase):
         self.assertEqual(len(run_id),32)
         self.assertEqual(json.loads((self.base/'out/progress.json').read_text())['run_id'],run_id)
         self.assertEqual(progress()['run_id'],run_id)
-        task='llmplay3_a_l46_m100'
+        task=next_task()['main']['task_id']
         window=workflow.seeds_for(task,1)
         ordered=first['tasks'][task]['available_seeds']
         self.assertEqual(set(ordered),set(window))
         self.assertEqual(ordered,seed_order(task,run_id,list(window)))
-        item=next_task()
+        item=next_task()['main']
         self.assertIn(item['seed'],first['tasks'][item['task_id']]['available_seeds'])
         with Game(task, seed=ordered[0], deck=[1,33,39,44,15,3], reason='跑通 run_id', strategy='投手') as game:
             self.assertEqual(game.run_id,run_id)
@@ -972,7 +972,7 @@ class DeliveryTest(unittest.TestCase):
         self.assertEqual(document['archives'], previous['archives'])
         self.assertEqual(document['tasks'], previous['tasks'])
         self.assertFalse(document['tasks'][self.task]['complete'])
-        self.assertEqual(next_task()['layer'], 'A')
+        self.assertEqual(next_task()['main']['layer'], 'A')
         self.assertIn(self.task, list_tasks())
         self.assertEqual(target_session.level(self.task)['search_ticks'], 345)
         self.assertEqual(target_session.level(self.task)['segment_rewrites'], 1)
@@ -1124,7 +1124,7 @@ class DeliveryTest(unittest.TestCase):
         self.assertFalse(document['archives'][0]['valid'])
         self.assertIn('tick mismatch', document['archives'][0]['invalid_reason'])
         self.assertIn(self.seed, document['tasks'][self.task]['available_seeds'])
-        item = next_task()
+        item = next_task()['main']
         self.assertIn(item['seed'], document['tasks'][item['task_id']]['available_seeds'])
 
     def test_resume_marks_missing_archive_invalid(self):

@@ -17,8 +17,9 @@ from llmplay import Game, next_task, out_dir, load_tasks  # noqa: E402
 
 
 def main() -> int:
-    item = next_task()
-    print("当前该做：%s" % json.dumps(item, ensure_ascii=False))
+    todo = next_task()
+    print("当前该做：%s" % json.dumps(todo, ensure_ascii=False))
+    item = todo["main"] if todo["main"]["task_id"] else todo["challenge"]
     task_id = sys.argv[1] if len(sys.argv) > 1 else item["task_id"]
     seed = int(sys.argv[2]) if len(sys.argv) > 2 else item.get("seed")
     task = load_tasks()[task_id]

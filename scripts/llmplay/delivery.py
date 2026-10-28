@@ -88,6 +88,7 @@ def _entry(archive, relative, *, valid=True, error=None):
                 note=meta.get("note", ""), valid=valid, invalid_reason=error,
                 won=won, robust=bool(won and _robust(meta)), run_id=meta.get("run_id"),
                 cycle=int(meta.get("cycle") or 1),
+                workflow_layer=meta.get("workflow_layer"), opening=meta.get("opening") or [],
                 environment_fingerprint=meta.get("environment_fingerprint"))
 
 
@@ -108,18 +109,14 @@ def next_task() -> dict:
     return workflow.next_task(progress())
 
 
-def check(task_id, deck, strategy="") -> None:
+def check(task_id, deck, strategy="", seed=None) -> dict:
     """Game() 建局前把关：层不对 / 卡组差 <3 张 / 打法重复 一律拒绝。"""
-    workflow.check(progress(), task_id, deck, strategy)
+    return workflow.check(progress(), task_id, deck, strategy, seed)
 
 
-def archive_requirements(task_id, strategy="", review="", abandoned=False) -> None:
+def archive_requirements(task_id, strategy="", review="", abandoned=False, **kwargs) -> None:
     """导出存档前的必填项（A/D 层的思路与评价）。"""
-    workflow.archive_requirements(task_id, strategy, review, abandoned)
-
-
-def current_cycle() -> int:
-    return progress()["cycle"]
+    workflow.archive_requirements(task_id, strategy, review, abandoned, **kwargs)
 
 
 def diagnose(task_id, *, waves=None, missing="", note="") -> Path:
@@ -127,14 +124,20 @@ def diagnose(task_id, *, waves=None, missing="", note="") -> Path:
     if not str(missing).strip():
         raise ValueError("失败诊断要写清楚缺什么（missing=...），例如「第 8 波后排水路缺群伤」")
     root = output_dir()
-    folder = root / "diagnosis"
-    folder.mkdir(parents=True, exist_ok=True)
-    payload = dict(schema="llmplay_diagnosis_v1", task_id=task_id, cycle=current_cycle(),
-                   waves=[int(wave) for wave in (waves or [])], missing=str(missing), note=str(note))
-    path = folder / (task_id + ".json")
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     with _lock(root):
         document = _read_progress(root)
+        derived = _derive(document["archives"], document.get("run_id"))
+        item = workflow.next_task(derived)["challenge"]
+        if item["task_id"] != task_id or item["action"] != "diagnose":
+            raise ValueError("须先完成 C 轨当前卡组的 5 个真实终局，再为该项写诊断")
+        if not waves or any(type(wave) is not int or wave < 0 for wave in waves):
+            raise ValueError("waves 必须填写真实失败波次")
+        folder = root / "diagnosis" / str(derived["cycle"])
+        folder.mkdir(parents=True, exist_ok=True)
+        payload = dict(schema="llmplay_diagnosis_v1", task_id=task_id, cycle=derived["cycle"],
+                       waves=list(waves), missing=str(missing), note=str(note))
+        path = folder / (task_id + ".json")
+        path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         _publish(root, document["archives"], budget.session())
     return path
 

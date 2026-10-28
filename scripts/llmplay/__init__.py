@@ -3,7 +3,7 @@
 用法（在包根目录下）：
 
     import llmplay
-    print(llmplay.next_task())        # 当前圈当前层必须做的那一项
+    print(llmplay.next_task())        # 主线 main 与独立挑战轨 challenge 的下一项
     g = llmplay.Game(task_id, seed=..., deck=[...], reason="...", strategy="...")
     print(g.observe())
     g.deck_review = "这套卡组前期省，后期缺群伤"   # A/D 层导出前必填
