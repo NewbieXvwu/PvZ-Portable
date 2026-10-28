@@ -146,6 +146,7 @@ if [ "${1:-}" = "--rollback" ]; then
   # Manual rollback: newest backup, mode removed, start_qc without --extra-manifest.
   O=$(ls -dt "$LOG_DIR"/deploy14p_* 2>/dev/null | head -1)
   [ -n "${O:-}" ] && [ -d "$O" ] || { log 'ABORT: no deploy14p backup directory'; exit 1; }
+  [ -e "$O/backed_up" ] || { log "ABORT: $O has no complete backup marker"; exit 1; }
   log "manual rollback from $O"
   stop_qc; STOPPED=1
   SAVED=1
@@ -164,7 +165,7 @@ if [ -f "$MODE15" ] && grep -qx v2sleep "$MODE15"; then
 else
   [ -x "$NEWEXE" ]
 fi
-log "preflight passed for $REV controller, selection builder, search_play and extra panel"
+log "preflight passed for $REV; extra panel is generated after install"
 stop_qc; STOPPED=1
 check_baseline
 mkdir -p "$O"
@@ -174,6 +175,7 @@ for file in "${FILES[@]}"; do
     cp -p "$W/$file" "$O/$file.before"
   fi
 done
+printf 'backed up\n' > "$O/backed_up"
 SAVED=1
 for file in "${FILES[@]}"; do
   mkdir -p "$(dirname "$W/$file")"
