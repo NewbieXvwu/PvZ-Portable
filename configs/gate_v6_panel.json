@@ -2,12 +2,14 @@
   "schema_version": 1,
   "panel_version": "v6_draft",
   "purpose": "task148 roof additions draft only; no gate code, ledger or live panel changes",
-  "rule": "include a level when the r11 student won >= 1 of its 32 scoreboard seeds or the teacher won >= 1 on the original scoreboard or task115; all-loss cells have no discriminative power",
+  "rule": "retain baseline v5 qualifications; new roof tasks require a current student or teacher terminal win in task148; choose one per level by the registered ranking",
   "sources": {
     "configs/adventure_scoreboard.json": "5213bf9fef5a22f676ba4a9f90cf9d73c6a0d36d5393b6efe07392e9b07946cc",
     "MEMORY/docs/adventure-scoreboard-r11-32.json": "de0c68c16c5f7582c8962916bc2334cd6f2e8e5877f5bb4f0ab0c48ae641b288",
     "MEMORY/docs/adventure-scoreboard.json": "71ac8475cb42ac4018adfd2626272b886d2b4afd52e4bbf6cdfa99e475de1976",
-    "MEMORY/docs/task115-teacher-arm-weak-levels.md": "2db7763cf281c89bcb11d220c82808ed1d6b90b45229b394a60ed597306a5bb1"
+    "MEMORY/docs/task115-teacher-arm-weak-levels.md": "2db7763cf281c89bcb11d220c82808ed1d6b90b45229b394a60ed597306a5bb1",
+    "MEMORY/docs/task148-roof-candidates.json": "cbd850a424b13c6fb4e439a56217fdae10ed6466443ad63be1c39548ba6cd4c0",
+    "MEMORY/docs/task148-roof-measurement.json": "7432d7732514d617fbd14ac1b2005b90031aa1136a7eebd265ac2ab545f4848f"
   },
   "groups": {
     "task101_l1_day_d7": "day",
@@ -49,7 +51,9 @@
     "task101_l41_roof_demo": "roof",
     "task101_l46_roof_demo": "roof",
     "day_l7_eval_d7p_holdout1": "heldout",
-    "day_l9_eval_d7p_holdout2": "heldout"
+    "day_l9_eval_d7p_holdout2": "heldout",
+    "task148_l42_roof_r2_d1": "roof",
+    "task148_l45_roof_r2_d2": "roof"
   },
   "monitor": [
     "day_l7_eval_d7p_holdout1",
@@ -61,7 +65,7 @@
     "heldout": 2,
     "night": 9,
     "pool": 9,
-    "roof": 2
+    "roof": 4
   },
   "qualification": {
     "task101_l1_day_d7": {
@@ -623,6 +627,22 @@
     "day_l9_eval_d7p_holdout2": {
       "zone": "heldout",
       "monitor_only": true
+    },
+    "task148_l42_roof_r2_d1": {
+      "zone": "roof",
+      "source": "MEMORY/docs/task148-roof-measurement.json",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 4,
+      "teacher_games": 8
+    },
+    "task148_l45_roof_r2_d2": {
+      "zone": "roof",
+      "source": "MEMORY/docs/task148-roof-measurement.json",
+      "student_wins": 1,
+      "student_games": 8,
+      "teacher_wins": 1,
+      "teacher_games": 8
     }
   },
   "excluded": [
@@ -747,6 +767,126 @@
         }
       },
       "reason": "no recorded win for the r11 student or the teacher"
+    },
+    {
+      "level": 42,
+      "task_id": "task148_l42_roof_r2_d2",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 43,
+      "task_id": "task148_l43_roof_r2_d1",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 43,
+      "task_id": "task148_l43_roof_r2_d2",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 44,
+      "task_id": "task148_l44_roof_r2_d1",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 44,
+      "task_id": "task148_l44_roof_r2_d2",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 45,
+      "task_id": "task148_l45_roof_r2_d1",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 47,
+      "task_id": "task148_l47_roof_r2_d1",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 47,
+      "task_id": "task148_l47_roof_r2_d2",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 48,
+      "task_id": "task148_l48_roof_r2_d1",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 48,
+      "task_id": "task148_l48_roof_r2_d2",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 49,
+      "task_id": "task148_l49_roof_r2_d1",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
+    },
+    {
+      "level": 49,
+      "task_id": "task148_l49_roof_r2_d2",
+      "zone": "roof",
+      "student_wins": 0,
+      "student_games": 8,
+      "teacher_wins": 0,
+      "teacher_games": 8,
+      "reason": "both current arms 0/8 in task148; keep outside gate draft"
     }
   ],
   "tasks": [
@@ -1543,10 +1683,52 @@
       "playthrough": 2,
       "split": "heldout_deck",
       "holdout_semantics": "unordered plant set excluded from every perturbation training family"
+    },
+    {
+      "task_id": "task148_l42_roof_r2_d1",
+      "level": 42,
+      "deck": [
+        1,
+        2,
+        14,
+        15,
+        17,
+        30,
+        32,
+        33,
+        35,
+        41
+      ],
+      "terrain": "roof",
+      "zombie_count_multiplier": 1.0,
+      "playthrough": 2,
+      "wave_cap": null,
+      "preplanted": []
+    },
+    {
+      "task_id": "task148_l45_roof_r2_d2",
+      "level": 45,
+      "deck": [
+        1,
+        2,
+        17,
+        30,
+        32,
+        33,
+        34,
+        37,
+        39,
+        44
+      ],
+      "terrain": "roof",
+      "zombie_count_multiplier": 1.0,
+      "playthrough": 2,
+      "wave_cap": null,
+      "preplanted": []
     }
   ],
   "deployment_ready": false,
-  "status": "awaiting task148 current student/teacher measurement",
+  "status": "measurement complete; draft only, not deployed",
   "base_panel": {
     "git_ref": "0ddbd6384735afec76e691db98d2ca5987282b14",
     "path": "configs/gate_v5_panel.json"
@@ -1591,7 +1773,20 @@
         "owned_upgrade_plants": [
           41
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 4,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "admitted_draft"
     },
     {
       "task_id": "task148_l42_roof_r2_d2",
@@ -1629,7 +1824,20 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l43_roof_r2_d1",
@@ -1667,7 +1875,20 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l43_roof_r2_d2",
@@ -1705,7 +1926,20 @@
         "owned_upgrade_plants": [
           42
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l44_roof_r2_d1",
@@ -1743,7 +1977,20 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l44_roof_r2_d2",
@@ -1781,7 +2028,20 @@
         "owned_upgrade_plants": [
           42
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l45_roof_r2_d1",
@@ -1817,7 +2077,20 @@
       "profile": {
         "seed_slot_count": 10,
         "owned_upgrade_plants": []
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l45_roof_r2_d2",
@@ -1855,7 +2128,20 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 1,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 1,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "admitted_draft"
     },
     {
       "task_id": "task148_l47_roof_r2_d1",
@@ -1893,7 +2179,20 @@
         "owned_upgrade_plants": [
           41
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l47_roof_r2_d2",
@@ -1931,7 +2230,20 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l48_roof_r2_d1",
@@ -1969,7 +2281,20 @@
         "owned_upgrade_plants": [
           41
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l48_roof_r2_d2",
@@ -2007,7 +2332,20 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l49_roof_r2_d1",
@@ -2045,7 +2383,20 @@
         "owned_upgrade_plants": [
           41
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     },
     {
       "task_id": "task148_l49_roof_r2_d2",
@@ -2083,8 +2434,25 @@
         "owned_upgrade_plants": [
           44
         ]
-      }
+      },
+      "measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "status": "all_zero_diagnostic_only"
     }
   ],
-  "seed_policy": "candidate seeds are diagnostic only; future gate deployment must allocate fresh seeds from the existing ledger; no block allocated by task148"
+  "seed_policy": "candidate seeds are diagnostic only; future gate deployment must allocate fresh seeds from the existing ledger; no block allocated by task148",
+  "task148_admitted_levels": [
+    42,
+    45
+  ]
 }

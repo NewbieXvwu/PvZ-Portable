@@ -1,0 +1,3132 @@
+{
+  "schema_version": 1,
+  "provenance": {
+    "active_student_round": 29,
+    "student_state_read": "2026-10-29",
+    "source_models": {
+      "student": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000029/student/model.pt",
+      "value": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+      "static_value": "/home/newbiexvwu/PvZ-search/artifacts/hard/value_branch1/model.pt"
+    },
+    "models": {
+      "student": {
+        "path": "/home/newbiexvwu/pvz-logs/task148/student.pt",
+        "sha256": "7af5436c50940d12f34f39dfdc5c90755d60aefc6aeabe4b5ebe22a48550c286"
+      },
+      "value": {
+        "path": "/home/newbiexvwu/pvz-logs/task148/value.pt",
+        "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+      },
+      "static_value": {
+        "path": "/home/newbiexvwu/pvz-logs/task148/static_value.pt",
+        "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+      }
+    },
+    "executable": "/home/newbiexvwu/PvZ-search/.claude/worktrees/gatev6/build/pvz-portable",
+    "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+    "source_commit": "681dffaa",
+    "workers": 2,
+    "ulimit_v_kb": 8000000,
+    "teacher": {
+      "arms": "fast_search",
+      "dagger_beta": 1,
+      "verify_samples": 9,
+      "student_candidates": 2,
+      "samples": 3,
+      "horizon": 2500,
+      "min_gap": 300,
+      "rollout_sim_skip": 61
+    },
+    "executable_sha256": "07d40b77c42e8a5884fc6365ec7acc51dd9d48d1ff686c9421885dc95a63a810"
+  },
+  "results": [
+    {
+      "task": {
+        "task_id": "task148_l42_roof_r2_d1",
+        "level": 42,
+        "deck": [
+          1,
+          2,
+          14,
+          15,
+          17,
+          30,
+          32,
+          33,
+          35,
+          41
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148001000,
+          148001001,
+          148001002,
+          148001003,
+          148001004,
+          148001005,
+          148001006,
+          148001007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 4,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148001001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11785,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 16476,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10683,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 17530,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 13838,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 18439,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11169,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 17139,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 22832,
+          "seconds": 5.1,
+          "searched": 59,
+          "overrides": 4
+        },
+        {
+          "seed": 148001001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 18,
+          "final_tick": 46818,
+          "seconds": 36.4,
+          "searched": 152,
+          "overrides": 37
+        },
+        {
+          "seed": 148001003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 24,
+          "final_tick": 64741,
+          "seconds": 52.6,
+          "searched": 208,
+          "overrides": 47
+        },
+        {
+          "seed": 148001002,
+          "arm": "fast_search",
+          "won": true,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 79910,
+          "seconds": 94.1,
+          "searched": 281,
+          "overrides": 74
+        },
+        {
+          "seed": 148001004,
+          "arm": "fast_search",
+          "won": true,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 76970,
+          "seconds": 96.3,
+          "searched": 286,
+          "overrides": 84
+        },
+        {
+          "seed": 148001005,
+          "arm": "fast_search",
+          "won": true,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 79916,
+          "seconds": 89.0,
+          "searched": 286,
+          "overrides": 61
+        },
+        {
+          "seed": 148001007,
+          "arm": "fast_search",
+          "won": true,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 78478,
+          "seconds": 65.7,
+          "searched": 277,
+          "overrides": 70
+        },
+        {
+          "seed": 148001006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 90648,
+          "seconds": 68.8,
+          "searched": 291,
+          "overrides": 80
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l42_roof_r2_d2",
+        "level": 42,
+        "deck": [
+          1,
+          2,
+          17,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148001100,
+          148001101,
+          148001102,
+          148001103,
+          148001104,
+          148001105,
+          148001106,
+          148001107
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148001101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 10607,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001100,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 22983,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 19499,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15996,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15742,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 14212,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 51698,
+          "seconds": 0.4,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 12,
+          "final_tick": 34014,
+          "seconds": 0.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148001101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 10607,
+          "seconds": 1.9,
+          "searched": 23,
+          "overrides": 0
+        },
+        {
+          "seed": 148001102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 19499,
+          "seconds": 4.2,
+          "searched": 43,
+          "overrides": 0
+        },
+        {
+          "seed": 148001100,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 22983,
+          "seconds": 6.3,
+          "searched": 58,
+          "overrides": 0
+        },
+        {
+          "seed": 148001104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15996,
+          "seconds": 3.6,
+          "searched": 36,
+          "overrides": 0
+        },
+        {
+          "seed": 148001105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15742,
+          "seconds": 3.5,
+          "searched": 36,
+          "overrides": 0
+        },
+        {
+          "seed": 148001103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 24118,
+          "seconds": 8.0,
+          "searched": 64,
+          "overrides": 1
+        },
+        {
+          "seed": 148001106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 14212,
+          "seconds": 3.0,
+          "searched": 32,
+          "overrides": 0
+        },
+        {
+          "seed": 148001107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 12,
+          "final_tick": 34014,
+          "seconds": 11.3,
+          "searched": 93,
+          "overrides": 0
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l43_roof_r2_d1",
+        "level": 43,
+        "deck": [
+          1,
+          2,
+          20,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148002000,
+          148002001,
+          148002002,
+          148002003,
+          148002004,
+          148002005,
+          148002006,
+          148002007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148002000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11398,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10741,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11991,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9354,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12327,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11104,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12105,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 13175,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10741,
+          "seconds": 1.8,
+          "searched": 23,
+          "overrides": 0
+        },
+        {
+          "seed": 148002000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11398,
+          "seconds": 1.9,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148002003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9354,
+          "seconds": 1.7,
+          "searched": 22,
+          "overrides": 0
+        },
+        {
+          "seed": 148002002,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11991,
+          "seconds": 2.4,
+          "searched": 29,
+          "overrides": 0
+        },
+        {
+          "seed": 148002004,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12327,
+          "seconds": 2.5,
+          "searched": 30,
+          "overrides": 0
+        },
+        {
+          "seed": 148002005,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11104,
+          "seconds": 1.9,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148002007,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12105,
+          "seconds": 1.7,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148002006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 13175,
+          "seconds": 2.3,
+          "searched": 28,
+          "overrides": 0
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l43_roof_r2_d2",
+        "level": 43,
+        "deck": [
+          1,
+          10,
+          14,
+          20,
+          23,
+          32,
+          33,
+          35,
+          36,
+          42
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148002100,
+          148002101,
+          148002102,
+          148002103,
+          148002104,
+          148002105,
+          148002106,
+          148002107
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148002101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10546,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10003,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002100,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11583,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10679,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11392,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10371,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10956,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10394,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148002101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10442,
+          "seconds": 2.6,
+          "searched": 25,
+          "overrides": 4
+        },
+        {
+          "seed": 148002100,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11552,
+          "seconds": 3.5,
+          "searched": 34,
+          "overrides": 5
+        },
+        {
+          "seed": 148002102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11808,
+          "seconds": 2.6,
+          "searched": 24,
+          "overrides": 3
+        },
+        {
+          "seed": 148002103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11559,
+          "seconds": 3.0,
+          "searched": 24,
+          "overrides": 5
+        },
+        {
+          "seed": 148002105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10711,
+          "seconds": 2.9,
+          "searched": 26,
+          "overrides": 5
+        },
+        {
+          "seed": 148002104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 14715,
+          "seconds": 5.5,
+          "searched": 36,
+          "overrides": 8
+        },
+        {
+          "seed": 148002106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11165,
+          "seconds": 2.1,
+          "searched": 23,
+          "overrides": 2
+        },
+        {
+          "seed": 148002107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10862,
+          "seconds": 2.5,
+          "searched": 25,
+          "overrides": 4
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l44_roof_r2_d1",
+        "level": 44,
+        "deck": [
+          1,
+          2,
+          20,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148003000,
+          148003001,
+          148003002,
+          148003003,
+          148003004,
+          148003005,
+          148003006,
+          148003007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148003001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11932,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12333,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10724,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10048,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10010,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11490,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11106,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11481,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11932,
+          "seconds": 1.8,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148003000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12333,
+          "seconds": 2.4,
+          "searched": 30,
+          "overrides": 0
+        },
+        {
+          "seed": 148003002,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10724,
+          "seconds": 1.5,
+          "searched": 21,
+          "overrides": 0
+        },
+        {
+          "seed": 148003003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10048,
+          "seconds": 1.6,
+          "searched": 22,
+          "overrides": 0
+        },
+        {
+          "seed": 148003004,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10010,
+          "seconds": 1.6,
+          "searched": 21,
+          "overrides": 0
+        },
+        {
+          "seed": 148003005,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11490,
+          "seconds": 1.9,
+          "searched": 26,
+          "overrides": 0
+        },
+        {
+          "seed": 148003006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11106,
+          "seconds": 2.0,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148003007,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11481,
+          "seconds": 1.8,
+          "searched": 24,
+          "overrides": 0
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l44_roof_r2_d2",
+        "level": 44,
+        "deck": [
+          1,
+          10,
+          14,
+          20,
+          23,
+          32,
+          33,
+          35,
+          36,
+          42
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148003100,
+          148003101,
+          148003102,
+          148003103,
+          148003104,
+          148003105,
+          148003106,
+          148003107
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148003100,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11168,
+          "seconds": 0.4,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9611,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9824,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9293,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11053,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10648,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11301,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10778,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148003101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9611,
+          "seconds": 1.3,
+          "searched": 17,
+          "overrides": 0
+        },
+        {
+          "seed": 148003100,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11168,
+          "seconds": 1.4,
+          "searched": 18,
+          "overrides": 0
+        },
+        {
+          "seed": 148003102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9824,
+          "seconds": 1.3,
+          "searched": 16,
+          "overrides": 0
+        },
+        {
+          "seed": 148003103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9293,
+          "seconds": 1.2,
+          "searched": 16,
+          "overrides": 0
+        },
+        {
+          "seed": 148003104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11053,
+          "seconds": 1.3,
+          "searched": 17,
+          "overrides": 0
+        },
+        {
+          "seed": 148003105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10648,
+          "seconds": 1.3,
+          "searched": 16,
+          "overrides": 0
+        },
+        {
+          "seed": 148003106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11301,
+          "seconds": 1.4,
+          "searched": 17,
+          "overrides": 0
+        },
+        {
+          "seed": 148003107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10778,
+          "seconds": 1.4,
+          "searched": 18,
+          "overrides": 0
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l45_roof_r2_d1",
+        "level": 45,
+        "deck": [
+          1,
+          2,
+          3,
+          4,
+          6,
+          20,
+          29,
+          30,
+          32,
+          33
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148004000,
+          148004001,
+          148004002,
+          148004003,
+          148004004,
+          148004005,
+          148004006,
+          148004007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148004001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 15,
+          "final_tick": 26125,
+          "seconds": 0.7,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 27,
+          "final_tick": 54232,
+          "seconds": 1.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 38216,
+          "seconds": 0.4,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 22,
+          "final_tick": 39760,
+          "seconds": 0.4,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 25,
+          "final_tick": 52608,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 24,
+          "final_tick": 43893,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 68771,
+          "seconds": 1.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 29,
+          "final_tick": 54662,
+          "seconds": 0.7,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 15,
+          "final_tick": 26125,
+          "seconds": 19.1,
+          "searched": 110,
+          "overrides": 0
+        },
+        {
+          "seed": 148004000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 17,
+          "final_tick": 36856,
+          "seconds": 19.9,
+          "searched": 120,
+          "overrides": 1
+        },
+        {
+          "seed": 148004002,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 38216,
+          "seconds": 32.3,
+          "searched": 159,
+          "overrides": 0
+        },
+        {
+          "seed": 148004003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 64310,
+          "seconds": 51.9,
+          "searched": 257,
+          "overrides": 1
+        },
+        {
+          "seed": 148004004,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 25,
+          "final_tick": 52608,
+          "seconds": 31.2,
+          "searched": 200,
+          "overrides": 0
+        },
+        {
+          "seed": 148004006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 24,
+          "final_tick": 43893,
+          "seconds": 24.9,
+          "searched": 168,
+          "overrides": 0
+        },
+        {
+          "seed": 148004005,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 27,
+          "final_tick": 48140,
+          "seconds": 43.3,
+          "searched": 206,
+          "overrides": 1
+        },
+        {
+          "seed": 148004007,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 27,
+          "final_tick": 49710,
+          "seconds": 38.2,
+          "searched": 190,
+          "overrides": 1
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l45_roof_r2_d2",
+        "level": 45,
+        "deck": [
+          1,
+          2,
+          17,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148004100,
+          148004101,
+          148004102,
+          148004103,
+          148004104,
+          148004105,
+          148004106,
+          148004107
+        ]
+      },
+      "student": {
+        "wins": 1,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 1,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148004101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 29,
+          "final_tick": 51753,
+          "seconds": 3.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004100,
+          "arm": "fast",
+          "won": true,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 62013,
+          "seconds": 3.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 33900,
+          "seconds": 0.3,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 42224,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 16,
+          "final_tick": 25236,
+          "seconds": 0.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 22,
+          "final_tick": 39421,
+          "seconds": 0.4,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 62169,
+          "seconds": 0.8,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 27,
+          "final_tick": 53137,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148004101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 29,
+          "final_tick": 51753,
+          "seconds": 40.9,
+          "searched": 201,
+          "overrides": 0
+        },
+        {
+          "seed": 148004100,
+          "arm": "fast_search",
+          "won": true,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 62408,
+          "seconds": 52.2,
+          "searched": 252,
+          "overrides": 5
+        },
+        {
+          "seed": 148004102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 42224,
+          "seconds": 24.2,
+          "searched": 162,
+          "overrides": 0
+        },
+        {
+          "seed": 148004103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 33900,
+          "seconds": 15.3,
+          "searched": 122,
+          "overrides": 0
+        },
+        {
+          "seed": 148004104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 16,
+          "final_tick": 25236,
+          "seconds": 12.5,
+          "searched": 108,
+          "overrides": 0
+        },
+        {
+          "seed": 148004106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 22,
+          "final_tick": 39421,
+          "seconds": 27.8,
+          "searched": 167,
+          "overrides": 0
+        },
+        {
+          "seed": 148004105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 63480,
+          "seconds": 45.0,
+          "searched": 246,
+          "overrides": 6
+        },
+        {
+          "seed": 148004107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 27,
+          "final_tick": 53137,
+          "seconds": 35.5,
+          "searched": 195,
+          "overrides": 0
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l47_roof_r2_d1",
+        "level": 47,
+        "deck": [
+          1,
+          2,
+          14,
+          15,
+          17,
+          30,
+          32,
+          33,
+          35,
+          41
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148006000,
+          148006001,
+          148006002,
+          148006003,
+          148006004,
+          148006005,
+          148006006,
+          148006007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148006000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 20825,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 22143,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15000,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 17270,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 13,
+          "final_tick": 36309,
+          "seconds": 0.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 12,
+          "final_tick": 35100,
+          "seconds": 0.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 18028,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 24724,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 26,
+          "final_tick": 62971,
+          "seconds": 51.6,
+          "searched": 199,
+          "overrides": 58
+        },
+        {
+          "seed": 148006000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 65356,
+          "seconds": 56.5,
+          "searched": 223,
+          "overrides": 59
+        },
+        {
+          "seed": 148006002,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 17,
+          "final_tick": 40392,
+          "seconds": 30.4,
+          "searched": 146,
+          "overrides": 38
+        },
+        {
+          "seed": 148006003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 24,
+          "final_tick": 50001,
+          "seconds": 51.7,
+          "searched": 185,
+          "overrides": 51
+        },
+        {
+          "seed": 148006004,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 71981,
+          "seconds": 78.9,
+          "searched": 259,
+          "overrides": 78
+        },
+        {
+          "seed": 148006005,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 23,
+          "final_tick": 63557,
+          "seconds": 59.5,
+          "searched": 229,
+          "overrides": 65
+        },
+        {
+          "seed": 148006006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 12,
+          "final_tick": 32681,
+          "seconds": 17.0,
+          "searched": 92,
+          "overrides": 27
+        },
+        {
+          "seed": 148006007,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 34,
+          "final_tick": 74271,
+          "seconds": 70.5,
+          "searched": 262,
+          "overrides": 62
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l47_roof_r2_d2",
+        "level": 47,
+        "deck": [
+          1,
+          2,
+          17,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148006100,
+          148006101,
+          148006102,
+          148006103,
+          148006104,
+          148006105,
+          148006106,
+          148006107
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148006101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 12573,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006100,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 19977,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10519,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 18833,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 12312,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 11,
+          "final_tick": 30343,
+          "seconds": 0.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 23128,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 11,
+          "final_tick": 26648,
+          "seconds": 0.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148006101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 12573,
+          "seconds": 2.2,
+          "searched": 26,
+          "overrides": 0
+        },
+        {
+          "seed": 148006102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10519,
+          "seconds": 2.3,
+          "searched": 27,
+          "overrides": 0
+        },
+        {
+          "seed": 148006100,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 19977,
+          "seconds": 5.0,
+          "searched": 49,
+          "overrides": 0
+        },
+        {
+          "seed": 148006104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 18833,
+          "seconds": 4.8,
+          "searched": 47,
+          "overrides": 0
+        },
+        {
+          "seed": 148006105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 16246,
+          "seconds": 4.2,
+          "searched": 43,
+          "overrides": 1
+        },
+        {
+          "seed": 148006106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 29,
+          "final_tick": 72081,
+          "seconds": 54.8,
+          "searched": 224,
+          "overrides": 66
+        },
+        {
+          "seed": 148006107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 10,
+          "final_tick": 29422,
+          "seconds": 6.5,
+          "searched": 77,
+          "overrides": 2
+        },
+        {
+          "seed": 148006103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 37,
+          "final_tick": 76868,
+          "seconds": 77.4,
+          "searched": 268,
+          "overrides": 57
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l48_roof_r2_d1",
+        "level": 48,
+        "deck": [
+          1,
+          2,
+          14,
+          15,
+          17,
+          30,
+          32,
+          33,
+          35,
+          41
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148007000,
+          148007001,
+          148007002,
+          148007003,
+          148007004,
+          148007005,
+          148007006,
+          148007007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148007001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11208,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 11922,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 22203,
+          "seconds": 0.6,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 16385,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 16682,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 20410,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15034,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 25112,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 42093,
+          "seconds": 39.7,
+          "searched": 144,
+          "overrides": 43
+        },
+        {
+          "seed": 148007000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 48197,
+          "seconds": 41.1,
+          "searched": 163,
+          "overrides": 42
+        },
+        {
+          "seed": 148007002,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 28,
+          "final_tick": 70566,
+          "seconds": 62.0,
+          "searched": 232,
+          "overrides": 60
+        },
+        {
+          "seed": 148007004,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 20323,
+          "seconds": 12.3,
+          "searched": 65,
+          "overrides": 19
+        },
+        {
+          "seed": 148007003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 84201,
+          "seconds": 84.5,
+          "searched": 296,
+          "overrides": 74
+        },
+        {
+          "seed": 148007006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 12,
+          "final_tick": 34828,
+          "seconds": 17.5,
+          "searched": 94,
+          "overrides": 26
+        },
+        {
+          "seed": 148007005,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 46888,
+          "seconds": 41.7,
+          "searched": 171,
+          "overrides": 54
+        },
+        {
+          "seed": 148007007,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 19,
+          "final_tick": 44822,
+          "seconds": 31.3,
+          "searched": 150,
+          "overrides": 52
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l48_roof_r2_d2",
+        "level": 48,
+        "deck": [
+          1,
+          2,
+          20,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148007100,
+          148007101,
+          148007102,
+          148007103,
+          148007104,
+          148007105,
+          148007106,
+          148007107
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148007100,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10558,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10912,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11671,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10024,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9248,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10521,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10673,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10268,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148007100,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10558,
+          "seconds": 1.5,
+          "searched": 25,
+          "overrides": 0
+        },
+        {
+          "seed": 148007101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10912,
+          "seconds": 1.5,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148007102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11671,
+          "seconds": 1.3,
+          "searched": 23,
+          "overrides": 0
+        },
+        {
+          "seed": 148007103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10024,
+          "seconds": 1.4,
+          "searched": 26,
+          "overrides": 0
+        },
+        {
+          "seed": 148007104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 9248,
+          "seconds": 1.2,
+          "searched": 21,
+          "overrides": 0
+        },
+        {
+          "seed": 148007105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10521,
+          "seconds": 1.3,
+          "searched": 22,
+          "overrides": 0
+        },
+        {
+          "seed": 148007106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10673,
+          "seconds": 1.3,
+          "searched": 24,
+          "overrides": 0
+        },
+        {
+          "seed": 148007107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 3,
+          "final_tick": 10268,
+          "seconds": 1.2,
+          "searched": 24,
+          "overrides": 0
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l49_roof_r2_d1",
+        "level": 49,
+        "deck": [
+          1,
+          2,
+          14,
+          15,
+          17,
+          30,
+          32,
+          33,
+          35,
+          41
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148008000,
+          148008001,
+          148008002,
+          148008003,
+          148008004,
+          148008005,
+          148008006,
+          148008007
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148008001,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 12086,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008000,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 19848,
+          "seconds": 0.5,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008002,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 13145,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008003,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15394,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008004,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 8,
+          "final_tick": 20131,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008005,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 15341,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008006,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 12016,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008007,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 23967,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008000,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 30,
+          "final_tick": 71026,
+          "seconds": 50.9,
+          "searched": 234,
+          "overrides": 67
+        },
+        {
+          "seed": 148008001,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 34,
+          "final_tick": 90870,
+          "seconds": 88.1,
+          "searched": 336,
+          "overrides": 90
+        },
+        {
+          "seed": 148008002,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 29,
+          "final_tick": 72090,
+          "seconds": 81.6,
+          "searched": 257,
+          "overrides": 81
+        },
+        {
+          "seed": 148008003,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 33,
+          "final_tick": 78570,
+          "seconds": 81.4,
+          "searched": 283,
+          "overrides": 64
+        },
+        {
+          "seed": 148008004,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 29,
+          "final_tick": 72111,
+          "seconds": 68.1,
+          "searched": 254,
+          "overrides": 75
+        },
+        {
+          "seed": 148008005,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 39,
+          "final_tick": 92210,
+          "seconds": 99.5,
+          "searched": 342,
+          "overrides": 93
+        },
+        {
+          "seed": 148008006,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 39,
+          "final_tick": 90422,
+          "seconds": 87.8,
+          "searched": 316,
+          "overrides": 64
+        },
+        {
+          "seed": 148008007,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 27,
+          "final_tick": 68270,
+          "seconds": 69.5,
+          "searched": 235,
+          "overrides": 68
+        }
+      ]
+    },
+    {
+      "task": {
+        "task_id": "task148_l49_roof_r2_d2",
+        "level": 49,
+        "deck": [
+          1,
+          2,
+          17,
+          30,
+          32,
+          33,
+          34,
+          37,
+          39,
+          44
+        ],
+        "terrain": "roof",
+        "zombie_count_multiplier": 1.0,
+        "playthrough": 2,
+        "seeds": [
+          148008100,
+          148008101,
+          148008102,
+          148008103,
+          148008104,
+          148008105,
+          148008106,
+          148008107
+        ]
+      },
+      "student": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "teacher": {
+        "wins": 0,
+        "games": 8,
+        "terminal_games": 8
+      },
+      "games": [
+        {
+          "seed": 148008101,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10486,
+          "seconds": 1.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008100,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 13002,
+          "seconds": 1.2,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008102,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 13925,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008103,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 17764,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008104,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 18039,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008105,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11127,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008106,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 12071,
+          "seconds": 0.0,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008107,
+          "arm": "fast",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 22336,
+          "seconds": 0.1,
+          "searched": 0,
+          "overrides": 0
+        },
+        {
+          "seed": 148008101,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 10486,
+          "seconds": 2.3,
+          "searched": 28,
+          "overrides": 0
+        },
+        {
+          "seed": 148008100,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 13002,
+          "seconds": 2.6,
+          "searched": 29,
+          "overrides": 0
+        },
+        {
+          "seed": 148008102,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 6,
+          "final_tick": 13925,
+          "seconds": 2.7,
+          "searched": 31,
+          "overrides": 0
+        },
+        {
+          "seed": 148008103,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 17764,
+          "seconds": 5.9,
+          "searched": 51,
+          "overrides": 0
+        },
+        {
+          "seed": 148008104,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 7,
+          "final_tick": 18039,
+          "seconds": 3.9,
+          "searched": 41,
+          "overrides": 0
+        },
+        {
+          "seed": 148008105,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 4,
+          "final_tick": 11127,
+          "seconds": 1.4,
+          "searched": 18,
+          "overrides": 0
+        },
+        {
+          "seed": 148008106,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 5,
+          "final_tick": 12071,
+          "seconds": 2.6,
+          "searched": 30,
+          "overrides": 0
+        },
+        {
+          "seed": 148008107,
+          "arm": "fast_search",
+          "won": false,
+          "terminal": true,
+          "final_wave": 9,
+          "final_tick": 22336,
+          "seconds": 5.6,
+          "searched": 56,
+          "overrides": 0
+        }
+      ]
+    }
+  ],
+  "selection_rule": "total current wins, teacher wins, then r2 rank; one per level",
+  "chosen": {
+    "42": "task148_l42_roof_r2_d1",
+    "43": "task148_l43_roof_r2_d1",
+    "44": "task148_l44_roof_r2_d1",
+    "45": "task148_l45_roof_r2_d2",
+    "47": "task148_l47_roof_r2_d1",
+    "48": "task148_l48_roof_r2_d1",
+    "49": "task148_l49_roof_r2_d1"
+  },
+  "totals": {
+    "student": {
+      "wins": 1,
+      "games": 112,
+      "terminal_games": 112
+    },
+    "teacher": {
+      "wins": 5,
+      "games": 112,
+      "terminal_games": 112
+    }
+  }
+}

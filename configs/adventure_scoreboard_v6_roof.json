@@ -616,7 +616,19 @@
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
-      "conveyor_semantics": "not a conveyor level"
+      "task148_measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 4,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": true
     },
     {
       "task_id": "task148_l43_roof_r2_d1",
@@ -636,7 +648,19 @@
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
-      "conveyor_semantics": "not a conveyor level"
+      "task148_measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": false
     },
     {
       "task_id": "task148_l44_roof_r2_d1",
@@ -656,26 +680,51 @@
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
-      "conveyor_semantics": "not a conveyor level"
+      "task148_measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": false
     },
     {
-      "task_id": "task148_l45_roof_r2_d1",
+      "task_id": "task148_l45_roof_r2_d2",
       "level": 45,
       "deck": [
         1,
         2,
-        3,
-        4,
-        6,
-        20,
-        29,
+        17,
         30,
         32,
-        33
+        33,
+        34,
+        37,
+        39,
+        44
       ],
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
+      "task148_measurement": {
+        "student": {
+          "wins": 1,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 1,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": true,
       "conveyor_semantics": "preloaded initial bank; engine conveyor deals thereafter"
     },
     {
@@ -713,7 +762,19 @@
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
-      "conveyor_semantics": "not a conveyor level"
+      "task148_measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": false
     },
     {
       "task_id": "task148_l48_roof_r2_d1",
@@ -733,7 +794,19 @@
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
-      "conveyor_semantics": "not a conveyor level"
+      "task148_measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": false
     },
     {
       "task_id": "task148_l49_roof_r2_d1",
@@ -753,7 +826,19 @@
       "terrain": "roof",
       "zombie_count_multiplier": 1.0,
       "playthrough": 2,
-      "conveyor_semantics": "not a conveyor level"
+      "task148_measurement": {
+        "student": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        },
+        "teacher": {
+          "wins": 0,
+          "games": 8,
+          "terminal_games": 8
+        }
+      },
+      "gate_draft_qualified": false
     },
     {
       "task_id": "task101_l50_native",
@@ -766,7 +851,8 @@
   ],
   "panel_version": "task148_roof_v6_draft",
   "deployment_ready": false,
-  "status": "r2-rank1 provisional, awaiting current-agent measurement",
+  "status": "measurement complete; draft only, not deployed",
   "source_run_id": "8024414b540c410893a07dc4e853f7e0",
-  "roof_source": "MEMORY/docs/task148-roof-candidates.json"
+  "roof_source": "MEMORY/docs/task148-roof-candidates.json",
+  "roof_selection_rule": "total current wins, teacher wins, then r2 rank; one per level"
 }
