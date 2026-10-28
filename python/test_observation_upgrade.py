@@ -117,19 +117,20 @@ def test_curriculum_recipe_trains_one_step_from_old_parent(tmp_path, monkeypatch
     assert checkpoint['state_dict']['trunk.0.weight'].shape[1] == 113
 
 
-def test_sleep_enqueue_freezes_one_incumbent_for_both_recipes(tmp_path, monkeypatch):
+def test_sleep_enqueue_trains_both_recipes_from_scratch(tmp_path, monkeypatch):
+    """task143: production trains every round from scratch; the queue must not
+    couple a v2sleep round to whichever checkpoint happens to be incumbent."""
     import curriculum_queue as queue
     from pvz_recipe import load_recipe, write_recipe
     from test_curriculum_pipeline import setup
 
     args, state = setup(tmp_path)
-    recipe = dict(load_recipe(args.recipe), obs='v2sleep')
+    recipe = dict(load_recipe(args.recipe), obs='v2sleep', init=None)
     write_recipe(args.recipe, recipe)
     args.alternate_recipe = tmp_path / 'b.json'
     write_recipe(args.alternate_recipe, recipe)
     args.candidates_per_recipe = 2
     args.selection_seed_ledger = tmp_path / 'selection_ledger.json'
-    parent = str(args.rollout_policy)
     monkeypatch.setattr(queue.TrainingPipeline, '_run', lambda *args: {})
     monkeypatch.setattr(queue.TrainingPipeline, '_plan_build', lambda *args: None)
     pipeline = queue.TrainingPipeline(args, state)
@@ -138,8 +139,7 @@ def test_sleep_enqueue_freezes_one_incumbent_for_both_recipes(tmp_path, monkeypa
         pipeline.futures[0][1].result(timeout=5)
         job = state['training_jobs'][0]
         assert len(job['candidate_recipes']) == 4
-        args.rollout_policy = tmp_path / 'later_incumbent.pt'
-        assert all(load_recipe(Path(candidate['recipe']))['init'] == parent
+        assert all(load_recipe(Path(candidate['recipe']))['init'] is None
                    for candidate in job['candidate_recipes'])
     finally:
         pipeline.executor.shutdown(wait=True)
