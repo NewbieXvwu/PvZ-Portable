@@ -9748,7 +9748,17 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/942ebac22713fd6734cc8654d0974f1cd7059b98de3396818f631950b50204d3",
+    "decisions": [
+     1090,
+     991
+    ],
+    "index": 0,
+    "future_seed_start": 311000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_boss_50_orig_m100_s81030004_a1b04b1d5e750",
