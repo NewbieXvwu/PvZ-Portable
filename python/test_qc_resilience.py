@@ -27,7 +27,11 @@ def args(root):
                            out=root / 'runs', stop_flag=root / 'stop', workers=2,
                            rollout_policy=root / 'student.pt', beta_threshold=.1,
                            starved_beta=.5, probe_interval=3, rounds=1,
-                           round_games=4, games_per_group=2)
+                           round_games=4, games_per_group=2,
+                           # task140: argparse always sets these; a fixture that forgot them
+                           # made collect_rounds raise AttributeError and spin forever.
+                           save_candidates_levels=frozenset(),
+                           random_deck_share=q.RANDOM_DECK_SHARE)
 
 
 def plan():
@@ -223,6 +227,29 @@ def test_persistent_state_error_blocks_collection_until_saved(tmp_path):
         q.collect_rounds(a, s, {}, {}, [1.], {}, {})
     assert events == ['save', 'save', 'collect']
     sleep.assert_called_once_with(120)
+
+
+def test_round_boundary_retries_are_bounded_then_give_up(tmp_path):
+    a = args(tmp_path)
+    with patch.object(q, 'save_state'), \
+         patch.object(q, 'plan_round', side_effect=OSError('manifest unreadable')), \
+         patch.object(q.time, 'sleep') as sleep:
+        with pytest.raises(OSError, match='manifest unreadable'):
+            q.collect_rounds(a, state(), {}, {}, [1.], {}, {})
+    assert [call.args[0] for call in sleep.call_args_list] == [120, 240, 480, 960, 1800]
+    # one retry line per attempt plus the fatal line, never an unbounded log
+    assert len(a.log.read_text().splitlines()) == q.ROUND_RETRY_LIMIT + 1
+
+
+def test_programming_error_at_round_boundary_is_not_retried(tmp_path):
+    a = args(tmp_path)
+    with patch.object(q, 'save_state'), \
+         patch.object(q, 'plan_round', side_effect=AttributeError('save_candidates_levels')), \
+         patch.object(q.time, 'sleep') as sleep:
+        with pytest.raises(AttributeError):
+            q.collect_rounds(a, state(), {}, {}, [1.], {}, {})
+    sleep.assert_not_called()
+    assert len(a.log.read_text().splitlines()) == 1
 
 
 def test_keyboard_interrupt_is_not_swallowed(tmp_path):
