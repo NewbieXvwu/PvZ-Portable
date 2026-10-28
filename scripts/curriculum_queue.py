@@ -1004,7 +1004,7 @@ class TrainingPipeline:
             if self.last_train_peak and self.last_pack_peak:
                 break
         queued = [job for job in state.setdefault('training_jobs', [])
-                  if job['status'] != 'done' and not job.get('isolated')
+                  if job['status'] not in ('done', 'superseded') and not job.get('isolated')
                   and job.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS]
         if queued:
             try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
@@ -1030,6 +1030,24 @@ class TrainingPipeline:
 
     def pending(self):
         return any(not future.done() for _, future in self.futures)
+
+    def _superseded_by(self, job):
+        """Newest round that makes this waiting job obsolete, or None (task141).
+
+        Every round retrains from the whole corpus, so training an older backlog entry
+        only delays the newest data. A job is skipped when any newer round is already
+        queued, running or trained (or is waiting to retry a background failure).
+        Isolated and already-superseded jobs never make an older job obsolete.
+        """
+        round_index = job.get('round')
+        if type(round_index) is not int:
+            return None
+        newer = [saved['round'] for saved in list(getattr(self, 'state', {}).get('training_jobs', []))
+                 if type(saved.get('round')) is int and saved['round'] > round_index
+                 and (saved.get('status') in ('queued', 'running', 'done')
+                      or (saved.get('status') == 'failed' and not saved.get('isolated')
+                          and saved.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS))]
+        return max(newer, default=None)
 
     def foreground_limit(self):
         # Evaluation reserves the game workers it is actually using (task73c: eval units
@@ -1425,6 +1443,11 @@ class TrainingPipeline:
                 if old and Path(job['model']).is_file():
                     if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job), old.get('evaluation_directory')):
                         return old
+                # task141: a finished round keeps its report; everything still waiting behind
+                # a newer round is skipped instead of trained and gated on stale data.
+                newer = self._superseded_by(job)
+                if newer is not None:
+                    return dict(superseded_by=newer)
                 if trained.is_file():
                     report = json.loads(trained.read_text())
                     if (report.get('model_sha256') != file_sha(job['model'])
@@ -1663,7 +1686,7 @@ class TrainingPipeline:
                     save_state(self.args.state, self.state)
                     log_line(self.args.log, f'background round {job["round"]} recovery isolated: {error}')
         for index, (job, future) in enumerate(list(self.futures)):
-            if job['status'] in ('done', 'failed') or not future.done():
+            if job['status'] in ('done', 'failed', 'superseded') or not future.done():
                 continue
             try:
                 retry_io(self._poll_job)(index, job, future, retry)
@@ -1697,6 +1720,12 @@ class TrainingPipeline:
             job['isolated'] = job['attempts'] >= MAX_BACKGROUND_ATTEMPTS
             log_line(self.args.log, f'background round {job["round"]} failed '
                                     f'{job["attempts"]} times; snapshot isolated, collection continues: {error}')
+            return
+        if isinstance(report, dict) and report.get('superseded_by') is not None:
+            job.update(status='superseded', superseded_by=report['superseded_by'])
+            save_state(self.args.state, self.state)
+            log_line(self.args.log, f'background round {job["round"]} superseded by round '
+                                    f'{report["superseded_by"]}; training and gate skipped')
             return
         promotion = report.get('promotion', {})
         current_contract = self.evaluation_contract(job)
@@ -2067,7 +2096,7 @@ def set_gate_version(state: dict, version: int) -> None:
     idle collection for hours).
     """
     previous = state.get('gate_version', 3)  # all pre-task113 states used v3
-    pending = any(job.get('status') != 'done' and not job.get('isolated')
+    pending = any(job.get('status') not in ('done', 'superseded') and not job.get('isolated')
                   for job in state.get('training_jobs', []))
     if version != previous and pending:
         raise ValueError(f'gate v{previous} -> v{version} requires a drained pipeline; '
