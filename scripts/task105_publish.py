@@ -12,6 +12,7 @@ import json
 import subprocess
 import time
 from pathlib import Path
+from task105_state import metadata_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / 'artifacts/task105'
@@ -26,6 +27,14 @@ def git(*args):
 
 
 def publish():
+    with metadata_lock(ROOT):
+        commit_results()
+    # Network work never holds the metadata lock or delays a registration.
+    if git('rev-list', '--count', 'origin/llmimport..HEAD') != '0':
+        print(git('push', 'origin', 'llmimport'), flush=True)
+
+
+def commit_results():
     if git('branch', '--show-current') != 'llmimport':
         raise ValueError('publisher requires branch llmimport')
     # Do not mix another actor's staged work into an automatic result commit.
@@ -64,9 +73,6 @@ def publish():
         print(git('diff', '--cached', '--stat'), flush=True)
         print(git('commit', '-m', f'task105: record scan {evidence["scanned"]} '
                   f'({evidence["registered"]} start cells)'), flush=True)
-    # A successful commit followed by a failed push must be retried on restart.
-    if git('rev-list', '--count', 'origin/llmimport..HEAD') != '0':
-        print(git('push', 'origin', 'llmimport'), flush=True)
 
 
 def main():

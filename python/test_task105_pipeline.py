@@ -36,6 +36,11 @@ class ResumeTest(unittest.TestCase):
         self.tasks = {}
         self.assertFalse(self.saved())
 
+    def test_report_can_use_its_snapshot_and_waits_for_registration(self):
+        with patch.object(Path, 'read_text', side_effect=AssertionError('reuse result snapshot')):
+            self.assertTrue(pipeline.scan_finished(self.entry, self.out, self.tasks, self.result))
+            self.assertFalse(pipeline.scan_finished(self.entry, self.out, {}, self.result))
+
     def test_no_passing_ladder_is_a_terminal_scan(self):
         self.result['ladder'] = None
         self.tasks = {}

@@ -32,6 +32,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
 from import_llm_run import allocate_future_block, occupied_seed_ranges, DEFAULT_SEED_LEDGER  # noqa: E402
+from task105_state import file_lock, metadata_lock  # noqa: E402
 
 # 生产模型（task91 任务书：学生 r11、叶值 v5、静态网 branch1）。
 DEFAULT_STUDENT = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt')
@@ -608,8 +609,7 @@ def update_manifest(manifest_path: Path, task_id: str, spec: dict, *, family: di
                     return False
                 raise ValueError(f'{task_id}: 已有起点格，不得覆盖')
             task['demo_start'] = spec
-            manifest_path.write_text(json.dumps(document, ensure_ascii=False, indent=1) + '\n',
-                                     encoding='utf-8')
+            write_json(manifest_path, document)
             return True
     if family is None or family.get('task_id') != task_id or family.get('demo_start'):
         raise KeyError(f'{task_id} 不在 {manifest_path}')
@@ -837,7 +837,16 @@ def parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> None:
     args = parser().parse_args(argv)
-    args.func(args)
+    if args.command == 'register':
+        with metadata_lock(ROOT):
+            args.func(args)
+    elif args.command == 'adaptive' and args.task_id:
+        # Both task105 workers select one exact SHA family. A late collision
+        # waits here, then --skip-complete reuses the first worker's result.
+        with file_lock(args.out / 'locks' / f'{args.task_id}.lock'):
+            args.func(args)
+    else:
+        args.func(args)
 
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 """A failed background push must not duplicate a scan commit or collect other files."""
 import contextlib
+import fcntl
 import io
 import json
 from pathlib import Path
@@ -50,6 +51,8 @@ class PublicationTest(unittest.TestCase):
 
             def offline_push(*args):
                 if args[0] == 'push':
+                    with (out / 'delivery.lock').open('a') as handle:
+                        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
                     raise subprocess.CalledProcessError(1, args, 'offline')
                 return original_git(*args)
 

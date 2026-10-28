@@ -29,12 +29,13 @@ def process_identity(pid):
         return None
 
 
-def scan_finished(entry, out, tasks):
+def scan_finished(entry, out, tasks, result=None):
     """Use the saved result and manifest; never launch a replay to resume."""
-    path = out / 'scan/results' / f'{entry["task_id"]}_s{entry["seed"]}.json'
-    if not path.exists():
-        return False
-    result = json.loads(path.read_text())
+    if result is None:
+        path = out / 'scan/results' / f'{entry["task_id"]}_s{entry["seed"]}.json'
+        if not path.exists():
+            return False
+        result = json.loads(path.read_text())
     if (not result.get('complete') or result.get('archive') != entry['archive']
             or result.get('future_seeds') != entry['future_seeds'][:8]):
         return False

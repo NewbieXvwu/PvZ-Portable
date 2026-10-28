@@ -12,7 +12,8 @@ import re
 from pathlib import Path
 
 from llm_import_sha import file_sha, save
-from task105_pipeline import ENGINE_SHA
+from task105_pipeline import ENGINE_SHA, scan_finished
+from task105_state import metadata_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -51,7 +52,9 @@ def collect():
         if not path.exists():
             continue
         result = json.loads(path.read_text())
-        if not result.get('complete'):
+        # Another worker may have finished adaptive but not registered yet.
+        # Publish an entry only once the full scan→register step is ready.
+        if not scan_finished(entry, out, tasks, result):
             continue
         ladder = result.get('ladder')
         spec = tasks[task_id].get('demo_start')
@@ -180,7 +183,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('input', nargs='?', help='accepted for the legacy running-chain entry; not reopened')
     parser.parse_args()
-    result = collect()
+    with metadata_lock(ROOT):
+        result = collect()
     print(f"task105: {result['scanned']}/{result['scan_expected']} scanned, "
           f"{result['registered']} registered, {result['deployed']} in production")
 
