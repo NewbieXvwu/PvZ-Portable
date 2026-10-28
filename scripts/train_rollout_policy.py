@@ -795,19 +795,8 @@ def main(*, step_observer=None) -> None:
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
-        from pvz_rollout_policy import load_student
-        initial = load_student(args.init)
-        weights = initial.state_dict()
-        if net.aux is not None:
-            weights.update({k: v for k, v in net.state_dict().items() if k.startswith("aux.")})
-        if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
-            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
-            weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
-        if args.obs == "v2fog" and initial.obs == "v2" and args.context == initial.context:
-            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 1))
-        if args.obs == "v2fogstack4" and initial.obs == "v2" and args.context == initial.context:
-            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 103))
-        net.load_state_dict(weights)
+        from pvz_rollout_policy import load_student, warm_start_student
+        warm_start_student(net, load_student(args.init))
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())

@@ -14,6 +14,7 @@
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)
+- [学生架构远期升级：个体 + 注意力](notes/student-architecture.md)
 
 ## 每日日志
 
@@ -105,6 +106,8 @@
 - [task76 终局真值报告](docs/task76-roof-terminal-truth.json)
 - [2026-10-25](2026-10-25.md)
 - [2026-10-26](2026-10-26.md)
+- [task118 气球关卡组检验](docs/task118-balloon-decks.md)
 - [2026-10-27](2026-10-27.md)
 - [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)
 - [task128：门禁 v5（冒险模式实际关卡与卡组）](docs/task128-gate-v5.md)
+- [task131：v2sleep 加宽热启动、缓存与 deploy15 准备](docs/task131-obs-upgrade.md)

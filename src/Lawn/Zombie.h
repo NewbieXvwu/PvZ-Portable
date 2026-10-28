@@ -311,6 +311,7 @@ public:
 	void                            DrawDancerReanim(Graphics* g);
 	void                            DrawBungeeReanim(Graphics* g);
 	void                            DrawBungeeTarget(Graphics* g);
+	bool                            BungeeTargetSettled();
 	void                            BungeeDie();
 	void                            ZamboniDeath(unsigned int theDamageFlags);
 	void                            CatapultDeath(unsigned int theDamageFlags);

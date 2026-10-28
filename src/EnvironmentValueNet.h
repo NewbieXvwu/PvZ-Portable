@@ -7,7 +7,7 @@
 #include <vector>
 class LawnApp;
 
-// PVZVN001: little-endian uint32 width, encoder version (1/2), context dimension (0/35),
+// PVZVN001: little-endian uint32 width, encoder version (1/2/3/4), context dimension (0/35),
 // then contiguous float32 parameters in PyTorch state_dict order. No JSON on the Board path.
 class EnvironmentValueNet
 {
@@ -15,7 +15,8 @@ public:
 	static constexpr int Channels = 92, Cells = 60, Scalars = 113, TaskContext = 35;
 	void Load(const std::string& path);
 	bool Loaded() const { return width != 0; }
-	int ScalarCount() const { return Scalars + (encoder == 2 ? 6 : 0) + context; }
+	int ScalarCount() const { return Scalars + (encoder >= 2 ? 6 : 0) + context; }
+	int ChannelCount() const { return Channels + (encoder == 4 ? 8 : encoder == 3 ? 6 : 0); }
 	void Features(LawnApp* app, double income, std::vector<float>& board, std::vector<float>& scalars) const;
 	float Logit(const std::vector<float>& board, const std::vector<float>& scalars);
 	float Predict(LawnApp* app, double income);

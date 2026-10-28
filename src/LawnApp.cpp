@@ -1963,6 +1963,58 @@ static void WriteObservationBoss(std::ostream& out, LawnApp* app)
 	out << '}';
 }
 
+LawnApp::BungeeObservation LawnApp::EnvironmentBungees() const
+{
+	BungeeObservation result;
+	for (Zombie* zombie : mBoard->mZombies)
+	{
+		if (zombie->mDead || zombie->mZombieType != ZombieType::ZOMBIE_BUNGEE ||
+			!zombie->IsOnBoard() || !EnvironmentZombieVisible(zombie)) continue;
+		const Rect body = zombie->GetZombieRect();
+		const bool visible = body.mY >= 0 && body.mY < mBoard->mHeight &&
+			body.mX + body.mWidth > 0 && body.mX < mBoard->mWidth;
+		const bool target = zombie->BungeeTargetSettled();
+		if (!visible && !target) continue;
+		int phase = -1;
+		if (visible)
+		{
+			if (zombie->mZombiePhase == ZombiePhase::PHASE_BUNGEE_DIVING || zombie->mZombiePhase == ZombiePhase::PHASE_BUNGEE_DIVING_SCREAMING) phase = 0;
+			else if (zombie->mZombiePhase == ZombiePhase::PHASE_BUNGEE_AT_BOTTOM || zombie->mZombiePhase == ZombiePhase::PHASE_BUNGEE_GRABBING) phase = 1;
+			else if (zombie->mZombiePhase == ZombiePhase::PHASE_BUNGEE_RISING) phase = 2;
+		}
+		result.zombies.push_back({zombie->mRow, zombie->mTargetCol, target, phase,
+			visible ? static_cast<int>(std::lround(zombie->mAltitude)) : 0});
+		Plant* plant = mBoard->mPlants.DataArrayTryToGet(static_cast<unsigned int>(zombie->mTargetPlantID));
+		if (visible && plant && !plant->mDead && !plant->mSquished && !EnvironmentPlantFogHidden(plant) &&
+			plant->mOnBungeeState != PlantOnBungeeState::NOT_ON_BUNGEE)
+			result.plants.push_back({plant->mRow, plant->mPlantCol});
+	}
+	return result;
+}
+
+static void WriteObservationBungees(std::ostream& out, LawnApp* app)
+{
+	const auto state = app->EnvironmentBungees();
+	if (state.zombies.empty() && state.plants.empty() && !app->IsBungeeBlitzLevel()) return;
+	out << ",\"bungee\":{\"zombies\":[";
+	bool first = true;
+	for (const auto& zombie : state.zombies)
+	{
+		if (!first) out << ',';
+		first = false;
+		out << '[' << zombie[0] << ',' << zombie[1] << ',' << zombie[2] << ',' << zombie[3] << ',' << zombie[4] << ']';
+	}
+	out << "],\"plants\":[";
+	first = true;
+	for (const auto& plant : state.plants)
+	{
+		if (!first) out << ',';
+		first = false;
+		out << '[' << plant[0] << ',' << plant[1] << ']';
+	}
+	out << "]}";
+}
+
 static void WriteObservationV2(std::ostream& out, LawnApp* app, bool privileged = false)
 {
 	Board* board = app->mBoard;
@@ -2061,7 +2113,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 		out << '[' << i << ',' << static_cast<int>(packet.mPacketType) << ',' << (packet.mActive ? 1 : 0)
 			<< ',' << packet.mRefreshCounter << ',' << packet.mRefreshTime << ',' << cost << ']';
 	}
-	// [row, col, type, health, max_health, squished]
+	// [row, col, type, health, max_health, squished, asleep, wake_up_counter]
 	out << "],\"plants\":[";
 	bool first = true;
 	for (const Plant* plant : mBoard->mPlants)
@@ -2073,7 +2125,8 @@ std::string LawnApp::EnvironmentLeanObservation()
 		const bool aHidden = EnvironmentPlantFogHidden(plant);
 		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
 			<< ',' << (aHidden ? -1 : plant->mPlantHealth) << ',' << (aHidden ? -1 : plant->mPlantMaxHealth)
-			<< ',' << (plant->mSquished ? 1 : 0) << ']';
+			<< ',' << (plant->mSquished ? 1 : 0) << ',' << (!aHidden && plant->mIsAsleep ? 1 : 0)
+			<< ',' << (aHidden ? -1 : plant->mWakeUpCounter) << ']';
 	}
 	// [row, type, x, velocity_x, body+helm+shield health, on_board, is_eating, chilled, ice_trap, id]
 	out << "],\"zombies\":[";
@@ -2132,6 +2185,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 	WriteObservationV2(out, this);
 	WriteObservationFog(out, this);
 	WriteObservationBoss(out, this);
+	WriteObservationBungees(out, this);
 	out << '}';
 	return out.str();
 }
@@ -2376,7 +2430,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"max_health\":" << (aPlantHidden ? -1 : plant->mPlantMaxHealth) << ",\"state\":" << (aPlantHidden ? -1 : static_cast<int>(plant->mState))
 				<< ",\"state_countdown\":" << (aPlantHidden ? -1 : plant->mStateCountdown) << ",\"launch_counter\":" << (aPlantHidden ? -1 : plant->mLaunchCounter)
 				<< ",\"launch_rate\":" << plant->mLaunchRate << ",\"shooting_counter\":" << plant->mShootingCounter
-				<< ",\"wake_up_counter\":" << plant->mWakeUpCounter << ",\"asleep\":" << (plant->mIsAsleep ? "true" : "false")
+				<< ",\"wake_up_counter\":" << (aPlantHidden ? -1 : plant->mWakeUpCounter) << ",\"asleep\":" << (!aPlantHidden && plant->mIsAsleep ? "true" : "false")
 				<< ",\"squished\":" << (plant->mSquished ? "true" : "false")
 				<< ",\"target_zombie_id\":" << (EnvironmentFogMasked() && !privileged ? -1 : static_cast<int>(plant->mTargetZombieID))
 				<< ",\"bungee_state\":" << static_cast<int>(plant->mOnBungeeState) << '}';
@@ -2488,6 +2542,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 	if (!privileged || mEnvironmentTaskSpec.fogObservation != EnvironmentFogObservation::Storm)
 		WriteObservationFog(out, this);
 	WriteObservationBoss(out, this);
+	WriteObservationBungees(out, this);
 	if (privileged)
 	{
 		// Loss attribution is diagnostic only; it never reaches either policy arm.

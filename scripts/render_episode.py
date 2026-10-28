@@ -134,8 +134,10 @@ def _frame(obs: dict) -> dict:
     见 LawnApp::EnvironmentLeanObservation）：两种输入得到**完全相同**的帧。
     """
     if obs.get("lean"):
+        sleep = [[p[0], p[1], int(p[6]) if p[3] >= 0 else 0, p[7] if p[3] >= 0 else -1]
+                 for p in obs['plants'] if len(p) >= 8 and not p[5]]
         return _frame_from(
-            obs,
+            {**obs, 'sleep': sleep} if sleep else obs,
             plants=[tuple(p[:5]) for p in obs["plants"] if not p[5]],
             zombies=[(z[0], z[1], z[2], z[3], z[4], bool(z[5]), bool(z[6]), int(z[7]), int(z[8]), int(z[9])) + tuple(z[10:])
                      for z in obs["zombies"]],
@@ -177,6 +179,11 @@ def _frame(obs: dict) -> dict:
         for p in obs.get("packets") or []
     ]
     graves = [[g["row"], g["col"], g["type"]] for g in (obs.get("grid_items") or [])]
+    sleep = [[p['row'], p['col'], int(p['asleep']) if p['health'] >= 0 else 0,
+              p.get('wake_up_counter', 0) if p['health'] >= 0 else -1]
+             for p in obs.get('plants', []) if 'asleep' in p and not p.get('squished')]
+    if sleep:
+        obs = {**obs, 'sleep': sleep}
     return _frame_from(obs, plants=plants, zombies=zombies, mowers=mowers, packets=packets, graves=graves)
 
 
@@ -247,6 +254,8 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
         **({"v2": obs["v2"]} if "v2" in obs else {}),
         **({"boss": obs["boss"]} if "boss" in obs else {}),
+        **({"bungee": obs["bungee"]} if "bungee" in obs else {}),
+        **({"sleep": obs["sleep"]} if "sleep" in obs else {}),
         **({"fog_amount": obs["fog_amount"]} if "fog_amount" in obs else {}),
         # 只有原版传送带开局的观测带这个键；旧任务/旧档案的帧逐字节不变。
         **({"conveyor_start": obs["conveyor_start"]} if obs.get("conveyor_start") else {}),

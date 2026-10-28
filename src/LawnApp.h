@@ -27,6 +27,7 @@
 #include "SexyAppFramework/SexyApp.h"
 #include "PvzpLib/PvzpFoley.h"
 #include <memory>
+#include <array>
 #include <vector>
 
 class Board;
@@ -285,6 +286,12 @@ public:
 	bool EnvironmentProjectileVisible(const class Projectile* projectile) const;
 	bool EnvironmentPlantFogHidden(const class Plant* plant) const;
 	bool EnvironmentVisibleEnemies() const;
+	struct BungeeObservation
+	{
+		std::vector<std::array<int, 5>> zombies;
+		std::vector<std::array<int, 2>> plants;
+	};
+	BungeeObservation EnvironmentBungees() const;
 	std::string                     EnvironmentDeckOptions();
 	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);
 	std::string                     EnvironmentDeckPool();

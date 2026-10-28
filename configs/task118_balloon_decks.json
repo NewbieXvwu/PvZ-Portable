@@ -1,0 +1,234 @@
+{
+  "schema_version": 1,
+  "source": "task118 balloon deck candidates; base = task101 frozen decks",
+  "seed_block": [
+    103000000,
+    103500000
+  ],
+  "stride": 10000,
+  "skipped_levels": [
+    5,
+    15,
+    25,
+    35,
+    45
+  ],
+  "tasks": [
+    {
+      "task_id": "task118_l33_control",
+      "level": 33,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        2,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l33_cactus",
+      "level": 33,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        26,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l33_cattail",
+      "level": 33,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        43,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l33_nutcactus",
+      "level": 33,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        26,
+        17,
+        19,
+        2,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l34_control",
+      "level": 34,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        2,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l34_cactus",
+      "level": 34,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        26,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l34_cattail",
+      "level": 34,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        43,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l34_nutcactus",
+      "level": 34,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        26,
+        17,
+        19,
+        2,
+        27,
+        7
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l39_control",
+      "level": 39,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        2,
+        27,
+        5
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l39_cactus",
+      "level": 39,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        26,
+        27,
+        5
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l39_cattail",
+      "level": 39,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        23,
+        17,
+        19,
+        43,
+        27,
+        5
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    },
+    {
+      "task_id": "task118_l39_nutcactus",
+      "level": 39,
+      "deck": [
+        9,
+        8,
+        10,
+        16,
+        26,
+        17,
+        19,
+        2,
+        27,
+        5
+      ],
+      "zombie_count_multiplier": 1.0,
+      "fog_observation": "human_v2"
+    }
+  ]
+}

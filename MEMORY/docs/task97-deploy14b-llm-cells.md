@@ -1,0 +1,27 @@
+# task97：deploy14b——11 个 LLM 屋顶起点格上 qc
+
+> 主控 2026-10-26 写。执行者：台式机 Codex（plus 号，tmux `codex-hashdet`；额度用完由 agent_pool 交 CodeBuddy）。工作树沿用 `/home/newbiexvwu/PvZ-search/.claude/worktrees/redeploy`（先 `git merge origin/pvz-env`）。每个任务最多 2 个游戏进程；**不碰 tmux `qc`**，cq 只读。**先等 deploy14 完成**：`~/pvz-logs/qc_setup.log` 里出现 `deploy14: first group after restart rc=0, OK`。如果出现的是 ROLLBACK，就停下，写进“问题”。
+
+## 要做的
+1. **存档入 cq**：用 `scripts/import_llm_run.py`（task89）把 `/home/newbiexvwu/pvz-logs/task89/llm_free_out_numeric.zip` 里的 12 份通关局导入 `cq/artifacts/llm_demo/raw/`，目录布局与 task87 相同。
+   - 逐份 verify；
+   - 核对 `configs/human_demo_tasks.json` 里这 11 个 `demo_start` 格引用的存档路径都能解析。
+2. **teacher_rates**：照 B8.6 的做法（`scripts/task70_b8_teacher_rates.py`），每格 8 局，用 deploy14 引擎 build5。给出写入 `~/pvz-logs/teacher_rates.json` 的片段。
+3. **面板与 dry-run**：照 B8 第 3、5 步。
+   - 面板只能新增，旧任务逐项不变，种子不相交；
+   - 在 state 拷贝上跑 dry-run，确认 11 个格都能注册。
+4. 写 `~/pvz-logs/qc_deploy14b.sh`，结构照 `qc_deploy14.sh`：
+   - 引擎不变，只换 configs / 面板 / rates；
+   - 回滚目标是 deploy14；
+   - **启动命令照抄 deploy14 的 `start_qc`**。
+   只写，不执行，由主控执行。
+5. 结果写 `MEMORY/docs/task70-engine-redeploy.md` 的 B10 节，`git push origin redeploy`。
+
+## 规则
+- 只用绝对路径；不 `cd` 进别的工作树；`PVZ_NO_POPUP=1`。
+- 禁止 `git add -f`；`.pt` `.npz` `.log` 和存档不进 git；不写字面密钥；不手写打法规则或公式。
+- 每完成一小步就提交、push，在“结果”里记一行；有疑问写进“问题”，按最佳判断继续。
+
+## 结果
+
+## 问题

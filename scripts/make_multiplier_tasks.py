@@ -243,6 +243,13 @@ def scan_manifests() -> list[Path]:
     paths: list[Path] = []
     for pattern in patterns:
         paths.extend(Path(p) for p in glob.glob(pattern, recursive=True) if Path(p).is_file())  # skip dangling links
+    # Replay evidence (task70 gate/ABBA/cold-start, task77 perf) records meta.json/games.jsonl
+    # with real seeds, and multiplier_panel.json copies exist in every deployed tree; neither is a
+    # task manifest and neither trains anything, so neither enters the disjointness scan. The
+    # panel tasks replayed there are the panel's own seeds -- self-references, not cross-family
+    # contamination.
+    paths = [p for p in paths if p.name != 'multiplier_panel.json'
+             and not any(part.startswith(('task70', 'task77')) for part in p.parts)]
     return sorted(set(paths))
 
 
@@ -280,6 +287,10 @@ def audit(tasks: list[dict], sources: dict[str, dict[str, dict]], manifest_paths
                 for seed in task['seeds']:
                     deck = deck_for_seed(task, seed)
                     assert len(deck) == len(base['deck']) and len(set(deck)) == len(deck)
+                    if not deck:
+                        # native conveyor (task75): no task deck -- the engine's own belt
+                        # schedule supplies the cards, AGENTS §8 deck coverage does not apply.
+                        continue
                     assert terrain_covered(level, deck), (task['task_id'], seed, deck)
                     if 'deck_perturb' not in task:
                         assert tuple(deck) == tuple(base['deck'])
