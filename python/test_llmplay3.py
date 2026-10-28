@@ -166,6 +166,15 @@ class ClaimTest(unittest.TestCase):
         self.assertTrue(item.get("busy"))
         self.assertEqual(item["action"], "busy")
 
+    def test_c_agent_gets_challenge_items_first_and_falls_back_to_main(self):
+        document = workflow.derive([], "run")
+        item = workflow.next_task(document, track="C")["item"]
+        self.assertEqual(item["layer"], "C")
+        # C 轨本圈做完后（这里清空 C 轨待办来模拟），C 子代理自动接主线
+        document["detail"]["C"] = {}
+        item = workflow.next_task(document, track="C")["item"]
+        self.assertIn(item["layer"], workflow.MAIN_LAYERS)
+
     def test_release_puts_the_slot_back(self):
         document = workflow.derive([], "run")
         item = workflow.next_task(document)["item"]

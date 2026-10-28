@@ -101,9 +101,9 @@ def progress() -> dict:
     return _derive(document["archives"], document["run_id"])
 
 
-def next_task() -> dict:
-    """当前圈当前层的下一项。这个任务没有终点，所以永远不返回 None。"""
-    return workflow.next_task(progress())
+def next_task(track=None) -> dict:
+    """领下一项。track="C" 表示 C 轨专职子代理（C 优先，做完接主线）。"""
+    return workflow.next_task(progress(), track=track)
 
 
 def check(task_id, deck, strategy="", seed=None) -> dict:

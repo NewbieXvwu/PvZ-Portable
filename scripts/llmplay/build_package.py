@@ -167,9 +167,11 @@ def repack_interface(previous: Path, out: Path) -> list[Path]:
         for name, document in (("human_demo_tasks.json", manifest),
                                ("extra_seeds.json", extra_seeds(manifest))):
             (stage / "configs" / name).write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
-        for path in (SEED_PLAN, ROBUSTNESS_PLAN, previous / "configs" / PACKAGE,
+        for path in (SEED_PLAN, ROBUSTNESS_PLAN,
                      ROOT / "configs" / "adventure_scoreboard.json", ROOT / "configs" / "gate_v5_panel.json"):
             shutil.copyfile(path, stage / "configs" / path.name)
+        (stage / "configs" / PACKAGE).write_text(json.dumps(dict(schema="llmplay_package_v1"),
+                                                             indent=2) + "\n")
         for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")

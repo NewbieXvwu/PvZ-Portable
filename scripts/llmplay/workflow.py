@@ -495,7 +495,8 @@ def claim_item(document=None, *, track=None, ttl=None) -> dict:
     """领一项还没被领走的任务；全部被领走时返回 action=busy，不阻塞。"""
     document = document if document is not None else _progress()
     main_items, c_items = _ordered(document)
-    order = ([] if track == "C" else main_items) + ([] if track == "main" else c_items)
+    # C 轨专职子代理先领 C，C 做完自动接主线；主线子代理反之。
+    order = (c_items + main_items) if track == "C" else (main_items + c_items)
     ttl = float(ttl or os.environ.get("LLMPLAY_CLAIM_TTL") or CLAIM_TTL)
     with _claim_lock():
         data = _read_claims()
