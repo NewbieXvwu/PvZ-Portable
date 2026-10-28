@@ -104,9 +104,12 @@ def write_selection(pipeline, command, best_index=0):
     best = candidates[best_index]
     out.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(best, out / 'model.pt')
+    # task137: the controller sums per-task wins for the holdout and random-deck groups.
+    wins = {task['task_id']: 0 for task in json.loads(manifest.read_text())['tasks']}
     (out / 'selection.json').write_text(json.dumps(
         dict(best=best, model_sha256=sha(best), manifest_sha256=sha(manifest),
-             scores={path: dict(total=10 - index) for index, path in enumerate(candidates)},
+             scores={path: dict(total=10 - index, wins=dict(wins))
+                     for index, path in enumerate(candidates)},
              rejected=[path for path in candidates if path != best])))
 
 

@@ -169,9 +169,9 @@ def test_consecutive_rounds_score_the_adventure_body_on_disjoint_seeds(tmp_path)
     first = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
     second = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
     assert len(first['adventure_tasks']) == 38
-    assert len(first['tasks']) == 43                      # 38 adventure + 3 random + 2 unseen
+    assert len(first['tasks']) == 48                      # 38 adventure + 8 random + 2 unseen
     assert {len(task['seeds']) for task in first['tasks']} == {8, 16}
-    assert sum(len(task['seeds']) for task in first['tasks']) == 416
+    assert sum(len(task['seeds']) for task in first['tasks']) == 456
     assert_disjoint(first, list(seed_spans(second)))
     assert first['score_only'] == first['selection_holdout_tasks']
 
@@ -307,7 +307,7 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
                                       'allocated': [[200000000, 200000256]]}))
     start_before = start_ledger.read_bytes()
     monkeypatch.setattr(queue, 'set_oom_score_adj', lambda _: None)
-    monkeypatch.setattr(queue, 'load_panel', lambda _: ({}, [1.], {}, {}))
+    monkeypatch.setattr(queue, 'load_panel', lambda *_: ({}, [1.], {}, {}))
     monkeypatch.setattr(queue, 'reconcile_cells', lambda *a: [])
     monkeypatch.setattr(queue, 'load_teacher_rates', lambda _: {'a': .5})
     def preview(*args, start_seed_ledger, **kwargs):

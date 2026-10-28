@@ -3,8 +3,8 @@
 Injects a stub background job into TrainingPipeline and drives poll() the way the collection
 loop does (once per group boundary, run_round). Pinned: the first failure is only recorded
 (job failed, error persisted in state, logged) while collection keeps going; exactly one retry
-follows; a second consecutive failure of the same round is what stops qc; close() never
-retries and never hangs on a failed job.
+follows; a second consecutive failure of the same round isolates the snapshot while
+collection keeps going; close() never retries and never hangs on a failed job.
 """
 import sys
 import tempfile
@@ -76,14 +76,14 @@ class BackgroundFailureRetry(unittest.TestCase):
                                                    and self.pipeline.futures[0][1].done()):
             time.sleep(0.02)
         self.assertEqual(len(calls), MAX_BACKGROUND_ATTEMPTS)
-        # the second consecutive failure of the same round is what stops qc
-        with self.assertRaises(RuntimeError) as caught:
-            self.drive(lambda: False, timeout=5.0)
-        self.assertIn('2 times', str(caught.exception))
+        # task98: the second consecutive failure of the same round isolates the
+        # snapshot; collection continues and qc is not stopped.
+        self.drive(lambda: job.get('status') == 'failed' and job.get('isolated'), timeout=5.0)
         self.assertEqual(job['attempts'], 2)
         log = (Path(self.tmp.name) / 'curriculum.log').read_text()
         self.assertIn('retrying once', log)
-        self.assertIn('stopping qc', log)
+        self.assertIn('snapshot isolated, collection continues', log)
+        self.assertNotIn('stopping qc', log)
 
     def test_retry_success_completes_the_round(self):
         calls = []
