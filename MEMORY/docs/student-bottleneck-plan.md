@@ -1050,3 +1050,4 @@
 - 12:25 **llmplay3 包定稿**（516c3c1c；Mac `~/pvz-llmplay3/` 下有 pkg 7z 5.3 MB 与 res zip 34 MB）：子代理数量不写死；C 轨至少 1 个，用 `next_task(track="C")`；两轨合成一条队列，没有等待状态；`out/claims.json` 加 flock 并发领取，15 分钟过期；去掉 selfcheck、verify_archive、全量重放、哈希清单、state_hash；PROMPT 不出现上传字样。主控审过 PROMPT。用户：Codex 额度 12 小时内全部重置，期间用 Qoder，Qoder 的 DeepSeek 用完换 Qwen。
 - 13:10 task138（groupwidth：可扩容 worker 池）、task140（fixtest：持久化错误有界重试 + conftest 护栏；根因是测试把 sleep 打成 0 后死循环写日志，生产里则是永不放弃，看门狗没机会接管）、task141（coalesce：排队的旧训练作业标 superseded，只训最新一轮）都交付了。主控把它们和 task137 合进 `prodint`（b2b36cc9），撤掉 deploy14l-wait，派 Qoder 做 task142：跑相关测试、写合并部署脚本 `qc_deploy14p.sh`。
 - 13:35 deploy14p（prodint 4beab441）已复制到台式机，start_qc 与现用版本等价（只改了 extra 参数的写法），由 tmux deploy14p-wait 挂到下一次 'student activated/retained'（r29 已训 2/4，约 16:00）。派 task143（Qoder）：deploy15 刷新到 prodint，并核对是否从头训练。
+- 用户带 Mac 外出：Mac 上已没有训练 / 对局进程（task127 的 seed_variance 已结束），Qoder、CodeBuddy 都已打断并通知暂停。台式机从约 13:40 起无响应，修好的 14p（e2f8cc16 版）还没复制过去。
