@@ -9896,7 +9896,16 @@
     2,
     17,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/d0285b74c5016602ed79d6ee1405ffa8acebfe0b931814cc8435a50b12b770da",
+    "decisions": [
+     1273
+    ],
+    "index": 0,
+    "future_seed_start": 324000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l36_snow_magnet_v2_m200_s81020033_aaf239adc9da2",

@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-28T18:25:14.073045+00:00",
+ "generated": "2026-10-28T18:37:51.401813+00:00",
  "input_sha256": null,
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "input_path": "/home/newbiexvwu/llm_runs/llmplay3_r2/out",
@@ -5315,6 +5315,25 @@
    "reason": ""
   },
   {
+   "task_id": "demo_roof_47_doom_m400_s81015033_ad0285b74c501",
+   "seed": 81015033,
+   "games": 80,
+   "l50": 1273,
+   "top": 1273,
+   "decisions": [
+    1273
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 324000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
+  },
+  {
    "task_id": "llmplay3_a_l44_m100_s139003028_a66aa4b80c40a",
    "seed": 139003028,
    "games": 80,
@@ -5381,9 +5400,9 @@
   }
  ],
  "scan_expected": 1246,
- "scanned": 232,
- "registered": 230,
+ "scanned": 233,
+ "registered": 231,
  "deployed": 0,
- "scan_games": 19800,
+ "scan_games": 19880,
  "complete": false
 }
