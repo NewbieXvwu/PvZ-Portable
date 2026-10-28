@@ -57,7 +57,8 @@
  "lr_schedule": "cosine",
  "init": null,
  "cache": true,
- "cache_dir": "artifacts/student/recipe_cache/dw4i_timer",
+ "cache_dir": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/cache",
+ "read_cache_dir": null,
  "dense_boards": false,
  "row_weights": null,
  "source_row_report": true,
@@ -80,15 +81,11 @@
   "fraction": 0.1
  },
  "provenance": {
-  "source_path": "recipes/dw4i2_rebalanced_p05_v2sleep.json",
-  "source_sha256": "df4da572c068c4296bd452914264b8e29de57e78797efd46cd3be5b0a2da4200",
-  "source_revision": "8d18b4e5",
-  "original_out": "artifacts/student/dw4i2_rebalanced_p05_v2sleep",
-  "original_cache_dir": "artifacts/student/recipe_cache/dw4i",
-  "original_source_row_report": "artifacts/student/dw4i2_rebalanced_p05_v2sleep/source_rows.json",
-  "notes": "task145 草稿，未跑：与 v2sleep 配方逐项相同，只把 obs 换成 v2timer（v2sleep + 可见计时 4 通道）。启用前必须先重打训练行：段指纹含 obs 版本，874 个段全部失效；v2timer 没有 v2→v2sleep 那种零填充复用路径，74,933 份档案要整份重编码，所以走的是冷缓存速率。估时见 MEMORY/docs/task145-obs-timer.md。init=null：不从旧权重热启动；warm_start_student 支持 v2sleep→v2timer，要热启动得另写一份带 init 的配方。"
+  "source_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/prodint16/recipes/dw4i2_rebalanced_p05_v2sleep.json",
+  "source_revision": "4f243a98",
+  "notes": "task150 deploy16: v2timer A/B, init=null; reuse the shared v2sleep/v2 cache and compute only four timer channels. Existing corpus is precomputed separately at nice 19 with two workers; queue snapshots still choose labels and outputs at enqueue time."
  },
- "data": ".claude/worktrees/dw4/artifacts/task23/training_frames",
+ "data": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames",
  "labels": [
   "z13dag3_fast_search",
   "z15dag3_fast_search",
@@ -262,7 +259,7 @@
   "n19dag3_fast_search",
   "n20o1_fast_search"
  ],
- "out": "artifacts/student/dw4i2_rebalanced_p05_v2timer",
+ "out": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i2_rebalanced_p05_v2timer",
  "schema_version": 1,
  "kind": "training",
  "source_weight": {
