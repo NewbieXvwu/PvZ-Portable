@@ -28,11 +28,11 @@ def outcomes(path, expected_seeds):
             or any(row.get('arm') != 'fast' or row.get('terminal') is not True
                    or type(row.get('won')) is not bool or row.get('searched', 0) != 0 for row in rows)):
         raise ValueError(f'incomplete/wrong selection games: {path}')
-    return {row['seed']: row['won'] for row in rows}
+    return {row['seed']: row for row in rows}
 
 
 def score_rows(path, expected_seeds):
-    return sum(outcomes(path, expected_seeds).values())
+    return sum(row['won'] for row in outcomes(path, expected_seeds).values())
 
 
 def selection_rank(score):
@@ -75,12 +75,15 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
             run_command(command, check=True, stdout=subprocess.DEVNULL)
             games = folder / 'games.jsonl'
             played = outcomes(games, expected)
-            wins[task] = sum(played.values())
+            wins[task] = sum(row['won'] for row in played.values())
             if incumbent_score is None:
                 incumbent_outcomes[task] = played
             elif table[task].get('selection_group') == 'adventure':
                 pairs.extend(dict(task_id=task, seed=seed, zone=table[task]['terrain'],
-                                  candidate=played[seed], incumbent=incumbent_outcomes[task][seed])
+                                  candidate=played[seed]['won'], incumbent=incumbent_outcomes[task][seed]['won'],
+                                  **(dict(candidate_wave=played[seed]['final_wave'],
+                                          incumbent_wave=incumbent_outcomes[task][seed]['final_wave'])
+                                     if table[task]['terrain'] == 'roof' else {}))
                              for seed in expected)
         score = dict(wins=wins, total=sum(value for name, value in wins.items() if name not in score_only),
                      score_only=dict(wins={name: wins[name] for name in sorted(score_only)},
