@@ -1257,9 +1257,12 @@ class TrainingPipeline:
                     catalog[str(path.parent.relative_to(source))] = path
         options = pack_options(**training_row_options(recipe, labels))
         view = self.directory / 'frames'
+        by_label = {}
+        for rel, path in catalog.items():
+            by_label.setdefault(Path(rel).name, []).append((rel, path))
         pending = []
         for label in sorted(wanted):
-            archives = sorted((rel, path) for rel, path in catalog.items() if Path(rel).name == label)
+            archives = sorted(by_label.get(label, []))
             if not archives:
                 continue   # 没有档案的标签 pack 时会自己报错，不进估算
             total = sum(path.stat().st_size for _, path in archives)
