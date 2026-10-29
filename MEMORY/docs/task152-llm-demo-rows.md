@@ -1,6 +1,6 @@
 # task152：GPT Pro 对局本身的动作，有没有进训练行？
 
-主控 2026-10-29 定。Mac 上做，先调查、再实现，分支 `demorows`，以 `origin/prodint16` 为底。
+主控 2026-10-29 定。Mac 上做，先调查、再实现，分支 `llmrows`，以 `origin/prodint16` 为底。
 
 ## 背景
 
@@ -23,4 +23,6 @@
 
 - 不训练、不部署，不连台式机生产。
 - 不加自校验。
-- 结论写在本文件末尾，推送 `demorows`。
+- 结论写在本文件末尾，推送 `llmrows`。
+
+补充：已有分支 `demorows` 是 task104 的示范行研究（“four-draw study … paired 992-game verdict”），先读它的结论（`origin/demorows` 的 MEMORY/docs/task104*），别重复做。
