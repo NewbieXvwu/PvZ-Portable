@@ -65,7 +65,9 @@ def certificate(pipeline, job, approved=True):
     manifest = freeze_panel(json.loads(pipeline.args.promotion_panel.read_text()),
                             version=GATE_VERSION, seed_block=frozen.get('seed_block'))
     pairs = [dict(task_id=t['task_id'], zone=manifest['groups'][t['task_id']], seed=seed,
-                  candidate=approved, incumbent=not approved) for t in manifest['tasks'] for seed in t['seeds']]
+                  candidate=approved, incumbent=not approved,
+                  candidate_wave=10, incumbent_wave=10)
+              for t in manifest['tasks'] for seed in t['seeds']]
     return {**decide(pairs, manifest), 'contract': frozen, 'contract_key': contract_key(frozen), 'paired': pairs}
 
 

@@ -22,7 +22,8 @@ def make_pipeline(tmp: str) -> TrainingPipeline:
     """The fields poll()/close() touch; _run is stubbed per test, so no recipe machinery."""
     pipeline = TrainingPipeline.__new__(TrainingPipeline)
     pipeline.args = type('Args', (), {'state': Path(tmp) / 'curriculum_state.json',
-                                      'log': Path(tmp) / 'curriculum.log'})()
+                                      'log': Path(tmp) / 'curriculum.log',
+                                      'seed_ledger': Path(tmp) / 'gate_ledger.json'})()
     pipeline.state = {'training_jobs': []}
     pipeline.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='test-background')
     pipeline.futures = []
@@ -87,7 +88,8 @@ class BackgroundFailureRetry(unittest.TestCase):
 
     def test_retry_success_completes_the_round(self):
         calls = []
-        report = {'round': 13, 'promotion': {'version': 0, 'approved': False, 'reasons': ['stub']}}
+        report = {'round': 13, 'promotion': {'version': 0, 'approved': False, 'reasons': ['stub'],
+                                             'contract': {'stub': True}}}
 
         def run(job=None):
             calls.append(1)

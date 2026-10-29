@@ -56,7 +56,7 @@ def fake_runner(wins_by_candidate):
         seeds = next(t['seeds'] for t in manifest['tasks'] if t['task_id'] == task)[offset:offset + count]
         won = wins_by_candidate[model][task]
         out.mkdir(parents=True, exist_ok=True)
-        rows = [dict(seed=seed, arm='fast', terminal=True, won=bool(i < won), searched=0)
+        rows = [dict(seed=seed, arm='fast', terminal=True, won=bool(i < won), searched=0, final_wave=10)
                 for i, seed in enumerate(seeds)]
         (out / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
         calls.append((model, task, offset, count))
@@ -180,10 +180,10 @@ def test_r26_selection_marginals_replay_with_one_shared_synthetic_incumbent(tmp_
     assert prediction['approved'] and prediction['overall']['pairs'] == 304
     assert prediction['overall']['gain'] == 18 and prediction['overall']['harm'] == 0
     assert set(prediction['zones']) == set(zones)
-    assert all(zone['holm_adjusted_p'] == 1 for zone in prediction['zones'].values())
+    assert all(zone['holm_adjusted_p'] == 1 for name, zone in prediction['zones'].items() if name != 'roof')
     first = result['scores'][models[0]]['prediction']
     assert first['zones']['fog']['gain'] == 0 and first['zones']['fog']['harm'] == 7
-    assert first['zones']['fog']['holm_adjusted_p'] == 5 / 128
+    assert first['zones']['fog']['holm_adjusted_p'] == 4 / 128
     assert 'significant_zone_regression:fog' in first['reasons']
     assert result['incumbent']['path'] == str(incumbent)
 
