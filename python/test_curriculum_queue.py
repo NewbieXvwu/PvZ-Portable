@@ -574,6 +574,7 @@ class CurriculumRulesTest(unittest.TestCase):
                         for name in ('dw4i', 'dw5i', 'identity_dw3_s1')]
             variants.append(dict(variants[0], context=True, aux_weight=1.0, aux_horizon=3,
                                  cell_soft_weight=0.0))
+            variants.append(dict(variants[0], label_keep={'.*': .25}))
             for i, recipe in enumerate(variants):
                 with self.subTest(variant=i):
                     recipe.update(out=str(root / f'out{i}'), data=str(root / 'frames'))
@@ -1570,4 +1571,28 @@ class RandomDeckCellsTest(unittest.TestCase):
         self.assertLessEqual(random_games, int(200 * 0.15))
         self.assertEqual({item['multiplier'] for item in plan if item['base'].startswith('rd137_')},
                          {0.5})
+
+    def test_data_levers_quota_and_external_cells_use_existing_planner(self):
+        import make_random_deck_cells as generator
+        registry = json.loads(generator.REGISTRY.read_text())
+        external = dict(task_id='rd159_l45_train_cad0fa53dae0', level=45, terrain='roof',
+                        deck=[1, 2, 3, 4, 6, 20, 29, 30, 32, 33], source='task148')
+        panels = generator.build_panels(registry, [external])
+        tasks = {task['task_id']: task for task in panels['training_panel']['tasks']}
+        def planned(**kwargs):
+            state = make_state(tasks, self.names, {}, {}, 'panel')
+            state['round'] = 4
+            for base, cell_state in state['cells'].items():
+                cell_state['last_round'] = 0 if base == external['task_id'] else 1
+            return plan_round(state, tasks, self.names, VALUES,
+                              {task_id: Path('/tmp/panel.json') for task_id in tasks},
+                              budget=768, per_group=48, **kwargs)[0]
+        baseline = planned()
+        self.assertEqual(baseline, planned(random_deck_share=.15))
+        for plan, count in ((baseline, 4), (planned(random_deck_share=.25), 8)):
+            self.assertEqual(len(plan), count)
+            self.assertEqual({item['games'] for item in plan}, {24})
+            self.assertEqual({item['multiplier'] for item in plan}, {.5})
+            self.assertIn(external['task_id'], {item['base'] for item in plan})
+        self.assertEqual(planned(random_deck_share=0), [])
 
