@@ -1069,3 +1069,10 @@
   - **task146 修订 1**：E 层原先 70/72 组 0 胜，会卡死循环 → 倍数降为 1.25/1.5，并加诊断出口。
   - CodeBuddy 会话全部关闭：账号 1–3 返回 403，账号 0 的会话卡在启动。新开 codex 会遇到更新提示，要按 3 跳过。
 - 10-29 10:12 用户要用台式机 1–2 h：stop_curr 让 qc 在 10:01 组边界停采；杀掉 qc 进程、后台训练（r39/40 段约 31 分钟作废）与 task105 扫描。qc-watchdog 会话夜里已经不在了，恢复时重开。codex-import 已告知暂停。r36 已于 06:34 晋升（门禁 approved）。
+- 10-29 10:40 **GPT Pro 数据进生产**：task105 已导入 1576 份存档，但此前生产 0 格。主控在组边界执行 `deploy_task105.py --apply`，部署 246 个起点格，生产 demo 任务从 99 个增至 345 个。
+  - 首次 apply 被生产加载器拒绝：demo_roof_49_doom_m300_s81018038 的未来块 2e8 落在续领池内，手工改成 4e8，分配器修复已派给 codex-import。
+  - 剩余 998 份接手扫描还在跑。
+- **看门狗**：改为 systemd 用户服务（`systemd-run --user --unit=qc-watchdog`），不再依赖 tmux。tmux 服务器今天两次整体消失，原因未查明。
+- **台式机代理**：127.0.0.1:7890 不通，DNS 也不通。Codex 启动报 `workspace routing discovery timed out`，两个号都起不来，需用户开代理。
+- **task148**：GPT Pro 在屋顶的胜利卡组上，学生 1/112、老师 5/112。v6 草案只新增 L42、L45。
+- **llmplay4 包**：已拷到 Mac `~/Downloads/pvz-llmplay4/`。
