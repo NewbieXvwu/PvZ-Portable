@@ -1312,6 +1312,15 @@ static void RunEnvironment(LawnApp* app)
 				gEnvSimSkip = mask;
 			minimalResponse = true;
 		}
+		else if (command == "OBS_V3")
+		{
+			int enabled = -1;
+			std::string extra;
+			input >> enabled;
+			ok = !input.fail() && !(input >> extra) && (enabled == 0 || enabled == 1);
+			if (ok) app->mEnvironmentTokenObservation = enabled == 1;
+			minimalResponse = true;
+		}
 		else if (command == "OBS_LEAN")
 		{
 			// Compact observations (LawnApp::EnvironmentLeanObservation) for search rollouts.

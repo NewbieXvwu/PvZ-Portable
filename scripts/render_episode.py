@@ -253,6 +253,7 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
         **({"v2": obs["v2"]} if "v2" in obs else {}),
+        **({"v3": obs["v3"]} if "v3" in obs else {}),
         **({"boss": obs["boss"]} if "boss" in obs else {}),
         **({"bungee": obs["bungee"]} if "bungee" in obs else {}),
         **({"sleep": obs["sleep"]} if "sleep" in obs else {}),
