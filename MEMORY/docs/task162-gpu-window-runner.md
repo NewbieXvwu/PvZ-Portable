@@ -110,3 +110,10 @@ python scripts/queue_decision_study.py \
 - 顺带修正行计划的枚举顺序：段是按采集轮次追加的，`ORDER BY source` 得到的偏移与包内行号不一致（实测 83,957 个源全部错位），这会让 token 缓存的 `stored_row` 与留出流式 `ArchiveTokens` 把行号解析成别的存档。split / tokens / `ArchiveTokens` / 探针统一改成 `ORDER BY rowid`（插入顺序=包内顺序；已只读核对已冻结的 1164 段完全一致），跳过标记才会落在正确的包行上。评测的“帧是否还在”查**冻结视图**而不是生产目录，避免生产后续裁剪时误删有效留出行。
 - 部署：新增固定检出 `code/9974c1a6…`，21 个 decision 作业（split、tokens、16 个训练臂、探针、发布、清理）重新锁定到该提交，原作业 JSON 与配方备份在 `queue-history/9974c1a6…/`；task163 的 14 个作业仍锁定 `cfa42c1c…` 未动。执行器经 `install_gpu_window.sh` 从新检出重装并重启（Nice10 / MemoryMax5GiB 不变），split 从 `progress.json` 的 segment 1164 续跑。生产 qc / 看门狗未触碰，重启后 `production_wait_observed_seconds` 仍为 0.0，服务在等下一个 pack/selection/gate 窗口。旧检出 `323b867c…`（33MiB）已无作业引用，留待磁盘紧张时再删。
 - 验收：`ulimit -v 8000000` + `-k "split or tokens or eval or deck or terrain or metric or budget or decision"`（test_decision_queue / test_gpu_window / test_window_budget）15 passed，新增两个小用例分别覆盖 split 缺帧跳过（并验证包行号占位）与 tokens 跳过时行计数推进。未运行生产规模验收。
+
+## 10-30 Codex 续办：纠正合并行顺序与实际部署
+
+- 复查 Qoder 的 `9974c1a6` / `6a116a0f`：保留已删除 d10orig 原帧的跳过处理；**上节关于 `ORDER BY rowid` 的结论撤回**。SQLite 插入顺序等于按 index 追加的段顺序，但 `train_rollout_policy.py::_read_segments` 明确执行 `chunks.sort(key=lambda chunk: str(Path(chunk[0]).parent))`，再把所有输入、标签、seed、权重、卡槽和候选写到共同排序的位置。研究使用的 r42 `corpus/merge/*.npy` 正是该合并结果，不是原段直接拼接。83,957 个源相对原段拼接的偏移不同，不能据此认定相对训练数组错位。实际数组首行 seed=1600000，尚未完成的 SQLite 插入首源却为 seed_7804240，也直接否定了 rowid 对齐合并数组的判断。
+- split、tokens、流式 `ArchiveTokens`、吞吐探针统一恢复 `ORDER BY source`（源名均为相同 basename `frames.npz`，与读取器按父目录排序一致）。原帧缺失的行仍占据**合并数组中的**行号，训练屏蔽与评测跳过保持生效。修正 Qoder 小用例：逆序插入的源应在排序后的合并位置被屏蔽，并覆盖逆序 token 源及流式读取；仅这两个相关 `-k` 用例运行，2 passed，Nice10、8GB虚拟内存上限。
+- **生产打包/训练不受该 SQLite 偏移问题影响**：生产 `cq` 的读取器同样按 source 父目录排序，来源回调也沿同一 `placed` 顺序执行；生产不读 task162 的 `sources.sqlite`，单段的 `source_archive/source_row` 与各列同时生成，合并时各列同时搬移。不需要重打包、重训或改 qc。Qoder 的 rowid 改动仅影响尚未成功准备完毕的决策研究，没有产生可用研究模型。
+- 03:54发现两处实际部署阻塞：systemd 文件已改为 `9974c1a6`，但 MainPID 437 自01:43启动后仍运行 `323b867c`；`enable --now` 不会重启正在运行的服务。与此同时 split 的既有 `window.json` 仍为 failed，重配作业不解除失败状态，故03:26–03:53约27.5分钟pack窗口没有启动研究。安装脚本改为 enable 后显式 restart；仅调整研究服务与研究队列状态，不动生产。

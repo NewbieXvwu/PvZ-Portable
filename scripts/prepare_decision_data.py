@@ -61,9 +61,9 @@ def split(args, stopped):
             np.lib.format.open_memmap(mask_path, mode='w+', dtype=bool, shape=(total,)))
     groups = defaultdict(dict)
     position = 0
-    for source, count in connection.execute('SELECT source,n FROM sources ORDER BY rowid'):
+    for source, count in connection.execute('SELECT source,n FROM sources ORDER BY source'):
         raw = out / 'raw' / source
-        # Sources are inserted in pack row order, so rowid (not the name) is the pack row offset.
+        # read_segments sorts source parents before merging; insertion order is only segment order.
         # Archives whose frames are retired keep their row numbers but are never trained or scored.
         if not raw.exists():
             mask[position:position+count] = True
@@ -141,7 +141,7 @@ def tokens(args, stopped):
         for name, handle in handles.items():
             handle.flush(); state['sizes'][name] = handle.tell()
         write_json(progress, state)
-    for source, raw_rows in connection.execute('SELECT source,rows FROM sources ORDER BY rowid LIMIT -1 OFFSET ?', (state['archives'],)):
+    for source, raw_rows in connection.execute('SELECT source,rows FROM sources ORDER BY source LIMIT -1 OFFSET ?', (state['archives'],)):
         rows = np.frombuffer(raw_rows, np.int32)
         selected = np.ones(len(rows), dtype=bool)
         if budget_path:

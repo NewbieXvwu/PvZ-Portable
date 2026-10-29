@@ -100,7 +100,7 @@ def test_decision_split_skips_retired_source_frames(tmp_path):
     split(Namespace(out=out, pack=packs/'index.npz', data=data, merge_dir=merged), lambda: False)
     mask = np.load(out/'unseen.npy')
     result = json.loads((out/'ready.json').read_text())
-    assert mask[20] and not (out/'raw'/sources[0]).exists()    # pack row 20, not the alphabetically first row
+    assert mask[0] and not (out/'raw'/sources[0]).exists()     # merged row 0, despite reverse insertion order
     assert result['unseen_rows'] == int(mask.sum()) == 3       # two complete decks plus the retired row
 
 
@@ -108,7 +108,7 @@ def test_decision_tokens_keep_pack_rows_of_retired_archives(tmp_path):
     import sqlite3
     from pvz_frame_store import write_frames
     from pvz_student_tokens import frame_tokens
-    from pvz_research_data import SparseTokens
+    from pvz_research_data import SparseTokens, ArchiveTokens
     from prepare_decision_data import tokens
     frame = dict(sun=100, wave=0, tick=0, scene={}, lanes=list(range(5)), plants=[[0, 1, 0, 50, 100]], zombies=[],
                  mowers=[[0, 1]], packets=[[0, 0, True, 0, 100, 100]])
@@ -118,9 +118,10 @@ def test_decision_tokens_keep_pack_rows_of_retired_archives(tmp_path):
     path.parent.mkdir(parents=True)
     write_frames(path, frames)
     db = sqlite3.connect(tmp_path / 'sources/sources.sqlite')
-    db.execute('CREATE TABLE sources (source TEXT, rows BLOB)')
-    db.execute('INSERT INTO sources VALUES (?, ?)', ('seed_1/gone/frames.npz', np.array([1, 2], np.int32).tobytes()))
-    db.execute('INSERT INTO sources VALUES (?, ?)', (live, np.array([1, 3], np.int32).tobytes()))
+    db.execute('CREATE TABLE sources (source TEXT, rows BLOB, n INTEGER)')
+    # Segment insertion order differs from the merged training array's source order.
+    db.execute('INSERT INTO sources VALUES (?, ?, ?)', (live, np.array([1, 3], np.int32).tobytes(), 2))
+    db.execute('INSERT INTO sources VALUES (?, ?, ?)', ('seed_1/gone/frames.npz', np.array([1, 2], np.int32).tobytes(), 2))
     db.commit(); db.close()
     args = Namespace(sources=tmp_path / 'sources', out=tmp_path / 'tokens')
     tokens(args, lambda: False)
@@ -128,6 +129,7 @@ def test_decision_tokens_keep_pack_rows_of_retired_archives(tmp_path):
     assert store.meta['rows'] == 4 and store.meta['stored_rows'] == 2
     np.testing.assert_array_equal(store.sample(2)['ids'], frame_tokens(frames[0])['ids'])
     np.testing.assert_array_equal(store.sample(3)['ids'], frame_tokens(frames[2])['ids'])
+    np.testing.assert_array_equal(ArchiveTokens(args.sources).sample(2)['features'], frame_tokens(frames[0])['features'])
 
 
 def test_decision_queue_honors_priority_and_dependencies(tmp_path):

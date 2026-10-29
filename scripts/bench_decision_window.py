@@ -31,7 +31,7 @@ from decision_window_budget import windows_48h, choose_budget, markdown
 
 def samples(sources):
     db = sqlite3.connect(sources/'sources.sqlite')
-    records = list(db.execute('SELECT source,n FROM sources ORDER BY rowid'))
+    records = list(db.execute('SELECT source,n FROM sources ORDER BY source'))
     offsets = {}; at = 0
     for source, n in records:
         offsets[source] = at; at += n

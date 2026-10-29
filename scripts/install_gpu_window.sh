@@ -34,4 +34,5 @@ Environment=OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1
 WantedBy=default.target
 EOF
 systemctl --user daemon-reload
-systemctl --user enable --now pvz-gpu-window.service
+systemctl --user enable pvz-gpu-window.service
+systemctl --user restart pvz-gpu-window.service

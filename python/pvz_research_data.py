@@ -14,7 +14,7 @@ class ArchiveTokens:
         import sqlite3
         self.directory = Path(sources)
         self.db = sqlite3.connect(self.directory/'sources.sqlite')
-        records = list(self.db.execute('SELECT source,n FROM sources ORDER BY rowid'))
+        records = list(self.db.execute('SELECT source,n FROM sources ORDER BY source'))
         self.names = [name for name, n in records]
         self.offsets = np.r_[0, np.cumsum([n for name,n in records])]
         self.current, self.frames, self.rows = None, None, None
