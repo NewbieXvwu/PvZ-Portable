@@ -42,7 +42,39 @@ def test_entity_permutation_precision_and_empty_inputs():
     assert not torch.equal(first['plant'], changed['plant'])
     empty = frame()
     empty.update(plants=[], zombies=[], packets=[])
-    assert torch.isfinite(net.entity(entity_features(empty)[None])).all()
+    context, cards = net.entity(entity_features(empty)[None])
+    assert torch.isfinite(context).all() and torch.isfinite(cards).all()
+    assert not cards.abs().sum()
+
+
+def test_cards_do_not_enter_the_board_context():
+    torch.set_num_threads(1)
+    torch.manual_seed(153)
+    net = RolloutNet(8, packet_head='identity', arch='entity_attn').eval()
+    first, second = frame(), frame()
+    second['packets'] = [[slot, 20 + slot, True, 0, 100, 25] for slot in range(6)]
+    a, a_cards = net.entity(entity_features(first)[None])
+    b, b_cards = net.entity(entity_features(second)[None])
+    torch.testing.assert_close(a, b, rtol=0, atol=0)
+    assert not torch.equal(a_cards, b_cards)
+
+
+def test_deck_dropout_hides_one_or_two_cards_per_sample_in_training():
+    torch.set_num_threads(1)
+    net = RolloutNet(8, packet_head='identity', arch='entity_attn').train()
+    net.entity.deck_dropout = 1.0
+    entities = entity_features(frame())[None].repeat(8, 1, 1)
+    card = entities[:, :, 0] == 1
+    valid = (entities[:, :, 0] > 0) & (entities[:, :, 1] >= 0)
+    torch.manual_seed(7)
+    hidden = net.entity.hidden_cards(valid, card)
+    count = hidden.sum(1)
+    assert hidden[:, 10:].sum() == 0 and (count >= 1).all() and (count <= 2).all()
+    torch.manual_seed(7)
+    cards = net.entity(entities)[1]
+    assert (cards[hidden[:, :10]].abs() == 0).all()
+    net.eval()
+    assert net.entity.hidden_cards(valid, card).sum() == 0
 
 
 def test_entity_warm_start_and_checkpoint(tmp_path):
@@ -60,7 +92,7 @@ def test_entity_warm_start_and_checkpoint(tmp_path):
     torch.save(dict(state_dict=net.state_dict(), packet_head='identity', arch='entity_attn'), path)
     restored = load_student(path)
     import pytest
-    with pytest.raises(ValueError, match='unseen-deck'):
+    with pytest.raises(ValueError, match='native export'):
         export_student(restored, tmp_path / 'model.bin')
     loss = restored(*inputs(record), packet_info=packet_features(record)[None])['plant'].sum()
     loss.backward()

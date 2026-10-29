@@ -120,11 +120,13 @@ class RolloutNet(nn.Module):
         if arch == 'entity_attn':
             from pvz_entity import EntityEncoder
             self.entity = EntityEncoder(width)
+            # Cards reach only the packet head, through the card tokens' cross-attention to the board.
+            self.card_projection = nn.Linear(width, e)
 
     def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None,
                 auxiliary: bool = False, packet_info: torch.Tensor | None = None):
-        h, g = self.encode(board, scalars, packet_info=packet_info)
-        out = {"plant": self.plant(g).squeeze(1), "packet": self.packet_logits(g, packet_info)}
+        h, g, cards = self.encode(board, scalars, packet_info=packet_info, return_cards=True)
+        out = {"plant": self.plant(g).squeeze(1), "packet": self.packet_logits(g, packet_info, cards)}
         if packet is not None:
             out["cell"] = self.cell_logits(h, g, packet, packet_info)
         if auxiliary:
@@ -132,7 +134,9 @@ class RolloutNet(nn.Module):
         return out
 
     def encode(self, board: torch.Tensor, scalars: torch.Tensor,
-               sparse_input: bool = False, packet_info: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+               sparse_input: bool = False, packet_info: torch.Tensor | None = None,
+               return_cards: bool = False):
+        cards = None
         if self.arch == 'entity_attn':
             from pvz_entity import ENTITY_FIELDS, ENTITY_TOKENS
             scalar_count = self.scalar[0].in_features
@@ -158,10 +162,11 @@ class RolloutNet(nn.Module):
             h = F.relu(h + self.row_projection(rows))
         s = self.scalar(scalars)                                # [B, W]
         if self.arch == 'entity_attn':
-            s = s + self.entity(entities)
-        if self.pool == "meanmax":
-            return h, torch.cat([h.mean(dim=(2, 3)), h.amax(dim=(2, 3)), s], dim=1)
-        return h, torch.cat([h.mean(dim=(2, 3)), s], dim=1)
+            context, cards = self.entity(entities)
+            s = s + context
+        g = (torch.cat([h.mean(dim=(2, 3)), h.amax(dim=(2, 3)), s], dim=1) if self.pool == "meanmax"
+             else torch.cat([h.mean(dim=(2, 3)), s], dim=1))
+        return (h, g, cards) if return_cards else (h, g)
 
     def _trunk_sparse(self, board: torch.Tensor) -> torch.Tensor:
         """The trunk with the first convolution restricted to input channels that are non-zero
@@ -181,13 +186,18 @@ class RolloutNet(nn.Module):
         if packet_info is None or packet_info.ndim != 3 or packet_info.shape[1:] != (PACKETS, 4):
             raise ValueError('identity packet head requires [batch,10,4] public packet_info')
 
-    def packet_logits(self, g: torch.Tensor, packet_info: torch.Tensor | None = None) -> torch.Tensor:
+    def packet_logits(self, g: torch.Tensor, packet_info: torch.Tensor | None = None,
+                      cards: torch.Tensor | None = None) -> torch.Tensor:
         # LEGACY(slot-packet-head): v34 and earlier students pick a card slot, not a plant identity.
         if self.packet_head == 'slot':
             return self.packet(g)
         self._check_packet_info(packet_info)
         kind = packet_info[:, :, 0].long()
         embedding = self.packet_embedding(kind.clamp(min=0))
+        if self.arch == 'entity_attn':
+            if cards is None:
+                raise ValueError('entity_attn packet logits need the entity card tokens')
+            embedding = embedding + self.card_projection(cards)
         global_context = g[:, None, :].expand(-1, PACKETS, -1)
         logits = self.packet(torch.cat([global_context, embedding, packet_info[:, :, 1:]], dim=2)).squeeze(2)
         # CanPickUp/CanPlantAt are authoritative at action selection: conveyor cards are free
@@ -228,13 +238,14 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     if net.arch == 'entity_attn':
         from pvz_entity import entity_features
         scalars = torch.cat((scalars, entity_features(frame).flatten()))
-    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
+    h, g, cards = net.encode(board[None], scalars[None], sparse_input=sparse_input,
+                             packet_info=info, return_cards=True)
     if float(net.plant(g)[0, 0]) <= 0.0:
         return dict(WAIT)
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
-    packet_logits = net.packet_logits(g, info)[0].tolist()
+    packet_logits = net.packet_logits(g, info, cards)[0].tolist()
     packet = max(by_packet, key=(lambda p: (packet_logits[p], -int(info[0, p, 0])))
                  if info is not None else (lambda p: packet_logits[p] if p < PACKETS else -1e9))
     cells = net.cell_logits(h, g, torch.tensor([packet]), info)[0].tolist()
@@ -272,13 +283,14 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
     if net.arch == 'entity_attn':
         from pvz_entity import entity_features
         scalars = torch.cat((scalars, entity_features(frame).flatten()))
-    h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
+    h, g, cards = net.encode(board[None], scalars[None], sparse_input=sparse_input,
+                             packet_info=info, return_cards=True)
     plant_p = float(torch.sigmoid(net.plant(g))[0, 0])
     by_packet: dict[int, list[dict]] = {}
     for a in legal_plants:
         by_packet.setdefault(a["packet"], []).append(a)
     packets = sorted(by_packet)
-    packet_p = torch.softmax(net.packet_logits(g, info)[0][packets], dim=0).tolist()
+    packet_p = torch.softmax(net.packet_logits(g, info, cards)[0][packets], dim=0).tolist()
     out: list[tuple[float, dict]] = []
     for packet, p_packet in zip(packets, packet_p):
         cells = net.cell_logits(h, g, torch.tensor([packet]), info)[0]
@@ -312,9 +324,11 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
     weights = dict(initial.state_dict())
     target = net.state_dict()
     if initial.arch == 'grid' and net.arch == 'entity_attn':
-        weights.update({name: value for name, value in target.items() if name.startswith('entity.')})
-        weights['entity.output.weight'] = torch.zeros_like(target['entity.output.weight'])
-        weights['entity.output.bias'] = torch.zeros_like(target['entity.output.bias'])
+        weights.update({name: value for name, value in target.items()
+                        if name.startswith(('entity.', 'card_projection.'))})
+        for name in ('entity.output.weight', 'entity.output.bias',
+                     'card_projection.weight', 'card_projection.bias'):
+            weights[name] = torch.zeros_like(target[name])
     for name in ('trunk.0.weight', 'scalar.0.weight'):
         old, new = weights[name], target[name]
         if old.shape[0] != new.shape[0] or old.shape[2:] != new.shape[2:] or old.shape[1] > new.shape[1]:
@@ -343,7 +357,7 @@ def load_student(path) -> RolloutNet:
 def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
     if net.arch == 'entity_attn':
-        raise ValueError('entity_attn native export awaits the unseen-deck comparison')
+        raise ValueError('entity_attn has no native export (task153 stopped before PVZRN007)')
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct
