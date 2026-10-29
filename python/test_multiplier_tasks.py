@@ -1,7 +1,7 @@
 """task29 第 1 步：倍率变体生成器的静态检查（不跑引擎）。
 
 覆盖：命名 / 种子段 / 字段复制 / 扰动族保留 deck_perturb / 每种子卡组合法 /
-同一面板内种子互不重叠。引擎侧“倍率真的放大每一波”由 scripts/smoke_zombie_multiplier.py 冒烟。
+同一面板内种子互不重叠。引擎侧“倍率真的放大每一波”由引擎冒烟脚本验证（task169 已删该脚本）。
 """
 import json
 import sys

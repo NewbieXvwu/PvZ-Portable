@@ -166,7 +166,7 @@ def test_deploy17_watchdog_launch_is_inert_until_active(tmp_path,active):
         (logs/'qc_deploy17.mode').write_text('datamix\n');(logs/'qc_deploy17.active').touch()
     result=subprocess.run(['bash','-c','tmux() { printf "%s\\n" "$*"; }; source "$1"','test',str(script)],capture_output=True,text=True,timeout=5)
     assert result.returncode==0,result.stderr
-    assert 'prodint16/build16/pvz-portable' in result.stdout
+    assert 'artifacts/production/deploy16/pvz-portable' in result.stdout
     assert '--training-parallelism 1' in result.stdout and '--gate-version 5' in result.stdout
     assert result.stdout.count('--extra-manifest')==1
     if active:

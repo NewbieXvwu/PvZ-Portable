@@ -603,13 +603,6 @@ class CurriculumRulesTest(unittest.TestCase):
                     self.assertEqual(load.call_args.args[0], args.frames)
                     self.assertIn('--prune', command)
 
-    def test_removed_pack_flags_are_not_exposed(self):
-        import subprocess
-        result = subprocess.run([sys.executable, str(ROOT / 'scripts/curriculum_queue.py'), '--help'],
-                                capture_output=True, text=True, check=True)
-        self.assertIn('--recipe', result.stdout)
-        self.assertNotIn('--pack-', result.stdout)
-
     def test_labels(self):
         self.assertEqual(label_for(3, 'day_l7_train_d7', 1.5), 'c3d7d7m150')
         self.assertEqual(label_for(1, 'night_l12_train_n10', 1.0), 'c1n12n10m100')

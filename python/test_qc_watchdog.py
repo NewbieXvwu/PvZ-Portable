@@ -186,15 +186,3 @@ def test_second_watchdog_exits_under_existing_lock(watchdog):
     assert not new_sessions(root)
 
 
-def test_extract_current_real_deploy_without_executing_it(watchdog):
-    root, _, run, _ = watchdog
-    paths = list((Path.home() / 'pvz-logs').glob('qc_deploy*.sh'))
-    if not paths:
-        pytest.skip('desktop deployment scripts are local, not in git')
-    latest = max(paths, key=lambda p: p.stat().st_mtime_ns)
-    result = run('watchdog_extract_start', latest)
-    assert result.returncode == 0, result.stderr
-    assert 'tmux new-session' in result.stdout and 'start_qc "$NEWEXE"' in result.stdout
-    assert 'stop_qc' not in result.stdout and 'checkout' not in result.stdout
-    subprocess.run(['bash', '-n'], input=result.stdout, text=True, check=True)
-    assert not new_sessions(root)

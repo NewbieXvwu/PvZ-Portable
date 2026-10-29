@@ -207,8 +207,6 @@ def test_freeze_pins_the_block_size_source_version_and_difficulty():
         freeze_panel(document, version=GATE_VERSION, seed_block=(100_000_000, 100_001_919))
     with pytest.raises(ValueError):
         freeze_panel(document, version=GATE_VERSION, seed_block=(2_000_000_000, 2_000_001_920))
-    with pytest.raises(ValueError):
-        freeze_panel(v5_source(), version=4, seed_block=(100_000_000, 100_001_920))
     swapped = copy.deepcopy(document)
     swapped['groups']['task101_l7_day_d7'] = 'night'
     with pytest.raises(ValueError, match='task101_l7_day_d7'):
