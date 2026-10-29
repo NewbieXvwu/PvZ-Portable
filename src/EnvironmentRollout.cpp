@@ -1,3 +1,4 @@
+#include "EnvironmentTokens.h"
 #include "EnvironmentRollout.h"
 #include "LawnApp.h"
 #include "Lawn/Board.h"
@@ -158,13 +159,17 @@ void EnvironmentRollout::LoadGraph(const std::string& path)
 {
 	pvz::net::Graph next;
 	next.Load(path);
-	if (next.metadata.size() != 3 || next.metadata[0] < 1 || next.metadata[0] > 9 ||
+	if (next.metadata.size() != 3 || next.metadata[0] < 1 || next.metadata[0] > 10 ||
 		next.metadata[1] < 0 || next.metadata[1] > 1 || next.metadata[2] < 0 || next.metadata[2] > 1)
 		throw std::runtime_error("generic policy requires native observation/context/identity metadata");
 	const int obs = next.metadata[0];
-	const int extra[] = {0, 0, 4, 9, 10, 10, 13, 19, 21, 25};
+	const int extra[] = {0, 0, 4, 9, 10, 10, 13, 19, 21, 25, 0};
 	const int scalarCount = Scalars + (next.metadata[1] ? TaskContext : 0) + (obs >= 6 ? 9 : obs >= 3 ? 7 : obs == 2);
-	int board = -1, scalars = -1, info = -1, selected = -1, terrain = -1;
+	int board = -1, scalars = -1, info = -1, selected = -1, terrain = -1, tokens = -1;
+	int meta = -1, valid = -1, pool = -1, coords = -1, cards = -1, cells = -1;
+    const int capacity = obs == 10 ? next.Get("tokens").shape.at(1) : 0;
+    if(obs == 10 && (capacity < ObservationTokenPrefix || next.metadata[2] != 1))
+        throw std::runtime_error("rich token policy requires capacity >=66 and identity packets");
 	for (size_t i = 0; i < next.tensors.size(); ++i)
 	{
 		const auto& t = next.tensors[i];
@@ -175,6 +180,13 @@ void EnvironmentRollout::LoadGraph(const std::string& path)
 		else if (t.name == "packet_info") { info = i; expected = {1, 10, 4}; }
 		else if (t.name == "selected_packet") { selected = i; expected = {1}; }
 		else if (t.name == "terrain") { terrain = i; expected = {1}; }
+        else if (obs == 10 && t.name == "tokens") { tokens = i; expected = {1, capacity, 38}; }
+        else if (obs == 10 && t.name == "token_meta") { meta = i; expected = {1, capacity, 3}; }
+        else if (obs == 10 && t.name == "coords") { coords = i; expected = {1, capacity, 2}; }
+        else if (obs == 10 && t.name == "valid") { valid = i; expected = {1, capacity}; }
+        else if (obs == 10 && t.name == "pool_valid") { pool = i; expected = {1, capacity}; }
+        else if (obs == 10 && t.name == "packet_index") { cards = i; expected = {1, 10}; }
+        else if (obs == 10 && t.name == "cell_index") { cells = i; expected = {1, 54}; }
 		else throw std::runtime_error("generic policy input needs an adapter: " + t.name);
 		if (t.shape != expected) throw std::runtime_error("generic policy input shape: " + t.name);
 	}
@@ -191,9 +203,12 @@ void EnvironmentRollout::LoadGraph(const std::string& path)
 	// Commit only after loading/binding succeeds, so a failed replacement preserves the old policy.
 	graph = std::move(next);
 	graphBoard = board; graphScalars = scalars; graphInfo = info;
-	graphSelected = selected; graphTerrain = terrain;
+	graphSelected = selected; graphTerrain = terrain; graphTokens = tokens;
+	graphMeta = meta; graphValid = valid; graphPool = pool; graphCoords = coords;
+	graphCardIndex = cards; graphCellIndex = cells;
+	if (tokens >= 0) publicTokens.reserve(capacity);
 	graphPlant = plant; graphPacket = packet; graphCell = cell;
-	SetObservation(obs, graph.metadata[1] != 0);
+	SetObservation(obs == 10 ? 1 : obs, graph.metadata[1] != 0);
 	identityPacket = graph.metadata[2] != 0;
 	width = 1; // Loaded() sentinel; generic execution gets dimensions from the graph.
 	generic = true;
@@ -827,9 +842,7 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 	}
 	++networkCalls;
 	packetLogitsValid = false;
-	Features(app, income, previousTick, previousPlant, featureBoard, featureScalars, history);
-	if (generic && graphTerrain >= 0)
-		graph.tensors[graphTerrain].data[0] = static_cast<float>(std::min(4, static_cast<int>(app->mBoard->mBackground)));
+	PrepareInputs(app,income,previousTick,previousPlant,history);
 	Encode(featureBoard, featureScalars);
 	result = Heads(-1);
 	if (result.plant <= 0 && !diagnostics) return result;
@@ -858,12 +871,48 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 	return result;
 }
 
+void EnvironmentRollout::PrepareInputs(LawnApp* app, double income, int previousTick, bool previousPlant, History& history)
+{
+	if (!generic || graphTokens < 0 || graphBoard >= 0 || graphScalars >= 0)
+		Features(app, income, previousTick, previousPlant, featureBoard, featureScalars, history);
+    if (generic && graphTokens >= 0)
+    {
+        PublicObservationTokens(app,publicTokens);
+        int capacity = graph.tensors[graphTokens].shape[1];
+        float* raw = graph.tensors[graphTokens].data.data();
+        FillObservationTokenArray(publicTokens,raw,capacity); // explicit overflow error; never truncate
+        auto data = [&](int index) -> float* { return index < 0 ? nullptr : graph.tensors[index].data.data(); };
+        float* meta = data(graphMeta); float* valid = data(graphValid); float* pool = data(graphPool);
+        float* coords = data(graphCoords);
+        for(int t=0;t<capacity;++t)
+        {
+            const float* token = raw+t*38;
+            int kind=int(token[0]), row=int(token[3]), col=int(token[4]);
+            bool present = t<int(publicTokens.size()) && !(kind==8 && token[1]==0);
+            if(meta) { meta[t*3]=kind; meta[t*3+1]=row; meta[t*3+2]=col; }
+            if(valid) valid[t]=present;
+            if(pool) pool[t]=present && kind!=8;
+            if(coords) {
+                bool spatial = present && kind>=3 && kind<=7 && row>=0 && row<6 && col>=0 && col<9;
+                coords[t*2]=spatial ? row : -1; coords[t*2+1]=spatial ? col : -1;
+            }
+        }
+        float* cards = data(graphCardIndex);
+        for(int p=0;p<10;++p) {
+            int kind=int(raw[(ObservationCardStart+p)*38+1])-1;
+            if(cards) cards[p]=kind>=0 ? ObservationCardStart+p : -1;
+            packetInfo[p][0]=float(kind);
+        }
+        if(float* cells = data(graphCellIndex)) for(int c=0;c<54;++c) cells[c]=ObservationCellStart+c;
+    }
+	if (generic && graphTerrain >= 0)
+		graph.tensors[graphTerrain].data[0] = static_cast<float>(std::min(4, static_cast<int>(app->mBoard->mBackground)));
+}
+
 double EnvironmentRollout::Benchmark(LawnApp* app, int iterations)
 {
 	History history;
-	Features(app, 0, -1, false, featureBoard, featureScalars, history);
-	if (generic && graphTerrain >= 0)
-		graph.tensors[graphTerrain].data[0] = static_cast<float>(std::min(4, static_cast<int>(app->mBoard->mBackground)));
+	PrepareInputs(app,0,-1,false,history);
 	Prediction output{};
 	auto run = [&] { packetLogitsValid = false; Encode(featureBoard, featureScalars); output = Heads(0); };
 	run();

@@ -23,7 +23,7 @@ namespace pvz::net {
 namespace {
 const std::vector<std::string> ops = {"linear", "conv", "relu", "add", "concat", "reshape",
     "permute", "pool", "norm", "attention", "ffn", "moe", "scatter", "pointer",
-    "embedding", "broadcast", "select", "slice", "mask", "relation", "conv_relu"};
+    "embedding", "broadcast", "select", "slice", "mask", "relation", "silu", "gather", "masked_pool", "conv_relu"};
 void Require(bool ok, std::string_view message) {
     if (!ok) throw std::runtime_error("generic forward: " + std::string(message));
 }
@@ -141,7 +141,7 @@ void Graph::Prepare() {
             const auto& w = at(1); Require(w.shape.size() == 2 && a.shape.back() == w.shape[1], "linear shape");
             auto expected = a.shape; expected.back() = w.shape[0]; Require(y.shape == expected, "linear output");
             if (n.inputs.size() == 3) Require(at(2).data.size() == size_t(w.shape[0]), "linear bias");
-        } else if (n.code == 1 || n.code == 20) {
+        } else if (n.code == 1 || n.code == 23) {
             Require(n.inputs.size() == 2 || n.inputs.size() == 3, "conv inputs");
             Require(n.ints.size() == 4 || (n.ints.size() == 5 && n.ints[4] == 1), "conv parameters");
             auto& w = at(1);
@@ -246,13 +246,24 @@ void Graph::Prepare() {
         } else if (n.code == 16) {
             inputs(2); Require(rank == 3 && at(1).data.size() == size_t(a.shape[0]) && y.shape == std::vector<int>({a.shape[0], a.shape[2]}), "select shape");
         } else if (n.code == 19) {
-            inputs(5); param(2);
+            Require(n.inputs.size() == 5 || n.inputs.size() == 7, "relation inputs"); param(2);
             Require(rank == 3 && a.shape[2] == 3 && at(1).shape.size() == 3 &&
                 at(1).shape[1] == at(1).shape[2] && n.ints[0] >= 0 && n.ints[1] >= 0, "relation metadata/table");
             int heads=at(1).shape[0];
             Require(at(2).shape == std::vector<int>({heads, 2*n.ints[0]+2}) &&
-                at(3).shape == std::vector<int>({heads, 2*n.ints[1]+2}) && at(4).data.size() == size_t(heads) &&
+                at(3).shape == std::vector<int>({heads, 2*n.ints[1]+2}) &&
+                (at(4).data.size() == size_t(heads) || at(4).shape == std::vector<int>({heads, 2})) &&
                 y.shape == std::vector<int>({a.shape[0],heads,a.shape[1],a.shape[1]}), "relation shape");
+            if(n.inputs.size() == 7) Require(at(5).shape == std::vector<int>({a.shape[0], a.shape[1]}) &&
+                at(6).data.size() == size_t(heads), "target relation shape");
+        } else if (n.code == 20) {
+            inputs(1); Require(a.shape == y.shape, "silu shape");
+        } else if (n.code == 21) {
+            inputs(2); Require(rank == 3 && at(1).shape.size() == 2 && at(1).shape[0] == a.shape[0] &&
+                y.shape == std::vector<int>({a.shape[0], at(1).shape[1], a.shape[2]}), "gather shape");
+        } else if (n.code == 22) {
+            inputs(2); Require(rank == 3 && at(1).shape == std::vector<int>({a.shape[0],a.shape[1]}) &&
+                y.shape == std::vector<int>({a.shape[0],a.shape[2]}), "masked pool shape");
         } else if (n.code == 17) {
             inputs(1); param(3); int axis=n.ints[0], start=n.ints[1], length=n.ints[2];
             Require(axis >= 0 && axis < rank && start >= 0 && length > 0 && start+length <= a.shape[axis], "slice range");
@@ -289,7 +300,7 @@ void Graph::Execute(Node& n) {
     const int count = int(y.data.size());
     switch (n.code) {
     case 0: Linear(x, at(1), n.inputs.size()==3 ? &at(2) : nullptr, out, a.data.size()/a.shape.back()); break;
-    case 1: case 20: {
+    case 1: case 23: {
         const auto& w=at(1); int B=a.shape[0], C=a.shape[1], H=a.shape[2], W=a.shape[3];
         int O=w.shape[0], KH=w.shape[2], KW=w.shape[3], OH=y.shape[2], OW=y.shape[3], S=OH*OW;
         float* col=n.scratch.data();
@@ -343,7 +354,7 @@ void Graph::Execute(Node& n) {
             if(K) cblas_sgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,O,S,K,1.f,kernel,K,direct ? x+b*C*S : col,S,0.f,dst,S);
             else std::fill_n(dst,O*S,0.f);
             if(n.inputs.size()==3) for(int o=0;o<O;++o) for(int s=0;s<S;++s) dst[o*S+s]+=at(2).data[o];
-            if(n.code==20) for(int i=0;i<O*S;++i) dst[i]=std::max(0.f,dst[i]);
+            if(n.code==23) for(int i=0;i<O*S;++i) dst[i]=std::max(0.f,dst[i]);
         } break;
     }
     case 2: for(int i=0;i<count;++i) out[i]=std::max(0.f,x[i]); break;
@@ -457,7 +468,8 @@ void Graph::Execute(Node& n) {
     }
     case 14: {
         int D=at(1).shape[1],V=at(1).shape[0];
-        for(size_t i=0;i<a.data.size();++i) { float id=std::max(0.f,x[i]);
+        for(size_t i=0;i<a.data.size();++i) { float id=std::max(0.f,x[i]+(n.ints.empty() ? 0 : n.ints[0]));
+            if(!n.ints.empty()) id=std::min(id,float(V-1));
             Require(std::isfinite(id) && id<V && id==std::floor(id), "embedding id");
             std::copy_n(at(1).data.data()+int(id)*D,D,out+i*D); }
         break;
@@ -492,8 +504,30 @@ void Graph::Execute(Node& n) {
                 bool same=left[1]>=0 && left[2]>=0 && left[1]==right[1] && left[2]==right[2];
                 for(int h=0;h<H;++h) out[((b*H+h)*T+i)*T+j]=
                     at(1).data[(h*K+int(left[0]))*K+int(right[0])] + at(2).data[h*(2*R+2)+dr] +
-                    at(3).data[h*(2*C+2)+dc] + (same ? at(4).data[h] : 0.f);
+                    at(3).data[h*(2*C+2)+dc] + (at(4).data.size()==size_t(H) ? (same ? at(4).data[h] : 0.f) : at(4).data[h*2+int(same)]) +
+                    (n.inputs.size()==7 && at(5).data[b*T+i]==j ? at(6).data[h] : 0.f);
             }
+        } break;
+    }
+    case 20: for(int i=0;i<count;++i) out[i]=x[i]/(1.f+std::exp(-x[i])); break;
+    case 21: {
+        int B=a.shape[0],T=a.shape[1],D=a.shape[2],M=at(1).shape[1];
+        for(int b=0;b<B;++b) for(int m=0;m<M;++m) {
+            float id=std::max(0.f,at(1).data[b*M+m]);
+            Require(std::isfinite(id) && id<T && id==std::floor(id), "gather index");
+            std::copy_n(x+(b*T+int(id))*D,D,out+(b*M+m)*D);
+        } break;
+    }
+    case 22: {
+        int B=a.shape[0],T=a.shape[1],D=a.shape[2];
+        std::fill(y.data.begin(),y.data.end(),0.f);
+        for(int b=0;b<B;++b) {
+            float total=0;
+            for(int t=0;t<T;++t) {
+                float w=at(1).data[b*T+t]; total+=w;
+                for(int d=0;d<D;++d) out[b*D+d]+=x[(b*T+t)*D+d]*w;
+            }
+            for(int d=0;d<D;++d) out[b*D+d]/=std::max(1.f,total);
         } break;
     }
     }

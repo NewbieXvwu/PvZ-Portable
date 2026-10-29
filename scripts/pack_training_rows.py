@@ -64,7 +64,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                         label_weight: dict[str, float] | None = None, cache_dir: Path | None = None,
                         with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
                         cells: bool = False, aux_horizon: int = 0, row_observer=None,
-                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None):
+                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None, token_input='compact'):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games).
@@ -76,6 +76,12 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     Rows are stored compactly (task32): bit-packed keep masks, uint8/int16 labels, a split packet block, uint8
     scalar indices and per-archive constant planes taken out of the board CSR. Every value a batch sees is
     bit-identical to the dense arrays this replaced."""
+    tokens = None
+    if obs == 'v3':
+        from pvz_student_tokens import TokenBuilder
+        tokens = TokenBuilder()
+        # Existing episode caches have no tokens: read each selected archive once.
+        cache_dir = None
     paths = ([p for p in frame_paths(data) if p.parent.name in labels]
              if archive_paths is None else list(archive_paths))
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
@@ -221,7 +227,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         frames = read_frames(path)
         future_damage = row_damage_labels(frames, aux_horizon) if aux_horizon else None
         ctx = _episode_context(path) if with_context else None
-        if obs != "v1":
+        if obs not in ("v1", "v3"):
             from pvz_student_observation import StudentHistory
             history = StudentHistory(obs)
         kept = np.unpackbits(keep[path])[:len(frames)].astype(bool)
@@ -229,18 +235,21 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         # path does: a pack must not depend on whether a feature cache happened to exist.
         archive_boards, archive_scalars = [], []
         for i in range(1, len(frames)):
-            if obs != "v1":
+            if obs not in ("v1", "v3"):
                 b, s = history.features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not kept[i]:
                 continue
-            if obs == "v1":
+            if obs in ("v1", "v3"):
                 b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             if packets is not None:
                 s = identity_scalars(frames[i - 1], s)
             if boards is None:
                 boards = CompactBoards(b.shape)
                 scalars = CompactBoards(s.shape, np.float32)
+            if tokens is not None:
+                from pvz_student_tokens import frame_tokens
+                tokens.append(frame_tokens(frames[i - 1], ctx, token_input))
             archive_boards.append(b.numpy())
             archive_scalars.append(s.numpy())
             if packets is not None:
@@ -275,6 +284,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         result = (*result, torch.from_numpy(auxiliary[:n]))
     if packets is not None:
         result = (*result, packets.finish(n))
+    if tokens is not None:
+        result = (*result, tokens.finish())
     sources = [str(path.relative_to(data)) for path in paths]
     return result, sources, source_archive[:n], source_row[:n]
 
@@ -290,7 +301,7 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
                                  options["label_weight"], cache_dir, options["with_context"],
                                  options["obs"], precompute_workers, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
-                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths)
+                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths, token_input=options.get('token_input', 'compact'))
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if options["aux_horizon"] else None
     packets = loaded[9 + (auxiliary is not None)] if options["packet_head"] == "identity" else None
@@ -311,6 +322,8 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
     if packets is not None:
         for index, column in enumerate(packets.columns):
             arrays["packet_col%d" % index] = np.asarray(column)
+    if options['obs'] == 'v3':
+        arrays.update(loaded[-1].packed_arrays())
     target = Path(out) if out is not None else pack_path(data, options)
     target.parent.mkdir(parents=True, exist_ok=True)
     write_started = time.perf_counter()
@@ -477,7 +490,8 @@ def verify(data: Path, options: dict, out: Path) -> None:
     loaded, _sources, source_archive, source_row = build_from_archives(
                                  data, set(options["labels"]), options["wait_keep"], options["label_weight"],
                                  None, options["with_context"], options["obs"], 1, cells=options["cells"],
-                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"])
+                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
+                                 token_input=options.get("token_input", "compact"))
     from train_rollout_policy import read_pack
     observed = []
     actual = read_pack(out, data, lambda path, rows: observed.append((str(path.relative_to(data)), rows)))
@@ -502,6 +516,13 @@ def assert_payload_equal(expected, actual, batch_size=64):
         if left is None or right is None:
             assert left is right, column
             continue
+        from pvz_student_tokens import TokenStore
+        if isinstance(left, TokenStore):
+            for key in left.arrays:
+                a, b = left.arrays[key], right.arrays[key]
+                if a.shape != b.shape or a.dtype != b.dtype or not np.array_equal(a, b):
+                    raise AssertionError(f'token column {key} differs')
+            continue
         for start in range(0, rows, batch_size):
             idx = torch.arange(start, min(start + batch_size, rows))
             def block(value):
@@ -524,7 +545,8 @@ def main() -> None:
     p.add_argument("--out", type=Path, help="pack path (default: <data>/packs/<key>.npz)")
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4", "v2boss", "v2bungee", "v2sleep",
-                                     "v2timer"], default="v1")
+                                     "v2timer", "v3"], default="v1")
+    p.add_argument("--token-input", choices=["compact", "obs_v3"], default="compact")
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")
@@ -539,7 +561,7 @@ def main() -> None:
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(","))))
+                           sources=archive_fingerprint(args.data, set(args.labels.split(","))), token_input=args.token_input)
     if args.verify:
         if args.out is None:
             p.error("--verify needs --out")

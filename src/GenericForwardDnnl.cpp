@@ -41,7 +41,7 @@ struct NativeConvolution {
         auto srcDesc=md(a,memory::format_tag::nhwc), dstDesc=md(y,memory::format_tag::nhwc);
         auto biasDesc=n.inputs.size()==3 ? md(g.tensors[n.inputs[2]],memory::format_tag::a) : memory::desc();
         primitive_attr attr; attr.set_scratchpad_mode(scratchpad_mode::user);
-        if(n.code==20) { post_ops post; post.append_eltwise(algorithm::eltwise_relu,0,0); attr.set_post_ops(post); }
+        if(n.code==23) { post_ops post; post.append_eltwise(algorithm::eltwise_relu,0,0); attr.set_post_ops(post); }
         convolution_forward::primitive_desc pd(eng,prop_kind::forward_inference,algorithm::convolution_direct,
             srcDesc,md(w,memory::format_tag::any),biasDesc,dstDesc,
             {n.ints[2],n.ints[3]},{n.ints[0],n.ints[1]},{n.ints[0],n.ints[1]},attr);
@@ -71,7 +71,7 @@ struct NativeConvolution {
     }
 };
 void PrepareNativeConvolution(Graph& g,Node& n) {
-    if(n.code!=1 && n.code!=20) return;
+    if(n.code!=1 && n.code!=23) return;
     const auto& a=g.tensors[n.inputs[0]]; const auto& w=g.tensors[n.inputs[1]];
     // Sparse first layers and tiny heads retain the portable kernels.
     if(n.ints.size()!=4 || a.shape[1]<16 || w.shape[0]<16 || g.tensors[n.output].shape[2]*g.tensors[n.output].shape[3]<16 || w.role!=2) return;

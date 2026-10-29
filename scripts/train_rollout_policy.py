@@ -16,6 +16,7 @@ import zipfile
 import random
 import sys
 import time
+import signal
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +30,7 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_recipe import training_args, training_row_options, write_recipe  # noqa: E402
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
-from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
+from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, create_student, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import CELL_CANDIDATES  # noqa: E402
 from pvz_training_pack import archive_fingerprint, pack_flags, pack_options, pack_path  # noqa: E402
 
@@ -378,14 +379,14 @@ def _pack_flags(options: dict) -> str:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
-         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None):
+         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None, token_input="compact"):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels))
+                           sources=archive_fingerprint(data, labels), token_input=token_input)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -394,7 +395,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     return read_pack(path, data, row_observer, source_weight)
 
 
-def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None):
+def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None, merge_dir=None):
     """The tuple load has always returned, from one packed file."""
     stored = np.load(path, mmap_mode="r", allow_pickle=False)
     if 'segments' in stored.files:
@@ -402,7 +403,7 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         stored.close()
         # source_weight is applied while merging: the segments carry the per-row source columns,
         # the concatenated pack does not.
-        return read_segments([path.parent / name for name in names], data, row_observer, source_weight)
+        return read_segments([path.parent / name for name in names], data, row_observer, source_weight, merge_dir)
     # npz arrays are materialized (np.load's mmap_mode does not mmap ZIP members).
     # Close the archive after reading; every returned array owns its bytes.
     rows = int(stored["rows"])
@@ -437,6 +438,9 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         result = (*result, torch.from_numpy(np.asarray(stored["aux"])))
     if "packet_col0" in stored.files:
         result = (*result, PacketStore.from_arrays(stored, rows))
+    if 'token_offsets' in stored.files:
+        from pvz_student_tokens import TokenStore
+        result = (*result, TokenStore.from_arrays(stored))
     stored.close()
     return result
 
@@ -461,13 +465,13 @@ def _member_array(archive, name):
         return np.lib.format.read_array(handle)
 
 
-def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
+def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None, merge_dir=None):
     """Share one merged generation between trainers, keeping their row weights private."""
     if data is None:
         return _read_segments(paths, data, row_observer, source_weight)
     import fcntl
     import hashlib
-    directory = Path(data) / '.merge' / 'shared-v1'
+    directory = Path(merge_dir) if merge_dir else Path(data) / '.merge' / 'shared-v1'
     directory.mkdir(parents=True, exist_ok=True)
     signature = hashlib.sha256(json.dumps([
         (str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns)
@@ -521,14 +525,17 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
             sources = stored["source"].tolist()
             archive = np.asarray(stored["source_archive"])
             rows = np.asarray(stored["source_row"])
+            has_tokens = 'token_offsets' in stored.files
             has_cands = "cand_counts" in stored.files
-            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ()) + (("token",) if has_tokens else ())
             # CSR streams carry an offsets member; the sparse stores derive theirs from
             # counts (uint8 per row, cumsum like ValueStore.from_arrays does at load).
             boundaries = {"board": np.asarray(stored["board_offsets"]),
                           "scalar": np.asarray(stored["scalar_offsets"]),
                           "value": np.concatenate(
                               [[0], np.cumsum(np.asarray(stored["value_counts"]).astype(np.int64))])}
+            if has_tokens:
+                boundaries['token'] = np.asarray(stored['token_offsets'])
             if has_cands:
                 boundaries["cand"] = np.concatenate(
                     [[0], np.cumsum(np.asarray(stored["cand_counts"]).astype(np.int64))])
@@ -548,10 +555,11 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
     with zipfile.ZipFile(layouts[0]["path"]) as zfile:
         members = set(name[:-4] for name in zfile.namelist())
         dense_names = ("plant", "packet", "cell", "weight")
+        has_tokens = 'token_offsets' in members
         has_aux = "aux" in members
         has_packets = "packet_col0" in members
         has_cands = "cand_counts" in members
-        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ()) + (("token",) if has_tokens else ())
         headers = {name: _member_header(zfile, name) for name in
                    dense_names + (("aux",) if has_aux else ()) + ("seed",)
                    + ("value_counts", "value_slots", "value_values")
@@ -623,6 +631,16 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         packets.columns = [allocate(f'packet_col{index}', column.dtype, column.shape)
                            for index, column in enumerate(packets.columns)]
 
+    token_store = None
+    if has_tokens:
+        from pvz_student_tokens import TokenStore
+        token_arrays = {'offsets': allocate('token_offsets', np.int64, (total_rows+1,))}
+        for name, (dtype, shape) in TokenStore.token_fields.items():
+            token_arrays[name] = allocate('token_'+name, dtype, (totals['token'], *shape))
+        for name, (dtype, shape) in TokenStore.row_fields.items():
+            token_arrays[name] = allocate('token_'+name, dtype, (total_rows, *shape))
+        token_store = TokenStore(token_arrays)
+
     # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
     for index, layout in enumerate(layouts):
         if reuse:
@@ -677,6 +695,15 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                                      *((("aux", 9),) if has_aux else ())):
                 dense_targets[name][pos:pos + span] = np.asarray(part[part_index])[start:stop]
             seed_target[pos:pos + span] = np.asarray(part[6])[start:stop]
+            if token_store is not None:
+                source_tokens = part[-1].arrays
+                at, lo, hi = entry['token']
+                token_arrays['offsets'][pos+1:pos+span+1] = at + source_tokens['offsets'][start+1:stop+1] - lo
+                for name in TokenStore.token_fields:
+                    token_arrays[name][at:at+hi-lo] = source_tokens[name][lo:hi]
+                for name in TokenStore.row_fields:
+                    token_arrays[name][pos:pos+span] = source_tokens[name][start:stop]
+
             if packets is not None:
                 for column, target_column in zip(part[9 + has_aux].columns, packets.columns):
                     target_column[pos:pos + span] = np.asarray(column)[start:stop]
@@ -694,6 +721,8 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         result = (*result, torch.from_numpy(dense_targets["aux"]))
     if has_packets:
         result = (*result, packets)
+    if token_store is not None:
+        result = (*result, token_store)
     if row_observer is not None and data is not None:
         for entry in placed:
             if len(entry["rows"]):
@@ -717,7 +746,23 @@ def main(*, step_observer=None) -> None:
     # task34: train after collection, but before the controller and the WSL access path.
     set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('--resume', type=Path, help='resume an interruption checkpoint (model + optimizer + RNG)')
+    p.add_argument('--checkpoint-seconds', type=float, default=0, help='opt in to resumable checkpoints and SIGUSR1 yielding (exit 75)')
+    p.add_argument('--skip-validation', action='store_true', help='defer row evaluation to the CPU worker')
+    p.add_argument('--pack', type=Path, help='use an existing frozen pack index without rescanning the corpus')
+    p.add_argument('--merge-dir', type=Path, help='private merged pack cache; never lock the production merge')
     args = training_args(p)
+    yielding = args.checkpoint_seconds > 0 or args.resume is not None
+    yield_requested = False
+    resume_ready = False
+    def request_yield(_signal, _frame):
+        nonlocal yield_requested
+        if not resume_ready:
+            raise SystemExit(75)  # Loading has no optimizer progress to save.
+        yield_requested = True
+    if yielding:
+        signal.signal(signal.SIGUSR1, request_yield)
+        signal.signal(signal.SIGTERM, request_yield)
     torch.set_num_threads(args.threads)
     args.out.mkdir(parents=True, exist_ok=True)
     write_recipe(args.out / "recipe.resolved.json", args.resolved_recipe)
@@ -742,10 +787,15 @@ def main(*, step_observer=None) -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    loaded = load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer)
+    loaded = (read_pack(args.pack, args.data, observer, args.source_weight, args.merge_dir) if args.pack else
+              load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer))
+    if yield_requested:
+        metrics.close()
+        raise SystemExit(75)  # No optimizer work yet; restart loading in the next window.
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
+    tokens = loaded[-1] if args.obs == 'v3' else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
@@ -761,6 +811,8 @@ def main(*, step_observer=None) -> None:
               "value_bytes": values.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, is_val))}
+    if tokens is not None:
+        memory['token_bytes'] = tokens.nbytes
     if packet_info is not None:
         memory['packet_bytes'] = (packet_info.nbytes if isinstance(packet_info, PacketStore)
                                   else packet_info.numel() * packet_info.element_size())
@@ -792,8 +844,8 @@ def main(*, step_observer=None) -> None:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
-                     aux=bool(args.aux_weight), packet_head=args.packet_head)
+    net = create_student(args.arch, width=args.width, pool=args.pool, context=args.context, obs=args.obs, row_pool=args.row_pool,
+                       aux=bool(args.aux_weight), packet_head=args.packet_head, network=args.network, token_input=args.token_input)
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
@@ -811,6 +863,8 @@ def main(*, step_observer=None) -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
+        if tokens is not None:
+            packet_args['tokens'] = tokens.batch(idx, args.device)
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
@@ -860,7 +914,8 @@ def main(*, step_observer=None) -> None:
     history = []
 
     def checkpoint() -> dict:
-        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width, "arch": args.arch,
+                **({"network": net.network, "token_input": net.token_input} if tokens is not None else {}),
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
@@ -873,14 +928,63 @@ def main(*, step_observer=None) -> None:
 
     completed_steps=0
     completed_rows=0
+    next_epoch, next_start, epoch_rng, train_loss = 1, 0, None, 0.0
+    def save_resume():
+        target = args.out / 'resume.pt'
+        payload = dict(checkpoint(), optimizer=opt.state_dict(), scheduler=None if schedule is None else schedule.state_dict(),
+                       completed_steps=completed_steps, completed_rows=completed_rows, next_epoch=next_epoch,
+                       next_start=next_start, epoch_rng=epoch_rng, train_loss=train_loss,
+                       rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all() if args.device.startswith('cuda') else [],
+                       pack=str(args.pack.resolve()) if args.pack else None, pack_size=args.pack.stat().st_size if args.pack else None,
+                       training_rows=len(train_idx), validation_rows=len(val_idx))
+        temporary = target.with_suffix('.building')
+        torch.save(payload, temporary)
+        temporary.replace(target)
+        (args.out / 'progress.json').write_text(json.dumps(dict(steps=completed_steps, rows=completed_rows,
+            epoch=next_epoch, batch_start=next_start, saved=time.time())) + '\n')
+    if args.resume:
+        saved = torch.load(args.resume, map_location=args.device, weights_only=False)
+        # Constant-size contract checks only; never replay or rehash the training corpus.
+        if (saved['recipe'] != args.resolved_recipe or saved['training_rows'] != len(train_idx)
+                or saved['validation_rows'] != len(val_idx) or saved['pack'] != (str(args.pack.resolve()) if args.pack else None)
+                or saved['pack_size'] != (args.pack.stat().st_size if args.pack else None)):
+            raise ValueError('resume recipe/pack/split differs from the saved run')
+        net.load_state_dict(saved['state_dict']); opt.load_state_dict(saved['optimizer'])
+        if schedule is not None:
+            schedule.load_state_dict(saved['scheduler'])
+        completed_steps, completed_rows = saved['completed_steps'], saved['completed_rows']
+        next_epoch, next_start, epoch_rng = saved['next_epoch'], saved['next_start'], saved['epoch_rng'].cpu()
+        train_loss, history = saved['train_loss'], saved['history']
+        torch.set_rng_state(saved['rng'].cpu())
+        if saved['cuda_rng']:
+            torch.cuda.set_rng_state_all([state.cpu() for state in saved['cuda_rng']])
+    last_save = time.monotonic()
+    resume_ready = True
+    def maybe_yield():
+        nonlocal last_save
+        if yielding and (yield_requested or time.monotonic() - last_save >= (args.checkpoint_seconds or 30)):
+            save_resume()
+            last_save = time.monotonic()
+        if yield_requested:
+            metrics.close()
+            raise SystemExit(75)
     metrics.update(phase="training")
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(next_epoch, args.epochs + 1):
+        if completed_steps >= steps:
+            break
         epoch_started = time.perf_counter()
         metrics.update(phase="training")
         net.train()
+        if not next_start:
+            epoch_rng = torch.get_rng_state()
+            train_loss = 0.0
+        current_rng = torch.get_rng_state()
+        torch.set_rng_state(epoch_rng)
         perm = train_idx[torch.randperm(len(train_idx))]
-        train_loss = 0.0
-        for start in range(0, len(perm), args.batch_size):
+        if next_start:
+            torch.set_rng_state(current_rng)
+        for start in range(next_start, len(perm), args.batch_size):
+            maybe_yield()
             loss, _ = batch_loss(perm[start:start + args.batch_size], True)
             if step_observer is not None:
                 step_observer(completed_steps + 1, float(loss.detach()))
@@ -890,30 +994,42 @@ def main(*, step_observer=None) -> None:
                 schedule.step()
             completed_steps+=1
             completed_rows += len(perm[start:start + args.batch_size])
+            next_epoch, next_start = epoch, start + args.batch_size
             metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
             if completed_steps>=steps:
                 break
+        maybe_yield()
         metrics.update(phase="validation")
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
         # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
-        with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
+        parts = []
+        if not args.skip_validation:
+            with torch.no_grad():
+                for chunk in val_idx.split(args.validation_batch_size):
+                    maybe_yield()
+                    parts.append((len(chunk), *batch_loss(chunk, False)))
         total = sum(n for n, _l, _s in parts)
-        vl = sum(float(l) * n for n, l, _s in parts) / total
-        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": float(vl),
+        vl = sum(float(l) * n for n, l, _s in parts) / total if total else None
+        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]} if parts else {}
+        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": vl,
                         **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)
             torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
+        next_epoch, next_start = epoch + 1, 0
         if completed_steps>=steps:
             break
     args.out.mkdir(parents=True, exist_ok=True)
-    torch.save(checkpoint(), args.out / "model.pt")
+    if yielding:
+        temporary = args.out / 'model.building'
+        torch.save(checkpoint(), temporary)
+        temporary.replace(args.out / 'model.pt')
+    else:
+        torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
                                                        "load_seconds": load_seconds, "data_memory": memory}, indent=1))
     metrics.update(phase="complete")

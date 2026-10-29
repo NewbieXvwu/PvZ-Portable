@@ -840,11 +840,17 @@ static void RunEnvironment(LawnApp* app)
 			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath);
 			std::ofstream trace;
 			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
+			EnvironmentRollout::Prediction prediction{};
+			if (ok)
+			{
+				try {
+					if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
+					prediction = rollout.Predict(app, income, priorTick, priorPlant, studentHistory, true);
+				} catch (const std::exception& error) { std::cerr << error.what() << std::endl; ok = false; }
+			}
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
 			if (ok)
 			{
-				if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
-				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, studentHistory, true);
 				std::cout << std::setprecision(9) << ",\"plant\":" << prediction.plant << ",\"packet\":[";
 				for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << prediction.packets[index];
 				std::cout << "],\"cell_packet\":" << prediction.cellPacket << ",\"cell\":[";
@@ -921,7 +927,8 @@ static void RunEnvironment(LawnApp* app)
 					if (!isFirst)
 					{
 						const auto start = std::chrono::steady_clock::now();
-						action = rollout.Predict(app, income, priorTick, priorPlant, studentHistory).action;
+						try { action = rollout.Predict(app, income, priorTick, priorPlant, studentHistory).action; }
+						catch (const std::exception& error) { std::cerr << error.what() << std::endl; ok = false; break; }
 						networkSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
 					}
 					const auto start = std::chrono::steady_clock::now();
@@ -1319,6 +1326,15 @@ static void RunEnvironment(LawnApp* app)
 			ok = !input.fail() && !(input >> extra) && mask >= 0 && (mask & ~ENV_SKIP_ALLOWED) == 0;
 			if (ok)
 				gEnvSimSkip = mask;
+			minimalResponse = true;
+		}
+		else if (command == "OBS_V3")
+		{
+			int enabled = -1;
+			std::string extra;
+			input >> enabled;
+			ok = !input.fail() && !(input >> extra) && (enabled == 0 || enabled == 1);
+			if (ok) app->mEnvironmentTokenObservation = enabled == 1;
 			minimalResponse = true;
 		}
 		else if (command == "OBS_LEAN")

@@ -196,3 +196,25 @@ conv_relu 明确表达融合激活，相邻卷积保留内部布局；调试驱�
 初次同机真实帧测得旧路径169.6 µs、通用192.5 µs；因此历史61 µs不能冒充本台式机此次旧路径实测，
 且此阶段还没有达到用户目标。可选后端的合成8通道CNN64约131–145 µs。
 真实帧对拍最大误差3.58e-7、动作与三次短续走一致，约4秒；性能继续优化。
+
+## 续任务阶段 5：合入 task163 与 task157 的实际原生接口
+
+工作期间 task163 发布 `0b663f85` 完整导出与输入适配，随后 `cfa42c1c` 收尾；本分支合入该已发布
+分支及其 task157 输入依赖，复用 `pvz_student_v3_export.student_graph`，没有另造一套 v3 网络。
+该分支还包含 task162 的执行器代码；此处只合入依赖，不安装/启动服务、不入实验队列。
+
+- `StudentV3(token_input="obs_v3")` 的 dense、5地形专家、共享+top-k、CNN scatter 均可直接
+  `export_student(net,path,token_capacity=256)`，CLI 同名容量参数；compact 原型明确拒绝按富输入导出。
+- 原生 observation id=10，线格式仍是 `v3.version=3 / tokens[N,38]`。类别已经+1、cells=2..55、
+  cards=56..65、无目标=-1；不把旧 obs id3(v2) 当 v3，不混用 compact 与富输入的特征槽。
+- 保留 task163 新增的 SiLU、gather、masked_pool、embedding offset、两桶同格和目标链接关系表；
+  与本分支 conv_relu 内部编号冲突已合并，磁盘格式按算子名字解析，既有图保持可读。
+- 对原生输入再做缓冲复用：PublicObservationTokens 可填调用方保留的 vector，原始38列直接填
+  Graph 预分配缓冲，输入下标在加载时绑定。纯 token 网络跳过不用的 CNN/scalar 特征构造。
+- 容量不足不截断，根节点/续走返回 ok=false，引擎可继续使用/重载；卡包同分沿用 identity 的植物
+  kind 优先规则，Python v3 同步该规则。
+
+当前合并版对拍：batch2 四结构（含padding/空卡槽/目标/重复scatter）逐节点通过，三头最大误差
+2.99e-7；实际白天/屋顶/雾/传送带各抽一帧、每帧四结构，最大误差5.59e-7；本 worktree 独立引擎
+四结构最大误差1.80e-7、合法动作一致。容量溢出后的根节点、续走错误与重载恢复也做针对性测试。
+每个 -k 单项约2–4秒，全部先看 free、限制地址空间；未回放全语料或启动训练。
