@@ -98,7 +98,7 @@ def reference(module, graph, feeds, *, intermediates=False):
         x = a[0]
         shape = graph.tensors[n['name']]['shape']
         if op == 'linear': y = F.linear(*a)
-        elif op == 'conv': y = F.conv2d(*a, stride=tuple(p[2:]), padding=tuple(p[:2]))
+        elif op == 'conv': y = F.conv2d(*a, stride=tuple(p[2:4]), padding=tuple(p[:2]))
         elif op == 'relu': y = F.relu(x)
         elif op == 'add': y = a[0] + a[1]
         elif op == 'concat': y = torch.cat(a, dim=p[0])
@@ -185,7 +185,9 @@ class Builder:
         shape = self.g.tensors[x]['shape'].copy()
         if isinstance(layer, torch.nn.Conv2d):
             shape = [shape[0], layer.out_channels] + [(shape[i+2]+2*layer.padding[i]-layer.kernel_size[i])//layer.stride[i]+1 for i in range(2)]
-            return self.g.node(name, 'conv', [x, w, b], shape, (*layer.padding, *layer.stride), stage=stage)
+            params = [*layer.padding, *layer.stride]
+            if x == 'board': params.append(1)  # sparse public feature channels; cached packed weights
+            return self.g.node(name, 'conv', [x, w]+([b] if b else []), shape, params, stage=stage)
         shape[-1] = layer.out_features
         return self.g.node(name, 'linear', [x, w]+([b] if b else []), shape, stage=stage)
 
@@ -240,10 +242,43 @@ def rollout_graph(net, batch=1):
     else:
         b.layer('packet', ctx, 'packet', 1)
         emb = g.node('selected_embedding', 'embedding', ['selected_packet', table], [batch, E], stage=2)
-    emb = g.node('cell_embedding', 'broadcast', [emb], [batch, E, 6, 10], [0, 1, -1, -1], stage=2)
-    glob = g.node('cell_context', 'broadcast', [ctx], [batch, G, 6, 10], [0, 1, -1, -1], stage=2)
-    cin = g.node('cell_input', 'concat', [h, emb, glob], [batch, W+E+G, 6, 10], [1], stage=2)
-    logits = b.layer('cell_score', b.relu('cell_relu', b.layer('cell_projection', cin, 'cell.0', 2), 2), 'cell.2', 2)
+    # Split the first 1x1 head into local and global contributions. Global/card projections
+    # are identical at every cell; compute them once. Constant kernel slices fold at load.
+    kernel = g.weight(net, 'cell.0.weight')
+    bias = g.weight(net, 'cell.0.bias')
+    local_kernel = g.node('cell_local_kernel', 'slice', [kernel], [W, W, 1, 1], [1, 0, W], stage=2)
+    global_kernel = g.node('cell_global_kernel4d', 'slice', [kernel], [W, E+G, 1, 1], [1, W, E+G], stage=2)
+    global_kernel = g.node('cell_global_kernel', 'reshape', [global_kernel], [W, E+G], stage=2)
+    global_input = g.node('cell_global_input', 'concat', [emb, ctx], [batch, E+G], [1], stage=2)
+    glob = g.node('cell_global_projected', 'linear', [global_input, global_kernel, bias], [batch, W], stage=2)
+    glob = g.node('cell_global_broadcast', 'broadcast', [glob], [batch, W, 6, 10], [0, 1, -1, -1], stage=2)
+    local = g.node('cell_local_projected', 'conv', [h, local_kernel], [batch, W, 6, 10], [0, 0, 1, 1], stage=2)
+    cin = g.node('cell_projection', 'add', [local, glob], [batch, W, 6, 10], stage=2)
+    logits = b.layer('cell_score', b.relu('cell_relu', cin, 2), 'cell.2', 2)
     logits = g.node('cell_crop', 'slice', [logits], [batch, 1, 6, 9], [3, 0, 9], stage=2)
     g.node('cell', 'reshape', [logits], [batch, 54], stage=2)
     return g
+
+
+def run_driver(module, graph, feeds, folder, driver, iterations=1):
+    """Write bounded parity artifacts and run the standalone tool (development only)."""
+    import json
+    import subprocess
+    from pathlib import Path
+    import numpy as np
+    folder = Path(folder)
+    export_graph(module, graph, folder/'model.bin')
+    with open(folder/'inputs.f32', 'wb') as f:
+        for name, desc in graph.tensors.items():
+            if desc['role'] == 1: f.write(feeds[name].numpy().astype('<f4').tobytes())
+    result = subprocess.run([str(driver), str(folder/'model.bin'), str(folder/'inputs.f32'),
+                             str(folder/'outputs.f32'), str(iterations)], check=True, capture_output=True, text=True)
+    raw = np.fromfile(folder/'outputs.f32', dtype='<f4')
+    outputs, pos = {}, 0
+    for n in graph.nodes:
+        shape = graph.tensors[n['name']]['shape']
+        size = int(np.prod(shape))
+        outputs[n['name']] = torch.from_numpy(raw[pos:pos+size].copy().reshape(shape))
+        pos += size
+    assert pos == len(raw)
+    return outputs, json.loads(result.stdout)

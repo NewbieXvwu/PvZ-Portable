@@ -2,15 +2,13 @@
 import json
 import os
 from pathlib import Path
-import subprocess
-import tempfile
 
 import numpy as np
 import pytest
 import torch
 from torch import nn
 
-from pvz_generic_forward import GraphSpec, export_graph, reference
+from pvz_generic_forward import GraphSpec, export_graph, reference, run_driver
 from pvz_generic_examples import EXAMPLES, example, random_feeds
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -18,22 +16,7 @@ DRIVER = Path(os.environ.get('PVZ_GENERIC_DRIVER', ROOT/'build-cppnet/generic-fo
 
 
 def run_cpp(module, graph, feeds, folder, iterations=1):
-    folder = Path(folder)
-    export_graph(module, graph, folder/'model.bin')
-    with open(folder/'inputs.f32', 'wb') as f:
-        for name, desc in graph.tensors.items():
-            if desc['role'] == 1: f.write(feeds[name].numpy().astype('<f4').tobytes())
-    result = subprocess.run([str(DRIVER), str(folder/'model.bin'), str(folder/'inputs.f32'),
-                             str(folder/'outputs.f32'), str(iterations)], check=True, capture_output=True, text=True)
-    raw = np.fromfile(folder/'outputs.f32', dtype='<f4')
-    outputs, pos = {}, 0
-    for n in graph.nodes:
-        shape = graph.tensors[n['name']]['shape']
-        size = int(np.prod(shape))
-        outputs[n['name']] = torch.from_numpy(raw[pos:pos+size].copy().reshape(shape))
-        pos += size
-    assert pos == len(raw)
-    return outputs, json.loads(result.stdout)
+    return run_driver(module, graph, feeds, folder, DRIVER, iterations)
 
 
 def compare(module, graph, feeds, tmp_path):
@@ -76,7 +59,9 @@ def test_small_batch_and_modules(tmp_path):
             weights.extend([g.weight(m, name+'.weight'), g.weight(m, name+'.bias')])
     g.node('relu_ffn', 'ffn', ['rms', *weights[:4]], [2, 4, 8], [0])
     g.node('moe', 'moe', ['relu_ffn', 'route', *weights], [2, 4, 8], [0, 0, 3, 2, 1])
-    feeds = {'x': torch.randn(2, 4, 8), 'route': torch.zeros(2, 4, 3)}
+    route = torch.randn(2, 4, 3)
+    route[0, 0] = 0  # deterministic ties, plus nonuniform softmax weights on other rows
+    feeds = {'x': torch.randn(2, 4, 8), 'route': route}
     assert compare(m, g, feeds, tmp_path) < 1e-5
     m, g = example('cnn64', batch=2)
     assert compare(m, g, random_feeds(g), tmp_path) < 1e-5

@@ -89,13 +89,13 @@
 3. u32 node_count；每节点为 op 字符串、i32 stage、i32 output id、i32 input ids 向量、
    i32 参数向量、f32 参数向量。节点按依赖和 stage 排序，不支持原地覆盖。
 
-算子 i32 参数：conv=`padH,padW,strideH,strideW`；concat=`axis`；permute=`轴序列`；
+算子 i32 参数：conv=`padH,padW,strideH,strideW[,1表示稀疏输入通道]`；concat=`axis`；permute=`轴序列`；
 pool=`归约末尾轴数,0均值/1最大/2均值拼最大`；norm=`0 LayerNorm/1 RMSNorm`（f32 epsilon）；
 attention=`heads`；ffn=`激活`；moe=`激活,0topk/1硬路由,路由专家数,topk,共享专家数`；
 broadcast=`每个输出轴对应的输入轴，-1为新增轴`（可丢弃输入的单例轴）；
 slice=`axis,start,length`；relation=`行差半径,列差半径`。pointer 的 f32 参数为缩放；
 mask 的 f32 参数为填充值（mask 输入<0 的连续尾块被覆盖）。其余算子无参数。
-linear 输入 x,w[,bias]；conv 输入 x,w,b；norm 输入 x,scale,bias（RMS 无 bias 时导出零向量）；
+linear 输入 x,w[,bias]；conv 输入 x,w[,bias]；norm 输入 x,scale,bias（RMS 无 bias 时导出零向量）；
 FFN 输入 x,up_w,up_b,down_w,down_b；MoE 输入 x,route，随后每个路由专家再共享专家的上述四组参数；
 scatter 输入 grid,entities,coords；embedding 输入 ids,table（负 id 映射 0）；select 从 `[B,T,D]`
 按 `[B]` 槽位取 `[B,D]`；relation 输入 meta,kind_table,row_table,col_table,same_table。
@@ -125,3 +125,58 @@ task157 增加富输入时在 `LoadGraph` 绑定新输入，在 `Encode` 填数�
 （v1/slot，v2/context/identity/非等宽embedding，v2timer/row_pool/identity CNN64），
 12 个决策逐中间量与 torch 原模型对拍，最大绝对误差 4.77e-7；旧路径/新路径完整动作一致。
 每种布局各做一次 600 tick 原生续走，两路径终态 hash 一致。测试约 2 秒，地址空间上限 8,000,000 KiB。
+
+## 阶段 3：性能、最终对拍与交付结论（2026-10-29）
+
+采用 CBLAS 矩阵核和编译器向量化，float32、不量化、不启用 fast-math；OpenBLAS 加载时限制单线程，
+Accelerate 设置 VECLIB_MAXIMUM_THREADS=1（调用方也应在进程启动前设置）。每个图加载时分配各节点
+输出、im2col、注意力分数、FFN/MoE 工作空间；前向没有堆分配。首层按实际非零通道缓存打包权重，
+活跃通道集变化才更新；im2col 只拷有效连续行，padding 从加载起保持零，1×1 直接读原数组。
+只依赖权重的切片/reshape 在加载时折叠；格子头的全局/卡包投影只算一次再广播，避免每格重算。
+硬路由 MoE 按专家收拢 token 做批量 GEMM，再按原位置回写；共享专家批量执行。
+这是前向实现优化，未增加游戏策略规则或启动/续跑自检。
+
+最终测量：本台式机 i7-12700F / WSL x86_64，GCC 15.2 Release / LTO / -ffp-contract=off，
+OpenBLAS 0.3.32，nice10，batch=1、单线程，每项热图 200 次均值，包含编码及全部三头，
+不含特征构造、模型加载、文件 I/O。保持生产运行，未绑核或停服务。完整记录在
+[task161-cpp-generic-forward-results.json](task161-cpp-generic-forward-results.json)。
+
+| 示例 | 稠密随机输入 µs | 8 个非零输入通道 µs | 稠密耗时 / 历史 61 µs |
+|---|---:|---:|---:|
+| 现行 CNN64（v2timer / meanmax / row_pool / identity） | 308.4 | 213.3 | 5.06 |
+| CNN128（相同头与观测） | 879.6 | 686.9 | 14.42 |
+| ResNet，stem + 6 个双卷积残差块，宽64 | 1167.0 | 1129.2 | 19.13 |
+| 2层 token / 宽128 / 64 tokens / 4头 | 1666.6 | — | 27.32 |
+| 2层 token / 宽128 / 128 tokens / 4头 | 3818.5 | — | 62.60 |
+| 4层 token / 宽128 / 64 tokens / 4头 | 3491.4 | — | 57.24 |
+| 4层 token / 宽128 / 128 tokens / 4头 | 7394.3 | — | 121.22 |
+| CNN + 2层 token + scatter | 1930.7 | — | 31.65 |
+| 1层 token + 5 专家硬路由 SwiGLU | 1239.8 | — | 20.32 |
+
+注意力示例包含 pre-LN、关系表、Q/K/V/输出投影、4倍隐藏宽度 SwiGLU FFN 和条件指针头；
+MoE 示例让 64 个 token 的外部 id 混合覆盖 5 个专家，不等同于全局一个地形 id 的最优批量。
+“8通道”是同一随机输入只保留前8个通道的可重复稀疏算例，不冒充真实帧速度。
+61 µs 是任务书引用的历史数值，并非本次同输入/同负载的旧路径实测；上表比值仅作量级参照。
+**通用 CNN64 仍未达到该历史速度，不建议据此切换生产默认。** 本任务不设速度晋升门槛；
+交付的是可配置前向能力与真实计时，后续可继续做融合/内核优化，不以降低精度换取对拍通过。
+
+最终随机对拍涵盖上表 9 类结构及3个稀疏变体，比较每个节点输出；最大绝对误差 **2.03e-6 < 1e-5**。
+CNN64/128 额外直接对照原 RolloutNet 三头，而不只对照图解释器。优化后的真实帧/旧路径对拍
+最大误差 **3.73e-7**，12 个决策动作仍相同，三次短原生续走终态相同。
+小批 B=2、全掩码、RMSNorm、非均匀 top-k/平局/共享专家的针对性测试通过。
+所有测试均独立 `-k`、8,000,000 KiB 上限，单项2–3秒；没有全量数据重放、训练或生产改动。
+
+复现基准（独立驱动，不启动游戏）：
+
+```bash
+nice -n 10 cmake -S . -B build-cppnet -G Ninja -DCMAKE_BUILD_TYPE=Release -DPVZ_GENERIC_DRIVER=ON
+nice -n 10 cmake --build build-cppnet --target generic-forward -j 3
+free -g
+ulimit -v 8000000
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 timeout 300 nice -n 10 "$HOME/.venvs/ml/bin/python3" \
+  scripts/bench_generic_forward.py --iterations 200 --sparse-cnn --output build-cppnet/results.json
+```
+
+task157 可直接从本分支取 `GenericForward`、导出器和上述 ABI；富 token 的原生数组适配、
+训练器结构和配方仍由它负责。当前新格式已能在现有原生特征适配器下作为根节点/续走策略使用，
+独立富 token 示例需接入相应富输入适配器。旧导出/旧模型、生产默认、qc、看门狗均保持原状。

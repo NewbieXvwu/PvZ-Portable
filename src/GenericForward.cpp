@@ -3,10 +3,12 @@
 #include <bit>
 #include <cmath>
 #include <cstdint>
+#include <cstdlib>
 #include <fstream>
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 #ifdef __APPLE__
 #include <vecLib/cblas.h>
@@ -19,8 +21,8 @@ namespace {
 const std::vector<std::string> ops = {"linear", "conv", "relu", "add", "concat", "reshape",
     "permute", "pool", "norm", "attention", "ffn", "moe", "scatter", "pointer",
     "embedding", "broadcast", "select", "slice", "mask", "relation"};
-void Require(bool ok, const std::string& message) {
-    if (!ok) throw std::runtime_error("generic forward: " + message);
+void Require(bool ok, std::string_view message) {
+    if (!ok) throw std::runtime_error("generic forward: " + std::string(message));
 }
 template<class T> T Read(std::istream& in) {
     T value{}; in.read(reinterpret_cast<char*>(&value), sizeof(T));
@@ -74,6 +76,11 @@ const Tensor& Graph::Get(const std::string& name) const {
 }
 Tensor& Graph::Get(const std::string& name) { return const_cast<Tensor&>(std::as_const(*this).Get(name)); }
 void Graph::Load(const std::string& path) {
+#ifdef OPENBLAS_VERSION
+    openblas_set_num_threads(1);
+#elif defined(__APPLE__)
+    setenv("VECLIB_MAXIMUM_THREADS", "1", 1);
+#endif
     std::ifstream in(path, std::ios::binary);
     char magic[8]{}; in.read(magic, 8);
     Require(std::string(magic, 8) == "PVZGN001" && std::endian::native == std::endian::little, "format/endian");
@@ -124,15 +131,17 @@ void Graph::Prepare() {
             auto expected = a.shape; expected.back() = w.shape[0]; Require(y.shape == expected, "linear output");
             if (n.inputs.size() == 3) Require(at(2).data.size() == size_t(w.shape[0]), "linear bias");
         } else if (n.code == 1) {
-            inputs(3); param(4); // padding H,W; stride H,W
+            Require(n.inputs.size() == 2 || n.inputs.size() == 3, "conv inputs");
+            Require(n.ints.size() == 4 || (n.ints.size() == 5 && n.ints[4] == 1), "conv parameters");
             auto& w = at(1);
             Require(rank == 4 && w.shape.size() == 4 && y.shape.size() == 4, "conv rank");
             Require(n.ints[0] >= 0 && n.ints[1] >= 0 && n.ints[2] > 0 && n.ints[3] > 0, "conv stride/padding");
-            Require(a.shape[1] == w.shape[1] && at(2).data.size() == size_t(w.shape[0]) &&
+            Require(a.shape[1] == w.shape[1] && (n.inputs.size() == 2 || at(2).data.size() == size_t(w.shape[0])) &&
                 y.shape == std::vector<int>({a.shape[0], w.shape[0],
                 (a.shape[2]+2*n.ints[0]-w.shape[2])/n.ints[2]+1,
                 (a.shape[3]+2*n.ints[1]-w.shape[3])/n.ints[3]+1}), "conv shape");
             n.scratch.resize(size_t(w.shape[1])*w.shape[2]*w.shape[3]*y.shape[2]*y.shape[3]);
+            if (n.ints.size() == 5) { n.indices.resize(a.shape[1], -1); n.packed.resize(w.data.size()); }
         } else if (n.code == 2 || n.code == 3 || n.code == 18) {
             inputs(n.code == 2 ? 1 : 2); Require(a.shape == y.shape, "elementwise shape");
             if (n.code == 3) Require(at(1).shape == a.shape, "add shape");
@@ -192,7 +201,7 @@ void Graph::Prepare() {
                     n.ints[3] > 0 && n.ints[3] <= n.ints[2] && n.ints[4] >= 0, "moe routing");
                 size_t rows = a.data.size()/a.shape.back();
                 Require(at(1).data.size() == rows * (n.ints[1] ? 1 : n.ints[2]), "moe route shape");
-                n.indices.resize(n.ints[2]);
+                n.indices.resize(n.ints[1] ? rows : n.ints[2]);
             }
             size_t scratch = 0;
             for (int e = 0; e < experts; ++e) {
@@ -200,8 +209,8 @@ void Graph::Prepare() {
                 Require(up.shape.size() == 2 && down.shape.size() == 2 && up.shape[1] == a.shape.back() &&
                     up.shape[0] == down.shape[1]*(n.ints[0] ? 2 : 1) && down.shape[0] == a.shape.back() &&
                     at(offset+4*e+1).data.size() == size_t(up.shape[0]) && at(offset+4*e+3).data.size() == size_t(down.shape[0]), "FFN weights");
-                scratch = std::max(scratch, size_t(up.shape[0])*(n.code == 10 ? a.data.size()/a.shape.back() : 1));
-            } n.scratch.resize(scratch + a.shape.back());
+                scratch = std::max(scratch, size_t(up.shape[0])*(a.data.size()/a.shape.back()));
+            } n.scratch.resize(scratch + (n.code == 11 ? 2*a.data.size() : 0));
         } else if (n.code == 12) {
             inputs(3); Require(rank == 4 && a.shape == y.shape && at(1).shape.size() == 3 &&
                 at(1).shape[0] == a.shape[0] && at(1).shape[2] == a.shape[1] &&
@@ -228,11 +237,15 @@ void Graph::Prepare() {
             auto expected=a.shape; expected[axis]=length; Require(y.shape==expected, "slice output");
         }
         ready[n.output] = true;
+        // E.g. split a 1x1 kernel once at load, not once per decision.
+        if (std::all_of(n.inputs.begin(), n.inputs.end(), [&](int i) { return tensors[i].role == 2; })) {
+            Execute(n); tensors[n.output].role = 2; n.code = -1;
+        }
     }
 }
 
 void Graph::Run(int firstStage, int lastStage) {
-    for (auto& n : nodes) if (n.stage >= firstStage && n.stage <= lastStage) Execute(n);
+    for (auto& n : nodes) if (n.code >= 0 && n.stage >= firstStage && n.stage <= lastStage) Execute(n);
 }
 void Graph::Execute(Node& n) {
     auto& a = tensors[n.inputs[0]]; auto& y = tensors[n.output];
@@ -245,17 +258,47 @@ void Graph::Execute(Node& n) {
         const auto& w=at(1); int B=a.shape[0], C=a.shape[1], H=a.shape[2], W=a.shape[3];
         int O=w.shape[0], KH=w.shape[2], KW=w.shape[3], OH=y.shape[2], OW=y.shape[3], S=OH*OW;
         float* col=n.scratch.data();
+        const bool sparse=n.ints.size()==5;
+        int active=C; const float* kernel=w.data.data();
+        if(sparse) {
+            active=0; bool changed=false;
+            for(int c=0;c<C;++c) {
+                bool nonzero=false;
+                for(int b=0;b<B && !nonzero;++b) {
+                    const float* plane=x+(b*C+c)*H*W;
+                    nonzero=std::any_of(plane,plane+H*W,[](float v) { return v!=0.f; });
+                }
+                if(nonzero) { changed |= n.indices[active]!=c; n.indices[active++]=c; }
+            }
+            if(changed || active!=n.activeCount) {
+                for(int o=0;o<O;++o) for(int c=0;c<active;++c)
+                    std::copy_n(kernel+(o*C+n.indices[c])*KH*KW,KH*KW,n.packed.data()+(o*active+c)*KH*KW);
+                n.activeCount=active;
+            }
+            kernel=n.packed.data();
+        }
+        int K=active*KH*KW;
         for (int b=0;b<B;++b) {
-            for (int c=0;c<C;++c) for (int kh=0;kh<KH;++kh) for (int kw=0;kw<KW;++kw) {
-                float* dst=col+((c*KH+kh)*KW+kw)*S;
-                for (int h=0;h<OH;++h) for (int v=0;v<OW;++v) {
+            const bool direct=!sparse && KH==1 && KW==1 && n.ints[0]==0 && n.ints[1]==0 && n.ints[2]==1 && n.ints[3]==1;
+            for (int ac=0;ac<active && !direct;++ac) for (int kh=0;kh<KH;++kh) for (int kw=0;kw<KW;++kw) {
+                int c=sparse ? n.indices[ac] : ac;
+                float* dst=col+((ac*KH+kh)*KW+kw)*S;
+                if(n.ints[3]==1) {
+                    // Padding stays zero from Load(); only contiguous valid row spans change.
+                    int begin=std::max(0,n.ints[1]-kw), end=std::min(OW,W+n.ints[1]-kw);
+                    if(begin<end) for(int h=0;h<OH;++h) {
+                        int ih=h*n.ints[2]+kh-n.ints[0];
+                        if(ih>=0 && ih<H) std::copy_n(x+((b*C+c)*H+ih)*W+begin+kw-n.ints[1],end-begin,dst+h*OW+begin);
+                    }
+                } else for (int h=0;h<OH;++h) for (int v=0;v<OW;++v) {
                     int ih=h*n.ints[2]+kh-n.ints[0], iw=v*n.ints[3]+kw-n.ints[1];
                     dst[h*OW+v]=(ih>=0 && ih<H && iw>=0 && iw<W) ? x[((b*C+c)*H+ih)*W+iw] : 0.f;
                 }
             }
             float* dst=out+b*O*S;
-            cblas_sgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,O,S,C*KH*KW,1.f,w.data.data(),C*KH*KW,col,S,0.f,dst,S);
-            for(int o=0;o<O;++o) for(int s=0;s<S;++s) dst[o*S+s]+=at(2).data[o];
+            if(K) cblas_sgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,O,S,K,1.f,kernel,K,direct ? x+b*C*S : col,S,0.f,dst,S);
+            else std::fill_n(dst,O*S,0.f);
+            if(n.inputs.size()==3) for(int o=0;o<O;++o) for(int s=0;s<S;++s) dst[o*S+s]+=at(2).data[o];
         } break;
     }
     case 2: for(int i=0;i<count;++i) out[i]=std::max(0.f,x[i]); break;
@@ -312,20 +355,36 @@ void Graph::Execute(Node& n) {
     case 10: FFN(x,a.data.size()/a.shape.back(),at(1),at(2),at(3),at(4),n.ints[0],n.scratch.data(),out); break;
     case 11: {
         int D=a.shape.back(), E=n.ints[2], shared=n.ints[4], rows=count/D;
-        std::fill_n(out,count,0.f); float* tmp=n.scratch.data(); float* expert=tmp+n.scratch.size()-D;
+        std::fill_n(out,count,0.f); float* tmp=n.scratch.data();
+        float* packed=tmp+n.scratch.size()-2*count;
+        float* expert=packed+count;
+        for(int e=0;e<shared;++e) {
+            int base=2+4*(E+e);
+            FFN(x,rows,at(base),at(base+1),at(base+2),at(base+3),n.ints[0],tmp,expert);
+            for(int i=0;i<count;++i) out[i]+=expert[i];
+        }
+        if(n.ints[1]) {
+            for(int r=0;r<rows;++r) { float id=at(1).data[r];
+                Require(std::isfinite(id) && id>=0 && id<E && id==std::floor(id), "external expert id"); }
+            for(int e=0;e<E;++e) {
+                int length=0;
+                for(int r=0;r<rows;++r) if(int(at(1).data[r])==e) {
+                    n.indices[length]=r; std::copy_n(x+r*D,D,packed+length*D); ++length;
+                }
+                if(!length) continue;
+                int base=2+4*e;
+                FFN(packed,length,at(base),at(base+1),at(base+2),at(base+3),n.ints[0],tmp,expert);
+                for(int r=0;r<length;++r) for(int d=0;d<D;++d) out[n.indices[r]*D+d]+=expert[r*D+d];
+            }
+            break;
+        }
         for(int r=0;r<rows;++r) {
             auto accumulate=[&](int e,float weight) {
                 int base=2+4*e;
                 FFN(x+r*D,1,at(base),at(base+1),at(base+2),at(base+3),n.ints[0],tmp,expert);
                 for(int d=0;d<D;++d) out[r*D+d]+=weight*expert[d];
             };
-            for(int e=0;e<shared;++e) accumulate(E+e,1.f);
-            if(n.ints[1]) {
-                float id=at(1).data[r];
-                // IDs are dynamic user input; reject instead of reading another expert's memory.
-                Require(std::isfinite(id) && id>=0 && id<E && id==std::floor(id), "external expert id");
-                accumulate(int(id),1.f);
-            } else {
+            {
                 const float* logits=at(1).data.data()+r*E;
                 std::iota(n.indices.begin(),n.indices.end(),0);
                 std::partial_sort(n.indices.begin(),n.indices.begin()+n.ints[3],n.indices.end(),[&](int l,int r) {
@@ -377,12 +436,12 @@ void Graph::Execute(Node& n) {
     }
     case 19: {
         int B=a.shape[0],T=a.shape[1],H=at(1).shape[0],K=at(1).shape[1],R=n.ints[0],C=n.ints[1];
+        for(int i=0;i<B*T;++i) Require(x[i*3]>=0 && x[i*3]<K && x[i*3]==std::floor(x[i*3]) &&
+            std::isfinite(x[i*3+1]) && std::isfinite(x[i*3+2]), "relation metadata");
         for(int b=0;b<B;++b) for(int i=0;i<T;++i) {
             const float* left=x+(b*T+i)*3;
-            Require(left[0]>=0 && left[0]<K && left[0]==std::floor(left[0]),"relation kind");
             for(int j=0;j<T;++j) {
                 const float* right=x+(b*T+j)*3;
-                Require(right[0]>=0 && right[0]<K && right[0]==std::floor(right[0]),"relation kind");
                 int dr=left[1]<0 || right[1]<0 ? 2*R+1 : int(std::clamp(left[1]-right[1],float(-R),float(R)))+R;
                 int dc=left[2]<0 || right[2]<0 ? 2*C+1 : int(std::clamp(left[2]-right[2],float(-C),float(C)))+C;
                 bool same=left[1]>=0 && left[2]>=0 && left[1]==right[1] && left[2]==right[2];

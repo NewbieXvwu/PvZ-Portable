@@ -5,7 +5,7 @@
 #include <vector>
 
 // Fixed-shape float32 inference graph. A Graph owns its scratch space; use one per worker.
-// No interpreter, allocation, shape inference or weight transformation in Run().
+// No interpreter, allocation or shape inference in Run(). Sparse kernels are cached by channel set.
 namespace pvz::net {
 struct Tensor {
     std::string name;
@@ -20,7 +20,9 @@ struct Node {
     int output = 0, stage = 0;
     int code = -1;
     std::vector<float> scratch;
+    std::vector<float> packed;
     std::vector<int> indices;
+    int activeCount = -1;
 };
 class Graph {
 public:

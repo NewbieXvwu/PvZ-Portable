@@ -55,8 +55,8 @@ def token_example(layers=2, tokens=64, width=128, batch=1, hybrid=False, moe=Fal
         grid = g.node('scatter', 'scatter', [grid, x, coords], [batch, width, 6, 10])
         query = g.node('hybrid_global', 'pool', [grid], [batch, width], [2, 0])
         keys = g.node('grid_channels_last', 'permute', [grid], [batch, 6, 10, width], [0, 2, 3, 1])
-        keys = g.node('grid_tokens', 'reshape', [keys], [batch, 60, width])
-        keys = g.node('grid_lawn', 'slice', [keys], [batch, 54, width], [1, 0, 54])
+        keys = g.node('grid_lawn', 'slice', [keys], [batch, 6, 9, width], [2, 0, 9])
+        keys = g.node('grid_tokens', 'reshape', [keys], [batch, 54, width])
     else:
         keys = g.node('cell_keys', 'slice', [x], [batch, 54, width], [1, 0, 54])
         # Packet tokens are excluded from global pooling, matching the task157 contract.
@@ -131,7 +131,16 @@ def random_feeds(graph):
         elif name == 'selected_packet': x = torch.zeros(shape)
         elif name.endswith('_terrain'): x = torch.randint(5, shape).float()
         elif name == 'packet_info':
+            x = torch.rand(shape)
             x[..., 0] = torch.randint(54, shape[:-1])
             x[:, -2:, 0] = -1
         feeds[name] = x.float()
+    if graph.metadata and graph.metadata[2] and 'scalars' in feeds and 'packet_info' in feeds:
+        scalars, info = feeds['scalars'], feeds['packet_info']
+        scalars[:, 5:113] = 0
+        kinds = info[..., 0].long()
+        valid = kinds >= 0
+        for start, values in ((5, info[..., 1]*info[..., 3]), (59, info[..., 2])):
+            scalars[:, start:start+54].scatter_reduce_(1, kinds.clamp(min=0),
+                values.masked_fill(~valid, 0), reduce='amax', include_self=True)
     return feeds

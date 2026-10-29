@@ -1,6 +1,7 @@
 // Standalone parity/benchmark driver; never linked into the production engine.
 #include "GenericForward.h"
 #include <chrono>
+#include <ctime>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -21,8 +22,10 @@ int main(int argc, char** argv) {
         }
         int iterations=argc>4 ? std::stoi(argv[4]) : 1;
         auto start=std::chrono::steady_clock::now();
+        auto cpuStart=std::clock();
         for(int i=0;i<iterations;++i) graph.Run();
         double us=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/iterations;
-        std::cout << "{\"us\":" << us << ",\"iterations\":" << iterations << "}\n";
+        double cpuUs=double(std::clock()-cpuStart)*1000000/CLOCKS_PER_SEC/iterations;
+        std::cout << "{\"us\":" << us << ",\"cpu_us\":" << cpuUs << ",\"iterations\":" << iterations << "}\n";
     } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 1; }
 }
