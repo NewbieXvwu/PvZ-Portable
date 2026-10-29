@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, arch='cnn', label_weight={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -139,6 +139,9 @@ def validate(document, kind=None):
                 raise ValueError(f'{name}: expected one of {choices}')
         if not isinstance(result['device'], str) or not result['device']:
             raise ValueError('device: expected nonempty string')
+        if not isinstance(result['arch'], str) or not result['arch'] or (
+                result['arch'] != 'cnn' and ':' not in result['arch']):
+            raise ValueError('arch: expected cnn or module:factory')
         labels = result['labels']
         if not isinstance(labels, list) or not labels or not all(isinstance(v, str) and v and ',' not in v for v in labels):
             raise ValueError('labels: expected nonempty list of label names')
@@ -265,6 +268,10 @@ def training_args(parser, argv=None):
     except (OSError, ValueError) as error:
         parser.error(str(error))
     args = argparse.Namespace(**resolved)
+    # Script-specific execution controls are not part of the frozen training recipe.
+    for name, value in vars(cli).items():
+        if not hasattr(args, name):
+            setattr(args, name, value)
     for name in PATH_FIELDS:
         if getattr(args, name, None) is not None:
             setattr(args, name, Path(getattr(args, name)))

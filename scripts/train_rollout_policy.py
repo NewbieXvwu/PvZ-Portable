@@ -16,6 +16,7 @@ import zipfile
 import random
 import sys
 import time
+import signal
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +30,7 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_recipe import training_args, training_row_options, write_recipe  # noqa: E402
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
-from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
+from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, create_student, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import CELL_CANDIDATES  # noqa: E402
 from pvz_training_pack import archive_fingerprint, pack_flags, pack_options, pack_path  # noqa: E402
 
@@ -394,7 +395,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     return read_pack(path, data, row_observer, source_weight)
 
 
-def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None):
+def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None, merge_dir=None):
     """The tuple load has always returned, from one packed file."""
     stored = np.load(path, mmap_mode="r", allow_pickle=False)
     if 'segments' in stored.files:
@@ -402,7 +403,7 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         stored.close()
         # source_weight is applied while merging: the segments carry the per-row source columns,
         # the concatenated pack does not.
-        return read_segments([path.parent / name for name in names], data, row_observer, source_weight)
+        return read_segments([path.parent / name for name in names], data, row_observer, source_weight, merge_dir)
     # npz arrays are materialized (np.load's mmap_mode does not mmap ZIP members).
     # Close the archive after reading; every returned array owns its bytes.
     rows = int(stored["rows"])
@@ -461,13 +462,13 @@ def _member_array(archive, name):
         return np.lib.format.read_array(handle)
 
 
-def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
+def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None, merge_dir=None):
     """Share one merged generation between trainers, keeping their row weights private."""
     if data is None:
         return _read_segments(paths, data, row_observer, source_weight)
     import fcntl
     import hashlib
-    directory = Path(data) / '.merge' / 'shared-v1'
+    directory = Path(merge_dir) if merge_dir else Path(data) / '.merge' / 'shared-v1'
     directory.mkdir(parents=True, exist_ok=True)
     signature = hashlib.sha256(json.dumps([
         (str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns)
@@ -717,7 +718,23 @@ def main(*, step_observer=None) -> None:
     # task34: train after collection, but before the controller and the WSL access path.
     set_oom_score_adj(OOM_SCORE_TRAINING)
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('--resume', type=Path, help='resume an interruption checkpoint (model + optimizer + RNG)')
+    p.add_argument('--checkpoint-seconds', type=float, default=0, help='opt in to resumable checkpoints and SIGUSR1 yielding (exit 75)')
+    p.add_argument('--skip-validation', action='store_true', help='defer row evaluation to the CPU worker')
+    p.add_argument('--pack', type=Path, help='use an existing frozen pack index without rescanning the corpus')
+    p.add_argument('--merge-dir', type=Path, help='private merged pack cache; never lock the production merge')
     args = training_args(p)
+    yielding = args.checkpoint_seconds > 0 or args.resume is not None
+    yield_requested = False
+    resume_ready = False
+    def request_yield(_signal, _frame):
+        nonlocal yield_requested
+        if not resume_ready:
+            raise SystemExit(75)  # Loading has no optimizer progress to save.
+        yield_requested = True
+    if yielding:
+        signal.signal(signal.SIGUSR1, request_yield)
+        signal.signal(signal.SIGTERM, request_yield)
     torch.set_num_threads(args.threads)
     args.out.mkdir(parents=True, exist_ok=True)
     write_recipe(args.out / "recipe.resolved.json", args.resolved_recipe)
@@ -742,7 +759,11 @@ def main(*, step_observer=None) -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    loaded = load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer)
+    loaded = (read_pack(args.pack, args.data, observer, args.source_weight, args.merge_dir) if args.pack else
+              load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer))
+    if yield_requested:
+        metrics.close()
+        raise SystemExit(75)  # No optimizer work yet; restart loading in the next window.
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
@@ -792,7 +813,7 @@ def main(*, step_observer=None) -> None:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
+    net = create_student(args.arch, width=args.width, pool=args.pool, context=args.context, obs=args.obs, row_pool=args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
@@ -860,7 +881,7 @@ def main(*, step_observer=None) -> None:
     history = []
 
     def checkpoint() -> dict:
-        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+        return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width, "arch": args.arch,
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
@@ -873,14 +894,63 @@ def main(*, step_observer=None) -> None:
 
     completed_steps=0
     completed_rows=0
+    next_epoch, next_start, epoch_rng, train_loss = 1, 0, None, 0.0
+    def save_resume():
+        target = args.out / 'resume.pt'
+        payload = dict(checkpoint(), optimizer=opt.state_dict(), scheduler=None if schedule is None else schedule.state_dict(),
+                       completed_steps=completed_steps, completed_rows=completed_rows, next_epoch=next_epoch,
+                       next_start=next_start, epoch_rng=epoch_rng, train_loss=train_loss,
+                       rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all() if args.device.startswith('cuda') else [],
+                       pack=str(args.pack.resolve()) if args.pack else None, pack_size=args.pack.stat().st_size if args.pack else None,
+                       training_rows=len(train_idx), validation_rows=len(val_idx))
+        temporary = target.with_suffix('.building')
+        torch.save(payload, temporary)
+        temporary.replace(target)
+        (args.out / 'progress.json').write_text(json.dumps(dict(steps=completed_steps, rows=completed_rows,
+            epoch=next_epoch, batch_start=next_start, saved=time.time())) + '\n')
+    if args.resume:
+        saved = torch.load(args.resume, map_location=args.device, weights_only=False)
+        # Constant-size contract checks only; never replay or rehash the training corpus.
+        if (saved['recipe'] != args.resolved_recipe or saved['training_rows'] != len(train_idx)
+                or saved['validation_rows'] != len(val_idx) or saved['pack'] != (str(args.pack.resolve()) if args.pack else None)
+                or saved['pack_size'] != (args.pack.stat().st_size if args.pack else None)):
+            raise ValueError('resume recipe/pack/split differs from the saved run')
+        net.load_state_dict(saved['state_dict']); opt.load_state_dict(saved['optimizer'])
+        if schedule is not None:
+            schedule.load_state_dict(saved['scheduler'])
+        completed_steps, completed_rows = saved['completed_steps'], saved['completed_rows']
+        next_epoch, next_start, epoch_rng = saved['next_epoch'], saved['next_start'], saved['epoch_rng'].cpu()
+        train_loss, history = saved['train_loss'], saved['history']
+        torch.set_rng_state(saved['rng'].cpu())
+        if saved['cuda_rng']:
+            torch.cuda.set_rng_state_all([state.cpu() for state in saved['cuda_rng']])
+    last_save = time.monotonic()
+    resume_ready = True
+    def maybe_yield():
+        nonlocal last_save
+        if yielding and (yield_requested or time.monotonic() - last_save >= args.checkpoint_seconds):
+            save_resume()
+            last_save = time.monotonic()
+        if yield_requested:
+            metrics.close()
+            raise SystemExit(75)
     metrics.update(phase="training")
-    for epoch in range(1, args.epochs + 1):
+    for epoch in range(next_epoch, args.epochs + 1):
+        if completed_steps >= steps:
+            break
         epoch_started = time.perf_counter()
         metrics.update(phase="training")
         net.train()
+        if not next_start:
+            epoch_rng = torch.get_rng_state()
+            train_loss = 0.0
+        current_rng = torch.get_rng_state()
+        torch.set_rng_state(epoch_rng)
         perm = train_idx[torch.randperm(len(train_idx))]
-        train_loss = 0.0
-        for start in range(0, len(perm), args.batch_size):
+        if next_start:
+            torch.set_rng_state(current_rng)
+        for start in range(next_start, len(perm), args.batch_size):
+            maybe_yield()
             loss, _ = batch_loss(perm[start:start + args.batch_size], True)
             if step_observer is not None:
                 step_observer(completed_steps + 1, float(loss.detach()))
@@ -890,26 +960,33 @@ def main(*, step_observer=None) -> None:
                 schedule.step()
             completed_steps+=1
             completed_rows += len(perm[start:start + args.batch_size])
+            next_epoch, next_start = epoch, start + args.batch_size
             metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
             if completed_steps>=steps:
                 break
+        maybe_yield()
         metrics.update(phase="validation")
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
         # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
         # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
-        with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
+        parts = []
+        if not args.skip_validation:
+            with torch.no_grad():
+                for chunk in val_idx.split(args.validation_batch_size):
+                    maybe_yield()
+                    parts.append((len(chunk), *batch_loss(chunk, False)))
         total = sum(n for n, _l, _s in parts)
-        vl = sum(float(l) * n for n, l, _s in parts) / total
-        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": float(vl),
+        vl = sum(float(l) * n for n, l, _s in parts) / total if total else None
+        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]} if parts else {}
+        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": vl,
                         **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:
             args.out.mkdir(parents=True, exist_ok=True)
             torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
+        next_epoch, next_start = epoch + 1, 0
         if completed_steps>=steps:
             break
     args.out.mkdir(parents=True, exist_ok=True)
