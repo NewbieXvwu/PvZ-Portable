@@ -122,6 +122,24 @@ def registered_signatures() -> set[tuple[int, ...]]:
     return seen
 
 
+def load_frozen_pool(path, registry, heldout_panels):
+    """Small reviewed task165 snapshot; never reread/replay the source archives at deployment."""
+    tasks = json.loads(path.read_text())['tasks']
+    heldout = heldout_signatures(registry, heldout_panels)
+    seen = {tuple(sorted(task['deck'])) for task in registry['tasks']}
+    for task in tasks:
+        deck = tuple(sorted(task['deck']))
+        if deck in heldout or deck in seen:
+            raise ValueError('frozen training deck duplicates a training/evaluation/heldout deck')
+        if deck_violations(task['level'], deck, fixed_bank=True) or not terrain_covered(task['level'], deck):
+            raise ValueError('frozen training deck violates terrain/v5 rules')
+        seen.add(deck)
+    base_train = {tuple(sorted(task['deck'])) for task in registry['tasks'] if task['split']=='train'}
+    if base_train & heldout:
+        raise ValueError('base random training decks overlap heldouts')
+    return tasks
+
+
 def generate_registry() -> dict:
     rng, seen, tasks = random.Random(DRAW_SEED), registered_signatures(), []
     for level in LEVELS:
@@ -214,6 +232,7 @@ def main() -> None:
     parser.add_argument('--gpt-ledger', type=Path, help='task105 import/merged_progress.json (or import_progress.json)')
     parser.add_argument('--archive-root', type=Path, default=ROOT, help='root for ledger archive paths')
     parser.add_argument('--roof-candidates', type=Path, help='task148-roof-candidates.json')
+    parser.add_argument('--pool-registry', type=Path, help='reviewed frozen external pool (task165); exclusive with live source arguments')
     parser.add_argument('--heldout-panel', type=Path, action='append', default=[],
                         help='additional selection/gate panel; supply gate_v6_panel.json before using external pools')
     args = parser.parse_args()
@@ -225,8 +244,13 @@ def main() -> None:
     if args.check:
         print(f'registry ok: {len(registry["tasks"])} tasks, rule v{registry["rule_version"]}')
         return
-    pool = load_deck_pool(registry, gpt_ledger=args.gpt_ledger, archive_root=args.archive_root,
-                          roof_candidates=args.roof_candidates, heldout_panels=args.heldout_panel)
+    if args.pool_registry:
+        if args.gpt_ledger or args.roof_candidates:
+            parser.error('--pool-registry cannot be combined with live deck sources')
+        pool = load_frozen_pool(args.pool_registry, registry, args.heldout_panel)
+    else:
+        pool = load_deck_pool(registry, gpt_ledger=args.gpt_ledger, archive_root=args.archive_root,
+                              roof_candidates=args.roof_candidates, heldout_panels=args.heldout_panel)
     panels = build_panels(registry, pool)
     args.out.mkdir(parents=True, exist_ok=True)
     for name, document in panels.items():

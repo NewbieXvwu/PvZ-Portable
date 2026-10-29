@@ -142,3 +142,30 @@ class RowWeights:
         return {'path':str(self.path),'sha256':hashlib.sha256(self.path.read_bytes()).hexdigest(),
                 'name':self.spec['name'],'row_identity_sha256':self.spec['row_identity_sha256'],
                 'multipliers_sha256':self.spec['multipliers_sha256']}
+
+
+class LabelWeightAdjustment:
+    """Rescale a trainer's private weights by archive spans, without rebuilding feature packs."""
+    def __init__(self, desired, packed):
+        self.factors = {}
+        for label in desired.keys() | packed.keys():
+            before, after = packed.get(label, 1.0), desired.get(label, 1.0)
+            if before == 0 and after != 0:
+                raise ValueError('cannot restore nonzero weights from a zero-weight pack')
+            if before != after:
+                self.factors[label] = after / before
+        self.rows = 0
+        self.spans = []
+
+    def observe(self, path, rows):
+        count = len(rows)
+        factor = self.factors.get(path.parent.name, 1.0)
+        if factor != 1 and count:
+            self.spans.append((self.rows, self.rows + count, factor))
+        self.rows += count
+
+    def apply(self, weight):
+        if self.rows != len(weight):
+            raise ValueError('label weight spans do not cover the loaded rows')
+        for start, stop, factor in self.spans:
+            weight[start:stop] *= factor

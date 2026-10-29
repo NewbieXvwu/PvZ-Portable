@@ -1,0 +1,43 @@
+{
+  "source_state_updated": "2026-10-29T18:51:35",
+  "source_round": 47,
+  "round_games": 768,
+  "per_group": 48,
+  "existing_cells": 342,
+  "external_decks": 38,
+  "baseline_revision": "ba257927",
+  "variants": {
+    "deploy16": {
+      "games": {
+        "opening": 192,
+        "demo": 576,
+        "random": 0,
+        "multiplier": 0
+      },
+      "groups": {
+        "opening": 16,
+        "demo": 24
+      },
+      "total": 768,
+      "active_cells": 342,
+      "planning_messages": 11
+    },
+    "deploy17": {
+      "games": {
+        "opening": 192,
+        "demo": 192,
+        "random": 192,
+        "multiplier": 192
+      },
+      "groups": {
+        "opening": 16,
+        "random": 8,
+        "demo": 8,
+        "multiplier": 8
+      },
+      "total": 768,
+      "active_cells": 380,
+      "planning_messages": 11
+    }
+  }
+}

@@ -1320,6 +1320,8 @@ class TrainingPipeline:
             base_options, variant_options = training_row_options(recipe), training_row_options(variant)
             base_options.pop('source_weight', None)
             variant_options.pop('source_weight', None)
+            base_options.pop('label_weight', None)
+            variant_options.pop('label_weight', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
@@ -1681,9 +1683,10 @@ class TrainingPipeline:
                 try:
                     if not admitted:
                         self._admit()
-                    candidate['train_peak_anon_bytes'] = self._command(
-                        [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
-                        directory / 'train.log')
+                    command = [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)]
+                    if variant.get('recipe_family') == 'B':
+                        command += ['--pack-recipe', str(recipe_path)]
+                    candidate['train_peak_anon_bytes'] = self._command(command, directory / 'train.log')
                     candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():
                         raise RuntimeError(f'trainer did not publish {model}')
@@ -1941,7 +1944,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
                renew_size: int = START_SEED_BLOCK,
                save_candidates_levels=frozenset(),
-               random_deck_share: float = RANDOM_DECK_SHARE) -> tuple[list[dict], list[str]]:
+               random_deck_share: float = RANDOM_DECK_SHARE,
+               demo_start_share: float | None = None) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -1960,9 +1964,29 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     pending_special = sum(games for _, _, games in special_picks)
     if specialists and pending_special > remaining:
         return [], changes + ['opening specialists start next round: partial-round budget already spent']
-    picks = special_picks + allocate(ordinary, values, remaining - pending_special,
-                                    per_group, state['round'] + 1, teacher,
-                                    random_deck_cap=int(budget * random_deck_share))
+    ordinary_budget = remaining - pending_special
+    if demo_start_share is None:
+        # Default remains the deploy16 planner, including its ordering.
+        picks = special_picks + allocate(ordinary, values, ordinary_budget,
+                                        per_group, state['round'] + 1, teacher,
+                                        random_deck_cap=int(budget * random_deck_share))
+    else:
+        def category(cell):
+            return 'random' if cell.get('random_deck_cell') else 'demo' if (cell.get('archive') is not None or cell.get('demo_archive') is not None) else 'multiplier'
+        completed_games = {kind: sum(group['games'] for group in completed
+                           if category(state['cells'].get(group['base'], state.get('retired_cells', {}).get(group['base'], group))) == kind)
+                           for kind in ('random', 'demo')}
+        caps = dict(random=max(0, int(budget * random_deck_share) - completed_games['random']),
+                    demo=max(0, int(budget * demo_start_share) - completed_games['demo']))
+        picks = list(special_picks)
+        # Reserve random decks before the large demo floor can consume their budget.
+        # Remaining non-demo budget goes to multiplier cells, including any unused quota.
+        for kind in ('random', 'demo', 'multiplier'):
+            subset = {base: cell for base, cell in ordinary.items() if category(cell) == kind}
+            quota = min(ordinary_budget, caps[kind]) if kind in caps else ordinary_budget
+            selected = allocate(subset, values, quota, per_group, state['round'] + 1, teacher)
+            picks.extend(selected)
+            ordinary_budget -= sum(games for _, _, games in selected)
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
@@ -2221,7 +2245,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                                        args.games_per_group, teacher,
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
                                        save_candidates_levels=args.save_candidates_levels,
-                                       random_deck_share=args.random_deck_share)
+                                       random_deck_share=args.random_deck_share,
+                                       demo_start_share=getattr(args, 'demo_start_share', None))
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -2297,6 +2322,8 @@ def main() -> None:
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
     parser.add_argument('--games-per-group', type=int, default=48)
+    parser.add_argument('--demo-start-share', type=float, default=None,
+                        help='optional demo-start game cap per round; reserves random-deck quota before demo floors, remainder to multiplier cells')
     parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
                         help='teacher win-rate evidence json (level/base -> rate); missing file = all unknown')
     parser.add_argument('--beta-threshold', type=float, default=0.1,
@@ -2373,6 +2400,8 @@ def main() -> None:
             parser.error(f'--extra-manifest does not exist: {extra}')
     if not 0.0 <= args.random_deck_share <= 1.0:
         parser.error('--random-deck-share must be within 0..1')
+    if args.demo_start_share is not None and not 0.0 <= args.demo_start_share <= 1.0:
+        parser.error('--demo-start-share must be within 0..1')
     try:
         probe = None
         if args.gate_version >= 2:
@@ -2435,7 +2464,8 @@ def main() -> None:
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
                                        save_candidates_levels=args.save_candidates_levels,
-                                       random_deck_share=args.random_deck_share)
+                                       random_deck_share=args.random_deck_share,
+                                       demo_start_share=getattr(args, 'demo_start_share', None))
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],

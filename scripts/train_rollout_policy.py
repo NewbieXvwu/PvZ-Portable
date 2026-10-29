@@ -743,8 +743,31 @@ def main(*, step_observer=None) -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    loaded = load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer)
+    load_options = training_row_options(args.resolved_recipe)
+    label_adjustment = None
+    if args.pack_recipe is not None:
+        from pvz_recipe import load_recipe
+        from pvz_training_rows import LabelWeightAdjustment
+        packed_options = training_row_options(load_recipe(args.pack_recipe, 'training'))
+        comparable = lambda options: {k:v for k,v in options.items() if k not in ('label_weight','source_weight')}
+        if comparable(load_options) != comparable(packed_options):
+            raise ValueError('shared pack and candidate row options differ')
+        label_adjustment = LabelWeightAdjustment(load_options['label_weight'], packed_options['label_weight'])
+        previous_observer = observer
+        def observer(path, rows):
+            label_adjustment.observe(path, rows)
+            if previous_observer: previous_observer(path, rows)
+        load_options['label_weight'] = packed_options['label_weight']
+    loaded = load(args.data, **load_options, row_observer=observer)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
+    if label_adjustment is not None:
+        label_adjustment.apply(weight)
+        import hashlib
+        (args.out / 'shared_pack_weights.json').write_text(json.dumps(dict(
+            pack_recipe=str(args.pack_recipe), pack_recipe_sha256=hashlib.sha256(args.pack_recipe.read_bytes()).hexdigest(),
+            effective_label_weight=args.resolved_recipe['label_weight'],
+            packed_label_weight=packed_options['label_weight'],
+            factors=label_adjustment.factors, rows=len(weight)), indent=1)+'\n')
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started

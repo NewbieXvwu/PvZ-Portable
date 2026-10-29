@@ -253,6 +253,7 @@ def training_row_options(recipe, labels=None):
 
 
 def training_args(parser, argv=None):
+    parser.add_argument('--pack-recipe', type=Path, help='shared packed-row recipe; apply this candidate label weights after loading')
     parser.add_argument('--recipe', type=Path, required=True)
     parser.add_argument('--out', type=Path, help='override output directory')
     parser.add_argument('--device', help='override compute device')
@@ -275,6 +276,7 @@ def training_args(parser, argv=None):
     args.label_weight = ','.join(f'{k}={v}' for k, v in resolved['label_weight'].items())
     args.source_row_report = args.out / 'source_rows.json' if resolved['source_row_report'] else None
     args.recipe = cli.recipe
+    args.pack_recipe = cli.pack_recipe
     args.resolved_recipe = resolved
     args.recipe_sha256 = hashlib.sha256(cli.recipe.read_bytes()).hexdigest()
     return args
