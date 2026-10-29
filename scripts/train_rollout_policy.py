@@ -378,14 +378,14 @@ def _pack_flags(options: dict) -> str:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
-         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None):
+         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None, token_input="compact"):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels))
+                           sources=archive_fingerprint(data, labels), token_input=token_input)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -825,7 +825,7 @@ def main(*, step_observer=None) -> None:
         print(json.dumps({'level_balance': shares}), flush=True)
     from pvz_rollout_policy import make_student
     net = make_student(args.width, args.pool, args.context, args.obs, args.row_pool,
-                       aux=bool(args.aux_weight), packet_head=args.packet_head, network=args.network)
+                       aux=bool(args.aux_weight), packet_head=args.packet_head, network=args.network, token_input=args.token_input)
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
@@ -895,7 +895,7 @@ def main(*, step_observer=None) -> None:
 
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
-                **({"network": net.network} if tokens is not None else {}),
+                **({"network": net.network, "token_input": net.token_input} if tokens is not None else {}),
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,

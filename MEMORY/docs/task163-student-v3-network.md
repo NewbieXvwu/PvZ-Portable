@@ -98,3 +98,11 @@ kind 编号沿用旧模型：global=0, profile=1, cell=2, plant=3, zombie=4, pro
 - 10 个新增小 CPU 测试通过（约 3.3 秒）：四类结构前后向、padding、token 数组入口、跨标签分段合并与复用、一次真实 trainer optimizer step（包含辅助头/软格子标签）、加载与合法动作出手、导出桩，以及默认 CNN 的权重/三头输出/旧格式导出逐位一致。
 - 另各跑一个与共享改动直接相关的旧配方与分段合并测试，均通过；全部测试先看 `free -g`，带 `ulimit -v 8000000`、超时及单线程限制。未跑全量测试、全量存档重放或真实语料训练；未碰生产进程、二进制或 GPU 训练。
 - task157 的富输入生产与 task161 的原生图适配仍由对应并行任务衔接；本分支提供可消费数组的网络、打包/训练/加载/Python 推理路径。未做胜率、吞吐量或晋升结论。
+
+## 续接阶段 3：task157 的实际富输入（2026-10-29）
+
+合入 task161 `origin/cppnet`（5e502c93）的 PVZGN001 依赖。task157 输入代码取自 `origin/studentv3` 的 e66d878a；只引入公开 token、回填及数组适配，不引入其被分工取代的 Python 网络初稿。
+
+新增显式 `token_input="obs_v3"`：直接消费 `v3.version=3 / v3.tokens[N,38]`，前 6 列是 kind/category/variant/row/col/target，后 32 列直接作为特征，不转换槽位、不重复加 1。固定 cells=2..55、cards=56..65；空卡槽 category=0，key mask 无效，卡包指针为 −1。与阶段 1 的 `tokens_v3` 紧凑原型是不同契约，旧默认 `token_input="compact"` 保留；富模型遇到缺 v3 的帧报需回填，不静默回退。pack 指纹只为新格式增加该字段，旧指纹保持不变。检查点记录 token_input，同构续训禁止跨格式复制。
+
+观测开关、帧保存、search_play 的 `--obs-v3` 与 Python 学生评估入口接通。实际富槽位以 [task157 输入契约](task157-student-v3-token-encoder.md) 为准；阶段 1 槽位说明仅适用于 compact 原型。

@@ -192,6 +192,7 @@ public:
 	bool							mMuteSoundsForCutscene;
 	bool							mEnvironmentMode;
 	bool							mEnvironmentLeanObservation = false;  // OBS_LEAN: compact rollout observations
+	bool mEnvironmentTokenObservation = false;  // OBS_V3: opt-in public tokens
 	double							mZombieMultiplier;
 	int								mPlayLevel;
 	std::string						mRecordOutputPath;

@@ -64,7 +64,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                         label_weight: dict[str, float] | None = None, cache_dir: Path | None = None,
                         with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
                         cells: bool = False, aux_horizon: int = 0, row_observer=None,
-                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None):
+                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None, token_input='compact'):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games).
@@ -249,7 +249,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 scalars = CompactBoards(s.shape, np.float32)
             if tokens is not None:
                 from pvz_student_tokens import frame_tokens
-                tokens.append(frame_tokens(frames[i - 1], ctx))
+                tokens.append(frame_tokens(frames[i - 1], ctx, token_input))
             archive_boards.append(b.numpy())
             archive_scalars.append(s.numpy())
             if packets is not None:
@@ -301,7 +301,7 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
                                  options["label_weight"], cache_dir, options["with_context"],
                                  options["obs"], precompute_workers, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
-                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths)
+                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths, token_input=options.get('token_input', 'compact'))
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if options["aux_horizon"] else None
     packets = loaded[9 + (auxiliary is not None)] if options["packet_head"] == "identity" else None
@@ -490,7 +490,8 @@ def verify(data: Path, options: dict, out: Path) -> None:
     loaded, _sources, source_archive, source_row = build_from_archives(
                                  data, set(options["labels"]), options["wait_keep"], options["label_weight"],
                                  None, options["with_context"], options["obs"], 1, cells=options["cells"],
-                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"])
+                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
+                                 token_input=options.get("token_input", "compact"))
     from train_rollout_policy import read_pack
     observed = []
     actual = read_pack(out, data, lambda path, rows: observed.append((str(path.relative_to(data)), rows)))
@@ -545,6 +546,7 @@ def main() -> None:
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4", "v2boss", "v2bungee", "v2sleep",
                                      "v2timer", "v3"], default="v1")
+    p.add_argument("--token-input", choices=["compact", "obs_v3"], default="compact")
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")
@@ -559,7 +561,7 @@ def main() -> None:
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(","))))
+                           sources=archive_fingerprint(args.data, set(args.labels.split(","))), token_input=args.token_input)
     if args.verify:
         if args.out is None:
             p.error("--verify needs --out")

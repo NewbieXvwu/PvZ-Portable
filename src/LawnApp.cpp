@@ -28,6 +28,7 @@
 #include <iostream>
 #include <cstdlib>
 #include "LawnApp.h"
+#include "EnvironmentTokens.h"
 #include "Resources.h"
 #include "Lawn/LawnCommon.h"
 #include "Lawn/Board.h"
@@ -2186,6 +2187,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 	WriteObservationFog(out, this);
 	WriteObservationBoss(out, this);
 	WriteObservationBungees(out, this);
+	if (mEnvironmentTokenObservation) WriteObservationTokens(out, this);
 	out << '}';
 	return out.str();
 }
@@ -2543,6 +2545,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 		WriteObservationFog(out, this);
 	WriteObservationBoss(out, this);
 	WriteObservationBungees(out, this);
+	if (!privileged && mEnvironmentTokenObservation) WriteObservationTokens(out, this);
 	if (privileged)
 	{
 		// Loss attribution is diagnostic only; it never reaches either policy arm.

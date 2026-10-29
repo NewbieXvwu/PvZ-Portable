@@ -76,14 +76,14 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 
 
 def make_student(width=64, pool='mean', context=False, obs='v1', row_pool=False,
-                 aux=False, packet_head='slot', plant_embedding_dim=None, network=None):
+                 aux=False, packet_head='slot', plant_embedding_dim=None, network=None, token_input="compact"):
     from pvz_student_config import network_config
     config = network_config(network, width)
     if config['architecture'] == 'token':
         if obs != 'v3' or packet_head != 'identity' or row_pool or pool != 'mean':
             raise ValueError('token student requires obs=v3, identity packets, and mean state pooling')
         from pvz_student_v3 import StudentV3
-        return StudentV3(width, config, context, aux)
+        return StudentV3(width, config, context, aux, token_input)
     if obs == 'v3':
         raise ValueError('obs=v3 requires token network')
     return RolloutNet(width, pool, context, obs, row_pool, aux, packet_head, plant_embedding_dim)
@@ -301,7 +301,7 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
     """
     if net.obs == 'v3' or initial.obs == 'v3':
         if (net.obs != initial.obs or net.width != initial.width or net.network != initial.network
-                or net.context != initial.context):
+                or net.context != initial.context or net.token_input != initial.token_input):
             raise ValueError('v3 warm-start requires the same token architecture')
         weights = {k: v for k, v in initial.state_dict().items() if not k.startswith('aux.')}
         if net.aux is not None:
@@ -339,7 +339,8 @@ def load_student(path) -> RolloutNet:
     weights = checkpoint["state_dict"]
     if checkpoint.get('obs') == 'v3':
         net = make_student(checkpoint['width'], context=bool(checkpoint.get('context', False)),
-                           obs='v3', packet_head='identity', network=checkpoint['network'])
+                           obs='v3', packet_head='identity', network=checkpoint['network'],
+                           token_input=checkpoint.get('token_input', 'compact'))
         net.load_state_dict({k: v for k, v in weights.items() if not k.startswith('aux.')})
         return net.eval()
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),

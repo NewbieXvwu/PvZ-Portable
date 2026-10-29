@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, network={}, label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, network={}, token_input="compact", label_weight={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -144,7 +144,9 @@ def validate(document, kind=None):
                 raise ValueError('token network requires obs=v3 and packet_head=identity')
             if result['row_pool'] or result['pool'] != 'mean':
                 raise ValueError('token network uses its own state pooling')
-        elif result['obs'] == 'v3':
+        if result['token_input'] not in ('compact', 'obs_v3') or (result['token_input'] != 'compact' and result['obs'] != 'v3'):
+            raise ValueError('token_input=obs_v3 requires obs=v3')
+        if network['architecture'] != 'token' and result['obs'] == 'v3':
             raise ValueError('obs=v3 requires token network')
         if not isinstance(result['device'], str) or not result['device']:
             raise ValueError('device: expected nonempty string')
@@ -255,6 +257,7 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
+                **({'token_input': recipe['token_input']} if recipe.get('token_input', 'compact') != 'compact' else {}),
                 **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
 
 

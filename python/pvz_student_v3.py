@@ -95,8 +95,9 @@ class RelationLayer(nn.Module):
 
 
 class StudentV3(nn.Module):
-    def __init__(self, width=192, network=None, context=False, aux=False):
+    def __init__(self, width=192, network=None, context=False, aux=False, token_input="compact"):
         super().__init__()
+        self.token_input = token_input
         self.width = width
         self.network = network_config({'architecture': 'token', **(network or {})}, width)
         self.obs, self.context, self.packet_head = 'v3', context, 'identity'
@@ -179,7 +180,7 @@ def _frame_encoding(net, frame, previous, context):
         raise ValueError('v3 context student requires task context')
     context = context if net.context else None
     device = next(net.parameters()).device
-    tokens = collate_tokens([frame_tokens(frame, context)], device)
+    tokens = collate_tokens([frame_tokens(frame, context, net.token_input)], device)
     board = None
     if net.cnn is not None:
         board = features(frame, previous, context)[0][None].to(device)

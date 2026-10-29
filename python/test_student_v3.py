@@ -193,3 +193,26 @@ def test_v3_disabled_legacy_bitwise(tmp_path, obs, packet_head):
     export_student(default, tmp_path/'default.bin')
     export_student(loaded, tmp_path/'loaded.bin')
     assert (tmp_path/'legacy.bin').read_bytes() == (tmp_path/'default.bin').read_bytes() == (tmp_path/'loaded.bin').read_bytes()
+
+
+def test_v3_rich_input_contract_and_empty_card_mask():
+    raw = np.zeros((68, 38), np.float32)
+    raw[:, 3:6] = -1
+    raw[2:56, 0] = 2
+    raw[2:56, 3] = np.arange(54)//9
+    raw[2:56, 4] = np.arange(54)%9
+    raw[56:66, 0] = 8
+    raw[56, 1] = 1
+    raw[66, :6] = [4, 2, 0, 0, 3, -1]
+    raw[66, 6:] = np.arange(32)/32
+    raw[67, :6] = [3, 1, 0, 0, 3, 5]
+    f = dict(frame(), v3=dict(version=3, tokens=raw.tolist()))
+    sample = frame_tokens(f, token_input='obs_v3')
+    np.testing.assert_array_equal(sample['features'][66], raw[66, 6:])
+    assert sample['target_indices'][67] == 5
+    assert sample['packet_index'].tolist() == [56]+[-1]*9
+    batch = collate_tokens([sample])
+    assert batch['mask'].sum() == 59
+    assert batch['cell_index'][0].tolist() == list(range(2, 56))
+    with pytest.raises(ValueError, match='backfill'):
+        frame_tokens(frame(), token_input='obs_v3')

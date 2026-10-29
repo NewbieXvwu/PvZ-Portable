@@ -253,6 +253,7 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "terminal": bool(obs.get("terminal")),
         "enemy_on_screen": bool(obs.get("enemy_zombies_on_screen")),
         **({"v2": obs["v2"]} if "v2" in obs else {}),
+        **({"v3": obs["v3"]} if "v3" in obs else {}),
         **({"boss": obs["boss"]} if "boss" in obs else {}),
         **({"bungee": obs["bungee"]} if "bungee" in obs else {}),
         **({"sleep": obs["sleep"]} if "sleep" in obs else {}),
@@ -337,6 +338,8 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     from pvz_rollout_policy import load_student
     student = load_student(checkpoint)
     env = EventWaitEnv(resource_dir, headless=True)
+    if getattr(student, 'token_input', None) == 'obs_v3':
+        env.set_token_observation(True)
     checkpoint_meta = {"checkpoint": str(checkpoint),
                        "checkpoint_sha256": hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()[:16],
                        "deterministic": True}

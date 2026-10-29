@@ -19,7 +19,19 @@ def terrain_id(scene):
     return 4 if scene.get('roof') else 3 if scene.get('fog') else 2 if scene.get('pool') else 1 if scene.get('night') else 0
 
 
-def frame_tokens(frame, context=None):
+def frame_tokens(frame, context=None, token_input='compact'):
+    if token_input == 'obs_v3':
+        from pvz_token_observation import graph_inputs
+        source = graph_inputs(frame)
+        raw = source['tokens'][0]
+        cards = np.arange(56, 66, dtype=np.int32)
+        cards[raw[56:66, 1] == 0] = -1
+        return dict(ids=raw[:, :5].astype(np.int16), features=raw[:, 6:].copy(),
+                    target_indices=raw[:, 5].astype(np.int32), packet_index=cards,
+                    cell_index=np.arange(2, 56, dtype=np.int32),
+                    terrain=np.asarray(terrain_id(frame['scene']), np.int64))
+    if token_input != 'compact':
+        raise ValueError('unknown token input format')
     if 'tokens_v3' in frame:
         raw = frame['tokens_v3']
         if raw['schema_version'] != TOKEN_SCHEMA:
@@ -105,7 +117,8 @@ def collate_tokens(samples, device='cpu'):
     mask = np.zeros((batch, count), bool)
     for i, s in enumerate(samples):
         n = len(s['ids'])
-        ids[i, :n], features[i, :n], targets[i, :n], mask[i, :n] = s['ids'], s['features'], s['target_indices'], True
+        ids[i, :n], features[i, :n], targets[i, :n] = s['ids'], s['features'], s['target_indices']
+        mask[i, :n] = ~((s['ids'][:, 0] == 8) & (s['ids'][:, 1] == 0))
     result = dict(ids=ids, features=features, target_indices=targets, mask=mask)
     result.update({key: np.stack([s[key] for s in samples]).astype(np.int64)
                    for key in ('packet_index', 'cell_index', 'terrain')})
