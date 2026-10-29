@@ -36,11 +36,16 @@ def catalog(request):
         if group is None:
             continue
         meta = json.loads(path.read_text())
-        seed = meta['task']['seed']
+        base_seed = meta['task']['seed']
+        seed = meta['task'].get('future_seed', base_seed)
+        if meta.get('demo_archive') and 'future_seed' not in meta['task']:
+            seed = int(path.parent.parent.name.rsplit('_f', 1)[1])
         definition = group['definition']
-        kwargs = training_task_kwargs(definition, seed)
+        kwargs = training_task_kwargs(definition, base_seed)
+        if meta.get('demo_archive'):
+            kwargs.update(demo_archive=meta['demo_archive'], demo_decision=meta['demo_decision'])
         deck = meta['task'].get('deck', kwargs['deck'])
-        records.append(dict(path=str(path), seed=seed, zone=terrain(kwargs['level']),
+        records.append(dict(path=str(path), seed=seed, base_seed=base_seed, zone=terrain(kwargs['level']),
                             deck=','.join(map(str, sorted(deck))), group=group['base'],
                             kwargs=kwargs, won=meta['outcome']['won']))
     return records
@@ -79,7 +84,9 @@ def decide(calibration, positions, zones):
         games = [row for row in calibration if zone == 'overall' or row['zone'] == zone]
         roots = [row for row in positions if zone == 'overall' or row['zone'] == zone]
         ranking = report(roots, 0.25, 0.02)
-        if len(games) < 8 or ranking.get('candidate', {}).get('pairs', 0) < 16:
+        independent = {root['seed'] for root in roots}
+        if (len({game['seed'] for game in games}) < 8 or len(independent) < 4
+                or ranking.get('candidate', {}).get('pairs', 0) < 16):
             reasons.append(f'{zone}: insufficient held-out games or informative pairs')
             continue
         brier = {name: sum(row[name] for row in games) / len(games) for name in ('incumbent', 'candidate')}
@@ -90,11 +97,14 @@ def decide(calibration, positions, zones):
             if ranking['candidate']['pair_accuracy'] <= ranking['incumbent']['pair_accuracy']:
                 reasons.append('overall: pair accuracy did not improve')
         else:
-            if significantly_worse([row['candidate'] - row['incumbent'] for row in games], 0.02):
+            per_seed = defaultdict(list)
+            for game in games:
+                per_seed[game['seed']].append(game['candidate'] - game['incumbent'])
+            if significantly_worse([sum(values) / len(values) for values in per_seed.values()], 0.02):
                 reasons.append(f'{zone}: Brier worsened')
             differences = []
-            for root in roots:
-                scores = report([root], 0.25, 0.02)
+            for seed in independent:
+                scores = report([root for root in roots if root['seed'] == seed], 0.25, 0.02)
                 if scores['candidate']['pairs']:
                     differences.append(scores['incumbent']['pair_accuracy'] - scores['candidate']['pair_accuracy'])
             if differences and significantly_worse(differences, 0.03):
@@ -155,18 +165,18 @@ def train_candidate(records, request, checkpoint, out):
     import train_value_net as training
     from pvz_value_net import load_value_net
     initial = load_value_net(request['incumbent'])
+    started = time.monotonic()
     training.CONTEXT, training.ENCODER_VERSION = initial.context, initial.encoder_version
     games, tensors = training.load_games(Path(request['data']), meta_paths=[Path(row['path']) for row in records],
                                          frames_per_game=32)
-    tensors['seed_of_game'] = [game['seed'] for game in games]
     zones = {row['path']: row['zone'] for row in records}
     ordered = sorted(records, key=lambda row: row['path'])
+    tensors['seed_of_game'] = [row['seed'] for row in ordered]
     counts = Counter(row['zone'] for row in records)
     factors = torch.tensor([len(records) / (len(counts) * counts[zones[row['path']]]) for row in ordered])
     tensors['weights'] *= factors[tensors['game_of'].long()]
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
     np.random.seed(155)
-    started = time.monotonic()
     model = training.train_model(tensors, set(range(len(games))), device, 8, 155, initial=initial)
     checkpoint.update(state_dict=model.cpu().state_dict(),
                       trained_on=sorted(set(checkpoint['trained_on']) | {row['seed'] for row in records}),
@@ -186,10 +196,12 @@ def run(request, out):
     seen = set(checkpoint['trained_on'])
     records = catalog(request)
     train = balanced([row for row in records if not held_out(row['seed'])], 2048)
-    test = balanced([row for row in records if held_out(row['seed']) and row['seed'] not in seen], 160)
+    test = balanced([row for row in records if held_out(row['seed'])
+                     and row['seed'] not in seen and row['base_seed'] not in seen], 160)
     result = dict(approved=False, incumbent=request['incumbent'], candidate=str(out / 'model.pt'),
                   round=request['round'], composition=shares(records), train_composition=shares(train),
                   test_composition=shares(test), split='stable seed hash, 20% held out; ancestry excluded')
+    (out / 'data.json').write_text(json.dumps(dict(result, terrain_weighting='equal total game weight per terrain'), indent=2) + '\n')
     zones = {row['zone'] for row in records}
     counts = Counter(row['zone'] for row in test)
     if len({row['seed'] for row in train}) < 8 or any(counts[zone] < 8 for zone in zones) or not zones:

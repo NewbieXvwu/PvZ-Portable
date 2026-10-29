@@ -1014,6 +1014,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--verify-samples', '9', '--student-candidates', '2',
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
+            *(['--value-monitor'] if getattr(args, 'value_monitor', False) or getattr(args, 'value_retrain', False) else []),
             '--manifest', str(manifest), '--task-id', task_id,
             *seed_args,
             '--executable', str(args.executable), '--dagger-beta', f'{beta:g}',
@@ -1160,7 +1161,9 @@ class TrainingPipeline:
         # are memory-admitted, see _evaluate). Reserve them before a group starts,
         # because training may finish in the middle of that group. --workers=1 still
         # allows one collector + one evaluator; --workers>=2 caps their combined count.
-        return max(1, self.args.workers - int(self.pending()) * self.eval_units)
+        value = getattr(self, 'value_future', None)
+        value_units = int(value is not None and not value.done())
+        return max(1, self.args.workers - int(self.pending()) * self.eval_units - value_units)
 
     def incumbent(self):
         with self.lock:
@@ -1494,7 +1497,7 @@ class TrainingPipeline:
                         except subprocess.TimeoutExpired:
                             os.killpg(process.pid, signal.SIGKILL)
                             process.wait()
-                        raise RuntimeError('value candidate yielded to queued student training')
+                        raise RuntimeError('CPU evaluation window ended; value candidate stopped')
                     peak = max(peak, _tree_anon_bytes(process.pid))
                     time.sleep(2)
             finally:
@@ -1587,8 +1590,7 @@ class TrainingPipeline:
             python = str(self.args.python) if self.args.python.exists() else sys.executable
             self._command([python, str(ROOT / 'scripts/value_retrain.py'),
                            '--request', str(folder / 'request.json'), '--out', str(folder)],
-                          folder / 'train.log', cancel=lambda: self.value_cpu_done.is_set()
-                          and self._superseded_by(job) is not None)
+                          folder / 'train.log', cancel=self.value_cpu_done.is_set)
             result = json.loads((folder / 'decision.json').read_text())
         except Exception as error:
             result = dict(approved=False, incumbent=job['value_job']['incumbent'],
@@ -2184,6 +2186,8 @@ def _run_group(args, state, item, round_index, per_worker):
     started = time.time()
     item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
+    if getattr(args, 'value_monitor', False) or getattr(args, 'value_retrain', False):
+        item['value'] = str(args.value)
     try:
         result = retry_io(subprocess.run)(command, cwd=ROOT)
     finally:
@@ -2217,6 +2221,8 @@ def _run_group(args, state, item, round_index, per_worker):
                        f'rc={result.returncode} {seconds:.0f}s')
     if result.returncode != 0:
         raise RuntimeError(f'{item["label"]}: search_play exited {result.returncode}')
+    if getattr(args, 'value_monitor', False) or getattr(args, 'value_retrain', False):
+        item['value_monitor'] = value_monitor_summary(rows)
     bucket = cell['windows'].setdefault(
         str(item['multiplier']), {'recent': [], 'wins': 0, 'games': 0})
     if beta > 0:
@@ -2246,6 +2252,52 @@ def pipeline_action(args, action):
     except (Exception, SystemExit) as error:
         log_line(args.log, f'background {action} isolated; collector retained: {type(error).__name__}: {error}')
         save_state(args.state, pipeline.state)
+
+
+def value_monitor_summary(rows):
+    models = {}
+    for row in rows:
+        monitor = row.get('value_monitor', {})
+        for name, sample in monitor.get('selected', {}).items():
+            count = sample['count']
+            if not count:
+                continue
+            key = monitor['value'] + ':' + name
+            bucket = models.setdefault(key, dict(games=0, points=0, prediction_sum=0., outcome_sum=0., brier_sum=0.))
+            bucket['games'] += 1
+            bucket['points'] += count
+            bucket['prediction_sum'] += sample['total'] / count
+            bucket['outcome_sum'] += row['won']
+            bucket['brier_sum'] += sample['squared'] / count - 2 * row['won'] * sample['total'] / count + row['won']
+    return models
+
+
+def record_value_monitor(args, state, entry):
+    combined = {}
+    for group in entry['groups']:
+        for key, sample in group.get('value_monitor', {}).items():
+            bucket = combined.setdefault(key, {name: 0 for name in sample})
+            for name, number in sample.items():
+                bucket[name] += number
+    entry['value_monitor'] = combined
+    warnings = []
+    for key, sample in combined.items():
+        error = (sample['prediction_sum'] - sample['outcome_sum']) / sample['games']
+        sample.update(mean_prediction=sample['prediction_sum'] / sample['games'],
+                      win_rate=sample['outcome_sum'] / sample['games'],
+                      mean_brier=sample['brier_sum'] / sample['games'], error=error)
+        log_line(args.log, f'round {entry["round"]} selected leaf monitor {key}: '
+                           f'games={sample["games"]} points={sample["points"]} error={error:.4f}')
+        recent = [old.get('value_monitor', {}).get(key, {}) for old in state['log'][-2:]] + [sample]
+        if (key.endswith(':executed') and len(recent) == 3
+                and all(row.get('games', 0) >= 8
+                        and (row['prediction_sum'] - row['outcome_sum']) / row['games'] > 0.10 for row in recent)):
+            warnings.append(key)
+            log_line(args.log, f'WARNING value persistently optimistic for 3 rounds: {key}')
+    entry['value_warnings'] = warnings
+    folder = args.state.parent / (args.state.stem + '.pipeline') / f'round_{entry["round"]:06d}'
+    folder.mkdir(parents=True, exist_ok=True)
+    TrainingPipeline._marker(folder / 'value_monitor.json', dict(round=entry['round'], models=combined, warnings=warnings))
 
 
 def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool | None:
@@ -2288,7 +2340,10 @@ def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worke
             return None
     state['round'] = round_index
     groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
-    state['log'].append(dict(round=round_index, groups=groups, changes=changes))
+    entry = dict(round=round_index, groups=groups, changes=changes)
+    if getattr(args, 'value_monitor', False) or getattr(args, 'value_retrain', False):
+        record_value_monitor(args, state, entry)
+    state['log'].append(entry)
     save_state(args.state, state)
     completed = [group for group in groups if group.get('status', 'done') == 'done']
     log_line(args.log, f'round {round_index} done: {len(completed)} groups, '
@@ -2400,6 +2455,7 @@ def main() -> None:
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
     parser.add_argument('--value-retrain', action='store_true', help='train value candidates in the student CPU-evaluation window')
+    parser.add_argument('--value-monitor', action='store_true', help='monitor leaf estimates even with retraining disabled')
     parser.add_argument('--value-window', type=int, default=3, help='recent collection rounds used by value candidates')
     parser.add_argument('--value-rollback', action='store_true', help='swap to the previous value network at startup')
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')

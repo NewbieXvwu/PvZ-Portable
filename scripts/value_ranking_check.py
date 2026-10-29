@@ -89,14 +89,26 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
     from pvz_tasks import profile_for_deck
     args, env, net = _W["args"], _W["env"], _W["student"]
     seed, kw = seed_task
-    task = TaskSpec(level=kw["level"], seed=seed, playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
+    task = TaskSpec(level=kw["level"], seed=kw.get('seed', seed), playthrough=2, profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
-    obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
+    prefix = []
+    if kw.get('demo_archive'):
+        from human_demo import replay
+        obs, _, prefix = replay(env, Path(kw['demo_archive']), decision=kw['demo_decision'],
+                                fog_observation=kw['task_extra'].get('fog_observation'))
+        env.reseed(seed)
+    else:
+        obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
     env.load_rollout_net(_W["weights"])
     context = torch.from_numpy(observation_context(obs))
     history = StudentHistory(net.obs)      # v2 students read per-decision history; v1 ignores it
     rng = random.Random(seed)
     previous, previous_action, positions, dumped = None, None, [], []
+    if prefix:
+        for frame in prefix[:-1]:
+            history.extra(frame)
+        previous = prefix[-2] if len(prefix) > 1 else None
+        previous_action = prefix[-1].get('action')
     while not obs["terminal"]:
         frame = _frame(obs)
         frame["action"] = previous_action

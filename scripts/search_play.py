@@ -580,6 +580,8 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
         plan = _save_plan(env, obs, root, candidates, totals, args, decision_seed, stats)
         if plan is not None:
             stats['last_targets'] = None
+            if getattr(args, 'value_monitor', False):
+                stats['last_leaf_value'] = plan['value']
             wait = {'type': 'wait', 'ticks': plan['ticks'], 'until': 'timeout'}
             _probe_decision(args, obs, candidates, totals, wait, decision_seed, policy_action,
                             best, policy_index)
@@ -628,6 +630,8 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
         chosen = candidates[best]
     else:
         chosen = policy_action
+    if getattr(args, 'value_monitor', False):
+        stats['last_leaf_value'] = totals[best if chosen is candidates[best] else policy_index]
     _probe_decision(args, obs, candidates, totals, chosen, decision_seed, policy_action, best, policy_index)
     return chosen
 
@@ -782,6 +786,7 @@ def _play(job: dict, observer=None) -> dict:
                 searched_before = stats['searched']
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
+                stats.pop('last_leaf_value', None)
                 action = _search(env, obs, action, args,
                                  (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions, stats)
                 if fog_diagnostics is not None:
@@ -798,6 +803,7 @@ def _play(job: dict, observer=None) -> dict:
             label = action
             if dagger is not None and dagger.random() >= args.dagger_beta:
                 action = policy_choice
+            prediction = stats.get('last_leaf_value')
             fast_state["action"] = action    # the student's next features read the executed action
             # Planting on an occupied cell only became legal with wall-nut first aid (a damaged
             # wall-nut takes another nut of the same type, Board::CanPlantAt) -- record what stood
@@ -823,6 +829,12 @@ def _play(job: dict, observer=None) -> dict:
                     fog_diagnostics.planted(planted_type, action)
             if rejected:
                 obs, _r, done, _t, info = env.step({"type": "wait", "ticks": 60})
+            if prediction is not None and math.isfinite(prediction):
+                for name in ('all', 'executed') if action == label and not rejected else ('all',):
+                    monitor = stats.setdefault('value_monitor', {}).setdefault(name, dict(count=0, total=0., squared=0.))
+                    monitor['count'] += 1
+                    monitor['total'] += prediction
+                    monitor['squared'] += prediction ** 2
             if observer is not None:
                 observer.after(obs, action, policy_choice, rejected, info)
             if fog_diagnostics is not None:
@@ -838,6 +850,9 @@ def _play(job: dict, observer=None) -> dict:
                     frame["targets"] = [[c.get("packet", -1), c.get("row", -1), c.get("col", -1), round(v, 4)]
                                         for c, v in stats["last_targets"]
                                         if abs(v) != float("inf") and c["type"] != "shovel"]
+                if prediction is not None and math.isfinite(prediction):
+                    frame['selected_leaf_value'] = prediction
+                    frame['selected_leaf_executed'] = action == label and not rejected
                 frame["action"] = action          # what was executed (after the search), like render_episode
                 frame["action_rejected"] = rejected
                 if observer is not None:
@@ -872,6 +887,8 @@ def _play(job: dict, observer=None) -> dict:
         write_frames_from_source(archive / "frames.npz",
                                  "".join(frames).encode())
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
+        if future_seed is not None:
+            archive_task['future_seed'] = future_seed
         demo_sha = None
         if demo_archive:
             demo_sha = _W.get('demo_sha')
@@ -899,6 +916,8 @@ def _play(job: dict, observer=None) -> dict:
                 "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
             "task": archive_task,
             "context": task_context,
+            **({'value_monitor': dict(value=str(args.value), selected=stats.get('value_monitor', {}))}
+               if getattr(args, 'value_monitor', False) else {}),
             "outcome": archive_outcome}))
     result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
             **({'deck': list(kw['deck'])} if 'deck_random' in task_definition else {}),
@@ -927,6 +946,8 @@ def _play(job: dict, observer=None) -> dict:
             "shovel_events": stats.get("shovel_events", []),
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
+    if getattr(args, 'value_monitor', False):
+        result['value_monitor'] = dict(value=str(args.value), selected=stats.get('value_monitor', {}))
     _release_freed_memory()      # this game's archives are written; its buffers are garbage now
     counters = _W.get("metrics_counters")
     if counters is not None:
@@ -940,6 +961,7 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
+    p.add_argument('--value-monitor', action='store_true', help='record selected leaf estimates without extra rollouts')
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")
     p.add_argument("--manifest", required=True)
