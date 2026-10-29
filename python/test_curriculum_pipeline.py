@@ -252,6 +252,128 @@ def test_candidate_transition_keeps_collection_workers():
             pipeline.close()
 
 
+@pytest.mark.parametrize('requested,workers,expected', [(4, 16, 4), (6, 16, 6), (1, 16, 1),
+                                                       (4, 2, 1), (4, 1, 1)])
+def test_min_eval_units_reserves_slots_and_memory(tmp_path, requested, workers, expected):
+    args, state = setup(tmp_path)
+    args.workers, args.min_eval_units = workers, requested
+    pipeline = queue.TrainingPipeline(args, state)
+    try:
+        assert pipeline.foreground_limit() == workers  # idle queue reserves nothing
+        pipeline.futures.append(({}, SimpleNamespace(done=lambda: False)))
+        pipeline.per_worker_bytes = queue.GIB
+        assert pipeline.foreground_limit() == max(1, workers - expected)
+        with patch.object(pipeline, 'estimate_peak', return_value=queue.GIB // 2):
+            assert pipeline.reservation() == expected * queue.GIB
+        pipeline.foreground_workers = max(1, workers - expected)
+        with patch.object(queue, 'mem_available_bytes', return_value=20 * queue.GIB):
+            assert pipeline._evaluation_units() == expected
+    finally:
+        pipeline.futures.clear()
+        pipeline.close()
+
+
+def test_min_eval_units_waits_for_old_group_and_memory(tmp_path):
+    args, state = setup(tmp_path)
+    args.workers = 16  # default min_eval_units=4, including historical jobs
+    pipeline = queue.TrainingPipeline(args, state)
+    pipeline.per_worker_bytes = queue.GIB
+    pipeline.foreground_workers = 16
+    available = [20 * queue.GIB]
+    waits = []
+
+    def release(_):
+        waits.append(1)
+        assert len(waits) <= 2
+        pipeline.foreground_workers = 12
+        available[0] = (queue.MEMORY_RESERVE_BYTES + (3 if len(waits) == 1 else 4) * queue.GIB)
+
+    try:
+        with patch.object(queue, 'mem_available_bytes', side_effect=lambda: available[0]), \
+             patch.object(queue.time, 'sleep', side_effect=release):
+            assert pipeline._evaluation_units() == 4
+        assert len(waits) == 2
+        assert 'min_units=4 free_slots=1' in args.log.read_text()
+        with patch.object(queue, 'mem_total_bytes', return_value=6 * queue.GIB):
+            with pytest.raises(RuntimeError, match='evaluation cannot fit 4 units'):
+                pipeline._evaluation_units()
+    finally:
+        pipeline.close()
+
+
+def test_min_eval_units_first_group_preserves_memory_and_growth_slots(tmp_path):
+    args, state = setup(tmp_path)
+    args.workers = 16
+    args.pipeline = pipeline = queue.TrainingPipeline(args, state)
+    pipeline.futures.append(({}, SimpleNamespace(done=lambda: False)))
+    item = plan(1)[0]
+
+    def command(*a, **kw):
+        # 16 available - 3 reserve - 4 evaluation = 9 at launch; later growth stops at12.
+        assert kw['workers'] == 9
+        assert kw['upper_workers'] == pipeline.foreground_workers == 12
+        assert kw['headroom_bytes'] == 4 * queue.GIB
+        return ['synthetic']
+
+    def collect(*a, **kw):
+        out = args.out / f'{item["label"]}_8'
+        out.mkdir(parents=True)
+        (out / 'games.jsonl').write_text('{"won":true}\n' * 8)
+        return SimpleNamespace(returncode=0)
+
+    try:
+        with patch.object(queue, 'mem_available_bytes', return_value=16 * queue.GIB), \
+             patch.object(pipeline, 'estimate_peak', return_value=queue.GIB), \
+             patch.object(queue, 'command_for', side_effect=command), \
+             patch.object(queue.subprocess, 'run', side_effect=collect):
+            queue._run_group(args, state, item, 1, queue.GIB)
+        assert pipeline.foreground_workers == 0
+    finally:
+        pipeline.futures.clear()
+        pipeline.close()
+
+
+def test_min_eval_units_reaches_selection_and_gate_commands(tmp_path):
+    args, state = setup(tmp_path)
+    args.workers = 16
+    pipeline = queue.TrainingPipeline(args, state)
+    pipeline.per_worker_bytes = queue.GIB
+    pipeline.foreground_workers = 12
+    folder = tmp_path / 'round'
+    folder.mkdir()
+    candidate = folder / 'candidate.pt'
+    candidate.write_bytes(b'candidate')
+    panel = folder / 'selection.json'
+    panel.write_text(json.dumps(dict(tasks=[dict(task_id='tiny', seeds=[1, 2, 3, 4])])))
+    job = dict(round=1, recipe=str(folder / 'recipe.json'), model=str(folder / 'student/model.pt'),
+               selection_manifest=str(panel), selection_manifest_sha256=sha(panel))
+    commands = []
+
+    def command(argv, log):
+        commands.append(argv)
+        if 'select_student.py' in argv[1]:
+            write_selection(pipeline, argv)
+        else:
+            out = Path(argv[argv.index('--out') + 1])
+            out.mkdir(parents=True)
+            (out / 'decision.json').write_text(json.dumps(dict(approved=False, reasons=['test'])))
+        return 0
+
+    try:
+        with patch.object(queue, 'mem_available_bytes', return_value=20 * queue.GIB), \
+             patch.object(pipeline, '_command', side_effect=command), \
+             patch.object(queue, 'valid_certificate', return_value=True):
+            selected = pipeline._select(job, [dict(model=str(candidate), model_sha256=sha(candidate))])
+            pipeline._seeded(job)
+            evaluated = pipeline._evaluate(job)
+        assert selected['selection_units'] == evaluated['eval_units'] == 4
+        assert commands[0][commands[0].index('--workers') + 1] == '4'
+        assert commands[1][commands[1].index('--eval-units') + 1] == '4'
+        assert commands[1][commands[1].index('--workers') + 1] == '1'
+    finally:
+        pipeline.close()
+
+
 def test_recipe_and_collection_sources_merge_without_copying_or_dropping_labels():
     with tempfile.TemporaryDirectory() as folder:
         root = Path(folder)
