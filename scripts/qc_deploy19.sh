@@ -6,7 +6,7 @@ R=$HOME/PvZ-search
 W=$R/.claude/worktrees/cq
 PACKAGE=$R
 PY=$HOME/.venvs/ml/bin/python3
-REV=e08b7a4f
+REV=e7543899
 BASE=3ee03561
 LOG_DIR=$HOME/pvz-logs
 MODE18=$LOG_DIR/qc_deploy18.mode
@@ -25,7 +25,7 @@ start_qc() {
       "$W/scripts/qc_watchdog.sh" "$LOG_DIR/qc_deploy18.sh")"
     return
   fi
-  tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --min-eval-units 4 --python $PY --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $A16 --alternate-recipe $B17 --candidates-per-recipe 2 --training-parallelism 1 --selection-holdout-manifest $W/configs/student_selection_holdout.json --opening-manifest $OPENING --executable $EXE19 --promotion-panel $PANEL5 --gate-version 6 --extra-manifest $EXTRA17 --demo-start-share 0.25 --random-deck-share 0.25 --obs-v3 --native-games --resource-dir $HOME/.cache/pvz-research-resources --frames $R/artifacts/student/frames_v2 --out $R/artifacts/hard --rollout-policy $R/artifacts/student/dw4i_s1/model.pt --value $R/artifacts/value_net/v5/model.pt --static-value $R/artifacts/hard/value_branch1/model.pt 2>&1 | tee -a $LOG_DIR/qc.out"
+  tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --min-eval-units 4 --python $PY --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $A16 --alternate-recipe $B17 --candidates-per-recipe 2 --training-parallelism 1 --selection-holdout-manifest $W/configs/student_selection_holdout.json --opening-manifest $OPENING --executable $EXE19 --promotion-panel $PANEL5 --gate-version 6 --extra-manifest $EXTRA17 --demo-start-share 0.25 --random-deck-share 0.25 --obs-v3 --no-native-games --resource-dir $HOME/.cache/pvz-research-resources --frames $R/artifacts/student/frames_v2 --out $R/artifacts/hard --rollout-policy $R/artifacts/student/dw4i_s1/model.pt --value $R/artifacts/value_net/v5/model.pt --static-value $R/artifacts/hard/value_branch1/model.pt 2>&1 | tee -a $LOG_DIR/qc.out"
 }
 # All mutations below run only after explicit main-controller approval/execution.
 FILES=(scripts/curriculum_queue.py scripts/search_play.py scripts/render_episode.py
@@ -163,5 +163,4 @@ printf 'native\n' > "$MODE19"
 printf '%s\n' "$REV" > "$ACTIVE19.building"
 mv "$ACTIVE19.building" "$ACTIVE19"
 start_qc
-log "activated native fog games, obs-v3, min-eval-units4, roof-wave gate6 and cleanup; B1/mix/state/ledgers retained; backup $O"
-
+log "activated obs-v3, min-eval-units4, roof-wave gate6 and cleanup; native fog games disabled pending A/B; B1/mix/state/ledgers retained; backup $O"

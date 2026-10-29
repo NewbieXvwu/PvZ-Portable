@@ -69,3 +69,11 @@ bash "$HOME/pvz-logs/deploy19_at_boundary.sh"
 其余追踪结果：被删的环境资源/源码摘要、experiment_manifest/working_tree.patch、debug_replay/save_replay/replay_record、选择/训练/配方/门禁 SHA、demo_archive_sha256、row_weights 身份字段及 prepared.json，现行执行代码没有残留消费者。`selection_ready.json` 仍由 `_prepare_selection` 写入；token `ready.json` 仍由 `SparseTokenWriter.finish` 写入；pack/cache 身份、门禁 contract_key、HF MANIFEST/归档读取及 resume 指针仍有各自数据来源。`verified` 仍由示范 verify / 导入回放产生，C++ STATE_HASH 仍提供显式状态诊断接口，均未冒充已删生产者处理。
 
 台式机只跑相关 `pytest -k`：11 项通过，另 5 个子用例通过；每次先看可用内存，限制 `ulimit -v 8000000`，不运行真实对局或整套重型测试。回归夹具覆盖不带摘要的示范录制、示范起点与反事实回放，以及无 SHA contract 的屋顶重算；现有导入、打包命令、续训、挑选和门禁用例通过。未操作 qc、看门狗、stop_curr 或部署流程。
+
+## 暂缓原生整局（2026-10-30，主控本次指示）
+
+修复提交 `1553e7ee` 已推送 `purgefix2`，合并提交 `e7543899` 已推送 `deploy19`；本轮接替尚未发布的 purgefix 消费者排查工作。
+
+`qc_deploy19.sh` 启动参数由 `--native-games` 改为 `--no-native-games`。仅删除正向参数不会关闭此功能，因为 curriculum_queue 的默认值为 True；显式关闭后沿现有参数传递覆盖采集、挑选和门禁，等待主控完成 45 种子 A/B 后再开。其余启动参数不变，obs-v3、min-eval-units 4、gate-version 6、A/B 配方、采集份额及数据位置照旧；部署模式标记仍保留原名 `native`，不代表原生整局开关。
+
+部署源码固定值推进为 `e7543899`，确保将来安装时带上本次消费者修复；激活日志同步注明原生整局关闭。脚本仅做 `bash -n` 语法检查，未执行安装、切换或回滚，未触碰生产 qc / 看门狗 / stop_curr，未运行 pkill。完成提交推送后停下，等待主控。
