@@ -74,7 +74,7 @@ def certificate(pipeline, job, approved=True):
 def write_evaluation(pipeline, command, approved=True):
     out = Path(command[command.index('--out') + 1])
     out.mkdir(parents=True, exist_ok=True)
-    job = dict(model=command[command.index('--candidate') + 1])
+    job = dict(model=command[command.index('--candidate') + 1], value=command[command.index('--value') + 1])
     if '--seed-block' in command:
         job['seed_block'] = [int(x) for x in command[command.index('--seed-block') + 1].split(',')]
     report = certificate(pipeline, job, approved)
@@ -180,6 +180,106 @@ def test_collection_overlaps_both_phases_and_switches_only_between_groups():
             pipeline = queue.TrainingPipeline(args, state)
             pipeline.enqueue()
             pipeline.close()
+
+
+def test_value_loop_overlaps_cpu_freezes_gate_and_switches_at_boundary(tmp_path, monkeypatch):
+    args, state = setup(tmp_path)
+    args.value_retrain = True
+    manifest = tmp_path / 'collection.json'
+    manifest.write_text(json.dumps(dict(tasks=[dict(task_id='a', level=7, deck=[0, 1, 2, 3, 4, 5], seeds=[1, 2]) ])))
+    state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a', base='a', task_id='a', manifest=str(manifest))])])
+    value_ready, selection_ready, release_selection = [threading.Event() for _ in range(3)]
+    events = []
+    original = args.value
+
+    def background(self, command, logfile, **kwargs):
+        if logfile.parent.name == 'value':
+            events.append('value')
+            assert 'train' in events
+            model = logfile.parent / 'model.pt'
+            model.write_bytes(b'new value')
+            self._marker(logfile.parent / 'decision.json', dict(approved=True, reasons=[], round=1,
+                         candidate=str(model), incumbent=str(original)))
+            value_ready.set()
+        elif logfile.name == 'train.log':
+            events.append('train')
+            model = logfile.parent / 'student/model.pt'
+            model.parent.mkdir(parents=True, exist_ok=True)
+            model.write_bytes(b'student')
+        elif logfile.name == 'selection.log':
+            assert value_ready.wait(5)
+            assert command[command.index('--value') + 1] == str(original)
+            events.append('selection')
+            selection_ready.set()
+            assert release_selection.wait(5)
+            write_selection(self, command)
+        elif logfile.name == 'evaluation.log':
+            events.append('gate')
+            assert command[command.index('--value') + 1] == str(original)
+            write_evaluation(self, command)
+        return 0
+
+    monkeypatch.setattr(queue.TrainingPipeline, '_command', background)
+    monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 64 * queue.GIB)
+    pipeline = queue.TrainingPipeline(args, state)
+    try:
+        pipeline.enqueue()
+        assert selection_ready.wait(5)
+        assert args.value == original
+        pipeline.poll()
+        assert args.value.name == 'model.pt' and args.value.parent.name == 'value'
+        assert state['previous_value'] == str(original)
+        release_selection.set()
+    finally:
+        release_selection.set()
+        pipeline.close()
+    assert events.index('train') < events.index('value') < events.index('selection') < events.index('gate')
+    assert state['training_jobs'][0]['value_decision']['activated']
+    args.value_rollback = True
+    restarted = queue.TrainingPipeline(args, state)
+    restarted.close()
+    assert args.value == original
+    assert Path(state['previous_value']).is_file()
+
+
+def test_value_loop_disabled_does_not_start_candidate(tmp_path, monkeypatch):
+    args, state = setup(tmp_path)
+    pipeline = queue.TrainingPipeline(args, state)
+    monkeypatch.setattr(pipeline, '_value_candidate', lambda *args: pytest.fail('disabled value job ran'))
+    try:
+        pipeline._start_value(dict(value_job={}))
+        assert not hasattr(pipeline, 'value_future')
+    finally:
+        pipeline.close()
+
+
+def test_value_loop_yields_gpu_before_next_student(tmp_path, monkeypatch):
+    args, state = setup(tmp_path)
+    args.value_retrain = True
+    folder = tmp_path / 'round_1'
+    folder.mkdir()
+    job = dict(round=1, recipe=str(folder / 'recipe.json'), value_job=dict(incumbent=str(args.value)))
+    started, cancelled = threading.Event(), threading.Event()
+
+    def command(command, log, cancel):
+        started.set()
+        assert pipeline.value_cpu_done.wait(5)
+        assert cancel()
+        cancelled.set()
+        raise RuntimeError('yielded')
+
+    monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 64 * queue.GIB)
+    pipeline = queue.TrainingPipeline(args, state)
+    monkeypatch.setattr(pipeline, '_command', command)
+    try:
+        pipeline._start_value(job)
+        assert started.wait(5)
+        state['training_jobs'].append(dict(round=2, status='queued'))
+        pipeline._finish_value()
+        assert cancelled.is_set()
+        assert not json.loads((folder / 'value/decision.json').read_text())['approved']
+    finally:
+        pipeline.close()
 
 
 def test_background_failure_is_saved_and_can_be_retried():

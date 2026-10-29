@@ -57,6 +57,7 @@ import json
 import math
 import os
 import shlex
+import signal
 import subprocess
 import sys
 import tempfile
@@ -1109,6 +1110,16 @@ class TrainingPipeline:
             if not model.is_file():
                 raise RuntimeError(f'saved collection student is missing: {model}')
             args.rollout_policy = model
+        if state.get('value'):
+            args.value = Path(state['value'])
+        if getattr(args, 'value_rollback', False):
+            previous = state.get('previous_value')
+            if previous is None or not Path(previous).is_file():
+                raise ValueError('no previous value network available for rollback')
+            state['previous_value'], state['value'] = str(args.value), previous
+            args.value = Path(previous)
+            save_state(args.state, state)
+            log_line(args.log, f'value rolled back at group boundary: {previous}')
         for job in state.setdefault('training_jobs', []):
             if job in queued:
                 if job['status'] == 'paused':
@@ -1164,7 +1175,7 @@ class TrainingPipeline:
         if source is None:
             source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
         return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
-                                  self.args.value, self.args.resource_dir, version=self.gate_version,
+                                  job.get('value', self.args.value), self.args.resource_dir, version=self.gate_version,
                                   seed_block=job.get('seed_block'))
 
     @retry_io
@@ -1193,7 +1204,7 @@ class TrainingPipeline:
         self.eval_units = units
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
-                   '--executable', str(self.args.executable), '--value', str(self.args.value),
+                   '--executable', str(self.args.executable), '--value', frozen['value'],
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
                    '--eval-units', str(units), '--gate-version', str(self.gate_version)]
         if self.gate_version >= 2:
@@ -1312,6 +1323,20 @@ class TrainingPipeline:
         write_recipe(path, recipe)
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
+        if getattr(self.args, 'value_retrain', False):
+            from render_episode import load_training_task
+            window = getattr(self.args, 'value_window', 3)
+            groups = [dict(label=group['label'], base=group['base'],
+                           frame_label=group.get('frame_label', group['label'] + '_fast_search'),
+                           definition={key: value for key, value in
+                                       load_training_task(group['manifest'], group['task_id']).items()
+                                       if key != 'seeds'})
+                      for entry in self.state['log'][-window:] for group in entry['groups']
+                      if group.get('status', 'done') == 'done']
+            job.update(value=str(self.args.value), value_job=dict(kind='value_candidate', window=window,
+                groups=groups, data=str(self.directory / 'frames'), round=round_index,
+                incumbent=str(self.args.value), student=str(self.incumbent()),
+                executable=str(self.args.executable), resource_dir=str(self.args.resource_dir)))
         alternate = getattr(self.args, 'alternate_recipe', None)
         if alternate:
             variant = load_recipe(alternate, 'training')
@@ -1442,14 +1467,15 @@ class TrainingPipeline:
             else:
                 target.symlink_to(source, target_is_directory=True)
 
-    def _command(self, command, log):
+    def _command(self, command, log, cancel=None):
         health = getattr(self.args, 'game_health', None)
         if health is not None and not health.wait():
             raise GameRecoveryStopped('background stopped while waiting for game recovery')
         with log.open('a') as output:
             offset = output.tell()
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
-                                       pass_fds=() if self.lock_fd is None else (self.lock_fd,))
+                                       pass_fds=() if self.lock_fd is None else (self.lock_fd,),
+                                       start_new_session=cancel is not None)
             with self.lock:
                 if not hasattr(self, 'processes'):
                     self.processes = {}
@@ -1461,6 +1487,14 @@ class TrainingPipeline:
                     code = process.poll()
                     if code is not None:
                         break
+                    if cancel is not None and cancel():
+                        os.killpg(process.pid, signal.SIGTERM)
+                        try:
+                            process.wait(timeout=5)
+                        except subprocess.TimeoutExpired:
+                            os.killpg(process.pid, signal.SIGKILL)
+                            process.wait()
+                        raise RuntimeError('value candidate yielded to queued student training')
                     peak = max(peak, _tree_anon_bytes(process.pid))
                     time.sleep(2)
             finally:
@@ -1530,6 +1564,76 @@ class TrainingPipeline:
                                        f'required={required / GIB:.2f} GiB{gpu_shown}')
                 last_log = time.monotonic()
             time.sleep(1)
+
+    def _start_value(self, job):
+        if (not getattr(self.args, 'value_retrain', False) or 'value_job' not in job
+                or getattr(self, 'value_future', None) is not None):
+            return
+        folder = Path(job['recipe']).parent / 'value'
+        if (folder / 'decision.json').exists():
+            return
+        folder.mkdir(exist_ok=True)
+        self._marker(folder / 'request.json', job['value_job'])
+        self.value_cpu_done = threading.Event()
+        self.value_executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='value-candidate')
+        self.value_future = self.value_executor.submit(self._value_candidate, job, folder)
+
+    def _value_candidate(self, job, folder):
+        log_line(self.args.log, f'background round {job["round"]} value candidate started')
+        try:
+            available = mem_available_bytes()
+            if available is not None and available < MEMORY_RESERVE_BYTES + 2 * GIB:
+                raise RuntimeError('value candidate skipped: less than 2 GiB idle memory headroom')
+            python = str(self.args.python) if self.args.python.exists() else sys.executable
+            self._command([python, str(ROOT / 'scripts/value_retrain.py'),
+                           '--request', str(folder / 'request.json'), '--out', str(folder)],
+                          folder / 'train.log', cancel=lambda: self.value_cpu_done.is_set()
+                          and self._superseded_by(job) is not None)
+            result = json.loads((folder / 'decision.json').read_text())
+        except Exception as error:
+            result = dict(approved=False, incumbent=job['value_job']['incumbent'],
+                          round=job['round'], reasons=[str(error)])
+            self._marker(folder / 'decision.json', result)
+        log_line(self.args.log, f'background round {job["round"]} value candidate decision: '
+                               f'approved={result["approved"]} reasons={result["reasons"]}')
+
+    def _finish_value(self):
+        future = getattr(self, 'value_future', None)
+        if future is not None:
+            self.value_cpu_done.set()
+            try:
+                future.result()
+            finally:
+                self.value_executor.shutdown(wait=True)
+                self.value_future = None
+
+    def _poll_value(self):
+        if not getattr(self.args, 'value_retrain', False):
+            return
+        for job in self.state.get('training_jobs', []):
+            if 'value_job' not in job or 'value_decision' in job:
+                continue
+            folder = Path(job['recipe']).parent / 'value'
+            path = folder / 'decision.json'
+            if not path.is_file():
+                continue
+            decision = json.loads(path.read_text())
+            activation = dict(decision, activated=False)
+            if (decision['approved'] and decision['incumbent'] == str(self.args.value)
+                    and job['round'] > self.state.get('value_round', 0)):
+                model = Path(decision['candidate'])
+                if not model.is_file():
+                    raise ValueError(f'approved value candidate missing: {model}')
+                self.state.update(previous_value=str(self.args.value), value=str(model), value_round=job['round'])
+                self.args.value = model
+                activation['activated'] = True
+                log_line(self.args.log, f'value activated at group boundary: round {job["round"]} {model}')
+            elif decision['approved']:
+                activation['reasons'] = ['value comparison stale; incumbent retained']
+                log_line(self.args.log, f'value retained: round {job["round"]} comparison stale')
+            job['value_decision'] = activation
+            self._marker(folder / 'activation.json', activation)
+            save_state(self.args.state, self.state)
 
     def _run(self, job):
         while self.game_health.wait():
@@ -1608,6 +1712,7 @@ class TrainingPipeline:
                 temporary = trained.with_suffix('.building')
                 temporary.write_text(json.dumps(report, indent=2) + '\n')
                 temporary.replace(trained)
+                self._start_value(job)
                 report.update(self._evaluate(job))
                 temporary = done.with_suffix('.building')
                 temporary.write_text(json.dumps(report, indent=2) + '\n')
@@ -1616,6 +1721,8 @@ class TrainingPipeline:
         except BaseException:
             self.failed = True
             raise
+        finally:
+            self._finish_value()
 
     @staticmethod
     def _marker(path, document):
@@ -1733,6 +1840,7 @@ class TrainingPipeline:
                       train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
                                            for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
+        self._start_value(job)
         report.update(self._select(job, trained))
         panel = json.loads(Path(job['selection_manifest']).read_text())
         holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
@@ -1772,7 +1880,7 @@ class TrainingPipeline:
                    str(ROOT / 'scripts/select_student.py'), '--candidates',
                    ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
                    '--manifest', str(manifest), '--sets', sets, '--workers', str(units),
-                   '--value', str(self.args.value), '--executable', str(self.args.executable),
+                   '--value', str(job.get('value', self.args.value)), '--executable', str(self.args.executable),
                    '--resource-dir', str(self.args.resource_dir)]
         started = time.time()
         peak = self._command(command, folder / 'selection.log')
@@ -1784,7 +1892,8 @@ class TrainingPipeline:
                 or receipt['manifest_sha256'] != expected_sha):
             raise ValueError('selected candidate does not match its training/panel receipt')
         return dict(selection=receipt, selection_started=started, selection_finished=time.time(),
-                    selection_peak_anon_bytes=peak, selection_units=units)
+                    selection_peak_anon_bytes=peak, selection_units=units,
+                    selection_value=str(job.get('value', self.args.value)))
 
     def poll(self, retry: bool = True):
         # A failed state write after enqueue may have left a durable job without
@@ -1813,6 +1922,7 @@ class TrainingPipeline:
                 self.failed = False
                 save_state(self.args.state, self.state)
                 log_line(self.args.log, f'background round {job["round"]} isolated: {job["error"]}')
+        self._poll_value()
 
     def _poll_job(self, index, job, future, retry):
         try:
@@ -2289,6 +2399,9 @@ def main() -> None:
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
+    parser.add_argument('--value-retrain', action='store_true', help='train value candidates in the student CPU-evaluation window')
+    parser.add_argument('--value-window', type=int, default=3, help='recent collection rounds used by value candidates')
+    parser.add_argument('--value-rollback', action='store_true', help='swap to the previous value network at startup')
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--workers', type=int, default=16,
@@ -2346,6 +2459,8 @@ def main() -> None:
         parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
+    if args.value_window < 1:
+        parser.error('--value-window must be positive')
     if args.candidates_per_recipe > 1 and args.alternate_recipe is None:
         parser.error('--candidates-per-recipe 2 requires --alternate-recipe')
     if args.selection_holdout_manifest is not None and not args.selection_holdout_manifest.is_absolute():
