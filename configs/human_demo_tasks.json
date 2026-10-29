@@ -10453,7 +10453,18 @@
     2,
     17,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/ae32346e38aba79481d437cc5f54d8f43bfe8f450f0ca098c392bd168862a6ed",
+    "decisions": [
+     1277,
+     1161,
+     929
+    ],
+    "index": 0,
+    "future_seed_start": 364000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_pool_30_orig_m100_s81028037_a44947a5a9751",
