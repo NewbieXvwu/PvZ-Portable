@@ -20,6 +20,10 @@ window is nearly spent, so the ledger continues into a second registered window
 instead of aborting the gate. Blocks stay ordered and never reused; the panel,
 the policy document and the certificate format are unchanged.
 
+Gate version 5 (task128): the panel is the adventure set (original 1.0x, scoreboard
+decks) instead of synthetic curriculum cells; the two registered heldout cells
+run for monitoring only, so they never veto and never enter the overall rate.
+
 Parallelism (task73c): --eval-units N runs up to N search_play children
 concurrently (each with the contract's own --workers). Game outcomes are a
 function of (model, task, seed) only, so unit order and concurrency never
@@ -232,12 +236,17 @@ def _run_unit(args, lock, manifest_path, task, side, model):
         complete = len((folder / 'games.jsonl').read_text().splitlines()) == len(task['seeds'])
     if not complete:
         with (folder / 'run.log').open('a') as log:
+            offset = log.tell()
             result = subprocess.run(command, cwd=ROOT, stdout=log, stderr=subprocess.STDOUT,
                                     pass_fds=(lock.fileno(),),
                                     env={**os.environ, 'CUDA_VISIBLE_DEVICES': '',
                                          'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
         if result.returncode:
-            raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; see {folder / "run.log"}')
+            with (folder / 'run.log').open('rb') as log:
+                log.seek(max(offset, (folder / 'run.log').stat().st_size - 8192))
+                diagnostic = log.read().decode('utf-8', errors='replace')
+            raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; '
+                               f'see {folder / "run.log"}\n{diagnostic}')
     rows = _task_rows(folder, task, model, args)
     print(f'{side} {task["task_id"]}: {sum(r["won"] for r in rows.values())}/{len(task["seeds"])}', flush=True)
     return side, task['task_id'], rows
@@ -333,9 +342,10 @@ def main():
     parser.add_argument('--eval-units', type=int, default=1,
                         help='concurrent search_play children (task73c); execution detail, '
                              'never part of the contract, outcomes are identical for any value')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
                         help='1 = task49A fixed 64-pair panel; 2 = task73b fresh-seed 1536-pair panel; '
-                             '3 = task73c fog/roof 1920-pair panel')
+                             '3 = task73c fog/roof 1920-pair panel; 4 = task113 Holm-Bonferroni zone veto; '
+                             '5 = task128 adventure-level panel, heldout monitored only')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git ledger of allocated gate seed blocks (v2+)')
     parser.add_argument('--seed-block', default=None,

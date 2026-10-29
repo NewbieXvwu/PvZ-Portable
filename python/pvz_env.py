@@ -826,6 +826,8 @@ class PvZEnv:
             raise RuntimeError("v2fog requires a rebuilt simulator with rollout_version >= 4")
         if observation == 7 and self._rollout_version < 5:
             raise RuntimeError("v2bungee requires a rebuilt simulator with rollout_version >= 5")
+        if observation == 8 and self._rollout_version < 6:
+            raise RuntimeError("v2sleep requires a rebuilt simulator with rollout_version >= 6")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")

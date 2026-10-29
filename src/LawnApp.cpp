@@ -2113,7 +2113,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 		out << '[' << i << ',' << static_cast<int>(packet.mPacketType) << ',' << (packet.mActive ? 1 : 0)
 			<< ',' << packet.mRefreshCounter << ',' << packet.mRefreshTime << ',' << cost << ']';
 	}
-	// [row, col, type, health, max_health, squished]
+	// [row, col, type, health, max_health, squished, asleep, wake_up_counter]
 	out << "],\"plants\":[";
 	bool first = true;
 	for (const Plant* plant : mBoard->mPlants)
@@ -2125,7 +2125,8 @@ std::string LawnApp::EnvironmentLeanObservation()
 		const bool aHidden = EnvironmentPlantFogHidden(plant);
 		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
 			<< ',' << (aHidden ? -1 : plant->mPlantHealth) << ',' << (aHidden ? -1 : plant->mPlantMaxHealth)
-			<< ',' << (plant->mSquished ? 1 : 0) << ']';
+			<< ',' << (plant->mSquished ? 1 : 0) << ',' << (!aHidden && plant->mIsAsleep ? 1 : 0)
+			<< ',' << (aHidden ? -1 : plant->mWakeUpCounter) << ']';
 	}
 	// [row, type, x, velocity_x, body+helm+shield health, on_board, is_eating, chilled, ice_trap, id]
 	out << "],\"zombies\":[";
@@ -2429,7 +2430,7 @@ std::string LawnApp::EnvironmentObservation(bool privileged)
 				<< ",\"max_health\":" << (aPlantHidden ? -1 : plant->mPlantMaxHealth) << ",\"state\":" << (aPlantHidden ? -1 : static_cast<int>(plant->mState))
 				<< ",\"state_countdown\":" << (aPlantHidden ? -1 : plant->mStateCountdown) << ",\"launch_counter\":" << (aPlantHidden ? -1 : plant->mLaunchCounter)
 				<< ",\"launch_rate\":" << plant->mLaunchRate << ",\"shooting_counter\":" << plant->mShootingCounter
-				<< ",\"wake_up_counter\":" << plant->mWakeUpCounter << ",\"asleep\":" << (plant->mIsAsleep ? "true" : "false")
+				<< ",\"wake_up_counter\":" << (aPlantHidden ? -1 : plant->mWakeUpCounter) << ",\"asleep\":" << (!aPlantHidden && plant->mIsAsleep ? "true" : "false")
 				<< ",\"squished\":" << (plant->mSquished ? "true" : "false")
 				<< ",\"target_zombie_id\":" << (EnvironmentFogMasked() && !privileged ? -1 : static_cast<int>(plant->mTargetZombieID))
 				<< ",\"bungee_state\":" << static_cast<int>(plant->mOnBungeeState) << '}';

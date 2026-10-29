@@ -98,6 +98,10 @@ DEFAULT_LOG = Path.home() / 'pvz-logs/curriculum.log'
 CURRICULUM_LADDERS = {
     'native_l25': [0.5, 1.0] + [m for m, _ in MULTIPLIERS],
 }
+# task137: v5 随机卡组格的阶梯写在清单里（每个任务带 curriculum_ladder），
+# 起点 0.5 让老师先能赢，再按 PROMOTE_ABOVE / DEMOTE_BELOW 往上走。
+RANDOM_DECK_SHARE = 0.15   # 随机卡组格每轮最多占 round-games 的 15%
+
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
@@ -108,7 +112,7 @@ DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / nump
 
 GIB = 1024 ** 3
 MAX_BACKGROUND_ATTEMPTS = 2   # task98: 同一快照最多尝试两次，失败保留证据，采集继续
-MEMORY_RESERVE_BYTES = 6 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
+MEMORY_RESERVE_BYTES = 3 * GIB          # 留给 WSL 接入通道、控制器与训练，不交给采集
 PACK_BUILDER_BYTES = 2 * GIB           # 一个段建造者的 Python/torch 与解压缓冲（pack() 同一假设）
 # 训练阶段的不可回收峰值 = 匿名内存（read_segments 的目标数组是文件后备 memmap，task61）。
 # 实测（2026-10-24，round 2 全量 7.73 GiB 段）：读入 + 建批 RssAnon 峰值 1.59 GiB = 0.205×
@@ -121,10 +125,82 @@ DEFAULT_WORKER_BYTES = GIB              # 实测失败时的保守值（一个 w
 MIN_PLAUSIBLE_WORKER_BYTES = GIB // 4  # a real python + engine worker is ~0.4-0.9 GiB
 PROBE_TIMEOUT_SECONDS = 900.0
 RSS_POLL_SECONDS = 0.2
+# task140: 轮边界重试必须有界。原来失败就 sleep(120) 后重来，永不放弃、也永不退出，
+# 2026-10-28 一次 pytest 用打了补丁的 sleep 跑这条路径，几十秒写出 20 GB 的 curriculum.log。
+ROUND_RETRY_LIMIT = 5                  # 连续失败这么多次就退出，交给看门狗重启
+ROUND_RETRY_SECONDS = 120              # 首次退避，之后翻倍
+ROUND_RETRY_MAX_SECONDS = 1800
+# 这些错误重试多少次都不会自己好：配置/接口写错、字段缺失。等下去只会刷日志。
+ROUND_FATAL_ERRORS = (AttributeError, TypeError, NameError, KeyError, AssertionError)
+ZERO_GAME_GROUP_LIMIT = 3
+GAME_RECOVERY_SECONDS = 180
 
 
 class StateWriteError(OSError):
     """No new games may start until the seed reservation is durable."""
+
+
+class GameRecoveryStopped(RuntimeError):
+    """A system-failed snapshot stays resumable when the controller stops."""
+
+
+def systemic_game_failure(error):
+    return isinstance(error, GameRecoveryStopped) or any(marker in str(error) for marker in (
+        'Inconsistency detected by ld.so', 'error while loading shared libraries',
+        'PvZ-Portable exited unexpectedly with code'))
+
+
+class GameHealth:
+    def __init__(self, args):
+        self.args = args
+        self.paused = threading.Event()
+        self.closed = threading.Event()
+        self.probe_lock = threading.Lock()
+        args.game_health = self
+
+    def pause(self, reason):
+        if not self.paused.is_set():
+            self.paused.set()
+            reason = ' '.join(str(reason).splitlines())
+            log_line(self.args.log, f'systemic game failure: collection/background paused at group boundary; '
+                                    f'one-game probe every {GAME_RECOVERY_SECONDS}s: {reason}')
+
+    def probe(self):
+        args = self.args
+        with tempfile.TemporaryDirectory(prefix='pvz-recovery-', dir=args.state.parent) as temporary:
+            folder = Path(temporary)
+            task = read_json(args.promotion_panel)['tasks'][0]
+            manifest = folder / 'manifest.json'
+            manifest.write_text(json.dumps(dict(tasks=[dict(task, seeds=(task.get('seeds') or [0])[:1])])))
+            command = command_for(args, manifest, task['task_id'], 0, 1,
+                                  'recovery', workers=1, frames=folder / 'frames', out=folder)
+            result = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL,
+                                    stderr=subprocess.DEVNULL, timeout=PROBE_TIMEOUT_SECONDS)
+            if result.returncode:
+                return False
+            rows = (folder / 'recovery_1/games.jsonl').read_text().splitlines()
+            return len(rows) == 1 and type(json.loads(rows[0]).get('won')) is bool
+
+    def wait(self):
+        with self.probe_lock:
+            while self.paused.is_set():
+                if self.closed.is_set() or getattr(self.args, 'stop_flag', STOP_FLAG).exists():
+                    return False
+                if self.closed.wait(GAME_RECOVERY_SECONDS):
+                    return False
+                if getattr(self.args, 'stop_flag', STOP_FLAG).exists():
+                    return False
+                try:
+                    recovered = self.probe()
+                except (OSError, ValueError, subprocess.SubprocessError) as error:
+                    log_line(self.args.log, f'one-game recovery probe failed: {error}')
+                    continue
+                if recovered:
+                    self.paused.clear()
+                    log_line(self.args.log, 'one-game recovery probe succeeded; collection/background resumed')
+                else:
+                    log_line(self.args.log, 'one-game recovery probe failed; system remains paused')
+        return True
 
 
 def retry_io(operation):
@@ -358,21 +434,38 @@ def startup_worker_estimate(args, plan: list[dict]) -> int:
     return max(measured, 1)
 
 
+def _panel_names(tasks) -> dict[str, float]:
+    names: dict[str, float] = {}
+    for task in tasks:
+        if '_m' in task['task_id']:
+            suffix = 'm' + task['task_id'].rsplit('_m', 1)[1]
+            names[suffix] = float(task['zombie_count_multiplier'])
+    return names
+
+
 @retry_io
-def load_panel(path: Path) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
+def load_panel(path: Path, extras=()) -> tuple[dict[str, dict], list[float], dict[str, float], dict[str, Path]]:
     """返回 (任务表, 倍率档, 后缀->倍率, 任务->它所在的清单)。
 
     1.0 档不是新任务：它们就是各源清单里的原任务，所以每个任务的清单要单独记，
     `search_play --manifest` 必须拿到含这个 task_id 的那一份。
+
+    task137: `extras` 是额外登记的清单（随机卡组族），只并进任务表 / 后缀 / 清单映射。
+    全局倍率表 values 不动 —— 0.5 / 0.75 这类 <1 档只对自带 ladder 的格子有意义，
+    混进 values 会改变所有老格子的 mult_index 语义。
     """
     document = json.loads(path.read_text())
     tasks = {task['task_id']: task for task in document['tasks']}
     manifests = {task['task_id']: path for task in document['tasks']}
-    names: dict[str, float] = {}
-    for task in document['tasks']:
-        if '_m' in task['task_id']:
-            suffix = 'm' + task['task_id'].rsplit('_m', 1)[1]
-            names[suffix] = float(task['zombie_count_multiplier'])
+    names = _panel_names(document['tasks'])
+    for extra in extras:
+        extra_document = json.loads(Path(extra).read_text())
+        for task in extra_document['tasks']:
+            if task['task_id'] in tasks:
+                raise ValueError(f'extra manifest duplicates task {task["task_id"]}: {extra}')
+            tasks[task['task_id']] = task
+            manifests[task['task_id']] = Path(extra)
+        names.update(_panel_names(extra_document['tasks']))
     for path_ in source_paths({}).values():
         for task_id, task in load_tasks(path_).items():
             if task_id not in tasks:
@@ -408,11 +501,12 @@ def cell_of(task_id: str, names: dict[str, float]) -> str:
     return parse_task_id(task_id, names)[0]
 
 
-def init_from_runs(patterns: list[str], names: dict[str, float]) -> tuple[dict, dict]:
+def init_from_runs(patterns: list[str], names: dict[str, float],
+                   extra_bases=()) -> tuple[dict, dict]:
     """从已有 run 的 config.json / games.jsonl 初始化窗口胜率与已用偏移。"""
     windows: dict[str, dict[str, dict]] = {}
     offsets: dict[str, int] = {}
-    base_ids = training_base_ids()
+    base_ids = training_base_ids() | set(extra_bases)
     for pattern in patterns:
         for path in glob.glob(pattern, recursive=True):
             config_path = Path(path)
@@ -464,8 +558,10 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                     windows_from_runs: dict) -> list[str]:
     """把状态里的格子对齐到当前训练集合；返回日志行，由调用方逐行写 curriculum.log。"""
     lines = []
-    training = training_base_ids() | {task_id for task_id, task in tasks.items()
-                                     if task.get('opening_specialist')}
+    # task137: 随机卡组族的 base id 不在 FAMILIES 里，由清单自己的 random_deck_cell 标记认领。
+    training = (training_base_ids()
+                | {task_id for task_id, task in tasks.items()
+                   if task.get('opening_specialist') or task.get('random_deck_cell')})
     cells = state.setdefault('cells', {})
     retired = state.setdefault('retired_cells', {})
     wanted = {}
@@ -499,6 +595,11 @@ def reconcile_cells(state: dict, tasks: dict[str, dict], names: dict[str, float]
                     mult_index=0, last_round=0, windows=dict(windows_from_runs.get(base, {})))
         if family in CURRICULUM_LADDERS:
             cell['ladder'] = CURRICULUM_LADDERS[family]
+        if task.get('curriculum_ladder'):
+            # task137: 随机卡组格自带 0.5..3.0 的阶梯（0.5 起）。
+            cell['ladder'] = list(task['curriculum_ladder'])
+        if task.get('random_deck_cell'):
+            cell['random_deck_cell'] = True
         if task.get('opening_specialist'):
             cell.update(opening_specialist=True, ladder=[1.0])
         cells[base] = cell
@@ -713,7 +814,8 @@ def adjust(cells: dict, values: list[float]) -> list[str]:
 
 
 def allocate(cells: dict, values: list[float], budget: int, per_group: int,
-             round_index: int, teacher: dict | None = None) -> list[tuple[str, float, int]]:
+             round_index: int, teacher: dict | None = None,
+             random_deck_cap: int | None = None) -> list[tuple[str, float, int]]:
     """返回 [(base, multiplier, games)]，总局数不超过 budget。
 
     1) 保底（防饿死）：超过 FLOOR_ROUNDS 轮没被采过（含 last_round=0 从未采过）的格，
@@ -733,15 +835,42 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
     picks: list[tuple[str, float, int]] = []
     picked: set[str] = set()
     spent = 0
+    # task137: 随机卡组格单独限流，别挤掉现有课程（默认每轮 <= 15% 局数）。
+    random_spent = 0
+
+    def fits(base: str, games: int) -> bool:
+        if not cells[base].get('random_deck_cell'):
+            return True
+        return random_deck_cap is None or random_spent + games <= random_deck_cap
+
+    def take(base: str, multiplier: float, games: int) -> None:
+        nonlocal random_spent
+        picks.append((base, multiplier, games))
+        picked.add(base)
+        if cells[base].get('random_deck_cell'):
+            random_spent += games
     floor_games = max(1, per_group // FLOOR_SHARE)
     floor_budget = min(budget, -(-len(cells) // FLOOR_ROUNDS) * floor_games)
     for base in sorted(cells, key=lambda name: (cells[name]['last_round'], name)):
         if spent + floor_games > floor_budget or cells[base]['last_round'] > round_index - FLOOR_ROUNDS:
             break
-        current = cell_level(cells[base], values)
-        picks.append((base, current, floor_games))
-        picked.add(base)
+        if not fits(base, floor_games):
+            continue
+        take(base, cell_level(cells[base], values), floor_games)
         spent += floor_games
+    # 随机卡组格在保底排序里永远排在最后（名字以 rd 开头，同 age 时 alphabetical 落后），
+    # 单靠上面那一轮会被现有课程饿死。这里给它一份独立预算：按最久没采轮转，
+    # 每轮最多 random_deck_cap 局（默认 = round-games 的 15%）。
+    if random_deck_cap:
+        for base in sorted((name for name, value in cells.items()
+                            if value.get('random_deck_cell') and name not in picked
+                            and (value['last_round'] == 0
+                                 or value['last_round'] <= round_index - FLOOR_ROUNDS)),
+                           key=lambda name: (cells[name]['last_round'], name)):
+            if random_spent + floor_games > random_deck_cap or spent + floor_games > budget:
+                break
+            take(base, cell_level(cells[base], values), floor_games)
+            spent += floor_games
     scored = []
     for base, cell in cells.items():
         if base in picked or cells[base]['last_round'] == round_index:
@@ -756,7 +885,9 @@ def allocate(cells: dict, values: list[float], budget: int, per_group: int,
     for _gap, _age, base, multiplier in sorted(scored):
         if remaining < per_group:
             break
-        picks.append((base, multiplier, per_group))
+        if not fits(base, per_group):
+            continue
+        take(base, multiplier, per_group)
         remaining -= per_group
     return picks
 
@@ -838,12 +969,32 @@ def save_candidates_for(cell: dict, task: dict | None, levels) -> int:
     return 1 if cell.get('level') in levels else 0
 
 
+def growth_args(args, workers, upper_workers, per_worker_bytes, headroom_bytes) -> list[str]:
+    """task138: --workers 是上限，开工宽度走 --initial-workers。
+
+    只有实测过单 worker RSS 才让 search_play 自己扩容；没实测时它保持开工宽度
+    （按未知成本加进程就是 OOM 的来源）。上限取 pipeline.foreground_limit()，
+    它已经扣掉了可能开始的评估进程。
+    """
+    initial = args.workers if workers is None else workers
+    # 没有声明上限 = 调用方要固定宽度（探针、一次性诊断），保持老语义。
+    if upper_workers is None:
+        return ['--workers', str(initial)]
+    upper = upper_workers
+    if initial >= upper and per_worker_bytes <= 0:
+        return ['--workers', str(initial)]
+    return ['--workers', str(upper), '--initial-workers', str(initial),
+            '--worker-memory-bytes', str(max(0, per_worker_bytes)),
+            '--memory-headroom-bytes', str(max(0, headroom_bytes))]
+
+
 def command_for(args, manifest: Path, task_id: str, offset: int, games: int, label: str,
                 workers: int | None = None, frames: Path | None = None,
                 out: Path | None = None, beta: float = 0.0,
                 demo_archive: str | None = None, demo_decision: int | None = None,
                 future_seeds: list[int] | None = None,
-                save_candidates: int = 0) -> list[str]:
+                save_candidates: int = 0, upper_workers: int | None = None,
+                per_worker_bytes: int = 0, headroom_bytes: int = 0) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -865,7 +1016,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--manifest', str(manifest), '--task-id', task_id,
             *seed_args,
             '--executable', str(args.executable), '--dagger-beta', f'{beta:g}',
-            '--workers', str(args.workers if workers is None else workers),
+            *growth_args(args, workers, upper_workers, per_worker_bytes, headroom_bytes),
             '--resource-dir', str(args.resource_dir),
             '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
             '--out', str((args.out if out is None else out) / f'{label}_{games}')]
@@ -903,6 +1054,7 @@ class TrainingPipeline:
 
     def __init__(self, args, state):
         self.args, self.state = args, state
+        self.game_health = getattr(args, 'game_health', None) or GameHealth(args)
         self.directory = args.state.parent / (args.state.stem + '.pipeline')
         retry_io(self.directory.mkdir)(parents=True, exist_ok=True)
         self.executor = ThreadPoolExecutor(max_workers=1, thread_name_prefix='curriculum-training')
@@ -916,7 +1068,6 @@ class TrainingPipeline:
         self.futures = []
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
-        self.last_train_data_bytes = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
         self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
@@ -937,19 +1088,16 @@ class TrainingPipeline:
                     self.last_train_peak = int(value)   # 重启后沿用最近一次后台训练的实测峰值
                 except (ValueError, TypeError):
                     pass
-            if timing and not self.last_train_data_bytes:
-                model = (timing.get('selection') or {}).get('best', job['model'])
-                self.last_train_data_bytes = timing.get('train_data_bytes', 0) or training_data_bytes(Path(model))
             if not self.last_pack_peak and timing.get('pack_peak_anon_bytes'):
                 try:      # 建造者数记在当轮配方的 precompute_workers 里
                     builders = int(load_recipe(Path(job['recipe']), 'training')['precompute_workers']) or 1
                     self.last_pack_peak = max(1, int(timing['pack_peak_anon_bytes']) // builders)
                 except (OSError, ValueError, KeyError, TypeError):
                     pass
-            if self.last_train_peak and self.last_pack_peak and self.last_train_data_bytes:
+            if self.last_train_peak and self.last_pack_peak:
                 break
         queued = [job for job in state.setdefault('training_jobs', [])
-                  if job['status'] != 'done' and not job.get('isolated')
+                  if job['status'] not in ('done', 'superseded') and not job.get('isolated')
                   and job.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS]
         if queued:
             try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
@@ -963,6 +1111,8 @@ class TrainingPipeline:
             args.rollout_policy = model
         for job in state.setdefault('training_jobs', []):
             if job in queued:
+                if job['status'] == 'paused':
+                    self.game_health.pause(job.get('error', 'saved background system failure'))
                 job['status'] = 'queued'
                 try:
                     self._seeded(job)
@@ -975,6 +1125,24 @@ class TrainingPipeline:
 
     def pending(self):
         return any(not future.done() for _, future in self.futures)
+
+    def _superseded_by(self, job):
+        """Newest round that makes this waiting job obsolete, or None (task141).
+
+        Every round retrains from the whole corpus, so training an older backlog entry
+        only delays the newest data. A job is skipped when any newer round is already
+        queued, running or trained (or is waiting to retry a background failure).
+        Isolated and already-superseded jobs never make an older job obsolete.
+        """
+        round_index = job.get('round')
+        if type(round_index) is not int:
+            return None
+        newer = [saved['round'] for saved in list(getattr(self, 'state', {}).get('training_jobs', []))
+                 if type(saved.get('round')) is int and saved['round'] > round_index
+                 and (saved.get('status') in ('queued', 'running', 'done', 'paused')
+                      or (saved.get('status') == 'failed' and not saved.get('isolated')
+                          and saved.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS))]
+        return max(newer, default=None)
 
     def foreground_limit(self):
         # Evaluation reserves the game workers it is actually using (task73c: eval units
@@ -1040,6 +1208,8 @@ class TrainingPipeline:
             if not valid_certificate(decision, frozen, out):
                 raise ValueError('promotion certificate does not match the registered comparison')
         except Exception as error:
+            if systemic_game_failure(error):
+                raise
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
             decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
@@ -1048,6 +1218,10 @@ class TrainingPipeline:
         finished = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate done: {finished-started:.3f}s '
                                f'approved={decision["approved"]} reasons={decision["reasons"]}')
+        if decision.get('monitor'):
+            # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
+            log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
+                f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
         return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
                     evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
@@ -1061,7 +1235,6 @@ class TrainingPipeline:
             train_peak = self.last_train_peak       # 最近一次后台训练的实测匿名峰值优先
         else:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
-        train_peak += getattr(self, 'last_train_data_bytes', 0) or compact_bytes
         return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
     def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
@@ -1084,9 +1257,12 @@ class TrainingPipeline:
                     catalog[str(path.parent.relative_to(source))] = path
         options = pack_options(**training_row_options(recipe, labels))
         view = self.directory / 'frames'
+        by_label = {}
+        for rel, path in catalog.items():
+            by_label.setdefault(Path(rel).name, []).append((rel, path))
         pending = []
         for label in sorted(wanted):
-            archives = sorted((rel, path) for rel, path in catalog.items() if Path(rel).name == label)
+            archives = sorted(by_label.get(label, []))
             if not archives:
                 continue   # 没有档案的标签 pack 时会自己报错，不进估算
             total = sum(path.stat().st_size for _, path in archives)
@@ -1115,13 +1291,11 @@ class TrainingPipeline:
         if not self.pending():
             return 0
         with self.lock:
-            table = _proc_table()
             processes = list(getattr(self, 'processes', {}).values())
             if not processes and self.process is not None:
                 processes = [self.process]
-            rss = sum(table.get(process.pid, (0, 0))[1] + _descendant_rss(process.pid, table)
-                      for process in processes)
-        return max(0, self.estimate_peak() - rss)
+            anonymous = sum(_tree_anon_bytes(process.pid) for process in processes)
+        return max(0, self.estimate_peak() - anonymous)
 
     @retry_io
     def enqueue(self):
@@ -1149,6 +1323,8 @@ class TrainingPipeline:
             base_options, variant_options = training_row_options(recipe), training_row_options(variant)
             base_options.pop('source_weight', None)
             variant_options.pop('source_weight', None)
+            base_options.pop('label_weight', None)
+            variant_options.pop('label_weight', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
@@ -1175,28 +1351,12 @@ class TrainingPipeline:
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
     def _snapshot_selection(self, job, folder):
+        """task128: freeze the adventure selection templates and one independent
+        seed block on the durable job. The panel no longer reads collector
+        windows, so no state/run snapshot is frozen with it."""
         incumbent = self.incumbent()
-        snapshot = folder / 'selection_state.json'
-        self._marker(snapshot, self.state)
         inputs = folder / 'selection_inputs'
         inputs.mkdir(exist_ok=True)
-        sources = {}
-        for rnd in self.state.get('log', []):
-            for group in rnd['groups']:
-                source = group.get('manifest')
-                if (group.get('status', 'done') != 'done'
-                        or group.get('student') != str(incumbent) or source in sources):
-                    continue
-                if source is not None:
-                    try:
-                        data = Path(source).read_bytes()
-                    except OSError as error:
-                        sources[source] = dict(error=str(error))
-                        continue  # diagnosed by the B7-protected background, not the collector
-                    digest = __import__('hashlib').sha256(data).hexdigest()
-                    target = inputs / f'{digest}.json'
-                    target.write_bytes(data)
-                    sources[source] = dict(path=str(target), sha256=digest)
         templates = inputs / 'templates.json'
         templates.write_text(json.dumps(selection_templates(
             getattr(self.args, 'selection_holdout_manifest', None), self.args.promotion_panel)))
@@ -1205,9 +1365,8 @@ class TrainingPipeline:
         job.update(training_seeds=job.get('training_seeds', list(TRAINING_SEEDS)),
                    training_parallelism=getattr(self.args, 'training_parallelism', 2),
                    selection_manifest=str(folder / 'selection_manifest.json'),
-                   selection_refresh=dict(snapshot=str(snapshot), snapshot_sha256=file_sha(snapshot),
-                       incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent), runs=str(self.args.out),
-                       templates=str(templates), templates_sha256=file_sha(templates), sources=sources,
+                   selection_refresh=dict(incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent),
+                       templates=str(templates), templates_sha256=file_sha(templates),
                        executable_sha256=file_sha(self.args.executable), seed_block=list(block), ledger=str(ledger)))
 
     def _validate_selection_panel(self, panel):
@@ -1221,7 +1380,7 @@ class TrainingPipeline:
             return dict(manifest_sha256=job['selection_manifest_sha256'])  # historical task92 jobs
         frozen = job['selection_refresh']
         refresh_sha = __import__('hashlib').sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
-        for name in ('snapshot', 'templates', 'incumbent'):
+        for name in ('templates', 'incumbent'):
             if file_sha(Path(frozen[name])) != frozen[name + '_sha256']:
                 raise ValueError(f'frozen selection {name} changed')
         if file_sha(self.args.executable) != frozen['executable_sha256']:
@@ -1230,33 +1389,28 @@ class TrainingPipeline:
         ready, manifest = folder / 'selection_ready.json', Path(job['selection_manifest'])
         if ready.exists():
             receipt = json.loads(ready.read_text())
-            if (receipt['snapshot_sha256'] != frozen['snapshot_sha256']
-                    or receipt['refresh_sha256'] != refresh_sha
+            if (receipt['refresh_sha256'] != refresh_sha
                     or receipt['manifest_sha256'] != file_sha(manifest)
                     or receipt['plan_sha256'] != file_sha(folder / 'selection_plan.json')
                     or receipt['executable_sha256'] != frozen['executable_sha256']):
                 raise ValueError('saved selection preparation changed')
             return receipt
-        documents = {}
-        for source, meta in frozen['sources'].items():
-            if 'error' in meta:
-                raise ValueError(f'selection source unavailable at enqueue: {source}: {meta["error"]}')
-            if file_sha(Path(meta['path'])) != meta['sha256']:
-                raise ValueError('frozen selection source changed')
-            documents[source] = json.loads(Path(meta['path']).read_text())
-        state = json.loads(Path(frozen['snapshot']).read_text())
-        panel = selection_plan(state, frozen['incumbent'], frozen['runs'],
-                               json.loads(Path(frozen['templates']).read_text()), documents, frozen['seed_block'])
+        templates = json.loads(Path(frozen['templates']).read_text())
+        panel = selection_plan(templates, frozen['seed_block'], frozen['incumbent'])
         plan_path = folder / 'selection_plan.json'
         self._marker(plan_path, panel)
         from pvz_promotion import SEED_POOLS_V2
         reserved = list(SEED_POOLS_V2)
-        for document in [*documents.values(), json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())]:
+        # The adventure definitions are scored on the frozen scoreboard seed block
+        # outside the gate; keep the selection block off it as well.
+        for document in (json.loads((ROOT / 'configs/adventure_scoreboard.json').read_text()),
+                         json.loads((ROOT / 'configs/human_demo_tasks.json').read_text()),
+                         templates):
             reserved.extend(seed_spans(document))
         assert_disjoint(panel, reserved)
         panel = self._validate_selection_panel(panel)
         self._marker(manifest, panel)
-        receipt = dict(snapshot_sha256=frozen['snapshot_sha256'], refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
+        receipt = dict(refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
                        manifest_sha256=file_sha(manifest), executable_sha256=frozen['executable_sha256'],
                        prepared=time.time())
         self._marker(ready, receipt)
@@ -1294,7 +1448,11 @@ class TrainingPipeline:
                 target.symlink_to(source, target_is_directory=True)
 
     def _command(self, command, log):
+        health = getattr(self.args, 'game_health', None)
+        if health is not None and not health.wait():
+            raise GameRecoveryStopped('background stopped while waiting for game recovery')
         with log.open('a') as output:
+            offset = output.tell()
             process = subprocess.Popen(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT,
                                        pass_fds=() if self.lock_fd is None else (self.lock_fd,))
             with self.lock:
@@ -1315,7 +1473,10 @@ class TrainingPipeline:
                     self.processes.pop(process.pid, None)
                     self.process = next(iter(self.processes.values()), None)
         if code:
-            raise RuntimeError(f'exit {code}; see {log}')
+            with log.open('rb') as output:
+                output.seek(max(offset, log.stat().st_size - 8192))
+                diagnostic = output.read().decode('utf-8', errors='replace')
+            raise RuntimeError(f'exit {code}; see {log}\n{diagnostic}')
         return peak
 
     def _admit(self):
@@ -1376,6 +1537,16 @@ class TrainingPipeline:
             time.sleep(1)
 
     def _run(self, job):
+        while self.game_health.wait():
+            try:
+                return self._run_snapshot(job)
+            except (Exception, SystemExit) as error:
+                if not systemic_game_failure(error):
+                    raise
+                self.game_health.pause(str(error))
+        raise GameRecoveryStopped('background stopped while waiting for game recovery')
+
+    def _run_snapshot(self, job):
         recipe_path = Path(job['recipe'])
         folder = recipe_path.parent
         done = folder / 'complete.json'
@@ -1391,6 +1562,11 @@ class TrainingPipeline:
                 if old and Path(job['model']).is_file():
                     if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job), old.get('evaluation_directory')):
                         return old
+                # task141: a finished round keeps its report; everything still waiting behind
+                # a newer round is skipped instead of trained and gated on stale data.
+                newer = self._superseded_by(job)
+                if newer is not None:
+                    return dict(superseded_by=newer)
                 if trained.is_file():
                     report = json.loads(trained.read_text())
                     if (report.get('model_sha256') != file_sha(job['model'])
@@ -1427,7 +1603,7 @@ class TrainingPipeline:
                                 self.build_peak = 0
                         if phase == 'train':
                             self.last_train_peak = report[phase + '_peak_anon_bytes']
-                            self.last_train_data_bytes = report['train_data_bytes'] = training_data_bytes(Path(job['model']))
+                            report['train_data_bytes'] = training_data_bytes(Path(job['model']))
                         report[phase + '_finished'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} done: '
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
@@ -1510,9 +1686,10 @@ class TrainingPipeline:
                 try:
                     if not admitted:
                         self._admit()
-                    candidate['train_peak_anon_bytes'] = self._command(
-                        [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)],
-                        directory / 'train.log')
+                    command = [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)]
+                    if variant.get('recipe_family') == 'B':
+                        command += ['--pack-recipe', str(recipe_path)]
+                    candidate['train_peak_anon_bytes'] = self._command(command, directory / 'train.log')
                     candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():
                         raise RuntimeError(f'trainer did not publish {model}')
@@ -1520,6 +1697,8 @@ class TrainingPipeline:
                                      model_sha256=file_sha(model), recipe_sha256=file_sha(path))
                     self._marker(marker, candidate)
                 except Exception as error:
+                    if systemic_game_failure(error):
+                        raise
                     candidate.update(status='failed', train_finished=time.time(), error=str(error))
                     self._marker(directory / 'failed.json', candidate)
                     log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
@@ -1560,11 +1739,13 @@ class TrainingPipeline:
                       train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
                                            for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
-        self.last_train_data_bytes = report['train_data_bytes']
         report.update(self._select(job, trained))
         panel = json.loads(Path(job['selection_manifest']).read_text())
         holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
                     if task.get('selection_group') == 'unseen_deck'}
+        # task137: 随机卡组格的胜局单独记一份，便于看卡组泛化（仍计入 selection 总分）。
+        random_decks = {task['task_id']: len(task['seeds']) for task in panel['tasks']
+                        if task.get('selection_group') == 'random_deck'}
         for candidate in candidates:
             candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])
             if holdouts and candidate['selection_score'] is not None:
@@ -1572,6 +1753,12 @@ class TrainingPipeline:
                 candidate['selection_unseen_deck'] = dict(
                     wins=sum(wins[name] for name in holdouts), games=sum(holdouts.values()),
                     tasks={name: dict(wins=wins[name], games=games) for name, games in holdouts.items()})
+            if random_decks and candidate['selection_score'] is not None:
+                wins = candidate['selection_score']['wins']
+                candidate['selection_random_deck'] = dict(
+                    wins=sum(wins[name] for name in random_decks), games=sum(random_decks.values()),
+                    tasks={name: dict(wins=wins[name], games=games)
+                           for name, games in random_decks.items()})
         self._marker(folder / 'candidates.json', dict(candidates=candidates))
         return report
 
@@ -1621,7 +1808,7 @@ class TrainingPipeline:
                     save_state(self.args.state, self.state)
                     log_line(self.args.log, f'background round {job["round"]} recovery isolated: {error}')
         for index, (job, future) in enumerate(list(self.futures)):
-            if job['status'] in ('done', 'failed') or not future.done():
+            if job['status'] in ('done', 'failed', 'superseded') or not future.done():
                 continue
             try:
                 retry_io(self._poll_job)(index, job, future, retry)
@@ -1637,6 +1824,12 @@ class TrainingPipeline:
         try:
             report = future.result()
         except BaseException as error:
+            if systemic_game_failure(error):
+                job.update(status='paused', error=str(error))
+                self.failed = False
+                save_state(self.args.state, self.state)
+                log_line(self.args.log, f'background round {job["round"]} paused; retry budget retained: {error}')
+                return
             # task70 B7: a background failure must not kill collection. Record it,
             # retry once; task98 isolates the snapshot after its second failure.
             job['status'] = 'failed'
@@ -1655,6 +1848,12 @@ class TrainingPipeline:
             job['isolated'] = job['attempts'] >= MAX_BACKGROUND_ATTEMPTS
             log_line(self.args.log, f'background round {job["round"]} failed '
                                     f'{job["attempts"]} times; snapshot isolated, collection continues: {error}')
+            return
+        if isinstance(report, dict) and report.get('superseded_by') is not None:
+            job.update(status='superseded', superseded_by=report['superseded_by'])
+            save_state(self.args.state, self.state)
+            log_line(self.args.log, f'background round {job["round"]} superseded by round '
+                                    f'{report["superseded_by"]}; training and gate skipped')
             return
         promotion = report.get('promotion', {})
         current_contract = self.evaluation_contract(job)
@@ -1691,6 +1890,9 @@ class TrainingPipeline:
         save_state(self.args.state, self.state)
 
     def close(self):
+        health = getattr(self.args, 'game_health', None)
+        if health is not None:
+            health.closed.set()
         # poll may schedule a stale comparison again; drain it before closing the executor.
         # B7: failed jobs stay failed here (no retry), so only wait on queued ones.
         try:
@@ -1744,7 +1946,9 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                manifests: dict[str, Path], budget: int, per_group: int,
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
                renew_size: int = START_SEED_BLOCK,
-               save_candidates_levels=frozenset()) -> tuple[list[dict], list[str]]:
+               save_candidates_levels=frozenset(),
+               random_deck_share: float = RANDOM_DECK_SHARE,
+               demo_start_share: float | None = None) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -1753,7 +1957,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     reserved = 24 * len(specialists)
     if reserved > budget:
         raise ValueError('round budget cannot cover opening specialists')
-    completed = state.get('completed_groups', []) if specialists else []
+    completed = [group for group in state.get('completed_groups', [])
+                 if group.get('status', 'done') == 'done']
     completed_betas = {base: {group.get('beta') for group in completed if group['base'] == base}
                        for base in specialists}
     special_picks = [(base, 1.0, 12 * (2 - len(completed_betas[base])))
@@ -1762,8 +1967,29 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     pending_special = sum(games for _, _, games in special_picks)
     if specialists and pending_special > remaining:
         return [], changes + ['opening specialists start next round: partial-round budget already spent']
-    picks = special_picks + allocate(ordinary, values, remaining - pending_special,
-                                    per_group, state['round'] + 1, teacher)
+    ordinary_budget = remaining - pending_special
+    if demo_start_share is None:
+        # Default remains the deploy16 planner, including its ordering.
+        picks = special_picks + allocate(ordinary, values, ordinary_budget,
+                                        per_group, state['round'] + 1, teacher,
+                                        random_deck_cap=int(budget * random_deck_share))
+    else:
+        def category(cell):
+            return 'random' if cell.get('random_deck_cell') else 'demo' if (cell.get('archive') is not None or cell.get('demo_archive') is not None) else 'multiplier'
+        completed_games = {kind: sum(group['games'] for group in completed
+                           if category(state['cells'].get(group['base'], state.get('retired_cells', {}).get(group['base'], group))) == kind)
+                           for kind in ('random', 'demo')}
+        caps = dict(random=max(0, int(budget * random_deck_share) - completed_games['random']),
+                    demo=max(0, int(budget * demo_start_share) - completed_games['demo']))
+        picks = list(special_picks)
+        # Reserve random decks before the large demo floor can consume their budget.
+        # Remaining non-demo budget goes to multiplier cells, including any unused quota.
+        for kind in ('random', 'demo', 'multiplier'):
+            subset = {base: cell for base, cell in ordinary.items() if category(cell) == kind}
+            quota = min(ordinary_budget, caps[kind]) if kind in caps else ordinary_budget
+            selected = allocate(subset, values, quota, per_group, state['round'] + 1, teacher)
+            picks.extend(selected)
+            ordinary_budget -= sum(games for _, _, games in selected)
     plan = []
     for base, multiplier, games in picks:
         cell = state['cells'][base]
@@ -1818,7 +2044,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
         item = dict(base=base, multiplier=multiplier, task_id=task_id, offset=offset,
                     games=games, manifest=manifest,
                     label=label_for(state['round'] + 1, base, multiplier,
-                                    start=int(multiplier) if start else None),
+                                    start=int(multiplier) if start else None) + f'_o{offset}',
                     save_candidates=save_candidates_for(cell, tasks.get(task_id),
                                                         save_candidates_levels))
         if start:
@@ -1869,9 +2095,11 @@ def _run_group(args, state, item, round_index, per_worker):
                           demo_archive=item.get('demo_archive'),
                           demo_decision=item.get('demo_decision'),
                           future_seeds=item.get('future_seeds'),
-                          save_candidates=item.get('save_candidates', 0))
+                          save_candidates=item.get('save_candidates', 0),
+                          upper_workers=upper, per_worker_bytes=per_worker,
+                          headroom_bytes=background)
     started = time.time()
-    item.update(collection_started=started, student=str(args.rollout_policy),
+    item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
     try:
         result = retry_io(subprocess.run)(command, cwd=ROOT)
@@ -1887,6 +2115,7 @@ def _run_group(args, state, item, round_index, per_worker):
         rows = [json.loads(line) for line in retry_io((folder / 'games.jsonl').read_text)().splitlines() if line.strip()]
         games = len(rows)
         wins = sum(1 for row in rows if row.get('won'))
+    item['valid_games'] = sum(type(row.get('won')) is bool for row in rows)
     if games != item['games'] or any(type(row.get('won')) is not bool for row in rows):
         raise ValueError(f'incomplete/invalid game results: {games}/{item["games"]}')
     metrics = getattr(args, 'metrics', None)
@@ -1936,35 +2165,53 @@ def pipeline_action(args, action):
         save_state(args.state, pipeline.state)
 
 
-def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool:
+def run_round(args, state: dict, plan: list[dict], changes: list[str], per_worker: int = 0) -> bool | None:
     """Group failures do not stop other cells; offsets are durable before collection."""
     round_index = state['round'] + 1
+    health = getattr(args, 'game_health', None) or GameHealth(args)
+    if state.get('zero_game_groups', 0) >= ZERO_GAME_GROUP_LIMIT:
+        health.pause('consecutive groups produced zero valid games before restart')
     for item in plan:
+        if not health.wait():
+            return False
         pipeline_action(args, 'poll')
+        if not health.wait():
+            return False
         if getattr(args, 'stop_flag', STOP_FLAG).exists():
             log_line(args.log, f'round {round_index}: stop flag seen before {item["label"]}; stopping at group boundary')
             return False
         try:
             _run_group(args, state, item, round_index, per_worker)
             item['status'] = 'done'
+            state['zero_game_groups'] = 0
         except StateWriteError:
             raise
         except (Exception, SystemExit) as error:
             item.update(status='failed', error=f'{type(error).__name__}: {error}',
                         collection_finished=time.time())
             log_line(args.log, f'round {round_index} {item["label"]}: group skipped: {item["error"]}')
-            if item['base'] in state['cells']:
+            if item.get('valid_games', 0) and item['base'] in state['cells']:
                 state['cells'][item['base']]['last_round'] = round_index
+            state['zero_game_groups'] = (state.get('zero_game_groups', 0) + 1
+                                         if item.get('valid_games') == 0 else 0)
         state.setdefault('completed_groups', []).append(dict(item))
         save_state(args.state, state)
+        if state['zero_game_groups'] >= ZERO_GAME_GROUP_LIMIT:
+            health.pause(f'{state["zero_game_groups"]} consecutive groups produced zero valid games')
+            if not health.wait():
+                return False
+            state['zero_game_groups'] = 0
+            save_state(args.state, state)
+            return None
     state['round'] = round_index
     groups = list({group['label']: group for group in state.pop('completed_groups', [])}.values())
     state['log'].append(dict(round=round_index, groups=groups, changes=changes))
     save_state(args.state, state)
-    log_line(args.log, f'round {round_index} done: {len(groups)} groups, '
-                       f'{sum(group["games"] for group in groups)} games, changes={len(changes)}'
+    completed = [group for group in groups if group.get('status', 'done') == 'done']
+    log_line(args.log, f'round {round_index} done: {len(completed)} groups, '
+                       f'{sum(group["games"] for group in completed)} games, changes={len(changes)}'
                        + ((' [' + '; '.join(changes) + ']') if changes else ''))
-    if groups and not getattr(args, 'stop_flag', STOP_FLAG).exists():
+    if completed and not getattr(args, 'stop_flag', STOP_FLAG).exists():
         pipeline_action(args, 'enqueue')
     return True
 
@@ -1988,6 +2235,7 @@ def print_plan(state: dict, plan: list[dict], changes: list[str]) -> None:
 def collect_rounds(args, state, tasks, names, values, manifests, teacher):
     per_worker = -1
     completed = 0
+    failures = 0
     while completed < args.rounds:
         if args.stop_flag.exists():
             log_line(args.log, 'stop flag seen at round boundary')
@@ -1999,19 +2247,35 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher,
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
-                                       save_candidates_levels=args.save_candidates_levels)
+                                       save_candidates_levels=args.save_candidates_levels,
+                                       random_deck_share=args.random_deck_share,
+                                       demo_start_share=getattr(args, 'demo_start_share', None))
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
                     break
                 per_worker = startup_worker_estimate(args, plan)
-            if not run_round(args, state, plan, changes, per_worker):
+            finished = run_round(args, state, plan, changes, per_worker)
+            if finished is False:
                 break
+            if finished is None:
+                continue
             completed += 1
+            failures = 0        # progress resets the retry budget
+        except ROUND_FATAL_ERRORS as error:
+            log_line(args.log, f'FATAL round boundary: {type(error).__name__}: {error}')
+            raise
         except (Exception, SystemExit) as error:
             # KeyboardInterrupt and process termination are deliberately not caught.
-            log_line(args.log, f'ERROR round boundary paused; retry in 120s: {type(error).__name__}: {error}')
-            time.sleep(120)
+            failures += 1
+            if failures > ROUND_RETRY_LIMIT:
+                log_line(args.log, f'FATAL round boundary failed {failures} times in a row, giving up: '
+                                   f'{type(error).__name__}: {error}')
+                raise
+            delay = min(ROUND_RETRY_SECONDS * 2 ** (failures - 1), ROUND_RETRY_MAX_SECONDS)
+            log_line(args.log, f'ERROR round boundary paused; retry {failures}/{ROUND_RETRY_LIMIT} '
+                               f'in {delay}s: {type(error).__name__}: {error}')
+            time.sleep(delay)
 
 
 def set_gate_version(state: dict, version: int) -> None:
@@ -2022,7 +2286,7 @@ def set_gate_version(state: dict, version: int) -> None:
     idle collection for hours).
     """
     previous = state.get('gate_version', 3)  # all pre-task113 states used v3
-    pending = any(job.get('status') != 'done' and not job.get('isolated')
+    pending = any(job.get('status') not in ('done', 'superseded') and not job.get('isolated')
                   for job in state.get('training_jobs', []))
     if version != previous and pending:
         raise ValueError(f'gate v{previous} -> v{version} requires a drained pipeline; '
@@ -2035,7 +2299,11 @@ def main() -> None:
     set_oom_score_adj(OOM_SCORE_CONTROLLER)
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--manifest', type=Path, default=ROOT / 'artifacts/stage4/multiplier_panel.json')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4), default=GATE_VERSION,
+    parser.add_argument('--extra-manifest', type=Path, action='append', default=[],
+                        help='additional registered training panel (task137 random-deck cells); repeatable')
+    parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
+                        help='max share of the round budget for random-deck cells (default 0.15)')
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
                         help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
@@ -2057,6 +2325,8 @@ def main() -> None:
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
     parser.add_argument('--games-per-group', type=int, default=48)
+    parser.add_argument('--demo-start-share', type=float, default=None,
+                        help='optional demo-start game cap per round; reserves random-deck quota before demo floors, remainder to multiplier cells')
     parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
                         help='teacher win-rate evidence json (level/base -> rate); missing file = all unknown')
     parser.add_argument('--beta-threshold', type=float, default=0.1,
@@ -2126,6 +2396,15 @@ def main() -> None:
         parser.error('seed ledger paths must be absolute')
     if not args.start_seed_ledger.is_absolute():
         parser.error('--start-seed-ledger must be absolute')
+    for extra in args.extra_manifest:
+        if not extra.is_absolute():
+            parser.error('all paths must be absolute: extra_manifest')
+        if not extra.is_file():
+            parser.error(f'--extra-manifest does not exist: {extra}')
+    if not 0.0 <= args.random_deck_share <= 1.0:
+        parser.error('--random-deck-share must be within 0..1')
+    if args.demo_start_share is not None and not 0.0 <= args.demo_start_share <= 1.0:
+        parser.error('--demo-start-share must be within 0..1')
     try:
         probe = None
         if args.gate_version >= 2:
@@ -2133,7 +2412,9 @@ def main() -> None:
         freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
-    tasks, values, names, manifests = load_panel(args.manifest)
+    tasks, values, names, manifests = load_panel(args.manifest, args.extra_manifest)
+    extra_bases = {cell_of(task_id, names) for task_id, task in tasks.items()
+                   if task.get('random_deck_cell')}
     if args.opening_manifest:
         opening = load_tasks(args.opening_manifest)
         tasks.update(opening)
@@ -2159,7 +2440,8 @@ def main() -> None:
         for line in isolate_cells(state, values):
             log_line(args.log, line)
         # 已有状态按当前训练集合增删格子；n10q 没有旧局，除非显式给 --init-glob 否则从空窗口起步。
-        windows = init_from_runs(args.init_glob, names)[0] if args.init_glob else {}
+        windows = (init_from_runs(args.init_glob, names, extra_bases)[0]
+                   if args.init_glob else {})
         for line in reconcile_cells(state, tasks, names, windows):
             log_line(args.log, line)
         for line in reconcile_start_cells(state, start_cells, windows,
@@ -2170,7 +2452,7 @@ def main() -> None:
                 parser.error(f'--restore-start-cell {base}: not a retired start cell in {args.state}')
             manifests.setdefault(base, args.demo_start_manifest)
     else:
-        windows, offsets = init_from_runs(patterns, names)
+        windows, offsets = init_from_runs(patterns, names, extra_bases)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
     try:
         set_gate_version(state, args.gate_version)
@@ -2184,7 +2466,9 @@ def main() -> None:
                 ledger.write_bytes(args.start_seed_ledger.read_bytes())
             plan, changes = plan_round(state, tasks, names, values, manifests, args.round_games,
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
-                                       save_candidates_levels=args.save_candidates_levels)
+                                       save_candidates_levels=args.save_candidates_levels,
+                                       random_deck_share=args.random_deck_share,
+                                       demo_start_share=getattr(args, 'demo_start_share', None))
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
@@ -2200,19 +2484,13 @@ def main() -> None:
         if labels:
             print('pack: ' + ' '.join(pack_command(args, labels)))
         incumbent = Path(state.get('student') or args.rollout_policy)
-        documents = {}
-        for rnd in state.get('log', []):
-            for group in rnd['groups']:
-                source = group.get('manifest')
-                if (group.get('status', 'done') == 'done'
-                        and group.get('student') == str(incumbent) and source is not None and source not in documents):
-                    documents[source] = json.loads(Path(source).read_text())
-        preview = selection_plan(state, incumbent, args.out,
-            selection_templates(args.selection_holdout_manifest, args.promotion_panel), documents,
-            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE))
+        preview = selection_plan(
+            selection_templates(args.selection_holdout_manifest, args.promotion_panel),
+            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE), incumbent)
         print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
-            eligible_cells=len(preview['cells']), random_families=3,
+            adventure_tasks=len(preview['adventure_tasks']), random_families=3,
             unseen_deck_tasks=preview.get('selection_holdout_tasks', []),
+            score_only_tasks=preview.get('score_only', []),
             candidates=(2 * args.candidates_per_recipe if args.alternate_recipe else len(TRAINING_SEEDS)),
             training_parallelism=args.training_parallelism,
             games=sum(len(task['seeds']) for task in preview['tasks']),

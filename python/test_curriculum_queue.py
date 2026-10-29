@@ -11,10 +11,11 @@ from unittest import mock
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
+import curriculum_queue
 from curriculum_queue import (DEMOTE_BELOW, FLOOR_ROUNDS, FLOOR_SHARE, GIB, MEMORY_RESERVE_BYTES,
                               CURRICULUM_LADDERS, MIN_SAMPLES, PACK_BUILDER_BYTES, PROMOTE_ABOVE,
                               WINDOW, _descendant_rss,
-                              adjust, allocate, build_plan, cell_level, command_for, label_for,
+                              adjust, allocate, build_plan, cell_level, command_for, growth_args, label_for,
                               load_demo_start_cells, load_teacher_rates, make_state, pack_command,
                               pack_labels, parse_levels, parse_task_id, plan_round, rate,
                               reconcile_cells, save_candidates_for,
@@ -573,6 +574,7 @@ class CurriculumRulesTest(unittest.TestCase):
                         for name in ('dw4i', 'dw5i', 'identity_dw3_s1')]
             variants.append(dict(variants[0], context=True, aux_weight=1.0, aux_horizon=3,
                                  cell_soft_weight=0.0))
+            variants.append(dict(variants[0], label_keep={'.*': .25}))
             for i, recipe in enumerate(variants):
                 with self.subTest(variant=i):
                     recipe.update(out=str(root / f'out{i}'), data=str(root / 'frames'))
@@ -711,11 +713,11 @@ class ReconcileCellsTest(unittest.TestCase):
 class WorkerCountTest(unittest.TestCase):
     def test_scales_with_available_memory(self):
         per_worker = 900 * 1024 ** 2          # 0.9 GiB
-        self.assertEqual(worker_count(20 * GIB, per_worker, 16), 15)    # (20-6)/0.9 = 15.5
-        self.assertEqual(worker_count(10 * GIB, per_worker, 16), 4)     # (10-6)/0.9 = 4.4
+        self.assertEqual(worker_count(20 * GIB, per_worker, 16), 16)
+        self.assertEqual(worker_count(10 * GIB, per_worker, 16), 7)
         self.assertEqual(worker_count(28 * GIB, 512 * 1024 ** 2, 8), 8)  # 上限
-        self.assertEqual(worker_count(4 * GIB, per_worker, 16), 1)      # 低于保留也不为 0
-        self.assertEqual(MEMORY_RESERVE_BYTES, 6 * GIB)
+        self.assertEqual(worker_count(2 * GIB, per_worker, 16), 1)
+        self.assertEqual(MEMORY_RESERVE_BYTES, 3 * GIB)
 
     def test_unknown_memory_or_estimate_keeps_the_upper_limit(self):
         self.assertEqual(worker_count(None, 900 * 1024 ** 2, 16), 16)   # 没有 /proc
@@ -737,6 +739,32 @@ class WorkerCountTest(unittest.TestCase):
         self.assertEqual(command[command.index('--frames') + 1], '/tmp/probe-frames')
         self.assertEqual(command[command.index('--out') + 1], '/tmp/probe/oomprobe_1')
         self.assertEqual(command[command.index('--seed-offset') + 1], '5')
+
+    def test_group_command_admits_the_start_width_and_the_cap(self):
+        """task138: 一组开工时把'开工宽度'和'上限'分开传，池子才有扩容空间。"""
+        args = SimpleNamespace(python=Path('/nonexistent/python'), workers=16,
+                               rollout_policy=Path('/m/student.pt'), static_value=Path('/m/static.pt'),
+                               value=Path('/m/value.pt'), executable=Path('/m/pvz-portable'),
+                               resource_dir=Path('/m/resources'), frames=Path('/m/frames'),
+                               out=Path('/m/out'))
+        command = command_for(args, Path('/m/panel.json'), 'day_l7', 5, 48, 'c1d7m100',
+                              workers=2, upper_workers=16, per_worker_bytes=2 * GIB,
+                              headroom_bytes=4 * GIB)
+        self.assertEqual(command[command.index('--workers') + 1], '16')
+        self.assertEqual(command[command.index('--initial-workers') + 1], '2')
+        self.assertEqual(command[command.index('--worker-memory-bytes') + 1], str(2 * GIB))
+        self.assertEqual(command[command.index('--memory-headroom-bytes') + 1], str(4 * GIB))
+
+    def test_growth_args_keep_the_old_fixed_width(self):
+        args = SimpleNamespace(workers=16)
+        # 没有声明上限（探针、一次性诊断）= 固定宽度，行为与 task138 之前一致。
+        self.assertEqual(growth_args(args, 3, None, 0, 0), ['--workers', '3'])
+        # 上限已给但没实测 RSS：池子不扩容，参数仍写明上限供日志审计。
+        self.assertEqual(growth_args(args, 3, 16, 0, 0),
+                         ['--workers', '16', '--initial-workers', '3',
+                          '--worker-memory-bytes', '0', '--memory-headroom-bytes', '0'])
+        # 宽度已到上限且没有实测值：不必多传参数。
+        self.assertEqual(growth_args(args, 16, 16, 0, 0), ['--workers', '16'])
 
     def test_startup_estimate_without_probe(self):
         import curriculum_queue as queue
@@ -782,6 +810,69 @@ class TrainingRestartTest(unittest.TestCase):
             statuses = {job['round']: job['status'] for job in state['training_jobs']}
             self.assertEqual(statuses, {1: 'queued', 2: 'queued', 3: 'done'})   # done 不动
             self.assertEqual(len(pipeline.futures), 2)
+
+    def test_supersede_targets_the_newest_waiting_round(self):
+        # task141：只有"会带来更新数据"的作业才使旧作业作废；isolated / 已 superseded 不算。
+        from curriculum_queue import TrainingPipeline
+        pipeline = TrainingPipeline.__new__(TrainingPipeline)
+        jobs = [dict(round=index, status='queued') for index in (28, 29, 30)]
+        pipeline.state = {'training_jobs': jobs}
+        self.assertEqual([pipeline._superseded_by(job) for job in jobs], [30, 30, None])
+        pipeline.state['training_jobs'].append(dict(round=31, status='failed', isolated=True))
+        pipeline.state['training_jobs'].append(dict(round=32, status='superseded'))
+        self.assertEqual(pipeline._superseded_by(jobs[0]), 30)
+        pipeline.state['training_jobs'].append(dict(round=31, status='failed', attempts=1))
+        self.assertEqual(pipeline._superseded_by(jobs[0]), 31)   # 会重试的新作业仍然算
+
+    def test_backlog_trains_only_the_newest_round(self):
+        # task141：队列 [28, 29, 30] 时执行器只训 30；28/29 标 superseded，记录被谁取代，
+        # 不训练不过门禁；重启后两者保持 superseded，不会被重新排队。
+        from curriculum_queue import GATE_VERSION, TrainingPipeline
+        with tempfile.TemporaryDirectory() as tmp:
+            jobs = [self._job(tmp, 'queued', index) for index in (28, 29, 30)]
+            for job in jobs:
+                job['seed_block'] = [1000, 1008]
+            state = {'training_jobs': jobs}
+            args = SimpleNamespace(state=Path(tmp) / 'state.json', log=Path(tmp) / 'log',
+                                   python=Path(sys.executable), seed_ledger=Path(tmp) / 'ledger.json',
+                                   gate_version=GATE_VERSION)
+            commands = []
+            def fake_command(self, command, log):
+                commands.append('pack' if command == ['pack'] else 'train')
+                return 0
+            def fake_evaluate(self, job):
+                return {'promotion': dict(version=GATE_VERSION,
+                                          policy=curriculum_queue.promotion_policy(GATE_VERSION),
+                                          approved=False, contract={},
+                                          reasons=['evaluation_error: stub'])}
+            with mock.patch.object(TrainingPipeline, '_plan_build', lambda self, recipe: None), \
+                    mock.patch.object(TrainingPipeline, '_admit', lambda self: None), \
+                    mock.patch.object(TrainingPipeline, '_prepare_corpus', lambda self, labels: None), \
+                    mock.patch.object(TrainingPipeline, '_command', fake_command), \
+                    mock.patch.object(TrainingPipeline, '_evaluate', fake_evaluate), \
+                    mock.patch.object(TrainingPipeline, 'evaluation_contract', lambda self, job: {}), \
+                    mock.patch.object(curriculum_queue, 'load_recipe',
+                                      lambda path, kind=None: {'labels': ['x'], 'data': '/tmp/frames'}), \
+                    mock.patch.object(curriculum_queue, 'pack_command', lambda args, labels: ['pack']):
+                pipeline = TrainingPipeline(args, state)
+                pipeline.executor.shutdown(wait=True)
+                pipeline.poll()
+                statuses = {job['round']: job['status'] for job in state['training_jobs']}
+                self.assertEqual(statuses, {28: 'superseded', 29: 'superseded', 30: 'done'})
+                self.assertEqual({job['round']: job.get('superseded_by')
+                                  for job in state['training_jobs'][:2]}, {28: 30, 29: 30})
+                self.assertEqual(commands, ['pack', 'train'])       # 只有第 30 轮真的训练
+                log = (Path(tmp) / 'log').read_text()
+                self.assertEqual(log.count('superseded by round 30'), 2)
+                self.assertFalse((Path(tmp) / 'ledger.json').exists())   # 种子账本未被写入
+                saved = json.loads((Path(tmp) / 'state.json').read_text())
+                self.assertEqual([job['status'] for job in saved['training_jobs']],
+                                 ['superseded', 'superseded', 'done'])
+                restarted = TrainingPipeline(args, saved)           # 重启：不复活旧作业
+                restarted.executor.shutdown(wait=True)
+                self.assertEqual(restarted.futures, [])
+                self.assertEqual([job['status'] for job in saved['training_jobs']],
+                                 ['superseded', 'superseded', 'done'])
 
     def test_run_reuses_trained_json_without_retraining(self):
         # 训练完成（trained.json 已写）、评估前被杀：重启后凭 sha 校验复用报告，直接进评估，
@@ -949,11 +1040,12 @@ class DemoStartCellsTest(unittest.TestCase):
         item = plan[0]
         self.assertEqual((item['task_id'], item['demo_decision'], item['offset']), (self.BASE, 800, 0))
         self.assertEqual(item['future_seeds'], [900, 901])
-        self.assertEqual(item['label'], 'c1demofog33cactussnowm200s800')
+        self.assertEqual(item['label'], 'c1demofog33cactussnowm200s800_o0')
         self.assertEqual(item['multiplier'], 800)             # 档位 = 起点决策号
         state['offsets'][self.BASE] = 5
         plan, _ = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan[0]['future_seeds'], [905])       # 只剩一个未来种子
+        self.assertEqual(plan[0]['label'], 'c1demofog33cactussnowm200s800_o5')
         state['offsets'][self.BASE] = 6
         plan, changes = plan_round(state, {self.BASE: {'seeds': [42]}}, NAMES, VALUES, manifests, budget=1, per_group=1)
         self.assertEqual(plan, [])
@@ -1375,3 +1467,132 @@ class WorkerProbeFloorTest(unittest.TestCase):
             self.assertEqual(queue.startup_worker_estimate(args, [dict()]), queue.GIB // 2)
         finally:
             queue.measure_worker_bytes, queue.mem_available_bytes = measure, memory
+
+
+class RandomDeckCellsTest(unittest.TestCase):
+    """task137：随机卡组格（0.5 起步的阶梯、每轮份额上限、挑选/训练两批卡组）。"""
+
+    def setUp(self):
+        import make_random_deck_cells as generator
+        registry = json.loads((ROOT / 'configs/random_deck_cells_v5.json').read_text())
+        panels = generator.build_panels(registry)
+        self.tasks = {task['task_id']: task for task in panels['training_panel']['tasks']}
+        self.names = {'m%03d' % round(m * 100): m for m in generator.LADDER if m != 1.0}
+        self.one_cell = {task_id: task for task_id, task in self.tasks.items()
+                         if task_id.startswith('rd137_l7_train_d01')}
+
+    def test_load_panel_merges_extra_manifest(self):
+        from curriculum_queue import load_panel
+        with tempfile.TemporaryDirectory() as directory:
+            main = Path(directory) / 'main.json'
+            main.write_text(json.dumps(dict(tasks=[dict(task_id='day_l7_train_d7', level=7,
+                                                        zombie_count_multiplier=1.0, seeds=[1])])))
+            extra = Path(directory) / 'extra.json'
+            extra.write_text(json.dumps(dict(tasks=list(self.one_cell.values()))))
+            with mock.patch.object(curriculum_queue, 'source_paths', lambda overrides: {}):
+                tasks, values, names, manifests = load_panel(main, [extra])
+        self.assertEqual(values, [1.0])                      # <1 档不进全局倍率表
+        self.assertEqual(names['m050'], 0.5)
+        self.assertIn('rd137_l7_train_d01_m050', tasks)
+        self.assertEqual(manifests['rd137_l7_train_d01'], extra)
+        self.assertEqual(manifests['day_l7_train_d7'], main)
+
+    def test_load_panel_rejects_duplicate_task(self):
+        from curriculum_queue import load_panel
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / 'p.json'
+            document = dict(tasks=list(self.one_cell.values()))
+            path.write_text(json.dumps(document))
+            with mock.patch.object(curriculum_queue, 'source_paths', lambda overrides: {}):
+                with self.assertRaises(ValueError):
+                    load_panel(path, [path])
+
+    def test_cells_start_at_half_and_follow_the_manifest_ladder(self):
+        state = dict(cells={}, retired_cells={})
+        reconcile_cells(state, self.tasks, self.names, {})
+        cell_state = state['cells']['rd137_l7_train_d01']
+        self.assertEqual(cell_state['ladder'], [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0])
+        self.assertEqual(cell_state['mult_index'], 0)
+        self.assertTrue(cell_state['random_deck_cell'])
+        self.assertEqual(cell_level(cell_state, VALUES), 0.5)
+
+    def test_random_cells_are_retired_when_the_extra_panel_is_dropped(self):
+        state = dict(cells={}, retired_cells={})
+        reconcile_cells(state, self.tasks, self.names, {})
+        self.assertIn('rd137_l7_train_d01', state['cells'])
+        lines = reconcile_cells(state, {'day_l7_train_d7': self.tasks['rd137_l7_train_d01']},
+                                self.names, {})
+        self.assertNotIn('rd137_l7_train_d01', state['cells'])
+        self.assertIn('rd137_l7_train_d01', state['retired_cells'])
+        self.assertTrue(any('cell retired' in line for line in lines))
+
+    def test_half_multiplier_demotes_and_floor_holds(self):
+        ladder = [0.5, 0.75, 1.0, 1.25]
+        cells = {
+            'top': dict(family='f', level=7, mult_index=2, last_round=0, random_deck_cell=True,
+                        ladder=list(ladder),
+                        windows={'1.0': {'recent': [0] * 10, 'wins': 0, 'games': 10}}),
+            'bottom': dict(family='f', level=7, mult_index=0, last_round=0, random_deck_cell=True,
+                           ladder=list(ladder),
+                           windows={'0.5': {'recent': [0] * 10, 'wins': 0, 'games': 10}}),
+        }
+        adjust(cells, VALUES)
+        self.assertEqual(cells['top']['mult_index'], 1)     # 1.0 -> 0.75
+        self.assertEqual(cells['bottom']['mult_index'], 0)  # 0.5 不再降
+
+    def test_allocation_keeps_random_cells_under_the_share_cap(self):
+        cells = {f'day_l{i}_train_d7': cell(0, 10, last_round=0) for i in range(12)}
+        cells.update({f'rd137_l7_train_d0{i}': dict(family='f', level=7, mult_index=0, last_round=0,
+                                                    random_deck_cell=True, windows={})
+                      for i in range(1, 5)})
+        picks = allocate(cells, VALUES, budget=100, per_group=10, round_index=3,
+                         random_deck_cap=15)
+        random_games = sum(games for base, _m, games in picks
+                           if cells[base].get('random_deck_cell'))
+        self.assertLessEqual(random_games, 15)
+        self.assertGreater(random_games, 0)
+        # 预算是上限：15 局保底 + 8 个整组 80 局，剩 5 局不够一组。
+        self.assertLessEqual(sum(games for _b, _m, games in picks), 100)
+
+    def test_zero_cap_excludes_random_cells(self):
+        cells = {f'day_l{i}_train_d7': cell(0, 10, last_round=0) for i in range(4)}
+        cells['rd137_l7_train_d01'] = dict(family='f', level=7, mult_index=0, last_round=0,
+                                           random_deck_cell=True, windows={})
+        picks = allocate(cells, VALUES, budget=20, per_group=10, round_index=1,
+                         random_deck_cap=0)
+        self.assertNotIn('rd137_l7_train_d01', {base for base, _m, _g in picks})
+
+    def test_plan_round_uses_fifteen_percent_of_the_budget(self):
+        state = make_state(self.tasks, self.names, {}, {}, 'panel')
+        plan, _changes = plan_round(state, self.tasks, self.names, VALUES,
+                                    {task_id: Path('/tmp/panel.json') for task_id in self.tasks},
+                                    budget=200, per_group=10)
+        random_games = sum(item['games'] for item in plan if item['base'].startswith('rd137_'))
+        self.assertLessEqual(random_games, int(200 * 0.15))
+        self.assertEqual({item['multiplier'] for item in plan if item['base'].startswith('rd137_')},
+                         {0.5})
+
+    def test_data_levers_quota_and_external_cells_use_existing_planner(self):
+        import make_random_deck_cells as generator
+        registry = json.loads(generator.REGISTRY.read_text())
+        external = dict(task_id='rd159_l45_train_cad0fa53dae0', level=45, terrain='roof',
+                        deck=[1, 2, 3, 4, 6, 20, 29, 30, 32, 33], source='task148')
+        panels = generator.build_panels(registry, [external])
+        tasks = {task['task_id']: task for task in panels['training_panel']['tasks']}
+        def planned(**kwargs):
+            state = make_state(tasks, self.names, {}, {}, 'panel')
+            state['round'] = 4
+            for base, cell_state in state['cells'].items():
+                cell_state['last_round'] = 0 if base == external['task_id'] else 1
+            return plan_round(state, tasks, self.names, VALUES,
+                              {task_id: Path('/tmp/panel.json') for task_id in tasks},
+                              budget=768, per_group=48, **kwargs)[0]
+        baseline = planned()
+        self.assertEqual(baseline, planned(random_deck_share=.15))
+        for plan, count in ((baseline, 4), (planned(random_deck_share=.25), 8)):
+            self.assertEqual(len(plan), count)
+            self.assertEqual({item['games'] for item in plan}, {24})
+            self.assertEqual({item['multiplier'] for item in plan}, {.5})
+            self.assertIn(external['task_id'], {item['base'] for item in plan})
+        self.assertEqual(planned(random_deck_share=0), [])
+

@@ -1,0 +1,1591 @@
+{
+ "purpose": "task165 training exclusion only; original gate/selection panels unchanged",
+ "tasks": [
+  {
+   "task_id": "task101_l1_day_d7",
+   "level": 1,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l2_day_d7",
+   "level": 2,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l3_day_d7",
+   "level": 3,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l4_day_d7",
+   "level": 4,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l6_day_d7",
+   "level": 6,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l7_day_d7",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l8_day_d7",
+   "level": 8,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l9_day_d7",
+   "level": 9,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l10_day_d7",
+   "level": 10,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l11_night_n10",
+   "level": 11,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l12_night_n10",
+   "level": 12,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l13_night_n10",
+   "level": 13,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l14_night_n10",
+   "level": 14,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l16_night_n10",
+   "level": 16,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l17_night_n10",
+   "level": 17,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l18_night_n10",
+   "level": 18,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l19_night_n10",
+   "level": 19,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l20_night_n10",
+   "level": 20,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l21_pool_p9k",
+   "level": 21,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l22_pool_p9k",
+   "level": 22,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l23_pool_p9k",
+   "level": 23,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l24_pool_p9k",
+   "level": 24,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l26_pool_p9k",
+   "level": 26,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l27_pool_p9k",
+   "level": 27,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l28_pool_p9k",
+   "level": 28,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l29_pool_p9k",
+   "level": 29,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l31_fog_selected",
+   "level": 31,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    5,
+    23,
+    17,
+    19,
+    2,
+    3
+   ]
+  },
+  {
+   "task_id": "task101_l32_fog_selected",
+   "level": 32,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    31,
+    3
+   ]
+  },
+  {
+   "task_id": "task101_l33_fog_selected",
+   "level": 33,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l34_fog_selected",
+   "level": 34,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l36_fog_selected",
+   "level": 36,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ]
+  },
+  {
+   "task_id": "task101_l37_fog_selected",
+   "level": 37,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ]
+  },
+  {
+   "task_id": "task101_l38_fog_selected",
+   "level": 38,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ]
+  },
+  {
+   "task_id": "task101_l39_fog_selected",
+   "level": 39,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    5
+   ]
+  },
+  {
+   "task_id": "task101_l41_roof_demo",
+   "level": 41,
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    15,
+    3,
+    2,
+    17,
+    4,
+    35
+   ]
+  },
+  {
+   "task_id": "task101_l46_roof_demo",
+   "level": 46,
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    15,
+    3,
+    2,
+    17,
+    4,
+    35
+   ]
+  },
+  {
+   "task_id": "day_l7_eval_d7p_holdout1",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    27,
+    5,
+    32,
+    3
+   ]
+  },
+  {
+   "task_id": "day_l9_eval_d7p_holdout2",
+   "level": 9,
+   "deck": [
+    7,
+    2,
+    5,
+    38,
+    4,
+    1,
+    3
+   ]
+  },
+  {
+   "task_id": "day_l1_train_d7_m250",
+   "level": 1,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "day_l3_train_d7_m250",
+   "level": 3,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "day_l4_train_d7_m250",
+   "level": 4,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "day_l7_train_d7_m175",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "day_l8_train_d7q",
+   "level": 8,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "day_l9_train_d7q",
+   "level": 9,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "night_l11_train_n10q_m175",
+   "level": 11,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l12_train_n10q",
+   "level": 12,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l14_train_n10q",
+   "level": 14,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l16_train_n10_m150",
+   "level": 16,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l17_train_n10q",
+   "level": 17,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l18_train_n10q",
+   "level": 18,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l19_train_n10",
+   "level": 19,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "night_l19_train_n10q",
+   "level": 19,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "pool_l26_train_p9k",
+   "level": 26,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "pool_l27_train_p9k",
+   "level": 27,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "day_l7_train_rand",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "task_id": "night_l12_train_rand",
+   "level": 12,
+   "deck": [
+    0,
+    1,
+    9,
+    2,
+    3,
+    4,
+    5
+   ]
+  },
+  {
+   "task_id": "pool_l21_train_rand",
+   "level": 21,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    16,
+    43
+   ]
+  },
+  {
+   "task_id": "day_l7_select_d7p_holdout3",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    7,
+    37
+   ]
+  },
+  {
+   "task_id": "day_l9_select_d7p_holdout4",
+   "level": 9,
+   "deck": [
+    3,
+    7,
+    29,
+    4,
+    5,
+    1,
+    0
+   ]
+  },
+  {
+   "task_id": "task101_l1_day_d7",
+   "level": 1,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l2_day_d7",
+   "level": 2,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l3_day_d7",
+   "level": 3,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l4_day_d7",
+   "level": 4,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l6_day_d7",
+   "level": 6,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l7_day_d7",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l8_day_d7",
+   "level": 8,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l9_day_d7",
+   "level": 9,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l10_day_d7",
+   "level": 10,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l11_night_n10",
+   "level": 11,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l12_night_n10",
+   "level": 12,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l13_night_n10",
+   "level": 13,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l14_night_n10",
+   "level": 14,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l16_night_n10",
+   "level": 16,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l17_night_n10",
+   "level": 17,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l18_night_n10",
+   "level": 18,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l19_night_n10",
+   "level": 19,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l20_night_n10",
+   "level": 20,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    8,
+    9,
+    11
+   ]
+  },
+  {
+   "task_id": "task101_l21_pool_p9k",
+   "level": 21,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l22_pool_p9k",
+   "level": 22,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l23_pool_p9k",
+   "level": 23,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l24_pool_p9k",
+   "level": 24,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l26_pool_p9k",
+   "level": 26,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l27_pool_p9k",
+   "level": 27,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l28_pool_p9k",
+   "level": 28,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l29_pool_p9k",
+   "level": 29,
+   "deck": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    7,
+    16,
+    19
+   ]
+  },
+  {
+   "task_id": "task101_l31_fog_selected",
+   "level": 31,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    5,
+    23,
+    17,
+    19,
+    2,
+    3
+   ]
+  },
+  {
+   "task_id": "task101_l32_fog_selected",
+   "level": 32,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    31,
+    3
+   ]
+  },
+  {
+   "task_id": "task101_l33_fog_selected",
+   "level": 33,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l34_fog_selected",
+   "level": 34,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    7
+   ]
+  },
+  {
+   "task_id": "task101_l36_fog_selected",
+   "level": 36,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ]
+  },
+  {
+   "task_id": "task101_l37_fog_selected",
+   "level": 37,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ]
+  },
+  {
+   "task_id": "task101_l38_fog_selected",
+   "level": 38,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ]
+  },
+  {
+   "task_id": "task101_l39_fog_selected",
+   "level": 39,
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    5
+   ]
+  },
+  {
+   "task_id": "task101_l41_roof_demo",
+   "level": 41,
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    15,
+    3,
+    2,
+    17,
+    4,
+    35
+   ]
+  },
+  {
+   "task_id": "task101_l46_roof_demo",
+   "level": 46,
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    15,
+    3,
+    2,
+    17,
+    4,
+    35
+   ]
+  },
+  {
+   "task_id": "day_l7_eval_d7p_holdout1",
+   "level": 7,
+   "deck": [
+    0,
+    1,
+    2,
+    27,
+    5,
+    32,
+    3
+   ]
+  },
+  {
+   "task_id": "day_l9_eval_d7p_holdout2",
+   "level": 9,
+   "deck": [
+    7,
+    2,
+    5,
+    38,
+    4,
+    1,
+    3
+   ]
+  },
+  {
+   "task_id": "task148_l42_roof_r2_d1",
+   "level": 42,
+   "deck": [
+    1,
+    2,
+    14,
+    15,
+    17,
+    30,
+    32,
+    33,
+    35,
+    41
+   ]
+  },
+  {
+   "task_id": "task148_l45_roof_r2_d2",
+   "level": 45,
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ]
+  },
+  {
+   "task_id": "rd137_l7_eval_d01",
+   "level": 7,
+   "deck": [
+    35,
+    17,
+    30,
+    9,
+    1,
+    3,
+    12,
+    0
+   ]
+  },
+  {
+   "task_id": "rd137_l8_eval_d01",
+   "level": 8,
+   "deck": [
+    9,
+    18,
+    35,
+    1,
+    0,
+    26,
+    8,
+    13,
+    32,
+    34
+   ]
+  },
+  {
+   "task_id": "rd137_l12_eval_d01",
+   "level": 12,
+   "deck": [
+    21,
+    34,
+    8,
+    1,
+    23,
+    31,
+    0,
+    22,
+    17,
+    11
+   ]
+  },
+  {
+   "task_id": "rd137_l14_eval_d01",
+   "level": 14,
+   "deck": [
+    8,
+    41,
+    9,
+    29,
+    4,
+    1,
+    5
+   ]
+  },
+  {
+   "task_id": "rd137_l24_eval_d01",
+   "level": 24,
+   "deck": [
+    23,
+    1,
+    7,
+    4,
+    16,
+    21,
+    29,
+    3,
+    2
+   ]
+  },
+  {
+   "task_id": "rd137_l26_eval_d01",
+   "level": 26,
+   "deck": [
+    12,
+    32,
+    1,
+    35,
+    26,
+    21,
+    43,
+    15,
+    23,
+    16
+   ]
+  },
+  {
+   "task_id": "rd137_l33_eval_d01",
+   "level": 33,
+   "deck": [
+    2,
+    32,
+    5,
+    7,
+    24,
+    40,
+    9,
+    29,
+    26,
+    16
+   ]
+  },
+  {
+   "task_id": "rd137_l37_eval_d01",
+   "level": 37,
+   "deck": [
+    17,
+    16,
+    41,
+    8,
+    39,
+    0,
+    1
+   ]
+  }
+ ]
+}

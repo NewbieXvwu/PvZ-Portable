@@ -79,6 +79,57 @@ def test_two_epoch_training_is_bitwise_identical():
                                                obs='v2', cells=True, packet_head='identity'))
 
 
+def test_label_keep_whole_archives_deterministic_and_reuses_unaffected_segments(tmp_path):
+    from pvz_training_pack import keep_archive, pack_flags
+    data = tmp_path / 'data'
+    fixture(data, ['old_a', 'new_b'])
+    for seed in range(103, 112):
+        path = data / f'seed_{seed}' / 'old_a' / 'frames.npz'
+        path.parent.mkdir(parents=True)
+        write_frames(path, game_frames(18))
+    labels = ['old_a', 'new_b']
+    baseline = options(data, labels, obs='v2', wait_keep=.5)
+    disabled = options(data, labels, obs='v2', wait_keep=.5, label_keep={'old_': 1})
+    assert disabled == baseline  # Existing pack identity and wait-row RNG stay unchanged.
+    original = pack(data, baseline)
+    full = pack_monolithic(data, disabled, out=tmp_path / 'disabled.npz')
+    assert_payload_equal(trainer.read_pack(original), trainer.read_pack(full))
+    with np.load(original) as stored:
+        before = [original.parent / name for name in stored['segments'].tolist()]
+    stamps = {path: path.stat().st_mtime_ns for path in before}
+
+    rules = {'old_': .5}
+    contract = options(data, labels, obs='v2', label_keep=rules)
+    flags = pack_flags(contract)
+    assert json.loads(flags[flags.index('--label-keep') + 1]) == contract['label_keep']
+    # Build a baseline with the same row options so the unaffected segment can be reused.
+    pack(data, options(data, labels, obs='v2'))
+    existing = set((data / 'packs/segments').glob('*.npz'))
+    sampled = pack(data, contract)
+    assert len(set((data / 'packs/segments').glob('*.npz')) - existing) == 1
+    observed = {}
+    trainer.load(data, set(labels), obs='v2', label_keep=rules,
+                 row_observer=lambda path, rows: observed.update({path: rows.tolist()}))
+    expected = {path: list(range(1, 18)) for path in data.glob('seed_*/*/frames.npz')
+                if keep_archive(data, path, rules)}
+    assert observed == expected
+    assert 0 < sum(path.parent.name == 'old_a' for path in observed) < 12
+    assert all(keep_archive(tmp_path / 'copy', tmp_path / 'copy' / path.relative_to(data), rules)
+               for path in observed)
+    fixture(data, ['later'])
+    expanded = options(data, labels + ['later'], obs='v2', label_keep=rules)
+    pack(data, expanded)
+    again = {}
+    trainer.load(data, set(labels + ['later']), obs='v2', label_keep=rules,
+                 row_observer=lambda path, rows: again.update({path: rows.tolist()}))
+    assert {path: rows for path, rows in again.items() if path.parent.name != 'later'} == observed
+    assert all(path.stat().st_mtime_ns == stamp for path, stamp in stamps.items())
+    dropped = pack(data, options(data, labels, obs='v2', label_keep={'old_': 0}))
+    assert len(trainer.read_pack(dropped)[2]) == 3 * 17
+    with pytest.raises(ValueError, match='no archives retained'):
+        pack(data, options(data, labels, label_keep={'.*': 0}))
+
+
 def test_shared_merge_reuses_payload_and_isolates_weights(tmp_path):
     data = tmp_path / 'data'
     fixture(data, ['a', 'b'])

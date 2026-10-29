@@ -378,14 +378,15 @@ def _pack_flags(options: dict) -> str:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
-         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None):
+         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None,
+         label_keep: dict[str, float] | None = None):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels))
+                           sources=archive_fingerprint(data, labels), label_keep=label_keep)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -742,8 +743,31 @@ def main(*, step_observer=None) -> None:
         torch.manual_seed(args.seed)
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
-    loaded = load(args.data, **training_row_options(args.resolved_recipe), row_observer=observer)
+    load_options = training_row_options(args.resolved_recipe)
+    label_adjustment = None
+    if args.pack_recipe is not None:
+        from pvz_recipe import load_recipe
+        from pvz_training_rows import LabelWeightAdjustment
+        packed_options = training_row_options(load_recipe(args.pack_recipe, 'training'))
+        comparable = lambda options: {k:v for k,v in options.items() if k not in ('label_weight','source_weight')}
+        if comparable(load_options) != comparable(packed_options):
+            raise ValueError('shared pack and candidate row options differ')
+        label_adjustment = LabelWeightAdjustment(load_options['label_weight'], packed_options['label_weight'])
+        previous_observer = observer
+        def observer(path, rows):
+            label_adjustment.observe(path, rows)
+            if previous_observer: previous_observer(path, rows)
+        load_options['label_weight'] = packed_options['label_weight']
+    loaded = load(args.data, **load_options, row_observer=observer)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
+    if label_adjustment is not None:
+        label_adjustment.apply(weight)
+        import hashlib
+        (args.out / 'shared_pack_weights.json').write_text(json.dumps(dict(
+            pack_recipe=str(args.pack_recipe), pack_recipe_sha256=hashlib.sha256(args.pack_recipe.read_bytes()).hexdigest(),
+            effective_label_weight=args.resolved_recipe['label_weight'],
+            packed_label_weight=packed_options['label_weight'],
+            factors=label_adjustment.factors, rows=len(weight)), indent=1)+'\n')
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started
@@ -795,19 +819,8 @@ def main(*, step_observer=None) -> None:
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
-        from pvz_rollout_policy import load_student
-        initial = load_student(args.init)
-        weights = initial.state_dict()
-        if net.aux is not None:
-            weights.update({k: v for k, v in net.state_dict().items() if k.startswith("aux.")})
-        if args.obs == "v2" and initial.obs == "v1" and args.context == initial.context:
-            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 9))
-            weights["scalar.0.weight"] = F.pad(weights["scalar.0.weight"], (0, 7))
-        if args.obs == "v2fog" and initial.obs == "v2" and args.context == initial.context:
-            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 1))
-        if args.obs == "v2fogstack4" and initial.obs == "v2" and args.context == initial.context:
-            weights["trunk.0.weight"] = F.pad(weights["trunk.0.weight"], (0, 0, 0, 0, 0, 103))
-        net.load_state_dict(weights)
+        from pvz_rollout_policy import load_student, warm_start_student
+        warm_start_student(net, load_student(args.init))
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())

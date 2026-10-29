@@ -47,6 +47,17 @@ class RecipeTests(unittest.TestCase):
             with self.subTest(update=update), self.assertRaisesRegex(ValueError, 'requires'):
                 validate(dict(self.base(), source_weight=update))
 
+    def test_label_keep_rules(self):
+        from pvz_recipe import training_row_options
+        self.assertNotIn('label_keep', training_row_options(validate(self.base())))
+        rules = {'old_': .25, 'one$': 0}
+        recipe = validate(dict(self.base(), label_keep=rules))
+        self.assertEqual(training_row_options(recipe)['label_keep'], rules)
+        for rules in ([], {'[': .5}, {'': .5}, {'one': -1}, {'one': 1.1},
+                      {'one': True}, {'one': float('nan')}):
+            with self.subTest(rules=rules), self.assertRaises(ValueError):
+                validate(dict(self.base(), label_keep=rules))
+
     def test_tempered_recipe_only_changes_the_level_balance(self):
         reference = load_recipe(ROOT/'recipes/dw4i2_rebalanced.json', 'training')
         tempered = load_recipe(ROOT/'recipes/dw4i2_rebalanced_p05.json', 'training')

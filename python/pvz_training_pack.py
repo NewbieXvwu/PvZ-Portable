@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import re
 from pathlib import Path
 
 import sys
@@ -62,9 +64,41 @@ def training_rows(frame_path):
 
 def segment_options(options: dict, label: str, sources: str) -> dict:
     """Unrelated labels/weights never invalidate an immutable label segment."""
-    return {**options, 'labels': [label], 'sources': sources,
+    result = {**options, 'labels': [label], 'sources': sources,
             'label_weight': {label: options['label_weight'][label]}
             if label in options['label_weight'] else {}}
+    result.pop('label_keep', None)
+    keep = label_keep_options([label], options.get('label_keep'))
+    if keep:
+        result['label_keep'] = keep
+    return result
+
+
+def label_keep_options(labels, rules):
+    """Regexes match from the start of a label; overlapping rules use the lowest rate."""
+    if not isinstance(rules, dict) and rules is not None:
+        raise ValueError('label_keep: expected object')
+    compiled = []
+    for pattern, rate in (rules or {}).items():
+        if not isinstance(pattern, str) or not pattern:
+            raise ValueError('label_keep: expected nonempty regex')
+        try:
+            regex = re.compile(pattern)
+        except re.error as error:
+            raise ValueError(f'label_keep: invalid regex {pattern!r}') from error
+        if type(rate) not in (int, float) or not math.isfinite(rate) or not 0 <= rate <= 1:
+            raise ValueError(f'label_keep.{pattern}: expected fraction in 0..1')
+        compiled.append((regex, rate))
+    return {re.escape(label) + '$': rate for label in sorted(labels)
+            if (rate := min((rate for regex, rate in compiled if regex.match(label)), default=1.)) < 1}
+
+
+def keep_archive(data, path, rules):
+    rate = min((rate for pattern, rate in (rules or {}).items() if re.match(pattern, path.parent.name)),
+               default=1.)
+    # Stable across corpus growth, rounds, copies and archive compression formats.
+    key = path.parent.relative_to(data).as_posix().encode()
+    return int.from_bytes(hashlib.sha256(key).digest()[:8], 'big') < rate * 2**64
 
 
 def segment_path(data: Path, options: dict) -> Path:
@@ -73,11 +107,13 @@ def segment_path(data: Path, options: dict) -> Path:
 
 def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = False,
                  aux_horizon: int = 0, packet_head: str = "slot", with_context: bool = False,
-                 label_weight: dict[str, float] | None = None, sources: str | None = None) -> dict:
+                 label_weight: dict[str, float] | None = None, sources: str | None = None,
+                 label_keep: dict[str, float] | None = None) -> dict:
     """Everything that changes the rows or their values: a pack is valid for exactly one tuple."""
+    keep = label_keep_options(labels, label_keep)
     return {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
             "obs": obs, "cells": bool(cells), "aux_horizon": int(aux_horizon), "packet_head": packet_head,
-            "with_context": bool(with_context),
+            "with_context": bool(with_context), **({'label_keep': keep} if keep else {}),
             "label_weight": {k: round(float(v), 6) for k, v in sorted((label_weight or {}).items())}}
 
 
@@ -98,4 +134,6 @@ def pack_flags(options: dict) -> list[str]:
         flags.append('--context')
     if options['label_weight']:
         flags += ['--label-weight', ','.join(f'{k}={v}' for k,v in options['label_weight'].items())]
+    if options.get('label_keep'):
+        flags += ['--label-keep', json.dumps(options['label_keep'])]
     return flags

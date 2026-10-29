@@ -11,7 +11,7 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 import curriculum_queue as queue
-from pvz_selection_refresh import make_plan, SELECTION_POOLS, SELECTION_BLOCK_SIZE
+from pvz_selection_refresh import make_plan, selection_templates, SELECTION_POOLS, SELECTION_BLOCK_SIZE
 from pvz_student_selection import assert_disjoint, seed_spans
 from promotion_gate import allocate_seed_block
 from test_curriculum_pipeline import setup, write_evaluation, write_selection
@@ -99,7 +99,7 @@ def test_two_trainers_overlap_failure_is_local_and_selection_precedes_gate(tmp_p
 def test_insufficient_resources_fall_back_to_serial(tmp_path, monkeypatch, resource):
     threads = set()
     if resource == 'host_memory':
-        monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 9 * queue.GIB)
+        monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 6 * queue.GIB)
     else:
         monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: 3 * queue.GIB)  # one fits, two do not
     def train(command, logfile):
@@ -155,32 +155,25 @@ def test_each_round_allocates_once_and_panels_never_overlap(tmp_path, monkeypatc
     ledger = json.loads((tmp_path / 'selection_seed_ledger.json').read_text())
     assert len(ledger['allocated']) == 2
     assert all(high - low == SELECTION_BLOCK_SIZE for low, high in ledger['allocated'])
-    assert all((Path(job['recipe']).parent / 'selection_state.json').is_file() for job in jobs)
     assert all((Path(job['recipe']).parent / 'selection_plan.json').is_file() for job in jobs)
 
 
-def test_current_incumbent_windows_refresh_eligible_cells(tmp_path):
+def test_consecutive_rounds_score_the_adventure_body_on_disjoint_seeds(tmp_path):
+    # task128: the panel no longer follows the incumbent's windows; every round
+    # re-plans the same adventure body on a fresh block from the selection ledger.
     model = tmp_path / 'new_incumbent.pt'
     model.write_bytes(b'new policy')
-    source = '/original_panel.json'
-    task = dict(task_id='t', level=7, deck=[0, 1, 2, 3, 4, 5], seeds=[30000])
-    templates = json.loads((ROOT / 'configs/student_selection_v2.json').read_text())
-    def state_with(label, wins):
-        folder = tmp_path / f'{label}_2'
-        folder.mkdir()
-        (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=str(model), dagger_beta=0, task_id='t')))
-        (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(won=bool(v), terminal=True)) for v in wins))
-        group = dict(base='t', multiplier=1, beta=0, student=str(model), label=label, games=2,
-                     task_id='t', manifest=source)
-        return dict(cells=dict(t=dict(windows={'1.0': dict(recent=wins)})), log=[dict(groups=[group])])
+    templates = selection_templates(ROOT / 'configs/student_selection_holdout.json',
+                                    ROOT / 'configs/gate_v5_panel.json')
     ledger = tmp_path / 'ledger.json'
-    first_block = allocate_seed_block(ledger, 384, pools=SELECTION_POOLS)
-    second_block = allocate_seed_block(ledger, 384, pools=SELECTION_POOLS)
-    first = make_plan(state_with('one', [1, 0]), model, tmp_path, templates, {source: dict(tasks=[task])}, first_block)
-    second = make_plan(state_with('two', [1, 1]), model, tmp_path, templates, {source: dict(tasks=[task])}, second_block)
-    assert len(first['cells']) == 1 and len(second['cells']) == 0
-    assert len(first['tasks']) == 4 and len(second['tasks']) == 3
+    first = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
+    second = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
+    assert len(first['adventure_tasks']) == 38
+    assert len(first['tasks']) == 48                      # 38 adventure + 8 random + 2 unseen
+    assert {len(task['seeds']) for task in first['tasks']} == {8, 16}
+    assert sum(len(task['seeds']) for task in first['tasks']) == 456
     assert_disjoint(first, list(seed_spans(second)))
+    assert first['score_only'] == first['selection_holdout_tasks']
 
 
 def test_locked_selection_ledger_handles_simultaneous_allocations(tmp_path):
@@ -233,6 +226,7 @@ def test_reservation_counts_both_live_training_trees(tmp_path, monkeypatch):
     pipeline.processes = {1: SimpleNamespace(pid=1), 3: SimpleNamespace(pid=3)}
     monkeypatch.setattr(queue, '_proc_table', lambda: {1: (0, queue.GIB), 2: (1, queue.GIB),
                                                      3: (0, queue.GIB), 4: (3, queue.GIB)})
+    monkeypatch.setattr(queue, '_anon_bytes', lambda pid: queue.GIB)
     try:
         assert pipeline.estimate_peak() == 6 * queue.GIB
         assert pipeline.reservation() == 2 * queue.GIB
@@ -241,25 +235,24 @@ def test_reservation_counts_both_live_training_trees(tmp_path, monkeypatch):
         pipeline.close()
 
 
-def test_mapped_training_data_forces_serial_admission(tmp_path, monkeypatch):
+def test_training_admission_uses_anonymous_peak(tmp_path, monkeypatch):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
     pipeline.last_train_peak = int(3.5 * queue.GIB)
-    pipeline.last_train_data_bytes = 11 * queue.GIB
     pipeline.train_parallelism, pipeline.training_admission = 2, True
     monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 24 * queue.GIB)
     monkeypatch.setattr(queue, 'mem_total_bytes', lambda: 25 * queue.GIB)
     try:
-        assert pipeline.estimate_peak() == 29 * queue.GIB
+        assert pipeline.estimate_peak() == 7 * queue.GIB
         pipeline._admit()
-        assert pipeline.train_parallelism == 1
-        assert pipeline.train_admission_record['fallback_reasons'] == ['host_memory']
-        assert pipeline.train_admission_record['required_bytes'] == int(20.5 * queue.GIB)
+        assert pipeline.train_parallelism == 2
+        assert pipeline.train_admission_record['fallback_reasons'] == []
+        assert pipeline.train_admission_record['required_bytes'] == 10 * queue.GIB
     finally:
         pipeline.close()
 
 
-def test_restart_recovers_data_bytes_from_selected_candidate_metrics(tmp_path):
+def test_restart_reserves_anonymous_peak_without_mapped_data(tmp_path):
     args, state = setup(tmp_path)
     model = tmp_path / 'seed_000001/student/model.pt'
     model.parent.mkdir(parents=True)
@@ -268,16 +261,16 @@ def test_restart_recovers_data_bytes_from_selected_candidate_metrics(tmp_path):
         packet_bytes=queue.GIB, tensor_bytes=queue.GIB))))
     state['training_jobs'] = [dict(round=1, status='done', recipe=str(args.recipe),
         model=str(tmp_path / 'selected/model.pt'), timing=dict(
-            train_peak_anon_bytes=3 * queue.GIB, selection=dict(best=str(model))))]
+            train_peak_anon_bytes=3 * queue.GIB, train_data_bytes=10 * queue.GIB,
+            selection=dict(best=str(model))))]
     pipeline = queue.TrainingPipeline(args, state)
     try:
-        assert pipeline.last_train_data_bytes == 10 * queue.GIB
-        assert pipeline.estimate_peak() == 13 * queue.GIB
+        assert pipeline.estimate_peak() == 3 * queue.GIB
     finally:
         pipeline.close()
 
 
-def test_first_training_reserves_pack_bytes_as_well_as_anonymous_peak(tmp_path):
+def test_pack_size_does_not_add_to_measured_anonymous_peak(tmp_path):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
     segments = pipeline.directory / 'frames/packs/segments'
@@ -285,7 +278,7 @@ def test_first_training_reserves_pack_bytes_as_well_as_anonymous_peak(tmp_path):
     (segments / 'one.npz').write_bytes(b'pack data')
     pipeline.last_train_peak = 3 * queue.GIB
     try:
-        assert pipeline.estimate_peak() == 3 * queue.GIB + len(b'pack data')
+        assert pipeline.estimate_peak() == 3 * queue.GIB
     finally:
         pipeline.close()
 
@@ -293,7 +286,7 @@ def test_first_training_reserves_pack_bytes_as_well_as_anonymous_peak(tmp_path):
 def test_resources_changing_during_admission_still_fall_back(tmp_path, monkeypatch):
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
-    values = iter([64 * queue.GIB, 9 * queue.GIB])
+    values = iter([64 * queue.GIB, 6 * queue.GIB])
     monkeypatch.setattr(queue, 'mem_available_bytes', lambda: next(values))
     pipeline.train_parallelism, pipeline.training_admission = 2, True
     try:
@@ -314,7 +307,7 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
                                       'allocated': [[200000000, 200000256]]}))
     start_before = start_ledger.read_bytes()
     monkeypatch.setattr(queue, 'set_oom_score_adj', lambda _: None)
-    monkeypatch.setattr(queue, 'load_panel', lambda _: ({}, [1.], {}, {}))
+    monkeypatch.setattr(queue, 'load_panel', lambda *_: ({}, [1.], {}, {}))
     monkeypatch.setattr(queue, 'reconcile_cells', lambda *a: [])
     monkeypatch.setattr(queue, 'load_teacher_rates', lambda _: {'a': .5})
     def preview(*args, start_seed_ledger, **kwargs):
@@ -339,29 +332,3 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
     assert args.state.read_bytes() == before
     assert not selection_ledger.exists() and not gate_ledger.exists()
     assert 'selection preview (no allocation, no engine, no state write)' in capsys.readouterr().out
-
-
-def test_window_that_disagrees_with_incumbent_records_sits_out(tmp_path):
-    # 10-26 production dry-run: six windows held games the log could not attribute; one bad
-    # window must drop that cell from the panel, not abort the whole selection.
-    from pvz_selection_refresh import current_cells
-    model = tmp_path / 'r11.pt'
-    model.write_bytes(b'r11')
-    folder = tmp_path / 'g_2'
-    folder.mkdir()
-    (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=str(model), dagger_beta='0', task_id='t')))
-    (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(won=bool(w), terminal=True)) for w in [1, 0]))
-    group = dict(base='t', multiplier=1., beta=0, student=str(model.resolve()), label='g', games=2,
-                 task_id='t', manifest='/m.json')
-    failed = dict(group, label='failed', status='failed')
-    broken = tmp_path / 'failed_2'
-    broken.mkdir()
-    (broken / 'games.jsonl').write_text('broken')
-    state = dict(log=[dict(groups=[group, failed, dict(failed, label='missing')])],
-                 cells=dict(t=dict(windows={'1.0': dict(recent=[1, 1, 1, 0])})))
-    cells, _, excluded = current_cells(state, model, tmp_path)
-    assert [c['rate'] for c in cells] == [.5]
-    state['cells']['t']['windows']['1.0']['recent'][-1] = 1
-    cells, _, excluded = current_cells(state, model, tmp_path)
-    assert cells == []
-    assert excluded[-1]['reason'] == 'current-policy records do not match window suffix'

@@ -458,3 +458,5 @@ build-*/
 
 # WorkBuddy agent workspace state (local only, never commit)
 .workbuddy-ai/
+/build7/
+/build16/

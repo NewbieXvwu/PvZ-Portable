@@ -50,6 +50,8 @@ import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / "scripts"))
+from growable_pool import GIB, GrowablePool  # noqa: E402  (task138: growable worker pool)
 DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
 NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 # The search overrides the student only when the best candidate beats it by more than this. It was
@@ -955,7 +957,19 @@ def parser():
     p.add_argument("--seed-list", help="explicit comma-separated seeds (overrides --seed-offset/--seeds); "
                    "task31 uses it to sample the seeds whose perturbed deck drops one specific base card")
     p.add_argument("--arms", default="fast_search", help="fast (the student alone), fast_search (the teacher)")
-    p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1))
+    p.add_argument("--workers", type=int, default=max(1, (os.cpu_count() or 2) - 1),
+                   help="hard cap on game workers; the pool may grow up to this many "
+                        "while the group runs (task138)")
+    p.add_argument("--initial-workers", type=int,
+                   help="workers to start with (default --workers). The controller passes the "
+                        "width it admitted at group start and lets the pool grow from there")
+    p.add_argument("--worker-memory-bytes", type=int, default=0,
+                   help="measured RSS of one worker; 0 = unmeasured, which disables growth")
+    p.add_argument("--memory-headroom-bytes", type=int, default=0,
+                   help="memory reserved for a running background job; subtracted from "
+                        "MemAvailable before admitting another worker")
+    p.add_argument("--grow-interval", type=float, default=30.0,
+                   help="seconds between two memory readings while the group runs")
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
@@ -1010,6 +1024,15 @@ def main() -> None:
         p.error("--save-share must be in (0, 1]")
     if args.save_max_wait <= 0 or args.save_chunk <= 0 or args.save_interval < 0:
         p.error("--save-max-wait and --save-chunk must be positive, --save-interval nonnegative")
+    if args.workers < 1:
+        p.error("--workers must be positive")
+    initial_workers = args.workers if args.initial_workers is None else args.initial_workers
+    if not 1 <= initial_workers <= args.workers:
+        p.error("--initial-workers must be within 1..--workers")
+    if args.worker_memory_bytes < 0 or args.memory_headroom_bytes < 0:
+        p.error("--worker-memory-bytes and --memory-headroom-bytes must be nonnegative")
+    if args.grow_interval <= 0:
+        p.error("--grow-interval must be positive")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
@@ -1046,7 +1069,13 @@ def main() -> None:
             for arm in args.arms.split(",") for s in seeds for f in futures
             if (arm, s if f is None else f) not in done_keys]
     (args.out / "config.json").write_text(json.dumps({k: str(v) for k, v in vars(args).items()}, indent=1))
-    print(f"{len(jobs)} games on {args.workers} workers", flush=True)
+    # Keep the exact "N games on W workers" shape: scripts/qc_log_throughput.py parses it.
+    print(f"{len(jobs)} games on {initial_workers} workers", flush=True)
+    if initial_workers != args.workers:
+        print(f"worker pool may grow to {args.workers} (per-worker "
+              f"{args.worker_memory_bytes / GIB:.2f} GiB, headroom "
+              f"{args.memory_headroom_bytes / GIB:.2f} GiB, every {args.grow_interval:g}s)",
+              flush=True)
     value_keep, value_files = _export_values(args.value, args.static_value)
     _release_freed_memory()
     # Student weights remain shared on fork; value weights live only in engine processes.
@@ -1059,22 +1088,34 @@ def main() -> None:
     for index, job in enumerate(jobs):
         job['metrics_index'] = index
     metrics = None
+    # task138: the width is no longer frozen at group start. The pool starts at the
+    # admitted width and adds workers when MemAvailable allows, up to --workers.
+    pool = GrowablePool(mp.get_context(start_method), _play, init=_init_worker,
+                        initargs=(value_files[0], args.rollout_policy, args.rollout_sim_skip,
+                                  value_files[1], counters),
+                        initial=initial_workers, upper=args.workers,
+                        interval=args.grow_interval,
+                        per_worker=args.worker_memory_bytes,
+                        background=args.memory_headroom_bytes)
     try:
-        with results_path.open("a") as out, mp.get_context(start_method).Pool(
-                args.workers, initializer=_init_worker, maxtasksperchild=None,
-                initargs=(value_files[0], args.rollout_policy, args.rollout_sim_skip, value_files[1], counters)) as pool:
+        with results_path.open("a") as out:
             from pvz_metrics import Metrics
             metrics = Metrics("search_play", progress_source=lambda: dict(
                 games=sum(counters[::2]), decisions=sum(counters[1::2]))).start()
-            for i, res in enumerate(pool.imap_unordered(_play, jobs), 1):
+            width = initial_workers
+            for i, res in enumerate(pool.run(jobs), 1):
                 out.write(json.dumps(res) + "\n"); out.flush()
+                if len(pool.processes) != width:
+                    print(f"workers {width}->{len(pool.processes)} "
+                          f"({time.time() - started:.0f}s)", flush=True)
+                    width = len(pool.processes)
                 if i % 10 == 0 or i == len(jobs):
                     print(f"{i}/{len(jobs)} ({time.time() - started:.0f}s)", flush=True)
-            # A graceful join runs worker finalizers and reaps their simulator children. The parent's
-            # RUSAGE_CHILDREN now includes all worker startup, games and teardown, exactly once.
+            # A graceful close runs worker finalizers and reaps their simulator children. The
+            # parent's RUSAGE_CHILDREN now includes all worker startup, games and teardown, once.
             pool.close()
-            pool.join()
     finally:
+        pool.close()
         if metrics is not None:
             metrics.close()
         value_keep.cleanup()

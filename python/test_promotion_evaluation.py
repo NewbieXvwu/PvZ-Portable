@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from pvz_promotion import PANEL_TASKS, SEED_POOLS_V2
+from pvz_promotion import PANEL_TASKS, PANEL_TASKS_V3, SEED_POOLS_V2
 from test_curriculum_pipeline import setup
 import promotion_gate as gate
 
@@ -21,8 +21,13 @@ def arguments(root):
     common, _ = setup(root)
     candidate = root / 'candidate.pt'
     candidate.write_bytes(b'candidate')
+    # These tests issue v3/v4 certificates, whose panel membership is version-pinned.
+    panel = root / 'v3_panel.json'
+    panel.write_text(json.dumps(dict(panel_version='v2', groups={name: zone for zone, name in PANEL_TASKS_V3},
+        tasks=[dict(task_id=name, seeds=list(range(30000, 30128)), wave_cap=None,
+                    zombie_count_multiplier=1, level=1, deck=[0, 1, 2, 3, 4, 5]) for _, name in PANEL_TASKS_V3])))
     return SimpleNamespace(candidate=candidate, incumbent=common.rollout_policy,
-        source_panel=common.promotion_panel, executable=common.executable, value=common.value,
+        source_panel=panel, executable=common.executable, value=common.value,
         resource_dir=common.resource_dir, workers=1, out=root / 'evaluation',
         gate_version=3, seed_ledger=root / 'gate_ledger.json')
 
@@ -30,7 +35,7 @@ def arguments(root):
 def fake_games(args, command, **kwargs):
     # Preregistration must exist before the first episode starts.
     registration = gate.read(args.out / 'registration.json')
-    if registration['version'] in (3, 4):
+    if registration['version'] in (3, 4, 5):
         assert registration['policy']['pair_count'] == 1920
         block = registration['seed_block']
         assert block[1] - block[0] == 10 * 192
@@ -52,8 +57,39 @@ def fake_games(args, command, **kwargs):
     (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=model, task_id=name, arms='fast',
         dagger_beta='0', executable=str(args.executable), workers='1')))
     (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(seed=seed, arm='fast', searched=0,
-        won=model == str(args.candidate))) for seed in task['seeds']))
+        won=(model == str(args.candidate)) != (registration['version'] == 5 and
+            name in gate.read(args.out / 'manifest.json').get('monitor', [])))) for seed in task['seeds']))
     return SimpleNamespace(returncode=0)
+
+
+def test_systemic_unit_failure_keeps_engine_diagnostics(tmp_path):
+    args = arguments(tmp_path)
+    task = dict(task_id='failed', seeds=[1])
+    marker = 'Inconsistency detected by ld.so: Assertion failed'
+
+    def crash(command, **kwargs):
+        kwargs['stdout'].write(marker + '\n')
+        return SimpleNamespace(returncode=127)
+
+    with (tmp_path / 'lock').open('w') as lock, \
+         patch.object(gate.subprocess, 'run', side_effect=crash):
+        with pytest.raises(RuntimeError, match='Inconsistency detected by ld.so'):
+            gate._run_unit(args, lock, args.source_panel, task, 'candidate', args.candidate)
+
+
+def test_v5_roof_panel_issues_resumes_and_records_heldout_collapse(tmp_path):
+    args = arguments(tmp_path)
+    args.gate_version = 5
+    args.source_panel = Path(__file__).resolve().parents[1] / 'configs/gate_v5_panel.json'
+    with patch.object(gate.subprocess, 'run', side_effect=lambda cmd, **kw: fake_games(args, cmd, **kw)) as run:
+        result = gate.evaluate(args)
+        assert run.call_count == 80                       # 40 tasks, both sides
+        assert result['approved'] and result['overall']['pairs'] == 1728
+        assert result['zones']['roof']['pairs'] == 90
+        assert all(cell['harm'] == 96 for cell in result['monitor'].values())
+        assert gate.valid_certificate(result, result['contract'], args.out)
+        gate.evaluate(args)
+        assert run.call_count == 80                       # resume uses the issued block
 
 
 def test_complete_evaluation_resumes_and_rechecks_raw_episode_certificates():

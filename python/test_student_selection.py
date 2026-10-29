@@ -8,7 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import pvz_student_selection as panel
 from pvz_promotion import SEED_POOLS_V2 as POOLS
-from select_student import score_rows, select
+from select_student import score_rows, select, selection_rank
 
 
 def test_training_seeds_are_two_distinct_integers():
@@ -141,6 +141,66 @@ def test_score_rows_sums_wins_over_exact_seed_set():
     rows = [dict(seed=s, arm='fast', terminal=True, won=s % 2 == 0, searched=0)
             for s in (10, 11, 12, 13)]
     assert score_rows_lines(rows, {10, 11, 12, 13}) == 2
+
+
+def test_r26_selection_marginals_replay_with_one_shared_synthetic_incumbent(tmp_path):
+    zones = ('day', 'night', 'pool', 'fog', 'roof')
+    counts = (72, 72, 72, 72, 16, 24, 16)
+    names = (*zones, 'random', 'unseen')
+    recorded = ((58, 65, 48, 28, 0, 3, 8), (63, 68, 50, 37, 1, 4, 7),
+                (52, 51, 37, 34, 0, 2, 8), (47, 59, 42, 39, 1, 3, 8))
+    tasks, cursor = [], 130_000_000
+    for name, count in zip(names, counts):
+        tasks.append(dict(task_id=name, terrain=name, seeds=list(range(cursor, cursor + count)),
+                          selection_group='adventure' if name in zones else name,
+                          score_only=name == 'unseen'))
+        cursor += count
+    incumbent = tmp_path / 'incumbent.pt'
+    incumbent.write_bytes(b'synthetic reference, not the missing r11 selection outcomes')
+    from select_student import sha
+    manifest = tmp_path / 'panel.json'
+    manifest.write_text(json.dumps(dict(tasks=tasks, incumbent=str(incumbent), incumbent_sha256=sha(incumbent))))
+    models, wins = [], {str(incumbent): dict(zip(names, (60, 60, 45, 35, 1, 24, 16)))}
+    for seed, values in enumerate(recorded, 1):
+        model = tmp_path / f'seed_{seed:06}.pt'
+        model.write_bytes(str(seed).encode())
+        models.append(str(model))
+        wins[str(model)] = dict(zip(names, values))
+    engine = tmp_path / 'engine'
+    engine.write_bytes(b'engine')
+    run = fake_runner(wins)
+    result = select(models, tmp_path / 'out', manifest,
+                    ','.join(f'{name}:0:{count}' for name, count in zip(names, counts)),
+                    2, '', '', engine, run_command=run)
+    assert [result['scores'][model]['total'] for model in models] == [202, 223, 176, 191]
+    assert result['best'] == models[1]
+    assert len(run.calls) == 5 * len(tasks)
+    assert sum(call[0] == str(incumbent) for call in run.calls) == len(tasks)
+    prediction = result['scores'][models[1]]['prediction']
+    assert prediction['approved'] and prediction['overall']['pairs'] == 304
+    assert prediction['overall']['gain'] == 18 and prediction['overall']['harm'] == 0
+    assert set(prediction['zones']) == set(zones)
+    assert all(zone['holm_adjusted_p'] == 1 for zone in prediction['zones'].values())
+    first = result['scores'][models[0]]['prediction']
+    assert first['zones']['fog']['gain'] == 0 and first['zones']['fog']['harm'] == 7
+    assert first['zones']['fog']['holm_adjusted_p'] == 5 / 128
+    assert 'significant_zone_regression:fog' in first['reasons']
+    assert result['incumbent']['model_sha256'] == sha(incumbent)
+
+
+def test_selection_prefers_approval_then_total_or_least_worst_zone():
+    from pvz_promotion import decide_scored
+    scores = {}
+    for name, wins in dict(approved=(80, 80, 80), better=(81, 81, 81),
+                           high_total=(60, 100, 100), least_regression=(70, 70, 70)).items():
+        pairs = [dict(zone=zone, candidate=seed < count, incumbent=seed < 80)
+                 for zone, count in zip(('day', 'night', 'pool'), wins) for seed in range(100)]
+        scores[name] = dict(total=sum(wins), prediction=decide_scored(pairs))
+    assert scores['high_total']['total'] > scores['better']['total']
+    assert max(scores, key=lambda name: selection_rank(scores[name])) == 'better'
+    rejected = ('high_total', 'least_regression')
+    assert all(not scores[name]['prediction']['approved'] for name in rejected)
+    assert max(rejected, key=lambda name: selection_rank(scores[name])) == 'least_regression'
 
 
 def score_rows_lines(rows, expected):

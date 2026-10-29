@@ -1489,3 +1489,207 @@ A=`dw4i2`用seed1/2，B=`dw4i2_rebalanced_p05`用seed3/4，目录仍为四个独
 训练串行，沿用task123共享映射与工作集准入，只打包一次。候选失败隔离，已训候选重启复用；
 轮报告逐候选记录配方族/来源、seed、总挑选分、逐任务胜局及换卡组小计，按原总胜局规则挑选，门禁不改。
 未激活和回滚启动参数仍为deploy14g的A+B(p=1)、原开局格、K=2，不开启新选择族。
+
+### 14.43 门禁 v5：冒险模式实际关卡与卡组（task128，2026-10-27）
+
+v1–v4 的合同与旧证书全部不动，v5 按版本号并存。第 12–22 轮共 11 次否决，
+其中 9 次含 heldout 否决，heldout 每轮退步 −3 到 −42pp，总体不过关也主要被
+它拉下（占门禁 20% 对局）；崩塌集中在一个合成卡组任务
+`day_l7_eval_d7p_holdout1`（`[0,1,2,27,5,32,3]`：白天带三叶草、靠卷心菜输出）。
+冒险模式每关用自定卡组，永远不会遇到这种组合，而目标顺序是"先通关、后泛化"，
+现行门禁把泛化排到了通关前面。
+
+**面板**：取 `configs/adventure_scoreboard.json`（task103 冻结的 45 关定义，
+原版 1.0 倍、记分板卡组），按 Board::PickBackground 分区归组，只收
+**r11 学生 32 种子里赢过、或老师在原记分板 / task115 赢过**的关 —— 全输的关没有判别力。
+派生脚本 `scripts/make_gate_v5_panel.py`（`--check` 逐字节校验），输出
+`configs/gate_v5_panel.json`：**38 冒险关，五个区**，day（L1–4、6–10）、night
+（L11–14、16–20）、pool（L21–24、26–30）、fog（L31–34、36–40）各 9 关，roof
+为 **L41、L46**。原 task101 记分板 `MEMORY/docs/adventure-scoreboard.json`
+（SHA256 `71ac8475…1976`）记载老师 L41 **3/16**、L46 **2/16**，卡组与冻结任务
+逐项相同，按原任务书入选；task115 的屋顶汇总不能覆盖或否定这些逐关胜局。
+其他屋顶六关与 L50 没有可归属逐关胜局，不入选。旧版实现只读 task115，误漏了
+记分板老师证据；这里已补齐，不再等待屋顶范围裁定。
+
+总量保持 **1920 对 / 3840 局**：1728 个冒险种子均摊到 38 关，按关卡顺序前
+18 关各 46 对、后 20 关各 45 对，两个 heldout 各 96 对。L30/L34/L39 学生 0/32，
+按老师胜局入选（原记分板 / task115 的最高记录分别 1/16、1/16、5/16）。L30 与
+L40 保留原生传送带设置，雾夜保留 human_v2 / storm 观测；完整继承冻结任务定义。
+
+**决策**：沿用 v4 的单侧 exact McNemar 区级 Holm–Bonferroni（族错误率 0.05，
+5 个冒险区全部进入检验族）与总体 Newcombe 配对 95% 下界 > −3pp；**两者都只在
+冒险对上计算**（1728 对）。两个 heldout 任务照常跑，结果写进 `decision.json`
+的 `monitor` 与轮日志（`heldout monitor (no veto)`），不否决、不进总体。
+
+**种子**：每轮从门禁种子账本 `~/pvz-logs/gate_seed_ledger.json` 领一个
+1920 个连续种子的块（有序池 `SEED_POOLS_V2`，用完不回头），与记分板
+103M 段、挑选 130M 池、训练/采集清单机械不相交；旧块不移动、不复用。
+
+**挑选面板对齐**：`pvz_selection_refresh` 的主体换成同一批 38 个冒险关（独立
+种子，来自 130M 挑选池，43 任务 × 8 局 = 344 局/候选），三个随机族保留；
+task126 的两个换卡组任务改为 `score_only`，只记分不进挑选总分。
+旧的 30%–80% 采集窗口筛选随主体一起退役（`current_cells` 删除），挑选不再读
+采集窗口，窗口归属错误也不可能再悄悄丢格。
+
+**部署**：`scripts/qc_deploy14i.sh` 只交主控执行。切换条件同 v4：没有已排队/
+运行的门禁任务即可，半轮采集组直接继续；门禁合同在轮末入队时才签发，旧评估
+仍按旧版本读取。未激活分支与回滚分支等于**当时在役**的部署：脚本按
+`~/pvz-logs/qc_deploy14h.mode` 是否含 `rebalance` 判断 —— 有则用 deploy14h
+参数（p=0.5、K=4、换卡组清单、门禁 v4），没有则用 deploy14g 参数（A+B p=1、
+K=2、门禁 v4）；代码 baseline 也按这两套状态分别校验。激活后
+`qc_deploy14i.mode=gatev5`，回滚删掉它即回到上一套参数，state/offset/账本保留。
+
+### 14.44 挑选相对在役学生的分区变化（task136，2026-10-27）
+
+挑选从冻结清单读取在役学生，在本轮同任务、同种子评一次供四候选共用。只将 38 个冒险关的
+配对胜负送入门禁共用统计核心，计算逐区 gain/harm、单侧 McNemar 与 Holm 校正，以及总体
+Newcombe 95% 下界 > −3pp。优先挑预计批准者中的总胜局最高者，全拒绝时选最差区 delta
+最大者，再按总胜局打破平局。随机任务保留在总胜局里，换卡组继续只记分，两者不参与冒险区检验。
+
+新模板 `selection-task136-v5` 为普通白天九关各 16 局，其他任务各 8 局，共 416 局/模型，
+挑选账本每轮分配 512 种子块。旧 task128 冻结模板继续 384 块与原来每项 8 局的顺序。
+K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整段吞吐估算增约 8 分钟。
+预测仅用于挑选，实际晋升仍由独立新种子的原门禁判定。部署包 `scripts/qc_deploy14k.sh`
+只替换选择器、选择预算和共用统计模块，课程控制器保持 admitfix cf94a8cb，启动参数及回滚
+原样继承台式机 deploy14j。证据边界及 Mac 相关单测结果见 [任务书](MEMORY/docs/task136-selection-vs-incumbent.md)。
+
+### 14.45 v5 随机卡组族：训练格子与留出评估（task137，2026-10-27 登记，AGENTS §8 第 4 条）
+
+**为什么**：task129 的 54 套 v5 卡组里搜索老师只赢 63/432（14.6%），连白天 L7 都有 3 套
+0/8。老师在搜索里用学生推演，所以老师和学生都只会打训练里见过的那几套卡组 —— 卡组泛化是
+头号短板。课程因此加入“固定登记、按 v5 规则抽出”的卡组格子。
+
+**规则与生成器**：`scripts/deck_rules.py`（v5 表：只禁零作用；白天蘑菇必带 35 咖啡豆；
+升级植物依赖底座；按关对空 / 冰车 / 巨人硬解）。`scripts/make_random_deck_cells.py` 从
+`draw_seed = 137` 抽卡组，登记表 `configs/random_deck_cells_v5.json` 进 git，卡组可由
+`(level, length, draw_seed)` 逐位重放；`python/test_random_deck_cells.py` 校验。
+
+| 区 | 关卡 | 训练族 | 评估族 |
+|---|---|---|---|
+| 白天 | 7、8 | `rd137_l{7,8}_train_d01` / `_d02` | `rd137_l{7,8}_eval_d01` |
+| 夜间 | 12、14 | 同上 | 同上 |
+| 白天泳池 | 24、26 | 同上 | 同上 |
+| 雾夜泳池 | 33、37 | 同上 | 同上 |
+
+16 个训练格子（2 关 × 2 套 × 4 区），8 套评估卡组。训练与评估卡组**签名互不重叠**，
+且都不与记分板 / 挑选 / 示范里已登记的卡组重复（生成时逐套比对）。雾区任务带
+`fog_observation: human_v2`（观测是任务族属性）。
+
+**倍率阶梯**：每格自带 `curriculum_ladder = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0]`，
+从 **0.5** 起步，按现有 0.85 / 0.5 规则升降；`mult_index` 到底不再降。引擎支持 <1：
+`Board::SpawnZombieWave` 的 `aSpawnCount = lround(原版该波僵尸数 × multiplier)`，所以 0.5
+只把 ≥2 只的波减半，单只波仍是 1 只（`lround(0.5) = 1`），坟头 / 泳池 / 屋顶的收尾额外刷怪
+不读倍率。不需要改游戏规则，也不需要额外给阳光。
+
+**种子段**：倍率档 `210_000_000 + 格子序号 × 100_000 + 档位 × 4_096`，1.0 档
+`213_000_000 + 格子序号 × 4_096`，每档 2048 个；登记区间 210M–214M，与现有清单
+（最高约 50M，门禁 130M、挑选 130M–140M）机械不相交。清单是派生文件
+`artifacts/task137/training_panel.json` / `eval_panel.json`（不入 git）。
+
+**课程接入**：`curriculum_queue.py --extra-manifest <training_panel.json>` 把 16 个格子并入
+现有训练集合；随机卡组格每轮最多占 `--random-deck-share`（默认 **0.15**）的局数，按最久没采
+轮转，每格一个保底组（生产参数 768 局/轮、48 局/组 → 4 格 × 24 局 = 96 局，12.5%/轮；
+16 格轮完约 4 轮）。去掉 `--extra-manifest` 即整体回滚，格子按现有规则退休、旧数据保留。
+
+**挑选与门禁**：挑选面板的 3 个 `*_train_rand` 族换成这 8 套评估卡组
+（`selection-task137-v5`：38 冒险 + 8 随机卡组 + 2 score-only 换卡组 = 456/512 局），
+候选的 `selection_random_deck` 单独记一份胜局。门禁 v5 面板不变：它没有随机卡组族，
+两个监控格（`d7p_holdout1/2`）本来就是训练外固定卡组；把 8 套评估卡组塞进门禁要
+每轮多 8 × 96 = 768 对（+40% 门禁时长与种子池消耗），本任务不做。
+
+**部署**：`scripts/qc_deploy14l.sh`（只交主控执行）换控制器与清单；控制器在启动时读清单，
+所以需要按组边界重启一次采集（`stop_qc` 的既有排空路径），后台训练 / 打包流水线不排空。
+
+### 14.46 采集组开工后扩容：组宽不再在开工时定死（task138，2026-10-28）
+
+**问题**：一组的 worker 数在开工那一刻按 `MemAvailable` 和后台余量算出来，之后整组不变。
+开工时内存临时紧张（打包、门禁评估、换候选的空档），整组就只有 1–5 个 worker，48 局的组能拖
+一小时以上。10-27 21:48 有一组 2 worker、57 分钟只打 20 局；10-28 05:14 有一组 1 worker，
+主控只好杀 qc 重开。task134 修的是余量口径，没有改“开工定死”。
+
+**做法**：`scripts/growable_pool.py` 取代 `search_play.py` 里的 `multiprocessing.Pool`。
+每 worker 初始化、一局一结果、`games.jsonl` 语义全部不变；作业改成父进程派活（每个 worker
+一条私有 `SimpleQueue`，父进程记着 `worker id -> 手上那局`），所以 worker 被 OOM 杀掉时
+父进程能认出“这局丢了”并报错退出，而不是像共享队列那样永久挂住。父进程每 `--grow-interval`
+（默认 30 s）重读一次 `MemAvailable`，用控制器自己的准入公式
+
+    clamp((MemAvailable − reserve − background) // per_worker, 1, upper)
+
+决定现在能开几个，多出来就 `Process.start()` 补上。**只增不减，在跑的局不杀。**
+`upper` 就是 `--workers`（`pipeline.foreground_limit()`，已扣掉可能开始的评估进程）；
+开工宽度改走新参数 `--initial-workers`，`--worker-memory-bytes` / `--memory-headroom-bytes`
+把控制器当时用的单 worker RSS 与后台预留原样带进去。没实测 RSS 或没有 `/proc`（macOS）时
+不扩容 —— 按未知成本加进程正是 OOM 的来源。
+
+**控制器**：`command_for()` 新增 `growth_args()`，把“开工宽度”和“上限”分开传。
+只给 `workers=` 的调用方（OOM 探针、一次性诊断）仍是固定宽度，行为与 task138 之前逐字相同。
+
+**日志**：`N games on W workers` 仍是开工宽度（`qc_log_throughput.py` 的正则不变），
+宽度变化另打一行 `workers 1->4 (120s)`，不匹配任何既有正则。
+
+**成本**：每 30 s 一次 `/proc/meminfo` 读取，可忽略；新 worker 在 Linux 上 fork 父进程，
+继承已加载的 torch 与权重页（`_init_worker` 的 `if "fast" not in _W` 分支），不再从磁盘加载。
+
+**部署**：`scripts/qc_deploy14m.sh`（只交主控执行）换 `search_play.py` + 控制器 + 新增
+`growable_pool.py`，然后重启 qc。未激活 / 回滚分支照抄台式机最新 deploy14l 的 `start_qc`：
+`--extra-manifest` 由 `qc_deploy14l.mode` 决定，`stop_qc` 直接 `kill-session`（不排空），
+并额外清掉本工作树遗留的 `search_play` 子进程。预检只有 sha256、`ast.parse`、`--help` 里的新
+参数、task137 面板的 144 条计数，加一个 1.5 s 的进程级池测试；不跑引擎、不重放存档。
+
+**边界**：`pipeline.foreground_workers` 仍记开工宽度，所以评估的进程数上限按开工宽度算；
+内存上限由评估自己那次 `worker_count(MemAvailable)` 兜底，扩容和评估都不会越过当时的可用内存。
+
+### 14.47 v2sleep 热启动与 deploy15 准备（task131）
+
+学生输入升级保持父模型函数：v1/v2/v2boss/v2bungee 到 v2sleep 时，第一层卷积与
+标量线性层只在新增输入列填零，其他参数照拷；不将 fog/size/lite 的不同语义当作
+前缀。课程仅对新输入在入队时为 A/B 两配方冻结同一个现役父检查点，重试复用。
+新配方 `dw4i2_v2sleep.json` 与 `dw4i2_rebalanced_p05_v2sleep.json` 保留旧版本。
+
+旧帧缺字段时新通道为零；新分片按 obs 分开，首次全标签构建，此后标签增量。
+已有 v2 逐局缓存可在 digest 与字段条件满足时通过小视图补零复用，不重压缩历史
+密集数组。按现有71,213档案、699标签抽4档案，双构建者首次约1–2小时；不在
+上线预检中运行，留在普通后台流水线。详细资源估算及证据见
+[task131结果](MEMORY/docs/task131-obs-upgrade.md)与
+[数值证据](MEMORY/docs/task131-evidence.json)。
+
+deploy15只准备：使用独立build7与新配方，延续门禁v5、K=4串行；未激活/回滚
+逐参数保留14i→14h→14g启动分支，代码基线分别冻结。旧学生/旧值网可继续运行；
+价值编码器v4待新分布续走数据与切片缺陷证据足够后另行重训。本任务不部署。
+
+### 14.48 deploy15 刷新到 deploy14p 之上（task143）
+
+生产每轮都是从头训练（r29–r31 与 `recipe.resolved.json` 的 `init` 均为 null），
+所以 v2sleep 切换不带热启动：task131 在入队时冻结现役学生的那段代码已删除，
+控制器与 14p 逐字节相同；`warm_start_student` 只对显式写 `init` 的配方生效。
+首个 v2sleep 轮次既不带父权重，也不与历史轮次共享初始化，挑选与门禁口径不变。
+
+`scripts/qc_deploy15.sh`（只准备）以 14p 生效后的六个生产文件为基线，替换六个
+观测/值网模块、`pack_training_rows`、`train_rollout_policy` 与两份 v2sleep 配方；
+激活时 `--executable` 切 `obsup/build7/pvz-portable`（sha256 固定），继续带
+task137 的 `--extra-manifest` 与门禁 v5 参数。stop 直接杀、不排空；首组 60 分钟
+没结果只记日志；只有 `rc != 0` 或 qc 退出才回滚。
+
+切换后 874 个标签段全部重建（观测版本在段指纹里），旧段保留不回收，磁盘稳态
+净增约 11.2 GiB；v2 逐局缓存通过零填充视图复用（抽样 400 份档案无新字段），
+缓存只增约 73 MB。按近期 25 s/段/worker 计，配方默认的 2 个建造者约 3 小时，
+机器近期实际能跑 4–7 个建造者；采集在打包期间继续。详见
+[task143结论](MEMORY/docs/task143-deploy15-refresh.md)。
+
+### 14.49 可选胜利卡组训练族 `rd159_l{level}_train_{hash}`（task159，2026-10-29 登记）
+
+`make_random_deck_cells.py --gpt-ledger <task105导入账本> --archive-root <账本存档路径根>` 从验证通过的胜局元数据读卡组，`--roof-candidates <task148-roof-candidates.json>` 读屋顶候选，两者可各自启用。默认都关闭，task137 原有训练/评估面板保持逐位相同。新卡组沿用 §14.45 的 v5 黑名单、地形必备表与升级底座规则，另调用 `pvz_tasks.terrain_covered` / `profile_for_deck` 检查地形与生成升级所有权。L45 仅接收 task148 同语义的非空预装手牌变体，普通随机生成器仍不接受特殊关和传送带关。
+
+签名为植物编号排序后的多重集，跨来源和关卡去重，同签名保留关号最小的合法任务。剔除 task137 全部已登记签名，并排除挑选、门禁、专用留出与 task137 eval 的所有卡组。扩展源启用时，若当前工作树没有 `configs/gate_v6_panel.json`，必须通过 `--heldout-panel` 提供该草案；可重复传入其他留出面板。仅面板的 `tasks` 作为留出，task148 的 `candidate_tasks` 仍为候选。比较只用小集合，不重放存档。
+
+新族编号由关号与排序卡组的 SHA256 前12位确定，旧族及旧档重放不变。倍率阶梯仍为 0.5–3.0，各档2048种子；扩展训练块从1,590,000,000起，每格100,000、每档4096，与task137及现有挑选/门禁块分离。生成的面板冻结实际卡组与种子，再用现有 `--extra-manifest` 接入课程。配额复用 `--random-deck-share` 和 `--games-per-group`，默认均不改。不部署。
+
+### task165 deploy17（准备，未部署）
+
+基于deploy16 ba257927，保留开局192局/轮；示范起点最多192、随机卡组预留192，余192归倍率格
+（768局标准预算；不足的随机/示范配额交给倍率格，不突破示范上限）。局内按既有胜率/最近采集轮转。
+冻结卡池登记在 `configs/deploy17_random_deck_pool.json`：task159的rd159族38套新卡组，复用其种子段，
+其中2套同时来自task148屋顶候选；加原rd137训练16套共54套。留出排除快照为
+`configs/deploy17_deck_holdouts.json`，只用于训练排除，门禁/挑选原面板不变。
+B为A相同v2timer配方，仅33个z*历史标签权重1.5→1.0；复用A特征包并仅重标私有权重向量。
+任务与回滚见 [task165](MEMORY/docs/task165-deploy17-data-mix.md)，主控审后才执行部署。

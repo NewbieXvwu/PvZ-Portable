@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, label_weight={}, label_keep={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -133,7 +133,8 @@ def validate(document, kind=None):
             if type(result[name]) is not bool:
                 raise ValueError(f'{name}: expected boolean')
         for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
-                                  obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4', 'v2bungee'), lr_schedule=('constant', 'cosine')).items():
+                                  obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4', 'v2bungee', 'v2sleep',
+                                       'v2timer'), lr_schedule=('constant', 'cosine')).items():
             if result[name] not in choices:
                 raise ValueError(f'{name}: expected one of {choices}')
         if not isinstance(result['device'], str) or not result['device']:
@@ -146,6 +147,8 @@ def validate(document, kind=None):
         _object(result['label_weight'], set(labels), 'label_weight')
         for name, weight in result['label_weight'].items():
             _number(weight, f'label_weight.{name}')
+        from pvz_training_pack import label_keep_options
+        label_keep_options(labels, result['label_keep'])
         _object(result['source_weight'], {'human', 'teacher', 'level_balance',
                                           'level_balance_power', 'level_balance_max_multiplier'},
                 'source_weight')
@@ -245,10 +248,12 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
+                **({'label_keep': recipe['label_keep']} if recipe.get('label_keep') else {}),
                 **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
 
 
 def training_args(parser, argv=None):
+    parser.add_argument('--pack-recipe', type=Path, help='shared packed-row recipe; apply this candidate label weights after loading')
     parser.add_argument('--recipe', type=Path, required=True)
     parser.add_argument('--out', type=Path, help='override output directory')
     parser.add_argument('--device', help='override compute device')
@@ -271,6 +276,7 @@ def training_args(parser, argv=None):
     args.label_weight = ','.join(f'{k}={v}' for k, v in resolved['label_weight'].items())
     args.source_row_report = args.out / 'source_rows.json' if resolved['source_row_report'] else None
     args.recipe = cli.recipe
+    args.pack_recipe = cli.pack_recipe
     args.resolved_recipe = resolved
     args.recipe_sha256 = hashlib.sha256(cli.recipe.read_bytes()).hexdigest()
     return args
