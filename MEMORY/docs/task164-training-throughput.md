@@ -160,7 +160,7 @@ task160-D 的生产画像（2026-10-29）：
 |---:|---|---:|---:|---|---:|---|---|
 | 1 | **候选并发训练**（2 进程） | 1.42× | 9,708 | 7.9 h | 1.14× | 不改数据 / 种子 / 顺序 / 超参；每个候选进程内的运算与单独跑完全相同 | **内存**：2026-10-17 两次并行都因内存失败（3 个进程撑爆 23 GB WSL、2 个进程互相换页） |
 | 1b | 同上，4 进程 | 1.86× | 7,410 | 7.3 h | 1.24× | 同上 | 同上，且代码池子写死 2（`curriculum_queue.py:1724`） |
-| 2 | **组装与计算重叠**（预取线程 + pinned staging + 旁路 stream） | 1.35× | 10,211 | 8.1 h | 1.12× | 逐位一致：batch 顺序、算子、求和顺序都不变，只是把 H2D 挪到别的 stream | 中：pinned 缓冲复用与 stream 依赖要处理对 |
+| 2 | **组装与计算重叠**（预取线程 + pinned staging + 旁路 stream）——**已实现，实测 1.1–1.2×，见 §9** | 1.35× | 10,211 | 8.1 h | 1.12× | 逐位一致：batch 顺序、算子、求和顺序都不变，只是把 H2D 挪到别的 stream | 中：pinned 缓冲复用与 stream 依赖要处理对 |
 | 3 | **batch 2048 → 8192** | 1.45× | 9,507 | 7.9 h | 1.15× | **会变**：优化步数变成 1/4，同 lr 等价于换了日程，必须重调 lr / warmup 并重跑门禁 | 低（改动小），但要重跑门禁 |
 | 4 | **削掉每 batch 的发射开销**（`torch.compile(mode="reduce-overhead")` / CUDA graph） | 最多 1.35× | 10,211 | 8.1 h | 1.12× | `torch.compile` 融合算子、改求和顺序 → 统计等价、不逐位；CUDA graph 逐位但要求静态形状，而 `planted.any()` / `rows_mask` 是动态的 | 高：编译时间、图捕获失败回退、显存峰值都要测 |
 | 5 | **候选数 4 → 2** | 2× | 6,893 | 7.2 h | 1.27× | **会变**：挑选面板从 4 选 1 变成 2 选 1，选中模型的期望质量下降 | 低技术风险、高结论风险 |
@@ -196,4 +196,81 @@ python3 scripts/task164_round_timings.py            # 加 --json out.json 存原
 # 离线基准（生产不训练时；一次一个进程）
 systemd-run --user --scope -p MemoryMax=4G --collect -- nice -n 10 \
   ~/.venvs/ml/bin/python3 scripts/task164_bench_load.py --segments 8 --batches 40 --mode both --batch-size 2048
+
+# 新旧实现逐位对比（CPU 上比权重；--tensors 比设备张量）
+~/.venvs/ml/bin/python3 scripts/task164_bitwise_check.py --segments 2 --epochs 1 --device cpu --work /tmp/task164_cpu
+~/.venvs/ml/bin/python3 scripts/task164_bitwise_check.py --segments 8 --work /tmp/task164_gpu --tensors
 ```
+
+### 9. 方案 #2 的实现与实测（2026-10-29 追加）
+
+分支 `trainspeed` 已直接替换训练器的数据路径，**没有开关**：
+
+- `CompactBoards.prepare()` / `materialize()`：把 `batch()` 拆成"CPU numpy gather"与"设备拷贝 + 两次散射"。`batch()` 保留为两者的组合，测试与验证路径不变。
+- `BatchSource.prepare(idx, pin)`：一个 batch 的全部行（棋盘、标量、plant / packet / cell / weight / packet_info / cands）在调用线程上 gather 完并 pin 进页锁定内存。
+- `BatchPrefetcher`：一个有界队列（深度 2）的工作线程，提前准备下一个 batch；`close()` 在步数预算提前用完时把生产者停掉。
+- `load_batch()`：把拷贝与散射全部排到旁路 `torch.cuda.Stream`，记录 event，让计算流 `wait_event`，再对这批张量 `record_stream`（否则分配器会在计算流还在用时把显存回收）。
+- 训练循环：`forward+backward+step` 入队之后、`float(loss.detach())` 同步之前，先给下一个 batch 排队拷贝；同步之后才释放上一个 batch 的页锁定缓冲（否则 `non_blocking` 拷贝会读到已经归还的 host 内存——第一版就是这么崩的）。
+
+#### 9.1 正确性
+
+**CPU（逐位，要求的那一项）**：同 recipe 同种子（seed=1），新旧各 1 个 epoch，`torch.equal` 比 21 个权重张量。
+
+最终提交的代码，2 段 / 10.7 万行（47 个优化步）：
+
+```
+{"identical": true, "differing_tensors": [], "old_val_loss": 7.737462520599365,
+ "new_val_loss": 7.737462520599365, "old_epochs": [26.5], "new_epochs": [23.6]}
+```
+
+第一次实现（把 `load_batch` 提成模块级函数之前），8 段 / 42.8 万行：
+
+```
+{"identical": true, "differing_tensors": [], "old_val_loss": 4.983341313966066,
+ "new_val_loss": 4.983341313966066, "old_epochs": [320.0], "new_epochs": [309.9]}
+```
+
+两次都是全部张量相等、验证集 loss 连末位都相同。CPU 上旁路 stream 为 `None`，走的是同步拷贝分支，但 gather 仍然来自新拆出来的 `prepare()` 与预取线程。
+
+**GPU 权重层面做不了逐位比较——未改动的代码自己就不可复现**：同一 recipe、同一子集，把 `origin/prodint16` 的原版跑两遍，21 个张量**全部**不同（`trunk.0.weight` 起），train_loss 5.5120 vs 5.5077。cuDNN 反向本来就不是逐位确定的，这是既有性质，不是本次改动引入的。
+
+因此 GPU 侧改用"设备张量逐位比较"来隔离本次改动：同一个 idx，旧的内联组装（`boards.batch` + `.to(device)`）对新的 `prepare(pin=True)` + `load_batch(..., 旁路 stream)`，3 个随机 batch × 2048 行，9 个张量全部 identical（候选张量的 NaN 填充按"同为 NaN"比较，否则 `torch.equal` 恒为假）：
+
+```
+{"trial0": "identical", "trial1": "identical", "trial2": "identical"}
+```
+
+#### 9.2 提速（同机、同语料、背靠背配对）
+
+32 段（79 万行）、3 epoch、新旧交替各 4 轮，取第 2–3 个 epoch 的均值（第 1 个 epoch 含页缓存预热）：
+
+| 轮 | 旧 s | 新 s | 配对倍数 |
+|---:|---:|---:|---:|
+| 1 | 9.95 | 8.73 | 1.14× |
+| 2 | 10.56 | 9.42 | 1.12× |
+| 3 | 11.61 | 7.33 | 1.58× |
+| 4 | 7.49 | 5.95 | 1.26× |
+
+**中位 1.20×，范围 1.12–1.58×；4 轮里新实现全部更快。** 16 段、3 epoch 的单轮对照是 1.07×。生产采集同时在跑，绝对秒数波动很大（旧实现 7.5–11.6 s 同一配置），所以只能看配对。
+
+#### 9.3 为什么没到 §5 预估的 1.35×
+
+做一个上限实验：把每个 batch 的组装整个删掉（所有步复用第一批已经拷到显存的张量），epoch 时间是 **[9.77, 5.67, 6.07]**，与旧实现 **[9.7, 5.5, 6.0]** 完全相同。
+
+也就是说 **组装本来就已经被反向传播盖住了**：旧循环里 `float(loss.detach())` 之后紧接 `backward()`/`step()` 入队，CPU 接着去组装下一个 batch，GPU 在跑这一批的反向——两件事本来就并行。
+
+§2 里"组装占 28%"是基准脚本的产物：它把 `assemble` 和 `step` 分开计时，中间各加了一次 `torch.cuda.synchronize()`，人为把两段串起来，还把 GPU 利用率压低到 30–37%。真实训练循环里 GPU 利用率约 26%（同机采样 50 次），瓶颈是**每 batch 约 200 次 kernel 发射的 Python 侧开销**，不是数据搬运。
+
+预取拿到的 1.2×，是把剩下没被盖住的那一小块（gather + 页锁定拷贝）挪到了工作线程；再往上就要减少发射次数本身。
+
+#### 9.4 对方案表的影响
+
+- 方案 #2 的收益从 1.35× 修正为 **1.1–1.2×**，折到轮次约 5%（32,647 s → 约 31,000 s）。
+- 方案 #3（batch 8192）与 #4（`torch.compile` / CUDA graph）的预估不受影响——它们减的正是发射次数，与这次的测量方向一致。
+- 方案 #1（候选并发）的 1.42–1.86× 也不受影响：那是两个进程各自发射，合计占满 CPU 与 GPU。
+
+#### 9.5 还没做的
+
+- 生产全量数据（1,290 万行 / 12.9 GB memmap）上没有跑过；本次只在 8–32 段（43–79 万行）上验证。
+- 生产者每 batch 有约 1.9 ms 花在 `pin_memory()` 的分配 + 拷贝上（不 pin 是 2.56 ms，pin 后 4.45 ms）。用预分配的页锁定缓冲 + `index_select(out=)` 直接写进去可以省掉这一块，属于后续可选优化，本次没做。
+- 预取深度固定 2，没有扫参。
