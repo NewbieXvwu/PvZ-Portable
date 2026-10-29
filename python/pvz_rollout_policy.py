@@ -78,11 +78,14 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 class RolloutNet(nn.Module):
     def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1",
                  row_pool: bool = False, aux: bool = False, packet_head: str = "slot",
-                 plant_embedding_dim: int | None = None):
+                 plant_embedding_dim: int | None = None, arch: str = 'grid'):
         super().__init__()
         if obs not in OBS_EXTRA:
             raise ValueError(f"unknown student observation version: {obs}")
         self.obs = obs
+        if arch not in ('grid', 'entity_attn') or (arch == 'entity_attn' and packet_head != 'identity'):
+            raise ValueError('entity_attn requires the identity packet head')
+        self.arch = arch
         if packet_head not in ('slot', 'identity'):
             raise ValueError(f'unknown packet head: {packet_head}')
         self.packet_head = packet_head
@@ -114,6 +117,9 @@ class RolloutNet(nn.Module):
         self.row_pool = row_pool
         self.row_projection = nn.Conv2d(2 * width, width, 1) if row_pool else None
         self.aux = nn.Conv2d(width, 1, 1) if aux else None
+        if arch == 'entity_attn':
+            from pvz_entity import EntityEncoder
+            self.entity = EntityEncoder(width)
 
     def forward(self, board: torch.Tensor, scalars: torch.Tensor, packet: torch.Tensor | None = None,
                 auxiliary: bool = False, packet_info: torch.Tensor | None = None):
@@ -127,6 +133,11 @@ class RolloutNet(nn.Module):
 
     def encode(self, board: torch.Tensor, scalars: torch.Tensor,
                sparse_input: bool = False, packet_info: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
+        if self.arch == 'entity_attn':
+            from pvz_entity import ENTITY_FIELDS, ENTITY_TOKENS
+            scalar_count = self.scalar[0].in_features
+            entities = scalars[:, scalar_count:].reshape(-1, ENTITY_TOKENS, ENTITY_FIELDS)
+            scalars = scalars[:, :scalar_count]
         if self.packet_head == 'identity':
             self._check_packet_info(packet_info)
             # Symmetric per-type aggregate, including duplicate cards; legacy features use last slot.
@@ -146,6 +157,8 @@ class RolloutNet(nn.Module):
             rows = torch.cat([h.mean(dim=3, keepdim=True), h.amax(dim=3, keepdim=True)], dim=1)
             h = F.relu(h + self.row_projection(rows))
         s = self.scalar(scalars)                                # [B, W]
+        if self.arch == 'entity_attn':
+            s = s + self.entity(entities)
         if self.pool == "meanmax":
             return h, torch.cat([h.mean(dim=(2, 3)), h.amax(dim=(2, 3)), s], dim=1)
         return h, torch.cat([h.mean(dim=(2, 3)), s], dim=1)
@@ -212,6 +225,9 @@ def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[
     info = packet_features(frame)[None] if net.packet_head == 'identity' else None
     if info is not None:
         scalars = identity_scalars(frame, scalars)
+    if net.arch == 'entity_attn':
+        from pvz_entity import entity_features
+        scalars = torch.cat((scalars, entity_features(frame).flatten()))
     h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
     if float(net.plant(g)[0, 0]) <= 0.0:
         return dict(WAIT)
@@ -253,6 +269,9 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
     info = packet_features(frame)[None] if net.packet_head == 'identity' else None
     if info is not None:
         scalars = identity_scalars(frame, scalars)
+    if net.arch == 'entity_attn':
+        from pvz_entity import entity_features
+        scalars = torch.cat((scalars, entity_features(frame).flatten()))
     h, g = net.encode(board[None], scalars[None], sparse_input=sparse_input, packet_info=info)
     plant_p = float(torch.sigmoid(net.plant(g))[0, 0])
     by_packet: dict[int, list[dict]] = {}
@@ -282,6 +301,8 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
     for name in ('pool', 'context', 'row_pool', 'packet_head', 'plant_embedding_dim'):
         if getattr(net, name) != getattr(initial, name):
             raise ValueError(f'warm-start architecture differs: {name}')
+    if initial.arch != net.arch and (initial.arch, net.arch) != ('grid', 'entity_attn'):
+        raise ValueError('cannot discard the entity branch during warm-start')
     upgrades = {('v1', 'v2'), ('v2', 'v2fog'), ('v2', 'v2fogstack4')}
     upgrades.update((obs, 'v2sleep') for obs in ('v1', 'v2', 'v2boss', 'v2bungee'))
     # v2timer 只是 v2sleep 后面再接 4 个通道，凡是它的前缀都能零权重加宽过来。
@@ -290,6 +311,10 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
         raise ValueError(f'no function-preserving input upgrade: {initial.obs} -> {net.obs}')
     weights = dict(initial.state_dict())
     target = net.state_dict()
+    if initial.arch == 'grid' and net.arch == 'entity_attn':
+        weights.update({name: value for name, value in target.items() if name.startswith('entity.')})
+        weights['entity.output.weight'] = torch.zeros_like(target['entity.output.weight'])
+        weights['entity.output.bias'] = torch.zeros_like(target['entity.output.bias'])
     for name in ('trunk.0.weight', 'scalar.0.weight'):
         old, new = weights[name], target[name]
         if old.shape[0] != new.shape[0] or old.shape[2:] != new.shape[2:] or old.shape[1] > new.shape[1]:
@@ -310,7 +335,7 @@ def load_student(path) -> RolloutNet:
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
                      bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"),
                      bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
-                     plant_embedding_dim=checkpoint.get('plant_embedding_dim'))
+                     plant_embedding_dim=checkpoint.get('plant_embedding_dim'), arch=checkpoint.get('arch', 'grid'))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith(("value.", "aux."))})
     return net.eval()
 
@@ -331,9 +356,11 @@ def export_student(net: RolloutNet, path) -> None:
         names += ("row_projection.weight", "row_projection.bias")
     if net.packet_head == 'identity':
         names += ('packet.2.weight', 'packet.2.bias')
+    if net.arch == 'entity_attn':
+        names += tuple(name for name in weights if name.startswith('entity.'))
     with open(path, "wb") as stream:
         identity = net.packet_head == 'identity'
-        stream.write((b"PVZRN006" if identity else b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN007" if net.arch == 'entity_attn' else b"PVZRN006" if identity else b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
         if identity or net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))

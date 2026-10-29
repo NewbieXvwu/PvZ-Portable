@@ -1320,6 +1320,8 @@ class TrainingPipeline:
             base_options, variant_options = training_row_options(recipe), training_row_options(variant)
             base_options.pop('source_weight', None)
             variant_options.pop('source_weight', None)
+            base_options.pop('arch', None)
+            variant_options.pop('arch', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
@@ -1649,6 +1651,17 @@ class TrainingPipeline:
                 self._prepare_corpus(recipe['labels'])
                 packed['pack_peak_anon_bytes'] = self._command(
                     pack_command(local_args, recipe['labels']), folder / 'pack.log')
+                architectures = {recipe.get('arch', 'grid')}
+                for candidate in job.get('candidate_recipes', []):
+                    candidate_path = Path(candidate['recipe'])
+                    candidate_recipe = load_recipe(candidate_path, 'training')
+                    architecture = candidate_recipe.get('arch', 'grid')
+                    if architecture in architectures:
+                        continue
+                    architectures.add(architecture)
+                    local_args.recipe = candidate_path
+                    packed['pack_peak_anon_bytes'] = max(packed['pack_peak_anon_bytes'], self._command(
+                        pack_command(local_args, recipe['labels']), folder / f'pack_{architecture}.log'))
             finally:
                 self.build_peak = 0
             packed['pack_finished'] = time.time()

@@ -64,7 +64,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                         label_weight: dict[str, float] | None = None, cache_dir: Path | None = None,
                         with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
                         cells: bool = False, aux_horizon: int = 0, row_observer=None,
-                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None):
+                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None,
+                        arch: str = 'grid'):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games).
@@ -174,6 +175,12 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                     ctx = _episode_context(path)
                     context_rows = np.broadcast_to(ctx, (count, len(ctx)))
                     rows_scalars = np.concatenate([rows_scalars[:, :115], context_rows, rows_scalars[:, 115:]], axis=1)
+                if arch == 'entity_attn':
+                    from pvz_entity import entity_features, ENTITY_TOKENS, ENTITY_FIELDS
+                    frames = read_frames(path)
+                    entity_rows = np.stack([entity_features(frames[i - 1]).numpy().ravel()
+                                            for i in stored['rows'][selected]]) if count else np.empty((0, ENTITY_TOKENS * ENTITY_FIELDS), np.float32)
+                    rows_scalars = np.concatenate((rows_scalars, entity_rows), axis=1)
                 rows_boards = stored["boards"]
                 if boards is None:
                     boards = CompactBoards(rows_boards.shape[1:])
@@ -238,6 +245,9 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             if packets is not None:
                 s = identity_scalars(frames[i - 1], s)
+            if arch == 'entity_attn':
+                from pvz_entity import entity_features
+                s = torch.cat((s, entity_features(frames[i - 1]).flatten()))
             if boards is None:
                 boards = CompactBoards(b.shape)
                 scalars = CompactBoards(s.shape, np.float32)
@@ -290,7 +300,8 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
                                  options["label_weight"], cache_dir, options["with_context"],
                                  options["obs"], precompute_workers, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
-                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths)
+                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths,
+                                 arch=options.get('arch', 'grid'))
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if options["aux_horizon"] else None
     packets = loaded[9 + (auxiliary is not None)] if options["packet_head"] == "identity" else None
@@ -446,8 +457,8 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
         # A different recipe or a v1 corpus is not superseded by this index.
         with np.load(keep, allow_pickle=False) as stored:
             current = json.loads(str(stored['meta']))
-        keys = set(current) - {'labels', 'sources', 'label_weight'}
-        if (set(meta['labels']) <= labels and all(meta.get(k) == current[k] for k in keys)
+        keys = (set(current) | set(meta)) - {'labels', 'sources', 'label_weight'}
+        if (set(meta['labels']) <= labels and all(meta.get(k) == current.get(k) for k in keys)
                 and all(meta['label_weight'].get(label, 1.) == current['label_weight'].get(label, 1.)
                         for label in meta['labels'])):
             path.unlink()
@@ -457,7 +468,7 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
 
 def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_context: bool = False,
                 obs: str = "v1", cells: bool = False, aux_horizon: int = 0, packet_head: str = "slot",
-                row_observer=None, cache_dir=None, rebuild: bool = False):
+                row_observer=None, cache_dir=None, rebuild: bool = False, arch: str = 'grid'):
     """Build the pack if this exact input has none yet, then read it the way the trainer does.
 
     rebuild forces the build even when a pack exists: a changed archive of the same size would
@@ -465,7 +476,7 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
     """
     from train_rollout_policy import read_pack
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, set(labels)))
+                           sources=archive_fingerprint(data, set(labels)), arch=arch)
     path = pack_path(data, options)
     if rebuild or not path.is_file():
         pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
@@ -477,7 +488,8 @@ def verify(data: Path, options: dict, out: Path) -> None:
     loaded, _sources, source_archive, source_row = build_from_archives(
                                  data, set(options["labels"]), options["wait_keep"], options["label_weight"],
                                  None, options["with_context"], options["obs"], 1, cells=options["cells"],
-                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"])
+                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
+                                 arch=options.get('arch', 'grid'))
     from train_rollout_policy import read_pack
     observed = []
     actual = read_pack(out, data, lambda path, rows: observed.append((str(path.relative_to(data)), rows)))
@@ -528,6 +540,7 @@ def main() -> None:
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")
+    p.add_argument('--arch', choices=['grid', 'entity_attn'], default='grid')
     p.add_argument("--context", action="store_true", help="append the task context to the scalars")
     p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
@@ -539,7 +552,7 @@ def main() -> None:
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(","))))
+                           sources=archive_fingerprint(args.data, set(args.labels.split(","))), arch=args.arch)
     if args.verify:
         if args.out is None:
             p.error("--verify needs --out")

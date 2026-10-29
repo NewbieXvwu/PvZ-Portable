@@ -378,14 +378,15 @@ def _pack_flags(options: dict) -> str:
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
-         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None):
+         row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None,
+         arch: str = 'grid'):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels))
+                           sources=archive_fingerprint(data, labels), arch=arch)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -793,7 +794,7 @@ def main(*, step_observer=None) -> None:
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
-                     aux=bool(args.aux_weight), packet_head=args.packet_head)
+                     aux=bool(args.aux_weight), packet_head=args.packet_head, arch=getattr(args, 'arch', 'grid'))
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
@@ -864,6 +865,7 @@ def main(*, step_observer=None) -> None:
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
+                **({'arch': net.arch} if net.arch == 'entity_attn' else {}),
                 "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
                 # Historical reports compare these metadata keys; both experiments are retired.
                 "soft_weight": 0.0, "ema": 0.0,

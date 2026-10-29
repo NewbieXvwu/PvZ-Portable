@@ -100,6 +100,8 @@ def validate(document, kind=None):
         'out', 'manifest', 'value', 'executable', 'resource_dir', 'day_manifest',
         'perturb_manifest', 'night_manifest', 'day_orig_manifest', 'pool_manifest', 'pressure_manifest'}
     allowed = set(defaults) | required | {'schema_version', 'kind'}
+    if kind == 'training':
+        allowed.add('arch')
     if kind == 'panel':
         allowed.add('rollout_policy')
     _object(document, allowed, 'recipe')
@@ -123,6 +125,10 @@ def validate(document, kind=None):
     if not all(isinstance(v, str) for v in result['provenance'].values()):
         raise ValueError('provenance: expected string values')
     if kind == 'training':
+        if result.get('arch', 'grid') not in ('grid', 'entity_attn'):
+            raise ValueError('arch: expected grid or entity_attn')
+        if result.get('arch') == 'entity_attn' and result['packet_head'] != 'identity':
+            raise ValueError('entity_attn requires packet_head: identity')
         for name in ('epochs', 'width', 'aux_horizon', 'batch_size', 'validation_batch_size', 'threads', 'precompute_workers'):
             _integer(result[name], name, 1)
         _integer(result['save_epochs'], 'save_epochs')
@@ -246,6 +252,7 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
+                **({'arch': recipe['arch']} if recipe.get('arch') == 'entity_attn' else {}),
                 **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
 
 
