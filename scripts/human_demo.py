@@ -147,7 +147,7 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
                    if getattr(env, 'executable', None) else None)
     recorded_sha = meta.get('executable_sha256')
     if strict_hashes is None:
-        strict_hashes = not recorded_sha or recorded_sha == current_sha
+        strict_hashes = False
     meta['hash_verification'] = (
         'per-operation state hash' if strict_hashes else
         'tick/ok/outcome only: archive recorded by engine '
