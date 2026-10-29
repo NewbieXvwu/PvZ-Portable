@@ -111,3 +111,5 @@
 - [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)
 - [task128：门禁 v5（冒险模式实际关卡与卡组）](docs/task128-gate-v5.md)
 - [task131：v2sleep 加宽热启动、缓存与 deploy15 准备](docs/task131-obs-upgrade.md)
+
+- [task165：deploy17数据配比与待审部署/回滚](docs/task165-deploy17-data-mix.md)

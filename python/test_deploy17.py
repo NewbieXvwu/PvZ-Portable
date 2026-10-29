@@ -103,6 +103,40 @@ def test_deploy17_shared_pack_weights_match_physical_pack(tmp_path):
     assert torch.equal(shared[2],physical[2]) and torch.equal(shared[3],physical[3])
 
 
+def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkeypatch):
+    import torch
+    import train_rollout_policy as trainer
+    from test_incremental_pack import fixture as rows,options
+    from pack_training_rows import pack
+    from pvz_recipe import write_recipe
+    data=tmp_path/'data';rows(data,['fresh','z_old'])
+    a=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.5}),tmp_path/'cache')
+    packed=trainer.read_pack(a,data)[5].clone()
+    common=dict(schema_version=1,kind='training',data=str(data),labels=['fresh','z_old'],device='cpu',threads=1,
+        wait_keep=1.0,obs='v1',packet_head='slot',cell_soft_weight=0,source_row_report=False,
+        out=str(tmp_path/'student'))
+    write_recipe(tmp_path/'a.json',dict(common,label_weight={'z_old':1.5}))
+    write_recipe(tmp_path/'b.json',dict(common,label_weight={'z_old':1.0}))
+    monkeypatch.setattr(sys,'argv',['train','--recipe',str(tmp_path/'b.json'),'--pack-recipe',str(tmp_path/'a.json')])
+    monkeypatch.setattr(trainer,'Metrics',Mock())
+    monkeypatch.setattr(trainer,'set_oom_score_adj',lambda *_:None)
+    observed={};original=trainer.load
+    def load(*args,**kwargs):
+        observed['weights']=kwargs['label_weight']
+        result=original(*args,**kwargs);observed['result']=result;return result
+    monkeypatch.setattr(trainer,'load',load)
+    class Loaded(Exception):pass
+    class StopBeforeSplit:
+        def __init__(self,*_):pass
+        def shuffle(self,*_):raise Loaded
+    monkeypatch.setattr(trainer.random,'Random',StopBeforeSplit)
+    with pytest.raises(Loaded):trainer.main()
+    assert observed['weights']=={'z_old':1.5}
+    assert not torch.equal(observed['result'][5],packed)
+    note=json.loads((tmp_path/'student/shared_pack_weights.json').read_text())
+    assert note['factors']=={'z_old':2/3}
+
+
 def test_deploy17_pipeline_accepts_label_only_alternate(tmp_path):
     import threading
     pipeline=q.TrainingPipeline.__new__(q.TrainingPipeline)
@@ -117,3 +151,96 @@ def test_deploy17_pipeline_accepts_label_only_alternate(tmp_path):
     job=pipeline.state['training_jobs'][0]
     assert [r['recipe_family'] for r in job['candidate_recipes']]==['A','A','B','B']
     assert job['training_seeds']==[1,2,3,4]
+
+
+@pytest.mark.parametrize('active',[False,True])
+def test_deploy17_watchdog_launch_is_inert_until_active(tmp_path,active):
+    import subprocess
+    result=subprocess.run(['bash','-c','source "$1"; watchdog_extract_start "$2"','test',
+        str(ROOT/'scripts/qc_watchdog.sh'),str(ROOT/'scripts/qc_deploy17.sh')],capture_output=True,text=True,timeout=5)
+    assert result.returncode==0,result.stderr
+    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('/home/newbiexvwu',str(tmp_path)))
+    logs=tmp_path/'pvz-logs';logs.mkdir()
+    (logs/'qc_deploy16.mode').write_text('v2timer\n');(logs/'qc_deploy16.active').touch()
+    if active:
+        (logs/'qc_deploy17.mode').write_text('datamix\n');(logs/'qc_deploy17.active').touch()
+    result=subprocess.run(['bash','-c','tmux() { printf "%s\\n" "$*"; }; source "$1"','test',str(script)],capture_output=True,text=True,timeout=5)
+    assert result.returncode==0,result.stderr
+    assert 'prodint16/build16/pvz-portable' in result.stdout
+    assert '--training-parallelism 1' in result.stdout and '--gate-version 5' in result.stdout
+    assert result.stdout.count('--extra-manifest')==1
+    if active:
+        assert 'history10.json' in result.stdout and 'task165/training_panel.json' in result.stdout
+        assert '--demo-start-share 0.25 --random-deck-share 0.25' in result.stdout
+    else:
+        assert 'rebalanced_p05_v2timer.json' in result.stdout and '--demo-start-share' not in result.stdout
+
+
+def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path,monkeypatch):
+    import deploy17_boundary as b
+    import signal
+    proc=tmp_path/'proc';worktree=tmp_path/'cq'
+    def process(pid,args,children=''):
+        folder=proc/str(pid);(folder/'task'/str(pid)).mkdir(parents=True)
+        (folder/'task'/str(pid)/'children').write_text(children)
+        (folder/'cmdline').write_bytes(('\0'.join(args)+'\0').encode())
+        (folder/'status').write_text('State:\tT (stopped)\n')
+        (folder/'stat').write_text(f'{pid} (python) '+' '.join(['T']+['0']*18+['123']+['0']*2))
+    process(101,['python',str(worktree/'scripts/curriculum_queue.py')],'202')
+    process(202,['python',str(worktree/'scripts/search_play.py')])
+    realpath=Path
+    monkeypatch.setattr(b,'Path',lambda value:proc if str(value)=='/proc' else realpath(value))
+    signals=[];monkeypatch.setattr(b.os,'kill',lambda pid,sig:signals.append((pid,sig)))
+    assert b.freeze_if_idle(101,worktree) is None
+    assert signals==[(101,signal.SIGSTOP),(101,signal.SIGCONT)]
+    (proc/'202/cmdline').write_bytes(b'python\0trainer\0');signals.clear()
+    record=tmp_path/'scheduler.json'
+    paused=b.freeze_if_idle(101,worktree,record)
+    assert record.is_file() and signals==[(101,signal.SIGSTOP)]
+    assert paused['children']==[dict(pid=202,start='123')]
+    (proc/'202/stat').write_text('202 (reused) '+' '.join(['T']+['0']*18+['999']))
+    b.act(paused['children'][0],signal.SIGTERM)
+    assert signals==[(101,signal.SIGSTOP)]
+    # stop also catches children forked by a background builder after the saved boundary.
+    process(303,['python','new-builder'])
+    (proc/'202/task/202/children').write_text('303')
+    monkeypatch.setattr(sys,'argv',['boundary','stop','--worktree',str(worktree),
+        '--log',str(tmp_path/'log'),'--record',str(record)])
+    b.main()
+    assert (303,signal.SIGTERM) in signals and signals[-1]==(101,signal.SIGCONT)
+    assert {pid for pid,_ in signals}<={101,202,303}
+
+
+def test_deploy17_backup_restore_only_temporary_files(tmp_path):
+    import subprocess
+    text=(ROOT/'scripts/qc_deploy17.sh').read_text().split('# --- switch:',1)[0]
+    script=tmp_path/'functions.sh';script.write_text(text.replace('/home/newbiexvwu',str(tmp_path)))
+    result=subprocess.run(['bash','-c','''
+source "$1"
+O="$2/backup"; mkdir -p "$W/scripts" "$O"
+FILES=(scripts/example.py recipes/new.json)
+GENERATED=artifacts/task165/training_panel.json
+printf 'original\n' > "$W/scripts/example.py"
+backup_files
+printf 'changed\n' > "$W/scripts/example.py"
+mkdir -p "$W/recipes"; printf 'new\n' > "$W/recipes/new.json"
+restore_files
+[[ "$(cat "$W/scripts/example.py")" = original ]]
+[[ ! -e "$W/recipes/new.json" ]]
+[[ -f "$O/backed_up" ]]
+''','test',str(script),str(tmp_path)],capture_output=True,text=True,timeout=5)
+    assert result.returncode==0,result.stderr
+
+
+def test_deploy17_boundary_waits_for_durable_group_record(tmp_path):
+    import deploy17_boundary as b
+    log=tmp_path/'curriculum.log';state=tmp_path/'curriculum_state.json'
+    log.write_text('2026-10-29T12:00:00 round 48 c48task_o24 task mult=1 rc=0 20s\n')
+    state.write_text(json.dumps(dict(completed_groups=[])))
+    assert not b.committed_boundary(log,state)
+    state.write_text(json.dumps(dict(completed_groups=[dict(label='c48task_o24')])))
+    assert b.committed_boundary(log,state)
+    log.write_text('2026-10-29T12:00:00 round 48 c48task_o24: group skipped: failed\n')
+    assert b.committed_boundary(log,state)
+    with log.open('a') as f:f.write('2026-10-29T12:00:00 round 48 c48task_o48: workers=2/16\n')
+    assert not b.committed_boundary(log,state)
