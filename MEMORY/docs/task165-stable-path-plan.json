@@ -28,11 +28,6 @@
       "sha256": "2b019fdf9a8660ba05a67aeacc29d3e20c4fe20c3a55e0e99ddc5550399c33be"
     },
     {
-      "path": "configs/panels/day_orig_panel.json",
-      "bytes": 222527,
-      "sha256": "01e3ae4f437b7673b3278280e3891bfcb0f65e92ba8bddaeb7b6321713fcdc27"
-    },
-    {
       "path": "configs/panels/unified_v1.json",
       "bytes": 320434,
       "sha256": "c17daf9a2ded971f51e6af53642badb4969cc17b234583aa7d3630409fe00b32"
@@ -60,7 +55,7 @@
       "file": "recipes/panel_pressure.json",
       "line": 25,
       "before": "  \"day_orig_manifest\": \".claude/worktrees/conveyor/artifacts/stage4/day_panel.json\",",
-      "path_rewrite": "  \"day_orig_manifest\": \"configs/panels/day_orig_panel.json\","
+      "path_rewrite": "remove day_orig_manifest; call day_original_tasks()"
     },
     {
       "file": "recipes/panel_pressure.json",
@@ -90,7 +85,7 @@
       "file": "recipes/panel_v2.json",
       "line": 25,
       "before": "  \"day_orig_manifest\": \".claude/worktrees/conveyor/artifacts/stage4/day_panel.json\",",
-      "path_rewrite": "  \"day_orig_manifest\": \"configs/panels/day_orig_panel.json\","
+      "path_rewrite": "remove day_orig_manifest; call day_original_tasks()"
     },
     {
       "file": "recipes/panel_v2.json",
@@ -324,7 +319,7 @@
       "file": "recipes/panel_v1.json",
       "line": 25,
       "before": "  \"day_orig_manifest\": \".claude/worktrees/conveyor/artifacts/stage4/day_panel.json\",",
-      "path_rewrite": "  \"day_orig_manifest\": \"configs/panels/day_orig_panel.json\","
+      "path_rewrite": "remove day_orig_manifest; call day_original_tasks()"
     },
     {
       "file": "recipes/dw4i.json",
@@ -372,7 +367,7 @@
       "file": "scripts/b3_noninferiority.py",
       "line": 58,
       "before": "    {'name': 'day_l10_orig', 'manifest': MAIN / '.claude/worktrees/conveyor/artifacts/stage4/day_panel.json',",
-      "path_rewrite": "    {'name': 'day_l10_orig', 'manifest': Path(__file__).resolve().parents[1] / 'configs/panels/day_orig_panel.json',"
+      "path_rewrite": "call day_original_tasks() through builtin:day_orig"
     },
     {
       "file": "scripts/task73c_holdout_probe.py",
@@ -384,7 +379,7 @@
       "file": "scripts/make_multiplier_tasks.py",
       "line": 175,
       "before": "        'day_orig': overrides.get('day_orig') or MAIN / '.claude/worktrees/conveyor/artifacts/stage4/day_panel.json',",
-      "path_rewrite": "        'day_orig': overrides.get('day_orig') or Path(__file__).resolve().parents[1] / 'configs/panels/day_orig_panel.json',"
+      "path_rewrite": "call day_original_tasks() through builtin:day_orig"
     },
     {
       "file": "scripts/audit_l20_student_gap.py",
@@ -696,7 +691,7 @@
       "file": "scripts/build_adventure_gap.py",
       "line": 131,
       "before": "    paths += [MAIN/'.claude/worktrees/conveyor/artifacts/stage4/day_panel.json']",
-      "path_rewrite": "    paths += [Path(__file__).resolve().parents[1] / 'configs/panels/day_orig_panel.json']"
+      "path_rewrite": "call day_original_tasks() through builtin:day_orig"
     },
     {
       "file": "scripts/qc_deploy14f.sh",
@@ -848,5 +843,12 @@
     "executable_target": "/home/newbiexvwu/PvZ-search/artifacts/production/deploy16/pvz-portable"
   },
   "legacy_archive_note": "Historical experiments use artifacts/archive/<source>; missing old models/results are not fabricated or made production dependencies.",
-  "preserved_historical_state": "Completed certificates and frozen job files retain their original provenance. Effective training labels are filtered by the explicit retirement policy on load."
+  "preserved_historical_state": "Completed certificates and frozen job files retain their original provenance. Effective training labels are filtered by the explicit retirement policy on load.",
+  "day_orig_source": {
+    "function": "scripts/day_orig_tasks.py:day_original_tasks",
+    "materialized_manifest": false,
+    "dispatch": "builtin:day_orig",
+    "legacy_job_paths": "resolve to the same function; no file read"
+  },
+  "preview_note": "File lists below are the historical pre-simplification read-only preview; day_orig JSON installation is superseded by the function above. No production apply has run."
 }

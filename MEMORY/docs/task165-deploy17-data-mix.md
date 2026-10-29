@@ -348,3 +348,30 @@ bash ~/pvz-logs/qc_deploy17_paths.sh --rollback
 操作脚本提交`c2576413`后补充看门狗启动桥接：若新updater是最新qc_deploy脚本，
 看门狗仍能只提取启动函数，转到现行`qc_deploy17.sh`，不执行更新体；重复执行/回滚也可直接返回。
 新增对应`-k`小项0.04秒通过，连同前述7项共8个相关用例通过；未执行真实服务操作。
+
+
+### 2026-10-30：按主控补充简化 day_orig（只提交，不部署）
+
+本节替代前节将 day_orig 面板纳入 git 的方案。删除 `configs/panels/day_orig_panel.json`，
+新增 `scripts/day_orig_tasks.py:day_original_tasks()`，在内存中按关卡、`deck_for_level` 和固定种子段
+生成原有 11 个任务。L1–10 跳过 L5，普通评估段 30000..31023；L10 原版传送带评估同段，
+训练段 1880000..1888191。原版开局仍为空卡组、`conveyor_start=original`。
+这里沿用前节已从生产状态确认的 task id、关卡、卡组和种子定义，没有改变任务族或偏移。
+
+`make_multiplier_tasks.py`、采集共用的 `render_episode.load_training_task`、`b3_noninferiority.py`、
+`build_adventure_gap.py`、`unified_panel.py` 接入同一函数。CLI/队列使用 `builtin:day_orig`
+仅作来源标记，不落临时 JSON；状态中已有的旧 conveyor 清单路径同样直接调用函数。
+`recipes/panel_v1.json`、`panel_v2.json`、`panel_pressure.json` 移除 `day_orig_manifest`；
+`pvz_recipe.py` 接受旧冻结配方的遗留字段，但不再要求它。
+
+准备中的边界更新脚本和安装助手同步移除 day_orig JSON 的复制项，安装生成函数，
+对 cq / obsup / 当前原生代码包的相关调用做局部替换，保留其余代码差异。
+此前 task20 两标签共 256 局的弃用处理不变，不重打全部训练段。
+路径计划文件的旧 preview 保留为历史记录，已注明此函数方案取代 day_orig JSON 项。
+
+本次按“只改 conveyor / task20”范围完成上述接线及必要的配方、更新脚本和文档调整；
+未继续全仓库清理，留给 task169 的 purgelive / purgedead。
+按用户要求未新增校验、未复跑；只调整原有相关用例以适配函数接口。
+只读查看生产日志：00:50:41 随机卡组 L32 完成 24 局、rc=0，随后开始下一组；
+现行 active 仍为 `ad4fe41c`。没有改生产配置、移除生产链接或触发组边界更新。
+部署与回滚仍使用前节两条命令，等待主控审后再执行。

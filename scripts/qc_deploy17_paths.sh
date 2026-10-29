@@ -80,9 +80,9 @@ O=$LOG_DIR/deploy17_paths_$(date +%Y%m%dT%H%M%S)_$$
 mkdir -p "$O/source"
 FILES=(scripts/deploy17_boundary.py scripts/apply_deploy17_paths.py
        scripts/stabilize_production_paths.py scripts/retire_task20.py scripts/qc_deploy17.sh
-       scripts/curriculum_queue.py python/pvz_frame_store.py python/pvz_recipe.py
+       scripts/curriculum_queue.py scripts/day_orig_tasks.py python/pvz_frame_store.py python/pvz_recipe.py
        python/pvz_training_pack.py python/pvz_corpus_policy.py
-       configs/panels/day_orig_panel.json configs/panels/unified_v1.json
+       configs/panels/unified_v1.json
        configs/panels/unified_v2.json configs/panels/day_identity.json)
 for file in "${FILES[@]}"; do
   mkdir -p "$(dirname "$O/source/$file")"

@@ -72,10 +72,11 @@ start_qc() {
 # All mutations below run only after explicit main-controller approval/execution.
 FILES=(scripts/curriculum_queue.py scripts/make_random_deck_cells.py scripts/deck_rules.py
        scripts/make_multiplier_tasks.py scripts/b3_noninferiority.py scripts/build_adventure_gap.py
+       scripts/day_orig_tasks.py scripts/render_episode.py scripts/unified_panel.py
        scripts/pack_training_rows.py scripts/train_rollout_policy.py
        python/pvz_recipe.py python/pvz_training_pack.py python/pvz_training_rows.py
        python/pvz_corpus_policy.py python/pvz_frame_store.py
-       configs/panels/day_orig_panel.json configs/panels/unified_v1.json
+       configs/panels/unified_v1.json
        configs/panels/unified_v2.json configs/panels/day_identity.json
        configs/deploy17_random_deck_pool.json configs/deploy17_deck_holdouts.json
        recipes/dw4i2_v2timer.json recipes/dw4i2_v2timer_history10.json)

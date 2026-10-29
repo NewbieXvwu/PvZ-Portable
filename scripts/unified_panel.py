@@ -15,6 +15,7 @@ from run_identity_validation import descendants
 import dagger_experiment_runner as guard
 from pvz_metrics import Metrics
 from pvz_recipe import panel_args, write_recipe
+from day_orig_tasks import day_original_tasks
 
 
 def read(path):
@@ -319,7 +320,7 @@ def main():
         print(f'wrote {args.manifest}: {len(document["tasks"])} tasks ({args.version})')
     if args.generate_pressure:
         assert 1 <= args.pressure_seeds <= 1024
-        pressure = generate_pressure(read(args.day_manifest), read(args.day_orig_manifest),
+        pressure = generate_pressure(read(args.day_manifest), {'tasks': list(day_original_tasks().values())},
                                      read(args.night_manifest), read(args.pool_manifest),
                                      args.pressure_seeds)
         write(args.pressure_manifest, pressure)

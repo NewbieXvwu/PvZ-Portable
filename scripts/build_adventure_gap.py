@@ -13,6 +13,7 @@ MAIN=Path('/home/newbiexvwu/PvZ-search')
 ART=ROOT/'artifacts/task55'
 sys.path[:0]=[str(ROOT/'scripts'),str(ROOT/'python')]
 import pvz_constants as constants
+from day_orig_tasks import day_original_tasks
 
 
 def read(p):return json.loads(Path(p).read_text())
@@ -128,10 +129,13 @@ def build():
     registry={}
     paths=[MAIN/'artifacts/stage4'/n for n in ('day_panel.json','night_panel.json','pool_panel.json')]
     paths += [MAIN/'.claude/worktrees/cq/artifacts/task45/fog_panel.json',MAIN/'.claude/worktrees/cq/artifacts/task46/roof_panel.json']
-    paths += [Path(__file__).resolve().parents[1] / 'configs/panels/day_orig_panel.json']
     for i,path in enumerate(paths):
         key=f'R{i}';doc=source(key,path,meta['captured_at'],'registered tasks; does not imply qc admission or measured wins')
         for t in doc['tasks']:registry[t['task_id']]=(t,key)
+    sources['R5'] = dict(path='scripts/day_orig_tasks.py:day_original_tasks',
+                         date=meta['captured_at'], note='generated original day tasks')
+    for task_id, task in day_original_tasks().items():
+        registry[task_id] = (task, 'R5')
     qc_last={}
     pattern=re.compile(r'^(\S+) round \d+ (\S+) (\S+) mult=([\d.]+) offset=(\d+) games=(\d+) wins=(\d+).* rc=(\d+)')
     for line_no,line in enumerate(log.splitlines(),1):
