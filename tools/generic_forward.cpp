@@ -15,6 +15,7 @@ int main(int argc, char** argv) {
             if(!in) throw std::runtime_error("truncated input");
         }
         graph.Run();
+        graph.Materialize();
         std::ofstream out(argv[3], std::ios::binary);
         for (const auto& n : graph.nodes) {
             const auto& t=graph.tensors[n.output];
@@ -26,6 +27,14 @@ int main(int argc, char** argv) {
         for(int i=0;i<iterations;++i) graph.Run();
         double us=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/iterations;
         double cpuUs=double(std::clock()-cpuStart)*1000000/CLOCKS_PER_SEC/iterations;
-        std::cout << "{\"us\":" << us << ",\"cpu_us\":" << cpuUs << ",\"iterations\":" << iterations << "}\n";
+        std::cout << "{\"us\":" << us << ",\"cpu_us\":" << cpuUs << ",\"iterations\":" << iterations;
+        if(argc>5 && std::string(argv[5])=="profile") {
+            auto times=graph.Profile(iterations);
+            std::cout<<",\"profile\":[";
+            for(size_t i=0;i<times.size();++i) std::cout<<(i ? "," : "")<<"{\"node\":\""<<graph.tensors[graph.nodes[i].output].name
+                <<"\",\"op\":\""<<graph.nodes[i].op<<"\",\"us\":"<<times[i]<<'}';
+            std::cout<<']';
+        }
+        std::cout << "}\n";
     } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 1; }
 }

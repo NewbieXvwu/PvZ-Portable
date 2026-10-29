@@ -98,7 +98,9 @@ def reference(module, graph, feeds, *, intermediates=False):
         x = a[0]
         shape = graph.tensors[n['name']]['shape']
         if op == 'linear': y = F.linear(*a)
-        elif op == 'conv': y = F.conv2d(*a, stride=tuple(p[2:4]), padding=tuple(p[:2]))
+        elif op in ('conv', 'conv_relu'):
+            y = F.conv2d(*a, stride=tuple(p[2:4]), padding=tuple(p[:2]))
+            if op == 'conv_relu': y = F.relu(y)
         elif op == 'relu': y = F.relu(x)
         elif op == 'add': y = a[0] + a[1]
         elif op == 'concat': y = torch.cat(a, dim=p[0])
@@ -192,6 +194,12 @@ class Builder:
         return self.g.node(name, 'linear', [x, w]+([b] if b else []), shape, stage=stage)
 
     def relu(self, name, x, stage=0):
+        source = next((n for n in reversed(self.g.nodes) if n['name'] == x), None)
+        if source and source['op'] == 'conv' and self.g.nodes[-1] is source:
+            # Keep the graph's logical output explicit, including in intermediate parity dumps.
+            shape=self.g.tensors.pop(x)['shape']
+            self.g.nodes.pop()
+            return self.g.node(name,'conv_relu',source['inputs'],shape,source['ints'],source['floats'],stage)
         return self.g.node(name, 'relu', [x], self.g.tensors[x]['shape'], stage=stage)
 
 

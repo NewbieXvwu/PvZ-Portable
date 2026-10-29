@@ -820,6 +820,15 @@ static void RunEnvironment(LawnApp* app)
 			}
 			minimalResponse = true;
 		}
+		else if (command == "ROLLOUT_BENCH")
+		{
+			int iterations=0; std::string extra;
+			ok=bool(input>>iterations) && !(input>>extra) && iterations>=1 && iterations<=10000 && rollout.Loaded() && app->mBoard;
+			std::cout<<"PVZENV {\"protocol_version\":"<<kEnvironmentProtocolVersion<<",\"ok\":"<<(ok ? "true" : "false");
+			if(ok) std::cout<<std::setprecision(9)<<",\"us\":"<<rollout.Benchmark(app,iterations);
+			std::cout<<'}'<<std::endl<<std::setprecision(6);
+			continue;
+		}
 		else if (command == "ROLLOUT_PREDICT")
 		{
 			int priorTick = -1, priorPlant = 0;

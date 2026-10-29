@@ -1,9 +1,12 @@
 #include "GenericForward.h"
+#include "GenericForwardDnnl.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <chrono>
 #include <cstdint>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
 #include <limits>
 #include <numeric>
@@ -20,7 +23,7 @@ namespace pvz::net {
 namespace {
 const std::vector<std::string> ops = {"linear", "conv", "relu", "add", "concat", "reshape",
     "permute", "pool", "norm", "attention", "ffn", "moe", "scatter", "pointer",
-    "embedding", "broadcast", "select", "slice", "mask", "relation"};
+    "embedding", "broadcast", "select", "slice", "mask", "relation", "conv_relu"};
 void Require(bool ok, std::string_view message) {
     if (!ok) throw std::runtime_error("generic forward: " + std::string(message));
 }
@@ -46,6 +49,11 @@ size_t Count(const std::vector<int>& shape) {
 // Linear weights retain PyTorch's [out,in] layout; BLAS consumes them transposed.
 void Linear(const float* x, const Tensor& w, const Tensor* bias, float* y, int rows) {
     const int out = w.shape[0], in = w.shape[1];
+    if (rows == 1) {
+        cblas_sgemv(CblasRowMajor, CblasNoTrans, out, in, 1.f, w.data.data(), in, x, 1, 0.f, y, 1);
+        if (bias) for (int c=0;c<out;++c) y[c]+=bias->data[c];
+        return;
+    }
     cblas_sgemm(CblasRowMajor, CblasNoTrans, CblasTrans, rows, out, in,
         1.f, x, in, w.data.data(), in, 0.f, y, out);
     if (bias) for (int r = 0; r < rows; ++r)
@@ -74,7 +82,10 @@ const Tensor& Graph::Get(const std::string& name) const {
     for (const auto& t : tensors) if (t.name == name) return t;
     throw std::runtime_error("generic forward: missing tensor " + name);
 }
-Tensor& Graph::Get(const std::string& name) { return const_cast<Tensor&>(std::as_const(*this).Get(name)); }
+Tensor& Graph::Get(const std::string& name) {
+    auto& t=const_cast<Tensor&>(std::as_const(*this).Get(name)); NativeToHost(t); return t;
+}
+void Graph::Materialize() { for(auto& t:tensors) NativeToHost(t); }
 void Graph::Load(const std::string& path) {
 #ifdef OPENBLAS_VERSION
     openblas_set_num_threads(1);
@@ -130,7 +141,7 @@ void Graph::Prepare() {
             const auto& w = at(1); Require(w.shape.size() == 2 && a.shape.back() == w.shape[1], "linear shape");
             auto expected = a.shape; expected.back() = w.shape[0]; Require(y.shape == expected, "linear output");
             if (n.inputs.size() == 3) Require(at(2).data.size() == size_t(w.shape[0]), "linear bias");
-        } else if (n.code == 1) {
+        } else if (n.code == 1 || n.code == 20) {
             Require(n.inputs.size() == 2 || n.inputs.size() == 3, "conv inputs");
             Require(n.ints.size() == 4 || (n.ints.size() == 5 && n.ints[4] == 1), "conv parameters");
             auto& w = at(1);
@@ -142,6 +153,17 @@ void Graph::Prepare() {
                 (a.shape[3]+2*n.ints[1]-w.shape[3])/n.ints[3]+1}), "conv shape");
             n.scratch.resize(size_t(w.shape[1])*w.shape[2]*w.shape[3]*y.shape[2]*y.shape[3]);
             if (n.ints.size() == 5) { n.indices.resize(a.shape[1], -1); n.packed.resize(w.data.size()); }
+            if (n.ints[3] == 1) {
+                const int OH=y.shape[2],OW=y.shape[3],H=a.shape[2],W=a.shape[3];
+                for(int kh=0;kh<w.shape[2];++kh) for(int kw=0;kw<w.shape[3];++kw) {
+                    int begin=std::max(0,n.ints[1]-kw), end=std::min(OW,W+n.ints[1]-kw);
+                    if(begin>=end) continue;
+                    for(int h=0;h<OH;++h) {
+                        int ih=h*n.ints[2]+kh-n.ints[0];
+                        if(ih>=0 && ih<H) n.copies.push_back({ih*W+begin+kw-n.ints[1],(kh*w.shape[3]+kw)*OH*OW+h*OW+begin,end-begin});
+                    }
+                }
+            }
         } else if (n.code == 2 || n.code == 3 || n.code == 18) {
             inputs(n.code == 2 ? 1 : 2); Require(a.shape == y.shape, "elementwise shape");
             if (n.code == 3) Require(at(1).shape == a.shape, "add shape");
@@ -237,6 +259,7 @@ void Graph::Prepare() {
             auto expected=a.shape; expected[axis]=length; Require(y.shape==expected, "slice output");
         }
         ready[n.output] = true;
+        PrepareNativeConvolution(*this,n);
         // E.g. split a 1x1 kernel once at load, not once per decision.
         if (std::all_of(n.inputs.begin(), n.inputs.end(), [&](int i) { return tensors[i].role == 2; })) {
             Execute(n); tensors[n.output].role = 2; n.code = -1;
@@ -247,14 +270,26 @@ void Graph::Prepare() {
 void Graph::Run(int firstStage, int lastStage) {
     for (auto& n : nodes) if (n.code >= 0 && n.stage >= firstStage && n.stage <= lastStage) Execute(n);
 }
+std::vector<double> Graph::Profile(int iterations) {
+    std::vector<double> times(nodes.size(), 0.);
+    for (int r=0; r<iterations; ++r) for (size_t i=0; i<nodes.size(); ++i) {
+        if (nodes[i].code < 0) continue;
+        auto start=std::chrono::steady_clock::now();
+        Execute(nodes[i]);
+        times[i]+=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/iterations;
+    }
+    return times;
+}
 void Graph::Execute(Node& n) {
+    if(ExecuteNativeConvolution(n)) return;
+    for(int id:n.inputs) NativeToHost(tensors[id]);
     auto& a = tensors[n.inputs[0]]; auto& y = tensors[n.output];
     auto at = [&](int i) -> const Tensor& { return tensors[n.inputs[i]]; };
     float* out = y.data.data(); const float* x = a.data.data();
     const int count = int(y.data.size());
     switch (n.code) {
     case 0: Linear(x, at(1), n.inputs.size()==3 ? &at(2) : nullptr, out, a.data.size()/a.shape.back()); break;
-    case 1: {
+    case 1: case 20: {
         const auto& w=at(1); int B=a.shape[0], C=a.shape[1], H=a.shape[2], W=a.shape[3];
         int O=w.shape[0], KH=w.shape[2], KW=w.shape[3], OH=y.shape[2], OW=y.shape[3], S=OH*OW;
         float* col=n.scratch.data();
@@ -266,7 +301,10 @@ void Graph::Execute(Node& n) {
                 bool nonzero=false;
                 for(int b=0;b<B && !nonzero;++b) {
                     const float* plane=x+(b*C+c)*H*W;
-                    nonzero=std::any_of(plane,plane+H*W,[](float v) { return v!=0.f; });
+                    uint64_t bits=0;
+                    for(int i=0;i+1<H*W;i+=2) { uint64_t word; std::memcpy(&word,plane+i,8); bits|=word; }
+                    if(H*W%2) { uint32_t word; std::memcpy(&word,plane+H*W-1,4); bits|=word; }
+                    nonzero=bits!=0;
                 }
                 if(nonzero) { changed |= n.indices[active]!=c; n.indices[active++]=c; }
             }
@@ -280,17 +318,23 @@ void Graph::Execute(Node& n) {
         int K=active*KH*KW;
         for (int b=0;b<B;++b) {
             const bool direct=!sparse && KH==1 && KW==1 && n.ints[0]==0 && n.ints[1]==0 && n.ints[2]==1 && n.ints[3]==1;
-            for (int ac=0;ac<active && !direct;++ac) for (int kh=0;kh<KH;++kh) for (int kw=0;kw<KW;++kw) {
+            if(!direct && n.ints[3]==1) for(int ac=0;ac<active;++ac) {
+                const float* source=x+(b*C+(sparse ? n.indices[ac] : ac))*H*W;
+                float* dest=col+ac*KH*KW*S;
+                for(const auto& copy:n.copies) {
+                    const float* src=source+copy.source; float* dst=dest+copy.destination;
+                    switch(copy.count) {
+                    case 10: std::memcpy(dst,src,40); break;
+                    case 9: std::memcpy(dst,src,36); break;
+                    case 8: std::memcpy(dst,src,32); break;
+                    default: std::memcpy(dst,src,copy.count*sizeof(float)); break;
+                    }
+                }
+            }
+            for (int ac=0;ac<active && !direct && n.ints[3]!=1;++ac) for (int kh=0;kh<KH;++kh) for (int kw=0;kw<KW;++kw) {
                 int c=sparse ? n.indices[ac] : ac;
                 float* dst=col+((ac*KH+kh)*KW+kw)*S;
-                if(n.ints[3]==1) {
-                    // Padding stays zero from Load(); only contiguous valid row spans change.
-                    int begin=std::max(0,n.ints[1]-kw), end=std::min(OW,W+n.ints[1]-kw);
-                    if(begin<end) for(int h=0;h<OH;++h) {
-                        int ih=h*n.ints[2]+kh-n.ints[0];
-                        if(ih>=0 && ih<H) std::copy_n(x+((b*C+c)*H+ih)*W+begin+kw-n.ints[1],end-begin,dst+h*OW+begin);
-                    }
-                } else for (int h=0;h<OH;++h) for (int v=0;v<OW;++v) {
+                for (int h=0;h<OH;++h) for (int v=0;v<OW;++v) {
                     int ih=h*n.ints[2]+kh-n.ints[0], iw=v*n.ints[3]+kw-n.ints[1];
                     dst[h*OW+v]=(ih>=0 && ih<H && iw>=0 && iw<W) ? x[((b*C+c)*H+ih)*W+iw] : 0.f;
                 }
@@ -299,6 +343,7 @@ void Graph::Execute(Node& n) {
             if(K) cblas_sgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,O,S,K,1.f,kernel,K,direct ? x+b*C*S : col,S,0.f,dst,S);
             else std::fill_n(dst,O*S,0.f);
             if(n.inputs.size()==3) for(int o=0;o<O;++o) for(int s=0;s<S;++s) dst[o*S+s]+=at(2).data[o];
+            if(n.code==20) for(int i=0;i<O*S;++i) dst[i]=std::max(0.f,dst[i]);
         } break;
     }
     case 2: for(int i=0;i<count;++i) out[i]=std::max(0.f,x[i]); break;

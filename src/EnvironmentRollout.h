@@ -46,6 +46,8 @@ public:
 	// nothing is plantable cost nothing).  Reset by the caller around a batch of rollouts.
 	int NetworkCalls() const { return networkCalls; }
 	void ResetNetworkCalls() { networkCalls = 0; }
+	// Explicit development command; features are constructed once, outside the timed loop.
+	double Benchmark(LawnApp* app, int iterations);
 
 private:
 	pvz::net::Graph graph;

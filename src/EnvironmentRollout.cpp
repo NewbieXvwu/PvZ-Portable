@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
+#include <chrono>
 #include <cstring>
 #include <fstream>
 #include <limits>
@@ -855,4 +856,21 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 		result.action = *std::max_element(legal.begin(), legal.end(), [&result](const Action& left, const Action& right) {
 			return result.cells[left.row * 9 + left.col] < result.cells[right.row * 9 + right.col]; });
 	return result;
+}
+
+double EnvironmentRollout::Benchmark(LawnApp* app, int iterations)
+{
+	History history;
+	Features(app, 0, -1, false, featureBoard, featureScalars, history);
+	if (generic && graphTerrain >= 0)
+		graph.tensors[graphTerrain].data[0] = static_cast<float>(std::min(4, static_cast<int>(app->mBoard->mBackground)));
+	Prediction output{};
+	auto run = [&] { packetLogitsValid = false; Encode(featureBoard, featureScalars); output = Heads(0); };
+	run();
+	auto start = std::chrono::steady_clock::now();
+	for (int i=0;i<iterations;++i) run();
+	// Keep the complete three-head result observable to LTO.
+	volatile float observed = output.plant + output.packets[0] + output.cells[0];
+	(void)observed;
+	return std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/iterations;
 }
