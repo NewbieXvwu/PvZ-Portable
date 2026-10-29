@@ -104,3 +104,24 @@ scatter 输入 grid,entities,coords；embedding 输入 ids,table（负 id 映射
 输出按节点顺序串联，供逐中间量对拍；生产不输出中间文件、不添加前向自检。
 阶段 1 相关测试：CNN64 各中间量最大绝对误差 2.69e-7；B=2 attention（含全掩码）、
 RMSNorm、ReLU FFN、共享+top-k MoE 和 B=2 identity CNN 对拍通过，单项约 2 秒。
+
+## 阶段 2：引擎接入（2026-10-29）
+
+`EnvironmentRollout::Load` 按 magic 分流，新格式供现有 `ROLLOUT_PREDICT` 根节点策略及
+`ROLLOUT`/`ROLLOUT_VALUE` 续走使用；旧格式与默认导出不变。能力字段新增
+`generic_forward_version:1`。Python `env.load_rollout_net(path)` 接受新格式；命令行导出：
+
+```bash
+python python/pvz_rollout_policy.py checkpoint.pt student.bin --generic
+```
+
+原生适配器支持可选输入 `board:[1,C,6,10]`、`scalars:[1,S]`、`packet_info:[1,10,4]`、
+`terrain:[1]`，必需 `selected_packet:[1]`。metadata 为 `[观测id1..9,task_context0/1,identity0/1]`。
+terrain 为白天0、夜间1、泳池2、雾3、屋顶/最终Boss4；可用 broadcast 扩展到每 token。
+task157 增加富输入时在 `LoadGraph` 绑定新输入，在 `Encode` 填数组即可，不需要改算子库。
+独立 token 示例使用合成 token 输入，因此需 task157 的富输入适配器后才能直接用于游戏。
+
+在本 worktree 的 `build-cppnet` 独立编译，nice10、-j3。真实占用局面选 3 种布局
+（v1/slot，v2/context/identity/非等宽embedding，v2timer/row_pool/identity CNN64），
+12 个决策逐中间量与 torch 原模型对拍，最大绝对误差 4.77e-7；旧路径/新路径完整动作一致。
+每种布局各做一次 600 tick 原生续走，两路径终态 hash 一致。测试约 2 秒，地址空间上限 8,000,000 KiB。

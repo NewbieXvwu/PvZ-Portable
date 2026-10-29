@@ -81,6 +81,7 @@ void EnvironmentRollout::Load(const std::string& path)
 	uint32_t size = 0, pool = 0, withContext = 0, observation = 1, withRowPool = 0;
 	uint32_t packetHead = 0, embedding = 0;
 	input.read(magic, 8);
+	if (std::string(magic, 8) == "PVZGN001") { LoadGraph(path); return; }
 	input.read(reinterpret_cast<char*>(&size), 4);
 	input.read(reinterpret_cast<char*>(&pool), 4);
 	const std::string version(magic, 8);
@@ -121,16 +122,9 @@ void EnvironmentRollout::Load(const std::string& path)
 	plantEmbedding = embedding;
 	meanmax = pool != 0;
 	rowPool = withRowPool != 0;
-	taskContext = withContext != 0;
-	v2lite = observation == 2;
-	v2 = observation >= 3;
-	fogChannel = observation == 4;
-	sizeChannel = observation == 5;
-	bossChannel = observation >= 6;
-	bungeeChannel = observation >= 7;
-	timerChannel = observation == 9;
-	sleepChannel = observation == 8 || timerChannel;
-	observationChannels = sleepChannel ? (timerChannel ? 25 : 21) : bungeeChannel ? 19 : bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0;
+	SetObservation(observation, withContext != 0);
+	generic = false;
+	graph = pvz::net::Graph{};
 	weights = std::move(loaded);
 	// LOAD_ROLLOUT_NET can replace a model in an existing process, including with
 	// another model of the same layout. Channel sets and dimensions do not identify
@@ -143,6 +137,68 @@ void EnvironmentRollout::Load(const std::string& path)
 	hidden.resize(Cells * width);
 	scratch.resize(Cells * width);
 	context.resize(nextContext);
+}
+
+void EnvironmentRollout::SetObservation(int observation, bool withContext)
+{
+	taskContext = withContext;
+	v2lite = observation == 2;
+	v2 = observation >= 3;
+	fogChannel = observation == 4;
+	sizeChannel = observation == 5;
+	bossChannel = observation >= 6;
+	bungeeChannel = observation >= 7;
+	timerChannel = observation == 9;
+	sleepChannel = observation == 8 || timerChannel;
+	observationChannels = sleepChannel ? (timerChannel ? 25 : 21) : bungeeChannel ? 19 : bossChannel ? 13 : (fogChannel || sizeChannel) ? 10 : v2 ? 9 : v2lite ? 4 : 0;
+}
+
+void EnvironmentRollout::LoadGraph(const std::string& path)
+{
+	pvz::net::Graph next;
+	next.Load(path);
+	if (next.metadata.size() != 3 || next.metadata[0] < 1 || next.metadata[0] > 9 ||
+		next.metadata[1] < 0 || next.metadata[1] > 1 || next.metadata[2] < 0 || next.metadata[2] > 1)
+		throw std::runtime_error("generic policy requires native observation/context/identity metadata");
+	const int obs = next.metadata[0];
+	const int extra[] = {0, 0, 4, 9, 10, 10, 13, 19, 21, 25};
+	const int scalarCount = Scalars + (next.metadata[1] ? TaskContext : 0) + (obs >= 6 ? 9 : obs >= 3 ? 7 : obs == 2);
+	int board = -1, scalars = -1, info = -1, selected = -1, terrain = -1;
+	for (size_t i = 0; i < next.tensors.size(); ++i)
+	{
+		const auto& t = next.tensors[i];
+		if (t.role != 1) continue;
+		std::vector<int> expected;
+		if (t.name == "board") { board = i; expected = {1, Channels + extra[obs], 6, 10}; }
+		else if (t.name == "scalars") { scalars = i; expected = {1, scalarCount}; }
+		else if (t.name == "packet_info") { info = i; expected = {1, 10, 4}; }
+		else if (t.name == "selected_packet") { selected = i; expected = {1}; }
+		else if (t.name == "terrain") { terrain = i; expected = {1}; }
+		else throw std::runtime_error("generic policy input needs an adapter: " + t.name);
+		if (t.shape != expected) throw std::runtime_error("generic policy input shape: " + t.name);
+	}
+	int plant = -1, packet = -1, cell = -1;
+	for (size_t i = 0; i < next.tensors.size(); ++i)
+	{
+		const auto& t = next.tensors[i];
+		if (t.name == "plant" && t.shape == std::vector<int>{1, 1}) plant = i;
+		if (t.name == "packet" && t.shape == std::vector<int>{1, 10}) packet = i;
+		if (t.name == "cell" && t.shape == std::vector<int>{1, 54}) cell = i;
+	}
+	if (plant < 0 || packet < 0 || cell < 0 || selected < 0)
+		throw std::runtime_error("generic policy requires plant/packet/cell outputs and selected_packet input");
+	// Commit only after loading/binding succeeds, so a failed replacement preserves the old policy.
+	graph = std::move(next);
+	graphBoard = board; graphScalars = scalars; graphInfo = info;
+	graphSelected = selected; graphTerrain = terrain;
+	graphPlant = plant; graphPacket = packet; graphCell = cell;
+	SetObservation(obs, graph.metadata[1] != 0);
+	identityPacket = graph.metadata[2] != 0;
+	width = 1; // Loaded() sentinel; generic execution gets dimensions from the graph.
+	generic = true;
+	weights.clear(); hidden.clear(); scratch.clear(); context.clear();
+	kernelChannels.clear(); kernelBuffer.clear(); packetWeightDouble.clear();
+	columnsCount = -1; packetLogitsValid = false;
 }
 
 void EnvironmentRollout::History::Update(LawnApp* app)
@@ -580,6 +636,15 @@ static float IdentityLinear(const float* input, const float* weight, int count, 
 
 void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vector<float>& scalars)
 {
+	if (generic)
+	{
+		if (graphBoard >= 0) std::copy(board.begin(), board.end(), graph.tensors[graphBoard].data.begin());
+		if (graphScalars >= 0) std::copy(scalars.begin(), scalars.end(), graph.tensors[graphScalars].data.begin());
+		if (graphInfo >= 0) for (int i = 0; i < 10; ++i)
+			std::copy_n(packetInfo[i].data(), 4, graph.tensors[graphInfo].data.data() + 4*i);
+		graph.Run(0, 1);
+		return;
+	}
 	Convolve(board, Channels + observationChannels, 3, 3, 0, hidden, true);
 	Convolve(hidden, width, 3, 3, 2, scratch, false);
 	Convolve(scratch, width, 1, 5, 4, hidden, false);
@@ -632,6 +697,19 @@ void EnvironmentRollout::Encode(const std::vector<float>& board, const std::vect
 EnvironmentRollout::Prediction EnvironmentRollout::Heads(int packet)
 {
 	Prediction result{};
+	if (generic)
+	{
+		result.plant = graph.tensors[graphPlant].data[0];
+		std::copy_n(graph.tensors[graphPacket].data.data(), 10, result.packets.begin());
+		result.cellPacket = packet;
+		if (packet >= 0)
+		{
+			graph.tensors[graphSelected].data[0] = static_cast<float>(packet);
+			graph.Run(2, 2);
+			std::copy_n(graph.tensors[graphCell].data.data(), 54, result.cells.begin());
+		}
+		return result;
+	}
 	const int global = context.size(), stride = width + plantEmbedding + global;
 	result.cellPacket = packet;
 	const auto linear = identityPacket ? IdentityLinear : Linear;
@@ -749,6 +827,8 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 	++networkCalls;
 	packetLogitsValid = false;
 	Features(app, income, previousTick, previousPlant, featureBoard, featureScalars, history);
+	if (generic && graphTerrain >= 0)
+		graph.tensors[graphTerrain].data[0] = static_cast<float>(std::min(4, static_cast<int>(app->mBoard->mBackground)));
 	Encode(featureBoard, featureScalars);
 	result = Heads(-1);
 	if (result.plant <= 0 && !diagnostics) return result;
