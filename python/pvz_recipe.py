@@ -21,7 +21,7 @@ TRAIN_DEFAULTS = dict(
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
-    demo_row_weight=1.0, demo_start_row_weight=1.0,
+    demo_row_weight=1.0, demo_start_row_weight=1.0, llm_demo_import=None, llm_demo_results=[1],
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
     source_row_report=False, max_steps=None, micro_batch_size=None, train_row_fraction=1.0, batch_size=2048, validation_batch_size=4096,
@@ -63,7 +63,7 @@ def resolve_paths(document):
     return result
 
 
-PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir', 'row_weights',
+PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir', 'row_weights', 'llm_demo_import',
                'manifest', 'rollout_policy', 'value', 'executable', 'resource_dir',
                'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
                'pool_manifest', 'pressure_manifest')
@@ -151,7 +151,7 @@ def validate(document, kind=None):
         _object(result['label_weight'], set(labels), 'label_weight')
         for name, weight in result['label_weight'].items():
             _number(weight, f'label_weight.{name}')
-        _object(result['source_weight'], {'human', 'teacher', 'level_balance',
+        _object(result['source_weight'], {'human', 'teacher', 'llm_gpt_pro', 'llm_agent', 'level_balance',
                                           'level_balance_power', 'level_balance_max_multiplier'},
                 'source_weight')
         for name, weight in result['source_weight'].items():
@@ -170,6 +170,11 @@ def validate(document, kind=None):
                     _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
         _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
         _number(result['train_row_fraction'], 'train_row_fraction', maximum=1, positive=True)
+        outcomes = result['llm_demo_results']
+        if (not isinstance(outcomes, list) or not outcomes
+                or any(type(value) is not int or value not in (0, 1, 2) for value in outcomes)
+                or len(set(outcomes)) != len(outcomes)):
+            raise ValueError('llm_demo_results: expected unique results from [0, 1, 2]')
         for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight',
                      'demo_row_weight', 'demo_start_row_weight'):
             _number(result[name], name)
@@ -252,7 +257,9 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
-                **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
+                **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}),
+                **({key: recipe[key] for key in ('llm_demo_import', 'llm_demo_results')}
+                   if recipe.get('llm_demo_import') else {}))
 
 
 def training_args(parser, argv=None):

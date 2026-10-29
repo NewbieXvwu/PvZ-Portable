@@ -574,6 +574,8 @@ class CurriculumRulesTest(unittest.TestCase):
                         for name in ('dw4i', 'dw5i', 'identity_dw3_s1')]
             variants.append(dict(variants[0], context=True, aux_weight=1.0, aux_horizon=3,
                                  cell_soft_weight=0.0))
+            variants.append(dict(variants[0], llm_demo_import='/task105/import',
+                                 llm_demo_results=[0, 1, 2], demo_row_weight=4))
             for i, recipe in enumerate(variants):
                 with self.subTest(variant=i):
                     recipe.update(out=str(root / f'out{i}'), data=str(root / 'frames'))
@@ -1570,4 +1572,3 @@ class RandomDeckCellsTest(unittest.TestCase):
         self.assertLessEqual(random_games, int(200 * 0.15))
         self.assertEqual({item['multiplier'] for item in plan if item['base'].startswith('rd137_')},
                          {0.5})
-

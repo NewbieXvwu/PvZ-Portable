@@ -64,7 +64,7 @@ class DemoRowWeights:
         self.enabled = demo_row_weight != 1.0 or demo_start_row_weight != 1.0
         self.observed = 0
         self.spans = []
-        self.rows = dict(human=0, demo_start=0)
+        self.rows = dict(human=0, demo_start=0, llm_demo=0)
 
     def observe(self, path, rows, meta=None):
         if not self.enabled:
@@ -79,6 +79,8 @@ class DemoRowWeights:
         source = meta.get('label_source', 'teacher')
         if source == 'human':
             category, factor = 'human', self.demo_row_weight
+        elif meta.get('llm_demo_sha256') and source.startswith('llm_'):
+            category, factor = 'llm_demo', self.demo_row_weight
         elif source == 'teacher' and meta.get('demo_archive'):
             category, factor = 'demo_start', self.demo_start_row_weight
         else:
