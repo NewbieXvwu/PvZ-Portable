@@ -140,3 +140,9 @@ task161 `cad071e9` 的 PVZGN001 图固定 T，网络导出方须确定容量或�
 | 划分 | `<前缀>/manifest.json`，记录实际卡组、关卡和 train/seen/unseen/terrain_sample |
 
 task163 可按该前缀下载后直接读取 manifest；数据取用确认后删除该 HF 前缀，遵守仓库中转后清理的约定。没有部署或访问台式机生产进程。
+
+## 台式机接手收尾：采集附件（2026-10-29，studentv3net）
+
+已先 fetch：`origin/studentv3` 仍为 `e66d878a`，没有重复实现本节。`search_play.py --obs-v3` 默认关闭；开启时逐决策流式写 `tokens_v3.npz`，与 `frames.npz` 并列，紧凑帧不写入 v3。学生推理仍可读取内存中的富输入。附件采用 task162 的 ids/counts/columns/values/offsets/feature_offsets/packet_index/cell_index/terrain 稀疏 float32，另加公开 target_indices；不量化数值，保留负零。每局结束压缩，临时列文件随即删除。附件记录紧凑帧 ZIP 成员的 CRC 与长度，读取仅查目录，不重放。
+
+实际采集开关小测试以及 float32/目标链接往返测试通过（2 项，限内存、单线程），开关两边紧凑帧所有数组逐位一致。未部署，未改生产 qc。按轮回填抽样和开销数字将在本节继续追加。

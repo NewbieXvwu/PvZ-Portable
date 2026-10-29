@@ -683,8 +683,15 @@ def _play(job: dict, observer=None) -> dict:
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
         env._teacher_value_loaded = True
-    if getattr(args, "obs_v3", False) or getattr(_W["fast"], "token_input", None) == "obs_v3":
-        env.set_token_observation(True)
+    token_observation = bool(getattr(args, "obs_v3", False) or getattr(_W["fast"], "token_input", None) == "obs_v3")
+    if token_observation or getattr(env, '_token_observation', False):
+        env.set_token_observation(token_observation)
+    env._token_observation = token_observation
+    from pvz_research_data import SparseTokenWriter, capture_frame, SIDECAR_NAME
+    token_writer = None
+    if getattr(args, 'obs_v3', False) and args.frames:
+        tag = job['seed'] if job.get('future_seed') is None else f"{job['seed']}_f{job['future_seed']}"
+        token_writer = SparseTokenWriter(Path(args.frames)/f'seed_{tag}'/f'{args.frames_label}_{job["arm"]}')
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -744,7 +751,7 @@ def _play(job: dict, observer=None) -> dict:
         # One JSON line per decision, exactly what write_frames would serialize -- kept as bytes
         # rather than as parsed dicts, so the archive costs 2.8 MB instead of ~18 MB of Python
         # objects for the whole game (task18).
-        frames = [_frame_json(_frame(obs))] if args.frames else None
+        frames = [_frame_json(capture_frame(obs, token_writer))] if args.frames else None
         fast_state = {}
         if prefix:
             fast_state['frame'] = prefix[-2] if len(prefix) > 1 else None
@@ -830,7 +837,7 @@ def _play(job: dict, observer=None) -> dict:
             if fog_diagnostics is not None:
                 fog_diagnostics.sample(env, obs)
             if frames is not None:
-                frame = _frame(obs)
+                frame = capture_frame(obs, token_writer)
                 if stats.get("last_targets"):
                     # the search's estimate for every candidate it compared: [packet (-1 = wait), row, col, value];
                     # a soft target for the student (train_rollout_policy --soft-weight). Before "action" and
@@ -862,6 +869,8 @@ def _play(job: dict, observer=None) -> dict:
             if done:
                 break
     except BaseException:
+        if token_writer is not None:
+            token_writer.abort()
         _W.pop("env", None)
         env.close()
         raise
@@ -873,6 +882,8 @@ def _play(job: dict, observer=None) -> dict:
         from pvz_frame_store import write_frames_from_source
         write_frames_from_source(archive / "frames.npz",
                                  "".join(frames).encode())
+        if token_writer is not None:
+            token_writer.finish(archive / SIDECAR_NAME, source_frame=archive / 'frames.npz')
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         demo_sha = None
         if demo_archive:
@@ -940,7 +951,7 @@ def _play(job: dict, observer=None) -> dict:
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    p.add_argument("--obs-v3", action="store_true", help="save C++ public rich token arrays")
+    p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
