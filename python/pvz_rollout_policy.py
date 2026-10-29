@@ -342,6 +342,8 @@ def load_student(path) -> RolloutNet:
 
 def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    if net.arch == 'entity_attn':
+        raise ValueError('entity_attn native export awaits the unseen-deck comparison')
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct
@@ -356,11 +358,9 @@ def export_student(net: RolloutNet, path) -> None:
         names += ("row_projection.weight", "row_projection.bias")
     if net.packet_head == 'identity':
         names += ('packet.2.weight', 'packet.2.bias')
-    if net.arch == 'entity_attn':
-        names += tuple(name for name in weights if name.startswith('entity.'))
     with open(path, "wb") as stream:
         identity = net.packet_head == 'identity'
-        stream.write((b"PVZRN007" if net.arch == 'entity_attn' else b"PVZRN006" if identity else b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
+        stream.write((b"PVZRN006" if identity else b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
                      + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
         if identity or net.row_pool or net.context or net.obs != "v1":
             stream.write(struct.pack("<I", int(net.context)))

@@ -1020,7 +1020,7 @@ static void RunEnvironment(LawnApp* app)
 					<< ",\"result\":" << static_cast<int>(app->mBoardResult) << ",\"value\":" << std::setprecision(9) << value;
 				if (estimatedResult >= 0) std::cout << ",\"rollout_result\":" << estimatedResult;
 				std::cout << "},\"decisions\":" << decisions << ",\"simulation_seconds\":" << simulationSeconds
-					<< ",\"network_seconds\":" << networkSeconds << "}" << std::endl << std::setprecision(6);
+					<< ",\"network_seconds\":" << networkSeconds << ",\"net_calls\":" << rollout.NetworkCalls() << "}" << std::endl << std::setprecision(6);
 				continue;
 			}
 			const auto observationStart = std::chrono::steady_clock::now();
