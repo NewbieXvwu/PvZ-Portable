@@ -43,11 +43,10 @@ def plan(args):
     args.out.mkdir(parents=True,exist_ok=True)
     frozen=args.out/'manifest.json';frozen.write_text(json.dumps(dict(tasks=tasks),indent=1))
     result=dict(manifest=str(frozen),tasks=[t['task_id'] for t in tasks],games=args.games,workers=args.workers,
-                seed_offset=args.seed_offset,student=str(MAIN/'artifacts/student/dw4i_s1/model.pt'),
-                static=str(MAIN/'artifacts/hard/value_branch1/model.pt'),
+                seed_offset=args.seed_offset,student=str(args.student),static=str(args.static),
                 v3=str(args.baseline),v4=str(args.v4),executable=str(args.executable),
-                student_sha256=hashlib.sha256((MAIN/'artifacts/student/dw4i_s1/model.pt').read_bytes()).hexdigest(),
-                static_sha256=hashlib.sha256((MAIN/'artifacts/hard/value_branch1/model.pt').read_bytes()).hexdigest(),
+                student_sha256=hashlib.sha256(args.student.read_bytes()).hexdigest(),
+                static_sha256=hashlib.sha256(args.static.read_bytes()).hexdigest(),
                 control='queue103 run(), beta=1, only leaf value checkpoint changes')
     target.write_text(json.dumps(result,indent=1));return result
 
@@ -101,6 +100,11 @@ def main():
     p.add_argument('--seed-offset',type=int,default=0)
     p.add_argument('--baseline',type=Path,default=MAIN/'artifacts/value_net/v3/model.pt',
                    help='the arm named v3; pass v4 to compare a new net against v4')
+    # The arm names stay v3/v4 for compatibility with value_sparse_finish.py and the tests; the
+    # student/static pair is what makes a run comparable, so a later comparison can pin its own
+    # (e.g. the production r36 student instead of the v4-era dw4i_s1) without editing the file.
+    p.add_argument('--student',type=Path,default=MAIN/'artifacts/student/dw4i_s1/model.pt')
+    p.add_argument('--static',type=Path,default=MAIN/'artifacts/hard/value_branch1/model.pt')
     p.add_argument('--executable',type=Path,default=ROOT/'build/pvz-portable')
     p.add_argument('--task',action='append',help='MANIFEST:task_id; replaces the default six tasks')
     a=p.parse_args()

@@ -132,7 +132,9 @@ def checkpoint_encoder(path: Path) -> int:
 
 
 def score_episode(entry: dict, net, frames_dir: Path, positions: int, version: int) -> dict | None:
-    path = frames_dir / entry["dir"] / "frames.npz"
+    # Episodes may live under more than one archive root (the pipeline view and the queue's
+    # default frames_v2 tree); the index records which one per entry.
+    path = Path(entry.get("frames_root") or frames_dir) / entry["dir"] / "frames.npz"
     try:
         frames = read_frames(path)
     except (OSError, ValueError):
