@@ -102,3 +102,11 @@ python scripts/queue_decision_study.py \
 磁盘方案再压缩：54个固定cell token及cell索引不逐行落盘，读取时按相同公开编码恢复；仅存实际训练行的全局行号和变长token。CPU留出顺序读取原帧，既不需要全量token缓存，也不复制大语料。缓存仍≤2GiB；用完连同row mask、二进制source plan和研究硬链接视图一起删除，JSON清单及结果保留。新增代码检出实测各33MiB，旧中间检出在无活动作业引用后移除。
 
 23:08部署收尾：决策作业和执行器重新锁定 **`323b867caf382efa4e4b9aea6829777d1d8d31f8`**；task163仍锁定 `cfa42c1c6d669f849b63bf52df90a2db6aafc072`。启用队列共35项（16个decision、14个task163、split/probe/publish/tokens/cleanup五项准备作业），另两项旧示例仍禁用。服务active，生产仍在训练，实验未占GPU；实测表待下个真实窗口自动追加。新版代码检出33MiB，task163代码检出33MiB；无活动作业引用的f9b5ad75中间检出33MiB已移除。未复制大数据，尚未产生token缓存或模型大文件。
+
+## decision_split 跳过已删除原帧的行（10-30 续办）
+
+- 失败点：r42 冻结包引用 256 份 task20 `d10orig1/2_fast_search` 存档（seed_1880000–1880255，57,970 行，占 0.245%），其原始帧随旧 conveyor worktree 删除且无备份（生产帧目录里指向它们的软链已移到 `~/pvz-logs/retired_d10orig_links/`）。split 在 `os.link` 处 FileNotFoundError，作业 returncode 1。
+- 处理（提交 `9974c1a6`）：缺帧的存档**不建硬链接、不建 token、不打分**，但**仍占住它在包里的行号**——行计划保留这些行并推进计数器，`unseen.npy` 把它们标为不训练，留出评测跳过它们，吞吐探针也跳过。没有新增校验步骤或清单文件。
+- 顺带修正行计划的枚举顺序：段是按采集轮次追加的，`ORDER BY source` 得到的偏移与包内行号不一致（实测 83,957 个源全部错位），这会让 token 缓存的 `stored_row` 与留出流式 `ArchiveTokens` 把行号解析成别的存档。split / tokens / `ArchiveTokens` / 探针统一改成 `ORDER BY rowid`（插入顺序=包内顺序；已只读核对已冻结的 1164 段完全一致），跳过标记才会落在正确的包行上。评测的“帧是否还在”查**冻结视图**而不是生产目录，避免生产后续裁剪时误删有效留出行。
+- 部署：新增固定检出 `code/9974c1a6…`，21 个 decision 作业（split、tokens、16 个训练臂、探针、发布、清理）重新锁定到该提交，原作业 JSON 与配方备份在 `queue-history/9974c1a6…/`；task163 的 14 个作业仍锁定 `cfa42c1c…` 未动。执行器经 `install_gpu_window.sh` 从新检出重装并重启（Nice10 / MemoryMax5GiB 不变），split 从 `progress.json` 的 segment 1164 续跑。生产 qc / 看门狗未触碰，重启后 `production_wait_observed_seconds` 仍为 0.0，服务在等下一个 pack/selection/gate 窗口。旧检出 `323b867c…`（33MiB）已无作业引用，留待磁盘紧张时再删。
+- 验收：`ulimit -v 8000000` + `-k "split or tokens or eval or deck or terrain or metric or budget or decision"`（test_decision_queue / test_gpu_window / test_window_budget）15 passed，新增两个小用例分别覆盖 split 缺帧跳过（并验证包行号占位）与 tokens 跳过时行计数推进。未运行生产规模验收。
