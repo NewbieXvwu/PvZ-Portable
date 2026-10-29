@@ -165,7 +165,9 @@ class Runner:
                 out = Path(job['out'])
                 if not out.is_absolute() or not Path(job['recipe']).is_absolute():
                     raise ValueError('out and recipe must be absolute')
-                if not (0 < job['host_gib'] <= self.args.memory_max_gib) or not (job['gpu_gib'] > 0):
+                if not job.get('enabled', True):
+                    continue
+                if not (0 < job['host_gib'] <= self.args.memory_max_gib) or not (job['gpu_gib'] >= 0):
                     raise ValueError('invalid resource declaration')
                 if not job['command'] or not all(isinstance(arg, str) for arg in job['command']):
                     raise ValueError('command must be an argv list')
@@ -180,24 +182,29 @@ class Runner:
                     write_json(state_path, state)
                 if state['status'] in ('complete', 'failed'):
                     continue
+                if any(not Path(dependency).is_file() for dependency in job.get('depends_on', [])):
+                    continue
                 if state.get('not_before', 0) <= time.time():
                     pending.append((job, state))
             except (OSError, ValueError, KeyError, TypeError) as error:
                 self.event('invalid_job', path=str(path), error=str(error))
-        yield from sorted(pending, key=lambda pair: pair[1]['seconds'])
+        yield from sorted(pending, key=lambda pair: (pair[0].get('priority', 100), pair[1]['seconds'], pair[0]['id']))
 
     def start(self, job, state, phase):
         out = Path(job['out'])
         out.mkdir(parents=True, exist_ok=True)
-        evaluating = (out / 'model.pt').is_file()
+        preparing = job.get('kind') == 'prepare'
+        evaluating = not preparing and (out / 'model.pt').is_file()
         command = list(job['evaluate'] if evaluating else job['command'])
         resume = out / 'resume.pt'
         if not evaluating and resume.exists():
             command += ['--resume', str(resume)]
-        with (out / ('evaluate.log' if evaluating else 'train.log')).open('a') as log:
+        with (out / ('prepare.log' if preparing else 'evaluate.log' if evaluating else 'train.log')).open('a') as log:
             self.child = subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, start_new_session=True,
+                                          cwd=job.get('code_root'),
                                           env={**os.environ, 'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
-        attempt = dict(started=time.time(), phase=phase['phase'], stage='evaluate' if evaluating else 'train', pid=self.child.pid)
+        attempt = dict(started=time.time(), phase=phase['phase'], stage='prepare' if preparing else 'evaluate' if evaluating else 'train',
+                       pid=self.child.pid, revision=job.get('revision'))
         state.update(status='running', command=command)
         state['attempts'].append(attempt)
         self.active = job, state, attempt
@@ -235,12 +242,17 @@ class Runner:
             if not model.exists():
                 os.link(out / 'model.pt', model)
             shutil.copyfile(job['recipe'], handoff / 'recipe.json')
+            if job.get('deck_split'):
+                shutil.copyfile(job['deck_split'], handoff / 'deck_split.json')
             write_json(handoff / 'ready.json', dict(job=job['id'], stage='trained', model=str(model),
-                source=str(out / 'model.pt'), cpu_metrics=str(out / 'heldout.json')))
-        if code == 0 and attempt['stage'] == 'evaluate':
+                source=str(out / 'model.pt'), cpu_metrics=str(out / 'heldout.json'), revision=job.get('revision'),
+                code_root=job.get('code_root'), arch=job.get('arch'), seed=job.get('seed')))
+        if code == 0 and attempt['stage'] in ('evaluate', 'prepare'):
             state['status'] = 'complete'
-            write_json(self.args.handoff / (job['id'] + '.json'), dict(job=job['id'], model=str(out / 'model.pt'),
-                recipe=job['recipe'], metrics=str(out / 'heldout.json'), bench='Mac bench_play.py', finished=now))
+            if attempt['stage'] == 'evaluate':
+                write_json(self.args.handoff / (job['id'] + '.json'), dict(job=job['id'], model=str(out / 'model.pt'),
+                    recipe=job['recipe'], metrics=str(out / 'heldout.json'), bench='Mac bench_play.py', finished=now,
+                    revision=job.get('revision'), arch=job.get('arch'), seed=job.get('seed')))
         elif code == 0 or code == YIELDED or 'yield_requested' in attempt:
             state['status'] = 'paused'
             state['not_before'] = now + 5

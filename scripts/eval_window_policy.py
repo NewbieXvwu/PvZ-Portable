@@ -70,6 +70,8 @@ def main():
     parser.add_argument('--merge-dir', type=Path, required=True)
     parser.add_argument('--out', type=Path, required=True)
     parser.add_argument('--batch-size', type=int, default=256)
+    parser.add_argument('--deck-holdout', type=Path)
+    parser.add_argument('--tokens', type=Path)
     args = parser.parse_args()
     recipe = load_recipe(args.recipe, 'training')
     torch.set_num_threads(1)
@@ -101,6 +103,13 @@ def main():
     unique_seeds = sorted(set(seeds)); rng.shuffle(unique_seeds)
     val_seeds = set(unique_seeds[:int(len(unique_seeds) * recipe['validation']['fraction'])])
     is_val = np.fromiter((seed in val_seeds for seed in seeds), bool, len(seeds))
+    if args.deck_holdout:
+        from pvz_research_data import extra_validation
+        is_val |= extra_validation(args.deck_holdout, len(seeds))
+    token_store = None
+    if args.tokens:
+        from pvz_research_data import SparseTokens
+        token_store = SparseTokens(args.tokens)
     validation = np.flatnonzero(is_val)
     terrain_of = np.empty(len(seeds), dtype=np.uint8)
     for start, stop_at, terrain in spans:
@@ -123,6 +132,9 @@ def main():
             save(); raise SystemExit(75)
     save()
     net = load_student(args.out / 'model.pt')  # CPU only, including future recipe architectures.
+    router = getattr(getattr(net, 'trunk', [None])[-1], 'route_counts', None)
+    if router is not None and 'routing' in state:
+        router.copy_(torch.tensor(state['routing']))
     with torch.inference_mode():
         for start in range(state['next_row'], len(validation), args.batch_size):
             if interrupted:
@@ -131,7 +143,8 @@ def main():
             planted = plant[idx].bool()
             pk, cell = packets[idx].long(), cells[idx].long()
             packet_info = info[idx]
-            out = net(boards.batch(idx, 'cpu'), scalars.batch(idx, 'cpu'), pk.clamp(min=0), packet_info=packet_info)
+            extra = dict(tokens=token_store.batch(idx)) if token_store is not None else {}
+            out = net(boards.batch(idx, 'cpu'), scalars.batch(idx, 'cpu'), pk.clamp(min=0), packet_info=packet_info, **extra)
             pred_type = out['plant'] > 0
             packet_ok = (out['packet'].argmax(1) == pk) & planted
             cell_ok = (out['cell'].argmax(1) == cell) & planted
@@ -147,12 +160,15 @@ def main():
             for name, mask in masks.items():
                 add_metrics(state['groups'][name], pred_type[mask], planted[mask], packet_ok[mask], cell_ok[mask], nll[mask])
             state['next_row'] = start + len(idx)
+            if router is not None:
+                state['routing'] = router.tolist()
             if start % (args.batch_size * 64) == 0:
                 save()
     save()
     write_json(args.out / 'heldout.json', dict(model=str(args.out / 'model.pt'), split=recipe['validation'],
         deck_identity='sorted public packet kinds including duplicates; seen in training rows',
-        groups={name: report_metrics(counts) for name, counts in state['groups'].items()}))
+        groups={name: report_metrics(counts) for name, counts in state['groups'].items()},
+        routing_by_terrain=state.get('routing')))
 
 
 if __name__ == '__main__':

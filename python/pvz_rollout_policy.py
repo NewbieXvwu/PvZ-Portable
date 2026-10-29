@@ -195,6 +195,9 @@ class RolloutNet(nn.Module):
 def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
         sparse_input: bool = True, context: np.ndarray | None = None, history=None) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
+    if getattr(net, 'research_arch', False):
+        from pvz_decision_models import action
+        return action(net, frame, previous, legal_plants, context, history)
     if net.obs != "v1":
         if history is None:
             raise ValueError(f"{net.obs} requires per-episode StudentHistory, updated at every decision")
@@ -238,6 +241,9 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
     candidate set with entries 2..k. Without that flag nothing calls this function and the teacher's
     candidate set is bit-identical to before.
     """
+    if getattr(net, 'research_arch', False):
+        from pvz_decision_models import action
+        return action(net, frame, previous, legal_plants, context, history, ranked=True)
     if not legal_plants:
         return []
     if net.obs != "v1":
@@ -308,7 +314,9 @@ def create_student(arch='cnn', **options):
         return RolloutNet(**options)
     import importlib
     module, factory = arch.split(':', 1)
-    return getattr(importlib.import_module(module), factory)(**options)
+    net = getattr(importlib.import_module(module), factory)(**options)
+    net.research_arch = module == 'pvz_decision_models'
+    return net
 
 
 def load_student(path) -> RolloutNet:
@@ -326,6 +334,8 @@ def load_student(path) -> RolloutNet:
 
 def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    if getattr(net, 'research_arch', False):
+        raise NotImplementedError('task162 research architecture uses the Python bench_play path')
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct

@@ -23,7 +23,7 @@ TRAIN_DEFAULTS = dict(
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
-    source_row_report=False, max_steps=None, batch_size=2048, validation_batch_size=4096,
+    source_row_report=False, max_steps=None, micro_batch_size=None, batch_size=2048, validation_batch_size=4096,
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
 
@@ -126,9 +126,9 @@ def validate(document, kind=None):
         for name in ('epochs', 'width', 'aux_horizon', 'batch_size', 'validation_batch_size', 'threads', 'precompute_workers'):
             _integer(result[name], name, 1)
         _integer(result['save_epochs'], 'save_epochs')
-        for name in ('seed', 'max_steps'):
+        for name in ('seed', 'max_steps', 'micro_batch_size'):
             if result[name] is not None:
-                _integer(result[name], name, 1 if name == 'max_steps' else 0)
+                _integer(result[name], name, 0 if name == 'seed' else 1)
         for name in ('row_pool', 'context', 'cache', 'dense_boards', 'source_row_report'):
             if type(result[name]) is not bool:
                 raise ValueError(f'{name}: expected boolean')

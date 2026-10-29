@@ -723,6 +723,8 @@ def main(*, step_observer=None) -> None:
     p.add_argument('--skip-validation', action='store_true', help='defer row evaluation to the CPU worker')
     p.add_argument('--pack', type=Path, help='use an existing frozen pack index without rescanning the corpus')
     p.add_argument('--merge-dir', type=Path, help='private merged pack cache; never lock the production merge')
+    p.add_argument('--deck-holdout', type=Path, help='common boolean row mask excluding complete heldout decks')
+    p.add_argument('--tokens', type=Path, help='sparse public token sidecar for the same frozen rows')
     args = training_args(p)
     yielding = args.checkpoint_seconds > 0 or args.resume is not None
     yield_requested = False
@@ -771,6 +773,15 @@ def main(*, step_observer=None) -> None:
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
+    if args.deck_holdout:
+        from pvz_research_data import extra_validation
+        is_val |= torch.from_numpy(extra_validation(args.deck_holdout, len(seed_of)))
+    token_store = None
+    if args.tokens:
+        from pvz_research_data import SparseTokens
+        token_store = SparseTokens(args.tokens)
+        if token_store.meta['rows'] != len(seed_of):
+            raise ValueError('token sidecar does not cover the frozen r42 rows')
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
     if source_counts and args.source_row_report:
@@ -788,6 +799,8 @@ def main(*, step_observer=None) -> None:
     print(json.dumps({"data_memory": memory}), flush=True)
     if args.packet_balance:
         planted_rows = packet >= 0
+        if args.deck_holdout:
+            planted_rows &= ~is_val
         balanced_packet = (packet.long() if packet_info is None else
                            packet_info.kinds(torch.arange(len(packet)), packet.clamp(min=0)))
         freq = torch.bincount(balanced_packet[planted_rows], minlength=PACKETS if packet_info is None else 54).float() / int(planted_rows.sum())
@@ -802,7 +815,8 @@ def main(*, step_observer=None) -> None:
         compared = torch.from_numpy(compared_rows).long()
         spread = torch.from_numpy(spread)
         # capped: a few spreads near 1 are games decided inside the horizon, not choices 30x more important
-        weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
+        spread_mean = spread[~is_val[compared]].mean() if args.deck_holdout else spread.mean()
+        weight[compared] *= ((1 + args.spread_weight * spread / spread_mean) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {len(compared)} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
     if row_plan:
@@ -820,10 +834,14 @@ def main(*, step_observer=None) -> None:
         warm_start_student(net, load_student(args.init))
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
-    waits = float(weight[plant < 0.5].sum())
-    pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
+    if args.deck_holdout:
+        eligible = ~is_val
+        waits, plants = float(weight[(plant < .5) & eligible].sum()), float(plant[eligible].sum())
+    else:
+        waits, plants = float(weight[plant < .5].sum()), float(plant.sum())
+    pos_weight = torch.tensor([waits / max(1.0, plants)], device=args.device).sqrt()
 
-    def batch_loss(idx, train):
+    def batch_loss(idx, train, normalizers=None):
         b = boards.batch(idx, args.device)
         s = scalars.batch(idx, args.device)
         y = plant[idx].to(args.device).float()          # uint8 in the compact store
@@ -832,8 +850,10 @@ def main(*, step_observer=None) -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
+        if token_store is not None:
+            packet_args['tokens'] = token_store.batch(idx, args.device)
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
-        denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
+        denom = normalizers['main'] if normalizers else w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
         if args.aux_weight:
@@ -851,12 +871,14 @@ def main(*, step_observer=None) -> None:
                 teacher = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
                 kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)
                 wc = w[rows]
-                cell_denom=wc.sum().clamp_min(1e-30) if row_plan else wc.sum()
+                cell_denom=normalizers['cell'] if normalizers else wc.sum().clamp_min(1e-30) if row_plan else wc.sum()
                 loss = loss + args.cell_soft_weight * (kl * wc).sum() / cell_denom
         if planted.any():
             wp = w[planted]                               # all 1 unless --label-weight is used
             loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
-                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if row_plan else wp.sum())
+                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (normalizers['plant'] if normalizers else wp.sum().clamp_min(1e-30) if row_plan else wp.sum())
+        if train and getattr(net, 'routing_loss', None) is not None:
+            loss = loss + .01 * net.routing_loss * (len(idx) / normalizers['rows'] if normalizers else 1)
         stats = {}
         if not train:
             with torch.no_grad():
@@ -951,11 +973,37 @@ def main(*, step_observer=None) -> None:
             torch.set_rng_state(current_rng)
         for start in range(next_start, len(perm), args.batch_size):
             maybe_yield()
-            loss, _ = batch_loss(perm[start:start + args.batch_size], True)
+            batch = perm[start:start + args.batch_size]
+            batch_rng = torch.get_rng_state()
+            batch_cuda_rng = torch.cuda.get_rng_state_all() if args.device.startswith('cuda') and args.micro_batch_size else None
+            opt.zero_grad()
+            if args.micro_batch_size and args.micro_batch_size < len(batch):
+                ww = weight[batch]
+                pp = plant[batch] > .5
+                denominators = dict(main=ww.sum().clamp_min(1e-30).to(args.device),
+                    plant=ww[pp].sum().clamp_min(1e-30).to(args.device), rows=len(batch))
+                if args.cell_soft_weight:
+                    cd = cands[batch].float()
+                    same = (cd[:, :, 0] == packet[batch, None].float()) & ~torch.isnan(cd[:, :, 2]) & pp[:, None]
+                    denominators['cell'] = ww[same.sum(1) >= 2].sum().clamp_min(1e-30).to(args.device)
+                loss_value = 0.0
+                for micro in batch.split(args.micro_batch_size):
+                    partial, _ = batch_loss(micro, True, denominators)
+                    partial.backward(); loss_value += float(partial.detach())
+                    if yield_requested:
+                        # Discard the incomplete logical batch; resume repeats it with the saved RNG.
+                        torch.set_rng_state(batch_rng)
+                        if batch_cuda_rng is not None:
+                            torch.cuda.set_rng_state_all(batch_cuda_rng)
+                        opt.zero_grad(); maybe_yield()
+                loss = torch.tensor(loss_value)
+            else:
+                loss, _ = batch_loss(batch, True)
+                loss.backward()
             if step_observer is not None:
                 step_observer(completed_steps + 1, float(loss.detach()))
             train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
-            opt.zero_grad(); loss.backward(); opt.step()
+            opt.step()
             if schedule is not None:
                 schedule.step()
             completed_steps+=1
