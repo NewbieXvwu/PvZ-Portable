@@ -216,3 +216,46 @@ GB按10⁹字节。**6.22GB是单份token，不是训练路径总盘位。** pac
 可复现入口：`scripts/bench_tokenstore.py --out /新的独立目录 --archives <上述原帧路径...>`，默认4096次随机加载、12步训练，遥测定向实验自身目录。实测在`free -g`后以Nice10、CPU单线程和`ulimit -v 6000000`执行；这个地址空间上限只用于小样本。全量mmap地址空间大于驻留内存，正式大语料作业应使用执行器的实际内存约束，不能照抄小测试的6GB地址空间上限。
 
 相关小`-k`测试通过：附件到分段/合并/batch/缓存复用及位模式保持、真实trainer一步含hybrid/辅助头/软格子标签、默认CNN两种旧输入的权重/输出/导出兼容。没有全量测试、全量重包或GPU训练。样本、实验缓存、配方及检查点保留在上述独立目录，不进入git。
+
+## 2026-10-30：块级打乱与多进程预取，加载超过50k行/s
+
+训练器对新稀疏token包默认使用 `pvz_token_loader.TokenBlockLoader`：每轮打乱压缩块顺序，块内仅打乱该块入选的至多32行，worker按此顺序整块解压、批量复原。源监督行、标签、权重及训练/验证划分不变；**SGD行序有意改为块级随机**。任务由主进程按训练随机种子生成，结果按提交顺序消费，不随worker完成先后改变顺序。原CNN与旧稠密原型沿用原路径。
+
+默认配方新增 `token_workers=4, token_prefetch=2`；设 `token_workers=0` 可保留旧随机行加载作对照。这两个执行参数不进入pack身份，不重打包。worker用spawn启动，进程池跨epoch保留；只打开现成的token_data mmap，不读源对局。全局行计划只需要块起点、选中行布尔位与块序列，不建立全量密集特征。
+
+每个任务约512个入选行，按batch_size的整倍数切分，最后一个batch可以较短。worker一次将稀疏块批量复原到临时共享内存，**每个minibatch独立取自己的最大token长度补齐**，不按整个预取任务的最长序列补齐。主进程直接将共享数组视图转为CPU tensor，不通过pickle传输密集数组，再按需要送训练设备。4×2个在途任务加当前任务，最多约4608行有界预取；没有整轮预解码。共享缓冲在消费后释放，提前达到max_steps时关闭迭代器、回收未消费缓冲并结束worker，不让生产背负后台解码进程。
+
+没有改存储格式；**新增常驻数据磁盘占用0字节**，同一份token仍为2,915,156字节。不新增manifest、哈希、JSON旁文件或任何校验。没有重打包、重放、全量测试或GPU训练；只运行本次吞吐测量与真实trainer的12步CPU训练。
+
+### 同一c53样本的前后吞吐
+
+直接复用上一节8局/10,787行的 `task163-tokenstore-c53/data/packs/897d54c254306e50.npz` 和已有合并缓存。batch=16，OS页缓存热；计入块解压、数值复原、padding、共享内存生产/消费、CPU tensor视图转换及每轮行计划，不计网络前后向或GPU传输。原随机行对照禁用解码LRU，模拟全量随机行低命中；原顺序读取使用16MiB LRU。
+
+| 路径 | 本轮实测 |
+|---|---:|
+| 上一节旧随机读取历史记录 | 3,512行/s |
+| 本轮同次运行重测旧随机读取，全10,787行 | **4,299行/s**，2.509s |
+| 本轮旧顺序读取，全10,787行 | 32,460行/s，0.332s |
+| 新块打乱+4进程预取，首次epoch含spawn启动 | 6,086行/s，1.772s |
+| 新路径进程池就绪后，连续10个完整epoch | **95,850行/s**，107,870行/1.125s |
+
+稳态各轮0.107–0.118s，约91k–101k行/s，超过50k目标；相对同次重测旧随机读取约**22.3倍**。单纯加载按同速外推2,300万行约**240秒/epoch**，这不是整轮模型训练耗时，也不是全量冷盘实测。小样本的首次epoch被一次性worker启动主导，不能用其6k行/s代表长作业稳态，也不能把稳态95k当作含启动的小样本首轮速度。
+
+实现中2个worker曾测得55.6k行/s，但并发负载上升时复测只有38.3k行/s；因此最终改为更紧的按batch补齐与4个低优先级worker，采用上表的最终实测，不以早期单次最好值交付。
+
+同一真实recipe的128宽/2层/4头网络、batch8、单线程CPU，使用新默认路径完成**12个optimizer step（96行）**，训练段2.252s（42.6行/s，含worker启动及提前停止回收），总墙钟约4s；输出在 `task163-tokenstore-c53/train-prefetch4`，仍隔离2714验证行且本次用`--skip-validation`。不作收敛或GPU速度结论。
+
+复现命令如下；去掉`--recipe`即可只测加载，不运行优化器。默认4个worker、每worker预取2任务、10个稳态epoch，统计仅打印stdout。trainer遥测也落在独立输出目录。
+
+```bash
+free -g
+ulimit -v 6000000
+CUDA_VISIBLE_DEVICES='' OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 MKL_NUM_THREADS=1 \
+nice -n 10 /home/newbiexvwu/.venvs/ml/bin/python3 scripts/bench_token_prefetch.py \
+  --data /home/newbiexvwu/PvZ-search/artifacts/student/task163-tokenstore-c53/data \
+  --pack /home/newbiexvwu/PvZ-search/artifacts/student/task163-tokenstore-c53/data/packs/897d54c254306e50.npz \
+  --recipe /home/newbiexvwu/PvZ-search/artifacts/student/task163-tokenstore-c53/recipe.json \
+  --train-out /home/newbiexvwu/PvZ-search/artifacts/student/task163-tokenstore-c53/train-prefetch4
+```
+
+资源约束同上一节：Nice10及单线程环境由子进程继承，小样本每进程虚拟地址空间上限6,000,000KiB；正式全量mmap不能照抄该地址空间限制，应沿用执行器的驻留内存约束。未改生产采集、队列、配置、模型或二进制。

@@ -16,6 +16,7 @@ import zipfile
 import random
 import sys
 import time
+from contextlib import closing, nullcontext
 from pathlib import Path
 
 import numpy as np
@@ -879,7 +880,7 @@ def main(*, step_observer=None) -> None:
     positive_count = float(plant[weight > 0].sum()) if private_weights is not None else float(plant.sum())
     pos_weight = torch.tensor([waits / max(1.0, positive_count)], device=args.device).sqrt()
 
-    def batch_loss(idx, train):
+    def batch_loss(idx, train, token_batch=None):
         pure_tokens = tokens is not None and not net.network['hybrid']
         b = None if pure_tokens else boards.batch(idx, args.device)
         s = None if pure_tokens else scalars.batch(idx, args.device)
@@ -890,7 +891,8 @@ def main(*, step_observer=None) -> None:
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
         if tokens is not None:
-            packet_args['tokens'] = tokens.batch(idx, args.device)
+            packet_args['tokens'] = (tokens.batch(idx, args.device) if token_batch is None else
+                                    {key: value.to(args.device) for key, value in token_batch.items()})
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan or private_weights is not None else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
@@ -969,50 +971,62 @@ def main(*, step_observer=None) -> None:
 
     completed_steps=0
     completed_rows=0
+    loader_context = nullcontext(None)
+    if tokens is not None and 'data' in tokens.arrays and args.token_workers:
+        from pvz_token_loader import TokenBlockLoader
+        loader_context = TokenBlockLoader(tokens, args.token_workers, args.token_prefetch)
     metrics.update(phase="training")
-    for epoch in range(1, args.epochs + 1):
-        epoch_started = time.perf_counter()
-        metrics.update(phase="training")
-        net.train()
-        perm = train_idx[torch.randperm(len(train_idx))]
-        if len(perm) < epoch_rows:
-            perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
-        train_loss = 0.0
-        for start in range(0, len(perm), args.batch_size):
-            loss, _ = batch_loss(perm[start:start + args.batch_size], True)
-            if step_observer is not None:
-                step_observer(completed_steps + 1, float(loss.detach()))
-            train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
-            opt.zero_grad(); loss.backward(); opt.step()
-            if schedule is not None:
-                schedule.step()
-            completed_steps+=1
-            completed_rows += len(perm[start:start + args.batch_size])
-            metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
+    with loader_context as token_loader:
+        for epoch in range(1, args.epochs + 1):
+            epoch_started = time.perf_counter()
+            metrics.update(phase="training")
+            net.train()
+            if token_loader is None:
+                perm = train_idx[torch.randperm(len(train_idx))]
+                if len(perm) < epoch_rows:
+                    perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
+                batches = ((perm[start:start+args.batch_size], None)
+                           for start in range(0, len(perm), args.batch_size))
+            else:
+                seed = int(torch.randint(0, 2**63-1, ()).item())
+                batches = token_loader.batches(train_idx.numpy(), args.batch_size, seed, epoch_rows)
+            train_loss = 0.0
+            with closing(batches):
+                for idx, token_batch in batches:
+                    loss, _ = batch_loss(idx, True, token_batch)
+                    if step_observer is not None:
+                        step_observer(completed_steps + 1, float(loss.detach()))
+                    train_loss += float(loss.detach()) * len(idx)
+                    opt.zero_grad(); loss.backward(); opt.step()
+                    if schedule is not None:
+                        schedule.step()
+                    completed_steps+=1
+                    completed_rows += len(idx)
+                    metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
+                    if completed_steps>=steps:
+                        break
+            metrics.update(phase="validation")
+            net.eval()
+            # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
+            # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
+            # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
+            # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
+            parts = []
+            if not args.skip_validation:
+                with torch.no_grad():
+                    for chunk in val_idx.split(args.validation_batch_size):
+                        parts.append((len(chunk), *batch_loss(chunk, False)))
+            total = sum(n for n, _l, _s in parts)
+            vl = sum(float(l) * n for n, l, _s in parts) / total if total else None
+            vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]} if parts else {}
+            history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows, "val_loss": vl,
+                            **vs, "seconds": time.perf_counter() - epoch_started})
+            print(json.dumps(history[-1]), flush=True)
+            if args.save_epochs and epoch > args.epochs - args.save_epochs:
+                args.out.mkdir(parents=True, exist_ok=True)
+                torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
             if completed_steps>=steps:
                 break
-        metrics.update(phase="validation")
-        net.eval()
-        # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
-        # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
-        # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
-        # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
-        parts = []
-        if not args.skip_validation:
-            with torch.no_grad():
-                for chunk in val_idx.split(args.validation_batch_size):
-                    parts.append((len(chunk), *batch_loss(chunk, False)))
-        total = sum(n for n, _l, _s in parts)
-        vl = sum(float(l) * n for n, l, _s in parts) / total if total else None
-        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]} if parts else {}
-        history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows, "val_loss": vl,
-                        **vs, "seconds": time.perf_counter() - epoch_started})
-        print(json.dumps(history[-1]), flush=True)
-        if args.save_epochs and epoch > args.epochs - args.save_epochs:
-            args.out.mkdir(parents=True, exist_ok=True)
-            torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
-        if completed_steps>=steps:
-            break
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
