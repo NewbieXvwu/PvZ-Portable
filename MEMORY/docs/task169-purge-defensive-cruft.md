@@ -72,3 +72,49 @@
 - 留下了哪些检查（一行理由）。
 
 每批提交推送各自分支。
+
+## 结论（会话 2，分支 `purgedead`，2026-10-29）
+
+### 删了什么
+
+净删除 **332 个文件、约 5.47 万行**（相对基线 `8763b5c8`；另恢复 5 个教师服务脚本，见下）：
+
+| 目录 | 删除文件数 | 内容 |
+|---|---:|---|
+| `scripts/` | 261 | 一次性任务脚本、旧面板/回放/值网络实验、旧 `qc_deploy14*`/`15`/`16`、`scripts/llmplay/`、`scripts/prototypes/` |
+| `python/` | 63 | 死模块（`pvz_compat.py`、`pvz_cpu_usage.py`）、dagger/critical-forks/roof/value-* 等一次性测试、旧测试夹具 |
+| `recipes/` | 4 | `dw5i`、`identity_dw3_s1`、`panel_pressure`、`panel_v1`（生产配方与测试引用的 `dw4i*`/`panel_v2` 保留） |
+| `configs/` | 2 | `llmplay_robustness`、`task118_balloon_decks` |
+| `experiments/` | 2 | `t7` 旧 BC 实验 |
+
+按题目四类划分：
+
+1. **manifest / 指纹 / 自校验**：约 30 个 `check_*`、`verify_*`、`audit_*`、`state_hash_*`、`compare_*manifest*`、llmplay `selfcheck` 脚本及只测它们的测试。
+2. **写死路径**：会话 2 未改活文件内部，故未改任何写死路径（由会话 1 / codexb 处理）。
+3. **死代码**：其余 300 余个一次性脚本、旧实验配置/配方、无引用模块和测试。
+4. **依赖地狱**：`python/pvz_compat.py`（旧格式兼容）、`scripts/llmplay/`（旧外部模型包）、旧 value 导出/强化实验分支、历史 deploy 脚本。
+
+### 活文件闭包口径
+
+从 `curriculum_queue.py`、deploy17 三件套、看门狗、`hf_sync.py`、GPU 空档执行器（`origin/gpuwindow`）、task105 扫描服务（`origin/llmimport`）出发，按 import、AST 中非文档字符串的路径字面量、shell 调用求闭包，再并入保留测试及其 helper。共保留 119 个文件。
+
+**补充发现：** `dsh/pvz-teacher`（教师 MCP 服务）通过子进程调用 `scripts/episode_query.py`、`lint_skills.py`，后者又依赖 `probe.py`/`search_episode.py`/`fog_timeline.py`。这条链不在任务书列出的生产入口里，但属于仓库内真实引用链。按 AGENTS §4 恢复这 5 个脚本及直接测试（`test_episode_hand`、`test_human_demo`、`test_lint_skills`、`test_replay_task_spec`、`test_search_episode`），避免教师服务断链。
+
+### 留下的检查（一行理由）
+
+- `curriculum_queue.py` 的种子账本 / 门禁契约：防止同一评估种子被重复使用、坏候选进入生产。
+- `qc_deploy17.sh` 的边界等待、备份与 rollback：防止切换时破坏生产状态（task165 已实际用到回滚）。
+- `hf_sync.py` 强制并入 `resume.json` 指向的检查点：漏传会导致归档无法续训（已实测踩过）。
+- task105 的文件锁与导入清单：扫描服务并发写状态，去掉会损坏续扫进度。
+- `python/conftest.py` 的三个受限测试护栏：曾因整套测试写日志撑满 Mac 磁盘，护栏只在三个重型测试文件生效。
+
+### 验证
+
+- 活模块逐个 `import` 通过；`python3 scripts/curriculum_queue.py --help` 通过。
+- `pytest --collect-only -q python`：631 项可收集，无导入错误。
+- 相关小测试：`test_metrics`、`test_growable_pool`、`test_check_start_seed_state`、`test_env_protocol`、`test_episode_hand`、`test_lint_skills`、`test_search_episode` 均通过；未整套运行 `test_curriculum_queue`/`test_curriculum_pipeline`/`test_qc_resilience`。
+
+### 遗留
+
+- `scripts/search_play.py` 的两处 `--help` 文案仍提到已删的 `verify_reseed.py` / `sim_skip_agreement.py`；该文件属会话 1 / codexb 的活代码修改范围，未在本分支改动。
+- 未部署、未连接台式机生产。

@@ -520,7 +520,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 
 - 宽搜索老师（每张卡挑最好的格子再加“先不种”，学生续走 3000 tick）在 1.3 倍出怪上 121/128 胜，**每局约 1 个樱桃、3 个坚果**；学生单独打只有 67/128。
 - 学生 v4 / v5 / v6a / v6b（加入老师对局，或者把这些对局的权重放大 5 倍）：1.3 倍出怪下 523 / 491 / 523 / 475（v3all 529，均为 1024 局），每局樱桃 ≤ 0.04。**老师的新本事没有传给学生。**
-- 逐卡诊断（`scripts/student_packet_recall.py`）：在老师种樱桃的训练行上，v4 只有 25% 选对卡、36% 判为“该种”；坚果 43%；豌豆 95%。
+- 逐卡诊断（`scripts/student_packet_recall.py`）：在老师种樱桃的训练行上，v4 只有 25% 选对卡、36% 判为“该种”；坚果 43%；豌豆 95%。（task169 已删：scripts/student_packet_recall.py）
   **这是稀有动作欠拟合（学不进），不是数据太少。**
 - 用加难度老师对局重训的价值网络 value_hard1：第 1 波 AUC 0.77，看起来很强；但装进老师后，1.5 倍出怪的 64 局只赢 5 局，原网络 v2 赢 15 局（配对 15:5，p = 0.04）。
   嫌疑是**难度混杂**：数据里 1.3 倍的局大多赢、1.5 倍的局大多输，网络学会了认出难度，但这对比较同一局面下的候选走法毫无用处。
@@ -541,7 +541,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 价值网络的修法（在 B 中落地）：特征里加入出怪倍率，以及本关会出的僵尸种类。这两项都是玩家开局就知道的公开信息；僵尸清单换关也有意义，关卡编号没有。
 数据用原版 2048 局加上加难度的老师对局；对照组只用 1.5 倍出怪的数据。评估**按难度分组计算 AUC**，不再用混在一起的数，最终以搜索实战配对比较为准。
 **10-16 修正**：上面这条路（整局结果做标签，看 AUC）已经被排序诊断否定：AUC 高的网络照样不会给候选排序。
-价值网络的评估改成 `scripts/value_ranking_check.py` 的成对一致率与带锚搜索的损失（标准答案是每个候选打到终局的实际胜率），
+价值网络的评估改成 `scripts/value_ranking_check.py` 的成对一致率与带锚搜索的损失（标准答案是每个候选打到终局的实际胜率），（task169 已删：scripts/value_ranking_check.py）
 训练数据改成同一局面不同走法的分叉叶子。最终仍以搜索实战配对比较为准。
 
 ### 14.4 衡量标准与 reward hacking
@@ -596,7 +596,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   （26 任务 = 原 22 + 新 4），原有 22 个任务逐任务 JSON 逐字节不变（生成前后对比见 task24 任务书“结果”），
   旧清单备份为 `day_panel.json.bak_task24`。1-5（坚果保龄球）仍不收；1-2 与 1-1 在环境里相同，所以只补 L1 不补 L2。
 - 已用偏移：L9 / L10 各 0–1535 台式机（queue93 / 95，d9dag1–4 / d10dag1–4；d9dag3 只下完 299 局），4096–4735 Mac（d9dag1b / d10dag1b），4736–5375 Mac（d9dag2b / d10dag2b），5376–6015 Mac（d9dag3b / d10dag3b，采集学生 v33），6016–6655 Mac（d9dag4b / d10dag4b，v33），6656–7295 Mac（d9dag5b / d10dag5b，v34）；v33 台式机 queue98：L7 / L8 0–1023（d7dag1–8 / d8dag1–8），L9 / L10 1536–2559（d9dag5–12 / d10dag5–12），每轮每关 128（queue98 实际只用到第 4 轮）；v34 台式机 queue100：L9 / L10 2560–3839（d9dag21–30 / d10dag21–30，每轮 128），L7 / L8 1024–1663（d7dag21–30 / d8dag21–30，每轮 64）。
-- task19新族：`day_l{7,8,9,10}_train_d7p`，由`scripts/make_identity_tasks.py --manifest <day_panel.json>`生成本地`artifacts/stage4/day_panel_identity.json`；训练种子分别1840000–1848191、1850000–1858191、1860000–1868191、1870000–1878191，不覆盖旧任务。`deck_perturb`含swaps=[1,2]、pool、引擎DECK_OPTIONS冻结查询及excluded_decks；每种子确定性替换恰1/2张、再洗牌，pool只取实际profile已解锁的非升级/非特殊且逐卡无引擎警告的植物，按AGENTS §8保持水路/屋顶覆盖。当前playthrough=2，解锁按第二轮冒险的引擎实际列表，不按首轮关卡奖励猜。
+- task19新族：`day_l{7,8,9,10}_train_d7p`，由`scripts/make_identity_tasks.py --manifest <day_panel.json>`生成本地`artifacts/stage4/day_panel_identity.json`；训练种子分别1840000–1848191、1850000–1858191、1860000–1868191、1870000–1878191，不覆盖旧任务。`deck_perturb`含swaps=[1,2]、pool、引擎DECK_OPTIONS冻结查询及excluded_decks；每种子确定性替换恰1/2张、再洗牌，pool只取实际profile已解锁的非升级/非特殊且逐卡无引擎警告的植物，按AGENTS §8保持水路/屋顶覆盖。当前playthrough=2，解锁按第二轮冒险的引擎实际列表，不按首轮关卡奖励猜。（task169 已删：scripts/make_identity_tasks.py）
 - d7p 已用偏移：Mac 4096–8191（`mac_dagger_d7pa.sh`，采集学生 identity_dw3_s1，每轮每关 160，标签 d{l}p{r}m，第 r 轮 4096+(r−1)·160 起）；台式机 0–4095 预留。
 - 留出族`day_lN_eval_d7p_holdout{1,2,3}`：每关3套初始7卡，环境种子30000–30255；12套无序初始植物集合在四个训练族中全部显式排除，槽位排列不解除排除。生成时穷举核对全部32768训练种子，无训练/留出初始卡组集合重叠；这不保证L10后续传送带动态手牌集合完全未见。采集meta保存实际初始deck、基础deck、扰动来源及冻结学生检查点，各帧packets保存真实动态手牌；反事实沿既有`episode_query`路径读取存档deck，不重新采样/读取现行清单。
 - 可行性范围：DECK_OPTIONS直接调用`HasSeedType`和`Board::SeedNotRecommendedForLevel`，默认排除逐卡原始警告；无头模式不调用会弹窗/依赖选卡UI状态的`SeedChooserScreen::OnStartButton`，尚未接其“整副卡无产阳光”等组合检查。上述随机扰动不按手工战术或卡牌强弱排序。L10保持既有任务物理语义，没有为满足固定卡组假设而关闭传送带或改动历史基线。
@@ -613,7 +613,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 ### 14.9 新任务族：夜间原版难度面板 `night_l*_eval` / `night_l*_eval_n8` / `night_l*_eval_n9`（2026-10-21 登记，AGENTS.md §8 第 4 条）
 
 - 用途：“加宽”第二步。夜间草地 L11–L20 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50、不预置植物），
-  每关一个评估任务 `night_lN_eval`；清单 `artifacts/stage4/night_panel.json`（不进 git，生成脚本 `scripts/make_night_panel.py`）。
+  每关一个评估任务 `night_lN_eval`；清单 `artifacts/stage4/night_panel.json`（不进 git，生成脚本 `scripts/make_night_panel.py`）。（task169 已删：scripts/make_night_panel.py）
 - 卡组：`deck_for_level`（未改动），夜间草地 = `[0, 1, 9, 2, 3, 4, 5]`（第 3 槽阳光菇 9）。与白天 6 卡 / 7 卡是不同任务族，结果不可混比。
 - 种子：评估 30000–31023（与白天面板同段，与训练段 1500000+/1600000+/1840000+ 不重叠）。
 - 特殊关：**2-5（L15）是打地鼠**（`LawnApp::IsWhackAZombieLevel`，Adventure `mLevel == 15`；波次走 `mChallenge->InitZombieWaves()`、8 波、`WhackAZombiePlaceGraves(9)`），没有卡组与阳光经济，**不收**；
@@ -624,7 +624,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
   另开两个任务族，与 `night_l*_eval` 对照，互不覆盖：
   - `night_lN_eval_n8`：`[0,1,2,3,4,5,8,9]`（白天 6 卡 + 小喷菇 8 + 阳光菇 9），清单 `artifacts/stage4/night_panel_n8.json`；
   - `night_lN_eval_n9`：`[0,1,2,3,4,5,7,8,9]`（学生训练卡组 + 小喷菇 + 阳光菇），清单 `artifacts/stage4/night_panel_n9.json`。
-  生成方式 `scripts/make_night_panel.py --deck ... --suffix _n8`；`deck_for_level` 仍未改动。三套卡组只换卡组，任务其余字段逐项相同。
+  生成方式 `scripts/make_night_panel.py --deck ... --suffix _n8`；`deck_for_level` 仍未改动。三套卡组只换卡组，任务其余字段逐项相同。（task169 已删：scripts/make_night_panel.py）
   **老师一律用 identity 学生做推演**（`identity_dw3_s1`，PVZRN006 走 C++ CPU 前向，不用 CUDA），
   避免 slot 头在夜间卡组上的槽位错位污染“老师上限”这个量。
 - **2026-10-22 主控定卡组：夜间用 n9** `[0,1,2,3,4,5,7,8,9]`（实测老师 58/80，n8 44/80，对照 3/80）。
@@ -659,7 +659,7 @@ bootstrap，折扣塑形望远镜相消后有 `G_t = −Φ(s_t) + Y`。该语义
 
 ### 14.10 统一评估面板与dw4i（task23，2026-10-22）
 
-`scripts/unified_panel.py --generate`合并已登记的白天七卡L1/3/4/6/7/8/9、原版L10、L7–L10各3套初始牌留出、夜间n9 L11/12/13/14/16/17/18/19及原版L20，共29项，清单仅在artifacts本地生成。白天与原版默认各128局，留出每套64，夜间各128；取各任务评估段前N种子，按白天/换卡组/夜间分别报告任务平均胜率，每模型默认2944局。最多4个自有游戏进程，slot/identity均沿同一面板跑纯学生。
+`scripts/unified_panel.py --generate`合并已登记的白天七卡L1/3/4/6/7/8/9、原版L10、L7–L10各3套初始牌留出、夜间n9 L11/12/13/14/16/17/18/19及原版L20，共29项，清单仅在artifacts本地生成。白天与原版默认各128局，留出每套64，夜间各128；取各任务评估段前N种子，按白天/换卡组/夜间分别报告任务平均胜率，每模型默认2944局。最多4个自有游戏进程，slot/identity均沿同一面板跑纯学生。（task169 已删：scripts/unified_panel.py）
 
 L10的三套留出按task23明确要求保留初始牌变体的测试语义（后续仍有原生补卡），与`day_l10_orig_eval`分开；不把这些留出伪称原版空手关。dw4i从原identity配方加入白天新轮、Mac、d7p、夜间与原版数据，冻结同一数据集合后依次训seed1/2，不改默认/生产模型；完整对照见MEMORY/docs/unified-panel.md。
 
@@ -667,7 +667,7 @@ L10的三套留出按task23明确要求保留初始牌变体的测试语义（�
 
 task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷菇 10、魅惑菇 12、胆小菇 13、寒冰菇 14、毁灭菇 15 **从未进过任何任务卡组**（只有小喷菇 8、墓碑吞噬者 11 出现过），identity 头在这些身份上把种植门压成负值，学生 16 局一棵不种。这一族的作用是让这些植物在普通夜间关里以任务卡组的形式出现，补训练分布；它不改变 2-10 本身（传送带关没有卡组，见 §14.8 的 `conveyor_start`）。
 
-- 生成器 `scripts/make_night_n10p.py`，输入 `~/PvZ-search/artifacts/stage4/night_panel.json`，输出 `<worktree>/artifacts/stage4/night_panel_n10p.json` 并另拷一份到 `~/PvZ-search/artifacts/stage4/`（清单不进 git）。
+- 生成器 `scripts/make_night_n10p.py`，输入 `~/PvZ-search/artifacts/stage4/night_panel.json`，输出 `<worktree>/artifacts/stage4/night_panel_n10p.json` 并另拷一份到 `~/PvZ-search/artifacts/stage4/`（清单不进 git）。（task169 已删：scripts/make_night_n10p.py）
 - 底卡组 n10 `[0,1,2,3,4,5,7,8,9,11]`（10 张 = SEEDBANK_MAX）。`deck_perturb` 与 task19 的 d7p 同一机制：`swaps=[1,2]`，每种子确定性替换恰好 1 或 2 张、再洗牌，卡组长度与槽位数不变。
 - 池子 = 引擎 `SeedChooserScreen::CrazyDavePickSeeds` 的候选（`PvZEnv.deck_pool`，按 reset 后真实 Board 的僵尸名单/地形/雾判断；叶子保护伞只在有蹦极/投石车时进池、三叶草只在有气球或雾时进池、屋顶排除火炬树桩），本机夜间实测 32 种；生成时**断言** 10/12/13/14/15 全在池里，缺一个直接报错（这是这一族存在的理由，不能静默退化）。
 - 整组检查 = `SeedChooserScreen::OnStartButton` 的 `CheckDeckWarnings`（`PvZEnv.deck_warnings`，判断全部来自引擎）。生成时把这一族能产生的全部卡组穷举一遍，把会触发任何警告的卡组写进 `engine_warned_decks`，`deck_for_seed` 运行时按集合排除（`require_no_warnings: true`）。夜间每关 10615 个候选卡组里 231 个（2.2%）触发 `sun` 警告（同时换掉向日葵 1 和阳光菇 9 的那些），已全部排除。
@@ -681,7 +681,7 @@ task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷
 
 旧族 `day_lN_train_d7p` 已经采过大量数据，**不改**（历史档案照样能用，第 5 步量出缺经济卡那部分基本全输）。d7q 是另起的新族名，机制与 d7p 相同，但两处判断换成引擎：替换池用 `CrazyDavePickSeeds` 候选，整组检查用 `OnStartButton` 的 `CheckDeckWarnings`。
 
-- 生成器 `scripts/make_day_d7q.py`（与 `make_night_n10p.py` 共用 `scripts/perturb_family.py`），输入 `~/PvZ-search/artifacts/stage4/day_panel.json`，输出 `<worktree>/artifacts/stage4/day_panel_d7q.json` 并另拷一份到 `~/PvZ-search/artifacts/stage4/`（清单不进 git）。
+- 生成器 `scripts/make_day_d7q.py`（与 `make_night_n10p.py` 共用 `scripts/perturb_family.py`），输入 `~/PvZ-search/artifacts/stage4/day_panel.json`，输出 `<worktree>/artifacts/stage4/day_panel_d7q.json` 并另拷一份到 `~/PvZ-search/artifacts/stage4/`（清单不进 git）。（task169 已删：scripts/make_day_d7q.py, scripts/perturb_family.py）
 - 底卡组 d7 `[0,1,2,3,4,5,7]`，`swaps=[1,2]`，每种子确定性替换 1–2 张再洗牌。
 - 训练族 `day_lN_train_d7q`，N = 7、8、9、10，每关 8192 个种子：2500000 / 2510000 / 2520000 / 2530000 起（与 d7p 的 1840000–1878191、d7 的 1800000–1838191 都不重叠）。
 - 留出族 `day_lN_eval_d7q_holdout{1,2,3}`：每关 3 套初始卡组，环境种子 30000–30255（每套 256 局）；12 套无序集合在 4 个训练族里全部排除。
@@ -709,7 +709,7 @@ task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷
   只按倍率放大常规名单，额外那批保持原版数量。
 - 原版传送带开局（`conveyor_start: original`）走同一条 `SpawnZombieWave`，倍率同样生效。
 
-**冒烟**（`scripts/smoke_zombie_multiplier.py`，7 档 1.0/1.25/1.5/1.75/2.0/2.5/3.0，每档同一关同一种子、
+**冒烟**（`scripts/smoke_zombie_multiplier.py`，7 档 1.0/1.25/1.5/1.75/2.0/2.5/3.0，每档同一关同一种子、（task169 已删：scripts/smoke_zombie_multiplier.py）
 不放植物，按 5 tick 步进数每波新增僵尸）：白天 L7、夜间 L12、泳池 L21、原版传送带 L10、夜间原版 L20
 全部满足 `count == lround(base × mult)`；干净观测分别 19 / 16 / 14 / 14 / 14 条，被小推车碾死污染的
 波次（僵尸数下降）标 dirty、不参与断言。汇总在 `artifacts/task29/smoke_l*.json`（不入 git）。
@@ -742,7 +742,7 @@ task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷
 都不进 git），生成器 `scripts/make_multiplier_tasks.py`，静态检查 `python/test_multiplier_tasks.py`。
 **不改** `deck_for_level`、不改任何现有族的定义；旧存档的 `whatif` 重放不受影响（重放读存档里的 deck 与倍率）。
 
-**v3 压力面板**（同属 task29，`scripts/unified_panel.py --generate-pressure`）：每区挑代表关
+**v3 压力面板**（同属 task29，`scripts/unified_panel.py --generate-pressure`）：每区挑代表关（task169 已删：scripts/unified_panel.py）
 ——白天 L7、原版传送带 L10；夜间 2-2（L12）、2-8（L18）、原版 2-10（L20）；泳池 L21、L26——
 在 1.0 / 1.5 / 2.0 三档各跑评估段前 64 个种子（30000 起，与既有评估任务**同种子**，方便配对比较；
 不新增训练种子）。任务 id `press_<区>_l<关卡>_m<倍率×100>`，除 id / seeds / 倍率外逐字段复制
@@ -762,9 +762,9 @@ task26 的结论是：2-10（原版传送带）发得到的 7 种卡里，大喷
 其槽位不再作为替换目标（`deck_perturb.keep_plants`，`scripts/pvz_tasks.py` 的 `deck_for_seed`）。
 不按植物写任何特例；结果是数据决定的一张表。
 
-**怎么量**：`scripts/analyze_keep_cards.py`（按底卡出表；老师/学生按 run 的 `config.json` `dagger_beta`
+**怎么量**：`scripts/analyze_keep_cards.py`（按底卡出表；老师/学生按 run 的 `config.json` `dagger_beta`（task169 已删：scripts/analyze_keep_cards.py）
 区分 —— `beta=0` 的 DAgger 采集同样会推演，`searched > 0` 不能当老师局标记）。样本不够的底卡用
-`scripts/pick_keep_seeds.py` **条件采样**补：只在“这张卡被换掉”的种子里等距抽，对 P(赢 | 换掉) 无偏，
+`scripts/pick_keep_seeds.py` **条件采样**补：只在“这张卡被换掉”的种子里等距抽，对 P(赢 | 换掉) 无偏，（task169 已删：scripts/pick_keep_seeds.py）
 比随机抽种子省 5–8 倍局数。
 
 **夜间实测表**（n10p，L12/L14/L17；已有老师局 48 局 + 条件采样补 90 局 = 138 局、29 胜）：
@@ -802,7 +802,7 @@ L7–L10 各 0/8192 个种子会换掉它（换掉它 = 没有产阳光植物，
 - 引擎整组检查表 / 替换池 / 逐卡选项直接沿用 n10p：n10q 能生成的卡组是 n10p 的子集，沿用是**保守超集**，
   只会多排除、不会漏排除。
 - 清单 `artifacts/stage4/night_panel_n10q.json`（工作树与 `~/PvZ-search/artifacts/stage4/` 各一份，都不进 git），
-  生成器 `scripts/make_night_n10q.py`，静态检查 `python/test_keep_families.py`。
+  生成器 `scripts/make_night_n10q.py`，静态检查 `python/test_keep_families.py`。（task169 已删：python/test_keep_families.py, scripts/make_night_n10q.py）
 - 倍率变体已加进 `scripts/make_multiplier_tasks.py`：族数 7 → 8，每档块宽 524,288 已超过原档距 500,000，
   档距加宽到 700,000（够再加一个族）；倍率族在加宽前已跑过少量 `_m125`/`_m150` 的局，偏移按 task_id 继续，
   不会重复（见 §14.13 种子段平移）。
@@ -813,7 +813,7 @@ L7–L10 各 0/8192 个种子会换掉它（换掉它 = 没有产阳光植物，
 
 - 用途：“加宽”第三步。白天泳池 L21–L30 原版难度（倍率 1.0、不限波、playthrough 2、阳光 50、不预置植物），
   每关一个评估任务 `pool_lN_eval`；清单 `artifacts/stage4/pool_panel.json`（不进 git，生成脚本
-  `scripts/make_pool_panel.py`，公共核心 `scripts/zone_panel.py`；task21 的 `make_night_panel.py`
+  `scripts/make_pool_panel.py`，公共核心 `scripts/zone_panel.py`；task21 的 `make_night_panel.py`（task169 已删：scripts/make_pool_panel.py）
   **没有**迁到该核心 —— 它的 task25 n10 族与 2-10 原版开局逻辑留在原实现里）。
 - 卡组：`deck_for_level`（未改动），白天泳池 = `[0, 1, 2, 3, 4, 5, 16, 43]`（白天 6 卡 + 睡莲 16 + 香蒲 43）。
   与白天 6/7 卡、夜间 n9 是不同任务族，结果不可混比。
@@ -856,11 +856,11 @@ dw5i保持64宽identity+row_pool及dw4i原12epoch配方，等q103第2轮全部�
 
 ### 14.17 价值网络叶子默认换 v4（task30，2026-10-23）
 
-老师叶子价值网络默认由 `value_net/v3` 改为 `value_net/v4`（编码 v2：空槽跳过、传送带免费与同类手牌聚合、公开场景/坟头标量；`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 与 `scripts/unified_panel.py` 的 `--value` 默认同步改）。依据：[value-widen.md 第 5 步](MEMORY/docs/value-widen.md)——同种子配对下白天 m150/m250 不掉（m250 L7 净 +2、L10 净 0）、夜间 96 对净 +20、泳池 L21 净 +9、L24 净 0；静态估值仍用 `value_branch1`。已知限制：全败泳池区叶值压平（修法另立 v5）；v4 不入 git，走 HF `transfer/value_v4.pt`（SHA256 回验一致）。
+老师叶子价值网络默认由 `value_net/v3` 改为 `value_net/v4`（编码 v2：空槽跳过、传送带免费与同类手牌聚合、公开场景/坟头标量；`scripts/curriculum_queue.py` 的 `DEFAULT_VALUE` 与 `scripts/unified_panel.py` 的 `--value` 默认同步改）。依据：[value-widen.md 第 5 步](MEMORY/docs/value-widen.md)——同种子配对下白天 m150/m250 不掉（m250 L7 净 +2、L10 净 0）、夜间 96 对净 +20、泳池 L21 净 +9、L24 净 0；静态估值仍用 `value_branch1`。已知限制：全败泳池区叶值压平（修法另立 v5）；v4 不入 git，走 HF `transfer/value_v4.pt`（SHA256 回验一致）。（task169 已删：scripts/unified_panel.py）
 
 ### 14.18 雾夜泳池族与冷启动预登记（task45，2026-10-23，AGENTS §8）
 
-生成器 `scripts/make_fog_panel.py`，公共结构 `zone_panel.Family/Zone`；本机清单
+生成器 `scripts/make_fog_panel.py`，公共结构 `zone_panel.Family/Zone`；本机清单（task169 已删：scripts/make_fog_panel.py）
 `artifacts/task45/fog_panel.json`，50 任务，不入 git。L35 是砸罐子，整关排除；
 L40 为 StormyNight 传送带、`StageHasFog=false`，只作单独标注的原版评估，不纳入普通训练。
 普通雾区 = L31–34/36–39。所有任务 playthrough 2、倍率 1、不限波、阳光 50、无预置植物。
@@ -923,7 +923,7 @@ L31 时只有火炬树桩，L32/33 加路灯花，L34 起三种都有；实验�
 警告为 `flyer`，加三叶草后四关警告均空。原版难度同16个配对评估种子/同老师，共64局。
 这一步先检验既有学生熟悉的水路卡组，不能用“有睡莲即覆盖地形”推出实际已建立水路火力。
 随后同种子测 `fog_lN_eval_f8_m050` / `fog_lN_eval_f10b_m050`，各64局；
-三组共192老师局，仍human。`scripts/fog_deck_diagnostic.py` 冻结独立清单与计划，
+三组共192老师局，仍human。`scripts/fog_deck_diagnostic.py` 冻结独立清单与计划，（task169 已删：scripts/fog_deck_diagnostic.py）
 不覆盖原 f8/f8x/f8p 任务及其证据，0.5 暂为诊断，不能未经实测推荐为课程起点。
 
 **本阶段结果**：384局冷启动全部失败；新增f10b原版64局0胜；0.5倍f8为1/64（唯一胜局L34），
@@ -947,7 +947,7 @@ f8新种子覆盖5585728–9104159的离散槽，f8p覆盖5651264–9169695的�
 每格16个配对评估种子（沿用§14.18每关前16个），老师beta1、dw4i续走、叶值v4、静态branch1；
 参数仍从qc的`command_for`构造。共384局，其中64局human/0.5与第一阶段任务、种子、模型、
 引擎哈希完全一致，按来源SHA256复用，320局新跑，不把复用结果说成新增独立样本。
-冻结计划/清单在`artifacts/task45/phase-c/ladder/`，脚本`scripts/fog_phase_c.py`。
+冻结计划/清单在`artifacts/task45/phase-c/ladder/`，脚本`scripts/fog_phase_c.py`。（task169 已删：scripts/fog_phase_c.py）
 0.25/0.35/0.5均用真实刷怪身份计数对原波次名单验证`lround(base*mult)`；不改刷怪公式。
 倍率起点按每关/观测分别取老师实测≥8/16的最高档，未达标不冒充可用起点。
 
@@ -1001,7 +1001,7 @@ f8新种子覆盖5585728–9104159的离散槽，f8p覆盖5651264–9169695的�
 
 **task46追加A第二阶段（2026-10-23）**：已完成L42–49原版r7各4局实际老师及L42–45各1局学生的逐决策时间线；[独立复核](MEMORY/docs/teacher-diag-roof-review.md)包含四份LLM原文的错误纠正、8点19分支逐帧反事实复验及数据需求。dw4i冻结48816训练档案中屋顶0份，执行合法性/原生动作对照无异常；早输样本存在低叶值分差，后期部分关搜索能纠正，尚不能确证缺群伤/伞是结构性卡组问题，未换族。L45是固定初始手牌的免费传送带变体，不能按阳光经济或原版空手牌开局解释。主控追加A已明确：0.5只作诊断，**不设为采集起点**，本阶段不启动或修改qc。
 
-**task46追加B第三阶段（2026-10-24）**：把雾区"真实老师分叉接终局"工具通用化为 `scripts/critical_forks.py`（task60 统一后的入口；历史实现见 tag `task60-pre-terminal-unification`）（终局续走仍是 v5 冻结 `bb2ec969` 的 `finish_teacher` 同哈希源码；雾区脚本固定 phase-e 路径、未记录静态/halving 归因，故本分支重写通用版）。按 CPU 计时预登记冻结 17 根、2 个共同未来、1506 条全合法候选终局标签（七普通关各 2 seed，含 6 个非 L45 旧点，窗口 0–10000 tick；L45 传送带与中后期段按追加B末句留后续）。[结果](MEMORY/docs/task46-roof-terminal-results.json)显示 177 条胜局标签。全量终验用 `scripts/critical_forks_data.py` 的 `panel`/`diagnose`（task60 统一入口） 从存根/冻结计划/预登记种子重建身份，复核覆盖、动作链哈希、完整决策链、终局 tick、丢车≤该 reset 实际防线与共同未来共享，1506 条 0 失败（[证据](MEMORY/docs/task46-roof-terminal-verification.json)）；8 个案例独立复现逐字相同（[复现](MEMORY/docs/task46-roof-terminal-repro.json)）。四项审计只审计不改参数：**候选生成遗漏是最大缺口**（won 维度 92 个观察改善动作中生产可表达 55、遗漏 46，静态保留 4、halving 裁 6、叶值未进候选前二 2、0.02 锚定挡 1、动作空间外 37）；v4 2500 tick 短叶值对终局排序一致率 won 53.9%（聚类自助区间跨 50%）、wave 56.1%、tick 54.8%，且只有 L42/L43/L46 的根含终局胜局（可分根 8/17）。CPU 17.74 小时，含 1200 秒保留共 18.07≤20（[总账](MEMORY/docs/task46-roof-terminal-completion-audit.json)）。本阶段未改门槛、生产参数或 qc。
+**task46追加B第三阶段（2026-10-24）**：把雾区"真实老师分叉接终局"工具通用化为 `scripts/critical_forks.py`（task60 统一后的入口；历史实现见 tag `task60-pre-terminal-unification`）（终局续走仍是 v5 冻结 `bb2ec969` 的 `finish_teacher` 同哈希源码；雾区脚本固定 phase-e 路径、未记录静态/halving 归因，故本分支重写通用版）。按 CPU 计时预登记冻结 17 根、2 个共同未来、1506 条全合法候选终局标签（七普通关各 2 seed，含 6 个非 L45 旧点，窗口 0–10000 tick；L45 传送带与中后期段按追加B末句留后续）。[结果](MEMORY/docs/task46-roof-terminal-results.json)显示 177 条胜局标签。全量终验用 `scripts/critical_forks_data.py` 的 `panel`/`diagnose`（task60 统一入口） 从存根/冻结计划/预登记种子重建身份，复核覆盖、动作链哈希、完整决策链、终局 tick、丢车≤该 reset 实际防线与共同未来共享，1506 条 0 失败（[证据](MEMORY/docs/task46-roof-terminal-verification.json)）；8 个案例独立复现逐字相同（[复现](MEMORY/docs/task46-roof-terminal-repro.json)）。四项审计只审计不改参数：**候选生成遗漏是最大缺口**（won 维度 92 个观察改善动作中生产可表达 55、遗漏 46，静态保留 4、halving 裁 6、叶值未进候选前二 2、0.02 锚定挡 1、动作空间外 37）；v4 2500 tick 短叶值对终局排序一致率 won 53.9%（聚类自助区间跨 50%）、wave 56.1%、tick 54.8%，且只有 L42/L43/L46 的根含终局胜局（可分根 8/17）。CPU 17.74 小时，含 1200 秒保留共 18.07≤20（[总账](MEMORY/docs/task46-roof-terminal-completion-audit.json)）。本阶段未改门槛、生产参数或 qc。（task169 已删：scripts/critical_forks.py, scripts/critical_forks_data.py）
 ### 14.21 雾区全合法候选终局诊断预登记（task45追加E）
 
 L31–34原版f8/f8x，每关前4个评估seed，human/xray配对，共32条学生根轨迹，范围0–8000tick。候选为引擎全部合法种植+等待，不用静态网/top-k缩减。冻结dw4i、v4、branch1及本树雾引擎；只读复用v5第二轮finish_teacher，从候选立即接冻结搜索老师到真实终局，不先经过2500tick学生续走。另在同候选/共同未来上计算正式2500tick学生叶的v4值，分报胜率、末波、终tick排序一致率及平局，不用候选对数充当独立样本。先做仅以CPU耗时决定根取样密度的pilot，取点在读终局标签前冻结；每点全候选×3共同未来。若预算允许，以新16共同未来对每关/观测一处筛出的根作独立确认，限制选择偏差。最多4游戏，全部阶段含重试≤20CPU小时，预留600秒停机，原始逐候选/未来终局和动作链保存在ignored phase-e。详见 [冻结方案](MEMORY/docs/task45-fog-terminal-plan.json)。本阶段不训练、不修改老师或v5分支。
@@ -1110,7 +1110,7 @@ L31 `demo_fog_31_snow_m200` **N=142**（第 3 波）。冷启动三局全 0/8。
 
 ### 14.27 原生传送带 L25 / L30 / L40（task75，2026-10-25）
 
-`scripts/make_native_conveyor_panel.py` 生成独立本地清单 `artifacts/task75/native_conveyor_panel.json`，六个任务为 `pool_l25_orig_eval/train`、`pool_l30_orig_eval/train`、`storm_l40_orig_eval/train`。全部 `deck: []`、`conveyor_start: original`，二周目、倍率 1、不限波、阳光 50、无预置。保留引擎的十空槽开局、免费种植与动态发牌，重复牌按实际槽位保留。原有泳池 p9k 与 L40 初始牌变体不变，重放仍读存档任务。
+`scripts/make_native_conveyor_panel.py` 生成独立本地清单 `artifacts/task75/native_conveyor_panel.json`，六个任务为 `pool_l25_orig_eval/train`、`pool_l30_orig_eval/train`、`storm_l40_orig_eval/train`。全部 `deck: []`、`conveyor_start: original`，二周目、倍率 1、不限波、阳光 50、无预置。保留引擎的十空槽开局、免费种植与动态发牌，重复牌按实际槽位保留。原有泳池 p9k 与 L40 初始牌变体不变，重放仍读存档任务。（task169 已删：scripts/make_native_conveyor_panel.py）
 
 训练段依次为 60000000–60008191、60100000–60108191、60200000–60208191。评估段依次为 61000000–61000031、61100000–61100031、61200000–61200031，每关 32 局。L40 独立采用 `fog_observation: storm`，按照暴风雨绘制状态遮挡，与既有 human / human_v2 / xray 分开。登记清单不改变生产课程，冷启动结果与准入建议见 `MEMORY/docs/native-conveyor.md`。
 
@@ -1141,13 +1141,13 @@ L25 新原生族的 full 僵尸字段 `scale`、lean 僵尸末尾和 v2 僵尸�
 
 ### 14.30 厚雾 L36–L38 倍率课程族（task79b，2026-10-25）
 
-task79b 选用 r11 下已过 50% 的三组基元：L36 `split`、L37 `split`、L38 `magnet`。三者固定 `fog_observation: human_v2`，倍率沿用 `fog_user` 的 1.0 基准与 `m125`、`m150`、`m175`、`m200`、`m250`、`m300` 六档。`scripts/make_fog79b_panel.py` 生成三个基元任务 `fog79b_l36_best`、`fog79b_l37_best`、`fog79b_l38_best`，再由 `scripts/make_multiplier_tasks.py` 展开倍率任务。
+task79b 选用 r11 下已过 50% 的三组基元：L36 `split`、L37 `split`、L38 `magnet`。三者固定 `fog_observation: human_v2`，倍率沿用 `fog_user` 的 1.0 基准与 `m125`、`m150`、`m175`、`m200`、`m250`、`m300` 六档。`scripts/make_fog79b_panel.py` 生成三个基元任务 `fog79b_l36_best`、`fog79b_l37_best`、`fog79b_l38_best`，再由 `scripts/make_multiplier_tasks.py` 展开倍率任务。（task169 已删：scripts/make_fog79b_panel.py）
 
 课程登记为 `CURRICULUM_LEVELS['fog79b'] = (36, 37, 38)`，种子使用独立段：基元训练段 `79,100,000–79,124,575`，倍率段从 `79,200,000` 起按档位步长 100,000、关卡槽宽 2,048 分配。旧族、旧面板和旧种子起点不变，倍率生成器的全局审计负责检查与既有清单不相交。
 
 ### 14.31 L50 僵王博士原生传送带族（task85，2026-10-25）
 
-`scripts/make_boss_panel.py` 登记 `boss_l50_orig_eval/train`，两者均为 `deck: []`、`conveyor_start: original`、二周目、倍率 1、不限波、阳光 50、无预置。评估种子为 85,000,000–85,000,031，训练种子为 85,100,000–85,108,191，独立于既有种子段。L50 的原生传送带牌表由引擎保留，任务清单不重写牌序。
+`scripts/make_boss_panel.py` 登记 `boss_l50_orig_eval/train`，两者均为 `deck: []`、`conveyor_start: original`、二周目、倍率 1、不限波、阳光 50、无预置。评估种子为 85,000,000–85,000,031，训练种子为 85,100,000–85,108,191，独立于既有种子段。L50 的原生传送带牌表由引擎保留，任务清单不重写牌序。（task169 已删：scripts/make_boss_panel.py）
 
 Boss 观测只增加人类可见状态：露头、外观血量阶段、召唤/跺脚/蹦极/投车动作目标，以及冰球或火球的颜色、行和屏幕位置。`v2boss` 是独立学生输入版本，旧观测与旧模型维度保持不变。
 
@@ -1197,7 +1197,7 @@ Boss 观测只增加人类可见状态：露头、外观血量阶段、召唤/�
 ### 14.32 晋升门禁种子池第二段（task88，2026-10-26）
 门禁 v2/v3 的种子池由一段改为有序的两段：`SEED_POOLS_V2 = ([31024, 65536), [100000000, 101000000))`，见 `python/pvz_promotion.py`。
 - 账本按顺序领块，永不复用；旧段用完后接着领新段。新段 100 万个种子，按 v3 每轮 1920 个计约 520 轮。
-- 新段与全机已登记的 61 个种子区间都不相交：用 `scripts/gate_seed_inventory.py` 机械盘点，汇总见 `MEMORY/docs/gate-seed-inventory.json`。
+- 新段与全机已登记的 61 个种子区间都不相交：用 `scripts/gate_seed_inventory.py` 机械盘点，汇总见 `MEMORY/docs/gate-seed-inventory.json`。（task169 已删：scripts/gate_seed_inventory.py）
 - 9 位种子在引擎里完整保留，没有截断，见 `MEMORY/docs/gate-seed-width-check.json`。
 - `GATE_VERSION`、面板和 policy 文档都不变，v2/v3 旧证书逐位不变。
 - 旧账本可以直接读，首次领块时原地升级为 `pools` 格式；旧代码遇到新账本会拒绝领块。
@@ -1232,7 +1232,7 @@ L48 456/617/525、L49 1299/1529，L49 本机种子局全程不过半（第二个
 
 GPT Pro 的离线沙箱用 llmplay 接口打冒险模式。task81c 把任务单从「每任务 3 个种子」扩到
 **每个任务 40 个种子**，并分成五层推进；task81d 加「换未来也能赢」的稳健性口径。
-任务定义与种子分配都由 `scripts/llmplay/make_llmplay_tasks.py` 生成，可重复执行：
+任务定义与种子分配都由 `scripts/llmplay/make_llmplay_tasks.py` 生成，可重复执行：（task169 已删：scripts/llmplay/make_llmplay_tasks.py）
 
 - **A 层**（屋顶 L46–L49 doom，2.0 倍）：`demo_roof_{46,47,48,49}_doom_m200`（沿用 task71b 已登记族）。
 - **B 层**（屋顶 L42–L44 的卡组变体 + L41）：`demo_roof_4{2,3,4}_{melon,gloom,kernel}_m200`、
@@ -1256,9 +1256,9 @@ C/D/E 槽位前移，生成器把清单默认种子同步为当前块首），
 落在 [81,000,000, 81,200,000) 的 **0 个**；块内 1240 个种子互不重复。
 
 **稳健性块**：**83,000,000–83,000,307**（4 个检查点 × 100 + 8 个未来），写在
-`configs/llmplay_robustness.json`，与任务种子不相交。
+`configs/llmplay_robustness.json`，与任务种子不相交。（task169 已删：configs/llmplay_robustness.json）
 
-**无头 reset**：`scripts/llmplay/check_tasks.py` 对 31 个任务各 reset + 120 tick，
+**无头 reset**：`scripts/llmplay/check_tasks.py` 对 31 个任务各 reset + 120 tick，（task169 已删：scripts/llmplay/check_tasks.py）
 全部起局成功（C 层 3.0/4.0 倍、D 层 human_v2、E 层传送带均正常，L30 在 120 tick 时已进第 1 波，
 L50 boss 用包内引擎 `a84f10cf` 起局正常，无需重编引擎）。
 ### 14.35 学生挑选保留种子块（task92，2026-10-26）
@@ -1387,7 +1387,7 @@ v2boss 附加通道 13、总通道 105 修复，Python pvz_env.py 已与 deploy1
 直接引用 [task95 证据](MEMORY/docs/task95-engine-gate.json)：六族 96 对零逻辑/动作差异、
 L50 四对、六族状态哈希及 16 对 ABBA 中位吞吐 1.021813 全过；本次不重跑。
 
-`scripts/qc_deploy14f.sh` 只准备并交主控执行：按 cq 当前 SHA 覆盖代码，把已归档 build4
+`scripts/qc_deploy14f.sh` 只准备并交主控执行：按 cq 当前 SHA 覆盖代码，把已归档 build4（task169 已删：scripts/qc_deploy14f.sh）
 复制到 cq/build6，核对 SHA 后重启；原 build5 保留。只要求没有已排队/运行的门禁任务，
 不补 v3 轮、不等采集轮结束、不回填。看门狗读取持久化的引擎选择，脚本未激活时使用 build5，
 激活后使用 build6，回滚后继续使用 build5。首个新组成功前失败可恢复旧代码；新采集已经开始后
@@ -1396,7 +1396,7 @@ L50 四对、六族状态哈希及 16 对 ABBA 中位吞吐 1.021813 全过；�
 
 ### 14.39 可重复冒险记分板（task103，2026-10-26）
 
-`scripts/adventure_scoreboard.py` 复用 `search_play.py` 的学生 `fast` 与老师 `fast_search`，
+`scripts/adventure_scoreboard.py` 复用 `search_play.py` 的学生 `fast` 与老师 `fast_search`，（task169 已删：scripts/adventure_scoreboard.py）
 老师固定 beta=1、verify=9、student-candidates=2。`configs/adventure_scoreboard.json` 冻结
 task101 的 45 个任务定义，不改卡组与观测，L10/L20 保留预装手牌变体，L30/L40/L50 原生空手，
 雾池为 human_v2、L40 为 storm。5/15/25/35/45 均未纳入这份冻结面板。按 task110 结论，
@@ -1423,7 +1423,7 @@ B 通过既有 `source_weight` 入口的 `level_balance: 0.25`，在原有卡包
 训练日志及 `level_shares.json`。候选原配方路径与逐项挑选分数进入轮报告，挑选与门禁 v4 沿用。
 
 新增独立任务族 `opening119_l{19,23,24,26,28,29}_scoreboard` 及
-`opening119_l{32,37}_magnet`，由 `scripts/make_rebalance_panel.py` 生成清单。
+`opening119_l{32,37}_magnet`，由 `scripts/make_rebalance_panel.py` 生成清单。（task169 已删：scripts/make_rebalance_panel.py）
 八关卡组与 task101/103 记分板一致：L19 `[0,1,2,3,4,5,7,8,9,11]`，
 泳池五关 `[0,1,2,3,4,5,7,16,19]`，L32 `[9,8,10,16,23,17,19,2,31,3]`，
 L37 `[9,8,10,16,23,17,19,2,5,31]`。雾区使用 `human_v2`。
@@ -1437,7 +1437,7 @@ L37 `[9,8,10,16,23,17,19,2,5,31]`。雾区使用 `human_v2`。
 组间重启按 `completed_groups` 保留已采份额和偏移。部署遇到剩余预算不足的旧半轮时，
 直接结束该半轮，专项从下一轮开始，不追加局数补齐。
 
-`scripts/qc_deploy14g.sh` 仅交主控执行：组边界停机，覆盖本次代码，保留 build6 与门禁 v4，
+`scripts/qc_deploy14g.sh` 仅交主控执行：组边界停机，覆盖本次代码，保留 build6 与门禁 v4，（task169 已删：scripts/qc_deploy14g.sh）
 预览后重启并要求首组 rc=0。未激活脚本时，看门狗仍采用 deploy14f 参数。
 失败退回 deploy14f 代码与参数，state/offset/种子账本及历史轮次记录保持原样。
 
@@ -1459,7 +1459,7 @@ L7 有 949 万行，倍数 0.035。梯度因此被极少样本主导。
 `dw4i2_rebalanced.json` 基础上取 p=0.5、倍数上限 20，其余字段（语料、卡包、
 `wait_keep`、缓存路径）完全一致；§14.39 的配方文件不改。
 
-第 21 轮实测（`python/fixtures_level_shares_round21.json`）：p=1 时 L7 份额
+第 21 轮实测（`python/fixtures_level_shares_round21.json`）：p=1 时 L7 份额（task169 已删：python/fixtures_level_shares_round21.json）
 2.04%、倍数 0.035，L40 份额 2.29%、倍数 1191；p=0.5 时 L7 份额 19.5%、
 倍数 0.33，L40 倍数 61；再叠 20 倍上限后 5 关被截断（L30/40/45/47/50），
 L40 落到 20，总训练权重为原值的 99.59%。p=0.5 下 25% 封顶不再触发。
@@ -1502,7 +1502,7 @@ v1–v4 的合同与旧证书全部不动，v5 按版本号并存。第 12–22 
 **面板**：取 `configs/adventure_scoreboard.json`（task103 冻结的 45 关定义，
 原版 1.0 倍、记分板卡组），按 Board::PickBackground 分区归组，只收
 **r11 学生 32 种子里赢过、或老师在原记分板 / task115 赢过**的关 —— 全输的关没有判别力。
-派生脚本 `scripts/make_gate_v5_panel.py`（`--check` 逐字节校验），输出
+派生脚本 `scripts/make_gate_v5_panel.py`（`--check` 逐字节校验），输出（task169 已删：scripts/make_gate_v5_panel.py）
 `configs/gate_v5_panel.json`：**38 冒险关，五个区**，day（L1–4、6–10）、night
 （L11–14、16–20）、pool（L21–24、26–30）、fog（L31–34、36–40）各 9 关，roof
 为 **L41、L46**。原 task101 记分板 `MEMORY/docs/adventure-scoreboard.json`
@@ -1531,7 +1531,7 @@ task126 的两个换卡组任务改为 `score_only`，只记分不进挑选总�
 旧的 30%–80% 采集窗口筛选随主体一起退役（`current_cells` 删除），挑选不再读
 采集窗口，窗口归属错误也不可能再悄悄丢格。
 
-**部署**：`scripts/qc_deploy14i.sh` 只交主控执行。切换条件同 v4：没有已排队/
+**部署**：`scripts/qc_deploy14i.sh` 只交主控执行。切换条件同 v4：没有已排队/（task169 已删：scripts/qc_deploy14i.sh）
 运行的门禁任务即可，半轮采集组直接继续；门禁合同在轮末入队时才签发，旧评估
 仍按旧版本读取。未激活分支与回滚分支等于**当时在役**的部署：脚本按
 `~/pvz-logs/qc_deploy14h.mode` 是否含 `rebalance` 判断 —— 有则用 deploy14h
@@ -1549,7 +1549,7 @@ Newcombe 95% 下界 > −3pp。优先挑预计批准者中的总胜局最高者�
 新模板 `selection-task136-v5` 为普通白天九关各 16 局，其他任务各 8 局，共 416 局/模型，
 挑选账本每轮分配 512 种子块。旧 task128 冻结模板继续 384 块与原来每项 8 局的顺序。
 K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整段吞吐估算增约 8 分钟。
-预测仅用于挑选，实际晋升仍由独立新种子的原门禁判定。部署包 `scripts/qc_deploy14k.sh`
+预测仅用于挑选，实际晋升仍由独立新种子的原门禁判定。部署包 `scripts/qc_deploy14k.sh`（task169 已删：scripts/qc_deploy14k.sh）
 只替换选择器、选择预算和共用统计模块，课程控制器保持 admitfix cf94a8cb，启动参数及回滚
 原样继承台式机 deploy14j。证据边界及 Mac 相关单测结果见 [任务书](MEMORY/docs/task136-selection-vs-incumbent.md)。
 
@@ -1597,7 +1597,7 @@ K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整
 两个监控格（`d7p_holdout1/2`）本来就是训练外固定卡组；把 8 套评估卡组塞进门禁要
 每轮多 8 × 96 = 768 对（+40% 门禁时长与种子池消耗），本任务不做。
 
-**部署**：`scripts/qc_deploy14l.sh`（只交主控执行）换控制器与清单；控制器在启动时读清单，
+**部署**：`scripts/qc_deploy14l.sh`（只交主控执行）换控制器与清单；控制器在启动时读清单，（task169 已删：scripts/qc_deploy14l.sh）
 所以需要按组边界重启一次采集（`stop_qc` 的既有排空路径），后台训练 / 打包流水线不排空。
 
 ### 14.46 采集组开工后扩容：组宽不再在开工时定死（task138，2026-10-28）
@@ -1630,7 +1630,7 @@ K=4 加一次在役对照共 2080 局，比原 1376 局增 704 局，按 r26 整
 **成本**：每 30 s 一次 `/proc/meminfo` 读取，可忽略；新 worker 在 Linux 上 fork 父进程，
 继承已加载的 torch 与权重页（`_init_worker` 的 `if "fast" not in _W` 分支），不再从磁盘加载。
 
-**部署**：`scripts/qc_deploy14m.sh`（只交主控执行）换 `search_play.py` + 控制器 + 新增
+**部署**：`scripts/qc_deploy14m.sh`（只交主控执行）换 `search_play.py` + 控制器 + 新增（task169 已删：scripts/qc_deploy14m.sh）
 `growable_pool.py`，然后重启 qc。未激活 / 回滚分支照抄台式机最新 deploy14l 的 `start_qc`：
 `--extra-manifest` 由 `qc_deploy14l.mode` 决定，`stop_qc` 直接 `kill-session`（不排空），
 并额外清掉本工作树遗留的 `search_play` 子进程。预检只有 sha256、`ast.parse`、`--help` 里的新
@@ -1664,7 +1664,7 @@ deploy15只准备：使用独立build7与新配方，延续门禁v5、K=4串行�
 控制器与 14p 逐字节相同；`warm_start_student` 只对显式写 `init` 的配方生效。
 首个 v2sleep 轮次既不带父权重，也不与历史轮次共享初始化，挑选与门禁口径不变。
 
-`scripts/qc_deploy15.sh`（只准备）以 14p 生效后的六个生产文件为基线，替换六个
+`scripts/qc_deploy15.sh`（只准备）以 14p 生效后的六个生产文件为基线，替换六个（task169 已删：scripts/qc_deploy15.sh）
 观测/值网模块、`pack_training_rows`、`train_rollout_policy` 与两份 v2sleep 配方；
 激活时 `--executable` 切 `obsup/build7/pvz-portable`（sha256 固定），继续带
 task137 的 `--extra-manifest` 与门禁 v5 参数。stop 直接杀、不排空；首组 60 分钟

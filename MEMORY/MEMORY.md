@@ -113,3 +113,5 @@
 - [task131：v2sleep 加宽热启动、缓存与 deploy15 准备](docs/task131-obs-upgrade.md)
 
 - [task165：deploy17数据配比与待审部署/回滚](docs/task165-deploy17-data-mix.md)
+- [task169：删除防御性冗余与死代码（历史文档中指向被删文件的引用以当时记录为准）](docs/task169-purge-defensive-cruft.md)
+- [2026-10-29](2026-10-29.md)
