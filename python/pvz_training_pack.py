@@ -18,15 +18,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
 
 
-def archive_fingerprint(data: Path, labels) -> str:
+def archive_fingerprint(data: Path, labels, llm_demo_import=None, llm_demo_results=(1,)) -> str:
     """What the pack was built from: every archive's path and size, so a new or changed game invalidates it.
 
     mtime is deliberately not part of it: a copy that keeps the bytes (HF transfer, scp) keeps the size,
     and a training run must not care when the file was written.
     """
-    from pvz_frame_store import frame_paths
     data = Path(data)
-    return fingerprint_paths(data, [path for path in frame_paths(data) if path.parent.name in labels])
+    return fingerprint_paths(data, training_paths(data, labels, llm_demo_import, llm_demo_results))
+
+
+def training_paths(data, labels, llm_demo_import=None, llm_demo_results=(1,)):
+    from pvz_frame_store import frame_paths
+    paths = [path for path in frame_paths(data) if path.parent.name in labels]
+    if llm_demo_import is not None:
+        from pvz_llm_demo_rows import demo_paths
+        paths.extend(demo_paths(Path(data), Path(llm_demo_import), llm_demo_results))
+    return sorted(paths, key=lambda path: str(path.parent))
 
 
 def fingerprint_paths(data: Path, paths) -> str:
@@ -62,7 +70,9 @@ def training_rows(frame_path):
 
 def segment_options(options: dict, label: str, sources: str) -> dict:
     """Unrelated labels/weights never invalidate an immutable label segment."""
-    return {**options, 'labels': [label], 'sources': sources,
+    base = {key: value for key, value in options.items()
+            if key not in ('llm_demo_import', 'llm_demo_results')}
+    return {**base, 'labels': [label], 'sources': sources,
             'label_weight': {label: options['label_weight'][label]}
             if label in options['label_weight'] else {}}
 
@@ -73,12 +83,16 @@ def segment_path(data: Path, options: dict) -> Path:
 
 def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = False,
                  aux_horizon: int = 0, packet_head: str = "slot", with_context: bool = False,
-                 label_weight: dict[str, float] | None = None, sources: str | None = None) -> dict:
+                 label_weight: dict[str, float] | None = None, sources: str | None = None,
+                 llm_demo_import=None, llm_demo_results=(1,)) -> dict:
     """Everything that changes the rows or their values: a pack is valid for exactly one tuple."""
-    return {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
+    options = {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
             "obs": obs, "cells": bool(cells), "aux_horizon": int(aux_horizon), "packet_head": packet_head,
             "with_context": bool(with_context),
             "label_weight": {k: round(float(v), 6) for k, v in sorted((label_weight or {}).items())}}
+    if llm_demo_import is not None:
+        options.update(llm_demo_import=str(llm_demo_import), llm_demo_results=sorted(llm_demo_results))
+    return options
 
 
 def pack_path(data: Path, options: dict) -> Path:
@@ -98,4 +112,7 @@ def pack_flags(options: dict) -> list[str]:
         flags.append('--context')
     if options['label_weight']:
         flags += ['--label-weight', ','.join(f'{k}={v}' for k,v in options['label_weight'].items())]
+    if options.get('llm_demo_import'):
+        flags += ['--llm-demo-import', options['llm_demo_import'], '--llm-demo-results',
+                  ','.join(map(str, options['llm_demo_results']))]
     return flags
