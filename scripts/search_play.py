@@ -684,9 +684,10 @@ def _play(job: dict, observer=None) -> dict:
         env.load_value_net(_W["value_files"][1], static=True)
         env._teacher_value_loaded = True
     token_observation = bool(getattr(args, "obs_v3", False) or getattr(_W["fast"], "token_input", None) == "obs_v3")
-    if token_observation or getattr(env, '_token_observation', False):
-        env.set_token_observation(token_observation)
-    env._token_observation = token_observation
+    initial_tokens = token_observation and not getattr(args, 'demo_archive', None)
+    if initial_tokens or getattr(env, '_token_observation', False):
+        env.set_token_observation(initial_tokens)
+    env._token_observation = initial_tokens
     from pvz_research_data import SparseTokenWriter, capture_frame, SIDECAR_NAME
     token_writer = None
     if getattr(args, 'obs_v3', False) and args.frames:
@@ -731,6 +732,11 @@ def _play(job: dict, observer=None) -> dict:
                 # teacher the true future (the clairvoyance problem, scripts/verify_reseed.py). RESEED
                 # re-picks every wave that has not started yet and leaves the board untouched.
                 env.reseed(future_seed)
+            if token_observation:
+                # Prefix ticks are restored, not collected or passed to the student.
+                env.set_token_observation(True)
+                env._token_observation = True
+                obs = env.observe()
             from pvz_frame_store import frame_path, read_frames
             demo_frames = read_frames(frame_path(Path(demo_archive)))
             _W['demo_actions'] = [(before['tick'], after['action'])

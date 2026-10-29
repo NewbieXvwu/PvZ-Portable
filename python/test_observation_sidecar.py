@@ -37,22 +37,36 @@ def test_sidecar_lossless_target_signed_zero_and_frame_binding(tmp_path):
         episode_tokens(path)
 
 
-def test_sidecar_collection_switch_keeps_compact_bytes(tmp_path,monkeypatch):
+@pytest.mark.parametrize('demo', [False, True])
+def test_sidecar_collection_switch_keeps_compact_bytes(tmp_path,monkeypatch,demo):
     from argparse import Namespace
     from pvz_rollout_policy import RolloutNet,export_student
     import search_play as search
     torch.set_num_threads(1)
     net=RolloutNet(8).eval()
     model=tmp_path/'model.bin';export_student(net,model)
+    (tmp_path/'checkpoint.pt').write_bytes(b'fixture; net supplied through worker state')
     manifest=tmp_path/'tasks.json'
     manifest.write_text(json.dumps(dict(tasks=[dict(task_id='fixture',level=7,deck=[0,1,2,3,4,5])])))
+    demo_archive = None
+    if demo:
+        from human_demo import Recorder
+        from pvz_event_env import EventWaitEnv
+        from pvz_env import TaskSpec
+        from pvz_tasks import profile_for_deck
+        demo_archive=tmp_path/'demo'
+        deck=(0,1,2,3,4,5)
+        with EventWaitEnv(Path.home()/'.cache/pvz-research-resources',executable=ROOT/'build-studentv3net/pvz-portable') as env:
+            recorder=Recorder(env,demo_archive,'fixture',deck,TaskSpec(level=7,seed=157,playthrough=2,profile=profile_for_deck(deck)))
+            recorder.step(dict(type='wait',ticks=60))
+            recorder.close()
     monkeypatch.setattr(search,'MAX_ACTIONS',4)
     collected=[]
     for enabled in (False,True):
         target=tmp_path/str(enabled)
         args=Namespace(manifest=manifest,task_id='fixture',resource_dir=Path.home()/'.cache/pvz-research-resources',
             executable=ROOT/'build-studentv3net/pvz-portable',obs_v3=enabled,frames=target,frames_label='fixture',
-            rollout_policy=tmp_path/'checkpoint.pt',dagger_beta=1.)
+            rollout_policy=tmp_path/'checkpoint.pt',dagger_beta=1.,demo_archive=demo_archive,demo_decision=2)
         search._W.clear();search._W.update(fast=net,rollout_file=str(model))
         search._play(dict(args=args,arm='fast',seed=157))
         folder=target/'seed_157/fixture_fast'
