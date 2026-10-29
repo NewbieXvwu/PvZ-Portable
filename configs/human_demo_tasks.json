@@ -10563,7 +10563,21 @@
     5,
     31
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/7e90ee200da8f67687780f5488b36d49f50d59d7f5ab8ef73d17a5461c1f8ff7",
+    "decisions": [
+     735,
+     468,
+     401,
+     201,
+     134,
+     68
+    ],
+    "index": 0,
+    "future_seed_start": 370000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l39_snow_blover_v2_m200_s81027036_ac39151a7ff85",
