@@ -53,16 +53,21 @@ def replay_archive(env, path, out, *, manifest=None, task_id=None):
         obs, _ = env.reset(deck=tuple(deck), task=task)
         for index, record in enumerate(frames):
             if index:
-                obs, *_rest, info = env.step(record["action"])
+                action = record.get("action") or record.get("input_action")
+                obs, *_rest, info = env.step(action)
                 rejected = not info.get("ok")
                 if rejected != record.get("action_rejected", False):
                     raise ValueError(f"frame {index}: action rejection differs")
-                if rejected:
+                if rejected and meta.get("schema") != "episode_archive_v1":
                     obs, *_ = env.step({"type": "wait", "ticks": 60})
             actual = json.loads(json.dumps(_frame(obs)))
             for key, value in actual.items():
                 # These observation extensions did not exist in early archives.
                 if key in ("v2", "v3", "sleep", "boss", "bungee", "fog_amount") and key not in record:
+                    continue
+                # Human capture polls each tick. Grouped waits preserve the board, but move
+                # the Python rolling-income event timestamps. v3 does not consume that estimate.
+                if key == "sun_income_rate" and meta.get("schema") == "episode_archive_v1":
                     continue
                 if value != record.get(key):
                     raise ValueError(f"{path}: frame {index}, {key} differs from replay")

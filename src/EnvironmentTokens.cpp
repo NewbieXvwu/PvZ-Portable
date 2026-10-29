@@ -75,7 +75,7 @@ std::vector<EnvironmentToken> PublicObservationTokens(LawnApp* app)
 			{p->mRow / 5.f, p->mPlantCol / 8.f, visible(p->mPlantHealth / 3000.f),
 			 visible(p->mPlantMaxHealth / 3000.f), visible(p->mX / 900.f), visible(p->mY / 700.f),
 			 visible(static_cast<int>(p->mState) / 128.f), visible(p->mStateCountdown / 1200.f),
-			 visible(p->mDoSpecialCountdown / 1200.f), visible(p->mLaunchCounter / 1200.f), p->mLaunchRate / 1200.f,
+			 visible(p->mDoSpecialCountdown / 1200.f), -1.f, p->mLaunchRate / 1200.f,
 			 visible(p->mShootingCounter / 1200.f), visible(p->mWakeUpCounter / 1200.f),
 			 visible(float(p->mIsAsleep)), visible(float(p->mSquished)), visible(static_cast<int>(p->mOnBungeeState) / 3.f),
 			 float(!hidden), float(rolling), vx / 20.f, vy / 20.f});
