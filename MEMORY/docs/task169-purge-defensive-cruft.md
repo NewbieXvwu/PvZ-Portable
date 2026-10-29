@@ -118,3 +118,77 @@
 
 - `scripts/search_play.py` 的两处 `--help` 文案仍提到已删的 `verify_reseed.py` / `sim_skip_agreement.py`；该文件属会话 1 / codexb 的活代码修改范围，未在本分支改动。
 - 未部署、未连接台式机生产。
+---
+
+## 会话 1 交付结论（purgelive，基线 origin/deploy17 @ ad9e751f）
+
+### 总体规模
+`origin/deploy17...purgelive` 区间：**59 个文件改动，+431 / −2421 行（净删 ≈1990 行）**。
+
+### 批次 1 · curriculum_queue.py / promotion_gate.py / pvz_promotion.py 闭包
+- **1.1 删 manifest / 指纹 / 自校验**
+  - selection / gate 路径上的 SHA256 比对；gate v1-v4 与历史 panel 的加载/解析分支；
+  - 每次 reset 哈希 `main.pak` + `partner.xml` + `git rev-parse` + `git status --untracked-files=all` 热路径（AGENTS §6.5 违规）；
+  - `experiment_manifest.json`、`working_tree.patch`、`debug_replay`、`save_replay`、`replay_record`、`_write_manifest` / `_check_manifest`。
+- **1.2 删写死路径**
+  - `/home/newbiexvwu/...` 与 `.claude/worktrees/<name>/...` → 全部改为仓库内 `ROOT = Path(__file__).resolve().parents[1]` 现算；
+  - 13 个测试的资源目录改成 `str(Path.home() / ...)`；
+  - `qc_deploy17.sh` / `qc_deploy16.sh` / `deploy17_at_boundary.sh` / `qc_watchdog.sh` 里的 `/home/newbiexvwu` → `$HOME`（保留 `watchdog_extract_start` 可解析的 `$HOME` 字面量，不用 `${VAR:-default}`）；
+  - `init_glob` 默认 patterns 去掉 `.claude/worktrees/{cq,obsup}`（与上游 2f038dbe 的收窄冲突：选择只保留仓库根的 `artifacts/hard/*` 与 `artifacts/task28/*`；--init-glob 留给显式使用）。
+- **1.3 删死代码**
+  - `scripts/gate_power_retest.py`（整文件）—— 一次性 task73 复测，无活引用；上游 2f038dbe 对该文件的路径修补随之丢弃（脚本本身属于会话 2 范围）。
+  - `scripts/verify_promotion_demo.py`（整文件）—— 同理由会话 2 整文件删除。
+- **1.4 删依赖地狱**
+  - `row_weights` / `RowWeights` / `update_identity` 整条从未开启的开关链：schema → trainer → class → test（`test_dagger_data_rows.py`） → 11 份 recipe 里的 `"row_weights": null` 字段。
+  - `pvz_common.py`：删除 `REPLAY_FORMAT_VERSION`、`OBSERVATION_VERSION`、`TASK_VERSION`、`TRAINING_SEED`、`VALUE_RANGE`、`_GENERATED_*`、`sha256_file`、`sha256_bytes`、`canonical_digest`、`is_generated_artifact`、`git_metadata`；`test_shared_helpers.py` 随之 `git rm`。
+  - `pvz_recipe.py`：删除 `args.recipe_sha256`；`train_rollout_policy.py`：删除 checkpoint 里的 `recipe_sha256` 与 `shared_pack_weights.json` 的 `pack_recipe_sha256`，以及 `row_plan` 相关的 `clamp_min(1e-30)` 分母。
+
+### 批次 2 · pvz_env / pvz_common（活模块底层）
+- 删 `pvz_env._manifest_data`、`_write_manifest`、`_check_manifest`（4514 字符）、`import gzip`；
+- 删 `_resource_hashes`、`_source_state`、`_resource_sha256`、`_properties_sha256`、`_source_metadata`、`_debug_state_sha256`、`debug_replay` 参数；
+- `reset()` 的 episode dict 不再写 `format_version` / `source_revision` / `source_dirty` / `resource_sha256` / `properties_partner_sha256`；
+- 对应 `human_demo.py`、`llmplay/game.py` meta 同步删除。
+
+### 批次 3 · search_play / pack_training_rows（subprocess 调起的脚本）
+- `search_play.py`：`DEFAULT_RESOURCE_DIR` 改成 `$PVZ_RESOURCE_DIR` 或 `~/.cache/pvz-research-resources`；删除 `_archive_sha256`、`final_state_hash`、`demo_sha` / `demo_archive_sha256`、`checkpoint_sha256`、`state_hash` 字段；
+- `pack_training_rows.py`：删 `--verify` CLI 开关；保留 `verify()` / `assert_payload_equal()` 函数供增量 pack 测试使用。
+
+### 批次 4 · train_rollout_policy（trainer 闭包）
+- 删 probe hashes；删 `row_plan` 分支（denominator `w.sum()` / `wc.sum()` / `wp.sum()` 替代 `clamp_min(1e-30)` 形式）。
+
+### 批次 5 · recipe 测试与解释器回退
+- `test_curriculum_queue.py`：`test_recipe_pack_command_matches_actual_trainer_load_request` 里 `args.python = Path('/nonexistent/python')` → `Path(sys.executable)`——断言 `command[0] == sys.executable` 正是针对被删的 `args.python.exists()` 回退分支。默认值就是 `sys.executable`（`DEFAULT_PYTHON = Path(sys.executable)`），回退会在生产 venv 路径写错时静默换解释器，按 §6.5 属"防御分支默认删除"。
+
+### 批次 6 · pvz_recipe 描述性 provenance
+- 删 `pvz_recipe.py:115-119` provenance schema/类型校验（注释自陈 "descriptive, never used as training configuration"）。provenance 字段本身仍保留在 recipe 默认值与 allowed keys 里，11 份 recipe 不动，仅不再校验。
+
+---
+
+### 保留的检查（防止具体损失）
+| 保留项 | 一行理由 |
+|---|---|
+| `hf_sync.py` SHA256 / `resume.json` 指针 | AGENTS §2 明确要求：下载后必须接得上；`_collect()` 强制并入 resume.json 指向的文件 |
+| `curriculum_queue.py` `contract_key` | 门禁断点续跑的身份键；缺了会重复花种子 |
+| `pvz_frame_store.py` 与 `train_rollout_policy.py` 的 merge `.complete` 签名 | 共享 pack 的 cache identity，缺了会把错误的合并喂进训练 |
+| `selection_ready.json` 标记 | 重启时跳过引擎重放，避免每次重启都重跑整轮选择局 |
+| `pack_training_rows.verify()` + `assert_payload_equal()` | 防止损坏的 pack 进训练（测试用） |
+| `search_play.py` `executable_sha256` | 人类示范用来决定 strict/relaxed 回放模式（不是 manifest 核对，是行为开关） |
+| `_task_rows` 完整性 | 保证每个 task 的 rows 被采到（防漏数据进训练） |
+| 种子账本唯一性 | 种子不可复用 = 门禁/评估公平性的根基，删了就等于历史证据全废 |
+
+### 遗留 / 交给会话 2 的断链
+以下非活文件在被删 helper 上还留着引用，属会话 2 `purgedead` 的整文件删除范围：
+- `scripts/analyze_multiseed_selection.py`、`scripts/task92b_selection.py`（import 已损坏）；
+- `scripts/import_mac_labels.py`、`scripts/run_identity_smoke.py`、`scripts/value_leaf_dispersion.py`、`scripts/qc_metrics_throughput.py`（引用被删的 `search_play` 字段 / 写死机器路径）；
+- `scripts/make_gate_v5_panel.py`（一次性生成脚本，带 SHA 钉）；
+- `scripts/dagger_data_design.py`、`scripts/train_rollout_policy_dilution.py`（import 已删的 `update_identity`）；
+- `scripts/qc_metrics_throughput.py` 与 `scripts/human_demo.py` 里的 `logs/...` 绝对路径。
+
+### 预先存在、与本会话删除无关的失败（origin/deploy17 tip ad9e751f 同样复现）
+- `test_recipe.py::test_full_200_step_observer_with_source_row_report`（"recipe and legacy requested different training rows"，在 batch 1 前的 HEAD 已失败）；
+- `test_recipe.py::test_historical_recipes_resolve_all_training_settings`（上游 2f038dbe 把 `dw4i.json` labels 从 170 改到 168，测试期望没跟着改）；
+- `test_deploy17.py::test_deploy17_watchdog_launch_is_inert_until_active[True/False]` 与 `test_deploy16.py::test_deploy16_watchdog_launch_selects_active_package_and_preserves_deckcells[True-14i-build16]`（上游把 `EXE16` 改成 `$R/artifacts/production/deploy16/pvz-portable`，测试断言仍写 `prodint16/build16/pvz-portable` / `build16`）；
+- `test_curriculum_queue.py` 里 4 项与上游相同的失败（`test_command_measures_child_anon_peak` 等 `TrainingPipeline` 相关；上游 tip 6 项失败，本分支 4 项——少掉的两项 `test_run_rejects_changed_trained_candidate` / `test_run_reuses_trained_json_without_retraining` 由批次 1 对 selection 哈希的清理而顺带修好）。
+
+### 每批验证协议（已按任务书执行）
+活模块 import、`curriculum_queue.py --help`、`timeout 300` + `ulimit -f 2000000` 的针对性 `pytest -k`，一次一个文件，未整套运行 `test_curriculum_queue.py` / `test_curriculum_pipeline.py` / `test_qc_resilience.py`。每批 `git fetch && git rebase origin/deploy17` 后 `--force-with-lease` 推送。不部署、不连台式机生产。

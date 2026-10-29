@@ -165,4 +165,4 @@ TASK49_ROOT=/home/newbiexvwu/PvZ-search/.claude/worktrees/qcpipe
 
 评估完成不会中断在采的组。拒绝案在03:16:37组结束后记录保留；通过案在03:18:43评估完成，至03:19:57第二组结束才切换，两个完整采集组的配置均仍引用原学生。上述内存为共享机器观测，不代表对其他进程的实时限制；后台继续使用既有预测峰值预留公式。
 
-完整测试为 **367 passed / 133 subtests passed / 0 failed / 0 skipped，72.17s**，覆盖过期对照重评不重训、旧完成标记补评、损坏/缺局证据不得晋升、评估异常保留学生且队列继续等情形。最终复核重新验证两案证书与逐局SHA、原检查点SHA、采集档案、状态和源码指纹；[结论证据](task49-A-evidence.json) 保存统计、资源观测、12份验收文件及7份源码指纹。原始档案在本工作树 `artifacts/task49/A/{reject_final,approve}/`，模型/帧/滚动日志不入git。重跑工具为 `scripts/verify_promotion_demo.py`，其CLI要求显式指定既有候选/现行检查点、面板与预期决策，产物须另选独立目录。
+完整测试为 **367 passed / 133 subtests passed / 0 failed / 0 skipped，72.17s**，覆盖过期对照重评不重训、旧完成标记补评、损坏/缺局证据不得晋升、评估异常保留学生且队列继续等情形。最终复核重新验证两案证书与逐局SHA、原检查点SHA、采集档案、状态和源码指纹；[结论证据](task49-A-evidence.json) 保存统计、资源观测、12份验收文件及7份源码指纹。原始档案在本工作树 `artifacts/task49/A/{reject_final,approve}/`，模型/帧/滚动日志不入git。重跑工具为 `scripts/verify_promotion_demo.py`（task169 彻查防御性冗余时已删除，一次性证书重跑脚本），其CLI要求显式指定既有候选/现行检查点、面板与预期决策，产物须另选独立目录。
