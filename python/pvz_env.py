@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import gzip
 import json
 import math
 import os
@@ -15,21 +14,11 @@ import sys
 import tempfile
 from typing import Any, Iterator, Sequence
 
-from pvz_common import (
-    ENV_PROTOCOL_VERSION,
-    OOM_SCORE_WORKER,
-    REPLAY_FORMAT_VERSION,
-    canonical_digest,
-    git_metadata,
-    is_generated_artifact,
-    sha256_bytes,
-    sha256_file,
-)
+from pvz_common import ENV_PROTOCOL_VERSION, OOM_SCORE_WORKER
 
 __all__ = [
     "BRANCH_BATCH_LIMIT",
     "ENV_PROTOCOL_VERSION",
-    "REPLAY_FORMAT_VERSION",
     "LoadoutContext",
     "PlayerProfileContext",
     "PvZEnv",
@@ -243,15 +232,12 @@ class PvZEnv:
         executable: str | os.PathLike[str] | None = None,
         save_dir: str | os.PathLike[str] | None = None,
         headless: bool = True,
-        debug_replay: bool = False,
     ) -> None:
         root = Path(__file__).resolve().parent.parent
         binary_name = "pvz-portable.exe" if os.name == "nt" else "pvz-portable"
         self.executable = Path(executable) if executable else root / "build" / binary_name
         self.resource_dir = Path(resource_dir).expanduser().resolve()
         self.headless = headless
-        self.debug_replay = debug_replay
-        self._root = root
         self.save_dir = Path(save_dir).expanduser().resolve() if save_dir else None
         self._temporary_save: tempfile.TemporaryDirectory[str] | None = None
         self._process: subprocess.Popen[str] | None = None
@@ -260,12 +246,6 @@ class PvZEnv:
         self._sparse_tracks_version = 0
         self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
-        # Resource hashes and git metadata are computed on first use: hashing main.pak
-        # eagerly here would raise a bare FileNotFoundError before ``_start`` can report
-        # the friendly "main.pak not found in resource directory" message.
-        self._resource_sha256: str | None = None
-        self._properties_sha256: str | None = None
-        self._source_metadata: tuple[str | None, bool | None] | None = None
         # Tick of the most recent observation, used to derive real tick deltas.
         self._tick: int | None = None
         self._sun_income_window_ticks = 6000
@@ -301,17 +281,6 @@ class PvZEnv:
                        if sample_tick >= cutoff)
         observation["sun_income_rate"] = produced * 1000.0 / elapsed if elapsed else 0.0
         return observation
-
-    def _resource_hashes(self) -> tuple[str, str]:
-        if self._resource_sha256 is None or self._properties_sha256 is None:
-            self._resource_sha256 = sha256_file(self.resource_dir / "main.pak")
-            self._properties_sha256 = sha256_file(self.resource_dir / "properties" / "partner.xml")
-        return self._resource_sha256, self._properties_sha256
-
-    def _source_state(self) -> tuple[str | None, bool | None]:
-        if self._source_metadata is None:
-            self._source_metadata = git_metadata(self._root)
-        return self._source_metadata
 
     def _adopt_tick(self, observation: dict[str, Any]) -> None:
         if "tick" in observation:
@@ -512,15 +481,8 @@ class PvZEnv:
         self._reset_done = True
         observation = self._annotate_observation(
             response["observation"], response.get("events", {}), reset_history=True)
-        resource_sha256, properties_sha256 = self._resource_hashes()
-        source_revision, source_dirty = self._source_state()
         self._adopt_tick(observation)
         self.episode = {
-            "format_version": REPLAY_FORMAT_VERSION,
-            "source_revision": source_revision,
-            "source_dirty": source_dirty,
-            "resource_sha256": resource_sha256,
-            "properties_partner_sha256": properties_sha256,
             "level": level,
             "seed": seed,
             "deck": [asdict(card) for card in cards],
@@ -980,7 +942,7 @@ class PvZEnv:
         simulator and must be released with :meth:`release_snapshot`; the parent stays
         valid.  Second, the simulator is left at the *last* branch's state, so the caller
         has to restore whatever state it wants next.  Like the search teacher, this
-        bypasses the episode bookkeeping, so do not mix it with :meth:`save_replay`.
+        bypasses the episode bookkeeping.
 
         With retain_snapshots=False, return compact observations without saving children or hashing them.
         Older binaries use the original command and release its child snapshots immediately.
@@ -1040,69 +1002,6 @@ class PvZEnv:
             self.episode["final_state"] = final_state
             self.release_snapshot(snapshot_id)
 
-    def save_replay(self, path: str | os.PathLike[str]) -> None:
-        if self.episode is None:
-            raise RuntimeError("call reset() before saving a replay")
-        output = Path(path)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        manifest = self._write_manifest(output.parent)
-        header = {key: value for key, value in self.episode.items() if key not in ("operations", "final_state")}
-        header["record_type"] = "header"
-        header["manifest"] = manifest
-        footer = {"record_type": "footer", "final_state": self.episode["final_state"]}
-        if output.name.endswith(".gz"):
-            with gzip.open(output, "wt", encoding="utf-8", compresslevel=6) as stream:
-                for item in [header, *self.episode["operations"], footer]:
-                    stream.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
-        else:
-            with output.open("w", encoding="utf-8") as stream:
-                for item in [header, *self.episode["operations"], footer]:
-                    stream.write(json.dumps(item, ensure_ascii=False, separators=(",", ":")) + "\n")
-
-    def replay_record(self, record: dict[str, Any], manifest_directory: Path | None = None) -> dict[str, Any]:
-        version = record.get("format_version")
-        if version != REPLAY_FORMAT_VERSION:
-            raise ValueError(f"unsupported replay version: {version}")
-        self._check_manifest(record["manifest"], manifest_directory)
-        task_data = dict(record["task"])
-        task_data["profile"] = PlayerProfileContext(**task_data["profile"])
-        task_data["forced_seeds"] = tuple(task_data["forced_seeds"])
-        task_data["preplanted"] = tuple(tuple(plant) for plant in task_data.get("preplanted", ()))
-        observation, _ = self.reset(deck=[SeedCard(**card) for card in record["deck"]], task=TaskSpec(**task_data))
-        if self._state_record(observation) != record["initial_state"]:
-            raise RuntimeError("replay diverged immediately after reset")
-        snapshot_ids: dict[int, int] = {}
-        for index, operation in enumerate(record["operations"]):
-            kind = operation["kind"]
-            if kind == "action":
-                action = operation["action"]
-                observation, _, _, _, info = self.step(action)
-                if info["events"] != operation["events"]:
-                    raise RuntimeError(f"replay events diverged at operation {index}")
-                if info["ticks_advanced"] != operation["ticks_advanced"]:
-                    raise RuntimeError(
-                        f"replay tick count diverged at operation {index}: "
-                        f"{info['ticks_advanced']} != {operation['ticks_advanced']}"
-                    )
-                if operation.get('wait_result') != info.get('wait_result'):
-                    raise RuntimeError(f"replay wait interruption diverged at operation {index}")
-            elif kind == "snapshot":
-                snapshot_ids[operation["id"]] = self.snapshot()
-                observation = self.observe()
-            elif kind == "restore":
-                observation = self.restore(snapshot_ids[operation["id"]])
-            else:
-                raise ValueError(f"unknown replay operation: {kind}")
-            actual = self._state_record(observation)
-            expected = operation["state"]
-            if actual != expected:
-                raise RuntimeError(f"replay diverged at operation {index}")
-            if operation.get("debug_state_sha256") and self._debug_state_sha256() != operation["debug_state_sha256"]:
-                raise RuntimeError(f"full game state diverged at operation {index}")
-        if self._state_record(observation) != record["final_state"]:
-            raise RuntimeError("replay terminal state diverged")
-        return observation
-
     @staticmethod
     def _state_record(observation: dict[str, Any]) -> dict[str, Any]:
         return {
@@ -1123,95 +1022,8 @@ class PvZEnv:
             operation["events"] = events if events is not None else {}
             operation["tick"] = observation["tick"]
             operation["state"] = self._state_record(observation)
-            if self.debug_replay:
-                operation["debug_state_sha256"] = self._debug_state_sha256()
             self.episode["operations"].append(operation)
             self.episode["final_state"] = operation["state"]
-
-    def _debug_state_sha256(self) -> str:
-        return canonical_digest(self.privileged_state())
-
-    def _manifest_data(self) -> tuple[dict[str, Any], bytes]:
-        revision, _ = self._source_state()
-        tracked = subprocess.run(
-            ["git", "diff", "HEAD", "--binary", "--", ".", ":(exclude)artifacts/**"],
-            cwd=self._root, check=True, capture_output=True
-        ).stdout
-        untracked_paths = subprocess.run(
-            ["git", "ls-files", "--others", "--exclude-standard", "-z"],
-            cwd=self._root, check=True, capture_output=True,
-        ).stdout.split(b"\0")
-        untracked = []
-        for raw_path in untracked_paths:
-            if raw_path:
-                path = os.fsdecode(raw_path)
-                if is_generated_artifact(path):
-                    continue
-                diff = subprocess.run(
-                    ["git", "diff", "--no-index", "--binary", "/dev/null", path],
-                    cwd=self._root, capture_output=True,
-                )
-                untracked.append(diff.stdout)
-        patch = tracked + b"".join(untracked)
-        cache = self._root / "build" / "CMakeCache.txt"
-        build_config: dict[str, str] = {}
-        if cache.is_file():
-            for line in cache.read_text(encoding="utf-8", errors="replace").splitlines():
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
-                    if key.split(":", 1)[0] in {
-                        "BUILD_STATIC", "CMAKE_BUILD_TYPE", "CMAKE_CXX_COMPILER", "CMAKE_CXX_FLAGS",
-                        "CMAKE_GENERATOR", "DO_FIX_BUGS", "LOW_MEMORY", "PVZ_DEBUG",
-                    }:
-                        build_config[key.split(":", 1)[0]] = value
-        executable_sha256 = sha256_file(self.executable) if self.executable.is_file() else None
-        resource_sha256, properties_sha256 = self._resource_hashes()
-        data = {
-            "source_revision": revision,
-            "source_dirty": bool(patch),
-            "working_tree_patch_sha256": sha256_bytes(patch),
-            "build_config": build_config,
-            "resource_sha256": resource_sha256,
-            "properties_partner_sha256": properties_sha256,
-            "executable_sha256": executable_sha256,
-        }
-        return data, patch
-
-    def _write_manifest(self, directory: Path) -> dict[str, str]:
-        path = directory / "experiment_manifest.json"
-        patch_path = directory / "working_tree.patch"
-        current, patch = self._manifest_data()
-        if path.exists():
-            manifest = json.loads(path.read_text(encoding="utf-8"))
-            if any(manifest.get(key) != current.get(key) for key in current):
-                raise RuntimeError(f"experiment manifest belongs to a different build: {path}")
-            if not patch_path.is_file() or sha256_bytes(patch_path.read_bytes()) != manifest.get("working_tree_patch_sha256"):
-                raise RuntimeError(f"experiment working tree patch is missing or changed: {patch_path}")
-        else:
-            patch_path.write_bytes(patch)
-            manifest = {**current, "working_tree_patch": patch_path.name}
-            path.write_text(json.dumps(manifest, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        digest = canonical_digest(manifest)
-        return {"path": path.name, "sha256": digest}
-
-    def _check_manifest(self, reference: dict[str, str], directory: Path | None) -> None:
-        if not reference or directory is None:
-            raise ValueError(f"v{REPLAY_FORMAT_VERSION} replay has no experiment manifest reference")
-        path = directory / reference["path"]
-        if not path.is_file():
-            raise FileNotFoundError(f"replay manifest not found: {path}")
-        manifest = json.loads(path.read_text(encoding="utf-8"))
-        digest = canonical_digest(manifest)
-        if digest != reference["sha256"]:
-            raise ValueError(f"replay manifest digest mismatch: {path}")
-        patch_path = path.parent / manifest.get("working_tree_patch", "")
-        if not patch_path.is_file() or sha256_bytes(patch_path.read_bytes()) != manifest.get("working_tree_patch_sha256"):
-            raise ValueError(f"replay working tree patch is missing or corrupted: {patch_path}")
-        current, _ = self._manifest_data()
-        mismatches = [key for key, value in current.items() if manifest.get(key) != value]
-        if mismatches:
-            raise RuntimeError("replay manifest mismatch: " + ", ".join(mismatches) +
-                               "; replay with the matching Git revision")
 
     @staticmethod
     def _coordinates(action: dict[str, Any], keys: tuple[str, ...]) -> tuple[int, ...]:

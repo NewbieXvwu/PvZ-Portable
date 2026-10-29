@@ -1,7 +1,7 @@
 from copy import deepcopy
 import unittest
 
-from pvz_env import PvZEnv, REPLAY_FORMAT_VERSION, branch_action_token
+from pvz_env import PvZEnv, branch_action_token
 from pvz_event_env import EventWaitEnv
 from pvz_wait_events import public_state, reference_wait
 
@@ -186,28 +186,6 @@ class EventWaitWrapperTests(unittest.TestCase):
                       stalled_clock_steps=30, initial_condition_satisfied=False, reason='max_ticks', triggered=['max_ticks'])
         env = FakeEventEnv(dict(ok=True, observation=observation(30), wait_result=result, events={}))
         with self.assertRaisesRegex(RuntimeError, 'identity'): env.step({'type': 'wait', 'ticks': 60, 'until': 'timeout'})
-
-    def test_replay_checks_interruption_when_ticks_and_events_still_match(self):
-        class ReplayFixture(FakeEventEnv):
-            def _check_manifest(self, *args):
-                pass  # This test isolates interruption comparison, not manifest integrity.
-            def reset(self, **kwargs):
-                self._tick = 0
-                self._sun_production_history.clear()
-                self._sun_history_start_tick = 0
-                self.episode = {'operations': [], 'final_state': {}}
-                return observation(), {}
-
-        metadata = dict(version=1, condition='timeout', requested_ticks=60, actual_ticks=30, logic_steps=60,
-                        stalled_clock_steps=30, initial_condition_satisfied=False, reason='max_ticks', triggered=['max_ticks'])
-        env = ReplayFixture(dict(ok=True, observation=observation(30), wait_result=metadata, events={'sun_produced': 25}))
-        env.step({'type': 'wait', 'ticks': 60, 'until': 'timeout'})
-        record = dict(format_version=REPLAY_FORMAT_VERSION, manifest={}, task={'profile': {}, 'forced_seeds': []}, deck=[{'seed_type': 0}],
-                      initial_state=env._state_record(observation()), operations=deepcopy(env.episode['operations']),
-                      final_state=deepcopy(env.episode['final_state']))
-        self.assertEqual(env.replay_record(record)['tick'], 30)
-        record['operations'][0]['wait_result']['reason'] = 'condition'
-        with self.assertRaisesRegex(RuntimeError, 'interruption diverged'): env.replay_record(record)
 
 
 if __name__ == '__main__':

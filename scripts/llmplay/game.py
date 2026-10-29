@@ -938,7 +938,6 @@ class Game:
         with (target / "frames.jsonl").open("w", encoding="utf-8") as stream:
             for frame in self.frames:
                 stream.write(json.dumps(frame, separators=(",", ":")) + "\n")
-        episode = self.env.episode or {}
         result = int(self.obs.get("result") or 0)
         roster = (self.initial_obs.get("loadout_context") or {}).get("zombie_roster")
         meta = dict(
@@ -950,7 +949,6 @@ class Game:
                       wave_cap=self.spec.wave_cap,
                       preplanted=[list(p) for p in self.spec.preplanted]),
             environment_task=self._environment_task(),
-            engine_sha=episode.get("source_revision"), engine_dirty=episode.get("source_dirty"),
             # executable_sha256 写成一句自解释的标记，不是 sha：
             # state_hash 跨进程不可复现（同一二进制两次 reset 会得到不同的开局哈希，
             # 实测见 task81 问题节）。human_demo.py verify 的规则是
@@ -959,8 +957,6 @@ class Game:
             # 而不是假装哈希一致。真正的二进制指纹在 recording_executable_sha256。
             executable_sha256="not-recorded:state_hash_not_reproducible_across_processes",
             recording_executable_sha256=hashlib.sha256(Path(self.executable).read_bytes()).hexdigest(),
-            resource_sha256=episode.get("resource_sha256"),
-            properties_partner_sha256=episode.get("properties_partner_sha256"),
             context=dict(level=self.spec.level, multiplier=self.spec.zombie_count_multiplier,
                          roster=roster),
             hash_schema="portable_snapshot_v1_without_draw_statistics_nonreproducible_across_processes",

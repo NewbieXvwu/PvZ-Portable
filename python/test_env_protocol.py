@@ -1,9 +1,9 @@
-"""Tests for the environment wrapper's pure-Python validation and replay bookkeeping.
+"""Tests for the environment wrapper's pure-Python validation and bookkeeping.
 
 Nothing here launches ``pvz-portable``: every assertion targets a code path that runs
-before the first byte reaches the child process, or that hashes files on disk. That is
-deliberate -- these are exactly the paths that were silently broken by a missing import
-while the process-level integration tests still passed.
+before the first byte reaches the child process. That is deliberate -- these are
+exactly the paths that were silently broken by a missing import while the
+process-level integration tests still passed.
 """
 
 from __future__ import annotations
@@ -16,11 +16,7 @@ from pathlib import Path
 from typing import Iterator
 
 import pvz_env
-from pvz_common import (
-    ENV_PROTOCOL_VERSION,
-    REPLAY_FORMAT_VERSION,
-    git_metadata,
-)
+from pvz_common import ENV_PROTOCOL_VERSION
 from pvz_env import (
     LoadoutContext,
     PlayerProfileContext,
@@ -53,29 +49,11 @@ class ConstructionTests(unittest.TestCase):
         self.assertEqual(sum(amount for _, amount in env._sun_production_history), 25)
 
     def test_construction_does_not_touch_the_resource_directory(self) -> None:
-        """Hashing main.pak eagerly raised a bare FileNotFoundError before _start() could
-        report the friendly "main.pak not found" message."""
         env = PvZEnv(resource_dir="/nonexistent/resource/directory")
 
         self.assertIsNone(env.episode)
         self.assertFalse(env._reset_done)
         self.assertIsNone(env._tick)
-
-    def test_resource_hashes_are_computed_lazily_and_cached(self) -> None:
-        with _resource_dir() as resources:
-            env = PvZEnv(resource_dir=resources)
-
-            first = env._resource_hashes()
-
-            self.assertEqual(first, env._resource_hashes())
-            self.assertTrue(all(len(digest) == 64 for digest in first))
-
-    def test_a_missing_main_pak_is_reported_when_the_hashes_are_needed(self) -> None:
-        with tempfile.TemporaryDirectory() as directory:
-            env = PvZEnv(resource_dir=directory)
-
-            with self.assertRaises(FileNotFoundError):
-                env._resource_hashes()
 
     def test_close_is_idempotent_on_an_environment_that_never_started(self) -> None:
         env = PvZEnv(resource_dir="/nonexistent")
@@ -201,8 +179,6 @@ class LifecycleGuardTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "call reset"):
             self.env.step({"type": "wait", "ticks": 60})
         with self.assertRaisesRegex(RuntimeError, "call reset"):
-            self.env.save_replay("/tmp/never-written.jsonl")
-        with self.assertRaisesRegex(RuntimeError, "call reset"):
             with self.env.speculative():
                 pass
 
@@ -221,13 +197,6 @@ class LifecycleGuardTests(unittest.TestCase):
             PvZEnv._coordinates({"packet": 1.5, "col": 2, "row": 3}, keys)
         with self.assertRaisesRegex(ValueError, "must be integers"):
             PvZEnv._coordinates({"col": 2}, ("col", "row"))
-
-    def test_replay_records_with_an_unknown_version_are_rejected(self) -> None:
-        with self.assertRaisesRegex(ValueError, "unsupported replay version"):
-            self.env.replay_record({"format_version": REPLAY_FORMAT_VERSION - 1})
-        with self.assertRaisesRegex(ValueError, "unsupported replay version"):
-            self.env.replay_record({})
-
 
 class BranchSnapshotTests(unittest.TestCase):
     """``BRANCH_SNAPSHOT_FAST`` is the command the search pays for every expansion.
@@ -301,9 +270,8 @@ class SharedConstantTests(unittest.TestCase):
     def test_env_module_reexports_the_shared_protocol_versions(self) -> None:
         """pvz_env must not redefine the versions it validates against."""
         self.assertIs(pvz_env.ENV_PROTOCOL_VERSION, ENV_PROTOCOL_VERSION)
-        self.assertIs(pvz_env.REPLAY_FORMAT_VERSION, REPLAY_FORMAT_VERSION)
         self.assertEqual(set(pvz_env.__all__), {
-            "BRANCH_BATCH_LIMIT", "ENV_PROTOCOL_VERSION", "REPLAY_FORMAT_VERSION",
+            "BRANCH_BATCH_LIMIT", "ENV_PROTOCOL_VERSION",
             "LoadoutContext", "PlayerProfileContext", "PvZEnv", "SeedCard",
             "SimulatorExited", "TaskSpec", "branch_action_token", "training_task",
         })
@@ -350,57 +318,6 @@ class ObservationDerivedInputTests(unittest.TestCase):
         env = PvZEnv(resource_dir="/nonexistent")
         with self.assertRaisesRegex(RuntimeError, "missing the public wave_timer field"):
             env._annotate_observation({"tick": 10}, reset_history=True)
-
-class ExperimentManifestTests(unittest.TestCase):
-    """The manifest is written by ``save_replay`` and re-verified when a replay is loaded.
-
-    Every one of these calls used to raise ``NameError`` because ``pvz_env`` had lost its
-    ``hashlib`` import while the process-level tests kept passing.
-    """
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        revision, _ = git_metadata(Path(__file__).resolve().parent.parent)
-        if revision is None:
-            raise unittest.SkipTest("the workspace is not a git checkout")
-
-    def test_manifest_is_written_verified_and_tamper_evident(self) -> None:
-        with _resource_dir() as resources, tempfile.TemporaryDirectory() as directory:
-            env = PvZEnv(resource_dir=resources)
-
-            reference = env._write_manifest(Path(directory))
-
-            self.assertEqual(reference["path"], "experiment_manifest.json")
-            self.assertEqual(len(reference["sha256"]), 64)
-            manifest_path = Path(directory) / reference["path"]
-            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-            self.assertEqual(len(manifest["working_tree_patch_sha256"]), 64)
-            self.assertTrue((Path(directory) / manifest["working_tree_patch"]).is_file())
-
-            env._check_manifest(reference, Path(directory))
-
-            manifest_path.write_text('{"tampered":1}', encoding="utf-8")
-            with self.assertRaisesRegex(ValueError, "digest mismatch"):
-                env._check_manifest(reference, Path(directory))
-
-    def test_a_tampered_working_tree_patch_is_detected(self) -> None:
-        with _resource_dir() as resources, tempfile.TemporaryDirectory() as directory:
-            env = PvZEnv(resource_dir=resources)
-            reference = env._write_manifest(Path(directory))
-
-            (Path(directory) / "working_tree.patch").write_bytes(b"tampered")
-
-            with self.assertRaisesRegex(ValueError, "working tree patch"):
-                env._check_manifest(reference, Path(directory))
-
-    def test_a_missing_manifest_reference_is_rejected(self) -> None:
-        env = PvZEnv(resource_dir="/nonexistent")
-
-        with self.assertRaisesRegex(ValueError, "no experiment manifest reference"):
-            env._check_manifest({}, None)
-        with self.assertRaisesRegex(ValueError, "no experiment manifest reference"):
-            env._check_manifest({"path": "experiment_manifest.json", "sha256": "0" * 64}, None)
-
 
 class EventKeyCanonicalisationTests(unittest.TestCase):
     """``events`` is JSON-decoded on every step, so its key strings must be shared.
