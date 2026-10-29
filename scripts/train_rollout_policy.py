@@ -347,10 +347,12 @@ class ValueStore:
             output[np.repeat(np.arange(len(selected)), counts), self.slots[positions]] = self.values[positions]
         return torch.from_numpy(output)
 
-    def spread(self) -> tuple[np.ndarray, np.ndarray]:
+    def spread(self, eligible=None) -> tuple[np.ndarray, np.ndarray]:
         """(rows with at least two known values, max - min of them): the spread weighting, without a dense row."""
         counts = self.counts.astype(np.int64)
         rows = np.flatnonzero(counts >= 2)
+        if eligible is not None:
+            rows = rows[np.asarray(eligible)[rows]]
         spreads = np.empty(len(rows), dtype=np.float32)
         for index, row in enumerate(rows):
             block = self.values[self.offsets[row]:self.offsets[row + 1]]
@@ -725,7 +727,19 @@ def main(*, step_observer=None) -> None:
     p.add_argument('--merge-dir', type=Path, help='private merged pack cache; never lock the production merge')
     p.add_argument('--deck-holdout', type=Path, help='common boolean row mask excluding complete heldout decks')
     p.add_argument('--tokens', type=Path, help='sparse public token sidecar for the same frozen rows')
+    p.add_argument('--training-budget', type=Path, help='common measured epochs/row budget, immutable after the GPU probe')
+    p.add_argument('--budget-arm', help='architecture key for the measured safe micro batch')
     args = training_args(p)
+    if args.training_budget:
+        import hashlib
+        budget_bytes = args.training_budget.read_bytes()
+        budget = json.loads(budget_bytes)
+        args.epochs = budget['epochs']
+        args.train_row_fraction = budget['train_row_fraction']
+        args.micro_batch_size = budget['micro_batches'][args.budget_arm]
+        args.resolved_recipe.update(epochs=args.epochs, train_row_fraction=args.train_row_fraction,
+                                   micro_batch_size=args.micro_batch_size)
+        args.resolved_recipe['provenance']['notes'] = args.resolved_recipe['provenance'].get('notes','') + ' budget_sha256=' + hashlib.sha256(budget_bytes).hexdigest()
     yielding = args.checkpoint_seconds > 0 or args.resume is not None
     yield_requested = False
     resume_ready = False
@@ -776,6 +790,12 @@ def main(*, step_observer=None) -> None:
     if args.deck_holdout:
         from pvz_research_data import extra_validation
         is_val |= torch.from_numpy(extra_validation(args.deck_holdout, len(seed_of)))
+    training_eligible = ~is_val
+    if args.train_row_fraction < 1:
+        from pvz_research_data import keep_training_rows
+        for begin in range(0, len(seed_of), 65536):
+            end = min(len(seed_of), begin + 65536)
+            training_eligible[begin:end] &= torch.from_numpy(keep_training_rows(np.arange(begin, end), args.train_row_fraction))
     token_store = None
     if args.tokens:
         from pvz_research_data import SparseTokens
@@ -799,8 +819,8 @@ def main(*, step_observer=None) -> None:
     print(json.dumps({"data_memory": memory}), flush=True)
     if args.packet_balance:
         planted_rows = packet >= 0
-        if args.deck_holdout:
-            planted_rows &= ~is_val
+        if args.deck_holdout or args.train_row_fraction < 1:
+            planted_rows &= training_eligible
         balanced_packet = (packet.long() if packet_info is None else
                            packet_info.kinds(torch.arange(len(packet)), packet.clamp(min=0)))
         freq = torch.bincount(balanced_packet[planted_rows], minlength=PACKETS if packet_info is None else 54).float() / int(planted_rows.sum())
@@ -811,11 +831,11 @@ def main(*, step_observer=None) -> None:
     if args.spread_weight:
         # 2026-10-17: only ~3% of rows are the teacher overriding the student, and those carry what the student lacks;
         # plain cross-entropy weighs a trivial wait as much as a decision worth 10 points of win rate.
-        compared_rows, spread = values.spread()
+        compared_rows, spread = values.spread(training_eligible.numpy() if args.train_row_fraction < 1 else None)
         compared = torch.from_numpy(compared_rows).long()
         spread = torch.from_numpy(spread)
         # capped: a few spreads near 1 are games decided inside the horizon, not choices 30x more important
-        spread_mean = spread[~is_val[compared]].mean() if args.deck_holdout else spread.mean()
+        spread_mean = spread[training_eligible[compared]].mean() if args.deck_holdout or args.train_row_fraction < 1 else spread.mean()
         weight[compared] *= ((1 + args.spread_weight * spread / spread_mean) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {len(compared)} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
@@ -834,8 +854,8 @@ def main(*, step_observer=None) -> None:
         warm_start_student(net, load_student(args.init))
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
-    if args.deck_holdout:
-        eligible = ~is_val
+    if args.deck_holdout or args.train_row_fraction < 1:
+        eligible = training_eligible
         waits, plants = float(weight[(plant < .5) & eligible].sum()), float(plant[eligible].sum())
     else:
         waits, plants = float(weight[plant < .5].sum()), float(plant.sum())
@@ -891,7 +911,7 @@ def main(*, step_observer=None) -> None:
 
     if not is_val.any() or is_val.all():
         raise ValueError("recipe split must produce nonempty training and validation sets")
-    train_idx = torch.nonzero(~is_val).squeeze(1).to(torch.int32)
+    train_idx = torch.nonzero(training_eligible).squeeze(1).to(torch.int32)
     val_idx = torch.nonzero(is_val).squeeze(1).to(torch.int32)
     steps = args.epochs * -(-len(train_idx) // args.batch_size)
     if args.max_steps is not None:

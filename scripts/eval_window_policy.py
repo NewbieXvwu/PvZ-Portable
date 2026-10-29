@@ -72,8 +72,10 @@ def main():
     parser.add_argument('--batch-size', type=int, default=256)
     parser.add_argument('--deck-holdout', type=Path)
     parser.add_argument('--tokens', type=Path)
+    parser.add_argument('--training-budget', type=Path)
     args = parser.parse_args()
     recipe = load_recipe(args.recipe, 'training')
+    row_fraction = json.loads(args.training_budget.read_text())['train_row_fraction'] if args.training_budget else 1.0
     torch.set_num_threads(1)
     interrupted = False
     ready = False
@@ -125,7 +127,8 @@ def main():
         write_json(state_path, state)
     for start in range(state['seen_cursor'], len(seeds), 65536):
         stop_at = min(len(seeds), start + 65536)
-        kinds = np.asarray(info.columns[0])[start:stop_at][~is_val[start:stop_at]]
+        from pvz_research_data import keep_training_rows
+        kinds = np.asarray(info.columns[0])[start:stop_at][~is_val[start:stop_at] & keep_training_rows(np.arange(start, stop_at), row_fraction)]
         seen.update(key.tobytes() for key in np.unique(deck_keys(kinds)))
         state['seen_cursor'] = stop_at
         if interrupted:

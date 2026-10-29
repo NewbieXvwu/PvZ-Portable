@@ -23,7 +23,7 @@ TRAIN_DEFAULTS = dict(
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
-    source_row_report=False, max_steps=None, micro_batch_size=None, batch_size=2048, validation_batch_size=4096,
+    source_row_report=False, max_steps=None, micro_batch_size=None, train_row_fraction=1.0, batch_size=2048, validation_batch_size=4096,
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
 
@@ -168,6 +168,7 @@ def validate(document, kind=None):
                 else:
                     _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
         _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
+        _number(result['train_row_fraction'], 'train_row_fraction', maximum=1, positive=True)
         for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight'):
             _number(result[name], name)
         for name in ('soft_temperature', 'spread_cap'):

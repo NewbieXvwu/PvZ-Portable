@@ -102,11 +102,11 @@ def split(args, stopped):
 def tokens(args, stopped):
     from pvz_frame_store import read_frames
     from pvz_student_tokens import frame_tokens
-    from pvz_research_data import FIELDS
+    from pvz_research_data import FIELDS, keep_training_rows
     out = args.out
     out.mkdir(parents=True, exist_ok=True)
     progress = out / 'progress.json'
-    state = json.loads(progress.read_text()) if progress.exists() else dict(archives=0, rows=0, tokens=0, features=0,
+    state = json.loads(progress.read_text()) if progress.exists() else dict(archives=0, rows=0, tokens=0, features=0, stored=0,
         sizes={name: 8 if name in ('offsets', 'feature_offsets') else 0 for name in FIELDS})
     handles = {}
     for name in FIELDS:
@@ -118,33 +118,65 @@ def tokens(args, stopped):
         handle = path.open('r+b'); handle.truncate(state['sizes'][name]); handle.seek(0, 2)
         handles[name] = handle
     connection = sqlite3.connect(args.sources / 'sources.sqlite')
+    budget_path = getattr(args, 'budget', None)
+    budget = json.loads(budget_path.read_text()) if budget_path else {}
+    if budget_path:
+        from pvz_frame_store import archive_seed
+        import random
+        seeds = sorted({archive_seed(Path(source).parent.parent.name) for source, in connection.execute('SELECT source FROM sources')})
+        random.Random(0).shuffle(seeds)
+        validation_seeds = set(seeds[:int(len(seeds)*.1)])
+        unseen = np.load(args.sources/'unseen.npy', mmap_mode='r')
     def save():
         for name, handle in handles.items():
             handle.flush(); state['sizes'][name] = handle.tell()
         write_json(progress, state)
     for source, raw_rows in connection.execute('SELECT source,rows FROM sources ORDER BY source LIMIT -1 OFFSET ?', (state['archives'],)):
-        frames = read_frames(args.sources / 'raw' / source)
-        for row in np.frombuffer(raw_rows, np.int32):
+        rows = np.frombuffer(raw_rows, np.int32)
+        selected = np.ones(len(rows), dtype=bool)
+        if budget_path:
+            selected &= keep_training_rows(np.arange(state['rows'], state['rows']+len(rows)), budget['train_row_fraction'])
+            selected &= ~unseen[state['rows']:state['rows']+len(rows)]
+            if archive_seed(Path(source).parent.parent.name) in validation_seeds:
+                selected[:] = False
+        frames = read_frames(args.sources/'raw'/source) if selected.any() else None
+        for row, included in zip(rows, selected):
+            global_row = state['rows']
+            if not included:
+                state['rows'] += 1
+                continue
             sample = frame_tokens(frames[int(row) - 1])
             if np.any(sample['target_indices'] != -1):
                 raise ValueError('compact r42 sidecar cannot silently discard rich target links')
+            if not np.array_equal(sample['cell_index'], np.arange(2,56)):
+                raise ValueError('compact sidecar requires the fixed cell-token order')
             features = sample['features']
             rr, cc = np.nonzero(features)
             arrays = dict(ids=sample['ids'], counts=np.bincount(rr, minlength=len(features)).astype(np.uint8),
                 columns=cc.astype(np.uint8), values=features[rr, cc], packet_index=sample['packet_index'],
-                cell_index=sample['cell_index'], terrain=sample['terrain'])
+                terrain=sample['terrain'], stored_row=np.array([global_row], np.int32))
+            state['stored'] += 1
             state['tokens'] += len(features); state['features'] += len(rr); state['rows'] += 1
             arrays.update(offsets=np.array([state['tokens']], np.int64), feature_offsets=np.array([state['features']], np.int64))
             for name, array in arrays.items():
                 np.asarray(array, dtype=FIELDS[name][0]).tofile(handles[name])
         state['archives'] += 1
         save()
+        size = sum(state['sizes'].values())
+        if budget_path and size > budget['sidecar_max_bytes']:
+            raise RuntimeError(f'token cache reached its disk budget: {size} bytes')
+        if budget_path:
+            host_free = min(shutil.disk_usage(path).free for path in ('/mnt/c','/mnt/d') if Path(path).exists())
+            if host_free < 12*(1<<30):
+                raise RuntimeError(f'host disk reserve reached: {host_free} bytes free; token construction stopped')
         if stopped():
             raise SystemExit(75)
     for handle in handles.values():
         handle.close()
     write_json(out / 'ready.json', dict(rows=state['rows'], archives=state['archives'], tokens=state['tokens'],
-        upstream='2a866783', input='original compact public frames for exact r42 source_row-1', sparse_float32=True))
+        upstream='2a866783', input='original compact public frames for exact r42 source_row-1', sparse_float32=True,
+        bytes=sum(state['sizes'].values()), stored_rows=state['stored'], schema=2,
+        evaluation='uncached rows stream from source archives; release cache after all decision jobs complete'))
 
 
 def main():
@@ -154,6 +186,7 @@ def main():
     parser.add_argument('--data', type=Path)
     parser.add_argument('--merge-dir', type=Path)
     parser.add_argument('--sources', type=Path)
+    parser.add_argument('--budget', type=Path)
     parser.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     interrupted = False

@@ -157,6 +157,14 @@ class Runner:
 
     def candidates(self):
         pending = []
+        completed = {}
+        def dependency_done(job_id):
+            if job_id not in completed:
+                source = self.args.queue / (job_id+'.json')
+                dependency = json.loads(source.read_text())
+                marker = Path(dependency['out'])/'window.json'
+                completed[job_id] = marker.is_file() and json.loads(marker.read_text()).get('status') == 'complete'
+            return completed[job_id]
         for path in sorted(self.args.queue.glob('*.json')):
             if path.name == 'status.json':
                 continue
@@ -183,6 +191,8 @@ class Runner:
                 if state['status'] in ('complete', 'failed'):
                     continue
                 if any(not Path(dependency).is_file() for dependency in job.get('depends_on', [])):
+                    continue
+                if any(not dependency_done(job_id) for job_id in job.get('after_jobs', [])):
                     continue
                 if state.get('not_before', 0) <= time.time():
                     pending.append((job, state))
@@ -247,6 +257,12 @@ class Runner:
             write_json(handoff / 'ready.json', dict(job=job['id'], stage='trained', model=str(model),
                 source=str(out / 'model.pt'), cpu_metrics=str(out / 'heldout.json'), revision=job.get('revision'),
                 code_root=job.get('code_root'), arch=job.get('arch'), seed=job.get('seed')))
+            state['model_bytes'] = model.stat().st_size
+            resume = out/'resume.pt'
+            if resume.exists():
+                size = resume.stat().st_size
+                resume.unlink()
+                self.event('intermediate_removed', job=job['id'], path=str(resume), bytes=size)
         if code == 0 and attempt['stage'] in ('evaluate', 'prepare'):
             state['status'] = 'complete'
             if attempt['stage'] == 'evaluate':

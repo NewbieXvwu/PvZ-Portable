@@ -10,6 +10,7 @@
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
+- [GPU空档实验磁盘约束](notes/gpu-window-storage.md)
 - [分工 / 每任务独立计算的游戏进程上限 / CUDA 执行记录](notes/workflow.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
