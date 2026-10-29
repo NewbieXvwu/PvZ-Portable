@@ -91,10 +91,13 @@ def main():
                 measurements[mode].append(dict(us=timing['us'],cpu_us=timing['cpu_us']))
                 errors[mode]=dict(all_nodes=error,heads=head_error)
             flops=matrix_flops(compact_g)
+            before_flops=matrix_flops(g)
             means={m:sum(t['us'] for t in v)/len(v) for m,v in measurements.items()}
             record=dict(example=name,actual_tokens=actual_count,capacity=128 if is_v3 else None,
                 order=order,samples=measurements,mean_us=means,max_abs_error=errors,
                 matrix_flops=flops,gflops=flops/means['after']/1000,
+                before_matrix_flops=before_flops,before_gflops=before_flops/means['before']/1000,
+                before_percent_p_core_turbo_peak=before_flops/means['before']/1000/156.8*100,
                 percent_p_core_turbo_peak=flops/means['after']/1000/156.8*100,
                 speedup=means['before']/means['after'])
             report['records'].append(record);save()

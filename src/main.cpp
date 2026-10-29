@@ -548,6 +548,7 @@ static void RunEnvironment(LawnApp* app)
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
 	EnvironmentRollout rollout, rootPolicy;
+	std::vector<EnvironmentRollout> rootBenchPolicies; // explicit development commands only
 	EnvironmentValueNet valueNets[2]; // leaf, static
 	HumanInput human;
 	bool demo = false;
@@ -845,6 +846,44 @@ static void RunEnvironment(LawnApp* app)
 				catch (const std::exception& error) { std::cerr << error.what() << std::endl; }
 			}
 			minimalResponse = true;
+		}
+		else if (command == "LOAD_ROOT_BENCH_NET")
+		{
+			std::string path, extra;
+			if (input >> std::quoted(path) && !(input >> extra) && rootBenchPolicies.size()<4)
+			{
+				try { EnvironmentRollout next; next.Load(path); rootBenchPolicies.push_back(std::move(next)); ok=true; }
+				catch (const std::exception& error) { std::cerr<<error.what()<<std::endl; }
+			}
+			minimalResponse=true;
+		}
+		else if (command == "ROOT_BENCH_COMPARE")
+		{
+			int priorTick=-1,priorPlant=0; double income=0;
+			EnvironmentRollout::History history; std::string trace;
+			ok=bool(input>>priorTick>>priorPlant>>income) && std::isfinite(income) &&
+				(priorPlant==0 || priorPlant==1) && app->mBoard && !rootBenchPolicies.empty();
+			ok=ok && ReadStudentOptions(input,app->mBoard->mMainCounter,history,trace) && trace.empty();
+			std::vector<double> times(rootBenchPolicies.size(),0.);
+			try {
+				// Same live frame, forward/reverse order, including native feature construction.
+				for(int pass=0;ok && pass<2;++pass) for(size_t p=0;p<times.size();++p) {
+					size_t index=pass ? times.size()-1-p : p;
+					auto perPolicyHistory=history;
+					auto start=std::chrono::steady_clock::now();
+					auto prediction=rootBenchPolicies[index].Predict(app,income,priorTick,priorPlant,perPolicyHistory,true);
+					volatile float observed=prediction.plant+prediction.packets[0]+prediction.cells[0]; (void)observed;
+					times[index]+=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/2;
+				}
+			} catch(const std::exception& error) { std::cerr<<error.what()<<std::endl; ok=false; }
+			std::cout<<"PVZENV {\"protocol_version\":"<<kEnvironmentProtocolVersion<<",\"ok\":"<<(ok ? "true" : "false");
+			if(ok) {
+				std::cout<<std::setprecision(9)<<",\"us\":[";
+				for(size_t p=0;p<times.size();++p) std::cout<<(p ? "," : "")<<times[p];
+				std::cout<<"],\"tokens\":"<<PublicObservationTokens(app).size();
+			}
+			std::cout<<'}'<<std::endl<<std::setprecision(6);
+			continue;
 		}
 		else if (command == "ROLLOUT_BENCH")
 		{

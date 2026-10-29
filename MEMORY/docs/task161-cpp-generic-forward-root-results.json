@@ -1,0 +1,263 @@
+{
+  "actual_games": {
+    "level": 9,
+    "seed": 161006,
+    "deck": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "horizon": 2500,
+    "samples": 3,
+    "halving": true,
+    "min_gap": 300,
+    "per_card": 1,
+    "sim_skip": 61,
+    "cnn_checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+    "value_checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+    "token_weights": "seed161 initialization, timing fixtures; no trained v3 checkpoint exists locally",
+    "timing": "one real terminal game per arm; observer.before through step response includes root IPC/features, full teacher search, CNN continuations, simulator step and public observation; excludes model load/reset and CSV I/O",
+    "records": [
+      {
+        "arm": "cnn64",
+        "decisions": 1106,
+        "decision_seconds": 58.822035499077174,
+        "games_per_hour_decisions": 61.20155430623407,
+        "e2e_us": {
+          "mean": 53184.480559744276,
+          "p50": 2123.965499777114,
+          "p95": 378805.9517492002,
+          "max": 551113.4150001453
+        },
+        "root_us": {
+          "mean": 627.3636970100165,
+          "p50": 620.048500422854,
+          "p95": 912.9752497756272
+        },
+        "root_share": 0.011795991808273345,
+        "continuation_decisions": 107152,
+        "continuation_network_seconds": 14.691935649999978,
+        "whole_call_seconds": 59.2898926859998,
+        "games_per_hour_with_startup": 60.718612176710394,
+        "game": {
+          "terminal": true,
+          "won": true,
+          "decisions": 1106,
+          "searched": 220,
+          "final_tick": 63203,
+          "final_wave": 30,
+          "overrides": 15
+        }
+      },
+      {
+        "arm": "token128_2",
+        "decisions": 965,
+        "decision_seconds": 32.95289572505134,
+        "games_per_hour_decisions": 109.24684829027696,
+        "e2e_us": {
+          "mean": 34148.0784715558,
+          "p50": 4393.424998852424,
+          "p95": 200049.46359913438,
+          "max": 340990.35499821184
+        },
+        "root_us": {
+          "mean": 2896.9956798787493,
+          "p50": 2649.9679988774005,
+          "p95": 5352.086398488609
+        },
+        "root_share": 0.0848362721870822,
+        "continuation_decisions": 71991,
+        "continuation_network_seconds": 6.558301712999993,
+        "whole_call_seconds": 33.23623734600187,
+        "games_per_hour_with_startup": 108.31551004172437,
+        "game": {
+          "terminal": true,
+          "won": false,
+          "decisions": 965,
+          "searched": 194,
+          "final_tick": 51596,
+          "final_wave": 24,
+          "overrides": 137
+        }
+      },
+      {
+        "arm": "token192_4",
+        "decisions": 1313,
+        "decision_seconds": 54.54949954111361,
+        "games_per_hour_decisions": 65.9951059181891,
+        "e2e_us": {
+          "mean": 41545.69652788546,
+          "p50": 11406.86000144342,
+          "p95": 195888.92420069888,
+          "max": 443479.4080007123
+        },
+        "root_us": {
+          "mean": 9564.399106617058,
+          "p50": 8997.200999147026,
+          "p95": 17256.82080214027
+        },
+        "root_share": 0.23021395489656635,
+        "continuation_decisions": 105644,
+        "continuation_network_seconds": 8.958713067000005,
+        "whole_call_seconds": 54.951820917001896,
+        "games_per_hour_with_startup": 65.51193281542692,
+        "game": {
+          "terminal": true,
+          "won": false,
+          "decisions": 1313,
+          "searched": 277,
+          "final_tick": 68839,
+          "final_wave": 29,
+          "overrides": 156
+        }
+      },
+      {
+        "arm": "terrain5",
+        "decisions": 1058,
+        "decision_seconds": 44.78890547201444,
+        "games_per_hour_decisions": 80.37704788855349,
+        "e2e_us": {
+          "mean": 42333.55904727263,
+          "p50": 3809.941003055428,
+          "p95": 254385.30004867053,
+          "max": 889656.7839983618
+        },
+        "root_us": {
+          "mean": 2787.8754385684847,
+          "p50": 2415.7070001820102,
+          "p95": 5165.128599946911
+        },
+        "root_share": 0.06585497419329536,
+        "continuation_decisions": 87492,
+        "continuation_network_seconds": 9.181803252999995,
+        "whole_call_seconds": 45.237268654997024,
+        "games_per_hour_with_startup": 79.58040144853739,
+        "game": {
+          "terminal": true,
+          "won": false,
+          "decisions": 1058,
+          "searched": 183,
+          "final_tick": 59680,
+          "final_wave": 24,
+          "overrides": 57
+        }
+      }
+    ]
+  },
+  "matched_trajectory": {
+    "level": 9,
+    "seed": 161006,
+    "deck": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      5
+    ],
+    "horizon": 2500,
+    "samples": 3,
+    "halving": true,
+    "min_gap": 300,
+    "per_card": 1,
+    "sim_skip": 61,
+    "cnn_checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/student/dw4i_s1/model.pt",
+    "value_checkpoint": "/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt",
+    "token_weights": "seed161 initialization, timing fixtures; no trained v3 checkpoint exists locally",
+    "timing": "one real terminal game per arm; observer.before through step response includes root IPC/features, full teacher search, CNN continuations, simulator step and public observation; excludes model load/reset and CSV I/O",
+    "records": [
+      {
+        "arm": "cnn64",
+        "decisions": 1106,
+        "decision_seconds": 62.48239891596676,
+        "games_per_hour_decisions": 57.61622572849161,
+        "e2e_us": {
+          "mean": 56494.0315695902,
+          "p50": 2442.967499519,
+          "p95": 382460.3377506719,
+          "max": 569489.8940018902
+        },
+        "root_us": {
+          "mean": 723.4168254746287,
+          "p50": 690.9485018695705,
+          "p95": 986.9875002550543
+        },
+        "root_share": 0.012805190307289592,
+        "continuation_decisions": 107152,
+        "continuation_network_seconds": 15.71079099100002,
+        "same_trajectory_counterfactual": {
+          "cnn64": {
+            "native_root_mean_us": 245.0101830922242,
+            "root_extra_seconds": 0.0,
+            "counterfactual_seconds": 62.48239891596676,
+            "games_per_hour": 57.61622572849161,
+            "games_per_hour_change_percent": 0.0,
+            "e2e_mean_us": 56494.0315695902
+          },
+          "token128_2": {
+            "native_root_mean_us": 2657.9028964737795,
+            "root_extra_seconds": 2.668659341,
+            "counterfactual_seconds": 65.15105825696676,
+            "games_per_hour": 55.25620145418042,
+            "games_per_hour_change_percent": -4.096110504413231,
+            "e2e_mean_us": 58906.92428297177
+          },
+          "token192_4": {
+            "native_root_mean_us": 9447.157227396023,
+            "root_extra_seconds": 10.177574631,
+            "counterfactual_seconds": 72.65997354696677,
+            "games_per_hour": 49.545847930607785,
+            "games_per_hour_change_percent": -14.007126804720492,
+            "e2e_mean_us": 65696.178613894
+          },
+          "terrain5": {
+            "native_root_mean_us": 2576.6441609403255,
+            "root_extra_seconds": 2.5787871795,
+            "counterfactual_seconds": 65.06118609546677,
+            "games_per_hour": 55.332529516409096,
+            "games_per_hour_change_percent": -3.9636338257283743,
+            "e2e_mean_us": 58825.66554743831
+          }
+        },
+        "actual_tokens": {
+          "min": 81,
+          "max": 144,
+          "mean": 114.79746835443038
+        },
+        "whole_call_seconds": 96.25573281100151,
+        "games_per_hour_with_startup": null,
+        "game": {
+          "terminal": true,
+          "won": true,
+          "decisions": 1106,
+          "searched": 220,
+          "final_tick": 63203,
+          "final_wave": 30,
+          "overrides": 15
+        }
+      }
+    ],
+    "matched_probes": true,
+    "matched_definition": "Counterfactual holds CNN states/actions/search fixed; add per-frame native root difference, forward/reverse order. Shadow probes excluded from decision timing, included in whole_call_seconds."
+  },
+  "local_decision_traces": [
+    "build-cppnet/root-games/cnn64-decisions.csv",
+    "build-cppnet/root-games/token128_2-decisions.csv",
+    "build-cppnet/root-games/token192_4-decisions.csv",
+    "build-cppnet/root-games/terrain5-decisions.csv",
+    "build-cppnet/root-games-matched/cnn64-decisions.csv"
+  ],
+  "live_root_fp32_parity": {
+    "structures": 3,
+    "frames_per_structure": 2,
+    "max_abs_error": 3.278329238909361e-07
+  },
+  "limitations": [
+    "V3 weights are deterministic initialization, not trained policies; no quality claim.",
+    "Actual-game throughput is confounded by different trajectories/terminal ticks. Only matched root-cost estimate isolates replacement cost.",
+    "One worker, one terminal game per arm, no pinned core or production interruption; not a multi-seed confidence interval."
+  ]
+}

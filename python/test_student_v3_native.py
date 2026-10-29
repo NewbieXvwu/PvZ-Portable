@@ -195,6 +195,12 @@ def test_independent_root_policy_config(tmp_path):
         with pytest.raises(RuntimeError): env.load_policy_config(config)
         env.restore_fast(snapshot)
         assert env.root_predict() == expected
+        for name in ('cnn.bin','root.bin'):
+            assert env._command(f'LOAD_ROOT_BENCH_NET "{tmp_path/name}"')['ok']
+        before=env.state_hash()
+        measured=env._command('ROOT_BENCH_COMPARE -1 0 0')
+        assert measured['ok'] and len(measured['us'])==2 and min(measured['us'])>0
+        assert env.state_hash()==before
         env.release_snapshot(snapshot)
 
 
@@ -214,3 +220,36 @@ def test_v3_actual_token_extent(tmp_path, mode, hybrid):
     actual,_=run_driver(module,capacity_graph,feeds,tmp_path,DRIVER,token_count=len(source['ids']))
     for name in actual:
         torch.testing.assert_close(actual[name],expected[name],atol=1e-5,rtol=0,msg=lambda msg:name+': '+msg)
+
+
+def test_root_sizes_live_fp32_parity(tmp_path):
+    from pvz_env import TaskSpec
+    from pvz_event_env import EventWaitEnv
+    from pvz_rollout_policy import export_student
+    import sys
+    sys.path.insert(0,str(ROOT/'scripts'))
+    from render_episode import _frame
+    torch.set_num_threads(1)
+    maximum=0.
+    with EventWaitEnv(Path.home()/'.cache/pvz-research-resources',executable=ROOT/'build-cppnet/pvz-portable') as env:
+        env.set_token_observation(True)
+        for width,layers,mode in ((128,2,'dense'),(192,4,'dense'),(128,2,'terrain')):
+            torch.manual_seed(161)
+            net=StudentV3(width,dict(layers=layers,heads=6 if width==192 else 4,
+                ff_width=256 if mode=='terrain' else width*4,ffn=mode),token_input='obs_v3').eval()
+            export_student(net,tmp_path/'root.bin',token_capacity=256)
+            env.load_rollout_net(tmp_path/'root.bin')
+            obs,_=env.reset(task=TaskSpec(level=9,seed=161006))
+            for elapsed in (0,3000):
+                if elapsed: obs,*_=env.step(dict(type='wait',ticks=elapsed))
+                tokens=collate_tokens([frame_tokens(_frame(obs),token_input='obs_v3')])
+                native=env.rollout_predict()
+                selected=torch.tensor([max(0,native['cell_packet'])])
+                with torch.no_grad(): expected=net(None,None,selected,tokens=tokens)
+                for key in ('plant','packet','cell'):
+                    if key=='cell' and native['cell_packet']<0: continue
+                    value=np.asarray(native[key]).reshape(-1)
+                    other=expected[key].numpy().reshape(-1)
+                    maximum=max(maximum,float(np.max(np.abs(value-other))))
+                    np.testing.assert_allclose(value,other,rtol=0,atol=1e-5)
+    print(json.dumps(dict(live_root_shapes=3,frames_per_shape=2,max_abs_error=maximum)))

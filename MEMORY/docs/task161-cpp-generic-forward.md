@@ -327,7 +327,7 @@ rollout "cnn64.bin"
 - 每层关系表在加载时展开为 kind-pair × 行桶 × 列桶 × 同格 的最终偏置；各层共享本帧pair索引，
   目标链接按query追加。没有缓存或跳过整次网络计算；输入/实体关系变化每次都会更新。
 
-独立驱动保存优化前二进制作对照。seed161、同权重/同输入、单线程、nice10、100次热图均值，
+独立驱动保存优化前二进制（65c0c054的前向，c7ce0191未改）作对照，优化后为722216fa。seed161、同权重/同输入、单线程、nice10、100次热图均值，
 依次 before/after/BLAS/BLAS/after/before；新v3按实际96个token执行，旧v3将相同96个补到128。
 包含编码与全部三头，排除加载/I/O/游戏特征构造。生产照常运行、不绑核，故不同批次绝对数会波动。
 完整样本见 [token-results.json](task161-cpp-generic-forward-token-results.json)。
@@ -350,7 +350,7 @@ rollout "cnn64.bin"
 | task163 hybrid128_2（96实际） | 3554.7 | 1767.9 | 2.01× | 83.0 | 52.9% |
 
 GFLOPS计数为实际执行图的矩阵乘加（FMA=2 FLOPs），包括卷积、线性、FFN、QK/PV与指针；
-分母为整个前向的墙钟时间，包含非矩阵算子，不把模型参数量冒充FLOPs。
+分母为整个前向的墙钟时间，包含非矩阵算子，不把模型参数量冒充FLOPs；优化前的实际FLOPs/GFLOPS/峰值比也保存在JSON。
 以i7-12700F单P核2×256bit FMA/cycle、4.9GHz计算156.8 GF/s的硬件上界；这是睿频上界比值，
 不是实测驻留频率/周期利用率。未绑核/锁频，E核128bit执行宽度对应的3.6GHz上界为57.6 GF/s，
 不与全机12核总峰值相除。执行宽度参照[Intel优化手册§2.4](https://kib.kiev.ua/x86docs/Intel/Intel-OptimGuide/248966-045.pdf)，频率/ISA见[Intel规格](https://www.intel.com/content/www/us/en/products/sku/134592/intel-core-i712700f-processor-25m-cache-up-to-4-90-ghz/specifications.html)。
@@ -378,3 +378,76 @@ GFLOPS计数为实际执行图的矩阵乘加（FMA=2 FLOPs），包括卷积、
 复现：先保留旧驱动`build-cppnet/generic-forward-before-token`，构建后在资源约束下运行
 `scripts/bench_token_forward.py --iterations 100 --output build-cppnet/token-fp32-results.json`；
 追加`--quantized`会运行独立低精度实验。此脚本不启动游戏、不加载生产状态。
+
+## 续任务阶段 9：老师根策略整局端到端与吞吐（2026-10-29）
+
+`scripts/bench_root_policy.py`直接调用老师`search_play._play/_search`，不是仅用网络µs乘调用比估计。
+L9、seed161006、`deck_for_level(9)`现行6卡、完整30波、单worker；老师预算沿用默认
+per-card=1、samples=3、halving、horizon=2500、min-gap=300、续走sim-skip=61。
+续走固定为本机已训练`artifacts/student/dw4i_s1/model.pt`（CNN64/v2/meanmax/row_pool/identity），
+以PVZGN001导出；老师静态/叶值用本机v5。三种v3没有本地已训练检查点，使用seed161初始化，
+结构和task163配方一致，原生容量256、每次按实际N执行。没有训练、排队、部署或改动生产模型。
+
+每决策从策略取动作前计时，到老师搜索与真实`env.step`响应结束，包括Python帧/历史处理、
+根策略IPC/特征/前向、候选评分/快照/全部CNN续走、游戏步进与公开观测解析；不含模型加载/reset
+及CSV输出。每个配置各跑到一次真实终局，逐决策数据保留在本机独立build目录：
+[CNN64](../../build-cppnet/root-games/cnn64-decisions.csv)、
+[token128_2](../../build-cppnet/root-games/token128_2-decisions.csv)、
+[token192_4](../../build-cppnet/root-games/token192_4-decisions.csv)、
+[terrain5](../../build-cppnet/root-games/terrain5-decisions.csv)。这些原始轨迹不入git；汇总见
+[root-results.json](task161-cpp-generic-forward-root-results.json)。
+
+| 根模型；均配CNN64续走 | 决策数 | 端到端均值 µs | P50 µs | P95 µs | 根策略均值 µs（含Python/IPC） | 决策总秒 | 本局折算局/h |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 全CNN64 | 1106 | 53184 | 2124 | 378806 | 627 | 58.82 | 61.20 |
+| token128_2 | 965 | 34148 | 4393 | 200049 | 2897 | 32.95 | 109.25 |
+| token192_4 | 1313 | 41546 | 11407 | 195889 | 9564 | 54.55 | 66.00 |
+| terrain5 | 1058 | 42334 | 3810 | 254385 | 2788 | 44.79 | 80.38 |
+
+“本局折算”只是3600/本局决策秒数，**不是替换根模型的性能收益**。CNN这局在63203tick获胜，
+三个未训练token根分别在51596、68839、59680tick输局，搜索次数/候选/续走量也不同；
+不能把更早输局的109局/h解释成老师加速。包含启动/reset的整局墙钟分别59.29、33.24、54.95、45.24秒。
+原生续走决策数分别107152、71991、105644、87492，实际网络有无合法动作时会跳过计算，
+因此这些计数不冒充网络调用数，也不套用历史1:132比例。
+
+为隔离纯根模型成本，增加显式开发命令`LOAD_ROOT_BENCH_NET`（最多4个）和`ROOT_BENCH_COMPARE`。
+在另一局同种子CNN对照的**每一个相同当前帧**上，以CNN/token128/token192/terrain及反向顺序测原生
+`Predict`两遍，包含C++特征构造和合法动作选择；模型预加载，比较不推进游戏，历史副本互不污染。
+探针在决策计时之外，没有将8次影子前向开销算进游戏吞吐。该对照同样1106决策、63203tick获胜，
+实际N=81–144、均值114.80，未补齐128或256。逐帧配对数据在
+[matched CSV](../../build-cppnet/root-games-matched/cnn64-decisions.csv)。
+
+对照局本次决策合计62.48秒；下面的替换量逐帧相加，公式是
+`T替换 = T对照 + Σ(本帧token根原生µs − 本帧CNN根原生µs)/1e6`。
+动作、局面、候选和CNN续走工作量固定，故这是**只替换根计算的配对开销估计**，不是新策略真实胜率或
+完整老师行为的预测；真实行为差异已经在上表单独列出。
+
+| 根模型 | 同帧原生根均值 µs | 配对端到端均值 µs | 同轨迹总秒（估计） | 局/h（估计） | 相对全CNN局/h |
+|---|---:|---:|---:|---:|---:|
+| CNN64 | 245.0 | 56494 | 62.48 | 57.62 | — |
+| token128_2 | 2657.9 | 58907 | 65.15 | 55.26 | -4.10% |
+| token192_4 | 9447.2 | 65696 | 72.66 | 49.55 | -14.01% |
+| terrain5 | 2576.6 | 58826 | 65.06 | 55.33 | -3.96% |
+
+影子探针整次进程墙钟96.26秒，包含显式探针成本，**不拿它算生产局/h**。不同批次CNN基线58.82/62.48秒
+反映未停生产/未绑核下的波动；替换差值来自同帧交错，未将两局绝对墙钟直接相减。
+本预算下128两层/terrain根约损失4%局/h，192四层约14%；这是根计算预算，是否值得需后续已训练策略
+质量结果，当前没有据此切生产默认。
+
+三种实际根尺寸额外在独立引擎起始/3000tick两种真实输入长度对照Python，三头最大误差
+**3.28e-7 < 1e-5**；小批、空卡槽与容量变更已由阶段8针对性测试覆盖。开发比较命令也确认不改变局面。
+没有全量存档重放、种子审计或生产状态操作。
+
+复现（下列变量指向本机已有检查点；导出物和逐决策CSV只写独立build目录）：
+
+```bash
+free -g
+ulimit -v 8000000
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 timeout 1200 nice -n 10 "$HOME/.venvs/ml/bin/python3" \
+  scripts/bench_root_policy.py --cnn "$CNN_CHECKPOINT" --value "$VALUE_CHECKPOINT" \
+  --output build-cppnet/root-games
+# 同轨迹根计算对照；实际根/续走仍为CNN，其他三个只测成本
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 timeout 240 nice -n 10 "$HOME/.venvs/ml/bin/python3" \
+  scripts/bench_root_policy.py --cnn "$CNN_CHECKPOINT" --value "$VALUE_CHECKPOINT" \
+  --arm cnn64 --matched --output build-cppnet/root-games-matched
+```
