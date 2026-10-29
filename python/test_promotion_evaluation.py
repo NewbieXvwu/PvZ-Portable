@@ -35,7 +35,7 @@ def arguments(root):
 def fake_games(args, command, **kwargs):
     # Preregistration must exist before the first episode starts.
     registration = gate.read(args.out / 'registration.json')
-    if registration['version'] in (3, 4, 5):
+    if registration['version'] in (3, 4, 5, 6):
         assert registration['policy']['pair_count'] == 1920
         block = registration['seed_block']
         assert block[1] - block[0] == 10 * 192
@@ -56,8 +56,10 @@ def fake_games(args, command, **kwargs):
     task = next(task for task in gate.read(args.out / 'manifest.json')['tasks'] if task['task_id'] == name)
     (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=model, task_id=name, arms='fast',
         dagger_beta='0', executable=str(args.executable), workers='1')))
+    roof = registration['version'] == 6 and gate.read(args.out / 'manifest.json')['groups'][name] == 'roof'
     (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(seed=seed, arm='fast', searched=0,
-        won=(model == str(args.candidate)) != (registration['version'] == 5 and
+        final_wave=(10 if model == str(args.candidate) else 20),
+        won=False if roof else (model == str(args.candidate)) != (registration['version'] >= 5 and
             name in gate.read(args.out / 'manifest.json').get('monitor', [])))) for seed in task['seeds']))
     return SimpleNamespace(returncode=0)
 
@@ -90,6 +92,23 @@ def test_v5_roof_panel_issues_resumes_and_records_heldout_collapse(tmp_path):
         assert gate.valid_certificate(result, result['contract'], args.out)
         gate.evaluate(args)
         assert run.call_count == 80                       # resume uses the issued block
+
+
+def test_v6_roof_wave_certificate_records_pairs_resumes_and_rejects_tampering(tmp_path):
+    args = arguments(tmp_path)
+    args.gate_version = 6
+    args.source_panel = Path(__file__).resolve().parents[1] / 'configs/gate_v5_panel.json'
+    with patch.object(gate.subprocess, 'run', side_effect=lambda cmd, **kw: fake_games(args, cmd, **kw)) as run:
+        result = gate.evaluate(args)
+        assert not result['approved'] and result['overall']['pairs'] == 1728
+        assert all(row['candidate_wave'] == 10 and row['incumbent_wave'] == 20 for row in result['paired'])
+        assert all(not row['candidate'] and not row['incumbent'] for row in result['paired'] if row['zone'] == 'roof')
+        assert gate.valid_certificate(result, result['contract'], args.out)
+        gate.evaluate(args)
+        assert run.call_count == 80
+    broken = copy.deepcopy(result)
+    next(row for row in broken['paired'] if row['zone'] == 'roof')['candidate_wave'] = 11
+    assert not gate.valid_certificate(broken, broken['contract'], args.out)
 
 
 def test_complete_evaluation_resumes_and_rechecks_raw_episode_certificates():

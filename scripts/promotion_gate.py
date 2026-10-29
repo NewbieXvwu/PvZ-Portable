@@ -24,6 +24,9 @@ Gate version 5 (task128): the panel is the adventure set (original 1.0x, scorebo
 decks) instead of synthetic curriculum cells; the two registered heldout cells
 run for monitoring only, so they never veto and never enter the overall rate.
 
+Gate version 6 (task168): same panel, with roof final_wave Wilcoxon vetoes and
+the four other adventure zones retaining binary Holm vetoes.
+
 Parallelism (task73c): --eval-units N runs up to N search_play children
 concurrently (each with the contract's own --workers). Game outcomes are a
 function of (model, task, seed) only, so unit order and concurrency never
@@ -188,12 +191,26 @@ def valid_certificate(result, frozen, directory=None):
                 folder = directory / side / task['task_id']
                 outcomes[side] = _task_rows(folder, task, Path(frozen[side]), args)
                 files[str((folder / 'games.jsonl').relative_to(directory))] = sha(folder / 'games.jsonl')
-            actual_pairs.extend(dict(task_id=task['task_id'], seed=seed, zone=manifest['groups'][task['task_id']],
-                                     candidate=outcomes['candidate'][seed]['won'], incumbent=outcomes['incumbent'][seed]['won'])
-                                for seed in task['seeds'])
+            actual_pairs.extend(_paired_rows(task, manifest['groups'][task['task_id']], outcomes,
+                                             frozen['version']))
         return actual_pairs == result['paired'] and files == result['episode_files_sha256']
     except (KeyError, ValueError, OSError, TypeError):
         return False
+
+
+def _paired_rows(task, zone, outcomes, version):
+    pairs = []
+    for seed in task['seeds']:
+        row = dict(task_id=task['task_id'], seed=seed, zone=zone,
+                   candidate=outcomes['candidate'][seed]['won'], incumbent=outcomes['incumbent'][seed]['won'])
+        if version >= 6:
+            for side in ('candidate', 'incumbent'):
+                wave = outcomes[side][seed].get('final_wave')
+                if type(wave) is not int or wave < 0:
+                    raise ValueError(f'missing/invalid final_wave: {side} {task["task_id"]} seed {seed}')
+                row[side + '_wave'] = wave
+        pairs.append(row)
+    return pairs
 
 
 def _task_rows(folder, task, model, args):
@@ -320,10 +337,9 @@ def evaluate(args):
             for side in ('candidate', 'incumbent'):
                 folder = args.out / side / task['task_id']
                 files[str((folder / 'games.jsonl').relative_to(args.out))] = sha(folder / 'games.jsonl')
-            paired.extend(dict(task_id=task['task_id'], seed=seed, zone=manifest['groups'][task['task_id']],
-                               candidate=outcomes['candidate', task['task_id']][seed]['won'],
-                               incumbent=outcomes['incumbent', task['task_id']][seed]['won'])
-                          for seed in task['seeds'])
+            paired.extend(_paired_rows(task, manifest['groups'][task['task_id']],
+                                       {side: outcomes[side, task['task_id']] for side in ('candidate', 'incumbent')},
+                                       version))
         result = decide(paired, manifest)
         result.update(contract=frozen, contract_key=contract_key(frozen), paired=paired,
                       episode_files_sha256=files, started=started, finished=time.time())
@@ -342,10 +358,11 @@ def main():
     parser.add_argument('--eval-units', type=int, default=1,
                         help='concurrent search_play children (task73c); execution detail, '
                              'never part of the contract, outcomes are identical for any value')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5, 6), default=GATE_VERSION,
                         help='1 = task49A fixed 64-pair panel; 2 = task73b fresh-seed 1536-pair panel; '
                              '3 = task73c fog/roof 1920-pair panel; 4 = task113 Holm-Bonferroni zone veto; '
-                             '5 = task128 adventure-level panel, heldout monitored only')
+                             '5 = task128 adventure-level panel, heldout monitored only; '
+                             '6 = task168 roof wave Wilcoxon veto, same v5 panel')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git ledger of allocated gate seed blocks (v2+)')
     parser.add_argument('--seed-block', default=None,
