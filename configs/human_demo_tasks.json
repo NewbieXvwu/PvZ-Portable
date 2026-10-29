@@ -29363,7 +29363,24 @@
     27,
     29
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/94b4cd7d9be6935038f41b60868d6008830932c5e1281b57619c5d3028b149ff",
+    "decisions": [
+     696,
+     443,
+     380,
+     317,
+     254,
+     191,
+     127,
+     64,
+     1
+    ],
+    "index": 0,
+    "future_seed_start": 356000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "llmplay3_a_l46_m100_s139005006_a008a192955c2",
