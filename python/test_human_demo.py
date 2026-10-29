@@ -16,7 +16,7 @@ from pvz_event_env import EventWaitEnv
 from pvz_frame_store import read_frames
 from pvz_tasks import profile_for_deck
 
-RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'))
+RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / 'Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')))
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 
 

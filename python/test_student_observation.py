@@ -19,7 +19,7 @@ from pvz_student_observation import StudentHistory
 from pvz_value_net import _featurize_reference
 from pack_training_rows import packed_load
 
-RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
+RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", str(Path.home() / 'Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')))
 BINARY = ROOT / "build/pvz-portable"
 
 

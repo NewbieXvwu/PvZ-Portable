@@ -2,7 +2,7 @@
 # task98: prepared only. Start this watchdog at a group boundary after deployment.
 # No deployment script is sourced or executed. Tests source the functions with a private LOG_DIR.
 
-LOG_DIR=/home/newbiexvwu/pvz-logs
+LOG_DIR=$HOME/pvz-logs
 WATCHDOG_INTERVAL=120
 WATCHDOG_STALE_SECONDS=1800
 WATCHDOG_RESTART_WINDOW=1800

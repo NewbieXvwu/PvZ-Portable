@@ -159,7 +159,7 @@ def test_deploy17_watchdog_launch_is_inert_until_active(tmp_path,active):
     result=subprocess.run(['bash','-c','source "$1"; watchdog_extract_start "$2"','test',
         str(ROOT/'scripts/qc_watchdog.sh'),str(ROOT/'scripts/qc_deploy17.sh')],capture_output=True,text=True,timeout=5)
     assert result.returncode==0,result.stderr
-    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('/home/newbiexvwu',str(tmp_path)))
+    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('$HOME',str(tmp_path)))
     logs=tmp_path/'pvz-logs';logs.mkdir()
     (logs/'qc_deploy16.mode').write_text('v2timer\n');(logs/'qc_deploy16.active').touch()
     if active:
@@ -214,7 +214,7 @@ def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path
 def test_deploy17_backup_restore_only_temporary_files(tmp_path):
     import subprocess
     text=(ROOT/'scripts/qc_deploy17.sh').read_text().split('# --- switch:',1)[0]
-    script=tmp_path/'functions.sh';script.write_text(text.replace('/home/newbiexvwu',str(tmp_path)))
+    script=tmp_path/'functions.sh';script.write_text(text.replace('$HOME',str(tmp_path)))
     result=subprocess.run(['bash','-c','''
 source "$1"
 O="$2/backup"; mkdir -p "$W/scripts" "$O"

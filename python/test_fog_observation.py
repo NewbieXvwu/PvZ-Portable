@@ -17,7 +17,7 @@ from pvz_student_observation import StudentHistory, fog_channel
 from pvz_tasks import deck_for_level, profile_for_deck
 from render_episode import _frame, training_task_kwargs
 
-RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/home/newbiexvwu/.cache/pvz-research-resources'))
+RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 engine = pytest.mark.skipif(not BINARY.is_file() or not (RESOURCE / 'main.pak').is_file(),
                             reason='requires simulator and resources')

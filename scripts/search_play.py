@@ -52,7 +52,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from growable_pool import GIB, GrowablePool  # noqa: E402  (task138: growable worker pool)
-DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
+DEFAULT_RESOURCE_DIR = os.environ.get("PVZ_RESOURCE_DIR",
+                                      str(Path.home() / ".cache" / "pvz-research-resources"))
 NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 # The search overrides the student only when the best candidate beats it by more than this. It was
 # --margin, set to 0.02 in all 201 run configurations (task33 audit); a constant now, not a flag.
@@ -637,29 +638,11 @@ def _frame_json(frame: dict) -> str:
     return json.dumps(frame, separators=(",", ":")) + "\n"
 
 
-def _archive_sha256(path: Path) -> str:
-    """示范存档的 SHA256（帧文件）：起点由"哪个存档 + 第几个决策"唯一确定，帧里记下它。"""
-    import hashlib
-    digest = hashlib.sha256()
-    with path.open('rb') as handle:
-        for chunk in iter(lambda: handle.read(1 << 20), b''):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
 def _final_zombies(obs: dict) -> list[dict]:
     # ROLLOUT returns a lean board even when ordinary root observations are full.
     from render_episode import _frame
     return [dict(row=z[0], type=z[1], x=z[2], health=z[4])
             for z in _frame(obs)['zombies'] if z[5]]
-
-
-def final_state_hash(env) -> str:
-    """STATE_HASH digest of the final position, or '' on engines that predate the command."""
-    try:
-        return env.state_hash()
-    except Exception:
-        return ""
 
 
 def _play(job: dict, observer=None) -> dict:
@@ -903,19 +886,12 @@ def _play(job: dict, observer=None) -> dict:
                                    bytes=(archive/SIDECAR_NAME).stat().st_size,
                                    frames=token_writer.rows)
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
-        demo_sha = None
-        if demo_archive:
-            demo_sha = _W.get('demo_sha')
-            if demo_sha is None:
-                demo_sha = _W['demo_sha'] = _archive_sha256(frame_path(Path(demo_archive)))
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
         if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
                 or task_definition.get('conveyor_start') == 'original'
                 or task_definition.get('fog_observation')):
-            import hashlib
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
                                 policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
-                                checkpoint_sha256=hashlib.sha256(Path(args.rollout_policy).read_bytes()).hexdigest(),
                                 task_id=args.task_id, first_aid_owned=kw.get('first_aid_owned', False),
                                 **{k: v for k, v in kw['task_extra'].items() if v is not None})
             if 'deck_perturb' in task_definition:
@@ -927,7 +903,6 @@ def _play(job: dict, observer=None) -> dict:
             "label_source": "teacher",
             **({'observation_attachment': attachment_info} if attachment_info else {}),
             **({"demo_archive": str(Path(demo_archive).resolve()), "demo_decision": args.demo_decision,
-                "demo_archive_sha256": demo_sha,
                 "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
             "task": archive_task,
             "context": task_context,
@@ -939,10 +914,6 @@ def _play(job: dict, observer=None) -> dict:
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "final_tick": obs["tick"], "terminal": bool(obs.get("terminal")),
             **({'obs_v3_bytes': attachment_info['bytes']} if args.frames and attachment_info else {}),
-            # Final stable state digest (SaveGame image + RNG + counters): lets engine-swap
-            # gates report how often the hashed state moved without replaying every tick.
-            # Older deployed engines predate STATE_HASH; they just report no digest.
-            "state_hash": final_state_hash(env),
             "wave_count": obs.get("wave_count"),
             # Public final-board evidence, including the row/type of a house breach.
             # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.

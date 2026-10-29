@@ -724,12 +724,8 @@ def main(*, step_observer=None) -> None:
     write_recipe(args.out / "recipe.resolved.json", args.resolved_recipe)
     metrics = Metrics("train_rollout_policy", training=True).start()
     metrics.update(step=0, rows=0, phase="loading")
-    row_plan = None
-    if args.row_weights:
-        from pvz_training_rows import RowWeights
-        row_plan = RowWeights(args.row_weights, args.data)
     source_counts = None
-    observer = row_plan.observe if row_plan else None
+    observer = None
     level_cap = args.source_weight.get('level_balance')
     level_power = args.source_weight.get('level_balance_power', 1.0)
     level_max_multiplier = args.source_weight.get('level_balance_max_multiplier')
@@ -738,7 +734,6 @@ def main(*, step_observer=None) -> None:
         source_counts = SourceRowCounts(balance=bool(level_cap))
         def observer(path, rows):
             source_counts.observe(path, rows)
-            if row_plan: row_plan.observe(path, rows)
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
@@ -773,9 +768,8 @@ def main(*, step_observer=None) -> None:
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     if label_adjustment is not None:
         label_adjustment.apply(weight)
-        import hashlib
         (args.out / 'shared_pack_weights.json').write_text(json.dumps(dict(
-            pack_recipe=str(args.pack_recipe), pack_recipe_sha256=hashlib.sha256(args.pack_recipe.read_bytes()).hexdigest(),
+            pack_recipe=str(args.pack_recipe),
             effective_label_weight=args.resolved_recipe['label_weight'],
             packed_label_weight=packed_options['label_weight'],
             factors=label_adjustment.factors, rows=len(weight)), indent=1)+'\n')
@@ -787,8 +781,6 @@ def main(*, step_observer=None) -> None:
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
     if private_weights is not None:
         private_weights.apply_keep(weight, is_val)
-    if row_plan:
-        row_plan.finish(len(plant), is_val.numpy())
     if source_counts and args.source_row_report:
         source_counts.finish(len(plant), val_seeds, args.source_row_report)
     print(f"{len(plant)} decisions ({int(plant.sum())} plants), {len(seeds)} seeds, "
@@ -821,10 +813,6 @@ def main(*, step_observer=None) -> None:
         weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
         print(f"spread weights: {len(compared)} compared rows, mean spread {float(spread.mean()):.4f}, "
               f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
-    if row_plan:
-        row_plan.apply(weight)
-        print(json.dumps({"row_intervention":row_plan.metadata(),
-                          "positive_weight_rows":int((weight>0).sum())}),flush=True)
     if level_cap:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
@@ -852,7 +840,7 @@ def main(*, step_observer=None) -> None:
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
-        denom = w.sum().clamp_min(1e-30) if row_plan or private_weights is not None else w.sum()
+        denom = w.sum().clamp_min(1e-30) if private_weights is not None else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
         if args.aux_weight:
@@ -870,12 +858,12 @@ def main(*, step_observer=None) -> None:
                 teacher = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
                 kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)
                 wc = w[rows]
-                cell_denom=wc.sum().clamp_min(1e-30) if row_plan or private_weights is not None else wc.sum()
+                cell_denom=wc.sum().clamp_min(1e-30) if private_weights is not None else wc.sum()
                 loss = loss + args.cell_soft_weight * (kl * wc).sum() / cell_denom
         if planted.any():
             wp = w[planted]                               # all 1 unless --label-weight is used
             loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
-                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if row_plan or private_weights is not None else wp.sum())
+                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if private_weights is not None else wp.sum())
         stats = {}
         if not train:
             with torch.no_grad():
@@ -920,8 +908,7 @@ def main(*, step_observer=None) -> None:
                 "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
                 # Historical reports compare these metadata keys; both experiments are retired.
                 "soft_weight": 0.0, "ema": 0.0,
-                "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
-                **({"row_intervention":row_plan.metadata()} if row_plan else {}),
+                "history": list(history), "recipe": args.resolved_recipe,
                 **({'private_weights': dict(history_l7_keep=history_keep, deck_weight_cap=deck_cap)}
                    if private_weights is not None else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
