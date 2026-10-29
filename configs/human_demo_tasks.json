@@ -10199,7 +10199,21 @@
     5,
     31
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/4cbdd0e0dae1f03ba32f122dbc2999ecf5058ae0a18d95e1ddc1061057a7728d",
+    "decisions": [
+     632,
+     403,
+     345,
+     230,
+     173,
+     116
+    ],
+    "index": 0,
+    "future_seed_start": 349000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_48_doom_m400_s81017005_a1c45d17d3dab",
