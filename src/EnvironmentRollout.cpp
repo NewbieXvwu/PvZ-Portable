@@ -878,6 +878,7 @@ void EnvironmentRollout::PrepareInputs(LawnApp* app, double income, int previous
     if (generic && graphTokens >= 0)
     {
         PublicObservationTokens(app,publicTokens);
+        graph.SetTokenCount(int(publicTokens.size()));
         int capacity = graph.tensors[graphTokens].shape[1];
         float* raw = graph.tensors[graphTokens].data.data();
         FillObservationTokenArray(publicTokens,raw,capacity); // explicit overflow error; never truncate

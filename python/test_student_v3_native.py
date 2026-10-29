@@ -196,3 +196,21 @@ def test_independent_root_policy_config(tmp_path):
         env.restore_fast(snapshot)
         assert env.root_predict() == expected
         env.release_snapshot(snapshot)
+
+
+@pytest.mark.parametrize('mode,hybrid', [('dense',False),('terrain',False),('moe',False),('dense',True)])
+def test_v3_actual_token_extent(tmp_path, mode, hybrid):
+    torch.set_num_threads(1)
+    torch.manual_seed(161)
+    net=StudentV3(24,dict(layers=2,heads=3,ff_width=32,ffn=mode,hybrid=hybrid),token_input='obs_v3').eval()
+    source=frame_tokens(rich_frame(),token_input='obs_v3')
+    # B=2 exercises compact batch strides, internal empty-card holes remain in attention mask.
+    tokens=collate_tokens([source,source])
+    board=torch.randn(2,BOARD_CHANNELS,6,10)
+    feeds=graph_feeds(tokens,torch.tensor([0,1]),board)
+    module,capacity_graph=student_graph(net,capacity=128,batch=2)
+    _,compact_graph=student_graph(net,capacity=len(source['ids']),batch=2)
+    expected=reference(module,compact_graph,feeds,intermediates=True)
+    actual,_=run_driver(module,capacity_graph,feeds,tmp_path,DRIVER,token_count=len(source['ids']))
+    for name in actual:
+        torch.testing.assert_close(actual[name],expected[name],atol=1e-5,rtol=0,msg=lambda msg:name+': '+msg)

@@ -1,6 +1,7 @@
 #include "GenericForward.h"
 #include "GenericForwardDnnl.h"
 #include "GenericForwardSparse.h"
+#include "GenericForwardToken.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -50,6 +51,7 @@ size_t Count(const std::vector<int>& shape) {
 // Linear weights retain PyTorch's [out,in] layout; BLAS consumes them transposed.
 void Linear(const float* x, const Tensor& w, const Tensor* bias, float* y, int rows) {
     const int out = w.shape[0], in = w.shape[1];
+    if(PackedMatrix(w,x,bias ? bias->data.data() : nullptr,y,rows)) return;
     if(out == 1) {
         cblas_sgemv(CblasRowMajor,CblasNoTrans,rows,in,1.f,x,in,w.data.data(),1,0.f,y,1);
         if(bias) for(int r=0;r<rows;++r) y[r]+=bias->data[0];
@@ -67,11 +69,7 @@ void Linear(const float* x, const Tensor& w, const Tensor* bias, float* y, int r
 }
 void Activate(float* x, int n, bool swiglu, int width) {
     if (!swiglu) { for (int i = 0; i < n; ++i) x[i] = std::max(0.f, x[i]); return; }
-    for (int r = 0; r < n / (2 * width); ++r)
-        for (int c = 0; c < width; ++c) {
-            const float gate = x[r * 2 * width + c];
-            x[r * width + c] = gate / (1.f + std::exp(-gate)) * x[r * 2 * width + width + c];
-        }
+    TokenSilu(x,x,n/(2*width),width,true);
 }
 void FFN(const float* x, int rows, const Tensor& up, const Tensor& ub,
          const Tensor& down, const Tensor& db, bool swiglu, float* tmp, float* y) {
@@ -111,7 +109,7 @@ void Graph::Load(const std::string& path) {
         Require(!next.Has(t.name) && t.role >= 0 && t.role <= 2, "tensor name/role");
         size_t count = Count(t.shape); total += count;
         Require(total <= 128000000, "graph memory limit");
-        t.data.resize(count);
+        t.data.resize(count); t.elements = count;
         if (t.role == 2) { in.read(reinterpret_cast<char*>(t.data.data()), count * 4); Require(bool(in), "truncated weight"); }
         next.tensors.push_back(std::move(t));
     }
@@ -126,6 +124,11 @@ void Graph::Load(const std::string& path) {
 }
 
 void Graph::Prepare() {
+    if (!metadata.empty() && metadata[0] == 10 && Has("tokens")) {
+        tokenCapacity = tokenCount = Get("tokens").shape[1];
+        for (auto& t : tensors) if (t.role == 1 && (t.name == "tokens" || t.name == "token_meta" ||
+            t.name == "valid" || t.name == "pool_valid" || t.name == "coords")) t.tokenAxes = 2;
+    }
     std::vector<bool> ready;
     for (const auto& t : tensors) ready.push_back(t.role != 0);
     int stage = 0;
@@ -229,7 +232,8 @@ void Graph::Prepare() {
                     n.ints[3] > 0 && n.ints[3] <= n.ints[2] && n.ints[4] >= 0, "moe routing");
                 size_t rows = a.data.size()/a.shape.back();
                 Require(at(1).data.size() == rows * (n.ints[1] ? 1 : n.ints[2]), "moe route shape");
-                n.indices.resize(n.ints[1] ? rows : n.ints[2]);
+                n.indices.resize(std::max(rows,size_t(n.ints[2])));
+                if(!n.ints[1]) { n.routes.resize(rows*n.ints[3]); n.routeWeights.resize(rows*(n.ints[3]+1)); }
             }
             size_t scratch = 0;
             for (int e = 0; e < experts; ++e) {
@@ -262,6 +266,26 @@ void Graph::Prepare() {
                 y.shape == std::vector<int>({a.shape[0],heads,a.shape[1],a.shape[1]}), "relation shape");
             if(n.inputs.size() == 7) Require(at(5).shape == std::vector<int>({a.shape[0], a.shape[1]}) &&
                 at(6).data.size() == size_t(heads), "target relation shape");
+            if (std::all_of(n.inputs.begin()+1,n.inputs.begin()+5,[&](int i){ return tensors[i].role==2; })) {
+                int K=at(1).shape[1], RB=2*n.ints[0]+2, CB=2*n.ints[1]+2;
+                n.packed.resize(size_t(heads)*K*K*RB*CB*2);
+                for(int h=0;h<heads;++h) for(int pair=0;pair<K*K;++pair)
+                    for(int r=0;r<RB;++r) for(int c=0;c<CB;++c) for(int same=0;same<2;++same)
+                        n.packed[((((h*K*K+pair)*RB+r)*CB+c)*2+same)]=at(1).data[h*K*K+pair]+
+                            at(2).data[h*RB+r]+at(3).data[h*CB+c]+
+                            (at(4).data.size()==size_t(heads) ? (same ? at(4).data[h] : 0.f) : at(4).data[h*2+same]);
+                for(auto& prior:nodes) {
+                    if(&prior==&n) break;
+                    if(prior.code==19 && prior.inputs[0]==n.inputs[0] && prior.ints==n.ints &&
+                        tensors[prior.inputs[1]].shape[1]==K && prior.relationIndices) {
+                        n.relationIndices=prior.relationIndices; break;
+                    }
+                }
+                if(!n.relationIndices) {
+                    n.relationIndices=std::make_shared<std::vector<int>>(size_t(a.shape[0])*a.shape[1]*a.shape[1]);
+                    n.buildRelationIndices=true;
+                }
+            }
         } else if (n.code == 20) {
             inputs(1); Require(a.shape == y.shape, "silu shape");
         } else if (n.code == 21) {
@@ -280,13 +304,67 @@ void Graph::Prepare() {
             Require(axis >= 0 && axis < rank && start >= 0 && length > 0 && start+length <= a.shape[axis], "slice range");
             auto expected=a.shape; expected[axis]=length; Require(y.shape==expected, "slice output");
         }
+        if (tokenCapacity) {
+            switch (n.code) {
+            case 0: case 2: case 3: case 8: case 10: case 11: case 14: case 17: case 18: case 20:
+                y.tokenAxes = a.tokenAxes; break;
+            case 5:
+                if (a.tokenAxes) {
+                    Require(a.tokenAxes == 2 && y.shape.size() >= 2 && y.shape[1] == tokenCapacity,
+                        "token reshape requires preserved token axis");
+                    y.tokenAxes = 2;
+                } break;
+            case 9: y.tokenAxes = a.tokenAxes; break;
+            case 19: y.tokenAxes = a.tokenAxes ? 12 : 0; break;
+            case 6: case 15:
+                for (size_t i=0;i<n.ints.size();++i)
+                    if (n.ints[i]>=0 && (a.tokenAxes & (1u<<n.ints[i]))) y.tokenAxes |= 1u<<i;
+                if (n.code==15 && a.name=="terrain" && y.shape.size()==2) y.tokenAxes=2;
+                break;
+            case 4: y.tokenAxes = a.tokenAxes; Require(!(y.tokenAxes & (1u<<n.ints[0])), "token concat axis"); break;
+            case 7: y.tokenAxes = a.tokenAxes & ((1u<<(rank-n.ints[0]))-1); break;
+            case 13: y.tokenAxes = at(1).tokenAxes & 2; break;
+            }
+        }
         ready[n.output] = true;
+        if(n.code==0) PreparePackedLinear(at(1));
+        if(n.code==10 || n.code==11) {
+            int offset=n.code==10 ? 1 : 2;
+            for(size_t i=offset;i<n.inputs.size();i+=4) { PreparePackedLinear(at(i)); PreparePackedLinear(at(i+2)); }
+        }
         PrepareSparseConvolution(*this,n);
         if(!n.sparse) PrepareNativeConvolution(*this,n);
         // E.g. split a 1x1 kernel once at load, not once per decision.
         if (std::all_of(n.inputs.begin(), n.inputs.end(), [&](int i) { return tensors[i].role == 2; })) {
             Execute(n); SparseToHost(tensors[n.output]); NativeToHost(tensors[n.output]);
             tensors[n.output].role = 2; n.code = -1;
+        }
+    }
+}
+
+void Graph::SetTokenCount(int count) {
+    Require(tokenCapacity && count > 0 && count <= tokenCapacity, "token capacity exceeded");
+    if (count == tokenCount) return;
+    tokenCount = count;
+    for (auto& t : tensors) if (t.tokenAxes) {
+        t.elements = 1;
+        for (size_t d=0;d<t.shape.size();++d) {
+            if (t.tokenAxes & (1u<<d)) t.shape[d] = count;
+            t.elements *= t.shape[d];
+        }
+    }
+    // Only index maps depend on shape; matrix packs and scratch retain capacity.
+    for (auto& n : nodes) if ((n.code==6 || n.code==15) && tensors[n.output].tokenAxes) {
+        auto& a=tensors[n.inputs[0]]; auto& y=tensors[n.output];
+        int stride[8]; stride[a.shape.size()-1]=1;
+        for (int i=int(a.shape.size())-2;i>=0;--i) stride[i]=stride[i+1]*a.shape[i+1];
+        for (size_t i=0;i<y.elements;++i) {
+            size_t rem=i; int source=0;
+            for (int axis=int(y.shape.size())-1;axis>=0;--axis) {
+                int c=rem%y.shape[axis]; rem/=y.shape[axis];
+                if(n.ints[axis]>=0) source+=c*stride[n.ints[axis]];
+            }
+            n.indices[i]=source;
         }
     }
 }
@@ -311,9 +389,9 @@ void Graph::Execute(Node& n) {
     auto& a = tensors[n.inputs[0]]; auto& y = tensors[n.output];
     auto at = [&](int i) -> const Tensor& { return tensors[n.inputs[i]]; };
     float* out = y.data.data(); const float* x = a.data.data();
-    const int count = int(y.data.size());
+    const int count = int(y.elements);
     switch (n.code) {
-    case 0: Linear(x, at(1), n.inputs.size()==3 ? &at(2) : nullptr, out, a.data.size()/a.shape.back()); break;
+    case 0: Linear(x, at(1), n.inputs.size()==3 ? &at(2) : nullptr, out, a.elements/a.shape.back()); break;
     case 1: case 23: {
         const auto& w=at(1); int B=a.shape[0], C=a.shape[1], H=a.shape[2], W=a.shape[3];
         int O=w.shape[0], KH=w.shape[2], KW=w.shape[3], OH=y.shape[2], OW=y.shape[3], S=OH*OW;
@@ -384,11 +462,11 @@ void Graph::Execute(Node& n) {
                 std::copy_n(t.data.data()+r*len,len,out+offset); offset+=len; }
         } break;
     }
-    case 5: std::copy(a.data.begin(),a.data.end(),y.data.begin()); break;
+    case 5: std::copy_n(x,a.elements,out); break;
     case 6: case 15: for(int i=0;i<count;++i) out[i]=x[n.indices[i]]; break;
     case 7: {
         int reduce=1; for(int i=int(a.shape.size())-n.ints[0];i<int(a.shape.size());++i) reduce*=a.shape[i];
-        int rows=a.data.size()/reduce, channels=a.shape[a.shape.size()-n.ints[0]-1];
+        int rows=a.elements/reduce, channels=a.shape[a.shape.size()-n.ints[0]-1];
         for(int r=0;r<rows;++r) {
             float sum=0, maximum=-std::numeric_limits<float>::infinity();
             for(int c=0;c<reduce;++c) { float v=x[r*reduce+c]; sum+=v; maximum=std::max(maximum,v); }
@@ -412,19 +490,12 @@ void Graph::Execute(Node& n) {
         for(int b=0;b<B;++b) for(int h=0;h<H;++h) {
             cblas_sgemm(CblasRowMajor,CblasNoTrans,CblasTrans,T,T,K,1.f/std::sqrt(float(K)),
                 x+b*T*D+h*K,D,key+b*T*D+h*K,D,0.f,scores,T);
-            for(int i=0;i<T;++i) {
-                float maximum=-std::numeric_limits<float>::infinity();
-                for(int j=0;j<T;++j) { float& s=scores[i*T+j];
-                    s=at(4).data[b*T+j]>0 ? s+at(3).data[((b*H+h)*T+i)*T+j] : -std::numeric_limits<float>::infinity();
-                    maximum=std::max(maximum,s); }
-                float sum=0;
-                for(int j=0;j<T;++j) { float& s=scores[i*T+j]; s=std::isfinite(maximum) ? std::exp(s-maximum) : 0.f; sum+=s; }
-                for(int j=0;j<T;++j) scores[i*T+j]=(sum>0 && at(4).data[b*T+i]>0) ? scores[i*T+j]/sum : 0.f;
-            }
+            for(int i=0;i<T;++i) TokenSoftmax(scores+i*T,at(3).data.data()+((b*H+h)*T+i)*T,
+                at(4).data.data()+b*T,T,at(4).data[b*T+i]>0);
             cblas_sgemm(CblasRowMajor,CblasNoTrans,CblasNoTrans,T,K,T,1.f,scores,T,value+b*T*D+h*K,D,0.f,out+b*T*D+h*K,D);
         } break;
     }
-    case 10: FFN(x,a.data.size()/a.shape.back(),at(1),at(2),at(3),at(4),n.ints[0],n.scratch.data(),out); break;
+    case 10: FFN(x,a.elements/a.shape.back(),at(1),at(2),at(3),at(4),n.ints[0],n.scratch.data(),out); break;
     case 11: {
         int D=a.shape.back(), E=n.ints[2], shared=n.ints[4], rows=count/D;
         std::fill_n(out,count,0.f); float* tmp=n.scratch.data();
@@ -450,25 +521,35 @@ void Graph::Execute(Node& n) {
             }
             break;
         }
+        const int topk=n.ints[3];
         for(int r=0;r<rows;++r) {
-            auto accumulate=[&](int e,float weight) {
-                int base=2+4*e;
-                FFN(x+r*D,1,at(base),at(base+1),at(base+2),at(base+3),n.ints[0],tmp,expert);
-                for(int d=0;d<D;++d) out[r*D+d]+=weight*expert[d];
-            };
-            {
-                const float* logits=at(1).data.data()+r*E;
-                std::iota(n.indices.begin(),n.indices.end(),0);
-                std::partial_sort(n.indices.begin(),n.indices.begin()+n.ints[3],n.indices.end(),[&](int l,int r) {
-                    return logits[l]==logits[r] ? l<r : logits[l]>logits[r]; });
-                float maximum=logits[n.indices[0]], total=0;
-                for(int k=0;k<n.ints[3];++k) total+=std::exp(logits[n.indices[k]]-maximum);
-                for(int k=0;k<n.ints[3];++k) accumulate(n.indices[k],std::exp(logits[n.indices[k]]-maximum)/total);
+            const float* logits=at(1).data.data()+r*E;
+            std::iota(n.indices.begin(),n.indices.begin()+E,0);
+            std::partial_sort(n.indices.begin(),n.indices.begin()+topk,n.indices.begin()+E,[&](int l,int r) {
+                return logits[l]==logits[r] ? l<r : logits[l]>logits[r]; });
+            float maximum=logits[n.indices[0]],total=0;
+            for(int k=0;k<topk;++k) total+=std::exp(logits[n.indices[k]]-maximum);
+            for(int k=0;k<topk;++k) {
+                n.routes[r*topk+k]=n.indices[k];
+                n.routeWeights[r*topk+k]=std::exp(logits[n.indices[k]]-maximum)/total;
             }
+        }
+        for(int e=0;e<E;++e) {
+            int length=0;
+            for(int r=0;r<rows;++r) for(int k=0;k<topk;++k) if(n.routes[r*topk+k]==e) {
+                n.indices[length]=r;
+                n.routeWeights[rows*topk+length]=n.routeWeights[r*topk+k];
+                std::copy_n(x+r*D,D,packed+length*D); ++length;
+            }
+            if(!length) continue;
+            int base=2+4*e;
+            FFN(packed,length,at(base),at(base+1),at(base+2),at(base+3),n.ints[0],tmp,expert);
+            for(int r=0;r<length;++r) for(int d=0;d<D;++d)
+                out[n.indices[r]*D+d]+=n.routeWeights[rows*topk+r]*expert[r*D+d];
         } break;
     }
     case 12: {
-        std::copy(a.data.begin(),a.data.end(),y.data.begin());
+        std::copy_n(x,a.elements,out);
         int B=a.shape[0],C=a.shape[1],H=a.shape[2],W=a.shape[3],T=at(1).shape[1];
         for(int b=0;b<B;++b) for(int t=0;t<T;++t) {
             float rf=at(2).data[(b*T+t)*2], cf=at(2).data[(b*T+t)*2+1];
@@ -484,7 +565,7 @@ void Graph::Execute(Node& n) {
     }
     case 14: {
         int D=at(1).shape[1],V=at(1).shape[0];
-        for(size_t i=0;i<a.data.size();++i) { float id=std::max(0.f,x[i]+(n.ints.empty() ? 0 : n.ints[0]));
+        for(size_t i=0;i<a.elements;++i) { float id=std::max(0.f,x[i]+(n.ints.empty() ? 0 : n.ints[0]));
             if(!n.ints.empty()) id=std::min(id,float(V-1));
             Require(std::isfinite(id) && id<V && id==std::floor(id), "embedding id");
             std::copy_n(at(1).data.data()+int(id)*D,D,out+i*D); }
@@ -503,7 +584,7 @@ void Graph::Execute(Node& n) {
         break;
     }
     case 18: {
-        int repeat=count/at(1).data.size();
+        int repeat=count/at(1).elements;
         for(int i=0;i<count;++i) out[i]=at(1).data[i/repeat]>=0 ? x[i] : n.floats[0];
         break;
     }
@@ -511,6 +592,28 @@ void Graph::Execute(Node& n) {
         int B=a.shape[0],T=a.shape[1],H=at(1).shape[0],K=at(1).shape[1],R=n.ints[0],C=n.ints[1];
         for(int i=0;i<B*T;++i) Require(x[i*3]>=0 && x[i*3]<K && x[i*3]==std::floor(x[i*3]) &&
             std::isfinite(x[i*3+1]) && std::isfinite(x[i*3+2]), "relation metadata");
+        if(n.relationIndices) {
+            int stride=K*K*(2*R+2)*(2*C+2)*2;
+            int* indices=n.relationIndices->data();
+            if(n.buildRelationIndices) for(int b=0;b<B;++b) for(int i=0;i<T;++i) for(int j=0;j<T;++j) {
+                const float* left=x+(b*T+i)*3; const float* right=x+(b*T+j)*3;
+                int dr=left[1]<0 || right[1]<0 ? 2*R+1 : int(std::clamp(left[1]-right[1],float(-R),float(R)))+R;
+                int dc=left[2]<0 || right[2]<0 ? 2*C+1 : int(std::clamp(left[2]-right[2],float(-C),float(C)))+C;
+                int same=left[1]>=0 && left[2]>=0 && left[1]==right[1] && left[2]==right[2];
+                indices[(b*T+i)*T+j]=(((int(left[0])*K+int(right[0]))*(2*R+2)+dr)*(2*C+2)+dc)*2+same;
+            }
+            for(int b=0;b<B;++b) for(int h=0;h<H;++h) for(int i=0;i<T;++i) {
+                float* dst=out+((b*H+h)*T+i)*T;
+                const float* table=n.packed.data()+h*stride;
+                const int* index=indices+(b*T+i)*T;
+                for(int j=0;j<T;++j) dst[j]=table[index[j]];
+                if(n.inputs.size()==7) {
+                    float target=at(5).data[b*T+i];
+                    if(target>=0 && target<T && target==int(target)) dst[int(target)]+=at(6).data[h];
+                }
+            }
+            break;
+        }
         for(int b=0;b<B;++b) for(int i=0;i<T;++i) {
             const float* left=x+(b*T+i)*3;
             for(int j=0;j<T;++j) {
@@ -525,7 +628,7 @@ void Graph::Execute(Node& n) {
             }
         } break;
     }
-    case 20: for(int i=0;i<count;++i) out[i]=x[i]/(1.f+std::exp(-x[i])); break;
+    case 20: TokenSilu(out,x,1,count,false); break;
     case 21: {
         int B=a.shape[0],T=a.shape[1],D=a.shape[2],M=at(1).shape[1];
         for(int b=0;b<B;++b) for(int m=0;m<M;++m) {
@@ -536,7 +639,7 @@ void Graph::Execute(Node& n) {
     }
     case 22: {
         int B=a.shape[0],T=a.shape[1],D=a.shape[2];
-        std::fill(y.data.begin(),y.data.end(),0.f);
+        std::fill_n(out,y.elements,0.f);
         for(int b=0;b<B;++b) {
             float total=0;
             for(int t=0;t<T;++t) {

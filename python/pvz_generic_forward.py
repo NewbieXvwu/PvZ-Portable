@@ -1,6 +1,7 @@
 """PVZGN001 graph description, nn.Module exporter and independent PyTorch reference.
 
-Shapes are fixed, including batch. Tensor layouts are explicit; no tracing or Python
+Shapes specify capacity, including fixed batch. Native obs-v3 can execute shorter token lengths.
+Tensor layouts are explicit; no tracing or Python
 is embedded in the artifact. See MEMORY/docs/task161-cpp-generic-forward.md for ABI.
 """
 from __future__ import annotations
@@ -277,7 +278,7 @@ def rollout_graph(net, batch=1):
     return g
 
 
-def run_driver(module, graph, feeds, folder, driver, iterations=1):
+def run_driver(module, graph, feeds, folder, driver, iterations=1, token_count=None):
     """Write bounded parity artifacts and run the standalone tool (development only)."""
     import json
     import subprocess
@@ -288,14 +289,17 @@ def run_driver(module, graph, feeds, folder, driver, iterations=1):
     with open(folder/'inputs.f32', 'wb') as f:
         for name, desc in graph.tensors.items():
             if desc['role'] == 1: f.write(feeds[name].numpy().astype('<f4').tobytes())
-    result = subprocess.run([str(driver), str(folder/'model.bin'), str(folder/'inputs.f32'),
-                             str(folder/'outputs.f32'), str(iterations)], check=True, capture_output=True, text=True)
+    command = [str(driver), str(folder/'model.bin'), str(folder/'inputs.f32'), str(folder/'outputs.f32'), str(iterations)]
+    if token_count is not None: command.append(f'tokens={token_count}')
+    result = subprocess.run(command, check=True, capture_output=True, text=True)
+    timing = json.loads(result.stdout)
     raw = np.fromfile(folder/'outputs.f32', dtype='<f4')
     outputs, pos = {}, 0
-    for n in graph.nodes:
-        shape = graph.tensors[n['name']]['shape']
+    for i, n in enumerate(graph.nodes):
+        shape = timing['shapes'][i] if token_count is not None else graph.tensors[n['name']]['shape']
         size = int(np.prod(shape))
         outputs[n['name']] = torch.from_numpy(raw[pos:pos+size].copy().reshape(shape))
         pos += size
     assert pos == len(raw)
-    return outputs, json.loads(result.stdout)
+    timing.pop('shapes', None)
+    return outputs, timing

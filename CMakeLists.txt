@@ -102,7 +102,7 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 )
 # Inference backends have independent compile flags/dependencies. Switching an optional
 # backend must not rebuild every game source on the production host.
-list(FILTER SOURCES EXCLUDE REGEX "/GenericForward(Sparse|Dnnl)?\\.cpp$")
+list(FILTER SOURCES EXCLUDE REGEX "/GenericForward(Sparse|Dnnl|Token)?\\.cpp$")
 
 option(LOW_MEMORY "Enable low memory mode" OFF)
 if(NINTENDO_SWITCH)
@@ -285,7 +285,7 @@ endif()
 
 option(PVZ_GENERIC_DRIVER "Build the standalone generic-forward parity/benchmark tool" OFF)
 option(PVZ_GENERIC_DNNL "Use optional oneDNN float32 convolutions in generic graphs" OFF)
-add_library(pvz-forward STATIC src/GenericForward.cpp src/GenericForwardDnnl.cpp src/GenericForwardSparse.cpp)
+add_library(pvz-forward STATIC src/GenericForward.cpp src/GenericForwardDnnl.cpp src/GenericForwardSparse.cpp src/GenericForwardToken.cpp)
 target_include_directories(pvz-forward PUBLIC src)
 target_compile_features(pvz-forward PUBLIC cxx_std_20)
 target_link_libraries(pvz-forward PUBLIC ${ROLLOUT_BLAS} ${VALUE_BLAS})

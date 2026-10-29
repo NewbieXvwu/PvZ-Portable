@@ -1,6 +1,7 @@
 """Full StudentV3 -> task161 PVZGN001, including embeddings and conditional heads.
 
-Graphs have a fixed capacity and never truncate tokens. Metadata observation id 10
+Graphs have a maximum capacity; native execution uses actual token count without padding.
+The capacity is allocated at load and tokens are never truncated. Metadata observation id 10
 means task157 public rich tokens, not the unrelated legacy observation id 3 (v2).
 """
 import torch
