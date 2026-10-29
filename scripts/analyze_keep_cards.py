@@ -18,7 +18,7 @@ removed = 底卡组 - 实际卡组。对每张底卡、按老师/学生分组统
   python3 scripts/analyze_keep_cards.py \
       --night-manifest /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json \
       --night-run night_l12_train_n10p=<dir> ... \
-      --day-manifest /home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/stage4/day_panel_identity.json \
+      --day-manifest /home/newbiexvwu/PvZ-search/configs/panels/day_identity.json \
       --day-run day_l7_train_d7p=<dir> ... \
       --out artifacts/task31/keep_cards.json
 """

@@ -113,7 +113,7 @@ def main():
                           map(json.loads,(OUT/f'panel_dw5i_{version}'/name/'games.jsonl').read_text().splitlines())})
         assert games[0]==games[1], ('same task changed across panel versions',left,right)
         matched_games+=len(games[0])
-    old_v1_path=MAIN/'.claude/worktrees/dw4/artifacts/task23/panel_dw4i_s1/panel.json'
+    old_v1_path=MAIN/'artifacts/archive/dw4/task23/panel_dw4i_s1/panel.json'
     old_v1=read(old_v1_path);old_manifest=read(OUT/'unified_v1.json')
     assert old_v1['complete'] and old_v1['model_sha256']==references['models_sha256']['dw4i_s1']
     assert old_v1['manifest_sha256']==sha(OUT/'unified_v1.json')

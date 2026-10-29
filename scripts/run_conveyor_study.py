@@ -16,7 +16,7 @@ from pvz_recipe import materialize_recipe
 
 OUT = ROOT / 'artifacts/task20'
 MAIN = Path.home() / 'PvZ-search'
-IDENTITY = MAIN / '.claude/worktrees/identity/artifacts/task19'
+IDENTITY = MAIN / 'artifacts/archive/identity/task19'
 guard.OUT = OUT
 guard.descendants = descendants
 guard.ENV = {**os.environ, 'PYTHONPATH': str(ROOT/'python')+':'+str(ROOT/'scripts'),

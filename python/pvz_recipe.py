@@ -13,6 +13,7 @@ import hashlib
 import json
 import math
 from pathlib import Path
+from pvz_corpus_policy import ABANDONED_LABELS, retained_labels
 
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
@@ -58,7 +59,9 @@ def resolve_paths(document):
     for name in PATH_FIELDS:
         value = result.get(name)
         if isinstance(value, str) and value and not Path(value).is_absolute():
-            result[name] = str(root / value)
+            # Versioned panels belong to this code snapshot; writable artifacts are shared.
+            base = Path(__file__).resolve().parents[1] if value.startswith('configs/') else root
+            result[name] = str(base / value)
     return result
 
 
@@ -147,6 +150,11 @@ def validate(document, kind=None):
         _object(result['label_weight'], set(labels), 'label_weight')
         for name, weight in result['label_weight'].items():
             _number(weight, f'label_weight.{name}')
+        result['labels'] = retained_labels(labels)
+        result['label_weight'] = {k: v for k, v in result['label_weight'].items()
+                                  if k not in ABANDONED_LABELS}
+        if not result['labels']:
+            raise ValueError('labels: no retained training labels after approved corpus retirements')
         from pvz_training_pack import label_keep_options
         label_keep_options(labels, result['label_keep'])
         _object(result['source_weight'], {'human', 'teacher', 'level_balance',
@@ -242,7 +250,7 @@ def write_recipe(path, document):
 
 def training_row_options(recipe, labels=None):
     """The row contract shared by training and curriculum packing."""
-    return dict(labels=set(recipe['labels'] if labels is None else labels),
+    return dict(labels=set(retained_labels(recipe['labels'] if labels is None else labels)),
                 wait_keep=recipe['wait_keep'], label_weight=recipe['label_weight'],
                 with_context=recipe['context'], obs=recipe['obs'],
                 cells=bool(recipe['cell_soft_weight']),

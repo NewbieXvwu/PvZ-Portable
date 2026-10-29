@@ -10,7 +10,7 @@ R=/home/newbiexvwu/PvZ-search; W=$R/.claude/worktrees/cq; PY=/home/newbiexvwu/.v
 REV=88cb4310fd7c0ad7652789320ad7649238630201
 ENGINE_SHA=de952714651c6544f4dba16f8ae832fe1ad1cb75bfc3e1d5495964d3d9a83845
 OLD_SHA=76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a
-SRC=$R/.claude/worktrees/deploy15
+SRC=${PVZ_DEPLOY14F_SOURCE:-$R}
 ENGINE=$SRC/artifacts/task95/engine/pvz-portable-build4
 NEWEXE=$W/build6/pvz-portable
 OLDEXE=$W/build5/pvz-portable

@@ -1028,7 +1028,8 @@ def pack_labels(state: dict, extra: str = '') -> list[str]:
               for entry in state['log'] for group in entry['groups']
               if group.get('status', 'done') == 'done'}
     labels.update(name for name in extra.split(',') if name)
-    return sorted(labels)
+    from pvz_corpus_policy import retained_labels
+    return sorted(retained_labels(labels))
 
 
 def pack_command(args, labels: list[str]) -> list[str]:
@@ -1249,7 +1250,8 @@ class TrainingPipeline:
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
-        wanted = set(labels)
+        from pvz_corpus_policy import retained_labels
+        wanted = set(retained_labels(labels))
         catalog: dict[str, Path] = {}
         for source in sources:
             for path in frame_paths(source):
@@ -1426,7 +1428,8 @@ class TrainingPipeline:
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
-        wanted = set(labels)
+        from pvz_corpus_policy import retained_labels
+        wanted = set(retained_labels(labels))
         catalog = {}
         for source in sources:
             for path in frame_paths(source):
@@ -2430,7 +2433,8 @@ def main() -> None:
         log_line(args.log, f'no teacher-rate evidence at {args.teacher_rates}; ranking by student rate only')
     patterns = args.init_glob or [str(MAIN / 'artifacts/hard/*/config.json'),
                                   str(MAIN / 'artifacts/task28/*/config.json'),
-                                  str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
+                                  str(MAIN / '.claude/worktrees/cq/artifacts/**/config.json'),
+                                  str(MAIN / '.claude/worktrees/obsup/artifacts/**/config.json')]
     if args.state.exists():
         state = read_json(args.state)
         if (not isinstance(state, dict) or type(state.get('round')) is not int or state['round'] < 0

@@ -11,7 +11,7 @@ from task27_common import ROOT, MAIN, OUT, PYTHON, guard, trainers, read, write,
 from import_mac_labels import refresh
 from pvz_recipe import materialize_recipe
 
-OLD = MAIN/'.claude/worktrees/dw4/artifacts/task23'
+OLD = MAIN/'artifacts/archive/dw4/task23'
 
 
 def completed(log):
@@ -78,7 +78,7 @@ def freeze():
     taskmaps = {}
     for manifest in (MAIN/'artifacts/stage4/night_panel.json',MAIN/'artifacts/stage4/day_panel.json',
                      MAIN/'artifacts/stage4/pool_panel.json',
-                     MAIN/'.claude/worktrees/identity/artifacts/stage4/day_panel_identity.json'):
+                     Path(__file__).resolve().parents[1] / 'configs/panels/day_identity.json'):
         taskmaps.update({t['task_id']:t for t in read(manifest)['tasks']})
     expected = {label:set(taskmaps[row['task']]['seeds'][row['offset']:row['offset']+row['games']])
                 for label,row in desktop.items()}

@@ -55,7 +55,7 @@ FAMILIES = (
      'task': 'night_l14_eval_n10'},
     {'name': 'pool_l24', 'manifest': MAIN / 'artifacts/stage4/pool_panel.json',
      'task': 'pool_l24_eval_p9k'},
-    {'name': 'day_l10_orig', 'manifest': MAIN / '.claude/worktrees/conveyor/artifacts/stage4/day_panel.json',
+    {'name': 'day_l10_orig', 'manifest': Path(__file__).resolve().parents[1] / 'configs/panels/day_orig_panel.json',
      'task': 'day_l10_orig_eval'},
 )
 FAMILY_BY_NAME = {f['name']: f for f in FAMILIES}

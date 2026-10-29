@@ -27,7 +27,7 @@ from pvz_event_env import EventWaitEnv
 
 DEFAULT_RESOURCE_DIR = Path(os.environ.get(
     'PVZ_RESOURCE_DIR', str(Path.home() / 'Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')))
-DEMO_ROOT = Path('/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/human_demo/raw')
+DEMO_ROOT = Path('/Users/newbiexvwu/PvZAgent/artifacts/archive/demo/human_demo/raw')
 DEMOS = (
     DEMO_ROOT / 'seed_20261031/demo_fog_31_fume_rebaselined',
     DEMO_ROOT / 'seed_20261031/demo_fog_31_snow_m200',

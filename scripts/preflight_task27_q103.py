@@ -14,7 +14,7 @@ LOG = Path('/home/newbiexvwu/pvz-logs/queue103.log')
 PATTERN = re.compile(r'\s(\S+) \(dw4i_s1, ([^,]+), offset (\d+), (\d+) workers\): (\d+)/(\d+)')
 MANIFESTS = (MAIN/'artifacts/stage4/night_panel.json', MAIN/'artifacts/stage4/day_panel.json',
              MAIN/'artifacts/stage4/pool_panel.json',
-             MAIN/'.claude/worktrees/identity/artifacts/stage4/day_panel_identity.json')
+             Path(__file__).resolve().parents[1] / 'configs/panels/day_identity.json')
 FRAMES = MAIN/'artifacts/student/frames_v2'
 
 

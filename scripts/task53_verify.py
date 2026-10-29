@@ -83,7 +83,7 @@ def verify(plan):
     evaluation_seeds={j['reset']['seed'] for j in registration['evaluation']}
     assert len(evaluation_seeds)==192 and not evaluation_seeds&{e['reset']['seed'] for e in plan['episodes']}
     # Use the real read-only task43 parser, rather than a schema-shaped mock.
-    reader_path=Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/scripts/train_value_widen.py')
+    reader_path=Path('/home/newbiexvwu/PvZ-search/artifacts/archive/v5/scripts/train_value_widen.py')
     search_paths=list(sys.path)
     try:
         spec=importlib.util.spec_from_file_location('task53_readonly_v5_reader',reader_path)
@@ -115,7 +115,7 @@ def verify(plan):
         # This extra file is a real parser-only validation control, never part of the
         # task53 export or student training. The new pool data remain training-only
         # under task43's pre-existing seed hash and need its existing holdout corpus.
-        for p in sorted((Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/v5/artifacts/task43/l21_dump')).glob('*.pt')):
+        for p in sorted((Path('/home/newbiexvwu/PvZ-search/artifacts/archive/v5/task43/l21_dump')).glob('*.pt')):
             d=torch.load(p,map_location='cpu',weights_only=False,mmap=True)
             if d.get('config',{}).get('task_id','').startswith('pool_') and any(module.held(s) for s in d['seed'].unique().tolist()):
                 control=dict(path=str(p),sha256=f.sha(p),format_check_only=True);break

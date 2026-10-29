@@ -23,9 +23,9 @@ MAIN = Path('/home/newbiexvwu/PvZ-search')
 DESTINATION = MAIN / 'artifacts/student/frames_v2'
 STATE = MAIN / 'artifacts/mac_import'
 LEGACY_REPORTS = (
-    MAIN / '.claude/worktrees/dw4/artifacts/task23/mac_import.json',
-    MAIN / '.claude/worktrees/dw5/artifacts/task27/mac_import.json',
-    MAIN / '.claude/worktrees/dw5/artifacts/task27/mac_package_journal.json',
+    MAIN / 'artifacts/archive/dw4/task23/mac_import.json',
+    MAIN / 'artifacts/archive/dw5/task27/mac_import.json',
+    MAIN / 'artifacts/archive/dw5/task27/mac_package_journal.json',
 )
 LABEL_PATTERNS = {
     'high_difficulty': re.compile(r'z\d+dag\d+[bc]'),

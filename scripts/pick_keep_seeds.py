@@ -9,7 +9,7 @@
   python3 scripts/pick_keep_seeds.py \
       --manifest /home/newbiexvwu/PvZ-search/artifacts/stage4/night_panel_n10p.json \
       --task-id night_l12_train_n10p --card 8 --count 8 \
-      --played /home/newbiexvwu/PvZ-search/.claude/worktrees/n10p/artifacts/task28/teacher_l12_16 \
+      --played /home/newbiexvwu/PvZ-search/artifacts/archive/n10p/task28/teacher_l12_16 \
       --out artifacts/task31/seeds_l12_c8.json
 
 挑法：符合条件的种子按数值排序后**等距**取 count 个（确定性，不用随机数），

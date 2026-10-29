@@ -19,7 +19,7 @@ from run_dw5_study import verify
 
 def main():
     plan=read(OUT/'study_plan.json');verify(plan)
-    old=MAIN/'.claude/worktrees/dw4/artifacts/task23'
+    old=MAIN/'artifacts/archive/dw4/task23'
     parent=read(old/'study_plan.json')
     assert parent['sources']['python/pvz_frame_store.py']==sha(ROOT/'python/pvz_frame_store.py')
     allowed={hashlib.sha256(str((Path(row['source'])/'frames.npz').resolve()).encode()).hexdigest()+'.npz'

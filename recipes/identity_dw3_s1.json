@@ -81,11 +81,11 @@
     "fraction": 0.1
   },
   "provenance": {
-    "source_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/identity_training.command.json",
+    "source_path": "/home/newbiexvwu/PvZ-search/artifacts/archive/identity/task19/identity_training.command.json",
     "source_sha256": "a8a82270b054c70304f728c5c5444ed96c13826eb2cbe0f02ee4c37e3a653af8",
     "source_revision": "c790588d",
-    "original_out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/identity_dw3_s1",
-    "original_cache_dir": "/home/newbiexvwu/PvZ-search/.claude/worktrees/identity/artifacts/task19/cache",
+    "original_out": "/home/newbiexvwu/PvZ-search/artifacts/archive/identity/task19/identity_dw3_s1",
+    "original_cache_dir": "/home/newbiexvwu/PvZ-search/artifacts/archive/identity/task19/cache",
     "original_source_row_report": "",
     "notes": "Only writable output/cache paths moved to recipe worktree; all training settings extracted with the original argparse parser."
   },

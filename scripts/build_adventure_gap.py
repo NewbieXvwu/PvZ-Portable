@@ -44,8 +44,8 @@ def build():
     for key,name in [('Q','curriculum_state'),('QL','curriculum_log'),('QP','curriculum_panel')]:
         sources[key]['original_path']=meta['sources'][name]['path']
     baseline=source('S27',ROOT/'MEMORY/docs/task27-results.json','2026-10-23','completed task27 v2; dw4i production reference, dw5i comparison')
-    done=source('SA0',MAIN/'.claude/worktrees/dw5/artifacts/task36/complete_A.json','2026-10-24 00:41:40+0800','latest completed candidate A; not deployed')
-    paired=source('SA',MAIN/'.claude/worktrees/dw5/artifacts/task36/paired_dw4i_vs_A.json',done['finished'],'34 paired tasks, 3264 games; raw files rechecked below')
+    done=source('SA0',MAIN/'artifacts/archive/dw5/task36/complete_A.json','2026-10-24 00:41:40+0800','latest completed candidate A; not deployed')
+    paired=source('SA',MAIN/'artifacts/archive/dw5/task36/paired_dw4i_vs_A.json',done['finished'],'34 paired tasks, 3264 games; raw files rechecked below')
     assert sha(done['model'])==done['model_sha256']
     prod={t['task_id']:metric(t['won'],t['games'],t['task_id'],'dw4i_s1','S27') for t in baseline['v2']['dw4i_s1']['tasks']}
     latest={};raw_hashes={}
@@ -62,27 +62,27 @@ def build():
     sources['SA']['raw_directory']=done['panel'];sources['SA']['raw_sha256']=raw_hashes
     fog=source('TF',ROOT/'MEMORY/docs/task45-fog-results.json','2026-10-23','cold-start human f8; separate fast and beta1 fast_search')
     roof=source('TR',ROOT/'MEMORY/docs/task46-roof-cold-start.json','2026-10-23','r7 original difficulty; L45 has overridden initial hand')
-    roof_diag=source('TR2',MAIN/'.claude/worktrees/roof/MEMORY/docs/task46-roof-timelines.json','2026-10-24','fixed four-seed teacher diagnostic, not a full evaluation panel; L42-45 overlap old panel seeds')
+    roof_diag=source('TR2',MAIN/'artifacts/archive/roof/MEMORY/docs/task46-roof-timelines.json','2026-10-24','fixed four-seed teacher diagnostic, not a full evaluation panel; L42-45 overlap old panel seeds')
     half=source('TRh',ROOT/'MEMORY/docs/task46-roof-half-results.json','2026-10-23','diagnostic multiplier .5; not current qc nor original completion')
     v4=source('TV4',ROOT/'MEMORY/docs/value-widen-paired.json','2026-10-23','beta1 v4 paired evaluation; new_wins is v4')
     dispersion=source('D30',ROOT/'MEMORY/docs/value-widen-dispersion.json','2026-10-23 12:20+0800','L24/L26 each4 games; all480 search decisions per arm, not only sampled200')
     source('D30d',ROOT/'MEMORY/docs/value-widen.md','2026-10-23 12:20+0800','step5-b: eight games per arm all lost; specific L24/L26 dispersion evidence')
-    t50=source('T50',MAIN/'.claude/worktrees/zones/artifacts/task50-a/teacher32-v4/comparison.json','2026-10-24','fresh deployed teacher gate; training-task seeds')
-    llm=source('T52',MAIN/'.claude/worktrees/llmcand/artifacts/task52/study-v1/summary.json','2026-10-24','144 complete games; arm A is unaugmented beta1 teacher')
+    t50=source('T50',MAIN/'artifacts/archive/zones/task50-a/teacher32-v4/comparison.json','2026-10-24','fresh deployed teacher gate; training-task seeds')
+    llm=source('T52',MAIN/'artifacts/archive/llmcand/task52/study-v1/summary.json','2026-10-24','144 complete games; arm A is unaugmented beta1 teacher')
     source('D',ROOT/'MEMORY/docs/day-panel.md','2026-10-21','task17 table archived 2026-10-21 00:51+08; old v32 teacher; task20 original L10')
     source('N',ROOT/'MEMORY/docs/night-panel.md','2026-10-22','old identity n9 teacher; NOT current n10')
     source('P',ROOT/'MEMORY/docs/pool-panel.md','2026-10-22','old identity p9k teacher; no modern same-model comparison')
     for key,path,note in [
-        ('D43',MAIN/'.claude/worktrees/v5/MEMORY/docs/task43-value-v5-pool.md','first v5 rejected; round2 teacher-continuation labels in progress'),
-        ('D45',MAIN/'.claude/worktrees/fog/MEMORY/docs/task45-fog-terminal-diagnosis.md','complete64-root terminal audit; local failure-delay improvements, no wins'),
-        ('D46',MAIN/'.claude/worktrees/roof/MEMORY/docs/teacher-diag-roof-review.md','independent phase2 roof diagnosis, not raw LLM conclusions'),
-        ('D46c',MAIN/'.claude/worktrees/roof/MEMORY/docs/task46-roof-training-coverage.json','dw4 frozen 48816 archives; no pool/fog/roof archives'),
-        ('D46b',MAIN/'.claude/worktrees/roof/MEMORY/docs/task46-roof-terminal-root-smoke.json','only four complete roots; not the full17-root panel'),
+        ('D43',MAIN/'artifacts/archive/v5/MEMORY/docs/task43-value-v5-pool.md','first v5 rejected; round2 teacher-continuation labels in progress'),
+        ('D45',MAIN/'artifacts/archive/fog/MEMORY/docs/task45-fog-terminal-diagnosis.md','complete64-root terminal audit; local failure-delay improvements, no wins'),
+        ('D46',MAIN/'artifacts/archive/roof/MEMORY/docs/teacher-diag-roof-review.md','independent phase2 roof diagnosis, not raw LLM conclusions'),
+        ('D46c',MAIN/'artifacts/archive/roof/MEMORY/docs/task46-roof-training-coverage.json','dw4 frozen 48816 archives; no pool/fog/roof archives'),
+        ('D46b',MAIN/'artifacts/archive/roof/MEMORY/docs/task46-roof-terminal-root-smoke.json','only four complete roots; not the full17-root panel'),
         ('D49',ROOT/'MEMORY/docs/task49-A-evidence.json','candidate promotion quality gate; two controlled demonstrations'),
-        ('D53',MAIN/'.claude/worktrees/forks/MEMORY/docs/task53-critical-forks.md','screen47 roots complete; independent16-future confirmation7 actions; training/paired evaluation not yet complete'),
+        ('D53',MAIN/'artifacts/archive/forks/MEMORY/docs/task53-critical-forks.md','screen47 roots complete; independent16-future confirmation7 actions; training/paired evaluation not yet complete'),
         ('D48',ROOT/'MEMORY/docs/task48-human-demo.md','human demonstration tools; ten L31-34 games planned, recordings not evidenced here'),
         ('H48',ART/'human-demo-plan.md','frozen origin/demo 206cc403ec98ef292ecde601303de1ca7bc200a9:MEMORY/docs/human-demo.md; plan, not actual recordings'),
-        ('D53c',MAIN/'.claude/worktrees/forks/MEMORY/docs/task53-critical-forks-deploy3-cost.json','48-game current-engine night projection only, not a complete mixed-terrain round'),
+        ('D53c',MAIN/'artifacts/archive/forks/MEMORY/docs/task53-critical-forks-deploy3-cost.json','48-game current-engine night projection only, not a complete mixed-terrain round'),
         ('PLAN',ROOT/'MEMORY/docs/student-bottleneck-plan.md','controller timeline through04:15; qc only packed before task49 pipeline deployment'),
     ]:source(key,path,'2026-10-24',note)
     teachers={};other={}
@@ -128,7 +128,7 @@ def build():
     registry={}
     paths=[MAIN/'artifacts/stage4'/n for n in ('day_panel.json','night_panel.json','pool_panel.json')]
     paths += [MAIN/'.claude/worktrees/cq/artifacts/task45/fog_panel.json',MAIN/'.claude/worktrees/cq/artifacts/task46/roof_panel.json']
-    paths += [MAIN/'.claude/worktrees/conveyor/artifacts/stage4/day_panel.json']
+    paths += [Path(__file__).resolve().parents[1] / 'configs/panels/day_orig_panel.json']
     for i,path in enumerate(paths):
         key=f'R{i}';doc=source(key,path,meta['captured_at'],'registered tasks; does not imply qc admission or measured wins')
         for t in doc['tasks']:registry[t['task_id']]=(t,key)

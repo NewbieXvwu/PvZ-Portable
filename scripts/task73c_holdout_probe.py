@@ -43,7 +43,7 @@ SEEDS_PER_CANDIDATE = 64
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-panel', type=Path,
-                        default=Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/unified_v2.json'))
+                        default=(Path(__file__).resolve().parents[1] / 'configs/panels/unified_v2.json'))
     parser.add_argument('--incumbent', type=Path,
                         default=Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/round_000011/student/model.pt'))
     parser.add_argument('--executable', type=Path,

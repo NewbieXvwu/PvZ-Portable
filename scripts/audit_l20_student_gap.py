@@ -34,11 +34,11 @@ def inventory():
     log_path=Path('/home/newbiexvwu/pvz-logs/curriculum.log');log_bytes=log_path.read_bytes()
     (OUT/'sources/qc.log').write_bytes(log_bytes)
     sources['qc.log']=dict(path=str(log_path),snapshot=str(OUT/'sources/qc.log'),sha256=hashlib.sha256(log_bytes).hexdigest())
-    command=freeze('A-command.json',MAIN/'.claude/worktrees/dw5/artifacts/task36/train_A.command.json')['command']
+    command=freeze('A-command.json',MAIN/'artifacts/archive/dw5/task36/train_A.command.json')['command']
     labels=command[command.index('--labels')+1].split(',')
-    a_sources=freeze('A-source-rows.json',MAIN/'.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/source_rows.json')
-    ledger=freeze('ledger.json',MAIN/'.claude/worktrees/dw5/artifacts/task36/data_ledger.json')
-    inv=freeze('dw4-inventory.json',MAIN/'.claude/worktrees/dw4/artifacts/task23/dataset_inventory.json')
+    a_sources=freeze('A-source-rows.json',MAIN/'artifacts/archive/dw5/task36/dw5i_A_s1/source_rows.json')
+    ledger=freeze('ledger.json',MAIN/'artifacts/archive/dw5/task36/data_ledger.json')
+    inv=freeze('dw4-inventory.json',MAIN/'artifacts/archive/dw4/task23/dataset_inventory.json')
     cells={k:v for k,v in state['cells'].items() if v['level']==20}
     groups=[g for entry in state['log'] for g in entry['groups'] if 'l20_' in g.get('task_id','') or 'n20' in g.get('label','')]
     rows=[]
@@ -61,7 +61,7 @@ def inventory():
                          waits_with_ready_card=wait_card,label_invalid_packet=bad,
                          model_training_inclusion=dict(dw4=any(x['archive']==str(path.parent.relative_to(frames_root)) for x in inv),
                                                        A=path.parent.name in labels)))
-    old=MAIN/'.claude/worktrees/l20diag/artifacts/task26'
+    old=MAIN/'artifacts/archive/l20diag/task26'
     comparisons={}
     for name in ('student_16','teacher_8'):
         path=old/name/'games.jsonl';gs=[json.loads(line) for line in path.read_text().splitlines()]
@@ -146,7 +146,7 @@ def packing():
     def distribution(items):
         return dict(n=len(items),min=float(min(items)),median=float(np.median(items)),max=float(max(items)))
     model_stats={}
-    for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/model.pt')]:
+    for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'artifacts/archive/dw5/task36/dw5i_A_s1/model.pt')]:
         net=load_student(path);assert net.obs=='v2' and net.packet_head=='identity' and not net.context
         details=[];losses=[]
         with torch.inference_mode():
@@ -205,9 +205,9 @@ def native():
     assert (OUT/'matched4/summary.json').is_file(),'finish the bounded game runner before native audit'
     paths=sorted((OUT/'diagnostic_frames').glob('*/*/meta.json'))
     assert len(paths)==8
-    nets={name:load_student(path) for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/model.pt')]}
+    nets={name:load_student(path) for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'artifacts/archive/dw5/task36/dw5i_A_s1/model.pt')]}
     for name,net in nets.items():export_student(net,OUT/f'{name}.bin')
-    binary=MAIN/'.claude/worktrees/deploy3/build/pvz-portable'
+    binary=MAIN/'artifacts/archive/deploy3/build/pvz-portable'
     task_def=load_training_task(MAIN/'artifacts/stage4/night_panel.json','night_l20_eval_n10_orig')
     rows=[];games=[];max_error=0.;frames_checked=0
     with EventWaitEnv('/home/newbiexvwu/.cache/pvz-research-resources',executable=binary,headless=True) as env:
@@ -301,9 +301,9 @@ def continuations():
     canonical=lambda x:json.loads(json.dumps(x))
     paths=sorted((OUT/'diagnostic_frames').glob('*/t56diag_fast_search/meta.json'));assert len(paths)==4
     task_def=load_training_task(MAIN/'artifacts/stage4/night_panel.json','night_l20_eval_n10_orig')
-    nets={name:load_student(path) for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'.claude/worktrees/dw5/artifacts/task36/dw5i_A_s1/model.pt')]}
+    nets={name:load_student(path) for name,path in [('dw4i',MAIN/'artifacts/student/dw4i_s1/model.pt'),('A',MAIN/'artifacts/archive/dw5/task36/dw5i_A_s1/model.pt')]}
     rows=[];total_bits=0
-    with EventWaitEnv('/home/newbiexvwu/.cache/pvz-research-resources',executable=MAIN/'.claude/worktrees/deploy3/build/pvz-portable',headless=True) as env:
+    with EventWaitEnv('/home/newbiexvwu/.cache/pvz-research-resources',executable=MAIN/'artifacts/archive/deploy3/build/pvz-portable',headless=True) as env:
         for meta_path in paths:
             meta=read(meta_path);fs=read_frames(frame_path(meta_path.parent));seed=meta['task']['seed']
             point=next(i for i in range(1,len(fs)) if fs[i-1]['tick']>=8000 and fs[i]['action']['type']=='plant')

@@ -15,6 +15,7 @@ from pathlib import Path
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
+from pvz_corpus_policy import retained_labels
 
 
 PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
@@ -110,6 +111,7 @@ def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = 
                  label_weight: dict[str, float] | None = None, sources: str | None = None,
                  label_keep: dict[str, float] | None = None) -> dict:
     """Everything that changes the rows or their values: a pack is valid for exactly one tuple."""
+    labels = retained_labels(labels)
     keep = label_keep_options(labels, label_keep)
     return {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
             "obs": obs, "cells": bool(cells), "aux_horizon": int(aux_horizon), "packet_head": packet_head,

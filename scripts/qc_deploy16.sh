@@ -6,7 +6,7 @@
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
-PACKAGE=$R/.claude/worktrees/prodint16
+PACKAGE=$R
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
 REV=ba257927
 FILES=(scripts/curriculum_queue.py scripts/select_student.py scripts/promotion_gate.py
@@ -18,7 +18,7 @@ FILES=(scripts/curriculum_queue.py scripts/select_student.py scripts/promotion_g
        recipes/dw4i2_v2timer.json recipes/dw4i2_rebalanced_p05_v2timer.json)
 NEWEXE=$W/build6/pvz-portable
 EXE15=$R/.claude/worktrees/obsup/build7/pvz-portable
-EXE16=$PACKAGE/build16/pvz-portable
+EXE16=$R/artifacts/production/deploy16/pvz-portable
 MODE14P=/home/newbiexvwu/pvz-logs/qc_deploy14p.mode
 MODE14I=/home/newbiexvwu/pvz-logs/qc_deploy14i.mode
 MODE14H=/home/newbiexvwu/pvz-logs/qc_deploy14h.mode

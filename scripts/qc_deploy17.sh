@@ -4,7 +4,7 @@
 set -Eeuo pipefail
 R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
-PACKAGE=$R/.claude/worktrees/deploy17
+PACKAGE=$R
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
 REV=ad4fe41c
 LOG_DIR=/home/newbiexvwu/pvz-logs
@@ -23,7 +23,7 @@ EXTRA=$W/artifacts/task137/training_panel.json
 EXTRA17=$W/artifacts/task165/training_panel.json
 NEWEXE=$W/build6/pvz-portable
 EXE15=$R/.claude/worktrees/obsup/build7/pvz-portable
-EXE16=$R/.claude/worktrees/prodint16/build16/pvz-portable
+EXE16=$R/artifacts/production/deploy16/pvz-portable
 A15=$W/recipes/dw4i2_v2sleep.json
 B15=$W/recipes/dw4i2_rebalanced_p05_v2sleep.json
 A16=$W/recipes/dw4i2_v2timer.json
@@ -71,17 +71,24 @@ start_qc() {
 }
 # All mutations below run only after explicit main-controller approval/execution.
 FILES=(scripts/curriculum_queue.py scripts/make_random_deck_cells.py scripts/deck_rules.py
+       scripts/make_multiplier_tasks.py scripts/b3_noninferiority.py scripts/build_adventure_gap.py
        scripts/pack_training_rows.py scripts/train_rollout_policy.py
        python/pvz_recipe.py python/pvz_training_pack.py python/pvz_training_rows.py
+       python/pvz_corpus_policy.py python/pvz_frame_store.py
+       configs/panels/day_orig_panel.json configs/panels/unified_v1.json
+       configs/panels/unified_v2.json configs/panels/day_identity.json
        configs/deploy17_random_deck_pool.json configs/deploy17_deck_holdouts.json
-       recipes/dw4i2_v2timer_history10.json)
+       recipes/dw4i2_v2timer.json recipes/dw4i2_v2timer_history10.json)
 GENERATED=artifacts/task165/training_panel.json
 O=""
 SAVED=0
 STOPPED=0
 log() { printf '%s deploy17: %s\n' "$(date -Iseconds)" "$*" >> "$LOG_DIR/qc_setup.log"; }
 helper() {
-  "$PY" "$PACKAGE/scripts/deploy17_boundary.py" "$1" --worktree "$W" \
+  if [ ! -f "$O/boundary-helper.py" ]; then
+    git -C "$PACKAGE" show "$REV:scripts/deploy17_boundary.py" > "$O/boundary-helper.py"
+  fi
+  "$PY" "$O/boundary-helper.py" "$1" --worktree "$W" \
     --log "$LOG_DIR/curriculum.log" --record "$O/scheduler.json"
 }
 resume_paused() { if [ -f "$O/scheduler.json" ]; then helper resume; fi; }
@@ -178,7 +185,7 @@ done
 /bin/bash -c 'source "$1"; watchdog_extract_start "$2"' deploy17 \
   "$W/scripts/qc_watchdog.sh" "$LOG_DIR/qc_deploy16.sh" > "$O/previous-launch.sh"
 cp -p "$LOG_DIR/qc_deploy16.sh" "$O/previous-deploy.sh"
-env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 10 "$PY" "$PACKAGE/scripts/make_random_deck_cells.py" \
+env OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 nice -n 10 "$PY" "$W/scripts/make_random_deck_cells.py" \
   --pool-registry "$O/install/configs/deploy17_random_deck_pool.json" \
   --heldout-panel "$O/install/configs/deploy17_deck_holdouts.json" \
   --heldout-panel "$W/configs/gate_v5_panel.json" \

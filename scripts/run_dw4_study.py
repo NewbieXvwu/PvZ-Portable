@@ -94,7 +94,7 @@ def freeze():
         subprocess.run([guard.PYTHON,str(ROOT/'scripts/import_mac_labels.py'),'--report',str(OUT/'mac_import.json')],cwd=ROOT,stdout=log,stderr=subprocess.STDOUT,check=True)
     old=read(ROOT/'MEMORY/docs/task19-validation-amended-plan.json');base=old['labels']
     candidates={}
-    for source in (MAIN/'artifacts/student/frames_v2',MAIN/'.claude/worktrees/conveyor/artifacts/task20/frames'):
+    for source in (MAIN/'artifacts/student/frames_v2',):
         for frames in source.glob('*/*/frames.npz'):
             label=frames.parent.name
             group=source_group(label,base)
@@ -105,12 +105,13 @@ def freeze():
                 assert sha(frames.parent/'meta.json')==sha(candidates[key][0].parent/'meta.json')
             else:candidates[key]=(frames,group)
     counts=Counter(frames.parent.name for frames,_ in candidates.values())
-    assert all(counts[label]==n for label,n in old['archive_counts'].items())
-    assert counts['d10orig1_fast_search']==counts['d10orig2_fast_search']==128
+    from pvz_corpus_policy import ABANDONED_LABELS
+    assert all(counts[label]==n for label,n in old['archive_counts'].items()
+               if label not in ABANDONED_LABELS)
     assert all(counts[label+'_fast_search']==64 for label in gate_labels)
     assert all(counts[label+'_fast_search']==640 for label in ('d9dag4b','d10dag4b','d9dag5b','d10dag5b'))
     held={tuple(sorted(t['deck'])) for t in read(OUT/'unified_manifest.json')['tasks'] if '_holdout' in t['task_id']}
-    identity_hash=sha(MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt')
+    identity_hash=sha(MAIN/'artifacts/archive/identity/task19/identity_dw3_s1/model.pt')
     inventory=[];mirror=OUT/'training_frames';mirror.mkdir(exist_ok=True)
     for index,(key,(frames,group)) in enumerate(sorted(candidates.items())):
         meta=frames.parent/'meta.json';task=read(meta)['task'];seed=int(frames.parent.parent.name.split('_')[-1])
@@ -130,7 +131,7 @@ def freeze():
         if index%2000==0:print(json.dumps(dict(freezing_archives=index,total=len(candidates))),flush=True)
     write(OUT/'dataset_inventory.json',inventory)
     labels=base+sorted(set(counts)-set(base))
-    models=dict(identity=str(MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'),v34=str(MAIN/'artifacts/student/v34/model.pt'))
+    models=dict(identity=str(MAIN/'artifacts/archive/identity/task19/identity_dw3_s1/model.pt'),v34=str(MAIN/'artifacts/student/v34/model.pt'))
     sources=['scripts/run_dw4_study.py','scripts/report_dw4_study.py','scripts/import_mac_labels.py',
              'scripts/unified_panel.py','scripts/train_rollout_policy.py',
              'python/pvz_recipe.py','recipes/dw4i.json','recipes/panel_v1.json',

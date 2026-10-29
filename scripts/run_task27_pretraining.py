@@ -10,7 +10,7 @@ from pvz_frame_store import read_frames
 from pvz_recipe import materialize_recipe
 
 MODELS = {'dw4i_s1':MAIN/'artifacts/student/dw4i_s1/model.pt',
-          'identity':MAIN/'.claude/worktrees/identity/artifacts/task19/identity_dw3_s1/model.pt'}
+          'identity':MAIN/'artifacts/archive/identity/task19/identity_dw3_s1/model.pt'}
 DEAD = ('day_l7_eval_d7p_holdout3','day_l8_eval_d7p_holdout1','day_l9_eval_d7p_holdout1')
 
 

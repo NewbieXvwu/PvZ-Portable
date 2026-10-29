@@ -133,7 +133,7 @@ def plan(out: Path, current_executable: Path | None = None, reference_plan: Path
                     old_value=MAIN / 'artifacts/value_net/v3/model.pt',
                     cq_value=MAIN / 'artifacts/value_net/v4/model.pt',
                     old_engine=ROOT / 'build-old/pvz-portable',
-                    cq_engine=current_executable or Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy2/build/pvz-portable'))
+                    cq_engine=current_executable or Path('/home/newbiexvwu/PvZ-search/artifacts/archive/deploy2/build/pvz-portable'))
     fingerprints = {str(p): sha(p) for p in controls.values()}
     fingerprints[str(manifest)] = sha(manifest)
     if reference_plan is not None:

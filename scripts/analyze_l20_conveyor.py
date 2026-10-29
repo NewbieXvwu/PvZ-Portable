@@ -7,8 +7,8 @@ import sys
 from collections import Counter, defaultdict
 from pathlib import Path
 
-ROOT = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/l20diag')
-sys.path.insert(0, str(ROOT / 'python'))
+ROOT = Path('/home/newbiexvwu/PvZ-search/artifacts/archive/l20diag')
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'python'))
 from pvz_frame_store import frame_bytes  # noqa: E402
 
 PLANTS = {0: 'peashooter', 1: 'sunflower', 2: 'cherry', 3: 'wallnut', 4: 'potatomine', 5: 'snowpea',
@@ -78,7 +78,7 @@ def analyse(archive: Path) -> dict:
 
 
 def main() -> None:
-    root = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / 'artifacts/task26/frames')
+    root = Path(sys.argv[1] if len(sys.argv) > 1 else ROOT / 'task26/frames')
     label = sys.argv[2] if len(sys.argv) > 2 else 'l20s_fast'
     rows = []
     for seed_dir in sorted(root.glob('seed_*')):

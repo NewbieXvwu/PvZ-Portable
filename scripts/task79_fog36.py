@@ -24,8 +24,8 @@ MANIFEST = ROOT / 'configs/human_demo_tasks.json'
 EXECUTABLE = ROOT / 'build/pvz-portable'
 RESOURCE = Path('/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')
 MODELS = {
-    'rollout-policy': Path('/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/student/dw4i_s1/model.pt'),
-    'value': Path('/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt'),
+    'rollout-policy': Path('/Users/newbiexvwu/PvZAgent/artifacts/archive/demo/student/dw4i_s1/model.pt'),
+    'value': Path('/Users/newbiexvwu/PvZAgent/artifacts/archive/demo/hard/value_v5/model.pt'),
     'static-value': Path('/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt'),
 }
 

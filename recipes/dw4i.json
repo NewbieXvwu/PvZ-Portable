@@ -81,15 +81,15 @@
     "fraction": 0.1
   },
   "provenance": {
-    "source_path": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/training_s1.command.json",
+    "source_path": "/home/newbiexvwu/PvZ-search/artifacts/archive/dw4/task23/training_s1.command.json",
     "source_sha256": "e3c1fbf06ac7def09a7729cb116b98554380438a8093606f5d5cce5d58895d7d",
     "source_revision": "c790588d",
-    "original_out": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dw4i_s1",
-    "original_cache_dir": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/cache",
-    "original_source_row_report": "/home/newbiexvwu/PvZ-search/.claude/worktrees/dw4/artifacts/task23/dw4i_s1/source_rows.json",
+    "original_out": "/home/newbiexvwu/PvZ-search/artifacts/archive/dw4/task23/dw4i_s1",
+    "original_cache_dir": "/home/newbiexvwu/PvZ-search/artifacts/archive/dw4/task23/cache",
+    "original_source_row_report": "/home/newbiexvwu/PvZ-search/artifacts/archive/dw4/task23/dw4i_s1/source_rows.json",
     "notes": "Only writable output/cache paths moved to recipe worktree; all training settings extracted with the original argparse parser."
   },
-  "data": ".claude/worktrees/dw4/artifacts/task23/training_frames",
+  "data": "artifacts/student/frames_v2",
   "labels": [
     "z13dag3_fast_search",
     "z15dag3_fast_search",
@@ -183,8 +183,6 @@
     "d10dag28_fast_search",
     "d10dag4b_fast_search",
     "d10dag5b_fast_search",
-    "d10orig1_fast_search",
-    "d10orig2_fast_search",
     "d10p1d_fast_search",
     "d10p1m_fast_search",
     "d10p2d_fast_search",

@@ -26,8 +26,8 @@ from pvz_promotion import PANEL_TASKS, summarize, paired_interval
 
 PIPELINE = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline')
 FROZEN_MANIFEST = PIPELINE / 'round_000011/evaluations/c83bfc91077e9168e9b8/manifest.json'
-UNIFIED = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/dw5/artifacts/task27/unified_v2.json')
-EXECUTABLE = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/deploy3/build/pvz-portable')
+UNIFIED = (Path(__file__).resolve().parents[1] / 'configs/panels/unified_v2.json')
+EXECUTABLE = Path('/home/newbiexvwu/PvZ-search/artifacts/archive/deploy3/build/pvz-portable')
 VALUE = Path('/home/newbiexvwu/PvZ-search/artifacts/value_net/v5/model.pt')
 RESOURCE_DIR = Path('/home/newbiexvwu/.cache/pvz-research-resources')
 STUDENTS = {

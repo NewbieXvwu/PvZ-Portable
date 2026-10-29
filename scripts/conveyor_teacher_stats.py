@@ -9,8 +9,8 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-DEFAULT_ROLLOUT = "/Users/newbiexvwu/PvZAgent/.claude/worktrees/fog36/artifacts/task79/models/r11/model.pt"
-DEFAULT_VALUE = "/Users/newbiexvwu/PvZAgent/.claude/worktrees/demo/artifacts/hard/value_v5/model.pt"
+DEFAULT_ROLLOUT = "/Users/newbiexvwu/PvZAgent/artifacts/archive/fog36/task79/models/r11/model.pt"
+DEFAULT_VALUE = "/Users/newbiexvwu/PvZAgent/artifacts/archive/demo/hard/value_v5/model.pt"
 DEFAULT_STATIC = "/Users/newbiexvwu/PvZAgent/artifacts/hard/value_branch1/model.pt"
 DEFAULT_EXECUTABLE = "/tmp/pvz-boss50-build/pvz-portable"
 DEFAULT_RESOURCE = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
