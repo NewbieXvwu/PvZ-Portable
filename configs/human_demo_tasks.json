@@ -10500,7 +10500,17 @@
    ],
    "zombie_count_multiplier": 1.0,
    "deck": [],
-   "conveyor_start": "original"
+   "conveyor_start": "original",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/8d5d48ed3506bc7eea0bda6f9daff51114b4551815ece0b42cee68d092449b6f",
+    "decisions": [
+     492,
+     447
+    ],
+    "index": 0,
+    "future_seed_start": 367000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l37_snow_split_v2_m200_s81023014_a024cd5a95a15",
