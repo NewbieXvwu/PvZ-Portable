@@ -38,3 +38,11 @@
 这是 episode 特征缓存预构建；新的 v2timer 训练段仍由正常后台训练管线按需打包。部署切换本身不等待段构建。没有为收尾重跑测试、重放存档或追加全量验算。
 
 本次只准备，没有执行部署，未操作 tmux qc、生产状态文件、看门狗或现役二进制。
+
+## 合入 task151 审查修复（2026-10-28，Mac，仅 git）
+
+- `825b756a` 合入 `origin/sysfail=bc8ea702`（task151 恢复探测自带种子）：生产 gate-v5 源面板没有 `seeds`，`GameHealth.probe()` 不再把源面板直接交给 `search_play`，而是在探测临时目录写一份只含单个种子的清单，源面板字节不变；`curriculum_queue.py` 只改 4 行。无冲突。
+- `ba257927` 合入 `origin/obstimer=745f146f`（task151 计时缓存祖先重建）：`pvz_frame_store.py` 的 `_derive_timer_cache` 与 `cache_episode` 在 `timer_from` 祖先缓存被清理后回退到完整编码路径，不再因断开的父引用失败；旧特征编码与签名不变。唯一冲突是 `MEMORY/2026-10-28.md` 的 add/add，保留两边全部条目，代码无冲突。
+- 旧固定提交 `4e479b04` 里两个运行文件因此变化，`scripts/qc_deploy16.sh` 的 `REV` 改为合并后的 HEAD `ba257927`。运行文件清单补入 `scripts/precompute_timer_cache.py`：它在 `0be80647` 增加了 `--data-kib`（DATA 2 GiB）并把默认 AS 提到 8,000,000 KiB，此前不在清单里，安装后 `$W` 的增量缓存构建与固定版本一致。清单由 16 个文件变为 17 个，其余 15 个文件内容未变。
+- 合并后 `bash -n` 通过，清单内 17 个文件在 `ba257927` 均存在。定向用例（单进程串行、`timeout 300`、`ulimit -f 2000000`）：`test_deploy16.py` 4 passed；`test_timer_inputs.py -k 'missing_parent_falls_back or missing_timer_ancestor_rebuilds or read_cache_can_reuse_a_zero_padded_sleep_parent'` 3 passed / 2 subtests；`test_qc_resilience.py -k 'recovery_probe'` 5 passed。没有整套跑 `test_curriculum_queue.py` / `test_curriculum_pipeline.py` / `test_qc_resilience.py`。
+- 未重新构建 build16、未重跑缓存预构建；`ba257927` 只影响上述两个运行文件的行为，二进制与规则配方不变。台式机上的部署仍需主控在组边界执行更新后的 `scripts/qc_deploy16.sh`（或其 `/home/newbiexvwu/pvz-logs/` 副本），本次只推送 git。

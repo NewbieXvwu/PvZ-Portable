@@ -8,8 +8,9 @@ R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
 PACKAGE=$R/.claude/worktrees/prodint16
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
-REV=4e479b04
+REV=ba257927
 FILES=(scripts/curriculum_queue.py scripts/select_student.py scripts/promotion_gate.py
+       scripts/precompute_timer_cache.py
        python/pvz_env.py python/pvz_frame_store.py python/pvz_recipe.py
        python/pvz_rollout_policy.py python/pvz_student_observation.py python/pvz_value_net.py
        scripts/pack_training_rows.py scripts/train_rollout_policy.py scripts/train_value_net.py
