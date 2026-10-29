@@ -1098,3 +1098,4 @@
 - **数据路线**（v2timer 基线出来后逐项单变量做）：① L7 历史 DAgger 降采样（占 47% 行）；② 随机卡组格配额提高，卡池加入 GPT Pro 的 50 套胜利卡组和屋顶 / 雾卡组；③ GPT Pro 整局动作行（task152）对照；④ 价值网进循环（task155）提升标签质量；⑤ 富输入尽早随帧写入（task157 第一阶段），数据从现在开始积累；⑥ 最终用真打胜率判，不只看逐行一致率。task156 普查结果出来后定具体比例。
 - 14:20 task155 交付（vloop b9a5f349，价值网候选默认关闭，启用待 task154 结论）。派 task159（Mac codex-plus2，datalevers）：历史行降采样开关 + 随机卡组卡池加入 GPT Pro / 屋顶卡组。用户：**禁用 gpt-6-astra**（额度消耗极快），Mac codex 已升到 0.165，codex-a 改回 gpt-6.1-sol。
 - 15:10 台式机代理恢复。派 task161（台式机 Codex business，cppnet）：C++ 通用前向模块。用户：Claude 额度紧，分析汇总全部外包给 Qoder（task160 A–E），主控只审。
+- 15:30 用户：Plus 号 A 的额度明天重置（有一次主动重置机会明天到期），尽量多派活。台式机再开两个 A 会话：task162（显卡空档实验执行器，gpuwindow）、task163（学生 v3 网络与训练接入，studentv3net，与 task157 / 161 分工）。
