@@ -10233,7 +10233,17 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/1c45d17d3dab625eec13d5a20ffd436783f6021e0695026e839a6988a2fb7b41",
+    "decisions": [
+     948,
+     843
+    ],
+    "index": 0,
+    "future_seed_start": 350000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l37_snow_magnet_v2_m200_s81022001_a99b58b48ec68",
