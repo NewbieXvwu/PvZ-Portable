@@ -79,6 +79,10 @@ def main():
         recipe=base_recipe, revision=revision, code_root=str(code), host_gib=.25, gpu_gib=0, slice_seconds=900,
         after_jobs=decision_ids, command=[sys.executable,str(code/'scripts/cleanup_decision_cache.py'),
             '--state',str(state),'--out',str(state/'decision-data/cleanup')]))
+    jobs.append(dict(id='decision_publish', kind='prepare', priority=2, out=str(state/'decision-data/publication'),
+        recipe=base_recipe,revision=revision,code_root=str(code),host_gib=.25,gpu_gib=0,slice_seconds=900,
+        depends_on=[str(probe/'report.json')],command=[sys.executable,str(code/'scripts/publish_window_budget.py'),
+            '--state',str(state),'--workspace',str(ROOT),'--out',str(state/'decision-data/publication')]))
     external = []
     for path in sorted(args.task163_jobs.glob('*.json')):
         job = json.loads(path.read_text())

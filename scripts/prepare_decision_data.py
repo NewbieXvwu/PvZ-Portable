@@ -150,10 +150,14 @@ def tokens(args, stopped):
                 raise ValueError('compact r42 sidecar cannot silently discard rich target links')
             if not np.array_equal(sample['cell_index'], np.arange(2,56)):
                 raise ValueError('compact sidecar requires the fixed cell-token order')
-            features = sample['features']
+            kept = np.r_[0:2,56:len(sample['ids'])]
+            ids = sample['ids'][kept]
+            features = sample['features'][kept]
+            packet_index = sample['packet_index'].copy()
+            packet_index[packet_index>=2] -= 54
             rr, cc = np.nonzero(features)
-            arrays = dict(ids=sample['ids'], counts=np.bincount(rr, minlength=len(features)).astype(np.uint8),
-                columns=cc.astype(np.uint8), values=features[rr, cc], packet_index=sample['packet_index'],
+            arrays = dict(ids=ids, counts=np.bincount(rr, minlength=len(features)).astype(np.uint8),
+                columns=cc.astype(np.uint8), values=features[rr, cc], packet_index=packet_index,
                 terrain=sample['terrain'], stored_row=np.array([global_row], np.int32))
             state['stored'] += 1
             state['tokens'] += len(features); state['features'] += len(rr); state['rows'] += 1
@@ -175,7 +179,7 @@ def tokens(args, stopped):
         handle.close()
     write_json(out / 'ready.json', dict(rows=state['rows'], archives=state['archives'], tokens=state['tokens'],
         upstream='2a866783', input='original compact public frames for exact r42 source_row-1', sparse_float32=True,
-        bytes=sum(state['sizes'].values()), stored_rows=state['stored'], schema=2,
+        bytes=sum(state['sizes'].values()), stored_rows=state['stored'], schema=3,
         evaluation='uncached rows stream from source archives; release cache after all decision jobs complete'))
 
 

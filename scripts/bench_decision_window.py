@@ -166,12 +166,12 @@ def main():
                            windows['eligible_fraction'])
     host_free = min(shutil.disk_usage(path).free for path in ('/mnt/c','/mnt/d') if Path(path).exists())
     cache_cap = min(2*(1<<30), max(0, host_free-13*(1<<30)))
-    if cache_cap < (1<<27):
-        raise RuntimeError(f'not enough host disk headroom for the bounded token cache: {host_free} bytes free')
-    sizes = [len(sample['ids'])*11 + np.count_nonzero(sample['features'])*5 + 41 for sample in public_tokens]
+    disk_blocked = cache_cap < (1<<27)
+    sizes = [(len(sample['ids'])-54)*11 + np.count_nonzero(sample['features'][np.r_[0:2,56:len(sample['ids'])]])*5 + 41
+             for sample in public_tokens]
     bytes_per_row = float(np.percentile(sizes, 95))*1.5
     disk_fraction = min(1.0, .95*cache_cap/(training_rows*bytes_per_row))
-    if disk_fraction < budget['train_row_fraction']:
+    if not disk_blocked and disk_fraction < budget['train_row_fraction']:
         ratio = disk_fraction/budget['train_row_fraction']
         budget['train_row_fraction'] = disk_fraction
         for key in ('planned_seed1_days','planned_seed1_gpu_hours','planned_all_gpu_hours','planned_all_days'):
@@ -179,12 +179,14 @@ def main():
         for entry in budget['per_job'].values():
             entry['planned_gpu_hours'] *= ratio
     budget.update(sidecar_max_bytes=cache_cap, estimated_sidecar_bytes=training_rows*budget['train_row_fraction']*bytes_per_row,
-        sparse_bytes_per_row_with_margin=bytes_per_row, host_free_bytes=host_free,
+        sparse_bytes_per_row_with_margin=bytes_per_row, host_free_bytes=host_free, disk_blocked=disk_blocked,
         disk_rule='at most 2 GiB token cache, leave 13 GiB host headroom at planning and stop construction below 12 GiB; CPU heldout tokens stream from original archives')
     report = dict(revision=args.revision, measured=time.time(), windows=windows, budget=budget, strata=strata,
                   rates=state['arms'], sample_rows=len(selected))
     write_json(args.out/'report.json', report)
     (args.out/'report.md').write_text(markdown(report))
+    if disk_blocked:
+        return  # Publish actual measurements, but do not release training into a full host disk.
     write_json(args.out/'ready.json', dict(budget, revision=args.revision,
         micro_batches={name: record['micro_batch_size'] for name, record in state['arms'].items()}))
 

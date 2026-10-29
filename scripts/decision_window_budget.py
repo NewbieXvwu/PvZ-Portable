@@ -112,4 +112,6 @@ def markdown(report):
         '测量使用按地形抽取的r42真实行、真实前后向/AdamW/微批累积与公开实体token，包含批次构造和传输；固定小工作集不能代表全语料缺页、全量token准备及CPU评测时间，后者另计。', '']
     if 'sidecar_max_bytes' in budget:
         lines += [f"磁盘约束进一步统一限制训练行比例：token缓存上限 {budget['sidecar_max_bytes']/(1<<30):.2f} GiB，按样本P95×1.5预计 {budget['estimated_sidecar_bytes']/(1<<30):.2f} GiB；预算时宿主最小余量 {budget['host_free_bytes']/(1<<30):.2f} GiB。仅缓存被采用的训练行，CPU留出逐档案生成token；全部decision作业完成后删除缓存和原帧硬链接视图，保留原始数据与模型交接。", '']
+    if budget.get('disk_blocked'):
+        lines += ['**宿主磁盘余量不足，以上训练预算尚未放行；吞吐测量已完成并发布，未创建训练ready标记。需释放磁盘后重新确定预算。**', '']
     return '\n'.join(lines)

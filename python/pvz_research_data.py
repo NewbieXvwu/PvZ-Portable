@@ -53,8 +53,18 @@ class SparseTokens:
         features = np.zeros((hi-lo, 32), np.float32)
         rows = np.repeat(np.arange(hi-lo), a['counts'][lo:hi])
         features[rows, a['columns'][flo:fhi]] = a['values'][flo:fhi]
-        return dict(ids=a['ids'][lo:hi], features=features, target_indices=np.full(hi-lo, -1, np.int32),
-                    packet_index=a['packet_index'][stored].astype(np.int32), cell_index=np.arange(2,56,dtype=np.int32),
+        ids = a['ids'][lo:hi]
+        cells = np.zeros((54,5), np.int16)
+        cells[:,0] = 2; cells[:,3] = np.arange(54)//9; cells[:,4] = np.arange(54)%9
+        cell_features = np.zeros((54,32), np.float32)
+        cell_features[:,0] = cells[:,3]/5; cell_features[:,1] = cells[:,4]/8
+        cell_features[:,8] = np.isin(cells[:,3], ids[ids[:,0]==10,3])
+        ids = np.concatenate([ids[:2],cells,ids[2:]])
+        features = np.concatenate([features[:2],cell_features,features[2:]])
+        packet_index = a['packet_index'][stored].astype(np.int32)
+        packet_index[packet_index>=2] += 54
+        return dict(ids=ids, features=features, target_indices=np.full(len(ids), -1, np.int32),
+                    packet_index=packet_index, cell_index=np.arange(2,56,dtype=np.int32),
                     terrain=np.asarray(a['terrain'][stored], np.int64))
 
     def batch(self, indices, device='cpu'):

@@ -25,7 +25,7 @@ def main():
     args.out.mkdir(parents=True, exist_ok=True)
     receipt = args.out/'progress.json'
     report = json.loads(receipt.read_text()) if receipt.exists() else dict(removed_bytes=0, removed_files=0,
-        scope='generated token .bin files and research raw hardlink view; production originals, checkpoints and source plan retained')
+        scope='generated tokens, row mask, binary source plan and research raw hardlink view; production originals, checkpoints and JSON receipts retained')
     for name in FIELDS:
         path = args.state/'decision-data/tokens'/(name+'.bin')
         if path.exists():
@@ -47,6 +47,12 @@ def main():
         if stopping:
             write_json(receipt, report)
             raise SystemExit(75)
+    for name in ('unseen.npy','sources.sqlite','sources.sqlite-wal','sources.sqlite-shm'):
+        path=args.state/'decision-data/split'/name
+        if path.exists():
+            report['removed_bytes'] += path.stat().st_size
+            report['removed_files'] += 1
+            path.unlink()
     write_json(args.out/'ready.json', report)
 
 
