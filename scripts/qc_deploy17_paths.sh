@@ -5,7 +5,7 @@ R=/home/newbiexvwu/PvZ-search
 W=$R/.claude/worktrees/cq
 PY=/home/newbiexvwu/.venvs/ml/bin/python3
 LOG_DIR=/home/newbiexvwu/pvz-logs
-REV=2f038dbe
+REV=18313d3c
 O=""
 STOPPED=0
 # A newly installed updater may be the watchdog's newest qc_deploy*.sh. Its launch

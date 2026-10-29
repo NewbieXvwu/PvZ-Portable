@@ -375,3 +375,5 @@ bash ~/pvz-logs/qc_deploy17_paths.sh --rollback
 只读查看生产日志：00:50:41 随机卡组 L32 完成 24 局、rc=0，随后开始下一组；
 现行 active 仍为 `ad4fe41c`。没有改生产配置、移除生产链接或触发组边界更新。
 部署与回滚仍使用前节两条命令，等待主控审后再执行。
+
+实现提交 `18313d3c`；准备中的 `qc_deploy17.sh` 与 `qc_deploy17_paths.sh` 均改为固定该源码版本，替代前节 `2f038dbe`，避免更新时重新安装已删除的 day_orig JSON。仍未部署。
