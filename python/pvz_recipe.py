@@ -48,10 +48,11 @@ def resolve_paths(document):
     result = copy.deepcopy(document)
     for name in PATH_FIELDS:
         value = result.get(name)
-        if isinstance(value, str) and value and not value.startswith('builtin:') and not Path(value).is_absolute():
+        if isinstance(value, str) and value and not value.startswith('builtin:'):
+            path = Path(value).expanduser()
             # Versioned panels belong to this code snapshot; writable artifacts are shared.
             base = Path(__file__).resolve().parents[1] if value.startswith('configs/') else root
-            result[name] = str(base / value)
+            result[name] = str(path if path.is_absolute() else base / path)
     return result
 
 
@@ -224,7 +225,11 @@ def load_recipe(path, kind=None):
                 raise ValueError(f'duplicate JSON field: {key}')
             result[key] = value
         return result
-    return resolve_paths(validate(json.loads(path.read_text(), object_pairs_hook=unique), kind))
+    document = json.loads(path.read_text(), object_pairs_hook=unique)
+    # Existing queued recipes recorded this retired, never-enabled field as null.
+    if document.get('row_weights') is None:
+        document.pop('row_weights', None)
+    return resolve_paths(validate(document, kind))
 
 
 def write_recipe(path, document):
