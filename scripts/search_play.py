@@ -316,9 +316,14 @@ def _probe_decision(args, obs: dict, candidates: list[dict], totals: list[float]
         return
     mean = sum(finite) / len(finite)
     std = (sum((v - mean) ** 2 for v in finite) / len(finite)) ** 0.5
+    # wave and the per-candidate leaf scores are what "is the search still allowed to override late
+    # in the game, and what does it think a one-wave-left position is worth" needs; both are
+    # diagnostic-only and change nothing the search does.
     row = dict(task=args.task_id, seed=decision_seed // 10000, decision=decision_seed % 10000,
-               tick=int(obs.get("tick", -1)), candidates=len(candidates), scored=len(finite),
+               tick=int(obs.get("tick", -1)), wave=int(obs.get("wave", -1)),
+               candidates=len(candidates), scored=len(finite),
                mean=round(mean, 6), std=round(std, 6), top1_top2=round(finite[0] - finite[1], 6),
+               values=[round(v, 6) for v in finite],
                best=best, policy_index=policy_index, overridden=chosen is not policy_action,
                chosen=json.dumps(chosen, sort_keys=True), policy=json.dumps(policy_action, sort_keys=True))
     with open(f"{path}.{os.getpid()}.jsonl", "a") as stream:
