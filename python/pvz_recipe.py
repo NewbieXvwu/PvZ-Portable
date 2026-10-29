@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, label_weight={}, label_keep={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -147,6 +147,8 @@ def validate(document, kind=None):
         _object(result['label_weight'], set(labels), 'label_weight')
         for name, weight in result['label_weight'].items():
             _number(weight, f'label_weight.{name}')
+        from pvz_training_pack import label_keep_options
+        label_keep_options(labels, result['label_keep'])
         _object(result['source_weight'], {'human', 'teacher', 'level_balance',
                                           'level_balance_power', 'level_balance_max_multiplier'},
                 'source_weight')
@@ -246,6 +248,7 @@ def training_row_options(recipe, labels=None):
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
+                **({'label_keep': recipe['label_keep']} if recipe.get('label_keep') else {}),
                 **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}))
 
 

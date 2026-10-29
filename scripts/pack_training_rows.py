@@ -44,7 +44,7 @@ from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, Va
                                   _episode_context, _member_array, _member_header, constant_plane)
 
 from pvz_training_pack import (PACK_VERSION, archive_fingerprint, fingerprint_paths, pack_options,
-                               pack_path, segment_options, segment_path, training_rows)  # noqa: E402
+                               pack_path, segment_options, segment_path, training_rows, keep_archive)  # noqa: E402
 
 
 def _store_arrays(store) -> dict:
@@ -64,7 +64,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                         label_weight: dict[str, float] | None = None, cache_dir: Path | None = None,
                         with_context: bool = False, obs: str = "v1", precompute_workers: int = 1,
                         cells: bool = False, aux_horizon: int = 0, row_observer=None,
-                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None):
+                        packet_head: str = 'slot', read_cache_dir: Path | None = None, archive_paths=None,
+                        label_keep=None):
     """Rows: frame i-1 -> action at frame i. With ``wait_keep`` < 1 only that fraction of the wait rows
     (~94% of all rows) is kept, each weighted 1 / wait_keep, so more games fit in memory.
     ``label_weight`` multiplies the weight of every row of a label (a small, newer teacher among many older games).
@@ -78,6 +79,10 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     bit-identical to the dense arrays this replaced."""
     paths = ([p for p in frame_paths(data) if p.parent.name in labels]
              if archive_paths is None else list(archive_paths))
+    if label_keep:
+        paths = [path for path in paths if keep_archive(data, path, label_keep)]
+    if not paths:
+        raise ValueError('no archives retained for training')
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
     # twice the memory, which on 887k rows (~10 GB of boards) took down the 23 GB WSL VM (2026-10-15).
     # Independent streams make row selection invariant to other labels entering the corpus.
@@ -290,7 +295,8 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
                                  options["label_weight"], cache_dir, options["with_context"],
                                  options["obs"], precompute_workers, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
-                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths)
+                                 read_cache_dir=read_cache_dir, archive_paths=archive_paths,
+                                 label_keep=options.get('label_keep'))
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if options["aux_horizon"] else None
     packets = loaded[9 + (auxiliary is not None)] if options["packet_head"] == "identity" else None
@@ -388,6 +394,8 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
         if not paths:
             raise ValueError(f'no archives for label {label!r} in {data}')
         contract = segment_options(options, label, fingerprint_paths(data, paths))
+        if contract.get('label_keep') and not any(keep_archive(data, path, contract['label_keep']) for path in paths):
+            continue
         target = segment_path(data, contract)
         segments.append(target)
         valid = False
@@ -397,6 +405,8 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
                          and segment_plane_shapes_valid(target, int(stored['rows'])))
         if not valid:
             jobs.append((data, contract, cache_dir, read_cache_dir, paths))
+    if not segments:
+        raise ValueError('no archives retained for training')
     # Each label worker includes Python/torch and a label's compact rows; its peak grows with
     # the label's raw archives. Same 6 GiB reserve as collection (pack_memory_limit docstring).
     try:
@@ -457,7 +467,7 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
 
 def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_context: bool = False,
                 obs: str = "v1", cells: bool = False, aux_horizon: int = 0, packet_head: str = "slot",
-                row_observer=None, cache_dir=None, rebuild: bool = False):
+                row_observer=None, cache_dir=None, rebuild: bool = False, label_keep=None):
     """Build the pack if this exact input has none yet, then read it the way the trainer does.
 
     rebuild forces the build even when a pack exists: a changed archive of the same size would
@@ -465,7 +475,7 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
     """
     from train_rollout_policy import read_pack
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, set(labels)))
+                           sources=archive_fingerprint(data, set(labels)), label_keep=label_keep)
     path = pack_path(data, options)
     if rebuild or not path.is_file():
         pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
@@ -477,7 +487,8 @@ def verify(data: Path, options: dict, out: Path) -> None:
     loaded, _sources, source_archive, source_row = build_from_archives(
                                  data, set(options["labels"]), options["wait_keep"], options["label_weight"],
                                  None, options["with_context"], options["obs"], 1, cells=options["cells"],
-                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"])
+                                 aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
+                                 label_keep=options.get('label_keep'))
     from train_rollout_policy import read_pack
     observed = []
     actual = read_pack(out, data, lambda path, rows: observed.append((str(path.relative_to(data)), rows)))
@@ -530,6 +541,7 @@ def main() -> None:
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")
     p.add_argument("--context", action="store_true", help="append the task context to the scalars")
     p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
+    p.add_argument("--label-keep", type=json.loads, default={}, help='JSON {label_regex: fraction}; keep whole archives')
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
     p.add_argument("--verify", action="store_true", help="compare the pack with a fresh build")
@@ -539,7 +551,7 @@ def main() -> None:
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(","))))
+                           sources=archive_fingerprint(args.data, set(args.labels.split(","))), label_keep=args.label_keep)
     if args.verify:
         if args.out is None:
             p.error("--verify needs --out")
