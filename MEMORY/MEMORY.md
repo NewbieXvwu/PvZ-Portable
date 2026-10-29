@@ -113,3 +113,4 @@
 - [task131：v2sleep 加宽热启动、缓存与 deploy15 准备](docs/task131-obs-upgrade.md)
 
 - [task165：deploy17数据配比与待审部署/回滚](docs/task165-deploy17-data-mix.md)
+- [task157：obs v3 附件、deploy18 准备与训练存储设计](docs/task157-student-v3-token-encoder.md)

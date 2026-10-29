@@ -88,3 +88,68 @@ def test_obsrec_compact_bytes_and_teacher_roots(tmp_path, monkeypatch, demo):
     with np.load(outputs[0]) as a, np.load(outputs[1]) as b:
         assert a.files == b.files
         assert all(a[name].tobytes() == b[name].tobytes() for name in a.files)
+
+
+@pytest.mark.parametrize('active', [False, True])
+def test_obsrec_deploy18_launch_only_when_active(tmp_path, active):
+    import subprocess
+    extracted = subprocess.run(['bash','-c','source "$1"; watchdog_extract_start "$2"','test',
+        str(ROOT/'scripts/qc_watchdog.sh'),str(ROOT/'scripts/qc_deploy18.sh')],
+        capture_output=True,text=True,timeout=5)
+    assert extracted.returncode == 0, extracted.stderr
+    script = tmp_path/'launch.sh'
+    script.write_text(extracted.stdout.replace('/home/newbiexvwu',str(tmp_path)))
+    logs = tmp_path/'pvz-logs'; logs.mkdir()
+    (logs/'qc_deploy17.mode').write_text('datamix\n')
+    (logs/'qc_deploy17.active').touch()
+    if active:
+        (logs/'qc_deploy18.mode').write_text('obs_v3\n')
+        (logs/'qc_deploy18.active').touch()
+    result = subprocess.run(['bash','-c','tmux() { printf "%s\\n" "$*"; }; source "$1"',
+        'test',str(script)],capture_output=True,text=True,timeout=5)
+    assert result.returncode == 0, result.stderr
+    assert ('--obs-v3' in result.stdout) == active
+    assert ('obsrec/build18/pvz-portable' in result.stdout) == active
+    assert '--demo-start-share 0.25 --random-deck-share 0.25' in result.stdout
+    assert 'history10.json' in result.stdout and '--training-parallelism 1' in result.stdout
+
+
+def test_obsrec_block_codec_preserves_float32_and_targets():
+    from pvz_token_blocks import encode, decode
+    from pvz_student_tokens import frame_tokens
+    raw = np.zeros((67,38),np.float32); raw[:,3:6] = -1
+    raw[1,0] = 1; raw[2:56,0] = 2; raw[56:66,0] = 8
+    raw[56,1] = 1; raw[66,:6] = [3,1,0,0,0,2]
+    raw[0,37] = -0.; raw[66,6:10] = [.1,-.2,np.inf,np.nan]
+    sample = frame_tokens(dict(scene={},v3=dict(version=3,tokens=raw)),token_input='obs_v3')
+    compressed, _ = encode([sample]*3)
+    store = decode(compressed)
+    for i in (2,0,1):
+        for key, expected in sample.items():
+            actual = store.sample(i)[key]
+            assert actual.dtype == expected.dtype and actual.tobytes() == expected.tobytes()
+
+
+def test_obsrec_deploy18_backup_restore_keeps_episode_data(tmp_path):
+    import subprocess
+    text = (ROOT/'scripts/qc_deploy18.sh').read_text().split('# --- switch:',1)[0]
+    script = tmp_path/'functions.sh'
+    script.write_text(text.replace('/home/newbiexvwu',str(tmp_path)))
+    result = subprocess.run(['bash','-c','''
+source "$1"
+O="$2/backup"; mkdir -p "$W/scripts" "$O" "$W/artifacts/frames/episode"
+FILES=(scripts/old.py python/new.py)
+printf original > "$W/scripts/old.py"
+printf frames > "$W/artifacts/frames/episode/frames.npz"
+printf tokens > "$W/artifacts/frames/episode/tokens_v3.npz"
+backup_files
+printf changed > "$W/scripts/old.py"
+mkdir -p "$W/python"; printf new > "$W/python/new.py"
+mkdir -p "$LOG_DIR"; printf obs_v3 > "$MODE18"; touch "$ACTIVE18"
+restore_files
+[[ "$(cat "$W/scripts/old.py")" = original ]]
+[[ ! -e "$W/python/new.py" && ! -e "$ACTIVE18" && ! -e "$MODE18" ]]
+[[ "$(cat "$W/artifacts/frames/episode/frames.npz")" = frames ]]
+[[ "$(cat "$W/artifacts/frames/episode/tokens_v3.npz")" = tokens ]]
+''','test',str(script),str(tmp_path)],capture_output=True,text=True,timeout=5)
+    assert result.returncode == 0, result.stderr
