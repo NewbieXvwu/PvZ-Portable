@@ -52,8 +52,8 @@ def balance_levels(levels, cap, power=1.0, max_multiplier=None):
 class DemoRowWeights:
     """Optional final multipliers from the pack's existing archive provenance.
 
-    No new pack columns/signatures. Human rows are label_source=human; teacher rows
-    with demo_archive are continuations from a demonstration. Task names alone never
+    No new pack columns/signatures. Human rows and explicitly imported LLM demo rows
+    share demo_row_weight; teacher rows with demo_archive are continuations. Task names never
     classify a row. Default factors return before reading metadata or touching weights.
     Apply AFTER packet/spread/intervention/level balancing: these boosts are not capped
     or renormalized, so a final level share can exceed the earlier level-balance cap.
