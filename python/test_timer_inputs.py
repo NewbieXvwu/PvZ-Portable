@@ -134,7 +134,7 @@ class TimerInputsTest(unittest.TestCase):
         export_student(net, path)
         with open(path, 'rb') as stream:
             header = stream.read(24)
-        self.assertIn(header[:8], (b'PVZRN004', b'PVZRN005', b'PVZRN006'))
+        self.assertEqual(header[:8], b'PVZRN006')
         size, pool, context, observation = struct.unpack('<IIII', header[8:24])
         self.assertEqual((size, observation), (8, 9))
         self.assertEqual((pool, context), (0, 0))

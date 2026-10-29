@@ -811,23 +811,10 @@ class PvZEnv:
         if any(char in filename for char in ('\n', '\r')):
             raise ValueError("rollout network path must not contain newlines")
         with open(filename, "rb") as stream:
-            version = stream.read(8)
-            # LEGACY(pvzrn-versions): 002-005 are older exports; 006 is the current one.
-            if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005", b"PVZRN006"):
-                raise ValueError("load_rollout_net requires an exported C++ network")
-            observation = int.from_bytes(stream.read(16)[12:16], "little") if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") else 1
+            if stream.read(8) != b"PVZRN006":
+                raise ValueError("load_rollout_net requires a PVZRN006 export")
         if self._process is None:
             self._start()
-        if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") and self._rollout_version < 2:
-            raise RuntimeError("v2lite requires a rebuilt simulator with rollout_version >= 2")
-        if observation == 3 and self._rollout_version < 3:
-            raise RuntimeError("v2 requires a rebuilt simulator with rollout_version >= 3")
-        if observation == 4 and self._rollout_version < 4:
-            raise RuntimeError("v2fog requires a rebuilt simulator with rollout_version >= 4")
-        if observation == 7 and self._rollout_version < 5:
-            raise RuntimeError("v2bungee requires a rebuilt simulator with rollout_version >= 5")
-        if observation == 8 and self._rollout_version < 6:
-            raise RuntimeError("v2sleep requires a rebuilt simulator with rollout_version >= 6")
         quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")

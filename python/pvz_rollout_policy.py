@@ -316,7 +316,7 @@ def load_student(path) -> RolloutNet:
 
 
 def export_student(net: RolloutNet, path) -> None:
-    """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    """Write PVZRN006, with the identity packet MLP/shared plant embeddings when present."""
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct
@@ -333,16 +333,11 @@ def export_student(net: RolloutNet, path) -> None:
         names += ('packet.2.weight', 'packet.2.bias')
     with open(path, "wb") as stream:
         identity = net.packet_head == 'identity'
-        stream.write((b"PVZRN006" if identity else b"PVZRN005" if net.row_pool else b"PVZRN004" if net.obs != "v1" else b"PVZRN003" if net.context else b"PVZRN002")
-                     + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
-        if identity or net.row_pool or net.context or net.obs != "v1":
-            stream.write(struct.pack("<I", int(net.context)))
-        if identity or net.row_pool or net.obs != "v1":
-            stream.write(struct.pack("<I", 9 if net.obs == "v2timer" else 8 if net.obs == "v2sleep" else 7 if net.obs == "v2bungee" else 6 if net.obs == "v2boss" else 5 if net.obs == "v2size" else 4 if net.obs == "v2fog" else 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
-        if identity or net.row_pool:
-            stream.write(struct.pack("<I", int(net.row_pool)))
-        if identity:
-            stream.write(struct.pack('<II', 1, net.plant_embedding_dim))
+        stream.write(b"PVZRN006" + struct.pack("<II", net.trunk[0].out_channels, int(net.pool == "meanmax")))
+        stream.write(struct.pack("<I", int(net.context)))
+        stream.write(struct.pack("<I", 9 if net.obs == "v2timer" else 8 if net.obs == "v2sleep" else 7 if net.obs == "v2bungee" else 6 if net.obs == "v2boss" else 5 if net.obs == "v2size" else 4 if net.obs == "v2fog" else 3 if net.obs == "v2" else 2 if net.obs == "v2lite" else 1))
+        stream.write(struct.pack("<I", int(net.row_pool)))
+        stream.write(struct.pack("<II", int(identity), net.plant_embedding_dim if identity else net.trunk[0].out_channels))
         for name in names:
             stream.write(weights[name].detach().cpu().numpy().astype("<f4").tobytes())
 

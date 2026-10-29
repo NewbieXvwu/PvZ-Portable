@@ -28,8 +28,8 @@ def test_rowpool_checkpoint_and_export_without_aux():
         assert loaded.row_pool and loaded.aux is None
         export_student(net, binary)
         data = binary.read_bytes()
-        assert data[:28] == b"PVZRN005" + struct.pack("<IIIII", 13, 1, 1, 3, 1)
-        expected_size = 28 + 4 * sum(value.numel() for name, value in net.state_dict().items()
+        assert data[:36] == b"PVZRN006" + struct.pack("<IIIIIII", 13, 1, 1, 3, 1, 0, 13)
+        expected_size = 36 + 4 * sum(value.numel() for name, value in net.state_dict().items()
                                     if not name.startswith("aux."))
         assert len(data) == expected_size
         export_student(loaded, binary)

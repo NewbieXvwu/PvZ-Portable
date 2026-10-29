@@ -64,13 +64,6 @@ LEGACY: dict[str, dict] = {
         "remove_when": "辅助头实验判死或转正",
         "where": ["python/pvz_frame_store.py:cache_aux"],
     },
-    "pvzrn-versions": {
-        "what": "C++ 学生网络导出格式 PVZRN002–005",
-        "kept_for": "旧导出文件与 python/test_cpp_rollout.py 的版本矩阵",
-        "since": "2026-10-20",
-        "remove_when": "测试只保留 PVZRN006",
-        "where": ["python/pvz_env.py:load_rollout_net", "src/EnvironmentRollout.cpp"],
-    },
 }
 
 # id -> {flag, script, owner, since, decide_by, why}

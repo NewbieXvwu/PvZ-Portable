@@ -78,23 +78,19 @@ void EnvironmentRollout::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
 	char magic[8]{};
-	uint32_t size = 0, pool = 0, withContext = 0, observation = 1, withRowPool = 0;
+	uint32_t size = 0, pool = 0, withContext = 0, observation = 0, withRowPool = 0;
 	uint32_t packetHead = 0, embedding = 0;
 	input.read(magic, 8);
 	input.read(reinterpret_cast<char*>(&size), 4);
 	input.read(reinterpret_cast<char*>(&pool), 4);
-	const std::string version(magic, 8);
-	const bool v6 = version == "PVZRN006";
-	if (version == "PVZRN003" || version == "PVZRN004" || version == "PVZRN005" || v6) input.read(reinterpret_cast<char*>(&withContext), 4);
-	if (version == "PVZRN004" || version == "PVZRN005" || v6) input.read(reinterpret_cast<char*>(&observation), 4);
-	if (version == "PVZRN005" || v6) input.read(reinterpret_cast<char*>(&withRowPool), 4);
-	if (v6)
-	{
-		input.read(reinterpret_cast<char*>(&packetHead), 4);
-		input.read(reinterpret_cast<char*>(&embedding), 4);
-	}
-	else embedding = size;
-	if (!input || (version != "PVZRN002" && version != "PVZRN003" && version != "PVZRN004" && version != "PVZRN005" && !v6) || std::endian::native != std::endian::little || size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 9 || withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
+	input.read(reinterpret_cast<char*>(&withContext), 4);
+	input.read(reinterpret_cast<char*>(&observation), 4);
+	input.read(reinterpret_cast<char*>(&withRowPool), 4);
+	input.read(reinterpret_cast<char*>(&packetHead), 4);
+	input.read(reinterpret_cast<char*>(&embedding), 4);
+	if (!input || std::string(magic, 8) != "PVZRN006" || std::endian::native != std::endian::little ||
+		size < 1 || size > 512 || pool > 1 || withContext > 1 || observation < 1 || observation > 9 ||
+		withRowPool > 1 || packetHead > 1 || embedding < 1 || embedding > 512 || (!packetHead && embedding != size))
 		throw std::runtime_error("invalid rollout network header");
 	const size_t nextWidth = size;
 	const size_t nextContext = (pool ? 3 : 2) * nextWidth;
