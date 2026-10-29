@@ -18,7 +18,7 @@ sys.path.insert(0, str(ROOT / 'python'))
 import import_llm_run as importer  # noqa: E402
 
 
-def _meta(task_id='demo_roof_46_doom_m200', seed=20261046, operations=120,
+def _meta(task_id='demo_roof_46_doom_m200', seed=20261046, operations=6,
           won=True, wins=None, k=8, level=46, deck=(1, 33, 39, 44, 15, 3, 2, 17, 4, 35),
           multiplier=2.0, manual_patch=None):
     meta = dict(
@@ -294,7 +294,7 @@ class EndToEndTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             source = root / 'source'
-            _write_archive(source, 'archive', _meta(wins=6))
+            _write_archive(source, 'archive', _meta(wins=6, operations=120))
             manifest = root / 'tasks.json'
             manifest.write_text('{"tasks":[]}')
             args = SimpleNamespace(input=source, dest=root / 'dest', manifest=manifest,
@@ -334,8 +334,8 @@ class EndToEndTest(unittest.TestCase):
             root = Path(directory)
             source = root / 'input'
             source.mkdir()
-            _write_archive(source, 'win_same', _meta(seed=20261046, wins=6))
-            _write_archive(source, 'win_foreign', _meta(seed=20261047, wins=2))
+            _write_archive(source, 'win_same', _meta(seed=20261046, wins=6, operations=120))
+            _write_archive(source, 'win_foreign', _meta(seed=20261047, wins=2, operations=120))
             _write_archive(source, 'loss', _meta(seed=20261048, won=False, operations=40))
             manifest = root / 'tasks.json'
             manifest.write_text(json.dumps({'tasks': [dict(

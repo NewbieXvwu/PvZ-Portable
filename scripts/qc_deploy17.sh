@@ -2,12 +2,12 @@
 # task165: PREPARED ONLY. The main controller reviews/installs this file; do not auto-run it.
 # Application source is pinned; reuse deploy16's binary. No rebuild/replay/pack/seed reset.
 set -Eeuo pipefail
-R=/home/newbiexvwu/PvZ-search
+R=$HOME/PvZ-search
 W=$R/.claude/worktrees/cq
 PACKAGE=$R
-PY=/home/newbiexvwu/.venvs/ml/bin/python3
+PY=$HOME/.venvs/ml/bin/python3
 REV=18313d3c
-LOG_DIR=/home/newbiexvwu/pvz-logs
+LOG_DIR=$HOME/pvz-logs
 MODE14P=$LOG_DIR/qc_deploy14p.mode
 MODE14I=$LOG_DIR/qc_deploy14i.mode
 MODE14H=$LOG_DIR/qc_deploy14h.mode

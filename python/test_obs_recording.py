@@ -100,7 +100,7 @@ def test_obsrec_deploy18_launch_only_when_active(tmp_path, active):
     script = tmp_path/'launch.sh'
     script.write_text(extracted.stdout.replace('/home/newbiexvwu',str(tmp_path)))
     logs = tmp_path/'pvz-logs'; logs.mkdir()
-    (logs/'qc_deploy17.sh').write_text((ROOT/'scripts/qc_deploy17.sh').read_text().replace('/home/newbiexvwu',str(tmp_path)))
+    (logs/'qc_deploy17.sh').write_text((ROOT/'scripts/qc_deploy17.sh').read_text().replace('$HOME',str(tmp_path)))
     watchdog = tmp_path/'PvZ-search/.claude/worktrees/cq/scripts/qc_watchdog.sh'
     watchdog.parent.mkdir(parents=True)
     watchdog.write_text((ROOT/'scripts/qc_watchdog.sh').read_text())

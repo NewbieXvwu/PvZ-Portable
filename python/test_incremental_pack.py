@@ -319,67 +319,6 @@ def test_read_segments_per_segment_copy_is_bitwise_including_spill(tmp_path):
     assert [(a, b.tolist()) for a, b in observed] == [(a, b.tolist()) for a, b in want]
 
 
-ROUND2_PACK = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/0d95f2ff1c6803b6.npz')
-ROUND2_SUBSET_HASHES = {
-    # sha256[:16] of every merged column, first 40 segments (2560231 rows), recorded from the
-    # OLD concatenate implementation (2026-10-24, peak RSS 3299 MB) before the task61 rewrite.
-    'board_indices': '81dd3aa1501d74e5', 'board_values': '80ff70734e3ef9a6',
-    'board_offsets': '52656171bdd25b6f', 'board_plane_of': '39e372160e41ef8a',
-    'board_planes_cells': '86a4ce41f36a5906', 'board_planes_values': '10231d223a7b9953',
-    'scalar_indices': '780e12c1363ae130', 'scalar_values': 'c0b776e72b2619d9',
-    'scalar_offsets': '949926976d4e47d5', 'scalar_plane_of': None,
-    'plant': '78e7bab786a734a2', 'packet': '0abc52115bacb67b', 'cell': '2ae1869a8d51015f',
-    'weight': '68b169251374bbe0', 'seed': '4c6a39979f571f3b',
-    'value_counts': '6a932229cf65eeac', 'value_slots': '3097b11bd997da2d',
-    'value_values': 'cb97e4e9c61912bd', 'cand_counts': '24e4935fe8d0ff2f',
-    'cand_entries': 'f1e1e5361bb45931', 'packet_col0': 'c4bbb2655da6f209',
-    'packet_col1': 'abacaa64ad3b417e', 'packet_col2': '469b90d7c1f9fe37',
-    'packet_col3': '5e662c79934c7564',
-}
-
-
-def _column_hashes(result):
-    import hashlib
-    import torch
-
-    def sha(array):
-        if isinstance(array, torch.Tensor):
-            array = array.numpy()
-        if array is None:
-            return None
-        return hashlib.sha256(np.ascontiguousarray(array).view(np.uint8)).hexdigest()[:16]
-
-    return {
-        'board_indices': sha(result[0].indices), 'board_values': sha(result[0].values),
-        'board_offsets': sha(result[0].offsets), 'board_plane_of': sha(result[0].plane_of),
-        'board_planes_cells': sha(np.concatenate([p[0] for p in result[0].planes])
-                                  if result[0].planes else np.zeros(0)),
-        'board_planes_values': sha(np.concatenate([p[1] for p in result[0].planes])
-                                   if result[0].planes else np.zeros(0)),
-        'scalar_indices': sha(result[1].indices), 'scalar_values': sha(result[1].values),
-        'scalar_offsets': sha(result[1].offsets), 'scalar_plane_of': sha(result[1].plane_of),
-        'plant': sha(result[2]), 'packet': sha(result[3]), 'cell': sha(result[4]),
-        'weight': sha(result[5]), 'seed': sha(result[6]),
-        'value_counts': sha(result[7].counts), 'value_slots': sha(result[7].slots),
-        'value_values': sha(result[7].values),
-        'cand_counts': sha(result[8].counts), 'cand_entries': sha(result[8].entries),
-        'packet_col0': sha(result[9].columns[0]), 'packet_col1': sha(result[9].columns[1]),
-        'packet_col2': sha(result[9].columns[2]), 'packet_col3': sha(result[9].columns[3]),
-    }
-
-
-def test_read_segments_matches_concatenating_reference_on_round2_subset(tmp_path):
-    if not ROUND2_PACK.is_file():
-        pytest.skip('round-2 pack not on this machine')
-    with np.load(ROUND2_PACK, mmap_mode='r') as stored:
-        names = stored['segments'].tolist()
-    paths = [ROUND2_PACK.parent / name for name in sorted(names)[:40]]
-    expected = {k: v for k, v in ROUND2_SUBSET_HASHES.items()}
-    for kwargs in ({}, {'data': tmp_path}):
-        got = _column_hashes(trainer.read_segments(paths, **kwargs))
-        assert got == expected
-
-
 def test_pending_builds_empty_after_pack(tmp_path):
     """task59 遗留修正：pending_builds 复用 pack() 的同一套指纹函数，pack 建完即判已建。"""
     import curriculum_queue as queue

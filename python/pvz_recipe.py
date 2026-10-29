@@ -9,7 +9,6 @@ from __future__ import annotations
 
 import argparse
 import copy
-import hashlib
 import json
 import math
 from pathlib import Path
@@ -22,7 +21,7 @@ TRAIN_DEFAULTS = dict(
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
-    cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
+    cache_dir=None, read_cache_dir=None, dense_boards=False,
     source_row_report=False, max_steps=None, batch_size=2048, validation_batch_size=4096,
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
@@ -56,7 +55,7 @@ def resolve_paths(document):
     return result
 
 
-PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir', 'row_weights',
+PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir',
                'manifest', 'rollout_policy', 'value', 'executable', 'resource_dir',
                'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
                'pool_manifest', 'pressure_manifest')
@@ -114,11 +113,6 @@ def validate(document, kind=None):
         # (the game resources) and for an already resolved recipe.
         if value is not None and (not isinstance(value, str) or not value):
             raise ValueError(f'{name}: expected a path string')
-    # Provenance is descriptive, never used as training configuration.
-    _object(result['provenance'], {'source_path', 'source_sha256', 'source_revision',
-                                 'original_out', 'original_cache_dir', 'original_source_row_report', 'notes'}, 'provenance')
-    if not all(isinstance(v, str) for v in result['provenance'].values()):
-        raise ValueError('provenance: expected string values')
     if kind == 'training':
         if 'history_l7_keep' in result:
             _number(result['history_l7_keep'], 'history_l7_keep', maximum=1)
@@ -197,8 +191,8 @@ def validate(document, kind=None):
         _number(result['validation']['fraction'], 'validation.fraction', maximum=1, positive=True)
         if result['validation']['fraction'] >= 1:
             raise ValueError('validation.fraction: must be below 1')
-        if (result['row_weights'] or result['source_row_report']) and not result['cache']:
-            raise ValueError('row_weights/source_row_report require cache')
+        if result['source_row_report'] and not result['cache']:
+            raise ValueError('source_row_report requires cache')
     else:
         if result['version'] not in ('v1', 'v2'):
             raise ValueError('version: expected v1 or v2')
@@ -281,7 +275,6 @@ def training_args(parser, argv=None):
     args.recipe = cli.recipe
     args.pack_recipe = cli.pack_recipe
     args.resolved_recipe = resolved
-    args.recipe_sha256 = hashlib.sha256(cli.recipe.read_bytes()).hexdigest()
     return args
 
 

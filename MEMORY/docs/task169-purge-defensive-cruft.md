@@ -118,3 +118,121 @@
 
 - `scripts/search_play.py` 的两处 `--help` 文案仍提到已删的 `verify_reseed.py` / `sim_skip_agreement.py`；该文件属会话 1 / codexb 的活代码修改范围，未在本分支改动。
 - 未部署、未连接台式机生产。
+---
+
+## 会话 1 交付结论（purgelive，基线 origin/deploy17 @ ad9e751f）
+
+### 总体规模
+`origin/deploy17...purgelive` 区间：**59 个文件改动，+431 / −2421 行（净删 ≈1990 行）**。
+
+### 批次 1 · curriculum_queue.py / promotion_gate.py / pvz_promotion.py 闭包
+- **1.1 删 manifest / 指纹 / 自校验**
+  - selection / gate 路径上的 SHA256 比对；gate v1-v4 与历史 panel 的加载/解析分支；
+  - 每次 reset 哈希 `main.pak` + `partner.xml` + `git rev-parse` + `git status --untracked-files=all` 热路径（AGENTS §6.5 违规）；
+  - `experiment_manifest.json`、`working_tree.patch`、`debug_replay`、`save_replay`、`replay_record`、`_write_manifest` / `_check_manifest`。
+- **1.2 删写死路径**
+  - `/home/newbiexvwu/...` 与 `.claude/worktrees/<name>/...` → 全部改为仓库内 `ROOT = Path(__file__).resolve().parents[1]` 现算；
+  - 13 个测试的资源目录改成 `str(Path.home() / ...)`；
+  - `qc_deploy17.sh` / `qc_deploy16.sh` / `deploy17_at_boundary.sh` / `qc_watchdog.sh` 里的 `/home/newbiexvwu` → `$HOME`（保留 `watchdog_extract_start` 可解析的 `$HOME` 字面量，不用 `${VAR:-default}`）；
+  - `init_glob` 默认 patterns 去掉 `.claude/worktrees/{cq,obsup}`（与上游 2f038dbe 的收窄冲突：选择只保留仓库根的 `artifacts/hard/*` 与 `artifacts/task28/*`；--init-glob 留给显式使用）。
+- **1.3 删死代码**
+  - `scripts/gate_power_retest.py`（整文件）—— 一次性 task73 复测，无活引用；上游 2f038dbe 对该文件的路径修补随之丢弃（脚本本身属于会话 2 范围）。
+  - `scripts/verify_promotion_demo.py`（整文件）—— 同理由会话 2 整文件删除。
+- **1.4 删依赖地狱**
+  - `row_weights` / `RowWeights` / `update_identity` 整条从未开启的开关链：schema → trainer → class → test（`test_dagger_data_rows.py`） → 11 份 recipe 里的 `"row_weights": null` 字段。
+  - `pvz_common.py`：删除 `REPLAY_FORMAT_VERSION`、`OBSERVATION_VERSION`、`TASK_VERSION`、`TRAINING_SEED`、`VALUE_RANGE`、`_GENERATED_*`、`sha256_file`、`sha256_bytes`、`canonical_digest`、`is_generated_artifact`、`git_metadata`；`test_shared_helpers.py` 随之 `git rm`。
+  - `pvz_recipe.py`：删除 `args.recipe_sha256`；`train_rollout_policy.py`：删除 checkpoint 里的 `recipe_sha256` 与 `shared_pack_weights.json` 的 `pack_recipe_sha256`，以及 `row_plan` 相关的 `clamp_min(1e-30)` 分母。
+
+### 批次 2 · pvz_env / pvz_common（活模块底层）
+- 删 `pvz_env._manifest_data`、`_write_manifest`、`_check_manifest`（4514 字符）、`import gzip`；
+- 删 `_resource_hashes`、`_source_state`、`_resource_sha256`、`_properties_sha256`、`_source_metadata`、`_debug_state_sha256`、`debug_replay` 参数；
+- `reset()` 的 episode dict 不再写 `format_version` / `source_revision` / `source_dirty` / `resource_sha256` / `properties_partner_sha256`；
+- 对应 `human_demo.py`、`llmplay/game.py` meta 同步删除。
+
+### 批次 3 · search_play / pack_training_rows（subprocess 调起的脚本）
+- `search_play.py`：`DEFAULT_RESOURCE_DIR` 改成 `$PVZ_RESOURCE_DIR` 或 `~/.cache/pvz-research-resources`；删除 `_archive_sha256`、`final_state_hash`、`demo_sha` / `demo_archive_sha256`、`checkpoint_sha256`、`state_hash` 字段；
+- `pack_training_rows.py`：删 `--verify` CLI 开关；保留 `verify()` / `assert_payload_equal()` 函数供增量 pack 测试使用。
+
+### 批次 4 · train_rollout_policy（trainer 闭包）
+- 删 probe hashes；删 `row_plan` 分支（denominator `w.sum()` / `wc.sum()` / `wp.sum()` 替代 `clamp_min(1e-30)` 形式）。
+
+### 批次 5 · recipe 测试与解释器回退
+- `test_curriculum_queue.py`：`test_recipe_pack_command_matches_actual_trainer_load_request` 里 `args.python = Path('/nonexistent/python')` → `Path(sys.executable)`——断言 `command[0] == sys.executable` 正是针对被删的 `args.python.exists()` 回退分支。默认值就是 `sys.executable`（`DEFAULT_PYTHON = Path(sys.executable)`），回退会在生产 venv 路径写错时静默换解释器，按 §6.5 属"防御分支默认删除"。
+
+### 批次 6 · pvz_recipe 描述性 provenance
+- 删 `pvz_recipe.py:115-119` provenance schema/类型校验（注释自陈 "descriptive, never used as training configuration"）。provenance 字段本身仍保留在 recipe 默认值与 allowed keys 里，11 份 recipe 不动，仅不再校验。
+
+---
+
+### 保留的检查（防止具体损失）
+| 保留项 | 一行理由 |
+|---|---|
+| `hf_sync.py` SHA256 / `resume.json` 指针 | AGENTS §2 明确要求：下载后必须接得上；`_collect()` 强制并入 resume.json 指向的文件 |
+| `curriculum_queue.py` `contract_key` | 门禁断点续跑的身份键；缺了会重复花种子 |
+| `pvz_frame_store.py` 与 `train_rollout_policy.py` 的 merge `.complete` 签名 | 共享 pack 的 cache identity，缺了会把错误的合并喂进训练 |
+| `selection_ready.json` 标记 | 重启时跳过引擎重放，避免每次重启都重跑整轮选择局 |
+| `pack_training_rows.verify()` + `assert_payload_equal()` | 防止损坏的 pack 进训练（测试用） |
+| `search_play.py` `executable_sha256` | 人类示范用来决定 strict/relaxed 回放模式（不是 manifest 核对，是行为开关） |
+| `_task_rows` 完整性 | 保证每个 task 的 rows 被采到（防漏数据进训练） |
+| 种子账本唯一性 | 种子不可复用 = 门禁/评估公平性的根基，删了就等于历史证据全废 |
+
+### 遗留 / 交给会话 2 的断链
+以下非活文件在被删 helper 上还留着引用，属会话 2 `purgedead` 的整文件删除范围：
+- `scripts/analyze_multiseed_selection.py`、`scripts/task92b_selection.py`（import 已损坏）；
+- `scripts/import_mac_labels.py`、`scripts/run_identity_smoke.py`、`scripts/value_leaf_dispersion.py`、`scripts/qc_metrics_throughput.py`（引用被删的 `search_play` 字段 / 写死机器路径）；
+- `scripts/make_gate_v5_panel.py`（一次性生成脚本，带 SHA 钉）；
+- `scripts/dagger_data_design.py`、`scripts/train_rollout_policy_dilution.py`（import 已删的 `update_identity`）；
+- `scripts/qc_metrics_throughput.py` 与 `scripts/human_demo.py` 里的 `logs/...` 绝对路径。
+
+### 预先存在、与本会话删除无关的失败（origin/deploy17 tip ad9e751f 同样复现）
+- `test_recipe.py::test_full_200_step_observer_with_source_row_report`（"recipe and legacy requested different training rows"，在 batch 1 前的 HEAD 已失败）；
+- `test_recipe.py::test_historical_recipes_resolve_all_training_settings`（上游 2f038dbe 把 `dw4i.json` labels 从 170 改到 168，测试期望没跟着改）；
+- `test_deploy17.py::test_deploy17_watchdog_launch_is_inert_until_active[True/False]` 与 `test_deploy16.py::test_deploy16_watchdog_launch_selects_active_package_and_preserves_deckcells[True-14i-build16]`（上游把 `EXE16` 改成 `$R/artifacts/production/deploy16/pvz-portable`，测试断言仍写 `prodint16/build16/pvz-portable` / `build16`）；
+- `test_curriculum_queue.py` 里 4 项与上游相同的失败（`test_command_measures_child_anon_peak` 等 `TrainingPipeline` 相关；上游 tip 6 项失败，本分支 4 项——少掉的两项 `test_run_rejects_changed_trained_candidate` / `test_run_reuses_trained_json_without_retraining` 由批次 1 对 selection 哈希的清理而顺带修好）。
+
+### 每批验证协议（已按任务书执行）
+活模块 import、`curriculum_queue.py --help`、`timeout 300` + `ulimit -f 2000000` 的针对性 `pytest -k`，一次一个文件，未整套运行 `test_curriculum_queue.py` / `test_curriculum_pipeline.py` / `test_qc_resilience.py`。每批 `git fetch && git rebase origin/deploy17` 后 `--force-with-lease` 推送。不部署、不连台式机生产。
+
+---
+
+## 第二轮（会话 1，进 deploy19：清理测试）
+
+基线改为 `origin/deploy18`（已含会话 1 前几批 + 会话 2 `purgedead` 整文件删除 + codexb 的 gateunits/obsrec/roofwave/abqueue）。先 `git fetch` 把 purgelive rebase 到 `origin/deploy18`。deploy18 的 `pvz_promotion.GATE_VERSION` 已升到 **v6**（屋顶 final_wave Wilcoxon 否决），故第一批 rebase 冲突全部取 deploy18 侧（v5 单一路径的清理已被更晚的工作覆盖），只重放 search_play / train_rollout_policy 里被删哈希与 `row_weights` 开关、以及新 B 配方对齐。
+
+指令：删只测已删功能的测试、重复测试、巨型夹具与慢测试；活代码快速单元测试保留；不加任何新校验。
+
+### 删掉的“只测已删功能”的测试
+- `test_curriculum_queue.py::test_removed_pack_flags_are_not_exposed` —— 只跑 `--help` 断言 `--pack-` 不存在，纯“已删 CLI 不会回来”的形式主义守卫（AGENTS §6.5）。
+- `test_promotion.py` 的 `freeze_panel(version=4)` 拒绝断言 —— gate v1–v4 已删，只剩 v6。
+- `test_qc_resilience.py::test_gate_switch_waits_for_issued_jobs_but_not_for_a_partial_round` —— `set_gate_version(s, 3/4)` 现报 unsupported gate version。
+- `test_qc_watchdog.py::test_extract_current_real_deploy_without_executing_it` —— 依赖不在 git 的 `~/pvz-logs`，Mac 上恒 skip，且“extract 不执行主流程”已由同文件 `DEPLOYMENT_MAIN_RAN` 与 deploy17/obs_recording 的真实脚本 extract 覆盖。
+- `test_frame_store_chunks.py::test_chunked_encode_matches_whole_game_encode` —— 默认 chunk 的全量对比被同文件“逐 chunk size 扫描”（含 `ENCODE_CHUNK`）完全包含。
+- `test_compact_loader.py::CompactBoardsTest::test_round_trip_is_bit_exact` —— 与 `test_compact_boards.py` 同名类测同一 append/finish/batch 位精确往返；把符号 `-0.0` 之外的 NaN 载荷并入 canonical 那条后删除克隆。
+- `test_curriculum_queue.py::test_command_measures_child_anon_peak` —— 起子进程 `sleep(2.5)` 只断言 `peak >= 0`，2.5s 下限、几乎无信息；内存记账保证由 `TrainingRestartTest` 的 build_peak 清除用例覆盖。
+
+### 巨型夹具缩小（数据量，不改语义）
+- `test_deploy17.py::fixture`：342 格、每格 `seeds=list(range(2048))`（≈70 万整数）→ `range(128)`，仍覆盖同一 offsets/配额算术，数据量 −94%。
+- `test_import_llm_run.py::_meta`：默认 `operations=120`（每档写 120 ticks + 121 frames，30 个用例反复写）→ 6；仅三处断言未来种子续走计数（24/48、“192 条续走”）的端到端用例显式钉回 `operations=120`，I/O 降约 95%。
+- `test_curriculum_queue.py::test_pack_memory_limit...`：造 3 GiB 稀疏档只为读 `st_size` → 3 MiB（`2**20` 字面量，无新校验）。
+
+### 慢测试与硬失败处置
+- `test_human_demo_conveyor.py`：需要本地 `/tmp/pvz-boss50-build/pvz-portable` 引擎 **且** `headless=False` 真人点击，任何无人环境必然 FileNotFoundError；按 `test_boss_l50`/`test_bungee_inputs` 既有约定加 `@pytest.mark.skipif(引擎或 main.pak 缺失)`，改为 skip 而非 fail。
+
+### fixture 漂移修复（deploy18 v6/多池/预留带来的断链，非本轮删除所致）
+rebase 到 deploy18 后，纯 deploy18 tip 上有 9 项测试先于本会话就在失败（合成数据没跟着 roof-wave/多池/预留改动更新）。为让“相关 pytest -k”有意义，把这些夹具补齐（每题 1–2 行，无新增校验逻辑）：
+- `test_curriculum_pipeline.py::certificate()` 合成 pairs 加 `candidate_wave`/`incumbent_wave`（v6 屋顶 Wilcoxon 端点）→ 修 4 项，连带 `test_multiseed_production.py` 3 项；同文件两处逐字重复的 `success()` 提升为模块级 `retried_success()`（−20 行）。
+- `test_student_selection.py::fake_runner` 合成 games 行加 `final_wave`（`select_student.py` 屋顶配对需要）；Holm 断言改为排除 roof（v6 屋顶已退出二值 Holm 家族）→ 修 1 项。
+- `test_multiseed_production.py` 起始种子账本文档键 `pool` → `pools`（多池分配器要求）→ 修 1 项。
+- `test_background_failure_retry.py` 的 `Args` 加 `seed_ledger`、report 的 promotion 带 `contract`（poll 关闭时重比对现行契约）→ 修 1 项。
+- `test_curriculum_queue.py` restart/backlog 三处 `args` stub 补 `workers`（task166 `minimum_eval_units` 现读 `args.workers`），`_bare_pipeline` 补 `game_health`。
+
+### rebase 后需主控定夺的两处生产公式（**未**擅自改）
+1. `pack_training_rows.pack_memory_limit` 文档写“给整机留 6 GiB（curriculum_queue.build_plan 用同一单建造者估算）”，但 `curriculum_queue.MEMORY_RESERVE_BYTES` 早在 task134 hotfix 改成 **3 GiB**，打包端仍是 6 GiB 字面量。`test_pack_memory_limit_matches_build_plan_per_builder` 因此在纯 deploy18 tip 上就失败（16 != 18）。这决定生产内存余量，属 codexb/主控范围，本会话只缩小其夹具、保留失败并上报。
+2. `scripts/qc_deploy17.sh` 的 datamix/v2timer 等分支仍传 `--gate-version 5`，而 `curriculum_queue.py --gate-version choices=(6,)` 已只接受 6 —— 回退链在 git 里对不上。deploy18 自身的激活分支是 v6，部署态由 `~/pvz-logs` 安装副本决定。`test_deploy17.py::..._inert_until_active` 的 `prodint16/build16` 断言已重指向 `artifacts/production/deploy16`（2f038dbe 的稳定路径），但 `--gate-version 5` 断言按上游 tip 原样保留、现随上游一起失败。
+3. `test_curriculum_queue.py` 的 `test_init_requeues...`/`test_init_restores_measured_pack_peak`/`test_pack_end_clears_build_peak...`/`test_pack_failure_still_clears...` 4 项在纯 deploy18 tip 同样失败：task166 改了 build_peak 预留/清除时序，旧断言（打包一结束即清零、init 恢复实测峰值）与新时序不符。属 task166 语义，本会话只补 stub 缺字段、不改断言期望，留待 codexb。
+
+### 本轮测试改动规模
+5 个提交（fix + 4 批 test 清理），相对 `origin/deploy18`：**50 文件 +170 / −314 行**（净删 144 行）。删除 7 个测已删功能/重复/零信息的测试、提升 1 个跨用例重复 helper、缩小 3 处巨型夹具数据量、把 1 个必失败手工用例改为 skip、补 6 处 deploy18 fixture 漂移。
+
+### 验证（本轮）
+`pytest --collect-only -q python` → 626 项可收集、无导入错误。逐文件实跑（`timeout 300` + `ulimit -f 2000000`，一次一个）：除 3 个重型文件外全部文件 **0 失败**（此前 7 个文件有 9 失败）；重型三件仅用 `-k` 子集验证（retired/bad/isolated/drain、pack_labels/budget/quota/random、clears_build_peak/init_requeues 等），未整套运行。每批 `git fetch && git rebase origin/deploy18` 后 `--force-with-lease` 推送 purgelive。不部署、不连台式机生产。

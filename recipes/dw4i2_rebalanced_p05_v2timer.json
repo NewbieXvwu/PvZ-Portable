@@ -60,7 +60,6 @@
  "cache_dir": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/cache",
  "read_cache_dir": null,
  "dense_boards": false,
- "row_weights": null,
  "source_row_report": true,
  "max_steps": null,
  "batch_size": 2048,

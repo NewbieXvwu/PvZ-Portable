@@ -21,11 +21,11 @@ def fixture(tmp_path):
         for i in range(n):
             name=f'{kind}_l9_{i:03d}'
             cells[name]=dict(level=9,mult_index=0,last_round=1,windows={},family='fixture')
-            tasks[name]=dict(task_id=name,level=9,seeds=list(range(2048)))
+            tasks[name]=dict(task_id=name,level=9,seeds=list(range(128)))
             if kind=='opening': cells[name]['opening_specialist']=True
             if kind=='rd': cells[name]['random_deck_cell']=True
             if kind=='demo':
-                cells[name].update(archive=str(archive),task_id=name,seeds=list(range(2048)),ladder=[100])
+                cells[name].update(archive=str(archive),task_id=name,seeds=list(range(128)),ladder=[100])
                 tasks[name]['seeds']=[42]
     state=dict(round=47,cells=cells,offsets={},retired_cells={},log=[])
     return state,tasks,{k:tmp_path/'panel.json' for k in tasks}
@@ -159,14 +159,14 @@ def test_deploy17_watchdog_launch_is_inert_until_active(tmp_path,active):
     result=subprocess.run(['bash','-c','source "$1"; watchdog_extract_start "$2"','test',
         str(ROOT/'scripts/qc_watchdog.sh'),str(ROOT/'scripts/qc_deploy17.sh')],capture_output=True,text=True,timeout=5)
     assert result.returncode==0,result.stderr
-    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('/home/newbiexvwu',str(tmp_path)))
+    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('$HOME',str(tmp_path)))
     logs=tmp_path/'pvz-logs';logs.mkdir()
     (logs/'qc_deploy16.mode').write_text('v2timer\n');(logs/'qc_deploy16.active').touch()
     if active:
         (logs/'qc_deploy17.mode').write_text('datamix\n');(logs/'qc_deploy17.active').touch()
     result=subprocess.run(['bash','-c','tmux() { printf "%s\\n" "$*"; }; source "$1"','test',str(script)],capture_output=True,text=True,timeout=5)
     assert result.returncode==0,result.stderr
-    assert 'prodint16/build16/pvz-portable' in result.stdout
+    assert 'artifacts/production/deploy16/pvz-portable' in result.stdout
     assert '--training-parallelism 1' in result.stdout and '--gate-version 5' in result.stdout
     assert result.stdout.count('--extra-manifest')==1
     if active:
@@ -214,7 +214,7 @@ def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path
 def test_deploy17_backup_restore_only_temporary_files(tmp_path):
     import subprocess
     text=(ROOT/'scripts/qc_deploy17.sh').read_text().split('# --- switch:',1)[0]
-    script=tmp_path/'functions.sh';script.write_text(text.replace('/home/newbiexvwu',str(tmp_path)))
+    script=tmp_path/'functions.sh';script.write_text(text.replace('$HOME',str(tmp_path)))
     result=subprocess.run(['bash','-c','''
 source "$1"
 O="$2/backup"; mkdir -p "$W/scripts" "$O"

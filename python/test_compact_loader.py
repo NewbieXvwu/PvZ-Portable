@@ -52,19 +52,6 @@ def game_frames(count: int) -> list[dict]:
 
 
 class CompactBoardsTest(unittest.TestCase):
-    def test_round_trip_is_bit_exact(self):
-        rng = np.random.default_rng(0)
-        boards = rng.normal(size=(5, 4, 3)).astype(np.float16)
-        boards[boards > 0.5] = 0                      # mostly zeros, like a real board
-        boards[0, 0, 0] = np.float16(-0.0)            # a stored zero whose sign matters
-        boards[1, 2, 1] = np.float16(np.nan)
-        store = CompactBoards(boards.shape[1:])
-        store.append(boards)
-        store.finish()
-        out = store.batch(np.arange(5), "cpu")
-        self.assertTrue(torch.equal(out.to(torch.float16).view(torch.int16),
-                                    torch.from_numpy(boards).view(torch.int16)))
-
     def test_constant_plane_is_hoisted_and_written_back(self):
         rng = np.random.default_rng(1)
         boards = np.zeros((6, 10, 10), dtype=np.float16)

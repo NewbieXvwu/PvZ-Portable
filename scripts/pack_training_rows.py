@@ -11,7 +11,7 @@ pack_monolithic is the full-build reference for verification, with identical row
 The production CLI always writes segments; there is no alternate packing mode.
 
   python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b
-  python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b --verify --out /absolute/pack.npz
+  python3 /absolute/repo/scripts/pack_training_rows.py --data /absolute/frames --labels a,b --out /absolute/pack.npz
 """
 from __future__ import annotations
 
@@ -544,7 +544,6 @@ def main() -> None:
     p.add_argument("--label-keep", type=json.loads, default={}, help='JSON {label_regex: fraction}; keep whole archives')
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
-    p.add_argument("--verify", action="store_true", help="compare the pack with a fresh build")
     p.add_argument("--prune", action="store_true",
                    help="delete the packs of a label subset this one supersedes")
     args = p.parse_args()
@@ -552,11 +551,6 @@ def main() -> None:
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
                            sources=archive_fingerprint(args.data, set(args.labels.split(","))), label_keep=args.label_keep)
-    if args.verify:
-        if args.out is None:
-            p.error("--verify needs --out")
-        verify(args.data, options, args.out)
-        return
     cache_dir = args.cache_dir or (args.data / ".feature_cache")
     target = pack(args.data, options, cache_dir, args.precompute_workers, None, args.out)
     if args.prune:

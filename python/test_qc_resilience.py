@@ -579,15 +579,3 @@ def test_bad_demo_configuration_retires_only_its_cell_before_dispatch(tmp_path, 
     q.reconcile_start_cells(s, specs)
     assert 'bad' not in s['cells']
 
-
-def test_gate_switch_waits_for_issued_jobs_but_not_for_a_partial_round():
-    s = state()
-    s['training_jobs'] = [dict(round=1, status='queued')]
-    with pytest.raises(ValueError, match='drained pipeline'):
-        q.set_gate_version(s, 4)
-    assert 'gate_version' not in s
-    q.set_gate_version(s, 3)
-    s['training_jobs'] = [dict(round=1, status='done')]
-    s['completed_groups'] = plan()    # mid-round: no gate contract has been issued for these groups
-    q.set_gate_version(s, 4)
-    assert s['gate_version'] == 4

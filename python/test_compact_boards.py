@@ -19,6 +19,7 @@ class CompactBoardsTest(unittest.TestCase):
         for channels in (92, 96):
             boards = np.zeros((7, channels, 6, 10), dtype=np.float16)
             boards[1, 0, 0, 0] = -0.0
+            boards[5, 0, 0, 0] = np.float16(np.nan)   # a NaN payload must survive too
             boards[2, 1, 2, 3] = .1234
             boards[3, -1, -1, -1] = -3.25
             boards[4] = .3

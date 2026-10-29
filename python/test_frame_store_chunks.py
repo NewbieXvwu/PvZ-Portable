@@ -46,19 +46,6 @@ def source_of(frames: list[dict]) -> bytes:
     return "".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames).encode()
 
 
-def test_chunked_encode_matches_whole_game_encode():
-    frames = game()
-    source = source_of(frames)
-    whole = encode_frames(frames, source)
-    chunked = encode_frames_from_source(source, chunk=ENCODE_CHUNK)
-    assert list(whole) == list(chunked)
-    assert whole["hints"] == chunked["hints"]
-    for name in ("rows", "boards", "scalars", "plant", "packet", "cell", "values"):
-        assert whole[name].dtype == chunked[name].dtype, name
-        assert whole[name].shape == chunked[name].shape, name
-        np.testing.assert_array_equal(whole[name], chunked[name], err_msg=name)
-
-
 def test_chunked_encode_is_independent_of_the_chunk_size():
     frames = game()
     source = source_of(frames)

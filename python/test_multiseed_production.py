@@ -290,8 +290,8 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
     before = args.state.read_bytes()
     selection_ledger, gate_ledger = tmp_path / 'selection.json', tmp_path / 'gate.json'
     start_ledger = tmp_path / 'start.json'
-    start_ledger.write_text(json.dumps({'pool': list(queue.START_SEED_POOL),
-                                      'allocated': [[200000000, 200000256]]}))
+    start_ledger.write_text(json.dumps({'pools': [list(queue.START_SEED_POOL)],
+                                        'allocated': [[200000000, 200000256]]}))
     start_before = start_ledger.read_bytes()
     monkeypatch.setattr(queue, 'set_oom_score_adj', lambda _: None)
     monkeypatch.setattr(queue, 'load_panel', lambda *_: ({}, [1.], {}, {}))

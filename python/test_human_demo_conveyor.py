@@ -1,10 +1,16 @@
-"""End-to-end scripted recording and replay for original conveyor levels."""
+"""End-to-end scripted recording and replay for original conveyor levels.
+
+Manual harness: needs the locally built engine at EXECUTABLE and interactive human
+input (headless=False), so it is skipped rather than failed when the binary is absent.
+"""
 from __future__ import annotations
 
 import json
 from pathlib import Path
 import sys
 import tempfile
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
@@ -14,7 +20,7 @@ from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from pvz_tasks import profile_for_deck
 
-RESOURCE = Path('/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')
+RESOURCE = Path(str(Path.home() / 'Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'))
 EXECUTABLE = Path('/tmp/pvz-boss50-build/pvz-portable')
 def record_and_verify(level: int, seed: int, task_id: str, archive: Path) -> dict:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(()),
@@ -42,6 +48,8 @@ def record_and_verify(level: int, seed: int, task_id: str, archive: Path) -> dic
     return report
 
 
+@pytest.mark.skipif(not EXECUTABLE.is_file() or not (RESOURCE / 'main.pak').is_file(),
+                    reason='requires the locally built engine and game resources')
 def test_original_conveyor_human_record_replay():
     with tempfile.TemporaryDirectory(prefix='pvz-task85c-') as tmp:
         root = Path(tmp)
