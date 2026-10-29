@@ -744,6 +744,12 @@ def main(*, step_observer=None) -> None:
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     load_options = training_row_options(args.resolved_recipe)
+    private_weights = None
+    history_keep = args.resolved_recipe.get('history_l7_keep', 1.0)
+    deck_cap = args.resolved_recipe.get('deck_weight_cap', 1.0)
+    if history_keep < 1 or deck_cap < 1:
+        from pvz_training_rows import SharedPackAdjustment
+        private_weights = SharedPackAdjustment(args.data, history_keep, deck_cap)
     label_adjustment = None
     if args.pack_recipe is not None:
         from pvz_recipe import load_recipe
@@ -758,6 +764,11 @@ def main(*, step_observer=None) -> None:
             label_adjustment.observe(path, rows)
             if previous_observer: previous_observer(path, rows)
         load_options['label_weight'] = packed_options['label_weight']
+    if private_weights is not None:
+        original_observer = observer
+        def observer(path, rows):
+            private_weights.observe(path, rows)
+            if original_observer: original_observer(path, rows)
     loaded = load(args.data, **load_options, row_observer=observer)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     if label_adjustment is not None:
@@ -774,6 +785,8 @@ def main(*, step_observer=None) -> None:
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
+    if private_weights is not None:
+        private_weights.apply_keep(weight, is_val)
     if row_plan:
         row_plan.finish(len(plant), is_val.numpy())
     if source_counts and args.source_row_report:
@@ -816,6 +829,8 @@ def main(*, step_observer=None) -> None:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
+    if private_weights is not None:
+        private_weights.apply_deck_cap(weight, is_val, packet_info)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
@@ -824,7 +839,8 @@ def main(*, step_observer=None) -> None:
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
-    pos_weight = torch.tensor([waits / max(1.0, float(plant.sum()))], device=args.device).sqrt()
+    positive_count = float(plant[weight > 0].sum()) if private_weights is not None else float(plant.sum())
+    pos_weight = torch.tensor([waits / max(1.0, positive_count)], device=args.device).sqrt()
 
     def batch_loss(idx, train):
         b = boards.batch(idx, args.device)
@@ -836,7 +852,7 @@ def main(*, step_observer=None) -> None:
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
-        denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
+        denom = w.sum().clamp_min(1e-30) if row_plan or private_weights is not None else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
         if args.aux_weight:
@@ -854,12 +870,12 @@ def main(*, step_observer=None) -> None:
                 teacher = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
                 kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)
                 wc = w[rows]
-                cell_denom=wc.sum().clamp_min(1e-30) if row_plan else wc.sum()
+                cell_denom=wc.sum().clamp_min(1e-30) if row_plan or private_weights is not None else wc.sum()
                 loss = loss + args.cell_soft_weight * (kl * wc).sum() / cell_denom
         if planted.any():
             wp = w[planted]                               # all 1 unless --label-weight is used
             loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
-                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if row_plan else wp.sum())
+                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if row_plan or private_weights is not None else wp.sum())
         stats = {}
         if not train:
             with torch.no_grad():
@@ -874,11 +890,24 @@ def main(*, step_observer=None) -> None:
         raise ValueError("recipe split must produce nonempty training and validation sets")
     train_idx = torch.nonzero(~is_val).squeeze(1).to(torch.int32)
     val_idx = torch.nonzero(is_val).squeeze(1).to(torch.int32)
-    steps = args.epochs * -(-len(train_idx) // args.batch_size)
+    epoch_rows = len(train_idx)
+    if private_weights is not None and history_keep < 1:
+        train_idx = train_idx[weight[train_idx] > 0]
+        if not len(train_idx):
+            raise ValueError('no positive training rows after history_l7_keep')
+    steps = args.epochs * -(-epoch_rows // args.batch_size)
     if args.max_steps is not None:
         if args.max_steps>steps:
             p.error("--max-steps exceeds the requested epochs")
         steps=args.max_steps
+    if private_weights is not None:
+        report = args.out / 'shared_pack_weights.json'
+        note = json.loads(report.read_text()) if report.exists() else {}
+        note['post_pack'] = private_weights.report
+        note['training_rows_before'] = epoch_rows
+        note['effective_training_rows'] = len(train_idx)
+        note['planned_optimizer_steps'] = steps
+        report.write_text(json.dumps(note, indent=1) + '\n')
     schedule = (torch.optim.lr_scheduler.LambdaLR(opt, lambda t: 0.5 * (1 + math.cos(math.pi * min(t, steps) / steps)))
                 if args.lr_schedule == "cosine" else None)
     history = []
@@ -893,6 +922,8 @@ def main(*, step_observer=None) -> None:
                 "soft_weight": 0.0, "ema": 0.0,
                 "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
+                **({'private_weights': dict(history_l7_keep=history_keep, deck_weight_cap=deck_cap)}
+                   if private_weights is not None else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 
     completed_steps=0
@@ -903,6 +934,8 @@ def main(*, step_observer=None) -> None:
         metrics.update(phase="training")
         net.train()
         perm = train_idx[torch.randperm(len(train_idx))]
+        if len(perm) < epoch_rows:
+            perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
         train_loss = 0.0
         for start in range(0, len(perm), args.batch_size):
             loss, _ = batch_loss(perm[start:start + args.batch_size], True)
@@ -928,7 +961,7 @@ def main(*, step_observer=None) -> None:
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "train_loss": train_loss / len(train_idx), "val_loss": float(vl),
+        history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows, "val_loss": float(vl),
                         **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:

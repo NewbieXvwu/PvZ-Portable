@@ -169,3 +169,99 @@ class LabelWeightAdjustment:
             raise ValueError('label weight spans do not cover the loaded rows')
         for start, stop, factor in self.spans:
             weight[start:stop] *= factor
+
+
+class SharedPackAdjustment:
+    """Archive selection and deck caps on private training weights; validation stays fixed."""
+    def __init__(self, data, history_l7_keep=1.0, deck_weight_cap=1.0):
+        self.data = Path(data)
+        self.keep = history_l7_keep
+        self.cap = deck_weight_cap
+        self.spans = []
+        self.rows = 0
+        self.report = {}
+
+    def observe(self, path, rows):
+        from pvz_training_pack import keep_archive
+        path = Path(path)
+        count = len(rows)
+        historical = path.parent.name.startswith(('z', 'd7'))
+        if count and (self.cap < 1 or self.keep < 1 and historical):
+            meta = json.loads((path.parent / 'meta.json').read_text())
+            task = meta.get('task', {})
+            level = int(task.get('level', meta.get('context', {}).get('level')))
+            selected = (self.keep == 1 or not historical or level != 7
+                        or keep_archive(self.data, path, {'.*': self.keep}))
+            self.spans.append((self.rows, self.rows + count, level, task.get('deck'),
+                               historical and level == 7, selected))
+        self.rows += count
+
+    def apply_keep(self, weights, is_val):
+        if self.keep == 1:
+            return
+        eligible = kept = dropped_rows = 0
+        before = after = 0.0
+        for start, stop, _level, _deck, historical, selected in self.spans:
+            if not historical:
+                continue
+            training = ~is_val[start:stop]
+            if not training.any():
+                continue
+            eligible += 1
+            kept += selected
+            part = weights[start:stop]
+            mass = float(part[training].sum())
+            before += mass
+            if selected:
+                after += mass
+            else:
+                dropped_rows += int(training.sum())
+                part[training] = 0
+        self.report['history_l7'] = dict(keep=self.keep, eligible_archives=eligible,
+                                       kept_archives=kept, dropped_training_rows=dropped_rows,
+                                       before_weight=before, after_weight=after)
+
+    def apply_deck_cap(self, weights, is_val, packets):
+        if self.cap == 1:
+            return
+        groups, spans = {}, []
+        for start, stop, level, deck, _historical, _selected in self.spans:
+            if deck is None:
+                # Fixed decks are recorded in the existing pack. Never infer an old deck
+                # from today's task defaults. Explicit [] keeps original conveyors separate.
+                deck = packets.columns[0][start]
+                deck = [int(kind) for kind in deck if kind >= 0]
+            signature = (level, tuple(sorted(deck)))
+            training = ~is_val[start:stop]
+            mass = float(weights[start:stop][training].sum())
+            if mass > 0:
+                groups[signature] = groups.get(signature, 0.0) + mass
+                spans.append((start, stop, signature))
+        if len(groups) * self.cap < 1 - 1e-12:
+            raise ValueError('too few positive training deck signatures for deck_weight_cap')
+        masses = sorted(groups.values(), reverse=True)
+        total = sum(masses)
+        threshold = max(masses)
+        if len(groups) * self.cap <= 1 + 1e-12:
+            threshold = min(masses)
+        else:
+            remaining = total
+            for count, mass in enumerate(masses):
+                bound = self.cap * remaining / (1 - self.cap * count)
+                if mass <= bound:
+                    threshold = bound
+                    break
+                remaining -= mass
+        factors = {key: min(1.0, threshold / mass) for key, mass in groups.items()}
+        for start, stop, signature in spans:
+            factor = factors[signature]
+            if factor < 1:
+                part = weights[start:stop]
+                training = ~is_val[start:stop]
+                part[training] *= factor
+        allocated = sum(groups[key] * factor for key, factor in factors.items())
+        self.report['decks'] = dict(cap=self.cap, before_weight=total, after_weight=allocated,
+            signatures=[dict(level=level, deck=list(deck), before_weight=mass,
+                             multiplier=factors[(level, deck)],
+                             effective_share=mass * factors[(level, deck)] / allocated)
+                        for (level, deck), mass in sorted(groups.items())])
