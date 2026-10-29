@@ -4,9 +4,12 @@
 种子段唯一且不与现有清单重叠、登记表里的卡组能由 draw_seed 重放。
 """
 import json
+import hashlib
 import sys
 import unittest
 from pathlib import Path
+
+import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
@@ -130,6 +133,73 @@ class PanelTest(unittest.TestCase):
             for task in document['tasks']:
                 if task['terrain'] == 'fog':
                     self.assertEqual(task['fog_observation'], 'human_v2')
+
+
+def test_data_levers_disabled_course_is_bitwise_unchanged():
+    registry = json.loads(cells.REGISTRY.read_text())
+    assert cells.load_deck_pool(registry) == []
+    payload = json.dumps(cells.build_panels(registry, []), sort_keys=True).encode()
+    # task137 panels before task159, including every seed and all task fields.
+    assert hashlib.sha256(payload).hexdigest() == 'c474925d0502aa31bf677dd6c592ad85b446d2078b961900663f9947d456d50c'
+
+
+def test_data_levers_pool_deduplicates_wins_filters_rules_and_holdouts(tmp_path):
+    from pvz_tasks import profile_for_deck
+    registry = json.loads(cells.REGISTRY.read_text())
+    def write(name, value):
+        path = tmp_path / name
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value))
+        return path
+    # v6's admitted roof decks must stay held out even at a different level.
+    reserved = [1, 2, 14, 15, 17, 30, 32, 33, 35, 41]
+    heldout = write('gate_v6.json', dict(tasks=[dict(level=42, deck=reserved)]))
+    deck = [0, 1, 2, 3, 4, 7, 40]
+    rows = []
+    cases = [(7, deck, '通过', 1), (7, list(reversed(deck)), '通过', 1),
+             (8, deck, '通过', 1), (7, [0, 1, 2, 3, 4, 38], '通过', 1),
+             (24, [0, 1, 2, 3, 4, 7], '通过', 1), (47, reserved, '通过', 1),
+             (7, generate_deck(7, 8, 159), '失败', 1),
+             (7, generate_deck(7, 8, 160), '通过', 2),
+             (7, [0, 1, 2, 3, 4, 40], '通过', 1)]  # 升级缺底座。
+    for index, (level, cards, verify, result) in enumerate(cases):
+        archive = f'archives/{index}'
+        # Rejected/lost ledger entries must never cause archive reads.
+        if verify == '通过' and result == 1:
+            write(f'{archive}/meta.json', dict(task=dict(level=level, deck=list(cards)),
+                                              outcome=dict(result=1)))
+        rows.append(dict(verify=verify, result=result, grade='half' if result == 1 else 'loss', archive=archive))
+    ledger = write('merged_progress.json', dict(archives=rows))
+    roof_deck = [1, 2, 3, 4, 6, 20, 29, 30, 32, 33]
+    roof = write('roof.json', dict(candidates=[dict(task=dict(level=45, deck=roof_deck)),
+                                              dict(task=dict(level=48, deck=list(reversed(reserved))))]))
+    pool = cells.load_deck_pool(registry, gpt_ledger=ledger, archive_root=tmp_path,
+                               roof_candidates=roof, heldout_panels=[heldout])
+    assert [(task['level'], task['deck']) for task in pool] == [(7, deck), (45, roof_deck)]
+    assert {task['source'] for task in pool} == {'task105', 'task148'}
+    assert pool[0]['profile']['owned_upgrade_plants'] == [40]
+    assert profile_for_deck(tuple(pool[0]['deck'])).owned_upgrade_plants == (40,)
+    assert all(task['profile']['seed_slot_count'] == len(task['deck']) for task in pool)
+    assert cells.load_deck_pool(registry, gpt_ledger=ledger, archive_root=tmp_path,
+                                roof_candidates=roof, heldout_panels=[heldout]) == pool
+    panels = cells.build_panels(registry, pool)
+    baseline = cells.build_panels(registry)
+    tasks = panels['training_panel']['tasks']
+    assert panels['eval_panel'] == baseline['eval_panel']
+    assert tasks[:len(baseline['training_panel']['tasks'])] == baseline['training_panel']['tasks']
+    added = tasks[len(baseline['training_panel']['tasks']):]
+    assert len(added) == 2 * len(cells.LADDER)
+    holdouts = cells.heldout_signatures(registry, [heldout])
+    assert not {tuple(sorted(task['deck'])) for task in tasks} & holdouts
+    assert len({tuple(task['deck']) for task in pool}) == len(pool)
+    seeds = [seed for task in added for seed in task['seeds']]
+    assert len(set(seeds)) == len(seeds)
+    assert min(seeds) == cells.POOL_SEED_BASE
+    assert max(seeds) < 2**31
+    assert all(task['profile']['seed_slot_count'] == len(task['deck']) for task in added)
+    only_heldout = write('heldout_candidates.json', dict(candidates=[dict(task=dict(level=47, deck=reserved))]))
+    with pytest.raises(ValueError, match='no eligible external decks'):
+        cells.load_deck_pool(registry, roof_candidates=only_heldout, heldout_panels=[heldout])
 
 
 if __name__ == '__main__':

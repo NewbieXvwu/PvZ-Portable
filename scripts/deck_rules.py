@@ -65,21 +65,21 @@ REQUIRED_BY_LEVEL = (
 )
 
 
-def region_for_level(level: int) -> str:
-    """1–49 的普通选卡关 -> 区；传送带关与特殊关（5 的倍数）不接受。"""
-    if type(level) is not int or not 1 <= level <= 49 or level % 5 == 0:
+def region_for_level(level: int, *, fixed_bank: bool = False) -> str:
+    """普通选卡关 -> 区；fixed_bank 额外接受 task148 的 L45 预装手牌变体。"""
+    if type(level) is not int or not 1 <= level <= 49 or (level % 5 == 0 and not (fixed_bank and level == 45)):
         raise ValueError('关号必须是1至49的普通选卡关，不含5的倍数')
     return REGIONS[(level - 1) // 10]
 
 
-def banned_for_level(level: int) -> set[int]:
-    region = region_for_level(level)
+def banned_for_level(level: int, *, fixed_bank: bool = False) -> set[int]:
+    region = region_for_level(level, fixed_bank=fixed_bank)
     return GLOBAL_BANNED | REGION_BANNED[region] | {
         card for card, levels in CONDITIONAL_BANS.items() if level in levels}
 
 
-def requirements(level: int) -> dict[str, set[int]]:
-    region = region_for_level(level)
+def requirements(level: int, *, fixed_bank: bool = False) -> dict[str, set[int]]:
+    region = region_for_level(level, fixed_bank=fixed_bank)
     required = dict(REQUIRED_BY_REGION[region])
     for name, levels, choices in REQUIRED_BY_LEVEL:
         if level in levels:
@@ -87,11 +87,11 @@ def requirements(level: int) -> dict[str, set[int]]:
     return required
 
 
-def deck_violations(level: int, deck) -> list[str]:
+def deck_violations(level: int, deck, *, fixed_bank: bool = False) -> list[str]:
     """返回违反 v5 的条目（空列表 = 合法）。给生成器与测试共用。"""
     deck = tuple(deck)
     problems = []
-    region = region_for_level(level)
+    region = region_for_level(level, fixed_bank=fixed_bank)
     cards = set(deck)
     if not 6 <= len(deck) <= 10:
         problems.append(f'长度 {len(deck)} 不在 6..10')
@@ -100,7 +100,7 @@ def deck_violations(level: int, deck) -> list[str]:
     if not all(type(card) is int and 0 <= card < 48 for card in deck):
         problems.append('卡号超出 0..47')
         return problems
-    banned = banned_for_level(level)
+    banned = banned_for_level(level, fixed_bank=fixed_bank)
     for card in sorted(cards & banned):
         problems.append(f'禁卡 {card}（{region}）')
     for card, bases in DEPENDENCIES.items():
@@ -108,7 +108,7 @@ def deck_violations(level: int, deck) -> list[str]:
             problems.append(f'{card} 缺少底座 {sorted(bases)}')
     if region in ('day', 'pool', 'roof') and ((35 in cards) != bool(cards & DAY_MUSHROOMS)):
         problems.append('咖啡豆 35 必须与白天蘑菇同进同出')
-    for name, choices in requirements(level).items():
+    for name, choices in requirements(level, fixed_bank=fixed_bank).items():
         if not cards & choices:
             problems.append(f'缺少必备组件 {name} {sorted(choices)}')
     return problems

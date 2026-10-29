@@ -35,3 +35,24 @@ r36 训练包（详见 `task156-data-mix-census.md`）：60% 行是课程开始�
 重打包只重建实际降采样标签的不可变段，其他段直接复用。保留存档仍可复用已有特征缓存，哈希筛选不解压帧。首次启用或调整比例要重新组装受影响标签的保留行，另写一个小索引，旧段不删除。代价随保留档案和缓存冷热变化，本任务仅运行秒级合成小样本，未启动全量重打包。
 
 相关小测试已通过：配方规则校验、默认关闭逐位等价、整局确定性、跨目录/新增标签一致，以及未受影响段复用。
+
+### 2. 可选胜利卡组池与每轮配额
+
+生成器原先用 `draw_seed=137`，通过 v5 按关卡规则抽卡，冻结16个训练格与8套评估卡组。现在可选传入 `--gpt-ledger <task105/import/merged_progress.json>`（也接受同格式的 `import_progress.json`），只读 `verify=通过`、`result=1`、`grade!=loss` 且有入库存档路径的记录，再读该存档的 `meta.json` 卡组。不从汇总证据或任务默认卡组猜测真实胜局卡组，不读帧、不复验。账本 `archive` 为相对路径时，用 `--archive-root <该路径对应的仓库根>` 指定根目录，绝对路径直接使用。
+
+屋顶来源为 `--roof-candidates <task148-roof-candidates.json>`，两个来源可以单用或同时用。须同时提供 task148 v6 草案留出面板，当前工作树没有该文件时传 `--heldout-panel <gate_v6_panel.json>`。额外的挑选或门禁面板可重复传此参数。当前 v5、挑选专用留出、task137 eval 自动纳入排除集合，v6 的实际 `tasks` 也排除，候选全集不全部当作留出。
+
+例如先用 `git show origin/gatev6:MEMORY/docs/task148-roof-candidates.json > /tmp/task159-roof.json` 和 `git show origin/gatev6:configs/gate_v6_panel.json > /tmp/task159-gate.json` 取得小文件，再生成：
+
+```sh
+python3 scripts/make_random_deck_cells.py \
+  --roof-candidates /tmp/task159-roof.json \
+  --heldout-panel /tmp/task159-gate.json \
+  --out artifacts/task159
+```
+
+要合并 GPT 胜局卡组，在同一命令追加 `--gpt-ledger <本机账本> --archive-root <本机存档根>`。这些输入须先在 Mac 可读，本任务未连接台式机生产。生成面板后固定输入版本及输出面板，再通过课程现有 `--extra-manifest <training_panel.json>` 使用。没有两个来源参数时，输出与原task137面板逐位相同。
+
+按排序植物多重集跨来源去重，同签名保留关号最小的合法任务，跳过 v5 黑名单、缺地形底座或缺升级底座的卡组。新族 `rd159_l{level}_train_{hash}`、升级所有权与独立训练种子段已在 DESIGN §14.49 登记。task148实际14条候选经排除v6已选留出、v5过滤及去重后留下两格：L43 `[1,10,14,20,23,32,33,35,36,42]` 和L45 `[1,2,3,4,6,20,29,30,32,33]`，增加18个倍率任务。L45沿用非空预装手牌变体，评估卡组不变。真实task105账本与存档没有在本任务运行，仅用同格式小样本验证读取路径。
+
+每轮配额复用现有参数：`--random-deck-share` 限制全部随机卡组格的总局数份额，`--games-per-group 48` 对应每格保底24局。每轮768局时，默认0.15允许4格×24局，改0.25允许最多8格×24局，具体受可用格子和预算限制。提高份额会同时降低普通课程可用配额。来源开关只增加候选格，不自动提高份额，也不触发旧数据重打包；新增对局沿现有标签段增量打包。

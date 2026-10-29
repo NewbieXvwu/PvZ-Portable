@@ -26,6 +26,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import sys
@@ -35,6 +36,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts')]
 
 from deck_rules import RULE_VERSION, deck_violations, generate_deck, region_for_level  # noqa: E402
+from pvz_tasks import profile_for_deck, terrain_covered  # noqa: E402
 
 REGISTRY = ROOT / 'configs/random_deck_cells_v5.json'
 LEVELS = (7, 8, 12, 14, 24, 26, 33, 37)
@@ -49,6 +51,63 @@ TRAINING_SEED_BLOCK = [MULT_SEED_BASE, 214_000_000]
 DECKS_PER_LEVEL = (('train', 2), ('eval', 1))
 REGISTERED_CONFIGS = ('student_selection_v2.json', 'gate_v5_panel.json', 'human_demo_tasks.json',
                       'student_selection_holdout.json')
+POOL_SEED_BASE = 1_590_000_000
+
+
+def heldout_signatures(registry, panels):
+    """只比卡组多重集，不比较种子，留出卡组在所有关卡都不能进训练。"""
+    gate_v6 = ROOT / 'configs/gate_v6_panel.json'
+    if not panels and not gate_v6.exists():
+        raise ValueError('external deck pools require --heldout-panel with the task148 gate v6 draft')
+    paths = [ROOT / 'configs' / name for name in REGISTERED_CONFIGS if name != 'human_demo_tasks.json']
+    paths += list(panels)
+    if gate_v6.exists():
+        paths.append(gate_v6)
+    tasks = [task for path in paths for task in json.loads(path.read_text())['tasks']]
+    tasks += [task for task in registry['tasks'] if task['split'] == 'eval']
+    return {tuple(sorted(task['deck'])) for task in tasks if task.get('deck')}
+
+
+def load_deck_pool(registry, *, gpt_ledger=None, archive_root=ROOT, roof_candidates=None, heldout_panels=()):
+    """读取已验证胜局的 meta 与 task148 候选，不读取帧或重新重放。"""
+    if gpt_ledger is None and roof_candidates is None:
+        return []
+    heldout = heldout_signatures(registry, heldout_panels)
+    seen = heldout | {tuple(sorted(task['deck'])) for task in registry['tasks']}
+    candidates = []
+    if gpt_ledger is not None:
+        for row in json.loads(gpt_ledger.read_text())['archives']:
+            if (row['verify'] != '通过' or row['result'] != 1 or row['grade'] == 'loss'
+                    or not row.get('archive')):
+                continue
+            archive = Path(row['archive'])
+            meta = json.loads((archive_root / archive / 'meta.json').read_text())
+            if meta['outcome']['result'] == 1:
+                candidates.append((meta['task'], 'task105'))
+    if roof_candidates is not None:
+        candidates += [(entry['task'], 'task148')
+                       for entry in json.loads(roof_candidates.read_text())['candidates']]
+    tasks = []
+    for task, source in sorted(candidates, key=lambda item: (item[0]['level'], sorted(item[0]['deck']), item[1])):
+        level, deck = task['level'], tuple(sorted(task['deck']))
+        try:
+            problems = deck_violations(level, deck, fixed_bank=True)
+        except ValueError:  # 原生传送带与特殊关没有可供本课程复用的固定卡组。
+            continue
+        if problems or not terrain_covered(level, deck) or deck in seen:
+            continue
+        seen.add(deck)
+        identity = hashlib.sha256(json.dumps([level, deck]).encode()).hexdigest()[:12]
+        profile = profile_for_deck(deck)
+        tasks.append(dict(task_id=f'rd159_l{level}_train_{identity}', level=level,
+                          terrain=region_for_level(level, fixed_bank=True), deck=list(deck), source=source,
+                          profile=dict(seed_slot_count=profile.seed_slot_count,
+                                       owned_upgrade_plants=list(profile.owned_upgrade_plants))))
+    if not tasks:
+        raise ValueError('no eligible external decks after terrain/rule/heldout filtering')
+    if {tuple(sorted(task['deck'])) for task in tasks} & heldout:
+        raise ValueError('external training decks overlap selection/gate holdouts')
+    return tasks
 
 
 def registered_signatures() -> set[tuple[int, ...]]:
@@ -98,10 +157,12 @@ def task_document(task: dict, multiplier: float, seeds) -> dict:
                  curriculum_ladder=list(LADDER))
     if task['terrain'] == 'fog':
         entry['fog_observation'] = 'human_v2'
+    if 'profile' in task:
+        entry['profile'] = task['profile']
     return entry
 
 
-def build_panels(registry: dict) -> dict:
+def build_panels(registry: dict, pool_tasks=()) -> dict:
     training = [task for task in registry['tasks'] if task['split'] == 'train']
     tasks = []
     for cell_index, task in enumerate(training):
@@ -111,11 +172,22 @@ def build_panels(registry: dict) -> dict:
             entry = task_document(task, multiplier, range(start, start + SEEDS_PER_TASK))
             entry['task_id'] = task['task_id'] + suffix
             tasks.append(entry)
+    for cell_index, task in enumerate(pool_tasks):
+        for band, multiplier in enumerate(LADDER):
+            suffix = '' if multiplier == 1.0 else '_m%03d' % round(multiplier * 100)
+            start = POOL_SEED_BASE + cell_index * MULT_CELL_STRIDE + band * MULT_BAND_STRIDE
+            entry = task_document(task, multiplier, range(start, start + SEEDS_PER_TASK))
+            entry.update(task_id=task['task_id'] + suffix, deck_source=task['source'])
+            tasks.append(entry)
     evaluation = [task_document(task, 1.0, []) for task in registry['tasks'] if task['split'] == 'eval']
-    return dict(training_panel=dict(schema_version=1, purpose='task137 v5 random-deck curriculum cells',
+    panels = dict(training_panel=dict(schema_version=1, purpose='task137 v5 random-deck curriculum cells',
                                     training_seed_block=TRAINING_SEED_BLOCK, tasks=tasks),
                 eval_panel=dict(schema_version=1, purpose='task137 v5 unseen decks for selection and monitoring',
                                 tasks=evaluation))
+    if pool_tasks:
+        panels['training_panel']['external_training_seed_block'] = [
+            POOL_SEED_BASE, POOL_SEED_BASE + len(pool_tasks) * MULT_CELL_STRIDE]
+    return panels
 
 
 def check(registry: dict) -> None:
@@ -139,6 +211,11 @@ def main() -> None:
     parser.add_argument('--out', type=Path, default=ROOT / 'artifacts/task137')
     parser.add_argument('--check', action='store_true', help='only verify the committed registry')
     parser.add_argument('--freeze-registry', action='store_true', help='print a fresh registry')
+    parser.add_argument('--gpt-ledger', type=Path, help='task105 import/merged_progress.json (or import_progress.json)')
+    parser.add_argument('--archive-root', type=Path, default=ROOT, help='root for ledger archive paths')
+    parser.add_argument('--roof-candidates', type=Path, help='task148-roof-candidates.json')
+    parser.add_argument('--heldout-panel', type=Path, action='append', default=[],
+                        help='additional selection/gate panel; supply gate_v6_panel.json before using external pools')
     args = parser.parse_args()
     if args.freeze_registry:
         print(json.dumps(generate_registry(), indent=1) + '\n')
@@ -148,7 +225,9 @@ def main() -> None:
     if args.check:
         print(f'registry ok: {len(registry["tasks"])} tasks, rule v{registry["rule_version"]}')
         return
-    panels = build_panels(registry)
+    pool = load_deck_pool(registry, gpt_ledger=args.gpt_ledger, archive_root=args.archive_root,
+                          roof_candidates=args.roof_candidates, heldout_panels=args.heldout_panel)
+    panels = build_panels(registry, pool)
     args.out.mkdir(parents=True, exist_ok=True)
     for name, document in panels.items():
         (args.out / f'{name}.json').write_text(json.dumps(document, indent=1) + '\n')

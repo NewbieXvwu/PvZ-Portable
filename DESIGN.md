@@ -1675,3 +1675,11 @@ task137 的 `--extra-manifest` 与门禁 v5 参数。stop 直接杀、不排空�
 缓存只增约 73 MB。按近期 25 s/段/worker 计，配方默认的 2 个建造者约 3 小时，
 机器近期实际能跑 4–7 个建造者；采集在打包期间继续。详见
 [task143结论](MEMORY/docs/task143-deploy15-refresh.md)。
+
+### 14.49 可选胜利卡组训练族 `rd159_l{level}_train_{hash}`（task159，2026-10-29 登记）
+
+`make_random_deck_cells.py --gpt-ledger <task105导入账本> --archive-root <账本存档路径根>` 从验证通过的胜局元数据读卡组，`--roof-candidates <task148-roof-candidates.json>` 读屋顶候选，两者可各自启用。默认都关闭，task137 原有训练/评估面板保持逐位相同。新卡组沿用 §14.45 的 v5 黑名单、地形必备表与升级底座规则，另调用 `pvz_tasks.terrain_covered` / `profile_for_deck` 检查地形与生成升级所有权。L45 仅接收 task148 同语义的非空预装手牌变体，普通随机生成器仍不接受特殊关和传送带关。
+
+签名为植物编号排序后的多重集，跨来源和关卡去重，同签名保留关号最小的合法任务。剔除 task137 全部已登记签名，并排除挑选、门禁、专用留出与 task137 eval 的所有卡组。扩展源启用时，若当前工作树没有 `configs/gate_v6_panel.json`，必须通过 `--heldout-panel` 提供该草案；可重复传入其他留出面板。仅面板的 `tasks` 作为留出，task148 的 `candidate_tasks` 仍为候选。比较只用小集合，不重放存档。
+
+新族编号由关号与排序卡组的 SHA256 前12位确定，旧族及旧档重放不变。倍率阶梯仍为 0.5–3.0，各档2048种子；扩展训练块从1,590,000,000起，每格100,000、每档4096，与task137及现有挑选/门禁块分离。生成的面板冻结实际卡组与种子，再用现有 `--extra-manifest` 接入课程。配额复用 `--random-deck-share` 和 `--games-per-group`，默认均不改。不部署。
