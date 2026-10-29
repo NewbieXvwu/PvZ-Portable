@@ -16,7 +16,6 @@ attributed to the incumbent can no longer silently drop a cell.
 from __future__ import annotations
 
 import copy
-import hashlib
 import json
 from pathlib import Path
 
@@ -116,79 +115,31 @@ def selection_templates(holdout_manifest=None, promotion_panel=None):
     return templates
 
 
-def sha(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
-
-
 def make_plan(templates, block, incumbent):
     """Pure planning. No engine, ledger write, score or training is performed here."""
     tasks = [copy.deepcopy(task) for task in templates['tasks']]
     if not tasks:
         raise ValueError('selection panel is empty')
-    current = templates['panel_version'] == PANEL_VERSION
-    budget = SELECTION_BLOCK_SIZE if current else 384
-    count = 8 if current else budget // len(tasks)
-    if count < 1 or block[1] - block[0] != budget:
-        raise ValueError('selection tasks exceed the seed budget or block size is invalid')
+    if templates['panel_version'] != PANEL_VERSION:
+        raise ValueError(f'unknown selection panel: {templates["panel_version"]!r}')
+    count = 8
+    if block[1] - block[0] != SELECTION_BLOCK_SIZE:
+        raise ValueError('selection block size is invalid')
     cursor = block[0]
     for task in tasks:
-        games = 16 if (current and task.get('selection_group') == 'adventure'
-                       and task['terrain'] == 'day') else count
+        games = 16 if task.get('selection_group') == 'adventure' and task['terrain'] == 'day' else count
         task['seeds'] = list(range(cursor, cursor + games))
         cursor += games
-        if 'deck_random' in task:
-            task['splits'] = dict(selection=task['seeds'])
     if cursor > block[1]:
         raise ValueError('selection tasks exceed the seed budget')
     return dict(schema_version=1, panel_version=templates['panel_version'], tasks=tasks,
-                incumbent=str(incumbent), incumbent_sha256=sha(incumbent),
-                seed_block=list(block), games_per_cell=count,
+                incumbent=str(incumbent), seed_block=list(block), games_per_cell=count,
                 games_per_task={task['task_id']: len(task['seeds']) for task in tasks},
                 score_only=[task['task_id'] for task in tasks if task.get('score_only')],
                 selection_holdout_tasks=[task['task_id'] for task in tasks
                                          if task.get('selection_group') == 'unseen_deck'],
                 adventure_tasks=[task['task_id'] for task in tasks
                                  if task.get('selection_group') == 'adventure'],
-                purpose=('adventure levels of the gate-v5 panel on independent seeds; '
-                         + ('ordinary day levels take 16 games, other tasks 8; ' if current else 'equal games per task; ')
-                         + 'unseen-deck cells are recorded but never scored'))
+                purpose=('adventure levels of the gate-v5 panel on independent seeds; ordinary day '
+                         'levels take 16 games, other tasks 8; unseen-deck cells are recorded but never scored'))
 
-
-def validate_random_tasks(panel, env):
-    """Freeze fresh engine-approved receipts using task93's exact sampler and filters."""
-    from dataclasses import replace
-    from pvz_constants import upgrade_plants
-    from pvz_env import TaskSpec
-    from pvz_tasks import (deck_for_level, profile_for_deck, random_deck_covered,
-                           random_deck_draws)
-    for task in panel['tasks']:
-        if 'deck_random' not in task:
-            continue
-        base = deck_for_level(task['level'])
-        capability = replace(profile_for_deck(base), owned_upgrade_plants=tuple(sorted(upgrade_plants())))
-        options = task['deck_random']['engine_options']
-        env.reset(deck=base, task=TaskSpec(level=task['level'], seed=task['seeds'][0],
-                                          playthrough=2, profile=capability))
-        actual = env.deck_options()
-        recommended = dict(actual['not_recommended'])
-        pool = sorted(card for card in env.deck_pool()['crazy_dave_pool']
-                      if 0 <= card < 40 and not recommended.get(card, 1))
-        if pool != options['available_plants'] or actual['not_recommended'] != options['not_recommended']:
-            raise ValueError('selection random family engine pool/warnings changed')
-        for seed in task['seeds']:
-            env.reset(deck=base, task=TaskSpec(level=task['level'], seed=seed, playthrough=2, profile=capability))
-            for attempt, deck in random_deck_draws(task, seed):
-                if not random_deck_covered(task, deck) or env.deck_warnings(deck)['warnings']:
-                    continue
-                try:
-                    env.reset(deck=deck, task=TaskSpec(level=task['level'], seed=seed,
-                                                     playthrough=2, profile=profile_for_deck(deck)))
-                except RuntimeError:
-                    continue
-                if env.deck_warnings(deck)['warnings']:
-                    continue
-                task['deck_random']['validated_decks'][str(seed)] = dict(attempt=attempt, deck=list(deck))
-                break
-            else:
-                raise ValueError(f'no engine-approved random deck: {task["task_id"]}/{seed}')
-    return panel

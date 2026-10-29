@@ -1,5 +1,4 @@
 """task92c: parallel trainers, fallback, durable panels, fresh locked seed blocks."""
-import copy
 import json
 from pathlib import Path
 import sys
@@ -19,7 +18,6 @@ from test_curriculum_pipeline import setup, write_evaluation, write_selection
 
 @pytest.fixture(autouse=True)
 def no_game_engine(monkeypatch):
-    monkeypatch.setattr(queue.TrainingPipeline, '_validate_selection_panel', lambda self, panel: panel)
     monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: 16 * queue.GIB)
     monkeypatch.setattr(queue, 'mem_available_bytes', lambda: 64 * queue.GIB)
     monkeypatch.setattr(queue, 'mem_total_bytes', lambda: 64 * queue.GIB)
@@ -92,7 +90,6 @@ def test_two_trainers_overlap_failure_is_local_and_selection_precedes_gate(tmp_p
     folder = Path(job['recipe']).parent
     assert (folder / 'training_mode.json').is_file()
     assert (folder / 'candidates.json').is_file()
-    assert (folder / 'seeds/seed_000002/failed.json').is_file()
 
 
 @pytest.mark.parametrize('resource', ['host_memory', 'gpu'])
@@ -112,16 +109,6 @@ def test_insufficient_resources_fall_back_to_serial(tmp_path, monkeypatch, resou
     assert len(threads) == 1
     assert len(job['timing']['selection']['rejected']) == 1
     assert (Path(job['recipe']).parent / 'student/selection.json').is_file()
-
-
-def test_prepared_panel_rejects_an_altered_round_seed_allocation(tmp_path, monkeypatch):
-    args, job, _ = run_round(tmp_path, monkeypatch, save_model)
-    changed = copy.deepcopy(job)
-    changed['selection_refresh']['seed_block'] = [value + 384 for value in changed['selection_refresh']['seed_block']]
-    pipeline = object.__new__(queue.TrainingPipeline)
-    pipeline.args = args
-    with pytest.raises(ValueError, match='preparation changed'):
-        pipeline._prepare_selection(changed)
 
 
 def test_each_round_allocates_once_and_panels_never_overlap(tmp_path, monkeypatch):

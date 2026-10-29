@@ -83,7 +83,7 @@ from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
 from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
-                                   make_plan as selection_plan, selection_templates, validate_random_tasks)
+                                   make_plan as selection_plan, selection_templates)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -1363,12 +1363,6 @@ class TrainingPipeline:
                    selection_refresh=dict(incumbent=str(incumbent), templates=str(templates),
                                           seed_block=list(block), ledger=str(ledger)))
 
-    def _validate_selection_panel(self, panel):
-        from pvz_env import PvZEnv
-        self._admit()
-        with PvZEnv(resource_dir=self.args.resource_dir, executable=self.args.executable, headless=True) as env:
-            return validate_random_tasks(panel, env)
-
     def _prepare_selection(self, job):
         frozen = job['selection_refresh']
         folder = Path(job['recipe']).parent
@@ -1389,7 +1383,6 @@ class TrainingPipeline:
                          templates):
             reserved.extend(seed_spans(document))
         assert_disjoint(panel, reserved)
-        panel = self._validate_selection_panel(panel)
         self._marker(manifest, panel)
         self._marker(ready, dict(prepared=time.time()))
         return manifest

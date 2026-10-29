@@ -1,5 +1,6 @@
 """task126: selection-only decks, four frozen candidates, serial resume and deployment isolation."""
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -56,18 +57,13 @@ def test_adventure_body_and_score_only_unseen_decks(tmp_path):
                             (103_000_000, 103_500_000), (200_000_000, 201_000_000)])
 
 
-def test_frozen_task128_selection_plan_retains_its_original_384_seed_block(tmp_path):
+def test_selection_plan_rejects_a_block_of_the_wrong_size(tmp_path):
     templates = selection_templates(HOLDOUT, ROOT / 'configs/gate_v5_panel.json')
-    templates['panel_version'] = 'selection-task128-v4'
     model = tmp_path / 'model.pt'
     model.write_bytes(b'incumbent')
     start = SELECTION_POOLS[0][0]
-    panel = make_plan(templates, (start, start + 384), model)
-    assert panel['panel_version'] == 'selection-task128-v4'
-    assert all(len(task['seeds']) == 8 for task in panel['tasks'])
-    assert panel['tasks'][0]['seeds'] == list(range(start, start + 8))
-    assert panel['tasks'][-1]['seeds'] == list(range(start + (len(panel['tasks']) - 1) * 8,
-                                                   start + len(panel['tasks']) * 8))
+    with pytest.raises(ValueError, match='block size'):
+        make_plan(templates, (start, start + 384), model)
 
 
 def test_selection_requires_the_gate_v5_adventure_panel(tmp_path):
@@ -91,10 +87,10 @@ def test_gate_card_sets_are_rejected_even_under_new_names(tmp_path):
 def test_two_new_decks_reset_in_the_engine_without_playing_a_game():
     from pvz_env import PvZEnv, TaskSpec
     from pvz_tasks import profile_for_deck
-    executable = Path('/home/newbiexvwu/PvZ-search/.claude/worktrees/cq/build6/pvz-portable')
+    executable = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
     resources = Path.home() / '.cache/pvz-research-resources'
     if not executable.exists() or not resources.exists():
-        pytest.skip('requires local build6 and resources for two legality-only resets')
+        pytest.skip('requires a local engine build and resources for two legality-only resets')
     with PvZEnv(resource_dir=resources, executable=executable, headless=True) as env:
         for task in json.loads(HOLDOUT.read_text())['tasks']:
             deck = tuple(task['deck'])
@@ -121,7 +117,7 @@ def test_four_candidates_are_serial_frozen_and_resume_without_retraining(tmp_pat
             templates = json.loads(Path(job['selection_refresh']['templates']).read_text())
             panel = make_plan(templates, job['selection_refresh']['seed_block'], args.rollout_policy)
             path.write_text(json.dumps(panel))
-        return dict(manifest_sha256=queue.file_sha(path))
+        return path
     monkeypatch.setattr(queue.TrainingPipeline, '_prepare_selection', prepare)
     seen, calls = [], []
     interrupted = False
