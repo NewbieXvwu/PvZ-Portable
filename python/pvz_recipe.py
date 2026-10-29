@@ -100,6 +100,8 @@ def validate(document, kind=None):
         'out', 'manifest', 'value', 'executable', 'resource_dir', 'day_manifest',
         'perturb_manifest', 'night_manifest', 'day_orig_manifest', 'pool_manifest', 'pressure_manifest'}
     allowed = set(defaults) | required | {'schema_version', 'kind'}
+    if kind == 'training':
+        allowed |= {'history_l7_keep', 'deck_weight_cap'}
     if kind == 'panel':
         allowed.add('rollout_policy')
     _object(document, allowed, 'recipe')
@@ -123,6 +125,12 @@ def validate(document, kind=None):
     if not all(isinstance(v, str) for v in result['provenance'].values()):
         raise ValueError('provenance: expected string values')
     if kind == 'training':
+        if 'history_l7_keep' in result:
+            _number(result['history_l7_keep'], 'history_l7_keep', maximum=1)
+        if 'deck_weight_cap' in result:
+            _number(result['deck_weight_cap'], 'deck_weight_cap', positive=True, maximum=1)
+            if result['deck_weight_cap'] < 1 and result['packet_head'] != 'identity':
+                raise ValueError('deck_weight_cap requires the packed identity card columns')
         for name in ('epochs', 'width', 'aux_horizon', 'batch_size', 'validation_batch_size', 'threads', 'precompute_workers'):
             _integer(result[name], name, 1)
         _integer(result['save_epochs'], 'save_epochs')
