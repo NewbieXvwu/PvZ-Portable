@@ -843,6 +843,17 @@ class PvZEnv:
         if not self._command(f"LOAD_ROLLOUT_NET {quoted}").get("ok"):
             raise RuntimeError(f"simulator rejected rollout network: {filename}")
 
+    def load_policy_config(self, path: str | os.PathLike[str]) -> None:
+        """Engine reads PVZPOL001 with independent root/rollout model paths (relative to config)."""
+        filename = str(Path(path).expanduser().resolve())
+        if any(c in filename for c in ('\n', '\r')):
+            raise ValueError('policy config path must not contain newlines')
+        if self._process is None:
+            self._start()
+        quoted = '"' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
+        if not self._command(f'LOAD_POLICY_CONFIG {quoted}').get('ok'):
+            raise RuntimeError(f'simulator rejected policy config: {filename}')
+
     def deck_options(self) -> dict:
         """Read engine unlocks and raw per-card recommendation flags without advancing the game."""
         result = self._command('DECK_OPTIONS')
@@ -891,22 +902,27 @@ class PvZEnv:
         return suffix
 
     def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False, *,
-                        student_history=None, trace_path=None) -> dict:
+                        student_history=None, trace_path=None, root_policy=False) -> dict:
         """Diagnostic logits and greedy action on the current public board, without advancing it."""
         if not self._reset_done:
             raise RuntimeError("call reset() before rollout_predict()")
         income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
-        response = self._command(f"ROLLOUT_PREDICT {previous_tick if previous_tick is not None else -1} "
+        command = 'ROOT_PREDICT' if root_policy else 'ROLLOUT_PREDICT'
+        response = self._command(f"{command} {previous_tick if previous_tick is not None else -1} "
                                  f"{int(previous_plant)} {income:.17g}"
                                  + self._student_options(student_history, trace_path))
         if not response.get("ok"):
-            raise RuntimeError("simulator rejected ROLLOUT_PREDICT")
+            raise RuntimeError(f"simulator rejected {command}")
         if trace_path is not None:
             # Older engines reply before the local trace stream is closed. A read-only
             # round trip waits for that command scope to end before callers read the file.
             if not self._command("OBS").get("ok"):
                 raise RuntimeError("simulator rejected rollout trace synchronization")
         return response
+
+    def root_predict(self, *args, **kwargs) -> dict:
+        """Configured teacher root policy; native continuations still use the rollout model."""
+        return self.rollout_predict(*args, **kwargs, root_policy=True)
 
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
                 sim_skip: int = 0, max_actions: int = 1000000,

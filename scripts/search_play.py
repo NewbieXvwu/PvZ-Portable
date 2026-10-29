@@ -153,7 +153,7 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
     _freeze_startup()
 
 
-def _fast_action(obs: dict, fast_state: dict) -> dict:
+def _fast_action(obs: dict, fast_state: dict, root_env=None) -> dict:
     """The student's action; ``fast_state`` carries the previous frame and action."""
     from pvz_rollout_policy import act
     from render_episode import _frame
@@ -163,8 +163,15 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     if _W["fast"].obs != "v1" and "history" not in fast_state:
         from pvz_student_observation import StudentHistory
         fast_state["history"] = StudentHistory(_W["fast"].obs)
-    action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
-                 context=_W.get("context"), history=fast_state.get("history"))
+    if root_env is not None:
+        if fast_state.get('history') is not None:
+            fast_state['history'].extra(frame)
+        action = root_env.root_predict(previous.get('tick') if previous else None,
+                                       (fast_state.get('action') or {}).get('type') == 'plant',
+                                       student_history=fast_state.get('history'))['action']
+    else:
+        action = act(_W["fast"], frame, previous, (obs.get("legal_actions") or {}).get("plants") or [],
+                     context=_W.get("context"), history=fast_state.get("history"))
     # --student-candidates needs exactly the frame / history the student just read, so keep them.
     _W["student_frame"], _W["student_previous_frame"] = frame, previous
     fast_state["frame"] = frame
@@ -678,7 +685,10 @@ def _play(job: dict, observer=None) -> dict:
     env = _W.get("env")
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
-        env.load_rollout_net(_W["rollout_file"])
+        if getattr(args, 'policy_config', None):
+            env.load_policy_config(args.policy_config)
+        else:
+            env.load_rollout_net(_W["rollout_file"])
     if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
@@ -778,7 +788,8 @@ def _play(job: dict, observer=None) -> dict:
         while not obs["terminal"] and decisions < MAX_ACTIONS:
             if observer is not None:
                 observer.before(env, obs, fast_state, decisions)
-            action = policy_choice = _fast_action(obs, fast_state)
+            action = policy_choice = _fast_action(obs, fast_state,
+                root_env=env if job['arm']=='fast_search' and getattr(args,'policy_config',None) else None)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
                 searched_before = stats['searched']
@@ -942,6 +953,7 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--obs-v3", action="store_true", help="save C++ public rich token arrays")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
+    p.add_argument('--policy-config', type=Path, help='PVZPOL001 engine root/rollout config; --rollout-policy must describe its continuation CNN')
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")

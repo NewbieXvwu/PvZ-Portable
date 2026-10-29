@@ -163,3 +163,36 @@ def test_v3_native_capacity_and_packet_ties(tmp_path):
         leaf=env.rollout(None,obs['tick']+120,snapshot_id=root)
         assert leaf['tick']>=obs['tick']+120 or leaf.get('terminal')
         env.release_snapshot(root)
+
+
+def test_independent_root_policy_config(tmp_path):
+    from pvz_env import TaskSpec
+    from pvz_event_env import EventWaitEnv
+    from pvz_rollout_policy import export_student
+    from pvz_generic_examples import example
+    torch.set_num_threads(1)
+    torch.manual_seed(161)
+    cnn, _ = example('cnn64')
+    root_net = StudentV3(24, dict(layers=2, heads=3, ff_width=32), token_input='obs_v3').eval()
+    export_student(cnn, tmp_path/'cnn.bin')
+    export_student(root_net, tmp_path/'root.bin', token_capacity=128)
+    config = tmp_path/'policy.conf'
+    config.write_text('PVZPOL001\nroot "root.bin"\nrollout "cnn.bin"\n')
+    with EventWaitEnv(Path.home()/'.cache/pvz-research-resources', executable=ROOT/'build-cppnet/pvz-portable') as env:
+        obs, _ = env.reset(task=TaskSpec(level=9, seed=161))
+        env.load_rollout_net(tmp_path/'root.bin')
+        expected = env.rollout_predict()
+        env.load_policy_config(config)
+        assert env.root_predict() == expected
+        snapshot = env.snapshot_fast()
+        mixed = env.rollout(None, obs['tick']+240, snapshot_id=snapshot)
+        mixed_hash = env.state_hash()
+        env.load_rollout_net(tmp_path/'cnn.bin')
+        cnn_only = env.rollout(None, obs['tick']+240, snapshot_id=snapshot)
+        assert mixed_hash == env.state_hash()
+        # A failed reload retains both live policies.
+        config.write_text('PVZPOL001\nroot "root.bin"\nrollout "missing.bin"\n')
+        with pytest.raises(RuntimeError): env.load_policy_config(config)
+        env.restore_fast(snapshot)
+        assert env.root_predict() == expected
+        env.release_snapshot(snapshot)

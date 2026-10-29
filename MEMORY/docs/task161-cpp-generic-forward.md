@@ -290,3 +290,25 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 timeout 120 nice -n 10 "$HOME/.venvs/ml
   scripts/bench_generic_forward.py --suite all --sparse-cnn --native --iterations 200 \
   --output build-cppnet/continued-results.json
 ```
+
+## 续任务阶段 7：独立根策略与性能口径（2026-10-29）
+
+用户确认采用同机对照：历史空闲机61 µs不再作为绝对门槛。阶段6同机旧185.50 / 通用150.75 µs，
+**CNN64“不慢于同机旧路径”性能项完成**，前文绝对61 µs未完成的判断由此更新。
+
+补完第5步独立配置入口：`env.load_policy_config(path)` 对应引擎 `LOAD_POLICY_CONFIG`，
+引擎直接读下面的文本配置，路径相对于配置文件；两个实例独立持有模型与缓冲，加载失败保留原配置。
+
+```text
+PVZPOL001
+root "token128_2.bin"
+rollout "cnn64.bin"
+```
+
+`ROOT_PREDICT` / `env.root_predict()` 使用根模型，`ROLLOUT_PREDICT` 和 `ROLLOUT[_VALUE]`
+使用续走模型。两项均支持PVZGN001与旧格式；不提供配置时旧默认不变。
+老师 `scripts/search_play.py --policy-config policy.conf` 在实际根节点取原生策略的贪心动作作搜索锚点，
+续走仍走配置里的CNN；`--rollout-policy` 应为该CNN对应检查点，继续提供其历史特征版本。
+已有可选 `--student-candidates` / `student-topk` 仍按 `--rollout-policy` 排序，默认静态候选不受影响。
+针对性检查覆盖根logits、根/续走隔离、失败配置后仍可调用，短续走和直接加载CNN终态相同。
+整局端到端与token优化计时续记后文。
