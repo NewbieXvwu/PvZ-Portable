@@ -195,6 +195,8 @@ class RolloutNet(nn.Module):
 def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
         sparse_input: bool = True, context: np.ndarray | None = None, history=None) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
+    if getattr(net, 'arch', 'grid') == 'token_v3':
+        return net.act(frame, legal_plants)
     if net.obs != "v1":
         if history is None:
             raise ValueError(f"{net.obs} requires per-episode StudentHistory, updated at every decision")
@@ -307,6 +309,11 @@ def load_student(path) -> RolloutNet:
     fast_ppo's value head is dropped)."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     weights = checkpoint["state_dict"]
+    if checkpoint.get('arch') == 'token_v3':
+        from pvz_token_student import TokenStudent
+        net = TokenStudent(**checkpoint['token_config'])
+        net.load_state_dict({k: v for k, v in weights.items() if not k.startswith('aux.')})
+        return net.eval()
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
                      bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"),
                      bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
@@ -317,6 +324,8 @@ def load_student(path) -> RolloutNet:
 
 def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    if getattr(net, 'arch', 'grid') == 'token_v3':
+        raise ValueError('token_v3 native root export is implemented in the task157 speed stage')
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct

@@ -384,6 +384,10 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
+    if obs == 'v3':
+        from pvz_token_data import load_token_rows
+        return load_token_rows(data, labels, wait_keep, label_weight, with_context, obs, cells,
+                               aux_horizon, row_observer, packet_head, source_weight)
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
                            sources=archive_fingerprint(data, labels))
     path = pack_path(data, options)
@@ -762,7 +766,7 @@ def main(*, step_observer=None) -> None:
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, is_val))}
     if packet_info is not None:
-        memory['packet_bytes'] = (packet_info.nbytes if isinstance(packet_info, PacketStore)
+        memory['packet_bytes'] = (packet_info.nbytes if hasattr(packet_info, 'nbytes')
                                   else packet_info.numel() * packet_info.element_size())
     print(json.dumps({"data_memory": memory}), flush=True)
     if args.packet_balance:
@@ -792,11 +796,18 @@ def main(*, step_observer=None) -> None:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
-                     aux=bool(args.aux_weight), packet_head=args.packet_head)
+    if getattr(args, 'arch', 'grid') == 'token_v3':
+        from pvz_token_student import TokenStudent
+        net = TokenStudent(args.width, args.token_layers, args.token_heads, args.token_ff_width, aux=bool(args.aux_weight))
+    else:
+        net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
+                         aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
-        warm_start_student(net, load_student(args.init))
+        if getattr(net, 'arch', 'grid') == 'token_v3':
+            net.load_state_dict(load_student(args.init).state_dict())
+        else:
+            warm_start_student(net, load_student(args.init))
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
@@ -868,6 +879,7 @@ def main(*, step_observer=None) -> None:
                 # Historical reports compare these metadata keys; both experiments are retired.
                 "soft_weight": 0.0, "ema": 0.0,
                 "history": list(history), "recipe": args.resolved_recipe, "recipe_sha256": args.recipe_sha256,
+                **({'arch': net.arch, 'token_config': net.config} if getattr(net, 'arch', 'grid') == 'token_v3' else {}),
                 **({"row_intervention":row_plan.metadata()} if row_plan else {}),
                 **({"max_steps":args.max_steps,"optimizer_steps":completed_steps} if args.max_steps else {})}
 

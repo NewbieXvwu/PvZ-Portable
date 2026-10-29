@@ -100,6 +100,8 @@ def validate(document, kind=None):
         'out', 'manifest', 'value', 'executable', 'resource_dir', 'day_manifest',
         'perturb_manifest', 'night_manifest', 'day_orig_manifest', 'pool_manifest', 'pressure_manifest'}
     allowed = set(defaults) | required | {'schema_version', 'kind'}
+    if kind == 'training':
+        allowed |= {'arch', 'token_layers', 'token_heads', 'token_ff_width'}
     if kind == 'panel':
         allowed.add('rollout_policy')
     _object(document, allowed, 'recipe')
@@ -123,6 +125,18 @@ def validate(document, kind=None):
     if not all(isinstance(v, str) for v in result['provenance'].values()):
         raise ValueError('provenance: expected string values')
     if kind == 'training':
+        if result.get('arch', 'grid') not in ('grid', 'token_v3'):
+            raise ValueError('arch: expected grid or token_v3')
+        if result.get('arch') == 'token_v3':
+            if result['obs'] != 'v3' or result['packet_head'] != 'identity':
+                raise ValueError('token_v3 requires obs=v3 and packet_head=identity')
+            for key, default in (('token_layers', 4), ('token_heads', 6), ('token_ff_width', 768)):
+                result.setdefault(key, default)
+                _integer(result[key], key, 1)
+            if result['width'] % result['token_heads']:
+                raise ValueError('width must be divisible by token_heads')
+        elif result['obs'] == 'v3' or any(k.startswith('token_') for k in result):
+            raise ValueError('obs=v3 and token dimensions require arch=token_v3')
         for name in ('epochs', 'width', 'aux_horizon', 'batch_size', 'validation_batch_size', 'threads', 'precompute_workers'):
             _integer(result[name], name, 1)
         _integer(result['save_epochs'], 'save_epochs')
@@ -134,7 +148,7 @@ def validate(document, kind=None):
                 raise ValueError(f'{name}: expected boolean')
         for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
                                   obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4', 'v2bungee', 'v2sleep',
-                                       'v2timer'), lr_schedule=('constant', 'cosine')).items():
+                                       'v2timer', 'v3'), lr_schedule=('constant', 'cosine')).items():
             if result[name] not in choices:
                 raise ValueError(f'{name}: expected one of {choices}')
         if not isinstance(result['device'], str) or not result['device']:

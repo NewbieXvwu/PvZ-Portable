@@ -6,6 +6,7 @@ import sys
 
 import numpy as np
 import pytest
+import torch
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
@@ -82,3 +83,39 @@ def test_public_tokens_moving_nut_and_backfill(tmp_path):
         write_frames(source, frames)
         assert replay_archive(env, source, tmp_path / "bad")["mismatch"]
         assert not (tmp_path / "bad/frames").exists()
+
+
+def test_token_pointer_permutation_padding_and_checkpoint(tmp_path):
+    from pvz_token_student import TokenStudent, token_batch
+    from pvz_rollout_policy import load_student
+    torch.set_num_threads(1)
+    torch.manual_seed(157)
+    array = np.zeros((69, 38), np.float32)
+    array[:, 3:6] = -1
+    array[0, 0], array[1, 0] = 0, 1
+    for i in range(54):
+        array[2 + i, :5] = [2, 2, 2, i // 9, i % 9]
+    array[56:66, 0] = 8
+    array[56:63, 1] = np.arange(1, 8)
+    array[66:, 0] = [3, 4, 5]
+    array[66:, 1] = [2, 3, 4]
+    net = TokenStudent(24, 2, 4, 48).eval()
+    original = net(token_batch([array]), packet=torch.tensor([2]))
+    permutation = np.array([4, 0, 2, 6, 1, 5, 3, 9, 8, 7])
+    changed = array.copy()
+    changed[56:66] = array[56:66][permutation]
+    actual = net(token_batch([changed]), packet=torch.tensor([int(np.flatnonzero(permutation == 2)[0])]))
+    torch.testing.assert_close(actual["plant"], original["plant"], rtol=0, atol=0)
+    torch.testing.assert_close(actual["packet"], original["packet"][:, permutation], rtol=0, atol=0)
+    torch.testing.assert_close(actual["cell"], original["cell"], rtol=0, atol=0)
+    padded = net(token_batch([array, np.concatenate((array, array[66:]))]), packet=torch.tensor([2, 2]))
+    torch.testing.assert_close(padded["cell"][:1], original["cell"], rtol=1e-5, atol=1e-5)
+    checkpoint = tmp_path / "model.pt"
+    torch.save(net.checkpoint(), checkpoint)
+    restored = load_student(checkpoint)
+    torch.testing.assert_close(restored(token_batch([array]))["plant"], original["plant"], rtol=0, atol=0)
+    net.train()
+    output = net(token_batch([array]), packet=torch.tensor([2]))
+    loss = output["plant"].sum() + output["packet"][0, 2] + output["cell"][0, 5]
+    loss.backward()
+    assert torch.isfinite(net.encoder[0].qkv.weight.grad).all()

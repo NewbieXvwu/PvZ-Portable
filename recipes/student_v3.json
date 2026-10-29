@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "kind": "training",
+  "arch": "token_v3",
+  "obs": "v3",
+  "width": 192,
+  "token_layers": 4,
+  "token_heads": 6,
+  "token_ff_width": 768,
+  "packet_head": "identity",
+  "data": "artifacts/student/task157/backfill/frames",
+  "labels": ["d7p1m_fast_search"],
+  "out": "artifacts/student/task157/v3",
+  "wait_keep": 0.1,
+  "seed": 1,
+  "device": "mps",
+  "batch_size": 32,
+  "validation_batch_size": 32,
+  "lr_schedule": "cosine",
+  "init": null
+}
