@@ -14,8 +14,9 @@ from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from pvz_tasks import profile_for_deck
 
-RESOURCE = Path('/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')
-EXECUTABLE = Path('/tmp/pvz-boss50-build/pvz-portable')
+import os
+RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
+EXECUTABLE = Path(os.environ.get('PVZ_EXECUTABLE', str(ROOT / 'build/pvz-portable')))
 def record_and_verify(level: int, seed: int, task_id: str, archive: Path) -> dict:
     task = TaskSpec(level=level, seed=seed, playthrough=2, profile=profile_for_deck(()),
                     zombie_count_multiplier=1.0, conveyor_start='original')

@@ -22,7 +22,7 @@ from pvz_student_observation import OBS_EXTRA, StudentHistory
 from pvz_value_net import ValueNet, ENCODER_V3, encode_frame, load_value_net
 from render_episode import _frame
 
-RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', '/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'))
+RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 
 

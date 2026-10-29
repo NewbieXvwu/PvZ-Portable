@@ -25,7 +25,7 @@ def _full_rollout(env, obs, first, until, root, seed):
     return env.rollout(first, until, sim_skip=search_play._W.get("rollout_sim_skip", 0),
                        snapshot_id=root, seed=seed, student_history=search_play._W.get("student_history"))
 
-RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
+RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
 BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
 
 

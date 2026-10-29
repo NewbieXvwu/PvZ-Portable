@@ -319,7 +319,7 @@ def test_read_segments_per_segment_copy_is_bitwise_including_spill(tmp_path):
     assert [(a, b.tolist()) for a, b in observed] == [(a, b.tolist()) for a, b in want]
 
 
-ROUND2_PACK = Path('/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames/packs/0d95f2ff1c6803b6.npz')
+ROUND2_PACK = Path.home() / 'pvz-logs/curriculum_state.pipeline/frames/packs/0d95f2ff1c6803b6.npz'
 ROUND2_SUBSET_HASHES = {
     # sha256[:16] of every merged column, first 40 segments (2560231 rows), recorded from the
     # OLD concatenate implementation (2026-10-24, peak RSS 3299 MB) before the task61 rewrite.
