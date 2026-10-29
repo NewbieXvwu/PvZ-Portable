@@ -1069,9 +1069,11 @@ class TrainingPipeline:
         self.build_workers, self.build_peak = 1, 0
         self.last_train_peak = 0
         self.last_pack_peak = 0     # 单建造者实测打包峰值（pack_peak_anon_bytes / 建造者数）
-        self.eval_units = 1         # 评估正在用的游戏 worker 数（task73c，内存准入分配）
+        self.eval_units = self.minimum_eval_units()  # task166: reserve before training finishes
         self.per_worker_bytes = 0   # 单 worker 实测 RSS（run_round 启动探针后填）
         self.foreground_workers = 0 # 前台当前组正在跑的游戏 worker 数
+        log_line(args.log, f'evaluation reservation: requested={getattr(args, "min_eval_units", 4)} '
+                           f'effective={self.minimum_eval_units()} workers={args.workers}')
         for index, job in enumerate(state.setdefault('training_jobs', [])):
             if (not isinstance(job, dict) or type(job.get('round')) is not int
                     or not isinstance(job.get('recipe'), str) or not isinstance(job.get('model'), str)
@@ -1145,11 +1147,39 @@ class TrainingPipeline:
         return max(newer, default=None)
 
     def foreground_limit(self):
-        # Evaluation reserves the game workers it is actually using (task73c: eval units
-        # are memory-admitted, see _evaluate). Reserve them before a group starts,
-        # because training may finish in the middle of that group. --workers=1 still
-        # allows one collector + one evaluator; --workers>=2 caps their combined count.
-        return max(1, self.args.workers - int(self.pending()) * self.eval_units)
+        # Reserve from enqueue onward: training can finish inside a collection group.
+        return max(1, self.args.workers - int(self.pending()) * self.minimum_eval_units())
+
+    def minimum_eval_units(self):
+        # Small installations retain one collector (workers=1 keeps the old 1+1 case).
+        return min(getattr(self.args, 'min_eval_units', 4), max(1, self.args.workers - 1))
+
+    def _evaluation_units(self):
+        """Admit the reserved width for both selection and promotion, never silently 1.
+
+        A group already running at enqueue may still occupy every slot. Its successor
+        reserves our slots and memory; no live collector is killed or resized here.
+        """
+        units = self.minimum_eval_units()
+        total = mem_total_bytes()
+        last_log = None
+        while True:
+            required = MEMORY_RESERVE_BYTES + units * self.per_worker_bytes
+            if total is not None and required > total:
+                raise RuntimeError(f'evaluation cannot fit {units} units: required '
+                                   f'{required / GIB:.2f} GiB > MemTotal {total / GIB:.2f} GiB')
+            available = mem_available_bytes()
+            slots = max(1, self.args.workers - self.foreground_workers)
+            if slots >= units and (available is None or available >= required):
+                self.eval_units = units
+                return units
+            now = time.monotonic()
+            if last_log is None or now - last_log >= 30:
+                shown = 'unknown' if available is None else f'{available / GIB:.2f} GiB'
+                log_line(self.args.log, f'evaluation waiting: min_units={units} free_slots={slots} '
+                                       f'available={shown} required={required / GIB:.2f} GiB')
+                last_log = now
+            time.sleep(1)
 
     def incumbent(self):
         with self.lock:
@@ -1184,13 +1214,7 @@ class TrainingPipeline:
         folder = Path(job['recipe']).parent
         out = folder / 'evaluations' / contract_key(frozen)
         python = str(self.args.python) if self.args.python.exists() else sys.executable
-        self._admit()
-        # task73c: 评估 worker 数与采集同一条内存准入公式分配（MemAvailable 已排除在跑
-        # 游戏 worker 的 RSS），并与前台在跑的组共享 --workers 进程上限（扣除其宽度）。
-        # 评估开始后新开的组按 foreground_limit() 收缩，让评估在 ≤10 分钟量级完成。
-        units = worker_count(mem_available_bytes(), self.per_worker_bytes,
-                             max(1, self.args.workers - self.foreground_workers), 0)
-        self.eval_units = units
+        units = self._evaluation_units()
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
@@ -1292,7 +1316,8 @@ class TrainingPipeline:
             if not processes and self.process is not None:
                 processes = [self.process]
             anonymous = sum(_tree_anon_bytes(process.pid) for process in processes)
-        return max(0, self.estimate_peak() - anonymous)
+        peak = max(self.estimate_peak(), self.minimum_eval_units() * self.per_worker_bytes)
+        return max(0, peak - anonymous)
 
     @retry_io
     def enqueue(self):
@@ -1767,10 +1792,7 @@ class TrainingPipeline:
         panel = json.loads(manifest.read_text())
         sets = ','.join(f'{task["task_id"]}:0:{len(task["seeds"])}' for task in panel['tasks'])
         folder = Path(job['recipe']).parent
-        self._admit()
-        units = min(2, worker_count(mem_available_bytes(), self.per_worker_bytes,
-                                   max(1, self.args.workers - self.foreground_workers), 0))
-        self.eval_units = units
+        units = self._evaluation_units()
         command = [str(self.args.python) if self.args.python.exists() else sys.executable,
                    str(ROOT / 'scripts/select_student.py'), '--candidates',
                    ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
@@ -2063,14 +2085,16 @@ def _run_group(args, state, item, round_index, per_worker):
     state['offsets'][item['task_id']] = item['offset'] + item['games']
     save_state(args.state, state)          # 先占偏移，崩溃也不会重采
     available = mem_available_bytes()
+    if pipeline is not None:
+        # reservation() needs the probe result even for the first group after restart.
+        pipeline.per_worker_bytes = per_worker
     background = pipeline.reservation() if pipeline is not None else 0
     upper = pipeline.foreground_limit() if pipeline is not None else args.workers
     workers = worker_count(available, per_worker, upper, background)
     if pipeline is not None:
-        # 评估分配 units 时要扣除前台在跑的组宽（task73c）；启动探针后这里也补上
-        # 单 worker 实测 RSS，供 _evaluate 的内存准入使用。
-        pipeline.per_worker_bytes = per_worker
-        pipeline.foreground_workers = workers
+        # search_play can grow from `workers` to `upper` inside this group (task138).
+        # Claim that ceiling so evaluation cannot spend its future growth slots.
+        pipeline.foreground_workers = upper
     per_worker_shown = f'{per_worker / GIB:.2f} GiB' if per_worker > 0 else 'unmeasured'
     log_line(args.log, f'round {round_index} {item["label"]}: workers={workers}/{args.workers} '
                        f'(MemAvailable {"n/a" if available is None else f"{available / GIB:.1f} GiB"}, '
@@ -2317,7 +2341,10 @@ def main() -> None:
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--workers', type=int, default=16,
-                        help='前台上限；后台队列非空时预留1名额给评估，总游戏数≤max(2,上限)，内存再限流')
+                        help='总游戏 worker 上限；后台队列非空时扣除 --min-eval-units，内存再限流')
+    parser.add_argument('--min-eval-units', type=int, default=4,
+                        help='门禁/挑选预留单元数；默认4，最多 workers-1（workers=1仍为1+1）；'
+                             '提前预留内存，资源不足时等待而不缩成1单元')
     parser.add_argument('--python', type=Path, default=DEFAULT_PYTHON,
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
@@ -2373,6 +2400,8 @@ def main() -> None:
         parser.error(str(error))
     if args.workers < 1:
         parser.error('--workers must be positive')
+    if args.min_eval_units < 1:
+        parser.error('--min-eval-units must be positive')
     if args.candidates_per_recipe > 1 and args.alternate_recipe is None:
         parser.error('--candidates-per-recipe 2 requires --alternate-recipe')
     if args.selection_holdout_manifest is not None and not args.selection_holdout_manifest.is_absolute():
