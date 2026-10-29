@@ -794,7 +794,10 @@ def _play(job: dict, observer=None) -> dict:
         if job["arm"] == "fast" and not args.frames and fog_diagnostics is None and observer is None:
             if fast_state.get("history") is not None:
                 _W["student_history"] = fast_state["history"]   # a demonstration start has history
-            obs = env.rollout(None, 0, max_actions=MAX_ACTIONS)
+            # ENV_SKIP_HEIGHT (bit 4) drops PlantDrawHeightOffset, which only moves a plant's
+            # reanim on screen; the student never reads it, and the final board state is
+            # unchanged (MEMORY/docs/task166c-fog-profile.md).
+            obs = env.rollout(None, 0, max_actions=MAX_ACTIONS, sim_skip=4)
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
             planted = planted_slots(details)
