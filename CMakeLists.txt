@@ -100,6 +100,9 @@ file(GLOB SOURCES CONFIGURE_DEPENDS
 	src/Lawn/Widget/*.cpp
 	src/Lawn/System/*.cpp
 )
+# Inference backends have independent compile flags/dependencies. Switching an optional
+# backend must not rebuild every game source on the production host.
+list(FILTER SOURCES EXCLUDE REGEX "/GenericForward(Sparse|Dnnl)?\\.cpp$")
 
 option(LOW_MEMORY "Enable low memory mode" OFF)
 if(NINTENDO_SWITCH)
@@ -282,21 +285,20 @@ endif()
 
 option(PVZ_GENERIC_DRIVER "Build the standalone generic-forward parity/benchmark tool" OFF)
 option(PVZ_GENERIC_DNNL "Use optional oneDNN float32 convolutions in generic graphs" OFF)
+add_library(pvz-forward STATIC src/GenericForward.cpp src/GenericForwardDnnl.cpp src/GenericForwardSparse.cpp)
+target_include_directories(pvz-forward PUBLIC src)
+target_compile_features(pvz-forward PUBLIC cxx_std_20)
+target_link_libraries(pvz-forward PUBLIC ${ROLLOUT_BLAS} ${VALUE_BLAS})
+target_link_libraries(pvz-portable PRIVATE pvz-forward)
 if(PVZ_GENERIC_DNNL)
 	find_package(dnnl CONFIG REQUIRED)
 	find_package(OpenMP REQUIRED)
-	target_compile_definitions(pvz-portable PRIVATE PVZ_GENERIC_DNNL)
-	target_link_libraries(pvz-portable PRIVATE DNNL::dnnl OpenMP::OpenMP_CXX)
+	target_compile_definitions(pvz-forward PRIVATE PVZ_GENERIC_DNNL)
+	target_link_libraries(pvz-forward PRIVATE DNNL::dnnl OpenMP::OpenMP_CXX)
 endif()
 if(PVZ_GENERIC_DRIVER)
-	add_executable(generic-forward tools/generic_forward.cpp src/GenericForward.cpp src/GenericForwardDnnl.cpp)
-	target_include_directories(generic-forward PRIVATE src)
-	target_compile_features(generic-forward PRIVATE cxx_std_20)
-	target_link_libraries(generic-forward PRIVATE ${ROLLOUT_BLAS} ${VALUE_BLAS})
-	if(PVZ_GENERIC_DNNL)
-		target_compile_definitions(generic-forward PRIVATE PVZ_GENERIC_DNNL)
-		target_link_libraries(generic-forward PRIVATE DNNL::dnnl OpenMP::OpenMP_CXX)
-	endif()
+	add_executable(generic-forward tools/generic_forward.cpp)
+	target_link_libraries(generic-forward PRIVATE pvz-forward)
 endif()
 
 if (LOW_MEMORY)

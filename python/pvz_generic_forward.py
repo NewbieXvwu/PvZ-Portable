@@ -105,6 +105,9 @@ def reference(module, graph, feeds, *, intermediates=False):
         elif op == 'silu': y = F.silu(x)
         elif op == 'gather': y = x.gather(1, a[1].long().clamp_min(0)[:, :, None].expand(-1, -1, x.shape[-1]))
         elif op == 'masked_pool': y = (x*a[1][:, :, None]).sum(1)/a[1].sum(1, keepdim=True).clamp_min(1)
+        elif op == 'row_context':
+            rows=torch.cat([x.mean(3,keepdim=True),x.amax(3,keepdim=True)],1)
+            y=F.relu(x+F.conv2d(rows,a[1],a[2]))
         elif op == 'add': y = a[0] + a[1]
         elif op == 'concat': y = torch.cat(a, dim=p[0])
         elif op == 'reshape': y = x.reshape(shape)
@@ -229,14 +232,8 @@ def rollout_graph(net, batch=1):
     h = 'board'
     for i in (0, 2, 4): h = b.relu(f'trunk_relu{i}', b.layer(f'trunk_conv{i}', h, f'trunk.{i}'))
     if net.row_pool:
-        # [B,W,6,10] -> [B,6,W,10], reduce columns -> [B,6,2W].
-        rows = g.node('row_channels_last', 'permute', [h], [batch, 6, W, 10], [0, 2, 1, 3])
-        rows = g.node('row_meanmax', 'pool', [rows], [batch, 6, 2*W], [1, 2])
-        rows = g.node('row_projection_input', 'permute', [rows], [batch, 2*W, 6], [0, 2, 1])
-        rows = g.node('row_projection_4d', 'reshape', [rows], [batch, 2*W, 6, 1])
-        rows = b.layer('row_projected', rows, 'row_projection')
-        rows = g.node('row_expanded', 'broadcast', [rows], [batch, W, 6, 10], [0, 1, 2, -1])
-        h = b.relu('hidden', g.node('row_added', 'add', [h, rows], [batch, W, 6, 10]))
+        h = g.node('hidden', 'row_context', [h, g.weight(net, 'row_projection.weight'),
+                    g.weight(net, 'row_projection.bias')], [batch,W,6,10])
     pooled = g.node('global_pool', 'pool', [h], [batch, G-W], [2, int(net.pool == 'meanmax')*2])
     scalar = b.relu('scalar_relu', b.layer('scalar_projection', 'scalars', 'scalar.0'))
     ctx = g.node('context', 'concat', [pooled, scalar], [batch, G], [1])
@@ -246,10 +243,16 @@ def rollout_graph(net, batch=1):
         kinds = g.node('packet_kind_3d', 'slice', ['packet_info'], [batch, 10, 1], [2, 0, 1], stage=1)
         kinds = g.node('packet_kind', 'reshape', [kinds], [batch, 10], stage=1)
         emb = g.node('packet_embeddings', 'embedding', [kinds, table], [batch, 10, E], stage=1)
-        glob = g.node('packet_context', 'broadcast', [ctx], [batch, 10, G], [0, -1, 1], stage=1)
         info = g.node('packet_public', 'slice', ['packet_info'], [batch, 10, 3], [2, 1, 3], stage=1)
-        pin = g.node('packet_input', 'concat', [glob, emb, info], [batch, 10, G+E+3], [2], stage=1)
-        logits = b.layer('packet_score', b.relu('packet_relu', b.layer('packet_projection', pin, 'packet.0', 1), 1), 'packet.2', 1)
+        kernel=g.weight(net,'packet.0.weight'); bias=g.weight(net,'packet.0.bias')
+        wk=g.node('packet_global_kernel','slice',[kernel],[W,G],[1,0,G],stage=1)
+        ek=g.node('packet_local_kernel','slice',[kernel],[W,E+3],[1,G,E+3],stage=1)
+        glob=g.node('packet_global_projected','linear',[ctx,wk,bias],[batch,W],stage=1)
+        glob=g.node('packet_global_broadcast','broadcast',[glob],[batch,10,W],[0,-1,1],stage=1)
+        pin = g.node('packet_input', 'concat', [emb, info], [batch, 10, E+3], [2], stage=1)
+        local=g.node('packet_local_projected','linear',[pin,ek],[batch,10,W],stage=1)
+        activation=g.node('packet_projection','add',[glob,local],[batch,10,W],stage=1)
+        logits = b.layer('packet_score', b.relu('packet_relu', activation, 1), 'packet.2', 1)
         logits = g.node('packet_unmasked', 'reshape', [logits], [batch, 10], stage=1)
         g.node('packet', 'mask', [logits, kinds], [batch, 10], floats=[-1e9], stage=1)
         emb = g.node('selected_embedding', 'select', [emb, 'selected_packet'], [batch, E], stage=2)

@@ -1,4 +1,5 @@
 #include "GenericForwardDnnl.h"
+#include "GenericForwardSparse.h"
 #ifdef PVZ_GENERIC_DNNL
 #include <oneapi/dnnl/dnnl.hpp>
 #include <omp.h>
@@ -29,6 +30,7 @@ struct NativeConvolution {
     convolution_forward op;
     reorder fromHost;
     std::shared_ptr<NativeTensor> source,output;
+    bool fromSparse=false;
     std::vector<dnnl_exec_arg_t> args;
     std::array<dnnl_exec_arg_t,2> sourceArgs{};
     explicit NativeConvolution(Graph& g, Node& n)
@@ -41,12 +43,14 @@ struct NativeConvolution {
         auto srcDesc=md(a,memory::format_tag::nhwc), dstDesc=md(y,memory::format_tag::nhwc);
         auto biasDesc=n.inputs.size()==3 ? md(g.tensors[n.inputs[2]],memory::format_tag::a) : memory::desc();
         primitive_attr attr; attr.set_scratchpad_mode(scratchpad_mode::user);
+        attr.set_fpmath_mode(fpmath_mode::strict);
         if(n.code==23) { post_ops post; post.append_eltwise(algorithm::eltwise_relu,0,0); attr.set_post_ops(post); }
         convolution_forward::primitive_desc pd(eng,prop_kind::forward_inference,algorithm::convolution_direct,
             srcDesc,md(w,memory::format_tag::any),biasDesc,dstDesc,
             {n.ints[2],n.ints[3]},{n.ints[0],n.ints[1]},{n.ints[0],n.ints[1]},attr);
         op=convolution_forward(pd);
         if(a.native) { source=a.native; src=source->value; }
+        else if(float* values=SparseChannelsData(a)) { src=memory(srcDesc,eng,values); fromSparse=true; }
         else {
             auto host=memory(md(a,memory::format_tag::nchw),eng,a.data.data());
             src=memory(srcDesc,eng); fromHost=reorder(host,src);
@@ -66,7 +70,7 @@ struct NativeConvolution {
     }
     memory sourceHost;
     void Run() {
-        if(!source) Execute(fromHost,queue,sourceArgs.data(),sourceArgs.size());
+        if(!source && !fromSparse) Execute(fromHost,queue,sourceArgs.data(),sourceArgs.size());
         Execute(op,queue,args.data(),args.size()); output->dirty=true;
     }
 };

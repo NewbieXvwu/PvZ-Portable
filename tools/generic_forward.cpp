@@ -27,7 +27,10 @@ int main(int argc, char** argv) {
         for(int i=0;i<iterations;++i) graph.Run();
         double us=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/iterations;
         double cpuUs=double(std::clock()-cpuStart)*1000000/CLOCKS_PER_SEC/iterations;
-        std::cout << "{\"us\":" << us << ",\"cpu_us\":" << cpuUs << ",\"iterations\":" << iterations;
+        int sparse=0,native=0;
+        for(const auto& n:graph.nodes) { sparse+=bool(n.sparse); native+=bool(n.native); }
+        std::cout << "{\"us\":" << us << ",\"cpu_us\":" << cpuUs << ",\"iterations\":" << iterations
+            <<",\"sparse_plans\":"<<sparse<<",\"dnnl_plans\":"<<native;
         if(argc>5 && std::string(argv[5])=="profile") {
             auto times=graph.Profile(iterations);
             std::cout<<",\"profile\":[";

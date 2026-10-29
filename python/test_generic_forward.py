@@ -64,7 +64,9 @@ def test_small_batch_and_modules(tmp_path):
     feeds = {'x': torch.randn(2, 4, 8), 'route': route}
     assert compare(m, g, feeds, tmp_path) < 1e-5
     m, g = example('cnn64', batch=2)
-    assert compare(m, g, random_feeds(g), tmp_path) < 1e-5
+    feeds=random_feeds(g)
+    feeds['board'][0]=0  # Empty and dense boards in the same small batch.
+    assert compare(m, g, feeds, tmp_path) < 1e-5
 
 
 def test_real_frames_and_legacy_actions(tmp_path):

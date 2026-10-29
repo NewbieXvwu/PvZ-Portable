@@ -1,0 +1,297 @@
+{
+  "seed": 161,
+  "batch": 1,
+  "threads": 1,
+  "environment": {
+    "machine": "x86_64",
+    "torch": "2.14.0+cu132",
+    "timing": "C++ warm graph; mean wall and process CPU microseconds; excludes load/I/O/features",
+    "backend": "PVZ_GENERIC_DNNL=OFF; AVX2/FMA sparse first convolution when supported, high-density BLAS fallback",
+    "compiler": "GCC 15.2.0, Release -O3, LTO, -ffp-contract=off (explicit FMA in inference kernel only)",
+    "cpu": "Intel Core i7-12700F, WSL x86_64; nice10, no CPU affinity; production remains running"
+  },
+  "records": [
+    {
+      "example": "cnn64",
+      "input": "dense_random",
+      "us": 289.077,
+      "cpu_us": 289.08,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 2.980232238769531e-07,
+      "nodes": 37,
+      "parameters": 182147,
+      "ratio_to_historical_61us": 4.738967213114754
+    },
+    {
+      "example": "cnn128",
+      "input": "dense_random",
+      "us": 744.981,
+      "cpu_us": 744.77,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 4.172325134277344e-07,
+      "nodes": 37,
+      "parameters": 569091,
+      "ratio_to_historical_61us": 12.212803278688524
+    },
+    {
+      "example": "res6",
+      "input": "dense_random",
+      "us": 996.429,
+      "cpu_us": 996.435,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 2.980232238769531e-07,
+      "nodes": 59,
+      "parameters": 625283,
+      "ratio_to_historical_61us": 16.334901639344263
+    },
+    {
+      "example": "token_2_64",
+      "input": "dense_random",
+      "us": 1554.2,
+      "cpu_us": 1554.2,
+      "iterations": 200,
+      "max_abs_error": 1.6093254089355469e-06,
+      "nodes": 30,
+      "parameters": 528769,
+      "ratio_to_historical_61us": 25.478688524590165,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "token_2_128",
+      "input": "dense_random",
+      "us": 3490.56,
+      "cpu_us": 3490.51,
+      "iterations": 200,
+      "max_abs_error": 1.6689300537109375e-06,
+      "nodes": 30,
+      "parameters": 528769,
+      "ratio_to_historical_61us": 57.22229508196721,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "token_4_64",
+      "input": "dense_random",
+      "us": 3056.64,
+      "cpu_us": 3056.49,
+      "iterations": 200,
+      "max_abs_error": 1.7881393432617188e-06,
+      "nodes": 50,
+      "parameters": 1057409,
+      "ratio_to_historical_61us": 50.10885245901639,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "token_4_128",
+      "input": "dense_random",
+      "us": 6944.19,
+      "cpu_us": 6944.08,
+      "iterations": 200,
+      "max_abs_error": 2.0265579223632812e-06,
+      "nodes": 50,
+      "parameters": 1057409,
+      "ratio_to_historical_61us": 113.83918032786885,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "hybrid",
+      "input": "dense_random",
+      "us": 1787.34,
+      "cpu_us": 1787.35,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 1.6689300537109375e-06,
+      "nodes": 33,
+      "parameters": 634881,
+      "ratio_to_historical_61us": 29.30065573770492
+    },
+    {
+      "example": "hard_moe5",
+      "input": "dense_random",
+      "us": 1139.85,
+      "cpu_us": 1139.85,
+      "iterations": 200,
+      "max_abs_error": 9.5367431640625e-07,
+      "nodes": 20,
+      "parameters": 1055489,
+      "ratio_to_historical_61us": 18.68606557377049,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "v3_dense128_2",
+      "input": "raw_obs_v3_96of128",
+      "us": 4294.28,
+      "cpu_us": 4294.19,
+      "iterations": 200,
+      "max_abs_error": 1.1920928955078125e-06,
+      "nodes": 64,
+      "parameters": 670345,
+      "ratio_to_historical_61us": 70.39803278688524,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "v3_dense192_4",
+      "input": "raw_obs_v3_96of128",
+      "us": 14245,
+      "cpu_us": 14244.7,
+      "iterations": 200,
+      "max_abs_error": 1.9073486328125e-06,
+      "nodes": 88,
+      "parameters": 2660761,
+      "ratio_to_historical_61us": 233.52459016393442,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "v3_terrain5",
+      "input": "raw_obs_v3_96of128",
+      "us": 3977.19,
+      "cpu_us": 3977.07,
+      "iterations": 200,
+      "max_abs_error": 1.430511474609375e-06,
+      "nodes": 65,
+      "parameters": 1462153,
+      "ratio_to_historical_61us": 65.19983606557378,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "v3_top2",
+      "input": "raw_obs_v3_96of128",
+      "us": 7965.18,
+      "cpu_us": 7957.6,
+      "iterations": 200,
+      "max_abs_error": 1.430511474609375e-06,
+      "nodes": 66,
+      "parameters": 1463443,
+      "ratio_to_historical_61us": 130.5767213114754,
+      "sparse_plans": 0,
+      "dnnl_plans": 0
+    },
+    {
+      "example": "v3_hybrid128_2",
+      "input": "raw_obs_v3_96of128",
+      "us": 4988.33,
+      "cpu_us": 4970.16,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 1.1920928955078125e-06,
+      "nodes": 73,
+      "parameters": 924041,
+      "ratio_to_historical_61us": 81.77590163934426
+    },
+    {
+      "example": "cnn64",
+      "input": "8_active_channels",
+      "us": 149.865,
+      "cpu_us": 149.875,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 2.980232238769531e-07,
+      "nodes": 37,
+      "parameters": 182147,
+      "ratio_to_historical_61us": 2.4568032786885245
+    },
+    {
+      "example": "cnn128",
+      "input": "8_active_channels",
+      "us": 680.768,
+      "cpu_us": 679.16,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 4.172325134277344e-07,
+      "nodes": 37,
+      "parameters": 569091,
+      "ratio_to_historical_61us": 11.160131147540984
+    },
+    {
+      "example": "res6",
+      "input": "8_active_channels",
+      "us": 964.656,
+      "cpu_us": 963.84,
+      "iterations": 200,
+      "sparse_plans": 1,
+      "dnnl_plans": 0,
+      "max_abs_error": 2.980232238769531e-07,
+      "nodes": 59,
+      "parameters": 625283,
+      "ratio_to_historical_61us": 15.814032786885246
+    }
+  ],
+  "native": {
+    "level": 9,
+    "seed": 161006,
+    "tick": 6000,
+    "iterations": 200,
+    "order": [
+      "legacy",
+      "generic",
+      "generic",
+      "legacy"
+    ],
+    "samples_us": {
+      "legacy": [
+        162.4717,
+        208.52659
+      ],
+      "generic": [
+        156.014375,
+        145.481865
+      ]
+    },
+    "mean_us": {
+      "legacy": 185.499145,
+      "generic": 150.74812
+    },
+    "generic_over_legacy": 0.8126620745340902
+  },
+  "refreshed_examples": [
+    {
+      "example": "cnn64",
+      "input": "dense_random"
+    },
+    {
+      "example": "cnn128",
+      "input": "dense_random"
+    },
+    {
+      "example": "res6",
+      "input": "dense_random"
+    },
+    {
+      "example": "hybrid",
+      "input": "dense_random"
+    },
+    {
+      "example": "v3_hybrid128_2",
+      "input": "raw_obs_v3_96of128"
+    },
+    {
+      "example": "cnn64",
+      "input": "8_active_channels"
+    },
+    {
+      "example": "cnn128",
+      "input": "8_active_channels"
+    },
+    {
+      "example": "res6",
+      "input": "8_active_channels"
+    }
+  ]
+}

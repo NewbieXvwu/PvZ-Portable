@@ -87,7 +87,7 @@ def residual_example(blocks=6, width=64, batch=1):
         z = b.layer(f'res{i}_conv1', z, f'res{i}_1')
         h = b.relu(f'res{i}_out', g.node(f'res{i}_add', 'add', [h, z], [batch, width, 6, 10]))
     # The remaining row-pool/scalar/three-head graph is unchanged.
-    start = next(i for i, n in enumerate(original.nodes) if n['name'] == 'row_channels_last')
+    start = next(i for i, n in enumerate(original.nodes) if n['op'] == 'row_context')
     for n in original.nodes[start:]:
         for name in n['inputs']:
             if name in original.tensors and original.tensors[name]['role'] == 2:
@@ -144,3 +144,36 @@ def random_feeds(graph):
             scalars[:, start:start+54].scatter_reduce_(1, kinds.clamp(min=0),
                 values.masked_fill(~valid, 0), reduce='amax', include_self=True)
     return feeds
+
+
+V3_EXAMPLES = ('v3_dense128_2', 'v3_dense192_4', 'v3_terrain5', 'v3_top2', 'v3_hybrid128_2')
+
+
+def v3_example(name, capacity=128):
+    """Actual task163 networks over task157-shaped synthetic public token arrays."""
+    import numpy as np
+    from pvz_student_v3 import StudentV3
+    from pvz_student_tokens import frame_tokens, collate_tokens
+    from pvz_student_v3_export import student_graph, graph_feeds
+    width=192 if name=='v3_dense192_4' else 128
+    layers=4 if width==192 else 2
+    mode='terrain' if name=='v3_terrain5' else 'moe' if name=='v3_top2' else 'dense'
+    hybrid=name=='v3_hybrid128_2'
+    net=StudentV3(width,dict(layers=layers,heads=6 if width==192 else 4,
+        ff_width=256 if mode!='dense' else width*4,ffn=mode,hybrid=hybrid),token_input='obs_v3').eval()
+    raw=np.zeros((96,38),np.float32); raw[:,3:6]=-1
+    raw[1,0]=1; raw[2:56,0]=2
+    raw[2:56,3]=np.arange(54)//9; raw[2:56,4]=np.arange(54)%9
+    raw[56:66,0]=8; raw[56:63,1]=[1,2,3,4,5,6,17]
+    rng=np.random.default_rng(161)
+    raw[66:,0]=rng.choice([3,4,5,6,7,9,10],30)
+    raw[66:,1]=rng.integers(1,20,30)
+    raw[66:,3]=rng.integers(-1,6,30); raw[66:,4]=rng.integers(-1,9,30)
+    raw[66,5]=67
+    raw[:,6:]=rng.normal(0,.1,(96,32))
+    frame=dict(scene=dict(pool=True),v3=dict(version=3,tokens=raw.tolist()))
+    tokens=collate_tokens([frame_tokens(frame,token_input='obs_v3')],capacity=capacity)
+    board=torch.randn(1,92,6,10)*.1
+    selected=torch.tensor([0])
+    module,graph=student_graph(net,capacity=capacity)
+    return module,graph,graph_feeds(tokens,selected,board),net,tokens,board,selected

@@ -1,5 +1,6 @@
 #include "GenericForward.h"
 #include "GenericForwardDnnl.h"
+#include "GenericForwardSparse.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -23,7 +24,7 @@ namespace pvz::net {
 namespace {
 const std::vector<std::string> ops = {"linear", "conv", "relu", "add", "concat", "reshape",
     "permute", "pool", "norm", "attention", "ffn", "moe", "scatter", "pointer",
-    "embedding", "broadcast", "select", "slice", "mask", "relation", "silu", "gather", "masked_pool", "conv_relu"};
+    "embedding", "broadcast", "select", "slice", "mask", "relation", "silu", "gather", "masked_pool", "conv_relu", "row_context"};
 void Require(bool ok, std::string_view message) {
     if (!ok) throw std::runtime_error("generic forward: " + std::string(message));
 }
@@ -49,6 +50,11 @@ size_t Count(const std::vector<int>& shape) {
 // Linear weights retain PyTorch's [out,in] layout; BLAS consumes them transposed.
 void Linear(const float* x, const Tensor& w, const Tensor* bias, float* y, int rows) {
     const int out = w.shape[0], in = w.shape[1];
+    if(out == 1) {
+        cblas_sgemv(CblasRowMajor,CblasNoTrans,rows,in,1.f,x,in,w.data.data(),1,0.f,y,1);
+        if(bias) for(int r=0;r<rows;++r) y[r]+=bias->data[0];
+        return;
+    }
     if (rows == 1) {
         cblas_sgemv(CblasRowMajor, CblasNoTrans, out, in, 1.f, w.data.data(), in, x, 1, 0.f, y, 1);
         if (bias) for (int c=0;c<out;++c) y[c]+=bias->data[c];
@@ -79,13 +85,13 @@ bool Graph::Has(const std::string& name) const {
     return std::any_of(tensors.begin(), tensors.end(), [&](const Tensor& t) { return t.name == name; });
 }
 const Tensor& Graph::Get(const std::string& name) const {
-    for (const auto& t : tensors) if (t.name == name) return t;
+    for (const auto& t : tensors) if (t.name == name) {
+        auto& cache=const_cast<Tensor&>(t); SparseToHost(cache); NativeToHost(cache); return t;
+    }
     throw std::runtime_error("generic forward: missing tensor " + name);
 }
-Tensor& Graph::Get(const std::string& name) {
-    auto& t=const_cast<Tensor&>(std::as_const(*this).Get(name)); NativeToHost(t); return t;
-}
-void Graph::Materialize() { for(auto& t:tensors) NativeToHost(t); }
+Tensor& Graph::Get(const std::string& name) { return const_cast<Tensor&>(std::as_const(*this).Get(name)); }
+void Graph::Materialize() { for(auto& t:tensors) { SparseToHost(t); NativeToHost(t); } }
 void Graph::Load(const std::string& path) {
 #ifdef OPENBLAS_VERSION
     openblas_set_num_threads(1);
@@ -264,16 +270,23 @@ void Graph::Prepare() {
         } else if (n.code == 22) {
             inputs(2); Require(rank == 3 && at(1).shape == std::vector<int>({a.shape[0],a.shape[1]}) &&
                 y.shape == std::vector<int>({a.shape[0],a.shape[2]}), "masked pool shape");
+        } else if (n.code == 24) {
+            inputs(3);
+            Require(rank==4 && y.shape==a.shape && at(1).data.size()==size_t(2*a.shape[1]*a.shape[1]) &&
+                at(1).shape[0]==a.shape[1] && at(1).shape[1]==2*a.shape[1] && at(2).data.size()==size_t(a.shape[1]),"row context shape");
+            n.scratch.resize(3*a.shape[0]*a.shape[2]*a.shape[1]);
         } else if (n.code == 17) {
             inputs(1); param(3); int axis=n.ints[0], start=n.ints[1], length=n.ints[2];
             Require(axis >= 0 && axis < rank && start >= 0 && length > 0 && start+length <= a.shape[axis], "slice range");
             auto expected=a.shape; expected[axis]=length; Require(y.shape==expected, "slice output");
         }
         ready[n.output] = true;
-        PrepareNativeConvolution(*this,n);
+        PrepareSparseConvolution(*this,n);
+        if(!n.sparse) PrepareNativeConvolution(*this,n);
         // E.g. split a 1x1 kernel once at load, not once per decision.
         if (std::all_of(n.inputs.begin(), n.inputs.end(), [&](int i) { return tensors[i].role == 2; })) {
-            Execute(n); tensors[n.output].role = 2; n.code = -1;
+            Execute(n); SparseToHost(tensors[n.output]); NativeToHost(tensors[n.output]);
+            tensors[n.output].role = 2; n.code = -1;
         }
     }
 }
@@ -292,8 +305,9 @@ std::vector<double> Graph::Profile(int iterations) {
     return times;
 }
 void Graph::Execute(Node& n) {
+    if(ExecuteSparseConvolution(n)) return;
     if(ExecuteNativeConvolution(n)) return;
-    for(int id:n.inputs) NativeToHost(tensors[id]);
+    for(int id:n.inputs) { SparseToHost(tensors[id]); NativeToHost(tensors[id]); }
     auto& a = tensors[n.inputs[0]]; auto& y = tensors[n.output];
     auto at = [&](int i) -> const Tensor& { return tensors[n.inputs[i]]; };
     float* out = y.data.data(); const float* x = a.data.data();
@@ -355,7 +369,9 @@ void Graph::Execute(Node& n) {
             else std::fill_n(dst,O*S,0.f);
             if(n.inputs.size()==3) for(int o=0;o<O;++o) for(int s=0;s<S;++s) dst[o*S+s]+=at(2).data[o];
             if(n.code==23) for(int i=0;i<O*S;++i) dst[i]=std::max(0.f,dst[i]);
-        } break;
+        }
+        if(n.sparse) SparseFromHost(y);
+        break;
     }
     case 2: for(int i=0;i<count;++i) out[i]=std::max(0.f,x[i]); break;
     case 3: for(int i=0;i<count;++i) out[i]=x[i]+at(1).data[i]; break;
@@ -529,6 +545,23 @@ void Graph::Execute(Node& n) {
             }
             for(int d=0;d<D;++d) out[b*D+d]/=std::max(1.f,total);
         } break;
+    }
+    case 24: {
+        int B=a.shape[0],C=a.shape[1],H=a.shape[2],W=a.shape[3];
+        float* rows=n.scratch.data(); float* projection=rows+B*H*2*C;
+        for(int b=0;b<B;++b) for(int h=0;h<H;++h) for(int c=0;c<C;++c) {
+            const float* values=x+((b*C+c)*H+h)*W;
+            float sum=0,maximum=-std::numeric_limits<float>::infinity();
+            for(int w=0;w<W;++w) { sum+=values[w]; maximum=std::max(maximum,values[w]); }
+            rows[(b*H+h)*2*C+c]=sum/W; rows[(b*H+h)*2*C+C+c]=maximum;
+        }
+        Linear(rows,at(1),&at(2),projection,B*H);
+        for(int b=0;b<B;++b) for(int c=0;c<C;++c) for(int h=0;h<H;++h)
+            for(int w=0;w<W;++w) {
+                int at=((b*C+c)*H+h)*W+w;
+                out[at]=std::max(0.f,x[at]+projection[(b*H+h)*C+c]);
+            }
+        break;
     }
     }
 }

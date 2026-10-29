@@ -10,12 +10,15 @@
 namespace pvz::net {
 struct NativeTensor;
 struct NativeConvolution;
+struct ChannelTensor;
+struct SparseConvolution;
 struct Tensor {
     std::string name;
     std::vector<int> shape;
     std::vector<float> data;
     int role = 0; // 0 activation, 1 input, 2 weight
     std::shared_ptr<NativeTensor> native;
+    std::shared_ptr<ChannelTensor> channelsLast;
 };
 struct Node {
     struct RowCopy { int source, destination, count; };
@@ -30,9 +33,15 @@ struct Node {
     std::vector<RowCopy> copies;
     int activeCount = -1;
     std::shared_ptr<NativeConvolution> native;
+    std::shared_ptr<SparseConvolution> sparse;
 };
 class Graph {
 public:
+    Graph() = default;
+    Graph(const Graph&) = delete;
+    Graph& operator=(const Graph&) = delete;
+    Graph(Graph&&) noexcept = default;
+    Graph& operator=(Graph&&) noexcept = default;
     void Load(const std::string& path);
     void Run(int firstStage = 0, int lastStage = 2);
     // Explicit development-tool profiling only; never called by native rollout.
