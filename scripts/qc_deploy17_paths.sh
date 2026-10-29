@@ -8,6 +8,12 @@ LOG_DIR=/home/newbiexvwu/pvz-logs
 REV=2f038dbe
 O=""
 STOPPED=0
+# A newly installed updater may be the watchdog's newest qc_deploy*.sh. Its launch
+# bridge delegates to the current launcher without ever executing a deployment body.
+start_qc() {
+  /bin/bash -c 'source "$1"; watchdog_extract_start "$2" | /bin/bash' task165 \
+    "$W/scripts/qc_watchdog.sh" "$LOG_DIR/qc_deploy17.sh"
+}
 helper() { "$PY" "$O/source/scripts/deploy17_boundary.py" "$1" --worktree "$W" \
   --log "$LOG_DIR/curriculum.log" --record "$O/scheduler.json"; }
 update() { nice -n 10 "$PY" "$O/source/scripts/apply_deploy17_paths.py" "$1" --root "$R" \
@@ -67,6 +73,7 @@ if [ -f "$LOG_DIR/qc_deploy17.active" ] && grep -qx "$REV" "$LOG_DIR/qc_deploy17
    [ -f "$LOG_DIR/deploy17_paths.latest" ] &&
    [ -f "$(cat "$LOG_DIR/deploy17_paths.latest")/complete" ]; then
   log "already active: $REV"
+  touch "$LOG_DIR/qc_deploy17.sh"
   exit 0
 fi
 O=$LOG_DIR/deploy17_paths_$(date +%Y%m%dT%H%M%S)_$$
@@ -94,6 +101,6 @@ tmux kill-session -t =qc 2>/dev/null || true
 printf '%s\n' "$O" > "$LOG_DIR/deploy17_paths.latest"
 update apply --engine "$ENGINE"
 extract_start > "$O/new-launch.sh"
-/bin/bash "$O/new-launch.sh"
+start_qc
 touch "$O/complete"
 log "activated $REV with fixed panels/executable and 256-archive retirement; backup $O"

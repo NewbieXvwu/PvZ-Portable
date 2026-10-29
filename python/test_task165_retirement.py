@@ -138,3 +138,14 @@ def test_task165_update_backup_restore_and_immutable_engine(tmp_path):
     with pytest.raises(RuntimeError, match='different bytes'):
         stage_engine(source, target)
     assert target.read_bytes() == b'immutable executable'
+
+
+def test_task165_update_watchdog_bridge_is_extractable():
+    import subprocess
+    # Extract only; never invoke the function or open a tmux session.
+    result = subprocess.run(['bash', '-c', 'source "$1"; watchdog_extract_start "$2"',
+                             'fixture', str(ROOT / 'scripts/qc_watchdog.sh'),
+                             str(ROOT / 'scripts/qc_deploy17_paths.sh')],
+                            capture_output=True, text=True, check=True)
+    assert 'watchdog_extract_start "$2" | /bin/bash' in result.stdout
+    assert 'qc_deploy17.sh' in result.stdout and '--at-boundary' not in result.stdout
