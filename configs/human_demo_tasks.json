@@ -10629,7 +10629,20 @@
     5,
     31
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/ae53c17b1cc9ca237a9b3377f3391e2048abefeb7c235266f04d501e23fd991c",
+    "decisions": [
+     651,
+     415,
+     356,
+     237,
+     178
+    ],
+    "index": 0,
+    "future_seed_start": 376000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l39_snow_cactus_v2_m200_s81026027_ab1a4e140e65c",
