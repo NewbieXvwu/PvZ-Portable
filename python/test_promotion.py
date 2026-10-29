@@ -349,7 +349,7 @@ def v5_panel(start=100_000_000):
 
 
 def test_v5_policy_and_committed_source_panel_are_the_same_adventure_set():
-    assert GATE_VERSION == 5
+    assert GATE_VERSION == 6
     v5 = policy(5)
     assert v5['pair_count'] == 1920 and v5['episode_count'] == 3840
     assert v5['seeds_per_task'] == 45 and v5['monitor_seeds_per_task'] == 96

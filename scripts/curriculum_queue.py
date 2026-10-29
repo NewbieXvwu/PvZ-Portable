@@ -2328,7 +2328,7 @@ def main() -> None:
                         help='additional registered training panel (task137 random-deck cells); repeatable')
     parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
                         help='max share of the round budget for random-deck cells (default 0.15)')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5), default=GATE_VERSION,
+    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5, 6), default=GATE_VERSION,
                         help='promotion policy; change only with no queued/running gate jobs')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '

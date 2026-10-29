@@ -18,6 +18,8 @@ Gate versions:
   monitoring only. The overall -3pp rule and the Holm-Bonferroni zone veto are
   computed on the adventure pairs alone; heldout never vetoes and never enters
   the overall rate.
+- 6 (task168): same v5 panel and overall rate; roof tasks veto by paired final_wave
+  Wilcoxon test (90 roof pairs pooled, one-sided alpha .01), leaving four binary zones in Holm.
 - 3 (task73c): panel extended with the zones the curriculum actually practices -
   fog (fog_user L31, human observation) and roof (L41 r7) - and the floor
   day_l9 holdout replaced by a measured in-band holdout. 1920 pairs. Decision
@@ -33,9 +35,10 @@ from __future__ import annotations
 
 import copy
 import math
-from statistics import NormalDist
+from itertools import groupby
+from statistics import NormalDist, median
 
-GATE_VERSION = 5
+GATE_VERSION = 6
 ALPHA = .05
 MARGIN = .03
 SEEDS_PER_TASK = 8
@@ -111,6 +114,8 @@ PANEL_TASKS_V5 = (
     ('heldout', 'day_l9_eval_d7p_holdout2', 96),
 )
 V5_PANEL = 'v5-task128'
+V6_PANEL = 'v6-task168'
+ROOF_WAVE_ALPHA = .01
 V5_MONITOR_TASKS = ('day_l7_eval_d7p_holdout1', 'day_l9_eval_d7p_holdout2')
 V5_SEEDS_PER_TASK = 45
 V5_MONITOR_SEEDS_PER_TASK = 96
@@ -118,7 +123,7 @@ V1_PANEL = 'v2-task49A'
 V2_PANEL = 'v2-task73b'
 V3_PANEL = 'v3-task73c'
 V4_PANEL = 'v4-task113'
-VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2, V3_PANEL: 3, V4_PANEL: 4, V5_PANEL: 5}
+VERSION_BY_PANEL = {V1_PANEL: 1, V2_PANEL: 2, V3_PANEL: 3, V4_PANEL: 4, V5_PANEL: 5, V6_PANEL: 6}
 V1_POOL = (30000, 30128)
 # task88: ordered pool list. [31024, 65536) was registered for task73b and is
 # nearly spent (ledger allocated up to 36272 on 2026-10-26); the second window is
@@ -146,6 +151,18 @@ START_SEED_BLOCK = 256
 
 
 def policy(version=GATE_VERSION):
+    if version == 6:
+        result = policy(5)
+        result.update(version=6, zone_veto='one-sided exact McNemar p across the four non-roof adventure zones; '
+                      'Holm–Bonferroni step-down correction, family-wise alpha = 0.05; '
+                      'veto while ordered p < 0.05 / (group_count - rank + 1)',
+                      roof_veto=dict(endpoint='candidate_wave - incumbent_wave (final_wave)',
+                                     test='one-sided exact Wilcoxon signed-rank, alternative less',
+                                     alpha=ROOF_WAVE_ALPHA, unit='roof zone, pooling both tasks (90 pairs)',
+                                     zeros='discard', ties='average ranks',
+                                     distribution='exact conditional sign-flip, inclusive lower tail',
+                                     tasks=[name for zone, name, _ in PANEL_TASKS_V5 if zone == 'roof']))
+        return result
     if version == 1:
         return dict(version=version, alpha=ALPHA, noninferiority_margin=MARGIN,
                     overall_interval='Newcombe paired method 10, two-sided 95%',
@@ -289,10 +306,14 @@ def _freeze_adventure_panel(document, seed_block):
 
 def freeze_panel(document, version=GATE_VERSION, seed_block=None):
     """Subset registered tasks, retaining decks/terrain and disjoint evaluation seeds."""
-    if document.get('panel_version') != ('v5' if version == 5 else 'v2'):
-        raise ValueError(f'promotion requires the registered {"v5" if version == 5 else "unified v2"} panel')
-    if version == 5:
-        return _freeze_adventure_panel(document, seed_block)
+    if document.get('panel_version') != ('v5' if version in (5, 6) else 'v2'):
+        raise ValueError(f'promotion requires the registered {"v5" if version in (5, 6) else "unified v2"} panel')
+    if version in (5, 6):
+        panel = _freeze_adventure_panel(document, seed_block)
+        if version == 6:
+            panel.update(panel_version=V6_PANEL, purpose='task168 v5 panel and seeds; roof final_wave '
+                         'Wilcoxon veto at 0.01 across 90 roof pairs, four non-roof binary zones Holm at 0.05')
+        return panel
     if version == 1 and seed_block is not None:
         raise ValueError('gate v1 uses fixed panel slices; seed_block is a v2 argument')
     table = {task['task_id']: task for task in document['tasks']}
@@ -375,6 +396,41 @@ def summarize(pairs):
                 mcnemar_worse_p=p_worse)
 
 
+def wilcoxon_worse(differences):
+    """Exact lower tail of W+, dropping zeros and averaging tied absolute ranks.
+
+    Doubled ranks are integers even with ties. Subset-sum counts give the full
+    conditional sign-flip distribution without enumerating 2**n assignments.
+    """
+    ranked, position = [], 0
+    for _, group in groupby(sorted((d for d in differences if d), key=abs), key=abs):
+        values = list(group)
+        rank = 2 * position + len(values) + 1
+        ranked.extend((value, rank) for value in values)
+        position += len(values)
+    observed = sum(rank for value, rank in ranked if value > 0)
+    counts = [1] + [0] * sum(rank for _, rank in ranked)
+    reachable = 0
+    for _, rank in ranked:
+        for total in range(reachable, -1, -1):
+            counts[total + rank] += counts[total]
+        reachable += rank
+    return dict(positive_rank_sum=observed / 2, nonzero_pairs=len(ranked),
+                wilcoxon_worse_p=sum(counts[:observed + 1]) / 2**len(ranked))
+
+
+def summarize_waves(pairs):
+    if not pairs or any(type(row.get(side + '_wave')) is not int or row[side + '_wave'] < 0
+                        for row in pairs for side in ('candidate', 'incumbent')):
+        raise ValueError('complete nonnegative integer paired roof waves required')
+    differences = [row['candidate_wave'] - row['incumbent_wave'] for row in pairs]
+    result = wilcoxon_worse(differences)
+    result.update(pairs=len(pairs), candidate_mean_wave=sum(row['candidate_wave'] for row in pairs) / len(pairs),
+                  incumbent_mean_wave=sum(row['incumbent_wave'] for row in pairs) / len(pairs),
+                  mean_delta_wave=sum(differences) / len(pairs), median_delta_wave=median(differences))
+    return result
+
+
 def decide_scored(scored, version=GATE_VERSION):
     """Shared statistical decision for scored pairs, independent of panel size."""
     overall = summarize(scored)
@@ -384,12 +440,13 @@ def decide_scored(scored, version=GATE_VERSION):
     if overall['ci95'][0] <= -MARGIN:
         reasons.append('overall_ci_lower_not_above_minus_3pp')
     if version >= 4:
-        # The family includes every zone, including those with no discordant pairs.
+        # Include zones with no discordant pairs; v6 roof uses its own wave endpoint.
         # Cumulative maximum implements Holm's stop-at-first-nonrejection rule.
         adjusted = 0.
-        ordered = sorted(zones, key=lambda zone: (zones[zone]['mcnemar_worse_p'], zone))
+        ordered = sorted((zone for zone in zones if version < 6 or zone != 'roof'),
+                         key=lambda zone: (zones[zone]['mcnemar_worse_p'], zone))
         for rank, zone in enumerate(ordered):
-            adjusted = max(adjusted, min(1., (len(zones) - rank) * zones[zone]['mcnemar_worse_p']))
+            adjusted = max(adjusted, min(1., (len(ordered) - rank) * zones[zone]['mcnemar_worse_p']))
             zones[zone]['holm_adjusted_p'] = adjusted
             if adjusted < ALPHA:
                 reasons.append('significant_zone_regression:' + zone)
@@ -397,6 +454,17 @@ def decide_scored(scored, version=GATE_VERSION):
         for zone, result in zones.items():
             if result['mcnemar_worse_p'] < ALPHA:
                 reasons.append('significant_zone_regression:' + zone)
+    if version >= 6 and 'roof' in zones:
+        roof = [row for row in scored if row['zone'] == 'roof']
+        result = summarize_waves(roof)
+        result.update(alpha=ROOF_WAVE_ALPHA, veto=result['wilcoxon_worse_p'] < ROOF_WAVE_ALPHA)
+        zones['roof']['waves'] = result
+        if result['veto']:
+            reasons.append('significant_roof_wave_regression:roof')
+        zones['roof']['wave_tasks'] = {}
+        for name in sorted({row['task_id'] for row in roof}):
+            result = summarize_waves([row for row in roof if row['task_id'] == name])
+            zones['roof']['wave_tasks'][name] = result
     return dict(version=version, approved=not reasons, reasons=reasons,
                 policy=policy(version), overall=overall, zones=zones)
 

@@ -1,0 +1,4209 @@
+{
+ "schema": "task168_roof_wave_replay_v1",
+ "policy": {
+  "version": 6,
+  "alpha": 0.05,
+  "noninferiority_margin": 0.03,
+  "overall_interval": "Newcombe paired method 10, two-sided 95%",
+  "zone_veto": "one-sided exact McNemar p across the four non-roof adventure zones; Holm–Bonferroni step-down correction, family-wise alpha = 0.05; veto while ordered p < 0.05 / (group_count - rank + 1)",
+  "pair_count": 1920,
+  "episode_count": 3840,
+  "seeds_per_task": 45,
+  "seed_assignment": "1728 adventure pairs evenly divided: first 18 tasks take 46, remaining 20 take 45",
+  "monitor_seeds_per_task": 96,
+  "seed_pool": [
+   31024,
+   65536
+  ],
+  "seed_ledger": "/home/newbiexvwu/pvz-logs/gate_seed_ledger.json",
+  "seed_reuse": "never; ledger-allocated contiguous block per round, exhaustion aborts the gate instead of wrapping",
+  "incumbent_rerun": "both sides are evaluated on the round seeds; cached incumbent outcomes are never used",
+  "panel": "adventure levels (original 1.0x, scoreboard decks) where the r11 student or the teacher has a recorded win; all-loss cells carry no regression signal",
+  "heldout": "monitor only: 96 pairs each, written into the round report, never vetoes and never enters the overall rate",
+  "tasks": [
+   {
+    "zone": "day",
+    "task_id": "task101_l1_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l2_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l3_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l4_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l6_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l7_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l8_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l9_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "day",
+    "task_id": "task101_l10_day_d7",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l11_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l12_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l13_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l14_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l16_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l17_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l18_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l19_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "night",
+    "task_id": "task101_l20_night_n10",
+    "seeds": 46,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l21_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l22_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l23_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l24_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l26_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l27_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l28_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l29_pool_p9k",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "pool",
+    "task_id": "task101_l30_native",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l31_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l32_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l33_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l34_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l36_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l37_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l38_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l39_fog_selected",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "fog",
+    "task_id": "task101_l40_native",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "roof",
+    "task_id": "task101_l41_roof_demo",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "roof",
+    "task_id": "task101_l46_roof_demo",
+    "seeds": 45,
+    "monitor": false
+   },
+   {
+    "zone": "heldout",
+    "task_id": "day_l7_eval_d7p_holdout1",
+    "seeds": 96,
+    "monitor": true
+   },
+   {
+    "zone": "heldout",
+    "task_id": "day_l9_eval_d7p_holdout2",
+    "seeds": 96,
+    "monitor": true
+   }
+  ],
+  "roof_veto": {
+   "endpoint": "candidate_wave - incumbent_wave (final_wave)",
+   "test": "one-sided exact Wilcoxon signed-rank, alternative less",
+   "alpha": 0.01,
+   "unit": "roof zone, pooling both tasks (90 pairs)",
+   "zeros": "discard",
+   "ties": "average ranks",
+   "distribution": "exact conditional sign-flip, inclusive lower tail",
+   "tasks": [
+    "task101_l41_roof_demo",
+    "task101_l46_roof_demo"
+   ]
+  }
+ },
+ "rounds": [
+  {
+   "round": 26,
+   "source": "round_000026/evaluations/51c090e2d3e37ba71e53/decision.json",
+   "decision_sha256": "d5ba4188519216d456c342e29997d3e24e28868357fb36f466c55d8d41cca7be",
+   "candidate_sha256": "6b085e9c40f86c5e3dacc19e2e863f6e4accf9351b66563e8db9078f0b983132",
+   "incumbent_sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+   "roof_episode_sha256": {
+    "candidate/task101_l41_roof_demo/games.jsonl": "180bdeb2637ccd3bb8866beea7cde7f38c2045d5360d12181a0c6cd4165cde29",
+    "incumbent/task101_l41_roof_demo/games.jsonl": "5ebeabcfc2f2be7602c2b13121faea2a042699784b47a4fec712d8007a8b4950",
+    "candidate/task101_l46_roof_demo/games.jsonl": "9ad49d50ee46ee132c88684c2cba5f446319dca32bc0ccd76ad008fb076dbd1e",
+    "incumbent/task101_l46_roof_demo/games.jsonl": "43d49a791feee51e4ea41214d137328904492b8563a0b254712b7bc03db7ce37"
+   },
+   "old_approved": false,
+   "old_reasons": [
+    "significant_zone_regression:day"
+   ],
+   "new_approved": false,
+   "new_reasons": [
+    "significant_zone_regression:day"
+   ],
+   "overall": {
+    "pairs": 1728,
+    "candidate_wins": 1171,
+    "incumbent_wins": 1164,
+    "gain": 187,
+    "harm": 180,
+    "both_win": 984,
+    "both_lose": 377,
+    "delta_rate": 0.004050925925925926,
+    "ci95": [
+     -0.017699009753660202,
+     0.02579588248924071
+    ],
+    "mcnemar_worse_p": 0.6618501970638709
+   },
+   "zones": {
+    "day": {
+     "pairs": 414,
+     "candidate_wins": 359,
+     "incumbent_wins": 383,
+     "gain": 24,
+     "harm": 48,
+     "both_win": 335,
+     "both_lose": 7,
+     "delta_rate": -0.057971014492753624,
+     "ci95": [
+      -0.09883695330506596,
+      -0.017761983236012066
+     ],
+     "mcnemar_worse_p": 0.0031549136568330234,
+     "holm_adjusted_p": 0.012619654627332094
+    },
+    "fog": {
+     "pairs": 405,
+     "candidate_wins": 175,
+     "incumbent_wins": 169,
+     "gain": 44,
+     "harm": 38,
+     "both_win": 131,
+     "both_lose": 192,
+     "delta_rate": 0.014814814814814815,
+     "ci95": [
+      -0.02912428951789281,
+      0.05863759259923104
+     ],
+     "mcnemar_worse_p": 0.7801472854070891,
+     "holm_adjusted_p": 1.0
+    },
+    "night": {
+     "pairs": 414,
+     "candidate_wins": 369,
+     "incumbent_wins": 380,
+     "gain": 28,
+     "harm": 39,
+     "both_win": 341,
+     "both_lose": 6,
+     "delta_rate": -0.026570048309178744,
+     "ci95": [
+      -0.06622896995265949,
+      0.012737149785464016
+     ],
+     "mcnemar_worse_p": 0.11077436482240557,
+     "holm_adjusted_p": 0.33232309446721675
+    },
+    "pool": {
+     "pairs": 405,
+     "candidate_wins": 266,
+     "incumbent_wins": 232,
+     "gain": 89,
+     "harm": 55,
+     "both_win": 177,
+     "both_lose": 84,
+     "delta_rate": 0.08395061728395062,
+     "ci95": [
+      0.02604512922194628,
+      0.1409829775236808
+     ],
+     "mcnemar_worse_p": 0.9983030579682134,
+     "holm_adjusted_p": 1.0
+    },
+    "roof": {
+     "pairs": 90,
+     "candidate_wins": 2,
+     "incumbent_wins": 0,
+     "gain": 2,
+     "harm": 0,
+     "both_win": 0,
+     "both_lose": 88,
+     "delta_rate": 0.022222222222222223,
+     "ci95": [
+      -0.02176816093035153,
+      0.0774452668862537
+     ],
+     "mcnemar_worse_p": 1.0,
+     "waves": {
+      "positive_rank_sum": 3112.0,
+      "nonzero_pairs": 81,
+      "wilcoxon_worse_p": 0.9999999999999952,
+      "pairs": 90,
+      "candidate_mean_wave": 12.21111111111111,
+      "incumbent_mean_wave": 7.233333333333333,
+      "mean_delta_wave": 4.977777777777778,
+      "median_delta_wave": 5.0,
+      "alpha": 0.01,
+      "veto": false
+     },
+     "wave_tasks": {
+      "task101_l41_roof_demo": {
+       "positive_rank_sum": 681.5,
+       "nonzero_pairs": 39,
+       "wilcoxon_worse_p": 0.9999936668464215,
+       "pairs": 45,
+       "candidate_mean_wave": 10.333333333333334,
+       "incumbent_mean_wave": 6.488888888888889,
+       "mean_delta_wave": 3.8444444444444446,
+       "median_delta_wave": 3
+      },
+      "task101_l46_roof_demo": {
+       "positive_rank_sum": 890.0,
+       "nonzero_pairs": 42,
+       "wilcoxon_worse_p": 0.9999999999868123,
+       "pairs": 45,
+       "candidate_mean_wave": 14.088888888888889,
+       "incumbent_mean_wave": 7.977777777777778,
+       "mean_delta_wave": 6.111111111111111,
+       "median_delta_wave": 5
+      }
+     }
+    }
+   },
+   "roof_pairs": {
+    "task101_l41_roof_demo": [
+     [
+      56342,
+      5,
+      4,
+      false,
+      false
+     ],
+     [
+      56343,
+      12,
+      4,
+      false,
+      false
+     ],
+     [
+      56344,
+      4,
+      10,
+      false,
+      false
+     ],
+     [
+      56345,
+      20,
+      4,
+      true,
+      false
+     ],
+     [
+      56346,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      56347,
+      19,
+      5,
+      false,
+      false
+     ],
+     [
+      56348,
+      4,
+      4,
+      false,
+      false
+     ],
+     [
+      56349,
+      19,
+      8,
+      false,
+      false
+     ],
+     [
+      56350,
+      11,
+      9,
+      false,
+      false
+     ],
+     [
+      56351,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      56352,
+      12,
+      6,
+      false,
+      false
+     ],
+     [
+      56353,
+      13,
+      4,
+      false,
+      false
+     ],
+     [
+      56354,
+      11,
+      6,
+      false,
+      false
+     ],
+     [
+      56355,
+      11,
+      5,
+      false,
+      false
+     ],
+     [
+      56356,
+      13,
+      11,
+      false,
+      false
+     ],
+     [
+      56357,
+      15,
+      6,
+      false,
+      false
+     ],
+     [
+      56358,
+      17,
+      7,
+      false,
+      false
+     ],
+     [
+      56359,
+      6,
+      7,
+      false,
+      false
+     ],
+     [
+      56360,
+      4,
+      6,
+      false,
+      false
+     ],
+     [
+      56361,
+      7,
+      4,
+      false,
+      false
+     ],
+     [
+      56362,
+      7,
+      12,
+      false,
+      false
+     ],
+     [
+      56363,
+      8,
+      4,
+      false,
+      false
+     ],
+     [
+      56364,
+      14,
+      8,
+      false,
+      false
+     ],
+     [
+      56365,
+      7,
+      7,
+      false,
+      false
+     ],
+     [
+      56366,
+      20,
+      5,
+      false,
+      false
+     ],
+     [
+      56367,
+      12,
+      5,
+      false,
+      false
+     ],
+     [
+      56368,
+      8,
+      6,
+      false,
+      false
+     ],
+     [
+      56369,
+      7,
+      8,
+      false,
+      false
+     ],
+     [
+      56370,
+      6,
+      6,
+      false,
+      false
+     ],
+     [
+      56371,
+      20,
+      9,
+      false,
+      false
+     ],
+     [
+      56372,
+      12,
+      4,
+      false,
+      false
+     ],
+     [
+      56373,
+      12,
+      5,
+      false,
+      false
+     ],
+     [
+      56374,
+      4,
+      5,
+      false,
+      false
+     ],
+     [
+      56375,
+      16,
+      9,
+      false,
+      false
+     ],
+     [
+      56376,
+      8,
+      8,
+      false,
+      false
+     ],
+     [
+      56377,
+      4,
+      5,
+      false,
+      false
+     ],
+     [
+      56378,
+      3,
+      5,
+      false,
+      false
+     ],
+     [
+      56379,
+      20,
+      13,
+      true,
+      false
+     ],
+     [
+      56380,
+      13,
+      5,
+      false,
+      false
+     ],
+     [
+      56381,
+      9,
+      4,
+      false,
+      false
+     ],
+     [
+      56382,
+      4,
+      9,
+      false,
+      false
+     ],
+     [
+      56383,
+      5,
+      5,
+      false,
+      false
+     ],
+     [
+      56384,
+      4,
+      5,
+      false,
+      false
+     ],
+     [
+      56385,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      56386,
+      12,
+      7,
+      false,
+      false
+     ]
+    ],
+    "task101_l46_roof_demo": [
+     [
+      56387,
+      12,
+      8,
+      false,
+      false
+     ],
+     [
+      56388,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      56389,
+      10,
+      6,
+      false,
+      false
+     ],
+     [
+      56390,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      56391,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      56392,
+      19,
+      8,
+      false,
+      false
+     ],
+     [
+      56393,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      56394,
+      13,
+      7,
+      false,
+      false
+     ],
+     [
+      56395,
+      15,
+      5,
+      false,
+      false
+     ],
+     [
+      56396,
+      14,
+      8,
+      false,
+      false
+     ],
+     [
+      56397,
+      17,
+      9,
+      false,
+      false
+     ],
+     [
+      56398,
+      11,
+      12,
+      false,
+      false
+     ],
+     [
+      56399,
+      9,
+      5,
+      false,
+      false
+     ],
+     [
+      56400,
+      17,
+      8,
+      false,
+      false
+     ],
+     [
+      56401,
+      21,
+      11,
+      false,
+      false
+     ],
+     [
+      56402,
+      12,
+      6,
+      false,
+      false
+     ],
+     [
+      56403,
+      10,
+      12,
+      false,
+      false
+     ],
+     [
+      56404,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      56405,
+      23,
+      8,
+      false,
+      false
+     ],
+     [
+      56406,
+      17,
+      12,
+      false,
+      false
+     ],
+     [
+      56407,
+      7,
+      5,
+      false,
+      false
+     ],
+     [
+      56408,
+      12,
+      7,
+      false,
+      false
+     ],
+     [
+      56409,
+      8,
+      4,
+      false,
+      false
+     ],
+     [
+      56410,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      56411,
+      29,
+      9,
+      false,
+      false
+     ],
+     [
+      56412,
+      11,
+      6,
+      false,
+      false
+     ],
+     [
+      56413,
+      12,
+      8,
+      false,
+      false
+     ],
+     [
+      56414,
+      23,
+      12,
+      false,
+      false
+     ],
+     [
+      56415,
+      18,
+      9,
+      false,
+      false
+     ],
+     [
+      56416,
+      16,
+      5,
+      false,
+      false
+     ],
+     [
+      56417,
+      25,
+      7,
+      false,
+      false
+     ],
+     [
+      56418,
+      14,
+      6,
+      false,
+      false
+     ],
+     [
+      56419,
+      17,
+      10,
+      false,
+      false
+     ],
+     [
+      56420,
+      9,
+      7,
+      false,
+      false
+     ],
+     [
+      56421,
+      12,
+      6,
+      false,
+      false
+     ],
+     [
+      56422,
+      19,
+      12,
+      false,
+      false
+     ],
+     [
+      56423,
+      23,
+      7,
+      false,
+      false
+     ],
+     [
+      56424,
+      13,
+      13,
+      false,
+      false
+     ],
+     [
+      56425,
+      12,
+      7,
+      false,
+      false
+     ],
+     [
+      56426,
+      20,
+      8,
+      false,
+      false
+     ],
+     [
+      56427,
+      14,
+      8,
+      false,
+      false
+     ],
+     [
+      56428,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      56429,
+      17,
+      9,
+      false,
+      false
+     ],
+     [
+      56430,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      56431,
+      13,
+      8,
+      false,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "round": 27,
+   "source": "round_000027/evaluations/695c15222e286b4ae479/decision.json",
+   "decision_sha256": "133b75e21b70057c0053130470c4dd8dfdecf86409e4364de7973ac5306b853d",
+   "candidate_sha256": "c91ed25f0933f70ba583c796ca7b34e9fd64b7974685288127e6db03c2458961",
+   "incumbent_sha256": "1cf82f5e6cf7994ca961d91e878d4ac65a4563eea2be50a1e96a9787c22dfd4c",
+   "roof_episode_sha256": {
+    "candidate/task101_l41_roof_demo/games.jsonl": "d71a491c895579da4aab92dbc7a4ed64cf3f7584b7ca9dd536d125b877db4aba",
+    "incumbent/task101_l41_roof_demo/games.jsonl": "9fe933b8024ea536334938ddf63b86411dd9b0103d35ba9ced059b63a92ca84c",
+    "candidate/task101_l46_roof_demo/games.jsonl": "293fe8db0cf3c4269f185f3c6913c4dcdc44e8b833dde090f24314c8909e7daa",
+    "incumbent/task101_l46_roof_demo/games.jsonl": "f554c5bd94d09a7aef9ded9a6d1d0242fb79b3f9c97207eda0791da7ffbd9f8a"
+   },
+   "old_approved": true,
+   "old_reasons": [],
+   "new_approved": true,
+   "new_reasons": [],
+   "overall": {
+    "pairs": 1728,
+    "candidate_wins": 1224,
+    "incumbent_wins": 1144,
+    "gain": 198,
+    "harm": 118,
+    "both_win": 1026,
+    "both_lose": 386,
+    "delta_rate": 0.046296296296296294,
+    "ci95": [
+     0.026206513411211843,
+     0.06634813957726503
+    ],
+    "mcnemar_worse_p": 0.9999976855112733
+   },
+   "zones": {
+    "day": {
+     "pairs": 414,
+     "candidate_wins": 390,
+     "incumbent_wins": 387,
+     "gain": 26,
+     "harm": 23,
+     "both_win": 364,
+     "both_lose": 1,
+     "delta_rate": 0.007246376811594203,
+     "ci95": [
+      -0.026607522882398954,
+      0.04129309980510674
+     ],
+     "mcnemar_worse_p": 0.7159137935754174,
+     "holm_adjusted_p": 1.0
+    },
+    "fog": {
+     "pairs": 405,
+     "candidate_wins": 184,
+     "incumbent_wins": 155,
+     "gain": 47,
+     "harm": 18,
+     "both_win": 137,
+     "both_lose": 203,
+     "delta_rate": 0.07160493827160494,
+     "ci95": [
+      0.032830143871183305,
+      0.10991292596367638
+     ],
+     "mcnemar_worse_p": 0.999923946712076,
+     "holm_adjusted_p": 1.0
+    },
+    "night": {
+     "pairs": 414,
+     "candidate_wins": 377,
+     "incumbent_wins": 386,
+     "gain": 22,
+     "harm": 31,
+     "both_win": 355,
+     "both_lose": 6,
+     "delta_rate": -0.021739130434782608,
+     "ci95": [
+      -0.05741706862308562,
+      0.013429523716050662
+     ],
+     "mcnemar_worse_p": 0.13583958303275168,
+     "holm_adjusted_p": 0.5433583321310067
+    },
+    "pool": {
+     "pairs": 405,
+     "candidate_wins": 267,
+     "incumbent_wins": 216,
+     "gain": 97,
+     "harm": 46,
+     "both_win": 170,
+     "both_lose": 92,
+     "delta_rate": 0.1259259259259259,
+     "ci95": [
+      0.0687375987611335,
+      0.18179695216558073
+     ],
+     "mcnemar_worse_p": 0.9999944910425579,
+     "holm_adjusted_p": 1.0
+    },
+    "roof": {
+     "pairs": 90,
+     "candidate_wins": 6,
+     "incumbent_wins": 0,
+     "gain": 6,
+     "harm": 0,
+     "both_win": 0,
+     "both_lose": 84,
+     "delta_rate": 0.06666666666666667,
+     "ci95": [
+      0.01231347155731008,
+      0.13790094774325523
+     ],
+     "mcnemar_worse_p": 1.0,
+     "waves": {
+      "positive_rank_sum": 3138.5,
+      "nonzero_pairs": 84,
+      "wilcoxon_worse_p": 0.9999999999696163,
+      "pairs": 90,
+      "candidate_mean_wave": 11.655555555555555,
+      "incumbent_mean_wave": 7.333333333333333,
+      "mean_delta_wave": 4.322222222222222,
+      "median_delta_wave": 4.0,
+      "alpha": 0.01,
+      "veto": false
+     },
+     "wave_tasks": {
+      "task101_l41_roof_demo": {
+       "positive_rank_sum": 916.5,
+       "nonzero_pairs": 44,
+       "wilcoxon_worse_p": 0.9999999784182592,
+       "pairs": 45,
+       "candidate_mean_wave": 12.333333333333334,
+       "incumbent_mean_wave": 6.8,
+       "mean_delta_wave": 5.533333333333333,
+       "median_delta_wave": 5
+      },
+      "task101_l46_roof_demo": {
+       "positive_rank_sum": 660.5,
+       "nonzero_pairs": 40,
+       "wilcoxon_worse_p": 0.9997734907892664,
+       "pairs": 45,
+       "candidate_mean_wave": 10.977777777777778,
+       "incumbent_mean_wave": 7.866666666666666,
+       "mean_delta_wave": 3.111111111111111,
+       "median_delta_wave": 1
+      }
+     }
+    }
+   },
+   "roof_pairs": {
+    "task101_l41_roof_demo": [
+     [
+      58262,
+      11,
+      7,
+      false,
+      false
+     ],
+     [
+      58263,
+      8,
+      4,
+      false,
+      false
+     ],
+     [
+      58264,
+      6,
+      7,
+      false,
+      false
+     ],
+     [
+      58265,
+      5,
+      7,
+      false,
+      false
+     ],
+     [
+      58266,
+      10,
+      5,
+      false,
+      false
+     ],
+     [
+      58267,
+      12,
+      8,
+      false,
+      false
+     ],
+     [
+      58268,
+      20,
+      8,
+      true,
+      false
+     ],
+     [
+      58269,
+      4,
+      4,
+      false,
+      false
+     ],
+     [
+      58270,
+      12,
+      11,
+      false,
+      false
+     ],
+     [
+      58271,
+      11,
+      4,
+      false,
+      false
+     ],
+     [
+      58272,
+      7,
+      4,
+      false,
+      false
+     ],
+     [
+      58273,
+      11,
+      3,
+      false,
+      false
+     ],
+     [
+      58274,
+      17,
+      9,
+      false,
+      false
+     ],
+     [
+      58275,
+      20,
+      9,
+      true,
+      false
+     ],
+     [
+      58276,
+      20,
+      5,
+      true,
+      false
+     ],
+     [
+      58277,
+      7,
+      6,
+      false,
+      false
+     ],
+     [
+      58278,
+      11,
+      3,
+      false,
+      false
+     ],
+     [
+      58279,
+      7,
+      8,
+      false,
+      false
+     ],
+     [
+      58280,
+      10,
+      5,
+      false,
+      false
+     ],
+     [
+      58281,
+      7,
+      4,
+      false,
+      false
+     ],
+     [
+      58282,
+      15,
+      7,
+      false,
+      false
+     ],
+     [
+      58283,
+      6,
+      5,
+      false,
+      false
+     ],
+     [
+      58284,
+      13,
+      4,
+      false,
+      false
+     ],
+     [
+      58285,
+      13,
+      4,
+      false,
+      false
+     ],
+     [
+      58286,
+      17,
+      4,
+      false,
+      false
+     ],
+     [
+      58287,
+      19,
+      12,
+      false,
+      false
+     ],
+     [
+      58288,
+      19,
+      14,
+      false,
+      false
+     ],
+     [
+      58289,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      58290,
+      20,
+      8,
+      false,
+      false
+     ],
+     [
+      58291,
+      4,
+      6,
+      false,
+      false
+     ],
+     [
+      58292,
+      18,
+      6,
+      false,
+      false
+     ],
+     [
+      58293,
+      11,
+      9,
+      false,
+      false
+     ],
+     [
+      58294,
+      12,
+      5,
+      false,
+      false
+     ],
+     [
+      58295,
+      10,
+      7,
+      false,
+      false
+     ],
+     [
+      58296,
+      16,
+      6,
+      false,
+      false
+     ],
+     [
+      58297,
+      17,
+      9,
+      false,
+      false
+     ],
+     [
+      58298,
+      9,
+      5,
+      false,
+      false
+     ],
+     [
+      58299,
+      10,
+      6,
+      false,
+      false
+     ],
+     [
+      58300,
+      20,
+      4,
+      true,
+      false
+     ],
+     [
+      58301,
+      5,
+      20,
+      false,
+      false
+     ],
+     [
+      58302,
+      11,
+      6,
+      false,
+      false
+     ],
+     [
+      58303,
+      20,
+      6,
+      true,
+      false
+     ],
+     [
+      58304,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      58305,
+      17,
+      8,
+      false,
+      false
+     ],
+     [
+      58306,
+      20,
+      7,
+      true,
+      false
+     ]
+    ],
+    "task101_l46_roof_demo": [
+     [
+      58307,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      58308,
+      4,
+      6,
+      false,
+      false
+     ],
+     [
+      58309,
+      6,
+      11,
+      false,
+      false
+     ],
+     [
+      58310,
+      27,
+      10,
+      false,
+      false
+     ],
+     [
+      58311,
+      10,
+      10,
+      false,
+      false
+     ],
+     [
+      58312,
+      12,
+      9,
+      false,
+      false
+     ],
+     [
+      58313,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      58314,
+      7,
+      10,
+      false,
+      false
+     ],
+     [
+      58315,
+      20,
+      8,
+      false,
+      false
+     ],
+     [
+      58316,
+      10,
+      3,
+      false,
+      false
+     ],
+     [
+      58317,
+      13,
+      7,
+      false,
+      false
+     ],
+     [
+      58318,
+      6,
+      8,
+      false,
+      false
+     ],
+     [
+      58319,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      58320,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      58321,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      58322,
+      13,
+      6,
+      false,
+      false
+     ],
+     [
+      58323,
+      7,
+      7,
+      false,
+      false
+     ],
+     [
+      58324,
+      13,
+      5,
+      false,
+      false
+     ],
+     [
+      58325,
+      10,
+      7,
+      false,
+      false
+     ],
+     [
+      58326,
+      9,
+      10,
+      false,
+      false
+     ],
+     [
+      58327,
+      15,
+      7,
+      false,
+      false
+     ],
+     [
+      58328,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      58329,
+      15,
+      4,
+      false,
+      false
+     ],
+     [
+      58330,
+      7,
+      8,
+      false,
+      false
+     ],
+     [
+      58331,
+      15,
+      7,
+      false,
+      false
+     ],
+     [
+      58332,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      58333,
+      10,
+      8,
+      false,
+      false
+     ],
+     [
+      58334,
+      7,
+      6,
+      false,
+      false
+     ],
+     [
+      58335,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      58336,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      58337,
+      19,
+      12,
+      false,
+      false
+     ],
+     [
+      58338,
+      10,
+      8,
+      false,
+      false
+     ],
+     [
+      58339,
+      13,
+      15,
+      false,
+      false
+     ],
+     [
+      58340,
+      13,
+      5,
+      false,
+      false
+     ],
+     [
+      58341,
+      19,
+      5,
+      false,
+      false
+     ],
+     [
+      58342,
+      5,
+      11,
+      false,
+      false
+     ],
+     [
+      58343,
+      6,
+      3,
+      false,
+      false
+     ],
+     [
+      58344,
+      6,
+      5,
+      false,
+      false
+     ],
+     [
+      58345,
+      13,
+      12,
+      false,
+      false
+     ],
+     [
+      58346,
+      12,
+      7,
+      false,
+      false
+     ],
+     [
+      58347,
+      7,
+      7,
+      false,
+      false
+     ],
+     [
+      58348,
+      6,
+      12,
+      false,
+      false
+     ],
+     [
+      58349,
+      24,
+      9,
+      false,
+      false
+     ],
+     [
+      58350,
+      14,
+      5,
+      false,
+      false
+     ],
+     [
+      58351,
+      11,
+      7,
+      false,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "round": 28,
+   "source": "round_000028/evaluations/a2b63e9e26f95ce174ac/decision.json",
+   "decision_sha256": "c781a79c0dc8d4907aa74ca5f930291ceed6d84b7782f12dfa8f9fef2ac22bb8",
+   "candidate_sha256": "d2f6cb632e0c2e96093393efd61d4cf6e7faa5f7aa0484bd3e3278f415ac4499",
+   "incumbent_sha256": "c91ed25f0933f70ba583c796ca7b34e9fd64b7974685288127e6db03c2458961",
+   "roof_episode_sha256": {
+    "candidate/task101_l41_roof_demo/games.jsonl": "1c3b3b9f4dac5f5ced9c424a4b026c277907da42edaa0d4eb05e78385269c187",
+    "incumbent/task101_l41_roof_demo/games.jsonl": "0773d39f51086fc761de9762641fe8adf58a4c1a72bd7cb2b26f89c8ec098cbd",
+    "candidate/task101_l46_roof_demo/games.jsonl": "390ab50a4e905badb3f505d1fe920e8b215a22fdd14245d8a0b3572223289c76",
+    "incumbent/task101_l46_roof_demo/games.jsonl": "c532be970220a0aff55c7ed20cb8160e961a901a924876697d05cfb5ee39eff0"
+   },
+   "old_approved": false,
+   "old_reasons": [
+    "significant_zone_regression:night"
+   ],
+   "new_approved": false,
+   "new_reasons": [
+    "significant_zone_regression:night"
+   ],
+   "overall": {
+    "pairs": 1728,
+    "candidate_wins": 1228,
+    "incumbent_wins": 1197,
+    "gain": 173,
+    "harm": 142,
+    "both_win": 1055,
+    "both_lose": 358,
+    "delta_rate": 0.017939814814814815,
+    "ci95": [
+     -0.002208288974213341,
+     0.03807660280214757
+    ],
+    "mcnemar_worse_p": 0.9643899712762254
+   },
+   "zones": {
+    "day": {
+     "pairs": 414,
+     "candidate_wins": 395,
+     "incumbent_wins": 375,
+     "gain": 38,
+     "harm": 18,
+     "both_win": 357,
+     "both_lose": 1,
+     "delta_rate": 0.04830917874396135,
+     "ci95": [
+      0.012985113341576891,
+      0.084668954207009
+     ],
+     "mcnemar_worse_p": 0.9977192336267959,
+     "holm_adjusted_p": 1.0
+    },
+    "fog": {
+     "pairs": 405,
+     "candidate_wins": 199,
+     "incumbent_wins": 187,
+     "gain": 33,
+     "harm": 21,
+     "both_win": 166,
+     "both_lose": 185,
+     "delta_rate": 0.02962962962962963,
+     "ci95": [
+      -0.006079648159866474,
+      0.06513694607498555
+     ],
+     "mcnemar_worse_p": 0.9620476352554492,
+     "holm_adjusted_p": 1.0
+    },
+    "night": {
+     "pairs": 414,
+     "candidate_wins": 364,
+     "incumbent_wins": 384,
+     "gain": 22,
+     "harm": 42,
+     "both_win": 342,
+     "both_lose": 8,
+     "delta_rate": -0.04830917874396135,
+     "ci95": [
+      -0.08712061605892293,
+      -0.01026069589844121
+     ],
+     "mcnemar_worse_p": 0.008429095022140565,
+     "holm_adjusted_p": 0.03371638008856226
+    },
+    "pool": {
+     "pairs": 405,
+     "candidate_wins": 265,
+     "incumbent_wins": 249,
+     "gain": 75,
+     "harm": 59,
+     "both_win": 190,
+     "both_lose": 81,
+     "delta_rate": 0.03950617283950617,
+     "ci95": [
+      -0.01657576077862255,
+      0.09520569255444378
+     ],
+     "mcnemar_worse_p": 0.929169125093613,
+     "holm_adjusted_p": 1.0
+    },
+    "roof": {
+     "pairs": 90,
+     "candidate_wins": 5,
+     "incumbent_wins": 2,
+     "gain": 5,
+     "harm": 2,
+     "both_win": 0,
+     "both_lose": 83,
+     "delta_rate": 0.03333333333333333,
+     "ci95": [
+      -0.03128393284270335,
+      0.10376788734261155
+     ],
+     "mcnemar_worse_p": 0.9375,
+     "waves": {
+      "positive_rank_sum": 1626.0,
+      "nonzero_pairs": 79,
+      "wilcoxon_worse_p": 0.5891776996089533,
+      "pairs": 90,
+      "candidate_mean_wave": 11.977777777777778,
+      "incumbent_mean_wave": 11.555555555555555,
+      "mean_delta_wave": 0.4222222222222222,
+      "median_delta_wave": 0.0,
+      "alpha": 0.01,
+      "veto": false
+     },
+     "wave_tasks": {
+      "task101_l41_roof_demo": {
+       "positive_rank_sum": 513.0,
+       "nonzero_pairs": 39,
+       "wilcoxon_worse_p": 0.9578451766301441,
+       "pairs": 45,
+       "candidate_mean_wave": 13.511111111111111,
+       "incumbent_mean_wave": 11.622222222222222,
+       "mean_delta_wave": 1.8888888888888888,
+       "median_delta_wave": 0
+      },
+      "task101_l46_roof_demo": {
+       "positive_rank_sum": 303.0,
+       "nonzero_pairs": 40,
+       "wilcoxon_worse_p": 0.0758835670476401,
+       "pairs": 45,
+       "candidate_mean_wave": 10.444444444444445,
+       "incumbent_mean_wave": 11.488888888888889,
+       "mean_delta_wave": -1.0444444444444445,
+       "median_delta_wave": -1
+      }
+     }
+    }
+   },
+   "roof_pairs": {
+    "task101_l41_roof_demo": [
+     [
+      60182,
+      17,
+      20,
+      false,
+      false
+     ],
+     [
+      60183,
+      20,
+      12,
+      false,
+      false
+     ],
+     [
+      60184,
+      18,
+      9,
+      false,
+      false
+     ],
+     [
+      60185,
+      10,
+      10,
+      false,
+      false
+     ],
+     [
+      60186,
+      13,
+      7,
+      false,
+      false
+     ],
+     [
+      60187,
+      8,
+      11,
+      false,
+      false
+     ],
+     [
+      60188,
+      15,
+      4,
+      false,
+      false
+     ],
+     [
+      60189,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      60190,
+      13,
+      10,
+      false,
+      false
+     ],
+     [
+      60191,
+      11,
+      20,
+      false,
+      true
+     ],
+     [
+      60192,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      60193,
+      18,
+      20,
+      false,
+      false
+     ],
+     [
+      60194,
+      12,
+      12,
+      false,
+      false
+     ],
+     [
+      60195,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      60196,
+      13,
+      10,
+      false,
+      false
+     ],
+     [
+      60197,
+      13,
+      11,
+      false,
+      false
+     ],
+     [
+      60198,
+      20,
+      7,
+      true,
+      false
+     ],
+     [
+      60199,
+      16,
+      6,
+      false,
+      false
+     ],
+     [
+      60200,
+      10,
+      12,
+      false,
+      false
+     ],
+     [
+      60201,
+      17,
+      9,
+      false,
+      false
+     ],
+     [
+      60202,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      60203,
+      10,
+      11,
+      false,
+      false
+     ],
+     [
+      60204,
+      16,
+      20,
+      false,
+      false
+     ],
+     [
+      60205,
+      20,
+      7,
+      true,
+      false
+     ],
+     [
+      60206,
+      14,
+      12,
+      false,
+      false
+     ],
+     [
+      60207,
+      20,
+      9,
+      true,
+      false
+     ],
+     [
+      60208,
+      12,
+      16,
+      false,
+      false
+     ],
+     [
+      60209,
+      12,
+      12,
+      false,
+      false
+     ],
+     [
+      60210,
+      20,
+      20,
+      false,
+      false
+     ],
+     [
+      60211,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      60212,
+      16,
+      18,
+      false,
+      false
+     ],
+     [
+      60213,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      60214,
+      16,
+      6,
+      false,
+      false
+     ],
+     [
+      60215,
+      13,
+      16,
+      false,
+      false
+     ],
+     [
+      60216,
+      15,
+      16,
+      false,
+      false
+     ],
+     [
+      60217,
+      12,
+      16,
+      false,
+      false
+     ],
+     [
+      60218,
+      17,
+      20,
+      false,
+      true
+     ],
+     [
+      60219,
+      12,
+      9,
+      false,
+      false
+     ],
+     [
+      60220,
+      13,
+      11,
+      false,
+      false
+     ],
+     [
+      60221,
+      13,
+      11,
+      false,
+      false
+     ],
+     [
+      60222,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      60223,
+      12,
+      7,
+      false,
+      false
+     ],
+     [
+      60224,
+      12,
+      9,
+      false,
+      false
+     ],
+     [
+      60225,
+      20,
+      8,
+      true,
+      false
+     ],
+     [
+      60226,
+      8,
+      14,
+      false,
+      false
+     ]
+    ],
+    "task101_l46_roof_demo": [
+     [
+      60227,
+      9,
+      18,
+      false,
+      false
+     ],
+     [
+      60228,
+      8,
+      6,
+      false,
+      false
+     ],
+     [
+      60229,
+      11,
+      14,
+      false,
+      false
+     ],
+     [
+      60230,
+      9,
+      15,
+      false,
+      false
+     ],
+     [
+      60231,
+      10,
+      13,
+      false,
+      false
+     ],
+     [
+      60232,
+      12,
+      7,
+      false,
+      false
+     ],
+     [
+      60233,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      60234,
+      12,
+      9,
+      false,
+      false
+     ],
+     [
+      60235,
+      9,
+      10,
+      false,
+      false
+     ],
+     [
+      60236,
+      30,
+      7,
+      true,
+      false
+     ],
+     [
+      60237,
+      8,
+      13,
+      false,
+      false
+     ],
+     [
+      60238,
+      6,
+      22,
+      false,
+      false
+     ],
+     [
+      60239,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      60240,
+      21,
+      22,
+      false,
+      false
+     ],
+     [
+      60241,
+      12,
+      22,
+      false,
+      false
+     ],
+     [
+      60242,
+      8,
+      6,
+      false,
+      false
+     ],
+     [
+      60243,
+      16,
+      13,
+      false,
+      false
+     ],
+     [
+      60244,
+      9,
+      19,
+      false,
+      false
+     ],
+     [
+      60245,
+      8,
+      14,
+      false,
+      false
+     ],
+     [
+      60246,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      60247,
+      14,
+      13,
+      false,
+      false
+     ],
+     [
+      60248,
+      20,
+      14,
+      false,
+      false
+     ],
+     [
+      60249,
+      16,
+      7,
+      false,
+      false
+     ],
+     [
+      60250,
+      9,
+      5,
+      false,
+      false
+     ],
+     [
+      60251,
+      8,
+      3,
+      false,
+      false
+     ],
+     [
+      60252,
+      9,
+      13,
+      false,
+      false
+     ],
+     [
+      60253,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      60254,
+      3,
+      19,
+      false,
+      false
+     ],
+     [
+      60255,
+      9,
+      7,
+      false,
+      false
+     ],
+     [
+      60256,
+      12,
+      4,
+      false,
+      false
+     ],
+     [
+      60257,
+      12,
+      14,
+      false,
+      false
+     ],
+     [
+      60258,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      60259,
+      8,
+      8,
+      false,
+      false
+     ],
+     [
+      60260,
+      9,
+      7,
+      false,
+      false
+     ],
+     [
+      60261,
+      9,
+      7,
+      false,
+      false
+     ],
+     [
+      60262,
+      7,
+      8,
+      false,
+      false
+     ],
+     [
+      60263,
+      9,
+      11,
+      false,
+      false
+     ],
+     [
+      60264,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      60265,
+      8,
+      13,
+      false,
+      false
+     ],
+     [
+      60266,
+      15,
+      15,
+      false,
+      false
+     ],
+     [
+      60267,
+      4,
+      10,
+      false,
+      false
+     ],
+     [
+      60268,
+      8,
+      12,
+      false,
+      false
+     ],
+     [
+      60269,
+      11,
+      11,
+      false,
+      false
+     ],
+     [
+      60270,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      60271,
+      14,
+      14,
+      false,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "round": 29,
+   "source": "round_000029/evaluations/0bb126552d3cc9fd7225/decision.json",
+   "decision_sha256": "422c86ea7fc72602681d8a30faab107cbf785146164001d1edce4c3f632609ae",
+   "candidate_sha256": "7af5436c50940d12f34f39dfdc5c90755d60aefc6aeabe4b5ebe22a48550c286",
+   "incumbent_sha256": "c91ed25f0933f70ba583c796ca7b34e9fd64b7974685288127e6db03c2458961",
+   "roof_episode_sha256": {
+    "candidate/task101_l41_roof_demo/games.jsonl": "359f253e2c8111a9654f750257a51970e7de9bfd833eaec6d7dc59d73079e650",
+    "incumbent/task101_l41_roof_demo/games.jsonl": "f2191591f8eb26e86df8ab61bd38e62ef671d2f29a57fc59f9bafba34adbdc4e",
+    "candidate/task101_l46_roof_demo/games.jsonl": "82aa85f8bb9cd681626b34b1c788221f8b9e5fa1616ecd98e11e31a63f28aeaa",
+    "incumbent/task101_l46_roof_demo/games.jsonl": "c3ca338071f9032e8c65fae9019bfc6501849d1292b4e1401759b1454d649d8d"
+   },
+   "old_approved": true,
+   "old_reasons": [],
+   "new_approved": false,
+   "new_reasons": [
+    "significant_roof_wave_regression:roof"
+   ],
+   "overall": {
+    "pairs": 1728,
+    "candidate_wins": 1215,
+    "incumbent_wins": 1218,
+    "gain": 166,
+    "harm": 169,
+    "both_win": 1049,
+    "both_lose": 344,
+    "delta_rate": -0.001736111111111111,
+    "ci95": [
+     -0.02252287855507176,
+     0.01905194016279723
+    ],
+    "mcnemar_worse_p": 0.456504203561171
+   },
+   "zones": {
+    "day": {
+     "pairs": 414,
+     "candidate_wins": 389,
+     "incumbent_wins": 383,
+     "gain": 29,
+     "harm": 23,
+     "both_win": 360,
+     "both_lose": 2,
+     "delta_rate": 0.014492753623188406,
+     "ci95": [
+      -0.02028645700063203,
+      0.04961902549964076
+     ],
+     "mcnemar_worse_p": 0.8341251183152547,
+     "holm_adjusted_p": 1.0
+    },
+    "fog": {
+     "pairs": 405,
+     "candidate_wins": 205,
+     "incumbent_wins": 182,
+     "gain": 38,
+     "harm": 15,
+     "both_win": 167,
+     "both_lose": 185,
+     "delta_rate": 0.056790123456790124,
+     "ci95": [
+      0.021632512392310753,
+      0.09156687061642436
+     ],
+     "mcnemar_worse_p": 0.9995988345565525,
+     "holm_adjusted_p": 1.0
+    },
+    "night": {
+     "pairs": 414,
+     "candidate_wins": 359,
+     "incumbent_wins": 373,
+     "gain": 32,
+     "harm": 46,
+     "both_win": 327,
+     "both_lose": 9,
+     "delta_rate": -0.033816425120772944,
+     "ci95": [
+      -0.07630268880719192,
+      0.008402026258476795
+     ],
+     "mcnemar_worse_p": 0.07026914313476122,
+     "holm_adjusted_p": 0.2810765725390449
+    },
+    "pool": {
+     "pairs": 405,
+     "candidate_wins": 260,
+     "incumbent_wins": 275,
+     "gain": 65,
+     "harm": 80,
+     "both_win": 195,
+     "both_lose": 65,
+     "delta_rate": -0.037037037037037035,
+     "ci95": [
+      -0.09502178217436848,
+      0.021313106454358473
+     ],
+     "mcnemar_worse_p": 0.1224417967218786,
+     "holm_adjusted_p": 0.3673253901656358
+    },
+    "roof": {
+     "pairs": 90,
+     "candidate_wins": 2,
+     "incumbent_wins": 5,
+     "gain": 2,
+     "harm": 5,
+     "both_win": 0,
+     "both_lose": 83,
+     "delta_rate": -0.03333333333333333,
+     "ci95": [
+      -0.10376788734261155,
+      0.03128393284270335
+     ],
+     "mcnemar_worse_p": 0.2265625,
+     "waves": {
+      "positive_rank_sum": 715.5,
+      "nonzero_pairs": 82,
+      "wilcoxon_worse_p": 1.0792829270380741e-06,
+      "pairs": 90,
+      "candidate_mean_wave": 8.855555555555556,
+      "incumbent_mean_wave": 12.222222222222221,
+      "mean_delta_wave": -3.3666666666666667,
+      "median_delta_wave": -2.0,
+      "alpha": 0.01,
+      "veto": true
+     },
+     "wave_tasks": {
+      "task101_l41_roof_demo": {
+       "positive_rank_sum": 261.5,
+       "nonzero_pairs": 39,
+       "wilcoxon_worse_p": 0.03625883629320015,
+       "pairs": 45,
+       "candidate_mean_wave": 10.311111111111112,
+       "incumbent_mean_wave": 12.4,
+       "mean_delta_wave": -2.088888888888889,
+       "median_delta_wave": 0
+      },
+      "task101_l46_roof_demo": {
+       "positive_rank_sum": 75.5,
+       "nonzero_pairs": 43,
+       "wilcoxon_worse_p": 4.793662355950801e-08,
+       "pairs": 45,
+       "candidate_mean_wave": 7.4,
+       "incumbent_mean_wave": 12.044444444444444,
+       "mean_delta_wave": -4.644444444444445,
+       "median_delta_wave": -3
+      }
+     }
+    }
+   },
+   "roof_pairs": {
+    "task101_l41_roof_demo": [
+     [
+      62102,
+      12,
+      17,
+      false,
+      false
+     ],
+     [
+      62103,
+      11,
+      7,
+      false,
+      false
+     ],
+     [
+      62104,
+      12,
+      11,
+      false,
+      false
+     ],
+     [
+      62105,
+      9,
+      20,
+      false,
+      true
+     ],
+     [
+      62106,
+      17,
+      9,
+      false,
+      false
+     ],
+     [
+      62107,
+      5,
+      20,
+      false,
+      true
+     ],
+     [
+      62108,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      62109,
+      9,
+      7,
+      false,
+      false
+     ],
+     [
+      62110,
+      16,
+      7,
+      false,
+      false
+     ],
+     [
+      62111,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      62112,
+      13,
+      5,
+      false,
+      false
+     ],
+     [
+      62113,
+      5,
+      20,
+      false,
+      false
+     ],
+     [
+      62114,
+      14,
+      10,
+      false,
+      false
+     ],
+     [
+      62115,
+      16,
+      13,
+      false,
+      false
+     ],
+     [
+      62116,
+      9,
+      18,
+      false,
+      false
+     ],
+     [
+      62117,
+      9,
+      20,
+      false,
+      true
+     ],
+     [
+      62118,
+      12,
+      12,
+      false,
+      false
+     ],
+     [
+      62119,
+      7,
+      20,
+      false,
+      true
+     ],
+     [
+      62120,
+      7,
+      8,
+      false,
+      false
+     ],
+     [
+      62121,
+      11,
+      11,
+      false,
+      false
+     ],
+     [
+      62122,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      62123,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      62124,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      62125,
+      9,
+      20,
+      false,
+      false
+     ],
+     [
+      62126,
+      12,
+      19,
+      false,
+      false
+     ],
+     [
+      62127,
+      12,
+      20,
+      false,
+      false
+     ],
+     [
+      62128,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      62129,
+      10,
+      20,
+      false,
+      false
+     ],
+     [
+      62130,
+      11,
+      16,
+      false,
+      false
+     ],
+     [
+      62131,
+      12,
+      4,
+      false,
+      false
+     ],
+     [
+      62132,
+      9,
+      20,
+      false,
+      true
+     ],
+     [
+      62133,
+      6,
+      5,
+      false,
+      false
+     ],
+     [
+      62134,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      62135,
+      10,
+      20,
+      false,
+      false
+     ],
+     [
+      62136,
+      13,
+      20,
+      false,
+      false
+     ],
+     [
+      62137,
+      20,
+      20,
+      true,
+      false
+     ],
+     [
+      62138,
+      6,
+      9,
+      false,
+      false
+     ],
+     [
+      62139,
+      20,
+      11,
+      true,
+      false
+     ],
+     [
+      62140,
+      9,
+      5,
+      false,
+      false
+     ],
+     [
+      62141,
+      11,
+      9,
+      false,
+      false
+     ],
+     [
+      62142,
+      6,
+      15,
+      false,
+      false
+     ],
+     [
+      62143,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      62144,
+      9,
+      4,
+      false,
+      false
+     ],
+     [
+      62145,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      62146,
+      7,
+      7,
+      false,
+      false
+     ]
+    ],
+    "task101_l46_roof_demo": [
+     [
+      62147,
+      6,
+      25,
+      false,
+      false
+     ],
+     [
+      62148,
+      7,
+      13,
+      false,
+      false
+     ],
+     [
+      62149,
+      7,
+      10,
+      false,
+      false
+     ],
+     [
+      62150,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      62151,
+      10,
+      13,
+      false,
+      false
+     ],
+     [
+      62152,
+      6,
+      12,
+      false,
+      false
+     ],
+     [
+      62153,
+      5,
+      10,
+      false,
+      false
+     ],
+     [
+      62154,
+      7,
+      13,
+      false,
+      false
+     ],
+     [
+      62155,
+      12,
+      14,
+      false,
+      false
+     ],
+     [
+      62156,
+      12,
+      28,
+      false,
+      false
+     ],
+     [
+      62157,
+      8,
+      12,
+      false,
+      false
+     ],
+     [
+      62158,
+      12,
+      29,
+      false,
+      false
+     ],
+     [
+      62159,
+      5,
+      14,
+      false,
+      false
+     ],
+     [
+      62160,
+      9,
+      19,
+      false,
+      false
+     ],
+     [
+      62161,
+      5,
+      17,
+      false,
+      false
+     ],
+     [
+      62162,
+      5,
+      7,
+      false,
+      false
+     ],
+     [
+      62163,
+      3,
+      5,
+      false,
+      false
+     ],
+     [
+      62164,
+      12,
+      12,
+      false,
+      false
+     ],
+     [
+      62165,
+      6,
+      5,
+      false,
+      false
+     ],
+     [
+      62166,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      62167,
+      5,
+      7,
+      false,
+      false
+     ],
+     [
+      62168,
+      9,
+      11,
+      false,
+      false
+     ],
+     [
+      62169,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      62170,
+      16,
+      13,
+      false,
+      false
+     ],
+     [
+      62171,
+      5,
+      12,
+      false,
+      false
+     ],
+     [
+      62172,
+      6,
+      11,
+      false,
+      false
+     ],
+     [
+      62173,
+      7,
+      11,
+      false,
+      false
+     ],
+     [
+      62174,
+      5,
+      12,
+      false,
+      false
+     ],
+     [
+      62175,
+      11,
+      9,
+      false,
+      false
+     ],
+     [
+      62176,
+      4,
+      12,
+      false,
+      false
+     ],
+     [
+      62177,
+      6,
+      23,
+      false,
+      false
+     ],
+     [
+      62178,
+      6,
+      9,
+      false,
+      false
+     ],
+     [
+      62179,
+      5,
+      7,
+      false,
+      false
+     ],
+     [
+      62180,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      62181,
+      3,
+      5,
+      false,
+      false
+     ],
+     [
+      62182,
+      9,
+      11,
+      false,
+      false
+     ],
+     [
+      62183,
+      9,
+      11,
+      false,
+      false
+     ],
+     [
+      62184,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      62185,
+      6,
+      12,
+      false,
+      false
+     ],
+     [
+      62186,
+      7,
+      10,
+      false,
+      false
+     ],
+     [
+      62187,
+      8,
+      19,
+      false,
+      false
+     ],
+     [
+      62188,
+      6,
+      13,
+      false,
+      false
+     ],
+     [
+      62189,
+      6,
+      6,
+      false,
+      false
+     ],
+     [
+      62190,
+      5,
+      12,
+      false,
+      false
+     ],
+     [
+      62191,
+      9,
+      7,
+      false,
+      false
+     ]
+    ]
+   }
+  },
+  {
+   "round": 36,
+   "source": "round_000036/evaluations/62899a883391dbba19b1/decision.json",
+   "decision_sha256": "fa548dc30365933d437f91ff4470dc5e17863613427c7696e3b61d2c3e20cd15",
+   "candidate_sha256": "b39241b389ae30c95f2e240eb3c8692a4f13b1a8e263cf6c435bbdfe08c6401e",
+   "incumbent_sha256": "7af5436c50940d12f34f39dfdc5c90755d60aefc6aeabe4b5ebe22a48550c286",
+   "roof_episode_sha256": {
+    "candidate/task101_l41_roof_demo/games.jsonl": "975a30ede14eeea4b0a0b5795577537957fb43f6e3fbec03d1fd054ebb7038f1",
+    "incumbent/task101_l41_roof_demo/games.jsonl": "5b5b3a50ac0e253306264d3e6b28c09a9184647d479bf522628107137f4206df",
+    "candidate/task101_l46_roof_demo/games.jsonl": "b96528eba544b95c297b208af45480e43a916dbff16e720251af937db8774f77",
+    "incumbent/task101_l46_roof_demo/games.jsonl": "9f10d7eb35527e6d210c2eb5ad6bc1ab6ba476d3eec089fac96292c6bfa1dbdc"
+   },
+   "old_approved": true,
+   "old_reasons": [],
+   "new_approved": true,
+   "new_reasons": [],
+   "overall": {
+    "pairs": 1728,
+    "candidate_wins": 1238,
+    "incumbent_wins": 1234,
+    "gain": 172,
+    "harm": 168,
+    "both_win": 1066,
+    "both_lose": 322,
+    "delta_rate": 0.0023148148148148147,
+    "ci95": [
+     -0.01862923453912238,
+     0.023257399198501314
+    ],
+    "mcnemar_worse_p": 0.606843406983115
+   },
+   "zones": {
+    "day": {
+     "pairs": 414,
+     "candidate_wins": 377,
+     "incumbent_wins": 380,
+     "gain": 33,
+     "harm": 36,
+     "both_win": 344,
+     "both_lose": 1,
+     "delta_rate": -0.007246376811594203,
+     "ci95": [
+      -0.047160859808228796,
+      0.0325838131182205
+     ],
+     "mcnemar_worse_p": 0.40497452645946236,
+     "holm_adjusted_p": 1.0
+    },
+    "fog": {
+     "pairs": 405,
+     "candidate_wins": 219,
+     "incumbent_wins": 208,
+     "gain": 25,
+     "harm": 14,
+     "both_win": 194,
+     "both_lose": 172,
+     "delta_rate": 0.027160493827160494,
+     "ci95": [
+      -0.00327084067517806,
+      0.0574360573053727
+     ],
+     "mcnemar_worse_p": 0.9733740429510362,
+     "holm_adjusted_p": 1.0
+    },
+    "night": {
+     "pairs": 414,
+     "candidate_wins": 384,
+     "incumbent_wins": 368,
+     "gain": 41,
+     "harm": 25,
+     "both_win": 343,
+     "both_lose": 5,
+     "delta_rate": 0.03864734299516908,
+     "ci95": [
+      -0.00020337118628355882,
+      0.07803906575557587
+     ],
+     "mcnemar_worse_p": 0.9822086377738841,
+     "holm_adjusted_p": 1.0
+    },
+    "pool": {
+     "pairs": 405,
+     "candidate_wins": 255,
+     "incumbent_wins": 275,
+     "gain": 70,
+     "harm": 90,
+     "both_win": 185,
+     "both_lose": 60,
+     "delta_rate": -0.04938271604938271,
+     "ci95": [
+      -0.11011541284638832,
+      0.011881200181427479
+     ],
+     "mcnemar_worse_p": 0.06641126657376284,
+     "holm_adjusted_p": 0.26564506629505136
+    },
+    "roof": {
+     "pairs": 90,
+     "candidate_wins": 3,
+     "incumbent_wins": 3,
+     "gain": 3,
+     "harm": 3,
+     "both_win": 0,
+     "both_lose": 84,
+     "delta_rate": 0.0,
+     "ci95": [
+      -0.06472082164607143,
+      0.06472082164607143
+     ],
+     "mcnemar_worse_p": 0.65625,
+     "waves": {
+      "positive_rank_sum": 1405.0,
+      "nonzero_pairs": 82,
+      "wilcoxon_worse_p": 0.08535474126404498,
+      "pairs": 90,
+      "candidate_mean_wave": 9.0,
+      "incumbent_mean_wave": 9.844444444444445,
+      "mean_delta_wave": -0.8444444444444444,
+      "median_delta_wave": 0.0,
+      "alpha": 0.01,
+      "veto": false
+     },
+     "wave_tasks": {
+      "task101_l41_roof_demo": {
+       "positive_rank_sum": 331.5,
+       "nonzero_pairs": 42,
+       "wilcoxon_worse_p": 0.06724210557126753,
+       "pairs": 45,
+       "candidate_mean_wave": 10.244444444444444,
+       "incumbent_mean_wave": 11.577777777777778,
+       "mean_delta_wave": -1.3333333333333333,
+       "median_delta_wave": -1
+      },
+      "task101_l46_roof_demo": {
+       "positive_rank_sum": 386.5,
+       "nonzero_pairs": 40,
+       "wilcoxon_worse_p": 0.3782314195341314,
+       "pairs": 45,
+       "candidate_mean_wave": 7.7555555555555555,
+       "incumbent_mean_wave": 8.11111111111111,
+       "mean_delta_wave": -0.35555555555555557,
+       "median_delta_wave": 0
+      }
+     }
+    }
+   },
+   "roof_pairs": {
+    "task101_l41_roof_demo": [
+     [
+      100011238,
+      12,
+      9,
+      false,
+      false
+     ],
+     [
+      100011239,
+      10,
+      6,
+      false,
+      false
+     ],
+     [
+      100011240,
+      12,
+      18,
+      false,
+      false
+     ],
+     [
+      100011241,
+      9,
+      7,
+      false,
+      false
+     ],
+     [
+      100011242,
+      14,
+      20,
+      false,
+      true
+     ],
+     [
+      100011243,
+      9,
+      19,
+      false,
+      false
+     ],
+     [
+      100011244,
+      7,
+      12,
+      false,
+      false
+     ],
+     [
+      100011245,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      100011246,
+      6,
+      15,
+      false,
+      false
+     ],
+     [
+      100011247,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      100011248,
+      5,
+      20,
+      false,
+      true
+     ],
+     [
+      100011249,
+      9,
+      15,
+      false,
+      false
+     ],
+     [
+      100011250,
+      7,
+      6,
+      false,
+      false
+     ],
+     [
+      100011251,
+      9,
+      12,
+      false,
+      false
+     ],
+     [
+      100011252,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      100011253,
+      8,
+      10,
+      false,
+      false
+     ],
+     [
+      100011254,
+      10,
+      19,
+      false,
+      false
+     ],
+     [
+      100011255,
+      6,
+      10,
+      false,
+      false
+     ],
+     [
+      100011256,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      100011257,
+      20,
+      10,
+      false,
+      false
+     ],
+     [
+      100011258,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      100011259,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      100011260,
+      5,
+      11,
+      false,
+      false
+     ],
+     [
+      100011261,
+      20,
+      14,
+      true,
+      false
+     ],
+     [
+      100011262,
+      16,
+      7,
+      false,
+      false
+     ],
+     [
+      100011263,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      100011264,
+      10,
+      14,
+      false,
+      false
+     ],
+     [
+      100011265,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      100011266,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      100011267,
+      11,
+      7,
+      false,
+      false
+     ],
+     [
+      100011268,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      100011269,
+      10,
+      8,
+      false,
+      false
+     ],
+     [
+      100011270,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      100011271,
+      9,
+      14,
+      false,
+      false
+     ],
+     [
+      100011272,
+      7,
+      5,
+      false,
+      false
+     ],
+     [
+      100011273,
+      10,
+      9,
+      false,
+      false
+     ],
+     [
+      100011274,
+      20,
+      18,
+      true,
+      false
+     ],
+     [
+      100011275,
+      10,
+      20,
+      false,
+      true
+     ],
+     [
+      100011276,
+      7,
+      12,
+      false,
+      false
+     ],
+     [
+      100011277,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      100011278,
+      20,
+      20,
+      true,
+      false
+     ],
+     [
+      100011279,
+      18,
+      13,
+      false,
+      false
+     ],
+     [
+      100011280,
+      18,
+      12,
+      false,
+      false
+     ],
+     [
+      100011281,
+      11,
+      20,
+      false,
+      false
+     ],
+     [
+      100011282,
+      4,
+      9,
+      false,
+      false
+     ]
+    ],
+    "task101_l46_roof_demo": [
+     [
+      100011283,
+      8,
+      15,
+      false,
+      false
+     ],
+     [
+      100011284,
+      5,
+      12,
+      false,
+      false
+     ],
+     [
+      100011285,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      100011286,
+      9,
+      4,
+      false,
+      false
+     ],
+     [
+      100011287,
+      8,
+      17,
+      false,
+      false
+     ],
+     [
+      100011288,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      100011289,
+      8,
+      13,
+      false,
+      false
+     ],
+     [
+      100011290,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      100011291,
+      4,
+      9,
+      false,
+      false
+     ],
+     [
+      100011292,
+      7,
+      9,
+      false,
+      false
+     ],
+     [
+      100011293,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      100011294,
+      10,
+      5,
+      false,
+      false
+     ],
+     [
+      100011295,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      100011296,
+      8,
+      4,
+      false,
+      false
+     ],
+     [
+      100011297,
+      5,
+      11,
+      false,
+      false
+     ],
+     [
+      100011298,
+      7,
+      10,
+      false,
+      false
+     ],
+     [
+      100011299,
+      5,
+      8,
+      false,
+      false
+     ],
+     [
+      100011300,
+      8,
+      14,
+      false,
+      false
+     ],
+     [
+      100011301,
+      7,
+      6,
+      false,
+      false
+     ],
+     [
+      100011302,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      100011303,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      100011304,
+      13,
+      9,
+      false,
+      false
+     ],
+     [
+      100011305,
+      10,
+      3,
+      false,
+      false
+     ],
+     [
+      100011306,
+      9,
+      8,
+      false,
+      false
+     ],
+     [
+      100011307,
+      7,
+      8,
+      false,
+      false
+     ],
+     [
+      100011308,
+      6,
+      7,
+      false,
+      false
+     ],
+     [
+      100011309,
+      6,
+      8,
+      false,
+      false
+     ],
+     [
+      100011310,
+      7,
+      4,
+      false,
+      false
+     ],
+     [
+      100011311,
+      10,
+      5,
+      false,
+      false
+     ],
+     [
+      100011312,
+      12,
+      5,
+      false,
+      false
+     ],
+     [
+      100011313,
+      9,
+      6,
+      false,
+      false
+     ],
+     [
+      100011314,
+      9,
+      9,
+      false,
+      false
+     ],
+     [
+      100011315,
+      5,
+      5,
+      false,
+      false
+     ],
+     [
+      100011316,
+      9,
+      5,
+      false,
+      false
+     ],
+     [
+      100011317,
+      7,
+      7,
+      false,
+      false
+     ],
+     [
+      100011318,
+      6,
+      3,
+      false,
+      false
+     ],
+     [
+      100011319,
+      8,
+      5,
+      false,
+      false
+     ],
+     [
+      100011320,
+      11,
+      8,
+      false,
+      false
+     ],
+     [
+      100011321,
+      6,
+      17,
+      false,
+      false
+     ],
+     [
+      100011322,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      100011323,
+      4,
+      9,
+      false,
+      false
+     ],
+     [
+      100011324,
+      9,
+      5,
+      false,
+      false
+     ],
+     [
+      100011325,
+      5,
+      10,
+      false,
+      false
+     ],
+     [
+      100011326,
+      8,
+      9,
+      false,
+      false
+     ],
+     [
+      100011327,
+      7,
+      9,
+      false,
+      false
+     ]
+    ]
+   }
+  }
+ ],
+ "duplicates": [
+  "round_000027/evaluations/957e1cd56eb51d7dba8f/decision.json"
+ ]
+}
