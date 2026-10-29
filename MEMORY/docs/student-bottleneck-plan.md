@@ -1076,3 +1076,6 @@
 - **台式机代理**：127.0.0.1:7890 不通，DNS 也不通。Codex 启动报 `workspace routing discovery timed out`，两个号都起不来，需用户开代理。
 - **task148**：GPT Pro 在屋顶的胜利卡组上，学生 1/112、老师 5/112。v6 草案只新增 L42、L45。
 - **llmplay4 包**：已拷到 Mac `~/Downloads/pvz-llmplay4/`。
+- 11:00 用户下载游戏，关了代理。台式机 WSL（镜像网络）的 systemd-resolved 没有任何 DNS 上游。用运行时命令 `sudo resolvectl dns eth5 10.255.255.254` 和 `default-route eth5 yes` 恢复了解析（不持久，WSL 重启后失效）。
+  - CodeBuddy 直连可用；OpenAI 和 GitHub（hosts 指向 127.0.0.1）都不通。
+  - 分工：cbp-task105（账号 0，只本地提交，代理恢复后再推）；Mac qoder-t150 合并 task151 修复进 prodint16；Mac codex-plus2 做 task152（LLM 存档整局操作是否进训练行，分支 llmrows）。
