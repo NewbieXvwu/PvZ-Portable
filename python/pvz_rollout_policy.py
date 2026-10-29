@@ -390,5 +390,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export student / fast_ppo weights for the C++ simulator")
     parser.add_argument("checkpoint")
     parser.add_argument("output")
+    parser.add_argument("--generic", action="store_true", help="export the self-describing PVZGN001 graph")
     options = parser.parse_args()
-    export_student(load_student(options.checkpoint), options.output)
+    net = load_student(options.checkpoint)
+    if options.generic:
+        from pvz_generic_forward import export_graph, rollout_graph
+        export_graph(net, rollout_graph(net), options.output)
+    else:
+        export_student(net, options.output)

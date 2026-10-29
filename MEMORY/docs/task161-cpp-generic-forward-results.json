@@ -1,0 +1,144 @@
+{
+  "seed": 161,
+  "batch": 1,
+  "threads": 1,
+  "environment": {
+    "machine": "x86_64",
+    "torch": "2.14.0+cu132",
+    "timing": "C++ warm graph; mean wall and process CPU microseconds; excludes load/I/O/features"
+  },
+  "records": [
+    {
+      "example": "cnn64",
+      "input": "dense_random",
+      "us": 308.412,
+      "cpu_us": 308.415,
+      "iterations": 200,
+      "max_abs_error": 3.5762786865234375e-07,
+      "nodes": 43,
+      "parameters": 182147,
+      "ratio_to_historical_61us": 5.055934426229507
+    },
+    {
+      "example": "cnn128",
+      "input": "dense_random",
+      "us": 879.623,
+      "cpu_us": 879.225,
+      "iterations": 200,
+      "max_abs_error": 4.172325134277344e-07,
+      "nodes": 43,
+      "parameters": 569091,
+      "ratio_to_historical_61us": 14.420049180327869
+    },
+    {
+      "example": "res6",
+      "input": "dense_random",
+      "us": 1166.98,
+      "cpu_us": 1166.59,
+      "iterations": 200,
+      "max_abs_error": 3.5762786865234375e-07,
+      "nodes": 69,
+      "parameters": 625283,
+      "ratio_to_historical_61us": 19.130819672131146
+    },
+    {
+      "example": "token_2_64",
+      "input": "dense_random",
+      "us": 1666.57,
+      "cpu_us": 1664.35,
+      "iterations": 200,
+      "max_abs_error": 1.6093254089355469e-06,
+      "nodes": 30,
+      "parameters": 528769,
+      "ratio_to_historical_61us": 27.320819672131147
+    },
+    {
+      "example": "token_2_128",
+      "input": "dense_random",
+      "us": 3818.53,
+      "cpu_us": 3813.3,
+      "iterations": 200,
+      "max_abs_error": 1.6689300537109375e-06,
+      "nodes": 30,
+      "parameters": 528769,
+      "ratio_to_historical_61us": 62.5988524590164
+    },
+    {
+      "example": "token_4_64",
+      "input": "dense_random",
+      "us": 3491.4,
+      "cpu_us": 3491.18,
+      "iterations": 200,
+      "max_abs_error": 1.7881393432617188e-06,
+      "nodes": 50,
+      "parameters": 1057409,
+      "ratio_to_historical_61us": 57.236065573770496
+    },
+    {
+      "example": "token_4_128",
+      "input": "dense_random",
+      "us": 7394.25,
+      "cpu_us": 7394.15,
+      "iterations": 200,
+      "max_abs_error": 2.0265579223632812e-06,
+      "nodes": 50,
+      "parameters": 1057409,
+      "ratio_to_historical_61us": 121.2172131147541
+    },
+    {
+      "example": "hybrid",
+      "input": "dense_random",
+      "us": 1930.66,
+      "cpu_us": 1929.66,
+      "iterations": 200,
+      "max_abs_error": 1.6689300537109375e-06,
+      "nodes": 34,
+      "parameters": 634881,
+      "ratio_to_historical_61us": 31.65016393442623
+    },
+    {
+      "example": "hard_moe5",
+      "input": "dense_random",
+      "us": 1239.79,
+      "cpu_us": 1208.33,
+      "iterations": 200,
+      "max_abs_error": 9.5367431640625e-07,
+      "nodes": 20,
+      "parameters": 1055489,
+      "ratio_to_historical_61us": 20.324426229508195
+    },
+    {
+      "example": "cnn64",
+      "input": "8_active_channels",
+      "us": 213.343,
+      "cpu_us": 213.345,
+      "iterations": 200,
+      "max_abs_error": 3.2782554626464844e-07,
+      "nodes": 43,
+      "parameters": 182147,
+      "ratio_to_historical_61us": 3.4974262295081964
+    },
+    {
+      "example": "cnn128",
+      "input": "8_active_channels",
+      "us": 686.942,
+      "cpu_us": 677.005,
+      "iterations": 200,
+      "max_abs_error": 3.5762786865234375e-07,
+      "nodes": 43,
+      "parameters": 569091,
+      "ratio_to_historical_61us": 11.261344262295083
+    },
+    {
+      "example": "res6",
+      "input": "8_active_channels",
+      "us": 1129.16,
+      "cpu_us": 1127.91,
+      "iterations": 200,
+      "max_abs_error": 3.5762786865234375e-07,
+      "nodes": 69,
+      "parameters": 625283,
+      "ratio_to_historical_61us": 18.51081967213115
+    }
+  ]
+}

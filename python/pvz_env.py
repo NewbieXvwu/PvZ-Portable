@@ -806,16 +806,22 @@ class PvZEnv:
         return response["values"]
 
     def load_rollout_net(self, path: str | os.PathLike[str]) -> None:
-        """Load weights exported by pvz_rollout_policy.export_student in this simulator process."""
+        """Load legacy RolloutNet or a self-describing PVZGN001 graph in this simulator."""
         filename = str(Path(path).expanduser().resolve())
         if any(char in filename for char in ('\n', '\r')):
             raise ValueError("rollout network path must not contain newlines")
         with open(filename, "rb") as stream:
             version = stream.read(8)
             # LEGACY(pvzrn-versions): 002-005 are older exports; 006 is the current one.
-            if version not in (b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005", b"PVZRN006"):
+            if version not in (b"PVZGN001", b"PVZRN002", b"PVZRN003", b"PVZRN004", b"PVZRN005", b"PVZRN006"):
                 raise ValueError("load_rollout_net requires an exported C++ network")
             observation = int.from_bytes(stream.read(16)[12:16], "little") if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") else 1
+        if version == b"PVZGN001":
+            from pvz_generic_forward import read_metadata
+            metadata = read_metadata(filename)
+            if len(metadata) != 3:
+                raise ValueError('generic policy requires native observation/context/identity metadata')
+            observation = metadata[0]
         if self._process is None:
             self._start()
         if version in (b"PVZRN004", b"PVZRN005", b"PVZRN006") and self._rollout_version < 2:

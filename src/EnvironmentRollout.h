@@ -6,6 +6,7 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include "GenericForward.h"
 
 class LawnApp;
 
@@ -47,6 +48,12 @@ public:
 	void ResetNetworkCalls() { networkCalls = 0; }
 
 private:
+	pvz::net::Graph graph;
+	bool generic = false;
+	int graphBoard = -1, graphScalars = -1, graphInfo = -1, graphSelected = -1, graphTerrain = -1;
+	int graphPlant = -1, graphPacket = -1, graphCell = -1;
+	void LoadGraph(const std::string& path);
+	void SetObservation(int observation, bool withContext);
 	int width = 0;
 	int plantEmbedding = 0;
 	bool identityPacket = false;
