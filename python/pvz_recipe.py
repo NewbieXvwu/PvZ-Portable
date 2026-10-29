@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, network={}, label_weight={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -134,9 +134,18 @@ def validate(document, kind=None):
                 raise ValueError(f'{name}: expected boolean')
         for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
                                   obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4', 'v2bungee', 'v2sleep',
-                                       'v2timer'), lr_schedule=('constant', 'cosine')).items():
+                                       'v2timer', 'v3'), lr_schedule=('constant', 'cosine')).items():
             if result[name] not in choices:
                 raise ValueError(f'{name}: expected one of {choices}')
+        from pvz_student_config import network_config
+        network = network_config(result['network'], result['width'])
+        if network['architecture'] == 'token':
+            if result['obs'] != 'v3' or result['packet_head'] != 'identity':
+                raise ValueError('token network requires obs=v3 and packet_head=identity')
+            if result['row_pool'] or result['pool'] != 'mean':
+                raise ValueError('token network uses its own state pooling')
+        elif result['obs'] == 'v3':
+            raise ValueError('obs=v3 requires token network')
         if not isinstance(result['device'], str) or not result['device']:
             raise ValueError('device: expected nonempty string')
         labels = result['labels']
