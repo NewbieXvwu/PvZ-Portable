@@ -100,6 +100,10 @@ def test_obsrec_deploy18_launch_only_when_active(tmp_path, active):
     script = tmp_path/'launch.sh'
     script.write_text(extracted.stdout.replace('/home/newbiexvwu',str(tmp_path)))
     logs = tmp_path/'pvz-logs'; logs.mkdir()
+    (logs/'qc_deploy17.sh').write_text((ROOT/'scripts/qc_deploy17.sh').read_text().replace('/home/newbiexvwu',str(tmp_path)))
+    watchdog = tmp_path/'PvZ-search/.claude/worktrees/cq/scripts/qc_watchdog.sh'
+    watchdog.parent.mkdir(parents=True)
+    watchdog.write_text((ROOT/'scripts/qc_watchdog.sh').read_text())
     (logs/'qc_deploy17.mode').write_text('datamix\n')
     (logs/'qc_deploy17.active').touch()
     if active:
@@ -109,7 +113,9 @@ def test_obsrec_deploy18_launch_only_when_active(tmp_path, active):
         'test',str(script)],capture_output=True,text=True,timeout=5)
     assert result.returncode == 0, result.stderr
     assert ('--obs-v3' in result.stdout) == active
-    assert ('obsrec/build18/pvz-portable' in result.stdout) == active
+    assert ('artifacts/production/deploy18/pvz-portable' in result.stdout) == active
+    assert ('--gate-version 6' in result.stdout) == active
+    assert ('--min-eval-units 4' in result.stdout) == active
     assert '--demo-start-share 0.25 --random-deck-share 0.25' in result.stdout
     assert 'history10.json' in result.stdout and '--training-parallelism 1' in result.stdout
 
@@ -139,15 +145,19 @@ def test_obsrec_deploy18_backup_restore_keeps_episode_data(tmp_path):
 source "$1"
 O="$2/backup"; mkdir -p "$W/scripts" "$O" "$W/artifacts/frames/episode"
 FILES=(scripts/old.py python/new.py)
+REMOVED=(scripts/deleted.py)
 printf original > "$W/scripts/old.py"
+printf removed > "$W/scripts/deleted.py"
 printf frames > "$W/artifacts/frames/episode/frames.npz"
 printf tokens > "$W/artifacts/frames/episode/tokens_v3.npz"
 backup_files
+rm "$W/scripts/deleted.py"
 printf changed > "$W/scripts/old.py"
 mkdir -p "$W/python"; printf new > "$W/python/new.py"
 mkdir -p "$LOG_DIR"; printf obs_v3 > "$MODE18"; touch "$ACTIVE18"
 restore_files
 [[ "$(cat "$W/scripts/old.py")" = original ]]
+[[ "$(cat "$W/scripts/deleted.py")" = removed ]]
 [[ ! -e "$W/python/new.py" && ! -e "$ACTIVE18" && ! -e "$MODE18" ]]
 [[ "$(cat "$W/artifacts/frames/episode/frames.npz")" = frames ]]
 [[ "$(cat "$W/artifacts/frames/episode/tokens_v3.npz")" = tokens ]]
