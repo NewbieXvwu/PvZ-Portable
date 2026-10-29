@@ -42,12 +42,13 @@ def split(args, stopped):
                 continue
             raw = args.data / source
             frozen = out / 'raw' / source
-            frozen.parent.mkdir(parents=True, exist_ok=True)
-            if not frozen.exists():
-                os.link(raw, frozen)
-            meta = raw.parent / 'meta.json'
-            if meta.exists() and not (frozen.parent / 'meta.json').exists():
-                shutil.copyfile(meta, frozen.parent / 'meta.json')
+            if raw.exists():
+                frozen.parent.mkdir(parents=True, exist_ok=True)
+                if not frozen.exists():
+                    os.link(raw, frozen)
+                meta = raw.parent / 'meta.json'
+                if meta.exists() and not (frozen.parent / 'meta.json').exists():
+                    shutil.copyfile(meta, frozen.parent / 'meta.json')
             connection.execute('INSERT OR IGNORE INTO sources VALUES (?, ?, ?)', (source, selected.tobytes(), len(selected)))
         connection.commit()
         state['segment'] = si + 1; write_json(progress, state)
@@ -55,10 +56,21 @@ def split(args, stopped):
             raise SystemExit(75)
     kinds = np.load(args.merge_dir / 'packet_col0.npy', mmap_mode='r')
     from eval_window_policy import deck_keys
+    mask_path = out / 'unseen.npy'
+    mask = (np.load(mask_path, mmap_mode='r+') if mask_path.exists() else
+            np.lib.format.open_memmap(mask_path, mode='w+', dtype=bool, shape=(total,)))
     groups = defaultdict(dict)
     position = 0
-    for source, count in connection.execute('SELECT source,n FROM sources ORDER BY source'):
-        meta = out / 'raw' / Path(source).parent / 'meta.json'
+    for source, count in connection.execute('SELECT source,n FROM sources ORDER BY rowid'):
+        raw = out / 'raw' / source
+        # Sources are inserted in pack row order, so rowid (not the name) is the pack row offset.
+        # Archives whose frames are retired keep their row numbers but are never trained or scored.
+        if not raw.exists():
+            mask[position:position+count] = True
+            mask.flush()
+            position += count
+            continue
+        meta = raw.parent / 'meta.json'
         record = json.loads(meta.read_text()) if meta.exists() else {}
         level = record.get('context', {}).get('level')
         # Conveyor hands are not static decks; leave them in the seed-only split.
@@ -83,20 +95,18 @@ def split(args, stopped):
                 selected.append(key); mass += decks[key]
     if not selected:
         raise ValueError('no complete deck holdout available in this corpus')
-    mask_path = out / 'unseen.npy'
-    mask = (np.load(mask_path, mmap_mode='r+') if mask_path.exists() else
-            np.lib.format.open_memmap(mask_path, mode='w+', dtype=bool, shape=(total,)))
     heldout = np.array([bytes.fromhex(key) for key in selected], dtype='V10')
     for start in range(state['mask_row'], total, 65536):
         stop = min(total, start + 65536)
-        mask[start:stop] = np.isin(deck_keys(kinds[start:stop]), heldout)
+        mask[start:stop] = mask[start:stop] | np.isin(deck_keys(kinds[start:stop]), heldout)
         mask.flush()
         state['mask_row'] = stop; write_json(progress, state)
         if stopped():
             raise SystemExit(75)
     write_json(out / 'ready.json', dict(rows=total, deck_seed=162, heldout_decks=selected,
         unseen_rows=int(mask.sum()), mask=str(mask_path), source_plan='sources.sqlite',
-        rule='complete deck multisets excluded from training, plus original seed holdout'))
+        rule='complete deck multisets excluded from training, plus original seed holdout; '
+             'retired-frame archives excluded from both sides'))
 
 
 def tokens(args, stopped):
@@ -131,7 +141,7 @@ def tokens(args, stopped):
         for name, handle in handles.items():
             handle.flush(); state['sizes'][name] = handle.tell()
         write_json(progress, state)
-    for source, raw_rows in connection.execute('SELECT source,rows FROM sources ORDER BY source LIMIT -1 OFFSET ?', (state['archives'],)):
+    for source, raw_rows in connection.execute('SELECT source,rows FROM sources ORDER BY rowid LIMIT -1 OFFSET ?', (state['archives'],)):
         rows = np.frombuffer(raw_rows, np.int32)
         selected = np.ones(len(rows), dtype=bool)
         if budget_path:
@@ -139,6 +149,12 @@ def tokens(args, stopped):
             selected &= ~unseen[state['rows']:state['rows']+len(rows)]
             if archive_seed(Path(source).parent.parent.name) in validation_seeds:
                 selected[:] = False
+        if not (args.sources/'raw'/source).exists():
+            # Retired archive: no tokens here, but its rows keep the pack numbering intact.
+            state['rows'] += len(rows); state['archives'] += 1
+            if stopped():
+                raise SystemExit(75)
+            continue
         frames = read_frames(args.sources/'raw'/source) if selected.any() else None
         for row, included in zip(rows, selected):
             global_row = state['rows']

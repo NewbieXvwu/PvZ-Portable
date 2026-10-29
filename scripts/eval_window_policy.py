@@ -89,14 +89,18 @@ def main():
     # Metadata is read once per source, never game-frame decompression/replay.
     spans, position = [], 0
     terrains = ['day', 'night', 'pool', 'fog', 'roof', 'unknown']
+    data_dir = Path(recipe['data'])
+    frozen = args.deck_holdout.parent / 'raw' if args.deck_holdout else None
     def observe(path, rows):
         nonlocal position
         metadata = path.parent / 'meta.json'
         level = json.loads(metadata.read_text()).get('context', {}).get('level') if metadata.exists() else None
         terrain = terrain_for_level(level) if level is not None else 'unknown'
-        spans.append((position, position + len(rows), terrains.index(terrain)))
+        # Archives whose frames are gone keep their pack rows, but neither side can score them.
+        keep = (frozen / path.relative_to(data_dir)).exists() if frozen else path.exists()
+        spans.append((position, position + len(rows), terrains.index(terrain), keep))
         position += len(rows)
-    data = read_pack(args.pack, Path(recipe['data']), observe, merge_dir=args.merge_dir)
+    data = read_pack(args.pack, data_dir, observe, merge_dir=args.merge_dir)
     boards, scalars, plant, packets, cells, _weight, seeds = data[:7]
     info = data[9 + bool(recipe['aux_weight'])] if recipe['packet_head'] == 'identity' else None
     if info is None:
@@ -112,10 +116,12 @@ def main():
     if args.tokens:
         from pvz_research_data import SparseTokens
         token_store = SparseTokens(args.tokens)
-    validation = np.flatnonzero(is_val)
     terrain_of = np.empty(len(seeds), dtype=np.uint8)
-    for start, stop_at, terrain in spans:
+    scored = np.ones(len(seeds), dtype=bool)
+    for start, stop_at, terrain, available in spans:
         terrain_of[start:stop_at] = terrain
+        scored[start:stop_at] = available
+    validation = np.flatnonzero(is_val & scored)
     state_path = args.out / 'eval_progress.json'
     state = json.loads(state_path.read_text()) if state_path.exists() else dict(
         seen_cursor=0, next_row=0, seen_decks=[], groups={name: empty_metrics() for name in

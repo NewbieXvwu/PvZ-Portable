@@ -81,6 +81,55 @@ def test_decision_sparse_tokens_preserve_exact_r42_rows(tmp_path):
     assert SparseTokens(args.out).meta['rows'] == 2
 
 
+def test_decision_split_skips_retired_source_frames(tmp_path):
+    from prepare_decision_data import split
+    data = tmp_path / 'raw'
+    sources = [f'seed_{kind:02d}/example/frames.npz' for kind in range(21)]
+    for kind in range(1, 21):                                 # seed_00's frames were deleted upstream
+        path = data / sources[kind]; path.parent.mkdir(parents=True)
+        path.write_bytes(b'archive')
+        (path.parent / 'meta.json').write_text(json.dumps(dict(context=dict(level=7), task=dict(deck=[kind]))))
+    packs = tmp_path / 'packs'; packs.mkdir()
+    np.savez(packs/'segment.npz', source=list(reversed(sources)), source_archive=np.arange(21, dtype=np.int32),
+             source_row=np.ones(21, np.int32))
+    np.savez(packs/'index.npz', rows=21, segments=['segment.npz'])
+    merged = tmp_path / 'merge'; merged.mkdir()
+    kinds = np.full((21, 10), -1, np.int8); kinds[:, 0] = np.arange(21)
+    np.save(merged/'packet_col0.npy', kinds)
+    out = tmp_path / 'split'
+    split(Namespace(out=out, pack=packs/'index.npz', data=data, merge_dir=merged), lambda: False)
+    mask = np.load(out/'unseen.npy')
+    result = json.loads((out/'ready.json').read_text())
+    assert mask[20] and not (out/'raw'/sources[0]).exists()    # pack row 20, not the alphabetically first row
+    assert result['unseen_rows'] == int(mask.sum()) == 3       # two complete decks plus the retired row
+
+
+def test_decision_tokens_keep_pack_rows_of_retired_archives(tmp_path):
+    import sqlite3
+    from pvz_frame_store import write_frames
+    from pvz_student_tokens import frame_tokens
+    from pvz_research_data import SparseTokens
+    from prepare_decision_data import tokens
+    frame = dict(sun=100, wave=0, tick=0, scene={}, lanes=list(range(5)), plants=[[0, 1, 0, 50, 100]], zombies=[],
+                 mowers=[[0, 1]], packets=[[0, 0, True, 0, 100, 100]])
+    frames = [{**frame, 'tick': i*60} for i in range(4)]
+    live = 'seed_2/example/frames.npz'
+    path = tmp_path / 'sources/raw' / live
+    path.parent.mkdir(parents=True)
+    write_frames(path, frames)
+    db = sqlite3.connect(tmp_path / 'sources/sources.sqlite')
+    db.execute('CREATE TABLE sources (source TEXT, rows BLOB)')
+    db.execute('INSERT INTO sources VALUES (?, ?)', ('seed_1/gone/frames.npz', np.array([1, 2], np.int32).tobytes()))
+    db.execute('INSERT INTO sources VALUES (?, ?)', (live, np.array([1, 3], np.int32).tobytes()))
+    db.commit(); db.close()
+    args = Namespace(sources=tmp_path / 'sources', out=tmp_path / 'tokens')
+    tokens(args, lambda: False)
+    store = SparseTokens(args.out)
+    assert store.meta['rows'] == 4 and store.meta['stored_rows'] == 2
+    np.testing.assert_array_equal(store.sample(2)['ids'], frame_tokens(frames[0])['ids'])
+    np.testing.assert_array_equal(store.sample(3)['ids'], frame_tokens(frames[2])['ids'])
+
+
 def test_decision_queue_honors_priority_and_dependencies(tmp_path):
     from gpu_window_runner import Runner
     queue = tmp_path / 'queue'; queue.mkdir()

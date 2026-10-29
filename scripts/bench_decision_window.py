@@ -31,14 +31,17 @@ from decision_window_budget import windows_48h, choose_budget, markdown
 
 def samples(sources):
     db = sqlite3.connect(sources/'sources.sqlite')
-    records = list(db.execute('SELECT source,n FROM sources ORDER BY source'))
+    records = list(db.execute('SELECT source,n FROM sources ORDER BY rowid'))
     offsets = {}; at = 0
     for source, n in records:
         offsets[source] = at; at += n
     random.Random(162).shuffle(records)
     selected, tokens, strata = [], [], {}
     for source, n in records:
-        meta = json.loads((sources/'raw'/Path(source).parent/'meta.json').read_text())
+        path = sources/'raw'/Path(source).parent/'meta.json'
+        if not path.exists():                                        # retired frames
+            continue
+        meta = json.loads(path.read_text())
         level = meta.get('context', {}).get('level')
         if level is None:
             continue
