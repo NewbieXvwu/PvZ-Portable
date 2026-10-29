@@ -171,8 +171,8 @@ def seed_start(mult_index: int, family_index: int, level: int) -> int:
 def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
     return {
         'day': overrides.get('day') or MAIN / 'artifacts/stage4/day_panel.json',
-        # task20 的原版传送带族只在 conveyor 工作树的清单里（主清单是 task23 的 26 项版）。
-        'day_orig': overrides.get('day_orig') or MAIN / '.claude/worktrees/conveyor/artifacts/stage4/day_panel.json',
+        # task165: original conveyor tasks are versioned with the code, independent of worktrees.
+        'day_orig': overrides.get('day_orig') or ROOT / 'configs/panels/day_orig_panel.json',
         'night': overrides.get('night') or MAIN / 'artifacts/stage4/night_panel.json',
         'pool': overrides.get('pool') or MAIN / 'artifacts/stage4/pool_panel.json',
         'day_d7q': overrides.get('day_d7q') or MAIN / 'artifacts/stage4/day_panel_d7q.json',
@@ -239,7 +239,8 @@ def existing_seeds(paths: list[Path], exclude: set[Path]) -> dict[int, str]:
 
 
 def scan_manifests() -> list[Path]:
-    patterns = [str(MAIN / 'artifacts/**/*.json'), str(MAIN / '.claude/worktrees/*/artifacts/**/*.json')]
+    patterns = [str(MAIN / 'artifacts/**/*.json'), str(MAIN / '.claude/worktrees/cq/artifacts/**/*.json'),
+                str(MAIN / '.claude/worktrees/obsup/artifacts/**/*.json')]
     paths: list[Path] = []
     for pattern in patterns:
         paths.extend(Path(p) for p in glob.glob(pattern, recursive=True) if Path(p).is_file())  # skip dangling links
