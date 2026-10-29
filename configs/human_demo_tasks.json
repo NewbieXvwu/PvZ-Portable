@@ -10025,7 +10025,17 @@
     5,
     28
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/7348922ba9a72769c9a2150b070bc69fb41be385120d6dba252d17e57617f086",
+    "decisions": [
+     850,
+     541
+    ],
+    "index": 0,
+    "future_seed_start": 336000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_boss_50_orig_m100_s81030022_a3daa2da13e0e",
