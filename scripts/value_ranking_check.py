@@ -108,6 +108,8 @@ def _game(seed_task) -> tuple[list[dict], list[tuple] | int]:
             position, leaves = _evaluate(env, obs, frame, previous, legal, action, seed, len(positions), context, history)
             positions.append(position)
             dumped += leaves
+            if getattr(args, 'max_positions', 0) and len(positions) >= args.max_positions:
+                break
         previous, previous_action = frame, action
         obs, _r, done, _t, info = env.step(action)
         if not info.get("ok"):

@@ -57,7 +57,8 @@ def _game_context(meta: dict, meta_path: Path):
     return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
 
 
-def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict | None]:
+def load_games(data_dir: Path, training: bool = True, *, meta_paths=None,
+               frames_per_game: int | None = None) -> tuple[list[dict], dict | None]:
     """Games with only their wave-start frames kept as dicts; with ``training`` the every-FRAME_STRIDE
     training samples are featurized straight into the row store. Keeping the frames themselves does not
     fit: 2048 night games held as dicts went past 16 GB and got OOM-killed (2026-10-15).
@@ -65,13 +66,14 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
     The boards go into a CSR store rather than a dense (samples, 92, 6, 10) float16 tensor: 11 040 bytes a
     sample become ~520, so 477k samples cost 250 MB instead of 5.3 GB and the 16.6 GB run fits (task32)."""
     from pvz_frame_store import frame_bytes, frame_path, read_frames
-    paths = sorted(data_dir.glob("*/*/meta.json"))
+    paths = sorted(data_dir.glob("*/*/meta.json") if meta_paths is None else meta_paths)
     train = None
     if training:
-        capacity = 0
-        for meta_path in paths:
-            lines = len(frame_bytes(frame_path(meta_path.parent)).splitlines())
-            capacity += len(range(0, lines - 1, FRAME_STRIDE))
+        capacity = len(paths) * frames_per_game if frames_per_game is not None else 0
+        if frames_per_game is None:
+            for meta_path in paths:
+                lines = len(frame_bytes(frame_path(meta_path.parent)).splitlines())
+                capacity += len(range(0, lines - 1, FRAME_STRIDE))
         train = {"boards": None, "scalars": None, "labels": [], "weights": [], "game_of": []}
     games, n = [], 0
     for meta_path in paths:
@@ -82,6 +84,8 @@ def load_games(data_dir: Path, training: bool = True) -> tuple[list[dict], dict 
         starts = wave_starts(frames)
         if training:
             picked = range(0, len(frames) - 1, FRAME_STRIDE)  # drop the terminal frame
+            if frames_per_game is not None and len(picked) > frames_per_game:
+                picked = [picked[index * len(picked) // frames_per_game] for index in range(frames_per_game)]
             for i in picked:
                 b, sc = _features(frames[i], context)
                 if train["boards"] is None:
@@ -145,7 +149,8 @@ def auc(scores: np.ndarray, labels: np.ndarray) -> float | None:
     return float((ranks[labels == 1].sum() - pos * (pos + 1) / 2) / (pos * neg))
 
 
-def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: int, metrics=None) -> ValueNet:
+def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: int, metrics=None,
+                initial: ValueNet | None = None) -> ValueNet:
     """Train on ``train_games``; 15% of their seeds are held out for early stopping."""
     torch.manual_seed(seed); random.seed(seed)
     game_of = t["game_of"].numpy()
@@ -157,7 +162,7 @@ def train_model(t: dict, train_games: set[int], device: str, epochs: int, seed: 
     stop_mask = np.array([g in train_games and seeds_of_game[g] in stop_seeds for g in game_of])
     fit_idx, stop_idx = np.nonzero(fit_mask)[0], np.nonzero(stop_mask)[0]
 
-    model = ValueNet(context=CONTEXT, encoder_version=ENCODER_VERSION).to(device)
+    model = (initial if initial is not None else ValueNet(context=CONTEXT, encoder_version=ENCODER_VERSION)).to(device)
     opt = torch.optim.AdamW(model.parameters(), lr=1e-3, weight_decay=1e-4)
     best, best_state, patience = float("inf"), None, 0
 
