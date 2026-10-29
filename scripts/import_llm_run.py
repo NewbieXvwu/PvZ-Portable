@@ -33,7 +33,7 @@ ARCHIVE_SCHEMA = 'episode_archive_v1'
 DEFAULT_DEST = ROOT / 'artifacts/llm_demo/raw'
 DEFAULT_MANIFEST = ROOT / 'configs/human_demo_tasks.json'
 DEFAULT_LAYERS = ROOT / 'configs/llmplay_seeds.json'
-DEFAULT_RESOURCES = Path('/home/newbiexvwu/.cache/pvz-research-resources')
+DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
 DEFAULT_SEED_LEDGER = ROOT / 'artifacts/llm_demo/scan_seed_ledger.json'
 
 SCAN_POINTS = 12

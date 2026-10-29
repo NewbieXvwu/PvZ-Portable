@@ -18,7 +18,7 @@
   "manifest": "builtin:unified_v2",
   "value": "artifacts/value_net/v3/model.pt",
   "executable": "build/pvz-portable",
-  "resource_dir": "/home/newbiexvwu/.cache/pvz-research-resources",
+  "resource_dir": "~/.cache/pvz-research-resources",
   "day_manifest": "artifacts/stage4/day_panel.json",
   "perturb_manifest": "builtin:day_identity",
   "night_manifest": "artifacts/stage4/night_panel.json",

@@ -26,7 +26,7 @@ ROOF = Zone(key='roof', task_prefix='roof_l', first_level=41, last_level=49, ter
 
 def main():
     unlocked = {}
-    with PvZEnv('/home/newbiexvwu/.cache/pvz-research-resources',
+    with PvZEnv(Path.home() / '.cache/pvz-research-resources',
                 executable=ROOT / 'build/pvz-portable') as env:
         for level in range(41, 50):
             deck = deck_for_level(level, family='roof_r7')

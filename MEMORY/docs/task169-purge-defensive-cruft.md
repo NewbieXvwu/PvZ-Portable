@@ -236,3 +236,60 @@ rebase 到 deploy18 后，纯 deploy18 tip 上有 9 项测试先于本会话就�
 
 ### 验证（本轮）
 `pytest --collect-only -q python` → 626 项可收集、无导入错误。逐文件实跑（`timeout 300` + `ulimit -f 2000000`，一次一个）：除 3 个重型文件外全部文件 **0 失败**（此前 7 个文件有 9 失败）；重型三件仅用 `-k` 子集验证（retired/bad/isolated/drain、pack_labels/budget/quota/random、clears_build_peak/init_requeues 等），未整套运行。每批 `git fetch && git rebase origin/deploy18` 后 `--force-with-lease` 推送 purgelive。不部署、不连台式机生产。
+
+
+## 结论（写死路径专项，分支 `purgepaths`，基于 origin/deploy18，2026-10-30）
+
+范围：scripts / python / configs / recipes / src / dsh 全仓搜 `/home/newbiexvwu`、`/Users/newbiexvwu`、
+`.claude/worktrees/<名>`；生产部署脚本指向 cq 工作树与 ~/pvz-logs 的运行配置按用户指示保留。未新增任何校验。
+
+### 批次 1（c1a22d88）scripts/
+
+- `search_play.py`、`render_episode.py` 的 `DEFAULT_RESOURCE_DIR`、`human_demo.py` / `backfill_frame_context.py`
+  的 `--resource-dir` 默认值、`import_llm_run.py` 的 `DEFAULT_RESOURCES`、`make_roof_panel.py` 的硬编码资源目录：
+  统一为 `~/.cache/pvz-research-resources`（与 `curriculum_queue.py` 现行默认同构；生产与 Mac 均可用，
+  手动跑其它资源用既有 `--resource-dir` 参数）。
+- `make_multiplier_tasks.py::scan_manifests` 不再写死 `.claude/worktrees/cq|obsup` 扫描根，改 `--scan-root`
+  参数（可重复，默认本仓库）；该函数只在手动种子审计 main 里调用，生产路径不经过。
+
+### 批次 2（5fce1c78）recipes/
+
+- 12 份配方的 `provenance.source_path / original_out / original_cache_dir / original_source_row_report`
+  去掉 `/home/newbiexvwu/PvZ-search` 前缀，改仓库相对字符串（`pvz_recipe` 只把它们当字符串记录，运行不读）。
+- `panel_v2.json` 的 `resource_dir` → `~/.cache/pvz-research-resources`（`PvZEnv` 已做 expanduser）。
+- v2timer 系列的 `data / cache_dir / out` 指向 pvz-logs 状态目录与主仓库 `artifacts/student/`：这是生产课程
+  队列逐字读取的运行配置，与 qc 脚本同属豁免类，保留；候选训练时 `out/cache_dir/data` 由队列覆盖。
+
+### 批次 3（16502167）python/ 测试
+
+- 13 个引擎测试的资源/二进制默认值统一为 `PVZ_RESOURCE_DIR`/`PVZ_EXECUTABLE` + `~/.cache` / `ROOT/build`
+  回退（此前一半写死 Mac Downloads、一半写死台式机 home；两处的字面路径都不再出现）。
+  `test_human_demo_conveyor.py` 的 `/tmp/pvz-boss50-build` 一并改 env。
+- `test_incremental_pack.py` 的真实 pack 对拍路径、`test_qc_watchdog.py` 的实机部署脚本探测改 `~/pvz-logs` 相对
+  （缺失仍按原逻辑 skip）。`test_deploy17/test_obs_recording` 中 `replace('/home/newbiexvwu', tmp)` 是匹配被豁免
+  部署脚本的 fixture 机制，保留。
+
+### 批次 4（c62dc966）部署脚本残留
+
+- `qc_deploy17.sh` 的 `EXE15` 仍指 `.claude/worktrees/obsup/build7`（conveyor 事故的同类：可删工作树），
+  改为主仓库 `artifacts/production/deploy15/pvz-portable` 固定命名，与 deploy16/18 一致。
+- `test_deploy17.py` 的启动命令断言仍期待已退役的 `prodint16/build16`（deploy18 基线上本就 2 failed），
+  改为 `artifacts/production/deploy16/pvz-portable`，该文件 11 项全过。
+
+### 保留清单（豁免/合理）
+
+- qc_deploy17/18、deploy*_at_boundary、qc_watchdog 的 R=/home/newbiexvwu/PvZ-search、W=cq 工作树、PY=venv、
+  LOG_DIR=~/pvz-logs——用户明示豁免的生产运行配置。
+- recipes 的 data/cache_dir/out（同上类的生产状态目录）。
+- src 第三方库注释里的 `C:\WINDOWS\CANYON.MID` 示例文字；dsh/pvz-teacher 文档/帮助里的示例路径。
+- Mac 本机补了 `~/.cache/pvz-research-resources -> Downloads 资源包` 软链，使统一默认在两台机器都直接可用
+  （机器环境调整，不入库）。
+
+### 验收（Mac，AGENTS §6.5）
+
+活模块 28 个 import 全过；`curriculum_queue.py --help` 正常；全部 12 份配方经 `pvz_recipe.validate` 复核合法。
+定向测试（单条 timeout 300 + ulimit -f）：test_import_llm_run/test_human_demo/test_replay_task_spec/
+test_deck_warnings 40 passed；test_qc_watchdog+test_obs_recording 16 passed；test_deploy17 11 passed；
+test_incremental_pack -k round2 skip（本机无该 pack，同基线）；test_fog_observation 非引擎用例同基线；
+配方相关 recipe 用例 2 passed；测试收集 25 项无错误。deploy18 基线固有的 2 个 test_deploy17 失败已随批次 4 修复。
+未部署、未连台式机。

@@ -19,8 +19,7 @@ from pvz_constants import plant_defs
 from pvz_event_env import EventWaitEnv
 from pvz_env import TaskSpec
 
-RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR",
-                               str(Path.home() / 'Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN')))
+RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
 BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
 
 

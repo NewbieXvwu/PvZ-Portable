@@ -241,9 +241,8 @@ def existing_seeds(paths: list[Path], exclude: set[Path]) -> dict[int, str]:
     return seen
 
 
-def scan_manifests() -> list[Path]:
-    patterns = [str(MAIN / 'artifacts/**/*.json'), str(MAIN / '.claude/worktrees/cq/artifacts/**/*.json'),
-                str(MAIN / '.claude/worktrees/obsup/artifacts/**/*.json')]
+def scan_manifests(roots: list[Path] | None = None) -> list[Path]:
+    patterns = [str(Path(root) / 'artifacts/**/*.json') for root in (roots or [ROOT])]
     paths: list[Path] = []
     for pattern in patterns:
         paths.extend(Path(p) for p in glob.glob(pattern, recursive=True) if Path(p).is_file())  # skip dangling links
@@ -325,6 +324,8 @@ def main() -> None:
     parser.add_argument('--fog-user-manifest', type=Path)
     parser.add_argument('--native-manifest', type=Path)
     parser.add_argument('--fog79b-manifest', type=Path)
+    parser.add_argument('--scan-root', type=Path, action='append',
+                        help='trees whose artifacts/ feeds the seed-disjointness scan (repeatable; default: this repo)')
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
@@ -337,7 +338,7 @@ def main() -> None:
                           'fog79b': args.fog79b_manifest, 'native': args.native_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
-    manifests = scan_manifests()
+    manifests = scan_manifests(args.scan_root)
     summary = audit(tasks, sources, manifests, {args.out.resolve(), args.copy_to.resolve()})
     if args.dry_run:
         print(f"{'family':<12}{'levels':>7}{'tasks':>7}{'seeds/task':>12}{'seed range':>28}")

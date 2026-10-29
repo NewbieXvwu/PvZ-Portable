@@ -290,7 +290,7 @@ def export(archive: Path, data: Path):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--resource-dir', type=Path, default=Path('/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN'))
+    parser.add_argument('--resource-dir', type=Path, default=Path.home() / '.cache/pvz-research-resources')
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     commands = parser.add_subparsers(dest='command', required=True)
     record = commands.add_parser('record')
