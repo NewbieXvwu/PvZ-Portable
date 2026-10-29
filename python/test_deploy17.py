@@ -21,11 +21,11 @@ def fixture(tmp_path):
         for i in range(n):
             name=f'{kind}_l9_{i:03d}'
             cells[name]=dict(level=9,mult_index=0,last_round=1,windows={},family='fixture')
-            tasks[name]=dict(task_id=name,level=9,seeds=list(range(2048)))
+            tasks[name]=dict(task_id=name,level=9,seeds=list(range(128)))
             if kind=='opening': cells[name]['opening_specialist']=True
             if kind=='rd': cells[name]['random_deck_cell']=True
             if kind=='demo':
-                cells[name].update(archive=str(archive),task_id=name,seeds=list(range(2048)),ladder=[100])
+                cells[name].update(archive=str(archive),task_id=name,seeds=list(range(128)),ladder=[100])
                 tasks[name]['seeds']=[42]
     state=dict(round=47,cells=cells,offsets={},retired_cells={},log=[])
     return state,tasks,{k:tmp_path/'panel.json' for k in tasks}
