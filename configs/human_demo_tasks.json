@@ -29308,7 +29308,24 @@
     20,
     27,
     29
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/0f4c35d6a43ba1e3d528e486b5bc6a0149be8e7bd1c4fcddedd76b6d85340bb2",
+    "decisions": [
+     633,
+     403,
+     346,
+     288,
+     231,
+     173,
+     116,
+     58,
+     1
+    ],
+    "index": 0,
+    "future_seed_start": 373000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "llmplay3_a_l32_m100_s139018032_a248a64d726f9",
