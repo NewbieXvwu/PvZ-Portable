@@ -165,7 +165,9 @@ def _unit_command(args, manifest_path, task, side, model):
             '--manifest', str(manifest_path), '--task-id', task['task_id'],
             '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
             '--seeds', str(len(task['seeds'])), '--workers', str(args.workers),
-            '--arms', 'fast', '--dagger-beta', '0', '--out', str(args.out / side / task['task_id'])]
+            '--arms', 'fast', '--dagger-beta', '0',
+            '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
+            '--out', str(args.out / side / task['task_id'])]
 
 
 def _run_unit(args, lock, manifest_path, task, side, model):
@@ -267,6 +269,8 @@ def main():
     for name in ('candidate', 'incumbent', 'source-panel', 'executable', 'value', 'resource-dir', 'out'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--workers', type=int, default=1)
+    parser.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
+                        help='enable whole-game C++ fog student games (deploy19)')
     parser.add_argument('--eval-units', type=int, default=1,
                         help='concurrent search_play children (task73c); execution detail, '
                              'never part of the contract, outcomes are identical for any value')

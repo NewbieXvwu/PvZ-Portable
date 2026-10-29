@@ -42,7 +42,7 @@ def selection_rank(score):
 
 
 def select(candidates, out, manifest, sets, workers, value, resource_dir, executable,
-           run_command=None):
+           run_command=None, native_games=True):
     """Share one incumbent run across candidates, preserving per-game evidence."""
     run_command = subprocess.run if run_command is None else run_command
     paths = sorted({str(Path(path)) for path in candidates})
@@ -69,7 +69,8 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
             command = [sys.executable, str(ROOT / 'scripts/search_play.py'), '--rollout-policy', path,
                        '--value', str(value), '--executable', str(executable), '--manifest', str(manifest),
                        '--task-id', task, '--seed-offset', str(offset), '--seeds', str(count),
-                       '--arms', 'fast', '--workers', str(workers), '--out', str(folder)]
+                       '--arms', 'fast', '--workers', str(workers),
+                       '--native-games' if native_games else '--no-native-games', '--out', str(folder)]
             if resource_dir:
                 command += ['--resource-dir', str(resource_dir)]
             run_command(command, check=True, stdout=subprocess.DEVNULL)
@@ -121,6 +122,8 @@ def main() -> None:
     p.add_argument("--sets", required=True,
                    help="task:offset:count,... (keep them apart from evaluation seeds and from collection seeds)")
     p.add_argument("--workers", type=int, default=16)
+    p.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
+                   help='enable whole-game C++ fog student games (deploy19)')
     p.add_argument("--value", default=str(ROOT / "artifacts/value_net/v5/model.pt"), help="unused by the fast arm")
     p.add_argument("--resource-dir")
     p.add_argument("--executable", type=Path, default=ROOT / 'build/pvz-portable')
@@ -129,7 +132,7 @@ def main() -> None:
     if not paths:
         raise SystemExit("no candidates")
     result = select(paths, args.out, args.manifest, args.sets, args.workers, args.value,
-                    args.resource_dir, args.executable)
+                    args.resource_dir, args.executable, native_games=args.native_games)
     print(f"best {result['best']} -> {args.out / 'model.pt'}")
 
 

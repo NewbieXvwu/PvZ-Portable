@@ -745,7 +745,10 @@ def _play(job: dict, observer=None) -> dict:
         else:
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         fog_diagnostics = None
-        if task_definition.get('fog_observation') and obs.get('fog'):
+        native_game = (getattr(args, 'native_games', True) and job['arm'] == 'fast'
+                       and not args.frames and observer is None)
+        if (task_definition.get('fog_observation') and obs.get('fog')
+                and (not native_game or getattr(args, 'fog_diagnostics', False))):
             from pvz_fog import FogEpisodeDiagnostics
             fog_diagnostics = FogEpisodeDiagnostics()
             fog_diagnostics.sample(env, obs)
@@ -971,6 +974,10 @@ def _play(job: dict, observer=None) -> dict:
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
+                   help='use whole-game C++ for fog student games without frame recording (deploy19)')
+    p.add_argument('--fog-diagnostics', action='store_true',
+                   help='collect per-decision fog diagnostics, using the Python game loop')
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
