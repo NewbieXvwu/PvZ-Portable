@@ -1079,3 +1079,7 @@
 - 11:00 用户下载游戏，关了代理。台式机 WSL（镜像网络）的 systemd-resolved 没有任何 DNS 上游。用运行时命令 `sudo resolvectl dns eth5 10.255.255.254` 和 `default-route eth5 yes` 恢复了解析（不持久，WSL 重启后失效）。
   - CodeBuddy 直连可用；OpenAI 和 GitHub（hosts 指向 127.0.0.1）都不通。
   - 分工：cbp-task105（账号 0，只本地提交，代理恢复后再推）；Mac qoder-t150 合并 task151 修复进 prodint16；Mac codex-plus2 做 task152（LLM 存档整局操作是否进训练行，分支 llmrows）。
+- 11:31 **deploy16 上线**（v2timer A/B + sysfail 暂停，prodint16 ba257927，含 task151 修复；build16 独立二进制）。台式机脚本已刷新为 origin/prodint16 版本（旧版留 `qc_deploy16.sh.prev9fa`），由 systemd 单元 deploy16 在 r42 组边界（11:31:10）触发，qc 11:31:21 重启，首组是 GPT Pro 起点格 demoboss50。新配方 init=null，从头训练；在役学生 r36 继续采集，直到新学生过门禁。
+- task150 合并（Qoder，1cc6941c）与 task152（Mac Codex，llmrows 3078261c）交付。task152：LLM 整局动作此前**没有**进训练包，只有起点格接续局（老师标签）进；新增默认关闭的 `llm_demo_import` 开关，草稿配方 `recipes/dw4i2_v2timer_llm_rows_task152.json`。task104 曾显示加 LLM/人类示范行无收益（泳池 −35pp），这次有 1246 份，等 v2timer 基线出来后再做单变量对照。
+- 派 task153（Mac codex-plus2，entityattn）：个体 + 注意力学生，可选架构 + C++ 前向 + Mac 小规模对照，目标是卡组泛化。
+- 台式机代理仍关，Codex 两个号等代理；CodeBuddy 说 git push 其实能通。
