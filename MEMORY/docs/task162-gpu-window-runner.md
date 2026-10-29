@@ -100,3 +100,5 @@ python scripts/queue_decision_study.py \
 续办落地：已实际入队14个task163作业（无seed3），seed1/seed2屏障已部署。吞吐报告发布也已安排为准备作业：下一空档测满8臂并确定共同预算后，使用一次性独立检出追加本任务书和当日日志，普通fast-forward推送gpuwindow，再删除该临时检出；仅在当前工作树干净且能fast-forward时同步它，**不移动作业使用的固定代码检出**。因此无需让Agent同步等生产训练数小时，实测速率、GPU小时、折算天数与实际缩减比例会在报告产生后自动落入任务书。发布失败会保留外部report.json/report.md，不假称已发布。
 
 磁盘方案再压缩：54个固定cell token及cell索引不逐行落盘，读取时按相同公开编码恢复；仅存实际训练行的全局行号和变长token。CPU留出顺序读取原帧，既不需要全量token缓存，也不复制大语料。缓存仍≤2GiB；用完连同row mask、二进制source plan和研究硬链接视图一起删除，JSON清单及结果保留。新增代码检出实测各33MiB，旧中间检出在无活动作业引用后移除。
+
+23:08部署收尾：决策作业和执行器重新锁定 **`323b867caf382efa4e4b9aea6829777d1d8d31f8`**；task163仍锁定 `cfa42c1c6d669f849b63bf52df90a2db6aafc072`。启用队列共35项（16个decision、14个task163、split/probe/publish/tokens/cleanup五项准备作业），另两项旧示例仍禁用。服务active，生产仍在训练，实验未占GPU；实测表待下个真实窗口自动追加。新版代码检出33MiB，task163代码检出33MiB；无活动作业引用的f9b5ad75中间检出33MiB已移除。未复制大数据，尚未产生token缓存或模型大文件。
