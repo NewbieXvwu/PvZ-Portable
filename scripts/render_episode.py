@@ -334,13 +334,11 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
     # 原版传送带开局的任务没有卡组（deck 为空），卡由引擎发；其余任务仍必须显式给卡组。
     if not checkpoint or (not deck and (task_extra or {}).get("conveyor_start") != "original"):
         raise ValueError("policy=student 需要 checkpoint=<学生 model.pt> 和训练任务的 deck")
-    import hashlib
     from pvz_event_env import EventWaitEnv
     from pvz_rollout_policy import load_student
     student = load_student(checkpoint)
     env = EventWaitEnv(resource_dir, headless=True)
     checkpoint_meta = {"checkpoint": str(checkpoint),
-                       "checkpoint_sha256": hashlib.sha256(Path(checkpoint).read_bytes()).hexdigest()[:16],
                        "deterministic": True}
     # profile 从卡组推导 —— 槽位数、升级植物所有权都和卡组一致（AGENTS.md「任务与卡组」）。
     deck = tuple(deck)

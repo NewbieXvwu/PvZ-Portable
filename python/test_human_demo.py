@@ -20,6 +20,43 @@ RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz
 BINARY = Path(os.environ.get('PVZ_EXECUTABLE', ROOT / 'build/pvz-portable'))
 
 
+def test_record_and_demo_start_replay_without_archive_hashes(tmp_path):
+    class DemoEnv:
+        def begin_demo(self):
+            pass
+
+        def reset(self, *, deck, task):
+            self.observation = dict(tick=0, wave=1, wave_count=1, result=0,
+                                    terminal=False, sun=50, loadout_context={'zombie_roster': []})
+            return self.observation, {}
+
+        def deck_options(self):
+            return {'available_plants': list(range(6))}
+
+        def deck_warnings(self, deck):
+            return {'warnings': []}
+
+        def step(self, action):
+            self.observation = {**self.observation, 'tick': self.observation['tick'] + action['ticks']}
+            return self.observation, 0, False, False, dict(ok=True, events={})
+
+    env = DemoEnv()
+    deck = list(range(6))
+    task = TaskSpec(level=1, seed=271, profile=profile_for_deck(deck))
+    archive = tmp_path / 'demo'
+    recorder = Recorder(env, archive, 'demo_test', deck, task)
+    recorder.step(dict(type='wait', ticks=3))
+    recorder.close()
+    obs, meta, frames = replay(env, archive, decision=2, fog_observation='human_v2')
+    assert obs['tick'] == frames[-1]['tick'] == 3
+    assert meta['operations'] == 3
+    assert replay(env, archive)[0]['tick'] == 3
+    changed = tmp_path / 'changed'
+    obs, _, _ = replay(env, archive, overrides={1: dict(type='wait', ticks=1)}, save=changed)
+    assert obs['tick'] == 1
+    assert replay(env, changed)[0]['tick'] == 1
+
+
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')
 class HumanDemoTest(unittest.TestCase):
     def test_record_replay_export_and_restore(self):
@@ -77,7 +114,7 @@ class HumanDemoTest(unittest.TestCase):
             torch.testing.assert_close(fresh[5], base[5] * .3)
             lines = (archive / 'ticks.jsonl').read_text().splitlines()
             bad = json.loads(lines[4])
-            bad['state_hash'] = 'wrong'
+            bad['end_tick'] += 1
             lines[4] = json.dumps(bad)
             (archive / 'ticks.jsonl').write_text('\n'.join(lines) + '\n')
             with self.assertRaisesRegex(RuntimeError, 'operation 5'):

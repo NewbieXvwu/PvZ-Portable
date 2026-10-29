@@ -36,7 +36,7 @@ def _meta(task_id='demo_roof_46_doom_m200', seed=20261046, operations=6,
         outcome=dict(result=1 if won else 0, won=won, final_wave=30, wave_count=30,
                      final_tick=operations, actions=operations),
         operations=operations, frame_count=operations + 1,
-        initial_state_hash='deadbeef', verified=False,
+        verified=False,
     )
     if wins is not None:
         meta['robustness'] = dict(k=k, passed=wins >= 5, checkpoints={
@@ -54,8 +54,7 @@ def _write_archive(root, name, meta):
     with (archive / 'ticks.jsonl').open('w', encoding='utf-8') as stream:
         for index in range(int(meta['operations'])):
             stream.write(json.dumps(dict(action=dict(type='wait', ticks=1), tick=index,
-                                         end_tick=index + 1, ok=True,
-                                         state_hash='x')) + '\n')
+                                         end_tick=index + 1, ok=True)) + '\n')
     with (archive / 'frames.jsonl').open('w', encoding='utf-8') as stream:
         for _ in range(int(meta['frame_count'])):
             stream.write('{}\n')
@@ -99,11 +98,11 @@ class SafeExtractTest(unittest.TestCase):
 
 
 class MetaTest(unittest.TestCase):
-    def test_verification_explicitly_uses_timeline_without_state_hashes(self):
+    def test_verification_replays_the_copied_archive(self):
         verify = Mock(return_value={'verified': True})
         with patch.dict(sys.modules, human_demo=SimpleNamespace(verify=verify)):
             importer.verify_copy(Path('/archive'), Path('/resources'), Path('/engine'))
-        verify.assert_called_once_with(Path('/archive'), Path('/resources'), Path('/engine'), strict_hashes=False)
+        verify.assert_called_once_with(Path('/archive'), Path('/resources'), Path('/engine'))
 
     def test_conveyor_empty_deck_is_valid_but_fixed_empty_deck_is_not(self):
         with tempfile.TemporaryDirectory() as directory:

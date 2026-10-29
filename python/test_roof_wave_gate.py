@@ -11,6 +11,30 @@ from pvz_promotion import decide, decide_scored, freeze_panel, policy, summarize
 from promotion_gate import _paired_rows
 
 
+@pytest.mark.parametrize('recorded_waves', [False, True])
+def test_offline_roof_replay_without_contract_hashes(tmp_path, recorded_waves):
+    from promotion_gate import contract
+    from replay_roof_wave_gate import replay
+
+    folder = tmp_path / 'round_1/evaluations/model'
+    folder.mkdir(parents=True)
+    pair = dict(task_id='roof', seed=1, zone='roof', candidate=True, incumbent=False)
+    if recorded_waves:
+        pair.update(candidate_wave=12, incumbent_wave=10)
+    else:
+        for side, won, wave in [('candidate', True, 12), ('incumbent', False, 10)]:
+            episode = folder / side / 'roof'
+            episode.mkdir(parents=True)
+            (episode / 'games.jsonl').write_text(json.dumps(dict(seed=1, won=won, final_wave=wave)) + '\n')
+    frozen = contract('candidate.pt', 'incumbent.pt', 'panel', 'engine', 'value', 'resources')
+    (folder / 'decision.json').write_text(json.dumps(dict(contract=frozen, paired=[pair],
+                                                        approved=False, reasons=['old decision'])))
+    result = replay(tmp_path)
+    assert result['rounds'][0]['round'] == 1
+    assert result['rounds'][0]['roof_pairs']['roof'] == [[1, 12, 10, True, False]]
+    assert result['rounds'][0]['zones']['roof']['waves']['mean_delta_wave'] == 2
+
+
 @pytest.mark.parametrize('differences,statistic,p', [
     ([0, 0], 0, 1), ([-1, -1], 0, .25), ([1, 1], 3, 1),
     ([-1, 0, 1], 1.5, .75), ([-1, 2, -3], 2, .375),

@@ -48,9 +48,7 @@ def record_archive(tmp: Path) -> Path:
 def restored_state(archive, mode=None):
     """Restore at decision 2, reseed like a start cell, settle the fog, return states."""
     with PvZEnv(RESOURCE, executable=BINARY) as env:
-        # strict_hashes=False: the relaxed verification (tick/ok/outcome) is load-robust;
-        # board identity across modes is asserted on the privileged state below.
-        obs, _, _ = replay(env, archive, decision=2, strict_hashes=False, fog_observation=mode)
+        obs, _, _ = replay(env, archive, decision=2, fog_observation=mode)
         env.reseed(44_000_001)
         # decision 2 stops within the first seconds; run well past the fog blow-in (~1000)
         obs, *_ = env.step(dict(type='wait', ticks=2400))
