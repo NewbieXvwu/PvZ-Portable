@@ -1009,6 +1009,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
         seed_args = ['--seed-offset', str(offset), '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
+            '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
             '--verify-samples', '9', '--student-candidates', '2',
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
@@ -1220,6 +1221,7 @@ class TrainingPipeline:
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
                    '--eval-units', str(units), '--gate-version', str(self.gate_version),
+                   '--native-games' if getattr(self.args, 'native_games', True) else '--no-native-games',
                    '--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                    '--seed-ledger', str(self.args.seed_ledger)]
         started = time.time()
@@ -1753,6 +1755,7 @@ class TrainingPipeline:
                    str(ROOT / 'scripts/select_student.py'), '--candidates',
                    ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
                    '--manifest', str(manifest), '--sets', sets, '--workers', str(units),
+                   '--native-games' if getattr(self.args, 'native_games', True) else '--no-native-games',
                    '--value', str(self.args.value), '--executable', str(self.args.executable),
                    '--resource-dir', str(self.args.resource_dir)]
         started = time.time()
@@ -2274,6 +2277,8 @@ def main() -> None:
     parser.add_argument('--frames', type=Path, default=DEFAULT_FRAMES)
     parser.add_argument('--obs-v3', action=argparse.BooleanOptionalAction, default=False,
                         help='write rich token attachment with each collected episode (deploy18 enables this)')
+    parser.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
+                        help='use native fog games in collection/selection/promotion (deploy19)')
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)

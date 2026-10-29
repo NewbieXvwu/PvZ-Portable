@@ -153,7 +153,7 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
     _freeze_startup()
 
 
-def _fast_action(obs: dict, fast_state: dict) -> dict:
+def _fast_action(obs: dict, fast_state: dict, native_env=None) -> dict:
     """The student's action; ``fast_state`` carries the previous frame and action."""
     from pvz_rollout_policy import act
     from render_episode import _frame
@@ -163,8 +163,18 @@ def _fast_action(obs: dict, fast_state: dict) -> dict:
     if _W["fast"].obs != "v1" and "history" not in fast_state:
         from pvz_student_observation import StudentHistory
         fast_state["history"] = StudentHistory(_W["fast"].obs)
-    action = act(_W["fast"], frame, fast_state.get("frame"), (obs.get("legal_actions") or {}).get("plants") or [],
-                 context=_W.get("context"), history=fast_state.get("history"))
+    if native_env is not None:
+        if fast_state.get('history') is not None:
+            fast_state['history'].extra(frame)
+        if (obs.get('legal_actions') or {}).get('plants'):
+            action = native_env.rollout_predict(previous.get('tick') if previous else None,
+                (fast_state.get('action') or {}).get('type') == 'plant',
+                student_history=fast_state.get('history'))['action']
+        else:
+            action = dict(NOOP)
+    else:
+        action = act(_W["fast"], frame, previous, (obs.get("legal_actions") or {}).get("plants") or [],
+                     context=_W.get("context"), history=fast_state.get("history"))
     # --student-candidates needs exactly the frame / history the student just read, so keep them.
     _W["student_frame"], _W["student_previous_frame"] = frame, previous
     fast_state["frame"] = frame
@@ -745,7 +755,10 @@ def _play(job: dict, observer=None) -> dict:
         else:
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         fog_diagnostics = None
-        if task_definition.get('fog_observation') and obs.get('fog'):
+        native_game = (getattr(args, 'native_games', False) and job['arm'] == 'fast'
+                       and not args.frames and observer is None)
+        if (task_definition.get('fog_observation') and obs.get('fog')
+                and (not native_game or getattr(args, 'fog_diagnostics', False))):
             from pvz_fog import FogEpisodeDiagnostics
             fog_diagnostics = FogEpisodeDiagnostics()
             fog_diagnostics.sample(env, obs)
@@ -788,10 +801,12 @@ def _play(job: dict, observer=None) -> dict:
             planted_by_type = read_types(details,task_definition)
             if planted_by_type is None or planted is None:
                 raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
+        native_root = (getattr(args, 'native_games', False) and observer is None
+                       and getattr(_W['fast'], 'token_input', None) != 'obs_v3')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
             if observer is not None:
                 observer.before(env, obs, fast_state, decisions)
-            action = policy_choice = _fast_action(obs, fast_state)
+            action = policy_choice = _fast_action(obs, fast_state, env if native_root else None)
             _W["student_history"] = fast_state.get("history")
             if job["arm"] == "fast_search":
                 searched_before = stats['searched']
@@ -971,6 +986,10 @@ def _play(job: dict, observer=None) -> dict:
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
+                   help='use C++ fog student games and CNN collection root forwards (deploy19)')
+    p.add_argument('--fog-diagnostics', action='store_true',
+                   help='collect per-decision fog diagnostics, using the Python game loop')
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
