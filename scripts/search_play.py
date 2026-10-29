@@ -683,6 +683,8 @@ def _play(job: dict, observer=None) -> dict:
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
         env._teacher_value_loaded = True
+    if getattr(args, "obs_v3", False):
+        env.set_token_observation(True)
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -938,6 +940,7 @@ def _play(job: dict, observer=None) -> dict:
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--obs-v3", action="store_true", help="随决策帧保存 C++ 公开富输入")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "

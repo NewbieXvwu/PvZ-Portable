@@ -750,6 +750,11 @@ class PvZEnv:
         if not self._command(f"SIM_SKIP {mask}").get("ok"):
             raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
 
+    def set_token_observation(self, enabled: bool) -> None:
+        """Opt in to C++ public obs-v3 tokens on decision observations."""
+        if not self._command(f"OBS_V3 {int(enabled)}").get("ok"):
+            raise RuntimeError("simulator rejected OBS_V3 (requires task157 engine)")
+
     def set_lean_observation(self, lean: bool) -> None:
         """``OBS_LEAN``: compact observations (``"lean": 1``) until switched off again.
 
