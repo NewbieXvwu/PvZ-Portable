@@ -1,5 +1,4 @@
 """Small CPU-only tests for the optional v3 student; no engine or corpus needed."""
-import io
 import numpy as np
 import pytest
 import torch
@@ -21,7 +20,9 @@ def test_v3_compact_wire_and_padding():
     a = frame_tokens(f)
     z = np.flatnonzero(a['ids'][:, 0] == 4)[0]
     assert a['features'][z, 2] == np.float32(150.25/900)
-    assert a['features'][z, 9] == np.float32(-.2)
+    assert a['features'][z, 10] == np.float32(-.2/5)
+    assert a['features'][z, 5] == 0  # Compact total hp must not masquerade as body hp.
+    assert a['features'][z, 21] == np.float32(180/2000)
     assert a['packet_index'][1] == -1
     rich = dict(f, tokens_v3=dict(schema_version=1, **{k: v.tolist() for k, v in a.items()}))
     b = frame_tokens(rich)
@@ -81,3 +82,114 @@ def test_v3_recipe_opt_in():
     assert c['network']['layers'] == 1
     with pytest.raises(ValueError):
         network_config(dict(architecture='token', surprise=1), 192)
+
+
+def test_v3_pipeline_pack_train_load_actions(tmp_path, monkeypatch):
+    from pathlib import Path
+    import sys
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+    from pvz_frame_store import write_frames
+    from pvz_training_pack import pack_options, archive_fingerprint
+    from pack_training_rows import pack
+    import train_rollout_policy as trainer
+    from pvz_rollout_policy import load_student, act, ranked_plants, export_student
+    from pvz_recipe import write_recipe
+
+    torch.set_num_threads(1)
+    data = tmp_path / 'data'
+    labels = {'a', 'b'}
+    expected = []
+    for seed in range(4):
+        for label in sorted(labels):
+            folder = data / f'seed_{seed}' / label
+            folder.mkdir(parents=True)
+            frames = []
+            for i in range(4):
+                f = frame()
+                f['tick'] = i*60
+                f['sun'] = 200+seed*10+i
+                f['zombies'] *= i+1
+                # Include the native-array entry point in actual packed supervision.
+                if seed == 0:
+                    raw = frame_tokens(f)
+                    f['tokens_v3'] = dict(schema_version=1, **{k: v.tolist() for k, v in raw.items()})
+                if i:
+                    f['action'] = dict(type='plant', packet=0, row=0, col=i) if i%2 else dict(type='wait', ticks=60)
+                    f['targets'] = [[0, 0, 1, .7], [0, 0, 2, .3]]
+                frames.append(f)
+            write_frames(folder / 'frames.npz', frames)
+            expected.extend(frame_tokens(f) for f in frames[:-1])
+    options = pack_options(labels, obs='v3', packet_head='identity', cells=True, aux_horizon=2,
+                           sources=archive_fingerprint(data, labels))
+    # Exercise the real segmented packer even when a legacy cache directory is supplied.
+    pack(data, options, cache_dir=tmp_path/'cache', quiet=True)
+    loaded = trainer.load(data, labels, obs='v3', packet_head='identity', cells=True, aux_horizon=2)
+    assert len(loaded) == 12
+    store = loaded[-1]
+    for i, sample in enumerate(expected):
+        for k, array in sample.items():
+            np.testing.assert_array_equal(store.sample(i)[k], array)
+    reused = trainer.load(data, labels, obs='v3', packet_head='identity', cells=True, aux_horizon=2)
+    for key, array in store.arrays.items():
+        np.testing.assert_array_equal(array, reused[-1].arrays[key])
+
+    recipe = dict(schema_version=1, kind='training', data=str(data), out=str(tmp_path/'out'),
+                  labels=sorted(labels), obs='v3', packet_head='identity', width=12,
+                  network=dict(architecture='token', layers=1, heads=3, ff_width=16, hybrid=True),
+                  batch_size=4, validation_batch_size=4, epochs=1, max_steps=1, seed=5,
+                  aux_weight=.1, aux_horizon=2, cell_soft_weight=.1,
+                  validation=dict(seed=0, fraction=.25))
+    path = tmp_path/'recipe.json'
+    write_recipe(path, recipe)
+    monkeypatch.setattr(sys, 'argv', ['train_rollout_policy.py', '--recipe', str(path)])
+    # Isolate telemetry and process-priority side effects from the production machine.
+    class QuietMetrics:
+        def __init__(self, *a, **kw): pass
+        def start(self): return self
+        def update(self, **kw): pass
+        def close(self): pass
+    monkeypatch.setattr(trainer, 'Metrics', QuietMetrics)
+    monkeypatch.setattr(trainer, 'set_oom_score_adj', lambda _: None)
+    losses = []
+    trainer.main(step_observer=lambda _, loss: losses.append(loss))
+    assert len(losses) == 1 and np.isfinite(losses[0])
+    net = load_student(tmp_path/'out'/'model.pt')
+    assert net.network['hybrid']
+    legal = [dict(type='plant', packet=0, row=0, col=1), dict(type='plant', packet=2, row=2, col=2)]
+    ranked = ranked_plants(net, frame(), None, legal)
+    assert len(ranked) == len(legal)
+    assert all(np.isfinite(p) for p, _ in ranked)
+    assert act(net, frame(), None, legal) in [*legal, dict(type='wait', ticks=60, until='timeout')]
+    with pytest.raises(NotImplementedError, match='task161'):
+        export_student(net, tmp_path/'native.bin')
+    assert not (tmp_path/'native.bin').exists()
+
+
+@pytest.mark.parametrize('obs,packet_head', [('v1', 'slot'), ('v2timer', 'identity')])
+def test_v3_disabled_legacy_bitwise(tmp_path, obs, packet_head):
+    from pvz_rollout_policy import RolloutNet, make_student, load_student, export_student
+    from pvz_value_net import BOARD_CHANNELS, SCALARS
+    from pvz_student_observation import OBS_EXTRA
+    torch.set_num_threads(1)
+    torch.manual_seed(19)
+    legacy = RolloutNet(width=8, obs=obs, packet_head=packet_head).eval()
+    torch.manual_seed(19)
+    default = make_student(width=8, obs=obs, packet_head=packet_head, network={}).eval()
+    for key, value in legacy.state_dict().items():
+        assert torch.equal(value, default.state_dict()[key])
+    board = torch.randn(2, BOARD_CHANNELS+OBS_EXTRA[obs][0], 6, 10)
+    scalars = torch.randn(2, SCALARS+2+OBS_EXTRA[obs][1])
+    info = torch.zeros(2, 10, 4) if packet_head == 'identity' else None
+    pk = torch.tensor([0, 1])
+    torch.save(dict(state_dict=legacy.state_dict(), obs=obs, packet_head=packet_head), tmp_path/'old.pt')
+    loaded = load_student(tmp_path/'old.pt')
+    with torch.no_grad():
+        a = legacy(board, scalars, pk, packet_info=info)
+        for model in (default, loaded):
+            b = model(board, scalars, pk, packet_info=info)
+            for key in a:
+                assert torch.equal(a[key], b[key])
+    export_student(legacy, tmp_path/'legacy.bin')
+    export_student(default, tmp_path/'default.bin')
+    export_student(loaded, tmp_path/'loaded.bin')
+    assert (tmp_path/'legacy.bin').read_bytes() == (tmp_path/'default.bin').read_bytes() == (tmp_path/'loaded.bin').read_bytes()

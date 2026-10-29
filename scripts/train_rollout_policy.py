@@ -437,6 +437,9 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         result = (*result, torch.from_numpy(np.asarray(stored["aux"])))
     if "packet_col0" in stored.files:
         result = (*result, PacketStore.from_arrays(stored, rows))
+    if 'token_offsets' in stored.files:
+        from pvz_student_tokens import TokenStore
+        result = (*result, TokenStore.from_arrays(stored))
     stored.close()
     return result
 
@@ -521,14 +524,17 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
             sources = stored["source"].tolist()
             archive = np.asarray(stored["source_archive"])
             rows = np.asarray(stored["source_row"])
+            has_tokens = 'token_offsets' in stored.files
             has_cands = "cand_counts" in stored.files
-            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ()) + (("token",) if has_tokens else ())
             # CSR streams carry an offsets member; the sparse stores derive theirs from
             # counts (uint8 per row, cumsum like ValueStore.from_arrays does at load).
             boundaries = {"board": np.asarray(stored["board_offsets"]),
                           "scalar": np.asarray(stored["scalar_offsets"]),
                           "value": np.concatenate(
                               [[0], np.cumsum(np.asarray(stored["value_counts"]).astype(np.int64))])}
+            if has_tokens:
+                boundaries['token'] = np.asarray(stored['token_offsets'])
             if has_cands:
                 boundaries["cand"] = np.concatenate(
                     [[0], np.cumsum(np.asarray(stored["cand_counts"]).astype(np.int64))])
@@ -548,10 +554,11 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
     with zipfile.ZipFile(layouts[0]["path"]) as zfile:
         members = set(name[:-4] for name in zfile.namelist())
         dense_names = ("plant", "packet", "cell", "weight")
+        has_tokens = 'token_offsets' in members
         has_aux = "aux" in members
         has_packets = "packet_col0" in members
         has_cands = "cand_counts" in members
-        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ()) + (("token",) if has_tokens else ())
         headers = {name: _member_header(zfile, name) for name in
                    dense_names + (("aux",) if has_aux else ()) + ("seed",)
                    + ("value_counts", "value_slots", "value_values")
@@ -623,6 +630,16 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         packets.columns = [allocate(f'packet_col{index}', column.dtype, column.shape)
                            for index, column in enumerate(packets.columns)]
 
+    token_store = None
+    if has_tokens:
+        from pvz_student_tokens import TokenStore
+        token_arrays = {'offsets': allocate('token_offsets', np.int64, (total_rows+1,))}
+        for name, (dtype, shape) in TokenStore.token_fields.items():
+            token_arrays[name] = allocate('token_'+name, dtype, (totals['token'], *shape))
+        for name, (dtype, shape) in TokenStore.row_fields.items():
+            token_arrays[name] = allocate('token_'+name, dtype, (total_rows, *shape))
+        token_store = TokenStore(token_arrays)
+
     # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
     for index, layout in enumerate(layouts):
         if reuse:
@@ -677,6 +694,15 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                                      *((("aux", 9),) if has_aux else ())):
                 dense_targets[name][pos:pos + span] = np.asarray(part[part_index])[start:stop]
             seed_target[pos:pos + span] = np.asarray(part[6])[start:stop]
+            if token_store is not None:
+                source_tokens = part[-1].arrays
+                at, lo, hi = entry['token']
+                token_arrays['offsets'][pos+1:pos+span+1] = at + source_tokens['offsets'][start+1:stop+1] - lo
+                for name in TokenStore.token_fields:
+                    token_arrays[name][at:at+hi-lo] = source_tokens[name][lo:hi]
+                for name in TokenStore.row_fields:
+                    token_arrays[name][pos:pos+span] = source_tokens[name][start:stop]
+
             if packets is not None:
                 for column, target_column in zip(part[9 + has_aux].columns, packets.columns):
                     target_column[pos:pos + span] = np.asarray(column)[start:stop]
@@ -694,6 +720,8 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         result = (*result, torch.from_numpy(dense_targets["aux"]))
     if has_packets:
         result = (*result, packets)
+    if token_store is not None:
+        result = (*result, token_store)
     if row_observer is not None and data is not None:
         for entry in placed:
             if len(entry["rows"]):
@@ -746,6 +774,7 @@ def main(*, step_observer=None) -> None:
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
+    tokens = loaded[-1] if args.obs == 'v3' else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
@@ -761,6 +790,8 @@ def main(*, step_observer=None) -> None:
               "value_bytes": values.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, is_val))}
+    if tokens is not None:
+        memory['token_bytes'] = tokens.nbytes
     if packet_info is not None:
         memory['packet_bytes'] = (packet_info.nbytes if isinstance(packet_info, PacketStore)
                                   else packet_info.numel() * packet_info.element_size())
@@ -792,8 +823,9 @@ def main(*, step_observer=None) -> None:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
-                     aux=bool(args.aux_weight), packet_head=args.packet_head)
+    from pvz_rollout_policy import make_student
+    net = make_student(args.width, args.pool, args.context, args.obs, args.row_pool,
+                       aux=bool(args.aux_weight), packet_head=args.packet_head, network=args.network)
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
@@ -811,6 +843,8 @@ def main(*, step_observer=None) -> None:
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
+        if tokens is not None:
+            packet_args['tokens'] = tokens.batch(idx, args.device)
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if row_plan else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
@@ -861,6 +895,7 @@ def main(*, step_observer=None) -> None:
 
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+                **({"network": net.network} if tokens is not None else {}),
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,

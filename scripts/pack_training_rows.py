@@ -76,6 +76,12 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
     Rows are stored compactly (task32): bit-packed keep masks, uint8/int16 labels, a split packet block, uint8
     scalar indices and per-archive constant planes taken out of the board CSR. Every value a batch sees is
     bit-identical to the dense arrays this replaced."""
+    tokens = None
+    if obs == 'v3':
+        from pvz_student_tokens import TokenBuilder
+        tokens = TokenBuilder()
+        # Existing episode caches have no tokens: read each selected archive once.
+        cache_dir = None
     paths = ([p for p in frame_paths(data) if p.parent.name in labels]
              if archive_paths is None else list(archive_paths))
     # Decide the kept rows first and preallocate exactly: a list of per-row tensors plus torch.stack needs
@@ -221,7 +227,7 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         frames = read_frames(path)
         future_damage = row_damage_labels(frames, aux_horizon) if aux_horizon else None
         ctx = _episode_context(path) if with_context else None
-        if obs != "v1":
+        if obs not in ("v1", "v3"):
             from pvz_student_observation import StudentHistory
             history = StudentHistory(obs)
         kept = np.unpackbits(keep[path])[:len(frames)].astype(bool)
@@ -229,18 +235,21 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         # path does: a pack must not depend on whether a feature cache happened to exist.
         archive_boards, archive_scalars = [], []
         for i in range(1, len(frames)):
-            if obs != "v1":
+            if obs not in ("v1", "v3"):
                 b, s = history.features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             action = frames[i].get("label") or frames[i].get("action")
             if not action or frames[i].get("action_rejected") or not kept[i]:
                 continue
-            if obs == "v1":
+            if obs in ("v1", "v3"):
                 b, s = features(frames[i - 1], frames[i - 2] if i >= 2 else None, ctx)
             if packets is not None:
                 s = identity_scalars(frames[i - 1], s)
             if boards is None:
                 boards = CompactBoards(b.shape)
                 scalars = CompactBoards(s.shape, np.float32)
+            if tokens is not None:
+                from pvz_student_tokens import frame_tokens
+                tokens.append(frame_tokens(frames[i - 1], ctx))
             archive_boards.append(b.numpy())
             archive_scalars.append(s.numpy())
             if packets is not None:
@@ -275,6 +284,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
         result = (*result, torch.from_numpy(auxiliary[:n]))
     if packets is not None:
         result = (*result, packets.finish(n))
+    if tokens is not None:
+        result = (*result, tokens.finish())
     sources = [str(path.relative_to(data)) for path in paths]
     return result, sources, source_archive[:n], source_row[:n]
 
@@ -311,6 +322,8 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
     if packets is not None:
         for index, column in enumerate(packets.columns):
             arrays["packet_col%d" % index] = np.asarray(column)
+    if options['obs'] == 'v3':
+        arrays.update(loaded[-1].packed_arrays())
     target = Path(out) if out is not None else pack_path(data, options)
     target.parent.mkdir(parents=True, exist_ok=True)
     write_started = time.perf_counter()
@@ -502,6 +515,13 @@ def assert_payload_equal(expected, actual, batch_size=64):
         if left is None or right is None:
             assert left is right, column
             continue
+        from pvz_student_tokens import TokenStore
+        if isinstance(left, TokenStore):
+            for key in left.arrays:
+                a, b = left.arrays[key], right.arrays[key]
+                if a.shape != b.shape or a.dtype != b.dtype or not np.array_equal(a, b):
+                    raise AssertionError(f'token column {key} differs')
+            continue
         for start in range(0, rows, batch_size):
             idx = torch.arange(start, min(start + batch_size, rows))
             def block(value):
@@ -524,7 +544,7 @@ def main() -> None:
     p.add_argument("--out", type=Path, help="pack path (default: <data>/packs/<key>.npz)")
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
     p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4", "v2boss", "v2bungee", "v2sleep",
-                                     "v2timer"], default="v1")
+                                     "v2timer", "v3"], default="v1")
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")
     p.add_argument("--packet-head", choices=["slot", "identity"], default="slot")

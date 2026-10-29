@@ -5,7 +5,8 @@ NETWORK_DEFAULTS = dict(architecture='cnn', layers=4, heads=6, ff_width=768,
 
 
 def network_config(config=None, width=64):
-    config = config or {}
+    if config is None:
+        config = {}
     if not isinstance(config, dict) or config.keys() - NETWORK_DEFAULTS.keys():
         raise ValueError('network: unknown fields or non-object')
     c = {**NETWORK_DEFAULTS, **config}

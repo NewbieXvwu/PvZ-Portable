@@ -42,12 +42,14 @@ class ExpertFFN(nn.Module):
             selected = terrain[:, None].expand(shape[:2]).reshape(-1, 1)
             weights = torch.ones_like(selected, dtype=x.dtype)
         else:
-            logits, selected = self.router(flat).topk(self.top_k, dim=-1)
-            weights = logits.softmax(-1)
+            logits = self.router(flat)
+            selected = logits.argsort(dim=-1, descending=True, stable=True)[:, :self.top_k]
+            weights = logits.gather(1, selected).softmax(-1)
         # Dispatch selected tokens only; shared experts see every token.
         for i, expert in enumerate(self.experts):
             positions, route = torch.where(selected == i)
-            result = result.index_add(0, positions, expert(flat[positions]) * weights[positions, route, None])
+            if positions.numel():
+                result = result.index_add(0, positions, expert(flat[positions]) * weights[positions, route, None])
         for expert in self.shared:
             result = result + expert(flat)
         return result.reshape(shape)
@@ -168,3 +170,66 @@ class StudentV3(nn.Module):
                 raise ValueError('auxiliary head disabled')
             out['aux'] = self.aux(enc['cells']).reshape(-1, 6, 9).mean(2)
         return out
+
+
+def _frame_encoding(net, frame, previous, context):
+    from pvz_rollout_policy import features
+    from pvz_student_tokens import frame_tokens, collate_tokens
+    if net.context and context is None:
+        raise ValueError('v3 context student requires task context')
+    context = context if net.context else None
+    device = next(net.parameters()).device
+    tokens = collate_tokens([frame_tokens(frame, context)], device)
+    board = None
+    if net.cnn is not None:
+        board = features(frame, previous, context)[0][None].to(device)
+    return net.encode_tokens(tokens, board)
+
+
+@torch.inference_mode()
+def choose_action(net, frame, previous, legal, context=None):
+    from pvz_rollout_policy import WAIT
+    if not legal:
+        return dict(WAIT)
+    encoded = _frame_encoding(net, frame, previous, context)
+    if net.plant(encoded['global_']).item() <= 0:
+        return dict(WAIT)
+    packets = sorted({a['packet'] for a in legal})
+    scores = net.packet_logits(encoded)[0]
+    packet = max(packets, key=lambda p: float(scores[p]))
+    cells = net.cell_logits(encoded, torch.tensor([packet], device=scores.device))[0]
+    best = max((a for a in legal if a['packet'] == packet), key=lambda a: float(cells[a['row']*9+a['col']]))
+    return dict(type='plant', packet=packet, row=best['row'], col=best['col'])
+
+
+@torch.inference_mode()
+def rank_actions(net, frame, previous, legal, context=None):
+    if not legal:
+        return []
+    encoded = _frame_encoding(net, frame, previous, context)
+    plant = float(net.plant(encoded['global_']).sigmoid().item())
+    packets = sorted({a['packet'] for a in legal})
+    scores = net.packet_logits(encoded)[0]
+    probabilities = scores[packets].softmax(-1).tolist()
+    result = []
+    for packet, probability in zip(packets, probabilities):
+        actions = [a for a in legal if a['packet'] == packet]
+        cells = net.cell_logits(encoded, torch.tensor([packet], device=scores.device))[0]
+        index = [a['row']*9+a['col'] for a in actions]
+        for action, p in zip(actions, cells[index].softmax(-1).tolist()):
+            result.append((plant*probability*p, action))
+    return sorted(result, key=lambda item: -item[0])
+
+
+def export_v3(net, path, graph=None):
+    """task161 export hook; graph ABI must include v3 token preparation and links.
+
+    A caller supplying a compatible GraphSpec can use the generic writer directly.
+    Do not write an RN006 file or a partial artifact when no graph adapter exists.
+    """
+    if graph is None:
+        raise NotImplementedError('v3 native graph adapter pending task161: token embedding/feature SiLU, '
+                                  'indexed gathers, masked state pooling and target-link bias; '
+                                  'pass a compatible GraphSpec to export_v3(net, path, graph)')
+    from pvz_generic_forward import export_graph
+    export_graph(net, graph, path)

@@ -53,6 +53,48 @@
 
 kind 编号沿用旧模型：global=0, profile=1, cell=2, plant=3, zombie=4, projectile=5, defense=6, grid_item=7, seed_packet=8, zombie_roster=9, lane=10, lane_enemy=11。卡包特征不包含槽位编号。
 
-特征槽沿用旧 `observation_tokens` 的布局：植物 0/1 行列、2 血量比例、3/4 当前/最大血量÷3000；僵尸 0/1 行列、2/3 x÷900/y÷700、5 血量÷2000、9 vx、10 减速÷2000、13 啃食；投射物 0/1 行列、2 x÷900、9 伤害÷500；卡包 1 价格÷500、2 冷却÷3000、3 总冷却÷3000、4 active。其余富特征槽由 task157 接入时明确，变更已有槽的含义需要新 schema，不能静默替换。
+特征槽沿用旧 `observation_tokens` 的布局：植物 0/1 行列、2 血量比例、3/4 当前/最大血量÷3000；僵尸 0/1 行列、2/3 x÷900/y÷700、5 本体血量÷2000、10 vx÷5、11 减速÷1200、13 冰冻÷1200、17 啃食、20 on_board、21 总血量÷2000、22/23 头盔/盾牌血量÷2000、24 体型（末四项为紧凑帧补充）；投射物 0/1 行列、2 x÷900、9 伤害÷500；卡包 1 价格÷500、2 冷却÷3000、3 总冷却÷3000、4 active。其余富特征槽由 task157 接入时明确，变更已有槽的含义需要新 schema，不能静默替换。
 
-紧凑帧可提供的类型是 global/profile占位、cell、lane、plant、zombie（精确 x/vx）、projectile（v2 子块可用时）、defense、seed_packet、zombie_roster（context 开启时）。缺少的状态/坐标、目标链接保持空；不推算轨迹，不增加策略公式。N 不截断；打包保留变长数组，训练只补齐当前 minibatch。
+紧凑帧可提供的类型是 global/profile占位、cell、lane、plant、zombie（精确 x/vx）、projectile（v2 子块可用时）、defense、grid_item（graves）、seed_packet、zombie_roster（context 开启时）。缺少的状态/坐标、目标链接保持空；不推算轨迹，不增加策略公式。N 不截断；打包保留变长数组，训练只补齐当前 minibatch。
+
+## 阶段 2（2026-10-29）：打包、训练、加载与 Python 出手
+
+- `pack_training_rows --obs v3 --packet-head identity` 打包 token。v3 不复用缺少 token 的旧 episode 特征缓存；只在构建缺失标签段时读取帧，已有不可变分段照常复用。token 按行变长保存，构建中用临时文件流式累计，避免囤积逐行 Python 对象；不保存 N² 关系矩阵。
+- `train_rollout_policy` 的现行分段合并器合并 token offsets、数据及帧内指针，保持原来的全局档案行顺序。合并后的 token 数组与其他列一样落在训练数据目录自己的 `.merge` memmap 中；复用时不重新解析 token 或旧档案。仅当前 minibatch 补齐 token。
+- `make_student` 按 recipe.network 构造 CNN 或 StudentV3。现行损失（种/等、卡包、格子、可选辅助头/格子软标签）接通；checkpoint 自带完整 network 配置；`load_student`、同构 warm-start、`act` 与 `ranked_plants` 支持 v3。`StudentHistory(v3)` 是无状态兼容入口。
+- **task161 导出按任务允许留桩**：`export_student(v3)` 明确报 `NotImplementedError`，不创建半成品文件。`export_v3(net,path,graph)` 已按 task161 当前 `export_graph(nn.Module, GraphSpec, path)` 签名留接入点。已读取 cppnet worktree 的接口初稿：还需把特征投影 SiLU、任意索引 gather、masked state pooling、目标链接偏置与 token 准备表达为兼容图/原生输入；未把另一并行分支的未提交文件复制到本分支，未宣称已有可部署的 v3 原生模型。旧 PVZRN002–006 导出不变。
+- 当前的僵尸紧凑帧 `health` 是本体+头盔+盾牌总和，放新槽 21；有 v2 头盔/盾牌细节时才填本体槽 5。速度/减速/啃食等前缀槽与旧富 token 对齐，缺失的最大血量、状态等不伪造。富输入直接消费 `tokens_v3`，不会再走紧凑实体循环。
+
+### 使用示例（仅说明，未启动实际训练）
+
+在现有训练 recipe 中显式改这些字段，其他数据、标签和权重项仍由同一 recipe 给出：
+
+```json
+{
+  "obs": "v3",
+  "packet_head": "identity",
+  "width": 192,
+  "pool": "mean",
+  "row_pool": false,
+  "batch_size": 16,
+  "validation_batch_size": 32,
+  "network": {
+    "architecture": "token",
+    "layers": 4,
+    "heads": 6,
+    "ff_width": 768,
+    "ffn": "dense",
+    "hybrid": false
+  }
+}
+```
+
+`width` 为现有配方字段，不另加一份宽度。`ffn="terrain"` 用 5 个地形专家 + `shared_experts`；`ffn="moe"` 用可配置 `experts`、`top_k`、`shared_experts`，每 token 只执行选中专家。top-k 同分按专家 id 升序，便于对接通用 C++ 实现。`hybrid=true` 将实体加回 6×10 CNN 格子；格子指针按每行前 9 列取出，保留 54 格顺序。
+
+打包仍使用现行命令与相同 recipe 的行选项（data / labels / wait_keep / context / aux_horizon / cells / label_weight）；训练入口仍是 `scripts/train_rollout_policy.py --recipe /绝对路径/recipe.json`。更换宽/层/FFN/混合结构不改变 token pack 的语义，因此不因结构变化重新打包。
+
+### 交付结论
+
+- 10 个新增小 CPU 测试通过（约 3.3 秒）：四类结构前后向、padding、token 数组入口、跨标签分段合并与复用、一次真实 trainer optimizer step（包含辅助头/软格子标签）、加载与合法动作出手、导出桩，以及默认 CNN 的权重/三头输出/旧格式导出逐位一致。
+- 另各跑一个与共享改动直接相关的旧配方与分段合并测试，均通过；全部测试先看 `free -g`，带 `ulimit -v 8000000`、超时及单线程限制。未跑全量测试、全量存档重放或真实语料训练；未碰生产进程、二进制或 GPU 训练。
+- task157 的富输入生产与 task161 的原生图适配仍由对应并行任务衔接；本分支提供可消费数组的网络、打包/训练/加载/Python 推理路径。未做胜率、吞吐量或晋升结论。
