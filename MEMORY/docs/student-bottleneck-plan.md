@@ -1083,3 +1083,8 @@
 - task150 合并（Qoder，1cc6941c）与 task152（Mac Codex，llmrows 3078261c）交付。task152：LLM 整局动作此前**没有**进训练包，只有起点格接续局（老师标签）进；新增默认关闭的 `llm_demo_import` 开关，草稿配方 `recipes/dw4i2_v2timer_llm_rows_task152.json`。task104 曾显示加 LLM/人类示范行无收益（泳池 −35pp），这次有 1246 份，等 v2timer 基线出来后再做单变量对照。
 - 派 task153（Mac codex-plus2，entityattn）：个体 + 注意力学生，可选架构 + C++ 前向 + Mac 小规模对照，目标是卡组泛化。
 - 台式机代理仍关，Codex 两个号等代理；CodeBuddy 说 git push 其实能通。
+- 12:10 注意力路线定稿进 `MEMORY/notes/student-architecture.md`（旧 GameplayModelV1 历史、三臂对照含等参宽 CNN、角色拆分优先、不用 LLM 稀疏注意力）。task153 任务书同步。
+- **痛点排查（主控）**：
+  1. **价值网冻结**：生产叶子价值网 v5 自 10-24 未换，训练时课程没有屋顶 / 随机卡组 / GPT Pro 卡组，学生已从 r11 到 r36；DESIGN 要求每轮重训并监测偏乐观，生产没做。派 task154（台式机 cbp-task154，CodeBuddy 账号 0，分支 vstale）：校准诊断 + 老师在陌生卡组上的单变量归因（价值网 / 续走 / 候选宽度），并给出“挑选 + 门禁期间显卡空闲时训价值网”的方案。
+  2. 地形互相拖累（r26 白天、r28 夜间退步被门禁否决）：task153 的宽 CNN 臂顺带量容量；之后再做“联合训练 vs 分地形”的干扰测量，再考虑按地形适配层 / MoE（推理只算一个专家，不拖续走）。
+  3. task152 的 LLM 整局动作行：等 deploy16 的 v2timer 基线出来后单变量对照。
