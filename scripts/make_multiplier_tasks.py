@@ -37,6 +37,7 @@ if ROOT.parent.name == 'worktrees' and ROOT.parent.parent.name == '.claude':
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402
+from day_orig_tasks import DAY_ORIG_MANIFEST, day_original_tasks, is_day_original_source
 
 # 倍率档 -> 族名后缀。任务书要求 1.25 / 1.5 / 1.75 / 2.0 / 2.5 / 3.0。
 MULTIPLIERS = ((1.25, 'm125'), (1.5, 'm150'), (1.75, 'm175'),
@@ -173,8 +174,7 @@ def seed_start(mult_index: int, family_index: int, level: int) -> int:
 def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
     return {
         'day': overrides.get('day') or MAIN / 'artifacts/stage4/day_panel.json',
-        # task165: original conveyor tasks are versioned with the code, independent of worktrees.
-        'day_orig': overrides.get('day_orig') or ROOT / 'configs/panels/day_orig_panel.json',
+        'day_orig': DAY_ORIG_MANIFEST,
         'night': overrides.get('night') or MAIN / 'artifacts/stage4/night_panel.json',
         'pool': overrides.get('pool') or MAIN / 'artifacts/stage4/pool_panel.json',
         'day_d7q': overrides.get('day_d7q') or MAIN / 'artifacts/stage4/day_panel_d7q.json',
@@ -192,6 +192,8 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
 
 
 def load_tasks(path: Path) -> dict[str, dict]:
+    if is_day_original_source(path):
+        return day_original_tasks()
     document = json.loads(path.read_text())
     entries = document['tasks'] if isinstance(document, dict) and 'tasks' in document else document
     return {task['task_id']: task for task in entries}
@@ -314,7 +316,6 @@ def main() -> None:
     parser.add_argument('--copy-to', type=Path,
                         default=MAIN / 'artifacts/stage4/multiplier_panel.json')
     parser.add_argument('--day-manifest', type=Path)
-    parser.add_argument('--day-orig-manifest', type=Path)
     parser.add_argument('--night-manifest', type=Path)
     parser.add_argument('--pool-manifest', type=Path)
     parser.add_argument('--day-d7q-manifest', type=Path)
@@ -329,7 +330,7 @@ def main() -> None:
     parser.add_argument('--dry-run', action='store_true')
     args = parser.parse_args()
     assert 1 <= args.seeds <= SEEDS_PER_TASK
-    paths = source_paths({'day': args.day_manifest, 'day_orig': args.day_orig_manifest,
+    paths = source_paths({'day': args.day_manifest,
                           'night': args.night_manifest, 'pool': args.pool_manifest,
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
                           'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest,

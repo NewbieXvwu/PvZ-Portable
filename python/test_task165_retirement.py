@@ -87,12 +87,12 @@ def test_task165_retirement_reuses_segments_and_training_input(tmp_path, monkeyp
 
 def test_task165_stable_panels_and_path_rewrites():
     from pvz_recipe import load_recipe
-    panel = json.loads((ROOT / 'configs/panels/day_orig_panel.json').read_text())
-    task = next(x for x in panel['tasks'] if x['task_id'] == 'day_l10_orig_train')
+    from day_orig_tasks import day_original_tasks
+    task = day_original_tasks()['day_l10_orig_train']
     assert task['level'] == 10 and task['deck'] == [] and task['conveyor_start'] == 'original'
     assert task['seeds'] == list(range(1880000, 1888192))
     resolved = load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')
-    assert Path(resolved['day_orig_manifest']) == ROOT / 'configs/panels/day_orig_panel.json'
+    assert 'day_orig_manifest' not in resolved
     old = '.claude/' + 'worktrees/'
     recipe = dict(kind='training', data=old + 'dw4/artifacts/task23/training_frames',
                   labels=['fresh', *sorted(ABANDONED_LABELS)])

@@ -22,7 +22,6 @@
   "day_manifest": "artifacts/stage4/day_panel.json",
   "perturb_manifest": "configs/panels/day_identity.json",
   "night_manifest": "artifacts/stage4/night_panel.json",
-  "day_orig_manifest": "configs/panels/day_orig_panel.json",
   "pool_manifest": "artifacts/stage4/pool_panel.json",
   "pressure_manifest": "artifacts/task29/pressure_manifest.json",
   "rollout_policy": "artifacts/archive/dw5/task27/dw5i_s1/model.pt",

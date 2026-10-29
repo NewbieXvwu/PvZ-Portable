@@ -93,12 +93,13 @@ def validate(document, kind=None):
     defaults = TRAIN_DEFAULTS if kind == 'training' else PANEL_DEFAULTS
     required = {'data', 'labels', 'out'} if kind == 'training' else {
         'out', 'manifest', 'value', 'executable', 'resource_dir', 'day_manifest',
-        'perturb_manifest', 'night_manifest', 'day_orig_manifest', 'pool_manifest', 'pressure_manifest'}
+        'perturb_manifest', 'night_manifest', 'pool_manifest', 'pressure_manifest'}
     allowed = set(defaults) | required | {'schema_version', 'kind'}
     if kind == 'training':
         allowed |= {'history_l7_keep', 'deck_weight_cap'}
     if kind == 'panel':
         allowed.add('rollout_policy')
+        allowed.add('day_orig_manifest')  # Accepted in old frozen recipes; no longer used.
     _object(document, allowed, 'recipe')
     missing = required - document.keys()
     if missing:

@@ -18,7 +18,7 @@ from stabilize_production_paths import planned_changes
 
 CORE = ('scripts/curriculum_queue.py', 'python/pvz_frame_store.py', 'python/pvz_recipe.py',
         'python/pvz_training_pack.py', 'python/pvz_corpus_policy.py')
-PANELS = ('day_orig_panel.json', 'unified_v1.json', 'unified_v2.json', 'day_identity.json')
+PANELS = ('unified_v1.json', 'unified_v2.json', 'day_identity.json')
 
 
 def current_engine(cq):
@@ -51,6 +51,7 @@ def updates(root, logs, revision, engine, baseline='ad4fe41c'):
         for path, text in planned_changes(mirror):
             changes[path] = text.encode()
         changes[mirror / 'python/pvz_corpus_policy.py'] = (SNAPSHOT / 'python/pvz_corpus_policy.py').read_bytes()
+        changes[mirror / 'scripts/day_orig_tasks.py'] = (SNAPSHOT / 'scripts/day_orig_tasks.py').read_bytes()
     for name in CORE:
         path = cq / name
         replacement = (SNAPSHOT / name).read_bytes()
