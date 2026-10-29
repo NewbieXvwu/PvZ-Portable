@@ -10391,7 +10391,16 @@
     2,
     17,
     4
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/d0b0b39aced378e56a941b787ccb6b15a08709859b13a9511d172681fcce056b",
+    "decisions": [
+     1273
+    ],
+    "index": 0,
+    "future_seed_start": 359000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l38_snow_tall_v2_m200_s81025011_a53424129042b",
