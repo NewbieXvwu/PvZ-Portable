@@ -32,6 +32,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MAIN = ROOT
+if ROOT.parent.name == 'worktrees' and ROOT.parent.parent.name == '.claude':
+    MAIN = ROOT.parent.parent.parent
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402

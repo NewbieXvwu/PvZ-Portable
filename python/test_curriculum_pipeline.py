@@ -329,7 +329,7 @@ def test_min_eval_units_reaches_selection_and_gate_commands(tmp_path):
     panel = folder / 'selection.json'
     panel.write_text(json.dumps(dict(tasks=[dict(task_id='tiny', seeds=[1, 2, 3, 4])])))
     job = dict(round=1, recipe=str(folder / 'recipe.json'), model=str(folder / 'student/model.pt'),
-               selection_manifest=str(panel), selection_manifest_sha256=sha(panel))
+               selection_manifest=str(panel))
     commands = []
 
     def command(argv, log):
@@ -346,7 +346,7 @@ def test_min_eval_units_reaches_selection_and_gate_commands(tmp_path):
         with patch.object(queue, 'mem_available_bytes', return_value=20 * queue.GIB), \
              patch.object(pipeline, '_command', side_effect=command), \
              patch.object(queue, 'valid_certificate', return_value=True):
-            selected = pipeline._select(job, [dict(model=str(candidate), model_sha256=sha(candidate))])
+            selected = pipeline._select(job, [dict(model=str(candidate))])
             pipeline._seeded(job)
             evaluated = pipeline._evaluate(job)
         assert selected['selection_units'] == evaluated['eval_units'] == 4
