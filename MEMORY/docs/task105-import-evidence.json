@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-29T01:57:09.884736+00:00",
+ "generated": "2026-10-29T03:13:12.888070+00:00",
  "input_sha256": null,
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "input_path": "/home/newbiexvwu/llm_runs/llmplay3_r2/out",
@@ -732,7 +732,7 @@
     672
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 89000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -753,7 +753,7 @@
     741
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 90000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -772,7 +772,7 @@
     972
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 158000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -794,7 +794,7 @@
     370
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 91000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -814,7 +814,7 @@
     761
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 92000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -835,7 +835,7 @@
     467
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 93000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -855,7 +855,7 @@
     1043
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 159000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -874,7 +874,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 160000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -894,7 +894,7 @@
     1216
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 161000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -914,7 +914,7 @@
     795
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 94000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -935,7 +935,7 @@
     818
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 95000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -954,7 +954,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 96000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -973,7 +973,7 @@
     1002
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 218000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -992,7 +992,7 @@
     1035
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 97000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1014,7 +1014,7 @@
     456
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 98000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1034,7 +1034,7 @@
     667
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 99000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1055,7 +1055,7 @@
     663
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 101000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1075,7 +1075,7 @@
     992
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 102000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1094,7 +1094,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 162000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1113,7 +1113,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 163000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1134,7 +1134,7 @@
     725
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 103000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1154,7 +1154,7 @@
     1056
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 104000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1173,7 +1173,7 @@
     1243
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 164000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1192,7 +1192,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 105000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1212,7 +1212,7 @@
     1233
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 106000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1232,7 +1232,7 @@
     1043
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 165000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1251,7 +1251,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 107000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1271,7 +1271,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 166000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1291,7 +1291,7 @@
     755
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 108000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1313,7 +1313,7 @@
     266
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 109000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1334,7 +1334,7 @@
     889
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 110000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1354,7 +1354,7 @@
     1216
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 167000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1374,7 +1374,7 @@
     541
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 111000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1393,7 +1393,7 @@
     974
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 112000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1414,7 +1414,7 @@
     360
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 113000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1435,7 +1435,7 @@
     712
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 114000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1455,7 +1455,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 115000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1475,7 +1475,7 @@
     884
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 168000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1494,7 +1494,7 @@
     1441
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 116000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1514,7 +1514,7 @@
     621
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 117000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1534,7 +1534,7 @@
     1057
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 118000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1553,7 +1553,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 119000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1572,7 +1572,7 @@
     1273
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 169000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1595,7 +1595,7 @@
     228
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 120000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1616,7 +1616,7 @@
     788
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 121000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1635,7 +1635,7 @@
     1482
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 122000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1656,7 +1656,7 @@
     645
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 123000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1676,7 +1676,7 @@
     804
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 124000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1698,7 +1698,7 @@
     467
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 125000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1718,7 +1718,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 126000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1737,7 +1737,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 170000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1758,7 +1758,7 @@
     454
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 127000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1778,7 +1778,7 @@
     602
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 128000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1798,7 +1798,7 @@
     886
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 129000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1818,7 +1818,7 @@
     702
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 171000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1837,7 +1837,7 @@
     1392
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 130000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1858,7 +1858,7 @@
     365
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 131000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1877,7 +1877,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 132000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1898,7 +1898,7 @@
     733
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 133000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1918,7 +1918,7 @@
     1105
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 134000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1938,7 +1938,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 172000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1958,7 +1958,7 @@
     1216
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 173000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1977,7 +1977,7 @@
     1149
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 135000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -1998,7 +1998,7 @@
     504
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 136000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2017,7 +2017,7 @@
     1162
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 137000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2037,7 +2037,7 @@
     1066
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 138000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2056,7 +2056,7 @@
     1441
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 139000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2077,7 +2077,7 @@
     444
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 140000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2097,7 +2097,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 141000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2117,7 +2117,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 142000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2137,7 +2137,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 143000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2157,7 +2157,7 @@
     966
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 144000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2177,7 +2177,7 @@
     752
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 145000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2196,7 +2196,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 174000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2215,7 +2215,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 146000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2235,7 +2235,7 @@
     876
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 147000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2256,7 +2256,7 @@
     922
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 148000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2276,7 +2276,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 149000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2296,7 +2296,7 @@
     884
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 150000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2315,7 +2315,7 @@
     1002
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 151000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2336,7 +2336,7 @@
     409
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 152000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2357,7 +2357,7 @@
     666
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 153000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2376,7 +2376,7 @@
     973
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 154000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2396,7 +2396,7 @@
     623
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 155000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2415,7 +2415,7 @@
     1149
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 156000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2436,7 +2436,7 @@
     550
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 157000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2455,7 +2455,7 @@
     942
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 175000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2475,7 +2475,7 @@
     755
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 176000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2494,7 +2494,7 @@
     1273
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 177000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2513,7 +2513,7 @@
     1338
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 178000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2532,7 +2532,7 @@
     973
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 179000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2553,7 +2553,7 @@
     444
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 180000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2574,7 +2574,7 @@
     777
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 181000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2595,7 +2595,7 @@
     789
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 182000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2614,7 +2614,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 183000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2635,7 +2635,7 @@
     504
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 184000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2655,7 +2655,7 @@
     1056
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 219000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2675,7 +2675,7 @@
     1233
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 185000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2695,7 +2695,7 @@
     893
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 186000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2715,7 +2715,7 @@
     938
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 187000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2735,7 +2735,7 @@
     886
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 188000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2757,7 +2757,7 @@
     270
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 189000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2777,7 +2777,7 @@
     642
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 190000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2800,7 +2800,7 @@
     145
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 191000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2820,7 +2820,7 @@
     893
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 192000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2839,7 +2839,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 193000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2858,7 +2858,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 194000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2878,7 +2878,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 195000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2899,7 +2899,7 @@
     662
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 196000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2919,7 +2919,7 @@
     704
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 197000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2940,7 +2940,7 @@
     666
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 198000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2960,7 +2960,7 @@
     665
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 199000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -2979,8 +2979,8 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
-   "future_seed_start": 200000000,
+   "deployed": true,
+   "future_seed_start": 400000000,
    "future_seed_count": 256,
    "teacher_top": {
     "wins": 4,
@@ -3000,7 +3000,7 @@
     460
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 201000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3019,7 +3019,7 @@
     974
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 202000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3039,7 +3039,7 @@
     614
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 203000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3060,7 +3060,7 @@
     922
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 204000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3082,7 +3082,7 @@
     402
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 205000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3102,7 +3102,7 @@
     771
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 206000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3138,7 +3138,7 @@
     1002
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 207000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3157,7 +3157,7 @@
     1331
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 208000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3177,7 +3177,7 @@
     966
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 209000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3196,7 +3196,7 @@
     973
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 210000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3215,7 +3215,7 @@
     1273
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 211000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3235,7 +3235,7 @@
     642
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 212000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3254,7 +3254,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 213000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3274,7 +3274,7 @@
     834
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 214000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3293,7 +3293,7 @@
     996
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 220000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3313,7 +3313,7 @@
     541
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 221000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3332,7 +3332,7 @@
     1392
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 222000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3352,7 +3352,7 @@
     841
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 223000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3371,7 +3371,7 @@
     973
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 224000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3391,7 +3391,7 @@
     690
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 225000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3412,7 +3412,7 @@
     653
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 226000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3433,7 +3433,7 @@
     653
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 227000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3453,7 +3453,7 @@
     892
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 228000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3474,7 +3474,7 @@
     725
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 229000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3494,7 +3494,7 @@
     802
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 230000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3515,7 +3515,7 @@
     504
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 231000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3536,7 +3536,7 @@
     852
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 232000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3560,7 +3560,7 @@
     145
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 233000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3579,7 +3579,7 @@
     973
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 234000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3601,7 +3601,7 @@
     341
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 235000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3622,7 +3622,7 @@
     414
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 236000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3641,7 +3641,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 237000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3660,7 +3660,7 @@
     1273
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 238000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3681,7 +3681,7 @@
     781
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 239000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3701,7 +3701,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 240000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3720,7 +3720,7 @@
     1250
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 241000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3741,7 +3741,7 @@
     610
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 242000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3761,7 +3761,7 @@
     726
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 243000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3781,7 +3781,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 244000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3802,7 +3802,7 @@
     565
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 245000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3821,7 +3821,7 @@
     1147
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 246000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3841,7 +3841,7 @@
     886
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 247000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3861,7 +3861,7 @@
     667
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 248000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3882,7 +3882,7 @@
     610
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 249000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3918,7 +3918,7 @@
     1227
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 250000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3937,7 +3937,7 @@
     1392
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 251000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3957,7 +3957,7 @@
     892
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 252000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3977,7 +3977,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 253000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -3997,7 +3997,7 @@
     1057
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 254000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4016,7 +4016,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 255000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4035,7 +4035,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 256000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4054,7 +4054,7 @@
     1441
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 257000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4074,7 +4074,7 @@
     429
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 258000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4093,7 +4093,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 259000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4112,7 +4112,7 @@
     982
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 260000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4134,7 +4134,7 @@
     301
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 261000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4153,7 +4153,7 @@
     1243
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 262000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4172,7 +4172,7 @@
     946
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 263000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4194,7 +4194,7 @@
     402
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 264000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4215,7 +4215,7 @@
     818
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 265000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4236,7 +4236,7 @@
     360
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 266000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4257,7 +4257,7 @@
     456
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 267000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4277,7 +4277,7 @@
     1044
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 268000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4296,7 +4296,7 @@
     973
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 269000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4316,7 +4316,7 @@
     974
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 270000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4337,7 +4337,7 @@
     270
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 271000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4357,7 +4357,7 @@
     1066
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 272000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4379,7 +4379,7 @@
     426
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 273000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4399,7 +4399,7 @@
     841
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 274000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4420,7 +4420,7 @@
     688
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 275000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4439,7 +4439,7 @@
     1250
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 276000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4459,7 +4459,7 @@
     844
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 277000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4478,7 +4478,7 @@
     1314
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 278000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4497,7 +4497,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 279000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4518,7 +4518,7 @@
     710
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 280000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4539,7 +4539,7 @@
     839
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 281000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4560,7 +4560,7 @@
     889
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 282000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4579,7 +4579,7 @@
     996
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 283000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4598,7 +4598,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 284000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4619,7 +4619,7 @@
     781
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 285000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4640,7 +4640,7 @@
     412
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 286000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4662,7 +4662,7 @@
     481
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 287000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4683,7 +4683,7 @@
     760
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 288000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4703,7 +4703,7 @@
     551
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 289000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4723,7 +4723,7 @@
     614
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 290000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4742,7 +4742,7 @@
     1220
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 291000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4763,7 +4763,7 @@
     414
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 292000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4783,7 +4783,7 @@
     684
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 293000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4802,7 +4802,7 @@
     1441
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 294000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4821,7 +4821,7 @@
     942
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 295000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4842,7 +4842,7 @@
     412
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 296000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4861,7 +4861,7 @@
     1482
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 297000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4881,7 +4881,7 @@
     530
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 298000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4901,7 +4901,7 @@
     876
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 299000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4920,7 +4920,7 @@
     1102
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 300000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4940,7 +4940,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 301000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4959,7 +4959,7 @@
     1337
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 302000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -4979,7 +4979,7 @@
     1056
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 303000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5000,7 +5000,7 @@
     927
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 304000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5020,7 +5020,7 @@
     674
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 305000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5040,7 +5040,7 @@
     580
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 306000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5059,7 +5059,7 @@
     1273
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 307000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5078,7 +5078,7 @@
     1035
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 308000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5098,7 +5098,7 @@
     539
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 309000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5118,7 +5118,7 @@
     911
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 310000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5138,7 +5138,7 @@
     991
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 311000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5158,7 +5158,7 @@
     465
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 312000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5179,7 +5179,7 @@
     341
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 313000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5200,7 +5200,7 @@
     889
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 314000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5220,7 +5220,7 @@
     758
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 315000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5242,7 +5242,7 @@
     328
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 316000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5263,7 +5263,7 @@
     788
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 317000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5284,7 +5284,7 @@
     254
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 319000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5305,7 +5305,7 @@
     797
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 323000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5324,7 +5324,7 @@
     1273
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 324000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5349,7 +5349,7 @@
     1
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 327000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5369,7 +5369,7 @@
     775
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 330000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5390,7 +5390,7 @@
     326
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 333000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5410,7 +5410,7 @@
     541
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 336000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5430,7 +5430,7 @@
     526
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 337000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5457,7 +5457,7 @@
     1
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 339000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5484,7 +5484,7 @@
     1
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 338000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5511,7 +5511,7 @@
     1
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 335000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5534,7 +5534,7 @@
     297
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 334000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5558,7 +5558,7 @@
     154
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 332000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5580,7 +5580,7 @@
     351
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 331000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5601,7 +5601,7 @@
     528
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 329000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5621,7 +5621,7 @@
     638
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 328000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5642,7 +5642,7 @@
     971
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 326000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5662,7 +5662,7 @@
     903
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 325000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5681,7 +5681,7 @@
     1242
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 322000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5708,7 +5708,7 @@
     1
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 321000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5727,7 +5727,7 @@
     948
    ],
    "registered": true,
-   "deployed": false,
+   "deployed": true,
    "future_seed_start": 320000000,
    "future_seed_count": 256,
    "teacher_top": {
@@ -5740,7 +5740,7 @@
  "scan_expected": 1246,
  "scanned": 248,
  "registered": 246,
- "deployed": 0,
+ "deployed": 246,
  "scan_games": 21200,
  "complete": false
 }

@@ -243,6 +243,18 @@ class ScanTest(unittest.TestCase):
         self.assertEqual(points[-1], 940)
         self.assertEqual(points, sorted(set(points)))
 
+    def test_renewal_pool_is_never_allocated(self):
+        # task114 续领池 [200000000,201000000)：生产 qc 从这里切起点格未来块，
+        # 导入侧落进去的格子在部署时会被拒（2026-10-29 实测）。
+        low, high = importer.RESERVED_SEED_POOLS[0]
+        ranges = importer.occupied_seed_ranges(ROOT)
+        self.assertTrue(any(start <= low and high - 1 <= stop for start, stop in ranges))
+        start = importer.allocate_future_block(ranges, low, 256)
+        self.assertFalse(low <= start < high)
+        self.assertGreaterEqual(start, high)
+        # 池内整段都被当作占用：从池首起分配必须跳到池尾或更后。
+        self.assertNotEqual(importer.allocate_future_block([(low, high - 1)], low, 256), low)
+
     def test_future_block_avoids_occupied_ranges(self):
         ranges = [(83_000_000, 83_000_307), (84_000_000, 84_000_095)]
         self.assertEqual(importer.allocate_future_block(ranges, 84_000_000, 96), 85_000_000)

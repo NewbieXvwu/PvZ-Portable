@@ -45,6 +45,12 @@ SCAN_TAIL = 0.94           # 12 个点覆盖决策序列的前 94%，避开终�
 ROBUST_WAVE = '10'
 ROBUST_MIN = 5
 
+# task114 的起点格续领池（半开区间），生产侧定义在 python/pvz_promotion.py 的
+# START_SEED_POOL，账本是 ~/pvz-logs/start_cell_seed_ledger.json。qc 每次从这里
+# 切一个 256 的块做新起点格，所以导入/登记侧永远不能把未来块落进去 —— 落进去的
+# 格子在部署时会被生产加载器直接拒绝（2026-10-29 实测：200000000 被拒）。
+RESERVED_SEED_POOLS = ((200_000_000, 201_000_000),)
+
 LEVEL_IN_ID = re.compile(r'_(?:l|roof|fog|pool|conv|night|day)_(\d{1,2})(?:_|$)')
 
 
@@ -340,6 +346,7 @@ def occupied_seed_ranges(root: Path, gap: int = 100_000) -> list:
     if snapshot.is_file():
         document = json.loads(snapshot.read_text(encoding='utf-8'))
         ranges += [(low, high - 1) for low, high in document['occupied'] + document['reserved_pools']]
+    ranges += [(low, high - 1) for low, high in RESERVED_SEED_POOLS]
     return ranges
 
 
