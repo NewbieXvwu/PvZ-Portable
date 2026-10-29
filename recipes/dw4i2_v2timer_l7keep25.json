@@ -81,7 +81,7 @@
   "fraction": 0.1
  },
  "provenance": {
-  "source_path": "/home/newbiexvwu/PvZ-search/artifacts/archive/prodint16/recipes/dw4i2_v2sleep.json",
+  "source_path": "artifacts/archive/prodint16/recipes/dw4i2_v2sleep.json",
   "source_revision": "4f243a98",
   "notes": "task150 deploy16: v2timer A/B, init=null; reuse the shared v2sleep/v2 cache and compute only four timer channels. Existing corpus is precomputed separately at nice 19 with two workers; queue snapshots still choose labels and outputs at enqueue time."
  },
