@@ -113,11 +113,6 @@ def validate(document, kind=None):
         # (the game resources) and for an already resolved recipe.
         if value is not None and (not isinstance(value, str) or not value):
             raise ValueError(f'{name}: expected a path string')
-    # Provenance is descriptive, never used as training configuration.
-    _object(result['provenance'], {'source_path', 'source_sha256', 'source_revision',
-                                 'original_out', 'original_cache_dir', 'original_source_row_report', 'notes'}, 'provenance')
-    if not all(isinstance(v, str) for v in result['provenance'].values()):
-        raise ValueError('provenance: expected string values')
     if kind == 'training':
         if 'history_l7_keep' in result:
             _number(result['history_l7_keep'], 'history_l7_keep', maximum=1)
