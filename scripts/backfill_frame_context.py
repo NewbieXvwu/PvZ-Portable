@@ -29,7 +29,7 @@ def main() -> None:
     p.add_argument("--level", type=int, required=True)
     p.add_argument("--multiplier", required=True, help="label=multiplier,...")
     p.add_argument("--deck", default="0,1,2,3,4,5,7")
-    p.add_argument("--resource-dir", default="/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN")
+    p.add_argument("--resource-dir", default=str(Path.home() / ".cache/pvz-research-resources"))
     args = p.parse_args()
     multiplier = {k: float(v) for k, v in (kv.split("=") for kv in args.multiplier.split(","))}
     deck = tuple(int(x) for x in args.deck.split(","))

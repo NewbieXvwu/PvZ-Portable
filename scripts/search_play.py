@@ -52,7 +52,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
 from growable_pool import GIB, GrowablePool  # noqa: E402  (task138: growable worker pool)
-DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
+DEFAULT_RESOURCE_DIR = str(Path.home() / ".cache/pvz-research-resources")
 NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 # The search overrides the student only when the best candidate beats it by more than this. It was
 # --margin, set to 0.02 in all 201 run configurations (task33 audit); a constant now, not a flag.

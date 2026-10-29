@@ -43,7 +43,7 @@ _LANE_TERRAIN = frozenset(
     v for v, name in grid_square_types().items()
     if name in ("GRIDSQUARE_GRASS", "GRIDSQUARE_POOL"))
 
-DEFAULT_RESOURCE_DIR = "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"
+DEFAULT_RESOURCE_DIR = str(Path.home() / ".cache/pvz-research-resources")
 
 MAX_ACTIONS = 4000
 LAWN_XMIN = 40
