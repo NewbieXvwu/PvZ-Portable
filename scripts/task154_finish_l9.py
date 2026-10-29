@@ -86,6 +86,7 @@ def summarize(root, partial=False):
                             dict(top_score=row['values'][0]))
     return dict(complete=complete,plan=plan,task=task,paired=comparison,blocks=blocks,
         episode_stats=episode_stats,harmed_seeds=harms,probes=probes,selected20_v6=selected,
+        harmed_loss_waves=dict(sorted(Counter(r['final_wave'] for r in games['v6'] if r['seed'] in harms).items())),
         input_probe_files=inputs,probe_bytes=sum(r['bytes'] for r in inputs),
         limitations=[
             'Two arms follow different trajectories after their first differing action; these are not same-root value comparisons.',
