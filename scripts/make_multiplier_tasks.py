@@ -37,7 +37,8 @@ if ROOT.parent.name == 'worktrees' and ROOT.parent.parent.name == '.claude':
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402
-from day_orig_tasks import DAY_ORIG_MANIFEST, day_original_tasks, is_day_original_source
+from day_orig_tasks import DAY_ORIG_MANIFEST
+from unified_panel import read_panel
 
 # 倍率档 -> 族名后缀。任务书要求 1.25 / 1.5 / 1.75 / 2.0 / 2.5 / 3.0。
 MULTIPLIERS = ((1.25, 'm125'), (1.5, 'm150'), (1.75, 'm175'),
@@ -192,9 +193,7 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
 
 
 def load_tasks(path: Path) -> dict[str, dict]:
-    if is_day_original_source(path):
-        return day_original_tasks()
-    document = json.loads(path.read_text())
+    document = read_panel(path)
     entries = document['tasks'] if isinstance(document, dict) and 'tasks' in document else document
     return {task['task_id']: task for task in entries}
 

@@ -453,12 +453,13 @@ def load_panel(path: Path, extras=()) -> tuple[dict[str, dict], list[float], dic
     全局倍率表 values 不动 —— 0.5 / 0.75 这类 <1 档只对自带 ladder 的格子有意义，
     混进 values 会改变所有老格子的 mult_index 语义。
     """
-    document = json.loads(path.read_text())
+    from unified_panel import read_panel
+    document = read_panel(path)
     tasks = {task['task_id']: task for task in document['tasks']}
     manifests = {task['task_id']: path for task in document['tasks']}
     names = _panel_names(document['tasks'])
     for extra in extras:
-        extra_document = json.loads(Path(extra).read_text())
+        extra_document = read_panel(extra)
         for task in extra_document['tasks']:
             if task['task_id'] in tasks:
                 raise ValueError(f'extra manifest duplicates task {task["task_id"]}: {extra}')
@@ -1027,8 +1028,7 @@ def pack_labels(state: dict, extra: str = '') -> list[str]:
               for entry in state['log'] for group in entry['groups']
               if group.get('status', 'done') == 'done'}
     labels.update(name for name in extra.split(',') if name)
-    from pvz_corpus_policy import retained_labels
-    return sorted(retained_labels(labels))
+    return sorted(labels)
 
 
 def pack_command(args, labels: list[str]) -> list[str]:
@@ -1270,8 +1270,7 @@ class TrainingPipeline:
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
-        from pvz_corpus_policy import retained_labels
-        wanted = set(retained_labels(labels))
+        wanted = set(labels)
         catalog: dict[str, Path] = {}
         for source in sources:
             for path in frame_paths(source):
@@ -1425,8 +1424,7 @@ class TrainingPipeline:
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
-        from pvz_corpus_policy import retained_labels
-        wanted = set(retained_labels(labels))
+        wanted = set(labels)
         catalog = {}
         for source in sources:
             for path in frame_paths(source):

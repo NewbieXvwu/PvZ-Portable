@@ -48,7 +48,8 @@ def select(candidates, out, manifest, sets, workers, value, resource_dir, execut
     paths = sorted({str(Path(path)) for path in candidates})
     if not paths:
         raise ValueError('no candidates')
-    document = json.loads(Path(manifest).read_text())
+    from unified_panel import read_panel
+    document = read_panel(manifest)
     table = {task['task_id']: task for task in document['tasks']}
     score_only = {task['task_id'] for task in document['tasks'] if task.get('score_only')}
     incumbent = document['incumbent']

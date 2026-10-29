@@ -11,14 +11,12 @@ import re
 import zipfile
 
 import numpy as np
-from pvz_corpus_policy import ABANDONED_LABELS
 
 # LEGACY(jsonl-archives): the JSONL half of the glob is for archives written before frames.npz.
 def frame_paths(data: Path):
     paths = {path.parent: path for path in data.glob("*/*/frames.jsonl")}
     paths.update({path.parent: path for path in data.glob("*/*/frames.npz")})
-    return sorted((path for path in paths.values() if path.parent.name not in ABANDONED_LABELS),
-                  key=lambda path: str(path.parent))
+    return sorted(paths.values(), key=lambda path: str(path.parent))
 
 
 def archive_seed(directory: str) -> int:

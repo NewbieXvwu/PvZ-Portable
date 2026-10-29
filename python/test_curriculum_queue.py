@@ -571,7 +571,7 @@ class CurriculumRulesTest(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             root = Path(folder)
             variants = [load_recipe(ROOT / f'recipes/{name}.json')
-                        for name in ('dw4i', 'dw5i', 'identity_dw3_s1')]
+                        for name in ('dw4i', 'dw4i2_v2timer', 'dw4i2_v2timer_history10')]
             variants.append(dict(variants[0], context=True, aux_weight=1.0, aux_horizon=3,
                                  cell_soft_weight=0.0))
             variants.append(dict(variants[0], label_keep={'.*': .25}))
@@ -580,7 +580,7 @@ class CurriculumRulesTest(unittest.TestCase):
                     recipe.update(out=str(root / f'out{i}'), data=str(root / 'frames'))
                     path = root / f'recipe{i}.json'
                     write_recipe(path, recipe)
-                    args = SimpleNamespace(python=Path('/nonexistent/python'),
+                    args = SimpleNamespace(python=Path(sys.executable),
                                            frames=root / 'frames', recipe=path)
                     command = pack_command(args, recipe['labels'])
                     self.assertEqual(command[0], sys.executable)

@@ -30,15 +30,14 @@ start_qc() {
 # All mutations below run only after explicit main-controller approval/execution.
 FILES=(scripts/curriculum_queue.py scripts/search_play.py scripts/render_episode.py
        scripts/human_demo.py scripts/make_multiplier_tasks.py scripts/promotion_gate.py
-       scripts/select_student.py scripts/train_rollout_policy.py
+       scripts/select_student.py scripts/train_rollout_policy.py scripts/day_orig_tasks.py
+       scripts/unified_panel.py scripts/make_day_panel.py
        python/pvz_common.py python/pvz_env.py python/pvz_promotion.py python/pvz_recipe.py
        python/pvz_selection_refresh.py python/pvz_student_selection.py python/pvz_training_rows.py
        python/pvz_research_data.py python/pvz_student_tokens.py python/pvz_token_blocks.py
-       python/pvz_token_observation.py python/pvz_corpus_policy.py python/pvz_frame_store.py
+       python/pvz_token_observation.py python/pvz_frame_store.py
        python/pvz_training_pack.py recipes/dw4i2_v2timer.json recipes/dw4i2_v2timer_history10.json
-       recipes/dw4i2_v2timer_l7keep25.json recipes/dw4i2_v2timer_deckcap05.json recipes/panel_v2.json
-       configs/panels/day_identity.json configs/panels/day_orig_panel.json
-       configs/panels/unified_v1.json configs/panels/unified_v2.json)
+       recipes/dw4i2_v2timer_l7keep25.json recipes/dw4i2_v2timer_deckcap05.json recipes/panel_v2.json)
 REMOVED=()
 O=""
 SAVED=0
