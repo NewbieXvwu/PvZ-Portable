@@ -1102,3 +1102,4 @@
 - 15:45 账号 A 撞 5 小时额度，按用户意思用掉明天 01:26 到期的那次重置（剩 1 次，11-07 到期）。task157 范围收窄：codex-a 只做 obs v3 富输入与回填；C++ 通用前向归 task161，Python 网络移植归 task163。台式机 Codex 一律用 ~/pvz-logs/codex_proxy_launch.sh 启动（tmux 会话不带代理环境变量）。
 - 15:55 **task154 结论**：价值网 v5 在屋顶 AUC 0.495（无区分力，预测 0.26 / 实际 0.81），Boss 反向，倍率 2.0 与示范起点格 AUC 约 0.53；白天 0.865 仍好。老师在屋顶 / 新卡组上等于用随机叶值搜索。→ cbp-task154 训 v6 候选并做三步比较，过了再在组边界切换。Codex 首轮交付：task161 通用前向（CNN64 213 µs，比旧路径慢，继续优化）、task162 显卡空档执行器已启动、task163 v3 网络接通、task157 回填 155 局成功。
 - 16:05 用户带 Mac 外出：Mac 代理（codex-a、codex-plus2、qoder-t158/t160b/c/e）已按 Esc 并通知暂停；训练进程 SIGSTOP：11939（task158 train_terrain_arms）、14053/14054（task160e run_train joint128）。恢复用 kill -CONT。台式机照常。
+- 16:45 台式机 DNS 又失效（getent 解析不了，resolvectl 设置还在），CodeBuddy 报 EAI_AGAIN。代理开着，改为让 CodeBuddy 走代理：tmux 里显式设 http(s)_proxy、NO_PROXY 不含 codebuddy，用 cb_launch_proxy.sh --resume 续上 cbp-task154/156/160a。
