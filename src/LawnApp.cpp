@@ -1560,22 +1560,28 @@ void LawnApp::EnvironmentPresent()
 		SDL_Delay(pauseMs);
 }
 
-void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& result)
+void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& result, bool timeoutOnly)
 {
 	using namespace EnvironmentWaitEvents;
 	result.clear();
 	result.terminal = EnvironmentTerminal();
 	if (!mBoard) return;
 	result.tick = mBoard->mMainCounter;
-	result.wave = mBoard->mCurrentWave;
-	result.sun = mBoard->mSunMoney;
-	for (const Plant* plant : mBoard->mPlants)
-		result.plantCount += !plant->mDead;
-	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	// A condition-0 wait can only end on terminal / a fired mower / a left-zone zombie, so the
+	// fields read by conditions 1/2/3/5 are not built at all.  Triggered() never reads them
+	// when condition == 0, and every wait reports the same reasons as before.
+	if (!timeoutOnly)
 	{
-		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
-		if (packet.mActive && packet.mPacketType != SeedType::SEED_NONE)
-			SortedInsert(result.readyPackets, std::make_tuple(i, static_cast<int>(packet.mPacketType), static_cast<int>(packet.mImitaterType)));
+		result.wave = mBoard->mCurrentWave;
+		result.sun = mBoard->mSunMoney;
+		for (const Plant* plant : mBoard->mPlants)
+			result.plantCount += !plant->mDead;
+		for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+		{
+			const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			if (packet.mActive && packet.mPacketType != SeedType::SEED_NONE)
+				SortedInsert(result.readyPackets, std::make_tuple(i, static_cast<int>(packet.mPacketType), static_cast<int>(packet.mImitaterType)));
+		}
 	}
 	for (const LawnMower* mower : mBoard->mLawnMowers)
 		if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY)
@@ -1593,7 +1599,20 @@ void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& res
 	}
 	for (Zombie* zombie : mBoard->mZombies)
 	{
-		if (zombie->mDead || !EnvironmentZombieVisible(zombie)) continue;
+		if (zombie->mDead) continue;
+		if (timeoutOnly)
+		{
+			// A timeout-only wait reads one thing from this loop: leftZoneZombies.  Only a zombie
+			// already on the board at (or within the six-digit rounding of) the boundary can enter
+			// it, so the visibility scan -- the fog opacity sampling, 21.7% of native fog CPU --
+			// is skipped for every other one.  The cost: the ID/coordinate guard below now runs
+			// only for the zombies that can reach the left zone, so a corrupt ID on an off-zone
+			// zombie no longer aborts a condition-0 wait.  Legal states are unaffected.
+			const double aCandidateX = zombie->mPosX;
+			if (std::isfinite(aCandidateX) &&
+				(!zombie->IsOnBoard() || aCandidateX > LeftZoneMaxX + 0.001)) continue;
+		}
+		if (!EnvironmentZombieVisible(zombie)) continue;
 		const int identity = static_cast<int>(mBoard->ZombieGetID(zombie));
 		if (identity == 0 || identity == -1 || !std::isfinite(zombie->mPosX))
 			throw std::runtime_error("invalid public zombie ID or coordinate for event wait");
@@ -1619,8 +1638,9 @@ void LawnApp::EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& res
 
 EnvironmentWaitEvents::Result LawnApp::EnvironmentWaitUntil(int ticks, int condition)
 {
+	const bool aTimeoutOnly = condition == 0;
 	return EnvironmentWaitEvents::Run(ticks, condition,
-		[this](EnvironmentWaitEvents::PublicState& theState) { EnvironmentPublicWaitState(theState); },
+		[this, aTimeoutOnly](EnvironmentWaitEvents::PublicState& theState) { EnvironmentPublicWaitState(theState, aTimeoutOnly); },
 		[this] { EnvironmentWait(1); });
 }
 

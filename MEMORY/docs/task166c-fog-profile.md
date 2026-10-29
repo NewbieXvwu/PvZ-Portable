@@ -1,6 +1,7 @@
-# task166 E11c 雾天观测耗时剖析（只剖析，未改逻辑）
+# task166 E11c 雾天观测耗时剖析（§1–§9 只剖析；§10 是后续实现）
 
-2026-10-29 · 分支 `fogprof` · 本机 Mac（arm64）· 生产引擎 `build/pvz-portable`（Release，`-O3 -DNDEBUG`，带符号）
+2026-10-29 · 分支 `fogprof`（§1–§9 剖析）→ 分支 `fogspeed`（§10 实现 §7 的 #3/#4）· 本机 Mac（arm64）
+· 生产引擎 `build/pvz-portable`（Release，`-O3 -DNDEBUG`，带符号）
 · r36 学生 `.claude/worktrees/archbench/artifacts/archbench/r36/model.pt`，门禁清单
 `.claude/worktrees/archbench/artifacts/archbench/r36_gate/manifest.json`（与 v5 门禁同样本、同种子）
 
@@ -37,6 +38,12 @@
 **估算：** 只做“雾关走原生整局”（最小改动）门禁雾关 **3.35 → ~1.0–1.1 s/局**；
 再叠加两项引擎优化可到 **~0.7–0.9 s/局**。雾区机时占门禁 50.1%，按此估算同面板同单元数
 门禁墙钟约 **−35%～−40%**。
+
+> **§10 的实测修正（fogspeed 分支，已实现上面第 5 条的两项）**：#4（`condition==0` 少算公共状态）
+> 逐位等价成立，但在门禁实际用的**雾关 Python 循环口径**只到 **−6.6%/局**（−22% 是原生路径里的占比，
+> 雾关当前不走原生路径）；#3（快路径 `sim_skip=4`）在白天 **−6.3%**、屋顶 **−11.4%**，
+> 雾关吃不到（同样因为不走快路径），代价是泳池/屋顶/雾关卡的 `state_hash` 会因**表现层 reanim**
+> 区块而移动（游戏逻辑区块 20/20 逐字节相同）。雾关那 −51% 的量级要等 #2 落地才能兑现。
 
 ---
 
@@ -313,6 +320,8 @@ student : plant packet 0 → (row 1, col 5)
 | 6 | **减少可见性采样点** | 3×5 → 更少 | 不建议 | 会改变 `kFogVisibilityThreshold=0.925` 标定过的语义（`LawnApp.cpp:1843` 注释：改动需重新标注） |
 | 7 | **更快 JSON / 复用缓冲** | 只在 Python 循环路径有意义 | 单条 obs 序列化占 ~12–21% | #2 之后基本消失，优先级低 |
 
+> **2026-10-29 更新**：#3 与 #4 已在 `fogspeed` 分支实现并验证，实测与本表的预计有出入（#4 在雾关门禁口径只到 −6.6%，#3 的 `state_hash` 会因表现层区块移动），见 §10。
+
 **#3 与 #4 可以叠加**（都作用在原生路径的引擎内部）：0.38 → ~0.23–0.25 s/局（本机 L31），
 门禁雾关约 **0.7–0.9 s/局**。
 
@@ -348,7 +357,129 @@ student : plant packet 0 → (row 1, col 5)
    判定标准：整体/分区胜率差在门禁统计噪声内（雾区配对差 σ≈2.3pp），且抽样 `state_hash` 的
    差异全部能解释为 1e-5 级近似并列。
 3. **task166c-3（引擎）**：`sim_skip=4/61` 与 `condition==0` 跳过公共状态，各自单独 A/B，
-   用 `sim_skip_agreement.py` 与 `test_cpp_rollout.py` 守护。
+   用 `sim_skip_agreement.py` 与 `test_cpp_rollout.py` 守护。**→ 已完成，见 §10（`fogspeed` 分支）。**
+
+---
+
+## 10. 追加：fogspeed 分支实现 §7 的 #3 / #4（2026-10-29）
+
+分支 `fogspeed`（基线 `origin/deploy17` = `aa836760`）。改动 3 个文件：`scripts/search_play.py`、
+`src/LawnApp.h`、`src/LawnApp.cpp`。两个独立 build 目录：`build-fogspeed-base/`（deploy17 原样）、
+`build-fogspeed/`（改后），都是 Release + Ninja + `-j 4`。**§7 #2（雾关走原生整局）按任务书未启用。**
+
+### 10.1 实现
+
+**#3 快路径传 `ENV_SKIP_HEIGHT`** — `scripts/search_play.py:772`：`env.rollout(None, 0, max_actions=MAX_ACTIONS)`
+加 `sim_skip=4`。
+
+**#4 `condition==0` 少算每 tick 的公共状态** — `src/LawnApp.h:272`、`src/LawnApp.cpp:1563`/`:1639`：
+`EnvironmentPublicWaitState(state, bool timeoutOnly)`，`EnvironmentWaitUntil` 在 `condition == 0` 时传 true，于是
+
+1. 不再构建 `wave / sun / plantCount / readyPackets`（`Triggered()` 只在 condition 1/2/3/5 读它们），
+   每 tick 省掉一次全植物扫描 + 一次卡槽扫描；
+2. 僵尸循环改成"先判左区候选、再算可见性"：`isfinite(x) && (!IsOnBoard() || x > 160.001)` 直接 `continue`，
+   跳过 `EnvironmentZombieVisible()` 的雾不透明度采样（§4 里雾原生 CPU 的 21.7%）。
+
+**与 §7 #4 原表述的偏差（重要）**：逐字实现"跳过每 tick 的公共状态计算"**不成立**——`Triggered()`
+（`src/EnvironmentWaitEvents.h:96`）无条件报 `terminal` / `defense_lost` / `zombie_entered_left_zone`，
+纯 timeout 等待同样会因这三项提前结束，所以公共状态仍要每 tick 读，只是只读这三项需要的字段。
+"先判坐标再判可见性"是精确等价的：`x ≤ 160` 与 `IsOnBoard()` 都不依赖可见性，而 `EnvironmentZombieVisible()`
+不写任何状态。
+
+一条放宽（已写进代码注释）：`timeoutOnly` 下 ID/坐标不变量只覆盖可能进左区的僵尸，离区僵尸即使 ID 损坏，
+condition-0 等待也不再抛错。合法局面无影响（20 局验证未触发异常路径）。
+
+### 10.2 同种子同动作序列的逐位对比（20 局一次性：雾 10 / 白天 5 / 屋顶 5）
+
+样本 = 门禁 v5 `r36_gate/manifest.json`：雾 L31/L32/L33/L34/L36 各 2 种子；白天 L1/L2/L3/L7/L9；屋顶 L41×3 + L46×2。
+驱动：`/tmp/fogspeed/verify.py`（录制 + 回放 + 快路径）、`chunkall.py` / `matrix.py`（STATE_BYTES 逐区块）。
+
+**踩过的坑，先记录**：`scripts/search_play.py` 被两个二进制共用，"base 快路径 vs new 快路径"两边都带着
+`sim_skip=4`，**隔离不出 #3**。下面所有 #3 数据都来自同一二进制只切 `sim_skip`。
+
+**#4 —— 逐位相同（含 `state_hash`）**
+
+| 检查 | 结果 |
+|---|---|
+| 雾门禁口径（Python 决策循环 + 诊断）base vs new：动作序列 | **20/20 完全一致** |
+| 同上：`state_hash` / `final_tick` / 决策数 / 胜负 | **20/20 逐位相同** |
+| 录制同一动作序列，`base/mask0` vs `new/mask0` 回放 | 20/20 与录制一致 |
+| 原生快路径：同一局 base+`sim_skip0` vs new+`sim_skip0`（白天 5 + 屋顶 5 + 雾 2） | 12/12 `state_hash` 逐位相同（#4 在新口径下不动任何区块） |
+| `base/mask4` vs `new/mask4`（两项互不干扰） | 20/20 相同 |
+| 新二进制 `pytest python/test_cpp_rollout.py -k "fog_unknown or leaf_income_restore or shovel_first_action"` | 3 passed |
+
+**#3 —— 游戏状态逐位相同，但 `state_hash` 在花盆/水面关卡会动**
+
+`STATE_HASH` 折的是整张 SaveGame 镜像，而镜像里**含 `SAVE4_CHUNK_REANIMATIONS`**（`src/main.cpp:322`、
+`src/Lawn/System/SaveGame.cpp:2356`）；`ENV_SKIP_HEIGHT` 省掉的正是 reanim 的绘制 Y 偏移，于是同一动作序列
+mask0 vs mask4：
+
+| 口径 | 白天 5 | 雾 10 | 屋顶 5 |
+|---|---|---|---|
+| `state_hash` 相同 | **5/5** | 0/10 | 0/5 |
+| STATE_BYTES 逐区块 | 20 个区块全同 | **只有 REANIMATIONS 变**，其余 19 个逻辑区块字节相同 | 同左 |
+| `final_tick` / `terminal` / 胜负 | 相同（20 局 × 4 个 mask/二进制组合，全部与录制一致） | 相同 | 相同 |
+| 差异规模 | 0 字节 | 80 232 B 中 **178 B**（睡莲水面浮动的 sin 偏移） | 59 216 B 中 **8 B**（2 条记录各 1 个 float：`-5.0 → 0.0`，花盆偏移） |
+
+> 结论要分开说：**#4 满足任务书"末状态逐位相同"；#3 满足的是"游戏逻辑状态逐位相同"** —— 无花盆无水面的白天关
+> 连哈希都逐位相同，有花盆/水面的关卡只差在被刻意跳过的那几个绘制 Y 上。门禁若在意"换引擎后状态有没有动"这个哨兵，
+> 见 §10.4 的取舍。
+
+**分支真正上线的组合（原生快路径 base+`sim_skip0` vs new+`sim_skip4`，`matrix.py`）**：`final_tick` 12/12 相同；
+`state_hash` 白天 **5/5 逐位相同**、屋顶 **0/5**、雾 **0/2**（参考口径，门禁雾关不走原生）；逐区块比较里白天
+4 局 `diff = []`，屋顶/雾**只有 `REANIMATIONS` 变**，与上表同一机制。
+
+### 10.3 每局耗时前后
+
+**雾（门禁雾关口径 = Python 决策循环 + 诊断，只有 #4 生效；单进程顺序跑，本机同时有其他任务，绝对值有抖动）**
+
+| 局 | before s | after s | Δ |
+|---|---|---|---|
+| L31 / 100010833 | 1.215 | 1.103 | −9.2% |
+| L31 / 100010834 | 1.420 | 1.294 | −8.9% |
+| L32 / 100010878 | 2.152 | 2.027 | −5.8% |
+| L32 / 100010879 | 2.282 | 2.079 | −8.9% |
+| L33 / 100010923 | 0.949 | 0.872 | −8.1% |
+| L33 / 100010924 | 0.817 | 0.807 | −1.2% |
+| L34 / 100010968 | 1.555 | 1.476 | −5.1% |
+| L34 / 100010969 | 1.135 | 1.061 | −6.5% |
+| L36 / 100011013 | 1.415 | 1.357 | −4.1% |
+| L36 / 100011014 | 1.337 | 1.254 | −6.2% |
+| **合计 / 中位** | **14.28 / 1.376** | **13.33 / 1.274** | **−6.6% / −7.4%** |
+
+**白天 / 屋顶（门禁口径 = 原生快路径；同一二进制只切 mask，5 局 × 3 轮中位，`matrix.py`）**
+
+| 分区 | base0（两项都关） | new0（只 #4） | base4（只 #3） | new4（分支现状） | Δ(#4 / #3 / 合计) |
+|---|---|---|---|---|---|
+| 白天 5 局 | 0.510 s | 0.505 s | 0.477 s | **0.467 s** | −1.0% / −6.3% / **−8.4%** |
+| 屋顶 5 局 | 0.163 s | 0.155 s | 0.144 s | **0.141 s** | −4.4% / −11.4% / **−13.0%** |
+| 雾 2 局（原生，参考：门禁不走这条路） | 0.504 s | 0.358 s | 0.397 s | **0.246 s** | −29.1% / −21.3% / **−51.2%** |
+
+单轮噪声参照（同局 3 轮极差）：L7 0.765–0.769、L41/100011238 0.202–0.228；白天 5 局的配对中位差 −0.030 s，
+屋顶 −0.018 s，方向一致。雾关原生路径的 −51% 说明：**这两项优化的大头要等 #2 落地才能在雾上兑现**，
+当前雾关只吃到 #4 的 −6.6%。
+
+### 10.4 门禁外推与取舍建议
+
+按 §7 的口径（单元 91.7 min，雾区 ≈46 min）：
+
+- **#4 建议直接采用**：逐位等价、3 个单测通过，雾关 −6.6%/局（3.35 → ≈3.13 s）≈ 雾区省 3 min/单元，
+  白天/屋顶另省 1%–4%。
+- **#3 需要主控拍板**：白天 −6.3%、屋顶 −11.4%（≈非雾区再省 2–3 min/单元），但泳池/屋顶/雾关卡的门禁
+  `state_hash` 证据会整体移动（本次 15/20），而 `search_play` 里那个字段正是"换引擎后状态有没有动"的哨兵。
+  三个选项：(a) 去掉 `sim_skip=4` 这一行，保住哨兵；(b) 保留 #3，接受哈希只因表现层移动（本报告的逐区块证据）；
+  (c) 以后给 `StableEnvironmentHash` 加一个"只折逻辑区块"的口径。**本分支按任务书实现了 (b)**，
+  回退只需删 `scripts/search_play.py:772` 的 `sim_skip=4`。
+- 两项合计（当前口径）≈ 单元机时 −6%～−7%。真正的雾关大头仍是 §7 的 #1（诊断开关）+ #2（雾关原生整局）：
+  §10.3 的雾关原生 0.504→0.246 s 是它们叠加后的量级。
+
+### 10.5 局限
+
+1. 本机 ≠ 台式机生产环境，且采样期间有其他任务在跑；比值可用，绝对值不可直接搬到门禁。
+2. #3 的表现层差异只在 20 局样本上确认"除 REANIMATIONS 外无差异"，没有从代码层面证明该区块永不影响逻辑
+   （`Attachment.cpp:721`、`Reanimator.cpp` 里的 attachment matrix / LIGHT_ANIMATION 位是另外的 mask 位，未启用）。
+3. #4 只测了 `condition==0`；condition 1–5 的路径未改动，也未回归覆盖（`test_cpp_rollout.py` 的 3 项通过）。
+4. 未做门禁级 A/B（本任务范围只有一次性 20 局等价 + 本机计时）。
 
 ---
 
@@ -361,3 +492,13 @@ student : plant packet 0 → (row 1, col 5)
 - `/tmp/fogprof/profile_search.py`、`time_breakdown.py`：worker 级 cProfile 与分项计时。
 - 原始样本：`/tmp/fogprof/sample_fog.txt`、`sample_fog_nodiag.txt`、`sample_fog_native.txt`、
   `sample_day_native.txt`。
+
+§10（fogspeed 实现）用的驱动，同样未入库：
+
+- `/tmp/fogspeed/verify.py`：同一局在各二进制各跑一遍 Python 决策循环并录制动作序列，然后
+  `base/new × mask{0,4}` 四种组合回放同一序列，比较 `state_hash` / `final_tick`；白天与屋顶另跑原生快路径。
+- `/tmp/fogspeed/chunkdiff.py`、`chunkall.py`：`STATE_BYTES` 落盘 + SaveGame TLV 逐区块比较（20 局）。
+- `/tmp/fogspeed/matrix.py`：原生快路径 `base/new × sim_skip{0,4}` 2×2 计时矩阵（隔离 #3、#4；每格 3 轮中位）。
+- `/tmp/fogspeed/nativemask.py`、`fastdiff.py`：同一二进制只切 mask 的哈希/区块对照。
+- 数据：`/tmp/fogspeed/results.jsonl`（20 局等价与计时）、`chunkall.json`、`matrix.json`、`skipmask.json`。
+- 构建：`build-fogspeed-base/`（deploy17 原样）、`build-fogspeed/`（改后），均 Release/`-j 4`。

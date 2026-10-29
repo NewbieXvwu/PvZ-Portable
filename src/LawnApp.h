@@ -269,7 +269,7 @@ public:
 	void							EnvironmentWait(int ticks);
 	void							EnvironmentPresent();
 	bool							EnvironmentScreenshot(const std::string& thePath);
-	void EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& theState);
+	void EnvironmentPublicWaitState(EnvironmentWaitEvents::PublicState& theState, bool timeoutOnly = false);
 	EnvironmentWaitEvents::Result EnvironmentWaitUntil(int ticks, int condition);
 	bool							EnvironmentTerminal() const;
 	std::string					EnvironmentObservation(bool privileged = false);
