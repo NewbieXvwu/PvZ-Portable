@@ -1,0 +1,28 @@
+// Standalone parity/benchmark driver; never linked into the production engine.
+#include "GenericForward.h"
+#include <chrono>
+#include <fstream>
+#include <iostream>
+#include <stdexcept>
+int main(int argc, char** argv) {
+    try {
+        if (argc < 4) throw std::runtime_error("usage: generic-forward model.bin inputs.f32 outputs.f32 [iterations]");
+        pvz::net::Graph graph; graph.Load(argv[1]);
+        std::ifstream in(argv[2], std::ios::binary);
+        for (auto& t : graph.tensors) if(t.role == 1) {
+            in.read(reinterpret_cast<char*>(t.data.data()), t.data.size()*4);
+            if(!in) throw std::runtime_error("truncated input");
+        }
+        graph.Run();
+        std::ofstream out(argv[3], std::ios::binary);
+        for (const auto& n : graph.nodes) {
+            const auto& t=graph.tensors[n.output];
+            out.write(reinterpret_cast<const char*>(t.data.data()),t.data.size()*4);
+        }
+        int iterations=argc>4 ? std::stoi(argv[4]) : 1;
+        auto start=std::chrono::steady_clock::now();
+        for(int i=0;i<iterations;++i) graph.Run();
+        double us=std::chrono::duration<double,std::micro>(std::chrono::steady_clock::now()-start).count()/iterations;
+        std::cout << "{\"us\":" << us << ",\"iterations\":" << iterations << "}\n";
+    } catch(const std::exception& e) { std::cerr<<e.what()<<'\n'; return 1; }
+}
