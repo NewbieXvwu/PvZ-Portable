@@ -62,13 +62,9 @@ class Recorder:
                                    zombie_count_multiplier=task.zombie_count_multiplier,
                                    wave_cap=task.wave_cap, preplanted=list(task.preplanted)),
                          environment_task=asdict(task),
-                         engine_sha=env.episode['source_revision'],
-                         engine_dirty=env.episode['source_dirty'],
                          executable_sha256=hashlib.sha256(env.executable.read_bytes()).hexdigest(),
-                         resource_sha256=env.episode['resource_sha256'],
                          context=dict(level=task.level, multiplier=task.zombie_count_multiplier,
                                       roster=self.observation['loadout_context']['zombie_roster']),
-                         properties_partner_sha256=env.episode['properties_partner_sha256'],
                          hash_schema='portable_snapshot_v1_without_draw_statistics',
                          initial_state_hash=env.state_hash(),
                          sun_collection='environment_auto', verified=False)

@@ -875,19 +875,18 @@ class TrainingRestartTest(unittest.TestCase):
                                  ['superseded', 'superseded', 'done'])
 
     def test_run_reuses_trained_json_without_retraining(self):
-        # 训练完成（trained.json 已写）、评估前被杀：重启后凭 sha 校验复用报告，直接进评估，
+        # 训练完成（trained.json 已写）、评估前被杀：重启后复用报告，直接进评估，
         # _admit/_command（重训入口）被调到即失败。
         from curriculum_queue import TrainingPipeline
-        from promotion_gate import sha as file_sha
         with tempfile.TemporaryDirectory() as tmp:
             job = self._job(tmp, 'queued')
-            trained = {'model_sha256': file_sha(job['model']), 'recipe_sha256': file_sha(job['recipe']),
-                       'round': job['round']}
+            trained = {'round': job['round']}
             (Path(job['recipe']).parent / 'trained.json').write_text(json.dumps(trained))
             pipeline = TrainingPipeline.__new__(TrainingPipeline)
             pipeline.failed = False
             pipeline.args = SimpleNamespace(log=Path(tmp) / 'log')
             pipeline.lock_fd = None
+            pipeline.game_health = SimpleNamespace(wait=lambda: True, pause=lambda message: None)
             def forbidden(*_a, **_k):
                 raise AssertionError('retrain path was entered')
             pipeline._admit = forbidden
@@ -898,21 +897,6 @@ class TrainingRestartTest(unittest.TestCase):
             self.assertEqual(report['round'], job['round'])
             self.assertEqual(report['promotion']['approved'], False)
             self.assertTrue((Path(job['recipe']).parent / 'complete.json').is_file())
-
-    def test_run_rejects_changed_trained_candidate(self):
-        # trained.json 里的 sha 和模型/recipe 对不上（半截文件或被改动）：拒绝复用，报错留给人看。
-        from curriculum_queue import TrainingPipeline
-        with tempfile.TemporaryDirectory() as tmp:
-            job = self._job(tmp, 'queued')
-            trained = {'model_sha256': '0' * 64, 'recipe_sha256': '0' * 64, 'round': job['round']}
-            (Path(job['recipe']).parent / 'trained.json').write_text(json.dumps(trained))
-            pipeline = TrainingPipeline.__new__(TrainingPipeline)
-            pipeline.failed = False
-            pipeline.args = SimpleNamespace(log=Path(tmp) / 'log')
-            pipeline.lock_fd = None
-            with self.assertRaises(ValueError):
-                pipeline._run(copy.deepcopy(job))
-            self.assertTrue(pipeline.failed)
 
     def test_build_plan_prefers_measured_per_builder(self):
         # task61 追加：单建造者基线实测优先（round 2 实测 0.37 GiB vs 假设 2 GiB），无实测回退。

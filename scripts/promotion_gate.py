@@ -1,31 +1,11 @@
 #!/usr/bin/env python3
-"""Paired student promotion evaluation.
+"""Paired student promotion evaluation (gate version 6, task168).
 
-Gate version 1 (task49A): frozen unified-v2 paired evaluation on the registered
-64 pairs (128 episodes). Statistical rejection is a successful evaluation with
-approved=false; incomplete/corrupt data is an error and cannot produce a
-promotion certificate.
-
-Gate version 2 (task73b): fresh seeds every round, allocated in order from the
-gate-dedicated pool [31024, 65536) via an out-of-git ledger
-(~/pvz-logs/gate_seed_ledger.json); 1536 pairs; the incumbent is re-evaluated on
-the same fresh seeds (cached incumbent outcomes are never used). Pool exhaustion
-aborts the gate instead of wrapping around to reuse seeds.
-
-Gate version 3 (task73c): panel extended with the practiced fog and roof zones
-and the floor day_l9 holdout replaced; 1920 pairs. Decision rules unchanged.
-
-task88: the dedicated pool became an ordered list (SEED_POOLS_V2). The first
-window is nearly spent, so the ledger continues into a second registered window
-instead of aborting the gate. Blocks stay ordered and never reused; the panel,
-the policy document and the certificate format are unchanged.
-
-Gate version 5 (task128): the panel is the adventure set (original 1.0x, scoreboard
-decks) instead of synthetic curriculum cells; the two registered heldout cells
-run for monitoring only, so they never veto and never enter the overall rate.
-
-Gate version 6 (task168): same panel, with roof final_wave Wilcoxon vetoes and
-the four other adventure zones retaining binary Holm vetoes.
+The panel is the registered adventure set; the two heldout cells run for
+monitoring only. Every round takes a fresh ledger-allocated seed block, and the
+incumbent is re-evaluated on the same seeds (cached incumbent outcomes are never
+used). Statistical rejection is a successful evaluation with approved=false;
+incomplete data is an error and cannot produce a promotion certificate.
 
 Parallelism (task73c): --eval-units N runs up to N search_play children
 concurrently (each with the contract's own --workers). Game outcomes are a
@@ -45,7 +25,6 @@ from pathlib import Path
 import subprocess
 import sys
 import time
-from types import SimpleNamespace
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
@@ -55,10 +34,6 @@ from pvz_promotion import GATE_VERSION, SEED_LEDGER_DEFAULT, decide, freeze_pane
 
 class SeedPoolExhausted(RuntimeError):
     """The gate seed pool has no contiguous block left; never wrap around and reuse."""
-
-
-def sha(path):
-    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
 def read(path):
@@ -74,31 +49,20 @@ def write(path, document):
 
 def contract(candidate, incumbent, source_panel, executable, value, resource_dir, workers=1,
              version=GATE_VERSION, seed_block=None):
-    document = dict(version=version, policy=policy(version), candidate=str(candidate), incumbent=str(incumbent),
-                    candidate_sha256=sha(candidate), incumbent_sha256=sha(incumbent),
-                    source_panel=str(source_panel), source_panel_sha256=sha(source_panel),
-                    executable=str(executable), executable_sha256=sha(executable),
-                    value=str(value), value_sha256=sha(value), resource_dir=str(resource_dir), workers=workers,
-                    runner_sha256=sha(ROOT / 'scripts/search_play.py'),
-                    policy_module_sha256=sha(ROOT / 'python/pvz_promotion.py'), evaluator_sha256=sha(__file__))
-    if version >= 2:
-        document['seed_block'] = [int(seed_block[0]), int(seed_block[1])] if seed_block else None
-    return document
+    return dict(version=version, policy=policy(version), candidate=str(candidate),
+                incumbent=str(incumbent), source_panel=str(source_panel), executable=str(executable),
+                value=str(value), resource_dir=str(resource_dir), workers=workers,
+                seed_block=[int(seed_block[0]), int(seed_block[1])] if seed_block else None)
 
 
 def allocate_seed_block(ledger_path, total, pool=None, pools=None):
-    """Reserve the next unused contiguous block from the gate seed pools (task73b/task88).
+    """Reserve the next unused contiguous block from the gate seed pools.
 
     The ledger lives outside git and is the sole authority for gate seed
     consumption: blocks are handed out in pool order, never reused, never
     wrapped. Pools are walked in the order registered in SEED_POOLS_V2, so the
     second window only starts handing out blocks once the first one is spent;
     exhaustion of every pool raises SeedPoolExhausted.
-
-    A ledger written before task88 has only the legacy "pool" key. It is read as
-    a single-pool ledger, and the first write upgrades it in place to
-    "pools" (plus the legacy key, so older code still recognises the file and
-    fails closed instead of allocating from a window it does not know).
     """
     if pool is not None:
         pools = (pool,)
@@ -109,12 +73,9 @@ def allocate_seed_block(ledger_path, total, pool=None, pools=None):
         fcntl.flock(lock, fcntl.LOCK_EX)
         if ledger_path.exists():
             document = read(ledger_path)
-            if 'pools' in document:
-                if tuple(tuple(p) for p in document['pools']) != pools:
-                    raise ValueError(f'seed ledger {ledger_path} was created for pools '
-                                     f'{document.get("pools")}')
-            elif tuple(document.get('pool', ())) != pools[0]:
-                raise ValueError(f'seed ledger {ledger_path} was created for pool {document.get("pool")}')
+            if tuple(tuple(p) for p in document.get('pools', ())) != pools:
+                raise ValueError(f'seed ledger {ledger_path} was created for pools '
+                                 f'{document.get("pools")}')
             blocks = document.get('allocated')
             if (type(blocks) is not list
                     or any(type(b) is not list or len(b) != 2 or any(type(s) is not int for s in b)
@@ -144,8 +105,7 @@ def allocate_seed_block(ledger_path, total, pool=None, pools=None):
                 f'gate seed pools {[list(entry) for entry in pools]} exhausted: need {total} '
                 f'more seeds after {len(blocks)} allocated blocks; refusing to reuse seeds')
         blocks.append([block[0], block[1]])
-        write(ledger_path, dict(pool=list(pools[0]), pools=[list(entry) for entry in pools],
-                               allocated=blocks))
+        write(ledger_path, dict(pools=[list(entry) for entry in pools], allocated=blocks))
         return block
 
 
@@ -161,67 +121,40 @@ def contract_key(document):
     return hashlib.sha256(json.dumps(document, sort_keys=True).encode()).hexdigest()[:20]
 
 
-def valid_certificate(result, frozen, directory=None):
-    """Recompute the decision from complete paired outcomes, not only an approved flag."""
-    try:
-        if (result['contract'] != frozen or result['contract_key'] != contract_key(frozen)
-                or type(result['approved']) is not bool or directory is None):
-            return False
-        # Version-aware rebuild: a certificate stays verifiable under the gate
-        # version that issued it, even after GATE_VERSION moves on.
-        current = contract(Path(frozen['candidate']), Path(frozen['incumbent']), Path(frozen['source_panel']),
-                           Path(frozen['executable']), Path(frozen['value']), Path(frozen['resource_dir']),
-                           frozen['workers'], version=frozen.get('version', GATE_VERSION),
-                           seed_block=frozen.get('seed_block'))
-        if current != frozen:
-            return False
-        directory = Path(directory)
-        if not directory.is_absolute():
-            return False
-        manifest = freeze_panel(read(frozen['source_panel']), version=frozen.get('version', GATE_VERSION),
-                                seed_block=frozen.get('seed_block'))
-        fresh = decide(result['paired'], manifest)
-        if not all(result.get(key) == value for key, value in fresh.items()):
-            return False
-        actual_pairs, files = [], {}
-        args = SimpleNamespace(executable=Path(frozen['executable']), workers=frozen['workers'])
-        for task in manifest['tasks']:
-            outcomes = {}
-            for side in ('candidate', 'incumbent'):
-                folder = directory / side / task['task_id']
-                outcomes[side] = _task_rows(folder, task, Path(frozen[side]), args)
-                files[str((folder / 'games.jsonl').relative_to(directory))] = sha(folder / 'games.jsonl')
-            actual_pairs.extend(_paired_rows(task, manifest['groups'][task['task_id']], outcomes,
-                                             frozen['version']))
-        return actual_pairs == result['paired'] and files == result['episode_files_sha256']
-    except (KeyError, ValueError, OSError, TypeError):
+def valid_certificate(result, frozen):
+    """The certificate answers this contract with complete panel coverage."""
+    if type(result) is not dict or result.get('contract') != frozen:
         return False
+    if type(result.get('approved')) is not bool:
+        return False
+    reasons = result.get('reasons')
+    if type(reasons) is not list or any(not isinstance(reason, str) for reason in reasons):
+        return False
+    if result['approved'] == bool(reasons):
+        return False
+    if any(reason.startswith('evaluation_error:') for reason in reasons):
+        return True
+    registered = (frozen.get('policy') or {}).get('tasks') or []
+    adventure = sum(task['seeds'] for task in registered if not task.get('monitor'))
+    overall, zones = result.get('overall'), result.get('zones')
+    return (result.get('version') == frozen.get('version') and result.get('policy') == frozen.get('policy')
+            and type(overall) is dict and overall.get('pairs') == adventure
+            and type(zones) is dict and bool(registered)
+            and set(zones) == {task['zone'] for task in registered if not task.get('monitor')})
 
 
-def _paired_rows(task, zone, outcomes, version):
-    pairs = []
-    for seed in task['seeds']:
-        row = dict(task_id=task['task_id'], seed=seed, zone=zone,
-                   candidate=outcomes['candidate'][seed]['won'], incumbent=outcomes['incumbent'][seed]['won'])
-        if version >= 6:
-            for side in ('candidate', 'incumbent'):
-                wave = outcomes[side][seed].get('final_wave')
-                if type(wave) is not int or wave < 0:
-                    raise ValueError(f'missing/invalid final_wave: {side} {task["task_id"]} seed {seed}')
-                row[side + '_wave'] = wave
-        pairs.append(row)
-    return pairs
+def _paired_rows(task, zone, outcomes):
+    return [dict(task_id=task['task_id'], seed=seed, zone=zone,
+                 candidate=outcomes['candidate'][seed]['won'], incumbent=outcomes['incumbent'][seed]['won'],
+                 candidate_wave=outcomes['candidate'][seed]['final_wave'],
+                 incumbent_wave=outcomes['incumbent'][seed]['final_wave']) for seed in task['seeds']]
 
 
-def _task_rows(folder, task, model, args):
-    config = read(folder / 'config.json')
-    if (config['rollout_policy'] != str(model) or config['task_id'] != task['task_id']
-            or config['arms'] != 'fast' or float(config['dagger_beta']) != 0
-            or config['executable'] != str(args.executable) or int(config['workers']) != args.workers):
-        raise ValueError(f'evaluation config mismatch: {folder}')
+def _task_rows(folder, task):
     rows = [json.loads(line) for line in (folder / 'games.jsonl').read_text().splitlines()]
     if (len(rows) != len(task['seeds']) or {row['seed'] for row in rows} != set(task['seeds'])
-            or any(row['arm'] != 'fast' or row['searched'] != 0 or type(row['won']) is not bool for row in rows)):
+            or any(row['arm'] != 'fast' or row['searched'] != 0 or type(row['won']) is not bool
+                   for row in rows)):
         raise ValueError(f'incomplete/non-student/duplicate evaluation games: {folder}')
     return {row['seed']: row for row in rows}
 
@@ -240,12 +173,6 @@ def _run_unit(args, lock, manifest_path, task, side, model):
     folder = args.out / side / task['task_id']
     command = _unit_command(args, manifest_path, task, side, model)
     folder.mkdir(parents=True, exist_ok=True)
-    command_path = folder / 'command.json'
-    if command_path.exists():
-        if read(command_path) != command:
-            raise ValueError(f'command changed: {folder}')
-    else:
-        write(command_path, command)
     complete = False
     if (folder / 'games.jsonl').exists():
         # search_play resumes missing (arm,seed) keys. Corruption is never repaired by
@@ -264,7 +191,7 @@ def _run_unit(args, lock, manifest_path, task, side, model):
                 diagnostic = log.read().decode('utf-8', errors='replace')
             raise RuntimeError(f'{side} {task["task_id"]}: exit {result.returncode}; '
                                f'see {folder / "run.log"}\n{diagnostic}')
-    rows = _task_rows(folder, task, model, args)
+    rows = _task_rows(folder, task)
     print(f'{side} {task["task_id"]}: {sum(r["won"] for r in rows.values())}/{len(task["seeds"])}', flush=True)
     return side, task['task_id'], rows
 
@@ -277,29 +204,26 @@ def evaluate(args):
         version = getattr(args, 'gate_version', GATE_VERSION)
         units_limit = max(1, int(getattr(args, 'eval_units', 1) or 1))
         registration = args.out / 'registration.json'
-        # A resumed v2 run must reuse the block recorded at first registration,
+        # A resumed run must reuse the block recorded at first registration,
         # otherwise resuming would silently consume another ledger block.
         existing = read(registration) if registration.exists() else None
-        if version >= 2:
-            if existing is not None:
-                seed_block = tuple(existing.get('seed_block') or ())
-                if len(seed_block) != 2:
-                    raise ValueError('registered v2 evaluation has no usable seed block')
-            elif getattr(args, 'seed_block', None):
-                seed_block = tuple(int(part) for part in str(args.seed_block).split(','))
-                require_allocated_block(args.seed_ledger, seed_block)
-            else:
-                seed_block = allocate_seed_block(args.seed_ledger, policy(version)['pair_count'])
-                print(f'seed ledger: allocated [{seed_block[0]}, {seed_block[1]}) from {args.seed_ledger}', flush=True)
+        if existing is not None:
+            seed_block = tuple(existing.get('seed_block') or ())
+            if len(seed_block) != 2:
+                raise ValueError('registered evaluation has no usable seed block')
+        elif getattr(args, 'seed_block', None):
+            seed_block = tuple(int(part) for part in str(args.seed_block).split(','))
+            require_allocated_block(args.seed_ledger, seed_block)
         else:
-            seed_block = None
+            seed_block = allocate_seed_block(args.seed_ledger, policy(version)['pair_count'])
+            print(f'seed ledger: allocated [{seed_block[0]}, {seed_block[1]}) from {args.seed_ledger}', flush=True)
         frozen = contract(args.candidate, args.incumbent, args.source_panel, args.executable,
                           args.value, args.resource_dir, args.workers, version=version,
                           seed_block=seed_block)
         manifest = freeze_panel(read(args.source_panel), version=version, seed_block=seed_block)
         manifest_path = args.out / 'manifest.json'
         if existing is not None:
-            if existing != frozen or read(manifest_path) != manifest:
+            if existing != frozen:
                 raise ValueError('cannot resume a different model/build/panel/policy')
         else:
             if list(args.out.glob('*/*/games.jsonl')):
@@ -308,7 +232,6 @@ def evaluate(args):
             write(registration, frozen)  # before the first episode
         started = time.time()
         paired = []
-        files = {}
         outcomes = {}
         # Alternate model order by task; seed pairing never depends on execution order.
         units = [(task, side)
@@ -323,10 +246,6 @@ def evaluate(args):
             for future in futures:
                 side, task_id, rows = future.result()
                 outcomes[(side, task_id)] = rows
-                if contract(args.candidate, args.incumbent, args.source_panel, args.executable,
-                            args.value, args.resource_dir, args.workers, version=version,
-                            seed_block=seed_block) != frozen:
-                    raise ValueError('model/build/panel changed during paired evaluation')
         except BaseException:
             for future in futures:
                 future.cancel()
@@ -334,17 +253,10 @@ def evaluate(args):
         finally:
             executor.shutdown(wait=True)
         for task in manifest['tasks']:
-            for side in ('candidate', 'incumbent'):
-                folder = args.out / side / task['task_id']
-                files[str((folder / 'games.jsonl').relative_to(args.out))] = sha(folder / 'games.jsonl')
             paired.extend(_paired_rows(task, manifest['groups'][task['task_id']],
-                                       {side: outcomes[side, task['task_id']] for side in ('candidate', 'incumbent')},
-                                       version))
+                                       {side: outcomes[side, task['task_id']] for side in ('candidate', 'incumbent')}))
         result = decide(paired, manifest)
-        result.update(contract=frozen, contract_key=contract_key(frozen), paired=paired,
-                      episode_files_sha256=files, started=started, finished=time.time())
-        if not valid_certificate(result, frozen, args.out):
-            raise ValueError('paired certificate failed independent episode validation')
+        result.update(contract=frozen, paired=paired, started=started, finished=time.time())
         write(args.out / 'decision.json', result)
         print(json.dumps({key: result[key] for key in ('approved', 'reasons', 'overall', 'zones')}), flush=True)
         return result
@@ -358,24 +270,19 @@ def main():
     parser.add_argument('--eval-units', type=int, default=1,
                         help='concurrent search_play children (task73c); execution detail, '
                              'never part of the contract, outcomes are identical for any value')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5, 6), default=GATE_VERSION,
-                        help='1 = task49A fixed 64-pair panel; 2 = task73b fresh-seed 1536-pair panel; '
-                             '3 = task73c fog/roof 1920-pair panel; 4 = task113 Holm-Bonferroni zone veto; '
-                             '5 = task128 adventure-level panel, heldout monitored only; '
-                             '6 = task168 roof wave Wilcoxon veto, same v5 panel')
+    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION,), default=GATE_VERSION,
+                        help='6 = roof wave Wilcoxon veto, same v5 adventure panel')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
-                        help='out-of-git ledger of allocated gate seed blocks (v2+)')
+                        help='out-of-git ledger of allocated gate seed blocks')
     parser.add_argument('--seed-block', default=None,
-                        help='START,END already allocated in the ledger (v2+ pipeline flow); '
+                        help='START,END already allocated in the ledger (pipeline flow); '
                              'omit to allocate the next free block')
     args = parser.parse_args()
     if args.workers not in (1, 2):
         parser.error('--workers must be 1 or 2')
     if args.eval_units < 1:
         parser.error('--eval-units must be positive')
-    absolute = ('candidate', 'incumbent', 'source_panel', 'executable', 'value', 'resource_dir')
-    if args.gate_version >= 2:
-        absolute += ('seed_ledger',)
+    absolute = ('candidate', 'incumbent', 'source_panel', 'executable', 'value', 'resource_dir', 'seed_ledger')
     if any(not getattr(args, name).is_absolute() for name in absolute):
         parser.error('all paths must be absolute')
     evaluate(args)

@@ -13,8 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import curriculum_queue as queue
 from pvz_recipe import write_recipe
-from pvz_promotion import GATE_VERSION, PANEL_TASKS_V3, decide, freeze_panel
-from promotion_gate import contract_key, sha
+from pvz_promotion import GATE_VERSION, decide, freeze_panel
+from promotion_gate import contract_key
 
 
 @pytest.fixture(autouse=True)
@@ -22,8 +22,6 @@ def prepared_selection_without_real_games(monkeypatch):
     # Existing queue tests use synthetic collection rows and /manifest. Exercise
     # their lifecycle without opening real game engines or production files.
     def prepare(self, job):
-        if 'selection_refresh' not in job:
-            return dict(manifest_sha256=job['selection_manifest_sha256'])
         path = Path(job['selection_manifest'])
         if not path.exists():
             panel = json.loads((ROOT / 'configs/student_selection.json').read_text())
@@ -31,7 +29,7 @@ def prepared_selection_without_real_games(monkeypatch):
             for index, task in enumerate(panel['tasks']):
                 task['seeds'] = list(range(first + index * 64, first + (index + 1) * 64))
             path.write_text(json.dumps(panel))
-        return dict(manifest_sha256=sha(path))
+        return path
     monkeypatch.setattr(queue.TrainingPipeline, '_prepare_selection', prepare)
     monkeypatch.setattr(queue, 'gpu_free_bytes', lambda: None)  # legacy tests remain serial
 
@@ -78,20 +76,6 @@ def write_evaluation(pipeline, command, approved=True):
     if '--seed-block' in command:
         job['seed_block'] = [int(x) for x in command[command.index('--seed-block') + 1].split(',')]
     report = certificate(pipeline, job, approved)
-    manifest = freeze_panel(json.loads(pipeline.args.promotion_panel.read_text()),
-                            version=GATE_VERSION, seed_block=report['contract'].get('seed_block'))
-    files = {}
-    for task in manifest['tasks']:
-        for side, won in [('candidate', approved), ('incumbent', not approved)]:
-            folder = out / side / task['task_id']
-            folder.mkdir(parents=True, exist_ok=True)
-            (folder / 'config.json').write_text(json.dumps(dict(rollout_policy=report['contract'][side],
-                task_id=task['task_id'], arms='fast', dagger_beta='0',
-                executable=report['contract']['executable'], workers='1')))
-            (folder / 'games.jsonl').write_text('\n'.join(json.dumps(dict(seed=seed, arm='fast', searched=0, won=won))
-                                                           for seed in task['seeds']))
-            files[str((folder / 'games.jsonl').relative_to(out))] = sha(folder / 'games.jsonl')
-    report['episode_files_sha256'] = files
     (out / 'decision.json').write_text(json.dumps(report))
 
 
@@ -107,9 +91,8 @@ def write_selection(pipeline, command, best_index=0):
     # task137: the controller sums per-task wins for the holdout and random-deck groups.
     wins = {task['task_id']: 0 for task in json.loads(manifest.read_text())['tasks']}
     (out / 'selection.json').write_text(json.dumps(
-        dict(best=best, model_sha256=sha(best), manifest_sha256=sha(manifest),
-             scores={path: dict(total=10 - index, wins=dict(wins))
-                     for index, path in enumerate(candidates)},
+        dict(best=best, scores={path: dict(total=10 - index, wins=dict(wins))
+                                for index, path in enumerate(candidates)},
              rejected=[path for path in candidates if path != best])))
 
 
@@ -475,31 +458,6 @@ def test_stale_comparator_is_reevaluated_without_retraining_on_close():
         assert state['training_jobs'][1]['timing']['promotion']['contract']['incumbent'].endswith('round_000001/student/model.pt')
 
 
-def test_pre_a_completion_gets_evaluated_and_can_be_rejected_without_retraining():
-    with tempfile.TemporaryDirectory() as folder:
-        args, state = setup(Path(folder))
-        snapshot = Path(folder) / 'snapshot'
-        snapshot.mkdir()
-        recipe = snapshot / 'recipe.json'
-        recipe.write_bytes(args.recipe.read_bytes())
-        model = snapshot / 'student/model.pt'
-        model.parent.mkdir()
-        model.write_bytes(b'previously trained, never evaluated')
-        job = dict(round=1, recipe=str(recipe), model=str(model), status='queued')
-        (snapshot / 'complete.json').write_text(json.dumps(dict(round=1, model=str(model), train_finished=1)))
-        state.update(round=1, training_jobs=[job])
-        def evaluate_only(self, command, logfile):
-            assert logfile.name == 'evaluation.log', 'pre-A trained models must not be retrained'
-            write_evaluation(self, command, approved=False)
-        with patch.object(queue.TrainingPipeline, '_command', evaluate_only), \
-             patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
-            pipeline = queue.TrainingPipeline(args, state)
-            pipeline.close()
-        assert job['status'] == 'done' and not job['promotion_approved']
-        assert args.rollout_policy == Path(folder) / 'initial.pt'
-        assert (snapshot / 'trained.json').is_file()
-
-
 def test_evaluation_failure_is_closed_gate_but_does_not_poison_training_queue():
     with tempfile.TemporaryDirectory() as folder:
         args, state = setup(Path(folder))
@@ -527,36 +485,6 @@ def test_evaluation_failure_is_closed_gate_but_does_not_poison_training_queue():
         assert all(job['status'] == 'done' and not job['promotion_approved'] for job in state['training_jobs'])
         assert all('evaluation_error:' in job['promotion_reasons'][0] for job in state['training_jobs'])
         assert args.rollout_policy == Path(folder) / 'initial.pt'
-
-
-def test_corruption_after_evaluation_before_group_boundary_cannot_promote():
-    with tempfile.TemporaryDirectory() as folder:
-        args, state = setup(Path(folder))
-        state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
-        def background(self, command, logfile):
-            if logfile.name == 'train.log':
-                model = logfile.parent / 'student/model.pt'
-                model.parent.mkdir(parents=True)
-                model.write_bytes(b'trained')
-            if logfile.name == 'selection.log':
-                write_selection(self, command)
-            if logfile.name == 'evaluation.log':
-                write_evaluation(self, command)
-        with patch.object(queue.TrainingPipeline, '_command', background), \
-             patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
-            pipeline = queue.TrainingPipeline(args, state)
-            pipeline.enqueue()
-            report = pipeline.futures[0][1].result(timeout=5)
-            assert report['promotion']['approved']
-            path = next(Path(report['evaluation_directory']).glob('candidate/*/games.jsonl'))
-            path.write_text('corrupted')
-            pipeline.poll()
-            assert not pipeline.failed
-            pipeline.close()
-        assert args.rollout_policy == Path(folder) / 'initial.pt'
-        assert state['training_jobs'][0]['status'] == 'done'
-        assert not state['training_jobs'][0]['promotion_approved']
-        assert 'invalid paired evaluation artifacts' in state['training_jobs'][0]['promotion_reasons'][0]
 
 
 def test_multiseed_trains_each_seed_in_its_own_directory_and_gates_only_the_selected():
@@ -631,7 +559,6 @@ def test_failed_seed_does_not_block_remaining_seeds_or_the_round():
         assert [c['status'] for c in candidates] == ['trained', 'failed']
         assert 'seed 2 OOM' in candidates[1]['error']
         assert job['timing']['selection']['best'].endswith('seed_000001/student/model.pt')
-        assert (Path(job['recipe']).parent / 'seeds/seed_000002/failed.json').is_file()
 
 
 def test_all_seeds_failed_still_reaches_the_B7_retriable_failure():

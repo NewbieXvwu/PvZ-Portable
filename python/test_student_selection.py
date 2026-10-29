@@ -7,7 +7,6 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import pvz_student_selection as panel
-from pvz_promotion import SEED_POOLS_V2 as POOLS
 from select_student import score_rows, select, selection_rank
 
 
@@ -37,21 +36,10 @@ def test_assert_disjoint_rejects_duplicates_and_registered_overlap():
         assert 'overlap' in str(error)
 
 
-def test_committed_panel_is_mechanically_disjoint_from_gate_and_demo_seeds():
-    selection = json.loads((ROOT / 'configs/student_selection.json').read_text())
-    reserved = list(POOLS)
-    reserved.extend(panel.seed_spans(json.loads((ROOT / 'configs/human_demo_tasks.json').read_text())))
-    panel.assert_disjoint(selection, reserved)
-    assert selection['panel_version'] == 'selection-task92-v1'
-    assert len(selection['tasks']) == len(panel.SELECTION_TASKS)
-    for task in selection['tasks']:
-        assert len(task['seeds']) == panel.SELECTION_GAMES
-
-
-def manifest_document():
-    return dict(schema_version=1, tasks=[
-        dict(task_id='t1', seeds=[10, 11, 12, 13]),
-        dict(task_id='t2', seeds=[20, 21, 22])])
+def manifest_document(incumbent):
+    return dict(schema_version=1, incumbent=str(incumbent), tasks=[
+        dict(task_id='t1', terrain='day', selection_group='adventure', seeds=[10, 11, 12, 13]),
+        dict(task_id='t2', terrain='night', selection_group='adventure', seeds=[20, 21, 22])])
 
 
 def fake_runner(wins_by_candidate):
@@ -82,13 +70,16 @@ def fake_runner(wins_by_candidate):
 def test_select_picks_the_best_total_and_records_the_rejected_candidates():
     with tempfile.TemporaryDirectory() as folder:
         root = Path(folder)
+        incumbent = root / 'incumbent.pt'
+        incumbent.write_bytes(b'incumbent weights')
         manifest = root / 'panel.json'
-        manifest.write_text(json.dumps(manifest_document()))
+        manifest.write_text(json.dumps(manifest_document(incumbent)))
         weak, strong = root / 'weak.pt', root / 'strong.pt'
         weak.write_bytes(b'weak')
         strong.write_bytes(b'strong weights')
         (root / 'engine').write_bytes(b'engine')
-        wins = {str(weak): dict(t1=1, t2=1), str(strong): dict(t1=3, t2=2)}
+        wins = {str(incumbent): dict(t1=2, t2=2),
+                str(weak): dict(t1=1, t2=1), str(strong): dict(t1=3, t2=2)}
         run = fake_runner(wins)
         result = select([str(weak), str(strong)], root / 'chosen', str(manifest), 't1:0:4,t2:0:3',
                         workers=2, value=root / 'value.pt', resource_dir=root / 'res',
@@ -97,26 +88,36 @@ def test_select_picks_the_best_total_and_records_the_rejected_candidates():
         assert result['rejected'] == [str(weak)]
         assert result['scores'][str(strong)]['total'] == 5
         assert result['scores'][str(weak)]['wins'] == dict(t1=1, t2=1)
-        assert result['manifest_sha256'] == __import__('hashlib').sha256(manifest.read_bytes()).hexdigest()
+        assert result['manifest'] == str(manifest)
         assert (root / 'chosen/model.pt').read_bytes() == b'strong weights'
-        # Every candidate played every requested slice exactly once.
-        assert len(run.calls) == 4
-        assert sorted({c[0] for c in run.calls}) == sorted([str(weak), str(strong)])
+        # Incumbent plus both candidates played every requested slice exactly once.
+        assert len(run.calls) == 6
+        assert sorted({c[0] for c in run.calls}) == sorted([str(incumbent), str(weak), str(strong)])
         assert (root / 'chosen/selection.json').is_file()
 
 
 def test_select_rejects_incomplete_or_wrongly_played_games():
     with tempfile.TemporaryDirectory() as folder:
         root = Path(folder)
+        incumbent = root / 'incumbent.pt'
+        incumbent.write_bytes(b'incumbent weights')
         manifest = root / 'panel.json'
-        manifest.write_text(json.dumps(manifest_document()))
+        manifest.write_text(json.dumps(manifest_document(incumbent)))
         model = root / 'm.pt'
         model.write_bytes(b'm')
         def bad_runner(rows):
             def run(command, check=True, stdout=None, stderr=None):
                 out = Path(command[command.index('--out') + 1])
                 out.mkdir(parents=True, exist_ok=True)
-                (out / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in rows) + '\n')
+                played = rows
+                if command[command.index('--rollout-policy') + 1] == str(incumbent):
+                    task = command[command.index('--task-id') + 1]
+                    offset = int(command[command.index('--seed-offset') + 1])
+                    count = int(command[command.index('--seeds') + 1])
+                    seeds = next(t['seeds'] for t in manifest_document(incumbent)['tasks']
+                                 if t['task_id'] == task)[offset:offset + count]
+                    played = [dict(seed=s, arm='fast', terminal=True, won=True, searched=0) for s in seeds]
+                (out / 'games.jsonl').write_text('\n'.join(json.dumps(r) for r in played) + '\n')
                 class Result:
                     returncode = 0
                 return Result()
@@ -157,9 +158,8 @@ def test_r26_selection_marginals_replay_with_one_shared_synthetic_incumbent(tmp_
         cursor += count
     incumbent = tmp_path / 'incumbent.pt'
     incumbent.write_bytes(b'synthetic reference, not the missing r11 selection outcomes')
-    from select_student import sha
     manifest = tmp_path / 'panel.json'
-    manifest.write_text(json.dumps(dict(tasks=tasks, incumbent=str(incumbent), incumbent_sha256=sha(incumbent))))
+    manifest.write_text(json.dumps(dict(tasks=tasks, incumbent=str(incumbent))))
     models, wins = [], {str(incumbent): dict(zip(names, (60, 60, 45, 35, 1, 24, 16)))}
     for seed, values in enumerate(recorded, 1):
         model = tmp_path / f'seed_{seed:06}.pt'
@@ -185,7 +185,7 @@ def test_r26_selection_marginals_replay_with_one_shared_synthetic_incumbent(tmp_
     assert first['zones']['fog']['gain'] == 0 and first['zones']['fog']['harm'] == 7
     assert first['zones']['fog']['holm_adjusted_p'] == 5 / 128
     assert 'significant_zone_regression:fog' in first['reasons']
-    assert result['incumbent']['model_sha256'] == sha(incumbent)
+    assert result['incumbent']['path'] == str(incumbent)
 
 
 def test_selection_prefers_approval_then_total_or_least_worst_zone():

@@ -13,7 +13,7 @@ from pvz_promotion import decide_scored, policy
 
 def replay(root):
     rounds, duplicates, seen = [], [], {}
-    monitor = {task['task_id'] for task in policy(5)['tasks'] if task['monitor']}
+    monitor = {task['task_id'] for task in policy()['tasks'] if task['monitor']}
     for path in sorted(root.glob('round_*/evaluations/*/decision.json')):
         original = json.loads(path.read_text())
         identity = tuple(original['contract'][side + '_sha256'] for side in ('candidate', 'incumbent'))
@@ -37,7 +37,7 @@ def replay(root):
                     if game['won'] is not row[side]:
                         raise ValueError(f'episode outcome differs from decision: {source}, seed {row["seed"]}')
                     row[side + '_wave'] = game['final_wave']
-        result = decide_scored(pairs, version=6)
+        result = decide_scored(pairs)
         rounds.append(dict(round=int(path.parents[2].name.split('_')[1]),
                            source=str(path.relative_to(root)),
                            decision_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -51,7 +51,7 @@ def replay(root):
                                        for name in result['zones']['roof']['wave_tasks']}))
     if not rounds:
         raise ValueError(f'no round_*/evaluations/*/decision.json in {root}')
-    return dict(schema='task168_roof_wave_replay_v1', policy=policy(6), rounds=rounds,
+    return dict(schema='task168_roof_wave_replay_v1', policy=policy(), rounds=rounds,
                 duplicates=duplicates)
 
 

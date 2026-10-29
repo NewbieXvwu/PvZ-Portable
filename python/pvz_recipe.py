@@ -36,18 +36,10 @@ _ROOT: Path | None = None
 
 
 def repository_root() -> Path:
-    """The checkout that owns the corpus, the build and the production outputs.
-
-    Agent worktrees live at <checkout>/.claude/worktrees/<name> (AGENTS.md §1), so a run
-    started from one still describes the same artifacts/ tree the mainline uses; a
-    normal checkout is its own root. No switch: one convention, resolved on load.
-    """
+    """The checkout that owns this code; recipe paths resolve relative to it."""
     global _ROOT
     if _ROOT is None:
-        root = Path(__file__).resolve().parents[1]
-        if root.parent.name == 'worktrees' and root.parent.parent.name == '.claude':
-            root = root.parent.parent.parent
-        _ROOT = root
+        _ROOT = Path(__file__).resolve().parents[1]
     return _ROOT
 
 

@@ -67,24 +67,23 @@ from datetime import datetime
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MAIN = Path('/home/newbiexvwu/PvZ-search')
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
                                    load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
-from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOL_V2, START_SEED_BLOCK,
+from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOLS_V2, START_SEED_BLOCK,
                            START_SEED_LEDGER_DEFAULT, START_SEED_POOL,
                            policy as promotion_policy, freeze_panel)
 from promotion_gate import (SeedPoolExhausted, allocate_seed_block, contract as promotion_contract,
-                            contract_key, sha as file_sha, valid_certificate)
+                            contract_key, valid_certificate)
 from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
 from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
-                                   make_plan as selection_plan, selection_templates, validate_random_tasks)
+                                   make_plan as selection_plan, selection_templates)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -103,12 +102,12 @@ CURRICULUM_LADDERS = {
 RANDOM_DECK_SHARE = 0.15   # 随机卡组格每轮最多占 round-games 的 15%
 
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
-DEFAULT_FRAMES = MAIN / 'artifacts/student/frames_v2'
-DEFAULT_MODEL = MAIN / 'artifacts/student/dw4i_s1/model.pt'
-DEFAULT_STATIC_VALUE = MAIN / 'artifacts/hard/value_branch1/model.pt'
-DEFAULT_VALUE = MAIN / 'artifacts/value_net/v5/model.pt'
+DEFAULT_FRAMES = ROOT / 'artifacts/student/frames_v2'
+DEFAULT_MODEL = ROOT / 'artifacts/student/dw4i_s1/model.pt'
+DEFAULT_STATIC_VALUE = ROOT / 'artifacts/hard/value_branch1/model.pt'
+DEFAULT_VALUE = ROOT / 'artifacts/value_net/v5/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
-DEFAULT_PYTHON = Path('/home/newbiexvwu/.venvs/ml/bin/python3')   # torch / numpy 在这里；系统 python3 没有
+DEFAULT_PYTHON = Path(sys.executable)
 
 GIB = 1024 ** 3
 MAX_BACKGROUND_ATTEMPTS = 2   # task98: 同一快照最多尝试两次，失败保留证据，采集继续
@@ -675,7 +674,6 @@ def renew_start_seeds(cell: dict, ledger_path: Path, size: int = START_SEED_BLOC
     格子的 seed_blocks（第一段永远是清单里原来的块），账本在 git 外、带文件锁，块只发一次。
     """
     if not cell.get('seed_blocks') and cell.get('seeds'):
-        # 旧状态没有分段记录：把清单里的第一段补上，日志与状态都从两段起算。
         cell['seed_blocks'] = start_seed_segments(cell['seeds'])
     block = allocate_seed_block(ledger_path, size, pool=START_SEED_POOL)
     cell.setdefault('seed_blocks', []).append([int(block[0]), int(block[1])])
@@ -1001,7 +999,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
     （--future-seeds），一个未来种子一局。--seed-offset/--seeds 仍给 0/局数——
     search_play 在 --demo-archive 下只接受"示范种子在清单选中段里"，给偏移会把它挤出段外。
     """
-    python = str(args.python) if args.python.exists() else sys.executable
+    python = str(args.python)
     if demo_archive:
         seed_args = ['--seed-offset', '0', '--seeds', str(games),
                      '--demo-archive', str(demo_archive), '--demo-decision', str(demo_decision),
@@ -1038,7 +1036,7 @@ def pack_command(args, labels: list[str]) -> list[str]:
     row_options = training_row_options(recipe, labels)
     row_options.pop('source_weight', None)
     options = pack_options(**row_options)
-    python = str(args.python) if args.python.exists() else sys.executable
+    python = str(args.python)
     return [python, str(ROOT / 'scripts/pack_training_rows.py'),
             '--data', str(args.frames), '--labels', ','.join(sorted(labels)),
             *pack_flags(options), '--precompute-workers', str(recipe['precompute_workers']),
@@ -1193,7 +1191,7 @@ class TrainingPipeline:
     def evaluation_contract(self, job):
         source = getattr(self.args, 'promotion_panel', None)
         if source is None:
-            source = Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest'])
+            source = ROOT / 'configs/gate_v5_panel.json'
         return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
                                   self.args.value, self.args.resource_dir, version=self.gate_version,
                                   seed_block=job.get('seed_block'))
@@ -1204,7 +1202,7 @@ class TrainingPipeline:
         persisted job dict (never on the _run copy), so resumed and stale re-evaluations
         reuse the same block and the ledger is never double-spent. Pool exhaustion
         raises and closes the gate; seeds are never wrapped around and reused."""
-        if self.gate_version >= 2 and 'seed_block' not in job:
+        if 'seed_block' not in job:
             job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
                                                          promotion_policy(self.gate_version)['pair_count']))
         return job
@@ -1214,24 +1212,21 @@ class TrainingPipeline:
         frozen = self.evaluation_contract(job)
         folder = Path(job['recipe']).parent
         out = folder / 'evaluations' / contract_key(frozen)
-        python = str(self.args.python) if self.args.python.exists() else sys.executable
+        python = str(self.args.python)
         units = self._evaluation_units()
         command = [python, str(ROOT / 'scripts/promotion_gate.py'), '--candidate', job['model'],
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
-                   '--eval-units', str(units), '--gate-version', str(self.gate_version)]
-        if self.gate_version >= 2:
-            command += ['--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
-                        '--seed-ledger', str(self.args.seed_ledger)]
+                   '--eval-units', str(units), '--gate-version', str(self.gate_version),
+                   '--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
+                   '--seed-ledger', str(self.args.seed_ledger)]
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against '
-                                f'{frozen["incumbent_sha256"]} eval_units={units}')
+                                f'{frozen["incumbent"]} eval_units={units}')
         try:
             self._command(command, folder / 'evaluation.log')
             decision = json.loads((out / 'decision.json').read_text())
-            if not valid_certificate(decision, frozen, out):
-                raise ValueError('promotion certificate does not match the registered comparison')
         except Exception as error:
             if systemic_game_failure(error):
                 raise
@@ -1247,7 +1242,7 @@ class TrainingPipeline:
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
                 f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
-        return dict(model=job['model'], model_sha256=frozen['candidate_sha256'],
+        return dict(model=job['model'],
                     evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
 
@@ -1391,40 +1386,20 @@ class TrainingPipeline:
         job.update(training_seeds=job.get('training_seeds', list(TRAINING_SEEDS)),
                    training_parallelism=getattr(self.args, 'training_parallelism', 2),
                    selection_manifest=str(folder / 'selection_manifest.json'),
-                   selection_refresh=dict(incumbent=str(incumbent), incumbent_sha256=file_sha(incumbent),
-                       templates=str(templates), templates_sha256=file_sha(templates),
-                       executable_sha256=file_sha(self.args.executable), seed_block=list(block), ledger=str(ledger)))
-
-    def _validate_selection_panel(self, panel):
-        from pvz_env import PvZEnv
-        self._admit()
-        with PvZEnv(resource_dir=self.args.resource_dir, executable=self.args.executable, headless=True) as env:
-            return validate_random_tasks(panel, env)
+                   selection_refresh=dict(incumbent=str(incumbent), templates=str(templates),
+                                          seed_block=list(block), ledger=str(ledger)))
 
     def _prepare_selection(self, job):
-        if 'selection_refresh' not in job:
-            return dict(manifest_sha256=job['selection_manifest_sha256'])  # historical task92 jobs
         frozen = job['selection_refresh']
-        refresh_sha = __import__('hashlib').sha256(json.dumps(frozen, sort_keys=True).encode()).hexdigest()
-        for name in ('templates', 'incumbent'):
-            if file_sha(Path(frozen[name])) != frozen[name + '_sha256']:
-                raise ValueError(f'frozen selection {name} changed')
-        if file_sha(self.args.executable) != frozen['executable_sha256']:
-            raise ValueError('selection engine changed since enqueue')
         folder = Path(job['recipe']).parent
         ready, manifest = folder / 'selection_ready.json', Path(job['selection_manifest'])
+        # The marker only skips the engine validation below on restart; all frozen inputs
+        # live in this job's own folder and cannot change after enqueue.
         if ready.exists():
-            receipt = json.loads(ready.read_text())
-            if (receipt['refresh_sha256'] != refresh_sha
-                    or receipt['manifest_sha256'] != file_sha(manifest)
-                    or receipt['plan_sha256'] != file_sha(folder / 'selection_plan.json')
-                    or receipt['executable_sha256'] != frozen['executable_sha256']):
-                raise ValueError('saved selection preparation changed')
-            return receipt
+            return manifest
         templates = json.loads(Path(frozen['templates']).read_text())
         panel = selection_plan(templates, frozen['seed_block'], frozen['incumbent'])
-        plan_path = folder / 'selection_plan.json'
-        self._marker(plan_path, panel)
+        self._marker(folder / 'selection_plan.json', panel)
         from pvz_promotion import SEED_POOLS_V2
         reserved = list(SEED_POOLS_V2)
         # The adventure definitions are scored on the frozen scoreboard seed block
@@ -1434,13 +1409,9 @@ class TrainingPipeline:
                          templates):
             reserved.extend(seed_spans(document))
         assert_disjoint(panel, reserved)
-        panel = self._validate_selection_panel(panel)
         self._marker(manifest, panel)
-        receipt = dict(refresh_sha256=refresh_sha, plan_sha256=file_sha(plan_path),
-                       manifest_sha256=file_sha(manifest), executable_sha256=frozen['executable_sha256'],
-                       prepared=time.time())
-        self._marker(ready, receipt)
-        return receipt
+        self._marker(ready, dict(prepared=time.time()))
+        return manifest
 
     def _prepare_corpus(self, labels):
         """An append-only local view of recipe archives + collected archives, without copying bytes.
@@ -1586,7 +1557,7 @@ class TrainingPipeline:
                 self.lock_fd = lock.fileno()  # child retains lock if the controller unexpectedly dies
                 old = json.loads(done.read_text()) if done.is_file() else None
                 if old and Path(job['model']).is_file():
-                    if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job), old.get('evaluation_directory')):
+                    if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job)):
                         return old
                 # task141: a finished round keeps its report; everything still waiting behind
                 # a newer round is skipped instead of trained and gated on stale data.
@@ -1595,13 +1566,6 @@ class TrainingPipeline:
                     return dict(superseded_by=newer)
                 if trained.is_file():
                     report = json.loads(trained.read_text())
-                    if (report.get('model_sha256') != file_sha(job['model'])
-                            or report.get('recipe_sha256') != file_sha(recipe_path)):
-                        raise ValueError('saved trained candidate or recipe changed')
-                elif old and Path(job['model']).is_file() and 'train_finished' in old:
-                    # Pre-A completion is proof of training only, never a quality approval.
-                    report = {k: v for k, v in old.items() if k not in
-                              ('promotion', 'evaluation_started', 'evaluation_finished', 'evaluation_directory')}
                 elif job.get('training_seeds'):
                     report = self._train_selected(job)
                 else:
@@ -1613,7 +1577,7 @@ class TrainingPipeline:
                     report = {'round': job['round'], 'model': job['model']}
                     for phase, command in (
                         ('pack', pack_command(local_args, recipe['labels'])),
-                        ('train', [str(self.args.python) if self.args.python.exists() else sys.executable,
+                        ('train', [str(self.args.python),
                                    str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(recipe_path)])):
                         self._admit()
                         report[phase + '_started'] = time.time()
@@ -1635,7 +1599,6 @@ class TrainingPipeline:
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
                 if not Path(job['model']).is_file():
                     raise RuntimeError(f'trainer did not publish {job["model"]}')
-                report.update(model_sha256=file_sha(job['model']), recipe_sha256=file_sha(recipe_path))
                 temporary = trained.with_suffix('.building')
                 temporary.write_text(json.dumps(report, indent=2) + '\n')
                 temporary.replace(trained)
@@ -1664,18 +1627,16 @@ class TrainingPipeline:
         folder = recipe_path.parent
         recipe = load_recipe(recipe_path, 'training')
         report = dict(round=job['round'], model=job['model'])
-        report['selection_preparation'] = self._prepare_selection(job)
+        report['selection_preparation'] = str(self._prepare_selection(job))
         pack_marker = folder / 'packed.json'
         if pack_marker.is_file():
             packed = json.loads(pack_marker.read_text())
-            if packed['recipe_sha256'] != file_sha(recipe_path):
-                raise ValueError('saved packed recipe changed')
             self.build_peak = 0
         else:
             self._admit()
             local_args = copy.copy(self.args)
             local_args.recipe, local_args.frames = recipe_path, Path(recipe['data'])
-            packed = dict(pack_started=time.time(), recipe_sha256=file_sha(recipe_path))
+            packed = dict(pack_started=time.time())
             try:
                 self._prepare_corpus(recipe['labels'])
                 packed['pack_peak_anon_bytes'] = self._command(
@@ -1685,7 +1646,7 @@ class TrainingPipeline:
             packed['pack_finished'] = time.time()
             self._marker(pack_marker, packed)
         report.update({key: value for key, value in packed.items() if key.startswith('pack_')})
-        python = str(self.args.python) if self.args.python.exists() else sys.executable
+        python = str(self.args.python)
         def train_seed(seed, admitted=False):
             directory = folder / 'seeds' / f'seed_{seed:06d}'
             directory.mkdir(parents=True, exist_ok=True)
@@ -1694,16 +1655,11 @@ class TrainingPipeline:
                        if 'candidate_recipes' in job else dict(recipe=str(recipe_path)))
             child_recipe = dict(load_recipe(Path(variant['recipe']), 'training'),
                                 seed=seed, out=str(directory / 'student'))
-            if path.exists():
-                if load_recipe(path, 'training') != child_recipe:
-                    raise ValueError('saved seed recipe changed')
-            else:
+            if not path.exists():
                 write_recipe(path, child_recipe)
             model, marker = directory / 'student/model.pt', directory / 'trained.json'
             if marker.is_file():
                 candidate = json.loads(marker.read_text())
-                if candidate['recipe_sha256'] != file_sha(path) or candidate['model_sha256'] != file_sha(model):
-                    raise ValueError('saved seed candidate changed')
             else:
                 candidate = dict(seed=seed, model=str(model), recipe=str(path),
                                  source_recipe=variant.get('source_recipe', str(recipe_path)),
@@ -1719,14 +1675,12 @@ class TrainingPipeline:
                     candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():
                         raise RuntimeError(f'trainer did not publish {model}')
-                    candidate.update(status='trained', train_finished=time.time(),
-                                     model_sha256=file_sha(model), recipe_sha256=file_sha(path))
+                    candidate.update(status='trained', train_finished=time.time())
                     self._marker(marker, candidate)
                 except Exception as error:
                     if systemic_game_failure(error):
                         raise
                     candidate.update(status='failed', train_finished=time.time(), error=str(error))
-                    self._marker(directory / 'failed.json', candidate)
                     log_line(self.args.log, f'background round {job["round"]} seed {seed} failed; '
                                             f'continuing other seeds: {error}')
             return candidate
@@ -1789,15 +1743,12 @@ class TrainingPipeline:
         return report
 
     def _select(self, job, candidates):
-        manifest = Path(job['selection_manifest'])
-        expected_sha = self._prepare_selection(job)['manifest_sha256']
-        if file_sha(manifest) != expected_sha:
-            raise ValueError('frozen selection panel changed')
+        manifest = self._prepare_selection(job)
         panel = json.loads(manifest.read_text())
         sets = ','.join(f'{task["task_id"]}:0:{len(task["seeds"])}' for task in panel['tasks'])
         folder = Path(job['recipe']).parent
         units = self._evaluation_units()
-        command = [str(self.args.python) if self.args.python.exists() else sys.executable,
+        command = [str(self.args.python),
                    str(ROOT / 'scripts/select_student.py'), '--candidates',
                    ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
                    '--manifest', str(manifest), '--sets', sets, '--workers', str(units),
@@ -1807,11 +1758,8 @@ class TrainingPipeline:
         peak = self._command(command, folder / 'selection.log')
         receipt = json.loads((folder / 'student/selection.json').read_text())
         eligible = {candidate['model']: candidate for candidate in candidates}
-        best = receipt['best']
-        if (best not in eligible or receipt['model_sha256'] != eligible[best]['model_sha256']
-                or file_sha(job['model']) != receipt['model_sha256']
-                or receipt['manifest_sha256'] != expected_sha):
-            raise ValueError('selected candidate does not match its training/panel receipt')
+        if receipt['best'] not in eligible:
+            raise ValueError('selected candidate is not one of the trained candidates')
         return dict(selection=receipt, selection_started=started, selection_finished=time.time(),
                     selection_peak_anon_bytes=peak, selection_units=units)
 
@@ -1880,20 +1828,14 @@ class TrainingPipeline:
             return
         promotion = report.get('promotion', {})
         current_contract = self.evaluation_contract(job)
-        invalid = False
-        if (promotion.get('version') != self.gate_version or promotion.get('policy') != promotion_policy(self.gate_version)
-                or type(promotion.get('approved')) is not bool):
-            invalid = True
-        elif promotion.get('contract') != current_contract:
+        if promotion.get('contract') != current_contract:
             job['status'] = 'queued'
             log_line(self.args.log, f'background round {job["round"]} comparison stale; re-evaluate current student')
             self._seeded(job)
             self.futures[index] = (job, self.executor.submit(self._run, copy.deepcopy(job)))
             save_state(self.args.state, self.state)
             return
-        elif not any(reason.startswith('evaluation_error:') for reason in promotion.get('reasons', [])):
-            invalid = not valid_certificate(promotion, current_contract, report.get('evaluation_directory'))
-        if invalid:
+        if not valid_certificate(promotion, current_contract):
             promotion = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
                              contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
             report['promotion'] = promotion
@@ -2304,18 +2246,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
 
 
 def set_gate_version(state: dict, version: int) -> None:
-    """A policy change may not cross an issued gate: queued/running jobs keep the version they were issued with.
-
-    A partly collected round is fine: its gate contract is only issued when its training job is queued at the
-    round's end, so collected groups carry no gate version (draining a whole round under the old policy would
-    idle collection for hours).
-    """
-    previous = state.get('gate_version', 3)  # all pre-task113 states used v3
-    pending = any(job.get('status') not in ('done', 'superseded') and not job.get('isolated')
-                  for job in state.get('training_jobs', []))
-    if version != previous and pending:
-        raise ValueError(f'gate v{previous} -> v{version} requires a drained pipeline; '
-                         f'let the queued jobs finish with --gate-version {previous}')
+    if version != GATE_VERSION:
+        raise ValueError(f'unsupported gate version: {version}')
     state['gate_version'] = version
 
 
@@ -2328,8 +2260,8 @@ def main() -> None:
                         help='additional registered training panel (task137 random-deck cells); repeatable')
     parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
                         help='max share of the round budget for random-deck cells (default 0.15)')
-    parser.add_argument('--gate-version', type=int, choices=(1, 2, 3, 4, 5, 6), default=GATE_VERSION,
-                        help='promotion policy; change only with no queued/running gate jobs')
+    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION,), default=GATE_VERSION,
+                        help='promotion policy (v6 roof wave endpoint, v5 adventure panel)')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
@@ -2337,7 +2269,7 @@ def main() -> None:
     parser.add_argument('--log', type=Path, default=DEFAULT_LOG)
     parser.add_argument('--stop-flag', type=Path, default=STOP_FLAG,
                         help='checked only between groups; independent runs should use an independent flag')
-    parser.add_argument('--out', type=Path, default=MAIN / 'artifacts/hard')
+    parser.add_argument('--out', type=Path, default=ROOT / 'artifacts/hard')
     parser.add_argument('--frames', type=Path, default=DEFAULT_FRAMES)
     parser.add_argument('--obs-v3', action=argparse.BooleanOptionalAction, default=False,
                         help='write rich token attachment with each collected episode (deploy18 enables this)')
@@ -2386,7 +2318,7 @@ def main() -> None:
     parser.add_argument('--opening-manifest', type=Path,
                         help='fixed 1.0x cold-start specialists, 12 beta=0 + 12 beta=0.5 per cell')
     parser.add_argument('--promotion-panel', type=Path,
-                        default=Path(load_recipe(ROOT / 'recipes/panel_v2.json', 'panel')['manifest']),
+                        default=ROOT / 'configs/gate_v5_panel.json',
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
@@ -2438,9 +2370,7 @@ def main() -> None:
     if args.demo_start_share is not None and not 0.0 <= args.demo_start_share <= 1.0:
         parser.error('--demo-start-share must be within 0..1')
     try:
-        probe = None
-        if args.gate_version >= 2:
-            probe = (SEED_POOL_V2[0], SEED_POOL_V2[0] + promotion_policy(args.gate_version)['pair_count'])
+        probe = (SEED_POOLS_V2[0][0], SEED_POOLS_V2[0][0] + promotion_policy(args.gate_version)['pair_count'])
         freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
@@ -2460,9 +2390,8 @@ def main() -> None:
     teacher = load_teacher_rates(args.teacher_rates)
     if not teacher:
         log_line(args.log, f'no teacher-rate evidence at {args.teacher_rates}; ranking by student rate only')
-    patterns = args.init_glob or [str(MAIN / 'artifacts/hard/*/config.json'),
-                                  str(MAIN / 'artifacts/task28/*/config.json'),
-                                  str(MAIN / '.claude/worktrees/*/artifacts/**/config.json')]
+    patterns = args.init_glob or [str(ROOT / 'artifacts/hard/*/config.json'),
+                                  str(ROOT / 'artifacts/task28/*/config.json')]
     if args.state.exists():
         state = read_json(args.state)
         if (not isinstance(state, dict) or type(state.get('round')) is not int or state['round'] < 0

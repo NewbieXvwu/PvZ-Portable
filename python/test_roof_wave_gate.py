@@ -7,7 +7,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
-from pvz_promotion import decide, decide_scored, freeze_panel, policy, summarize_waves, wilcoxon_worse
+from pvz_promotion import decide, decide_scored, freeze_panel, policy, summarize, summarize_waves, wilcoxon_worse
 from promotion_gate import _paired_rows
 
 
@@ -25,22 +25,14 @@ def test_exact_wilcoxon_roof_ties_zeros_and_direction(differences, statistic, p)
     assert result['nonzero_pairs'] == sum(d != 0 for d in differences)
 
 
-def test_roof_wave_recording_and_legacy_pairs():
+def test_roof_wave_recording():
     task = dict(task_id='roof', seeds=[2, 1])
     outcomes = dict(candidate={1: dict(won=False, final_wave=5), 2: dict(won=False, final_wave=8)},
                     incumbent={1: dict(won=False, final_wave=6), 2: dict(won=False, final_wave=7)})
-    legacy = _paired_rows(task, 'roof', outcomes, 5)
-    assert legacy == [dict(task_id='roof', seed=seed, zone='roof', candidate=False, incumbent=False)
-                      for seed in task['seeds']]
-    recorded = _paired_rows(task, 'roof', outcomes, 6)
+    recorded = _paired_rows(task, 'roof', outcomes)
     assert [(row['seed'], row['candidate_wave'], row['incumbent_wave']) for row in recorded] == [(2, 8, 7), (1, 5, 6)]
     assert summarize_waves(recorded)['wilcoxon_worse_p'] == .75
     assert summarize_waves(recorded)['mean_delta_wave'] == 0
-    with pytest.raises(ValueError, match='paired roof waves'):
-        summarize_waves(legacy)
-    outcomes['candidate'][1].pop('final_wave')
-    with pytest.raises(ValueError, match='final_wave'):
-        _paired_rows(task, 'roof', outcomes, 6)
 
 
 def v6_pairs():
@@ -54,21 +46,18 @@ def v6_pairs():
 
 def test_v6_roof_endpoint_uses_90_pairs_and_preserves_overall_and_monitoring():
     panel, pairs = v6_pairs()
-    old_panel = freeze_panel(json.loads((ROOT / 'configs/gate_v5_panel.json').read_text()),
-                             version=5, seed_block=panel['seed_block'])
     assert panel['panel_version'] == 'v6-task168'
-    assert panel['tasks'] == old_panel['tasks']
-    assert policy(6)['pair_count'] == policy(5)['pair_count'] == 1920
+    assert policy()['pair_count'] == 1920
     for row in pairs:
         if row['zone'] in ('roof', 'heldout'):
             row.update(candidate=False, incumbent=False)
         if row['zone'] == 'roof':
             row.update(candidate_wave=10, incumbent_wave=20)
     result = decide(pairs, panel)
-    legacy = decide(pairs, old_panel)
-    assert legacy['approved'] and not result['approved']
+    assert not result['approved']
     assert result['reasons'] == ['significant_roof_wave_regression:roof']
-    assert result['overall'] == legacy['overall'] and result['monitor'] == legacy['monitor']
+    assert result['overall'] == summarize([row for row in pairs if row['zone'] != 'heldout'])
+    assert all(cell['harm'] == 0 for cell in result['monitor'].values())
     assert result['zones']['roof']['waves']['pairs'] == 90
     assert result['zones']['roof']['waves']['wilcoxon_worse_p'] == 2**-90
     assert 'holm_adjusted_p' not in result['zones']['roof']
@@ -83,19 +72,15 @@ def test_v6_four_binary_zones_keep_mcnemar_and_use_four_way_holm():
     for row in pairs[:7]:
         row['candidate'] = False
     scored = [row for row in pairs if row['zone'] != 'heldout']
-    old, new = decide_scored(scored, 5), decide(pairs, panel)
-    assert old['overall'] == new['overall']
+    new = decide(pairs, panel)
+    assert summarize(scored) == new['overall']
     for zone in ('day', 'night', 'pool', 'fog'):
         assert {key: value for key, value in new['zones'][zone].items() if key != 'holm_adjusted_p'} == \
-            {key: value for key, value in old['zones'][zone].items() if key != 'holm_adjusted_p'}
+            summarize([row for row in scored if row['zone'] == zone])
     assert new['zones']['day']['holm_adjusted_p'] == 4 / 128
-    assert old['zones']['day']['holm_adjusted_p'] == 5 / 128
     assert 'significant_zone_regression:day' in new['reasons']
     pairs[-1]['candidate'] = False  # A heldout loss still cannot veto.
     assert decide(pairs, panel)['reasons'] == new['reasons']
-    next(row for row in pairs if row['zone'] == 'roof').pop('candidate_wave')
-    with pytest.raises(ValueError, match='paired roof waves'):
-        decide(pairs, panel)
 
 
 @pytest.mark.parametrize('round_number,approved', [(26, False), (27, True), (28, False), (29, False), (36, True)])
@@ -113,7 +98,7 @@ def test_v6_preregistered_historical_roof_replay(round_number, approved):
         pairs.extend(dict(task_id=name, seed=seed, zone='roof', candidate=candidate, incumbent=incumbent,
                           candidate_wave=cwave, incumbent_wave=iwave)
                      for seed, cwave, iwave, candidate, incumbent in rows)
-    result = decide_scored(pairs, version=6)
+    result = decide_scored(pairs)
     assert result['approved'] is approved
     assert result['reasons'] == record['new_reasons']
     if round_number in (27, 29):

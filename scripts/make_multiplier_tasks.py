@@ -31,7 +31,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-MAIN = Path('/home/newbiexvwu/PvZ-search')
+MAIN = ROOT
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402
