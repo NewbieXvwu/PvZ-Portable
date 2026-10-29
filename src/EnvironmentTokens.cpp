@@ -12,6 +12,7 @@
 #include <cmath>
 #include <iomanip>
 #include <ostream>
+#include <stdexcept>
 
 std::vector<EnvironmentToken> PublicObservationTokens(LawnApp* app)
 {
@@ -129,17 +130,36 @@ std::vector<EnvironmentToken> PublicObservationTokens(LawnApp* app)
 	return tokens;
 }
 
+std::vector<float> ObservationTokenArray(const std::vector<EnvironmentToken>& tokens, size_t capacity)
+{
+	if (capacity == 0) capacity = tokens.size();
+	if (capacity < tokens.size()) throw std::length_error("obs-v3 token count exceeds graph capacity");
+	std::vector<float> values(capacity * ObservationTokenFields);
+	for (size_t i = 0; i < capacity; ++i)
+	{
+		float* row = values.data() + i * ObservationTokenFields;
+		row[3] = row[4] = row[5] = -1;
+		if (i >= tokens.size()) continue;
+		const auto& t = tokens[i];
+		row[0] = t.kind; row[1] = t.category; row[2] = t.variant;
+		row[3] = t.row; row[4] = t.col; row[5] = t.target;
+		std::copy(t.features.begin(), t.features.end(), row + 6);
+	}
+	return values;
+}
+
 void WriteObservationTokens(std::ostream& out, LawnApp* app)
 {
 	const auto tokens = PublicObservationTokens(app);
+	const auto values = ObservationTokenArray(tokens);
 	const auto precision = out.precision();
 	out << ",\"v3\":{\"version\":3,\"tokens\":[" << std::setprecision(9);
 	for (size_t i = 0; i < tokens.size(); ++i)
 	{
 		if (i) out << ',';
-		const auto& t = tokens[i];
-		out << '[' << t.kind << ',' << t.category << ',' << t.variant << ',' << t.row << ',' << t.col << ',' << t.target;
-		for (float value : t.features) out << ',' << value;
+		out << '[';
+		for (int j = 0; j < ObservationTokenFields; ++j)
+			out << (j ? "," : "") << values[i * ObservationTokenFields + j];
 		out << ']';
 	}
 	out << "]}";

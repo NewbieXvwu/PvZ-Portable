@@ -72,6 +72,7 @@ def replay_archive(env, path, out, *, manifest=None, task_id=None):
                 if value != record.get(key):
                     raise ValueError(f"{path}: frame {index}, {key} differs from replay")
             record["v3"] = obs["v3"]
+            record.setdefault("v2", obs["v2"])
         destination = out / "frames" / path.parent.parent.name / path.parent.name
         destination.mkdir(parents=True, exist_ok=False)
         write_frames(destination / "frames.npz", frames)
@@ -79,6 +80,8 @@ def replay_archive(env, path, out, *, manifest=None, task_id=None):
         (destination / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n")
         return dict(source=str(path), mismatch=False, frames_written=len(frames),
                     tokens=sum(len(frame["v3"]["tokens"]) for frame in frames),
+                    max_tokens=max(len(frame["v3"]["tokens"]) for frame in frames),
+                    bytes_written=(destination / "frames.npz").stat().st_size,
                     seconds=time.perf_counter() - started)
     except ValueError as error:
         return dict(source=str(path), mismatch=True, frame=index, reason=str(error), frames_written=0,
