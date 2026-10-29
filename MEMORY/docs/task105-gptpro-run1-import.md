@@ -120,6 +120,21 @@
 - 提交器的systemd环境必须继承当前shell代理：启动时增加 `--setenv=HTTP_PROXY --setenv=HTTPS_PROXY --setenv=NO_PROXY --setenv=http_proxy --setenv=https_proxy --setenv=no_proxy`（仅传变量名，不在命令或文档记录变量值）。未继承时会直接访问GitHub并因域名解析失败而返回128。
 - 仅重启提交器，原两进程主线和单进程辅线保持运行；修复后后台已成功补推 `254f7e2f`。累计230/1246扫描、228格、生产0格；L2新增阶梯[594,378,324,271,217,163,109,55,1]，顶档老师8/8，未来块321000000–321000255。继续扫描，未执行部署。
 
+## 追加输入 3 续领池修复（2026-10-29 10:25 后）
+
+- 主控已在 10:25 用 `deploy_task105.py --apply` 部署 246 格，回滚副本 `/home/newbiexvwu/pvz-logs/task105_deploy_ghynjbfk`；生产 qc 清单 99 → 345 个任务。
+- 首次 apply 被生产加载器拒绝：`demo_roof_49_doom_m300_s81018038_a39598b6f6507` 的未来块 200000000 落在 task114 续领池 [200000000,201000000) 内（生产 `pvz_promotion.START_SEED_POOL`，账本 `~/pvz-logs/start_cell_seed_ledger.json`）。主控把该格手工改成 400000000 后才应用成功。
+- 本次修复根因而不是只改一格：`scripts/import_llm_run.py` 新增 `RESERVED_SEED_POOLS = ((200000000, 201000000),)`，`occupied_seed_ranges()` 把续领池并进占用段，于是扫描分配器与登记账本（都走这个函数）永远跳过它；新增用例 `test_renewal_pool_is_never_allocated` 守住。
+- 本地清单 `configs/human_demo_tasks.json` 该格同步为 400000000–400000255，`DESIGN.md` 同步；400000000 段经 `occupied_seed_ranges` 与清单双重核对为空闲。
+- 用生产加载器 `curriculum_queue.load_demo_start_cells` 复验本地清单：278 格全部接受、续领池内 0 格（修复前正是这一步拒绝）。
+- 重建 `deployment_plan.json`：246 格已全部出现在生产清单，待部署 0 格；扫描证据里的老师率仍是用旧 200000000 段未来种子测的（只做评估，不占课程种子）。
+
+## 追加输入 3 计划刷新记录（2026-10-29 起）
+
+- 机制：`~/pvz-logs/task105_refresh.py` 以 systemd 用户服务 `task105-refresh`（MemoryMax=128M、Nice=15）常驻，每 300 秒读一次 `artifacts/task105/delivery_summary.json`；已登记格数比上次刷新多满 50 格时，跑一次 `scripts/task105_results.py`（只读已有结果 JSON，不重放、不开游戏、不解压）重建 `deployment_plan.json`，并在本节追加一行。基线状态存 `~/pvz-logs/task105_refresh_state.json`。
+- 基线（2026-10-29 11:20，接管时）：已登记 246 格、生产 qc 清单 246 格、待主控部署 0 格；扫描 248/1246。下一次刷新触发点 = 登记 296 格。
+- 每行的含义：新增登记数、累计扫描/登记/生产数、`deployment_plan.json` 里待部署格数。本任务始终不执行部署脚本，计划只供主控在 qc 组边界应用。
+
 ## 结果
 
 - 累计1578份SHA去重存档：deploy14 verify通过1576份、拒绝2份；按(任务,种子)去重为812个通关种子、246个稳健种子。稳健按随包第10波k=8且≥5胜记录。
@@ -495,13 +510,3 @@
 - 已增量导入1578个唯一SHA：1576份通过、2份拒绝。拒绝原因见上方结果节。
 - 接手扫描248/1246份，已登记246格、生产qc清单246格。剩余998份继续断点扫描。
 - 未执行部署；已登记且未部署的起点格由主控在组边界应用。存档、策略及游戏资源只留本机。
-
-## 追加输入 3 续领池修复（2026-10-29 10:25 后）
-
-- 主控已在 10:25 用 `deploy_task105.py --apply` 部署 246 格，回滚副本 `/home/newbiexvwu/pvz-logs/task105_deploy_ghynjbfk`；生产 qc 清单 99 → 345 个任务。
-- 首次 apply 被生产加载器拒绝：`demo_roof_49_doom_m300_s81018038_a39598b6f6507` 的未来块 200000000 落在 task114 续领池 [200000000,201000000) 内（生产 `pvz_promotion.START_SEED_POOL`，账本 `~/pvz-logs/start_cell_seed_ledger.json`）。主控把该格手工改成 400000000 后才应用成功。
-- 本次修复根因而不是只改一格：`scripts/import_llm_run.py` 新增 `RESERVED_SEED_POOLS = ((200000000, 201000000),)`，`occupied_seed_ranges()` 把续领池并进占用段，于是扫描分配器与登记账本（都走这个函数）永远跳过它；新增用例 `test_renewal_pool_is_never_allocated` 守住。
-- 本地清单 `configs/human_demo_tasks.json` 该格同步为 400000000–400000255，`DESIGN.md` 同步；400000000 段经 `occupied_seed_ranges` 与清单双重核对为空闲。
-- 用生产加载器 `curriculum_queue.load_demo_start_cells` 复验本地清单：278 格全部接受、续领池内 0 格（修复前正是这一步拒绝）。
-- 重建 `deployment_plan.json`：246 格已全部出现在生产清单，待部署 0 格；扫描证据里的老师率仍是用旧 200000000 段未来种子测的（只做评估，不占课程种子）。
-
