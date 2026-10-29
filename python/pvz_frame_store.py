@@ -412,8 +412,11 @@ def _derive_timer_cache(source: bytes, digest: str, target: Path,
         with np.load(parent, allow_pickle=False) as stored:
             if str(stored['digest']) != parent_digest:
                 continue
-        with read_episode_cache(parent) as stored:
-            rows = np.asarray(stored['rows'], dtype=np.int64)
+        try:
+            with read_episode_cache(parent) as stored:
+                rows = np.asarray(stored['rows'], dtype=np.int64)
+        except (FileNotFoundError, ValueError):
+            continue
         lines = source.splitlines()
         channels = np.empty((len(rows), 4, 6, 10), dtype=np.float16)
         for offset, index in enumerate(rows):
@@ -443,8 +446,12 @@ def cache_episode(path: Path, directory: Path, obs: str = "v1", read_directory: 
         if candidate.exists():
             with np.load(candidate, allow_pickle=False) as stored:
                 if str(stored["digest"]) == digest:
-                    if 'timer_from' in stored.files and not Path(str(stored['timer_from'])).is_file():
-                        continue
+                    if 'timer_from' in stored.files:
+                        try:
+                            with read_episode_cache(Path(str(stored['timer_from']))):
+                                pass
+                        except (FileNotFoundError, ValueError):
+                            continue
                     if 'zero_pad_from' in stored.files:
                         parent = Path(str(stored['zero_pad_from']))
                         if not parent.is_file():

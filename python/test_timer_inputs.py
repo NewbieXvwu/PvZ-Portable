@@ -218,6 +218,31 @@ class TimerCacheTest(unittest.TestCase):
             with store.read_episode_cache(derived) as actual:
                 np.testing.assert_array_equal(actual['boards'], expected['boards'])
 
+    def test_missing_timer_ancestor_rebuilds_a_standalone_cache(self):
+        import pvz_frame_store as store
+        first = timer_frame()
+        first.pop('bungee', None)
+        second = copy.deepcopy(first)
+        second['action'] = dict(type='wait', ticks=60)
+        for existing_timer in (False, True):
+            with self.subTest(existing_timer=existing_timer), tempfile.TemporaryDirectory() as directory:
+                root = Path(directory)
+                path = root / 'seed_1' / 'example' / 'frames.npz'
+                store.write_frames(path, [first, second])
+                source = store.frame_bytes(path)
+                expected = store.encode_student_frames([first, second], source, 'v2timer')
+                ancestor = store.cache_episode(path, root / 'shared', 'v2')
+                store.cache_episode(path, root / 'shared', 'v2sleep')
+                if existing_timer:
+                    store.cache_episode(path, root / 'local', 'v2timer', root / 'shared')
+                ancestor.unlink()
+                rebuilt = store.cache_episode(path, root / 'local', 'v2timer', root / 'shared')
+                with np.load(rebuilt, allow_pickle=False) as stored:
+                    self.assertNotIn('timer_from', stored.files)
+                with store.read_episode_cache(rebuilt) as actual:
+                    for name, array in expected.items():
+                        np.testing.assert_array_equal(actual[name], array)
+
 
 if __name__ == '__main__':
     unittest.main()
