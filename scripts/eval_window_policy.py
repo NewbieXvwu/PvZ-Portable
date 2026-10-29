@@ -72,6 +72,7 @@ def main():
     parser.add_argument('--eval-data', type=Path, help='external heldout corpus, separate from training data')
     parser.add_argument('--manifest', type=Path, help='task157 fixed train/seen/unseen/terrain_sample split')
     parser.add_argument('--batch-size', type=int, default=256)
+    parser.add_argument('--tokens', type=Path, help='task162 sparse decision tokens aligned with --pack')
     args = parser.parse_args()
     recipe = load_recipe(args.recipe, 'training')
     torch.set_num_threads(1)
@@ -103,6 +104,12 @@ def main():
     data = read_pack(args.pack, eval_data, observe, merge_dir=args.merge_dir)
     boards, scalars, plant, packets, cells, _weight, seeds = data[:7]
     info = data[9 + bool(recipe['aux_weight'])] if recipe['packet_head'] == 'identity' else None
+    tokens = data[-1] if recipe['obs'] == 'v3' else None
+    if args.tokens:
+        if recipe['obs'] != 'v3':
+            parser.error('--tokens requires obs=v3')
+        from pvz_research_data import decision_tokens
+        tokens = decision_tokens(args.tokens, len(seeds), recipe.get('token_input', 'compact'))
     if info is None:
         raise ValueError('deck-stratified evaluation requires an identity packet pack')
     rng = random.Random(recipe['validation']['seed'])
@@ -146,7 +153,7 @@ def main():
             planted = plant[idx].bool()
             pk, cell = packets[idx].long(), cells[idx].long()
             packet_info = info[idx]
-            extra = {'tokens': data[-1].batch(idx, 'cpu')} if recipe['obs']=='v3' else {}
+            extra = {'tokens': tokens.batch(idx, 'cpu')} if tokens is not None else {}
             out = net(boards.batch(idx, 'cpu'), scalars.batch(idx, 'cpu'), pk.clamp(min=0), packet_info=packet_info, **extra)
             pred_type = out['plant'] > 0
             packet_ok = (out['packet'].argmax(1) == pk) & planted

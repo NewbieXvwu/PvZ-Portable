@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
 
 
-def archive_fingerprint(data: Path, labels) -> str:
+def archive_fingerprint(data: Path, labels, token_input='compact') -> str:
     """What the pack was built from: every archive's path and size, so a new or changed game invalidates it.
 
     mtime is deliberately not part of it: a copy that keeps the bytes (HF transfer, scp) keeps the size,
@@ -26,16 +26,24 @@ def archive_fingerprint(data: Path, labels) -> str:
     """
     from pvz_frame_store import frame_paths
     data = Path(data)
-    return fingerprint_paths(data, [path for path in frame_paths(data) if path.parent.name in labels])
+    return fingerprint_paths(data, [path for path in frame_paths(data) if path.parent.name in labels], token_input)
 
 
-def fingerprint_paths(data: Path, paths) -> str:
+def fingerprint_paths(data: Path, paths, token_input='compact') -> str:
     lines = []
     for path in paths:
         line = f"{path.relative_to(data)}:{path.stat().st_size}"
         selection = training_rows(path)
         if selection is not None:
             line += ':training_rows=' + json.dumps(selection, separators=(',', ':'))
+        if token_input == 'obs_v3':
+            import zipfile
+            attachment = path.parent / 'tokens_v3.npz'
+            if attachment.is_file():
+                # Read ZIP metadata only; adding/changing an attachment invalidates rich packs.
+                with zipfile.ZipFile(attachment) as archive:
+                    members = [(m.filename, m.CRC, m.file_size) for m in archive.infolist()]
+                line += ':obs_v3=' + json.dumps(members, separators=(',', ':'))
         lines.append(line)
     lines.sort()
     return hashlib.sha1("|".join(lines).encode()).hexdigest()[:16]

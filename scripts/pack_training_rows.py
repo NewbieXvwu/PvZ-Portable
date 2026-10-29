@@ -225,6 +225,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 n += count
             continue
         frames = read_frames(path)
+        from pvz_research_data import episode_tokens
+        attachment = episode_tokens(path) if obs == 'v3' and token_input == 'obs_v3' else None
         future_damage = row_damage_labels(frames, aux_horizon) if aux_horizon else None
         ctx = _episode_context(path) if with_context else None
         if obs not in ("v1", "v3"):
@@ -249,7 +251,8 @@ def build_from_archives(data: Path, labels: set[str], wait_keep: float = 1.0,
                 scalars = CompactBoards(s.shape, np.float32)
             if tokens is not None:
                 from pvz_student_tokens import frame_tokens
-                tokens.append(frame_tokens(frames[i - 1], ctx, token_input))
+                tokens.append(attachment.sample(i - 1) if attachment is not None else
+                              frame_tokens(frames[i - 1], ctx, token_input))
             archive_boards.append(b.numpy())
             archive_scalars.append(s.numpy())
             if packets is not None:
@@ -400,7 +403,7 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
     for label, paths in sorted(catalog.items()):
         if not paths:
             raise ValueError(f'no archives for label {label!r} in {data}')
-        contract = segment_options(options, label, fingerprint_paths(data, paths))
+        contract = segment_options(options, label, fingerprint_paths(data, paths, options.get('token_input', 'compact')))
         target = segment_path(data, contract)
         segments.append(target)
         valid = False
@@ -470,7 +473,7 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
 
 def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_context: bool = False,
                 obs: str = "v1", cells: bool = False, aux_horizon: int = 0, packet_head: str = "slot",
-                row_observer=None, cache_dir=None, rebuild: bool = False):
+                row_observer=None, cache_dir=None, rebuild: bool = False, token_input='compact'):
     """Build the pack if this exact input has none yet, then read it the way the trainer does.
 
     rebuild forces the build even when a pack exists: a changed archive of the same size would
@@ -478,7 +481,7 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
     """
     from train_rollout_policy import read_pack
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, set(labels)))
+                           sources=archive_fingerprint(data, set(labels), token_input), token_input=token_input)
     path = pack_path(data, options)
     if rebuild or not path.is_file():
         pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
@@ -561,7 +564,7 @@ def main() -> None:
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(","))), token_input=args.token_input)
+                           sources=archive_fingerprint(args.data, set(args.labels.split(",")), args.token_input), token_input=args.token_input)
     if args.verify:
         if args.out is None:
             p.error("--verify needs --out")

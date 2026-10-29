@@ -386,7 +386,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels), token_input=token_input)
+                           sources=archive_fingerprint(data, labels, token_input), token_input=token_input)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -751,7 +751,10 @@ def main(*, step_observer=None) -> None:
     p.add_argument('--skip-validation', action='store_true', help='defer row evaluation to the CPU worker')
     p.add_argument('--pack', type=Path, help='use an existing frozen pack index without rescanning the corpus')
     p.add_argument('--merge-dir', type=Path, help='private merged pack cache; never lock the production merge')
+    p.add_argument('--tokens', type=Path, help='task162 sparse decision_tokens alongside an existing frozen --pack')
     args = training_args(p)
+    if args.tokens and (not args.pack or args.obs != 'v3'):
+        p.error('--tokens requires --pack and obs=v3')
     yielding = args.checkpoint_seconds > 0 or args.resume is not None
     yield_requested = False
     resume_ready = False
@@ -796,6 +799,11 @@ def main(*, step_observer=None) -> None:
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     tokens = loaded[-1] if args.obs == 'v3' else None
+    token_contract = None
+    if args.tokens:
+        from pvz_research_data import decision_tokens, decision_contract
+        tokens = decision_tokens(args.tokens, len(plant), args.token_input)
+        token_contract = decision_contract(args.tokens)
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
@@ -936,7 +944,7 @@ def main(*, step_observer=None) -> None:
                        next_start=next_start, epoch_rng=epoch_rng, train_loss=train_loss,
                        rng=torch.get_rng_state(), cuda_rng=torch.cuda.get_rng_state_all() if args.device.startswith('cuda') else [],
                        pack=str(args.pack.resolve()) if args.pack else None, pack_size=args.pack.stat().st_size if args.pack else None,
-                       training_rows=len(train_idx), validation_rows=len(val_idx))
+                       training_rows=len(train_idx), validation_rows=len(val_idx), token_contract=token_contract)
         temporary = target.with_suffix('.building')
         torch.save(payload, temporary)
         temporary.replace(target)
@@ -947,7 +955,8 @@ def main(*, step_observer=None) -> None:
         # Constant-size contract checks only; never replay or rehash the training corpus.
         if (saved['recipe'] != args.resolved_recipe or saved['training_rows'] != len(train_idx)
                 or saved['validation_rows'] != len(val_idx) or saved['pack'] != (str(args.pack.resolve()) if args.pack else None)
-                or saved['pack_size'] != (args.pack.stat().st_size if args.pack else None)):
+                or saved['pack_size'] != (args.pack.stat().st_size if args.pack else None)
+                or saved.get('token_contract') != token_contract):
             raise ValueError('resume recipe/pack/split differs from the saved run')
         net.load_state_dict(saved['state_dict']); opt.load_state_dict(saved['optimizer'])
         if schedule is not None:

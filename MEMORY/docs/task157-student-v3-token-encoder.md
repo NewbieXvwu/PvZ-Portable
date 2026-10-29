@@ -146,3 +146,12 @@ task163 可按该前缀下载后直接读取 manifest；数据取用确认后删
 已先 fetch：`origin/studentv3` 仍为 `e66d878a`，没有重复实现本节。`search_play.py --obs-v3` 默认关闭；开启时逐决策流式写 `tokens_v3.npz`，与 `frames.npz` 并列，紧凑帧不写入 v3。学生推理仍可读取内存中的富输入。附件采用 task162 的 ids/counts/columns/values/offsets/feature_offsets/packet_index/cell_index/terrain 稀疏 float32，另加公开 target_indices；不量化数值，保留负零。每局结束压缩，临时列文件随即删除。附件记录紧凑帧 ZIP 成员的 CRC 与长度，读取仅查目录，不重放。
 
 实际采集开关小测试以及 float32/目标链接往返测试通过（2 项，限内存、单线程），开关两边紧凑帧所有数组逐位一致。未部署，未改生产 qc。按轮回填抽样和开销数字将在本节继续追加。
+
+### 打包与训练路径（2026-10-29）
+
+- 小型语料可直接 `pack_training_rows.py --obs v3 --packet-head identity --token-input obs_v3 ...`：优先读帧旁 `tokens_v3.npz`，兼容原有内联 v3；仍使用原帧 i−1 对动作 i 和既有行抽样。仅 obs_v3 配方把附件 ZIP 目录里的 CRC/长度纳入 pack 身份，旧配方指纹不变。
+- 大语料优先沿用 task162 冻结的 pack 和 `sources.sqlite` 行计划：`prepare_decision_data.py tokens --sources <冻结源计划> --token-input obs_v3 --out <独立decision_tokens_v3>`。`split` 阶段硬链接紧凑帧与已有附件，token 阶段只读选中的 i−1 输入，不启动引擎。输出为 task162 同名 `.bin` 列与 `ready.json`，另加 `target_indices.bin`；按局记录进度，中断后截去未提交尾部继续。旧 compact decision_tokens 继续可读。不要把 rich 输出写进生产已有的 compact 目录。
+- 训练：`train_rollout_policy.py --recipe <obs=v3,token_input=obs_v3> --pack <冻结pack> --merge-dir <独立缓存> --tokens <decision_tokens_v3>`。CPU 评估同样支持 `eval_window_policy.py --tokens ...`。直接 mmap 列，不再复制富 token 成大号密集 pack。稀疏附件行数/输入版本与配方不符会拒绝；续训只比较小型 ready 元数据身份，不重读语料。旧入口不传 --tokens 时行为不变。
+- 混合 CNN 结构的 board 分支沿用 v1 网格通道，须使用对应的 v3/v1 board pack；不能直接把 v2timer board 通道交给混合结构。纯 token 结构不使用 board 张量，可沿用 task162 的 v2timer 冻结行 pack。
+
+一个相关小测试串通：非连续监督行→附件 pack→稀疏列中断续写→训练 SIGUSR1 保存/续训→CPU 评估，且目标链接及 float32 字节保持一致。测试仅选该用例、ulimit -v 8000000、CPU 单线程完成；没有运行全量 pack 或 GPU 训练。

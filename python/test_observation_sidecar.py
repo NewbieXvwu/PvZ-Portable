@@ -65,3 +65,103 @@ def test_sidecar_collection_switch_keeps_compact_bytes(tmp_path,monkeypatch):
         assert a.files==b.files
         for name in a.files:
             assert a[name].tobytes()==b[name].tobytes()
+
+
+def test_sidecar_pack_sparse_resume_train_and_evaluate(tmp_path, monkeypatch):
+    """Exact selected decision rows survive attachments, interrupted packing and training."""
+    import os
+    import signal
+    import sqlite3
+    from argparse import Namespace
+    import prepare_decision_data as prepare
+    import train_rollout_policy as trainer
+    import eval_window_policy as evaluate
+    from pvz_training_pack import archive_fingerprint, pack_options, pack_path
+    from pack_training_rows import pack
+    from pvz_recipe import write_recipe
+    from pvz_research_data import decision_tokens
+
+    torch.set_num_threads(1)
+    data=tmp_path/'data'
+    sources=tmp_path/'sources'
+    sources.mkdir()
+    connection=sqlite3.connect(sources/'sources.sqlite')
+    connection.execute('CREATE TABLE sources (source TEXT PRIMARY KEY, rows BLOB)')
+    expected=[]
+    for seed in range(4):
+        path=data/f'seed_{seed}'/'fixture'/'frames.npz'
+        path.parent.mkdir(parents=True)
+        frames=[]; samples=[]
+        for i in range(4):
+            f=dict(frame(),tick=i*60)
+            if i: f['action']=dict(type='plant',packet=0,row=0,col=1) if i==1 else dict(type='wait',ticks=60)
+            frames.append(f)
+            rich=dict(f,v3=rich_frame()['v3'])
+            sample=frame_tokens(rich,token_input='obs_v3')
+            sample['features'][0,31]=np.float32(seed+i/8)
+            samples.append(sample)
+        write_frames(path,frames)
+        meta=dict(training_rows=[1,3],context=dict(level=7))
+        (path.parent/'meta.json').write_text(json.dumps(meta))
+        legacy=archive_fingerprint(data,{'fixture'})
+        oldrich=archive_fingerprint(data,{'fixture'},'obs_v3')
+        writer=SparseTokenWriter(path.parent)
+        for sample in samples: writer.append(sample)
+        writer.finish(path.parent/SIDECAR_NAME,source_frame=path)
+        assert archive_fingerprint(data,{'fixture'})==legacy
+        assert archive_fingerprint(data,{'fixture'},'obs_v3')!=oldrich
+        source=str(path.relative_to(data))
+        raw=sources/'raw'/source
+        raw.parent.mkdir(parents=True)
+        os.link(path,raw)
+        os.link(path.parent/SIDECAR_NAME,raw.parent/SIDECAR_NAME)
+        connection.execute('INSERT INTO sources VALUES (?,?)',(source,np.array([1,3],np.int32).tobytes()))
+        expected.extend([samples[0],samples[2]])
+    connection.commit(); connection.close()
+    args=Namespace(out=tmp_path/'decision_tokens',sources=sources,token_input='obs_v3')
+    with pytest.raises(SystemExit) as interrupted:
+        prepare.tokens(args,lambda:True)
+    assert interrupted.value.code==75
+    with (args.out/'values.bin').open('ab') as stream: stream.write(b'partial uncommitted row')
+    prepare.tokens(args,lambda:False)
+    sparse=decision_tokens(args.out,8,'obs_v3')
+    for i,sample in enumerate(expected):
+        for name,value in sample.items(): assert sparse.sample(i)[name].tobytes()==value.tobytes()
+    with pytest.raises(ValueError,match='rows/input'): decision_tokens(args.out,9,'obs_v3')
+    with pytest.raises(ValueError,match='rows/input'): decision_tokens(args.out,8,'compact')
+    options=pack_options({'fixture'},obs='v3',packet_head='identity',token_input='obs_v3',
+        sources=archive_fingerprint(data,{'fixture'},'obs_v3'))
+    pack(data,options,quiet=True)
+    packed=trainer.load(data,{'fixture'},obs='v3',packet_head='identity',token_input='obs_v3')
+    for i,sample in enumerate(expected):
+        for name,value in sample.items(): assert packed[-1].sample(i)[name].tobytes()==value.tobytes()
+    # Existing compact pack and row plan are reusable; no dense rich copy is required.
+    compact=pack_options({'fixture'},obs='v1',packet_head='identity',sources=archive_fingerprint(data,{'fixture'}))
+    pack(data,compact,quiet=True)
+    frozen=pack_path(data,compact)
+    recipe=tmp_path/'recipe.json'; out=tmp_path/'trained'
+    write_recipe(recipe,dict(schema_version=1,kind='training',data=str(data),out=str(out),labels=['fixture'],
+        obs='v3',token_input='obs_v3',packet_head='identity',width=12,
+        network=dict(architecture='token',layers=1,heads=3,ff_width=16),
+        batch_size=2,epochs=1,max_steps=2,seed=1,validation=dict(seed=0,fraction=.25)))
+    class QuietMetrics:
+        def __init__(self,*a,**kw): pass
+        def start(self): return self
+        def update(self,**kw): pass
+        def close(self): pass
+    monkeypatch.setattr(trainer,'Metrics',QuietMetrics)
+    monkeypatch.setattr(trainer,'set_oom_score_adj',lambda _:None)
+    command=['train','--recipe',str(recipe),'--pack',str(frozen),'--tokens',str(args.out),
+        '--merge-dir',str(tmp_path/'merged'),'--checkpoint-seconds','60','--device','cpu']
+    monkeypatch.setattr(sys,'argv',command)
+    with pytest.raises(SystemExit) as yielded:
+        trainer.main(step_observer=lambda step,loss:os.kill(os.getpid(),signal.SIGUSR1))
+    assert yielded.value.code==75
+    saved=torch.load(out/'resume.pt',map_location='cpu',weights_only=False)
+    assert saved['token_contract']['path']==str(args.out.resolve())
+    monkeypatch.setattr(sys,'argv',command+['--resume',str(out/'resume.pt')])
+    trainer.main()
+    monkeypatch.setattr(sys,'argv',['eval','--recipe',str(recipe),'--pack',str(frozen),'--tokens',str(args.out),
+        '--merge-dir',str(tmp_path/'merged'),'--out',str(out),'--batch-size','2'])
+    evaluate.main()
+    assert json.loads((out/'heldout.json').read_text())['groups']['all']['rows']==2

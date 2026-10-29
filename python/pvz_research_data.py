@@ -150,6 +150,22 @@ def episode_tokens(frame_path):
     return store
 
 
+def decision_tokens(directory, rows, token_input):
+    """Bind a prebuilt decision attachment without opening any source game."""
+    store = SparseTokens(directory)
+    if (store.meta['rows'] != rows or store.meta.get('index_kind', 'decision') != 'decision'
+            or store.meta.get('token_input', 'compact') != token_input):
+        raise ValueError('decision token rows/input differ from the frozen pack recipe')
+    return store
+
+
+def decision_contract(directory):
+    """Small resume identity: the producer publishes immutable columns before ready.json."""
+    import hashlib
+    directory = Path(directory)
+    return dict(path=str(directory.resolve()), ready_sha256=hashlib.sha256((directory/'ready.json').read_bytes()).hexdigest())
+
+
 def capture_frame(observation, writer=None):
     """Collection-only boundary: inference can still read inline v3; compact storage cannot."""
     from render_episode import _frame

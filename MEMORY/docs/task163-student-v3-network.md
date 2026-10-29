@@ -152,3 +152,7 @@ OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ~/.venvs/ml/bin/python3 scripts/prepare
 - 本 worktree 独立 Release 引擎 `build-studentv3net`，nice10/-j2；四种结构通过真实引擎 id10 适配，三头最大误差 **1.80e-7**，合法动作与 Python 一致。没有替换生产二进制。
 - 小CPU作业测试覆盖7结构配方生成、v3一次 SIGUSR1 中断/断点接续、外部 manifest CPU评测及三组行数；默认CNN检查点/前向/旧导出仍逐位一致。测试全部按相关 `-k`、8,000,000KiB虚拟内存上限执行，没有GPU训练或全量重放。
 - HF 155局已下载，并硬链接到作业自己的 train/heldout 语料目录。已按用户要求删除远端 `transfer/task157_obs_v3_7e702892/`，删除提交 `1e69acb1727f145f9ef94455144947159f9af509`；本地数值档案保留供后续作业使用，未提交数据/检查点/日志。
+
+### task157 冻结后的接手收尾（2026-10-29）
+
+采集 `--obs-v3` 改为独立稀疏附件，紧凑帧逐位不变；打包器直接读附件。大语料复用 task162 冻结行计划生成 mmap `decision_tokens_v3`，训练器与 CPU 评估通过 `--tokens` 读取，支持中断续训。纯 token 可复用 v2timer 行 pack，混合 CNN 需 v1/v3 网格 pack。实现和磁盘/回填抽样结论统一追加于 [task157 任务书](task157-student-v3-token-encoder.md)。未部署或改生产 qc。
