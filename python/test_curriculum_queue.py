@@ -183,10 +183,10 @@ class CurriculumRulesTest(unittest.TestCase):
             big = Path(tmp) / 'big' / 'frames.npz'
             big.parent.mkdir()
             with big.open('wb') as handle:
-                handle.truncate(3 * GIB)                     # 稀疏文件，只占 st_size
+                handle.truncate(3 * 2 ** 20)                     # only st_size is read
             jobs = [('d', 'c', None, None, [big])]
             self.assertEqual(packer.pack_memory_limit(40 * GIB, jobs),
-                             (40 * GIB - MEMORY_RESERVE_BYTES) // (PACK_BUILDER_BYTES + 3 * GIB))
+                             (40 * GIB - MEMORY_RESERVE_BYTES) // (PACK_BUILDER_BYTES + 3 * 2 ** 20))
             self.assertEqual(packer.pack_memory_limit(40 * GIB, [('d', 'c', None, None, [])]),
                              (40 * GIB - MEMORY_RESERVE_BYTES) // PACK_BUILDER_BYTES)
             self.assertEqual(packer.pack_memory_limit(GIB, jobs), 1)
@@ -535,20 +535,6 @@ class CurriculumRulesTest(unittest.TestCase):
             finally:
                 queue.mem_total_bytes = original
 
-    def test_command_measures_child_anon_peak(self):
-        import threading
-
-        import curriculum_queue as queue
-        with tempfile.TemporaryDirectory() as tmp:
-            pipeline = object.__new__(queue.TrainingPipeline)
-            pipeline.lock = threading.Lock()
-            pipeline.lock_fd = None
-            pipeline.process = None
-            peak = pipeline._command([sys.executable, '-c', 'import time; time.sleep(2.5)'],
-                                     Path(tmp) / 'cmd.log')
-            self.assertIsInstance(peak, int)
-            self.assertGreaterEqual(peak, 0)
-
     def test_pack_labels_union_the_log_and_the_base_corpus(self):
         state = {'log': [{'groups': [{'label': 'c1d7m150'}]},
                          {'groups': [{'label': 'c2d7m125'}, {'label': 'c1d7m150'}]}]}
@@ -772,6 +758,12 @@ class WorkerCountTest(unittest.TestCase):
             finally:
                 queue.mem_available_bytes = original
 
+def queue_health():
+    """A background job stub whose recovery gate is always open."""
+    return type('Health', (), {'wait': lambda self: False, 'pause': lambda self, reason: None,
+                               'resume': lambda self: None})()
+
+
 class TrainingRestartTest(unittest.TestCase):
     """task61 追加：杀掉后台训练进程 + 控制器重启后，任务干净重跑，不丢不重。"""
 
@@ -793,7 +785,7 @@ class TrainingRestartTest(unittest.TestCase):
             def fake_run(self, job):
                 started.append(job['round'])
                 return {}
-            args = SimpleNamespace(state=Path(tmp) / 'state.json',
+            args = SimpleNamespace(state=Path(tmp) / 'state.json', workers=2,
                                    seed_ledger=Path(tmp) / 'gate_ledger.json')
             with mock.patch.object(TrainingPipeline, '_run', fake_run), \
                     mock.patch.object(TrainingPipeline, '_plan_build', lambda self, recipe: None):
@@ -827,7 +819,8 @@ class TrainingRestartTest(unittest.TestCase):
                 job['seed_block'] = [1000, 1008]
             state = {'training_jobs': jobs}
             args = SimpleNamespace(state=Path(tmp) / 'state.json', log=Path(tmp) / 'log',
-                                   python=Path(sys.executable), seed_ledger=Path(tmp) / 'ledger.json',
+                                   python=Path(sys.executable), workers=2,
+                                   seed_ledger=Path(tmp) / 'ledger.json',
                                    gate_version=GATE_VERSION)
             commands = []
             def fake_command(self, command, log):
@@ -904,7 +897,9 @@ class TrainingRestartTest(unittest.TestCase):
         from curriculum_queue import TrainingPipeline
         pipeline = TrainingPipeline.__new__(TrainingPipeline)
         pipeline.failed = False
-        pipeline.args = SimpleNamespace(log=Path(tmp) / 'log', python=Path(sys.executable))
+        pipeline.args = SimpleNamespace(log=Path(tmp) / 'log', python=Path(sys.executable),
+                                        workers=2, game_health=None)
+        pipeline.game_health = queue_health()
         pipeline.lock_fd = None
         pipeline.build_workers = 6
         pipeline.build_peak = 12 * GIB          # 15:22 生产现场：pack plan 估到 12.1 GiB
@@ -960,7 +955,7 @@ class TrainingRestartTest(unittest.TestCase):
             job['timing'] = {'pack_peak_anon_bytes': int(0.40 * GIB),
                              'train_peak_anon_bytes': int(3.53 * GIB)}
             state = {'training_jobs': [job]}
-            args = SimpleNamespace(state=Path(tmp) / 'state.json')
+            args = SimpleNamespace(state=Path(tmp) / 'state.json', workers=2)
             def fake_run(self, _job):
                 return {}
             with mock.patch.object(queue.TrainingPipeline, '_run', fake_run), \

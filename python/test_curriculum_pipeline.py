@@ -98,6 +98,18 @@ def write_selection(pipeline, command, best_index=0):
              rejected=[path for path in candidates if path != best])))
 
 
+def retried_success(self, command, logfile):
+    """_command stand-in: the retry trains, selects and gates without an engine."""
+    if logfile.name == 'train.log':
+        model = logfile.parent / 'student/model.pt'
+        model.parent.mkdir(parents=True)
+        model.write_bytes(b'retried')
+    elif logfile.name == 'selection.log':
+        write_selection(self, command)
+    elif logfile.name == 'evaluation.log':
+        write_evaluation(self, command)
+
+
 def plan(round_index):
     return [dict(base=name, multiplier=1., task_id=name, offset=(round_index - 1) * 8,
                  games=8, manifest='/manifest', label=f'c{round_index}{name}') for name in ('a', 'b')]
@@ -179,16 +191,7 @@ def test_background_failure_is_saved_and_can_be_retried():
         saved = json.loads(args.state.read_text())
         assert saved['round'] == 1 and saved['training_jobs'][0]['status'] == 'failed'
         assert 'pack failed' in saved['training_jobs'][0]['error']
-        def success(self, command, logfile):
-            if logfile.name == 'train.log':
-                model = logfile.parent / 'student/model.pt'
-                model.parent.mkdir(parents=True)
-                model.write_bytes(b'retried')
-            if logfile.name == 'selection.log':
-                write_selection(self, command)
-            if logfile.name == 'evaluation.log':
-                write_evaluation(self, command)
-        with patch.object(queue.TrainingPipeline, '_command', success), \
+        with patch.object(queue.TrainingPipeline, '_command', retried_success), \
              patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
             pipeline = queue.TrainingPipeline(args, saved)
             pipeline.close()
@@ -588,7 +591,7 @@ def test_all_seeds_failed_still_reaches_the_B7_retriable_failure():
                 write_selection(self, command)
             elif logfile.name == 'evaluation.log':
                 write_evaluation(self, command)
-        with patch.object(queue.TrainingPipeline, '_command', success), \
+        with patch.object(queue.TrainingPipeline, '_command', retried_success), \
              patch.object(queue, 'mem_available_bytes', return_value=64 * queue.GIB):
             args.pipeline = queue.TrainingPipeline(args, state)
             args.pipeline.close()
