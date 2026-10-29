@@ -706,8 +706,7 @@ def _play(job: dict, observer=None) -> dict:
             demo_meta = json.loads((Path(demo_archive) / 'meta.json').read_text())
             # Compare every field the archive recorded. A field added to TaskSpec after the
             # demonstration was recorded (fog_observation, task53) did not exist then and must not
-            # block the start; an actual environment difference still fails replay()'s per-operation
-            # state-hash check.  fog_observation is exempt outright (task70 B6): it is presentation
+            # block the start. fog_observation is exempt outright (task70 B6): it is presentation
             # only, so a demo start cell may replay a null-mode recording under human_v2, and the
             # _hv2 start cells deliberately carry task ids that extend the recorded one.
             recorded = demo_meta['environment_task']

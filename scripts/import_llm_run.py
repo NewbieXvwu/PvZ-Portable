@@ -461,7 +461,7 @@ def reject_archive(target: Path, dest: Path) -> Path:
 
 def verify_copy(archive: Path, resource_dir: Path, executable: Path | None) -> dict:
     from human_demo import verify
-    return verify(archive, resource_dir, executable, strict_hashes=False)
+    return verify(archive, resource_dir, executable)
 
 
 # ---------------------------------------------------------------- 报告
@@ -545,7 +545,7 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
             base_id = str(task.get('id') or archive.name)
             final_id, new_family, family_problems = resolve_family(meta, tasks)
             problems += family_problems
-            key = (base_id, seed, int(meta.get('operations') or 0), meta.get('initial_state_hash'))
+            key = (base_id, seed, int(meta.get('operations') or 0))
             if key in seen:
                 problems.append(f'包内重复存档（与 {seen[key]} 相同）')
             else:

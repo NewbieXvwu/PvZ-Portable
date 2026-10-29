@@ -88,7 +88,6 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
         "frame_count": len(rec["frames"]),
     }
     meta["checkpoint"] = rec["task"].get("checkpoint")
-    meta["checkpoint_sha256"] = rec["task"].get("checkpoint_sha256")
     (out_dir / "meta.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
     with (out_dir / "frames.jsonl").open("w", encoding="utf-8") as fh:
@@ -1272,7 +1271,7 @@ def main() -> None:
         print("\n".join([
             "这一局由**实际搜索老师**执行，推演由学生续走。" if t.get("policy")=="teacher" else "这一局是**专家迭代的学生网络**打的（DESIGN.md §13–§14）。",
             "",
-            *([f"  检查点：{t.get('checkpoint')}（指纹 {t.get('checkpoint_sha256')}）"] if t else []),
+            *([f"  检查点：{t.get('checkpoint')}"] if t else []),
             "  怎么来的：模仿“学生 + 搜索”这位老师在每个局面的选择（搜索 = 每张卡挑少数几个格子、"
             "再加“先不种”，各自往后模拟约 2500 tick 用价值网络比输赢）。",
             "  它看什么：这一帧的棋盘与卡槽、上一帧、上一步实际执行的动作。**没有更长的记忆**。",

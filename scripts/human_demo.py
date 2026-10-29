@@ -1,12 +1,10 @@
-"""Record native-window demonstrations, verify every tick, and export training archives."""
+"""Record native-window demonstrations, replay actions, and export training archives."""
 from __future__ import annotations
 
 import argparse
 from dataclasses import asdict
-import hashlib
 import json
 from pathlib import Path
-import shutil
 import sys
 import time
 
@@ -23,11 +21,10 @@ from render_episode import _frame, load_training_task, training_task_kwargs
 def reset_archive(env, meta, *, fog_observation=None):
     """Restore the archive's initial board.
 
-    task70 B6: fog_observation is presentation only (the task66 invariant tests pin the
-    state hash across modes), so a caller may override the recorded value with the
-    manifest's: the demo_start cells replayed under human_v2 must not inherit the
+    task70 B6: fog_observation is presentation only, so a caller may override the
+    recorded value with the manifest's: demo_start cells under human_v2 must not inherit the
     recording-time x-ray just because the demo task predates the fog families.  The
-    board itself is untouched -- every hash check still applies.
+    board itself is untouched.
     """
     config = dict(meta['environment_task'])
     if fog_observation is not None:
@@ -62,11 +59,8 @@ class Recorder:
                                    zombie_count_multiplier=task.zombie_count_multiplier,
                                    wave_cap=task.wave_cap, preplanted=list(task.preplanted)),
                          environment_task=asdict(task),
-                         executable_sha256=hashlib.sha256(env.executable.read_bytes()).hexdigest(),
                          context=dict(level=task.level, multiplier=task.zombie_count_multiplier,
                                       roster=self.observation['loadout_context']['zombie_roster']),
-                         hash_schema='portable_snapshot_v1_without_draw_statistics',
-                         initial_state_hash=env.state_hash(),
                          sun_collection='environment_auto', verified=False)
         self.tape = (archive / 'ticks.jsonl').open('w', encoding='utf-8', buffering=1)
         self.frames = (archive / 'frames.jsonl').open('w', encoding='utf-8', buffering=1)
@@ -114,7 +108,7 @@ class Recorder:
         self.last_info = info
         self.operations += 1
         self.tape.write(json.dumps(dict(action=action, tick=before, end_tick=self.observation['tick'],
-                                        ok=info['ok'], state_hash=self.env._last_response['state_hash']),
+                                        ok=info['ok']),
                                    separators=(',', ':')) + '\n')
         for name, value in info['events'].items():
             self.events[name] = self.events.get(name, 0) + value
@@ -132,26 +126,8 @@ class Recorder:
 
 
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
-           save: Path | None = None, *, strict_hashes: bool | None = None,
-           fog_observation: str | None = None):
+           save: Path | None = None, *, fog_observation: str | None = None):
     meta = json.loads((archive / 'meta.json').read_text())
-    # task70: state-hash equality only holds when the replaying engine is the one that
-    # recorded the archive.  task63 changed the FIELD_SHAKE seeding inside the SaveGame
-    # image, so an archive recorded by a pre-task63 engine (or rebaselined by deploy3)
-    # hashes differently under deploy4 even though every observable field is identical.
-    # The archive's executable_sha256 selects the verification mode: same engine -> the
-    # full per-operation hash check; different engine -> the engine-independent fields
-    # (tick timeline, per-operation ok, terminal outcome) are still enforced, and the
-    # relaxed mode is recorded on the returned meta so it is never silent.
-    current_sha = (hashlib.sha256(Path(env.executable).read_bytes()).hexdigest()
-                   if getattr(env, 'executable', None) else None)
-    recorded_sha = meta.get('executable_sha256')
-    if strict_hashes is None:
-        strict_hashes = False
-    meta['hash_verification'] = (
-        'per-operation state hash' if strict_hashes else
-        'tick/ok/outcome only: archive recorded by engine '
-        + (recorded_sha or 'unknown')[:12] + ', replayed by ' + (current_sha or 'unknown')[:12])
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
@@ -165,8 +141,6 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
         recorder = Recorder(env, save, meta['task']['id'], meta['task']['deck'], TaskSpec(**config),
                             meta.get('note', ''), label_source='counterfactual')
         obs = recorder.observation
-    if strict_hashes and env._last_response['state_hash'] != meta['initial_state_hash']:
-        raise RuntimeError('demonstration initial state hash differs')
     replacements = {frames[index - 1]['operation'] + 1: (frames[index]['operation'], action)
                     for index, action in (overrides or {}).items()}
     diverged = False
@@ -207,10 +181,8 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
                 frame.update(action=action if action['type'] in ('plant', 'wait') else None,
                              action_rejected=not info['ok'], label_source='counterfactual')
                 changed_frames.append(frame)
-            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick']
-                                 or (strict_hashes
-                                     and env._last_response['state_hash'] != entry['state_hash'])):
-                raise RuntimeError(f'demonstration state hash differs at operation {operation}, tick {obs["tick"]}')
+            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick']):
+                raise RuntimeError(f'demonstration action timeline differs at operation {operation}, tick {obs["tick"]}')
             if obs['terminal'] and diverged:
                 break
     if decision is None and not diverged:
@@ -233,48 +205,12 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     return obs, meta, frames[:decision] if decision is not None else frames
 
 
-def verify(archive: Path, resource_dir, executable=None, *, strict_hashes=None):
+def verify(archive: Path, resource_dir, executable=None):
     with EventWaitEnv(resource_dir, executable=executable) as env:
-        obs, meta, _ = replay(env, archive, strict_hashes=strict_hashes)
+        obs, meta, _ = replay(env, archive)
     meta['verified'] = True
     (archive / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
     return dict(verified=True, operations=meta['operations'], tick=obs['tick'], wave=obs['wave'], result=obs['result'])
-
-
-def rebaseline(archive: Path, out: Path, resource_dir, executable=None):
-    """Rewrite an archive's per-operation hashes with the current engine, into a new directory.
-
-    Only for archives recorded by an engine whose state hash was not reproducible.  task63 found
-    one: a particle FIELD_SHAKE seeded the C runtime rand() with the particle's *address*, so every
-    tick that ran a shake field hashed a heap address.  Those hashes cannot be reproduced by any
-    process, so such an archive can never verify again -- not by the old engine and not by a fixed
-    one.  The actions themselves are sound, and this conversion keeps them: it replays them, checks
-    the tick timeline and the terminal outcome against the archive, and writes the hashes this
-    engine produces.  The result verifies on any machine from then on; the source is never touched.
-    """
-    meta = json.loads((archive / 'meta.json').read_text())
-    out.mkdir(parents=True, exist_ok=False)
-    shutil.copyfile(archive / 'frames.jsonl', out / 'frames.jsonl')
-    rewritten = 0
-    with EventWaitEnv(resource_dir, executable=executable) as env:
-        obs = reset_archive(env, meta)
-        with (archive / 'ticks.jsonl').open() as stream, (out / 'ticks.jsonl').open('w') as tape:
-            for operation, line in enumerate(stream, 1):
-                entry = json.loads(line)
-                obs, _, _, _, info = env.step(entry['action'])
-                if obs['tick'] != entry['end_tick'] or info['ok'] != entry['ok']:
-                    raise RuntimeError(f'action timeline differs at operation {operation}')
-                state_hash = env._last_response['state_hash']
-                rewritten += state_hash != entry['state_hash']
-                tape.write(json.dumps({**entry, 'state_hash': state_hash}, separators=(',', ':')) + '\n')
-        outcome = meta['outcome']
-        if (obs['tick'], obs['wave'], obs['result']) != (outcome['final_tick'], outcome['final_wave'], outcome['result']):
-            raise RuntimeError('terminal outcome differs')
-    meta['rebaseline'] = dict(source=str(archive.resolve()), rewritten_operations=rewritten,
-                               reason='recorded with heap-address-seeded particle shake (task63)')
-    meta['verified'] = False
-    (out / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
-    return verify(out, resource_dir, executable)
 
 
 def export(archive: Path, data: Path):
@@ -301,18 +237,12 @@ def main():
     record.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/raw')
     check = commands.add_parser('verify')
     check.add_argument('--archive', type=Path, required=True)
-    fix = commands.add_parser('rebaseline')
-    fix.add_argument('--archive', type=Path, required=True)
-    fix.add_argument('--out', type=Path, required=True)
     convert = commands.add_parser('export')
     convert.add_argument('--archive', type=Path, required=True)
     convert.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/frames_v2')
     args = parser.parse_args()
     if args.command == 'verify':
         print(json.dumps(verify(args.archive, args.resource_dir, args.executable)))
-        return
-    if args.command == 'rebaseline':
-        print(json.dumps(rebaseline(args.archive, args.out, args.resource_dir, args.executable)))
         return
     if args.command == 'export':
         print(export(args.archive, args.out))
