@@ -57,3 +57,71 @@ def test_complete_v3_native_parity(tmp_path, mode, hybrid):
             maximum = max(maximum, error)
             torch.testing.assert_close(value, other, rtol=0, atol=1e-5)
     print(json.dumps(dict(mode=mode, hybrid=hybrid, max_abs_error=maximum)))
+
+
+def test_v3_hf_real_frames_native(tmp_path):
+    from pvz_frame_store import read_frames
+    from pvz_rollout_policy import features
+    root = Path(os.environ.get('PVZ_TASK157_DATA', ROOT/'artifacts/student/task163/hf/transfer/task157_obs_v3_7e702892'))
+    manifest = json.loads((root/'manifest.json').read_text())
+    samples = [next(a for a in manifest['archives'] if a['split']=='train')]
+    samples += [a for a in manifest['archives'] if a['split']=='terrain_sample']
+    maximum = 0.
+    torch.set_num_threads(1)
+    for sample in samples:
+        frames = read_frames(root/sample['path'])
+        f = frames[len(frames)//2]
+        source = frame_tokens(f, token_input='obs_v3')
+        capacity = len(source['ids'])+5
+        tokens = collate_tokens([source], capacity=capacity)
+        board = features(f,None)[0][None]
+        selected = torch.tensor([next(i for i,p in enumerate(source['packet_index']) if p>=0)])
+        for mode,hybrid in [('dense',False),('terrain',False),('moe',False),('dense',True)]:
+            torch.manual_seed(163)
+            net = StudentV3(24, dict(layers=2,heads=3,ff_width=32,ffn=mode,hybrid=hybrid), token_input='obs_v3').eval()
+            with torch.no_grad(): expected = net(board,None,selected,tokens=tokens)
+            module,graph=student_graph(net,capacity)
+            actual,_=run_driver(module,graph,graph_feeds(tokens,selected,board),tmp_path,DRIVER)
+            for name in expected:
+                value=actual[name].squeeze(1) if name=='plant' else actual[name]
+                maximum=max(maximum,(value-expected[name]).abs().max().item())
+                torch.testing.assert_close(value,expected[name],atol=1e-5,rtol=0)
+    print(json.dumps(dict(real_frames=len(samples), max_abs_error=maximum)))
+
+
+def test_v3_engine_adapter_and_actions(tmp_path):
+    from pvz_env import TaskSpec
+    from pvz_event_env import EventWaitEnv
+    from pvz_rollout_policy import export_student, features, act
+    import sys
+    sys.path.insert(0,str(ROOT/'scripts'))
+    from render_episode import _frame
+    binary=ROOT/'build-studentv3net/pvz-portable'
+    resource=Path(os.environ.get('PVZ_RESOURCE_DIR',Path.home()/'.cache/pvz-research-resources'))
+    torch.set_num_threads(1)
+    maximum=0.
+    with EventWaitEnv(resource,executable=binary) as env:
+        env.set_token_observation(True)
+        obs,_=env.reset(task=TaskSpec(level=7,seed=163))
+        obs,*_=env.step(dict(type='wait',ticks=120))
+        f=_frame(obs)
+        source=frame_tokens(f,token_input='obs_v3')
+        tokens=collate_tokens([source])
+        board=features(f,None)[0][None]
+        for mode,hybrid in [('dense',False),('terrain',False),('moe',False),('dense',True)]:
+            torch.manual_seed(163)
+            net=StudentV3(24,dict(layers=2,heads=3,ff_width=32,ffn=mode,hybrid=hybrid),token_input='obs_v3').eval()
+            with torch.no_grad(): net.plant.bias.fill_(1)
+            export_student(net,tmp_path/'model.bin',token_capacity=256)
+            env.load_rollout_net(tmp_path/'model.bin')
+            native=env.rollout_predict()
+            with torch.no_grad(): expected=net(board,None,torch.tensor([max(0,native['cell_packet'])]),tokens=tokens)
+            for key in expected:
+                value=np.asarray(native[key]).reshape(-1)
+                if key=='cell' and native['cell_packet']<0: continue
+                other=expected[key].detach().numpy().reshape(-1)
+                error=float(np.max(np.abs(value-other)))
+                maximum=max(maximum,error)
+                np.testing.assert_allclose(value,other,atol=1e-5,rtol=0)
+            assert native['action']==act(net,f,None,obs['legal_actions']['plants'])
+    print(json.dumps(dict(engine_structures=4,max_abs_error=maximum)))

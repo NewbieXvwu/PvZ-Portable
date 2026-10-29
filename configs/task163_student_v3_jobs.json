@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "seeds": [1, 2, 3],
+  "epochs": 12,
+  "wait_keep": 0.1,
+  "internal_validation": {"seed": 0, "fraction": 0.1},
+  "host_gib": 5,
+  "gpu_gib": 4,
+  "slice_seconds": 900,
+  "checkpoint_seconds": 30,
+  "structures": [
+    {"name": "cnn64", "width": 64, "obs": "v2timer", "pool": "meanmax", "row_pool": true, "batch_size": 256, "network": {}},
+    {"name": "cnn128", "width": 128, "obs": "v2timer", "pool": "meanmax", "row_pool": true, "batch_size": 128, "network": {}},
+    {"name": "token128_2", "width": 128, "obs": "v3", "batch_size": 16, "network": {"architecture": "token", "layers": 2, "heads": 4, "ff_width": 512}},
+    {"name": "token192_4", "width": 192, "obs": "v3", "batch_size": 16, "network": {"architecture": "token", "layers": 4, "heads": 6, "ff_width": 768}},
+    {"name": "terrain5", "width": 128, "obs": "v3", "batch_size": 16, "network": {"architecture": "token", "layers": 2, "heads": 4, "ff_width": 256, "ffn": "terrain", "experts": 5, "shared_experts": 1}},
+    {"name": "moe5_top2", "width": 128, "obs": "v3", "batch_size": 16, "network": {"architecture": "token", "layers": 2, "heads": 4, "ff_width": 256, "ffn": "moe", "experts": 5, "top_k": 2, "shared_experts": 1}},
+    {"name": "hybrid128_2", "width": 128, "obs": "v3", "batch_size": 16, "network": {"architecture": "token", "layers": 2, "heads": 4, "ff_width": 512, "hybrid": true}}
+  ]
+}

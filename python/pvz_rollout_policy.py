@@ -332,6 +332,15 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
     net.load_state_dict(weights)
 
 
+def create_student(arch='cnn', **options):
+    """Shared factory for training and CPU evaluation; research architectures opt in."""
+    if arch in ('cnn', 'student_v3'):
+        return make_student(**options)
+    import importlib
+    module, factory = arch.split(':', 1)
+    return getattr(importlib.import_module(module), factory)(**options)
+
+
 def load_student(path) -> RolloutNet:
     """A student or fast_ppo checkpoint as a RolloutNet in eval mode (width read from the weights;
     fast_ppo's value head is dropped)."""
@@ -343,9 +352,9 @@ def load_student(path) -> RolloutNet:
                            token_input=checkpoint.get('token_input', 'compact'))
         net.load_state_dict({k: v for k, v in weights.items() if not k.startswith('aux.')})
         return net.eval()
-    net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
-                     bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"),
-                     bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
+    net = create_student(checkpoint.get('arch', 'cnn'), width=checkpoint.get('width', weights.get('trunk.0.weight', torch.empty(64)).shape[0]),
+                     pool=checkpoint.get("pool", "mean"), context=bool(checkpoint.get("context", False)),
+                     obs=checkpoint.get("obs", "v1"), row_pool=bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
                      plant_embedding_dim=checkpoint.get('plant_embedding_dim'))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith(("value.", "aux."))})
     return net.eval()

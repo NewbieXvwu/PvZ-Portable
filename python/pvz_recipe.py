@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, network={}, token_input="compact", label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, arch="cnn", network={}, token_input="compact", label_weight={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -144,12 +144,17 @@ def validate(document, kind=None):
                 raise ValueError('token network requires obs=v3 and packet_head=identity')
             if result['row_pool'] or result['pool'] != 'mean':
                 raise ValueError('token network uses its own state pooling')
+        if result['arch'] == 'student_v3' and network['architecture'] != 'token':
+            raise ValueError('arch=student_v3 requires network.architecture=token')
         if result['token_input'] not in ('compact', 'obs_v3') or (result['token_input'] != 'compact' and result['obs'] != 'v3'):
             raise ValueError('token_input=obs_v3 requires obs=v3')
         if network['architecture'] != 'token' and result['obs'] == 'v3':
             raise ValueError('obs=v3 requires token network')
         if not isinstance(result['device'], str) or not result['device']:
             raise ValueError('device: expected nonempty string')
+        if not isinstance(result['arch'], str) or not result['arch'] or (
+                result['arch'] not in ('cnn', 'student_v3') and ':' not in result['arch']):
+            raise ValueError('arch: expected cnn, student_v3 or module:factory')
         labels = result['labels']
         if not isinstance(labels, list) or not labels or not all(isinstance(v, str) and v and ',' not in v for v in labels):
             raise ValueError('labels: expected nonempty list of label names')
@@ -277,6 +282,10 @@ def training_args(parser, argv=None):
     except (OSError, ValueError) as error:
         parser.error(str(error))
     args = argparse.Namespace(**resolved)
+    # Script-specific execution controls are not part of the frozen training recipe.
+    for name, value in vars(cli).items():
+        if not hasattr(args, name):
+            setattr(args, name, value)
     for name in PATH_FIELDS:
         if getattr(args, name, None) is not None:
             setattr(args, name, Path(getattr(args, name)))

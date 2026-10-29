@@ -216,3 +216,65 @@ def test_v3_rich_input_contract_and_empty_card_mask():
     assert batch['cell_index'][0].tolist() == list(range(2, 56))
     with pytest.raises(ValueError, match='backfill'):
         frame_tokens(frame(), token_input='obs_v3')
+
+
+def test_v3_window_jobs_resume_and_manifest_eval(tmp_path, monkeypatch):
+    import json
+    import os
+    import signal
+    import sys
+    from pathlib import Path
+    sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
+    import prepare_student_v3_jobs as prep
+    import train_rollout_policy as trainer
+    import eval_window_policy as evaluator
+    from pvz_frame_store import write_frames
+    from test_student_v3_native import rich_frame
+    source=tmp_path/'source'
+    archives=[]
+    for i, split in enumerate(['train']*4+['seen','unseen','terrain_sample']):
+        path=source/'frames'/f'seed_{i}'/'fixture'/'frames.npz'
+        path.parent.mkdir(parents=True)
+        frames=[]
+        for t in range(3):
+            f=frame()
+            f.pop('v2')
+            f['v3']=rich_frame()['v3']
+            f['tick']=t*60
+            if t: f['action']=dict(type='plant',packet=0,row=1,col=2) if t==1 else dict(type='wait',ticks=60)
+            frames.append(f)
+        write_frames(path,frames)
+        (path.parent/'meta.json').write_text(json.dumps(dict(context=dict(level=7))))
+        archives.append(dict(path=str(path.relative_to(source)),split=split,seed=i,level=7))
+    (source/'manifest.json').write_text(json.dumps(dict(input_revision='fixture',archives=archives)))
+    matrix=json.loads((prep.ROOT/'configs/task163_student_v3_jobs.json').read_text())
+    matrix.update(seeds=[1],epochs=1,internal_validation=dict(seed=0,fraction=.25))
+    for structure in matrix['structures']:
+        structure.update(width=12,batch_size=2)
+        if structure['obs']=='v3': structure['network'].update(heads=3,layers=1,ff_width=16)
+    prepared=prep.prepare(source,tmp_path/'state',matrix)
+    assert len(prepared['jobs'])==7 and prepared['enqueued'] is False
+    job=json.loads((tmp_path/'state/jobs/task163_token128_2_s1.json').read_text())
+    class QuietMetrics:
+        def __init__(self,*a,**kw): pass
+        def start(self): return self
+        def update(self,**kw): pass
+        def close(self): pass
+    monkeypatch.setattr(trainer,'Metrics',QuietMetrics)
+    monkeypatch.setattr(trainer,'set_oom_score_adj',lambda _:None)
+    command=['train',*job['command'][2:],'--device','cpu']
+    monkeypatch.setattr(sys,'argv',command)
+    with pytest.raises(SystemExit) as stopped:
+        trainer.main(step_observer=lambda step,loss: os.kill(os.getpid(),signal.SIGUSR1) if step==1 else None)
+    assert stopped.value.code==75
+    out=Path(job['out'])
+    saved=torch.load(out/'resume.pt',weights_only=False,map_location='cpu')
+    assert saved['token_input']=='obs_v3' and saved['completed_steps']==1
+    monkeypatch.setattr(sys,'argv',[*command,'--resume',str(out/'resume.pt')])
+    trainer.main()
+    monkeypatch.setattr(sys,'argv',['evaluate',*job['evaluate'][2:]])
+    evaluator.main()
+    metrics=json.loads((out/'heldout.json').read_text())['groups']
+    assert metrics['all']['rows']==6
+    assert all(metrics[k]['rows']==2 for k in ('seen','unseen','terrain_sample'))
+    assert metrics['seen/day']['rows']==metrics['unseen/day']['rows']==2

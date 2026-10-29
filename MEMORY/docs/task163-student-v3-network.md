@@ -116,3 +116,39 @@ kind 编号沿用旧模型：global=0, profile=1, cell=2, plant=3, zombie=4, pro
 原生 `EnvironmentRollout` 增加 id10 输入适配：直接从 PublicObservationTokens 填 float32 原始数组、有效位、排除卡包的池化位、帧内指针和实体 scatter 坐标；编码/种等卡包仍在 stage0/1，stage2 可多次给定卡包算格子。导出的 batch>1 图供独立驱动；原生游戏适配器是 batch1。
 
 完整模型小型独立 C++ 对拍（batch2、含空卡槽/补齐/目标链接/重复 scatter、24宽2层3头）四结构均通过，三头对原始 StudentV3 的最大绝对误差：dense 2.09e-7、地形 1.64e-7、top-k 2.02e-7、hybrid 2.99e-7，均 <1e-5。约2秒，无训练/存档重放。真实富帧与引擎适配将在本次交付收尾记录。
+
+## 续接阶段 5：task162 作业交付（2026-10-29）
+
+合入 task162 的 `gpuwindow`（8ef62176），沿用其原有信号让路、模型/优化器/RNG 断点、独立 frozen-pack/merge 路径。没有安装/重启服务或修改生产队列。统一 `create_student` 与本分支的 `make_student`，`arch=student_v3` 按 network 构造模型；先前没有 arch 的本分支 v3 检查点仍可加载。CPU 评测同样传入 token minibatch。
+
+可提交的矩阵为 `configs/task163_student_v3_jobs.json`；准备入口为 `scripts/prepare_student_v3_jobs.py`。7 类结构 × seed 1/2/3：
+
+| 名称 | 结构 | batch |
+|---|---|---|
+| cnn64 / cnn128 | 现行 v2timer、meanmax、row_pool、identity | 256 / 128 |
+| token128_2 | 128宽、2层4头、FF512 | 16 |
+| token192_4 | 192宽、4层6头、FF768 | 16 |
+| terrain5 | 128宽、2层4头、5个地形 FF256 专家+1共享专家 | 16 |
+| moe5_top2 | 128宽、2层4头、5个 FF256 专家、top2+1共享专家 | 16 |
+| hybrid128_2 | token128_2 + CNN scatter | 16 |
+
+每作业12轮、cosine学习率，init=null。资源申报为 host 5GiB / GPU 4GiB、每空档最多900秒、每30秒断点；这是保守作业预算，并非完整训练实测。执行器仍执行自身生产余量/显存门禁。CPU评测batch=32（token）/256（CNN）。所有结构复用同一训练档案划分与抽样；CNN与v3分别仅打包一次，结构和随机种子变化不重新打包。
+
+准备命令（仅创建独立作业，不入运行队列）：
+
+```bash
+OPENBLAS_NUM_THREADS=1 OMP_NUM_THREADS=1 ~/.venvs/ml/bin/python3 scripts/prepare_student_v3_jobs.py \
+  --source /绝对路径/task157_obs_v3_7e702892 \
+  --state /绝对路径/新的独立作业目录
+```
+
+输入 manifest 的 train 档案单独硬链接为训练语料；训练内部另保留固定种子的10% validation，但 GPU 作业跳过逐轮验证。seen/unseen/terrain_sample 全部隔离为外部 CPU 留出集，逐行评测不抽掉等待行。`eval_window_policy --manifest --eval-data` 使用源 manifest 的分组与地形，terrain_sample 不冒充 unseen；旧的训练包内 seed/deck 留出方式保持可用。它们是该155局数据上的结构作业，**不是2300万行生产规模实验，也不是等参比较或旧 task157 初稿的数值复现**。
+
+本机生成目录为 `/home/newbiexvwu/PvZ-search/artifacts/student/task163-window`，其中 `jobs/*.json` 是 task162 接受的绝对路径 argv 作业，`recipes/` 是逐作业冻结配方，`prepared.json` 记录包路径与划分。未复制到正在运行的生产空档执行器队列；供主控按实验安排取用。
+
+### 最终输入/原生验证与中转清理
+
+- HF真实富输入抽白天、屋顶、雾、原生泳池传送带各一帧，四种结构均对拍原始 StudentV3 三头；最大绝对误差 **7.16e-7 <1e-5**。
+- 本 worktree 独立 Release 引擎 `build-studentv3net`，nice10/-j2；四种结构通过真实引擎 id10 适配，三头最大误差 **1.80e-7**，合法动作与 Python 一致。没有替换生产二进制。
+- 小CPU作业测试覆盖7结构配方生成、v3一次 SIGUSR1 中断/断点接续、外部 manifest CPU评测及三组行数；默认CNN检查点/前向/旧导出仍逐位一致。测试全部按相关 `-k`、8,000,000KiB虚拟内存上限执行，没有GPU训练或全量重放。
+- HF 155局已下载，并硬链接到作业自己的 train/heldout 语料目录。已按用户要求删除远端 `transfer/task157_obs_v3_7e702892/`，删除提交 `1e69acb1727f145f9ef94455144947159f9af509`；本地数值档案保留供后续作业使用，未提交数据/检查点/日志。
