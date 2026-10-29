@@ -161,3 +161,31 @@ bash ~/pvz-logs/qc_deploy17.sh --rollback
 模型/优化器、不训练）、看门狗启动参数、临时文件备份/恢复与模拟PID边界屏障。脚本语法检查通过。
 这些测试只用临时夹具；没有执行真实部署脚本，没有发信号给生产进程，没有改qc、看门狗、stop_curr
 或生产二进制，也没有全量重打包/回放/训练。提交推送deploy17后停下，等待主控审。
+
+## 主控批准后的切换观察（2026-10-29 23:29–23:37）
+
+用户已审过并启动`deploy17-boundary`，授权观察，失败时执行既有`--rollback`。
+23:29:52在round51的`c51opening119l28scoreboardm100_o696_b0`完成后切换，
+该组12局、10胜、rc=0；脚本写入`qc_deploy17.active=ae739b1c`后返回0。
+**这只说明安装脚本完成，不能作为新控制器已正常启动的证据。**
+
+新控制器在`load_panel`退出，未开始新采集组。原因是
+`scripts/make_multiplier_tasks.py:source_paths({})`的`day_orig`默认源仍指向
+`/home/newbiexvwu/PvZ-search/.claude/worktrees/conveyor/artifacts/stage4/day_panel.json`，
+该路径不存在；其余12项默认源文件存在。这是源清单注册的旧绝对路径依赖，并非新生成的
+task165随机卡池里写入了该路径。错误记录在`qc.out`及看门狗23:29:59、23:31:59的crash尾档。
+
+23:32:54按本次明确授权执行：
+
+```bash
+bash ~/pvz-logs/qc_deploy17.sh --rollback
+```
+
+回滚返回0，备份目录为`~/pvz-logs/deploy17_20261029T232921_268487`，有
+`rollback.complete`，deploy17 active标记已撤销。恢复的deploy16同样在该缺失源清单处退出；
+23:33:59看门狗记录`CRITICAL HALTED`（30分钟内已重启两次），当前采集没有恢复。
+未再次部署、未改看门狗/stop_curr/生产二进制；已向主控报告并询问是否授权修复旧路径后恢复deploy16。
+
+因此本次**没有deploy17第一个完整轮**；四类各192局、新卡池实际使用、B训练日志及
+`shared_pack_weights.json`实产倍率均待成功切换后验收，不能用准备阶段的规划或小测试冒充。
+当前round51为切换前已有的部分轮，恢复后的完整新轮仍须按实际运行配置认定。
