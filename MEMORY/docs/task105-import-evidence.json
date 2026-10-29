@@ -1,6 +1,6 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-29T14:25:56.518852+00:00",
+ "generated": "2026-10-29T14:54:29.880192+00:00",
  "input_sha256": null,
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
  "input_path": "/home/newbiexvwu/llm_runs/llmplay3_r2/out",
@@ -5678,6 +5678,33 @@
    "reason": ""
   },
   {
+   "task_id": "llmplay3_a_l12_m100_s139012007_ad67abb33a85b",
+   "seed": 139012007,
+   "games": 88,
+   "l50": 1,
+   "top": 936,
+   "decisions": [
+    936,
+    596,
+    511,
+    426,
+    341,
+    256,
+    171,
+    86,
+    1
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 360000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
+  },
+  {
    "task_id": "llmplay3_a_l6_m100_s139010000_a950ce75376b7",
    "seed": 139010000,
    "games": 88,
@@ -6205,9 +6232,9 @@
   }
  ],
  "scan_expected": 1246,
- "scanned": 268,
- "registered": 266,
+ "scanned": 269,
+ "registered": 267,
  "deployed": 246,
- "scan_games": 22944,
+ "scan_games": 23032,
  "complete": false
 }
