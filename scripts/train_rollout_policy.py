@@ -928,7 +928,7 @@ def main(*, step_observer=None) -> None:
     resume_ready = True
     def maybe_yield():
         nonlocal last_save
-        if yielding and (yield_requested or time.monotonic() - last_save >= args.checkpoint_seconds):
+        if yielding and (yield_requested or time.monotonic() - last_save >= (args.checkpoint_seconds or 30)):
             save_resume()
             last_save = time.monotonic()
         if yield_requested:
@@ -990,7 +990,12 @@ def main(*, step_observer=None) -> None:
         if completed_steps>=steps:
             break
     args.out.mkdir(parents=True, exist_ok=True)
-    torch.save(checkpoint(), args.out / "model.pt")
+    if yielding:
+        temporary = args.out / 'model.building'
+        torch.save(checkpoint(), temporary)
+        temporary.replace(args.out / 'model.pt')
+    else:
+        torch.save(checkpoint(), args.out / "model.pt")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
                                                        "load_seconds": load_seconds, "data_memory": memory}, indent=1))
     metrics.update(phase="complete")
