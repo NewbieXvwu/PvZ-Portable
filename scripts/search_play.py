@@ -683,6 +683,16 @@ def _play(job: dict, observer=None) -> dict:
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
         env._teacher_value_loaded = True
+    token_observation = bool(getattr(args, "obs_v3", False) or getattr(_W["fast"], "token_input", None) == "obs_v3")
+    initial_tokens = token_observation and not getattr(args, 'demo_archive', None)
+    if initial_tokens or getattr(env, '_token_observation', False):
+        env.set_token_observation(initial_tokens)
+    env._token_observation = initial_tokens
+    from pvz_research_data import SparseTokenWriter, capture_frame, SIDECAR_NAME
+    token_writer = None
+    if getattr(args, 'obs_v3', False) and args.frames:
+        tag = job['seed'] if job.get('future_seed') is None else f"{job['seed']}_f{job['future_seed']}"
+        token_writer = SparseTokenWriter(Path(args.frames)/f'seed_{tag}'/f'{args.frames_label}_{job["arm"]}')
     task = TaskSpec(level=kw["level"], seed=kw["seed"], playthrough=2,
                     profile=profile_for_deck(tuple(kw["deck"]), kw.get("first_aid_owned", False)),
                     **{k: v for k, v in kw["task_extra"].items() if v is not None})
@@ -722,6 +732,11 @@ def _play(job: dict, observer=None) -> dict:
                 # teacher the true future (the clairvoyance problem, scripts/verify_reseed.py). RESEED
                 # re-picks every wave that has not started yet and leaves the board untouched.
                 env.reseed(future_seed)
+            if token_observation:
+                # Prefix ticks are restored, not collected or passed to the student.
+                env.set_token_observation(True)
+                env._token_observation = True
+                obs = env.observe()
             from pvz_frame_store import frame_path, read_frames
             demo_frames = read_frames(frame_path(Path(demo_archive)))
             _W['demo_actions'] = [(before['tick'], after['action'])
@@ -742,7 +757,7 @@ def _play(job: dict, observer=None) -> dict:
         # One JSON line per decision, exactly what write_frames would serialize -- kept as bytes
         # rather than as parsed dicts, so the archive costs 2.8 MB instead of ~18 MB of Python
         # objects for the whole game (task18).
-        frames = [_frame_json(_frame(obs))] if args.frames else None
+        frames = [_frame_json(capture_frame(obs, token_writer))] if args.frames else None
         fast_state = {}
         if prefix:
             fast_state['frame'] = prefix[-2] if len(prefix) > 1 else None
@@ -782,8 +797,16 @@ def _play(job: dict, observer=None) -> dict:
                 searched_before = stats['searched']
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
-                action = _search(env, obs, action, args,
-                                 (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions, stats)
+                # Capture root inputs only. CNN teacher rollouts need no rich JSON observations.
+                pause_tokens = token_writer is not None and getattr(_W['fast'], 'token_input', None) != 'obs_v3'
+                if pause_tokens:
+                    env.set_token_observation(False)
+                try:
+                    action = _search(env, obs, action, args,
+                                     (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions, stats)
+                finally:
+                    if pause_tokens:
+                        env.set_token_observation(True)
                 if fog_diagnostics is not None:
                     fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
                 if action["type"] == "shovel":
@@ -828,7 +851,7 @@ def _play(job: dict, observer=None) -> dict:
             if fog_diagnostics is not None:
                 fog_diagnostics.sample(env, obs)
             if frames is not None:
-                frame = _frame(obs)
+                frame = capture_frame(obs, token_writer)
                 if stats.get("last_targets"):
                     # the search's estimate for every candidate it compared: [packet (-1 = wait), row, col, value];
                     # a soft target for the student (train_rollout_policy --soft-weight). Before "action" and
@@ -860,6 +883,8 @@ def _play(job: dict, observer=None) -> dict:
             if done:
                 break
     except BaseException:
+        if token_writer is not None:
+            token_writer.abort()
         _W.pop("env", None)
         env.close()
         raise
@@ -871,6 +896,12 @@ def _play(job: dict, observer=None) -> dict:
         from pvz_frame_store import write_frames_from_source
         write_frames_from_source(archive / "frames.npz",
                                  "".join(frames).encode())
+        attachment_info = None
+        if token_writer is not None:
+            token_writer.finish(archive / SIDECAR_NAME, source_frame=archive / 'frames.npz')
+            attachment_info = dict(file=SIDECAR_NAME, version=3,
+                                   bytes=(archive/SIDECAR_NAME).stat().st_size,
+                                   frames=token_writer.rows)
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         demo_sha = None
         if demo_archive:
@@ -894,6 +925,7 @@ def _play(job: dict, observer=None) -> dict:
                                    reason='win' if obs.get('result') == 1 else 'not_won')
         (archive / "meta.json").write_text(json.dumps({
             "label_source": "teacher",
+            **({'observation_attachment': attachment_info} if attachment_info else {}),
             **({"demo_archive": str(Path(demo_archive).resolve()), "demo_decision": args.demo_decision,
                 "demo_archive_sha256": demo_sha,
                 "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
@@ -906,6 +938,7 @@ def _play(job: dict, observer=None) -> dict:
                 'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
             "final_wave": obs["wave"], "decisions": decisions, "seconds": round(time.time() - started, 1),
             "final_tick": obs["tick"], "terminal": bool(obs.get("terminal")),
+            **({'obs_v3_bytes': attachment_info['bytes']} if args.frames and attachment_info else {}),
             # Final stable state digest (SaveGame image + RNG + counters): lets engine-swap
             # gates report how often the hashed state moved without replaying every tick.
             # Older deployed engines predate STATE_HASH; they just report no digest.
@@ -938,6 +971,7 @@ def _play(job: dict, observer=None) -> dict:
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "

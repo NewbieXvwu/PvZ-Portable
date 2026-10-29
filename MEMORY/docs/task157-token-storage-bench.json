@@ -1,0 +1,204 @@
+{
+  "rows": 2048,
+  "sources": [
+    {
+      "source": "frames/seed_1844520/d7p3m_fast_search/frames.npz",
+      "level": 7,
+      "lo": 0,
+      "hi": 512,
+      "first_frame": 234
+    },
+    {
+      "source": "frames/seed_20261030/demo_pool_30_orig_m100/frames.npz",
+      "level": 30,
+      "lo": 512,
+      "hi": 1024,
+      "first_frame": 76
+    },
+    {
+      "source": "frames/seed_20261039/demo_fog_39_cactus_snow_m200/frames.npz",
+      "level": 39,
+      "lo": 1024,
+      "hi": 1536,
+      "first_frame": 549
+    },
+    {
+      "source": "frames/seed_20261042/demo_roof_42_melon_m200/frames.npz",
+      "level": 42,
+      "lo": 1536,
+      "hi": 2048,
+      "first_frame": 501
+    }
+  ],
+  "single_cpu_thread": true,
+  "cache": "OS page-cache warm, application decoded cache disabled for random reads; no cold-cache claim",
+  "reference_rows": 23000000,
+  "exact_r42_rows": 23631235,
+  "reference_sparse_bytes_per_row": 5544.54325398948,
+  "decoder": "zlib level3, exact sparse float32 plus target links; experimental TKB1, not installed in production",
+  "episode_on_demand": {
+    "sample_bytes": 712234,
+    "raw_bytes": 11249039,
+    "compression_ratio": 0.06331509740520946,
+    "projected_23m_bytes": 8074225812.456041,
+    "projected_r42_bytes": 8295822939.878898,
+    "random": {
+      "rows": 256,
+      "seconds": 0.846912084001815,
+      "rows_per_second": 302.2745865076727,
+      "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+    },
+    "locality": {
+      "rows": 2048,
+      "seconds": 0.04832810199877713,
+      "rows_per_second": 42377.00044689985,
+      "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+    },
+    "mean_episode_rows": 512.0,
+    "mean_episode_bytes": 178058.5,
+    "disk_budget_random_rows_s": {
+      "50": 145.5726905958478,
+      "200": 238.17787287998084
+    }
+  },
+  "blocks": [
+    {
+      "block_rows": 1,
+      "sample_bytes": 3412729,
+      "raw_bytes": 11314511,
+      "compression_ratio": 0.30162408256088136,
+      "projected_23m_bytes": 38648458768.68512,
+      "index_23m_bytes": 184000008,
+      "projected_r42_bytes": 39709165719.372116,
+      "mean_block_bytes": 1666.37158203125,
+      "random": {
+        "rows": 4096,
+        "seconds": 0.26830628500465536,
+        "rows_per_second": 15266.13511841115,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "locality": {
+        "rows": 2048,
+        "seconds": 0.12842490799812367,
+        "rows_per_second": 15947.062232117169,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "disk_budget_random_rows_s": {
+        "50": 10118.191019003476,
+        "200": 13543.469834448608
+      }
+    },
+    {
+      "block_rows": 8,
+      "sample_bytes": 1075556,
+      "raw_bytes": 11257167,
+      "compression_ratio": 0.09554410981022135,
+      "projected_23m_bytes": 12207214346.653936,
+      "index_23m_bytes": 23000008,
+      "projected_r42_bytes": 12542241349.178293,
+      "mean_block_bytes": 4201.390625,
+      "random": {
+        "rows": 4096,
+        "seconds": 0.40441099499730626,
+        "rows_per_second": 10128.310186094923,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "locality": {
+        "rows": 2048,
+        "seconds": 0.06127438900148263,
+        "rows_per_second": 33423.42589414389,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "disk_budget_random_rows_s": {
+        "50": 5471.62790944445,
+        "200": 8351.420687112315
+      }
+    },
+    {
+      "block_rows": 32,
+      "sample_bytes": 805794,
+      "raw_bytes": 11251023,
+      "compression_ratio": 0.07161962072248897,
+      "projected_23m_bytes": 9139005961.393711,
+      "index_23m_bytes": 5750008,
+      "projected_r42_bytes": 9389825987.034601,
+      "mean_block_bytes": 12590.53125,
+      "random": {
+        "rows": 4096,
+        "seconds": 0.8954017430005479,
+        "rows_per_second": 4574.482942454461,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "locality": {
+        "rows": 2048,
+        "seconds": 0.05020787799730897,
+        "rows_per_second": 40790.411419294964,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "disk_budget_random_rows_s": {
+        "50": 2125.784514196157,
+        "200": 3551.683779356954
+      }
+    },
+    {
+      "block_rows": 128,
+      "sample_bytes": 740789,
+      "raw_bytes": 11249487,
+      "compression_ratio": 0.06585091391278554,
+      "projected_23m_bytes": 8399042043.596072,
+      "index_23m_bytes": 1437512,
+      "projected_r42_bytes": 8629553755.965727,
+      "mean_block_bytes": 46299.3125,
+      "random": {
+        "rows": 4096,
+        "seconds": 3.1491531089995988,
+        "rows_per_second": 1300.66715025526,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "locality": {
+        "rows": 2048,
+        "seconds": 0.045837755998945795,
+        "rows_per_second": 44679.32505350177,
+        "includes": "seek/read/decompress/selected-row reconstruction/CPU batch padding and tensor conversion"
+      },
+      "disk_budget_random_rows_s": {
+        "50": 590.0323040511641,
+        "200": 999.6673399476805
+      }
+    }
+  ],
+  "temporary_total_written_bytes": 17996141,
+  "temporary_removed": true,
+  "projection_note": "Disk projections normalize compression ratios to the 52-game task157 sample, not just these four windows. Frozen row plan is reused; a new optional uint32 row map adds 92 MB for 23M rows. Cold disk budgets assume effective 50/200 MB/s, not measured SSD throughput. Cold-disk budgets add CPU time and assumed read time without overlap; they are estimates, not measured cold-cache runs.",
+  "temporary_compressed_written_bytes": 6747102,
+  "temporary_raw_columns_written_bytes": 11249039,
+  "date": "2026-10-29",
+  "collection_mix_projection": {
+    "games_per_round": 768,
+    "mix": "deploy17/deploy18: 192 opening,192 demo,192 random,192 multiplier",
+    "conditional_samples": {
+      "opening": {
+        "games": 19,
+        "mean_bytes": 345585.7368421053
+      },
+      "demo": {
+        "games": 26,
+        "mean_bytes": 92797.73076923077
+      },
+      "random": {
+        "games": 1,
+        "mean_bytes": 288718.0
+      },
+      "multiplier": {
+        "games": 6,
+        "mean_bytes": 297636.1666666667
+      }
+    },
+    "estimated_extra_bytes_per_round": 196749625.78137654,
+    "planning_extra_bytes_per_round": [
+      250000000,
+      300000000
+    ],
+    "caveat": "conditional means from previous 52-game replay sample; random deck sample only one, not a measured deploy18 production round"
+  }
+}

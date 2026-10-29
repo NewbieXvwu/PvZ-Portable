@@ -1019,6 +1019,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             *growth_args(args, workers, upper_workers, per_worker_bytes, headroom_bytes),
             '--resource-dir', str(args.resource_dir),
             '--frames', str(args.frames if frames is None else frames), '--frames-label', label,
+            *(['--obs-v3'] if getattr(args, 'obs_v3', False) else []),
             '--out', str((args.out if out is None else out) / f'{label}_{games}')]
 
 
@@ -2338,6 +2339,8 @@ def main() -> None:
                         help='checked only between groups; independent runs should use an independent flag')
     parser.add_argument('--out', type=Path, default=MAIN / 'artifacts/hard')
     parser.add_argument('--frames', type=Path, default=DEFAULT_FRAMES)
+    parser.add_argument('--obs-v3', action=argparse.BooleanOptionalAction, default=False,
+                        help='write rich token attachment with each collected episode (deploy18 enables this)')
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
