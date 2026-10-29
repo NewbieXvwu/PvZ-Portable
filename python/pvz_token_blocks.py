@@ -1,6 +1,6 @@
-"""Experimental lossless row-block codec for the task157 storage design.
+"""Lossless sparse row-block codec shared by token packs and the storage benchmark.
 
-Not selected by production training. Same numeric columns as task162 decision_tokens;
+Same numeric columns as task162 decision_tokens;
 32 feature columns remain float32 and signed zero/target links are preserved.
 """
 import struct
@@ -35,7 +35,7 @@ def decode(compressed):
     raw = zlib.decompress(compressed)
     magic, rows, tokens, features = HEADER.unpack_from(raw)
     if magic != b'TKB1':
-        raise ValueError('unsupported experimental token block')
+        raise ValueError('unsupported token block')
     counts = dict(ids=tokens, counts=tokens, columns=features, values=features,
                   offsets=rows+1, feature_offsets=rows+1, packet_index=rows,
                   cell_index=rows, terrain=rows, target_indices=tokens)
