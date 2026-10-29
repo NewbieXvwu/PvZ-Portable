@@ -2,8 +2,6 @@
 #define PVZ_ENVIRONMENT_VALUE_NET_H
 
 #include <string>
-#include <array>
-#include <cstdint>
 #include <vector>
 class LawnApp;
 
@@ -21,9 +19,6 @@ public:
 	float Logit(const std::vector<float>& board, const std::vector<float>& scalars);
 	float Predict(LawnApp* app, double income);
 	static float Probability(float logit);
-	double featureSeconds = 0, forwardSeconds = 0;
-	std::array<double, 3> convolutionSeconds{};
-	uint64_t calls = 0;
 private:
 	int width = 0, encoder = 0, context = 0;
 	std::vector<std::vector<float>> weights;

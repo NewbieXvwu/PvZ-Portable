@@ -257,8 +257,6 @@ class PvZEnv:
         self._process: subprocess.Popen[str] | None = None
         self._reset_done = False
         self._last_response: dict[str, Any] = {}
-        self._sparse_tracks_version = 0
-        self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
         # Resource hashes and git metadata are computed on first use: hashing main.pak
         # eagerly here would raise a bare FileNotFoundError before ``_start`` can report
@@ -352,8 +350,6 @@ class PvZEnv:
             preexec_fn=_oom_score_engine if os.name == "posix" else None,
         )
         ready = self._read_message()
-        self._rollout_version = ready.get("rollout_version", 0)
-        self._sparse_tracks_version = ready.get("sparse_tracks_version", 0)
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
             raise RuntimeError(f"PvZ-Portable did not enter protocol-v{ENV_PROTOCOL_VERSION} environment mode: {ready}")
@@ -637,12 +633,6 @@ class PvZEnv:
         if not response.get("ok"):
             raise RuntimeError("cell injection requires a visible demonstration session")
 
-    def screenshot(self, path: str | Path) -> None:
-        """Save the presented frame as a PNG (visible runs only, task66 calibration)."""
-        response = self._command(f'SCREENSHOT "{Path(path).resolve()}"')
-        if not response.get("ok"):
-            raise RuntimeError(f"environment could not take a screenshot: {response}")
-
     def privileged_state(self) -> dict[str, Any]:
         response = self._command("PRIV")
         if response.get("observation") is None:
@@ -728,25 +718,16 @@ class PvZEnv:
         if not response.get("ok"):
             raise ValueError(f"environment could not reseed: {response}")
 
-    def require_sparse_tracks(self) -> None:
-        """Fail before collection starts when the requested CPU feature is absent."""
-        if self._process is None:
-            self._start()
-        if self._sparse_tracks_version != 1:
-            raise RuntimeError("CPU sparse tracks require a rebuilt simulator advertising sparse_tracks_version=1")
-
     def set_sim_skip(self, mask: int) -> None:
         """Approximate simulation (``SIM_SKIP``, bits in ``EnvSimSkip`` of src/PvzpLib/PvzpCommon.h).
 
         0 is the exact game. The setting is process-wide and survives RESET/RESTORE, so search
         code sets it around its rollouts and puts it back to 0 afterwards. Presentation skips are
-        approximations to measure (scripts/sim_skip_agreement.py). Bit256 only changes traversal
+        approximations to measure. Bit256 only changes traversal
         of otherwise inactive animation tracks and preserves the chosen presentation mode.
         """
         if type(mask) is not int or mask < 0 or mask & ~317:
             raise ValueError("SIM_SKIP accepts presentation bits 1, 4, 8, 16, 32 and sparse-track bit256")
-        if mask & 256:
-            self.require_sparse_tracks()
         if not self._command(f"SIM_SKIP {mask}").get("ok"):
             raise RuntimeError("simulator rejected SIM_SKIP (binary older than this wrapper?)")
 
@@ -862,8 +843,6 @@ class PvZEnv:
             if any(char in filename for char in ('\n', '\r')):
                 raise ValueError("trace path must not contain newlines")
             suffix += ' TRACE "' + filename.replace('\\', '\\\\').replace('"', '\\"') + '"'
-        if suffix and self._rollout_version < 2:
-            raise RuntimeError("student history and tracing require rollout_version >= 2")
         return suffix
 
     def rollout_predict(self, previous_tick: int | None = None, previous_plant: bool = False, *,
@@ -902,8 +881,6 @@ class PvZEnv:
             raise ValueError("max_actions must be from 1 to 1000000")
         if type(sim_skip) is not int or sim_skip < 0 or sim_skip & ~509:
             raise ValueError("rollout sim skip mask must combine the bits 1, 4, 8, 16, 32, 64, 128 and 256")
-        if sim_skip & 256:
-            self.require_sparse_tracks()
         event_wait = False
         if first_action is None:
             token = "A"
@@ -970,7 +947,6 @@ class PvZEnv:
         bypasses the episode bookkeeping, so do not mix it with :meth:`save_replay`.
 
         With retain_snapshots=False, return compact observations without saving children or hashing them.
-        Older binaries use the original command and release its child snapshots immediately.
         """
         if type(snapshot_id) is not int or snapshot_id < 1:
             raise ValueError("snapshot_id must be a positive integer")
@@ -982,20 +958,8 @@ class PvZEnv:
                 f"got {len(actions)}"
             )
         tokens = " ".join(branch_action_token(action) for action in actions)
-        if not retain_snapshots and self._branch_observe_supported is False:
-            branches = self.branch_snapshot(snapshot_id, actions)
-            for branch in branches:
-                child = branch.pop("snapshot_id", None)
-                branch.pop("state_hash", None)
-                if child is not None:
-                    self.release_snapshot(child)
-            return branches
         command = "BRANCH_SNAPSHOT_FAST" if retain_snapshots else "BRANCH_OBSERVE"
         response = self._command(f"{command} {snapshot_id} {len(actions)} {tokens}")
-        if not retain_snapshots and self._branch_observe_supported is None:
-            self._branch_observe_supported = "branches" in response
-            if not self._branch_observe_supported:
-                return self.branch_snapshot(snapshot_id, actions, retain_snapshots=False)
         branches = response.get("branches")
         if not response.get("ok") or not isinstance(branches, list) or len(branches) != len(actions):
             raise ValueError(f"environment could not branch snapshot {snapshot_id}: {response}")

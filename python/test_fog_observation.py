@@ -123,7 +123,6 @@ def test_predict_trace_is_complete_when_response_precedes_stream_close(tmp_path)
     env = PvZEnv(RESOURCE)
     env._reset_done = True
     env._tick = 8000
-    env._rollout_version = 2
     prediction = {'ok': True, 'action': {'type': 'wait', 'ticks': 60}}
     commands = []
 

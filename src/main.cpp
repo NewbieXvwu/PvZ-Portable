@@ -273,52 +273,6 @@ static bool RestoreEnvironmentSnapshot(LawnApp* app, const EnvironmentSnapshot& 
 	return true;
 }
 
-// Debug aid for "two runs disagree" reports: dump every field StableEnvironmentHash folds in,
-// so the two runs can be compared field by field instead of only by a 64-bit digest.  The board
-// payload is the same SaveGame V4 image the hash uses (header + TLV chunks), so a diff can be
-// narrowed to a chunk and then to a field.  Layout:
-//   "PVZSB1\n" | u64 board size | board bytes | u64 rand size | rand bytes |
-//   u32 appRandSeed | u32 randSeed | u32 appCounter | u32 zombiesKilled | u32 plantsEaten |
-//   u32 sunProduced | u32 triggeredLawnMowers | u32 gameScene | u32 boardResult
-static bool WriteEnvironmentStateBytes(LawnApp* app, const std::string& thePath)
-{
-	EnvironmentSnapshot snapshot{};
-	if (!app->mBoard)
-		return false;
-	// Same presentation zeroing StableEnvironmentHash does, so the dumped image is byte-for-byte
-	// what the digest covered.
-	Board* board = app->mBoard;
-	auto presentation = std::make_tuple(board->mDrawCount, board->mStartDrawTime,
-		board->mIntervalDrawTime, board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime);
-	std::tie(board->mDrawCount, board->mStartDrawTime, board->mIntervalDrawTime,
-		board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime) = std::make_tuple(0U, 0LL, 0LL, 0U, 0.0f, 0);
-	bool saved = SaveEnvironmentSnapshot(app, snapshot);
-	std::tie(board->mDrawCount, board->mStartDrawTime, board->mIntervalDrawTime,
-		board->mIntervalDrawCountStart, board->mMinFPS, board->mPreloadTime) = presentation;
-	if (!saved)
-		return false;
-	std::ofstream out(thePath, std::ios::binary);
-	if (!out)
-		return false;
-	auto writeU64 = [&out](uint64_t value) { out.write(reinterpret_cast<const char*>(&value), sizeof(value)); };
-	auto writeU32 = [&out](uint32_t value) { out.write(reinterpret_cast<const char*>(&value), sizeof(value)); };
-	out.write("PVZSB1\n", 7);
-	writeU64(snapshot.board.size());
-	out.write(reinterpret_cast<const char*>(snapshot.board.data()), static_cast<std::streamsize>(snapshot.board.size()));
-	writeU64(snapshot.randState.size());
-	out.write(reinterpret_cast<const char*>(snapshot.randState.data()), static_cast<std::streamsize>(snapshot.randState.size()));
-	writeU32(snapshot.appRandSeed);
-	writeU32(snapshot.randSeed);
-	writeU32(snapshot.appCounter);
-	writeU32(snapshot.zombiesKilled);
-	writeU32(snapshot.plantsEaten);
-	writeU32(snapshot.sunProduced);
-	writeU32(snapshot.triggeredLawnMowers);
-	writeU32(static_cast<uint32_t>(snapshot.gameScene));
-	writeU32(static_cast<uint32_t>(snapshot.boardResult));
-	return static_cast<bool>(out);
-}
-
 static uint64_t StableEnvironmentHash(LawnApp* app)
 {
 	Board* board = app->mBoard;
@@ -551,13 +505,11 @@ static void RunEnvironment(LawnApp* app)
 	HumanInput human;
 	bool demo = false;
 	const bool visible = !app->mHeadlessMode;
-	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
 		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
-		const auto commandStart = std::chrono::steady_clock::now();
 		std::istringstream input(line);
 		std::string command;
 		input >> command;
@@ -656,38 +608,6 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (app->mBoard ? "true" : "false");
 			if (app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';
 			std::cout << '}' << std::endl;
-			continue;
-		}
-		else if (command == "STATE_BYTES")
-		{
-			std::string path;
-			input >> std::quoted(path);
-			ok = !input.fail() && !path.empty() && app->mBoard != nullptr && WriteEnvironmentStateBytes(app, path);
-			minimalResponse = true;
-		}
-		else if (command == "SCREENSHOT")
-		{
-			// task66: visible runs only.  The frame is read back from the GL framebuffer inside
-			// the process, so a sleeping display or a locked desktop cannot black it out.
-			std::string path;
-			input >> std::quoted(path);
-			ok = !input.fail() && !path.empty() && visible && app->mBoard != nullptr &&
-				app->EnvironmentScreenshot(path);
-			minimalResponse = true;
-		}
-		else if (command == "ENV_PROFILE")
-		{
-			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":true"
-				<< ",\"action_seconds\":" << actionSeconds << ",\"observation_seconds\":" << observationSeconds
-				<< ",\"control_seconds\":" << controlSeconds << ",\"value\":[";
-			for (int slot = 0; slot < 2; ++slot)
-			{
-				const auto& net = valueNets[slot];
-				std::cout << (slot ? "," : "") << "{\"calls\":" << net.calls << ",\"features\":" << net.featureSeconds
-					<< ",\"forward\":" << net.forwardSeconds << ",\"conv\":[" << net.convolutionSeconds[0] << ','
-					<< net.convolutionSeconds[1] << ',' << net.convolutionSeconds[2] << "]}";
-			}
-			std::cout << "]}" << std::endl;
 			continue;
 		}
 		else if (command == "DECK_OPTIONS")
@@ -1000,7 +920,6 @@ static void RunEnvironment(LawnApp* app)
 				gEnvSimSkip = savedMask;
 				if (trace.is_open()) { trace.flush(); ok = trace.good(); }
 			}
-			actionSeconds += simulationSeconds;
 			if (scoreValue)
 			{
 				double value = 0;
@@ -1023,9 +942,7 @@ static void RunEnvironment(LawnApp* app)
 					<< ",\"network_seconds\":" << networkSeconds << "}" << std::endl << std::setprecision(6);
 				continue;
 			}
-			const auto observationStart = std::chrono::steady_clock::now();
 			const std::string observation = app->mBoard ? app->EnvironmentLeanObservation() : "null";
-			observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
 				<< ",\"observation\":" << observation
 				<< ",\"estimated_result\":" << estimatedResult
@@ -1141,58 +1058,6 @@ static void RunEnvironment(LawnApp* app)
 				} while (!app->EnvironmentTerminal() && app->mBoard->mMainCounter < untilTick &&
 					!app->EnvironmentAnyLegalPlant());
 			}
-		}
-		else if (command == "BENCH_SNAPSHOT")
-		{
-			// Split the cost of one BRANCH_SNAPSHOT_FAST branch into its ingredients.  The
-			// search is dominated by that round trip, and "save" versus "restore" versus
-			// "hash" need very different fixes -- so an optimisation should be attributed by
-			// measurement, not by guesswork.  ``scripts/branch_benchmark.py`` times the whole
-			// command from Python; this is the in-process view that separates the parts the
-			// Python timer lumps together with transport and JSON parsing.
-			int reps = 0;
-			input >> reps;
-			reps = std::clamp(reps, 1, 20000);
-			using Clock = std::chrono::steady_clock;
-			auto measure = [&](auto&& body)
-			{
-				std::vector<double> samples;
-				samples.reserve(static_cast<size_t>(reps));
-				for (int i = 0; i < reps; ++i)
-				{
-					auto started = Clock::now();
-					body();
-					samples.push_back(std::chrono::duration<double, std::micro>(Clock::now() - started).count());
-				}
-				std::sort(samples.begin(), samples.end());
-				double total = 0.0;
-				for (double sample : samples) total += sample;
-				return std::pair<double, double>{ samples[samples.size() / 2], total / static_cast<double>(samples.size()) };
-			};
-			EnvironmentSnapshot parent{};
-			bool haveParent = app->mBoard && SaveEnvironmentSnapshot(app, parent);
-			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion
-				<< ",\"ok\":" << (haveParent ? "true" : "false") << ",\"reps\":" << reps;
-			if (haveParent)
-			{
-				std::vector<unsigned char> reused;
-				auto emit = [&](const char* name, const std::pair<double, double>& stats)
-				{
-					std::cout << ",\"" << name << "\":{\"median_us\":" << stats.first << ",\"mean_us\":" << stats.second << '}';
-				};
-				// Every body has to feed a volatile sink: the compiler is entitled to delete a
-				// call whose result is unused and it happily did, turning "hash" into 0 us.
-				static volatile uint64_t aSink = 0;
-				emit("save_fresh", measure([&] { std::vector<unsigned char> out; LawnSaveGameToMemory(app->mBoard, out); aSink += out.size(); }));
-				emit("save_reused", measure([&] { reused.clear(); LawnSaveGameToMemory(app->mBoard, reused); aSink += reused.size(); }));
-				emit("restore", measure([&] { aSink += LawnLoadGameFromMemory(app->mBoard, parent.board) ? 1 : 0; }));
-				emit("hash", measure([&] { aSink += EnvironmentSnapshotHash(parent); }));
-				emit("observation", measure([&] { aSink += app->EnvironmentObservation(false).size(); }));
-				std::cout << ",\"payload_bytes\":" << parent.board.size()
-					<< ",\"rand_state_bytes\":" << parent.randState.size();
-			}
-			std::cout << '}' << std::endl;
-			continue;
 		}
 		else if (command == "BRANCH_SNAPSHOT_FAST" || command == "BRANCH_OBSERVE")
 		{
@@ -1387,13 +1252,7 @@ static void RunEnvironment(LawnApp* app)
 			human.packet = -1;
 			human.shovel = false;
 		}
-		const auto observationStart = std::chrono::steady_clock::now();
-		const double executionSeconds = std::chrono::duration<double>(observationStart - commandStart).count();
-		if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")
-			actionSeconds += executionSeconds;
-		else controlSeconds += executionSeconds;
 		const std::string observation = app->EnvironmentObservation(privileged);
-		observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
 		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << observation;
 		if (demo && app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';
 		if (hasWaitResult)

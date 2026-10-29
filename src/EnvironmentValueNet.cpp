@@ -10,7 +10,6 @@
 #include <algorithm>
 #include <bit>
 #include <cmath>
-#include <chrono>
 #include <cstdint>
 #include <fstream>
 #include <stdexcept>
@@ -130,7 +129,6 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 void EnvironmentValueNet::Convolve(const std::vector<float>& input, int channels, int kernelRows, int layer,
 	std::vector<float>& output)
 {
-	const auto started = std::chrono::steady_clock::now();
 	const float* kernel = weights[layer].data();
 	activeChannels.clear();
 	for (int ch = 0; ch < channels; ++ch)
@@ -162,12 +160,10 @@ void EnvironmentValueNet::Convolve(const std::vector<float>& input, int channels
 	for (int ch = 0; ch < width; ++ch)
 		for (int cell = 0; cell < Cells; ++cell)
 			output[ch * Cells + cell] = std::max(0.0f, output[ch * Cells + cell] + weights[layer + 1][ch]);
-	convolutionSeconds[layer / 2] += std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
 }
 
 float EnvironmentValueNet::Logit(const std::vector<float>& b, const std::vector<float>& s)
 {
-	const auto started = std::chrono::steady_clock::now();
 	if (!Loaded() || b.size() != ChannelCount() * Cells || s.size() != static_cast<size_t>(ScalarCount()))
 		throw std::runtime_error("invalid value network input");
 	Convolve(b, ChannelCount(), 3, 0, first); Convolve(first, width, 3, 2, second); Convolve(second, width, 1, 4, first);
@@ -183,10 +179,7 @@ float EnvironmentValueNet::Logit(const std::vector<float>& b, const std::vector<
 	for (int ch = 0; ch < width; ++ch) joined[width * 7 + ch] = std::max(0.0f, scalarHidden[ch] + weights[7][ch]);
 	cblas_sgemv(CblasRowMajor, CblasNoTrans, width, width * 8, 1.0f, weights[8].data(), width * 8, joined.data(), 1, 0.0f, hidden.data(), 1);
 	for (int ch = 0; ch < width; ++ch) hidden[ch] = std::max(0.0f, hidden[ch] + weights[9][ch]);
-	const float logit = cblas_sdot(width, weights[10].data(), 1, hidden.data(), 1) + weights[11][0];
-	++calls;
-	forwardSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
-	return logit;
+	return cblas_sdot(width, weights[10].data(), 1, hidden.data(), 1) + weights[11][0];
 }
 
 float EnvironmentValueNet::Probability(float logit)
@@ -196,8 +189,6 @@ float EnvironmentValueNet::Probability(float logit)
 
 float EnvironmentValueNet::Predict(LawnApp* app, double income)
 {
-	const auto started = std::chrono::steady_clock::now();
 	Features(app, income, board, scalars);
-	featureSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
 	return Probability(Logit(board, scalars));
 }
