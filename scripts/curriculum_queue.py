@@ -170,7 +170,9 @@ class GameHealth:
         with tempfile.TemporaryDirectory(prefix='pvz-recovery-', dir=args.state.parent) as temporary:
             folder = Path(temporary)
             task = read_json(args.promotion_panel)['tasks'][0]
-            command = command_for(args, args.promotion_panel, task['task_id'], 0, 1,
+            manifest = folder / 'manifest.json'
+            manifest.write_text(json.dumps(dict(tasks=[dict(task, seeds=(task.get('seeds') or [0])[:1])])))
+            command = command_for(args, manifest, task['task_id'], 0, 1,
                                   'recovery', workers=1, frames=folder / 'frames', out=folder)
             result = subprocess.run(command, cwd=ROOT, stdout=subprocess.DEVNULL,
                                     stderr=subprocess.DEVNULL, timeout=PROBE_TIMEOUT_SECONDS)
