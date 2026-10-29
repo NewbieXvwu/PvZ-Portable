@@ -29353,7 +29353,21 @@
     33,
     35,
     41
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/008a192955c28360be92123128c747c76237c4c5d256e6013ce9eea357f1d1d9",
+    "decisions": [
+     609,
+     388,
+     333,
+     277,
+     222,
+     167
+    ],
+    "index": 0,
+    "future_seed_start": 352000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "llmplay3_a_l38_m100_s139020019_aa6a62ea2f04e",
