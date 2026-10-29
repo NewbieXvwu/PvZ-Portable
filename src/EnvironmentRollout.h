@@ -52,6 +52,7 @@ private:
 	bool generic = false;
 	int graphBoard = -1, graphScalars = -1, graphInfo = -1, graphSelected = -1, graphTerrain = -1;
 	int graphPlant = -1, graphPacket = -1, graphCell = -1;
+	int graphTokens = -1;
 	void LoadGraph(const std::string& path);
 	void SetObservation(int observation, bool withContext);
 	int width = 0;

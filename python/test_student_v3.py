@@ -160,7 +160,7 @@ def test_v3_pipeline_pack_train_load_actions(tmp_path, monkeypatch):
     assert len(ranked) == len(legal)
     assert all(np.isfinite(p) for p, _ in ranked)
     assert act(net, frame(), None, legal) in [*legal, dict(type='wait', ticks=60, until='timeout')]
-    with pytest.raises(NotImplementedError, match='task161'):
+    with pytest.raises(ValueError, match='input contract'):
         export_student(net, tmp_path/'native.bin')
     assert not (tmp_path/'native.bin').exists()
 

@@ -1,3 +1,4 @@
+#include "EnvironmentTokens.h"
 #include "EnvironmentRollout.h"
 #include "LawnApp.h"
 #include "Lawn/Board.h"
@@ -157,13 +158,16 @@ void EnvironmentRollout::LoadGraph(const std::string& path)
 {
 	pvz::net::Graph next;
 	next.Load(path);
-	if (next.metadata.size() != 3 || next.metadata[0] < 1 || next.metadata[0] > 9 ||
+	if (next.metadata.size() != 3 || next.metadata[0] < 1 || next.metadata[0] > 10 ||
 		next.metadata[1] < 0 || next.metadata[1] > 1 || next.metadata[2] < 0 || next.metadata[2] > 1)
 		throw std::runtime_error("generic policy requires native observation/context/identity metadata");
 	const int obs = next.metadata[0];
-	const int extra[] = {0, 0, 4, 9, 10, 10, 13, 19, 21, 25};
+	const int extra[] = {0, 0, 4, 9, 10, 10, 13, 19, 21, 25, 0};
 	const int scalarCount = Scalars + (next.metadata[1] ? TaskContext : 0) + (obs >= 6 ? 9 : obs >= 3 ? 7 : obs == 2);
-	int board = -1, scalars = -1, info = -1, selected = -1, terrain = -1;
+	int board = -1, scalars = -1, info = -1, selected = -1, terrain = -1, tokens = -1;
+    const int capacity = obs == 10 ? next.Get("tokens").shape.at(1) : 0;
+    if(obs == 10 && (capacity < ObservationTokenPrefix || next.metadata[2] != 1))
+        throw std::runtime_error("rich token policy requires capacity >=66 and identity packets");
 	for (size_t i = 0; i < next.tensors.size(); ++i)
 	{
 		const auto& t = next.tensors[i];
@@ -174,6 +178,12 @@ void EnvironmentRollout::LoadGraph(const std::string& path)
 		else if (t.name == "packet_info") { info = i; expected = {1, 10, 4}; }
 		else if (t.name == "selected_packet") { selected = i; expected = {1}; }
 		else if (t.name == "terrain") { terrain = i; expected = {1}; }
+        else if (obs == 10 && t.name == "tokens") { tokens = i; expected = {1, capacity, 38}; }
+        else if (obs == 10 && t.name == "token_meta") expected = {1, capacity, 3};
+        else if (obs == 10 && t.name == "coords") expected = {1, capacity, 2};
+        else if (obs == 10 && (t.name == "valid" || t.name == "pool_valid")) expected = {1, capacity};
+        else if (obs == 10 && t.name == "packet_index") expected = {1, 10};
+        else if (obs == 10 && t.name == "cell_index") expected = {1, 54};
 		else throw std::runtime_error("generic policy input needs an adapter: " + t.name);
 		if (t.shape != expected) throw std::runtime_error("generic policy input shape: " + t.name);
 	}
@@ -190,9 +200,9 @@ void EnvironmentRollout::LoadGraph(const std::string& path)
 	// Commit only after loading/binding succeeds, so a failed replacement preserves the old policy.
 	graph = std::move(next);
 	graphBoard = board; graphScalars = scalars; graphInfo = info;
-	graphSelected = selected; graphTerrain = terrain;
+	graphSelected = selected; graphTerrain = terrain; graphTokens = tokens;
 	graphPlant = plant; graphPacket = packet; graphCell = cell;
-	SetObservation(obs, graph.metadata[1] != 0);
+	SetObservation(obs == 10 ? 1 : obs, graph.metadata[1] != 0);
 	identityPacket = graph.metadata[2] != 0;
 	width = 1; // Loaded() sentinel; generic execution gets dimensions from the graph.
 	generic = true;
@@ -827,6 +837,33 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 	++networkCalls;
 	packetLogitsValid = false;
 	Features(app, income, previousTick, previousPlant, featureBoard, featureScalars, history);
+    if (generic && graphTokens >= 0)
+    {
+        auto publicTokens = PublicObservationTokens(app);
+        int capacity = graph.tensors[graphTokens].shape[1];
+        auto raw = ObservationTokenArray(publicTokens, capacity); // explicit overflow error; never truncate
+        std::copy(raw.begin(), raw.end(), graph.tensors[graphTokens].data.begin());
+        auto& meta = graph.Get("token_meta").data;
+        auto& valid = graph.Get("valid").data;
+        auto& pool = graph.Get("pool_valid").data;
+        auto* coords = graph.Has("coords") ? &graph.Get("coords").data : nullptr;
+        for(int t=0;t<capacity;++t)
+        {
+            const float* token = raw.data()+t*38;
+            int kind=int(token[0]), row=int(token[3]), col=int(token[4]);
+            bool present = t<int(publicTokens.size()) && !(kind==8 && token[1]==0);
+            meta[t*3]=kind; meta[t*3+1]=row; meta[t*3+2]=col;
+            valid[t]=present; pool[t]=present && kind!=8;
+            if(coords) {
+                bool spatial = present && kind>=3 && kind<=7 && row>=0 && row<6 && col>=0 && col<9;
+                (*coords)[t*2]=spatial ? row : -1; (*coords)[t*2+1]=spatial ? col : -1;
+            }
+        }
+        auto& cards = graph.Get("packet_index").data;
+        for(int p=0;p<10;++p) cards[p]=raw[(ObservationCardStart+p)*38+1]>0 ? ObservationCardStart+p : -1;
+        auto& cells = graph.Get("cell_index").data;
+        for(int c=0;c<54;++c) cells[c]=ObservationCellStart+c;
+    }
 	if (generic && graphTerrain >= 0)
 		graph.tensors[graphTerrain].data[0] = static_cast<float>(std::min(4, static_cast<int>(app->mBoard->mBackground)));
 	Encode(featureBoard, featureScalars);

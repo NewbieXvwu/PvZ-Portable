@@ -106,3 +106,13 @@ kind 编号沿用旧模型：global=0, profile=1, cell=2, plant=3, zombie=4, pro
 新增显式 `token_input="obs_v3"`：直接消费 `v3.version=3 / v3.tokens[N,38]`，前 6 列是 kind/category/variant/row/col/target，后 32 列直接作为特征，不转换槽位、不重复加 1。固定 cells=2..55、cards=56..65；空卡槽 category=0，key mask 无效，卡包指针为 −1。与阶段 1 的 `tokens_v3` 紧凑原型是不同契约，旧默认 `token_input="compact"` 保留；富模型遇到缺 v3 的帧报需回填，不静默回退。pack 指纹只为新格式增加该字段，旧指纹保持不变。检查点记录 token_input，同构续训禁止跨格式复制。
 
 观测开关、帧保存、search_play 的 `--obs-v3` 与 Python 学生评估入口接通。实际富槽位以 [task157 输入契约](task157-student-v3-token-encoder.md) 为准；阶段 1 槽位说明仅适用于 compact 原型。
+
+## 续接阶段 4：完整 PVZGN001 导出（2026-10-29）
+
+`pvz_student_v3_export.student_graph` 导出完整的嵌入/特征 SiLU/逐层关系注意力/SwiGLU 或 MoE/可选 CNN scatter/三指针头。GenericForward 增加通用 SiLU、批内 gather、带掩码均值池化；embedding 可选偏移（行列未知位），relation 支持两桶同格表及可选目标链接表。旧节点参数和旧图继续有效。权重快照在导出时合并 gate/value，前向不拼接权重。
+
+新图 metadata 的 observation id=10 表示 task157 富输入；线格式仍是 `v3.version=3`。`export_student` 和 CLI（含 `--generic`）自动导出新格式，可用 `--token-capacity` 指定固定容量，默认 256。容量不足明确报错，不截断实体。compact 原型 checkpoint 明确拒绝按富输入导出，以免无声改变模型输入。
+
+原生 `EnvironmentRollout` 增加 id10 输入适配：直接从 PublicObservationTokens 填 float32 原始数组、有效位、排除卡包的池化位、帧内指针和实体 scatter 坐标；编码/种等卡包仍在 stage0/1，stage2 可多次给定卡包算格子。导出的 batch>1 图供独立驱动；原生游戏适配器是 batch1。
+
+完整模型小型独立 C++ 对拍（batch2、含空卡槽/补齐/目标链接/重复 scatter、24宽2层3头）四结构均通过，三头对原始 StudentV3 的最大绝对误差：dense 2.09e-7、地形 1.64e-7、top-k 2.02e-7、hybrid 2.99e-7，均 <1e-5。约2秒，无训练/存档重放。真实富帧与引擎适配将在本次交付收尾记录。

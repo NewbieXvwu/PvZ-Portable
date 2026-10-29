@@ -351,11 +351,11 @@ def load_student(path) -> RolloutNet:
     return net.eval()
 
 
-def export_student(net: RolloutNet, path) -> None:
+def export_student(net: RolloutNet, path, *, token_capacity=256) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
     if net.obs == 'v3':
         from pvz_student_v3 import export_v3
-        return export_v3(net, path)
+        return export_v3(net, path, capacity=token_capacity)
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct
@@ -391,10 +391,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export student / fast_ppo weights for the C++ simulator")
     parser.add_argument("checkpoint")
     parser.add_argument("output")
+    parser.add_argument("--token-capacity", type=int, default=256)
     parser.add_argument("--generic", action="store_true", help="export the self-describing PVZGN001 graph")
     options = parser.parse_args()
     net = load_student(options.checkpoint)
-    if options.generic:
+    if net.obs == 'v3':
+        export_student(net, options.output, token_capacity=options.token_capacity)
+    elif options.generic:
         from pvz_generic_forward import export_graph, rollout_graph
         export_graph(net, rollout_graph(net), options.output)
     else:

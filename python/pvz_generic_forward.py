@@ -100,6 +100,9 @@ def reference(module, graph, feeds, *, intermediates=False):
         if op == 'linear': y = F.linear(*a)
         elif op == 'conv': y = F.conv2d(*a, stride=tuple(p[2:4]), padding=tuple(p[:2]))
         elif op == 'relu': y = F.relu(x)
+        elif op == 'silu': y = F.silu(x)
+        elif op == 'gather': y = x.gather(1, a[1].long().clamp_min(0)[:, :, None].expand(-1, -1, x.shape[-1]))
+        elif op == 'masked_pool': y = (x*a[1][:, :, None]).sum(1)/a[1].sum(1, keepdim=True).clamp_min(1)
         elif op == 'add': y = a[0] + a[1]
         elif op == 'concat': y = torch.cat(a, dim=p[0])
         elif op == 'reshape': y = x.reshape(shape)
@@ -134,7 +137,10 @@ def reference(module, graph, feeds, *, intermediates=False):
             same = ((rows[:, :, None] == rows[:, None, :]) & (cols[:, :, None] == cols[:, None, :]) &
                     (rows[:, :, None] >= 0) & (cols[:, :, None] >= 0))
             y = (a[1][:, kinds[:, :, None], kinds[:, None, :]] + a[2][:, dr] + a[3][:, dc] +
-                 same[None] * a[4][:, None, None, None]).permute(1, 0, 2, 3)
+                 (same[None] * a[4][:, None, None, None] if a[4].ndim == 1 else a[4][:, same.long()])).permute(1, 0, 2, 3)
+            if len(a) == 7:
+                links = a[5][:, :, None] == torch.arange(x.shape[1], device=x.device)[None, None, :]
+                y = y + a[6][None, :, None, None]*links[:, None]
         elif op == 'ffn': y = _ffn(x, a[1:], p[0])
         elif op == 'moe':
             swiglu, hard, experts, topk, shared = p
@@ -162,7 +168,7 @@ def reference(module, graph, feeds, *, intermediates=False):
                     if 0 <= r < x.shape[2] and 0 <= c < x.shape[3]:
                         y[b, :, int(r), int(c)] += a[1][b, t]
         elif op == 'pointer': y = torch.einsum('bd,btd->bt', x, a[1]) * fp[0]
-        elif op == 'embedding': y = F.embedding(x.long().clamp(min=0), a[1])
+        elif op == 'embedding': y = F.embedding((x.long()+(p[0] if p else 0)).clamp(min=0, max=a[1].shape[0]-1) if p else x.long().clamp(min=0), a[1])
         elif op == 'select': y = x[torch.arange(x.shape[0]), a[1].long()]
         elif op == 'slice': y = x.narrow(*p)
         elif op == 'mask': y = x.masked_fill((a[1] < 0).reshape(a[1].shape + (1,)*(x.ndim-a[1].ndim)).expand_as(x), fp[0])

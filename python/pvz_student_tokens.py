@@ -106,9 +106,12 @@ def frame_tokens(frame, context=None, token_input='compact'):
                 cell_index=cell_index, terrain=np.asarray(terrain_id(scene), np.int64))
 
 
-def collate_tokens(samples, device='cpu'):
+def collate_tokens(samples, device='cpu', capacity=None):
     """Pad only the current minibatch; no quadratic relations stored on disk."""
-    count = max(len(s['ids']) for s in samples)
+    required = max(len(s['ids']) for s in samples)
+    count = required if capacity is None else capacity
+    if count < required:
+        raise ValueError(f'token capacity {count} < {required}; truncation is unsupported')
     batch = len(samples)
     ids = np.zeros((batch, count, 5), np.int64)
     ids[:, :, 3:] = -1

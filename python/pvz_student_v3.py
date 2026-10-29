@@ -222,15 +222,9 @@ def rank_actions(net, frame, previous, legal, context=None):
     return sorted(result, key=lambda item: -item[0])
 
 
-def export_v3(net, path, graph=None):
-    """task161 export hook; graph ABI must include v3 token preparation and links.
-
-    A caller supplying a compatible GraphSpec can use the generic writer directly.
-    Do not write an RN006 file or a partial artifact when no graph adapter exists.
-    """
-    if graph is None:
-        raise NotImplementedError('v3 native graph adapter pending task161: token embedding/feature SiLU, '
-                                  'indexed gathers, masked state pooling and target-link bias; '
-                                  'pass a compatible GraphSpec to export_v3(net, path, graph)')
-    from pvz_generic_forward import export_graph
-    export_graph(net, graph, path)
+def export_v3(net, path, graph=None, capacity=256, batch=1):
+    from pvz_student_v3_export import export_student_v3
+    if graph is not None:
+        from pvz_generic_forward import export_graph
+        return export_graph(net, graph, path)
+    return export_student_v3(net, path, capacity, batch)
