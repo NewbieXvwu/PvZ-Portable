@@ -4,7 +4,8 @@
 
     import llmplay
     print(llmplay.next_task(shard=0, shards=3))  # item 已占位
-    g = llmplay.Game(task_id, seed=..., deck=[...], reason="经济/主力/防守/应急/地形卡…")
+    print(llmplay.roster(task_id, seed=...))  # 先查威胁，再利用先验知识比较不同克制方案
+    g = llmplay.Game(task_id, seed=..., deck=[...], reason="针对…用…；经济/主力/防守/应急/地形卡…")
     print(g.observe())
     g.export_archive(llmplay.out_dir() / "x")
 """
@@ -13,6 +14,7 @@ from .delivery import (resume, carry, progress, next_task, ensure_run_id, diagno
                        output_dir as out_dir)
 from .runtime import paths
 from .decks import configure_shard
+from .roster import roster
 from .resources import install as _install_resources, app_data as _app_data
 
 _resources = _install_resources(ROOT)
@@ -23,7 +25,7 @@ carry()
 ensure_run_id()
 
 __all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "carry",
-           "progress", "next_task", "diagnose", "out_dir", "paths", "configure_shard"]
+           "progress", "next_task", "diagnose", "out_dir", "paths", "configure_shard", "roster"]
 
 
 def list_tasks() -> dict:

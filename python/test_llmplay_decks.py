@@ -340,3 +340,74 @@ def test_decks_native_archive_uses_original_cards_without_fixed_deck_index(tmp_p
     assert delivery.progress()['native']['llmplay_decks_native_l40_m100']['wins'] == 1
     g.env = None
     g.close()
+
+
+def test_decks_roster_uses_seed_wave_table_instead_of_first_allowed_wave(tmp_path):
+    import importlib
+    module = importlib.import_module('llmplay.roster')
+    module._query.cache_clear()
+    env = Mock()
+    env.reset.return_value = (dict(wave_count=20, zombies=[], loadout_context={'zombie_roster': [0, 16]}), {})
+    env.privileged_state.return_value = {
+        'hidden': {'zombies_in_wave': [[0], [], [], [], [], [], [16], [16]],
+                   'rand_seed': 123456, 'rand_state_hex': 'do-not-return'},
+        'zombies': [{'id': 99, 'x': 777, 'row': 4}]}
+    context = Mock()
+    context.__enter__ = Mock(return_value=env)
+    context.__exit__ = Mock(return_value=False)
+    before = delivery.progress()['archives']
+    with patch.object(module, 'PvZEnv', return_value=context), \
+            patch.object(module, '_ensure_executable'), patch.object(module, 'app_data', return_value=tmp_path):
+        result = module.roster('llmplay_decks_l33_m100', seed=186032123)
+        same = module.roster('llmplay_decks_l33_m100', seed=186032123)
+        assert env.reset.call_count == 1  # 仅当前进程缓存，不建磁盘中间文件。
+        selected = {zombie['type']: zombie for zombie in result['zombies']}
+        assert selected[16]['first_wave'] == 7  # 静态mFirstAllowedWave是10，不能当本局首次波次。
+        assert selected[16]['name'] == '气球僵尸'
+        assert result['seed'] == 186032123
+        spec = env.reset.call_args.kwargs['task']
+        assert spec.level == 33 and spec.fog_observation == 'human_v2'
+        assert spec.seed == result['seed']
+        assert 'rand_seed' not in repr(result) and 'do-not-return' not in repr(result)
+        result['zombies'].clear()
+        assert module.roster('llmplay_decks_l33_m100', seed=186032123) == same
+        env.step.assert_not_called()
+        env.wait.assert_not_called()
+    assert delivery.progress()['archives'] == before
+    module._query.cache_clear()
+
+
+def test_decks_roster_marks_allowed_and_summoned_threats_without_inventing_waves():
+    from llmplay.roster import _summary
+    spec, _, _ = task_spec(load_tasks()['llmplay_decks_l19_m100'], deck=D1)
+    obs = dict(wave_count=20, zombies=[], loadout_context={'zombie_roster': [0, 6, 8]})
+    result = _summary('llmplay_decks_l19_m100', spec, obs, {'hidden': {'zombies_in_wave': [[0], [8]]}})
+    zombies = {item['type']: item for item in result['zombies']}
+    assert zombies[8]['first_wave'] == 2
+    assert zombies[9]['first_wave'] is None and zombies[9]['sources'] == ['summon']
+    assert zombies[6]['first_wave'] is None and zombies[6]['sources'] == ['allowed']
+
+
+def test_decks_roster_native_boss_has_stage_based_threats():
+    from llmplay.roster import _summary
+    spec, _, _ = task_spec(load_tasks()['llmplay_decks_native_l50_m100'])
+    result = _summary('llmplay_decks_native_l50_m100', spec, dict(wave_count=0),
+                      {'hidden': {'zombies_in_wave': []}})
+    zombies = {item['type']: item for item in result['zombies']}
+    assert zombies[25]['sources'] == ['boss']
+    assert zombies[23]['sources'] == ['boss_summon']  # 巨人，来自源码gBossZombieList
+    assert zombies[20]['sources'] == ['boss_summon']  # 蹦极，来自BossBungeeSpawn
+    assert zombies[24]['sources'] == ['summon']      # 巨人投出小鬼
+    assert all(item['first_wave'] is None for item in zombies.values())
+
+
+def test_decks_roster_public_export_and_default_seed():
+    import importlib
+    import llmplay
+    module = importlib.import_module('llmplay.roster')
+    task_id = 'llmplay_decks_l7_m100'
+    with patch.object(module, '_query', return_value={'zombies': []}) as query:
+        llmplay.roster(task_id)
+        query.assert_called_once_with(task_id, load_tasks()[task_id]['seeds'][0])
+    with pytest.raises(ValueError, match='没有任务'):
+        llmplay.roster('not-a-task')

@@ -14,7 +14,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from llmplay import Game, next_task, out_dir, load_tasks  # noqa: E402
+from llmplay import Game, next_task, out_dir, roster  # noqa: E402
 
 
 def main() -> int:
@@ -28,6 +28,8 @@ def main() -> int:
     print("当前该做：%s" % json.dumps(todo, ensure_ascii=False))
     item = todo["item"]
     task_id, seed = item["task_id"], item["seed"]
+    if item["layer"] == "decks" and item["action"] != "resume":
+        print("选卡前出怪表：%s" % json.dumps(roster(task_id, seed=seed), ensure_ascii=False))
     if item["layer"] == "decks" and item["action"] != "resume" and (not args.deck or not args.reason):
         parser.error("扩卡组主线须提供--deck与--reason；传送带支线由引擎发牌")
     deck = [] if item["layer"] == "native" else [int(card) for card in (args.deck or "").split(",") if card]
