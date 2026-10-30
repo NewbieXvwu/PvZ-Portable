@@ -190,3 +190,18 @@ McNemar 精确双侧 p = 0.219（n=6，gain 5 / harm 1）。两臂总胜率 13.9
 验证：planner 用例现在断言整局格 `len(task seeds) == games` 且 `seed_offset == 0`；新增一例
 让某格续种抛 `SeedPoolExhausted`，断言该格被跳过、其余格仍出计划。`scripts/qc_deploy24.sh`
 已写好未执行：`start_qc` 仅 tmux 一行，`watchdog_extract_start` 实测 rc=0。
+
+## 9. deploy24 B 槽位改为「A 配方换种子」（task200 追加）
+
+B（`dw4i2_v2timer_warm.json`，热启动、新行 ×5）在 r60（冷启动轮）与 r62（热启动轮）
+首次门禁都约 −10pp，白占一半训练与门禁，因此改成同配方不同种子：新配方
+`recipes/dw4i2_v2timer_seed2cold.json` = `dw4i2_v2timer.json` 原样复制，只加
+`restart_every=1`、`restart_epochs=12`、`replay_new_weight=1.0`。gate7 下
+`cold = round % 1 == 0` 恒真，每轮 init=None、12 epoch、新行不加权；B 的训练种子由
+`training_seeds=[1,2]` 给 2（子配方 `seeds/seed_000002`，A 为 1）。`recipe_b.json`
+自身的 `seed` 字段仍是模板值 1（与 warm 配方一样由 `train_seed` 覆盖），实际训练种子才是 2。
+
+plan 实跑（不训练，真实 `enqueue` 路径 + submit 打桩）：`recipe_b.json` 的 init=null、
+epochs=12、replay_new_weight=1.0、restart_every=1；A/B 子配方种子分别为 1/2。
+`qc_deploy24.sh` 的 `--alternate-recipe` 改指新配方并加入部署拷贝列表；start_qc 仍是
+单行自包含，`watchdog_extract_start` 实测 rc=0。

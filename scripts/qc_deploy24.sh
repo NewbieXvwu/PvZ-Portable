@@ -23,9 +23,9 @@ EXE20=$R/artifacts/production/deploy20/pvz-portable
 VALUE5=$R/artifacts/value_net/v5/model.pt
 VROOF=$R/artifacts/value_net/v5roof/model.pt
 A16=$W/recipes/dw4i2_v2timer.json
-B21=$W/recipes/dw4i2_v2timer_warm.json
+B24=$W/recipes/dw4i2_v2timer_seed2cold.json
 start_qc() {
-  tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --min-eval-units 4 --python $PY --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $A16 --alternate-recipe $B21 --candidates-per-recipe 1 --training-parallelism 1 --opening-manifest $OPENING --executable $EXE20 --promotion-panel $PANEL5 --gate-version 7 --extra-manifest $EXTRA17 --demo-start-share 0.25 --random-deck-share 0.25 --gpt-import-dir $L/artifacts/task105/import --gpt-archive-root $L --gpt-cold-rates $COLD_RATES --obs-v3 --native-games --resource-dir $HOME/.cache/pvz-research-resources --frames $R/artifacts/student/frames_v2 --out $R/artifacts/hard --rollout-policy $R/artifacts/student/dw4i_s1/model.pt --value $VALUE5 --value-roof $VROOF --static-value $R/artifacts/hard/value_branch1/model.pt 2>&1 | tee -a $LOG_DIR/qc.out"
+  tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --min-eval-units 4 --python $PY --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $A16 --alternate-recipe $B24 --candidates-per-recipe 1 --training-parallelism 1 --opening-manifest $OPENING --executable $EXE20 --promotion-panel $PANEL5 --gate-version 7 --extra-manifest $EXTRA17 --demo-start-share 0.25 --random-deck-share 0.25 --gpt-import-dir $L/artifacts/task105/import --gpt-archive-root $L --gpt-cold-rates $COLD_RATES --obs-v3 --native-games --resource-dir $HOME/.cache/pvz-research-resources --frames $R/artifacts/student/frames_v2 --out $R/artifacts/hard --rollout-policy $R/artifacts/student/dw4i_s1/model.pt --value $VALUE5 --value-roof $VROOF --static-value $R/artifacts/hard/value_branch1/model.pt 2>&1 | tee -a $LOG_DIR/qc.out"
 }
 # All mutations below run only after explicit main-controller approval/execution.
 IMPORT_FILES=(scripts/import_llm_run.py scripts/task105_import_batch.py scripts/pvz_live_import.py)
@@ -42,7 +42,7 @@ FILES=(scripts/pvz_live_curriculum.py scripts/pvz_live_import.py scripts/deploy2
        python/pvz_research_data.py python/pvz_student_tokens.py python/pvz_token_blocks.py
        python/pvz_token_observation.py python/pvz_frame_store.py
        python/pvz_training_pack.py recipes/dw4i2_v2timer.json recipes/dw4i2_v2timer_history10.json
-       recipes/dw4i2_v2timer_l7keep25.json recipes/panel_v2.json
+       recipes/dw4i2_v2timer_seed2cold.json recipes/dw4i2_v2timer_l7keep25.json recipes/panel_v2.json
        recipes/dw4i.json recipes/dw4i2.json recipes/dw4i2_rebalanced.json
        recipes/dw4i2_rebalanced_p05.json recipes/dw4i2_rebalanced_p05_v2sleep.json
        recipes/dw4i2_rebalanced_p05_v2timer.json recipes/dw4i2_v2sleep.json)
