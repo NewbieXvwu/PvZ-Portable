@@ -112,3 +112,5 @@
 - [task126：挑选换卡组与每配方双种子](docs/task126-selection-heldout.md)
 - [task128：门禁 v5（冒险模式实际关卡与卡组）](docs/task128-gate-v5.md)
 - [task131：v2sleep 加宽热启动、缓存与 deploy15 准备](docs/task131-obs-upgrade.md)
+
+- [task192：卡牌静态属性离线实验](docs/task192-cardattr.md)

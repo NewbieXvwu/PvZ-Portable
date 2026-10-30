@@ -17,7 +17,7 @@ from pathlib import Path
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
     epochs=12, device='cpu', threads=1, precompute_workers=1,
-    wait_keep=1.0, seed=None, width=64, arch='cnn', label_weight={}, source_weight={}, packet_balance=0.0,
+    wait_keep=1.0, seed=None, width=64, arch='cnn', card_attributes=False, label_weight={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
@@ -129,7 +129,7 @@ def validate(document, kind=None):
         for name in ('seed', 'max_steps', 'micro_batch_size'):
             if result[name] is not None:
                 _integer(result[name], name, 0 if name == 'seed' else 1)
-        for name in ('row_pool', 'context', 'cache', 'dense_boards', 'source_row_report'):
+        for name in ('row_pool', 'context', 'cache', 'dense_boards', 'source_row_report', 'card_attributes'):
             if type(result[name]) is not bool:
                 raise ValueError(f'{name}: expected boolean')
         for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),

@@ -849,7 +849,8 @@ def main(*, step_observer=None) -> None:
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
     net = create_student(args.arch, width=args.width, pool=args.pool, context=args.context, obs=args.obs, row_pool=args.row_pool,
-                     aux=bool(args.aux_weight), packet_head=args.packet_head)
+                     aux=bool(args.aux_weight), packet_head=args.packet_head,
+                     **({'card_attributes': True} if args.card_attributes else {}))
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
@@ -936,6 +937,7 @@ def main(*, step_observer=None) -> None:
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
+                **({"card_attributes": True} if args.card_attributes else {}),
                 "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
                 # Historical reports compare these metadata keys; both experiments are retired.
                 "soft_weight": 0.0, "ema": 0.0,

@@ -146,11 +146,40 @@ def replan_two_day(state, recipe_path, revision, code_root, python, manifest):
     return summary
 
 
+def enqueue_card_attributes(state, recipe_path, revision, code_root, python):
+    """task192: one opt-in arm; reuse the exact CNN64 rows, budget and prefix.
+
+    Only the two required queue/recipe objects are written. Existing cohorts,
+    manifests, masks, production configuration and the runner are untouched.
+    """
+    control = json.loads((state / 'queue/r42_cnn64_s1.json').read_text())
+    name = 'cnn64_cardattr_s1'
+    path = state / 'decision-recipes' / (name + '.json')
+    out = state / 'runs' / name
+    variant = load_recipe(recipe_path, 'training')
+    variant.update(card_attributes=True, out=str(out))
+    variant['provenance'] = dict(variant['provenance'], source_revision=revision)
+    write_recipe(path, variant)
+    job = dict(control, id=name, recipe=str(path), out=str(out), revision=revision, code_root=str(code_root),
+               priority=control['priority'] + 1, enabled=True, after_jobs=['r42_cnn64_s1'], defer_evaluation=False)
+    replacements = {control['recipe']: str(path), control['out']: str(out)}
+    for field in ('command', 'evaluate'):
+        command = [replacements.get(arg, arg) for arg in control[field]]
+        command[0] = python
+        command[1] = str(code_root / 'scripts' / Path(command[1]).name)
+        job[field] = command
+    job['evaluate'] += ['--preview-only', '--peer-out', control['out'], '--peers-inline']
+    job.pop('evaluation_peers', None)
+    write_json(state / 'queue' / (name + '.json'), job)
+    return dict(job=name, revision=revision, after_jobs=job['after_jobs'], out=str(out))
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--state', type=Path, required=True)
     p.add_argument('--recipe', type=Path, required=True)
     p.add_argument('--revision', required=True, help='committed full code revision to execute for every attempt')
+    p.add_argument('--card-attributes', action='store_true', help='enqueue only task192 from the existing r42_cnn64_s1 recipe')
     p.add_argument('--replan-two-day', action='store_true', help='replace existing study jobs; stop the research service before invoking')
     args = p.parse_args()
     revision = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', args.revision+'^{commit}'], text=True).strip()
@@ -158,6 +187,10 @@ def main():
     if not code_root.exists():
         code_root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(['git', '-C', str(ROOT), 'worktree', 'add', '--detach', str(code_root), revision], check=True)
+    if args.card_attributes:
+        print(json.dumps(enqueue_card_attributes(args.state.resolve(), args.recipe.resolve(),
+                                                revision, code_root, sys.executable)))
+        return
     manifest = json.loads((code_root/'configs/decision_r42.json').read_text())
     operation = replan_two_day if args.replan_two_day else enqueue
     summary = operation(args.state.resolve(), args.recipe.resolve(), revision, code_root, sys.executable, manifest)

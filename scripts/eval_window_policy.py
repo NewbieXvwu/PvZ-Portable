@@ -72,6 +72,24 @@ def evaluation_order(validation, preview_rows):
     return np.r_[validation[prefix], validation[~prefix]], int(prefix.sum())
 
 
+def peer_comparisons(groups, peers):
+    """Matched-prefix differences in existing output, without writing into control runs."""
+    focus = ['all', 'unseen', 'day', 'night', 'pool', 'fog', 'roof']
+    focus += ['unseen/' + zone for zone in ('day', 'night', 'pool', 'fog', 'roof')]
+    current = {name: report_metrics(groups[name]) for name in focus}
+    comparisons = {}
+    for path, peer in peers.items():
+        result = {}
+        for name in focus:
+            control = report_metrics(peer['groups'][name])
+            result[name] = dict(rows=current[name]['rows'], control=control,
+                delta={key: current[name][key] - control[key]
+                       if current[name][key] is not None and control[key] is not None else None
+                       for key in ('type_acc', 'plant_recall', 'packet_acc', 'cell_acc', 'joint_acc', 'nll')})
+        comparisons[path] = result
+    return comparisons
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--recipe', type=Path, required=True)
@@ -85,6 +103,8 @@ def main():
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--peer-out', type=Path, action='append', default=[], help='compare these trained runs in the same input/token pass')
     parser.add_argument('--preview-rows', type=int, default=0, help='publish a uniform heldout prefix, then continue the complete heldout set')
+    parser.add_argument('--preview-only', action='store_true', help='stop after the existing common heldout prefix')
+    parser.add_argument('--peers-inline', action='store_true', help='keep peer comparisons in this run heldout.json; never replace control outputs')
     parser.add_argument('--cached-preview-only', action='store_true', help='Mac handoff: evaluate the cached prefix without original frame archives; report partial')
     args = parser.parse_args()
     recipe = load_recipe(args.recipe, 'training')
@@ -167,16 +187,19 @@ def main():
         router.copy_(torch.tensor(state['routing']))
     def publish(complete):
         for folder, _model, groups in models:
+            if args.peers_inline and folder != args.out:
+                continue
             write_json(folder / 'heldout.json', dict(model=str(folder / 'model.pt'), split=recipe['validation'],
                 deck_identity='sorted public packet kinds including duplicates; seen in training rows',
                 groups={name: report_metrics(counts) for name, counts in groups.items()},
                 routing_by_terrain=state.get('routing') if folder == args.out else None,
                 evaluation_complete=complete, evaluated_rows=state['next_row'], heldout_rows=len(validation),
-                preview_rows=preview_count, device=args.device))
+                preview_rows=preview_count, device=args.device,
+                **(dict(comparisons=peer_comparisons(groups, peers)) if args.peers_inline else {})))
         print(json.dumps(dict(stage='complete' if complete else 'preview', rows=state['next_row'],
                               heldout_rows=len(validation), models=[str(folder) for folder, _, _ in models])), flush=True)
     with torch.inference_mode():
-        limit = preview_count if args.cached_preview_only else len(validation)
+        limit = preview_count if args.cached_preview_only or args.preview_only else len(validation)
         while state['next_row'] < limit:
             start = state['next_row']
             if interrupted:
@@ -219,7 +242,7 @@ def main():
                 state['preview_published'] = True
                 save(); publish(False)
     save()
-    publish(not args.cached_preview_only)
+    publish(not (args.cached_preview_only or args.preview_only))
 
 
 if __name__ == '__main__':

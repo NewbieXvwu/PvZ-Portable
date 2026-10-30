@@ -78,11 +78,20 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
 class RolloutNet(nn.Module):
     def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1",
                  row_pool: bool = False, aux: bool = False, packet_head: str = "slot",
-                 plant_embedding_dim: int | None = None):
+                 plant_embedding_dim: int | None = None, card_attributes: bool = False):
         super().__init__()
         if obs not in OBS_EXTRA:
             raise ValueError(f"unknown student observation version: {obs}")
         self.obs = obs
+        self.card_attributes = card_attributes
+        attribute_dim = 0
+        if card_attributes and packet_head != 'identity':
+            raise NotImplementedError('card attributes use the identity packet head')
+        if card_attributes:
+            from pvz_card_attributes import card_attribute_matrix
+            matrix, self.card_attribute_names = card_attribute_matrix(PlantTypes)
+            self.register_buffer('plant_attributes', torch.tensor(matrix), persistent=False)
+            attribute_dim = matrix.shape[1]
         if packet_head not in ('slot', 'identity'):
             raise ValueError(f'unknown packet head: {packet_head}')
         self.packet_head = packet_head
@@ -98,17 +107,17 @@ class RolloutNet(nn.Module):
         self.pool = pool
         g = (3 if pool == "meanmax" else 2) * width
         self.trunk = nn.Sequential(
-            nn.Conv2d(BOARD_CHANNELS + OBS_EXTRA[obs][0], width, 3, padding=1), nn.ReLU(),
+            nn.Conv2d(BOARD_CHANNELS + OBS_EXTRA[obs][0] + attribute_dim, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 5), padding=(0, 2)), nn.ReLU(),
         )
         self.scalar = nn.Sequential(nn.Linear(SCALARS + EXTRA + (CONTEXT if context else 0)
                                              + OBS_EXTRA[obs][1], width), nn.ReLU())
         self.plant = nn.Linear(g, 1)
-        e = self.plant_embedding_dim
+        e = self.plant_embedding_dim + attribute_dim
         self.packet = (nn.Linear(g, PACKETS) if packet_head == 'slot' else
                        nn.Sequential(nn.Linear(g + e + 3, width), nn.ReLU(), nn.Linear(width, 1)))
-        self.packet_embedding = nn.Embedding(PACKETS if packet_head == 'slot' else PlantTypes, e)
+        self.packet_embedding = nn.Embedding(PACKETS if packet_head == 'slot' else PlantTypes, self.plant_embedding_dim)
         # Each cell sees its own features, the chosen packet and the global context.
         self.cell = nn.Sequential(nn.Conv2d(width + e + g, width, 1), nn.ReLU(), nn.Conv2d(width, 1, 1))
         self.row_pool = row_pool
@@ -138,6 +147,11 @@ class RolloutNet(nn.Module):
             for start, values in ((5, ready), (59, packet_info[:, :, 2])):
                 scalars[:, start:start + PlantTypes].scatter_reduce_(
                     1, kinds.clamp(min=0), values.masked_fill(~valid, 0), reduce='amax', include_self=True)
+        if self.card_attributes:
+            # The existing plant channels are identity one-hot weighted by health.
+            # Append their static-attribute projection, preserving every original channel.
+            attributes = torch.einsum('bprc,pa->barc', board[:, :PlantTypes], self.plant_attributes)
+            board = torch.cat([board, attributes], dim=1)
         if sparse_input:
             h = self._trunk_sparse(board)
         else:
@@ -175,6 +189,9 @@ class RolloutNet(nn.Module):
         self._check_packet_info(packet_info)
         kind = packet_info[:, :, 0].long()
         embedding = self.packet_embedding(kind.clamp(min=0))
+        if self.card_attributes:
+            attributes = self.plant_attributes[kind.clamp(min=0)].masked_fill((kind < 0)[:, :, None], 0)
+            embedding = torch.cat([embedding, attributes], dim=2)
         global_context = g[:, None, :].expand(-1, PACKETS, -1)
         logits = self.packet(torch.cat([global_context, embedding, packet_info[:, :, 1:]], dim=2)).squeeze(2)
         # CanPickUp/CanPlantAt are authoritative at action selection: conveyor cards are free
@@ -186,7 +203,10 @@ class RolloutNet(nn.Module):
         if self.packet_head == 'identity':
             self._check_packet_info(packet_info)
             packet = packet_info[:, :, 0].long().gather(1, packet[:, None]).squeeze(1).clamp(min=0)
-        e = self.packet_embedding(packet)[:, :, None, None].expand(-1, -1, ROWS, COLS)
+        e = self.packet_embedding(packet)
+        if self.card_attributes:
+            e = torch.cat([e, self.plant_attributes[packet]], dim=1)
+        e = e[:, :, None, None].expand(-1, -1, ROWS, COLS)
         ctx = g[:, :, None, None].expand(-1, -1, ROWS, COLS)
         return self.cell(torch.cat([h, e, ctx], dim=1))[:, 0, :, :LAWN_COLS].flatten(1)  # [B, 54]
 
@@ -327,13 +347,16 @@ def load_student(path) -> RolloutNet:
     net = create_student(checkpoint.get('arch', 'cnn'), width=checkpoint.get('width', weights.get('trunk.0.weight', torch.empty(64)).shape[0]),
                      pool=checkpoint.get("pool", "mean"), context=bool(checkpoint.get("context", False)),
                      obs=checkpoint.get("obs", "v1"), row_pool=bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
-                     plant_embedding_dim=checkpoint.get('plant_embedding_dim'))
+                     plant_embedding_dim=checkpoint.get('plant_embedding_dim'),
+                     **({'card_attributes': True} if checkpoint.get('card_attributes', False) else {}))
     net.load_state_dict({k: v for k, v in weights.items() if not k.startswith(("value.", "aux."))})
     return net.eval()
 
 
 def export_student(net: RolloutNet, path) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    if getattr(net, 'card_attributes', False):
+        raise NotImplementedError('task192 card attributes use Python inference; no C++ forward/export')
     if getattr(net, 'research_arch', False):
         raise NotImplementedError('task162 research architecture uses the Python bench_play path')
     if net.obs == 'v2fogstack4':
