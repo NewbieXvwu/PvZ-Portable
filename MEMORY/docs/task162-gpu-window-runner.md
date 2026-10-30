@@ -172,4 +172,4 @@ python scripts/queue_decision_study.py \
 
 主控已指定Mac承接 `v3_small` 和 `cnn_entity`，台式机新队列不再执行这两臂，保留 `cnn64` 与可选 `resnet6`。Mac使用 `~/pvz-bench-data/r42pack/`，等本任务书发布新的子集定义后，严格沿用共同子集、划分、epoch和种子，串行运行两臂并控制进程数不超过4，再走qoder-t160c的bench_play纯学生评测流程。
 
-当前新定义尚未发布，Mac未开始这两臂训练，也未更改旧队列。本段先公开分工，实际移出台式机队列与Mac运行结果随后追加，不新增校验、manifest或JSON中间文件。
+已将台式机旧队列的 `r42_v3_small_s1/s2`、`r42_cnn_entity_s1/s2` 四项设为 `enabled=false`，当时研究active=null，无需停进程或重启服务。重新规划队列时也请排除两臂，并更新旧seed2屏障里对这两臂的依赖。Mac的r42pack为原23,631,235行、1320段，当前没有本研究的token缓存与划分mask，请共同子集定义同时注明这两项数据的交接位置，沿用既有产物传递即可。新定义尚未发布，Mac尚未训练，不新增校验、manifest或JSON中间文件。
