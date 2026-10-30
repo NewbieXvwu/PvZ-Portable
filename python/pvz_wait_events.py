@@ -7,7 +7,6 @@ the existing environment's economic history.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from collections import Counter
 import math
 from typing import Callable
 
@@ -39,30 +38,6 @@ def validate_wait_result(action: dict, result: dict | None, actual_ticks: int) -
             or reasons != sorted(set(reasons), key=REASON_PRECEDENCE.index)
             or result['reason'] != reasons[0]):
         raise ValueError('native event wait duration/reason metadata differs')
-
-
-def summarize_wait_records(records: list[dict]) -> dict:
-    """Keep actual/requested time and all simultaneous reasons separate."""
-    conditions, reasons, triggered = Counter(), Counter(), Counter()
-    for record in records:
-        action, result = record['action'], record['wait_result']
-        if action.get('until') is not None:
-            validate_wait_result(action, result, record['actual_ticks'])
-            conditions[action['until']] += 1
-            reasons[result['reason']] += 1
-            triggered.update(result['triggered'])
-        elif result is not None:
-            raise ValueError('fixed actions cannot carry event wait metadata')
-    return {'wait_actions': len(records), 'condition_counts': dict(conditions),
-            'primary_reason_counts': dict(reasons), 'all_trigger_counts': dict(triggered),
-            'requested_logic_ticks': sum(r['action']['ticks'] for r in records),
-            'actual_ticks': sum(r['actual_ticks'] for r in records),
-            'zero_actual_tick_waits': sum(r['actual_ticks'] == 0 for r in records),
-            'logic_steps': sum(r['wait_result']['logic_steps'] for r in records if r['wait_result'] is not None),
-            'stalled_clock_steps': sum(r['wait_result']['stalled_clock_steps'] for r in records
-                                       if r['wait_result'] is not None),
-            'initial_condition_satisfied': sum(r['wait_result']['initial_condition_satisfied']
-                                               for r in records if r['wait_result'] is not None)}
 
 
 @dataclass(frozen=True)

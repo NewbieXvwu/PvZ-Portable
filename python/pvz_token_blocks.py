@@ -1,6 +1,6 @@
 """Experimental lossless row-block codec for the task157 storage design.
 
-Not selected by production training. Same numeric columns as task162 decision_tokens;
+Not selected by production training. Same numeric columns as task162 decision tokens;
 32 feature columns remain float32 and signed zero/target links are preserved.
 """
 import struct

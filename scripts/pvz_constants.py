@@ -460,16 +460,6 @@ def background_label(value) -> str:
     return _BACKGROUND_LABEL.get(name, name)
 
 
-def gridsquare_label(value) -> str:
-    """GridSquareType 的编号 -> 中文名。同上：认不出就回英文枚举名。"""
-    if value == -1:
-        return "混合地形"
-    name = grid_square_types().get(int(value)) if value is not None else None
-    if name is None:
-        return f"(未知地形 {value})"
-    return _GRIDSQUARE_LABEL.get(name, name)
-
-
 def upgrade_plants() -> frozenset[int]:
     """升级植物集合（SeedType 编号），从 `Plant::IsUpgrade`（Plant.cpp）解析。
 

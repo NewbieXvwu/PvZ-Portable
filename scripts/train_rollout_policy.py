@@ -11,7 +11,6 @@ from __future__ import annotations
 import argparse
 import json
 import math
-import os
 import zipfile
 import random
 import sys
@@ -41,16 +40,6 @@ def _episode_context(path: Path) -> np.ndarray:
     if "context" not in meta:
         raise SystemExit(f"{path.parent} has no task context: run scripts/backfill_frame_context.py first")
     return context_vector(meta["context"]["multiplier"], meta["context"]["roster"])
-
-
-def _spilled_array(directory: Path, name: str, dtype, shape):
-    """Writable file-backed array that leaves the directory at once: the mapping keeps the pages alive,
-    and the kernel can drop them under pressure instead of holding them as anonymous memory (task32)."""
-    directory.mkdir(parents=True, exist_ok=True)
-    path = directory / f"{name}_{os.getpid()}.npy"
-    store = np.lib.format.open_memmap(path, mode="w+", dtype=dtype, shape=shape)
-    path.unlink()
-    return store
 
 
 def constant_plane(rows):
@@ -906,8 +895,6 @@ def main(*, step_observer=None) -> None:
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
                 "context": args.context, "obs": args.obs, "spread_weight": args.spread_weight, "spread_cap": args.spread_cap, "lr_schedule": args.lr_schedule, "cell_soft_weight": args.cell_soft_weight,
-                # Historical reports compare these metadata keys; both experiments are retired.
-                "soft_weight": 0.0, "ema": 0.0,
                 "history": list(history), "recipe": args.resolved_recipe,
                 **({'private_weights': dict(history_l7_keep=history_keep, deck_weight_cap=deck_cap)}
                    if private_weights is not None else {}),

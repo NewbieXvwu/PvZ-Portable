@@ -782,12 +782,6 @@ def _disp(s) -> int:
     return sum(2 if ord(ch) > 0x2E80 else 1 for ch in str(s))
 
 
-def _pad(s, width: int) -> str:
-    """右对齐补齐（数字列用）。保留是因为别处还在按这个名字调用。"""
-    s = str(s)
-    return " " * max(0, width - _disp(s)) + s
-
-
 def _cell(s, width: int, align: str = ">") -> str:
     """按显示宽度补齐一个单元格。align='>' 右对齐（数字），'<' 左对齐（文字）。
 

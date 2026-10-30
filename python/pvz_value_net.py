@@ -272,14 +272,6 @@ def _featurize_reference(frame: dict) -> tuple[torch.Tensor, torch.Tensor]:
     return board, scalars
 
 
-def potential_phi(frame: dict) -> float:
-    """The shaping potential the PPO reward uses (notes/training.md), as a baseline score."""
-    plants = frame["plants"]
-    health = (sum(p[3] / max(1, p[4]) for p in plants) / len(plants)) if plants else 0.0
-    wave_count = max(1, frame["scene"].get("wave_count") or 1)
-    return (min(1.0, frame["sun"] / 1000) + min(1.0, frame["wave"] / wave_count) + health) / 3
-
-
 class ValueNet(nn.Module):
     """Small conv net over the board, joined with the scalars, producing a win logit.
 

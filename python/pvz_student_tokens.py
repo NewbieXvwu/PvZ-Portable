@@ -144,9 +144,6 @@ class TokenStore:
     def from_arrays(cls, stored):
         return cls({k: np.asarray(stored['token_'+k]) for k in ('offsets', *cls.token_fields, *cls.row_fields)})
 
-    def packed_arrays(self):
-        return {'token_'+k: v for k, v in self.arrays.items()}
-
     def sample(self, i):
         lo, hi = self.arrays['offsets'][i:i+2]
         return {**{k: self.arrays[k][lo:hi] for k in self.token_fields},
@@ -156,23 +153,3 @@ class TokenStore:
         return collate_tokens([self.sample(int(i)) for i in indices], device)
 
 
-class TokenBuilder:
-    """Stream a label's tokens to temporary files instead of keeping per-row objects."""
-    def __init__(self):
-        import tempfile
-        self.files = {k: tempfile.TemporaryFile() for k in (*TokenStore.token_fields, *TokenStore.row_fields)}
-        self.offsets = [0]
-
-    def append(self, sample):
-        for k, (dtype, _) in {**TokenStore.token_fields, **TokenStore.row_fields}.items():
-            np.asarray(sample[k], dtype=dtype).tofile(self.files[k])
-        self.offsets.append(self.offsets[-1]+len(sample['ids']))
-
-    def finish(self):
-        arrays = dict(offsets=np.asarray(self.offsets, np.int64))
-        for k, (dtype, shape) in {**TokenStore.token_fields, **TokenStore.row_fields}.items():
-            handle = self.files[k]
-            handle.seek(0)
-            arrays[k] = np.fromfile(handle, dtype=dtype).reshape(-1, *shape)
-            handle.close()
-        return TokenStore(arrays)

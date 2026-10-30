@@ -574,17 +574,6 @@ class PvZEnv:
             raise RuntimeError("human input requires a visible demonstration session")
         return response
 
-    def demo_key(self, key: str) -> None:
-        """task80: push Esc/Space/window-close through the recorder's real SDL handler.
-
-        Test seam for scripted regressions; rejected outside a visible demonstration session.
-        """
-        if key not in ("escape", "space", "close"):
-            raise ValueError("key must be 'escape', 'space' or 'close'")
-        response = self._command(f"DEMO_INPUT {key}")
-        if not response.get("ok"):
-            raise RuntimeError("key injection requires a visible demonstration session")
-
     def demo_click_packet(self, index: int) -> None:
         if type(index) is not int:
             raise TypeError("packet index must be an integer")
@@ -598,12 +587,6 @@ class PvZEnv:
         response = self._command(f"DEMO_CLICK_CELL {col} {row}")
         if not response.get("ok"):
             raise RuntimeError("cell injection requires a visible demonstration session")
-
-    def screenshot(self, path: str | Path) -> None:
-        """Save the presented frame as a PNG (visible runs only, task66 calibration)."""
-        response = self._command(f'SCREENSHOT "{Path(path).resolve()}"')
-        if not response.get("ok"):
-            raise RuntimeError(f"environment could not take a screenshot: {response}")
 
     def privileged_state(self) -> dict[str, Any]:
         response = self._command("PRIV")

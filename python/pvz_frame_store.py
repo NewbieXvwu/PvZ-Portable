@@ -176,10 +176,6 @@ def encode_frames(frames: list[dict], source: bytes) -> dict:
                 values=np.array(values, dtype=np.float32).reshape(-1, PACKETS + 1))
 
 
-def encode_v2lite_frames(frames: list[dict], source: bytes) -> dict:
-    return encode_student_frames(frames, source, "v2lite")
-
-
 def encode_student_frames(frames: list[dict], source: bytes, obs: str) -> dict:
     from pvz_student_observation import OBS_EXTRA, StudentHistory
     encoded = encode_frames(frames, source)
