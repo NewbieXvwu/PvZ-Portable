@@ -663,7 +663,8 @@ def _play(job: dict, observer=None) -> dict:
     from render_episode import _frame, load_training_task, training_task_kwargs
     from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec
-    task_definition = load_training_task(Path(args.manifest), args.task_id)
+    task_definition = (job['task_definition'] if 'task_definition' in job else
+                       load_training_task(Path(args.manifest), args.task_id))
     kw = training_task_kwargs(task_definition, job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
     # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board

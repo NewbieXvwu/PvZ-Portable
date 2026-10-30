@@ -1,8 +1,8 @@
 # task181 北极星基准
 
-不参与晋升，只看走势（task179 §5）。台式机用户服务 `pvz-northstar` 每 30 分钟读
-`~/pvz-logs/curriculum_state.json` 的 `student` / `student_round`，出现新的现任学生就跑一遍，
-只读生产状态。结果 CSV 与曲线图在 `~/pvz-logs/northstar/`，不入 git；本文件只记关键数字。
+不参与晋升，只看走势（task179 §5）。task198 起在 Mac 每30分钟只读台式机课程状态，
+出现新的现任学生经 HF `transfer/` 拉取，取完即删远端中转文件。结果 CSV 与曲线图在
+Mac `~/pvz-logs/northstar/`，不入 git。本文件只记关键数字。下文台式机设置为历史记录。
 
 - **通关**：冒险 1–50 关，原难度、`pvz_tasks.deck_for_level` 标准卡组（5/10/20/25/30/40/45/50
   用引擎自己的传送带），纯学生，每关 16 个种子。
@@ -104,3 +104,11 @@ L11 从 0/16 变 16/16，L13 从 1/16 变 16/16；C++ 原生整局与门禁/筛�
 - 对照：训练/门禁卡组 438/800 = 54.8%（day 136/160、night 132/176、pool 91/160、fog 77/144、roof 2/160）。
 - 可赢陌生卡组：8/106 = 7.5%。
 - 倍率 50%（0.5–3.0 阶梯，端点表示未跨过）：L7 2.08、L14 0.5、L25 0.5、L33 0.5、L45 0.77。
+
+### task198：迁回 Mac 并补列（2026-10-30）
+
+保留 r36/r52 原始 CSV 两行，只补新列。GPT 列取 task105 两轮 GPT Pro（438cb30a、8024414b）的已导入胜局，限原版1.0倍，按（关卡、卡组签名）去重，每组合2个固定种子，雾关须 human_v2。task194 的15.2%来自含倍率的313个组合，本列按本次要求收窄到1.0倍，口径另列。
+
+老师列与训练/门禁列共用800个关卡/种子，沿用生产搜索（samples=3、horizon=2500、verify_samples=9、student_candidates=2、sim_skip=61，叶值v5、静态branch1）。Mac空闲才推进，学生优先，逐局数值CSV支持续跑，每位学生只完成一次。默认4个工作进程，含引擎约10进程，轮询时仍≤12，nice 10。模型缓存在 `~/.cache/pvz-northstar/models/` 共用，老师完成即清，临时导出与拉取目录随任务回收。
+
+Mac 启动：在本工作树用具备 torch/huggingface_hub/matplotlib 的 Python 执行 `nice -n 10 python3 scripts/bench_northstar.py --workers 4`。台式机由主控执行 `systemctl --user disable --now pvz-northstar.service`，本任务不操作台式机服务。
