@@ -64,6 +64,7 @@ MAX_ACTIONS = 3000
 _W: dict = {}
 
 ROOF_BACKGROUNDS = frozenset({"BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
+PRIOR_BACKGROUNDS = frozenset({"BACKGROUND_4_FOG", "BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
 
 
 def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str:
@@ -73,6 +74,14 @@ def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str
     from pvz_constants import background_for_level
     roof = background_for_level(int(task["level"])) in ROOF_BACKGROUNDS
     return roof_value_path if roof else value_path
+
+
+def _terrain_policy(student_path: str, gpt_path: str | None, task: dict) -> str:
+    """Fog, roof and boss levels act and continue with the GPT prior; other terrain keeps the student."""
+    if not gpt_path:
+        return student_path
+    from pvz_constants import background_for_level
+    return gpt_path if background_for_level(int(task["level"])) in PRIOR_BACKGROUNDS else student_path
 
 
 def _export_values(value_path: str, static_value_path: str | None):
@@ -978,6 +987,9 @@ def parser():
                    help='collect per-decision fog diagnostics, using the Python game loop')
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
+    p.add_argument("--rollout-policy-gpt",
+                   help="GPT behavior-clone prior for fog/roof/boss levels "
+                        "(BACKGROUND_4_FOG/5_ROOF/6_BOSS); default --rollout-policy")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--value-roof", help="value net that scores the leaves on roof levels 41-50 "
                    "(including the boss); default --value")
@@ -1083,6 +1095,7 @@ def main() -> None:
                        load_training_task(Path(args.manifest), args.task_id))
     task_seeds = task_definition["seeds"]
     args.leaf_value = _leaf_value(args.value, args.value_roof, task_definition)
+    args.rollout_policy = _terrain_policy(args.rollout_policy, args.rollout_policy_gpt, task_definition)
     if args.seed_list:
         seeds = [int(s) for s in args.seed_list.split(',') if s.strip()]
         unknown = [s for s in seeds if s not in set(task_seeds)]

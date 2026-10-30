@@ -1017,6 +1017,8 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                      '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
+            *(['--rollout-policy-gpt', str(args.rollout_policy_gpt)]
+              if getattr(args, 'rollout_policy_gpt', None) else []),
             '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
             '--verify-samples', '9', '--student-candidates', '2',
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
@@ -2443,6 +2445,8 @@ def main() -> None:
     parser.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
                         help='use native fog games in collection/selection/promotion (deploy19)')
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
+    parser.add_argument('--rollout-policy-gpt', type=Path,
+                        help='GPT behavior-clone prior for fog/roof/boss levels; default --rollout-policy')
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
     parser.add_argument('--value-roof', type=Path,
