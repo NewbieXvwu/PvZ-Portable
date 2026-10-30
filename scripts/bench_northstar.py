@@ -635,7 +635,7 @@ def teacher(args, record, model):
                 if handle.tell() == 0:
                     writer.writeheader()
                 while pending or (admit and cursor < len(jobs)):
-                    if (args.gpt_tasks is None and not record.get('gpt_rate') and gpt_poll is None
+                    if (not args.local_only and args.gpt_tasks is None and not record.get('gpt_rate') and gpt_poll is None
                             and time.monotonic() >= next_gpt):
                         gpt_poll = polls.submit(gpt_suite, args.remote)
                     if gpt_poll is not None and gpt_poll.done():
@@ -649,7 +649,7 @@ def teacher(args, record, model):
                         next_gpt = time.monotonic()+60
                     if time.monotonic() >= next_poll:
                         admit = idle(args)
-                        if poll is None:
+                        if not args.local_only and poll is None:
                             poll = polls.submit(active_student, args.state, args.remote)
                         next_poll = time.monotonic() + 60
                     if poll is not None and poll.done():
@@ -760,6 +760,8 @@ def main() -> int:
     parser.add_argument("--round", type=int, help="student round of --model")
     parser.add_argument("--state", type=Path, default=STATE)
     parser.add_argument('--remote', default=REMOTE, help='desktop SSH host; state and task105 metadata only')
+    parser.add_argument('--local-only', action='store_true',
+                        help='finish cached teacher jobs only; no desktop, GPT-source or HF connections')
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--doc", type=Path, default=DEFAULT_DOC)
     parser.add_argument("--backend", choices=("auto", "cpp", "python"), default="auto")
@@ -793,6 +795,29 @@ def main() -> int:
 
     args.out.mkdir(parents=True, exist_ok=True)
     lock_path = args.out / ".lock"
+
+    if args.local_only:
+        while True:
+            lock = acquire_lock(lock_path)
+            if lock is not None:
+                try:
+                    pending = [row for row in read_rows(args.out/'results.csv')
+                               if not row.get('teacher_rate')]
+                    if not pending:
+                        log('cached teacher jobs complete; local-only runner exits')
+                        return 0
+                    if idle(args):
+                        row = pending[0]
+                        model = MODEL_CACHE / f'r{int(row["round"]):06d}.pt'
+                        if not model.is_file():
+                            log(f'local model missing for r{row["round"]}; waiting for an explicit network resume')
+                            return 1
+                        teacher(args, row, model)
+                    else:
+                        log('Mac compute is busy; cached teacher remains queued locally')
+                finally:
+                    lock.close()
+            time.sleep(60)
 
     if args.model:
         lock = acquire_lock(lock_path)

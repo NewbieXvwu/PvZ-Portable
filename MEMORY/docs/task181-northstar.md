@@ -116,3 +116,5 @@ L11 从 0/16 变 16/16，L13 从 1/16 变 16/16；C++ 原生整局与门禁/筛�
 老师列与训练/门禁列共用800个关卡/种子，沿用生产搜索（samples=3、horizon=2500、verify_samples=9、student_candidates=2、sim_skip=61，叶值v5、静态branch1），31–40关按生产默认启用1个存钱探针，复用 `save_candidates_for` 及任务覆写。Mac空闲才推进，学生优先，逐局数值CSV支持续跑，每位学生只完成一次。默认4个工作进程，含引擎约10进程，轮询时仍≤12，nice 10。模型缓存在 `~/.cache/pvz-northstar/models/` 共用，学生和老师列均完成后清，临时导出与拉取目录随任务回收。远端读取异步进行，连接等待期间可用本地模型继续老师列，GPT来源取得后优先补学生列。
 
 Mac 启动：在本工作树用具备 torch/huggingface_hub/matplotlib 的 Python 执行 `nice -n 10 python3 scripts/bench_northstar.py --workers 4`。台式机由主控执行 `systemctl --user disable --now pvz-northstar.service`，本任务不操作台式机服务。
+
+手机热点期间改用 `--local-only`，由 nohup 后台运行，日志写入 Mac `~/pvz-logs/northstar/poller.log`。只续跑已有模型的老师列，关闭台式机轮询、GPT来源读取和HF传输；本地老师任务完成后退出。网络恢复后由用户通知再恢复联网模式，会话不轮询等待。
