@@ -11027,7 +11027,21 @@
    ],
    "zombie_count_multiplier": 1.0,
    "deck": [],
-   "conveyor_start": "original"
+   "conveyor_start": "original",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/56b3563a2c8fbdf1910f89818901acb998dc4741e933c9136ccd787083cec3dc",
+    "decisions": [
+     646,
+     411,
+     353,
+     294,
+     236,
+     177
+    ],
+    "index": 0,
+    "future_seed_start": 407000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l37_snow_magnet_v2_m200_s81022000_a3c2ea20e450b",
