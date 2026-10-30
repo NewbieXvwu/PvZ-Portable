@@ -16,9 +16,16 @@
 
 std::vector<EnvironmentToken> PublicObservationTokens(LawnApp* app)
 {
+	std::vector<EnvironmentToken> tokens;
+	PublicObservationTokens(app,tokens);
+	return tokens;
+}
+
+void PublicObservationTokens(LawnApp* app, std::vector<EnvironmentToken>& tokens)
+{
 	Board* b = app->mBoard;
 	const bool dark = app->EnvironmentStormHidden();
-	std::vector<EnvironmentToken> tokens;
+	tokens.clear();
 	auto add = [&](int kind, int category, int variant, int row, int col,
 		std::initializer_list<float> values) -> EnvironmentToken& {
 		tokens.push_back({kind, category + 1, variant + 1, row, col});
@@ -127,7 +134,6 @@ std::vector<EnvironmentToken> PublicObservationTokens(LawnApp* app)
 			if (t.row == row) { plants += t.kind == 3; zombies += t.kind == 4; projectiles += t.kind == 5; }
 		add(10, -1, -1, row, -1, {plants / 20.f, zombies / 40.f, projectiles / 50.f});
 	}
-	return tokens;
 }
 
 std::vector<float> ObservationTokenArray(const std::vector<EnvironmentToken>& tokens, size_t capacity)
@@ -135,9 +141,17 @@ std::vector<float> ObservationTokenArray(const std::vector<EnvironmentToken>& to
 	if (capacity == 0) capacity = tokens.size();
 	if (capacity < tokens.size()) throw std::length_error("obs-v3 token count exceeds graph capacity");
 	std::vector<float> values(capacity * ObservationTokenFields);
+	FillObservationTokenArray(tokens, values.data(), capacity);
+	return values;
+}
+
+void FillObservationTokenArray(const std::vector<EnvironmentToken>& tokens, float* values, size_t capacity)
+{
+	if (capacity < tokens.size()) throw std::length_error("obs-v3 token count exceeds graph capacity");
+	std::fill_n(values,capacity*ObservationTokenFields,0.f);
 	for (size_t i = 0; i < capacity; ++i)
 	{
-		float* row = values.data() + i * ObservationTokenFields;
+		float* row = values + i * ObservationTokenFields;
 		row[3] = row[4] = row[5] = -1;
 		if (i >= tokens.size()) continue;
 		const auto& t = tokens[i];
@@ -145,7 +159,6 @@ std::vector<float> ObservationTokenArray(const std::vector<EnvironmentToken>& to
 		row[3] = t.row; row[4] = t.col; row[5] = t.target;
 		std::copy(t.features.begin(), t.features.end(), row + 6);
 	}
-	return values;
 }
 
 void WriteObservationTokens(std::ostream& out, LawnApp* app)

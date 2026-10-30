@@ -23,6 +23,8 @@ struct EnvironmentToken
 };
 
 std::vector<EnvironmentToken> PublicObservationTokens(LawnApp* app);
+void PublicObservationTokens(LawnApp* app, std::vector<EnvironmentToken>& tokens);
 // capacity=0 keeps the exact count. A fixed-shape consumer must never truncate entities.
 std::vector<float> ObservationTokenArray(const std::vector<EnvironmentToken>& tokens, size_t capacity = 0);
+void FillObservationTokenArray(const std::vector<EnvironmentToken>& tokens, float* values, size_t capacity);
 void WriteObservationTokens(std::ostream& out, LawnApp* app);

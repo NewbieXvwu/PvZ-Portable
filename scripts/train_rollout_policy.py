@@ -16,6 +16,7 @@ import zipfile
 import random
 import sys
 import time
+from contextlib import closing, nullcontext
 from pathlib import Path
 
 import numpy as np
@@ -29,7 +30,7 @@ import torch.nn.functional as F  # noqa: E402
 from pvz_recipe import training_args, training_row_options, write_recipe  # noqa: E402
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
-from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
+from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, make_student, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import CELL_CANDIDATES  # noqa: E402
 from pvz_training_pack import archive_fingerprint, pack_flags, pack_options, pack_path  # noqa: E402
 
@@ -379,14 +380,14 @@ def _pack_flags(options: dict) -> str:
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
          row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None,
-         label_keep: dict[str, float] | None = None):
+         label_keep: dict[str, float] | None = None, token_input="compact"):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels), label_keep=label_keep)
+                           sources=archive_fingerprint(data, labels, token_input), label_keep=label_keep, token_input=token_input)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -395,7 +396,7 @@ def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dic
     return read_pack(path, data, row_observer, source_weight)
 
 
-def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None):
+def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None, merge_dir=None):
     """The tuple load has always returned, from one packed file."""
     stored = np.load(path, mmap_mode="r", allow_pickle=False)
     if 'segments' in stored.files:
@@ -403,7 +404,7 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         stored.close()
         # source_weight is applied while merging: the segments carry the per-row source columns,
         # the concatenated pack does not.
-        return read_segments([path.parent / name for name in names], data, row_observer, source_weight)
+        return read_segments([path.parent / name for name in names], data, row_observer, source_weight, merge_dir)
     # npz arrays are materialized (np.load's mmap_mode does not mmap ZIP members).
     # Close the archive after reading; every returned array owns its bytes.
     rows = int(stored["rows"])
@@ -438,6 +439,9 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
         result = (*result, torch.from_numpy(np.asarray(stored["aux"])))
     if "packet_col0" in stored.files:
         result = (*result, PacketStore.from_arrays(stored, rows))
+    if 'token_offsets' in stored.files:
+        from pvz_student_tokens import TokenStore
+        result = (*result, TokenStore.from_arrays(stored))
     stored.close()
     return result
 
@@ -462,13 +466,16 @@ def _member_array(archive, name):
         return np.lib.format.read_array(handle)
 
 
-def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None):
+def read_segments(paths: list[Path], data: Path | None = None, row_observer=None, source_weight=None, merge_dir=None):
     """Share one merged generation between trainers, keeping their row weights private."""
-    if data is None:
+    if data is None and merge_dir is None:
         return _read_segments(paths, data, row_observer, source_weight)
     import fcntl
     import hashlib
-    directory = Path(data) / '.merge' / 'shared-v1'
+    with np.load(paths[0], allow_pickle=False) as stored:
+        token_contract = json.loads(str(stored['meta'])).get('obs') == 'v3'
+    directory = (Path(merge_dir) if merge_dir else Path(data) / '.merge' /
+                 ('tokens-v3' if token_contract else 'shared-v1'))
     directory.mkdir(parents=True, exist_ok=True)
     signature = hashlib.sha256(json.dumps([
         (str(path.resolve()), path.stat().st_size, path.stat().st_mtime_ns)
@@ -522,14 +529,17 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
             sources = stored["source"].tolist()
             archive = np.asarray(stored["source_archive"])
             rows = np.asarray(stored["source_row"])
+            has_tokens = 'token_offsets' in stored.files
             has_cands = "cand_counts" in stored.files
-            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+            streams = ("board", "scalar", "value") + (("cand",) if has_cands else ()) + (("token",) if has_tokens else ())
             # CSR streams carry an offsets member; the sparse stores derive theirs from
             # counts (uint8 per row, cumsum like ValueStore.from_arrays does at load).
             boundaries = {"board": np.asarray(stored["board_offsets"]),
                           "scalar": np.asarray(stored["scalar_offsets"]),
                           "value": np.concatenate(
                               [[0], np.cumsum(np.asarray(stored["value_counts"]).astype(np.int64))])}
+            if has_tokens:
+                boundaries['token'] = np.asarray(stored['token_offsets'])
             if has_cands:
                 boundaries["cand"] = np.concatenate(
                     [[0], np.cumsum(np.asarray(stored["cand_counts"]).astype(np.int64))])
@@ -549,10 +559,11 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
     with zipfile.ZipFile(layouts[0]["path"]) as zfile:
         members = set(name[:-4] for name in zfile.namelist())
         dense_names = ("plant", "packet", "cell", "weight")
+        has_tokens = 'token_offsets' in members
         has_aux = "aux" in members
         has_packets = "packet_col0" in members
         has_cands = "cand_counts" in members
-        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ())
+        streams = ("board", "scalar", "value") + (("cand",) if has_cands else ()) + (("token",) if has_tokens else ())
         headers = {name: _member_header(zfile, name) for name in
                    dense_names + (("aux",) if has_aux else ()) + ("seed",)
                    + ("value_counts", "value_slots", "value_values")
@@ -624,6 +635,18 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         packets.columns = [allocate(f'packet_col{index}', column.dtype, column.shape)
                            for index, column in enumerate(packets.columns)]
 
+    token_store = None
+    if has_tokens:
+        from pvz_student_tokens import TokenStore, DenseTokenStore
+        token_class = TokenStore if 'token_data' in members else DenseTokenStore
+        token_arrays = {'offsets': allocate('token_offsets', np.int64, (total_rows+1,))}
+        token_arrays['offsets'][0] = 0
+        for name, (dtype, shape) in token_class.token_fields.items():
+            token_arrays[name] = allocate('token_'+name, dtype, (totals['token'], *shape))
+        for name, (dtype, shape) in token_class.row_fields.items():
+            token_arrays[name] = allocate('token_'+name, dtype, (total_rows, *shape))
+        token_store = token_class(token_arrays)
+
     # Pass two: one segment in memory at a time; every chunk goes to its precomputed position.
     for index, layout in enumerate(layouts):
         if reuse:
@@ -678,6 +701,15 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                                      *((("aux", 9),) if has_aux else ())):
                 dense_targets[name][pos:pos + span] = np.asarray(part[part_index])[start:stop]
             seed_target[pos:pos + span] = np.asarray(part[6])[start:stop]
+            if token_store is not None:
+                source_tokens = part[-1].arrays
+                at, lo, hi = entry['token']
+                token_arrays['offsets'][pos+1:pos+span+1] = at + source_tokens['offsets'][start+1:stop+1] - lo
+                for name in token_class.token_fields:
+                    token_arrays[name][at:at+hi-lo] = source_tokens[name][lo:hi]
+                for name in token_class.row_fields:
+                    token_arrays[name][pos:pos+span] = source_tokens[name][start:stop]
+
             if packets is not None:
                 for column, target_column in zip(part[9 + has_aux].columns, packets.columns):
                     target_column[pos:pos + span] = np.asarray(column)[start:stop]
@@ -695,6 +727,8 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
         result = (*result, torch.from_numpy(dense_targets["aux"]))
     if has_packets:
         result = (*result, packets)
+    if token_store is not None:
+        result = (*result, token_store)
     if row_observer is not None and data is not None:
         for entry in placed:
             if len(entry["rows"]):
@@ -775,6 +809,7 @@ def main(*, step_observer=None) -> None:
             factors=label_adjustment.factors, rows=len(weight)), indent=1)+'\n')
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
+    tokens = loaded[-1] if args.obs == 'v3' else None
     load_seconds = time.time() - started
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
@@ -790,6 +825,8 @@ def main(*, step_observer=None) -> None:
               "value_bytes": values.nbytes,
               "tensor_bytes": sum(tensor.numel() * tensor.element_size()
                                   for tensor in (plant, packet, cell, weight, is_val))}
+    if tokens is not None:
+        memory['token_bytes'] = tokens.nbytes
     if packet_info is not None:
         memory['packet_bytes'] = (packet_info.nbytes if isinstance(packet_info, PacketStore)
                                   else packet_info.numel() * packet_info.element_size())
@@ -819,8 +856,8 @@ def main(*, step_observer=None) -> None:
         print(json.dumps({'level_balance': shares}), flush=True)
     if private_weights is not None:
         private_weights.apply_deck_cap(weight, is_val, packet_info)
-    net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
-                     aux=bool(args.aux_weight), packet_head=args.packet_head)
+    net = make_student(width=args.width, pool=args.pool, context=args.context, obs=args.obs, row_pool=args.row_pool,
+                       aux=bool(args.aux_weight), packet_head=args.packet_head, network=args.network, token_input=args.token_input)
     if args.init:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
@@ -830,15 +867,19 @@ def main(*, step_observer=None) -> None:
     positive_count = float(plant[weight > 0].sum()) if private_weights is not None else float(plant.sum())
     pos_weight = torch.tensor([waits / max(1.0, positive_count)], device=args.device).sqrt()
 
-    def batch_loss(idx, train):
-        b = boards.batch(idx, args.device)
-        s = scalars.batch(idx, args.device)
+    def batch_loss(idx, train, token_batch=None):
+        pure_tokens = tokens is not None and not net.network['hybrid']
+        b = None if pure_tokens else boards.batch(idx, args.device)
+        s = None if pure_tokens else scalars.batch(idx, args.device)
         y = plant[idx].to(args.device).float()          # uint8 in the compact store
         pk = packet[idx].to(args.device).long()         # int16 in the compact store
         c = cell[idx].to(args.device).long()
         w = weight[idx].to(args.device)
         planted = y > 0.5
         packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
+        if tokens is not None:
+            packet_args['tokens'] = (tokens.batch(idx, args.device) if token_batch is None else
+                                    {key: value.to(args.device) for key, value in token_batch.items()})
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if private_weights is not None else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
@@ -902,6 +943,7 @@ def main(*, step_observer=None) -> None:
 
     def checkpoint() -> dict:
         return {"state_dict": {k: v.cpu() for k, v in net.state_dict().items()}, "labels": args.labels, "width": args.width,
+                **({"network": net.network, "token_input": net.token_input} if tokens is not None else {}),
                 "label_weight": label_weight, "pool": args.pool, "packet_balance": args.packet_balance,
                 "row_pool": args.row_pool, "aux_weight": args.aux_weight, "aux_horizon": args.aux_horizon,
                 "packet_head": args.packet_head, "plant_embedding_dim": net.plant_embedding_dim,
@@ -915,49 +957,66 @@ def main(*, step_observer=None) -> None:
 
     completed_steps=0
     completed_rows=0
+    loader_context = nullcontext(None)
+    if tokens is not None and 'data' in tokens.arrays and args.token_workers:
+        from pvz_token_loader import TokenBlockLoader
+        loader_context = TokenBlockLoader(tokens, args.token_workers, args.token_prefetch)
     metrics.update(phase="training")
-    for epoch in range(1, args.epochs + 1):
-        epoch_started = time.perf_counter()
-        metrics.update(phase="training")
-        net.train()
-        perm = train_idx[torch.randperm(len(train_idx))]
-        if len(perm) < epoch_rows:
-            perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
-        train_loss = 0.0
-        for start in range(0, len(perm), args.batch_size):
-            loss, _ = batch_loss(perm[start:start + args.batch_size], True)
-            if step_observer is not None:
-                step_observer(completed_steps + 1, float(loss.detach()))
-            train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
-            opt.zero_grad(); loss.backward(); opt.step()
-            if schedule is not None:
-                schedule.step()
-            completed_steps+=1
-            completed_rows += len(perm[start:start + args.batch_size])
-            metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
+    with loader_context as token_loader:
+        for epoch in range(1, args.epochs + 1):
+            epoch_started = time.perf_counter()
+            metrics.update(phase="training")
+            net.train()
+            if token_loader is None:
+                perm = train_idx[torch.randperm(len(train_idx))]
+                if len(perm) < epoch_rows:
+                    perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
+                batches = ((perm[start:start+args.batch_size], None)
+                           for start in range(0, len(perm), args.batch_size))
+            else:
+                seed = int(torch.randint(0, 2**63-1, ()).item())
+                batches = token_loader.batches(train_idx.numpy(), args.batch_size, seed, epoch_rows)
+            train_loss = 0.0
+            with closing(batches):
+                for idx, token_batch in batches:
+                    loss, _ = batch_loss(idx, True, token_batch)
+                    if step_observer is not None:
+                        step_observer(completed_steps + 1, float(loss.detach()))
+                    train_loss += float(loss.detach()) * len(idx)
+                    opt.zero_grad(); loss.backward(); opt.step()
+                    if schedule is not None:
+                        schedule.step()
+                    completed_steps+=1
+                    completed_rows += len(idx)
+                    metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
+                    if completed_steps>=steps:
+                        break
+            metrics.update(phase="validation")
+            net.eval()
+            # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
+            # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
+            # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
+            # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
+            parts = []
+            with torch.no_grad():
+                for chunk in val_idx.split(args.validation_batch_size):
+                    parts.append((len(chunk), *batch_loss(chunk, False)))
+            total = sum(n for n, _l, _s in parts)
+            vl = sum(float(l) * n for n, l, _s in parts) / total if total else None
+            vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]} if parts else {}
+            history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows, "val_loss": vl,
+                            **vs, "seconds": time.perf_counter() - epoch_started})
+            print(json.dumps(history[-1]), flush=True)
+            if args.save_epochs and epoch > args.epochs - args.save_epochs:
+                args.out.mkdir(parents=True, exist_ok=True)
+                torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
             if completed_steps>=steps:
                 break
-        metrics.update(phase="validation")
-        net.eval()
-        # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
-        # (2026-10-15: garbage val metrics while the model itself was fine on the CPU). 1024 rather than
-        # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
-        # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
-        with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
-        total = sum(n for n, _l, _s in parts)
-        vl = sum(float(l) * n for n, l, _s in parts) / total
-        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows, "val_loss": float(vl),
-                        **vs, "seconds": time.perf_counter() - epoch_started})
-        print(json.dumps(history[-1]), flush=True)
-        if args.save_epochs and epoch > args.epochs - args.save_epochs:
-            args.out.mkdir(parents=True, exist_ok=True)
-            torch.save(checkpoint(), args.out / f"epoch_{epoch:02d}.pt")
-        if completed_steps>=steps:
-            break
     args.out.mkdir(parents=True, exist_ok=True)
     torch.save(checkpoint(), args.out / "model.pt")
+    if tokens is not None:
+        from pvz_rollout_policy import export_student
+        export_student(net.cpu().eval(), args.out / "model.bin")
     (args.out / "metrics.json").write_text(json.dumps({"history": history, "seconds": time.time() - started,
                                                        "load_seconds": load_seconds, "data_memory": memory}, indent=1))
     metrics.update(phase="complete")

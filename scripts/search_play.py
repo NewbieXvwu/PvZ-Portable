@@ -83,7 +83,8 @@ def _close_worker_env():
         env.close()
 
 
-def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None) -> None:
+def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None = None,
+               root_policy: str | None = None) -> None:
     """Load the nets and the student's C++ export into the worker state dict.
 
     Either every worker calls this, or -- where the platform can fork -- the parent calls it
@@ -103,6 +104,15 @@ def _load_nets(value_path: str, rollout_path: str, static_value_path: str | None
     _W["rollout_tmp"] = tempfile.TemporaryDirectory(prefix="pvz-rollout-")
     _W["rollout_file"] = str(Path(_W["rollout_tmp"].name) / "student.bin")
     export_student(_W["fast"], _W["rollout_file"])
+    _W['root'] = _W['fast']
+    _W['policy_config'] = None
+    if root_policy is not None:
+        root_file = Path(_W['rollout_tmp'].name) / 'root.bin'
+        _W['root'] = load_student(root_policy)
+        export_student(_W['root'], root_file)
+        config = root_file.with_suffix('.conf')
+        config.write_text('PVZPOL001\nroot "root.bin"\nrollout "student.bin"\n')
+        _W['policy_config'] = str(config)
 
 
 def _release_freed_memory() -> None:
@@ -133,7 +143,8 @@ def _freeze_startup() -> None:
 
 
 def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
-                 static_value_path: str | None = None, metrics_counters=None) -> None:
+                 static_value_path: str | None = None, metrics_counters=None,
+                 root_policy: str | None = None) -> None:
     _W["metrics_counters"] = metrics_counters
     os.environ.setdefault("OMP_NUM_THREADS", "1")
     os.environ.setdefault("VECLIB_MAXIMUM_THREADS", "1")
@@ -146,7 +157,7 @@ def _init_worker(value_path: str, rollout_path: str, rollout_sim_skip: int = 0,
     from multiprocessing.util import Finalize
     Finalize(None, _close_worker_env, exitpriority=10)
     if "fast" not in _W:        # a preloading parent already loaded them, and we inherited the pages
-        _load_nets(value_path, rollout_path, static_value_path)
+        _load_nets(value_path, rollout_path, static_value_path, root_policy)
     import torch
     # Forking does not carry the parent's intra-op thread count into the child; a worker is
     # single threaded either way.
@@ -168,7 +179,8 @@ def _fast_action(obs: dict, fast_state: dict, native_env=None) -> dict:
         if fast_state.get('history') is not None:
             fast_state['history'].extra(frame)
         if (obs.get('legal_actions') or {}).get('plants'):
-            action = native_env.rollout_predict(previous.get('tick') if previous else None,
+            predict = native_env.root_predict if _W.get('policy_config') else native_env.rollout_predict
+            action = predict(previous.get('tick') if previous else None,
                 (fast_state.get('action') or {}).get('type') == 'plant',
                 student_history=fast_state.get('history'))['action']
         else:
@@ -289,7 +301,7 @@ def _student_topk_candidates(legal: list[dict], k: int) -> tuple[list[dict], set
     from pvz_rollout_policy import ranked_plants
     if _W.get("student_frame") is None:
         raise ValueError("student-topk candidates require the current student frame")
-    ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+    ranked = ranked_plants(_W.get('root', _W['fast']), _W["student_frame"], _W.get("student_previous_frame"),
                            legal, context=_W.get("context"), history=_W.get("student_history"))
     candidates, keys = [], set()
     for _score, entry in ranked[:k]:
@@ -384,7 +396,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                 from pvz_rollout_policy import ranked_plants
                 present = {json.dumps(c, sort_keys=True) for c in candidates}
                 added = 0
-                student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
+                student_ranked = ranked_plants(_W.get('root', _W['fast']), _W["student_frame"], _W.get("student_previous_frame"),
                                               legal, context=_W.get("context"), history=_W.get("student_history"))
                 for _score, entry in student_ranked:
                     action = {"type": "plant", "packet": int(entry["packet"]),
@@ -672,11 +684,15 @@ def _play(job: dict, observer=None) -> dict:
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
         env.load_rollout_net(_W["rollout_file"])
+        if _W.get('policy_config'):
+            env.load_policy_config(_W['policy_config'])
     if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
         env._teacher_value_loaded = True
-    token_observation = bool(getattr(args, "obs_v3", False) or getattr(_W["fast"], "token_input", None) == "obs_v3")
+    token_observation = bool(getattr(args, "obs_v3", False)
+        or getattr(_W["fast"], "token_input", None) == "obs_v3"
+        or (getattr(args, 'student_candidates', 0) and getattr(_W.get('root'), 'token_input', None) == 'obs_v3'))
     initial_tokens = token_observation and not getattr(args, 'demo_archive', None)
     if initial_tokens or getattr(env, '_token_observation', False):
         env.set_token_observation(initial_tokens)
@@ -738,7 +754,7 @@ def _play(job: dict, observer=None) -> dict:
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         fog_diagnostics = None
         native_game = (getattr(args, 'native_games', False) and job['arm'] == 'fast'
-                       and not args.frames and observer is None)
+                       and not args.frames and observer is None and not _W.get('policy_config'))
         if (task_definition.get('fog_observation') and obs.get('fog')
                 and (not native_game or getattr(args, 'fog_diagnostics', False))):
             from pvz_fog import FogEpisodeDiagnostics
@@ -773,7 +789,8 @@ def _play(job: dict, observer=None) -> dict:
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
         # 整局 C++ 接口只返回末状态，逐决策档案需要走 Python 对局循环。
-        if job["arm"] == "fast" and not args.frames and fog_diagnostics is None and observer is None:
+        if (job["arm"] == "fast" and not args.frames and fog_diagnostics is None
+                and observer is None and not _W.get('policy_config')):
             if fast_state.get("history") is not None:
                 _W["student_history"] = fast_state["history"]   # a demonstration start has history
             # ENV_SKIP_HEIGHT (bit 4) drops PlantDrawHeightOffset, which only moves a plant's
@@ -786,8 +803,7 @@ def _play(job: dict, observer=None) -> dict:
             planted_by_type = read_types(details,task_definition)
             if planted_by_type is None or planted is None:
                 raise RuntimeError('native executable lacks recoverable type counts; rebuild this worktree')
-        native_root = (getattr(args, 'native_games', False) and observer is None
-                       and getattr(_W['fast'], 'token_input', None) != 'obs_v3')
+        native_root = (getattr(args, 'native_games', False) or _W.get('policy_config')) and observer is None
         while not obs["terminal"] and decisions < MAX_ACTIONS:
             if observer is not None:
                 observer.before(env, obs, fast_state, decisions)
@@ -798,7 +814,7 @@ def _play(job: dict, observer=None) -> dict:
                 stats["last_targets"] = None
                 stats.pop("last_verification", None)
                 # Capture root inputs only. CNN teacher rollouts need no rich JSON observations.
-                pause_tokens = token_writer is not None and getattr(_W['fast'], 'token_input', None) != 'obs_v3'
+                pause_tokens = token_observation and getattr(_W['fast'], 'token_input', None) != 'obs_v3'
                 if pause_tokens:
                     env.set_token_observation(False)
                 try:
@@ -903,6 +919,8 @@ def _play(job: dict, observer=None) -> dict:
                                    bytes=(archive/SIDECAR_NAME).stat().st_size,
                                    frames=token_writer.rows)
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
+        if getattr(args, 'root_policy', None):
+            archive_task['root_policy'] = str(Path(args.root_policy).resolve())
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
         if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
                 or task_definition.get('conveyor_start') == 'original'
@@ -965,6 +983,7 @@ def parser():
                    help='collect per-decision fog diagnostics, using the Python game loop')
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
+    p.add_argument('--root-policy', help='independent native root student; --rollout-policy remains the CNN continuation')
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")
@@ -1107,7 +1126,7 @@ def main() -> None:
     # Student weights remain shared on fork; value weights live only in engine processes.
     start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"
     if start_method == "fork":
-        _load_nets(value_files[0], args.rollout_policy, value_files[1])
+        _load_nets(value_files[0], args.rollout_policy, value_files[1], args.root_policy)
         _freeze_startup()
     started = time.time()
     counters = mp.get_context(start_method).RawArray("q", len(jobs) * 2)
@@ -1118,7 +1137,7 @@ def main() -> None:
     # admitted width and adds workers when MemAvailable allows, up to --workers.
     pool = GrowablePool(mp.get_context(start_method), _play, init=_init_worker,
                         initargs=(value_files[0], args.rollout_policy, args.rollout_sim_skip,
-                                  value_files[1], counters),
+                                  value_files[1], counters, args.root_policy),
                         initial=initial_workers, upper=args.workers,
                         interval=args.grow_interval,
                         per_worker=args.worker_memory_bytes,

@@ -6,6 +6,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include "GenericForward.h"
+#include "EnvironmentTokens.h"
 
 class LawnApp;
 
@@ -45,8 +47,17 @@ public:
 	// nothing is plantable cost nothing).  Reset by the caller around a batch of rollouts.
 	int NetworkCalls() const { return networkCalls; }
 	void ResetNetworkCalls() { networkCalls = 0; }
-
 private:
+	pvz::net::Graph graph;
+	bool generic = false;
+	int graphBoard = -1, graphScalars = -1, graphInfo = -1, graphSelected = -1, graphTerrain = -1;
+	int graphPlant = -1, graphPacket = -1, graphCell = -1;
+	int graphTokens = -1;
+	int graphMeta = -1, graphValid = -1, graphPool = -1, graphCoords = -1, graphCardIndex = -1, graphCellIndex = -1;
+	std::vector<EnvironmentToken> publicTokens;
+	void PrepareInputs(LawnApp* app, double income, int previousTick, bool previousPlant, History& history);
+	void LoadGraph(const std::string& path);
+	void SetObservation(int observation, bool withContext);
 	int width = 0;
 	int plantEmbedding = 0;
 	bool identityPacket = false;

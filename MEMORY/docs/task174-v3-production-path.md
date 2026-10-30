@@ -22,4 +22,12 @@
 
 ## 结果
 
-待追加。
+已接入，现行配方和启动脚本均未开启。复用 `origin/tokenstore@89ad0def` 的32行稀疏块与有界预取，以及 `origin/cppnet@96ccee7f` 的通用图和独立根接口。保留 deploy19 的引擎优化与路径清理，没有引入实验命令、常驻检查或新的清单文件。
+
+训练配方增加 `"network": {"architecture": "token"}` 即选 StudentV3，自动使用 `obs=v3`、富附件和 identity 卡头，默认两层、四头、前馈宽度为网络宽度的四倍。`"width": 128` 对应 token128_2，其余训练参数沿用研究配方。`init` 应为空或同结构 v3 检查点。未填写 network 时沿用 CNN。生产打包只纳入具有真实 `tokens_v3.npz` 的档案，缺附件的旧档案留给 CNN，不回填。训练仍走 `scripts/train_rollout_policy.py --recipe ...`，v3 完成后同时发布 `model.pt` 和 `model.bin`，后者为 PVZGN001。独立导出可用 `python/pvz_rollout_policy.py CHECKPOINT OUTPUT`。
+
+采集直接使用 `search_play.py --rollout-policy CNN.pt --root-policy V3.pt`。生产队列使用 `--rollout-policy 当前学生.pt --cnn-rollout-policy 固定CNN.pt`，晋升仍更新当前学生，续走 CNN 保持固定。需要随帧写富附件时加已有 `--obs-v3`。根动作走 C++，启用 `--student-candidates` 时追加候选也读取根学生。已有档案 meta 记录独立根路径。挑选和门禁继续使用原入口与 v3 的 `model.pt`，不需要独立评测器。
+
+CNN 与 v3 输入合同不同，A/B 队列分别打包，合并缓存按 CNN/v3 隔开。相同合同仍共包并在进程内调整权重。修正旧包清理对可选行选项的比较，防止不同合同互相删包。未改变现有默认 CNN 的构造、批次顺序或二进制格式。
+
+Mac 一次性演练使用台式机只读取得的三局真实 c53 富附件档案，合计977329字节。打包2923行耗时0.44秒，token128_2 用一个预取工人完成1步训练，含读取和验证共1.69秒，导出头为 PVZGN001。随后 v3 根配 r36 CNN 续走完成4个决策，其中1次实际搜索、追加2个学生候选，采集产出5帧富附件。现有挑选入口在五种地形各跑1对学生/现任，正常生成选择结果与门禁v6判定。只训练1步的模型五局皆负，门禁拒绝，符合这次通路演练用途，不作为能力结论。临时数据、模型、构建目录和演练脚本已清理，未部署。

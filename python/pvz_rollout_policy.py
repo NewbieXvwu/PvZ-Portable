@@ -75,6 +75,20 @@ def features(frame: dict, previous: dict | None, context: np.ndarray | None = No
     return torch.from_numpy(board), torch.from_numpy(np.concatenate(parts))
 
 
+def make_student(width=64, pool='mean', context=False, obs='v1', row_pool=False,
+                 aux=False, packet_head='slot', plant_embedding_dim=None, network=None, token_input="compact"):
+    from pvz_student_config import network_config
+    config = network_config(network, width)
+    if config['architecture'] == 'token':
+        if obs != 'v3' or packet_head != 'identity' or row_pool or pool != 'mean':
+            raise ValueError('token student requires obs=v3, identity packets, and mean state pooling')
+        from pvz_student_v3 import StudentV3
+        return StudentV3(width, config, context, aux, token_input)
+    if obs == 'v3':
+        raise ValueError('obs=v3 requires token network')
+    return RolloutNet(width, pool, context, obs, row_pool, aux, packet_head, plant_embedding_dim)
+
+
 class RolloutNet(nn.Module):
     def __init__(self, width: int = 64, pool: str = "mean", context: bool = False, obs: str = "v1",
                  row_pool: bool = False, aux: bool = False, packet_head: str = "slot",
@@ -195,6 +209,9 @@ class RolloutNet(nn.Module):
 def act(net: RolloutNet, frame: dict, previous: dict | None, legal_plants: list[dict],
         sparse_input: bool = True, context: np.ndarray | None = None, history=None) -> dict:
     """Greedy action restricted to the simulator's legal plants; otherwise wait like pi does."""
+    if net.obs == 'v3':
+        from pvz_student_v3 import choose_action
+        return choose_action(net, frame, previous, legal_plants, context)
     if net.obs != "v1":
         if history is None:
             raise ValueError(f"{net.obs} requires per-episode StudentHistory, updated at every decision")
@@ -238,6 +255,9 @@ def ranked_plants(net: RolloutNet, frame: dict, previous: dict | None, legal_pla
     candidate set with entries 2..k. Without that flag nothing calls this function and the teacher's
     candidate set is bit-identical to before.
     """
+    if net.obs == 'v3':
+        from pvz_student_v3 import rank_actions
+        return rank_actions(net, frame, previous, legal_plants, context)
     if not legal_plants:
         return []
     if net.obs != "v1":
@@ -279,6 +299,16 @@ def warm_start_student(net: RolloutNet, initial: RolloutNet) -> None:
     Only prefix encodings may be widened: fog/size/lite inputs carry different
     features and cannot be reinterpreted as boss/bungee/sleep channels.
     """
+    if net.obs == 'v3' or initial.obs == 'v3':
+        if (net.obs != initial.obs or net.width != initial.width or net.network != initial.network
+                or net.context != initial.context or net.token_input != initial.token_input):
+            raise ValueError('v3 warm-start requires the same token architecture')
+        weights = {k: v for k, v in initial.state_dict().items() if not k.startswith('aux.')}
+        if net.aux is not None:
+            source = initial if initial.aux is not None else net
+            weights.update({k: v for k, v in source.state_dict().items() if k.startswith('aux.')})
+        net.load_state_dict(weights)
+        return
     for name in ('pool', 'context', 'row_pool', 'packet_head', 'plant_embedding_dim'):
         if getattr(net, name) != getattr(initial, name):
             raise ValueError(f'warm-start architecture differs: {name}')
@@ -307,6 +337,12 @@ def load_student(path) -> RolloutNet:
     fast_ppo's value head is dropped)."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     weights = checkpoint["state_dict"]
+    if checkpoint.get('obs') == 'v3':
+        net = make_student(checkpoint['width'], context=bool(checkpoint.get('context', False)),
+                           obs='v3', packet_head='identity', network=checkpoint['network'],
+                           token_input=checkpoint.get('token_input', 'compact'))
+        net.load_state_dict({k: v for k, v in weights.items() if not k.startswith('aux.')})
+        return net.eval()
     net = RolloutNet(weights["trunk.0.weight"].shape[0], checkpoint.get("pool", "mean"),
                      bool(checkpoint.get("context", False)), checkpoint.get("obs", "v1"),
                      bool(checkpoint.get("row_pool", False)), packet_head=checkpoint.get('packet_head', 'slot'),
@@ -315,8 +351,11 @@ def load_student(path) -> RolloutNet:
     return net.eval()
 
 
-def export_student(net: RolloutNet, path) -> None:
+def export_student(net: RolloutNet, path, *, token_capacity=256) -> None:
     """v6 adds an identity packet MLP/shared plant embeddings; legacy exports remain byte-identical."""
+    if net.obs == 'v3':
+        from pvz_student_v3 import export_v3
+        return export_v3(net, path, capacity=token_capacity)
     if net.obs == 'v2fogstack4':
         raise ValueError('v2fogstack4 is a Python memory experiment; native export is not implemented')
     import struct
@@ -352,5 +391,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Export student / fast_ppo weights for the C++ simulator")
     parser.add_argument("checkpoint")
     parser.add_argument("output")
+    parser.add_argument("--token-capacity", type=int, default=256)
+    parser.add_argument("--generic", action="store_true", help="export the self-describing PVZGN001 graph")
     options = parser.parse_args()
-    export_student(load_student(options.checkpoint), options.output)
+    net = load_student(options.checkpoint)
+    if net.obs == 'v3':
+        export_student(net, options.output, token_capacity=options.token_capacity)
+    elif options.generic:
+        from pvz_generic_forward import export_graph, rollout_graph
+        export_graph(net, rollout_graph(net), options.output)
+    else:
+        export_student(net, options.output)

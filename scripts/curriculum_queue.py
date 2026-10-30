@@ -1008,7 +1008,8 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
     else:
         seed_args = ['--seed-offset', str(offset), '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
-            '--rollout-policy', str(args.rollout_policy),
+            '--rollout-policy', str(getattr(args, 'cnn_rollout_policy', None) or args.rollout_policy),
+            *(['--root-policy', str(args.rollout_policy)] if getattr(args, 'cnn_rollout_policy', None) else []),
             '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
             '--verify-samples', '9', '--student-candidates', '2',
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
@@ -1269,13 +1270,13 @@ class TrainingPipeline:
         enqueue 时本轮新采的帧还没有链进视图——缺链接的标签直接待建（pack 必然要建）；
         链接齐全的标签在视图路径上调用真 fingerprint_paths 后查段文件是否存在。
         """
-        from pvz_frame_store import frame_paths
+        from pvz_training_pack import training_frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
         wanted = set(labels)
         catalog: dict[str, Path] = {}
         for source in sources:
-            for path in frame_paths(source):
+            for path in training_frame_paths(source, wanted, recipe.get('token_input', 'compact')):
                 if path.parent.name in wanted:
                     catalog[str(path.parent.relative_to(source))] = path
         options = pack_options(**training_row_options(recipe, labels))
@@ -1293,7 +1294,7 @@ class TrainingPipeline:
             if not all(view_path.exists() for view_path in view_paths):
                 pending.append((label, total))
                 continue
-            fingerprint = fingerprint_paths(view, view_paths)
+            fingerprint = fingerprint_paths(view, view_paths, recipe.get('token_input', 'compact'))
             target = segment_path(view, segment_options(options, label, fingerprint))
             if not target.is_file():
                 pending.append((label, total))
@@ -1344,13 +1345,6 @@ class TrainingPipeline:
             variant = load_recipe(alternate, 'training')
             variant.update({key: recipe[key] for key in
                             ('labels', 'data', 'out', 'cache_dir', 'precompute_workers')})
-            base_options, variant_options = training_row_options(recipe), training_row_options(variant)
-            base_options.pop('source_weight', None)
-            variant_options.pop('source_weight', None)
-            base_options.pop('label_weight', None)
-            variant_options.pop('label_weight', None)
-            if base_options != variant_options:
-                raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
             write_recipe(variant_path, variant)
             repeats = getattr(self.args, 'candidates_per_recipe', 1)
@@ -1629,6 +1623,21 @@ class TrainingPipeline:
         recipe_path = Path(job['recipe'])
         folder = recipe_path.parent
         recipe = load_recipe(recipe_path, 'training')
+        pack_recipes = {str(recipe_path): recipe}
+        shared_recipes = {str(recipe_path)}
+        base_options = training_row_options(recipe)
+        for key in ('label_weight', 'source_weight'):
+            base_options.pop(key, None)
+        for variant in job.get('candidate_recipes', []):
+            variant_path = variant['recipe']
+            candidate_recipe = load_recipe(Path(variant_path), 'training')
+            options = training_row_options(candidate_recipe)
+            for key in ('label_weight', 'source_weight'):
+                options.pop(key, None)
+            if options == base_options:
+                shared_recipes.add(variant_path)
+            else:
+                pack_recipes[variant_path] = candidate_recipe
         report = dict(round=job['round'], model=job['model'])
         report['selection_preparation'] = str(self._prepare_selection(job))
         pack_marker = folder / 'packed.json'
@@ -1642,8 +1651,12 @@ class TrainingPipeline:
             packed = dict(pack_started=time.time())
             try:
                 self._prepare_corpus(recipe['labels'])
-                packed['pack_peak_anon_bytes'] = self._command(
-                    pack_command(local_args, recipe['labels']), folder / 'pack.log')
+                packed['pack_peak_anon_bytes'] = 0
+                for index, (pack_recipe_path, pack_recipe) in enumerate(pack_recipes.items()):
+                    local_args.recipe = Path(pack_recipe_path)
+                    peak = self._command(pack_command(local_args, pack_recipe['labels']),
+                                         folder / ('pack.log' if index == 0 else f'pack_{index}.log'))
+                    packed['pack_peak_anon_bytes'] = max(packed['pack_peak_anon_bytes'], peak)
             finally:
                 self.build_peak = 0
             packed['pack_finished'] = time.time()
@@ -1672,7 +1685,7 @@ class TrainingPipeline:
                     if not admitted:
                         self._admit()
                     command = [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)]
-                    if variant.get('recipe_family') == 'B':
+                    if variant.get('recipe_family') == 'B' and variant['recipe'] in shared_recipes:
                         command += ['--pack-recipe', str(recipe_path)]
                     candidate['train_peak_anon_bytes'] = self._command(command, directory / 'train.log')
                     candidate['train_data_bytes'] = training_data_bytes(model)
@@ -2280,6 +2293,8 @@ def main() -> None:
     parser.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
                         help='use native fog games in collection/selection/promotion (deploy19)')
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
+    parser.add_argument('--cnn-rollout-policy', type=Path,
+                        help='pin CNN search continuations while the current student supplies the root')
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')

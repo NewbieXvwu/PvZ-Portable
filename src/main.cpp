@@ -27,6 +27,7 @@
 #include "Lawn/CursorObject.h"
 #include "SexyAppFramework/widget/WidgetManager.h"
 #include <SDL.h>
+#include <filesystem>
 #include "Lawn/System/SaveGame.h"
 #include "Lawn/Zombie.h"
 #include "Lawn/LawnMower.h"
@@ -546,7 +547,7 @@ static void RunEnvironment(LawnApp* app)
 	std::string line;
 	std::unordered_map<int, EnvironmentSnapshot> snapshots;
 	int nextSnapshotId = 1;
-	EnvironmentRollout rollout;
+	EnvironmentRollout rollout, rootPolicy;
 	EnvironmentValueNet valueNets[2]; // leaf, static
 	HumanInput human;
 	bool demo = false;
@@ -554,7 +555,7 @@ static void RunEnvironment(LawnApp* app)
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1}" << std::endl;
+		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1,\"generic_forward_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -810,6 +811,31 @@ static void RunEnvironment(LawnApp* app)
 			std::cout << "]}" << std::endl << std::setprecision(6);
 			continue;
 		}
+		else if (command == "LOAD_POLICY_CONFIG")
+		{
+			std::string path, extra;
+			if (input >> std::quoted(path) && !(input >> extra))
+			{
+				try {
+					std::ifstream config(path);
+					std::string magic, key, model, rootPath, rolloutPath;
+					config >> magic;
+					if (magic != "PVZPOL001") throw std::runtime_error("policy config magic");
+					while (config >> key) {
+						if (!(config >> std::quoted(model))) throw std::runtime_error("policy config path");
+						auto resolved = (std::filesystem::path(path).parent_path() / model).string();
+						if (key == "root" && rootPath.empty()) rootPath = resolved;
+						else if (key == "rollout" && rolloutPath.empty()) rolloutPath = resolved;
+						else throw std::runtime_error("unknown/duplicate policy config key");
+					}
+					if (rootPath.empty() || rolloutPath.empty()) throw std::runtime_error("policy config requires root and rollout");
+					EnvironmentRollout nextRoot, nextRollout;
+					nextRoot.Load(rootPath); nextRollout.Load(rolloutPath);
+					rootPolicy = std::move(nextRoot); rollout = std::move(nextRollout); ok = true;
+				} catch (const std::exception& error) { std::cerr << error.what() << std::endl; }
+			}
+			minimalResponse = true;
+		}
 		else if (command == "LOAD_ROLLOUT_NET")
 		{
 			std::string path, extra;
@@ -820,22 +846,29 @@ static void RunEnvironment(LawnApp* app)
 			}
 			minimalResponse = true;
 		}
-		else if (command == "ROLLOUT_PREDICT")
+		else if (command == "ROLLOUT_PREDICT" || command == "ROOT_PREDICT")
 		{
+			auto& policy = command == "ROOT_PREDICT" ? rootPolicy : rollout;
 			int priorTick = -1, priorPlant = 0;
 			double income = 0;
 			std::string tracePath;
 			EnvironmentRollout::History studentHistory;
 			ok = static_cast<bool>(input >> priorTick >> priorPlant >> income) &&
-				rollout.Loaded() && app->mBoard && std::isfinite(income) && (priorPlant == 0 || priorPlant == 1);
+				policy.Loaded() && app->mBoard && std::isfinite(income) && (priorPlant == 0 || priorPlant == 1);
 			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath);
 			std::ofstream trace;
 			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
+			EnvironmentRollout::Prediction prediction{};
+			if (ok)
+			{
+				try {
+					if (trace.is_open()) TraceStudent(trace, policy, app, income, priorTick, priorPlant, studentHistory);
+					prediction = policy.Predict(app, income, priorTick, priorPlant, studentHistory, true);
+				} catch (const std::exception& error) { std::cerr << error.what() << std::endl; ok = false; }
+			}
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false");
 			if (ok)
 			{
-				if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
-				auto prediction = rollout.Predict(app, income, priorTick, priorPlant, studentHistory, true);
 				std::cout << std::setprecision(9) << ",\"plant\":" << prediction.plant << ",\"packet\":[";
 				for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << prediction.packets[index];
 				std::cout << "],\"cell_packet\":" << prediction.cellPacket << ",\"cell\":[";

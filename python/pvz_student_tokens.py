@@ -128,8 +128,8 @@ def collate_tokens(samples, device='cpu', capacity=None):
     return {k: torch.from_numpy(v).to(device) for k, v in result.items()}
 
 
-class TokenStore:
-    """Ragged arrays in packs; indices remain frame-local when segments are merged."""
+class DenseTokenStore:
+    """Reader for the earlier dense-feature prototype packs."""
     token_fields = dict(ids=(np.int16, (5,)), features=(np.float32, (32,)), target_indices=(np.int32, ()))
     row_fields = dict(packet_index=(np.int32, (10,)), cell_index=(np.int32, (54,)), terrain=(np.int64, ()))
 
@@ -156,23 +156,90 @@ class TokenStore:
         return collate_tokens([self.sample(int(i)) for i in indices], device)
 
 
+class TokenStore:
+    """32-row sparse compressed blocks inside the ordinary training segment.
+
+    offsets holds each row's block byte address (plus the final end address),
+    rows its ordinal within that block. Blocks never cross source archives,
+    allowing the existing archive-order merger to copy bytes without decoding.
+    """
+    token_fields = dict(data=(np.uint8, ()))
+    row_fields = dict(rows=(np.uint8, ()))
+
+    def __init__(self, arrays, cache_bytes=16 * 1024**2):
+        from collections import OrderedDict
+        self.arrays = arrays
+        self.cache_bytes = cache_bytes
+        self.cache = OrderedDict()
+        self.cached_bytes = 0
+
+    @property
+    def nbytes(self):
+        return sum(a.nbytes for a in self.arrays.values())
+
+    @classmethod
+    def from_arrays(cls, stored):
+        if 'token_data' not in stored:
+            return DenseTokenStore.from_arrays(stored)
+        return cls({k: np.asarray(stored['token_'+k]) for k in ('offsets', 'data', 'rows')})
+
+    def packed_arrays(self):
+        return {'token_'+k: v for k, v in self.arrays.items()}
+
+    def sample(self, i):
+        from pvz_token_blocks import decode
+        import struct
+        at = int(self.arrays['offsets'][i])
+        block = self.cache.pop(at, None)
+        if block is None:
+            data = self.arrays['data']
+            size, = struct.unpack_from('<I', data, at)
+            block = decode(data[at+4:at+4+size])
+            self.cached_bytes += block.nbytes
+        self.cache[at] = block
+        while self.cached_bytes > self.cache_bytes and self.cache:
+            _, old = self.cache.popitem(last=False)
+            self.cached_bytes -= old.nbytes
+        return block.sample(int(self.arrays['rows'][i]))
+
+    def batch(self, indices, device='cpu'):
+        return collate_tokens([self.sample(int(i)) for i in indices], device)
+
+
 class TokenBuilder:
-    """Stream a label's tokens to temporary files instead of keeping per-row objects."""
+    """Compress at most 32 rows at a time; never build corpus-wide dense tokens."""
     def __init__(self):
         import tempfile
-        self.files = {k: tempfile.TemporaryFile() for k in (*TokenStore.token_fields, *TokenStore.row_fields)}
-        self.offsets = [0]
+        self.file = tempfile.TemporaryFile()
+        from array import array
+        self.offsets = array('q')
+        self.rows = bytearray()
+        self.pending = []
 
     def append(self, sample):
-        for k, (dtype, _) in {**TokenStore.token_fields, **TokenStore.row_fields}.items():
-            np.asarray(sample[k], dtype=dtype).tofile(self.files[k])
-        self.offsets.append(self.offsets[-1]+len(sample['ids']))
+        self.pending.append(sample)
+        if len(self.pending) == 32:
+            self.flush()
+
+    def flush(self):
+        """Also called at each source archive boundary, including short archives."""
+        if not self.pending:
+            return
+        import struct
+        from pvz_token_blocks import encode
+        compressed, _ = encode(self.pending)
+        at = self.file.tell()
+        self.offsets.extend([at] * len(self.pending))
+        self.rows.extend(range(len(self.pending)))
+        self.file.write(struct.pack('<I', len(compressed)))
+        self.file.write(compressed)
+        self.pending.clear()
 
     def finish(self):
-        arrays = dict(offsets=np.asarray(self.offsets, np.int64))
-        for k, (dtype, shape) in {**TokenStore.token_fields, **TokenStore.row_fields}.items():
-            handle = self.files[k]
-            handle.seek(0)
-            arrays[k] = np.fromfile(handle, dtype=dtype).reshape(-1, *shape)
-            handle.close()
-        return TokenStore(arrays)
+        self.flush()
+        self.offsets.append(self.file.tell())
+        self.file.seek(0)
+        data = np.fromfile(self.file, dtype=np.uint8)
+        self.file.close()
+        return TokenStore(dict(offsets=np.asarray(self.offsets, np.int64), data=data,
+                               rows=np.frombuffer(self.rows, dtype=np.uint8)))

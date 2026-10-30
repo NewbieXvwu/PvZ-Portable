@@ -92,6 +92,8 @@ class StudentHistory:
         self.zombie_frames = []
 
     def extra(self, frame: dict) -> tuple[np.ndarray, np.ndarray]:
+        if self.obs == 'v3':
+            return np.zeros((0, ROWS, COLS), np.float32), np.zeros(0, np.float32)
         tick = frame["tick"]
         if frame["wave"] != self.wave:
             self.wave, self.wave_tick = frame["wave"], tick
@@ -150,6 +152,8 @@ class StudentHistory:
     def features(self, frame: dict, previous: dict | None, context=None):
         from pvz_rollout_policy import features
         board, scalars = features(frame, previous, context)
+        if self.obs == 'v3':
+            return board, scalars  # v3 tokens have no per-episode history.
         extra_board, extra_scalars = self.extra(frame)
         return (torch.cat([board, torch.from_numpy(extra_board)]),
                 torch.cat([scalars, torch.from_numpy(extra_scalars)]))
