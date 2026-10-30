@@ -128,4 +128,8 @@ python3 scripts/llmplay/build_package.py \
 
 已覆盖重打 `~/pvz-logs/llmplay5/llmplay_pkg.7z.001`（5631568字节，单卷），引擎与资源原样沿用；相关carry筛选4项测试通过，均设8GB虚拟内存上限。
 
-task105现有入口在 `llmimport` 工作树：`scripts/import_llm_run.py`（SHA回执增量）→ `scripts/task105_import_batch.py --completed-index ... --staged-manifest ...` 合并队列→adaptive/register。首次SHA默认仍需重放，本任务明确“不重放”，尚待用户明确是否允许链内首次重放；未绕过验证入库。task105服务仍照常运行，尚未导入本批，故原始解包目录保留，未执行清理；如需停止/重启服务由用户操作。
+用户已明确：“不重放”只针对包内与合并carry；导入链首次重放照常，复用已有SHA回执，不额外复验。按task105现有SHA导入→队列合并→adaptive/register链处理，nice19、单worker、2GiB进程组上限（开工可用14GiB，峰值约1.5GiB），未改生产或扫描服务。
+
+565个存档路径去重为296份SHA，295份通过、1份拒绝（L27种子139152074，meta.frame_count=1348，实际frames.jsonl为554行；保留拒绝回执，不重跑）。228份胜局登记并加入扫描队列，累计1874份SHA、1474个扫描任务（新增228）。回执、数值存档与本批报告均在llmimport工作树的artifacts/task105；相关队列合并2项-k测试通过，设8GB上限。
+
+已用既有短时元数据锁合并队列并刷新结果，保留所有旧扫描上下文；scan/secondary仍持有启动时的队列，需用户重启task105-scan与task105-secondary以立即加载新增项，本任务未操作服务。原始解包目录~/pvz-logs/llmplay_returns/llmplay5_20261030_1626已删除；按既有链保留交回zip作本地策略参考：~/llm_runs/llmplay5_20261030_1626_out.zip（45573831字节）。

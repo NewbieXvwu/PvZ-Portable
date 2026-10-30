@@ -112,3 +112,4 @@
 - [task81 GPT Pro 对局包与持续续跑约定](docs/task81-gpt-pro-playthrough.md)
 
 - [task133 LLMPlay第二轮自选卡交付](docs/task133-llmplay2.md)
+- [task182/187/189 llmplay5续跑包与回收入库](docs/task182-llmplay5-package.md)
