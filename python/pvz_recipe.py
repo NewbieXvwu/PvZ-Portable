@@ -26,11 +26,6 @@ TRAIN_DEFAULTS = dict(
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
 
-PANEL_DEFAULTS = dict(version='v1',
-    generate=False, generate_pressure=False, pressure=False, pressure_seeds=64,
-    pressure_tasks='', tasks='', day_seeds=128, heldout_seeds=64, night_seeds=128,
-    pool_seeds=40, task_seed_overrides={}, workers=2, provenance={})
-
 _ROOT: Path | None = None
 
 
@@ -56,10 +51,7 @@ def resolve_paths(document):
     return result
 
 
-PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir',
-               'manifest', 'rollout_policy', 'value', 'executable', 'resource_dir',
-               'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
-               'pool_manifest', 'pressure_manifest')
+PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir')
 
 
 def _object(value, allowed, context):
@@ -87,18 +79,11 @@ def validate(document, kind=None):
     if document.get('schema_version') != SCHEMA_VERSION or type(document.get('schema_version')) is not int:
         raise ValueError(f'unsupported schema_version: {document.get("schema_version")}')
     kind = kind or document.get('kind')
-    if kind not in ('training', 'panel') or document.get('kind') != kind:
+    if kind != 'training' or document.get('kind') != kind:
         raise ValueError(f'expected recipe kind {kind!r}')
-    defaults = TRAIN_DEFAULTS if kind == 'training' else PANEL_DEFAULTS
-    required = {'data', 'labels', 'out'} if kind == 'training' else {
-        'out', 'manifest', 'value', 'executable', 'resource_dir', 'day_manifest',
-        'perturb_manifest', 'night_manifest', 'pool_manifest', 'pressure_manifest'}
-    allowed = set(defaults) | required | {'schema_version', 'kind'}
-    if kind == 'training':
-        allowed |= {'history_l7_keep', 'deck_weight_cap'}
-    if kind == 'panel':
-        allowed.add('rollout_policy')
-        allowed.add('day_orig_manifest')  # Accepted in old frozen recipes; no longer used.
+    defaults = TRAIN_DEFAULTS
+    required = {'data', 'labels', 'out'}
+    allowed = set(defaults) | required | {'schema_version', 'kind', 'history_l7_keep', 'deck_weight_cap'}
     _object(document, allowed, 'recipe')
     missing = required - document.keys()
     if missing:
@@ -114,103 +99,85 @@ def validate(document, kind=None):
         # (the game resources) and for an already resolved recipe.
         if value is not None and (not isinstance(value, str) or not value):
             raise ValueError(f'{name}: expected a path string')
-    if kind == 'training':
-        if 'history_l7_keep' in result:
-            _number(result['history_l7_keep'], 'history_l7_keep', maximum=1)
-        if 'deck_weight_cap' in result:
-            _number(result['deck_weight_cap'], 'deck_weight_cap', positive=True, maximum=1)
-            if result['deck_weight_cap'] < 1 and result['packet_head'] != 'identity':
-                raise ValueError('deck_weight_cap requires the packed identity card columns')
-        for name in ('epochs', 'width', 'aux_horizon', 'batch_size', 'validation_batch_size', 'threads', 'precompute_workers'):
-            _integer(result[name], name, 1)
-        _integer(result['save_epochs'], 'save_epochs')
-        for name in ('seed', 'max_steps'):
-            if result[name] is not None:
-                _integer(result[name], name, 1 if name == 'max_steps' else 0)
-        for name in ('row_pool', 'context', 'cache', 'dense_boards', 'source_row_report'):
-            if type(result[name]) is not bool:
-                raise ValueError(f'{name}: expected boolean')
-        for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
-                                  obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4', 'v2bungee', 'v2sleep',
-                                       'v2timer'), lr_schedule=('constant', 'cosine')).items():
-            if result[name] not in choices:
-                raise ValueError(f'{name}: expected one of {choices}')
-        if not isinstance(result['device'], str) or not result['device']:
-            raise ValueError('device: expected nonempty string')
-        labels = result['labels']
-        if not isinstance(labels, list) or not labels or not all(isinstance(v, str) and v and ',' not in v for v in labels):
-            raise ValueError('labels: expected nonempty list of label names')
-        if len(labels) != len(set(labels)):
-            raise ValueError('labels: duplicate label')
-        _object(result['label_weight'], set(labels), 'label_weight')
-        for name, weight in result['label_weight'].items():
-            _number(weight, f'label_weight.{name}')
-        from pvz_training_pack import label_keep_options
-        label_keep_options(labels, result['label_keep'])
-        _object(result['source_weight'], {'human', 'teacher', 'level_balance',
-                                          'level_balance_power', 'level_balance_max_multiplier'},
-                'source_weight')
-        for name, weight in result['source_weight'].items():
-            _number(weight, f'source_weight.{name}')
-        if 'level_balance' in result['source_weight']:
-            _number(result['source_weight']['level_balance'], 'source_weight.level_balance',
-                    positive=True, maximum=1)
-        for name in ('level_balance_power', 'level_balance_max_multiplier'):
-            if name in result['source_weight']:
-                if 'level_balance' not in result['source_weight']:
-                    raise ValueError(f'source_weight.{name}: requires source_weight.level_balance')
-                if name == 'level_balance_power':
-                    # 1 is the exact inverse of retained rows, 0 leaves the weights untouched.
-                    _number(result['source_weight'][name], f'source_weight.{name}', maximum=1)
-                else:
-                    _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
-        _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
-        for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight'):
-            _number(result[name], name)
-        for name in ('soft_temperature', 'spread_cap'):
-            _number(result[name], name, positive=True)
-        opt = {**TRAIN_DEFAULTS['optimizer'], **result['optimizer']} if isinstance(result['optimizer'], dict) else result['optimizer']
-        _object(opt, set(TRAIN_DEFAULTS['optimizer']), 'optimizer')
-        if opt['name'] != 'AdamW':
-            raise ValueError('optimizer.name: only AdamW is supported')
-        for name in ('lr', 'eps'):
-            _number(opt[name], f'optimizer.{name}', positive=True)
-        _number(opt['weight_decay'], 'optimizer.weight_decay')
-        if type(opt['amsgrad']) is not bool:
-            raise ValueError('optimizer.amsgrad: expected boolean')
-        if not isinstance(opt['betas'], list) or len(opt['betas']) != 2:
-            raise ValueError('optimizer.betas: expected two numbers')
-        for value in opt['betas']:
-            _number(value, 'optimizer.betas', maximum=1)
-            if value == 1:
-                raise ValueError('optimizer.betas: must be below 1')
-        result['optimizer'] = opt
-        split = result['validation']
-        _object(split, {'seed', 'fraction'}, 'validation')
-        result['validation'] = {**TRAIN_DEFAULTS['validation'], **split}
-        _integer(result['validation']['seed'], 'validation.seed')
-        _number(result['validation']['fraction'], 'validation.fraction', maximum=1, positive=True)
-        if result['validation']['fraction'] >= 1:
-            raise ValueError('validation.fraction: must be below 1')
-        if result['source_row_report'] and not result['cache']:
-            raise ValueError('source_row_report requires cache')
-    else:
-        if result['version'] not in ('v1', 'v2'):
-            raise ValueError('version: expected v1 or v2')
-        for name in ('generate', 'generate_pressure', 'pressure'):
-            if type(result[name]) is not bool:
-                raise ValueError(f'{name}: expected boolean')
-        for name in ('workers', 'pressure_seeds', 'day_seeds', 'heldout_seeds', 'night_seeds', 'pool_seeds'):
-            _integer(result[name], name, 1)
-        if result['workers'] > 4:
-            raise ValueError('workers: panel maximum is 4')
-        for name in ('tasks', 'pressure_tasks'):
-            if not isinstance(result[name], str):
-                raise ValueError(f'{name}: expected comma-separated string')
-        if not isinstance(result['task_seed_overrides'], dict):
-            raise ValueError('task_seed_overrides: expected object')
-        for name, value in result['task_seed_overrides'].items():
-            _integer(value, f'task_seed_overrides.{name}', 1)
+    if 'history_l7_keep' in result:
+        _number(result['history_l7_keep'], 'history_l7_keep', maximum=1)
+    if 'deck_weight_cap' in result:
+        _number(result['deck_weight_cap'], 'deck_weight_cap', positive=True, maximum=1)
+        if result['deck_weight_cap'] < 1 and result['packet_head'] != 'identity':
+            raise ValueError('deck_weight_cap requires the packed identity card columns')
+    for name in ('epochs', 'width', 'aux_horizon', 'batch_size', 'validation_batch_size', 'threads', 'precompute_workers'):
+        _integer(result[name], name, 1)
+    _integer(result['save_epochs'], 'save_epochs')
+    for name in ('seed', 'max_steps'):
+        if result[name] is not None:
+            _integer(result[name], name, 1 if name == 'max_steps' else 0)
+    for name in ('row_pool', 'context', 'cache', 'dense_boards', 'source_row_report'):
+        if type(result[name]) is not bool:
+            raise ValueError(f'{name}: expected boolean')
+    for name, choices in dict(pool=('mean', 'meanmax'), packet_head=('slot', 'identity'),
+                              obs=('v1', 'v2lite', 'v2', 'v2fog', 'v2fogstack4', 'v2bungee', 'v2sleep',
+                                   'v2timer'), lr_schedule=('constant', 'cosine')).items():
+        if result[name] not in choices:
+            raise ValueError(f'{name}: expected one of {choices}')
+    if not isinstance(result['device'], str) or not result['device']:
+        raise ValueError('device: expected nonempty string')
+    labels = result['labels']
+    if not isinstance(labels, list) or not labels or not all(isinstance(v, str) and v and ',' not in v for v in labels):
+        raise ValueError('labels: expected nonempty list of label names')
+    if len(labels) != len(set(labels)):
+        raise ValueError('labels: duplicate label')
+    _object(result['label_weight'], set(labels), 'label_weight')
+    for name, weight in result['label_weight'].items():
+        _number(weight, f'label_weight.{name}')
+    from pvz_training_pack import label_keep_options
+    label_keep_options(labels, result['label_keep'])
+    _object(result['source_weight'], {'human', 'teacher', 'level_balance',
+                                      'level_balance_power', 'level_balance_max_multiplier'},
+            'source_weight')
+    for name, weight in result['source_weight'].items():
+        _number(weight, f'source_weight.{name}')
+    if 'level_balance' in result['source_weight']:
+        _number(result['source_weight']['level_balance'], 'source_weight.level_balance',
+                positive=True, maximum=1)
+    for name in ('level_balance_power', 'level_balance_max_multiplier'):
+        if name in result['source_weight']:
+            if 'level_balance' not in result['source_weight']:
+                raise ValueError(f'source_weight.{name}: requires source_weight.level_balance')
+            if name == 'level_balance_power':
+                # 1 is the exact inverse of retained rows, 0 leaves the weights untouched.
+                _number(result['source_weight'][name], f'source_weight.{name}', maximum=1)
+            else:
+                _number(result['source_weight'][name], f'source_weight.{name}', positive=True)
+    _number(result['wait_keep'], 'wait_keep', maximum=1, positive=True)
+    for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight'):
+        _number(result[name], name)
+    for name in ('soft_temperature', 'spread_cap'):
+        _number(result[name], name, positive=True)
+    opt = {**TRAIN_DEFAULTS['optimizer'], **result['optimizer']} if isinstance(result['optimizer'], dict) else result['optimizer']
+    _object(opt, set(TRAIN_DEFAULTS['optimizer']), 'optimizer')
+    if opt['name'] != 'AdamW':
+        raise ValueError('optimizer.name: only AdamW is supported')
+    for name in ('lr', 'eps'):
+        _number(opt[name], f'optimizer.{name}', positive=True)
+    _number(opt['weight_decay'], 'optimizer.weight_decay')
+    if type(opt['amsgrad']) is not bool:
+        raise ValueError('optimizer.amsgrad: expected boolean')
+    if not isinstance(opt['betas'], list) or len(opt['betas']) != 2:
+        raise ValueError('optimizer.betas: expected two numbers')
+    for value in opt['betas']:
+        _number(value, 'optimizer.betas', maximum=1)
+        if value == 1:
+            raise ValueError('optimizer.betas: must be below 1')
+    result['optimizer'] = opt
+    split = result['validation']
+    _object(split, {'seed', 'fraction'}, 'validation')
+    result['validation'] = {**TRAIN_DEFAULTS['validation'], **split}
+    _integer(result['validation']['seed'], 'validation.seed')
+    _number(result['validation']['fraction'], 'validation.fraction', maximum=1, positive=True)
+    if result['validation']['fraction'] >= 1:
+        raise ValueError('validation.fraction: must be below 1')
+    if result['source_row_report'] and not result['cache']:
+        raise ValueError('source_row_report requires cache')
     return result
 
 
@@ -279,43 +246,5 @@ def training_args(parser, argv=None):
     args.source_row_report = args.out / 'source_rows.json' if resolved['source_row_report'] else None
     args.recipe = cli.recipe
     args.pack_recipe = cli.pack_recipe
-    args.resolved_recipe = resolved
-    return args
-
-
-def materialize_recipe(base, path, **updates):
-    """Freeze a study's corpus/output variant as a reviewable recipe before launch."""
-    document = load_recipe(base)
-    document.update({key: str(value) if isinstance(value, Path) else value for key, value in updates.items()})
-    document = validate(document)
-    path = Path(path)
-    if path.exists():
-        if load_recipe(path) != document:
-            raise ValueError(f'cannot overwrite a different frozen recipe: {path}')
-    else:
-        write_recipe(path, document)
-    return path
-
-
-def panel_args(parser, argv=None):
-    parser.add_argument('--recipe', type=Path, required=True)
-    for name in ('out', 'rollout-policy', 'executable', 'resource-dir'):
-        parser.add_argument('--' + name, type=Path)
-    parser.add_argument('--workers', type=int)
-    cli = parser.parse_args(argv)
-    try:
-        resolved = load_recipe(cli.recipe, 'panel')
-        for name in ('out', 'rollout_policy', 'executable', 'resource_dir', 'workers'):
-            value = getattr(cli, name)
-            if value is not None:
-                resolved[name] = str(value) if isinstance(value, Path) else value
-        resolved = validate(resolved, 'panel')
-    except (OSError, ValueError) as error:
-        parser.error(str(error))
-    args = argparse.Namespace(**resolved)
-    for name in PATH_FIELDS:
-        if getattr(args, name, None) is not None:
-            setattr(args, name, Path(getattr(args, name)))
-    args.rollout_policy = getattr(args, 'rollout_policy', None)
     args.resolved_recipe = resolved
     return args

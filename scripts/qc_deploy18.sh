@@ -37,7 +37,7 @@ FILES=(scripts/curriculum_queue.py scripts/search_play.py scripts/render_episode
        python/pvz_research_data.py python/pvz_student_tokens.py python/pvz_token_blocks.py
        python/pvz_token_observation.py python/pvz_frame_store.py
        python/pvz_training_pack.py recipes/dw4i2_v2timer.json recipes/dw4i2_v2timer_history10.json
-       recipes/dw4i2_v2timer_l7keep25.json recipes/dw4i2_v2timer_deckcap05.json recipes/panel_v2.json)
+       recipes/dw4i2_v2timer_l7keep25.json recipes/dw4i2_v2timer_deckcap05.json)
 REMOVED=()
 O=""
 SAVED=0
