@@ -109,6 +109,6 @@ L11 从 0/16 变 16/16，L13 从 1/16 变 16/16；C++ 原生整局与门禁/筛�
 
 保留 r36/r52 原始 CSV 两行，只补新列。GPT 列取 task105 两轮 GPT Pro（438cb30a、8024414b）的已导入胜局，限原版1.0倍，按（关卡、卡组签名）去重，每组合2个固定种子，雾关须 human_v2。task194 的15.2%来自含倍率的313个组合，本列按本次要求收窄到1.0倍，口径另列。
 
-老师列与训练/门禁列共用800个关卡/种子，沿用生产搜索（samples=3、horizon=2500、verify_samples=9、student_candidates=2、sim_skip=61，叶值v5、静态branch1）。Mac空闲才推进，学生优先，逐局数值CSV支持续跑，每位学生只完成一次。默认4个工作进程，含引擎约10进程，轮询时仍≤12，nice 10。模型缓存在 `~/.cache/pvz-northstar/models/` 共用，老师完成即清，临时导出与拉取目录随任务回收。
+老师列与训练/门禁列共用800个关卡/种子，沿用生产搜索（samples=3、horizon=2500、verify_samples=9、student_candidates=2、sim_skip=61，叶值v5、静态branch1）。Mac空闲才推进，学生优先，逐局数值CSV支持续跑，每位学生只完成一次。默认4个工作进程，含引擎约10进程，轮询时仍≤12，nice 10。模型缓存在 `~/.cache/pvz-northstar/models/` 共用，学生和老师列均完成后清，临时导出与拉取目录随任务回收。远端读取异步进行，连接等待期间可用本地模型继续老师列，GPT来源取得后优先补学生列。
 
 Mac 启动：在本工作树用具备 torch/huggingface_hub/matplotlib 的 Python 执行 `nice -n 10 python3 scripts/bench_northstar.py --workers 4`。台式机由主控执行 `systemctl --user disable --now pvz-northstar.service`，本任务不操作台式机服务。

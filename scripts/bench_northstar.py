@@ -234,7 +234,8 @@ for name in ('merged_progress.json', 'import_progress.json'):
     p = root/'artifacts/task105/import'/name
     if p.exists():
         for r in json.loads(p.read_text()).get('archives', []):
-            rows[r.get('archive_sha256') or r.get('archive')] = r
+            if r.get('archive'):
+                rows[r.get('archive_sha256') or r['archive']] = r
 tasks = []
 for _, r in sorted(rows.items()):
     if r.get('verify') != '通过' or r.get('result') != 1 or r.get('manual_patch'):
@@ -616,14 +617,27 @@ def teacher(args, record, model):
         pool = mp.get_context('spawn').Pool(args.workers, initializer=_teacher_worker,
                                           initargs=(dict(args=params, values=values),))
         pending, cursor, admit, next_poll = [], 0, True, time.monotonic()+60
-        polls = ThreadPoolExecutor(max_workers=1)
-        poll = None
+        polls = ThreadPoolExecutor(max_workers=2)
+        poll = gpt_poll = None
+        next_gpt = 0.
+        yield_for_student = False
         try:
             with path.open('a', newline='') as handle:
                 writer = csv.DictWriter(handle, fieldnames=('task_id','seed','zone','won','final_wave','seconds'))
                 if handle.tell() == 0:
                     writer.writeheader()
                 while pending or (admit and cursor < len(jobs)):
+                    if args.gpt_tasks is None and gpt_poll is None and time.monotonic() >= next_gpt:
+                        gpt_poll = polls.submit(gpt_suite, args.remote)
+                    if gpt_poll is not None and gpt_poll.done():
+                        try:
+                            args.gpt_tasks = gpt_poll.result()
+                            log(f'GPT source ready: {len(args.gpt_tasks[0])} original level/deck combinations')
+                            yield_for_student = True
+                        except RuntimeError as error:
+                            log(f'GPT source still waiting: {error}')
+                        gpt_poll = None
+                        next_gpt = time.monotonic()+60
                     if time.monotonic() >= next_poll:
                         admit = idle(args)
                         if poll is None:
@@ -633,10 +647,11 @@ def teacher(args, record, model):
                         try:
                             current, _ = poll.result()
                             ready = {int(r['round']) for r in read_rows(args.out/'results.csv') if r.get('gpt_rate')}
-                            admit = admit and current in ready
+                            yield_for_student = yield_for_student or current not in ready
                         except RuntimeError:
                             pass
                         poll = None
+                    admit = admit and not yield_for_student
                     while admit and len(pending) < args.workers and cursor < len(jobs):
                         pending.append(pool.apply_async(_teacher_game, (jobs[cursor],)))
                         cursor += 1
@@ -820,6 +835,11 @@ def main() -> int:
                 log(f"poll failed: {exc}")
                 if args.once:
                     return 1
+                if args.gpt_tasks is not None:
+                    for row in read_rows(args.out/'results.csv'):
+                        model = MODEL_CACHE / f'r{int(row["round"]):06d}.pt'
+                        if not row.get('gpt_rate') and model.is_file():
+                            run_round(args, int(row['round']), model)
                 # Existing models need no network to advance the teacher column.
                 for row in read_rows(args.out/'results.csv'):
                     model = MODEL_CACHE / f'r{int(row["round"]):06d}.pt'
