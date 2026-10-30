@@ -10941,7 +10941,23 @@
     5,
     28
    ],
-   "fog_observation": "human_v2"
+   "fog_observation": "human_v2",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/6f7a586aae58fb32dea6a34bce61a12cec7968fff7826d3a8c5f26572af0ea19",
+    "decisions": [
+     658,
+     419,
+     359,
+     300,
+     240,
+     180,
+     120,
+     61
+    ],
+    "index": 0,
+    "future_seed_start": 404000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l37_snow_split_v2_m200_s81023024_a0bef3ff13cf7",
