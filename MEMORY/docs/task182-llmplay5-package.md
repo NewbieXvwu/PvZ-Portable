@@ -93,7 +93,7 @@ carry合并只读progress及32份跨圈失败诊断结论，不打开存档。�
 
 第1圈仍全部完成：A/B/D/E各21/21、C31/31。新会话第一项为 `llmplay5_a_l33_m100`，种子 `139140051`，因此新关卡不必等到第3圈。
 
-重新打包命令（上一版引擎放在 `~/pvz-logs/llmplay5_previous/build/pvz-portable`）：
+重新打包命令（已交付静态引擎取自本机 `~/pvz-logs/llmplay_dist/llmplay_pkg.zip` 的 `llmplay_pkg/build/pvz-portable`，放到 `~/pvz-logs/llmplay5_previous/build/pvz-portable`；按task133/task144/task146的记录，后续包只重打接口、沿用静态引擎。本次未重编）：
 
 ```bash
 python3 scripts/llmplay/build_package.py \
@@ -112,4 +112,12 @@ python3 scripts/llmplay/build_package.py \
 
 只运行用户允许的 `pytest -k`，先看free并加 `ulimit -v 8000000`。相关筛选测试通过，覆盖任务清单、种子、carry合并、当前圈追加、已完成C位置沿用与Boss检查点；未运行真实对局、重编、全量测试或存档复验。未碰生产qc、看门狗或stop_curr。
 
-产物目标：`~/pvz-logs/llmplay5/llmplay_pkg.7z.001` 等分卷，以及原样的 `llmplay_res.zip`。原资源包已原样就位；半成品已接入，待上一版引擎就位后完成分卷。
+最终产物已生成到台式机 `~/pvz-logs/llmplay5/`：
+
+- `llmplay_pkg.7z.001`：5,593,449字节，只有一卷，含静态引擎、接口、任务配置、任务书和合并后的carry。
+- `llmplay_res.zip`：34,258,402字节，从已交付资源包原样复制。
+- `llmplay_pkg/`：对应的解开目录；`carry/progress.json` 已是上述cycle2/layerA和各层完成数。
+
+构建直接输出了合并后的cycle/layer和完成数，未另做存档扫描、复验、解包自检或引擎对局。原始 `~/llm_runs/llmplay4_partial/out/` 保留供task105后续导入，没有删除或改写。
+
+代码提交 `2e1127aa` 已推送到 `origin/llmplay5`，交付记录随后在同分支追加。
