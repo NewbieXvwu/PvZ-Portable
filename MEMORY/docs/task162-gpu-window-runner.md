@@ -167,3 +167,9 @@ python scripts/queue_decision_study.py \
 补充范围：研究`prepare_decision_data.py`的split与tokens、`python/pvz_research_data.py::ArchiveTokens`、`bench_decision_window.py::samples`是使用SQLite累计全局偏移的四处，当前固定代码均为`ORDER BY source`。研究`RowWeights`通过同一合并后observer收集行身份；离线`train_rollout_policy_dilution.py::ImmutableDataCache`记录并原序转发observer，不另建source偏移。其余source_row命中是参数、计数报告、离线诊断/旧验收工具；`human_demo`的同名字段记录原始来源路径，不是按偏移读取训练包的入口。
 
 **影响范围与修法：** rowid错误限于task162研究的卡组/缺帧mask、token行映射、流式留出token和探针配对；旧错误版本尚未产出可用研究模型。生产当前包、训练权重和r52晋升链没有这次错位的代码路径，故**无需改生产、重打包、重训或撤销r52**。今后若改研究来源布局，应沿用训练器的父目录排序语义；需要重建的是依赖错误行序的研究派生物，不应重写生产包。本次不添加任何一致性校验或新清单。
+
+## Mac承接两臂（2026-10-30，等待共同子集定义）
+
+主控已指定Mac承接 `v3_small` 和 `cnn_entity`，台式机新队列不再执行这两臂，保留 `cnn64` 与可选 `resnet6`。Mac使用 `~/pvz-bench-data/r42pack/`，等本任务书发布新的子集定义后，严格沿用共同子集、划分、epoch和种子，串行运行两臂并控制进程数不超过4，再走qoder-t160c的bench_play纯学生评测流程。
+
+当前新定义尚未发布，Mac未开始这两臂训练，也未更改旧队列。本段先公开分工，实际移出台式机队列与Mac运行结果随后追加，不新增校验、manifest或JSON中间文件。
