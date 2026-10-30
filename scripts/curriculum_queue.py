@@ -1325,6 +1325,8 @@ class TrainingPipeline:
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
+        from mac_collect_import import batch_sources
+        sources += batch_sources(self.args.frames)
         wanted = set(labels)
         catalog: dict[str, Path] = {}
         for source in sources:
@@ -1380,7 +1382,9 @@ class TrainingPipeline:
         if any(job['round'] == round_index for job in self.state['training_jobs']):
             return
         recipe = load_recipe(self.args.recipe, 'training')
-        recipe['labels'] = pack_labels(self.state, ','.join(recipe['labels']))
+        from mac_collect_import import batch_sources
+        recipe['labels'] = pack_labels(self.state, ','.join(
+            recipe['labels'] + [path.name for path in batch_sources(self.args.frames)]))
         recipe['data'] = str(self.directory / 'frames')
         folder = self.directory / f'round_{round_index:06d}'
         recipe['out'] = str(folder / 'student')
@@ -1500,6 +1504,8 @@ class TrainingPipeline:
         from pvz_frame_store import frame_paths
         base = Path(load_recipe(self.args.recipe, 'training')['data'])
         sources = [base] if base == self.args.frames else [base, self.args.frames]
+        from mac_collect_import import batch_sources
+        sources += batch_sources(self.args.frames)
         wanted = set(labels)
         catalog = {}
         for source in sources:

@@ -10,8 +10,16 @@
 
 Mac只有一处批次缓存。帧按唯一批次标签归档，经HF发送，台式机导入器仅下载、标准库解包并原子放入 `frames_v2/mac197/<批次标签>/`，收到后删除HF包。训练快照创建时从这些实际批次目录取得标签，现有语料合并逻辑接入档案。网络传输和解包在打包关键路径之外完成，不加重放、清单或校验。Mac确认送达后清理本批帧及临时文件，模型缓存只保留现任。
 
-台式机只增加批次根目录接入和导入入口。部署脚本只安装必要源码，交主控在组边界执行，不操作qc、看门狗或stop_curr。首次演练用一组实际生产任务，把包导入台式机隔离目录，并确认现有帧读取器可读；不部署到正在运行的cq。相关pytest只用 `-k`，逐个执行，附 `timeout 300` 和 `ulimit -f 2000000`。
+台式机只增加批次根目录接入和导入入口。部署脚本只安装必要源码，交主控在组边界执行，不操作qc、看门狗或stop_curr。演练把包放入独立的 `frames_v2/mac197/` 子目录，确认现有帧读取器可读，正在运行的cq不安装补丁。相关pytest只用 `-k`，逐个执行，附 `timeout 300` 和 `ulimit -f 2000000`。
 
 ## 交付记录
 
-设计已登记，实施与一组实际送达结果随后追加。
+已实现采集、HF交接、独立批次导入，以及生产训练视图的8行接入。Mac已完成clang PGO两阶段构建，位置 `~/pvz-mac-collect/build/pvz-portable`。实际生产已切deploy22 `41bcc4a1`，读取到第62轮、现任为第52轮学生，配合v5和branch1采集。L26与L24各2局均完整终局，保留生产搜索预算及obs v3，独立种子1970000006–1970000009。课程标签合并/待打包与任务加载相关现有测试各2项通过。
+
+两批共约2.48MB，已上传 `transfer/mac197/frames/mac197_197000000{6,8}_fast_search.tar.gz`。台式机SSH连接超时，导入与台式机读帧尚未完成，不能认定端到端通过。本地原帧和已完成包保留于唯一缓存 `~/pvz-mac-collect/`，连接恢复后按下面的send命令逐包送达，收到确认后自动删除HF包和本地批次。未部署台式机补丁，未启动长期采集。
+
+## 主控操作
+
+组边界在台式机更新远端引用后执行 `bash scripts/install_mac_collect.sh /home/newbiexvwu/PvZ-search/.claude/worktrees/cq origin/maccollect`，仅应用接入补丁与导入脚本，生产进程的边界切换由主控安排。无需新增配置文件。
+
+Mac使用现有带torch/HF的解释器：`PY=~/.local/share/mise/installs/python/3.14/bin/python3`。恢复投递为 `"$PY" scripts/mac_collect.py send --batch-path ~/pvz-mac-collect/mac197_1970000006_fast_search.tar.gz --destination /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2`，随后同样送0008。主控启用持续采集时运行 `"$PY" scripts/mac_collect.py run --workers 12 --batches 100000`，每批均刷新现任和部署标记。相同缓存只启动一个采集入口，送达前断连会保留本批并退出。
