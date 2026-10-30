@@ -27,17 +27,17 @@ def configure_shard(shard=None, shards=None):
                 os.environ.get("LLMPLAY_SHARDS", config()["default_shards"]))
     index = int(shard if shard is not None else os.environ.get("LLMPLAY_SHARD", 0))
     if not 1 <= count <= len(config()["order"]) or not 0 <= index < count:
-        raise ValueError("分片要求 1 <= shards <= 41 且 0 <= shard < shards")
+        raise ValueError("分片要求 1 <= shards <= 40 且 0 <= shard < shards")
     if shard is not None or shards is not None:
         os.environ["LLMPLAY_SHARD"] = str(index)
         os.environ["LLMPLAY_SHARDS"] = str(count)
     return index, count
 
 
-def assigned_tasks():
+def assigned_tasks(*, native=False):
     index, count = configure_shard()
     tasks = load_tasks()
-    order = config()["order"]
+    order = config()["native_order" if native else "order"]
     if count == len(config()["terrain_shards"]):
         return [key for key in order
                 if region(tasks[key]["level"]) in config()["terrain_shards"][index]]
@@ -55,17 +55,23 @@ def legal_cards(level):
     return deck_pool_for_level(level, config()["blacklist"])
 
 
-def seed_at(level, index):
+def _seed_base(level, native=False):
+    cfg = config()
+    if native:
+        slot = cfg["native_order"].index("llmplay_decks_native_l%d_m100" % level)
+        return cfg["native_seed_base"] + slot * cfg["seed_window"]
+    return cfg["seed_base"] + (level - 1) * cfg["seed_window"]
+
+
+def seed_at(level, index, *, native=False):
     cfg = config()
     epoch, offset = divmod(index, cfg["seed_window"])
-    return cfg["seed_base"] + epoch * cfg["seed_epoch_stride"] + (
-        level - 1) * cfg["seed_window"] + offset
+    return _seed_base(level, native) + epoch * cfg["seed_epoch_stride"] + offset
 
 
-def seed_index(level, seed):
+def seed_index(level, seed, *, native=False):
     cfg = config()
-    epoch, offset = divmod(int(seed) - cfg["seed_base"], cfg["seed_epoch_stride"])
-    offset -= (level - 1) * cfg["seed_window"]
+    epoch, offset = divmod(int(seed) - _seed_base(level, native), cfg["seed_epoch_stride"])
     return epoch * cfg["seed_window"] + offset if epoch >= 0 and 0 <= offset < cfg["seed_window"] else None
 
 
@@ -89,6 +95,22 @@ def _won(entry):
     return entry.get("won") and not entry.get("abandoned") and entry.get("result") == 1
 
 
+def _public_win(entry, level):
+    # 未记录遮挡模式的旧雾局只保留历史去重，不抵扣 human_v2 的目标。
+    return _won(entry) and (region(level) != "fog" or entry.get("fog_observation") == "human_v2")
+
+
+def attempt_seeds(entries, task_id, deck, seed, prior=()):
+    key = wf.deck_key(deck)
+    seeds = set(prior) | {int(seed)}
+    for entry in entries:
+        if (entry.get("valid", True) and entry["task_id"] == task_id
+                and wf.deck_key(entry.get("deck")) == key):
+            seeds.add(int(entry["seed"]))
+            seeds.update(entry.get("deck_attempt_seeds") or [])
+    return sorted(seeds)
+
+
 def derive(entries, run_id=None):
     cfg, definitions = config(), load_tasks()
     by_level = {}
@@ -106,16 +128,19 @@ def derive(entries, run_id=None):
         task = definitions[task_id]
         level, terrain = int(task["level"]), region(task["level"])
         pool = legal_cards(level)
-        groups, registered, used, pending = {}, {}, set(), None
+        groups, registered, counted, used, pending = {}, {}, {}, set(), None
         for entry in by_level.get(level, []):
             key, cards = wf.deck_key(entry.get("deck")), entry.get("deck") or []
             if _won(entry):
                 registered[key] = list(cards)
+                if _public_win(entry, level):
+                    counted[key] = list(cards)
             if entry["task_id"] != task_id:
                 continue
             group = groups.setdefault(key, dict(deck=list(cards), losses=0, won=False,
                                                 loss_notes=[], seeds=[]))
             group["seeds"].append(entry["seed"])
+            group["seeds"].extend(entry.get("deck_attempt_seeds") or [])
             if _won(entry):
                 group["won"] = True
             elif not entry.get("abandoned") and entry.get("result") == 2:
@@ -124,12 +149,13 @@ def derive(entries, run_id=None):
             used.add(int(entry["seed"]))
             if not entry.get("abandoned") and entry.get("result") == 0:
                 pending = dict(seed=entry["seed"], deck=list(cards), archive=entry["archive"])
-        wins = {key: cards for key, cards in registered.items()
+        wins = {key: cards for key, cards in counted.items()
                 if key not in holdouts() and set(cards) <= set(pool)}
         small = sum(len(cards) <= 7 for cards in wins.values())
         eight = sum(len(cards) == 8 for cards in wins.values())
         target = cfg["targets"][terrain]
-        goal = target + max(0, (len(wins) - target) // cfg["growth_step"] + 1) * cfg["growth_step"] if len(wins) >= target else target
+        for group in groups.values():
+            group["seed_attempts"] = len(set(group["seeds"]))
         indices = [seed_index(level, seed) for seed in used]
         cursor = max([value for value in indices if value is not None], default=-1) + 1
         fresh = [seed_at(level, cursor + n) for n in range(candidate_count)]
@@ -139,7 +165,7 @@ def derive(entries, run_id=None):
                         groups[wf.deck_key(pending["deck"])]["losses"] >= cfg["max_losses"]):
             pending = None
         levels[task_id] = dict(level=level, terrain=terrain, victory_decks=len(wins),
-                              target=target, goal=goal, small_decks=small, eight_decks=eight,
+                              target=target, goal=target, small_decks=small, eight_decks=eight,
                               baseline_complete=len(wins) >= target and small >= cfg["min_small_decks"]
                               and eight >= cfg["min_eight_decks"], registered_decks=registered,
                               winning_decks=wins, decks=groups, retry=retry, pending=pending,
@@ -161,13 +187,42 @@ def derive(entries, run_id=None):
         terrain_progress[terrain] = dict(counts=counts, targets=targets, missing=missing,
                                          covered=sum(counts[card] >= targets[card] for card in counts),
                                          total=len(counts), complete=not missing)
-    active = assigned_tasks()
+    active, active_native = assigned_tasks(), assigned_tasks(native=True)
+    native_progress = {}
+    for task_id in cfg["native_order"]:
+        task = definitions[task_id]
+        level = task["level"]
+        records = [entry for entry in by_level.get(level, []) if entry["task_id"] == task_id]
+        wins = {entry["seed"] for entry in by_level.get(level, [])
+                if _public_win(entry, level) and (entry["task_id"] == task_id or
+                definitions.get(entry["task_id"], {}).get("conveyor_start") == "original")}
+        indices = [seed_index(level, entry["seed"], native=True) for entry in records]
+        cursor = max([value for value in indices if value is not None], default=-1) + 1
+        pending = next((dict(seed=entry["seed"], deck=[], archive=entry["archive"])
+                        for entry in reversed(records) if entry.get("result") == 0
+                        and not entry.get("abandoned")), None)
+        native_progress[task_id] = dict(level=level, terrain=region(level), wins=len(wins),
+                                        winning_seeds=sorted(wins), target=cfg["native_wins"],
+                                        complete=len(wins) >= cfg["native_wins"], pending=pending,
+                                        available_seeds=[seed_at(level, cursor + n, native=True)
+                                                         for n in range(candidate_count)])
+    # 主线本轮配额完成后让支线获得工作；支线达标后继续提高主线配额。
+    covered = all(terrain_progress[levels[key]["terrain"]]["complete"] for key in active)
+    native_done = all(native_progress[key]["complete"] for key in active_native)
+    stage = min((max(0, (levels[key]["victory_decks"] - levels[key]["target"]) // cfg["growth_step"] + 1)
+                 if levels[key]["baseline_complete"] else 0 for key in active), default=0)
+    stage = stage if covered and native_done else 0
+    for info in levels.values():
+        info["goal"] = info["target"] + stage * cfg["growth_step"]
     index, count = configure_shard()
     flat = {task_id: dict(item, active=task_id in active, complete=False, layer="decks")
             for task_id, item in levels.items()}
+    flat.update({task_id: dict(item, active=task_id in active_native, layer="native")
+                 for task_id, item in native_progress.items()})
     return dict(schema=wf.PROGRESS_SCHEMA, mode="decks", run_id=run_id, cycle=1, batch=1,
                 layer="decks", complete=False, note=NOTE, requirements=cfg,
-                shard=index, shards=count, active_tasks=active, levels=levels,
+                shard=index, shards=count, active_tasks=active, levels=levels, stage=stage + 1,
+                active_native=active_native, native=native_progress,
                 coverage=terrain_progress, tasks=flat, archives=list(entries))
 
 
@@ -180,6 +235,9 @@ def items(document):
     for task_id in order:
         info = levels[task_id]
         missing = document["coverage"][info["terrain"]]["missing"]
+        if (info["victory_decks"] >= info["goal"] and info["baseline_complete"]
+                and not missing and not info["pending"]):
+            continue
         priority = sorted((int(card) for card in missing if int(card) in info["legal_cards"]),
                           key=lambda card: (-missing[str(card)], card))
         base = dict(task_id=task_id, level=info["level"], terrain=info["terrain"],
@@ -190,7 +248,8 @@ def items(document):
                     failed_decks=[group for group in info["decks"].values() if group["losses"] >= config()["max_losses"]])
         if info["pending"]:
             candidates.append(dict(base, action="resume", **info["pending"]))
-        for seed in info["available_seeds"]:
+            continue
+        for seed in info["available_seeds"][:1]:
             retry = info["retry"]
             candidates.append(dict(base, seed=seed, deck=retry["deck"] if retry else None,
                                    action="retry_deck" if retry else "new_deck",
@@ -200,17 +259,48 @@ def items(document):
     return [group[n] for n in range(max(map(len, grouped), default=0)) for group in grouped if n < len(group)]
 
 
+def native_items(document):
+    candidates = []
+    for task_id in document["active_native"]:
+        info = document["native"][task_id]
+        if info["complete"]:
+            continue
+        base = dict(task_id=task_id, level=info["level"], terrain=info["terrain"],
+                    cycle=1, batch=1, layer="native", multiplier=1.0, deck=[],
+                    wins=info["wins"], target=info["target"], conveyor_start="original")
+        if info["pending"]:
+            candidates.append(dict(base, action="resume", **{key: value for key, value in info["pending"].items() if key != "deck"}))
+        else:
+            candidates.extend(dict(base, seed=seed, action="native_play")
+                              for seed in info["available_seeds"])
+    return candidates
+
+
 def view(document):
-    candidates = items(document)
-    item = wf._first_free(candidates, wf.held()) or wf._busy(candidates)
-    return dict(item=item, main=item, challenge=None, complete=False, cycle=1,
+    candidates, side = items(document), native_items(document)
+    claims = wf.held()
+    main = wf._first_free(candidates, claims)
+    native = wf._first_free(side, claims)
+    item = main or native or wf._busy(candidates + side)
+    return dict(item=item, main=main, challenge=None, native=native, complete=False, cycle=1,
                 shard=document["shard"], shards=document["shards"], note=NOTE)
 
 
 def check(document, task_id, deck, strategy="", seed=None):
+    if task_id in document["active_native"]:
+        info = document["native"][task_id]
+        if deck:
+            raise ValueError("原生传送带/固定卡支线由引擎发牌，不能自选卡组")
+        if info["complete"] or seed is None or int(seed) not in info["available_seeds"]:
+            raise ValueError("支线须使用队列分配的新种子，已达8胜的关卡不再分配")
+        if wf._first_free(items(document), wf.held()) is not None:
+            raise ValueError("扩卡组主线优先；请先领取本片主线项")
+        return dict(cycle=1, workflow_layer="native")
     if task_id not in document["active_tasks"]:
         raise ValueError("请使用本分片 next_task() 给出的新任务族")
     info = document["levels"][task_id]
+    if not any(item["task_id"] == task_id for item in items(document)):
+        raise ValueError("本关本轮目标已达标；请领取其余主线或传送带支线")
     validate_deck(load_tasks()[task_id], deck)
     key = wf.deck_key(deck)
     if key in holdouts():
@@ -249,6 +339,11 @@ def report(document):
         info = document["levels"][key]
         lines.append("| L%d | %s | %d | %d | %d/3 | %d/3 |" % (
             info["level"], info["terrain"], info["victory_decks"], info["goal"], info["small_decks"], info["eight_decks"]))
+    lines += ["", "## 原生传送带支线（主线无项可领时领取）", "",
+              "| 关卡 | 不同种子胜局 | 目标 |", "|---|---|---|"]
+    for key in document["active_native"]:
+        info = document["native"][key]
+        lines.append("| L%d | %d | %d |" % (info["level"], info["wins"], info["target"]))
     lines += ["", "| 地形 | 达到覆盖目标的卡 | 各卡胜利卡组数 | 覆盖缺口 |", "|---|---|---|---|"]
     for terrain, info in document["coverage"].items():
         lines.append("| %s | %d/%d | %s | %s |" % (terrain, info["covered"], info["total"], info["counts"], info["missing"]))

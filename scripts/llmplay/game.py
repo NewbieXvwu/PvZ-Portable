@@ -224,7 +224,8 @@ class Game:
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
                  deck=None, reason="", strategy="", deck_review="", abandon_reason=None, attempt_id=None,
                  robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False,
-                 _gate: bool = True, cycle=None, workflow_layer=None, _restore_claim=False):
+                 _gate: bool = True, cycle=None, workflow_layer=None, _restore_claim=False,
+                 deck_attempt_seeds=None):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
@@ -240,6 +241,7 @@ class Game:
             raise ValueError("自选卡组请填写 reason 选卡理由")
         self.spec, self.deck, self.seed = task_spec(self.task_definition, seed, deck)
         self.deck_reason, self.strategy, self.deck_review = reason, strategy, deck_review
+        self.deck_attempt_seeds = list(deck_attempt_seeds or [])
         self._declared_strategy = strategy
         self.cycle = int(cycle or 1)
         self.workflow_layer = workflow_layer or self.task_definition.get("layer", "A")
@@ -289,7 +291,7 @@ class Game:
             # 队列占位：别的子代理不会领到同一项；进程崩了 30 分钟后自动释放。
             hold(self.task_id, self.seed)
             self._claimed = True
-        elif _restore_claim and self.workflow_layer == "decks" and not self._internal:
+        elif _restore_claim and self.workflow_layer in ("decks", "native") and not self._internal:
             # 同片中盘恢复继续持有并最终释放原来的关卡+种子占位。
             from .workflow import hold
             hold(self.task_id, self.seed)
@@ -415,6 +417,10 @@ class Game:
                 continue
             kind, row = info[0], info[1]
             if kind == 20:      # 蹦极僵尸抓完就走，不算击杀
+                continue
+            if self.spec.fog_observation == "human_v2" and (self.obs or {}).get("fog"):
+                # 公共观测过滤了雾中僵尸；消失不代表已经被消灭。
+                self.events.append(dict(kind="unseen", tick=tick, zombie=kind, row=row))
                 continue
             self.events.append(dict(kind="kill", tick=tick, zombie=kind, row=row))
             self._wave_stats["kills"] += 1
@@ -689,6 +695,7 @@ class Game:
         self.session.require_branch(self.budget_key)
         child = Game(self.task_id, seed=self.seed, manifest=self.manifest,
                     deck=self.deck, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review, attempt_id=self.attempt_id,
+                    deck_attempt_seeds=self.deck_attempt_seeds,
                     executable=self.executable, resource_dir=self.resource_dir,
                     ops=[dict(op) for op in self.ops],
                     frames=[dict(f) for f in self.frames],
@@ -924,6 +931,7 @@ class Game:
 
     def log(self) -> dict:
         return dict(schema=SCHEMA, task_id=self.task_id, seed=self.seed, deck=self.deck,
+                    deck_attempt_seeds=self.deck_attempt_seeds,
                     run_id=self.run_id, cycle=self.cycle, workflow_layer=self.workflow_layer,
                     note=self.note, reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
                     abandon_reason=self.abandon_reason, attempt_id=self.attempt_id, tick=self.tick, ops=self.ops,
@@ -951,7 +959,9 @@ class Game:
                    deck=doc.get("deck"), reason=doc.get("reason", ""), strategy=doc.get("strategy", ""),
                    deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"), attempt_id=doc.get("attempt_id"),
                    run_id=doc.get("run_id"), cycle=doc.get("cycle"), workflow_layer=doc.get("workflow_layer"),
-                   manual_patch=bool(doc.get("manual_patch", False)), _gate=False, _restore_claim=True, **kwargs)
+                   manual_patch=bool(doc.get("manual_patch", False)),
+                   deck_attempt_seeds=doc.get("deck_attempt_seeds"),
+                   _gate=False, _restore_claim=True, **kwargs)
 
     @classmethod
     def load_archive(cls, directory, **kwargs) -> "Game":
@@ -967,6 +977,7 @@ class Game:
                    deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
                    deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"),
                    cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"),
+                   deck_attempt_seeds=meta.get("deck_attempt_seeds"),
                    _gate=False, _restore_claim=True, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
@@ -988,7 +999,7 @@ class Game:
         # task139：缺思路 / 缺评价的局不能进下一层，所以在写盘前就拦下来（不用重打）。
         from itertools import islice
         from .delivery import archive_requirements
-        opening = list(islice((self.deck[op["action"]["packet"]] for op in self.ops
+        opening = [] if self.spec.conveyor_start == "original" else list(islice((self.deck[op["action"]["packet"]] for op in self.ops
                                if op.get("ok") and op["action"].get("type") == "plant"), 6))
         archive_requirements(self.task_id, self.strategy, self.deck_review,
                              abandoned=self.abandon_reason is not None, layer=self.workflow_layer,
@@ -1013,7 +1024,16 @@ class Game:
         from .runtime import environment_fingerprint
         result = int(self.obs.get("result") or 0)
         roster = (self.initial_obs.get("loadout_context") or {}).get("zombie_roster")
+        attempts = {}
+        if self.workflow_layer == "decks":
+            from .decks import attempt_seeds
+            from .delivery import _read_progress, output_dir
+            self.deck_attempt_seeds = attempt_seeds(_read_progress(output_dir())["archives"], self.task_id, self.deck,
+                                                    self.seed, self.deck_attempt_seeds)
+            attempts = dict(deck_seed_attempts=len(self.deck_attempt_seeds),
+                            deck_attempt_seeds=self.deck_attempt_seeds)
         meta = dict(
+            **attempts,
             schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE, cycle=self.cycle,
             workflow_layer=self.workflow_layer, opening=opening,
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),

@@ -87,6 +87,10 @@ def _entry(archive, relative, *, valid=True, error=None):
                 cycle=int(meta.get("cycle") or 1),
                 workflow_layer=meta.get("workflow_layer"), opening=meta.get("opening") or [],
                 environment_fingerprint=meta.get("environment_fingerprint"),
+                fog_observation=(meta.get("environment_task") or {}).get("fog_observation"),
+                conveyor_start=(meta.get("environment_task") or {}).get("conveyor_start"),
+                deck_seed_attempts=meta.get("deck_seed_attempts"),
+                deck_attempt_seeds=meta.get("deck_attempt_seeds"),
                 zombie_count_multiplier=task.get("zombie_count_multiplier"))
 
 

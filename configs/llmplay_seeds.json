@@ -34234,6 +34234,30 @@
     ],
     "llmplay_decks_l50_m100": [
       235000000
+    ],
+    "llmplay_decks_native_l5_m100": [
+      236000000
+    ],
+    "llmplay_decks_native_l10_m100": [
+      237000000
+    ],
+    "llmplay_decks_native_l20_m100": [
+      238000000
+    ],
+    "llmplay_decks_native_l25_m100": [
+      239000000
+    ],
+    "llmplay_decks_native_l30_m100": [
+      240000000
+    ],
+    "llmplay_decks_native_l40_m100": [
+      241000000
+    ],
+    "llmplay_decks_native_l45_m100": [
+      242000000
+    ],
+    "llmplay_decks_native_l50_m100": [
+      243000000
     ]
   },
   "mode": "decks",
@@ -34278,8 +34302,7 @@
       "llmplay_decks_l46_m100",
       "llmplay_decks_l47_m100",
       "llmplay_decks_l48_m100",
-      "llmplay_decks_l49_m100",
-      "llmplay_decks_l50_m100"
+      "llmplay_decks_l49_m100"
     ],
     "targets": {
       "day": 12,
@@ -34313,7 +34336,7 @@
     ],
     "seed_base": 186000000,
     "seed_window": 1000000,
-    "seed_epoch_stride": 50000000,
+    "seed_epoch_stride": 64000000,
     "blacklist": {
       "all": [
         38,
@@ -34378,6 +34401,18 @@
         46
       ]
     },
-    "note": "task186: 仅扩展胜利卡组；coverage_priority 按地形/卡号补 task185 重点卡目标次数；旧循环定义保留供历史读取。"
+    "note": "task186: 仅扩展胜利卡组；coverage_priority 按地形/卡号补 task185 重点卡目标次数；旧循环定义保留供历史读取。",
+    "native_order": [
+      "llmplay_decks_native_l5_m100",
+      "llmplay_decks_native_l10_m100",
+      "llmplay_decks_native_l20_m100",
+      "llmplay_decks_native_l25_m100",
+      "llmplay_decks_native_l30_m100",
+      "llmplay_decks_native_l40_m100",
+      "llmplay_decks_native_l45_m100",
+      "llmplay_decks_native_l50_m100"
+    ],
+    "native_wins": 8,
+    "native_seed_base": 236000000
   }
 }

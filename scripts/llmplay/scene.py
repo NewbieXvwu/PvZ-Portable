@@ -111,6 +111,18 @@ def _lane_list(obs) -> list:
     return lane_indices(_frame(obs))
 
 
+def _fog_cells(game):
+    """只读公开雾格，不重算引擎的可见性，更不读取隐藏僵尸。"""
+    if getattr(getattr(game, "spec", None), "fog_observation", None) != "human_v2":
+        return set()
+    return {(row, col) for row, amounts in enumerate((game.obs or {}).get("fog_amount") or [])
+            for col, amount in enumerate(amounts) if amount > 0}
+
+
+def _plant_hidden(plant):
+    return int(plant.get("health", 0)) < 0 or int(plant.get("state", 0)) < 0
+
+
 # ---------------------------------------------------------------- 2. 局面头
 
 def header(game) -> str:
@@ -139,6 +151,8 @@ def header(game) -> str:
         bits.append("**终局：%s**" % ("通关" if result == 1 else "失败"))
     else:
         bits.append("进行中")
+    if _fog_cells(game):
+        bits.append("雾中看不见：僵尸仅列可见部分，未知不代表没有；被遮植物只记位置和种类")
     return " ".join(bits)
 
 
@@ -167,9 +181,11 @@ def _zombie_tags(zombies) -> str:
     return text[:ZOMBIE_PART]
 
 
-def _cell(plant, zombies, pool: bool = False) -> str:
+def _cell(plant, zombies, pool: bool = False, fog: bool = False) -> str:
     if plant is None:
-        left = ("~~" if pool else "..").ljust(PLANT_PART)
+        left = ("看不见" if fog else "~~" if pool else "..").ljust(PLANT_PART)
+    elif _plant_hidden(plant):
+        left = (_plant_code(plant["type"]) + "?").ljust(PLANT_PART)
     else:
         left = ("%-3s%-2d" % (_plant_code(plant["type"]), _pct(plant.get("health"),
                                                              plant.get("max_health"))))
@@ -186,6 +202,7 @@ def grid(game) -> str:
     plants = _plants(obs)
     zombies = [z for z in _zombies(obs) if z.get("on_board")]
     by_cell = {}
+    fog_cells = _fog_cells(game)
     for plant in plants:
         by_cell.setdefault((int(plant["row"]), int(plant["col"])), []).append(plant)
     zcell = {}
@@ -204,7 +221,7 @@ def grid(game) -> str:
             pool = False
             if row < len(grid_rows) and col < len(grid_rows[row]):
                 pool = int(grid_rows[row][col]) == 3
-            cells.append(_cell(plant, zcell.get((row, col)), pool=pool))
+            cells.append(_cell(plant, zcell.get((row, col)), pool=pool, fog=(row, col) in fog_cells))
         lines.append("  r%-2d   " % row + "".join(cells))
     outside = [z for z in _zombies(obs) if not z.get("on_board")]
     if outside:
@@ -251,6 +268,8 @@ def _plant_timers(obs) -> dict:
 
 
 def _plant_state(plant, special=None) -> str:
+    if _plant_hidden(plant):
+        return "看不见（雾中；血量与状态未知）"
     if plant.get("asleep"):
         left = int(plant.get("wake_up_counter") or 0)
         return "睡着（约 %d tick 后醒）" % left if left > 0 else "睡着"
@@ -358,6 +377,7 @@ def rows(game) -> str:
     plants = _plants(obs)
     zombies = _zombies(obs)
     timers = _plant_timers(obs)
+    fog_rows = {row for row, col in _fog_cells(game)}
     lines = []
     for row in lanes:
         row_plants = sorted([p for p in plants if int(p["row"]) == row], key=lambda p: int(p["col"]))
@@ -367,9 +387,10 @@ def rows(game) -> str:
                     if z.get("on_board") and int(z.get("body_health") or 0) > 0]
         if row_plants:
             text = " · ".join(
-                "c%d %s %d/%d %s" % (int(p["col"]), _plant_name(p["type"]),
+                ("c%d %s 看不见（雾中；血量与状态未知）" % (int(p["col"]), _plant_name(p["type"]))
+                 if _plant_hidden(p) else "c%d %s %d/%d %s" % (int(p["col"]), _plant_name(p["type"]),
                                      int(p.get("health") or 0), int(p.get("max_health") or 0),
-                                     _plant_state(p, timers.get((int(p["row"]), int(p["col"])))))
+                                     _plant_state(p, timers.get((int(p["row"]), int(p["col"]))))))
                 for p in row_plants)
         else:
             text = "（没有植物）"
@@ -380,7 +401,9 @@ def rows(game) -> str:
             front = min(on_board, key=lambda z: float(z["x"]))
             lines.append("     最前: %s %s" % (_zombie_name(front["type"]), _eta(front, plants)))
         else:
-            lines.append("     僵尸: 无")
+            lines.append("     僵尸: " + ("可见范围内无；雾中看不见" if row in fog_rows else "无"))
+        if on_board and row in fog_rows:
+            lines.append("     雾中其余僵尸看不见，数量和位置未知")
     return "\n".join(lines)
 
 
@@ -446,7 +469,7 @@ def events(game) -> str:
     log = getattr(game, "events", None) or []
     if not log:
         return "  （自上次 observe 以来没有值得记的事件）"
-    planted, lost, kills, waves, mowers = [], [], {}, [], []
+    planted, lost, kills, waves, mowers, unseen = [], [], {}, [], [], []
     for item in log:
         kind = item.get("kind")
         if kind == "plant":
@@ -461,6 +484,8 @@ def events(game) -> str:
             waves.append(str(item["wave"]))
         elif kind == "mower":
             mowers.append("r%d" % item["row"])
+        elif kind == "unseen":
+            unseen.append("r%d %s" % (item["row"], _zombie_name(item["zombie"])))
     lines = []
     if planted:
         lines.append("  种下: " + "、".join(planted))
@@ -472,6 +497,8 @@ def events(game) -> str:
         lines.append("  新波: 第 %s 波开始" % "、".join(waves))
     if mowers:
         lines.append("  小推车触发: " + "、".join(mowers))
+    if unseen:
+        lines.append("  离开可见范围: " + "、".join(unseen) + "（是否消灭看不见）")
     return "\n".join(lines)
 
 
@@ -489,6 +516,7 @@ def legend() -> str:
             "放不下时截断并标 +n（n = 还有几只没显示）。\n"
             ".. = 空地，~~ = 水路；r0–r5 = 行，c0–c8 = 列（c0 最左，僵尸从右往左走）。\n"
             "血量都是当前/上限，位置列号保留一位小数。\n"
+            "植物代码后的 ? = 雾中血量与状态看不见；雾格不是已确认的空格。\n"
             "僵尸短代码：\n" + _code_table())
 
 
@@ -525,12 +553,17 @@ def summary(game) -> dict:
     obs = game.obs or {}
     defenses = obs.get("defenses") or []
     lanes = []
+    fog_rows = {row for row, col in _fog_cells(game)}
+    unseen_plants = [dict(row=p["row"], col=p["col"], type=_plant_name(p["type"]),
+                          status="看不见（雾中；血量与状态未知）") for p in _plants(obs) if _plant_hidden(p)]
     for row in _lane_list(obs):
         row_zombies = [z for z in _zombies(obs) if int(z["row"]) == row and z.get("on_board")]
         front = min(row_zombies, key=lambda z: float(z["x"])) if row_zombies else None
         lanes.append(dict(row=row,
                           plants=sum(1 for p in _plants(obs) if int(p["row"]) == row),
-                          zombies=len(row_zombies),
+                          zombies=None if row in fog_rows else len(row_zombies),
+                          **(dict(visible_zombies=len(row_zombies), zombies_visibility="雾中看不见，数量未知")
+                             if row in fog_rows else {}),
                           front_col=None if front is None else round(_col_of(float(front["x"])) + 0.5, 1),
                           front_type=None if front is None else _zombie_name(front["type"])))
     result = obs.get("result")
@@ -540,7 +573,10 @@ def summary(game) -> dict:
                 mowers_left=sum(1 for d in defenses if int(d["state"]) == 1),
                 mowers_total=len(defenses),
                 plants=len(_plants(obs)),
-                zombies=sum(1 for z in _zombies(obs) if z.get("on_board")),
+                zombies=None if fog_rows else sum(1 for z in _zombies(obs) if z.get("on_board")),
+                **(dict(visible_zombies=sum(1 for z in _zombies(obs) if z.get("on_board")),
+                         zombies_visibility="雾中看不见，数量与位置未知", unseen_plants=unseen_plants)
+                   if fog_rows or unseen_plants else {}),
                 terminal=bool(obs.get("terminal")), won=result == 1, result=result,
                 lanes=lanes)
 

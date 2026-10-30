@@ -5,7 +5,8 @@ import os
 from pathlib import Path
 import sys
 import tempfile
-from unittest.mock import patch
+from types import SimpleNamespace
+from unittest.mock import patch, Mock
 
 import pytest
 
@@ -42,8 +43,8 @@ D2 = [0, 1, 2, 3, 7, 17]
 
 def test_decks_tasks_and_shards_share_original_engine_rules(monkeypatch):
     tasks = load_tasks()
-    expected = {n for n in range(1, 50) if n % 5} | {50}
-    assert set(player_deck_levels(include_boss=True)) == expected
+    expected = {n for n in range(1, 50) if n % 5}
+    assert set(player_deck_levels()) == expected
     assert {tasks[key]['level'] for key in decks.config()['order']} == expected
     assert all(tasks[key]['zombie_count_multiplier'] == 1.0 and not tasks[key].get('wave_cap')
                for key in decks.config()['order'])
@@ -54,13 +55,13 @@ def test_decks_tasks_and_shards_share_original_engine_rules(monkeypatch):
             decks.configure_shard(index, count)
             assigned.append(set(decks.assigned_tasks()))
         assert set.union(*assigned) == set(decks.config()['order'])
-        assert sum(map(len, assigned)) == 41
+        assert sum(map(len, assigned)) == 40
         if count == 3:
             assert {decks.region(tasks[key]['level']) for key in assigned[0]} == {'day', 'night'}
-            assert {decks.region(tasks[key]['level']) for key in assigned[2]} == {'roof', 'boss'}
-    spec, cards, _ = task_spec(tasks['llmplay_decks_l50_m100'], deck=[1, 2, 3, 4, 32, 33])
+            assert {decks.region(tasks[key]['level']) for key in assigned[2]} == {'roof'}
+    spec, cards, _ = task_spec(tasks['llmplay_decks_native_l50_m100'])
     assert spec.level == 50 and spec.zombie_count_multiplier == 1.0
-    assert spec.profile.seed_slot_count == len(cards)
+    assert cards == [] and spec.conveyor_start == 'original'
 
 
 def test_decks_one_win_registers_and_two_card_difference_applies_to_history():
@@ -140,7 +141,10 @@ def test_decks_goal_grows_and_seed_windows_extend_without_materializing_seeds():
     cards = []
     for length, count in ((6, 3), (8, 3), (9, 6)):
         cards.extend([[1] + list(combo) for combo in itertools.islice(itertools.combinations(pool, length - 1), count)])
-    doc = workflow.derive([entry(1, deck, n) for n, deck in enumerate(cards)], 'run')
+    # 支线已完成（此夹具没有分配支线），本片覆盖完成后主线继续加4组。
+    with patch.object(decks, 'assigned_tasks', side_effect=lambda native=False: [] if native else ['llmplay_decks_l1_m100']), \
+            patch.dict(decks.config(), coverage_per_card=0):
+        doc = workflow.derive([entry(1, deck, n) for n, deck in enumerate(cards)], 'run')
     info = doc['levels']['llmplay_decks_l1_m100']
     assert info['baseline_complete'] and info['goal'] == 16
     assert workflow.next_task(doc, claim=False)['item'] is not None
@@ -214,3 +218,125 @@ def test_decks_metadata_only_carry_survives_out_zip_resume(tmp_path):
         assert delivery.progress()['levels']['llmplay_decks_l1_m100']['victory_decks'] == 1
     finally:
         os.environ['LLMPLAY_OUT'] = previous_out
+
+
+def native_entry(level, index=0, won=True):
+    return dict(entry(level, [], index, won=won),
+                task_id=f'llmplay_decks_native_l{level}_m100',
+                seed=decks.seed_at(level, index, native=True), conveyor_start='original',
+                fog_observation='human_v2' if level == 40 else None)
+
+
+def test_decks_fog_specs_and_unknown_history_do_not_count_as_public_wins():
+    tasks = load_tasks()
+    fog_ids = [key for key in decks.config()['order'] + decks.config()['native_order']
+               if decks.region(tasks[key]['level']) == 'fog']
+    assert {tasks[key]['level'] for key in fog_ids} == {31, 32, 33, 34, 36, 37, 38, 39, 40}
+    for key in fog_ids:
+        cards = [] if tasks[key].get('conveyor_start') else [1, 8, 9, 10, 16, 25]
+        assert task_spec(tasks[key], deck=cards)[0].fog_observation == 'human_v2'
+    old = entry(31, [1, 8, 9, 10, 16, 25])
+    doc = workflow.derive([old], 'run')
+    info = doc['levels'][old['task_id']]
+    assert info['victory_decks'] == 0 and info['registered_decks']
+    doc = workflow.derive([dict(old, fog_observation='human_v2')], 'run')
+    assert doc['levels'][old['task_id']]['victory_decks'] == 1
+
+
+def test_decks_native_is_lower_priority_and_eight_distinct_seeds_complete():
+    doc = workflow.derive([], 'run')
+    assert workflow.next_task(doc, claim=False)['item']['layer'] == 'decks'
+    claimed = {workflow._slot(item['task_id'], item['seed']): {} for item in decks.items(doc)}
+    with patch.object(workflow, '_read_claims', return_value=claimed):
+        item = workflow.next_task(doc, claim=False)['item']
+        assert item['layer'] == 'native' and item['action'] == 'native_play'
+        workflow.check(doc, item['task_id'], [], seed=item['seed'])
+        with pytest.raises(ValueError, match='不能自选'):
+            workflow.check(doc, item['task_id'], D1, seed=item['seed'])
+    with pytest.raises(ValueError, match='主线优先'):
+        workflow.check(doc, item['task_id'], [], seed=item['seed'])
+    repeated = [native_entry(10)] * 8
+    assert workflow.derive(repeated, 'run')['native']['llmplay_decks_native_l10_m100']['wins'] == 1
+    doc = workflow.derive([native_entry(10, n) for n in range(8)], 'run')
+    assert doc['native']['llmplay_decks_native_l10_m100']['complete']
+    assert all(item['level'] != 10 for item in decks.native_items(doc))
+    assert '原生传送带支线' in workflow.report(doc)
+
+
+def test_decks_native_shards_and_seed_windows_are_separate():
+    tasks = load_tasks()
+    sets = []
+    for index in range(3):
+        decks.configure_shard(index, 3)
+        sets.append({tasks[key]['level'] for key in decks.assigned_tasks(native=True)})
+    assert sets == [{5, 10, 20}, {25, 30, 40}, {45, 50}]
+    for level in (5, 40, 50):
+        for index in (0, decks.config()['seed_window']):
+            seed = decks.seed_at(level, index, native=True)
+            assert decks.seed_index(level, seed, native=True) == index
+            assert decks.seed_index(level, seed) is None
+
+
+def test_decks_fog_observe_summary_and_disappearance_remain_unknown():
+    from llmplay import scene
+    obs = dict(level=31, tick=1200, wave=1, wave_count=10, sun=50, fog=True,
+               grid=[[1] * 9 for _ in range(6)], fog_amount=[[0] * 6 + [200] * 3 for _ in range(6)],
+               plants=[dict(type=15, row=1, col=7, health=-1, max_health=-1, state=-1,
+                            state_countdown=-1, asleep=True, wake_up_counter=987, squished=False)],
+               zombies=[], packets=[], defenses=[], result=0, terminal=False)
+    g = Game('llmplay_decks_l31_m100', deck=[1, 8, 9, 10, 16, 25], reason='雾关试卡', _gate=False)
+    g.env = Mock(episode={})
+    g.env.observe.return_value = obs
+    g.obs = obs
+    with patch.object(g, '_start'):
+        text = g.observe()
+        summary = g.summary()
+    assert '看不见' in text and 'Doo?' in text
+    assert '-1/-1' not in text and '987' not in text
+    assert summary['zombies'] is None and summary['visible_zombies'] == 0
+    assert '看不见' in summary['unseen_plants'][0]['status']
+    assert summary['lanes'][1]['zombies'] is None
+    g._note_events({'type': 'wait'}, True, {}, {1: (0, 1, 600, True, False)}, {}, before_wave=1)
+    assert any(event['kind'] == 'unseen' for event in g.events)
+    assert not any(event['kind'] == 'kill' for event in g.events)
+    g.env = None
+    g.close()
+
+
+def test_decks_export_records_distinct_seed_attempts_and_restores_them(tmp_path):
+    failures = [entry(1, D1, n, won=False) for n in range(2)]
+    # 包括放弃/中途尝试；重复导出和相同种子不重复计数。
+    assert decks.attempt_seeds(failures + failures, failures[0]['task_id'], D1, decks.seed_at(1, 2)) == [
+        decks.seed_at(1, n) for n in range(3)]
+    g = Game('llmplay_decks_l1_m100', seed=decks.seed_at(1, 2), deck=D1, reason='经济主力与防守', _gate=False)
+    g.env = SimpleNamespace(episode={})
+    g.obs = dict(result=1, tick=100, wave=10, wave_count=10, terminal=True)
+    g.initial_obs = {}
+    archive = tmp_path / 'winning'
+    with patch.object(delivery, '_read_progress', return_value={'archives': failures}):
+        g.export_archive(archive)
+    meta = json.loads((archive / 'meta.json').read_text())
+    assert meta['deck_seed_attempts'] == 3
+    assert meta['deck_attempt_seeds'] == [decks.seed_at(1, n) for n in range(3)]
+    restored = Game.load_archive(archive)
+    assert restored.deck_attempt_seeds == meta['deck_attempt_seeds']
+    g.env = None
+    g.close()
+    restored.close()
+
+
+def test_decks_native_archive_uses_original_cards_without_fixed_deck_index(tmp_path):
+    g = Game('llmplay_decks_native_l40_m100', seed=decks.seed_at(40, 0, native=True), _gate=False)
+    g.env = SimpleNamespace(episode={})
+    g.obs = dict(result=1, tick=100, wave=10, wave_count=10, terminal=True)
+    g.initial_obs = {}
+    g.ops = [dict(action={'type': 'plant', 'packet': 7, 'row': 0, 'col': 0}, tick=0, end_tick=0, ok=True)]
+    archive = tmp_path / 'native-win'
+    g.export_archive(archive)
+    meta = json.loads((archive / 'meta.json').read_text())
+    assert meta['task']['deck'] == [] and meta['opening'] == []
+    assert meta['environment_task']['conveyor_start'] == 'original'
+    assert meta['environment_task']['fog_observation'] == 'human_v2'
+    assert delivery.progress()['native']['llmplay_decks_native_l40_m100']['wins'] == 1
+    g.env = None
+    g.close()

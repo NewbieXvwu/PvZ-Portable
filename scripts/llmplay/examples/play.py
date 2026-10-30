@@ -21,14 +21,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--shard", type=int)
     parser.add_argument("--shards", type=int)
-    parser.add_argument("--deck", required=True, help="按当前地形和配额自行设计的植物编号列表，逗号分隔")
-    parser.add_argument("--reason", required=True, help="经济/主力/防守/应急/地形专用卡的核心思路")
+    parser.add_argument("--deck", help="按当前地形和配额自行设计的植物编号列表，逗号分隔")
+    parser.add_argument("--reason", default="", help="经济/主力/防守/应急/地形专用卡的核心思路")
     args = parser.parse_args()
     todo = next_task(shard=args.shard, shards=args.shards)
     print("当前该做：%s" % json.dumps(todo, ensure_ascii=False))
     item = todo["item"]
     task_id, seed = item["task_id"], item["seed"]
-    deck = [int(card) for card in args.deck.split(",")]
+    if item["layer"] == "decks" and item["action"] != "resume" and (not args.deck or not args.reason):
+        parser.error("扩卡组主线须提供--deck与--reason；传送带支线由引擎发牌")
+    deck = [] if item["layer"] == "native" else [int(card) for card in (args.deck or "").split(",") if card]
     game = (Game.load_archive(out_dir() / item["archive"]) if item["action"] == "resume" else
             Game(task_id, seed=seed, deck=deck, reason=args.reason))
     with game:
