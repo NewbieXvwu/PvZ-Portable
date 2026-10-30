@@ -343,3 +343,29 @@ A1/A2/B3的最优点都在第11轮，第12轮分别反弹0.000410/0.000248/0.000
 `curriculum.log`显示r52在08:32:52开始门禁，08:57:41通过，09:03:09在组边界激活；09:14:39出现r52/r53被r54取代、跳过训练和门禁的记录。后者是WSL重启后的队列续接记录，不代表r52此前四候选从未训练或此前门禁未执行。r53没有可用四候选曲线，epoch建议仅以r52为依据。
 
 本次仅移入已实现训练代码、只读分析现存日志、追加本任务书和日记。没有新增校验、manifest、JSON中间文件或实验脚本，没有运行测试、训练、全量重放/重包、重新构建引擎；没有修改qc、看门狗、stop_curr、生产启动文件、状态或队列。部署仍交主控：从deploy20取本次 `scripts/train_rollout_policy.py` 到现行cq工作树；引擎继续沿用deploy19，启动并行度保持1。提交推送deploy20后停下等主控。
+
+## 2026-10-30：deploy20 部署包与台式机引擎准备
+
+主控已确定双训练不做、epoch先不改。本分支合入最新 `origin/fognative` 的 `e89d0488`，最终运行源码固定为合并提交 **`f1cc69167c4d941982cf77f21dfab8fff18142a1`**，其中包含deploy19和本任务的组装/计算重叠。后续提交只补部署脚本及交付记录，脚本REV与构建源码均指向这一个完整运行版本。
+
+整局原生启用依据为Mac已完成的45种子A/B，详见合入的 `task172-fog-native.md`：跨路径胜负翻转0/90、波数差2/90，v6子样本判定不变；雾/夜/白天单局耗时分别约减少80%/56%/51%。夜间和白天的比较旧侧被强制走Python，现网原本已有原生整局路径，不能把这两个降幅当作相对当前生产的新增收益。本机不重复A/B。
+
+新增待安装的 `scripts/qc_deploy20.sh` 和薄入口 `scripts/deploy20_at_boundary.sh`。沿用deploy19的组边界暂停、旧代码备份、真实旧启动函数提取、失败回滚与显式 `--rollback`；前驱为实际安装的deploy19（源码e7543899）。原有部署状态/调度记录格式沿用，不新增校验、manifest或JSON中间文件。
+
+启动使用 `artifacts/production/deploy20/pvz-portable`，去掉 `--no-native-games`，显式打开 `--native-games`。继续使用 `--training-parallelism 1`、原12epoch配方、obs-v3、v6门禁、min-eval-units4及现有A/B和采集份额。deploy20尚未激活时，看门狗提取到的新启动函数仍转用实际deploy19启动函数；回滚恢复备份代码与旧启动函数，不回退控制器状态、种子offset或账本。
+
+供主控安装与部署的命令（本任务未执行）：
+
+```sh
+R=$HOME/PvZ-search
+git -C "$R" fetch origin deploy20
+git -C "$R" show origin/deploy20:scripts/qc_deploy20.sh > "$HOME/pvz-logs/qc_deploy20.sh"
+git -C "$R" show origin/deploy20:scripts/deploy20_at_boundary.sh > "$HOME/pvz-logs/deploy20_at_boundary.sh"
+bash "$HOME/pvz-logs/deploy20_at_boundary.sh"
+```
+
+一条命令回滚：`bash "$HOME/pvz-logs/qc_deploy20.sh" --rollback`。备份位置沿用同类部署规则，记录于 `~/pvz-logs/deploy20.latest`。未将脚本写入生产日志目录，也未运行组边界助手或操作qc、看门狗、stop_curr。
+
+构建沿用 `~/pvz-logs/build19.sh` 的Release/Ninja、`PVZ_DEBUG=OFF`、`PVZ_ROLLOUT_BLAS=ON`与prodint16既有PGO目录。独立detached工作树为 `~/PvZ-search/.claude/worktrees/build20`，固定在上述源码提交；构建目录为其 `build/`。配置与构建均以Nice10运行，四种大小写代理环境变量均设为 `http://127.0.0.1:7890`，编译 `-j 4 --target pvz-portable`。构建日志在 `~/pvz-logs/build20.log`；完成后引擎复制到 `~/PvZ-search/artifacts/production/deploy20/pvz-portable`，不入git。
+
+台式机构建已成功结束（命令退出0），新引擎已复制到上述deploy20稳定路径。未运行引擎对局、门禁或额外校验，未覆盖deploy19引擎；二进制和构建日志只留本机。源码REV继续固定f1cc6916，本次交付提交仅添加待安装脚本和记录，未部署。提交推送后停下等主控。
