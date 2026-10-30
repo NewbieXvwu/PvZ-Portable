@@ -121,3 +121,11 @@ python3 scripts/llmplay/build_package.py \
 构建直接输出了合并后的cycle/layer和完成数，未另做存档扫描、复验、解包自检或引擎对局。原始 `~/llm_runs/llmplay4_partial/out/` 保留供task105后续导入，没有删除或改写。
 
 代码提交 `2e1127aa` 已推送到 `origin/llmplay5`，交付记录随后在同分支追加。
+
+## task189：2026-10-30 最终交回续接
+
+`~/pvz-logs/llmplay_returns/llmplay5_20261030_1626/out/` 的最终进度已按原 `--partial` 入口合入现有 carry：1705条记录，cycle2/layerD，A28/28、B28/28、C18/18、D/E0/28。只读进度与诊断结论，没有重放；旧透视雾局保留历史成绩，新建雾关仍为task187的human_v2。PROMPT/README同步为从D层续跑。
+
+已覆盖重打 `~/pvz-logs/llmplay5/llmplay_pkg.7z.001`（5631568字节，单卷），引擎与资源原样沿用；相关carry筛选4项测试通过，均设8GB虚拟内存上限。
+
+task105现有入口在 `llmimport` 工作树：`scripts/import_llm_run.py`（SHA回执增量）→ `scripts/task105_import_batch.py --completed-index ... --staged-manifest ...` 合并队列→adaptive/register。首次SHA默认仍需重放，本任务明确“不重放”，尚待用户明确是否允许链内首次重放；未绕过验证入库。task105服务仍照常运行，尚未导入本批，故原始解包目录保留，未执行清理；如需停止/重启服务由用户操作。
