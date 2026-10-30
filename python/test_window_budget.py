@@ -51,10 +51,11 @@ def test_disk_bounded_token_cache_streams_uncached_validation(tmp_path):
     db.execute('CREATE TABLE sources (source TEXT,rows BLOB,n INTEGER)')
     db.execute('INSERT INTO sources VALUES (?,?,?)',(source,np.array([1,3],np.int32).tobytes(),2)); db.commit(); db.close()
     np.save(tmp_path/'split/unseen.npy',np.array([False,True]))
-    budget=tmp_path/'budget.json'; budget.write_text(json.dumps(dict(train_row_fraction=1,sidecar_max_bytes=1<<30)))
+    budget=tmp_path/'budget.json'; budget.write_text(json.dumps(dict(train_row_fraction=1,sidecar_max_bytes=1<<30,preview_rows=1)))
     tokens(Namespace(sources=tmp_path/'split',out=tmp_path/'tokens',budget=budget),lambda:False)
     store=SparseTokens(tmp_path/'tokens')
-    assert store.meta['stored_rows']==1
+    assert store.meta['stored_rows']==2 and store.meta['heldout_rows']==1
+    path.unlink()  # Both train and common preview remain readable without original frames on Mac.
     for i,row in enumerate((1,3)):
         for key,value in frame_tokens(frames[row-1]).items():
             np.testing.assert_array_equal(store.sample(i)[key],value)

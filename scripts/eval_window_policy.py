@@ -85,6 +85,7 @@ def main():
     parser.add_argument('--device', default='cpu')
     parser.add_argument('--peer-out', type=Path, action='append', default=[], help='compare these trained runs in the same input/token pass')
     parser.add_argument('--preview-rows', type=int, default=0, help='publish a uniform heldout prefix, then continue the complete heldout set')
+    parser.add_argument('--cached-preview-only', action='store_true', help='Mac handoff: evaluate the cached prefix without original frame archives; report partial')
     args = parser.parse_args()
     recipe = load_recipe(args.recipe, 'training')
     row_fraction = json.loads(args.training_budget.read_text())['train_row_fraction'] if args.training_budget else 1.0
@@ -103,13 +104,15 @@ def main():
     terrains = ['day', 'night', 'pool', 'fog', 'roof', 'unknown']
     data_dir = Path(recipe['data'])
     frozen = args.deck_holdout.parent / 'raw' if args.deck_holdout else None
+    excluded = set(json.loads((args.tokens/'ready.json').read_text())['excluded_sources']) if args.cached_preview_only else None
     def observe(path, rows):
         nonlocal position
         metadata = path.parent / 'meta.json'
         level = json.loads(metadata.read_text()).get('context', {}).get('level') if metadata.exists() else None
         terrain = terrain_for_level(level) if level is not None else 'unknown'
         # Archives whose frames are gone keep their pack rows, but neither side can score them.
-        keep = (frozen / path.relative_to(data_dir)).exists() if frozen else path.exists()
+        keep = (str(path.relative_to(data_dir)) not in excluded if excluded is not None else
+                (frozen / path.relative_to(data_dir)).exists() if frozen else path.exists())
         spans.append((position, position + len(rows), terrains.index(terrain), keep))
         position += len(rows)
     data = read_pack(args.pack, data_dir, observe, merge_dir=args.merge_dir)
@@ -173,13 +176,19 @@ def main():
         print(json.dumps(dict(stage='complete' if complete else 'preview', rows=state['next_row'],
                               heldout_rows=len(validation), models=[str(folder) for folder, _, _ in models])), flush=True)
     with torch.inference_mode():
-        for start in range(state['next_row'], len(validation), args.batch_size):
+        limit = preview_count if args.cached_preview_only else len(validation)
+        while state['next_row'] < limit:
+            start = state['next_row']
             if interrupted:
                 save(); raise SystemExit(75)
-            idx = validation[start:start + args.batch_size]
+            end = min(start + args.batch_size, limit, preview_count if start < preview_count else limit)
+            idx = validation[start:end]
             planted = plant[idx].bool()
             pk, cell = packets[idx].long(), cells[idx].long()
             packet_info = info[idx]
+            tokens = token_store.batch(idx, args.device) if token_store is not None else None
+            if args.cached_preview_only:
+                terrain_of[idx] = tokens['terrain'].cpu().numpy()
             exposed = np.array([key.tobytes() in seen for key in deck_keys(packet_info[:, :, 0].numpy())])
             masks = dict(all=np.ones(len(idx), dtype=bool), seen=exposed, unseen=~exposed)
             for terrain, name in enumerate(terrains):
@@ -187,7 +196,6 @@ def main():
                 masks['seen/' + name] = masks[name] & exposed
                 masks['unseen/' + name] = masks[name] & ~exposed
             # Decode/collate public tokens and read board rows once for all compared models.
-            tokens = token_store.batch(idx, args.device) if token_store is not None else None
             b, s = boards.batch(idx, args.device), scalars.batch(idx, args.device)
             public_info, labelled_packet = packet_info.to(args.device), pk.clamp(min=0).to(args.device)
             for _folder, model, groups in models:
@@ -205,13 +213,13 @@ def main():
             state['next_row'] = start + len(idx)
             if router is not None:
                 state['routing'] = router.tolist()
-            if start % (args.batch_size * 64) == 0:
+            if (start // args.batch_size) % 64 == 0:
                 save()
             if args.preview_rows and not state.get('preview_published') and state['next_row'] >= preview_count:
                 state['preview_published'] = True
                 save(); publish(False)
     save()
-    publish(True)
+    publish(not args.cached_preview_only)
 
 
 if __name__ == '__main__':

@@ -24,6 +24,7 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest, replace=F
     tokens = state / 'decision-data/tokens'
     mask = split / 'unseen.npy'
     focused = 'target_training_rows' in manifest
+    desktop = manifest.get('desktop_arms', [arm['name'] for arm in manifest['arms']])
     budget_path = state / 'decision-data/throughput/ready.json'
     common = dict(revision=revision, code_root=str(code_root), host_gib=5, gpu_gib=0, slice_seconds=900,
                   kind='prepare', recipe=str(recipe_path))
@@ -73,15 +74,17 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest, replace=F
                 budget_flags = ['--training-budget', str(budget_path)]
                 job['command'] += ['--resident-training-rows', *budget_flags, '--budget-arm', arm['name']]
                 job['evaluate'] += [*budget_flags, '--device', 'cuda', '--preview-rows', str(manifest['preview_rows'])]
-                job['defer_evaluation'] = arm['name'] != 'cnn_entity'
+                job['enabled'] = arm['name'] in desktop
+                job['defer_evaluation'] = arm['name'] != 'cnn_entity' and len(desktop) > 1
                 job['after_jobs'] = []
-                if arm['name'] == 'cnn_entity':
+                if arm['name'] == 'cnn_entity' and len(desktop) > 1:
                     job['after_jobs'] = [f'r42_{name}_s1' for name in ('cnn64', 'v3_small')]
                     job['evaluation_peers'] = list(job['after_jobs'])
                     for peer in ('cnn64', 'v3_small'):
                         job['evaluate'] += ['--peer-out', str(state/'runs'/f'r42_{peer}_s1')]
     if focused:
         jobs.append(dict(common, id='decision_cleanup', priority=300, out=str(state/'decision-data/cleanup'),
+            enabled=len(desktop) == len(manifest['arms']),
             after_jobs=[f'r42_{arm["name"]}_s1' for arm in manifest['arms']],
             command=[python, str(code_root/'scripts/cleanup_decision_cache.py'), '--state', str(state),
                      '--out', str(state/'decision-data/cleanup')]))
@@ -116,10 +119,11 @@ def replan_two_day(state, recipe_path, revision, code_root, python, manifest):
     budget = dict(study=manifest['study'], epochs=manifest['epochs'], train_row_fraction=fraction,
         measured_training_rows=old['measured_training_rows'], target_training_rows=manifest['target_training_rows'],
         batch_size=manifest['batch_size'], micro_batches={arm['name']: arm['micro_batch_size'] for arm in manifest['arms']},
-        sidecar_max_bytes=old['sidecar_max_bytes'], estimated_sidecar_bytes=manifest['target_training_rows']*old['sparse_bytes_per_row_with_margin'],
+        sidecar_max_bytes=old['sidecar_max_bytes'], estimated_sidecar_bytes=(manifest['target_training_rows']+manifest['preview_rows'])*old['sparse_bytes_per_row_with_margin'],
         revision=revision, seed1_only=True, planning_window_fraction=manifest['planning_window_fraction'],
         estimated_window_hours=window_hours, estimated_preview_calendar_hours=window_hours/manifest['planning_window_fraction'],
         preview_rows=manifest['preview_rows'], heldout='unchanged; shared uniform preview then complete heldout',
+        desktop_arms=manifest.get('desktop_arms', list(rates)),
         probe_rows_per_second=rates,
         sparse_bytes_per_row_with_margin=old['sparse_bytes_per_row_with_margin'],
         reason='three seed1 arms, one epoch and common global-row hash; deadline includes one hour tokens, half hour preview, half hour restart overhead, plus 25% margin')

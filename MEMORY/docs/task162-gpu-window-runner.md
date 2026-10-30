@@ -168,6 +168,12 @@ python scripts/queue_decision_study.py \
 
 **影响范围与修法：** rowid错误限于task162研究的卡组/缺帧mask、token行映射、流式留出token和探针配对；旧错误版本尚未产出可用研究模型。生产当前包、训练权重和r52晋升链没有这次错位的代码路径，故**无需改生产、重打包、重训或撤销r52**。今后若改研究来源布局，应沿用训练器的父目录排序语义；需要重建的是依赖错误行序的研究派生物，不应重写生产包。本次不添加任何一致性校验或新清单。
 
+## Mac承接两臂（2026-10-30，等待共同子集定义）
+
+主控已指定Mac承接 `v3_small` 和 `cnn_entity`，台式机新队列不再执行这两臂，保留 `cnn64` 与可选 `resnet6`。Mac使用 `~/pvz-bench-data/r42pack/`，等本任务书发布新的子集定义后，严格沿用共同子集、划分、epoch和种子，串行运行两臂并控制进程数不超过4，再走qoder-t160c的bench_play纯学生评测流程。
+
+已将台式机旧队列的 `r42_v3_small_s1/s2`、`r42_cnn_entity_s1/s2` 四项设为 `enabled=false`，当时研究active=null，无需停进程或重启服务。重新规划队列时也请排除两臂，并更新旧seed2屏障里对这两臂的依赖。Mac的r42pack为原23,631,235行、1320段，当前没有本研究的token缓存与划分mask，请共同子集定义同时注明这两项数据的交接位置，沿用既有产物传递即可。新定义尚未发布，Mac尚未训练，不新增校验、manifest或JSON中间文件。
+
 ## 10-30 两天内取得三臂seed1阶段结果（替代八臂计划）
 
 用户要求收敛到CNN64基线、v3_small和cnn_entity混合；MoE不再重复Mac E3/task158的否定结论。现行配置直接更新原`configs/decision_r42.json`，不新增研究manifest。**本轮只排三个seed1**；CNN128、v3_medium、地形专家、MoE与所有seed2禁用，ResNet6保留为禁用的候补，三臂结果出来后再决定。task163暂缓，避免旧依赖和额外作业争抢两天空档。
@@ -189,3 +195,17 @@ python scripts/queue_decision_study.py \
 资源与交付：只暂停/重装独立研究服务，Nice10、MemoryHigh4GiB、MemoryMax5GiB、CPUQuota150%、12GiB主存/8GiB显存预留及既有让路规则保持。没有改qc、看门狗、stop_curr、生产配方或状态。相关小CPU用例在Nice10、8GB虚拟内存限制下通过，覆盖全局行号/常量平面缓存、三臂队列、共享评测中断续跑与模型提前交接；没有全量验收或新运行时校验。实际固定代码与入队状态随后追加。
 
 **11:03:11已实际部署：** 代码/服务/三份配方/既有预算与队列均锁定 **`b0d33790285ff1ae32e661f9fcc6868e25f591d2`**，固定检出位于`~/pvz-logs/gpu-window/code/<该SHA>/`；服务active，MainPID **11934**，Nice10、MemoryHigh4GiB、MemoryMax5GiB、CPUQuota150%实际配置不变。启用队列为既有split（已完成）、tokens、三个seed1、cleanup共6项；其他31项禁用，未新增作业JSON文件。CNN64旧断点保留在`runs/r42_cnn64_s1_before_2day/resume.pt`，未接入新训练。token准备优先级5，随后CNN64=10、v3_small=20、cnn_entity=30；最后一个臂训练完成后联合评测，cleanup等全量评测完成。重装时生产仍在训练，研究等待下一空档，没有在Agent前台构建token或读取全量数据。按入队时刻折算，阶段结果预期 **10-31 11:15至11-01 00:46（北京时间）**；48小时目标截止为11-01 11:03。这个区间是预算估计，不是已实测的新吞吐，也不代表全量留出完工时间。
+
+### 11:07起合并Mac并行分工（覆盖上节的三臂台式机调度）
+
+推送时发现远端新增`0c35c99e` / `f8e511d8` / `2d95caf3`，明确主控已让Mac承接v3_small/cnn_entity，并已禁用台式机旧两臂。两边原先并行工作，台式机重排曾把它们重新启用；发现后立即再次禁用，期间生产一直训练，**两臂没有在台式机启动**。保留双方追加记录并合并，按Mac交接执行，避免重复训练。**共同三臂定义不变，实际分工改为台式机CNN64、Mac的v3_small/cnn_entity；台式机ResNet6候补仍禁用。** 原seed2全部禁用，不再有等待16个旧作业的屏障；cleanup也禁用，等Mac取用并完成评测后另行清理。CNN64自行运行GPU阶段/全量留出评测，不等Mac模型返传。
+
+给Mac的共同定义与既有交接位置（不新增manifest/JSON文件）：
+
+- 数据/划分：原r42 **23,631,235行、1320段**，按source父目录排序的合并全局行号；训练种子切分仍为对所有seed数值排序后`random.Random(0).shuffle`，前10%为种子留出，另排除现有`unseen.npy`。训练保留函数为同版`python/pvz_research_data.py::keep_training_rows`，固定盐162、比例 **0.002355305998583711**。三臂全部 **seed1、1 epoch、batch256、init=null**；配方只因本地data/out路径及CPU/CUDA/MPS设备不同而调整，不另抽样、不重划卡组留出。
+- 台式机根目录 **`~/pvz-logs/gpu-window/`** 下：`decision-data/split/unseen.npy`（22.54MiB）和`split/ready.json`是已完成划分；`split/sources.sqlite`是原source行映射；**`decision-data/throughput/ready.json`是本次预算**，不要误用同目录历史八臂`report.json`中的旧比例；`decision-recipes/r42_{cnn64,v3_small,cnn_entity}_s1.json`是同源三份配方。
+- **`decision-data/tokens/`的既有`.bin`与`ready.json`** 是待准备的公共数值token缓存。为满足Mac没有原帧的情况，准备作业现在同时缓存**训练子集 + 同一约32,768行均匀留出前缀**，估计约 **435MiB**（仍受原2GiB上限约束），不是全量token缓存。`stored_row.bin`保留原全局行号；ready内记录完整可评分留出行数和`excluded_sources`（原帧已缺失的来源），供Mac保持同一可评分集合。已完成的raw研究视图仍在`split/raw/`，不会被清理。
+- Mac可用同版`eval_window_policy.py --cached-preview-only --preview-rows 32768 --tokens <公共缓存>`，配合同一mask/预算和本地r42pack，先评测完全相同的前缀；该模式从缓存取地形，不因Mac没有原帧把整批留出误丢弃，输出始终为`evaluation_complete=false`。完整留出分母仍记录在结果中；要继续全量token评测还需原公开帧或完整相应token，不能把训练缓存当全量缓存。台式机CNN64前缀与之严格一致，不需要三模型在同一台机器上才能比较。
+- 跨机仍按项目既有 **HF transfer** 传上述数值产物及现有划分/预算元数据，不能传游戏资源或图片。本次仅公布已有/待生成路径，**没有声称token缓存已经ready、已经上传HF或Mac已经完成训练**；公共缓存由生产空档作业生成，Mac侧按其承接任务取用。CNN64模型仍在原Mac交接位置。
+
+24–38小时仍是按三臂都以较慢台式机16.22行/秒计算的保守工作量预算；按最新分工不会再让两个token臂排台式机空档，但Mac整体完工还依赖缓存交接及其实际吞吐，不能把未启动的Mac速度写成实测。阶段前缀完整评分与全量留出完工继续分开报告。缓存增加前缀后，准备预留1小时也仍是估计；未来空档明显低于15%或交接延迟时需据实更新，不能保证不可用的GPU窗口。

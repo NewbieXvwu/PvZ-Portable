@@ -137,6 +137,18 @@ def tokens(args, stopped):
         random.Random(0).shuffle(seeds)
         validation_seeds = set(seeds[:int(len(seeds)*.1)])
         unseen = np.load(args.sources/'unseen.npy', mmap_mode='r')
+    preview_rows = budget.get('preview_rows', 0)
+    heldout_rows, excluded_sources = 0, []
+    if preview_rows:
+        position = 0
+        for source, n in connection.execute('SELECT source,n FROM sources ORDER BY source'):
+            if not (args.sources/'raw'/source).exists():
+                excluded_sources.append(source)
+            elif archive_seed(Path(source).parent.parent.name) in validation_seeds:
+                heldout_rows += n
+            else:
+                heldout_rows += int(np.count_nonzero(unseen[position:position+n]))
+            position += n
     def save():
         for name, handle in handles.items():
             handle.flush(); state['sizes'][name] = handle.tell()
@@ -145,10 +157,13 @@ def tokens(args, stopped):
         rows = np.frombuffer(raw_rows, np.int32)
         selected = np.ones(len(rows), dtype=bool)
         if budget_path:
-            selected &= keep_training_rows(np.arange(state['rows'], state['rows']+len(rows)), budget['train_row_fraction'])
-            selected &= ~unseen[state['rows']:state['rows']+len(rows)]
+            indices = np.arange(state['rows'], state['rows']+len(rows))
+            validation = np.array(unseen[state['rows']:state['rows']+len(rows)])
             if archive_seed(Path(source).parent.parent.name) in validation_seeds:
-                selected[:] = False
+                validation[:] = True
+            selected = keep_training_rows(indices, budget['train_row_fraction']) & ~validation
+            if preview_rows and heldout_rows:
+                selected |= keep_training_rows(indices, min(1, preview_rows/heldout_rows)) & validation
         if not (args.sources/'raw'/source).exists():
             # Retired archive: no tokens here, but its rows keep the pack numbering intact.
             state['rows'] += len(rows); state['archives'] += 1
@@ -196,6 +211,7 @@ def tokens(args, stopped):
     write_json(out / 'ready.json', dict(rows=state['rows'], archives=state['archives'], tokens=state['tokens'],
         upstream='2a866783', input='original compact public frames for exact r42 source_row-1', sparse_float32=True,
         bytes=sum(state['sizes'].values()), stored_rows=state['stored'], schema=3,
+        preview_rows=preview_rows, heldout_rows=heldout_rows, excluded_sources=excluded_sources,
         evaluation='uncached rows stream from source archives; release cache after all decision jobs complete'))
 
 

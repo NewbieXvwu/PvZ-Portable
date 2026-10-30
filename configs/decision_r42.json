@@ -1,6 +1,7 @@
 {
   "study": "task162_r42_decision_2day",
   "seeds": [1],
+  "desktop_arms": ["cnn64"],
   "epochs": 1,
   "batch_size": 256,
   "target_training_rows": 49152,

@@ -217,9 +217,9 @@ def test_decision_manifest_enqueues_focused_seed1_comparison(tmp_path):
         assert all('--resident-training-rows' in job['command'] for job in group)
         assert all(load_recipe(Path(job['recipe']))['batch_size'] == 256 for job in group)
     hybrid = next(job for job in trained if job['id'] == 'r42_cnn_entity_s1')
-    assert hybrid['evaluate'].count('--peer-out') == 2
-    assert hybrid['after_jobs'] == ['r42_cnn64_s1', 'r42_v3_small_s1']
-    assert sum(job.get('defer_evaluation', False) for job in trained) == 2
+    assert [job['id'] for job in trained if job['enabled']] == ['r42_cnn64_s1']
+    assert not next(job for job in trained if job['id']=='r42_cnn64_s1')['defer_evaluation']
+    assert not hybrid['enabled'] and not hybrid['after_jobs']
 
 
 def test_decision_resident_rows_preserve_planes_and_global_identity():
