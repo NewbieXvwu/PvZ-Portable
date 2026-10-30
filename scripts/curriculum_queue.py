@@ -1018,6 +1018,7 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
             '--verify-samples', '9', '--student-candidates', '2',
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
+            *(['--value-roof', str(args.value_roof)] if getattr(args, 'value_roof', None) else []),
             '--manifest', str(manifest), '--task-id', task_id,
             *(['--task-json', json.dumps(task_definition)] if task_definition is not None else []),
             *seed_args,
@@ -2420,6 +2421,8 @@ def main() -> None:
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
+    parser.add_argument('--value-roof', type=Path,
+                        help='leaf value net for roof levels 41-50 (including the boss); default --value')
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--workers', type=int, default=16,

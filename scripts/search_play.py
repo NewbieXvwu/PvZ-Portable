@@ -63,6 +63,17 @@ MAX_ACTIONS = 3000
 
 _W: dict = {}
 
+ROOF_BACKGROUNDS = frozenset({"BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
+
+
+def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str:
+    """Roof levels (and the boss) score leaves with ``--value-roof``; every other terrain keeps ``--value``."""
+    if not roof_value_path:
+        return value_path
+    from pvz_constants import background_for_level
+    roof = background_for_level(int(task["level"])) in ROOF_BACKGROUNDS
+    return roof_value_path if roof else value_path
+
 
 def _export_values(value_path: str, static_value_path: str | None):
     """Export once in the driver; workers keep paths instead of torch value networks."""
@@ -968,6 +979,8 @@ def parser():
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
+    p.add_argument("--value-roof", help="value net that scores the leaves on roof levels 41-50 "
+                   "(including the boss); default --value")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")
     p.add_argument("--task-json", help="inline curriculum task definition (task193; no derived manifest)")
@@ -1066,8 +1079,10 @@ def main() -> None:
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
-    task_seeds = (json.loads(args.task_json) if args.task_json else
-                  load_training_task(Path(args.manifest), args.task_id))["seeds"]
+    task_definition = (json.loads(args.task_json) if args.task_json else
+                       load_training_task(Path(args.manifest), args.task_id))
+    task_seeds = task_definition["seeds"]
+    args.leaf_value = _leaf_value(args.value, args.value_roof, task_definition)
     if args.seed_list:
         seeds = [int(s) for s in args.seed_list.split(',') if s.strip()]
         unknown = [s for s in seeds if s not in set(task_seeds)]
@@ -1106,7 +1121,7 @@ def main() -> None:
               f"{args.worker_memory_bytes / GIB:.2f} GiB, headroom "
               f"{args.memory_headroom_bytes / GIB:.2f} GiB, every {args.grow_interval:g}s)",
               flush=True)
-    value_keep, value_files = _export_values(args.value, args.static_value)
+    value_keep, value_files = _export_values(args.leaf_value, args.static_value)
     _release_freed_memory()
     # Student weights remain shared on fork; value weights live only in engine processes.
     start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"

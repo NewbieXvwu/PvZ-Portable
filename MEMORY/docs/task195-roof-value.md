@@ -162,3 +162,16 @@ McNemar 精确双侧 p = 0.219（n=6，gain 5 / harm 1）。两臂总胜率 13.9
    屋顶之外也可以按同样方式补弱地形；但注意扫描标签是老师自打的结果，只适合补叶值排序。
 4. 环境限制：本机 CUDA 在带 `ulimit -v` 的 shell 里不可用（`cudaGetDeviceCount` 报 OOM），
    gpuwindow 队列里的训练不受影响（实际 device=cuda）。
+
+## 7. 部署（task199 = deploy23，已写好未执行）
+
+候选落在 `~/PvZ-search/artifacts/value_net/v5roof/model.pt`。生产老师按任务关卡现算地形
+（`pvz_constants.background_for_level`：41–49 屋顶、50 Boss）选叶值：屋顶用 v5roof，其余仍 v5。
+路由在 `search_play.py`（`--value-roof`，解析结果写进 config.json 的 `leaf_value`），
+`curriculum_queue.py` 只透传；门禁 / 选拔走 `--arms fast`，不读叶值，未改。
+
+`scripts/qc_deploy23.sh` 照 deploy22 的模式写：start_qc 只含 tmux 一行，无回退分支、
+无 `${ENV:-默认值}`；`watchdog_extract_start` 实测 rc=0 且打印出 tmux 行（deploy22 的
+`COLD_RATES=${PVZ_GPT_COLD_RATES:-…}` 正是看门狗拒绝重启的原因）。最小演练：L41 屋顶一局
+（`--value-roof`）`leaf_value=v5roof` 并取胜；L7 白天同参数 `leaf_value=v5`。回滚启动命令
+从 deploy22 脚本提取（脚本内先把未绑定的 COLD_RATES 写法规范化成字面路径）。
