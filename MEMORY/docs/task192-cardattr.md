@@ -5,4 +5,6 @@
 - 卡槽及所选卡的落点输入拼接属性；棋盘追加“属性矩阵 × 原植物 one-hot×血量”投影。保留原输入，旧模型照常加载；新臂仅用 Python 推理。
 - `cnn64_cardattr_s1` 从现有 `r42_cnn64_s1` 配方派生，只开启属性（另改输出/代码来源）；复用同一包、mask、全局行哈希及预算：目标 49,152 行、1 epoch、seed1、同一约 32,768 行留出前缀。无重打包、重新划分或新增中间清单。
 - 对照与新臂在同一输入遍历中评分，原 CNN64 结果不改写；新臂现有 `heldout.json.comparisons` 报 unseen、五地形及交叉分组。准确率差为新臂−CNN64，NLL 差越负越好；前缀报告保持 `evaluation_complete=false`。
-- 10 项相关 `-k` CPU 测试通过（约6秒），先看 free -g 并设 `ulimit -v 8000000`。待固定提交后入 gpuwindow 队列，严格排在现有 CNN64 臂完成之后；尚无泛化收益结论。
+- 10 项相关 `-k` CPU 测试通过（约6秒），先看 free -g 并设 `ulimit -v 8000000`。已实际入 gpuwindow 队列，固定代码 `52421eab4f2faf998f3d02f45c2c839aec638b8f`，`after_jobs=[r42_cnn64_s1]`、优先级11；仅新增所需作业/研究配方，未重启服务。尚无泛化收益结论。
+
+结果位置：`~/pvz-logs/gpu-window/runs/cnn64_cardattr_s1/heldout.json`；原配方和队列项均保留。
