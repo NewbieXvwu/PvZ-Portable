@@ -20,8 +20,8 @@
   "context": false,
   "obs": "v2timer",
   "soft_temperature": 0.05,
-  "cell_soft_weight": 3,
-  "spread_weight": 8,
+  "cell_soft_weight": 0,
+  "spread_weight": 0,
   "spread_cap": 10,
   "save_epochs": 0,
   "lr_schedule": "cosine",
@@ -55,7 +55,7 @@
   "provenance": {
     "source_path": "recipes/dw4i2_v2timer_llm_rows_task152.json",
     "source_revision": "52887aca",
-    "notes": "task194：只用 task105 已验证通关的 GPT 整局示范行，从零训练生产 A 结构（CNN64、v2timer、identity packet head）。不含任何生产基础标签或旧示范行；雾关只取记录 fog_observation=human_v2 的局。"
+    "notes": "task194：只用 task105 已验证通关的 GPT 整局示范行，从零训练生产 A 结构（CNN64、v2timer、identity packet head、row_pool/meanmax、AdamW lr 2e-3、12 epoch cosine）。不含任何生产基础标签或旧示范行；雾关只取记录 fog_observation=human_v2 的局。GPT 档案没有老师搜索标注（targets/values 全空），因此 cell_soft_weight 与 spread_weight 两项设为 0（它们只消费这些标注），其余超参与生产 A 一致。"
   },
   "data": "/home/newbiexvwu/pvz-logs/gptbc/data",
   "labels": [],
