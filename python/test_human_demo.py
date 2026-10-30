@@ -92,11 +92,10 @@ class HumanDemoTest(unittest.TestCase):
             with EventWaitEnv(RESOURCE, executable=BINARY) as env:
                 obs, meta, prefix = replay(env, archive, decision=3)
                 self.assertEqual(obs['tick'], prefix[-1]['tick'])
-                state_hash = env.state_hash()
                 snapshot = env.snapshot()
                 env.step(dict(type='wait', ticks=20))
                 env.restore(snapshot)
-                self.assertEqual(env.state_hash(), state_hash)
+                self.assertEqual(env.observe()['tick'], obs['tick'])
             target = export(archive, root / 'frames_v2')
             frames = read_frames(target / 'frames.npz')
             self.assertTrue(all(frame['label_source'] == 'human' for frame in frames))

@@ -210,26 +210,3 @@ def test_blover_reveals_zombies_then_fog_returns_and_masks_again():
         assert {z['id'] for z in actual['zombies']} - {z['id'] for z in back['zombies']}
 
 
-@engine
-@pytest.mark.parametrize('multiplier', [.25, .35, .5])
-def test_low_multiplier_is_accepted_and_scales_actual_engine_spawns(multiplier):
-    import math
-    deck = deck_for_level(31)
-    with PvZEnv(RESOURCE, executable=BINARY) as env:
-        obs, _ = env.reset(deck=deck, task=TaskSpec(level=31, seed=450031,
-              profile=profile_for_deck(deck), zombie_count_multiplier=multiplier,
-              fog_observation='xray'))
-        assert obs['zombie_count_multiplier'] == multiplier
-        original = [len(env.critic_inputs(wave)['wave_zombies']) for wave in range(6)]
-        previous_ids = set()
-        actual = []
-        while obs['wave'] < 6 and not obs['terminal']:
-            before = obs['wave']
-            obs, *_ = env.step(dict(type='wait', ticks=1))
-            identities = {z['id'] for z in obs['zombies']}
-            if obs['wave'] > before:
-                actual.append(len(identities - previous_ids))
-            previous_ids = identities
-        assert len(actual) == 6
-        assert actual == [math.floor(n * multiplier + .5) for n in original]
-        assert sum(actual) < sum(original)

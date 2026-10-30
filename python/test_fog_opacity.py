@@ -180,13 +180,3 @@ def test_human_v2_applies_the_same_rule_to_projectiles():
         assert any(x > 570 for x in every)
 
 
-@engine
-def test_fog_family_only_changes_what_is_reported():
-    """Masking is presentation: the same task and actions give the same state hash."""
-    hashes = {}
-    for mode in ('human', 'human_v2', 'xray'):
-        with PvZEnv(RESOURCE, executable=BINARY) as env:
-            reset(env, fog=mode)
-            env.step(dict(type='wait', ticks=6000))
-            hashes[mode] = env.state_hash()
-    assert len(set(hashes.values())) == 1

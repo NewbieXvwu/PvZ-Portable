@@ -18,7 +18,6 @@ from typing import Iterator
 import pvz_env
 from pvz_common import ENV_PROTOCOL_VERSION
 from pvz_env import (
-    LoadoutContext,
     PlayerProfileContext,
     PvZEnv,
     SeedCard,
@@ -178,9 +177,6 @@ class LifecycleGuardTests(unittest.TestCase):
     def test_operations_before_reset_are_rejected(self) -> None:
         with self.assertRaisesRegex(RuntimeError, "call reset"):
             self.env.step({"type": "wait", "ticks": 60})
-        with self.assertRaisesRegex(RuntimeError, "call reset"):
-            with self.env.speculative():
-                pass
 
     def test_snapshot_ids_must_be_positive_integers(self) -> None:
         for snapshot_id in (0, -1, "1", 1.0, True):
@@ -272,7 +268,7 @@ class SharedConstantTests(unittest.TestCase):
         self.assertIs(pvz_env.ENV_PROTOCOL_VERSION, ENV_PROTOCOL_VERSION)
         self.assertEqual(set(pvz_env.__all__), {
             "BRANCH_BATCH_LIMIT", "ENV_PROTOCOL_VERSION",
-            "LoadoutContext", "PlayerProfileContext", "PvZEnv", "SeedCard",
+            "PlayerProfileContext", "PvZEnv", "SeedCard",
             "SimulatorExited", "TaskSpec", "branch_action_token", "training_task",
         })
 
@@ -284,17 +280,6 @@ class SharedConstantTests(unittest.TestCase):
         self.assertEqual(task.profile, PlayerProfileContext())
         self.assertEqual(task.loadout_mode, "fixed")
         self.assertEqual(task.forced_seeds, ())
-
-    def test_loadout_context_reads_the_observation(self) -> None:
-        context = LoadoutContext.from_observation({"loadout_context": {
-            "scene": 1, "seed_slot_count": 6, "free_slots": 4,
-            "available_plants": [0, 1], "forced_seeds": [2], "zombie_roster": [0, 3],
-        }})
-
-        self.assertEqual(context.scene, 1)
-        self.assertEqual(context.available_plants, (0, 1))
-        self.assertEqual(context.forced_seeds, (2,))
-        self.assertEqual(context.zombie_roster, (0, 3))
 
 
 class ObservationDerivedInputTests(unittest.TestCase):

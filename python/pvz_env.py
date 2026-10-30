@@ -6,20 +6,18 @@ import json
 import math
 import os
 from collections import deque
-from contextlib import contextmanager
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from typing import Any, Iterator, Sequence
+from typing import Any, Sequence
 
 from pvz_common import ENV_PROTOCOL_VERSION, OOM_SCORE_WORKER
 
 __all__ = [
     "BRANCH_BATCH_LIMIT",
     "ENV_PROTOCOL_VERSION",
-    "LoadoutContext",
     "PlayerProfileContext",
     "PvZEnv",
     "SeedCard",
@@ -148,28 +146,6 @@ def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -
         profile=PlayerProfileContext(),
         zombie_count_multiplier=zombie_count_multiplier,
     )
-
-
-@dataclass(frozen=True)
-class LoadoutContext:
-    scene: int
-    seed_slot_count: int
-    free_slots: int
-    available_plants: tuple[int, ...]
-    forced_seeds: tuple[int, ...]
-    zombie_roster: tuple[int, ...]
-
-    @classmethod
-    def from_observation(cls, observation: dict[str, Any]) -> "LoadoutContext":
-        context = observation["loadout_context"]
-        return cls(
-            scene=context["scene"],
-            seed_slot_count=context["seed_slot_count"],
-            free_slots=context["free_slots"],
-            available_plants=tuple(context["available_plants"]),
-            forced_seeds=tuple(context["forced_seeds"]),
-            zombie_roster=tuple(context["zombie_roster"]),
-        )
 
 
 @dataclass(frozen=True)
@@ -562,44 +538,17 @@ class PvZEnv:
         if not self._command("DEMO_BEGIN").get("ok"):
             raise RuntimeError("simulator does not support human demonstrations")
 
-    def state_hash(self) -> str:
-        response = self._command("STATE_HASH")
-        if not response.get("ok") or not response.get("state_hash"):
-            raise RuntimeError("simulator could not hash the current state")
-        return response["state_hash"]
-
     def human_input(self) -> dict[str, Any]:
         response = self._command("HUMAN_POLL")
         if not response.get("ok"):
             raise RuntimeError("human input requires a visible demonstration session")
         return response
 
-    def demo_click_packet(self, index: int) -> None:
-        if type(index) is not int:
-            raise TypeError("packet index must be an integer")
-        response = self._command(f"DEMO_CLICK_PACKET {index}")
-        if not response.get("ok"):
-            raise RuntimeError("packet injection requires a visible demonstration session")
-
-    def demo_click_cell(self, col: int, row: int) -> None:
-        if type(col) is not int or type(row) is not int:
-            raise TypeError("cell coordinates must be integers")
-        response = self._command(f"DEMO_CLICK_CELL {col} {row}")
-        if not response.get("ok"):
-            raise RuntimeError("cell injection requires a visible demonstration session")
-
     def privileged_state(self) -> dict[str, Any]:
         response = self._command("PRIV")
         if response.get("observation") is None:
             raise RuntimeError(f"environment returned no state: {response}")
         return response["observation"]
-
-    def critic_inputs(self, wave_index: int) -> dict[str, Any]:
-        response = self._command(f"CRITIC_INPUTS {int(wave_index)}")
-        if (not response.get("ok") or type(response.get("wave_timer")) is not int
-                or not isinstance(response.get("wave_zombies"), list)):
-            raise RuntimeError(f"environment returned invalid critic inputs: {response}")
-        return response
 
     def snapshot_fast(self) -> int:
         """Search-only snapshot: preserve wrapper income/time without exporting the root again."""
@@ -717,28 +666,6 @@ class PvZEnv:
         if not self._command(f"LOAD_VALUE_NET {int(static)} {json.dumps(filename)}").get("ok"):
             raise RuntimeError(f"simulator rejected value network: {filename}")
 
-    def leaf_values(self, *, income: float | None = None, static: bool = False,
-                    trace_path: str | os.PathLike[str] | None = None) -> list[float]:
-        """Score the current Board without exporting an observation; optional feature trace for tests."""
-        if income is None:
-            income = self._annotate_observation({"tick": self._tick, "wave_timer": 0})["sun_income_rate"]
-        if not math.isfinite(income):
-            raise ValueError("income must be finite")
-        suffix = f" {json.dumps(str(Path(trace_path).resolve()))}" if trace_path is not None else ""
-        response = self._command(f"LEAF_VALUES {int(static)} BOARD {income:.17g}" + suffix)
-        if not response.get("ok") or len(response.get("values", [])) != 1:
-            raise RuntimeError(f"simulator rejected LEAF_VALUES: {response}")
-        return response["values"]
-
-    def leaf_feature_values(self, path: str | os.PathLike[str], count: int, *, static: bool = False) -> list[float]:
-        """Score a float32 feature file produced by an external simulator or an oracle test."""
-        if type(count) is not int or not 1 <= count <= 4096:
-            raise ValueError("feature count must be from 1 to 4096")
-        response = self._command(f"LEAF_VALUES {int(static)} FEATURES {count} {json.dumps(str(Path(path).resolve()))}")
-        if not response.get("ok") or len(response.get("values", [])) != count:
-            raise RuntimeError(f"simulator rejected LEAF_VALUES: {response}")
-        return response["values"]
-
     def static_scores(self, snapshot_id: int, actions: list[dict[str, Any]], income: float) -> list[float | None]:
         """Restore, act, score each branch in the engine; rejected actions return None in place."""
         if type(snapshot_id) is not int or snapshot_id not in self._sun_history_snapshots:
@@ -803,13 +730,6 @@ class PvZEnv:
         result = self._command(f'DECK_WARNINGS {len(cards)}' + ''.join(f' {card}' for card in cards))
         if not result.get('ok'):
             raise RuntimeError('DECK_WARNINGS requires a reset board and a rebuilt simulator')
-        return result
-
-    def deck_pool(self) -> dict:
-        """CrazyDavePickSeeds' candidate cards for the current level (engine query, no pick)."""
-        result = self._command('DECK_POOL')
-        if not result.get('ok'):
-            raise RuntimeError('DECK_POOL requires a reset board and a rebuilt simulator')
         return result
 
     def _student_options(self, student_history, trace_path) -> str:
@@ -974,21 +894,6 @@ class PvZEnv:
             self._sun_production_history = deque(base_history)
             self._sun_history_start_tick = base_start
         return branches
-
-    @contextmanager
-    def speculative(self) -> Iterator[int]:
-        if not self._reset_done or self.episode is None:
-            raise RuntimeError("call reset() before speculative()")
-        operation_count = len(self.episode["operations"])
-        final_state = self.episode["final_state"]
-        snapshot_id = self.snapshot()
-        try:
-            yield snapshot_id
-        finally:
-            self.restore(snapshot_id)
-            del self.episode["operations"][operation_count:]
-            self.episode["final_state"] = final_state
-            self.release_snapshot(snapshot_id)
 
     @staticmethod
     def _state_record(observation: dict[str, Any]) -> dict[str, Any]:

@@ -12,7 +12,6 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from export_value_net import export_value_net
 from pack_training_rows import packed_load
 from pvz_env import PvZEnv, TaskSpec, profile_for_deck
 from pvz_frame_store import write_frames, encoder_signature
@@ -103,9 +102,6 @@ class BungeeEngineTest(unittest.TestCase):
             net = RolloutNet(8, obs='v2bungee').eval()
             export_student(net, root / 'student.bin')
             env.load_rollout_net(root / 'student.bin')
-            value = ValueNet(8, encoder_version=3).eval()
-            export_value_net(value, root / 'value.bin')
-            env.load_value_net(root / 'value.bin')
             plants = tuple((33, row, col) for row in range(5) for col in range(3, 9))
             plants += tuple((3, row, col) for row in range(5) for col in range(3, 9))
             plants += tuple((39, row, col) for row in range(5) for col in range(3))
@@ -131,14 +127,6 @@ class BungeeEngineTest(unittest.TestCase):
                     with torch.inference_mode():
                         hidden, context = net.encode(board[None], scalars[None])
                         maximum_error = max(maximum_error, abs(float(net.plant(context)[0, 0]) - native['plant']))
-                    value_board, value_scalars = encode_frame(public, 3)
-                    probability = env.leaf_values(trace_path=root / 'value.bin')[0]
-                    np.testing.assert_array_equal(np.fromfile(root / 'value.bin', dtype='<f4'),
-                        np.concatenate([value_board.flatten().numpy(), value_scalars.numpy()]))
-                    self.assertAlmostEqual(env.leaf_feature_values(root / 'value.bin', 1)[0], probability, places=6)
-                    with torch.inference_mode():
-                        maximum_error = max(maximum_error,
-                            abs(float(torch.sigmoid(value(value_board[None], value_scalars[None]))[0]) - probability))
                     samples += 1
                     seen |= active
                 if seen.all():

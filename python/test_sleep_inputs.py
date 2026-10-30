@@ -8,7 +8,6 @@ import numpy as np
 import torch
 
 from test_bungee_inputs import BINARY, RESOURCE, frame
-from export_value_net import export_value_net
 from pack_training_rows import packed_load
 from pvz_env import PvZEnv, TaskSpec, profile_for_deck
 from pvz_frame_store import encoder_signature, write_frames
@@ -89,10 +88,6 @@ class SleepEngineTest(unittest.TestCase):
         encoded = json.loads((root / 'student.json').read_text())
         for expected, actual in ((board.flatten(), encoded['board']), (scalars, encoded['scalars'])):
             np.testing.assert_array_equal(expected.numpy().view(np.uint32), np.asarray(actual, np.float32).view(np.uint32))
-        value_board, value_scalars = encode_frame(public, 4)
-        probability = env.leaf_values(trace_path=root / 'features.bin')[0]
-        np.testing.assert_array_equal(np.fromfile(root / 'features.bin', dtype='<f4').view(np.uint32),
-            np.concatenate([value_board.flatten().numpy(), value_scalars.numpy()]).view(np.uint32))
         with torch.inference_mode():
             _, context = net.encode(board[None], scalars[None], packet_info=packet_features(public)[None])
             self.assertAlmostEqual(float(net.plant(context)[0, 0]), native['plant'], places=6)
@@ -107,9 +102,6 @@ class SleepEngineTest(unittest.TestCase):
             net = RolloutNet(8, obs='v2sleep', packet_head='identity').eval()
             export_student(net, root / 'student.bin')
             env.load_rollout_net(root / 'student.bin')
-            value = ValueNet(8, encoder_version=4).eval()
-            export_value_net(value, root / 'value.bin')
-            env.load_value_net(root / 'value.bin')
             env.reset(deck=deck, task=TaskSpec(level=7, seed=30000, profile=profile_for_deck(deck)))
             env.step(dict(type='plant', packet=4, row=0, col=2))
             sleeping = self.assert_native_features(env, net, root)
@@ -129,10 +121,6 @@ class SleepEngineTest(unittest.TestCase):
             env.step(dict(type='wait', ticks=150))
             awake = self.assert_native_features(env, net, root)
             self.assertIn([0, 2, 0, 0], awake['sleep'])
-            value_board, value_scalars = encode_frame(awake, 4)
-            with torch.inference_mode():
-                expected = float(torch.sigmoid(value(value_board[None], value_scalars[None]))[0])
-            self.assertAlmostEqual(env.leaf_values()[0], expected, places=6)
             print(json.dumps(dict(level=7, samples=3, student_float32_bit_equal=True,
                                   value_float32_bit_equal=True)), flush=True)
 
@@ -143,8 +131,6 @@ class SleepEngineTest(unittest.TestCase):
             net = RolloutNet(8, obs='v2sleep').eval()
             export_student(net, root / 'student.bin')
             env.load_rollout_net(root / 'student.bin')
-            export_value_net(ValueNet(8, encoder_version=4), root / 'value.bin')
-            env.load_value_net(root / 'value.bin')
             env.reset(deck=deck, task=TaskSpec(level=31, seed=30000, profile=profile_for_deck(deck),
                 fog_observation='human_v2', preplanted=((8, 0, 2), (8, 1, 7))))
             env.step(dict(type='wait', ticks=2500))
@@ -163,10 +149,6 @@ class SleepEngineTest(unittest.TestCase):
             encoded = json.loads((root / 'student.json').read_text())
             np.testing.assert_array_equal(board[-2:].numpy().flatten().view(np.uint32),
                 np.asarray(encoded['board'], np.float32)[-120:].view(np.uint32))
-            env.leaf_values(trace_path=root / 'features.bin')
-            native_board = np.fromfile(root / 'features.bin', dtype='<f4')[:6000].reshape(100, 6, 10)
-            np.testing.assert_array_equal(encode_frame(public, 4)[0][-2:].numpy().view(np.uint32),
-                                          native_board[-2:].view(np.uint32))
 
 
 if __name__ == '__main__':

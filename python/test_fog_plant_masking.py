@@ -136,30 +136,24 @@ def canonical(observation):
 
 
 def collect(binary, fog):
-    """Reset, settle the fog, then harvest public observations and state hashes."""
-    frames, hashes = [], []
+    """Reset, settle the fog, then harvest public observations."""
+    frames = []
     with PvZEnv(RESOURCE, executable=binary) as env:
         reset(env, fog=fog, preplanted=PREPLANTED)
         env.step(dict(type='wait', ticks=1000))
         for _ in range(8):
             observation, *_ = env.step(dict(type='wait', ticks=500))
             frames.append(canonical(observation))
-            hashes.append(env.state_hash())
-    return frames, hashes
+    return frames
 
 
 @engine
 @old_engine
 def test_human_and_xray_observations_are_bit_identical_to_pre_b5():
-    """The task66 dui-pai: human / xray / None must not change one byte.
-
-    state_hash is NOT compared here: under production qc load the pre-existing reset
-    particle race (task70 A2 probe) splits the save-image hash line on either engine,
-    while the observations -- every logic field -- stay identical.
-    """
+    """The task66 dui-pai: human / xray / None must not change one byte."""
     for fog in ('human', 'xray', None):
-        old_frames, _ = collect(OLD_BINARY, fog)
-        new_frames, _ = collect(BINARY, fog)
+        old_frames = collect(OLD_BINARY, fog)
+        new_frames = collect(BINARY, fog)
         assert new_frames == old_frames, fog
 
 
@@ -167,8 +161,8 @@ def test_human_and_xray_observations_are_bit_identical_to_pre_b5():
 @old_engine
 def test_human_v2_changes_only_the_masked_plant_fields():
     """Against the pre-B5 engine, the only allowed diffs are the five fields -> -1."""
-    old_frames, _ = collect(OLD_BINARY, 'human_v2')
-    new_frames, _ = collect(BINARY, 'human_v2')
+    old_frames = collect(OLD_BINARY, 'human_v2')
+    new_frames = collect(BINARY, 'human_v2')
     assert len(old_frames) == len(new_frames)
     for old_raw, new_raw in zip(old_frames, new_frames):
         if old_raw == new_raw:
@@ -209,8 +203,7 @@ def privileged_logic(binary, fog):
 def test_masking_is_presentation_same_privileged_state():
     """Same actions drive both engines to identical logic states, in every fog mode;
     within one engine the privileged state is fog-mode independent (masking is
-    presentation only).  state_hash would race under qc load (A2 probe), the logic
-    state cannot."""
+    presentation only)."""
     for fog in ('human', 'human_v2', 'xray'):
         old_state = privileged_logic(OLD_BINARY, fog)
         new_state = privileged_logic(BINARY, fog)

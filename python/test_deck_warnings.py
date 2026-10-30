@@ -1,4 +1,4 @@
-"""task28：整组选卡检查（SeedChooserScreen::OnStartButton）与 CrazyDavePickSeeds 候选池的引擎查询。"""
+"""task28：整组选卡检查（SeedChooserScreen::OnStartButton）的引擎查询。"""
 import os
 from pathlib import Path
 import sys
@@ -45,26 +45,6 @@ class DeckWarningsTest(unittest.TestCase):
     def test_normal_deck_has_no_warnings(self):
         self.assertEqual(self.warnings(12, (0, 1, 2, 3, 4, 5, 7, 8, 9, 11)), [])
         self.assertEqual(self.warnings(7, (0, 1, 2, 3, 4, 5, 7)), [])
-
-    def test_crazy_dave_pool_follows_engine_rules(self):
-        self.env.reset(deck=(0, 1, 2, 3, 4, 5), task=TaskSpec(level=7, seed=1,
-                                                              profile=profile_for_deck((0, 1, 2, 3, 4, 5)), playthrough=2))
-        day_pool = self.env.deck_pool()['crazy_dave_pool']
-        self.assertIn(1, day_pool)                 # sunflower is always a candidate
-        self.assertNotIn(37, day_pool)             # umbrella leaf: no bungee/catapult on 1-7
-        self.assertNotIn(27, day_pool)             # blover: no balloon, no fog
-        self.assertNotIn(40, day_pool)             # upgrades are never candidates
-
-        self.env.reset(deck=(0, 1, 2, 3, 4, 16), task=TaskSpec(level=31, seed=1,
-                                                               profile=profile_for_deck((0, 1, 2, 3, 4, 16)), playthrough=2))
-        fog_pool = self.env.deck_pool()['crazy_dave_pool']
-        self.assertIn(27, fog_pool)                # fog levels unlock blover
-
-        self.env.reset(deck=(0, 1, 2, 3, 4, 33), task=TaskSpec(level=41, seed=1,
-                                                               profile=profile_for_deck((0, 1, 2, 3, 4, 33)), playthrough=2))
-        roof_pool = self.env.deck_pool()['crazy_dave_pool']
-        self.assertIn(33, roof_pool)               # flower pot is needed on the roof
-        self.assertNotIn(22, roof_pool)            # torchwood is excluded on the roof
 
 
 if __name__ == '__main__':
