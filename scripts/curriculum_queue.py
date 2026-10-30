@@ -396,7 +396,8 @@ def measure_worker_bytes(args, item: dict) -> int:
                               demo_archive=item.get('demo_archive'),
                               demo_decision=item.get('demo_decision'),
                               future_seeds=(item.get('future_seeds') or [])[:1],
-                              task_definition=item.get('task_definition'))
+                              task_definition=item.get('task_definition'),
+                              seed_offset=item.get('seed_offset'))
         process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                    text=True)
         peak = 0
@@ -998,7 +999,8 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                 future_seeds: list[int] | None = None,
                 save_candidates: int = 0, upper_workers: int | None = None,
                 per_worker_bytes: int = 0, headroom_bytes: int = 0,
-                task_definition: dict | None = None) -> list[str]:
+                task_definition: dict | None = None,
+                seed_offset: int | None = None) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -1011,7 +1013,8 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                      '--demo-archive', str(demo_archive), '--demo-decision', str(demo_decision),
                      '--future-seeds', ','.join(str(seed) for seed in future_seeds or [])]
     else:
-        seed_args = ['--seed-offset', str(offset), '--seeds', str(games)]
+        seed_args = ['--seed-offset', str(offset if seed_offset is None else seed_offset),
+                     '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
             '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
@@ -2058,12 +2061,32 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
             task, extra = materialize(base, cell, live_catalog, state['round'] + 1, state)
             offset = state['offsets'].get(base, 0)
             while offset + games > len(cell['seeds']):
-                renew_start_seeds(cell, start_seed_ledger, renew_size)
-            task['seeds'] = task['seeds'] if extra.get('demo_archive') else list(cell['seeds'])
+                try:
+                    block = renew_start_seeds(cell, start_seed_ledger, renew_size)
+                except (SeedPoolExhausted, ValueError, OSError) as error:
+                    # Pool exhausted, ledger corrupt, or ledger directory unwritable: only this
+                    # cell misses out; the rest of the round still runs (task98's lesson).
+                    changes.append(f'{base}: seed renewal failed ({error})')
+                    break
+                else:
+                    changes.append(f'{base}: seeds renewed +{block[1] - block[0]} from '
+                                   f'[{block[0]},{block[1]}) (table {len(cell["seeds"])}, '
+                                   f'segments {len(cell.get("seed_blocks") or [])})')
+            if offset + games > len(cell['seeds']):
+                changes.append(f'{base}: seeds exhausted (offset {offset} + {games} > '
+                               f'{len(cell["seeds"])}); group skipped')
+                continue
+            seed_offset = None
+            if not extra.get('demo_archive'):
+                # Only this group's window goes into --task-json: the cell keeps accumulating
+                # blocks, and the whole table would eventually exceed Linux's 128 KiB argument cap.
+                task['seeds'] = list(cell['seeds'][offset:offset + games])
+                seed_offset = 0
             label = label_for(state['round'] + 1, base, multiplier,
                               start=extra.get('demo_decision')) + f'_o{offset}'
             item = dict(base=base, multiplier=multiplier, task_id=task['task_id'], offset=offset,
-                        offset_key=base, games=games, manifest=str(next(iter(manifests.values()))),
+                        seed_offset=seed_offset, offset_key=base, games=games,
+                        manifest=str(next(iter(manifests.values()))),
                         label=label, task_definition=task,
                         save_candidates=save_candidates_for(cell, task, save_candidates_levels), **extra)
             if extra.get('demo_archive'):
@@ -2180,7 +2203,8 @@ def _run_group(args, state, item, round_index, per_worker):
                           future_seeds=item.get('future_seeds'),
                           save_candidates=item.get('save_candidates', 0),
                           upper_workers=upper, per_worker_bytes=per_worker,
-                          headroom_bytes=background, task_definition=item.get('task_definition'))
+                          headroom_bytes=background, task_definition=item.get('task_definition'),
+                          seed_offset=item.get('seed_offset'))
     started = time.time()
     item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
@@ -2589,7 +2613,8 @@ def main() -> None:
                                                        demo_decision=item.get('demo_decision'),
                                                        future_seeds=item.get('future_seeds'),
                                                        save_candidates=item.get('save_candidates', 0),
-                                                       task_definition=item.get('task_definition'))))
+                                                       task_definition=item.get('task_definition'),
+                                                       seed_offset=item.get('seed_offset'))))
         # The pack command this controller would run at the end of the round: reviewable before
         # a round is spent, and the only place the recipe's row options become a real command.
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))

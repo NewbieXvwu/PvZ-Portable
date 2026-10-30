@@ -121,17 +121,47 @@ def test_deploy22_planner_quotas_and_seed_offsets_without_manifest(tmp_path):
         768, 48, start_seed_ledger=ledger, random_deck_share=.25, demo_start_share=.25, live_catalog=catalog)
     assert sum(p['games'] for p in plan if 'demo_archive' not in p) == 192
     assert sum(p['games'] for p in plan if 'demo_archive' in p) == 192
-    seed_sets = [set(p.get('future_seeds', p['task_definition']['seeds'][p['offset']:p['offset']+p['games']])) for p in plan]
+    seed_sets = [set(p.get('future_seeds') or p['task_definition']['seeds']) for p in plan]
     assert len(set.union(*seed_sets)) == sum(map(len, seed_sets))
     assert all('task_definition' in p and p['offset_key'] == p['base'] for p in plan)
-    first = plan[0]; base = first['base']
+    # Whole-game live cells carry only this group's window; the cell table keeps accumulating.
+    whole = [p for p in plan if 'demo_archive' not in p]
+    assert all(p['seed_offset'] == 0 and len(p['task_definition']['seeds']) == p['games']
+               for p in whole)
+    first = whole[0]; base = first['base']
     saved['offsets'][base] = first['games']
     saved['cells'][base]['mult_index'] = 3
     next_plan, _ = queue.plan_round(saved, {}, {}, [1., 1.25], {'placeholder': ROOT / 'configs/gate_v5_panel.json'},
         768, 48, start_seed_ledger=ledger, random_deck_share=.25, demo_start_share=.25, live_catalog=catalog)
     again = next(p for p in next_plan if p['base'] == base)
-    assert again['offset'] == first['games']
-    assert set(again['task_definition']['seeds'][again['offset']:again['offset']+again['games']]).isdisjoint(seed_sets[0])
+    assert again['offset'] == first['games'] and again['seed_offset'] == 0
+    assert set(again['task_definition']['seeds']).isdisjoint(first['task_definition']['seeds'])
+
+
+def test_deploy24_live193_seed_renewal_failure_skips_only_that_group(tmp_path, monkeypatch):
+    saved = state(); catalog = {}
+    for level in (1, 2):
+        base = f'rd193_l{level}_train'
+        saved['cells'][base] = dict(level=level, family='gpt_live', last_round=0, live193=True,
+            random_deck_cell=True, windows={}, mult_index=2, ladder=list(live.LADDER), seeds=[])
+        catalog[base] = dict(kind='random', options=[dict(
+            task_id=base, level=level, deck=[0, 1, 2, 3, 4, 7], zombie_count_multiplier=1.)])
+    exhausted = 'rd193_l1_train'
+
+    def renew(cell, ledger, size=256):
+        if cell is saved['cells'][exhausted]:
+            raise queue.SeedPoolExhausted('test pool exhausted')
+        cell['seeds'] = cell['seeds'] + list(range(200000000, 200000000 + size))
+        return [200000000, 200000000 + size]
+
+    monkeypatch.setattr(queue, 'renew_start_seeds', renew)
+    plan, changes = queue.plan_round(saved, {}, {}, [1., 1.25],
+        {'placeholder': ROOT / 'configs/gate_v5_panel.json'}, 768, 48,
+        start_seed_ledger=tmp_path / 'seeds.json',
+        random_deck_share=.25, demo_start_share=.25, live_catalog=catalog)
+    assert exhausted not in {item['base'] for item in plan}
+    assert any(exhausted in change and 'failed' in change for change in changes)
+    assert plan and all(len(item['task_definition']['seeds']) == item['games'] for item in plan)
 
 
 def test_deploy22_import_cli_updates_existing_index_without_scanning(tmp_path):

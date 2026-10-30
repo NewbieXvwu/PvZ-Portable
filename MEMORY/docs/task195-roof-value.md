@@ -175,3 +175,18 @@ McNemar 精确双侧 p = 0.219（n=6，gain 5 / harm 1）。两臂总胜率 13.9
 `COLD_RATES=${PVZ_GPT_COLD_RATES:-…}` 正是看门狗拒绝重启的原因）。最小演练：L41 屋顶一局
 （`--value-roof`）`leaf_value=v5roof` 并取胜；L7 白天同参数 `leaf_value=v5`。回滚启动命令
 从 deploy22 脚本提取（脚本内先把未绑定的 COLD_RATES 写法规范化成字面路径）。
+
+## 8. deploy24（task200：deploy22 两处潜在故障）
+
+1. **动态格续种逐格隔离**：`plan_round` 的 live193 分支照起点格（task98/99）的做法包住
+   `renew_start_seeds`。`SeedPoolExhausted`、账本损坏/池不符、账本目录不可写都只让这一格
+   本轮领不到（`changes` 记原文后 break），随后按「种子不足」跳过该组，其余组照常规划；
+   续种成功也记块区间与表长，和起点格日志一致。
+2. **`--task-json` 只带本组窗口**：live193 整局格的 `task['seeds']` 从「格子累计全表」改为
+   `cell['seeds'][offset:offset+games]`，item 记 `seed_offset=0`；`command_for` 用它替代
+   绝对偏移（`offset` 仍用于 label 与 offsets 账本）。命令不再随轮数增长（48 个种子的
+   任务定义约 297 字节），写入 state 的组定义也一并变小。
+
+验证：planner 用例现在断言整局格 `len(task seeds) == games` 且 `seed_offset == 0`；新增一例
+让某格续种抛 `SeedPoolExhausted`，断言该格被跳过、其余格仍出计划。`scripts/qc_deploy24.sh`
+已写好未执行：`start_qc` 仅 tmux 一行，`watchdog_extract_start` 实测 rc=0。
