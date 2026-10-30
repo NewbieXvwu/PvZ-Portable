@@ -293,3 +293,89 @@ test_deck_warnings 40 passed；test_qc_watchdog+test_obs_recording 16 passed；t
 test_incremental_pack -k round2 skip（本机无该 pack，同基线）；test_fog_observation 非引擎用例同基线；
 配方相关 recipe 用例 2 passed；测试收集 25 项无错误。deploy18 基线固有的 2 个 test_deploy17 失败已随批次 4 修复。
 未部署、未连台式机。
+
+---
+
+## 第三轮（会话 1，进 deploy20 之前：purgeunused）
+
+基线 `origin/deploy19` @ 8eb35d86；`origin/deploy20` 已到 9b80ee22 但未合入，本分支在其之下独立推进。
+指令：活代码文件里 `git grep` 全仓库零引用的函数 / 类 / 命令行参数 / 配置字段（**测试里的引用算零**），
+连同只测它们的测试一起删；每批活模块 import + `curriculum_queue.py --help` + 相关 `pytest -k`
+（`timeout 300`、`ulimit -f 2000000`、一次一个文件）后提交推送；不加任何新校验。
+分支 `purgeunused`，7 个提交，相对 `origin/deploy19`：**43 文件 +172 / −1188 行**，删除 2 个文件
+（`python/test_human_demo_conveyor.py`、`recipes/panel_v2.json`）。
+
+### 批次 1（a333d170）没人用的 panel 配方路径
+`pvz_recipe` 的 `PANEL_DEFAULTS`、`materialize_recipe()`、`panel_args()`、`validate()` 的 panel 分支、
+`PATH_FIELDS` 里的 panel 条目；冻结的 `recipes/panel_v2.json`；`qc_deploy18.sh` / `qc_deploy19.sh`
+`FILES=(...)` 里对它的拷贝。panel 配置在 v6 之后已全部由 `pvz_promotion` 生成，配方里不再出现。
+
+### 批次 2（c07bdb01）零引用符号
+`pvz_env.demo_key` / `screenshot`；`pvz_research_data.extra_validation` / `decision_tokens` / `decision_contract`；
+`pvz_student_tokens.TokenStore.packed_arrays` 与 `TokenBuilder`；`pvz_frame_store.encode_v2lite_frames`；
+`pvz_value_net.potential_phi`；`pvz_wait_events.summarize_wait_records`；`pvz_constants.gridsquare_label`；
+`render_episode._pad`；`train_rollout_policy._spilled_array` 及检查点里从未写入的 `soft_weight` / `ema`。
+
+### 批次 3（15205268）只有测试在用的 env 接缝
+`pvz_env`：`LoadoutContext`、`state_hash`、`demo_click_packet`、`demo_click_cell`、`critic_inputs`、
+`leaf_values`、`leaf_feature_values`、`deck_pool`、`speculative` 及其 `__all__` 条目；对应的
+`test_env_protocol` / `test_human_demo` / 两个雾测试 / `test_sleep_inputs` / `test_bungee_inputs` /
+`test_deck_warnings` 断言按“只删依赖被删符号的部分”处理，保留其余真实覆盖；
+整文件删除 `python/test_human_demo_conveyor.py`（需引擎 + `headless=False` 真人点击，无人环境必失败）。
+
+### 批次 4（e2f5d007）Python 回放 / 等待参考实现
+`search_play._python_rollout_reference()`（C++ rollout 上线后只剩对拍用途）与 `test_cpp_rollout._full_rollout`；
+`pvz_wait_events` 的整条参考语义 `PublicState` / `public_state()` / `triggers()` / `reference_wait()` /
+`LEFT_ZONE_MAX_X` 与只测它们的 `WaitEventSemanticsTests`。生产侧只留 `validate_wait_result()`
+（`pvz_event_env` 仍在用）。C++ rollout 的叶子收益 / 恢复 / RNG 用例保留，改为直接调用 `env.rollout`。
+
+### 批次 5a（63bb3f0a）测试专用读写器
+`select_student.score_rows()`＋其用例；`pvz_frame_store.save_arrays()`（测试改用内部同一容器 `_save`）；
+`pvz_research_data.episode_tokens()`、`frame_crc()` 与 `SparseTokenWriter.finish(source_frame=...)`
+——写侧仍产生 attachment，但没有任何活代码读它，CRC 绑定是纯自校验；
+`pack_training_rows.packed_load()` 移到 `python/pack_test_support.py`（8 个测试文件同一行改 import；
+脚本里只留生产打包路径）。
+
+### 批次 5b（6789f818）value-only 的 v1..v5 编码器
+`pvz_value_net.featurize()` / `encode_frame()` / `_featurize_reference()`。生产喂价值网走
+`featurize_numpy` 与学生历史编码器（`pvz_student_observation` / `pvz_frame_store.encode_student_frames`），
+这三个只有测试在调用。`test_value_encoder` 收成 `load_value_net` 的版本分派与未知编码拒绝；
+bungee/sleep/timer 三个输入测试去掉 `encode_frame` 对拍，改断言 `StudentHistory` 的对应尾部通道；
+`test_student_observation` 的 oracle 改用生产 `pvz_rollout_policy.features`。
+
+**签名必须不动：** `encoder_signature()` 把 `featurize_numpy` / `features` / `target_values` /
+`encode_frames` 的源码与两模块的大写常量一起哈希，删除 / 改动这些会改写全部历史档案的缓存身份。
+删除前后实测 `encoder_signature()` 仍为 `5c344826…424f008`，`v2bungee` 仍为 `82609c46…2bdb6f`，
+故 `featurize_numpy` 的 docstring（仍提到已删的 `_featurize_reference` 与 `perf_rollout_check.py`）
+**故意保持原样**。`ENCODER_V1..V5` 字符串同样保留：它们写在已有检查点的 `encoder` 字段里。
+
+### 批次 5c（babbb02c）无人引用的常量
+`pvz_promotion.V5_PANEL`（gate v5 删除后无读者）；`pvz_student_tokens.TOKEN_KINDS` 与 `TokenStore` 类
+（全仓库零引用，含测试）；`render_episode.ZOMBIE_GLYPH`（僵尸渲染走别的路径，只有 `PLANT_GLYPH` 在用）；
+`make_roof_panel.TRAIN_LEVELS`（只在测试里作为期望值，测试改为直接写出冻结的关卡集合）。
+
+### 保留项（一行理由）
+- `pvz_wait_events.validate_wait_result()`：`pvz_event_env` 生产路径每次 wait 都校验原生元数据。
+- `pvz_research_data.SparseTokens` / `SparseTokenWriter` / `capture_frame`、`pvz_student_tokens.frame_tokens`：
+  采集侧（`search_play --obs-v3`）仍在写 token sidecar，`pvz_token_blocks` 仍在读。
+- `pack_training_rows.verify()` / `assert_payload_equal()`：增量 pack 测试用来防损坏数据进训练（第二轮决定保留）。
+- `pvz_recipe` 的 `provenance` 字段：11 份配方里的来源说明，代码只接受不校验（第二轮已定保留字段本身）。
+- `featurize_numpy` 的旧 docstring / `ENCODER_V*` 字符串：见批次 5b 的签名约束。
+
+### 验证
+- 每批：活模块 import（含 `search_play`、`train_rollout_policy`、`pvz_event_env`、`pack_test_support`）、
+  `python3 scripts/curriculum_queue.py --help`；签名断言 `encoder_signature()` / `v2bungee` / `v2timer` 实跑核对。
+- 定向 pytest（`timeout 300`、`ulimit -f 2000000`）：`test_student_selection`、`test_frame_store_container`、
+  `test_obs_recording`（引擎用例 skip）、`test_rowpool_aux`、`test_bungee_inputs`、`test_compact_loader`、
+  `test_identity_training`、`test_observation_upgrade`、`test_human_demo`、`test_student_observation`、
+  `test_value_encoder`、`test_sleep_inputs`、`test_timer_inputs`、`test_frame_store_chunks`、
+  `test_compact_boards`、`test_episode_hand`、`test_roof_panel`、`test_promotion`、`test_incremental_pack` 全过。
+- 偏差：批次 5a 有一次把 `test_bungee_inputs` 与 `test_compact_loader` 放在同一条命令里跑，其余均一次一个文件；
+  未整套运行 `test_curriculum_queue` / `test_curriculum_pipeline` / `test_qc_resilience`。
+
+### 说明
+- 本机（Mac）缺隔离引擎 `studentv3net/build-studentv3net`，`test_obs_recording` 的 compact_bytes 用例与
+  bungee/sleep 的引擎对拍按原约定 skip；被改写的 npz-meta 断言只做了收集通过，需在台式机上首次跑通确认。
+- 删除 `_featurize_reference` 后，“torch 索引版编码器与 numpy 版逐位一致”的 oracle 不复存在；
+  该对拍的原调用方 `scripts/perf_rollout_check.py` 早已删除，numpy 版仍是生产唯一实现。
+- 未部署、未连接台式机生产。
