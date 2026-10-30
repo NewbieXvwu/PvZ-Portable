@@ -12,7 +12,7 @@ DEPLOY14_ENGINE = '76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a78
 DEMO_LABEL = 'llm_demo_decisions'
 
 
-def demo_paths(data: Path, imported: Path, results=(1,)):
+def demo_paths(data: Path, imported: Path, results=(1,), runs=None):
     ledger = json.loads((imported / 'merged_progress.json').read_text())
     selected = {}
     for row in ledger['archives']:
@@ -33,9 +33,16 @@ def demo_paths(data: Path, imported: Path, results=(1,)):
     for sha, row in sorted(selected.items()):
         relative = Path(f'seed_{row["seed"]}') / DEMO_LABEL / 'frames.npz'
         target = destination / sha
+        source = imported / 'sha256' / sha
+        meta = json.loads((source / 'meta.json').read_text())
+        if runs and not any(str(meta.get('run_id', '')).startswith(prefix) for prefix in runs):
+            continue
+        level = meta['task'].get('level', (meta.get('environment_task') or {}).get('level'))
+        if level is not None and 31 <= level <= 40 and level != 35 and (
+                (meta.get('environment_task') or {}).get('fog_observation') != 'human_v2'):
+            # Without the recorded human-view renderer the model could see through fog.
+            continue
         if not target.exists():
-            source = imported / 'sha256' / sha
-            meta = json.loads((source / 'meta.json').read_text())
             if (meta['task']['seed'] != row['seed'] or meta['outcome']['result'] != row['result']
                     or not str(meta.get('label_source', '')).startswith('llm_')):
                 raise ValueError(f'{source}: task105 provenance differs')

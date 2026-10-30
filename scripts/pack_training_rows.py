@@ -287,7 +287,7 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
     started = time.perf_counter()
     if archive_paths is None and options.get('llm_demo_import'):
         archive_paths = training_paths(data, options['labels'], options['llm_demo_import'],
-                                       options['llm_demo_results'])
+                                       options['llm_demo_results'], options.get('llm_demo_runs'))
     loaded, sources, source_archive, source_row = build_from_archives(
                                  data, set(options["labels"]), options["wait_keep"],
                                  options["label_weight"], cache_dir, options["with_context"],
@@ -384,7 +384,7 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
     started = time.perf_counter()
     catalog = {label: [] for label in options['labels']}
     for path in training_paths(data, options['labels'], options.get('llm_demo_import'),
-                               options.get('llm_demo_results', [1])):
+                               options.get('llm_demo_results', [1]), options.get('llm_demo_runs')):
         catalog.setdefault(path.parent.name, []).append(path)
     jobs, segments = [], []
     for label, paths in sorted(catalog.items()):
@@ -461,7 +461,7 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
 def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_context: bool = False,
                 obs: str = "v1", cells: bool = False, aux_horizon: int = 0, packet_head: str = "slot",
                 row_observer=None, cache_dir=None, rebuild: bool = False,
-                llm_demo_import=None, llm_demo_results=(1,)):
+                llm_demo_import=None, llm_demo_results=(1,), llm_demo_runs=None):
     """Build the pack if this exact input has none yet, then read it the way the trainer does.
 
     rebuild forces the build even when a pack exists: a changed archive of the same size would
@@ -469,8 +469,8 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
     """
     from train_rollout_policy import read_pack
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, set(labels), llm_demo_import, llm_demo_results),
-                           llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results)
+                           sources=archive_fingerprint(data, set(labels), llm_demo_import, llm_demo_results, llm_demo_runs),
+                           llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results, llm_demo_runs=llm_demo_runs)
     path = pack_path(data, options)
     if rebuild or not path.is_file():
         pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
@@ -484,7 +484,7 @@ def verify(data: Path, options: dict, out: Path) -> None:
                                  None, options["with_context"], options["obs"], 1, cells=options["cells"],
                                  aux_horizon=options["aux_horizon"], packet_head=options["packet_head"],
                                  archive_paths=training_paths(data, options['labels'], options.get('llm_demo_import'),
-                                                             options.get('llm_demo_results', [1])))
+                                                             options.get('llm_demo_results', [1]), options.get('llm_demo_runs')))
     from train_rollout_policy import read_pack
     observed = []
     actual = read_pack(out, data, lambda path, rows: observed.append((str(path.relative_to(data)), rows)))
@@ -539,6 +539,7 @@ def main() -> None:
     p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
     p.add_argument('--llm-demo-import', type=Path, help='task105 import directory; omitted disables LLM rows')
     p.add_argument('--llm-demo-results', default='1', help='accepted outcomes: 1=win, 2=loss, 0=unfinished')
+    p.add_argument('--llm-demo-runs', help='comma separated run_id prefixes to accept; omitted accepts all runs')
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
     p.add_argument("--verify", action="store_true", help="compare the pack with a fresh build")
@@ -549,10 +550,12 @@ def main() -> None:
     results = [int(value) for value in args.llm_demo_results.split(',')]
     if not results or any(value not in (0, 1, 2) for value in results):
         p.error('--llm-demo-results must contain results from 0,1,2')
-    options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
+    labels = [label for label in args.labels.split(",") if label]
+    runs = [value for value in (args.llm_demo_runs or '').split(',') if value]
+    options = pack_options(labels, args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(",")), args.llm_demo_import, results),
-                           llm_demo_import=args.llm_demo_import, llm_demo_results=results)
+                           sources=archive_fingerprint(args.data, set(labels), args.llm_demo_import, results, runs),
+                           llm_demo_import=args.llm_demo_import, llm_demo_results=results, llm_demo_runs=runs)
     if args.verify:
         if args.out is None:
             p.error("--verify needs --out")

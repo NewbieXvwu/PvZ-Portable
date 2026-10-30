@@ -382,15 +382,15 @@ def _pack_flags(options: dict) -> str:
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
          row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None,
-         llm_demo_import=None, llm_demo_results=(1,)):
+         llm_demo_import=None, llm_demo_results=(1,), llm_demo_runs=None):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels, llm_demo_import, llm_demo_results),
-                           llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results)
+                           sources=archive_fingerprint(data, labels, llm_demo_import, llm_demo_results, llm_demo_runs),
+                           llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results, llm_demo_runs=llm_demo_runs)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "

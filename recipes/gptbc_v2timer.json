@@ -1,0 +1,73 @@
+{
+  "schema_version": 1,
+  "kind": "training",
+  "epochs": 12,
+  "device": "cuda",
+  "threads": 1,
+  "precompute_workers": 2,
+  "wait_keep": 0.1,
+  "seed": 1,
+  "width": 64,
+  "arch": "cnn",
+  "label_weight": {},
+  "source_weight": {},
+  "packet_balance": 0.5,
+  "pool": "meanmax",
+  "row_pool": true,
+  "packet_head": "identity",
+  "aux_weight": 0,
+  "aux_horizon": 8,
+  "context": false,
+  "obs": "v2timer",
+  "soft_temperature": 0.05,
+  "cell_soft_weight": 3,
+  "spread_weight": 8,
+  "spread_cap": 10,
+  "save_epochs": 0,
+  "lr_schedule": "cosine",
+  "init": null,
+  "cache": true,
+  "cache_dir": "/home/newbiexvwu/pvz-logs/gptbc/cache",
+  "read_cache_dir": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/cache",
+  "dense_boards": false,
+  "row_weights": null,
+  "source_row_report": true,
+  "max_steps": null,
+  "micro_batch_size": null,
+  "train_row_fraction": 1.0,
+  "batch_size": 2048,
+  "validation_batch_size": 4096,
+  "optimizer": {
+    "name": "AdamW",
+    "lr": 0.002,
+    "weight_decay": 0.0001,
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "eps": 1e-08,
+    "amsgrad": false
+  },
+  "validation": {
+    "seed": 0,
+    "fraction": 0.1
+  },
+  "provenance": {
+    "source_path": "recipes/dw4i2_v2timer_llm_rows_task152.json",
+    "source_revision": "52887aca",
+    "notes": "task194：只用 task105 已验证通关的 GPT 整局示范行，从零训练生产 A 结构（CNN64、v2timer、identity packet head）。不含任何生产基础标签或旧示范行；雾关只取记录 fog_observation=human_v2 的局。"
+  },
+  "data": "/home/newbiexvwu/pvz-logs/gptbc/data",
+  "labels": [],
+  "out": "/home/newbiexvwu/pvz-logs/gpu-window/runs/gptbc_gpt_s1",
+  "llm_demo_import": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import",
+  "llm_demo_results": [
+    1
+  ],
+  "llm_demo_runs": [
+    "438cb30a",
+    "8024414b"
+  ],
+  "demo_row_weight": 1,
+  "demo_start_row_weight": 1
+}

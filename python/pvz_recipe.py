@@ -21,7 +21,7 @@ TRAIN_DEFAULTS = dict(
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
-    demo_row_weight=1.0, demo_start_row_weight=1.0, llm_demo_import=None, llm_demo_results=[1],
+    demo_row_weight=1.0, demo_start_row_weight=1.0, llm_demo_import=None, llm_demo_results=[1], llm_demo_runs=None,
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False, row_weights=None,
     source_row_report=False, max_steps=None, micro_batch_size=None, train_row_fraction=1.0, batch_size=2048, validation_batch_size=4096,
@@ -144,7 +144,9 @@ def validate(document, kind=None):
                 result['arch'] != 'cnn' and ':' not in result['arch']):
             raise ValueError('arch: expected cnn or module:factory')
         labels = result['labels']
-        if not isinstance(labels, list) or not labels or not all(isinstance(v, str) and v and ',' not in v for v in labels):
+        if not isinstance(labels, list) or not all(isinstance(v, str) and v and ',' not in v for v in labels):
+            raise ValueError('labels: expected nonempty list of label names')
+        if not labels and not result['llm_demo_import']:
             raise ValueError('labels: expected nonempty list of label names')
         if len(labels) != len(set(labels)):
             raise ValueError('labels: duplicate label')
@@ -175,6 +177,10 @@ def validate(document, kind=None):
                 or any(type(value) is not int or value not in (0, 1, 2) for value in outcomes)
                 or len(set(outcomes)) != len(outcomes)):
             raise ValueError('llm_demo_results: expected unique results from [0, 1, 2]')
+        runs = result['llm_demo_runs']
+        if runs is not None and (not isinstance(runs, list) or not all(
+                isinstance(value, str) and value for value in runs)):
+            raise ValueError('llm_demo_runs: expected a list of nonempty run_id prefixes')
         for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight',
                      'demo_row_weight', 'demo_start_row_weight'):
             _number(result[name], name)
@@ -258,7 +264,7 @@ def training_row_options(recipe, labels=None):
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
                 **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}),
-                **({key: recipe[key] for key in ('llm_demo_import', 'llm_demo_results')}
+                **({key: recipe[key] for key in ('llm_demo_import', 'llm_demo_results', 'llm_demo_runs')}
                    if recipe.get('llm_demo_import') else {}))
 
 
