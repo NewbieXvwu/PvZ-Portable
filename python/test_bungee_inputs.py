@@ -18,7 +18,7 @@ from pvz_frame_store import write_frames, encoder_signature
 from pvz_recipe import validate, training_row_options
 from pvz_rollout_policy import RolloutNet, export_student, features
 from pvz_student_observation import OBS_EXTRA, StudentHistory
-from pvz_value_net import ValueNet, ENCODER_V3, encode_frame, load_value_net
+from pvz_value_net import ValueNet, ENCODER_V3, bungee_features, load_value_net
 from render_episode import _frame
 
 RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
@@ -46,9 +46,6 @@ class BungeeInputsTest(unittest.TestCase):
             encode = features if version == 'v1' else StudentHistory(version).features
             for before, after in zip(left, encode(current, None)):
                 np.testing.assert_array_equal(before.numpy().view(np.uint32), after.numpy().view(np.uint32))
-        for version in (1, 2):
-            for before, after in zip(encode_frame(old, version), encode_frame(current, version)):
-                np.testing.assert_array_equal(before.numpy().view(np.uint32), after.numpy().view(np.uint32))
         board, scalars = StudentHistory('v2bungee').features(current, None)
         base, base_scalars = StudentHistory('v2boss').features(current, None)
         torch.testing.assert_close(board[:-6], base, rtol=0, atol=0)
@@ -62,9 +59,7 @@ class BungeeInputsTest(unittest.TestCase):
         self.assertEqual(extra[3, 2, 6], 1)
         self.assertEqual(extra[4, 3, 7], 1)
         self.assertEqual(extra[5, 3, 7], 1)
-        value, _ = encode_frame(current, 3)
-        torch.testing.assert_close(value[-6:], extra, rtol=0, atol=0)
-        self.assertFalse(encode_frame(old, 3)[0][-6:].any())
+        self.assertFalse(StudentHistory('v2bungee').features(old, None)[0][-6:].any())
         self.assertEqual(encoder_signature('v2boss'), 'b5d77ca232300a2d7331ae572ace07ef1c58757f3ef5e2818c3fb5a691df3bc4')
 
     def test_recipe_packs_new_observation_rows(self):
@@ -112,7 +107,7 @@ class BungeeEngineTest(unittest.TestCase):
             maximum_error = 0.0
             while observation['tick'] < 30000 and not observation['terminal']:
                 public = _frame(observation)
-                extra = encode_frame(public, 3)[0][-6:]
+                extra = bungee_features(public)
                 active = extra.flatten(1).any(1).numpy()
                 if (active & ~seen).any():
                     env.set_lean_observation(True)

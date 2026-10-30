@@ -15,7 +15,6 @@ from pvz_frame_store import encoder_signature
 from pvz_recipe import validate
 from pvz_rollout_policy import RolloutNet, export_student, warm_start_student
 from pvz_student_observation import OBS_EXTRA, StudentHistory
-from pvz_value_net import encode_frame
 
 
 def timer_frame():
@@ -79,16 +78,6 @@ class TimerInputsTest(unittest.TestCase):
         self.assertAlmostEqual(float(first[-2, 0, 0]), 16 / 48, places=6)
         self.assertAlmostEqual(float(second[-2, 0, 1]), 16 / 48, places=6)
         self.assertEqual(float(second[-2, 0, 0]), float(2 + 1) / 48)
-
-    def test_value_encoder_five_extends_four(self):
-        current = timer_frame()
-        five_board, five_scalars = encode_frame(current, 5)
-        four_board, four_scalars = encode_frame(current, 4)
-        self.assertEqual(tuple(five_board.shape), (104, 6, 10))
-        torch.testing.assert_close(five_board[:-4], four_board, rtol=0, atol=0)
-        torch.testing.assert_close(five_scalars, four_scalars, rtol=0, atol=0)
-        student, _ = StudentHistory('v2timer').features(current, None)
-        torch.testing.assert_close(five_board[-4:], student[-4:], rtol=0, atol=0)
 
     def test_old_versions_keep_their_signatures(self):
         # v2sleep 在 task145 之前就存在；新增 v2timer 不能改它的缓存签名。

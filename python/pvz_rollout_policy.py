@@ -3,7 +3,7 @@
 AlphaGo's search used a rollout policy far weaker than its main policy but about a thousand
 times faster. Here pi costs ~18 ms per step at batch size 1 (the 7.9M-parameter transformer),
 while the simulator itself costs ~1.3 ms, so look-ahead is limited by pi. This net reads the same
-public board encoding as the value network (``pvz_value_net.featurize``) and predicts pi's next
+public board encoding as the value network (``pvz_value_net.featurize_numpy``) and predicts pi's next
 action. In practice pi only ever plays ``plant(packet, row, col)`` or ``wait 60 / timeout``, so
 there are three heads: plant-or-wait, which packet, and which cell given the packet.
 

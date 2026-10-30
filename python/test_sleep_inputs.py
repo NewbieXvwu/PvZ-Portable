@@ -14,7 +14,7 @@ from pvz_frame_store import encoder_signature, write_frames
 from pvz_recipe import training_row_options, validate
 from pvz_rollout_policy import RolloutNet, export_student, features, packet_features
 from pvz_student_observation import OBS_EXTRA, StudentHistory
-from pvz_value_net import ENCODER_V4, ValueNet, encode_frame, load_value_net
+from pvz_value_net import ENCODER_V4, ValueNet, load_value_net
 from render_episode import _frame
 
 
@@ -31,9 +31,6 @@ class SleepInputsTest(unittest.TestCase):
             after = features(current, None) if version == 'v1' else StudentHistory(version).features(current, None)
             for left, right in zip(before, after):
                 np.testing.assert_array_equal(left.numpy().view(np.uint32), right.numpy().view(np.uint32))
-        for version in (1, 2, 3):
-            for left, right in zip(encode_frame(old, version), encode_frame(current, version)):
-                np.testing.assert_array_equal(left.numpy().view(np.uint32), right.numpy().view(np.uint32))
         board, scalars = StudentHistory('v2sleep').features(current, None)
         base, base_scalars = StudentHistory('v2bungee').features(current, None)
         self.assertEqual(tuple(board.shape), (113, 6, 10))
@@ -43,11 +40,7 @@ class SleepInputsTest(unittest.TestCase):
         self.assertEqual(board[-1, 0, 1], 0)
         self.assertEqual(board[-2:, 1, 2].tolist(), [1, 1])
         self.assertEqual(board[-2:].sum(), 3)
-        value, value_scalars = encode_frame(current, 4)
-        self.assertEqual(tuple(value.shape), (100, 6, 10))
-        self.assertEqual(len(value_scalars), 119)
-        torch.testing.assert_close(value[-2:], board[-2:], rtol=0, atol=0)
-        self.assertFalse(encode_frame(old, 4)[0][-2:].any())
+        self.assertFalse(StudentHistory('v2sleep').features(old, None)[0][-2:].any())
         self.assertEqual(encoder_signature('v2bungee'), '82609c46ed14655cead5910457ee9c0a627d77948b896c8afef09b012a2bdb6f')
 
     def test_recipe_pack_and_checkpoints(self):

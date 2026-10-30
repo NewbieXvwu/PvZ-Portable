@@ -16,7 +16,6 @@ import search_play
 import pvz_rollout_policy as policy
 from pvz_frame_store import cache_episode, encode_student_frames, encoder_signature, read_frames, write_frames
 from pvz_student_observation import StudentHistory
-from pvz_value_net import _featurize_reference
 from pack_test_support import packed_load
 
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
@@ -136,7 +135,7 @@ class StudentObservationTest(unittest.TestCase):
                     expected_board, expected_scalars = replay[index]
                     torch.testing.assert_close(board, expected_board[:board.shape[0]], rtol=0, atol=0)
                     torch.testing.assert_close(scalars, expected_scalars[:len(scalars)], rtol=0, atol=0)
-                    reference, reference_scalars = _featurize_reference(frames[index])
+                    reference, reference_scalars = policy.features(frames[index], None)
                     self.assertTrue(torch.equal(board[:92], reference))
                     self.assertTrue(torch.equal(scalars[:113], reference_scalars))
                 self.assertGreater(len(recorded), 10)

@@ -64,12 +64,6 @@ def observation_context(obs: dict) -> np.ndarray:
                           (obs.get("loadout_context") or {}).get("zombie_roster") or [])
 
 
-def featurize(frame: dict) -> tuple[torch.Tensor, torch.Tensor]:
-    """Return ``(board[C,6,10], scalars[S])`` for one frame."""
-    board, scalars = featurize_numpy(frame)
-    return torch.from_numpy(board), torch.from_numpy(scalars)
-
-
 def featurize_numpy(frame: dict) -> tuple[np.ndarray, np.ndarray]:
     """:func:`featurize` as float32 numpy arrays.
 
@@ -200,76 +194,6 @@ def timer_features(frame: dict) -> np.ndarray:
         board[2, 0, index] = (kind + 1) / 48.0
         board[3, 0, index] = float(bool(active) and cooldown == 0)
     return board
-
-
-def encode_frame(frame: dict, version: int = 1) -> tuple[torch.Tensor, torch.Tensor]:
-    """Versioned value-only encoding; existing students keep the frozen v1 entrypoint."""
-    if version == 1:
-        return featurize(frame)
-    if version not in (2, 3, 4, 5):
-        raise ValueError(f"unknown value encoder version: {version}")
-    # Start without packets: negative empty types must never alias global/cooldown scalars.
-    board, scalars = featurize_numpy({**frame, "packets": []})
-    conveyor = frame.get("conveyor_start") == "original"
-    sun = frame["sun"]
-    for _index, kind, active, cooldown, refresh, cost in frame["packets"]:
-        if kind < 0:
-            continue
-        kind = min(kind, PLANT_TYPES - 1)
-        ready = bool(active) and (conveyor or sun >= cost)
-        progress = 1.0 if active else (cooldown / refresh if refresh else 1.0)
-        # A conveyor can hold several packets of one type: any ready copy is playable.
-        scalars[SCALAR_BASE + kind] = max(scalars[SCALAR_BASE + kind], float(ready))
-        k = SCALAR_BASE + PLANT_TYPES + kind
-        scalars[k] = max(scalars[k], min(1.0, progress))
-    scene = frame["scene"]
-    extra = np.array([float(bool(scene.get(k))) for k in ("night", "pool", "fog", "roof")]
-                     + [float(conveyor), len(frame.get("graves", [])) / 45.0], dtype=np.float32)
-    if version >= 3:
-        board = np.concatenate([board, bungee_features(frame)])
-    if version >= 4:
-        board = np.concatenate([board, sleep_features(frame)])
-    if version == 5:
-        board = np.concatenate([board, timer_features(frame)])
-    return torch.from_numpy(board), torch.from_numpy(np.concatenate([scalars, extra]))
-
-
-def _featurize_reference(frame: dict) -> tuple[torch.Tensor, torch.Tensor]:
-    """The original torch-indexing encoder, kept as the oracle for :func:`featurize`."""
-    board = torch.zeros(BOARD_CHANNELS, ROWS, COLS)
-    for row, col, kind, health, max_health in frame["plants"]:
-        if 0 <= row < ROWS and 0 <= col < COLS - 1:
-            board[CH_PLANT + min(kind, PLANT_TYPES - 1), row, col] += health / max(1, max_health)
-    for z in frame["zombies"]:
-        row, kind, x, _vx, health, on_board, eating, chilled = z[:8]
-        if not on_board or not 0 <= row < ROWS:
-            continue
-        col = _col_of(x)
-        board[CH_ZOMBIE + min(kind, ZOMBIE_TYPES - 1), row, col] += health / 200.0
-        board[CH_EATING, row, col] += float(eating)
-        board[CH_CHILLED, row, col] += float(chilled > 0)
-    for row, state in frame["mowers"]:
-        if 0 <= row < ROWS:
-            board[CH_MOWER, row, 0] = float(state == 1)
-    for row in frame.get("lanes", []):
-        if 0 <= row < ROWS:
-            board[CH_LANE, row, :] = 1.0
-
-    scalars = torch.zeros(SCALARS)
-    wave_count = max(1, frame["scene"].get("wave_count") or 1)
-    sun = frame["sun"]
-    scalars[0] = min(sun, 2000) / 1000.0
-    scalars[1] = frame["wave"] / wave_count
-    scalars[2] = frame["tick"] / 60000.0
-    scalars[3] = (frame.get("sun_income_rate") or 0.0) / 100.0
-    scalars[4] = math.log1p(wave_count) / math.log1p(50)
-    for _index, kind, active, cooldown, refresh, cost in frame["packets"]:
-        kind = min(kind, PLANT_TYPES - 1)
-        ready = bool(active) and sun >= cost
-        scalars[SCALAR_BASE + kind] = float(ready)
-        progress = 1.0 if active else (cooldown / refresh if refresh else 1.0)
-        scalars[SCALAR_BASE + PLANT_TYPES + kind] = min(1.0, progress)
-    return board, scalars
 
 
 class ValueNet(nn.Module):
