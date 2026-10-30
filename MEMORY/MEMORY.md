@@ -116,3 +116,5 @@
 - [task157：obs v3 附件、deploy18 准备与训练存储设计](docs/task157-student-v3-token-encoder.md)
 - [task169：删除防御性冗余与死代码（历史文档中指向被删文件的引用以当时记录为准）](docs/task169-purge-defensive-cruft.md)
 - [2026-10-29](2026-10-29.md)
+
+- [task183 / deploy21：双候选序贯门禁与热启动交付](docs/task183-deploy21.md)

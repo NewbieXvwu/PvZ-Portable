@@ -19,6 +19,7 @@ import argparse
 import fcntl
 import hashlib
 import json
+import math
 import os
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
@@ -48,11 +49,14 @@ def write(path, document):
 
 
 def contract(candidate, incumbent, source_panel, executable, value, resource_dir, workers=1,
-             version=GATE_VERSION, seed_block=None):
-    return dict(version=version, policy=policy(version), candidate=str(candidate),
+             version=GATE_VERSION, seed_block=None, candidates=None, calibration=None):
+    result = dict(version=version, policy=policy(version), candidate=str(candidate),
                 incumbent=str(incumbent), source_panel=str(source_panel), executable=str(executable),
                 value=str(value), resource_dir=str(resource_dir), workers=workers,
                 seed_block=[int(seed_block[0]), int(seed_block[1])] if seed_block else None)
+    if version == 7:
+        result.update(candidates=candidates, calibration=calibration)
+    return result
 
 
 def allocate_seed_block(ledger_path, total, pool=None, pools=None):
@@ -137,6 +141,9 @@ def valid_certificate(result, frozen):
     registered = (frozen.get('policy') or {}).get('tasks') or []
     adventure = sum(task['seeds'] for task in registered if not task.get('monitor'))
     overall, zones = result.get('overall'), result.get('zones')
+    if frozen.get('version') == 7 and result.get('sequential', {}).get('stopped'):
+        fraction = frozen['policy']['sequential']['looks'][result['sequential']['look'] - 1]
+        adventure = sum(math.ceil(task['seeds'] * fraction) for task in registered if not task.get('monitor'))
     return (result.get('version') == frozen.get('version') and result.get('policy') == frozen.get('policy')
             and type(overall) is dict and overall.get('pairs') == adventure
             and type(zones) is dict and bool(registered)
@@ -152,6 +159,10 @@ def _paired_rows(task, zone, outcomes):
 
 def _task_rows(folder, task):
     rows = [json.loads(line) for line in (folder / 'games.jsonl').read_text().splitlines()]
+    if task.get('gate_key'):
+        rows = [dict(row, seed=row.get('future_seed') if row.get('future_seed') is not None else row['seed'])
+                for row in rows]
+        rows = [row for row in rows if row['seed'] in set(task['seeds'])]
     if (len(rows) != len(task['seeds']) or {row['seed'] for row in rows} != set(task['seeds'])
             or any(row['arm'] != 'fast' or row['searched'] != 0 or type(row['won']) is not bool
                    for row in rows)):
@@ -160,7 +171,7 @@ def _task_rows(folder, task):
 
 
 def _unit_command(args, manifest_path, task, side, model):
-    return [sys.executable, str(ROOT / 'scripts/search_play.py'),
+    command = [sys.executable, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(model), '--value', str(args.value),
             '--manifest', str(manifest_path), '--task-id', task['task_id'],
             '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
@@ -168,6 +179,13 @@ def _unit_command(args, manifest_path, task, side, model):
             '--arms', 'fast', '--dagger-beta', '0',
             '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
             '--out', str(args.out / side / task['task_id'])]
+    if task.get('demo_start'):
+        demo = task['demo_start']
+        command += ['--demo-archive', str(ROOT / demo['archive']),
+                    '--demo-decision', str(demo['decisions'][demo['index']]),
+                    '--seed-list', str(task['demo_seed']),
+                    '--future-seeds', ','.join(map(str, task['seeds']))]
+    return command
 
 
 def _run_unit(args, lock, manifest_path, task, side, model):
@@ -179,7 +197,8 @@ def _run_unit(args, lock, manifest_path, task, side, model):
     if (folder / 'games.jsonl').exists():
         # search_play resumes missing (arm,seed) keys. Corruption is never repaired by
         # silently dropping rows; the complete-data validator below will reject it.
-        complete = len((folder / 'games.jsonl').read_text().splitlines()) == len(task['seeds'])
+        count = len((folder / 'games.jsonl').read_text().splitlines())
+        complete = count >= len(task['seeds']) if task.get('gate_key') else count == len(task['seeds'])
     if not complete:
         with (folder / 'run.log').open('a') as log:
             offset = log.tell()
@@ -199,6 +218,8 @@ def _run_unit(args, lock, manifest_path, task, side, model):
 
 
 def evaluate(args):
+    if getattr(args, 'gate_version', GATE_VERSION) == 7:
+        return evaluate_dual(args)
     args.out.mkdir(parents=True, exist_ok=True)
     # A resumed run cannot race the still-live evaluator or its game children.
     with (args.out / 'evaluation.lock').open('a') as lock:
@@ -268,14 +289,16 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('candidate', 'incumbent', 'source-panel', 'executable', 'value', 'resource-dir', 'out'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--candidates', help='JSON object mapping A/B family to model paths')
+    parser.add_argument('--calibration', help='JSON object frozen from curriculum_state.gate_panel')
     parser.add_argument('--workers', type=int, default=1)
     parser.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
                         help='enable whole-game C++ fog student games (deploy19)')
     parser.add_argument('--eval-units', type=int, default=1,
                         help='concurrent search_play children (task73c); execution detail, '
                              'never part of the contract, outcomes are identical for any value')
-    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION,), default=GATE_VERSION,
-                        help='6 = roof wave Wilcoxon veto, same v5 adventure panel')
+    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION, 7), default=GATE_VERSION,
+                        help='7 = two-candidate sequential staircase; 6 = legacy roof-wave gate')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git ledger of allocated gate seed blocks')
     parser.add_argument('--seed-block', default=None,
@@ -291,6 +314,93 @@ def main():
         parser.error('all paths must be absolute')
     evaluate(args)
 
+
+
+def evaluate_dual(args):
+    """One shared incumbent run per seed, both candidates at every balanced look.
+
+    Existing registration/manifest/decision files are reused. decision.json is
+    replaced after each look, so restart resumes search_play's cumulative keys.
+    """
+    import pvz_promotion_v7 as sequential
+    candidates = json.loads(args.candidates) if isinstance(args.candidates, str) else args.candidates
+    calibration = json.loads(args.calibration) if isinstance(args.calibration, str) else args.calibration
+    models = dict(candidates, incumbent=str(args.incumbent))
+    args.out.mkdir(parents=True, exist_ok=True)
+    with (args.out / 'evaluation.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        registration = args.out / 'registration.json'
+        existing = read(registration) if registration.exists() else None
+        if existing:
+            block = existing['seed_block']
+        elif args.seed_block:
+            block = [int(x) for x in args.seed_block.split(',')]
+            require_allocated_block(args.seed_ledger, block)
+        else:
+            block = allocate_seed_block(args.seed_ledger, policy(7)['pair_count'])
+        frozen = contract(args.candidate, args.incumbent, args.source_panel, args.executable,
+                          args.value, args.resource_dir, args.workers, version=7, seed_block=block,
+                          candidates=candidates, calibration=calibration)
+        manifest = freeze_panel(read(args.source_panel), version=7, seed_block=block,
+                                calibration=calibration, demos=read(ROOT / 'configs/human_demo_tasks.json'))
+        manifest_path = args.out / 'manifest.json'
+        if existing is not None:
+            if existing != frozen:
+                raise ValueError('cannot resume a different model/build/panel/policy')
+        else:
+            write(manifest_path, manifest)
+            write(registration, frozen)
+        started = time.time()
+        outcomes = {side: {} for side in models}
+        for look, fraction in enumerate(sequential.LOOKS, 1):
+            tasks = []
+            for task in manifest['tasks']:
+                seeds = task.get('gate_seeds', task['seeds'])
+                count = len(seeds) if task['task_id'] in manifest['monitor'] else max(1, math.ceil(len(seeds) * fraction))
+                tasks.append(dict(task, seeds=seeds[:count],
+                                  **(dict(demo_seed=task['seeds'][0]) if task.get('demo_start') else {})))
+            with ThreadPoolExecutor(max_workers=args.eval_units, thread_name_prefix='gate-eval') as executor:
+                futures = [executor.submit(_run_unit, args, lock, manifest_path, task, side, model)
+                           for task in tasks for side, model in models.items()]
+                for future in futures:
+                    side, name, rows = future.result()
+                    outcomes[side][name] = rows
+            def pairs(left, right):
+                rows = []
+                for task in tasks:
+                    name = task['task_id']
+                    for seed in task['seeds']:
+                        a, b = outcomes[left][name][seed], outcomes[right][name][seed]
+                        rows.append(dict(task_id=name, seed=seed, zone=manifest['groups'][name],
+                                         candidate=a['won'], incumbent=b['won'],
+                                         candidate_wave=a['final_wave'], incumbent_wave=b['final_wave'],
+                                         endpoint=task['endpoint'],
+                                         wave_count=a.get('wave_count') or b.get('wave_count')))
+                return rows
+            results = {side: sequential.decide(pairs(side, 'incumbent'), manifest, look) for side in candidates}
+            stopped = all(r['status'] != 'continue' for r in results.values())
+            eligible = [side for side in candidates if results[side]['approved']] if stopped else []
+            winner = max(eligible, key=lambda side: results[side]['overall']['delta_rate'], default=None)
+            representative = winner or max(results, key=lambda side: results[side]['overall']['delta_rate'])
+            result = dict(results[representative])
+            result.update(approved=bool(winner), winner=candidates.get(winner), winner_family=winner,
+                          candidates=results, contract=frozen,
+                          sequential=dict(look=look, fraction=fraction, stopped=stopped,
+                                          adventure_pairs=result['overall']['pairs']),
+                          started=started, finished=time.time())
+            if not stopped:
+                result['reasons'] = ['sequential_continue']
+            elif not winner:
+                result['reasons'] = ['no_candidate_passed']
+            if stopped:
+                result['next_panel'] = sequential.next_panel(calibration, manifest, outcomes)
+                if 'A' in candidates and 'B' in candidates:
+                    result['ab'] = sequential.ab_summary(pairs('A', 'B'))
+            write(args.out / 'decision.json', result)
+            print(f'sequential look {look}: ' + json.dumps({s: dict(status=r['status'],
+                  delta=r['overall']['delta_rate'], reasons=r['reasons']) for s, r in results.items()}), flush=True)
+            if stopped:
+                return result
 
 if __name__ == '__main__':
     main()

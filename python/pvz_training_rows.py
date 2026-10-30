@@ -220,3 +220,24 @@ class SharedPackAdjustment:
                              multiplier=factors[(level, deck)],
                              effective_share=mass * factors[(level, deck)] / allocated)
                         for (level, deck), mass in sorted(groups.items())])
+
+
+class ReplayAdjustment:
+    """New immutable archives since the promoted corpus; no frame reads or new packs."""
+    def __init__(self, data, old_archives, old_labels, new_weight):
+        self.data, self.old_archives = Path(data), set(old_archives)
+        self.old_labels, self.new_weight = set(old_labels), new_weight
+        self.rows, self.spans = 0, []
+
+    def observe(self, path, rows):
+        path = Path(path)
+        old = (str(path.parent.relative_to(self.data)) in self.old_archives
+               or path.parent.name in self.old_labels)
+        if not old and len(rows):
+            self.spans.append((self.rows, self.rows + len(rows)))
+        self.rows += len(rows)
+
+    def apply(self, weight, is_val):
+        for start, stop in self.spans:
+            part = weight[start:stop]
+            part[~is_val[start:stop]] *= self.new_weight

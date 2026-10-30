@@ -99,6 +99,9 @@ START_SEED_BLOCK = 256
 
 
 def policy(version=GATE_VERSION):
+    if version == 7:
+        from pvz_promotion_v7 import policy as sequential_policy
+        return sequential_policy()
     if version != GATE_VERSION:
         raise ValueError(f'unknown gate version: {version}')
     return dict(version=version, alpha=ALPHA, noninferiority_margin=MARGIN,
@@ -131,13 +134,18 @@ def policy(version=GATE_VERSION):
                        for zone, name, count in PANEL_TASKS_V5])
 
 
-def freeze_panel(document, version=GATE_VERSION, seed_block=None):
+def freeze_panel(document, version=GATE_VERSION, seed_block=None, calibration=None, demos=None):
     """Partition one ledger block across the registered adventure panel.
 
     Adventure tasks take 45 or 46 pairs each and the two monitoring
     cells V5_MONITOR_SEEDS_PER_TASK; the block must be exactly the registered
     size, so a stale source panel cannot silently shrink or grow the gate.
     """
+    if version == 7:
+        from pvz_promotion_v7 import freeze_panel as sequential_panel, initial_panel
+        return sequential_panel(document, seed_block,
+                                calibration if calibration is not None else initial_panel(document),
+                                demos or {})
     if version != GATE_VERSION:
         raise ValueError(f'unknown gate version: {version}')
     if document.get('panel_version') != 'v5':

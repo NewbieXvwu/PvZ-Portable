@@ -1099,6 +1099,23 @@ class TrainingPipeline:
                     pass
             if self.last_train_peak and self.last_pack_peak:
                 break
+        if self.gate_version == 7:
+            from pvz_promotion_v7 import initial_panel
+            state.setdefault('gate_panel', initial_panel(read_json(args.promotion_panel)))
+            for saved in state['training_jobs']:
+                if saved.get('gate_version') != 7 and saved['status'] not in ('done', 'superseded'):
+                    saved.update(status='superseded', superseded_reason='task179 retires legacy selection jobs')
+            approved = [j for j in state['training_jobs'] if j.get('promotion_approved')
+                        and j['round'] > state.get('student_round', 0)]
+            if approved:
+                latest = max(approved, key=lambda j: j['round'])
+                state.update(student=latest['model'], student_round=latest['round'])
+                recovered = latest.get('timing') or {}
+                if recovered.get('corpus_archives') is not None:
+                    state['student_corpus_archives'] = recovered['corpus_archives']
+                if recovered.get('promotion', {}).get('next_panel') is not None:
+                    state['gate_panel'] = recovered['promotion']['next_panel']
+            save_state(args.state, state)
         queued = [job for job in state.setdefault('training_jobs', [])
                   if job['status'] not in ('done', 'superseded') and not job.get('isolated')
                   and job.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS]
@@ -1194,9 +1211,18 @@ class TrainingPipeline:
         source = getattr(self.args, 'promotion_panel', None)
         if source is None:
             source = ROOT / 'configs/gate_v5_panel.json'
-        return promotion_contract(Path(job['model']), self.incumbent(), source, self.args.executable,
+        extra = {}
+        incumbent = self.incumbent()
+        if job.get('gate_version') == 7:
+            trained = read_json(Path(job['recipe']).parent / 'trained.json')
+            with self.lock:
+                incumbent = Path(self.args.rollout_policy)
+                extra = dict(candidates={c['recipe_family']: c['model'] for c in trained['candidates']
+                                         if c['status'] == 'trained'},
+                             calibration=copy.deepcopy(self.state['gate_panel']))
+        return promotion_contract(Path(job['model']), incumbent, source, self.args.executable,
                                   self.args.value, self.args.resource_dir, version=self.gate_version,
-                                  seed_block=job.get('seed_block'))
+                                  seed_block=job.get('seed_block'), **extra)
 
     @retry_io
     def _seeded(self, job):
@@ -1224,6 +1250,9 @@ class TrainingPipeline:
                    '--native-games' if getattr(self.args, 'native_games', True) else '--no-native-games',
                    '--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                    '--seed-ledger', str(self.args.seed_ledger)]
+        if job.get('gate_version') == 7:
+            command += ['--candidates', json.dumps(frozen['candidates']),
+                        '--calibration', json.dumps(frozen['calibration'])]
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against '
                                 f'{frozen["incumbent"]} eval_units={units}')
@@ -1245,6 +1274,24 @@ class TrainingPipeline:
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
                 f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
+        if job.get('gate_version') == 7:
+            self._marker(folder / 'ab_result.json', dict(round=job['round'],
+                seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
+                candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
+                calibration=frozen['calibration'], **(decision.get('ab') or
+                    dict(available=False, reason='evaluation or training candidate unavailable'))))
+            if decision.get('approved'):
+                import shutil
+                published = Path(job['model'])
+                published.parent.mkdir(parents=True, exist_ok=True)
+                temporary = published.with_suffix('.building')
+                shutil.copyfile(decision['winner'], temporary)
+                temporary.replace(published)
+            for side, result in decision.get('candidates', {}).items():
+                for name, cell in result['monitor'].items():
+                    if cell['delta_rate'] <= -.2:
+                        log_line(self.args.log, f'WARNING heldout regression round {job["round"]} '
+                                               f'{side} {name}: delta={cell["delta_rate"]:.3f}')
         return dict(model=job['model'],
                     evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
@@ -1340,6 +1387,9 @@ class TrainingPipeline:
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
         alternate = getattr(self.args, 'alternate_recipe', None)
+        if self.gate_version == 7:
+            alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_warm.json'
+            job['gate_version'] = 7
         if alternate:
             variant = load_recipe(alternate, 'training')
             variant.update({key: recipe[key] for key in
@@ -1351,9 +1401,24 @@ class TrainingPipeline:
             variant_options.pop('label_weight', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
+            if self.gate_version == 7:
+                cold = round_index % variant['restart_every'] == 0 if variant['restart_every'] else False
+                variant.update(init=None if cold else str(self.incumbent()),
+                               epochs=variant['restart_epochs'] if cold else 2,
+                               history_l7_keep=1.0)
+                # Promoted training corpus, not the in-flight collector snapshot. Labels are
+                # an initial fallback for the pre-v7 incumbent; after promotion use archives.
+                if 'student_corpus_archives' in self.state:
+                    variant['replay_old_archives'] = self.state['student_corpus_archives']
+                    variant['replay_old_labels'] = []
+                else:
+                    old = dict(self.state, log=[entry for entry in self.state['log']
+                               if entry['round'] <= self.state.get('student_round', 0)])
+                    variant['replay_old_labels'] = pack_labels(old, ','.join(
+                        load_recipe(self.args.recipe, 'training')['labels']))
             variant_path = folder / 'recipe_b.json'
             write_recipe(variant_path, variant)
-            repeats = getattr(self.args, 'candidates_per_recipe', 1)
+            repeats = 1 if self.gate_version == 7 else getattr(self.args, 'candidates_per_recipe', 1)
             job['candidate_recipes'] = [
                 dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
                 for candidate_path, source, family in ((path, self.args.recipe, 'A'),
@@ -1362,7 +1427,10 @@ class TrainingPipeline:
             job['training_seeds'] = list(range(1, len(job['candidate_recipes']) + 1))
         # Freeze the plan on the durable job. Historical jobs without this field
         # retain their original single-seed training/resume semantics.
-        self._snapshot_selection(job, folder)
+        if self.gate_version == 7:
+            job['training_parallelism'] = getattr(self.args, 'training_parallelism', 1)
+        else:
+            self._snapshot_selection(job, folder)
         self.state['training_jobs'].append(job)
         try:
             self._seeded(job)
@@ -1559,7 +1627,7 @@ class TrainingPipeline:
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 self.lock_fd = lock.fileno()  # child retains lock if the controller unexpectedly dies
                 old = json.loads(done.read_text()) if done.is_file() else None
-                if old and Path(job['model']).is_file():
+                if old and (job.get('gate_version') == 7 or Path(job['model']).is_file()):
                     if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job)):
                         return old
                 # task141: a finished round keeps its report; everything still waiting behind
@@ -1600,7 +1668,7 @@ class TrainingPipeline:
                         report[phase + '_finished'] = time.time()
                         log_line(self.args.log, f'background round {job["round"]} {phase} done: '
                                                f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
-                if not Path(job['model']).is_file():
+                if job.get('gate_version') != 7 and not Path(job['model']).is_file():
                     raise RuntimeError(f'trainer did not publish {job["model"]}')
                 temporary = trained.with_suffix('.building')
                 temporary.write_text(json.dumps(report, indent=2) + '\n')
@@ -1630,7 +1698,8 @@ class TrainingPipeline:
         folder = recipe_path.parent
         recipe = load_recipe(recipe_path, 'training')
         report = dict(round=job['round'], model=job['model'])
-        report['selection_preparation'] = str(self._prepare_selection(job))
+        if job.get('gate_version') != 7:
+            report['selection_preparation'] = str(self._prepare_selection(job))
         pack_marker = folder / 'packed.json'
         if pack_marker.is_file():
             packed = json.loads(pack_marker.read_text())
@@ -1722,6 +1791,11 @@ class TrainingPipeline:
                       train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
                                            for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
+        if job.get('gate_version') == 7:
+            from pvz_frame_store import frame_paths
+            report['corpus_archives'] = sorted({str(path.parent.relative_to(Path(recipe['data'])))
+                for path in frame_paths(Path(recipe['data'])) if path.parent.name in set(recipe['labels'])})
+            return report
         report.update(self._select(job, trained))
         panel = json.loads(Path(job['selection_manifest']).read_text())
         holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
@@ -1849,14 +1923,20 @@ class TrainingPipeline:
             temporary.replace(completed)
         job.update(status='done', timing=report, promotion_approved=promotion['approved'],
                    promotion_reasons=promotion['reasons'])
+        if promotion.get('next_panel') is not None:
+            self.state['gate_panel'] = promotion['next_panel']
         if promotion['approved'] and job['round'] > self.state.get('student_round', 0):
             with self.lock:
-                self.args.rollout_policy = Path(job['model'])
                 self.state.update(student=job['model'], student_round=job['round'])
+                if report.get('corpus_archives') is not None:
+                    self.state['student_corpus_archives'] = report['corpus_archives']
+                save_state(self.args.state, self.state)
+                self.args.rollout_policy = Path(job['model'])
             log_line(self.args.log, f'student activated at group boundary: round {job["round"]} {job["model"]}')
-        elif not promotion['approved']:
-            log_line(self.args.log, f'student retained: round {job["round"]} rejected {promotion["reasons"]}')
-        save_state(self.args.state, self.state)
+        else:
+            save_state(self.args.state, self.state)
+            if not promotion['approved']:
+                log_line(self.args.log, f'student retained: round {job["round"]} rejected {promotion["reasons"]}')
 
     def close(self):
         health = getattr(self.args, 'game_health', None)
@@ -2250,7 +2330,7 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
 
 
 def set_gate_version(state: dict, version: int) -> None:
-    if version != GATE_VERSION:
+    if version not in (GATE_VERSION, 7):
         raise ValueError(f'unsupported gate version: {version}')
     state['gate_version'] = version
 
@@ -2264,8 +2344,8 @@ def main() -> None:
                         help='additional registered training panel (task137 random-deck cells); repeatable')
     parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
                         help='max share of the round budget for random-deck cells (default 0.15)')
-    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION,), default=GATE_VERSION,
-                        help='promotion policy (v6 roof wave endpoint, v5 adventure panel)')
+    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION, 7), default=7,
+                        help='7 = dual-candidate sequential staircase (default); 6 = legacy gate')
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
@@ -2316,7 +2396,7 @@ def main() -> None:
     parser.add_argument('--alternate-recipe', type=Path,
                         help='recipe B candidates, sharing recipe A pack row options')
     parser.add_argument('--candidates-per-recipe', type=int, choices=(1, 2), default=1,
-                        help='A/B independent training counts; 2 gives A seeds 1/2 and B seeds 3/4')
+                        help='legacy gate6 training counts; gate7 always uses one seed per recipe')
     parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
                         help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
     parser.add_argument('--selection-holdout-manifest', type=Path,
@@ -2377,7 +2457,8 @@ def main() -> None:
         parser.error('--demo-start-share must be within 0..1')
     try:
         probe = (SEED_POOLS_V2[0][0], SEED_POOLS_V2[0][0] + promotion_policy(args.gate_version)['pair_count'])
-        freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
+        if args.gate_version != 7:
+            freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
     except (OSError, ValueError, KeyError) as error:
         parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest, args.extra_manifest)
@@ -2450,6 +2531,9 @@ def main() -> None:
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
         if labels:
             print('pack: ' + ' '.join(pack_command(args, labels)))
+        if args.gate_version == 7:
+            print('gate7: two candidates A/B, one seed each, shared incumbent; no selection panel')
+            return
         incumbent = Path(state.get('student') or args.rollout_policy)
         preview = selection_plan(
             selection_templates(args.selection_holdout_manifest, args.promotion_panel),

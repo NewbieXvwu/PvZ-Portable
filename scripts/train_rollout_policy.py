@@ -916,6 +916,15 @@ def main(*, step_observer=None) -> None:
         def observer(path, rows):
             private_weights.observe(path, rows)
             if original_observer: original_observer(path, rows)
+    replay = None
+    if args.replay_uniform:
+        from pvz_training_rows import ReplayAdjustment
+        replay = ReplayAdjustment(args.data, args.replay_old_archives, args.replay_old_labels,
+                                  args.replay_new_weight)
+        replay_observer = observer
+        def observer(path, rows):
+            replay.observe(path, rows)
+            if replay_observer: replay_observer(path, rows)
     loaded = load(args.data, **load_options, row_observer=observer)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
     if label_adjustment is not None:
@@ -931,6 +940,8 @@ def main(*, step_observer=None) -> None:
     seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
+    if replay is not None:
+        replay.apply(weight, is_val)
     if private_weights is not None:
         private_weights.apply_keep(weight, is_val)
     if source_counts and args.source_row_report:

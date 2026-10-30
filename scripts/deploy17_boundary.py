@@ -54,8 +54,19 @@ def committed_boundary(log,state):
     event,label=last_group_event(log)
     if event!='finished': return False
     # rc is logged BEFORE completed_groups is saved. Only accept its durable label.
-    # One small state-file byte scan (~10 MB here), no JSON object graph or archive replay.
-    return b'"label": '+json.dumps(label).encode() in state.read_bytes()
+    # One small state read; no episode replay. A gate logged as passed may still
+    # be waiting for foreground poll, so include the bounded log tail as well.
+    saved=json.loads(state.read_text())
+    with log.open('rb') as stream:
+        stream.seek(max(0,log.stat().st_size-65536))
+        tail=stream.read().decode(errors='replace')
+    passed=[job['round'] for job in saved.get('training_jobs', []) if job.get('promotion_approved')]
+    passed.extend(int(value) for value in re.findall(
+        r'background round (\d+) evaluate done:[^\n]*approved=True',tail))
+    groups=saved.get('completed_groups', [])
+    groups += [group for entry in saved.get('log', []) for group in entry.get('groups', [])]
+    return (any(group.get('label')==label for group in groups)
+            and saved.get('student_round',0)>=max(passed,default=0))
 
 
 def freeze_if_idle(pid, worktree, output=None, ready=None):

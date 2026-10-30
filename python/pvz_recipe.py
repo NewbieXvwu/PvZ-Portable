@@ -15,6 +15,8 @@ from pathlib import Path
 
 SCHEMA_VERSION = 1
 TRAIN_DEFAULTS = dict(
+    restart_every=0, restart_epochs=12, replay_new_weight=1.0, replay_uniform=False,
+    replay_old_archives=[], replay_old_labels=[],
     epochs=12, device='cpu', threads=1, precompute_workers=1,
     wait_keep=1.0, seed=None, width=64, label_weight={}, label_keep={}, source_weight={}, packet_balance=0.0,
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
