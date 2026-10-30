@@ -883,6 +883,22 @@ def main(*, step_observer=None) -> None:
         train_idx = train_idx[weight[train_idx] > 0]
         if not len(train_idx):
             raise ValueError('no positive training rows after history_l7_keep')
+    kl_probs = None
+    if args.kl_weights is not None:
+        if not 0 < args.kl_share < 1:
+            raise ValueError('kl_share must be in (0, 1)')
+        kl = np.load(args.kl_weights)['kl'].astype(np.float32)
+        if len(kl) != len(plant):
+            raise ValueError(f'kl_weights has {len(kl)} rows, pack has {len(plant)}')
+        kl = torch.from_numpy(np.maximum(kl, 0))[train_idx.long()].double()
+        if not float(kl.sum()) > 0:
+            raise ValueError('kl_weights has no positive rows in the training split')
+        # KataGo's frequency weights: a uniform floor plus a share proportional to the
+        # search-vs-prior KL, so half of the draws stay the old distribution.
+        kl_probs = (1 - args.kl_share) / len(train_idx) + args.kl_share * kl / kl.sum()
+        print(f"kl sampling: share {args.kl_share}, {int((kl > 0).sum())} weighted rows, "
+              f"top-1% probability mass {float(kl_probs.topk(max(1, len(kl_probs) // 100)).values.sum()):.3f}",
+              flush=True)
     steps = args.epochs * -(-epoch_rows // args.batch_size)
     if args.max_steps is not None:
         if args.max_steps>steps:
@@ -920,7 +936,13 @@ def main(*, step_observer=None) -> None:
         epoch_started = time.perf_counter()
         metrics.update(phase="training")
         net.train()
-        perm = train_idx[torch.randperm(len(train_idx))]
+        if kl_probs is None:
+            perm = train_idx[torch.randperm(len(train_idx))]
+        else:
+            rows = len(train_idx)
+            uniform = train_idx[torch.randperm(rows)[:rows // 2]]
+            weighted = train_idx[torch.multinomial(kl_probs, rows - len(uniform), replacement=True)]
+            perm = torch.cat([uniform, weighted])[torch.randperm(rows)]
         if len(perm) < epoch_rows:
             perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
         train_loss = 0.0

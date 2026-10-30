@@ -22,6 +22,7 @@ TRAIN_DEFAULTS = dict(
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
     save_epochs=0, lr_schedule='constant', init=None, cache=True,
     cache_dir=None, read_cache_dir=None, dense_boards=False,
+    kl_weights=None, kl_share=0.5,
     source_row_report=False, max_steps=None, batch_size=2048, validation_batch_size=4096,
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
@@ -56,7 +57,7 @@ def resolve_paths(document):
     return result
 
 
-PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir',
+PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir', 'kl_weights',
                'manifest', 'rollout_policy', 'value', 'executable', 'resource_dir',
                'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
                'pool_manifest', 'pressure_manifest')
@@ -169,6 +170,7 @@ def validate(document, kind=None):
             _number(result[name], name)
         for name in ('soft_temperature', 'spread_cap'):
             _number(result[name], name, positive=True)
+        _number(result['kl_share'], 'kl_share', maximum=1)
         opt = {**TRAIN_DEFAULTS['optimizer'], **result['optimizer']} if isinstance(result['optimizer'], dict) else result['optimizer']
         _object(opt, set(TRAIN_DEFAULTS['optimizer']), 'optimizer')
         if opt['name'] != 'AdamW':
