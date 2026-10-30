@@ -63,7 +63,7 @@ task7 `cuda-merge`：混采入口已改为poll=100及精确复核预取默认开
 分支 `cuda-rollout`，只替代老师的续走。真实对局与帧档案仍由原版模拟器生成。
 交接材料在 `~/pvz-logs/qoder_cuda_task.md`、`qoder_goal_addendum.md`、`qoder_answers.md`。
 本报告在 2026-10-18 接手时重写；旧版本是阶段 0 前的设计，不能代表当前实现。
-逐轮历史测量见 `~/pvz-logs/cuda_status.md`；机制来源见 [规格目录](../../cuda/spec/)。
+逐轮历史测量见 `~/pvz-logs/cuda_status.md`；机制来源见 规格目录 `cuda/spec/`（当时分支，已删除）。
 
 ## 当前结论
 

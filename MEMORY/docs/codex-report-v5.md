@@ -85,7 +85,7 @@ I5/I6 都是意向处理、剂量不足。I5 对 I0 精确 McNemar `p=0.125`、H
 
 - 独立 DSH session `session-dad68eb9-ac65-41c3-94ab-b38d740c611e`，退出码 0，用时 810 秒；44 次工具调用。轨迹、卡点与完整 session log 位于 `/tmp/pvz-v5/teacher/early_mid_30059/run/`。
 - what-if 的主要命中：决策 170（从 `plant:0:2:3` 改到 `plant:0:3:2`）、224（`plant:0:3:3` 改到 `plant:0:4:2`）和 301（`plant:0:1:3` 改到同路 c1 的 `plant:0:1:1`），三种替换的策略续跑都通关。决策 119、145 是两个反例点；决策 220 的多个候选没有改善。第 224 步自动枚举超时，手工候选成功完成；不会把该工具超时记作机制被否。
-- 候选机制为“最前僵尸已到内侧时，不要在僵尸右侧外列补直射射手”。三问在本局的检查记录：falsifier 列出全向/后向攻击、已有前排阻挡等不适用状态；3 个不同决策点有 what-if 结果；probe 仅依赖 `action_type`、`plant_role`、`action_col_min`、`lane_front_zombie_x_max`。`lint_skills` 返回 1/1 通过，随后 `probe` 验收 3/3 证据命中、2/2 反例未命中。文件：临时原件 `/tmp/pvz-v5/teacher/early_mid_30059/skills_out/avoid-rear-shooters-blind-spot/SKILL.md`，共享库副本 [avoid-rear-shooters-blind-spot](</home/newbiexvwu/PvZ-Portable/dsh/pvz-teacher/skills/avoid-rear-shooters-blind-spot/SKILL.md>)；两份 SHA256 都是 `df7be57109d7b44e2652e0861286808e7fba1db126cd5b72c2e160f3fb2be15f`。`dsh/pvz-teacher/README.md` 的技能清单已登记。
+- 候选机制为“最前僵尸已到内侧时，不要在僵尸右侧外列补直射射手”。三问在本局的检查记录：falsifier 列出全向/后向攻击、已有前排阻挡等不适用状态；3 个不同决策点有 what-if 结果；probe 仅依赖 `action_type`、`plant_role`、`action_col_min`、`lane_front_zombie_x_max`。`lint_skills` 返回 1/1 通过，随后 `probe` 验收 3/3 证据命中、2/2 反例未命中。文件：临时原件 `/tmp/pvz-v5/teacher/early_mid_30059/skills_out/avoid-rear-shooters-blind-spot/SKILL.md`，共享库副本 [avoid-rear-shooters-blind-spot](../../dsh/pvz-teacher/skills/avoid-rear-shooters-blind-spot/SKILL.md)；两份 SHA256 都是 `df7be57109d7b44e2652e0861286808e7fba1db126cd5b72c2e160f3fb2be15f`。`dsh/pvz-teacher/README.md` 的技能清单已登记。
 - 限制：probe 的 `shooter` 是较宽角色类，含裂荚射手、杨桃等特殊射手；skill 的 falsifier 排除了部分例外，因此 probe 是待人工核验的候选筛子，不是自动动作规则。本 skill 仅在一个 seed 的三个决策点验证，尚无跨 seed 复核；B 的汇总会把它列为单局过闸产物，不当作群体因果结论。
 - 两次 lint 调用中第一次发生在文件写入前，返回目录为空；文件写入后第二次 1/1 通过。一次 `write` 调用带了不支持的 `justification` 参数而失败，随后无该参数重试成功。细节均保留在 trace。
 
@@ -104,7 +104,7 @@ I5/I6 都是意向处理、剂量不足。I5 对 I0 精确 McNemar `p=0.125`、H
 - 独立 DSH session `session-8f64e139-f159-4cf4-93a2-558796e9bf7b`，退出码 0，用时 1020 秒；60 次工具调用。归档在 `/tmp/pvz-v5/teacher/late_death_30329/run/`；完整诊断在 `run/session.log`，摘要和卡点在 `run/trace_summary.txt`、`run/trace_confusion.txt`。
 - 诊断把可观测错误分成三类：承压裸路仍无火力、普通右射手种在已突破僵尸身后、未使用樱桃炸弹范围清场。对预先给定的群体假设，本局有 4 路在第 3 波承压裸路且射手为 0；第 105 步在阳光 50 时把向日葵种到安全路，第 113 步阳光 100 时又在僵尸已清空的安全路补射手。教师据当时阳光与合法卡片状态判断这里不是无钱被迫等待。
 - What-if 重放在第 105、113、241、660、675、690、778 步均报告通关；前 3 点验证裸路威胁优先，后 4 点把后方/身侧普通射手替换为樱桃炸弹。第 113 步原始枚举超时一次，改成显式候选后完成；该超时是工具问题。以上是同一 seed 下的单步反事实重放，不是随机化的群体因果估计。
-- 两条产物都回答反例问、列出至少两个 what-if 证据点并给出状态字段迁移判据，最终 `lint_skills` 为 2/2。`bare-lane-defense-priority` 与前面 `threatened-lane-priority` 语义重叠，本轮不再加一份重复共享规则；新机制 `emergency-cherry-bomb-clearance` 已复制到共享 skill 库，原件与副本 SHA256 均为 `30e6d30aea3f25304b447ff34cc1cb03e1f03aec391c4a72edfbf4480912babf`。文件：[emergency-cherry-bomb-clearance](</home/newbiexvwu/PvZ-Portable/dsh/pvz-teacher/skills/emergency-cherry-bomb-clearance/SKILL.md>)。这里只经单局验证，未做跨 seed 验证，也未用 `probe` 自动验收这条新 skill。
+- 两条产物都回答反例问、列出至少两个 what-if 证据点并给出状态字段迁移判据，最终 `lint_skills` 为 2/2。`bare-lane-defense-priority` 与前面 `threatened-lane-priority` 语义重叠，本轮不再加一份重复共享规则；新机制 `emergency-cherry-bomb-clearance` 已复制到共享 skill 库，原件与副本 SHA256 均为 `30e6d30aea3f25304b447ff34cc1cb03e1f03aec391c4a72edfbf4480912babf`。文件：[emergency-cherry-bomb-clearance](../../dsh/pvz-teacher/skills/emergency-cherry-bomb-clearance/SKILL.md)。这里只经单局验证，未做跨 seed 验证，也未用 `probe` 自动验收这条新 skill。
 - `lint_skills` 对同一目录重复调用 4 次（最终仍为 2/2），what-if 自动枚举一次超时；这些是过程卡点，不当作策略假设被否的证据。
 
 ### 已完成 5/10：seed 30974（末波死，wave 29）
@@ -112,7 +112,7 @@ I5/I6 都是意向处理、剂量不足。I5 对 I0 精确 McNemar `p=0.125`、H
 - 独立 DSH session `session-07f5ba55-e224-447c-b36f-2f09f924def1`，退出码 0，用时 1020 秒；61 次工具调用。完整日志与调用轨迹在 `/tmp/pvz-v5/teacher/late_death_30974/run/`。
 - 本局没有复现“同波火力偏少”与“向日葵损失偏高”两条已知群体现象；教师将前期未补火力解释为阳光不足，报告称 88.1% 的相关决策低于 100 阳光。数字来源为 `run/session.log` 中的局内动作/阳光统计，属于单局描述，不能外推为群体比例。
 - What-if 在 273、287、745、766 步把原射手替换为坚果墙后均通关；技能将机制限定为僵尸已进内侧、原射手很快死亡的紧急拦截。第 422 步的射手实际存活 12,086 tick，不符合 `plant_life_ticks_max:1200`，被排除；修订后 probe 证据 4/4 命中、反例 2/2 未命中，最终 `lint_skills` 1/1 通过。
-- `emergency-wallnut-containment` 已复制到共享库，session 原件与副本 SHA256 均为 `fe135bd67658c1c50094e6e69c18c77f6d8b21507ea8809becbc9fef5ec5062c`。文件：[emergency-wallnut-containment](</home/newbiexvwu/PvZ-Portable/dsh/pvz-teacher/skills/emergency-wallnut-containment/SKILL.md>)。仅此一局四点验证，不能当作群体因果结论。
+- `emergency-wallnut-containment` 已复制到共享库，session 原件与副本 SHA256 均为 `fe135bd67658c1c50094e6e69c18c77f6d8b21507ea8809becbc9fef5ec5062c`。文件：[emergency-wallnut-containment](../../dsh/pvz-teacher/skills/emergency-wallnut-containment/SKILL.md)。仅此一局四点验证，不能当作群体因果结论。
 - 教师也在 744、745、766 步尝试樱桃炸弹候选并得到通关；它在本轮被识别为已存在的 `emergency-cherry-bomb-clearance`，所以不新建重复条目。注意本会话能看到上一局已加入共享库的该 skill；这些樱桃炸弹重放是有先前机制提示的跨局复核，不是盲诊断。
 - 卡点：自动枚举 745 超时后改用显式候选；第 422 步导致首轮 lint 0/1，排除该误命中后最终 1/1；另有一次 write 参数错误后重试成功。trace confusion 共记录 3 次工具错误、1 组 lint 重复调用。均不当作策略假设被否。
 
@@ -135,7 +135,7 @@ I5/I6 都是意向处理、剂量不足。I5 对 I0 精确 McNemar `p=0.125`、H
 - 独立 DSH session `session-763b7868-d5de-4451-bc88-01d7a4826664`，退出码 0，用时 781 秒；51 次工具调用。日志与轨迹在 `/tmp/pvz-v5/teacher/rescued_I3g_30718/run/`。
 - 原 I0 轨迹第 19 波进屋，I3g 轨迹第 30 波通关、消耗 4 台割草机。教师认为 I3g 在第 4 波把原路线上的坚果墙换成向日葵，较早触发第 6 波割草机，清出 0 路后让策略重建火力；同一局另一个 what-if 在第 199 步换向日葵却只到 wave 13。**这支持“轨迹分叉/割草机清路可能带来救回”这一解释，但单局不能证明 I3g 的总体因果机制。**
 - 更直接的替代策略证据：在 I0 第 115 步（tick 6240，0 路 0 火力、僵尸在 c7、阳光 100；原动作在已清空的 4 路补射手），改在 0 路 c2/c3/c4 种豌豆均到 wave 30；最佳存档 `run/out/best_whatif_115` 为 0 台割草机通关（原 I0 第 19 波失败，I3g 通关消耗 4 台）。决策 183（僵尸已过 0 路射手、3 路有来敌）把火力改投 3 路 c3 也通关。What-if 原件与结果见 session log、`trace_summary.txt` 及 `run/out/`。
-- `prioritize-effective-firepower-placement` 通过三问和 `lint_skills` 1/1，两个证据点均有 +11 波变化。原件与共享库副本 SHA256 均为 `a8f5d1ffbd2cfe83b270d1a34ff23e7d51722333d6aeee4863d38d54c838ba82`。文件：[prioritize-effective-firepower-placement](</home/newbiexvwu/PvZ-Portable/dsh/pvz-teacher/skills/prioritize-effective-firepower-placement/SKILL.md>)。该综合规则与既有 `avoid-rear-shooters-blind-spot`、`threatened-lane-priority` 两条机制重叠；保留其合并表达和本局证据，不把它当成第三个独立根因。
+- `prioritize-effective-firepower-placement` 通过三问和 `lint_skills` 1/1，两个证据点均有 +11 波变化。原件与共享库副本 SHA256 均为 `a8f5d1ffbd2cfe83b270d1a34ff23e7d51722333d6aeee4863d38d54c838ba82`。文件：[prioritize-effective-firepower-placement](../../dsh/pvz-teacher/skills/prioritize-effective-firepower-placement/SKILL.md)。该综合规则与既有 `avoid-rear-shooters-blind-spot`、`threatened-lane-priority` 两条机制重叠；保留其合并表达和本局证据，不把它当成第三个独立根因。
 - 自动枚举决策 115 超时，随后改为 115/183 显式动作；trace confusion 记录 1 次工具错误。自动枚举超时不作为假设被否。
 
 ### 已完成 9/10：seed 30238（I3g 救回局）
@@ -143,7 +143,7 @@ I5/I6 都是意向处理、剂量不足。I5 对 I0 精确 McNemar `p=0.125`、H
 - 独立 DSH session `session-1d67efb5-d49d-420f-ad01-b0144fed9712`，退出码 0，用时 1081 秒；65 次工具调用。完整日志与轨迹在 `/tmp/pvz-v5/teacher/rescued_I3g_30238/run/`。
 - I0 在第 17 波进屋，I3g 到 wave 30 通关。失败轨迹在第 6–17 波的总射手更多，但第 4 路直到 wave 13 仍空防；I3g 的射手分布更均衡。两轨在同一 tick 都损失一株向日葵，教师未把“向日葵被吃”判为这局的区分根因。
 - 决策 296 是 I3g 干预点；替换向日葵/坚果墙/土豆雷会产生不同清路结果，向日葵延迟僵尸并改变后续割草机与重建防线的轨迹。教师明确说“种向日葵本身不是 skill”。单局轨迹差异不证明 I3g 总体疗效。
-- 在 I0 上，决策 221、278、293 将已被越过僵尸的身后豌豆改成对准未防守路线的有效火力，三点均把结局从 wave 17 进屋改到 wave 30 通关。生成的 `no-shooter-behind-zombies` 回答三问、probe 证据 3/3、反例 2/2，`lint_skills` 最终 1/1 通过；它与已入库的 `avoid-rear-shooters-blind-spot` 在规则和 probe 上实质重复，所以不复制第二份。原件：[no-shooter-behind-zombies](</tmp/pvz-v5/teacher/rescued_I3g_30238/skills_out/no-shooter-behind-zombies/SKILL.md>)，SHA256 `2f5d1c3a4f90cc157d70b88d3b09a2608a92c32f79cb95c15b41c338a96cc0bf`。
+- 在 I0 上，决策 221、278、293 将已被越过僵尸的身后豌豆改成对准未防守路线的有效火力，三点均把结局从 wave 17 进屋改到 wave 30 通关。生成的 `no-shooter-behind-zombies` 回答三问、probe 证据 3/3、反例 2/2，`lint_skills` 最终 1/1 通过；它与已入库的 `avoid-rear-shooters-blind-spot` 在规则和 probe 上实质重复，所以不复制第二份。原件：no-shooter-behind-zombies（原件 `/tmp/pvz-v5/teacher/rescued_I3g_30238/skills_out/no-shooter-behind-zombies/SKILL.md`，已不存在），SHA256 `2f5d1c3a4f90cc157d70b88d3b09a2608a92c32f79cb95c15b41c338a96cc0bf`。
 - trace confusion 记 3 次工具错误（两次 what-if 请求超时、一次 write 参数错误）和 3 次 lint 调用；后续显式候选完成验证。初次超时不算假设被否。
 
 ### 已完成 10/10：seed 30381（`bc_seq32_100k` 失败局）
@@ -151,7 +151,7 @@ I5/I6 都是意向处理、剂量不足。I5 对 I0 精确 McNemar `p=0.125`、H
 - 独立 DSH session `session-b2da9d48-a290-4521-918e-646cd478674b`，退出码 0，用时 780 秒；51 次工具调用。日志与轨迹在 `/tmp/pvz-v5/teacher/b9_seq32_30381/run/`。
 - **口径校正**：`seq32` 是模型/训练运行标识，不是 32 决策截断。归档 `artifacts/episode_samples/seed_30381/bc_seq32_100k/meta.json` 记录 `outcome.actions=899`、`frame_count=900`、`won=false`、`final_wave=30`、`final_tick=49286`、`mower_triggered=2`；模型在第 30 波僵尸进屋失败。
 - 决策 211 时有 125 阳光，豌豆/坚果/向日葵/土豆雷均就绪；策略仍在贴脸僵尸格种豌豆，300 tick 后被吃。决策 239 又在已越过僵尸身后补射手。What-if 中决策 211 改坚果或转投威胁路、决策 239 改坚果或补裸路射手均通关。
-- 后段决策 751、771 在阳光 475–1050 且樱桃炸弹就绪时，基线仍补种短命寒冰/双发；分别改樱桃炸弹均通关。教师生成 `cherry-bomb-emergency-sweep`，回答三问、probe 与 `lint_skills` 1/1 通过。原件：[cherry-bomb-emergency-sweep](</tmp/pvz-v5/teacher/b9_seq32_30381/skills_out/cherry-bomb-emergency-sweep/SKILL.md>)，SHA256 `4c7ad6cd9985dd3ca39f9950ee7c9be5c4f0da221e2d493f1a3ba759b2848f04`。它与已共享的 `emergency-cherry-bomb-clearance` 重叠，因此作为跨模型/档案复核，不复制同义 skill。
+- 后段决策 751、771 在阳光 475–1050 且樱桃炸弹就绪时，基线仍补种短命寒冰/双发；分别改樱桃炸弹均通关。教师生成 `cherry-bomb-emergency-sweep`，回答三问、probe 与 `lint_skills` 1/1 通过。原件：cherry-bomb-emergency-sweep（原件 `/tmp/pvz-v5/teacher/b9_seq32_30381/skills_out/cherry-bomb-emergency-sweep/SKILL.md`，已不存在），SHA256 `4c7ad6cd9985dd3ca39f9950ee7c9be5c4f0da221e2d493f1a3ba759b2848f04`。它与已共享的 `emergency-cherry-bomb-clearance` 重叠，因此作为跨模型/档案复核，不复制同义 skill。
 - trace confusion 记录 2 次 What-if 超时（决策 211 枚举、决策 239 多候选）；改成单项显式候选后完成重放。超时不是假设被否。
 
 ### B 轨合并结论

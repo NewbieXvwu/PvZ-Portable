@@ -293,3 +293,50 @@ test_deck_warnings 40 passed；test_qc_watchdog+test_obs_recording 16 passed；t
 test_incremental_pack -k round2 skip（本机无该 pack，同基线）；test_fog_observation 非引擎用例同基线；
 配方相关 recipe 用例 2 passed；测试收集 25 项无错误。deploy18 基线固有的 2 个 test_deploy17 失败已随批次 4 修复。
 未部署、未连台式机。
+
+## 文档（分支 `purgedocs`，基于 origin/deploy19 @ 8eb35d86，2026-10-29）
+
+第三轮：只改文档，不动代码、不动 `AGENTS.md`、不新增文档。
+
+### 根目录 .md
+
+- `README.md`：已无残留 —— 第 41 行早在 2026-10-19 就写明 PPO 线与规则策略已删，第 313 行
+  已记 `scripts/pvzp-v4-converter.py` 于 task169 删除。未改。
+- `DESIGN.md`：§14 是**按当时记录的历史日志**，整段删除会丢掉压力阶梯、种子分配、师生差距等
+  仍被引用的结论，所以按用户给的第二选项改为“一句现状说明”：
+  - 在 §14 开头加一条总说明（task169，2026-10-29）：§14 各条按当时记录保留，点名的生成器 /
+    评估脚本 / 清单多数已随 task169 删除，行内标 `task169 已删`，这些命令不再可用；现行任务表由
+    `scripts/curriculum_queue.py` + `scripts/pvz_tasks.py` 在内存中生成，评估走现行门禁
+    （`python/pvz_promotion.py`，v6，面板 `configs/gate_v5_panel.json`）。
+  - 行内补标 `task169 已删`：`scripts/mixed_dagger_round.sh`、`make_night_panel.py --combined`
+    （两处）、`make_pool_panel.py --combined`、`qc_log_throughput.py`、
+    `value_ranking_check.py --dump` + `train_value_branches.py`。
+  - 修正一处旧标注错误：`scripts/unified_panel.py` **文件仍在**（只提供 `generate()` /
+    `read_panel()` / `day_identity_tasks()` 内存任务族），删掉的只是旧 `--generate` /
+    `--generate-pressure` / `--value` CLI。四处相关段落改为“旧 CLI 已删”，不再说整个脚本已删。
+  - 修三处已过时的校验流程描述：`human_demo.py` 的逐 tick 动作带、示范局 `meta.json` 的
+    `demo_archive_sha256`、task112 验收的“逐操作状态哈希校验”，均注明状态哈希比对已在
+    task173 删除（`human_demo.py verify` 仍存在，仍写 `meta['verified']`，只是不再比对哈希；
+    `search_play.py` 的 meta 也不再写 `demo_archive_sha256`）。
+- `AGENTS.md` / `CLAUDE.md`：引用的 `scripts/hf_sync.py`、`scripts/pvz_tasks.py`、
+  `scripts/episode_query.py` 都还在，无需改。
+
+### MEMORY 断链（历史不删，只修链接）
+
+扫描 `MEMORY/**/*.md` 的内联链接（含 `](<绝对路径>)` 形式，跳过 http / 锚点），共 **53 条断链**，
+全部处理：
+
+- **10 条改指现存文件**：`codex-report-v5.md` / `codex-report-v5-snapshot.md` 各 4 条技能链接改为
+  仓库相对 `../../dsh/pvz-teacher/skills/<name>/SKILL.md`；`2026-10-24.md` 两条 task45 链接改指
+  `docs/task45-fog-terminal-diagnosis.md` 与 `docs/task45-fog-terminal-results.json`。
+- **43 条改为纯文本**：`adventure-gap.md` 30 条指向已删工作树 `advgap` 的绝对路径、`task56-l20-student-gap.md`
+  4 条指向已删工作树 `l20gap`，以及 `codex-report-v5*.md` 的 `/tmp` 产物、`cuda-rollout-report.md` 的
+  `cuda/spec/`、`qc-throughput-20261027.md` 的 3 个已删脚本、`value-widen.md` 的本地 `paired.json`。
+  文字保留，括注原路径已不存在（或本地产物不入 git）。
+
+### 验收
+
+- 全量重扫（README/DESIGN/AGENTS + `MEMORY/**/*.md`）：断链 **0**。
+- 按 `/tmp/deleted.txt`（deploy17→deploy19 删除的 343 个路径）反查根目录文档，未标注的命中只剩
+  `search_play.py` 名字里含 `play.py` 的误报。
+- `git diff --check` 干净；本分支只改 10 个文档文件（DESIGN + 8 份 MEMORY 历史 + 本任务书），无代码改动、无新增文档、未部署。

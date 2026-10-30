@@ -93,15 +93,15 @@ ID字典：0普通，1旗帜，2路障，3撑杆，4铁桶，5报纸，6铁门�
 
 源码定位（对应上表，避免将猜测当作已实现能力）：
 
-- 原生传送带：[Board.cpp:8577](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Board.cpp:8577)、[LawnApp.cpp:1407](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:1407)、[Challenge.cpp:1649](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1649)；[D] [TV4] [R2] [R5]。
-- LittleTrouble小僵尸：[LawnApp.cpp:3122](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:3122)、[Challenge.cpp:1781](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1781)、[Zombie.cpp:871](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Zombie.cpp:871)；[E]。
-- 暴风雨传送带：[Board.cpp:8710](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Board.cpp:8710)、[Challenge.cpp:1965](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1965)、[LawnApp.cpp:1643](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:1643)；[E] [R3]。
-- 保龄球：[Challenge.cpp:2453](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:2453)、[Plant.cpp:2361](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Plant.cpp:2361)、[LawnApp.cpp:2063](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:2063)；[E] [EP]。
-- 打地鼠（用户排除）：[Challenge.cpp:1329](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1329)、[Board.cpp:8590](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Board.cpp:8590)、[pvz_env.py:536](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/python/pvz_env.py:536)；[E]。
-- 砸罐子：[Challenge.cpp:1346](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1346)、[Challenge.cpp:4057](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:4057)、[LawnApp.cpp:2099](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:2099)、[LawnApp.cpp:2133](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:2133)、[Board.cpp:8590](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Board.cpp:8590)；[E]。
-- 蹦极：[Board.cpp:4800](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Board.cpp:4800)、[Challenge.cpp:1807](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1807)、[LawnApp.cpp:2088](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:2088)；[E] [TR] [TR2] [D46]。
-- 僵王：[Challenge.cpp:1741](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Challenge.cpp:1741)、[Zombie.h:150](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Zombie.h:150)、[Zombie.cpp:10169](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Zombie.cpp:10169)、[LawnApp.cpp:2088](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/LawnApp.cpp:2088)；[E] [EP]。
-- 玉米加农炮（跨关机制）：[Plant.cpp:4207](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Plant.cpp:4207)、[Board.cpp:3581](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/src/Lawn/Board.cpp:3581)、[pvz_env.py:536](/home/newbiexvwu/PvZ-search/.claude/worktrees/advgap/python/pvz_env.py:536)；[E]。
+- 原生传送带：`Board.cpp:8577`、`LawnApp.cpp:1407`、`Challenge.cpp:1649`；[D] [TV4] [R2] [R5]。
+- LittleTrouble小僵尸：`LawnApp.cpp:3122`、`Challenge.cpp:1781`、`Zombie.cpp:871`；[E]。
+- 暴风雨传送带：`Board.cpp:8710`、`Challenge.cpp:1965`、`LawnApp.cpp:1643`；[E] [R3]。
+- 保龄球：`Challenge.cpp:2453`、`Plant.cpp:2361`、`LawnApp.cpp:2063`；[E] [EP]。
+- 打地鼠（用户排除）：`Challenge.cpp:1329`、`Board.cpp:8590`、`pvz_env.py:536`；[E]。
+- 砸罐子：`Challenge.cpp:1346`、`Challenge.cpp:4057`、`LawnApp.cpp:2099`、`LawnApp.cpp:2133`、`Board.cpp:8590`；[E]。
+- 蹦极：`Board.cpp:4800`、`Challenge.cpp:1807`、`LawnApp.cpp:2088`；[E] [TR] [TR2] [D46]。
+- 僵王：`Challenge.cpp:1741`、`Zombie.h:150`、`Zombie.cpp:10169`、`LawnApp.cpp:2088`；[E] [EP]。
+- 玉米加农炮（跨关机制）：`Plant.cpp:4207`、`Board.cpp:3581`、`pvz_env.py:536`；[E]。
 
 另外，屋顶探针L41预置25盆（c0–c4），L45/L50为15盆（c0–c2），不能把“所有屋顶预置前五列”当作本次事实。L15/L35原生槽数分别3/1，现有reset会按传入deck重写；两关探针成功不等于保持原生玩法。砸罐的内容屏蔽与Boss可见状态均须同步检查full/lean/v2/原生推演和学生编码，不能只改展示JSON。
 

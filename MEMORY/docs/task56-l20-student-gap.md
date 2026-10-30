@@ -48,7 +48,7 @@ task55 的总表（`MEMORY/docs/adventure-gap.md`）里，差距最大的一关�
 
 两份已完成模型的固定训练语料都没有L20。task36 A按原任务要求只重加权task27冻结的281标签，未扩充来源；原清单不含独立的`n20o1_fast_search`。所以这里没有“575条已入训标签却被模型全部学坏”的证据。实际断点在**选入训练语料之前**，不是本次查到的packet/cell错配或wait过滤故障。该结论不证明加进这32局就必能通关，也不能从零直接监督推断表示容量足够或不足。
 
-qc的只读快照中，L20窗口32局来自初始化：`last_round=0`、offset=32，完整state.log及当前curriculum.log均无新L20采集组。排队的round2配方有202标签，也无L20。`pack_labels`收集控制器实际写出的组与显式基底标签；导入胜率窗口不会自动把对应帧加入基底配方。后续若真的采到L20新组，它会按普通流程加入；这里没有证据称L20标签会被永久过滤。[代码](</home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/scripts/curriculum_queue.py:411>)
+qc的只读快照中，L20窗口32局来自初始化：`last_round=0`、offset=32，完整state.log及当前curriculum.log均无新L20采集组。排队的round2配方有202标签，也无L20。`pack_labels`收集控制器实际写出的组与显式基底标签；导入胜率窗口不会自动把对应帧加入基底配方。后续若真的采到L20新组，它会按普通流程加入；这里没有证据称L20标签会被永久过滤。代码（原路径 `/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/scripts/curriculum_queue.py:411`，工作树已删除）
 
 ### 1. 真实师生行为与同状态偏好
 
@@ -91,7 +91,7 @@ qc的只读快照中，L20窗口32局来自初始化：`last_round=0`、offset=3
 
 ### 3. 观测、身份头与续走
 
-`conveyor_start=original`由引擎实际reset标记传到帧，身份手牌特征把免费卡affordable置1；实际动作筛选仍取引擎合法表，未发明阳光门槛。每槽保存类型/active/冷却进度/可付费四列；重复卡分别保留槽状态，global输入按类型amax聚合，cell头取该槽实际植物身份嵌入，空槽−1不作为有效身份。没有按当前deck或固定slot猜原生发牌。[packet_features/identity头](</home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_rollout_policy.py:32>)、[缓存对齐](</home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_frame_store.py:352>)。
+`conveyor_start=original`由引擎实际reset标记传到帧，身份手牌特征把免费卡affordable置1；实际动作筛选仍取引擎合法表，未发明阳光门槛。每槽保存类型/active/冷却进度/可付费四列；重复卡分别保留槽状态，global输入按类型amax聚合，cell头取该槽实际植物身份嵌入，空槽−1不作为有效身份。没有按当前deck或固定slot猜原生发牌。packet_features/identity头（原路径 `/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_rollout_policy.py:32`，工作树已删除）、缓存对齐（原路径 `/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/python/pvz_frame_store.py:352`，工作树已删除）。
 
 8局4634帧精确回放覆盖空槽、重复卡与标称cost高于银行余额的合法免费卡；64根×两模型的所有head argmax和贪心动作一致。logit只是数值容差一致（最大绝对差6.10e−5），不是逐位一致。四个固定老师根×两模型的2500tick/mask61/共同未来续走进一步核验：336条记录含8条指定首步等待，328个学生决策的完整公开轨迹及叶状态一致；进入网络的2077152个float32值逐位相同，包含身份聚合后的scalars。
 
@@ -109,7 +109,7 @@ qc的只读快照中，L20窗口32局来自初始化：`last_round=0`、offset=3
 
 ### 5. 证据与复核
 
-结论层：[task56-l20-gap-evidence.json](</home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/MEMORY/docs/task56-l20-gap-evidence.json>)。包含原始来源与快照SHA、逐局种植/等待统计、head概率与排名示例、pack索引与模型SHA、128个预测对及8段续走的原始证据索引。原始帧、段、trace与日志均在本树忽略的artifacts/task56，不推git；没有生成训练检查点。
+结论层：task56-l20-gap-evidence.json（原路径 `/home/newbiexvwu/PvZ-search/.claude/worktrees/l20gap/MEMORY/docs/task56-l20-gap-evidence.json`，工作树已删除）。包含原始来源与快照SHA、逐局种植/等待统计、head概率与排名示例、pack索引与模型SHA、128个预测对及8段续走的原始证据索引。原始帧、段、trace与日志均在本树忽略的artifacts/task56，不推git；没有生成训练检查点。
 
 只读复核（不启动游戏或训练）：
 
