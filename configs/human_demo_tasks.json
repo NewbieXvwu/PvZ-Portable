@@ -11008,7 +11008,16 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/e34e7fd6f0e9501665d2cf54dd8797ce24a6ba56a8911ed1cee37958e6bfd1e9",
+    "decisions": [
+     1159
+    ],
+    "index": 0,
+    "future_seed_start": 406000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_pool_30_orig_m100_s81028023_a56b3563a2c8f",
