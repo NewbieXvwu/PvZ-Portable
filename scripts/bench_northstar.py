@@ -563,7 +563,12 @@ task129 卡组用登记表自带种子），所有学生逐局配对。L35 是�
 # --------------------------------------------------------------------------- main
 
 def active_student(path: Path, remote: str) -> tuple[int, Path]:
-    document = json.loads(remote_python(remote, f'from pathlib import Path\nprint(Path({str(path)!r}).expanduser().read_text())'))
+    code = f'''import json
+from pathlib import Path
+state = json.loads(Path({str(path)!r}).expanduser().read_text())
+print(json.dumps({{'student_round': state['student_round'], 'student': state['student']}}))
+'''
+    document = json.loads(remote_python(remote, code))
     return int(document["student_round"]), Path(document["student"])
 
 
@@ -587,8 +592,10 @@ def _teacher_worker(cfg):
 
 def _teacher_game(job):
     import search_play
+    from curriculum_queue import save_candidates_for
     task, seed = job
-    args = argparse.Namespace(**{**vars(_TEACHER['args']), 'task_id': task['task_id']})
+    args = argparse.Namespace(**{**vars(_TEACHER['args']), 'task_id': task['task_id'],
+        'save_candidates': save_candidates_for(task, task, _TEACHER['save_levels'])})
     row = search_play._play(dict(args=args, arm='fast_search', seed=seed, task_definition=task))
     return dict(task_id=task['task_id'], seed=seed, zone=task['zone'],
                 won=int(row['won']), final_wave=row['final_wave'], seconds=row['seconds'])
@@ -597,6 +604,7 @@ def _teacher_game(job):
 def teacher(args, record, model):
     """Bounded in-flight games, durable numerical results, student-first idle scheduling."""
     from concurrent.futures import ThreadPoolExecutor
+    from curriculum_queue import parse_levels
     import search_play
     tasks, plan = control_suite()
     path = args.out / f'teacher_r{int(record["round"]):06d}.csv'
@@ -614,7 +622,8 @@ def teacher(args, record, model):
             '--native-games', '--dagger-beta', '1'])
         keep, values = search_play._export_values(str(args.value), str(args.static_value))
         pool = mp.get_context('spawn').Pool(args.workers, initializer=_teacher_worker,
-                                          initargs=(dict(args=params, values=values),))
+            initargs=(dict(args=params, values=values,
+                           save_levels=parse_levels(args.save_candidates_levels)),))
         pending, cursor, admit, next_poll = [], 0, True, time.monotonic()+60
         polls = ThreadPoolExecutor(max_workers=2)
         poll = gpt_poll = None
@@ -626,7 +635,8 @@ def teacher(args, record, model):
                 if handle.tell() == 0:
                     writer.writeheader()
                 while pending or (admit and cursor < len(jobs)):
-                    if args.gpt_tasks is None and gpt_poll is None and time.monotonic() >= next_gpt:
+                    if (args.gpt_tasks is None and not record.get('gpt_rate') and gpt_poll is None
+                            and time.monotonic() >= next_gpt):
                         gpt_poll = polls.submit(gpt_suite, args.remote)
                     if gpt_poll is not None and gpt_poll.done():
                         try:
@@ -758,6 +768,8 @@ def main() -> int:
     parser.add_argument("--resource-dir", type=Path, default=DEFAULT_RESOURCE_DIR)
     parser.add_argument('--value', type=Path, default=Path.home()/'pvz-bench-data/task171/teacher/value.pt')
     parser.add_argument('--static-value', type=Path, default=Path.home()/'pvz-bench-data/task171/teacher/static.pt')
+    parser.add_argument('--save-candidates-levels', default='31-40',
+                        help='production teacher saving probes; same level list as curriculum_queue')
     parser.add_argument('--idle-cpu-percent', type=float, default=150,
                         help='pause teacher admission when other compute uses this %%CPU')
     parser.add_argument("--interval", type=int, default=1800,
