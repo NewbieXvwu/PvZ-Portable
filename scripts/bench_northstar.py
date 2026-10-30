@@ -67,7 +67,7 @@ DEFAULT_RESOURCE_DIR = Path(os.environ.get(
     "PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
 MAX_WORKERS = 4  # ten game/driver processes, leaving room for SSH polling
 MODEL_CACHE = Path.home() / '.cache/pvz-northstar/models'
-REMOTE = 'newbiexvwu@fd7a:115c:a1e0::ab2a:9b56'
+REMOTE = 'newbiexvwu@100.120.155.85'
 IMPORT_ROOT = '/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport'
 GPT_SEED_START = 938_000_000
 LEVELS = tuple(range(1, 51))
@@ -207,10 +207,9 @@ SUITES = {"completion": completion_suite, "control": control_suite,
 
 
 def remote_python(remote: str, code: str) -> str:
-    options = ['-o', 'HostKeyAlias=100.120.155.85'] if remote == REMOTE else []
     encoded = base64.b64encode(code.encode()).decode()
     command = f'"exec(__import__(\'base64\').b64decode(\'{encoded}\'))"'
-    result = subprocess.run(['ssh', '-o', 'ConnectTimeout=60', '-o', 'ServerAliveInterval=10', *options,
+    result = subprocess.run(['ssh', '-o', 'ConnectTimeout=60', '-o', 'ServerAliveInterval=10',
                              remote, 'wsl', '-d', 'Ubuntu',
                              '-e', '/home/newbiexvwu/.venvs/ml/bin/python3', '-c', command],
                             stdin=subprocess.DEVNULL, text=True, capture_output=True)
@@ -298,9 +297,9 @@ print(commit.oid)
     with tempfile.TemporaryDirectory(prefix='pull-', dir=MODEL_CACHE) as temporary:
         pulled = hf_hub_download(repo_id=os.environ['PVZ_HF_REPO'], repo_type='model',
             filename=name, revision=revision, local_dir=temporary, token=os.environ['HF_TOKEN'])
+        HfApi(token=os.environ['HF_TOKEN']).delete_file(
+            repo_id=os.environ['PVZ_HF_REPO'], repo_type='model', path_in_repo=name)
         shutil.move(pulled, target)
-    HfApi(token=os.environ['HF_TOKEN']).delete_file(
-        repo_id=os.environ['PVZ_HF_REPO'], repo_type='model', path_in_repo=name)
     return target
 
 
