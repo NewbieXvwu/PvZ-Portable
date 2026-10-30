@@ -13,7 +13,7 @@ from pvz_frame_store import (cache_aux, cache_episode, encode_student_frames, en
                              frame_bytes, row_damage_labels, write_frames)
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
-from pack_training_rows import packed_load
+from pack_test_support import packed_load
 
 
 def test_rowpool_checkpoint_and_export_without_aux():

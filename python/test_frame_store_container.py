@@ -16,7 +16,7 @@ import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 
-from pvz_frame_store import frame_bytes, save_arrays  # noqa: E402
+from pvz_frame_store import _save, frame_bytes  # noqa: E402
 
 
 def sample() -> dict:
@@ -69,7 +69,7 @@ class ContainerTest(unittest.TestCase):
         arrays = sample()
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "frames.npz"
-            save_arrays(path, **arrays)
+            _save(path, **arrays)
             with zipfile.ZipFile(path) as archive:
                 self.assertEqual({info.compress_type for info in archive.infolist()}, {zipfile.ZIP_LZMA})
                 self.assertEqual(sorted(info.filename for info in archive.infolist()),
@@ -84,7 +84,7 @@ class ContainerTest(unittest.TestCase):
     def test_zero_dimensional_string_survives(self):
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "cache.npz"
-            save_arrays(path, digest=np.array("abc", dtype="<U64"), rows=np.array([1], dtype=np.int64))
+            _save(path, digest=np.array("abc", dtype="<U64"), rows=np.array([1], dtype=np.int64))
             with np.load(path, allow_pickle=False) as stored:
                 self.assertEqual(str(stored["digest"]), "abc")
                 self.assertEqual(stored["digest"].shape, ())

@@ -101,7 +101,7 @@ class HumanDemoTest(unittest.TestCase):
             self.assertTrue(all(frame['label_source'] == 'human' for frame in frames))
             self.assertFalse(any('note' in frame for frame in frames))
             self.assertEqual(json.loads((target / 'meta.json').read_text())['note'], '向日葵示范')
-            from pack_training_rows import packed_load
+            from pack_test_support import packed_load
             from train_rollout_policy import load
             import torch
             data = root / 'frames_v2'

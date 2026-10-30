@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / 'scripts'))
 from pvz_frame_store import cache_episode, read_frames, write_frames, identity_scene_scalars
 from pvz_rollout_policy import load_student, packet_features
 from train_rollout_policy import CandidateStore, PacketStore, ValueStore
-from pack_training_rows import packed_load
+from pack_test_support import packed_load
 
 
 class IdentityTrainingTest(unittest.TestCase):

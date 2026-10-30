@@ -34,7 +34,6 @@ def test_obsrec_compact_bytes_and_teacher_roots(tmp_path, monkeypatch, demo):
     from pvz_tasks import profile_for_deck
     from pvz_rollout_policy import RolloutNet, export_student
     from pvz_frame_store import frame_bytes
-    from pvz_research_data import episode_tokens
     exe = ROOT.parent/'studentv3net/build-studentv3net/pvz-portable'
     if not exe.is_file():
         pytest.skip('existing isolated task163 engine unavailable')
@@ -75,14 +74,15 @@ def test_obsrec_compact_bytes_and_teacher_roots(tmp_path, monkeypatch, demo):
             s._close_worker_env()
         path = args.frames/'seed_157/fixture_fast_search/frames.npz'
         outputs.append(path)
-        attachment = episode_tokens(path)
         meta = json.loads((path.parent/'meta.json').read_text())
+        sidecar = path.parent/'tokens_v3.npz'
         if enabled:
-            assert attachment.meta['rows'] == 4
-            assert result['obs_v3_bytes'] == (path.parent/'tokens_v3.npz').stat().st_size
+            with np.load(sidecar, allow_pickle=False) as stored:
+                assert json.loads(str(stored['meta']))['rows'] == 4
+            assert result['obs_v3_bytes'] == sidecar.stat().st_size
             assert meta['observation_attachment']['bytes'] == result['obs_v3_bytes']
         else:
-            assert attachment is None and 'obs_v3_bytes' not in result
+            assert not sidecar.exists() and 'obs_v3_bytes' not in result
     assert searches == [False]*3+[True]*3
     assert frame_bytes(outputs[0]) == frame_bytes(outputs[1])
     with np.load(outputs[0]) as a, np.load(outputs[1]) as b:

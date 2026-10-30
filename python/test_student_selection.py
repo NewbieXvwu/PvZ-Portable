@@ -7,7 +7,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import pvz_student_selection as panel
-from select_student import score_rows, select, selection_rank
+from select_student import select, selection_rank
 
 
 def test_training_seeds_are_two_distinct_integers():
@@ -138,12 +138,6 @@ def test_select_rejects_incomplete_or_wrongly_played_games():
                 pass
 
 
-def test_score_rows_sums_wins_over_exact_seed_set():
-    rows = [dict(seed=s, arm='fast', terminal=True, won=s % 2 == 0, searched=0)
-            for s in (10, 11, 12, 13)]
-    assert score_rows_lines(rows, {10, 11, 12, 13}) == 2
-
-
 def test_r26_selection_marginals_replay_with_one_shared_synthetic_incumbent(tmp_path):
     zones = ('day', 'night', 'pool', 'fog', 'roof')
     counts = (72, 72, 72, 72, 16, 24, 16)
@@ -203,13 +197,3 @@ def test_selection_prefers_approval_then_total_or_least_worst_zone():
     assert max(rejected, key=lambda name: selection_rank(scores[name])) == 'least_regression'
 
 
-def score_rows_lines(rows, expected):
-    # score_rows reads a file; exercise through a temp file for the real path.
-    import tempfile as tf
-    with tf.NamedTemporaryFile('w', suffix='.jsonl', delete=False) as handle:
-        handle.write('\n'.join(json.dumps(r) for r in rows))
-        path = Path(handle.name)
-    try:
-        return score_rows(path, expected)
-    finally:
-        path.unlink()

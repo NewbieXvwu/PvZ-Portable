@@ -324,11 +324,6 @@ def write_frames_from_source(path: Path, source: bytes) -> None:
           **encode_frames_from_source(source))
 
 
-def save_arrays(path: Path, **arrays) -> None:
-    """Write an archive/cache npz verbatim -- the same container _save uses (LZMA)."""
-    _save(path, **arrays)
-
-
 def write_frames(path: Path, frames: list[dict]):
     source = "".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames).encode()
     if path.suffix == ".jsonl":

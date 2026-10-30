@@ -8,7 +8,7 @@ import numpy as np
 import torch
 
 from test_bungee_inputs import BINARY, RESOURCE, frame
-from pack_training_rows import packed_load
+from pack_test_support import packed_load
 from pvz_env import PvZEnv, TaskSpec, profile_for_deck
 from pvz_frame_store import encoder_signature, write_frames
 from pvz_recipe import training_row_options, validate

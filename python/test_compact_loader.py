@@ -17,7 +17,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_frame_store import write_frames  # noqa: E402
-from pack_training_rows import packed_load  # noqa: E402
+from pack_test_support import packed_load  # noqa: E402
 from train_rollout_policy import (CandidateStore, CompactBoards, PacketStore, ValueStore,
                                   constant_plane, load)  # noqa: E402
 

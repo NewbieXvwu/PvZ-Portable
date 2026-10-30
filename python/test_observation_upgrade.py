@@ -88,7 +88,7 @@ def test_curriculum_recipe_trains_one_step_from_old_parent(tmp_path, monkeypatch
     import train_rollout_policy as trainer
     from pvz_frame_store import write_frames, cache_episode
     from pvz_recipe import write_recipe
-    from pack_training_rows import packed_load
+    from pack_test_support import packed_load
     from test_bungee_inputs import frame
 
     old = RolloutNet(8, 'meanmax', False, 'v2', row_pool=True, packet_head='identity')

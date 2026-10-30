@@ -31,10 +31,6 @@ def outcomes(path, expected_seeds):
     return {row['seed']: row for row in rows}
 
 
-def score_rows(path, expected_seeds):
-    return sum(row['won'] for row in outcomes(path, expected_seeds).values())
-
-
 def selection_rank(score):
     prediction = score['prediction']
     worst = min(zone['delta_rate'] for zone in prediction['zones'].values())

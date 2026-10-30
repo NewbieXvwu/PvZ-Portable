@@ -17,7 +17,7 @@ import pvz_rollout_policy as policy
 from pvz_frame_store import cache_episode, encode_student_frames, encoder_signature, read_frames, write_frames
 from pvz_student_observation import StudentHistory
 from pvz_value_net import _featurize_reference
-from pack_training_rows import packed_load
+from pack_test_support import packed_load
 
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
 BINARY = ROOT / "build/pvz-portable"

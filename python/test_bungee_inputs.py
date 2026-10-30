@@ -12,7 +12,7 @@ import torch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pack_training_rows import packed_load
+from pack_test_support import packed_load
 from pvz_env import PvZEnv, TaskSpec, profile_for_deck
 from pvz_frame_store import write_frames, encoder_signature
 from pvz_recipe import validate, training_row_options

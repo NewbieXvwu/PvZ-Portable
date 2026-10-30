@@ -49,19 +49,6 @@ RICH_FIELDS = {**FIELDS, 'target_indices': (np.int32, ())}
 SIDECAR_NAME = 'tokens_v3.npz'
 
 
-def frame_crc(path):
-    """Constant-size ZIP-directory lookup; never decompress/replay an archive to bind it."""
-    import zipfile
-    import zlib
-    path = Path(path)
-    if path.suffix == '.npz':
-        with zipfile.ZipFile(path) as archive:
-            member = archive.getinfo('frames.npy')
-            return [member.CRC, member.file_size]
-    raw = path.read_bytes()
-    return [zlib.crc32(raw), len(raw)]
-
-
 class SparseTokenWriter:
     """Streaming task162-compatible columns, compressed per episode or mmap-ready per pack."""
     def __init__(self, parent, *, index_kind='frame', token_input='obs_v3'):
@@ -92,7 +79,7 @@ class SparseTokenWriter:
         for name, value in arrays.items():
             np.asarray(value, dtype=RICH_FIELDS[name][0]).tofile(self.handles[name])
 
-    def finish(self, target, *, source_frame=None, compressed=True):
+    def finish(self, target, *, compressed=True):
         import os
         import zipfile
         for handle in self.handles.values():
@@ -100,8 +87,6 @@ class SparseTokenWriter:
         meta = dict(version=2, token_input=self.token_input, index_kind=self.index_kind,
                     rows=self.rows, tokens=self.tokens, features=self.features, max_tokens=self.max_tokens,
                     sparse_float32=True)
-        if source_frame is not None:
-            meta['frame_crc'] = frame_crc(source_frame)
         (self.directory/'ready.json').write_text(json.dumps(meta)+'\n')
         target = Path(target)
         target.parent.mkdir(parents=True, exist_ok=True)
@@ -129,17 +114,6 @@ class SparseTokenWriter:
             if not handle.closed:
                 handle.close()
         self.temporary.cleanup()
-
-
-def episode_tokens(frame_path):
-    """Read an optional attachment; bind using the compact member's recorded CRC only."""
-    path = Path(frame_path).parent/SIDECAR_NAME
-    if not path.is_file():
-        return None
-    store = SparseTokens(path)
-    if store.meta.get('index_kind') != 'frame' or store.meta.get('frame_crc') != frame_crc(frame_path):
-        raise ValueError(f'{path}: token attachment belongs to different compact frames')
-    return store
 
 
 def capture_frame(observation, writer=None):

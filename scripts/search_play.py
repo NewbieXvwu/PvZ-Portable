@@ -841,7 +841,7 @@ def _play(job: dict, observer=None) -> dict:
                                  "".join(frames).encode())
         attachment_info = None
         if token_writer is not None:
-            token_writer.finish(archive / SIDECAR_NAME, source_frame=archive / 'frames.npz')
+            token_writer.finish(archive / SIDECAR_NAME)
             attachment_info = dict(file=SIDECAR_NAME, version=3,
                                    bytes=(archive/SIDECAR_NAME).stat().st_size,
                                    frames=token_writer.rows)
