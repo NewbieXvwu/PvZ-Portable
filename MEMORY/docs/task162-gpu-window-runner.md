@@ -211,3 +211,5 @@ python scripts/queue_decision_study.py \
 24–38小时仍是按三臂都以较慢台式机16.22行/秒计算的保守工作量预算；按最新分工不会再让两个token臂排台式机空档，但Mac整体完工还依赖缓存交接及其实际吞吐，不能把未启动的Mac速度写成实测。阶段前缀完整评分与全量留出完工继续分开报告。缓存增加前缀后，准备预留1小时也仍是估计；未来空档明显低于15%或交接延迟时需据实更新，不能保证不可用的GPU窗口。
 
 **11:13:57最终分工已部署并发布：** 合并提交/固定研究代码 **`5ef7ad93af44145668b27cc9ba6cb4bf3b5bab12`**，服务active，MainPID **12921**，Nice10、MemoryMax5GiB保持。台式机仅启用**已完成split、公共tokens准备、CNN64 seed1**三项，另外34项禁用；CNN64不再延期等待其他臂的共同评测，两个token臂及cleanup确实禁用。token缓存尚未ready，没有在前台同步生成，也没有上传HF。上述公共子集、缓存前缀与Mac无原帧评测入口已推送gpuwindow，供Mac承接任务使用；原三臂台式机预算与部署记录仅作时间线保留，以本节最终分工为准。
+
+Mac已接收5ef7ad93共同定义，通过HF取用同一unseen.npy、划分ready、当前预算和两份seed1配方，仅将配方data调整为本地r42pack，HF中的这批中转文件已删除。为实际训练调用同版read_pack建立了可供两臂共用的稀疏输入缓存 `~/pvz-bench-data/r42pack/.merge/shared-v1/`，23,631,235行已准备完成，没有重放、重打标签或另建行清单；Mac支持MPS，将以Nice19、单训练进程串行运行两臂。11:35读取台式机状态仍为生产training、研究active=null，公共tokens尚无progress/ready，故Mac还未开训，等待同一数值缓存交接。
