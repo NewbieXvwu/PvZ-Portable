@@ -63,3 +63,11 @@ Mac 小型夹具共7项通过：5项 task167 测试覆盖默认/显式关闭逐�
 主控安装本分支的 `python/pvz_recipe.py`、`python/pvz_training_rows.py`、`scripts/train_rollout_policy.py` 和两份新配方后，沿现有组边界流程切换控制器的 `--alternate-recipe`。先指向生产工作树中的 B2 文件，下一阶段指向 B3 文件，`--recipe` 始终指向原 A。启动仍保持 `--candidates-per-recipe 2 --training-parallelism 1`。
 
 已有入队任务继续使用各自 `round_*/recipe_b.json` 和种子配方快照；切换只作用于之后新入队任务。根据候选的 source_recipe 及 shared_pack_weights.json 确认实际实验阶段，并待前一阶段完成两轮后再切。每轮仅按 A 构建/复用一次包，不为 B2/B3 发起打包命令。当前提交只提供文件与上述顺序，没有改生产启动文件、队列状态或在役配方。
+
+## 2026-10-30 主控决定：deploy20 切 B2，撤销 B3
+
+主控确认B1已完成r52、r54两轮，deploy20的B槽位改用 `recipes/dw4i2_v2timer_l7keep25.json`（`history_l7_keep=0.25`）。**此前“B2观察两轮后再切B3”的排队安排撤销，B3不用，不再排期或自动切换。** A仍使用原 `dw4i2_v2timer.json`。
+
+沿用本任务已有的共包+私有权重实现：按整局稳定哈希选择历史z*/d7*且实际关卡为L7的训练档案，未保留档案的训练行权重置零，验证划分与验证权重保持A口径。B2的历史z*标签权重保持A的1.5，不叠加B1的1.0缩放；不是将全部标签逐行随机丢弃，也不设置pack的label_keep。共用每轮A包和已有合并缓存，不为B2重打包，优化步数预算及12epoch保持原样。
+
+待安装的 `qc_deploy20.sh` 已将 `--alternate-recipe` 指向B2，并从deploy20安装列表移除不用的B3配方；不删除历史实现或旧配方文件。已入队的round配方和种子快照不改写，切换作用于部署后新入队的轮次。本次未部署、训练、重打包或新增校验/中间文件。

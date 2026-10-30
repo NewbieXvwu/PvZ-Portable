@@ -369,3 +369,11 @@ bash "$HOME/pvz-logs/deploy20_at_boundary.sh"
 构建沿用 `~/pvz-logs/build19.sh` 的Release/Ninja、`PVZ_DEBUG=OFF`、`PVZ_ROLLOUT_BLAS=ON`与prodint16既有PGO目录。独立detached工作树为 `~/PvZ-search/.claude/worktrees/build20`，固定在上述源码提交；构建目录为其 `build/`。配置与构建均以Nice10运行，四种大小写代理环境变量均设为 `http://127.0.0.1:7890`，编译 `-j 4 --target pvz-portable`。构建日志在 `~/pvz-logs/build20.log`；完成后引擎复制到 `~/PvZ-search/artifacts/production/deploy20/pvz-portable`，不入git。
 
 台式机构建已成功结束（命令退出0），新引擎已复制到上述deploy20稳定路径。未运行引擎对局、门禁或额外校验，未覆盖deploy19引擎；二进制和构建日志只留本机。源码REV继续固定f1cc6916，本次交付提交仅添加待安装脚本和记录，未部署。提交推送后停下等主控。
+
+## 2026-10-30 补充：deploy20 的 B1 换 B2
+
+主控确认B1（历史z*权重1.0）已完成r52、r54两轮，现将deploy20启动的 `--alternate-recipe` 切为 `recipes/dw4i2_v2timer_l7keep25.json`。这是origin/abqueue task167已实现且已随deploy19进入本分支的B2：历史L7存档按整局稳定哈希保留25%，共用A包，在训练进程私有权重上置零未保留训练行，不重打包。B2保持A的历史z*权重1.5，只增加 `history_l7_keep=0.25`；A配方不改。
+
+B3撤销不用，task167此前后续切B3的计划已被本次主控决定覆盖，deploy20安装列表也不再包含B3配方。保留既有12epoch、并行度1、原生整局开关及组边界/一命令回滚。已入队任务继续使用自己的冻结配方；B2从部署后新入队轮次开始，未修改现有队列或快照。
+
+本次仅切换待部署启动项及排队说明，训练实现和C++均未变，不重建已成功构建的deploy20引擎（引擎构建源码f1cc6916）。提交后将部署脚本REV固定到包含本次B2接线的源码提交，安装源码与引擎的C++内容相同。未测试、部署、训练或重打包，未新增校验、manifest或JSON中间文件。

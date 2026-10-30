@@ -18,14 +18,14 @@ PANEL5=$W/configs/gate_v5_panel.json
 EXTRA17=$W/artifacts/task165/training_panel.json
 EXE20=$R/artifacts/production/deploy20/pvz-portable
 A16=$W/recipes/dw4i2_v2timer.json
-B17=$W/recipes/dw4i2_v2timer_history10.json
+B20=$W/recipes/dw4i2_v2timer_l7keep25.json
 start_qc() {
   if [ ! -f "$ACTIVE20" ] || [ ! -f "$MODE20" ] || ! grep -qx native "$MODE20"; then
     eval "$(/bin/bash -c 'source "$1"; watchdog_extract_start "$2"' deploy20 \
       "$W/scripts/qc_watchdog.sh" "$LOG_DIR/qc_deploy19.sh")"
     return
   fi
-  tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --min-eval-units 4 --python $PY --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $A16 --alternate-recipe $B17 --candidates-per-recipe 2 --training-parallelism 1 --selection-holdout-manifest $W/configs/student_selection_holdout.json --opening-manifest $OPENING --executable $EXE20 --promotion-panel $PANEL5 --gate-version 6 --extra-manifest $EXTRA17 --demo-start-share 0.25 --random-deck-share 0.25 --obs-v3 --native-games --resource-dir $HOME/.cache/pvz-research-resources --frames $R/artifacts/student/frames_v2 --out $R/artifacts/hard --rollout-policy $R/artifacts/student/dw4i_s1/model.pt --value $R/artifacts/value_net/v5/model.pt --static-value $R/artifacts/hard/value_branch1/model.pt 2>&1 | tee -a $LOG_DIR/qc.out"
+  tmux new-session -d -s qc -x 200 -y 50 "env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 $PY $W/scripts/curriculum_queue.py --rounds 100 --workers 16 --min-eval-units 4 --python $PY --round-games 768 --games-per-group 48 --manifest $W/artifacts/stage4/multiplier_panel.json --recipe $A16 --alternate-recipe $B20 --candidates-per-recipe 2 --training-parallelism 1 --selection-holdout-manifest $W/configs/student_selection_holdout.json --opening-manifest $OPENING --executable $EXE20 --promotion-panel $PANEL5 --gate-version 6 --extra-manifest $EXTRA17 --demo-start-share 0.25 --random-deck-share 0.25 --obs-v3 --native-games --resource-dir $HOME/.cache/pvz-research-resources --frames $R/artifacts/student/frames_v2 --out $R/artifacts/hard --rollout-policy $R/artifacts/student/dw4i_s1/model.pt --value $R/artifacts/value_net/v5/model.pt --static-value $R/artifacts/hard/value_branch1/model.pt 2>&1 | tee -a $LOG_DIR/qc.out"
 }
 # All mutations below run only after explicit main-controller approval/execution.
 FILES=(scripts/curriculum_queue.py scripts/search_play.py scripts/render_episode.py
@@ -39,7 +39,7 @@ FILES=(scripts/curriculum_queue.py scripts/search_play.py scripts/render_episode
        python/pvz_research_data.py python/pvz_student_tokens.py python/pvz_token_blocks.py
        python/pvz_token_observation.py python/pvz_frame_store.py
        python/pvz_training_pack.py recipes/dw4i2_v2timer.json recipes/dw4i2_v2timer_history10.json
-       recipes/dw4i2_v2timer_l7keep25.json recipes/dw4i2_v2timer_deckcap05.json recipes/panel_v2.json
+       recipes/dw4i2_v2timer_l7keep25.json recipes/panel_v2.json
        recipes/dw4i.json recipes/dw4i2.json recipes/dw4i2_rebalanced.json
        recipes/dw4i2_rebalanced_p05.json recipes/dw4i2_rebalanced_p05_v2sleep.json
        recipes/dw4i2_rebalanced_p05_v2timer.json recipes/dw4i2_v2sleep.json)
@@ -163,4 +163,4 @@ printf 'native\n' > "$MODE20"
 printf '%s\n' "$REV" > "$ACTIVE20.building"
 mv "$ACTIVE20.building" "$ACTIVE20"
 start_qc
-log "activated batch assembly overlap, obs-v3, min-eval-units4 and roof-wave gate6; native games enabled after Mac A/B; B1/mix/state/ledgers retained; backup $O"
+log "activated batch assembly overlap, obs-v3, min-eval-units4 and roof-wave gate6; native games enabled after Mac A/B; B2 historical-L7 keep25 enabled; A/mix/state/ledgers retained; backup $O"
