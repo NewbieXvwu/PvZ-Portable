@@ -663,7 +663,8 @@ def _play(job: dict, observer=None) -> dict:
     from render_episode import _frame, load_training_task, training_task_kwargs
     from pvz_tasks import profile_for_deck
     from pvz_env import TaskSpec
-    task_definition = load_training_task(Path(args.manifest), args.task_id)
+    task_definition = (json.loads(args.task_json) if getattr(args, 'task_json', None) else
+                       load_training_task(Path(args.manifest), args.task_id))
     kw = training_task_kwargs(task_definition, job["seed"])
     # One simulator process per worker, reset for every game: starting the process and loading
     # resources costs ~0.7 s, as much as a whole student-only game. RESET_V2 rebuilds the board
@@ -905,6 +906,7 @@ def _play(job: dict, observer=None) -> dict:
         archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
         archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
         if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
+                or task_definition.get('live193')
                 or task_definition.get('conveyor_start') == 'original'
                 or task_definition.get('fog_observation')):
             archive_task.update(level=kw['level'], deck=list(kw['deck']), playthrough=2,
@@ -968,6 +970,7 @@ def parser():
     p.add_argument("--value", required=True, help="value net that scores the leaves")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")
+    p.add_argument("--task-json", help="inline curriculum task definition (task193; no derived manifest)")
     p.add_argument("--manifest", required=True)
     p.add_argument("--task-id", required=True)
     p.add_argument("--demo-archive", type=Path, help="verified human demonstration used as the starting state")
@@ -1063,7 +1066,8 @@ def main() -> None:
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
-    task_seeds = load_training_task(Path(args.manifest), args.task_id)["seeds"]
+    task_seeds = (json.loads(args.task_json) if args.task_json else
+                  load_training_task(Path(args.manifest), args.task_id))["seeds"]
     if args.seed_list:
         seeds = [int(s) for s in args.seed_list.split(',') if s.strip()]
         unknown = [s for s in seeds if s not in set(task_seeds)]

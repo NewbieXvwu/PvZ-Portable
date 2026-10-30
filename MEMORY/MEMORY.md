@@ -118,3 +118,4 @@
 - [2026-10-29](2026-10-29.md)
 
 - [task183 / deploy21：双候选序贯门禁与热启动交付](docs/task183-deploy21.md)
+- [task193 / deploy22：GPT 胜局直接入课程与待审部署](docs/task193-deploy22.md)

@@ -7,7 +7,7 @@
 逐份用本机引擎 human_demo.verify 校验（操作数、每步 tick/ok、终局一致；不要求
 逐位 state_hash，理由见 task82）→ 读 meta 分档（full / half / loss）→ 种子不属于
 原 demo 族时按 task87 的命名规则登记 <base>_s<seed> 新族 → 为 full/half 的局
-生成 task71b 接手扫描作业清单（12 点 × 8 未来 × 老师/学生两臂）→ 输出报告。
+直接更新既有导入索引，供生产课程下轮读取；不再生成接手扫描作业。
 
 输入只读：存档先复制进 --dest，校验写的是副本的 meta。
 
@@ -627,29 +627,8 @@ def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
 
 
 def main_with(args) -> int:
-    result = run(args.input, args.dest, args.manifest, args.layers, args.resource_dir,
-                 args.executable, not args.no_verify, args.future_base, seed_ledger=args.seed_ledger)
-    report = render_report(result['rows'], result['layers'], result['plan'])
-    print(report)
-    if args.report:
-        args.report.parent.mkdir(parents=True, exist_ok=True)
-        args.report.write_text(report, encoding='utf-8')
-    stamp = dt.datetime.now().strftime('%Y%m%d')
-    scan_out = args.scan_out or args.dest / f'scan_jobs_{stamp}.json'
-    scan_out.parent.mkdir(parents=True, exist_ok=True)
-    scan_out.write_text(json.dumps(result['plan'], ensure_ascii=False, indent=2) + '\n',
-                        encoding='utf-8')
-    index = dict(schema='llm_import_v1',
-                 generated=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
-                 input=str(args.input), archives=result['rows'],
-                 registered=[entry['task_id'] for entry in result['registered']],
-                 scan_plan=str(scan_out), seed_ledger=str(args.seed_ledger),
-                 scan_jobs=sum(len(entry['jobs']) for entry in result['plan']['archives']))
-    args.dest.mkdir(parents=True, exist_ok=True)
-    (args.dest / f'llm_import_{stamp}.json').write_text(
-        json.dumps(index, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-    bad = [row for row in result['rows'] if row['verify'] in ('失败', '拒绝')]
-    return 1 if bad else 0
+    from pvz_live_import import main_with as live_import
+    return live_import(args, sys.modules[__name__])
 
 
 def main() -> int:
