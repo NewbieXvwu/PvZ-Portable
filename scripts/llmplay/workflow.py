@@ -204,7 +204,28 @@ def _top(decks, chosen, count) -> list:
 
 # ----------------------------------------------------------------- 单圈
 
-def _cycle(number, entries, tasks, req, run_id=None) -> dict:
+def _challenge_detail(task_id, task, number, in_cycle, req, run_id, diagnosis):
+    window = seeds_for(task_id, number, run_id)[:int(req["C"]["seeds"])]
+    entries_c = [entry for entry in in_cycle if entry["task_id"] == task_id
+                 and deck_key(entry.get("deck")) == deck_key(task["deck"])
+                 and int(entry["seed"]) in window and not entry.get("abandoned")
+                 and entry.get("result") in (1, 2)]
+    wins = len({int(entry["seed"]) for entry in entries_c if entry.get("won")})
+    attempted = {int(entry["seed"]) for entry in entries_c}
+    report = diagnosis.get((task_id, number))
+    if not (report and report.get("cycle") == number and report.get("task_id") == task_id
+            and report.get("waves") and str(report.get("missing") or "").strip()):
+        report = None
+    complete = wins >= int(req["C"]["wins"]) or (set(window) <= attempted and bool(report))
+    return dict(task_id=task_id, level=int(task["level"]), deck=sorted(task["deck"]),
+                             window=window, wins=wins, attempted=sorted(attempted),
+                             diagnosis=report, complete=complete)
+
+
+def _cycle(number, entries, tasks, req, run_id=None, diagnosis=None) -> dict:
+    all_tasks = dict(tasks)
+    tasks = [(task_id, task) for task_id, task in tasks
+             if int(task.get("first_cycle", 1)) <= number <= int(task.get("last_cycle", number))]
     in_cycle = [entry for entry in entries if int(entry.get("cycle") or 1) == number]
     a_ids = [task_id for task_id, task in tasks if task.get("layer") == "A"]
     e_tasks: dict = {}
@@ -248,26 +269,19 @@ def _cycle(number, entries, tasks, req, run_id=None) -> dict:
 
     # ---- C 挑战
     batch = batch_for_cycle(number)
-    diagnosis = diagnoses()
+    diagnosis = diagnoses() if diagnosis is None else diagnosis
     c_detail = {}
     for task_id, task in tasks:
         if task.get("layer") != "C" or int(task.get("batch") or 1) != batch:
             continue
-        window = seeds_for(task_id, number, run_id)[:int(req["C"]["seeds"])]
-        entries_c = [entry for entry in in_cycle if entry["task_id"] == task_id
-                     and deck_key(entry.get("deck")) == deck_key(task["deck"])
-                     and int(entry["seed"]) in window and not entry.get("abandoned")
-                     and entry.get("result") in (1, 2)]
-        wins = len({int(entry["seed"]) for entry in entries_c if entry.get("won")})
-        attempted = {int(entry["seed"]) for entry in entries_c}
-        report = diagnosis.get((task_id, number))
-        if not (report and report.get("cycle") == number and report.get("task_id") == task_id
-                and report.get("waves") and str(report.get("missing") or "").strip()):
-            report = None
-        complete = wins >= int(req["C"]["wins"]) or (set(window) <= attempted and bool(report))
-        c_detail[task_id] = dict(task_id=task_id, level=int(task["level"]), deck=sorted(task["deck"]),
-                                 window=window, wins=wins, attempted=sorted(attempted),
-                                 diagnosis=report, complete=complete)
+        item = _challenge_detail(task_id, task, number, in_cycle, req, run_id, diagnosis)
+        # 半成品已完成的旧挑战位置不重做；保留原结论，不把旧胜局冒充新卡组胜局。
+        if task.get("replaces"):
+            origin = all_tasks[task["replaces"]]
+            done = _challenge_detail(origin["task_id"], origin, number, in_cycle, req, run_id, diagnosis)
+            if done["complete"]:
+                item.update(complete=True, carried_completion=done)
+        c_detail[task_id] = item
     c_complete = all(item["complete"] for item in c_detail.values())
 
     # ---- D 打法
@@ -375,13 +389,14 @@ def _summary(detail, complete, upstream) -> dict:
 
 # ----------------------------------------------------------------- 文档
 
-def derive(entries, run_id=None) -> dict:
+def derive(entries, run_id=None, *, diagnosis=None) -> dict:
     tasks = ordered_tasks()
     req = requirements()
     usable = [entry for entry in entries if entry.get("valid", True)]
     usable = _drop_suppressed(usable)
     highest = max([int(entry.get("cycle") or 1) for entry in usable] or [1])
-    cycles = {number: _cycle(number, usable, tasks, req, run_id) for number in range(1, highest + 2)}
+    cycles = {number: _cycle(number, usable, tasks, req, run_id, diagnosis)
+              for number in range(1, highest + 2)}
     current = next(number for number in sorted(cycles) if not cycles[number]["complete"])
     cycle = cycles[current]
     layer = next((name for name in MAIN_LAYERS if not cycle["layers"][name]["complete"]), "C")
@@ -389,7 +404,11 @@ def derive(entries, run_id=None) -> dict:
     flat = {}
     for task_id, task in tasks:
         kind = task.get("layer")
-        active = True
+        active = int(task.get("first_cycle", 1)) <= current <= int(task.get("last_cycle", current))
+        if not active:
+            flat[task_id] = dict(layer=kind, cycle=current, active=False, complete=False,
+                                 available_seeds=[], seeds={}, wins=0, robust=0, decks=None)
+            continue
         if kind == "C":
             active = int(task.get("batch") or 1) == cycle["batch"]
             item = cycle["detail"]["C"].get(task_id)
@@ -607,9 +626,10 @@ def _main_items(document) -> list:
                     continue
                 groups.append([_item(document, task_id, "improve_robustness", seed=row["seed"],
                                      deck=deck["deck"], archive=row["archive"],
-                                     note="这套卡组还差 %d 个稳健种子（第 10 波 k=8 赢≥5）；"
+                                     note="这套卡组还差 %d 个稳健种子（%s k=8 赢≥5）；"
                                           "读这个存档，用闭环打法跑 robustness()"
-                                          % (deck["need"] - len(deck["robust_seeds"])))
+                                          % (deck["need"] - len(deck["robust_seeds"]),
+                                             required_checkpoint(load_tasks()[task_id])))
                                for row in deck["pending"] if row["archive"]])
         return _interleave(groups)
 
@@ -770,7 +790,9 @@ def check(document, task_id, deck, strategy="", seed=None) -> dict:
     """Game() 建局前调用：层序 / 种子窗口 / 卡组差异 / 打法去重，当场计数判断。"""
     tasks = load_tasks()
     task = tasks.get(task_id)
-    if task is None or task_id not in (plan()["tasks"] or {}):
+    if (task is None or task_id not in (plan()["tasks"] or {})
+            or not int(task.get("first_cycle", 1)) <= document["cycle"]
+            <= int(task.get("last_cycle", document["cycle"]))):
         if any(task_id in tasks for task_id in plan()["tasks"]):
             _refuse(document, "循环任务请使用 next_task() 返回的任务，旧任务不计入本轮")
         return {}

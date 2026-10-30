@@ -18,6 +18,7 @@ import shutil
 import sys
 import os
 import tempfile
+import types
 import zipfile
 from pathlib import Path
 
@@ -98,13 +99,89 @@ def copy_modules(stage: Path) -> None:
                                                   "make_llmplay2_tasks.py", "make_llmplay3_tasks.py"))
 
 
-def copy_carry(stage: Path, carry: Path | None) -> None:
+def read_partial(source: Path) -> dict:
+    """只读进度和失败诊断结论；存档不解出、不打开。"""
+    source = source.expanduser()
+    if source.is_dir():
+        if (source / "out.zip").is_file():
+            return read_partial(source / "out.zip")
+        if (source / "out/progress.json").is_file():
+            source = source / "out"
+        document = json.loads((source / "progress.json").read_text(encoding="utf-8"))
+        reports = [json.loads(path.read_text(encoding="utf-8"))
+                   for path in (source / "diagnosis").glob("*/*.json")]
+        return _with_diagnoses(document, reports)
+    if source.suffix == ".zip":
+        with zipfile.ZipFile(source) as bundle:
+            name = next(name for name in bundle.namelist()
+                        if name == "progress.json" or name.endswith("/progress.json"))
+            document = json.loads(bundle.read(name))
+            prefix = name.removesuffix("progress.json") + "diagnosis/"
+            reports = [json.loads(bundle.read(path)) for path in bundle.namelist()
+                       if path.startswith(prefix) and path.endswith(".json")]
+            return _with_diagnoses(document, reports)
+    return json.loads(source.read_text(encoding="utf-8"))
+
+
+def _with_diagnoses(document, reports):
+    items = list(document.get("carried_diagnoses") or [])
+    for report in reports:
+        item = dict(task_id=report["task_id"], cycle=report["cycle"], diagnosis=report)
+        if "deck" in report:
+            item.update(deck=report["deck"], multiplier=report["multiplier"])
+        items.append(item)
+    return dict(document, carried_diagnoses=items)
+
+
+def merge_carry(prior: dict, latest: dict) -> dict:
+    """合并已完成记录与诊断；不读取存档，不重算进度、不生成中间文件。"""
+    fresh = latest.get("archives") or []
+    keys = {entry["archive"] for entry in fresh}
+    result = dict(prior, **latest)
+    result["archives"] = [entry for entry in prior.get("archives", [])
+                          if entry["archive"] not in keys] + fresh
+    reports = {}
+    for document in (prior, latest):
+        items = list(document.get("carried_diagnoses") or [])
+        detail = document.get("detail") or {}
+        for item in list((detail.get("C") or {}).values()) + [
+                item for group in (detail.get("E") or {}).values()
+                for item in (group.get("items") or {}).values()]:
+            if item.get("diagnosis"):
+                items.append(dict(item, cycle=document.get("cycle", 1)))
+            completed = item.get("carried_completion") or {}
+            if completed.get("diagnosis"):
+                items.append(dict(completed, cycle=document.get("cycle", 1)))
+        for item in items:
+            key = (item["cycle"], item["task_id"], tuple(sorted(item.get("deck") or [])))
+            reports[key] = item
+    result["carried_diagnoses"] = list(reports.values())
+    return result
+
+
+def copy_carry(stage: Path, carry: Path | None, partial: Path | None = None) -> None:
     """把前次进度放进 carry/：首次 import 时接口自动接上，不用再传别的文件。"""
     if carry is None:
         return
     target = stage / "carry" / "progress.json"
     target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copyfile(carry, target)
+    if partial is None:
+        shutil.copyfile(carry, target)
+    else:
+        merged = merge_carry(read_partial(carry), read_partial(partial))
+        from llmplay import workflow
+        reports = {}
+        for item in merged["carried_diagnoses"]:
+            key = (item["task_id"], item["cycle"])
+            if "multiplier" in item:
+                key += (workflow.deck_key(item["deck"]),)
+            reports[key] = item["diagnosis"]
+        document = workflow.derive(merged["archives"], merged.get("run_id"), diagnosis=reports)
+        document["carried_diagnoses"] = merged["carried_diagnoses"]
+        target.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(dict(carry_cycle=document["cycle"], carry_layer=document["layer"],
+                              layers=document["layers"], archives=len(document["archives"])),
+                         ensure_ascii=False))
 
 
 def copy_reference(stage: Path) -> None:
@@ -161,7 +238,8 @@ def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = 
                       carry=carry)
 
 
-def repack_interface(previous: Path, out: Path, carry: Path | None = None) -> list[Path]:
+def repack_interface(previous: Path, out: Path, carry: Path | None = None,
+                     partial: Path | None = None, resource_zip: Path | None = None) -> list[Path]:
     """复用已交付引擎及资源契约，只重打接口，不重建资源、不重复逐关 reset。
 
     previous 是上一包的 stage；大文件留在本机，不进入 git。py7zr 仅构建时需要。
@@ -169,6 +247,7 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None) -> li
     import py7zr
     from llmplay.resources import PACKAGE
     previous, out = previous.resolve(), out.resolve()
+    carry = carry or previous / "carry" / "progress.json"
     out.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".interface-build-", dir=out) as temporary:
         stage = Path(temporary) / "llmplay_pkg"
@@ -191,7 +270,7 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None) -> li
                                                              indent=2) + "\n")
         for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
-        copy_carry(stage, carry)
+        copy_carry(stage, carry, partial)
         copy_reference(stage)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
         hits = scan(stage)
@@ -213,6 +292,9 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None) -> li
         if destination.exists():
             shutil.rmtree(destination)
         os.replace(stage, destination)
+        resources = resource_zip or previous.parent / "llmplay_res.zip"
+        if resources.resolve() != (out / "llmplay_res.zip").resolve():
+            shutil.copyfile(resources, out / "llmplay_res.zip")
         print(json.dumps([dict(file=str(path), bytes=path.stat().st_size) for path in volumes],
                          indent=2))
         return volumes
@@ -291,13 +373,16 @@ def main() -> int:
     parser.add_argument("--executable", type=Path)
     parser.add_argument("--reuse-package", type=Path, help="复用上一包 stage，仅重打接口为7z分卷")
     parser.add_argument("--carry", type=Path, help="前次 progress.json，打进包内 carry/ 供开局自动接上")
+    parser.add_argument("--partial", type=Path, help="合入新会话 out.zip / out 目录 / progress.json；只读进度")
+    parser.add_argument("--resource-zip", type=Path, help="原样沿用的资源 zip，默认上一包旁的 llmplay_res.zip")
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--cache-dir", type=Path,
                         help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
     args = parser.parse_args()
     if args.reuse_package:
-        repack_interface(args.reuse_package, args.out, carry=args.carry)
+        repack_interface(args.reuse_package, args.out, carry=args.carry,
+                         partial=args.partial, resource_zip=args.resource_zip)
         return 0
     if not args.executable or not args.cache_dir:
         parser.error("首次构建需要 --executable 和 --cache-dir")
@@ -307,4 +392,8 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # 构建只导入模块，不执行游戏包的开局初始化，不创建临时 out/ 进度或安装资源。
+    package = types.ModuleType("llmplay")
+    package.__path__ = [str(ROOT / "scripts" / "llmplay")]
+    sys.modules["llmplay"] = package
     raise SystemExit(main())

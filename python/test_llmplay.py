@@ -108,7 +108,7 @@ class PackageTest(unittest.TestCase):
         layers = {}
         for task in manifest['tasks']:
             layers[task['layer']] = layers.get(task['layer'], 0) + 1
-        self.assertEqual(layers, dict(A=21, C=56, E=63))    # 另保留 21 个旧 2.0 倍任务供 carry 计数
+        self.assertEqual(layers, dict(A=28, C=104, E=77))    # 另保留 21 个旧 2.0 倍任务供 carry 计数
         self.assertEqual(by_id['llmplay3_a_l45_m100']['reference_task_id'], 'demo_roof_45_orig_m100')
         self.assertEqual(by_id['llmplay3_a_l32_m100']['fog_observation'], 'human_v2')
         self.assertEqual(by_id['llmplay3_e_l42_m125']['zombie_count_multiplier'], 1.25)
@@ -140,7 +140,7 @@ class PackageTest(unittest.TestCase):
             self.assertEqual(len(set(values)), 160)
             flat.extend(values)
         self.assertEqual(len(set(flat)), len(flat))
-        self.assertTrue(all(139_000_000 <= seed < 139_200_000 for seed in flat))
+        self.assertTrue(all(139_000_000 <= seed < 139_209_000 for seed in flat))
 
     def test_package_root_is_repo_root(self):
         self.assertEqual(PACKAGE_ROOT, ROOT)

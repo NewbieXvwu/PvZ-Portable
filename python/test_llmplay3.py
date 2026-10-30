@@ -48,6 +48,9 @@ def fill_cycle(cycle, *, skip_layer=None, robust=True):
     """造出一整圈（或指定层的空缺）的合格存档，用来验证层序与下传。"""
     entries = []
     for task_id in A_IDS:
+        task = TASKS[task_id]
+        if not task.get("first_cycle", 1) <= cycle <= task.get("last_cycle", cycle):
+            continue
         pool = seeds_of(task_id, cycle, 40)
         # 每圈用不同的卡组：A 层要求新一圈的卡组和之前所有圈差≥3 张。
         base = (cycle - 1) * 4
@@ -64,13 +67,14 @@ def fill_cycle(cycle, *, skip_layer=None, robust=True):
                     entries.append(entry(task_id, pool[8 + index * 6 + style * 2 + offset], cards,
                                          cycle=cycle, strategy=name, layer="D", opening=[style, 1, style]))
             for multiplier, tag in ((1.25, "m125"), (1.5, "m150")):
-                e_task = "llmplay3_e_l%d_%s" % (TASKS[task_id]["level"], tag)
+                e_task = task_id.replace("_a_", "_e_").replace("_m100", "_" + tag)
                 for offset in (0, 1):
                     entries.append(entry(e_task, seeds_of(e_task, cycle)[index * 2 + offset], cards,
                                          cycle=cycle, strategy=name, layer="E"))
     batch = workflow.batch_for_cycle(cycle)
     for task_id, task in TASKS.items():
-        if task.get("layer") != "C" or int(task.get("batch") or 1) != batch:
+        if (task.get("layer") != "C" or int(task.get("batch") or 1) != batch
+                or not task.get("first_cycle", 1) <= cycle <= task.get("last_cycle", cycle)):
             continue
         pool = seeds_of(task_id, cycle, 5)
         for seed in pool[:2]:
@@ -95,9 +99,18 @@ class CycleOrderTest(unittest.TestCase):
         self.assertEqual(document["cycles"]["1"]["complete"], True)
         self.assertEqual(document["cycle"], 2)
         self.assertEqual(document["layer"], "A")
+        self.assertEqual({row["level"] for row in document["detail"]["A"].values()},
+                         set(range(41, 51)) | {2, 6, 8, 12, 16, 18, 22, 26, 27, 28, 29, 32, 33, 34, 36, 38, 39, 40})
         item = workflow.next_task(document, claim=False)["main"]
         self.assertIsNotNone(item)
         self.assertEqual(item["cycle"], 2)
+        old_id = "llmplay3_c_l42_d01_retry"
+        completed = [entry(old_id, seed, TASKS[old_id]["deck"], cycle=2)
+                     for seed in seeds_of(old_id, 2)[:2]]
+        document = workflow.derive(fill_cycle(1) + completed, "run")
+        carried = document["detail"]["C"]["llmplay5_c_l42_d01_retry"]
+        self.assertTrue(carried["complete"])
+        self.assertEqual(carried["carried_completion"]["task_id"], old_id)
 
     def test_layer_stays_blocked_until_previous_layer_done(self):
         entries = [item for item in fill_cycle(1) if item["task_id"] != A_IDS[0]]

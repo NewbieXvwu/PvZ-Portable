@@ -15,7 +15,7 @@ _TEMP = tempfile.TemporaryDirectory(prefix="llmplay-carry-test-")
 os.environ["PVZ_LLMPLAY_SESSION"] = str(Path(_TEMP.name) / "budget.json")
 os.environ["LLMPLAY_OUT"] = str(Path(_TEMP.name) / "out")
 
-from llmplay import delivery, workflow  # noqa: E402
+from llmplay import build_package, delivery, workflow  # noqa: E402
 
 PLAN = workflow.plan()
 TASKS = {task_id: task for task_id, task in workflow.ordered_tasks()}
@@ -50,12 +50,13 @@ class CarryTest(unittest.TestCase):
         return self.source
 
     def test_records_become_the_starting_point(self):
-        self.write(prior([entry(A_ID, 139000001)]))
+        self.write(build_package.merge_carry(
+            prior([entry(A_ID, 139000001)]), prior([entry(A_ID, 139000002)])))
         document = delivery.carry(self.source)
         self.assertEqual(document["run_id"], "prior-run")      # 沿用上一份运行ID
         progress = delivery.progress()
         self.assertEqual((progress["cycle"], progress["layer"]), (1, "A"))
-        self.assertEqual(len(progress["archives"]), 1)
+        self.assertEqual(len(progress["archives"]), 2)
         self.assertEqual(progress["layers"]["A"]["completed"], 0)   # 一套卡组不够 A 层
 
     def test_used_seeds_are_not_offered_again(self):

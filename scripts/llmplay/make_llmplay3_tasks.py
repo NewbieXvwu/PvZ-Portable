@@ -1,4 +1,7 @@
-"""task139：循环式五层工作流的任务族与种子计划。
+"""task139/task182：循环式五层工作流的任务族与种子计划。
+
+第5版：第1圈原定义保留；当前第2圈保留已完成的旧21关、追加7关；第3圈起主线22关。
+C轨按配置的previous保留旧定义，新卡组使用llmplay5_新族和追加种子块。
 
 产物（两个文件都由本脚本重写，其它地方不要手改）：
 
@@ -35,6 +38,8 @@ from pvz_constants import background_for_level  # noqa: E402
 ROOF = [41, 42, 43, 44, 45, 46, 47, 48, 49]
 H_LEVELS = [2, 6, 8, 12, 16, 18, 22, 26, 28, 32, 36, 38]
 A_LEVELS = ROOF + H_LEVELS
+RETIRED_LEVELS = {2, 6, 8, 12, 16, 18}
+NEW_LEVELS = [33, 34, 39, 40, 27, 29, 50]
 BASE = 139_000_000
 STRIDE = 1000
 PER_TASK = 160
@@ -95,6 +100,7 @@ def c_tasks(challenges):
     """按关卡分三批：前 3 套进第 1 圈，其余对半分到第 2、3 圈。"""
     by_level = {}
     for row in challenges["decks"]:
+        row = dict(row, **row.get("previous", {}))
         by_level.setdefault(row["level"], []).append(row)
     out, order = [], []
     for level in sorted(by_level):
@@ -157,7 +163,8 @@ def retry_tasks(tasks):
 def write_manifest(tasks):
     path = ROOT / "configs" / "human_demo_tasks.json"
     document = json.loads(path.read_text(encoding="utf-8"))
-    kept = [task for task in document["tasks"] if not task["task_id"].startswith("llmplay3_")]
+    kept = [task for task in document["tasks"]
+            if not task["task_id"].startswith(("llmplay3_", "llmplay5_"))]
     kept.extend(tasks)
     lines = ["{", '  "tasks": [']
     body = ["    " + json.dumps(task, ensure_ascii=False, separators=(",", ":")) for task in kept]
@@ -168,16 +175,72 @@ def write_manifest(tasks):
 
 
 def write_plan(order):
-    tasks = {}
-    for index, task_id in enumerate(order):
-        block = BASE + index * STRIDE
-        tasks[task_id] = list(range(block, block + PER_TASK))
+    path = ROOT / "configs" / "llmplay_seeds.json"
+    prior = json.loads(path.read_text(encoding="utf-8"))
+    # 原任务顺序与种子块逐项沿用；新增族只追加，不挪动历史种子。
+    existing = prior["tasks"]
+    order = list(prior["order"]) + [task_id for task_id in order if task_id not in existing]
+    tasks = dict(existing)
+    block = max(max(seeds) for seeds in tasks.values()) // STRIDE * STRIDE + STRIDE
+    for task_id in order:
+        if task_id not in tasks:
+            tasks[task_id] = list(range(block, block + PER_TASK))
+            block += STRIDE
     document = dict(schema="llmplay_cycle_v1",
                     block=dict(base=BASE, stride=STRIDE, per_task=PER_TASK, per_cycle=PER_CYCLE),
                     requirements=REQUIREMENTS, batches=BATCHES, order=list(order), tasks=tasks)
     (ROOT / "configs" / "llmplay_seeds.json").write_text(
         json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     return document
+
+
+def fifth_version(a, e, c, challenges):
+    """task182：第1圈定义留用；换卡组新开族，第2圈起生效。"""
+    for task in a + e:
+        if task["level"] in RETIRED_LEVELS:
+            task["last_cycle"] = 2
+    added = []
+    for level in NEW_LEVELS:
+        from pvz_tasks import deck_for_level
+        task_id = "llmplay5_a_l%d_m100" % level
+        task = dict(task_id=task_id, level=level, deck=[], deck_selection="player",
+                    unlock_field="available_plants", layer="A", first_cycle=2,
+                    reference_deck=list(deck_for_level(level)), zombie_count_multiplier=1.0,
+                    description=a[0]["description"])
+        if level in (33, 34, 39, 40):
+            task["fog_observation"] = "human_v2"
+        if level == 50:
+            task["robustness_checkpoint"] = "tick:6000"
+        added.append(task)
+        for multiplier, tag in ((1.25, "m125"), (1.5, "m150")):
+            added.append(dict(task_id="llmplay5_e_l%d_%s" % (level, tag), level=level,
+                              deck=[], deck_selection="player", unlock_field="available_plants",
+                              layer="E", first_cycle=2, pair_task=task_id,
+                              zombie_count_multiplier=multiplier,
+                              **({"fog_observation": "human_v2"} if level in (33, 34, 39, 40) else {}),
+                              description="加压层：沿用 B 层卡组，两胜或连续五败后写诊断。"))
+    changed = {row["previous"]["source_task_id"]: row
+               for row in challenges["decks"] if row.get("previous")}
+    for task in c:
+        row = changed.get(task["challenge_source_task_id"])
+        if row is None:
+            continue
+        # 同一个旧留出源曾用于三关，按关卡找回对应替换项。
+        row = next(row for row in challenges["decks"]
+                   if row.get("previous", {}).get("source_task_id") == task["challenge_source_task_id"]
+                   and row["level"] == task["level"])
+        task["last_cycle"] = 1
+        replacement = dict(task, task_id=task["task_id"].replace("llmplay3_", "llmplay5_", 1),
+                           deck=list(row["deck"]), first_cycle=2,
+                           challenge_source=row["source"], challenge_source_task_id=row["source_task_id"],
+                           replaces=task["task_id"],
+                           description="指定胜局卡组挑战（第 %d 批）：不能换卡，5 个种子赢≥2；"
+                                       "未达标则按真实败局写诊断。来源 %s（L%d）。" %
+                                       (task["batch"], row["source_task_id"], row["source_level"]))
+        replacement.pop("last_cycle")
+        replacement.pop("retry_of", None)
+        added.append(replacement)
+    return added
 
 
 def validate(tasks):
@@ -209,9 +272,12 @@ def main() -> int:
     retry = retry_tasks(c)
     reduced = e_tasks(reduced=True)
     tasks = a + e + c + retry + reduced
+    added = fifth_version(a, e + reduced, c + retry, challenges)
+    tasks += added
     validate(tasks)
     # 重试任务排在最后：种子块按 order 序号分配，排在后面才拿得到没用过的新种子。
-    order = [task["task_id"] for task in a + e] + c_order + [task["task_id"] for task in retry + reduced]
+    order = ([task["task_id"] for task in a + e] + c_order
+             + [task["task_id"] for task in retry + reduced + added])
     if args.check:
         print(json.dumps(dict(A=len(a), E=len(e), C=len(c), retry=len(retry), total=len(tasks)),
                          ensure_ascii=False))

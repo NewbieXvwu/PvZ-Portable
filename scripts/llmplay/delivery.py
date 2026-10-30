@@ -328,14 +328,17 @@ def _restore_diagnoses(root, prior) -> None:
     items = list((detail.get("C") or {}).values())
     items += [item for group in (detail.get("E") or {}).values()
               for item in (group.get("items") or {}).values()]
+    items += prior.get("carried_diagnoses") or []
+    items += [item["carried_completion"] for item in items if item.get("carried_completion")]
     for item in items:
         report = (item or {}).get("diagnosis") or {}
         if not (report.get("waves") and str(report.get("missing") or "").strip()):
             continue
         task_id = item["task_id"]
-        folder = root / "diagnosis" / str(cycle)
+        item_cycle = int(item.get("cycle") or cycle)
+        folder = root / "diagnosis" / str(item_cycle)
         folder.mkdir(parents=True, exist_ok=True)
-        payload = dict(schema=DIAGNOSIS_SCHEMA, task_id=task_id, cycle=cycle,
+        payload = dict(schema=DIAGNOSIS_SCHEMA, task_id=task_id, cycle=item_cycle,
                        waves=list(report["waves"]), missing=str(report["missing"]),
                        note=str(report.get("note") or ""))
         suffix = ""
