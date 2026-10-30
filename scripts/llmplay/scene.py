@@ -111,6 +111,17 @@ def _lane_list(obs) -> list:
     return lane_indices(_frame(obs))
 
 
+def _fog_note(obs) -> str:
+    if not obs.get("fog"):
+        return ""
+    return ("雾中遮住的僵尸看不见，僵尸数与最前位置仅计可见者；未见不代表没有。"
+            "雾中植物的位置和种类保留，血量与状态看不见；合法种植和铲除仍由引擎判定。")
+
+
+def _masked_plant(plant) -> bool:
+    return plant.get("health") == -1 or plant.get("state") == -1
+
+
 # ---------------------------------------------------------------- 2. 局面头
 
 def header(game) -> str:
@@ -170,6 +181,8 @@ def _zombie_tags(zombies) -> str:
 def _cell(plant, zombies, pool: bool = False) -> str:
     if plant is None:
         left = ("~~" if pool else "..").ljust(PLANT_PART)
+    elif _masked_plant(plant):
+        left = ("%s??" % _plant_code(plant["type"])).ljust(PLANT_PART)
     else:
         left = ("%-3s%-2d" % (_plant_code(plant["type"]), _pct(plant.get("health"),
                                                              plant.get("max_health"))))
@@ -251,6 +264,8 @@ def _plant_timers(obs) -> dict:
 
 
 def _plant_state(plant, special=None) -> str:
+    if _masked_plant(plant):
+        return "状态未知（雾中看不见）"
     if plant.get("asleep"):
         left = int(plant.get("wake_up_counter") or 0)
         return "睡着（约 %d tick 后醒）" % left if left > 0 else "睡着"
@@ -367,8 +382,9 @@ def rows(game) -> str:
                     if z.get("on_board") and int(z.get("body_health") or 0) > 0]
         if row_plants:
             text = " · ".join(
-                "c%d %s %d/%d %s" % (int(p["col"]), _plant_name(p["type"]),
-                                     int(p.get("health") or 0), int(p.get("max_health") or 0),
+                "c%d %s %s %s" % (int(p["col"]), _plant_name(p["type"]),
+                                     "血量看不见" if _masked_plant(p) else "%d/%d" % (
+                                         int(p.get("health") or 0), int(p.get("max_health") or 0)),
                                      _plant_state(p, timers.get((int(p["row"]), int(p["col"])))))
                 for p in row_plants)
         else:
@@ -380,7 +396,7 @@ def rows(game) -> str:
             front = min(on_board, key=lambda z: float(z["x"]))
             lines.append("     最前: %s %s" % (_zombie_name(front["type"]), _eta(front, plants)))
         else:
-            lines.append("     僵尸: 无")
+            lines.append("     僵尸: " + ("未见（雾中看不见）" if obs.get("fog") else "无"))
     return "\n".join(lines)
 
 
@@ -497,6 +513,8 @@ def render(game, level: str = "full") -> str:
     session = budget.session()
     first = session.claim_legend()
     lines = [session.status_line(game.budget_key), header(game), ""]
+    if _fog_note(game.obs or {}):
+        lines += [_fog_note(game.obs), "网格植物 ?? = 血量看不见；空格不代表雾中没有僵尸。", ""]
     if first:
         lines += [legend(), ""]
     lines += ["空间网格（植物 + 该格僵尸）：", grid(game), "",
@@ -518,7 +536,10 @@ def legal(game) -> dict:
                "cells": sorted(cells)}
               for packet, cells in sorted(grouped.items())]
     shovels = sorted({(int(p["row"]), int(p["col"])) for p in _plants(obs)})
-    return {"plants": plants, "shovels": [list(cell) for cell in shovels]}
+    out = {"plants": plants, "shovels": [list(cell) for cell in shovels]}
+    if _fog_note(obs):
+        out["visibility"] = _fog_note(obs)
+    return out
 
 
 def summary(game) -> dict:
@@ -534,7 +555,7 @@ def summary(game) -> dict:
                           front_col=None if front is None else round(_col_of(float(front["x"])) + 0.5, 1),
                           front_type=None if front is None else _zombie_name(front["type"])))
     result = obs.get("result")
-    return dict(tick=obs.get("tick"), level=obs.get("level"), wave=obs.get("wave"),
+    out = dict(tick=obs.get("tick"), level=obs.get("level"), wave=obs.get("wave"),
                 wave_count=obs.get("wave_count"), max_wave=game.max_wave,
                 sun=obs.get("sun"),
                 mowers_left=sum(1 for d in defenses if int(d["state"]) == 1),
@@ -543,6 +564,9 @@ def summary(game) -> dict:
                 zombies=sum(1 for z in _zombies(obs) if z.get("on_board")),
                 terminal=bool(obs.get("terminal")), won=result == 1, result=result,
                 lanes=lanes)
+    if _fog_note(obs):
+        out["visibility"] = _fog_note(obs)
+    return out
 
 
 def timeline(game) -> str:

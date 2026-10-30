@@ -274,6 +274,10 @@ def main() -> int:
     tasks = a + e + c + retry + reduced
     added = fifth_version(a, e + reduced, c + retry, challenges)
     tasks += added
+    # task187：所有层的雾关统一使用生产观测；历史计数与存档不变。
+    for task in tasks:
+        if background_for_level(task["level"]) == "BACKGROUND_4_FOG":
+            task["fog_observation"] = "human_v2"
     validate(tasks)
     # 重试任务排在最后：种子块按 order 序号分配，排在后面才拿得到没用过的新种子。
     order = ([task["task_id"] for task in a + e] + c_order

@@ -111,6 +111,12 @@ class PackageTest(unittest.TestCase):
         self.assertEqual(layers, dict(A=28, C=104, E=77))    # 另保留 21 个旧 2.0 倍任务供 carry 计数
         self.assertEqual(by_id['llmplay3_a_l45_m100']['reference_task_id'], 'demo_roof_45_orig_m100')
         self.assertEqual(by_id['llmplay3_a_l32_m100']['fog_observation'], 'human_v2')
+        from pvz_constants import background_for_level
+        for task in manifest['tasks']:
+            if background_for_level(task['level']) == 'BACKGROUND_4_FOG':
+                self.assertEqual(task['fog_observation'], 'human_v2', task['task_id'])
+                self.assertEqual(task_spec(task, deck=task['deck'] or [0, 1, 8, 9, 16, 27])[0].fog_observation,
+                                 'human_v2')
         self.assertEqual(by_id['llmplay3_e_l42_m125']['zombie_count_multiplier'], 1.25)
         self.assertEqual(by_id['llmplay3_e_l42_m150']['zombie_count_multiplier'], 1.5)
         self.assertEqual(by_id['llmplay3_e_l42_m200']['zombie_count_multiplier'], 2.0)
@@ -372,8 +378,26 @@ class VisibleTimerTest(unittest.TestCase):
         self.assertEqual(scene._plant_state({'type': 47, 'state': 35, 'state_countdown': 500}), '装填中 剩 500 tick')
 
     def test_fog_masked_plant_stays_unknown(self):
+        from types import SimpleNamespace
         from llmplay import scene
-        self.assertIn('未知', scene._plant_state({'type': 15, 'state': -1, 'state_countdown': -1}, -1))
+        plant = dict(row=0, col=8, type=15, health=-1, max_health=-1,
+                     state=-1, state_countdown=-1, asleep=True, wake_up_counter=100)
+        self.assertIn('看不见', scene._plant_state(plant, -1))
+        self.assertIn('Doo??', scene._cell(plant, []))
+        game = SimpleNamespace(obs=dict(tick=1000, wave=1, sun=50, fog=True,
+                                        plants=[plant], zombies=[], grid=[[1] * 9 for _ in range(6)], packets=[],
+                                        legal_actions=dict(plants=[dict(packet=0, row=0, col=7)])),
+                               max_wave=1, budget_key=33, wave_history=[], events=[])
+        text = scene.render(game)
+        self.assertIn('血量看不见', text)
+        self.assertIn('僵尸: 未见（雾中看不见）', text)
+        self.assertNotIn('-1/-1', text)
+        self.assertNotIn('约 100 tick 后醒', text)
+        self.assertIn('看不见', scene.summary(game)['visibility'])
+        actions = scene.legal(game)
+        self.assertIn('看不见', actions['visibility'])
+        self.assertEqual(actions['shovels'], [[0, 8]])
+        self.assertEqual(actions['plants'][0]['cells'], [[0, 7]])
 
     def test_card_name_follows_the_slot_after_the_belt_shifts(self):
         from llmplay import cards
