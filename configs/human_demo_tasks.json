@@ -10851,7 +10851,16 @@
     17,
     4,
     35
-   ]
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/1b6aa9d1b41197c49c0587acced01c04de48c5019cbd0dd90fcb0605bb4f9f04",
+    "decisions": [
+     1159
+    ],
+    "index": 0,
+    "future_seed_start": 395000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "fog79_l37_snow_split_v2_m200_s81023014_aff83121e704f",
