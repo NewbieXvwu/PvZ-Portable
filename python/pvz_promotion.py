@@ -71,7 +71,6 @@ PANEL_TASKS_V5 = (
     ('heldout', 'day_l7_eval_d7p_holdout1', 96),
     ('heldout', 'day_l9_eval_d7p_holdout2', 96),
 )
-V5_PANEL = 'v5-task128'
 V6_PANEL = 'v6-task168'
 V5_MONITOR_TASKS = ('day_l7_eval_d7p_holdout1', 'day_l9_eval_d7p_holdout2')
 V5_SEEDS_PER_TASK = 45

@@ -12,7 +12,6 @@ from zone_panel import Family, Zone, main_for
 EVAL_START = 45000000
 EVAL_COUNT = 32
 TRAIN_BASE = 46000000
-TRAIN_LEVELS = (41, 42, 43, 44, 46, 47, 48, 49)
 
 ROOF = Zone(key='roof', task_prefix='roof_l', first_level=41, last_level=49, terrain='roof',
     default_out=ROOT / 'artifacts/task46/roof_panel.json',

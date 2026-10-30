@@ -8,8 +8,6 @@ from __future__ import annotations
 import numpy as np
 import torch
 
-TOKEN_KINDS = dict(global_=0, profile=1, cell=2, plant=3, zombie=4, projectile=5,
-                   defense=6, grid_item=7, seed_packet=8, zombie_roster=9, lane=10, lane_enemy=11)
 FEATURE_COUNT = 32
 TOKEN_SCHEMA = 1
 
@@ -126,30 +124,3 @@ def collate_tokens(samples, device='cpu', capacity=None):
     result.update({key: np.stack([s[key] for s in samples]).astype(np.int64)
                    for key in ('packet_index', 'cell_index', 'terrain')})
     return {k: torch.from_numpy(v).to(device) for k, v in result.items()}
-
-
-class TokenStore:
-    """Ragged arrays in packs; indices remain frame-local when segments are merged."""
-    token_fields = dict(ids=(np.int16, (5,)), features=(np.float32, (32,)), target_indices=(np.int32, ()))
-    row_fields = dict(packet_index=(np.int32, (10,)), cell_index=(np.int32, (54,)), terrain=(np.int64, ()))
-
-    def __init__(self, arrays):
-        self.arrays = arrays
-
-    @property
-    def nbytes(self):
-        return sum(a.nbytes for a in self.arrays.values())
-
-    @classmethod
-    def from_arrays(cls, stored):
-        return cls({k: np.asarray(stored['token_'+k]) for k in ('offsets', *cls.token_fields, *cls.row_fields)})
-
-    def sample(self, i):
-        lo, hi = self.arrays['offsets'][i:i+2]
-        return {**{k: self.arrays[k][lo:hi] for k in self.token_fields},
-                **{k: self.arrays[k][i] for k in self.row_fields}}
-
-    def batch(self, indices, device='cpu'):
-        return collate_tokens([self.sample(int(i)) for i in indices], device)
-
-
