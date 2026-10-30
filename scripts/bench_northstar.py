@@ -54,6 +54,7 @@ DEFAULT_OUT = Path.home() / "pvz-logs/northstar"
 DEFAULT_DOC = ROOT / "MEMORY/docs/task181-northstar.md"
 TASK129_DECKS = ROOT / "configs/task129_decks_v5.json"
 DEPLOY17_DECKS = ROOT / "configs/deploy17_random_deck_pool.json"
+CONTROL_PANEL = ROOT / "configs/gate_v5_panel.json"
 DEFAULT_EXECUTABLE = DEFAULT_OUT / "engine/pvz-portable"
 DEFAULT_RESOURCE_DIR = Path(os.environ.get(
     "PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
@@ -78,6 +79,9 @@ FIELDS = ("round", "evaluated_at", "model_sha256", "model_bytes", "backend", "wo
           "seconds", "completion_wins", "completion_games", "completion_rate",
           "day_wins", "day_games", "night_wins", "night_games", "pool_wins", "pool_games",
           "fog_wins", "fog_games", "roof_wins", "roof_games",
+          "control_completion_wins", "control_completion_games", "control_completion_rate",
+          *[f"control_{zone}_{name}" for zone in ("day", "night", "pool", "fog", "roof")
+            for name in ("wins", "games")],
           "unseen_wins", "unseen_games", "unseen_rate",
           *[f"m50_l{level}" for level in LADDER_LEVELS])
 
@@ -109,6 +113,41 @@ def completion_suite() -> dict:
     tasks, plan = {}, {}
     for index, level in enumerate(LEVELS):
         task = standard_task(f"north_l{level:02d}", level)
+        tasks[task["task_id"]] = task
+        first = COMPLETION_SEED_START + index * SEEDS_PER_LEVEL
+        plan[task["task_id"]] = list(range(first, first + SEEDS_PER_LEVEL))
+    return tasks, plan
+
+
+def control_deck_for_level(level: int) -> tuple[int, ...]:
+    """Deck the training queue and gate actually use on this level (task184 control).
+
+    Read from the gate v5 panel rather than a second hand-written deck table: its
+    per-level decks are the d7/n10/p9k/fog_selected/roof_demo families, and the first
+    deck of a zone covers levels the panel leaves out (L15 night, L42-45/47-49 roof).
+    Conveyor levels keep the engine's own bank, exactly like the standard suite.
+    """
+    import pvz_tasks
+    if pvz_tasks.conveyor_belt_level(level):
+        return ()
+    document = json.loads(CONTROL_PANEL.read_text())
+    by_level, by_zone = {}, {}
+    for task in document["tasks"]:
+        zone = document["groups"][task["task_id"]]
+        if zone == "heldout":
+            continue
+        by_level[int(task["level"])] = tuple(task["deck"])
+        by_zone.setdefault(zone, tuple(task["deck"]))
+    return by_level.get(level) or by_zone[zone_of(level)]
+
+
+def control_suite() -> dict:
+    """Adventure 1-50 on the training/gate decks, paired with the completion seeds."""
+    tasks, plan = {}, {}
+    for index, level in enumerate(LEVELS):
+        task = standard_task(f"control_l{level:02d}", level)
+        deck = control_deck_for_level(level)
+        task["deck"] = list(deck)
         tasks[task["task_id"]] = task
         first = COMPLETION_SEED_START + index * SEEDS_PER_LEVEL
         plan[task["task_id"]] = list(range(first, first + SEEDS_PER_LEVEL))
@@ -150,7 +189,8 @@ def ladder_suite() -> dict:
     return tasks, plan
 
 
-SUITES = {"completion": completion_suite, "unseen": unseen_suite, "ladder": ladder_suite}
+SUITES = {"completion": completion_suite, "control": control_suite,
+          "unseen": unseen_suite, "ladder": ladder_suite}
 
 
 # --------------------------------------------------------------------------- bench
@@ -248,12 +288,15 @@ def evaluate(round_number: int, model: Path, backend: str, workers: int,
     log(f"round {round_number}: backend={backend} workers={workers} model={model}")
 
     completion = run_suite("completion", model, native, backend, workers, resource_dir, executable)
+    control = run_suite("control", model, native, backend, workers, resource_dir, executable)
     unseen = run_suite("unseen", model, native, backend, workers, resource_dir, executable)
     ladder = run_suite("ladder", model, native, backend, workers, resource_dir, executable)
-    zones = {}
+    zones, control_zones = {}, {}
     for zone in ("day", "night", "pool", "fog", "roof"):
         zones[zone] = wins([row for row in completion if row["zone"] == zone])
-    completion_block, unseen_block = wins(completion), wins(unseen)
+        control_zones[zone] = wins([row for row in control if row["zone"] == zone])
+    completion_block = wins(completion)
+    control_block, unseen_block = wins(control), wins(unseen)
     record = {"round": round_number,
               "evaluated_at": datetime.now().strftime("%Y-%m-%d %H:%M"),
               "model_sha256": sha256_file(model), "model_bytes": model.stat().st_size,
@@ -262,6 +305,12 @@ def evaluate(round_number: int, model: Path, backend: str, workers: int,
               "completion_wins": completion_block[0], "completion_games": completion_block[1],
               "completion_rate": rate(completion_block),
               **{f"{zone}_{name}": value for zone, block in zones.items()
+                 for name, value in zip(("wins", "games"), block)},
+              "control_completion_wins": control_block[0],
+              "control_completion_games": control_block[1],
+              "control_completion_rate": rate(control_block),
+              **{f"control_{zone}_{name}": value
+                 for zone, block in control_zones.items()
                  for name, value in zip(("wins", "games"), block)},
               "unseen_wins": unseen_block[0], "unseen_games": unseen_block[1],
               "unseen_rate": rate(unseen_block),
@@ -298,7 +347,11 @@ def plot(path: Path, rows: list[dict]) -> None:
     rounds = [int(row["round"]) for row in rows]
     figure, (top, bottom) = plt.subplots(2, 1, figsize=(10, 8), sharex=True,
                                          gridspec_kw={"height_ratios": [3, 2]})
-    top.plot(rounds, [float(row["completion_rate"]) for row in rows], "o-", label="adventure 1-50")
+    top.plot(rounds, [float(row["completion_rate"]) for row in rows], "o-", label="adventure 1-50 (standard deck)")
+    control = [(int(row["round"]), float(row["control_completion_rate"])) for row in rows
+               if row.get("control_completion_rate")]
+    if control:
+        top.plot(*zip(*control), "^-", label="adventure 1-50 (training/gate decks)")
     top.plot(rounds, [float(row["unseen_rate"]) for row in rows], "s-", label="winnable unseen decks")
     top.set_ylabel("win rate")
     top.set_ylim(0, 1)
@@ -328,12 +381,17 @@ def append_doc(doc: Path, record: dict) -> None:
     doc.parent.mkdir(parents=True, exist_ok=True)
     zones = "、".join(f"{zone} {record[f'{zone}_wins']}/{record[f'{zone}_games']}"
                      for zone in ("day", "night", "pool", "fog", "roof"))
+    control_zones = "、".join(f"{zone} {record[f'control_{zone}_wins']}/{record[f'control_{zone}_games']}"
+                              for zone in ("day", "night", "pool", "fog", "roof"))
     ladder = "、".join(f"L{level} {record[f'm50_l{level}']}" for level in LADDER_LEVELS)
     text = (f"\n### r{record['round']}（{record['evaluated_at']}）\n\n"
             f"- 模型 `{record['model_sha256'][:12]}`（{int(record['model_bytes']) / 1e6:.1f} MB），"
             f"{record['backend']} 后端，{record['workers']} 进程，耗时 {record['seconds']} s。\n"
             f"- 冒险 1–50：{record['completion_wins']}/{record['completion_games']} = "
             f"{percent(record['completion_rate'])}（{zones}）。\n"
+            f"- 对照：训练/门禁卡组同一批种子 {record['control_completion_wins']}/"
+            f"{record['control_completion_games']} = {percent(record['control_completion_rate'])}"
+            f"（{control_zones}）。\n"
             f"- 可赢陌生卡组：{record['unseen_wins']}/{record['unseen_games']} = "
             f"{percent(record['unseen_rate'])}。\n"
             f"- 倍率 50%（0.5–3.0 阶梯，端点表示未跨过）：{ladder}。\n")
@@ -349,6 +407,9 @@ DOC_HEADER = """# task181 北极星基准
 
 - **通关**：冒险 1–50 关，原难度、`pvz_tasks.deck_for_level` 标准卡组（5/10/20/25/30/40/45/50
   用引擎自己的传送带），纯学生，每关 16 个种子。
+- **对照**：同一批关卡/种子、换成训练与门禁实际在用的卡组（d7 / n10 / p9k /
+  fog_selected / roof_demo，从 `configs/gate_v5_panel.json` 现读；面板没列的关卡用同区
+  第一套卡组，传送带关仍用引擎牌组）。标准卡组与它的差距是卡组口径差，不是能力差。
 - **泛化**：用老师能赢的陌生卡组 —— task177 里老师至少赢过 1 局的 15 套 deck129 v5 卡组
   （L7 d02/d04/d05、L9 d05/d06、L14 d01/d02/d03、L24 d02/d05、L26 d01/d02/d03、L37 d01/d05），
   加 `configs/deploy17_random_deck_pool.json` 里 38 套 GPT Pro 胜局卡组，每套 2 个种子。
@@ -386,8 +447,8 @@ def run_round(args, round_number: int, model: Path) -> dict:
                       args.resource_dir, args.executable)
     append_row(args.out / "results.csv", record)
     finalize(args)
-    log(f"round {round_number}: completion {record['completion_rate']}, unseen "
-        f"{record['unseen_rate']}, m50 "
+    log(f"round {round_number}: completion {record['completion_rate']}, control "
+        f"{record['control_completion_rate']}, unseen {record['unseen_rate']}, m50 "
         + ", ".join(f"L{level}={record[f'm50_l{level}']}" for level in LADDER_LEVELS))
     return record
 
