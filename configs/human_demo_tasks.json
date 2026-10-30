@@ -10815,7 +10815,23 @@
    ],
    "zombie_count_multiplier": 1.0,
    "deck": [],
-   "conveyor_start": "original"
+   "conveyor_start": "original",
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/833d82b102f8c067b43c2b9cb1902d664a114011cc443be069f36fe686e519fb",
+    "decisions": [
+     390,
+     249,
+     213,
+     178,
+     142,
+     107,
+     72,
+     36
+    ],
+    "index": 0,
+    "future_seed_start": 393000000,
+    "future_seed_count": 256
+   }
   },
   {
    "task_id": "demo_roof_48_doom_m400_s81017005_a1b6aa9d1b411",
