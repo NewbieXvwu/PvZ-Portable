@@ -142,8 +142,12 @@ def test_window_cpu_eval_continues_counts_after_yield(tmp_path, monkeypatch):
         out = tmp_path / name
         out.mkdir()
         torch.save(checkpoint, out / 'model.pt')
+        peer = tmp_path / (name + '_peer')
+        peer.mkdir()
+        torch.save(checkpoint, peer / 'model.pt')
         monkeypatch.setattr(sys, 'argv', ['eval', '--recipe', str(recipe), '--pack', str(pack),
-                           '--merge-dir', str(tmp_path / 'merge'), '--out', str(out), '--batch-size', '2'])
+                           '--merge-dir', str(tmp_path / 'merge'), '--out', str(out), '--batch-size', '2',
+                           '--peer-out', str(peer), '--preview-rows', '2'])
         if name == 'resumed':
             def interrupt(*args):
                 original_add(*args)
@@ -156,6 +160,9 @@ def test_window_cpu_eval_continues_counts_after_yield(tmp_path, monkeypatch):
             monkeypatch.setattr(evaluator, 'add_metrics', original_add)
         evaluator.main()
         results.append(json.loads((out / 'heldout.json').read_text())['groups'])
+        compared = json.loads((peer / 'heldout.json').read_text())
+        assert compared['groups'] == results[-1] and compared['evaluation_complete'] is True
+        assert compared['heldout_rows'] == compared['evaluated_rows'] == 7
     assert results[0] == results[1]
     assert results[0]['all']['rows'] == 7
     assert results[0]['seen']['rows'] == 7 and results[0]['unseen']['rows'] == 0
@@ -177,8 +184,20 @@ def test_window_training_completion_hands_off_model_before_cpu_evaluation(tmp_pa
     runner.child.wait(timeout=2); runner.finish()
     assert (args.handoff / 'fixture/model.pt').stat().st_ino == (out / 'model.pt').stat().st_ino
     assert state['status'] == 'paused'
+    peer = dict(job, id='peer')
+    (args.queue / 'peer.json').write_text(json.dumps(peer))
+    job['evaluation_peers'] = ['peer']
     runner.start(job, state, dict(phase='selection'))
     assert runner.active[2]['stage'] == 'evaluate'
     runner.child.wait(timeout=2); runner.finish()
     assert state['status'] == 'complete'
     assert (args.handoff / 'fixture.json').is_file()
+    assert (args.handoff / 'peer.json').is_file()
+    job['defer_evaluation'] = True
+    job['id'] = 'deferred'
+    (out / 'model.pt').unlink()
+    state = dict(status='queued', seconds=0, attempts=[])
+    runner.start(job, state, dict(phase='pack'))
+    runner.child.wait(timeout=2); runner.finish()
+    assert state['status'] == 'complete'
+    assert json.loads((args.handoff / 'deferred/ready.json').read_text())['stage'] == 'trained'

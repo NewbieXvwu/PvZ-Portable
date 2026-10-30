@@ -15,7 +15,7 @@ from pvz_recipe import load_recipe, write_recipe
 from gpu_window_runner import write_json
 
 
-def enqueue(state, recipe_path, revision, code_root, python, manifest):
+def enqueue(state, recipe_path, revision, code_root, python, manifest, replace=False):
     corpus = json.loads((state / 'corpus/corpus.json').read_text())
     base = load_recipe(recipe_path, 'training')
     if base['obs'] != 'v2timer' or corpus['rows'] != 23631235:
@@ -23,14 +23,18 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest):
     split = state / 'decision-data/split'
     tokens = state / 'decision-data/tokens'
     mask = split / 'unseen.npy'
+    focused = 'target_training_rows' in manifest
+    budget_path = state / 'decision-data/throughput/ready.json'
     common = dict(revision=revision, code_root=str(code_root), host_gib=5, gpu_gib=0, slice_seconds=900,
                   kind='prepare', recipe=str(recipe_path))
     jobs = []
     prep_script = str(code_root / 'scripts/prepare_decision_data.py')
     jobs.append(dict(common, id='decision_split', priority=0, out=str(split), command=[python, prep_script, 'split',
         '--pack', corpus['pack'], '--data', base['data'], '--merge-dir', corpus['merge_dir'], '--out', str(split)]))
-    jobs.append(dict(common, id='decision_tokens', priority=60, out=str(tokens), depends_on=[str(split/'ready.json')],
-        command=[python, prep_script, 'tokens', '--sources', str(split), '--out', str(tokens)]))
+    jobs.append(dict(common, id='decision_tokens', priority=5 if focused else 60, out=str(tokens),
+        depends_on=[str(split/'ready.json')] + ([str(budget_path)] if focused else []),
+        command=[python, prep_script, 'tokens', '--sources', str(split), '--out', str(tokens)] +
+                (['--budget', str(budget_path)] if focused else [])))
     recipes = state / 'decision-recipes'; recipes.mkdir(parents=True, exist_ok=True)
     for arm in manifest['arms']:
         for seed in manifest['seeds']:
@@ -41,13 +45,18 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest):
                 width=arm['width'], arch=arm['arch'], micro_batch_size=arm['micro_batch_size'], validation_batch_size=32,
                 provenance=dict(source_path=str(recipe_path), source_revision=revision,
                     notes=f'task162 decision control; exact r42 rows; common whole-deck exclusion; token encoder {manifest["token_source_revision"]}'))
-            if path.exists():
+            if focused:
+                variant.update(epochs=manifest['epochs'], batch_size=manifest['batch_size'])
+                variant['provenance']['notes'] += '; two-day seed1 cohort; previous optimizer runs retired'
+            if path.exists() and not replace:
                 if load_recipe(path) != variant:
                     raise ValueError(f'cannot replace frozen recipe {path}')
             else:
                 write_recipe(path, variant)
             flags = ['--pack', corpus['pack'], '--merge-dir', corpus['merge_dir'], '--deck-holdout', str(mask)]
             dependencies = [str(split/'ready.json')]
+            if focused:
+                dependencies += [str(budget_path)]
             if arm.get('tokens'):
                 flags += ['--tokens', str(tokens)]
                 dependencies += [str(tokens/'ready.json')]
@@ -60,6 +69,22 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest):
                 evaluate=[python, str(code_root/'scripts/eval_window_policy.py'), '--recipe', str(path),
                           '--out', str(out), '--batch-size', str(min(32, arm['micro_batch_size'])), *flags])
             jobs.append(job)
+            if focused:
+                budget_flags = ['--training-budget', str(budget_path)]
+                job['command'] += ['--resident-training-rows', *budget_flags, '--budget-arm', arm['name']]
+                job['evaluate'] += [*budget_flags, '--device', 'cuda', '--preview-rows', str(manifest['preview_rows'])]
+                job['defer_evaluation'] = arm['name'] != 'cnn_entity'
+                job['after_jobs'] = []
+                if arm['name'] == 'cnn_entity':
+                    job['after_jobs'] = [f'r42_{name}_s1' for name in ('cnn64', 'v3_small')]
+                    job['evaluation_peers'] = list(job['after_jobs'])
+                    for peer in ('cnn64', 'v3_small'):
+                        job['evaluate'] += ['--peer-out', str(state/'runs'/f'r42_{peer}_s1')]
+    if focused:
+        jobs.append(dict(common, id='decision_cleanup', priority=300, out=str(state/'decision-data/cleanup'),
+            after_jobs=[f'r42_{arm["name"]}_s1' for arm in manifest['arms']],
+            command=[python, str(code_root/'scripts/cleanup_decision_cache.py'), '--state', str(state),
+                     '--out', str(state/'decision-data/cleanup')]))
     # Original two examples have no exclusion split and are a different cohort.
     for name in ('r42_cnn64', 'r42_cnn128'):
         old = state / 'queue' / (name + '.json')
@@ -69,7 +94,7 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest):
             write_json(old, document)
     for job in jobs:
         path = state / 'queue' / (job['id'] + '.json')
-        if path.exists() and json.loads(path.read_text()) != job:
+        if path.exists() and not replace and json.loads(path.read_text()) != job:
             raise ValueError(f'cannot replace queued pinned job {path}')
         write_json(path, job)
     summary = dict(study=manifest['study'], revision=revision, token_source_revision=manifest['token_source_revision'],
@@ -79,11 +104,50 @@ def enqueue(state, recipe_path, revision, code_root, python, manifest):
     return summary
 
 
+def replan_two_day(state, recipe_path, revision, code_root, python, manifest):
+    """Replace existing research queue/configuration; no new manifest or data scan."""
+    budget_path = state/'decision-data/throughput/ready.json'
+    old = json.loads(budget_path.read_text())
+    report = json.loads((budget_path.parent/'report.json').read_text())
+    fraction = manifest['target_training_rows'] / old['measured_training_rows']
+    rates = {arm['name']: report['rates'][arm['name']]['rows_per_second'] for arm in manifest['arms']}
+    # The measured cold end-to-end rate, rather than hot probe throughput, drives the deadline.
+    window_hours = (len(rates)*manifest['target_training_rows']/manifest['measured_end_to_end_rows_per_second']/3600 + 2) * 1.25
+    budget = dict(study=manifest['study'], epochs=manifest['epochs'], train_row_fraction=fraction,
+        measured_training_rows=old['measured_training_rows'], target_training_rows=manifest['target_training_rows'],
+        batch_size=manifest['batch_size'], micro_batches={arm['name']: arm['micro_batch_size'] for arm in manifest['arms']},
+        sidecar_max_bytes=old['sidecar_max_bytes'], estimated_sidecar_bytes=manifest['target_training_rows']*old['sparse_bytes_per_row_with_margin'],
+        revision=revision, seed1_only=True, planning_window_fraction=manifest['planning_window_fraction'],
+        estimated_window_hours=window_hours, estimated_preview_calendar_hours=window_hours/manifest['planning_window_fraction'],
+        preview_rows=manifest['preview_rows'], heldout='unchanged; shared uniform preview then complete heldout',
+        probe_rows_per_second=rates,
+        sparse_bytes_per_row_with_margin=old['sparse_bytes_per_row_with_margin'],
+        reason='three seed1 arms, one epoch and common global-row hash; deadline includes one hour tokens, half hour preview, half hour restart overhead, plus 25% margin')
+    # Disable the old cohorts first, including seed2 and task163, so none can consume this deadline.
+    for path in (state/'queue').glob('*.json'):
+        if path.name == 'status.json':
+            continue
+        job = json.loads(path.read_text())
+        job.update(enabled=False, reason='two-day three-arm seed1 cohort; other arms/seeds deferred')
+        write_json(path, job)
+    outputs = [state/'runs'/f'r42_{arm["name"]}_s1' for arm in manifest['arms']]
+    outputs.append(state/'decision-data/tokens')
+    for out in outputs:
+        if out.exists() and old.get('study') != manifest['study']:
+            out.rename(out.with_name(out.name+'_before_2day'))
+    write_json(budget_path, budget)
+    summary = enqueue(state, recipe_path, revision, code_root, python, manifest, replace=True)
+    summary['budget'] = budget
+    write_json(state/'decision-study.json', summary)
+    return summary
+
+
 def main():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--state', type=Path, required=True)
     p.add_argument('--recipe', type=Path, required=True)
     p.add_argument('--revision', required=True, help='committed full code revision to execute for every attempt')
+    p.add_argument('--replan-two-day', action='store_true', help='replace existing study jobs; stop the research service before invoking')
     args = p.parse_args()
     revision = subprocess.check_output(['git', '-C', str(ROOT), 'rev-parse', args.revision+'^{commit}'], text=True).strip()
     code_root = args.state / 'code' / revision
@@ -91,7 +155,8 @@ def main():
         code_root.parent.mkdir(parents=True, exist_ok=True)
         subprocess.run(['git', '-C', str(ROOT), 'worktree', 'add', '--detach', str(code_root), revision], check=True)
     manifest = json.loads((code_root/'configs/decision_r42.json').read_text())
-    summary = enqueue(args.state.resolve(), args.recipe.resolve(), revision, code_root, sys.executable, manifest)
+    operation = replan_two_day if args.replan_two_day else enqueue
+    summary = operation(args.state.resolve(), args.recipe.resolve(), revision, code_root, sys.executable, manifest)
     print(json.dumps(dict(training_jobs=summary['training_jobs'], revision=revision, handoff=summary['handoff'])))
 
 

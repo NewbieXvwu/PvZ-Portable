@@ -263,12 +263,16 @@ class Runner:
                 size = resume.stat().st_size
                 resume.unlink()
                 self.event('intermediate_removed', job=job['id'], path=str(resume), bytes=size)
-        if code == 0 and attempt['stage'] in ('evaluate', 'prepare'):
+        if code == 0 and (attempt['stage'] in ('evaluate', 'prepare') or job.get('defer_evaluation')):
             state['status'] = 'complete'
             if attempt['stage'] == 'evaluate':
-                write_json(self.args.handoff / (job['id'] + '.json'), dict(job=job['id'], model=str(out / 'model.pt'),
-                    recipe=job['recipe'], metrics=str(out / 'heldout.json'), bench='Mac bench_play.py', finished=now,
-                    revision=job.get('revision'), arch=job.get('arch'), seed=job.get('seed')))
+                evaluated = [job] + [json.loads((self.args.queue / (peer+'.json')).read_text())
+                                     for peer in job.get('evaluation_peers', [])]
+                for compared in evaluated:
+                    folder = Path(compared['out'])
+                    write_json(self.args.handoff / (compared['id'] + '.json'), dict(job=compared['id'], model=str(folder / 'model.pt'),
+                        recipe=compared['recipe'], metrics=str(folder / 'heldout.json'), bench='Mac bench_play.py', finished=now,
+                        revision=compared.get('revision'), arch=compared.get('arch'), seed=compared.get('seed')))
         elif code == 0 or code == YIELDED or 'yield_requested' in attempt:
             state['status'] = 'paused'
             state['not_before'] = now + 5

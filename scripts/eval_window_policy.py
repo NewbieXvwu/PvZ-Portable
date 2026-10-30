@@ -1,4 +1,4 @@
-"""Interruptible CPU heldout-row metrics on a frozen pack, by deck exposure and terrain.
+"""Interruptible heldout-row metrics on a frozen pack, by deck exposure and terrain.
 
 Counts use actual row denominators (plant-only heads never count waits). Deck identity
 is the sorted public packet kinds, retaining duplicate cards and ignoring slot order.
@@ -63,6 +63,15 @@ def report_metrics(counts):
     return result
 
 
+def evaluation_order(validation, preview_rows):
+    """Uniform common prefix, followed by every remaining heldout row unchanged."""
+    if not preview_rows or preview_rows >= len(validation):
+        return validation, len(validation)
+    from pvz_research_data import keep_training_rows
+    prefix = keep_training_rows(validation, preview_rows / len(validation))
+    return np.r_[validation[prefix], validation[~prefix]], int(prefix.sum())
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--recipe', type=Path, required=True)
@@ -73,6 +82,9 @@ def main():
     parser.add_argument('--deck-holdout', type=Path)
     parser.add_argument('--tokens', type=Path)
     parser.add_argument('--training-budget', type=Path)
+    parser.add_argument('--device', default='cpu')
+    parser.add_argument('--peer-out', type=Path, action='append', default=[], help='compare these trained runs in the same input/token pass')
+    parser.add_argument('--preview-rows', type=int, default=0, help='publish a uniform heldout prefix, then continue the complete heldout set')
     args = parser.parse_args()
     recipe = load_recipe(args.recipe, 'training')
     row_fraction = json.loads(args.training_budget.read_text())['train_row_fraction'] if args.training_budget else 1.0
@@ -122,11 +134,15 @@ def main():
         terrain_of[start:stop_at] = terrain
         scored[start:stop_at] = available
     validation = np.flatnonzero(is_val & scored)
+    validation, preview_count = evaluation_order(validation, args.preview_rows)
     state_path = args.out / 'eval_progress.json'
     state = json.loads(state_path.read_text()) if state_path.exists() else dict(
         seen_cursor=0, next_row=0, seen_decks=[], groups={name: empty_metrics() for name in
             ['all', 'seen', 'unseen'] + terrains + [f'{deck}/{terrain}' for deck in ('seen', 'unseen') for terrain in terrains]})
     seen = {bytes.fromhex(value) for value in state['seen_decks']}
+    peers = state.setdefault('peers', {})
+    for out in args.peer_out:
+        peers.setdefault(str(out), dict(groups={name: empty_metrics() for name in state['groups']}))
     ready = True
     def save():
         state['seen_decks'] = sorted(key.hex() for key in seen)
@@ -140,10 +156,22 @@ def main():
         if interrupted:
             save(); raise SystemExit(75)
     save()
-    net = load_student(args.out / 'model.pt')  # CPU only, including future recipe architectures.
+    net = load_student(args.out / 'model.pt').to(args.device)
+    models = [(args.out, net, state['groups'])] + [
+        (out, load_student(out / 'model.pt').to(args.device), peers[str(out)]['groups']) for out in args.peer_out]
     router = getattr(getattr(net, 'trunk', [None])[-1], 'route_counts', None)
     if router is not None and 'routing' in state:
         router.copy_(torch.tensor(state['routing']))
+    def publish(complete):
+        for folder, _model, groups in models:
+            write_json(folder / 'heldout.json', dict(model=str(folder / 'model.pt'), split=recipe['validation'],
+                deck_identity='sorted public packet kinds including duplicates; seen in training rows',
+                groups={name: report_metrics(counts) for name, counts in groups.items()},
+                routing_by_terrain=state.get('routing') if folder == args.out else None,
+                evaluation_complete=complete, evaluated_rows=state['next_row'], heldout_rows=len(validation),
+                preview_rows=preview_count, device=args.device))
+        print(json.dumps(dict(stage='complete' if complete else 'preview', rows=state['next_row'],
+                              heldout_rows=len(validation), models=[str(folder) for folder, _, _ in models])), flush=True)
     with torch.inference_mode():
         for start in range(state['next_row'], len(validation), args.batch_size):
             if interrupted:
@@ -152,32 +180,38 @@ def main():
             planted = plant[idx].bool()
             pk, cell = packets[idx].long(), cells[idx].long()
             packet_info = info[idx]
-            extra = dict(tokens=token_store.batch(idx)) if token_store is not None else {}
-            out = net(boards.batch(idx, 'cpu'), scalars.batch(idx, 'cpu'), pk.clamp(min=0), packet_info=packet_info, **extra)
-            pred_type = out['plant'] > 0
-            packet_ok = (out['packet'].argmax(1) == pk) & planted
-            cell_ok = (out['cell'].argmax(1) == cell) & planted
-            nll = F.binary_cross_entropy_with_logits(out['plant'], planted.float(), reduction='none')
-            nll[planted] += F.cross_entropy(out['packet'][planted], pk[planted], reduction='none')
-            nll[planted] += F.cross_entropy(out['cell'][planted], cell[planted], reduction='none')
             exposed = np.array([key.tobytes() in seen for key in deck_keys(packet_info[:, :, 0].numpy())])
             masks = dict(all=np.ones(len(idx), dtype=bool), seen=exposed, unseen=~exposed)
             for terrain, name in enumerate(terrains):
                 masks[name] = terrain_of[idx] == terrain
                 masks['seen/' + name] = masks[name] & exposed
                 masks['unseen/' + name] = masks[name] & ~exposed
-            for name, mask in masks.items():
-                add_metrics(state['groups'][name], pred_type[mask], planted[mask], packet_ok[mask], cell_ok[mask], nll[mask])
+            # Decode/collate public tokens and read board rows once for all compared models.
+            tokens = token_store.batch(idx, args.device) if token_store is not None else None
+            b, s = boards.batch(idx, args.device), scalars.batch(idx, args.device)
+            public_info, labelled_packet = packet_info.to(args.device), pk.clamp(min=0).to(args.device)
+            for _folder, model, groups in models:
+                extra = dict(tokens=tokens) if getattr(model, 'requires_tokens', False) else {}
+                output = model(b, s, labelled_packet, packet_info=public_info, **extra)
+                out = {key: value.cpu() for key, value in output.items()}
+                pred_type = out['plant'] > 0
+                packet_ok = (out['packet'].argmax(1) == pk) & planted
+                cell_ok = (out['cell'].argmax(1) == cell) & planted
+                nll = F.binary_cross_entropy_with_logits(out['plant'], planted.float(), reduction='none')
+                nll[planted] += F.cross_entropy(out['packet'][planted], pk[planted], reduction='none')
+                nll[planted] += F.cross_entropy(out['cell'][planted], cell[planted], reduction='none')
+                for name, mask in masks.items():
+                    add_metrics(groups[name], pred_type[mask], planted[mask], packet_ok[mask], cell_ok[mask], nll[mask])
             state['next_row'] = start + len(idx)
             if router is not None:
                 state['routing'] = router.tolist()
             if start % (args.batch_size * 64) == 0:
                 save()
+            if args.preview_rows and not state.get('preview_published') and state['next_row'] >= preview_count:
+                state['preview_published'] = True
+                save(); publish(False)
     save()
-    write_json(args.out / 'heldout.json', dict(model=str(args.out / 'model.pt'), split=recipe['validation'],
-        deck_identity='sorted public packet kinds including duplicates; seen in training rows',
-        groups={name: report_metrics(counts) for name, counts in state['groups'].items()},
-        routing_by_terrain=state.get('routing')))
+    publish(True)
 
 
 if __name__ == '__main__':

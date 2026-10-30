@@ -194,9 +194,9 @@ def test_decision_microbatch_preserves_weighted_objective(tmp_path, monkeypatch)
         torch.testing.assert_close(value, parameters[1][name], rtol=1e-4, atol=1e-5)
 
 
-def test_decision_manifest_enqueues_two_pinned_seeds_per_arm(tmp_path):
+def test_decision_manifest_enqueues_focused_seed1_comparison(tmp_path):
     from queue_decision_study import enqueue
-    from pvz_recipe import write_recipe
+    from pvz_recipe import write_recipe, load_recipe
     state = tmp_path/'state'; (state/'corpus').mkdir(parents=True)
     (state/'corpus/corpus.json').write_text(json.dumps(dict(rows=23631235, pack='/frozen/index.npz', merge_dir='/frozen/merge')))
     recipe = tmp_path/'base.json'
@@ -207,10 +207,37 @@ def test_decision_manifest_enqueues_two_pinned_seeds_per_arm(tmp_path):
     result = enqueue(state, recipe, revision, ROOT, sys.executable, manifest)
     jobs = [json.loads(path.read_text()) for path in (state/'queue').glob('*.json')]
     trained = [job for job in jobs if job.get('kind') != 'prepare']
-    assert len(trained) == result['training_jobs'] == 16 and len(jobs) == 18
+    assert len(trained) == result['training_jobs'] == 3 and len(jobs) == 6
     assert all(job['revision'] == revision and job['code_root'] == str(ROOT) for job in jobs)
     for arm in manifest['arms']:
         group = [job for job in trained if job['id'].startswith('r42_'+arm['name']+'_s')]
-        assert {job['seed'] for job in group} == {1, 2}
+        assert {job['seed'] for job in group} == {1}
         assert all('--deck-holdout' in job['command'] for job in group)
         assert all(('--tokens' in job['command']) == bool(arm.get('tokens')) for job in group)
+        assert all('--resident-training-rows' in job['command'] for job in group)
+        assert all(load_recipe(Path(job['recipe']))['batch_size'] == 256 for job in group)
+    hybrid = next(job for job in trained if job['id'] == 'r42_cnn_entity_s1')
+    assert hybrid['evaluate'].count('--peer-out') == 2
+    assert hybrid['after_jobs'] == ['r42_cnn64_s1', 'r42_v3_small_s1']
+    assert sum(job.get('defer_evaluation', False) for job in trained) == 2
+
+
+def test_decision_resident_rows_preserve_planes_and_global_identity():
+    from train_rollout_policy import CompactBoards, PacketStore
+    from pvz_research_data import ResidentRows
+    torch.set_num_threads(1)
+    source = CompactBoards((2, 3))
+    dense = np.arange(48, dtype=np.float16).reshape(8, 2, 3)
+    plane = (np.array([0, 1]), np.array([13, 17], np.float16))
+    covered = np.array([True, True, False, False, False, False])
+    source.append(dense[:4], covered=covered, plane=plane)
+    source.append(dense[4:])
+    source.finish()
+    rows = np.array([1, 3, 6], np.int32)
+    cached = ResidentRows(source, rows)
+    order = np.array([6, 1, 6, 3], np.int32)
+    torch.testing.assert_close(cached.batch(order, 'cpu'), source.batch(order, 'cpu'), rtol=0, atol=0)
+    packets = PacketStore(8, 10)
+    info = np.arange(320, dtype=np.float32).reshape(8, 10, 4)
+    packets.set(0, 8, info)
+    torch.testing.assert_close(ResidentRows(packets, rows)[order], packets[order], rtol=0, atol=0)

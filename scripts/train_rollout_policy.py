@@ -723,6 +723,7 @@ def main(*, step_observer=None) -> None:
     p.add_argument('--resume', type=Path, help='resume an interruption checkpoint (model + optimizer + RNG)')
     p.add_argument('--checkpoint-seconds', type=float, default=0, help='opt in to resumable checkpoints and SIGUSR1 yielding (exit 75)')
     p.add_argument('--skip-validation', action='store_true', help='defer row evaluation to the CPU worker')
+    p.add_argument('--resident-training-rows', action='store_true', help='cache selected training inputs in RAM; use with --skip-validation')
     p.add_argument('--pack', type=Path, help='use an existing frozen pack index without rescanning the corpus')
     p.add_argument('--merge-dir', type=Path, help='private merged pack cache; never lock the production merge')
     p.add_argument('--deck-holdout', type=Path, help='common boolean row mask excluding complete heldout decks')
@@ -913,6 +914,14 @@ def main(*, step_observer=None) -> None:
         raise ValueError("recipe split must produce nonempty training and validation sets")
     train_idx = torch.nonzero(training_eligible).squeeze(1).to(torch.int32)
     val_idx = torch.nonzero(is_val).squeeze(1).to(torch.int32)
+    if args.resident_training_rows and args.skip_validation:
+        from pvz_research_data import ResidentRows
+        boards, scalars = (ResidentRows(store, train_idx) for store in (boards, scalars))
+        if cands is not None:
+            cands = ResidentRows(cands, train_idx)
+        if packet_info is not None:
+            packet_info = ResidentRows(packet_info, train_idx)
+        print(json.dumps(dict(resident_training_rows=len(train_idx))), flush=True)
     steps = args.epochs * -(-len(train_idx) // args.batch_size)
     if args.max_steps is not None:
         if args.max_steps>steps:

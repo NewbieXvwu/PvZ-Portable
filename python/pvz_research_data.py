@@ -8,6 +8,35 @@ FIELDS = dict(ids=(np.int16, (5,)), counts=(np.uint8, ()), columns=(np.uint8, ()
               packet_index=(np.int16, (10,)), terrain=(np.uint8, ()))
 
 
+class ResidentRows:
+    """Only the selected training rows resident in RAM; callers retain global row IDs."""
+    def __init__(self, source, rows):
+        import copy
+        self.rows = np.asarray(rows)
+        if hasattr(source, 'offsets') and hasattr(source, 'indices'):
+            local = copy.copy(source)
+            starts = source.offsets[self.rows]
+            counts = source.offsets[self.rows + 1] - starts
+            local.offsets = np.r_[0, counts.cumsum()]
+            positions = (np.repeat(starts - local.offsets[:-1], counts)
+                         + np.arange(local.offsets[-1]))
+            local.indices = source.indices[positions].copy()
+            local.values = source.values[positions].copy()
+            local.plane_of = None if source.plane_of is None else source.plane_of[self.rows].copy()
+            local.shape = (len(rows), *source.shape[1:])
+            local.nnz = len(local.values)
+            local._plane_device = {}
+            self.data = local
+        else:
+            self.data = source[self.rows].clone()
+
+    def batch(self, rows, device):
+        return self.data.batch(np.searchsorted(self.rows, np.asarray(rows)), device)
+
+    def __getitem__(self, rows):
+        return self.data[np.searchsorted(self.rows, np.asarray(rows))]
+
+
 class ArchiveTokens:
     """Sequential CPU evaluation reads one source at a time, without a disk token cache."""
     def __init__(self, sources):

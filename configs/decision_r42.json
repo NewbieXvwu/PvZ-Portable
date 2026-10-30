@@ -1,15 +1,17 @@
 {
-  "study": "task162_r42_decision",
-  "seeds": [1, 2],
+  "study": "task162_r42_decision_2day",
+  "seeds": [1],
+  "epochs": 1,
+  "batch_size": 256,
+  "target_training_rows": 49152,
+  "preview_rows": 32768,
+  "planning_window_fraction": 0.15,
+  "measured_end_to_end_rows_per_second": 16.22,
+  "optional_arms": ["resnet6"],
   "token_source_revision": "2a8667832bbfe97429aac6501cc931b5e936b17c",
   "arms": [
     {"name": "cnn64", "arch": "cnn", "width": 64, "priority": 10, "micro_batch_size": 256},
-    {"name": "cnn128", "arch": "cnn", "width": 128, "priority": 20, "micro_batch_size": 128},
-    {"name": "resnet6", "arch": "pvz_decision_models:resnet6", "width": 64, "priority": 30, "micro_batch_size": 128},
-    {"name": "terrain", "arch": "pvz_decision_models:TerrainExperts", "width": 64, "priority": 40, "micro_batch_size": 128},
-    {"name": "moe", "arch": "pvz_decision_models:MoEPolicy", "width": 64, "priority": 50, "micro_batch_size": 64},
-    {"name": "v3_small", "arch": "pvz_decision_models:token_small", "width": 96, "priority": 70, "micro_batch_size": 16, "tokens": true},
-    {"name": "v3_medium", "arch": "pvz_decision_models:token_medium", "width": 192, "priority": 80, "micro_batch_size": 8, "tokens": true},
-    {"name": "cnn_entity", "arch": "pvz_decision_models:cnn_entity", "width": 96, "priority": 90, "micro_batch_size": 16, "tokens": true}
+    {"name": "v3_small", "arch": "pvz_decision_models:token_small", "width": 96, "priority": 20, "micro_batch_size": 16, "tokens": true},
+    {"name": "cnn_entity", "arch": "pvz_decision_models:cnn_entity", "width": 96, "priority": 30, "micro_batch_size": 16, "tokens": true}
   ]
 }
