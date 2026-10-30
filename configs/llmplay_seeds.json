@@ -34111,6 +34111,273 @@
       139208157,
       139208158,
       139208159
+    ],
+    "llmplay_decks_l1_m100": [
+      186000000
+    ],
+    "llmplay_decks_l2_m100": [
+      187000000
+    ],
+    "llmplay_decks_l3_m100": [
+      188000000
+    ],
+    "llmplay_decks_l4_m100": [
+      189000000
+    ],
+    "llmplay_decks_l6_m100": [
+      191000000
+    ],
+    "llmplay_decks_l7_m100": [
+      192000000
+    ],
+    "llmplay_decks_l8_m100": [
+      193000000
+    ],
+    "llmplay_decks_l9_m100": [
+      194000000
+    ],
+    "llmplay_decks_l11_m100": [
+      196000000
+    ],
+    "llmplay_decks_l12_m100": [
+      197000000
+    ],
+    "llmplay_decks_l13_m100": [
+      198000000
+    ],
+    "llmplay_decks_l14_m100": [
+      199000000
+    ],
+    "llmplay_decks_l16_m100": [
+      201000000
+    ],
+    "llmplay_decks_l17_m100": [
+      202000000
+    ],
+    "llmplay_decks_l18_m100": [
+      203000000
+    ],
+    "llmplay_decks_l19_m100": [
+      204000000
+    ],
+    "llmplay_decks_l21_m100": [
+      206000000
+    ],
+    "llmplay_decks_l22_m100": [
+      207000000
+    ],
+    "llmplay_decks_l23_m100": [
+      208000000
+    ],
+    "llmplay_decks_l24_m100": [
+      209000000
+    ],
+    "llmplay_decks_l26_m100": [
+      211000000
+    ],
+    "llmplay_decks_l27_m100": [
+      212000000
+    ],
+    "llmplay_decks_l28_m100": [
+      213000000
+    ],
+    "llmplay_decks_l29_m100": [
+      214000000
+    ],
+    "llmplay_decks_l31_m100": [
+      216000000
+    ],
+    "llmplay_decks_l32_m100": [
+      217000000
+    ],
+    "llmplay_decks_l33_m100": [
+      218000000
+    ],
+    "llmplay_decks_l34_m100": [
+      219000000
+    ],
+    "llmplay_decks_l36_m100": [
+      221000000
+    ],
+    "llmplay_decks_l37_m100": [
+      222000000
+    ],
+    "llmplay_decks_l38_m100": [
+      223000000
+    ],
+    "llmplay_decks_l39_m100": [
+      224000000
+    ],
+    "llmplay_decks_l41_m100": [
+      226000000
+    ],
+    "llmplay_decks_l42_m100": [
+      227000000
+    ],
+    "llmplay_decks_l43_m100": [
+      228000000
+    ],
+    "llmplay_decks_l44_m100": [
+      229000000
+    ],
+    "llmplay_decks_l46_m100": [
+      231000000
+    ],
+    "llmplay_decks_l47_m100": [
+      232000000
+    ],
+    "llmplay_decks_l48_m100": [
+      233000000
+    ],
+    "llmplay_decks_l49_m100": [
+      234000000
+    ],
+    "llmplay_decks_l50_m100": [
+      235000000
     ]
+  },
+  "mode": "decks",
+  "decks": {
+    "order": [
+      "llmplay_decks_l1_m100",
+      "llmplay_decks_l2_m100",
+      "llmplay_decks_l3_m100",
+      "llmplay_decks_l4_m100",
+      "llmplay_decks_l6_m100",
+      "llmplay_decks_l7_m100",
+      "llmplay_decks_l8_m100",
+      "llmplay_decks_l9_m100",
+      "llmplay_decks_l11_m100",
+      "llmplay_decks_l12_m100",
+      "llmplay_decks_l13_m100",
+      "llmplay_decks_l14_m100",
+      "llmplay_decks_l16_m100",
+      "llmplay_decks_l17_m100",
+      "llmplay_decks_l18_m100",
+      "llmplay_decks_l19_m100",
+      "llmplay_decks_l21_m100",
+      "llmplay_decks_l22_m100",
+      "llmplay_decks_l23_m100",
+      "llmplay_decks_l24_m100",
+      "llmplay_decks_l26_m100",
+      "llmplay_decks_l27_m100",
+      "llmplay_decks_l28_m100",
+      "llmplay_decks_l29_m100",
+      "llmplay_decks_l31_m100",
+      "llmplay_decks_l32_m100",
+      "llmplay_decks_l33_m100",
+      "llmplay_decks_l34_m100",
+      "llmplay_decks_l36_m100",
+      "llmplay_decks_l37_m100",
+      "llmplay_decks_l38_m100",
+      "llmplay_decks_l39_m100",
+      "llmplay_decks_l41_m100",
+      "llmplay_decks_l42_m100",
+      "llmplay_decks_l43_m100",
+      "llmplay_decks_l44_m100",
+      "llmplay_decks_l46_m100",
+      "llmplay_decks_l47_m100",
+      "llmplay_decks_l48_m100",
+      "llmplay_decks_l49_m100",
+      "llmplay_decks_l50_m100"
+    ],
+    "targets": {
+      "day": 12,
+      "night": 16,
+      "pool": 12,
+      "fog": 16,
+      "roof": 16,
+      "boss": 16
+    },
+    "min_card_changes": 2,
+    "max_losses": 3,
+    "min_small_decks": 3,
+    "min_eight_decks": 3,
+    "coverage_per_card": 2,
+    "coverage_priority": {},
+    "growth_step": 4,
+    "default_shards": 3,
+    "terrain_shards": [
+      [
+        "day",
+        "night"
+      ],
+      [
+        "pool",
+        "fog"
+      ],
+      [
+        "roof",
+        "boss"
+      ]
+    ],
+    "seed_base": 186000000,
+    "seed_window": 1000000,
+    "seed_epoch_stride": 50000000,
+    "blacklist": {
+      "all": [
+        38,
+        45,
+        47
+      ],
+      "day": [
+        11,
+        16,
+        19,
+        24,
+        25,
+        27,
+        33,
+        37,
+        43
+      ],
+      "night": [
+        16,
+        19,
+        24,
+        25,
+        27,
+        33,
+        35,
+        37,
+        43
+      ],
+      "pool": [
+        11,
+        25,
+        27,
+        33,
+        37
+      ],
+      "fog": [
+        11,
+        33,
+        35,
+        37
+      ],
+      "roof": [
+        11,
+        16,
+        19,
+        21,
+        24,
+        25,
+        27,
+        43,
+        46
+      ],
+      "boss": [
+        11,
+        16,
+        19,
+        21,
+        24,
+        25,
+        27,
+        43,
+        46
+      ]
+    },
+    "note": "task186: 仅扩展胜利卡组；coverage_priority 按地形/卡号补 task185 重点卡目标次数；旧循环定义保留供历史读取。"
   }
 }

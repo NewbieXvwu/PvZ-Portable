@@ -1,11 +1,12 @@
 """最小示例：按 next_task() 打一局，打印局面，导出存档。
 
-    python3 examples/play.py [task_id] [seed]
+    python3 examples/play.py --shard 0 --shards 3 --deck 0,1,2,3,4,6 --reason '经济…主力…防守…应急…地形…'
 
-不给参数就用 next_task() 返回的那一项（当前圈当前层必须做的那一项）。
+使用 next_task() 返回的关卡与种子，卡组与思路由调用者指定。
 """
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -17,16 +18,20 @@ from llmplay import Game, next_task, out_dir, load_tasks  # noqa: E402
 
 
 def main() -> int:
-    todo = next_task()
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--shard", type=int)
+    parser.add_argument("--shards", type=int)
+    parser.add_argument("--deck", required=True, help="按当前地形和配额自行设计的植物编号列表，逗号分隔")
+    parser.add_argument("--reason", required=True, help="经济/主力/防守/应急/地形专用卡的核心思路")
+    args = parser.parse_args()
+    todo = next_task(shard=args.shard, shards=args.shards)
     print("当前该做：%s" % json.dumps(todo, ensure_ascii=False))
     item = todo["item"]
-    task_id = sys.argv[1] if len(sys.argv) > 1 else item["task_id"]
-    seed = int(sys.argv[2]) if len(sys.argv) > 2 else item.get("seed")
-    task = load_tasks()[task_id]
-    deck = item.get("deck") or task.get("reference_deck") or []
-    if len(deck) < 6:                       # C 层的指定卡组由任务自己带
-        deck = task.get("deck") or []
-    with Game(task_id, seed=seed, deck=deck, reason="先试参考卡组", strategy="参考卡组") as game:
+    task_id, seed = item["task_id"], item["seed"]
+    deck = [int(card) for card in args.deck.split(",")]
+    game = (Game.load_archive(out_dir() / item["archive"]) if item["action"] == "resume" else
+            Game(task_id, seed=seed, deck=deck, reason=args.reason))
+    with game:
         out = out_dir() / ("%s_seed%s" % (task_id, game.seed))
         print(game.observe())
         print(json.dumps(game.legal(), ensure_ascii=False)[:2000])
@@ -34,7 +39,7 @@ def main() -> int:
         game.wait(600)
         print(json.dumps(game.summary(), ensure_ascii=False))
         game.save(out.with_suffix(".json"))
-        game.deck_review = "示例局：只跑 600 tick，不作评价"   # A/D 层导出前必填
+        game.deck_review = "示例局：只跑 600 tick"
         game.export_archive(out)
         print("存档：%s" % out)
     return 0

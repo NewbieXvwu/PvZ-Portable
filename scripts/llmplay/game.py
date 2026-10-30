@@ -224,7 +224,7 @@ class Game:
                  resource_dir=None, ops=None, frames=None, tick=None, note: str = "",
                  deck=None, reason="", strategy="", deck_review="", abandon_reason=None, attempt_id=None,
                  robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False,
-                 _gate: bool = True, cycle=None, workflow_layer=None):
+                 _gate: bool = True, cycle=None, workflow_layer=None, _restore_claim=False):
         tasks = load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
@@ -287,6 +287,11 @@ class Game:
             self.cycle = context.get("cycle", self.cycle)
             self.workflow_layer = context.get("workflow_layer", self.workflow_layer)
             # 队列占位：别的子代理不会领到同一项；进程崩了 30 分钟后自动释放。
+            hold(self.task_id, self.seed)
+            self._claimed = True
+        elif _restore_claim and self.workflow_layer == "decks" and not self._internal:
+            # 同片中盘恢复继续持有并最终释放原来的关卡+种子占位。
+            from .workflow import hold
             hold(self.task_id, self.seed)
             self._claimed = True
         self.session = budget.session()
@@ -946,7 +951,7 @@ class Game:
                    deck=doc.get("deck"), reason=doc.get("reason", ""), strategy=doc.get("strategy", ""),
                    deck_review=doc.get("deck_review", ""), abandon_reason=doc.get("abandon_reason"), attempt_id=doc.get("attempt_id"),
                    run_id=doc.get("run_id"), cycle=doc.get("cycle"), workflow_layer=doc.get("workflow_layer"),
-                   manual_patch=bool(doc.get("manual_patch", False)), _gate=False, **kwargs)
+                   manual_patch=bool(doc.get("manual_patch", False)), _gate=False, _restore_claim=True, **kwargs)
 
     @classmethod
     def load_archive(cls, directory, **kwargs) -> "Game":
@@ -961,7 +966,8 @@ class Game:
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
                    deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
                    deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"),
-                   cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"), _gate=False, **kwargs)
+                   cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"),
+                   _gate=False, _restore_claim=True, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
@@ -977,6 +983,8 @@ class Game:
         导出的存档是引擎真正接受的动作序列，可直接 load_archive 继续中盘打。
         """
         self._require_primary("export_archive()")
+        if self.workflow_layer == "decks":
+            self._start()
         # task139：缺思路 / 缺评价的局不能进下一层，所以在写盘前就拦下来（不用重打）。
         from itertools import islice
         from .delivery import archive_requirements
@@ -984,7 +992,9 @@ class Game:
                                if op.get("ok") and op["action"].get("type") == "plant"), 6))
         archive_requirements(self.task_id, self.strategy, self.deck_review,
                              abandoned=self.abandon_reason is not None, layer=self.workflow_layer,
-                             opening=opening, cycle=self.cycle, deck=self.deck)
+                             opening=opening, cycle=self.cycle, deck=self.deck,
+                             reason=self.deck_reason, note=self.note if note is None else note,
+                             result=(self.obs or {}).get("result"))
         if self.workflow_layer == "D" and self.strategy != self._declared_strategy:
             raise ValueError("D 层打法在开局时固定，不能在导出时改名")
         self._start()

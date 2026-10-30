@@ -29,10 +29,10 @@ PYTHON_MODULES = ["pvz_env.py", "pvz_common.py"]
 # pvz_constants.py 是**从 C++ 源码现场解析**常量表的（AGENTS 的约定：不许手抄表），
 # 所以包里必须带上它读的那几个文件，否则 import 阶段就抛"常量来源文件不存在"。
 CONSTANT_SOURCES = ["src/ConstEnums.h", "src/Lawn/Plant.cpp", "src/Lawn/Zombie.cpp",
-                    "src/Lawn/Board.cpp", "src/SexyAppFramework/SexyAppBase.cpp"]
+                    "src/Lawn/Board.cpp", "src/LawnApp.cpp", "src/SexyAppFramework/SexyAppBase.cpp"]
 SCRIPT_MODULES = ["pvz_constants.py", "pvz_tasks.py", "render_episode.py", "episode_query.py"]
 RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
-DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay_pkg"
+DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay-decks"
 SEED_PLAN = ROOT / "configs" / "llmplay_seeds.json"
 ROBUSTNESS_PLAN = ROOT / "configs" / "llmplay_robustness.json"
 
@@ -53,6 +53,9 @@ def seed_plan() -> dict:
 def task_manifest() -> dict:
     """按循环计划打包本轮 A/C/E 三层新族；参考卡组来自冻结记分板。"""
     repo = json.loads((ROOT / "configs" / "human_demo_tasks.json").read_text(encoding="utf-8"))
+    if seed_plan().get("mode") == "decks":
+        # 保留历史任务定义，旧存档仍能 load_archive；只派发新扩卡组族。
+        return repo
     by_id = {task["task_id"]: task for task in repo["tasks"]}
     plan = seed_plan()
     order = list(plan["order"])
@@ -70,6 +73,8 @@ def task_manifest() -> dict:
 def extra_seeds(manifest: dict) -> dict:
     """每个任务 160 个种子（139,000,000 起，每任务步长 1000；每圈用 40 个窗口）。"""
     plan = seed_plan()
+    if plan.get("mode") == "decks":
+        return plan["tasks"]
     out = {}
     for task in manifest["tasks"]:
         seeds = plan["tasks"].get(task["task_id"])
@@ -264,7 +269,8 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
                                ("extra_seeds.json", extra_seeds(manifest))):
             (stage / "configs" / name).write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
         for path in (SEED_PLAN, ROBUSTNESS_PLAN,
-                     ROOT / "configs" / "adventure_scoreboard.json", ROOT / "configs" / "gate_v5_panel.json"):
+                     ROOT / "configs" / "adventure_scoreboard.json", ROOT / "configs" / "gate_v5_panel.json",
+                     ROOT / "configs" / "deploy17_deck_holdouts.json"):
             shutil.copyfile(path, stage / "configs" / path.name)
         (stage / "configs" / PACKAGE).write_text(json.dumps(dict(schema="llmplay_package_v1"),
                                                              indent=2) + "\n")

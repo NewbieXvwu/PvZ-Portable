@@ -86,7 +86,8 @@ def _entry(archive, relative, *, valid=True, error=None):
                 won=won, robust=bool(won and _robust(meta)), run_id=meta.get("run_id"),
                 cycle=int(meta.get("cycle") or 1),
                 workflow_layer=meta.get("workflow_layer"), opening=meta.get("opening") or [],
-                environment_fingerprint=meta.get("environment_fingerprint"))
+                environment_fingerprint=meta.get("environment_fingerprint"),
+                zombie_count_multiplier=task.get("zombie_count_multiplier"))
 
 
 def _derive(entries, run_id=None):
@@ -101,8 +102,11 @@ def progress() -> dict:
     return _derive(document["archives"], document["run_id"])
 
 
-def next_task(track=None) -> dict:
+def next_task(track=None, *, shard=None, shards=None) -> dict:
     """领下一项。track="C" 表示 C 轨专职子代理（C 优先，做完接主线）。"""
+    if workflow.decks_mode() and (shard is not None or shards is not None):
+        from .decks import configure_shard
+        configure_shard(shard, shards)
     return workflow.next_task(progress(), track=track)
 
 
@@ -297,13 +301,16 @@ def carry(source=None):
         known = workflow.plan()["tasks"]
         entries = [_carry_entry(entry) for entry in prior.get("archives") or []]
         entries = [entry for entry in entries if entry["task_id"] in known]
-        _restore_diagnoses(root, prior)
+        if not workflow.decks_mode():
+            _restore_diagnoses(root, prior)
         return _publish(root, entries, budget.session(), run_id=prior.get("run_id"))
 
 
 def _carry_entry(entry) -> dict:
     """把上一份 progress 的一条记录补成当前判定要用的形状；不做任何核对。"""
     out = dict(entry)
+    if workflow.decks_mode():
+        out["carried"] = True
     out["seed"] = int(out["seed"])
     out["cycle"] = int(out.get("cycle") or 1)
     out["valid"] = bool(out.get("valid", True))
@@ -374,8 +381,12 @@ def resume(source) -> dict:
                 archive = path.parent / entry["archive"]
                 prior_entries.setdefault(archive, []).append(entry)
                 if not archive.is_dir():
-                    missing.append(dict(entry, valid=False, won=False, robust=False,
-                                        invalid_reason="进度引用的存档缺失，无法恢复"))
+                    if workflow.decks_mode() and entry.get("carried"):
+                        # 随包沿用的结论本来就不含旧存档，续跑继续保留其登记。
+                        missing.append(dict(entry))
+                    else:
+                        missing.append(dict(entry, valid=False, won=False, robust=False,
+                                            invalid_reason="进度引用的存档缺失，无法恢复"))
         if len(prior_run_ids) > 1:
             raise ValueError("续跑来源含多个 run_id，请指定一份 out.zip 或对应的 out 目录")
         if not prior_entries:

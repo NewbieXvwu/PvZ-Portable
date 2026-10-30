@@ -61,6 +61,10 @@ def requirements() -> dict:
     return plan()["requirements"]
 
 
+def decks_mode():
+    return plan().get("mode") == "decks"
+
+
 def per_cycle() -> int:
     return int(plan()["block"]["per_cycle"])
 
@@ -390,6 +394,9 @@ def _summary(detail, complete, upstream) -> dict:
 # ----------------------------------------------------------------- 文档
 
 def derive(entries, run_id=None, *, diagnosis=None) -> dict:
+    if decks_mode():
+        from . import decks
+        return decks.derive(entries, run_id)
     tasks = ordered_tasks()
     req = requirements()
     usable = [entry for entry in entries if entry.get("valid", True)]
@@ -573,6 +580,9 @@ def claim_item(document=None, *, track=None, ttl=None) -> dict:
 
 def _ordered(document) -> tuple:
     """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞。"""
+    if document.get("mode") == "decks":
+        from . import decks
+        return decks.items(document), []
     return _main_items(document), _challenge_items(document)
 
 
@@ -723,6 +733,9 @@ def _pick(document, main, challenge, main_items, c_items):
 
 def _view(document, claims=None) -> dict:
     """只读视图：两轨各自第一个还没被领走的项，不写占位记录。"""
+    if document.get("mode") == "decks":
+        from . import decks
+        return decks.view(document)
     main_items, c_items = _ordered(document)
     claims = _read_claims() if claims is None else claims
     main = _first_free(main_items, claims)
@@ -788,6 +801,9 @@ def _refuse(document, reason) -> None:
 
 def check(document, task_id, deck, strategy="", seed=None) -> dict:
     """Game() 建局前调用：层序 / 种子窗口 / 卡组差异 / 打法去重，当场计数判断。"""
+    if document.get("mode") == "decks":
+        from . import decks
+        return decks.check(document, task_id, deck, strategy, seed)
     tasks = load_tasks()
     task = tasks.get(task_id)
     if (task is None or task_id not in (plan()["tasks"] or {})
@@ -861,8 +877,12 @@ def check(document, task_id, deck, strategy="", seed=None) -> dict:
 
 
 def archive_requirements(task_id, strategy="", review="", abandoned=False, *, layer=None,
-                         opening=None, cycle=None, deck=None) -> None:
+                         opening=None, cycle=None, deck=None, reason="", note="", result=None) -> None:
     """导出存档前的必填项：A/D 层要思路与评价，C 层全输要诊断。"""
+    if layer == "decks":
+        from . import decks
+        return decks.archive_requirements(task_id, deck, reason=reason, note=note,
+                                          result=result, abandoned=abandoned)
     if abandoned:
         return
     task = load_tasks().get(task_id) or {}
@@ -890,6 +910,9 @@ def archive_requirements(task_id, strategy="", review="", abandoned=False, *, la
 # ----------------------------------------------------------------- 报告
 
 def report(document) -> str:
+    if document.get("mode") == "decks":
+        from . import decks
+        return decks.report(document)
     view = _view(document)
     lines = ["# LLM 对局进度（循环式）", "",
              "运行ID：%s" % document["run_id"], "",

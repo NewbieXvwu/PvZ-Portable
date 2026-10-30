@@ -1,18 +1,18 @@
-"""LLM 打全程的沙箱接口（task139：循环式、逐层下传）。
+"""LLM 打全程的沙箱接口（task186：扩卡组专用任务）。
 
 用法（在包根目录下）：
 
     import llmplay
-    print(llmplay.next_task())        # 领一项：item 已为你占位（多子代理并发不会撞项）
-    g = llmplay.Game(task_id, seed=..., deck=[...], reason="...", strategy="...")
+    print(llmplay.next_task(shard=0, shards=3))  # item 已占位
+    g = llmplay.Game(task_id, seed=..., deck=[...], reason="经济/主力/防守/应急/地形卡…")
     print(g.observe())
-    g.deck_review = "这套卡组前期省，后期缺群伤"   # A/D 层导出前必填
     g.export_archive(llmplay.out_dir() / "x")
 """
 from .game import Game, load_tasks, task_spec, ROOT
 from .delivery import (resume, carry, progress, next_task, ensure_run_id, diagnose,
                        output_dir as out_dir)
 from .runtime import paths
+from .decks import configure_shard
 from .resources import install as _install_resources, app_data as _app_data
 
 _resources = _install_resources(ROOT)
@@ -23,14 +23,11 @@ carry()
 ensure_run_id()
 
 __all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "carry",
-           "progress", "next_task", "diagnose", "out_dir", "paths"]
+           "progress", "next_task", "diagnose", "out_dir", "paths", "configure_shard"]
 
 
 def list_tasks() -> dict:
-    """本圈还没做完的任务 id -> 关卡/种子/倍率/当前进度，方便挑要打哪一关。
-
-    不在本圈批次里的 C 层任务不会出现；已达标的任务也不会出现。
-    """
+    """本片可继续扩卡组的任务 id -> 关卡/种子/倍率/当前进度。"""
     document = progress()
     return {task_id: dict(level=task["level"], seeds=document["tasks"][task_id]["available_seeds"],
                           multiplier=task.get("zombie_count_multiplier"),

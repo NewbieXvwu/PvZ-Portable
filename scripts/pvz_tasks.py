@@ -30,6 +30,25 @@ def conveyor_belt_level(level: int) -> bool:
     return level in pvz_constants.adventure_conveyor_levels()
 
 
+def player_deck_levels(*, include_boss: bool = False) -> tuple[int, ...]:
+    """普通冒险选卡关；沿用传送带判定，另排除砸罐子与打僵尸。
+
+    L50 仅供已经支持任务卡组覆盖 Boss 卡槽的接口显式启用。
+    """
+    return tuple(level for level in range(1, 51)
+                 if (level == 50 and include_boss)
+                 or (level not in (15, 35) and not conveyor_belt_level(level)))
+
+
+def deck_pool_for_level(level: int, blacklist) -> list[int]:
+    """二周目可表达的选卡范围减任务黑名单；不使用随机戴夫推荐。"""
+    scene = pvz_constants.background_for_level(level)
+    region = scene.split("_")[-1].lower()
+    banned = set(blacklist.get("all", [])) | set(blacklist.get(region, []))
+    return sorted(d["type"] for d in pvz_constants.plant_defs()
+                  if 0 <= d["type"] < 48 and d["type"] not in banned)
+
+
 def deck_for_level(level: int, conveyor_start: str | None = None, *,
                    family: str | None = None) -> tuple[int, ...]:
     """按关卡地形排卡组。规则：**卡组必须覆盖这一关的每一格地形**。
