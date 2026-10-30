@@ -148,3 +148,13 @@ PROMPT要求每次选新卡组前查表，利用LLM的PvZ先验知识，逐类�
 本次仅运行相关`pytest -k roster`，4项通过（0.89秒，8GB虚拟内存上限，未启动引擎）。
 最终接口分卷更新为5,623,668字节，位于~/pvz-logs/llmplay-decks/llmplay_pkg.7z.001；
 资源包与引擎继续原样沿用llmplay5，任务范围、雾遮挡、支线及一胜规则保持。
+
+## task188：现有task105导入链兼容性（2026-10-30）
+
+在origin/llmimport的5c1992fa上，以L38雾关、L30原生传送带两份真实1.0倍胜局轨迹改成新族，
+组成临时out.zip调用原run_sha，真实重放导入2/2通过（相关pytest -k，8GB虚拟内存上限，4.08秒）。
+两类新族均按SHA独立登记；human_v2、deck_seed_attempts及种子列表原样保留；无稳健记录的胜局
+分为half仍进入扫描作业，老师参数保持存档同关、同卡组，native保留空deck与original开局。
+导入侧无需修改，不需因兼容性重启task105四服务。四服务不监听新zip；交回后仍须显式增量导入、
+合并队列，再由主控按现有流程让scan/secondary重载；publish/refresh无需动。未启动/重启服务，
+未改生产队列、清单或账本；所有测试文件在临时目录，未新增运行时校验、manifest或中间文件。
