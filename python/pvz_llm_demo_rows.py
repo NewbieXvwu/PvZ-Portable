@@ -12,6 +12,17 @@ DEPLOY14_ENGINE = '76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a78
 DEMO_LABEL = 'llm_demo_decisions'
 
 
+def _representable(frames, index):
+    """The identity packet head can only name a plant through a slot filled in the preceding state."""
+    action = frames[index].get('action') or {}
+    if action.get('type') != 'plant':
+        return True
+    from pvz_rollout_policy import PACKETS, packet_features
+    slot = action.get('packet')
+    return (type(slot) is int and 0 <= slot < PACKETS
+            and float(packet_features(frames[index - 1])[slot, 0]) >= 0)
+
+
 def demo_paths(data: Path, imported: Path, results=(1,), runs=None):
     ledger = json.loads((imported / 'merged_progress.json').read_text())
     selected = {}
@@ -49,7 +60,7 @@ def demo_paths(data: Path, imported: Path, results=(1,), runs=None):
             frames = read_frames(frame_path(source))
             meta['training_rows'] = [index for index, frame in enumerate(frames) if index > 0
                                      and (frame.get('action') or {}).get('type') in ('plant', 'wait')
-                                     and not frame.get('action_rejected')]
+                                     and not frame.get('action_rejected') and _representable(frames, index)]
             meta['llm_demo_sha256'] = sha
             destination.mkdir(parents=True, exist_ok=True)
             with tempfile.TemporaryDirectory(dir=destination) as temporary:
