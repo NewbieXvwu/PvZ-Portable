@@ -9,12 +9,15 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import contextlib
 import json
 import math
 import os
+import queue
 import zipfile
 import random
 import sys
+import threading
 import time
 from pathlib import Path
 
@@ -69,6 +72,23 @@ def constant_plane(rows):
     if len(positions) < 8:          # a handful of cells is not worth a plane id on every row
         return None, None
     return (positions.astype(np.int32), first[positions].copy()), covered
+
+
+def _maybe_pin(tensor: torch.Tensor, pin: bool) -> torch.Tensor:
+    """Pin a gathered CPU tensor so its device copy can be queued without blocking (task164)."""
+    return tensor.pin_memory() if pin else tensor
+
+
+def _copy_to(tensor: torch.Tensor, device, stream=None, dtype=None):
+    """Copy to the device; the caller has already entered stream when it passes one."""
+    if stream is None:
+        return tensor.to(device=device, dtype=dtype) if dtype is not None else tensor.to(device)
+    return tensor.to(device=device, dtype=dtype or tensor.dtype, non_blocking=True)
+
+
+def _stream_context(stream):
+    """The side stream, or a no-op context for the CPU path."""
+    return torch.cuda.stream(stream) if stream is not None else contextlib.nullcontext()
 
 
 class CompactBoards:
@@ -182,17 +202,25 @@ class CompactBoards:
             self._plane_device[device] = tables
         return tables
 
-    def batch(self, idx, device):
+    def warm(self):
+        """Resolve the lazily built plane tables before a prefetch thread starts reading them."""
+        if self.plane_of is not None:
+            self._plane_tables()
+        return self
+
+    def prepare(self, idx, pin=False):
+        """The CPU half of batch(): the numpy gather, runnable while the GPU trains the previous batch.
+
+        pin=True copies the result into pinned memory so the matching copy in materialize() can be
+        queued with non_blocking=True on a side stream (task164).
+        """
         selected = np.asarray(idx)
         starts = self.offsets[selected]
         counts = self.offsets[selected + 1] - starts
         ends = counts.cumsum()
         positions = np.arange(ends[-1] if len(ends) else 0) + np.repeat(starts - (ends - counts), counts)
-        size = self.cells
-        destinations = np.repeat(np.arange(len(selected)) * size, counts) + self.indices[positions]
-        output = torch.zeros(len(selected) * size, dtype=torch.float32, device=device)
-        output.index_put_((torch.from_numpy(destinations).to(device),),
-                          torch.from_numpy(self.values[positions]).to(device=device, dtype=torch.float32))
+        destinations = np.repeat(np.arange(len(selected)) * self.cells, counts) + self.indices[positions]
+        plane = None
         if self.plane_of is not None:
             identities = self.plane_of[selected]
             mask = identities >= 0
@@ -200,18 +228,39 @@ class CompactBoards:
                 # One fused scatter instead of one kernel launch per distinct plane: on the
                 # round-2 pack (5155 planes, ~1400 distinct in a 2048-row batch) the loop was
                 # 218 ms of a 222 ms batch build; gathers below are ~1 ms (task61).
-                cells, values, offsets = self._plane_tables()
+                _, _, offsets = self._plane_tables()
                 ids = identities[mask]
                 lens = offsets[ids + 1] - offsets[ids]
                 total = int(lens.sum())
                 row_of = np.repeat(np.flatnonzero(mask), lens)
-                positions = (np.repeat(offsets[ids], lens) + np.arange(total)
-                             - np.repeat(np.cumsum(lens) - lens, lens))
+                plane_positions = (np.repeat(offsets[ids], lens) + np.arange(total)
+                                   - np.repeat(np.cumsum(lens) - lens, lens))
+                plane = (_maybe_pin(torch.from_numpy(row_of), pin),
+                         _maybe_pin(torch.from_numpy(plane_positions), pin))
+        return {"destinations": _maybe_pin(torch.from_numpy(destinations), pin),
+                "values": _maybe_pin(torch.from_numpy(self.values[positions]), pin),
+                "plane": plane, "rows": len(selected)}
+
+    def materialize(self, prepared, device, stream=None):
+        """The device half of batch(): zero, two copies and the plane scatter, all queued on stream.
+
+        Every op has to be on the same stream: the scatter reads what the copies just wrote, so
+        splitting them across the compute and side streams would race (task164).
+        """
+        size, rows = self.cells, prepared["rows"]
+        with _stream_context(stream):
+            output = torch.zeros(rows * size, dtype=torch.float32, device=device)
+            output.index_put_((_copy_to(prepared["destinations"], device, stream),),
+                              _copy_to(prepared["values"], device, stream, torch.float32))
+            if prepared["plane"] is not None:
+                row_of, positions = prepared["plane"]
                 plane_cells, plane_values = self._plane_device_tables(device)
-                gathered = torch.from_numpy(positions).to(device)
-                output.view(len(selected), size)[
-                    torch.from_numpy(row_of).to(device), plane_cells[gathered]] = plane_values[gathered]
-        return output.reshape(len(selected), *self.shape[1:])
+                gathered = _copy_to(positions, device, stream)
+                output.view(rows, size)[_copy_to(row_of, device, stream), plane_cells[gathered]] = plane_values[gathered]
+        return output.reshape(rows, *self.shape[1:])
+
+    def batch(self, idx, device):
+        return self.materialize(self.prepare(idx), device)
 
 
 class PacketStore:
@@ -374,6 +423,109 @@ class ValueStore:
 def _pack_flags(options: dict) -> str:
     import shlex
     return shlex.join(pack_flags(options))
+
+
+class BatchSource:
+    """One batch's rows, gathered on whichever thread calls prepare().
+
+    task164: the gather is pure CPU (numpy + pinned copies), so a prefetch thread can run it while
+    the GPU trains the previous batch. prepare() must never touch the device.
+    """
+
+    def __init__(self, boards, scalars, plant, packet, cell, weight, packet_info, cands, auxiliary):
+        self.boards, self.scalars = boards, scalars
+        self.plant, self.packet, self.cell, self.weight = plant, packet, cell, weight
+        self.packet_info, self.cands, self.auxiliary = packet_info, cands, auxiliary
+        boards.warm()
+        scalars.warm()
+
+    def prepare(self, idx, pin=False) -> dict:
+        """Everything batch_loss reads, still on the host."""
+        return {
+            "board": self.boards.prepare(idx, pin),
+            "scalar": self.scalars.prepare(idx, pin),
+            "plant": _maybe_pin(self.plant[idx], pin),
+            "packet": _maybe_pin(self.packet[idx], pin),
+            "cell": _maybe_pin(self.cell[idx], pin),
+            "weight": _maybe_pin(self.weight[idx], pin),
+            "packet_info": _maybe_pin(self.packet_info[idx], pin) if self.packet_info is not None else None,
+            "cands": _maybe_pin(self.cands[idx], pin),
+            "auxiliary": _maybe_pin(self.auxiliary[idx], pin) if self.auxiliary is not None else None,
+            "rows": len(np.asarray(idx)),
+        }
+
+
+class BatchPrefetcher:
+    """Gather the next batch on a worker thread while the GPU trains the current one (task164).
+
+    Bounded on purpose: depth batches ahead is all the pipeline can use, and an unbounded queue
+    would run the whole epoch ahead and hold every pinned copy in host memory.
+    """
+
+    def __init__(self, source: BatchSource, batches, depth: int = 2, pin: bool = True):
+        self.source, self.batches, self.depth, self.pin = source, batches, depth, pin
+        self.queue: queue.Queue = queue.Queue(maxsize=depth)
+        self.stopped = threading.Event()
+        self.thread = threading.Thread(target=self._produce, name="batch-prefetch", daemon=True)
+        self.thread.start()
+
+    def _produce(self) -> None:
+        try:
+            for idx in self.batches:
+                while not self.stopped.is_set():
+                    try:
+                        self.queue.put(self.source.prepare(idx, pin=self.pin), timeout=0.2)
+                        break
+                    except queue.Full:
+                        continue
+                if self.stopped.is_set():
+                    return
+        except BaseException as error:      # surfaced on the consumer thread, not swallowed
+            self.queue.put(error)
+        finally:
+            self.queue.put(None)
+
+    def __iter__(self):
+        while True:
+            item = self.queue.get()
+            if item is None:
+                return
+            if isinstance(item, BaseException):
+                raise item
+            yield item
+
+    def close(self) -> None:
+        """Stop early (step budget reached): unblock the producer and let it exit."""
+        self.stopped.set()
+        while self.thread.is_alive():
+            try:
+                self.queue.get(timeout=0.05)
+            except queue.Empty:
+                pass
+        self.thread.join(timeout=1)
+
+
+def load_batch(source: BatchSource, prepared: dict, device, stream=None, event=None):
+    """Queue one prepared batch's copies on stream; returns the device tensors batch_loss reads."""
+    with _stream_context(stream):
+        b = source.boards.materialize(prepared["board"], device, stream)
+        s = source.scalars.materialize(prepared["scalar"], device, stream)
+        y = _copy_to(prepared["plant"], device, stream).float()      # uint8 in the compact store
+        pk = _copy_to(prepared["packet"], device, stream).long()     # int16 in the compact store
+        c = _copy_to(prepared["cell"], device, stream).long()
+        w = _copy_to(prepared["weight"], device, stream)
+        info = _copy_to(prepared["packet_info"], device, stream) if prepared["packet_info"] is not None else None
+        cd = _copy_to(prepared["cands"], device, stream).float()
+        aux = _copy_to(prepared["auxiliary"], device, stream) if prepared["auxiliary"] is not None else None
+    if stream is not None:
+        # The compute stream must not read these before the side stream has written them, and the
+        # allocator must not hand their memory back while the compute stream still uses it.
+        event.record(stream)
+        torch.cuda.current_stream().wait_event(event)
+        for tensor in (b, s, y, pk, c, w, info, cd, aux):
+            if tensor is not None:
+                tensor.record_stream(torch.cuda.current_stream())
+    return b, s, y, pk, c, w, info, cd, aux
 
 
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
@@ -829,25 +981,24 @@ def main(*, step_observer=None) -> None:
     waits = float(weight[plant < 0.5].sum())
     positive_count = float(plant[weight > 0].sum()) if private_weights is not None else float(plant.sum())
     pos_weight = torch.tensor([waits / max(1.0, positive_count)], device=args.device).sqrt()
+    source = BatchSource(boards, scalars, plant, packet, cell, weight, packet_info, cands, auxiliary)
 
-    def batch_loss(idx, train):
-        b = boards.batch(idx, args.device)
-        s = scalars.batch(idx, args.device)
-        y = plant[idx].to(args.device).float()          # uint8 in the compact store
-        pk = packet[idx].to(args.device).long()         # int16 in the compact store
-        c = cell[idx].to(args.device).long()
-        w = weight[idx].to(args.device)
+    side_stream = torch.cuda.Stream() if str(args.device).startswith("cuda") else None
+    loaded_event = torch.cuda.Event() if side_stream is not None else None
+
+    def batch_loss(parts, train):
+        b, s, y, pk, c, w, info, cd, aux = parts
         planted = y > 0.5
-        packet_args = {'packet_info': packet_info[idx].to(args.device)} if packet_info is not None else {}
+        packet_args = {'packet_info': info} if info is not None else {}
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if private_weights is not None else w.sum()
         loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
                 ).sum() / denom
         if args.aux_weight:
-            row_loss = F.binary_cross_entropy_with_logits(out["aux"], auxiliary[idx].to(args.device), reduction="none").mean(1)
+            row_loss = F.binary_cross_entropy_with_logits(out["aux"], aux, reduction="none").mean(1)
             loss = loss + args.aux_weight * (row_loss * w).sum() / denom
         if args.cell_soft_weight and planted.any():
-            cd = cands[idx].to(args.device).float()                       # (B, K, 3): packet, cell, value
+            # cd is (B, K, 3): packet, cell, value
             same = (cd[:, :, 0] == pk[:, None].float()) & ~torch.isnan(cd[:, :, 2]) & planted[:, None]
             rows = same.sum(1) >= 2                                       # >= 2 cells of the labelled card compared
             if rows.any():
@@ -924,19 +1075,40 @@ def main(*, step_observer=None) -> None:
         if len(perm) < epoch_rows:
             perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
         train_loss = 0.0
-        for start in range(0, len(perm), args.batch_size):
-            loss, _ = batch_loss(perm[start:start + args.batch_size], True)
-            if step_observer is not None:
-                step_observer(completed_steps + 1, float(loss.detach()))
-            train_loss += float(loss.detach()) * len(perm[start:start + args.batch_size])
-            opt.zero_grad(); loss.backward(); opt.step()
-            if schedule is not None:
-                schedule.step()
-            completed_steps+=1
-            completed_rows += len(perm[start:start + args.batch_size])
-            metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
-            if completed_steps>=steps:
-                break
+        # task164: the gather for batch i+1 runs on a worker thread and its copies are queued on the
+        # side stream while batch i is still in flight, so the host-side part of the batch build no
+        # longer competes with the kernel launches of the current one (measured 1.1-1.2x, see
+        # MEMORY/docs/task164-training-throughput.md section 9).
+        loader = BatchPrefetcher(source, [perm[start:start + args.batch_size]
+                                          for start in range(0, len(perm), args.batch_size)],
+                                 pin=side_stream is not None)
+        iterator = iter(loader)
+        prepared = next(iterator, None)
+        parts = load_batch(source, prepared, args.device, side_stream, loaded_event) if prepared is not None else None
+        try:
+            while prepared is not None:
+                loss, _ = batch_loss(parts, True)
+                opt.zero_grad(); loss.backward(); opt.step()
+                if schedule is not None:
+                    schedule.step()
+                count = prepared["rows"]
+                nxt = next(iterator, None)
+                if nxt is not None:
+                    parts = load_batch(source, nxt, args.device, side_stream, loaded_event)
+                value = float(loss.detach())          # the only per-batch sync, after this step is queued
+                # The pinned host buffers must outlive their non_blocking copies; the sync above is
+                # what proves those copies landed, so the previous batch's buffers go only now.
+                prepared = nxt
+                if step_observer is not None:
+                    step_observer(completed_steps + 1, value)
+                train_loss += value * count
+                completed_steps+=1
+                completed_rows += count
+                metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
+                if completed_steps>=steps:
+                    break
+        finally:
+            loader.close()
         metrics.update(phase="validation")
         net.eval()
         # Validate in chunks: one ~95k-row batch is a >2 GB tensor, which MPS silently gets wrong
@@ -944,7 +1116,8 @@ def main(*, step_observer=None) -> None:
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
         # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
         with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(chunk, False)) for chunk in val_idx.split(args.validation_batch_size)]
+            parts = [(len(chunk), *batch_loss(load_batch(source, source.prepare(chunk), args.device), False))
+                     for chunk in val_idx.split(args.validation_batch_size)]
         total = sum(n for n, _l, _s in parts)
         vl = sum(float(l) * n for n, l, _s in parts) / total
         vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
