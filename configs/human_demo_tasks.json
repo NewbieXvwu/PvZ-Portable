@@ -34796,6 +34796,490 @@
     43
    ]
   },
-    {"task_id":"llmplay3_a_l38_m100_s139020064_a72f8f6f0927c","level":38,"seeds":[139020064],"zombie_count_multiplier":1.0,"deck":[5,8,9,12,14,16,19,23,27,29],"fog_observation":"human_v2"}
+  {
+   "task_id": "llmplay3_a_l38_m100_s139020064_a72f8f6f0927c",
+   "level": 38,
+   "seeds": [
+    139020064
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    5,
+    8,
+    9,
+    12,
+    14,
+    16,
+    19,
+    23,
+    27,
+    29
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay5_a_l50_m100_s139158060_a59f8e368f3fb",
+   "level": 50,
+   "seeds": [
+    139158060
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    2,
+    10,
+    14,
+    20,
+    30,
+    31,
+    33,
+    37,
+    39,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l50_m100_s139158062_ac66259d54c63",
+   "level": 50,
+   "seeds": [
+    139158062
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    5,
+    6,
+    10,
+    14,
+    20,
+    32,
+    33,
+    34,
+    39,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l39_m100_s139146072_a16139913cd7c",
+   "level": 39,
+   "seeds": [
+    139146072
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    3,
+    8,
+    9,
+    14,
+    15,
+    16,
+    27,
+    30,
+    43
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay5_c_l24_d02_retry_s139205040_a72a3f6238ee1",
+   "level": 24,
+   "seeds": [
+    139205040
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    2,
+    4,
+    13,
+    16,
+    19,
+    30,
+    35,
+    43
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l29_m100_s139155071_aea90cdb8e923",
+   "level": 29,
+   "seeds": [
+    139155071
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    4,
+    16,
+    17,
+    19,
+    27,
+    30,
+    39,
+    43,
+    44
+   ]
+  },
+  {
+   "task_id": "llmplay3_a_l8_m100_s139011056_ab9a221b50320",
+   "level": 8,
+   "seeds": [
+    139011056
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    23,
+    27,
+    32,
+    35,
+    36,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l50_m100_s139158060_a65f55a977a20",
+   "level": 50,
+   "seeds": [
+    139158060
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    2,
+    10,
+    14,
+    20,
+    30,
+    31,
+    33,
+    37,
+    39,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l50_m100_s139158060_a3393795a8410",
+   "level": 50,
+   "seeds": [
+    139158060
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    2,
+    10,
+    14,
+    20,
+    30,
+    31,
+    33,
+    37,
+    39,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l33_m100_s139140052_a13306f8ffcd5",
+   "level": 33,
+   "seeds": [
+    139140052
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    9,
+    8,
+    13,
+    16,
+    43,
+    39,
+    44,
+    23,
+    19,
+    27
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay5_a_l27_m100_s139152073_a03177111182a",
+   "level": 27,
+   "seeds": [
+    139152073
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    2,
+    5,
+    6,
+    16,
+    19,
+    27,
+    29,
+    30,
+    43
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l40_m100_s139149052_a2ed0bed607a5",
+   "level": 40,
+   "seeds": [
+    139149052
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    16,
+    32,
+    34,
+    39,
+    44,
+    21,
+    46,
+    17,
+    20
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay3_a_l26_m100_s139016064_a55c24875010f",
+   "level": 26,
+   "seeds": [
+    139016064
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    0,
+    1,
+    5,
+    16,
+    19,
+    20,
+    23,
+    27,
+    41,
+    43
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l39_m100_s139146055_ae164e77c00d4",
+   "level": 39,
+   "seeds": [
+    139146055
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    8,
+    9,
+    16,
+    17,
+    20,
+    24,
+    26,
+    29,
+    43
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay5_a_l29_m100_s139155054_ae2ad594af09a",
+   "level": 29,
+   "seeds": [
+    139155054
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    16,
+    43,
+    41,
+    30,
+    21,
+    46,
+    19,
+    2,
+    17
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l40_m100_s139149058_a228e410331cd",
+   "level": 40,
+   "seeds": [
+    139149058
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    15,
+    14,
+    16,
+    31,
+    27,
+    23
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay5_a_l50_m100_s139158077_a57a376a2b918",
+   "level": 50,
+   "seeds": [
+    139158077
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    2,
+    10,
+    14,
+    20,
+    30,
+    31,
+    33,
+    37,
+    39,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay5_a_l39_m100_s139146066_adc8cc30797aa",
+   "level": 39,
+   "seeds": [
+    139146066
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    2,
+    8,
+    9,
+    16,
+    19,
+    27,
+    39,
+    43,
+    44
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay3_a_l41_m100_s139000052_aeef05215db7b",
+   "level": 41,
+   "seeds": [
+    139000052
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay3_a_l36_m100_s139019046_a8a1a36c07889",
+   "level": 36,
+   "seeds": [
+    139019046
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    0,
+    3,
+    7,
+    8,
+    9,
+    16,
+    17,
+    22,
+    27,
+    40
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay5_a_l40_m100_s139149055_a8ef882e70923",
+   "level": 40,
+   "seeds": [
+    139149055
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    1,
+    3,
+    8,
+    9,
+    14,
+    15,
+    16,
+    27,
+    30,
+    43
+   ],
+   "fog_observation": "human_v2"
+  },
+  {
+   "task_id": "llmplay3_a_l45_m100_s139004069_ab50742a04a8f",
+   "level": 45,
+   "seeds": [
+    139004069
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    2,
+    5,
+    10,
+    20,
+    32,
+    33,
+    34,
+    35,
+    37,
+    42
+   ]
+  },
+  {
+   "task_id": "llmplay3_a_l12_m100_s139012042_a6d88b66a929a",
+   "level": 12,
+   "seeds": [
+    139012042
+   ],
+   "zombie_count_multiplier": 1.0,
+   "deck": [
+    3,
+    4,
+    8,
+    9,
+    12,
+    14,
+    15,
+    17,
+    27,
+    32
+   ],
+   "demo_start": {
+    "archive": "artifacts/task105/import/sha256/6d88b66a929a4b06b9129f64be1e98388624606f82ed89c951f27f8d819b4e32",
+    "decisions": [
+     910,
+     579,
+     497,
+     414,
+     332,
+     249,
+     166,
+     84,
+     1
+    ],
+    "index": 0,
+    "future_seed_start": 403000000,
+    "future_seed_count": 256
+   }
+  }
  ]
 }

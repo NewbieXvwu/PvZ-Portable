@@ -1,9 +1,9 @@
 {
  "schema": "task105_results_v1",
- "generated": "2026-10-30T11:57:53.438558+00:00",
+ "generated": "2026-10-30T13:26:05.598677+00:00",
  "input_sha256": null,
  "initial_input_sha256": "676fb355128be6742d5023f365526396612755d5da6b362144faeaedf5cd0ee7",
- "input_path": "/home/newbiexvwu/llm_runs/llmplay3_r2/out",
+ "input_path": "/home/newbiexvwu/pvz-logs/llmplay_returns/llmplay5_20261030_1626/out",
  "input_packages": [
   {
    "identity": {
@@ -63,12 +63,27 @@
    "reused": 683,
    "verified": 875,
    "rejected": 2
+  },
+  {
+   "identity": {
+    "path": "/home/newbiexvwu/pvz-logs/llmplay_returns/llmplay5_20261030_1626/out",
+    "kind": "directory",
+    "size": 1146781016,
+    "mtime_ns": 1793348816203756800,
+    "files": 1695,
+    "inventory_sha256": "f02f8c9914e2424647e69cbd0520df23250aa5cc48348c7ebd408d1902ce39c5"
+   },
+   "archives": 296,
+   "source_copies": 565,
+   "reused": 0,
+   "verified": 295,
+   "rejected": 1
   }
  ],
  "engine_sha256": "76ff36dc026f67641aefccd5f30f6cdae65eee14ee197dc24497413123a7874a",
- "archives": 1578,
- "verified": 1576,
- "rejected": 2,
+ "archives": 1874,
+ "verified": 1871,
+ "rejected": 3,
  "tasks": {
   "demo_roof_46_doom_m200": {
    "archives": 32,
@@ -288,16 +303,16 @@
    "reasons": []
   },
   "llmplay3_a_l8_m100": {
-   "archives": 28,
-   "won": 20,
-   "robust": 4,
+   "archives": 36,
+   "won": 24,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l32_m100": {
-   "archives": 26,
-   "won": 20,
-   "robust": 4,
+   "archives": 32,
+   "won": 24,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
@@ -309,58 +324,58 @@
    "reasons": []
   },
   "llmplay3_a_l45_m100": {
-   "archives": 77,
-   "won": 20,
-   "robust": 4,
+   "archives": 85,
+   "won": 21,
+   "robust": 5,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l22_m100": {
-   "archives": 27,
-   "won": 20,
-   "robust": 4,
+   "archives": 34,
+   "won": 24,
+   "robust": 8,
    "rejected": 1,
    "reasons": [
     "meta.frame_count=1137 与 frames.jsonl 的 812 行不一致"
    ]
   },
   "llmplay3_a_l42_m100": {
-   "archives": 36,
-   "won": 22,
+   "archives": 37,
+   "won": 23,
    "robust": 4,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l6_m100": {
-   "archives": 24,
-   "won": 20,
-   "robust": 4,
+   "archives": 30,
+   "won": 23,
+   "robust": 7,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l28_m100": {
-   "archives": 31,
-   "won": 21,
-   "robust": 4,
+   "archives": 41,
+   "won": 25,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l36_m100": {
-   "archives": 28,
-   "won": 22,
-   "robust": 4,
+   "archives": 35,
+   "won": 26,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l18_m100": {
-   "archives": 24,
-   "won": 20,
-   "robust": 4,
+   "archives": 30,
+   "won": 24,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l44_m100": {
-   "archives": 49,
+   "archives": 50,
    "won": 21,
    "robust": 4,
    "rejected": 0,
@@ -374,16 +389,16 @@
    "reasons": []
   },
   "llmplay3_a_l12_m100": {
-   "archives": 24,
-   "won": 20,
-   "robust": 4,
+   "archives": 31,
+   "won": 24,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l49_m100": {
-   "archives": 40,
-   "won": 21,
-   "robust": 4,
+   "archives": 53,
+   "won": 23,
+   "robust": 6,
    "rejected": 0,
    "reasons": []
   },
@@ -402,29 +417,29 @@
    "reasons": []
   },
   "llmplay3_a_l26_m100": {
-   "archives": 27,
-   "won": 20,
-   "robust": 4,
+   "archives": 36,
+   "won": 24,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l38_m100": {
-   "archives": 32,
-   "won": 23,
-   "robust": 4,
+   "archives": 39,
+   "won": 27,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l16_m100": {
-   "archives": 26,
-   "won": 20,
-   "robust": 4,
+   "archives": 32,
+   "won": 24,
+   "robust": 8,
    "rejected": 0,
    "reasons": []
   },
   "llmplay3_a_l41_m100": {
-   "archives": 30,
-   "won": 20,
+   "archives": 31,
+   "won": 21,
    "robust": 4,
    "rejected": 0,
    "reasons": []
@@ -712,6 +727,99 @@
    ]
   },
   "llmplay3_c_l7_d03": {
+   "archives": 2,
+   "won": 2,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_a_l39_m100": {
+   "archives": 17,
+   "won": 8,
+   "robust": 4,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_a_l40_m100": {
+   "archives": 20,
+   "won": 8,
+   "robust": 4,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_a_l50_m100": {
+   "archives": 67,
+   "won": 8,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_a_l27_m100": {
+   "archives": 13,
+   "won": 8,
+   "robust": 4,
+   "rejected": 1,
+   "reasons": [
+    "meta.frame_count=1348 与 frames.jsonl 的 554 行不一致"
+   ]
+  },
+  "llmplay5_a_l33_m100": {
+   "archives": 16,
+   "won": 8,
+   "robust": 4,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_a_l29_m100": {
+   "archives": 17,
+   "won": 8,
+   "robust": 4,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_a_l34_m100": {
+   "archives": 19,
+   "won": 8,
+   "robust": 4,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_c_l14_d03_retry": {
+   "archives": 5,
+   "won": 2,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_c_l48_d02_retry": {
+   "archives": 2,
+   "won": 2,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_c_l48_d03_retry": {
+   "archives": 5,
+   "won": 1,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_c_l42_d01_retry": {
+   "archives": 5,
+   "won": 1,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay3_c_l14_d02_retry": {
+   "archives": 5,
+   "won": 0,
+   "robust": 0,
+   "rejected": 0,
+   "reasons": []
+  },
+  "llmplay5_c_l24_d02_retry": {
    "archives": 2,
    "won": 2,
    "robust": 0,
@@ -7157,12 +7265,39 @@
     "games": 8
    },
    "reason": ""
+  },
+  {
+   "task_id": "llmplay3_a_l12_m100_s139012042_a6d88b66a929a",
+   "seed": 139012042,
+   "games": 88,
+   "l50": 1,
+   "top": 910,
+   "decisions": [
+    910,
+    579,
+    497,
+    414,
+    332,
+    249,
+    166,
+    84,
+    1
+   ],
+   "registered": true,
+   "deployed": false,
+   "future_seed_start": 403000000,
+   "future_seed_count": 256,
+   "teacher_top": {
+    "wins": 8,
+    "games": 8
+   },
+   "reason": ""
   }
  ],
- "scan_expected": 1246,
- "scanned": 310,
- "registered": 307,
+ "scan_expected": 1474,
+ "scanned": 311,
+ "registered": 308,
  "deployed": 246,
- "scan_games": 26600,
+ "scan_games": 26688,
  "complete": false
 }
