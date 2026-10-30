@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
-"""Northstar benchmark: poll the desktop curriculum queue and chart each new student.
+"""Northstar benchmark: poll the desktop curriculum state and chart each student.
 
 task179 §5 asks for a trend line that never takes part in promotion:
 
 * completion -- adventure 1..50 at the original difficulty with the standard deck
   (``pvz_tasks.deck_for_level``; the engine's own conveyor bank on 5/10/20/25/30/40/45/50),
   16 seeds per level, pure student;
-* generalization -- the 54 unfamiliar v5 decks of task129 (``configs/task129_decks_v5.json``),
-  2 seeds each, taken from the registry's own seed block;
+* generalization -- decks a teacher can actually win with: the 15 task129 v5 decks on which
+  the task177 teacher won at least one game, plus the 38 GPT Pro verified winning decks of
+  ``configs/deploy17_random_deck_pool.json``; 2 seeds each;
 * difficulty -- the 0.5..3.0 multiplier ladder on L7/L14/L25/L33/L45, 16 seeds per rung,
   reported as the multiplier where the win rate crosses 50 % (logit-linear interpolation).
 
 Every model plays exactly the same (task, seed) pairs, so rounds are paired across time.
 Results are appended to one CSV keyed by student round; ``northstar.png`` plots the trend;
-a short paragraph goes to ``MEMORY/docs/task181-northstar.md``. CSV, PNG, logs and the
-pulled checkpoints live under ``artifacts/northstar/`` and ``~/.cache/pvz-northstar/``
-and are never committed.
+a short paragraph goes to ``MEMORY/docs/task181-northstar.md``. Everything except the note
+lives under ``~/pvz-logs/northstar/`` and is never committed.
 
-The desktop is a production machine: the poller only runs ``cat`` and ``stat`` there and
-never writes, starts or stops anything. Benchmarks are capped at 4 game processes (3 by
-default) because this Mac runs other experiments as well.
+This runs on the desktop, so the curriculum state is read in place and nothing is written
+there: the poller only reads ``curriculum_state.json`` and the checkpoint it points at.
+The systemd user unit caps it at two game processes, nice 19 and 3 GiB so it yields to the
+production queue.
 
 Usage:
   python3 scripts/bench_northstar.py --once --dry-run          # show the active student
   python3 scripts/bench_northstar.py --once                    # one poll, bench if new
   python3 scripts/bench_northstar.py --model m.pt --round 52   # one explicit student
-  nohup nice -n 10 python3 scripts/bench_northstar.py \\
-      >> artifacts/northstar/poller.log 2>&1 &
+  systemctl --user start pvz-northstar                         # the installed poller
 """
 from __future__ import annotations
 
@@ -38,7 +38,6 @@ import json
 import math
 import multiprocessing as mp
 import os
-import subprocess
 import sys
 import time
 from datetime import datetime
@@ -50,15 +49,15 @@ sys.path.insert(0, str(ROOT / "scripts"))
 
 import bench_play  # noqa: E402
 
-REMOTE_STATE = "/home/newbiexvwu/pvz-logs/curriculum_state.json"
-DEFAULT_MODEL_DIR = Path("~/.cache/pvz-northstar/models")
-DEFAULT_OUT = ROOT / "artifacts/northstar"
+STATE = Path.home() / "pvz-logs/curriculum_state.json"
+DEFAULT_OUT = Path.home() / "pvz-logs/northstar"
 DEFAULT_DOC = ROOT / "MEMORY/docs/task181-northstar.md"
-UNSEEN_DECKS = ROOT / "configs/task129_decks_v5.json"
-DEFAULT_EXECUTABLE = ROOT / "build/pvz-portable"
+TASK129_DECKS = ROOT / "configs/task129_decks_v5.json"
+DEPLOY17_DECKS = ROOT / "configs/deploy17_random_deck_pool.json"
+DEFAULT_EXECUTABLE = DEFAULT_OUT / "engine/pvz-portable"
 DEFAULT_RESOURCE_DIR = Path(os.environ.get(
-    "PVZ_RESOURCE_DIR", "/Users/newbiexvwu/Downloads/Plants_Vs_Zombies_V1.2.0.1073_EN"))
-MAX_WORKERS = 4
+    "PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
+MAX_WORKERS = 2
 LEVELS = tuple(range(1, 51))
 SEEDS_PER_LEVEL = 16
 UNSEEN_SEEDS = 2
@@ -67,9 +66,14 @@ LADDER = (0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0, 2.5, 3.0)
 LADDER_SEEDS = 16
 COMPLETION_SEED_START = 932_000_000
 LADDER_SEED_START = 934_000_000
+UNSEEN_SEED_START = 936_000_000
 ZONE_BY_BACKGROUND = {"BACKGROUND_1_DAY": "day", "BACKGROUND_2_NIGHT": "night",
                       "BACKGROUND_3_POOL": "pool", "BACKGROUND_4_FOG": "fog",
                       "BACKGROUND_5_ROOF": "roof", "BACKGROUND_6_BOSS": "roof"}
+# task177 base+deep arms: these are the only task129 decks on which the teacher won >= 1 game.
+TASK177_WINS = {(7, "d02"), (7, "d04"), (7, "d05"), (9, "d05"), (9, "d06"),
+                (14, "d01"), (14, "d02"), (14, "d03"), (24, "d02"), (24, "d05"),
+                (26, "d01"), (26, "d02"), (26, "d03"), (37, "d01"), (37, "d05")}
 FIELDS = ("round", "evaluated_at", "model_sha256", "model_bytes", "backend", "workers",
           "seconds", "completion_wins", "completion_games", "completion_rate",
           "day_wins", "day_games", "night_wins", "night_games", "pool_wins", "pool_games",
@@ -112,14 +116,26 @@ def completion_suite() -> dict:
 
 
 def unseen_suite() -> dict:
-    document = json.loads(UNSEEN_DECKS.read_text())
     tasks, plan = {}, {}
-    for entry in document["tasks"]:
+    registry = json.loads(TASK129_DECKS.read_text())
+    for entry in registry["tasks"]:
+        # deck129_v5_l07_d02 -> level 7, deck d02
+        _, _, _, deck_tag = entry["task_id"].split("_")
+        if (entry["level"], deck_tag) not in TASK177_WINS:
+            continue
         task_id = f"unseen_{entry['task_id']}"
         tasks[task_id] = {"task_id": task_id, "zone": zone_of(entry["level"]),
                           "level": entry["level"], "deck": list(entry["deck"]),
                           "zombie_count_multiplier": 1.0, "playthrough": 2}
         plan[task_id] = [int(seed) for seed in entry["seeds"][:UNSEEN_SEEDS]]
+    pool = json.loads(DEPLOY17_DECKS.read_text())
+    for index, entry in enumerate(pool["tasks"]):
+        task_id = f"unseen_{entry['task_id']}"
+        tasks[task_id] = {"task_id": task_id, "zone": zone_of(entry["level"]),
+                          "level": entry["level"], "deck": list(entry["deck"]),
+                          "zombie_count_multiplier": 1.0, "playthrough": 2}
+        first = UNSEEN_SEED_START + index * UNSEEN_SEEDS
+        plan[task_id] = list(range(first, first + UNSEEN_SEEDS))
     return tasks, plan
 
 
@@ -158,33 +174,28 @@ def run_suite(name: str, model: Path, native: Path | None, backend: str, workers
     start_method = "spawn" if sys.platform == "darwin" else (
         "fork" if "fork" in mp.get_all_start_methods() else "spawn")
     rows: list[dict] = []
-    failure: Exception | None = None
+    remaining = jobs
     context = mp.get_context(start_method)
-    pool = context.Pool(workers, initializer=bench_play._init_worker, initargs=(cfg,))
-    try:
-        pending = jobs
-        for attempt in (1, 2):
-            failed = []
-            try:
-                for index, row in enumerate(pool.imap_unordered(
-                        bench_play._play_one, pending, chunksize=1), 1):
-                    rows.append(row)
-                    if index % 100 == 0 or index == len(pending):
-                        log(f"{name}: {index}/{len(pending)} games")
-            except Exception as exc:  # a game crashed the worker; retry the rest once
-                failure = exc
-                log(f"{name}: game failed ({exc}); retrying the unfinished jobs")
-                done = {(row["task_id"], row["seed"]) for row in rows}
-                failed = [job for job in pending if (job["task_id"], job["seed"]) not in done]
-                pending = failed or pending
-                continue
-            failure = None
+    for attempt in (1, 2):
+        if not remaining:
             break
-    finally:
-        pool.close()
-        pool.join()
-    if failure is not None:
-        raise failure
+        pool = context.Pool(workers, initializer=bench_play._init_worker, initargs=(cfg,))
+        try:
+            for index, row in enumerate(pool.imap_unordered(
+                    bench_play._play_one, remaining, chunksize=1), 1):
+                rows.append(row)
+                if index % 100 == 0 or index == len(remaining):
+                    log(f"{name}: {index}/{len(remaining)} games")
+            remaining = []
+        except Exception as exc:  # a game crashed the worker; retry the rest once
+            log(f"{name}: game failed ({exc}) on attempt {attempt}")
+            if attempt == 2:
+                raise
+            done = {(row["task_id"], row["seed"]) for row in rows}
+            remaining = [job for job in jobs if (job["task_id"], job["seed"]) not in done]
+        finally:
+            pool.close()
+            pool.join()
     return rows
 
 
@@ -283,11 +294,12 @@ def plot(path: Path, rows: list[dict]) -> None:
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    from matplotlib.ticker import MaxNLocator
     rounds = [int(row["round"]) for row in rows]
     figure, (top, bottom) = plt.subplots(2, 1, figsize=(10, 8), sharex=True,
                                          gridspec_kw={"height_ratios": [3, 2]})
     top.plot(rounds, [float(row["completion_rate"]) for row in rows], "o-", label="adventure 1-50")
-    top.plot(rounds, [float(row["unseen_rate"]) for row in rows], "s-", label="54 unseen decks")
+    top.plot(rounds, [float(row["unseen_rate"]) for row in rows], "s-", label="winnable unseen decks")
     top.set_ylabel("win rate")
     top.set_ylim(0, 1)
     top.grid(alpha=0.3)
@@ -297,6 +309,7 @@ def plot(path: Path, rows: list[dict]) -> None:
     bottom.set_xlabel("student round")
     bottom.set_ylabel("multiplier at 50% win rate")
     bottom.set_ylim(0.4, 3.1)
+    bottom.xaxis.set_major_locator(MaxNLocator(integer=True))
     bottom.grid(alpha=0.3)
     bottom.legend(loc="upper left", ncol=5)
     figure.tight_layout()
@@ -321,7 +334,7 @@ def append_doc(doc: Path, record: dict) -> None:
             f"{record['backend']} 后端，{record['workers']} 进程，耗时 {record['seconds']} s。\n"
             f"- 冒险 1–50：{record['completion_wins']}/{record['completion_games']} = "
             f"{percent(record['completion_rate'])}（{zones}）。\n"
-            f"- 54 套陌生卡组：{record['unseen_wins']}/{record['unseen_games']} = "
+            f"- 可赢陌生卡组：{record['unseen_wins']}/{record['unseen_games']} = "
             f"{percent(record['unseen_rate'])}。\n"
             f"- 倍率 50%（0.5–3.0 阶梯，端点表示未跨过）：{ladder}。\n")
     with doc.open("a", encoding="utf-8") as handle:
@@ -330,106 +343,80 @@ def append_doc(doc: Path, record: dict) -> None:
 
 DOC_HEADER = """# task181 北极星基准
 
-不参与晋升，只看走势（task179 §5）。每出现一个已激活学生跑一次：
+不参与晋升，只看走势（task179 §5）。台式机用户服务 `pvz-northstar` 每 30 分钟读
+`~/pvz-logs/curriculum_state.json` 的 `student` / `student_round`，出现新的现任学生就跑一遍，
+只读生产状态。结果 CSV 与曲线图在 `~/pvz-logs/northstar/`，不入 git；本文件只记关键数字。
 
 - **通关**：冒险 1–50 关，原难度、`pvz_tasks.deck_for_level` 标准卡组（5/10/20/25/30/40/45/50
   用引擎自己的传送带），纯学生，每关 16 个种子。
-- **泛化**：task129 的 54 套 v5 陌生卡组（`configs/task129_decks_v5.json`），每套 2 个种子，
-  用登记表自带的种子段。
+- **泛化**：用老师能赢的陌生卡组 —— task177 里老师至少赢过 1 局的 15 套 deck129 v5 卡组
+  （L7 d02/d04/d05、L9 d05/d06、L14 d01/d02/d03、L24 d02/d05、L26 d01/d02/d03、L37 d01/d05），
+  加 `configs/deploy17_random_deck_pool.json` 里 38 套 GPT Pro 胜局卡组，每套 2 个种子。
 - **难度**：L7/L14/L25/L33/L45 的 9 档倍率（0.5–3.0），每档 16 个种子；报胜率 50% 对应的倍率
   （相邻两档在 log(倍率) × logit 上线性插值，落在端点表示没跨过 50%）。
 
-种子固定（通关 932M、倍率 934M、陌生卡组 129M），所有学生逐局配对。CSV、曲线图、日志与拉取的
-检查点都在 `artifacts/northstar/` 与 `~/.cache/pvz-northstar/`，不入 git。L35 是砸罐子关，
-学生没有砸罐动作，通关率结构性为 0，看走势时忽略这一关。
+引擎固定在 `~/pvz-logs/northstar/engine/pvz-portable`（deploy19 生产二进制，SHA256 `41bb2a36…`），
+C++ 原生整局，最多 2 个游戏进程。种子固定（通关 932M、倍率 934M、deploy17 卡组 936M、
+task129 卡组用登记表自带种子），所有学生逐局配对。L35 是砸罐子关，学生没有砸罐动作，
+通关率结构性为 0，看走势时忽略这一关。
 """
-
-
-# --------------------------------------------------------------------------- remote
-
-class Remote:
-    def __init__(self, host: str, distro: str):
-        self.host, self.distro = host, distro
-
-    def _wsl(self, argv: list[str], *, stdin: bytes | None = None, stdout=None,
-             timeout: float = 120):
-        command = ["ssh", "-o", "ConnectTimeout=40", self.host,
-                   "wsl", "-d", self.distro, "-e", *argv]
-        return subprocess.run(command, input=stdin, stdout=stdout or subprocess.PIPE,
-                              stderr=subprocess.PIPE, timeout=timeout)
-
-    def read_state(self) -> tuple[int, str]:
-        result = self._wsl(["cat", REMOTE_STATE])
-        if result.returncode != 0:
-            raise RuntimeError(f"remote state read failed: "
-                               f"{result.stderr.decode(errors='replace').strip()}")
-        document = json.loads(result.stdout)
-        return int(document["student_round"]), str(document["student"])
-
-    def size(self, path: str) -> int:
-        script = f'stat -c "%s" "{path}"\n'
-        result = self._wsl(["bash", "-s"], stdin=script.encode())
-        if result.returncode != 0:
-            raise RuntimeError(f"remote stat failed for {path}: "
-                               f"{result.stderr.decode(errors='replace').strip()}")
-        return int(result.stdout.decode().strip())
-
-    def copy(self, path: str, destination: Path) -> None:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        temporary = destination.with_suffix(destination.suffix + ".part")
-        with temporary.open("wb") as handle:
-            result = self._wsl(["cat", path], stdout=handle, timeout=1800)
-        if result.returncode != 0:
-            temporary.unlink(missing_ok=True)
-            raise RuntimeError(f"remote cat failed for {path}: "
-                               f"{result.stderr.decode(errors='replace').strip()}")
-        temporary.replace(destination)
-
-
-def pull_model(remote: Remote, round_number: int, remote_path: str, model_dir: Path) -> Path:
-    expected = remote.size(remote_path)
-    target = model_dir / f"r{round_number:06d}.pt"
-    for attempt in (1, 2):
-        remote.copy(remote_path, target)
-        if target.stat().st_size == expected:
-            log(f"round {round_number}: model {expected} bytes from {remote_path}")
-            return target
-        log(f"round {round_number}: size mismatch (local {target.stat().st_size}, "
-            f"remote {expected}), retrying")
-    raise RuntimeError(f"round {round_number}: checkpoint copy is truncated after two attempts")
 
 
 # --------------------------------------------------------------------------- main
 
-def run_round(args, remote: Remote | None, round_number: int, remote_path: str | None,
-              model: Path | None) -> dict:
-    if model is None:
-        model = pull_model(remote, round_number, remote_path, args.model_dir)
+def active_student(path: Path) -> tuple[int, Path]:
+    document = json.loads(path.read_text())
+    return int(document["student_round"]), Path(document["student"])
+
+
+def acquire_lock(path: Path):
+    handle = path.open("w")
+    try:
+        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError:
+        handle.close()
+        return None
+    return handle
+
+
+def run_round(args, round_number: int, model: Path) -> dict:
+    if not model.is_file():
+        raise RuntimeError(f"checkpoint not found: {model}")
     record = evaluate(round_number, model, args.backend, args.workers,
                       args.resource_dir, args.executable)
-    append_row(args.out / "northstar.csv", record)
-    plot(args.out / "northstar.png", read_rows(args.out / "northstar.csv"))
-    if not args.doc.is_file():
-        args.doc.write_text(DOC_HEADER, encoding="utf-8")
-    append_doc(args.doc, record)
+    append_row(args.out / "results.csv", record)
+    finalize(args)
     log(f"round {round_number}: completion {record['completion_rate']}, unseen "
         f"{record['unseen_rate']}, m50 "
         + ", ".join(f"L{level}={record[f'm50_l{level}']}" for level in LADDER_LEVELS))
     return record
 
 
+def finalize(args) -> None:
+    """Rewrite the plot and append any CSV round missing from the note."""
+    rows = read_rows(args.out / "results.csv")
+    if not rows:
+        return
+    plot(args.out / "northstar.png", rows)
+    if not args.doc.is_file():
+        args.doc.write_text(DOC_HEADER, encoding="utf-8")
+    text = args.doc.read_text(encoding="utf-8")
+    for row in rows:
+        marker = f"### r{row['round']}（"
+        if marker not in text:
+            append_doc(args.doc, row)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("--host", default="newbiexvwu@100.120.155.85")
-    parser.add_argument("--distro", default="Ubuntu")
     parser.add_argument("--model", type=Path, help="bench this checkpoint instead of the active one")
     parser.add_argument("--round", type=int, help="student round of --model")
-    parser.add_argument("--model-dir", type=Path, default=DEFAULT_MODEL_DIR)
+    parser.add_argument("--state", type=Path, default=STATE)
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--doc", type=Path, default=DEFAULT_DOC)
     parser.add_argument("--backend", choices=("auto", "cpp", "python"), default="auto")
-    parser.add_argument("--workers", type=int, default=3)
+    parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--executable", type=Path, default=DEFAULT_EXECUTABLE)
     parser.add_argument("--resource-dir", type=Path, default=DEFAULT_RESOURCE_DIR)
     parser.add_argument("--interval", type=int, default=1800,
@@ -440,44 +427,53 @@ def main() -> int:
     args = parser.parse_args()
 
     if not 1 <= args.workers <= MAX_WORKERS:
-        parser.error(f"--workers must be from 1 to {MAX_WORKERS} on this Mac")
+        parser.error(f"--workers must be from 1 to {MAX_WORKERS} on the desktop")
     if bool(args.model) != bool(args.round):
         parser.error("--model and --round go together")
-    args.model_dir = args.model_dir.expanduser().resolve()
+    args.state = args.state.expanduser().resolve()
     args.out = args.out.expanduser().resolve()
     args.executable = args.executable.expanduser().resolve()
     args.resource_dir = args.resource_dir.expanduser().resolve()
 
     args.out.mkdir(parents=True, exist_ok=True)
-    lock = (args.out / ".lock").open("w")
-    try:
-        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except BlockingIOError:
-        print(f"another northstar run is active ({args.out / '.lock'})", file=sys.stderr)
-        return 2
+    lock_path = args.out / ".lock"
 
     if args.model:
-        run_round(args, None, args.round, None, args.model.expanduser().resolve())
+        lock = acquire_lock(lock_path)
+        if lock is None:
+            print(f"another northstar run is active ({lock_path})", file=sys.stderr)
+            return 2
+        try:
+            finalize(args)
+            run_round(args, args.round, args.model.expanduser().resolve())
+        finally:
+            lock.close()
         return 0
 
-    remote = Remote(args.host, args.distro)
     while True:
-        try:
-            round_number, remote_path = remote.read_state()
-            done = {int(row["round"]) for row in read_rows(args.out / "northstar.csv")}
-            if args.dry_run:
-                print(f"active student round {round_number} at {remote_path}; "
-                      f"benchmarked rounds {sorted(done)}")
-                return 0
-            if round_number in done:
-                log(f"student round {round_number} already benchmarked")
-            else:
-                log(f"new student round {round_number}: {remote_path}")
-                run_round(args, remote, round_number, remote_path, None)
-        except Exception as exc:
-            log(f"poll failed: {exc}")
-            if args.once:
-                return 1
+        lock = acquire_lock(lock_path)
+        if lock is None:
+            log(f"another northstar run is active ({lock_path}); skipping this poll")
+        else:
+            try:
+                finalize(args)
+                round_number, model = active_student(args.state)
+                done = {int(row["round"]) for row in read_rows(args.out / "results.csv")}
+                if args.dry_run:
+                    print(f"active student r{round_number} at {model}; "
+                          f"benchmarked rounds {sorted(done)}")
+                    return 0
+                if round_number in done:
+                    log(f"student round {round_number} already benchmarked")
+                else:
+                    log(f"new student round {round_number}: {model}")
+                    run_round(args, round_number, model)
+            except Exception as exc:
+                log(f"poll failed: {exc}")
+                if args.once:
+                    return 1
+            finally:
+                lock.close()
         if args.once:
             return 0
         time.sleep(args.interval)

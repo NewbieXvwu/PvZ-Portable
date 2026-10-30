@@ -1,0 +1,24 @@
+[Unit]
+Description=PvZ northstar benchmark poller (read-only, yields to production)
+
+[Service]
+Type=simple
+WorkingDirectory=%h/PvZ-search/.claude/worktrees/northstar
+ExecStart=%h/.venvs/ml/bin/python3 %h/PvZ-search/.claude/worktrees/northstar/scripts/bench_northstar.py
+Nice=19
+CPUWeight=10
+IOWeight=1
+MemoryHigh=2G
+MemoryMax=3G
+OOMScoreAdjust=800
+OOMPolicy=kill
+TasksMax=64
+KillMode=control-group
+TimeoutStopSec=10
+Restart=on-failure
+RestartSec=60
+Environment=OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 PYTHONUNBUFFERED=1
+Environment=PVZ_RESOURCE_DIR=%h/.cache/pvz-research-resources
+
+[Install]
+WantedBy=default.target
