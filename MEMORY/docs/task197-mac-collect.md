@@ -16,13 +16,13 @@ Mac只有一处批次缓存。帧按唯一批次标签归档，经HF发送，台
 
 已实现采集、HF交接、独立批次导入，以及生产训练视图的8行接入。Mac已完成clang PGO两阶段构建，位置 `~/pvz-mac-collect/build/pvz-portable`。实际生产已切deploy22 `41bcc4a1`，读取到第62轮、现任为第52轮学生，配合v5和branch1采集。L26与L24各2局均完整终局，保留生产搜索预算及obs v3，独立种子1970000006–1970000009。课程标签合并/待打包与任务加载相关现有测试各2项通过。
 
-两批共约2.48MB，已上传 `transfer/mac197/frames/mac197_197000000{6,8}_fast_search.tar.gz`。台式机SSH连接超时，导入与台式机读帧尚未完成，不能认定端到端通过。本地原帧和已完成包保留于唯一缓存 `~/pvz-mac-collect/`，连接恢复后按下面的send命令逐包送达，收到确认后自动删除HF包和本地批次。未部署台式机补丁，未启动长期采集。
+两批共约2.48MB，已从HF送达台式机，并由原导入脚本放入 `~/pvz-logs/task197-smoke-*/frames/mac197/` 临时帧目录。生产打包模块的 `frame_paths`、`read_frames` 和 `_episode_context` 已只读载入4局、6207帧，每局任务上下文均可读取。未进行特征打包或训练；临时目录已删除，两个HF包取用后已删除，Mac对应原帧及包也已清理。生产帧目录、qc、看门狗和stop_curr均未改动，未部署接入补丁，Mac计算继续暂停。
 
 ## 主控操作
 
 组边界在台式机更新远端引用后执行 `bash scripts/install_mac_collect.sh /home/newbiexvwu/PvZ-search/.claude/worktrees/cq origin/maccollect`，仅应用接入补丁与导入脚本，生产进程的边界切换由主控安排。无需新增配置文件。
 
-Mac使用现有带torch/HF的解释器：`PY=~/.local/share/mise/installs/python/3.14/bin/python3`。恢复投递为 `"$PY" scripts/mac_collect.py send --batch-path ~/pvz-mac-collect/mac197_1970000006_fast_search.tar.gz --destination /home/newbiexvwu/PvZ-search/artifacts/student/frames_v2`，随后同样送0008。主控启用持续采集时运行 `"$PY" scripts/mac_collect.py run --workers 12 --batches 100000`，每批均刷新现任和部署标记。相同缓存只启动一个采集入口，送达前断连会保留本批并退出。
+Mac使用现有带torch/HF的解释器：`PY=~/.local/share/mise/installs/python/3.14/bin/python3`。演练已完成，无需重送。Mac计算当前继续暂停，等待用户通知；后续获准启用持续采集时运行 `"$PY" scripts/mac_collect.py run --workers 12 --batches 100000`，每批均刷新现任和部署标记。相同缓存只启动一个采集入口，送达前断连会保留本批并退出。
 
 ## deploy22 审查
 
