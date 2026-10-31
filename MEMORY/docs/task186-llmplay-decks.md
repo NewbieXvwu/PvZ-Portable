@@ -167,4 +167,8 @@ PROMPT要求每次选新卡组前查表，利用LLM的PvZ先验知识，逐类�
 
 按用户追加要求，帧文件直接用现有pvz_frame_store.write_frames写frames.npz，Game.load_archive用frame_path/read_frames兼容读两种格式；没有另写解析。写函数新增默认开启的cache参数，接口调用cache=False只存同款无损frames数组，避免在GPT包里引入Torch与无用的训练特征计算；训练读取端原本就能按需建缓存。分卷对已压缩npz用ZIP_STORED，避免再压一次。resume支持首卷或分卷目录，并保留策略、卡组登记和预算。相关-k测试均设8GB上限。
 
-task105导入使用现行task193/deploy22后的import-only入口，nice19、单worker、2GiB上限，已有SHA回执复用；仅更新merged_progress索引，不排扫描、不启动服务。导入结果待完成后在此追加。
+task105导入使用现行task193/deploy22后的import-only入口，nice19、1–2个worker、2–4GiB上限，已有SHA回执复用；仅更新merged_progress索引，不排扫描。此次交回2753个路径去重为1379份SHA，1377通过、2份frame_count不符拒绝；旧llmplay4_partial的1046个路径去重为538份，534通过、4份frame_count不符拒绝。合并索引累计3791份SHA；不修补元数据、不重复重放，不需重载scan/secondary或其他服务，生产下轮读取新索引。
+
+旧半成品的538个SHA目录确认全部已在导入库后，~/llm_runs/llmplay4_partial已删除，清掉3316734453字节。库内转换复用task32原工具及其内置逐帧比对，nice19、最多2个转换worker、3GiB上限；先处理冷档，待两批导入完成后对剩余新档用min-age=0转换并删JSONL，没有另加重放或校验链。
+
+最终导入库体积从7316485861降至903508199字节（6.81→0.84GiB，期间还补入了旧半成品538份SHA）；3791个frames.jsonl全部转为frames.npz并删除，JSONL余0、NPZ共3791个。另清掉1个154532字节的本次转换临时文件。加上旧半成品目录删除，合计净减约9.06GiB。最终接口分卷llmplay_pkg.7z.001为6031116字节，carry保留2786条记录，位于~/pvz-logs/llmplay-decks/；以后只取export_bundle()返回的out外99MB分卷。所做筛选测试均通过，未做其他全量验收。
