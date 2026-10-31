@@ -11,6 +11,7 @@ import uuid
 import zipfile
 from contextlib import contextmanager
 from pathlib import Path, PurePosixPath
+from pvz_frame_store import frame_path
 
 from . import budget
 from . import workflow
@@ -18,7 +19,7 @@ from .runtime import output_path
 from .game import (ROOT, ARCHIVE_SCHEMA, _default_executable, _default_resource_dir,
                    _ensure_executable, load_tasks, required_checkpoint)
 
-FILES = ("meta.json", "ticks.jsonl", "frames.jsonl")
+FILES = ("meta.json", "ticks.jsonl", "frames.npz", "frames.jsonl")
 LAYERS = workflow.LAYERS
 
 
@@ -159,7 +160,7 @@ def _report(document):
 
 def _archive_digest(archive):
     digest = hashlib.sha256()
-    for name in FILES:
+    for name in ("meta.json", "ticks.jsonl", frame_path(archive).name):
         digest.update(name.encode())
         if not (archive / name).is_file():
             digest.update(b"<missing>")
@@ -313,7 +314,8 @@ def export_bundle() -> list[Path]:
                         for name in FILES:
                             path = root / relative / name
                             if path.is_file():
-                                bundle.write(path, "out/" + relative + "/" + name)
+                                bundle.write(path, "out/" + relative + "/" + name,
+                                             compress_type=zipfile.ZIP_STORED if name == "frames.npz" else zipfile.ZIP_DEFLATED)
                     for directory, folders, files in os.walk(root):
                         folders[:] = [name for name in folders if not name.startswith(".")
                                       and name not in ("archives", "__pycache__")]

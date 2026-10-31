@@ -49,8 +49,10 @@ L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支�
 按99 MB连续ZIP分卷放在out同级固定的`out_exports/`目录；成功后删除上一份。
 外部只取函数返回的全部分卷，不再取整个out。缓存、日志、运行存盘和其他包都不进入分卷。
 `llmplay.paths()`可查看实际`bundle_dir`，`resume("…/out.zip.001")`或`resume(分卷目录)`自动续接。
-手工解压/导入时先在out外执行`cat out.zip.[0-9]* > returned.zip`，得到标准ZIP；frames仍是原JSONL，现有导入侧无需更改。
-占位、`Game.save/load/load_archive`和存档格式沿用上一版，导出返回正式存档路径。
+手工解压/导入时先在out外执行`cat out.zip.[0-9]* > returned.zip`，得到标准ZIP。
+每局直接使用生产同款`pvz_frame_store.write_frames`写`frames.npz`，读档走`frame_path/read_frames`，兼容旧JSONL。
+接口包不预计算训练特征，因此无需Torch；下游训练按原逻辑生成缓存，现有导入解析无需改写。
+占位、`Game.save/load/load_archive`沿用上一版，导出返回正式存档路径。
 包内carry只读结论，不复演；旧存档始终使用其中记录的卡组和环境。
 
 覆盖与重点卡配置在`configs/llmplay_seeds.json`的`decks`中：

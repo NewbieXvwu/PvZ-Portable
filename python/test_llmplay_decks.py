@@ -342,7 +342,7 @@ def test_decks_native_archive_uses_original_cards_without_fixed_deck_index(tmp_p
     g.close()
 
 
-def test_compact_export_removes_finished_run_and_old_delivery_without_compressing():
+def test_compact_export_removes_finished_run_without_full_bundle():
     root = delivery.output_dir()
     g = Game('llmplay_decks_l1_m100', seed=decks.seed_at(1, 0), deck=D1, reason='经济主力与防守', _gate=False)
     g.env = SimpleNamespace(episode={})
@@ -354,11 +354,17 @@ def test_compact_export_removes_finished_run_and_old_delivery_without_compressin
     (root / 'out.zip').write_bytes(b'obsolete')
     (root / '.out.zip.partial').write_bytes(b'obsolete')
     run = root / 'player_finished'
-    with patch.object(delivery.zipfile, 'ZipFile', side_effect=AssertionError('no per-game compression')):
+    with patch.dict(sys.modules, torch=None):
         stored = g.export_archive(run)
     assert not run.exists() and stored.parent == root / 'archives'
-    assert (stored / 'frames.jsonl').is_file()
+    assert (stored / 'frames.npz').is_file() and not (stored / 'frames.jsonl').exists()
+    from pvz_frame_store import read_frames
+    assert read_frames(stored / 'frames.npz') == g.frames
+    restored = Game.load_archive(stored)
+    assert restored.frames == g.frames
+    restored.close()
     assert not (root / 'out.zip').exists() and not (root / '.out.zip.partial').exists()
+    assert not delivery.bundle_dir().exists()
     generations = [p for p in (root / '.delivery').iterdir() if not p.is_symlink()]
     assert len(generations) == 1 and not old.exists()
     assert set(p.name for p in generations[0].iterdir()) == {'progress.json', 'report.md', 'budget.json', 'decks.json'}
@@ -375,7 +381,8 @@ def _compact_archive(tmp_path, seed=0):
                 outcome=dict(result=1, won=True, final_tick=100), workflow_layer='decks')
     (archive / 'meta.json').write_text(json.dumps(meta))
     (archive / 'ticks.jsonl').write_text('{}\n')
-    (archive / 'frames.jsonl').write_text(json.dumps({'noise': os.urandom(10000).hex()}) + '\n')
+    from pvz_frame_store import write_frames
+    write_frames(archive / 'frames.npz', [{'noise': os.urandom(10000).hex()}], cache=False)
     delivery.record_archive(archive)
     return archive
 
@@ -399,6 +406,7 @@ def test_compact_bundle_whitelist_parts_replacement_and_failed_export(tmp_path, 
         assert {'out/progress.json', 'out/decks.json', 'out/policy.py'} <= set(names)
         assert all(name in ('out/progress.json', 'out/decks.json', 'out/policy.py')
                    or name.startswith('out/archives/') for name in names)
+        assert all(bundle.getinfo(name).compress_type == zipfile.ZIP_STORED for name in names if name.endswith('.npz'))
         assert json.loads(bundle.read('out/progress.json')) == delivery._read_progress(root)
     before = [p.read_bytes() for p in parts]
     with patch.object(delivery.zipfile.ZipFile, 'write', side_effect=OSError('disk full')):

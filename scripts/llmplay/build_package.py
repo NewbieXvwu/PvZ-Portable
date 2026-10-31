@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-PYTHON_MODULES = ["pvz_env.py", "pvz_common.py"]
+PYTHON_MODULES = ["pvz_env.py", "pvz_common.py", "pvz_frame_store.py"]
 # pvz_constants.py 是**从 C++ 源码现场解析**常量表的（AGENTS 的约定：不许手抄表），
 # 所以包里必须带上它读的那几个文件，否则 import 阶段就抛"常量来源文件不存在"。
 CONSTANT_SOURCES = ["src/ConstEnums.h", "src/Lawn/Plant.cpp", "src/Lawn/Zombie.cpp",

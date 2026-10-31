@@ -969,7 +969,8 @@ class Game:
         archive = Path(directory)
         meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
         ops = [json.loads(line) for line in (archive / "ticks.jsonl").read_text(encoding="utf-8").splitlines()]
-        frames = [json.loads(line) for line in (archive / "frames.jsonl").read_text(encoding="utf-8").splitlines()]
+        from pvz_frame_store import frame_path, read_frames
+        frames = read_frames(frame_path(archive))
         task = meta["task"]
         game = cls(task["id"], seed=task["seed"], ops=ops, frames=frames,
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
@@ -989,7 +990,7 @@ class Game:
         return game
 
     def export_archive(self, directory, *, note=None) -> Path:
-        """导出 episode_archive_v1 存档（ticks.jsonl / frames.jsonl / meta.json）。
+        """导出 episode_archive_v1 存档（ticks.jsonl / frames.npz / meta.json）。
 
         导出的存档是引擎真正接受的动作序列，可直接 load_archive 继续中盘打。
         返回 archives 中的正式路径；成功后删除 out 内的本次临时运行目录。
@@ -1018,9 +1019,8 @@ class Game:
                 tape.write(json.dumps(dict(action=op["action"], tick=op["tick"],
                                            end_tick=op["end_tick"], ok=op["ok"]),
                                       separators=(",", ":")) + "\n")
-        with (target / "frames.jsonl").open("w", encoding="utf-8") as stream:
-            for frame in self.frames:
-                stream.write(json.dumps(frame, separators=(",", ":")) + "\n")
+        from pvz_frame_store import write_frames
+        write_frames(target / "frames.npz", self.frames, cache=False)
         episode = self.env.episode or {}
         from .runtime import environment_fingerprint
         result = int(self.obs.get("result") or 0)

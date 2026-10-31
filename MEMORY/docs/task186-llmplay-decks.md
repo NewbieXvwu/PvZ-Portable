@@ -165,6 +165,6 @@ PROMPT要求每次选新卡组前查表，利用LLM的PvZ先验知识，逐类�
 
 逐局发布只写progress/report/budget/decks结论，.delivery仅留当前小型快照，旧代、旧out.zip和临时压缩文件即用即清。Game.export_archive成功登记后删除out内对应运行目录，返回archives中的正式路径。显式llmplay.export_bundle()在out同级固定的<out名>_exports目录生成连续ZIP分卷，每卷上限99000000字节；直接流式写分卷，不另留整包副本，新包成功后删除上一份，失败保留旧包。只含正式存档、进度、卡组登记与.py策略，预算内嵌进度，日志/缓存/运行存盘/其他包不参与。压缩锁与逐局发布锁分离，压缩不挡对局。
 
-frames保持原JSONL，仅容器压缩；分卷拼接即标准ZIP，现有llmimport可直接解包。resume支持首卷或分卷目录，并保留策略、卡组登记和预算。相关6项-k测试通过（8GB上限），覆盖清理、分卷上限与恢复、失败保留旧包、打包期间继续发布和元数据carry续接；未加额外全量验收。
+按用户追加要求，帧文件直接用现有pvz_frame_store.write_frames写frames.npz，Game.load_archive用frame_path/read_frames兼容读两种格式；没有另写解析。写函数新增默认开启的cache参数，接口调用cache=False只存同款无损frames数组，避免在GPT包里引入Torch与无用的训练特征计算；训练读取端原本就能按需建缓存。分卷对已压缩npz用ZIP_STORED，避免再压一次。resume支持首卷或分卷目录，并保留策略、卡组登记和预算。相关-k测试均设8GB上限。
 
 task105导入使用现行task193/deploy22后的import-only入口，nice19、单worker、2GiB上限，已有SHA回执复用；仅更新merged_progress索引，不排扫描、不启动服务。导入结果待完成后在此追加。
