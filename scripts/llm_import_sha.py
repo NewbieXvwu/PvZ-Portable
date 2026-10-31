@@ -149,6 +149,10 @@ def run_sha(input_path, dest, manifest, layers_path, resources, executable,
                     else:
                         for name in FILES[1:]:
                             source_file, stored_file = archive / name, target / name
+                            if name in ('frames.jsonl', 'frames.npz') and (archive / 'frames.jsonl').is_file() \
+                                    and not (archive / 'frames.npz').exists() and (target / 'frames.npz').is_file():
+                                # task32's verified in-place conversion preserves this SHA's receipt.
+                                continue
                             if (source_file.exists() != stored_file.exists()
                                     or (source_file.exists() and source_file.stat().st_size != stored_file.stat().st_size)):
                                 raise ValueError(f'库内存档大小不符，禁止自动复放：{stored_file}')

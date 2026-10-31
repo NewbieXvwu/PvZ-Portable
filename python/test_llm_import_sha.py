@@ -22,6 +22,33 @@ def run_sha(*args, **kwargs):
 
 
 class ShaImportTest(unittest.TestCase):
+    def test_cached_jsonl_receipt_survives_task32_inplace_npz_conversion(self):
+        from pvz_frame_store import write_frames, read_frames
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            archive = _write_archive(root / 'source', 'a', _meta(wins=5))
+            manifest = root / 'configs/tasks.json'
+            manifest.parent.mkdir()
+            manifest.write_text(json.dumps({'tasks': []}))
+            layers = root / 'layers.json'
+            layers.write_text(json.dumps({'layers': {}}))
+            args = (root / 'source', root / 'dest', manifest, layers, root, root / 'engine',
+                    84_000_000, root / 'ledger.json')
+            with patch('llm_import_sha.verification_context', return_value={}), \
+                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}):
+                first = run_sha(*args)
+            stored = root / 'dest/sha256' / archive_sha(archive)
+            write_frames(stored / 'frames.npz', read_frames(stored / 'frames.jsonl'))
+            with patch('llm_import_sha.legacy.verify_copy', side_effect=AssertionError('no repeat replay')):
+                # Also accept the converter's brief state between rename and JSONL unlink.
+                transition = run_sha(*args)
+                self.assertTrue(transition['rows'][0]['verification_reused'])
+                (stored / 'frames.jsonl').unlink()
+                second = run_sha(*args)
+            self.assertTrue(second['rows'][0]['verification_reused'])
+            self.assertEqual(first['rows'][0]['task_id'], second['rows'][0]['task_id'])
+            self.assertEqual(second['rows'][0]['verify'], '通过')
+
     def test_single_verifier_can_share_the_three_game_budget_with_scanning(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
