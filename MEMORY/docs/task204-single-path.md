@@ -13,6 +13,7 @@
 - **导入端有两条链**：`import_llm_run`（原样 `copytree`）与 `llm_import_sha`（原样复制 `FILES` + SHA 收据），两条都**不在入库时做 JSONL→NPZ 转换**。
 - **task203 已经动过手，但修在两个旁支、没有合流**：`llmplay-decks` 把导出改成 `pvz_frame_store.write_frames(..., cache=False)`；`llmimport` 让 SHA 收据在外部原地转换后不失效。deploy25 基线本身仍是旧行为，所以“双入口”在代码库层面依旧存在，只是其中一半被搬到了旁支。
 - 真正意义上的一条路应当是：**`pvz_frame_store` 是唯一的帧容器**，所有生产者写 `frames.npz`，所有消费者用 `frame_path/read_frames`，导入在入库时转换，旧档只读兼容。
+- **按 §6.6 复核新增 6 项**（`origin/pvz-env:AGENTS.md`）：老师搜索树、`StudentHistory`/太阳历史、C++ 事实重算、常驻 Python 参考实现、未采纳的 `v2fogstack4` 原型、两个 `profile_for_deck`；部署脚本复制直接违反第 4 条。详见 §0.5。
 
 下表按“对体积 / 正确性 / 维护的危害”排序。P0 是体积，P1 是会产出错误数据或错误晋升，P2 是维护成本。
 
@@ -24,11 +25,60 @@
 | 4 | 对局驱动 / 录制 / 复演 | 正确性 + 维护 | 3 | `human_demo` + `pvz_env` 为唯一录制层 |
 | 5 | 任务定义与卡组推导 | 正确性 | 3+ | `pvz_tasks` + `render_episode` 为权威 |
 | 6 | 门禁 v6 / v7 与 `select_student` | 正确性（晋升判定） | 2 套统计 + 1 套预测 | v7；v6 显式标记 legacy |
-| 7 | 部署脚本 `qc_deploy17..25` | 维护 | 9 | 一个参数化启动器 |
+| 7 | 部署脚本 `qc_deploy17..25` | 维护（违反 §6.6 第 4 条） | 9 | 一个参数化启动器 |
 | 8 | `recipes/` 旧配方 | 维护 | 14 份，3 份在用 | A / B / warm 三份 |
-| 9 | 观测编码 Python vs C++ | 维护（有意保留） | 2 | 两份都留，等价测试是契约 |
+| 9 | 观测编码 Python vs C++ | 维护（训练侧允许） | 2 | 训练侧留；生产逐步 history 迁 C++（S1-2） |
 | 10 | 场景文本渲染 | 维护 | 3 | 共享渲染器 |
 | 11 | 任务生成器 / panel 生成 / llmplay 分支家族 | 维护 | 多 | 一个生成器、一条 llmplay 分支 |
+
+---
+
+## 0.5 §6.6 复核：C++ 权威与 Python 待迁移清单
+
+依据 `origin/pvz-env:AGENTS.md` §6.6（2026-10-31 用户定；deploy25 基线的 AGENTS.md 尚未含此节，但已作为项目约束生效）。本节把原清单按新标准再过一遍：
+
+- **合规薄接口**：只调用 C++ 的 `reset/step/observe`、示范重放、调试分析、训练（PyTorch）。
+- **待迁移**：实现已被生产采纳，但权威代码仍在 Python。
+- **重复实现**：Python 里又算了一遍 C++ 已有的规则、特征、搜索或推理。
+
+判定原则：C++ 是游戏规则、观测特征、老师搜索、推理的权威；Python 的 PyTorch 侧和调试工具可以保留，但不能成为生产推理/搜索的第二实现。原型被采纳要同批移入 C++，没采纳就删。部署脚本不复制粘贴。
+
+### S1 生产已采纳、Python 版仍在（按危害）
+
+| # | 项 | Python 位置 | C++ 对应 | 生产用法 | 结论 | 迁移代价 |
+|---|---|---|---|---|---|---|
+| S1-1 | 老师搜索树 | `scripts/search_play.py:_search`、`_continuations`、`_halving_choice`、`_save_value`、`_save_probe`、`_save_plan`、`_verified_choice`（约 283–664 行）；`_leaf_values`/`_static_scores` 已调用 C++ | 没有整棵搜索命令，只有 `BRANCH_SNAPSHOT_FAST`、`ROLLOUT(_VALUE)`、`LEAF_VALUES`、`STATIC_SCORES`、`SIM_SKIP` 原语 | qc 的 `fast_search` 每个决策都走；`--native-games` 不影响 | **违反 §6.6 第 2 条**：候选生成、每卡取格、减半、验证选择、预算/剪枝都在 Python。把搜索树移入 C++（新 SEARCH/PLAN 命令），Python 只发请求、记结果 | 高 |
+| S1-2 | StudentHistory / 太阳收入历史 | `python/pvz_student_observation.py:StudentHistory`（含 `extra`/`features`）；`search_play._fast_action` 每步更新；`pvz_env._student_options` 序列化 `V2H`；`pvz_env.rollout` 传 `_sun_production_history`；`pvz_env._annotate_observation` 算 `sun_income_rate` | `src/EnvironmentRollout.h:History`（注释明确“mirrors the Python StudentHistory”）、`Update`、`Features`、`Predict`；`main.cpp:ReadStudentOptions` 解析 `V2H`；`ROLLOUT` 内部也按 history 算 income | `--native-games` 的 `ROLLOUT_PREDICT` 与 `ROLLOUT` | **Python 重算 C++ 已能维护的历史**。让 C++ 持有跨命令 history；训练侧 encoder 可留，但生产逐步接口不再由 Python 算/传 | 中高 |
+| S1-3 | 事件 / 波次 / 损失原因 / 卡组校验 / 等待语义 | `llmplay/game.py:_snapshot`、`_mower_states`、`_note_events`、`_loss_reason`、`_close_wave` 从公共观测反推事件（`info["events"]` 只用于 totals）；`scripts/pvz_tasks.py:terrain_covered` 与 `llmplay/game.py:validate_deck` 重写地形覆盖；`python/pvz_wait_events.py:public_state/triggers/reference_wait` 是等待语义的 Python 参考 | `LawnApp::EnvironmentDeckWarnings`（`pool`/`roof`/`upgrade`）、`EnvironmentWaitEvents`、native `info["events"]`/wave/defense | GPT 包 `Game`；任务生成；`pvz_event_env` 校验 | 事件叙述与卡组校验应消费 C++ 输出；wait 参考按第 3 条只留一次性对比。`Game` 不是生产主路径，优先级低于 S1-1/2；`validate_deck` 可直接改调 `env.deck_warnings`；`terrain_covered` 若必须在无引擎的生成期使用，保留但注明是任务设计预筛，不是第二权威 | 中 |
+| S1-4 | 常驻 Python 参考实现与等价测试 | `scripts/search_play.py:_python_rollout_reference`（注释 LEGACY，仅 test/perf）；`python/pvz_wait_events.py:reference_wait`；测试 `test_cpp_rollout`、`test_identity_cpp`、`test_value_encoder`、`test_sleep/timer/bungee_inputs`、`test_wait_events` | `EnvironmentRollout`、`EnvironmentValueNet`、`EnvironmentTokens`、`EnvironmentWaitEvents` | 仅测试/诊断 | 与 §6.6 第 3 条、§6.5 冲突：移植只做一次小对比，不常驻重复校验。建议删除完整 Python oracle，保留少量固定 fixture 的 golden 测试 | 低 |
+| S1-5 | 未采纳的 Python 原型 | `v2fogstack4`：`pvz_student_observation.StudentHistory` 的 `zombie_frames` 记忆通道；`pvz_rollout_policy.export_student` 明确抛“Python memory experiment; native export is not implemented”，但仍列在 `pack_training_rows --obs`、`pvz_recipe` 的可选值，并有 `test_fog_memory.py` | 无（C++ 未实现） | 训练可选、测试 | 未被 C++ 采纳的 Python 原型；若实验仍在进行，明确保留期限，否则按第 3 条删除/归档，不再出现在运行代码/CLI 选项 | 低 |
+| S1-6 | 两个 `profile_for_deck` / `training_task` | `python/pvz_env.py:profile_for_deck` 硬编码升级集合 `40 <= type <= 47`；`scripts/pvz_tasks.py:profile_for_deck` 从 `pvz_constants.upgrade_plants()` 解析；`pvz_env.training_task` 与 `render_episode.training_task_kwargs` 重复 | `Plant::IsUpgrade`（经 `pvz_constants` 解析）、`LawnApp.cpp` 的 profile 校验 | `pvz_env` 版本只在 `test_boss_l50`、`test_bungee_inputs`、`test_cpp_rollout`、`test_deck_warnings`、`test_env_protocol` 使用；生产走 `pvz_tasks` | 删除 `pvz_env` 版本，测试改用权威实现；硬编码 40..47 与 C++ 清单有漂移风险 | 低 |
+
+### S2 Python 重算 C++ 已有逻辑（训练侧，允许但需标记）
+
+这些不是违规，因为 §6.6 明确允许“训练（PyTorch）”。但它们确实是同一逻辑的第二份实现，必须满足两个条件：只服务训练/数据准备，不得成为生产推理或搜索的后备路径；训练侧与 C++ 的定义要保持可验证的一致。
+
+| Python 位置 | C++ 对应 | 用途 | 判定 |
+|---|---|---|---|
+| `pvz_value_net.featurize/encode_frame`、`pvz_student_observation.StudentHistory.extra`、`pvz_frame_store.encode_frames` | `EnvironmentValueNet::Features`、`EnvironmentRollout::Features` | 训练帧编码 / 训练缓存 | 允许的训练侧；`encode_frames` 在 `search_play` 写档时使用，属于训练数据准备，不是推理 |
+| `pvz_rollout_policy.RolloutNet.forward/act/ranked_plants` | `EnvironmentRollout::Predict` | 训练、非 native 诊断/A-B | 允许训练；non-native `search_play` 只应是实验/诊断，不能进 qc |
+| `pvz_token_observation`、`pvz_student_tokens`、`pvz_token_blocks` | `EnvironmentTokens`（`OBS_V3`） | token 训练拼装 | 允许训练；生产 token 由 C++ 发出，Python 只做 collate |
+| `pvz_env._annotate_observation` 的太阳收入窗口 | `ROLLOUT` 内 income 计算 | 逐步接口 | 见 S1-2，应并入 C++ history |
+| `pvz_tasks.deck_for_level` / `random_deck_for_seed` | 无对应 C++（任务设计） | 任务/卡组定义 | 保留一份 Python 实现即可；不要另写第二份 |
+
+### S3 判定为合规的清单（不要误删）
+
+- `python/pvz_env.py` 的协议封装：薄接口。
+- `python/pvz_event_env.py`：native wait 的薄适配器。
+- `scripts/human_demo.py:replay/verify`：示范重放/校验，§6.6 明确允许。
+- `scripts/episode_query.py`：调试与分析。
+- `scripts/render_episode.py`、`scripts/llmplay/scene.py`：训练报告/调试渲染（渲染器本身应合并，见第 10 项）。
+- `scripts/llmplay/game.py` 的 `plant/shovel/wait/wait_until/observe/summary`：外部模型逐步对局接口，允许；其中 `_note_events` 等推导不属于薄接口，见 S1-3。
+- `curriculum_queue` / `promotion_gate` / 导入编排：不是 C++ 模拟逻辑，但“同一件事只一份”仍适用（第 2、5、6、7 项）。
+
+### S4 规则 4：部署脚本
+
+`scripts/qc_deploy17.sh` … `qc_deploy25.sh` 是九份整份复制，直接违反 §6.6 第 4 条。应改为一个参数化启动器，每版文件只保留版本常量、recipe、panel、引擎路径；`start_qc` 一处来源，看门狗与部署共用。详见第 7 项。
 
 ---
 
@@ -84,7 +134,7 @@
 - `scripts/import_mac_labels.py`（仅 `origin/llmimport`）：从 HF 取 Mac 标签，直接写共享语料 `artifacts/student/frames_v2`，不走上面任何一层。它做的是“把帧送进语料”，与导入器职责重叠。
 
 **谁在用**
-- 生产 qc：`$L`（llmimport 工作树）上用 `pvz_live_install` → `run_sha`，索引由 `pvz_live_curriculum` 读取。
+- 生产 qc：`$L`（llmimport 工作树）上用 `deploy22_import.install` 装入 `pvz_live_import`，后者调 `run_sha`，索引由 `pvz_live_curriculum` 读取。
 - 人工批量：`task105_import_batch`。
 - 兼容/测试：legacy `import_llm_run.run`。
 - 注意：qc_deploy25 定义了 `IMPORT_FILES=(import_llm_run.py task105_import_batch.py pvz_live_import.py)`，但 `task105_import_batch.py` 在 deploy25 基线上**不存在**，只在 `$L` 的 llmimport 分支上。文件清单与真实来源已经脱节。
@@ -157,6 +207,10 @@
 **迁移代价**
 - 高。需要把 `Game` 的 rewind/branch/robustness 搬成 `pvz_env` 能力或复用 `human_demo.replay`，并保持 GPT 包 API 兼容。建议先合并写盘（第 1 项），把这一步拆成后续任务。
 
+**§6.6 复核**
+- `Game` 对外的 `reset/step/observe` 属允许的薄接口；但 `_snapshot`、`_mower_states`、`_note_events`、`_loss_reason`、`_close_wave` 是从公共观测反推 C++ 已有的事实（`info["events"]`、wave、defense），不属于薄接口（S1-3）。先让 `Game` 消费 C++ 结构化事件；若 C++ 事件不够细，扩 C++ 输出，而不是在 Python 再推一遍。
+- `_python_rollout_reference` 是常驻 Python 参考实现，按 §6.6 第 3 条只应保留到一次一致性对比为止（S1-4）。
+
 ### 5. 任务定义与卡组推导有三套以上
 
 **实现 A：生产权威**
@@ -186,6 +240,10 @@
 
 **迁移代价**
 - 中。先合并 `llmplay-decks` 的 `pvz_tasks` 增量，再把 llmplay 的四个函数换成 import。内联 `--task-json` 与清单需要保留，但都走同一 `load_training_task`。
+
+**§6.6 复核**
+- `terrain_covered` 与 C++ `LawnApp::EnvironmentDeckWarnings` 的 `pool`/`roof` 判定重复，`llmplay.game.validate_deck` 又重写一遍（S1-3）。任务生成期没有引擎时保留 `terrain_covered` 作为设计预筛，但 reset 前应以 C++ `deck_warnings` 为权威；`Game.validate_deck` 直接改调它。
+- `python/pvz_env.py:profile_for_deck` 是 `scripts/pvz_tasks.py:profile_for_deck` 的第二份，且把升级植物硬编码成 `40 <= type <= 47`，与 `pvz_constants.upgrade_plants()`（从 `Plant::IsUpgrade` 解析）有漂移风险；它目前只被测试使用，应删除并让测试改用权威实现（S1-6）。`pvz_env.training_task` 同理。
 
 ### 6. 门禁 v6 / v7 并存，`select_student` 仍按 v6 预测
 
@@ -232,6 +290,9 @@
 **迁移代价**
 - 中。必须确认 `~/pvz-logs/qc_deployNN.sh` 与 boundary wrapper 的指向，以及 watchdog 的 mtime 选择规则；不能在 qc 运行时删除旧文件。
 
+**§6.6 复核**
+- 这不仅是维护问题，直接违反第 4 条“部署脚本不复制粘贴”。迁移目标是一个 `qc_launch.sh` 参数化命令，每版 `qc_deployNN.sh` 只保留版本常量与 `source`；`start_qc` 的文本仍由 `watchdog_extract_start` 从同一处抽取，契约不变。
+
 ### 8. `recipes/` 14 份，只有 3 份在用
 
 - 在用：`dw4i2_v2timer.json`（A）、`dw4i2_v2timer_seed2cold.json`（B）、`dw4i2_v2timer_warm.json`（回退）。
@@ -242,15 +303,20 @@
 **迁移代价**
 - 低，但顺序不能反：先清引用与队列，再删文件。
 
-### 9. 观测编码 Python / C++ 两份（有意保留）
+### 9. 观测编码 Python / C++ 两份（训练侧允许，生产逐步接口例外）
 
 - Python：`pvz_value_net.featurize/encode_frame`、`pvz_rollout_policy.packet_features`、`pvz_student_observation.StudentHistory`、`pvz_token_observation`。
 - C++：`src/EnvironmentValueNet.{h,cpp}`、`src/EnvironmentRollout.{h,cpp}`、`src/EnvironmentTokens.cpp`。
 - 用途：C++ 整局 rollout 与原生根搜索必须与 Python 训练侧逐位一致；等价测试（`test_cpp_rollout`、`test_identity_cpp`、`test_value_encoder`、`test_sleep/timer/bungee_inputs`）就是契约。
-- 结论：这是性能所需的双实现，不是“双入口”。保留两份，但任何一侧改动必须同步另一侧并跑对应等价测试；不要为了“单一实现”删掉 C++ 路径。
+- 原结论：这是性能所需的双实现，不是“双入口”。
+
+**§6.6 复核**
+- 这个结论只在 Python 侧**仅用于训练/调试**时成立。C++ 是特征、推理、搜索的权威；当前生产 `--native-games` 已走 C++ inference，Python encoder 用于训练缓存，判合规。
+- 例外是 `StudentHistory` 与太阳收入历史：它们在生产的逐步 `ROLLOUT_PREDICT`/`ROLLOUT` 里被 Python 计算并传给 C++，属于 S1-2，必须迁 C++。
+- 训练侧 encoder 保留的前提是永不成为生产后备；长期按第 3 条只做一次性等价对比，不维护完整 Python oracle（S1-4）。不要为了“单一实现”删掉 C++ 路径。
 
 **迁移代价**
-- 不迁移；维护成本即测试成本。
+- 训练侧不迁移；生产逐步 history 按 S1-2 迁移，中高成本。
 
 ### 10. 场景文本渲染三份
 
@@ -265,7 +331,7 @@
 ### 11. 任务生成器重复与 llmplay 分支家族
 
 - 生成器：`make_day_panel` / `zone_panel` / `make_fog_user_panel` / `make_fog_user_v2_panel` / `make_roof_panel` / `make_multiplier_tasks` / `unified_panel` / `day_orig_tasks`，各自拼任务 dict；`unified_panel._task` 与 `zone_panel.task_document` 是同一个 schema 的两份写法。
-- 分支：`llmplay`、`llmplay2`、`llmplay3`、`llmplay4`、`llmplay5`、`llmplay-decks`；旧 `make_llmplay_tasks.py` 拒绝运行却仍与 `make_llmplay3_tasks.py` 并存。
+- 分支：`llmplay`、`llmplay2`、`llmplay3`、`llmplay4`、`llmplay5`、`llmplay-decks`；旧 `make_llmplay_tasks.py` 拒绝运行却仍与 `make_llmplay3_tasks.py` 并存。未采纳的 `v2fogstack4` 原型见 S1-5。
 - 建议：任务 dict 由 `unified_panel._task` 一处产出；llmplay 只保留 `llmplay-decks` 一条分支，其余在确认无未合并提交后归档。
 
 **迁移代价**
@@ -291,7 +357,9 @@
 1. **合并 task203 两处旁支修复**（`3c43bc13`、`a06b9edf`），让 GPT 写端与导入收据进入同一基线。这一步是体积问题的主要止血。
 2. **收窄 `FILES`** 到 `meta.json/ticks.jsonl/frames.npz`，读端保留 jsonl 回退；`episode_query` 改用 `write_frames`。
 3. **导入器入库即转换**，并统一索引文件；删除安装器的源码改写。
-4. **统一 schema** 与必备字段；search_play 补 schema。
-5. **门禁**：v6 标记 legacy，`select_student` 预测对齐当前 gate 版本。
-6. **部署与配方**：参数化启动器；清引用后再归档旧 recipe / 旧 deploy。
-7. 最后才考虑 **`llmplay.Game` 录制语义** 与 **场景渲染** 的合并；这两项改动面大、收益是维护性。
+4. **§6.6 低成本清理**（不阻塞上面的体积工作）：删 `pvz_env.profile_for_deck`/`training_task`（S1-6）与 `v2fogstack4`（S1-5）；`Game.validate_deck` 改调 `env.deck_warnings`；`_python_rollout_reference`/`pvz_wait_events` 参考做一次 A/B 后删除（S1-4）。
+5. **统一 schema** 与必备字段；search_play 补 schema。
+6. **门禁**：v6 标记 legacy，`select_student` 预测对齐当前 gate 版本。
+7. **§6.6 高成本迁移**（独立轨道，不阻塞 1–6）：`StudentHistory`/太阳历史 → C++（S1-2）；搜索树 → C++（S1-1）；`Game` 事件叙述改消费 C++ 输出（S1-3）。每项只做一次 A/B 对比，不保留常驻双跑。
+8. **部署与配方**：一个参数化启动器（§6.6 第 4 条）；清引用后再归档旧 recipe / 旧 deploy。
+9. 最后才考虑 **`llmplay.Game` 录制语义** 与 **场景渲染** 的合并；这两项改动面大、收益是维护性。
