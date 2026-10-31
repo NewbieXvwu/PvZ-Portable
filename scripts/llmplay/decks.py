@@ -10,7 +10,8 @@ from pvz_tasks import deck_pool_for_level, terrain_covered
 from .game import ROOT, load_tasks
 from . import workflow as wf
 
-NOTE = "扩卡组任务没有终点；达标后继续增加胜利卡组，优先补覆盖缺口。只有用户说停才停。"
+NOTE = ("扩卡组任务没有终点；派发顺序：夜间/泳池/白天重放已登记胜利卡组 > 传送带支线 > 主线新卡组。"
+        "重放达标后循环加量，只有用户说停才停。")
 
 
 def config():
@@ -34,14 +35,33 @@ def configure_shard(shard=None, shards=None):
     return index, count
 
 
-def assigned_tasks(*, native=False):
+def assigned_tasks(*, native=False, replay=False):
     index, count = configure_shard()
     tasks = load_tasks()
+    if replay:
+        order = replay_task_order()
+        if count == len(config()["terrain_shards"]):
+            terrains = config()["terrain_shards"][index]
+            order = [key for key in order if region(tasks[key]["level"]) in terrains]
+        else:
+            order = order[index::count]
+        return [key for key in order
+                if region(tasks[key]["level"]) in config()["replay"]["terrain_order"]]
     order = config()["native_order" if native else "order"]
     if count == len(config()["terrain_shards"]):
         return [key for key in order
                 if region(tasks[key]["level"]) in config()["terrain_shards"][index]]
     return order[index::count]
+
+
+def replay_task_order():
+    """重放轨的任务族 id 列表，按配置的 地形优先级 → 关卡表顺序 排列。"""
+    cfg = config()["replay"]
+    definitions = load_tasks()
+    by_level = {int(task["level"]): key for key, task in definitions.items()
+                if key in config()["order"]}
+    return ["llmplay_decks_l%d_m100" % level for terrain in cfg["terrain_order"]
+            for level in cfg["levels"][terrain] if level in by_level]
 
 
 @lru_cache(maxsize=1)
@@ -206,6 +226,30 @@ def derive(entries, run_id=None):
                                         complete=len(wins) >= cfg["native_wins"], pending=pending,
                                         available_seeds=[seed_at(level, cursor + n, native=True)
                                                          for n in range(candidate_count)])
+    # task211：弱地形（夜/池/日）用已登记胜利卡组在新种子重放，最高优先派发。
+    replay_cfg = cfg["replay"]
+    active_replay = assigned_tasks(replay=True)
+    replay_progress = {}
+    for task_id in replay_task_order():
+        level = int(levels[task_id]["level"])
+        registered = levels[task_id]["registered_decks"]
+        groups = levels[task_id]["decks"]
+        wins = [entry for entry in by_level.get(level, [])
+                if _won(entry) and wf.deck_key(entry.get("deck")) in registered]
+        goal = replay_cfg["target_wins"] * (1 + len(wins) // replay_cfg["target_wins"])
+        # 后来累计到三败的胜组不再轮换派发，重放照样换下一套。
+        rotation = sorted((cards for cards in registered.values()
+                           if groups.get(wf.deck_key(cards), {}).get("losses", 0) < cfg["max_losses"]),
+                          key=lambda cards: (len(groups.get(wf.deck_key(cards), {}).get("seeds", [])),
+                                             wf.deck_key(cards)))
+        cursor = max([value for value in (seed_index(level, entry["seed"])
+                                          for entry in by_level.get(level, []))
+                      if value is not None], default=-1) + 1
+        replay_progress[task_id] = dict(level=level, terrain=region(level), wins=len(wins),
+                                        target=replay_cfg["target_wins"], goal=goal,
+                                        decks=[list(cards) for cards in rotation],
+                                        available_seeds=[seed_at(level, cursor + 8 + n)
+                                                         for n in range(candidate_count)])
     # task210：传送带支线先派发到各关达标，之后回到主线并按轮次提高主线配额。
     covered = all(terrain_progress[levels[key]["terrain"]]["complete"] for key in active)
     native_done = all(native_progress[key]["complete"] for key in active_native)
@@ -219,10 +263,13 @@ def derive(entries, run_id=None):
             for task_id, item in levels.items()}
     flat.update({task_id: dict(item, active=task_id in active_native, layer="native")
                  for task_id, item in native_progress.items()})
+    flat.update({task_id: dict(item, active=task_id in active_replay, layer="replay")
+                 for task_id, item in replay_progress.items()})
     return dict(schema=wf.PROGRESS_SCHEMA, mode="decks", run_id=run_id, cycle=1, batch=1,
                 layer="decks", complete=False, note=NOTE, requirements=cfg,
                 shard=index, shards=count, active_tasks=active, levels=levels, stage=stage + 1,
                 active_native=active_native, native=native_progress,
+                active_replay=active_replay, replay=replay_progress,
                 coverage=terrain_progress, tasks=flat, archives=list(entries))
 
 
@@ -276,13 +323,35 @@ def native_items(document):
     return candidates
 
 
+def replay_items(document):
+    candidates = []
+    for task_id in document.get("active_replay", []):
+        info = document.get("replay", {})[task_id]
+        if info["wins"] >= info["goal"] or not info["decks"]:
+            continue
+        base = dict(task_id=task_id, level=info["level"], terrain=info["terrain"],
+                    cycle=1, batch=1, layer="replay", multiplier=1.0,
+                    wins=info["wins"], target=info["goal"], registered_decks=info["decks"])
+        seed = next((value for value in info["available_seeds"]
+                     if wf._slot(task_id, value) not in wf.held()), None)
+        if seed is None:
+            continue
+        candidates.append(dict(base, seed=seed, deck=info["decks"][info["wins"] % len(info["decks"])],
+                               action="replay_deck"))
+    return candidates
+
+
 def view(document):
-    candidates, side = items(document), native_items(document)
     claims = wf.held()
-    native = wf._first_free(side, claims)
-    main = wf._first_free(candidates, claims)
-    item = native or main or wf._busy(candidates + side)
-    return dict(item=item, main=main, challenge=None, native=native, complete=False, cycle=1,
+    queues = [(replay_items(document), "replay"), (native_items(document), "native"),
+              (items(document), "main")]
+    pools = {name: wf._first_free(candidates, claims) for candidates, name in queues}
+    item = next((found for found in pools.values() if found), None)
+    if item is None:
+        item = wf._busy([row for candidates, _ in queues for row in candidates]) \
+            or wf._item(document, None, "blocked", note="没有可推进的项")
+    return dict(item=item, main=pools["main"], replay=pools["replay"], challenge=None,
+                native=pools["native"], complete=False, cycle=1,
                 shard=document["shard"], shards=document["shards"], note=NOTE)
 
 
@@ -293,14 +362,28 @@ def check(document, task_id, deck, strategy="", seed=None):
             raise ValueError("原生传送带/固定卡支线由引擎发牌，不能自选卡组")
         if info["complete"] or seed is None or int(seed) not in info["available_seeds"]:
             raise ValueError("支线须使用队列分配的新种子，各关达到 16 胜后不再分配")
+        if wf._first_free(replay_items(document), wf.held()) is not None:
+            raise ValueError("弱地形重放优先；请先领取夜间/泳池/白天的重放项")
         return dict(cycle=1, workflow_layer="native")
     if task_id not in document["active_tasks"]:
         raise ValueError("请使用本分片 next_task() 给出的新任务族")
-    if wf._first_free(native_items(document), wf.held()) is not None:
-        raise ValueError("传送带支线优先；请先领取本片支线项，各关 16 胜后回到主线")
     info = document["levels"][task_id]
+    replay_info = document.get("replay", {}).get(task_id)
+    # 重放轨用主线窗口之后的另一段种子；按种子落在哪一段分流，两轨互不抢占。
+    if replay_info and seed is not None and int(seed) in replay_info["available_seeds"]:
+        if wf.deck_key(deck or []) not in info["registered_decks"]:
+            raise ValueError("重放只能用本关已登记的胜利卡组；新卡组请领主线项")
+        return dict(cycle=1, workflow_layer="decks")
+    if wf.deck_key(deck or []) not in info["decks"]:
+        # 只拦全新卡组；断局 resume / 同卡组换种子不受重放与支线优先影响。
+        earlier = (("弱地形重放", replay_items), ("传送带支线", native_items))
+        for label, queue in earlier:
+            if wf._first_free(queue(document), wf.held()) is not None:
+                raise ValueError("%s优先；请先领取本片%s项" % (label, label))
     if not any(item["task_id"] == task_id for item in items(document)):
         raise ValueError("本关本轮目标已达标；请领取其余主线或传送带支线")
+    if seed is None or int(seed) not in info["available_seeds"]:
+        raise ValueError("请使用 next_task() 分配的本关新种子；中盘用 Game.load_archive()")
     # Task design can prefilter without launching an engine; Game asks C++ at reset.
     if not terrain_covered(info['level'], deck):
         raise ValueError('卡组没有覆盖本关地形')
@@ -317,8 +400,6 @@ def check(document, task_id, deck, strategy="", seed=None):
         raise ValueError("这套卡组已三败，请记录失败原因并换卡组")
     if len(deck) not in info["required_lengths"] and not group:
         raise ValueError("本关卡组大小尚缺配额；新卡组长度须为 %s" % info["required_lengths"])
-    if seed is None or int(seed) not in info["available_seeds"]:
-        raise ValueError("请使用 next_task() 分配的本关新种子；中盘用 Game.load_archive()")
     return dict(cycle=1, workflow_layer="decks")
 
 
@@ -341,7 +422,12 @@ def report(document):
         info = document["levels"][key]
         lines.append("| L%d | %s | %d | %d | %d/3 | %d/3 |" % (
             info["level"], info["terrain"], info["victory_decks"], info["goal"], info["small_decks"], info["eight_decks"]))
-    lines += ["", "## 原生传送带支线（优先派发，各关 16 胜后停止）", "",
+    lines += ["", "## 弱地形重放（最高优先：已登记胜利卡组 × 新种子）", "",
+              "| 关卡 | 地形 | 重放胜局 | 本轮目标 |", "|---|---|---|---|"]
+    for key in document.get("active_replay", []):
+        info = document["replay"][key]
+        lines.append("| L%d | %s | %d | %d |" % (info["level"], info["terrain"], info["wins"], info["goal"]))
+    lines += ["", "## 原生传送带支线（重放之后派发，各关 16 胜后停止）", "",
               "| 关卡 | 不同种子胜局 | 目标 |", "|---|---|---|"]
     for key in document["active_native"]:
         info = document["native"][key]

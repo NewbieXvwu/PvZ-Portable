@@ -582,10 +582,12 @@ def claim_item(document=None, *, track=None, ttl=None) -> dict:
 
 
 def _ordered(document) -> tuple:
-    """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞。"""
+    """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞（decks 模式为三轨优先序）。"""
     if document.get("mode") == "decks":
         from . import decks
-        return decks.items(document), decks.native_items(document)
+        # task211 三轨：重放 > 传送带支线 > 主线新卡组，合成一条按优先序领取的队列。
+        return (decks.replay_items(document) + decks.native_items(document)
+                + decks.items(document)), []
     return _main_items(document), _challenge_items(document)
 
 

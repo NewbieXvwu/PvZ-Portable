@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import sys
 import tempfile
+from contextlib import contextmanager
 from types import SimpleNamespace
 from unittest.mock import patch, Mock
 
@@ -41,6 +42,15 @@ D1 = [0, 1, 2, 3, 4, 6]
 D2 = [0, 1, 2, 3, 7, 17]
 
 
+@contextmanager
+def mainline_only():
+    """派发顺序是 弱地形重放 > 传送带支线 > 主线新卡组；单测主线校验闸时把前两轨清空。"""
+    def assign(*, native=False, replay=False):
+        return [] if (native or replay) else decks.config()['order']
+    with patch.object(decks, 'assigned_tasks', side_effect=assign):
+        yield
+
+
 def test_decks_tasks_and_shards_share_original_engine_rules(monkeypatch):
     tasks = load_tasks()
     expected = {n for n in range(1, 50) if n % 5}
@@ -65,47 +75,51 @@ def test_decks_tasks_and_shards_share_original_engine_rules(monkeypatch):
 
 
 def test_decks_one_win_registers_and_two_card_difference_applies_to_history():
-    history = entry(1, D1, task_id='llmplay3_a_l2_m100')
-    doc = workflow.derive([history], 'run')
-    info = doc['levels']['llmplay_decks_l1_m100']
-    assert info['victory_decks'] == 1
-    assert workflow.card_diff(D1, D2) == 2
-    seed = info['available_seeds'][0]
-    with pytest.raises(ValueError, match='至少差 2'):
-        workflow.check(doc, 'llmplay_decks_l1_m100', D1[::-1], seed=seed)
-    with pytest.raises(ValueError, match='至少差 2'):
-        workflow.check(doc, 'llmplay_decks_l1_m100', [0, 1, 2, 3, 4, 7], seed=seed)
-    assert workflow.check(doc, 'llmplay_decks_l1_m100', D2, seed=seed)['workflow_layer'] == 'decks'
+    # 别的任务族（L2）里的同卡组胜利，同样要给 L1 记账：登记去重跨任务族生效。
+    history = dict(entry(1, D1), task_id='llmplay_decks_l2_m100')
+    with mainline_only():
+        doc = workflow.derive([history], 'run')
+        info = doc['levels']['llmplay_decks_l1_m100']
+        assert info['victory_decks'] == 1
+        assert workflow.card_diff(D1, D2) == 2
+        seed = info['available_seeds'][0]
+        with pytest.raises(ValueError, match='至少差 2'):
+            workflow.check(doc, 'llmplay_decks_l1_m100', D1[::-1], seed=seed)
+        with pytest.raises(ValueError, match='至少差 2'):
+            workflow.check(doc, 'llmplay_decks_l1_m100', [0, 1, 2, 3, 4, 7], seed=seed)
+        assert workflow.check(doc, 'llmplay_decks_l1_m100', D2, seed=seed)['workflow_layer'] == 'decks'
 
 
 def test_decks_holdout_signature_rejected_on_other_level():
     held = json.loads((ROOT / 'configs/deploy17_deck_holdouts.json').read_text())['tasks'][0]['deck']
-    doc = workflow.derive([], 'run')
-    with pytest.raises(ValueError, match='留出'):
-        workflow.check(doc, 'llmplay_decks_l4_m100', held[::-1], seed=decks.seed_at(4, 0))
-    with pytest.raises(ValueError, match='黑名单'):
-        workflow.check(doc, 'llmplay_decks_l1_m100', [0, 1, 2, 3, 4, 38], seed=decks.seed_at(1, 0))
+    with mainline_only():
+        doc = workflow.derive([], 'run')
+        with pytest.raises(ValueError, match='留出'):
+            workflow.check(doc, 'llmplay_decks_l4_m100', held[::-1], seed=decks.seed_at(4, 0))
+        with pytest.raises(ValueError, match='黑名单'):
+            workflow.check(doc, 'llmplay_decks_l1_m100', [0, 1, 2, 3, 4, 38], seed=decks.seed_at(1, 0))
 
 
 def test_decks_three_losses_reason_stored_in_third_archive_note():
     task_id = 'llmplay_decks_l1_m100'
     failures = [entry(1, D1, n, won=False) for n in range(2)]
-    doc = workflow.derive(failures, 'run')
-    candidate = next(item for item in decks.items(doc) if item['task_id'] == task_id)
-    assert candidate['action'] == 'retry_deck' and candidate['losses'] == 2
-    assert candidate['seed'] == decks.seed_at(1, 2)
-    workflow.check(doc, task_id, D1, seed=candidate['seed'])
-    with patch.object(workflow, '_progress', return_value=doc):
-        with pytest.raises(ValueError, match='第三次败局'):
-            workflow.archive_requirements(task_id, layer='decks', deck=D1, result=2, reason='经济与主力')
-        workflow.archive_requirements(task_id, layer='decks', deck=D1, result=2,
-                                      reason='经济与主力', note='后半场群伤不足')
-    failures.append(dict(entry(1, D1, 2, won=False), note='后半场群伤不足'))
-    doc = workflow.derive(failures, 'run')
-    assert '后半场群伤不足' in workflow.report(doc)
-    with pytest.raises(ValueError, match='三败'):
-        workflow.check(doc, task_id, D1, seed=decks.seed_at(1, 3))
-    workflow.check(doc, task_id, D2, seed=decks.seed_at(1, 3))
+    with mainline_only():
+        doc = workflow.derive(failures, 'run')
+        candidate = next(item for item in decks.items(doc) if item['task_id'] == task_id)
+        assert candidate['action'] == 'retry_deck' and candidate['losses'] == 2
+        assert candidate['seed'] == decks.seed_at(1, 2)
+        workflow.check(doc, task_id, D1, seed=candidate['seed'])
+        with patch.object(workflow, '_progress', return_value=doc):
+            with pytest.raises(ValueError, match='第三次败局'):
+                workflow.archive_requirements(task_id, layer='decks', deck=D1, result=2, reason='经济与主力')
+            workflow.archive_requirements(task_id, layer='decks', deck=D1, result=2,
+                                          reason='经济与主力', note='后半场群伤不足')
+        failures.append(dict(entry(1, D1, 2, won=False), note='后半场群伤不足'))
+        doc = workflow.derive(failures, 'run')
+        assert '后半场群伤不足' in workflow.report(doc)
+        with pytest.raises(ValueError, match='三败'):
+            workflow.check(doc, task_id, D1, seed=decks.seed_at(1, 3))
+        workflow.check(doc, task_id, D2, seed=decks.seed_at(1, 3))
 
 
 def test_decks_duplicate_exports_partial_and_abandon_do_not_inflate_losses():
@@ -124,10 +138,11 @@ def test_decks_duplicate_exports_partial_and_abandon_do_not_inflate_losses():
 def test_decks_size_quotas_and_coverage_are_distinct_card_sets():
     task_id = 'llmplay_decks_l1_m100'
     small = [entry(1, cards, n) for n, cards in enumerate((D1, D2, [0, 1, 2, 4, 7, 17, 23]))]
-    doc = workflow.derive(small, 'run')
-    assert doc['levels'][task_id]['required_lengths'] == [8]
-    with pytest.raises(ValueError, match='大小'):
-        workflow.check(doc, task_id, [1, 3, 6, 17, 23, 29], seed=decks.seed_at(1, 3))
+    with mainline_only():
+        doc = workflow.derive(small, 'run')
+        assert doc['levels'][task_id]['required_lengths'] == [8]
+        with pytest.raises(ValueError, match='大小'):
+            workflow.check(doc, task_id, [1, 3, 6, 17, 23, 29], seed=decks.seed_at(1, 3))
     # 同一组跨关获胜只算一组覆盖；两个签名都带向日葵则计两组。
     doc = workflow.derive([entry(1, D1), entry(2, D1), entry(2, D2, 1)], 'run')
     assert doc['coverage']['day']['counts']['1'] == 2
@@ -141,8 +156,8 @@ def test_decks_goal_grows_and_seed_windows_extend_without_materializing_seeds():
     cards = []
     for length, count in ((6, 3), (8, 3), (9, 6)):
         cards.extend([[1] + list(combo) for combo in itertools.islice(itertools.combinations(pool, length - 1), count)])
-    # 支线已完成（此夹具没有分配支线），本片覆盖完成后主线继续加2组。
-    with patch.object(decks, 'assigned_tasks', side_effect=lambda native=False: [] if native else ['llmplay_decks_l1_m100']), \
+    # 支线已完成（此夹具没有分配支线/重放），本片覆盖完成后主线继续加2组。
+    with patch.object(decks, 'assigned_tasks', side_effect=lambda native=False, replay=False: [] if native or replay else ['llmplay_decks_l1_m100']), \
             patch.dict(decks.config(), coverage_per_card=0):
         doc = workflow.derive([entry(1, deck, n) for n, deck in enumerate(cards)], 'run')
     info = doc['levels']['llmplay_decks_l1_m100']
@@ -187,7 +202,8 @@ def test_decks_claims_progress_and_resume_preserve_registry(tmp_path):
 
 def test_decks_restoring_claim_does_not_let_search_branch_release_parent(tmp_path):
     task_id = 'llmplay_decks_l1_m100'
-    primary = Game(task_id, seed=decks.seed_at(1, 0), deck=D1, reason='经济与主力')
+    with mainline_only():
+        primary = Game(task_id, seed=decks.seed_at(1, 0), deck=D1, reason='经济与主力')
     saved = tmp_path / 'game.json'
     primary.save(saved)
     with patch.object(primary, '_start'):
@@ -243,27 +259,62 @@ def test_decks_fog_specs_and_unknown_history_do_not_count_as_public_wins():
     assert doc['levels'][old['task_id']]['victory_decks'] == 1
 
 
-def test_decks_native_is_dispatched_first_until_sixteen_distinct_seed_wins():
-    doc = workflow.derive([], 'run')
-    assert workflow.next_task(doc, claim=False)['item']['layer'] == 'native'
-    with pytest.raises(ValueError, match='支线优先'):
-        workflow.check(doc, doc['active_tasks'][0], D1,
-                       seed=doc['levels'][doc['active_tasks'][0]]['available_seeds'][0])
-    first_native = decks.native_items(doc)[0]
-    workflow.check(doc, first_native['task_id'], [], seed=first_native['seed'])
-    with pytest.raises(ValueError, match='不能自选'):
-        workflow.check(doc, first_native['task_id'], D1, seed=first_native['seed'])
-    claimed = {workflow._slot(item['task_id'], item['seed']): {} for item in decks.native_items(doc)}
-    with patch.object(workflow, '_read_claims', return_value=claimed):
-        item = workflow.next_task(doc, claim=False)['item']
-        assert item['layer'] == 'decks' and item['action'] in ('new_deck', 'retry_deck', 'resume')
-        workflow.check(doc, item['task_id'], item['deck'] or D1, seed=item['seed'])
+def test_decks_native_is_dispatched_after_replay_until_sixteen_distinct_seed_wins():
+    no_replay = dict(side_effect=lambda native=False, replay=False:
+                     [] if replay else (decks.config()["native_order"] if native else decks.config()["order"]))
+    with patch.object(decks, 'assigned_tasks', **no_replay):
+        doc = workflow.derive([], 'run')
+        assert doc['active_replay'] == []
+        assert workflow.next_task(doc, claim=False)['item']['layer'] == 'native'
+        with pytest.raises(ValueError, match='支线优先'):
+            workflow.check(doc, doc['active_tasks'][0], D1,
+                           seed=doc['levels'][doc['active_tasks'][0]]['available_seeds'][0])
+        first_native = decks.native_items(doc)[0]
+        workflow.check(doc, first_native['task_id'], [], seed=first_native['seed'])
+        with pytest.raises(ValueError, match='不能自选'):
+            workflow.check(doc, first_native['task_id'], D1, seed=first_native['seed'])
+        claimed = {workflow._slot(item['task_id'], item['seed']): {} for item in decks.native_items(doc)}
+        with patch.object(workflow, '_read_claims', return_value=claimed):
+            item = workflow.next_task(doc, claim=False)['item']
+            assert item['layer'] == 'decks' and item['action'] in ('new_deck', 'retry_deck', 'resume')
+            workflow.check(doc, item['task_id'], item['deck'] or D1, seed=item['seed'])
     repeated = [native_entry(10)] * 8
     assert workflow.derive(repeated, 'run')['native']['llmplay_decks_native_l10_m100']['wins'] == 1
     doc = workflow.derive([native_entry(10, n) for n in range(16)], 'run')
     assert doc['native']['llmplay_decks_native_l10_m100']['complete']
     assert all(item['level'] != 10 for item in decks.native_items(doc))
     assert '原生传送带支线' in workflow.report(doc)
+
+
+def test_decks_replay_rotates_registered_decks_on_fresh_seeds_first():
+    night = 'llmplay_decks_l11_m100'
+    def game(deck, index, **kw):
+        return dict(entry(11, deck, index, **kw), seed=decks.seed_at(11, index))
+    entries = [game(D1, 0), game(D2, 1)]
+    entries += [game(D1, n) for n in range(2, 26)]
+    doc = workflow.derive(entries, 'run')
+    assert night in doc['active_replay']
+    info = doc['replay'][night]
+    assert info['wins'] == 26 and info['goal'] == 48 and len(info['decks']) == 2
+    item = workflow.next_task(doc, claim=False)['item']
+    assert item['layer'] == 'replay' and item['action'] == 'replay_deck' and item['task_id'] == night
+    assert item['deck'] == D2 and item['seed'] == decks.seed_at(11, 34)  # D2 只用过一次，先轮换到它
+    workflow.check(doc, night, D2, seed=item['seed'])           # 已登记卡组可复用，不触发差 2 张闸
+    workflow.check(doc, night, D1, seed=item['seed'])
+    with pytest.raises(ValueError, match='已登记的胜利卡组'):
+        workflow.check(doc, night, [0, 1, 2, 3, 4, 7], seed=item['seed'])
+    with pytest.raises(ValueError, match='新种子'):
+        workflow.check(doc, night, D1, seed=decks.seed_at(11, 0))
+    with pytest.raises(ValueError, match='重放优先'):
+        workflow.check(doc, decks.native_items(doc)[0]['task_id'], [],
+                       seed=decks.native_items(doc)[0]['seed'])
+    grown = entries + [game(D1, n) for n in range(26, 38)]
+    doc = workflow.derive(grown, 'run')
+    assert decks.replay_items(doc)[0]['deck'] == D2
+    assert decks.replay_items(doc)[0]['seed'] == decks.seed_at(11, 46)
+    doc = workflow.derive([game(deck, n)
+                           for n, deck in enumerate([D1, D2] * 25)], 'run')
+    assert doc['replay'][night]['goal'] == 72                   # 50 胜后加量到 24×3
 
 
 def test_decks_native_shards_and_seed_windows_are_separate():
