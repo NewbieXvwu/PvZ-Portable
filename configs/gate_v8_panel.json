@@ -168,7 +168,7 @@
     },
     "task208_l17_night": {
       "zone": "night",
-      "teacher_wins": 4,
+      "teacher_wins": 8,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -184,7 +184,7 @@
     },
     "task208_l19_night": {
       "zone": "night",
-      "teacher_wins": 4,
+      "teacher_wins": 6,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -208,7 +208,7 @@
     },
     "task208_l23_pool": {
       "zone": "pool",
-      "teacher_wins": 2,
+      "teacher_wins": 4,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -224,7 +224,7 @@
     },
     "task208_l26_pool": {
       "zone": "pool",
-      "teacher_wins": 5,
+      "teacher_wins": 6,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -248,7 +248,7 @@
     },
     "task208_l29_pool": {
       "zone": "pool",
-      "teacher_wins": 2,
+      "teacher_wins": 3,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -272,7 +272,7 @@
     },
     "task208_l33_fog": {
       "zone": "fog",
-      "teacher_wins": 7,
+      "teacher_wins": 8,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -541,16 +541,13 @@
       "task_id": "task208_l11_night",
       "level": 11,
       "deck": [
-        0,
-        2,
-        3,
         8,
         9,
+        10,
         11,
+        12,
         14,
-        21,
-        26,
-        28
+        30
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "night",
@@ -640,16 +637,15 @@
       "task_id": "task208_l17_night",
       "level": 17,
       "deck": [
-        3,
         8,
         9,
         10,
         11,
-        15,
-        21,
-        26,
-        31,
-        36
+        12,
+        14,
+        17,
+        30,
+        31
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "night",
@@ -682,16 +678,14 @@
       "task_id": "task208_l19_night",
       "level": 19,
       "deck": [
-        3,
         8,
         9,
         10,
         11,
-        15,
-        21,
-        31,
-        42,
-        46
+        12,
+        14,
+        30,
+        42
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "night",
@@ -744,11 +738,13 @@
       "level": 23,
       "deck": [
         1,
-        2,
-        5,
+        3,
+        6,
         16,
+        17,
         19,
-        28
+        30,
+        32
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "pool",
@@ -780,10 +776,12 @@
       "level": 26,
       "deck": [
         1,
-        5,
+        3,
         16,
         17,
+        19,
         21,
+        29,
         46
       ],
       "zombie_count_multiplier": 1.0,
@@ -835,13 +833,14 @@
       "task_id": "task208_l29_pool",
       "level": 29,
       "deck": [
+        0,
         1,
         2,
         16,
-        21,
+        17,
+        19,
         23,
-        29,
-        46
+        43
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "pool",
@@ -895,16 +894,12 @@
       "task_id": "task208_l33_fog",
       "level": 33,
       "deck": [
-        4,
         8,
         9,
-        14,
         16,
-        18,
         19,
-        23,
         25,
-        27
+        43
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "fog",
