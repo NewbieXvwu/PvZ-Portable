@@ -172,3 +172,7 @@ task105导入使用现行task193/deploy22后的import-only入口，nice19、1–
 旧半成品的538个SHA目录确认全部已在导入库后，~/llm_runs/llmplay4_partial已删除，清掉3316734453字节。库内转换复用task32原工具及其内置逐帧比对，nice19、最多2个转换worker、3GiB上限；先处理冷档，待两批导入完成后对剩余新档用min-age=0转换并删JSONL，没有另加重放或校验链。
 
 最终导入库体积从7316485861降至903508199字节（6.81→0.84GiB，期间还补入了旧半成品538份SHA）；3791个frames.jsonl全部转为frames.npz并删除，JSONL余0、NPZ共3791个。另清掉1个154532字节的本次转换临时文件。加上旧半成品目录删除，合计净减约9.06GiB。最终接口分卷llmplay_pkg.7z.001为6031116字节，carry保留2786条记录，位于~/pvz-logs/llmplay-decks/；以后只取export_bundle()返回的out外99MB分卷。所做筛选测试均通过，未做其他全量验收。
+
+task203收尾追加：PROMPT/README均无用户规定的三个禁词，已移除外部获取分卷及手工拼接的说明；文档只说明llmplay.export_bundle()与llmplay.bundle_dir()，输出为out同级的<out目录名>_exports/（默认/mnt/data/out_exports/），外部获取方式由主控起跑提示词规定。README重打命令直接复用现成包的carry，不再依赖原始交回目录。新版接口分卷已覆盖~/pvz-logs/llmplay-decks/llmplay_pkg.7z.001，6026663字节，carry不变。
+
+导入与并包完成后，按用户授权删除/home/newbiexvwu/llm_runs/llmplay_decks_20261031_0350整个原始解包目录，释放5321845240字节（约4.96GiB）；连同前述导入库压缩与旧半成品删除，累计净减15051557355字节（约14.02GiB）。开始前free -g显示available 21GiB，相关单项-k测试在ulimit -v 8000000、nice19下通过；生产qc、看门狗、stop_curr均未触动，没有新增校验或JSON中间文件，无需重载服务。

@@ -45,11 +45,8 @@ L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支�
 
 进度与报告逐局写入`llmplay.out_dir()`；正式导出成功后删除对应运行目录，只保留`archives/`中的一份。
 `.delivery/`只保留当前小型进度，旧暂存立即清掉，每局不再压整批对局。
-需要交回结果时调用`llmplay.export_bundle()`：只含存档、进度（内含预算）、卡组登记和`.py`策略脚本，
-按99 MB连续ZIP分卷放在out同级固定的`out_exports/`目录；成功后删除上一份。
-外部只取函数返回的全部分卷，不再取整个out。缓存、日志、运行存盘和其他包都不进入分卷。
-`llmplay.paths()`可查看实际`bundle_dir`，`resume("…/out.zip.001")`或`resume(分卷目录)`自动续接。
-手工解压/导入时先在out外执行`cat out.zip.[0-9]* > returned.zip`，得到标准ZIP。
+`llmplay.export_bundle()`生成分卷，输出目录由`llmplay.bundle_dir()`返回：
+位于out同级的`<out目录名>_exports/`，默认是`/mnt/data/out_exports/`。
 每局直接使用生产同款`pvz_frame_store.write_frames`写`frames.npz`，读档走`frame_path/read_frames`，兼容旧JSONL。
 接口包不预计算训练特征，因此无需Torch；下游训练按原逻辑生成缓存，现有导入解析无需改写。
 占位、`Game.save/load/load_archive`沿用上一版，导出返回正式存档路径。
@@ -63,9 +60,8 @@ L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支�
 
 ```bash
 python3 scripts/llmplay/build_package.py \
-  --reuse-package ~/pvz-logs/llmplay5/llmplay_pkg \
-  --resource-zip ~/pvz-logs/llmplay5/llmplay_res.zip \
-  --carry ~/llm_runs/llmplay_decks_20261031_0350/out/progress.json \
+  --reuse-package ~/pvz-logs/llmplay-decks/llmplay_pkg \
+  --resource-zip ~/pvz-logs/llmplay-decks/llmplay_res.zip \
   --out ~/pvz-logs/llmplay-decks
 ```
 
