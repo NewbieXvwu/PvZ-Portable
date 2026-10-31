@@ -136,6 +136,11 @@ def test_deploy22_planner_quotas_and_seed_offsets_without_manifest(tmp_path):
     again = next(p for p in next_plan if p['base'] == base)
     assert again['offset'] == first['games'] and again['seed_offset'] == 0
     assert set(again['task_definition']['seeds']).isdisjoint(first['task_definition']['seeds'])
+    review = next(p for p in next_plan if p.get('review_of') == again['label'])
+    assert review['games'] == 12 and review['multiplier'] == 1.
+    assert review['task_definition']['deck'] == again['task_definition']['deck']
+    assert review['offset_key'] == again['offset_key'] == base
+    assert set(review['task_definition']['seeds']).isdisjoint(again['task_definition']['seeds'])
 
 
 def test_deploy24_live193_seed_renewal_failure_skips_only_that_group(tmp_path, monkeypatch):

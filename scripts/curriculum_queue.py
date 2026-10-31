@@ -97,6 +97,7 @@ CURRICULUM_LADDERS = {
 # task137: v5 随机卡组格的阶梯写在清单里（每个任务带 curriculum_ladder），
 # 起点 0.5 让老师先能赢，再按 PROMOTE_ABOVE / DEMOTE_BELOW 往上走。
 RANDOM_DECK_SHARE = 0.15   # 随机卡组格每轮最多占 round-games 的 15%
+REVIEW_SHARE = 0.25       # 非 1 倍任务在原配额之外追加的 1 倍复习
 
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = ROOT / 'artifacts/student/frames_v2'
@@ -1868,6 +1869,43 @@ def _write_state(path: Path, state: dict) -> None:
     temporary.replace(path)
 
 
+def review_groups(state, groups, tasks, share, start_seed_ledger, renew_size, changes):
+    """Extra 1x data, consuming the original task's next seeds without adapting its ladder."""
+    finished = {group.get('review_of') for group in state.get('completed_groups', [])}
+    reviews = []
+    for group in groups:
+        task = group.get('task_definition') or tasks.get(group['task_id'], {})
+        games = math.ceil(group['games'] * share)
+        if not games or task.get('zombie_count_multiplier', 1.) == 1. or group['label'] in finished:
+            continue
+        cell = state['cells'].get(group['base'])
+        if cell is None:
+            continue
+        key = group.get('offset_key', group['task_id'])
+        renewable = cell.get('live193') or cell.get('archive') is not None
+        seeds = cell['seeds'] if renewable else task['seeds']
+        offset = max(group['offset'] + group['games'], state['offsets'].get(key, 0))
+        while offset + games > len(seeds) and renewable and start_seed_ledger is not None:
+            try:
+                renew_start_seeds(cell, start_seed_ledger, renew_size)
+            except (SeedPoolExhausted, ValueError, OSError) as error:
+                changes.append(f'{key}: 1x review seed renewal failed ({error})')
+                break
+            seeds = cell['seeds']
+        available = max(0, len(seeds) - offset)
+        if available < games:
+            changes.append(f'{key}: 1x review seeds exhausted; {min(available, games)}/{games} games')
+            games = available
+        if games:
+            definition = dict(task, zombie_count_multiplier=1., seeds=list(seeds[offset:offset + games]))
+            definition.pop('demo_start', None)  # A recorded non-1x board cannot be replayed at 1x.
+            reviews.append(dict(base=group['base'], task_id=group['task_id'], multiplier=1.,
+                task_definition=definition, manifest=group['manifest'], games=games,
+                offset=offset, offset_key=key, seed_offset=0, review_of=group['label'],
+                label=group['label'] + f'_review1_o{offset}', save_candidates=group.get('save_candidates', 0)))
+    return reviews
+
+
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
@@ -1875,7 +1913,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                save_candidates_levels=frozenset(),
                random_deck_share: float = RANDOM_DECK_SHARE,
                demo_start_share: float | None = None,
-               live_catalog: dict | None = None) -> tuple[list[dict], list[str]]:
+               live_catalog: dict | None = None,
+               review_share: float = REVIEW_SHARE) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -1888,7 +1927,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     if reserved > budget:
         raise ValueError('round budget cannot cover opening specialists')
     completed = [group for group in state.get('completed_groups', [])
-                 if group.get('status', 'done') == 'done']
+                 if group.get('status', 'done') == 'done' and not group.get('review_of')]
     completed_betas = {base: {group.get('beta') for group in completed if group['base'] == base}
                        for base in specialists}
     special_picks = [(base, 1.0, 12 * (2 - len(completed_betas[base])))
@@ -2025,6 +2064,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                     offset += 12
         else:
             plan.append(item)
+    plan += review_groups(state, completed + plan, tasks, review_share,
+                          start_seed_ledger, renew_size, changes)
     return plan, changes
 
 
@@ -2109,6 +2150,8 @@ def _run_group(args, state, item, round_index, per_worker):
                        f'rc={result.returncode} {seconds:.0f}s')
     if result.returncode != 0:
         raise RuntimeError(f'{item["label"]}: search_play exited {result.returncode}')
+    if item.get('review_of'):
+        return  # Reviews feed training only; do not update ladder windows or probe counters.
     bucket = cell['windows'].setdefault(
         str(adaptation_value), {'recent': [], 'wins': 0, 'games': 0})
     if beta > 0:
@@ -2244,7 +2287,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
-                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog)
+                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog,
+                                       review_share=getattr(args, 'review_share', REVIEW_SHARE))
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -2321,6 +2365,8 @@ def main() -> None:
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
     parser.add_argument('--games-per-group', type=int, default=48)
+    parser.add_argument('--review-share', type=float, default=REVIEW_SHARE,
+                        help='非1倍任务在原配额之外追加的1倍复习份额，默认0.25，0关闭')
     parser.add_argument('--demo-start-share', type=float, default=None,
                         help='optional demo-start game cap per round; reserves random-deck quota before demo floors, remainder to multiplier cells')
     parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
@@ -2370,6 +2416,8 @@ def main() -> None:
         parser.error('--min-eval-units must be positive')
     if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
         parser.error('rounds and game budgets must be positive')
+    if not 0.0 <= args.review_share <= 1.0:
+        parser.error('--review-share must be within 0..1')
     try:
         args.save_candidates_levels = parse_levels(args.save_candidates_levels)
     except ValueError as error:
@@ -2447,7 +2495,8 @@ def main() -> None:
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
-                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog)
+                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog,
+                                       review_share=args.review_share)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],

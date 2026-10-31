@@ -11,6 +11,7 @@ def command(args):
     python = args.python or Path.home() / '.venvs/ml/bin/python3'
     imports = root / '.claude/worktrees/llmimport'
     return [str(python), str(worktree / 'scripts/curriculum_queue.py'),
+        *(['--review-share', str(args.review_share)] if args.review_share is not None else []),
         '--state', str(args.logs / 'curriculum_state.json'), '--log', str(args.logs / 'curriculum.log'),
         '--seed-ledger', str(args.logs / 'gate_seed_ledger.json'),
         '--start-seed-ledger', str(args.logs / 'start_cell_seed_ledger.json'),
@@ -46,6 +47,7 @@ def main():
     parser.add_argument('--alternate-recipe', type=Path)
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--rounds', type=int, default=100)
+    parser.add_argument('--review-share', type=float)
     args = parser.parse_args()
     shell = 'env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 ' + shlex.join(command(args))
     shell += ' 2>&1 | tee -a ' + shlex.quote(str(args.logs / 'qc.out'))
