@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import asdict
+from dataclasses import asdict, replace
+import hashlib
 import json
+import random
 from pathlib import Path
 import sys
 import time
@@ -38,16 +40,20 @@ def reset_archive(env, meta, *, fog_observation=None):
 
 class Recorder:
     def __init__(self, env, archive: Path, task_id: str, deck, task: TaskSpec, note: str = '',
-                 label_source: str = 'human'):
+                 label_source: str = 'human', *, initial_observation=None):
         self.env, self.archive = env, archive
         self.label_source = label_source
-        env.begin_demo()
-        self.observation, _ = env.reset(deck=deck, task=task)
-        options = env.deck_options()
-        warnings = env.deck_warnings(deck)['warnings']
-        original_conveyor = task.conveyor_start == 'original' and not deck
-        if set(deck) - set(options['available_plants']) or (warnings and not original_conveyor):
-            raise ValueError(f'deck contains locked plants or engine warnings: {warnings}')
+        if initial_observation is None:
+            env.begin_demo()
+            self.observation, _ = env.reset(deck=deck, task=task)
+            options = env.deck_options()
+            warnings = env.deck_warnings(deck)['warnings']
+            original_conveyor = task.conveyor_start == 'original' and not deck
+            if set(deck) - set(options['available_plants']) or (warnings and not original_conveyor):
+                raise ValueError(f'deck contains locked plants or engine warnings: {warnings}')
+        else:
+            # The original chooser already presented its warnings and the player confirmed.
+            self.observation = initial_observation
         archive.mkdir(parents=True, exist_ok=False)
         self.operations = 0
         self.events = {}
@@ -225,6 +231,23 @@ def export(archive: Path, data: Path):
     return target
 
 
+def record_user_pick(env, out: Path, level: int, seed: int, multiplier: float = 1.0,
+                     fog: str = 'human_v2', note: str = ''):
+    from pvz_constants import background_for_level, upgrade_plants
+    task = TaskSpec(level=level, seed=seed, loadout_mode='user_pick',
+        profile=PlayerProfileContext(seed_slot_count=10, owned_upgrade_plants=tuple(sorted(upgrade_plants()))),
+        zombie_count_multiplier=multiplier,
+        fog_observation=fog if background_for_level(level) == 'BACKGROUND_4_FOG' else None)
+    env.begin_demo()
+    observation, info = env.reset(deck=(), task=task)
+    deck = info['deck']
+    signature = hashlib.sha256(repr(tuple(sorted(deck))).encode()).hexdigest()[:12]
+    task_id = f'user_l{level}_{signature}'
+    archive = out / f'seed_{seed}' / task_id
+    return Recorder(env, archive, task_id, deck, replace(task, loadout_mode='fixed'), note,
+                    initial_observation=observation)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--resource-dir', type=Path, default=Path.home() / '.cache/pvz-research-resources')
@@ -232,8 +255,13 @@ def main():
     commands = parser.add_subparsers(dest='command', required=True)
     record = commands.add_parser('record')
     record.add_argument('--manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json')
-    record.add_argument('--task', required=True)
+    source = record.add_mutually_exclusive_group(required=True)
+    source.add_argument('--task')
+    source.add_argument('--level', type=int, help='choose ten cards in the original game window')
     record.add_argument('--seed', type=int)
+    record.add_argument('--multiplier', type=float, default=1.0, help='--level difficulty multiplier')
+    record.add_argument('--fog', choices=('human', 'human_v2', 'xray', 'storm'), default='human_v2',
+                        help='--level fog visibility; fog levels default to human_v2')
     record.add_argument('--note', default='')
     record.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/raw')
     check = commands.add_parser('verify')
@@ -248,15 +276,21 @@ def main():
     if args.command == 'export':
         print(export(args.archive, args.out))
         return
-    spec = load_training_task(args.manifest, args.task)
-    kw = training_task_kwargs(spec, args.seed)
-    deck, seed = kw['deck'], kw['seed']
-    task = TaskSpec(level=kw['level'], seed=seed, playthrough=2,
-                    profile=profile_for_deck(deck, kw['first_aid_owned']),
-                    **{key: value for key, value in kw['task_extra'].items() if value is not None})
-    archive = args.out / f'seed_{seed}' / args.task
     with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
-        recorder = Recorder(env, archive, args.task, deck, task, args.note)
+        if args.level is not None:
+            seed = args.seed if args.seed is not None else random.getrandbits(32)
+            print(f'请在窗口选满10张卡并点“开始战斗”（关卡{args.level}，种子{seed}）。', flush=True)
+            recorder = record_user_pick(env, args.out, args.level, seed, args.multiplier, args.fog, args.note)
+        else:
+            spec = load_training_task(args.manifest, args.task)
+            kw = training_task_kwargs(spec, args.seed)
+            deck, seed = kw['deck'], kw['seed']
+            task = TaskSpec(level=kw['level'], seed=seed, playthrough=2,
+                            profile=profile_for_deck(deck, kw['first_aid_owned']),
+                            **{key: value for key, value in kw['task_extra'].items() if value is not None})
+            archive = args.out / f'seed_{seed}' / args.task
+            recorder = Recorder(env, archive, args.task, deck, task, args.note)
+        archive = recorder.archive
         print(f'录制中：{archive}。Esc 或空格暂停/继续（暂停时可以慢慢种、铲、收集），'
               f'右键取消选卡，关闭窗口结束录制。', flush=True)
         try:

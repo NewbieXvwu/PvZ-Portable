@@ -11,7 +11,7 @@
 - [文档结构 / 仓库约定](notes/repo.md)
 - [单一入口与 C++ 权威约束](../AGENTS.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
-- [分工 / 每任务独立计算的游戏进程上限 / CUDA 执行记录](notes/workflow.md)
+- [分工 / 游戏进程上限 / CUDA 执行记录 / 图形界面自测](notes/workflow.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
 - [教师流水线（dsh/pvz-teacher）](notes/teacher.md)
 - [用户立场](notes/stance.md)

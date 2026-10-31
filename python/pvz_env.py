@@ -353,8 +353,11 @@ class PvZEnv:
         if task is None:
             task = TaskSpec(level=level, seed=seed)
         profile = task.profile
-        if task.loadout_mode != "fixed":
-            raise ValueError("only fixed loadouts are supported")
+        if task.loadout_mode not in ("fixed", "user_pick"):
+            raise ValueError("loadout_mode must be fixed or user_pick")
+        user_pick = task.loadout_mode == 'user_pick'
+        if user_pick and (self.headless or deck or task.conveyor_start or profile.imitater_owned or task.forced_seeds):
+            raise ValueError('user_pick requires a visible window, empty deck, and no imitater/forced/conveyor cards')
         if (type(task.zombie_count_multiplier) not in (int, float) or
                 not 0.1 <= task.zombie_count_multiplier <= 10.0):
             raise ValueError("zombie_count_multiplier must be from 0.1 to 10")
@@ -403,7 +406,7 @@ class PvZEnv:
                 cards.append(SeedCard(card[0], card[1]))
             else:
                 raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
-        if (not cards and task.conveyor_start != "original") or len(cards) > profile.seed_slot_count:
+        if (not cards and task.conveyor_start != "original" and not user_pick) or len(cards) > profile.seed_slot_count:
             raise ValueError("deck must contain cards and fit the profile's seed slots")
         if any(type(card.seed_type) is not int or card.seed_type < 0 or card.seed_type >= 49 or
                (card.imitater_type is not None and
@@ -438,9 +441,13 @@ class PvZEnv:
             command += " conveyor_original"
         if task.fog_observation is not None:
             command += f" fog_{task.fog_observation}"
+        if user_pick:
+            command += ' user_pick'
         response = self._command(command)
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
+        if user_pick:
+            cards = [SeedCard(kind) for kind in response['deck']]
         self._reset_done = True
         observation = self._annotate_observation(
             response["observation"], response.get("events", {}), reset_history=True)
@@ -455,7 +462,7 @@ class PvZEnv:
                 "playthrough": task.playthrough,
                 "profile": asdict(profile),
                 "forced_seeds": list(task.forced_seeds),
-                "loadout_mode": task.loadout_mode,
+                "loadout_mode": "fixed",
                 "zombie_count_multiplier": task.zombie_count_multiplier,
                 "wave_cap": task.wave_cap,
                 "preplanted": [list(plant) for plant in task.preplanted],
@@ -466,7 +473,8 @@ class PvZEnv:
             "operations": [],
             "final_state": self._state_record(observation),
         }
-        return observation, {"events": response.get("events", {})}
+        return observation, {"events": response.get("events", {}),
+                             **({'deck': response['deck']} if user_pick else {})}
 
     def step(self, action: dict[str, Any]) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         if not self._reset_done:

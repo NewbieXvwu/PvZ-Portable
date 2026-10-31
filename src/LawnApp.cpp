@@ -366,6 +366,12 @@ void LawnApp::WriteToRegistry()
 void LawnApp::ReadFromRegistry()
 {
 	SexyApp::ReadFromRegistry();
+	if (mEnvironmentMode && !mHeadlessMode)
+	{
+		mIsWindowed = true;
+		mForceWindowed = true;
+		mForceFullscreen = false;
+	}
 }
 
 bool LawnApp::WriteCurrentUserConfig()
@@ -1329,12 +1335,15 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<SeedT
 
 bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task)
 {
-	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || (deck.empty() && !task.originalConveyorStart) ||
+	if (!mEnvironmentMode || level < 1 || level > FINAL_LEVEL || (deck.empty() && !task.originalConveyorStart && !task.userPick) ||
 		deck.size() > SEEDBANK_MAX ||
 		task.playthrough != 2 || task.seedSlotCount < 6 || task.seedSlotCount > SEEDBANK_MAX ||
 		static_cast<int>(deck.size()) > task.seedSlotCount || task.rakeCharges < 0 || !std::isfinite(task.zombieCountMultiplier) ||
 		task.zombieCountMultiplier < 0.1 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
 		task.waveCap < 0 || task.waveCap > FINAL_LEVEL)
+		return false;
+	if (task.userPick && (!deck.empty() || task.originalConveyorStart ||
+		task.imitaterOwned || !task.forcedSeeds.empty()))
 		return false;
 	for (const EnvironmentPreplanted& plant : task.preplanted)
 	{
@@ -1411,10 +1420,50 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 	// every other level keeps the task deck and rejects the option.
 	if (task.originalConveyorStart && !mBoard->HasConveyorBeltSeedBank())
 		return false;
+	if (task.userPick && !mBoard->ChooseSeedsOnCurrentLevel())
+	{
+		std::cerr << "This adventure level has no original seed chooser" << std::endl;
+		return false;
+	}
 	mMusic->mMusicDisabled = true;
 	mGameScene = GameScenes::SCENE_LEVEL_INTRO;
 	ShowSeedChooserScreen();
 	mBoard->mCutScene->StartLevelIntro();
+	if (task.userPick)
+	{
+		// DEMO_BEGIN uses headless simulation even in a visible recording window.
+		// Temporarily run the ordinary window loop for the chooser, then restore it.
+		const bool headless = mHeadlessMode;
+		mHeadlessMode = false;
+		const bool selected = [this]() {
+			Board* choosingBoard = mBoard;
+			bool choosing = false;
+			for (;;)
+			{
+				if (!UpdateAppStep(nullptr) || mShutdown || mCloseRequest || mBoard != choosingBoard ||
+					mGameScene != GameScenes::SCENE_LEVEL_INTRO)
+					return false;
+				if (mBoard->mCutScene->mSeedChoosing) choosing = true;
+				else if (choosing) return true;
+				SDL_Delay(1);
+			}
+		}();
+		mHeadlessMode = headless;
+		if (!selected) return false;
+		std::vector<EnvironmentSeed> chosen;
+		for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+		{
+			const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
+			if (packet.mPacketType < SeedType::SEED_PEASHOOTER || packet.mPacketType >= SeedType::SEED_IMITATER)
+				return false;
+			chosen.push_back({packet.mPacketType, packet.mImitaterType});
+		}
+		// The UI may run for minutes. Start the recorded board through the same fixed-deck
+		// reset used by replay, so intro animation and choice timing cannot change gameplay.
+		EnvironmentTaskSpec fixed = task;
+		fixed.userPick = false;
+		return EnvironmentReset(level, seed, chosen, fixed);
+	}
 	mBoard->mCutScene->mCutsceneTime = 1000000;
 	mBoard->mCutScene->CancelIntro();
 	// Board::InitLevel already sized the bank from GetNumSeedsInBank() (10 on a conveyor level)
