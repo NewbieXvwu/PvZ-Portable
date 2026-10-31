@@ -98,10 +98,12 @@ CURRICULUM_LADDERS = {
 # 起点 0.5 让老师先能赢，再按 PROMOTE_ABOVE / DEMOTE_BELOW 往上走。
 RANDOM_DECK_SHARE = 0.15   # 随机卡组格每轮最多占 round-games 的 15%
 REVIEW_SHARE = 0.25       # 非 1 倍任务在原配额之外追加的 1 倍复习
+CLEAN_B_LINEAGE = 'task205-clean-b'
 
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = ROOT / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = ROOT / 'artifacts/student/dw4i_s1/model.pt'
+DEFAULT_B_INIT = Path.home() / 'PvZ-search/artifacts/student/gptbc_s1/model.pt'
 DEFAULT_STATIC_VALUE = ROOT / 'artifacts/hard/value_branch1/model.pt'
 DEFAULT_VALUE = ROOT / 'artifacts/value_net/v5/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
@@ -1091,6 +1093,10 @@ class TrainingPipeline:
                     or not isinstance(job.get('status'), str)):
                 state['training_jobs'][index] = dict(round=-1, status='failed', isolated=True,
                     invalid_job=job, error='invalid saved training job')
+            elif job.get('status') not in ('done', 'superseded') and job.get('b_lineage') != CLEAN_B_LINEAGE:
+                job.update(status='superseded', superseded_reason='clean B experiment replaced old recipes')
+        parent, parent_round = self._b_parent(float('inf'))
+        state.update(b_student=str(parent), b_round=parent_round, b_lineage=CLEAN_B_LINEAGE)
         for job in reversed(state.get('training_jobs', [])):
             timing = job.get('timing') or {}
             if not isinstance(timing, dict):
@@ -1278,7 +1284,7 @@ class TrainingPipeline:
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
                 f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
-        self._marker(folder / 'ab_result.json', dict(round=job['round'],
+        self._marker(folder / 'ab_result.json', dict(round=job['round'], experiment=job.get('b_lineage'),
             seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
             candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
             calibration=frozen['calibration'], **(decision.get('ab') or
@@ -1371,6 +1377,29 @@ class TrainingPipeline:
         peak = max(self.estimate_peak(), self.minimum_eval_units() * self.per_worker_bytes)
         return max(0, peak - anonymous)
 
+    def _b_parent(self, before):
+        parent = Path(getattr(self.args, 'b_init', DEFAULT_B_INIT))
+        round_index = 0
+        if self.state.get('b_lineage') == CLEAN_B_LINEAGE and self.state.get('b_round', 0) < before:
+            parent, round_index = Path(self.state['b_student']), self.state['b_round']
+        for old in self.state.get('training_jobs', []):
+            if old.get('b_lineage') != CLEAN_B_LINEAGE or not round_index < old['round'] < before:
+                continue
+            marker = Path(old['recipe']).parent / 'seeds/seed_000002/trained.json'
+            if marker.is_file():
+                candidate = read_json(marker)
+                if candidate['status'] == 'trained':
+                    parent, round_index = Path(candidate['model']), old['round']
+        return parent, round_index
+
+    def _b_recipe(self, job):
+        path = Path(job['recipe']).with_name('recipe_b.json')
+        recipe = load_recipe(path, 'training')
+        parent, parent_round = self._b_parent(job['round'])
+        recipe.update(init=str(parent), epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
+        write_recipe(path, recipe)
+        return recipe
+
     @retry_io
     def enqueue(self):
         round_index = self.state['round']
@@ -1390,8 +1419,11 @@ class TrainingPipeline:
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
         alternate = getattr(self.args, 'alternate_recipe', None)
-        alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_warm.json'
+        alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
         job['gate_version'] = 7
+        job.update(b_lineage=CLEAN_B_LINEAGE,
+                   b_initial_epochs=getattr(self.args, 'b_initial_epochs', 8),
+                   b_epochs=getattr(self.args, 'b_epochs', 4))
         if alternate:
             variant = load_recipe(alternate, 'training')
             variant.update({key: recipe[key] for key in
@@ -1403,10 +1435,9 @@ class TrainingPipeline:
             variant_options.pop('label_weight', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
-            cold = round_index % variant['restart_every'] == 0 if variant['restart_every'] else False
-            variant.update(init=None if cold else str(self.incumbent()),
-                           epochs=variant['restart_epochs'] if cold else 2,
-                           history_l7_keep=1.0)
+            parent, parent_round = self._b_parent(round_index)
+            variant.update(init=str(parent),
+                           epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
             # Promoted training corpus, not the in-flight collector snapshot. Labels are
             # an initial fallback for the pre-v7 incumbent; after promotion use archives.
             if 'student_corpus_archives' in self.state:
@@ -1651,6 +1682,8 @@ class TrainingPipeline:
             variant = job['candidate_recipes'][job['training_seeds'].index(seed)]
             child_recipe = dict(load_recipe(Path(variant['recipe']), 'training'),
                                 seed=seed, out=str(directory / 'student'))
+            if variant['recipe_family'] == 'B' and not path.exists():
+                child_recipe.update(self._b_recipe(job), seed=seed, out=str(directory / 'student'))
             if not path.exists():
                 write_recipe(path, child_recipe)
             model, marker = directory / 'student/model.pt', directory / 'trained.json'
@@ -1660,6 +1693,7 @@ class TrainingPipeline:
                 candidate = dict(seed=seed, model=str(model), recipe=str(path),
                                  source_recipe=variant.get('source_recipe', str(recipe_path)),
                                  recipe_family=variant.get('recipe_family', 'A'),
+                                 init=child_recipe['init'], epochs=child_recipe['epochs'],
                                  train_started=time.time())
                 try:
                     if not admitted:
@@ -1783,6 +1817,10 @@ class TrainingPipeline:
                                     f'{report["superseded_by"]}; training and gate skipped')
             return
         promotion = report.get('promotion', {})
+        for candidate in report.get('candidates', []):
+            if (job.get('b_lineage') == CLEAN_B_LINEAGE and candidate.get('recipe_family') == 'B'
+                    and candidate['status'] == 'trained' and job['round'] > self.state.get('b_round', 0)):
+                self.state.update(b_student=candidate['model'], b_round=job['round'], b_lineage=CLEAN_B_LINEAGE)
         current_contract = self.evaluation_contract(job)
         if promotion.get('contract') != current_contract:
             job['status'] = 'queued'
@@ -2389,6 +2427,9 @@ def main() -> None:
                         help='training recipe for the collection student; supplies every pack row option')
     parser.add_argument('--alternate-recipe', type=Path,
                         help='recipe B candidates, sharing recipe A pack row options')
+    parser.add_argument('--b-init', type=Path, default=DEFAULT_B_INIT)
+    parser.add_argument('--b-initial-epochs', type=int, default=8)
+    parser.add_argument('--b-epochs', type=int, default=4)
     parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
                         help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
     parser.add_argument('--opening-manifest', type=Path,
@@ -2414,6 +2455,8 @@ def main() -> None:
         parser.error('--workers must be positive')
     if args.min_eval_units < 1:
         parser.error('--min-eval-units must be positive')
+    if args.b_initial_epochs < 1 or args.b_epochs < 1:
+        parser.error('B epoch counts must be positive')
     if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
         parser.error('rounds and game budgets must be positive')
     if not 0.0 <= args.review_share <= 1.0:

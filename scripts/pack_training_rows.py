@@ -290,6 +290,10 @@ def pack_monolithic(data: Path, options: dict, cache_dir: Path | None = None, pr
          read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False, archive_paths=None) -> Path:
     """Build the pack for these options from the archives under ``data``; returns its path."""
     started = time.perf_counter()
+    if archive_paths is None and options.get('llm_demo_import'):
+        from pvz_training_pack import training_paths
+        archive_paths = training_paths(data, options['labels'], options['llm_demo_import'],
+                                       options['llm_demo_results'])
     loaded, sources, source_archive, source_row = build_from_archives(
                                  data, set(options["labels"]), options["wait_keep"],
                                  options["label_weight"], cache_dir, options["with_context"],
@@ -386,9 +390,10 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
     import multiprocessing as mp
     started = time.perf_counter()
     catalog = {label: [] for label in options['labels']}
-    for path in frame_paths(data):
-        if path.parent.name in catalog:
-            catalog[path.parent.name].append(path)
+    from pvz_training_pack import training_paths
+    for path in training_paths(data, options['labels'], options.get('llm_demo_import'),
+                               options.get('llm_demo_results', [1])):
+        catalog.setdefault(path.parent.name, []).append(path)
     jobs, segments = [], []
     for label, paths in sorted(catalog.items()):
         if not paths:
@@ -467,7 +472,8 @@ def prune(data: Path, labels: set[str], keep: Path) -> list[Path]:
 
 def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_context: bool = False,
                 obs: str = "v1", cells: bool = False, aux_horizon: int = 0, packet_head: str = "slot",
-                row_observer=None, cache_dir=None, rebuild: bool = False, label_keep=None):
+                row_observer=None, cache_dir=None, rebuild: bool = False, label_keep=None,
+                llm_demo_import=None, llm_demo_results=(1,)):
     """Build the pack if this exact input has none yet, then read it the way the trainer does.
 
     rebuild forces the build even when a pack exists: a changed archive of the same size would
@@ -475,7 +481,8 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
     """
     from train_rollout_policy import read_pack
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, set(labels)), label_keep=label_keep)
+                           sources=archive_fingerprint(data, set(labels), llm_demo_import, llm_demo_results),
+                           label_keep=label_keep, llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results)
     path = pack_path(data, options)
     if rebuild or not path.is_file():
         pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
@@ -542,15 +549,19 @@ def main() -> None:
     p.add_argument("--context", action="store_true", help="append the task context to the scalars")
     p.add_argument("--label-weight", default="", help="label=factor,... row-weight multipliers per label")
     p.add_argument("--label-keep", type=json.loads, default={}, help='JSON {label_regex: fraction}; keep whole archives')
+    p.add_argument('--llm-demo-import', type=Path, help='task105 import or preconverted GPT demo data')
+    p.add_argument('--llm-demo-results', default='1')
     p.add_argument("--cache-dir", type=Path, help="per-episode feature cache (default: <data>/.feature_cache)")
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
     p.add_argument("--prune", action="store_true",
                    help="delete the packs of a label subset this one supersedes")
     args = p.parse_args()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
+    results = [int(value) for value in args.llm_demo_results.split(',')]
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,
                            args.packet_head, args.context, label_weight,
-                           sources=archive_fingerprint(args.data, set(args.labels.split(","))), label_keep=args.label_keep)
+                           sources=archive_fingerprint(args.data, set(args.labels.split(",")), args.llm_demo_import, results),
+                           label_keep=args.label_keep, llm_demo_import=args.llm_demo_import, llm_demo_results=results)
     cache_dir = args.cache_dir or (args.data / ".feature_cache")
     target = pack(args.data, options, cache_dir, args.precompute_workers, None, args.out)
     if args.prune:

@@ -18,8 +18,11 @@ def command(args):
         '--rounds', str(args.rounds), '--workers', str(args.workers), '--min-eval-units', '4',
         '--python', str(python), '--round-games', '768', '--games-per-group', '48',
         '--manifest', str(worktree / 'artifacts/stage4/multiplier_panel.json'),
-        '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer.json'),
-        '--alternate-recipe', str(args.alternate_recipe or worktree / 'recipes/dw4i2_v2timer_rebal_seed2cold.json'),
+        '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer_rebal_seed2cold.json'),
+        '--alternate-recipe', str(args.alternate_recipe or worktree / 'recipes/dw4i2_v2timer_clean_b.json'),
+        *(['--b-init', str(args.b_init)] if args.b_init is not None else []),
+        *(['--b-initial-epochs', str(args.b_initial_epochs)] if args.b_initial_epochs is not None else []),
+        *(['--b-epochs', str(args.b_epochs)] if args.b_epochs is not None else []),
         '--training-parallelism', '1', '--opening-manifest', str(worktree / 'artifacts/task119/opening_panel.json'),
         '--executable', str(args.executable or root / 'artifacts/production/deploy20/pvz-portable'),
         '--promotion-panel', str(worktree / 'configs/gate_v5_panel.json'),
@@ -48,6 +51,9 @@ def main():
     parser.add_argument('--workers', type=int, default=16)
     parser.add_argument('--rounds', type=int, default=100)
     parser.add_argument('--review-share', type=float)
+    parser.add_argument('--b-init', type=Path)
+    parser.add_argument('--b-initial-epochs', type=int)
+    parser.add_argument('--b-epochs', type=int)
     args = parser.parse_args()
     shell = 'env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 ' + shlex.join(command(args))
     shell += ' 2>&1 | tee -a ' + shlex.quote(str(args.logs / 'qc.out'))

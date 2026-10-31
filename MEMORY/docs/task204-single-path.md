@@ -374,7 +374,7 @@
 
 删除环境层重复的 `profile_for_deck / training_task`，调用统一走 `pvz_tasks` 和 `training_task_kwargs`。删除 `v2fogstack4` 及测试，移除 Python rollout 与 wait 参考实现，native wait 的协议常量和薄接口检查留在 `pvz_event_env`。GPT 建局校验调用 `env.deck_warnings`。门禁统一到 `pvz_promotion` 的 v7，实现和执行入口各一份，删除 v5/v6 判定、独立 selector 及其面板刷新代码，旧版本历史作业不续跑也不改写。
 
-部署命令只在 `qc_launch.py`，看门狗直接调用它。删除仓库九份 `qc_deploy17..25.sh` 及六份边界包装脚本，原边界助手更名为 `qc_boundary.py`。`deploy26.py` 共用这些入口，在组结束且状态落盘后切换，备份实际安装文件及软链，可恢复删除项和原有软链。A 配方与 GPT 地形路由沿用 deploy25，v5 / v5roof 和 branch1 不变，B 配方按下文第 10 步改为重新配比。
+部署命令只在 `qc_launch.py`，看门狗直接调用它。删除仓库九份 `qc_deploy17..25.sh` 及六份边界包装脚本，原边界助手更名为 `qc_boundary.py`。`deploy26.py` 共用这些入口，在组结束且状态落盘后切换，备份实际安装文件及软链，可恢复删除项和原有软链。GPT 地形路由沿用 deploy25，v5 / v5roof 和 branch1 不变，当前 A/B 槽位按下文第 11 步执行。
 
 **行数**：合入 task203 后的代码及配置清理删除 **40,342 行**、新增 **1,388 行**，其中代码与测试删除 **6,482 行**、新增 **1,059 行**。种子表把连续数组缩为等价区间，删除 33,859 行、增加 210 行，任务与种子值不变。相对 deploy25，代码与测试合计增加 8,820 行、删除 5,165 行，增加部分主要来自本次要求合回主线的 GPT 包。
 
@@ -421,3 +421,15 @@ Mac 串行执行相关 `pytest -k`，每次带 `timeout 300` 和 `ulimit -f 2000
 在临时目录调用现有排程函数生成并打印 `recipe_b.json`，实际输出确认三项关卡平衡参数和 33 个 1.0 标签权重均保留，`init=null`、`restart_every=1`、`epochs=12`，A/B 种子为 `[1,2]`。除允许分别应用的来源权重和标签权重外，两臂打包选项相同，排程未报错，临时目录已删除。
 
 两臂仍一同参加 v7 三方配对门禁，沿用逐轮 `ab_result.json` 的 A−B 方向和分地形结果，跨轮累计从新 B 配方启用后的轮次开始，旧 B 配方结果不混入。回滚与切换失败恢复会显式选回 deploy25 的原 seed2cold 配方，避免删除新配方文件后仍按新默认值启动。相关 `-k` 小测试 4 项通过，未启动真实训练或对局，未部署。
+
+### task205 追加第 11 步：B 干净谱系，A 重新配比
+
+本步替代第 10 步的槽位安排。A 使用 `dw4i2_v2timer_rebal_seed2cold.json`，种子 1，每轮冷启动 12 epoch，保留关卡平衡和 z* 权重 1.0。B 使用 `dw4i2_v2timer_clean_b.json`，共享 A 的同一个包，来源权重为 `default=0、llm_demo=1、teacher_r52=1、teacher_gptbc=1`。生产行按存档 `task.checkpoint / task.policy` 判定先验，与 task206 的分类一致，未记录先验和旧老师行均为 0。GPT 示范对 A 的权重为 0。零权重行不进入训练或验证批次，也不参与种子划分、类别频率和关卡平衡计数，epoch 按有效行计算。
+
+合入 `origin/llmrows` 的 task152 转行实现，复用 `llm_demo_import` 与 `training_rows`。两份配方都读取 `~/pvz-logs/gptbc/data/.llm_demo_rows`，已只读确认 task194 的 1190 份转换结果存在，直接复用已清理的 1,105,910 行，不重放或冷转换这批档案。统一导入器在验证通过后调用同一个转换函数，默认输出到 `--llm-demo-data ~/pvz-logs/gptbc/data`，新增示范继续排除未遮挡雾关及传送带空槽种植行。训练侧只读转换池，不再扫描原始导入回执。task152 的旧私有实验配方不恢复。
+
+B 首次初始化为 `~/PvZ-search/artifacts/student/gptbc_s1/model.pt`，`--b-initial-epochs` 默认 8，后续从最近成功训练的 B 候选初始化，`--b-epochs` 默认 4，初始化模型可用 `--b-init` 指定。课程状态记录 `b_student / b_round / b_lineage`。初始化在开训前再按已有 B 完成标记确定，已排队的下一轮不会误用 r52 或旧的初始化预览，重启可从候选标记恢复。B 的门禁失败不打断谱系，B 未训成或被跳过的轮次不推进谱系。
+
+门禁仍对 A、B 和现任三方同种子配对，当前现任为 r52。`ab_result.json` 使用实验标记 `task205-clean-b`，跨轮 A−B 从本标记重新累计，旧记录保留。切换时旧配方未完成作业标为 superseded，不再续跑旧 B，已完成历史不改。回滚显式选回 deploy25 原 A / seed2cold，沿用同一个启动器。
+
+临时排程实际打印的 B 首轮参数为 `init=/home/newbiexvwu/PvZ-search/artifacts/student/gptbc_s1/model.pt、epochs=8`，有效来源权重为旧老师 0、未知 0、r52 1、GPT 先验 1、GPT 示范 1。后续排程打印了上一轮 B 路径及 4 epoch。共享打包选项一致，相关 `-k` 小测试通过，覆盖转换接入、过滤、来源权重、谱系排队和重启以及三方门禁。本步只改代码并跑小测试，台式机仅只读查看，未训练或部署。

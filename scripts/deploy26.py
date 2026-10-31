@@ -69,7 +69,8 @@ def launch(installation, args, worktree, rollback=False):
         '--repo', str(args.repo), '--worktree', str(worktree), '--logs', str(args.logs),
         '--python', sys.executable]
     if rollback:
-        command += ['--alternate-recipe', str(worktree / 'recipes/dw4i2_v2timer_seed2cold.json')]
+        command += ['--recipe', str(worktree / 'recipes/dw4i2_v2timer.json'),
+                    '--alternate-recipe', str(worktree / 'recipes/dw4i2_v2timer_seed2cold.json')]
     subprocess.run(command, check=True)
 
 

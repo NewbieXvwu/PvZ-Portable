@@ -35,6 +35,7 @@ from pvz_common import OOM_SCORE_TRAINING, set_oom_score_adj  # noqa: E402
 from pvz_rollout_policy import LAWN_COLS, PACKETS, RolloutNet, features, packet_features, identity_scalars  # noqa: E402
 from pvz_frame_store import CELL_CANDIDATES  # noqa: E402
 from pvz_training_pack import archive_fingerprint, pack_flags, pack_options, pack_path  # noqa: E402
+from pvz_training_rows import source_factor
 
 
 def _episode_context(path: Path) -> np.ndarray:
@@ -531,14 +532,15 @@ def load_batch(source: BatchSource, prepared: dict, device, stream=None, event=N
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
          row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None,
-         label_keep: dict[str, float] | None = None):
+         label_keep: dict[str, float] | None = None, llm_demo_import=None, llm_demo_results=(1,)):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
     options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels), label_keep=label_keep)
+                           sources=archive_fingerprint(data, labels, llm_demo_import, llm_demo_results),
+                           label_keep=label_keep, llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results)
     path = pack_path(data, options)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
@@ -583,7 +585,7 @@ def read_pack(path: Path, data: Path | None = None, row_observer=None, source_we
                 if source_weight:
                     meta_path = source.parent / 'meta.json'
                     meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
-                    weight[start:start + count] *= source_weight.get(meta.get('label_source', 'teacher'), 1.0)
+                    weight[start:start + count] *= source_factor(meta, source_weight)
             start += count
     result = (boards, scalars, plant, packet, cell, weight, seed_of, values, cands)
     if "aux" in stored.files:
@@ -861,7 +863,7 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                 continue
             meta_path = (Path(data) / entry["source"]).parent / "meta.json"
             meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
-            factor = source_weight.get(meta.get("label_source", "teacher"), 1.0)
+            factor = source_factor(meta, source_weight)
             if factor != 1.0:
                 dense_targets["weight"][entry["pos"]:entry["pos"] + span] *= factor
     return result
@@ -886,6 +888,15 @@ def main(*, step_observer=None) -> None:
         source_counts = SourceRowCounts(balance=bool(level_cap))
         def observer(path, rows):
             source_counts.observe(path, rows)
+    demo_plan = None
+    if args.demo_row_weight != 1.0 or args.demo_start_row_weight != 1.0:
+        from pvz_training_rows import DemoRowWeights
+        demo_plan = DemoRowWeights(args.demo_row_weight, args.demo_start_row_weight)
+        demo_observer = observer
+        def observer(path, rows):
+            demo_plan.observe(path, rows)
+            if demo_observer:
+                demo_observer(path, rows)
     if args.seed is not None:
         torch.manual_seed(args.seed)
     started = time.time()
@@ -937,7 +948,7 @@ def main(*, step_observer=None) -> None:
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started
-    seeds = sorted(set(seed_of)); random.Random(args.validation["seed"]).shuffle(seeds)
+    seeds = sorted(set(seed_of[(weight > 0).numpy()])); random.Random(args.validation["seed"]).shuffle(seeds)
     val_seeds = set(seeds[: int(len(seeds) * args.validation["fraction"])])
     is_val = torch.from_numpy(np.fromiter((s in val_seeds for s in seed_of), dtype=bool, count=len(seed_of)))
     if replay is not None:
@@ -958,7 +969,7 @@ def main(*, step_observer=None) -> None:
                                   else packet_info.numel() * packet_info.element_size())
     print(json.dumps({"data_memory": memory}), flush=True)
     if args.packet_balance:
-        planted_rows = packet >= 0
+        planted_rows = (packet >= 0) & (weight > 0)
         balanced_packet = (packet.long() if packet_info is None else
                            packet_info.kinds(torch.arange(len(packet)), packet.clamp(min=0)))
         freq = torch.bincount(balanced_packet[planted_rows], minlength=PACKETS if packet_info is None else 54).float() / int(planted_rows.sum())
@@ -972,16 +983,21 @@ def main(*, step_observer=None) -> None:
         compared_rows, spread = values.spread()
         compared = torch.from_numpy(compared_rows).long()
         spread = torch.from_numpy(spread)
+        kept = weight[compared] > 0
+        compared, spread = compared[kept], spread[kept]
         # capped: a few spreads near 1 are games decided inside the horizon, not choices 30x more important
-        weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
-        print(f"spread weights: {len(compared)} compared rows, mean spread {float(spread.mean()):.4f}, "
-              f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
+        if len(compared):
+            weight[compared] *= ((1 + args.spread_weight * spread / spread.mean()) / (1 + args.spread_weight)).clamp(max=args.spread_cap)
+            print(f"spread weights: {len(compared)} compared rows, mean spread {float(spread.mean()):.4f}, "
+                  f"weight range {float(weight[compared].min()):.2f}-{float(weight[compared].max()):.2f}", flush=True)
     if level_cap:
         shares = source_counts.rebalance(weight, is_val, level_cap, level_power, level_max_multiplier)
         (args.out / 'level_shares.json').write_text(json.dumps(shares, indent=2) + '\n')
         print(json.dumps({'level_balance': shares}), flush=True)
     if private_weights is not None:
         private_weights.apply_deck_cap(weight, is_val, packet_info)
+    if demo_plan:
+        demo_plan.apply(weight)
     net = RolloutNet(args.width, args.pool, args.context, args.obs, args.row_pool,
                      aux=bool(args.aux_weight), packet_head=args.packet_head)
     if args.init:
@@ -990,7 +1006,7 @@ def main(*, step_observer=None) -> None:
     net = net.to(args.device)
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
-    positive_count = float(plant[weight > 0].sum()) if private_weights is not None else float(plant.sum())
+    positive_count = float(plant[weight > 0].sum())
     pos_weight = torch.tensor([waits / max(1.0, positive_count)], device=args.device).sqrt()
     source = BatchSource(boards, scalars, plant, packet, cell, weight, packet_info, cands, auxiliary)
 
@@ -1036,10 +1052,10 @@ def main(*, step_observer=None) -> None:
                          "cell_acc": float((out["cell"][planted].argmax(1) == c[planted]).float().mean()) if planted.any() else 0.0}
         return loss, stats
 
-    if not is_val.any() or is_val.all():
+    train_idx = torch.nonzero(~is_val & (weight > 0)).squeeze(1).to(torch.int32)
+    val_idx = torch.nonzero(is_val & (weight > 0)).squeeze(1).to(torch.int32)
+    if not len(train_idx) or not len(val_idx):
         raise ValueError("recipe split must produce nonempty training and validation sets")
-    train_idx = torch.nonzero(~is_val).squeeze(1).to(torch.int32)
-    val_idx = torch.nonzero(is_val).squeeze(1).to(torch.int32)
     epoch_rows = len(train_idx)
     if private_weights is not None and history_keep < 1:
         train_idx = train_idx[weight[train_idx] > 0]

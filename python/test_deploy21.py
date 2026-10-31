@@ -82,32 +82,44 @@ def test_deploy21_staircase_keeps_decks_and_uses_persisted_endpoints():
     assert settings['task101_l34_fog_selected']['multiplier'] == .75
 
 
-def test_deploy21_warm_recipe_one_seed_each_and_sixth_round_restart(tmp_path, monkeypatch):
+def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tmp_path, monkeypatch):
     from test_curriculum_pipeline import setup
     args, state = setup(tmp_path)
-    args.gate_version, args.candidates_per_recipe = 7, 2  # old launch flag cannot create four candidates
-    b = load_recipe(args.recipe, 'training')
-    b.update(epochs=2, restart_every=6, restart_epochs=12, replay_uniform=True, replay_new_weight=5)
-    args.alternate_recipe = tmp_path / 'warm.json'
-    write_recipe(args.alternate_recipe, b)
-    state['student_round'] = 2
-    state['student_corpus_archives'] = ['seed_1/base']
+    args.recipe = ROOT / 'recipes/dw4i2_v2timer_rebal_seed2cold.json'
+    args.alternate_recipe = ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
+    args.b_init = tmp_path / 'gptbc.pt'
+    args.b_init.write_bytes(b'gptbc')
     pipeline = queue.TrainingPipeline(args, state)
     monkeypatch.setattr(pipeline.executor, 'submit', lambda *a: Future())
-    monkeypatch.setattr(pipeline, '_plan_build', lambda recipe: None)
     try:
-        for round_index in (5, 6):
+        for round_index in (1, 2):
             state['round'] = round_index
             pipeline.enqueue()
-            job = state['training_jobs'][-1]
-            assert job['training_seeds'] == [1, 2]
-            assert [c['recipe_family'] for c in job['candidate_recipes']] == ['A', 'B']
-            assert 'selection_refresh' not in job
-            recipe = load_recipe(Path(job['candidate_recipes'][1]['recipe']), 'training')
-            assert recipe['init'] == (str(args.rollout_policy) if round_index == 5 else None)
-            assert recipe['epochs'] == (2 if round_index == 5 else 12)
-            assert recipe['replay_old_archives'] == ['seed_1/base']
-            assert recipe['history_l7_keep'] == 1
+        first, second = state['training_jobs']
+        a = load_recipe(Path(first['recipe']), 'training')
+        b_path = Path(first['recipe']).with_name('recipe_b.json')
+        b = load_recipe(b_path, 'training')
+        assert a['init'] is None and a['epochs'] == 12
+        assert a['source_weight']['llm_demo'] == 0
+        assert b['init'] == str(args.b_init) and b['epochs'] == 8
+        assert state['b_student'] == str(args.b_init)
+        assert b['source_weight'] == dict(default=0., llm_demo=1., teacher_r52=1., teacher_gptbc=1.)
+        assert first['training_seeds'] == [1, 2]
+        parent = Path(first['recipe']).parent / 'seeds/seed_000002/student/model.pt'
+        parent.parent.mkdir(parents=True)
+        parent.write_bytes(b'first B')
+        marker = parent.parent.parent / 'trained.json'
+        marker.write_text(json.dumps(dict(status='trained', model=str(parent))))
+        next_b = pipeline._b_recipe(second)
+        assert next_b['init'] == str(parent) and next_b['epochs'] == 4
+        for job in state['training_jobs']:
+            job['status'] = 'done'
+        restored = queue.TrainingPipeline(args, state)
+        restored.executor.shutdown(wait=True)
+        assert state['b_student'] == str(parent) and state['b_round'] == 1
+        assert gate.read(args.state)['b_student'] == str(parent)
+        print('recipe_b.json:', json.dumps({k:b[k] for k in ('init', 'epochs', 'source_weight')}))
+        print('next recipe_b.json:', json.dumps({k:next_b[k] for k in ('init', 'epochs', 'source_weight')}))
     finally:
         pipeline.executor.shutdown(wait=True)
 

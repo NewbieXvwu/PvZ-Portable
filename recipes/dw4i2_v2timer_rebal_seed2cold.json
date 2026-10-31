@@ -265,6 +265,8 @@
  "source_weight": {
   "level_balance": 0.25,
   "level_balance_power": 0.5,
-  "level_balance_max_multiplier": 20
- }
+  "level_balance_max_multiplier": 20,
+  "llm_demo": 0.0
+ },
+ "llm_demo_import": "/home/newbiexvwu/pvz-logs/gptbc/data"
 }

@@ -48,6 +48,79 @@ def balance_levels(levels, cap, power=1.0, max_multiplier=None):
                 allocated_weight_ratio=allocated / total_weight)
 
 
+def source_kind(meta):
+    """Classify the recorded prior and explicitly converted demonstrations once."""
+    source = meta.get('label_source', 'teacher')
+    category = source
+    task = meta.get('task', {})
+    prior = str(task.get('checkpoint', '')) + ' ' + str(task.get('policy', ''))
+    if meta.get('llm_demo_sha256') and source.startswith('llm_'):
+        category = 'llm_demo'
+    elif source == 'teacher' and 'gptbc' in prior:
+        category = 'teacher_gptbc'
+    elif source == 'teacher' and 'round_000052' in prior:
+        category = 'teacher_r52'
+    return category
+
+
+def source_factor(meta, rules):
+    return rules.get(source_kind(meta), rules.get(meta.get('label_source', 'teacher'), rules.get('default', 1.)))
+
+
+class DemoRowWeights:
+    """Optional final multipliers from the pack's existing archive provenance.
+
+    No new pack columns/signatures. Human rows and explicitly imported LLM demo rows
+    share demo_row_weight; teacher rows with demo_archive are continuations. Task names never
+    classify a row. Default factors return before reading metadata or touching weights.
+    Apply AFTER packet/spread/intervention/level balancing: these boosts are not capped
+    or renormalized, so a final level share can exceed the earlier level-balance cap.
+    """
+    def __init__(self, demo_row_weight=1.0, demo_start_row_weight=1.0):
+        self.demo_row_weight = demo_row_weight
+        self.demo_start_row_weight = demo_start_row_weight
+        self.enabled = demo_row_weight != 1.0 or demo_start_row_weight != 1.0
+        self.observed = 0
+        self.spans = []
+        self.rows = dict(human=0, demo_start=0, llm_demo=0)
+
+    def observe(self, path, rows, meta=None):
+        if not self.enabled:
+            return
+        start, count = self.observed, len(rows)
+        self.observed += count
+        if not count:
+            return
+        if meta is None:
+            meta_path = Path(path).parent / 'meta.json'
+            meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
+        source = meta.get('label_source', 'teacher')
+        if source == 'human':
+            category, factor = 'human', self.demo_row_weight
+        elif source_kind(meta) == 'llm_demo':
+            category, factor = 'llm_demo', self.demo_row_weight
+        elif source == 'teacher' and meta.get('demo_archive'):
+            category, factor = 'demo_start', self.demo_start_row_weight
+        else:
+            return
+        self.rows[category] += count
+        if factor != 1.0:
+            self.spans.append((start, start + count, factor))
+
+    def apply(self, weights):
+        if not self.enabled:
+            return
+        if len(weights) != self.observed:
+            raise ValueError('demo row provenance does not cover the loaded rows')
+        for start, stop, factor in self.spans:
+            weights[start:stop] *= factor
+
+    def metadata(self):
+        return dict(demo_row_weight=self.demo_row_weight,
+                    demo_start_row_weight=self.demo_start_row_weight,
+                    rows=self.rows, stage='after_level_balance', participates_in_cap=False)
+
+
 class SourceRowCounts:
     """Count actual retained cached rows without changing sampling, weights or RNG state."""
     def __init__(self, balance=False):
@@ -56,14 +129,15 @@ class SourceRowCounts:
         self.spans = []
         self.observed = 0
 
-    def observe(self, path, rows):
+    def observe(self, path, rows, meta=None):
         path = Path(path)
         record = self.sources.setdefault(path.parent.name, dict(archives=0, seeds={}))
         record['archives'] += 1
         seed = archive_seed(path.parent.parent.name)
         record['seeds'][seed] = record['seeds'].get(seed, 0)+len(rows)
         if self.balance:
-            meta = json.loads((path.parent / 'meta.json').read_text())
+            if meta is None:
+                meta = json.loads((path.parent / 'meta.json').read_text())
             level = int(meta['context']['level'])
             self.spans.append((level, self.observed, self.observed + len(rows)))
         self.observed += len(rows)
@@ -71,7 +145,7 @@ class SourceRowCounts:
     def rebalance(self, weights, is_val, cap, power=1.0, max_multiplier=None):
         levels = {}
         for level, start, stop in self.spans:
-            training = ~is_val[start:stop]
+            training = ~is_val[start:stop] & (weights[start:stop] > 0)
             record = levels.setdefault(level, dict(rows=0, original_weight=0.0))
             record['rows'] += int(training.sum())
             record['original_weight'] += float(weights[start:stop][training].sum())

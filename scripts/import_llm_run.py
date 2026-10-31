@@ -290,7 +290,8 @@ def verify_once(target, resources, executable, receipt_path, sha, context, probl
     return receipt
 
 
-def run(input_path, dest, manifest, resources, executable, *, executor_factory=None, verify_workers=2):
+def run(input_path, dest, manifest, resources, executable, *, executor_factory=None, verify_workers=2,
+        llm_demo_data=None):
     if verify_workers not in (1, 2):
         raise ValueError('verify_workers must be 1 or 2')
     if input_path.is_dir() and (input_path.resolve() == dest.resolve()
@@ -381,6 +382,9 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                     _, _, family_problems = resolve_family(meta, tasks)
                     problems = problems + family_problems
                     verified = receipt['verified'] and not problems
+                    if verified and llm_demo_data is not None and str(meta.get('label_source', '')).startswith('llm_'):
+                        from pvz_llm_demo_rows import import_demo
+                        import_demo(llm_demo_data, target, sha)
                     reason = '；'.join(problems + ([receipt['reason']] if receipt['reason'] else []))
                     relative = str(target.relative_to(ROOT)) if target.is_relative_to(ROOT) else str(target)
                     row = dict(source=str(archive.relative_to(source)), archive_sha256=sha,
@@ -418,12 +422,13 @@ def main():
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--verify-workers', type=int, choices=(1, 2), default=2)
+    parser.add_argument('--llm-demo-data', type=Path, default=Path.home() / 'pvz-logs/gptbc/data')
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
     rows, layers = [], {}
     for source in args.inputs:
         result = run(source, args.dest, args.manifest, args.resource_dir, args.executable,
-                     verify_workers=args.verify_workers)
+                     verify_workers=args.verify_workers, llm_demo_data=args.llm_demo_data)
         rows.extend(result['rows'])
         layers.update(result['layers'])
     report = render_report(rows, layers)
