@@ -19,7 +19,7 @@ def command(args):
         '--python', str(python), '--round-games', '768', '--games-per-group', '48',
         '--manifest', str(worktree / 'artifacts/stage4/multiplier_panel.json'),
         '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer.json'),
-        '--alternate-recipe', str(args.alternate_recipe or worktree / 'recipes/dw4i2_v2timer_seed2cold.json'),
+        '--alternate-recipe', str(args.alternate_recipe or worktree / 'recipes/dw4i2_v2timer_rebal_seed2cold.json'),
         '--training-parallelism', '1', '--opening-manifest', str(worktree / 'artifacts/task119/opening_panel.json'),
         '--executable', str(args.executable or root / 'artifacts/production/deploy20/pvz-portable'),
         '--promotion-panel', str(worktree / 'configs/gate_v5_panel.json'),

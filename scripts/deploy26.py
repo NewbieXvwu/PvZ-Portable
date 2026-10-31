@@ -64,10 +64,13 @@ def start_watchdog(logs):
                          stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
 
 
-def launch(installation, args, worktree):
-    subprocess.run([sys.executable, str(installation / 'scripts/qc_launch.py'),
+def launch(installation, args, worktree, rollback=False):
+    command = [sys.executable, str(installation / 'scripts/qc_launch.py'),
         '--repo', str(args.repo), '--worktree', str(worktree), '--logs', str(args.logs),
-        '--python', sys.executable], check=True)
+        '--python', sys.executable]
+    if rollback:
+        command += ['--alternate-recipe', str(worktree / 'recipes/dw4i2_v2timer_seed2cold.json')]
+    subprocess.run(command, check=True)
 
 
 def stop_collection(worktree, logs, record):
@@ -140,7 +143,7 @@ def execute(args):
             (imports / 'scripts/import_llm_run.py').symlink_to(worktree / 'scripts/import_llm_run.py')
             (logs / 'qc_watchdog.sh').symlink_to(worktree / 'scripts/qc_watchdog.sh')
             (logs / 'qc.active').write_text(revision + '\n')
-        launch(installation, args, worktree)
+        launch(installation, args, worktree, rollback=rollback)
         start_watchdog(logs)
         print(('rolled back' if rollback else 'activated') + f' {revision}; backup {folder}', flush=True)
     except BaseException:
@@ -148,7 +151,7 @@ def execute(args):
             stop_collection(worktree, logs, record)
             for key, path in targets.items():
                 restore(path, folder / 'before' / key)
-            launch(installation, args, worktree)
+            launch(installation, args, worktree, rollback=True)
         elif record.exists():
             boundary.act(json.loads(record.read_text())['controller'], signal.SIGCONT)
         start_watchdog(logs)

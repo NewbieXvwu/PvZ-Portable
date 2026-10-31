@@ -205,3 +205,15 @@ def test_deploy26_backup_restores_removed_files_and_original_symlink(tmp_path):
     assert code.read_text() == 'old code'
     assert link.is_symlink() and link.read_text() == 'old code'
     assert not new.exists()
+
+
+def test_deploy26_rollback_launch_uses_original_recipe(tmp_path, monkeypatch):
+    import deploy26
+    calls = []
+    monkeypatch.setattr(deploy26.subprocess, 'run', lambda command, **kw: calls.append(command))
+    args = SimpleNamespace(repo=tmp_path, logs=tmp_path / 'logs')
+    worktree = tmp_path / 'cq'
+    deploy26.launch(tmp_path / 'install', args, worktree, rollback=True)
+    command, = calls
+    assert command[command.index('--alternate-recipe') + 1] == str(
+        worktree / 'recipes/dw4i2_v2timer_seed2cold.json')
