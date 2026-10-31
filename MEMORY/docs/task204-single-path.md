@@ -479,6 +479,29 @@ Mac 串行执行相关 `pytest -k`，每次带 `timeout 300` 和 `ulimit -f 2000
 7. **部署启动解释器覆盖。** `deploy26.py:68-70` 用 `sys.executable` 作为 `--python` 与 tmux 载荷解释器，覆盖 qc_launch 的 venv 默认值；若不用 venv 执行部署脚本，首次启动会用缺 torch 的系统解释器而失败，而 `tmux new-session` 仍返回 0，部署显示成功；看门狗 120 秒后用 venv 重启但会消耗 2 次重启预算。按文档用 `~/.venvs/ml/bin/python3 scripts/deploy26.py` 执行即可。
 8. **已核对、未发现问题的项。** deploy26 删除的旧模块（`select_student`、`pvz_promotion_v7`、`pvz_selection_refresh`、`pvz_wait_events`、`replay_roof_wave_gate`、`pvz_live_import`、`deploy22_import`）在现行 `python/scripts/recipes` 与活跃 `~/pvz-logs/*.sh` 中无引用，退役导入入口只出现在旧部署脚本里。回滚时 `deploy26.py:71-72` 用安装快照里的 qc_launch 启动，不传 `--candidates-per-recipe/--gate-version/--review-share`，与 deploy25 队列默认值等价，回滚命令有效。cq 工作树在这 42 个将被覆盖的路径中，除 `scripts/episode_query.py` 外均与 deploy25 逐字节相同；24 个删除路径在 cq 已不存在。
 
+#### 7. 补演：第 11 步的干净 B 谱系（2026-10-31 追加，台式机）
+
+对照新尖 `origin/deploy26`（e60d07e6 / 28f6774a）在 `/tmp/t207b` 重跑排程、打包、训练与重启四条，只读复用 task194 的转换池（取其中 3 份示范档）。全程 `ulimit -v 8000000` + `/usr/bin/nice -n 19`，`free -g` 先确认 16 GB 可用；未改代码，未碰生产 qc / 看门狗 / stop_curr，演练完 `/tmp/t207b` 整目录删除。第 1 节的启动命令对照在新尖只余一处实质变更：`qc_launch.py:21-25` 的 `--recipe` 默认改成 A 的重新配比配方、`--alternate-recipe` 改成 B 的干净配方，`--b-init/--b-initial-epochs/--b-epochs` 只在显式给出时传入，回滚分支 `deploy26.py:71-73` 显式把两个配方选回 deploy25 的 `dw4i2_v2timer.json` / `dw4i2_v2timer_seed2cold.json`。
+
+1. **排程预演（真实 `enqueue` 代码路径）。** 新进程一初始化就把两条非终态旧 B 作业（round 69、70，原 status queued）标为 `superseded`，原因 `clean B experiment replaced old recipes`，同时把 `b_student / b_round / b_lineage` 写成 gptbc_s1 / 0 / `task205-clean-b`（`curriculum_queue.py:1096-1099`）。**部署当刻的副作用**：生产队列里任何尚未训完的旧 B 作业会被同样丢弃，A 侧不受影响。第 71 轮实际写出：
+   - `round_000071/recipe_b.json`：`init=gptbc_s1/model.pt`、`epochs=8`、`seed=1`、`source_weight={default:0, llm_demo:1, teacher_r52:1, teacher_gptbc:1}`；
+   - `round_000071/recipe.json`（A）：`init=null`、`epochs=12`、`source_weight.llm_demo=0.0`，保留 `level_balance=0.25 / power=0.5 / max_multiplier=20`；
+   - A / B 标签集 2438 项逐字相同、`llm_demo_import` 相同 ⇒ 弹出 `source_weight / label_weight` 后的行选项一致，两臂共享同一个包；`train_rollout_policy.py:555-558` 在合并分段时才套用来源权重，共享包 + 各臂权重是构造性质，不是巧合。
+
+2. **来源权重实测。** 演练包 = 2 份生产老师档（`z15dag18_fast_search` / `n19dag2_fast_search`，395 行）+ 3 份 GPT 示范转换档（1,924 行），打包命令由训练器自己打印（`--wait-keep 0.1 --obs v2timer --packet-head identity --aux-horizon 0 --cells --llm-demo-import ... --llm-demo-results 1`），2319 行、分段 3 个。`data/.llm_demo_rows` 由 `demo_paths` 自动软链到转换池（`pvz_llm_demo_rows.py:18-21`），示范行确实进了包。按训练器同一条 `load(..., source_weight)` 逐存档实测因子：
+   - 3 份示范：`source_kind=llm_demo`（`label_source=llm_agent` + `llm_demo_sha256`）、因子 1.0、权重合计 1924.0；
+   - 2 份旧老师档（meta `label_source=None`、`task.checkpoint=None`）：因子 0.0（落 `default`）、权重合计 0.0；
+   - 整包 2319 行中 395 行权重为 0。训练日志 `3 seeds` 是 `seed_of[weight > 0]` 的去重计数（`train_rollout_policy.py:951`），只含 3 个示范种子，旧档连种子划分都不参与；`source_rows.json` 里示范 1248 训练 / 676 验证，两个老师标签 271 / 124 行但验证 0。
+
+3. **B 从 gptbc 起训跑通。** 演练配方是 `dw4i2_v2timer_clean_b.json` 的原样克隆（obs / pool / packet_head / row_pool / cell_soft_weight / wait_keep / source_weight / init 全部不动），只把 data、out、cache、labels 缩到演练档，并设 1 epoch、CPU、batch 128、`max_steps=3`、验证比例 0.5。退出码 0，写出 `model.pt`（736 KB）、`metrics.json`、`source_rows.json`。warm-start 核对：`load_student(gptbc_s1)` 与 B 的网络在 pool / context / row_pool / packet_head / obs 及输入通道（117）上完全一致，21/21 张量被父网络权重覆盖，`trunk.0.weight`、`scalar.0.weight` 前缀逐位相等、无加宽列；训练后每个被覆盖的张量都相对初始化有位移 ⇒ 确实是从 gptbc 起步而不是随机初始化。CUDA 初始化 OOM 警告无害（实际 device=cpu）。
+
+4. **模拟重启续谱系（两种恢复来源）。** 在同一份课程状态副本上，把第 71 轮的 B 模型路径写成 `round_000071/seeds/seed_000002/trained.json`：
+   - 只有轮次标记（把 `b_student / b_round / b_lineage` 改坏，模拟状态写盘前崩溃）：`_b_parent(inf)` 扫标记恢复出 `b_student=<第 71 轮 B 模型>、b_round=71`（`curriculum_queue.py:1380-1392`）；
+   - 只有课程状态（删标记）：直接读 `b_student / b_round`，结果相同。
+   两种情况下第 72 轮的 `recipe_b.json` 都是 `init=<上一轮 B 模型>、epochs=4`（`b_initial_epochs=8` 仅在 `parent_round == 0` 时生效，`_b_recipe` 的判定见 `:1395-1401`），A 仍是 `init=null / epochs=12 / llm_demo=0.0`，断言全过。
+
+5. **问题 7 复核：未修。** 新尖 `deploy26.py:68-70` 的 `launch()` 仍把 `sys.executable` 同时用作 `qc_launch.py` 的解释器和传给它的 `--python`，覆盖 `qc_launch.py:11` 的 venv 默认值；第 11 步把两个配方也从这条路径传入，所以这个覆盖的影响面没变、只是多了配方参数。按文档用 `~/.venvs/ml/bin/python3 scripts/deploy26.py` 执行即可回避；若用系统解释器跑部署，首次启动的 tmux 载荷会因缺 torch 失败而 `tmux new-session` 仍返回 0，部署显示成功、看门狗 120 秒后用 venv 拉起但吃掉 2 次重启预算。交主控决定是改成 `DEFAULT_PYTHON`（venv）还是在部署脚本里断言解释器。
+
 ### task205 追加第 11 步：B 干净谱系，A 重新配比
 
 本步替代第 10 步的槽位安排。A 使用 `dw4i2_v2timer_rebal_seed2cold.json`，种子 1，每轮冷启动 12 epoch，保留关卡平衡和 z* 权重 1.0。B 使用 `dw4i2_v2timer_clean_b.json`，共享 A 的同一个包，来源权重为 `default=0、llm_demo=1、teacher_r52=1、teacher_gptbc=1`。生产行按存档 `task.checkpoint / task.policy` 判定先验，与 task206 的分类一致，未记录先验和旧老师行均为 0。GPT 示范对 A 的权重为 0。零权重行不进入训练或验证批次，也不参与种子划分、类别频率和关卡平衡计数，epoch 按有效行计算。
