@@ -422,6 +422,63 @@ Mac 串行执行相关 `pytest -k`，每次带 `timeout 300` 和 `ulimit -f 2000
 
 两臂仍一同参加 v7 三方配对门禁，沿用逐轮 `ab_result.json` 的 A−B 方向和分地形结果，跨轮累计从新 B 配方启用后的轮次开始，旧 B 配方结果不混入。回滚与切换失败恢复会显式选回 deploy25 的原 seed2cold 配方，避免删除新配方文件后仍按新默认值启动。相关 `-k` 小测试 4 项通过，未启动真实训练或对局，未部署。
 
+### task207：部署前审查与演练（2026-10-31，台式机）
+
+对照 `origin/deploy26`（adf0bcc6）与生产 `origin/deploy25`（BASE 97994745）做只读审查，并在临时目录完成一次最小端到端演练。未改任何代码，未碰生产 qc / 看门狗 / stop_curr，`~/pvz-logs/curriculum_state.json` 本体只被复制读取。
+
+#### 1. 启动命令逐项对照
+
+从正在运行的 `curriculum_queue.py` 进程取出完整 argv（`ps -eo args`），与 `scripts/qc_launch.py:command()` 用生产同一组参数生成的命令按 token 排序比对。差异只有四处，均不改变语义：
+
+| 项 | 生产现行 | qc_launch | 说明 |
+|---|---|---|---|
+| `--candidates-per-recipe` | 显式 `1` | 不传 | 新旧 argparse 默认都是 1（deploy25 `curriculum_queue.py:2487`） |
+| `--gate-version` | 显式 `7` | 不传 | 新入口已移除该参数，每轮强制 `GATE_VERSION`（`curriculum_queue.py:2486`）；deploy25 默认也是 7 |
+| `--state/--log/--seed-ledger/--start-seed-ledger` | 不传 | 显式写默认路径 | 与 argparse 默认值逐字相同 |
+| `--review-share` | 不传 | 显式 `0.25` | 生产靠默认值，显式值与默认值一致 |
+
+其余 `--rounds 100 --workers 16 --min-eval-units 4 --round-games 768 --games-per-group 48 --training-parallelism 1`、各面板 / 模型 / 引擎路径、`--obs-v3 --native-games`、`2>&1 | tee -a ~/pvz-logs/qc.out` 完全一致。用记录 argv 的假 `tmux` 执行 `qc_launch.main()`，退出码 0，生成单条 `tmux new-session -d -s qc -x 200 -y 50 ...`，载荷与现行生产逐项相同。
+
+#### 2. 看门狗拉起路径
+
+- 生产看门狗 argv 是 `/bin/bash /home/newbiexvwu/pvz-logs/qc_watchdog.sh`（systemd-run 单元 `qc-watchdog.service`）；`deploy26.py:50-58` 按 `command[1]` 匹配包含该路径的集合，能停下。
+- 重启分支（`qc_watchdog.sh:104`）用 `$PYTHON`（venv）调 `$WORKTREE/scripts/qc_launch.py --repo ... --worktree ... --logs ...`，与部署启动参数一致；部署后该脚本在 cq 工作树内。因此 qc 崩溃（tmux 会话消失）时拉起的是本次核对过的同一条命令。
+- 两点提醒（非缺陷）：新看门狗由 `deploy26.py:61-64` 用 Popen 直接拉起，不再挂在 systemd 单元下，原 `qc-watchdog.service` 会变成 inactive（transient 单元本就不跨重启保留）；部署时启动解释器见问题 7。
+
+#### 3. 旧状态与旧导入进度
+
+- 生产课程状态共 67 个作业：`gate_version=None` 57 个（31 done + 26 superseded，全部终态），v7 10 个（5 done / 3 queued / 2 superseded）。恢复逻辑（`curriculum_queue.py:1126`）只重新排队 `gate_version == GATE_VERSION` 的作业，旧作业不参与、不报错；重启时还会强制 `state['gate_version']=7`（`:2486`）。若将来出现非终态 v5/v6 作业，会被静默搁置而非续跑。
+- 旧 `import_progress.json`：演练目录预置一份旧格式进度后导入，`import_llm_run.py:316` 与 `merged_progress.json` 合并，写入新台账后删除旧文件（`:403-404`），核查通过。
+
+#### 4. 复习份额的种子间隔
+
+对生产状态副本跑 `--dry-run`：本轮 20 组、264 局 = 8 个原配额组 ×24 + 12 个复习组 ×6。复习起点为 `max(group.offset + group.games, state.offsets[offset_key])`（`:1887`），标签 `..._review1_o<offset>`（`:1905`），1 倍组在 `:1879` 直接跳过。按 offset_key 机械检查全部 20 个区间：**零重叠**。示例：`day_l3_train_d7` 原段 504–528、复习 528–534；6 个 rd193 组 24–48 → 复习 48–54。
+理论风险：若同一 offset_key 上两个非 1 倍组在同一轮排入且 `state.offsets` 未推进，会算出同一起点；本轮无此情况（见问题 5）。代价是每轮采集从 192 局增至 264 局（+37.5%），起始种子按轮加速消耗；种子不足时沿用 `renew_start_seeds`，续领失败降级为只采剩余并记日志，不会崩。
+
+#### 5. 最小端到端演练
+
+环境：新建 deploy26 工作树；课程状态、门禁 / 起始种子账本、`teacher_rates.json` 复制到 `/tmp/t207`。`free -g` 确认 16 GB 可用后，全程 `ulimit -v 8000000`、`nice -n 19`。工作树缺 gitignore 的运行时 artifacts，演练时临时软链 14 个目录到 cq，结束后已删除；`/tmp/t207` 已整目录删除。
+
+1. **排程预演** `--dry-run`：20 组 / 264 局，倍率变化仅 `day_l3 2→2.5`。
+2. **采集**：deploy20 引擎，`day_l3_train_d7`，`--seed-offset 0 --seeds 2`，2 局、1 胜 1 负；帧写 `frames.npz`，`ticks.jsonl` 正常。
+3. **打包**：`curriculum_queue.pack_command` 按演练标签打包，得到 503 行样本（116 个植物动作），包 `775fed7c...`。演练配方只保留演练标签的 `label_weight` 以通过配方校验。
+4. **训练**：1 epoch、CPU、batch 128、`max_steps=2`；503 行、2 个种子、验证 240 行，写出 `epoch_01.pt` 与 `model.pt`，退出码 0（CUDA 初始化 OOM 警告无害，实际 device=cpu）。另按小样本调了 `source_weight={}`、验证比例 0.5，属演练配置调整，非代码缺陷。
+5. **门禁最小单元**：单任务 `task101_l1_day_d7`、2 个种子，A=刚训练的模型、incumbent=`dw4i_s1`；`promotion_gate._unit_command` 跑完后 `pvz_promotion.decide` 返回 `continue`、`delta_rate=-0.5`，`next_panel` 正常写出。`decide` 要求 monitor 行非空，最小演练用 `monitor={}`。
+6. **导入**：临时 dest 导入两个小包——(a) npz 存档重新打包的 zip，(b) 原始 `frames.jsonl` 包的 zip。两者均通过 `human_demo.verify`；(b) 入库时转 `frames.npz` 并把 v1 meta 升到 v2；旧 `import_progress.json` 合并后删除。回执、`sha256/<sha>`、报告均正常。
+
+演练覆盖“采集 → 打包 → 训练 → 门禁 → 导入”整条链，未发现会崩溃或写坏状态的缺陷。
+
+#### 6. 发现的问题（交主控处理，均未改代码）
+
+1. **cq 工作树有一处未提交修补会被覆盖（最需先处理）。** cq 的 `scripts/episode_query.py` 比 deploy25 多两行：写入 `meta["checkpoint_sha256"]`（cq:91）与展示指纹（cq:1275），是生产本地热修、从未提交。deploy26 恰好重写了同一函数（改用 `write_meta` / `write_frames`），但不含这两行；部署会静默覆盖，此后新采集存档不再带检查点指纹（溯源元数据丢失，非崩溃）。建议部署前把该修补并入 deploy26。
+2. **`configs/` 不随 deploy26 部署。** `deploy26.py:23-27` 只分发 `python/ scripts/ recipes/`，本次改动的 4 个 configs 不进 cq；其中 `human_demo_tasks.json` 新增 49 个 `llmplay_decks_*` 注册。后果：(a) 导入器默认清单是 `ROOT/configs/human_demo_tasks.json`（`import_llm_run.py:22`，经 llmimport 软链解析到 cq），这些族在 cq 未登记，`resolve_family` 会在不比对卡组 / 倍率的情况下当新族接受（`:168-170`）；(b) 若将来门禁校准引用只存在于 deploy26 配置的 `demo_task`，`freeze_panel` 会 KeyError（`pvz_promotion.py:267`）。当前面板只引用 `demo_roof_46_doom_m200`、`demo_storm_40_orig_m100`，cq 配置都有，暂不触发。
+3. **`archive_sha` 把帧文件名算进哈希。** `import_llm_run.py:242-256` 对 `meta.json`、`ticks.jsonl`、帧**文件名**做哈希；同一局以 `frames.jsonl` 与 `frames.npz` 两种包装到达会得到不同 SHA。deploy26 起新包统一写 npz，若把旧局以 npz 形式重新导入，会被当成新档重复计入。当前生产台账 3791 行、无重复 (task_id, seed)，属潜在问题；演练中同一存档重打包确实生成了第三个 SHA。
+4. **行构造直接取原始 meta 的必需键。** `:389-390` 无保护地取 `meta['outcome']['result']`、`meta['outcome']['final_wave']`、`meta['operations']`、`meta['frame_count']`；`metadata()` 的补齐只在 `read_meta` / `write_meta` 路径生效，这里用的是原始 `json.loads`。缺任一键会 KeyError 并中止整批导入（无逐档隔离）。已知生产包都带这些键，外部手打包需注意。
+5. **复习种子共享 offset_key 的理论重叠。** `:1887` 的 `max(...)` 在同一 offset_key 上两个非 1 倍组同轮排入、且 offsets 未推进时，会算出相同起点。本轮 20 个区间零重叠，专精组均为 1 倍被跳过，暂不触发；以后新增同 key 多倍率组需复查。
+6. **每轮局数与种子消耗上升。** 本轮 192 → 264 局（+37.5%）；1 倍复习为 `review-share=0.25` 对非 1 倍组配额的追加，起始种子按轮加速消耗，续领失败会缩短该组数据量。
+7. **部署启动解释器覆盖。** `deploy26.py:68-70` 用 `sys.executable` 作为 `--python` 与 tmux 载荷解释器，覆盖 qc_launch 的 venv 默认值；若不用 venv 执行部署脚本，首次启动会用缺 torch 的系统解释器而失败，而 `tmux new-session` 仍返回 0，部署显示成功；看门狗 120 秒后用 venv 重启但会消耗 2 次重启预算。按文档用 `~/.venvs/ml/bin/python3 scripts/deploy26.py` 执行即可。
+8. **已核对、未发现问题的项。** deploy26 删除的旧模块（`select_student`、`pvz_promotion_v7`、`pvz_selection_refresh`、`pvz_wait_events`、`replay_roof_wave_gate`、`pvz_live_import`、`deploy22_import`）在现行 `python/scripts/recipes` 与活跃 `~/pvz-logs/*.sh` 中无引用，退役导入入口只出现在旧部署脚本里。回滚时 `deploy26.py:71-72` 用安装快照里的 qc_launch 启动，不传 `--candidates-per-recipe/--gate-version/--review-share`，与 deploy25 队列默认值等价，回滚命令有效。cq 工作树在这 42 个将被覆盖的路径中，除 `scripts/episode_query.py` 外均与 deploy25 逐字节相同；24 个删除路径在 cq 已不存在。
+
 ### task205 追加第 11 步：B 干净谱系，A 重新配比
 
 本步替代第 10 步的槽位安排。A 使用 `dw4i2_v2timer_rebal_seed2cold.json`，种子 1，每轮冷启动 12 epoch，保留关卡平衡和 z* 权重 1.0。B 使用 `dw4i2_v2timer_clean_b.json`，共享 A 的同一个包，来源权重为 `default=0、llm_demo=1、teacher_r52=1、teacher_gptbc=1`。生产行按存档 `task.checkpoint / task.policy` 判定先验，与 task206 的分类一致，未记录先验和旧老师行均为 0。GPT 示范对 A 的权重为 0。零权重行不进入训练或验证批次，也不参与种子划分、类别频率和关卡平衡计数，epoch 按有效行计算。
