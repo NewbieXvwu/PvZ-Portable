@@ -1,54 +1,31 @@
 #!/usr/bin/env python3
-"""把 GPT Pro / llmplay 交回的一整包存档一键入库（task89）。
-
-    python3 scripts/import_llm_run.py <out.zip 或解压目录> --dest artifacts/llm_demo/raw
-
-流程：安全解压（拒绝绝对路径与 ..）→ 找出全部 episode_archive_v1 存档 →
-逐份用本机引擎 human_demo.verify 校验（操作数、每步 tick/ok、终局一致；不要求
-逐位 state_hash，理由见 task82）→ 读 meta 分档（full / half / loss）→ 种子不属于
-原 demo 族时按 task87 的命名规则登记 <base>_s<seed> 新族 → 为 full/half 的局
-直接更新既有导入索引，供生产课程下轮读取；不再生成接手扫描作业。
-
-输入只读：存档先复制进 --dest，校验写的是副本的 meta。
-
-规则（AGENTS.md）：存档本身不进 git；不写死密钥；不手写打法规则。
-"""
+"""Import GPT/human archives once by SHA, convert to NPZ, and publish one live index."""
 from __future__ import annotations
-
 import argparse
-import datetime as dt
+from concurrent.futures import ProcessPoolExecutor
 import fcntl
+import hashlib
 import json
+import multiprocessing
+from pathlib import Path
 import re
 import shutil
 import sys
 import tempfile
 import zipfile
-from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
-
-ARCHIVE_SCHEMA = 'episode_archive_v1'
-DEFAULT_DEST = ROOT / 'artifacts/llm_demo/raw'
+from pvz_episode_archive import FILES, READ_SCHEMAS, copy_archive, convert_archive, write_meta
+from pvz_frame_store import frame_path, frame_bytes
+DEFAULT_DEST = Path(__file__).absolute().parents[1] / 'artifacts/task105/import'
 DEFAULT_MANIFEST = ROOT / 'configs/human_demo_tasks.json'
-DEFAULT_LAYERS = ROOT / 'configs/llmplay_seeds.json'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
-DEFAULT_SEED_LEDGER = ROOT / 'artifacts/llm_demo/scan_seed_ledger.json'
-
-SCAN_POINTS = 12
 SCAN_FUTURES = 8
-FUTURE_BLOCK = 96          # 每份存档预留的种子块；实际只用前 8 个
-FUTURE_STRIDE = 1000
-DEFAULT_FUTURE_BASE = 84_000_000
-SCAN_TAIL = 0.94           # 12 个点覆盖决策序列的前 94%，避开终局读档点
 ROBUST_WAVE = '10'
 ROBUST_MIN = 5
-
 LEVEL_IN_ID = re.compile(r'_(?:l|roof|fog|pool|conv|night|day)_(\d{1,2})(?:_|$)')
 
-
-# ---------------------------------------------------------------- 输入与解压
 
 def _zip_target(root: Path, name: str) -> Path:
     """zip 成员 -> 落盘路径；绝对路径、盘符、.. 一律拒绝。"""
@@ -81,22 +58,20 @@ def safe_extract(archive: Path, destination: Path) -> None:
 
 
 def discover(root: Path) -> list[Path]:
-    """按 llmplay 的导出格式找存档：meta.json + ticks.jsonl + episode_archive_v1。"""
+    """Find old and current numerical archives with metadata and an operation tape."""
     found = []
     for meta_path in sorted(root.rglob('meta.json')):
         try:
             meta = json.loads(meta_path.read_text(encoding='utf-8'))
         except (OSError, ValueError):
             continue
-        if meta.get('schema') != ARCHIVE_SCHEMA:
+        if meta.get('schema') not in READ_SCHEMAS:
             continue
         if not (meta_path.parent / 'ticks.jsonl').is_file():
             continue
         found.append(meta_path.parent)
     return found
 
-
-# ---------------------------------------------------------------- meta 检查
 
 def _tick_lines(archive: Path) -> int:
     with (archive / 'ticks.jsonl').open(encoding='utf-8') as stream:
@@ -141,12 +116,13 @@ def archive_problems(meta: dict, archive: Path) -> list[str]:
         lines = None
     if lines is not None and meta.get('operations') is not None and int(meta['operations']) != lines:
         problems.append(f'meta.operations={meta["operations"]} 与 ticks.jsonl 的 {lines} 行不一致')
-    frames = archive / 'frames.jsonl'
-    if frames.is_file() and meta.get('frame_count') is not None:
-        with frames.open(encoding='utf-8') as stream:
-            count = sum(1 for line in stream if line.strip())
+    frames = frame_path(archive)
+    if not frames.is_file():
+        problems.append('存档缺帧文件')
+    elif meta.get('frame_count') is not None:
+        count = sum(bool(line.strip()) for line in frame_bytes(frames).splitlines())
         if int(meta['frame_count']) != count:
-            problems.append(f'meta.frame_count={meta["frame_count"]} 与 frames.jsonl 的 {count} 行不一致')
+            problems.append(f'meta.frame_count={meta["frame_count"]} 与帧数 {count} 不一致')
     return problems
 
 
@@ -173,8 +149,6 @@ def robustness_text(meta: dict) -> str:
     return f'{int(checkpoint.get("wins") or 0)}/{int(checkpoint.get("k") or SCAN_FUTURES)}'
 
 
-# ---------------------------------------------------------------- 任务族
-
 def load_manifest(path: Path) -> dict:
     document = json.loads(path.read_text(encoding='utf-8'))
     return {task['task_id']: task for task in document.get('tasks') or []}
@@ -195,7 +169,7 @@ def resolve_family(meta: dict, tasks: dict) -> tuple[str, bool, list[str]]:
     if entry is None:
         return base, True, []
     family_deck = [int(value) for value in entry.get('deck') or []]
-    if deck != family_deck:
+    if entry.get('deck_selection') != 'player' and deck != family_deck:
         return base, False, [f'卡组与已登记的 {base} 不同：meta {deck} vs 清单 {family_deck}']
     for key, default in (('level', None), ('zombie_count_multiplier', 1.0)):
         if task.get(key, default) != entry.get(key, default):
@@ -230,233 +204,6 @@ def family_entry(final: str, meta: dict, base_entry: dict | None) -> dict:
     return entry
 
 
-def register_tasks(path: Path, entries: list[dict]) -> None:
-    """把新族按现有排版（一行一个任务）插到清单末尾，其余字节不动。"""
-    if not entries:
-        return
-    lines = path.read_text(encoding='utf-8').splitlines()
-    closing = [index for index, line in enumerate(lines) if line.strip() == ']']
-    if not closing:
-        # 单行 JSON 也接受：整份重排成仓库惯用的一行一任务。
-        document = json.loads(path.read_text(encoding='utf-8'))
-        document.setdefault('tasks', []).extend(entries)
-        path.write_text(json.dumps(document, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-        load_manifest(path)
-        return
-    index = closing[-1]
-    if index == 0 or not lines[index - 1].strip():
-        raise ValueError(f'{path} 的 tasks 数组是空的，拒绝自动登记')
-    if lines[index - 1].strip() != '"tasks": [' and not lines[index - 1].rstrip().endswith(','):
-        lines[index - 1] = lines[index - 1].rstrip() + ','
-    new_lines = ['    ' + json.dumps(entry, ensure_ascii=False, separators=(',', ':'))
-                 + (',' if i < len(entries) - 1 else '') for i, entry in enumerate(entries)]
-    lines[index:index] = new_lines
-    path.write_text('\n'.join(lines) + '\n', encoding='utf-8')
-    load_manifest(path)  # 写坏了立刻报
-
-
-def register_design(path: Path, entries: list[dict]) -> None:
-    """与清单同步登记新族；重复调用不追加已有 task_id。"""
-    text = path.read_text(encoding='utf-8') if path.exists() else ''
-    missing = [entry for entry in entries if f'`{entry["task_id"]}`' not in text]
-    if not missing:
-        return
-    lines = ['\n### task89：LLM 存档自动登记的新族\n',
-             '| task_id | 关卡 | 种子 | 倍率 | 卡组（存档 meta） |',
-             '|---|---|---|---|---|']
-    for entry in missing:
-        lines.append(f'| `{entry["task_id"]}` | {entry["level"]} | {entry["seeds"]} | '
-                     f'{entry["zombie_count_multiplier"]} | {entry["deck"]} |')
-    path.write_text(text.rstrip() + '\n' + '\n'.join(lines) + '\n', encoding='utf-8')
-
-
-# ---------------------------------------------------------------- 扫描作业
-
-def scan_decisions(operations: int, points: int = SCAN_POINTS) -> list[int]:
-    """12 个等距决策号，覆盖前 94% 的决策（终局附近的读档点没有教学意义）。"""
-    last = max(1, int(operations * SCAN_TAIL))
-    if points <= 1:
-        return [1]
-    values = {max(1, round(1 + (last - 1) * index / (points - 1))) for index in range(points)}
-    return sorted(values)
-
-
-def _config_seed_points(document, points: set) -> None:
-    if isinstance(document, dict):
-        start, count = document.get('future_seed_start'), document.get('future_seed_count')
-        if type(start) is int and type(count) is int:
-            points.update(range(start, start + count))
-        for key, value in document.items():
-            if key in ('seeds', 'future_seeds') and isinstance(value, list):
-                points.update(int(item) for item in value if isinstance(item, int))
-                _config_seed_points(value, points)
-            elif key == 'tasks' and isinstance(value, dict):
-                for task in value.values():
-                    if isinstance(task, list):
-                        points.update(item for item in task if type(item) is int)
-                    else:
-                        _config_seed_points(task, points)
-            elif key in ('seed_block', 'seed_window') and isinstance(value, list) and len(value) == 2:
-                points.update(range(*value))
-            elif key in ('future_seed_start', 'seed') and isinstance(value, int):
-                points.add(value)
-            elif key == 'block' and isinstance(value, dict):
-                base = value.get('base')
-                stride = int(value.get('stride') or 1)
-                count = int(value.get('per_task') or 0)
-                tasks = value.get('tasks') or document.get('tasks') or 1
-                tasks = len(tasks) if isinstance(tasks, (dict, list)) else int(tasks)
-                if isinstance(base, int) and count:
-                    for index in range(max(tasks, 1)):
-                        points.update(range(base + index * stride, base + index * stride + count))
-            else:
-                _config_seed_points(value, points)
-    elif isinstance(document, list):
-        for item in document:
-            _config_seed_points(item, points)
-
-
-def occupied_seed_ranges(root: Path, gap: int = 100_000) -> list:
-    """仓库里所有登记过的种子段（configs/*.json + DESIGN.md 的大数）。机械求，不手抄。"""
-    points = set()
-    for path in sorted((root / 'configs').glob('*.json')):
-        try:
-            _config_seed_points(json.loads(path.read_text(encoding='utf-8')), points)
-        except (OSError, ValueError):
-            continue
-    design = root / 'DESIGN.md'
-    if design.is_file():
-        for match in re.finditer(r'\b\d{1,3}(?:,\d{3}){2,}\b', design.read_text(encoding='utf-8')):
-            value = int(match.group(0).replace(',', ''))
-            if value >= 1_000_000:
-                points.add(value)
-    ranges = []
-    for value in sorted(points):
-        if ranges and value - ranges[-1][1] <= gap:
-            ranges[-1] = (ranges[-1][0], value)
-        else:
-            ranges.append((value, value))
-    snapshot = root / 'MEMORY/docs/llm-import-seed-inventory.json'
-    if snapshot.is_file():
-        document = json.loads(snapshot.read_text(encoding='utf-8'))
-        ranges += [(low, high - 1) for low, high in document['occupied'] + document['reserved_pools']]
-    return ranges
-
-
-def allocate_future_block(ranges: list, base: int, count: int) -> int:
-    while True:
-        if base < 0 or count < 1 or base + count > 2**32:
-            raise ValueError('未来种子块超出 uint32 范围')
-        end = base + count - 1
-        if not any(start <= end and base <= stop for start, stop in ranges):
-            return base
-        base += 1_000_000
-
-
-def scan_plan(rows: list, layers: dict, base: int, root: Path = ROOT,
-              ledger_path: Path | None = None) -> dict:
-    """锁住本目标目录的分配账本，跨导入不复用新未来，同档重跑保持分配。"""
-    if ledger_path is None:
-        return _scan_plan(rows, layers, base, root, {})
-    ledger_path.parent.mkdir(parents=True, exist_ok=True)
-    with ledger_path.with_suffix('.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        ledger = (json.loads(ledger_path.read_text(encoding='utf-8')) if ledger_path.exists()
-                  else dict(schema='llm_scan_seed_ledger_v1', reservations={}))
-        if ledger.get('schema') != 'llm_scan_seed_ledger_v1':
-            raise ValueError('未知扫描种子账本格式')
-        result = _scan_plan(rows, layers, base, root, ledger['reservations'])
-        with tempfile.NamedTemporaryFile(mode='w', encoding='utf-8', dir=ledger_path.parent,
-                                         delete=False) as temporary:
-            temporary.write(json.dumps(ledger, ensure_ascii=False, indent=2) + '\n')
-        Path(temporary.name).replace(ledger_path)
-        return result
-
-
-def _scan_plan(rows: list, layers: dict, base: int, root: Path, reservations: dict) -> dict:
-    """为 full / half 的局生成 task71b 作业清单；只生成，不运行。"""
-    registered_ranges = occupied_seed_ranges(root)
-    ranges = list(registered_ranges)
-    usable = [row for row in rows if row['grade'] != 'loss' and row.get('archive')]
-    claimed = []
-    for entry in reservations.values():
-        start, count = entry['start'], entry['count']
-        if not (isinstance(start, int) and 0 <= start < 2**32 and count == FUTURE_BLOCK
-                and start + count <= 2**32):
-            raise ValueError('扫描种子账本范围无效')
-        interval = (start, start + count - 1)
-        if any(a <= interval[1] and interval[0] <= b for a, b in claimed):
-            raise ValueError('扫描种子账本区间重叠')
-        claimed.append(interval)
-    ranges += claimed
-    cursor = base
-    archives = []
-    for row in usable:
-        key = json.dumps([row['task_id'], row['seed'], row['archive']], ensure_ascii=False)
-        existing = reservations.get(key)
-        start = existing['start'] if existing else allocate_future_block(ranges, cursor, FUTURE_BLOCK)
-        if not existing:
-            reservations[key] = dict(start=start, count=FUTURE_BLOCK)
-            ranges.append((start, start + FUTURE_BLOCK - 1))
-        cursor = start + FUTURE_STRIDE
-        futures = list(range(start, start + SCAN_FUTURES))
-        decisions = scan_decisions(row['frames'])
-        jobs = []
-        for decision in decisions:
-            for arm, beta in (('teacher', 1.0), ('student', 0.0)):
-                jobs.append(dict(task_id=row['task_id'], archive=row['archive'], level=row['level'],
-                                 seed=row['seed'], decision=decision, arm=arm,
-                                 dagger_beta=beta, future_seeds=futures))
-        archives.append(dict(task_id=row['task_id'], archive=row['archive'], level=row['level'],
-                             seed=row['seed'], grade=row['grade'], decisions=decisions,
-                             reused_reservation=existing is not None,
-                             future_seed_start=start, future_seed_count=FUTURE_BLOCK,
-                             future_seeds=futures, layer=layers.get(row['base_task_id'], '其他'),
-                             jobs=jobs))
-    return dict(schema='llm_scan_jobs_v1',
-                generated=dt.datetime.now(dt.timezone.utc).isoformat(timespec='seconds'),
-                future_block=dict(base=archives[0]['future_seed_start'] if archives else base,
-                                  requested_base=base, stride=FUTURE_STRIDE, count=FUTURE_BLOCK),
-                seed_audit=dict(existing_ranges=[[a, b] for a, b in registered_ranges],
-                                previous_allocations=[[a, b] for a, b in claimed],
-                                allocated=[[entry['future_seed_start'],
-                                            entry['future_seed_start'] + FUTURE_BLOCK - 1]
-                                           for entry in archives]),
-                archives=archives)
-
-
-# ---------------------------------------------------------------- 入库
-
-def _same_archive(left: Path, right: Path) -> bool:
-    try:
-        for filename in ('ticks.jsonl', 'frames.jsonl', 'frames.npz'):
-            a, b = left / filename, right / filename
-            if a.exists() != b.exists() or (a.exists() and a.read_bytes() != b.read_bytes()):
-                return False
-        def metadata(path):
-            return {k: v for k, v in json.loads((path / 'meta.json').read_text()).items()
-                    if k not in ('verified', 'hash_verification')}
-        return metadata(left) == metadata(right)
-    except (OSError, ValueError):
-        return False
-
-
-def import_archive(archive: Path, dest: Path, task_id: str, seed: int) -> tuple:
-    target = dest / f'seed_{seed}' / task_id
-    if target.exists():
-        return target, 'duplicate' if _same_archive(archive, target) else 'conflict'
-    target.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(archive, target)
-    return target, 'copied'
-
-
-def reject_archive(target: Path, dest: Path) -> Path:
-    rejected = dest / '_rejected' / target.parent.name / target.name
-    rejected.parent.mkdir(parents=True, exist_ok=True)
-    if rejected.exists():
-        shutil.rmtree(rejected)
-    shutil.move(str(target), str(rejected))
-    return rejected
 
 
 def verify_copy(archive: Path, resource_dir: Path, executable: Path | None) -> dict:
@@ -464,9 +211,7 @@ def verify_copy(archive: Path, resource_dir: Path, executable: Path | None) -> d
     return verify(archive, resource_dir, executable)
 
 
-# ---------------------------------------------------------------- 报告
-
-def render_report(rows: list, layers: dict, plan: dict) -> str:
+def render_report(rows: list, layers: dict) -> str:
     lines = ['| 任务 | 种子 | 倍率 | 结果 | 波 | 操作 | verify | 分档 | 稳健性（第10波） | 补救 | 新族 | 备注 |',
              '|---|---|---|---|---|---|---|---|---|---|---|---|']
     for row in rows:
@@ -491,163 +236,202 @@ def render_report(rows: list, layers: dict, plan: dict) -> str:
         cell = summary[layer]
         lines.append('| {layer} | {total} | {won} | {full} | {half} | {loss} |'.format(
             layer=layer, **cell))
-    jobs = sum(len(entry['jobs']) for entry in plan['archives'])
-    trajectories = sum(len(job['future_seeds']) for entry in plan['archives'] for job in entry['jobs'])
-    lines += ['', '扫描作业：{count} 组（每组 8 个未来），合计 {trajectories} 条续走；{archives} 份存档。'.format(
-                  count=jobs, trajectories=trajectories,
-                  archives=len(plan['archives'])),
-              '未来种子块：{base} 起，每份存档 {stride} 步长、{count} 个。'.format(
-                  **plan['future_block'])]
     return '\n'.join(lines) + '\n'
 
 
-# ---------------------------------------------------------------- 主流程
+def archive_sha(archive: Path) -> str:
+    digest = hashlib.sha256()
+    for name in ('meta.json', 'ticks.jsonl', frame_path(archive).name):
+        path = archive / name
+        if not path.exists():
+            continue
+        data = path.read_bytes()
+        if name == 'meta.json':
+            meta = json.loads(data)
+            for key in ('verified', 'hash_verification'):
+                meta.pop(key, None)
+            data = json.dumps(meta, sort_keys=True, ensure_ascii=False,
+                              separators=(',', ':')).encode()
+        digest.update(name.encode() + b'\0' + len(data).to_bytes(8, 'big') + data)
+    return digest.hexdigest()
 
-def run(input_path: Path, dest: Path, manifest: Path, layers_path: Path,
-        resource_dir: Path, executable: Path | None, do_verify: bool,
-        future_base: int, design_path: Path | None = None,
-        seed_ledger: Path | None = None) -> dict:
-    if input_path.is_dir():
-        source_path, output_path = input_path.resolve(), dest.resolve()
-        if source_path == output_path or source_path in output_path.parents or output_path in source_path.parents:
-            raise ValueError('输入目录与 dest 不得互相包含（输入只读）')
-    if design_path is None:
-        design_path = (manifest.parent.parent if manifest.parent.name == 'configs' else manifest.parent) / 'DESIGN.md'
-    if input_path.is_dir() and any(input_path.resolve() in path.resolve().parents
-                                   for path in (manifest, design_path)):
-        raise ValueError('任务清单与 DESIGN 不得写进只读输入目录')
-    layers = (json.loads(layers_path.read_text(encoding='utf-8')).get('layers') or {})
-    layer_of = {task_id: name for name, ids in layers.items() for task_id in ids}
-    tasks = load_manifest(manifest)
 
-    workdir = None
+def file_sha(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def save(path: Path, data: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile('w', dir=path.parent, delete=False) as stream:
+        json.dump(data, stream, ensure_ascii=False, indent=1)
+        stream.write('\n')
+    Path(stream.name).replace(path)
+
+
+def verification_context(executable: Path, resources: Path) -> dict:
+    return dict(engine=file_sha(executable), resources={
+        name: file_sha(resources / name) for name in ('main.pak', 'properties/partner.xml')
+        if (resources / name).exists()}, verifier={
+        name: file_sha(ROOT / name) for name in
+        ('scripts/human_demo.py', 'python/pvz_env.py', 'python/pvz_event_env.py')})
+
+
+
+
+def verify_once(target, resources, executable, receipt_path, sha, context, problems):
+    """One worker owns one game; persist its result before another archive starts."""
     try:
-        if input_path.is_dir():
+        result = verify_copy(target, resources, executable)
+        receipt = dict(verified=True, result=result, reason='')
+    except Exception as error:
+        receipt = dict(verified=False, reason=str(error))
+    receipt.update(archive_sha256=sha, context=context, input_problems=problems)
+    save(receipt_path, receipt)
+    return receipt
+
+
+def run(input_path, dest, manifest, resources, executable, *, executor_factory=None, verify_workers=2):
+    if verify_workers not in (1, 2):
+        raise ValueError('verify_workers must be 1 or 2')
+    if input_path.is_dir() and (input_path.resolve() == dest.resolve()
+                               or input_path.resolve() in dest.resolve().parents
+                               or dest.resolve() in input_path.resolve().parents):
+        raise ValueError('输入与dest不得互相包含')
+    dest.mkdir(parents=True, exist_ok=True)
+    # Shared dest lock covers receipts and the incremental live index.
+    with (dest / 'import.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        with tempfile.TemporaryDirectory(prefix='llm_sha_') as directory:
             source = input_path
-        elif input_path.is_file() and zipfile.is_zipfile(input_path):
-            workdir = Path(tempfile.mkdtemp(prefix='llm_import_'))
-            safe_extract(input_path, workdir)
-            source = workdir
-        else:
-            raise ValueError(f'输入既不是目录也不是 zip：{input_path}')
-
-        archives = discover(source)
-        if not archives:
-            raise ValueError(f'{input_path} 里没有找到 episode_archive_v1 存档')
-
-        rows, pending = [], []
-        seen = {}
-        for archive in archives:
-            meta = json.loads((archive / 'meta.json').read_text(encoding='utf-8'))
-            problems = archive_problems(meta, archive)
-            task = meta.get('task') or {}
-            seed = int(task.get('seed') or 0)
-            base_id = str(task.get('id') or archive.name)
-            final_id, new_family, family_problems = resolve_family(meta, tasks)
-            problems += family_problems
-            key = (base_id, seed, int(meta.get('operations') or 0))
-            if key in seen:
-                problems.append(f'包内重复存档（与 {seen[key]} 相同）')
-            else:
-                seen[key] = str(archive)
-            row = dict(source=str(archive), task_id=final_id, base_task_id=base_id, seed=seed,
-                       level=int(task.get('level') or 0),
-                       multiplier=float(task.get('zombie_count_multiplier') or 1.0),
-                       result=(meta.get('outcome') or {}).get('result'),
-                       wave=(meta.get('outcome') or {}).get('final_wave'),
-                       operations=int(meta.get('operations') or 0),
-                       frames=int(meta.get('frame_count') or meta.get('operations') or 0),
-                       verify='未做', grade='loss', robustness=robustness_text(meta),
-                       new_family=new_family, archive='', note='',
-                       manual_patch=meta.get('manual_patch'))
-            if problems:
-                row['verify'] = '拒绝'
-                row['note'] = '；'.join(problems)
-                rows.append(row)
-                continue
-            pending.append((row, meta, archive))
-
-        # 每份先校验；只有通关的局进 dest（任务书：loss 只入报告）。
-        # 校验在 staging 副本上做，输入目录始终只读。
-        entries = []
-        staging = dest / '_staging'
-        for row, meta, archive in pending:
-            rows.append(row)
-            copy = staging / archive.name
-            if copy.exists():
-                shutil.rmtree(copy)
-            copy.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copytree(archive, copy)
-            won = grade(meta) != 'loss'
-            if do_verify:
-                try:
-                    verify_copy(copy, resource_dir, executable)
-                    row['verify'] = '通过'
-                except Exception as error:  # noqa: BLE001 - 引擎的报错要原样进报告
-                    row['verify'] = '失败'
-                    row['note'] = str(error)
-            else:
-                row['verify'] = '跳过'
-            row['grade'] = grade(meta) if row['verify'] in ('通过', '跳过') else 'loss'
-            if not won or row['verify'] == '失败':
-                if won:
-                    reject_archive(copy, dest)
-                    row['archive'] = ''
-                else:
-                    shutil.rmtree(copy, ignore_errors=True)
-                continue
-            target, state = import_archive(copy, dest, row['task_id'], row['seed'])
-            shutil.rmtree(copy, ignore_errors=True)
+            if input_path.is_file():
+                source = Path(directory)
+                safe_extract(input_path, source)
+            archives = discover(source)
+            if not archives:
+                raise ValueError('没有可导入的对局存档')
+            context = None
+            tasks = load_manifest(manifest)
+            layer_of = {}
+            previous = {}
+            for name in ('import_progress.json', 'merged_progress.json'):
+                path = dest / name
+                if path.exists():
+                    for row in json.loads(path.read_text()).get('archives', []):
+                        key = row.get('archive_sha256') or row.get('archive') or row['source']
+                        if row.get('archive') or key not in previous:
+                            previous[key] = row
+            rows, seen, pending, futures = [], set(), [], {}
+            pool = None
             try:
-                row['archive'] = str(target.relative_to(ROOT))
-            except ValueError:
-                row['archive'] = str(target)
-            if state == 'conflict':
-                row['verify'] = '拒绝'
-                row['note'] = f'目标已存在且内容不同：{target}'
-                row['grade'] = 'loss'
-                continue
-            if state == 'duplicate':
-                row['note'] = '同一份存档此前已入库'
-            if row['new_family'] and row['task_id'] not in tasks:
-                entry = family_entry(row['task_id'], meta, tasks.get(row['base_task_id']))
-                tasks[row['task_id']] = entry
-                entries.append(entry)
-        shutil.rmtree(staging, ignore_errors=True)
+                for archive in archives:
+                    sha = archive_sha(archive)
+                    meta = json.loads((archive / 'meta.json').read_text())
+                    task = meta['task']
+                    base, seed = task['id'], int(task['seed'])
+                    final = f'{base}_s{seed}_a{sha[:12]}'
+                    target = dest / 'sha256' / sha
+                    receipt_path = dest / 'receipts' / f'{sha}.json'
+                    receipt = json.loads(receipt_path.read_text()) if receipt_path.exists() else None
+                    copied = not target.exists()
+                    if copied:
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        with tempfile.TemporaryDirectory(prefix='.staging_', dir=target.parent) as copy_directory:
+                            staged = Path(copy_directory) / 'archive'
+                            copy_archive(archive, staged)
+                            staged.rename(target)
+                    else:
+                        source_tape, stored_tape = archive / 'ticks.jsonl', target / 'ticks.jsonl'
+                        if source_tape.stat().st_size != stored_tape.stat().st_size:
+                            raise ValueError(f'库内存档大小不符，禁止自动复放：{stored_tape}')
+                        source_frame, stored_frame = frame_path(archive), frame_path(target)
+                        converted = source_frame.suffix == '.jsonl' and stored_frame.suffix == '.npz'
+                        if not converted and source_frame.stat().st_size != stored_frame.stat().st_size:
+                            raise ValueError(f'库内存档大小不符，禁止自动复放：{stored_frame}')
+                        convert_archive(target)
+                    if receipt is not None:
+                        if receipt.get('archive_sha256') != sha or type(receipt.get('verified')) is not bool:
+                            raise ValueError(f'已有SHA回执损坏，禁止自动复放：{receipt_path}')
+                        problems = receipt.get('input_problems')
+                        if problems is None:
+                            old = previous.get(sha)
+                            problems = ([old['note']] if old and old['verify'] in ('失败', '拒绝')
+                                        and old.get('note') else [])
+                        if receipt['verified']:
+                            meta['verified'] = True
+                            write_meta(target, meta)
+                        pending.append((archive, sha, meta, final, target, receipt, True, problems))
+                        continue
+                    if sha not in futures:
+                        problems = archive_problems(meta, archive)
+                        if context is None:
+                            context = verification_context(executable, resources)
+                        if pool is None:
+                            pool = (executor_factory(max_workers=verify_workers) if executor_factory else
+                                    ProcessPoolExecutor(max_workers=verify_workers,
+                                        mp_context=multiprocessing.get_context('spawn')))
+                        futures[sha] = (pool.submit(verify_once, target, resources, executable,
+                                                   receipt_path, sha, context, problems), problems)
+                    pending.append((archive, sha, meta, final, target, None, False, futures[sha][1]))
 
-        register_tasks(manifest, entries)
-        register_design(design_path, entries)
-        rows.sort(key=lambda item: (item['base_task_id'], item['seed']))
-        plan = scan_plan(rows, layer_of, future_base,
-                         ledger_path=seed_ledger or dest / 'scan_seed_ledger.json')
-        return dict(rows=rows, layers=layer_of, plan=plan, registered=entries)
-    finally:
-        if workdir is not None:
-            shutil.rmtree(workdir, ignore_errors=True)
+                for archive, sha, meta, final, target, receipt, cached, problems in pending:
+                    if receipt is None:
+                        receipt = futures[sha][0].result()
+                    task = meta['task']
+                    base, seed = task['id'], int(task['seed'])
+                    _, _, family_problems = resolve_family(meta, tasks)
+                    problems = problems + family_problems
+                    verified = receipt['verified'] and not problems
+                    reason = '；'.join(problems + ([receipt['reason']] if receipt['reason'] else []))
+                    relative = str(target.relative_to(ROOT)) if target.is_relative_to(ROOT) else str(target)
+                    row = dict(source=str(archive.relative_to(source)), archive_sha256=sha,
+                               task_id=final, base_task_id=base, seed=seed, level=int(task['level']),
+                               multiplier=task.get('zombie_count_multiplier', 1),
+                               result=meta['outcome']['result'], wave=meta['outcome']['final_wave'],
+                               operations=meta['operations'], frames=meta['frame_count'],
+                               verify='通过' if verified else '失败',
+                               grade=grade(meta) if verified else 'loss',
+                               robustness=robustness_text(meta), manual_patch=meta.get('manual_patch'),
+                               new_family=sha not in previous, archive=relative if verified else '',
+                               note=reason, verification_reused=cached)
+                    if sha in seen:
+                        row.update(note='包内相同SHA，仅入库一次', archive='')
+                    seen.add(sha)
+                    rows.append(row)
+                    layer_of[base] = meta.get('workflow_layer') or '其他'
+                    if row.get('archive') or sha not in previous:
+                        previous[sha] = row
+                    save(dest / 'merged_progress.json', dict(cache='sha_once', archives=list(previous.values())))
+                    (dest / 'import_progress.json').unlink(missing_ok=True)
+                    print(f'[{len(rows)}/{len(archives)}] {base} s{seed} {sha[:12]} '
+                          f'{row["verify"]} {reason}', flush=True)
+            finally:
+                if pool is not None:
+                    pool.shutdown(wait=True)
+            return dict(rows=rows, layers=layer_of)
 
 
-def main_with(args) -> int:
-    from pvz_live_import import main_with as live_import
-    return live_import(args, sys.modules[__name__])
-
-
-def main() -> int:
-    parser = argparse.ArgumentParser(description=__doc__,
-                                     formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('input', type=Path, help='交回的 out.zip 或解压目录（只读）')
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('inputs', nargs='+', type=Path)
     parser.add_argument('--dest', type=Path, default=DEFAULT_DEST)
     parser.add_argument('--manifest', type=Path, default=DEFAULT_MANIFEST)
-    parser.add_argument('--layers', type=Path, default=DEFAULT_LAYERS)
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
-    parser.add_argument('--executable', type=Path)
-    parser.add_argument('--no-verify', action='store_true', help='只入库不校验（测试用）')
-    parser.add_argument('--report', type=Path, help='把 markdown 报告写到这里')
-    parser.add_argument('--scan-out', type=Path, help='扫描作业清单 json')
-    parser.add_argument('--future-base', type=int, default=DEFAULT_FUTURE_BASE)
-    parser.add_argument('--seed-ledger', type=Path, default=DEFAULT_SEED_LEDGER,
-                        help='扫描种子分配账本；默认各次导入共用，不随 dest 改变')
+    parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
+    parser.add_argument('--verify-workers', type=int, choices=(1, 2), default=2)
+    parser.add_argument('--report', type=Path)
     args = parser.parse_args()
-    return main_with(args)
+    rows, layers = [], {}
+    for source in args.inputs:
+        result = run(source, args.dest, args.manifest, args.resource_dir, args.executable,
+                     verify_workers=args.verify_workers)
+        rows.extend(result['rows'])
+        layers.update(result['layers'])
+    report = render_report(rows, layers)
+    print(report)
+    if args.report:
+        args.report.parent.mkdir(parents=True, exist_ok=True)
+        args.report.write_text(report)
+    return int(any(row['verify'] in ('失败', '拒绝') for row in rows))
 
 
 if __name__ == '__main__':

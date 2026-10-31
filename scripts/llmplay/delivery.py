@@ -16,10 +16,10 @@ from pvz_frame_store import frame_path
 from . import budget
 from . import workflow
 from .runtime import output_path
-from .game import (ROOT, ARCHIVE_SCHEMA, _default_executable, _default_resource_dir,
+from .game import (ROOT, _default_executable, _default_resource_dir,
                    _ensure_executable, load_tasks, required_checkpoint)
 
-FILES = ("meta.json", "ticks.jsonl", "frames.npz", "frames.jsonl")
+from pvz_episode_archive import FILES, copy_archive
 LAYERS = workflow.LAYERS
 
 
@@ -183,12 +183,7 @@ def _restore_archive(archive, root, relative, *, consume=False):
         target.parent.mkdir(parents=True, exist_ok=True)
         tmp = Path(tempfile.mkdtemp(prefix=".archive-", dir=target.parent))
         try:
-            for name in FILES:
-                if (archive / name).is_file():
-                    if consume:
-                        shutil.move(str(archive / name), str(tmp / name))
-                    else:
-                        shutil.copyfile(archive / name, tmp / name)
+            copy_archive(archive, tmp, consume=consume)
             os.replace(tmp, target)
         finally:
             if tmp.exists():

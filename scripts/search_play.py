@@ -226,58 +226,6 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 # LEGACY(python-rollout-reference): the Python continuation loop, kept as the reference the C++ path is
 # checked against. Test and diagnostic only -- python/test_cpp_rollout.py and scripts/perf_rollout_check.py
 # call it; nothing on the collection path does.
-def _python_rollout_reference(env, obs: dict, first: dict, until_tick: int,
-                              root: int | None = None, seed: int | None = None, *,
-                              fast_state_out: dict | None = None) -> dict:
-    """Play ``first`` and let the student continue until ``until_tick`` (0 = end of game), one step at a time."""
-    student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
-    if root is not None:
-        env.restore(root)
-    if seed is not None:
-        env.reseed(seed)
-    from render_episode import _frame
-    fast_state = {"frame": _frame(obs), "action": first}
-    if _W["fast"].obs != "v1":
-        from copy import deepcopy
-        from pvz_student_observation import StudentHistory
-        fast_state["history"] = deepcopy(student_history) if student_history is not None else StudentHistory(_W["fast"].obs)
-        fast_state["history"].extra(fast_state["frame"])
-    until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
-    action = first
-    # The student only reads what render_episode._frame keeps, so rollouts can ask for the compact
-    # observation (identical frames, ~1/4 of the bytes).
-    lean = _W.get("lean_rollouts", False)
-    batch_waits = _W.get("batch_waits", False) and hasattr(env, "wait_until_legal") and _W["fast"].obs == "v1"
-    sim_skip = _W.get("rollout_sim_skip", 0)
-    if lean:
-        env.set_lean_observation(True)
-    if sim_skip:
-        env.set_sim_skip(sim_skip)
-    try:
-        while True:
-            obs, _r, done, _t, info = env.step(action)
-            if not info.get("ok"):
-                action = {"type": "wait", "ticks": 60}
-                obs, _r, done, _t, info = env.step(action)
-            if done or obs.get("terminal") or obs["tick"] >= until_tick:
-                return obs
-            if batch_waits and not (obs.get("legal_actions") or {}).get("plants"):
-                # With no legal plant the student can only wait 60 ticks, again and again: let
-                # the simulator repeat that itself. Its features only read the previous frame's
-                # tick and whether the previous action was a plant, so this state is exact.
-                obs, _r, done, _t, info = env.wait_until_legal(until_tick)
-                fast_state["frame"], fast_state["action"] = {"tick": info["previous_tick"]}, dict(NOOP)
-                if done or obs.get("terminal") or obs["tick"] >= until_tick:
-                    return obs
-            action = _fast_action(obs, fast_state)
-    finally:
-        if fast_state_out is not None:
-            fast_state_out.clear()
-            fast_state_out.update(fast_state)
-        if sim_skip:
-            env.set_sim_skip(0)
-        if lean:
-            env.set_lean_observation(False)
 
 
 def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args,
@@ -923,8 +871,16 @@ def _play(job: dict, observer=None) -> dict:
             attachment_info = dict(file=SIDECAR_NAME, version=3,
                                    bytes=(archive/SIDECAR_NAME).stat().st_size,
                                    frames=token_writer.rows)
-        archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
-        archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
+        from dataclasses import asdict
+        from pvz_episode_archive import write_meta
+        archive_task = dict(id=args.task_id, seed=job['seed'], level=kw['level'], deck=list(kw['deck']),
+                            policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
+                            arm=job['arm'], playthrough=2,
+                            **{k: v for k, v in kw['task_extra'].items() if v is not None})
+        archive_outcome = dict(result=obs.get('result') or 0, won=obs.get('result') == 1,
+                               final_wave=obs['wave'], final_tick=obs['tick'],
+                               wave_count=obs.get('wave_count'),
+                               reason='win' if obs.get('result') == 1 else 'not_won')
         if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
                 or task_definition.get('live193')
                 or task_definition.get('conveyor_start') == 'original'
@@ -938,14 +894,16 @@ def _play(job: dict, observer=None) -> dict:
                 archive_task['base_deck'] = task_definition['deck']
             archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0),
                                    reason='win' if obs.get('result') == 1 else 'not_won')
-        (archive / "meta.json").write_text(json.dumps({
+        write_meta(archive, {
             "label_source": "teacher",
             **({'observation_attachment': attachment_info} if attachment_info else {}),
             **({"demo_archive": str(Path(demo_archive).resolve()), "demo_decision": args.demo_decision,
                 "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
             "task": archive_task,
+            "environment_task": asdict(task),
+            "frame_count": len(frames), "operations": decisions,
             "context": task_context,
-            "outcome": archive_outcome}))
+            "outcome": archive_outcome})
     result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
             **({'deck': list(kw['deck'])} if 'deck_random' in task_definition else {}),
             **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),

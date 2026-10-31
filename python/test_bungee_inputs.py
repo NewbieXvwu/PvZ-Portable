@@ -14,7 +14,8 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
 from export_value_net import export_value_net
 from pack_training_rows import packed_load
-from pvz_env import PvZEnv, TaskSpec, profile_for_deck
+from pvz_env import PvZEnv, TaskSpec
+from pvz_tasks import profile_for_deck
 from pvz_frame_store import write_frames, encoder_signature
 from pvz_recipe import validate, training_row_options
 from pvz_rollout_policy import RolloutNet, export_student, features

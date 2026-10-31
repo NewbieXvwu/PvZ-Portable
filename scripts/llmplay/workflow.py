@@ -53,6 +53,9 @@ def plan() -> dict:
         document = json.loads(PLAN_PATH.read_text(encoding="utf-8"))
         if document.get("schema") != SCHEMA:
             raise ValueError("不是 %s 计划：%s" % (SCHEMA, PLAN_PATH))
+        if 'seed_ranges' in document:
+            document['tasks'] = {key: list(range(bounds[0], bounds[-1] + 1))
+                                 for key, bounds in document.pop('seed_ranges').items()}
         _CACHE["plan"] = document
     return _CACHE["plan"]
 

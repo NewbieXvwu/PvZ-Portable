@@ -10,10 +10,8 @@ import pytest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 import curriculum_queue as queue
-from pvz_selection_refresh import make_plan, selection_templates, SELECTION_POOLS, SELECTION_BLOCK_SIZE
-from pvz_student_selection import assert_disjoint, seed_spans
 from promotion_gate import allocate_seed_block
-from test_curriculum_pipeline import setup, write_evaluation, write_selection
+from test_curriculum_pipeline import setup, write_evaluation
 
 
 @pytest.fixture(autouse=True)
@@ -25,15 +23,14 @@ def no_game_engine(monkeypatch):
 
 def run_round(root, monkeypatch, trainer, alternate=None):
     args, state = setup(root)
-    args.alternate_recipe = alternate
+    args.alternate_recipe = alternate or args.alternate_recipe
+    args.training_parallelism = 2
     state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
     calls = []
     def command(self, command, logfile):
         calls.append(logfile.name)
         if logfile.name == 'train.log':
             trainer(command, logfile)
-        elif logfile.name == 'selection.log':
-            write_selection(self, command)
         elif logfile.name == 'evaluation.log':
             write_evaluation(self, command)
         return queue.GIB
@@ -67,7 +64,7 @@ def test_two_recipes_share_one_pack_and_record_each_selection_score(tmp_path, mo
     assert sorted(recipe['source_weight'].get('level_balance', 0) for recipe in seen) == [0, .25]
     assert len({recipe['data'] for recipe in seen}) == 1
     candidates = job['timing']['candidates']
-    assert [candidate['selection_score']['total'] for candidate in candidates] == [10, 9]
+    assert [candidate['recipe_family'] for candidate in candidates] == ['A', 'B']
     assert candidates[1]['source_recipe'] == str(alternate)
     assert job['promotion_approved']
 
@@ -85,7 +82,6 @@ def test_two_trainers_overlap_failure_is_local_and_selection_precedes_gate(tmp_p
     assert len(threads) == 2
     assert job['timing']['training_mode']['mode'] == 'parallel'
     assert [c['status'] for c in job['timing']['candidates']] == ['trained', 'failed']
-    assert calls.index('selection.log') < calls.index('evaluation.log')
     assert job['promotion_approved']
     folder = Path(job['recipe']).parent
     assert (folder / 'training_mode.json').is_file()
@@ -107,101 +103,7 @@ def test_insufficient_resources_fall_back_to_serial(tmp_path, monkeypatch, resou
     assert mode['mode'] == 'serial' and mode['workers'] == 1
     assert mode['fallback_reasons']
     assert len(threads) == 1
-    assert len(job['timing']['selection']['rejected']) == 1
-    assert (Path(job['recipe']).parent / 'student/selection.json').is_file()
-
-
-def test_each_round_allocates_once_and_panels_never_overlap(tmp_path, monkeypatch):
-    args, state = setup(tmp_path)
-    state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
-    def command(self, command, logfile):
-        if logfile.name == 'train.log':
-            save_model(command, logfile)
-        elif logfile.name == 'selection.log':
-            write_selection(self, command)
-        elif logfile.name == 'evaluation.log':
-            write_evaluation(self, command)
-        return queue.GIB
-    monkeypatch.setattr(queue.TrainingPipeline, '_command', command)
-    pipeline = queue.TrainingPipeline(args, state)
-    try:
-        pipeline.enqueue()
-        pipeline.enqueue()  # same round, no second allocation
-        pipeline.futures[0][1].result(timeout=10)
-        pipeline.poll()
-        state.update(round=2)
-        state['log'].append(dict(round=2, groups=[dict(label='c2a')]))
-        pipeline.enqueue()
-        pipeline.futures[1][1].result(timeout=10)
-        pipeline.poll()
-    finally:
-        pipeline.close()
-    jobs = state['training_jobs']
-    first, second = [json.loads(Path(job['selection_manifest']).read_text()) for job in jobs]
-    assert_disjoint(first, list(seed_spans(second)))
-    ledger = json.loads((tmp_path / 'selection_seed_ledger.json').read_text())
-    assert len(ledger['allocated']) == 2
-    assert all(high - low == SELECTION_BLOCK_SIZE for low, high in ledger['allocated'])
-    assert all((Path(job['recipe']).parent / 'selection_plan.json').is_file() for job in jobs)
-
-
-def test_consecutive_rounds_score_the_adventure_body_on_disjoint_seeds(tmp_path):
-    # task128: the panel no longer follows the incumbent's windows; every round
-    # re-plans the same adventure body on a fresh block from the selection ledger.
-    model = tmp_path / 'new_incumbent.pt'
-    model.write_bytes(b'new policy')
-    templates = selection_templates(ROOT / 'configs/student_selection_holdout.json',
-                                    ROOT / 'configs/gate_v5_panel.json')
-    ledger = tmp_path / 'ledger.json'
-    first = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
-    second = make_plan(templates, allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS), model)
-    assert len(first['adventure_tasks']) == 38
-    assert len(first['tasks']) == 48                      # 38 adventure + 8 random + 2 unseen
-    assert {len(task['seeds']) for task in first['tasks']} == {8, 16}
-    assert sum(len(task['seeds']) for task in first['tasks']) == 456
-    assert_disjoint(first, list(seed_spans(second)))
-    assert first['score_only'] == first['selection_holdout_tasks']
-
-
-def test_locked_selection_ledger_handles_simultaneous_allocations(tmp_path):
-    ledger = tmp_path / 'ledger.json'
-    with ThreadPoolExecutor(max_workers=2) as executor:
-        blocks = list(executor.map(lambda _: allocate_seed_block(ledger, 384, pools=SELECTION_POOLS), range(2)))
-    assert blocks[0] != blocks[1]
-    assert sorted(blocks)[0][1] <= sorted(blocks)[1][0]
-
-
-def test_selection_retry_reuses_models_panel_and_preserves_actual_mode(tmp_path, monkeypatch):
-    args, state = setup(tmp_path)
-    state.update(round=1, log=[dict(round=1, groups=[dict(label='c1a')])])
-    counts = dict(train=0, selection=0)
-    def command(self, command, logfile):
-        if logfile.name == 'train.log':
-            counts['train'] += 1
-            save_model(command, logfile)
-        elif logfile.name == 'selection.log':
-            counts['selection'] += 1
-            if counts['selection'] == 1:
-                raise RuntimeError('selection interrupted')
-            write_selection(self, command)
-        elif logfile.name == 'evaluation.log':
-            write_evaluation(self, command)
-        return queue.GIB
-    monkeypatch.setattr(queue.TrainingPipeline, '_command', command)
-    pipeline = queue.TrainingPipeline(args, state)
-    try:
-        pipeline.enqueue()
-        with pytest.raises(RuntimeError, match='selection interrupted'):
-            pipeline.futures[0][1].result(timeout=10)
-        pipeline.poll()
-        pipeline.futures[0][1].result(timeout=10)
-        pipeline.poll()
-    finally:
-        pipeline.close()
-    job = state['training_jobs'][0]
-    assert job['status'] == 'done' and counts == dict(train=2, selection=2)
-    assert [mode['mode'] for mode in job['timing']['training_mode']['attempt_history']] == ['parallel', 'reused']
-    assert len(json.loads((tmp_path / 'selection_seed_ledger.json').read_text())['allocated']) == 1
+    assert len(job['timing']['candidates']) == 2
 
 
 def test_reservation_counts_both_live_training_trees(tmp_path, monkeypatch):
@@ -288,7 +190,7 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
     args, state = setup(tmp_path)
     args.state.write_text(json.dumps(state))
     before = args.state.read_bytes()
-    selection_ledger, gate_ledger = tmp_path / 'selection.json', tmp_path / 'gate.json'
+    gate_ledger = tmp_path / 'gate.json'
     start_ledger = tmp_path / 'start.json'
     start_ledger.write_text(json.dumps({'pools': [list(queue.START_SEED_POOL)],
                                         'allocated': [[200000000, 200000256]]}))
@@ -312,10 +214,9 @@ def test_controller_dry_run_never_allocates_or_starts_a_process(tmp_path, monkey
         '--state', str(args.state), '--log', str(args.log), '--recipe', str(args.recipe),
         '--frames', str(args.frames), '--out', str(args.out), '--rollout-policy', str(args.rollout_policy),
         '--executable', str(args.executable), '--resource-dir', str(args.resource_dir),
-        '--demo-start-manifest', str(tmp_path / 'absent.json'), '--selection-seed-ledger', str(selection_ledger),
+        '--demo-start-manifest', str(tmp_path / 'absent.json'),
         '--seed-ledger', str(gate_ledger), '--start-seed-ledger', str(start_ledger)])
     queue.main()
     assert start_ledger.read_bytes() == start_before
     assert args.state.read_bytes() == before
-    assert not selection_ledger.exists() and not gate_ledger.exists()
-    assert 'selection preview (no allocation, no engine, no state write)' in capsys.readouterr().out
+    assert not gate_ledger.exists()

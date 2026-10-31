@@ -8,7 +8,8 @@ ROOT = Path(__file__).resolve().parents[1]
 import sys
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
-from pvz_env import PvZEnv, TaskSpec, profile_for_deck
+from pvz_env import PvZEnv, TaskSpec
+from pvz_tasks import profile_for_deck
 from pvz_student_observation import StudentHistory
 
 

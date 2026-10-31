@@ -318,7 +318,8 @@ def test_decks_export_records_distinct_seed_attempts_and_restores_them(tmp_path)
     meta = json.loads((archive / 'meta.json').read_text())
     assert meta['deck_seed_attempts'] == 3
     assert meta['deck_attempt_seeds'] == [decks.seed_at(1, n) for n in range(3)]
-    restored = Game.load_archive(archive)
+    with patch('llmplay.game.load_tasks', side_effect=AssertionError('archive owns its task definition')):
+        restored = Game.load_archive(archive)
     assert restored.deck_attempt_seeds == meta['deck_attempt_seeds']
     g.env = None
     g.close()

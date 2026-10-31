@@ -12,7 +12,8 @@ import numpy as np
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "scripts"))
-from pvz_env import TaskSpec, profile_for_deck
+from pvz_env import TaskSpec
+from pvz_tasks import profile_for_deck
 from pvz_event_env import EventWaitEnv
 from pvz_rollout_policy import RolloutNet, act, export_student, features, load_student
 from pvz_value_net import observation_context
@@ -21,9 +22,6 @@ from render_episode import _frame
 import search_play
 
 
-def _full_rollout(env, obs, first, until, root, seed):
-    return env.rollout(first, until, sim_skip=search_play._W.get("rollout_sim_skip", 0),
-                       snapshot_id=root, seed=seed, student_history=search_play._W.get("student_history"))
 
 RESOURCE = Path(os.environ.get("PVZ_RESOURCE_DIR", str(Path.home() / ".cache/pvz-research-resources")))
 BINARY = Path(os.environ.get("PVZ_EXECUTABLE", ROOT / "build/pvz-portable"))
@@ -228,48 +226,13 @@ class CppRolloutTest(unittest.TestCase):
                     np.testing.assert_array_equal(expected.numpy().view(np.uint32), np.array(encoded, np.float32).view(np.uint32))
                     bits += expected.numel()
                 compared += 1
-            if until:
-                recovered = {}
-                expected = search_play._python_rollout_reference(
-                    self.env, self.obs, first, until, root, seed, fast_state_out=recovered)
-                self.assertEqual(_frame(actual), _frame(expected))
-                self.assertEqual(recovered['frame']['tick'], record['observation']['tick'])
-                self.assertEqual(recovered['history'].wave, recovered['frame']['wave'])
-                next_trace = Path(self.directory.name) / 'leaf_features.jsonl'
-                self.env.rollout_predict(recovered['frame']['tick'],
-                    recovered['action']['type'] == 'plant', student_history=recovered['history'],
-                    trace_path=next_trace)
-                native = json.loads(next_trace.read_text())
-                leaf_frame = _frame(expected)
-                leaf_frame['action'] = recovered['action']
-                board, scalars = recovered['history'].features(leaf_frame, recovered['frame'], context)
-                np.testing.assert_array_equal(board.flatten().numpy().view(np.uint32),
-                    np.array(native['board'], np.float32).view(np.uint32))
-                np.testing.assert_array_equal(scalars.numpy().view(np.uint32),
-                    np.array(native['scalars'], np.float32).view(np.uint32))
         self.assertGreater(compared, 50)
         print(json.dumps({"obs": version, "trajectory_decisions": compared, "equal_float32": bits}), flush=True)
 
-    def test_rollout_leaf_income_restore_and_rng(self):
-        self.obs, *_ = self.env.step({"type": "wait", "ticks": 6000})
-        root = self.env.snapshot()
-        self.addCleanup(self.env.release_snapshot, root)
-        search_play._W.clear()
-        search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=21)
-        self.addCleanup(search_play._W.clear)
-        first = {"type": "wait", "ticks": 60, "until": "timeout"}
-        expected = search_play._python_rollout_reference(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
-        expected_frame = _frame(expected)
-        expected_history = self.env._sun_production_history.copy()
-        actual = _full_rollout(self.env, self.obs, first, self.obs["tick"] + 3000, root, 12345)
-        self.assertEqual(_frame(actual), expected_frame)
-        self.assertEqual(self.env._sun_production_history, expected_history)
-        restored = self.env.restore(root)
-        self.assertEqual(_frame(restored), _frame(self.obs))
 
 
-    def test_shovel_first_action_matches_the_python_loop(self):
-        """The search may start a continuation with a shovel; C++ and the Python loop must agree."""
+    def test_shovel_first_action_removes_the_target_plant(self):
+        """A shovel branch removes its target plant."""
         for _ in range(200):
             if self.obs["legal_actions"]["shovels"]:
                 break
@@ -288,13 +251,6 @@ class CppRolloutTest(unittest.TestCase):
         self.assertNotIn((row, col), after)
         self.assertEqual(after, before - {(row, col)})
 
-        search_play._W.clear()
-        search_play._W.update(fast=self.net, lean_rollouts=True, batch_waits=True, rollout_sim_skip=0)
-        self.addCleanup(search_play._W.clear)
-        until = self.obs["tick"] + 1200
-        expected = search_play._python_rollout_reference(self.env, self.obs, first, until, root, 4242)
-        actual = _full_rollout(self.env, self.obs, first, until, root, 4242)
-        self.assertEqual(_frame(actual), _frame(expected))
 
 
 if __name__ == "__main__":

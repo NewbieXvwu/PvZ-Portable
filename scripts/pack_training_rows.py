@@ -534,7 +534,7 @@ def main() -> None:
     p.add_argument("--labels", required=True, help="comma separated <label> directory names")
     p.add_argument("--out", type=Path, help="pack path (default: <data>/packs/<key>.npz)")
     p.add_argument("--wait-keep", type=float, default=1.0, help="fraction of wait rows kept (reweighted)")
-    p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2fogstack4", "v2boss", "v2bungee", "v2sleep",
+    p.add_argument("--obs", choices=["v1", "v2lite", "v2", "v2fog", "v2boss", "v2bungee", "v2sleep",
                                      "v2timer"], default="v1")
     p.add_argument("--cells", action="store_true", help="store the search cell candidates")
     p.add_argument("--aux-horizon", type=int, default=0, help="row damage labels over this many decisions")

@@ -28,7 +28,7 @@ def group_id(level, deck):
 
 def imported_wins(directory, archive_root):
     rows = {}
-    for name in ('merged_progress.json', 'import_progress.json'):
+    for name in ('merged_progress.json',):
         path = directory / name
         if path.exists():
             for row in json.loads(path.read_text()).get('archives', []):

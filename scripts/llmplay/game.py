@@ -77,7 +77,7 @@ def _auto_observe() -> None:
 atexit.register(_auto_observe)
 
 SCHEMA = "llmplay_log_v1"
-ARCHIVE_SCHEMA = "episode_archive_v1"
+from pvz_episode_archive import SCHEMA as ARCHIVE_SCHEMA, read_meta, write_meta
 LABEL_SOURCE = "llm_agent"
 FRAME_INTERVAL = 60          # 与 human_demo 的帧节奏一致（每 60 tick 一帧）
 DEFAULT_MANIFEST = ROOT / "configs" / "human_demo_tasks.json"
@@ -117,41 +117,27 @@ def load_tasks(manifest: str | Path | None = None) -> dict:
 
 
 def task_spec(task: dict, seed=None, deck=None):
-    """任务定义 -> (TaskSpec, 卡组, 种子)。与 human_demo 用同一套推导。"""
-    seeds = task.get("seeds") or []
-    actual_seed = int(seed if seed is not None else (seeds[0] if seeds else 0))
-    deck = list(task.get("deck", []) if deck is None else deck)
-    if task.get("deck_selection") == "player":
-        validate_deck(task, deck)
-    extra = {"wave_cap": task.get("wave_cap"),
-             "zombie_count_multiplier": task.get("zombie_count_multiplier")}
-    preplanted = tuple(tuple(int(v) for v in p) for p in (task.get("preplanted") or ()))
-    if preplanted:
-        extra["preplanted"] = preplanted
-    if task.get("conveyor_start"):
-        extra["conveyor_start"] = task["conveyor_start"]
-    if task.get("fog_observation"):
-        extra["fog_observation"] = task["fog_observation"]
-    spec = TaskSpec(level=int(task["level"]), seed=actual_seed, playthrough=2,
-                    profile=profile_for_deck(tuple(deck), bool(task.get("first_aid_owned", False))),
-                    **{key: value for key, value in extra.items() if value is not None})
-    return spec, deck, actual_seed
+    """Use the same task/deck derivation as collection and demonstration recording."""
+    from render_episode import training_task_kwargs
+    definition = dict(task)
+    if deck is not None:
+        definition['deck'] = list(deck)
+        definition.pop('deck_random', None)
+        definition.pop('deck_perturb', None)
+    kw = training_task_kwargs(definition, seed)
+    spec = TaskSpec(level=kw['level'], seed=kw['seed'], playthrough=2,
+                    profile=profile_for_deck(tuple(kw['deck']), kw['first_aid_owned']),
+                    **{key: value for key, value in kw['task_extra'].items() if value is not None})
+    return spec, kw['deck'], kw['seed']
 
 
 
 
-def validate_deck(task, deck):
-    """仅校验游戏硬约束；解锁范围在 reset 后直接问引擎。"""
-    from pvz_constants import background_for_level
-    if not 6 <= len(deck) <= 10 or any(type(card) is not int for card in deck):
-        raise ValueError("卡组须为 6–10 个植物整数编号")
-    if len(set(deck)) != len(deck) or any(not 0 <= card <= 47 for card in deck):
-        raise ValueError("卡组不能重复，植物编号须为 0..47（不含需指定模仿目标的模仿者）")
-    scene = background_for_level(int(task["level"]))
-    if scene in ("BACKGROUND_3_POOL", "BACKGROUND_4_FOG") and 16 not in deck:
-        raise ValueError("水路卡组必须带睡莲(16)")
-    if scene in ("BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS") and 33 not in deck:
-        raise ValueError("屋顶卡组必须带花盆(33)")
+def validate_deck(env, deck):
+    """Deck warnings are facts from the reset native board."""
+    warnings = env.deck_warnings(deck)['warnings']
+    if warnings:
+        raise ValueError('卡组不符合引擎要求：%s' % warnings)
 
 
 def required_checkpoint(task):
@@ -225,8 +211,8 @@ class Game:
                  deck=None, reason="", strategy="", deck_review="", abandon_reason=None, attempt_id=None,
                  robustness=None, manual_patch: bool = False, run_id=None, _internal: bool = False,
                  _gate: bool = True, cycle=None, workflow_layer=None, _restore_claim=False,
-                 deck_attempt_seeds=None):
-        tasks = load_tasks(manifest)
+                 deck_attempt_seeds=None, _definition=None):
+        tasks = {task_id: _definition} if _definition is not None else load_tasks(manifest)
         if task_id not in tasks:
             raise ValueError("没有任务 %r。可用：%s" % (task_id, sorted(tasks)))
         self.task_id = task_id
@@ -328,9 +314,10 @@ class Game:
         self.env.begin_demo()
         self.initial_obs, _ = self.env.reset(deck=self.deck, task=self.spec)
         if self.task_definition.get("deck_selection") == "player":
+            validate_deck(self.env, self.deck)
             options = self.env.deck_options()
             field = self.task_definition.get("unlock_field", "first_adventure_available")
-            available = set(options[field]) | set(range(40, 48))
+            available = set(options[field]) | set(self.spec.profile.owned_upgrade_plants)
             locked = sorted(set(self.deck) - available)
             if locked:
                 raise ValueError("该关尚未解锁的植物：%s" % locked)
@@ -967,7 +954,7 @@ class Game:
     def load_archive(cls, directory, **kwargs) -> "Game":
         """恢复已导出的局，使用存档中的任务定义（旧卡组不受现行任务变动影响）。"""
         archive = Path(directory)
-        meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
+        meta = read_meta(archive)
         ops = [json.loads(line) for line in (archive / "ticks.jsonl").read_text(encoding="utf-8").splitlines()]
         from pvz_frame_store import frame_path, read_frames
         frames = read_frames(frame_path(archive))
@@ -979,7 +966,10 @@ class Game:
                    deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"),
                    cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"),
                    deck_attempt_seeds=meta.get("deck_attempt_seeds"),
-                   _gate=False, _restore_claim=True, **kwargs)
+                   _gate=False, _restore_claim=True,
+                   _definition={**task, **meta['environment_task'], 'task_id': task['id'],
+                                'deck': task['deck'], 'seeds': [task['seed']],
+                                'layer': meta.get('workflow_layer', 'A')}, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
@@ -990,7 +980,7 @@ class Game:
         return game
 
     def export_archive(self, directory, *, note=None) -> Path:
-        """导出 episode_archive_v1 存档（ticks.jsonl / frames.npz / meta.json）。
+        """导出统一版本存档（ticks.jsonl / frames.npz / meta.json）。
 
         导出的存档是引擎真正接受的动作序列，可直接 load_archive 继续中盘打。
         返回 archives 中的正式路径；成功后删除 out 内的本次临时运行目录。
@@ -1063,8 +1053,7 @@ class Game:
                          plants_eaten=self.totals.get("plants_eaten", 0),
                          plants_eaten_free=self.totals.get("plants_eaten_free", 0)),
         )
-        (target / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
-                                          encoding="utf-8")
+        write_meta(target, meta)
         from .delivery import record_archive, output_dir
         document = record_archive(target, session=self.session)
         stored = output_dir() / document["archives"][-1]["archive"]

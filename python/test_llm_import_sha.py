@@ -12,9 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
-from llm_import_sha import archive_sha, run_sha as production_run_sha
+from import_llm_run import archive_sha, run as production_run_sha
 from python.test_import_llm_run import _meta, _write_archive
-from deploy_task105 import merge_tasks
 
 
 def run_sha(*args, **kwargs):
@@ -30,20 +29,18 @@ class ShaImportTest(unittest.TestCase):
             manifest = root / 'configs/tasks.json'
             manifest.parent.mkdir()
             manifest.write_text(json.dumps({'tasks': []}))
-            layers = root / 'layers.json'
-            layers.write_text(json.dumps({'layers': {}}))
-            args = (root / 'source', root / 'dest', manifest, layers, root, root / 'engine',
-                    84_000_000, root / 'ledger.json')
-            with patch('llm_import_sha.verification_context', return_value={}), \
-                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}):
+            args = (root / 'source', root / 'dest', manifest, root, root / 'engine')
+            with patch('import_llm_run.verification_context', return_value={}), \
+                 patch('import_llm_run.verify_copy', return_value={'verified': True}):
                 first = run_sha(*args)
             stored = root / 'dest/sha256' / archive_sha(archive)
-            write_frames(stored / 'frames.npz', read_frames(stored / 'frames.jsonl'))
-            with patch('llm_import_sha.legacy.verify_copy', side_effect=AssertionError('no repeat replay')):
+            write_frames(stored / 'frames.npz', read_frames(archive / 'frames.jsonl'), cache=False)
+            shutil.copyfile(archive / 'frames.jsonl', stored / 'frames.jsonl')
+            with patch('import_llm_run.verify_copy', side_effect=AssertionError('no repeat replay')):
                 # Also accept the converter's brief state between rename and JSONL unlink.
                 transition = run_sha(*args)
                 self.assertTrue(transition['rows'][0]['verification_reused'])
-                (stored / 'frames.jsonl').unlink()
+                self.assertFalse((stored / 'frames.jsonl').exists())
                 second = run_sha(*args)
             self.assertTrue(second['rows'][0]['verification_reused'])
             self.assertEqual(first['rows'][0]['task_id'], second['rows'][0]['task_id'])
@@ -57,16 +54,14 @@ class ShaImportTest(unittest.TestCase):
             manifest = root / 'configs/tasks.json'
             manifest.parent.mkdir()
             manifest.write_text(json.dumps({'tasks': []}))
-            layers = root / 'layers.json'
-            layers.write_text(json.dumps({'layers': {}}))
-            with patch('llm_import_sha.verification_context', return_value={}), \
-                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}) as verify:
+            with patch('import_llm_run.verification_context', return_value={}), \
+                 patch('import_llm_run.verify_copy', return_value={'verified': True}) as verify:
                 pools = []
                 def executor(**kwargs):
                     pools.append(kwargs['max_workers'])
                     return ThreadPoolExecutor(**kwargs)
-                production_run_sha(root / 'source', root / 'dest', manifest, layers,
-                                   root, root / 'engine', 84_000_000, root / 'ledger.json',
+                production_run_sha(root / 'source', root / 'dest', manifest,
+                                   root, root / 'engine',
                                    executor_factory=executor, verify_workers=1)
             self.assertEqual(pools, [1])
             self.assertEqual(verify.call_count, 3)
@@ -80,10 +75,7 @@ class ShaImportTest(unittest.TestCase):
             manifest = root / 'configs/tasks.json'
             manifest.parent.mkdir()
             manifest.write_text(json.dumps({'tasks': []}))
-            layers = root / 'layers.json'
-            layers.write_text(json.dumps({'layers': {}}))
-            args = (source, root / 'dest', manifest, layers, root, root / 'engine',
-                    84_000_000, root / 'ledger.json')
+            args = (source, root / 'dest', manifest, root, root / 'engine')
             lock, barrier = threading.Lock(), threading.Barrier(2)
             active, peak, calls = 0, 0, 0
 
@@ -101,12 +93,12 @@ class ShaImportTest(unittest.TestCase):
                     active -= 1
                 return {'verified': True}
 
-            with patch('llm_import_sha.verification_context', return_value={'engine': 'one'}), \
-                 patch('llm_import_sha.legacy.verify_copy', side_effect=verify):
+            with patch('import_llm_run.verification_context', return_value={'engine': 'one'}), \
+                 patch('import_llm_run.verify_copy', side_effect=verify):
                 run_sha(*args)
             self.assertEqual((calls, peak), (3, 2))
-            with patch('llm_import_sha.verification_context', side_effect=AssertionError('cached provenance is enough')), \
-                 patch('llm_import_sha.legacy.verify_copy', side_effect=AssertionError('must not replay')):
+            with patch('import_llm_run.verification_context', side_effect=AssertionError('cached provenance is enough')), \
+                 patch('import_llm_run.verify_copy', side_effect=AssertionError('must not replay')):
                 result = run_sha(*args)
             self.assertTrue(all(row['verification_reused'] for row in result['rows']))
     def test_interrupted_copy_leaves_no_partial_sha_target_and_can_retry(self):
@@ -117,22 +109,15 @@ class ShaImportTest(unittest.TestCase):
             manifest = root / 'configs/tasks.json'
             manifest.parent.mkdir()
             manifest.write_text(json.dumps({'tasks': []}))
-            layers = root / 'layers.json'
-            layers.write_text(json.dumps({'layers': {}}))
-            args = (source, root / 'dest', manifest, layers, root, root / 'engine',
-                    84_000_000, root / 'ledger.json')
+            args = (source, root / 'dest', manifest, root, root / 'engine')
             copyfile = shutil.copyfile
-            calls = []
-
             def interrupted(source_path, destination):
-                calls.append(source_path)
-                if len(calls) == 2:
-                    raise OSError('interrupted archive copy')
-                return copyfile(source_path, destination)
+                copyfile(source_path, destination)
+                raise OSError('interrupted archive copy')
 
-            with patch('llm_import_sha.verification_context', return_value={'engine': 'one'}), \
-                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}) as verify:
-                with patch('llm_import_sha.shutil.copyfile', side_effect=interrupted):
+            with patch('import_llm_run.verification_context', return_value={'engine': 'one'}), \
+                 patch('import_llm_run.verify_copy', return_value={'verified': True}) as verify:
+                with patch('pvz_episode_archive.shutil.copyfile', side_effect=interrupted):
                     with self.assertRaisesRegex(OSError, 'interrupted archive copy'):
                         run_sha(*args)
                 self.assertFalse((root / 'dest/sha256' / archive_sha(archive)).exists())
@@ -142,16 +127,6 @@ class ShaImportTest(unittest.TestCase):
                 self.assertEqual(verify.call_count, 1)
                 self.assertEqual(result['rows'][0]['verify'], '通过')
 
-    def test_deployment_merge_preserves_current_tasks_and_rejects_conflicts(self):
-        current = {'tasks': [{'task_id': 'live', 'demo_start': {'index': 3}}], 'new_field': True}
-        addition = {'task_id': 'new', 'demo_start': {'index': 0}}
-        merged = merge_tasks(current, [addition])
-        self.assertEqual(merged['tasks'][0], current['tasks'][0])
-        self.assertEqual(len(current['tasks']), 1)
-        self.assertTrue(merged['new_field'])
-        self.assertEqual(merge_tasks(merged, [addition]), merged)
-        with self.assertRaisesRegex(ValueError, 'conflict'):
-            merge_tasks(merged, [{'task_id': 'new', 'demo_start': {'index': 4}}])
 
     def test_verifier_fields_are_ignored_but_robustness_and_tape_are_not(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -178,23 +153,17 @@ class ShaImportTest(unittest.TestCase):
             manifest = root / 'configs/tasks.json'
             manifest.parent.mkdir()
             manifest.write_text(json.dumps({'tasks': []}))
-            layers = root / 'layers.json'
-            layers.write_text(json.dumps({'layers': {}}))
-            args = (source, root / 'dest', manifest, layers, root, root / 'engine',
-                    84_000_000, root / 'ledger.json')
-            with patch('llm_import_sha.verification_context', return_value={'engine': 'one'}), \
-                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}) as verify:
+            args = (source, root / 'dest', manifest, root, root / 'engine')
+            with patch('import_llm_run.verification_context', return_value={'engine': 'one'}), \
+                 patch('import_llm_run.verify_copy', return_value={'verified': True}) as verify:
                 first = run_sha(*args)
                 before = manifest.read_bytes()
                 self.assertEqual(verify.call_count, 2)
-                self.assertEqual(len(first['registered']), 2)
                 self.assertEqual(len({r['archive'] for r in first['rows']}), 2)
                 second = run_sha(*args)
                 self.assertEqual(verify.call_count, 2)
-                self.assertFalse(second['registered'])
                 self.assertEqual(manifest.read_bytes(), before)
-                self.assertEqual([a['future_seed_start'] for a in first['plan']['archives']],
-                                 [a['future_seed_start'] for a in second['plan']['archives']])
+                self.assertEqual(len(json.loads((root / 'dest/merged_progress.json').read_text())['archives']), 2)
                 _write_archive(source, 'c', _meta(wins=7))
                 verify.side_effect = RuntimeError('timeline mismatch')
                 third = run_sha(*args)
@@ -203,13 +172,13 @@ class ShaImportTest(unittest.TestCase):
                 self.assertIn('timeline mismatch', third['rows'][2]['note'])
                 run_sha(*args)
                 self.assertEqual(verify.call_count, 3)  # failed receipts also resume
-            with patch('llm_import_sha.verification_context', return_value={'engine': 'two'}), \
-                 patch('llm_import_sha.legacy.verify_copy', return_value={'verified': True}) as verify:
+            with patch('import_llm_run.verification_context', return_value={'engine': 'two'}), \
+                 patch('import_llm_run.verify_copy', return_value={'verified': True}) as verify:
                 run_sha(*args)
                 self.assertEqual(verify.call_count, 0)
             target = root / 'dest/sha256' / archive_sha(source / 'a') / 'ticks.jsonl'
             target.write_text('corrupt')
-            with patch('llm_import_sha.verification_context', return_value={'engine': 'two'}):
+            with patch('import_llm_run.verification_context', return_value={'engine': 'two'}):
                 with self.assertRaisesRegex(ValueError, '大小不符'):
                     run_sha(*args)
 

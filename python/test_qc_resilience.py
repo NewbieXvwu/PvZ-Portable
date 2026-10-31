@@ -273,14 +273,14 @@ def test_recovery_probe_supplies_seed_for_production_panel(tmp_path):
     assert arguments.promotion_panel.read_bytes() == source
 
 
-@pytest.mark.parametrize('failure', ['preparation', 'selection', 'pack', 'train', 'evaluation'])
+@pytest.mark.parametrize('failure', ['preparation', 'pack', 'train', 'evaluation'])
 def test_systemic_background_failures_wait_without_spending_attempts(tmp_path, failure):
-    from test_curriculum_pipeline import setup, write_selection, write_evaluation
+    from test_curriculum_pipeline import setup, write_evaluation
     arguments, current = setup(tmp_path)
     current.update(round=1, log=[dict(groups=[dict(label='c1a')])])
     pipeline = q.TrainingPipeline(arguments, current)
     failures = []
-    original_prepare = pipeline._prepare_selection
+    original_prepare = pipeline._prepare_corpus
 
     def fail(phase):
         if phase == failure and len(failures) < 3:
@@ -297,14 +297,12 @@ def test_systemic_background_failures_wait_without_spending_attempts(tmp_path, f
             model = logfile.parent / 'student/model.pt'
             model.parent.mkdir(parents=True)
             model.write_bytes(b'trained')
-        elif logfile.name == 'selection.log':
-            write_selection(pipeline, command)
         elif logfile.name == 'evaluation.log':
             write_evaluation(pipeline, command, approved=False)
         return 0
 
     try:
-        with patch.object(pipeline, '_prepare_selection', side_effect=prepare), \
+        with patch.object(pipeline, '_prepare_corpus', side_effect=prepare), \
              patch.object(pipeline, '_command', side_effect=command), \
              patch.object(pipeline.game_health, 'probe', side_effect=[False, True] * 3) as probe, \
              patch.object(pipeline.game_health.closed, 'wait', return_value=False):
@@ -523,7 +521,7 @@ def test_orphaned_snapshot_recovery_failure_isolated(tmp_path):
 
 
 def test_twice_failed_background_snapshot_does_not_poison_next_round(tmp_path):
-    from test_curriculum_pipeline import setup, write_evaluation, write_selection
+    from test_curriculum_pipeline import setup, write_evaluation
     a, s = setup(tmp_path)
     s.update(round=1, log=[dict(groups=[dict(label='c1a')])])
     def command(self, cmd, log):
@@ -535,8 +533,6 @@ def test_twice_failed_background_snapshot_does_not_poison_next_round(tmp_path):
             model.write_bytes(b'trained')
         if log.name == 'evaluation.log':
             write_evaluation(self, cmd, approved=False)
-        if log.name == 'selection.log':
-            write_selection(self, cmd)
     with patch.object(q.TrainingPipeline, '_command', command), \
          patch.object(q, 'mem_available_bytes', return_value=64 * q.GIB):
         p = q.TrainingPipeline(a, s)

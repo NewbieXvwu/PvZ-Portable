@@ -137,47 +137,8 @@ def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkey
     assert note['factors']=={'z_old':2/3}
 
 
-def test_deploy17_pipeline_accepts_label_only_alternate(tmp_path):
-    import threading
-    pipeline=q.TrainingPipeline.__new__(q.TrainingPipeline)
-    pipeline.args=SimpleNamespace(recipe=ROOT/'recipes/dw4i2_v2timer.json',
-        alternate_recipe=ROOT/'recipes/dw4i2_v2timer_history10.json',candidates_per_recipe=2,
-        state=tmp_path/'state.json',log=tmp_path/'qc.log')
-    pipeline.directory=tmp_path/'pipeline';pipeline.build_workers=1
-    pipeline.state=dict(round=1,log=[],training_jobs=[])
-    pipeline._plan_build=Mock();pipeline._snapshot_selection=Mock();pipeline._seeded=Mock()
-    pipeline.executor=Mock();pipeline.futures=[]
-    pipeline.enqueue()
-    job=pipeline.state['training_jobs'][0]
-    assert [r['recipe_family'] for r in job['candidate_recipes']]==['A','A','B','B']
-    assert job['training_seeds']==[1,2,3,4]
-
-
-@pytest.mark.parametrize('active',[False,True])
-def test_deploy17_watchdog_launch_is_inert_until_active(tmp_path,active):
-    import subprocess
-    result=subprocess.run(['bash','-c','source "$1"; watchdog_extract_start "$2"','test',
-        str(ROOT/'scripts/qc_watchdog.sh'),str(ROOT/'scripts/qc_deploy17.sh')],capture_output=True,text=True,timeout=5)
-    assert result.returncode==0,result.stderr
-    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('$HOME',str(tmp_path)))
-    logs=tmp_path/'pvz-logs';logs.mkdir()
-    (logs/'qc_deploy16.mode').write_text('v2timer\n');(logs/'qc_deploy16.active').touch()
-    if active:
-        (logs/'qc_deploy17.mode').write_text('datamix\n');(logs/'qc_deploy17.active').touch()
-    result=subprocess.run(['bash','-c','tmux() { printf "%s\\n" "$*"; }; source "$1"','test',str(script)],capture_output=True,text=True,timeout=5)
-    assert result.returncode==0,result.stderr
-    assert 'artifacts/production/deploy16/pvz-portable' in result.stdout
-    assert '--training-parallelism 1' in result.stdout and '--gate-version 5' in result.stdout
-    assert result.stdout.count('--extra-manifest')==1
-    if active:
-        assert 'history10.json' in result.stdout and 'task165/training_panel.json' in result.stdout
-        assert '--demo-start-share 0.25 --random-deck-share 0.25' in result.stdout
-    else:
-        assert 'rebalanced_p05_v2timer.json' in result.stdout and '--demo-start-share' not in result.stdout
-
-
 def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path,monkeypatch):
-    import deploy17_boundary as b
+    import qc_boundary as b
     import signal
     proc=tmp_path/'proc';worktree=tmp_path/'cq'
     def process(pid,args,children=''):
@@ -211,29 +172,8 @@ def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path
     assert {pid for pid,_ in signals}<={101,202,303}
 
 
-def test_deploy17_backup_restore_only_temporary_files(tmp_path):
-    import subprocess
-    text=(ROOT/'scripts/qc_deploy17.sh').read_text().split('# --- switch:',1)[0]
-    script=tmp_path/'functions.sh';script.write_text(text.replace('$HOME',str(tmp_path)))
-    result=subprocess.run(['bash','-c','''
-source "$1"
-O="$2/backup"; mkdir -p "$W/scripts" "$O"
-FILES=(scripts/example.py recipes/new.json)
-GENERATED=artifacts/task165/training_panel.json
-printf 'original\n' > "$W/scripts/example.py"
-backup_files
-printf 'changed\n' > "$W/scripts/example.py"
-mkdir -p "$W/recipes"; printf 'new\n' > "$W/recipes/new.json"
-restore_files
-[[ "$(cat "$W/scripts/example.py")" = original ]]
-[[ ! -e "$W/recipes/new.json" ]]
-[[ -f "$O/backed_up" ]]
-''','test',str(script),str(tmp_path)],capture_output=True,text=True,timeout=5)
-    assert result.returncode==0,result.stderr
-
-
 def test_deploy17_boundary_waits_for_durable_group_record(tmp_path):
-    import deploy17_boundary as b
+    import qc_boundary as b
     log=tmp_path/'curriculum.log';state=tmp_path/'curriculum_state.json'
     log.write_text('2026-10-29T12:00:00 round 48 c48task_o24 task mult=1 rc=0 20s\n')
     state.write_text(json.dumps(dict(completed_groups=[])))
@@ -244,3 +184,24 @@ def test_deploy17_boundary_waits_for_durable_group_record(tmp_path):
     assert b.committed_boundary(log,state)
     with log.open('a') as f:f.write('2026-10-29T12:00:00 round 48 c48task_o48: workers=2/16\n')
     assert not b.committed_boundary(log,state)
+
+
+def test_deploy26_backup_restores_removed_files_and_original_symlink(tmp_path):
+    from deploy26 import backup, restore
+    code = tmp_path / 'code.py'
+    code.write_text('old code')
+    link = tmp_path / 'watchdog.sh'
+    link.symlink_to('code.py')
+    new = tmp_path / 'new.py'
+    saved = tmp_path / 'before'
+    for path in (code, link, new):
+        backup(path, saved / path.name)
+    code.unlink()
+    link.unlink()
+    link.write_text('replacement')
+    new.write_text('new code')
+    for path in (code, link, new):
+        restore(path, saved / path.name)
+    assert code.read_text() == 'old code'
+    assert link.is_symlink() and link.read_text() == 'old code'
+    assert not new.exists()

@@ -48,6 +48,8 @@ def test_record_and_demo_start_replay_without_archive_hashes(tmp_path):
     recorder.step(dict(type='wait', ticks=3))
     recorder.close()
     obs, meta, frames = replay(env, archive, decision=2, fog_observation='human_v2')
+    assert meta['schema_version'] == 2
+    assert {path.name for path in archive.iterdir()} == {'meta.json', 'ticks.jsonl', 'frames.npz'}
     assert obs['tick'] == frames[-1]['tick'] == 3
     assert meta['operations'] == 3
     assert replay(env, archive)[0]['tick'] == 3
@@ -85,7 +87,7 @@ class HumanDemoTest(unittest.TestCase):
             self.assertEqual(json.loads((root / 'changed/meta.json').read_text())['label_source'], 'counterfactual')
             from episode_query import _whatif
             meta = json.loads((archive / 'meta.json').read_text())
-            raw_frames = read_frames(archive / 'frames.jsonl')
+            raw_frames = read_frames(archive / 'frames.npz')
             text = _whatif(archive, meta, raw_frames, 2, ['wait:5'], str(RESOURCE), False, None, 1, None)
             self.assertNotIn('重放失败', text)
             self.assertIn('随后继续执行原局录下的操作', text)

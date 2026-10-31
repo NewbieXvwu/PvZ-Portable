@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import curriculum_queue as queue
 import promotion_gate as gate
-import pvz_promotion_v7 as v7
+import pvz_promotion as v7
 from pvz_recipe import load_recipe, write_recipe
 
 
@@ -31,7 +31,7 @@ def test_deploy21_three_way_early_stop_and_higher_passing_arm(tmp_path, monkeypa
         return side, task['task_id'], {seed: dict(won=seed % 10 < wins,
             final_wave=10 if seed % 10 < wins else 3, wave_count=10) for seed in task['seeds']}
     monkeypatch.setattr(gate, '_run_unit', run)
-    result = gate.evaluate_dual(args)
+    result = gate.evaluate(args)
     assert result['winner_family'] == 'B' and result['approved']
     assert all(r['approved'] for r in result['candidates'].values())
     assert result['sequential']['look'] == 1
@@ -125,7 +125,7 @@ def test_deploy21_new_rows_weighted_without_changing_validation(tmp_path):
 
 def test_deploy21_activation_is_saved_before_logging_and_boundary(tmp_path, monkeypatch):
     from test_curriculum_pipeline import setup, certificate
-    import deploy17_boundary as boundary
+    import qc_boundary as boundary
     args, state = setup(tmp_path)
     pipeline = queue.TrainingPipeline(args, state)
     try:
@@ -247,7 +247,7 @@ def test_deploy21_e2e_real_engine_once(monkeypatch):
                     executable=args.executable, value=args.value, resource_dir=args.resource_dir,
                     workers=1, eval_units=1, native_games=False, out=Path(arg('out')),
                     seed_ledger=args.seed_ledger, seed_block=arg('seed-block'))
-                gate.evaluate_dual(eval_args)
+                gate.evaluate(eval_args)
             else:
                 with log.open('a') as output:
                     completed = subprocess.run(command, cwd=ROOT, stdout=output, stderr=subprocess.STDOUT)
@@ -271,10 +271,3 @@ def test_deploy21_e2e_real_engine_once(monkeypatch):
             print('E2E promotion saved: A/B 1 optimizer step each; look 3/4, 120 adventure pairs; temp removed on exit', flush=True)
         finally:
             pipeline.executor.shutdown(wait=True)
-
-
-@pytest.mark.parametrize('script', ['qc_deploy21.sh', 'deploy21_at_boundary.sh'])
-def test_deploy21_prepared_shell_syntax(script):
-    import subprocess
-    completed = subprocess.run(['bash', '-n', str(ROOT / 'scripts' / script)], capture_output=True, text=True)
-    assert completed.returncode == 0, completed.stderr

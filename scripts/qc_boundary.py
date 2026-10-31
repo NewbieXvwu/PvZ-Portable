@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Prepared deploy17 helper. Called only by the reviewed deployment script, never by qc.
+"""Group-boundary process helper, called only by the reviewed deployment script.
 
 Freeze the scheduler briefly, resume it if a collector is active, and wait for that
 group's log line. An idle frozen scheduler cannot race into the next collection group.
@@ -106,6 +106,15 @@ def act(record, signum):
         except ProcessLookupError: pass
 
 
+def stop(record):
+    controller=record['controller']
+    if identity(controller['pid'])==controller['start']:
+        for pid in descendants(controller['pid']): act(dict(pid=pid,start=identity(pid)),signal.SIGTERM)
+    for child in record['children']: act(child,signal.SIGTERM)
+    act(controller,signal.SIGTERM)
+    act(controller,signal.SIGCONT)
+
+
 def wait_boundary(worktree, log, output):
     needle=str(worktree/'scripts/curriculum_queue.py')
     position=log.stat().st_size if log.exists() else 0
@@ -140,13 +149,7 @@ def main():
     if args.mode=='wait': wait_boundary(args.worktree,args.log,args.record);return
     record=json.loads(args.record.read_text())
     if args.mode=='resume': act(record['controller'],signal.SIGCONT);return
-    controller=record['controller']
-    if identity(controller['pid'])==controller['start']:
-        # Background builders may have forked since the boundary record was saved.
-        for pid in descendants(controller['pid']): act(dict(pid=pid,start=identity(pid)),signal.SIGTERM)
-    for child in record['children']: act(child,signal.SIGTERM)
-    act(record['controller'],signal.SIGTERM)
-    act(record['controller'],signal.SIGCONT)
+    stop(record)
 
 
 if __name__=='__main__': main()

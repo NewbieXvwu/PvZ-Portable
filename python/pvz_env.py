@@ -26,7 +26,6 @@ __all__ = [
     "SimulatorExited",
     "TaskSpec",
     "branch_action_token",
-    "training_task",
 ]
 
 # ``BRANCH_SNAPSHOT_FAST`` refuses more than this many specs in one command
@@ -139,15 +138,6 @@ def fog_diagnostics(state: dict[str, Any]) -> dict[int, dict[str, Any]]:
     return {entry['id']: entry for entry in state.get('fog_zombies') or []}
 
 
-def training_task(seed: int, level: int, zombie_count_multiplier: float = 1.0) -> TaskSpec:
-    """The single ``TaskSpec`` shared by search collection, DAgger, PPO rollouts and benchmarks."""
-    return TaskSpec(
-        level=level,
-        seed=seed,
-        playthrough=2,
-        profile=PlayerProfileContext(),
-        zombie_count_multiplier=zombie_count_multiplier,
-    )
 
 
 @dataclass(frozen=True)
@@ -178,33 +168,6 @@ class SeedCard:
     imitater_type: int | None = None
 
 
-def profile_for_deck(deck: Sequence[int | SeedCard | tuple[int, int]],
-                     first_aid_owned: bool = False) -> PlayerProfileContext:
-    """Match seed-bank capacity and upgrade ownership to a fixed task deck.
-
-    first_aid_owned (wall-nut first aid) is a task property, not a deck property: it only
-    widens Board::CanPlantAt (a damaged wall-nut / tall-nut may take another nut of the same
-    type). Default False keeps every historical task's reset message byte-identical.
-    """
-    seed_types = []
-    imitater_owned = False
-    for card in deck:
-        if type(card) is int:
-            seed_type = card
-        elif isinstance(card, SeedCard):
-            seed_type = card.seed_type
-            imitater_owned |= seed_type == 48
-        elif isinstance(card, tuple) and len(card) == 2 and all(type(value) is int for value in card):
-            seed_type = card[0]
-            imitater_owned |= seed_type == 48
-        else:
-            raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
-        seed_types.append(seed_type)
-    upgrades = tuple(sorted(seed_type for seed_type in set(seed_types) if 40 <= seed_type <= 47))
-    # An empty deck is the original conveyor start: no task deck exists, so the profile keeps
-    # the normal six slots while the board uses the engine's own ten-packet conveyor bank.
-    return PlayerProfileContext(seed_slot_count=len(deck) if deck else 6, owned_upgrade_plants=upgrades,
-                                imitater_owned=imitater_owned, first_aid_owned=bool(first_aid_owned))
 
 
 def _oom_score_engine() -> None:

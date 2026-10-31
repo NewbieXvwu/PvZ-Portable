@@ -25,7 +25,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
 
-PYTHON_MODULES = ["pvz_env.py", "pvz_common.py", "pvz_frame_store.py"]
+PYTHON_MODULES = ["pvz_env.py", "pvz_common.py", "pvz_frame_store.py", "pvz_episode_archive.py"]
 # pvz_constants.py 是**从 C++ 源码现场解析**常量表的（AGENTS 的约定：不许手抄表），
 # 所以包里必须带上它读的那几个文件，否则 import 阶段就抛"常量来源文件不存在"。
 CONSTANT_SOURCES = ["src/ConstEnums.h", "src/Lawn/Plant.cpp", "src/Lawn/Zombie.cpp",
@@ -44,10 +44,8 @@ SECRET_PATTERNS = [re.compile(pattern) for pattern in
 
 def seed_plan() -> dict:
     """task139 的循环计划：任务顺序 + 每任务 160 个种子（`configs/llmplay_seeds.json`，机械生成）。"""
-    document = json.loads(SEED_PLAN.read_text(encoding="utf-8"))
-    if document.get("schema") != "llmplay_cycle_v1":
-        raise SystemExit("不是 llmplay_cycle_v1：%s" % SEED_PLAN)
-    return document
+    from llmplay.workflow import plan
+    return plan()
 
 
 def task_manifest() -> dict:

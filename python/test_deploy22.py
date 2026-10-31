@@ -48,7 +48,7 @@ def test_deploy22_next_round_live_pool_dedup_mixing_and_global_holdout(tmp_path,
     assert 'rd193_l2_train' not in catalog and 'rd193_l3_train' not in catalog
     assert not any(item['kind'] == 'demo' for item in catalog.values())
     new = archive(tmp_path, 'e', level=4)
-    (tmp_path / 'import_progress.json').write_text(json.dumps(dict(archives=[new])))
+    publish(tmp_path, [first, duplicate, excluded, hard, new])
     refreshed = live.refresh(saved, tasks, tmp_path, tmp_path, [], {})
     assert 'rd193_l4_train' in refreshed
 
@@ -162,50 +162,6 @@ def test_deploy24_live193_seed_renewal_failure_skips_only_that_group(tmp_path, m
     assert exhausted not in {item['base'] for item in plan}
     assert any(exhausted in change and 'failed' in change for change in changes)
     assert plan and all(len(item['task_definition']['seeds']) == item['games'] for item in plan)
-
-
-def test_deploy22_import_cli_updates_existing_index_without_scanning(tmp_path):
-    import pvz_live_import as handoff
-    old = dict(source='old', archive='/old', verify='通过', result=1)
-    publish(tmp_path, [old])
-    scan = tmp_path / 'scan_jobs.json'; scan.write_text('old scan work retained')
-    row = dict(source='new', archive='/new', verify='通过', result=1)
-    importer = SimpleNamespace()
-    original_scan = lambda *a, **kw: pytest.fail('offline scan must not be invoked')
-    importer.scan_plan = original_scan
-    def run(*args, **kwargs):
-        assert importer.scan_plan([], {}, 1)['archives'] == []
-        return dict(rows=[row], layers={}, plan=handoff.no_scan_plan(), registered=[])
-    importer.run = run
-    importer.render_report = lambda *a: 'imported\n'
-    args = SimpleNamespace(no_verify=True, input=tmp_path, dest=tmp_path, manifest=tmp_path/'unused',
-        layers=tmp_path/'unused', resource_dir=tmp_path, executable=Path('/engine'), future_base=1,
-        seed_ledger=tmp_path/'must_not_exist.json', report=None, scan_out=scan)
-    assert handoff.main_with(args, importer) == 0
-    assert scan.read_text() == 'old scan work retained'
-    assert not args.seed_ledger.exists()
-    assert importer.scan_plan is original_scan
-    assert len(json.loads((tmp_path/'merged_progress.json').read_text())['archives']) == 2
-
-
-def test_deploy22_prepared_import_adapter_keeps_existing_sha_implementation(tmp_path):
-    from deploy22_import import install
-    scripts = tmp_path/'scripts'; scripts.mkdir()
-    importer = scripts/'import_llm_run.py'
-    importer.write_text('import sys\nfrom llm_import_sha import run_sha\ndef main_with(args):\n    old()\n\ndef main():\n    pass\n')
-    batch = scripts/'task105_import_batch.py'
-    batch.write_text("ROOT = 'root'\nENGINE = 'engine'\ndef main():\n    old_scan()\n\nif __name__ == '__main__':\n    main()\n")
-    install(tmp_path, ROOT/'scripts/pvz_live_import.py')
-    assert 'from llm_import_sha import run_sha' in importer.read_text()
-    assert 'return live_import(args, sys.modules[__name__])' in importer.read_text()
-    assert 'return batch_main(ROOT, ENGINE)' in batch.read_text()
-
-
-@pytest.mark.parametrize('script', ['qc_deploy22.sh', 'deploy22_at_boundary.sh'])
-def test_deploy22_prepared_shell_syntax(script):
-    import subprocess
-    result = subprocess.run(['bash', '-n', str(ROOT/'scripts'/script)], capture_output=True, text=True)
-    assert result.returncode == 0, result.stderr
 
 
 @pytest.mark.skipif(__import__('os').environ.get('PVZ_DEPLOY22_E2E') != '1', reason='one-time desktop rehearsal')

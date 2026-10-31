@@ -363,3 +363,45 @@
 7. **§6.6 高成本迁移**（独立轨道，不阻塞 1–6）：`StudentHistory`/太阳历史 → C++（S1-2）；搜索树 → C++（S1-1）；`Game` 事件叙述改消费 C++ 输出（S1-3）。每项只做一次 A/B 对比，不保留常驻双跑。
 8. **部署与配方**：一个参数化启动器（§6.6 第 4 条）；清引用后再归档旧 recipe / 旧 deploy。
 9. 最后才考虑 **`llmplay.Game` 录制语义** 与 **场景渲染** 的合并；这两项改动面大、收益是维护性。
+
+## task205 / deploy26：第一批落地（2026-10-31，待主控部署）
+
+基于 `origin/deploy25`（`97994745`）建立 `deploy26`，采用 §6.6，完成第 1–6 步和第 8 步。task203 的写端与 SHA 收据已合流，`llmplay-decks` 取到最新 `bbfd1124`，`llmimport` 最新仍为 `a06b9edf`。GPT 包以后从主线构建，`scripts/llmplay/` 的修复直接进主线。
+
+所有帧写入共用 `pvz_frame_store`，新录制及调试捕获写 NPZ，交付的存档文件限定为 `meta.json / ticks.jsonl / frames.npz`。旧 JSONL 继续由 `frame_path/read_frames` 读取，导入时转换一次并删除明文。`pvz_episode_archive` 统一元信息，写入 `schema=episode_archive_v2`、`schema_version=2`，生产 `search_play` 补上任务环境和终局字段。读旧存档直接使用录下的任务与卡组，不依赖现行清单仍保留同名任务。
+
+导入仅留 `scripts/import_llm_run.py`：保留 SHA 收据、一次复验和原子入库，支持一次传多个包，发布 `merged_progress.json`。第一次新导入会合并旧 `import_progress.json` 后删除它，课程只读统一索引。不再改写源码或登记生成任务清单。删除 `llm_import_sha.py`、`pvz_live_import.py` 和 `deploy22_import.py`，旧离线扫描与注册路径一起退役。
+
+删除环境层重复的 `profile_for_deck / training_task`，调用统一走 `pvz_tasks` 和 `training_task_kwargs`。删除 `v2fogstack4` 及测试，移除 Python rollout 与 wait 参考实现，native wait 的协议常量和薄接口检查留在 `pvz_event_env`。GPT 建局校验调用 `env.deck_warnings`。门禁统一到 `pvz_promotion` 的 v7，实现和执行入口各一份，删除 v5/v6 判定、独立 selector 及其面板刷新代码，旧版本历史作业不续跑也不改写。
+
+部署命令只在 `qc_launch.py`，看门狗直接调用它。删除仓库九份 `qc_deploy17..25.sh` 及六份边界包装脚本，原边界助手更名为 `qc_boundary.py`。`deploy26.py` 共用这些入口，在组结束且状态落盘后切换，备份实际安装文件及软链，可恢复删除项和原有软链。启动参数沿用 deploy25 的 A / seed2cold、GPT 地形路由、v5 / v5roof 与 branch1。
+
+**行数**：合入 task203 后的收敛提交删除 **40,342 行**、新增 **1,388 行**，其中代码与测试删除 **6,482 行**、新增 **1,059 行**。种子表把连续数组缩为等价区间，删除 33,859 行、增加 210 行，任务与种子值不变。相对 deploy25，代码与测试合计增加 8,820 行、删除 5,165 行，增加部分主要来自本次要求合回主线的 GPT 包。
+
+保留原面板及留出卡组数据供 v7 和任务设计使用，保留历史配方供旧记录读取，老师搜索树及 StudentHistory 迁入 C++ 按要求留给独立工程。
+
+Mac 串行执行相关 `pytest -k`，每次带 `timeout 300` 和 `ulimit -f 2000000`，存档转换、压缩交付、v7 三方判定以及队列重试等小测试通过，`curriculum_queue.py --help` 可运行。未跑引擎对局、训练或三份重型测试整套，未操作台式机生产。
+
+### 主控切换与回滚
+
+在已审的 deploy26 源工作树执行下列命令。脚本自行通过 `systemd-run --user --wait --collect --property=KillMode=process` 进入临时单元，等组边界后安装。生产任务配置、课程状态和种子账本原样保留，GPT 包构建使用 deploy26 源工作树中的配置。
+
+```bash
+~/.venvs/ml/bin/python3 scripts/deploy26.py --revision origin/deploy26
+```
+
+切换脚本把 `llmimport/scripts/import_llm_run.py` 链到 cq 的同一实现，旧批量入口随之退役。task105 后续导入统一改用下面的命令，`<输入包>` 可以给多个路径，不再调用 `task105_import_batch.py`，也不执行旧安装器：
+
+```bash
+~/.venvs/ml/bin/python3 ~/PvZ-search/.claude/worktrees/llmimport/scripts/import_llm_run.py <输入包> \
+  --dest ~/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import \
+  --executable ~/PvZ-search/artifacts/production/deploy20/pvz-portable
+```
+
+成功后脚本打印备份目录 `~/pvz-logs/deploy26_<时间>_<进程号>`，回滚仍从同一源工作树执行：
+
+```bash
+~/.venvs/ml/bin/python3 scripts/deploy26.py --rollback ~/pvz-logs/deploy26_<时间>_<进程号>
+```
+
+台式机 `~/pvz-logs` 中的旧版 qc 部署副本保留，仓库打 `pre-deploy26` 标签指向 deploy25。以上脚本只交付给主控，本任务未部署。

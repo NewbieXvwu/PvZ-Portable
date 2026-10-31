@@ -219,18 +219,8 @@ L15 打僵尸与 L35 砸罐子需要现有接口未提供的小游戏动作，�
 帧文件直接写成生产同款 `frames.npz`，不再额外存明文 `frames.jsonl`；接口读档仍兼容旧存档。
 `.delivery/` 只保留当前小型进度快照，旧暂存即用即清，每局不会重新压整批对局。
 
-需要交回阶段性结果时：
-
-```python
-parts = llmplay.export_bundle()
-print(parts)  # 固定在 out 同级的 out_exports/；每卷至多 99 MB
-```
-
-外部**只取这里列出的全部 `out.zip.001`、`.002`…分卷**，不要把整个 out 目录打包。
-分卷只含 `archives/`、`progress.json`、`decks.json` 和 `.py` 策略脚本；进度内含续跑预算。
-日志、运行中存盘、缓存、旧交付包不进入分卷。新一份成功生成后自动删除上一份。
-压缩不占用对局发布锁；导出期间继续完成的对局留到下次交回，不影响当前包的一致进度。
-不要每局调用 `export_bundle()`，仅在需要交回时调用，避免重复压缩全部历史。
+`llmplay.export_bundle()` 生成分卷，输出目录由 `llmplay.bundle_dir()` 返回：
+位于 out 同级的 `<out目录名>_exports/`，默认是 `/mnt/data/out_exports/`。
 
 包内 `carry/progress.json` 若存在，首次导入自动接上前次结论；不会重新打旧胜局。
 另有交回分卷时用 `llmplay.resume("…/out.zip.001")`（或分卷所在目录）恢复，

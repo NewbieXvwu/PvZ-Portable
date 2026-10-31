@@ -7,7 +7,7 @@ from pvz_value_net import (CELL_PX, COLS, LAWN_XMIN, ROWS, _col_of, bungee_featu
 
 SPEED_SCALE = 1.0
 OBS_EXTRA = {"v1": (0, 0), "v2lite": (4, 1), "v2": (9, 7), "v2fog": (10, 7),
-             "v2fogstack4": (112, 7), "v2size": (10, 7), "v2boss": (13, 9), "v2bungee": (19, 9), "v2sleep": (21, 9),
+             "v2size": (10, 7), "v2boss": (13, 9), "v2bungee": (19, 9), "v2sleep": (21, 9),
              # task145：v2sleep + 可见计时 4 通道（引爆/唤醒进度、状态进度、传送带卡序、卡是否就绪）
              "v2timer": (25, 9)}
 
@@ -89,13 +89,12 @@ class StudentHistory:
         self.plants = {}
         self.wave = None
         self.wave_tick = 0
-        self.zombie_frames = []
 
     def extra(self, frame: dict) -> tuple[np.ndarray, np.ndarray]:
         tick = frame["tick"]
         if frame["wave"] != self.wave:
             self.wave, self.wave_tick = frame["wave"], tick
-        if self.obs in ("v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep", "v2timer"):
+        if self.obs in ("v2", "v2fog", "v2size", "v2boss", "v2bungee", "v2sleep", "v2timer"):
             frame = {**frame, '_boss_features': self.obs in ('v2boss', 'v2bungee', 'v2sleep', 'v2timer')}
             board, scalars = v2_extra(frame, self.wave_tick)
             if self.obs in ('v2bungee', 'v2sleep', 'v2timer'):
@@ -111,19 +110,8 @@ class StudentHistory:
                     if on_board and 0 <= row < ROWS:
                         size[0, row, _col_of(position)] += zombie[10] if len(zombie) > 10 else 1.0
                 board = np.concatenate([board, size])
-            if self.obs in ("v2fog", "v2fogstack4"):
+            if self.obs == "v2fog":
                 board = np.concatenate([board, fog_channel(frame)])
-            if self.obs == 'v2fogstack4':
-                from pvz_value_net import featurize_numpy
-                # Generic public channel copies, sampled by elapsed game time. No tracking,
-                # extrapolation, hidden IDs, or fog-specific interpretation of past zombies.
-                current = featurize_numpy(frame)[0][54:88].copy()
-                past = [values for time, values in reversed(self.zombie_frames) if time <= tick - 60][:3]
-                missing = [np.zeros_like(current) for _ in range(3 - len(past))]
-                board = np.concatenate([board, *past, *missing])
-                if not self.zombie_frames or tick - self.zombie_frames[-1][0] >= 60:
-                    self.zombie_frames.append((tick, current))
-                    self.zombie_frames = self.zombie_frames[-4:]
             return board, scalars
         current = {(row, col, kind): self.plants.get((row, col, kind), tick)
                    for row, col, kind, *_ in frame["plants"]

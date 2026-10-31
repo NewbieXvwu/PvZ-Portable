@@ -6,8 +6,8 @@ import os
 from functools import lru_cache
 
 from pvz_constants import background_for_level
-from pvz_tasks import deck_pool_for_level
-from .game import ROOT, load_tasks, validate_deck
+from pvz_tasks import deck_pool_for_level, terrain_covered
+from .game import ROOT, load_tasks
 from . import workflow as wf
 
 NOTE = "扩卡组任务没有终点；达标后继续增加胜利卡组，优先补覆盖缺口。只有用户说停才停。"
@@ -301,7 +301,9 @@ def check(document, task_id, deck, strategy="", seed=None):
     info = document["levels"][task_id]
     if not any(item["task_id"] == task_id for item in items(document)):
         raise ValueError("本关本轮目标已达标；请领取其余主线或传送带支线")
-    validate_deck(load_tasks()[task_id], deck)
+    # Task design can prefilter without launching an engine; Game asks C++ at reset.
+    if not terrain_covered(info['level'], deck):
+        raise ValueError('卡组没有覆盖本关地形')
     key = wf.deck_key(deck)
     if key in holdouts():
         raise ValueError("门禁/挑选留出卡组签名禁止使用（跨关同样禁止）")
