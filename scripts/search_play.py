@@ -63,6 +63,26 @@ MAX_ACTIONS = 3000
 
 _W: dict = {}
 
+ROOF_BACKGROUNDS = frozenset({"BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
+PRIOR_BACKGROUNDS = frozenset({"BACKGROUND_4_FOG", "BACKGROUND_5_ROOF", "BACKGROUND_6_BOSS"})
+
+
+def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str:
+    """Roof levels (and the boss) score leaves with ``--value-roof``; every other terrain keeps ``--value``."""
+    if not roof_value_path:
+        return value_path
+    from pvz_constants import background_for_level
+    roof = background_for_level(int(task["level"])) in ROOF_BACKGROUNDS
+    return roof_value_path if roof else value_path
+
+
+def _terrain_policy(student_path: str, gpt_path: str | None, task: dict) -> str:
+    """Fog, roof and boss levels act and continue with the GPT prior; other terrain keeps the student."""
+    if not gpt_path:
+        return student_path
+    from pvz_constants import background_for_level
+    return gpt_path if background_for_level(int(task["level"])) in PRIOR_BACKGROUNDS else student_path
+
 
 def _export_values(value_path: str, static_value_path: str | None):
     """Export once in the driver; workers keep paths instead of torch value networks."""
@@ -206,58 +226,6 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 # LEGACY(python-rollout-reference): the Python continuation loop, kept as the reference the C++ path is
 # checked against. Test and diagnostic only -- python/test_cpp_rollout.py and scripts/perf_rollout_check.py
 # call it; nothing on the collection path does.
-def _python_rollout_reference(env, obs: dict, first: dict, until_tick: int,
-                              root: int | None = None, seed: int | None = None, *,
-                              fast_state_out: dict | None = None) -> dict:
-    """Play ``first`` and let the student continue until ``until_tick`` (0 = end of game), one step at a time."""
-    student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
-    if root is not None:
-        env.restore(root)
-    if seed is not None:
-        env.reseed(seed)
-    from render_episode import _frame
-    fast_state = {"frame": _frame(obs), "action": first}
-    if _W["fast"].obs != "v1":
-        from copy import deepcopy
-        from pvz_student_observation import StudentHistory
-        fast_state["history"] = deepcopy(student_history) if student_history is not None else StudentHistory(_W["fast"].obs)
-        fast_state["history"].extra(fast_state["frame"])
-    until_tick = until_tick if until_tick > obs["tick"] else 10 ** 9
-    action = first
-    # The student only reads what render_episode._frame keeps, so rollouts can ask for the compact
-    # observation (identical frames, ~1/4 of the bytes).
-    lean = _W.get("lean_rollouts", False)
-    batch_waits = _W.get("batch_waits", False) and hasattr(env, "wait_until_legal") and _W["fast"].obs == "v1"
-    sim_skip = _W.get("rollout_sim_skip", 0)
-    if lean:
-        env.set_lean_observation(True)
-    if sim_skip:
-        env.set_sim_skip(sim_skip)
-    try:
-        while True:
-            obs, _r, done, _t, info = env.step(action)
-            if not info.get("ok"):
-                action = {"type": "wait", "ticks": 60}
-                obs, _r, done, _t, info = env.step(action)
-            if done or obs.get("terminal") or obs["tick"] >= until_tick:
-                return obs
-            if batch_waits and not (obs.get("legal_actions") or {}).get("plants"):
-                # With no legal plant the student can only wait 60 ticks, again and again: let
-                # the simulator repeat that itself. Its features only read the previous frame's
-                # tick and whether the previous action was a plant, so this state is exact.
-                obs, _r, done, _t, info = env.wait_until_legal(until_tick)
-                fast_state["frame"], fast_state["action"] = {"tick": info["previous_tick"]}, dict(NOOP)
-                if done or obs.get("terminal") or obs["tick"] >= until_tick:
-                    return obs
-            action = _fast_action(obs, fast_state)
-    finally:
-        if fast_state_out is not None:
-            fast_state_out.clear()
-            fast_state_out.update(fast_state)
-        if sim_skip:
-            env.set_sim_skip(0)
-        if lean:
-            env.set_lean_observation(False)
 
 
 def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args,
@@ -903,8 +871,16 @@ def _play(job: dict, observer=None) -> dict:
             attachment_info = dict(file=SIDECAR_NAME, version=3,
                                    bytes=(archive/SIDECAR_NAME).stat().st_size,
                                    frames=token_writer.rows)
-        archive_task = {"seed": job["seed"], "policy": str(args.rollout_policy), "arm": job["arm"]}
-        archive_outcome = {"won": obs.get("result") == 1, "final_wave": obs["wave"]}
+        from dataclasses import asdict
+        from pvz_episode_archive import write_meta
+        archive_task = dict(id=args.task_id, seed=job['seed'], level=kw['level'], deck=list(kw['deck']),
+                            policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
+                            arm=job['arm'], playthrough=2,
+                            **{k: v for k, v in kw['task_extra'].items() if v is not None})
+        archive_outcome = dict(result=obs.get('result') or 0, won=obs.get('result') == 1,
+                               final_wave=obs['wave'], final_tick=obs['tick'],
+                               wave_count=obs.get('wave_count'),
+                               reason='win' if obs.get('result') == 1 else 'not_won')
         if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
                 or task_definition.get('live193')
                 or task_definition.get('conveyor_start') == 'original'
@@ -918,14 +894,16 @@ def _play(job: dict, observer=None) -> dict:
                 archive_task['base_deck'] = task_definition['deck']
             archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0),
                                    reason='win' if obs.get('result') == 1 else 'not_won')
-        (archive / "meta.json").write_text(json.dumps({
+        write_meta(archive, {
             "label_source": "teacher",
             **({'observation_attachment': attachment_info} if attachment_info else {}),
             **({"demo_archive": str(Path(demo_archive).resolve()), "demo_decision": args.demo_decision,
                 "demo_note": demo_meta.get('note', '')} if demo_archive else {}),
             "task": archive_task,
+            "environment_task": asdict(task),
+            "frame_count": len(frames), "operations": decisions,
             "context": task_context,
-            "outcome": archive_outcome}))
+            "outcome": archive_outcome})
     result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
             **({'deck': list(kw['deck'])} if 'deck_random' in task_definition else {}),
             **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
@@ -967,7 +945,12 @@ def parser():
                    help='collect per-decision fog diagnostics, using the Python game loop')
     p.add_argument("--obs-v3", action="store_true", help="write separate sparse float32 obs-v3 attachment beside compact frames")
     p.add_argument("--rollout-policy", required=True, help="the student (scripts/train_rollout_policy.py)")
+    p.add_argument("--rollout-policy-gpt",
+                   help="GPT behavior-clone prior for fog/roof/boss levels "
+                        "(BACKGROUND_4_FOG/5_ROOF/6_BOSS); default --rollout-policy")
     p.add_argument("--value", required=True, help="value net that scores the leaves")
+    p.add_argument("--value-roof", help="value net that scores the leaves on roof levels 41-50 "
+                   "(including the boss); default --value")
     p.add_argument("--static-value", help="value net that picks the candidate cells right after planting "
                    "(default --value)")
     p.add_argument("--task-json", help="inline curriculum task definition (task193; no derived manifest)")
@@ -1066,8 +1049,11 @@ def main() -> None:
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))
     from render_episode import load_training_task
-    task_seeds = (json.loads(args.task_json) if args.task_json else
-                  load_training_task(Path(args.manifest), args.task_id))["seeds"]
+    task_definition = (json.loads(args.task_json) if args.task_json else
+                       load_training_task(Path(args.manifest), args.task_id))
+    task_seeds = task_definition["seeds"]
+    args.leaf_value = _leaf_value(args.value, args.value_roof, task_definition)
+    args.rollout_policy = _terrain_policy(args.rollout_policy, args.rollout_policy_gpt, task_definition)
     if args.seed_list:
         seeds = [int(s) for s in args.seed_list.split(',') if s.strip()]
         unknown = [s for s in seeds if s not in set(task_seeds)]
@@ -1106,7 +1092,7 @@ def main() -> None:
               f"{args.worker_memory_bytes / GIB:.2f} GiB, headroom "
               f"{args.memory_headroom_bytes / GIB:.2f} GiB, every {args.grow_interval:g}s)",
               flush=True)
-    value_keep, value_files = _export_values(args.value, args.static_value)
+    value_keep, value_files = _export_values(args.leaf_value, args.static_value)
     _release_freed_memory()
     # Student weights remain shared on fork; value weights live only in engine processes.
     start_method = "fork" if "fork" in mp.get_all_start_methods() else "spawn"

@@ -34,6 +34,102 @@ def cell(wins, games, mult_index=0, last_round=0, level=7):
                                                    'wins': wins, 'games': games}})
 
 
+class ReviewShareTest(unittest.TestCase):
+    def fixture(self, multiplier=3.):
+        base = 'night_l20_train_n10_orig'
+        suffix = '' if multiplier == 1. else '_m050' if multiplier == .5 else '_m300'
+        task_id = base + suffix
+        tasks = {task_id: dict(task_id=task_id, level=20, deck=[0, 1, 2, 3, 4, 7],
+                              zombie_count_multiplier=multiplier, seeds=list(range(1000, 1200)))}
+        state = dict(round=0, log=[], offsets={task_id: 7}, cells={base: dict(
+            family='f', level=20, last_round=0, mult_index=[.5, 1., 3.].index(multiplier),
+            windows={str(multiplier): dict(recent=[0, 1] * 4, wins=4, games=8)})})
+        return state, tasks, {'m050': .5, 'm300': 3.}, [.5, 1., 3.], {task_id: Path('/panel')}
+
+    def test_review_share_extra_quota_uses_source_seeds_and_same_deck(self):
+        for multiplier, share, extra in ((3., .25, 12), (.5, .25, 12), (3., .5, 24),
+                                         (3., 0., 0), (1., .25, 0)):
+            with self.subTest(multiplier=multiplier, share=share):
+                args = self.fixture(multiplier)
+                original = copy.deepcopy(args)
+                plan, _ = plan_round(*args, budget=48, per_group=48, review_share=share)
+                self.assertEqual(sum(item['games'] for item in plan), 48 + extra)
+                self.assertEqual(plan[0]['games'], 48)
+                if extra:
+                    main, review = plan
+                    self.assertEqual(review['task_id'], main['task_id'])
+                    self.assertEqual(review['offset_key'], main['task_id'])
+                    self.assertEqual(review['offset'], 55)
+                    self.assertEqual(review['task_definition']['seeds'], list(range(1055, 1055 + extra)))
+                    self.assertEqual(review['task_definition']['deck'], args[1][main['task_id']]['deck'])
+                    self.assertEqual(review['task_definition']['zombie_count_multiplier'], 1.)
+                self.assertEqual(args, original)
+
+    def test_review_share_resume_keeps_pending_reviews_outside_course_budget(self):
+        args = self.fixture()
+        state, tasks, names, values, manifests = args
+        normal, review = plan_round(*args, budget=48, per_group=48)[0]
+        state['completed_groups'] = [dict(normal, status='done')]
+        state['offsets'][normal['task_id']] = 55
+        state['cells'][normal['base']]['last_round'] = 1
+        base = 'night_l14_train_n10'
+        state['cells'][base] = dict(family='f', level=14, last_round=0, mult_index=1, windows={})
+        tasks[base] = dict(task_id=base, level=14, deck=[0, 1, 2, 3, 4, 7],
+                           zombie_count_multiplier=1., seeds=list(range(2000, 2100)))
+        manifests[base] = Path('/panel')
+        pending, _ = plan_round(*args, budget=96, per_group=48)
+        self.assertEqual(sum(p['games'] for p in pending if not p.get('review_of')), 48)
+        self.assertEqual([p for p in pending if p.get('review_of')], [review])
+        state['completed_groups'].append(dict(review, status='done'))
+        state['offsets'][normal['task_id']] = 67
+        pending, _ = plan_round(*args, budget=96, per_group=48)
+        self.assertEqual([p['games'] for p in pending], [48])
+
+    def test_review_share_demo_uses_actual_multiplier_and_original_future_seed_book(self):
+        state, tasks, *_ = self.fixture()
+        task_id, task = next(iter(tasks.items()))
+        base, target = next(iter(state['cells'].items()))
+        target.update(archive='/recorded', seeds=list(range(2000, 2200)), archive_cursor=4)
+        group = dict(base=base, task_id=task_id, multiplier=90, demo_archive='/recorded',
+            demo_decision=90, future_seeds=[1], manifest='/panel', label='demo',
+            games=48, offset=7, offset_key=base, task_definition=dict(task, zombie_count_multiplier=1.))
+        before = copy.deepcopy(target)
+        self.assertEqual(curriculum_queue.review_groups(state, [group], tasks, .25, None, 256, []), [])
+        group['task_definition']['zombie_count_multiplier'] = 3.
+        review, = curriculum_queue.review_groups(state, [group], tasks, .25, None, 256, [])
+        self.assertEqual(review['task_definition']['seeds'], list(range(2055, 2067)))
+        self.assertNotIn('demo_archive', review)
+        self.assertNotIn('future_seeds', review)
+        self.assertEqual(review['offset_key'], base)
+        self.assertEqual(target, before)
+
+    def test_review_share_results_feed_training_without_changing_curriculum(self):
+        state, tasks, names, values, manifests = self.fixture()
+        review = plan_round(state, tasks, names, values, manifests, 48, 48)[0][1]
+        before = copy.deepcopy(state['cells'])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            args = SimpleNamespace(state=root / 'state.json', log=root / 'log', out=root / 'out',
+                stop_flag=root / 'stop', python=Path('/python'), rollout_policy=Path('/student'),
+                static_value=Path('/static'), value=Path('/value'), workers=2, executable=Path('/engine'),
+                resource_dir=Path('/resources'), frames=root / 'frames', beta_threshold=.1,
+                starved_beta=.5, probe_interval=3)
+            def collect(command, **kwargs):
+                definition = json.loads(command[command.index('--task-json') + 1])
+                self.assertEqual(definition['zombie_count_multiplier'], 1.)
+                self.assertEqual(command[command.index('--seed-offset') + 1], '0')
+                folder = Path(command[command.index('--out') + 1])
+                folder.mkdir(parents=True)
+                (folder / 'games.jsonl').write_text('{"won":true}\n' * review['games'])
+                return SimpleNamespace(returncode=0)
+            with mock.patch.object(curriculum_queue.subprocess, 'run', side_effect=collect), \
+                 mock.patch.object(curriculum_queue, 'mem_available_bytes', return_value=None):
+                self.assertTrue(curriculum_queue.run_round(args, state, [review], []))
+        self.assertEqual(state['cells'], before)
+        self.assertEqual(state['offsets'][review['offset_key']], 67)
+        self.assertIn(review['label'] + '_fast_search', pack_labels(state))
+
+
 class CurriculumRulesTest(unittest.TestCase):
     def test_zones_admission_only_measured_roof_and_one_fog_family(self):
         ids = training_base_ids()

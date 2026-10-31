@@ -214,7 +214,7 @@ def encoder_signature(obs: str = "v1") -> str:
     signature = hashlib.sha256((source + json.dumps(constants, sort_keys=True)).encode()).hexdigest()
     if obs == "v1":
         return signature
-    if obs not in ("v2lite", "v2", "v2fog", "v2fogstack4", "v2size", "v2boss", "v2bungee", "v2sleep",
+    if obs not in ("v2lite", "v2", "v2fog", "v2size", "v2boss", "v2bungee", "v2sleep",
                    "v2timer"):
         raise ValueError(f"unknown student observation version: {obs}")
     # v2lite/v2 are frozen encoder semantics. Adding a new version in their shared
@@ -226,7 +226,6 @@ def encoder_signature(obs: str = "v1") -> str:
             'v2lite': 'b6020e4131d35d7ff9ef0fb0996f877e6f3ffd2122045a65bd5e87be2c065aa5',
             'v2': '5031d93614db9ecff271dcaa6aa8645d7a799452f170e5ebf699cc2fb8c1df91',
             'v2fog': '17aba0780afb4005daeb1cff6f50ca6048179a7c83b4fae0bbde35437e4036e8',
-            'v2fogstack4': '072d07ab4bba3b373abe9d09d832c17f4a476c2a49d325b69de2196a1fcd84b5',
             'v2size': '400d14ae3def3b970f2e19593b11c5f0a54a9d00da596fa2f5ce19710be75886',
             'v2boss': 'b5d77ca232300a2d7331ae572ace07ef1c58757f3ef5e2818c3fb5a691df3bc4',
             'v2bungee': '82609c46ed14655cead5910457ee9c0a627d77948b896c8afef09b012a2bdb6f',
@@ -333,11 +332,15 @@ def save_arrays(path: Path, **arrays) -> None:
     _save(path, **arrays)
 
 
-def write_frames(path: Path, frames: list[dict]):
+def write_frames(path: Path, frames: list[dict], *, cache: bool = True):
     source = "".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames).encode()
     if path.suffix == ".jsonl":
         path.write_bytes(source)
         path.with_suffix(".npz").unlink(missing_ok=True)
+        return
+    if not cache:
+        # Interface-only archives use the same lossless container; training builds its cache downstream.
+        _save(path, frames=np.frombuffer(source, dtype=np.uint8))
         return
     _save(path, frames=np.frombuffer(source, dtype=np.uint8), encoder=encoder_signature(),
           **encode_frames(frames, source))

@@ -23,7 +23,6 @@ from pvz_env import (
     PvZEnv,
     SeedCard,
     TaskSpec,
-    training_task,
 )
 
 
@@ -273,17 +272,9 @@ class SharedConstantTests(unittest.TestCase):
         self.assertEqual(set(pvz_env.__all__), {
             "BRANCH_BATCH_LIMIT", "ENV_PROTOCOL_VERSION",
             "LoadoutContext", "PlayerProfileContext", "PvZEnv", "SeedCard",
-            "SimulatorExited", "TaskSpec", "branch_action_token", "training_task",
+            "SimulatorExited", "TaskSpec", "branch_action_token",
         })
 
-    def test_training_task_is_the_single_shared_task_factory(self) -> None:
-        task = training_task(1234, 7, 2.5)
-
-        self.assertEqual((task.level, task.seed, task.playthrough), (7, 1234, 2))
-        self.assertEqual(task.zombie_count_multiplier, 2.5)
-        self.assertEqual(task.profile, PlayerProfileContext())
-        self.assertEqual(task.loadout_mode, "fixed")
-        self.assertEqual(task.forced_seeds, ())
 
     def test_loadout_context_reads_the_observation(self) -> None:
         context = LoadoutContext.from_observation({"loadout_context": {

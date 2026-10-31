@@ -14,6 +14,7 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from pvz_env import PlayerProfileContext, TaskSpec
 from pvz_event_env import EventWaitEnv
 from pvz_frame_store import frame_path, read_frames, write_frames
+from pvz_episode_archive import read_meta, write_meta
 from pvz_tasks import profile_for_deck
 from render_episode import _frame, load_training_task, training_task_kwargs
 
@@ -53,7 +54,7 @@ class Recorder:
         self.last_tick = self.observation['tick']
         self.last_operation = 0
         self.frame_count = 0
-        self.meta = dict(schema='episode_archive_v1', label_source=label_source, note=note,
+        self.meta = dict(label_source=label_source, note=note,
                          task=dict(id=task_id, level=task.level, seed=task.seed, deck=list(deck),
                                    policy='human', playthrough=task.playthrough,
                                    zombie_count_multiplier=task.zombie_count_multiplier,
@@ -63,7 +64,7 @@ class Recorder:
                                       roster=self.observation['loadout_context']['zombie_roster']),
                          sun_collection='environment_auto', verified=False)
         self.tape = (archive / 'ticks.jsonl').open('w', encoding='utf-8', buffering=1)
-        self.frames = (archive / 'frames.jsonl').open('w', encoding='utf-8', buffering=1)
+        self.frames = []
         self._frame(None)
         self._save_meta()
 
@@ -73,7 +74,7 @@ class Recorder:
         if action and action['type'] not in ('plant', 'wait'):
             frame['input_action'] = frame['action']
             frame['action'] = None
-        self.frames.write(json.dumps(frame, separators=(',', ':')) + '\n')
+        self.frames.append(frame)
         self.frame_count += 1
         self.last_tick = self.observation['tick']
         self.last_operation = self.operations
@@ -88,7 +89,8 @@ class Recorder:
                                       final_tick=obs['tick'], actions=self.frame_count - 1,
                                       plants_eaten=self.events.get('plants_eaten', 0),
                                       plants_eaten_free=self.events.get('plants_eaten_free', 0)))
-        (self.archive / 'meta.json').write_text(json.dumps(self.meta, ensure_ascii=False, indent=2) + '\n')
+        self.meta = write_meta(self.archive, self.meta)
+        write_frames(self.archive / 'frames.npz', self.frames, cache=False)
 
     def step(self, action):
         if action['type'] == 'wait' and 'until' not in action:
@@ -121,13 +123,12 @@ class Recorder:
         if self.last_operation != self.operations:
             self._frame(dict(type='wait', ticks=self.observation['tick'] - self.last_tick))
         self.tape.close()
-        self.frames.close()
         self._save_meta()
 
 
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
            save: Path | None = None, *, fog_observation: str | None = None):
-    meta = json.loads((archive / 'meta.json').read_text())
+    meta = read_meta(archive)
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
@@ -209,18 +210,18 @@ def verify(archive: Path, resource_dir, executable=None):
     with EventWaitEnv(resource_dir, executable=executable) as env:
         obs, meta, _ = replay(env, archive)
     meta['verified'] = True
-    (archive / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
+    write_meta(archive, meta)
     return dict(verified=True, operations=meta['operations'], tick=obs['tick'], wave=obs['wave'], result=obs['result'])
 
 
 def export(archive: Path, data: Path):
-    meta = json.loads((archive / 'meta.json').read_text())
+    meta = read_meta(archive)
     if not meta.get('verified'):
         raise ValueError('verify the demonstration before exporting training data')
     target = data / f'seed_{meta["task"]["seed"]}' / meta['task']['id']
     target.mkdir(parents=True, exist_ok=False)
     write_frames(target / 'frames.npz', read_frames(frame_path(archive)))
-    (target / 'meta.json').write_text(json.dumps(meta, ensure_ascii=False, indent=2) + '\n')
+    write_meta(target, meta)
     return target
 
 

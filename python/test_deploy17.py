@@ -84,26 +84,57 @@ def test_deploy17_recipe_and_frozen_pool(tmp_path):
     with pytest.raises(ValueError):decks.load_frozen_pool(duplicate,registry,holdouts)
 
 
-def test_deploy17_shared_pack_weights_match_physical_pack(tmp_path):
+def test_shared_pack_runtime_label_weights_do_not_change_rows_or_key(tmp_path):
     import torch
-    from test_incremental_pack import fixture as rows,options
-    from pack_training_rows import pack
+    from test_incremental_pack import fixture as rows, options
+    from pack_training_rows import pack, pack_monolithic
     import train_rollout_policy as trainer
-    from pvz_training_rows import LabelWeightAdjustment
-    data=tmp_path/'data';rows(data,['fresh','z_old'])
-    a=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.5}),tmp_path/'cache')
-    adjust=LabelWeightAdjustment({'z_old':1.0},{'z_old':1.5})
-    shared=trainer.read_pack(a,data,row_observer=adjust.observe)
-    original=shared[5].clone();adjust.apply(shared[5])
-    b=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.0}),tmp_path/'cache')
-    physical=trainer.read_pack(b,data)
-    torch.testing.assert_close(shared[5],physical[5],rtol=0,atol=1e-6)
-    assert not torch.equal(original,shared[5])
-    torch.testing.assert_close(trainer.read_pack(a,data)[5],original,rtol=0,atol=0)
-    assert torch.equal(shared[2],physical[2]) and torch.equal(shared[3],physical[3])
+    from pvz_training_pack import pack_path
+    data = tmp_path / 'data'
+    rows(data, ['fresh', 'z_old'])
+    first = options(data, ['fresh', 'z_old'], label_weight={'z_old': 1.5})
+    second = options(data, ['fresh', 'z_old'], label_weight={'z_old': 0.})
+    assert first == second
+    assert pack_path(data, dict(first, source_weight={'default': 0.})) == pack_path(data, first)
+    path = pack(data, first, tmp_path / 'cache')
+    before = trainer.read_pack(path, data)[5].clone()
+    a = trainer.load(data, {'fresh', 'z_old'}, label_weight={'z_old': 1.5}, pack_file=path)
+    b = trainer.load(data, {'fresh', 'z_old'}, label_weight={'z_old': 0.}, pack_file=path)
+    assert (a[5] > b[5]).any() and (b[5] == 0).any()
+    torch.testing.assert_close(trainer.read_pack(path, data)[5], before, rtol=0, atol=0)
+    assert torch.equal(a[2], b[2]) and torch.equal(a[3], b[3])
+    old_options = dict(first, label_weight={'z_old': 1.5})
+    legacy = pack_monolithic(data, old_options, tmp_path / 'cache', out=data / 'packs/legacy.npz', quiet=True)
+    restored = trainer.load(data, {'fresh', 'z_old'}, pack_file=legacy)
+    torch.testing.assert_close(restored[5], before, rtol=0, atol=1e-6)
 
 
-def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkeypatch):
+def test_existing_neutral_segments_are_reused_without_repacking(tmp_path, monkeypatch):
+    import hashlib
+    import numpy as np
+    import pack_training_rows as packer
+    from test_incremental_pack import fixture as rows, options
+    from pvz_training_pack import fingerprint_paths, segment_options
+    from pvz_frame_store import frame_paths
+    data = tmp_path / 'data'
+    rows(data, ['z_old'])
+    requested = options(data, ['z_old'])
+    contract = segment_options(requested, 'z_old', fingerprint_paths(data, frame_paths(data)))
+    legacy = dict(contract, label_weight={'z_old': 1.0})
+    key = hashlib.sha1(json.dumps(legacy, sort_keys=True).encode()).hexdigest()[:16]
+    path = data / 'packs/segments' / (key + '.npz')
+    packer.pack_monolithic(data, legacy, tmp_path / 'cache', out=path, quiet=True)
+    stamp = path.stat().st_mtime_ns
+    monkeypatch.setattr(packer, '_build_segment', lambda *a: pytest.fail('must reuse the existing segment'))
+    index = packer.pack(data, requested, tmp_path / 'cache')
+    with np.load(index, allow_pickle=False) as stored:
+        assert stored['segments'].tolist() == ['segments/' + path.name]
+    assert path.stat().st_mtime_ns == stamp
+    assert len(list(path.parent.glob('*.npz'))) == 1
+
+
+@pytest.mark.parametrize('explicit_snapshot', [True, False])
+def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkeypatch,explicit_snapshot):
     import torch
     import train_rollout_policy as trainer
     from test_incremental_pack import fixture as rows,options
@@ -111,18 +142,24 @@ def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkey
     from pvz_recipe import write_recipe
     data=tmp_path/'data';rows(data,['fresh','z_old'])
     a=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.5}),tmp_path/'cache')
-    packed=trainer.read_pack(a,data)[5].clone()
+    packed=trainer.load(data, {'fresh','z_old'}, label_weight={'z_old':1.5}, pack_file=a)[5].clone()
     common=dict(schema_version=1,kind='training',data=str(data),labels=['fresh','z_old'],device='cpu',threads=1,
         wait_keep=1.0,obs='v1',packet_head='slot',cell_soft_weight=0,source_row_report=False,
         out=str(tmp_path/'student'))
-    write_recipe(tmp_path/'a.json',dict(common,label_weight={'z_old':1.5}))
-    write_recipe(tmp_path/'b.json',dict(common,label_weight={'z_old':1.0}))
-    monkeypatch.setattr(sys,'argv',['train','--recipe',str(tmp_path/'b.json'),'--pack-recipe',str(tmp_path/'a.json')])
+    folder=tmp_path/'round_000071';folder.mkdir()
+    child=folder/'seeds/seed_000001/recipe.json';child.parent.mkdir(parents=True)
+    write_recipe(folder/'recipe.json',dict(common,label_weight={'z_old':1.5}))
+    write_recipe(child,dict(common,label_weight={'z_old':1.0}))
+    argv=['train','--recipe',str(child)]
+    if explicit_snapshot:argv+=['--pack-recipe',str(folder/'recipe.json')]
+    monkeypatch.setattr(sys,'argv',argv)
+    (folder/'pack.log').write_text(json.dumps({'pack':str(a)})+'\n')
+    monkeypatch.setattr(trainer,'archive_fingerprint',lambda *a,**kw:pytest.fail('must reuse the logged pack'))
     monkeypatch.setattr(trainer,'Metrics',Mock())
     monkeypatch.setattr(trainer,'set_oom_score_adj',lambda *_:None)
     observed={};original=trainer.load
     def load(*args,**kwargs):
-        observed['weights']=kwargs['label_weight']
+        observed['weights']=kwargs['label_weight'];observed['pack_file']=kwargs.get('pack_file')
         result=original(*args,**kwargs);observed['result']=result;return result
     monkeypatch.setattr(trainer,'load',load)
     class Loaded(Exception):pass
@@ -131,53 +168,16 @@ def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkey
         def shuffle(self,*_):raise Loaded
     monkeypatch.setattr(trainer.random,'Random',StopBeforeSplit)
     with pytest.raises(Loaded):trainer.main()
-    assert observed['weights']=={'z_old':1.5}
+    assert observed['weights']=={'z_old':1.0}
     assert not torch.equal(observed['result'][5],packed)
-    note=json.loads((tmp_path/'student/shared_pack_weights.json').read_text())
-    assert note['factors']=={'z_old':2/3}
-
-
-def test_deploy17_pipeline_accepts_label_only_alternate(tmp_path):
-    import threading
-    pipeline=q.TrainingPipeline.__new__(q.TrainingPipeline)
-    pipeline.args=SimpleNamespace(recipe=ROOT/'recipes/dw4i2_v2timer.json',
-        alternate_recipe=ROOT/'recipes/dw4i2_v2timer_history10.json',candidates_per_recipe=2,
-        state=tmp_path/'state.json',log=tmp_path/'qc.log')
-    pipeline.directory=tmp_path/'pipeline';pipeline.build_workers=1
-    pipeline.state=dict(round=1,log=[],training_jobs=[])
-    pipeline._plan_build=Mock();pipeline._snapshot_selection=Mock();pipeline._seeded=Mock()
-    pipeline.executor=Mock();pipeline.futures=[]
-    pipeline.enqueue()
-    job=pipeline.state['training_jobs'][0]
-    assert [r['recipe_family'] for r in job['candidate_recipes']]==['A','A','B','B']
-    assert job['training_seeds']==[1,2,3,4]
-
-
-@pytest.mark.parametrize('active',[False,True])
-def test_deploy17_watchdog_launch_is_inert_until_active(tmp_path,active):
-    import subprocess
-    result=subprocess.run(['bash','-c','source "$1"; watchdog_extract_start "$2"','test',
-        str(ROOT/'scripts/qc_watchdog.sh'),str(ROOT/'scripts/qc_deploy17.sh')],capture_output=True,text=True,timeout=5)
-    assert result.returncode==0,result.stderr
-    script=tmp_path/'start.sh';script.write_text(result.stdout.replace('$HOME',str(tmp_path)))
-    logs=tmp_path/'pvz-logs';logs.mkdir()
-    (logs/'qc_deploy16.mode').write_text('v2timer\n');(logs/'qc_deploy16.active').touch()
-    if active:
-        (logs/'qc_deploy17.mode').write_text('datamix\n');(logs/'qc_deploy17.active').touch()
-    result=subprocess.run(['bash','-c','tmux() { printf "%s\\n" "$*"; }; source "$1"','test',str(script)],capture_output=True,text=True,timeout=5)
-    assert result.returncode==0,result.stderr
-    assert 'artifacts/production/deploy16/pvz-portable' in result.stdout
-    assert '--training-parallelism 1' in result.stdout and '--gate-version 5' in result.stdout
-    assert result.stdout.count('--extra-manifest')==1
-    if active:
-        assert 'history10.json' in result.stdout and 'task165/training_panel.json' in result.stdout
-        assert '--demo-start-share 0.25 --random-deck-share 0.25' in result.stdout
-    else:
-        assert 'rebalanced_p05_v2timer.json' in result.stdout and '--demo-start-share' not in result.stdout
+    assert observed['pack_file']==a
+    if explicit_snapshot:
+        note=json.loads((tmp_path/'student/shared_pack_weights.json').read_text())
+        assert note['factors']=={} and note['pack_file']==str(a)
 
 
 def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path,monkeypatch):
-    import deploy17_boundary as b
+    import qc_boundary as b
     import signal
     proc=tmp_path/'proc';worktree=tmp_path/'cq'
     def process(pid,args,children=''):
@@ -211,29 +211,8 @@ def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path
     assert {pid for pid,_ in signals}<={101,202,303}
 
 
-def test_deploy17_backup_restore_only_temporary_files(tmp_path):
-    import subprocess
-    text=(ROOT/'scripts/qc_deploy17.sh').read_text().split('# --- switch:',1)[0]
-    script=tmp_path/'functions.sh';script.write_text(text.replace('$HOME',str(tmp_path)))
-    result=subprocess.run(['bash','-c','''
-source "$1"
-O="$2/backup"; mkdir -p "$W/scripts" "$O"
-FILES=(scripts/example.py recipes/new.json)
-GENERATED=artifacts/task165/training_panel.json
-printf 'original\n' > "$W/scripts/example.py"
-backup_files
-printf 'changed\n' > "$W/scripts/example.py"
-mkdir -p "$W/recipes"; printf 'new\n' > "$W/recipes/new.json"
-restore_files
-[[ "$(cat "$W/scripts/example.py")" = original ]]
-[[ ! -e "$W/recipes/new.json" ]]
-[[ -f "$O/backed_up" ]]
-''','test',str(script),str(tmp_path)],capture_output=True,text=True,timeout=5)
-    assert result.returncode==0,result.stderr
-
-
 def test_deploy17_boundary_waits_for_durable_group_record(tmp_path):
-    import deploy17_boundary as b
+    import qc_boundary as b
     log=tmp_path/'curriculum.log';state=tmp_path/'curriculum_state.json'
     log.write_text('2026-10-29T12:00:00 round 48 c48task_o24 task mult=1 rc=0 20s\n')
     state.write_text(json.dumps(dict(completed_groups=[])))
@@ -244,3 +223,36 @@ def test_deploy17_boundary_waits_for_durable_group_record(tmp_path):
     assert b.committed_boundary(log,state)
     with log.open('a') as f:f.write('2026-10-29T12:00:00 round 48 c48task_o48: workers=2/16\n')
     assert not b.committed_boundary(log,state)
+
+
+def test_deploy26_backup_restores_removed_files_and_original_symlink(tmp_path):
+    from deploy26 import backup, restore
+    code = tmp_path / 'code.py'
+    code.write_text('old code')
+    link = tmp_path / 'watchdog.sh'
+    link.symlink_to('code.py')
+    new = tmp_path / 'new.py'
+    saved = tmp_path / 'before'
+    for path in (code, link, new):
+        backup(path, saved / path.name)
+    code.unlink()
+    link.unlink()
+    link.write_text('replacement')
+    new.write_text('new code')
+    for path in (code, link, new):
+        restore(path, saved / path.name)
+    assert code.read_text() == 'old code'
+    assert link.is_symlink() and link.read_text() == 'old code'
+    assert not new.exists()
+
+
+def test_deploy26_rollback_launch_uses_original_recipe(tmp_path, monkeypatch):
+    import deploy26
+    calls = []
+    monkeypatch.setattr(deploy26.subprocess, 'run', lambda command, **kw: calls.append(command))
+    args = SimpleNamespace(repo=tmp_path, logs=tmp_path / 'logs')
+    worktree = tmp_path / 'cq'
+    deploy26.launch(tmp_path / 'install', args, worktree, rollback=True)
+    command, = calls
+    assert command[command.index('--alternate-recipe') + 1] == str(
+        worktree / 'recipes/dw4i2_v2timer_seed2cold.json')

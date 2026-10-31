@@ -72,18 +72,15 @@ sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUPERSEDED,
                                    load_tasks, source_paths)  # noqa: E402
 from pvz_recipe import load_recipe, training_row_options, write_recipe
-from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, SEED_POOLS_V2, START_SEED_BLOCK,
+from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, START_SEED_BLOCK,
                            START_SEED_LEDGER_DEFAULT, START_SEED_POOL,
-                           policy as promotion_policy, freeze_panel)
+                           policy as promotion_policy)
 from promotion_gate import (SeedPoolExhausted, allocate_seed_block, contract as promotion_contract,
                             contract_key, valid_certificate)
 from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
                                segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
-from pvz_student_selection import TRAINING_SEEDS, assert_disjoint, seed_spans
-from pvz_selection_refresh import (SELECTION_POOLS, SELECTION_BLOCK_SIZE, SELECTION_LEDGER,
-                                   make_plan as selection_plan, selection_templates)
 
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
@@ -100,10 +97,13 @@ CURRICULUM_LADDERS = {
 # task137: v5 随机卡组格的阶梯写在清单里（每个任务带 curriculum_ladder），
 # 起点 0.5 让老师先能赢，再按 PROMOTE_ABOVE / DEMOTE_BELOW 往上走。
 RANDOM_DECK_SHARE = 0.15   # 随机卡组格每轮最多占 round-games 的 15%
+REVIEW_SHARE = 0.25       # 非 1 倍任务在原配额之外追加的 1 倍复习
+CLEAN_B_LINEAGE = 'task205-clean-b'
 
 STOP_FLAG = Path.home() / 'pvz-logs/stop_curr'
 DEFAULT_FRAMES = ROOT / 'artifacts/student/frames_v2'
 DEFAULT_MODEL = ROOT / 'artifacts/student/dw4i_s1/model.pt'
+DEFAULT_B_INIT = Path.home() / 'PvZ-search/artifacts/student/gptbc_s1/model.pt'
 DEFAULT_STATIC_VALUE = ROOT / 'artifacts/hard/value_branch1/model.pt'
 DEFAULT_VALUE = ROOT / 'artifacts/value_net/v5/model.pt'
 DEFAULT_RESOURCES = Path.home() / '.cache/pvz-research-resources'
@@ -396,7 +396,8 @@ def measure_worker_bytes(args, item: dict) -> int:
                               demo_archive=item.get('demo_archive'),
                               demo_decision=item.get('demo_decision'),
                               future_seeds=(item.get('future_seeds') or [])[:1],
-                              task_definition=item.get('task_definition'))
+                              task_definition=item.get('task_definition'),
+                              seed_offset=item.get('seed_offset'))
         process = subprocess.Popen(command, cwd=ROOT, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
                                    text=True)
         peak = 0
@@ -998,7 +999,8 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                 future_seeds: list[int] | None = None,
                 save_candidates: int = 0, upper_workers: int | None = None,
                 per_worker_bytes: int = 0, headroom_bytes: int = 0,
-                task_definition: dict | None = None) -> list[str]:
+                task_definition: dict | None = None,
+                seed_offset: int | None = None) -> list[str]:
     """生产采集命令。
 
     示范起点格（task71）：局面由（存档、起点决策号）恢复，未来随机流走 RESEED
@@ -1011,13 +1013,17 @@ def command_for(args, manifest: Path, task_id: str, offset: int, games: int, lab
                      '--demo-archive', str(demo_archive), '--demo-decision', str(demo_decision),
                      '--future-seeds', ','.join(str(seed) for seed in future_seeds or [])]
     else:
-        seed_args = ['--seed-offset', str(offset), '--seeds', str(games)]
+        seed_args = ['--seed-offset', str(offset if seed_offset is None else seed_offset),
+                     '--seeds', str(games)]
     return [python, str(ROOT / 'scripts/search_play.py'),
             '--rollout-policy', str(args.rollout_policy),
+            *(['--rollout-policy-gpt', str(args.rollout_policy_gpt)]
+              if getattr(args, 'rollout_policy_gpt', None) else []),
             '--native-games' if getattr(args, 'native_games', True) else '--no-native-games',
             '--verify-samples', '9', '--student-candidates', '2',
             *(['--save-candidates', str(save_candidates)] if save_candidates else []),
             '--static-value', str(args.static_value), '--value', str(args.value),
+            *(['--value-roof', str(args.value_roof)] if getattr(args, 'value_roof', None) else []),
             '--manifest', str(manifest), '--task-id', task_id,
             *(['--task-json', json.dumps(task_definition)] if task_definition is not None else []),
             *seed_args,
@@ -1087,6 +1093,10 @@ class TrainingPipeline:
                     or not isinstance(job.get('status'), str)):
                 state['training_jobs'][index] = dict(round=-1, status='failed', isolated=True,
                     invalid_job=job, error='invalid saved training job')
+            elif job.get('status') not in ('done', 'superseded') and job.get('b_lineage') != CLEAN_B_LINEAGE:
+                job.update(status='superseded', superseded_reason='clean B experiment replaced old recipes')
+        parent, parent_round = self._b_parent(float('inf'))
+        state.update(b_student=str(parent), b_round=parent_round, b_lineage=CLEAN_B_LINEAGE)
         for job in reversed(state.get('training_jobs', [])):
             timing = job.get('timing') or {}
             if not isinstance(timing, dict):
@@ -1105,25 +1115,21 @@ class TrainingPipeline:
                     pass
             if self.last_train_peak and self.last_pack_peak:
                 break
-        if self.gate_version == 7:
-            from pvz_promotion_v7 import initial_panel
-            state.setdefault('gate_panel', initial_panel(read_json(args.promotion_panel)))
-            for saved in state['training_jobs']:
-                if saved.get('gate_version') != 7 and saved['status'] not in ('done', 'superseded'):
-                    saved.update(status='superseded', superseded_reason='task179 retires legacy selection jobs')
-            approved = [j for j in state['training_jobs'] if j.get('promotion_approved')
-                        and j['round'] > state.get('student_round', 0)]
-            if approved:
-                latest = max(approved, key=lambda j: j['round'])
-                state.update(student=latest['model'], student_round=latest['round'])
-                recovered = latest.get('timing') or {}
-                if recovered.get('corpus_archives') is not None:
-                    state['student_corpus_archives'] = recovered['corpus_archives']
-                if recovered.get('promotion', {}).get('next_panel') is not None:
-                    state['gate_panel'] = recovered['promotion']['next_panel']
-            save_state(args.state, state)
+        from pvz_promotion import initial_panel
+        state.setdefault('gate_panel', initial_panel(read_json(args.promotion_panel)))
+        approved = [j for j in state['training_jobs'] if j.get('promotion_approved')
+                    and j['round'] > state.get('student_round', 0)]
+        if approved:
+            latest = max(approved, key=lambda j: j['round'])
+            state.update(student=latest['model'], student_round=latest['round'])
+            recovered = latest.get('timing') or {}
+            if recovered.get('corpus_archives') is not None:
+                state['student_corpus_archives'] = recovered['corpus_archives']
+            if recovered.get('promotion', {}).get('next_panel') is not None:
+                state['gate_panel'] = recovered['promotion']['next_panel']
+        save_state(args.state, state)
         queued = [job for job in state.setdefault('training_jobs', [])
-                  if job['status'] not in ('done', 'superseded') and not job.get('isolated')
+                  if job.get('gate_version') == GATE_VERSION and job['status'] not in ('done', 'superseded') and not job.get('isolated')
                   and job.get('attempts', 0) < MAX_BACKGROUND_ATTEMPTS]
         if queued:
             try:       # 重启后恢复待建估算，reservation 才不至于沿用旧段体积
@@ -1211,7 +1217,7 @@ class TrainingPipeline:
 
     @property
     def gate_version(self):
-        return getattr(self.args, 'gate_version', GATE_VERSION)
+        return GATE_VERSION
 
     def evaluation_contract(self, job):
         source = getattr(self.args, 'promotion_panel', None)
@@ -1219,15 +1225,14 @@ class TrainingPipeline:
             source = ROOT / 'configs/gate_v5_panel.json'
         extra = {}
         incumbent = self.incumbent()
-        if job.get('gate_version') == 7:
-            trained = read_json(Path(job['recipe']).parent / 'trained.json')
-            with self.lock:
-                incumbent = Path(self.args.rollout_policy)
-                extra = dict(candidates={c['recipe_family']: c['model'] for c in trained['candidates']
-                                         if c['status'] == 'trained'},
-                             calibration=copy.deepcopy(self.state['gate_panel']))
+        trained = read_json(Path(job['recipe']).parent / 'trained.json')
+        with self.lock:
+            incumbent = Path(self.args.rollout_policy)
+            extra = dict(candidates={c['recipe_family']: c['model'] for c in trained['candidates']
+                                     if c['status'] == 'trained'},
+                         calibration=copy.deepcopy(self.state['gate_panel']))
         return promotion_contract(Path(job['model']), incumbent, source, self.args.executable,
-                                  self.args.value, self.args.resource_dir, version=self.gate_version,
+                                  self.args.value, self.args.resource_dir,
                                   seed_block=job.get('seed_block'), **extra)
 
     @retry_io
@@ -1238,7 +1243,7 @@ class TrainingPipeline:
         raises and closes the gate; seeds are never wrapped around and reused."""
         if 'seed_block' not in job:
             job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
-                                                         promotion_policy(self.gate_version)['pair_count']))
+                                                         promotion_policy()['pair_count']))
         return job
 
     def _evaluate(self, job):
@@ -1252,13 +1257,12 @@ class TrainingPipeline:
                    '--incumbent', frozen['incumbent'], '--source-panel', frozen['source_panel'],
                    '--executable', str(self.args.executable), '--value', str(self.args.value),
                    '--resource-dir', str(self.args.resource_dir), '--out', str(out), '--workers', '1',
-                   '--eval-units', str(units), '--gate-version', str(self.gate_version),
+                   '--eval-units', str(units),
                    '--native-games' if getattr(self.args, 'native_games', True) else '--no-native-games',
                    '--seed-block', f'{frozen["seed_block"][0]},{frozen["seed_block"][1]}',
                    '--seed-ledger', str(self.args.seed_ledger)]
-        if job.get('gate_version') == 7:
-            command += ['--candidates', json.dumps(frozen['candidates']),
-                        '--calibration', json.dumps(frozen['calibration'])]
+        command += ['--candidates', json.dumps(frozen['candidates']),
+                    '--calibration', json.dumps(frozen['calibration'])]
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against '
                                 f'{frozen["incumbent"]} eval_units={units}')
@@ -1269,7 +1273,7 @@ class TrainingPipeline:
             if systemic_game_failure(error):
                 raise
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
-            decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
+            decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
             out.mkdir(parents=True, exist_ok=True)
             (out / 'error.json').write_text(json.dumps(decision, indent=2) + '\n')
@@ -1280,24 +1284,23 @@ class TrainingPipeline:
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
                 f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
-        if job.get('gate_version') == 7:
-            self._marker(folder / 'ab_result.json', dict(round=job['round'],
-                seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
-                candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
-                calibration=frozen['calibration'], **(decision.get('ab') or
-                    dict(available=False, reason='evaluation or training candidate unavailable'))))
-            if decision.get('approved'):
-                import shutil
-                published = Path(job['model'])
-                published.parent.mkdir(parents=True, exist_ok=True)
-                temporary = published.with_suffix('.building')
-                shutil.copyfile(decision['winner'], temporary)
-                temporary.replace(published)
-            for side, result in decision.get('candidates', {}).items():
-                for name, cell in result['monitor'].items():
-                    if cell['delta_rate'] <= -.2:
-                        log_line(self.args.log, f'WARNING heldout regression round {job["round"]} '
-                                               f'{side} {name}: delta={cell["delta_rate"]:.3f}')
+        self._marker(folder / 'ab_result.json', dict(round=job['round'], experiment=job.get('b_lineage'),
+            seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
+            candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
+            calibration=frozen['calibration'], **(decision.get('ab') or
+                dict(available=False, reason='evaluation or training candidate unavailable'))))
+        if decision.get('approved'):
+            import shutil
+            published = Path(job['model'])
+            published.parent.mkdir(parents=True, exist_ok=True)
+            temporary = published.with_suffix('.building')
+            shutil.copyfile(decision['winner'], temporary)
+            temporary.replace(published)
+        for side, result in decision.get('candidates', {}).items():
+            for name, cell in result['monitor'].items():
+                if cell['delta_rate'] <= -.2:
+                    log_line(self.args.log, f'WARNING heldout regression round {job["round"]} '
+                                           f'{side} {name}: delta={cell["delta_rate"]:.3f}')
         return dict(model=job['model'],
                     evaluation_started=started, evaluation_finished=finished, eval_units=units,
                     promotion=decision, evaluation_directory=str(out))
@@ -1376,6 +1379,29 @@ class TrainingPipeline:
         peak = max(self.estimate_peak(), self.minimum_eval_units() * self.per_worker_bytes)
         return max(0, peak - anonymous)
 
+    def _b_parent(self, before):
+        parent = Path(getattr(self.args, 'b_init', DEFAULT_B_INIT))
+        round_index = 0
+        if self.state.get('b_lineage') == CLEAN_B_LINEAGE and self.state.get('b_round', 0) < before:
+            parent, round_index = Path(self.state['b_student']), self.state['b_round']
+        for old in self.state.get('training_jobs', []):
+            if old.get('b_lineage') != CLEAN_B_LINEAGE or not round_index < old['round'] < before:
+                continue
+            marker = Path(old['recipe']).parent / 'seeds/seed_000002/trained.json'
+            if marker.is_file():
+                candidate = read_json(marker)
+                if candidate['status'] == 'trained':
+                    parent, round_index = Path(candidate['model']), old['round']
+        return parent, round_index
+
+    def _b_recipe(self, job):
+        path = Path(job['recipe']).with_name('recipe_b.json')
+        recipe = load_recipe(path, 'training')
+        parent, parent_round = self._b_parent(job['round'])
+        recipe.update(init=str(parent), epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
+        write_recipe(path, recipe)
+        return recipe
+
     @retry_io
     def enqueue(self):
         round_index = self.state['round']
@@ -1397,9 +1423,11 @@ class TrainingPipeline:
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued')
         alternate = getattr(self.args, 'alternate_recipe', None)
-        if self.gate_version == 7:
-            alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_warm.json'
-            job['gate_version'] = 7
+        alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
+        job['gate_version'] = 7
+        job.update(b_lineage=CLEAN_B_LINEAGE,
+                   b_initial_epochs=getattr(self.args, 'b_initial_epochs', 8),
+                   b_epochs=getattr(self.args, 'b_epochs', 4))
         if alternate:
             variant = load_recipe(alternate, 'training')
             variant.update({key: recipe[key] for key in
@@ -1411,24 +1439,22 @@ class TrainingPipeline:
             variant_options.pop('label_weight', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
-            if self.gate_version == 7:
-                cold = round_index % variant['restart_every'] == 0 if variant['restart_every'] else False
-                variant.update(init=None if cold else str(self.incumbent()),
-                               epochs=variant['restart_epochs'] if cold else 2,
-                               history_l7_keep=1.0)
-                # Promoted training corpus, not the in-flight collector snapshot. Labels are
-                # an initial fallback for the pre-v7 incumbent; after promotion use archives.
-                if 'student_corpus_archives' in self.state:
-                    variant['replay_old_archives'] = self.state['student_corpus_archives']
-                    variant['replay_old_labels'] = []
-                else:
-                    old = dict(self.state, log=[entry for entry in self.state['log']
-                               if entry['round'] <= self.state.get('student_round', 0)])
-                    variant['replay_old_labels'] = pack_labels(old, ','.join(
-                        load_recipe(self.args.recipe, 'training')['labels']))
+            parent, parent_round = self._b_parent(round_index)
+            variant.update(init=str(parent),
+                           epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
+            # Promoted training corpus, not the in-flight collector snapshot. Labels are
+            # an initial fallback for the pre-v7 incumbent; after promotion use archives.
+            if 'student_corpus_archives' in self.state:
+                variant['replay_old_archives'] = self.state['student_corpus_archives']
+                variant['replay_old_labels'] = []
+            else:
+                old = dict(self.state, log=[entry for entry in self.state['log']
+                           if entry['round'] <= self.state.get('student_round', 0)])
+                variant['replay_old_labels'] = pack_labels(old, ','.join(
+                    load_recipe(self.args.recipe, 'training')['labels']))
             variant_path = folder / 'recipe_b.json'
             write_recipe(variant_path, variant)
-            repeats = 1 if self.gate_version == 7 else getattr(self.args, 'candidates_per_recipe', 1)
+            repeats = 1
             job['candidate_recipes'] = [
                 dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
                 for candidate_path, source, family in ((path, self.args.recipe, 'A'),
@@ -1437,10 +1463,7 @@ class TrainingPipeline:
             job['training_seeds'] = list(range(1, len(job['candidate_recipes']) + 1))
         # Freeze the plan on the durable job. Historical jobs without this field
         # retain their original single-seed training/resume semantics.
-        if self.gate_version == 7:
-            job['training_parallelism'] = getattr(self.args, 'training_parallelism', 1)
-        else:
-            self._snapshot_selection(job, folder)
+        job['training_parallelism'] = getattr(self.args, 'training_parallelism', 1)
         self.state['training_jobs'].append(job)
         try:
             self._seeded(job)
@@ -1452,47 +1475,7 @@ class TrainingPipeline:
         log_line(self.args.log, f'background round {round_index} queued: {path}')
         self.futures.append((job, self.executor.submit(self._run, copy.deepcopy(job))))
 
-    def _snapshot_selection(self, job, folder):
-        """task128: freeze the adventure selection templates and one independent
-        seed block on the durable job. The panel no longer reads collector
-        windows, so no state/run snapshot is frozen with it."""
-        incumbent = self.incumbent()
-        inputs = folder / 'selection_inputs'
-        inputs.mkdir(exist_ok=True)
-        templates = inputs / 'templates.json'
-        templates.write_text(json.dumps(selection_templates(
-            getattr(self.args, 'selection_holdout_manifest', None), self.args.promotion_panel)))
-        ledger = getattr(self.args, 'selection_seed_ledger', self.args.state.parent / 'selection_seed_ledger.json')
-        block = allocate_seed_block(ledger, SELECTION_BLOCK_SIZE, pools=SELECTION_POOLS)
-        job.update(training_seeds=job.get('training_seeds', list(TRAINING_SEEDS)),
-                   training_parallelism=getattr(self.args, 'training_parallelism', 2),
-                   selection_manifest=str(folder / 'selection_manifest.json'),
-                   selection_refresh=dict(incumbent=str(incumbent), templates=str(templates),
-                                          seed_block=list(block), ledger=str(ledger)))
 
-    def _prepare_selection(self, job):
-        frozen = job['selection_refresh']
-        folder = Path(job['recipe']).parent
-        ready, manifest = folder / 'selection_ready.json', Path(job['selection_manifest'])
-        # The marker only skips the engine validation below on restart; all frozen inputs
-        # live in this job's own folder and cannot change after enqueue.
-        if ready.exists():
-            return manifest
-        templates = json.loads(Path(frozen['templates']).read_text())
-        panel = selection_plan(templates, frozen['seed_block'], frozen['incumbent'])
-        self._marker(folder / 'selection_plan.json', panel)
-        from pvz_promotion import SEED_POOLS_V2
-        reserved = list(SEED_POOLS_V2)
-        # The adventure definitions are scored on the frozen scoreboard seed block
-        # outside the gate; keep the selection block off it as well.
-        for document in (json.loads((ROOT / 'configs/adventure_scoreboard.json').read_text()),
-                         json.loads((ROOT / 'configs/human_demo_tasks.json').read_text()),
-                         templates):
-            reserved.extend(seed_spans(document))
-        assert_disjoint(panel, reserved)
-        self._marker(manifest, panel)
-        self._marker(ready, dict(prepared=time.time()))
-        return manifest
 
     def _prepare_corpus(self, labels):
         """An append-only local view of recipe archives + collected archives, without copying bytes.
@@ -1639,7 +1622,7 @@ class TrainingPipeline:
                 fcntl.flock(lock, fcntl.LOCK_EX)
                 self.lock_fd = lock.fileno()  # child retains lock if the controller unexpectedly dies
                 old = json.loads(done.read_text()) if done.is_file() else None
-                if old and (job.get('gate_version') == 7 or Path(job['model']).is_file()):
+                if old:
                     if valid_certificate(old.get('promotion', {}), self.evaluation_contract(job)):
                         return old
                 # task141: a finished round keeps its report; everything still waiting behind
@@ -1649,39 +1632,8 @@ class TrainingPipeline:
                     return dict(superseded_by=newer)
                 if trained.is_file():
                     report = json.loads(trained.read_text())
-                elif job.get('training_seeds'):
-                    report = self._train_selected(job)
                 else:
-                    self._admit()
-                    local_args = copy.copy(self.args)
-                    local_args.recipe = recipe_path
-                    recipe = load_recipe(recipe_path, 'training')
-                    local_args.frames = Path(recipe['data'])
-                    report = {'round': job['round'], 'model': job['model']}
-                    for phase, command in (
-                        ('pack', pack_command(local_args, recipe['labels'])),
-                        ('train', [str(self.args.python),
-                                   str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(recipe_path)])):
-                        self._admit()
-                        report[phase + '_started'] = time.time()
-                        log_line(self.args.log, f'background round {job["round"]} {phase} started')
-                        try:
-                            if phase == 'pack':
-                                self._prepare_corpus(recipe['labels'])
-                            report[phase + '_peak_anon_bytes'] = self._command(command, folder / f'{phase}.log')
-                        finally:
-                            if phase == 'pack':
-                                # 打包已结束（成功或失败都算）： reservation 之后只按训练/评估估算，
-                                # 不再背着 pack plan 的 12 GiB 把前台压到 2 worker（2026-10-24 15:22）。
-                                self.build_peak = 0
-                        if phase == 'train':
-                            self.last_train_peak = report[phase + '_peak_anon_bytes']
-                            report['train_data_bytes'] = training_data_bytes(Path(job['model']))
-                        report[phase + '_finished'] = time.time()
-                        log_line(self.args.log, f'background round {job["round"]} {phase} done: '
-                                               f'{report[phase + "_finished"] - report[phase + "_started"]:.3f}s')
-                if job.get('gate_version') != 7 and not Path(job['model']).is_file():
-                    raise RuntimeError(f'trainer did not publish {job["model"]}')
+                    report = self._train_candidates(job)
                 temporary = trained.with_suffix('.building')
                 temporary.write_text(json.dumps(report, indent=2) + '\n')
                 temporary.replace(trained)
@@ -1700,8 +1652,8 @@ class TrainingPipeline:
         temporary.write_text(json.dumps(document, indent=2) + '\n')
         temporary.replace(path)
 
-    def _train_selected(self, job):
-        """One corpus, resource-admitted independent seeds, then a single gate candidate.
+    def _train_candidates(self, job):
+        """One corpus, one resource-admitted candidate per recipe, then the shared-incumbent gate.
 
         A failed seed is local to its candidate. Only an entirely failed round
         reaches the existing B7 retry/stop mechanism in _run/poll.
@@ -1710,8 +1662,6 @@ class TrainingPipeline:
         folder = recipe_path.parent
         recipe = load_recipe(recipe_path, 'training')
         report = dict(round=job['round'], model=job['model'])
-        if job.get('gate_version') != 7:
-            report['selection_preparation'] = str(self._prepare_selection(job))
         pack_marker = folder / 'packed.json'
         if pack_marker.is_file():
             packed = json.loads(pack_marker.read_text())
@@ -1730,15 +1680,18 @@ class TrainingPipeline:
             packed['pack_finished'] = time.time()
             self._marker(pack_marker, packed)
         report.update({key: value for key, value in packed.items() if key.startswith('pack_')})
+        from pvz_training_pack import packed_file_from_log
+        shared_pack = packed_file_from_log(folder / 'pack.log')
         python = str(self.args.python)
         def train_seed(seed, admitted=False):
             directory = folder / 'seeds' / f'seed_{seed:06d}'
             directory.mkdir(parents=True, exist_ok=True)
             path = directory / 'recipe.json'
-            variant = (job['candidate_recipes'][job['training_seeds'].index(seed)]
-                       if 'candidate_recipes' in job else dict(recipe=str(recipe_path)))
+            variant = job['candidate_recipes'][job['training_seeds'].index(seed)]
             child_recipe = dict(load_recipe(Path(variant['recipe']), 'training'),
                                 seed=seed, out=str(directory / 'student'))
+            if variant['recipe_family'] == 'B' and not path.exists():
+                child_recipe.update(self._b_recipe(job), seed=seed, out=str(directory / 'student'))
             if not path.exists():
                 write_recipe(path, child_recipe)
             model, marker = directory / 'student/model.pt', directory / 'trained.json'
@@ -1748,13 +1701,15 @@ class TrainingPipeline:
                 candidate = dict(seed=seed, model=str(model), recipe=str(path),
                                  source_recipe=variant.get('source_recipe', str(recipe_path)),
                                  recipe_family=variant.get('recipe_family', 'A'),
+                                 init=child_recipe['init'], epochs=child_recipe['epochs'],
                                  train_started=time.time())
                 try:
                     if not admitted:
                         self._admit()
                     command = [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)]
-                    if variant.get('recipe_family') == 'B':
-                        command += ['--pack-recipe', str(recipe_path)]
+                    command += ['--pack-recipe', str(recipe_path)]
+                    if shared_pack is not None:
+                        command += ['--pack-file', str(shared_pack)]
                     candidate['train_peak_anon_bytes'] = self._command(command, directory / 'train.log')
                     candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():
@@ -1803,61 +1758,15 @@ class TrainingPipeline:
                       train_data_bytes=max(candidate.get('train_data_bytes', 0) or training_data_bytes(Path(candidate['model']))
                                            for candidate in trained))
         self.last_train_peak = report['train_peak_anon_bytes']
-        if job.get('gate_version') == 7:
-            from pvz_frame_store import frame_paths
-            report['corpus_archives'] = sorted({str(path.parent.relative_to(Path(recipe['data'])))
-                for path in frame_paths(Path(recipe['data'])) if path.parent.name in set(recipe['labels'])})
-            return report
-        report.update(self._select(job, trained))
-        panel = json.loads(Path(job['selection_manifest']).read_text())
-        holdouts = {task['task_id']: len(task['seeds']) for task in panel['tasks']
-                    if task.get('selection_group') == 'unseen_deck'}
-        # task137: 随机卡组格的胜局单独记一份，便于看卡组泛化（仍计入 selection 总分）。
-        random_decks = {task['task_id']: len(task['seeds']) for task in panel['tasks']
-                        if task.get('selection_group') == 'random_deck'}
-        for candidate in candidates:
-            candidate['selection_score'] = report['selection'].get('scores', {}).get(candidate['model'])
-            if holdouts and candidate['selection_score'] is not None:
-                wins = candidate['selection_score']['wins']
-                candidate['selection_unseen_deck'] = dict(
-                    wins=sum(wins[name] for name in holdouts), games=sum(holdouts.values()),
-                    tasks={name: dict(wins=wins[name], games=games) for name, games in holdouts.items()})
-            if random_decks and candidate['selection_score'] is not None:
-                wins = candidate['selection_score']['wins']
-                candidate['selection_random_deck'] = dict(
-                    wins=sum(wins[name] for name in random_decks), games=sum(random_decks.values()),
-                    tasks={name: dict(wins=wins[name], games=games)
-                           for name, games in random_decks.items()})
-        self._marker(folder / 'candidates.json', dict(candidates=candidates))
+        from pvz_frame_store import frame_paths
+        report['corpus_archives'] = sorted({str(path.parent.relative_to(Path(recipe['data'])))
+            for path in frame_paths(Path(recipe['data'])) if path.parent.name in set(recipe['labels'])})
         return report
-
-    def _select(self, job, candidates):
-        manifest = self._prepare_selection(job)
-        panel = json.loads(manifest.read_text())
-        sets = ','.join(f'{task["task_id"]}:0:{len(task["seeds"])}' for task in panel['tasks'])
-        folder = Path(job['recipe']).parent
-        units = self._evaluation_units()
-        command = [str(self.args.python),
-                   str(ROOT / 'scripts/select_student.py'), '--candidates',
-                   ','.join(candidate['model'] for candidate in candidates), '--out', str(folder / 'student'),
-                   '--manifest', str(manifest), '--sets', sets, '--workers', str(units),
-                   '--native-games' if getattr(self.args, 'native_games', True) else '--no-native-games',
-                   '--value', str(self.args.value), '--executable', str(self.args.executable),
-                   '--resource-dir', str(self.args.resource_dir)]
-        started = time.time()
-        peak = self._command(command, folder / 'selection.log')
-        receipt = json.loads((folder / 'student/selection.json').read_text())
-        eligible = {candidate['model']: candidate for candidate in candidates}
-        if receipt['best'] not in eligible:
-            raise ValueError('selected candidate is not one of the trained candidates')
-        return dict(selection=receipt, selection_started=started, selection_finished=time.time(),
-                    selection_peak_anon_bytes=peak, selection_units=units)
-
     def poll(self, retry: bool = True):
         # A failed state write after enqueue may have left a durable job without
         # a submitted future. Recover it before polling, without duplicating workers.
         for job in self.state.get('training_jobs', []):
-            if job['status'] == 'queued' and not any(saved is job for saved, _ in self.futures):
+            if job.get('gate_version') == GATE_VERSION and job['status'] == 'queued' and not any(saved is job for saved, _ in self.futures):
                 try:
                     self._seeded(job)
                     save_state(self.args.state, self.state)
@@ -1917,6 +1826,10 @@ class TrainingPipeline:
                                     f'{report["superseded_by"]}; training and gate skipped')
             return
         promotion = report.get('promotion', {})
+        for candidate in report.get('candidates', []):
+            if (job.get('b_lineage') == CLEAN_B_LINEAGE and candidate.get('recipe_family') == 'B'
+                    and candidate['status'] == 'trained' and job['round'] > self.state.get('b_round', 0)):
+                self.state.update(b_student=candidate['model'], b_round=job['round'], b_lineage=CLEAN_B_LINEAGE)
         current_contract = self.evaluation_contract(job)
         if promotion.get('contract') != current_contract:
             job['status'] = 'queued'
@@ -1926,7 +1839,7 @@ class TrainingPipeline:
             save_state(self.args.state, self.state)
             return
         if not valid_certificate(promotion, current_contract):
-            promotion = dict(version=self.gate_version, approved=False, policy=promotion_policy(self.gate_version),
+            promotion = dict(version=self.gate_version, approved=False, policy=promotion_policy(),
                              contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
             report['promotion'] = promotion
             completed = Path(job['recipe']).parent / 'complete.json'
@@ -2003,6 +1916,43 @@ def _write_state(path: Path, state: dict) -> None:
     temporary.replace(path)
 
 
+def review_groups(state, groups, tasks, share, start_seed_ledger, renew_size, changes):
+    """Extra 1x data, consuming the original task's next seeds without adapting its ladder."""
+    finished = {group.get('review_of') for group in state.get('completed_groups', [])}
+    reviews = []
+    for group in groups:
+        task = group.get('task_definition') or tasks.get(group['task_id'], {})
+        games = math.ceil(group['games'] * share)
+        if not games or task.get('zombie_count_multiplier', 1.) == 1. or group['label'] in finished:
+            continue
+        cell = state['cells'].get(group['base'])
+        if cell is None:
+            continue
+        key = group.get('offset_key', group['task_id'])
+        renewable = cell.get('live193') or cell.get('archive') is not None
+        seeds = cell['seeds'] if renewable else task['seeds']
+        offset = max(group['offset'] + group['games'], state['offsets'].get(key, 0))
+        while offset + games > len(seeds) and renewable and start_seed_ledger is not None:
+            try:
+                renew_start_seeds(cell, start_seed_ledger, renew_size)
+            except (SeedPoolExhausted, ValueError, OSError) as error:
+                changes.append(f'{key}: 1x review seed renewal failed ({error})')
+                break
+            seeds = cell['seeds']
+        available = max(0, len(seeds) - offset)
+        if available < games:
+            changes.append(f'{key}: 1x review seeds exhausted; {min(available, games)}/{games} games')
+            games = available
+        if games:
+            definition = dict(task, zombie_count_multiplier=1., seeds=list(seeds[offset:offset + games]))
+            definition.pop('demo_start', None)  # A recorded non-1x board cannot be replayed at 1x.
+            reviews.append(dict(base=group['base'], task_id=group['task_id'], multiplier=1.,
+                task_definition=definition, manifest=group['manifest'], games=games,
+                offset=offset, offset_key=key, seed_offset=0, review_of=group['label'],
+                label=group['label'] + f'_review1_o{offset}', save_candidates=group.get('save_candidates', 0)))
+    return reviews
+
+
 def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], values: list[float],
                manifests: dict[str, Path], budget: int, per_group: int,
                teacher: dict | None = None, start_seed_ledger: Path | None = None,
@@ -2010,7 +1960,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                save_candidates_levels=frozenset(),
                random_deck_share: float = RANDOM_DECK_SHARE,
                demo_start_share: float | None = None,
-               live_catalog: dict | None = None) -> tuple[list[dict], list[str]]:
+               live_catalog: dict | None = None,
+               review_share: float = REVIEW_SHARE) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
     changes += adjust(state['cells'], values)
     specialists = {base: cell for base, cell in state['cells'].items() if cell.get('opening_specialist')}
@@ -2023,7 +1974,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     if reserved > budget:
         raise ValueError('round budget cannot cover opening specialists')
     completed = [group for group in state.get('completed_groups', [])
-                 if group.get('status', 'done') == 'done']
+                 if group.get('status', 'done') == 'done' and not group.get('review_of')]
     completed_betas = {base: {group.get('beta') for group in completed if group['base'] == base}
                        for base in specialists}
     special_picks = [(base, 1.0, 12 * (2 - len(completed_betas[base])))
@@ -2063,12 +2014,32 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
             task, extra = materialize(base, cell, live_catalog, state['round'] + 1, state)
             offset = state['offsets'].get(base, 0)
             while offset + games > len(cell['seeds']):
-                renew_start_seeds(cell, start_seed_ledger, renew_size)
-            task['seeds'] = task['seeds'] if extra.get('demo_archive') else list(cell['seeds'])
+                try:
+                    block = renew_start_seeds(cell, start_seed_ledger, renew_size)
+                except (SeedPoolExhausted, ValueError, OSError) as error:
+                    # Pool exhausted, ledger corrupt, or ledger directory unwritable: only this
+                    # cell misses out; the rest of the round still runs (task98's lesson).
+                    changes.append(f'{base}: seed renewal failed ({error})')
+                    break
+                else:
+                    changes.append(f'{base}: seeds renewed +{block[1] - block[0]} from '
+                                   f'[{block[0]},{block[1]}) (table {len(cell["seeds"])}, '
+                                   f'segments {len(cell.get("seed_blocks") or [])})')
+            if offset + games > len(cell['seeds']):
+                changes.append(f'{base}: seeds exhausted (offset {offset} + {games} > '
+                               f'{len(cell["seeds"])}); group skipped')
+                continue
+            seed_offset = None
+            if not extra.get('demo_archive'):
+                # Only this group's window goes into --task-json: the cell keeps accumulating
+                # blocks, and the whole table would eventually exceed Linux's 128 KiB argument cap.
+                task['seeds'] = list(cell['seeds'][offset:offset + games])
+                seed_offset = 0
             label = label_for(state['round'] + 1, base, multiplier,
                               start=extra.get('demo_decision')) + f'_o{offset}'
             item = dict(base=base, multiplier=multiplier, task_id=task['task_id'], offset=offset,
-                        offset_key=base, games=games, manifest=str(next(iter(manifests.values()))),
+                        seed_offset=seed_offset, offset_key=base, games=games,
+                        manifest=str(next(iter(manifests.values()))),
                         label=label, task_definition=task,
                         save_candidates=save_candidates_for(cell, task, save_candidates_levels), **extra)
             if extra.get('demo_archive'):
@@ -2140,6 +2111,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                     offset += 12
         else:
             plan.append(item)
+    plan += review_groups(state, completed + plan, tasks, review_share,
+                          start_seed_ledger, renew_size, changes)
     return plan, changes
 
 
@@ -2185,7 +2158,8 @@ def _run_group(args, state, item, round_index, per_worker):
                           future_seeds=item.get('future_seeds'),
                           save_candidates=item.get('save_candidates', 0),
                           upper_workers=upper, per_worker_bytes=per_worker,
-                          headroom_bytes=background, task_definition=item.get('task_definition'))
+                          headroom_bytes=background, task_definition=item.get('task_definition'),
+                          seed_offset=item.get('seed_offset'))
     started = time.time()
     item.update(collection_started=started, valid_games=0, student=str(args.rollout_policy),
                 student_round=state.get('student_round', 0), workers=workers)
@@ -2223,6 +2197,8 @@ def _run_group(args, state, item, round_index, per_worker):
                        f'rc={result.returncode} {seconds:.0f}s')
     if result.returncode != 0:
         raise RuntimeError(f'{item["label"]}: search_play exited {result.returncode}')
+    if item.get('review_of'):
+        return  # Reviews feed training only; do not update ladder windows or probe counters.
     bucket = cell['windows'].setdefault(
         str(adaptation_value), {'recent': [], 'wins': 0, 'games': 0})
     if beta > 0:
@@ -2358,7 +2334,8 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
-                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog)
+                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog,
+                                       review_share=getattr(args, 'review_share', REVIEW_SHARE))
             print_plan(state, plan, changes)
             if per_worker < 0:
                 if args.stop_flag.exists():
@@ -2387,10 +2364,6 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
             time.sleep(delay)
 
 
-def set_gate_version(state: dict, version: int) -> None:
-    if version not in (GATE_VERSION, 7):
-        raise ValueError(f'unsupported gate version: {version}')
-    state['gate_version'] = version
 
 
 def main() -> None:
@@ -2402,8 +2375,6 @@ def main() -> None:
                         help='additional registered training panel (task137 random-deck cells); repeatable')
     parser.add_argument('--random-deck-share', type=float, default=RANDOM_DECK_SHARE,
                         help='max share of the round budget for random-deck cells (default 0.15)')
-    parser.add_argument('--gate-version', type=int, choices=(GATE_VERSION, 7), default=7,
-                        help='7 = dual-candidate sequential staircase (default); 6 = legacy gate')
     parser.add_argument('--gpt-import-dir', type=Path,
                         help='task193: reread the existing task105 import indexes at each round')
     parser.add_argument('--gpt-archive-root', type=Path, help='root for relative task105 archive paths')
@@ -2424,8 +2395,12 @@ def main() -> None:
     parser.add_argument('--native-games', action=argparse.BooleanOptionalAction, default=True,
                         help='use native fog games in collection/selection/promotion (deploy19)')
     parser.add_argument('--rollout-policy', type=Path, default=DEFAULT_MODEL)
+    parser.add_argument('--rollout-policy-gpt', type=Path,
+                        help='GPT behavior-clone prior for fog/roof/boss levels; default --rollout-policy')
     parser.add_argument('--static-value', type=Path, default=DEFAULT_STATIC_VALUE)
     parser.add_argument('--value', type=Path, default=DEFAULT_VALUE)
+    parser.add_argument('--value-roof', type=Path,
+                        help='leaf value net for roof levels 41-50 (including the boss); default --value')
     parser.add_argument('--executable', type=Path, default=ROOT / 'build/pvz-portable')
     parser.add_argument('--resource-dir', type=Path, default=DEFAULT_RESOURCES)
     parser.add_argument('--workers', type=int, default=16,
@@ -2437,6 +2412,8 @@ def main() -> None:
                         help='跑 search_play 的解释器（默认 ~/.venvs/ml/bin/python3）')
     parser.add_argument('--round-games', type=int, default=240)
     parser.add_argument('--games-per-group', type=int, default=48)
+    parser.add_argument('--review-share', type=float, default=REVIEW_SHARE,
+                        help='非1倍任务在原配额之外追加的1倍复习份额，默认0.25，0关闭')
     parser.add_argument('--demo-start-share', type=float, default=None,
                         help='optional demo-start game cap per round; reserves random-deck quota before demo floors, remainder to multiplier cells')
     parser.add_argument('--teacher-rates', type=Path, default=DEFAULT_TEACHER_RATES,
@@ -2459,12 +2436,11 @@ def main() -> None:
                         help='training recipe for the collection student; supplies every pack row option')
     parser.add_argument('--alternate-recipe', type=Path,
                         help='recipe B candidates, sharing recipe A pack row options')
-    parser.add_argument('--candidates-per-recipe', type=int, choices=(1, 2), default=1,
-                        help='legacy gate6 training counts; gate7 always uses one seed per recipe')
+    parser.add_argument('--b-init', type=Path, default=DEFAULT_B_INIT)
+    parser.add_argument('--b-initial-epochs', type=int, default=8)
+    parser.add_argument('--b-epochs', type=int, default=4)
     parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
                         help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
-    parser.add_argument('--selection-holdout-manifest', type=Path,
-                        help='selection-only fixed unseen decks, frozen per job; never changes promotion panel')
     parser.add_argument('--opening-manifest', type=Path,
                         help='fixed 1.0x cold-start specialists, 12 beta=0 + 12 beta=0.5 per cell')
     parser.add_argument('--promotion-panel', type=Path,
@@ -2472,8 +2448,6 @@ def main() -> None:
                         help='registered unified v2 source manifest for the mandatory paired promotion gate')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
-    parser.add_argument('--selection-seed-ledger', type=Path, default=SELECTION_LEDGER,
-                        help='independent locked ledger for fresh per-round selection seeds')
     parser.add_argument('--start-seed-ledger', type=Path, default=Path(START_SEED_LEDGER_DEFAULT),
                         help='out-of-git ledger for renewed demo-start future seed blocks (task99)')
     parser.add_argument('--restore-start-cell', action='append', default=[], metavar='TASK_ID',
@@ -2490,12 +2464,12 @@ def main() -> None:
         parser.error('--workers must be positive')
     if args.min_eval_units < 1:
         parser.error('--min-eval-units must be positive')
-    if args.candidates_per_recipe > 1 and args.alternate_recipe is None:
-        parser.error('--candidates-per-recipe 2 requires --alternate-recipe')
-    if args.selection_holdout_manifest is not None and not args.selection_holdout_manifest.is_absolute():
-        parser.error('--selection-holdout-manifest must be absolute')
+    if args.b_initial_epochs < 1 or args.b_epochs < 1:
+        parser.error('B epoch counts must be positive')
     if args.round_games < 1 or args.games_per_group < 1 or args.rounds < 1:
         parser.error('rounds and game budgets must be positive')
+    if not 0.0 <= args.review_share <= 1.0:
+        parser.error('--review-share must be within 0..1')
     try:
         args.save_candidates_levels = parse_levels(args.save_candidates_levels)
     except ValueError as error:
@@ -2507,7 +2481,7 @@ def main() -> None:
         value = getattr(args, name)
         if value is not None and not value.is_absolute():
             parser.error(f'all paths must be absolute: {name}')
-    if not args.seed_ledger.is_absolute() or not args.selection_seed_ledger.is_absolute():
+    if not args.seed_ledger.is_absolute():
         parser.error('seed ledger paths must be absolute')
     if not args.start_seed_ledger.is_absolute():
         parser.error('--start-seed-ledger must be absolute')
@@ -2520,12 +2494,6 @@ def main() -> None:
         parser.error('--random-deck-share must be within 0..1')
     if args.demo_start_share is not None and not 0.0 <= args.demo_start_share <= 1.0:
         parser.error('--demo-start-share must be within 0..1')
-    try:
-        probe = (SEED_POOLS_V2[0][0], SEED_POOLS_V2[0][0] + promotion_policy(args.gate_version)['pair_count'])
-        if args.gate_version != 7:
-            freeze_panel(json.loads(args.promotion_panel.read_text()), version=args.gate_version, seed_block=probe)
-    except (OSError, ValueError, KeyError) as error:
-        parser.error(f'--promotion-panel: {error}')
     tasks, values, names, manifests = load_panel(args.manifest, args.extra_manifest)
     extra_bases = {cell_of(task_id, names) for task_id, task in tasks.items()
                    if task.get('random_deck_cell')}
@@ -2567,10 +2535,7 @@ def main() -> None:
     else:
         windows, offsets = init_from_runs(patterns, names, extra_bases)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
-    try:
-        set_gate_version(state, args.gate_version)
-    except ValueError as error:
-        parser.error(str(error))
+    state['gate_version'] = GATE_VERSION
     if args.dry_run:
         # 预览也要走续领逻辑，但不能真花种子：在账本副本上领，块与生产下次会拿到的一致。
         with tempfile.TemporaryDirectory() as preview_dir:
@@ -2582,7 +2547,8 @@ def main() -> None:
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
-                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog)
+                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog,
+                                       review_share=args.review_share)
         print_plan(state, plan, changes)
         for item in plan:
             print('collect: ' + shlex.join(command_for(args, Path(item['manifest']), item['task_id'],
@@ -2592,27 +2558,14 @@ def main() -> None:
                                                        demo_decision=item.get('demo_decision'),
                                                        future_seeds=item.get('future_seeds'),
                                                        save_candidates=item.get('save_candidates', 0),
-                                                       task_definition=item.get('task_definition'))))
+                                                       task_definition=item.get('task_definition'),
+                                                       seed_offset=item.get('seed_offset'))))
         # The pack command this controller would run at the end of the round: reviewable before
         # a round is spent, and the only place the recipe's row options become a real command.
         labels = pack_labels(state, ','.join(load_recipe(args.recipe, 'training')['labels']))
         if labels:
             print('pack: ' + ' '.join(pack_command(args, labels)))
-        if args.gate_version == 7:
-            print('gate7: two candidates A/B, one seed each, shared incumbent; no selection panel')
-            return
-        incumbent = Path(state.get('student') or args.rollout_policy)
-        preview = selection_plan(
-            selection_templates(args.selection_holdout_manifest, args.promotion_panel),
-            (SELECTION_POOLS[0][0], SELECTION_POOLS[0][0] + SELECTION_BLOCK_SIZE), incumbent)
-        print('selection preview (no allocation, no engine, no state write): ' + json.dumps(dict(
-            adventure_tasks=len(preview['adventure_tasks']), random_families=3,
-            unseen_deck_tasks=preview.get('selection_holdout_tasks', []),
-            score_only_tasks=preview.get('score_only', []),
-            candidates=(2 * args.candidates_per_recipe if args.alternate_recipe else len(TRAINING_SEEDS)),
-            training_parallelism=args.training_parallelism,
-            games=sum(len(task['seeds']) for task in preview['tasks']),
-            pools=SELECTION_POOLS, ledger=str(args.selection_seed_ledger))))
+        print('gate7: two candidates A/B, one seed each, shared incumbent; no selection panel')
         return
     args.metrics = None
     try:

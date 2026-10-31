@@ -20,15 +20,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
 
 
-def archive_fingerprint(data: Path, labels) -> str:
+def archive_fingerprint(data: Path, labels, llm_demo_import=None, llm_demo_results=(1,)) -> str:
     """What the pack was built from: every archive's path and size, so a new or changed game invalidates it.
 
     mtime is deliberately not part of it: a copy that keeps the bytes (HF transfer, scp) keeps the size,
     and a training run must not care when the file was written.
     """
-    from pvz_frame_store import frame_paths
     data = Path(data)
-    return fingerprint_paths(data, [path for path in frame_paths(data) if path.parent.name in labels])
+    return fingerprint_paths(data, training_paths(data, labels, llm_demo_import, llm_demo_results))
+
+
+def training_paths(data, labels, llm_demo_import=None, llm_demo_results=(1,)):
+    from pvz_frame_store import frame_paths
+    paths = [path for path in frame_paths(data) if path.parent.name in labels]
+    if llm_demo_import is not None:
+        from pvz_llm_demo_rows import demo_paths
+        paths.extend(demo_paths(Path(data), Path(llm_demo_import), llm_demo_results))
+    return sorted(paths, key=lambda path: str(path.parent))
 
 
 def fingerprint_paths(data: Path, paths) -> str:
@@ -68,6 +76,8 @@ def segment_options(options: dict, label: str, sources: str) -> dict:
             'label_weight': {label: options['label_weight'][label]}
             if label in options['label_weight'] else {}}
     result.pop('label_keep', None)
+    result.pop('llm_demo_import', None)
+    result.pop('llm_demo_results', None)
     keep = label_keep_options([label], options.get('label_keep'))
     if keep:
         result['label_keep'] = keep
@@ -102,24 +112,63 @@ def keep_archive(data, path, rules):
 
 
 def segment_path(data: Path, options: dict) -> Path:
-    return Path(data) / 'packs' / 'segments' / pack_path(data, options).name
+    directory = Path(data) / 'packs' / 'segments'
+    target = directory / pack_path(data, options).name
+    # Existing production segments with an explicit 1.0 label factor have identical rows.
+    if not target.is_file() and len(options['labels']) == 1:
+        legacy = dict(options, label_weight={options['labels'][0]: 1.0})
+        previous = directory / (_pack_key(legacy) + '.npz')
+        if previous.is_file():
+            return previous
+    return target
 
 
 def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = False,
                  aux_horizon: int = 0, packet_head: str = "slot", with_context: bool = False,
                  label_weight: dict[str, float] | None = None, sources: str | None = None,
-                 label_keep: dict[str, float] | None = None) -> dict:
-    """Everything that changes the rows or their values: a pack is valid for exactly one tuple."""
+                 label_keep: dict[str, float] | None = None,
+                 llm_demo_import=None, llm_demo_results=(1,), source_weight=None) -> dict:
+    """Packed row content only; label/source weights are applied by each trainer."""
     keep = label_keep_options(labels, label_keep)
-    return {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
+    result = {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
             "obs": obs, "cells": bool(cells), "aux_horizon": int(aux_horizon), "packet_head": packet_head,
             "with_context": bool(with_context), **({'label_keep': keep} if keep else {}),
-            "label_weight": {k: round(float(v), 6) for k, v in sorted((label_weight or {}).items())}}
+            "label_weight": {}}
+    if llm_demo_import is not None:
+        result.update(llm_demo_import=str(llm_demo_import), llm_demo_results=sorted(llm_demo_results))
+    return result
+
+
+def content_options(options):
+    result = dict(options, label_weight={})
+    result.pop('source_weight', None)
+    return result
+
+
+def _pack_key(options):
+    return hashlib.sha1(json.dumps(options, sort_keys=True).encode()).hexdigest()[:16]
 
 
 def pack_path(data: Path, options: dict) -> Path:
-    key = hashlib.sha1(json.dumps(options, sort_keys=True).encode()).hexdigest()[:16]
-    return Path(data) / "packs" / f"{key}.npz"
+    return Path(data) / "packs" / f"{_pack_key(content_options(options))}.npz"
+
+
+def packed_file_from_log(log):
+    """Read the packer's published file, without rescanning a mutable source pool."""
+    log = Path(log)
+    if not log.is_file():
+        return None
+    with log.open('rb') as stream:
+        stream.seek(max(0, log.stat().st_size - 65536))
+        lines = stream.read().decode(errors='replace').splitlines()
+    for line in reversed(lines):
+        try:
+            report = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(report, dict) and report.get('pack'):
+            return Path(report['pack'])
+    return None
 
 
 
@@ -136,4 +185,7 @@ def pack_flags(options: dict) -> list[str]:
         flags += ['--label-weight', ','.join(f'{k}={v}' for k,v in options['label_weight'].items())]
     if options.get('label_keep'):
         flags += ['--label-keep', json.dumps(options['label_keep'])]
+    if options.get('llm_demo_import'):
+        flags += ['--llm-demo-import', options['llm_demo_import'], '--llm-demo-results',
+                  ','.join(map(str, options['llm_demo_results']))]
     return flags

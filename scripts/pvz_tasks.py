@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pvz_env import PlayerProfileContext  # noqa: E402
+from pvz_env import PlayerProfileContext, SeedCard  # noqa: E402
 import pvz_constants  # noqa: E402
 
 DECK = (0, 1, 2, 3, 4, 5)
@@ -28,6 +28,25 @@ ROOF_R7_DECK = (0, 1, 2, 3, 32, 35, 33)
 def conveyor_belt_level(level: int) -> bool:
     """Read Adventure conveyor eligibility from Board/LawnApp, including special levels."""
     return level in pvz_constants.adventure_conveyor_levels()
+
+
+def player_deck_levels(*, include_boss: bool = False) -> tuple[int, ...]:
+    """普通冒险选卡关；沿用传送带判定，另排除砸罐子与打僵尸。
+
+    L50 仅供已经支持任务卡组覆盖 Boss 卡槽的接口显式启用。
+    """
+    return tuple(level for level in range(1, 51)
+                 if (level == 50 and include_boss)
+                 or (level not in (15, 35) and not conveyor_belt_level(level)))
+
+
+def deck_pool_for_level(level: int, blacklist) -> list[int]:
+    """二周目可表达的选卡范围减任务黑名单；不使用随机戴夫推荐。"""
+    scene = pvz_constants.background_for_level(level)
+    region = scene.split("_")[-1].lower()
+    banned = set(blacklist.get("all", [])) | set(blacklist.get(region, []))
+    return sorted(d["type"] for d in pvz_constants.plant_defs()
+                  if 0 <= d["type"] < 48 and d["type"] not in banned)
 
 
 def deck_for_level(level: int, conveyor_start: str | None = None, *,
@@ -71,11 +90,24 @@ def profile_for_deck(deck: tuple[int, ...], first_aid_owned: bool = False) -> Pl
     再种一个同种坚果），合法动作由模拟器自己给出，这里只负责把所有权传进
     profile。缺省 False，旧任务的 reset 报文逐字节不变（AGENTS.md §8：
     改任务 = 换任务族，任务清单里用 "first_aid_owned": true 显式打开）。"""
-    upgrades = tuple(sorted(set(deck) & set(pvz_constants.upgrade_plants())))
+    seed_types, imitater_owned = [], False
+    for card in deck:
+        if type(card) is int:
+            seed_type = card
+        elif isinstance(card, SeedCard):
+            seed_type = card.seed_type
+            imitater_owned |= seed_type == pvz_constants._seed_index('IMITATER')
+        elif isinstance(card, tuple) and len(card) == 2 and all(type(value) is int for value in card):
+            seed_type = card[0]
+            imitater_owned |= seed_type == pvz_constants._seed_index('IMITATER')
+        else:
+            raise ValueError('deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs')
+        seed_types.append(seed_type)
+    upgrades = tuple(sorted(set(seed_types) & set(pvz_constants.upgrade_plants())))
     # 空卡组 = 原版传送带开局（任务 deck: []）：没有任务卡组，profile 仍用正常 6 槽，
     # 棋盘用引擎自己的 10 格传送带。
     return PlayerProfileContext(seed_slot_count=len(deck) if deck else 6,
-                                owned_upgrade_plants=upgrades,
+                                owned_upgrade_plants=upgrades, imitater_owned=imitater_owned,
                                 first_aid_owned=bool(first_aid_owned))
 
 

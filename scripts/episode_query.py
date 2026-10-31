@@ -61,7 +61,7 @@ from render_episode import (  # noqa: E402
 # 不在本文件里手抄一份标签表，抄了会和源码漂移。
 import pvz_constants  # noqa: E402
 
-SCHEMA = "episode_archive_v1"
+from pvz_episode_archive import SCHEMA, read_meta, write_meta
 
 
 # ---------------------------------------------------------------- 存档读写
@@ -88,17 +88,15 @@ def capture(resource_dir: str, seed: int, level: int, policy: str, deck,
         "frame_count": len(rec["frames"]),
     }
     meta["checkpoint"] = rec["task"].get("checkpoint")
-    (out_dir / "meta.json").write_text(
-        json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
-    with (out_dir / "frames.jsonl").open("w", encoding="utf-8") as fh:
-        for fr in rec["frames"]:
-            fh.write(json.dumps(fr, ensure_ascii=False, separators=(",", ":")) + "\n")
+    meta = write_meta(out_dir, meta)
+    from pvz_frame_store import write_frames
+    write_frames(out_dir / 'frames.npz', rec['frames'], cache=False)
     return {"meta": meta, "log": rec["log"]}
 
 
 def load(archive: Path) -> tuple[dict, list]:
     from pvz_frame_store import frame_path, read_frames
-    meta = json.loads((archive / "meta.json").read_text(encoding="utf-8"))
+    meta = read_meta(archive)
     frames = read_frames(frame_path(archive))
     return meta, frames
 
@@ -941,19 +939,16 @@ def _whatif(archive: Path, meta: dict, frames: list, decision: int,
                           4000, deck, override={decision: top[1]}, prefix_actions=prefix,
                           checkpoint=t.get("checkpoint"), task_extra=_replay_task_extra(t))
                 out.mkdir(parents=True, exist_ok=True)
-                (out / "meta.json").write_text(json.dumps(
+                write_meta(out,
                     {"schema": SCHEMA,
                      "task": {**t,
                               **({"policy": "student", "source_policy": "teacher"} if t.get("policy") == "teacher" else {}),
                               "note": f"反事实：第 {decision} 步改为 "
                                       f"{_action_text(top[1], hand)}"},
                      "outcome": rec["outcome"], "totals": rec["totals"],
-                     "frame_count": len(rec["frames"])},
-                    ensure_ascii=False, indent=2), encoding="utf-8")
-                with (out / "frames.jsonl").open("w", encoding="utf-8") as fh:
-                    for fr in rec["frames"]:
-                        fh.write(json.dumps(fr, ensure_ascii=False,
-                                            separators=(",", ":")) + "\n")
+                     "frame_count": len(rec["frames"])})
+                from pvz_frame_store import write_frames
+                write_frames(out / 'frames.npz', rec['frames'], cache=False)
             L.append(f"  最好的那个已存档到 {out} —— 可以接着用 lane / narrative / "
                      f"frame 查它，和原局对照。")
     else:

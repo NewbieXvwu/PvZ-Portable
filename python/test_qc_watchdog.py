@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import time
+import sys
 from pathlib import Path
 
 import pytest
@@ -43,26 +44,13 @@ if [[ "$1" == '+%s' ]]; then cat "$WATCHDOG_FIXTURE/now"; else "$WATCHDOG_REAL_D
     env = dict(os.environ, WATCHDOG_FIXTURE=str(tmp_path), PATH=f'{tools}:{os.environ["PATH"]}',
                WATCHDOG_REAL_DATE=shutil.which('gdate') or shutil.which('date'))
     def run(function='watchdog_tick', *params):
-        return subprocess.run(['bash', '-c', 'source "$1"; LOG_DIR=$2; shift 2; "$@"',
-                               'test', str(SCRIPT), str(tmp_path), function, *map(str, params)],
-                              env=env, text=True, capture_output=True, timeout=10)
-    def deployment(name='qc_deploy_new.sh', tag='new', modified=now):
-        p = tmp_path / name
-        p.write_text(f'''#!/bin/bash
-R=/safe/repo; W=$R/.claude/worktrees/cq; PY=/python
-NEWEXE=$W/build5/pvz-portable
-PANEL3=$W/panel.json
-O=/unneeded/$(date +%s)
-start_qc() {{
- tmux new-session -d -s qc "env PVZ_NO_POPUP=1 $PY $W/scripts/curriculum_queue.py --tag {tag} --executable $1 --promotion-panel $PANEL3"
-}}
-touch {tmp_path}/DEPLOYMENT_MAIN_RAN
-start_qc "$NEWEXE"
-''')
-        os.utime(p, (modified, modified))
-        return p
-    deployment()
-    return tmp_path, now, run, deployment
+        return subprocess.run(['bash', '-c',
+            'source "$1"; LOG_DIR=$2; PYTHON=$3; QC_LAUNCH=$4; REPO=$2/repo; WORKTREE=$REPO/cq; shift 4; "$@"',
+            'test', str(SCRIPT), str(tmp_path), sys.executable,
+            str(SCRIPT.with_name('qc_launch.py')), function, *map(str, params)],
+            env=env, text=True, capture_output=True, timeout=10)
+    return tmp_path, now, run
+
 
 
 def new_sessions(root):
@@ -70,24 +58,23 @@ def new_sessions(root):
     return [line for line in path.read_text().splitlines() if line.startswith('new-session')] if path.exists() else []
 
 
-def test_dead_qc_uses_latest_function_only_and_archives_last_50(watchdog):
-    root, now, run, deploy = watchdog
-    deploy('qc_deploy_older.sh', 'old', now - 500)
+def test_dead_qc_uses_shared_launcher_and_archives_last_50(watchdog):
+    root, now, run = watchdog
     (root / 'qc.out').write_text(''.join(f'line {i}\n' for i in range(80)))
     result = run()
     assert result.returncode == 0, result.stderr
-    assert len(new_sessions(root)) == 1 and '--tag new' in new_sessions(root)[0]
-    assert '/safe/repo/.claude/worktrees/cq/build5/pvz-portable' in new_sessions(root)[0]
-    assert not (root / 'DEPLOYMENT_MAIN_RAN').exists()
+    assert len(new_sessions(root)) == 1
+    assert '--obs-v3' in new_sessions(root)[0] and '--native-games' in new_sessions(root)[0]
+    assert str(root / 'repo/cq/scripts/curriculum_queue.py') in new_sessions(root)[0]
     assert next(root.glob('qc_crash_*.out')).read_text().splitlines() == [f'line {i}' for i in range(30, 80)]
-    assert 'start_qc' in (root / 'qc_setup.log').read_text()
+    assert 'qc_launch.py' in (root / 'qc_setup.log').read_text()
     assert 'LOCK_LEAK' not in (root / 'qc_setup.log').read_text()
     assert not list(root.glob('qc_watchdog_start_*.sh'))
 
 
 @pytest.mark.parametrize('blocker', ['stop_curr', 'deploying'])
 def test_stop_or_deployment_suppresses_restart(watchdog, blocker):
-    root, _, run, _ = watchdog
+    root, _, run = watchdog
     (root / blocker).touch()
     assert run().returncode == 0
     assert not new_sessions(root)
@@ -95,7 +82,7 @@ def test_stop_or_deployment_suppresses_restart(watchdog, blocker):
 
 
 def test_two_restarts_then_dead_session_latches_halt(watchdog):
-    root, now, run, _ = watchdog
+    root, now, run = watchdog
     for _ in range(2):
         assert run().returncode == 0
         (root / 'alive').unlink()
@@ -109,7 +96,7 @@ def test_two_restarts_then_dead_session_latches_halt(watchdog):
 
 
 def test_two_launch_failures_also_latch_halt(watchdog):
-    root, _, run, _ = watchdog
+    root, _, run = watchdog
     (root / 'start_fails').touch()
     run()
     run()
@@ -119,14 +106,14 @@ def test_two_launch_failures_also_latch_halt(watchdog):
 
 
 def test_expired_restart_attempt_does_not_spend_current_window(watchdog):
-    root, now, run, _ = watchdog
+    root, now, run = watchdog
     (root / 'qc_watchdog.restarts').write_text(f'{now - 1801}\n{now - 1801}\n')
     run()
     assert len(new_sessions(root)) == 1
 
 
 def test_corrupt_budget_refuses_restart(watchdog):
-    root, _, run, _ = watchdog
+    root, _, run = watchdog
     (root / 'qc_watchdog.restarts').write_text('corrupt\n')
     run()
     assert not new_sessions(root)
@@ -134,7 +121,7 @@ def test_corrupt_budget_refuses_restart(watchdog):
 
 
 def test_stale_live_log_warns_without_restart_and_touch_is_not_progress(watchdog):
-    root, now, run, _ = watchdog
+    root, now, run = watchdog
     (root / 'alive').touch()
     log = root / 'curriculum.log'
     log.write_text('first line\n')
@@ -152,34 +139,13 @@ def test_stale_live_log_warns_without_restart_and_touch_is_not_progress(watchdog
     assert not new_sessions(root)
 
 
-def test_bad_latest_deployment_does_not_fall_back_to_older(watchdog):
-    root, now, run, deploy = watchdog
-    deploy('qc_deploy_unknown.sh', modified=now + 5).write_text('touch /DO_NOT_RUN\n')
-    run()
-    assert not new_sessions(root)
-    assert 'cannot extract start_qc' in (root / 'qc_setup.log').read_text()
 
 
-@pytest.mark.parametrize('calling_convention', ['alternate_variable', 'no_argument'])
-def test_actual_start_invocation_is_preserved(watchdog, calling_convention):
-    root, _, run, _ = watchdog
-    p = root / 'qc_deploy_new.sh'
-    text = p.read_text()
-    if calling_convention == 'alternate_variable':
-        text = text.replace('NEWEXE', 'EXE')
-    else:
-        text = text.replace('--executable $1', '--executable $NEWEXE')
-        text = text.replace('start_qc "$NEWEXE"', 'start_qc')
-    p.write_text(text)
-    result = run()
-    assert result.returncode == 0, result.stderr
-    assert len(new_sessions(root)) == 1
-    assert '/safe/repo/.claude/worktrees/cq/build5/pvz-portable' in new_sessions(root)[0]
 
 
 @pytest.mark.skipif(shutil.which('flock') is None, reason='Linux flock command is unavailable')
 def test_second_watchdog_exits_under_existing_lock(watchdog):
-    root, _, run, _ = watchdog
+    root, _, run = watchdog
     with (root / 'qc_watchdog.lock').open('w') as handle:
         fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
         assert run('watchdog_main').returncode == 0

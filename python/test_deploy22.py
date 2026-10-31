@@ -48,7 +48,7 @@ def test_deploy22_next_round_live_pool_dedup_mixing_and_global_holdout(tmp_path,
     assert 'rd193_l2_train' not in catalog and 'rd193_l3_train' not in catalog
     assert not any(item['kind'] == 'demo' for item in catalog.values())
     new = archive(tmp_path, 'e', level=4)
-    (tmp_path / 'import_progress.json').write_text(json.dumps(dict(archives=[new])))
+    publish(tmp_path, [first, duplicate, excluded, hard, new])
     refreshed = live.refresh(saved, tasks, tmp_path, tmp_path, [], {})
     assert 'rd193_l4_train' in refreshed
 
@@ -121,61 +121,52 @@ def test_deploy22_planner_quotas_and_seed_offsets_without_manifest(tmp_path):
         768, 48, start_seed_ledger=ledger, random_deck_share=.25, demo_start_share=.25, live_catalog=catalog)
     assert sum(p['games'] for p in plan if 'demo_archive' not in p) == 192
     assert sum(p['games'] for p in plan if 'demo_archive' in p) == 192
-    seed_sets = [set(p.get('future_seeds', p['task_definition']['seeds'][p['offset']:p['offset']+p['games']])) for p in plan]
+    seed_sets = [set(p.get('future_seeds') or p['task_definition']['seeds']) for p in plan]
     assert len(set.union(*seed_sets)) == sum(map(len, seed_sets))
     assert all('task_definition' in p and p['offset_key'] == p['base'] for p in plan)
-    first = plan[0]; base = first['base']
+    # Whole-game live cells carry only this group's window; the cell table keeps accumulating.
+    whole = [p for p in plan if 'demo_archive' not in p]
+    assert all(p['seed_offset'] == 0 and len(p['task_definition']['seeds']) == p['games']
+               for p in whole)
+    first = whole[0]; base = first['base']
     saved['offsets'][base] = first['games']
     saved['cells'][base]['mult_index'] = 3
     next_plan, _ = queue.plan_round(saved, {}, {}, [1., 1.25], {'placeholder': ROOT / 'configs/gate_v5_panel.json'},
         768, 48, start_seed_ledger=ledger, random_deck_share=.25, demo_start_share=.25, live_catalog=catalog)
     again = next(p for p in next_plan if p['base'] == base)
-    assert again['offset'] == first['games']
-    assert set(again['task_definition']['seeds'][again['offset']:again['offset']+again['games']]).isdisjoint(seed_sets[0])
+    assert again['offset'] == first['games'] and again['seed_offset'] == 0
+    assert set(again['task_definition']['seeds']).isdisjoint(first['task_definition']['seeds'])
+    review = next(p for p in next_plan if p.get('review_of') == again['label'])
+    assert review['games'] == 12 and review['multiplier'] == 1.
+    assert review['task_definition']['deck'] == again['task_definition']['deck']
+    assert review['offset_key'] == again['offset_key'] == base
+    assert set(review['task_definition']['seeds']).isdisjoint(again['task_definition']['seeds'])
 
 
-def test_deploy22_import_cli_updates_existing_index_without_scanning(tmp_path):
-    import pvz_live_import as handoff
-    old = dict(source='old', archive='/old', verify='通过', result=1)
-    publish(tmp_path, [old])
-    scan = tmp_path / 'scan_jobs.json'; scan.write_text('old scan work retained')
-    row = dict(source='new', archive='/new', verify='通过', result=1)
-    importer = SimpleNamespace()
-    original_scan = lambda *a, **kw: pytest.fail('offline scan must not be invoked')
-    importer.scan_plan = original_scan
-    def run(*args, **kwargs):
-        assert importer.scan_plan([], {}, 1)['archives'] == []
-        return dict(rows=[row], layers={}, plan=handoff.no_scan_plan(), registered=[])
-    importer.run = run
-    importer.render_report = lambda *a: 'imported\n'
-    args = SimpleNamespace(no_verify=True, input=tmp_path, dest=tmp_path, manifest=tmp_path/'unused',
-        layers=tmp_path/'unused', resource_dir=tmp_path, executable=Path('/engine'), future_base=1,
-        seed_ledger=tmp_path/'must_not_exist.json', report=None, scan_out=scan)
-    assert handoff.main_with(args, importer) == 0
-    assert scan.read_text() == 'old scan work retained'
-    assert not args.seed_ledger.exists()
-    assert importer.scan_plan is original_scan
-    assert len(json.loads((tmp_path/'merged_progress.json').read_text())['archives']) == 2
+def test_deploy24_live193_seed_renewal_failure_skips_only_that_group(tmp_path, monkeypatch):
+    saved = state(); catalog = {}
+    for level in (1, 2):
+        base = f'rd193_l{level}_train'
+        saved['cells'][base] = dict(level=level, family='gpt_live', last_round=0, live193=True,
+            random_deck_cell=True, windows={}, mult_index=2, ladder=list(live.LADDER), seeds=[])
+        catalog[base] = dict(kind='random', options=[dict(
+            task_id=base, level=level, deck=[0, 1, 2, 3, 4, 7], zombie_count_multiplier=1.)])
+    exhausted = 'rd193_l1_train'
 
+    def renew(cell, ledger, size=256):
+        if cell is saved['cells'][exhausted]:
+            raise queue.SeedPoolExhausted('test pool exhausted')
+        cell['seeds'] = cell['seeds'] + list(range(200000000, 200000000 + size))
+        return [200000000, 200000000 + size]
 
-def test_deploy22_prepared_import_adapter_keeps_existing_sha_implementation(tmp_path):
-    from deploy22_import import install
-    scripts = tmp_path/'scripts'; scripts.mkdir()
-    importer = scripts/'import_llm_run.py'
-    importer.write_text('import sys\nfrom llm_import_sha import run_sha\ndef main_with(args):\n    old()\n\ndef main():\n    pass\n')
-    batch = scripts/'task105_import_batch.py'
-    batch.write_text("ROOT = 'root'\nENGINE = 'engine'\ndef main():\n    old_scan()\n\nif __name__ == '__main__':\n    main()\n")
-    install(tmp_path, ROOT/'scripts/pvz_live_import.py')
-    assert 'from llm_import_sha import run_sha' in importer.read_text()
-    assert 'return live_import(args, sys.modules[__name__])' in importer.read_text()
-    assert 'return batch_main(ROOT, ENGINE)' in batch.read_text()
-
-
-@pytest.mark.parametrize('script', ['qc_deploy22.sh', 'deploy22_at_boundary.sh'])
-def test_deploy22_prepared_shell_syntax(script):
-    import subprocess
-    result = subprocess.run(['bash', '-n', str(ROOT/'scripts'/script)], capture_output=True, text=True)
-    assert result.returncode == 0, result.stderr
+    monkeypatch.setattr(queue, 'renew_start_seeds', renew)
+    plan, changes = queue.plan_round(saved, {}, {}, [1., 1.25],
+        {'placeholder': ROOT / 'configs/gate_v5_panel.json'}, 768, 48,
+        start_seed_ledger=tmp_path / 'seeds.json',
+        random_deck_share=.25, demo_start_share=.25, live_catalog=catalog)
+    assert exhausted not in {item['base'] for item in plan}
+    assert any(exhausted in change and 'failed' in change for change in changes)
+    assert plan and all(len(item['task_definition']['seeds']) == item['games'] for item in plan)
 
 
 @pytest.mark.skipif(__import__('os').environ.get('PVZ_DEPLOY22_E2E') != '1', reason='one-time desktop rehearsal')

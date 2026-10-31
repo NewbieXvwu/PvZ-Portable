@@ -9,6 +9,7 @@
 
 - [运行环境 / 测试陷阱](notes/env.md)
 - [文档结构 / 仓库约定](notes/repo.md)
+- [单一入口与 C++ 权威约束](../AGENTS.md)
 - [台式机（WSL）连接与运维](notes/desktop.md)
 - [分工 / 每任务独立计算的游戏进程上限 / CUDA 执行记录](notes/workflow.md)
 - [失败模式：落点错配](notes/lane-mismatch.md)
@@ -119,3 +120,4 @@
 
 - [task183 / deploy21：双候选序贯门禁与热启动交付](docs/task183-deploy21.md)
 - [task193 / deploy22：GPT 胜局直接入课程与待审部署](docs/task193-deploy22.md)
+- [task204 审计与 task205 / deploy26 第一批收敛](docs/task204-single-path.md)

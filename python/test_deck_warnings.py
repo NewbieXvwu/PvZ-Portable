@@ -7,7 +7,8 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import TaskSpec, profile_for_deck
+from pvz_env import TaskSpec
+from pvz_tasks import profile_for_deck
 from pvz_event_env import EventWaitEnv
 
 RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
