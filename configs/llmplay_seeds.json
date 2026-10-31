@@ -587,28 +587,28 @@
       235000000
     ],
     "llmplay_decks_native_l5_m100": [
-      236000000
+      307000000
     ],
     "llmplay_decks_native_l10_m100": [
-      237000000
+      306000000
     ],
     "llmplay_decks_native_l20_m100": [
-      238000000
+      305000000
     ],
     "llmplay_decks_native_l25_m100": [
-      239000000
+      304000000
     ],
     "llmplay_decks_native_l30_m100": [
-      240000000
+      303000000
     ],
     "llmplay_decks_native_l40_m100": [
-      241000000
+      302000000
     ],
     "llmplay_decks_native_l45_m100": [
-      242000000
+      301000000
     ],
     "llmplay_decks_native_l50_m100": [
-      243000000
+      300000000
     ]
   },
   "mode": "decks",
@@ -669,7 +669,7 @@
     "min_eight_decks": 3,
     "coverage_per_card": 2,
     "coverage_priority": {},
-    "growth_step": 4,
+    "growth_step": 2,
     "default_shards": 3,
     "terrain_shards": [
       [
@@ -752,18 +752,18 @@
         46
       ]
     },
-    "note": "task186: 仅扩展胜利卡组；coverage_priority 按地形/卡号补 task185 重点卡目标次数；旧循环定义保留供历史读取。",
+    "note": "task186: 仅扩展胜利卡组；coverage_priority 按地形/卡号补 task185 重点卡目标次数；旧循环定义保留供历史读取。task210: 传送带支线优先、各关目标 16 胜，L50/45/40 排队首；主线每轮加 2 套；支线种子窗口迁至 300000000–307999999，避免与旧窗口重发。",
     "native_order": [
-      "llmplay_decks_native_l5_m100",
-      "llmplay_decks_native_l10_m100",
-      "llmplay_decks_native_l20_m100",
-      "llmplay_decks_native_l25_m100",
-      "llmplay_decks_native_l30_m100",
-      "llmplay_decks_native_l40_m100",
+      "llmplay_decks_native_l50_m100",
       "llmplay_decks_native_l45_m100",
-      "llmplay_decks_native_l50_m100"
+      "llmplay_decks_native_l40_m100",
+      "llmplay_decks_native_l30_m100",
+      "llmplay_decks_native_l25_m100",
+      "llmplay_decks_native_l20_m100",
+      "llmplay_decks_native_l10_m100",
+      "llmplay_decks_native_l5_m100"
     ],
-    "native_wins": 8,
-    "native_seed_base": 236000000
+    "native_wins": 16,
+    "native_seed_base": 300000000
   }
 }

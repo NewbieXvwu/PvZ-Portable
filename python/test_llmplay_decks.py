@@ -141,12 +141,12 @@ def test_decks_goal_grows_and_seed_windows_extend_without_materializing_seeds():
     cards = []
     for length, count in ((6, 3), (8, 3), (9, 6)):
         cards.extend([[1] + list(combo) for combo in itertools.islice(itertools.combinations(pool, length - 1), count)])
-    # 支线已完成（此夹具没有分配支线），本片覆盖完成后主线继续加4组。
+    # 支线已完成（此夹具没有分配支线），本片覆盖完成后主线继续加2组。
     with patch.object(decks, 'assigned_tasks', side_effect=lambda native=False: [] if native else ['llmplay_decks_l1_m100']), \
             patch.dict(decks.config(), coverage_per_card=0):
         doc = workflow.derive([entry(1, deck, n) for n, deck in enumerate(cards)], 'run')
     info = doc['levels']['llmplay_decks_l1_m100']
-    assert info['baseline_complete'] and info['goal'] == 16
+    assert info['baseline_complete'] and info['goal'] == 14
     assert workflow.next_task(doc, claim=False)['item'] is not None
     assert doc['complete'] is False
     last = decks.config()['seed_window'] - 1
@@ -243,21 +243,24 @@ def test_decks_fog_specs_and_unknown_history_do_not_count_as_public_wins():
     assert doc['levels'][old['task_id']]['victory_decks'] == 1
 
 
-def test_decks_native_is_lower_priority_and_eight_distinct_seeds_complete():
+def test_decks_native_is_dispatched_first_until_sixteen_distinct_seed_wins():
     doc = workflow.derive([], 'run')
-    assert workflow.next_task(doc, claim=False)['item']['layer'] == 'decks'
-    claimed = {workflow._slot(item['task_id'], item['seed']): {} for item in decks.items(doc)}
+    assert workflow.next_task(doc, claim=False)['item']['layer'] == 'native'
+    with pytest.raises(ValueError, match='支线优先'):
+        workflow.check(doc, doc['active_tasks'][0], D1,
+                       seed=doc['levels'][doc['active_tasks'][0]]['available_seeds'][0])
+    first_native = decks.native_items(doc)[0]
+    workflow.check(doc, first_native['task_id'], [], seed=first_native['seed'])
+    with pytest.raises(ValueError, match='不能自选'):
+        workflow.check(doc, first_native['task_id'], D1, seed=first_native['seed'])
+    claimed = {workflow._slot(item['task_id'], item['seed']): {} for item in decks.native_items(doc)}
     with patch.object(workflow, '_read_claims', return_value=claimed):
         item = workflow.next_task(doc, claim=False)['item']
-        assert item['layer'] == 'native' and item['action'] == 'native_play'
-        workflow.check(doc, item['task_id'], [], seed=item['seed'])
-        with pytest.raises(ValueError, match='不能自选'):
-            workflow.check(doc, item['task_id'], D1, seed=item['seed'])
-    with pytest.raises(ValueError, match='主线优先'):
-        workflow.check(doc, item['task_id'], [], seed=item['seed'])
+        assert item['layer'] == 'decks' and item['action'] in ('new_deck', 'retry_deck', 'resume')
+        workflow.check(doc, item['task_id'], item['deck'] or D1, seed=item['seed'])
     repeated = [native_entry(10)] * 8
     assert workflow.derive(repeated, 'run')['native']['llmplay_decks_native_l10_m100']['wins'] == 1
-    doc = workflow.derive([native_entry(10, n) for n in range(8)], 'run')
+    doc = workflow.derive([native_entry(10, n) for n in range(16)], 'run')
     assert doc['native']['llmplay_decks_native_l10_m100']['complete']
     assert all(item['level'] != 10 for item in decks.native_items(doc))
     assert '原生传送带支线' in workflow.report(doc)

@@ -206,7 +206,7 @@ def derive(entries, run_id=None):
                                         complete=len(wins) >= cfg["native_wins"], pending=pending,
                                         available_seeds=[seed_at(level, cursor + n, native=True)
                                                          for n in range(candidate_count)])
-    # 主线本轮配额完成后让支线获得工作；支线达标后继续提高主线配额。
+    # task210：传送带支线先派发到各关达标，之后回到主线并按轮次提高主线配额。
     covered = all(terrain_progress[levels[key]["terrain"]]["complete"] for key in active)
     native_done = all(native_progress[key]["complete"] for key in active_native)
     stage = min((max(0, (levels[key]["victory_decks"] - levels[key]["target"]) // cfg["growth_step"] + 1)
@@ -279,9 +279,9 @@ def native_items(document):
 def view(document):
     candidates, side = items(document), native_items(document)
     claims = wf.held()
-    main = wf._first_free(candidates, claims)
     native = wf._first_free(side, claims)
-    item = main or native or wf._busy(candidates + side)
+    main = wf._first_free(candidates, claims)
+    item = native or main or wf._busy(candidates + side)
     return dict(item=item, main=main, challenge=None, native=native, complete=False, cycle=1,
                 shard=document["shard"], shards=document["shards"], note=NOTE)
 
@@ -292,12 +292,12 @@ def check(document, task_id, deck, strategy="", seed=None):
         if deck:
             raise ValueError("原生传送带/固定卡支线由引擎发牌，不能自选卡组")
         if info["complete"] or seed is None or int(seed) not in info["available_seeds"]:
-            raise ValueError("支线须使用队列分配的新种子，已达8胜的关卡不再分配")
-        if wf._first_free(items(document), wf.held()) is not None:
-            raise ValueError("扩卡组主线优先；请先领取本片主线项")
+            raise ValueError("支线须使用队列分配的新种子，各关达到 16 胜后不再分配")
         return dict(cycle=1, workflow_layer="native")
     if task_id not in document["active_tasks"]:
         raise ValueError("请使用本分片 next_task() 给出的新任务族")
+    if wf._first_free(native_items(document), wf.held()) is not None:
+        raise ValueError("传送带支线优先；请先领取本片支线项，各关 16 胜后回到主线")
     info = document["levels"][task_id]
     if not any(item["task_id"] == task_id for item in items(document)):
         raise ValueError("本关本轮目标已达标；请领取其余主线或传送带支线")
@@ -341,7 +341,7 @@ def report(document):
         info = document["levels"][key]
         lines.append("| L%d | %s | %d | %d | %d/3 | %d/3 |" % (
             info["level"], info["terrain"], info["victory_decks"], info["goal"], info["small_decks"], info["eight_decks"]))
-    lines += ["", "## 原生传送带支线（主线无项可领时领取）", "",
+    lines += ["", "## 原生传送带支线（优先派发，各关 16 胜后停止）", "",
               "| 关卡 | 不同种子胜局 | 目标 |", "|---|---|---|"]
     for key in document["active_native"]:
         info = document["native"][key]
