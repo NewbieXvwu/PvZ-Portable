@@ -171,7 +171,7 @@ def test_decks_claims_progress_and_resume_preserve_registry(tmp_path):
         (archive / filename).write_text('')
     delivery.record_archive(archive)
     saved = tmp_path / 'saved.zip'
-    saved.write_bytes((delivery.output_dir() / 'out.zip').read_bytes())
+    saved.write_bytes(delivery.export_bundle()[0].read_bytes())
     first = delivery.next_task()['item']
     second = delivery.next_task()['item']
     assert (first['task_id'], first['seed']) != (second['task_id'], second['seed'])
@@ -209,7 +209,7 @@ def test_decks_metadata_only_carry_survives_out_zip_resume(tmp_path):
     delivery.carry(source)
     assert delivery.progress()['archives'][0]['carried']
     saved = tmp_path / 'carry-out.zip'
-    saved.write_bytes((delivery.output_dir() / 'out.zip').read_bytes())
+    saved.write_bytes(delivery.export_bundle()[0].read_bytes())
     previous_out = os.environ['LLMPLAY_OUT']
     os.environ['LLMPLAY_OUT'] = str(tmp_path / 'resumed-carry')
     try:
@@ -340,6 +340,111 @@ def test_decks_native_archive_uses_original_cards_without_fixed_deck_index(tmp_p
     assert delivery.progress()['native']['llmplay_decks_native_l40_m100']['wins'] == 1
     g.env = None
     g.close()
+
+
+def test_compact_export_removes_finished_run_and_old_delivery_without_compressing():
+    root = delivery.output_dir()
+    g = Game('llmplay_decks_l1_m100', seed=decks.seed_at(1, 0), deck=D1, reason='经济主力与防守', _gate=False)
+    g.env = SimpleNamespace(episode={})
+    g.obs = dict(result=1, tick=100, wave=10, wave_count=10, terminal=True)
+    g.initial_obs = {}
+    old = root / '.delivery' / 'old'
+    old.mkdir()
+    (old / 'out.zip').write_bytes(b'obsolete')
+    (root / 'out.zip').write_bytes(b'obsolete')
+    (root / '.out.zip.partial').write_bytes(b'obsolete')
+    run = root / 'player_finished'
+    with patch.object(delivery.zipfile, 'ZipFile', side_effect=AssertionError('no per-game compression')):
+        stored = g.export_archive(run)
+    assert not run.exists() and stored.parent == root / 'archives'
+    assert (stored / 'frames.jsonl').is_file()
+    assert not (root / 'out.zip').exists() and not (root / '.out.zip.partial').exists()
+    generations = [p for p in (root / '.delivery').iterdir() if not p.is_symlink()]
+    assert len(generations) == 1 and not old.exists()
+    assert set(p.name for p in generations[0].iterdir()) == {'progress.json', 'report.md', 'budget.json', 'decks.json'}
+    assert json.loads((root / 'decks.json').read_text())['llmplay_decks_l1_m100']
+    g.env = None
+    g.close()
+
+
+def _compact_archive(tmp_path, seed=0):
+    archive = tmp_path / ('episode-%d' % seed)
+    archive.mkdir()
+    meta = dict(task=dict(id='llmplay_decks_l1_m100', level=1, seed=decks.seed_at(1, seed),
+                          deck=D1, zombie_count_multiplier=1.0),
+                outcome=dict(result=1, won=True, final_tick=100), workflow_layer='decks')
+    (archive / 'meta.json').write_text(json.dumps(meta))
+    (archive / 'ticks.jsonl').write_text('{}\n')
+    (archive / 'frames.jsonl').write_text(json.dumps({'noise': os.urandom(10000).hex()}) + '\n')
+    delivery.record_archive(archive)
+    return archive
+
+
+def test_compact_bundle_whitelist_parts_replacement_and_failed_export(tmp_path, monkeypatch):
+    import io
+    import zipfile
+    _compact_archive(tmp_path)
+    root = delivery.output_dir()
+    (root / 'policy.py').write_text('def policy(g): g.wait(30)\n')
+    (root / 'run.log').write_text('large log')
+    (root / 'active.json').write_text('{}')
+    (root / '__pycache__').mkdir()
+    (root / '__pycache__' / 'cached.py').write_text('discard')
+    monkeypatch.setattr(delivery, 'BUNDLE_PART_BYTES', 4096)
+    parts = delivery.export_bundle()
+    assert len(parts) > 1 and all(p.stat().st_size <= 4096 for p in parts)
+    assert parts[0].parent == root.with_name(root.name + '_exports')
+    with zipfile.ZipFile(io.BytesIO(b''.join(p.read_bytes() for p in parts))) as bundle:
+        names = bundle.namelist()
+        assert {'out/progress.json', 'out/decks.json', 'out/policy.py'} <= set(names)
+        assert all(name in ('out/progress.json', 'out/decks.json', 'out/policy.py')
+                   or name.startswith('out/archives/') for name in names)
+        assert json.loads(bundle.read('out/progress.json')) == delivery._read_progress(root)
+    before = [p.read_bytes() for p in parts]
+    with patch.object(delivery.zipfile.ZipFile, 'write', side_effect=OSError('disk full')):
+        with pytest.raises(OSError, match='disk full'):
+            delivery.export_bundle()
+    assert [p.read_bytes() for p in parts] == before
+    monkeypatch.setattr(delivery, 'BUNDLE_PART_BYTES', 99_000_000)
+    assert len(delivery.export_bundle()) == 1
+    assert len(list(parts[0].parent.iterdir())) == 1
+
+
+def test_compact_bundle_snapshot_does_not_block_new_games_and_resumes_parts(tmp_path, monkeypatch):
+    import io
+    import zipfile
+    task_id = 'llmplay_decks_l1_m100'
+    budget.session().note_ticks(task_id, 123, 'search')
+    _compact_archive(tmp_path)
+    root = delivery.output_dir()
+    (root / 'policy.py').write_text('def policy(g): g.wait(30)\n')
+    old = delivery._read_progress(root)
+    write = zipfile.ZipFile.write
+    published = []
+
+    def publish_during_compression(bundle, filename, *args, **kwargs):
+        if not published:
+            published.append(True)
+            # Would deadlock if export_bundle held the per-game publication lock.
+            with (root / '.delivery.lock').open() as lock:
+                budget.fcntl.flock(lock, budget.fcntl.LOCK_EX | budget.fcntl.LOCK_NB)
+            _compact_archive(tmp_path, 1)
+        return write(bundle, filename, *args, **kwargs)
+
+    monkeypatch.setattr(delivery, 'BUNDLE_PART_BYTES', 4096)
+    with patch.object(zipfile.ZipFile, 'write', publish_during_compression):
+        parts = delivery.export_bundle()
+    with zipfile.ZipFile(io.BytesIO(b''.join(p.read_bytes() for p in parts))) as bundle:
+        assert json.loads(bundle.read('out/progress.json')) == old
+    assert len(delivery._read_progress(root)['archives']) == 2
+    monkeypatch.setenv('LLMPLAY_OUT', str(tmp_path / 'resumed'))
+    budget.reset_session(tmp_path / 'resumed-budget.json')
+    with patch('llmplay.game.PvZEnv', side_effect=AssertionError('no replay')):
+        document = delivery.resume(parts[0])
+    assert document['archives'] == old['archives']
+    assert delivery.progress()['levels']['llmplay_decks_l1_m100']['victory_decks'] == 1
+    assert budget.session().level(task_id)['search_ticks'] == 123
+    assert (delivery.output_dir() / 'policy.py').read_text() == 'def policy(g): g.wait(30)\n'
 
 
 def test_decks_roster_uses_seed_wave_table_instead_of_first_allowed_wave(tmp_path):

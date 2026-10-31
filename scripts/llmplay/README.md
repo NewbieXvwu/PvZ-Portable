@@ -43,8 +43,14 @@ PROMPT要求利用LLM的PvZ先验知识比较本关各类威胁的不同克制�
 默认三片分别负责L5/10/20、L25/30/40、L45/50。支线用引擎发牌，不传自选卡组，按名字种植。
 L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支线种子窗口独立，用完按64000000顺延。
 
-进度与报告逐局写入`llmplay.out_dir()`，`out.zip`自动更新。
-占位、`Game.save/load/load_archive`、`resume(out.zip)`和存档格式均沿用上一版。
+进度与报告逐局写入`llmplay.out_dir()`；正式导出成功后删除对应运行目录，只保留`archives/`中的一份。
+`.delivery/`只保留当前小型进度，旧暂存立即清掉，每局不再压整批对局。
+需要交回结果时调用`llmplay.export_bundle()`：只含存档、进度（内含预算）、卡组登记和`.py`策略脚本，
+按99 MB连续ZIP分卷放在out同级固定的`out_exports/`目录；成功后删除上一份。
+外部只取函数返回的全部分卷，不再取整个out。缓存、日志、运行存盘和其他包都不进入分卷。
+`llmplay.paths()`可查看实际`bundle_dir`，`resume("…/out.zip.001")`或`resume(分卷目录)`自动续接。
+手工解压/导入时先在out外执行`cat out.zip.[0-9]* > returned.zip`，得到标准ZIP；frames仍是原JSONL，现有导入侧无需更改。
+占位、`Game.save/load/load_archive`和存档格式沿用上一版，导出返回正式存档路径。
 包内carry只读结论，不复演；旧存档始终使用其中记录的卡组和环境。
 
 覆盖与重点卡配置在`configs/llmplay_seeds.json`的`decks`中：
@@ -57,7 +63,8 @@ L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支�
 python3 scripts/llmplay/build_package.py \
   --reuse-package ~/pvz-logs/llmplay5/llmplay_pkg \
   --resource-zip ~/pvz-logs/llmplay5/llmplay_res.zip \
+  --carry ~/llm_runs/llmplay_decks_20261031_0350/out/progress.json \
   --out ~/pvz-logs/llmplay-decks
 ```
 
-产物不进git。引擎、资源、存档、占位、断点续跑与自动out.zip机制沿用llmplay5。
+产物不进git。引擎与资源原样沿用；交回进度只读结论并入carry，不搬旧对局、不重放。

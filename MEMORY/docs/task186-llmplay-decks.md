@@ -158,3 +158,13 @@ PROMPT要求每次选新卡组前查表，利用LLM的PvZ先验知识，逐类�
 导入侧无需修改，不需因兼容性重启task105四服务。四服务不监听新zip；交回后仍须显式增量导入、
 合并队列，再由主控按现有流程让scan/secondary重载；publish/refresh无需动。未启动/重启服务，
 未改生产队列、清单或账本；所有测试文件在临时目录，未新增运行时校验、manifest或中间文件。
+
+## task203：交回续跑与交付瘦身（2026-10-31）
+
+基于origin/llmplay-decks af98308a。来源~/llm_runs/llmplay_decks_20261031_0350/out的2786条进度记录已按既有入口合并carry，仅读取结论，没有搬旧对局或重放；新版接口分卷覆盖至~/pvz-logs/llmplay-decks/，继续原样沿用引擎与资源。
+
+逐局发布只写progress/report/budget/decks结论，.delivery仅留当前小型快照，旧代、旧out.zip和临时压缩文件即用即清。Game.export_archive成功登记后删除out内对应运行目录，返回archives中的正式路径。显式llmplay.export_bundle()在out同级固定的<out名>_exports目录生成连续ZIP分卷，每卷上限99000000字节；直接流式写分卷，不另留整包副本，新包成功后删除上一份，失败保留旧包。只含正式存档、进度、卡组登记与.py策略，预算内嵌进度，日志/缓存/运行存盘/其他包不参与。压缩锁与逐局发布锁分离，压缩不挡对局。
+
+frames保持原JSONL，仅容器压缩；分卷拼接即标准ZIP，现有llmimport可直接解包。resume支持首卷或分卷目录，并保留策略、卡组登记和预算。相关6项-k测试通过（8GB上限），覆盖清理、分卷上限与恢复、失败保留旧包、打包期间继续发布和元数据carry续接；未加额外全量验收。
+
+task105导入使用现行task193/deploy22后的import-only入口，nice19、单worker、2GiB上限，已有SHA回执复用；仅更新merged_progress索引，不排扫描、不启动服务。导入结果待完成后在此追加。

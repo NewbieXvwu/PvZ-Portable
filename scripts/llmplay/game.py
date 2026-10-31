@@ -992,6 +992,7 @@ class Game:
         """导出 episode_archive_v1 存档（ticks.jsonl / frames.jsonl / meta.json）。
 
         导出的存档是引擎真正接受的动作序列，可直接 load_archive 继续中盘打。
+        返回 archives 中的正式路径；成功后删除 out 内的本次临时运行目录。
         """
         self._require_primary("export_archive()")
         if self.workflow_layer == "decks":
@@ -1064,8 +1065,14 @@ class Game:
         )
         (target / "meta.json").write_text(json.dumps(meta, ensure_ascii=False, indent=2) + "\n",
                                           encoding="utf-8")
-        from .delivery import record_archive
-        record_archive(target, session=self.session)
+        from .delivery import record_archive, output_dir
+        document = record_archive(target, session=self.session)
+        stored = output_dir() / document["archives"][-1]["archive"]
+        # 仅清理本次在 out 内新建的导出运行目录；正式存档继续可加载。
+        if target.resolve() != stored.resolve() and output_dir() in target.resolve().parents:
+            import shutil
+            shutil.rmtree(target)
+            target = stored
         self._release_claim()
         return target
 

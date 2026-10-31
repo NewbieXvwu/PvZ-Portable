@@ -1,11 +1,8 @@
-"""task81e：自动交付、逐档验证续跑与五层进度。只使用标准库和包内引擎。
-
-存档按内容寻址且不修改。progress/report/budget/out.zip 指向同一代目录，最后只原子
-替换 current 链接；压缩或写盘失败时上一代四份文件仍完整可用。flock 串行化多进程更新。
-"""
+"""不可变存档与小型进度快照；显式交付只压缩一次，分卷放在 out 外。"""
 from __future__ import annotations
 
 import hashlib
+import io
 import json
 import os
 import shutil
@@ -45,9 +42,9 @@ def ensure_run_id():
 
 
 @contextmanager
-def _lock(root):
+def _lock(root, filename=".delivery.lock"):
     root.mkdir(parents=True, exist_ok=True)
-    with (root / ".delivery.lock").open("a+") as handle:
+    with (root / filename).open("a+") as handle:
         if budget.fcntl is not None:
             budget.fcntl.flock(handle.fileno(), budget.fcntl.LOCK_EX)
         try:
@@ -201,6 +198,7 @@ def _restore_archive(archive, root, relative, *, consume=False):
 def _publish(root, entries, session, *, run_id=None, compresslevel=None):
     run_id = run_id or _read_progress(root).get("run_id") or uuid.uuid4().hex
     document = _derive(entries, run_id)
+    document["budget"] = session.snapshot()
     generations = root / ".delivery"
     generations.mkdir(exist_ok=True)
     generation = generations / uuid.uuid4().hex
@@ -209,29 +207,11 @@ def _publish(root, entries, session, *, run_id=None, compresslevel=None):
     try:
         (generation / "progress.json").write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         (generation / "report.md").write_text(_report(document), encoding="utf-8")
-        (generation / "budget.json").write_text(json.dumps(session.snapshot(), ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
-        temporary = generation / "out.zip.tmp"
-        with zipfile.ZipFile(temporary, "w", zipfile.ZIP_DEFLATED, compresslevel=compresslevel) as bundle:
-            for name in ("progress.json", "report.md", "budget.json"):
-                bundle.write(generation / name, "out/" + name)
-            for relative in sorted({e["archive"] for e in entries}):
-                archive = root / relative
-                for name in FILES:
-                    if (archive / name).is_file():
-                        bundle.write(archive / name, "out/" + relative + "/" + name)
-            # 模型放在 out 中的策略源码和说明也随交付保存。
-            for path in sorted(root.rglob("*")):
-                relative = path.relative_to(root)
-                if (any(part.startswith(".") for part in relative.parts)
-                        or relative.parts[0] == "archives"
-                        or relative.as_posix() in ("progress.json", "report.md", "out.zip", "budget.json")
-                        or path.is_symlink() or not path.is_file()
-                        or ((path.parent / "meta.json").is_file() and (path.parent / "ticks.jsonl").is_file())):
-                    continue
-                bundle.write(path, "out/" + relative.as_posix())
-        os.replace(temporary, generation / "out.zip")
+        (generation / "budget.json").write_text(json.dumps(document["budget"], ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        registry = {key: info["registered_decks"] for key, info in document.get("levels", {}).items()}
+        (generation / "decks.json").write_text(json.dumps(registry, ensure_ascii=False) + "\n", encoding="utf-8")
         # 常驻文件入口；此后仅 current 的一次原子 rename 切换整代。
-        for name in ("progress.json", "report.md", "budget.json", "out.zip"):
+        for name in ("progress.json", "report.md", "budget.json", "decks.json"):
             alias = root / name
             expected = ".delivery/current/" + name
             if not alias.is_symlink() or os.readlink(alias) != expected:
@@ -242,7 +222,6 @@ def _publish(root, entries, session, *, run_id=None, compresslevel=None):
         link = generations / ("current." + uuid.uuid4().hex + ".tmp")
         pending_links.append(link)
         link.symlink_to(generation.name)
-        previous = (generations / "current").resolve() if (generations / "current").exists() else None
         os.replace(link, generations / "current")
     except BaseException:
         shutil.rmtree(generation, ignore_errors=True)
@@ -250,11 +229,115 @@ def _publish(root, entries, session, *, run_id=None, compresslevel=None):
     finally:
         for link in pending_links:
             link.unlink(missing_ok=True)
-    # 只保留本代和上一代；不可变存档仍由 archives 持有。
+    # current 只持有小型结论；旧代和旧版压缩包立即清掉。
     for old in generations.iterdir():
-        if old.is_dir() and not old.is_symlink() and old not in (generation, previous):
+        if old == generation or old.name == "current":
+            continue
+        if old.is_dir() and not old.is_symlink():
             shutil.rmtree(old, ignore_errors=True)
+        else:
+            old.unlink(missing_ok=True)
+    (root / "out.zip").unlink(missing_ok=True)
+    for old in root.glob(".out.zip.*"):
+        if not old.is_dir():
+            old.unlink(missing_ok=True)
     return document
+
+
+BUNDLE_PART_BYTES = 99_000_000
+
+
+def bundle_dir() -> Path:
+    root = output_dir()
+    return root.with_name(root.name + "_exports")
+
+
+class _Volumes(io.RawIOBase):
+    """Write a standard ZIP as contiguous <=99 MB pieces, without a whole ZIP copy."""
+    def __init__(self, directory):
+        self.directory = directory
+        self.position = 0
+        self.part_size = 0
+        self.stream = None
+        self.count = 0
+
+    def writable(self):
+        return True
+
+    def tell(self):
+        return self.position
+
+    def write(self, data):
+        view = memoryview(data)
+        size = len(view)
+        while view:
+            if self.stream is None or self.part_size == BUNDLE_PART_BYTES:
+                if self.stream is not None:
+                    self.stream.close()
+                self.count += 1
+                self.stream = (self.directory / ("out.zip.%03d" % self.count)).open("wb")
+                self.part_size = 0
+            length = min(len(view), BUNDLE_PART_BYTES - self.part_size)
+            self.stream.write(view[:length])
+            self.part_size += length
+            self.position += length
+            view = view[length:]
+        return size
+
+    def close(self):
+        if self.stream is not None:
+            self.stream.close()
+        super().close()
+
+
+def export_bundle() -> list[Path]:
+    """只交付存档、进度、卡组登记和 .py 策略；固定放在 out 的同级 *_exports。"""
+    root, destination = output_dir(), bundle_dir()
+    ensure_run_id()
+    # 打包单独串行；长时间压缩不持有对局发布锁。
+    with _lock(root.parent, "." + root.name + "_exports.lock"):
+        with tempfile.TemporaryDirectory(prefix="." + destination.name + "-", dir=root.parent) as temporary:
+            work = Path(temporary)
+            parts = work / "parts"
+            parts.mkdir()
+            with _lock(root):
+                document = _read_progress(root)
+                (work / "progress.json").write_text(json.dumps(document, ensure_ascii=False) + "\n", encoding="utf-8")
+                registry = {key: info["registered_decks"] for key, info in document.get("levels", {}).items()}
+                (work / "decks.json").write_text(json.dumps(registry, ensure_ascii=False) + "\n", encoding="utf-8")
+            with _Volumes(parts) as writer:
+                with zipfile.ZipFile(writer, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as bundle:
+                    for name in ("progress.json", "decks.json"):
+                        bundle.write(work / name, "out/" + name)
+                    for relative in sorted({e["archive"] for e in document["archives"] if e.get("archive")}):
+                        for name in FILES:
+                            path = root / relative / name
+                            if path.is_file():
+                                bundle.write(path, "out/" + relative + "/" + name)
+                    for directory, folders, files in os.walk(root):
+                        folders[:] = [name for name in folders if not name.startswith(".")
+                                      and name not in ("archives", "__pycache__")]
+                        directory = Path(directory)
+                        if (directory / "meta.json").is_file() and (directory / "ticks.jsonl").is_file():
+                            folders[:] = []
+                            continue
+                        for name in sorted(files):
+                            path = directory / name
+                            if name.endswith(".py") and not name.startswith(".") and not path.is_symlink():
+                                bundle.write(path, "out/" + path.relative_to(root).as_posix())
+            previous = destination.with_name("." + destination.name + ".previous")
+            if previous.exists():
+                shutil.rmtree(previous)
+            if destination.exists():
+                os.replace(destination, previous)
+            try:
+                os.replace(parts, destination)
+            except BaseException:
+                if previous.exists():
+                    os.replace(previous, destination)
+                raise
+            shutil.rmtree(previous, ignore_errors=True)
+    return sorted(destination.glob("out.zip.*"))
 
 
 def record_archive(archive, *, session=None):
@@ -365,6 +448,15 @@ def resume(source) -> dict:
     root = output_dir()
     with tempfile.TemporaryDirectory(prefix="llmplay-resume-") as directory:
         source = Path(source).expanduser().resolve()
+        if source.is_dir() and (source / "out.zip.001").is_file():
+            source = source / "out.zip.001"
+        if source.name == "out.zip.001":
+            joined = Path(directory) / "out.zip"
+            with joined.open("wb") as stream:
+                for part in sorted(source.parent.glob("out.zip.[0-9]*"), key=lambda path: int(path.suffix[1:])):
+                    with part.open("rb") as piece:
+                        shutil.copyfileobj(piece, stream)
+            source = joined
         extracted = source.is_file()
         if extracted:
             _extract(source, directory)
@@ -378,6 +470,8 @@ def resume(source) -> dict:
             prior = json.loads(path.read_text(encoding="utf-8"))
             if prior.get("run_id"):
                 prior_run_ids.add(prior["run_id"])
+            if prior.get("budget"):
+                budget.session().import_budget(prior["budget"])
             for entry in prior.get("archives", []):
                 relative = PurePosixPath(entry["archive"])
                 if relative.is_absolute() or ".." in relative.parts or "\\" in entry["archive"]:

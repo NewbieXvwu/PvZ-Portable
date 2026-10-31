@@ -44,8 +44,10 @@ def paths():
     from .game import ROOT, _default_executable, _default_resource_dir
     from . import budget
     from .resources import app_data
+    from .delivery import bundle_dir
     executable, resources = _default_executable(), _default_resource_dir()
     data = dict(package_dir=str(ROOT), resource_dir=str(resources), out_dir=str(output_path(ROOT)),
+                bundle_dir=str(bundle_dir()),
                 budget_file=str(budget.session().path),
                 app_data_dir=str(app_data(executable, resources, budget.session())) if executable.is_file() else None)
     print(json.dumps(data, ensure_ascii=False, indent=2))

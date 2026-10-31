@@ -11,7 +11,7 @@
 """
 from .game import Game, load_tasks, task_spec, ROOT
 from .delivery import (resume, carry, progress, next_task, ensure_run_id, diagnose,
-                       output_dir as out_dir)
+                       output_dir as out_dir, export_bundle, bundle_dir)
 from .runtime import paths
 from .decks import configure_shard
 from .roster import roster
@@ -25,7 +25,8 @@ carry()
 ensure_run_id()
 
 __all__ = ["Game", "load_tasks", "task_spec", "ROOT", "list_tasks", "resume", "carry",
-           "progress", "next_task", "diagnose", "out_dir", "paths", "configure_shard", "roster"]
+           "progress", "next_task", "diagnose", "out_dir", "paths", "configure_shard", "roster",
+           "export_bundle", "bundle_dir"]
 
 
 def list_tasks() -> dict:

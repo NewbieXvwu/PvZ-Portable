@@ -185,7 +185,7 @@ def copy_carry(stage: Path, carry: Path | None, partial: Path | None = None) -> 
         document["carried_diagnoses"] = merged["carried_diagnoses"]
         target.write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(dict(carry_cycle=document["cycle"], carry_layer=document["layer"],
-                              layers=document["layers"], archives=len(document["archives"])),
+                              layers=document.get("layers"), archives=len(document["archives"])),
                          ensure_ascii=False))
 
 

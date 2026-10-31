@@ -112,4 +112,4 @@
 - [task81 GPT Pro 对局包与持续续跑约定](docs/task81-gpt-pro-playthrough.md)
 
 - [task133 LLMPlay第二轮自选卡交付](docs/task133-llmplay2.md)
-- [task186 扩卡组专用包与分片约定](docs/task186-llmplay-decks.md)
+- [task186/188/203 扩卡组包、导入与精简交付约定](docs/task186-llmplay-decks.md)

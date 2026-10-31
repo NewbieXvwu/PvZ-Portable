@@ -17,7 +17,7 @@ os.environ['PVZ_LLMPLAY_SESSION'] = str(Path(_SESSION_DIR) / 'budget.json')
 os.environ['LLMPLAY_OUT'] = str(Path(_SESSION_DIR) / 'out')
 
 from llmplay.game import Game, ROOT as PACKAGE_ROOT, load_tasks, task_spec  # noqa: E402
-from llmplay import budget, build_package  # noqa: E402
+from llmplay import budget, build_package, export_bundle  # noqa: E402
 from pvz_tasks import profile_for_deck  # noqa: E402
 
 
@@ -792,7 +792,7 @@ class PortableRuntimeTest(unittest.TestCase):
     def test_resume_empty_run_preserves_id_and_seed_order(self):
         from llmplay import progress,resume
         first=progress()
-        source=self.base/'out/out.zip'
+        source=export_bundle()[0]
         os.environ['LLMPLAY_OUT']=str(self.base/'resumed')
         self.assertNotEqual(progress()['run_id'],first['run_id'])
         result=resume(source)
@@ -932,20 +932,22 @@ class DeliveryTest(unittest.TestCase):
         self.assertTrue(record['manual_patch'])
         self.assertEqual(set(document['layers']), set('ABCDE'))
         self.assertIn('不同布阵参数', (self.out / 'report.md').read_text())
-        with zipfile.ZipFile(self.out / 'out.zip') as bundle:
+        with zipfile.ZipFile(export_bundle()[0]) as bundle:
             self.assertEqual(json.loads(bundle.read('out/progress.json')), document)
-            self.assertEqual(json.loads(bundle.read('out/budget.json'))['levels'][self.task]['search_ticks'], 123)
+            self.assertEqual(json.loads(bundle.read('out/progress.json'))['budget']['levels'][self.task]['search_ticks'], 123)
             self.assertIn('out/' + record['archive'] + '/ticks.jsonl', bundle.namelist())
 
-    def test_compression_failure_preserves_previous_generation(self):
+    def test_compression_failure_preserves_previous_bundle(self):
         from unittest.mock import patch
         from llmplay.delivery import record_archive
         record_archive(self.archive(self.seed))
-        before = {name: (self.out / name).read_bytes() for name in ('progress.json', 'report.md', 'out.zip', 'budget.json')}
+        parts = export_bundle()
+        before = [path.read_bytes() for path in parts]
+        record_archive(self.archive(self.seed + 1))
         with patch('llmplay.delivery.zipfile.ZipFile.write', side_effect=OSError('disk full')):
             with self.assertRaisesRegex(OSError, 'disk full'):
-                record_archive(self.archive(self.seed + 1))
-        self.assertEqual(before, {name: (self.out / name).read_bytes() for name in before})
+                export_bundle()
+        self.assertEqual(before, [path.read_bytes() for path in parts])
 
     def test_concurrent_delivery_keeps_both_seeds(self):
         import multiprocessing
@@ -962,7 +964,7 @@ class DeliveryTest(unittest.TestCase):
         from unittest.mock import patch
         from llmplay.delivery import record_archive
         record_archive(self.archive(self.seed))
-        before = {name: (self.out / name).read_bytes() for name in ('progress.json', 'report.md', 'out.zip')}
+        before = {name: (self.out / name).read_bytes() for name in ('progress.json', 'report.md', 'decks.json')}
         replace = os.replace
         def fail_commit(source, target):
             if Path(target).name == 'current': raise OSError('rename failed')
@@ -981,7 +983,7 @@ class DeliveryTest(unittest.TestCase):
         self.session.note_ticks(self.task, 345, 'search')
         self.session.note_rewind(self.task, 10, 20)
         for n in range(5): record_archive(self.archive(self.seed + n, robust=n < 3))
-        source = self.out / 'out.zip'
+        source = export_bundle()[0]
         previous = json.loads((self.out/'progress.json').read_text())
         os.environ['LLMPLAY_OUT'] = str(self.base / 'new')
         target_session = budget.reset_session(self.base / 'new-budget.json')
@@ -1015,7 +1017,7 @@ class DeliveryTest(unittest.TestCase):
         record_archive(self.archive(self.seed))
         import zipfile
         source = self.base / 'missing'
-        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
+        with zipfile.ZipFile(export_bundle()[0]) as bundle: bundle.extractall(source)
         shutil.rmtree(source/'out'/'archives')
         os.environ['LLMPLAY_OUT'] = str(self.base/'new')
         document = resume(source)
@@ -1030,12 +1032,12 @@ class DeliveryTest(unittest.TestCase):
         (self.out/'policy.py').write_text('def policy(g): g.wait(30)\n')
         (self.out/'run.json').write_text('{"tick": 120}\n')
         record_archive(self.archive(self.seed))
-        source = self.out/'out.zip'
+        source = export_bundle()[0]
         target = self.base/'new'
         os.environ['LLMPLAY_OUT'] = str(target)
         resume(source)
         self.assertEqual((target/'policy.py').read_bytes(), (self.out/'policy.py').read_bytes())
-        self.assertEqual((target/'run.json').read_bytes(), (self.out/'run.json').read_bytes())
+        self.assertFalse((target/'run.json').exists())
 
     def test_resume_preserves_non_digest_path_and_ignores_unlisted_archive(self):
         from unittest.mock import patch
@@ -1044,7 +1046,7 @@ class DeliveryTest(unittest.TestCase):
         import zipfile
         record_archive(self.archive(self.seed))
         source = self.base/'source'
-        with zipfile.ZipFile(self.out/'out.zip') as bundle: bundle.extractall(source)
+        with zipfile.ZipFile(export_bundle()[0]) as bundle: bundle.extractall(source)
         p = source/'out/progress.json'
         prior = json.loads(p.read_text())
         archive = source/'out'/prior['archives'][0]['archive']

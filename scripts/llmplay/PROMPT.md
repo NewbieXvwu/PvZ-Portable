@@ -13,7 +13,7 @@
 - `progress()["complete"]` 永远是 `False`，这不是 bug。
 - **唯一停止条件是用户在对话里说停。** 已做很多局、生成报告、阶段达标、时间长，都不能作为结束理由。
 - 按 **≥10 小时**设计：全包主线基础目标共 576 套胜利卡组，另有 8 个支线关各 8 个不同种子胜局；各片都要持续探索，10 小时不是停止条件。
-- `report.md` 和 `out.zip` 每局自动更新；生成后立即接着打。
+- `progress.json` 和 `report.md` 每局自动更新；需要交回结果时调用 `export_bundle()`，随后继续打。
 
 ## 1. 解包与选择会话分片
 
@@ -148,7 +148,8 @@ g.wait_until("wave:8")       # Boss没有波次，按tick或条件推进
 # 可用g.branch()作局部探索，g.rewind(tick)重写一段。
 
 g.note = "本局观察；若这是同组第三败，写清失败原因"
-g.export_archive(llmplay.out_dir() / f"l{g.spec.level}_{g.seed}_{g.attempt_id}")
+archive = g.export_archive(llmplay.out_dir() / f"l{g.spec.level}_{g.seed}_{g.attempt_id}")
+# 返回 archives/ 中的正式路径；传入的临时运行目录在成功登记后删除。
 g.close()
 item = llmplay.next_task()["item"]  # 立即继续
 ```
@@ -211,9 +212,26 @@ L15 打僵尸与 L35 砸罐子需要现有接口未提供的小游戏动作，�
 - `progress.json`：每关胜利卡组数、大小配额、所有已登记胜组、各地形逐卡覆盖及支线不同种子胜局；
 - `report.md`：本片逐关进度、逐卡覆盖、三败原因；
 - `budget.json`：续跑的搜索与重写计数；
-- `out.zip`：存档、进度、报告、预算以及 out 下的代码与说明。
+- `decks.json`：全部已登记胜利卡组。
 
-不要自行改写这些自动文件。你的执行脚本和选卡思路放进 `out_dir()`，会随结果保存。
+不要自行改写这些自动文件。策略脚本保存成 `out_dir()` 下的 `.py` 文件。
+每局成功导出后，正式文件只留在 `archives/`，对应运行目录会删除；用返回的 `archive` 路径读档。
+`.delivery/` 只保留当前小型进度快照，旧暂存即用即清，每局不会重新压整批对局。
+
+需要交回阶段性结果时：
+
+```python
+parts = llmplay.export_bundle()
+print(parts)  # 固定在 out 同级的 out_exports/；每卷至多 99 MB
+```
+
+外部**只取这里列出的全部 `out.zip.001`、`.002`…分卷**，不要把整个 out 目录打包。
+分卷只含 `archives/`、`progress.json`、`decks.json` 和 `.py` 策略脚本；进度内含续跑预算。
+日志、运行中存盘、缓存、旧交付包不进入分卷。新一份成功生成后自动删除上一份。
+压缩不占用对局发布锁；导出期间继续完成的对局留到下次交回，不影响当前包的一致进度。
+不要每局调用 `export_bundle()`，仅在需要交回时调用，避免重复压缩全部历史。
+
 包内 `carry/progress.json` 若存在，首次导入自动接上前次结论；不会重新打旧胜局。
-另有完整 `out.zip` 时用 `llmplay.resume(path)` 恢复，**只搬记录，不重放复验**。
+另有交回分卷时用 `llmplay.resume("…/out.zip.001")`（或分卷所在目录）恢复，
+旧版完整 zip 也可使用，**只搬记录，不重放复验**。
 仅恢复你原来那一片；所有新进程保持原片号。接完就调用 `next_task()` 继续打。
