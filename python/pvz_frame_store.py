@@ -333,11 +333,15 @@ def save_arrays(path: Path, **arrays) -> None:
     _save(path, **arrays)
 
 
-def write_frames(path: Path, frames: list[dict]):
+def write_frames(path: Path, frames: list[dict], *, cache: bool = True):
     source = "".join(json.dumps(frame, separators=(",", ":")) + "\n" for frame in frames).encode()
     if path.suffix == ".jsonl":
         path.write_bytes(source)
         path.with_suffix(".npz").unlink(missing_ok=True)
+        return
+    if not cache:
+        # Interface-only archives use the same lossless container; training builds its cache downstream.
+        _save(path, frames=np.frombuffer(source, dtype=np.uint8))
         return
     _save(path, frames=np.frombuffer(source, dtype=np.uint8), encoder=encoder_signature(),
           **encode_frames(frames, source))

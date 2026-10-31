@@ -1,0 +1,2278 @@
+{
+  "schema": "llmplay3_challenge_decks_v1",
+  "note": "task182：第2圈起按task177零胜签名与deploy17全部留出卡组签名替换；previous仅保存第1圈历史任务定义。当前卡组取origin/deploy17的GPT Pro胜局池，同关优先，否则同地形。原batch不变。",
+  "decks": [
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l9_train_2d8ba29b8a8f",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        6,
+        8,
+        12,
+        14,
+        26,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "holdout",
+        "source_task_id": "holdout_l7",
+        "deck": [
+          0,
+          1,
+          2,
+          27,
+          5,
+          32,
+          3
+        ],
+        "won": null,
+        "games": null,
+        "card_names": []
+      },
+      "replacement_reason": "门禁/挑选留出签名",
+      "source_level": 9,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_664321c69d40",
+      "level": 6,
+      "deck": [
+        0,
+        1,
+        7,
+        17,
+        23,
+        30,
+        34,
+        36,
+        39
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "holdout",
+        "source_task_id": "holdout_l7",
+        "deck": [
+          0,
+          1,
+          2,
+          27,
+          5,
+          32,
+          3
+        ],
+        "won": null,
+        "games": null,
+        "card_names": []
+      },
+      "replacement_reason": "门禁/挑选留出签名",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_664321c69d40",
+      "level": 8,
+      "deck": [
+        0,
+        1,
+        7,
+        17,
+        23,
+        30,
+        34,
+        36,
+        39
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "holdout",
+        "source_task_id": "holdout_l7",
+        "deck": [
+          0,
+          1,
+          2,
+          27,
+          5,
+          32,
+          3
+        ],
+        "won": null,
+        "games": null,
+        "card_names": []
+      },
+      "replacement_reason": "门禁/挑选留出签名",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_664321c69d40",
+      "level": 9,
+      "deck": [
+        0,
+        1,
+        7,
+        17,
+        23,
+        30,
+        34,
+        36,
+        39
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "holdout",
+        "source_task_id": "holdout_l9",
+        "deck": [
+          7,
+          2,
+          5,
+          38,
+          4,
+          1,
+          3
+        ],
+        "won": null,
+        "games": null,
+        "card_names": []
+      },
+      "replacement_reason": "门禁/挑选留出签名",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l9_train_18891fd9c032",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        7,
+        8,
+        13,
+        35,
+        39
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l07_d01",
+        "deck": [
+          6,
+          1,
+          8,
+          35,
+          32,
+          7,
+          36,
+          4,
+          18
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "大嘴花",
+          "向日葵",
+          "小喷菇",
+          "咖啡豆",
+          "卷心菜投手",
+          "双发射手",
+          "大蒜",
+          "土豆雷",
+          "三线射手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 9,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l9_train_4702f3094f39",
+      "level": 7,
+      "deck": [
+        1,
+        2,
+        4,
+        10,
+        12,
+        32,
+        34,
+        35,
+        36,
+        41
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l07_d03",
+        "deck": [
+          36,
+          1,
+          7,
+          35,
+          32,
+          4,
+          40,
+          10
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "大蒜",
+          "向日葵",
+          "双发射手",
+          "咖啡豆",
+          "卷心菜投手",
+          "土豆雷",
+          "机枪射手",
+          "大喷菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 9,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l9_train_2d8ba29b8a8f",
+      "level": 7,
+      "deck": [
+        0,
+        1,
+        6,
+        8,
+        12,
+        14,
+        26,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l07_d06",
+        "deck": [
+          17,
+          7,
+          39,
+          34,
+          36,
+          0,
+          30,
+          1,
+          23
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "窝瓜",
+          "双发射手",
+          "西瓜投手",
+          "玉米投手",
+          "大蒜",
+          "豌豆射手",
+          "南瓜头",
+          "向日葵",
+          "高坚果"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 9,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_c1dc092d89af",
+      "level": 9,
+      "deck": [
+        1,
+        4,
+        6,
+        7,
+        8,
+        18,
+        32,
+        35,
+        36
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l09_d02",
+        "deck": [
+          12,
+          1,
+          26,
+          0,
+          14,
+          6,
+          8,
+          35
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "魅惑菇",
+          "向日葵",
+          "仙人掌",
+          "豌豆射手",
+          "寒冰菇",
+          "大嘴花",
+          "小喷菇",
+          "咖啡豆"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_52ed34cdeb54",
+      "level": 9,
+      "deck": [
+        1,
+        4,
+        7,
+        10,
+        32,
+        35,
+        36,
+        40
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l09_d03",
+        "deck": [
+          32,
+          35,
+          2,
+          12,
+          10,
+          34,
+          41,
+          4,
+          1,
+          36
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "卷心菜投手",
+          "咖啡豆",
+          "樱桃炸弹",
+          "魅惑菇",
+          "大喷菇",
+          "玉米投手",
+          "双子向日葵",
+          "土豆雷",
+          "向日葵",
+          "大蒜"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_664321c69d40",
+      "level": 9,
+      "deck": [
+        0,
+        1,
+        7,
+        17,
+        23,
+        30,
+        34,
+        36,
+        39
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l09_d04",
+        "deck": [
+          39,
+          0,
+          8,
+          13,
+          7,
+          35,
+          1
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "西瓜投手",
+          "豌豆射手",
+          "小喷菇",
+          "胆小菇",
+          "双发射手",
+          "咖啡豆",
+          "向日葵"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l09_d06",
+      "level": 9,
+      "deck": [
+        1,
+        41,
+        0,
+        8,
+        15,
+        30,
+        7,
+        6,
+        35
+      ],
+      "won": 1,
+      "games": 8,
+      "card_names": [
+        "向日葵",
+        "双子向日葵",
+        "豌豆射手",
+        "小喷菇",
+        "毁灭菇",
+        "南瓜头",
+        "双发射手",
+        "大嘴花",
+        "咖啡豆"
+      ]
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l7_train_c1dc092d89af",
+      "level": 9,
+      "deck": [
+        1,
+        4,
+        6,
+        7,
+        8,
+        18,
+        32,
+        35,
+        36
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l09_d01",
+        "deck": [
+          32,
+          36,
+          20,
+          21,
+          26,
+          23,
+          1,
+          4
+        ],
+        "won": 2,
+        "games": 8,
+        "card_names": [
+          "卷心菜投手",
+          "大蒜",
+          "火爆辣椒",
+          "地刺",
+          "仙人掌",
+          "高坚果",
+          "向日葵",
+          "土豆雷"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 7,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l14_d02",
+      "level": 14,
+      "deck": [
+        36,
+        6,
+        32,
+        14,
+        5,
+        29,
+        9,
+        7,
+        20,
+        13
+      ],
+      "won": 0,
+      "games": 8,
+      "card_names": [
+        "大蒜",
+        "大嘴花",
+        "卷心菜投手",
+        "寒冰菇",
+        "寒冰射手",
+        "杨桃",
+        "阳光菇",
+        "双发射手",
+        "火爆辣椒",
+        "胆小菇"
+      ]
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l14_d03",
+      "level": 14,
+      "deck": [
+        11,
+        10,
+        26,
+        0,
+        9,
+        39,
+        1,
+        42
+      ],
+      "won": 0,
+      "games": 8,
+      "card_names": [
+        "墓碑吞噬者",
+        "大喷菇",
+        "仙人掌",
+        "豌豆射手",
+        "阳光菇",
+        "西瓜投手",
+        "向日葵",
+        "忧郁菇"
+      ]
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l14_train_3c0fa3a1a3d0",
+      "level": 14,
+      "deck": [
+        5,
+        6,
+        7,
+        9,
+        13,
+        14,
+        20,
+        29,
+        32,
+        36
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l14_d04",
+        "deck": [
+          28,
+          17,
+          36,
+          1,
+          32,
+          31,
+          20,
+          12
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "裂荚射手",
+          "窝瓜",
+          "大蒜",
+          "向日葵",
+          "卷心菜投手",
+          "磁力菇",
+          "火爆辣椒",
+          "魅惑菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 14,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l14_train_3c0fa3a1a3d0",
+      "level": 14,
+      "deck": [
+        5,
+        6,
+        7,
+        9,
+        13,
+        14,
+        20,
+        29,
+        32,
+        36
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l14_d05",
+        "deck": [
+          26,
+          36,
+          12,
+          1,
+          2,
+          4,
+          41
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "仙人掌",
+          "大蒜",
+          "魅惑菇",
+          "向日葵",
+          "樱桃炸弹",
+          "土豆雷",
+          "双子向日葵"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 14,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l14_train_3c0fa3a1a3d0",
+      "level": 14,
+      "deck": [
+        5,
+        6,
+        7,
+        9,
+        13,
+        14,
+        20,
+        29,
+        32,
+        36
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l14_d06",
+        "deck": [
+          9,
+          30,
+          2,
+          32,
+          18,
+          26,
+          31,
+          0,
+          36,
+          28
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "阳光菇",
+          "南瓜头",
+          "樱桃炸弹",
+          "卷心菜投手",
+          "三线射手",
+          "仙人掌",
+          "磁力菇",
+          "豌豆射手",
+          "大蒜",
+          "裂荚射手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 14,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_63e393e4711f",
+      "level": 24,
+      "deck": [
+        0,
+        1,
+        5,
+        8,
+        9,
+        10,
+        16,
+        20,
+        34,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l24_d01",
+        "deck": [
+          21,
+          19,
+          17,
+          16,
+          35,
+          1,
+          13
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "地刺",
+          "缠绕水草",
+          "窝瓜",
+          "睡莲",
+          "咖啡豆",
+          "向日葵",
+          "胆小菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_787691e1dd20",
+      "level": 24,
+      "deck": [
+        1,
+        2,
+        4,
+        13,
+        16,
+        19,
+        30,
+        35,
+        43
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l24_d03",
+        "deck": [
+          14,
+          1,
+          4,
+          24,
+          31,
+          16,
+          35,
+          10
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "寒冰菇",
+          "向日葵",
+          "土豆雷",
+          "海蘑菇",
+          "磁力菇",
+          "睡莲",
+          "咖啡豆",
+          "大喷菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_fb8822035b72",
+      "level": 24,
+      "deck": [
+        1,
+        14,
+        16,
+        20,
+        21,
+        24,
+        26,
+        34,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l24_d04",
+        "deck": [
+          16,
+          0,
+          30,
+          1,
+          22,
+          19,
+          26,
+          34,
+          29,
+          36
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "睡莲",
+          "豌豆射手",
+          "南瓜头",
+          "向日葵",
+          "火炬树桩",
+          "缠绕水草",
+          "仙人掌",
+          "玉米投手",
+          "杨桃",
+          "大蒜"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_63e393e4711f",
+      "level": 24,
+      "deck": [
+        0,
+        1,
+        5,
+        8,
+        9,
+        10,
+        16,
+        20,
+        34,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l24_d06",
+        "deck": [
+          34,
+          35,
+          16,
+          32,
+          26,
+          31,
+          41,
+          1
+        ],
+        "won": 1,
+        "games": 8,
+        "card_names": [
+          "玉米投手",
+          "咖啡豆",
+          "睡莲",
+          "卷心菜投手",
+          "仙人掌",
+          "磁力菇",
+          "双子向日葵",
+          "向日葵"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l26_d03",
+      "level": 26,
+      "deck": [
+        35,
+        16,
+        34,
+        14,
+        1,
+        24,
+        21,
+        20,
+        26
+      ],
+      "won": 0,
+      "games": 8,
+      "card_names": [
+        "咖啡豆",
+        "睡莲",
+        "玉米投手",
+        "寒冰菇",
+        "向日葵",
+        "海蘑菇",
+        "地刺",
+        "火爆辣椒",
+        "仙人掌"
+      ]
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_fb8822035b72",
+      "level": 26,
+      "deck": [
+        1,
+        14,
+        16,
+        20,
+        21,
+        24,
+        26,
+        34,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l26_d04",
+        "deck": [
+          19,
+          35,
+          43,
+          4,
+          30,
+          16,
+          2,
+          1,
+          13
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "缠绕水草",
+          "咖啡豆",
+          "香蒲",
+          "土豆雷",
+          "南瓜头",
+          "睡莲",
+          "樱桃炸弹",
+          "向日葵",
+          "胆小菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_fb8822035b72",
+      "level": 26,
+      "deck": [
+        1,
+        14,
+        16,
+        20,
+        21,
+        24,
+        26,
+        34,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l26_d05",
+        "deck": [
+          20,
+          9,
+          34,
+          10,
+          16,
+          35,
+          1,
+          8,
+          5,
+          0
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "火爆辣椒",
+          "阳光菇",
+          "玉米投手",
+          "大喷菇",
+          "睡莲",
+          "咖啡豆",
+          "向日葵",
+          "小喷菇",
+          "寒冰射手",
+          "豌豆射手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l26_train_fb8822035b72",
+      "level": 26,
+      "deck": [
+        1,
+        14,
+        16,
+        20,
+        21,
+        24,
+        26,
+        34,
+        35
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l26_d06",
+        "deck": [
+          43,
+          34,
+          16,
+          10,
+          30,
+          35,
+          1,
+          17,
+          28
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "香蒲",
+          "玉米投手",
+          "睡莲",
+          "大喷菇",
+          "南瓜头",
+          "咖啡豆",
+          "向日葵",
+          "窝瓜",
+          "裂荚射手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 26,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l26_d02",
+      "level": 26,
+      "deck": [
+        2,
+        39,
+        35,
+        16,
+        19,
+        1,
+        4,
+        3,
+        18,
+        15
+      ],
+      "won": 1,
+      "games": 8,
+      "card_names": [
+        "樱桃炸弹",
+        "西瓜投手",
+        "咖啡豆",
+        "睡莲",
+        "缠绕水草",
+        "向日葵",
+        "土豆雷",
+        "坚果墙",
+        "三线射手",
+        "毁灭菇"
+      ]
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l32_train_27fa36e6571b",
+      "level": 33,
+      "deck": [
+        2,
+        3,
+        6,
+        8,
+        9,
+        12,
+        16,
+        20,
+        27,
+        29
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l33_d01",
+        "deck": [
+          14,
+          1,
+          27,
+          34,
+          12,
+          39,
+          16,
+          8
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "寒冰菇",
+          "向日葵",
+          "三叶草",
+          "玉米投手",
+          "魅惑菇",
+          "西瓜投手",
+          "睡莲",
+          "小喷菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 32,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l32_train_f3a348c1a94d",
+      "level": 33,
+      "deck": [
+        2,
+        3,
+        8,
+        9,
+        16,
+        17,
+        20,
+        27,
+        30,
+        43
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l33_d02",
+        "deck": [
+          0,
+          24,
+          1,
+          26,
+          20,
+          16,
+          4,
+          8
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "豌豆射手",
+          "海蘑菇",
+          "向日葵",
+          "仙人掌",
+          "火爆辣椒",
+          "睡莲",
+          "土豆雷",
+          "小喷菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 32,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l32_train_c69f2ca2d6ff",
+      "level": 33,
+      "deck": [
+        2,
+        8,
+        9,
+        16,
+        20,
+        27,
+        30,
+        32,
+        39,
+        44
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l33_d03",
+        "deck": [
+          16,
+          27,
+          9,
+          26,
+          29,
+          21,
+          24,
+          12
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "睡莲",
+          "三叶草",
+          "阳光菇",
+          "仙人掌",
+          "杨桃",
+          "地刺",
+          "海蘑菇",
+          "魅惑菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 32,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l32_train_1942dba95936",
+      "level": 33,
+      "deck": [
+        8,
+        9,
+        10,
+        14,
+        15,
+        16,
+        27,
+        30,
+        31,
+        42
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l33_d04",
+        "deck": [
+          12,
+          4,
+          6,
+          9,
+          26,
+          7,
+          16,
+          34
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "魅惑菇",
+          "土豆雷",
+          "大嘴花",
+          "阳光菇",
+          "仙人掌",
+          "双发射手",
+          "睡莲",
+          "玉米投手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 32,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l36_train_211906b65be2",
+      "level": 33,
+      "deck": [
+        2,
+        5,
+        8,
+        9,
+        10,
+        16,
+        17,
+        19,
+        23,
+        28
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l33_d05",
+        "deck": [
+          43,
+          16,
+          14,
+          34,
+          19,
+          41,
+          12,
+          1
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "香蒲",
+          "睡莲",
+          "寒冰菇",
+          "玉米投手",
+          "缠绕水草",
+          "双子向日葵",
+          "魅惑菇",
+          "向日葵"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 36,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l37_train_ff6850374ea1",
+      "level": 33,
+      "deck": [
+        0,
+        8,
+        9,
+        10,
+        13,
+        16,
+        26
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l33_d06",
+        "deck": [
+          16,
+          43,
+          34,
+          13,
+          1,
+          3,
+          6
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "睡莲",
+          "香蒲",
+          "玉米投手",
+          "胆小菇",
+          "向日葵",
+          "坚果墙",
+          "大嘴花"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 37,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l37_train_ff6850374ea1",
+      "level": 37,
+      "deck": [
+        0,
+        8,
+        9,
+        10,
+        13,
+        16,
+        26
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l37_d02",
+        "deck": [
+          17,
+          27,
+          9,
+          20,
+          2,
+          36,
+          43,
+          16
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "窝瓜",
+          "三叶草",
+          "阳光菇",
+          "火爆辣椒",
+          "樱桃炸弹",
+          "大蒜",
+          "香蒲",
+          "睡莲"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 37,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l37_train_ff6850374ea1",
+      "level": 37,
+      "deck": [
+        0,
+        8,
+        9,
+        10,
+        13,
+        16,
+        26
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l37_d03",
+        "deck": [
+          7,
+          1,
+          41,
+          34,
+          39,
+          43,
+          16
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "双发射手",
+          "向日葵",
+          "双子向日葵",
+          "玉米投手",
+          "西瓜投手",
+          "香蒲",
+          "睡莲"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 37,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l37_d05",
+      "level": 37,
+      "deck": [
+        10,
+        9,
+        16,
+        26,
+        8,
+        0,
+        13
+      ],
+      "won": 0,
+      "games": 8,
+      "card_names": [
+        "大喷菇",
+        "阳光菇",
+        "睡莲",
+        "仙人掌",
+        "小喷菇",
+        "豌豆射手",
+        "胆小菇"
+      ]
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l37_train_ff6850374ea1",
+      "level": 37,
+      "deck": [
+        0,
+        8,
+        9,
+        10,
+        13,
+        16,
+        26
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l37_d06",
+        "deck": [
+          31,
+          16,
+          18,
+          24,
+          39,
+          25,
+          1,
+          23
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "磁力菇",
+          "睡莲",
+          "三线射手",
+          "海蘑菇",
+          "西瓜投手",
+          "路灯花",
+          "向日葵",
+          "高坚果"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 37,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l37_train_ff6850374ea1",
+      "level": 37,
+      "deck": [
+        0,
+        8,
+        9,
+        10,
+        13,
+        16,
+        26
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l37_d04",
+        "deck": [
+          21,
+          25,
+          17,
+          16,
+          18,
+          9,
+          32,
+          8,
+          34,
+          46
+        ],
+        "won": 1,
+        "games": 8,
+        "card_names": [
+          "地刺",
+          "路灯花",
+          "窝瓜",
+          "睡莲",
+          "三线射手",
+          "阳光菇",
+          "卷心菜投手",
+          "小喷菇",
+          "玉米投手",
+          "地刺王"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 37,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "task129",
+      "source_task_id": "deck129_v5_l37_d01",
+      "level": 37,
+      "deck": [
+        36,
+        7,
+        9,
+        16,
+        29,
+        28,
+        17,
+        26,
+        24,
+        8
+      ],
+      "won": 2,
+      "games": 8,
+      "card_names": [
+        "大蒜",
+        "双发射手",
+        "阳光菇",
+        "睡莲",
+        "杨桃",
+        "裂荚射手",
+        "窝瓜",
+        "仙人掌",
+        "海蘑菇",
+        "小喷菇"
+      ]
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_959c3577f14f",
+      "level": 42,
+      "deck": [
+        1,
+        2,
+        3,
+        4,
+        17,
+        23,
+        33,
+        37,
+        39,
+        44
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l42_d01",
+        "deck": [
+          3,
+          14,
+          9,
+          1,
+          34,
+          23,
+          33,
+          35,
+          0
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "坚果墙",
+          "寒冰菇",
+          "阳光菇",
+          "向日葵",
+          "玉米投手",
+          "高坚果",
+          "花盆",
+          "咖啡豆",
+          "豌豆射手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_8aa656b6f4a3",
+      "level": 42,
+      "deck": [
+        1,
+        3,
+        7,
+        17,
+        20,
+        22,
+        30,
+        32,
+        33,
+        40
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l42_d02",
+        "deck": [
+          0,
+          33,
+          6,
+          39,
+          1,
+          8,
+          28,
+          35,
+          30
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "豌豆射手",
+          "花盆",
+          "大嘴花",
+          "西瓜投手",
+          "向日葵",
+          "小喷菇",
+          "裂荚射手",
+          "咖啡豆",
+          "南瓜头"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_8ce638b6244c",
+      "level": 42,
+      "deck": [
+        1,
+        4,
+        10,
+        17,
+        33,
+        35,
+        36,
+        39,
+        42,
+        44
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l42_d03",
+        "deck": [
+          35,
+          0,
+          13,
+          33,
+          32,
+          6,
+          36,
+          3,
+          9,
+          1
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "咖啡豆",
+          "豌豆射手",
+          "胆小菇",
+          "花盆",
+          "卷心菜投手",
+          "大嘴花",
+          "大蒜",
+          "坚果墙",
+          "阳光菇",
+          "向日葵"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_959c3577f14f",
+      "level": 42,
+      "deck": [
+        1,
+        2,
+        3,
+        4,
+        17,
+        23,
+        33,
+        37,
+        39,
+        44
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l42_d04",
+        "deck": [
+          39,
+          44,
+          23,
+          22,
+          1,
+          26,
+          6,
+          0,
+          33,
+          3
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "西瓜投手",
+          "冰西瓜",
+          "高坚果",
+          "火炬树桩",
+          "向日葵",
+          "仙人掌",
+          "大嘴花",
+          "豌豆射手",
+          "花盆",
+          "坚果墙"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_8aa656b6f4a3",
+      "level": 42,
+      "deck": [
+        1,
+        3,
+        7,
+        17,
+        20,
+        22,
+        30,
+        32,
+        33,
+        40
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l42_d05",
+        "deck": [
+          1,
+          18,
+          23,
+          33,
+          26,
+          32,
+          31,
+          35
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "向日葵",
+          "三线射手",
+          "高坚果",
+          "花盆",
+          "仙人掌",
+          "卷心菜投手",
+          "磁力菇",
+          "咖啡豆"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_8ce638b6244c",
+      "level": 42,
+      "deck": [
+        1,
+        4,
+        10,
+        17,
+        33,
+        35,
+        36,
+        39,
+        42,
+        44
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l42_d06",
+        "deck": [
+          34,
+          35,
+          1,
+          33,
+          37,
+          31,
+          41,
+          4
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "玉米投手",
+          "咖啡豆",
+          "向日葵",
+          "花盆",
+          "叶子保护伞",
+          "磁力菇",
+          "双子向日葵",
+          "土豆雷"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l41_train_0d7ff6999952",
+      "level": 48,
+      "deck": [
+        1,
+        2,
+        3,
+        4,
+        6,
+        20,
+        29,
+        30,
+        32,
+        33
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l48_d01",
+        "deck": [
+          23,
+          33,
+          17,
+          1,
+          7,
+          26,
+          39
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "高坚果",
+          "花盆",
+          "窝瓜",
+          "向日葵",
+          "双发射手",
+          "仙人掌",
+          "西瓜投手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 41,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l41_train_8cd58baffd15",
+      "level": 48,
+      "deck": [
+        1,
+        2,
+        3,
+        5,
+        17,
+        20,
+        30,
+        32,
+        33,
+        34
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l48_d02",
+        "deck": [
+          33,
+          20,
+          34,
+          36,
+          28,
+          23,
+          32,
+          1,
+          7
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "花盆",
+          "火爆辣椒",
+          "玉米投手",
+          "大蒜",
+          "裂荚射手",
+          "高坚果",
+          "卷心菜投手",
+          "向日葵",
+          "双发射手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 41,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l41_train_12a18ff24a4e",
+      "level": 48,
+      "deck": [
+        1,
+        7,
+        20,
+        22,
+        23,
+        30,
+        32,
+        33,
+        40,
+        41
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l48_d03",
+        "deck": [
+          35,
+          32,
+          2,
+          1,
+          33,
+          13,
+          4,
+          41
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "咖啡豆",
+          "卷心菜投手",
+          "樱桃炸弹",
+          "向日葵",
+          "花盆",
+          "胆小菇",
+          "土豆雷",
+          "双子向日葵"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 41,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l41_train_2cb5906fb5ed",
+      "level": 48,
+      "deck": [
+        1,
+        14,
+        15,
+        23,
+        32,
+        33,
+        35,
+        37,
+        39,
+        44
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l48_d04",
+        "deck": [
+          9,
+          33,
+          35,
+          6,
+          1,
+          30,
+          17,
+          32,
+          4,
+          34
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "阳光菇",
+          "花盆",
+          "咖啡豆",
+          "大嘴花",
+          "向日葵",
+          "南瓜头",
+          "窝瓜",
+          "卷心菜投手",
+          "土豆雷",
+          "玉米投手"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 41,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_576ca3fef80e",
+      "level": 48,
+      "deck": [
+        0,
+        1,
+        3,
+        6,
+        9,
+        13,
+        32,
+        33,
+        35,
+        36
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l48_d05",
+        "deck": [
+          4,
+          9,
+          17,
+          1,
+          35,
+          34,
+          0,
+          33,
+          5,
+          8
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "土豆雷",
+          "阳光菇",
+          "窝瓜",
+          "向日葵",
+          "咖啡豆",
+          "玉米投手",
+          "豌豆射手",
+          "花盆",
+          "寒冰射手",
+          "小喷菇"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    },
+    {
+      "source": "gpt_pro_win",
+      "source_task_id": "rd159_l42_train_f712116e371f",
+      "level": 48,
+      "deck": [
+        0,
+        1,
+        6,
+        8,
+        28,
+        30,
+        33,
+        35,
+        39
+      ],
+      "won": 1,
+      "games": null,
+      "card_names": [],
+      "previous": {
+        "source": "task129",
+        "source_task_id": "deck129_v5_l48_d06",
+        "deck": [
+          39,
+          1,
+          29,
+          36,
+          33,
+          6,
+          20,
+          4
+        ],
+        "won": 0,
+        "games": 8,
+        "card_names": [
+          "西瓜投手",
+          "向日葵",
+          "杨桃",
+          "大蒜",
+          "花盆",
+          "大嘴花",
+          "火爆辣椒",
+          "土豆雷"
+        ]
+      },
+      "replacement_reason": "task177 base/deep 均 0/8（关卡＋卡组多重集）",
+      "source_level": 42,
+      "source_evidence": "task105"
+    }
+  ]
+}
