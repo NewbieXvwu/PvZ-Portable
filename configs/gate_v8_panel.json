@@ -1,0 +1,1193 @@
+{
+  "schema_version": 1,
+  "panel_version": "v8",
+  "status": "draft",
+  "awaiting_user_decks": true,
+  "purpose": "task208 rebuilt evaluation decks: one 1.0x task per selectable adventure level (1-49 minus conveyor and minigame levels), deck = the level's first selected good deck from scripts/pvz_tasks.GOOD_DECKS. DRAFT - the user records decks in game and they take precedence via USER_DECKS; merge before wiring into promotion. python/pvz_promotion.py still only accepts panel_version 'v5' and production qc still points at gate_v5_panel.json.",
+  "rule": "include every selectable level; deck candidates from GPT Pro 1.0x wins (task105 import, llmplay_decks families, fog only under human_v2 occlusion), filtered by dead-card blacklist + terrain coverage + per-level zombie threats, ranked by the deploy25 teacher's from-scratch win rate",
+  "sources": {
+    "MEMORY/docs/task208-good-decks.md": "per-level candidates and teacher evidence",
+    "scripts/pvz_tasks.py": "GOOD_DECKS / USER_DECKS are the single deck source",
+    "~/pvz-logs/task208/teacher/": "8-seed deploy25 teacher measurements",
+    "~/pvz-logs/gptbc/teacher/gptbc/": "task194 2-seed GPT-prior teacher games"
+  },
+  "groups": {
+    "task208_l1_day": "day",
+    "task208_l2_day": "day",
+    "task208_l3_day": "day",
+    "task208_l4_day": "day",
+    "task208_l6_day": "day",
+    "task208_l7_day": "day",
+    "task208_l8_day": "day",
+    "task208_l9_day": "day",
+    "task208_l11_night": "night",
+    "task208_l12_night": "night",
+    "task208_l13_night": "night",
+    "task208_l14_night": "night",
+    "task208_l16_night": "night",
+    "task208_l17_night": "night",
+    "task208_l18_night": "night",
+    "task208_l19_night": "night",
+    "task208_l21_pool": "pool",
+    "task208_l22_pool": "pool",
+    "task208_l23_pool": "pool",
+    "task208_l24_pool": "pool",
+    "task208_l26_pool": "pool",
+    "task208_l27_pool": "pool",
+    "task208_l28_pool": "pool",
+    "task208_l29_pool": "pool",
+    "task208_l31_fog": "fog",
+    "task208_l32_fog": "fog",
+    "task208_l33_fog": "fog",
+    "task208_l34_fog": "fog",
+    "task208_l36_fog": "fog",
+    "task208_l37_fog": "fog",
+    "task208_l38_fog": "fog",
+    "task208_l39_fog": "fog",
+    "task208_l41_roof": "roof",
+    "task208_l42_roof": "roof",
+    "task208_l43_roof": "roof",
+    "task208_l44_roof": "roof",
+    "task208_l46_roof": "roof",
+    "task208_l47_roof": "roof",
+    "task208_l48_roof": "roof",
+    "task208_l49_roof": "roof"
+  },
+  "monitor": [],
+  "zone_counts": {
+    "day": 8,
+    "night": 8,
+    "pool": 8,
+    "fog": 8,
+    "roof": 8
+  },
+  "qualification": {
+    "task208_l1_day": {
+      "zone": "day",
+      "teacher_wins": 8,
+      "teacher_games": 8,
+      "teacher_source": "task208 8-seed deploy25 teacher",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l2_day": {
+      "zone": "day",
+      "teacher_wins": 7,
+      "teacher_games": 8,
+      "teacher_source": "task208 8-seed deploy25 teacher",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l3_day": {
+      "zone": "day",
+      "teacher_wins": 6,
+      "teacher_games": 8,
+      "teacher_source": "task208 8-seed deploy25 teacher",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l4_day": {
+      "zone": "day",
+      "teacher_wins": 8,
+      "teacher_games": 8,
+      "teacher_source": "task208 8-seed deploy25 teacher",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l6_day": {
+      "zone": "day",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l7_day": {
+      "zone": "day",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 3,
+      "user_deck": false
+    },
+    "task208_l8_day": {
+      "zone": "day",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l9_day": {
+      "zone": "day",
+      "teacher_wins": 2,
+      "teacher_games": 8,
+      "teacher_source": "task208 8-seed deploy25 teacher",
+      "gpt_win_episodes": 2,
+      "user_deck": false
+    },
+    "task208_l11_night": {
+      "zone": "night",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l12_night": {
+      "zone": "night",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 6,
+      "user_deck": false
+    },
+    "task208_l13_night": {
+      "zone": "night",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l14_night": {
+      "zone": "night",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l16_night": {
+      "zone": "night",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 6,
+      "user_deck": false
+    },
+    "task208_l17_night": {
+      "zone": "night",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l18_night": {
+      "zone": "night",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 6,
+      "user_deck": false
+    },
+    "task208_l19_night": {
+      "zone": "night",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l21_pool": {
+      "zone": "pool",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l22_pool": {
+      "zone": "pool",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l23_pool": {
+      "zone": "pool",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l24_pool": {
+      "zone": "pool",
+      "teacher_wins": 1,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 2,
+      "user_deck": false
+    },
+    "task208_l26_pool": {
+      "zone": "pool",
+      "teacher_wins": 0,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 2,
+      "user_deck": false
+    },
+    "task208_l27_pool": {
+      "zone": "pool",
+      "teacher_wins": 0,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 4,
+      "user_deck": false
+    },
+    "task208_l28_pool": {
+      "zone": "pool",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 6,
+      "user_deck": false
+    },
+    "task208_l29_pool": {
+      "zone": "pool",
+      "teacher_wins": 0,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 5,
+      "user_deck": false
+    },
+    "task208_l31_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l32_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l33_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l34_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l36_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l37_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l38_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l39_fog": {
+      "zone": "fog",
+      "teacher_wins": null,
+      "teacher_games": null,
+      "teacher_source": "pending",
+      "gpt_win_episodes": 1,
+      "user_deck": false
+    },
+    "task208_l41_roof": {
+      "zone": "roof",
+      "teacher_wins": 0,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 12,
+      "user_deck": false
+    },
+    "task208_l42_roof": {
+      "zone": "roof",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 11,
+      "user_deck": false
+    },
+    "task208_l43_roof": {
+      "zone": "roof",
+      "teacher_wins": 1,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 2,
+      "user_deck": false
+    },
+    "task208_l44_roof": {
+      "zone": "roof",
+      "teacher_wins": 1,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 2,
+      "user_deck": false
+    },
+    "task208_l46_roof": {
+      "zone": "roof",
+      "teacher_wins": 1,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 10,
+      "user_deck": false
+    },
+    "task208_l47_roof": {
+      "zone": "roof",
+      "teacher_wins": 1,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 10,
+      "user_deck": false
+    },
+    "task208_l48_roof": {
+      "zone": "roof",
+      "teacher_wins": 2,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 4,
+      "user_deck": false
+    },
+    "task208_l49_roof": {
+      "zone": "roof",
+      "teacher_wins": 0,
+      "teacher_games": 2,
+      "teacher_source": "task194 2-seed GPT-prior teacher",
+      "gpt_win_episodes": 13,
+      "user_deck": false
+    }
+  },
+  "excluded": [],
+  "tasks": [
+    {
+      "task_id": "task208_l1_day",
+      "level": 1,
+      "deck": [
+        1,
+        2,
+        3,
+        4,
+        17,
+        21,
+        23,
+        32,
+        39,
+        41
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l2_day",
+      "level": 2,
+      "deck": [
+        0,
+        1,
+        3,
+        10,
+        14,
+        15,
+        35,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l3_day",
+      "level": 3,
+      "deck": [
+        0,
+        1,
+        3,
+        10,
+        14,
+        15,
+        35,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l4_day",
+      "level": 4,
+      "deck": [
+        0,
+        1,
+        3,
+        7,
+        22,
+        40
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l6_day",
+      "level": 6,
+      "deck": [
+        1,
+        2,
+        4,
+        18,
+        23,
+        26
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l7_day",
+      "level": 7,
+      "deck": [
+        1,
+        4,
+        6,
+        7,
+        8,
+        18,
+        32,
+        35,
+        36
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l8_day",
+      "level": 8,
+      "deck": [
+        1,
+        4,
+        17,
+        20,
+        23,
+        32,
+        39,
+        44
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l9_day",
+      "level": 9,
+      "deck": [
+        0,
+        1,
+        7,
+        8,
+        13,
+        35,
+        39
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "day",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l11_night",
+      "level": 11,
+      "deck": [
+        0,
+        2,
+        3,
+        8,
+        9,
+        11,
+        14,
+        21,
+        26,
+        28
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l12_night",
+      "level": 12,
+      "deck": [
+        3,
+        4,
+        7,
+        8,
+        9,
+        12,
+        17,
+        22,
+        29,
+        40
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l13_night",
+      "level": 13,
+      "deck": [
+        8,
+        9,
+        10,
+        11,
+        15,
+        30,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l14_night",
+      "level": 14,
+      "deck": [
+        8,
+        9,
+        10,
+        11,
+        14,
+        23,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l16_night",
+      "level": 16,
+      "deck": [
+        3,
+        4,
+        7,
+        8,
+        9,
+        12,
+        17,
+        22,
+        29,
+        40
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l17_night",
+      "level": 17,
+      "deck": [
+        3,
+        8,
+        9,
+        10,
+        11,
+        15,
+        21,
+        26,
+        31,
+        36
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l18_night",
+      "level": 18,
+      "deck": [
+        3,
+        4,
+        7,
+        8,
+        9,
+        12,
+        17,
+        22,
+        29,
+        40
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l19_night",
+      "level": 19,
+      "deck": [
+        8,
+        9,
+        10,
+        11,
+        15,
+        31,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "night",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l21_pool",
+      "level": 21,
+      "deck": [
+        1,
+        3,
+        4,
+        10,
+        14,
+        15,
+        16,
+        32,
+        35,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l22_pool",
+      "level": 22,
+      "deck": [
+        1,
+        3,
+        4,
+        9,
+        10,
+        14,
+        16,
+        32,
+        35,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l23_pool",
+      "level": 23,
+      "deck": [
+        1,
+        2,
+        5,
+        16,
+        19,
+        28
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l24_pool",
+      "level": 24,
+      "deck": [
+        0,
+        1,
+        16,
+        19,
+        22,
+        26,
+        29,
+        30,
+        34,
+        36
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l26_pool",
+      "level": 26,
+      "deck": [
+        1,
+        14,
+        16,
+        20,
+        21,
+        24,
+        26,
+        34,
+        35
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l27_pool",
+      "level": 27,
+      "deck": [
+        0,
+        1,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        46
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l28_pool",
+      "level": 28,
+      "deck": [
+        0,
+        1,
+        2,
+        5,
+        7,
+        16,
+        17,
+        22,
+        30,
+        40
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l29_pool",
+      "level": 29,
+      "deck": [
+        0,
+        1,
+        16,
+        17,
+        18,
+        19,
+        21,
+        22,
+        23,
+        46
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "pool",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l31_fog",
+      "level": 31,
+      "deck": [
+        8,
+        9,
+        10,
+        12,
+        15,
+        16,
+        19,
+        23,
+        25,
+        42
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l32_fog",
+      "level": 32,
+      "deck": [
+        8,
+        9,
+        10,
+        15,
+        16,
+        19,
+        23,
+        25,
+        26,
+        36
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l33_fog",
+      "level": 33,
+      "deck": [
+        4,
+        8,
+        9,
+        14,
+        16,
+        18,
+        19,
+        23,
+        25,
+        27
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l34_fog",
+      "level": 34,
+      "deck": [
+        5,
+        8,
+        9,
+        16,
+        19,
+        23,
+        25,
+        43
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l36_fog",
+      "level": 36,
+      "deck": [
+        4,
+        8,
+        9,
+        14,
+        16,
+        17,
+        18,
+        19,
+        23,
+        25
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l37_fog",
+      "level": 37,
+      "deck": [
+        8,
+        9,
+        10,
+        15,
+        16,
+        19,
+        23,
+        25,
+        36
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l38_fog",
+      "level": 38,
+      "deck": [
+        0,
+        3,
+        6,
+        8,
+        9,
+        16,
+        17,
+        19,
+        23,
+        25
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l39_fog",
+      "level": 39,
+      "deck": [
+        1,
+        8,
+        16,
+        18,
+        19,
+        23,
+        25,
+        31,
+        43
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "fog",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l41_roof",
+      "level": 41,
+      "deck": [
+        1,
+        14,
+        15,
+        23,
+        32,
+        33,
+        35,
+        37,
+        39,
+        44
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l42_roof",
+      "level": 42,
+      "deck": [
+        1,
+        2,
+        17,
+        30,
+        32,
+        33,
+        34,
+        37,
+        39,
+        44
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l43_roof",
+      "level": 43,
+      "deck": [
+        1,
+        2,
+        3,
+        5,
+        17,
+        20,
+        30,
+        32,
+        33,
+        34
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l44_roof",
+      "level": 44,
+      "deck": [
+        1,
+        2,
+        3,
+        5,
+        17,
+        20,
+        30,
+        32,
+        33,
+        34
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l46_roof",
+      "level": 46,
+      "deck": [
+        1,
+        2,
+        17,
+        30,
+        32,
+        33,
+        34,
+        37,
+        39,
+        44
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l47_roof",
+      "level": 47,
+      "deck": [
+        1,
+        2,
+        17,
+        30,
+        32,
+        33,
+        34,
+        37,
+        39,
+        44
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l48_roof",
+      "level": 48,
+      "deck": [
+        1,
+        2,
+        3,
+        5,
+        17,
+        20,
+        30,
+        32,
+        33,
+        34
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    },
+    {
+      "task_id": "task208_l49_roof",
+      "level": 49,
+      "deck": [
+        1,
+        2,
+        17,
+        30,
+        32,
+        33,
+        34,
+        37,
+        39,
+        44
+      ],
+      "zombie_count_multiplier": 1.0,
+      "terrain": "roof",
+      "wave_cap": null,
+      "playthrough": 2,
+      "preplanted": []
+    }
+  ]
+}
