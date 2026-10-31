@@ -1674,6 +1674,8 @@ class TrainingPipeline:
             packed['pack_finished'] = time.time()
             self._marker(pack_marker, packed)
         report.update({key: value for key, value in packed.items() if key.startswith('pack_')})
+        from pvz_training_pack import packed_file_from_log
+        shared_pack = packed_file_from_log(folder / 'pack.log')
         python = str(self.args.python)
         def train_seed(seed, admitted=False):
             directory = folder / 'seeds' / f'seed_{seed:06d}'
@@ -1699,8 +1701,9 @@ class TrainingPipeline:
                     if not admitted:
                         self._admit()
                     command = [python, str(ROOT / 'scripts/train_rollout_policy.py'), '--recipe', str(path)]
-                    if variant.get('recipe_family') == 'B':
-                        command += ['--pack-recipe', str(recipe_path)]
+                    command += ['--pack-recipe', str(recipe_path)]
+                    if shared_pack is not None:
+                        command += ['--pack-file', str(shared_pack)]
                     candidate['train_peak_anon_bytes'] = self._command(command, directory / 'train.log')
                     candidate['train_data_bytes'] = training_data_bytes(model)
                     if not model.is_file():

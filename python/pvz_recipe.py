@@ -255,19 +255,19 @@ def write_recipe(path, document):
 def training_row_options(recipe, labels=None):
     """The row contract shared by training and curriculum packing."""
     return dict(labels=set(recipe['labels'] if labels is None else labels),
-                wait_keep=recipe['wait_keep'], label_weight=recipe['label_weight'],
+                wait_keep=recipe['wait_keep'],
                 with_context=recipe['context'], obs=recipe['obs'],
                 cells=bool(recipe['cell_soft_weight']),
                 aux_horizon=recipe['aux_horizon'] if recipe['aux_weight'] else 0,
                 packet_head=recipe['packet_head'],
                 **({'label_keep': recipe['label_keep']} if recipe.get('label_keep') else {}),
-                **({'source_weight': recipe['source_weight']} if recipe.get('source_weight') else {}),
                 **({key: recipe[key] for key in ('llm_demo_import', 'llm_demo_results')}
                    if recipe.get('llm_demo_import') else {}))
 
 
 def training_args(parser, argv=None):
     parser.add_argument('--pack-recipe', type=Path, help='shared packed-row recipe; apply this candidate label weights after loading')
+    parser.add_argument('--pack-file', type=Path, help='immutable shared pack selected by the round packer')
     parser.add_argument('--recipe', type=Path, required=True)
     parser.add_argument('--out', type=Path, help='override output directory')
     parser.add_argument('--device', help='override compute device')
@@ -291,6 +291,7 @@ def training_args(parser, argv=None):
     args.source_row_report = args.out / 'source_rows.json' if resolved['source_row_report'] else None
     args.recipe = cli.recipe
     args.pack_recipe = cli.pack_recipe
+    args.pack_file = cli.pack_file
     args.resolved_recipe = resolved
     return args
 

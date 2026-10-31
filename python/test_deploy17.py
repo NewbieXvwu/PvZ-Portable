@@ -84,26 +84,57 @@ def test_deploy17_recipe_and_frozen_pool(tmp_path):
     with pytest.raises(ValueError):decks.load_frozen_pool(duplicate,registry,holdouts)
 
 
-def test_deploy17_shared_pack_weights_match_physical_pack(tmp_path):
+def test_shared_pack_runtime_label_weights_do_not_change_rows_or_key(tmp_path):
     import torch
-    from test_incremental_pack import fixture as rows,options
-    from pack_training_rows import pack
+    from test_incremental_pack import fixture as rows, options
+    from pack_training_rows import pack, pack_monolithic
     import train_rollout_policy as trainer
-    from pvz_training_rows import LabelWeightAdjustment
-    data=tmp_path/'data';rows(data,['fresh','z_old'])
-    a=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.5}),tmp_path/'cache')
-    adjust=LabelWeightAdjustment({'z_old':1.0},{'z_old':1.5})
-    shared=trainer.read_pack(a,data,row_observer=adjust.observe)
-    original=shared[5].clone();adjust.apply(shared[5])
-    b=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.0}),tmp_path/'cache')
-    physical=trainer.read_pack(b,data)
-    torch.testing.assert_close(shared[5],physical[5],rtol=0,atol=1e-6)
-    assert not torch.equal(original,shared[5])
-    torch.testing.assert_close(trainer.read_pack(a,data)[5],original,rtol=0,atol=0)
-    assert torch.equal(shared[2],physical[2]) and torch.equal(shared[3],physical[3])
+    from pvz_training_pack import pack_path
+    data = tmp_path / 'data'
+    rows(data, ['fresh', 'z_old'])
+    first = options(data, ['fresh', 'z_old'], label_weight={'z_old': 1.5})
+    second = options(data, ['fresh', 'z_old'], label_weight={'z_old': 0.})
+    assert first == second
+    assert pack_path(data, dict(first, source_weight={'default': 0.})) == pack_path(data, first)
+    path = pack(data, first, tmp_path / 'cache')
+    before = trainer.read_pack(path, data)[5].clone()
+    a = trainer.load(data, {'fresh', 'z_old'}, label_weight={'z_old': 1.5}, pack_file=path)
+    b = trainer.load(data, {'fresh', 'z_old'}, label_weight={'z_old': 0.}, pack_file=path)
+    assert (a[5] > b[5]).any() and (b[5] == 0).any()
+    torch.testing.assert_close(trainer.read_pack(path, data)[5], before, rtol=0, atol=0)
+    assert torch.equal(a[2], b[2]) and torch.equal(a[3], b[3])
+    old_options = dict(first, label_weight={'z_old': 1.5})
+    legacy = pack_monolithic(data, old_options, tmp_path / 'cache', out=data / 'packs/legacy.npz', quiet=True)
+    restored = trainer.load(data, {'fresh', 'z_old'}, pack_file=legacy)
+    torch.testing.assert_close(restored[5], before, rtol=0, atol=1e-6)
 
 
-def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkeypatch):
+def test_existing_neutral_segments_are_reused_without_repacking(tmp_path, monkeypatch):
+    import hashlib
+    import numpy as np
+    import pack_training_rows as packer
+    from test_incremental_pack import fixture as rows, options
+    from pvz_training_pack import fingerprint_paths, segment_options
+    from pvz_frame_store import frame_paths
+    data = tmp_path / 'data'
+    rows(data, ['z_old'])
+    requested = options(data, ['z_old'])
+    contract = segment_options(requested, 'z_old', fingerprint_paths(data, frame_paths(data)))
+    legacy = dict(contract, label_weight={'z_old': 1.0})
+    key = hashlib.sha1(json.dumps(legacy, sort_keys=True).encode()).hexdigest()[:16]
+    path = data / 'packs/segments' / (key + '.npz')
+    packer.pack_monolithic(data, legacy, tmp_path / 'cache', out=path, quiet=True)
+    stamp = path.stat().st_mtime_ns
+    monkeypatch.setattr(packer, '_build_segment', lambda *a: pytest.fail('must reuse the existing segment'))
+    index = packer.pack(data, requested, tmp_path / 'cache')
+    with np.load(index, allow_pickle=False) as stored:
+        assert stored['segments'].tolist() == ['segments/' + path.name]
+    assert path.stat().st_mtime_ns == stamp
+    assert len(list(path.parent.glob('*.npz'))) == 1
+
+
+@pytest.mark.parametrize('explicit_snapshot', [True, False])
+def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkeypatch,explicit_snapshot):
     import torch
     import train_rollout_policy as trainer
     from test_incremental_pack import fixture as rows,options
@@ -111,18 +142,24 @@ def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkey
     from pvz_recipe import write_recipe
     data=tmp_path/'data';rows(data,['fresh','z_old'])
     a=pack(data,options(data,['fresh','z_old'],label_weight={'z_old':1.5}),tmp_path/'cache')
-    packed=trainer.read_pack(a,data)[5].clone()
+    packed=trainer.load(data, {'fresh','z_old'}, label_weight={'z_old':1.5}, pack_file=a)[5].clone()
     common=dict(schema_version=1,kind='training',data=str(data),labels=['fresh','z_old'],device='cpu',threads=1,
         wait_keep=1.0,obs='v1',packet_head='slot',cell_soft_weight=0,source_row_report=False,
         out=str(tmp_path/'student'))
-    write_recipe(tmp_path/'a.json',dict(common,label_weight={'z_old':1.5}))
-    write_recipe(tmp_path/'b.json',dict(common,label_weight={'z_old':1.0}))
-    monkeypatch.setattr(sys,'argv',['train','--recipe',str(tmp_path/'b.json'),'--pack-recipe',str(tmp_path/'a.json')])
+    folder=tmp_path/'round_000071';folder.mkdir()
+    child=folder/'seeds/seed_000001/recipe.json';child.parent.mkdir(parents=True)
+    write_recipe(folder/'recipe.json',dict(common,label_weight={'z_old':1.5}))
+    write_recipe(child,dict(common,label_weight={'z_old':1.0}))
+    argv=['train','--recipe',str(child)]
+    if explicit_snapshot:argv+=['--pack-recipe',str(folder/'recipe.json')]
+    monkeypatch.setattr(sys,'argv',argv)
+    (folder/'pack.log').write_text(json.dumps({'pack':str(a)})+'\n')
+    monkeypatch.setattr(trainer,'archive_fingerprint',lambda *a,**kw:pytest.fail('must reuse the logged pack'))
     monkeypatch.setattr(trainer,'Metrics',Mock())
     monkeypatch.setattr(trainer,'set_oom_score_adj',lambda *_:None)
     observed={};original=trainer.load
     def load(*args,**kwargs):
-        observed['weights']=kwargs['label_weight']
+        observed['weights']=kwargs['label_weight'];observed['pack_file']=kwargs.get('pack_file')
         result=original(*args,**kwargs);observed['result']=result;return result
     monkeypatch.setattr(trainer,'load',load)
     class Loaded(Exception):pass
@@ -131,10 +168,12 @@ def test_deploy17_training_cli_uses_shared_pack_without_training(tmp_path,monkey
         def shuffle(self,*_):raise Loaded
     monkeypatch.setattr(trainer.random,'Random',StopBeforeSplit)
     with pytest.raises(Loaded):trainer.main()
-    assert observed['weights']=={'z_old':1.5}
+    assert observed['weights']=={'z_old':1.0}
     assert not torch.equal(observed['result'][5],packed)
-    note=json.loads((tmp_path/'student/shared_pack_weights.json').read_text())
-    assert note['factors']=={'z_old':2/3}
+    assert observed['pack_file']==a
+    if explicit_snapshot:
+        note=json.loads((tmp_path/'student/shared_pack_weights.json').read_text())
+        assert note['factors']=={} and note['pack_file']==str(a)
 
 
 def test_deploy17_boundary_barrier_is_scoped_and_resumes_busy_scheduler(tmp_path,monkeypatch):

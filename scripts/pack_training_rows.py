@@ -406,7 +406,8 @@ def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_wo
         valid = False
         if target.is_file() and not rebuild:
             with np.load(target, allow_pickle=False) as stored:
-                valid = (json.loads(str(stored['meta'])) == contract
+                from pvz_training_pack import content_options
+                valid = (content_options(json.loads(str(stored['meta']))) == content_options(contract)
                          and segment_plane_shapes_valid(target, int(stored['rows'])))
         if not valid:
             jobs.append((data, contract, cache_dir, read_cache_dir, paths))
@@ -486,7 +487,10 @@ def packed_load(data, labels, wait_keep: float = 1.0, label_weight=None, with_co
     path = pack_path(data, options)
     if rebuild or not path.is_file():
         pack(data, options, cache_dir, 1, None, path, quiet=True, rebuild=rebuild)
-    return read_pack(path, data, row_observer)
+    from train_rollout_policy import load
+    return load(data, labels, wait_keep, label_weight, with_context, obs, cells, aux_horizon,
+                packet_head=packet_head, row_observer=row_observer, label_keep=label_keep,
+                llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results, pack_file=path)
 
 
 def verify(data: Path, options: dict, out: Path) -> None:

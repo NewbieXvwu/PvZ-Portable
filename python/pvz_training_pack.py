@@ -112,7 +112,15 @@ def keep_archive(data, path, rules):
 
 
 def segment_path(data: Path, options: dict) -> Path:
-    return Path(data) / 'packs' / 'segments' / pack_path(data, options).name
+    directory = Path(data) / 'packs' / 'segments'
+    target = directory / pack_path(data, options).name
+    # Existing production segments with an explicit 1.0 label factor have identical rows.
+    if not target.is_file() and len(options['labels']) == 1:
+        legacy = dict(options, label_weight={options['labels'][0]: 1.0})
+        previous = directory / (_pack_key(legacy) + '.npz')
+        if previous.is_file():
+            return previous
+    return target
 
 
 def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = False,
@@ -120,20 +128,47 @@ def pack_options(labels, wait_keep: float = 1.0, obs: str = "v1", cells: bool = 
                  label_weight: dict[str, float] | None = None, sources: str | None = None,
                  label_keep: dict[str, float] | None = None,
                  llm_demo_import=None, llm_demo_results=(1,), source_weight=None) -> dict:
-    """Everything that changes the rows or their values: a pack is valid for exactly one tuple."""
+    """Packed row content only; label/source weights are applied by each trainer."""
     keep = label_keep_options(labels, label_keep)
     result = {"version": PACK_VERSION, "sources": sources, "labels": sorted(labels), "wait_keep": round(float(wait_keep), 6),
             "obs": obs, "cells": bool(cells), "aux_horizon": int(aux_horizon), "packet_head": packet_head,
             "with_context": bool(with_context), **({'label_keep': keep} if keep else {}),
-            "label_weight": {k: round(float(v), 6) for k, v in sorted((label_weight or {}).items())}}
+            "label_weight": {}}
     if llm_demo_import is not None:
         result.update(llm_demo_import=str(llm_demo_import), llm_demo_results=sorted(llm_demo_results))
     return result
 
 
+def content_options(options):
+    result = dict(options, label_weight={})
+    result.pop('source_weight', None)
+    return result
+
+
+def _pack_key(options):
+    return hashlib.sha1(json.dumps(options, sort_keys=True).encode()).hexdigest()[:16]
+
+
 def pack_path(data: Path, options: dict) -> Path:
-    key = hashlib.sha1(json.dumps(options, sort_keys=True).encode()).hexdigest()[:16]
-    return Path(data) / "packs" / f"{key}.npz"
+    return Path(data) / "packs" / f"{_pack_key(content_options(options))}.npz"
+
+
+def packed_file_from_log(log):
+    """Read the packer's published file, without rescanning a mutable source pool."""
+    log = Path(log)
+    if not log.is_file():
+        return None
+    with log.open('rb') as stream:
+        stream.seek(max(0, log.stat().st_size - 65536))
+        lines = stream.read().decode(errors='replace').splitlines()
+    for line in reversed(lines):
+        try:
+            report = json.loads(line)
+        except ValueError:
+            continue
+        if isinstance(report, dict) and report.get('pack'):
+            return Path(report['pack'])
+    return None
 
 
 

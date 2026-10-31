@@ -532,21 +532,39 @@ def load_batch(source: BatchSource, prepared: dict, device, stream=None, event=N
 def load(data: Path, labels: set[str], wait_keep: float = 1.0, label_weight: dict[str, float] | None = None,
          with_context: bool = False, obs: str = "v1", cells: bool = False, aux_horizon: int = 0,
          row_observer=None, packet_head: str = "slot", source_weight: dict[str, float] | None = None,
-         label_keep: dict[str, float] | None = None, llm_demo_import=None, llm_demo_results=(1,)):
+         label_keep: dict[str, float] | None = None, llm_demo_import=None, llm_demo_results=(1,),
+         pack_file: Path | None = None, weight_report: Path | None = None):
     """The training rows of this option tuple, read from its pack (scripts/pack_training_rows.py).
 
     Read the corpus index and immutable label segments, merging CSR slices in archive order.
     The collector writes the index; a label set without one says which command to run.
     """
-    options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context, label_weight,
-                           sources=archive_fingerprint(data, labels, llm_demo_import, llm_demo_results),
-                           label_keep=label_keep, llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results)
-    path = pack_path(data, options)
+    if pack_file is None:
+        options = pack_options(labels, wait_keep, obs, cells, aux_horizon, packet_head, with_context,
+                               sources=archive_fingerprint(data, labels, llm_demo_import, llm_demo_results),
+                               label_keep=label_keep, llm_demo_import=llm_demo_import, llm_demo_results=llm_demo_results)
+        path = pack_path(data, options)
+    else:
+        path = Path(pack_file)
     if not path.is_file():
         raise SystemExit(f"no training pack for these options: {path} -- run: "
                          f"python3 scripts/pack_training_rows.py --data {data} "
-                         f"--labels {','.join(sorted(labels))} {_pack_flags(options)}")
-    return read_pack(path, data, row_observer, source_weight)
+                         f"--labels {','.join(sorted(labels))}" +
+                         (f" {_pack_flags(options)}" if pack_file is None else ''))
+    from pvz_training_rows import LabelWeightAdjustment
+    with np.load(path, allow_pickle=False) as stored:
+        packed_weights = json.loads(str(stored['meta'])).get('label_weight', {})
+    adjustment = LabelWeightAdjustment(label_weight or {}, packed_weights)
+    def observe(path, rows):
+        adjustment.observe(path, rows)
+        if row_observer:
+            row_observer(path, rows)
+    loaded = read_pack(path, data, observe, source_weight)
+    adjustment.apply(loaded[5])
+    if weight_report is not None:
+        weight_report.write_text(json.dumps(dict(pack_file=str(path), effective_label_weight=label_weight or {},
+            packed_label_weight=packed_weights, factors=adjustment.factors, rows=len(loaded[5])), indent=1) + '\n')
+    return loaded
 
 
 def read_pack(path: Path, data: Path | None = None, row_observer=None, source_weight=None):
@@ -902,26 +920,27 @@ def main(*, step_observer=None) -> None:
     started = time.time()
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     load_options = training_row_options(args.resolved_recipe)
+    load_options.update(label_weight=args.resolved_recipe['label_weight'], source_weight=args.source_weight)
+    from pvz_training_pack import packed_file_from_log
+    snapshot = args.pack_recipe
+    # Already-running controllers pass --pack-recipe only for B; their A recipes use this layout.
+    if snapshot is None and args.recipe.parent.parent.name == 'seeds':
+        snapshot = args.recipe.parents[2] / 'recipe.json'
+    selected_pack = args.pack_file or (packed_file_from_log(snapshot.parent / 'pack.log') if snapshot else None)
+    if selected_pack is not None:
+        load_options['pack_file'] = selected_pack
     private_weights = None
     history_keep = args.resolved_recipe.get('history_l7_keep', 1.0)
     deck_cap = args.resolved_recipe.get('deck_weight_cap', 1.0)
     if history_keep < 1 or deck_cap < 1:
         from pvz_training_rows import SharedPackAdjustment
         private_weights = SharedPackAdjustment(args.data, history_keep, deck_cap)
-    label_adjustment = None
     if args.pack_recipe is not None:
         from pvz_recipe import load_recipe
-        from pvz_training_rows import LabelWeightAdjustment
         packed_options = training_row_options(load_recipe(args.pack_recipe, 'training'))
-        comparable = lambda options: {k:v for k,v in options.items() if k not in ('label_weight','source_weight')}
-        if comparable(load_options) != comparable(packed_options):
+        if training_row_options(args.resolved_recipe) != packed_options:
             raise ValueError('shared pack and candidate row options differ')
-        label_adjustment = LabelWeightAdjustment(load_options['label_weight'], packed_options['label_weight'])
-        previous_observer = observer
-        def observer(path, rows):
-            label_adjustment.observe(path, rows)
-            if previous_observer: previous_observer(path, rows)
-        load_options['label_weight'] = packed_options['label_weight']
+        load_options['weight_report'] = args.out / 'shared_pack_weights.json'
     if private_weights is not None:
         original_observer = observer
         def observer(path, rows):
@@ -938,13 +957,6 @@ def main(*, step_observer=None) -> None:
             if replay_observer: replay_observer(path, rows)
     loaded = load(args.data, **load_options, row_observer=observer)
     boards, scalars, plant, packet, cell, weight, seed_of, values, cands = loaded[:9]
-    if label_adjustment is not None:
-        label_adjustment.apply(weight)
-        (args.out / 'shared_pack_weights.json').write_text(json.dumps(dict(
-            pack_recipe=str(args.pack_recipe),
-            effective_label_weight=args.resolved_recipe['label_weight'],
-            packed_label_weight=packed_options['label_weight'],
-            factors=label_adjustment.factors, rows=len(weight)), indent=1)+'\n')
     auxiliary = loaded[9] if args.aux_weight else None
     packet_info = loaded[9 + bool(args.aux_weight)] if args.packet_head == 'identity' else None
     load_seconds = time.time() - started

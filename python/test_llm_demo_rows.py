@@ -102,7 +102,7 @@ def test_task152_recipe_rejects_invalid_results():
                           labels=['base'], llm_demo_results=results))
 
 
-def test_clean_b_only_uses_verified_demo_and_recorded_r52_or_gptbc_prior(tmp_path):
+def test_clean_b_only_uses_verified_demo_and_recorded_r52_or_gptbc_prior(tmp_path, monkeypatch):
     imported, _ = imported_archives(tmp_path)
     data = tmp_path / 'shared'
     checkpoints = dict(old='/runs/round_000051/student/model.pt',
@@ -116,11 +116,16 @@ def test_clean_b_only_uses_verified_demo_and_recorded_r52_or_gptbc_prior(tmp_pat
     labels = set(checkpoints)
     assert source_factor(dict(label_source='teacher', task=dict(policy='round_000052')), dict(default=0., teacher_r52=1.)) == 1.
     packed_load(data, labels, obs='v2', llm_demo_import=imported)
+    from pvz_training_pack import pack_path
+    pinned = pack_path(data, pack_options(labels, obs='v2',
+        sources=archive_fingerprint(data, labels, imported), llm_demo_import=imported))
+    import train_rollout_policy as trainer
+    monkeypatch.setattr(trainer, 'archive_fingerprint', lambda *a, **kw: pytest.fail('do not reselect the round pack'))
     spans = []
-    b = load(data, labels, obs='v2', llm_demo_import=imported,
+    b = load(data, labels, obs='v2', llm_demo_import=imported, pack_file=pinned,
         source_weight=dict(default=0., teacher_r52=1., teacher_gptbc=1., llm_demo=1.),
         row_observer=lambda path, rows: spans.append((path.parent.name, len(rows))))
-    a = load(data, labels, obs='v2', llm_demo_import=imported, source_weight=dict(llm_demo=0.))
+    a = load(data, labels, obs='v2', llm_demo_import=imported, pack_file=pinned, source_weight=dict(llm_demo=0.))
     offset = 0
     for label, count in spans:
         allowed = label in ('r52', 'gpt', 'llm_demo_decisions')

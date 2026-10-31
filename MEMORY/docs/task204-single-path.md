@@ -513,3 +513,13 @@ B 首次初始化为 `~/PvZ-search/artifacts/student/gptbc_s1/model.pt`，`--b-i
 门禁仍对 A、B 和现任三方同种子配对，当前现任为 r52。`ab_result.json` 使用实验标记 `task205-clean-b`，跨轮 A−B 从本标记重新累计，旧记录保留。切换时旧配方未完成作业标为 superseded，不再续跑旧 B，已完成历史不改。回滚显式选回 deploy25 原 A / seed2cold，沿用同一个启动器。
 
 临时排程实际打印的 B 首轮参数为 `init=/home/newbiexvwu/PvZ-search/artifacts/student/gptbc_s1/model.pt、epochs=8`，有效来源权重为旧老师 0、未知 0、r52 1、GPT 先验 1、GPT 示范 1。后续排程打印了上一轮 B 路径及 4 epoch。共享打包选项一致，相关 `-k` 小测试通过，覆盖转换接入、过滤、来源权重、谱系排队和重启以及三方门禁。本步只改代码并跑小测试，台式机仅只读查看，未训练或部署。
+
+### task205 紧急修复：r71 B 找不到共享训练包
+
+只读生产记录确认，r71 已完成的 A 包为 `frames/packs/2fc4cbcdf4da5811.npz`，29,758,882 行，B 却查找 `b9dfef852bafe40d.npz`。代码中 `source_weight` 原已被最终 `pack_options` 忽略，但训练入口会重新扫描来源指纹并计算包路径，没有绑定本轮打包器公布的文件。两份配方的行内容选项相同，权重差异不应参与定位。此次同时去掉 `training_row_options` 中的两类权重，将 `label_weight` 与 `source_weight` 统一留到训练加载时施加，打包键只反映内容和抽样选项。
+
+新控制器向 A、B 显式传同一 `--pack-file`，来自现有 `pack.log`。训练入口也兼容当前仍在运行的旧控制器：B 从已有 `--pack-recipe` 找到本轮日志，A 从已有 `round/seeds/seed_N/recipe.json` 找到本轮日志，直接读已发布包，不重新计算来源指纹。没有新增清单或中间文件。现有显式 1.0 标签权重的分片原地复用，不复制或重新编码。旧包若存有非中性标签权重，训练端按目标与已存权重的比例调整。
+
+小测试用同一个实际包确认：GPT 示范确实在包内，A 的示范行权重为 0，B 的旧老师及未知来源行权重为 0，r52/GPT 先验生产行及示范保持有效。两臂修改各自私有权重，不修改共享缓存。相关 `pytest -k` 串行通过，包含旧启动参数、现有分片复用及旧包标签权重转换，均只用临时小样本，没有启动对局或真实训练。
+
+主控部署时热更新本提交的五个运行时文件：`python/pvz_recipe.py`、`python/pvz_training_pack.py`、`scripts/train_rollout_policy.py`、`scripts/pack_training_rows.py`、`scripts/curriculum_queue.py`。无需重启生产 qc，也无需执行边界切换脚本。正在训练的 r72 A 已加载代码和数据，不受文件更新影响，之后新启动的训练子进程即采用修复。控制器下次正常重启后才采用显式 `--pack-file`，此前由训练入口兼容现有参数。r71 已失败 B 的状态未改，本次不自动重试。本提交未部署，未写生产状态或重新打大包。
