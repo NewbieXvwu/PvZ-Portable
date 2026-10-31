@@ -2,6 +2,7 @@
 import argparse
 import contextlib
 import fcntl
+import hashlib
 import io
 import json
 import os
@@ -10,6 +11,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import time
 
 ROOT = Path(__file__).resolve().parents[1]
 FIRST_SEED, LAST_SEED = 1_970_000_000, 1_980_000_000
@@ -36,10 +38,10 @@ def snapshot(payload):
     def option(name, default=None):
         return argv[argv.index(name) + 1] if name in argv else default
     state = json.loads((logs / 'curriculum_state.json').read_text())
-    revision = next((logs / f'qc_deploy{version}.active').read_text().strip()
-                    for version in (22, 21) if (logs / f'qc_deploy{version}.active').exists())
+    revision = (logs / 'qc.active').read_text().strip()
     head = dict(revision=revision, student=state['student'], round=state['round'],
         value=option('--value', str(root.parents[2] / 'artifacts/value_net/v5/model.pt')),
+        value_roof=option('--value-roof'), rollout_policy_gpt=option('--rollout-policy-gpt'),
         static=option('--static-value', str(root.parents[2] / 'artifacts/hard/value_branch1/model.pt')),
         frames=option('--frames', str(root.parents[2] / 'artifacts/student/frames_v2')),
         obs_v3='--obs-v3' in argv)
@@ -73,6 +75,7 @@ def snapshot(payload):
             save_candidates_levels=q.parse_levels(option('--save-candidates-levels', '31-40')),
             random_deck_share=float(option('--random-deck-share', '.15')),
             demo_start_share=float(option('--demo-start-share')) if option('--demo-start-share') else None,
+            review_share=float(option('--review-share', '.25')),
             **(dict(live_catalog=catalog) if catalog is not None else {}))
     result = []
     for group in plan:
@@ -82,6 +85,9 @@ def snapshot(payload):
         probe = cell.get('mixed_since_probe', 0) >= max(1, int(option('--probe-interval', '3'))) - 1
         group['beta'] = group.get('beta', float(option('--starved-beta', '.5')) if starved and not probe else 0.)
         task = dict(group.get('task_definition') or tasks[group['task_id']])
+        from pvz_constants import background_for_level
+        if background_for_level(task['level']) not in ('BACKGROUND_1_DAY', 'BACKGROUND_2_NIGHT', 'BACKGROUND_3_POOL'):
+            continue
         if group.get('demo_archive'):
             meta = json.loads((Path(group['demo_archive']) / 'meta.json').read_text())
             task['seeds'] = [meta['task']['seed']]
@@ -109,16 +115,23 @@ def remote(args, action, payload):
     # Send code/input through stdin, including credentials only in the SSH process memory.
     source = Path(__file__).read_text()
     token = os.environ.get('HF_TOKEN') or os.environ.get('HUGGING_FACE_HUB_TOKEN')
-    program = 'import os\nos.environ["HF_TOKEN"]=' + repr(token or '') + '\n'
+    program = 'import os\nos.environ["HF_HUB_DISABLE_PROGRESS_BARS"]="1"\nos.environ["HF_TOKEN"]=' + repr(token or '') + '\n'
     program += 'namespace={"__name__":"mac197_remote","__file__":"/tmp/mac_collect.py"}\n'
     program += 'exec(' + repr(source) + ',namespace)\n'
     program += 'print(json.dumps(namespace[' + repr(action) + '](' + repr(payload) + ')))\n'
     # json is imported by the transmitted module in its namespace, not this wrapper.
     program = 'import json\n' + program
-    response = subprocess.run(['ssh', '-o', 'ConnectTimeout=40', '-o', 'ServerAliveInterval=10',
-        '-o', 'ServerAliveCountMax=2', args.host,
-        'wsl -d Ubuntu -e /home/newbiexvwu/.venvs/ml/bin/python -'],
-        input=program, text=True, stdout=subprocess.PIPE, check=True)
+    for attempt in range(3):
+        try:
+            response = subprocess.run(['ssh', '-o', 'ConnectTimeout=40', '-o', 'ServerAliveInterval=10',
+                '-o', 'ServerAliveCountMax=2', args.host,
+                'wsl -d Ubuntu -e /home/newbiexvwu/.venvs/ml/bin/python -'],
+                input=program, text=True, stdout=subprocess.PIPE, check=True)
+            break
+        except subprocess.CalledProcessError:
+            if attempt == 2:
+                raise
+            time.sleep(10)
     return json.loads(response.stdout)
 
 
@@ -140,7 +153,7 @@ def code_at(args, revision):
     directory = args.cache / 'code'
     marker = args.cache / 'revision'
     if not marker.exists() or marker.read_text() != revision:
-        subprocess.run(['git', '-C', str(ROOT), 'fetch', 'origin', 'deploy21', 'deploy22'], check=True)
+        subprocess.run(['git', '-C', str(ROOT), 'fetch', 'origin', revision], check=True)
         shutil.rmtree(directory, ignore_errors=True)
         directory.mkdir()
         archive = subprocess.Popen(['git', '-C', str(ROOT), 'archive', revision,
@@ -157,10 +170,11 @@ def inputs(args, state, group, label):
     from huggingface_hub import HfApi, CommitOperationDelete, hf_hub_download
     directory = args.cache / 'models'
     directory.mkdir(exist_ok=True)
-    student_name = 'student_' + Path(state['student']).parts[-3] + '.pt'
+    student_name = 'student_' + hashlib.sha1(state['student'].encode()).hexdigest()[:12] + '.pt'
     files = {}
-    for name, source in ((student_name, state['student']), ('value.pt', state['value']), ('static.pt', state['static'])):
-        if not (directory / name).exists():
+    for name, source in ((student_name, state['student']), ('value.pt', state['value']), ('static.pt', state['static']),
+                         ('gptbc.pt', state['rollout_policy_gpt']), ('value_roof.pt', state['value_roof'])):
+        if source and not (directory / name).exists():
             files[name] = source
     shutil.rmtree(directory / 'demo', ignore_errors=True)
     if group.get('demo_archive'):
@@ -208,7 +222,7 @@ def play(payload):
     command = q.command_for(args, Path('builtin:mac197'), task['task_id'], 0, payload['games'], payload['label'],
         workers=args.workers, beta=payload['beta'], demo_archive=payload.get('demo_archive'),
         demo_decision=payload.get('demo_decision'), future_seeds=payload.get('future_seeds'),
-        save_candidates=payload.get('save_candidates', 0))
+        save_candidates=payload.get('save_candidates', 0), task_definition=task)
     if payload.get('max_actions'):
         search_play.MAX_ACTIONS = payload['max_actions']
     sys.argv = command[1:]
@@ -246,7 +260,8 @@ def import_batch(payload):
 
 
 def run(args):
-    os.environ.update(OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', VECLIB_MAXIMUM_THREADS='1', CUDA_VISIBLE_DEVICES='')
+    os.environ.update(OMP_NUM_THREADS='1', OPENBLAS_NUM_THREADS='1', VECLIB_MAXIMUM_THREADS='1',
+                      CUDA_VISIBLE_DEVICES='', HF_HUB_DISABLE_PROGRESS_BARS='1')
     args.cache.mkdir(parents=True, exist_ok=True)
     (args.cache / 'tmp').mkdir(exist_ok=True)
     os.environ['TMPDIR'] = str(args.cache / 'tmp')
@@ -257,6 +272,8 @@ def run(args):
         if not full and (latest['revision'], latest['round']) != (state['revision'], state['round']):
             latest = remote(args, 'snapshot', {})
         state = dict(state or {}, **latest)
+        for archive in sorted(args.cache.glob('mac197_*.tar.gz')):
+            send(args, archive, args.destination or state['frames'])
         seed, index = reserve(args.cache, args.games or max(group['games'] for group in state['plan']))
         group = state['plan'][index % len(state['plan'])]
         games = min(args.games, group['games']) if args.games else max(1, group['games'] // 2)
@@ -273,6 +290,7 @@ def run(args):
             label=label.removesuffix('_fast_search'), beta=group['beta'], deck_seeds=deck_seeds,
             save_candidates=group.get('save_candidates', 0), max_actions=args.max_actions if args.profile else None,
             args=dict(rollout_policy=str(student), value=str(model / 'value.pt'), static_value=str(model / 'static.pt'),
+                rollout_policy_gpt=str(model / 'gptbc.pt'), value_roof=str(model / 'value_roof.pt'),
                 executable=str(args.executable), resource_dir=str(args.resource_dir), frames=str(folder / 'frames'),
                 out=str(folder / 'games'), workers=args.workers, native_games=True, obs_v3=state['obs_v3']))
         if group.get('demo_archive'):
@@ -284,6 +302,7 @@ def run(args):
         else:
             for path in (folder / 'frames').glob('*/*/meta.json'):
                 meta = json.loads(path.read_text())
+                meta['task']['checkpoint'] = state['student']
                 meta['task']['policy'] = state['student']
                 if group.get('demo_archive'):
                     meta['demo_archive'] = group['demo_archive']
@@ -321,6 +340,7 @@ def main():
             parser.error('send requires --batch-path and --destination')
         send(args, args.batch_path, args.destination)
     else:
+        os.nice(10)
         run(args)
 
 

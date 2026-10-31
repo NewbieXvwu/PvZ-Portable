@@ -303,17 +303,21 @@ def test_recipe_and_collection_sources_merge_without_copying_or_dropping_labels(
         base = root / 'recipe_frames/seed_2/base'
         base.mkdir(parents=True)
         (base / 'frames.jsonl').write_text('{"from_recipe":true}\n')
+        mac = args.frames / 'mac197/mac197_1970000100_fast_search/seed_1970000100/mac197_1970000100_fast_search'
+        mac.mkdir(parents=True)
+        (mac / 'frames.jsonl').write_text('{}\n')
         recipe = json.loads(args.recipe.read_text())
         recipe['data'] = str(root / 'recipe_frames')
         write_recipe(args.recipe, recipe)
         pipeline = queue.TrainingPipeline(args, state)
         try:
-            pipeline._prepare_corpus(['base', 'c1a_fast_search'])
+            pipeline._prepare_corpus(['base', 'c1a_fast_search', 'mac197_1970000100_fast_search'])
             view = pipeline.directory / 'frames'
             assert (view / 'seed_2/base').is_symlink()
             assert (view / 'seed_2/base').resolve() == base.resolve()
             assert (view / 'seed_1/base').resolve() == (args.frames / 'seed_1/base').resolve()
             assert (view / 'seed_1/c1a_fast_search/frames.jsonl').read_bytes() == b'{}\n'
+            assert (view / 'seed_1970000100/mac197_1970000100_fast_search').resolve() == mac.resolve()
             try:
                 pipeline._prepare_corpus(['missing'])
                 assert False, 'missing labels must fail'

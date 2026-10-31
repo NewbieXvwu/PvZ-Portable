@@ -1,16 +1,16 @@
 # task197：Mac 为生产补充 DAgger 采集
 
-分支 `maccollect`，基于 deploy22 `41bcc4a1`（包含 deploy21 `f7e564a5`）。先做一组端到端交付，再由主控启用持续采集，台式机生产进程保持原状。
+分支 `maccollect`，已合入现行 deploy26 `94bf76c4`。task197b 的一组端到端交付已完成，Mac 持续采集已在后台启用，台式机生产代码与控制进程保持原状，接入安装交主控执行。
 
 ## 设计
 
-每批在台式机只读取得当前部署标记、课程状态、启动参数和现任模型路径，用当版课程规划函数在状态副本上安排任务。Mac沿用任务、卡组、倍率、DAgger参数与示范决策起点，默认每组取生产局数的一半、12个worker。普通局和示范未来随机流改用独立的 `[1970000000,1980000000)` 段，Mac用单个文本游标先预留再采集，生产偏移和种子账本均不写。动态任务以内存任务定义传入采集器，保留已选卡组和环境语义。
+每批在台式机只读取得 `qc.active`、课程状态、统一启动器产生的实际进程参数和现任模型路径，用当版课程规划函数在状态副本上安排任务。Mac 沿用任务、卡组、倍率、DAgger 参数与示范起点，包括默认 25% 的 1 倍复习份额，只保留白天 / 夜间 / 泳池地形（含特殊夜间关 L35），默认每组取生产局数的一半，最多 12 个 worker、nice 10。普通局和示范未来随机流改用独立的 `[1970000000,1980000000)` 段，Mac 用单个文本游标先预留再采集，生产偏移和种子账本均不写。动态任务通过生产已有 `--task-json` 传入，保留卡组和环境语义。
 
-生产版本在每批边界跟随 deploy21→deploy22，采集调用相应版本的老师/学生代码。引擎以当前共同C++源码按task47的AppleClang PGO流程构建，显式启用原生路径；DAgger仍保留生产逐决策帧输出。模型固定为当批现任学生、v5与branch1，现任改变时换模型。所需权重和数值示范档案经HF `transfer/` 传递，取用后删除，不传游戏资源。
+采集代码在批次边界跟随生产部署标记，不复制启动命令。引擎复用 task47 的 AppleClang PGO 构建，C++ 源码与 deploy26 相同，显式启用原生路径且全程无窗口。老师保持 deploy25 路由：雾 / 屋顶 / Boss 使用 GPT BC，其余使用现任学生，叶值 v5、屋顶 / Boss 叶值 v5roof、静态网 branch1，verify-samples 9、student-candidates 2。此次筛选出的地形走现任分支。模型缓存按现任完整路径命名，更新后拉新模型并清理旧现任。所需权重和数值示范档案经 HF `transfer/` 传递，取用后删除。
 
 Mac只有一处批次缓存。帧按唯一批次标签归档，经HF发送，台式机导入器仅下载、标准库解包并原子放入 `frames_v2/mac197/<批次标签>/`，收到后删除HF包。训练快照创建时从这些实际批次目录取得标签，现有语料合并逻辑接入档案。网络传输和解包在打包关键路径之外完成，不加重放、清单或校验。Mac确认送达后清理本批帧及临时文件，模型缓存只保留现任。
 
-台式机只增加批次根目录接入和导入入口。部署脚本只安装必要源码，交主控在组边界执行，不操作qc、看门狗或stop_curr。演练把包放入独立的 `frames_v2/mac197/` 子目录，确认现有帧读取器可读，正在运行的cq不安装补丁。相关pytest只用 `-k`，逐个执行，附 `timeout 300` 和 `ulimit -f 2000000`。
+台式机只增加批次根目录接入和数值帧包的解包脚本，GPT 存档继续走 deploy26 的唯一入口 `import_llm_run.py`，不新增重放或转换实现。安装脚本只安装必要源码，交主控在组边界执行。生产状态和种子账本不写，qc / 看门狗 / stop_curr 均不操作。相关 pytest 只用 `-k`，逐个执行，附 `timeout 300` 和 `ulimit -f 2000000`。
 
 ## 交付记录
 
@@ -20,9 +20,15 @@ Mac只有一处批次缓存。帧按唯一批次标签归档，经HF发送，台
 
 ## 主控操作
 
-组边界在台式机更新远端引用后执行 `bash scripts/install_mac_collect.sh /home/newbiexvwu/PvZ-search/.claude/worktrees/cq origin/maccollect`，仅应用接入补丁与导入脚本，生产进程的边界切换由主控安排。无需新增配置文件。
+组边界由主控在台式机执行以下命令，只安装解包脚本和相对 `94bf76c4` 的 8 行来源接入，保留生产已有修改。已运行的控制器需要由主控正常重启一次才会载入来源接入，重启不由本脚本执行。无需重新导入已送达批次，无需新增配置文件。
 
-Mac使用现有带torch/HF的解释器：`PY=~/.local/share/mise/installs/python/3.14/bin/python3`。演练已完成，无需重送。Mac计算当前继续暂停，等待用户通知；后续获准启用持续采集时运行 `"$PY" scripts/mac_collect.py run --workers 12 --batches 100000`，每批均刷新现任和部署标记。相同缓存只启动一个采集入口，送达前断连会保留本批并退出。
+```bash
+cd ~/PvZ-search
+git fetch origin maccollect
+git show origin/maccollect:scripts/install_mac_collect.sh | bash -s -- /home/newbiexvwu/PvZ-search/.claude/worktrees/cq origin/maccollect
+```
+
+Mac 使用现有带 torch/HF 的解释器 `~/.local/share/mise/installs/python/3.14/bin/python3`，入口 `scripts/mac_collect.py run --workers 12 --batches 100000`。当前已后台启动，外层仅在进程退出后等 60 秒重启，已完成未送达的 `.tar.gz` 在继续采集前重送。缓存共用 `~/pvz-mac-collect`，取用后清理每批帧、压缩包、示范和临时目录。相同缓存只运行一个采集入口。
 
 ## deploy22 审查
 
@@ -35,3 +41,13 @@ Mac使用现有带torch/HF的解释器：`PY=~/.local/share/mise/installs/python
 ## deploy23 / deploy24 审查（27d2fec9 / 48c58cd9）
 
 未发现问题。
+
+## task197b：正式采集启用（2026-10-31）
+
+已合入 deploy26 `94bf76c4`，保留该版统一启动器、NPZ 存档、唯一 GPT 导入入口及共享训练包修复。生产 `qc.active` 当前记录 `f0dce045`，其采集代码和 C++ 源码与 `94bf76c4` 相同，差异为训练包修复。只读生产第 73 轮计划得到 41 个符合地形要求的采集组，任务定义、卡组、倍率、示范起点和 beta 来自真实生产规划函数。
+
+小批用 L28 `opening119_l28_scoreboard`、2 局、2 worker，完整生产预算，独立种子 `1970000010–1970000011`，53 秒完成。两局分别 1317 / 1136 帧，共 2453 帧，存档 schema_version=2、frames.npz。经 HF 送达台式机 `~/PvZ-search/artifacts/student/frames_v2/mac197/mac197_1970000010_fast_search/`，现有 `frame_paths / read_frames` 已只读载入两局，来源均为 `teacher_r52`，现行干净 B 的来源权重均为 1.0。数据是真实生产老师采集，留作训练，不是测试伪造行。HF 取用即删，Mac 本批原帧与包已清理。来源合并的相关 `-k` 小测试通过。
+
+长期采集已后台运行，进程组号 `6691`，启动器 PID 写在 `~/pvz-mac-collect/collector.pid`，日志 `~/pvz-mac-collect/task197b.log`。worker 和引擎继承 nice 10，线程各为 1，最多 12 个 worker。主控外出时冻结整个进程组，回来继续同组即可，示例 `kill -STOP -- -6691` / `kill -CONT -- -6691`，冻结期间无作业总时限，不会主动重启或杀掉冻结中的任务。网络恢复失败会保留已打包帧，外层重启后先重送。长期采集不在会话中轮询。
+
+当前批次由同一解包函数通过 SSH 在内存中执行，持续送至上述生产额外来源目录，未安装台式机脚本，也未修改台式机生产源码或状态。主控按上节安装并正常载入后，新创建的训练快照把各实际批次标签纳入 A/B 同一包，干净 B 按实际老师元信息取权重，A 保持其生产配方。无新增清单或 JSON 中间文件。
