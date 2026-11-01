@@ -1223,3 +1223,5 @@
 - 11-01 09:25 **r77 训练两次失败**（08:51 / 08:53，`[Errno 7] Argument list too long`）：Mac 批次每批一个标签，训练包标签累计 3270 个、`--labels` 拼起来 132,706 字节，超过 Linux 单参数 128 KiB 上限（与 deploy22 审查预言的 `--task-json` 是同一类问题），r77 快照被隔离。主控热修（maccollect d00fe637）：`pack_command` 对超过 60 kB 的值写 `frames/.pack_args/<sha1>.txt` 并传 `@文件`，`pack_training_rows` 的 `--labels` / `--label-weight` 支持 `@文件`；Mac 上冒烟通过。用 systemd-run 跑 `deploy26.py --revision origin/maccollect`（第一次用 nohup 在 ssh 断开后静默退出，没部署上），09:20:30 组边界切换完成，看门狗在。r78 起恢复训练。
 
 - 11-01 09:45 用户带 Mac 出门：主控冻结 Mac 采集进程组 6691（`kill -STOP -- -6691`，恢复 `kill -CONT -- -6691`），已通知 plus2 勿动。Mac 采集至此共送达 492 批（约 5900 局、1.6 GB，白天 / 夜间 / 泳池）。C: 21.5 GB。task208 候选表完成、等用户卡组（awaiting_user_decks）。
+
+- 11-01 10:05 用户：Qoder 的 DeepSeek 免费期结束，改用 **dsh（DeepSeek Harness，OpenCode Go 提供商的 deepseek-v4.1-flash）**，仅装在 Mac。主控摸清用法：headless 模式一轮一任务（`--json` 事件流、`--session-id` 续接），密钥由包装脚本 `~/pvz-dsh/dshx` 从 `~/.dsh/.credentials.yaml` 导出、不回显；任务启动器 `~/pvz-dsh/dshjob`。第一件 dsh 任务 task212（Mac 工作树 asib，基于 origin/maccollect）：A 槽改为干净新线的兄弟——同一初始化（上一轮 B）、同 4 epoch、同数据，只把旧数据行权重 0 → 0.1，A−B 即“掺 10% 旧数据”的单变量效果；用户已同意。Mac 上已导入的 GPT 交回 zip 已删。
