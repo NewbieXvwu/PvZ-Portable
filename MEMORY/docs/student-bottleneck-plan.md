@@ -1261,3 +1261,5 @@
 - 11-02 00:55 **人类示范进训练**（task218，plus2 Codex，humanrows 26cc7f77）：clean_a / clean_b 的 source_weight 加 `human: 1.0`；`human_demo.py export-batch` 把 verified 人类存档导出到 `frames_v2/human/<任务>/`，复用 Mac 批次的 `batch_sources` 接入（扫 mac197 + human）。主控在台式机导入 23 份人类存档（早期 demo_* 18 份 + 用户今天录的 L22 / L28 / L29×2 / L49 共 5 份），HF 中转包已删；`deploy26.py --revision origin/humanrows` 00:51:21 组边界切换，控制器与看门狗正常。下一轮起 A / B 都含人类行。
 
 - 11-02 02:05 **r84 打包失败两次、快照隔离**：`OverflowError: 3174639343 out of bounds for int32`——训练包 seed 列是 int32，用户在游戏里选卡录制时用的是随机 32 位种子（3 份 > 2^31）。主控处理：把 frames_v2/human 里这 3 份导出副本的种子改成 `seed & 0x7fffffff`（目录名与 meta.task.seed 一起改，原值存 original_seed；原始存档不动），清掉训练视图里指向旧路径的 3 个软链（第二次重试失败就是因为改名后软链失效）。r85 起正常。代码修复交 plus2（task218b：录制选种限制在 [0, 2^31)、导出时超界自动映射）。教训：新数据源接入生产前，要用它真跑一次打包。
+
+- 11-02 04:15 **r85 打包成功**（3519.7 万行，新建 180 段、复用 3901 段，1050 s）——第一个包含人类示范（23 份）的训练包，种子溢出问题已解决；A / B 正在训练。用户录制脚本（userpick 7006a867）改为 31 位随机种子。
