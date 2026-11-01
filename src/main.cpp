@@ -47,6 +47,7 @@
 #include <deque>
 #include <fstream>
 #include <limits>
+#include <map>
 #include <sstream>
 #include <string>
 #include <unordered_map>
@@ -541,6 +542,632 @@ static void TraceStudent(std::ostream& output, EnvironmentRollout& rollout, Lawn
 	output << "]}\n";
 }
 
+struct RolloutRequest
+{
+	int rootId = 0;
+	int64_t seed = -1;
+	int untilTick = 0;
+	int mask = 0;
+	int maxActions = 0;
+	bool eventWait = false;
+	bool scoreValue = false;
+	std::string first;
+	int historyStart = 0;
+	std::vector<std::pair<int, uint32_t>> history;
+	const EnvironmentRollout::History* studentHistory = nullptr;
+	const std::string* tracePath = nullptr;
+};
+
+struct RolloutOutcome
+{
+	bool ok = false;
+	int decisions = 0, mowersLeft = 0, estimatedResult = -1, startTick = 0;
+	std::array<int, 10> planted{};
+	std::array<int, 54> plantedByType{};
+	double simulationSeconds = 0, networkSeconds = 0;
+	std::vector<std::pair<int, uint32_t>> substeps;
+	double value = 0;
+	bool terminal = false;
+};
+
+// One continuation: restore the root, reseed, play the first action ("A" = let the student pick it)
+// and then let the student continue until untilTick, and score the leaf out of its income history.
+// ROLLOUT and SEARCH both go through here, so the continuation loop exists exactly once.
+static RolloutOutcome RunRollout(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+	const RolloutRequest& request, std::unordered_map<int, EnvironmentSnapshot>& snapshots)
+{
+	RolloutOutcome outcome;
+	std::ofstream trace;
+	outcome.ok = true;
+	if (request.rootId) outcome.ok = RestoreEnvironmentSnapshot(app, snapshots.at(request.rootId));
+	if (!outcome.ok) return outcome;
+	if (request.seed >= 0) ReseedEnvironment(app, static_cast<uint32_t>(request.seed));
+	if (request.tracePath && !request.tracePath->empty())
+	{
+		trace.open(*request.tracePath);
+		if (!trace.good()) { outcome.ok = false; return outcome; }
+	}
+	EnvironmentRollout::History studentHistory;
+	if (request.studentHistory) studentHistory = *request.studentHistory;
+	std::string actionCommand, actionArguments;
+	// "A" lets the student pick the first action too; otherwise the spec must decode.
+	if (request.first != "A" && !DecodeBranchAction(request.first, actionCommand, actionArguments))
+	{
+		outcome.ok = false;
+		return outcome;
+	}
+	std::deque<std::pair<int, uint32_t>> history(request.history.begin(), request.history.end());
+	const int savedMask = gEnvSimSkip;
+	gEnvSimSkip = request.mask;
+	outcome.startTick = app->mBoard->mMainCounter;
+	const bool finiteHorizon = request.untilTick > outcome.startTick;
+	int untilTick = request.untilTick;
+	if (untilTick <= app->mBoard->mMainCounter) untilTick = std::numeric_limits<int>::max();
+	int priorTick = -1;
+	bool priorPlant = false;
+	auto readyMowers = [&] { int count = 0; for (const LawnMower* mower : app->mBoard->mLawnMowers)
+		if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY) ++count; return count; };
+	outcome.mowersLeft = readyMowers();
+	rollout.ResetNetworkCalls();
+	while (!app->EnvironmentTerminal() && outcome.decisions < request.maxActions)
+	{
+		const int tick = app->mBoard->mMainCounter;
+		const uint32_t producedBefore = app->mBoard->mSunMoneyProduced;
+		EnvironmentRollout::Action action;
+		bool isFirst = outcome.decisions == 0 && request.first != "A";
+		while (!history.empty() && history.front().first < tick - 6000) history.pop_front();
+		double totalProduced = 0;
+		for (auto entry : history) totalProduced += entry.second;
+		const int elapsed = std::max(0, std::min(6000, tick - request.historyStart));
+		const double income = elapsed ? totalProduced * 1000.0 / elapsed : 0;
+		if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
+		if (isFirst && rollout.HasHistory()) studentHistory.Update(app);
+		if (!isFirst)
+		{
+			const auto start = std::chrono::steady_clock::now();
+			action = rollout.Predict(app, income, priorTick, priorPlant, studentHistory).action;
+			outcome.networkSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+		}
+		const auto start = std::chrono::steady_clock::now();
+		bool accepted = true;
+		int plantedType = -1;
+		int plantSlot = action.packet;
+		if (isFirst && actionCommand == "PLANT")
+		{
+			std::istringstream arguments(actionArguments);
+			arguments >> plantSlot;
+		}
+		if ((!isFirst || actionCommand == "PLANT") && plantSlot >= 0 && plantSlot < app->mBoard->mSeedBank->mNumPackets)
+		{
+			const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[plantSlot];
+			plantedType = static_cast<int>(packet.mPacketType == SeedType::SEED_IMITATER ? packet.mImitaterType : packet.mPacketType);
+		}
+		if (isFirst)
+		{
+			std::istringstream arguments(actionArguments);
+			if (actionCommand == "WAIT" && request.eventWait)
+			{
+				int ticks = -1;
+				accepted = static_cast<bool>(arguments >> ticks) && ticks >= 0 && ticks <= 1000000;
+				if (accepted) app->EnvironmentWaitUntil(ticks, 0);
+			}
+			else accepted = ExecuteEnvironmentAction(app, actionCommand, arguments);
+			priorPlant = actionCommand == "PLANT" && accepted;
+			if (priorPlant) { arguments.clear(); arguments.str(actionArguments); arguments >> action.packet; }
+		}
+		else
+		{
+			priorPlant = action.packet >= 0;
+			if (priorPlant) accepted = app->EnvironmentPlant(action.packet, action.col, action.row);
+			else app->EnvironmentWaitUntil(60, 0);
+		}
+		if (!accepted) { app->EnvironmentWait(60); priorPlant = false; }
+		if (priorPlant)
+		{
+			++outcome.planted[action.packet];
+			if (plantedType >= 0 && plantedType < static_cast<int>(outcome.plantedByType.size())) ++outcome.plantedByType[plantedType];
+		}
+		priorTick = tick;
+		const int now = app->mBoard->mMainCounter;
+		const uint32_t produced = app->mBoard->mSunMoneyProduced - producedBefore;
+		if (produced) history.emplace_back(now, produced);
+		outcome.substeps.emplace_back(now, produced);
+		outcome.simulationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
+		++outcome.decisions;
+		// 胜利会放出剩余小推车，与 Python 一样保留最后非终局观测的数量。
+		if (!app->EnvironmentTerminal()) outcome.mowersLeft = readyMowers();
+		if (now >= untilTick) break;
+		if (!app->EnvironmentTerminal() && (request.mask & ENV_EARLY_RESULT) && app->mBoard->mLevel == 7)
+		{
+			bool protectedRows[6]{};
+			for (const LawnMower* mower : app->mBoard->mLawnMowers)
+				if (!mower->mDead && mower->mRow >= 0 && mower->mRow < 6 && mower->mMowerState == LawnMowerState::MOWER_READY)
+					protectedRows[mower->mRow] = true;
+			bool safe = app->mBoard->mCurrentWave == app->mBoard->mNumWaves && app->mBoard->mRiseFromGraveCounter == 0;
+			for (Zombie* zombie : app->mBoard->mZombies)
+			{
+				if (zombie->mDead || zombie->IsDeadOrDying() || zombie->mMindControlled) continue;
+				const bool protectedRow = zombie->mRow >= 0 && zombie->mRow < 6 && protectedRows[zombie->mRow];
+				safe = safe && protectedRow;
+				if (!protectedRow && zombie->mPosX < 80.0f && zombie->mHasHead)
+				{
+					outcome.estimatedResult = 0;
+					break;
+				}
+			}
+			if (safe) outcome.estimatedResult = 1;
+			if (outcome.estimatedResult >= 0) break;
+		}
+		if (finiteHorizon && (request.mask & ENV_ADAPTIVE_HORIZON) && now - outcome.startTick >= 600)
+		{
+			bool threatened = false;
+			for (Zombie* zombie : app->mBoard->mZombies)
+				if (!zombie->mDead && !zombie->IsDeadOrDying() && !zombie->mMindControlled && zombie->mPosX < 400.0f)
+				{
+					threatened = true;
+					break;
+				}
+			if (!threatened) break;
+		}
+	}
+	gEnvSimSkip = savedMask;
+	if (trace.is_open()) { trace.flush(); outcome.ok = trace.good(); }
+	outcome.terminal = app->EnvironmentTerminal();
+	if (!request.scoreValue) return outcome;
+	const int now = app->mBoard->mMainCounter;
+	double produced = 0;
+	for (auto sample : history) if (sample.first >= now - 6000) produced += sample.second;
+	const int elapsed = std::max(0, std::min(6000, now - request.historyStart));
+	if (outcome.estimatedResult >= 0) outcome.value = outcome.estimatedResult;
+	else if (app->EnvironmentTerminal()) outcome.value = app->mBoardResult == BoardResult::BOARDRESULT_WON ? 1.0 : 0.0;
+	else outcome.value = leafValue.Predict(app, elapsed ? produced * 1000.0 / elapsed : 0.0);
+	return outcome;
+}
+
+// The teacher's search, moved out of Python (task217).  One command answers a whole decision:
+// candidates from the static value net plus the student's own top-k, successive halving over the
+// same reseeded futures, the override margin, and the verification futures.  Everything below runs
+// in-process on the primitives that already exist (RunRollout, EnvironmentRollout::Rank, the two
+// value nets, the snapshot table), so a decision no longer needs a round trip per candidate.
+// scripts/search_play.py keeps the Python version next to it until the two have been compared.
+struct SearchCandidate
+{
+	char kind = 'W';   // 'P' plant with packet/col/row, 'W' the no-op wait (NOOP in Python)
+	int packet = -1, col = 0, row = 0;
+};
+
+static std::string CandidateKey(const SearchCandidate& candidate)
+{
+	if (candidate.kind != 'P') return "W";
+	return "P " + std::to_string(candidate.packet) + " " + std::to_string(candidate.col) + " " + std::to_string(candidate.row);
+}
+
+static std::string CandidateJson(const SearchCandidate& candidate)
+{
+	if (candidate.kind != 'P') return "{\"type\":\"wait\",\"ticks\":60,\"until\":\"timeout\"}";
+	return "{\"type\":\"plant\",\"packet\":" + std::to_string(candidate.packet) + ",\"row\":"
+		+ std::to_string(candidate.row) + ",\"col\":" + std::to_string(candidate.col) + "}";
+}
+
+static bool DecodeSearchCandidate(const std::string& spec, SearchCandidate& candidate)
+{
+	// "W" is the no-op wait, otherwise the branch-action form "P:packet:col:row".
+	if (spec == "W") { candidate = SearchCandidate{ 'W', -1, 0, 0 }; return true; }
+	std::string command, arguments;
+	if (!DecodeBranchAction(spec, command, arguments) || command != "PLANT") return false;
+	std::istringstream input(arguments);
+	int packet = -1, col = -1, row = -1;
+	if (!(input >> packet >> col >> row) || packet < 0 || col < 0 || row < 0) return false;
+	candidate = SearchCandidate{ 'P', packet, col, row };
+	return true;
+}
+
+struct SearchParameters
+{
+	int horizon = 2500;
+	int perCard = 1;
+	int studentCandidates = 0;
+	int samples = 3;
+	int verifySamples = 0;
+	int halvingFirstSamples = 1;
+	int minGap = 300;
+	int lastSearchTick = -1000000000;
+	int reserve = 0;
+	int simSkip = 61;
+	double marginRelative = 0.0;
+	bool halving = true;
+};
+
+struct SearchResult
+{
+	bool searched = false;
+	bool overridden = false;
+	SearchCandidate chosen;
+	std::vector<SearchCandidate> candidates;
+	std::vector<double> totals;
+	std::vector<bool> studentCandidate;
+	int policyIndex = 0, best = 0;
+	std::string verification;
+	int overrides = 0, halvingCandidates = 0, halvingRollouts = 0, halvingSelectedLanes = 0;
+	int studentCandidateAdded = 0, studentCandidateBest = 0, studentCandidateOverride = 0;
+	int rolloutBatches = 0, rolloutLanes = 0, demoCandidateAdded = 0;
+};
+
+// The override margin: absolute by default, opt-in relative (--margin-relative).  With the default
+// 0 this is MARGIN unchanged, so the historical decision rule keeps the same float comparison.
+static double SearchMargin(const SearchParameters& parameters, double bestValue)
+{
+	if (parameters.marginRelative <= 0) return 0.02;
+	return std::max(0.001, parameters.marginRelative * bestValue);
+}
+
+class EnvironmentSearch
+{
+public:
+	// Scores one candidate plant from the root; leaves the engine on the branch it scored.
+	bool ScoreStatic(LawnApp* app, EnvironmentValueNet& staticValue, int rootId, int packet, int col, int row,
+		double income, std::unordered_map<int, EnvironmentSnapshot>& snapshots, double& score)
+	{
+		if (!RestoreEnvironmentSnapshot(app, snapshots.at(rootId))) return false;
+		if (!app->EnvironmentPlant(packet, col, row)) return false;
+		score = staticValue.Predict(app, income);
+		return true;
+	}
+
+	// One continuation for a candidate, from the root, on the given future.
+	RolloutOutcome Continue(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, double income,
+		const SearchParameters& parameters, uint32_t seed, int untilTick,
+		const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, const SearchCandidate& candidate)
+	{
+		RolloutRequest request;
+		request.rootId = rootId;
+		request.seed = seed;
+		request.untilTick = untilTick;
+		request.mask = parameters.simSkip;
+		request.maxActions = 1000000;
+		request.eventWait = true;
+		request.scoreValue = true;
+		request.first = candidate.kind == 'P'
+			? "P:" + std::to_string(candidate.packet) + ":" + std::to_string(candidate.col) + ":" + std::to_string(candidate.row)
+			: "W:60";
+		request.historyStart = historyStart;
+		request.history = history;
+		request.studentHistory = &studentHistory;
+		(void)income;
+		return RunRollout(app, rollout, leafValue, request, snapshots);
+	}
+
+	// A candidate is "terminal" when its leaf carries a decided or estimated result instead of a
+	// value-net score; those accumulate first, exactly like the original CPU order.
+	static bool TerminalLeaf(const RolloutOutcome& outcome)
+	{
+		return outcome.estimatedResult >= 0 || outcome.terminal;
+	}
+
+	void Run(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue, EnvironmentValueNet& staticValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, int64_t decisionSeed, double income,
+		int previousTick, bool previousPlant, const SearchParameters& parameters,
+		const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, const SearchCandidate& policy,
+		const SearchCandidate* demo)
+	{
+		result = SearchResult();
+		result.chosen = policy;
+		const int tick = app->mBoard->mMainCounter;
+		const int untilTick = tick + parameters.horizon;
+		// The engine only lists plant actions the player can pay for; a pending combo upgrade keeps
+		// its cost in the bank, so only spare sun is spent.
+		std::vector<std::array<int, 3>> legal;
+		app->EnvironmentLegalPlants(legal);
+		if (parameters.reserve > 0)
+		{
+			std::vector<std::array<int, 3>> spare;
+			for (const auto& action : legal)
+			{
+				SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[action[0]];
+				const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
+				if (app->mBoard->mSunMoney - cost >= parameters.reserve) spare.push_back(action);
+			}
+			legal.swap(spare);
+			if (legal.empty()) return;
+		}
+		if (legal.empty()) return;
+		if (parameters.minGap && policy.kind != 'P' && tick - parameters.lastSearchTick < parameters.minGap) return;
+		result.searched = true;
+
+		// The best cells of *every* card, not the overall top-k: the static net was trained on games
+		// where some cards were never played, so it cannot rank them against shooters right after
+		// planting -- only the rollout can show what they are worth.
+		std::vector<std::pair<double, SearchCandidate>> scored;
+		for (const auto& action : legal)
+		{
+			double score = 0;
+			SearchCandidate candidate{ 'P', action[0], action[1], action[2] };
+			if (ScoreStatic(app, staticValue, rootId, candidate.packet, candidate.col, candidate.row, income, snapshots, score))
+				scored.emplace_back(score, candidate);
+		}
+		std::stable_sort(scored.begin(), scored.end(),
+			[](const auto& left, const auto& right) { return left.first > right.first; });
+		std::vector<SearchCandidate> candidates;
+		{
+			std::vector<int> cardOrder;
+			std::map<int, std::vector<SearchCandidate>> byCard;
+			for (const auto& entry : scored)
+			{
+				auto found = byCard.find(entry.second.packet);
+				if (found == byCard.end()) cardOrder.push_back(entry.second.packet);
+				byCard[entry.second.packet].push_back(entry.second);
+			}
+			for (int packet : cardOrder)
+			{
+				auto& cells = byCard[packet];
+				for (int index = 0; index < parameters.perCard && index < static_cast<int>(cells.size()); ++index)
+					candidates.push_back(cells[static_cast<size_t>(index)]);
+			}
+			candidates.push_back({ 'W', -1, 0, 0 });
+		}
+		auto present = [&] { std::vector<std::string> keys; for (const auto& candidate : candidates) keys.push_back(CandidateKey(candidate)); return keys; };
+		const std::string policyKey = CandidateKey(policy);
+		{
+			std::vector<std::string> keys = present();
+			if (policy.kind == 'P' && std::find(keys.begin(), keys.end(), policyKey) == keys.end())
+				candidates.push_back(policy);
+		}
+		result.studentCandidate.assign(candidates.size(), false);
+		// --student-candidates k: the student's own top-k plants join the candidates.  The static net
+		// only offers one cell per card, so a cell the student would actually pick is reachable
+		// otherwise only by shovelling first.  The net reads the root, so restore it first.
+		if (parameters.studentCandidates > 0)
+		{
+			RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
+			std::vector<EnvironmentRollout::Action> rankable;
+			for (const auto& action : legal) rankable.push_back({ action[0], action[1], action[2] });
+			std::vector<EnvironmentRollout::Ranked> ranked;
+			// The student reads its previous action too, so the probe must see the same one it did.
+			EnvironmentRollout::History historyCopy = studentHistory;
+			rollout.Rank(app, income, previousTick, previousPlant, historyCopy, rankable, ranked);
+			if (std::getenv("PVZ_SEARCH_DEBUG"))
+			{
+				std::cerr << "rank(" << previousTick << "):";
+				for (size_t index = 0; index < ranked.size() && index < 8; ++index)
+					std::cerr << ' ' << ranked[index].action.packet << '/' << ranked[index].action.row << '/'
+						<< ranked[index].action.col << '=' << ranked[index].score;
+				std::cerr << std::endl;
+			}
+			std::vector<std::string> keys = present();
+			int added = 0;
+			for (const auto& entry : ranked)
+			{
+				if (added >= parameters.studentCandidates) break;
+				SearchCandidate candidate{ 'P', entry.action.packet, entry.action.col, entry.action.row };
+				const std::string key = CandidateKey(candidate);
+				if (std::find(keys.begin(), keys.end(), key) != keys.end()) continue;
+				candidates.push_back(candidate);
+				result.studentCandidate.push_back(true);
+				keys.push_back(key);
+				++added;
+			}
+			result.studentCandidateAdded += added;
+		}
+		// A demonstration start offers its recorded plant once more, like the Python path does.
+		if (demo && demo->kind == 'P')
+		{
+			std::vector<std::string> keys = present();
+			const std::string key = CandidateKey(*demo);
+			if (std::find(keys.begin(), keys.end(), key) == keys.end())
+			{
+				candidates.push_back(*demo);
+				result.studentCandidate.push_back(false);
+				++result.demoCandidateAdded;
+			}
+		}
+		result.candidates = candidates;
+		for (size_t index = 0; index < candidates.size(); ++index)
+			if (CandidateKey(candidates[index]) == policyKey) { result.policyIndex = static_cast<int>(index); break; }
+
+		if (parameters.halving) HalvingChoice(app, rollout, leafValue, snapshots, rootId, decisionSeed, income,
+			parameters, history, historyStart, studentHistory, untilTick, policy, tick);
+		else FullChoice(app, rollout, leafValue, snapshots, rootId, decisionSeed, income, parameters, history,
+			historyStart, studentHistory, untilTick, policy);
+	}
+
+	SearchResult result;
+
+private:
+	void AppendBatch(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, int64_t decisionSeed, double income,
+		const SearchParameters& parameters, const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, int untilTick,
+		const std::vector<std::pair<int, int>>& order, std::vector<std::pair<int, bool>>& terminal, std::vector<double>& values)
+	{
+		result.rolloutBatches++;
+		result.rolloutLanes += static_cast<int>(order.size());
+		terminal.clear();
+		values.clear();
+		for (const auto& job : order)
+		{
+			// Same futures as the Python path: (decision_seed * 1000 + k) % 2**32.
+			const uint32_t seed = static_cast<uint32_t>((decisionSeed * 1000 + job.second) & 0xffffffff);
+			RolloutOutcome outcome = Continue(app, rollout, leafValue, snapshots, rootId, income, parameters, seed, untilTick,
+				history, historyStart, studentHistory, result.candidates[static_cast<size_t>(job.first)]);
+			terminal.emplace_back(job.first, TerminalLeaf(outcome));
+			values.push_back(outcome.value);
+		}
+	}
+
+	void HalvingChoice(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, int64_t decisionSeed, double income,
+		const SearchParameters& parameters, const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, int untilTick, const SearchCandidate& policy, int tick)
+	{
+		std::vector<std::vector<double>> values(result.candidates.size());
+		std::vector<int> alive;
+		for (int index = 0; index < static_cast<int>(result.candidates.size()); ++index) alive.push_back(index);
+		result.halvingCandidates += static_cast<int>(result.candidates.size());
+		int selectedLanes = 0, done = 0;
+		// Round 1 gives every candidate one future before the first cut; later rounds double.
+		int target = std::min(parameters.samples, std::max(1, parameters.halvingFirstSamples));
+		while (true)
+		{
+			target = std::min(target, parameters.samples);
+			std::vector<std::pair<int, int>> order;
+			for (int index : alive)
+				for (int future = done; future < target; ++future) order.emplace_back(index, future);
+			selectedLanes += static_cast<int>(order.size());
+			std::vector<std::pair<int, bool>> terminal;
+			std::vector<double> batch;
+			AppendBatch(app, rollout, leafValue, snapshots, rootId, decisionSeed, income, parameters, history,
+				historyStart, studentHistory, untilTick, order, terminal, batch);
+			std::vector<int> ranking(order.size());
+			for (size_t index = 0; index < ranking.size(); ++index) ranking[index] = static_cast<int>(index);
+			std::stable_sort(ranking.begin(), ranking.end(), [&](int left, int right) {
+				return terminal[static_cast<size_t>(left)].second && !terminal[static_cast<size_t>(right)].second; });
+			for (size_t index = 0; index < ranking.size(); ++index)
+			{
+				const auto& job = order[static_cast<size_t>(ranking[index])];
+				values[static_cast<size_t>(job.first)].push_back(batch[ranking[index]]);
+			}
+			done = target;
+			std::vector<int> ranked = alive;
+			std::stable_sort(ranked.begin(), ranked.end(), [&](int left, int right) {
+				return Mean(values[static_cast<size_t>(left)]) > Mean(values[static_cast<size_t>(right)]); });
+			if (done >= parameters.samples) break;
+			std::vector<int> keep(ranked.begin(), ranked.begin() + std::max(2, (static_cast<int>(ranked.size()) + 1) / 2));
+			if (std::find(keep.begin(), keep.end(), result.policyIndex) == keep.end()) keep.push_back(result.policyIndex);
+			std::sort(keep.begin(), keep.end());
+			alive = keep;
+			target = done * 2;
+		}
+		int rollouts = 0;
+		for (const auto& entry : values) rollouts += static_cast<int>(entry.size());
+		result.halvingRollouts += rollouts;
+		result.halvingSelectedLanes += selectedLanes;
+		(void)tick;
+		result.totals.assign(result.candidates.size(), -std::numeric_limits<double>::infinity());
+		std::vector<int> counts(result.candidates.size(), 0);
+		for (size_t index = 0; index < values.size(); ++index)
+		{
+			if (values[index].empty()) continue;
+			result.totals[index] = Mean(values[index]);
+			counts[index] = static_cast<int>(values[index].size());
+		}
+		int best = alive.front();
+		for (int index : alive) if (result.totals[static_cast<size_t>(index)] > result.totals[static_cast<size_t>(best)]) best = index;
+		VerifiedChoice(app, rollout, leafValue, snapshots, rootId, decisionSeed, income, parameters, history,
+			historyStart, studentHistory, untilTick, policy, best, counts, false);
+	}
+
+	void FullChoice(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, int64_t decisionSeed, double income,
+		const SearchParameters& parameters, const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, int untilTick, const SearchCandidate& policy)
+	{
+		std::vector<int> counts(result.candidates.size(), parameters.samples);
+		result.totals.assign(result.candidates.size(), 0.0);
+		for (size_t index = 0; index < result.candidates.size(); ++index)
+		{
+			std::vector<std::pair<int, bool>> terminal;
+			std::vector<double> batch;
+			std::vector<std::pair<int, int>> order;
+			for (int future = 0; future < parameters.samples; ++future) order.emplace_back(static_cast<int>(index), future);
+			AppendBatch(app, rollout, leafValue, snapshots, rootId, decisionSeed, income, parameters, history,
+				historyStart, studentHistory, untilTick, order, terminal, batch);
+			// Terminal futures first, then the value-net leaves: the original accumulation order.
+			std::vector<double> ordered;
+			for (size_t job = 0; job < batch.size(); ++job) if (terminal[job].second) ordered.push_back(batch[job]);
+			for (size_t job = 0; job < batch.size(); ++job) if (!terminal[job].second) ordered.push_back(batch[job]);
+			double total = 0;
+			for (double value : ordered) total += value;
+			result.totals[index] = total / static_cast<double>(ordered.size());
+		}
+		int best = 0;
+		for (size_t index = 1; index < result.totals.size(); ++index)
+			if (result.totals[index] > result.totals[static_cast<size_t>(best)]) best = static_cast<int>(index);
+		VerifiedChoice(app, rollout, leafValue, snapshots, rootId, decisionSeed, income, parameters, history,
+			historyStart, studentHistory, untilTick, policy, best, counts, false);
+	}
+
+	void VerifiedChoice(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, int64_t decisionSeed, double income,
+		const SearchParameters& parameters, const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, int untilTick, const SearchCandidate& policy,
+		int best, std::vector<int> counts, bool fresh)
+	{
+		const int policyIndex = result.policyIndex;
+		bool before = fresh || (best != policyIndex &&
+			result.totals[static_cast<size_t>(best)] - result.totals[static_cast<size_t>(policyIndex)] >
+				SearchMargin(parameters, result.totals[static_cast<size_t>(best)]));
+		const int samples = parameters.verifySamples + (fresh ? parameters.samples : 0);
+		if (samples && before)
+		{
+			const double beforePolicy = result.totals[static_cast<size_t>(policyIndex)];
+			const double beforeBest = result.totals[static_cast<size_t>(best)];
+			const int originalPolicy = counts[static_cast<size_t>(policyIndex)];
+			const int originalBest = counts[static_cast<size_t>(best)];
+			const auto started = std::chrono::steady_clock::now();
+			for (int index : { policyIndex, best })
+			{
+				std::vector<std::pair<int, bool>> terminal;
+				std::vector<double> batch;
+				std::vector<std::pair<int, int>> order;
+				for (int future = parameters.samples; future < parameters.samples + samples; ++future)
+					order.emplace_back(index, future);
+				AppendBatch(app, rollout, leafValue, snapshots, rootId, decisionSeed, income, parameters, history,
+					historyStart, studentHistory, untilTick, order, terminal, batch);
+				std::vector<double> ordered;
+				for (size_t job = 0; job < batch.size(); ++job) if (terminal[job].second) ordered.push_back(batch[job]);
+				for (size_t job = 0; job < batch.size(); ++job) if (!terminal[job].second) ordered.push_back(batch[job]);
+				double added = 0;
+				for (double value : ordered) added += value;
+				result.totals[static_cast<size_t>(index)] =
+					(result.totals[static_cast<size_t>(index)] * counts[static_cast<size_t>(index)] + added) /
+					(counts[static_cast<size_t>(index)] + samples);
+				counts[static_cast<size_t>(index)] += samples;
+			}
+			// The original value batches and terminal-first sum order, so the last bits match too.
+			const double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
+			std::ostringstream verification;
+			verification << std::setprecision(17) << "{\"samples\":" << samples << ",\"student\":" << CandidateJson(policy)
+				<< ",\"challenger\":" << CandidateJson(result.candidates[static_cast<size_t>(best)])
+				<< ",\"before_values\":[" << beforePolicy << ',' << beforeBest << "],\"after_values\":["
+				<< result.totals[static_cast<size_t>(policyIndex)] << ',' << result.totals[static_cast<size_t>(best)]
+				<< "],\"before_override\":true,\"after_override\":"
+				<< ((result.totals[static_cast<size_t>(best)] - result.totals[static_cast<size_t>(policyIndex)] >
+					SearchMargin(parameters, result.totals[static_cast<size_t>(best)])) ? "true" : "false")
+				<< ",\"original_samples\":[" << originalPolicy << ',' << originalBest << "],\"decision_seed\":" << decisionSeed
+				<< ",\"mode\":\"" << (fresh ? "fresh" : "reproduced") << "\",\"seconds\":" << seconds << '}';
+			result.verification = verification.str();
+		}
+		if (result.studentCandidate[static_cast<size_t>(best)])
+		{
+			result.studentCandidateBest++;
+			if (best != policyIndex &&
+				result.totals[static_cast<size_t>(best)] - result.totals[static_cast<size_t>(policyIndex)] >
+					SearchMargin(parameters, result.totals[static_cast<size_t>(best)]))
+				result.studentCandidateOverride++;
+		}
+		result.best = best;
+		if (best != policyIndex &&
+			result.totals[static_cast<size_t>(best)] - result.totals[static_cast<size_t>(policyIndex)] >
+				SearchMargin(parameters, result.totals[static_cast<size_t>(best)]))
+		{
+			result.overrides++;
+			result.overridden = true;
+			result.chosen = result.candidates[static_cast<size_t>(best)];
+		}
+		else result.chosen = policy;
+	}
+
+	static double Mean(const std::vector<double>& values)
+	{
+		double total = 0;
+		for (double value : values) total += value;
+		return total / static_cast<double>(values.size());
+	}
+};
+
 static void RunEnvironment(LawnApp* app)
 {
 	std::string line;
@@ -554,7 +1181,7 @@ static void RunEnvironment(LawnApp* app)
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1}" << std::endl;
+		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1,\"search_version\":1}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -856,7 +1483,6 @@ static void RunEnvironment(LawnApp* app)
 			int64_t seed = -1;
 			std::string first, tracePath;
 			EnvironmentRollout::History studentHistory;
-			std::ofstream trace;
 			std::deque<std::pair<int, uint32_t>> history;
 			ok = static_cast<bool>(input >> rootId >> seed >> untilTick >> mask >> maxActions >> eventWait >> first >> historyStart >> historyCount) &&
 				rollout.Loaded() && (!scoreValue || valueNets[0].Loaded()) && app->mBoard && mask >= 0 && !(mask & ~ENV_SKIP_ALLOWED) &&
@@ -875,152 +1501,35 @@ static void RunEnvironment(LawnApp* app)
 					(history.empty() || tick >= history.back().first);
 				if (ok) history.emplace_back(tick, produced);
 			}
-			std::string actionCommand, actionArguments;
+			std::string firstCommand, firstArguments;
 			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath) && historyStart >= 0 && historyStart <= app->mBoard->mMainCounter &&
-				(first == "A" || DecodeBranchAction(first, actionCommand, actionArguments));
-			if (ok && !tracePath.empty()) { trace.open(tracePath); ok = trace.good(); }
-			int decisions = 0, mowersLeft = 0, estimatedResult = -1, startTick = 0;
-			std::array<int, 10> planted{};
-			std::array<int, 54> plantedByType{};
-			double simulationSeconds = 0, networkSeconds = 0;
-			if (ok)
-			{
-				const int savedMask = gEnvSimSkip;
-				gEnvSimSkip = mask;
-				startTick = app->mBoard->mMainCounter;
-				const bool finiteHorizon = untilTick > startTick;
-				if (untilTick <= app->mBoard->mMainCounter) untilTick = std::numeric_limits<int>::max();
-				int priorTick = -1;
-				bool priorPlant = false;
-				auto readyMowers = [&] { int count = 0; for (const LawnMower* mower : app->mBoard->mLawnMowers)
-					if (!mower->mDead && mower->mMowerState == LawnMowerState::MOWER_READY) ++count; return count; };
-				mowersLeft = readyMowers();
-				rollout.ResetNetworkCalls();
-				while (!app->EnvironmentTerminal() && decisions < maxActions)
-				{
-					const int tick = app->mBoard->mMainCounter;
-					const uint32_t producedBefore = app->mBoard->mSunMoneyProduced;
-					EnvironmentRollout::Action action;
-					bool isFirst = decisions == 0 && first != "A";
-					while (!history.empty() && history.front().first < tick - 6000) history.pop_front();
-					double totalProduced = 0;
-					for (auto entry : history) totalProduced += entry.second;
-					const int elapsed = std::max(0, std::min(6000, tick - historyStart));
-					const double income = elapsed ? totalProduced * 1000.0 / elapsed : 0;
-					if (trace.is_open()) TraceStudent(trace, rollout, app, income, priorTick, priorPlant, studentHistory);
-					if (isFirst && rollout.HasHistory()) studentHistory.Update(app);
-					if (!isFirst)
-					{
-						const auto start = std::chrono::steady_clock::now();
-						action = rollout.Predict(app, income, priorTick, priorPlant, studentHistory).action;
-						networkSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-					}
-					const auto start = std::chrono::steady_clock::now();
-					bool accepted = true;
-					int plantedType = -1;
-					int plantSlot = action.packet;
-					if (isFirst && actionCommand == "PLANT")
-					{
-						std::istringstream arguments(actionArguments);
-						arguments >> plantSlot;
-					}
-					if ((!isFirst || actionCommand == "PLANT") && plantSlot >= 0 && plantSlot < app->mBoard->mSeedBank->mNumPackets)
-					{
-						const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[plantSlot];
-						plantedType = static_cast<int>(packet.mPacketType == SeedType::SEED_IMITATER ? packet.mImitaterType : packet.mPacketType);
-					}
-					if (isFirst)
-					{
-						std::istringstream arguments(actionArguments);
-						if (actionCommand == "WAIT" && eventWait)
-						{
-							int ticks = -1;
-							accepted = static_cast<bool>(arguments >> ticks) && ticks >= 0 && ticks <= 1000000;
-							if (accepted) app->EnvironmentWaitUntil(ticks, 0);
-						}
-						else accepted = ExecuteEnvironmentAction(app, actionCommand, arguments);
-						priorPlant = actionCommand == "PLANT" && accepted;
-						if (priorPlant) { arguments.clear(); arguments.str(actionArguments); arguments >> action.packet; }
-					}
-					else
-					{
-						priorPlant = action.packet >= 0;
-						if (priorPlant) accepted = app->EnvironmentPlant(action.packet, action.col, action.row);
-						else app->EnvironmentWaitUntil(60, 0);
-					}
-					if (!accepted) { app->EnvironmentWait(60); priorPlant = false; }
-					if (priorPlant)
-					{
-						++planted[action.packet];
-						if (plantedType >= 0 && plantedType < static_cast<int>(plantedByType.size())) ++plantedByType[plantedType];
-					}
-					priorTick = tick;
-					const int now = app->mBoard->mMainCounter;
-					const uint32_t produced = app->mBoard->mSunMoneyProduced - producedBefore;
-					if (produced) history.emplace_back(now, produced);
-					substeps.emplace_back(now, produced);
-					simulationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - start).count();
-					++decisions;
-					// 胜利会放出剩余小推车，与 Python 一样保留最后非终局观测的数量。
-					if (!app->EnvironmentTerminal()) mowersLeft = readyMowers();
-					if (now >= untilTick) break;
-					if (!app->EnvironmentTerminal() && (mask & ENV_EARLY_RESULT) && app->mBoard->mLevel == 7)
-					{
-						bool protectedRows[6]{};
-						for (const LawnMower* mower : app->mBoard->mLawnMowers)
-							if (!mower->mDead && mower->mRow >= 0 && mower->mRow < 6 && mower->mMowerState == LawnMowerState::MOWER_READY)
-								protectedRows[mower->mRow] = true;
-						bool safe = app->mBoard->mCurrentWave == app->mBoard->mNumWaves && app->mBoard->mRiseFromGraveCounter == 0;
-						for (Zombie* zombie : app->mBoard->mZombies)
-						{
-							if (zombie->mDead || zombie->IsDeadOrDying() || zombie->mMindControlled) continue;
-							const bool protectedRow = zombie->mRow >= 0 && zombie->mRow < 6 && protectedRows[zombie->mRow];
-							safe = safe && protectedRow;
-							if (!protectedRow && zombie->mPosX < 80.0f && zombie->mHasHead)
-							{
-								estimatedResult = 0;
-								break;
-							}
-						}
-						if (safe) estimatedResult = 1;
-						if (estimatedResult >= 0) break;
-					}
-					if (finiteHorizon && (mask & ENV_ADAPTIVE_HORIZON) && now - startTick >= 600)
-					{
-						bool threatened = false;
-						for (Zombie* zombie : app->mBoard->mZombies)
-							if (!zombie->mDead && !zombie->IsDeadOrDying() && !zombie->mMindControlled && zombie->mPosX < 400.0f)
-							{
-								threatened = true;
-								break;
-							}
-						if (!threatened) break;
-					}
-				}
-				gEnvSimSkip = savedMask;
-				if (trace.is_open()) { trace.flush(); ok = trace.good(); }
-			}
-			actionSeconds += simulationSeconds;
+				(first == "A" || DecodeBranchAction(first, firstCommand, firstArguments));
+			RolloutRequest request;
+			request.rootId = rootId;
+			request.seed = seed;
+			request.untilTick = untilTick;
+			request.mask = mask;
+			request.maxActions = maxActions;
+			request.eventWait = eventWait != 0;
+			request.scoreValue = scoreValue;
+			request.first = first;
+			request.historyStart = historyStart;
+			request.history.assign(history.begin(), history.end());
+			request.studentHistory = &studentHistory;
+			request.tracePath = &tracePath;
+			RolloutOutcome outcome;
+			if (ok) outcome = RunRollout(app, rollout, valueNets[0], request, snapshots);
+			ok = ok && outcome.ok;
+			actionSeconds += outcome.simulationSeconds;
 			if (scoreValue)
 			{
-				double value = 0;
-				if (ok)
-				{
-					const int now = app->mBoard->mMainCounter;
-					double produced = 0;
-					for (auto sample : history) if (sample.first >= now - 6000) produced += sample.second;
-					const int elapsed = std::max(0, std::min(6000, now - historyStart));
-					if (estimatedResult >= 0) value = estimatedResult;
-					else if (app->EnvironmentTerminal()) value = app->mBoardResult == BoardResult::BOARDRESULT_WON ? 1.0 : 0.0;
-					else value = valueNets[0].Predict(app, elapsed ? produced * 1000.0 / elapsed : 0.0);
-				}
 				std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
 					<< ",\"observation\":{\"tick\":" << (app->mBoard ? app->mBoard->mMainCounter : 0)
 					<< ",\"wave_timer\":0,\"terminal\":" << (app->EnvironmentTerminal() ? "true" : "false")
-					<< ",\"result\":" << static_cast<int>(app->mBoardResult) << ",\"value\":" << std::setprecision(9) << value;
-				if (estimatedResult >= 0) std::cout << ",\"rollout_result\":" << estimatedResult;
-				std::cout << "},\"decisions\":" << decisions << ",\"simulation_seconds\":" << simulationSeconds
-					<< ",\"network_seconds\":" << networkSeconds << "}" << std::endl << std::setprecision(6);
+					<< ",\"result\":" << static_cast<int>(app->mBoardResult) << ",\"value\":" << std::setprecision(17) << outcome.value;
+				if (outcome.estimatedResult >= 0) std::cout << ",\"rollout_result\":" << outcome.estimatedResult;
+				std::cout << "},\"decisions\":" << outcome.decisions << ",\"simulation_seconds\":" << outcome.simulationSeconds
+					<< ",\"network_seconds\":" << outcome.networkSeconds << "}" << std::endl << std::setprecision(6);
 				continue;
 			}
 			const auto observationStart = std::chrono::steady_clock::now();
@@ -1028,18 +1537,151 @@ static void RunEnvironment(LawnApp* app)
 			observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false")
 				<< ",\"observation\":" << observation
-				<< ",\"estimated_result\":" << estimatedResult
-				<< ",\"decisions\":" << decisions << ",\"mowers_left\":" << mowersLeft << ",\"planted_slots\":[";
-			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << planted[index];
+				<< ",\"estimated_result\":" << outcome.estimatedResult
+				<< ",\"decisions\":" << outcome.decisions << ",\"mowers_left\":" << outcome.mowersLeft << ",\"planted_slots\":[";
+			for (int index = 0; index < 10; ++index) std::cout << (index ? "," : "") << outcome.planted[index];
 			std::cout << "],\"planted_types\":{";
 			bool firstType = true;
-			for (size_t index = 0; index < plantedByType.size(); ++index)
-				if (plantedByType[index]) { std::cout << (firstType ? "" : ",") << '\"' << index << "\":" << plantedByType[index]; firstType = false; }
-			std::cout << "},\"simulation_seconds\":" << simulationSeconds << ",\"network_seconds\":" << networkSeconds
-				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << app->mBoard->mMainCounter - startTick << ",\"substeps\":[";
-			for (size_t index = 0; index < substeps.size(); ++index)
-				std::cout << (index ? ",[" : "[") << substeps[index].first << ',' << substeps[index].second << ']';
+			for (size_t index = 0; index < outcome.plantedByType.size(); ++index)
+				if (outcome.plantedByType[index]) { std::cout << (firstType ? "" : ",") << '\"' << index << "\":" << outcome.plantedByType[index]; firstType = false; }
+			std::cout << "},\"simulation_seconds\":" << outcome.simulationSeconds << ",\"network_seconds\":" << outcome.networkSeconds
+				<< ",\"net_calls\":" << rollout.NetworkCalls() << ",\"ticks\":" << (app->mBoard ? app->mBoard->mMainCounter - outcome.startTick : 0) << ",\"substeps\":[";
+			for (size_t index = 0; index < outcome.substeps.size(); ++index)
+				std::cout << (index ? ",[" : "[") << outcome.substeps[index].first << ',' << outcome.substeps[index].second << ']';
 			std::cout << "]}" << std::endl;
+			continue;
+		}
+		else if (command == "RANK_PROBE")
+		{
+			// Student preference order on the current board, for the migration comparison against
+			// pvz_rollout_policy.ranked_plants (task217).  No state change.
+			double income = 0;
+			int previousTick = -1, previousPlant = 0;
+			std::string tracePath;
+			EnvironmentRollout::History studentHistory;
+			ok = static_cast<bool>(input >> income >> previousTick >> previousPlant) && rollout.Loaded() && app->mBoard &&
+				std::isfinite(income) && previousTick >= -1 && (previousPlant == 0 || previousPlant == 1) &&
+				ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath);
+			std::vector<std::array<int, 3>> legal;
+			if (ok) app->EnvironmentLegalPlants(legal);
+			std::vector<EnvironmentRollout::Action> actions;
+			for (const auto& action : legal) actions.push_back({ action[0], action[1], action[2] });
+			std::vector<EnvironmentRollout::Ranked> ranked;
+			double seconds = 0;
+			if (ok)
+			{
+				const auto started = std::chrono::steady_clock::now();
+				rollout.Rank(app, income, previousTick, previousPlant != 0, studentHistory, actions, ranked);
+				seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
+			}
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":"
+				<< (ok ? "true" : "false") << ",\"seconds\":" << seconds << ",\"ranked\":[";
+			for (size_t index = 0; index < ranked.size(); ++index)
+			{
+				if (index) std::cout << ',';
+				std::cout << '[' << ranked[index].action.packet << ',' << ranked[index].action.row << ','
+					<< ranked[index].action.col << ',' << std::setprecision(17) << ranked[index].score << ']';
+			}
+			std::cout << "]}" << std::endl << std::setprecision(6);
+			continue;
+		}
+		else if (command == "SEARCH")
+		{
+			// One whole teacher decision (task217): the candidate set, the halving rounds, the
+			// verification futures and the override rule all run here, so the driver no longer needs a
+			// round trip per candidate.  The caller passes the decision root's snapshot, its sun-income
+			// history, the student history and the student's own action; the algorithm is
+			// MEMORY/docs/task217-csearch.md.
+			int rootId = 0, mask = 0, horizon = 0, perCard = 0, studentCandidates = 0, samples = 0;
+			int verifySamples = 0, halving = 0, halvingFirstSamples = 0, minGap = 0, lastSearchTick = 0;
+			int reserve = 0, historyStart = 0, historyCount = 0, previousTick = -1, previousPlant = 0;
+			double income = 0, marginRelative = 0;
+			int64_t decisionSeed = 0;
+			std::string policyToken, demoTarget, tracePath;
+			EnvironmentRollout::History studentHistory;
+			std::deque<std::pair<int, uint32_t>> history;
+			ok = static_cast<bool>(input >> rootId >> decisionSeed >> income >> previousTick >> previousPlant
+				>> mask >> horizon >> perCard
+				>> studentCandidates >> samples >> verifySamples >> halving >> halvingFirstSamples >> marginRelative
+				>> minGap >> lastSearchTick >> reserve >> policyToken >> demoTarget >> historyStart >> historyCount) &&
+				rollout.Loaded() && valueNets[0].Loaded() && valueNets[1].Loaded() && app->mBoard &&
+				snapshots.contains(rootId) && decisionSeed >= 0 && std::isfinite(income) && mask >= 0 &&
+				!(mask & ~ENV_SKIP_ALLOWED) && horizon >= 0 && horizon <= 1000000 && perCard >= 1 && perCard <= 32 &&
+				studentCandidates >= 0 && studentCandidates <= 64 && samples >= 1 && samples <= 64 &&
+				verifySamples >= 0 && verifySamples <= 64 && (halving == 0 || halving == 1) && halvingFirstSamples >= 1 &&
+				marginRelative >= 0 && std::isfinite(marginRelative) && minGap >= 0 && reserve >= 0 && previousTick >= -1 &&
+				(previousPlant == 0 || previousPlant == 1) &&
+				historyStart >= 0 && historyCount >= 0 && historyCount <= 100000;
+			if (ok) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
+			if (ok) before = ReadCounters(app);
+			for (int index = 0; ok && index < historyCount; ++index)
+			{
+				int tick = 0;
+				uint32_t produced = 0;
+				ok = static_cast<bool>(input >> tick >> produced) && tick >= historyStart &&
+					tick <= app->mBoard->mMainCounter && (history.empty() || tick >= history.back().first);
+				if (ok) history.emplace_back(tick, produced);
+			}
+			ok = ok && ReadStudentOptions(input, app->mBoard->mMainCounter, studentHistory, tracePath) &&
+				historyStart <= app->mBoard->mMainCounter;
+			SearchCandidate policy;
+			SearchCandidate demo;
+			bool hasDemo = false;
+			ok = ok && DecodeSearchCandidate(policyToken, policy);
+			if (ok && demoTarget != "-")
+			{
+				hasDemo = DecodeSearchCandidate(demoTarget, demo) && demo.kind == 'P';
+				ok = hasDemo;
+			}
+			SearchParameters parameters;
+			parameters.horizon = horizon;
+			parameters.perCard = perCard;
+			parameters.studentCandidates = studentCandidates;
+			parameters.samples = samples;
+			parameters.verifySamples = verifySamples;
+			parameters.halvingFirstSamples = halvingFirstSamples;
+			parameters.minGap = minGap;
+			parameters.lastSearchTick = lastSearchTick;
+			parameters.reserve = reserve;
+			parameters.simSkip = mask;
+			parameters.marginRelative = marginRelative;
+			parameters.halving = halving != 0;
+			EnvironmentSearch search;
+			if (ok)
+				search.Run(app, rollout, valueNets[0], valueNets[1], snapshots, rootId, decisionSeed, income,
+					previousTick, previousPlant != 0, parameters,
+					std::vector<std::pair<int, uint32_t>>(history.begin(), history.end()), historyStart,
+					studentHistory, policy, hasDemo ? &demo : nullptr);
+			const SearchResult& result = search.result;
+			ok = ok && result.chosen.kind != 0;
+			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":"
+				<< (ok ? "true" : "false") << ",\"searched\":" << (result.searched ? "true" : "false")
+				<< ",\"action\":" << CandidateJson(result.chosen) << ",\"best\":" << result.best
+				<< ",\"policy_index\":" << result.policyIndex << ",\"overridden\":"
+				<< (result.overridden ? "true" : "false") << ",\"stats\":{\"overrides\":" << result.overrides
+				<< ",\"halving_candidates\":" << result.halvingCandidates << ",\"halving_rollouts\":"
+				<< result.halvingRollouts << ",\"halving_selected_lanes\":" << result.halvingSelectedLanes
+				<< ",\"rollout_batches\":" << result.rolloutBatches << ",\"rollout_lanes\":" << result.rolloutLanes
+				<< ",\"student_candidate_added\":" << result.studentCandidateAdded << ",\"student_candidate_best\":"
+				<< result.studentCandidateBest << ",\"student_candidate_override\":" << result.studentCandidateOverride
+				<< ",\"demo_candidate_added\":" << result.demoCandidateAdded;
+			if (result.overridden)
+				std::cout << ",\"override_kind\":\"" << (result.chosen.kind == 'P' ? "plant" : "wait") << "_over_"
+					<< (policy.kind == 'P' ? "plant" : "wait") << '"';
+			std::cout << "},\"targets\":[" << std::setprecision(17);
+			for (size_t index = 0; index < result.candidates.size(); ++index)
+			{
+				if (index) std::cout << ',';
+				const SearchCandidate& candidate = result.candidates[index];
+				std::cout << '[' << (candidate.kind == 'P' ? candidate.packet : -1) << ','
+					<< (candidate.kind == 'P' ? candidate.row : -1) << ','
+					<< (candidate.kind == 'P' ? candidate.col : -1) << ',';
+				if (std::isfinite(result.totals[index])) std::cout << result.totals[index];
+				else std::cout << "null";
+				std::cout << ']';
+			}
+			std::cout << "],\"verification\":" << (result.verification.empty() ? "null" : result.verification.c_str())
+				<< '}' << std::endl << std::setprecision(6);
 			continue;
 		}
 		else if (command == "RESET_V2")

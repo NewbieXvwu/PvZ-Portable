@@ -41,6 +41,12 @@ public:
 		std::vector<float>& board, std::vector<float>& scalars, History& history);
 	Prediction Predict(LawnApp* app, double income, int previousTick, bool previousPlant,
 		History& history, bool diagnostics = false);
+	// The student's own preference order over the legal plant actions, best first: the same three
+	// heads as Predict, but every legal action gets P(plant) x P(packet) x P(cell) instead of only
+	// the argmax.  Python's pvz_rollout_policy.ranked_plants (--student-candidates) is this.
+	struct Ranked { float score; Action action; int kind; };
+	void Rank(LawnApp* app, double income, int previousTick, bool previousPlant, History& history,
+		const std::vector<Action>& legal, std::vector<Ranked>& out);
 	// Number of Predict calls that actually ran the network (the ones that return early because
 	// nothing is plantable cost nothing).  Reset by the caller around a batch of rollouts.
 	int NetworkCalls() const { return networkCalls; }

@@ -23,6 +23,9 @@ The comparison harness ``scripts/b3_noninferiority.py`` can set a private ``_W["
 "student-topk"`` (task42 B3 arm: the student's global top-k plants, wait, and its own action). There is no
 CLI flag, and the formal collection path never sets it.
 
+``--search-impl cpp`` runs the whole decision as one engine command (``SEARCH``, task217); the Python
+search below stays the default until the two have been compared.
+
 Continuations run in the original C++ simulator. ``--rollout-sim-skip`` is a CPU presentation-work
 bitmask: mask 29 skips colour, height, attachment matrices and messages, while preserving game ticks
 and animation lifecycle updates.
@@ -217,6 +220,7 @@ def _fast_action(obs: dict, fast_state: dict, native_env=None) -> dict:
                      context=_W.get("context"), history=fast_state.get("history"))
     # --student-candidates needs exactly the frame / history the student just read, so keep them.
     _W["student_frame"], _W["student_previous_frame"] = frame, previous
+    _W["student_previous_plant"] = (fast_state.get("action") or {}).get("type") == "plant"
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action
@@ -250,6 +254,19 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 def _plain_action(candidate: dict) -> dict:
     """The action dict of a candidate, without --combo-candidates metadata."""
     return {key: candidate[key] for key in ("type", "packet", "col", "row") if key in candidate}
+
+
+def _demo_candidate(obs: dict, legal: list[dict]) -> dict | None:
+    """The demonstration's next recorded plant once it is legal again, or None.
+
+    Same rule as the inline loop of _search: the first recorded plant at or after the current tick
+    that the board offers right now.  Returned to the engine by --search-impl cpp.
+    """
+    legal_keys = {json.dumps(plant, sort_keys=True) for plant in legal}
+    for tick, action in _W.get("demo_actions", ()):
+        if tick >= obs["tick"] and json.dumps(action, sort_keys=True) in legal_keys:
+            return action
+    return None
 
 
 def _upgrade_legal(obs: dict, packet: int, col: int, row: int) -> dict | None:
@@ -542,6 +559,55 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         env.release_snapshot(root)
 
 
+def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
+    """--search-impl cpp: the whole decision as one SEARCH command (task217).
+
+    The engine runs the candidate set, the halving rounds, the verification futures and the
+    override rule that _search/_halving_choice/_verified_choice run in Python, so this function
+    only marshals the decision inputs and copies the counter deltas into ``stats``.  It exists so
+    both implementations can be compared arm for arm; the Python one goes away once they agree.
+    """
+    legal = (obs.get("legal_actions") or {}).get("plants") or []
+    if not legal:
+        return policy_action
+    previous = _W.get("student_previous_frame")
+    root = env.snapshot_fast()
+    try:
+        response = env.search(
+            root, policy_action, income=obs.get("sun_income_rate") or 0.0, decision_seed=decision_seed,
+            horizon=args.horizon, per_card=args.per_card, student_candidates=args.student_candidates,
+            samples=args.samples, verify_samples=args.verify_samples, halving=args.halving,
+            halving_first_samples=args.halving_first_samples, margin_relative=args.margin_relative,
+            min_gap=args.min_gap, last_search_tick=stats.get("last_search_tick", -10 ** 9),
+            previous_tick=int(previous["tick"]) if previous else -1,
+            previous_plant=bool(_W.get("student_previous_plant")),
+            reserve=int(stats.get("sun_reserve") or 0), sim_skip=args.rollout_sim_skip,
+            student_history=_W.get("student_history"), demo_action=_demo_candidate(obs, legal))
+    finally:
+        env.restore_fast(root)
+        env.release_snapshot(root)
+    payload = response.get("stats") or {}
+    if response["searched"]:
+        stats["last_search_tick"] = obs["tick"]
+        stats["searched"] += 1
+    for name in ("overrides", "halving_candidates", "halving_rollouts", "halving_selected_lanes",
+                 "rollout_batches", "rollout_lanes", "student_candidate_added",
+                 "student_candidate_best", "student_candidate_override", "demo_candidate_added"):
+        if payload.get(name):
+            stats[name] = stats.get(name, 0) + payload[name]
+    if payload.get("override_kind"):
+        stats["override_kinds"][payload["override_kind"]] += 1
+    totals = [float("-inf") if value is None else float(value) for _packet, _row, _col, value in
+              response.get("targets") or []]
+    candidates = [dict(NOOP) if packet < 0 else {"type": "plant", "packet": packet, "row": row, "col": col}
+                  for packet, row, col, _value in response.get("targets") or []]
+    stats["last_targets"] = list(zip(candidates, totals))
+    stats["last_verification"] = response.get("verification")
+    _probe_decision(args, obs, candidates, totals, response["action"], decision_seed, policy_action,
+                    int(response["best"]), int(response["policy_index"]))
+    return response["action"]
+
+
 def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_action: dict, policy_key: str,
                     args, decision_seed: int, stats: dict) -> dict:
     """``--halving``: successive halving over the same resampled futures as the full search.
@@ -784,6 +850,8 @@ def _play(job: dict, observer=None) -> dict:
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
         env.load_rollout_net(_W["rollout_file"])
+    if getattr(args, "search_impl", "python") == "cpp" and not getattr(env, "_search_version", 0):
+        raise RuntimeError("--search-impl cpp needs a rebuilt simulator advertising search_version=1")
     if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
@@ -916,8 +984,14 @@ def _play(job: dict, observer=None) -> dict:
                 if pause_tokens:
                     env.set_token_observation(False)
                 try:
-                    action = _search(env, obs, action, args,
-                                     (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions, stats)
+                    if args.search_impl == "cpp":
+                        action = _cpp_search(env, obs, action, args,
+                                             (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions,
+                                             stats)
+                    else:
+                        action = _search(env, obs, action, args,
+                                         (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions,
+                                         stats)
                 finally:
                     if pause_tokens:
                         env.set_token_observation(True)
@@ -1143,6 +1217,9 @@ def parser():
                         "MemAvailable before admitting another worker")
     p.add_argument("--grow-interval", type=float, default=30.0,
                    help="seconds between two memory readings while the group runs")
+    p.add_argument("--search-impl", choices=("python", "cpp"), default="python",
+                   help="where the decision search runs: the Python teacher (default) or the engine's "
+                        "SEARCH command (task217, one request per decision)")
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
