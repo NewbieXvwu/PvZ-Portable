@@ -90,6 +90,7 @@ def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tm
     args.alternate_recipe = ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
     args.b_init = tmp_path / 'gptbc.pt'
     args.b_init.write_bytes(b'gptbc')
+    args.a_restart = False  # legacy shared-lineage mode; task216 makes restart the default
     pipeline = queue.TrainingPipeline(args, state)
     monkeypatch.setattr(pipeline.executor, 'submit', lambda *a: Future())
 
@@ -131,6 +132,51 @@ def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tm
         assert gate.read(args.state)['b_student'] == str(parent)
         for name, recipe in (('recipe.json', a), ('recipe_b.json', b),
                              ('next recipe.json', next_a), ('next recipe_b.json', next_b)):
+            print(name + ':', json.dumps({k: recipe[k] for k in ('init', 'epochs', 'source_weight')}))
+    finally:
+        pipeline.executor.shutdown(wait=True)
+
+
+def test_clean_a_restart_reinitializes_each_round_and_leaves_b_lineage(tmp_path, monkeypatch):
+    from test_curriculum_pipeline import setup
+    args, state = setup(tmp_path)
+    args.recipe = ROOT / 'recipes/dw4i2_v2timer_clean_a.json'
+    args.alternate_recipe = ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
+    args.b_init = tmp_path / 'gptbc.pt'
+    args.b_init.write_bytes(b'gptbc')
+    args.a_restart = True
+    pipeline = queue.TrainingPipeline(args, state)
+    monkeypatch.setattr(pipeline.executor, 'submit', lambda *a: Future())
+
+    def pack_key(recipe):
+        return pack_path(recipe['data'], pack_options(**training_row_options(recipe)))
+    try:
+        state['round'] = 1
+        pipeline.enqueue()
+        first = state['training_jobs'][0]
+        parent = Path(first['recipe']).parent / 'seeds/seed_000002/student/model.pt'
+        parent.parent.mkdir(parents=True)
+        parent.write_bytes(b'first B')
+        (parent.parent.parent / 'trained.json').write_text(
+            json.dumps(dict(status='trained', model=str(parent))))
+        state['round'] = 2
+        pipeline.enqueue()
+        first, second = state['training_jobs']
+        a1 = load_recipe(Path(first['recipe']), 'training')
+        b1 = load_recipe(Path(first['recipe']).with_name('recipe_b.json'), 'training')
+        a2 = load_recipe(Path(second['recipe']), 'training')
+        b2 = load_recipe(Path(second['recipe']).with_name('recipe_b.json'), 'training')
+        assert a1['init'] == b1['init'] == str(args.b_init)
+        assert a1['epochs'] == b1['epochs'] == 8
+        assert a2['init'] == str(args.b_init) and a2['epochs'] == 8
+        assert b2['init'] == str(parent) and b2['epochs'] == 4
+        for a, b in ((a1, b1), (a2, b2)):
+            assert a['source_weight'] == b['source_weight']
+            assert pack_key(a) == pack_key(b)
+        assert second['a_restart'] is True
+        assert state['b_student'] == str(args.b_init)
+        for name, recipe in (('round1 recipe.json', a1), ('round1 recipe_b.json', b1),
+                             ('round2 recipe.json', a2), ('round2 recipe_b.json', b2)):
             print(name + ':', json.dumps({k: recipe[k] for k in ('init', 'epochs', 'source_weight')}))
     finally:
         pipeline.executor.shutdown(wait=True)

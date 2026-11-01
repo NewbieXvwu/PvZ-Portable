@@ -23,6 +23,7 @@ def command(args):
         *(['--b-init', str(args.b_init)] if args.b_init is not None else []),
         *(['--b-initial-epochs', str(args.b_initial_epochs)] if args.b_initial_epochs is not None else []),
         *(['--b-epochs', str(args.b_epochs)] if args.b_epochs is not None else []),
+        '--a-restart' if args.a_restart else '--no-a-restart',
         '--training-parallelism', '1', '--opening-manifest', str(worktree / 'artifacts/task119/opening_panel.json'),
         '--executable', str(args.executable or root / 'artifacts/production/deploy20/pvz-portable'),
         '--promotion-panel', str(worktree / 'configs/gate_v5_panel.json'),
@@ -54,6 +55,7 @@ def main():
     parser.add_argument('--b-init', type=Path)
     parser.add_argument('--b-initial-epochs', type=int)
     parser.add_argument('--b-epochs', type=int)
+    parser.add_argument('--a-restart', action=argparse.BooleanOptionalAction, default=True)
     args = parser.parse_args()
     shell = 'env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 ' + shlex.join(command(args))
     shell += ' 2>&1 | tee -a ' + shlex.quote(str(args.logs / 'qc.out'))

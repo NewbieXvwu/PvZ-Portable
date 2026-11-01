@@ -1414,16 +1414,16 @@ class TrainingPipeline:
                       epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
         return recipe
 
-    def _refresh_lineage(self, path, job):
-        """Re-resolve the B parent at train time so A and B start from the same model."""
+    def _refresh_lineage(self, path, job, restart=False):
+        """Resolve A's restart init or the B parent at train time."""
         recipe = load_recipe(path, 'training')
-        parent, parent_round = self._b_parent(job['round'])
+        parent, parent_round = self._b_parent(0 if restart else job['round'])
         recipe = self._lineage(recipe, job, parent, parent_round)
         write_recipe(path, recipe)
         return recipe
 
     def _a_recipe(self, job):
-        return self._refresh_lineage(Path(job['recipe']), job)
+        return self._refresh_lineage(Path(job['recipe']), job, restart=job.get('a_restart', False))
 
     def _b_recipe(self, job):
         return self._refresh_lineage(Path(job['recipe']).with_name('recipe_b.json'), job)
@@ -1463,9 +1463,11 @@ class TrainingPipeline:
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
                    status='queued', gate_version=7, b_lineage=CLEAN_B_LINEAGE,
                    b_initial_epochs=getattr(self.args, 'b_initial_epochs', 8),
-                   b_epochs=getattr(self.args, 'b_epochs', 4))
+                   b_epochs=getattr(self.args, 'b_epochs', 4),
+                   a_restart=bool(getattr(self.args, 'a_restart', True)))
         parent, parent_round = self._b_parent(round_index)
-        write_recipe(path, self._round_recipe(recipe, job, parent, parent_round))
+        a_parent, a_round = self._b_parent(0) if job['a_restart'] else (parent, parent_round)
+        write_recipe(path, self._round_recipe(recipe, job, a_parent, a_round))
         alternate = getattr(self.args, 'alternate_recipe', None)
         alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
         if alternate:
@@ -2468,6 +2470,8 @@ def main() -> None:
     parser.add_argument('--b-init', type=Path, default=DEFAULT_B_INIT)
     parser.add_argument('--b-initial-epochs', type=int, default=8)
     parser.add_argument('--b-epochs', type=int, default=4)
+    parser.add_argument('--a-restart', action=argparse.BooleanOptionalAction, default=True,
+                        help='A restarts from --b-init for b_initial_epochs every round; B keeps the lineage')
     parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
                         help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
     parser.add_argument('--opening-manifest', type=Path,

@@ -70,7 +70,8 @@ def launch(installation, args, worktree, rollback=False):
         '--python', sys.executable]
     if rollback:
         command += ['--recipe', str(worktree / 'recipes/dw4i2_v2timer.json'),
-                    '--alternate-recipe', str(worktree / 'recipes/dw4i2_v2timer_seed2cold.json')]
+                    '--alternate-recipe', str(worktree / 'recipes/dw4i2_v2timer_seed2cold.json'),
+                    '--no-a-restart']
     subprocess.run(command, check=True)
 
 
