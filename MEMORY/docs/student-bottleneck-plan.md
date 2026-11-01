@@ -1221,3 +1221,5 @@
 - 11-01 08:40 r76 门禁（旧面板）：A −12.6pp、B 约 −8.8pp（336 / 648 vs r52 393），都否。**B 第五代**：白天 144 / 173（第四代 192，掉得多）、夜间 50 / 69、泳池 49 / 69、雾 61 / 66、屋顶 10/12。同一 r52 两轮间白天 186 → 173，门禁抽样波动约 ±10，但 B 白天 192 → 144 超出波动——可能是 4 epoch 热启动在逐轮变化的数据上漂移，再看一两轮。
 
 - 11-01 09:25 **r77 训练两次失败**（08:51 / 08:53，`[Errno 7] Argument list too long`）：Mac 批次每批一个标签，训练包标签累计 3270 个、`--labels` 拼起来 132,706 字节，超过 Linux 单参数 128 KiB 上限（与 deploy22 审查预言的 `--task-json` 是同一类问题），r77 快照被隔离。主控热修（maccollect d00fe637）：`pack_command` 对超过 60 kB 的值写 `frames/.pack_args/<sha1>.txt` 并传 `@文件`，`pack_training_rows` 的 `--labels` / `--label-weight` 支持 `@文件`；Mac 上冒烟通过。用 systemd-run 跑 `deploy26.py --revision origin/maccollect`（第一次用 nohup 在 ssh 断开后静默退出，没部署上），09:20:30 组边界切换完成，看门狗在。r78 起恢复训练。
+
+- 11-01 09:45 用户带 Mac 出门：主控冻结 Mac 采集进程组 6691（`kill -STOP -- -6691`，恢复 `kill -CONT -- -6691`），已通知 plus2 勿动。Mac 采集至此共送达 492 批（约 5900 局、1.6 GB，白天 / 夜间 / 泳池）。C: 21.5 GB。task208 候选表完成、等用户卡组（awaiting_user_decks）。
