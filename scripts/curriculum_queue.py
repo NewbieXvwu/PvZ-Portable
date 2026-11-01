@@ -1408,12 +1408,39 @@ class TrainingPipeline:
                     parent, round_index = Path(candidate['model']), old['round']
         return parent, round_index
 
-    def _b_recipe(self, job):
-        path = Path(job['recipe']).with_name('recipe_b.json')
+    @staticmethod
+    def _lineage(recipe, job, parent, parent_round):
+        recipe.update(init=str(parent),
+                      epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
+        return recipe
+
+    def _refresh_lineage(self, path, job):
+        """Re-resolve the B parent at train time so A and B start from the same model."""
         recipe = load_recipe(path, 'training')
         parent, parent_round = self._b_parent(job['round'])
-        recipe.update(init=str(parent), epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
+        recipe = self._lineage(recipe, job, parent, parent_round)
         write_recipe(path, recipe)
+        return recipe
+
+    def _a_recipe(self, job):
+        return self._refresh_lineage(Path(job['recipe']), job)
+
+    def _b_recipe(self, job):
+        return self._refresh_lineage(Path(job['recipe']).with_name('recipe_b.json'), job)
+
+    def _round_recipe(self, recipe, job, parent, parent_round):
+        """Freeze the shared round lineage and replay window for both candidates."""
+        recipe = self._lineage(recipe, job, parent, parent_round)
+        # Promoted training corpus, not the in-flight collector snapshot. Labels are
+        # an initial fallback for the pre-v7 incumbent; after promotion use archives.
+        if 'student_corpus_archives' in self.state:
+            recipe['replay_old_archives'] = self.state['student_corpus_archives']
+            recipe['replay_old_labels'] = []
+        else:
+            old = dict(self.state, log=[entry for entry in self.state['log']
+                       if entry['round'] <= self.state.get('student_round', 0)])
+            recipe['replay_old_labels'] = pack_labels(old, ','.join(
+                load_recipe(self.args.recipe, 'training')['labels']))
         return recipe
 
     @retry_io
@@ -1433,15 +1460,14 @@ class TrainingPipeline:
         recipe['precompute_workers'] = self.build_workers
         path = folder / 'recipe.json'
         path.parent.mkdir(parents=True, exist_ok=True)
-        write_recipe(path, recipe)
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
-                   status='queued')
-        alternate = getattr(self.args, 'alternate_recipe', None)
-        alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
-        job['gate_version'] = 7
-        job.update(b_lineage=CLEAN_B_LINEAGE,
+                   status='queued', gate_version=7, b_lineage=CLEAN_B_LINEAGE,
                    b_initial_epochs=getattr(self.args, 'b_initial_epochs', 8),
                    b_epochs=getattr(self.args, 'b_epochs', 4))
+        parent, parent_round = self._b_parent(round_index)
+        write_recipe(path, self._round_recipe(recipe, job, parent, parent_round))
+        alternate = getattr(self.args, 'alternate_recipe', None)
+        alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
         if alternate:
             variant = load_recipe(alternate, 'training')
             variant.update({key: recipe[key] for key in
@@ -1453,21 +1479,8 @@ class TrainingPipeline:
             variant_options.pop('label_weight', None)
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
-            parent, parent_round = self._b_parent(round_index)
-            variant.update(init=str(parent),
-                           epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
-            # Promoted training corpus, not the in-flight collector snapshot. Labels are
-            # an initial fallback for the pre-v7 incumbent; after promotion use archives.
-            if 'student_corpus_archives' in self.state:
-                variant['replay_old_archives'] = self.state['student_corpus_archives']
-                variant['replay_old_labels'] = []
-            else:
-                old = dict(self.state, log=[entry for entry in self.state['log']
-                           if entry['round'] <= self.state.get('student_round', 0)])
-                variant['replay_old_labels'] = pack_labels(old, ','.join(
-                    load_recipe(self.args.recipe, 'training')['labels']))
             variant_path = folder / 'recipe_b.json'
-            write_recipe(variant_path, variant)
+            write_recipe(variant_path, self._round_recipe(variant, job, parent, parent_round))
             repeats = 1
             job['candidate_recipes'] = [
                 dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
@@ -1704,9 +1717,11 @@ class TrainingPipeline:
             variant = job['candidate_recipes'][job['training_seeds'].index(seed)]
             child_recipe = dict(load_recipe(Path(variant['recipe']), 'training'),
                                 seed=seed, out=str(directory / 'student'))
-            if variant['recipe_family'] == 'B' and not path.exists():
-                child_recipe.update(self._b_recipe(job), seed=seed, out=str(directory / 'student'))
             if not path.exists():
+                if variant['recipe_family'] == 'B':
+                    child_recipe.update(self._b_recipe(job), seed=seed, out=str(directory / 'student'))
+                elif variant['recipe_family'] == 'A':
+                    child_recipe.update(self._a_recipe(job), seed=seed, out=str(directory / 'student'))
                 write_recipe(path, child_recipe)
             model, marker = directory / 'student/model.pt', directory / 'trained.json'
             if marker.is_file():

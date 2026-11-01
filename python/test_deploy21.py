@@ -14,7 +14,8 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 import curriculum_queue as queue
 import promotion_gate as gate
 import pvz_promotion as v7
-from pvz_recipe import load_recipe, write_recipe
+from pvz_recipe import load_recipe, training_row_options, write_recipe
+from pvz_training_pack import pack_options, pack_path
 
 
 def test_deploy21_three_way_early_stop_and_higher_passing_arm(tmp_path, monkeypatch):
@@ -85,12 +86,15 @@ def test_deploy21_staircase_keeps_decks_and_uses_persisted_endpoints():
 def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tmp_path, monkeypatch):
     from test_curriculum_pipeline import setup
     args, state = setup(tmp_path)
-    args.recipe = ROOT / 'recipes/dw4i2_v2timer_rebal_seed2cold.json'
+    args.recipe = ROOT / 'recipes/dw4i2_v2timer_clean_old10.json'
     args.alternate_recipe = ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
     args.b_init = tmp_path / 'gptbc.pt'
     args.b_init.write_bytes(b'gptbc')
     pipeline = queue.TrainingPipeline(args, state)
     monkeypatch.setattr(pipeline.executor, 'submit', lambda *a: Future())
+
+    def pack_key(recipe):
+        return pack_path(recipe['data'], pack_options(**training_row_options(recipe)))
     try:
         for round_index in (1, 2):
             state['round'] = round_index
@@ -99,11 +103,13 @@ def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tm
         a = load_recipe(Path(first['recipe']), 'training')
         b_path = Path(first['recipe']).with_name('recipe_b.json')
         b = load_recipe(b_path, 'training')
-        assert a['init'] is None and a['epochs'] == 12
-        assert a['source_weight']['llm_demo'] == 0
-        assert b['init'] == str(args.b_init) and b['epochs'] == 8
-        assert state['b_student'] == str(args.b_init)
+        assert a['init'] == b['init'] == str(args.b_init)
+        assert a['epochs'] == b['epochs'] == 8
+        assert a['source_weight'] == dict(default=.1, llm_demo=1., teacher_r52=1., teacher_gptbc=1.)
         assert b['source_weight'] == dict(default=0., llm_demo=1., teacher_r52=1., teacher_gptbc=1.)
+        assert {key for key in a.keys() | b.keys() if a.get(key) != b.get(key)} == {'source_weight'}
+        assert pack_key(a) == pack_key(b)
+        assert state['b_student'] == str(args.b_init)
         assert first['training_seeds'] == [1, 2]
         parent = Path(first['recipe']).parent / 'seeds/seed_000002/student/model.pt'
         parent.parent.mkdir(parents=True)
@@ -111,15 +117,21 @@ def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tm
         marker = parent.parent.parent / 'trained.json'
         marker.write_text(json.dumps(dict(status='trained', model=str(parent))))
         next_b = pipeline._b_recipe(second)
-        assert next_b['init'] == str(parent) and next_b['epochs'] == 4
+        next_a = pipeline._a_recipe(second)
+        assert next_a['init'] == next_b['init'] == str(parent)
+        assert next_a['epochs'] == next_b['epochs'] == 4
+        assert {key for key in next_a.keys() | next_b.keys()
+                if next_a.get(key) != next_b.get(key)} == {'source_weight'}
+        assert pack_key(next_a) == pack_key(next_b)
         for job in state['training_jobs']:
             job['status'] = 'done'
         restored = queue.TrainingPipeline(args, state)
         restored.executor.shutdown(wait=True)
         assert state['b_student'] == str(parent) and state['b_round'] == 1
         assert gate.read(args.state)['b_student'] == str(parent)
-        print('recipe_b.json:', json.dumps({k:b[k] for k in ('init', 'epochs', 'source_weight')}))
-        print('next recipe_b.json:', json.dumps({k:next_b[k] for k in ('init', 'epochs', 'source_weight')}))
+        for name, recipe in (('recipe.json', a), ('recipe_b.json', b),
+                             ('next recipe.json', next_a), ('next recipe_b.json', next_b)):
+            print(name + ':', json.dumps({k: recipe[k] for k in ('init', 'epochs', 'source_weight')}))
     finally:
         pipeline.executor.shutdown(wait=True)
 

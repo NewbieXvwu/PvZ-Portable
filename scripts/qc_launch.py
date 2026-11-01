@@ -18,7 +18,7 @@ def command(args):
         '--rounds', str(args.rounds), '--workers', str(args.workers), '--min-eval-units', '4',
         '--python', str(python), '--round-games', '768', '--games-per-group', '48',
         '--manifest', str(worktree / 'artifacts/stage4/multiplier_panel.json'),
-        '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer_rebal_seed2cold.json'),
+        '--recipe', str(args.recipe or worktree / 'recipes/dw4i2_v2timer_clean_old10.json'),
         '--alternate-recipe', str(args.alternate_recipe or worktree / 'recipes/dw4i2_v2timer_clean_b.json'),
         *(['--b-init', str(args.b_init)] if args.b_init is not None else []),
         *(['--b-initial-epochs', str(args.b_initial_epochs)] if args.b_initial_epochs is not None else []),

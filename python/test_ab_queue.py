@@ -106,7 +106,8 @@ def test_recipes_share_a_pack_and_pipeline_freezes_each_b_variant(tmp_path):
         assert training_row_options(a) == training_row_options(b)
         pipeline = queue.TrainingPipeline.__new__(queue.TrainingPipeline)
         pipeline.args = SimpleNamespace(recipe=ROOT / 'recipes/dw4i2_v2timer.json',
-            alternate_recipe=path, candidates_per_recipe=2, state=tmp_path / 'state.json', log=tmp_path / 'log')
+            alternate_recipe=path, candidates_per_recipe=2, state=tmp_path / 'state.json',
+            log=tmp_path / 'log', frames=tmp_path / 'frames')
         pipeline.directory = tmp_path / filename
         pipeline.build_workers = 1
         pipeline.state = dict(round=52, log=[], training_jobs=[])
@@ -117,9 +118,9 @@ def test_recipes_share_a_pack_and_pipeline_freezes_each_b_variant(tmp_path):
         pipeline.futures = []
         pipeline.enqueue()
         job = pipeline.state['training_jobs'][0]
-        assert job['training_seeds'] == [1, 2, 3, 4]
-        assert [r['recipe_family'] for r in job['candidate_recipes']] == ['A', 'A', 'B', 'B']
-        frozen = load_recipe(Path(job['candidate_recipes'][2]['recipe']))
+        assert job['training_seeds'] == [1, 2]
+        assert [r['recipe_family'] for r in job['candidate_recipes']] == ['A', 'B']
+        frozen = load_recipe(Path(job['candidate_recipes'][1]['recipe']))
         assert frozen[field] == value and pipeline._plan_build.call_count == 1
     for field, value in [('history_l7_keep', -1), ('deck_weight_cap', 0), ('deck_weight_cap', 1.1)]:
         with pytest.raises(ValueError):
