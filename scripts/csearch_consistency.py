@@ -46,6 +46,8 @@ def parser():
     p.add_argument("--budget", choices=("prod", "deep"), default="prod",
                    help="prod = the production teacher budget; deep = the kind of larger budget the "
                         "native search exists to afford (samples 6, verify 15, top-4, horizon 5000)")
+    p.add_argument("--combo-candidates", type=int, default=0, help="enable --combo-candidates k")
+    p.add_argument("--save-candidates", type=int, default=0, help="enable --save-candidates k")
     p.add_argument("--out", type=Path, help="write the per-decision rows here")
     return p
 
@@ -69,9 +71,9 @@ def main() -> None:
     deep = args.budget == "deep"
     teacher = argparse.Namespace(
         per_card=1, student_candidates=args.student_candidates if args.student_candidates is not None
-        else (4 if deep else 2), save_candidates=0, save_share=0.5, save_max_wait=1800,
+        else (4 if deep else 2), save_candidates=args.save_candidates, save_share=0.5, save_max_wait=1800,
         save_chunk=300, save_interval=600, samples=6 if deep else 3, halving=True, halving_first_samples=1,
-        combo_candidates=0, combo_max_wait=5000, margin_relative=0.0, horizon=2500,
+        combo_candidates=args.combo_candidates, combo_max_wait=5000, margin_relative=0.0, horizon=2500,
         verify_samples=9, min_gap=300, rollout_sim_skip=61, leaf_probe=None, leaf_probe_limit=0,
         task_id=f"csearch_L{args.level}")
     rows, compared, agreed = [], 0, 0
@@ -98,7 +100,8 @@ def main() -> None:
             stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
                      "student_candidate_added": 0, "student_candidate_best": 0,
                      "student_candidate_override": 0, "combo_candidate_added": 0,
-                     "combo_upgrades": 0, "pending_upgrade": None, "sun_reserve": 0}
+                     "combo_upgrades": 0, "combo_held": 0, "save_probes": 0, "save_overrides": 0,
+                     "save_wait_ticks": 0, "pending_upgrade": None, "sun_reserve": 0}
             fast_state, steps = {}, 0
             while not obs["terminal"] and steps < args.max_steps and compared < args.decisions * len(seeds):
                 action = search_play._fast_action(obs, fast_state, env)
@@ -165,7 +168,9 @@ def main() -> None:
                     # Structural counters must match exactly: they show the halving rounds and the
                     # candidate set ran identically, which the final action alone would hide.
                     counters = ("halving_candidates", "halving_rollouts", "halving_selected_lanes",
-                                "overrides", "student_candidate_added")
+                                "overrides", "student_candidate_added", "combo_candidate_added",
+                                "combo_upgrades", "combo_held", "save_probes", "save_overrides",
+                                "save_wait_ticks")
                     counters_same = all(python_stats.get(name, 0) == cpp_stats.get(name, 0) for name in counters)
                     if not counters_same:
                         print(f"{seed} step {steps} COUNTERS differ " + ", ".join(
