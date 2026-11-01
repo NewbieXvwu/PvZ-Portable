@@ -560,6 +560,11 @@ def main() -> None:
     p.add_argument("--prune", action="store_true",
                    help="delete the packs of a label subset this one supersedes")
     args = p.parse_args()
+    # Long label lists exceed Linux's 128 KiB single-argument limit; '@file' reads them from a file.
+    for name in ('labels', 'label_weight'):
+        value = getattr(args, name)
+        if value.startswith('@'):
+            setattr(args, name, Path(value[1:]).read_text().strip())
     label_weight = {k: float(v) for k, v in (kv.split("=") for kv in args.label_weight.split(",") if kv)}
     results = [int(value) for value in args.llm_demo_results.split(',')]
     options = pack_options(args.labels.split(","), args.wait_keep, args.obs, args.cells, args.aux_horizon,

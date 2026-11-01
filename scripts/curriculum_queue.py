@@ -1044,6 +1044,20 @@ def pack_labels(state: dict, extra: str = '') -> list[str]:
     return sorted(labels)
 
 
+def _argument_file(frames: Path, value: str) -> str:
+    """Pass long values as '@file': one argv string is capped at 128 KiB on Linux."""
+    if len(value) < 60000:
+        return value
+    import hashlib
+    path = frames / '.pack_args' / f'{hashlib.sha1(value.encode()).hexdigest()[:16]}.txt'
+    if not path.is_file():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temporary = path.with_suffix('.building')
+        temporary.write_text(value)
+        temporary.replace(path)
+    return '@' + str(path)
+
+
 def pack_command(args, labels: list[str]) -> list[str]:
     """Pack the same row options the trainer resolves from this recipe."""
     recipe = load_recipe(args.recipe, 'training')
@@ -1052,7 +1066,7 @@ def pack_command(args, labels: list[str]) -> list[str]:
     options = pack_options(**row_options)
     python = str(args.python)
     return [python, str(ROOT / 'scripts/pack_training_rows.py'),
-            '--data', str(args.frames), '--labels', ','.join(sorted(labels)),
+            '--data', str(args.frames), '--labels', _argument_file(args.frames, ','.join(sorted(labels))),
             *pack_flags(options), '--precompute-workers', str(recipe['precompute_workers']),
             '--cache-dir', str(recipe['cache_dir'] or (args.frames / '.feature_cache')), '--prune']
 
