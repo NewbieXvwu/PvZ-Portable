@@ -58,6 +58,9 @@ NOOP = {"type": "wait", "ticks": 60, "until": "timeout"}
 # The search overrides the student only when the best candidate beats it by more than this. It was
 # --margin, set to 0.02 in all 201 run configurations (task33 audit); a constant now, not a flag.
 MARGIN = 0.02
+# Floor of the opt-in relative override margin (--margin-relative).  The default path keeps the
+# absolute MARGIN above, bit for bit; this floor only applies when the relative margin is enabled.
+MARGIN_FLOOR = 0.001
 # Action budget of one game: --max-actions was 3000 in every run configuration that recorded one.
 MAX_ACTIONS = 3000
 
@@ -74,6 +77,19 @@ def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str
     from pvz_constants import background_for_level
     roof = background_for_level(int(task["level"])) in ROOF_BACKGROUNDS
     return roof_value_path if roof else value_path
+
+
+def _margin_threshold(args, best_value: float) -> float:
+    """The override margin: absolute MARGIN by default, opt-in relative otherwise.
+
+    ``--margin-relative R`` uses ``max(MARGIN_FLOOR, R * best_value)``.  With the default
+    ``R = 0`` this returns MARGIN unchanged, so the historical decision rule is preserved
+    exactly (same float, same comparison).
+    """
+    relative = getattr(args, "margin_relative", 0.0) or 0.0
+    if relative <= 0:
+        return MARGIN
+    return max(MARGIN_FLOOR, relative * float(best_value))
 
 
 def _terrain_policy(student_path: str, gpt_path: str | None, task: dict) -> str:
@@ -413,7 +429,7 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     (never fewer than two, and always the student's own choice, because the override rule compares
     against it) and doubles their futures (k = 1, then k = 2..3, ... up to ``--samples``). Survivors
     have always been scored on exactly the same futures, so comparing them stays a common-random-numbers
-    comparison. The decision rule (override only by more than ``MARGIN``) is unchanged. With 8
+    comparison. The decision rule (override only by more than the margin) is unchanged. With 8
     candidates and 4 futures this is 8 + 4 + 2x2 = 16 rollouts instead of 32.
     """
     keys = [json.dumps(c, sort_keys=True) for c in candidates]
@@ -423,7 +439,9 @@ def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_ac
     stats["halving_candidates"] = stats.get("halving_candidates", 0) + len(candidates)
     selected_lanes = 0
     done = 0                                 # futures every survivor has been scored on
-    target = 1
+    # --halving-first-samples N: round 1 gives every candidate N futures before the first cut.
+    # N = 1 is the historical behaviour; later rounds double, exactly as before.
+    target = min(args.samples, max(1, int(getattr(args, "halving_first_samples", 1))))
     while True:
         target = min(target, args.samples)
         order = [(i, k) for i in alive for k in range(done, target)]
@@ -509,7 +527,7 @@ def _save_probe(env, obs: dict, root: int, packet: int, cost: int, args, decisio
 
 def _save_plan(env, obs: dict, root: int, candidates: list[dict], totals: list[float], args,
                decision_seed: int, stats: dict) -> dict | None:
-    """The best "save up and plant it" plan, when it beats every current candidate by MARGIN."""
+    """The best "save up and plant it" plan, when it beats every current candidate by the margin."""
     if not getattr(args, 'save_candidates', 0):
         return None
     present = {candidate.get('packet') for candidate in candidates if candidate['type'] == 'plant'}
@@ -545,7 +563,7 @@ def _save_plan(env, obs: dict, root: int, candidates: list[dict], totals: list[f
     if not plans or not finite:
         return None
     plan = max(plans, key=lambda item: item['value'])
-    if plan['value'] > max(finite) + MARGIN:
+    if plan['value'] > max(finite) + _margin_threshold(args, max(finite)):
         stats['save_overrides'] = stats.get('save_overrides', 0) + 1
         stats['save_wait_ticks'] = stats.get('save_wait_ticks', 0) + plan['ticks']
         return plan
@@ -563,7 +581,8 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
             _probe_decision(args, obs, candidates, totals, wait, decision_seed, policy_action,
                             best, policy_index)
             return wait
-    before = fresh or (best != policy_index and totals[best] - totals[policy_index] > MARGIN)
+    before = fresh or (best != policy_index
+                       and totals[best] - totals[policy_index] > _margin_threshold(args, totals[best]))
     samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
     if fresh:
         counts = [0] * len(candidates)
@@ -589,7 +608,8 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
         stats["last_verification"] = {
             "samples": samples, "student": policy_action, "challenger": candidates[best],
             "before_values": prior, "after_values": [totals[policy_index], totals[best]],
-            "before_override": True, "after_override": totals[best] - totals[policy_index] > MARGIN,
+            "before_override": True,
+            "after_override": totals[best] - totals[policy_index] > _margin_threshold(args, totals[best]),
             "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
             "mode": "fresh" if fresh else "reproduced",
             "seconds": time.perf_counter() - started}
@@ -597,11 +617,13 @@ def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: 
     # full search report it; the override counter below is the subset that changed the action.
     if json.dumps(candidates[best], sort_keys=True) in (stats.get("last_student_keys") or ()):
         stats["student_candidate_best"] = stats.get("student_candidate_best", 0) + 1
-        if best != policy_index and totals[best] - totals[policy_index] > MARGIN:
+        if (best != policy_index
+                and totals[best] - totals[policy_index] > _margin_threshold(args, totals[best])):
             stats["student_candidate_override"] = stats.get("student_candidate_override", 0) + 1
     stats["last_targets"] = list(zip(candidates, totals))
     stats["last_best"] = candidates[best]
-    if totals[best] - totals[policy_index] > MARGIN and best != policy_index:
+    if (totals[best] - totals[policy_index] > _margin_threshold(args, totals[best])
+            and best != policy_index):
         stats["overrides"] += 1
         stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
         chosen = candidates[best]
@@ -998,6 +1020,11 @@ def parser():
     p.add_argument("--save-interval", type=int, default=600,
                    help="minimum ticks between two probes of the same card")
     p.add_argument("--samples", type=int, default=3)
+    p.add_argument("--halving-first-samples", type=int, default=1,
+                   help="futures every candidate gets in the first --halving round (default 1 = the old "
+                        "behaviour); later rounds double, clamped to --samples")
+    p.add_argument("--margin-relative", type=float, default=0.0,
+                   help="off (0) = the absolute MARGIN 0.02; R>0 = max(0.001, R * best candidate value)")
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
@@ -1028,6 +1055,10 @@ def main() -> None:
     args = p.parse_args()
     if args.verify_samples < 0:
         p.error("--verify-samples must be nonnegative")
+    if args.halving_first_samples < 1:
+        p.error("--halving-first-samples must be positive")
+    if args.margin_relative < 0:
+        p.error("--margin-relative must be nonnegative (0 = off)")
     if args.student_candidates < 0:
         p.error("--student-candidates must be nonnegative")
     if args.save_candidates < 0:

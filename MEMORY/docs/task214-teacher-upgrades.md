@@ -21,3 +21,9 @@
 | 5 | 只给减半幸存者延长到 5000–7500 tick（不要全候选） | rollout 约 +20–30%；优先级低于 1–3（2500 已能看到 42/44/41 的收益） |
 
 数据与脚本：`/tmp/task214/{audit,phase3,phase3b,phase4}.jsonl`（本机临时；未入 git）。引擎 `~/pvz-mac-collect/build/pvz-portable`，学生 round_52、v5、branch1，单进程 nice 19，无窗口。
+
+## task214b 实现（2026-11-01）
+- `scripts/search_play.py` 新增 `--halving-first-samples N`（默认 1；首轮每候选 N 个未来，之后照旧翻倍）和 `--margin-relative R`（默认 0 = 绝对 0.02；R>0 时门槛 `max(0.001, R×当前最好值)`）。默认路径逐位不变，新逻辑只在开关启用时进入。
+- save probe 推荐：`--save-candidates 2 --save-share 0.5 --save-interval 600`（先 1–2 张、600 tick 一次；L29 贵卡在阳光 150–300 时最需要），再配上面的 `--halving-first-samples 2 --margin-relative 0.1` 做对照臂。
+- 对照脚本 `scripts/teacher_upgrade_ab.py`：只调用现有 `search_play.py` 入口，输出每局 won / final_wave / `upgrade_planted`。Mac 冒烟（L29a、seed 3237972681、生产老师参数）1 局 4s，输在 wave 9 / tick 25,772，40–47 与 22/35/39 全 0，与 0/8 一致。
+- 同一决策点复核：默认选 spiker(4,5) 0.00477；`--halving-first-samples 2` 把 lane 20→28 但选点不变；`--margin-relative 0.1` 触发 9 个复核未来，忧郁菇 42 的 0.00768 复核后降到 0.00492（policy 0.00425），仍不 override——首轮加样本只降噪，必须同时调 margin 才可能改选。
