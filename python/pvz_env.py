@@ -63,10 +63,18 @@ def _canonical_events(events: Any) -> Any:
 
 
 def search_action_token(action: dict[str, Any]) -> str:
-    """Encode a ``SEARCH`` target: ``W`` for the fixed no-op wait, else the branch-action form."""
+    """Encode a ``SEARCH`` target: ``W`` for the fixed no-op wait, else the branch-action form.
+
+    A --combo-candidates plan carries the upgrade packet it will force as a trailing field, so the
+    two steps of one plan stay one candidate on both sides of the wire.
+    """
     if isinstance(action, dict) and action.get("type") == "wait":
         return "W"
-    return branch_action_token(action)
+    token = branch_action_token(action)
+    combo = action.get("combo") if isinstance(action, dict) else None
+    if combo:
+        token += f":{int(combo['upgrade_packet'])}"
+    return token
 
 
 def branch_action_token(action: dict[str, Any]) -> str:
@@ -840,7 +848,10 @@ class PvZEnv:
                horizon: int, per_card: int, student_candidates: int, samples: int, verify_samples: int,
                halving: bool, halving_first_samples: int, margin_relative: float, min_gap: int,
                last_search_tick: int, previous_tick: int = -1, previous_plant: bool = False,
-               reserve: int = 0, sim_skip: int = 61, student_history=None, demo_action=None) -> dict:
+               reserve: int = 0, sim_skip: int = 61, student_history=None, demo_action=None,
+               combo_candidates: int = 0, combo_max_wait: int = 0, save_candidates: int = 0,
+               save_share: float = 0.5, save_interval: int = 0, save_chunk: int = 300,
+               save_max_wait: int = 1800) -> dict:
         """Run one whole teacher decision (SEARCH) on the snapshot and return its action.
 
         The engine owns the candidate set, the resampled futures, the halving rounds, the
@@ -869,7 +880,9 @@ class PvZEnv:
             f"{int(bool(previous_plant))} {int(sim_skip)} {int(horizon)} {int(per_card)} "
             f"{int(student_candidates)} {int(samples)} {int(verify_samples)} {int(bool(halving))} "
             f"{int(halving_first_samples)} {margin_relative:.17g} {int(min_gap)} {int(last_search_tick)} "
-            f"{int(reserve)} {token} {demo} {history_start} {len(history)} {samples_text}".rstrip()
+            f"{int(reserve)} {int(combo_candidates)} {int(combo_max_wait)} {int(save_candidates)} "
+            f"{save_share:.17g} {int(save_interval)} {int(save_chunk)} {int(save_max_wait)} "
+            f"{token} {demo} {history_start} {len(history)} {samples_text}".rstrip()
             + self._student_options(student_history, None))
         if not response.get("ok"):
             raise RuntimeError(f"simulator rejected SEARCH (binary older than this wrapper?): {response}")
