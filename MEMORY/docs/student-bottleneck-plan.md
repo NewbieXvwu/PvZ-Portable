@@ -1227,3 +1227,5 @@
 - 11-01 10:05 用户：Qoder 的 DeepSeek 免费期结束，改用 **dsh（DeepSeek Harness，OpenCode Go 提供商的 deepseek-v4.1-flash）**，仅装在 Mac。主控摸清用法：headless 模式一轮一任务（`--json` 事件流、`--session-id` 续接），密钥由包装脚本 `~/pvz-dsh/dshx` 从 `~/.dsh/.credentials.yaml` 导出、不回显；任务启动器 `~/pvz-dsh/dshjob`。第一件 dsh 任务 task212（Mac 工作树 asib，基于 origin/maccollect）：A 槽改为干净新线的兄弟——同一初始化（上一轮 B）、同 4 epoch、同数据，只把旧数据行权重 0 → 0.1，A−B 即“掺 10% 旧数据”的单变量效果；用户已同意。Mac 上已导入的 GPT 交回 zip 已删。
 
 - 11-01 10:40 **task212 上线**（dsh 第一件任务，asib c94874a2；主控审 diff 后 systemd-run `deploy26.py --revision origin/asib`，10:38:43 组边界切换，看门狗在）：A = `dw4i2_v2timer_clean_old10`（与 B 同一初始化 = 上一轮 B、同 4 epoch、同数据，只把旧行 `source_weight.default` 0 → 0.1），B = clean_b；谱系只沿 B。r78 起每轮 A−B = “掺 10% 旧数据”的单变量效果。dsh 任务从派出到推送约 25 分钟，196 个工具调用。
+
+- 11-01 11:00 用户装了 dsh 的 TUI（`dst` = dsh-tui 0.17.0）。主控把 dsh-tui 配置的默认模型从 deepseek-official/deepseek-flash 改为 opencode-go/deepseek-v4.1-flash、默认权限 danger-full-access（备份 `.bak-20261101`），在 tmux 里试跑应答正常。以后多轮代理用 `dst` 开在 tmux 会话里（`dst-<任务名>`），一次性任务仍可用 headless 的 `~/pvz-dsh/dshjob`。
