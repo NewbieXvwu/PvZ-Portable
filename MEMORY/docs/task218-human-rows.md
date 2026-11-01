@@ -25,3 +25,7 @@ rm -rf "$HOME/pvz-logs/task218/mac197/human_raw"
 ```
 
 后续新的人类录制继续用最后一条 export-batch 命令导入相应原档根目录即可，同标签沿用现有批次机制，新建训练作业会自动纳入。导出读取已验证的数值帧，不需要再 verify 或重放。
+
+## task218b：训练种子 int32 范围
+
+humanrows 原基线未包含 userpick 的随机录制入口，本次合入已有 task209 实现，`record --level` 随机种子改用 31 位。`export` 仅在训练副本里将 ≥2^31 的种子映射为 `seed & 0x7fffffff`，目录与 `task.seed` 一致，并记录 `task.original_seed`。批量导出用同一映射寻找现有副本，能跳过主控已经修正的副本。原档及其重放种子不改。相关 5 项小测试通过，覆盖 2^31、3174639343 和最大 uint32，未启动游戏或窗口，台式机生产未动。

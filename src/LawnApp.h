@@ -109,6 +109,7 @@ struct EnvironmentTaskSpec
 	// Conveyor levels only: leave the engine's own seed bank (10 empty packets) in place and
 	// let Challenge::UpdateConveyorBelt deal cards, instead of writing the task deck into it.
 	bool originalConveyorStart = false;
+	bool userPick = false;
 	EnvironmentFogObservation fogObservation = EnvironmentFogObservation::None;
 };
 

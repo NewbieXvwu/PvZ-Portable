@@ -10,7 +10,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
-from human_demo import Recorder, export, replay, verify
+from human_demo import Recorder, export, replay, verify, record_user_pick
 from pvz_env import TaskSpec
 from pvz_event_env import EventWaitEnv
 from pvz_frame_store import read_frames
@@ -57,6 +57,38 @@ def test_record_and_demo_start_replay_without_archive_hashes(tmp_path):
     obs, _, _ = replay(env, archive, overrides={1: dict(type='wait', ticks=1)}, save=changed)
     assert obs['tick'] == 1
     assert replay(env, changed)[0]['tick'] == 1
+
+
+def test_user_pick_records_slot_order_and_replays_fixed_deck(tmp_path):
+    selected = [7, 0, 1, 2, 3, 4, 5, 6, 17, 27]
+
+    class DemoEnv:
+        def begin_demo(self):
+            pass
+
+        def reset(self, *, deck, task):
+            self.task = task
+            self.deck = deck
+            return dict(tick=0, wave=0, wave_count=20, result=0, terminal=False, sun=50,
+                        loadout_context={'zombie_roster': []}), dict(deck=selected)
+
+    env = DemoEnv()
+    recorder = record_user_pick(env, tmp_path, 31, 209)
+    assert env.task.loadout_mode == 'user_pick'
+    assert env.task.fog_observation == 'human_v2'
+    assert env.task.profile.seed_slot_count == 10
+    assert not env.task.profile.imitater_owned
+    assert not env.deck
+    recorder.close()
+    meta = json.loads((recorder.archive / 'meta.json').read_text())
+    assert meta['task']['id'].startswith('user_l31_')
+    assert meta['task']['deck'] == selected
+    assert meta['label_source'] == 'human'
+    assert meta['environment_task']['loadout_mode'] == 'fixed'
+    assert (recorder.archive / 'frames.npz').is_file()
+    replay(env, recorder.archive)
+    assert env.task.loadout_mode == 'fixed'
+    assert env.deck == selected
 
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')

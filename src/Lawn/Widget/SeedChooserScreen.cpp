@@ -199,7 +199,8 @@ SeedChooserScreen::SeedChooserScreen()
 		aStarFruit.mSeedIndexInBank = 0;
 		mSeedsInBank++;
 	}
-	if (mApp->IsAdventureMode() && !mApp->IsFirstTimeAdventureMode())
+	if (mApp->IsAdventureMode() && !mApp->IsFirstTimeAdventureMode() &&
+		!(mApp->mEnvironmentMode && mApp->mEnvironmentTaskSpec.userPick))
 		CrazyDavePickSeeds();
 	UpdateImitaterButton();
 }

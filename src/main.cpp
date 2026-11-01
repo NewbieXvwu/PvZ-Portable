@@ -570,6 +570,7 @@ static void RunEnvironment(LawnApp* app)
 		EnvironmentWaitEvents::Result waitResult;
 		int snapshotId = 0;
 		bool hasSubsteps = false;
+		bool userPickedDeck = false;
 		int previousTick = 0;
 		std::vector<std::pair<int, uint32_t>> substeps;
 		if (command == "DEMO_BEGIN")
@@ -1068,6 +1069,7 @@ static void RunEnvironment(LawnApp* app)
 				while (input >> extra)
 				{
 					if (extra == "conveyor_original") task.originalConveyorStart = true;
+					else if (extra == "user_pick") task.userPick = true;
 					// fog_human keeps the pre-task66 cell rule so old archives replay byte for
 					// byte; fog_human_v2 is the calibrated opacity rule (task66).
 					else if (extra == "fog_human") task.fogObservation = EnvironmentFogObservation::Cell;
@@ -1077,7 +1079,7 @@ static void RunEnvironment(LawnApp* app)
 					else parsed = false;
 				}
 			}
-			if (parsed && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&
+			if (parsed && (!task.userPick || visible) && (imitater == 0 || imitater == 1) && (firstAid == 0 || firstAid == 1) &&
 				(poolCleaner == 0 || poolCleaner == 1) && (roofCleaner == 0 || roofCleaner == 1))
 			{
 				task.playthrough = playthrough;
@@ -1090,6 +1092,7 @@ static void RunEnvironment(LawnApp* app)
 				for (int value : upgrades) task.ownedUpgradePlants.push_back(static_cast<SeedType>(value));
 				for (int value : forced) task.forcedSeeds.push_back(static_cast<SeedType>(value));
 				ok = app->EnvironmentReset(level, seed, deck, task);
+				userPickedDeck = ok && task.userPick;
 			}
 			if (ok)
 			{
@@ -1404,6 +1407,13 @@ static void RunEnvironment(LawnApp* app)
 		const std::string observation = app->EnvironmentObservation(privileged);
 		observationSeconds += std::chrono::duration<double>(std::chrono::steady_clock::now() - observationStart).count();
 		std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":" << (ok ? "true" : "false") << ",\"observation\":" << observation;
+		if (userPickedDeck)
+		{
+			std::cout << ",\"deck\":[";
+			for (int i = 0; i < app->mBoard->mSeedBank->mNumPackets; ++i)
+				std::cout << (i ? "," : "") << static_cast<int>(app->mBoard->mSeedBank->mSeedPackets[i].mPacketType);
+			std::cout << ']';
+		}
 		if (demo && app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';
 		if (hasWaitResult)
 		{
