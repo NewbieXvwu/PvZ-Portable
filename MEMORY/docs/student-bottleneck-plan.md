@@ -1229,3 +1229,5 @@
 - 11-01 10:40 **task212 上线**（dsh 第一件任务，asib c94874a2；主控审 diff 后 systemd-run `deploy26.py --revision origin/asib`，10:38:43 组边界切换，看门狗在）：A = `dw4i2_v2timer_clean_old10`（与 B 同一初始化 = 上一轮 B、同 4 epoch、同数据，只把旧行 `source_weight.default` 0 → 0.1），B = clean_b；谱系只沿 B。r78 起每轮 A−B = “掺 10% 旧数据”的单变量效果。dsh 任务从派出到推送约 25 分钟，196 个工具调用。
 
 - 11-01 11:00 用户装了 dsh 的 TUI（`dst` = dsh-tui 0.17.0）。主控把 dsh-tui 配置的默认模型从 deepseek-official/deepseek-flash 改为 opencode-go/deepseek-v4.1-flash、默认权限 danger-full-access（备份 `.bak-20261101`），在 tmux 里试跑应答正常。以后多轮代理用 `dst` 开在 tmux 会话里（`dst-<任务名>`），一次性任务仍可用 headless 的 `~/pvz-dsh/dshjob`。
+
+- 11-01 13:05 **task208 好卡组候选完成**（gooddecks）：40 个普通选卡关、1308 套 GPT 1.0 倍胜局卡组，按常识剔除废卡 + 必须回答本关威胁 + 套间至少差 3 张，每关取 ≤3 套，用生产现行老师从头 8 种子补测。第一套老师胜率：白天 96%、夜间 95%、雾 98%（全部 8 关 ≥6/8），泳池 62%（4/8 关达标），屋顶 73%（5/8 关达标）。**还没有合格卡组的关**（最好的一套 <6/8）：泳池 L22（1/8）、L23（4/8）、L27（4/8）、L29（3/8），屋顶 L44（3/8）、L47（4/8）、L49（2/8）。用户已录 L28、L29（都赢）；task213 正在用老师验收这两套（≥6/8 才进基准）。下一步请用户优先录上述 7 关。
