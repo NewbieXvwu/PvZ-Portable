@@ -19,7 +19,7 @@ sp._W["fast"] = SimpleNamespace(obs="v1")   # the rollouts read the observation 
 def _args(**overrides):
     base = dict(samples=1, horizon=2500, verify_samples=0, save_candidates=0, halving=True,
                 halving_first_samples=1, margin_relative=0.0, combo_candidates=0,
-                combo_max_wait=2500, min_gap=0, per_card=1)
+                combo_max_wait=2500, combo_buffer=25, combo_interval=0, min_gap=0, per_card=1)
     base.update(overrides)
     return SimpleNamespace(**base)
 
@@ -116,6 +116,32 @@ class SearchCandidateTest(unittest.TestCase):
         self.assertEqual(stats["combo_candidate_added"], 1)
 
 
+class ReserveTest(unittest.TestCase):
+    def _search(self, sun, costs, combo_cost):
+        args = _args()
+        env = FakeEnv()
+        env.static_scores = lambda root, actions, income: [0.1] * len(actions)
+        obs = {"tick": 0, "sun": sun, "sun_income_rate": 1.0,
+               "packets": [{"index": i, "type": 0, "cost": cost} for i, cost in enumerate(costs)],
+               "legal_actions": {"plants": [{"packet": i, "col": i, "row": 0}
+                                            for i in range(len(costs))]}, "plants": []}
+        stats = {"searched": 0, "overrides": 0, "override_kinds": {}, "last_search_tick": -10 ** 9,
+                 "student_candidate_added": 0, "combo_candidate_added": 0}
+        captured = {}
+
+        def halving(env, obs, root, candidates, policy, key, args, seed, stats):
+            captured["candidates"] = candidates
+            return candidates[0]
+
+        with patch.object(sp, "_halving_choice", side_effect=halving):
+            sp._search(env, obs, sp.NOOP, args, 5, stats)
+        return [c["packet"] for c in captured.get("candidates", []) if c["type"] == "plant"]
+
+    def test_no_sun_is_withheld_while_a_plan_is_pending(self):
+        # task214d: a hard bank made the night economy deadlock, so every card stays payable
+        self.assertEqual(self._search(30, [0, 25, 50], 100), [0, 1, 2])
+
+
 class ComboRolloutTest(unittest.TestCase):
     def test_waits_for_the_upgrade_and_plants_it_on_the_base_cell(self):
         env = FakeEnv()
@@ -156,23 +182,36 @@ class ForcedUpgradeTest(unittest.TestCase):
     def test_fires_on_the_base_cell_only(self):
         stats = self._stats()
         obs = self._obs([{"type": 7, "col": 4, "row": 2}], [(40, 3, 2), (40, 4, 2)])
-        self.assertEqual(sp._forced_upgrade(obs, stats, 2500),
+        obs["packets"] = [{"index": 40, "cost": 100}]
+        obs["sun"] = 200
+        self.assertEqual(sp._forced_upgrade(obs, stats, 2500, 25),
                          {"type": "plant", "packet": 40, "col": 4, "row": 2})
         self.assertIsNone(stats["pending_upgrade"])
 
     def test_waits_while_not_affordable(self):
         self.assertIsNone(sp._forced_upgrade(
-            self._obs([{"type": 7, "col": 4, "row": 2}], []), self._stats(), 2500))
+            self._obs([{"type": 7, "col": 4, "row": 2}], []), self._stats(), 2500, 25))
+
+    def test_waits_when_the_buffer_would_be_eaten(self):
+        stats = self._stats()
+        obs = self._obs([{"type": 7, "col": 4, "row": 2}], [(40, 4, 2)])
+        obs["packets"] = [{"index": 40, "cost": 100}]
+        obs["sun"] = 110
+        self.assertIsNone(sp._forced_upgrade(obs, stats, 2500, 25))
+        self.assertIsNotNone(stats["pending_upgrade"])
 
     def test_drops_the_plan_when_the_base_died(self):
         stats = self._stats()
-        self.assertIsNone(sp._forced_upgrade(self._obs([], [(40, 4, 2)]), stats, 2500))
+        obs = self._obs([], [(40, 4, 2)])
+        obs["packets"], obs["sun"] = [{"index": 40, "cost": 100}], 300
+        self.assertIsNone(sp._forced_upgrade(obs, stats, 2500, 25))
         self.assertIsNone(stats["pending_upgrade"])
 
     def test_drops_the_plan_after_the_deadline(self):
         stats = self._stats(expires=150)
-        self.assertIsNone(sp._forced_upgrade(
-            self._obs([{"type": 7, "col": 4, "row": 2}], [(40, 4, 2)], tick=200), stats, 2500))
+        obs = self._obs([{"type": 7, "col": 4, "row": 2}], [(40, 4, 2)], tick=200)
+        obs["packets"], obs["sun"] = [{"index": 40, "cost": 100}], 300
+        self.assertIsNone(sp._forced_upgrade(obs, stats, 2500, 25))
         self.assertIsNone(stats["pending_upgrade"])
 
 

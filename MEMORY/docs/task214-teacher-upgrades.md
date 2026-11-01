@@ -41,3 +41,31 @@
 ## 升级局面 → 叶值网训练格式
 - `scripts/prepare_upgrade_value_rows.py`：从人类存档的升级决策点出发，每点分 `upgrade`/`wait` 两臂，各跑到 horizon 取叶帧，用 v5 编码器写 `board/scalars/label`（label = 继续到终局的胜负），`rows.pt` + `manifest.json`，不训练。
 - 冒烟（L29b 1 个决策点）：2 行，`board [2,104,6,10]`，`scalars [2,119]`，两臂皆胜；3 份存档共 62 个升级决策点，全量应放台式机跑。
+
+## task214d：L33（雾）组合臂 0/8 的原因与修法
+台式机 8/8 输、平均 8.8 波、每局 14 秒，save 臂 8/8 过；本机同种子同卡组复现（2 局 8 波、`combo_upgrades 0`）。
+
+**根因不是雾/GPT 路由**（两臂同一路由），而是组合臂"留钱"实现把自己锁死：
+1. 种下底座后把**升级全价**（香蒲 100）压进银行，`_search` 过滤掉一切会让余额低于该值的候选。夜间关开局 50 阳光，第一张睡莲就花光，之后连 25 的阳光菇都付不出，阳光纯靠阳光菇产出 → 银行永远到不了 100，5 秒后计划过期，下一张睡莲又把银行压回去。实测阳光菇 1–6 个（save 臂 10–15）、平均只活到第 8 波。
+2. 每张睡莲都会重新武装一个计划，留钱几乎是常开的，防守被长期抽血。
+
+**修法**（默认开启，属于 bug 修复而非新旋钮默认值变更）：
+- 不再扣银行：升级只在"买完之后仍剩 `--combo-buffer`（默认 25）"时才强制，钱留给最便宜的卡。
+- 新增 `--combo-interval`（默认 600 tick）：两次武装计划之间至少隔 600 tick，避免香蒲刚种下又立刻为下一张留钱。
+
+**验证**：
+| 变体 | 桌面 056 | 桌面 059 | Mac 056/059 |
+|---|---|---|---|
+| 原样（全价银行） | 8 波输 | 8 波输 | —— |
+| `--combo-max-wait 60`（计划秒过） | 20 波胜 | 20 波胜 | —— |
+| 只取消银行、无 buffer/interval | 13 波输 | —— | —— |
+| buffer 25 + interval 600 | 20 波胜（香蒲 4、升级 1） | 20 波胜（升级 1） | 20 波胜 ×2（香蒲 12/14） |
+`--combo-max-wait` 保持 5000；三档都仍是 L33 全胜，save 臂不受影响。
+
+## 结果文件里的 `upgrade_planted`
+写是写了的（`summary.json` 里有，save 臂 43 计数 8），但只躺在 harness 的内存行里写进 `summary.json`；combo 臂全 0 是因为它一次没升级。现在同一批行**另存一份 `upgrades.jsonl`** 到 `--out` 目录，`games.jsonl` 仍是 search_play 的原始输出（含 `planted_types`，可按槽位+卡组回退）。
+
+## 人类示范没进训练数据（干净新线 B）
+- `curriculum_state.pipeline/frames` 下 116418 个存档目录里 `label_source` 只有 `teacher`（66530）与缺失（53749），**`human`/`counterfactual` 0 个**：人类录制从未导入过。
+- 即使导入，`recipes/dw4i2_v2timer_clean_b.json` 的 `source_weight` 是 `default: 0`，只放行 `llm_demo / teacher_r52 / teacher_gptbc`；`source_kind()` 对 `label_source=human` 返回 `human`，落到 `default` → 权重 0，行不进批次、种子划分与关卡平衡。Mac 上 15 份人类存档全部 `verified`，全被这条规则挡在门外。
+- 最小改法（**未部署**）：① 一次 `scripts/human_demo.py export <archive> <frames>` 把已验证存档写进 frames 目录（`seed_<s>/<task_id>/` 布局与管线一致）；② 在 `clean_b` 的 `source_weight` 里加 `"human": 1.0`（已改）。实测 `source_factor`：`human→1.0`、`teacher_r52→1.0`、缺先验的 teacher→0.0，其余不变。

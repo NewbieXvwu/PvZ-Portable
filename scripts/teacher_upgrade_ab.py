@@ -214,6 +214,8 @@ def main():
         rows = _read_games(results, deck)
         summary["groups"][name] = {"args": group_args, "seconds": round(time.time() - started, 1),
                                    "games": rows}
+        # Same rows as a standalone per-game file: --out is often the only thing read afterwards.
+        (out_dir / "upgrades.jsonl").write_text("".join(json.dumps(row) + "\n" for row in rows))
         print(f"[{name}] {len(rows)} game(s) in {time.time() - started:.0f}s", flush=True)
         for row in rows:
             seen = ",".join(str(seed) for seed in row["upgrade_seen"]) or "-"

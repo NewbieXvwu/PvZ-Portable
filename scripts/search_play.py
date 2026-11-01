@@ -259,11 +259,11 @@ def _upgrade_legal(obs: dict, packet: int, col: int, row: int) -> dict | None:
     return None
 
 
-def _forced_upgrade(obs: dict, stats: dict, max_wait: int) -> dict | None:
+def _forced_upgrade(obs: dict, stats: dict, max_wait: int, buffer: int = 25) -> dict | None:
     """Pending --combo-candidates second step: the upgrade once it is legal on the base cell.
 
-    Until the upgrade is affordable the teacher keeps searching with the upgrade's cost held in
-    reserve, so the base still gets its support. The plan is dropped when the base is gone or the
+    Until the upgrade is affordable the teacher keeps searching normally, so the base still gets
+    its support; only --combo-buffer sun has to survive the payment. The plan is dropped when the base is gone or the
     wait budget is spent, so a dead base never blocks the teacher.
     """
     pending = stats.get("pending_upgrade")
@@ -273,13 +273,15 @@ def _forced_upgrade(obs: dict, stats: dict, max_wait: int) -> dict | None:
                   and p.get("type") == pending["base_type"] for p in obs.get("plants") or [])
     if not planted or obs["tick"] > pending["expires"]:
         stats["pending_upgrade"] = None
-        stats["sun_reserve"] = 0
         return None
     action = _upgrade_legal(obs, pending["packet"], pending["col"], pending["row"])
     if action is None:
         return None
+    cost = next((card["cost"] for card in obs.get("packets") or []
+                 if card["index"] == pending["packet"]), 0)
+    if obs.get("sun", 0) - cost < buffer:
+        return None     # affordable, but leave the cheapest card payable: the economy must survive
     stats["pending_upgrade"] = None
-    stats["sun_reserve"] = 0
     return action
 
 
@@ -288,7 +290,7 @@ def _combo_rollout(env, obs: dict, candidate: dict, until_tick: int, root: int, 
     """Score a --combo-candidates plan: plant the base, play on until the upgrade is legal, plant it.
 
     Between the two steps the student keeps acting, exactly like the run (the teacher keeps
-    searching while the plan is pending, with only the upgrade's cost kept in reserve).
+    searching while the plan is pending).
     --combo-max-wait bounds it; if the upgrade never becomes legal (sun, a dead base, the level
     ending) the base-only position is scored instead.
     """
@@ -410,14 +412,6 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     if not legal:
         return policy_action
-    reserve = int(stats.get("sun_reserve") or 0)
-    if reserve:
-        # --combo-candidates: a pending upgrade keeps its cost in the bank; only spare sun is spent.
-        cost = {card["index"]: card["cost"] for card in obs.get("packets") or []}
-        legal = [action for action in legal
-                 if obs.get("sun", 0) - cost.get(action["packet"], 0) >= reserve]
-        if not legal:
-            return dict(NOOP)
     if (args.min_gap and policy_action["type"] != "plant"
             and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
         return policy_action
@@ -481,6 +475,8 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             raise ValueError(f"unknown candidate mode {mode!r}")
 
         # --combo-candidates k: a base plant now plus a forced upgrade later, scored as one plan.
+        # No sun is withheld afterwards; the plan only fires when the upgrade is affordable with
+        # --combo-buffer to spare (a hard bank deadlocks poor night levels, task214d).
         # Only pairs whose upgrade is not already legal (a legal upgrade is its own candidate) and
         # only cells the static net already likes. k = 0 (default) leaves the set untouched.
         if getattr(args, "combo_candidates", 0):
@@ -488,7 +484,10 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                            for card in obs.get("packets") or [] if isinstance(card, dict)}
             legal_packets = {action["packet"] for action in legal}
             added = 0
+            last_combo = stats.get("last_combo_tick", -10 ** 9)
             for upgrade, base in COMBO_BASES.items():
+                if obs["tick"] - last_combo < args.combo_interval:
+                    break
                 upgrade_packets = [index for index, kind in packet_type.items() if kind == upgrade]
                 if (added >= args.combo_candidates or not upgrade_packets
                         or upgrade_packets[0] in legal_packets):
@@ -502,6 +501,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
                 action["combo"] = {"upgrade_packet": upgrade_packets[0], "base_type": base}
                 candidates.append(action)
                 stats["combo_candidate_added"] = stats.get("combo_candidate_added", 0) + 1
+                stats["last_combo_tick"] = obs["tick"]
                 added += 1
 
         present = {json.dumps(candidate, sort_keys=True) for candidate in candidates}
@@ -809,7 +809,7 @@ def _play(job: dict, observer=None) -> dict:
     stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
              "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0,
              "combo_candidate_added": 0, "combo_upgrades": 0, "pending_upgrade": None,
-             "sun_reserve": 0}
+             "last_combo_tick": -10 ** 9}
     try:
         demo_archive = getattr(args, 'demo_archive', None)
         prefix = []
@@ -923,7 +923,7 @@ def _play(job: dict, observer=None) -> dict:
                         env.set_token_observation(True)
                 if fog_diagnostics is not None:
                     fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
-                forced = _forced_upgrade(obs, stats, args.combo_max_wait)
+                forced = _forced_upgrade(obs, stats, args.combo_max_wait, args.combo_buffer)
                 if forced is not None:
                     action = forced
                     if forced["type"] == "plant":
@@ -962,9 +962,6 @@ def _play(job: dict, observer=None) -> dict:
                                             "base_type": action["combo"]["base_type"],
                                             "col": action["col"], "row": action["row"],
                                             "expires": obs["tick"] + args.combo_max_wait}
-                stats["sun_reserve"] = next(
-                    (card["cost"] for card in obs.get("packets") or []
-                     if card["index"] == action["combo"]["upgrade_packet"]), 0)
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
@@ -1165,9 +1162,13 @@ def parser():
     p.add_argument("--combo-candidates", type=int, default=0,
                    help="base-now/upgrade-later plans added as candidates (default 0 = off); the "
                         "upgrade is forced at the next decision where it is legal on the base cell")
+    p.add_argument("--combo-buffer", type=int, default=25,
+                   help="sun left over after a forced upgrade; below it the upgrade waits")
+    p.add_argument("--combo-interval", type=int, default=600,
+                   help="minimum ticks between arming two combo plans")
     p.add_argument("--combo-max-wait", type=int, default=5000,
                    help="ticks a --combo-candidates plan may keep its upgrade cost in reserve before "
-                        "giving up")
+                        "giving up; cards at most a quarter of that cost stay payable")
     p.add_argument("--margin-relative", type=float, default=0.0,
                    help="off (0) = the absolute MARGIN 0.02; R>0 = max(0.001, R * best candidate value)")
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
@@ -1204,6 +1205,10 @@ def main() -> None:
         p.error("--halving-first-samples must be positive")
     if args.combo_candidates < 0:
         p.error("--combo-candidates must be nonnegative")
+    if args.combo_buffer < 0:
+        p.error("--combo-buffer must be nonnegative")
+    if args.combo_interval < 0:
+        p.error("--combo-interval must be nonnegative")
     if args.combo_max_wait < 0:
         p.error("--combo-max-wait must be nonnegative")
     if args.margin_relative < 0:
