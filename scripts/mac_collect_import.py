@@ -7,7 +7,8 @@ import tempfile
 
 
 def batch_sources(frames):
-    return sorted(path for path in (Path(frames) / 'mac197').glob('mac197_*') if path.is_dir())
+    return sorted(path for source in ('mac197', 'human')
+                  for path in (Path(frames) / source).glob('*') if path.is_dir())
 
 
 def receive(repo, package, frames):

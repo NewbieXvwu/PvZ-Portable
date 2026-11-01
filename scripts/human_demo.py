@@ -225,6 +225,19 @@ def export(archive: Path, data: Path):
     return target
 
 
+def export_verified(roots, data: Path):
+    exported = []
+    for root in roots:
+        for path in sorted(root.rglob('meta.json')):
+            meta = read_meta(path.parent)
+            if not meta.get('verified') or meta.get('label_source') != 'human':
+                continue
+            batch = data / 'human' / meta['task']['id']
+            if not (batch / f'seed_{meta["task"]["seed"]}' / meta['task']['id']).exists():
+                exported.append(export(path.parent, batch))
+    return exported
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--resource-dir', type=Path, default=Path.home() / '.cache/pvz-research-resources')
@@ -241,12 +254,19 @@ def main():
     convert = commands.add_parser('export')
     convert.add_argument('--archive', type=Path, required=True)
     convert.add_argument('--out', type=Path, default=ROOT / 'artifacts/human_demo/frames_v2')
+    batch = commands.add_parser('export-batch')
+    batch.add_argument('--archives', type=Path, nargs='+', required=True)
+    batch.add_argument('--out', type=Path, required=True)
     args = parser.parse_args()
     if args.command == 'verify':
         print(json.dumps(verify(args.archive, args.resource_dir, args.executable)))
         return
     if args.command == 'export':
         print(export(args.archive, args.out))
+        return
+    if args.command == 'export-batch':
+        for path in export_verified(args.archives, args.out):
+            print(path)
         return
     spec = load_training_task(args.manifest, args.task)
     kw = training_task_kwargs(spec, args.seed)

@@ -264,6 +264,7 @@
  "replay_new_weight": 1.0,
  "source_weight": {
   "default": 0.0,
+  "human": 1.0,
   "llm_demo": 1.0,
   "teacher_r52": 1.0,
   "teacher_gptbc": 1.0
