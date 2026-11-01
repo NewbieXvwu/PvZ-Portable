@@ -62,6 +62,13 @@ def _canonical_events(events: Any) -> Any:
     return {EVENT_KEYS.get(key, key): value for key, value in events.items()}
 
 
+def search_action_token(action: dict[str, Any]) -> str:
+    """Encode a ``SEARCH`` target: ``W`` for the fixed no-op wait, else the branch-action form."""
+    if isinstance(action, dict) and action.get("type") == "wait":
+        return "W"
+    return branch_action_token(action)
+
+
 def branch_action_token(action: dict[str, Any]) -> str:
     """Encode one action as the compact spec ``BRANCH_SNAPSHOT_FAST`` expects.
 
@@ -207,6 +214,7 @@ class PvZEnv:
         self._reset_done = False
         self._last_response: dict[str, Any] = {}
         self._sparse_tracks_version = 0
+        self._search_version = 0
         self._branch_observe_supported: bool | None = None
         self.episode: dict[str, Any] | None = None
         # Tick of the most recent observation, used to derive real tick deltas.
@@ -285,6 +293,7 @@ class PvZEnv:
         )
         ready = self._read_message()
         self._rollout_version = ready.get("rollout_version", 0)
+        self._search_version = ready.get("search_version", 0)
         self._sparse_tracks_version = ready.get("sparse_tracks_version", 0)
         if not ready.get("ready") or ready.get("protocol_version") != ENV_PROTOCOL_VERSION:
             self._abort_process()
@@ -825,6 +834,45 @@ class PvZEnv:
             # round trip waits for that command scope to end before callers read the file.
             if not self._command("OBS").get("ok"):
                 raise RuntimeError("simulator rejected rollout trace synchronization")
+        return response
+
+    def search(self, snapshot_id: int, policy_action: dict[str, Any], *, income: float, decision_seed: int,
+               horizon: int, per_card: int, student_candidates: int, samples: int, verify_samples: int,
+               halving: bool, halving_first_samples: int, margin_relative: float, min_gap: int,
+               last_search_tick: int, previous_tick: int = -1, previous_plant: bool = False,
+               reserve: int = 0, sim_skip: int = 61, student_history=None, demo_action=None) -> dict:
+        """Run one whole teacher decision (SEARCH) on the snapshot and return its action.
+
+        The engine owns the candidate set, the resampled futures, the halving rounds, the
+        verification futures and the override rule; this wrapper only marshals the decision
+        inputs.  The root snapshot stays untouched, but the engine is left somewhere else, so
+        the caller restores its root afterwards.  See ``search_play._cpp_search``.
+        """
+        if self._process is None:
+            self._start()
+        if not self._search_version:
+            raise RuntimeError("SEARCH needs a rebuilt simulator advertising search_version >= 1")
+        if type(snapshot_id) is not int or snapshot_id not in self._sun_history_snapshots:
+            raise ValueError("snapshot_id must refer to a live snapshot")
+        if not math.isfinite(income) or not math.isfinite(margin_relative):
+            raise ValueError("income and margin_relative must be finite")
+        if not (1 << 31) > horizon > 0:
+            raise ValueError("horizon must be a positive signed 32-bit integer")
+        token = search_action_token(policy_action)
+        # "-" means no demo candidate; a demo must be a plant, so a bare "W" would be rejected.
+        demo = branch_action_token(demo_action) if demo_action is not None else "-"
+        saved = self._sun_history_snapshots[snapshot_id]
+        history, history_start = saved[0], saved[1] or 0
+        samples_text = " ".join(f"{tick} {produced}" for tick, produced in history)
+        response = self._command(
+            f"SEARCH {snapshot_id} {int(decision_seed)} {income:.17g} {int(previous_tick)} "
+            f"{int(bool(previous_plant))} {int(sim_skip)} {int(horizon)} {int(per_card)} "
+            f"{int(student_candidates)} {int(samples)} {int(verify_samples)} {int(bool(halving))} "
+            f"{int(halving_first_samples)} {margin_relative:.17g} {int(min_gap)} {int(last_search_tick)} "
+            f"{int(reserve)} {token} {demo} {history_start} {len(history)} {samples_text}".rstrip()
+            + self._student_options(student_history, None))
+        if not response.get("ok"):
+            raise RuntimeError(f"simulator rejected SEARCH (binary older than this wrapper?): {response}")
         return response
 
     def rollout(self, first_action: dict[str, Any] | None, until_tick: int, *,
