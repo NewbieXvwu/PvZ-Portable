@@ -11,9 +11,8 @@ Example (Mac smoke, one game):
     --student /tmp/task214-models/student/model.pt \
     --value /tmp/task214-models/v5/model.pt \
     --static-value /tmp/task214-models/static/model.pt \
-    --group default \
-    --group first2:--halving-first-samples 2 \
-    --group first2rel:--halving-first-samples 2 --margin-relative 0.1 \
+    --group "save:--save-candidates 2 --save-share 0.5 --save-interval 600" \
+    --group "combo:--save-candidates 2 --save-share 0.5 --save-interval 600 --combo-candidates 2" \
     --executable ~/pvz-mac-collect/build/pvz-portable \
     --workers 1 --timeout 3600 --out /tmp/task214b-smoke
 
@@ -125,15 +124,33 @@ def _command(args, group_args, task, out_dir):
     return command
 
 
-def _read_games(path: Path):
+def _planted_types(raw, deck):
+    """Plant identity counts: planted_types, filled in from planted_slots when telemetry is thin.
+
+    Older engines and some runs only report slot totals. The slot->type mapping is exact because
+    the deck is known, so a missing or empty planted_types never turns a real upgrade into 0.
+    """
+    counts = {}
+    for key, value in (raw.get("planted_types") or {}).items():
+        counts[int(key)] = int(value)
+    slots = raw.get("planted_slots") or raw.get("planted") or {}
+    for slot, value in slots.items():
+        index = int(slot)
+        if index < len(deck):
+            counts[deck[index]] = counts.get(deck[index], 0) + int(value)
+    return counts
+
+
+def _read_games(path: Path, deck):
     rows = []
     for line in path.read_text().splitlines():
         if not line.strip():
             continue
         raw = json.loads(line)
-        planted = {str(key): int(value) for key, value in (raw.get("planted_types") or {}).items()}
+        planted = {str(key): value for key, value in _planted_types(raw, deck).items()}
         upgrade_planted = {str(seed): planted.get(str(seed), 0) for seed in UPGRADE_TYPES}
         key_planted = {str(seed): planted.get(str(seed), 0) for seed in KEY_TYPES}
+        all_planted = {str(seed): planted.get(str(seed), 0) for seed in sorted(set(deck))}
         rows.append({
             "seed": raw.get("seed"),
             "won": bool(raw.get("won")),
@@ -142,6 +159,7 @@ def _read_games(path: Path):
             "seconds": raw.get("seconds"),
             "upgrade_planted": upgrade_planted,
             "upgrade_seen": [int(seed) for seed, count in upgrade_planted.items() if count],
+            "all_planted": all_planted,
             "key_planted": key_planted,
         })
     return rows
@@ -193,7 +211,7 @@ def main():
             if not parsed.keep_going:
                 break
             continue
-        rows = _read_games(results)
+        rows = _read_games(results, deck)
         summary["groups"][name] = {"args": group_args, "seconds": round(time.time() - started, 1),
                                    "games": rows}
         print(f"[{name}] {len(rows)} game(s) in {time.time() - started:.0f}s", flush=True)

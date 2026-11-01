@@ -61,6 +61,9 @@ MARGIN = 0.02
 # Floor of the opt-in relative override margin (--margin-relative).  The default path keeps the
 # absolute MARGIN above, bit for bit; this floor only applies when the relative margin is enabled.
 MARGIN_FLOOR = 0.001
+# Upgrade plant -> the base it must be planted on (Plant::IsUpgradableTo, Plant.cpp). --combo-candidates
+# uses it in reverse: plant the base now, force its upgrade at the next affordable decision.
+COMBO_BASES = {40: 7, 41: 1, 42: 10, 43: 16, 44: 39, 45: 31, 46: 21, 47: 34}
 # Action budget of one game: --max-actions was 3000 in every run configuration that recorded one.
 MAX_ACTIONS = 3000
 
@@ -244,12 +247,94 @@ def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
 # call it; nothing on the collection path does.
 
 
+def _plain_action(candidate: dict) -> dict:
+    """The action dict of a candidate, without --combo-candidates metadata."""
+    return {key: candidate[key] for key in ("type", "packet", "col", "row") if key in candidate}
+
+
+def _upgrade_legal(obs: dict, packet: int, col: int, row: int) -> dict | None:
+    for action in (obs.get("legal_actions") or {}).get("plants") or []:
+        if action["packet"] == packet and action["col"] == col and action["row"] == row:
+            return {"type": "plant", "packet": packet, "col": col, "row": row}
+    return None
+
+
+def _forced_upgrade(obs: dict, stats: dict, max_wait: int) -> dict | None:
+    """Pending --combo-candidates second step: the upgrade once it is legal on the base cell.
+
+    Until the upgrade is affordable the teacher keeps searching with the upgrade's cost held in
+    reserve, so the base still gets its support. The plan is dropped when the base is gone or the
+    wait budget is spent, so a dead base never blocks the teacher.
+    """
+    pending = stats.get("pending_upgrade")
+    if not pending:
+        return None
+    planted = any(p.get("row") == pending["row"] and p.get("col") == pending["col"]
+                  and p.get("type") == pending["base_type"] for p in obs.get("plants") or [])
+    if not planted or obs["tick"] > pending["expires"]:
+        stats["pending_upgrade"] = None
+        stats["sun_reserve"] = 0
+        return None
+    action = _upgrade_legal(obs, pending["packet"], pending["col"], pending["row"])
+    if action is None:
+        return None
+    stats["pending_upgrade"] = None
+    stats["sun_reserve"] = 0
+    return action
+
+
+def _combo_rollout(env, obs: dict, candidate: dict, until_tick: int, root: int, seed: int,
+                   args) -> dict:
+    """Score a --combo-candidates plan: plant the base, play on until the upgrade is legal, plant it.
+
+    Between the two steps the student keeps acting, exactly like the run (the teacher keeps
+    searching while the plan is pending, with only the upgrade's cost kept in reserve).
+    --combo-max-wait bounds it; if the upgrade never becomes legal (sun, a dead base, the level
+    ending) the base-only position is scored instead.
+    """
+    base = _plain_action(candidate)
+    combo = candidate["combo"]
+    student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
+    env.restore_fast(root)
+    upgrade, waited = None, 0
+    current, _, done, _, info = env.step(base)
+    if not info.get("ok"):
+        done = True
+    while not done and waited < args.combo_max_wait:
+        upgrade = _upgrade_legal(current, combo["upgrade_packet"], base["col"], base["row"])
+        if upgrade is not None:
+            break
+        chunk = min(250, args.combo_max_wait - waited)
+        snapshot = env.snapshot_fast()
+        try:
+            current = env.rollout(None, current["tick"] + chunk, snapshot_id=snapshot,
+                                  seed=seed + waited + 1)
+        finally:
+            env.release_snapshot(snapshot)
+        done = bool(current.get("terminal"))
+        waited += chunk
+    if upgrade is not None and not done:
+        current, _, done, _, info = env.step(upgrade)
+        # Every plan gets --horizon ticks *after its last step*; otherwise the ticks spent waiting
+        # for the upgrade are taken out of the combo's own horizon and it always looks worse.
+        until_tick = max(until_tick, current["tick"] + args.horizon)
+    snapshot = env.snapshot_fast()
+    try:
+        return env.rollout(None, until_tick, sim_skip=_W.get("rollout_sim_skip", 0),
+                           snapshot_id=snapshot, seed=seed, student_history=student_history,
+                           score_value=True)
+    finally:
+        env.release_snapshot(snapshot)
+
+
 def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args,
                    stats: dict) -> list:
     """Play each candidate and continue with the student for ``--horizon`` ticks; one handle per job."""
     stats["rollout_batches"] = stats.get("rollout_batches", 0) + 1
     stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + len(jobs)
-    return [_rollout_policy(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32)
+    return [_combo_rollout(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32, args)
+            if "combo" in candidate else
+            _rollout_policy(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32)
             for candidate, seed in jobs]
 
 
@@ -325,6 +410,14 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     if not legal:
         return policy_action
+    reserve = int(stats.get("sun_reserve") or 0)
+    if reserve:
+        # --combo-candidates: a pending upgrade keeps its cost in the bank; only spare sun is spent.
+        cost = {card["index"]: card["cost"] for card in obs.get("packets") or []}
+        legal = [action for action in legal
+                 if obs.get("sun", 0) - cost.get(action["packet"], 0) >= reserve]
+        if not legal:
+            return dict(NOOP)
     if (args.min_gap and policy_action["type"] != "plant"
             and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
         return policy_action
@@ -347,6 +440,7 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             stats["last_student_keys"] = student_keys
         elif mode == "static":
             scored = sorted(_static_scores(env, root, plants, income), key=lambda item: -item[0])
+            static_value = {(a["packet"], a["col"], a["row"]): v for v, a in scored}
             # The best cells of *every* card, not the overall top-k: the static value net was trained on
             # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
             # against shooters right after planting -- only the rollout can show what they are worth.
@@ -386,6 +480,30 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         else:
             raise ValueError(f"unknown candidate mode {mode!r}")
 
+        # --combo-candidates k: a base plant now plus a forced upgrade later, scored as one plan.
+        # Only pairs whose upgrade is not already legal (a legal upgrade is its own candidate) and
+        # only cells the static net already likes. k = 0 (default) leaves the set untouched.
+        if getattr(args, "combo_candidates", 0):
+            packet_type = {int(card["index"]): int(card["type"])
+                           for card in obs.get("packets") or [] if isinstance(card, dict)}
+            legal_packets = {action["packet"] for action in legal}
+            added = 0
+            for upgrade, base in COMBO_BASES.items():
+                upgrade_packets = [index for index, kind in packet_type.items() if kind == upgrade]
+                if (added >= args.combo_candidates or not upgrade_packets
+                        or upgrade_packets[0] in legal_packets):
+                    continue
+                bases = [(static_value.get((c["packet"], c["col"], c["row"]), float("-inf")), c)
+                         for c in candidates
+                         if c["type"] == "plant" and packet_type.get(c["packet"]) == base]
+                if not bases:
+                    continue
+                action = dict(max(bases, key=lambda item: item[0])[1])
+                action["combo"] = {"upgrade_packet": upgrade_packets[0], "base_type": base}
+                candidates.append(action)
+                stats["combo_candidate_added"] = stats.get("combo_candidate_added", 0) + 1
+                added += 1
+
         present = {json.dumps(candidate, sort_keys=True) for candidate in candidates}
         legal_keys = {json.dumps(plant, sort_keys=True) for plant in plants}
         for tick, action in _W.get('demo_actions', ()):
@@ -403,8 +521,11 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
         for cand in candidates:
             fixed, frames = [], []
             for k in range(args.samples):
-                leaf = _rollout_policy(env, obs, cand, obs["tick"] + args.horizon,
-                                       root, (decision_seed * 1000 + k) % 2 ** 32)
+                leaf = (_combo_rollout(env, obs, cand, obs["tick"] + args.horizon, root,
+                                       (decision_seed * 1000 + k) % 2 ** 32, args)
+                        if "combo" in cand else
+                        _rollout_policy(env, obs, cand, obs["tick"] + args.horizon,
+                                        root, (decision_seed * 1000 + k) % 2 ** 32))
                 terminal = _score_terminal_or_value(leaf)
                 if terminal is None:
                     frames.append(leaf)
@@ -686,7 +807,9 @@ def _play(job: dict, observer=None) -> dict:
     torch.manual_seed(kw["seed"] if future_seed is None else future_seed)
     started = time.time()
     stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
-             "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0}
+             "student_candidate_added": 0, "student_candidate_best": 0, "student_candidate_override": 0,
+             "combo_candidate_added": 0, "combo_upgrades": 0, "pending_upgrade": None,
+             "sun_reserve": 0}
     try:
         demo_archive = getattr(args, 'demo_archive', None)
         prefix = []
@@ -800,6 +923,11 @@ def _play(job: dict, observer=None) -> dict:
                         env.set_token_observation(True)
                 if fog_diagnostics is not None:
                     fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
+                forced = _forced_upgrade(obs, stats, args.combo_max_wait)
+                if forced is not None:
+                    action = forced
+                    if forced["type"] == "plant":
+                        stats["combo_upgrades"] += 1
                 if action["type"] == "shovel":
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []
@@ -829,6 +957,14 @@ def _play(job: dict, observer=None) -> dict:
                         "plant_type":planted_type,"same_type": occupant.get("type") == planted_type})
             obs, _r, done, _t, info = env.step(action)
             rejected = not info.get("ok")
+            if not rejected and action["type"] == "plant" and action.get("combo"):
+                stats["pending_upgrade"] = {"packet": action["combo"]["upgrade_packet"],
+                                            "base_type": action["combo"]["base_type"],
+                                            "col": action["col"], "row": action["row"],
+                                            "expires": obs["tick"] + args.combo_max_wait}
+                stats["sun_reserve"] = next(
+                    (card["cost"] for card in obs.get("packets") or []
+                     if card["index"] == action["combo"]["upgrade_packet"]), 0)
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
@@ -943,6 +1079,9 @@ def _play(job: dict, observer=None) -> dict:
             "searched": stats["searched"], "overrides": stats["overrides"],
             **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes",
                 "halving_candidates", "halving_rollouts", "halving_selected_lanes")},
+            "combo_candidate_added": stats["combo_candidate_added"],
+            "combo_upgrades": stats["combo_upgrades"],
+            "combo_pending": stats["pending_upgrade"] is not None,
             "student_candidate_added": stats["student_candidate_added"],
             "student_candidate_best": stats["student_candidate_best"],
             "student_candidate_override": stats["student_candidate_override"],
@@ -1023,6 +1162,12 @@ def parser():
     p.add_argument("--halving-first-samples", type=int, default=1,
                    help="futures every candidate gets in the first --halving round (default 1 = the old "
                         "behaviour); later rounds double, clamped to --samples")
+    p.add_argument("--combo-candidates", type=int, default=0,
+                   help="base-now/upgrade-later plans added as candidates (default 0 = off); the "
+                        "upgrade is forced at the next decision where it is legal on the base cell")
+    p.add_argument("--combo-max-wait", type=int, default=5000,
+                   help="ticks a --combo-candidates plan may keep its upgrade cost in reserve before "
+                        "giving up")
     p.add_argument("--margin-relative", type=float, default=0.0,
                    help="off (0) = the absolute MARGIN 0.02; R>0 = max(0.001, R * best candidate value)")
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,
@@ -1057,6 +1202,10 @@ def main() -> None:
         p.error("--verify-samples must be nonnegative")
     if args.halving_first_samples < 1:
         p.error("--halving-first-samples must be positive")
+    if args.combo_candidates < 0:
+        p.error("--combo-candidates must be nonnegative")
+    if args.combo_max_wait < 0:
+        p.error("--combo-max-wait must be nonnegative")
     if args.margin_relative < 0:
         p.error("--margin-relative must be nonnegative (0 = off)")
     if args.student_candidates < 0:

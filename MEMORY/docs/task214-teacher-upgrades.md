@@ -27,3 +27,17 @@
 - save probe 推荐：`--save-candidates 2 --save-share 0.5 --save-interval 600`（先 1–2 张、600 tick 一次；L29 贵卡在阳光 150–300 时最需要），再配上面的 `--halving-first-samples 2 --margin-relative 0.1` 做对照臂。
 - 对照脚本 `scripts/teacher_upgrade_ab.py`：只调用现有 `search_play.py` 入口，输出每局 won / final_wave / `upgrade_planted`。Mac 冒烟（L29a、seed 3237972681、生产老师参数）1 局 4s，输在 wave 9 / tick 25,772，40–47 与 22/35/39 全 0，与 0/8 一致。
 - 同一决策点复核：默认选 spiker(4,5) 0.00477；`--halving-first-samples 2` 把 lane 20→28 但选点不变；`--margin-relative 0.1` 触发 9 个复核未来，忧郁菇 42 的 0.00768 复核后降到 0.00492（policy 0.00425），仍不 override——首轮加样本只降噪，必须同时调 margin 才可能改选。
+
+## task215 台式机三臂结果（用户提供）
+- L28 全胜（8/8 三臂）；L29 固定阵型 0/8、0/8、0/8（≈第 10 波）；L29 第二套 0/8、0/8、1/8（save 到 16.9 波、saverel 26.0 波）。
+- 8 个普通关 save 与现行持平，saverel 略退；save 墙钟 +20–80%。结论：攒钱有用，相对门槛没用，固定阵型不动。
+
+## task214c：底座→升级组合候选
+- `--combo-candidates k`（默认 0 关）：按 `Plant::IsUpgradableTo` 的 8 组配对，给“现在种底座”的候选打标记；一旦选中，下一决策起把升级卡的费用留在银行（`sun_reserve`），升级一合法就强制种、不搜索；`--combo-max-wait`（默认 5000）后放弃。底座死了立刻放弃。
+- 评分 = 种底座 → 学生继续 → 升级合法即种 → 之后仍有 `--horizon` 个 tick 再取叶值（等待不吃掉组合自己的 horizon）。默认关闭时决策路径逐位不变。
+- Mac 冒烟（L28 seed 3174639343，save + combo，单进程 nice 19 无窗口）：组合候选 61 次，实际强制升级 2 次（41），本局输在第 21 波（同 seed 的 save 臂第 30 波胜）——单局噪声，机制已跑通。
+- 注意：组合臂会明显多种底座（31 vs 21 个向日葵），是否值得要在台式机多局上判。
+
+## 升级局面 → 叶值网训练格式
+- `scripts/prepare_upgrade_value_rows.py`：从人类存档的升级决策点出发，每点分 `upgrade`/`wait` 两臂，各跑到 horizon 取叶帧，用 v5 编码器写 `board/scalars/label`（label = 继续到终局的胜负），`rows.pt` + `manifest.json`，不训练。
+- 冒烟（L29b 1 个决策点）：2 行，`board [2,104,6,10]`，`scalars [2,119]`，两臂皆胜；3 份存档共 62 个升级决策点，全量应放台式机跑。
