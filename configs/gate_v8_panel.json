@@ -296,7 +296,7 @@
     },
     "task208_l37_fog": {
       "zone": "fog",
-      "teacher_wins": 7,
+      "teacher_wins": 8,
       "teacher_games": 8,
       "teacher_source": "task208 8-seed deploy25 teacher",
       "gpt_win_episodes": 1,
@@ -951,15 +951,16 @@
       "task_id": "task208_l37_fog",
       "level": 37,
       "deck": [
+        3,
         8,
         9,
-        10,
         15,
         16,
         19,
-        23,
         25,
-        36
+        29,
+        31,
+        43
       ],
       "zombie_count_multiplier": 1.0,
       "terrain": "fog",
