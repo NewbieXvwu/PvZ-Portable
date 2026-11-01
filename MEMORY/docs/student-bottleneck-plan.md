@@ -1253,3 +1253,5 @@
 - 11-01 22:35 **task215b 完成**（save vs save + combo，各 8 种子）：用户 L28 save 8/8、combo 7/8（combo 真种出机枪 / 双子）；用户 L29 两套仍 0/8（第 9.5 波 / 第 23.7 波）；普通关持平，**但 L33（雾）combo 0/8（8.8 波、每局 14 s）vs save 8/8**——combo 在雾关有 bug。结论：组合候选没能解开用户 L29（固定阵型卡在白天蘑菇开局；第二套卡在中后期），save 是小幅正收益、成本 +20–80% 墙钟，暂不上生产。派 task214d（dsh）：修 L33 combo bug、修结果文件升级计数、查人类示范行是否被干净新线的权重规则挡在外面。
 
 - 11-01 22:45 **用户：老师搜索搬进 C++ 现在就做**。派 task217（dsh，Mac 工作树 csearch，基于 origin/upgrades）第 0 + 1 阶段：写清现行 Python 搜索的完整算法与 C++ 设计（新 env 命令 SEARCH，一次请求完成整个决策，复用 EnvironmentRollout / EnvironmentValueNet），实现与现行生产参数等价的 C++ 搜索，search_play 加迁移期开关 `--search-impl {python,cpp}`（第 2 阶段对照通过后删 Python 版），Mac 构建 + 少量局面一致性与单决策耗时冒烟。之后阶段：全量对照 → 性能 → 用省下的算力加深搜索 / 攒钱 / 组合 → 上生产。
+
+- 11-01 23:20 **task217 第 0 + 1 阶段完成**（dsh，csearch cad763c6）：C++ `SEARCH` 命令 + `EnvironmentSearch`（静态打分、每卡取格、NOOP / 先验 / 学生 top-k / 示范候选、减半、9 个验证未来、门槛、预留与最小间隔），与 Python 搜索 124 个决策逐位一致、3 局整局一致（修了一个学生上一动作没传进引擎的 bug）。**但提速只有 1.03–1.08×**（单决策 52.2 → 48.4 ms）：时间主要在模拟和网络前向，不在通信——搬进 C++ 本身不会让老师变快，要加深搜索得另外降单决策成本。派第 2 阶段（续同一会话）：剖析时间分布并给出降本 2× 以上的方案、移植 save probe / combo / 学生 top-k（顺带修雾关 L33 combo bug）、扩大对照后删 Python 搜索。task214d 第一次因 OpenCode Go 上游 500 错误空返回，已重发。
