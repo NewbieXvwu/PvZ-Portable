@@ -278,7 +278,7 @@ def main():
         return
     with EventWaitEnv(args.resource_dir, executable=args.executable, headless=False) as env:
         if args.level is not None:
-            seed = args.seed if args.seed is not None else random.getrandbits(32)
+            seed = args.seed if args.seed is not None else random.getrandbits(31)  # training packs store seeds as int32
             print(f'请在窗口选满10张卡并点“开始战斗”（关卡{args.level}，种子{seed}）。', flush=True)
             recorder = record_user_pick(env, args.out, args.level, seed, args.multiplier, args.fog, args.note)
         else:
