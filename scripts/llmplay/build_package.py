@@ -296,8 +296,10 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
         copy_carry(stage, carry, partial)
-        archived = copy_resume(stage, resume_dir or (previous / "resume"
-                                                     if (previous / "resume").is_dir() else None))
+        fallback = previous / "resume"
+        source = resume_dir if resume_dir and Path(resume_dir).is_dir() else (
+            fallback if fallback.is_dir() else None)
+        archived = copy_resume(stage, source)
         print(json.dumps(dict(resume_items=archived)))
         copy_reference(stage)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")

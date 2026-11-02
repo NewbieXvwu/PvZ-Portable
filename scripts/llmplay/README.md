@@ -13,7 +13,7 @@ print(llmplay.next_task())
 print(llmplay.progress()["coverage"])
 ```
 
-默认片0为白天＋夜间，片1为泳池＋雾，片2为屋顶＋Boss。
+默认只开 1 片（覆盖全部关卡）；显式设 `LLMPLAY_SHARDS=3` 时片0为白天＋夜间，片1为泳池＋雾，片2为屋顶＋Boss。
 可传 `next_task(shard=0, shards=N)`（0起编号，N=1–40）；N不是3时按关卡轮转分配。
 每次新进程都保持原片号。每关有独立百万种子窗口，用完顺延，窗口不重叠。
 

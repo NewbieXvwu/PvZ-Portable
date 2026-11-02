@@ -58,8 +58,8 @@
 
 ## 6. 交付与校验
 
-- 接口包 **7,458,787 字节**（含 `resume/` 365 份存档约 17 MB 原始、1.4 MB 压缩）。
-- `md5 llmplay_pkg.7z.001 = fe648730667dbadcc0987c4968054bbf`（7,458,787 字节）
+- 默认单片（`LLMPLAY_SHARDS=1`）；接口包 **7,458,916 字节**（含 `resume/` 365 份存档约 17 MB 原始、1.4 MB 压缩）。
+- `md5 llmplay_pkg.7z.001 = 55fbbafd06de3010a572b1d520bf9f80`（7,458,916 字节）
   `md5 llmplay_res.zip = 7c55cd5bfda1ea3f3f30300cb97a38f9`（34,258,402 字节）。
 - carry 由 task211 会话 `decks_20261101_2247_out.zip` 的 `out/progress.json` 与旧 carry 合并：
   8673 条唯一存档（旧 3129 条全部包含在会话进度里，无丢失）。

@@ -670,7 +670,7 @@
     "coverage_per_card": 2,
     "coverage_priority": {},
     "growth_step": 2,
-    "default_shards": 3,
+    "default_shards": 1,
     "terrain_shards": [
       [
         "day",
