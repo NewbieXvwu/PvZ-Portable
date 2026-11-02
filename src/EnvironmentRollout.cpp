@@ -776,3 +776,60 @@ EnvironmentRollout::Prediction EnvironmentRollout::Predict(LawnApp* app, double 
 			return result.cells[left.row * 9 + left.col] < result.cells[right.row * 9 + right.col]; });
 	return result;
 }
+
+// pvz_rollout_policy.ranked_plants: the same heads Predict runs, scored for every legal action
+// instead of only the argmax.  Predict's first entry is exactly the greedy action, so the search
+// only takes entries 2..k of this list.  Sorting matches Python's key
+// (-score, packet kind, row, col, packet), which needs the packet's identity kind.
+void EnvironmentRollout::Rank(LawnApp* app, double income, int previousTick, bool previousPlant,
+	History& history, const std::vector<Action>& legal, std::vector<Ranked>& out)
+{
+	out.clear();
+	if (legal.empty() || !Loaded() || !app->mBoard) return;
+	++networkCalls;
+	packetLogitsValid = false;
+	Features(app, income, previousTick, previousPlant, featureBoard, featureScalars, history);
+	Encode(featureBoard, featureScalars);
+	Prediction head = Heads(-1);
+	const double plantProbability = 1.0 / (1.0 + std::exp(-static_cast<double>(head.plant)));
+	// Legal packets ascending, exactly like Python's `sorted(by_packet)`.
+	std::vector<int> packets;
+	for (const Action& action : legal)
+		if (packets.empty() || packets.back() != action.packet) packets.push_back(action.packet);
+	std::vector<double> packetExponent(packets.size());
+	double packetTotal = 0;
+	for (size_t index = 0; index < packets.size(); ++index)
+	{
+		packetExponent[index] = std::exp(static_cast<double>(head.packets[packets[index]]));
+		packetTotal += packetExponent[index];
+	}
+	for (size_t index = 0; index < packets.size(); ++index)
+	{
+		const int packet = packets[index];
+		const auto cells = Heads(packet).cells;
+		std::vector<const Action*> cellActions;
+		for (const Action& action : legal)
+			if (action.packet == packet) cellActions.push_back(&action);
+		std::vector<double> cellExponent(cellActions.size());
+		double cellTotal = 0;
+		for (size_t cell = 0; cell < cellActions.size(); ++cell)
+		{
+			cellExponent[cell] = std::exp(static_cast<double>(cells[cellActions[cell]->row * 9 + cellActions[cell]->col]));
+			cellTotal += cellExponent[cell];
+		}
+		const double packetProbability = packetTotal > 0 ? packetExponent[index] / packetTotal : 0;
+		for (size_t cell = 0; cell < cellActions.size(); ++cell)
+		{
+			const Action& action = *cellActions[cell];
+			const double cellProbability = cellTotal > 0 ? cellExponent[cell] / cellTotal : 0;
+			out.push_back({ static_cast<float>(plantProbability * packetProbability * cellProbability), action,
+				std::max(0, static_cast<int>(packetInfo[action.packet][0])) });
+		}
+	}
+	std::stable_sort(out.begin(), out.end(), [](const Ranked& left, const Ranked& right) {
+		if (left.score != right.score) return left.score > right.score;
+		if (left.kind != right.kind) return left.kind < right.kind;
+		if (left.action.row != right.action.row) return left.action.row < right.action.row;
+		if (left.action.col != right.action.col) return left.action.col < right.action.col;
+		return left.action.packet < right.action.packet; });
+}

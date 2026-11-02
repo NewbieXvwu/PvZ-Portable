@@ -194,6 +194,7 @@ public:
 	bool							mEnvironmentMode;
 	bool							mEnvironmentLeanObservation = false;  // OBS_LEAN: compact rollout observations
 	bool mEnvironmentTokenObservation = false;  // OBS_V3: opt-in public tokens
+	std::vector<std::array<int, 3>> mEnvironmentLegalPlantScratch;  // EnvironmentAnyLegalPlant
 	double							mZombieMultiplier;
 	int								mPlayLevel;
 	std::string						mRecordOutputPath;
@@ -297,6 +298,10 @@ public:
 	std::string                     EnvironmentDeckOptions();
 	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);
 	std::string                     EnvironmentDeckPool();
+	// The legal plant actions the observation publishes, in observation order (packet slot, col,
+	// row).  ``theLimit`` > 0 stops after that many entries; the target vector is not cleared.
+	// One implementation for the observation, WAIT_UNTIL_LEGAL and the native search.
+	bool						EnvironmentLegalPlants(std::vector<std::array<int, 3>>& theOut, int theLimit = 0);
 	bool						EnvironmentAnyLegalPlant();
 	void							Start() override;
 	Dialog*							NewDialog(int theDialogId, bool isModal, const std::string& theDialogHeader, const std::string& theDialogLines, const std::string& theDialogFooter, int theButtonMode) override;

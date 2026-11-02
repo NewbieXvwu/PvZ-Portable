@@ -2236,20 +2236,13 @@ std::string LawnApp::EnvironmentLeanObservation()
 		out << '[' << item->mGridY << ',' << item->mGridX << ',' << static_cast<int>(item->mGridItemType) << ']';
 	}
 	out << "],\"legal_actions\":{\"plants\":[";
-	bool firstAction = true;
-	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
+	std::vector<std::array<int, 3>> legalPlants;
+	EnvironmentLegalPlants(legalPlants);
+	for (size_t index = 0; index < legalPlants.size(); ++index)
 	{
-		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
-		if (!packet.CanPickUp()) continue;
-		SeedType seed = packet.mPacketType == SeedType::SEED_IMITATER && packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
-		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
-			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
-				if (mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
-				{
-					if (!firstAction) out << ',';
-					firstAction = false;
-					out << "{\"packet\":" << i << ",\"col\":" << col << ",\"row\":" << row << '}';
-				}
+		if (index) out << ',';
+		out << "{\"packet\":" << legalPlants[index][0] << ",\"col\":" << legalPlants[index][1]
+			<< ",\"row\":" << legalPlants[index][2] << '}';
 	}
 	out << "]}";
 	WriteObservationV2(out, this);
@@ -2261,12 +2254,13 @@ std::string LawnApp::EnvironmentLeanObservation()
 	return out.str();
 }
 
-// Whether the observation's legal_actions.plants list would be non-empty: the same loop, stopped
-// at the first legal (packet, cell).  Used by WAIT_UNTIL_LEGAL (src/main.cpp).
-bool LawnApp::EnvironmentAnyLegalPlant()
+// The observation's legal plant list, in observation order (packet slot, col, row).  Shared by the
+// observation above, WAIT_UNTIL_LEGAL and the native search so the three can never diverge.
+bool LawnApp::EnvironmentLegalPlants(std::vector<std::array<int, 3>>& theOut, int theLimit)
 {
 	if (!mBoard)
 		return false;
+	const int total = theLimit > 0 ? theLimit : std::numeric_limits<int>::max();
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 	{
 		SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
@@ -2275,9 +2269,22 @@ bool LawnApp::EnvironmentAnyLegalPlant()
 		for (int row = 0; row < MAX_GRID_SIZE_Y; ++row)
 			for (int col = 0; col < MAX_GRID_SIZE_X; ++col)
 				if (mBoard->CanPlantAt(col, row, seed) == PlantingReason::PLANTING_OK)
-					return true;
+				{
+					theOut.push_back({ i, col, row });
+					if (static_cast<int>(theOut.size()) >= total)
+						return true;
+				}
 	}
-	return false;
+	return !theOut.empty();
+}
+
+// Whether the observation's legal_actions.plants list would be non-empty: the same enumeration,
+// stopped at the first legal (packet, cell).  Called once per rollout tick, so it keeps its own
+// scratch vector instead of allocating.
+bool LawnApp::EnvironmentAnyLegalPlant()
+{
+	mEnvironmentLegalPlantScratch.clear();
+	return EnvironmentLegalPlants(mEnvironmentLegalPlantScratch, 1);
 }
 
 std::string LawnApp::EnvironmentDeckOptions()
