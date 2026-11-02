@@ -380,37 +380,39 @@ def segment_plane_shapes_valid(path: Path, rows: int) -> bool:
 
 def pack(data: Path, options: dict, cache_dir: Path | None = None, precompute_workers: int = 1,
          read_cache_dir: Path | None = None, out: Path | None = None, quiet: bool = False,
-         rebuild: bool = False) -> Path:
+         rebuild: bool = False, source_weights=None) -> Path:
     """Publish an index of immutable per-label segments; only missing segments are built.
 
     The whole archive catalog is scanned once. Parallelism is across labels, never a nested
     feature pool. A training snapshot pins its segment names, so later rounds cannot change it.
+    ``source_weights`` is every active recipe's weight map: archives that all of them weight 0
+    are not packed, and a label left without archives is simply absent from the index.
     """
     from concurrent.futures import ProcessPoolExecutor
     import multiprocessing as mp
+    from pvz_training_pack import content_options, filter_sources, segment_contracts, training_paths
     started = time.perf_counter()
     catalog = {label: [] for label in options['labels']}
-    from pvz_training_pack import training_paths
     for path in training_paths(data, options['labels'], options.get('llm_demo_import'),
                                options.get('llm_demo_results', [1])):
         catalog.setdefault(path.parent.name, []).append(path)
     jobs, segments = [], []
     for label, paths in sorted(catalog.items()):
+        paths = filter_sources(paths, source_weights)
         if not paths:
-            raise ValueError(f'no archives for label {label!r} in {data}')
-        contract = segment_options(options, label, fingerprint_paths(data, paths))
-        if contract.get('label_keep') and not any(keep_archive(data, path, contract['label_keep']) for path in paths):
+            if source_weights is None:
+                raise ValueError(f'no archives for label {label!r} in {data}')
             continue
-        target = segment_path(data, contract)
-        segments.append(target)
-        valid = False
-        if target.is_file() and not rebuild:
-            with np.load(target, allow_pickle=False) as stored:
-                from pvz_training_pack import content_options
-                valid = (content_options(json.loads(str(stored['meta']))) == content_options(contract)
-                         and segment_plane_shapes_valid(target, int(stored['rows'])))
-        if not valid:
-            jobs.append((data, contract, cache_dir, read_cache_dir, paths))
+        for contract, group in segment_contracts(data, options, label, paths):
+            target = segment_path(data, contract)
+            segments.append(target)
+            valid = False
+            if target.is_file() and not rebuild:
+                with np.load(target, allow_pickle=False) as stored:
+                    valid = (content_options(json.loads(str(stored['meta']))) == content_options(contract)
+                             and segment_plane_shapes_valid(target, int(stored['rows'])))
+            if not valid:
+                jobs.append((data, contract, cache_dir, read_cache_dir, group))
     if not segments:
         raise ValueError('no archives retained for training')
     # Each label worker includes Python/torch and a label's compact rows; its peak grows with
@@ -559,6 +561,8 @@ def main() -> None:
     p.add_argument("--precompute-workers", type=int, default=1, help="parallel label builders (memory capped)")
     p.add_argument("--prune", action="store_true",
                    help="delete the packs of a label subset this one supersedes")
+    p.add_argument("--source-weights", type=json.loads, default=None,
+                   help="JSON list of active {source: weight} maps; drop rows every map weights 0")
     args = p.parse_args()
     # Long label lists exceed Linux's 128 KiB single-argument limit; '@file' reads them from a file.
     for name in ('labels', 'label_weight'):
@@ -572,7 +576,8 @@ def main() -> None:
                            sources=archive_fingerprint(args.data, set(args.labels.split(",")), args.llm_demo_import, results),
                            label_keep=args.label_keep, llm_demo_import=args.llm_demo_import, llm_demo_results=results)
     cache_dir = args.cache_dir or (args.data / ".feature_cache")
-    target = pack(args.data, options, cache_dir, args.precompute_workers, None, args.out)
+    target = pack(args.data, options, cache_dir, args.precompute_workers, None, args.out,
+                  source_weights=args.source_weights)
     if args.prune:
         removed = prune(args.data, set(options["labels"]), target)
         print(json.dumps({"pruned": [str(path) for path in removed]}), flush=True)

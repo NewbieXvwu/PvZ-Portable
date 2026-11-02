@@ -10,6 +10,18 @@ from pvz_frame_store import frame_path, read_frames, write_frames
 DEMO_LABEL = 'llm_demo_decisions'
 
 
+def demo_batch(data: Path, path: Path) -> str:
+    """Import batch (archive sha) that owns a converted archive; a new import packs alone."""
+    try:
+        parts = Path(path).relative_to(data).parts
+    except ValueError:
+        return 'external'
+    if '.llm_demo_rows' in parts:
+        index = parts.index('.llm_demo_rows')
+        return parts[index + 1] if index + 1 < len(parts) else 'unknown'
+    return 'external'
+
+
 def demo_paths(data: Path, imported: Path, results=(1,)):
     """Read the task194/task152 converted pool; admission belongs to import_llm_run."""
     cache = imported / '.llm_demo_rows'

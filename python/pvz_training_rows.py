@@ -67,6 +67,13 @@ def source_factor(meta, rules):
     return rules.get(source_kind(meta), rules.get(meta.get('label_source', 'teacher'), rules.get('default', 1.)))
 
 
+def source_enabled(meta, source_weights):
+    """A row stays in the packed corpus while at least one active recipe trains it."""
+    if not source_weights:
+        return True
+    return any(source_factor(meta, rules) > 0 for rules in source_weights)
+
+
 class DemoRowWeights:
     """Optional final multipliers from the pack's existing archive provenance.
 

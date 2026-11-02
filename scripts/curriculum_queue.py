@@ -77,8 +77,8 @@ from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, START_SEED_BLOCK,
                            policy as promotion_policy)
 from promotion_gate import (SeedPoolExhausted, allocate_seed_block, contract as promotion_contract,
                             contract_key, valid_certificate)
-from pvz_training_pack import (pack_flags, pack_options, fingerprint_paths, segment_options,
-                               segment_path)
+from pvz_training_pack import (filter_sources, pack_flags, pack_options, fingerprint_paths,
+                               segment_contracts, segment_options, segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
@@ -1058,6 +1058,15 @@ def _argument_file(frames: Path, value: str) -> str:
     return '@' + str(path)
 
 
+def active_source_weights(args, recipe: dict) -> list[dict]:
+    """Every recipe that trains this pack: rows all of them weight 0 are never packed."""
+    weights = [recipe['source_weight']]
+    alternate = getattr(args, 'alternate_recipe', None)
+    if alternate:
+        weights.append(load_recipe(alternate, 'training')['source_weight'])
+    return weights
+
+
 def pack_command(args, labels: list[str]) -> list[str]:
     """Pack the same row options the trainer resolves from this recipe."""
     recipe = load_recipe(args.recipe, 'training')
@@ -1067,7 +1076,8 @@ def pack_command(args, labels: list[str]) -> list[str]:
     python = str(args.python)
     return [python, str(ROOT / 'scripts/pack_training_rows.py'),
             '--data', str(args.frames), '--labels', _argument_file(args.frames, ','.join(sorted(labels))),
-            *pack_flags(options), '--precompute-workers', str(recipe['precompute_workers']),
+            *pack_flags(options), '--source-weights', json.dumps(active_source_weights(args, recipe)),
+            '--precompute-workers', str(recipe['precompute_workers']),
             '--cache-dir', str(recipe['cache_dir'] or (args.frames / '.feature_cache')), '--prune']
 
 
@@ -1330,7 +1340,8 @@ class TrainingPipeline:
             train_peak = TRAIN_ANON_EXTRA + int(compact_bytes * TRAIN_ANON_FACTOR)
         return max(self.build_peak, train_peak * getattr(self, 'train_parallelism', 1))
 
-    def pending_builds(self, labels: list[str], recipe: dict) -> list[tuple[str, int]]:
+    def pending_builds(self, labels: list[str], recipe: dict,
+                       source_weights=None) -> list[tuple[str, int]]:
         """待建段 [(label, 原始档案字节)]：与 _prepare_corpus 同一合并视图（采集优先），
         判定与 pack() 完全同一套函数——fingerprint_paths / segment_options / segment_path。
 
@@ -1359,21 +1370,24 @@ class TrainingPipeline:
         for label in sorted(wanted):
             archives = sorted(by_label.get(label, []))
             if not archives:
-                continue   # 没有档案的标签 pack 时会自己报错，不进估算
+                continue   # 没有档案的标签不进估算
             total = sum(path.stat().st_size for _, path in archives)
             view_paths = [view / rel / path.name for rel, path in archives]
             if not all(view_path.exists() for view_path in view_paths):
                 pending.append((label, total))
                 continue
-            fingerprint = fingerprint_paths(view, view_paths)
-            target = segment_path(view, segment_options(options, label, fingerprint))
-            if not target.is_file():
+            view_paths = filter_sources(view_paths, source_weights)
+            if not view_paths:
+                continue   # 所有有效配方都把这个来源权重设为 0，pack 时不会建段
+            if any(not segment_path(view, contract).is_file()
+                   for contract, _group in segment_contracts(view, options, label, view_paths)):
                 pending.append((label, total))
         return pending
 
     def _plan_build(self, recipe: dict) -> None:
         """按待建段估算打包并发与峰值；enqueue 写进配方，estimate_peak/reservation 引用。"""
-        pending = self.pending_builds(recipe['labels'], recipe)
+        pending = self.pending_builds(recipe['labels'], recipe,
+                                      active_source_weights(self.args, recipe))
         self.build_workers, per_builder = build_plan([size for _, size in pending],
                                                      recipe['precompute_workers'], mem_available_bytes(),
                                                      measured_per_builder=self.last_pack_peak)

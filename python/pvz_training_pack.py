@@ -18,6 +18,8 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 
 PACK_VERSION = 2  # label-local wait sampling; immutable segments + small corpus index
+DEMO_LABEL = 'llm_demo_decisions'
+DEMO_SEGMENT_ARCHIVES = 64  # one GPT import builds its own small segments, never one giant one
 
 
 def archive_fingerprint(data: Path, labels, llm_demo_import=None, llm_demo_results=(1,)) -> str:
@@ -82,6 +84,52 @@ def segment_options(options: dict, label: str, sources: str) -> dict:
     if keep:
         result['label_keep'] = keep
     return result
+
+
+def filter_sources(paths, source_weights):
+    """Drop archives every active recipe weights 0; unreadable metadata stays and fails in packing."""
+    if not source_weights:
+        return list(paths)
+    from pvz_training_rows import source_enabled
+    kept = []
+    for path in paths:
+        meta_path = Path(path).parent / 'meta.json'
+        try:
+            meta = json.loads(meta_path.read_text())
+        except (OSError, ValueError):
+            kept.append(path)
+            continue
+        if source_enabled(meta, source_weights):
+            kept.append(path)
+    return kept
+
+
+def segment_contracts(data: Path, options: dict, label: str, paths):
+    """One label may publish several immutable segments; callers build each independently.
+
+    Converted GPT demos are split by import batch (and a bounded archive count), so a new
+    import only builds its own segments. Every other label keeps its single segment.
+    """
+    groups = []
+    if label == DEMO_LABEL:
+        from pvz_llm_demo_rows import demo_batch
+        batches = {}
+        for path in paths:
+            batches.setdefault(demo_batch(Path(data), path), []).append(path)
+        for batch in sorted(batches):
+            chunk = sorted(batches[batch], key=str)
+            groups.extend(chunk[start:start + DEMO_SEGMENT_ARCHIVES]
+                          for start in range(0, len(chunk), DEMO_SEGMENT_ARCHIVES))
+    else:
+        groups = [list(paths)]
+    contracts = []
+    for group in groups:
+        contract = segment_options(options, label, fingerprint_paths(data, group))
+        if contract.get('label_keep') and not any(
+                keep_archive(data, path, contract['label_keep']) for path in group):
+            continue
+        contracts.append((contract, group))
+    return contracts
 
 
 def label_keep_options(labels, rules):
