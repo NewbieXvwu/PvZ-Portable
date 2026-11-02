@@ -308,7 +308,7 @@ def test_decks_frontier_rotates_registered_decks_on_fresh_seeds_first():
     assert info['multiplier'] == 2.0 and info['wins'] == 0 and len(info['decks']) == 2
     item = workflow.next_task(doc, claim=False)['item']
     assert item['layer'] == 'frontier' and item['action'] == 'frontier_deck' and item['task_id'] == frontier
-    assert item['multiplier'] == 2.0 and item['deck'] == D1 and item['seed'] == decks.frontier_seed_at(11, 0)
+    assert item['multiplier'] == 2.0 and item['deck'] == D1 and item['seed'] == decks.frontier_seed_at(frontier, 0)
     workflow.check(doc, frontier, D1, seed=item['seed'])
     with pytest.raises(ValueError, match='已登记的胜利卡组'):
         workflow.check(doc, frontier, [0, 1, 2, 3, 4, 7], seed=item['seed'])
@@ -318,13 +318,13 @@ def test_decks_frontier_rotates_registered_decks_on_fresh_seeds_first():
         workflow.check(doc, decks.native_items(doc)[0]['task_id'], [],
                        seed=decks.native_items(doc)[0]['seed'])
     won = [dict(entry(11, D1, 100 + n, task_id=frontier), level=11,
-                seed=decks.frontier_seed_at(11, n), zombie_count_multiplier=2.0) for n in range(2)]
+                seed=decks.frontier_seed_at(frontier, n), zombie_count_multiplier=2.0) for n in range(2)]
     doc = workflow.derive(entries + won, 'run')
     assert doc['frontier'][frontier]['wins'] == 2
     assert decks.frontier_items(doc)[0]['deck'] == D1   # 2 胜后轮换回第一套
-    assert decks.frontier_items(doc)[0]['seed'] == decks.frontier_seed_at(11, 2)
+    assert decks.frontier_items(doc)[0]['seed'] == decks.frontier_seed_at(frontier, 2)
     done = [dict(entry(11, D1, 200 + n, task_id=frontier), level=11,
-                 seed=decks.frontier_seed_at(11, n), zombie_count_multiplier=2.0) for n in range(6)]
+                 seed=decks.frontier_seed_at(frontier, n), zombie_count_multiplier=2.0) for n in range(24)]
     doc = workflow.derive(entries + done, 'run')
     assert doc['frontier'][frontier]['complete']
     assert all(row['task_id'] != frontier for row in decks.frontier_items(doc))
@@ -624,7 +624,7 @@ def test_decks_upgrade_requirement_applies_until_session_target():
     with patch.object(decks, 'assigned_tasks', side_effect=assign), \
             patch.object(decks, 'resume_catalog', return_value=[]):
         doc = workflow.derive([], 'run')
-        assert doc['upgrades']['night']['missing'] == 6
+        assert doc['upgrades']['night']['missing'] == 24
         item = [row for row in decks.items(doc) if row['task_id'] == night][0]
         assert item['upgrade_required'] and item['upgrade_cards'] == [42]
         with pytest.raises(ValueError, match='升级植物'):

@@ -24,6 +24,7 @@ def config():
     return wf.plan()["decks"]
 
 
+@lru_cache(maxsize=64)
 def region(level):
     return background_for_level(int(level)).split("_")[-1].lower()
 
@@ -94,20 +95,31 @@ def seed_index(level, seed, *, native=False):
     return epoch * cfg["seed_window"] + offset if epoch >= 0 and 0 <= offset < cfg["seed_window"] else None
 
 
-def frontier_base(level):
-    cfg = config()["frontier"]
-    return cfg["seed_base"] + (int(level) - 1) * cfg["seed_window"]
+def frontier_tasks():
+    """前沿倍率任务表：每个 (关卡, 倍率, 层) 一条，自带种子窗口起点。"""
+    return list(config()["frontier"]["tasks"])
 
 
-def frontier_seed_at(level, index):
+def frontier_task(task_id):
+    return next((task for task in frontier_tasks() if task["task_id"] == task_id), None)
+
+
+def frontier_base(task_id):
+    task = frontier_task(task_id)
+    if task is None:
+        raise ValueError("不是前沿倍率任务：%s" % task_id)
+    return int(task["seed_base"])
+
+
+def frontier_seed_at(task_id, index):
     cfg = config()["frontier"]
     epoch, offset = divmod(index, cfg["seed_window"])
-    return frontier_base(level) + epoch * cfg["seed_epoch_stride"] + offset
+    return frontier_base(task_id) + epoch * cfg["seed_epoch_stride"] + offset
 
 
-def frontier_seed_index(level, seed):
+def frontier_seed_index(task_id, seed):
     cfg = config()["frontier"]
-    epoch, offset = divmod(int(seed) - frontier_base(level), cfg["seed_epoch_stride"])
+    epoch, offset = divmod(int(seed) - frontier_base(task_id), cfg["seed_epoch_stride"])
     return epoch * cfg["seed_window"] + offset if epoch >= 0 and 0 <= offset < cfg["seed_window"] else None
 
 
@@ -198,7 +210,8 @@ def resume_items(document):
     index, count = configure_shard()
     terrains = (config()["terrain_shards"][index]
                 if count == len(config().get("terrain_shards") or []) else None)
-    for item in document.get("resume", {}).get("items") or []:
+    # 目录有数千条，只把队首能领的一段变成项；领走后 resume_progress 会重新排序。
+    for item in (document.get("resume", {}).get("items") or [])[:256]:
         if terrains is not None and region(item["level"]) not in terrains:
             continue
         archive = item.get("archive") or ""
@@ -332,11 +345,11 @@ def derive(entries, run_id=None):
     frontier_cfg = cfg["frontier"]
     active_frontier = assigned_tasks(frontier=True)
     frontier_progress = {}
-    for task_id in frontier_cfg["order"]:
-        task = definitions.get(task_id)
-        if task is None:
+    for spec in frontier_cfg["tasks"]:
+        task_id = spec["task_id"]
+        if definitions.get(task_id) is None:
             continue
-        level, terrain = int(task["level"]), region(task["level"])
+        level, terrain = int(spec["level"]), region(spec["level"])
         base_task = main_task(level)
         info = levels.get(base_task) or {}
         registered = list((info.get("winning_decks") or {}).values())
@@ -344,16 +357,17 @@ def derive(entries, run_id=None):
                    if entry.get("valid", True) and entry.get("task_id") == task_id
                    and not entry.get("abandoned")]
         wins = sorted({int(entry["seed"]) for entry in records if _won(entry)})
-        indices = [frontier_seed_index(level, entry["seed"]) for entry in records]
+        indices = [frontier_seed_index(task_id, entry["seed"]) for entry in records]
         cursor = max([value for value in indices if value is not None], default=-1) + 1
         frontier_progress[task_id] = dict(level=level, terrain=terrain,
-                                          multiplier=float(task["zombie_count_multiplier"]),
+                                          multiplier=float(spec["multiplier"]),
+                                          tier=spec.get("tier"),
                                           wins=len(wins), winning_seeds=wins,
                                           target=frontier_cfg["target_wins"],
                                           complete=len(wins) >= frontier_cfg["target_wins"],
                                           decks=[list(cards) for cards in registered],
                                           legal_cards=legal_cards(level),
-                                          available_seeds=[frontier_seed_at(level, cursor + n)
+                                          available_seeds=[frontier_seed_at(task_id, cursor + n)
                                                            for n in range(candidate_count)])
     # task210：传送带支线先派发到各关达标，之后回到主线并按轮次提高主线配额。
     covered = all(terrain_progress[levels[key]["terrain"]]["complete"] for key in active)
