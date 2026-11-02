@@ -593,7 +593,9 @@ def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, s
     if not legal:
         return policy_action
     previous = _W.get("student_previous_frame")
+    _t0 = time.perf_counter()
     root = env.snapshot_fast()
+    _t1 = time.perf_counter()
     try:
         response = env.search(
             root, policy_action, income=obs.get("sun_income_rate") or 0.0, decision_seed=decision_seed,
@@ -613,12 +615,15 @@ def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, s
             candidate_mode=1 if _W.get("candidate_mode") == "student-topk" else 0,
             student_topk=int(_W.get("student_topk", 3)))
     finally:
+        _t2 = time.perf_counter()
         env.restore_fast(root)
         env.release_snapshot(root)
+        _t3 = time.perf_counter()
     payload = response.get("stats") or {}
     if os.environ.get('PVZ_DBG'):
-        print(f"DBGPAY tick={obs['tick']} save={payload.get('save_probes')}/{payload.get('save_overrides')}/"
-              f"{payload.get('save_wait_ticks')} action={response['action']}", file=sys.stderr, flush=True)
+        print(f"DBGPAY tick={obs['tick']} snap={(_t1-_t0)*1000:.1f} search={(_t2-_t1)*1000:.1f} "
+              f"restore={(_t3-_t2)*1000:.1f} engine={(payload.get('profile') or {}).get('total_seconds', 0)*1000:.1f}",
+              file=sys.stderr, flush=True)
     if response["searched"]:
         stats["last_search_tick"] = obs["tick"]
         stats["searched"] += 1
