@@ -209,3 +209,38 @@ def test_win_guard_leaves_waves_alone_when_wins_are_too_rare():
     assert result['zones']['fog']['win_guard_veto'] is False
     assert result['zones']['fog']['endpoint_used'] == 'waves'
     assert 'significant_win_regression:fog' not in result['reasons']
+
+
+def test_roof_uses_wins_when_discordant_pairs_are_enough():
+    pairs = _pair_rows('roof_task', 'roof', 96, 'waves', 60, 30, waves=(5, 10))
+    manifest = dict(monitor=[], groups={'roof_task': 'roof'})
+    result = promotion.decide(pairs, manifest, 1)
+    roof = result['zones']['roof']
+    assert roof['win_discordant'] == 30
+    assert roof['endpoint_used'] == 'win'
+    assert roof['win_guard_veto'] is False
+    assert roof['waves']['wilcoxon_worse_p'] < roof['waves']['alpha']  # old rule would veto
+    assert 'significant_roof_wave_regression:roof' not in result['reasons']
+
+
+def test_roof_falls_back_to_waves_when_wins_are_too_rare():
+    pairs = _pair_rows('roof_task', 'roof', 96, 'waves', 2, 0, waves=(5, 10))
+    manifest = dict(monitor=[], groups={'roof_task': 'roof'})
+    result = promotion.decide(pairs, manifest, 1)
+    roof = result['zones']['roof']
+    assert roof['win_discordant'] == 2
+    assert roof['endpoint_used'] == 'waves'
+    assert roof['waves']['veto'] is True
+    assert 'significant_roof_wave_regression:roof' in result['reasons']
+
+
+def test_roof_win_guard_vetoes_a_significant_win_loss_with_flat_waves():
+    pairs = _pair_rows('roof_task', 'roof', 96, 'waves', 0, 8, waves=(10, 10))
+    manifest = dict(monitor=[], groups={'roof_task': 'roof'})
+    result = promotion.decide(pairs, manifest, 1)
+    roof = result['zones']['roof']
+    assert roof['win_discordant'] == 8
+    assert roof['endpoint_used'] == 'win'
+    assert roof['win_guard_veto'] is True
+    assert 'significant_win_regression:roof' in result['reasons']
+    assert result['approved'] is False

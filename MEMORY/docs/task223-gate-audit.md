@@ -67,3 +67,5 @@ python3 -m pytest python/test_gate_v8_panel.py python/test_deploy21.py \
 - 不改 r95 历史 `decision.json`；是否回滚/重评由主控决定。
 - 不部署；控制器重启时 state 迁移自动生效（`gate_panel_student_round`）。
 - 区级 win guard 是额外的安全否决，仍保留原 Holm 家族；两者可能同时给理由。
+
+> roof 的同类修正见 [task223b](task223b-roof-win-first.md)。

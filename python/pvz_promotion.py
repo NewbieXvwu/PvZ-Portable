@@ -148,7 +148,9 @@ def policy(document=None):
                                unit=f"roof zone, pooling {sum(row['seeds'] for row in rows if row['zone'] == 'roof')} pairs",
                                zeros='discard', ties='average ranks',
                                distribution='exact conditional sign-flip, inclusive lower tail',
-                               tasks=roof),
+                               tasks=roof,
+                               win_first='wins first when win discordant >= 6; wave test is '
+                                         'the fallback only below that'),
                 pair_count=sum(row['seeds'] for row in rows),
                 episode_count=2 * sum(row['seeds'] for row in rows),
                 seeds_per_task=SEEDS_PER_TASK if not v8 else 'per task (v8 panel pairs)',
@@ -471,17 +473,31 @@ def decide(pairs, manifest, look):
         reasons.append('overall_point_estimate_negative')
     for zone, result in zones.items():
         rows = [r for r in scored if r['zone'] == zone]
-        if zone == 'roof':
-            waves = summarize_waves(rows)
-            waves.update(alpha=ROOF_WAVE_ALPHA / (len(LOOKS) * 2))
-            waves['veto'] = waves['wilcoxon_worse_p'] < waves['alpha']
-            result['waves'] = waves
-            if waves['veto']:
-                reasons.append('significant_roof_wave_regression:roof')
-            continue
         win_p = result['mcnemar_worse_p']
         discordant = result['gain'] + result['harm']
         result['win_discordant'] = discordant
+        if zone == 'roof':
+            waves = summarize_waves(rows)
+            waves.update(alpha=ROOF_WAVE_ALPHA / (len(LOOKS) * 2))
+            result['waves'] = waves
+            result['wave_test_p'] = waves['wilcoxon_worse_p']
+            # task223b: roof follows the same win-first rule.  Its wave test
+            # only stands in while the win comparison is underpowered.
+            if discordant >= ZONE_WIN_GUARD_DISCORDANT:
+                result['win_guard_veto'] = win_p < ZONE_WIN_GUARD_ALPHA
+                result['endpoint_used'] = 'win'
+                result['endpoint_worse_p'] = win_p
+                waves['veto'] = False
+                if result['win_guard_veto']:
+                    reasons.append('significant_win_regression:roof')
+            else:
+                result['win_guard_veto'] = False
+                result['endpoint_used'] = 'waves'
+                result['endpoint_worse_p'] = waves['wilcoxon_worse_p']
+                waves['veto'] = waves['wilcoxon_worse_p'] < waves['alpha']
+                if waves['veto']:
+                    reasons.append('significant_roof_wave_regression:roof')
+            continue
         wave_p = None
         if result['wave_pairs']:
             wave_p = wilcoxon_worse(
