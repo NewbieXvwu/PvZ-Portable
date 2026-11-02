@@ -1276,3 +1276,10 @@
 - 用户 08:05 前后强制重启（显示器也已点不亮，确认是 Windows 层驱动挂死）。生产 07:56 先用 stop_curr 停在组边界，08:10 手动拉起 qc 与看门狗。r85 因 r86 已排队被跳过（superseded），r86 打包中，GPU 正常。
 - dsh 账单事故：`dshjob` 叠加了网页端补丁，网页端默认模型被用户换成 yeta 后，upgrades（06:52 起）与 csearch 全部打到 yeta，把那边额度烧光，OpenCode Go 几乎没用。现在 `dshjob` 每次生成私有补丁、末尾钉死 opencode-go / deepseek-v4.1-flash（已用 yeta 默认实测覆盖成功）。
 - task217 第 2 阶段在 csearch 会话里续跑，已确认走 opencode-go。
+
+### 11-02 09:00 task217 第 2 阶段完成；task219 派出
+
+- task217b（csearch 9a77c235）：攒阳光探测、组合种植（de6b1561 规则）、学生 top-k 全部进 C++ `SEARCH`；L1/L17/L28/L33/L44 × 2 种子 89 个决策 + 雾关组合/探测各项全一致；Python 搜索、4 个测试文件与 `--search-impl` 已删。
+- **2.2 倍没有出现**，仍是 1.0–1.08 倍：决策耗时里模拟 36–57 %、学生前向 32–53 %，记账 < 1 %（第 1 阶段剖析误判）；单条推演一个 LawnApp，前向无法批量。再提速只能少模拟（验证样本 9→5 等），都改决策，留作提案表。
+- r86：A 训完（764 s），B 训练中；r85 已被跳过。
+- task219（dsh，cdeploy）：humanrows 合并 csearch、台式机新建引擎到 `artifacts/production/csearch1/`、冒烟；部署由我做。
