@@ -1703,3 +1703,18 @@ B为A相同v2timer配方，仅33个z*历史标签权重1.5→1.0；复用A特征
 原阶梯与窗口。旧族定义与旧档重放不改。无派生面板，实际任务经内联参数交给采集器，
 每轮刷新导入元数据；证据来源、待确认项与部署/回滚见
 [task193](MEMORY/docs/task193-deploy22.md)。
+
+### task220 LLM 包：前沿倍率族与中盘接回族（2026-11-02 登记，未部署）
+
+`llmplay_frontier_l{level}_m{mult}` 共 14 个新任务族：只取台式机 `curriculum_state.json` 当前
+`mult_index` 对应倍率 > 1.0 的关卡（L1/L3/L4/L8 2.5、L6 2.0、L9 1.75、L11 2.0、L13/L16/L18 1.5、
+L21/L22/L38 1.25、L31 1.5），`deck_selection: "player"`（GPT 只能用本关已登记胜组）、
+`fog_observation: "human_v2"`，种子段 **320000000–359999999**（每关 1,000,000 槽，
+`seed_base + (level-1)*1e6`，纪元步长 64,000,000），与 186–234M、243M、300–307M、81M 各段不相交。
+传送带关 L10/L20 仍只走原生支线，不进前沿倍率。
+
+中盘接回不是固定任务族：存档沿用来源门禁任务 id（`task101_*`），由 `import_llm_run` 按既有
+「原族不存在则登记 meta 的 task.id」规则登记成新的 `_s<seed>` 族；卡组、倍率、种子都照原局，
+`environment_task` 完整写入 meta，旧档重放不受现行规则影响。截断点 = 第一次破门（小推车触发或
+僵尸进到第 0 列）前 45 秒，导出后仍是完整 tick 日志。升级植物配额与地形联系见
+`configs/llmplay_seeds.json` 的 `decks.upgrades`（只统计本会话新胜组），未改生产课程。

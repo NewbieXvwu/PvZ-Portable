@@ -1,4 +1,9 @@
-"""task186 扩卡组任务：只计算结论、选下一项，不启动或重放引擎。"""
+"""task186 扩卡组任务：只计算结论、选下一项，不启动或重放引擎。
+
+task220 派发次序（用户 2026-11-01 定）：学生败局中盘接回（resume）> 前沿倍率
+（frontier，只派当前倍率 > 1.0 的关卡）> 传送带/Boss 支线 > 主线新卡组（升级植物
+优先，雾/屋顶广度留在主线）。普通 ×1 的日/夜/池重放已退役。
+"""
 from __future__ import annotations
 
 import json
@@ -10,8 +15,9 @@ from pvz_tasks import deck_pool_for_level, terrain_covered
 from .game import ROOT, load_tasks
 from . import workflow as wf
 
-NOTE = ("扩卡组任务没有终点；派发顺序：夜间/泳池/白天重放已登记胜利卡组 > 传送带支线 > 主线新卡组。"
-        "重放达标后循环加量，只有用户说停才停。")
+NOTE = ("扩卡组任务没有终点；派发顺序：学生败局中盘接回（resume）> 前沿倍率（frontier，仅 >1.0 的关卡）"
+        "> 传送带/Boss 支线 > 主线新卡组（升级植物优先、雾/屋顶广度在后）。"
+        "普通 ×1 重放退役；只有用户说停才停。")
 
 
 def config():
@@ -35,33 +41,18 @@ def configure_shard(shard=None, shards=None):
     return index, count
 
 
-def assigned_tasks(*, native=False, replay=False):
+def assigned_tasks(*, native=False, frontier=False):
     index, count = configure_shard()
     tasks = load_tasks()
-    if replay:
-        order = replay_task_order()
-        if count == len(config()["terrain_shards"]):
-            terrains = config()["terrain_shards"][index]
-            order = [key for key in order if region(tasks[key]["level"]) in terrains]
-        else:
-            order = order[index::count]
-        return [key for key in order
-                if region(tasks[key]["level"]) in config()["replay"]["terrain_order"]]
-    order = config()["native_order" if native else "order"]
+    if frontier:
+        order = config()["frontier"]["order"]
+        order = [key for key in order if key in tasks]
+    else:
+        order = config()["native_order" if native else "order"]
     if count == len(config()["terrain_shards"]):
-        return [key for key in order
-                if region(tasks[key]["level"]) in config()["terrain_shards"][index]]
+        terrains = config()["terrain_shards"][index]
+        return [key for key in order if region(tasks[key]["level"]) in terrains]
     return order[index::count]
-
-
-def replay_task_order():
-    """重放轨的任务族 id 列表，按配置的 地形优先级 → 关卡表顺序 排列。"""
-    cfg = config()["replay"]
-    definitions = load_tasks()
-    by_level = {int(task["level"]): key for key, task in definitions.items()
-                if key in config()["order"]}
-    return ["llmplay_decks_l%d_m100" % level for terrain in cfg["terrain_order"]
-            for level in cfg["levels"][terrain] if level in by_level]
 
 
 @lru_cache(maxsize=1)
@@ -73,6 +64,14 @@ def holdouts():
 @lru_cache(maxsize=50)
 def legal_cards(level):
     return deck_pool_for_level(level, config()["blacklist"])
+
+
+def upgrade_cards(terrain):
+    return list((config().get("upgrades", {}).get("cards") or {}).get(terrain) or [])
+
+
+def upgrade_target(terrain):
+    return int((config().get("upgrades", {}).get("targets") or {}).get(terrain, 0))
 
 
 def _seed_base(level, native=False):
@@ -93,6 +92,31 @@ def seed_index(level, seed, *, native=False):
     cfg = config()
     epoch, offset = divmod(int(seed) - _seed_base(level, native), cfg["seed_epoch_stride"])
     return epoch * cfg["seed_window"] + offset if epoch >= 0 and 0 <= offset < cfg["seed_window"] else None
+
+
+def frontier_base(level):
+    cfg = config()["frontier"]
+    return cfg["seed_base"] + (int(level) - 1) * cfg["seed_window"]
+
+
+def frontier_seed_at(level, index):
+    cfg = config()["frontier"]
+    epoch, offset = divmod(index, cfg["seed_window"])
+    return frontier_base(level) + epoch * cfg["seed_epoch_stride"] + offset
+
+
+def frontier_seed_index(level, seed):
+    cfg = config()["frontier"]
+    epoch, offset = divmod(int(seed) - frontier_base(level), cfg["seed_epoch_stride"])
+    return epoch * cfg["seed_window"] + offset if epoch >= 0 and 0 <= offset < cfg["seed_window"] else None
+
+
+def main_task(level):
+    """关卡 -> 主线任务族 id。"""
+    for task_id in config()["order"]:
+        if int(load_tasks().get(task_id, {}).get("level") or 0) == int(level):
+            return task_id
+    return None
 
 
 def _latest(entries):
@@ -131,10 +155,73 @@ def attempt_seeds(entries, task_id, deck, seed, prior=()):
     return sorted(seeds)
 
 
+@lru_cache(maxsize=1)
+def resume_catalog():
+    """包内中盘接回清单（configs/llmplay_resume.json）。
+
+    每条对应 `resume/<archive>/` 里的一份存档：学生败局在首次破防前 30–60 秒截断的
+    tick 日志 + 截断点那一帧。卡组与倍率都照原局，不能再自选。
+    """
+    relative = (config().get("resume") or {}).get("catalog") or "configs/llmplay_resume.json"
+    path = ROOT / relative
+    if not path.is_file():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return list(document.get("items") or [])
+
+
+def resume_progress(document):
+    catalog = resume_catalog()
+    known = {item["id"] for item in catalog}
+    played = {entry.get("resume_id") for entry in document.get("archives") or []
+              if entry.get("resume_id") in known}
+    items = [item for item in catalog if item["id"] not in played]
+    terrain_order = (config().get("resume") or {}).get("terrain_order") or []
+    rank = {name: index for index, name in enumerate(terrain_order)}
+    def terrain(item):
+        return item.get("terrain") or region(item["level"])
+    items.sort(key=lambda item: (rank.get(terrain(item), len(rank)),
+                                 item.get("cutoff_tick", 0), item["id"]))
+    counts = {}
+    for item in catalog:
+        name = terrain(item)
+        counts.setdefault(name, [0, 0])
+        counts[name][0] += 1
+        if item["id"] in played:
+            counts[name][1] += 1
+    return dict(total=len(catalog), played=len(played), remaining=len(items),
+                by_terrain=counts, items=items)
+
+
+def resume_items(document):
+    candidates = []
+    index, count = configure_shard()
+    terrains = (config()["terrain_shards"][index]
+                if count == len(config().get("terrain_shards") or []) else None)
+    for item in document.get("resume", {}).get("items") or []:
+        if terrains is not None and region(item["level"]) not in terrains:
+            continue
+        archive = item.get("archive") or ""
+        candidates.append(dict(task_id=item["id"], level=int(item["level"]),
+                               terrain=item.get("terrain") or region(item["level"]),
+                               cycle=1, batch=1, layer="resume", multiplier=item.get("multiplier", 1.0),
+                               seed=int(item["seed"]), deck=list(item.get("deck") or []),
+                               action="resume_archive", archive=archive,
+                               path=str(ROOT / "resume" / archive),
+                               base_task_id=item.get("base_task_id"),
+                               breach_tick=item.get("breach_tick"), cutoff_tick=item.get("cutoff_tick"),
+                               source_arm=item.get("source_arm"), source_checkpoint=item.get("source_checkpoint"),
+                               source_executable=item.get("source_executable"),
+                               source_result=item.get("source_result")))
+    return candidates
+
+
 def derive(entries, run_id=None):
     cfg, definitions = config(), load_tasks()
     by_level = {}
     for entry in _latest(entries):
+        if entry.get("resume_id"):
+            continue
         task = definitions.get(entry["task_id"], {})
         level = int(entry.get("level") or task.get("level") or 0)
         multiplier = entry.get("zombie_count_multiplier") or task.get("zombie_count_multiplier")
@@ -207,6 +294,21 @@ def derive(entries, run_id=None):
         terrain_progress[terrain] = dict(counts=counts, targets=targets, missing=missing,
                                          covered=sum(counts[card] >= targets[card] for card in counts),
                                          total=len(counts), complete=not missing)
+    # task220：升级植物按地形配额。只算本关已登记、且卡组里带该地形升级植物的不同胜组。
+    upgrade_progress = {}
+    for terrain in (cfg.get("upgrades", {}).get("targets") or {}):
+        cards = upgrade_cards(terrain)
+        decks = set()
+        for entry in entries:
+            if entry.get("carried") or not _won(entry):
+                continue
+            if region(int(entry.get("level") or 0)) != terrain:
+                continue
+            if set(entry.get("deck") or []) & set(cards):
+                decks.add(wf.deck_key(entry.get("deck")))
+        upgrade_progress[terrain] = dict(wins=len(decks), target=upgrade_target(terrain),
+                                         missing=max(0, upgrade_target(terrain) - len(decks)),
+                                         cards=cards, decks=sorted(decks))
     active, active_native = assigned_tasks(), assigned_tasks(native=True)
     native_progress = {}
     for task_id in cfg["native_order"]:
@@ -226,30 +328,33 @@ def derive(entries, run_id=None):
                                         complete=len(wins) >= cfg["native_wins"], pending=pending,
                                         available_seeds=[seed_at(level, cursor + n, native=True)
                                                          for n in range(candidate_count)])
-    # task211：弱地形（夜/池/日）用已登记胜利卡组在新种子重放，最高优先派发。
-    replay_cfg = cfg["replay"]
-    active_replay = assigned_tasks(replay=True)
-    replay_progress = {}
-    for task_id in replay_task_order():
-        level = int(levels[task_id]["level"])
-        registered = levels[task_id]["registered_decks"]
-        groups = levels[task_id]["decks"]
-        wins = [entry for entry in by_level.get(level, [])
-                if _won(entry) and wf.deck_key(entry.get("deck")) in registered]
-        goal = replay_cfg["target_wins"] * (1 + len(wins) // replay_cfg["target_wins"])
-        # 后来累计到三败的胜组不再轮换派发，重放照样换下一套。
-        rotation = sorted((cards for cards in registered.values()
-                           if groups.get(wf.deck_key(cards), {}).get("losses", 0) < cfg["max_losses"]),
-                          key=lambda cards: (len(groups.get(wf.deck_key(cards), {}).get("seeds", [])),
-                                             wf.deck_key(cards)))
-        cursor = max([value for value in (seed_index(level, entry["seed"])
-                                          for entry in by_level.get(level, []))
-                      if value is not None], default=-1) + 1
-        replay_progress[task_id] = dict(level=level, terrain=region(level), wins=len(wins),
-                                        target=replay_cfg["target_wins"], goal=goal,
-                                        decks=[list(cards) for cards in rotation],
-                                        available_seeds=[seed_at(level, cursor + 8 + n)
-                                                         for n in range(candidate_count)])
+    # task220：前沿倍率。只给课程当前倍率 > 1.0 的关卡派发；用本关已登记胜组打新种子。
+    frontier_cfg = cfg["frontier"]
+    active_frontier = assigned_tasks(frontier=True)
+    frontier_progress = {}
+    for task_id in frontier_cfg["order"]:
+        task = definitions.get(task_id)
+        if task is None:
+            continue
+        level, terrain = int(task["level"]), region(task["level"])
+        base_task = main_task(level)
+        info = levels.get(base_task) or {}
+        registered = list((info.get("winning_decks") or {}).values())
+        records = [entry for entry in _latest(entries)
+                   if entry.get("valid", True) and entry.get("task_id") == task_id
+                   and not entry.get("abandoned")]
+        wins = sorted({int(entry["seed"]) for entry in records if _won(entry)})
+        indices = [frontier_seed_index(level, entry["seed"]) for entry in records]
+        cursor = max([value for value in indices if value is not None], default=-1) + 1
+        frontier_progress[task_id] = dict(level=level, terrain=terrain,
+                                          multiplier=float(task["zombie_count_multiplier"]),
+                                          wins=len(wins), winning_seeds=wins,
+                                          target=frontier_cfg["target_wins"],
+                                          complete=len(wins) >= frontier_cfg["target_wins"],
+                                          decks=[list(cards) for cards in registered],
+                                          legal_cards=legal_cards(level),
+                                          available_seeds=[frontier_seed_at(level, cursor + n)
+                                                           for n in range(candidate_count)])
     # task210：传送带支线先派发到各关达标，之后回到主线并按轮次提高主线配额。
     covered = all(terrain_progress[levels[key]["terrain"]]["complete"] for key in active)
     native_done = all(native_progress[key]["complete"] for key in active_native)
@@ -263,20 +368,24 @@ def derive(entries, run_id=None):
             for task_id, item in levels.items()}
     flat.update({task_id: dict(item, active=task_id in active_native, layer="native")
                  for task_id, item in native_progress.items()})
-    flat.update({task_id: dict(item, active=task_id in active_replay, layer="replay")
-                 for task_id, item in replay_progress.items()})
+    flat.update({task_id: dict(item, active=task_id in active_frontier, layer="frontier")
+                 for task_id, item in frontier_progress.items()})
+    resume = resume_progress(dict(archives=list(entries)))
     return dict(schema=wf.PROGRESS_SCHEMA, mode="decks", run_id=run_id, cycle=1, batch=1,
                 layer="decks", complete=False, note=NOTE, requirements=cfg,
                 shard=index, shards=count, active_tasks=active, levels=levels, stage=stage + 1,
                 active_native=active_native, native=native_progress,
-                active_replay=active_replay, replay=replay_progress,
+                active_frontier=active_frontier, frontier=frontier_progress,
+                resume=resume, upgrades=upgrade_progress,
                 coverage=terrain_progress, tasks=flat, archives=list(entries))
 
 
 def items(document):
     levels = document["levels"]
+    upgrades = document.get("upgrades") or {}
     order = sorted(document["active_tasks"], key=lambda key: (
         not bool(document["coverage"][levels[key]["terrain"]]["missing"]),
+        not bool((upgrades.get(levels[key]["terrain"]) or {}).get("missing")),
         levels[key]["victory_decks"] / levels[key]["goal"], levels[key]["attempts"], levels[key]["level"]))
     candidates = []
     for task_id in order:
@@ -287,10 +396,14 @@ def items(document):
             continue
         priority = sorted((int(card) for card in missing if int(card) in info["legal_cards"]),
                           key=lambda card: (-missing[str(card)], card))
+        upgrade = upgrades.get(info["terrain"]) or {}
         base = dict(task_id=task_id, level=info["level"], terrain=info["terrain"],
                     cycle=1, batch=1, layer="decks", multiplier=1.0,
                     victory_decks=info["victory_decks"], target=info["goal"],
                     required_lengths=info["required_lengths"], priority_cards=priority,
+                    upgrade_cards=list(upgrade.get("cards") or []),
+                    upgrade_wins=upgrade.get("wins"), upgrade_target=upgrade.get("target"),
+                    upgrade_required=bool(upgrade.get("missing")),
                     legal_cards=info["legal_cards"], registered_decks=list(info["registered_decks"].values()),
                     failed_decks=[group for group in info["decks"].values() if group["losses"] >= config()["max_losses"]])
         if info["pending"]:
@@ -323,63 +436,85 @@ def native_items(document):
     return candidates
 
 
-def replay_items(document):
+def frontier_items(document):
     candidates = []
-    for task_id in document.get("active_replay", []):
-        info = document.get("replay", {})[task_id]
-        if info["wins"] >= info["goal"] or not info["decks"]:
+    for task_id in document.get("active_frontier", []):
+        info = document.get("frontier", {}).get(task_id)
+        if info is None or info["complete"] or not info["decks"]:
             continue
         base = dict(task_id=task_id, level=info["level"], terrain=info["terrain"],
-                    cycle=1, batch=1, layer="replay", multiplier=1.0,
-                    wins=info["wins"], target=info["goal"], registered_decks=info["decks"])
+                    cycle=1, batch=1, layer="frontier", multiplier=info["multiplier"],
+                    wins=info["wins"], target=info["target"], registered_decks=info["decks"],
+                    legal_cards=info["legal_cards"])
         seed = next((value for value in info["available_seeds"]
                      if wf._slot(task_id, value) not in wf.held()), None)
         if seed is None:
             continue
         candidates.append(dict(base, seed=seed, deck=info["decks"][info["wins"] % len(info["decks"])],
-                               action="replay_deck"))
+                               action="frontier_deck"))
     return candidates
 
 
 def view(document):
     claims = wf.held()
-    queues = [(replay_items(document), "replay"), (native_items(document), "native"),
-              (items(document), "main")]
+    queues = [(resume_items(document), "resume"), (frontier_items(document), "frontier"),
+              (native_items(document), "native"), (items(document), "main")]
     pools = {name: wf._first_free(candidates, claims) for candidates, name in queues}
     item = next((found for found in pools.values() if found), None)
     if item is None:
         item = wf._busy([row for candidates, _ in queues for row in candidates]) \
             or wf._item(document, None, "blocked", note="没有可推进的项")
-    return dict(item=item, main=pools["main"], replay=pools["replay"], challenge=None,
-                native=pools["native"], complete=False, cycle=1,
+    return dict(item=item, main=pools["main"], resume=pools["resume"], frontier=pools["frontier"],
+                challenge=None, native=pools["native"], complete=False, cycle=1,
                 shard=document["shard"], shards=document["shards"], note=NOTE)
 
 
+def _earlier_block(document, name):
+    """name 之前的队列里还有能领的项就拦下来（派发次序 resume > frontier > native > main）。"""
+    claims = wf.held()
+    queues = {"resume": resume_items, "frontier": frontier_items,
+              "native": native_items, "main": items}
+    order = ["resume", "frontier", "native", "main"]
+    labels = {"resume": "学生败局中盘接回", "frontier": "前沿倍率",
+              "native": "传送带/Boss 支线", "main": "主线"}
+    for earlier in order[:order.index(name)]:
+        if wf._first_free(queues[earlier](document), claims) is not None:
+            raise ValueError("%s优先；请先领取本片%s项" % (labels[earlier], labels[earlier]))
+    return None
+
+
 def check(document, task_id, deck, strategy="", seed=None):
+    if task_id in {item["id"] for item in resume_catalog()}:
+        raise ValueError("中盘接回项用 Game.load_archive(item['path']) 打开；卡组与倍率照原局，不能自选")
+    if task_id in document.get("active_frontier", []):
+        info = document["frontier"][task_id]
+        _earlier_block(document, "frontier")
+        if info["complete"]:
+            raise ValueError("本关前沿倍率已达标；请领取其余项")
+        if seed is None or int(seed) not in info["available_seeds"]:
+            raise ValueError("请使用 next_task() 分配的本关前沿倍率新种子")
+        if wf.deck_key(deck or []) not in {wf.deck_key(cards) for cards in info["decks"]}:
+            raise ValueError("前沿倍率只能用本关已登记的胜利卡组；新卡组请领主线项")
+        if not terrain_covered(info["level"], deck):
+            raise ValueError("卡组没有覆盖本关地形")
+        if wf.deck_key(deck) in holdouts():
+            raise ValueError("门禁/挑选留出卡组签名禁止使用（跨关同样禁止）")
+        if not set(deck) <= set(info["legal_cards"]):
+            raise ValueError("卡组含任务黑名单中的卡；请看 next_task() 的 legal_cards")
+        return dict(cycle=1, workflow_layer="frontier")
     if task_id in document["active_native"]:
         info = document["native"][task_id]
+        _earlier_block(document, "native")
         if deck:
             raise ValueError("原生传送带/固定卡支线由引擎发牌，不能自选卡组")
         if info["complete"] or seed is None or int(seed) not in info["available_seeds"]:
             raise ValueError("支线须使用队列分配的新种子，各关达到 16 胜后不再分配")
-        if wf._first_free(replay_items(document), wf.held()) is not None:
-            raise ValueError("弱地形重放优先；请先领取夜间/泳池/白天的重放项")
         return dict(cycle=1, workflow_layer="native")
     if task_id not in document["active_tasks"]:
         raise ValueError("请使用本分片 next_task() 给出的新任务族")
     info = document["levels"][task_id]
-    replay_info = document.get("replay", {}).get(task_id)
-    # 重放轨用主线窗口之后的另一段种子；按种子落在哪一段分流，两轨互不抢占。
-    if replay_info and seed is not None and int(seed) in replay_info["available_seeds"]:
-        if wf.deck_key(deck or []) not in info["registered_decks"]:
-            raise ValueError("重放只能用本关已登记的胜利卡组；新卡组请领主线项")
-        return dict(cycle=1, workflow_layer="decks")
     if wf.deck_key(deck or []) not in info["decks"]:
-        # 只拦全新卡组；断局 resume / 同卡组换种子不受重放与支线优先影响。
-        earlier = (("弱地形重放", replay_items), ("传送带支线", native_items))
-        for label, queue in earlier:
-            if wf._first_free(queue(document), wf.held()) is not None:
-                raise ValueError("%s优先；请先领取本片%s项" % (label, label))
+        _earlier_block(document, "main")
     if not any(item["task_id"] == task_id for item in items(document)):
         raise ValueError("本关本轮目标已达标；请领取其余主线或传送带支线")
     if seed is None or int(seed) not in info["available_seeds"]:
@@ -400,6 +535,11 @@ def check(document, task_id, deck, strategy="", seed=None):
         raise ValueError("这套卡组已三败，请记录失败原因并换卡组")
     if len(deck) not in info["required_lengths"] and not group:
         raise ValueError("本关卡组大小尚缺配额；新卡组长度须为 %s" % info["required_lengths"])
+    upgrade = (document.get("upgrades") or {}).get(info["terrain"]) or {}
+    if (not group and upgrade.get("missing")
+            and not (set(deck) & set(upgrade.get("cards") or []))):
+        raise ValueError("本关地形升级植物还缺 %d 套胜组；新卡组必须带一张 %s 升级植物并带它的底座"
+                         "（底座规则见 PROMPT）" % (upgrade["missing"], upgrade["cards"]))
     return dict(cycle=1, workflow_layer="decks")
 
 
@@ -416,18 +556,28 @@ def archive_requirements(task_id, deck, *, reason="", note="", result=None, **kw
 
 def report(document):
     lines = ["# 扩卡组进度", "", NOTE, "",
-             "当前分片 %d/%d（0 起编号）；原版 1.0 倍，一套一胜。" % (document["shard"], document["shards"]),
-             "", "| 关卡 | 地形 | 胜利卡组 | 当前目标 | ≤7张 | 8张 |", "|---|---|---|---|---|---|"]
+             "当前分片 %d/%d（0 起编号）；一套一胜。" % (document["shard"], document["shards"]),
+             "", "## 学生败局中盘接回（最高优先，一条只打一次）", ""]
+    resume = document.get("resume") or {}
+    lines.append("共 %d 条，已打 %d，剩 %d。" % (resume.get("total", 0), resume.get("played", 0),
+                                              resume.get("remaining", 0)))
+    for terrain, (total, played) in sorted((resume.get("by_terrain") or {}).items()):
+        lines.append("- %s：%d/%d" % (terrain, played, total))
+    lines += ["", "## 前沿倍率（课程当前倍率 > 1.0）", "",
+              "| 关卡 | 地形 | 倍率 | 胜局 | 目标 |", "|---|---|---|---|---|"]
+    for key in document.get("active_frontier", []):
+        info = document["frontier"][key]
+        lines.append("| L%d | %s | %.2f | %d | %d |" % (
+            info["level"], info["terrain"], info["multiplier"], info["wins"], info["target"]))
+    lines += ["", "## 升级植物配额", "", "| 地形 | 升级胜组 | 目标 | 卡 |", "|---|---|---|---|"]
+    for terrain, info in sorted((document.get("upgrades") or {}).items()):
+        lines.append("| %s | %d | %d | %s |" % (terrain, info["wins"], info["target"], info["cards"]))
+    lines += ["", "| 关卡 | 地形 | 胜利卡组 | 当前目标 | ≤7张 | 8张 |", "|---|---|---|---|---|---|"]
     for key in document["active_tasks"]:
         info = document["levels"][key]
         lines.append("| L%d | %s | %d | %d | %d/3 | %d/3 |" % (
             info["level"], info["terrain"], info["victory_decks"], info["goal"], info["small_decks"], info["eight_decks"]))
-    lines += ["", "## 弱地形重放（最高优先：已登记胜利卡组 × 新种子）", "",
-              "| 关卡 | 地形 | 重放胜局 | 本轮目标 |", "|---|---|---|---|"]
-    for key in document.get("active_replay", []):
-        info = document["replay"][key]
-        lines.append("| L%d | %s | %d | %d |" % (info["level"], info["terrain"], info["wins"], info["goal"]))
-    lines += ["", "## 原生传送带支线（重放之后派发，各关 16 胜后停止）", "",
+    lines += ["", "## 原生传送带支线（前沿倍率之后派发，各关 16 胜后停止）", "",
               "| 关卡 | 不同种子胜局 | 目标 |", "|---|---|---|"]
     for key in document["active_native"]:
         info = document["native"][key]

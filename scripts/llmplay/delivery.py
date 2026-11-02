@@ -89,6 +89,7 @@ def _entry(archive, relative, *, valid=True, error=None):
                 conveyor_start=(meta.get("environment_task") or {}).get("conveyor_start"),
                 deck_seed_attempts=meta.get("deck_seed_attempts"),
                 deck_attempt_seeds=meta.get("deck_attempt_seeds"),
+                resume_id=meta.get("resume_id"), resume=meta.get("resume"),
                 zombie_count_multiplier=task.get("zombie_count_multiplier"))
 
 
@@ -382,9 +383,10 @@ def carry(source=None):
         prior = json.loads(source.read_text(encoding="utf-8"))
         if prior.get("schema") != CARRY_SCHEMA:
             raise ValueError("前次进度不是 %s：%s" % (CARRY_SCHEMA, source))
-        known = workflow.plan()["tasks"]
+        known = workflow.known_tasks()
         entries = [_carry_entry(entry) for entry in prior.get("archives") or []]
-        entries = [entry for entry in entries if entry["task_id"] in known]
+        entries = [entry for entry in entries
+                   if entry["task_id"] in known or entry.get("resume_id")]
         if not workflow.decks_mode():
             _restore_diagnoses(root, prior)
         return _publish(root, entries, budget.session(), run_id=prior.get("run_id"))

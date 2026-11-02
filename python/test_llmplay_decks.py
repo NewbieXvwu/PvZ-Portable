@@ -44,10 +44,12 @@ D2 = [0, 1, 2, 3, 7, 17]
 
 @contextmanager
 def mainline_only():
-    """派发顺序是 弱地形重放 > 传送带支线 > 主线新卡组；单测主线校验闸时把前两轨清空。"""
-    def assign(*, native=False, replay=False):
-        return [] if (native or replay) else decks.config()['order']
-    with patch.object(decks, 'assigned_tasks', side_effect=assign):
+    """派发顺序是 中盘接回 > 前沿倍率 > 支线 > 主线；单测主线校验闸时把前三轨清空。"""
+    def assign(*, native=False, frontier=False):
+        return [] if (native or frontier) else decks.config()['order']
+    with patch.object(decks, 'assigned_tasks', side_effect=assign), \
+            patch.object(decks, 'resume_catalog', return_value=[]), \
+            patch.object(decks, 'upgrade_target', return_value=0):
         yield
 
 
@@ -157,7 +159,11 @@ def test_decks_goal_grows_and_seed_windows_extend_without_materializing_seeds():
     for length, count in ((6, 3), (8, 3), (9, 6)):
         cards.extend([[1] + list(combo) for combo in itertools.islice(itertools.combinations(pool, length - 1), count)])
     # 支线已完成（此夹具没有分配支线/重放），本片覆盖完成后主线继续加2组。
-    with patch.object(decks, 'assigned_tasks', side_effect=lambda native=False, replay=False: [] if native or replay else ['llmplay_decks_l1_m100']), \
+    with patch.object(decks, 'assigned_tasks',
+                      side_effect=lambda native=False, frontier=False:
+                      [] if native or frontier else ['llmplay_decks_l1_m100']), \
+            patch.object(decks, 'resume_catalog', return_value=[]), \
+            patch.object(decks, 'upgrade_target', return_value=0), \
             patch.dict(decks.config(), coverage_per_card=0):
         doc = workflow.derive([entry(1, deck, n) for n, deck in enumerate(cards)], 'run')
     info = doc['levels']['llmplay_decks_l1_m100']
@@ -259,12 +265,14 @@ def test_decks_fog_specs_and_unknown_history_do_not_count_as_public_wins():
     assert doc['levels'][old['task_id']]['victory_decks'] == 1
 
 
-def test_decks_native_is_dispatched_after_replay_until_sixteen_distinct_seed_wins():
-    no_replay = dict(side_effect=lambda native=False, replay=False:
-                     [] if replay else (decks.config()["native_order"] if native else decks.config()["order"]))
-    with patch.object(decks, 'assigned_tasks', **no_replay):
+def test_decks_native_is_dispatched_after_frontier_until_sixteen_distinct_seed_wins():
+    no_frontier = dict(side_effect=lambda native=False, frontier=False:
+                       [] if frontier else (decks.config()["native_order"] if native else decks.config()["order"]))
+    with patch.object(decks, 'assigned_tasks', **no_frontier), \
+            patch.object(decks, 'resume_catalog', return_value=[]), \
+            patch.object(decks, 'upgrade_target', return_value=0):
         doc = workflow.derive([], 'run')
-        assert doc['active_replay'] == []
+        assert doc['active_frontier'] == [] and doc['frontier']
         assert workflow.next_task(doc, claim=False)['item']['layer'] == 'native'
         with pytest.raises(ValueError, match='支线优先'):
             workflow.check(doc, doc['active_tasks'][0], D1,
@@ -286,35 +294,40 @@ def test_decks_native_is_dispatched_after_replay_until_sixteen_distinct_seed_win
     assert '原生传送带支线' in workflow.report(doc)
 
 
-def test_decks_replay_rotates_registered_decks_on_fresh_seeds_first():
+def test_decks_frontier_rotates_registered_decks_on_fresh_seeds_first():
     night = 'llmplay_decks_l11_m100'
+    frontier = 'llmplay_frontier_l11_m200'
+
     def game(deck, index, **kw):
         return dict(entry(11, deck, index, **kw), seed=decks.seed_at(11, index))
-    entries = [game(D1, 0), game(D2, 1)]
-    entries += [game(D1, n) for n in range(2, 26)]
-    doc = workflow.derive(entries, 'run')
-    assert night in doc['active_replay']
-    info = doc['replay'][night]
-    assert info['wins'] == 26 and info['goal'] == 48 and len(info['decks']) == 2
+    entries = [game(D1, 0), game(D2, 1)] + [game(D1, n) for n in range(2, 5)]
+    with patch.object(decks, 'resume_catalog', return_value=[]):
+        doc = workflow.derive(entries, 'run')
+    assert frontier in doc['active_frontier']
+    info = doc['frontier'][frontier]
+    assert info['multiplier'] == 2.0 and info['wins'] == 0 and len(info['decks']) == 2
     item = workflow.next_task(doc, claim=False)['item']
-    assert item['layer'] == 'replay' and item['action'] == 'replay_deck' and item['task_id'] == night
-    assert item['deck'] == D2 and item['seed'] == decks.seed_at(11, 34)  # D2 只用过一次，先轮换到它
-    workflow.check(doc, night, D2, seed=item['seed'])           # 已登记卡组可复用，不触发差 2 张闸
-    workflow.check(doc, night, D1, seed=item['seed'])
+    assert item['layer'] == 'frontier' and item['action'] == 'frontier_deck' and item['task_id'] == frontier
+    assert item['multiplier'] == 2.0 and item['deck'] == D1 and item['seed'] == decks.frontier_seed_at(11, 0)
+    workflow.check(doc, frontier, D1, seed=item['seed'])
     with pytest.raises(ValueError, match='已登记的胜利卡组'):
-        workflow.check(doc, night, [0, 1, 2, 3, 4, 7], seed=item['seed'])
+        workflow.check(doc, frontier, [0, 1, 2, 3, 4, 7], seed=item['seed'])
     with pytest.raises(ValueError, match='新种子'):
-        workflow.check(doc, night, D1, seed=decks.seed_at(11, 0))
-    with pytest.raises(ValueError, match='重放优先'):
+        workflow.check(doc, frontier, D1, seed=decks.seed_at(11, 0))
+    with pytest.raises(ValueError, match='前沿倍率优先'):
         workflow.check(doc, decks.native_items(doc)[0]['task_id'], [],
                        seed=decks.native_items(doc)[0]['seed'])
-    grown = entries + [game(D1, n) for n in range(26, 38)]
-    doc = workflow.derive(grown, 'run')
-    assert decks.replay_items(doc)[0]['deck'] == D2
-    assert decks.replay_items(doc)[0]['seed'] == decks.seed_at(11, 46)
-    doc = workflow.derive([game(deck, n)
-                           for n, deck in enumerate([D1, D2] * 25)], 'run')
-    assert doc['replay'][night]['goal'] == 72                   # 50 胜后加量到 24×3
+    won = [dict(entry(11, D1, 100 + n, task_id=frontier), level=11,
+                seed=decks.frontier_seed_at(11, n), zombie_count_multiplier=2.0) for n in range(2)]
+    doc = workflow.derive(entries + won, 'run')
+    assert doc['frontier'][frontier]['wins'] == 2
+    assert decks.frontier_items(doc)[0]['deck'] == D1   # 2 胜后轮换回第一套
+    assert decks.frontier_items(doc)[0]['seed'] == decks.frontier_seed_at(11, 2)
+    done = [dict(entry(11, D1, 200 + n, task_id=frontier), level=11,
+                 seed=decks.frontier_seed_at(11, n), zombie_count_multiplier=2.0) for n in range(6)]
+    doc = workflow.derive(entries + done, 'run')
+    assert doc['frontier'][frontier]['complete']
+    assert all(row['task_id'] != frontier for row in decks.frontier_items(doc))
 
 
 def test_decks_native_shards_and_seed_windows_are_separate():
@@ -579,3 +592,42 @@ def test_decks_roster_public_export_and_default_seed():
         query.assert_called_once_with(task_id, load_tasks()[task_id]['seeds'][0])
     with pytest.raises(ValueError, match='没有任务'):
         llmplay.roster('not-a-task')
+
+
+def test_decks_resume_items_dispatch_first_and_are_one_shot():
+    catalog = [dict(id='r86a_l17_s1', archive='r86a_l17_s1', level=17, terrain='night',
+                    seed=1, deck=D1, multiplier=1.0, base_task_id='task101_l17_night_n10',
+                    breach_tick=9000, cutoff_tick=4500, source_arm='r86a'),
+               dict(id='r86a_l21_s2', archive='r86a_l21_s2', level=21, terrain='pool',
+                    seed=2, deck=D2, multiplier=1.0, base_task_id='task101_l21_pool_p9k',
+                    breach_tick=12000, cutoff_tick=7500, source_arm='r86a')]
+    with patch.object(decks, 'resume_catalog', return_value=catalog):
+        doc = workflow.derive([], 'run')
+        assert doc['resume']['total'] == 2 and doc['resume']['remaining'] == 2
+        item = workflow.next_task(doc, claim=False)['item']
+        assert item['layer'] == 'resume' and item['task_id'] == 'r86a_l17_s1'
+        assert item['action'] == 'resume_archive' and item['path'].endswith('resume/r86a_l17_s1')
+        with pytest.raises(ValueError, match='load_archive'):
+            workflow.check(doc, 'r86a_l17_s1', D1, seed=1)
+        played = dict(entry(17, D1, 0), resume_id='r86a_l17_s1',
+                      task_id='task101_l17_night_n10')
+        doc = workflow.derive([played], 'run')
+        assert doc['resume']['played'] == 1 and doc['resume']['remaining'] == 1
+        item = workflow.next_task(doc, claim=False)['item']
+        assert item['task_id'] == 'r86a_l21_s2'
+
+
+def test_decks_upgrade_requirement_applies_until_session_target():
+    night = 'llmplay_decks_l11_m100'
+    def assign(*, native=False, frontier=False):
+        return [] if (native or frontier) else decks.config()['order']
+    with patch.object(decks, 'assigned_tasks', side_effect=assign), \
+            patch.object(decks, 'resume_catalog', return_value=[]):
+        doc = workflow.derive([], 'run')
+        assert doc['upgrades']['night']['missing'] == 6
+        item = [row for row in decks.items(doc) if row['task_id'] == night][0]
+        assert item['upgrade_required'] and item['upgrade_cards'] == [42]
+        with pytest.raises(ValueError, match='升级植物'):
+            workflow.check(doc, night, D1, seed=item['seed'])
+        upgraded = [42, 10, 9, 8, 3, 4, 17]
+        workflow.check(doc, night, upgraded, seed=item['seed'])

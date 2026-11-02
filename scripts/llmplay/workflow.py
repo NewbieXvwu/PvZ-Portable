@@ -64,6 +64,16 @@ def requirements() -> dict:
     return plan()["requirements"]
 
 
+def known_tasks() -> set:
+    """进度里认得的任务族：计划种子表 + decks 模式的四条派发轨。"""
+    tasks = set(plan().get("tasks") or {})
+    decks = plan().get("decks") or {}
+    for key in ("order", "native_order"):
+        tasks.update(decks.get(key) or [])
+    tasks.update((decks.get("frontier") or {}).get("order") or [])
+    return tasks
+
+
 def decks_mode():
     return plan().get("mode") == "decks"
 
@@ -585,9 +595,9 @@ def _ordered(document) -> tuple:
     """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞（decks 模式为三轨优先序）。"""
     if document.get("mode") == "decks":
         from . import decks
-        # task211 三轨：重放 > 传送带支线 > 主线新卡组，合成一条按优先序领取的队列。
-        return (decks.replay_items(document) + decks.native_items(document)
-                + decks.items(document)), []
+        # task220 四轨：中盘接回 > 前沿倍率 > 传送带/Boss 支线 > 主线新卡组，合成一条优先序队列。
+        return (decks.resume_items(document) + decks.frontier_items(document)
+                + decks.native_items(document) + decks.items(document)), []
     return _main_items(document), _challenge_items(document)
 
 
@@ -888,6 +898,11 @@ def archive_requirements(task_id, strategy="", review="", abandoned=False, *, la
         from . import decks
         return decks.archive_requirements(task_id, deck, reason=reason, note=note,
                                           result=result, abandoned=abandoned)
+    if layer in ("resume", "frontier"):
+        # task220：中盘接回/前沿倍率都要求一句打法思路；卡组由来源局或已登记胜组固定。
+        if not abandoned and not str(strategy or "").strip():
+            raise ValueError("中盘接回/前沿倍率导出前请填写 strategy：从当前局面打算怎么救/怎么打")
+        return
     if abandoned:
         return
     task = load_tasks().get(task_id) or {}
