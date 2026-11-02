@@ -122,3 +122,90 @@ def test_v8_sequential_evaluate_certificate(tmp_path, monkeypatch):
     assert result['overall']['pairs'] == 492
     assert gate.valid_certificate(result, result['contract'])
     assert {side for side, _, _ in calls} == {'incumbent', 'A', 'B'}
+
+
+def _pair_rows(task_id, zone, count, endpoint, candidate_wins, incumbent_wins, waves=(10, 10)):
+    rows = []
+    for index in range(count):
+        candidate = index < candidate_wins
+        incumbent = index < incumbent_wins
+        if endpoint == 'waves':
+            candidate_wave, incumbent_wave = waves
+        else:
+            candidate_wave = 20 if candidate else 0
+            incumbent_wave = 20 if incumbent else 0
+        rows.append(dict(task_id=task_id, zone=zone, seed=index, candidate=candidate,
+                         incumbent=incumbent, candidate_wave=candidate_wave,
+                         incumbent_wave=incumbent_wave, wave_count=20, endpoint=endpoint))
+    return rows
+
+
+def test_next_panel_follows_the_promoted_side():
+    manifest = dict(groups={'fog_task': 'fog', 'night_task': 'night'},
+                    tasks=[dict(task_id='fog_task', gate_key='fog_task', seeds=[0, 1]),
+                           dict(task_id='night_task', gate_key='night_task', seeds=[0, 1])])
+    calibration = {'fog_task': dict(multiplier=1., low_win=True),
+                   'night_task': dict(multiplier=1., low_win=False)}
+    outcomes = {
+        'A': {'fog_task': {0: {'won': True}, 1: {'won': False}},
+              'night_task': {0: {'won': True}, 1: {'won': False}}},
+        'B': {'fog_task': {0: {'won': False}, 1: {'won': False}},
+              'night_task': {0: {'won': False}, 1: {'won': False}}},
+        'incumbent': {'fog_task': {0: {'won': False}, 1: {'won': False}},
+                      'night_task': {0: {'won': True}, 1: {'won': True}}}}
+    promoted = promotion.next_panel(calibration, manifest, outcomes, 'A')
+    stale = promotion.next_panel(calibration, manifest, outcomes)
+    assert promoted['fog_task']['low_win'] is False
+    assert promoted['fog_task']['multiplier'] == 1.
+    assert promoted['fog_task']['rates']['A'] == .5
+    assert stale['fog_task']['low_win'] is True
+    assert stale['fog_task']['multiplier'] == .75
+
+
+def test_recalibrate_panel_reuses_stored_winner_rates():
+    pre = {'fog_task': dict(multiplier=1., low_win=True)}
+    post = {'fog_task': dict(multiplier=.75, low_win=True,
+                             rates={'A': .5, 'B': .1, 'incumbent': 0.})}
+    fixed = promotion.recalibrate_panel(pre, post, 'A')
+    assert fixed['fog_task']['low_win'] is False
+    assert fixed['fog_task']['multiplier'] == 1.
+
+
+def test_startup_recalibration_follows_current_student():
+    pre = {'fog_task': dict(multiplier=1., low_win=True)}
+    state = dict(student_round=95, gate_panel={
+                    'fog_task': dict(multiplier=.75, low_win=True,
+                                     rates={'A': .5, 'B': .1, 'incumbent': 0.})},
+                training_jobs=[dict(round=95, promotion_approved=True, timing={'promotion': {
+                    'winner_family': 'A', 'contract': {'version': 8, 'calibration': pre}}})])
+    queue._recalibrate_current_incumbent(state, {'panel_version': 'v8'})
+    assert state['gate_panel_student_round'] == 95
+    assert state['gate_panel']['fog_task']['low_win'] is False
+    assert state['gate_panel']['fog_task']['multiplier'] == 1.
+
+
+def test_win_guard_vetoes_a_significant_loss_even_when_waves_are_flat():
+    pairs = []
+    pairs += _pair_rows('day_task', 'day', 96, 'win', 96, 88)
+    pairs += _pair_rows('night_task', 'night', 96, 'win', 96, 96)
+    pairs += _pair_rows('pool_task', 'pool', 96, 'win', 96, 96)
+    pairs += _pair_rows('fog_wave', 'fog', 84, 'waves', 84, 84)
+    pairs += _pair_rows('fog_win', 'fog', 12, 'win', 0, 8)
+    manifest = dict(monitor=[], groups={'day_task': 'day', 'night_task': 'night',
+                                        'pool_task': 'pool', 'fog_wave': 'fog', 'fog_win': 'fog'})
+    result = promotion.decide(pairs, manifest, 1)
+    assert result['zones']['fog']['win_guard_veto'] is True
+    assert result['zones']['fog']['endpoint_used'] == 'win'
+    assert 'significant_win_regression:fog' in result['reasons']
+    assert result['approved'] is False
+
+
+def test_win_guard_leaves_waves_alone_when_wins_are_too_rare():
+    pairs = []
+    pairs += _pair_rows('fog_wave', 'fog', 84, 'waves', 84, 84)
+    pairs += _pair_rows('fog_win', 'fog', 12, 'win', 0, 3)
+    manifest = dict(monitor=[], groups={'fog_wave': 'fog', 'fog_win': 'fog'})
+    result = promotion.decide(pairs, manifest, 1)
+    assert result['zones']['fog']['win_guard_veto'] is False
+    assert result['zones']['fog']['endpoint_used'] == 'waves'
+    assert 'significant_win_regression:fog' not in result['reasons']

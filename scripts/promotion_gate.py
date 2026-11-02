@@ -319,7 +319,8 @@ def evaluate(args):
             elif not winner:
                 result['reasons'] = ['no_candidate_passed']
             if stopped:
-                result['next_panel'] = sequential.next_panel(calibration, manifest, outcomes)
+                result['next_panel'] = sequential.next_panel(
+                    calibration, manifest, outcomes, winner or 'incumbent')
                 if 'A' in candidates and 'B' in candidates:
                     result['ab'] = sequential.ab_summary(pairs('A', 'B'))
             write(args.out / 'decision.json', result)

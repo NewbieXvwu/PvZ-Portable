@@ -10,6 +10,11 @@ GATE_VERSION = 8
 ROOF_WAVE_ALPHA = .01
 ALPHA = .05
 MARGIN = .03
+# task223: a wave endpoint must not hide a significant win loss.  With at least
+# this many discordant win pairs the exact McNemar test is meaningful; below it,
+# the zone's wins are genuinely too rare to compare and waves may stand in.
+ZONE_WIN_GUARD_ALPHA = .05
+ZONE_WIN_GUARD_DISCORDANT = 6
 # task128 (gate v5): the panel is the adventure set, not synthetic curriculum cells.
 # Levels come from configs/adventure_scoreboard.json (task103: 45 levels, 1.0x,
 # scoreboard decks) and enter only when the r11 student or the teacher has a win
@@ -130,7 +135,13 @@ def policy(document=None):
                 overall_interval='Newcombe paired method 10, two-sided 95%',
                 zone_veto='one-sided exact McNemar p across the four non-roof adventure zones; '
                           'Holm–Bonferroni step-down correction, family-wise alpha = 0.05; '
-                          'veto while ordered p < 0.05 / (group_count - rank + 1)',
+                          'veto while ordered p < 0.05 / (group_count - rank + 1); '
+                          'a significant win loss (p < .05, >= 6 discordant pairs) also vetoes '
+                          'when the zone uses wave endpoints',
+                zone_win_guard=dict(alpha=ZONE_WIN_GUARD_ALPHA,
+                                    min_discordant=ZONE_WIN_GUARD_DISCORDANT,
+                                    rule='waves substitute for wins only below the discordant '
+                                         'threshold; otherwise the win McNemar p decides'),
                 roof_veto=dict(endpoint='candidate_wave - incumbent_wave (final_wave)',
                                test='one-sided exact Wilcoxon signed-rank, alternative less',
                                alpha=ROOF_WAVE_ALPHA,
@@ -366,7 +377,25 @@ def freeze_panel(source, seed_block, calibration, demos):
     return panel
 
 
-def next_panel(calibration, manifest, outcomes):
+def _advance_setting(setting, rate, roof, base_multiplier=None):
+    """One staircase step for the side that will be incumbent after this gate."""
+    setting['low_win'] = rate <= .2 or roof
+    index = MULTIPLIERS.index(base_multiplier if base_multiplier is not None
+                              else setting.get('multiplier', 1.))
+    direction = 1 if rate >= .9 else -1 if rate <= .1 else 0
+    setting['multiplier'] = MULTIPLIERS[max(0, min(len(MULTIPLIERS) - 1, index + direction))]
+    return setting
+
+
+def next_panel(calibration, manifest, outcomes, incumbent_side='incumbent'):
+    """Advance the staircase for the CURRENT incumbent after this gate.
+
+    ``incumbent_side`` is 'A'/'B' when that candidate was promoted, otherwise
+    'incumbent'.  The old code always read outcomes['incumbent'], which after a
+    promotion described the previous student; that left stale low_win flags and
+    multipliers until another gate.  Reusing the promoted candidate's same-gate
+    rows costs no extra games.
+    """
     result = copy.deepcopy(calibration)
     for task in manifest['tasks']:
         key = task['gate_key']
@@ -376,14 +405,35 @@ def next_panel(calibration, manifest, outcomes):
         rates = {side: sum(row['won'] for row in rows[task['task_id']].values()) /
                        len(rows[task['task_id']]) for side, rows in outcomes.items()}
         setting['rates'] = rates
-        setting['low_win'] = (rates['incumbent'] <= .2 or manifest['groups'][task['task_id']] == 'roof')
-        direction = 1 if min(rates.values()) >= .9 else -1 if max(rates.values()) <= .1 else 0
+        current = rates.get(incumbent_side, rates['incumbent'])
+        roof = manifest['groups'][task['task_id']] == 'roof'
         if setting.get('demo_task'):
+            setting['low_win'] = current <= .2 or roof
+            direction = 1 if current >= .9 else -1 if current <= .1 else 0
             setting['demo_index'] = max(0, min(len(task['demo_start']['decisions']) - 1,
                                               setting['demo_index'] + direction))
         else:
-            index = MULTIPLIERS.index(setting['multiplier'])
-            setting['multiplier'] = MULTIPLIERS[max(0, min(len(MULTIPLIERS) - 1, index + direction))]
+            _advance_setting(setting, current, roof)
+    return result
+
+
+def recalibrate_panel(pre_calibration, post_calibration, incumbent_side):
+    """Redo the staircase for a promotion using already-stored gate rates.
+
+    Startup migration for states written by the old next_panel: the post-gate
+    rates contain the promoted side's rows, and pre_calibration is the frozen
+    pre-gate setting, so no games are replayed.
+    """
+    result = copy.deepcopy(post_calibration)
+    for key, setting in result.items():
+        rate = (setting.get('rates') or {}).get(incumbent_side)
+        if rate is None:
+            continue
+        pre = pre_calibration.get(key) or {}
+        if pre.get('demo_task'):
+            continue
+        _advance_setting(setting, rate, '_roof_' in key,
+                         base_multiplier=pre.get('multiplier', setting.get('multiplier', 1.)))
     return result
 
 
@@ -428,11 +478,29 @@ def decide(pairs, manifest, look):
             result['waves'] = waves
             if waves['veto']:
                 reasons.append('significant_roof_wave_regression:roof')
-        elif result['wave_pairs']:
-            result['endpoint_worse_p'] = wilcoxon_worse(
+            continue
+        win_p = result['mcnemar_worse_p']
+        discordant = result['gain'] + result['harm']
+        result['win_discordant'] = discordant
+        wave_p = None
+        if result['wave_pairs']:
+            wave_p = wilcoxon_worse(
                 [score(r, 'candidate') - score(r, 'incumbent') for r in rows])['wilcoxon_worse_p']
+            result['wave_test_p'] = wave_p
+        # task223: waves may substitute for wins only when the win comparison is
+        # underpowered.  With enough discordant win pairs, a significant win loss
+        # vetoes the zone even when wave progress is flat.
+        result['win_guard_veto'] = bool(
+            wave_p is not None and discordant >= ZONE_WIN_GUARD_DISCORDANT
+            and win_p < ZONE_WIN_GUARD_ALPHA)
+        if result['win_guard_veto']:
+            reasons.append('significant_win_regression:' + zone)
+        if wave_p is not None and discordant < ZONE_WIN_GUARD_DISCORDANT:
+            result['endpoint_used'] = 'waves'
+            result['endpoint_worse_p'] = wave_p
         else:
-            result['endpoint_worse_p'] = result['mcnemar_worse_p']
+            result['endpoint_used'] = 'win'
+            result['endpoint_worse_p'] = win_p
     adjusted = 0.
     ordered = sorted((z for z in zones if z != 'roof'), key=lambda z: (zones[z]['endpoint_worse_p'], z))
     for rank, zone in enumerate(ordered):

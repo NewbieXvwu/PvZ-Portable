@@ -74,13 +74,48 @@ from make_multiplier_tasks import (CURRICULUM_LEVELS, FAMILIES, MULTIPLIERS, SUP
 from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_promotion import (GATE_VERSION, SEED_LEDGER_DEFAULT, START_SEED_BLOCK,
                            START_SEED_LEDGER_DEFAULT, START_SEED_POOL,
-                           policy as promotion_policy)
+                           policy as promotion_policy, recalibrate_panel)
 from promotion_gate import (SeedPoolExhausted, allocate_seed_block, contract as promotion_contract,
                             contract_key, valid_certificate)
 from pvz_training_pack import (filter_sources, pack_flags, pack_options, fingerprint_paths,
                                segment_contracts, segment_options, segment_path)
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
+
+
+def _recalibrate_current_incumbent(state, source):
+    """Undo one old-code staircase step that used the previous incumbent.
+
+    States written before task223 stored rates for the promoted candidate but
+    advanced low_win/multiplier from the old incumbent.  The promoted side's
+    rows are already in gate_panel[key]['rates'], so this is a pure state
+    migration, never a game replay.  gate_panel_student_round marks the student
+    round the calibration follows.
+    """
+    if source.get('panel_version') != 'v8':
+        return
+    round_index = state.get('student_round')
+    if type(round_index) is not int:
+        return
+    if state.get('gate_panel_student_round') == round_index:
+        return
+    jobs = [job for job in state.get('training_jobs', [])
+            if job.get('round') == round_index and job.get('promotion_approved')]
+    if not jobs:
+        return
+    promotion = (jobs[-1].get('timing') or {}).get('promotion') or {}
+    contract = promotion.get('contract') or {}
+    side = promotion.get('winner_family')
+    pre = contract.get('calibration')
+    if (side not in ('A', 'B') or not isinstance(pre, dict)
+            or contract.get('version') != GATE_VERSION):
+        return
+    if not any(isinstance(setting, dict) and setting.get('rates')
+               for setting in (state.get('gate_panel') or {}).values()):
+        return
+    state['gate_panel'] = recalibrate_panel(pre, state.get('gate_panel') or {}, side)
+    state['gate_panel_student_round'] = round_index
+
 
 def reconcile_gate_panel(state, source):
     """Keep the staircase calibration in sync with the panel file.
@@ -95,8 +130,13 @@ def reconcile_gate_panel(state, source):
     existing = state.get('gate_panel')
     if not isinstance(existing, dict) or state.get('gate_panel_version') != version:
         # A legacy v5 state keeps its calibrated multipliers when the version is
-        # first stamped; every other transition starts from the panel defaults.
-        if not (version == 'v5' and isinstance(existing, dict)):
+        # first stamped; a v8 state whose version marker was lost keeps its
+        # task222 keys so the stored-rate migration can still run.  Every other
+        # transition starts from the panel defaults.
+        keep = (isinstance(existing, dict)
+                and (version == 'v5' or (version == 'v8' and any(
+                    str(key).startswith('task222_') for key in existing))))
+        if not keep:
             state['gate_panel'] = calibration
     state['gate_panel'] = state.get('gate_panel') if isinstance(state.get('gate_panel'), dict) else {}
     for key, value in calibration.items():
@@ -104,6 +144,7 @@ def reconcile_gate_panel(state, source):
     for key in set(state['gate_panel']) - set(calibration):
         del state['gate_panel'][key]
     state['gate_panel_version'] = version
+    _recalibrate_current_incumbent(state, source)
 
 
 PROMOTE_ABOVE = 0.85
@@ -1163,8 +1204,6 @@ class TrainingPipeline:
                     pass
             if self.last_train_peak and self.last_pack_peak:
                 break
-        reconcile_gate_panel(state, read_json(getattr(args, 'promotion_panel', None)
-                                             or ROOT / 'configs/gate_v8_panel.json'))
         approved = [j for j in state['training_jobs'] if j.get('promotion_approved')
                     and j['round'] > state.get('student_round', 0)]
         if approved:
@@ -1175,6 +1214,8 @@ class TrainingPipeline:
                 state['student_corpus_archives'] = recovered['corpus_archives']
             if recovered.get('promotion', {}).get('next_panel') is not None:
                 state['gate_panel'] = recovered['promotion']['next_panel']
+        reconcile_gate_panel(state, read_json(getattr(args, 'promotion_panel', None)
+                                             or ROOT / 'configs/gate_v8_panel.json'))
         save_state(args.state, state)
         queued = [job for job in state.setdefault('training_jobs', [])
                   if job.get('gate_version') == GATE_VERSION and job['status'] not in ('done', 'superseded') and not job.get('isolated')
@@ -1931,10 +1972,12 @@ class TrainingPipeline:
                 self.state.update(student=job['model'], student_round=job['round'])
                 if report.get('corpus_archives') is not None:
                     self.state['student_corpus_archives'] = report['corpus_archives']
+                self.state['gate_panel_student_round'] = job['round']
                 save_state(self.args.state, self.state)
                 self.args.rollout_policy = Path(job['model'])
             log_line(self.args.log, f'student activated at group boundary: round {job["round"]} {job["model"]}')
         else:
+            self.state['gate_panel_student_round'] = self.state.get('student_round', 0)
             save_state(self.args.state, self.state)
             if not promotion['approved']:
                 log_line(self.args.log, f'student retained: round {job["round"]} rejected {promotion["reasons"]}')
