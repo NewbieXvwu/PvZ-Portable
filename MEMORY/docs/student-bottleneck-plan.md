@@ -1270,3 +1270,9 @@
 - WSL 与 Windows 两侧的 `nvidia-smi` 都挂住，Windows 事件日志无 TDR 记录。设备管理器显示 RTX 5080 状态 OK。
 - 采集不受影响（搜索全走 CPU），第 86、87 轮照常进行；只是训练与门禁停了。r86 的训练排在 r85 后面。
 - 恢复需要动机器（`wsl --shutdown` 或重启 GPU 设备 / 重启 Windows），按规矩先问用户。
+
+### 11-02 08:15 台式机恢复；dsh 走错提供商
+
+- 用户 08:05 前后强制重启（显示器也已点不亮，确认是 Windows 层驱动挂死）。生产 07:56 先用 stop_curr 停在组边界，08:10 手动拉起 qc 与看门狗。r85 因 r86 已排队被跳过（superseded），r86 打包中，GPU 正常。
+- dsh 账单事故：`dshjob` 叠加了网页端补丁，网页端默认模型被用户换成 yeta 后，upgrades（06:52 起）与 csearch 全部打到 yeta，把那边额度烧光，OpenCode Go 几乎没用。现在 `dshjob` 每次生成私有补丁、末尾钉死 opencode-go / deepseek-v4.1-flash（已用 yeta 默认实测覆盖成功）。
+- task217 第 2 阶段在 csearch 会话里续跑，已确认走 opencode-go。
