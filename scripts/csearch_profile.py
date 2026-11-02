@@ -38,6 +38,8 @@ def parser():
     p.add_argument("--resource-dir", type=Path, default=Path.home() / ".cache/pvz-research-resources")
     p.add_argument("--decisions", type=int, default=6, help="profiled decisions per seed")
     p.add_argument("--max-steps", type=int, default=4000)
+    p.add_argument("--combo-candidates", type=int, default=0)
+    p.add_argument("--save-candidates", type=int, default=0)
     p.add_argument("--sim-skip", type=int, default=61, help="rollout sim-skip mask (add 256 for sparse tracks)")
     p.add_argument("--out", type=Path)
     return p
@@ -60,9 +62,9 @@ def main() -> None:
     search_play._load_nets(value_files[0], str(args.student), value_files[1])
     search_play._W.update(lean_rollouts=True, rollout_sim_skip=args.sim_skip, batch_waits=True)
     teacher = ap.Namespace(
-        per_card=1, student_candidates=2, save_candidates=2, save_share=0.5, save_max_wait=1800,
+        per_card=1, student_candidates=2, save_candidates=args.save_candidates, save_share=0.5, save_max_wait=1800,
         save_chunk=300, save_interval=600, samples=3, halving=True, halving_first_samples=1,
-        combo_candidates=2, combo_max_wait=5000, combo_buffer=25, combo_interval=600, margin_relative=0.0, horizon=2500, verify_samples=9,
+        combo_candidates=args.combo_candidates, combo_max_wait=5000, combo_buffer=25, combo_interval=600, margin_relative=0.0, horizon=2500, verify_samples=9,
         min_gap=300, rollout_sim_skip=args.sim_skip, leaf_probe=None, leaf_probe_limit=0,
         task_id=f"csearch_profile_L{args.level}")
     rows = []
