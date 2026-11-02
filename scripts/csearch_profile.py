@@ -86,7 +86,7 @@ def main() -> None:
             search_play._W["demo_actions"] = []
             from collections import Counter
             stats = {"searched": 0, "overrides": 0, "override_kinds": Counter(), "combo_candidate_added": 0,
-                     "combo_upgrades": 0, "pending_upgrade": None, "sun_reserve": 0}
+                     "combo_upgrades": 0, "pending_upgrade": None}
             fast_state, steps, profiled = {}, 0, 0
             while not obs["terminal"] and steps < args.max_steps and profiled < args.decisions:
                 action = search_play._fast_action(obs, fast_state, env)
@@ -94,7 +94,7 @@ def main() -> None:
                 legal = (obs.get("legal_actions") or {}).get("plants") or []
                 if legal and profiled < args.decisions:
                     stats["last_profile"] = None
-                    action = search_play._cpp_search(env, obs, action, teacher, seed * 10000 + steps, stats)
+                    action = search_play._search(env, obs, action, teacher, seed * 10000 + steps, stats)
                     profile = stats.get("last_profile")
                     if profile and profile["rollouts"]:
                         rows.append(dict(seed=seed, step=steps, tick=obs["tick"], legal=len(legal), **profile))

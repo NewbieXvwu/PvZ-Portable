@@ -1,17 +1,20 @@
 """The teacher of expert iteration: the student plus a value-guided search (DESIGN.md §13–§14).
 
-At a decision where some plant is legal (packet ready, sun enough, free cell):
-  1. Every legal plant is applied from a snapshot (``branch_snapshot``) and the board right after planting is
-     scored by the static value net (``--static-value``, default ``--value``). The best ``--per-card`` cells of
-     every card survive, plus "do nothing now" and the student's own choice. With ``--student-candidates k``
-     the student's own top-k plants (by its policy probabilities, ``pvz_rollout_policy.ranked_plants``) join
-     the candidates too -- the static net only ever offers one cell per card, so cells the student itself
-     would pick were previously reachable only by shovelling first. 0 = off, and off is the old candidate
-     set exactly.
-  2. Each candidate is played and then continued by the student for ``--horizon`` ticks in C++, ``--samples``
+One decision is a single engine command (``SEARCH``, task217): the driver hands over the decision root,
+the sun-income history, the student history and the student's own action, and the engine runs the whole
+teacher -- candidate set, static scoring, halving rounds, verification futures, save probes, combo plans
+and the override rule -- returning the action, every candidate's value and the counters.  The algorithm
+is ``MEMORY/docs/task217-csearch.md``; there is no Python implementation any more (AGENTS.md §6.6).
+
+What the engine does at a decision where some plant is legal (packet ready, sun enough, free cell):
+  1. Every legal plant is applied from a snapshot and the board right after planting is scored by the
+     static value net (``--static-value``, default ``--value``). The best ``--per-card`` cells of every
+     card survive, plus "do nothing now" and the student's own choice. With ``--student-candidates k``
+     the student's own top-k plants join the candidates too. 0 = off, and off is the old candidate set.
+  2. Each candidate is played and then continued by the student for ``--horizon`` ticks, ``--samples``
      times with different random futures (the same futures for every candidate). The leaf is scored by
-     ``--value`` (a game that ended inside the horizon scores its result). ``--halving`` (default) rolls out
-     the weaker half fewer times.
+     ``--value`` (a game that ended inside the horizon scores its result). ``--halving`` (default) rolls
+     out the weaker half fewer times.
   3. The student's choice is overridden only when the best candidate beats it by ``MARGIN``.
      ``--verify-samples`` adds independent futures for just that pair before accepting an override.
 Between searches at least ``--min-gap`` ticks pass unless the student itself wants to plant.
@@ -21,10 +24,7 @@ for training (with ``--dagger-beta`` < 1 the student executes part of the moves,
 
 The comparison harness ``scripts/b3_noninferiority.py`` can set a private ``_W["candidate_mode"] =
 "student-topk"`` (task42 B3 arm: the student's global top-k plants, wait, and its own action). There is no
-CLI flag, and the formal collection path never sets it.
-
-``--search-impl cpp`` runs the whole decision as one engine command (``SEARCH``, task217); the Python
-search below stays the default until the two have been compared.
+CLI flag, and the formal collection path never sets it; the engine implements it as ``candidate_mode``.
 
 Continuations run in the original C++ simulator. ``--rollout-sim-skip`` is a CPU presentation-work
 bitmask: mask 29 skips colour, height, attachment matrices and messages, while preserving game ticks
@@ -83,19 +83,6 @@ def _leaf_value(value_path: str, roof_value_path: str | None, task: dict) -> str
     from pvz_constants import background_for_level
     roof = background_for_level(int(task["level"])) in ROOF_BACKGROUNDS
     return roof_value_path if roof else value_path
-
-
-def _margin_threshold(args, best_value: float) -> float:
-    """The override margin: absolute MARGIN by default, opt-in relative otherwise.
-
-    ``--margin-relative R`` uses ``max(MARGIN_FLOOR, R * best_value)``.  With the default
-    ``R = 0`` this returns MARGIN unchanged, so the historical decision rule is preserved
-    exactly (same float, same comparison).
-    """
-    relative = getattr(args, "margin_relative", 0.0) or 0.0
-    if relative <= 0:
-        return MARGIN
-    return max(MARGIN_FLOOR, relative * float(best_value))
 
 
 def _terrain_policy(student_path: str, gpt_path: str | None, task: dict) -> str:
@@ -226,41 +213,17 @@ def _fast_action(obs: dict, fast_state: dict, native_env=None) -> dict:
     return action
 
 
-def _score_terminal_or_value(obs: dict) -> float | None:
-    if "rollout_result" in obs:
-        return float(obs["rollout_result"])
-    if obs.get("terminal"):
-        return 1.0 if obs.get("result") == 1 else 0.0
-    return None
 
 
-def _rollout_policy(env, obs: dict, first: dict, until_tick: int,
-                    root: int | None = None, seed: int | None = None) -> dict:
-    """Play ``first`` and then let the student continue until ``until_tick`` (0 = to the end of the game) in C++."""
-    student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
-    leaf = env.rollout(first, until_tick, sim_skip=_W.get("rollout_sim_skip", 0), snapshot_id=root, seed=seed,
-                       student_history=student_history, score_value=True)
-    metrics = _W.setdefault("rollout_metrics", {})
-    for key in ("decisions", "simulation_seconds", "network_seconds"):
-        metrics[key] = metrics.get(key, 0) + env._last_response[key]
-    return leaf
 
 
-# LEGACY(python-rollout-reference): the Python continuation loop, kept as the reference the C++ path is
-# checked against. Test and diagnostic only -- python/test_cpp_rollout.py and scripts/perf_rollout_check.py
-# call it; nothing on the collection path does.
-
-
-def _plain_action(candidate: dict) -> dict:
-    """The action dict of a candidate, without --combo-candidates metadata."""
-    return {key: candidate[key] for key in ("type", "packet", "col", "row") if key in candidate}
 
 
 def _demo_candidate(obs: dict, legal: list[dict]) -> dict | None:
     """The demonstration's next recorded plant once it is legal again, or None.
 
     Same rule as the inline loop of _search: the first recorded plant at or after the current tick
-    that the board offers right now.  Returned to the engine by --search-impl cpp.
+    that the board offers right now.  Returned to the engine as the demo candidate.
     """
     legal_keys = {json.dumps(plant, sort_keys=True) for plant in legal}
     for tick, action in _W.get("demo_actions", ()):
@@ -269,143 +232,17 @@ def _demo_candidate(obs: dict, legal: list[dict]) -> dict | None:
     return None
 
 
-def _upgrade_legal(obs: dict, packet: int, col: int, row: int) -> dict | None:
-    for action in (obs.get("legal_actions") or {}).get("plants") or []:
-        if action["packet"] == packet and action["col"] == col and action["row"] == row:
-            return {"type": "plant", "packet": packet, "col": col, "row": row}
-    return None
 
 
-def _forced_upgrade(obs: dict, stats: dict, max_wait: int, buffer: int = 25) -> dict | None:
-    """Pending --combo-candidates second step: the upgrade once it is legal on the base cell.
-
-    Until the upgrade is affordable the teacher keeps searching normally, so the base still gets
-    its support; only --combo-buffer sun has to survive the payment. The plan is dropped when the base is gone or the
-    wait budget is spent, so a dead base never blocks the teacher.
-    """
-    pending = stats.get("pending_upgrade")
-    if os.environ.get('PVZ_DBG'):
-        print(f"DBGFORCE tick={obs['tick']} pending={pending}", file=sys.stderr, flush=True)
-    if not pending:
-        return None
-    planted = any(p.get("row") == pending["row"] and p.get("col") == pending["col"]
-                  and p.get("type") == pending["base_type"] for p in obs.get("plants") or [])
-    if not planted or obs["tick"] > pending["expires"]:
-        stats["pending_upgrade"] = None
-        return None
-    action = _upgrade_legal(obs, pending["packet"], pending["col"], pending["row"])
-    if action is None:
-        return None
-    cost = next((card["cost"] for card in obs.get("packets") or []
-                 if card["index"] == pending["packet"]), 0)
-    if obs.get("sun", 0) - cost < buffer:
-        return None     # affordable, but leave the cheapest card payable: the economy must survive
-    stats["pending_upgrade"] = None
-    return action
 
 
-def _combo_rollout(env, obs: dict, candidate: dict, until_tick: int, root: int, seed: int,
-                   args) -> dict:
-    """Score a --combo-candidates plan: plant the base, wait until the upgrade is legal, plant it.
-
-    Between the two steps the student keeps acting, exactly like the run (the teacher keeps
-    searching while the plan is pending).
-    --combo-max-wait bounds it; if the upgrade never becomes legal (sun, a dead base, the level
-    ending) the base-only position is scored instead.
-    """
-    base = _plain_action(candidate)
-    combo = candidate["combo"]
-    if os.environ.get('PVZ_DBG'):
-        print(f"DBGCOMBO start tick={obs['tick']} upgrade={combo['upgrade_packet']} cell={base['col']},{base['row']}",
-              file=sys.stderr, flush=True)
-    student_history = _W.get("student_history") if _W["fast"].obs != "v1" else None
-    env.restore_fast(root)
-    upgrade, waited = None, 0
-    current, _, done, _, info = env.step(base)
-    if os.environ.get('PVZ_DBG'):
-        held = [p for p in current.get('plants') or [] if p.get('col') == base['col'] and p.get('row') == base['row']]
-        print(f"DBGCOMBO base ok={info.get('ok')} plants={len(current.get('plants') or [])} held={[p.get('type') for p in held]} sun={current.get('sun')}", file=sys.stderr, flush=True)
-    if not info.get("ok"):
-        done = True
-    while not done and waited < args.combo_max_wait:
-        upgrade = _upgrade_legal(current, combo["upgrade_packet"], base["col"], base["row"])
-        if upgrade is not None:
-            break
-        chunk = min(250, args.combo_max_wait - waited)
-        current, _reward, done, _truncated, _info = env.step({"type": "wait", "ticks": chunk})
-        waited += chunk
-        if os.environ.get('PVZ_DBG'):
-            plants = current.get('plants') or []
-            have = [a for a in (current.get('legal_actions') or {}).get('plants') or [] if a['packet'] == combo['upgrade_packet']]
-            anywhere = [a for a in (current.get('legal_actions') or {}).get('plants') or [] if a['packet'] == 4]
-            types = [(x['col'], x['row'], x['type']) if isinstance(x, dict) else (x[1], x[0], x[2]) for x in plants]
-            print(f"DBGCOMBO wait waited={waited} sun={current.get('sun')} types={types} "
-                  f"upg_anywhere={len(anywhere)} upg_here={len(have)} term={done}", file=sys.stderr, flush=True)
-    if upgrade is not None and not done:
-        current, _, done, _, info = env.step(upgrade)
-    # Every plan gets --horizon ticks *after its last step*.  The wait loop can run past until_tick,
-    # and the engine reads a past deadline as "no limit": without this the leaf would always run to
-    # the end of the game, score 0 on every loss and make the plan look worthless (task217b, L33).
-    until_tick = max(until_tick, current["tick"] + args.horizon)
-    snapshot = env.snapshot_fast()
-    try:
-        leaf = env.rollout(None, until_tick, sim_skip=_W.get("rollout_sim_skip", 0),
-                           snapshot_id=snapshot, seed=seed, student_history=student_history,
-                           score_value=True)
-        if os.environ.get('PVZ_DBG'):
-            print(f"DBGCOMBO end waited={waited} keys={sorted(leaf)[:14]} "
-                  f"leaf_tick={leaf.get('tick')} term={leaf.get('terminal')} result={leaf.get('result')} "
-                  f"value={leaf.get('value')} rolled={leaf.get('rollout_result')}", file=sys.stderr, flush=True)
-        return leaf
-    finally:
-        env.release_snapshot(snapshot)
 
 
-def _continuations(env, obs: dict, root: int, jobs: list[tuple[dict, int]], args,
-                   stats: dict) -> list:
-    """Play each candidate and continue with the student for ``--horizon`` ticks; one handle per job."""
-    stats["rollout_batches"] = stats.get("rollout_batches", 0) + 1
-    stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + len(jobs)
-    return [_combo_rollout(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32, args)
-            if "combo" in candidate else
-            _rollout_policy(env, obs, candidate, obs["tick"] + args.horizon, root, seed % 2 ** 32)
-            for candidate, seed in jobs]
 
 
-def _leaf_values(handles: list) -> list[float]:
-    """Terminal results or engine value scores, in continuation order."""
-    return [handle["value"] if (terminal := _score_terminal_or_value(handle)) is None else terminal
-            for handle in handles]
 
 
-def _static_scores(env, root: int, actions: list[dict], income) -> list[tuple[float, dict]]:
-    """Score candidates in engine order; rejected branches do not enter the candidate set."""
-    return [(score, action) for score, action in zip(env.static_scores(root, actions, income or 0.0), actions)
-            if score is not None]
 
-def _student_topk_candidates(legal: list[dict], k: int) -> tuple[list[dict], set[str]]:
-    """The student's global top-k legal plants, best first (``ranked_plants``).
-
-    Comparison arm only (scripts/b3_noninferiority.py, task42). The formal path never sets
-    ``_W["candidate_mode"]``, so this function is not reached by collection runs.
-    """
-    from pvz_rollout_policy import ranked_plants
-    if _W.get("student_frame") is None:
-        raise ValueError("student-topk candidates require the current student frame")
-    ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
-                           legal, context=_W.get("context"), history=_W.get("student_history"))
-    candidates, keys = [], set()
-    for _score, entry in ranked[:k]:
-        action = {"type": "plant", "packet": int(entry["packet"]),
-                  "col": int(entry["col"]), "row": int(entry["row"])}
-        key = json.dumps(action, sort_keys=True)
-        if key not in keys:
-            candidates.append(action)
-            keys.add(key)
-    return candidates, keys
-
-
-_LEAF_PROBE_COUNT = 0
 
 
 def _probe_decision(args, obs: dict, candidates: list[dict], totals: list[float], chosen: dict,
@@ -440,162 +277,20 @@ def _probe_decision(args, obs: dict, candidates: list[dict], totals: list[float]
     _LEAF_PROBE_COUNT += 1
 
 
+
+
 def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
-    legal = (obs.get("legal_actions") or {}).get("plants") or []
-    if not legal:
-        return policy_action
-    if (args.min_gap and policy_action["type"] != "plant"
-            and obs["tick"] - stats.get("last_search_tick", -10 ** 9) < args.min_gap):
-        return policy_action
-    stats["last_search_tick"] = obs["tick"]
-    stats["searched"] += 1
-    root = env.snapshot_fast()
-    income = obs.get("sun_income_rate")
-    try:
-        plants = [{"type": "plant", "packet": a["packet"], "col": a["col"], "row": a["row"]} for a in legal]
-        policy_key = json.dumps(policy_action if policy_action["type"] == "plant" else NOOP, sort_keys=True)
-        mode = _W.get("candidate_mode", "static")
-        if mode == "student-topk":
-            # task42 B3 arm: global top-k plants by the student's own probabilities, plus wait and
-            # the student's own action. No static net, no per-card floor.
-            candidates, student_keys = _student_topk_candidates(legal, int(_W.get("student_topk", 3)))
-            candidates.append(NOOP)
-            if (policy_action["type"] == "plant"
-                    and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
-                candidates.append(policy_action)
-            stats["last_student_keys"] = student_keys
-        elif mode == "static":
-            scored = sorted(_static_scores(env, root, plants, income), key=lambda item: -item[0])
-            static_value = {(a["packet"], a["col"], a["row"]): v for v, a in scored}
-            # The best cells of *every* card, not the overall top-k: the static value net was trained on
-            # games where some cards (cherry bomb, wall-nut) were never played, so it cannot rank them
-            # against shooters right after planting -- only the rollout can show what they are worth.
-            by_card: dict[int, list] = {}
-            for v, a in scored:
-                by_card.setdefault(a["packet"], []).append(a)
-            candidates = ([a for cells in by_card.values() for a in cells[: args.per_card]] + [NOOP])
-            if (policy_action["type"] == "plant"
-                    and all(json.dumps(c, sort_keys=True) != policy_key for c in candidates)):
-                candidates.append(policy_action)
+    """The whole teacher decision as one SEARCH command (task217).
 
-            # --student-candidates k: the student's own top-k plants join the candidates
-            # (pvz_rollout_policy.ranked_plants). The static value net picks one cell per card, so a cell
-            # the student would actually pick -- or its second choice -- never gets compared; the search
-            # could only reach it indirectly by shovelling and letting the student react (learn/06).
-            # Deduplicated against everything already there. k = 0 (default) leaves the set untouched.
-            stats["last_student_keys"] = set()
-            if getattr(args, "student_candidates", 0) and _W.get("student_frame") is not None:
-                from pvz_rollout_policy import ranked_plants
-                present = {json.dumps(c, sort_keys=True) for c in candidates}
-                added = 0
-                student_ranked = ranked_plants(_W["fast"], _W["student_frame"], _W.get("student_previous_frame"),
-                                              legal, context=_W.get("context"), history=_W.get("student_history"))
-                for _score, entry in student_ranked:
-                    action = {"type": "plant", "packet": int(entry["packet"]),
-                              "col": int(entry["col"]), "row": int(entry["row"])}
-                    key = json.dumps(action, sort_keys=True)
-                    if key in present:
-                        continue
-                    candidates.append(action)
-                    present.add(key)
-                    stats["last_student_keys"].add(key)
-                    added += 1
-                    if added >= args.student_candidates:
-                        break
-                stats["student_candidate_added"] = stats.get("student_candidate_added", 0) + added
-        else:
-            raise ValueError(f"unknown candidate mode {mode!r}")
-
-        # --combo-candidates k: a base plant now plus a forced upgrade later, scored as one plan.
-        # No sun is withheld afterwards; the plan only fires when the upgrade is affordable with
-        # --combo-buffer to spare (a hard bank deadlocks poor night levels, task214d).
-        # Only pairs whose upgrade is not already legal (a legal upgrade is its own candidate) and
-        # only cells the static net already likes. k = 0 (default) leaves the set untouched.
-        if getattr(args, "combo_candidates", 0):
-            packet_type = {int(card["index"]): int(card["type"])
-                           for card in obs.get("packets") or [] if isinstance(card, dict)}
-            legal_packets = {action["packet"] for action in legal}
-            added = 0
-            last_combo = stats.get("last_combo_tick", -10 ** 9)
-            for upgrade, base in COMBO_BASES.items():
-                if obs["tick"] - last_combo < args.combo_interval:
-                    break
-                upgrade_packets = [index for index, kind in packet_type.items() if kind == upgrade]
-                if (added >= args.combo_candidates or not upgrade_packets
-                        or upgrade_packets[0] in legal_packets):
-                    continue
-                bases = [(static_value.get((c["packet"], c["col"], c["row"]), float("-inf")), c)
-                         for c in candidates
-                         if c["type"] == "plant" and packet_type.get(c["packet"]) == base]
-                if not bases:
-                    continue
-                action = dict(max(bases, key=lambda item: item[0])[1])
-                action["combo"] = {"upgrade_packet": upgrade_packets[0], "base_type": base}
-                if os.environ.get('PVZ_DBG'):
-                    print(f"DBGMK upgrade={upgrade} base={base} slot={action['packet']} cell={action['col']},{action['row']} "
-                          f"packet_type={packet_type} deck_slots={[(c.get('index'), c.get('type')) for c in obs.get('packets') or []]}",
-                          file=sys.stderr, flush=True)
-                candidates.append(action)
-                stats["combo_candidate_added"] = stats.get("combo_candidate_added", 0) + 1
-                stats["last_combo_tick"] = obs["tick"]
-                added += 1
-
-        present = {json.dumps(candidate, sort_keys=True) for candidate in candidates}
-        legal_keys = {json.dumps(plant, sort_keys=True) for plant in plants}
-        for tick, action in _W.get('demo_actions', ()):
-            key = json.dumps(action, sort_keys=True)
-            if tick >= obs['tick'] and key in legal_keys:
-                if key not in present:
-                    candidates.append(action)
-                    stats['demo_candidate_added'] = stats.get('demo_candidate_added', 0) + 1
-                break
-
-        if os.environ.get('PVZ_DBG'):
-            print(f"DBG tick={obs['tick']} n={len(candidates)} combos={sum(1 for c in candidates if 'combo' in c)}",
-                  file=sys.stderr, flush=True)
-        if args.halving:
-            return _halving_choice(env, obs, root, candidates, policy_action, policy_key, args, decision_seed, stats)
-        # One candidate at a time, terminal futures first: the order the labels were produced in.
-        totals = []
-        for cand in candidates:
-            fixed, frames = [], []
-            for k in range(args.samples):
-                leaf = (_combo_rollout(env, obs, cand, obs["tick"] + args.horizon, root,
-                                       (decision_seed * 1000 + k) % 2 ** 32, args)
-                        if "combo" in cand else
-                        _rollout_policy(env, obs, cand, obs["tick"] + args.horizon,
-                                        root, (decision_seed * 1000 + k) % 2 ** 32))
-                terminal = _score_terminal_or_value(leaf)
-                if terminal is None:
-                    frames.append(leaf)
-                else:
-                    fixed.append(terminal)
-            scored_values = fixed + _leaf_values(frames)
-            totals.append(sum(scored_values) / len(scored_values))
-        best = max(range(len(candidates)), key=lambda i: totals[i])
-        keys = [json.dumps(c, sort_keys=True) for c in candidates]
-        return _verified_choice(env, obs, root, candidates, totals, [args.samples] * len(candidates),
-                                best, keys.index(policy_key), policy_action, args, decision_seed, stats)
-    finally:
-        env.restore_fast(root)
-        env.release_snapshot(root)
-
-
-def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats: dict) -> dict:
-    """--search-impl cpp: the whole decision as one SEARCH command (task217).
-
-    The engine runs the candidate set, the halving rounds, the verification futures and the
-    override rule that _search/_halving_choice/_verified_choice run in Python, so this function
-    only marshals the decision inputs and copies the counter deltas into ``stats``.  It exists so
-    both implementations can be compared arm for arm; the Python one goes away once they agree.
+    The engine runs the candidate set, the halving rounds, the verification futures, the save
+    probes, the combo plans and the override rule, so this function only marshals the decision
+    inputs and copies the counter deltas into ``stats``.
     """
     legal = (obs.get("legal_actions") or {}).get("plants") or []
     if not legal:
         return policy_action
     previous = _W.get("student_previous_frame")
-    _t0 = time.perf_counter()
     root = env.snapshot_fast()
-    _t1 = time.perf_counter()
     try:
         response = env.search(
             root, policy_action, income=obs.get("sun_income_rate") or 0.0, decision_seed=decision_seed,
@@ -615,19 +310,15 @@ def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, s
             candidate_mode=1 if _W.get("candidate_mode") == "student-topk" else 0,
             student_topk=int(_W.get("student_topk", 3)))
     finally:
-        _t2 = time.perf_counter()
         env.restore_fast(root)
         env.release_snapshot(root)
-        _t3 = time.perf_counter()
     payload = response.get("stats") or {}
-    if os.environ.get('PVZ_DBG'):
-        print(f"DBGPAY tick={obs['tick']} snap={(_t1-_t0)*1000:.1f} search={(_t2-_t1)*1000:.1f} "
-              f"restore={(_t3-_t2)*1000:.1f} engine={(payload.get('profile') or {}).get('total_seconds', 0)*1000:.1f}",
-              file=sys.stderr, flush=True)
     if response["searched"]:
         stats["last_search_tick"] = obs["tick"]
         stats["searched"] += 1
     # The engine owns the pending upgrade across decisions (--combo-buffer / --combo-interval).
+    if "combo_pending" in payload:
+        stats["pending_upgrade"] = payload["combo_pending"]
     if "combo_pending" in payload:
         stats["pending_upgrade"] = payload["combo_pending"]
     if "last_combo_tick" in payload:
@@ -656,235 +347,19 @@ def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, s
     stats["last_verification"] = response.get("verification")
     if "profile" in payload:
         stats["last_profile"] = payload["profile"]
-        if os.environ.get('PVZ_DBG'):
-            print(f"DBGPROF {payload['profile']}", file=sys.stderr, flush=True)
     _probe_decision(args, obs, candidates, totals, response["action"], decision_seed, policy_action,
                     int(response["best"]), int(response["policy_index"]))
     return response["action"]
 
 
-def _halving_choice(env, obs: dict, root: int, candidates: list[dict], policy_action: dict, policy_key: str,
-                    args, decision_seed: int, stats: dict) -> dict:
-    """``--halving``: successive halving over the same resampled futures as the full search.
-
-    Round 1 rolls every candidate out once (future k = 0). Each later round keeps the better half
-    (never fewer than two, and always the student's own choice, because the override rule compares
-    against it) and doubles their futures (k = 1, then k = 2..3, ... up to ``--samples``). Survivors
-    have always been scored on exactly the same futures, so comparing them stays a common-random-numbers
-    comparison. The decision rule (override only by more than the margin) is unchanged. With 8
-    candidates and 4 futures this is 8 + 4 + 2x2 = 16 rollouts instead of 32.
-    """
-    keys = [json.dumps(c, sort_keys=True) for c in candidates]
-    policy_index = keys.index(policy_key)
-    values: list[list[float]] = [[] for _ in candidates]
-    alive = list(range(len(candidates)))
-    stats["halving_candidates"] = stats.get("halving_candidates", 0) + len(candidates)
-    selected_lanes = 0
-    done = 0                                 # futures every survivor has been scored on
-    # --halving-first-samples N: round 1 gives every candidate N futures before the first cut.
-    # N = 1 is the historical behaviour; later rounds double, exactly as before.
-    target = min(args.samples, max(1, int(getattr(args, "halving_first_samples", 1))))
-    while True:
-        target = min(target, args.samples)
-        order = [(i, k) for i in alive for k in range(done, target)]
-        selected_lanes += len(order)
-        jobs = [(candidates[i], decision_seed * 1000 + k) for i, k in order]
-        handles = _continuations(env, obs, root, jobs, args, stats)
-        scored = list(zip(order, handles, _leaf_values(handles)))
-        # Terminal futures first, as the original CPU accumulation order had them.
-        scored.sort(key=lambda row: _score_terminal_or_value(row[1]) is None)
-        for (i, _k), _handle, value in scored:
-            if value is not None:
-                values[i].append(value)
-        done = target
-        mean = {i: sum(values[i]) / max(1, len(values[i])) for i in alive}
-        ranked = sorted(alive, key=lambda i: -mean[i])
-        if done >= args.samples:
-            break
-        keep = ranked[: max(2, (len(ranked) + 1) // 2)]
-        if policy_index not in keep:
-            keep.append(policy_index)
-        alive = sorted(keep)
-        target = done * 2
-    stats["halving_rollouts"] = stats.get("halving_rollouts", 0) + sum(len(v) for v in values)
-    stats["halving_selected_lanes"] = stats.get("halving_selected_lanes", 0) + selected_lanes
-    totals = [sum(v) / len(v) if v else float("-inf") for v in values]
-    best = max(alive, key=lambda i: totals[i])
-    return _verified_choice(env, obs, root, candidates, totals, [len(v) for v in values], best,
-                            policy_index, policy_action, args, decision_seed, stats)
 
 
-def _save_value(env, obs: dict, action: dict, snapshot: int, seed: int, until_tick: int) -> float:
-    leaf = _rollout_policy(env, obs, action, until_tick, snapshot, seed)
-    terminal = _score_terminal_or_value(leaf)
-    if terminal is not None:
-        return terminal
-    return _leaf_values([leaf])[0]
 
 
-def _save_probe(env, obs: dict, root: int, packet: int, cost: int, args, decision_seed: int,
-                until_tick: int) -> dict | None:
-    """Wait in the engine until `packet` is affordable, then score planting it there.
-
-    The engine only lists plant actions the player can pay for, so a card above the sun the
-    policy ever holds is invisible to the candidate set (task120: a 125 card had a legal cell in
-    0.5% of decisions, a 300 card in none). This probe answers "what would it be worth if we
-    saved for it" without touching the candidate set: restore the decision root, wait, and roll
-    the plant out from the future state. The caller restores the root again afterwards.
-    """
-    waited = 0
-    current = obs
-    env.restore_fast(root)
-    while current['sun'] < cost and waited < args.save_max_wait and not current['terminal']:
-        step = min(args.save_chunk, args.save_max_wait - waited)
-        current, _reward, _done, _truncated, info = env.step({'type': 'wait', 'ticks': step})
-        advanced = int(info.get('ticks_advanced') or 0)
-        if advanced <= 0:
-            break
-        waited += advanced
-    if os.environ.get('PVZ_DBG'):
-        print(f"DBGSAVE end packet={packet} cost={cost} waited={waited} sun={current['sun']} term={current['terminal']}",
-              file=sys.stderr, flush=True)
-    if current['terminal'] or current['sun'] < cost:
-        return None
-    actions = [{'type': 'plant', 'packet': entry['packet'], 'col': entry['col'], 'row': entry['row']}
-               for entry in (current.get('legal_actions') or {}).get('plants') or []
-               if entry['packet'] == packet]
-    if os.environ.get('PVZ_DBG'):
-        print(f"DBGSAVE packet={packet} cost={cost} waited={waited} sun={current['sun']} cells={len(actions)} "
-              f"legal={len((current.get('legal_actions') or {}).get('plants') or [])}", file=sys.stderr, flush=True)
-    if not actions:
-        return None
-    # Same as the combo plan: the probe's horizon starts after the ticks it spent waiting.
-    until_tick = max(until_tick, current['tick'] + args.horizon)
-    future = env.snapshot_fast()
-    try:
-        scores = env.static_scores(future, actions, current.get('sun_income_rate') or 0.0)
-        pairs = [(score, action) for score, action in zip(scores, actions) if score is not None]
-        if not pairs:
-            return None
-        action = max(pairs, key=lambda item: item[0])[1]
-        # The normal candidates are decided after --samples + --verify-samples futures; a plan with
-        # fewer would win against them on noise alone.
-        samples = max(1, args.samples + max(0, args.verify_samples))
-        values = [_save_value(env, current, action, future,
-                              (decision_seed * 1000 + k) % 2 ** 32, until_tick) for k in range(samples)]
-    finally:
-        env.release_snapshot(future)
-    return dict(packet=packet, cost=cost, ticks=waited, cell=[action['col'], action['row']],
-                value=sum(values) / len(values), sun=int(current['sun']), samples=samples)
 
 
-def _save_plan(env, obs: dict, root: int, candidates: list[dict], totals: list[float], args,
-               decision_seed: int, stats: dict) -> dict | None:
-    """The best "save up and plant it" plan, when it beats every current candidate by the margin."""
-    if not getattr(args, 'save_candidates', 0):
-        return None
-    present = {candidate.get('packet') for candidate in candidates if candidate['type'] == 'plant'}
-    # obs['packets'] is in deck order: the slot index is the action's packet field, while
-    # entry['type'] is the SeedType (a different numbering).
-    costs = {slot: entry.get('cost') or 0 for slot, entry in enumerate(obs.get('packets') or [])
-             if entry.get('type', -1) >= 0}
-    last = stats.setdefault('save_last_probe', {})
-    reachable = [(packet, cost) for packet, cost in costs.items()
-                 if packet not in present and cost > obs['sun']
-                 and obs['sun'] >= getattr(args, 'save_share', 0.5) * cost
-                 and obs['tick'] - last.get(packet, -10 ** 9) >= getattr(args, 'save_interval', 600)]
-    if not reachable:
-        return None
-    reachable.sort(key=lambda item: item[1])
-    # The probe advances the engine and restores it; keep it out of the export operation stream so
-    # a recording run cannot replay it as if the teacher had waited.
-    episode = env.episode
-    env.episode = None
-    plans = []
-    try:
-        for packet, cost in reachable[: args.save_candidates]:
-            last[packet] = obs['tick']
-            plan = _save_probe(env, obs, root, packet, cost, args, decision_seed,
-                               obs['tick'] + args.horizon)
-            env.restore_fast(root)
-            if plan is not None:
-                plans.append(plan)
-    finally:
-        env.episode = episode
-    stats['save_probes'] = stats.get('save_probes', 0) + len(plans)
-    finite = [float(value) for value in totals if math.isfinite(float(value))]
-    if not plans or not finite:
-        return None
-    plan = max(plans, key=lambda item: item['value'])
-    if plan['value'] > max(finite) + _margin_threshold(args, max(finite)):
-        stats['save_overrides'] = stats.get('save_overrides', 0) + 1
-        stats['save_wait_ticks'] = stats.get('save_wait_ticks', 0) + plan['ticks']
-        return plan
-    return None
 
 
-def _verified_choice(env, obs: dict, root: int, candidates: list[dict], totals: list[float],
-                     counts: list[int], best: int, policy_index: int, policy_action: dict,
-                     args, decision_seed: int, stats: dict, *, fresh: bool = False) -> dict:
-    if os.environ.get('PVZ_DBG'):
-        print(f"DBGV best={best} policy={policy_index} tb={totals[best]!r} tp={totals[policy_index]!r} "
-              f"bestcombo={'combo' in candidates[best]} all={[(round(t, 5), 'combo' in c) for c, t in zip(candidates, totals)]}",
-              file=sys.stderr, flush=True)
-    if not fresh:
-        plan = _save_plan(env, obs, root, candidates, totals, args, decision_seed, stats)
-        if plan is not None:
-            stats['last_targets'] = None
-            wait = {'type': 'wait', 'ticks': plan['ticks'], 'until': 'timeout'}
-            _probe_decision(args, obs, candidates, totals, wait, decision_seed, policy_action,
-                            best, policy_index)
-            return wait
-    before = fresh or (best != policy_index
-                       and totals[best] - totals[policy_index] > _margin_threshold(args, totals[best]))
-    samples = getattr(args, "verify_samples", 0) + (args.samples if fresh else 0)
-    if fresh:
-        counts = [0] * len(candidates)
-    if samples and before:
-        prior = None if fresh else [totals[policy_index], totals[best]]
-        started = time.perf_counter()
-        # The original value batches and terminal-first sum order: a different order can change the
-        # last bits even though the continuation jobs are identical.
-        stats["rollout_batches"] = stats.get("rollout_batches", 0) + 1
-        stats["rollout_lanes"] = stats.get("rollout_lanes", 0) + 2 * samples
-        for index in (policy_index, best):
-            fixed, leaves = [], []
-            for future in range(args.samples, args.samples + samples):
-                leaf = _rollout_policy(env, obs, candidates[index], obs["tick"] + args.horizon,
-                                       root, (decision_seed * 1000 + future) % 2 ** 32)
-                terminal = _score_terminal_or_value(leaf)
-                if terminal is None:
-                    leaves.append(leaf)
-                else:
-                    fixed.append(terminal)
-            added = fixed + _leaf_values(leaves)
-            totals[index] = (totals[index] * counts[index] + sum(added)) / (counts[index] + samples)
-        stats["last_verification"] = {
-            "samples": samples, "student": policy_action, "challenger": candidates[best],
-            "before_values": prior, "after_values": [totals[policy_index], totals[best]],
-            "before_override": True,
-            "after_override": totals[best] - totals[policy_index] > _margin_threshold(args, totals[best]),
-            "original_samples": [counts[policy_index], counts[best]], "decision_seed": decision_seed,
-            "mode": "fresh" if fresh else "reproduced",
-            "seconds": time.perf_counter() - started}
-    # Did the winner come from --student-candidates? Counted here so both the halving and the
-    # full search report it; the override counter below is the subset that changed the action.
-    if json.dumps(candidates[best], sort_keys=True) in (stats.get("last_student_keys") or ()):
-        stats["student_candidate_best"] = stats.get("student_candidate_best", 0) + 1
-        if (best != policy_index
-                and totals[best] - totals[policy_index] > _margin_threshold(args, totals[best])):
-            stats["student_candidate_override"] = stats.get("student_candidate_override", 0) + 1
-    stats["last_targets"] = list(zip(candidates, totals))
-    stats["last_best"] = candidates[best]
-    if (totals[best] - totals[policy_index] > _margin_threshold(args, totals[best])
-            and best != policy_index):
-        stats["overrides"] += 1
-        stats["override_kinds"][candidates[best]["type"] + "_over_" + policy_action["type"]] += 1
-        chosen = candidates[best]
-    else:
-        chosen = policy_action
-    _probe_decision(args, obs, candidates, totals, chosen, decision_seed, policy_action, best, policy_index)
-    return chosen
 
 
 def _frame_json(frame: dict) -> str:
@@ -917,8 +392,8 @@ def _play(job: dict, observer=None) -> dict:
     if env is None:
         env = _W["env"] = EventWaitEnv(args.resource_dir, executable=getattr(args, "executable", None), headless=True)
         env.load_rollout_net(_W["rollout_file"])
-    if getattr(args, "search_impl", "python") == "cpp" and not getattr(env, "_search_version", 0):
-        raise RuntimeError("--search-impl cpp needs a rebuilt simulator advertising search_version=1")
+    if not getattr(env, "_search_version", 0):
+        raise RuntimeError("the teacher needs a rebuilt simulator advertising search_version=1")
     if job["arm"] == "fast_search" and not getattr(env, "_teacher_value_loaded", False):
         env.load_value_net(_W["value_files"][0])
         env.load_value_net(_W["value_files"][1], static=True)
@@ -1053,14 +528,9 @@ def _play(job: dict, observer=None) -> dict:
                 if pause_tokens:
                     env.set_token_observation(False)
                 try:
-                    if args.search_impl == "cpp":
-                        action = _cpp_search(env, obs, action, args,
-                                             (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions,
-                                             stats)
-                    else:
-                        action = _search(env, obs, action, args,
-                                         (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions,
-                                         stats)
+                    action = _search(env, obs, action, args,
+                                     (kw["seed"] if future_seed is None else future_seed) * 10000 + decisions,
+                                     stats)
                 finally:
                     if pause_tokens:
                         env.set_token_observation(True)
@@ -1069,11 +539,6 @@ def _play(job: dict, observer=None) -> dict:
                           f"hascombo={'combo' in action}", file=sys.stderr, flush=True)
                 if fog_diagnostics is not None:
                     fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
-                forced = _forced_upgrade(obs, stats, args.combo_max_wait, args.combo_buffer)
-                if forced is not None:
-                    action = forced
-                    if forced["type"] == "plant":
-                        stats["combo_upgrades"] += 1
                 if action["type"] == "shovel":
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []
@@ -1105,11 +570,6 @@ def _play(job: dict, observer=None) -> dict:
             rejected = not info.get("ok")
             if os.environ.get('PVZ_DBG') and (action.get("combo") or rejected):
                 print(f"DBGEXEC tick={obs['tick']} action={action} rejected={rejected}", file=sys.stderr, flush=True)
-            if not rejected and action["type"] == "plant" and action.get("combo"):
-                stats["pending_upgrade"] = {"packet": action["combo"]["upgrade_packet"],
-                                            "base_type": action["combo"]["base_type"],
-                                            "col": action["col"], "row": action["row"],
-                                            "expires": obs["tick"] + args.combo_max_wait}
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
@@ -1292,9 +752,6 @@ def parser():
                         "MemAvailable before admitting another worker")
     p.add_argument("--grow-interval", type=float, default=30.0,
                    help="seconds between two memory readings while the group runs")
-    p.add_argument("--search-impl", choices=("python", "cpp"), default="python",
-                   help="where the decision search runs: the Python teacher (default) or the engine's "
-                        "SEARCH command (task217, one request per decision)")
     p.add_argument("--per-card", type=int, default=1, help="best cells of each card kept as candidates")
     p.add_argument("--student-candidates", type=int, default=0,
                    help="the student's own top-k plant actions (its policy probabilities) added to the "
