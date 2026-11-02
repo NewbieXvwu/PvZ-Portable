@@ -1311,3 +1311,9 @@
 - GPT 包导入第一次因某局 `frames.npz` 为空直接中断整批（EOFError）。cdeploy d90b535f：读不了的帧文件记为该局问题、跳过，不再中断；已热更新 cq，重跑（TMPDIR 改到 `~/pvz-logs/tmp_import`，台式机 /tmp 是内存）。
 - **C: 只剩 7.2 GB**（vhdx 187.1 GB，WSL 内 162 GB）。退役 gpu-window 研究队列（task162 r42 旧数据结构对比，10-31 后无产出）：停用服务、删 corpus + decision-data；删 ~/llm_runs 8 个已导入旧包。WSL 内 174 → 162 GB（语料多为硬链接）。vhdx 内约 25 GB 可复用，暂不再涨；要还给 C: 需停生产压缩，待用户批准。
 - task220（dsh，llmpkg220）：下一个 GPT Pro 包改为按细分缺口派发——①从候选学生自己的败局中盘接着打（DAgger 式 resume），②各关课程前沿倍率，③升级植物卡组，④雾/屋顶广度与传送带/Boss；不再派 ×1 白天/夜间/泳池重放。
+
+### 11-02 12:40 GPT 11-01 包入库；r88 否决；task220 新包就绪
+
+- 导入完成：5541 局通过、3 局空帧跳过（exit=1 只因这 3 局；merged_progress 12:09 已发布）。decks 层 5460 局 5299 胜，native 层 84 局 24 胜。r88 打包在 11:03，没赶上；r89 起含这批数据。
+- r88 门禁两个候选都否（no_candidate_passed）。
+- task220（llmpkg220 abdabbef）：`~/Downloads/pvz-llmplay-220/`（pkg md5 55fbbafd…，res md5 7c55cd5b…）。派发顺序：学生败局中盘接回 365 条（夜 129 / 日 85 / 雾 77 / 池 74，r86 A/B 败局，首次破门前 45 s 截断）→ 前沿倍率 14 关 × 6 胜 → 传送带/Boss 8 关 × 16 胜 → 主线新卡组（含升级植物配额）。普通 ×1 日/夜/池重放退役；carry 合并到 8673 条唯一存档。
