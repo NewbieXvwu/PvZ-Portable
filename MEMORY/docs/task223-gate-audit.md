@@ -26,7 +26,7 @@
   `rates` 和门禁前冻结的倍率重做一步楼梯；不重放、不重跑。
 - `curriculum_queue._recalibrate_current_incumbent`：启动迁移。若 `gate_panel_student_round`
   不是当前 `student_round`，用该轮已批准 job 的 `contract.calibration` + `gate_panel.rates`
-  重算，并写 marker。r95 的旧 state 在控制器重启后会从 r52 口径切到 r95（A）口径：
+  重算，并写 marker。r95 的旧 state 在控制器重启后会从旧口径切到 r95（A）口径：
   fog L31/L34 变 `low_win=True`（A 0.0），L33/L37/L39 变 `False`（A .25/.58/.25）；
   倍率同步按 A 的同一批 rate 走一步。
 - `decide` 的区级规则：非屋顶区同时有胜局和波数对时，若胜局分歧对 ≥
