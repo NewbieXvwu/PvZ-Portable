@@ -6,7 +6,7 @@ from pathlib import Path
 from itertools import groupby
 from statistics import NormalDist, median
 
-GATE_VERSION = 7
+GATE_VERSION = 8
 ROOF_WAVE_ALPHA = .01
 ALPHA = .05
 MARGIN = .03
@@ -83,6 +83,7 @@ START_SEED_LEDGER_DEFAULT = str(Path.home() / 'pvz-logs/start_cell_seed_ledger.j
 START_SEED_BLOCK = 256
 
 VERSION = GATE_VERSION
+V8_PANEL_VERSION = 'v8'
 LOOKS = (0.25, 0.5, 0.75, 1.0)
 MULTIPLIERS = (.5, .75, 1., 1.25, 1.5, 1.75, 2., 2.5, 3.)
 # task180 evidence; retain the registered decks. Nonmatching fog demos are not substituted.
@@ -95,7 +96,36 @@ DEMO_TASKS = {40: ('demo_storm_40_orig_m100', 0),
               46: ('demo_roof_46_doom_m200', 3)}
 
 
-def policy():
+def _panel_tasks(document=None):
+    """Registered task order and pair counts, v5 legacy or v8 panel document."""
+    if document is None or document.get('panel_version') == 'v5':
+        return [dict(zone=zone, task_id=name, seeds=count, monitor=name in MONITOR_TASKS)
+                for zone, name, count in PANEL_TASKS]
+    if document.get('panel_version') not in (V8_PANEL_VERSION, 'v8-task222'):
+        raise ValueError(f"unknown panel_version: {document.get('panel_version')!r}")
+    monitor = list(document.get('monitor') or ())
+    groups = document.get('groups') or {}
+    rows = []
+    for task in document.get('tasks') or []:
+        name = task.get('task_id')
+        if not name or name not in groups:
+            raise ValueError(f'v8 panel task has no group: {name!r}')
+        is_monitor = name in monitor
+        count = (document.get('monitor_seeds_per_task', MONITOR_SEEDS_PER_TASK) if is_monitor
+                 else task.get('pairs', len(task.get('seeds') or ()) or document.get('seeds_per_task', SEEDS_PER_TASK)))
+        if type(count) is not int or count < 1:
+            raise ValueError(f'v8 panel task {name} has invalid pair count {count!r}')
+        rows.append(dict(zone=groups[name], task_id=name, seeds=count, monitor=is_monitor))
+    missing = set(monitor) - {row['task_id'] for row in rows}
+    if missing:
+        raise ValueError(f'v8 panel monitor cells are missing: {sorted(missing)}')
+    return rows
+
+
+def policy(document=None):
+    rows = _panel_tasks(document)
+    v8 = document is not None and document.get('panel_version') in (V8_PANEL_VERSION, 'v8-task222')
+    roof = [row['task_id'] for row in rows if row['zone'] == 'roof']
     result = dict(version=GATE_VERSION, alpha=ALPHA, noninferiority_margin=MARGIN,
                 overall_interval='Newcombe paired method 10, two-sided 95%',
                 zone_veto='one-sided exact McNemar p across the four non-roof adventure zones; '
@@ -103,14 +133,18 @@ def policy():
                           'veto while ordered p < 0.05 / (group_count - rank + 1)',
                 roof_veto=dict(endpoint='candidate_wave - incumbent_wave (final_wave)',
                                test='one-sided exact Wilcoxon signed-rank, alternative less',
-                               alpha=ROOF_WAVE_ALPHA, unit='roof zone, pooling both tasks (90 pairs)',
+                               alpha=ROOF_WAVE_ALPHA,
+                               unit=f"roof zone, pooling {sum(row['seeds'] for row in rows if row['zone'] == 'roof')} pairs",
                                zeros='discard', ties='average ranks',
                                distribution='exact conditional sign-flip, inclusive lower tail',
-                               tasks=[name for zone, name, _ in PANEL_TASKS if zone == 'roof']),
-                pair_count=sum(count for _, _, count in PANEL_TASKS),
-                episode_count=2 * sum(count for _, _, count in PANEL_TASKS),
-                seeds_per_task=SEEDS_PER_TASK,
-                seed_assignment="1728 adventure pairs evenly divided: first 18 tasks take 46, remaining 20 take 45",
+                               tasks=roof),
+                pair_count=sum(row['seeds'] for row in rows),
+                episode_count=2 * sum(row['seeds'] for row in rows),
+                seeds_per_task=SEEDS_PER_TASK if not v8 else 'per task (v8 panel pairs)',
+                seed_assignment=('1728 adventure pairs evenly divided: first 18 tasks take 46, '
+                                 'remaining 20 take 45' if not v8 else
+                                 f"{sum(row['seeds'] for row in rows if not row['monitor'])} adventure pairs: "
+                                 'first 18 tasks take 46, the rest 45'),
                 monitor_seeds_per_task=MONITOR_SEEDS_PER_TASK,
                 seed_pool=list(SEED_POOLS_V2[0]),
                 seed_ledger=SEED_LEDGER_DEFAULT,
@@ -118,12 +152,13 @@ def policy():
                            'exhaustion aborts the gate instead of wrapping',
                 incumbent_rerun='both sides are evaluated on the round seeds; '
                                 'cached incumbent outcomes are never used',
-                panel='adventure levels (original 1.0x, scoreboard decks) where the r11 student or '
-                      'the teacher has a recorded win; all-loss cells carry no regression signal',
+                panel=("task222 gate v8: the user's in-game deck picks, task208 first good decks "
+                       'elsewhere; every terrain zone represented' if v8 else
+                       'adventure levels (original 1.0x, scoreboard decks) where the r11 student or '
+                       'the teacher has a recorded win; all-loss cells carry no regression signal'),
                 heldout='monitor only: 96 pairs each, written into the round report, '
                         'never vetoes and never enters the overall rate',
-                tasks=[dict(zone=zone, task_id=name, seeds=count, monitor=name in MONITOR_TASKS)
-                       for zone, name, count in PANEL_TASKS])
+                tasks=rows)
 
     result.update(version=VERSION, episode_count=3 * result['pair_count'],
                   overall_interval='paired score normal interval with variance floor 1/n; '
@@ -133,15 +168,55 @@ def policy():
                   sequential=dict(looks=list(LOOKS), arms=2, spending='equal Bonferroni across looks and arms',
                                   stop='both candidates pass or are clearly rejected at the same look; '
                                        'at cap reject any unresolved candidate'),
-                  panel='task180 seeded staircase, persisted in curriculum_state.gate_panel',
+                  panel=('task180 seeded staircase, persisted in curriculum_state.gate_panel' if not v8
+                         else 'task222 v8 deck panel with the task180 staircase, persisted in '
+                              'curriculum_state.gate_panel'),
                   zone_veto='same four-zone Holm family at .05 and roof Wilcoxon at .01, '
                             'each spent over four looks and two candidates; low-win endpoints use Wilcoxon')
     return result
 
 
+def _registered_panel_v8(document, seed_block):
+    if seed_block is None or [int(s) for s in seed_block] != list(seed_block) or len(seed_block) != 2:
+        raise ValueError('gate v8 requires the ledger-allocated seed block')
+    start, end = int(seed_block[0]), int(seed_block[1])
+    if not any(low <= start and end <= high for low, high in SEED_POOLS_V2):
+        raise ValueError(f'seed block [{start}, {end}) is outside the gate pools '
+                         f'{[list(pool) for pool in SEED_POOLS_V2]}')
+    rows = _panel_tasks(document)
+    total = sum(row['seeds'] for row in rows)
+    if end - start != total:
+        raise ValueError(f'seed block [{start}, {end}) has the wrong size for gate v8 '
+                         f'(needs {total} seeds)')
+    table = {task['task_id']: task for task in document['tasks']}
+    tasks, groups, cursor = [], {}, start
+    for row in rows:
+        name = row['task_id']
+        task = copy.deepcopy(table[name])
+        if task.get('wave_cap') is not None:
+            raise ValueError(f'promotion must use complete evaluation games: {name}')
+        if float(task.get('zombie_count_multiplier', 1.)) != 1:
+            raise ValueError(f'promotion must register original difficulty; calibration sets it: {name}')
+        deck = task.get('deck') or ()
+        if deck and (not 6 <= len(deck) <= 10 or len(set(deck)) != len(deck)):
+            raise ValueError(f'v8 panel deck must be 6..10 distinct cards: {name}')
+        task['seeds'] = list(range(cursor, cursor + row['seeds']))
+        cursor += row['seeds']
+        tasks.append(task)
+        groups[name] = row['zone']
+    if cursor != end:
+        raise ValueError('gate v8 seed assignment is not a disjoint partition of the block')
+    return dict(schema_version=1, panel_version='v8-task222', groups=groups, tasks=tasks,
+                seed_block=[start, end], monitor=list(document.get('monitor') or ()),
+                purpose='task222 v8 user/task208 deck panel; roof wave Wilcoxon at 0.01, '
+                        'four non-roof binary zones Holm at 0.05')
+
+
 def _registered_panel(document, seed_block):
+    if document.get('panel_version') == V8_PANEL_VERSION:
+        return _registered_panel_v8(document, seed_block)
     if document.get('panel_version') != 'v5':
-        raise ValueError('promotion requires the registered v5 panel')
+        raise ValueError('promotion requires the registered v5 or v8 panel')
     if seed_block is None or [int(s) for s in seed_block] != list(seed_block) or len(seed_block) != 2:
         raise ValueError('gate v5 requires the ledger-allocated seed block')
     start, end = int(seed_block[0]), int(seed_block[1])
@@ -246,6 +321,18 @@ def summarize_waves(pairs):
 
 
 def initial_panel(source):
+    if source.get('panel_version') == V8_PANEL_VERSION:
+        initial = {str(level): value for level, value in (source.get('initial_multipliers') or {}).items()}
+        low = set(source.get('initial_low_win') or ())
+        result = {}
+        for task in source['tasks']:
+            name = task['task_id']
+            if name in (source.get('monitor') or ()):
+                continue
+            level = int(task['level'])
+            result[name] = dict(multiplier=float(initial.get(str(level), INITIAL_MULTIPLIERS.get(level, 1.))),
+                                low_win=level in low or level in LOW_LEVELS)
+        return result
     return {t['task_id']: dict(multiplier=2. if t['level'] == 46 else INITIAL_MULTIPLIERS.get(t['level'], 1.),
                                low_win=t['level'] in LOW_LEVELS,
                                **(dict(demo_task=DEMO_TASKS[t['level']][0],
@@ -255,9 +342,10 @@ def initial_panel(source):
 
 
 def freeze_panel(source, seed_block, calibration, demos):
+    is_v8 = source.get('panel_version') == V8_PANEL_VERSION
     panel = _registered_panel(source, seed_block)
-    panel['panel_version'] = 'v7-task179'
-    demo_table = {t['task_id']: t for t in demos.get('tasks', [])}
+    panel['panel_version'] = 'v8-task222' if is_v8 else 'v7-task179'
+    demo_table = {t['task_id']: t for t in (demos or {}).get('tasks', [])}
     for task in panel['tasks']:
         key = task['task_id']
         setting = calibration.get(key, {})
@@ -274,7 +362,7 @@ def freeze_panel(source, seed_block, calibration, demos):
         else:
             task['zombie_count_multiplier'] = setting.get('multiplier', 1.)
     panel['groups'] = {t['task_id']: source['groups'][t['gate_key']] for t in panel['tasks']}
-    panel['purpose'] = policy()['panel']
+    panel['purpose'] = policy(source)['panel']
     return panel
 
 
@@ -356,7 +444,8 @@ def decide(pairs, manifest, look):
     veto = any(reason.startswith('significant_') for reason in reasons)
     clear_reject = veto or overall['score_ci'][1] < 0
     status = 'pass' if approved else 'reject' if clear_reject or look == len(LOOKS) else 'continue'
-    return dict(version=VERSION, policy=policy(), approved=approved, reasons=reasons,
+    panel_policy = policy(manifest) if manifest.get('panel_version') in (V8_PANEL_VERSION, 'v8-task222') else policy()
+    return dict(version=VERSION, policy=panel_policy, approved=approved, reasons=reasons,
                 overall=overall, zones=zones, status=status,
                 monitor={name: summarize([r for r in pairs if r['task_id'] == name])
                          for name in manifest['monitor']},

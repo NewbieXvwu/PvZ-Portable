@@ -82,6 +82,30 @@ from pvz_training_pack import (filter_sources, pack_flags, pack_options, fingerp
 from pvz_metrics import Metrics  # noqa: E402
 from pvz_common import OOM_SCORE_CONTROLLER, set_oom_score_adj  # noqa: E402
 
+def reconcile_gate_panel(state, source):
+    """Keep the staircase calibration in sync with the panel file.
+
+    A version change (v5 -> v8) starts fresh: old task keys and rates are
+    dropped.  Within one version, adding a recording only adds its default
+    calibration; existing multipliers and staircase progress survive.
+    """
+    from pvz_promotion import initial_panel
+    version = str(source.get('panel_version'))
+    calibration = initial_panel(source)
+    existing = state.get('gate_panel')
+    if not isinstance(existing, dict) or state.get('gate_panel_version') != version:
+        # A legacy v5 state keeps its calibrated multipliers when the version is
+        # first stamped; every other transition starts from the panel defaults.
+        if not (version == 'v5' and isinstance(existing, dict)):
+            state['gate_panel'] = calibration
+    state['gate_panel'] = state.get('gate_panel') if isinstance(state.get('gate_panel'), dict) else {}
+    for key, value in calibration.items():
+        state['gate_panel'].setdefault(key, value)
+    for key in set(state['gate_panel']) - set(calibration):
+        del state['gate_panel'][key]
+    state['gate_panel_version'] = version
+
+
 PROMOTE_ABOVE = 0.85
 DEMOTE_BELOW = 0.5
 MIN_SAMPLES = 8            # 少于这个局数不做升降级，只继续采
@@ -1139,8 +1163,8 @@ class TrainingPipeline:
                     pass
             if self.last_train_peak and self.last_pack_peak:
                 break
-        from pvz_promotion import initial_panel
-        state.setdefault('gate_panel', initial_panel(read_json(args.promotion_panel)))
+        reconcile_gate_panel(state, read_json(getattr(args, 'promotion_panel', None)
+                                             or ROOT / 'configs/gate_v8_panel.json'))
         approved = [j for j in state['training_jobs'] if j.get('promotion_approved')
                     and j['round'] > state.get('student_round', 0)]
         if approved:
@@ -1243,6 +1267,10 @@ class TrainingPipeline:
     def gate_version(self):
         return GATE_VERSION
 
+    def promotion_panel_path(self):
+        return Path(getattr(self.args, 'promotion_panel', None) or
+                    ROOT / 'configs/gate_v8_panel.json')
+
     def evaluation_contract(self, job):
         source = getattr(self.args, 'promotion_panel', None)
         if source is None:
@@ -1266,8 +1294,9 @@ class TrainingPipeline:
         reuse the same block and the ledger is never double-spent. Pool exhaustion
         raises and closes the gate; seeds are never wrapped around and reused."""
         if 'seed_block' not in job:
-            job['seed_block'] = list(allocate_seed_block(self.args.seed_ledger,
-                                                         promotion_policy()['pair_count']))
+            job['seed_block'] = list(allocate_seed_block(
+                self.args.seed_ledger,
+                promotion_policy(read_json(self.promotion_panel_path()))['pair_count']))
         return job
 
     def _evaluate(self, job):
@@ -1297,7 +1326,8 @@ class TrainingPipeline:
             if systemic_game_failure(error):
                 raise
             # Evaluation failure is a closed gate, not permission to stop accumulating data.
-            decision = dict(version=self.gate_version, approved=False, policy=promotion_policy(),
+            decision = dict(version=self.gate_version, approved=False,
+                            policy=promotion_policy(read_json(self.promotion_panel_path())),
                             contract=frozen, reasons=['evaluation_error: ' + str(error)])
             out.mkdir(parents=True, exist_ok=True)
             (out / 'error.json').write_text(json.dumps(decision, indent=2) + '\n')
@@ -1475,7 +1505,7 @@ class TrainingPipeline:
         path = folder / 'recipe.json'
         path.parent.mkdir(parents=True, exist_ok=True)
         job = dict(round=round_index, recipe=str(path), model=str(Path(recipe['out']) / 'model.pt'),
-                   status='queued', gate_version=7, b_lineage=CLEAN_B_LINEAGE,
+                   status='queued', gate_version=GATE_VERSION, b_lineage=CLEAN_B_LINEAGE,
                    b_initial_epochs=getattr(self.args, 'b_initial_epochs', 8),
                    b_epochs=getattr(self.args, 'b_epochs', 4),
                    a_restart=bool(getattr(self.args, 'a_restart', True)))
@@ -1884,7 +1914,8 @@ class TrainingPipeline:
             save_state(self.args.state, self.state)
             return
         if not valid_certificate(promotion, current_contract):
-            promotion = dict(version=self.gate_version, approved=False, policy=promotion_policy(),
+            promotion = dict(version=self.gate_version, approved=False,
+                             policy=promotion_policy(read_json(self.promotion_panel_path())),
                              contract=current_contract, reasons=['evaluation_error: invalid paired evaluation artifacts'])
             report['promotion'] = promotion
             completed = Path(job['recipe']).parent / 'complete.json'
@@ -2491,8 +2522,8 @@ def main() -> None:
     parser.add_argument('--opening-manifest', type=Path,
                         help='fixed 1.0x cold-start specialists, 12 beta=0 + 12 beta=0.5 per cell')
     parser.add_argument('--promotion-panel', type=Path,
-                        default=ROOT / 'configs/gate_v5_panel.json',
-                        help='registered unified v2 source manifest for the mandatory paired promotion gate')
+                        default=ROOT / 'configs/gate_v8_panel.json',
+                        help='registered v8 deck panel for the mandatory paired promotion gate')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
     parser.add_argument('--start-seed-ledger', type=Path, default=Path(START_SEED_LEDGER_DEFAULT),

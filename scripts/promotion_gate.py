@@ -50,7 +50,7 @@ def write(path, document):
 
 def contract(candidate, incumbent, source_panel, executable, value, resource_dir, workers=1,
              seed_block=None, candidates=None, calibration=None):
-    result = dict(version=GATE_VERSION, policy=policy(), candidate=str(candidate),
+    result = dict(version=GATE_VERSION, policy=policy(read(source_panel)), candidate=str(candidate),
                 incumbent=str(incumbent), source_panel=str(source_panel), executable=str(executable),
                 value=str(value), resource_dir=str(resource_dir), workers=workers,
                 seed_block=[int(seed_block[0]), int(seed_block[1])] if seed_block else None)
@@ -263,7 +263,7 @@ def evaluate(args):
             block = [int(x) for x in args.seed_block.split(',')]
             require_allocated_block(args.seed_ledger, block)
         else:
-            block = allocate_seed_block(args.seed_ledger, policy()['pair_count'])
+            block = allocate_seed_block(args.seed_ledger, policy(read(args.source_panel))['pair_count'])
         frozen = contract(args.candidate, args.incumbent, args.source_panel, args.executable,
                           args.value, args.resource_dir, args.workers, seed_block=block,
                           candidates=candidates, calibration=calibration)
