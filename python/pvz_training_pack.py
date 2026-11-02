@@ -113,11 +113,14 @@ def segment_contracts(data: Path, options: dict, label: str, paths):
     groups = []
     if label == DEMO_LABEL:
         from pvz_llm_demo_rows import demo_batch
-        batches = {}
+        # Hash buckets keep the split stable when another import arrives: a new sha only
+        # rebuilds its own bucket, never every later batch. The cap bounds one job.
+        buckets = {}
         for path in paths:
-            batches.setdefault(demo_batch(Path(data), path), []).append(path)
-        for batch in sorted(batches):
-            chunk = sorted(batches[batch], key=str)
+            batch = demo_batch(Path(data), path)
+            buckets.setdefault(batch[:2], []).append(path)
+        for key in sorted(buckets):
+            chunk = sorted(buckets[key], key=str)
             groups.extend(chunk[start:start + DEMO_SEGMENT_ARCHIVES]
                           for start in range(0, len(chunk), DEMO_SEGMENT_ARCHIVES))
     else:
