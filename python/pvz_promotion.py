@@ -331,7 +331,7 @@ def initial_panel(source):
                 continue
             level = int(task['level'])
             result[name] = dict(multiplier=float(initial.get(str(level), INITIAL_MULTIPLIERS.get(level, 1.))),
-                                low_win=level in low or level in LOW_LEVELS)
+                                low_win=level in low)
         return result
     return {t['task_id']: dict(multiplier=2. if t['level'] == 46 else INITIAL_MULTIPLIERS.get(t['level'], 1.),
                                low_win=t['level'] in LOW_LEVELS,

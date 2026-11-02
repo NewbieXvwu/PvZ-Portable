@@ -1710,3 +1710,14 @@ B为A相同v2timer配方，仅33个z*历史标签权重1.5→1.0；复用A特征
 种子默认随机，也可显式指定；倍率默认1.0，雾关默认 human_v2。每局 meta 保留真实卡槽顺序与
 `label_source=human`，固定卡组开局合同供后续重放使用。此族独立于现有训练与门禁卡组，
 不覆盖旧任务定义或旧档案。入口及完整命令见 [task209](MEMORY/docs/task209-user-pick.md)。
+
+### task222：门禁 v8（用户卡组基准，2026-11-02 登记）
+
+新任务族 `task222_l{level}_{zone}_{user|good}`：用户游戏内亲自选卡的录制优先，没有用户卡组的
+关卡取 task208 的第一套好卡组；传送带/特殊关不选（没有选卡）。面板
+`configs/gate_v8_panel.json` 为 41 个冒险任务（day 8、night 8、pool 9（L29 两套用户卡组）、
+fog 8、roof 8）加原有 2 个留出监控，生成器 `scripts/make_gate_v8_panel.py` 是唯一实现。
+倍率沿用 task180 的阶梯：面板初值由 v5 校准热启动后按同一规则做基线校准，不按关卡手调。
+`GATE_VERSION=8`，默认 `--promotion-panel` 与 `qc_launch` 都指向 v8；版本切换时
+`reconcile_gate_panel` 丢弃 v5 的 task key/rates/楼梯状态，v8 结果不与 v5 轮次比较。
+不部署，由控制器部署。面板表与台式机基线见 [task222](MEMORY/docs/task222-gate-v8.md)。

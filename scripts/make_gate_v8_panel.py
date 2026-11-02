@@ -117,6 +117,37 @@ def warm_start(path: Path | None) -> dict[int, dict]:
     return result
 
 
+def calibrated_from_summary(path: Path, base: dict[int, float]) -> tuple[dict[int, float], set[int]]:
+    """One standard staircase step from an incumbent baseline summary.
+
+    Rates are aggregated per level (a level with two recorded decks gets one
+    multiplier).  >=90% raises a step, <=10% lowers one, otherwise unchanged.
+    Low-win levels (<=20% or roof) switch to the wave endpoint, exactly like
+    next_panel does after a gate round.
+    """
+    document = json.loads(path.read_text())
+    totals: dict[int, list[int]] = {}
+    zones: dict[int, str] = {}
+    for task in document.get('tasks', []):
+        if task.get('zone') == 'heldout':
+            continue
+        level = int(task['level'])
+        bucket = totals.setdefault(level, [0, 0])
+        bucket[0] += int(task['wins'])
+        bucket[1] += int(task['games'])
+        zones[level] = task['zone']
+    result = dict(base)
+    low = set()
+    for level, (wins, games) in totals.items():
+        rate = wins / games
+        index = MULTIPLIERS.index(result.get(level, 1.))
+        direction = 1 if rate >= .9 else -1 if rate <= .1 else 0
+        result[level] = MULTIPLIERS[max(0, min(len(MULTIPLIERS) - 1, index + direction))]
+        if rate <= .2 or zones[level] == 'roof':
+            low.add(level)
+    return result, low
+
+
 def monitor_definitions(path: Path) -> list[dict]:
     source = json.loads(path.read_text())
     table = {task['task_id']: task for task in source['tasks']}
@@ -132,7 +163,8 @@ def monitor_definitions(path: Path) -> list[dict]:
     return result
 
 
-def build(user_root: Path, v5_panel: Path, warm_state: Path | None) -> dict:
+def build(user_root: Path, v5_panel: Path, warm_state: Path | None,
+          calibration_summary: Path | None = None, base_panel: Path | None = None) -> dict:
     recordings = user_recordings(user_root)
     warm = warm_start(warm_state)
     by_level: dict[int, list[dict]] = {}
@@ -199,16 +231,32 @@ def build(user_root: Path, v5_panel: Path, warm_state: Path | None) -> dict:
         tasks.append(task)
 
     initial, initial_low = {}, []
+    base_panel_document = json.loads(base_panel.read_text()) if base_panel else None
+    base_low = set((base_panel_document or {}).get('initial_low_win') or ())
+    known = set(int(level) for level in (base_panel_document or {}).get('initial_multipliers', {}))
     for entry in entries:
         level = entry['level']
         setting = warm.get(level)
-        multiplier = setting['multiplier'] if setting else INITIAL_MULTIPLIERS.get(level, 1.0)
+        if base_panel_document is not None:
+            multiplier = float(base_panel_document.get('initial_multipliers', {}).get(
+                str(level), INITIAL_MULTIPLIERS.get(level, 1.0)))
+        else:
+            multiplier = setting['multiplier'] if setting else INITIAL_MULTIPLIERS.get(level, 1.0)
         if multiplier not in MULTIPLIERS:
             raise ValueError(f'L{level}: multiplier {multiplier} outside {MULTIPLIERS}')
         initial[str(level)] = multiplier
-        if entry['zone'] == 'roof' or level in LOW_LEVELS or (setting and setting['low_win']):
+        if base_panel_document is not None and level in known:
+            low = level in base_low
+        else:
+            low = entry['zone'] == 'roof' or level in LOW_LEVELS or bool(setting and setting['low_win'])
+        if low:
             initial_low.append(level)
     initial_low = sorted(set(initial_low))
+    if calibration_summary is not None:
+        base = {int(level): value for level, value in initial.items()}
+        adjusted, low = calibrated_from_summary(calibration_summary, base)
+        initial = {str(level): value for level, value in adjusted.items()}
+        initial_low = sorted(low)
 
     zone_counts = {zone: sum(1 for row in entries if row['zone'] == zone) for zone in ZONE_ORDER}
     zone_counts['heldout'] = len(monitors)
@@ -223,17 +271,18 @@ def build(user_root: Path, v5_panel: Path, warm_state: Path | None) -> dict:
         sources=dict(**{
             'scripts/pvz_tasks.py': 'GOOD_DECKS / USER_DECKS deck source (task208)',
             'MEMORY/docs/task208-good-decks.md': 'task208 per-level deck and teacher evidence',
-            str(user_root): 'user in-game recordings (meta.json task.level/task.deck)',
-            str(v5_panel): 'registered heldout monitor definitions (decks unchanged)',
-        }, **({'warm start': str(warm_state)} if warm_state else {})),
+            'user recordings': 'desktop ~/PvZ-search/artifacts/student/frames_v2/human/user_l* '
+                               '(meta.json task.level/task.deck)',
+            'configs/gate_v5_panel.json': 'registered heldout monitor definitions (decks unchanged)',
+        }),
         groups=groups, monitor=list(MONITOR_TASKS), zone_counts=zone_counts,
         seeds_per_task=SEEDS_PER_TASK, monitor_seeds_per_task=MONITOR_SEEDS_PER_TASK,
         bonus_pairs=BONUS_PAIRS, first_look_pairs=sum(
             math.ceil((SEEDS_PER_TASK + (1 if index < BONUS_PAIRS else 0)) * .25)
             for index in range(len(entries))) + MONITOR_SEEDS_PER_TASK * len(monitors),
         initial_multipliers=initial, initial_low_win=initial_low,
-        initial_multiplier_source=('current staircase multipliers by level (warm start), '
-                                   'not v5 outcomes' if warm else 'task180 initial multipliers'),
+        initial_multiplier_source=('staircase-calibrated on the task222 incumbent baseline; '
+                                   'see MEMORY/docs/task222-gate-v8.md'),
         user_recordings=[dict(level=row['level'], deck=list(row['deck']), seed=row['seed'],
                               path=row['path']) for row in recordings],
         excluded=[dict(level=level, reason='conveyor or special level: no deck choice')
@@ -248,10 +297,15 @@ def main() -> None:
     parser.add_argument('--v5-panel', type=Path, default=DEFAULT_V5_PANEL)
     parser.add_argument('--warm-state', type=Path,
                         help='curriculum_state.json or a {task: setting} snapshot for initial multipliers')
+    parser.add_argument('--calibrate-from', type=Path,
+                        help='incumbent baseline summary.json; apply one standard staircase step')
+    parser.add_argument('--base-panel', type=Path,
+                        help='use this panel\'s initial_multipliers as the staircase base')
     parser.add_argument('--out', type=Path, default=DEFAULT_OUT)
     parser.add_argument('--check', action='store_true', help='fail unless --out already matches')
     args = parser.parse_args()
-    panel = build(args.user_root, args.v5_panel, args.warm_state)
+    panel = build(args.user_root, args.v5_panel, args.warm_state, args.calibrate_from,
+                  args.base_panel)
     text = json.dumps(panel, indent=1, ensure_ascii=False) + '\n'
     if args.check:
         current = args.out.read_text() if args.out.exists() else ''

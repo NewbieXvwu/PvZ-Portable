@@ -245,6 +245,8 @@ def deck_for_seed(task: dict, seed: int) -> tuple[int, ...]:
         rng.shuffle(deck)
         return tuple(deck)
     raise ValueError('no admissible non-held-out deck under the requested perturbation')
+
+
 # BEGIN GOOD_DECKS (task208)
 GOOD_DECKS: dict[int, tuple[tuple[int, ...], ...]] = {
     1: ((1,2,3,4,17,21,23,32,39,41), (1,2,4,17,18,20,21,23,26,41), (0,1,3,4,5,20)),
