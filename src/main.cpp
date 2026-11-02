@@ -808,7 +808,8 @@ struct SearchParameters
 	int halvingFirstSamples = 1;
 	int minGap = 300;
 	int lastSearchTick = -1000000000;
-	int reserve = 0;
+	int comboBuffer = 25;
+	int comboInterval = 600;
 	int simSkip = 61;
 	double marginRelative = 0.0;
 	bool halving = true;
@@ -833,13 +834,16 @@ static const std::vector<std::pair<int, int>> kComboBases = { { 40, 7 }, { 41, 1
 struct SearchState
 {
 	int pendingUpgrade = 0, pendingBase = 0, pendingCol = -1, pendingRow = -1, pendingExpires = 0;
-	int sunReserve = 0;
+	int lastComboTick = -1000000000;   // --combo-interval: when a base last armed a plan
+	int pendingArmedTick = -1;         // decision that armed the plan (its base is planted after it)
 	std::map<int, int> lastSaveProbe;
 	void Reset()
 	{
 		pendingUpgrade = pendingBase = 0;
 		pendingCol = pendingRow = -1;
-		pendingExpires = sunReserve = 0;
+		pendingExpires = 0;
+		lastComboTick = -1000000000;
+		pendingArmedTick = -1;
 		lastSaveProbe.clear();
 	}
 };
@@ -1052,23 +1056,9 @@ public:
 		result.chosen = policy;
 		const int tick = app->mBoard->mMainCounter;
 		const int untilTick = tick + parameters.horizon;
-		state.sunReserve = parameters.reserve;
-		// The engine only lists plant actions the player can pay for; a pending combo upgrade keeps
-		// its cost in the bank, so only spare sun is spent.
+		// The engine only lists plant actions the player can pay for right now.
 		std::vector<std::array<int, 3>> legal;
 		LegalCells(app, legal);
-		if (parameters.reserve > 0)
-		{
-			std::vector<std::array<int, 3>> spare;
-			for (const auto& action : legal)
-			{
-				SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[action[0]];
-				const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
-				if (app->mBoard->mSunMoney - cost >= parameters.reserve) spare.push_back(action);
-			}
-			legal.swap(spare);
-			if (legal.empty()) { profile.totalSeconds = Elapsed(started); return; }
-		}
 		if (legal.empty()) { profile.totalSeconds = Elapsed(started); return; }
 		if (parameters.minGap && policy.kind != 'P' && tick - parameters.lastSearchTick < parameters.minGap)
 		{ profile.totalSeconds = Elapsed(started); return; }
@@ -1187,7 +1177,7 @@ public:
 		// --combo-candidates k: a base plant now plus a forced upgrade later, scored as one plan.  Only
 		// pairs whose upgrade card is not already legal (a legal upgrade is its own candidate) and only
 		// cells the static net already ranked.  k = 0 leaves the set untouched.
-		if (parameters.comboCandidates > 0)
+		if (parameters.comboCandidates > 0 && tick - state.lastComboTick >= parameters.comboInterval)
 		{
 			std::map<int, int> packetType;   // packet slot -> SeedType
 			for (int slot = 0; slot < app->mBoard->mSeedBank->mNumPackets; ++slot)
@@ -1226,6 +1216,7 @@ public:
 				combo.baseType = pair.second;
 				candidates.push_back(combo);
 				result.studentCandidate.push_back(false);
+				state.lastComboTick = tick;
 				++added;
 			}
 			result.comboCandidateAdded += added;
@@ -1255,16 +1246,6 @@ public:
 				history, historyStart, studentHistory, untilTick, policy, tick);
 		// The response is emitted by the caller, so the profile is closed out here.
 		profile.totalSeconds = Elapsed(started);
-		ForcedUpgrade(app, parameters, tick);
-		if (!result.comboUpgrades && state.sunReserve && result.chosen.kind == 'P' &&
-			BreaksReserve(app, result.chosen.packet))
-		{
-			// A pending plan keeps its upgrade's cost in the bank.  The candidate filter above already
-			// skips cards it cannot afford, but the student's own action bypasses that filter, so the
-			// reserve would never bind and the upgrade never became legal (task217b).
-			result.chosen = SearchCandidate();
-			++result.comboHeld;
-		}
 		(void)rolloutsBefore;
 		if (result.chosen.kind == 'P' && result.chosen.upgradePacket)
 		{
@@ -1273,9 +1254,23 @@ public:
 			state.pendingBase = result.chosen.baseType;
 			state.pendingCol = result.chosen.col;
 			state.pendingRow = result.chosen.row;
-			state.pendingExpires = tick + parameters.comboMaxWait;
-			state.sunReserve = PacketCost(app, result.chosen.upgradePacket);
+			state.pendingExpires = -1;   // armed; the next decision stamps tick + --combo-max-wait
+			state.pendingArmedTick = tick;
+			state.lastComboTick = tick;
 		}
+	}
+
+	// Runs after Run().  The pending upgrade is checked at *every* decision, including the ones the
+	// search itself skips (no legal plant, --min-gap), exactly like the Python loop, which checks it
+	// outside the search.
+	void FinishDecision(LawnApp* app, const SearchParameters& parameters, int tick)
+	{
+		// A plan armed by this decision's own action has not been planted yet (the caller executes it
+		// after this response), so it cannot fire here -- Python arms it after the step, too.
+		if (state.pendingUpgrade && state.pendingArmedTick == tick) return;
+		if (state.pendingUpgrade && state.pendingExpires < 0)
+			state.pendingExpires = tick + parameters.comboMaxWait;
+		ForcedUpgrade(app, parameters, tick);
 	}
 
 	SearchResult result;
@@ -1677,15 +1672,16 @@ private:
 				planted = true;
 				break;
 			}
-		if (!planted || tick > state.pendingExpires)
+		if (!planted || (state.pendingExpires >= 0 && tick > state.pendingExpires))
 		{
 			state.pendingUpgrade = 0;
-			state.sunReserve = 0;
 			return;
 		}
 		std::vector<std::array<int, 3>> legal;
 		LegalCells(app, legal);
 		if (!UpgradeLegal(legal, state.pendingUpgrade, state.pendingCol, state.pendingRow)) return;
+		// Leave --combo-buffer sun behind: a hard bank deadlocked poor night levels (task214d).
+		if (app->mBoard->mSunMoney - PacketCost(app, state.pendingUpgrade) < parameters.comboBuffer) return;
 		SearchCandidate upgrade;
 		upgrade.kind = 'P';
 		upgrade.packet = state.pendingUpgrade;
@@ -1694,7 +1690,6 @@ private:
 		result.chosen = upgrade;
 		++result.comboUpgrades;
 		state.pendingUpgrade = 0;
-		state.sunReserve = 0;
 	}
 
 	static int PacketCost(LawnApp* app, int packet)
@@ -1703,11 +1698,6 @@ private:
 		SeedPacket& card = app->mBoard->mSeedBank->mSeedPackets[packet];
 		return card.mPacketType == SeedType::SEED_NONE ? 0
 			: Plant::GetCost(card.mPacketType, card.mImitaterType);
-	}
-
-	bool BreaksReserve(LawnApp* app, int packet)
-	{
-		return app->mBoard->mSunMoney - PacketCost(app, packet) < state.sunReserve;
 	}
 
 	static double Mean(const std::vector<double>& values)
@@ -2145,8 +2135,9 @@ static void RunEnvironment(LawnApp* app)
 			// MEMORY/docs/task217-csearch.md.
 			int rootId = 0, mask = 0, horizon = 0, perCard = 0, studentCandidates = 0, samples = 0;
 			int verifySamples = 0, halving = 0, halvingFirstSamples = 0, minGap = 0, lastSearchTick = 0;
-			int reserve = 0, historyStart = 0, historyCount = 0, previousTick = -1, previousPlant = 0;
-			int comboCandidates = 0, comboMaxWait = 0, saveCandidates = 0, saveChunk = 0, saveMaxWait = 0;
+			int historyStart = 0, historyCount = 0, previousTick = -1, previousPlant = 0;
+			int comboCandidates = 0, comboMaxWait = 0, comboBuffer = 25, comboInterval = 600;
+			int saveCandidates = 0, saveChunk = 0, saveMaxWait = 0;
 			int saveInterval = 0, candidateMode = 0, studentTopk = 3;
 			double income = 0, marginRelative = 0, saveShare = 0;
 			int64_t decisionSeed = 0;
@@ -2156,7 +2147,8 @@ static void RunEnvironment(LawnApp* app)
 			ok = static_cast<bool>(input >> rootId >> decisionSeed >> income >> previousTick >> previousPlant
 				>> mask >> horizon >> perCard
 				>> studentCandidates >> samples >> verifySamples >> halving >> halvingFirstSamples >> marginRelative
-				>> minGap >> lastSearchTick >> reserve >> comboCandidates >> comboMaxWait >> saveCandidates
+				>> minGap >> lastSearchTick >> comboCandidates >> comboMaxWait >> comboBuffer >> comboInterval
+				>> saveCandidates
 				>> saveShare >> saveInterval >> saveChunk >> saveMaxWait >> candidateMode >> studentTopk
 				>> policyToken >> demoTarget >> historyStart >> historyCount) &&
 				rollout.Loaded() && valueNets[0].Loaded() && valueNets[1].Loaded() && app->mBoard &&
@@ -2164,10 +2156,11 @@ static void RunEnvironment(LawnApp* app)
 				!(mask & ~ENV_SKIP_ALLOWED) && horizon >= 0 && horizon <= 1000000 && perCard >= 1 && perCard <= 32 &&
 				studentCandidates >= 0 && studentCandidates <= 64 && samples >= 1 && samples <= 64 &&
 				verifySamples >= 0 && verifySamples <= 64 && (halving == 0 || halving == 1) && halvingFirstSamples >= 1 &&
-				marginRelative >= 0 && std::isfinite(marginRelative) && minGap >= 0 && reserve >= 0 && previousTick >= -1 &&
+				marginRelative >= 0 && std::isfinite(marginRelative) && minGap >= 0 && previousTick >= -1 &&
 				(previousPlant == 0 || previousPlant == 1) &&
 				historyStart >= 0 && historyCount >= 0 && historyCount <= 100000 &&
-				comboCandidates >= 0 && comboCandidates <= 64 && comboMaxWait >= 0 &&
+				comboCandidates >= 0 && comboCandidates <= 64 && comboMaxWait >= 0 && comboBuffer >= 0 &&
+				comboInterval >= 0 &&
 				saveCandidates >= 0 && saveCandidates <= 64 && saveShare >= 0 && std::isfinite(saveShare) &&
 				saveInterval >= 0 && saveChunk > 0 && saveMaxWait > 0 &&
 				(candidateMode == 0 || candidateMode == 1) && studentTopk >= 1 && studentTopk <= 64;
@@ -2201,7 +2194,8 @@ static void RunEnvironment(LawnApp* app)
 			parameters.halvingFirstSamples = halvingFirstSamples;
 			parameters.minGap = minGap;
 			parameters.lastSearchTick = lastSearchTick;
-			parameters.reserve = reserve;
+			parameters.comboBuffer = comboBuffer;
+			parameters.comboInterval = comboInterval;
 			parameters.simSkip = mask;
 			parameters.marginRelative = marginRelative;
 			parameters.halving = halving != 0;
@@ -2215,11 +2209,13 @@ static void RunEnvironment(LawnApp* app)
 			parameters.studentTopk = studentTopk;
 			parameters.saveShare = saveShare;
 			EnvironmentSearch search(searchState, nextSnapshotId);
+			const int decisionTick = app->mBoard ? static_cast<int>(app->mBoard->mMainCounter) : 0;
 			if (ok)
 				search.Run(app, rollout, valueNets[0], valueNets[1], snapshots, rootId, decisionSeed, income,
 					previousTick, previousPlant != 0, parameters,
 					std::vector<std::pair<int, uint32_t>>(history.begin(), history.end()), historyStart,
 					studentHistory, policy, hasDemo ? &demo : nullptr);
+			if (ok) search.FinishDecision(app, parameters, decisionTick);
 			const SearchResult& result = search.result;
 			ok = ok && result.chosen.kind != 0;
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ",\"ok\":"
@@ -2239,7 +2235,7 @@ static void RunEnvironment(LawnApp* app)
 				<< ",\"save_probes\":" << result.saveProbes
 				<< ",\"save_overrides\":" << result.saveOverrides
 				<< ",\"save_wait_ticks\":" << result.saveWaitTicks
-				<< ",\"sun_reserve\":" << searchState.sunReserve << ",\"save_last_probe\":{";
+				<< ",\"last_combo_tick\":" << searchState.lastComboTick << ",\"save_last_probe\":{";
 			for (auto entry = searchState.lastSaveProbe.begin(); entry != searchState.lastSaveProbe.end(); ++entry)
 			{
 				if (entry != searchState.lastSaveProbe.begin()) std::cout << ',';

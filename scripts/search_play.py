@@ -603,9 +603,10 @@ def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, s
             min_gap=args.min_gap, last_search_tick=stats.get("last_search_tick", -10 ** 9),
             previous_tick=int(previous["tick"]) if previous else -1,
             previous_plant=bool(_W.get("student_previous_plant")),
-            reserve=int(stats.get("sun_reserve") or 0), sim_skip=args.rollout_sim_skip,
+            sim_skip=args.rollout_sim_skip,
             student_history=_W.get("student_history"), demo_action=_demo_candidate(obs, legal),
             combo_candidates=args.combo_candidates, combo_max_wait=args.combo_max_wait,
+            combo_buffer=args.combo_buffer, combo_interval=args.combo_interval,
             save_candidates=args.save_candidates, save_share=args.save_share,
             save_interval=args.save_interval, save_chunk=args.save_chunk,
             save_max_wait=args.save_max_wait,
@@ -621,11 +622,11 @@ def _cpp_search(env, obs: dict, policy_action: dict, args, decision_seed: int, s
     if response["searched"]:
         stats["last_search_tick"] = obs["tick"]
         stats["searched"] += 1
-    # The engine owns the pending upgrade and the sun reserved for it across decisions.
+    # The engine owns the pending upgrade across decisions (--combo-buffer / --combo-interval).
     if "combo_pending" in payload:
         stats["pending_upgrade"] = payload["combo_pending"]
-    if "sun_reserve" in payload:
-        stats["sun_reserve"] = int(payload["sun_reserve"] or 0)
+    if "last_combo_tick" in payload:
+        stats["last_combo_tick"] = int(payload["last_combo_tick"])
     if "save_last_probe" in payload:
         stats["save_last_probe"] = {int(slot): int(tick) for slot, tick in payload["save_last_probe"].items()}
     for name in ("overrides", "halving_candidates", "halving_rollouts", "halving_selected_lanes",
@@ -1068,16 +1069,6 @@ def _play(job: dict, observer=None) -> dict:
                     action = forced
                     if forced["type"] == "plant":
                         stats["combo_upgrades"] += 1
-                elif stats.get("sun_reserve") and action["type"] == "plant":
-                    # A pending combo keeps its upgrade's cost in the bank: the candidate filter
-                    # already skips cards it cannot afford, but the student's own action bypasses
-                    # that filter, so the reserve would never bind and the upgrade never became
-                    # legal (task217b).  Spend only the sun above the reserve.
-                    cost = next((card["cost"] for card in obs.get("packets") or []
-                                 if card["index"] == action["packet"]), 0)
-                    if obs["sun"] - cost < stats["sun_reserve"]:
-                        action = dict(NOOP)
-                        stats["combo_held"] = stats.get("combo_held", 0) + 1
                 if action["type"] == "shovel":
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []
@@ -1326,8 +1317,7 @@ def parser():
     p.add_argument("--combo-interval", type=int, default=600,
                    help="minimum ticks between arming two combo plans")
     p.add_argument("--combo-max-wait", type=int, default=5000,
-                   help="ticks a --combo-candidates plan may keep its upgrade cost in reserve before "
-                        "giving up; cards at most a quarter of that cost stay payable")
+                   help="ticks a --combo-candidates plan waits for its upgrade before giving up")
     p.add_argument("--margin-relative", type=float, default=0.0,
                    help="off (0) = the absolute MARGIN 0.02; R>0 = max(0.001, R * best candidate value)")
     p.add_argument("--halving", action=argparse.BooleanOptionalAction, default=True,

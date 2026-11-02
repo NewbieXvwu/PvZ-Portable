@@ -848,10 +848,11 @@ class PvZEnv:
                horizon: int, per_card: int, student_candidates: int, samples: int, verify_samples: int,
                halving: bool, halving_first_samples: int, margin_relative: float, min_gap: int,
                last_search_tick: int, previous_tick: int = -1, previous_plant: bool = False,
-               reserve: int = 0, sim_skip: int = 61, student_history=None, demo_action=None,
-               combo_candidates: int = 0, combo_max_wait: int = 0, save_candidates: int = 0,
+               sim_skip: int = 61, student_history=None, demo_action=None,
+               combo_candidates: int = 0, combo_max_wait: int = 0, combo_buffer: int = 25,
+               combo_interval: int = 600, save_candidates: int = 0,
                save_share: float = 0.5, save_interval: int = 0, save_chunk: int = 300,
-               save_max_wait: int = 1800) -> dict:
+               save_max_wait: int = 1800, candidate_mode: int = 0, student_topk: int = 3) -> dict:
         """Run one whole teacher decision (SEARCH) on the snapshot and return its action.
 
         The engine owns the candidate set, the resampled futures, the halving rounds, the
@@ -880,8 +881,10 @@ class PvZEnv:
             f"{int(bool(previous_plant))} {int(sim_skip)} {int(horizon)} {int(per_card)} "
             f"{int(student_candidates)} {int(samples)} {int(verify_samples)} {int(bool(halving))} "
             f"{int(halving_first_samples)} {margin_relative:.17g} {int(min_gap)} {int(last_search_tick)} "
-            f"{int(reserve)} {int(combo_candidates)} {int(combo_max_wait)} {int(save_candidates)} "
+            f"{int(combo_candidates)} {int(combo_max_wait)} {int(combo_buffer)} {int(combo_interval)} "
+            f"{int(save_candidates)} "
             f"{save_share:.17g} {int(save_interval)} {int(save_chunk)} {int(save_max_wait)} "
+            f"{int(candidate_mode)} {int(student_topk)} "
             f"{token} {demo} {history_start} {len(history)} {samples_text}".rstrip()
             + self._student_options(student_history, None))
         if not response.get("ok"):

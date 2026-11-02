@@ -73,7 +73,8 @@ def main() -> None:
         per_card=1, student_candidates=args.student_candidates if args.student_candidates is not None
         else (4 if deep else 2), save_candidates=args.save_candidates, save_share=0.5, save_max_wait=1800,
         save_chunk=300, save_interval=600, samples=6 if deep else 3, halving=True, halving_first_samples=1,
-        combo_candidates=args.combo_candidates, combo_max_wait=5000, margin_relative=0.0, horizon=2500,
+        combo_candidates=args.combo_candidates, combo_max_wait=5000, combo_buffer=25, combo_interval=600,
+        margin_relative=0.0, horizon=2500,
         verify_samples=9, min_gap=300, rollout_sim_skip=61, leaf_probe=None, leaf_probe_limit=0,
         task_id=f"csearch_L{args.level}")
     rows, compared, agreed = [], 0, 0
