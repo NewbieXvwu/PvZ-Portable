@@ -120,9 +120,13 @@ def archive_problems(meta: dict, archive: Path) -> list[str]:
     if not frames.is_file():
         problems.append('存档缺帧文件')
     elif meta.get('frame_count') is not None:
-        count = sum(bool(line.strip()) for line in frame_bytes(frames).splitlines())
-        if int(meta['frame_count']) != count:
-            problems.append(f'meta.frame_count={meta["frame_count"]} 与帧数 {count} 不一致')
+        try:
+            count = sum(bool(line.strip()) for line in frame_bytes(frames).splitlines())
+        except (OSError, EOFError, ValueError) as error:  # empty / truncated npz from the sandbox
+            problems.append(f'帧文件读不了：{error}')
+        else:
+            if int(meta['frame_count']) != count:
+                problems.append(f'meta.frame_count={meta["frame_count"]} 与帧数 {count} 不一致')
     return problems
 
 
