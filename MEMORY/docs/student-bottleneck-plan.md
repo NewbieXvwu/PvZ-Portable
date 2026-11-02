@@ -1297,3 +1297,11 @@
   r86 A：白天 69/108（现任 77）、夜间 41/108（69）、泳池 59（63）、雾 75（57）、屋顶 22/24（9）。夜间仍是主要差距（门禁判 significant_zone_regression:night）。A 与现任的差距从 −11～−17 pp 缩到 −4 pp；人类示范只有 23 局，进步主要应来自累积的干净数据，单看这一轮分不开。
 - task219：cdeploy（ecdecf3d = humanrows + csearch）09:25 组边界由 deploy26 切换上线，引擎 `artifacts/production/csearch1/pvz-portable`，Python 搜索已从生产代码删除。冒烟：L28 139 s/局（生产 121–131）、L32 雾 82 s/局（生产 122–135）。
 - Mac 采集（maccollect）仍跑旧 Python 搜索，下次重启时换到 cdeploy。
+
+### 11-02 10:40 屋顶核对无回归；GPT Pro 11-01 包交回
+
+- L47 0/24 核对（dsh）：同 4 个种子，旧版（26cc7f77 + deploy20）与新版（cdeploy + csearch1）逐决策动作、逐帧全等，0/4 两边一样，也与生产那组帧一致。0/24 是这组种子/卡组本身难，不是切换造成的。
+- GPT Pro 11-01 包（task211，单会话）：**5544 局、5326 胜**、465 万帧，label_source 全为 llm_agent。按包说明写策略脚本批量推进（`player_*_policy.py` 等），符合包设计。
+  - 白天 / 夜间 / 泳池每关约 213–235 胜，每关约 27 套卡组 × 约 8 个新种子，种子不重复；雾只有 L40 8/8，屋顶 L45 10/12，Boss L50 6/64。
+  - 已送台式机 `~/llm_runs/decks_20261101_2247_out.zip`（542 MB，md5 一致），`import_llm_run.py` 用 csearch1 引擎、2 个复验进程后台导入（systemd 单元 import-decks1101，nice 10）。
+  - 量是以往 GPT 数据的十几倍；进训练后 llm_demo 行会占大头，夜间（A 的最大短板）每关多了 230 多局胜局。导入完成后看下一轮包的来源占比再决定要不要按关封顶。
