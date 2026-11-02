@@ -22,7 +22,7 @@ def git(root, *args):
 
 def code_paths(root, revision, kind):
     return [path for path in git(root, 'diff', '--no-renames', '--name-only', '--diff-filter=' + kind,
-            BASE, revision, '--', 'python', 'scripts', 'recipes').decode().splitlines()
+            BASE, revision, '--', 'python', 'scripts', 'recipes', 'configs').decode().splitlines()
             if not path.startswith('python/test_') and path.endswith(('.py', '.sh', '.json'))]
 
 
