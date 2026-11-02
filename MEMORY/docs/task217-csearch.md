@@ -270,3 +270,48 @@ C++ 侧因此重写：`SearchState` 用 `lastComboTick` 取代 `sunReserve`，`F
 **没有到 2.2×。** 原因见文首第 2 条：往返 75 µs、记账 <1 %、快照恢复 <2 %，能"免费"拿的只有不到
 5 %；剩下 95 % 是模拟 tick 与每 tick 一次的学生前向，两项在阶段 1 就已经在 C++ 里跑，搬动调用方
 不会让它们变快。真正的 2× 属于"少算"或"把 sim/net 本身做快"，见第 3 节的表。
+
+---
+
+# D. task219 — 合到 humanrows、桌面构建与冒烟（2026-11-02）
+
+生产分支 = `origin/humanrows`（`031fa8d0`），`origin/csearch`（`9a77c235`）基于 `origin/upgrades`，
+两者都改到 clean B、`pvz_env.py`、`LawnApp` 和 `main.cpp`。合并结果在 `cdeploy`（`f098385d`）。
+
+## D1. 冲突与处理
+
+| 文件 | 情况 | 处理 |
+|---|---|---|
+| `MEMORY/2026-11-01.md` | 两边都新增（add/add） | 保留两边全部条目，按主题分段，未删内容 |
+| `recipes/dw4i2_v2timer_clean_b.json` | 两边都加 `"human": 1.0`，git 自动合并成重复键 | 去重为单个 `human: 1.0`；A 配方不变 |
+| `python/pvz_env.py`、`scripts/search_play.py`、`src/main.cpp`、`src/LawnApp.*` | 无文本冲突，自动合并 | 人工确认两边语义都在：SEARCH/search_version、C++ 唯一搜索，同时保留 human 来源权重、user_pick、A-restart、int32 训练种子映射 |
+
+`search_play.py` 不含 Python 搜索残留，`--search-impl` 已随 csearch 删除；生产 argv 未使用该开关。
+`qc_launch.py` 的默认 `--executable` 改成 `artifacts/production/csearch1/pvz-portable`；
+`test_deploy21/22` 只在测试里显式传 deploy20 路径，没有断言默认值，未改。
+
+## D2. 构建（桌面，生产机）
+
+```
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DPVZ_ROLLOUT_BLAS=ON
+cmake --build build -j4        # 最多 -j6；开工前 free -g 约 16 GiB available
+```
+
+系统 OpenBLAS（`libopenblas.so.0`）、mimalloc，Release `-O3 -DNDEBUG`，与 cq 的 CMake cache 一致。
+二进制 73,413,816 B，复制到新目录 `artifacts/production/csearch1/pvz-portable`；ready 行
+`search_version:1`，deploy20 未动。
+
+## D3. 冒烟（桌面，2 worker，`ulimit -v 8000000`）
+
+argv 取自当时正在跑的生产 `scripts/search_play.py`，只改任务、种子数、worker 数和输出路径；
+从 cdeploy worktree 用 csearch1 运行，输出到 `~/pvz-logs/task219/`，跑完已删。
+
+| 任务 | 结果 | 帧 | 平均秒/局 | 生产同任务 summary |
+|---|---|---|---|---|
+| `opening119_l28_scoreboard`（白天泳池，2 局） | 2/2 胜，wave 30 | 1276 / 1370 帧 | **139.2 s** | 121.2–131.2 s |
+| `opening119_l32_magnet`（雾，2 局） | 2/2 胜，wave 30 | 1122 / 1141 帧 | **82.2 s** | 122.2–135.1 s |
+
+两关都写出 `frames.npz` + `tokens_v3.npz`，rc=0；雾关更快符合"C++ 决策替掉 Python 候选生成"的预期。
+Mac 上只跑了直接相关的小测试：`test_human_demo.py -k user_pick`、`test_env_protocol.py -k
+"task_options or profile_options or deck_entries"`、`test_human_rows.py -k verified_human_export`
+（1 + 4 + 4 通过），另核对 qc_launch 默认路径。
