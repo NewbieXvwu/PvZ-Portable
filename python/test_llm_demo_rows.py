@@ -176,3 +176,29 @@ def test_clean_b_unified_import_exports_demo_rows_after_verification(tmp_path, m
     paths = demo_paths(tmp_path / 'view', tmp_path / 'demos')
     assert len(paths) == 1
     assert json.loads((paths[0].parent / 'meta.json').read_text())['llm_demo_sha256']
+
+
+def test_resume_archive_rows_only_cover_gpt_continuation(tmp_path):
+    """截断点及更早的帧不能变成 llm_demo 行；只有截断点之后的 GPT 决策计入。"""
+    import hashlib
+    frames = game_frames(4)
+    for index, frame in enumerate(frames):
+        frame['action'] = dict(type='wait', ticks=60) if index else None
+        frame['action_rejected'] = False
+    frames[0]['tick'], frames[0]['action'] = 100, dict(type='wait', ticks=60)
+    frames[1]['tick'], frames[1]['action'] = 200, dict(type='wait', ticks=60)
+    frames[2]['tick'], frames[2]['action'] = 1000, None
+    frames[3]['tick'], frames[3]['action'] = 1060, dict(type='wait', ticks=60)
+    source = tmp_path / 'archive'
+    source.mkdir()
+    write_frames(source / 'frames.npz', frames, cache=False)
+    (source / 'meta.json').write_text(json.dumps(dict(
+        label_source='llm_agent', outcome=dict(result=1, won=True),
+        task=dict(id='r_l11_s9', level=11, seed=9, deck=list(range(6))),
+        environment_task={}, resume=dict(cutoff_tick=1000))))
+    sha = hashlib.sha256(b'resume').hexdigest()
+    import_demo(tmp_path / 'data', source, sha)
+    stored = tmp_path / 'data/.llm_demo_rows' / sha / 'seed_9/llm_demo_decisions'
+    meta = json.loads((stored / 'meta.json').read_text())
+    assert meta['training_rows'] == [3]
+    assert meta['resume']['cutoff_tick'] == 1000

@@ -154,7 +154,9 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     rejected = False
     events = {}
     changed_frames = [_frame(obs)] if overrides else None
-    frame_operations = {frame['operation'] for frame in frames}
+    # 中盘接回的存档只有截断点那一帧没有 operation（它不是某个操作的终点）；
+    # 其余帧仍是操作号，按操作对齐的覆盖逻辑不变。
+    frame_operations = {frame['operation'] for frame in frames if 'operation' in frame}
     mowers = sum(defense['state'] == 1 for defense in obs.get('defenses') or [])
     mowers_left = mowers
     skip_until = 0

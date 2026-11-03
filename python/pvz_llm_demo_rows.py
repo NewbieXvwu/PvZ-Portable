@@ -48,10 +48,14 @@ def import_demo(data, source, sha, results=(1,)):
     target = destination / sha
     if not target.exists():
         frames = read_frames(frame_path(source))
+        # task224：中盘接回存档的 frames 从截断点开始；截断点本身和学生前缀都不能变成示范行。
+        cutoff = (meta.get('resume') or {}).get('cutoff_tick')
         rows = []
         for index, frame in enumerate(frames):
             action = frame.get('action') or {}
             if not index or frame.get('action_rejected') or action.get('type') not in ('plant', 'wait'):
+                continue
+            if cutoff is not None and float(frame.get('tick') or 0) <= float(cutoff):
                 continue
             if action['type'] == 'plant' and not any(
                     card[0] == action['packet'] and card[1] >= 0 for card in frames[index - 1]['packets']):

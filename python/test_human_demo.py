@@ -10,10 +10,12 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 
+from dataclasses import asdict
 from human_demo import Recorder, export, replay, verify, record_user_pick
 from pvz_env import TaskSpec
+from pvz_episode_archive import write_meta
 from pvz_event_env import EventWaitEnv
-from pvz_frame_store import read_frames
+from pvz_frame_store import read_frames, write_frames
 from pvz_tasks import profile_for_deck
 
 RESOURCE = Path(os.environ.get('PVZ_RESOURCE_DIR', str(Path.home() / '.cache/pvz-research-resources')))
@@ -215,6 +217,43 @@ class HumanDemoTest(unittest.TestCase):
                 recorder.close()
             report = verify(archive, RESOURCE, BINARY)
             self.assertEqual((report['result'], report['wave']), (result, wave))
+
+
+def test_replay_accepts_resume_archive_without_operation_on_start_frame(tmp_path):
+    """中盘接回的存档第一帧是截断点，没有 operation；旧代码在这里 KeyError。"""
+    class WaitEnv:
+        def begin_demo(self):
+            pass
+
+        def reset(self, *, deck, task):
+            self.observation = dict(tick=0, wave=1, wave_count=1, result=0, terminal=False,
+                                    sun=50, defenses=[], loadout_context={'zombie_roster': []})
+            return self.observation, {}
+
+        def step(self, action):
+            self.observation = {**self.observation, 'tick': self.observation['tick'] + action['ticks']}
+            return self.observation, 0, False, False, dict(ok=True, events={})
+
+    deck = list(range(6))
+    task = TaskSpec(level=1, seed=7, profile=profile_for_deck(deck))
+    archive = tmp_path / 'resume'
+    archive.mkdir()
+    ops = [dict(action=dict(type='wait', ticks=3), tick=0, end_tick=3, ok=True),
+           dict(action=dict(type='wait', ticks=3), tick=3, end_tick=6, ok=True)]
+    (archive / 'ticks.jsonl').write_text(''.join(json.dumps(op) + '\n' for op in ops))
+    frames = [dict(tick=3, action=None, action_rejected=None, wave=1, packets=[]),
+              dict(tick=6, action=dict(type='wait', ticks=3), action_rejected=False,
+                   operation=2, wave=1, packets=[])]
+    write_frames(archive / 'frames.npz', frames, cache=False)
+    write_meta(archive, dict(
+        label_source='llm_agent', resume_id='r_l1_s7_c0', resume=dict(cutoff_tick=3),
+        task=dict(id='r_l1_s7', level=1, seed=7, deck=deck),
+        environment_task=asdict(task), frame_count=2, operations=2,
+        outcome=dict(result=0, won=False, final_tick=6, final_wave=1, wave_count=1)))
+    obs, meta, got = replay(WaitEnv(), archive)
+    assert obs['tick'] == 6 and meta['resume_id'] == 'r_l1_s7_c0'
+    assert read_frames(archive / 'frames.npz')[0]['tick'] == 3
+
 
 
 if __name__ == '__main__':
