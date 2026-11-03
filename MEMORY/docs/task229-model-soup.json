@@ -606,5 +606,6 @@
       "params": 182147
     },
     "loader_verified": "all soups load through python/pvz_rollout_policy.load_student unchanged"
-  }
+  },
+  "cleanup": "checkpoints (r101-r105 A/B), frame archives, feature cache and per-game jsonl deleted after the gate; kept the three soups, gate decision/manifest/registration and this json"
 }
