@@ -1222,7 +1222,7 @@ class DemoStartCellsTest(unittest.TestCase):
                                       'demo_roof_47_doom_m200', 'demo_roof_47_doom_m200_s20261048',
                                       'demo_roof_47_doom_m200_s20261049',
                                       # task227: 用户屋顶卡组示范起点（L47 模仿者卡组 / L49）
-                                      'demo_roof_47_user_m100', 'demo_roof_49_user_m100',
+                                      'user_l47_5240981d44c6_start', 'user_l49_de02ad43d9b1_start',
                                       'demo_roof_48_doom_m200_s20261049', 'demo_roof_48_doom_m200_s20261050',
                                       'demo_roof_49_doom_m200_s20261050', 'demo_roof_49_doom_m200_s20261051',
                                       # task107: 原生传送带用户示范起点格（L40 沿用 task75 的 storm 口径）

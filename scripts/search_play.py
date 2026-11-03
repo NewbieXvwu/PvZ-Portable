@@ -381,7 +381,7 @@ def _play(job: dict, observer=None) -> dict:
     from pvz_event_env import EventWaitEnv
     from render_episode import _frame, load_training_task, training_task_kwargs
     from pvz_tasks import profile_for_deck
-    from pvz_env import TaskSpec
+    from pvz_env import TaskSpec, deck_card
     task_definition = (json.loads(args.task_json) if getattr(args, 'task_json', None) else
                        load_training_task(Path(args.manifest), args.task_id))
     kw = training_task_kwargs(task_definition, job["seed"])
@@ -437,10 +437,28 @@ def _play(job: dict, observer=None) -> dict:
             # _hv2 start cells deliberately carry task ids that extend the recorded one.
             recorded = demo_meta['environment_task']
             current = json.loads(json.dumps(asdict(task)))
+
+            def comparable(env_task: dict, deck) -> dict:
+                # A human recording was made with the save's full upgrade ownership, while a
+                # collection task derives ownership from its fixed deck. Extra owned upgrades
+                # are unreachable through that deck, so compare only deck upgrades; every
+                # other environment field (seed slots, Imitater, first aid, cleaners, rake)
+                # stays exact.
+                env_task = dict(env_task)
+                profile = dict(env_task.get('profile') or {})
+                in_deck = {deck_card(card)[0] for card in deck}
+                profile['owned_upgrade_plants'] = sorted(
+                    in_deck & set(profile.get('owned_upgrade_plants') or ()))
+                env_task['profile'] = profile
+                return env_task
+
+            recorded_env = comparable(recorded, demo_meta['task']['deck'])
+            current_env = comparable(current, kw['deck'])
             if (demo_meta['task']['id'] != args.task_id and
                     not (isinstance(args.task_id, str) and args.task_id.startswith(demo_meta['task']['id'] + '_')) or
-                    demo_meta['task']['deck'] != list(kw['deck']) or
-                    any(current.get(key) != value for key, value in recorded.items()
+                    [deck_card(card) for card in demo_meta['task']['deck']] !=
+                    [deck_card(card) for card in kw['deck']] or
+                    any(current_env.get(key) != value for key, value in recorded_env.items()
                         if key != 'fog_observation')):
                 raise ValueError('demonstration task, deck, seed or environment differs from the manifest')
             obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision,

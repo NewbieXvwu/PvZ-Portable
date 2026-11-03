@@ -1737,14 +1737,18 @@ fog 8、roof 8）加原有 2 个留出监控，生成器 `scripts/make_gate_v8_p
 1.25/1.5/1.75/2.0/2.5/3.0 自动升降，不设专用 `CURRICULUM_LADDERS`。基础任务清单由
 `scripts/make_user_roof_panel.py` 生成（`artifacts/task227/user_roof_panel.json`，不入 git）。
 
-同时登记两个示范起点格（task71 同一条路径，只加清单行）：`demo_roof_47_user_m100`、
-`demo_roof_49_user_m100`，分别取用户验证胜局 `user_l47_5240981d44c6`（frame_count 1193）与
+同时登记两个示范起点格（task71 同一条路径，只加清单行）：`user_l47_5240981d44c6_start`、
+`user_l49_de02ad43d9b1_start`（task227b：task_id 必须延伸录像 id，search_play 才接受），
+分别取用户验证胜局 `user_l47_5240981d44c6`（frame_count 1193）与
 `user_l49_de02ad43d9b1`（1406）的 94%…46% 决策号，7 档降序，未来种子块 45,800,000 /
 45,900,000 各 256。生产重启时 `reconcile_cells` / `reconcile_start_cells` 自动加格；
 不需要手改 `curriculum_state.json`。
 
 部署要额外把两套录像（整目录）放到 `~/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/`
-对应 seed 目录，并在台式机重新生成两份本地清单后再重启 qc。
+对应 seed 目录，并在台式机重新生成两份本地清单后再重启 qc。task227b 起 task_id 必须延伸录像
+id（`user_l47_5240981d44c6_start` / `user_l49_de02ad43d9b1_start`）；r104 已写入 state 的旧格
+`demo_roof_47_user_m100` / `demo_roof_49_user_m100` 会在重启时被 `reconcile_start_cells`
+自动移入 `retired_cells`，不需要手工改 `curriculum_state.json`。
 
 ### task228：新线学生先验进入干净训练（2026-11-03 登记）
 
