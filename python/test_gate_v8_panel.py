@@ -2,6 +2,8 @@
 import copy
 import json
 import sys
+
+import pytest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -244,3 +246,21 @@ def test_roof_win_guard_vetoes_a_significant_win_loss_with_flat_waves():
     assert roof['win_guard_veto'] is True
     assert 'significant_win_regression:roof' in result['reasons']
     assert result['approved'] is False
+
+
+def test_imitater_pair_is_a_distinct_card_and_survives_the_generator(tmp_path):
+    deck = [1, 33, 41, [48, 1], 39, 44, 37, 4, 17, 30]
+    parsed = maker._deck(deck)
+    assert parsed == (1, 33, 41, (48, 1), 39, 44, 37, 4, 17, 30)
+    maker._check_deck(47, parsed, 'imitater L47')
+    meta = tmp_path / 'user_l47_5240981d44c6' / 'seed_1' / 'user_l47_5240981d44c6' / 'meta.json'
+    meta.parent.mkdir(parents=True)
+    meta.write_text(json.dumps({'task': {'level': 47, 'deck': deck, 'seed': 1}}))
+    generated = maker.build(tmp_path, V5_PANEL, None)
+    tasks = [task for task in generated['tasks'] if task['level'] == 47]
+    assert len(tasks) == 1 and tasks[0]['deck_source'] == 'user'
+    assert tasks[0]['deck'][3] == (48, 1) and 1 in tasks[0]['deck']
+    with pytest.raises(ValueError, match='duplicate card'):
+        maker._check_deck(47, maker._deck([1, 1, 2, 3, 4, 5]), 'duplicate L47')
+    with pytest.raises(ValueError, match='imitater must be'):
+        maker._check_deck(47, maker._deck([48, 2, 3, 4, 5, 6]), 'bare 48')

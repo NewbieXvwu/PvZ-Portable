@@ -6,6 +6,8 @@ from pathlib import Path
 from itertools import groupby
 from statistics import NormalDist, median
 
+from pvz_env import deck_card
+
 GATE_VERSION = 8
 ROOF_WAVE_ALPHA = .01
 ALPHA = .05
@@ -211,7 +213,9 @@ def _registered_panel_v8(document, seed_block):
         if float(task.get('zombie_count_multiplier', 1.)) != 1:
             raise ValueError(f'promotion must register original difficulty; calibration sets it: {name}')
         deck = task.get('deck') or ()
-        if deck and (not 6 <= len(deck) <= 10 or len(set(deck)) != len(deck)):
+        # Raw card identities: (48, 1) is a different slot from the ordinary 1.
+        cards = [deck_card(card) for card in deck]
+        if deck and (not 6 <= len(deck) <= 10 or len(set(cards)) != len(cards)):
             raise ValueError(f'v8 panel deck must be 6..10 distinct cards: {name}')
         task['seeds'] = list(range(cursor, cursor + row['seeds']))
         cursor += row['seeds']

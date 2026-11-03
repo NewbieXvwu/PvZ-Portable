@@ -10,9 +10,10 @@ teacher win rate.  Re-running this script after new recordings is the whole
 update path; no per-level hand editing.
 
 Only structural rules are enforced here: 6..10 distinct cards, every card in
-the legal 0..47 range, and terrain coverage (lily pad on pool/fog, flower pot on
-roof).  Teacher acceptance is deliberately not an inclusion filter (user
-2026-11-01: teacher defects are to be fixed, not avoided).
+the legal 0..47 range (the Imitater is `[48, target]` with target 0..47), and
+terrain coverage (lily pad on pool/fog, flower pot on roof).  Teacher acceptance
+is deliberately not an inclusion filter (user 2026-11-01: teacher defects are to
+be fixed, not avoided).
 """
 from __future__ import annotations
 
@@ -29,6 +30,7 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 import pvz_constants  # noqa: E402
 import pvz_tasks  # noqa: E402
+from pvz_env import deck_card  # noqa: E402
 from deck_rules import region_for_level  # noqa: E402
 from pvz_promotion import (INITIAL_MULTIPLIERS, LOW_LEVELS, MONITOR_SEEDS_PER_TASK,  # noqa: E402
                            MULTIPLIERS, SEEDS_PER_TASK)
@@ -55,18 +57,41 @@ def _reading(path: Path) -> dict:
 
 
 def _deck(value):
-    if not isinstance(value, list) or any(type(card) is not int for card in value):
+    """Archive deck -> tuple of ints and hashable ``(48, target)`` pairs."""
+    if not isinstance(value, list):
         return None
-    return tuple(value)
+    cards = []
+    for card in value:
+        if type(card) is int:
+            cards.append(card)
+        elif (isinstance(card, (list, tuple)) and len(card) == 2
+              and all(type(part) is int for part in card)):
+            cards.append((card[0], card[1]))
+        else:
+            return None
+    try:
+        [deck_card(card) for card in cards]
+    except ValueError:
+        return None
+    return tuple(cards)
 
 
 def _check_deck(level: int, deck, where: str) -> None:
+    """Validate exactly like ``PvZEnv.reset``: raw card identities are distinct, so
+    ``(48, 1)`` is legal next to the ordinary sunflower card ``1``."""
     if not 6 <= len(deck) <= 10:
         raise ValueError(f'{where}: deck length {len(deck)} outside 6..10')
-    if len(set(deck)) != len(deck):
+    cards = [deck_card(card) for card in deck]
+    seed_types = [seed_type for seed_type, _ in cards]
+    if len(set(seed_types)) != len(seed_types):
         raise ValueError(f'{where}: duplicate card in deck {deck}')
-    if any(not 0 <= card < 48 for card in deck):
-        raise ValueError(f'{where}: card outside 0..47 in deck {deck}')
+    for seed_type, target in cards:
+        if type(seed_type) is not int or not 0 <= seed_type <= 48:
+            raise ValueError(f'{where}: card outside 0..47 in deck {deck}')
+        if target is not None and (type(target) is not int or not 0 <= target < 48):
+            raise ValueError(f'{where}: imitater target outside 0..47 in deck {deck}')
+        if (seed_type == 48) != (target is not None):
+            raise ValueError(f'{where}: imitater must be (48, target) in deck {deck}')
     if not pvz_tasks.terrain_covered(level, deck):
         raise ValueError(f'{where}: deck {deck} does not cover level {level} terrain '
                          f'({pvz_constants.background_for_level(level)})')
