@@ -18,6 +18,18 @@ from pvz_recipe import load_recipe, training_row_options, write_recipe
 from pvz_training_pack import pack_options, pack_path
 
 
+def test_qc_launch_defaults_to_the_imitater_engine(tmp_path):
+    """Production picks the engine in exactly one place: qc_launch's default --executable."""
+    import qc_launch
+    args = SimpleNamespace(repo=tmp_path, worktree=tmp_path / 'wt', python=Path('/python'),
+        review_share=None, logs=tmp_path / 'logs', rounds=1, workers=1, recipe=None,
+        alternate_recipe=None, b_init=None, b_initial_epochs=None, b_epochs=None,
+        a_restart=True, executable=None)
+    command = qc_launch.command(args)
+    assert command[command.index('--executable') + 1] == str(
+        tmp_path / 'artifacts/production/imitater1/pvz-portable')
+
+
 def test_deploy21_three_way_early_stop_and_higher_passing_arm(tmp_path, monkeypatch):
     source = ROOT / 'configs/gate_v5_panel.json'
     settings = v7.initial_panel(gate.read(source))
