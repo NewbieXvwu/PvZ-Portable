@@ -11,7 +11,7 @@ sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 from pack_training_rows import assert_payload_equal, packed_load
 from pvz_frame_store import read_frames, write_frames
 from pvz_llm_demo_rows import demo_paths, import_demo
-from pvz_recipe import training_row_options, validate
+from pvz_recipe import load_recipe, training_row_options, validate
 from pvz_training_pack import archive_fingerprint, pack_options, segment_options, segment_path
 from pvz_training_rows import DemoRowWeights
 from test_compact_loader import game_frames
@@ -202,3 +202,21 @@ def test_resume_archive_rows_only_cover_gpt_continuation(tmp_path):
     meta = json.loads((stored / 'meta.json').read_text())
     assert meta['training_rows'] == [3]
     assert meta['resume']['cutoff_tick'] == 1000
+
+
+def test_clean_recipes_admit_teacher_line_but_not_older_students():
+    def prior(path):
+        return dict(label_source='teacher', task=dict(checkpoint=path))
+
+    line = prior('/runs/round_000094/student/model.pt')
+    older = prior('/runs/round_000071/student/model.pt')
+    r52 = prior('/runs/round_000052/student/model.pt')
+    gpt = prior('/artifacts/student/gptbc_s1/model.pt')
+    for name in ('dw4i2_v2timer_clean_a.json', 'dw4i2_v2timer_clean_b.json',
+                 'dw4i2_v2timer_clean_old10.json'):
+        weights = load_recipe(ROOT / 'recipes' / name, 'training')['source_weight']
+        assert weights['teacher_line'] == 1.
+        assert source_factor(line, weights) == 1.
+        assert source_factor(older, weights) == weights['default']
+        assert source_factor(r52, weights) == 1.
+        assert source_factor(gpt, weights) == 1.

@@ -1,10 +1,17 @@
 """Per-label level balancing and label-weight adjustment for row-weighted training."""
 from __future__ import annotations
 import json
+import re
 from pathlib import Path
 import numpy as np
 
 from pvz_frame_store import archive_seed
+
+# Round 72 is the first promoted candidate of the clean new line (2026-10-31). Every
+# later student is trained on that line only, so its collection rows are the line's own
+# data. Rounds 53-71 were never promoted and never used as a collection prior.
+TEACHER_LINE_MIN_ROUND = 72
+TEACHER_LINE_PRIOR = re.compile(r'round_(\d{6})/student/model\.pt(?!\.)')
 
 
 def deck_signature(deck):
@@ -73,6 +80,9 @@ def source_kind(meta):
         category = 'teacher_gptbc'
     elif source == 'teacher' and 'round_000052' in prior:
         category = 'teacher_r52'
+    elif source == 'teacher' and any(int(round_number) >= TEACHER_LINE_MIN_ROUND
+                                     for round_number in TEACHER_LINE_PRIOR.findall(prior)):
+        category = 'teacher_line'
     return category
 
 

@@ -1745,3 +1745,22 @@ fog 8、roof 8）加原有 2 个留出监控，生成器 `scripts/make_gate_v8_p
 
 部署要额外把两套录像（整目录）放到 `~/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/`
 对应 seed 目录，并在台式机重新生成两份本地清单后再重启 qc。
+
+### task228：新线学生先验进入干净训练（2026-11-03 登记）
+
+10-31 的干净新线只训练 GPT 示范、人类示范、以及采集先验为 r52 或 gptbc 的老师行；
+新线学生超过 r52 后采集先验切到学生自己，但 `source_kind` 仍把 r94/r95/r101 的行
+记作 `teacher`，落进 `default: 0.0`，约 5,900 局生产数据白天进不了训练。
+
+- `python/pvz_training_rows.py` 的 `source_kind` 新增 `teacher_line`：先验路径为
+  `round_0000NN/student/model.pt` 且 `NN >= TEACHER_LINE_MIN_ROUND`（=72，10-31 首个
+  干净新线晋升候选；r53–r71 从未晋升、从未当过采集先验）。r52 仍是 `teacher_r52`，
+  gptbc 仍是 `teacher_gptbc`。Mac 采集写的是当前生产学生路径，因此同样归入此类。
+- `source_weight` 同时登记 `teacher_line` 键（`python/pvz_recipe.py` 白名单）；
+  三套干净配方 `recipes/dw4i2_v2timer_clean_{a,b,old10}.json` 均取 `teacher_line: 1.0`。
+- 打包不需要重建旧数据：`filter_sources` 每次 pack 都用当前配方重扫全部 archive，
+  原先被整标签过滤的行会因保留路径从空集变成非空而生成新段，已存在的段全部复用。
+  台式机实测待纳入 334 个标签 / 5,532 archive / 5.18M 行 / 760 MB 原始数据；
+  以 round_000100 的 270 段 / 7.73M 行 / 1575 s（2 workers）为参照，约 20 分钟、
+  峰值约 1.8 GiB，下一轮训练等这次 pack，采集不停。
+

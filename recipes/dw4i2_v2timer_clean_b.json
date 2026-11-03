@@ -267,7 +267,8 @@
   "human": 1.0,
   "llm_demo": 1.0,
   "teacher_r52": 1.0,
-  "teacher_gptbc": 1.0
+  "teacher_gptbc": 1.0,
+  "teacher_line": 1.0
  },
  "llm_demo_import": "/home/newbiexvwu/pvz-logs/gptbc/data"
 }

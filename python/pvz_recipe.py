@@ -151,7 +151,8 @@ def validate(document, kind=None):
         from pvz_training_pack import label_keep_options
         label_keep_options(labels, result['label_keep'])
         _object(result['source_weight'], {'human', 'teacher', 'llm_gpt_pro', 'llm_agent', 'llm_demo',
-                                          'teacher_r52', 'teacher_gptbc', 'default', 'level_balance',
+                                          'teacher_r52', 'teacher_gptbc', 'teacher_line',
+                                          'default', 'level_balance',
                                           'level_balance_power', 'level_balance_max_multiplier'},
                 'source_weight')
         for name, weight in result['source_weight'].items():

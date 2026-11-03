@@ -118,8 +118,10 @@ def test_clean_b_lineage_plan_waits_for_previous_b_and_recovers_after_restart(tm
         b = load_recipe(b_path, 'training')
         assert a['init'] == b['init'] == str(args.b_init)
         assert a['epochs'] == b['epochs'] == 8
-        assert a['source_weight'] == dict(default=.1, llm_demo=1., teacher_r52=1., teacher_gptbc=1.)
-        assert b['source_weight'] == dict(default=0., human=1., llm_demo=1., teacher_r52=1., teacher_gptbc=1.)
+        assert a['source_weight'] == dict(default=.1, llm_demo=1., teacher_r52=1., teacher_gptbc=1.,
+                                          teacher_line=1.)
+        assert b['source_weight'] == dict(default=0., human=1., llm_demo=1., teacher_r52=1.,
+                                          teacher_gptbc=1., teacher_line=1.)
         assert {key for key in a.keys() | b.keys() if a.get(key) != b.get(key)} == {'source_weight'}
         assert pack_key(a) == pack_key(b)
         assert state['b_student'] == str(args.b_init)

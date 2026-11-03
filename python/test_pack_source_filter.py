@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'scripts'), str(ROOT / 'python')]
 
 from pvz_training_pack import filter_sources, pack_options, segment_contracts, segment_path
-from pvz_training_rows import source_enabled
+from pvz_training_rows import source_enabled, source_kind
 
 
 def archive(root, relative, meta):
@@ -80,3 +80,59 @@ def test_pack_omits_a_label_every_recipe_zeroes(tmp_path):
         with np.load(segment, allow_pickle=False) as stored:
             packed.extend(json.loads(str(stored['meta']))['labels'])
     assert packed == ['keep']
+
+
+def test_teacher_line_is_a_promoted_new_line_student():
+    def kind(round_number):
+        return source_kind(dict(label_source='teacher', task=dict(
+            checkpoint=f'/runs/round_{round_number:06d}/student/model.pt')))
+
+    assert kind(72) == 'teacher_line'
+    assert kind(94) == 'teacher_line'
+    assert kind(101) == 'teacher_line'
+    assert kind(71) == 'teacher'  # never promoted, never a collection prior
+    assert kind(52) == 'teacher_r52'  # existing categories keep their meaning
+    assert source_kind(dict(label_source='teacher',
+                            task=dict(policy='artifacts/student/gptbc_s1/model.pt'))) == 'teacher_gptbc'
+    assert source_kind(dict(label_source='teacher',
+                            task=dict(checkpoint='round_000094/student/model.pt.bak'))) == 'teacher'
+    assert source_kind(dict(label_source='human', task=dict(
+        checkpoint='round_000094/student/model.pt'))) == 'human'
+
+
+def packed_labels(index):
+    import numpy as np
+    labels = []
+    with np.load(index, allow_pickle=False) as stored:
+        for name in stored['segments'].tolist():
+            with np.load(Path(index).parent / name, allow_pickle=False) as segment:
+                labels.extend(json.loads(str(segment['meta']))['labels'])
+    return labels
+
+
+def test_pack_recovers_teacher_line_rows_on_the_next_recipe_change(tmp_path):
+    import numpy as np
+    from pack_training_rows import pack
+    from pvz_training_pack import archive_fingerprint
+    from test_incremental_pack import fixture
+
+    data = tmp_path / 'data'
+    fixture(data, ['line', 'r52'])
+    for meta in data.glob('seed_*/line/meta.json'):
+        meta.write_text(json.dumps(dict(
+            label_source='teacher', task=dict(checkpoint='/runs/round_000094/student/model.pt'))))
+    for meta in data.glob('seed_*/r52/meta.json'):
+        meta.write_text(json.dumps(dict(
+            label_source='teacher', task=dict(checkpoint='/runs/round_000052/student/model.pt'))))
+    labels = {'line', 'r52'}
+    options = pack_options(labels, obs='v2', sources=archive_fingerprint(data, labels))
+    before = pack(data, options, tmp_path / 'cache',
+                  source_weights=[dict(default=0., teacher_r52=1., teacher_gptbc=1.)])
+    assert sorted(packed_labels(before)) == ['r52']
+    with np.load(before, allow_pickle=False) as stored:
+        rows_before = int(stored['rows'])
+    after = pack(data, options, tmp_path / 'cache',
+                 source_weights=[dict(default=0., teacher_r52=1., teacher_gptbc=1., teacher_line=1.)])
+    assert sorted(packed_labels(after)) == ['line', 'r52']
+    with np.load(after, allow_pickle=False) as stored:
+        assert int(stored['rows']) > rows_before
