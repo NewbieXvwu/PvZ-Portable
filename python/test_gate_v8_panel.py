@@ -29,10 +29,12 @@ def test_registered_panel_covers_zones_and_uses_user_decks_first():
     assert document['panel_version'] == 'v8'
     assert document['zone_counts'] == dict(day=8, night=8, pool=9, fog=8, roof=8, heldout=2)
     user = [task for task in document['tasks'] if task.get('deck_source') == 'user']
-    assert len(user) == 8
+    assert len(user) == 9
     l29 = [task['deck'] for task in user if task['level'] == 29]
     assert l29 == [[1, 16, 35, 10, 42, 39, 44, 30, 21, 17],
                    [1, 7, 40, 22, 23, 19, 16, 17, 21, 46]]
+    l47 = [task for task in user if task['level'] == 47]
+    assert len(l47) == 1 and l47[0]['deck'][3] == [48, 1]
     for task in document['tasks']:
         if task.get('deck_source') == 'task208':
             assert tuple(task['deck']) == pvz_tasks.GOOD_DECKS[task['level']][0]
@@ -65,6 +67,7 @@ def test_v8_calibration_and_freeze_use_the_panel_multipliers():
     assert manifest['panel_version'] == 'v8-task222'
     assert sum(len(task['seeds']) for task in manifest['tasks']) == total
     by_id = {task['task_id']: task for task in manifest['tasks']}
+    assert by_id['task222_l47_roof_user']['deck'][3] == [48, 1]
     for task in document['tasks']:
         name = task['task_id']
         if name in document['monitor']:

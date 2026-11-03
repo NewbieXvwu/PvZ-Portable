@@ -49,7 +49,7 @@
   "task222_l43_roof_good": "roof",
   "task222_l44_roof_good": "roof",
   "task222_l46_roof_good": "roof",
-  "task222_l47_roof_good": "roof",
+  "task222_l47_roof_user": "roof",
   "task222_l48_roof_good": "roof",
   "task222_l49_roof_user": "roof",
   "day_l7_eval_d7p_holdout1": "heldout",
@@ -260,6 +260,26 @@
    ],
    "seed": 359090705,
    "path": "user_l33_17619f8c84f1/seed_359090705/user_l33_17619f8c84f1/meta.json"
+  },
+  {
+   "level": 47,
+   "deck": [
+    1,
+    33,
+    41,
+    [
+     48,
+     1
+    ],
+    39,
+    44,
+    37,
+    4,
+    17,
+    30
+   ],
+   "seed": 116649463,
+   "path": "user_l47_5240981d44c6/seed_116649463/user_l47_5240981d44c6/meta.json"
   },
   {
    "level": 49,
@@ -1093,26 +1113,31 @@
    "task208_rank": 1,
    "teacher_evidence": "MEMORY/docs/task208-good-decks.md first (starred) deck"
   },
-  "task222_l47_roof_good": {
+  "task222_l47_roof_user": {
    "zone": "roof",
    "level": 47,
    "deck": [
     1,
-    2,
-    17,
-    30,
-    32,
     33,
-    34,
-    37,
+    41,
+    [
+     48,
+     1
+    ],
     39,
-    44
+    44,
+    37,
+    4,
+    17,
+    30
    ],
    "pairs": 45,
-   "deck_source": "task208",
-   "user_deck": false,
-   "task208_rank": 1,
-   "teacher_evidence": "MEMORY/docs/task208-good-decks.md first (starred) deck"
+   "deck_source": "user",
+   "user_deck": true,
+   "task208_rank": null,
+   "teacher_evidence": "user recording, not filtered by teacher win rate",
+   "recording_seed": 116649463,
+   "recording": "user_l47_5240981d44c6/seed_116649463/user_l47_5240981d44c6/meta.json"
   },
   "task222_l48_roof_good": {
    "zone": "roof",
@@ -2028,19 +2053,22 @@
    "deck_source": "task208"
   },
   {
-   "task_id": "task222_l47_roof_good",
+   "task_id": "task222_l47_roof_user",
    "level": 47,
    "deck": [
     1,
-    2,
-    17,
-    30,
-    32,
     33,
-    34,
-    37,
+    41,
+    [
+     48,
+     1
+    ],
     39,
-    44
+    44,
+    37,
+    4,
+    17,
+    30
    ],
    "zombie_count_multiplier": 1.0,
    "terrain": "roof",
@@ -2048,7 +2076,7 @@
    "playthrough": 2,
    "preplanted": [],
    "pairs": 45,
-   "deck_source": "task208"
+   "deck_source": "user"
   },
   {
    "task_id": "task222_l48_roof_good",
