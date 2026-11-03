@@ -1368,3 +1368,4 @@
   - B 谱系 4 轮相对 L2 只有 0.22，在同一盆地里。
   - EMA 早在 10-20 就否决过（两种子差距不缩，余弦退火已到 0），这次不再试。
 - 11-04 05:10 派 **task230**（dsh，bchamp 工作树）：B 改为每轮从现任学生微调 4 epoch（`--b-from-incumbent`，qc_launch 默认开）。A 仍负责重训探索，B 紧贴现任做利用；理由是 r102–r105 的 B 谱系在自己的盆地里漂，对 r101 落后 3–10pp。
+- 11-04 05:40 **task230 上线**（bchamp 86e02646，deploy26 组边界，exit 0，控制器参数含 `--b-from-incumbent`）：B 每轮从排轮时的现任学生（现为 r101）微调 4 epoch，job 记 `b_init_source=incumbent`，ab_result experiment 记 `+b-from-incumbent`；A 仍从 gptbc_s1 重训 8 epoch。r106 起生效（部署时 r106 仍在采集，后台空闲）。回滚：qc_launch `--no-b-from-incumbent`（b_student 指针仍随 B 更新）。
