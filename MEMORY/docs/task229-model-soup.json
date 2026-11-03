@@ -1,0 +1,610 @@
+{
+  "task": "task229 model soup",
+  "base_commit": "0fb53dbc",
+  "seed_block": [
+    100900000,
+    100902055
+  ],
+  "production_ledger_max_end": 100143700,
+  "panel": {
+    "source": "configs/gate_v8_panel.json",
+    "tasks": 43,
+    "adventure": 41,
+    "monitor": 2,
+    "pair_count": 2055
+  },
+  "gate": {
+    "script": "scripts/promotion_gate.py",
+    "executable": "~/pvz-mac-collect/build2/pvz-portable",
+    "resource_dir": "~/.cache/pvz-research-resources",
+    "value": "artifacts/task229/value_v5.pt",
+    "eval_units": 14,
+    "workers": 1,
+    "look": 1,
+    "fraction": 0.25,
+    "adventure_pairs": 492,
+    "monitor_pairs": 192,
+    "seconds": 81.5,
+    "stopped": true,
+    "approved": false,
+    "seed_ledger": "artifacts/task229/seed_ledger.json (experimental; pools [[100900000,101000000]], allocated [[100900000,100902055]])",
+    "command": "python3 scripts/promotion_gate.py --candidate artifacts/task229/soups/soup_a5.pt --incumbent artifacts/task229/models/r101_s1.pt --source-panel configs/gate_v8_panel.json --executable ~/pvz-mac-collect/build2/pvz-portable --value artifacts/task229/value_v5.pt --resource-dir ~/.cache/pvz-research-resources --candidates '{soupA5,soupA4,soupAB,r105A}' --calibration <state.gate_panel> --workers 1 --eval-units 14 --native-games --seed-ledger artifacts/task229/seed_ledger.json --seed-block 100900000,100902055 --out artifacts/task229/gate/run1",
+    "collector": "PGID 80146 STOP before, CONT after via trap; verified paused/resumed"
+  },
+  "averageability": {
+    "checkpoints": 11,
+    "state_dict_keys": 21,
+    "parameters": 182147,
+    "dtype": "float32",
+    "shapes_identical": true,
+    "size_range": [
+      4007726,
+      4379886
+    ],
+    "size_growth_cause": "metadata only: labels string 216730->230781 chars and recipe labels 5456->5627 (171 new); tensor shapes unchanged",
+    "r101_s1_equals_r101_round": true,
+    "weight_distance": {
+      "r101_s1-r102_s1": [
+        0.698,
+        0.7561
+      ],
+      "r101_s1-r103_s1": [
+        0.7243,
+        0.7404
+      ],
+      "r101_s1-r104_s1": [
+        0.7411,
+        0.7388
+      ],
+      "r101_s1-r105_s1": [
+        0.7406,
+        0.7539
+      ],
+      "r104_s1-r105_s1": [
+        0.7296,
+        0.7467
+      ],
+      "r101_s2-r105_s2": [
+        0.222,
+        0.9869
+      ]
+    }
+  },
+  "screen": {
+    "pack": "artifacts/task229/screen_pack.npz",
+    "rows": 1072,
+    "labels": 4,
+    "pos_weight": 2.895,
+    "models": {
+      "r101_s1.pt": {
+        "weighted_loss": 0.5218,
+        "plant_bce": 0.2688,
+        "packet_ce": 0.0491,
+        "cell_ce": 0.2039,
+        "type_acc": 0.9696,
+        "packet_acc": 0.8731,
+        "cell_acc": 0.6459,
+        "joint_acc": 0.943
+      },
+      "r102_s1.pt": {
+        "weighted_loss": 0.5468,
+        "plant_bce": 0.2774,
+        "packet_ce": 0.0511,
+        "cell_ce": 0.2183,
+        "type_acc": 0.9402,
+        "packet_acc": 0.8374,
+        "cell_acc": 0.4432,
+        "joint_acc": 0.8925
+      },
+      "r103_s1.pt": {
+        "weighted_loss": 0.5531,
+        "plant_bce": 0.2831,
+        "packet_ce": 0.0498,
+        "cell_ce": 0.2202,
+        "type_acc": 0.935,
+        "packet_acc": 0.8352,
+        "cell_acc": 0.4566,
+        "joint_acc": 0.888
+      },
+      "r104_s1.pt": {
+        "weighted_loss": 0.542,
+        "plant_bce": 0.2764,
+        "packet_ce": 0.0532,
+        "cell_ce": 0.2125,
+        "type_acc": 0.9535,
+        "packet_acc": 0.8062,
+        "cell_acc": 0.4543,
+        "joint_acc": 0.9065
+      },
+      "r105_s1.pt": {
+        "weighted_loss": 0.5361,
+        "plant_bce": 0.2745,
+        "packet_ce": 0.0509,
+        "cell_ce": 0.2107,
+        "type_acc": 0.9499,
+        "packet_acc": 0.8218,
+        "cell_acc": 0.4477,
+        "joint_acc": 0.9027
+      },
+      "r105_s2.pt": {
+        "weighted_loss": 0.534,
+        "plant_bce": 0.2702,
+        "packet_ce": 0.0508,
+        "cell_ce": 0.2129,
+        "type_acc": 0.9483,
+        "packet_acc": 0.8241,
+        "cell_acc": 0.4276,
+        "joint_acc": 0.9005
+      },
+      "soup_a5.pt": {
+        "weighted_loss": 0.9325,
+        "plant_bce": 0.567,
+        "packet_ce": 0.0567,
+        "cell_ce": 0.3088,
+        "type_acc": 0.9202,
+        "packet_acc": 0.7817,
+        "cell_acc": 0.2249,
+        "joint_acc": 0.8918
+      },
+      "soup_a4.pt": {
+        "weighted_loss": 0.8767,
+        "plant_bce": 0.519,
+        "packet_ce": 0.0535,
+        "cell_ce": 0.3041,
+        "type_acc": 0.9229,
+        "packet_acc": 0.8151,
+        "cell_acc": 0.216,
+        "joint_acc": 0.8901
+      },
+      "soup_ab.pt": {
+        "weighted_loss": 1.3212,
+        "plant_bce": 0.949,
+        "packet_ce": 0.1012,
+        "cell_ce": 0.271,
+        "type_acc": 0.907,
+        "packet_acc": 0.6726,
+        "cell_acc": 0.2918,
+        "joint_acc": 0.8944
+      }
+    },
+    "note": "1072 rows from 5 archives of 4 labels added in r105 (collected with r101 as student); labels/meta copied from production frames, pack rebuilt locally with the production row contract"
+  },
+  "interpolation": {
+    "r104_s1.pt": {
+      "weighted_loss": 0.542,
+      "plant_bce": 0.2764,
+      "packet_ce": 0.0532,
+      "cell_ce": 0.2125,
+      "type_acc": 0.9535,
+      "packet_acc": 0.8062,
+      "cell_acc": 0.4543,
+      "joint_acc": 0.9065
+    },
+    "r105_s1.pt": {
+      "weighted_loss": 0.5361,
+      "plant_bce": 0.2745,
+      "packet_ce": 0.0509,
+      "cell_ce": 0.2107,
+      "type_acc": 0.9499,
+      "packet_acc": 0.8218,
+      "cell_acc": 0.4477,
+      "joint_acc": 0.9027
+    },
+    "interp_0.1.pt": {
+      "weighted_loss": 0.5823,
+      "plant_bce": 0.2967,
+      "packet_ce": 0.0534,
+      "cell_ce": 0.2322,
+      "type_acc": 0.957,
+      "packet_acc": 0.8129,
+      "cell_acc": 0.4254,
+      "joint_acc": 0.9117
+    },
+    "interp_0.5.pt": {
+      "weighted_loss": 0.7496,
+      "plant_bce": 0.3903,
+      "packet_ce": 0.0538,
+      "cell_ce": 0.3055,
+      "type_acc": 0.9362,
+      "packet_acc": 0.7951,
+      "cell_acc": 0.167,
+      "joint_acc": 0.8873
+    },
+    "interp_0.9.pt": {
+      "weighted_loss": 0.5685,
+      "plant_bce": 0.2852,
+      "packet_ce": 0.0541,
+      "cell_ce": 0.2292,
+      "type_acc": 0.948,
+      "packet_acc": 0.7973,
+      "cell_acc": 0.4076,
+      "joint_acc": 0.8956
+    }
+  },
+  "gate_results": {
+    "soupA5": {
+      "status": "reject",
+      "reasons": [
+        "overall_ci_lower_not_above_minus_3pp",
+        "overall_point_estimate_negative",
+        "significant_win_regression:day",
+        "significant_win_regression:fog",
+        "significant_win_regression:night",
+        "significant_win_regression:pool",
+        "significant_win_regression:roof",
+        "significant_zone_regression:night",
+        "significant_zone_regression:pool",
+        "significant_zone_regression:day",
+        "significant_zone_regression:fog"
+      ],
+      "overall": {
+        "pairs": 492,
+        "candidate_wins": 4,
+        "incumbent_wins": 212,
+        "delta": -0.4933,
+        "ci": [
+          -0.5478,
+          -0.4388
+        ],
+        "p": 0.0
+      },
+      "monitor": {
+        "day_l7_eval_d7p_holdout1": {
+          "candidate_wins": 0,
+          "incumbent_wins": 8
+        },
+        "day_l9_eval_d7p_holdout2": {
+          "candidate_wins": 0,
+          "incumbent_wins": 25
+        }
+      },
+      "zones": {
+        "day": {
+          "pairs": 96,
+          "candidate_wins": 4,
+          "incumbent_wins": 46,
+          "delta": -0.4552,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 50
+        },
+        "fog": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 30,
+          "delta": -0.4523,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 30
+        },
+        "night": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 55,
+          "delta": -0.5875,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 55
+        },
+        "pool": {
+          "pairs": 108,
+          "candidate_wins": 0,
+          "incumbent_wins": 39,
+          "delta": -0.4317,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 39
+        },
+        "roof": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 42,
+          "delta": -0.5476,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 42
+        }
+      }
+    },
+    "soupA4": {
+      "status": "reject",
+      "reasons": [
+        "overall_ci_lower_not_above_minus_3pp",
+        "overall_point_estimate_negative",
+        "significant_win_regression:day",
+        "significant_win_regression:fog",
+        "significant_win_regression:night",
+        "significant_win_regression:pool",
+        "significant_win_regression:roof",
+        "significant_zone_regression:night",
+        "significant_zone_regression:pool",
+        "significant_zone_regression:fog",
+        "significant_zone_regression:day"
+      ],
+      "overall": {
+        "pairs": 492,
+        "candidate_wins": 8,
+        "incumbent_wins": 212,
+        "delta": -0.4856,
+        "ci": [
+          -0.5424,
+          -0.4288
+        ],
+        "p": 0.0
+      },
+      "monitor": {
+        "day_l7_eval_d7p_holdout1": {
+          "candidate_wins": 0,
+          "incumbent_wins": 8
+        },
+        "day_l9_eval_d7p_holdout2": {
+          "candidate_wins": 0,
+          "incumbent_wins": 25
+        }
+      },
+      "zones": {
+        "day": {
+          "pairs": 96,
+          "candidate_wins": 8,
+          "incumbent_wins": 46,
+          "delta": -0.4104,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 54
+        },
+        "fog": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 30,
+          "delta": -0.4519,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 30
+        },
+        "night": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 55,
+          "delta": -0.5943,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 55
+        },
+        "pool": {
+          "pairs": 108,
+          "candidate_wins": 0,
+          "incumbent_wins": 39,
+          "delta": -0.4275,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 39
+        },
+        "roof": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 42,
+          "delta": -0.5511,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 42
+        }
+      }
+    },
+    "soupAB": {
+      "status": "reject",
+      "reasons": [
+        "overall_ci_lower_not_above_minus_3pp",
+        "overall_point_estimate_negative",
+        "significant_win_regression:day",
+        "significant_win_regression:fog",
+        "significant_win_regression:night",
+        "significant_win_regression:pool",
+        "significant_win_regression:roof",
+        "significant_zone_regression:night",
+        "significant_zone_regression:pool",
+        "significant_zone_regression:day",
+        "significant_zone_regression:fog"
+      ],
+      "overall": {
+        "pairs": 492,
+        "candidate_wins": 13,
+        "incumbent_wins": 212,
+        "delta": -0.4437,
+        "ci": [
+          -0.4999,
+          -0.3875
+        ],
+        "p": 0.0
+      },
+      "monitor": {
+        "day_l7_eval_d7p_holdout1": {
+          "candidate_wins": 0,
+          "incumbent_wins": 8
+        },
+        "day_l9_eval_d7p_holdout2": {
+          "candidate_wins": 0,
+          "incumbent_wins": 25
+        }
+      },
+      "zones": {
+        "day": {
+          "pairs": 96,
+          "candidate_wins": 6,
+          "incumbent_wins": 46,
+          "delta": -0.4406,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 52
+        },
+        "fog": {
+          "pairs": 96,
+          "candidate_wins": 3,
+          "incumbent_wins": 30,
+          "delta": -0.4071,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 29
+        },
+        "night": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 55,
+          "delta": -0.588,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 55
+        },
+        "pool": {
+          "pairs": 108,
+          "candidate_wins": 4,
+          "incumbent_wins": 39,
+          "delta": -0.3954,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 37
+        },
+        "roof": {
+          "pairs": 96,
+          "candidate_wins": 0,
+          "incumbent_wins": 42,
+          "delta": -0.3935,
+          "p": 0.0,
+          "endpoint": "win",
+          "win_discordant": 42
+        }
+      }
+    },
+    "r105A": {
+      "status": "reject",
+      "reasons": [
+        "overall_ci_lower_not_above_minus_3pp",
+        "overall_point_estimate_negative",
+        "significant_win_regression:day",
+        "significant_win_regression:fog"
+      ],
+      "overall": {
+        "pairs": 492,
+        "candidate_wins": 180,
+        "incumbent_wins": 212,
+        "delta": -0.0609,
+        "ci": [
+          -0.1251,
+          0.0033
+        ],
+        "p": 0.009255
+      },
+      "monitor": {
+        "day_l7_eval_d7p_holdout1": {
+          "candidate_wins": 18,
+          "incumbent_wins": 8
+        },
+        "day_l9_eval_d7p_holdout2": {
+          "candidate_wins": 69,
+          "incumbent_wins": 25
+        }
+      },
+      "zones": {
+        "day": {
+          "pairs": 96,
+          "candidate_wins": 31,
+          "incumbent_wins": 46,
+          "delta": -0.1604,
+          "p": 0.01577,
+          "endpoint": "win",
+          "win_discordant": 43
+        },
+        "fog": {
+          "pairs": 96,
+          "candidate_wins": 16,
+          "incumbent_wins": 30,
+          "delta": -0.1611,
+          "p": 0.01003,
+          "endpoint": "win",
+          "win_discordant": 32
+        },
+        "night": {
+          "pairs": 96,
+          "candidate_wins": 55,
+          "incumbent_wins": 55,
+          "delta": 0.0099,
+          "p": 0.56792,
+          "endpoint": "win",
+          "win_discordant": 34
+        },
+        "pool": {
+          "pairs": 108,
+          "candidate_wins": 39,
+          "incumbent_wins": 39,
+          "delta": -0.059,
+          "p": 0.56603,
+          "endpoint": "win",
+          "win_discordant": 36
+        },
+        "roof": {
+          "pairs": 96,
+          "candidate_wins": 39,
+          "incumbent_wins": 42,
+          "delta": 0.0661,
+          "p": 0.35554,
+          "endpoint": "win",
+          "win_discordant": 29
+        }
+      }
+    }
+  },
+  "conclusion": {
+    "soup_valid": false,
+    "why": [
+      "all 21 tensors share shape but rounds sit 0.70 relative L2 / 0.75 cosine from the shared init, i.e. different basins",
+      "even the 50/50 interpolation of adjacent rounds r104/r105 raises held-out loss 0.54->0.75 and halves cell accuracy 0.45->0.17",
+      "gate: soupA5 4/492 wins, -49.3pp vs incumbent; soups rejected in every zone and overall at look 1"
+    ],
+    "recommendation": "do not add soup as third candidate and do not replace A; variance must be reduced inside the basin (EMA/SWA within a round, lower LR, or action-level ensemble), not across rounds"
+  },
+  "soups": {
+    "soup_a5": {
+      "path": "artifacts/task229/soups/soup_a5.pt",
+      "members": [
+        "artifacts/task229/models/r101_s1.pt",
+        "artifacts/task229/models/r102_s1.pt",
+        "artifacts/task229/models/r103_s1.pt",
+        "artifacts/task229/models/r104_s1.pt",
+        "artifacts/task229/models/r105_s1.pt"
+      ],
+      "size": 4381028,
+      "tensors": 21,
+      "params": 182147
+    },
+    "soup_a4": {
+      "path": "artifacts/task229/soups/soup_a4.pt",
+      "members": [
+        "artifacts/task229/models/r102_s1.pt",
+        "artifacts/task229/models/r103_s1.pt",
+        "artifacts/task229/models/r104_s1.pt",
+        "artifacts/task229/models/r105_s1.pt"
+      ],
+      "size": 4380964,
+      "tensors": 21,
+      "params": 182147
+    },
+    "soup_ab": {
+      "path": "artifacts/task229/soups/soup_ab.pt",
+      "members": [
+        "artifacts/task229/models/r101_s1.pt",
+        "artifacts/task229/models/r101_s2.pt",
+        "artifacts/task229/models/r102_s1.pt",
+        "artifacts/task229/models/r102_s2.pt",
+        "artifacts/task229/models/r103_s1.pt",
+        "artifacts/task229/models/r103_s2.pt",
+        "artifacts/task229/models/r104_s1.pt",
+        "artifacts/task229/models/r104_s2.pt",
+        "artifacts/task229/models/r105_s1.pt",
+        "artifacts/task229/models/r105_s2.pt"
+      ],
+      "size": 4381284,
+      "tensors": 21,
+      "params": 182147
+    },
+    "loader_verified": "all soups load through python/pvz_rollout_policy.load_student unchanged"
+  }
+}
