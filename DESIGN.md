@@ -1721,3 +1721,27 @@ fog 8、roof 8）加原有 2 个留出监控，生成器 `scripts/make_gate_v8_p
 `GATE_VERSION=8`，默认 `--promotion-panel` 与 `qc_launch` 都指向 v8；版本切换时
 `reconcile_gate_panel` 丢弃 v5 的 task key/rates/楼梯状态，v8 结果不与 v5 轮次比较。
 不部署，由控制器部署。面板表与台式机基线见 [task222](MEMORY/docs/task222-gate-v8.md)。
+
+### task227：用户屋顶卡组进入生产采集课程（2026-11-03 登记，AGENTS §8 第 4 条）
+
+门禁 v8 里的两套用户屋顶卡组此前只有评估任务（`task222_l47_roof_user`、`task222_l49_roof_user`），
+采集课程只有 `roof_l*_train_r7`；卡组不同即任务族不同（AGENTS §8），所以学生只从一局录像里
+见过它们。task227 新增采集族 `roof_user_l{47,49}_user`，卡组唯一来源是
+`scripts/pvz_tasks.py` 的 `USER_DECKS`（与门禁同一定义）：
+
+- L47 `[1,33,41,[48,1],39,44,37,4,17,30]`（`[48,1]` = 模仿者→向日葵；屋顶花盆 33 已覆盖）；
+- L49 `[1,33,39,44,4,2,17,35,14,15]`。
+
+基础任务种子段 84,000,000（每关 2048），倍率变体由 `scripts/make_multiplier_tasks.py` 生成，
+独立块 84,100,000 + 100,000×档、每关偏移 2048。课程格从 1.0 起步，沿用全局倍率阶梯
+1.25/1.5/1.75/2.0/2.5/3.0 自动升降，不设专用 `CURRICULUM_LADDERS`。基础任务清单由
+`scripts/make_user_roof_panel.py` 生成（`artifacts/task227/user_roof_panel.json`，不入 git）。
+
+同时登记两个示范起点格（task71 同一条路径，只加清单行）：`demo_roof_47_user_m100`、
+`demo_roof_49_user_m100`，分别取用户验证胜局 `user_l47_5240981d44c6`（frame_count 1193）与
+`user_l49_de02ad43d9b1`（1406）的 94%…46% 决策号，7 档降序，未来种子块 45,800,000 /
+45,900,000 各 256。生产重启时 `reconcile_cells` / `reconcile_start_cells` 自动加格；
+不需要手改 `curriculum_state.json`。
+
+部署要额外把两套录像（整目录）放到 `~/PvZ-search/.claude/worktrees/cq/artifacts/human_demo/raw/`
+对应 seed 目录，并在台式机重新生成两份本地清单后再重启 qc。

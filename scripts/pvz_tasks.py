@@ -296,12 +296,18 @@ GOOD_DECKS: dict[int, tuple[tuple[int, ...], ...]] = {
 }
 # END GOOD_DECKS (task208)
 
-USER_DECKS: dict[int, tuple[int, ...]] = {}
 """用户在游戏里亲自选的卡组（关卡 -> 卡组）。用户卡组一旦登记就是该关第一套，
-优先级高于表里的候选；门禁 / 北极星 / 训练都必须以它为准。"""
+优先级高于表里的候选；门禁 / 北极星 / 训练都必须以它为准。
+
+task227: 用户屋顶卡组进入生产采集课程。门禁与采集共用这一份定义；[48, x] 是
+“模仿者→x”，由 deck_card 展开（卡组槽仍只占一格）。"""
+USER_DECKS: dict[int, tuple[int | tuple[int, int], ...]] = {
+    47: (1, 33, 41, (48, 1), 39, 44, 37, 4, 17, 30),
+    49: (1, 33, 39, 44, 4, 2, 17, 35, 14, 15),
+}
 
 
-def good_decks_for_level(level: int) -> tuple[tuple[int, ...], ...]:
+def good_decks_for_level(level: int) -> tuple[tuple, ...]:
     """这一关选中的好卡组（第一套 = 门禁 / 北极星用的卡组）；没有记录时退回 deck_for_level。"""
     user = USER_DECKS.get(level)
     if user:
@@ -309,6 +315,6 @@ def good_decks_for_level(level: int) -> tuple[tuple[int, ...], ...]:
     return GOOD_DECKS.get(level) or (deck_for_level(level),)
 
 
-def good_deck_for_level(level: int) -> tuple[int, ...]:
+def good_deck_for_level(level: int) -> tuple:
     """门禁 / 北极星用的第一套：用户卡组 > 表内首选 > deck_for_level 地形卡组。"""
     return good_decks_for_level(level)[0]

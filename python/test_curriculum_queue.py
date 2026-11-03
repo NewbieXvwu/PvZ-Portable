@@ -133,8 +133,11 @@ class ReviewShareTest(unittest.TestCase):
 class CurriculumRulesTest(unittest.TestCase):
     def test_zones_admission_only_measured_roof_and_one_fog_family(self):
         ids = training_base_ids()
-        self.assertEqual({name for name in ids if name.startswith('roof_')},
+        self.assertEqual({name for name in ids if name.startswith('roof_l')},
                          {'roof_l41_train_r7'})
+        # task227: user roof decks are a new family, not a multiplier of roof_l*_train_r7.
+        self.assertEqual({name for name in ids if name.startswith('roof_user_')},
+                         {'roof_user_l47_user', 'roof_user_l49_user'})
         # task70 B6: fog_user_v2 (human_v2) replaces fog_user; task79b admits the measured L36-L38
         # human_v2 bases; L39 remains demonstration-only; fog_f8/f8p stay out.
         self.assertEqual({name for name in ids if name.startswith('fog')},
@@ -1218,6 +1221,8 @@ class DemoStartCellsTest(unittest.TestCase):
                                       'demo_roof_46_doom_m200_s20261047', 'demo_roof_46_doom_m200_s20261048',
                                       'demo_roof_47_doom_m200', 'demo_roof_47_doom_m200_s20261048',
                                       'demo_roof_47_doom_m200_s20261049',
+                                      # task227: 用户屋顶卡组示范起点（L47 模仿者卡组 / L49）
+                                      'demo_roof_47_user_m100', 'demo_roof_49_user_m100',
                                       'demo_roof_48_doom_m200_s20261049', 'demo_roof_48_doom_m200_s20261050',
                                       'demo_roof_49_doom_m200_s20261050', 'demo_roof_49_doom_m200_s20261051',
                                       # task107: 原生传送带用户示范起点格（L40 沿用 task75 的 storm 口径）

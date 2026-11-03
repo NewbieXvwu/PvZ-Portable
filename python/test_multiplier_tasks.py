@@ -91,15 +91,15 @@ class MultiplierTasksTest(unittest.TestCase):
 
     def test_roof_allocation_preserves_every_existing_seed_block(self):
         """Re-adding roof last must not move any other family's preregistered seeds."""
-        # task70: fog_user_v2 was appended after roof, so it is not part of the seed set
-        # roof had to preserve either.
+        # task70/227: fog_user_v2 and roof_user were appended after roof, so they are not
+        # part of the seed set roof had to preserve either.
+        late = ('roof', 'fog_user_v2', 'fog79b', 'roof_user', 'native_l25', 'native_l30', 'native_l40')
         old = {(m, entry[0], level): seed_start(m, f, level)
                for f, entry in enumerate(FAMILIES)
-               if entry[0] not in ('roof', 'fog_user_v2', 'fog79b', 'native_l25', 'native_l30', 'native_l40')
+               if entry[0] not in late
                for m in range(len(MULTIPLIERS)) for level in entry[3]}
         roof = ('roof', 'roof', 'roof_l{level}_train_r7', (41, 42, 43, 44, 46, 47, 48, 49), 'roof')
-        families = tuple(f for f in FAMILIES if f[0] not in ('roof', 'fog_user_v2', 'fog79b',
-                                                             'native_l25', 'native_l30', 'native_l40')) + (roof,)
+        families = tuple(f for f in FAMILIES if f[0] not in late) + (roof,)
         with patch.object(generator, 'FAMILIES', families):
             index = {entry[0]: i for i, entry in enumerate(families)}
             for (m, name, level), value in old.items():
@@ -129,10 +129,30 @@ class MultiplierTasksTest(unittest.TestCase):
                         expected = 49200000 + mult * 100000 + (level - 31) * 2048
                     elif family == 'fog79b':
                         expected = 79200000 + mult * 100000 + (level - 36) * 2048
+                    elif family == 'roof_user':
+                        # task227: user roof decks; base tasks keep 84_000_000.
+                        expected = 84100000 + mult * 100000 + (level - 47) * 2048
                     else:
                         expected = (5000000 + mult * 700000 +
                                     (legacy.index(family) * 32 + level - 1) * 2048)
                     self.assertEqual(seed_start(mult, index, level), expected)
+
+    def test_user_roof_panel_uses_the_gate_decks(self):
+        """task227: base tasks come from USER_DECKS; the multiplier ladder is derived later."""
+        import make_user_roof_panel as panel
+        from pvz_tasks import profile_for_deck
+        doc = panel.document()
+        self.assertEqual([task['task_id'] for task in doc['tasks']],
+                         ['roof_user_l47_user', 'roof_user_l49_user'])
+        self.assertEqual(doc['seed_blocks']['train'], [84000000, 84004095])
+        self.assertEqual(doc['tasks'][0]['deck'],
+                         [1, 33, 41, (48, 1), 39, 44, 37, 4, 17, 30])
+        self.assertEqual(doc['tasks'][1]['deck'],
+                         [1, 33, 39, 44, 4, 2, 17, 35, 14, 15])
+        profile = profile_for_deck(tuple(doc['tasks'][0]['deck']))
+        self.assertTrue(profile.imitater_owned)
+        self.assertEqual(set(profile.owned_upgrade_plants), {41, 44})
+        self.assertFalse(set(doc['tasks'][0]['seeds']) & set(doc['tasks'][1]['seeds']))
 
     def test_fog_user_cell_preserves_every_existing_cell(self):
         """task68: appending the fog_user family leaves every preregistered cell untouched.
@@ -141,12 +161,13 @@ class MultiplierTasksTest(unittest.TestCase):
         structural: drop the family, rebuild, and require the surviving task list to be
         byte-identical (ids, seeds, offsets, every copied field) and the new seeds disjoint.
         """
-        # task70: fog_user_v2 now also exists; the original task68 proof (appending fog_user
-        # preserved everything) must drop both fog families from the "before" build.
-        old_families = tuple(f for f in FAMILIES if f[0] not in ('fog_user', 'fog_user_v2', 'fog79b',
-                                                                 'native_l25', 'native_l30', 'native_l40'))
+        # task70/227: the original task68 proof (appending fog_user preserved everything)
+        # must drop the later families from the "before" build too.
+        late = ('fog_user', 'fog_user_v2', 'fog79b', 'roof_user',
+                'native_l25', 'native_l30', 'native_l40')
+        old_families = tuple(f for f in FAMILIES if f[0] not in late)
         old_sources = {key: table for key, table in self.sources.items()
-                       if key not in ('fog_user', 'fog_user_v2', 'native')}
+                       if key not in ('fog_user', 'fog_user_v2', 'roof_user', 'native')}
         with patch.object(generator, 'FAMILIES', old_families):
             before = build_variants(old_sources, seeds=SEEDS_PER_TASK)
         families_with_user = old_families + tuple(

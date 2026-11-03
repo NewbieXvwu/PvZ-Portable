@@ -28,7 +28,9 @@ sys.path.insert(0, str(ROOT / "scripts"))
 sys.path.insert(0, str(ROOT / "python"))
 
 import pvz_constants  # noqa: E402
-from pvz_tasks import conveyor_belt_level, deck_for_level, terrain_covered  # noqa: E402
+from pvz_env import deck_card  # noqa: E402
+from pvz_tasks import (conveyor_belt_level, deck_for_level, profile_for_deck,
+                       terrain_covered)  # noqa: E402
 from make_day_panel import SUN_START, unlocked_plants  # noqa: E402
 
 SEED_START = 30000
@@ -116,18 +118,20 @@ def check_seed_overlap(zone: Zone, tasks: list[dict]) -> None:
 def check_decks(zone: Zone, level: int, decks: dict[str, tuple]) -> list[str]:
     """AGENTS §8：地形覆盖 / 升级植物所有权 / 长度。返回问题列表（空 = 全合法）。"""
     problems = []
-    upgrades = pvz_constants.upgrade_plants()
     for label, deck in decks.items():
         if not 6 <= len(deck) <= 10:
             problems.append(f"{label}: 卡组长度 {len(deck)} 不在 6..10")
-        if len(set(deck)) != len(deck):
+        slots = [deck_card(card)[0] for card in deck]
+        if len(set(slots)) != len(slots):
             problems.append(f"{label}: 卡组内有重复")
         if not terrain_covered(level, deck):
             problems.append(f"{label}: 地形没覆盖（{pvz_constants.background_for_level(level)} 需要睡莲 16 或香蒲 43）")
-        owned = set(deck) & set(upgrades)
-        if 43 in deck and 43 not in owned:  # 防御性：upgrade_plants() 应包含香蒲
+        # 升级植物所有权由 profile_for_deck 从 deck_card 推导（含模仿者目标），
+        # 清单里不另存一份，避免两处定义分叉（AGENTS §6.6）。
+        profile = profile_for_deck(tuple(deck))
+        if 43 in slots and 43 not in profile.owned_upgrade_plants:
             problems.append(f"{label}: 香蒲 43 未声明所有权")
-        if 43 in deck and 16 not in deck:
+        if 43 in slots and 16 not in slots:
             problems.append(f"{label}: 香蒲 43 没有睡莲底座")
     return problems
 

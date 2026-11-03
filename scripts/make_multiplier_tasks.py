@@ -36,6 +36,7 @@ if ROOT.parent.name == 'worktrees' and ROOT.parent.parent.name == '.claude':
     MAIN = ROOT.parent.parent.parent
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
+from pvz_env import deck_card  # noqa: E402
 from pvz_tasks import deck_for_seed, terrain_covered  # noqa: E402
 from day_orig_tasks import DAY_ORIG_MANIFEST
 from unified_panel import read_panel
@@ -86,12 +87,20 @@ NATIVE_MULT_SEED_BASE = 62_000_000
 NATIVE_MULT_STRIDE = 10_000
 FOG79B_MULT_SEED_BASE = 79_200_000
 FOG79B_MULT_STRIDE = 100_000
+
+# task227: the user roof decks (L47 Imitater, L49) are a new deck family, not a multiplier
+# of roof_l*_train_r7 (same level, different deck = different task family). The legacy grid
+# slots are full, so it gets an independent block above 84M. Base tasks keep
+# 84_000_000..84_004_095 and the six multiplier bands start at 84_100_000.
+ROOF_USER_MULT_SEED_BASE = 84_100_000
+ROOF_USER_MULT_STRIDE = 100_000
 INDEPENDENT_BLOCKS = {
     # family -> (multiplier seed base, band width, first level of the block)
     'roof': (ROOF_MULT_SEED_BASE, ROOF_MULT_STRIDE, 41),
     'fog_user': (FOG_USER_MULT_SEED_BASE, FOG_USER_MULT_STRIDE, 31),
     'fog_user_v2': (FOG_USER_V2_MULT_SEED_BASE, FOG_USER_V2_MULT_STRIDE, 31),
     'fog79b': (FOG79B_MULT_SEED_BASE, FOG79B_MULT_STRIDE, 36),
+    'roof_user': (ROOF_USER_MULT_SEED_BASE, ROOF_USER_MULT_STRIDE, 47),
 }
 NATIVE_BLOCKS = {'native_l25': NATIVE_MULT_SEED_BASE,
                  'native_l30': NATIVE_MULT_SEED_BASE + 100_000,
@@ -125,6 +134,9 @@ FAMILIES = (
     # so this is a new family with a fresh seed block; fog_user is superseded below.
     ('fog_user_v2', 'fog_user_v2', 'fog_user_v2_l{level}_snow', (31,), 'fog'),
     ('fog79b', 'fog79b', 'fog79b_l{level}_best', (36, 37, 38), 'fog'),
+    # task227: user roof decks (L47 Imitater deck, L49) from the gate v8 panel. Same level
+    # as roof_l{level}_train_r7 but a different deck, so it is a separate family (AGENTS §8).
+    ('roof_user', 'roof_user', 'roof_user_l{level}_user', (47, 49), 'roof'),
     ('native_l25', 'native', 'pool_l25_orig_train', (25,), 'pool'),
     ('native_l30', 'native', 'pool_l30_orig_train', (30,), 'pool'),
     ('native_l40', 'native', 'storm_l40_orig_train', (40,), 'fog'),
@@ -143,7 +155,7 @@ FAMILIES = (
 # keeps its manifest, seeds and data.
 # task79b: the measured L36-L38 human_v2 bases; task75b: native L25 from 0.5x.
 CURRICULUM_LEVELS = {'roof': (41,), 'fog_f8': (), 'fog_f8p': (), 'fog_user_v2': (31,),
-                     'fog79b': (36, 37, 38),
+                     'fog79b': (36, 37, 38), 'roof_user': (47, 49),
                      'native_l25': (25,), 'native_l30': (), 'native_l40': ()}
 
 # 课程里被新族取代的族（旧族的清单、种子段、数据、评估全部保留，只是课程不再给它排新局）。
@@ -189,6 +201,8 @@ def source_paths(overrides: dict[str, Path]) -> dict[str, Path]:
         'fog_user_v2': overrides.get('fog_user_v2') or ROOT / 'artifacts/task70/fog_user_v2_panel.json',
         'fog79b': overrides.get('fog79b') or ROOT / 'artifacts/task79b/fog79b_panel.json',
         'native': overrides.get('native') or ROOT / 'artifacts/task75/native_conveyor_panel.json',
+        # task227: local manifest from scripts/make_user_roof_panel.py (not in git).
+        'roof_user': overrides.get('roof_user') or ROOT / 'artifacts/task227/user_roof_panel.json',
     }
 
 
@@ -289,14 +303,18 @@ def audit(tasks: list[dict], sources: dict[str, dict[str, dict]], manifest_paths
                 # 4) 每个种子都能取到合法卡组（扰动族按 deck_for_seed，其余等于底卡组）。
                 for seed in task['seeds']:
                     deck = deck_for_seed(task, seed)
-                    assert len(deck) == len(base['deck']) and len(set(deck)) == len(deck)
+                    # task227: an Imitater slot is a (48, target) pair, not an int; compare
+                    # card identities so both JSON lists and in-memory tuples validate.
+                    slots = [deck_card(card)[0] for card in deck]
+                    assert len(deck) == len(base['deck']) and len(set(slots)) == len(slots)
                     if not deck:
                         # native conveyor (task75): no task deck -- the engine's own belt
                         # schedule supplies the cards, AGENTS §8 deck coverage does not apply.
                         continue
                     assert terrain_covered(level, deck), (task['task_id'], seed, deck)
                     if 'deck_perturb' not in task:
-                        assert tuple(deck) == tuple(base['deck'])
+                        assert ([deck_card(card) for card in deck]
+                                == [deck_card(card) for card in base['deck']])
                     checked_decks += 1
     return dict(tasks=len(tasks), seeds=len(owner), decks_checked=checked_decks,
                 scanned_manifests=len(manifest_paths), scanned_seeds=len(seen), seed_overlap=len(clashes),
@@ -324,6 +342,8 @@ def main() -> None:
     parser.add_argument('--fog-user-manifest', type=Path)
     parser.add_argument('--native-manifest', type=Path)
     parser.add_argument('--fog79b-manifest', type=Path)
+    parser.add_argument('--roof-user-manifest', type=Path,
+                        help='task227 user roof-deck base panel (default artifacts/task227/user_roof_panel.json)')
     parser.add_argument('--scan-root', type=Path, action='append',
                         help='trees whose artifacts/ feeds the seed-disjointness scan (repeatable; default: this repo)')
     parser.add_argument('--seeds', type=int, default=SEEDS_PER_TASK)
@@ -335,7 +355,8 @@ def main() -> None:
                           'day_d7q': args.day_d7q_manifest, 'night_n10p': args.night_n10p_manifest,
                           'night_n10q': args.night_n10q_manifest, 'roof': args.roof_manifest,
                           'fog': args.fog_manifest, 'fog_user': args.fog_user_manifest,
-                          'fog79b': args.fog79b_manifest, 'native': args.native_manifest})
+                          'fog79b': args.fog79b_manifest, 'native': args.native_manifest,
+                          'roof_user': args.roof_user_manifest})
     sources = {key: load_tasks(path) for key, path in paths.items()}
     tasks = build_variants(sources, args.seeds)
     manifests = scan_manifests(args.scan_root)
