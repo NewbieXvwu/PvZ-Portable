@@ -7,8 +7,11 @@ import tempfile
 
 
 def batch_sources(frames):
+    # receive() extracts into a hidden `.incoming-*` directory and renames it when done;
+    # a snapshot taken mid-transfer must not record that temporary name as a label.
     return sorted(path for source in ('mac197', 'human')
-                  for path in (Path(frames) / source).glob('*') if path.is_dir())
+                  for path in (Path(frames) / source).glob('*')
+                  if path.is_dir() and not path.name.startswith('.'))
 
 
 def receive(repo, package, frames):
