@@ -1357,3 +1357,5 @@
   - **修复**：从生产源码（macengine 工作树 = usercells 93af12b3）沿用旧 PGO 数据重建 `~/pvz-mac-collect/build2/pvz-portable`。冒烟 12 局 21 s，已送达台式机；循环以新进程组 80146 重启（日志 `~/pvz-mac-collect/task228.log`；冻结 `kill -STOP -- -80146`）。
   - **更大的问题**：`pvz_training_rows.source_kind` 只认 `round_000052` / `gptbc`。r94 晋升（11-03 02:55）以后，白天 / 夜间 / 泳池采集的先验换成 r94 / r95 / r101，这些行都被归为 `teacher`、权重 0（default 0）。03:00 以来约 5900 局生产数据进不了训练，只有约 2200 局 gptbc 先验的数据进了；Mac 数据同样是 0。这违背 10-31 定的“新线学生接管采集先验、自产自销”，也可能是 r96–r100 连续卡住的原因之一。
   - **派 task228**（dsh，lineweight 工作树）：新增类别 `teacher_line`（先验为 r72 及以后的学生），三套配方权重 1，并查清打包怎样捡回之前被过滤掉的行。
+- 11-04 00:25 **task228 上线**（lineweight 395ca3fa，deploy26 组边界，exit 0）：`source_kind` 新增 `teacher_line`（先验为 `round_0000NN/student/model.pt` 且 NN ≥ 72），三套 clean 配方权重 1。台式机只读实测受影响 334 标签 / 5532 局 / 518 万行，下一次打包自动建 334 个新段（约 20 分钟，旧段复用），训练行 19.2M → 约 24.4M。Mac 采集 40 分钟送达 22 批，已自动跟到 395ca3fa。
+- 11-04 00:25 **task227 的录像开局 cell 在生产全失败**（r104 两组 0/24）：search_play 要求 manifest task_id 等于或延伸录像 id，用户录像 id 是 `user_l47_…` / `user_l49_…`，task227 起名 `demo_roof_4x_user_m100`，且没实打过。派 task227b（续 dsh 会话）改名并在 Mac 实打录像开局与整局各 1 局，给出旧 cell 的处理。
