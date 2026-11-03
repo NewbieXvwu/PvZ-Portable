@@ -40,6 +40,10 @@ class DeckWarningsTest(unittest.TestCase):
         self.assertEqual(self.warnings(41, (0, 1, 2, 3, 4, 5)), ['roof'])
         self.assertEqual(self.warnings(41, (0, 1, 2, 3, 4, 33)), [])
 
+    def test_imitater_copy_counts_as_the_picked_plant(self):
+        self.assertEqual(self.warnings(41, ((48, 33), 1, 2, 3, 4, 5)), [])
+        self.assertEqual(self.warnings(7, ((48, 1), 2, 3, 4, 5, 7)), [])
+
     def test_night_deck_without_sunshroom_warns(self):
         self.assertEqual(self.warnings(12, (0, 2, 3, 4, 5, 7, 8, 11, 10, 13)), ['sun'])
 

@@ -1401,7 +1401,10 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 		if (static_cast<int>(forced) < 0 || forced >= SeedType::SEED_GATLINGPEA ||
 			std::find(task.forcedSeeds.begin(), task.forcedSeeds.begin() + i, forced) != task.forcedSeeds.begin() + i)
 			return false;
-		if (std::none_of(deck.begin(), deck.end(), [forced](const EnvironmentSeed& card) { return card.type == forced; }))
+		if (std::none_of(deck.begin(), deck.end(), [forced](const EnvironmentSeed& card) {
+				return card.type == forced ||
+					(card.type == SeedType::SEED_IMITATER && card.imitaterType == forced);
+			}))
 			return false;
 	}
 	mGameMode = GameMode::GAMEMODE_ADVENTURE;

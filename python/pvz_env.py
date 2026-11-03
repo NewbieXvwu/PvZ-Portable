@@ -443,7 +443,9 @@ class PvZEnv:
         card_types = [card.seed_type for card in cards]
         if len(set(card_types)) != len(card_types):
             raise ValueError("deck must not contain duplicate card types")
-        if any(seed_type not in card_types for seed_type in task.forced_seeds):
+        effective_types = [card.imitater_type if card.seed_type == 48 and card.imitater_type is not None
+                           else card.seed_type for card in cards]
+        if any(seed_type not in effective_types for seed_type in task.forced_seeds):
             raise ValueError("deck must include every forced seed")
 
         upgrades = ",".join(map(str, profile.owned_upgrade_plants)) or "-"

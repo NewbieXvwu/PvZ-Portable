@@ -160,6 +160,11 @@ class ResetValidationTests(unittest.TestCase):
     def test_forced_seeds_must_be_present_in_the_deck(self) -> None:
         with self.assertRaisesRegex(ValueError, "deck must include every forced seed"):
             self.env.reset(deck=[0, 1], task=TaskSpec(level=1, seed=0, forced_seeds=(5,)))
+        # An Imitater copy provides the forced plant too; validation then reaches the child process.
+        with self.assertRaises((FileNotFoundError, RuntimeError)):
+            self.env.reset(deck=[SeedCard(48, 5), 1],
+                           task=TaskSpec(level=1, seed=0, forced_seeds=(5,),
+                                         profile=PlayerProfileContext(imitater_owned=True)))
 
     def test_an_imitater_card_is_accepted_when_the_profile_owns_one(self) -> None:
         """Deck validation must not reject a legal imitater just because it is exotic."""
