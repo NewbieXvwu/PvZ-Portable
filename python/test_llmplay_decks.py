@@ -631,3 +631,20 @@ def test_decks_upgrade_requirement_applies_until_session_target():
             workflow.check(doc, night, D1, seed=item['seed'])
         upgraded = [42, 10, 9, 8, 3, 4, 17]
         workflow.check(doc, night, upgraded, seed=item['seed'])
+
+
+def test_decks_resume_fresh_priority_beats_terrain_order():
+    catalog = [
+        dict(id='old_pool', archive='old_pool', level=21, terrain='pool', seed=1, deck=D1,
+             multiplier=1.0, priority=1, cutoff_tick=100),
+        dict(id='fresh_roof', archive='fresh_roof', level=41, terrain='roof', seed=2, deck=D1,
+             multiplier=1.0, priority=0, cutoff_tick=900),
+        dict(id='fresh_night', archive='fresh_night', level=11, terrain='night', seed=3, deck=D1,
+             multiplier=1.0, priority=0, cutoff_tick=500),
+    ]
+    with patch.object(decks, 'resume_catalog', return_value=catalog):
+        doc = workflow.derive([], 'run')
+        item = workflow.next_task(doc, claim=False)['item']
+    # 先新鲜批次，再按地形（夜先于屋顶）；旧档即使地形更靠前也排在所有新鲜项之后。
+    assert item['task_id'] == 'fresh_night'
+    assert [row['id'] for row in doc['resume']['items']][:3] == ['fresh_night', 'fresh_roof', 'old_pool']

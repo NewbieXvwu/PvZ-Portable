@@ -192,7 +192,9 @@ def resume_progress(document):
     rank = {name: index for index, name in enumerate(terrain_order)}
     def terrain(item):
         return item.get("terrain") or region(item["level"])
-    items.sort(key=lambda item: (rank.get(terrain(item), len(rank)),
+    # task226：priority 0 = 当前 v8 策略的新鲜败局，1 = 旧 r86–r89 存档；新鲜的先打。
+    items.sort(key=lambda item: (int(item.get("priority", 1)),
+                                 rank.get(terrain(item), len(rank)),
                                  item.get("cutoff_tick", 0), item["id"]))
     counts = {}
     for item in catalog:
