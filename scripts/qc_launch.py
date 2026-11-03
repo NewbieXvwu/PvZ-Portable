@@ -25,7 +25,7 @@ def command(args):
         *(['--b-epochs', str(args.b_epochs)] if args.b_epochs is not None else []),
         '--a-restart' if args.a_restart else '--no-a-restart',
         '--training-parallelism', '1', '--opening-manifest', str(worktree / 'artifacts/task119/opening_panel.json'),
-        '--executable', str(args.executable or root / 'artifacts/production/csearch1/pvz-portable'),
+        '--executable', str(args.executable or root / 'artifacts/production/imitater1/pvz-portable'),
         '--promotion-panel', str(worktree / 'configs/gate_v8_panel.json'),
         '--extra-manifest', str(worktree / 'artifacts/task165/training_panel.json'),
         '--demo-start-share', '0.25', '--random-deck-share', '0.25',
