@@ -331,7 +331,11 @@ void EnvironmentRollout::Features(LawnApp* app, double income, int previousTick,
 	for (int index = 0; index < state->mSeedBank->mNumPackets; ++index)
 	{
 		const SeedPacket& packet = state->mSeedBank->mSeedPackets[index];
-		const int kind = std::min(static_cast<int>(packet.mPacketType), 53);
+		// The Imitater plays the plant it copies; its packet cost/cooldown already do, and the
+		// identity head's embedding and scalar channels must use that same plant type.
+		const SeedType packetType = packet.mPacketType == SeedType::SEED_IMITATER &&
+			packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
+		const int kind = std::min(static_cast<int>(packetType), 53);
 		const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
 		// Identity packet inputs follow the original-start engine flag, just like packet_features.
 		// Legacy slot students keep their established scalar encoding on every task.

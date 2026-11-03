@@ -12,7 +12,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "python"))
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from pvz_env import PlayerProfileContext, SeedCard  # noqa: E402
+from pvz_env import PlayerProfileContext, deck_card  # noqa: E402
 import pvz_constants  # noqa: E402
 
 DECK = (0, 1, 2, 3, 4, 5)
@@ -90,20 +90,16 @@ def profile_for_deck(deck: tuple[int, ...], first_aid_owned: bool = False) -> Pl
     再种一个同种坚果），合法动作由模拟器自己给出，这里只负责把所有权传进
     profile。缺省 False，旧任务的 reset 报文逐字节不变（AGENTS.md §8：
     改任务 = 换任务族，任务清单里用 "first_aid_owned": true 显式打开）。"""
-    seed_types, imitater_owned = [], False
+    seed_types, effective_types, imitater_owned = [], [], False
     for card in deck:
-        if type(card) is int:
-            seed_type = card
-        elif isinstance(card, SeedCard):
-            seed_type = card.seed_type
-            imitater_owned |= seed_type == pvz_constants._seed_index('IMITATER')
-        elif isinstance(card, tuple) and len(card) == 2 and all(type(value) is int for value in card):
-            seed_type = card[0]
-            imitater_owned |= seed_type == pvz_constants._seed_index('IMITATER')
-        else:
-            raise ValueError('deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs')
+        seed_type, target = deck_card(card)
         seed_types.append(seed_type)
-    upgrades = tuple(sorted(set(seed_types) & set(pvz_constants.upgrade_plants())))
+        imitater_owned |= seed_type == pvz_constants._seed_index('IMITATER')
+        # An Imitater slot is the target plant for upgrades and terrain coverage; the card
+        # itself is 48, but the player still has to own the plant it copies.
+        effective_types.append(target if seed_type == pvz_constants._seed_index('IMITATER')
+                               and target is not None else seed_type)
+    upgrades = tuple(sorted(set(effective_types) & set(pvz_constants.upgrade_plants())))
     # 空卡组 = 原版传送带开局（任务 deck: []）：没有任务卡组，profile 仍用正常 6 槽，
     # 棋盘用引擎自己的 10 格传送带。
     return PlayerProfileContext(seed_slot_count=len(deck) if deck else 6,
@@ -117,12 +113,20 @@ def _perturbation_background(level: int) -> str:
 
 
 def terrain_covered(level: int, deck) -> bool:
-    """AGENTS §8 coverage only; no handwritten playing or card-strength policy."""
+    """AGENTS §8 coverage only; no handwritten playing or card-strength policy.
+
+    An Imitater slot covers terrain through its target: (48, 16) is a lily pad card.
+    """
     background = _perturbation_background(level)
+    cards = set()
+    for card in deck:
+        seed_type, target = deck_card(card)
+        cards.add(target if seed_type == pvz_constants._seed_index('IMITATER') and target is not None
+                  else seed_type)
     if background in ('BACKGROUND_3_POOL', 'BACKGROUND_4_FOG'):
-        return LILY_PAD in deck or CATTAIL in deck
+        return LILY_PAD in cards or CATTAIL in cards
     if background in ('BACKGROUND_5_ROOF', 'BACKGROUND_6_BOSS'):
-        return FLOWER_POT in deck
+        return FLOWER_POT in cards
     return True
 
 

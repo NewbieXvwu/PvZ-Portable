@@ -1172,7 +1172,10 @@ public:
 			std::map<int, int> packetType;   // packet slot -> SeedType
 			for (int slot = 0; slot < app->mBoard->mSeedBank->mNumPackets; ++slot)
 			{
-				const SeedType type = app->mBoard->mSeedBank->mSeedPackets[slot].mPacketType;
+				const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[slot];
+				// An Imitater card is the base/upgrade it copies, not the card identity 48.
+				const SeedType type = packet.mPacketType == SeedType::SEED_IMITATER &&
+					packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
 				if (type != SeedType::SEED_NONE) packetType[slot] = static_cast<int>(type);
 			}
 			auto isLegalPacket = [&](int packet)
@@ -1830,13 +1833,21 @@ static void RunEnvironment(LawnApp* app)
 		else if (command == "DECK_WARNINGS")
 		{
 			int count = 0;
-			std::vector<int> deck;
+			std::vector<EnvironmentSeed> deck;
 			ok = static_cast<bool>(input >> count) && count >= 0 && count <= 10;
 			for (int index = 0; ok && index < count; ++index)
 			{
-				int type = -1;
-				ok = static_cast<bool>(input >> type) && type >= 0 && type < 64;
-				if (ok) deck.push_back(type);
+				// A plain card is "type"; an Imitater is "48:target". Every pre-Imitater
+				// caller sends the plain form, so its command text is unchanged.
+				std::string item;
+				ok = static_cast<bool>(input >> item);
+				if (!ok) break;
+				const size_t separator = item.find(':');
+				int type = -1, imitater = static_cast<int>(SeedType::SEED_NONE);
+				ok = ParseInt(item.substr(0, separator), type) && type >= 0 && type < 64 &&
+					(separator == std::string::npos ||
+					 (ParseInt(item.substr(separator + 1), imitater) && imitater >= 0 && imitater < SeedType::NUM_SEED_TYPES));
+				if (ok) deck.push_back({static_cast<SeedType>(type), static_cast<SeedType>(imitater)});
 			}
 			const std::string warnings = ok ? app->EnvironmentDeckWarnings(deck) : std::string("{\"ok\":false}");
 			std::cout << "PVZENV {\"protocol_version\":" << kEnvironmentProtocolVersion << ',' << warnings.substr(1) << std::endl;
@@ -2615,7 +2626,15 @@ static void RunEnvironment(LawnApp* app)
 		{
 			std::cout << ",\"deck\":[";
 			for (int i = 0; i < app->mBoard->mSeedBank->mNumPackets; ++i)
-				std::cout << (i ? "," : "") << static_cast<int>(app->mBoard->mSeedBank->mSeedPackets[i].mPacketType);
+			{
+				const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[i];
+				if (i) std::cout << ',';
+				if (packet.mPacketType == SeedType::SEED_IMITATER)
+					std::cout << '[' << static_cast<int>(packet.mPacketType) << ','
+						<< static_cast<int>(packet.mImitaterType) << ']';
+				else
+					std::cout << static_cast<int>(packet.mPacketType);
+			}
 			std::cout << ']';
 		}
 		if (demo && app->mBoard) std::cout << ",\"state_hash\":\"" << std::hex << StableEnvironmentHash(app) << std::dec << '"';

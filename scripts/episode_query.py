@@ -258,11 +258,14 @@ def _fmt_bank(cur: dict) -> str:
     if not packets:
         return "卡槽：（空）"
     parts = []
+    imitater = cur.get("packet_imitater") or []
     for index, ptype, active, cooldown, refresh, cost in packets:
         if ptype < 0:
             parts.append(f"{index}·空槽")
             continue
         name = PLANT_NAME.get(ptype, f"type{ptype}")
+        if index < len(imitater) and imitater[index] >= 0:
+            name = "模仿者·" + PLANT_NAME.get(int(imitater[index]), f"type{imitater[index]}")
         if active and cooldown <= 0:
             state = "就绪"
         else:

@@ -183,6 +183,23 @@ class SeedCard:
     imitater_type: int | None = None
 
 
+def deck_card(card) -> tuple[int, int | None]:
+    """One deck entry -> ``(seed_type, imitater_type)``; JSON round trips pairs as lists."""
+    if type(card) is int:
+        return card, None
+    if isinstance(card, SeedCard):
+        return card.seed_type, card.imitater_type
+    if isinstance(card, (tuple, list)) and len(card) == 2 and all(type(value) is int for value in card):
+        return card[0], card[1]
+    raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
+
+
+def deck_entry(card):
+    """Canonical archive form: an ``int``, or ``(48, target)`` for the Imitater slot."""
+    seed_type, imitater_type = deck_card(card)
+    return seed_type if imitater_type is None else (seed_type, imitater_type)
+
+
 
 
 def _oom_score_engine() -> None:
@@ -373,8 +390,8 @@ class PvZEnv:
         if task.loadout_mode not in ("fixed", "user_pick"):
             raise ValueError("loadout_mode must be fixed or user_pick")
         user_pick = task.loadout_mode == 'user_pick'
-        if user_pick and (self.headless or deck or task.conveyor_start or profile.imitater_owned or task.forced_seeds):
-            raise ValueError('user_pick requires a visible window, empty deck, and no imitater/forced/conveyor cards')
+        if user_pick and (self.headless or deck or task.conveyor_start or task.forced_seeds):
+            raise ValueError('user_pick requires a visible window, empty deck, and no forced/conveyor cards')
         if (type(task.zombie_count_multiplier) not in (int, float) or
                 not 0.1 <= task.zombie_count_multiplier <= 10.0):
             raise ValueError("zombie_count_multiplier must be from 0.1 to 10")
@@ -413,16 +430,7 @@ class PvZEnv:
         if len(set(task.forced_seeds)) != len(task.forced_seeds):
             raise ValueError("forced_seeds must not contain duplicates")
 
-        cards: list[SeedCard] = []
-        for card in deck:
-            if type(card) is int:
-                cards.append(SeedCard(card))
-            elif isinstance(card, SeedCard):
-                cards.append(card)
-            elif isinstance(card, tuple) and len(card) == 2 and all(type(value) is int for value in card):
-                cards.append(SeedCard(card[0], card[1]))
-            else:
-                raise ValueError("deck entries must be seed IDs, SeedCard values, or (imitater, target) pairs")
+        cards: list[SeedCard] = [SeedCard(*deck_card(card)) for card in deck]
         if (not cards and task.conveyor_start != "original" and not user_pick) or len(cards) > profile.seed_slot_count:
             raise ValueError("deck must contain cards and fit the profile's seed slots")
         if any(type(card.seed_type) is not int or card.seed_type < 0 or card.seed_type >= 49 or
@@ -463,8 +471,10 @@ class PvZEnv:
         response = self._command(command)
         if not response.get("ok") or response.get("observation") is None:
             raise ValueError(f"PvZ-Portable rejected reset: {response}")
+        picked_deck = None
         if user_pick:
-            cards = [SeedCard(kind) for kind in response['deck']]
+            cards = [SeedCard(*deck_card(kind)) for kind in response['deck']]
+            picked_deck = [deck_entry(card) for card in cards]
         self._reset_done = True
         observation = self._annotate_observation(
             response["observation"], response.get("events", {}), reset_history=True)
@@ -491,7 +501,7 @@ class PvZEnv:
             "final_state": self._state_record(observation),
         }
         return observation, {"events": response.get("events", {}),
-                             **({'deck': response['deck']} if user_pick else {})}
+                             **({'deck': picked_deck} if user_pick else {})}
 
     def step(self, action: dict[str, Any]) -> tuple[dict[str, Any], float, bool, bool, dict[str, Any]]:
         if not self._reset_done:
@@ -800,12 +810,15 @@ class PvZEnv:
         The engine runs its own CheckDeckWarnings on the reset board, so level/mode facts
         (pool, roof, fog, zombie roster, unlocks) come from the game, not from Python.
         """
-        cards = [int(card) for card in deck]
+        cards = [deck_card(card) for card in deck]
         if not 0 <= len(cards) <= 10:
             raise ValueError('deck must have 0..10 cards')
-        if any(card < 0 or card >= 64 for card in cards):
+        if any(seed_type < 0 or seed_type >= 64 or (target is not None and not 0 <= target < 64)
+               for seed_type, target in cards):
             raise ValueError('deck cards must be seed types in 0..63')
-        result = self._command(f'DECK_WARNINGS {len(cards)}' + ''.join(f' {card}' for card in cards))
+        result = self._command(f'DECK_WARNINGS {len(cards)}' + ''.join(
+            f' {seed_type}' if target is None else f' {seed_type}:{target}'
+            for seed_type, target in cards))
         if not result.get('ok'):
             raise RuntimeError('DECK_WARNINGS requires a reset board and a rebuilt simulator')
         return result

@@ -66,23 +66,46 @@ def packets(obs) -> list[dict]:
     for entry in (obs or {}).get("packets") or []:
         if isinstance(entry, dict):
             out.append(dict(index=int(entry["index"]), type=int(entry["type"]),
+                            imitater=int(entry.get("imitater_type", -1)),
                             active=bool(entry.get("active")),
                             cooldown=int(entry.get("cooldown") or 0)))
         else:
             out.append(dict(index=int(entry[0]), type=int(entry[1]),
+                            imitater=int(entry[6]) if len(entry) > 6 else -1,
                             active=bool(entry[2]), cooldown=int(entry[3] or 0)))
     return out
 
 
 def slot_for(obs, text: str) -> int:
-    """在**当前**卡槽里找这张卡：同一张卡有多张时取最左、已就绪的那张。"""
-    seed = resolve(text)
-    slots = [entry for entry in packets(obs) if entry["type"] == seed]
+    """在**当前**卡槽里找这张卡：同一张卡有多张时取最左、已就绪的那张。
+
+    An Imitater slot answers to the name of the plant it copies, so a deck with a
+    sunflower and an Imitater-sunflower has two ``plant("sunflower")`` targets: the
+    first call takes the original, the next (while it is cooling down) the copy.
+    ``"imitater:sunflower"`` / ``"模仿者:向日葵"`` forces the copied slot.
+    """
+    raw = str(text).strip()
+    only_imitater = False
+    for prefix in ("imitater:", "模仿者:", "模仿者·"):
+        if raw.lower().startswith(prefix.lower()):
+            raw, only_imitater = raw[len(prefix):].strip(), True
+            break
+    seed = resolve(raw)
+    def matches(entry):
+        if entry["type"] == seed:
+            return not only_imitater
+        return entry["type"] == 48 and entry["imitater"] == seed
+    slots = [entry for entry in packets(obs) if matches(entry)]
     if not slots:
-        present = [slug(entry["type"]) if entry["type"] >= 0 else "空槽"
-                   for entry in packets(obs)]
+        def name(entry):
+            if entry["type"] < 0:
+                return "空槽"
+            if entry["type"] == 48 and entry["imitater"] >= 0:
+                return "模仿者·" + slug(entry["imitater"])
+            return slug(entry["type"])
+        present = [name(entry) for entry in packets(obs)]
         raise ValueError("当前卡槽里没有 %s(%d)；现在的卡槽是 %s" % (
-            slug(seed), seed, "、".join("%d:%s" % (i, name) for i, name in enumerate(present))))
+            slug(seed), seed, "、".join("%d:%s" % (i, name_) for i, name_ in enumerate(present))))
     ready = [entry for entry in slots if entry["active"] and entry["cooldown"] == 0]
     chosen = (ready or slots)[0]
     return chosen["index"]

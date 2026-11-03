@@ -34,6 +34,20 @@ def planted_slots(game):
     return _counts(game[key],key) if key is not None else None
 
 
+def _deck_type(card):
+    """Effective plant type of one deck entry, or None for an empty/unknown slot."""
+    if isinstance(card, bool) or card is None:
+        return None
+    if isinstance(card, (list, tuple)):
+        if len(card) != 2 or not all(isinstance(value, Integral) and not isinstance(value, bool)
+                                     for value in card):
+            return None
+        return int(card[1]) if int(card[0]) == 48 else int(card[0])
+    if isinstance(card, Integral):
+        return int(card) if int(card) >= 0 else None
+    return None
+
+
 def planted_by_type(game, deck, *, level=None, conveyor_start=None):
     """Return {str(plant_type): count}, or None when historical identity is unknowable.
 
@@ -66,16 +80,22 @@ def planted_by_type(game, deck, *, level=None, conveyor_start=None):
     totals=Counter()
     for slot,count in slots.items():
         index=int(slot)
-        if index>=len(deck) or deck[index]<0:return None
-        totals[str(int(deck[index]))]+=count
+        if index>=len(deck):return None
+        plant_type=_deck_type(deck[index])
+        if plant_type is None:return None
+        totals[str(plant_type)]+=count
     return dict(sorted(totals.items(),key=lambda pair:int(pair[0])))
 
 
 def plant_type_before_action(observation, packet):
     """Read a live observation's slot before planting can consume/move a conveyor card."""
+    targets = observation.get('packet_imitater') or ()
     for card in observation['packets']:
         if isinstance(card,Mapping):
             if card['index']!=packet:continue
             return card.get('imitater_type',-1) if card['type']==48 else card['type']
-        if card[0]==packet:return card[1]
+        if card[0]==packet:
+            if len(card)>1 and card[1]==48 and packet < len(targets) and targets[packet]>=0:
+                return int(targets[packet])
+            return card[1]
     return None

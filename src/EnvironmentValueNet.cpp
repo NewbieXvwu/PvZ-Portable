@@ -101,7 +101,10 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 	for (int index = 0; index < state->mSeedBank->mNumPackets; ++index)
 	{
 		const SeedPacket& p = state->mSeedBank->mSeedPackets[index];
-		const int kind = std::min(static_cast<int>(p.mPacketType), 53);
+		// The packet's behaviour is its target plant, not the Imitater card identity.
+		const SeedType packetType = p.mPacketType == SeedType::SEED_IMITATER &&
+			p.mImitaterType != SeedType::SEED_NONE ? p.mImitaterType : p.mPacketType;
+		const int kind = std::min(static_cast<int>(packetType), 53);
 		if (encoder >= 2 && kind < 0) continue;
 		const int cost = p.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(p.mPacketType, p.mImitaterType);
 		const float ready = p.mActive && ((encoder >= 2 && conveyor) || state->mSunMoney >= cost);

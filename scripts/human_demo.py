@@ -13,7 +13,7 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / 'python'), str(ROOT / 'scripts')]
 
-from pvz_env import PlayerProfileContext, TaskSpec
+from pvz_env import PlayerProfileContext, TaskSpec, deck_card
 from pvz_event_env import EventWaitEnv
 from pvz_frame_store import frame_path, read_frames, write_frames
 from pvz_episode_archive import read_meta, write_meta
@@ -49,7 +49,8 @@ class Recorder:
             options = env.deck_options()
             warnings = env.deck_warnings(deck)['warnings']
             original_conveyor = task.conveyor_start == 'original' and not deck
-            if set(deck) - set(options['available_plants']) or (warnings and not original_conveyor):
+            card_types = {deck_card(card)[0] for card in deck}
+            if card_types - set(options['available_plants']) or (warnings and not original_conveyor):
                 raise ValueError(f'deck contains locked plants or engine warnings: {warnings}')
         else:
             # The original chooser already presented its warnings and the player confirmed.
@@ -253,17 +254,28 @@ def export_verified(roots, data: Path):
     return exported
 
 
+def _deck_signature(deck) -> str:
+    """Order-independent task id; all-int decks keep the pre-Imitater hash exactly."""
+    cards = [deck_card(card) for card in deck]
+    if all(target is None for _, target in cards):
+        payload = repr(tuple(sorted(seed_type for seed_type, _ in cards)))
+    else:
+        payload = json.dumps(sorted([list(card) for card in cards], key=repr), separators=(',', ':'))
+    return hashlib.sha256(payload.encode()).hexdigest()[:12]
+
+
 def record_user_pick(env, out: Path, level: int, seed: int, multiplier: float = 1.0,
                      fog: str = 'human_v2', note: str = ''):
     from pvz_constants import background_for_level, upgrade_plants
     task = TaskSpec(level=level, seed=seed, loadout_mode='user_pick',
-        profile=PlayerProfileContext(seed_slot_count=10, owned_upgrade_plants=tuple(sorted(upgrade_plants()))),
+        profile=PlayerProfileContext(seed_slot_count=10, imitater_owned=True,
+                                     owned_upgrade_plants=tuple(sorted(upgrade_plants()))),
         zombie_count_multiplier=multiplier,
         fog_observation=fog if background_for_level(level) == 'BACKGROUND_4_FOG' else None)
     env.begin_demo()
     observation, info = env.reset(deck=(), task=task)
-    deck = info['deck']
-    signature = hashlib.sha256(repr(tuple(sorted(deck))).encode()).hexdigest()[:12]
+    deck = list(info['deck'])
+    signature = _deck_signature(deck)
     task_id = f'user_l{level}_{signature}'
     archive = out / f'seed_{seed}' / task_id
     return Recorder(env, archive, task_id, deck, replace(task, loadout_mode='fixed'), note,

@@ -169,6 +169,24 @@ class ResetValidationTests(unittest.TestCase):
                            task=TaskSpec(level=1, seed=0,
                                          profile=PlayerProfileContext(imitater_owned=True)))
 
+    def test_user_pick_returns_the_imitater_target(self) -> None:
+        env = PvZEnv(resource_dir="/nonexistent", headless=False)
+        observation = {"tick": 0, "wave": 0, "wave_count": 20, "wave_timer": 3000,
+                       "sun": 50, "plants": [], "zombies": [], "terminal": False, "result": 0}
+        commands = []
+
+        def command(text):
+            commands.append(text)
+            return {"ok": True, "observation": observation, "deck": [0, [48, 1]]}
+
+        env._command = command  # type: ignore[method-assign]
+        _, info = env.reset(deck=(), task=TaskSpec(
+            level=41, seed=225, loadout_mode="user_pick",
+            profile=PlayerProfileContext(seed_slot_count=10, imitater_owned=True)))
+        self.assertIn(" user_pick", commands[-1])
+        self.assertNotIn(" no imitater", commands[-1])
+        self.assertEqual(info["deck"], [0, (48, 1)])
+
 
 class LifecycleGuardTests(unittest.TestCase):
     def setUp(self) -> None:

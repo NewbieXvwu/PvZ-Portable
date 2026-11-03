@@ -84,6 +84,16 @@ class LoadTrainingTask(unittest.TestCase):
         self.assertEqual(profile_for_deck((0, 43), True).owned_upgrade_plants, (43,))
         self.assertEqual(profile_for_deck((0, 43), True).seed_slot_count, 2)
 
+    def test_profile_for_deck_owns_the_imitater_and_its_upgrade_target(self) -> None:
+        from pvz_tasks import profile_for_deck, terrain_covered
+        profile = profile_for_deck([(48, 1), 0, 2])
+        self.assertTrue(profile.imitater_owned)
+        self.assertEqual(profile.seed_slot_count, 3)
+        self.assertEqual(profile_for_deck([(48, 43), 0, 16]).owned_upgrade_plants, (43,))
+        self.assertTrue(terrain_covered(41, [(48, 33), 1, 2, 3, 4, 5]))
+        self.assertTrue(terrain_covered(21, [(48, 16), 1, 2, 3, 4, 5]))
+        self.assertFalse(terrain_covered(21, [(48, 1), 0, 2, 3, 4, 5]))
+
     def test_no_preplanted_means_no_key(self) -> None:
         """预种植物是空的就不传 —— `TaskSpec` 的默认值就是空，传个空元组只是噪音。"""
         task = dict(TASK, preplanted=[])

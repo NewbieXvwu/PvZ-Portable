@@ -79,7 +79,7 @@ def test_user_pick_records_slot_order_and_replays_fixed_deck(tmp_path):
     assert env.task.loadout_mode == 'user_pick'
     assert env.task.fog_observation == 'human_v2'
     assert env.task.profile.seed_slot_count == 10
-    assert not env.task.profile.imitater_owned
+    assert env.task.profile.imitater_owned
     assert not env.deck
     recorder.close()
     meta = json.loads((recorder.archive / 'meta.json').read_text())
@@ -91,6 +91,32 @@ def test_user_pick_records_slot_order_and_replays_fixed_deck(tmp_path):
     replay(env, recorder.archive)
     assert env.task.loadout_mode == 'fixed'
     assert env.deck == selected
+
+
+def test_user_pick_records_imitater_target_and_replays_it(tmp_path):
+    selected = [(48, 1), 0, 2, 3, 4, 5, 6, 17, 27, 33]
+
+    class DemoEnv:
+        def begin_demo(self):
+            pass
+
+        def reset(self, *, deck, task):
+            self.task = task
+            self.deck = deck
+            return dict(tick=0, wave=0, wave_count=20, result=0, terminal=False, sun=50,
+                        loadout_context={'zombie_roster': []}), dict(deck=selected)
+
+    env = DemoEnv()
+    recorder = record_user_pick(env, tmp_path, 41, 225)
+    assert env.task.profile.imitater_owned
+    recorder.close()
+    meta = json.loads((recorder.archive / 'meta.json').read_text())
+    assert meta['task']['deck'][0] == [48, 1]
+    assert meta['environment_task']['profile']['imitater_owned'] is True
+    replay(env, recorder.archive)
+    assert env.task.loadout_mode == 'fixed'
+    assert env.task.profile.imitater_owned
+    assert env.deck[0] == [48, 1]
 
 
 @unittest.skipUnless(BINARY.is_file() and (RESOURCE / 'main.pak').is_file(), 'requires simulator and resources')

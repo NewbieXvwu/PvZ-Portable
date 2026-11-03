@@ -7,6 +7,19 @@ import numpy as np
 from pvz_frame_store import archive_seed
 
 
+def deck_signature(deck):
+    """Sortable card-set key; Imitater entries stay (48, target), never int(48)."""
+    cards = []
+    for card in deck or ():
+        if isinstance(card, (list, tuple)):
+            if len(card) != 2:
+                raise ValueError('deck card pairs must be (imitater, target)')
+            cards.append(str([int(card[0]), int(card[1])]))
+        else:
+            cards.append(str(int(card)))
+    return tuple(sorted(cards))
+
+
 def balance_levels(levels, cap, power=1.0, max_multiplier=None):
     """Per-level training-row multipliers from retained rows and original weights.
 
@@ -267,7 +280,7 @@ class SharedPackAdjustment:
                 # from today's task defaults. Explicit [] keeps original conveyors separate.
                 deck = packets.columns[0][start]
                 deck = [int(kind) for kind in deck if kind >= 0]
-            signature = (level, tuple(sorted(deck)))
+            signature = (level, deck_signature(deck))
             training = ~is_val[start:stop]
             mass = float(weights[start:stop][training].sum())
             if mass > 0:

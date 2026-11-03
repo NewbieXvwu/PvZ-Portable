@@ -55,5 +55,13 @@ class EpisodeStatsTest(unittest.TestCase):
         self.assertEqual(plant_type_before_action(after,0),9)
         self.assertEqual(plant_type_before_action({'packets':[{'index':0,'type':48,'imitater_type':3}]},0),3)
 
+    def test_imitater_slot_maps_to_its_target_in_frames_and_legacy_decks(self):
+        self.assertEqual(plant_type_before_action({'packets':[[0,48,True,0,750,50]],
+                                                   'packet_imitater':[1]},0),1)
+        self.assertEqual(plant_type_before_action({'packets':[[0,1,True,0,750,50]],
+                                                   'packet_imitater':[1]},0),1)
+        self.assertEqual(plant_type_before_action({'packets':[[0,48,True,0,750,50]]},0),48)
+        self.assertEqual(planted_by_type({'planted':{'0':2,'1':3}},[(48,1),0],level=7),{'0':3,'1':2})
+
 
 if __name__=='__main__':unittest.main()

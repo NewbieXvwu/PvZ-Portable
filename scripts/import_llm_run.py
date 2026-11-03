@@ -27,6 +27,19 @@ ROBUST_MIN = 5
 LEVEL_IN_ID = re.compile(r'_(?:l|roof|fog|pool|conv|night|day)_(\d{1,2})(?:_|$)')
 
 
+def _deck_cards(deck) -> list:
+    """Normalise task.deck: an int, or ``[48, target]`` for the Imitater slot."""
+    cards = []
+    for card in deck or []:
+        if isinstance(card, (list, tuple)):
+            if len(card) != 2:
+                raise ValueError('task.deck card pairs must be [imitater, target]')
+            cards.append([int(card[0]), int(card[1])])
+        else:
+            cards.append(int(card))
+    return cards
+
+
 def _zip_target(root: Path, name: str) -> Path:
     """zip 成员 -> 落盘路径；绝对路径、盘符、.. 一律拒绝。"""
     if not name or name.startswith(('/', '\\')) or re.match(r'^[A-Za-z]:', name):
@@ -168,11 +181,11 @@ def resolve_family(meta: dict, tasks: dict) -> tuple[str, bool, list[str]]:
     task = meta['task']
     base = str(task['id'])
     seed = int(task['seed'])
-    deck = [int(value) for value in task['deck']]
+    deck = _deck_cards(task['deck'])
     entry = tasks.get(base)
     if entry is None:
         return base, True, []
-    family_deck = [int(value) for value in entry.get('deck') or []]
+    family_deck = _deck_cards(entry.get('deck'))
     if entry.get('deck_selection') != 'player' and deck != family_deck:
         return base, False, [f'卡组与已登记的 {base} 不同：meta {deck} vs 清单 {family_deck}']
     for key, default in (('level', None), ('zombie_count_multiplier', 1.0)):
@@ -183,7 +196,7 @@ def resolve_family(meta: dict, tasks: dict) -> tuple[str, bool, list[str]]:
     final = f'{base}_s{seed}'
     existing = tasks.get(final)
     if existing is not None:
-        if [int(value) for value in existing.get('deck') or []] != deck:
+        if _deck_cards(existing.get('deck')) != deck:
             return final, False, [f'{final} 已登记但卡组不同']
         if seed not in {int(value) for value in existing.get('seeds') or []}:
             return final, False, [f'{final} 已登记但没有种子 {seed}']
@@ -196,7 +209,7 @@ def family_entry(final: str, meta: dict, base_entry: dict | None) -> dict:
     env = meta.get('environment_task') or {}
     entry = {'task_id': final, 'level': int(task['level']), 'seeds': [int(task['seed'])],
              'zombie_count_multiplier': float(task.get('zombie_count_multiplier') or 1.0),
-             'deck': [int(value) for value in task['deck']]}
+             'deck': _deck_cards(task['deck'])}
     for key in ('wave_cap', 'preplanted', 'conveyor_start', 'fog_observation'):
         value = (base_entry or {}).get(key)
         if value is None:

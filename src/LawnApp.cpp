@@ -1342,8 +1342,7 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 		task.zombieCountMultiplier < 0.1 || task.zombieCountMultiplier > 10.0 || task.forcedSeeds.size() > 3 ||
 		task.waveCap < 0 || task.waveCap > FINAL_LEVEL)
 		return false;
-	if (task.userPick && (!deck.empty() || task.originalConveyorStart ||
-		task.imitaterOwned || !task.forcedSeeds.empty()))
+	if (task.userPick && (!deck.empty() || task.originalConveyorStart || !task.forcedSeeds.empty()))
 		return false;
 	for (const EnvironmentPreplanted& plant : task.preplanted)
 	{
@@ -1454,7 +1453,9 @@ bool LawnApp::EnvironmentReset(int level, uint32_t seed, const std::vector<Envir
 		for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 		{
 			const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
-			if (packet.mPacketType < SeedType::SEED_PEASHOOTER || packet.mPacketType >= SeedType::SEED_IMITATER)
+			if (packet.mPacketType < SeedType::SEED_PEASHOOTER || packet.mPacketType > SeedType::SEED_IMITATER ||
+				(packet.mPacketType == SeedType::SEED_IMITATER &&
+				 (packet.mImitaterType == SeedType::SEED_NONE || !HasSeedType(packet.mImitaterType))))
 				return false;
 			chosen.push_back({packet.mPacketType, packet.mImitaterType});
 		}
@@ -2173,7 +2174,7 @@ std::string LawnApp::EnvironmentLeanObservation()
 		}
 		out << ']';
 	}
-	// [index, type, active, cooldown, refresh_time, cost]
+	// [index, type, active, cooldown, refresh_time, cost, imitater_type]
 	out << "],\"packets\":[";
 	for (int i = 0; i < mBoard->mSeedBank->mNumPackets; ++i)
 	{
@@ -2181,9 +2182,10 @@ std::string LawnApp::EnvironmentLeanObservation()
 		const SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[i];
 		const int cost = packet.mPacketType == SeedType::SEED_NONE ? 0 : Plant::GetCost(packet.mPacketType, packet.mImitaterType);
 		out << '[' << i << ',' << static_cast<int>(packet.mPacketType) << ',' << (packet.mActive ? 1 : 0)
-			<< ',' << packet.mRefreshCounter << ',' << packet.mRefreshTime << ',' << cost << ']';
+			<< ',' << packet.mRefreshCounter << ',' << packet.mRefreshTime << ',' << cost
+			<< ',' << static_cast<int>(packet.mImitaterType) << ']';
 	}
-	// [row, col, type, health, max_health, squished, asleep, wake_up_counter]
+	// [row, col, type, health, max_health, squished, asleep, wake_up_counter, imitater_type]
 	out << "],\"plants\":[";
 	bool first = true;
 	for (const Plant* plant : mBoard->mPlants)
@@ -2196,7 +2198,8 @@ std::string LawnApp::EnvironmentLeanObservation()
 		out << '[' << plant->mRow << ',' << plant->mPlantCol << ',' << static_cast<int>(plant->mSeedType)
 			<< ',' << (aHidden ? -1 : plant->mPlantHealth) << ',' << (aHidden ? -1 : plant->mPlantMaxHealth)
 			<< ',' << (plant->mSquished ? 1 : 0) << ',' << (!aHidden && plant->mIsAsleep ? 1 : 0)
-			<< ',' << (aHidden ? -1 : plant->mWakeUpCounter) << ']';
+			<< ',' << (aHidden ? -1 : plant->mWakeUpCounter)
+			<< ',' << static_cast<int>(plant->mImitaterType) << ']';
 	}
 	// [row, type, x, velocity_x, body+helm+shield health, on_board, is_eating, chilled, ice_trap, id]
 	out << "],\"zombies\":[";
@@ -2319,14 +2322,21 @@ std::string LawnApp::EnvironmentDeckOptions()
 
 // Whole-deck warnings from SeedChooserScreen::OnStartButton, for an arbitrary deck on the current
 // board (task28).  The judgement is the engine's own CheckDeckWarnings; nothing is re-derived here.
-std::string LawnApp::EnvironmentDeckWarnings(const std::vector<int>& theDeck)
+// An Imitater card counts as the plant it copies, exactly like SeedChooserScreen::PickedPlantType.
+std::string LawnApp::EnvironmentDeckWarnings(const std::vector<EnvironmentSeed>& theDeck)
 {
 	if (!mBoard)
 		return "{\"ok\":false}";
 	bool aPresent[SeedType::NUM_SEED_TYPES] = {};
-	for (int aType : theDeck)
+	for (const EnvironmentSeed& aCard : theDeck)
+	{
+		const int aType = static_cast<int>(aCard.type);
 		if (aType >= 0 && aType < SeedType::NUM_SEED_TYPES)
 			aPresent[aType] = true;
+		const int aImitater = static_cast<int>(aCard.imitaterType);
+		if (aCard.type == SeedType::SEED_IMITATER && aImitater >= 0 && aImitater < SeedType::NUM_SEED_TYPES)
+			aPresent[aImitater] = true;
+	}
 	auto aPicked = [&aPresent](SeedType theType) {
 		return theType >= 0 && theType < SeedType::NUM_SEED_TYPES && aPresent[theType];
 	};

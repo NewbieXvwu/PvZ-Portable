@@ -137,14 +137,20 @@ def _frame(obs: dict) -> dict:
     if obs.get("lean"):
         sleep = [[p[0], p[1], int(p[6]) if p[3] >= 0 else 0, p[7] if p[3] >= 0 else -1]
                  for p in obs['plants'] if len(p) >= 8 and not p[5]]
+        packet_imitater = [int(p[6]) if len(p) > 6 and p[1] == 48 else -1 for p in obs["packets"]]
+        packets = [[p[0], p[6] if p[1] == 48 and len(p) > 6 and p[6] >= 0 else p[1],
+                    bool(p[2]), int(p[3]), int(p[4]), int(p[5])] for p in obs["packets"]]
+        plant_imitater = [[p[0], p[1], int(p[8])]
+                          for p in obs['plants'] if len(p) > 8 and not p[5] and p[8] >= 0]
         return _frame_from(
             {**obs, 'sleep': sleep} if sleep else obs,
             plants=[tuple(p[:5]) for p in obs["plants"] if not p[5]],
             zombies=[(z[0], z[1], z[2], z[3], z[4], bool(z[5]), bool(z[6]), int(z[7]), int(z[8]), int(z[9])) + tuple(z[10:])
                      for z in obs["zombies"]],
             mowers=[[d[0], d[1]] for d in obs["defenses"]],
-            packets=[[p[0], p[1], bool(p[2]), int(p[3]), int(p[4]), int(p[5])] for p in obs["packets"]],
+            packets=packets,
             graves=[[g[0], g[1], g[2]] for g in obs["grid_items"]],
+            packet_imitater=packet_imitater, plant_imitater=plant_imitater,
         )
     plants = [
         (p["row"], p["col"], p["type"], p["health"], p["max_health"])
@@ -172,23 +178,32 @@ def _frame(obs: dict) -> dict:
     #      Maybe the frame tool has a way to show? Not in this output."
     # 它连试三条路都拿不到"手里有什么牌、哪张冷却好了"，最后只能从 `actions`
     # 里出现过的植物去反推卡组。数据一直都在，只是没往外送。
-    packets = [
-        [
-            p["index"], p["type"], bool(p["active"]),
-            int(p["cooldown"]), int(p["refresh_time"]), int(p["cost"]),
-        ]
-        for p in obs.get("packets") or []
-    ]
+    packets = []
+    packet_imitater = []
+    for p in obs.get("packets") or []:
+        seed = int(p["type"])
+        target = int(p.get("imitater_type", -1))
+        # The Imitater card keeps type 48 in the engine.  Compact features use the plant it
+        # actually plays (the packet's cost/cooldown are already the target's); the original
+        # pair stays in packet_imitater for tokens and display.
+        packets.append([p["index"], target if seed == 48 and target >= 0 else seed, bool(p["active"]),
+                        int(p["cooldown"]), int(p["refresh_time"]), int(p["cost"])])
+        packet_imitater.append(target if seed == 48 else -1)
+    plant_imitater = [[p["row"], p["col"], int(p["imitater_type"])]
+                      for p in obs.get("plants") or []
+                      if not p.get("squished") and int(p.get("imitater_type", -1)) >= 0]
     graves = [[g["row"], g["col"], g["type"]] for g in (obs.get("grid_items") or [])]
     sleep = [[p['row'], p['col'], int(p['asleep']) if p['health'] >= 0 else 0,
               p.get('wake_up_counter', 0) if p['health'] >= 0 else -1]
              for p in obs.get('plants', []) if 'asleep' in p and not p.get('squished')]
     if sleep:
         obs = {**obs, 'sleep': sleep}
-    return _frame_from(obs, plants=plants, zombies=zombies, mowers=mowers, packets=packets, graves=graves)
+    return _frame_from(obs, plants=plants, zombies=zombies, mowers=mowers, packets=packets, graves=graves,
+                       packet_imitater=packet_imitater, plant_imitater=plant_imitater)
 
 
-def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets: list, graves: list) -> dict:
+def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets: list, graves: list,
+                packet_imitater=None, plant_imitater=None) -> dict:
     """`_frame` 的公共部分：场景、路、计数。两种观测格式共用这一份。"""
     # 场景（关卡背景 + 每格地形）。原生观测一直发 `terrain` / `night` / `pool` /
     # `fog` / `roof` / `grid`，是这个压缩函数
@@ -234,6 +249,9 @@ def _frame_from(obs: dict, *, plants: list, zombies: list, mowers: list, packets
         "zombies": zombies,
         "mowers": mowers,
         "packets": packets,
+        **({"packet_imitater": packet_imitater}
+           if packet_imitater and any(target >= 0 for target in packet_imitater) else {}),
+        **({"plant_imitater": plant_imitater} if plant_imitater else {}),
         "scene": {
             "level": obs.get("level"),
             "terrain": obs.get("terrain"),      # BackgroundType 的编号
@@ -473,11 +491,11 @@ def collect(resource_dir: str, seed: int, level: int, policy: str,
 def _plant_diff(a: list, b: list) -> list:
     """a 有、b 没有的植物（按 (row,col,type) 计数差）。"""
     from collections import Counter
-    ca = Counter((r, c, t) for r, c, t, _, _ in a)
-    cb = Counter((r, c, t) for r, c, t, _, _ in b)
+    ca = Counter((r, c, t) for r, c, t, *_ in a)
+    cb = Counter((r, c, t) for r, c, t, *_ in b)
     out = []
     for key, n in (ca - cb).items():
-        hp = next((h for r, c, t, h, _ in a if (r, c, t) == key), 0)
+        hp = next((h for r, c, t, h, *_ in a if (r, c, t) == key), 0)
         out.extend([(key[0], key[1], key[2], hp)] * n)
     return sorted(out)
 
@@ -753,7 +771,7 @@ def _board_ascii(frame: dict, mode: str) -> str:
         if r < nrows and t == 3:  # GRIDSQUARE_POOL
             grid[r] = ["~" for _ in range(GRID_COLS)]
     if mode == "plant":
-        for r, c, t, hp, mx in frame["plants"]:
+        for r, c, t, hp, mx, *_ in frame["plants"]:
             if 0 <= r < nrows and 0 <= c < GRID_COLS:
                 g = PLANT_GLYPH.get(t, "?")
                 grid[r][c] = g if hp >= mx else g.lower()

@@ -67,8 +67,12 @@ def frame_tokens(frame, context=None, token_input='compact'):
                 features=(row/5, col/8, 0, 0, 0, 0, 0, 0, float(row in lanes)))
     for row in sorted(lanes):
         add(10, row=row)
-    for row, col, kind, hp, max_hp in frame['plants']:
-        add(3, kind, row=row, col=col, features=(row/5, col/8, hp/max(1, max_hp), hp/3000, max_hp/3000))
+    plant_imitater = {(int(row), int(col)): int(target)
+                      for row, col, target in frame.get('plant_imitater') or []}
+    packet_imitater = frame.get('packet_imitater') or []
+    for row, col, kind, hp, max_hp, *_ in frame['plants']:
+        add(3, kind, plant_imitater.get((row, col), -1), row=row, col=col,
+            features=(row/5, col/8, hp/max(1, max_hp), hp/3000, max_hp/3000))
     for zi, zombie in enumerate(frame['zombies']):
         row, kind, x, vx, hp, on_board, eating, chilled = zombie[:8]
         if not on_board:
@@ -95,9 +99,12 @@ def frame_tokens(frame, context=None, token_input='compact'):
         add(6, row=row, features=(row/5, state/5))
     for row, col, kind in frame.get('graves', []):
         add(7, kind, row=row, col=col, features=(row/5, col/8))
-    for slot, kind, active, cooldown, refresh, cost in frame['packets']:
+    for slot, kind, active, cooldown, refresh, cost, *_ in frame['packets']:
         if 0 <= slot < 10 and kind >= 0:
-            packet_index[slot] = add(8, kind, features=(0, cost/500, cooldown/3000, refresh/3000, float(active)))
+            target = int(packet_imitater[slot]) if slot < len(packet_imitater) else -1
+            category = 48 if target >= 0 else kind
+            packet_index[slot] = add(8, category, target,
+                                     features=(0, cost/500, cooldown/3000, refresh/3000, float(active)))
     if context is not None:
         for kind in np.flatnonzero(context[1:]):
             add(9, int(kind), features=(1,))

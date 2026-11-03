@@ -436,6 +436,10 @@ def cards(game) -> str:
         cooldown = int(packet.get("cooldown") or 0)
         active = bool(packet.get("active"))
         ready = active and cooldown == 0
+        target = int(packet.get("imitater_type", -1))
+        copied = seed == 48 and target >= 0
+        if copied:
+            seed = target
         cells = _packet_cells(obs, index)
         # 传送带关的卡不花阳光（Board::PlantSeed 对 HasConveyorBeltSeedBank 直接放行），
         # 卡片上的价钱只是这株植物的市价，说"阳光不够"会把模型劝退。
@@ -454,9 +458,9 @@ def cards(game) -> str:
             state = "冷却剩 %d tick" % cooldown
         else:
             state = "未激活"
-        lines.append("  [%d] %s(%s) %d☀ %s %s %s"
-                     % (index, _plant_name(seed), card_names.slug(seed), cost,
-                        state, afford, where))
+        lines.append("  [%d] %s%s(%s) %d☀ %s %s %s"
+                     % (index, _plant_name(seed), "（模仿者）" if copied else "",
+                        card_names.slug(seed), cost, state, afford, where))
     return "\n".join(lines) if lines else "  （没有卡槽）"
 
 

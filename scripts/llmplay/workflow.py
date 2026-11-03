@@ -115,11 +115,19 @@ def diagnoses() -> dict:
 # ----------------------------------------------------------------- 统计
 
 def deck_key(deck) -> str:
-    return ",".join(str(card) for card in sorted(deck or []))
+    cards = list(deck or [])
+    if all(not isinstance(card, (list, tuple)) for card in cards):
+        return ",".join(str(card) for card in sorted(cards))
+    return ",".join(sorted(str([int(card[0]), int(card[1])]) if isinstance(card, (list, tuple))
+                           else str(int(card)) for card in cards))
 
 
 def card_diff(left, right) -> int:
-    return max(len(set(left or []) - set(right or [])), len(set(right or []) - set(left or [])))
+    def cards(deck):
+        return [tuple(int(v) for v in card) if isinstance(card, (list, tuple)) else int(card)
+                for card in deck or []]
+    left, right = cards(left), cards(right)
+    return max(len(set(left) - set(right)), len(set(right) - set(left)))
 
 
 def _suppressed(entries) -> set:

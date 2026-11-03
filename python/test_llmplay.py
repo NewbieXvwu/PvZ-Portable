@@ -346,6 +346,19 @@ class VisibleTimerTest(unittest.TestCase):
         self.assertEqual(cards.slot_for(obs, '毁灭菇'), 0)
         self.assertEqual(cards.slot_for(obs, 'doomshroom'), 0)
 
+    def test_card_name_reaches_the_imitater_copy_of_the_same_plant(self):
+        from types import SimpleNamespace
+        from llmplay import cards, scene
+        obs = dict(sun=100, packets=[
+            dict(index=0, type=1, active=True, cooldown=0, cost=50),
+            dict(index=1, type=48, imitater_type=1, active=True, cooldown=0, cost=50)])
+        self.assertEqual(cards.slot_for(obs, 'sunflower'), 0)
+        obs['packets'][0].update(active=False, cooldown=750)
+        self.assertEqual(cards.slot_for(obs, 'sunflower'), 1)
+        self.assertEqual(cards.slot_for(obs, 'imitater:sunflower'), 1)
+        self.assertEqual(cards.slot_for(obs, '模仿者:向日葵'), 1)
+        self.assertIn('模仿者', scene.cards(SimpleNamespace(obs=obs)))
+
     def test_missing_card_lists_the_current_belt(self):
         from llmplay import cards
         obs = dict(packets=[dict(index=0, type=2, active=True, cooldown=0)])

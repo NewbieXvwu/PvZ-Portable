@@ -296,7 +296,7 @@ public:
 	};
 	BungeeObservation EnvironmentBungees() const;
 	std::string                     EnvironmentDeckOptions();
-	std::string                     EnvironmentDeckWarnings(const std::vector<int>& theDeck);
+	std::string                     EnvironmentDeckWarnings(const std::vector<EnvironmentSeed>& theDeck);
 	std::string                     EnvironmentDeckPool();
 	// The legal plant actions the observation publishes, in observation order (packet slot, col,
 	// row).  ``theLimit`` > 0 stops after that many entries; the target vector is not cleared.
