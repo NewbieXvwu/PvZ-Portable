@@ -1768,3 +1768,12 @@ id（`user_l47_5240981d44c6_start` / `user_l49_de02ad43d9b1_start`）；r104 已
   以 round_000100 的 270 段 / 7.73M 行 / 1575 s（2 workers）为参照，约 20 分钟、
   峰值约 1.8 GiB，下一轮训练等这次 pack，采集不停。
 
+### task230：B 候选改为从现任学生微调（2026-11-03 登记）
+
+A 仍每轮从 `--b-init`（gptbc_s1）重训 `b_initial_epochs`（8）做探索；B 新增
+`--b-from-incumbent`（默认关，`qc_launch` 生产启动默认开）：开关打开时，B 不再沿干净
+B 谱系，而是从排轮时的现任学生（`state['student']` / `student_round`）微调
+`b_epochs`（4）。现任在 `enqueue` 时冻结进 job（`b_init_source='incumbent'`、
+`b_init`、`b_init_round`），之后后台门禁再晋升别人也不改本轮 B；`ab_result.experiment`
+写成 `<lineage>+b-from-incumbent` 便于事后区分。关闭开关时 `_b_parent` 与旧干净 B
+谱系行为完全不变（已晋升的 B 候选仍会更新 `b_student`，便于以后切回）。

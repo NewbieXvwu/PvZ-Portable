@@ -24,6 +24,7 @@ def command(args):
         *(['--b-initial-epochs', str(args.b_initial_epochs)] if args.b_initial_epochs is not None else []),
         *(['--b-epochs', str(args.b_epochs)] if args.b_epochs is not None else []),
         '--a-restart' if args.a_restart else '--no-a-restart',
+        '--b-from-incumbent' if getattr(args, 'b_from_incumbent', True) else '--no-b-from-incumbent',
         '--training-parallelism', '1', '--opening-manifest', str(worktree / 'artifacts/task119/opening_panel.json'),
         '--executable', str(args.executable or root / 'artifacts/production/imitater1/pvz-portable'),
         '--promotion-panel', str(worktree / 'configs/gate_v8_panel.json'),
@@ -56,6 +57,8 @@ def main():
     parser.add_argument('--b-initial-epochs', type=int)
     parser.add_argument('--b-epochs', type=int)
     parser.add_argument('--a-restart', action=argparse.BooleanOptionalAction, default=True)
+    parser.add_argument('--b-from-incumbent', action=argparse.BooleanOptionalAction, default=True,
+                        help='B fine-tunes the incumbent at queue time (production default)')
     args = parser.parse_args()
     shell = 'env PVZ_NO_POPUP=1 OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 ' + shlex.join(command(args))
     shell += ' 2>&1 | tee -a ' + shlex.quote(str(args.logs / 'qc.out'))

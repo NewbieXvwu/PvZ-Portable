@@ -1379,7 +1379,10 @@ class TrainingPipeline:
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
                 f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
-        self._marker(folder / 'ab_result.json', dict(round=job['round'], experiment=job.get('b_lineage'),
+        experiment = job.get('b_lineage')
+        if job.get('b_init_source') == 'incumbent':
+            experiment = f'{experiment}+b-from-incumbent'
+        self._marker(folder / 'ab_result.json', dict(round=job['round'], experiment=experiment,
             seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
             candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
             calibration=frozen['calibration'], **(decision.get('ab') or
@@ -1494,16 +1497,25 @@ class TrainingPipeline:
         return parent, round_index
 
     @staticmethod
-    def _lineage(recipe, job, parent, parent_round):
-        recipe.update(init=str(parent),
-                      epochs=job['b_epochs'] if parent_round else job['b_initial_epochs'])
+    def _lineage(recipe, job, parent, parent_round, epochs=None):
+        if epochs is None:
+            epochs = job['b_epochs'] if parent_round else job['b_initial_epochs']
+        recipe.update(init=str(parent), epochs=epochs)
         return recipe
 
     def _refresh_lineage(self, path, job, restart=False):
         """Resolve A's restart init or the B parent at train time."""
         recipe = load_recipe(path, 'training')
-        parent, parent_round = self._b_parent(0 if restart else job['round'])
-        recipe = self._lineage(recipe, job, parent, parent_round)
+        if not restart and job.get('b_init_source') == 'incumbent':
+            # Freeze the incumbent selected when the round was queued. A promotion
+            # finishing later must not silently retarget this round's B candidate.
+            parent = Path(job['b_init'])
+            parent_round = job.get('b_init_round', 0)
+            epochs = job['b_epochs']
+        else:
+            parent, parent_round = self._b_parent(0 if restart else job['round'])
+            epochs = None
+        recipe = self._lineage(recipe, job, parent, parent_round, epochs=epochs)
         write_recipe(path, recipe)
         return recipe
 
@@ -1513,9 +1525,9 @@ class TrainingPipeline:
     def _b_recipe(self, job):
         return self._refresh_lineage(Path(job['recipe']).with_name('recipe_b.json'), job)
 
-    def _round_recipe(self, recipe, job, parent, parent_round):
+    def _round_recipe(self, recipe, job, parent, parent_round, epochs=None):
         """Freeze the shared round lineage and replay window for both candidates."""
-        recipe = self._lineage(recipe, job, parent, parent_round)
+        recipe = self._lineage(recipe, job, parent, parent_round, epochs=epochs)
         # Promoted training corpus, not the in-flight collector snapshot. Labels are
         # an initial fallback for the pre-v7 incumbent; after promotion use archives.
         if 'student_corpus_archives' in self.state:
@@ -1552,7 +1564,20 @@ class TrainingPipeline:
                    a_restart=bool(getattr(self.args, 'a_restart', True)))
         parent, parent_round = self._b_parent(round_index)
         a_parent, a_round = self._b_parent(0) if job['a_restart'] else (parent, parent_round)
-        write_recipe(path, self._round_recipe(recipe, job, a_parent, a_round))
+        b_from_incumbent = bool(getattr(self.args, 'b_from_incumbent', False))
+        a_epochs = b_epochs = None
+        if b_from_incumbent:
+            # Freeze the incumbent now: a gate promotion after this point applies to
+            # the next queued round, not this one.
+            incumbent = Path(self.state.get('student') or getattr(
+                self.args, 'rollout_policy', DEFAULT_B_INIT))
+            parent, parent_round = incumbent, self.state.get('student_round', 0)
+            job.update(b_init_source='incumbent', b_init=str(incumbent),
+                       b_init_round=parent_round)
+            b_epochs = job['b_epochs']
+            if not job['a_restart']:
+                a_parent, a_round, a_epochs = parent, parent_round, job['b_epochs']
+        write_recipe(path, self._round_recipe(recipe, job, a_parent, a_round, epochs=a_epochs))
         alternate = getattr(self.args, 'alternate_recipe', None)
         alternate = alternate or ROOT / 'recipes/dw4i2_v2timer_clean_b.json'
         if alternate:
@@ -1567,7 +1592,8 @@ class TrainingPipeline:
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
-            write_recipe(variant_path, self._round_recipe(variant, job, parent, parent_round))
+            write_recipe(variant_path, self._round_recipe(variant, job, parent, parent_round,
+                                                          epochs=b_epochs))
             repeats = 1
             job['candidate_recipes'] = [
                 dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
@@ -1819,6 +1845,9 @@ class TrainingPipeline:
                                  recipe_family=variant.get('recipe_family', 'A'),
                                  init=child_recipe['init'], epochs=child_recipe['epochs'],
                                  train_started=time.time())
+                if variant.get('recipe_family') == 'B' and job.get('b_init_source'):
+                    candidate.update(b_init_source=job['b_init_source'],
+                                     b_init_round=job.get('b_init_round'))
                 try:
                     if not admitted:
                         self._admit()
@@ -1942,6 +1971,8 @@ class TrainingPipeline:
                                     f'{report["superseded_by"]}; training and gate skipped')
             return
         promotion = report.get('promotion', {})
+        # Keep the clean-B lineage pointer current even in incumbent mode: flipping
+        # --no-b-from-incumbent later should resume from the last finished B.
         for candidate in report.get('candidates', []):
             if (job.get('b_lineage') == CLEAN_B_LINEAGE and candidate.get('recipe_family') == 'B'
                     and candidate['status'] == 'trained' and job['round'] > self.state.get('b_round', 0)):
@@ -2560,6 +2591,9 @@ def main() -> None:
     parser.add_argument('--b-epochs', type=int, default=4)
     parser.add_argument('--a-restart', action=argparse.BooleanOptionalAction, default=True,
                         help='A restarts from --b-init for b_initial_epochs every round; B keeps the lineage')
+    parser.add_argument('--b-from-incumbent', action=argparse.BooleanOptionalAction, default=False,
+                        help='B fine-tunes the student incumbent when the round is queued, for b_epochs, '
+                             'instead of continuing the clean-B lineage')
     parser.add_argument('--training-parallelism', type=int, choices=(1, 2), default=2,
                         help='maximum simultaneous trainers, frozen per job; 1 forces serial admission')
     parser.add_argument('--opening-manifest', type=Path,

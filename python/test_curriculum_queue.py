@@ -1066,6 +1066,77 @@ class TrainingRestartTest(unittest.TestCase):
             self.assertEqual(pipeline.last_train_peak, int(3.53 * GIB))
 
 
+class BFromIncumbentTest(unittest.TestCase):
+    """task230: B can fine-tune the incumbent frozen when the round is queued."""
+
+    def _recipe(self, path):
+        path.write_text(json.dumps(dict(
+            schema_version=1, kind='training', data=str(path.parent / 'frames'),
+            labels=['z13dag3_fast_search'], out=str(path.parent / 'out'))))
+
+    def _pipeline(self, tmp, enabled):
+        directory = tmp / 'pipeline'
+        directory.mkdir()
+        recipe = tmp / 'recipe_a.json'
+        alternate = tmp / 'recipe_b.json'
+        self._recipe(recipe)
+        self._recipe(alternate)
+        state = dict(round=105, log=[], training_jobs=[],
+                     student=str(tmp / 'incumbent/model.pt'), student_round=101,
+                     b_student=str(tmp / 'old_b/model.pt'), b_round=100,
+                     b_lineage=curriculum_queue.CLEAN_B_LINEAGE)
+        args = SimpleNamespace(
+            state=tmp / 'state.json', log=tmp / 'curriculum.log', frames=tmp / 'frames',
+            recipe=recipe, alternate_recipe=alternate,
+            b_init=Path('/checkpoints/gptbc_s1/model.pt'), b_initial_epochs=8,
+            b_epochs=4, a_restart=True, b_from_incumbent=enabled,
+            training_parallelism=1, rollout_policy=tmp / 'rollout/model.pt')
+        pipeline = curriculum_queue.TrainingPipeline.__new__(curriculum_queue.TrainingPipeline)
+        pipeline.args = args
+        pipeline.state = state
+        pipeline.directory = directory
+        pipeline.build_workers = 1
+        pipeline._plan_build = lambda recipe: None
+        pipeline._seeded = lambda job: job
+        pipeline.executor = SimpleNamespace(submit=lambda *a, **k: None)
+        pipeline.futures = []
+        pipeline.enqueue()
+        return pipeline, state['training_jobs'][-1], directory / 'round_000105'
+
+    def test_open_mode_uses_incumbent_for_b(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            pipeline, job, folder = self._pipeline(tmp, enabled=True)
+            incumbent = str(tmp / 'incumbent/model.pt')
+            self.assertEqual(job['b_init_source'], 'incumbent')
+            self.assertEqual(job['b_init'], incumbent)
+            self.assertEqual(job['b_init_round'], 101)
+            a_recipe = json.loads((folder / 'recipe.json').read_text())
+            b_recipe = json.loads((folder / 'recipe_b.json').read_text())
+            self.assertEqual(a_recipe['init'], '/checkpoints/gptbc_s1/model.pt')
+            self.assertEqual(a_recipe['epochs'], 8)
+            self.assertEqual(b_recipe['init'], incumbent)
+            self.assertEqual(b_recipe['epochs'], 4)
+            # A later promotion must not retarget the already queued round.
+            pipeline.state['student'] = str(tmp / 'newer/model.pt')
+            pipeline.state['student_round'] = 104
+            refreshed = pipeline._b_recipe(job)
+            self.assertEqual(refreshed['init'], incumbent)
+            self.assertEqual(refreshed['epochs'], 4)
+
+    def test_closed_mode_keeps_clean_b_lineage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp = Path(tmp)
+            _, job, folder = self._pipeline(tmp, enabled=False)
+            self.assertNotIn('b_init_source', job)
+            a_recipe = json.loads((folder / 'recipe.json').read_text())
+            b_recipe = json.loads((folder / 'recipe_b.json').read_text())
+            self.assertEqual(a_recipe['init'], '/checkpoints/gptbc_s1/model.pt')
+            self.assertEqual(a_recipe['epochs'], 8)
+            self.assertEqual(b_recipe['init'], str(tmp / 'old_b/model.pt'))
+            self.assertEqual(b_recipe['epochs'], 4)
+
+
 class DemoStartCellsTest(unittest.TestCase):
     """task71：示范起点格——档位是起点决策号，未来随机流走 RESEED。"""
 
