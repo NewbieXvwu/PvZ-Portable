@@ -21,6 +21,7 @@ import hashlib
 import json
 import math
 import os
+import signal
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import subprocess
@@ -211,6 +212,46 @@ def _run_unit(args, lock, manifest_path, task, side, model):
     return side, task['task_id'], rows
 
 
+def exam_monitor(args, models):
+    """Fail-open, bounded sidecar after the scored gate has already been written."""
+    bank = getattr(args, 'exam_bank', ROOT / 'configs/task242_exam.json')
+    if bank is None:
+        return dict(status='disabled', veto=False)
+    sides = getattr(args, 'exam_sides', 'A,B').split(',')
+    selected = {side: model for side, model in models.items()
+                if side in sides or side == 'incumbent'}
+    folder = args.out / 'tactical_exam'
+    started = time.monotonic()
+    try:
+        if not set(selected) - {'incumbent'}:
+            raise ValueError('no selected exam candidate')
+        command = [sys.executable, str(ROOT / 'scripts/tactical_exam.py'),
+                   '--bank', str(bank), '--models', json.dumps(selected),
+                   '--training-manifest', str(getattr(args, 'exam_training_manifest',
+                                                      ROOT / 'configs/task235_drills.json')),
+                   '--value', str(args.value), '--executable', str(args.executable),
+                   '--resource-dir', str(args.resource_dir),
+                   '--workers', str(min(args.eval_units, 4)), '--out', str(folder)]
+        process = subprocess.Popen(command, cwd=ROOT, start_new_session=True,
+                                   env={**os.environ, 'CUDA_VISIBLE_DEVICES': '',
+                                        'OMP_NUM_THREADS': '1', 'OPENBLAS_NUM_THREADS': '1'})
+        try:
+            code = process.wait(timeout=300)
+        except subprocess.TimeoutExpired:
+            # The pool and simulators inherit this private process group.
+            os.killpg(process.pid, signal.SIGKILL)
+            process.wait()
+            raise TimeoutError('tactical exam exceeded the 300s budget')
+        if code:
+            raise RuntimeError(f'tactical exam exit {code}; see evaluation.log')
+        result = read(folder / 'summary.json')
+    except Exception as error:
+        result = dict(status='skipped', error=f'{type(error).__name__}: {error}')
+    result.update(veto=False, elapsed_seconds=round(time.monotonic() - started, 3))
+    print('tactical exam monitor (no veto): ' + json.dumps(result), flush=True)
+    return result
+
+
 
 
 def main():
@@ -230,6 +271,9 @@ def main():
     parser.add_argument('--seed-block', default=None,
                         help='START,END already allocated in the ledger (pipeline flow); '
                              'omit to allocate the next free block')
+    parser.add_argument('--exam-bank', type=Path, default=ROOT / 'configs/task242_exam.json')
+    parser.add_argument('--exam-sides', default='A,B', help='monitored candidates; B for a smaller budget')
+    parser.add_argument('--exam-training-manifest', type=Path, default=ROOT / 'configs/task235_drills.json')
     args = parser.parse_args()
     if args.workers not in (1, 2):
         parser.error('--workers must be 1 or 2')
@@ -327,6 +371,12 @@ def evaluate(args):
             print(f'sequential look {look}: ' + json.dumps({s: dict(status=r['status'],
                   delta=r['overall']['delta_rate'], reasons=r['reasons']) for s, r in results.items()}), flush=True)
             if stopped:
+                result['monitor'] = dict(result.get('monitor', {}),
+                                         tactical_exam=exam_monitor(args, models))
+                try:
+                    write(args.out / 'decision.json', result)
+                except OSError as error:
+                    print(f'tactical exam monitor write skipped: {error}', flush=True)
                 return result
 
 if __name__ == '__main__':

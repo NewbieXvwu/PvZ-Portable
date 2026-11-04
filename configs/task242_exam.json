@@ -1,0 +1,7232 @@
+{
+ "schema": "pvz-tactical-exam-v1",
+ "task": "task242",
+ "status": "ready",
+ "veto": false,
+ "items": [
+  {
+   "id": "llmimport:11ac7ce96e942a1a71749c88f286a1b618e87178d3c98b5bf2a9847ddfae5cc2:r211",
+   "skill": "fog|balloon",
+   "task": {
+    "task_id": "exam242_0214d5fe4a08",
+    "level": 34,
+    "seeds": [
+     219000005
+    ],
+    "deck": [
+     9,
+     16,
+     8,
+     5,
+     17,
+     23,
+     26
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/11ac7ce96e942a1a71749c88f286a1b618e87178d3c98b5bf2a9847ddfae5cc2",
+     "decisions": [
+      212
+     ],
+     "index": 0,
+     "future_seed_start": 242200000,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67895299,
+       "row": 2,
+       "type": 16,
+       "name": "balloon",
+       "x": 495.5
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "11ac7ce96e942a1a71749c88f286a1b618e87178d3c98b5bf2a9847ddfae5cc2",
+   "seeds": [
+    242200000
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.2
+   }
+  },
+  {
+   "id": "llmimport:4ae2e04f9a17c99186317620a8ed3f08e9dadb08714127e24d033d23859e2a99:r431",
+   "skill": "fog|jack",
+   "task": {
+    "task_id": "exam242_da348abd78cb",
+    "level": 37,
+    "seeds": [
+     139099057
+    ],
+    "deck": [
+     8,
+     9,
+     16,
+     17,
+     18,
+     21,
+     25,
+     32,
+     34,
+     46
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/4ae2e04f9a17c99186317620a8ed3f08e9dadb08714127e24d033d23859e2a99",
+     "decisions": [
+      432
+     ],
+     "index": 0,
+     "future_seed_start": 242200001,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69337097,
+       "row": 1,
+       "type": 15,
+       "name": "jack",
+       "x": 791.9
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "4ae2e04f9a17c99186317620a8ed3f08e9dadb08714127e24d033d23859e2a99",
+   "seeds": [
+    242200001
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.5
+   }
+  },
+  {
+   "id": "framesv2:c91rd193l38m075_o126_fast_search:r396",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_306b909ec58d",
+    "level": 38,
+    "seeds": [
+     200013189
+    ],
+    "deck": [
+     9,
+     16,
+     8,
+     34,
+     19,
+     3,
+     23,
+     25,
+     2,
+     5
+    ],
+    "zombie_count_multiplier": 0.75,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013189/c91rd193l38m075_o126_fast_search",
+     "decisions": [
+      397
+     ],
+     "index": 0,
+     "future_seed_start": 242200002,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67567619,
+       "row": 1,
+       "type": 18,
+       "name": "pogo",
+       "x": 811.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200013189/c91rd193l38m075_o126_fast_search",
+   "seeds": [
+    242200002
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.3
+   }
+  },
+  {
+   "id": "exam242:3a86434a85cd",
+   "skill": "night|football",
+   "task": {
+    "task_id": "exam242_3a86434a85cd",
+    "level": 17,
+    "seeds": [
+     3361129
+    ],
+    "deck": [
+     0,
+     7,
+     4,
+     2,
+     12,
+     11,
+     1,
+     5,
+     8,
+     9
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3361129/c98n17n10qm100_o1128_fast_search",
+     "decisions": [
+      983
+     ],
+     "index": 0,
+     "future_seed_start": 242200003,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70057985,
+       "row": 2,
+       "type": 7,
+       "name": "football",
+       "x": 583.9
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_3361129/c98n17n10qm100_o1128_fast_search",
+   "seeds": [
+    242200003
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.1
+   }
+  },
+  {
+   "id": "exam242:b5951694103b",
+   "skill": "night|polevaulter",
+   "task": {
+    "task_id": "exam242_b5951694103b",
+    "level": 14,
+    "seeds": [
+     3331107
+    ],
+    "deck": [
+     36,
+     4,
+     3,
+     1,
+     30,
+     2,
+     8,
+     7,
+     9,
+     11
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_3331107/c107n14n10qm100_o1104_fast_search",
+     "decisions": [
+      388
+     ],
+     "index": 0,
+     "future_seed_start": 242200004,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 66912264,
+       "row": 0,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 849.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_3331107/c107n14n10qm100_o1104_fast_search",
+   "seeds": [
+    242200004
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.9
+   }
+  },
+  {
+   "id": "exam242:42a064be60f0",
+   "skill": "pool|dolphin",
+   "task": {
+    "task_id": "exam242_42a064be60f0",
+    "level": 29,
+    "seeds": [
+     210502121
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210502121/c110opening119l29scoreboardm100_o2112_b0_fast_search",
+     "decisions": [
+      586
+     ],
+     "index": 0,
+     "future_seed_start": 242200005,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68550665,
+       "row": 3,
+       "type": 14,
+       "name": "dolphin",
+       "x": 805.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_210502121/c110opening119l29scoreboardm100_o2112_b0_fast_search",
+   "seeds": [
+    242200005
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 5.0
+   }
+  },
+  {
+   "id": "exam242:18ba96e869fd",
+   "skill": "pool|football",
+   "task": {
+    "task_id": "exam242_18ba96e869fd",
+    "level": 25,
+    "seeds": [
+     20261025
+    ],
+    "deck": [],
+    "zombie_count_multiplier": 1.0,
+    "conveyor_start": "original",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_pool_25_orig_m100/seed_20261025/demo_pool_25_orig_m100",
+     "decisions": [
+      85
+     ],
+     "index": 0,
+     "future_seed_start": 242200006,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67436554,
+       "row": 0,
+       "type": 7,
+       "name": "football",
+       "x": 497.3
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_pool_25_orig_m100/seed_20261025/demo_pool_25_orig_m100",
+   "seeds": [
+    242200006
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.4
+   }
+  },
+  {
+   "id": "exam242:c3a3f93b3f5c",
+   "skill": "pool|polevaulter",
+   "task": {
+    "task_id": "exam242_c3a3f93b3f5c",
+    "level": 24,
+    "seeds": [
+     200036883
+    ],
+    "deck": [
+     1,
+     41,
+     16,
+     32,
+     39,
+     44,
+     23,
+     19,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200036883/c109rd193l24m050_o258_fast_search",
+     "decisions": [
+      543
+     ],
+     "index": 0,
+     "future_seed_start": 242200007,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67567622,
+       "row": 5,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 760.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200036883/c109rd193l24m050_o258_fast_search",
+   "seeds": [
+    242200007
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.4
+   }
+  },
+  {
+   "id": "exam242:0658fc0273ca",
+   "skill": "pool|snorkel",
+   "task": {
+    "task_id": "exam242_0658fc0273ca",
+    "level": 24,
+    "seeds": [
+     210201883
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210201883/c100opening119l24scoreboardm100_o1872_b0_fast_search",
+     "decisions": [
+      525
+     ],
+     "index": 0,
+     "future_seed_start": 242200008,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68026368,
+       "row": 3,
+       "type": 11,
+       "name": "snorkel",
+       "x": 816.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_210201883/c100opening119l24scoreboardm100_o1872_b0_fast_search",
+   "seeds": [
+    242200008
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.4
+   }
+  },
+  {
+   "id": "exam242:35e545b7f21d",
+   "skill": "pool|zamboni",
+   "task": {
+    "task_id": "exam242_35e545b7f21d",
+    "level": 26,
+    "seeds": [
+     210301470
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210301470/c83opening119l26scoreboardm100_o1464_b0_fast_search",
+     "decisions": [
+      761
+     ],
+     "index": 0,
+     "future_seed_start": 242200009,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69337093,
+       "row": 0,
+       "type": 12,
+       "name": "zamboni",
+       "x": 746.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_210301470/c83opening119l26scoreboardm100_o1464_b0_fast_search",
+   "seeds": [
+    242200009
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.4
+   }
+  },
+  {
+   "id": "exam242:942059a6e161",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_942059a6e161",
+    "level": 44,
+    "seeds": [
+     200014646
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     35,
+     31,
+     39,
+     44,
+     17
+    ],
+    "zombie_count_multiplier": 0.75,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014646/c76rd193l44m075_o54_fast_search",
+     "decisions": [
+      670
+     ],
+     "index": 0,
+     "future_seed_start": 242200010,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68419587,
+       "row": 1,
+       "type": 7,
+       "name": "football",
+       "x": 668.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014646/c76rd193l44m075_o54_fast_search",
+   "seeds": [
+    242200010
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "exam242:ad3c24fbf157",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_ad3c24fbf157",
+    "level": 48,
+    "seeds": [
+     311000051
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_311000051/c82demoroof48doomm400s81017035a942ebac22713s1090_o24_review1_o48_fast_search",
+     "decisions": [
+      1200
+     ],
+     "index": 0,
+     "future_seed_start": 242200011,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 75235348,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 644.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_311000051/c82demoroof48doomm400s81017035a942ebac22713s1090_o24_review1_o48_fast_search",
+   "seeds": [
+    242200011
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.5
+   }
+  },
+  {
+   "id": "exam242:0055885a39b0",
+   "skill": "roof|jack",
+   "task": {
+    "task_id": "exam242_0055885a39b0",
+    "level": 49,
+    "seeds": [
+     400000049
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_400000049/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+     "decisions": [
+      669
+     ],
+     "index": 0,
+     "future_seed_start": 242200012,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68812805,
+       "row": 4,
+       "type": 15,
+       "name": "jack",
+       "x": 566.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_400000049/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+   "seeds": [
+    242200012
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.6
+   }
+  },
+  {
+   "id": "exam242:9f51e43582f7",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_9f51e43582f7",
+    "level": 43,
+    "seeds": [
+     200014497
+    ],
+    "deck": [
+     1,
+     33,
+     32,
+     35,
+     14,
+     2,
+     31
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014497/c93rd193l43m050_o144_fast_search",
+     "decisions": [
+      580
+     ],
+     "index": 0,
+     "future_seed_start": 242200013,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68485126,
+       "row": 2,
+       "type": 21,
+       "name": "ladder",
+       "x": 626.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014497/c93rd193l43m050_o144_fast_search",
+   "seeds": [
+    242200013
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "exam242:e8605a3caba9",
+   "skill": "roof|pogo",
+   "task": {
+    "task_id": "exam242_e8605a3caba9",
+    "level": 44,
+    "seeds": [
+     200014808
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     39,
+     44,
+     41,
+     20,
+     23,
+     2
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014808/c105rd193l44m050_o204_fast_search",
+     "decisions": [
+      488
+     ],
+     "index": 0,
+     "future_seed_start": 242200014,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67436551,
+       "row": 2,
+       "type": 18,
+       "name": "pogo",
+       "x": 806.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014808/c105rd193l44m050_o204_fast_search",
+   "seeds": [
+    242200014
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "exam242:ca5a972fd0bc",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_ca5a972fd0bc",
+    "level": 42,
+    "seeds": [
+     148000072
+    ],
+    "deck": [
+     1,
+     33,
+     10,
+     42,
+     36,
+     35,
+     44,
+     39,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_148000072/c94demoroof42gloommelonm200s81007033a10702a1d26b4s1038_o48_review1_o72_fast_search",
+     "decisions": [
+      435
+     ],
+     "index": 0,
+     "future_seed_start": 242200015,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 66912260,
+       "row": 2,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 529.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_148000072/c94demoroof42gloommelonm200s81007033a10702a1d26b4s1038_o48_review1_o72_fast_search",
+   "seeds": [
+    242200015
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 0.9
+   }
+  },
+  {
+   "id": "llmimport:1e6305b2923233921cf9df703de7c0efe669e9bb827cbb0e66293eb08858da4e:r406",
+   "skill": "fog|balloon",
+   "task": {
+    "task_id": "exam242_4606b51b60c5",
+    "level": 39,
+    "seeds": [
+     81027016
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     27,
+     5
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/1e6305b2923233921cf9df703de7c0efe669e9bb827cbb0e66293eb08858da4e",
+     "decisions": [
+      407
+     ],
+     "index": 0,
+     "future_seed_start": 242200016,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69730314,
+       "row": 1,
+       "type": 16,
+       "name": "balloon",
+       "x": 770.2
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "1e6305b2923233921cf9df703de7c0efe669e9bb827cbb0e66293eb08858da4e",
+   "seeds": [
+    242200016
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.4
+   }
+  },
+  {
+   "id": "llmimport:1acd814ae164a3b07ad3b32bc3d10df2e67d959ec4ecb3298a1678816f590720:r753",
+   "skill": "fog|jack",
+   "task": {
+    "task_id": "exam242_408567bcbafa",
+    "level": 32,
+    "seeds": [
+     139057014
+    ],
+    "deck": [
+     2,
+     3,
+     6,
+     8,
+     9,
+     12,
+     16,
+     20,
+     27,
+     29
+    ],
+    "zombie_count_multiplier": 1.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/1acd814ae164a3b07ad3b32bc3d10df2e67d959ec4ecb3298a1678816f590720",
+     "decisions": [
+      754
+     ],
+     "index": 0,
+     "future_seed_start": 242200017,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 79364111,
+       "row": 1,
+       "type": 15,
+       "name": "jack",
+       "x": 788.0
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "1acd814ae164a3b07ad3b32bc3d10df2e67d959ec4ecb3298a1678816f590720",
+   "seeds": [
+    242200017
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "llmimport:fce1d22809e08255a07b5a700b9786315a6f9d0b2078e2d4558922ede7b3a9a7:r394",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_f9e5e1fa473a",
+    "level": 38,
+    "seeds": [
+     139139031
+    ],
+    "deck": [
+     2,
+     3,
+     6,
+     8,
+     9,
+     12,
+     16,
+     20,
+     27,
+     29
+    ],
+    "zombie_count_multiplier": 1.25,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/fce1d22809e08255a07b5a700b9786315a6f9d0b2078e2d4558922ede7b3a9a7",
+     "decisions": [
+      395
+     ],
+     "index": 0,
+     "future_seed_start": 242200018,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68354048,
+       "row": 1,
+       "type": 18,
+       "name": "pogo",
+       "x": 779.9
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "fce1d22809e08255a07b5a700b9786315a6f9d0b2078e2d4558922ede7b3a9a7",
+   "seeds": [
+    242200018
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.3
+   }
+  },
+  {
+   "id": "exam242:95d74a61e8bd",
+   "skill": "night|football",
+   "task": {
+    "task_id": "exam242_95d74a61e8bd",
+    "level": 17,
+    "seeds": [
+     2261126
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2261126/c113n17n10m100_o1112_fast_search",
+     "decisions": [
+      1291
+     ],
+     "index": 0,
+     "future_seed_start": 242200019,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72286220,
+       "row": 3,
+       "type": 7,
+       "name": "football",
+       "x": 536.4
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_2261126/c113n17n10m100_o1112_fast_search",
+   "seeds": [
+    242200019
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 4.5
+   }
+  },
+  {
+   "id": "exam242:fd6864a811c4",
+   "skill": "night|polevaulter",
+   "task": {
+    "task_id": "exam242_fd6864a811c4",
+    "level": 14,
+    "seeds": [
+     200039205
+    ],
+    "deck": [
+     9,
+     8,
+     34,
+     11,
+     17,
+     31,
+     23,
+     3
+    ],
+    "zombie_count_multiplier": 0.75,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200039205/c112rd193l14m075_o270_fast_search",
+     "decisions": [
+      714
+     ],
+     "index": 0,
+     "future_seed_start": 242200020,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68681730,
+       "row": 2,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 857.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200039205/c112rd193l14m075_o270_fast_search",
+   "seeds": [
+    242200020
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.8
+   }
+  },
+  {
+   "id": "exam242:aa0bdd81ed13",
+   "skill": "pool|dolphin",
+   "task": {
+    "task_id": "exam242_aa0bdd81ed13",
+    "level": 29,
+    "seeds": [
+     210501201
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210501201/c72opening119l29scoreboardm100_o1200_b0_fast_search",
+     "decisions": [
+      663
+     ],
+     "index": 0,
+     "future_seed_start": 242200021,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69861387,
+       "row": 3,
+       "type": 14,
+       "name": "dolphin",
+       "x": 782.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_210501201/c72opening119l29scoreboardm100_o1200_b0_fast_search",
+   "seeds": [
+    242200021
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 7.1
+   }
+  },
+  {
+   "id": "exam242:017b4e556ca5",
+   "skill": "pool|football",
+   "task": {
+    "task_id": "exam242_017b4e556ca5",
+    "level": 22,
+    "seeds": [
+     200006075
+    ],
+    "deck": [
+     1,
+     2,
+     3,
+     5,
+     16,
+     17,
+     19,
+     23,
+     27,
+     29
+    ],
+    "zombie_count_multiplier": 0.5,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200006075/c92rd193l22m050_o168_fast_search",
+     "decisions": [
+      867
+     ],
+     "index": 0,
+     "future_seed_start": 242200022,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69206025,
+       "row": 4,
+       "type": 7,
+       "name": "football",
+       "x": 783.4
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200006075/c92rd193l22m050_o168_fast_search",
+   "seeds": [
+    242200022
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.0
+   }
+  },
+  {
+   "id": "exam242:39969ed0a5ba",
+   "skill": "pool|polevaulter",
+   "task": {
+    "task_id": "exam242_39969ed0a5ba",
+    "level": 24,
+    "seeds": [
+     2030696
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2030696/c105p24p9km100_o680_fast_search",
+     "decisions": [
+      653
+     ],
+     "index": 0,
+     "future_seed_start": 242200023,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68681737,
+       "row": 4,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 740.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_2030696/c105p24p9km100_o680_fast_search",
+   "seeds": [
+    242200023
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.6
+   }
+  },
+  {
+   "id": "exam242:c8858e31752e",
+   "skill": "pool|snorkel",
+   "task": {
+    "task_id": "exam242_c8858e31752e",
+    "level": 24,
+    "seeds": [
+     2030598
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2030598/c84p24p9km100_o584_fast_search",
+     "decisions": [
+      465
+     ],
+     "index": 0,
+     "future_seed_start": 242200024,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67633160,
+       "row": 3,
+       "type": 11,
+       "name": "snorkel",
+       "x": 831.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_2030598/c84p24p9km100_o584_fast_search",
+   "seeds": [
+    242200024
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.6
+   }
+  },
+  {
+   "id": "exam242:c30da9ce1941",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_c30da9ce1941",
+    "level": 44,
+    "seeds": [
+     200014814
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     39,
+     44,
+     41,
+     20,
+     23,
+     2
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014814/c105rd193l44m050_o204_fast_search",
+     "decisions": [
+      874
+     ],
+     "index": 0,
+     "future_seed_start": 242200025,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69468165,
+       "row": 0,
+       "type": 7,
+       "name": "football",
+       "x": 682.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014814/c105rd193l44m050_o204_fast_search",
+   "seeds": [
+    242200025
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "exam242:625a91827d9c",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_625a91827d9c",
+    "level": 48,
+    "seeds": [
+     313000052
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_313000052/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+     "decisions": [
+      1006
+     ],
+     "index": 0,
+     "future_seed_start": 242200026,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 73531393,
+       "row": 4,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 642.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_313000052/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+   "seeds": [
+    242200026
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.7
+   }
+  },
+  {
+   "id": "exam242:5ef9bd7454ca",
+   "skill": "roof|jack",
+   "task": {
+    "task_id": "exam242_5ef9bd7454ca",
+    "level": 49,
+    "seeds": [
+     303000052
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_303000052/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+     "decisions": [
+      993
+     ],
+     "index": 0,
+     "future_seed_start": 242200027,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70123520,
+       "row": 2,
+       "type": 15,
+       "name": "jack",
+       "x": 769.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_303000052/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+   "seeds": [
+    242200027
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.4
+   }
+  },
+  {
+   "id": "exam242:8933e02db771",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_8933e02db771",
+    "level": 47,
+    "seeds": [
+     116649463
+    ],
+    "deck": [
+     1,
+     33,
+     41,
+     [
+      48,
+      1
+     ],
+     39,
+     44,
+     37,
+     4,
+     17,
+     30
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/user_l47_5240981d44c6/seed_116649463/user_l47_5240981d44c6",
+     "decisions": [
+      616
+     ],
+     "index": 0,
+     "future_seed_start": 242200028,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68026371,
+       "row": 0,
+       "type": 21,
+       "name": "ladder",
+       "x": 650.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/user_l47_5240981d44c6/seed_116649463/user_l47_5240981d44c6",
+   "seeds": [
+    242200028
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.3
+   }
+  },
+  {
+   "id": "exam242:24ba05c00e08",
+   "skill": "roof|pogo",
+   "task": {
+    "task_id": "exam242_24ba05c00e08",
+    "level": 44,
+    "seeds": [
+     200014814
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     39,
+     44,
+     41,
+     20,
+     23,
+     2
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014814/c105rd193l44m050_o204_fast_search",
+     "decisions": [
+      693
+     ],
+     "index": 0,
+     "future_seed_start": 242200029,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68354053,
+       "row": 1,
+       "type": 18,
+       "name": "pogo",
+       "x": 756.8
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014814/c105rd193l44m050_o204_fast_search",
+   "seeds": [
+    242200029
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.5
+   }
+  },
+  {
+   "id": "exam242:12cb6b997c8f",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_12cb6b997c8f",
+    "level": 42,
+    "seeds": [
+     148000072
+    ],
+    "deck": [
+     1,
+     33,
+     10,
+     42,
+     36,
+     35,
+     44,
+     39,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_148000072/c94demoroof42gloommelonm200s81007033a10702a1d26b4s1038_o48_review1_o72_fast_search",
+     "decisions": [
+      299
+     ],
+     "index": 0,
+     "future_seed_start": 242200030,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 66519048,
+       "row": 1,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 764.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_148000072/c94demoroof42gloommelonm200s81007033a10702a1d26b4s1038_o48_review1_o72_fast_search",
+   "seeds": [
+    242200030
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.4
+   }
+  },
+  {
+   "id": "framesv2:c59rd159l399620bf216504m050_o24_fast_search:r522",
+   "skill": "fog|balloon",
+   "task": {
+    "task_id": "exam242_e4aad1d66f41",
+    "level": 39,
+    "seeds": [
+     1592300026
+    ],
+    "deck": [
+     2,
+     5,
+     8,
+     9,
+     10,
+     16,
+     17,
+     19,
+     23,
+     26
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1592300026/c59rd159l399620bf216504m050_o24_fast_search",
+     "decisions": [
+      523
+     ],
+     "index": 0,
+     "future_seed_start": 242200031,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67698693,
+       "row": 2,
+       "type": 16,
+       "name": "balloon",
+       "x": 789.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_1592300026/c59rd159l399620bf216504m050_o24_fast_search",
+   "seeds": [
+    242200031
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.5
+   }
+  },
+  {
+   "id": "llmimport:7348922ba9a72769c9a2150b070bc69fb41be385120d6dba252d17e57617f086:r722",
+   "skill": "fog|jack",
+   "task": {
+    "task_id": "exam242_6b8af69192f1",
+    "level": 37,
+    "seeds": [
+     81023028
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     28
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/7348922ba9a72769c9a2150b070bc69fb41be385120d6dba252d17e57617f086",
+     "decisions": [
+      723
+     ],
+     "index": 0,
+     "future_seed_start": 242200032,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 79036434,
+       "row": 5,
+       "type": 15,
+       "name": "jack",
+       "x": 769.2
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "7348922ba9a72769c9a2150b070bc69fb41be385120d6dba252d17e57617f086",
+   "seeds": [
+    242200032
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 1.5
+   }
+  },
+  {
+   "id": "llmimport:659bd0f7c938bc6808d1781483d227707b7a43427117bbf253f3609c0792f58c:r410",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_7ae5fe0eea9b",
+    "level": 38,
+    "seeds": [
+     81025015
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     3
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/659bd0f7c938bc6808d1781483d227707b7a43427117bbf253f3609c0792f58c",
+     "decisions": [
+      411
+     ],
+     "index": 0,
+     "future_seed_start": 242200033,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69206022,
+       "row": 4,
+       "type": 18,
+       "name": "pogo",
+       "x": 460.6
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "659bd0f7c938bc6808d1781483d227707b7a43427117bbf253f3609c0792f58c",
+   "seeds": [
+    242200033
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.4
+   }
+  },
+  {
+   "id": "exam242:57792a77aa55",
+   "skill": "night|football",
+   "task": {
+    "task_id": "exam242_57792a77aa55",
+    "level": 16,
+    "seeds": [
+     5490117
+    ],
+    "deck": [
+     3,
+     4,
+     11,
+     2,
+     1,
+     7,
+     8,
+     0,
+     18,
+     9
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_5490117/c108n16n10qm125_o618_review1_o642_fast_search",
+     "decisions": [
+      437
+     ],
+     "index": 0,
+     "future_seed_start": 242200034,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67895304,
+       "row": 1,
+       "type": 7,
+       "name": "football",
+       "x": 706.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_5490117/c108n16n10qm125_o618_review1_o642_fast_search",
+   "seeds": [
+    242200034
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 4.7
+   }
+  },
+  {
+   "id": "exam242:b8bbcb31e585",
+   "skill": "night|polevaulter",
+   "task": {
+    "task_id": "exam242_b8bbcb31e585",
+    "level": 14,
+    "seeds": [
+     2231103
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     8,
+     9,
+     11
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2231103/c93n14n10m100_o1090_fast_search",
+     "decisions": [
+      830
+     ],
+     "index": 0,
+     "future_seed_start": 242200035,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69664777,
+       "row": 4,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 608.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_2231103/c93n14n10m100_o1090_fast_search",
+   "seeds": [
+    242200035
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.9
+   }
+  },
+  {
+   "id": "exam242:5769325e4ebc",
+   "skill": "pool|football",
+   "task": {
+    "task_id": "exam242_5769325e4ebc",
+    "level": 25,
+    "seeds": [
+     20261025
+    ],
+    "deck": [],
+    "zombie_count_multiplier": 1.0,
+    "conveyor_start": "original",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_pool_25_orig_m100/seed_20261025/demo_pool_25_orig_m100",
+     "decisions": [
+      213
+     ],
+     "index": 0,
+     "future_seed_start": 242200036,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69795852,
+       "row": 5,
+       "type": 7,
+       "name": "football",
+       "x": 632.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_pool_25_orig_m100/seed_20261025/demo_pool_25_orig_m100",
+   "seeds": [
+    242200036
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.2
+   }
+  },
+  {
+   "id": "exam242:e70de047b605",
+   "skill": "pool|polevaulter",
+   "task": {
+    "task_id": "exam242_e70de047b605",
+    "level": 24,
+    "seeds": [
+     210201750
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210201750/c94opening119l24scoreboardm100_o1728_b1_fast_search",
+     "decisions": [
+      628
+     ],
+     "index": 0,
+     "future_seed_start": 242200037,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68747272,
+       "row": 5,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 721.9
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_210201750/c94opening119l24scoreboardm100_o1728_b1_fast_search",
+   "seeds": [
+    242200037
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.7
+   }
+  },
+  {
+   "id": "exam242:c2dfceed3b50",
+   "skill": "pool|snorkel",
+   "task": {
+    "task_id": "exam242_c2dfceed3b50",
+    "level": 27,
+    "seeds": [
+     2061285
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_2061285/c76p27p9km100_o1280_fast_search",
+     "decisions": [
+      595
+     ],
+     "index": 0,
+     "future_seed_start": 242200038,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68157446,
+       "row": 2,
+       "type": 11,
+       "name": "snorkel",
+       "x": 811.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_2061285/c76p27p9km100_o1280_fast_search",
+   "seeds": [
+    242200038
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.4
+   }
+  },
+  {
+   "id": "exam242:44d9ea43cee7",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_44d9ea43cee7",
+    "level": 44,
+    "seeds": [
+     200014788
+    ],
+    "deck": [
+     1,
+     2,
+     20,
+     30,
+     32,
+     33,
+     34,
+     37,
+     39,
+     44
+    ],
+    "zombie_count_multiplier": 0.5,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014788/c99rd193l44m050_o174_fast_search",
+     "decisions": [
+      769
+     ],
+     "index": 0,
+     "future_seed_start": 242200039,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68943874,
+       "row": 1,
+       "type": 7,
+       "name": "football",
+       "x": 692.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014788/c99rd193l44m050_o174_fast_search",
+   "seeds": [
+    242200039
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.6
+   }
+  },
+  {
+   "id": "exam242:472815d764b0",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_472815d764b0",
+    "level": 48,
+    "seeds": [
+     20261048
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 2.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_roof_48_doom_m200/seed_20261048/demo_roof_48_doom_m200",
+     "decisions": [
+      1085
+     ],
+     "index": 0,
+     "future_seed_start": 242200040,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 86310920,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 646.4
+      },
+      {
+       "id": 85065748,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 665.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_roof_48_doom_m200/seed_20261048/demo_roof_48_doom_m200",
+   "seeds": [
+    242200040
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:d94e8cdb2644",
+   "skill": "roof|jack",
+   "task": {
+    "task_id": "exam242_d94e8cdb2644",
+    "level": 49,
+    "seeds": [
+     400000049
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_400000049/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+     "decisions": [
+      649
+     ],
+     "index": 0,
+     "future_seed_start": 242200041,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68550662,
+       "row": 1,
+       "type": 15,
+       "name": "jack",
+       "x": 566.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_400000049/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+   "seeds": [
+    242200041
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.9
+   }
+  },
+  {
+   "id": "exam242:dec6883738fb",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_dec6883738fb",
+    "level": 47,
+    "seeds": [
+     200016825
+    ],
+    "deck": [
+     1,
+     41,
+     33,
+     32,
+     39,
+     44,
+     37,
+     17,
+     20
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200016825/c100rd193l47m050_o174_fast_search",
+     "decisions": [
+      562
+     ],
+     "index": 0,
+     "future_seed_start": 242200042,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67960840,
+       "row": 0,
+       "type": 21,
+       "name": "ladder",
+       "x": 623.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200016825/c100rd193l47m050_o174_fast_search",
+   "seeds": [
+    242200042
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.6
+   }
+  },
+  {
+   "id": "exam242:759936aaf5fd",
+   "skill": "roof|pogo",
+   "task": {
+    "task_id": "exam242_759936aaf5fd",
+    "level": 44,
+    "seeds": [
+     200002187
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002187/c105demoroof44melonm200s738_o366_review1_o390_fast_search",
+     "decisions": [
+      893
+     ],
+     "index": 0,
+     "future_seed_start": 242200043,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 71041026,
+       "row": 3,
+       "type": 18,
+       "name": "pogo",
+       "x": 491.4
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002187/c105demoroof44melonm200s738_o366_review1_o390_fast_search",
+   "seeds": [
+    242200043
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:6277aac28432",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_6277aac28432",
+    "level": 42,
+    "seeds": [
+     200014248
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     17,
+     23,
+     37,
+     2,
+     41
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014248/c98rd193l42m050_o168_fast_search",
+     "decisions": [
+      251
+     ],
+     "index": 0,
+     "future_seed_start": 242200044,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 66453512,
+       "row": 0,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 490.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014248/c98rd193l42m050_o168_fast_search",
+   "seeds": [
+    242200044
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.4
+   }
+  },
+  {
+   "id": "llmimport:dbd58da8cb69156948cc1d39b66d921a31404f2261fa81a5bc43395f3e02ae5a:r406",
+   "skill": "fog|balloon",
+   "task": {
+    "task_id": "exam242_6f5fa4a88474",
+    "level": 39,
+    "seeds": [
+     81027016
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     27,
+     5
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/dbd58da8cb69156948cc1d39b66d921a31404f2261fa81a5bc43395f3e02ae5a",
+     "decisions": [
+      407
+     ],
+     "index": 0,
+     "future_seed_start": 242200045,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69730314,
+       "row": 1,
+       "type": 16,
+       "name": "balloon",
+       "x": 770.2
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "dbd58da8cb69156948cc1d39b66d921a31404f2261fa81a5bc43395f3e02ae5a",
+   "seeds": [
+    242200045
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.5
+   }
+  },
+  {
+   "id": "llmimport:655a9b359aa024bdabbef0f52f9745198745c6fce4c85bb8a1ed6ee6d92717f6:r722",
+   "skill": "fog|jack",
+   "task": {
+    "task_id": "exam242_b66d32fe7d78",
+    "level": 37,
+    "seeds": [
+     81023028
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     28
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/655a9b359aa024bdabbef0f52f9745198745c6fce4c85bb8a1ed6ee6d92717f6",
+     "decisions": [
+      723
+     ],
+     "index": 0,
+     "future_seed_start": 242200046,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 79036434,
+       "row": 5,
+       "type": 15,
+       "name": "jack",
+       "x": 769.2
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "655a9b359aa024bdabbef0f52f9745198745c6fce4c85bb8a1ed6ee6d92717f6",
+   "seeds": [
+    242200046
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 1.6
+   }
+  },
+  {
+   "id": "llmimport:f6b8829069ed32aed53f6f1e61bc00290d2c98d4628a763897e2df964bb10c2d:r410",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_5be7c80bfa22",
+    "level": 38,
+    "seeds": [
+     81025015
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     3
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/f6b8829069ed32aed53f6f1e61bc00290d2c98d4628a763897e2df964bb10c2d",
+     "decisions": [
+      411
+     ],
+     "index": 0,
+     "future_seed_start": 242200047,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69206022,
+       "row": 4,
+       "type": 18,
+       "name": "pogo",
+       "x": 460.6
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "f6b8829069ed32aed53f6f1e61bc00290d2c98d4628a763897e2df964bb10c2d",
+   "seeds": [
+    242200047
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.4
+   }
+  },
+  {
+   "id": "exam242:809fc91bcfcb",
+   "skill": "pool|snorkel",
+   "task": {
+    "task_id": "exam242_809fc91bcfcb",
+    "level": 24,
+    "seeds": [
+     210201349
+    ],
+    "deck": [
+     0,
+     1,
+     2,
+     3,
+     4,
+     5,
+     7,
+     16,
+     19
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210201349/c78opening119l24scoreboardm100_o1344_b0_fast_search",
+     "decisions": [
+      601
+     ],
+     "index": 0,
+     "future_seed_start": 242200048,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68288520,
+       "row": 3,
+       "type": 11,
+       "name": "snorkel",
+       "x": 792.8
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_210201349/c78opening119l24scoreboardm100_o1344_b0_fast_search",
+   "seeds": [
+    242200048
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.8
+   }
+  },
+  {
+   "id": "exam242:662f04b01e96",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_662f04b01e96",
+    "level": 44,
+    "seeds": [
+     200014633
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     32,
+     5,
+     3,
+     2,
+     17,
+     20,
+     30
+    ],
+    "zombie_count_multiplier": 0.75,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014633/c71rd193l44m075_o24_fast_search",
+     "decisions": [
+      603
+     ],
+     "index": 0,
+     "future_seed_start": 242200049,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68943873,
+       "row": 1,
+       "type": 7,
+       "name": "football",
+       "x": 607.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014633/c71rd193l44m075_o24_fast_search",
+   "seeds": [
+    242200049
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:7dc362307d7d",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_7dc362307d7d",
+    "level": 49,
+    "seeds": [
+     303000049
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_303000049/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+     "decisions": [
+      1244
+     ],
+     "index": 0,
+     "future_seed_start": 242200050,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 74252302,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 543.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_303000049/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+   "seeds": [
+    242200050
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:bc5d2f00eafd",
+   "skill": "roof|jack",
+   "task": {
+    "task_id": "exam242_bc5d2f00eafd",
+    "level": 49,
+    "seeds": [
+     400000053
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_400000053/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+     "decisions": [
+      1143
+     ],
+     "index": 0,
+     "future_seed_start": 242200051,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 73072651,
+       "row": 2,
+       "type": 15,
+       "name": "jack",
+       "x": 664.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_400000053/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+   "seeds": [
+    242200051
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.6
+   }
+  },
+  {
+   "id": "exam242:7bbb047a83c3",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_7bbb047a83c3",
+    "level": 43,
+    "seeds": [
+     200014574
+    ],
+    "deck": [
+     1,
+     33,
+     32,
+     34,
+     35,
+     31,
+     30,
+     17
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014574/c111rd193l43m050_o234_fast_search",
+     "decisions": [
+      450
+     ],
+     "index": 0,
+     "future_seed_start": 242200052,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67174403,
+       "row": 4,
+       "type": 21,
+       "name": "ladder",
+       "x": 697.3
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014574/c111rd193l43m050_o234_fast_search",
+   "seeds": [
+    242200052
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.7
+   }
+  },
+  {
+   "id": "exam242:cb501021569b",
+   "skill": "roof|pogo",
+   "task": {
+    "task_id": "exam242_cb501021569b",
+    "level": 44,
+    "seeds": [
+     200002155
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+     "decisions": [
+      861
+     ],
+     "index": 0,
+     "future_seed_start": 242200053,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70254596,
+       "row": 3,
+       "type": 18,
+       "name": "pogo",
+       "x": 566.9
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+   "seeds": [
+    242200053
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.7
+   }
+  },
+  {
+   "id": "exam242:56a75fe64adb",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_56a75fe64adb",
+    "level": 42,
+    "seeds": [
+     200011059
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     37,
+     23,
+     2,
+     17,
+     3,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200011059/c96gpt193l423862c26a5179s518_o24_review1_o48_fast_search",
+     "decisions": [
+      415
+     ],
+     "index": 0,
+     "future_seed_start": 242200054,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67108866,
+       "row": 4,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 619.9
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200011059/c96gpt193l423862c26a5179s518_o24_review1_o48_fast_search",
+   "seeds": [
+    242200054
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.5
+   }
+  },
+  {
+   "id": "framesv2:c90demofog39cactussnowm200hv2s963_o336_review1_o360_fast_search:r763",
+   "skill": "fog|balloon",
+   "task": {
+    "task_id": "exam242_2672017125bc",
+    "level": 39,
+    "seeds": [
+     200001645
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     26,
+     5
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200001645/c90demofog39cactussnowm200hv2s963_o336_review1_o360_fast_search",
+     "decisions": [
+      764
+     ],
+     "index": 0,
+     "future_seed_start": 242200055,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70320139,
+       "row": 1,
+       "type": 16,
+       "name": "balloon",
+       "x": 822.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200001645/c90demofog39cactussnowm200hv2s963_o336_review1_o360_fast_search",
+   "seeds": [
+    242200055
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.6
+   }
+  },
+  {
+   "id": "llmimport:447531e57f7553966c7a236639425266c37c1a4297ea2947b48be028da7c359d:r346",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_dfe85e87e498",
+    "level": 38,
+    "seeds": [
+     81024000
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     31
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/447531e57f7553966c7a236639425266c37c1a4297ea2947b48be028da7c359d",
+     "decisions": [
+      347
+     ],
+     "index": 0,
+     "future_seed_start": 242200056,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70385678,
+       "row": 5,
+       "type": 18,
+       "name": "pogo",
+       "x": 444.4
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "447531e57f7553966c7a236639425266c37c1a4297ea2947b48be028da7c359d",
+   "seeds": [
+    242200056
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.5
+   }
+  },
+  {
+   "id": "exam242:95f9b44e158e",
+   "skill": "pool|snorkel",
+   "task": {
+    "task_id": "exam242_95f9b44e158e",
+    "level": 25,
+    "seeds": [
+     20261025
+    ],
+    "deck": [],
+    "zombie_count_multiplier": 1.0,
+    "conveyor_start": "original",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_pool_25_orig_m100/seed_20261025/demo_pool_25_orig_m100",
+     "decisions": [
+      326
+     ],
+     "index": 0,
+     "future_seed_start": 242200057,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 73400327,
+       "row": 2,
+       "type": 11,
+       "name": "snorkel",
+       "x": 603.2
+      },
+      {
+       "id": 72613901,
+       "row": 2,
+       "type": 11,
+       "name": "snorkel",
+       "x": 448.9
+      },
+      {
+       "id": 73596953,
+       "row": 2,
+       "type": 11,
+       "name": "snorkel",
+       "x": 584.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_pool_25_orig_m100/seed_20261025/demo_pool_25_orig_m100",
+   "seeds": [
+    242200057
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.6
+   }
+  },
+  {
+   "id": "exam242:8ff6625e2a05",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_8ff6625e2a05",
+    "level": 44,
+    "seeds": [
+     200014633
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     32,
+     5,
+     3,
+     2,
+     17,
+     20,
+     30
+    ],
+    "zombie_count_multiplier": 0.75,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014633/c71rd193l44m075_o24_fast_search",
+     "decisions": [
+      649
+     ],
+     "index": 0,
+     "future_seed_start": 242200058,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69009409,
+       "row": 2,
+       "type": 7,
+       "name": "football",
+       "x": 690.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014633/c71rd193l44m075_o24_fast_search",
+   "seeds": [
+    242200058
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:cd7fc0de7804",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_cd7fc0de7804",
+    "level": 49,
+    "seeds": [
+     400000048
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_400000048/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+     "decisions": [
+      1229
+     ],
+     "index": 0,
+     "future_seed_start": 242200059,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 74317841,
+       "row": 3,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 599.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_400000048/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+   "seeds": [
+    242200059
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.9
+   }
+  },
+  {
+   "id": "exam242:dd8d039ea7e3",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_dd8d039ea7e3",
+    "level": 44,
+    "seeds": [
+     200002187
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002187/c105demoroof44melonm200s738_o366_review1_o390_fast_search",
+     "decisions": [
+      655
+     ],
+     "index": 0,
+     "future_seed_start": 242200060,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69206019,
+       "row": 1,
+       "type": 21,
+       "name": "ladder",
+       "x": 660.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002187/c105demoroof44melonm200s738_o366_review1_o390_fast_search",
+   "seeds": [
+    242200060
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:e4d891052408",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_e4d891052408",
+    "level": 42,
+    "seeds": [
+     200014248
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     17,
+     23,
+     37,
+     2,
+     41
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014248/c98rd193l42m050_o168_fast_search",
+     "decisions": [
+      559
+     ],
+     "index": 0,
+     "future_seed_start": 242200061,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67174408,
+       "row": 1,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 630.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014248/c98rd193l42m050_o168_fast_search",
+   "seeds": [
+    242200061
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.6
+   }
+  },
+  {
+   "id": "llmimport:8af5eac706d0cbcfa60a4565eb421340d26e11c247ff1eb74d75abfa1fa26ac9:r913",
+   "skill": "fog|balloon",
+   "task": {
+    "task_id": "exam242_9571f1552d6f",
+    "level": 39,
+    "seeds": [
+     81027000
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     27,
+     5
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/8af5eac706d0cbcfa60a4565eb421340d26e11c247ff1eb74d75abfa1fa26ac9",
+     "decisions": [
+      914
+     ],
+     "index": 0,
+     "future_seed_start": 242200062,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 80216084,
+       "row": 4,
+       "type": 16,
+       "name": "balloon",
+       "x": 416.5
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "8af5eac706d0cbcfa60a4565eb421340d26e11c247ff1eb74d75abfa1fa26ac9",
+   "seeds": [
+    242200062
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "llmimport:5d71ba333fcccf7b80aebcde7fa0cdbac160739d5aee5aed1eda94c416c81d95:r346",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_b7d1d0547114",
+    "level": 38,
+    "seeds": [
+     81024000
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     31
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/5d71ba333fcccf7b80aebcde7fa0cdbac160739d5aee5aed1eda94c416c81d95",
+     "decisions": [
+      347
+     ],
+     "index": 0,
+     "future_seed_start": 242200063,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70385678,
+       "row": 5,
+       "type": 18,
+       "name": "pogo",
+       "x": 444.4
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "5d71ba333fcccf7b80aebcde7fa0cdbac160739d5aee5aed1eda94c416c81d95",
+   "seeds": [
+    242200063
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.5
+   }
+  },
+  {
+   "id": "exam242:5e86c7aded2e",
+   "skill": "pool|snorkel",
+   "task": {
+    "task_id": "exam242_5e86c7aded2e",
+    "level": 30,
+    "seeds": [
+     20261030
+    ],
+    "deck": [],
+    "zombie_count_multiplier": 1.0,
+    "conveyor_start": "original",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_pool_30_orig_m100/seed_20261030/demo_pool_30_orig_m100",
+     "decisions": [
+      361
+     ],
+     "index": 0,
+     "future_seed_start": 242200064,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 71106562,
+       "row": 2,
+       "type": 11,
+       "name": "snorkel",
+       "x": 452.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_pool_30_orig_m100/seed_20261030/demo_pool_30_orig_m100",
+   "seeds": [
+    242200064
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 19.3
+   }
+  },
+  {
+   "id": "exam242:947701105341",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_947701105341",
+    "level": 44,
+    "seeds": [
+     200014814
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     39,
+     44,
+     41,
+     20,
+     23,
+     2
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014814/c105rd193l44m050_o204_fast_search",
+     "decisions": [
+      965
+     ],
+     "index": 0,
+     "future_seed_start": 242200065,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70320136,
+       "row": 2,
+       "type": 7,
+       "name": "football",
+       "x": 756.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014814/c105rd193l44m050_o204_fast_search",
+   "seeds": [
+    242200065
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.8
+   }
+  },
+  {
+   "id": "exam242:f39b5a054b92",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_f39b5a054b92",
+    "level": 48,
+    "seeds": [
+     313000051
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_313000051/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+     "decisions": [
+      689
+     ],
+     "index": 0,
+     "future_seed_start": 242200066,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69271556,
+       "row": 1,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 656.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_313000051/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+   "seeds": [
+    242200066
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.0
+   }
+  },
+  {
+   "id": "exam242:39c13ec4611c",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_39c13ec4611c",
+    "level": 44,
+    "seeds": [
+     200014788
+    ],
+    "deck": [
+     1,
+     2,
+     20,
+     30,
+     32,
+     33,
+     34,
+     37,
+     39,
+     44
+    ],
+    "zombie_count_multiplier": 0.5,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014788/c99rd193l44m050_o174_fast_search",
+     "decisions": [
+      635
+     ],
+     "index": 0,
+     "future_seed_start": 242200067,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68288518,
+       "row": 0,
+       "type": 21,
+       "name": "ladder",
+       "x": 604.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014788/c99rd193l44m050_o174_fast_search",
+   "seeds": [
+    242200067
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.0
+   }
+  },
+  {
+   "id": "exam242:7d5a1bf286ba",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_7d5a1bf286ba",
+    "level": 42,
+    "seeds": [
+     200014272
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     17,
+     23,
+     37,
+     2,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014272/c98rd193l42m050_o168_review1_o192_fast_search",
+     "decisions": [
+      719
+     ],
+     "index": 0,
+     "future_seed_start": 242200068,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68419584,
+       "row": 1,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 524.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014272/c98rd193l42m050_o168_review1_o192_fast_search",
+   "seeds": [
+    242200068
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.7
+   }
+  },
+  {
+   "id": "framesv2:c104demofog39cactussnowm200hv2s963_o366_review1_o390_fast_search:r785",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_6cf38b06e871",
+    "level": 39,
+    "seeds": [
+     200001670
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     26,
+     5
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200001670/c104demofog39cactussnowm200hv2s963_o366_review1_o390_fast_search",
+     "decisions": [
+      786
+     ],
+     "index": 0,
+     "future_seed_start": 242200069,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70647821,
+       "row": 0,
+       "type": 18,
+       "name": "pogo",
+       "x": 842.8
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200001670/c104demofog39cactussnowm200hv2s963_o366_review1_o390_fast_search",
+   "seeds": [
+    242200069
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.6
+   }
+  },
+  {
+   "id": "exam242:1321ff10c871",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_1321ff10c871",
+    "level": 44,
+    "seeds": [
+     200002155
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+     "decisions": [
+      801
+     ],
+     "index": 0,
+     "future_seed_start": 242200070,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69468165,
+       "row": 2,
+       "type": 7,
+       "name": "football",
+       "x": 447.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+   "seeds": [
+    242200070
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.9
+   }
+  },
+  {
+   "id": "exam242:4883bf744eab",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_4883bf744eab",
+    "level": 48,
+    "seeds": [
+     313000053
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_313000053/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+     "decisions": [
+      972
+     ],
+     "index": 0,
+     "future_seed_start": 242200071,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72351760,
+       "row": 4,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 636.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_313000053/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+   "seeds": [
+    242200071
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.1
+   }
+  },
+  {
+   "id": "exam242:86e83b62bd00",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_86e83b62bd00",
+    "level": 47,
+    "seeds": [
+     277000050
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     37,
+     15,
+     35,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_277000050/c77demoroof47doomm300s81014030a11fa85c2ac02s844_o24_review1_o48_fast_search",
+     "decisions": [
+      667
+     ],
+     "index": 0,
+     "future_seed_start": 242200072,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69009416,
+       "row": 1,
+       "type": 21,
+       "name": "ladder",
+       "x": 500.9
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_277000050/c77demoroof47doomm300s81014030a11fa85c2ac02s844_o24_review1_o48_fast_search",
+   "seeds": [
+    242200072
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.0
+   }
+  },
+  {
+   "id": "exam242:06c52356557d",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_06c52356557d",
+    "level": 42,
+    "seeds": [
+     200014272
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     17,
+     23,
+     37,
+     2,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014272/c98rd193l42m050_o168_review1_o192_fast_search",
+     "decisions": [
+      559
+     ],
+     "index": 0,
+     "future_seed_start": 242200073,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 67567622,
+       "row": 4,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 447.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014272/c98rd193l42m050_o168_review1_o192_fast_search",
+   "seeds": [
+    242200073
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.9
+   }
+  },
+  {
+   "id": "framesv2:c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search:r755",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_d7266f6c86d9",
+    "level": 38,
+    "seeds": [
+     333000050
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     5,
+     31
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_333000050/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+     "decisions": [
+      756
+     ],
+     "index": 0,
+     "future_seed_start": 242200074,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70844423,
+       "row": 0,
+       "type": 18,
+       "name": "pogo",
+       "x": 806.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_333000050/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+   "seeds": [
+    242200074
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.6
+   }
+  },
+  {
+   "id": "exam242:44f3a491b888",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_44f3a491b888",
+    "level": 44,
+    "seeds": [
+     200014788
+    ],
+    "deck": [
+     1,
+     2,
+     20,
+     30,
+     32,
+     33,
+     34,
+     37,
+     39,
+     44
+    ],
+    "zombie_count_multiplier": 0.5,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014788/c99rd193l44m050_o174_fast_search",
+     "decisions": [
+      674
+     ],
+     "index": 0,
+     "future_seed_start": 242200075,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68419590,
+       "row": 2,
+       "type": 7,
+       "name": "football",
+       "x": 553.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014788/c99rd193l44m050_o174_fast_search",
+   "seeds": [
+    242200075
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.1
+   }
+  },
+  {
+   "id": "exam242:36e8c16ddcb8",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_36e8c16ddcb8",
+    "level": 48,
+    "seeds": [
+     313000053
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_313000053/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+     "decisions": [
+      1077
+     ],
+     "index": 0,
+     "future_seed_start": 242200076,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 73728016,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 656.4
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_313000053/c77demoroof48doomm200s81002021a9a95ba12ad42s477_o24_review1_o48_fast_search",
+   "seeds": [
+    242200076
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.3
+   }
+  },
+  {
+   "id": "exam242:b8f194ebb989",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_b8f194ebb989",
+    "level": 45,
+    "seeds": [
+     200015068
+    ],
+    "deck": [
+     5,
+     18,
+     23,
+     30,
+     32,
+     33,
+     34,
+     37,
+     39,
+     44
+    ],
+    "zombie_count_multiplier": 0.5,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200015068/c106rd193l45m050_o204_fast_search",
+     "decisions": [
+      469
+     ],
+     "index": 0,
+     "future_seed_start": 242200077,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69468169,
+       "row": 2,
+       "type": 21,
+       "name": "ladder",
+       "x": 665.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200015068/c106rd193l45m050_o204_fast_search",
+   "seeds": [
+    242200077
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.0
+   }
+  },
+  {
+   "id": "exam242:88bb4147cc63",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_88bb4147cc63",
+    "level": 42,
+    "seeds": [
+     200014177
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     39,
+     17,
+     44,
+     37,
+     23,
+     41
+    ],
+    "zombie_count_multiplier": 0.75,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014177/c81rd193l42m075_o78_fast_search",
+     "decisions": [
+      645
+     ],
+     "index": 0,
+     "future_seed_start": 242200078,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68943874,
+       "row": 1,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 683.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014177/c81rd193l42m075_o78_fast_search",
+   "seeds": [
+    242200078
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 1.9
+   }
+  },
+  {
+   "id": "llmimport:d0cac9170fd07efb87ba37d2e74ca1828dad145d2c6a879f9ff80bbc8e0c5d79:r410",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_7c7c7af8e0a4",
+    "level": 39,
+    "seeds": [
+     81027037
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     27,
+     5
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/d0cac9170fd07efb87ba37d2e74ca1828dad145d2c6a879f9ff80bbc8e0c5d79",
+     "decisions": [
+      411
+     ],
+     "index": 0,
+     "future_seed_start": 242200079,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72417297,
+       "row": 4,
+       "type": 18,
+       "name": "pogo",
+       "x": 781.0
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "d0cac9170fd07efb87ba37d2e74ca1828dad145d2c6a879f9ff80bbc8e0c5d79",
+   "seeds": [
+    242200079
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 0.7
+   }
+  },
+  {
+   "id": "exam242:cbc9a0dac788",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_cbc9a0dac788",
+    "level": 44,
+    "seeds": [
+     200014808
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     39,
+     44,
+     41,
+     20,
+     23,
+     2
+    ],
+    "zombie_count_multiplier": 0.5,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014808/c105rd193l44m050_o204_fast_search",
+     "decisions": [
+      784
+     ],
+     "index": 0,
+     "future_seed_start": 242200080,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69140482,
+       "row": 3,
+       "type": 7,
+       "name": "football",
+       "x": 639.8
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014808/c105rd193l44m050_o204_fast_search",
+   "seeds": [
+    242200080
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.1
+   }
+  },
+  {
+   "id": "exam242:155a10aa584b",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_155a10aa584b",
+    "level": 49,
+    "seeds": [
+     400000051
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_400000051/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+     "decisions": [
+      1035
+     ],
+     "index": 0,
+     "future_seed_start": 242200081,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72024081,
+       "row": 1,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 464.3
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_400000051/c87demoroof49doomm300s81018038a39598b6f6507s1337_o24_review1_o48_fast_search",
+   "seeds": [
+    242200081
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.5
+   }
+  },
+  {
+   "id": "exam242:b54873411362",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_b54873411362",
+    "level": 44,
+    "seeds": [
+     200014646
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     35,
+     31,
+     39,
+     44,
+     17
+    ],
+    "zombie_count_multiplier": 0.75,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014646/c76rd193l44m075_o54_fast_search",
+     "decisions": [
+      688
+     ],
+     "index": 0,
+     "future_seed_start": 242200082,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68550660,
+       "row": 2,
+       "type": 21,
+       "name": "ladder",
+       "x": 617.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014646/c76rd193l44m075_o54_fast_search",
+   "seeds": [
+    242200082
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.2
+   }
+  },
+  {
+   "id": "exam242:9f387cc8be24",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_9f387cc8be24",
+    "level": 42,
+    "seeds": [
+     200014275
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     17,
+     23,
+     37,
+     2,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014275/c98rd193l42m050_o168_review1_o192_fast_search",
+     "decisions": [
+      728
+     ],
+     "index": 0,
+     "future_seed_start": 242200083,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68878339,
+       "row": 0,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 530.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014275/c98rd193l42m050_o168_review1_o192_fast_search",
+   "seeds": [
+    242200083
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.1
+   }
+  },
+  {
+   "id": "llmimport:18652993e16a18254b3d1519ddccca9409eaf3a16d20090ee42dbb83500cacfc:r693",
+   "skill": "fog|pogo",
+   "task": {
+    "task_id": "exam242_46927b94af8f",
+    "level": 39,
+    "seeds": [
+     81026007
+    ],
+    "deck": [
+     9,
+     8,
+     10,
+     16,
+     23,
+     17,
+     19,
+     2,
+     26,
+     5
+    ],
+    "zombie_count_multiplier": 2.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/18652993e16a18254b3d1519ddccca9409eaf3a16d20090ee42dbb83500cacfc",
+     "decisions": [
+      694
+     ],
+     "index": 0,
+     "future_seed_start": 242200084,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 78118936,
+       "row": 1,
+       "type": 18,
+       "name": "pogo",
+       "x": 763.0
+      }
+     ]
+    }
+   },
+   "source_root": "llmimport",
+   "archive": "18652993e16a18254b3d1519ddccca9409eaf3a16d20090ee42dbb83500cacfc",
+   "seeds": [
+    242200084
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     88000000,
+     88000001,
+     88000002
+    ],
+    "first_game_seconds": 1.2
+   }
+  },
+  {
+   "id": "exam242:19ad9125ca37",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_19ad9125ca37",
+    "level": 44,
+    "seeds": [
+     200002155
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+     "decisions": [
+      728
+     ],
+     "index": 0,
+     "future_seed_start": 242200085,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68812804,
+       "row": 3,
+       "type": 7,
+       "name": "football",
+       "x": 537.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+   "seeds": [
+    242200085
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.3
+   }
+  },
+  {
+   "id": "exam242:322bb9cbb7cf",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_322bb9cbb7cf",
+    "level": 49,
+    "seeds": [
+     303000051
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_303000051/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+     "decisions": [
+      1096
+     ],
+     "index": 0,
+     "future_seed_start": 242200086,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 71172109,
+       "row": 3,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 414.9
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_303000051/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+   "seeds": [
+    242200086
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.9
+   }
+  },
+  {
+   "id": "exam242:d1804ff58e0c",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_d1804ff58e0c",
+    "level": 45,
+    "seeds": [
+     200014978
+    ],
+    "deck": [
+     1,
+     2,
+     3,
+     4,
+     6,
+     20,
+     29,
+     30,
+     32,
+     33
+    ],
+    "zombie_count_multiplier": 0.5,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014978/c88rd193l45m050_o114_fast_search",
+     "decisions": [
+      505
+     ],
+     "index": 0,
+     "future_seed_start": 242200087,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 71106566,
+       "row": 3,
+       "type": 21,
+       "name": "ladder",
+       "x": 665.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014978/c88rd193l45m050_o114_fast_search",
+   "seeds": [
+    242200087
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.2
+   }
+  },
+  {
+   "id": "exam242:752b67d9d692",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_752b67d9d692",
+    "level": 42,
+    "seeds": [
+     200014275
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     17,
+     23,
+     37,
+     2,
+     41
+    ],
+    "zombie_count_multiplier": 1.0,
+    "fog_observation": "human_v2",
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014275/c98rd193l42m050_o168_review1_o192_fast_search",
+     "decisions": [
+      915
+     ],
+     "index": 0,
+     "future_seed_start": 242200088,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70451212,
+       "row": 2,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 370.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014275/c98rd193l42m050_o168_review1_o192_fast_search",
+   "seeds": [
+    242200088
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.1
+   }
+  },
+  {
+   "id": "exam242:7742124ac266",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_7742124ac266",
+    "level": 44,
+    "seeds": [
+     200014633
+    ],
+    "deck": [
+     1,
+     33,
+     34,
+     32,
+     5,
+     3,
+     2,
+     17,
+     20,
+     30
+    ],
+    "zombie_count_multiplier": 0.75,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014633/c71rd193l44m075_o24_fast_search",
+     "decisions": [
+      862
+     ],
+     "index": 0,
+     "future_seed_start": 242200089,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70778886,
+       "row": 4,
+       "type": 7,
+       "name": "football",
+       "x": 637.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014633/c71rd193l44m075_o24_fast_search",
+   "seeds": [
+    242200089
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.6
+   }
+  },
+  {
+   "id": "exam242:34a8b338b11f",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_34a8b338b11f",
+    "level": 49,
+    "seeds": [
+     864551889
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     4,
+     2,
+     17,
+     35,
+     14,
+     15
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/user_l49_de02ad43d9b1/seed_864551889/user_l49_de02ad43d9b1",
+     "decisions": [
+      1331
+     ],
+     "index": 0,
+     "future_seed_start": 242200090,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 76546054,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 599.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/user_l49_de02ad43d9b1/seed_864551889/user_l49_de02ad43d9b1",
+   "seeds": [
+    242200090
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.9
+   }
+  },
+  {
+   "id": "exam242:b7a086585a7a",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_b7a086585a7a",
+    "level": 43,
+    "seeds": [
+     20261043
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     3,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 2.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_roof_43_melon_m200/seed_20261043/demo_roof_43_melon_m200",
+     "decisions": [
+      632
+     ],
+     "index": 0,
+     "future_seed_start": 242200091,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68354057,
+       "row": 1,
+       "type": 21,
+       "name": "ladder",
+       "x": 776.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_roof_43_melon_m200/seed_20261043/demo_roof_43_melon_m200",
+   "seeds": [
+    242200091
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.6
+   }
+  },
+  {
+   "id": "exam242:bcf932c01c2b",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_bcf932c01c2b",
+    "level": 42,
+    "seeds": [
+     20261042
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     37,
+     23,
+     2,
+     17,
+     3,
+     4
+    ],
+    "zombie_count_multiplier": 2.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_roof_42_melon_m200/seed_20261042/demo_roof_42_melon_m200",
+     "decisions": [
+      630
+     ],
+     "index": 0,
+     "future_seed_start": 242200092,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 69861388,
+       "row": 1,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 795.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/demo_roof_42_melon_m200/seed_20261042/demo_roof_42_melon_m200",
+   "seeds": [
+    242200092
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.1
+   }
+  },
+  {
+   "id": "exam242:a9eed7e9dc05",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_a9eed7e9dc05",
+    "level": 44,
+    "seeds": [
+     200002187
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002187/c105demoroof44melonm200s738_o366_review1_o390_fast_search",
+     "decisions": [
+      984
+     ],
+     "index": 0,
+     "future_seed_start": 242200093,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72024065,
+       "row": 4,
+       "type": 7,
+       "name": "football",
+       "x": 482.6
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002187/c105demoroof44melonm200s738_o366_review1_o390_fast_search",
+   "seeds": [
+    242200093
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.0
+   }
+  },
+  {
+   "id": "exam242:7944fd159d09",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_7944fd159d09",
+    "level": 49,
+    "seeds": [
+     303000050
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_303000050/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+     "decisions": [
+      794
+     ],
+     "index": 0,
+     "future_seed_start": 242200094,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 70189067,
+       "row": 3,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 711.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_303000050/c83demoroof49doomm200s81003027a635c541c7855s1056_o24_review1_o48_fast_search",
+   "seeds": [
+    242200094
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333333333333333
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.1
+   }
+  },
+  {
+   "id": "exam242:2b93bc5d6325",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_2b93bc5d6325",
+    "level": 47,
+    "seeds": [
+     116649463
+    ],
+    "deck": [
+     1,
+     33,
+     41,
+     [
+      48,
+      1
+     ],
+     39,
+     44,
+     37,
+     4,
+     17,
+     30
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/user_l47_5240981d44c6/seed_116649463/user_l47_5240981d44c6",
+     "decisions": [
+      696
+     ],
+     "index": 0,
+     "future_seed_start": 242200095,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 68943880,
+       "row": 3,
+       "type": 21,
+       "name": "ladder",
+       "x": 660.1
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "human/user_l47_5240981d44c6/seed_116649463/user_l47_5240981d44c6",
+   "seeds": [
+    242200095
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 2.8
+   }
+  },
+  {
+   "id": "exam242:10f768e17b1a",
+   "skill": "roof|polevaulter",
+   "task": {
+    "task_id": "exam242_10f768e17b1a",
+    "level": 42,
+    "seeds": [
+     200011059
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     37,
+     23,
+     2,
+     17,
+     3,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200011059/c96gpt193l423862c26a5179s518_o24_review1_o48_fast_search",
+     "decisions": [
+      1021
+     ],
+     "index": 0,
+     "future_seed_start": 242200096,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 71499778,
+       "row": 3,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 683.2
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200011059/c96gpt193l423862c26a5179s518_o24_review1_o48_fast_search",
+   "seeds": [
+    242200096
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 4.0
+   }
+  },
+  {
+   "id": "exam242:712d4e0a369e",
+   "skill": "roof|football",
+   "task": {
+    "task_id": "exam242_712d4e0a369e",
+    "level": 44,
+    "seeds": [
+     200002155
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     31,
+     35,
+     23,
+     2,
+     17,
+     4
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+     "decisions": [
+      1037
+     ],
+     "index": 0,
+     "future_seed_start": 242200097,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72810497,
+       "row": 1,
+       "type": 7,
+       "name": "football",
+       "x": 484.7
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200002155/c91demoroof44melonm200s738_o336_review1_o360_fast_search",
+   "seeds": [
+    242200097
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.1
+   }
+  },
+  {
+   "id": "exam242:b7e3280e0421",
+   "skill": "roof|gargantuar",
+   "task": {
+    "task_id": "exam242_b7e3280e0421",
+    "level": 48,
+    "seeds": [
+     311000048
+    ],
+    "deck": [
+     1,
+     33,
+     39,
+     44,
+     15,
+     3,
+     2,
+     17,
+     4,
+     35
+    ],
+    "zombie_count_multiplier": 1.0,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_311000048/c82demoroof48doomm400s81017035a942ebac22713s1090_o24_review1_o48_fast_search",
+     "decisions": [
+      1026
+     ],
+     "index": 0,
+     "future_seed_start": 242200098,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 74121216,
+       "row": 2,
+       "type": 23,
+       "name": "gargantuar",
+       "x": 468.5
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_311000048/c82demoroof48doomm400s81017035a942ebac22713s1090_o24_review1_o48_fast_search",
+   "seeds": [
+    242200098
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 0,
+     "rate": 0.0
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 3.1
+   }
+  },
+  {
+   "id": "exam242:8c6570595c20",
+   "skill": "roof|ladder",
+   "task": {
+    "task_id": "exam242_8c6570595c20",
+    "level": 45,
+    "seeds": [
+     200014903
+    ],
+    "deck": [
+     3,
+     4,
+     5,
+     6,
+     17,
+     29,
+     32,
+     33,
+     34,
+     37
+    ],
+    "zombie_count_multiplier": 0.75,
+    "drill_start": {
+     "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200014903/c76rd193l45m075_o54_fast_search",
+     "decisions": [
+      643
+     ],
+     "index": 0,
+     "future_seed_start": 242200099,
+     "future_seed_count": 1,
+     "horizon": 1200,
+     "criterion": {
+      "threats_neutralized": true,
+      "mower_unchanged": true,
+      "house_unchanged": true,
+      "secondary": "plants_lost"
+     },
+     "targets": [
+      {
+       "id": 72417290,
+       "row": 2,
+       "type": 21,
+       "name": "ladder",
+       "x": 505.0
+      }
+     ]
+    }
+   },
+   "source_root": "framesv2",
+   "archive": "seed_200014903/c76rd193l45m075_o54_fast_search",
+   "seeds": [
+    242200099
+   ],
+   "calibration": {
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6666666666666666
+    },
+    "incumbent": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "seeds": [
+     242100000,
+     242100001,
+     242100002
+    ],
+    "first_game_seconds": 4.0
+   }
+  }
+ ],
+ "excluded": {
+  "no_observed_discrimination": 451,
+  "incomplete_calibration": 6
+ },
+ "counts": {
+  "items": 100,
+  "skills": {
+   "fog|balloon": 6,
+   "fog|jack": 4,
+   "fog|pogo": 10,
+   "night|football": 3,
+   "night|polevaulter": 3,
+   "pool|dolphin": 2,
+   "pool|football": 3,
+   "pool|polevaulter": 3,
+   "pool|snorkel": 6,
+   "pool|zamboni": 1,
+   "roof|football": 13,
+   "roof|gargantuar": 13,
+   "roof|jack": 4,
+   "roof|ladder": 13,
+   "roof|pogo": 4,
+   "roof|polevaulter": 12
+  }
+ },
+ "seed_block": [
+  242200000,
+  242200100
+ ],
+ "provenance": {
+  "training_manifest": "configs/task235_drills.json",
+  "training_manifest_sha256": "7927b33eb658926a6457fb0ed8c167048e754f80cfe5c4f2ffdd438d2fcd2101",
+  "calibration_student": "r112",
+  "calibration_student_sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57",
+  "teacher_prior_sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd",
+  "engine_revision": "482729be824bd280078c2e2c3a8ef6056200cafe",
+  "calibration_rule": "老师成功率在20–80%，或老师与r112成功率不同；每边三个相同的校准未来种子",
+  "isolation": "排除训练清单引用的整个来源存档；考试未来种子与训练和校准分开",
+  "source": "task235 660题校准记录中的雾关留出题，以及按同法从台式机生产存档挖出的救场题"
+ }
+}
