@@ -1468,3 +1468,13 @@
   - 机制：drill_start = demo_start + 1200 tick 视界 + 机械判据（目标僵尸离场 / 死、无割草机、无破屋）；课程按局部成功率统计；每轮约 36 局（4.7%），耗时 <1%；drill 行训练权重 ×3（DemoRowWeights，加载时施加，共用包）。
   - 回滚：改名 `configs/task235_drills.json` 后重启，或 `--drill-share 0`。
 - 11-04 21:45 task236 第一次跑因 dsh `TRANSPORT: Connection error` 只说了一句就结束，已用 `dshjob --continue` 续跑。
+- 11-04 22:35 **Mac 系统崩溃重启**（约 22:22 CST）：tmux 服务器、采集、看门狗、dsh 任务全部丢失；/tmp 下的 torch venv 被清空。旧的 codex / qoder 空闲会话随之消失。
+  - 已重拉采集（新进程组 4502，写入 collector.pgid，自动跟到 d35a1fdf / 学生 r112）与电源看门狗（pid 4503）。
+  - task236 用 `dshjob --continue` 从断点续跑：工作区已有诊断、冒烟中间产物和未提交的 C++ 改动。
+  - /loop 正常：重启后 ScheduleWakeup 仍按时排程。
+- 11-04 22:40 派 **task238**（dshjob，pkg238 工作树）：GPT Pro 必刷题 / 出题包 pvz-llmplay-238。
+  - 合并 llmpkg220（包代码）与 scenario（摆题接口）。
+  - 新增 drill 项：task235 雾关 660 道，老师全错的 418 道优先，外加屋顶 / 夜间 / 泳池新挖题；scenario 项：GPT 在真实底局上注入单一威胁出题、自己解，模拟器判。
+  - 派发顺序 drill > scenario > resume；carry 接上 226b 最新进度。
+  - 导入器支持两类存档，只导 GPT 决策并带 drill 标记（×3）。
+  - 包放 `~/Downloads/pvz-llmplay-238/`。
