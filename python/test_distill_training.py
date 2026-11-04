@@ -78,7 +78,7 @@ def test_distill_from_initial_student_starts_at_zero(tmp_path, monkeypatch):
 def test_distill_recipe_fields_stay_out_of_the_pack_key(tmp_path):
     b = load_recipe(ROOT / 'recipes/dw4i2_v2timer_clean_b.json')
     a = load_recipe(ROOT / 'recipes/dw4i2_v2timer_clean_a.json')
-    assert b['distill_weight'] == 1.0 and b['distill_from'] is None
+    assert b['distill_weight'] == 5.0 and b['distill_from'] is None
     assert a['distill_weight'] == 0 and a['distill_from'] is None
     assert training_row_options(a) == training_row_options(b)
     assert resolve_paths(dict(b, distill_from='artifacts/student/x/model.pt'))['distill_from'] == \
@@ -120,13 +120,13 @@ def test_distill_queue_freezes_incumbent_as_teacher(tmp_path):
     pipeline.futures = []
     pipeline.enqueue()
     job = pipeline.state['training_jobs'][0]
-    assert job['distill_weight'] == 1.0
+    assert job['distill_weight'] == 5.0
     a_path, b_path = (Path(candidate['recipe']) for candidate in job['candidate_recipes'])
     a, b = load_recipe(a_path), load_recipe(b_path)
     assert b['init'] == str(incumbent) and b['distill_from'] == str(incumbent)
-    assert b['epochs'] == 4 and b['distill_weight'] == 1.0
+    assert b['epochs'] == 4 and b['distill_weight'] == 5.0
     assert a['distill_weight'] == 0 and a['distill_from'] is None
     assert training_row_options(a) == training_row_options(b)
     # The train-time lineage refresh keeps the same frozen teacher.
     assert pipeline._b_recipe(job)['distill_from'] == str(incumbent)
-    assert queue.experiment_name(job) == 'task205-clean-b+b-from-incumbent+distill1'
+    assert queue.experiment_name(job) == 'task205-clean-b+b-from-incumbent+distill5'

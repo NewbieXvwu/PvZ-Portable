@@ -264,7 +264,7 @@ def mine_archive(item, max_per_archive, horizon, lookback, min_gap, include_huma
         if not targets or trigger_x <= 80.0:
             continue
         drills.append(dict(
-            id=f"{item['source_root']}:{archive.name}:r{root_frame}",
+            id=f"{item['source_root']}:{item['archive']}:r{root_frame}",
             source_root=item["source_root"], archive=item["archive"],
             decision=root_frame + 1, root_frame=root_frame, root_tick=int(root["tick"]),
             level=level, terrain=terrain, lanes=lanes,
@@ -298,7 +298,7 @@ def mine_archive(item, max_per_archive, horizon, lookback, min_gap, include_huma
                 continue
             sequence["targets"] = near
             drills.append(dict(
-                id=f"{item['source_root']}:{archive.name}:human_r{sequence['root_frame']}",
+                id=f"{item['source_root']}:{item['archive']}:human_r{sequence['root_frame']}",
                 kind="human_rescue", source_root=item["source_root"], archive=item["archive"],
                 decision=sequence["decision"], root_frame=sequence["root_frame"],
                 root_tick=int(root["tick"]), level=level, terrain=terrain, lanes=lanes,
