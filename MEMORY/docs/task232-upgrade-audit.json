@@ -1,0 +1,218 @@
+{
+  "task": "task232",
+  "title": "模仿者引擎上线后，升级植物（41/44/40 等）的老师行为或标签审计",
+  "worktree": "/Users/newbiexvwu/PvZAgent/.claude/worktrees/upgaudit",
+  "base_commit": "539869eb",
+  "production": {
+    "desktop_repo": "/home/newbiexvwu/PvZ-search/.claude/worktrees/cq",
+    "desktop_commit": "c84ad7d1",
+    "engines": {
+      "csearch1": {
+        "path": "/home/newbiexvwu/PvZ-search/artifacts/production/csearch1/pvz-portable",
+        "build": 4093,
+        "commit_date": "2026-11-01",
+        "size": 73413816
+      },
+      "imitater1": {
+        "path": "/home/newbiexvwu/PvZ-search/artifacts/production/imitater1/pvz-portable",
+        "build": 4107,
+        "commit_date": "2026-11-03",
+        "size": 73421064
+      }
+    }
+  },
+  "engine_switch": "2026-11-03 15:38:00 +0800 (csearch1 -> imitater1)",
+  "method": {
+    "frames": "~/pvz-logs/curriculum_state.pipeline/frames (59,037 frame archives, 31 GB; symlinks followed)",
+    "labels": "frames[i].label if present else frames[i].action; action_rejected rows excluded; packet slot -> kind from the previous frame's packets",
+    "segments": "read-only scan of 4,913 immutable pack segments under frames/packs/segments",
+    "replay": "EventWaitEnv with explicit --executable; same deck/seed/action prefix on both engines; full observation, legal_actions, compact _frame (including obs-v3 v3 token payload) compared recursively",
+    "constraints": "nice -n 19 ionice -c3, ulimit -v 4000000, at most one replay process at a time, no pytest"
+  },
+  "step1_teacher_upgrade_behaviour": {
+    "levels": {
+      "L9": {
+        "pre_1538": {
+          "archives": 880,
+          "decisions": 1048458,
+          "plant_labels": 119764,
+          "upgrade_plants_40_47": 0,
+          "upgrade_share_of_plants_pct": 0.0,
+          "by_kind": {"40": 0, "41": 0, "42": 0, "43": 0, "44": 0, "45": 0, "46": 0, "47": 0},
+          "decision_frames_with_any_upgrade_card_available": 71659
+        },
+        "post_1538": {
+          "archives": 309,
+          "decisions": 344099,
+          "plant_labels": 30140,
+          "upgrade_plants_40_47": 0,
+          "upgrade_share_of_plants_pct": 0.0,
+          "by_kind": {"40": 0, "41": 0, "42": 0, "43": 0, "44": 0, "45": 0, "46": 0, "47": 0},
+          "decision_frames_with_any_upgrade_card_available": 29697
+        }
+      },
+      "L8": {
+        "pre_1538": {
+          "archives": 912,
+          "decisions": 757939,
+          "plant_labels": 81402,
+          "upgrade_plants_40_47": 116,
+          "upgrade_share_of_plants_pct": 0.143,
+          "by_kind": {"40": 0, "41": 2, "42": 0, "43": 0, "44": 0, "45": 0, "46": 114, "47": 0},
+          "decision_frames_with_any_upgrade_card_available": 85445
+        },
+        "post_1538": {
+          "archives": 300,
+          "decisions": 244907,
+          "plant_labels": 20346,
+          "upgrade_plants_40_47": 39,
+          "upgrade_share_of_plants_pct": 0.192,
+          "by_kind": {"40": 0, "41": 25, "42": 0, "43": 0, "44": 14, "45": 0, "46": 0, "47": 0},
+          "decision_frames_with_any_upgrade_card_available": 71890
+        }
+      },
+      "L4": {
+        "pre_1538": {
+          "archives": 519,
+          "decisions": 431731,
+          "plant_labels": 41137,
+          "upgrade_plants_40_47": 64,
+          "upgrade_share_of_plants_pct": 0.156,
+          "by_kind": {"40": 0, "41": 0, "42": 0, "43": 0, "44": 0, "45": 0, "46": 64, "47": 0},
+          "decision_frames_with_any_upgrade_card_available": 95298
+        },
+        "post_1538": {
+          "archives": 138,
+          "decisions": 113016,
+          "plant_labels": 8395,
+          "upgrade_plants_40_47": 0,
+          "upgrade_share_of_plants_pct": 0.0,
+          "by_kind": {"40": 0, "41": 0, "42": 0, "43": 0, "44": 0, "45": 0, "46": 0, "47": 0},
+          "decision_frames_with_any_upgrade_card_available": 0,
+          "note": "the post-switch L4 decks in this corpus contain no upgrade card at all"
+        }
+      }
+    },
+    "opportunity_vs_planted": {
+      "definition": "decision frames where the card is present and active and sun >= packet cost; ready_base additionally requires its base plant on the board (41->1, 44->39, 40->7)",
+      "L9_41_pre": {"present": 28326, "active": 26446, "affordable": 55, "ready_with_base": 55, "planted": 0},
+      "L9_41_post": {"present": 5325, "active": 4934, "affordable": 0, "ready_with_base": 0, "planted": 0},
+      "L8_41_pre": {"present": 15087, "active": 13535, "affordable": 30, "ready_with_base": 26, "planted": 2},
+      "L8_41_post": {"present": 17384, "active": 13852, "affordable": 324, "ready_with_base": 167, "planted": 25},
+      "L8_44_pre": {"present": 7314, "active": 5799, "affordable": 2101, "ready_with_base": 0, "planted": 0},
+      "L8_44_post": {"present": 54506, "active": 48720, "affordable": 17900, "ready_with_base": 5412, "planted": 14},
+      "L4_41_pre": {"present": 39038, "active": 35030, "affordable": 0, "ready_with_base": 0, "planted": 0}
+    },
+    "conclusion": "Teacher upgrade behaviour did not fall after the engine switch. L9 never planted any upgrade card in either segment (0/119,764 pre, 0/30,140 post); L8's upgrade share rose slightly (0.143% -> 0.192%), with 41/44 appearing only in post-switch decks; kind 40 was never planted anywhere in production. L9's 41 was affordable with a sunflower base only 55 times pre and 0 times post, so zero plantings is expected rather than a regression."
+  },
+  "step2_encoding_parity": {
+    "forced_41": {
+      "task": "level 1, deck [1,41,0,2,3,4], seed 12345, base sunflower -> twin sunflower",
+      "steps_to_legal": 61,
+      "before": {"observation_diffs": 0, "legal_action_diffs": 0, "compact_frame_diffs": 0, "obs_v3_token_diffs": 0},
+      "after_plant": {"observation_diffs": 0, "compact_frame_diffs": 0, "obs_v3_token_diffs": 0},
+      "packet_before": {"type": 41, "imitater_type": -1, "active": true, "refresh_time": 3500, "cost": 150},
+      "packet_after": {"type": 41, "imitater_type": -1, "active": false, "refresh_time": 5000, "cost": 150},
+      "action_history_equal": true
+    },
+    "forced_44": {
+      "task": "level 1, deck [39,44,0,2,3,4], seed 12345, base melon-pult -> winter melon",
+      "steps_to_legal": 191,
+      "before": {"observation_diffs": 0, "legal_action_diffs": 0, "compact_frame_diffs": 0, "obs_v3_token_diffs": 0},
+      "after_plant": {"observation_diffs": 0, "compact_frame_diffs": 0, "obs_v3_token_diffs": 0},
+      "packet_before": {"type": 44, "imitater_type": -1, "active": true, "refresh_time": 3500, "cost": 200},
+      "packet_after": {"type": 44, "imitater_type": -1, "active": false, "refresh_time": 5000, "cost": 200},
+      "action_history_equal": true
+    },
+    "archive_replay": {
+      "archive": "seed_200018196/c66rd193l8m100_o0_fast_search (pre-switch, decision 351 plants slot 9 / kind 41)",
+      "before_and_after": {"observation_diffs": 0, "legal_action_diffs": 0, "compact_frame_diffs": 0},
+      "note": "the harness re-synced by waiting and diverged from the archive tick at decision 69; both engines were compared at the same state and were identical, so this is a secondary check only. The forced tests above are the authoritative parity check."
+    },
+    "conclusion": "For non-Imitater upgrade cards 41 and 44, the two production engines produce bit-identical observations, legal action masks, compact frames and obs-v3 token payloads, and both accept the same plant action. The task225 change resolves the Imitater packet identity only; it does not change upgrade card identity or slot encoding."
+  },
+  "step3_pack_labels": {
+    "packed_upgrade_rows": {
+      "41": {"rows": 2, "labels": ["c66rd193l8m100_o0_fast_search"], "slot": 9, "kind": 41, "source_rows": [391, 351]},
+      "44": {"rows": 7, "labels": ["c108rd193l8m075_o204_fast_search", "c108rd193l8m075_o204_review1_o228_fast_search"], "slot": 3, "kind": 44, "source_rows": [665, 448, 749, 438, 408, 526, 599]},
+      "46": {"rows": 113, "labels": ["c69rd193l4m100_o0_fast_search", "c96rd193l8m050_o144_fast_search", "c99rd193l4m100_o126_fast_search"]},
+      "40": {"rows": 0}
+    },
+    "checks": {
+      "packet_label_ge_10": 0,
+      "seven_field_packet_frames": 0,
+      "conclusion": "Every upgrade plant row stores the card slot in `packet` and the upgrade plant type in `packet_col0`; 41 is 9/41, not 9/1, and 44 is 3/44, not 3/39. No upgrade label needs re-export or deletion."
+    }
+  },
+  "root_cause": {
+    "verdict": "Not the upgrade plants and not task225 encoding. The L9 collapse is a training-trajectory instability caused by the corpus-growth sampler: the round adds new positive rows, the global `train_idx` length/order changes, and `torch.randperm(len(train_idx))` re-batches every old row in a different order. L9 and upgrade labels are not even active rows.",
+    "timeline_evidence": {
+      "r101_pack_window_1538_1736": {"L4_archives": 0, "L8_archives": 0, "L9_archives": 0},
+      "r102_pack_window_1736_1945": {"L4_archives": 0, "L8_archives": 30, "L9_archives": 0},
+      "r103_pack_window_1945_2114": {"L4_archives": 0, "L8_archives": 0, "L9_archives": 30},
+      "implication": "No L9 data entered at r102, yet L9 B fell 12/12 -> 4/12. The first L9 imitater1 archives arrived only at r103, when L9 B fell to 0/12."
+    },
+    "positive_rows_added": {
+      "r102": {
+        "labels": 4,
+        "archives": 48,
+        "pack_rows": 16615,
+        "pack_log_delta": 16611,
+        "detail": "c102opening119l32magnet*_b0/b1 and c102opening119l37magnet*_b0/b1, checkpoint gptbc_s1 -> source_kind teacher_gptbc (weight 1.0)",
+        "other_new_labels": "49 labels (L6/L7/L8 0.5x day, night, gpt193, opening scoreboard) have checkpoint round_000101/000095 -> source_kind teacher_line, weight 0.0 in the r101-r103 recipes"
+      },
+      "r103": {
+        "labels": 11,
+        "pack_rows": 39593,
+        "pack_log_delta": 39573,
+        "detail": "c103demoboss50*, c103demofog31/32*, c103demoroof47*, c103opening119l32/l37magnet*, c103rd193l39m050* -> teacher_gptbc (weight 1.0)"
+      },
+      "r102_zero_weight": {"labels": 49, "weight": 0.0},
+      "r103_zero_weight": {"labels": 42, "pack_rows": 202738, "weight": 0.0},
+      "zero_weight_note": "r102/r103 added 49+42 teacher_line labels; at r103 they account for 202,738 pack rows. They have weight 0 and cannot contribute gradients, but they still shift the pack row order."
+    },
+    "sampler_mechanism": {
+      "file": "scripts/train_rollout_policy.py",
+      "lines": "1067 train_idx = nonzero(~is_val & (weight > 0)); 1113 perm = train_idx[torch.randperm(len(train_idx))]",
+      "why": "The permutation is over global positions, not stable row ids. Adding 16,615 positive rows at r102 changes both len(train_idx) and the row values under each position, so every epoch uses a different global batching of the old rows. A 0.09% corpus addition therefore produces a different model, including a different L9 policy."
+    },
+    "l9_policy_drift": {
+      "deck": [0, 1, 6, 7, 8, 15, 30, 35, 41],
+      "r101_B": {"wins": 12, "pairs": 12, "planted_type_0_peashooter": 108, "type_1_sunflower": 398, "type_6_chomper": 169, "type_8_puffshroom": 437, "type_30_pumpkin": 146, "type_35_coffee_bean": 130, "type_41_twin_sunflower": 5},
+      "r102_B": {"wins": 4, "pairs": 12, "planted_type_0_peashooter": 231, "type_1_sunflower": 488, "type_6_chomper": 68, "type_8_puffshroom": 587, "type_30_pumpkin": 96, "type_35_coffee_bean": 171, "type_41_twin_sunflower": 1},
+      "r103_B": {"wins": 0, "pairs": 12, "planted_type_0_peashooter": 245, "type_1_sunflower": 525, "type_6_chomper": 28, "type_8_puffshroom": 646, "type_30_pumpkin": 76, "type_35_coffee_bean": 223, "type_41_twin_sunflower": 0},
+      "r108_A": {"wins": 0, "pairs": 23, "planted_type_0_peashooter": 47, "type_1_sunflower": 34, "type_6_chomper": 0, "type_8_puffshroom": 383, "type_30_pumpkin": 1, "type_35_coffee_bean": 373, "type_41_twin_sunflower": 0},
+      "r108_B": {"wins": 0, "pairs": 23, "planted_type_0_peashooter": 280, "type_1_sunflower": 633, "type_6_chomper": 26, "type_8_puffshroom": 625, "type_30_pumpkin": 68, "type_35_coffee_bean": 377, "type_41_twin_sunflower": 0},
+      "r108_incumbent": {"wins": 13, "pairs": 23, "planted_type_0_peashooter": 581, "type_1_sunflower": 443, "type_6_chomper": 101, "type_8_puffshroom": 201, "type_30_pumpkin": 60, "type_35_coffee_bean": 195, "type_41_twin_sunflower": 4},
+      "reading": "The collapse is an economy/strategy drift towards puff-shroom+coffee-bean and away from chomper/pumpkin/peashooter, not a failure to plant 41. 41 is used 0-5 times per 12-23 games in every arm."
+    }
+  },
+  "fix": {
+    "primary": "Make the training sampler invariant to corpus growth: shuffle with a stable per-row key (archive seed + source_row + training seed), or sort train_idx by a stable row id and permute per-archive, instead of torch.randperm(len(train_idx)). Then retrain from r101/gptbc_s1 with the r102/r103 corpus; no data deletion is required.",
+    "data_side_ab": "If a data-only workaround is wanted before the sampler fix: (1) minimal single-variable test: zero-weight or exclude the 4 r102 opening labels (48 archives, 16,615 rows) and retrain the r102 candidate from gptbc_s1; (2) if L9 still does not recover, also exclude the 11 r103 positive labels (39,593 rows), total 56,208 rows. Keep the zero-weight teacher_line labels; they cannot train and only need stable ordering.",
+    "upgrade_labels": "0 rows. Do not re-export or delete 41/44/40 labels: slots and kinds are correct and both engines encode them bit-identically.",
+    "gate_deck": "Do not change the L9 gate deck or remove 41. 41 is never planted by the teacher in L9 and is not the cause; changing the deck would create a new task family under AGENTS.md 8.",
+    "acceptance": "A/B the fixed sampler against r101 on L9/L8/L4 with the same data and seed; L9 should return toward 12/12 without changing the card set."
+  },
+  "affected_data": {
+    "upgrade_labels_reimport_or_delete": 0,
+    "upgrade_rows_in_packs": {"41": 2, "44": 7, "46": 113, "40": 0},
+    "positive_added_rows_to_check": {
+      "r102_minimal": {"labels": 4, "rows": 16615},
+      "r103_full": {"labels": 11, "rows": 39593},
+      "total": {"labels": 15, "rows": 56208}
+    },
+    "zero_weight_teacher_line_rows": {
+      "r102": "49 new labels; all weight 0 in the r101-r103 source_weight",
+      "r103": "42 new labels, 202,738 pack rows; all weight 0",
+      "l9_first_batch": {"labels": 2, "archives": 30, "rows": 5285, "weight": 0.0}
+    }
+  },
+  "caveats": [
+    "The forced 41/44 parity test uses level 1 to isolate encoding; level does not change the packet/plant encoding, and the pre-switch L8 archive replay at the 41 decision also produced zero diffs.",
+    "The archive replay harness re-synced ticks and diverged from the archive at decision 69; both engines were compared at the same state and matched, so it is supporting evidence, not the primary check.",
+    "This audit did not retrain. The sampler mechanism is proven by code and by the r102/r103 pack deltas matching the positive-row additions; whether the 16,615 r102 rows also contribute content-level gradient drift needs the proposed A/B.",
+    "Pack-row counts are reconstructed with the exact wait_keep=0.1 mask and match pack.log within 4 rows (16,615 vs 16,611; 39,593 vs 39,573).",
+    "Teacher upgrade statistics use the teacher label (`label` if present else `action`); DAgger rows are counted by the teacher label, as training does."
+  ]
+}
