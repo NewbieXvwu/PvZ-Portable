@@ -469,6 +469,13 @@ static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
 		input >> col >> row;
 		return !input.fail() && app->EnvironmentShovel(col, row);
 	}
+	if (command == "REPLACE")
+	{
+		// task236: dig the top plant and plant the card on the same cell in the same tick.
+		int packet = -1, col = -1, row = -1;
+		input >> packet >> col >> row;
+		return !input.fail() && app->EnvironmentReplace(packet, col, row);
+	}
 	if (command == "WAIT")
 	{
 		int ticks = -1;
@@ -503,6 +510,7 @@ static bool DecodeBranchAction(const std::string& spec, std::string& command, st
 	const char kind = spec[0];
 	if (kind == 'P') command = "PLANT";
 	else if (kind == 'S') command = "SHOVEL";
+	else if (kind == 'R') command = "REPLACE";
 	else if (kind == 'W') command = "WAIT";
 	else return false;
 	arguments = spec.substr(2);
@@ -779,7 +787,7 @@ struct SearchCandidate
 static bool SameCandidate(const SearchCandidate& left, const SearchCandidate& right)
 {
 	if (left.kind != right.kind) return false;
-	if (left.kind != 'P') return true;
+	if (left.kind != 'P' && left.kind != 'R') return true;
 	return left.packet == right.packet && left.col == right.col && left.row == right.row &&
 		left.upgradePacket == right.upgradePacket;
 }
@@ -794,6 +802,9 @@ static std::string CandidateJson(const SearchCandidate& candidate)
 {
 	if (candidate.kind == 'S')
 		return "{\"type\":\"wait\",\"ticks\":" + std::to_string(candidate.ticks) + ",\"until\":\"timeout\"}";
+	if (candidate.kind == 'R')
+		return "{\"type\":\"replace\",\"packet\":" + std::to_string(candidate.packet) + ",\"row\":"
+			+ std::to_string(candidate.row) + ",\"col\":" + std::to_string(candidate.col) + "}";
 	if (candidate.kind != 'P') return "{\"type\":\"wait\",\"ticks\":60,\"until\":\"timeout\"}";
 	std::string json = "{\"type\":\"plant\",\"packet\":" + std::to_string(candidate.packet) + ",\"row\":"
 		+ std::to_string(candidate.row) + ",\"col\":" + std::to_string(candidate.col);
@@ -819,14 +830,14 @@ static bool DecodeSearchCandidate(const std::string& spec, SearchCandidate& cand
 	// "W" is the no-op wait, otherwise the branch-action form "P:packet:col:row[:upgrade]".
 	if (spec == "W") { candidate = SearchCandidate(); return true; }
 	std::string command, arguments;
-	if (!DecodeBranchAction(spec, command, arguments) || command != "PLANT") return false;
+	if (!DecodeBranchAction(spec, command, arguments) || (command != "PLANT" && command != "REPLACE")) return false;
 	std::istringstream input(arguments);
 	int packet = -1, col = -1, row = -1, upgrade = 0;
 	if (!(input >> packet >> col >> row) || packet < 0 || col < 0 || row < 0) return false;
 	if (!(input >> upgrade)) upgrade = 0;
 	if (upgrade < 0) return false;
 	candidate = SearchCandidate();
-	candidate.kind = 'P';
+	candidate.kind = command == "REPLACE" ? 'R' : 'P';
 	candidate.packet = packet;
 	candidate.col = col;
 	candidate.row = row;
@@ -858,6 +869,11 @@ struct SearchParameters
 	int saveMaxWait = 1800;
 	int saveInterval = 600;
 	double saveShare = 0.5;
+	// task236 shovel prototype: replacement candidates screened against the search's own no-shovel
+	// action with paired common-random-number short rollouts.  0 candidates keeps the old set.
+	int shovelCandidates = 0;
+	int shovelSamples = 0;
+	int shovelHorizon = 0;
 };
 
 // State a decision passes to the next one (--combo-candidates and the --save-* probes): the pending
@@ -908,6 +924,10 @@ struct SearchResult
 	int verifyRollouts = 0;
 	int comboCandidateAdded = 0, comboUpgrades = 0, comboHeld = 0;
 	int saveProbes = 0, saveOverrides = 0, saveWaitTicks = 0;
+	// task236 shovel screen
+	int shovelCandidates = 0, shovelScreened = 0, shovelPasses = 0, shovelOverrides = 0;
+	double shovelBaseline = 0, shovelBestDelta = 0, shovelLower = 0;
+	std::string shovelDetail;
 };
 
 // Where one decision's time goes (task217b): the search is deterministic, so the sections are the
@@ -964,7 +984,9 @@ public:
 		request.scoreValue = true;
 		request.first = candidate.kind == 'P'
 			? "P:" + std::to_string(candidate.packet) + ":" + std::to_string(candidate.col) + ":" + std::to_string(candidate.row)
-			: "W:60";
+			: candidate.kind == 'R'
+				? "R:" + std::to_string(candidate.packet) + ":" + std::to_string(candidate.col) + ":" + std::to_string(candidate.row)
+				: "W:60";
 		request.historyStart = historyStart;
 		request.history = history;
 		request.studentHistory = &studentHistory;
@@ -1233,6 +1255,10 @@ public:
 		else
 			FullChoice(app, rollout, leafValue, staticValue, snapshots, rootId, decisionSeed, income, parameters,
 				history, historyStart, studentHistory, untilTick, policy, tick);
+		// task236: a replacement is only considered after the ordinary decision exists, and only
+		// when the paired short-horizon confidence bound says it beats that ordinary decision.
+		ShovelChoice(app, rollout, leafValue, staticValue, snapshots, rootId, decisionSeed, income, parameters,
+			history, historyStart, studentHistory, tick);
 		// The response is emitted by the caller, so the profile is closed out here.
 		profile.totalSeconds = Elapsed(started);
 		(void)rolloutsBefore;
@@ -1482,6 +1508,172 @@ private:
 		else result.chosen = policy;
 	}
 
+	// One-sided 95% Student-t quantile.  The adoption rule is a confidence bound, not a tuned
+	// margin: with n paired futures the threshold scales with the observed paired variance.
+	static double StudentT95(int df)
+	{
+		static const double table[] = { 0.0,
+			6.3138, 2.9200, 2.3534, 2.1318, 2.0150, 1.9432, 1.8946, 1.8595, 1.8331, 1.8125,
+			1.7959, 1.7823, 1.7709, 1.7613, 1.7531, 1.7459, 1.7396, 1.7341, 1.7291, 1.7247,
+			1.7207, 1.7171, 1.7139, 1.7109, 1.7081, 1.7056, 1.7033, 1.7011, 1.6991, 1.6973,
+			1.6955, 1.6939, 1.6924, 1.6909, 1.6896, 1.6883, 1.6871, 1.6860, 1.6849, 1.6839 };
+		if (df >= 1 && df <= 40) return table[df];
+		return 1.6449 + 2.4 / std::max(1, df);
+	}
+
+	struct ShovelPlan
+	{
+		SearchCandidate candidate;
+		double staticScore = 0;
+	};
+
+	// task236: replacement candidates.  A candidate is one affordable card on one occupied cell;
+	// the static net ranks cells per card exactly as it ranks empty cells, and the paired screen
+	// decides whether the replacement actually beats the no-shovel continuation.
+	void BuildShovelPlans(LawnApp* app, EnvironmentValueNet& staticValue,
+		std::unordered_map<int, EnvironmentSnapshot>& snapshots, int rootId, double income,
+		const SearchParameters& parameters, std::vector<ShovelPlan>& out)
+	{
+		std::vector<std::pair<int, int>> cards;   // packet, cost
+		for (int slot = 0; slot < app->mBoard->mSeedBank->mNumPackets; ++slot)
+		{
+			const SeedPacket& packet = app->mBoard->mSeedBank->mSeedPackets[slot];
+			const SeedType type = packet.mPacketType == SeedType::SEED_IMITATER &&
+				packet.mImitaterType != SeedType::SEED_NONE ? packet.mImitaterType : packet.mPacketType;
+			if (type == SeedType::SEED_NONE || !packet.mActive) continue;
+			const int cost = PacketCost(app, slot);
+			if (cost > app->mBoard->mSunMoney) continue;
+			cards.emplace_back(slot, cost);
+		}
+		std::vector<std::pair<int, int>> cells;   // col, row
+		for (const Plant* plant : app->mBoard->mPlants)
+		{
+			if (plant->mDead || plant->mSquished) continue;
+			const SeedType type = plant->mSeedType == SeedType::SEED_IMITATER &&
+				plant->mImitaterType != SeedType::SEED_NONE ? plant->mImitaterType : plant->mSeedType;
+			if (type == SeedType::SEED_FLOWERPOT || type == SeedType::SEED_LILYPAD) continue;
+			if (app->mBoard->GetTopPlantAt(plant->mPlantCol, plant->mRow, PlantPriority::TOPPLANT_ANY) != plant)
+				continue;
+			cells.emplace_back(plant->mPlantCol, plant->mRow);
+		}
+		if (cards.empty() || cells.empty()) return;
+		std::vector<std::pair<double, ShovelPlan>> scored;
+		for (const auto& card : cards)
+		{
+			std::vector<std::pair<double, ShovelPlan>> perCard;
+			for (const auto& cell : cells)
+			{
+				if (!RestoreEnvironmentSnapshot(app, snapshots.at(rootId))) continue;
+				ShovelPlan plan;
+				plan.candidate.kind = 'R';
+				plan.candidate.packet = card.first;
+				plan.candidate.col = cell.first;
+				plan.candidate.row = cell.second;
+				if (!app->EnvironmentReplace(plan.candidate.packet, plan.candidate.col, plan.candidate.row))
+					continue;
+				plan.staticScore = staticValue.Predict(app, income);
+				++profile.staticEvaluations;
+				perCard.emplace_back(plan.staticScore, plan);
+			}
+			std::stable_sort(perCard.begin(), perCard.end(),
+				[](const auto& left, const auto& right) { return left.first > right.first; });
+			const int keep = std::max(1, parameters.perCard);
+			for (int index = 0; index < keep && index < static_cast<int>(perCard.size()); ++index)
+				scored.push_back(perCard[static_cast<size_t>(index)]);
+		}
+		RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
+		std::stable_sort(scored.begin(), scored.end(),
+			[](const auto& left, const auto& right) { return left.first > right.first; });
+		const int keep = std::min(parameters.shovelCandidates, static_cast<int>(scored.size()));
+		out.clear();
+		for (int index = 0; index < keep; ++index) out.push_back(scored[static_cast<size_t>(index)].second);
+	}
+
+	// The screen: for every candidate run the same n reseeded futures for the no-shovel baseline and
+	// for the replacement, take the paired differences, and require the one-sided 95% lower bound
+	// to be positive.  The baseline is the decision's own chosen action, so this answers exactly
+	// "replace this plant vs. do what the teacher would do without a shovel".
+	void ShovelChoice(LawnApp* app, EnvironmentRollout& rollout, EnvironmentValueNet& leafValue,
+		EnvironmentValueNet& staticValue, std::unordered_map<int, EnvironmentSnapshot>& snapshots,
+		int rootId, int64_t decisionSeed, double income, const SearchParameters& parameters,
+		const std::vector<std::pair<int, uint32_t>>& history, int historyStart,
+		const EnvironmentRollout::History& studentHistory, int tick)
+	{
+		if (parameters.shovelCandidates <= 0 || result.chosen.kind == 'S') return;
+		std::vector<ShovelPlan> plans;
+		BuildShovelPlans(app, staticValue, snapshots, rootId, income, parameters, plans);
+		result.shovelCandidates = static_cast<int>(plans.size());
+		if (plans.empty()) return;
+		const int samples = std::max(2, std::min(parameters.shovelSamples, 32));
+		const int untilTick = tick + parameters.shovelHorizon;
+		const SearchCandidate baseline = result.chosen;
+		std::vector<double> baselineValues(static_cast<size_t>(samples));
+		for (int future = 0; future < samples; ++future)
+		{
+			const uint32_t seed = static_cast<uint32_t>((decisionSeed * 1000 + future) & 0xffffffff);
+			RolloutOutcome outcome = Continue(app, rollout, leafValue, snapshots, rootId, income, parameters,
+				seed, untilTick, history, historyStart, studentHistory, baseline);
+			baselineValues[static_cast<size_t>(future)] = outcome.value;
+			++profile.rollouts;
+			profile.simulationSeconds += outcome.simulationSeconds;
+			profile.networkSeconds += outcome.networkSeconds;
+			profile.leafForwards++;
+			profile.studentForwards += std::max(0, outcome.decisions - 1);
+		}
+		result.shovelBaseline = Mean(baselineValues);
+		const double critical = StudentT95(samples - 1);
+		ShovelPlan bestPlan;
+		double bestMean = -std::numeric_limits<double>::infinity(), bestLower = 0;
+		bool adopted = false;
+		std::ostringstream detail;
+		detail << '[';
+		bool first = true;
+		for (const auto& plan : plans)
+		{
+			std::vector<double> diffs(static_cast<size_t>(samples));
+			for (int future = 0; future < samples; ++future)
+			{
+				const uint32_t seed = static_cast<uint32_t>((decisionSeed * 1000 + future) & 0xffffffff);
+				RolloutOutcome outcome = Continue(app, rollout, leafValue, snapshots, rootId, income, parameters,
+					seed, untilTick, history, historyStart, studentHistory, plan.candidate);
+				diffs[static_cast<size_t>(future)] = outcome.value - baselineValues[static_cast<size_t>(future)];
+				++profile.rollouts;
+				profile.simulationSeconds += outcome.simulationSeconds;
+				profile.networkSeconds += outcome.networkSeconds;
+				profile.leafForwards++;
+				profile.studentForwards += std::max(0, outcome.decisions - 1);
+			}
+			const double mean = Mean(diffs);
+			double variance = 0;
+			for (double value : diffs) variance += (value - mean) * (value - mean);
+			variance = samples > 1 ? variance / (samples - 1) : 0.0;
+			const double standardError = std::sqrt(variance / samples);
+			const double lower = mean - critical * standardError;
+			++result.shovelScreened;
+			const bool pass = lower > 0;
+			if (pass)
+			{
+				++result.shovelPasses;
+				if (mean > bestMean) { bestMean = mean; bestLower = lower; bestPlan = plan; adopted = true; }
+			}
+			if (!first) detail << ',';
+			first = false;
+			detail << "{\"packet\":" << plan.candidate.packet << ",\"row\":" << plan.candidate.row
+				<< ",\"col\":" << plan.candidate.col << ",\"mean\":" << mean << ",\"lower\":" << lower
+				<< ",\"pass\":" << (pass ? "true" : "false") << '}';
+		}
+		detail << ']';
+		result.shovelDetail = detail.str();
+		if (adopted)
+		{
+			result.chosen = bestPlan.candidate;
+			result.overridden = true;
+			result.shovelOverrides = 1;
+			result.shovelBestDelta = bestMean;
+			result.shovelLower = bestLower;
+		}
+	}
+
 	// --save-candidates k: what would a card be worth if the teacher saved up for it?  The engine
 	// only lists actions the player can pay for, so a card above the sun the policy ever holds is
 	// invisible to the candidate set (task120: a 125 card had a legal cell in 0.5% of decisions, a 300
@@ -1687,7 +1879,7 @@ static void RunEnvironment(LawnApp* app)
 	double actionSeconds = 0, observationSeconds = 0, controlSeconds = 0;
 	std::cout << "PVZENV {\"ready\":true,\"protocol_version\":" << kEnvironmentProtocolVersion
 		<< ",\"wait_events_version\":" << EnvironmentWaitEvents::Version
-		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1,\"search_version\":1}" << std::endl;
+		<< ",\"rollout_version\":6,\"sparse_tracks_version\":1,\"search_version\":2}" << std::endl;
 	while (std::getline(std::cin, line))
 	{
 		const auto commandStart = std::chrono::steady_clock::now();
@@ -2113,6 +2305,7 @@ static void RunEnvironment(LawnApp* app)
 			int comboCandidates = 0, comboMaxWait = 0, comboBuffer = 25, comboInterval = 600;
 			int saveCandidates = 0, saveChunk = 0, saveMaxWait = 0;
 			int saveInterval = 0, candidateMode = 0, studentTopk = 3;
+			int shovelCandidates = 0, shovelSamples = 0, shovelHorizon = 0;
 			double income = 0, marginRelative = 0, saveShare = 0;
 			int64_t decisionSeed = 0;
 			std::string policyToken, demoTarget, tracePath;
@@ -2124,6 +2317,7 @@ static void RunEnvironment(LawnApp* app)
 				>> minGap >> lastSearchTick >> comboCandidates >> comboMaxWait >> comboBuffer >> comboInterval
 				>> saveCandidates
 				>> saveShare >> saveInterval >> saveChunk >> saveMaxWait >> candidateMode >> studentTopk
+				>> shovelCandidates >> shovelSamples >> shovelHorizon
 				>> policyToken >> demoTarget >> historyStart >> historyCount) &&
 				rollout.Loaded() && valueNets[0].Loaded() && valueNets[1].Loaded() && app->mBoard &&
 				snapshots.contains(rootId) && decisionSeed >= 0 && std::isfinite(income) && mask >= 0 &&
@@ -2137,7 +2331,10 @@ static void RunEnvironment(LawnApp* app)
 				comboInterval >= 0 &&
 				saveCandidates >= 0 && saveCandidates <= 64 && saveShare >= 0 && std::isfinite(saveShare) &&
 				saveInterval >= 0 && saveChunk > 0 && saveMaxWait > 0 &&
-				(candidateMode == 0 || candidateMode == 1) && studentTopk >= 1 && studentTopk <= 64;
+				(candidateMode == 0 || candidateMode == 1) && studentTopk >= 1 && studentTopk <= 64 &&
+				shovelCandidates >= 0 && shovelCandidates <= 64 && shovelSamples >= 0 && shovelSamples <= 64 &&
+				shovelHorizon >= 0 && shovelHorizon <= 100000 &&
+				(shovelCandidates == 0 || (shovelSamples >= 2 && shovelHorizon >= 60));
 			if (ok) ok = RestoreEnvironmentSnapshot(app, snapshots.at(rootId));
 			if (ok) before = ReadCounters(app);
 			for (int index = 0; ok && index < historyCount; ++index)
@@ -2182,6 +2379,9 @@ static void RunEnvironment(LawnApp* app)
 			parameters.candidateMode = candidateMode;
 			parameters.studentTopk = studentTopk;
 			parameters.saveShare = saveShare;
+			parameters.shovelCandidates = shovelCandidates;
+			parameters.shovelSamples = shovelSamples;
+			parameters.shovelHorizon = shovelHorizon;
 			EnvironmentSearch search(searchState, nextSnapshotId);
 			const int decisionTick = app->mBoard ? static_cast<int>(app->mBoard->mMainCounter) : 0;
 			if (ok)
@@ -2215,7 +2415,12 @@ static void RunEnvironment(LawnApp* app)
 				if (entry != searchState.lastSaveProbe.begin()) std::cout << ',';
 				std::cout << '"' << entry->first << "\":" << entry->second;
 			}
-			std::cout << "}";
+			std::cout << "},\"shovel\":{\"candidates\":" << result.shovelCandidates
+				<< ",\"screened\":" << result.shovelScreened << ",\"passes\":" << result.shovelPasses
+				<< ",\"overridden\":" << (result.shovelOverrides ? "true" : "false")
+				<< ",\"baseline\":" << result.shovelBaseline << ",\"best_delta\":" << result.shovelBestDelta
+				<< ",\"lower\":" << result.shovelLower << ",\"detail\":"
+				<< (result.shovelDetail.empty() ? "null" : result.shovelDetail.c_str()) << '}';
 			if (std::getenv("PVZ_SEARCH_PROFILE"))
 			{
 				const SearchProfile& p = search.profile;
@@ -2239,8 +2444,9 @@ static void RunEnvironment(LawnApp* app)
 					<< searchState.pendingRow << ",\"expires\":" << searchState.pendingExpires << '}';
 			else std::cout << "null";
 			if (result.overridden)
-				std::cout << ",\"override_kind\":\"" << (result.chosen.kind == 'P' ? "plant" : "wait") << "_over_"
-					<< (policy.kind == 'P' ? "plant" : "wait") << '"';
+				std::cout << ",\"override_kind\":\""
+					<< (result.chosen.kind == 'P' ? "plant" : result.chosen.kind == 'R' ? "replace" : "wait")
+					<< "_over_" << (policy.kind == 'P' ? "plant" : "wait") << '"';
 			std::cout << "},\"targets\":[" << std::setprecision(17);
 			for (size_t index = 0; index < result.candidates.size(); ++index)
 			{
@@ -2318,7 +2524,7 @@ static void RunEnvironment(LawnApp* app)
 				before = ReadCounters(app);
 			}
 		}
-		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "COLLECT")
+		else if (command == "PLANT" || command == "SHOVEL" || command == "REPLACE" || command == "WAIT" || command == "COLLECT")
 		{
 			ok = ExecuteEnvironmentAction(app, command, input);
 		}
@@ -2609,14 +2815,14 @@ static void RunEnvironment(LawnApp* app)
 			continue;
 		}
 
-		if (demo && ok && (command == "PLANT" || command == "SHOVEL"))
+		if (demo && ok && (command == "PLANT" || command == "SHOVEL" || command == "REPLACE"))
 		{
 			human.packet = -1;
 			human.shovel = false;
 		}
 		const auto observationStart = std::chrono::steady_clock::now();
 		const double executionSeconds = std::chrono::duration<double>(observationStart - commandStart).count();
-		if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")
+		if (command == "PLANT" || command == "SHOVEL" || command == "REPLACE" || command == "WAIT" || command == "WAIT_EVENT_V1" || command == "WAIT_UNTIL_LEGAL")
 			actionSeconds += executionSeconds;
 		else controlSeconds += executionSeconds;
 		const std::string observation = app->EnvironmentObservation(privileged);

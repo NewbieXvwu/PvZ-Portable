@@ -207,7 +207,7 @@ def _fast_action(obs: dict, fast_state: dict, native_env=None) -> dict:
                      context=_W.get("context"), history=fast_state.get("history"))
     # --student-candidates needs exactly the frame / history the student just read, so keep them.
     _W["student_frame"], _W["student_previous_frame"] = frame, previous
-    _W["student_previous_plant"] = (fast_state.get("action") or {}).get("type") == "plant"
+    _W["student_previous_plant"] = (fast_state.get("action") or {}).get("type") in ("plant", "replace")
     fast_state["frame"] = frame
     fast_state["action"] = action
     return action
@@ -308,11 +308,15 @@ def _search(env, obs: dict, policy_action: dict, args, decision_seed: int, stats
             save_interval=args.save_interval, save_chunk=args.save_chunk,
             save_max_wait=args.save_max_wait,
             candidate_mode=1 if _W.get("candidate_mode") == "student-topk" else 0,
-            student_topk=int(_W.get("student_topk", 3)))
+            student_topk=int(_W.get("student_topk", 3)),
+            shovel_candidates=int(getattr(args, "shovel_candidates", 0)),
+            shovel_samples=int(getattr(args, "shovel_samples", 0)),
+            shovel_horizon=int(getattr(args, "shovel_horizon", 0)))
     finally:
         env.restore_fast(root)
         env.release_snapshot(root)
     payload = response.get("stats") or {}
+    stats["last_shovel"] = (response.get("stats") or {}).get("shovel")
     if response["searched"]:
         stats["last_search_tick"] = obs["tick"]
         stats["searched"] += 1
@@ -557,14 +561,16 @@ def _play(job: dict, observer=None) -> dict:
                           f"hascombo={'combo' in action}", file=sys.stderr, flush=True)
                 if fog_diagnostics is not None:
                     fog_diagnostics.compare(obs, policy_choice, action, stats['searched'] > searched_before)
-                if action["type"] == "shovel":
+                if action["type"] in ("shovel", "replace"):
                     stats["shovels"] += 1
                     cell = next((p for p in obs.get("plants") or []
                                  if p["row"] == action["row"] and p["col"] == action["col"]), None)
                     stats.setdefault("shovel_events", []).append({
                         "tick": obs["tick"], "row": action["row"], "col": action["col"],
+                        "kind": action["type"],
                         "plant": cell.get("type") if cell else None,
                         "plant_health": cell.get("health") if cell else None,
+                        "planted": action.get("packet") if action["type"] == "replace" else None,
                         "student": policy_choice["type"], "decision": decisions})
             label = action
             if dagger is not None and dagger.random() >= args.dagger_beta:
@@ -588,6 +594,11 @@ def _play(job: dict, observer=None) -> dict:
             rejected = not info.get("ok")
             if os.environ.get('PVZ_DBG') and (action.get("combo") or rejected):
                 print(f"DBGEXEC tick={obs['tick']} action={action} rejected={rejected}", file=sys.stderr, flush=True)
+            if not rejected and action["type"] == "replace":
+                planted[action["packet"]] = planted.get(action["packet"], 0) + 1
+                replaced_type = plant_type_before_action(obs, action["packet"])
+                if replaced_type is not None and replaced_type >= 0:
+                    planted_by_type[replaced_type] = planted_by_type.get(replaced_type, 0) + 1
             if not rejected and action["type"] == "plant":
                 planted[action["packet"]] = planted.get(action["packet"], 0) + 1
                 assert planted_type is not None and planted_type >= 0
@@ -713,6 +724,7 @@ def _play(job: dict, observer=None) -> dict:
             "student_candidate_best": stats["student_candidate_best"],
             "student_candidate_override": stats["student_candidate_override"],
             "demo_candidate_added": stats.get('demo_candidate_added', 0),
+            "shovels": stats.get("shovels", 0),
             "shovel_events": stats.get("shovel_events", []),
             "replant_events": stats.get("replant_events", []),
             "override_kinds": dict(stats["override_kinds"])}
@@ -804,6 +816,13 @@ def parser():
                    help="successive halving over the candidates (1, 2, 4.. futures); --no-halving = every "
                         "candidate gets all --samples")
     p.add_argument("--horizon", type=int, default=2500)
+    p.add_argument("--shovel-candidates", type=int, default=0,
+                   help="task236 replacement candidates (dig + plant the same cell) screened against the "
+                        "no-shovel decision with paired short rollouts; 0 = off")
+    p.add_argument("--shovel-samples", type=int, default=0,
+                   help="paired futures per arm for the shovel screen (>=2 when --shovel-candidates > 0)")
+    p.add_argument("--shovel-horizon", type=int, default=0,
+                   help="short rollout horizon of the shovel screen, in ticks")
     p.add_argument("--leaf-probe", help="diagnostic: write one JSON line per search decision with "
                    "candidate-leaf mean/std/top1-top2 to <path>.<pid>.jsonl; off by default")
     p.add_argument("--leaf-probe-limit", type=int, default=0,
@@ -859,6 +878,13 @@ def main() -> None:
         p.error("--worker-memory-bytes and --memory-headroom-bytes must be nonnegative")
     if args.grow_interval <= 0:
         p.error("--grow-interval must be positive")
+    if args.shovel_candidates < 0 or args.shovel_samples < 0 or args.shovel_horizon < 0:
+        p.error("--shovel-* must be nonnegative")
+    if args.shovel_candidates and (args.shovel_samples < 2 or args.shovel_horizon < 60):
+        p.error("--shovel-candidates needs --shovel-samples >= 2 and --shovel-horizon >= 60")
+    if args.shovel_candidates and args.frames:
+        p.error("--shovel-candidates cannot write replay frames yet: 'replace' is not in the archive "
+                "action grammar; collect after that grammar (or the student head) lands")
 
     sys.path.insert(0, str(ROOT / "scripts"))
     sys.path.insert(0, str(ROOT / "python"))

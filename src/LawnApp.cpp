@@ -1555,6 +1555,22 @@ bool LawnApp::EnvironmentPlant(int packetIndex, int col, int row)
 	return true;
 }
 
+bool LawnApp::EnvironmentReplace(int packetIndex, int col, int row)
+{
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || col < 0 || col >= MAX_GRID_SIZE_X ||
+		row < 0 || row >= MAX_GRID_SIZE_Y || packetIndex < 0 || packetIndex >= mBoard->mSeedBank->mNumPackets)
+		return false;
+	Plant* top = mBoard->GetTopPlantAt(col, row, PlantPriority::TOPPLANT_ANY);
+	if (!top) return false;
+	// The pot / lilypad is the ground the plant stands on, not a plant to replace.  Digging it
+	// would leave nothing to plant into, and the task's shovel plans are replacements only.
+	const SeedType type = top->mSeedType == SeedType::SEED_IMITATER && top->mImitaterType != SeedType::SEED_NONE
+		? top->mImitaterType : top->mSeedType;
+	if (type == SeedType::SEED_FLOWERPOT || type == SeedType::SEED_LILYPAD) return false;
+	if (!EnvironmentShovel(col, row)) return false;
+	return EnvironmentPlant(packetIndex, col, row);
+}
+
 bool LawnApp::EnvironmentShovel(int col, int row)
 {
 	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || col < 0 || col >= MAX_GRID_SIZE_X || row < 0 || row >= MAX_GRID_SIZE_Y)

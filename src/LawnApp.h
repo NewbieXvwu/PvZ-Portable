@@ -269,6 +269,9 @@ public:
 	bool							EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task);
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
+	// task236: the replacement primitive -- dig the top plant and plant `packet` on the same
+	// cell in the same tick.  Search and the wire protocol both go through this one function.
+	bool							EnvironmentReplace(int packet, int col, int row);
 	void							EnvironmentWait(int ticks);
 	void							EnvironmentPresent();
 	bool							EnvironmentScreenshot(const std::string& thePath);

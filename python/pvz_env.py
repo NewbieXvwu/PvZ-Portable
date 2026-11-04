@@ -94,6 +94,8 @@ def branch_action_token(action: dict[str, Any]) -> str:
         return f"P:{int(action['packet'])}:{int(action['col'])}:{int(action['row'])}"
     if kind == "shovel":
         return f"S:{int(action['col'])}:{int(action['row'])}"
+    if kind == "replace":
+        return f"R:{int(action['packet'])}:{int(action['col'])}:{int(action['row'])}"
     if kind == "wait":
         return f"W:{int(action['ticks'])}"
     raise ValueError(f"unsupported branch action: {action}")
@@ -519,6 +521,9 @@ class PvZEnv:
         elif kind == "shovel":
             col, row = self._coordinates(action, ("col", "row"))
             command = f"SHOVEL {col} {row}"
+        elif kind == "replace":
+            packet, col, row = self._coordinates(action, ("packet", "col", "row"))
+            command = f"REPLACE {packet} {col} {row}"
         elif kind == "wait":
             ticks = action.get("ticks")
             if type(ticks) is not int or not 0 <= ticks <= 1_000_000:
@@ -528,7 +533,7 @@ class PvZEnv:
             x, y = self._coordinates(action, ("x", "y"))
             command = f"COLLECT {x} {y}"
         else:
-            raise ValueError("action type must be 'plant', 'shovel', 'collect' or 'wait'")
+            raise ValueError("action type must be 'plant', 'shovel', 'replace', 'collect' or 'wait'")
 
         response = self._command(command)
         observation = response.get("observation")
@@ -875,7 +880,8 @@ class PvZEnv:
                combo_candidates: int = 0, combo_max_wait: int = 0, combo_buffer: int = 25,
                combo_interval: int = 600, save_candidates: int = 0,
                save_share: float = 0.5, save_interval: int = 0, save_chunk: int = 300,
-               save_max_wait: int = 1800, candidate_mode: int = 0, student_topk: int = 3) -> dict:
+               save_max_wait: int = 1800, candidate_mode: int = 0, student_topk: int = 3,
+               shovel_candidates: int = 0, shovel_samples: int = 0, shovel_horizon: int = 0) -> dict:
         """Run one whole teacher decision (SEARCH) on the snapshot and return its action.
 
         The engine owns the candidate set, the resampled futures, the halving rounds, the
@@ -891,6 +897,10 @@ class PvZEnv:
             raise ValueError("snapshot_id must refer to a live snapshot")
         if not math.isfinite(income) or not math.isfinite(margin_relative):
             raise ValueError("income and margin_relative must be finite")
+        if not (type(shovel_candidates) is int and 0 <= shovel_candidates <= 64) or \
+                not (type(shovel_samples) is int and 0 <= shovel_samples <= 64) or \
+                not (type(shovel_horizon) is int and 0 <= shovel_horizon <= 100000):
+            raise ValueError("shovel parameters out of range")
         if not (1 << 31) > horizon > 0:
             raise ValueError("horizon must be a positive signed 32-bit integer")
         token = search_action_token(policy_action)
@@ -908,7 +918,9 @@ class PvZEnv:
             f"{int(save_candidates)} "
             f"{save_share:.17g} {int(save_interval)} {int(save_chunk)} {int(save_max_wait)} "
             f"{int(candidate_mode)} {int(student_topk)} "
-            f"{token} {demo} {history_start} {len(history)} {samples_text}".rstrip()
+            + (f"{int(shovel_candidates)} {int(shovel_samples)} {int(shovel_horizon)} "
+               if self._search_version >= 2 else "")
+            + f"{token} {demo} {history_start} {len(history)} {samples_text}".rstrip()
             + self._student_options(student_history, None))
         if not response.get("ok"):
             raise RuntimeError(f"simulator rejected SEARCH (binary older than this wrapper?): {response}")
@@ -942,14 +954,16 @@ class PvZEnv:
             condition = action.pop("until", None)
             if condition is not None and (action.get("type") != "wait" or condition != "timeout"):
                 raise ValueError("rollout first action only supports fixed or timeout waits")
-            if action.get("type") not in ("plant", "shovel", "wait"):
-                raise ValueError("rollout first action must be plant, shovel or wait")
+            if action.get("type") not in ("plant", "shovel", "replace", "wait"):
+                raise ValueError("rollout first action must be plant, shovel, replace or wait")
             if action["type"] == "wait" and (type(action.get("ticks")) is not int or not 0 <= action["ticks"] <= 1000000):
                 raise ValueError("wait ticks must be from 0 to 1000000")
             if action["type"] == "plant":
                 self._coordinates(action, ("packet", "row", "col"))
             if action["type"] == "shovel":
                 self._coordinates(action, ("col", "row"))
+            if action["type"] == "replace":
+                self._coordinates(action, ("packet", "col", "row"))
             event_wait = condition is not None
             token = branch_action_token(action)
         if seed is not None and (type(seed) is not int or not 0 <= seed < 2 ** 32):

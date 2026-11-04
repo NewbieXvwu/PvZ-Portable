@@ -146,6 +146,15 @@ def _plant_type(obs, row, col):
     return None
 
 
+def _top_plant_type(obs, row, col):
+    """The plant the shovel would remove (Board::GetTopPlantAt TOPPLANT_ANY order)."""
+    cells = [p for p in obs.get("plants") or []
+             if p["row"] == row and p["col"] == col and not p.get("squished")]
+    def rank(p):
+        return 3 if int(p["type"]) in (16, 33) else 2 if int(p["type"]) == 30 else 1
+    return int(min(cells, key=rank)["type"]) if cells else None
+
+
 def _packet_type(obs, packet):
     for p in obs.get("packets") or []:
         if isinstance(p, dict):
@@ -267,8 +276,11 @@ def _run_one(job):
     search_play._W["context"] = observation_context(obs)
     search_play._W["demo_actions"] = []
     args = make_args(arm, terrain, cfg["out"], cfg["student"], cfg["value"])
+    args.shovel_candidates = int(cfg.get("shovel_candidates") or 0)
+    args.shovel_samples = int(cfg.get("shovel_samples") or 0)
+    args.shovel_horizon = int(cfg.get("shovel_horizon") or 0)
     stats = {"searched": 0, "overrides": 0, "shovels": 0, "override_kinds": Counter(),
-             "last_search_tick": -10 ** 9, "last_combo_tick": -10 ** 9,
+             "shovel_screens": [], "last_search_tick": -10 ** 9, "last_combo_tick": -10 ** 9,
              "last_targets": None, "pending_upgrade": None}
     root_tick = int(obs["tick"])
     root_ready = _ready_mowers(obs)
@@ -289,22 +301,37 @@ def _run_one(job):
                 action = search_play._search(
                     env, obs, policy, args,
                     (seed * 10000 + len(actions)) & 0x7fffffff, stats)
+                screen = stats.pop("last_shovel", None)
+                if screen and screen.get("screened"):
+                    stats["shovel_screens"].append(dict(tick=int(obs["tick"]), **screen))
             fast_state["action"] = action
             before = dict(row=action.get("row"), col=action.get("col"),
-                          plant_before=_plant_type(obs, action.get("row"), action.get("col"))
-                          if action.get("type") in ("plant", "shovel") else None)
+                          plant_before=_top_plant_type(obs, action.get("row"), action.get("col"))
+                          if action.get("type") in ("plant", "shovel", "replace") else None)
             obs, _reward, _done, _truncated, info = env.step(action)
             rejected = not info.get("ok")
             if rejected:
                 obs, _reward, _done, _truncated, info = env.step(dict(type="wait", ticks=60))
             plants_lost += int((info.get("events") or {}).get("plants_eaten", 0))
             pipe = _packet_type(obs, int(action["packet"])) if action.get("type") == "plant" else None
-            actions.append(dict(tick=int(obs["tick"]),
-                                type=action.get("type"), packet=action.get("packet"),
-                                row=action.get("row"), col=action.get("col"),
-                                rejected=rejected, plant_type=pipe,
-                                plant_before=before["plant_before"]))
-            if action.get("type") == "shovel":
+            tick_now = int(obs["tick"])
+            if action.get("type") == "replace" and not rejected:
+                # One wire action, two game steps: report the pair the run actually did so the
+                # sequence detector and the shovel statistics see the same event.
+                pipe = _packet_type(obs, int(action["packet"]))
+                actions.append(dict(tick=tick_now, type="shovel", packet=None,
+                                    row=action.get("row"), col=action.get("col"), rejected=False,
+                                    plant_type=None, plant_before=before["plant_before"]))
+                actions.append(dict(tick=tick_now, type="plant", packet=action.get("packet"),
+                                    row=action.get("row"), col=action.get("col"), rejected=False,
+                                    plant_type=pipe, plant_before=before["plant_before"]))
+            else:
+                actions.append(dict(tick=tick_now,
+                                    type=action.get("type"), packet=action.get("packet"),
+                                    row=action.get("row"), col=action.get("col"),
+                                    rejected=rejected, plant_type=pipe,
+                                    plant_before=before["plant_before"]))
+            if action.get("type") in ("shovel", "replace"):
                 stats["shovels"] += 1
             ready = _ready_mowers(obs)
             if ready < root_ready:
@@ -324,6 +351,7 @@ def _run_one(job):
             plants_lost=plants_lost, root_tick=root_tick, final_tick=final_tick,
             tick_delta=final_tick - root_tick, decisions=len(actions),
             searched=stats["searched"], overrides=stats["overrides"], shovels=stats["shovels"],
+            shovel_screens=stats["shovel_screens"],
             override_kinds=dict(stats["override_kinds"]),
             sequences=_sequence(actions),
             actions=actions,
@@ -451,6 +479,12 @@ def main():
     parser.add_argument("--per-terrain", type=int, help="take the first N drills of each terrain")
     parser.add_argument("--limit", type=int)
     parser.add_argument("--drill-id", action="append", default=[])
+    parser.add_argument("--shovel-candidates", type=int, default=0,
+                        help="task236 replacement candidates (0 = off)")
+    parser.add_argument("--shovel-samples", type=int, default=0,
+                        help="paired futures per arm for the shovel screen")
+    parser.add_argument("--shovel-horizon", type=int, default=0,
+                        help="short rollout horizon of the shovel screen")
     parser.add_argument("--out", type=Path, required=True)
     args = parser.parse_args()
     if not 1 <= args.workers <= 6:
@@ -478,7 +512,8 @@ def main():
     config = dict(roots=roots, student=str(args.student), teacher_prior=str(args.teacher_prior),
                   value_bins=value_bins, sim_skip=61, resource_dir=str(args.resource_dir),
                   executable=str(args.executable), out=str(args.out), tmp=keep.name,
-                  value=str(args.value))
+                  value=str(args.value), shovel_candidates=args.shovel_candidates,
+                  shovel_samples=args.shovel_samples, shovel_horizon=args.shovel_horizon)
     print(f"{len(drills)} drills, {len(jobs)} games on {args.workers} workers", flush=True)
     rows = []
     started = time.time()
