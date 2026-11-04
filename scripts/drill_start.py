@@ -115,10 +115,11 @@ def on_board(env, obs) -> dict[int, dict]:
         if isinstance(z, dict):
             if not z.get("on_board"):
                 continue
-            out[int(z["id"])] = dict(row=int(z["row"]), type=int(z["type"]),
+            out[int(z["id"])] = dict(id=int(z["id"]), row=int(z["row"]), type=int(z["type"]),
                                      x=float(z["x"]), hp=int(z.get("health") or 0))
         elif z[5]:
-            out[int(z[9])] = dict(row=int(z[0]), type=int(z[1]), x=float(z[2]), hp=int(z[4]))
+            out[int(z[9])] = dict(id=int(z[9]), row=int(z[0]), type=int(z[1]),
+                                  x=float(z[2]), hp=int(z[4]))
     return out
 
 

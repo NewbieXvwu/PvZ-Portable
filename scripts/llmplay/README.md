@@ -1,21 +1,19 @@
-# llmplay-decks：GPT Pro 扩卡组包
+# llmplay-decks：GPT Pro 必刷题 / 自出题包
 
 解压全部 `llmplay_pkg.7z.*` 分卷；原样的 `llmplay_res.zip` 放在生成的
-`llmplay_pkg/` 旁。进入接口目录，阅读 `PROMPT.md`，先选择分片，再开始对局。
+`llmplay_pkg/` 旁。进入接口目录，阅读 `PROMPT.md`，直接开始对局。
 
 ```python
 import os
-os.environ["LLMPLAY_SHARDS"] = "3"
-os.environ["LLMPLAY_SHARD"] = "0"  # 三个会话分别填0、1、2
 os.environ["LLMPLAY_OUT"] = "/mnt/data/out"  # 共用文件系统时，各会话指定不同目录
 import llmplay
 print(llmplay.next_task())
-print(llmplay.progress()["coverage"])
+print(llmplay.progress()["drill"], llmplay.progress()["scenario"])
 ```
 
-默认只开 1 片（覆盖全部关卡）；显式设 `LLMPLAY_SHARDS=3` 时片0为白天＋夜间，片1为泳池＋雾，片2为屋顶＋Boss。
-可传 `next_task(shard=0, shards=N)`（0起编号，N=1–40）；N不是3时按关卡轮转分配。
-每次新进程都保持原片号。每关有独立百万种子窗口，用完顺延，窗口不重叠。
+派发顺序：**drill（真实必刷题）> scenario（GPT 自己出题）> resume（学生败局中盘接回）
+> 前沿倍率 > 传送带/Boss 支线 > 主线新卡组**。drill 与 scenario 都是短视界项目，
+由模拟器机械判据验收；resume 及之后沿用 task220/226 的规则。
 
 选新卡组前先调用 `llmplay.roster(item["task_id"], seed=item["seed"])`，在 `Game()` 前即可查询
 本种子僵尸种类及首次波次。接口使用临时棋盘只reset一次，不推进或重放，不计卡组尝试次数。
@@ -118,3 +116,18 @@ task226重打包：并入 11-03 resume 会话（2959 局，carry 11632 条唯一
 夜 1107 / 池 1165 / 日 1118 / 雾 1075 / 屋顶 1226）排在前面，上一批 r86–r89 剩余 **2701** 条
 （日 1218 / 雾 919 / 池 449 / 屋顶 115，夜已打完）排在后面；前沿倍率 42×24、传送带 8×16、升级配额 24/地形不变。
 目录新增 `priority` 字段（0=新鲜，1=旧档），`resume_progress` 先按 priority 再按地形/截断点排序。
+
+task238重打包：包内新增两类短视界项目，排在所有旧队列之前。
+**drill** 共 918 道（2754 个 seed 项）：task235 雾关 660 道全部保留并按生产老师校准排序
+（0/3 的 418 道最优先，其次中间题 81、全对题 149），task234 屋顶/夜间/泳池 106 道（存档仍在的），
+另从 226b 生产中盘前缀新挖 152 道屋顶/夜间/泳池/白天题；按僵尸类型分层，每类有上限。
+每项带 `path` / `future_seed` / `horizon` / `targets` / `knowledge` / `priority`，
+`Game.load_archive()` + `g.reseed(seed)` 起手，`g.drill_result()` 用
+`scripts/drill_start.py` 的同一判据验收（目标离场、无小推车、无破屋）。
+**scenario** 共 300 个底局（600 个 seed 项），按地形各 60 个；底局取自生产/中盘前缀，
+`g.spawn` / `g.set_sun` / `g.set_cooldown` 注入单一威胁后用 `g.declare_scenario()` 声明知识点、
+视界和目标，同时自动跑“什么都不做”对照，对照也成功则拒绝导出。注入操作是普通 operation，
+导入时按同一 ticks 重放，但不进示范行。
+导入器 `import_llm_run.py` 对两类存档走 `verify_short()`，只把起点之后的 plant/wait 记为
+`llm_demo` 行；drill 成功局带 `meta["drill"]`，训练按 ×3 加权；失败局只记录。
+`carry/` 接上 226b 最新交回进度（2026-11-04 18:20 HKT），不需要旧分卷。

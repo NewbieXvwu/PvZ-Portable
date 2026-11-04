@@ -231,11 +231,140 @@ def resume_items(document):
     return candidates
 
 
+# ----------------------------------------------------------------- task238 必刷题 / 自出题
+
+def _catalog(name):
+    relative = (config().get(name) or {}).get("catalog")
+    if not relative:
+        return []
+    path = ROOT / relative
+    if not path.is_file():
+        return []
+    document = json.loads(path.read_text(encoding="utf-8"))
+    return list(document.get("items") or [])
+
+
+@lru_cache(maxsize=1)
+def drill_catalog():
+    return _catalog("drill")
+
+
+@lru_cache(maxsize=1)
+def scenario_catalog():
+    return _catalog("scenario")
+
+
+def catalog_tasks():
+    """题库里的 task_id，给 carry 保留这些记录（它们不在种子表里）。"""
+    return {item["task_id"] for item in drill_catalog() + scenario_catalog()}
+
+
+def _played(entries, kind, key="drill_id"):
+    out = set()
+    for entry in entries:
+        if not entry.get(key):
+            continue
+        if entry.get("future_seed") is None:
+            continue
+        out.add((entry[key], int(entry["future_seed"])))
+    return out
+
+
+def drill_progress(document):
+    entries = document.get("archives") or []
+    played = _played(entries, "drill")
+    items = []
+    for item in drill_catalog():
+        for index, seed in enumerate(item.get("future_seeds") or []):
+            key = (item["task_id"], int(seed))
+            if key in played:
+                continue
+            items.append(dict(item, seed=int(seed), seed_index=index))
+    items.sort(key=lambda item: (int(item.get("priority", 9)), item.get("terrain", ""),
+                                 item.get("type", ""), item["task_id"], item["seed_index"]))
+    counts = {}
+    for item in drill_catalog():
+        name = item.get("terrain", "?")
+        counts.setdefault(name, [0, 0])
+        counts[name][0] += len(item.get("future_seeds") or [])
+        counts[name][1] += sum(1 for seed in item.get("future_seeds") or []
+                               if (item["task_id"], int(seed)) in played)
+    return dict(total=sum(len(item.get("future_seeds") or []) for item in drill_catalog()),
+                played=len(played), remaining=len(items), by_terrain=counts, items=items)
+
+
+def drill_items(document):
+    candidates = []
+    index, count = configure_shard()
+    terrains = (config()["terrain_shards"][index]
+                if count == len(config().get("terrain_shards") or []) else None)
+    # 题库可能上千条；只把队首一段变成项，领走后 progress 重新排序。
+    for item in (document.get("drill", {}).get("items") or [])[:512]:
+        if terrains is not None and item.get("terrain") not in terrains:
+            continue
+        candidates.append(dict(
+            task_id=item["task_id"], level=int(item["level"]), terrain=item.get("terrain"),
+            cycle=1, batch=1, layer="drill", multiplier=item.get("multiplier", 1.0),
+            seed=int(item["seed"]), source_seed=int(item.get("source_seed") or 0),
+            deck=list(item.get("deck") or []),
+            action="drill_archive", archive=item.get("archive"),
+            path=str(ROOT / item["archive"]), future_seed=int(item["seed"]),
+            drill_id=item["task_id"], knowledge=item.get("knowledge"),
+            horizon=int(item.get("horizon") or 900), targets=list(item.get("targets") or []),
+            priority=int(item.get("priority", 9)), source=item.get("source"),
+            suits=item.get("suits")))
+    return candidates
+
+
+def scenario_progress(document):
+    entries = document.get("archives") or []
+    played = _played(entries, "scenario", "scenario_id")
+    items = []
+    for item in scenario_catalog():
+        for index, seed in enumerate(item.get("future_seeds") or []):
+            key = (item["task_id"], int(seed))
+            if key in played:
+                continue
+            items.append(dict(item, seed=int(seed), seed_index=index))
+    items.sort(key=lambda item: (item.get("terrain", ""), item["task_id"], item["seed_index"]))
+    counts = {}
+    for item in scenario_catalog():
+        name = item.get("terrain", "?")
+        counts.setdefault(name, [0, 0])
+        counts[name][0] += len(item.get("future_seeds") or [])
+        counts[name][1] += sum(1 for seed in item.get("future_seeds") or []
+                               if (item["task_id"], int(seed)) in played)
+    return dict(total=sum(len(item.get("future_seeds") or []) for item in scenario_catalog()),
+                played=len(played), remaining=len(items), by_terrain=counts, items=items)
+
+
+def scenario_items(document):
+    candidates = []
+    index, count = configure_shard()
+    terrains = (config()["terrain_shards"][index]
+                if count == len(config().get("terrain_shards") or []) else None)
+    for item in (document.get("scenario", {}).get("items") or [])[:512]:
+        if terrains is not None and item.get("terrain") not in terrains:
+            continue
+        candidates.append(dict(
+            task_id=item["task_id"], level=int(item["level"]), terrain=item.get("terrain"),
+            cycle=1, batch=1, layer="scenario", multiplier=item.get("multiplier", 1.0),
+            seed=int(item["seed"]), source_seed=int(item.get("source_seed") or 0),
+            deck=list(item.get("deck") or []),
+            action="scenario_sandbox", archive=item.get("archive"),
+            path=str(ROOT / item["archive"]), future_seed=int(item["seed"]),
+            scenario_id=item["task_id"], base_id=item.get("base_id"),
+            knowledge_candidates=list(item.get("knowledge_candidates") or []),
+            knowledge=(item.get("knowledge_candidates") or [None])[0],
+            horizon=int(item.get("horizon") or 900), suits=item.get("suits")))
+    return candidates
+
+
 def derive(entries, run_id=None):
     cfg, definitions = config(), load_tasks()
     by_level = {}
     for entry in _latest(entries):
-        if entry.get("resume_id"):
+        if entry.get("resume_id") or entry.get("drill_id") or entry.get("scenario_id"):
             continue
         task = definitions.get(entry["task_id"], {})
         level = int(entry.get("level") or task.get("level") or 0)
@@ -387,12 +516,14 @@ def derive(entries, run_id=None):
     flat.update({task_id: dict(item, active=task_id in active_frontier, layer="frontier")
                  for task_id, item in frontier_progress.items()})
     resume = resume_progress(dict(archives=list(entries)))
+    drill = drill_progress(dict(archives=list(entries)))
+    scenario = scenario_progress(dict(archives=list(entries)))
     return dict(schema=wf.PROGRESS_SCHEMA, mode="decks", run_id=run_id, cycle=1, batch=1,
                 layer="decks", complete=False, note=NOTE, requirements=cfg,
                 shard=index, shards=count, active_tasks=active, levels=levels, stage=stage + 1,
                 active_native=active_native, native=native_progress,
                 active_frontier=active_frontier, frontier=frontier_progress,
-                resume=resume, upgrades=upgrade_progress,
+                resume=resume, drill=drill, scenario=scenario, upgrades=upgrade_progress,
                 coverage=terrain_progress, tasks=flat, archives=list(entries))
 
 
@@ -473,26 +604,29 @@ def frontier_items(document):
 
 def view(document):
     claims = wf.held()
-    queues = [(resume_items(document), "resume"), (frontier_items(document), "frontier"),
+    queues = [(drill_items(document), "drill"), (scenario_items(document), "scenario"),
+              (resume_items(document), "resume"), (frontier_items(document), "frontier"),
               (native_items(document), "native"), (items(document), "main")]
     pools = {name: wf._first_free(candidates, claims) for candidates, name in queues}
     item = next((found for found in pools.values() if found), None)
     if item is None:
         item = wf._busy([row for candidates, _ in queues for row in candidates]) \
             or wf._item(document, None, "blocked", note="没有可推进的项")
-    return dict(item=item, main=pools["main"], resume=pools["resume"], frontier=pools["frontier"],
+    return dict(item=item, main=pools["main"], drill=pools["drill"],
+                scenario=pools["scenario"], resume=pools["resume"],
+                frontier=pools["frontier"],
                 challenge=None, native=pools["native"], complete=False, cycle=1,
                 shard=document["shard"], shards=document["shards"], note=NOTE)
 
 
 def _earlier_block(document, name):
-    """name 之前的队列里还有能领的项就拦下来（派发次序 resume > frontier > native > main）。"""
+    """name 之前的队列里还有能领的项就拦下来（drill > scenario > resume > frontier > native > main）。"""
     claims = wf.held()
-    queues = {"resume": resume_items, "frontier": frontier_items,
-              "native": native_items, "main": items}
-    order = ["resume", "frontier", "native", "main"]
-    labels = {"resume": "学生败局中盘接回", "frontier": "前沿倍率",
-              "native": "传送带/Boss 支线", "main": "主线"}
+    queues = {"drill": drill_items, "scenario": scenario_items, "resume": resume_items,
+              "frontier": frontier_items, "native": native_items, "main": items}
+    order = ["drill", "scenario", "resume", "frontier", "native", "main"]
+    labels = {"drill": "真实必刷题", "scenario": "GPT 自出题", "resume": "学生败局中盘接回",
+              "frontier": "前沿倍率", "native": "传送带/Boss 支线", "main": "主线"}
     for earlier in order[:order.index(name)]:
         if wf._first_free(queues[earlier](document), claims) is not None:
             raise ValueError("%s优先；请先领取本片%s项" % (labels[earlier], labels[earlier]))
@@ -500,6 +634,10 @@ def _earlier_block(document, name):
 
 
 def check(document, task_id, deck, strategy="", seed=None):
+    if task_id in {item["task_id"] for item in drill_catalog()}:
+        raise ValueError("必刷题用 Game.load_archive(item['path']) 打开；起点、卡组和视界照题库")
+    if task_id in {item["task_id"] for item in scenario_catalog()}:
+        raise ValueError("自出题用 Game.load_archive(item['path']) 打开底局，再 spawn 注入威胁")
     if task_id in {item["id"] for item in resume_catalog()}:
         raise ValueError("中盘接回项用 Game.load_archive(item['path']) 打开；卡组与倍率照原局，不能自选")
     if task_id in document.get("active_frontier", []):

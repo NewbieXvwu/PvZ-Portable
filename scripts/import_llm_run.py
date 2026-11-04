@@ -228,6 +228,50 @@ def verify_copy(archive: Path, resource_dir: Path, executable: Path | None) -> d
     return verify(archive, resource_dir, executable)
 
 
+def short_horizon(meta: dict) -> dict | None:
+    return meta.get('drill') or meta.get('scenario')
+
+
+def verify_short(archive: Path, resource_dir: Path, executable: Path | None) -> dict:
+    """Replay a drill/scenario archive through the same Game path and re-run its judge.
+
+    The prefix of a collection drill has no ticks.jsonl, so ``human_demo.replay``'s
+    strict per-operation timeline check does not apply; the authoritative replay for
+    these archives is ``Game.load_archive`` (the path GPT used to open them).  This
+    still replays every operation and every SPAWN/SET/RESEED on the engine.
+    """
+    from llmplay.game import Game
+    from drill_start import judge
+    from pvz_episode_archive import write_meta
+    meta = json.loads((archive / 'meta.json').read_text())
+    block = short_horizon(meta)
+    if block is None:
+        raise ValueError('不是 drill/scenario 存档')
+    game = Game.load_archive(archive, executable=executable, resource_dir=resource_dir)
+    try:
+        game._start()
+        obs = game.obs
+        mowers_left = 0
+        for defense in obs.get('defenses') or []:
+            state = defense.get('state', 0) if isinstance(defense, dict) else defense[1]
+            mowers_left += int(state) == 1
+        outcome = judge(game.env, obs, list(block.get('targets') or []),
+                        int(block.get('mowers_start') or 0), mowers_left,
+                        horizon=int(block.get('horizon') or 900),
+                        root_tick=int(block.get('root_tick') or 0))
+    finally:
+        game.close()
+    expected = block.get('success')
+    if expected is not None and bool(expected) != bool(outcome['success']):
+        raise ValueError('判据与存档记录不一致：meta=%s replay=%s' % (expected, outcome['success']))
+    block = dict(block, **outcome)
+    meta['drill' if 'drill' in meta else 'scenario'] = block
+    meta['verified'] = True
+    write_meta(archive, meta)
+    return dict(verified=True, operations=meta['operations'], tick=obs['tick'],
+                wave=obs['wave'], result=outcome['success'], short_horizon=True)
+
+
 def render_report(rows: list, layers: dict) -> str:
     lines = ['| 任务 | 种子 | 倍率 | 结果 | 波 | 操作 | verify | 分档 | 稳健性（第10波） | 补救 | 新族 | 备注 |',
              '|---|---|---|---|---|---|---|---|---|---|---|---|']
@@ -298,7 +342,9 @@ def verification_context(executable: Path, resources: Path) -> dict:
 def verify_once(target, resources, executable, receipt_path, sha, context, problems):
     """One worker owns one game; persist its result before another archive starts."""
     try:
-        result = verify_copy(target, resources, executable)
+        meta = json.loads((target / 'meta.json').read_text())
+        result = (verify_short(target, resources, executable) if short_horizon(meta)
+                  else verify_copy(target, resources, executable))
         receipt = dict(verified=True, result=result, reason='')
     except Exception as error:
         receipt = dict(verified=False, reason=str(error))
@@ -399,10 +445,19 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                     _, _, family_problems = resolve_family(meta, tasks)
                     problems = problems + family_problems
                     verified = receipt['verified'] and not problems
-                    if verified and llm_demo_data is not None and str(meta.get('label_source', '')).startswith('llm_'):
+                    block = short_horizon(meta)
+                    short_success = bool(block.get('success')) if block else bool(meta['outcome'].get('won'))
+                    if (verified and short_success and llm_demo_data is not None
+                            and str(meta.get('label_source', '')).startswith('llm_')):
                         from pvz_llm_demo_rows import import_demo
-                        import_demo(llm_demo_data, target, sha)
+                        import_demo(llm_demo_data, target, sha,
+                                    min_operation=int((block or {}).get('prefix_operations') or 0),
+                                    skip_operations=(block or {}).get('injection_operations') or (),
+                                    force=bool(block))
                     reason = '；'.join(problems + ([receipt['reason']] if receipt['reason'] else []))
+                    if block:
+                        reason = '；'.join(filter(None, [reason, str(block.get('knowledge') or ''),
+                                                         '局部成功' if short_success else '局部失败']))
                     relative = str(target.relative_to(ROOT)) if target.is_relative_to(ROOT) else str(target)
                     row = dict(source=str(archive.relative_to(source)), archive_sha256=sha,
                                task_id=final, base_task_id=base, seed=seed, level=int(task['level']),
@@ -410,7 +465,8 @@ def run(input_path, dest, manifest, resources, executable, *, executor_factory=N
                                result=meta['outcome']['result'], wave=meta['outcome']['final_wave'],
                                operations=meta['operations'], frames=meta['frame_count'],
                                verify='通过' if verified else '失败',
-                               grade=grade(meta) if verified else 'loss',
+                               grade=('full' if short_success else 'loss') if block else
+                               (grade(meta) if verified else 'loss'),
                                robustness=robustness_text(meta), manual_patch=meta.get('manual_patch'),
                                new_family=sha not in previous, archive=relative if verified else '',
                                note=reason, verification_reused=cached)

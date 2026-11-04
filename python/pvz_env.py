@@ -552,6 +552,11 @@ class PvZEnv:
             if slot < 0 or not 0 <= ticks <= 1_000_000:
                 raise ValueError("set_cooldown needs slot >= 0 and ticks 0..1000000")
             command = f"SET_COOLDOWN {slot} {ticks}"
+        elif kind == "reseed":
+            seed = action.get("seed")
+            if type(seed) is not int or not 0 <= seed < 2_000_000_000:
+                raise ValueError("reseed seed must be an integer 0..1999999999")
+            command = f"RESEED {seed}"
         elif kind == "set_wave":
             wave = action.get("wave")
             if type(wave) is not int or wave < 0:
@@ -564,7 +569,7 @@ class PvZEnv:
                 command += f" {countdown}"
         else:
             raise ValueError("action type must be 'plant', 'shovel', 'collect', 'wait', "
-                             "'spawn', 'set_sun', 'set_cooldown' or 'set_wave'")
+                             "'spawn', 'set_sun', 'set_cooldown', 'set_wave' or 'reseed'")
 
         response = self._command(command)
         observation = response.get("observation")

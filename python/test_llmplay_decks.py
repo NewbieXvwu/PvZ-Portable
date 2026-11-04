@@ -269,6 +269,8 @@ def test_decks_native_is_dispatched_after_frontier_until_sixteen_distinct_seed_w
     no_frontier = dict(side_effect=lambda native=False, frontier=False:
                        [] if frontier else (decks.config()["native_order"] if native else decks.config()["order"]))
     with patch.object(decks, 'assigned_tasks', **no_frontier), \
+            patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
             patch.object(decks, 'resume_catalog', return_value=[]), \
             patch.object(decks, 'upgrade_target', return_value=0):
         doc = workflow.derive([], 'run')
@@ -301,7 +303,9 @@ def test_decks_frontier_rotates_registered_decks_on_fresh_seeds_first():
     def game(deck, index, **kw):
         return dict(entry(11, deck, index, **kw), seed=decks.seed_at(11, index))
     entries = [game(D1, 0), game(D2, 1)] + [game(D1, n) for n in range(2, 5)]
-    with patch.object(decks, 'resume_catalog', return_value=[]):
+    with patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch.object(decks, 'resume_catalog', return_value=[]):
         doc = workflow.derive(entries, 'run')
     assert frontier in doc['active_frontier']
     info = doc['frontier'][frontier]
@@ -601,7 +605,9 @@ def test_decks_resume_items_dispatch_first_and_are_one_shot():
                dict(id='r86a_l21_s2', archive='r86a_l21_s2', level=21, terrain='pool',
                     seed=2, deck=D2, multiplier=1.0, base_task_id='task101_l21_pool_p9k',
                     breach_tick=12000, cutoff_tick=7500, source_arm='r86a')]
-    with patch.object(decks, 'resume_catalog', return_value=catalog):
+    with patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch.object(decks, 'resume_catalog', return_value=catalog):
         doc = workflow.derive([], 'run')
         assert doc['resume']['total'] == 2 and doc['resume']['remaining'] == 2
         item = workflow.next_task(doc, claim=False)['item']
@@ -642,7 +648,9 @@ def test_decks_resume_fresh_priority_beats_terrain_order():
         dict(id='fresh_night', archive='fresh_night', level=11, terrain='night', seed=3, deck=D1,
              multiplier=1.0, priority=0, cutoff_tick=500),
     ]
-    with patch.object(decks, 'resume_catalog', return_value=catalog):
+    with patch.object(decks, 'drill_catalog', return_value=[]), \
+            patch.object(decks, 'scenario_catalog', return_value=[]), \
+            patch.object(decks, 'resume_catalog', return_value=catalog):
         doc = workflow.derive([], 'run')
         item = workflow.next_task(doc, claim=False)['item']
     # 先新鲜批次，再按地形（夜先于屋顶）；旧档即使地形更靠前也排在所有新鲜项之后。

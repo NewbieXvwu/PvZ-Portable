@@ -30,7 +30,8 @@ PYTHON_MODULES = ["pvz_env.py", "pvz_common.py", "pvz_frame_store.py", "pvz_epis
 # 所以包里必须带上它读的那几个文件，否则 import 阶段就抛"常量来源文件不存在"。
 CONSTANT_SOURCES = ["src/ConstEnums.h", "src/Lawn/Plant.cpp", "src/Lawn/Zombie.cpp",
                     "src/Lawn/Board.cpp", "src/LawnApp.cpp", "src/SexyAppFramework/SexyAppBase.cpp"]
-SCRIPT_MODULES = ["pvz_constants.py", "pvz_tasks.py", "render_episode.py", "episode_query.py"]
+SCRIPT_MODULES = ["pvz_constants.py", "pvz_tasks.py", "render_episode.py", "episode_query.py",
+                  "drill_start.py"]
 RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
 DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay-decks"
 SEED_PLAN = ROOT / "configs" / "llmplay_seeds.json"
@@ -39,6 +40,10 @@ RESUME_PLAN = ROOT / "configs" / "llmplay_resume.json"
 # task220：中盘接回存档（meta.json + ticks.jsonl + 截断点那一帧）。二进制不进 git，
 # 从台式机取回到本机临时目录，打包时整目录复制进接口包。
 DEFAULT_RESUME_DIR = Path.home() / "pvz-logs" / "task220" / "resume"
+# task238：drill/ 与 scenario/ 的 npz 前缀存档，构建时从本机临时目录复制。
+DEFAULT_ASSET_DIR = Path.home() / "pvz-logs" / "task238" / "assets"
+DRILL_PLAN = ROOT / "configs" / "llmplay_drills.json"
+SCENARIO_PLAN = ROOT / "configs" / "llmplay_scenarios.json"
 
 SECRET_PATTERNS = [re.compile(pattern) for pattern in
                    (rb"hf_[A-Za-z0-9]{20,}", rb"sk-[A-Za-z0-9]{20,}", rb"AIza[A-Za-z0-9_-]{30,}",
@@ -103,7 +108,8 @@ def copy_modules(stage: Path) -> None:
                                                   "mac_bundle.sh", "make_llmplay_tasks.py",
                                                   "check_tasks.py", "robustness_check.py",
                                                   "cache_prepare.py", "cache_profile.py",
-                                                  "make_llmplay2_tasks.py", "make_llmplay3_tasks.py"))
+                                                  "make_llmplay2_tasks.py", "make_llmplay3_tasks.py",
+                                                  "make_drill_bank.py"))
 
 
 def read_partial(source: Path) -> dict:
@@ -261,12 +267,24 @@ def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = 
                       carry=carry)
 
 
+def copy_assets(stage: Path, asset_dir: Path | None) -> None:
+    """Copy the task238 drill/scenario prefix archives into the interface package."""
+    if asset_dir is None or not Path(asset_dir).is_dir():
+        return
+    for name in ("drill", "scenario"):
+        source = Path(asset_dir) / name
+        if source.is_dir():
+            shutil.copytree(source, stage / name)
+
+
 def repack_interface(previous: Path, out: Path, carry: Path | None = None,
                      partial: Path | None = None, resource_zip: Path | None = None,
-                     resume_dir: Path | None = None) -> list[Path]:
+                     resume_dir: Path | None = None, executable: Path | None = None,
+                     asset_dir: Path | None = None) -> list[Path]:
     """复用已交付引擎及资源契约，只重打接口，不重建资源、不重复逐关 reset。
 
     previous 是上一包的 stage；大文件留在本机，不进入 git。py7zr 仅构建时需要。
+    executable 用来把 task237 的 C++ 改动换进包里；不给则沿用上一包引擎。
     """
     import py7zr
     from llmplay.resources import PACKAGE
@@ -279,7 +297,7 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         copy_modules(stage)
         copy_constant_sources(stage)
         (stage / "build").mkdir()
-        engine = previous / "build" / "pvz-portable"
+        engine = Path(executable) if executable else previous / "build" / "pvz-portable"
         shutil.copyfile(engine, stage / "build" / "pvz-portable")
         (stage / "build" / "pvz-portable").chmod(0o755)
         (stage / "configs").mkdir()
@@ -287,7 +305,7 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         for name, document in (("human_demo_tasks.json", manifest),
                                ("extra_seeds.json", extra_seeds(manifest))):
             (stage / "configs" / name).write_text(json.dumps(document, ensure_ascii=False, indent=2) + "\n")
-        for path in (SEED_PLAN, ROBUSTNESS_PLAN,
+        for path in (SEED_PLAN, ROBUSTNESS_PLAN, DRILL_PLAN, SCENARIO_PLAN,
                      ROOT / "configs" / "adventure_scoreboard.json", ROOT / "configs" / "gate_v5_panel.json",
                      ROOT / "configs" / "deploy17_deck_holdouts.json"):
             shutil.copyfile(path, stage / "configs" / path.name)
@@ -300,7 +318,10 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         source = resume_dir if resume_dir and Path(resume_dir).is_dir() else (
             fallback if fallback.is_dir() else None)
         archived = copy_resume(stage, source)
-        print(json.dumps(dict(resume_items=archived)))
+        copy_assets(stage, asset_dir)
+        print(json.dumps(dict(resume_items=archived,
+                              drill_items=len(list((stage / "drill").glob("*"))) if (stage / "drill").is_dir() else 0,
+                              scenario_items=len(list((stage / "scenario").glob("*"))) if (stage / "scenario").is_dir() else 0)))
         copy_reference(stage)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
         hits = scan(stage)
@@ -408,6 +429,8 @@ def main() -> int:
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
     parser.add_argument("--resume-dir", type=Path, default=DEFAULT_RESUME_DIR,
                         help="task220 中盘接回存档目录（默认 ~/pvz-logs/task220/resume）")
+    parser.add_argument("--asset-dir", type=Path, default=DEFAULT_ASSET_DIR,
+                        help="task238 drill/ 与 scenario/ 前缀存档目录")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--cache-dir", type=Path,
                         help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
@@ -415,7 +438,8 @@ def main() -> int:
     if args.reuse_package:
         repack_interface(args.reuse_package, args.out, carry=args.carry,
                          partial=args.partial, resource_zip=args.resource_zip,
-                         resume_dir=args.resume_dir)
+                         resume_dir=args.resume_dir, executable=args.executable,
+                         asset_dir=args.asset_dir)
         return 0
     if not args.executable or not args.cache_dir:
         parser.error("首次构建需要 --executable 和 --cache-dir")

@@ -1,0 +1,10070 @@
+{
+ "schema": "llmplay_scenario_catalog_v1",
+ "task": "task238",
+ "item_count": 300,
+ "items": [
+  {
+   "task_id": "scenario238_pool_001",
+   "archive": "scenario/scenario238_pool_001",
+   "level": 26,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    16,
+    17,
+    19,
+    21,
+    29,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100119958,
+   "base_id": "v8r94i_l26_s100119958_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000002,
+    239000003
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_001",
+   "archive": "scenario/scenario238_fog_001",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124476,
+   "base_id": "v8r96a_l36_s100124476_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000002,
+    239000003
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_001",
+   "archive": "scenario/scenario238_day_001",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100123293,
+   "base_id": "v8r96a_l4_s100123293_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000002,
+    239000003
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_002",
+   "archive": "scenario/scenario238_fog_002",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124474,
+   "base_id": "v8r96b_l36_s100124474_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000004,
+    239000005
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_003",
+   "archive": "scenario/scenario238_fog_003",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124524,
+   "base_id": "v8r96i_l37_s100124524_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000006,
+    239000007
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_001",
+   "archive": "scenario/scenario238_night_001",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125713,
+   "base_id": "v8r97i_l14_s100125713_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000002,
+    239000003
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_002",
+   "archive": "scenario/scenario238_night_002",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119511,
+   "base_id": "v8r94i_l13_s100119511_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000004,
+    239000005
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_003",
+   "archive": "scenario/scenario238_night_003",
+   "level": 16,
+   "terrain": "night",
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    13,
+    11,
+    5,
+    36,
+    31,
+    21
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100123704,
+   "base_id": "v8r96i_l16_s100123704_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000006,
+    239000007
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_004",
+   "archive": "scenario/scenario238_fog_004",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128637,
+   "base_id": "v8r98i_l37_s100128637_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000008,
+    239000009
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_005",
+   "archive": "scenario/scenario238_fog_005",
+   "level": 34,
+   "terrain": "fog",
+   "deck": [
+    5,
+    8,
+    9,
+    16,
+    19,
+    23,
+    25,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120318,
+   "base_id": "v8r94a_l34_s100120318_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000010,
+    239000011
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_006",
+   "archive": "scenario/scenario238_fog_006",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122331,
+   "base_id": "v8r95b_l33_s100122331_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000012,
+    239000013
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_002",
+   "archive": "scenario/scenario238_day_002",
+   "level": 1,
+   "terrain": "day",
+   "deck": [
+    1,
+    2,
+    3,
+    4,
+    17,
+    21,
+    23,
+    32,
+    39,
+    41
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100125213,
+   "base_id": "v8r97a_l1_s100125213_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000004,
+    239000005
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_004",
+   "archive": "scenario/scenario238_night_004",
+   "level": 16,
+   "terrain": "night",
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    13,
+    11,
+    5,
+    36,
+    31,
+    21
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100121648,
+   "base_id": "v8r95i_l16_s100121648_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000008,
+    239000009
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_007",
+   "archive": "scenario/scenario238_fog_007",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124385,
+   "base_id": "v8r96i_l33_s100124385_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000014,
+    239000015
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_002",
+   "archive": "scenario/scenario238_pool_002",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128090,
+   "base_id": "v8r98i_l23_s100128090_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000004,
+    239000005
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_003",
+   "archive": "scenario/scenario238_day_003",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119183,
+   "base_id": "v8r94b_l4_s100119183_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000006,
+    239000007
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_001",
+   "archive": "scenario/scenario238_roof_001",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120544,
+   "base_id": "v8r94i_l41_s100120544_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000002,
+    239000003
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_004",
+   "archive": "scenario/scenario238_day_004",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100119226,
+   "base_id": "v8r94a_l6_s100119226_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000008,
+    239000009
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_002",
+   "archive": "scenario/scenario238_roof_002",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120590,
+   "base_id": "v8r94i_l42_s100120590_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000004,
+    239000005
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_005",
+   "archive": "scenario/scenario238_night_005",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123658,
+   "base_id": "v8r96i_l14_s100123658_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000010,
+    239000011
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_008",
+   "archive": "scenario/scenario238_fog_008",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126440,
+   "base_id": "v8r97b_l33_s100126440_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000016,
+    239000017
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_009",
+   "archive": "scenario/scenario238_fog_009",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128584,
+   "base_id": "v8r98b_l36_s100128584_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000018,
+    239000019
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_010",
+   "archive": "scenario/scenario238_fog_010",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122420,
+   "base_id": "v8r95i_l36_s100122420_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000020,
+    239000021
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_003",
+   "archive": "scenario/scenario238_pool_003",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124248,
+   "base_id": "v8r96b_l29_s100124248_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000006,
+    239000007
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_005",
+   "archive": "scenario/scenario238_day_005",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123206,
+   "base_id": "v8r96b_l2_s100123206_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000010,
+    239000011
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_004",
+   "archive": "scenario/scenario238_pool_004",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100123895,
+   "base_id": "v8r96i_l21_s100123895_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000008,
+    239000009
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_003",
+   "archive": "scenario/scenario238_roof_003",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100126761,
+   "base_id": "v8r97i_l42_s100126761_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000006,
+    239000007
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_011",
+   "archive": "scenario/scenario238_fog_011",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128493,
+   "base_id": "v8r98a_l33_s100128493_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000022,
+    239000023
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_012",
+   "archive": "scenario/scenario238_fog_012",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120365,
+   "base_id": "v8r94a_l36_s100120365_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000024,
+    239000025
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_006",
+   "archive": "scenario/scenario238_day_006",
+   "level": 9,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    6,
+    7,
+    8,
+    15,
+    30,
+    35,
+    41
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100119366,
+   "base_id": "v8r94a_l9_s100119366_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000012,
+    239000013
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_006",
+   "archive": "scenario/scenario238_night_006",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100125667,
+   "base_id": "v8r97a_l13_s100125667_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000012,
+    239000013
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_005",
+   "archive": "scenario/scenario238_pool_005",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100130279,
+   "base_id": "v8r99i_l27_s100130279_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000010,
+    239000011
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_007",
+   "archive": "scenario/scenario238_day_007",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100129459,
+   "base_id": "v8r99i_l4_s100129459_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000014,
+    239000015
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_008",
+   "archive": "scenario/scenario238_day_008",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100119224,
+   "base_id": "v8r94a_l6_s100119224_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000016,
+    239000017
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_006",
+   "archive": "scenario/scenario238_pool_006",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120138,
+   "base_id": "v8r94i_l29_s100120138_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000012,
+    239000013
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_013",
+   "archive": "scenario/scenario238_fog_013",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124475,
+   "base_id": "v8r96b_l36_s100124475_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000026,
+    239000027
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_014",
+   "archive": "scenario/scenario238_fog_014",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124474,
+   "base_id": "v8r96i_l36_s100124474_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000028,
+    239000029
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_015",
+   "archive": "scenario/scenario238_fog_015",
+   "level": 34,
+   "terrain": "fog",
+   "deck": [
+    5,
+    8,
+    9,
+    16,
+    19,
+    23,
+    25,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130594,
+   "base_id": "v8r99i_l34_s100130594_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000030,
+    239000031
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_007",
+   "archive": "scenario/scenario238_pool_007",
+   "level": 24,
+   "terrain": "pool",
+   "deck": [
+    1,
+    4,
+    5,
+    16,
+    17,
+    18,
+    19,
+    23
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100119914,
+   "base_id": "v8r94i_l24_s100119914_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000014,
+    239000015
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_009",
+   "archive": "scenario/scenario238_day_009",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100123291,
+   "base_id": "v8r96a_l4_s100123291_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000018,
+    239000019
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_007",
+   "archive": "scenario/scenario238_night_007",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100125665,
+   "base_id": "v8r97i_l13_s100125665_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000014,
+    239000015
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_010",
+   "archive": "scenario/scenario238_day_010",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100129362,
+   "base_id": "v8r99a_l2_s100129362_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000020,
+    239000021
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_011",
+   "archive": "scenario/scenario238_day_011",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100119096,
+   "base_id": "v8r94a_l2_s100119096_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000022,
+    239000023
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_016",
+   "archive": "scenario/scenario238_fog_016",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128586,
+   "base_id": "v8r98b_l36_s100128586_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000032,
+    239000033
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_004",
+   "archive": "scenario/scenario238_roof_004",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128774,
+   "base_id": "v8r98b_l41_s100128774_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000008,
+    239000009
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_012",
+   "archive": "scenario/scenario238_day_012",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100127400,
+   "base_id": "v8r98b_l4_s100127400_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000024,
+    239000025
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_013",
+   "archive": "scenario/scenario238_day_013",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100129500,
+   "base_id": "v8r99a_l6_s100129500_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000026,
+    239000027
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_008",
+   "archive": "scenario/scenario238_pool_008",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128089,
+   "base_id": "v8r98a_l23_s100128089_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000016,
+    239000017
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_014",
+   "archive": "scenario/scenario238_day_014",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100127316,
+   "base_id": "v8r98a_l2_s100127316_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000028,
+    239000029
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_017",
+   "archive": "scenario/scenario238_fog_017",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130551,
+   "base_id": "v8r99i_l33_s100130551_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000034,
+    239000035
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_005",
+   "archive": "scenario/scenario238_roof_005",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120591,
+   "base_id": "v8r94b_l42_s100120591_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000010,
+    239000011
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_015",
+   "archive": "scenario/scenario238_day_015",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125348,
+   "base_id": "v8r97i_l4_s100125348_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000030,
+    239000031
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_018",
+   "archive": "scenario/scenario238_fog_018",
+   "level": 32,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    25,
+    27,
+    36,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128450,
+   "base_id": "v8r98b_l32_s100128450_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000036,
+    239000037
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_016",
+   "archive": "scenario/scenario238_day_016",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121237,
+   "base_id": "v8r95b_l4_s100121237_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000032,
+    239000033
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_019",
+   "archive": "scenario/scenario238_fog_019",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122330,
+   "base_id": "v8r95b_l33_s100122330_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000038,
+    239000039
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_020",
+   "archive": "scenario/scenario238_fog_020",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124386,
+   "base_id": "v8r96b_l33_s100124386_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000040,
+    239000041
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_009",
+   "archive": "scenario/scenario238_pool_009",
+   "level": 22,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    35,
+    10,
+    42,
+    36,
+    17,
+    4,
+    19,
+    21
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128043,
+   "base_id": "v8r98i_l22_s100128043_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000018,
+    239000019
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_010",
+   "archive": "scenario/scenario238_pool_010",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100130053,
+   "base_id": "v8r99b_l21_s100130053_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000020,
+    239000021
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_008",
+   "archive": "scenario/scenario238_night_008",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123610,
+   "base_id": "v8r96a_l13_s100123610_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000016,
+    239000017
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_021",
+   "archive": "scenario/scenario238_fog_021",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120275,
+   "base_id": "v8r94b_l33_s100120275_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000042,
+    239000043
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_022",
+   "archive": "scenario/scenario238_fog_022",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120363,
+   "base_id": "v8r94b_l36_s100120363_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000044,
+    239000045
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_023",
+   "archive": "scenario/scenario238_fog_023",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122330,
+   "base_id": "v8r95i_l33_s100122330_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000046,
+    239000047
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_006",
+   "archive": "scenario/scenario238_roof_006",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122607,
+   "base_id": "v8r95i_l41_s100122607_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000012,
+    239000013
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_024",
+   "archive": "scenario/scenario238_fog_024",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124475,
+   "base_id": "v8r96a_l36_s100124475_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000048,
+    239000049
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_025",
+   "archive": "scenario/scenario238_fog_025",
+   "level": 34,
+   "terrain": "fog",
+   "deck": [
+    5,
+    8,
+    9,
+    16,
+    19,
+    23,
+    25,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128540,
+   "base_id": "v8r98a_l34_s100128540_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000050,
+    239000051
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_026",
+   "archive": "scenario/scenario238_fog_026",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130645,
+   "base_id": "v8r99b_l36_s100130645_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000052,
+    239000053
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_017",
+   "archive": "scenario/scenario238_day_017",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100129463,
+   "base_id": "v8r99i_l4_s100129463_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000034,
+    239000035
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_027",
+   "archive": "scenario/scenario238_fog_027",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120364,
+   "base_id": "v8r94a_l36_s100120364_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000054,
+    239000055
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_011",
+   "archive": "scenario/scenario238_pool_011",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100119777,
+   "base_id": "v8r94i_l21_s100119777_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000022,
+    239000023
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_018",
+   "archive": "scenario/scenario238_day_018",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121238,
+   "base_id": "v8r95b_l4_s100121238_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000036,
+    239000037
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_028",
+   "archive": "scenario/scenario238_fog_028",
+   "level": 34,
+   "terrain": "fog",
+   "deck": [
+    5,
+    8,
+    9,
+    16,
+    19,
+    23,
+    25,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124428,
+   "base_id": "v8r96i_l34_s100124428_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000056,
+    239000057
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_019",
+   "archive": "scenario/scenario238_day_019",
+   "level": 8,
+   "terrain": "day",
+   "deck": [
+    1,
+    4,
+    17,
+    20,
+    23,
+    32,
+    39,
+    44
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127540,
+   "base_id": "v8r98i_l8_s100127540_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000038,
+    239000039
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_029",
+   "archive": "scenario/scenario238_fog_029",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120275,
+   "base_id": "v8r94a_l33_s100120275_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000058,
+    239000059
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_030",
+   "archive": "scenario/scenario238_fog_030",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122418,
+   "base_id": "v8r95b_l36_s100122418_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000060,
+    239000061
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_031",
+   "archive": "scenario/scenario238_fog_031",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122419,
+   "base_id": "v8r95b_l36_s100122419_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000062,
+    239000063
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_007",
+   "archive": "scenario/scenario238_roof_007",
+   "level": 46,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100122779,
+   "base_id": "v8r95b_l46_s100122779_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000014,
+    239000015
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_008",
+   "archive": "scenario/scenario238_roof_008",
+   "level": 46,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100122779,
+   "base_id": "v8r95i_l46_s100122779_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000016,
+    239000017
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_020",
+   "archive": "scenario/scenario238_day_020",
+   "level": 1,
+   "terrain": "day",
+   "deck": [
+    1,
+    2,
+    3,
+    4,
+    17,
+    21,
+    23,
+    32,
+    39,
+    41
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100123153,
+   "base_id": "v8r96i_l1_s100123153_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000040,
+    239000041
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_009",
+   "archive": "scenario/scenario238_roof_009",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126710,
+   "base_id": "v8r97b_l41_s100126710_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000018,
+    239000019
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_021",
+   "archive": "scenario/scenario238_day_021",
+   "level": 1,
+   "terrain": "day",
+   "deck": [
+    1,
+    2,
+    3,
+    4,
+    17,
+    21,
+    23,
+    32,
+    39,
+    41
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100125210,
+   "base_id": "v8r97i_l1_s100125210_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000042,
+    239000043
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_032",
+   "archive": "scenario/scenario238_fog_032",
+   "level": 31,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    12,
+    15,
+    16,
+    19,
+    23,
+    25,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128405,
+   "base_id": "v8r98b_l31_s100128405_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000064,
+    239000065
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_033",
+   "archive": "scenario/scenario238_fog_033",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130644,
+   "base_id": "v8r99b_l36_s100130644_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000066,
+    239000067
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_012",
+   "archive": "scenario/scenario238_pool_012",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100119778,
+   "base_id": "v8r94i_l21_s100119778_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000024,
+    239000025
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_034",
+   "archive": "scenario/scenario238_fog_034",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124473,
+   "base_id": "v8r96b_l36_s100124473_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000068,
+    239000069
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_022",
+   "archive": "scenario/scenario238_day_022",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121237,
+   "base_id": "v8r95a_l4_s100121237_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000044,
+    239000045
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_023",
+   "archive": "scenario/scenario238_day_023",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100121150,
+   "base_id": "v8r95a_l2_s100121150_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000046,
+    239000047
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_024",
+   "archive": "scenario/scenario238_day_024",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100121282,
+   "base_id": "v8r95i_l6_s100121282_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000048,
+    239000049
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_035",
+   "archive": "scenario/scenario238_fog_035",
+   "level": 32,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    25,
+    27,
+    36,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124340,
+   "base_id": "v8r96a_l32_s100124340_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000070,
+    239000071
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_009",
+   "archive": "scenario/scenario238_night_009",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125711,
+   "base_id": "v8r97a_l14_s100125711_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000018,
+    239000019
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_036",
+   "archive": "scenario/scenario238_fog_036",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128493,
+   "base_id": "v8r98b_l33_s100128493_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000072,
+    239000073
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_025",
+   "archive": "scenario/scenario238_day_025",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100119086,
+   "base_id": "v8r94a_l2_s100119086_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000050,
+    239000051
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_010",
+   "archive": "scenario/scenario238_night_010",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100119549,
+   "base_id": "v8r94b_l14_s100119549_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000020,
+    239000021
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_037",
+   "archive": "scenario/scenario238_fog_037",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124384,
+   "base_id": "v8r96i_l33_s100124384_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000074,
+    239000075
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_038",
+   "archive": "scenario/scenario238_fog_038",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126439,
+   "base_id": "v8r97b_l33_s100126439_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000076,
+    239000077
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_013",
+   "archive": "scenario/scenario238_pool_013",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100130144,
+   "base_id": "v8r99b_l23_s100130144_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000026,
+    239000027
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_026",
+   "archive": "scenario/scenario238_day_026",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100129457,
+   "base_id": "v8r99b_l4_s100129457_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000052,
+    239000053
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_039",
+   "archive": "scenario/scenario238_fog_039",
+   "level": 32,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    25,
+    27,
+    36,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120230,
+   "base_id": "v8r94a_l32_s100120230_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000078,
+    239000079
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_027",
+   "archive": "scenario/scenario238_day_027",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119189,
+   "base_id": "v8r94a_l4_s100119189_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000054,
+    239000055
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_010",
+   "archive": "scenario/scenario238_roof_010",
+   "level": 44,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120680,
+   "base_id": "v8r94i_l44_s100120680_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000020,
+    239000021
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_040",
+   "archive": "scenario/scenario238_fog_040",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126529,
+   "base_id": "v8r97b_l36_s100126529_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000080,
+    239000081
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_028",
+   "archive": "scenario/scenario238_day_028",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100127404,
+   "base_id": "v8r98a_l4_s100127404_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000056,
+    239000057
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_029",
+   "archive": "scenario/scenario238_day_029",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100127404,
+   "base_id": "v8r98i_l4_s100127404_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000058,
+    239000059
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_014",
+   "archive": "scenario/scenario238_pool_014",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100120006,
+   "base_id": "v8r94a_l27_s100120006_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000028,
+    239000029
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_015",
+   "archive": "scenario/scenario238_pool_015",
+   "level": 24,
+   "terrain": "pool",
+   "deck": [
+    1,
+    4,
+    5,
+    16,
+    17,
+    18,
+    19,
+    23
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100119913,
+   "base_id": "v8r94i_l24_s100119913_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000030,
+    239000031
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_041",
+   "archive": "scenario/scenario238_fog_041",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122331,
+   "base_id": "v8r95i_l33_s100122331_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000082,
+    239000083
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_030",
+   "archive": "scenario/scenario238_day_030",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121238,
+   "base_id": "v8r95i_l4_s100121238_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000060,
+    239000061
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_011",
+   "archive": "scenario/scenario238_night_011",
+   "level": 11,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30
+   ],
+   "multiplier": 3.0,
+   "source_seed": 100123522,
+   "base_id": "v8r96b_l11_s100123522_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000022,
+    239000023
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_031",
+   "archive": "scenario/scenario238_day_031",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100125253,
+   "base_id": "v8r97i_l2_s100125253_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000062,
+    239000063
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_042",
+   "archive": "scenario/scenario238_fog_042",
+   "level": 37,
+   "terrain": "fog",
+   "deck": [
+    3,
+    8,
+    9,
+    15,
+    16,
+    19,
+    25,
+    29,
+    31,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126584,
+   "base_id": "v8r97i_l37_s100126584_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000084,
+    239000085
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_043",
+   "archive": "scenario/scenario238_fog_043",
+   "level": 31,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    12,
+    15,
+    16,
+    19,
+    23,
+    25,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128408,
+   "base_id": "v8r98b_l31_s100128408_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000086,
+    239000087
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_016",
+   "archive": "scenario/scenario238_pool_016",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    35,
+    10,
+    42,
+    39,
+    44,
+    30,
+    21,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120093,
+   "base_id": "v8r94i_l29_s100120093_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000032,
+    239000033
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_011",
+   "archive": "scenario/scenario238_roof_011",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120549,
+   "base_id": "v8r94b_l41_s100120549_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000022,
+    239000023
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_012",
+   "archive": "scenario/scenario238_roof_012",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120545,
+   "base_id": "v8r94i_l41_s100120545_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000024,
+    239000025
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_044",
+   "archive": "scenario/scenario238_fog_044",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126439,
+   "base_id": "v8r97a_l33_s100126439_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000088,
+    239000089
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_045",
+   "archive": "scenario/scenario238_fog_045",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130548,
+   "base_id": "v8r99i_l33_s100130548_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000090,
+    239000091
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_046",
+   "archive": "scenario/scenario238_fog_046",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120276,
+   "base_id": "v8r94a_l33_s100120276_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000092,
+    239000093
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_047",
+   "archive": "scenario/scenario238_fog_047",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120365,
+   "base_id": "v8r94b_l36_s100120365_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000094,
+    239000095
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_032",
+   "archive": "scenario/scenario238_day_032",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100121279,
+   "base_id": "v8r95i_l6_s100121279_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000064,
+    239000065
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_048",
+   "archive": "scenario/scenario238_fog_048",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126440,
+   "base_id": "v8r97a_l33_s100126440_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000096,
+    239000097
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_049",
+   "archive": "scenario/scenario238_fog_049",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126528,
+   "base_id": "v8r97b_l36_s100126528_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000098,
+    239000099
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_033",
+   "archive": "scenario/scenario238_day_033",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100127312,
+   "base_id": "v8r98i_l2_s100127312_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000066,
+    239000067
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_050",
+   "archive": "scenario/scenario238_fog_050",
+   "level": 34,
+   "terrain": "fog",
+   "deck": [
+    5,
+    8,
+    9,
+    16,
+    19,
+    23,
+    25,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130593,
+   "base_id": "v8r99i_l34_s100130593_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000100,
+    239000101
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_013",
+   "archive": "scenario/scenario238_roof_013",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120641,
+   "base_id": "v8r94b_l43_s100120641_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000026,
+    239000027
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_014",
+   "archive": "scenario/scenario238_roof_014",
+   "level": 48,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120816,
+   "base_id": "v8r94i_l48_s100120816_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000028,
+    239000029
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_051",
+   "archive": "scenario/scenario238_fog_051",
+   "level": 34,
+   "terrain": "fog",
+   "deck": [
+    5,
+    8,
+    9,
+    16,
+    19,
+    23,
+    25,
+    43
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122375,
+   "base_id": "v8r95a_l34_s100122375_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000102,
+    239000103
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_034",
+   "archive": "scenario/scenario238_day_034",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100121148,
+   "base_id": "v8r95b_l2_s100121148_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000068,
+    239000069
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_052",
+   "archive": "scenario/scenario238_fog_052",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124384,
+   "base_id": "v8r96b_l33_s100124384_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000104,
+    239000105
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_017",
+   "archive": "scenario/scenario238_pool_017",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128360,
+   "base_id": "v8r98b_l29_s100128360_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000034,
+    239000035
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_053",
+   "archive": "scenario/scenario238_fog_053",
+   "level": 31,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    12,
+    15,
+    16,
+    19,
+    23,
+    25,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130466,
+   "base_id": "v8r99b_l31_s100130466_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000106,
+    239000107
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_054",
+   "archive": "scenario/scenario238_fog_054",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130550,
+   "base_id": "v8r99i_l33_s100130550_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000108,
+    239000109
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_055",
+   "archive": "scenario/scenario238_fog_055",
+   "level": 31,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    12,
+    15,
+    16,
+    19,
+    23,
+    25,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122243,
+   "base_id": "v8r95b_l31_s100122243_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000110,
+    239000111
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_056",
+   "archive": "scenario/scenario238_fog_056",
+   "level": 32,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    15,
+    16,
+    19,
+    25,
+    27,
+    36,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124338,
+   "base_id": "v8r96i_l32_s100124338_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000112,
+    239000113
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_012",
+   "archive": "scenario/scenario238_night_012",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125714,
+   "base_id": "v8r97b_l14_s100125714_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000024,
+    239000025
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_035",
+   "archive": "scenario/scenario238_day_035",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121237,
+   "base_id": "v8r95i_l4_s100121237_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000070,
+    239000071
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_018",
+   "archive": "scenario/scenario238_pool_018",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120138,
+   "base_id": "v8r94a_l29_s100120138_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000036,
+    239000037
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_057",
+   "archive": "scenario/scenario238_fog_057",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120363,
+   "base_id": "v8r94a_l36_s100120363_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000114,
+    239000115
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_036",
+   "archive": "scenario/scenario238_day_036",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100129500,
+   "base_id": "v8r99i_l6_s100129500_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000072,
+    239000073
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_015",
+   "archive": "scenario/scenario238_roof_015",
+   "level": 47,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120768,
+   "base_id": "v8r94i_l47_s100120768_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000030,
+    239000031
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_019",
+   "archive": "scenario/scenario238_pool_019",
+   "level": 26,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    16,
+    17,
+    19,
+    21,
+    29,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122017,
+   "base_id": "v8r95a_l26_s100122017_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000038,
+    239000039
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_037",
+   "archive": "scenario/scenario238_day_037",
+   "level": 9,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    6,
+    7,
+    8,
+    15,
+    30,
+    35,
+    41
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100123475,
+   "base_id": "v8r96b_l9_s100123475_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000074,
+    239000075
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_020",
+   "archive": "scenario/scenario238_pool_020",
+   "level": 28,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    5,
+    7,
+    23,
+    19,
+    4,
+    17,
+    40,
+    41
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100126218,
+   "base_id": "v8r97a_l28_s100126218_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000040,
+    239000041
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_013",
+   "archive": "scenario/scenario238_night_013",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125712,
+   "base_id": "v8r97i_l14_s100125712_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000026,
+    239000027
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_058",
+   "archive": "scenario/scenario238_fog_058",
+   "level": 33,
+   "terrain": "fog",
+   "deck": [
+    9,
+    8,
+    16,
+    10,
+    42,
+    43,
+    24,
+    36,
+    5,
+    17
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128494,
+   "base_id": "v8r98b_l33_s100128494_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000116,
+    239000117
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_038",
+   "archive": "scenario/scenario238_day_038",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100129455,
+   "base_id": "v8r99b_l4_s100129455_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000076,
+    239000077
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_059",
+   "archive": "scenario/scenario238_fog_059",
+   "level": 31,
+   "terrain": "fog",
+   "deck": [
+    8,
+    9,
+    10,
+    12,
+    15,
+    16,
+    19,
+    23,
+    25,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120190,
+   "base_id": "v8r94b_l31_s100120190_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000118,
+    239000119
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_021",
+   "archive": "scenario/scenario238_pool_021",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100120012,
+   "base_id": "v8r94i_l27_s100120012_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000042,
+    239000043
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_016",
+   "archive": "scenario/scenario238_roof_016",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120543,
+   "base_id": "v8r94i_l41_s100120543_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000032,
+    239000033
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_022",
+   "archive": "scenario/scenario238_pool_022",
+   "level": 28,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    5,
+    7,
+    23,
+    19,
+    4,
+    17,
+    40,
+    41
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100124162,
+   "base_id": "v8r96a_l28_s100124162_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000044,
+    239000045
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_fog_060",
+   "archive": "scenario/scenario238_fog_060",
+   "level": 36,
+   "terrain": "fog",
+   "deck": [
+    4,
+    8,
+    9,
+    14,
+    16,
+    17,
+    18,
+    19,
+    23,
+    25
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124474,
+   "base_id": "v8r96a_l36_s100124474_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000120,
+    239000121
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "橄榄球",
+    "跳跳",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_039",
+   "archive": "scenario/scenario238_day_039",
+   "level": 1,
+   "terrain": "day",
+   "deck": [
+    1,
+    2,
+    3,
+    4,
+    17,
+    21,
+    23,
+    32,
+    39,
+    41
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100125214,
+   "base_id": "v8r97a_l1_s100125214_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000078,
+    239000079
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_014",
+   "archive": "scenario/scenario238_night_014",
+   "level": 16,
+   "terrain": "night",
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    13,
+    11,
+    5,
+    36,
+    31,
+    21
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100125759,
+   "base_id": "v8r97i_l16_s100125759_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000028,
+    239000029
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_023",
+   "archive": "scenario/scenario238_pool_023",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128360,
+   "base_id": "v8r98a_l29_s100128360_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000046,
+    239000047
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_040",
+   "archive": "scenario/scenario238_day_040",
+   "level": 9,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    6,
+    7,
+    8,
+    15,
+    30,
+    35,
+    41
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100127583,
+   "base_id": "v8r98i_l9_s100127583_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000080,
+    239000081
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_015",
+   "archive": "scenario/scenario238_night_015",
+   "level": 11,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30
+   ],
+   "multiplier": 3.0,
+   "source_seed": 100125574,
+   "base_id": "v8r97b_l11_s100125574_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000030,
+    239000031
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_016",
+   "archive": "scenario/scenario238_night_016",
+   "level": 19,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30,
+    42
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100125896,
+   "base_id": "v8r97b_l19_s100125896_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000032,
+    239000033
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_024",
+   "archive": "scenario/scenario238_pool_024",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100126168,
+   "base_id": "v8r97i_l27_s100126168_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000048,
+    239000049
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_017",
+   "archive": "scenario/scenario238_night_017",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127767,
+   "base_id": "v8r98a_l14_s100127767_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000034,
+    239000035
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_018",
+   "archive": "scenario/scenario238_night_018",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100129826,
+   "base_id": "v8r99i_l14_s100129826_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000036,
+    239000037
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_041",
+   "archive": "scenario/scenario238_day_041",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119181,
+   "base_id": "v8r94a_l4_s100119181_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000082,
+    239000083
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_017",
+   "archive": "scenario/scenario238_roof_017",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120860,
+   "base_id": "v8r94i_l49_s100120860_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000034,
+    239000035
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_025",
+   "archive": "scenario/scenario238_pool_025",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100121831,
+   "base_id": "v8r95b_l21_s100121831_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000050,
+    239000051
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_042",
+   "archive": "scenario/scenario238_day_042",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123205,
+   "base_id": "v8r96b_l2_s100123205_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000084,
+    239000085
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_019",
+   "archive": "scenario/scenario238_night_019",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123617,
+   "base_id": "v8r96i_l13_s100123617_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000038,
+    239000039
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_043",
+   "archive": "scenario/scenario238_day_043",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100127401,
+   "base_id": "v8r98a_l4_s100127401_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000086,
+    239000087
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_020",
+   "archive": "scenario/scenario238_night_020",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100127723,
+   "base_id": "v8r98i_l13_s100127723_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000040,
+    239000041
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_018",
+   "archive": "scenario/scenario238_roof_018",
+   "level": 47,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100128988,
+   "base_id": "v8r98i_l47_s100128988_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000036,
+    239000037
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_019",
+   "archive": "scenario/scenario238_roof_019",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100131134,
+   "base_id": "v8r99a_l49_s100131134_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000038,
+    239000039
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_044",
+   "archive": "scenario/scenario238_day_044",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100129461,
+   "base_id": "v8r99a_l4_s100129461_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000088,
+    239000089
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_026",
+   "archive": "scenario/scenario238_pool_026",
+   "level": 28,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    5,
+    7,
+    23,
+    19,
+    4,
+    17,
+    40,
+    41
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100126214,
+   "base_id": "v8r97b_l28_s100126214_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000052,
+    239000053
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_021",
+   "archive": "scenario/scenario238_night_021",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100129821,
+   "base_id": "v8r99i_l14_s100129821_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000042,
+    239000043
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_045",
+   "archive": "scenario/scenario238_day_045",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119180,
+   "base_id": "v8r94i_l4_s100119180_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000090,
+    239000091
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_046",
+   "archive": "scenario/scenario238_day_046",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100119224,
+   "base_id": "v8r94i_l6_s100119224_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000092,
+    239000093
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_027",
+   "archive": "scenario/scenario238_pool_027",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100122067,
+   "base_id": "v8r95a_l27_s100122067_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000054,
+    239000055
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_028",
+   "archive": "scenario/scenario238_pool_028",
+   "level": 22,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    35,
+    10,
+    42,
+    36,
+    17,
+    4,
+    19,
+    21
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100123935,
+   "base_id": "v8r96a_l22_s100123935_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000056,
+    239000057
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_029",
+   "archive": "scenario/scenario238_pool_029",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126304,
+   "base_id": "v8r97i_l29_s100126304_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000058,
+    239000059
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_030",
+   "archive": "scenario/scenario238_pool_030",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100119870,
+   "base_id": "v8r94a_l23_s100119870_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000060,
+    239000061
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_047",
+   "archive": "scenario/scenario238_day_047",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119180,
+   "base_id": "v8r94b_l4_s100119180_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000094,
+    239000095
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_031",
+   "archive": "scenario/scenario238_pool_031",
+   "level": 28,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    5,
+    7,
+    23,
+    19,
+    4,
+    17,
+    40,
+    41
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100120055,
+   "base_id": "v8r94i_l28_s100120055_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000062,
+    239000063
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_032",
+   "archive": "scenario/scenario238_pool_032",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126303,
+   "base_id": "v8r97b_l29_s100126303_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000064,
+    239000065
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_033",
+   "archive": "scenario/scenario238_pool_033",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128223,
+   "base_id": "v8r98b_l27_s100128223_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000066,
+    239000067
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_048",
+   "archive": "scenario/scenario238_day_048",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121236,
+   "base_id": "v8r95i_l4_s100121236_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000096,
+    239000097
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_049",
+   "archive": "scenario/scenario238_day_049",
+   "level": 3,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    10,
+    17,
+    35,
+    41,
+    42
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100125300,
+   "base_id": "v8r97i_l3_s100125300_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000098,
+    239000099
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_050",
+   "archive": "scenario/scenario238_day_050",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100125390,
+   "base_id": "v8r97i_l6_s100125390_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000100,
+    239000101
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_022",
+   "archive": "scenario/scenario238_night_022",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127766,
+   "base_id": "v8r98a_l14_s100127766_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000044,
+    239000045
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_034",
+   "archive": "scenario/scenario238_pool_034",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128223,
+   "base_id": "v8r98a_l27_s100128223_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000068,
+    239000069
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_023",
+   "archive": "scenario/scenario238_night_023",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127768,
+   "base_id": "v8r98b_l14_s100127768_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000046,
+    239000047
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_035",
+   "archive": "scenario/scenario238_pool_035",
+   "level": 26,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    16,
+    17,
+    19,
+    21,
+    29,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128182,
+   "base_id": "v8r98i_l26_s100128182_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000070,
+    239000071
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_051",
+   "archive": "scenario/scenario238_day_051",
+   "level": 6,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    5,
+    17,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100119226,
+   "base_id": "v8r94b_l6_s100119226_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000102,
+    239000103
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_036",
+   "archive": "scenario/scenario238_pool_036",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100121926,
+   "base_id": "v8r95i_l23_s100121926_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000072,
+    239000073
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_024",
+   "archive": "scenario/scenario238_night_024",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100125665,
+   "base_id": "v8r97a_l13_s100125665_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000048,
+    239000049
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_037",
+   "archive": "scenario/scenario238_pool_037",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128225,
+   "base_id": "v8r98a_l27_s100128225_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000074,
+    239000075
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_052",
+   "archive": "scenario/scenario238_day_052",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100127315,
+   "base_id": "v8r98a_l2_s100127315_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000104,
+    239000105
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_020",
+   "archive": "scenario/scenario238_roof_020",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120546,
+   "base_id": "v8r94b_l41_s100120546_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000040,
+    239000041
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_038",
+   "archive": "scenario/scenario238_pool_038",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124249,
+   "base_id": "v8r96i_l29_s100124249_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000076,
+    239000077
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_025",
+   "archive": "scenario/scenario238_night_025",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125712,
+   "base_id": "v8r97a_l14_s100125712_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000050,
+    239000051
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_053",
+   "archive": "scenario/scenario238_day_053",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100129363,
+   "base_id": "v8r99a_l2_s100129363_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000106,
+    239000107
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_054",
+   "archive": "scenario/scenario238_day_054",
+   "level": 9,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    6,
+    7,
+    8,
+    15,
+    30,
+    35,
+    41
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100129643,
+   "base_id": "v8r99a_l9_s100129643_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000108,
+    239000109
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_055",
+   "archive": "scenario/scenario238_day_055",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125343,
+   "base_id": "v8r97i_l4_s100125343_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000110,
+    239000111
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_056",
+   "archive": "scenario/scenario238_day_056",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100123292,
+   "base_id": "v8r96i_l4_s100123292_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000112,
+    239000113
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_026",
+   "archive": "scenario/scenario238_night_026",
+   "level": 19,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30,
+    42
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100125895,
+   "base_id": "v8r97b_l19_s100125895_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000052,
+    239000053
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_039",
+   "archive": "scenario/scenario238_pool_039",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100130053,
+   "base_id": "v8r99a_l21_s100130053_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000078,
+    239000079
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_040",
+   "archive": "scenario/scenario238_pool_040",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120138,
+   "base_id": "v8r94b_l29_s100120138_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000080,
+    239000081
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_057",
+   "archive": "scenario/scenario238_day_057",
+   "level": 2,
+   "terrain": "day",
+   "deck": [
+    1,
+    3,
+    4,
+    18,
+    29,
+    30,
+    41
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100121141,
+   "base_id": "v8r95b_l2_s100121141_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000114,
+    239000115
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_058",
+   "archive": "scenario/scenario238_day_058",
+   "level": 1,
+   "terrain": "day",
+   "deck": [
+    1,
+    2,
+    3,
+    4,
+    17,
+    21,
+    23,
+    32,
+    39,
+    41
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100123157,
+   "base_id": "v8r96i_l1_s100123157_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000116,
+    239000117
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_021",
+   "archive": "scenario/scenario238_roof_021",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100124703,
+   "base_id": "v8r96i_l42_s100124703_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000042,
+    239000043
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_059",
+   "archive": "scenario/scenario238_day_059",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125344,
+   "base_id": "v8r97i_l4_s100125344_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000118,
+    239000119
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_day_060",
+   "archive": "scenario/scenario238_day_060",
+   "level": 4,
+   "terrain": "day",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    22,
+    40
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100127400,
+   "base_id": "v8r98a_l4_s100127400_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000120,
+    239000121
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "撑杆",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_041",
+   "archive": "scenario/scenario238_pool_041",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128226,
+   "base_id": "v8r98i_l27_s100128226_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000082,
+    239000083
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_042",
+   "archive": "scenario/scenario238_pool_042",
+   "level": 21,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    3,
+    7,
+    16,
+    17,
+    22,
+    40
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100130051,
+   "base_id": "v8r99b_l21_s100130051_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000084,
+    239000085
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_022",
+   "archive": "scenario/scenario238_roof_022",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120859,
+   "base_id": "v8r94i_l49_s100120859_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000044,
+    239000045
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_043",
+   "archive": "scenario/scenario238_pool_043",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128359,
+   "base_id": "v8r98b_l29_s100128359_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000086,
+    239000087
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_044",
+   "archive": "scenario/scenario238_pool_044",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100119871,
+   "base_id": "v8r94i_l23_s100119871_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000088,
+    239000089
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_023",
+   "archive": "scenario/scenario238_roof_023",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100124701,
+   "base_id": "v8r96a_l42_s100124701_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000046,
+    239000047
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_027",
+   "archive": "scenario/scenario238_night_027",
+   "level": 19,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30,
+    42
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100123847,
+   "base_id": "v8r96i_l19_s100123847_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000054,
+    239000055
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_045",
+   "archive": "scenario/scenario238_pool_045",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100126170,
+   "base_id": "v8r97i_l27_s100126170_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000090,
+    239000091
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_028",
+   "archive": "scenario/scenario238_night_028",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127768,
+   "base_id": "v8r98a_l14_s100127768_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000056,
+    239000057
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_029",
+   "archive": "scenario/scenario238_night_029",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119505,
+   "base_id": "v8r94a_l13_s100119505_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000058,
+    239000059
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_030",
+   "archive": "scenario/scenario238_night_030",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100121602,
+   "base_id": "v8r95a_l14_s100121602_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000060,
+    239000061
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_031",
+   "archive": "scenario/scenario238_night_031",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100121561,
+   "base_id": "v8r95i_l13_s100121561_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000062,
+    239000063
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_046",
+   "archive": "scenario/scenario238_pool_046",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122194,
+   "base_id": "v8r95i_l29_s100122194_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000092,
+    239000093
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_024",
+   "archive": "scenario/scenario238_roof_024",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100124698,
+   "base_id": "v8r96b_l42_s100124698_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000048,
+    239000049
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_032",
+   "archive": "scenario/scenario238_night_032",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123611,
+   "base_id": "v8r96i_l13_s100123611_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000064,
+    239000065
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_047",
+   "archive": "scenario/scenario238_pool_047",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100126168,
+   "base_id": "v8r97a_l27_s100126168_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000094,
+    239000095
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_048",
+   "archive": "scenario/scenario238_pool_048",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126306,
+   "base_id": "v8r97b_l29_s100126306_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000096,
+    239000097
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_049",
+   "archive": "scenario/scenario238_pool_049",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124249,
+   "base_id": "v8r96b_l29_s100124249_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000098,
+    239000099
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_050",
+   "archive": "scenario/scenario238_pool_050",
+   "level": 26,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    16,
+    17,
+    19,
+    21,
+    29,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126131,
+   "base_id": "v8r97i_l26_s100126131_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000100,
+    239000101
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_033",
+   "archive": "scenario/scenario238_night_033",
+   "level": 19,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30,
+    42
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127961,
+   "base_id": "v8r98a_l19_s100127961_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000066,
+    239000067
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_051",
+   "archive": "scenario/scenario238_pool_051",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100130280,
+   "base_id": "v8r99a_l27_s100130280_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000102,
+    239000103
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_052",
+   "archive": "scenario/scenario238_pool_052",
+   "level": 28,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    5,
+    7,
+    23,
+    19,
+    4,
+    17,
+    40,
+    41
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100120048,
+   "base_id": "v8r94i_l28_s100120048_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000104,
+    239000105
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_053",
+   "archive": "scenario/scenario238_pool_053",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128223,
+   "base_id": "v8r98i_l27_s100128223_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000106,
+    239000107
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_054",
+   "archive": "scenario/scenario238_pool_054",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122193,
+   "base_id": "v8r95b_l29_s100122193_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000108,
+    239000109
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_055",
+   "archive": "scenario/scenario238_pool_055",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100126035,
+   "base_id": "v8r97a_l23_s100126035_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000110,
+    239000111
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_056",
+   "archive": "scenario/scenario238_pool_056",
+   "level": 27,
+   "terrain": "pool",
+   "deck": [
+    0,
+    1,
+    16,
+    17,
+    19,
+    23,
+    43
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100120005,
+   "base_id": "v8r94a_l27_s100120005_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000112,
+    239000113
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_057",
+   "archive": "scenario/scenario238_pool_057",
+   "level": 29,
+   "terrain": "pool",
+   "deck": [
+    1,
+    7,
+    40,
+    22,
+    23,
+    19,
+    16,
+    17,
+    21,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120140,
+   "base_id": "v8r94b_l29_s100120140_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000114,
+    239000115
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_058",
+   "archive": "scenario/scenario238_pool_058",
+   "level": 26,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    16,
+    17,
+    19,
+    21,
+    29,
+    46
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100119958,
+   "base_id": "v8r94i_l26_s100119958_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000116,
+    239000117
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_034",
+   "archive": "scenario/scenario238_night_034",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123657,
+   "base_id": "v8r96i_l14_s100123657_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000068,
+    239000069
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_059",
+   "archive": "scenario/scenario238_pool_059",
+   "level": 22,
+   "terrain": "pool",
+   "deck": [
+    1,
+    16,
+    35,
+    10,
+    42,
+    36,
+    17,
+    4,
+    19,
+    21
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100125990,
+   "base_id": "v8r97a_l22_s100125990_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000118,
+    239000119
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_035",
+   "archive": "scenario/scenario238_night_035",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125713,
+   "base_id": "v8r97i_l14_s100125713_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000070,
+    239000071
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_pool_060",
+   "archive": "scenario/scenario238_pool_060",
+   "level": 23,
+   "terrain": "pool",
+   "deck": [
+    1,
+    3,
+    6,
+    16,
+    17,
+    19,
+    30,
+    32
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100128090,
+   "base_id": "v8r98a_l23_s100128090_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000120,
+    239000121
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "海豚",
+    "潜水",
+    "橄榄球",
+    "冰车"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_036",
+   "archive": "scenario/scenario238_night_036",
+   "level": 16,
+   "terrain": "night",
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    13,
+    11,
+    5,
+    36,
+    31,
+    21
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100123704,
+   "base_id": "v8r96i_l16_s100123704_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000072,
+    239000073
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_037",
+   "archive": "scenario/scenario238_night_037",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100119501,
+   "base_id": "v8r94a_l13_s100119501_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000074,
+    239000075
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_038",
+   "archive": "scenario/scenario238_night_038",
+   "level": 16,
+   "terrain": "night",
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    13,
+    11,
+    5,
+    36,
+    31,
+    21
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100119594,
+   "base_id": "v8r94a_l16_s100119594_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000076,
+    239000077
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_039",
+   "archive": "scenario/scenario238_night_039",
+   "level": 16,
+   "terrain": "night",
+   "deck": [
+    9,
+    8,
+    10,
+    42,
+    13,
+    11,
+    5,
+    36,
+    31,
+    21
+   ],
+   "multiplier": 1.25,
+   "source_seed": 100121648,
+   "base_id": "v8r95i_l16_s100121648_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000078,
+    239000079
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_040",
+   "archive": "scenario/scenario238_night_040",
+   "level": 19,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30,
+    42
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100123850,
+   "base_id": "v8r96b_l19_s100123850_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000080,
+    239000081
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_041",
+   "archive": "scenario/scenario238_night_041",
+   "level": 11,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30
+   ],
+   "multiplier": 3.0,
+   "source_seed": 100119415,
+   "base_id": "v8r94a_l11_s100119415_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000082,
+    239000083
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_025",
+   "archive": "scenario/scenario238_roof_025",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120858,
+   "base_id": "v8r94a_l49_s100120858_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000050,
+    239000051
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_026",
+   "archive": "scenario/scenario238_roof_026",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120544,
+   "base_id": "v8r94i_l41_s100120544_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000052,
+    239000053
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_042",
+   "archive": "scenario/scenario238_night_042",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127768,
+   "base_id": "v8r98i_l14_s100127768_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000084,
+    239000085
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_027",
+   "archive": "scenario/scenario238_roof_027",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120590,
+   "base_id": "v8r94i_l42_s100120590_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000054,
+    239000055
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_028",
+   "archive": "scenario/scenario238_roof_028",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120635,
+   "base_id": "v8r94i_l43_s100120635_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000056,
+    239000057
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_043",
+   "archive": "scenario/scenario238_night_043",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123658,
+   "base_id": "v8r96i_l14_s100123658_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000086,
+    239000087
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_029",
+   "archive": "scenario/scenario238_roof_029",
+   "level": 46,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100120723,
+   "base_id": "v8r94i_l46_s100120723_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000058,
+    239000059
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_044",
+   "archive": "scenario/scenario238_night_044",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123614,
+   "base_id": "v8r96i_l13_s100123614_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000088,
+    239000089
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_030",
+   "archive": "scenario/scenario238_roof_030",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100126761,
+   "base_id": "v8r97i_l42_s100126761_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000060,
+    239000061
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_045",
+   "archive": "scenario/scenario238_night_045",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100127729,
+   "base_id": "v8r98i_l13_s100127729_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000090,
+    239000091
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_046",
+   "archive": "scenario/scenario238_night_046",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100125667,
+   "base_id": "v8r97a_l13_s100125667_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000092,
+    239000093
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_047",
+   "archive": "scenario/scenario238_night_047",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100125665,
+   "base_id": "v8r97i_l13_s100125665_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000094,
+    239000095
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_031",
+   "archive": "scenario/scenario238_roof_031",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128774,
+   "base_id": "v8r98b_l41_s100128774_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000062,
+    239000063
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_048",
+   "archive": "scenario/scenario238_night_048",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100121601,
+   "base_id": "v8r95a_l14_s100121601_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000096,
+    239000097
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_032",
+   "archive": "scenario/scenario238_roof_032",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100128808,
+   "base_id": "v8r98a_l42_s100128808_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000064,
+    239000065
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_033",
+   "archive": "scenario/scenario238_roof_033",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100130911,
+   "base_id": "v8r99b_l43_s100130911_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000066,
+    239000067
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_049",
+   "archive": "scenario/scenario238_night_049",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100119546,
+   "base_id": "v8r94b_l14_s100119546_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000098,
+    239000099
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_034",
+   "archive": "scenario/scenario238_roof_034",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120591,
+   "base_id": "v8r94b_l42_s100120591_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000068,
+    239000069
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_035",
+   "archive": "scenario/scenario238_roof_035",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100130908,
+   "base_id": "v8r99a_l43_s100130908_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000070,
+    239000071
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_050",
+   "archive": "scenario/scenario238_night_050",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123610,
+   "base_id": "v8r96a_l13_s100123610_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000100,
+    239000101
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_051",
+   "archive": "scenario/scenario238_night_051",
+   "level": 19,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30,
+    42
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100119732,
+   "base_id": "v8r94a_l19_s100119732_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000102,
+    239000103
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_036",
+   "archive": "scenario/scenario238_roof_036",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100128764,
+   "base_id": "v8r98a_l41_s100128764_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000072,
+    239000073
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_052",
+   "archive": "scenario/scenario238_night_052",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125711,
+   "base_id": "v8r97b_l14_s100125711_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000104,
+    239000105
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_037",
+   "archive": "scenario/scenario238_roof_037",
+   "level": 46,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100122779,
+   "base_id": "v8r95b_l46_s100122779_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000074,
+    239000075
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_038",
+   "archive": "scenario/scenario238_roof_038",
+   "level": 46,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 1.0,
+   "source_seed": 100122779,
+   "base_id": "v8r95i_l46_s100122779_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000076,
+    239000077
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_039",
+   "archive": "scenario/scenario238_roof_039",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100130822,
+   "base_id": "v8r99b_l41_s100130822_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000078,
+    239000079
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_053",
+   "archive": "scenario/scenario238_night_053",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125711,
+   "base_id": "v8r97a_l14_s100125711_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000106,
+    239000107
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_054",
+   "archive": "scenario/scenario238_night_054",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100119549,
+   "base_id": "v8r94b_l14_s100119549_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000108,
+    239000109
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_055",
+   "archive": "scenario/scenario238_night_055",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100127767,
+   "base_id": "v8r98b_l14_s100127767_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000110,
+    239000111
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_056",
+   "archive": "scenario/scenario238_night_056",
+   "level": 13,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    15,
+    30,
+    42
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123612,
+   "base_id": "v8r96a_l13_s100123612_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000112,
+    239000113
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_040",
+   "archive": "scenario/scenario238_roof_040",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120588,
+   "base_id": "v8r94b_l42_s100120588_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000080,
+    239000081
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_041",
+   "archive": "scenario/scenario238_roof_041",
+   "level": 44,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120680,
+   "base_id": "v8r94i_l44_s100120680_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000082,
+    239000083
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_057",
+   "archive": "scenario/scenario238_night_057",
+   "level": 11,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    30
+   ],
+   "multiplier": 3.0,
+   "source_seed": 100123522,
+   "base_id": "v8r96b_l11_s100123522_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000114,
+    239000115
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_042",
+   "archive": "scenario/scenario238_roof_042",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120545,
+   "base_id": "v8r94i_l41_s100120545_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000084,
+    239000085
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_043",
+   "archive": "scenario/scenario238_roof_043",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120641,
+   "base_id": "v8r94b_l43_s100120641_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000086,
+    239000087
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_044",
+   "archive": "scenario/scenario238_roof_044",
+   "level": 48,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120816,
+   "base_id": "v8r94i_l48_s100120816_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000088,
+    239000089
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_058",
+   "archive": "scenario/scenario238_night_058",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.5,
+   "source_seed": 100129827,
+   "base_id": "v8r99b_l14_s100129827_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000116,
+    239000117
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_059",
+   "archive": "scenario/scenario238_night_059",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 2.0,
+   "source_seed": 100123657,
+   "base_id": "v8r96b_l14_s100123657_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000118,
+    239000119
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_night_060",
+   "archive": "scenario/scenario238_night_060",
+   "level": 14,
+   "terrain": "night",
+   "deck": [
+    8,
+    9,
+    10,
+    11,
+    21,
+    23,
+    46
+   ],
+   "multiplier": 1.75,
+   "source_seed": 100125714,
+   "base_id": "v8r97b_l14_s100125714_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000120,
+    239000121
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "橄榄球",
+    "跳跳",
+    "梯子",
+    "巨人"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_045",
+   "archive": "scenario/scenario238_roof_045",
+   "level": 47,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120768,
+   "base_id": "v8r94i_l47_s100120768_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000090,
+    239000091
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_046",
+   "archive": "scenario/scenario238_roof_046",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120633,
+   "base_id": "v8r94i_l43_s100120633_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000092,
+    239000093
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_047",
+   "archive": "scenario/scenario238_roof_047",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120860,
+   "base_id": "v8r94i_l49_s100120860_c3",
+   "horizon": 1200,
+   "future_seeds": [
+    239000094,
+    239000095
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_048",
+   "archive": "scenario/scenario238_roof_048",
+   "level": 48,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100124929,
+   "base_id": "v8r96i_l48_s100124929_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000096,
+    239000097
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_049",
+   "archive": "scenario/scenario238_roof_049",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100131134,
+   "base_id": "v8r99a_l49_s100131134_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000098,
+    239000099
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_050",
+   "archive": "scenario/scenario238_roof_050",
+   "level": 47,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120775,
+   "base_id": "v8r94a_l47_s100120775_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000100,
+    239000101
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_051",
+   "archive": "scenario/scenario238_roof_051",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100122649,
+   "base_id": "v8r95a_l42_s100122649_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000102,
+    239000103
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_052",
+   "archive": "scenario/scenario238_roof_052",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100128809,
+   "base_id": "v8r98a_l42_s100128809_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000104,
+    239000105
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_053",
+   "archive": "scenario/scenario238_roof_053",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120546,
+   "base_id": "v8r94b_l41_s100120546_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000106,
+    239000107
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_054",
+   "archive": "scenario/scenario238_roof_054",
+   "level": 43,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    3,
+    5,
+    17,
+    20,
+    30,
+    32,
+    33,
+    34
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100122691,
+   "base_id": "v8r95b_l43_s100122691_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000108,
+    239000109
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_055",
+   "archive": "scenario/scenario238_roof_055",
+   "level": 47,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100131043,
+   "base_id": "v8r99i_l47_s100131043_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000110,
+    239000111
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_056",
+   "archive": "scenario/scenario238_roof_056",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100124698,
+   "base_id": "v8r96b_l42_s100124698_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000112,
+    239000113
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_057",
+   "archive": "scenario/scenario238_roof_057",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100126717,
+   "base_id": "v8r97i_l41_s100126717_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000114,
+    239000115
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_058",
+   "archive": "scenario/scenario238_roof_058",
+   "level": 42,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    17,
+    30,
+    32,
+    33,
+    34,
+    37,
+    39,
+    44
+   ],
+   "multiplier": 0.75,
+   "source_seed": 100120590,
+   "base_id": "v8r94a_l42_s100120590_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000116,
+    239000117
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_059",
+   "archive": "scenario/scenario238_roof_059",
+   "level": 41,
+   "terrain": "roof",
+   "deck": [
+    1,
+    2,
+    10,
+    17,
+    30,
+    32,
+    33,
+    35,
+    37,
+    42
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100122601,
+   "base_id": "v8r95a_l41_s100122601_c9",
+   "horizon": 1200,
+   "future_seeds": [
+    239000118,
+    239000119
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  },
+  {
+   "task_id": "scenario238_roof_060",
+   "archive": "scenario/scenario238_roof_060",
+   "level": 49,
+   "terrain": "roof",
+   "deck": [
+    1,
+    33,
+    39,
+    44,
+    4,
+    2,
+    17,
+    35,
+    14,
+    15
+   ],
+   "multiplier": 0.5,
+   "source_seed": 100120858,
+   "base_id": "v8r94a_l49_s100120858_c6",
+   "horizon": 1200,
+   "future_seeds": [
+    239000120,
+    239000121
+   ],
+   "knowledge_candidates": [
+    "气球",
+    "小丑",
+    "矿工",
+    "投石车",
+    "蹦极",
+    "巨人",
+    "梯子"
+   ]
+  }
+ ]
+}

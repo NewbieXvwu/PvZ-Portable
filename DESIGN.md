@@ -3543,3 +3543,25 @@ L1/L3/L4/L8 2.5、L6 2.0、L9 1.75、L11 2.0、L13/L16/L18 1.5、L21/L22/L38 1.2
 `environment_task` 完整写入 meta，旧档重放不受现行规则影响。截断点 = 第一次破门（小推车触发或
 僵尸进到第 0 列）前 45 秒，导出后仍是完整 tick 日志。升级植物配额与地形联系见
 `configs/llmplay_seeds.json` 的 `decks.upgrades`（只统计本会话新胜组），未改生产课程。
+
+### task238：GPT Pro 必刷题 / 自出题包（2026-11-04 登记，未部署）
+
+在 task220/226 的 LLM 包之上新增两条短视界队列，派发顺序变为
+**drill > scenario > resume > frontier > native > main**。
+
+- **drill**：`configs/llmplay_drills.json` + 包内 `drill/`（起点 tick 日志 + 单帧 npz）。
+  918 道：task235 雾关 660 道全部按生产老师 0/3 → 中间 → 全对排序；task234 屋顶/夜间/
+  泳池 106 道（存档仍在的）；226b 生产中盘前缀新挖 152 道（按地形×僵尸类型限流）。
+  每道 3 个 RESEED 种子，按项派发。
+- **scenario**：`configs/llmplay_scenarios.json` + 包内 `scenario/`。五地形各 60 个真实
+  中盘底局；GPT 用 `spawn` / `set_sun` / `set_cooldown` 注入单一威胁，`declare_scenario()`
+  声明知识点/视界/目标并自动跑“什么都不做”对照，对照成功拒绝导出。每个底局 2 个种子。
+- 判据仍是 `scripts/drill_start.py` 的唯一实现（目标离场、无小推车、无破屋），
+  `Game.drill_result()` / `declare_scenario()` 只搬运。`Game.reseed()` 走 C++ `RESEED`，
+  作为普通 operation 写进 ticks，导入时逐位重放。
+- `import_llm_run.py` 对两类存档用 `verify_short()`（`Game.load_archive` 重放 + 复判），
+  `pvz_llm_demo_rows.import_demo` 只保留起点后的 plant/wait 行；drill 成功局带
+  `meta['drill']`，训练 ×3；失败局只记录。注入操作不进示范行。
+- carry 接 226b 最新交回进度（2026-11-04 18:20 HKT，12012 条）；资源包沿用 226b。
+  包体 `~/Downloads/pvz-llmplay-238/llmplay_pkg.7z.001`（15,243,324 B，md5
+  f464856167acd196b0a58baf4b87524e）。

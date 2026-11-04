@@ -89,6 +89,14 @@ def _entry(archive, relative, *, valid=True, error=None):
                 conveyor_start=(meta.get("environment_task") or {}).get("conveyor_start"),
                 deck_seed_attempts=meta.get("deck_seed_attempts"),
                 deck_attempt_seeds=meta.get("deck_attempt_seeds"),
+                drill_id=(meta.get("drill") or {}).get("id"),
+                scenario_id=(meta.get("scenario") or {}).get("id"),
+                future_seed=((meta.get("drill") or {}).get("future_seed")
+                             or (meta.get("scenario") or {}).get("future_seed")),
+                knowledge=((meta.get("drill") or {}).get("knowledge")
+                           or (meta.get("scenario") or {}).get("knowledge")),
+                drill_success=((meta.get("drill") or {}).get("success")
+                               if meta.get("drill") else (meta.get("scenario") or {}).get("success")),
                 resume_id=meta.get("resume_id"), resume=meta.get("resume"),
                 zombie_count_multiplier=task.get("zombie_count_multiplier"))
 

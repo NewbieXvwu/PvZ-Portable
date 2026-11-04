@@ -65,12 +65,15 @@ def requirements() -> dict:
 
 
 def known_tasks() -> set:
-    """进度里认得的任务族：计划种子表 + decks 模式的四条派发轨。"""
+    """进度里认得的任务族：计划种子表 + decks 模式的派发轨 + task238 题库。"""
     tasks = set(plan().get("tasks") or {})
     decks = plan().get("decks") or {}
     for key in ("order", "native_order"):
         tasks.update(decks.get(key) or [])
     tasks.update((decks.get("frontier") or {}).get("order") or [])
+    if decks.get("drill") or decks.get("scenario"):
+        from . import decks as deck_tracks
+        tasks.update(deck_tracks.catalog_tasks())
     return tasks
 
 
@@ -603,8 +606,9 @@ def _ordered(document) -> tuple:
     """两轨的候选项（按优先顺序）：主线在前，C 轨在后，互不阻塞（decks 模式为三轨优先序）。"""
     if document.get("mode") == "decks":
         from . import decks
-        # task220 四轨：中盘接回 > 前沿倍率 > 传送带/Boss 支线 > 主线新卡组，合成一条优先序队列。
-        return (decks.resume_items(document) + decks.frontier_items(document)
+        # task238 六轨：必刷题 > 自出题 > 中盘接回 > 前沿倍率 > 传送带/Boss 支线 > 主线。
+        return (decks.drill_items(document) + decks.scenario_items(document)
+                + decks.resume_items(document) + decks.frontier_items(document)
                 + decks.native_items(document) + decks.items(document)), []
     return _main_items(document), _challenge_items(document)
 
@@ -905,7 +909,12 @@ def archive_requirements(task_id, strategy="", review="", abandoned=False, *, la
     if layer == "decks":
         from . import decks
         return decks.archive_requirements(task_id, deck, reason=reason, note=note,
-                                          result=result, abandoned=abandoned)
+                                          result=result, abandoned=abandoned, layer=layer)
+    if layer in ("drill", "scenario"):
+        # task238：题目由题库/自出题决定，导出前必须写一句“考什么、怎么应对”。
+        if not abandoned and not str(reason or "").strip():
+            raise ValueError("%s 导出前请填写 reason：考的是什么知识点、打算怎么应对" % layer)
+        return
     if layer in ("resume", "frontier"):
         # task220：中盘接回/前沿倍率都要求一句打法思路；卡组由来源局或已登记胜组固定。
         if not abandoned and not str(strategy or "").strip():

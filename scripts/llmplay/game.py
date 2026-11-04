@@ -265,6 +265,14 @@ class Game:
         # task220：中盘接回的来源（resume/<archive>）；普通开局是 None。
         self.resume_id = None
         self.resume_source = {}
+        # task238：drill / scenario 的题面与机械判据；普通局为 None。
+        self.drill_meta = None
+        self.scenario_meta = None
+        self.future_seed = None
+        self._root_operations = 0
+        self._root_tick = 0
+        self._root_mowers = None
+        self.last_spawn_id = None
         # RESEED 过的局不能再按操作日志重放（未来已经换过），所以内部试打局带这个标记。
         self._reseeded = None
         # 内部试打局（robustness 的 k 个新未来）不写「最远进度」、不进自动 observe。
@@ -305,6 +313,10 @@ class Game:
             self._reset_engine()
             if self.ops or target:
                 self._replay_to(target)
+            # task238：drill/scenario 的起点就是重放终点；判据从这一刻算起。
+            self._root_operations = len(self.ops)
+            self._root_tick = self.tick
+            self._root_mowers = self._mower_count()
             if self.abandon_reason is not None:
                 self.terminal = True
         except BaseException:
@@ -580,6 +592,14 @@ class Game:
     def _last_frame_tick(self) -> int:
         return int(self.frames[-1]["tick"]) if self.frames else 0
 
+    def _mower_count(self) -> int:
+        """Available lawn mowers in the current observation (state 1 = ready)."""
+        total = 0
+        for defense in (self.obs or {}).get("defenses") or []:
+            state = defense.get("state", 0) if isinstance(defense, dict) else defense[1]
+            total += int(state) == 1
+        return total
+
     def _frame_now(self, action, rejected: bool = False) -> None:
         assert self.obs is not None
         frame = _frame(self.obs)
@@ -618,15 +638,24 @@ class Game:
     # ------------------------------------------------------------ 摆题（task237）
 
     def spawn(self, zombie_type: int, row: int, x: float, target_col: int | None = None) -> bool:
-        """在 (row, x) 放一只僵尸；蹦极的 x 表示目标格，target_col 可覆盖。"""
+        """在 (row, x) 放一只僵尸；蹦极的 x 表示目标格，target_col 可覆盖。
+
+        成功后新僵尸的引擎 id 在 ``self.last_spawn_id``，方便 declare_scenario 直接引用。
+        """
         if self.abandon_reason is not None:
             raise RuntimeError("本局已放弃，请重开")
         self._start()
+        from drill_start import on_board
+        before = set(on_board(self.env, self.obs or {}))
         action = {"type": "spawn", "zombie_type": int(zombie_type), "row": int(row),
                   "x": float(x)}
         if target_col is not None:
             action["target_col"] = int(target_col)
-        return self._apply(action)
+        ok = self._apply(action)
+        after = set(on_board(self.env, self.obs or {}))
+        added = sorted(after - before)
+        self.last_spawn_id = added[-1] if added else None
+        return ok
 
     def set_sun(self, sun: int) -> bool:
         """把当前阳光设为 sun（0..9990）。只在真有棋盘时改变局面。"""
@@ -641,6 +670,88 @@ class Game:
             raise RuntimeError("本局已放弃，请重开")
         self._start()
         return self._apply({"type": "set_cooldown", "slot": int(slot), "ticks": int(ticks)})
+
+    # ------------------------------------------------------------ 必刷题 / 出题（task238）
+
+    def reseed(self, seed: int) -> bool:
+        """从当前局面换一条同样合理的未来（RESEED），之后照常 plant / wait。
+
+        它只改尚未开始的波次与在场随机流，不改当前棋盘；操作日志里会留下一条
+        ``reseed`` 记录，导入时按同一条路径重放。
+        """
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
+        self._start()
+        self.future_seed = int(seed)
+        return self._apply({"type": "reseed", "seed": int(seed)})
+
+    def zombies(self) -> list[dict]:
+        """当前在场的僵尸（id / row / type / x / hp），用于声明出题目标。"""
+        self._start()
+        from drill_start import on_board
+        return list(on_board(self.env, self.obs or {}).values())
+
+    def _judge(self, block: dict) -> dict:
+        assert self.env is not None and self.obs is not None
+        from drill_start import judge
+        if self._root_mowers is None:
+            self._root_mowers = self._mower_count()
+        return judge(self.env, self.obs, list(block.get("targets") or []),
+                     int(self._root_mowers), self._mower_count(),
+                     horizon=int(block.get("horizon") or 900),
+                     root_tick=int(self._root_tick))
+
+    def drill_result(self) -> dict:
+        """按 drill_start 的机械判据算这道必刷题；不写盘，随时可查。"""
+        self._start()
+        if not self.drill_meta:
+            raise ValueError("这不是 drill 项；请用 next_task() 返回的 layer=drill 项")
+        result = self._judge(self.drill_meta)
+        result.update(reached=result["tick_delta"] >= int(self.drill_meta.get("horizon") or 900),
+                      knowledge=self.drill_meta.get("knowledge"))
+        return result
+
+    def declare_scenario(self, knowledge: str, horizon: int = 900, targets=None) -> dict:
+        """声明这道自出题考什么、视界多长、要清掉哪些 id；顺手跑一次“什么都不做”对照。
+
+        对照只推进这一局的一次短视界（不写操作日志、不占训练行），然后恢复原局面。
+        正常情况下不做任何事应当失败；失败不是异常，会写进导出 meta 供下游过滤。
+        """
+        self._start()
+        assert self.env is not None and self.obs is not None
+        if not str(knowledge or "").strip():
+            raise ValueError("declare_scenario 需要知识点标签")
+        if type(horizon) is not int or not 300 <= horizon <= 6000:
+            raise ValueError("scenario horizon 必须是 300..6000 的整数")
+        current = {int(z["id"]): dict(z) for z in self.zombies()}
+        chosen = []
+        for target in targets or []:
+            target_id = int(target["id"] if isinstance(target, dict) else target)
+            if target_id not in current:
+                raise ValueError("目标僵尸 %d 不在场上；先 spawn 再用 g.zombies() 取 id" % target_id)
+            chosen.append(current[target_id])
+        if not chosen:
+            raise ValueError("scenario 至少要声明一个在场目标 id（g.zombies()）")
+        self.scenario_meta = dict(
+            dict(self.scenario_meta or {}),
+            knowledge=str(knowledge).strip(), horizon=int(horizon),
+            root_tick=int(self._root_tick), prefix_operations=int(self._root_operations),
+            targets=chosen, mowers_start=int(self._root_mowers or 0),
+            injection_operations=[index + 1 for index, op in enumerate(self.ops)
+                                  if index >= int(self._root_operations)
+                                  and op.get("action", {}).get("type") in
+                                  ("spawn", "set_sun", "set_cooldown", "set_wave", "reseed")])
+        snapshot = self.env.snapshot_fast()
+        try:
+            obs, _reward, terminal, _truncated, _info = self.env.step(
+                {"type": "wait", "ticks": int(horizon)})
+            self.obs, self.tick, self.terminal = obs, int(obs["tick"]), bool(terminal)
+            baseline = self._judge(self.scenario_meta)
+        finally:
+            self.env.restore_fast(snapshot)
+            self._reset_bookkeeping(self.env.observe())
+        self.scenario_meta["baseline"] = dict(baseline, success=bool(baseline["success"]))
+        return self.scenario_meta
 
     def set_wave(self, wave: int, countdown: int | None = None) -> bool:
         """把当前波次设为 wave（只能往前），可选设置下一波倒计时。"""
@@ -1038,6 +1149,13 @@ class Game:
         game.resume_id = meta.get("resume_id") or None
         game.resume_source = dict(meta.get("resume") or {})
         game.workflow_layer = meta.get("workflow_layer") or game.workflow_layer
+        # task238：题面随存档走，导入/重放不再另读配置。
+        game.drill_meta = dict(meta.get("drill") or task.get("drill_start") or {}) or None
+        game.scenario_meta = dict(meta.get("scenario") or {}) or None
+        game.future_seed = ((game.drill_meta or {}).get("future_seed")
+                            or (game.scenario_meta or {}).get("future_seed"))
+        game._root_operations = len(ops)
+        game._root_tick = int(tick)
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
         config["profile"] = PlayerProfileContext(**config["profile"])
@@ -1090,12 +1208,37 @@ class Game:
                                                     self.seed, self.deck_attempt_seeds)
             attempts = dict(deck_seed_attempts=len(self.deck_attempt_seeds),
                             deck_attempt_seeds=self.deck_attempt_seeds)
+        if self.workflow_layer == "drill":
+            judged = self.drill_result()
+            if not judged["reached"]:
+                raise ValueError("还没到 drill 视界（%d ticks）：先 wait 到视界再导出"
+                                 % int((self.drill_meta or {}).get("horizon") or 900))
+            self.drill_meta = dict(self.drill_meta or {}, **judged)
+            self.drill_meta.setdefault("id", self.task_id)
+            if self.future_seed is not None:
+                self.drill_meta["future_seed"] = int(self.future_seed)
+        elif self.workflow_layer == "scenario":
+            if not self.scenario_meta:
+                raise ValueError("scenario 导出前先调用 declare_scenario(knowledge, horizon, targets)")
+            judged = self._judge(self.scenario_meta)
+            if judged["tick_delta"] < int(self.scenario_meta.get("horizon") or 900):
+                raise ValueError("还没到 scenario 视界（%d ticks）：先 wait 到视界再导出"
+                                 % int(self.scenario_meta.get("horizon") or 900))
+            baseline = self.scenario_meta.get("baseline") or {}
+            if baseline.get("success"):
+                raise ValueError("这道出题“什么都不做”也成功，威胁不够真；换更强的注入或更长的视界")
+            self.scenario_meta = dict(self.scenario_meta, **judged)
+            self.scenario_meta.setdefault("id", self.task_id)
+            if self.future_seed is not None:
+                self.scenario_meta["future_seed"] = int(self.future_seed)
         meta = dict(
             **attempts,
             schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE, cycle=self.cycle,
             workflow_layer=self.workflow_layer, opening=opening,
             **({"resume_id": self.resume_id, "resume": dict(self.resume_source)}
                if self.resume_id else {}),
+            **({"drill": dict(self.drill_meta or {})} if self.workflow_layer == "drill" else {}),
+            **({"scenario": dict(self.scenario_meta or {})} if self.workflow_layer == "scenario" else {}),
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
             deck_reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,
