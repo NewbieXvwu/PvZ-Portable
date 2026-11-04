@@ -534,8 +534,8 @@ class PvZEnv:
             if not 0 <= row < 6:
                 raise ValueError("spawn row must be 0..5")
             x = action.get("x")
-            if type(x) not in (int, float) or not math.isfinite(float(x)):
-                raise ValueError("spawn x must be a finite number")
+            if type(x) not in (int, float) or not math.isfinite(float(x)) or not -100 <= float(x) <= 1000:
+                raise ValueError("spawn x must be a finite number from -100 to 1000")
             target_col = action.get("target_col")
             if target_col is not None and (type(target_col) is not int or not 0 <= target_col < 9):
                 raise ValueError("spawn target_col must be an integer 0..8 or None")

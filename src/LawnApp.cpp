@@ -1572,7 +1572,7 @@ bool LawnApp::EnvironmentShovel(int col, int row)
 
 bool LawnApp::EnvironmentSpawnZombie(int zombieType, int row, float x, int targetCol)
 {
-	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || !std::isfinite(x))
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || !std::isfinite(x) || x < -100.0f || x > 1000.0f)
 		return false;
 	if (zombieType < 0 || zombieType >= ZombieType::NUM_ZOMBIE_TYPES)
 		return false;

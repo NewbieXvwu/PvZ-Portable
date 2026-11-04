@@ -69,6 +69,7 @@ class EncodingTest(unittest.TestCase):
     def test_invalid_arguments_never_reach_the_child(self):
         for action, message in (
                 ({"type": "spawn", "zombie_type": 18, "row": 2, "x": float("nan")}, 'finite'),
+                ({"type": "spawn", "zombie_type": 18, "row": 2, "x": 2000}, 'finite'),
                 ({"type": "spawn", "zombie_type": 18, "row": 2, "x": 1, "target_col": 1.5}, 'integer'),
                 ({"type": "spawn", "zombie_type": 33, "row": 2, "x": 1}, '0..32'),
                 ({"type": "set_sun", "sun": 1.5}, 'integer'),
