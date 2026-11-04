@@ -1533,3 +1533,6 @@
   - 是否用 caffeinate 让接电时保持唤醒，属于改系统行为，等用户决定。台式机生产不受影响。
   - 期间合入 task242 战术考试，并修了一个合并后的 bug：drill 清单改为列表后，考试收到的是列表的字符串形式，每次都会被跳过。修复见 pkg238 a7ca891c。另布 `autodeploy-integ242`。
   - 台式机 scenario 引擎重编成功（build-scenario1 exit 0）。
+- 11-05 06:15 CST 集成版 **a7ca891c 已上线**（autodeploy-integ242，exit 0）：泳池升级链 drill240 的 7 个 cell 在采集，战术考试旁路监控也上了。r115、r116 都被否（现任仍为 r112）。
+  - **r116 是首次门禁带体检表**：100 题，A / B / 现任各 100 局，status ok、0 错误，结果写进 ab_result `monitor.tactical_exam`，分 16 个技能层。
+  - 例：B vs r112，屋顶橄榄球 8 vs 6、雾气球 2 vs 1，其余基本持平。每层题少（3–13 对），单轮只作参考。
