@@ -111,6 +111,17 @@ def export(payload):
     return list(payload['files'])
 
 
+def retry(call, attempts=6):
+    for attempt in range(attempts):
+        try:
+            return call()
+        except Exception as error:
+            if attempt == attempts - 1:
+                raise
+            print(f'delivery retry {attempt + 1}/{attempts - 1}: {str(error).splitlines()[0][:160]}', flush=True)
+            time.sleep(60 * (attempt + 1))
+
+
 def remote(args, action, payload):
     # Send code/input through stdin, including credentials only in the SSH process memory.
     source = Path(__file__).read_text()
@@ -243,9 +254,12 @@ def send(args, archive, frames):
     from huggingface_hub import HfApi
     label = archive.name.removesuffix('.tar.gz')
     package = 'transfer/mac197/frames/' + archive.name
-    HfApi().upload_file(repo_id=args.repo, path_in_repo=package, path_or_fileobj=archive)
-    result = remote(args, 'import_batch', dict(repo=args.repo, package=package, frames=frames,
-        import_source=(ROOT / 'scripts/mac_collect_import.py').read_text()))
+    # HF answers bursts of commits (one upload + one delete per batch) with 429; both steps
+    # are idempotent (receive skips an existing target), so back off and retry instead of
+    # letting the collector exit and drop the finished batch.
+    retry(lambda: HfApi().upload_file(repo_id=args.repo, path_in_repo=package, path_or_fileobj=archive))
+    result = retry(lambda: remote(args, 'import_batch', dict(repo=args.repo, package=package, frames=frames,
+        import_source=(ROOT / 'scripts/mac_collect_import.py').read_text())))
     shutil.rmtree(args.cache / label)
     archive.unlink()
     print('delivered', result, flush=True)
