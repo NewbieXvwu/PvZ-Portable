@@ -1390,3 +1390,12 @@
   - 主控追查 L8 / L9 历史：所有候选从 **r102** 起 L9 崩盘（B 谱系 r101 12/12 → r102 4/12 → r103 0/12），早于 teacher_line（r104），与 imitater1 引擎采集的数据首次进入训练（r102）同时。但同关扰动卡组留出 r108 A 62/96 远高于现任 24 → 问题与卡组相关。
   - L9 门禁卡组含双子向日葵 41，L8 含冰西瓜 44，L4 含机枪豌豆 40。怀疑 task225 改“生效类型 / 身份卡头”后，升级植物的老师行为或标签编码变了（上线前只核对了夜 L12 / 屋顶 L41）。
   - 派 **task232**（dshjob，upgaudit 工作树，只读）：先统计新旧引擎采集中老师种升级植物的比例，再用 csearch1 / imitater1 重放同一局面逐位比较编码，最后查打包标签。
+- 11-04 13:50 **task232 完成**（upgaudit 6ae91aa5，`MEMORY/docs/task232-upgrade-audit.json`）：**排除升级植物**。
+  - 老师在 L9 前后都 0 次种 41（119,764 / 30,140 个种植标签）。
+  - csearch1 / imitater1 对同一局面种 41 / 44：obs、掩码、帧、obs-v3 token 逐位一致。打包标签 slot / kind 正确，0 行需重导。
+  - 根因：训练 `randperm` 全局洗牌。r102 只新增 16,615 行正权重数据（L32 / L37 开局），就让全部旧行重新分批，轨迹换到另一个解。
+  - L9 崩盘表现为经济退化：r101 用豌豆 / 向日葵 / 大嘴花 / 南瓜，候选退化成小喷菇 + 咖啡豆。
+  - 不改门禁卡组（AGENTS §8）。
+- 11-04 13:55 结论：候选的逐任务好坏主要由训练轨迹随机性决定。r101 在白天 / 夜间是偶然学好的高点，新候选学到泳池的新东西、同时丢掉 r101 的打法。已否决：EMA、soup、宽 128、全速续训；低学习率只略好。
+  - 派 **task233**（dshjob，distill 工作树）：B 加向现任蒸馏（LwF），`distill_weight × KL(现任 ‖ 学生)` 与 BC 损失相加，B 配方 `distill_weight = 1.0`，A 不动；`distill_weight = 0` 时逐位等同旧行为。
+- 11-04 13:55 Mac 电源看门狗：`~/pvz-mac-collect/power_watch.sh`（pid 见 power_watch.pid）每 20 s 查 `pmset`，切到电池就 `kill -STOP` 采集进程组（`collector.pgid`），回到 AC 自动 `CONT`；手动 `~/pvz-mac-collect/freeze.sh stop|cont`，日志 power_watch.log。实测冻结 / 恢复正常。
