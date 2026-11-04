@@ -56,7 +56,7 @@
  "save_epochs": 0,
  "lr_schedule": "cosine",
  "init": "/home/newbiexvwu/PvZ-search/artifacts/student/gptbc_s1/model.pt",
- "distill_weight": 1.0,
+ "distill_weight": 5.0,
  "cache": true,
  "cache_dir": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/cache",
  "read_cache_dir": null,
