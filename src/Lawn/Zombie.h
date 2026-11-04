@@ -179,6 +179,9 @@ public:
 	void                            DrawBungeeCord(Graphics* g, int theOffsetX);
 	void                            TakeDamage(int theDamage, unsigned int theDamageFlags);
 	void                 SetRow(int theRow);
+	// task237: place a zombie that was just created by AddZombieInRow at a chosen x.
+	// Bungee target cell is fixed here; dolphin/snorkel already in the water start in their pool phase.
+	void                 EnvironmentPlaceAt(int theRow, float thePosX, int theTargetCol);
 	float                           GetPosYBasedOnRow(int theRow);
 	void                            ApplyChill(bool theIsIceTrap);
 	void                            UpdateZombieBungee();

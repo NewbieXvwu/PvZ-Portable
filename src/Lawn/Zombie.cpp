@@ -19,7 +19,9 @@
  * along with PvZ-Portable. If not, see <https://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <climits>
+#include <cmath>
 #include <format>
 
 #include "Plant.h"
@@ -8191,6 +8193,55 @@ void Zombie::SetRow(int theRow)
 
 	mRow = theRow;
 	mRenderOrder = Board::MakeRenderOrder(RenderLayer::RENDER_LAYER_ZOMBIE, mRow, 4);
+}
+
+// task237: a scenario places a zombie at an explicit x.  ZombieInitialize already did the
+// type-specific setup; this only fixes the position (and the phase a normal wave would have
+// received after walking into the water).  Bungee is special: its mPosX *is* the target
+// cell, and the recorded x selects that cell.
+void Zombie::EnvironmentPlaceAt(int theRow, float thePosX, int theTargetCol)
+{
+	if (mZombieType == ZombieType::ZOMBIE_BUNGEE)
+	{
+		int aTargetCol = theTargetCol;
+		if (aTargetCol < 0)
+			aTargetCol = mBoard->PixelToGridXKeepOnBoard(static_cast<int>(thePosX), theRow);
+		aTargetCol = std::clamp(aTargetCol, 0, MAX_GRID_SIZE_X - 1);
+		// ZombieInitialize picked a random target row; the scenario row is the target row.
+		SetRow(theRow);
+		mTargetCol = aTargetCol;
+		mPosX = static_cast<float>(mBoard->GridToPixelX(aTargetCol, theRow));
+		mPosY = GetPosYBasedOnRow(theRow);
+	}
+	else
+	{
+		mPosX = thePosX;
+		mPosY = GetPosYBasedOnRow(theRow);
+		if (mBoard->mPlantRow[theRow] == PlantRowType::PLANTROW_POOL && mPosX < 700.0f)
+		{
+			const int aCol = mBoard->PixelToGridXKeepOnBoard(static_cast<int>(mPosX + 40.0f), theRow);
+			if (mBoard->IsPoolSquare(aCol, theRow))
+			{
+				if (mZombieType == ZombieType::ZOMBIE_DOLPHIN_RIDER)
+				{
+					mInPool = true;
+					mAltitude = 0.0f;
+					mZombiePhase = ZombiePhase::PHASE_DOLPHIN_RIDING;
+					mZombieAttackRect = Rect(-29, 0, 70, 115);
+					PlayZombieReanim("anim_ride", ReanimLoopType::REANIM_LOOP_FULL_LAST_FRAME, 0, 12.0f);
+				}
+				else if (mZombieType == ZombieType::ZOMBIE_SNORKEL)
+				{
+					mInPool = true;
+					mAltitude = 0.0f;
+					mZombiePhase = ZombiePhase::PHASE_SNORKEL_WALKING_IN_POOL;
+					PlayZombieReanim("anim_swim", ReanimLoopType::REANIM_LOOP_FULL_LAST_FRAME, 0, 12.0f);
+				}
+			}
+		}
+	}
+	mX = static_cast<int>(mPosX);
+	mY = static_cast<int>(mPosY);
 }
 
 void Zombie::RiseFromGrave(int theCol, int theRow)

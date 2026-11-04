@@ -269,6 +269,11 @@ public:
 	bool							EnvironmentReset(int level, uint32_t seed, const std::vector<EnvironmentSeed>& deck, const EnvironmentTaskSpec& task);
 	bool							EnvironmentPlant(int packet, int col, int row);
 	bool							EnvironmentShovel(int col, int row);
+	// task237 scenario commands: current board only, recorded by the caller as an operation.
+	bool							EnvironmentSpawnZombie(int zombieType, int row, float x, int targetCol);
+	bool							EnvironmentSetSun(int sun);
+	bool							EnvironmentSetCooldown(int slot, int ticks);
+	bool							EnvironmentSetWave(int wave, int countdown);
 	void							EnvironmentWait(int ticks);
 	void							EnvironmentPresent();
 	bool							EnvironmentScreenshot(const std::string& thePath);

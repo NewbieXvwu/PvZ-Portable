@@ -2655,6 +2655,79 @@ Zombie* Board::AddZombie(ZombieType theZombieType, int theFromWave)
 	return AddZombieInRow(theZombieType, PickRowForNewZombie(theZombieType), theFromWave);
 }
 
+// task237: is a scenario-injected zombie legal on this row?  The wave spawner has its own
+// answer (RowCanHaveZombieType), but that also enforces wave timing -- e.g. no ordinary
+// zombie in the pool before wave 5.  A scenario is not a wave, so this keeps the terrain
+// rules and drops the pacing ones: no water-only zombie on land, no dolphin/snorkel on
+// the roof, no vehicle on the roof, no giant in the first row outside survival.
+bool Board::EnvironmentCanSpawnZombie(int theRow, ZombieType theZombieType)
+{
+	if (!RowCanHaveZombies(theRow) || theZombieType <= ZombieType::ZOMBIE_INVALID ||
+		theZombieType >= ZombieType::NUM_ZOMBIE_TYPES)
+		return false;
+	if (theZombieType == ZombieType::ZOMBIE_BOSS && !mApp->IsFinalBossLevel())
+		return false;
+
+	const PlantRowType aRowType = mPlantRow[theRow];
+	if (aRowType == PlantRowType::PLANTROW_POOL)
+	{
+		// Ducky Tube and Balloon are the two engine cases the helper omits: the tube walks
+		// on the water and the balloon flies over it.
+		if (!Zombie::ZombieTypeCanGoInPool(theZombieType) &&
+			theZombieType != ZombieType::ZOMBIE_BALLOON &&
+			theZombieType != ZombieType::ZOMBIE_DUCKY_TUBE)
+			return false;
+	}
+	else if (theZombieType == ZombieType::ZOMBIE_SNORKEL ||
+		theZombieType == ZombieType::ZOMBIE_DOLPHIN_RIDER ||
+		theZombieType == ZombieType::ZOMBIE_DUCKY_TUBE)
+	{
+		return false;
+	}
+	if (aRowType == PlantRowType::PLANTROW_HIGH_GROUND && !Zombie::ZombieTypeCanGoOnHighGround(theZombieType))
+		return false;
+	// Roof boards keep PLANTROW_NORMAL; the high ground is in mGridSquareType.  The engine's
+	// own spawner refuses the two vehicles there, so a scenario must too.
+	if (StageHasRoof() && !Zombie::ZombieTypeCanGoOnHighGround(theZombieType))
+		return false;
+	if (theRow == 0 && !mApp->IsSurvivalMode() &&
+		(theZombieType == ZombieType::ZOMBIE_GARGANTUAR || theZombieType == ZombieType::ZOMBIE_REDEYE_GARGANTUAR))
+		return false;
+	return true;
+}
+
+Zombie* Board::EnvironmentSpawnZombie(ZombieType theZombieType, int theRow, float thePosX, int theTargetCol)
+{
+	if (!std::isfinite(thePosX) || !EnvironmentCanSpawnZombie(theRow, theZombieType))
+		return nullptr;
+	Zombie* aZombie = AddZombieInRow(theZombieType, theRow, Zombie::ZOMBIE_WAVE_DEBUG);
+	if (aZombie == nullptr || aZombie->mDead)
+		return nullptr;
+	const float aOldPosX = aZombie->mPosX;
+	aZombie->EnvironmentPlaceAt(theRow, thePosX, theTargetCol);
+	if (theZombieType == ZombieType::ZOMBIE_BOBSLED)
+	{
+		// The sled only exists on ice: without a trail it takes 6 damage per update until
+		// the runners are gone (Zombie::UpdateZombieBobsled).  A scenario injection creates
+		// that trail for the row it lands on; the normal wave path still requires real ice.
+		mIceTimer[theRow] = std::max(mIceTimer[theRow], 500);
+		mIceMinX[theRow] = std::min(mIceMinX[theRow], 0);
+		// AddZombieInRow has already placed the three followers relative to the spawn x.
+		// Move the whole team together or the sled would arrive in pieces.
+		const float aDelta = aZombie->mPosX - aOldPosX;
+		for (int i = 0; i < MAX_ZOMBIE_FOLLOWERS; ++i)
+		{
+			Zombie* aFollower = ZombieTryToGet(aZombie->mFollowerZombieID[i]);
+			if (aFollower == nullptr)
+				continue;
+			aFollower->mPosX += aDelta;
+			aFollower->mX = static_cast<int>(aFollower->mPosX);
+			aFollower->mY = static_cast<int>(aFollower->mPosY);
+		}
+	}
+	return aZombie;
+}
+
 void Board::RemoveAllZombies()
 {
 	for (Zombie* aZombie : mZombies)

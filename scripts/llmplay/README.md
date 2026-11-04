@@ -57,6 +57,38 @@ L15/35所需小游戏动作不在现有接口中，继续跳过。主线与支�
 `coverage_per_card`为默认次数，`coverage_priority`可设`{"fog":{"27":4}}`这样的重点目标。
 黑名单在同一配置，留出签名来自原样的`configs/deploy17_deck_holdouts.json`。
 
+## 摆题：在真实局面上注入威胁（task237）
+
+出小题时不要从空棋盘开始，先用 `Game.from_archive(archive, decision=N)` 把一道真实存档
+恢复到第 N 个操作之前，再调用三个 C++ 命令：
+
+```python
+g = Game.from_archive(archive, decision=812)   # 1 = 初始状态，N = 第 N 个操作执行之前
+g.observe()                                    # 触发重放，拿到完整局面
+g.spawn(18, 2, 300)                            # 跳跳僵尸：row=2，x=300
+g.set_sun(500)                                 # 0..9990
+g.set_cooldown(0, 0)                           # 卡槽 0 立刻可用；ticks 是剩余更新数
+# g.set_wave(5, 60)                            # 可选：第 5 波 + 60 tick 后下一波
+# 玩家/模型继续 g.plant / g.wait，直到 horizon。
+```
+
+- `spawn(type, row, x, target_col=None)`：`x` 是像素位置；蹦极僵尸的 `x` 表示目标格，
+  `target_col` 可显式覆盖。引擎按地形拒绝非法组合（屋顶海豚/潜水、陆地海豚、屋顶冰车/冰橇等）。
+- 特殊初始化是引擎自己的：气球在空中、矿工在地下、海豚/潜水员在水里、冰车会为所在行生成冰面，
+  蹦极固定在目标格下绳。
+- `set_cooldown(slot, ticks)` 的 `ticks=0` 表示立刻可用；正整数表示经过这么多次引擎更新后可用。
+  传送带关卡没有卡槽冷却语义，会被拒绝。
+- `set_wave` 只能往前设；跳波时建议同时给 `countdown`，否则沿用旧计时器。
+- 所有命令都是普通操作，写进 `ticks.jsonl` / `ops`，`human_demo.replay`、导入器和
+  `search_play` 的 demo 前缀重放会自动逐位复现；旧存档不含这些动作，格式不变。
+
+最小可运行示例是 `examples/drill_scenario.py`：恢复真实存档 → 注入跳跳 → 设阳光 →
+交给 `player(game)` → 用 task234 的局部判据（根威胁离场、小推车/房子不变）验收：
+
+```bash
+python3 examples/drill_scenario.py --archive /path/to/archive --decision 812     --row 2 --x 300 --sun 500 --horizon 900
+```
+
 在仓库重打接口（不重建引擎或资源）：
 
 ```bash

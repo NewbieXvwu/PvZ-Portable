@@ -615,6 +615,43 @@ class Game:
         """铲掉 (row, col) 上的植物。"""
         return self._apply({"type": "shovel", "col": int(col), "row": int(row)})
 
+    # ------------------------------------------------------------ 摆题（task237）
+
+    def spawn(self, zombie_type: int, row: int, x: float, target_col: int | None = None) -> bool:
+        """在 (row, x) 放一只僵尸；蹦极的 x 表示目标格，target_col 可覆盖。"""
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
+        self._start()
+        action = {"type": "spawn", "zombie_type": int(zombie_type), "row": int(row),
+                  "x": float(x)}
+        if target_col is not None:
+            action["target_col"] = int(target_col)
+        return self._apply(action)
+
+    def set_sun(self, sun: int) -> bool:
+        """把当前阳光设为 sun（0..9990）。只在真有棋盘时改变局面。"""
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
+        self._start()
+        return self._apply({"type": "set_sun", "sun": int(sun)})
+
+    def set_cooldown(self, slot: int, ticks: int) -> bool:
+        """让卡槽 slot 在 ticks 次更新后可用（0 = 立刻可用）。"""
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
+        self._start()
+        return self._apply({"type": "set_cooldown", "slot": int(slot), "ticks": int(ticks)})
+
+    def set_wave(self, wave: int, countdown: int | None = None) -> bool:
+        """把当前波次设为 wave（只能往前），可选设置下一波倒计时。"""
+        if self.abandon_reason is not None:
+            raise RuntimeError("本局已放弃，请重开")
+        self._start()
+        action = {"type": "set_wave", "wave": int(wave)}
+        if countdown is not None:
+            action["countdown"] = int(countdown)
+        return self._apply(action)
+
     def wait(self, ticks: int) -> None:
         """推进 ticks 个 tick。内部按 60 tick 分块（每块落一帧，便于事后回看）。"""
         if self.abandon_reason is not None:
@@ -956,21 +993,43 @@ class Game:
     @classmethod
     def load_archive(cls, directory, **kwargs) -> "Game":
         """恢复已导出的局，使用存档中的任务定义（旧卡组不受现行任务变动影响）。"""
+        return cls.from_archive(directory, **kwargs)
+
+    @classmethod
+    def from_archive(cls, directory, decision=None, **kwargs) -> "Game":
+        """从存档恢复；decision=N 恢复成该决策执行前的局面（1 = 初始状态）。
+
+        只截断已有的操作日志，再由 Game._start 用现有重放路径走到那里，不另写一套
+        游戏逻辑（AGENTS.md §6.6）。之后的 plant / spawn / set_sun 会接在这段前缀后。
+        """
         archive = Path(directory)
         meta = read_meta(archive)
         ops = [json.loads(line) for line in (archive / "ticks.jsonl").read_text(encoding="utf-8").splitlines()]
         from pvz_frame_store import frame_path, read_frames
         frames = read_frames(frame_path(archive))
+        tick = meta["outcome"]["final_tick"]
+        if decision is not None:
+            if type(decision) is not int or not 1 <= decision <= len(frames):
+                raise ValueError("decision must be an integer between 1 and %d" % len(frames))
+            if "operation" not in frames[decision - 1]:
+                raise ValueError("archive has no operation column; decision restore is unavailable")
+            stop = int(frames[decision - 1]["operation"])
+            if not 0 <= stop <= len(ops):
+                raise ValueError("archive operation index %d is outside its %d operations" % (stop, len(ops)))
+            ops = ops[:stop]
+            frames = frames[:decision]
+            tick = int(ops[-1]["end_tick"]) if ops else int(frames[0].get("tick", 0))
         task = meta["task"]
+        kwargs.setdefault("_gate", False)
+        kwargs.setdefault("_restore_claim", True)
         game = cls(task["id"], seed=task["seed"], ops=ops, frames=frames,
-                   tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
+                   tick=tick, note=meta.get("note", ""),
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
                    deck=task["deck"], reason=meta.get("deck_reason", ""),
                    strategy=kwargs.pop("strategy", meta.get("strategy", "")),
                    deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"),
                    cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"),
                    deck_attempt_seeds=meta.get("deck_attempt_seeds"),
-                   _gate=False, _restore_claim=True,
                    _definition={**task, **meta['environment_task'], 'task_id': task['id'],
                                 'deck': task['deck'], 'seeds': [task['seed']],
                                 'layer': meta.get('workflow_layer', 'A')}, **kwargs)
