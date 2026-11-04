@@ -1570,6 +1570,77 @@ bool LawnApp::EnvironmentShovel(int col, int row)
 	return mBoard->mPlantsShoveled != shoveled;
 }
 
+bool LawnApp::EnvironmentSpawnZombie(int zombieType, int row, float x, int targetCol)
+{
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || !std::isfinite(x))
+		return false;
+	if (zombieType < 0 || zombieType >= ZombieType::NUM_ZOMBIE_TYPES)
+		return false;
+	if (targetCol < -1 || targetCol >= MAX_GRID_SIZE_X)
+		return false;
+	return mBoard->EnvironmentSpawnZombie(static_cast<ZombieType>(zombieType), row, x, targetCol) != nullptr;
+}
+
+bool LawnApp::EnvironmentSetSun(int sun)
+{
+	// Board::AddSunMoney caps at 9990; a scenario setting has to obey the same bound.
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING || sun < 0 || sun > 9990)
+		return false;
+	mBoard->mSunMoney = sun;
+	return true;
+}
+
+bool LawnApp::EnvironmentSetCooldown(int slot, int ticks)
+{
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING ||
+		slot < 0 || slot >= mBoard->mSeedBank->mNumPackets ||
+		mBoard->HasConveyorBeltSeedBank() || ticks < 0 || ticks > 1000000)
+		return false;
+	SeedPacket& packet = mBoard->mSeedBank->mSeedPackets[slot];
+	if (packet.mPacketType == SeedType::SEED_NONE)
+		return false;
+	if (ticks == 0)
+	{
+		packet.mActive = true;
+		packet.mRefreshing = false;
+		packet.mRefreshCounter = 0;
+		packet.mRefreshTime = 0;
+		return true;
+	}
+	// SeedPacket::Update increments the counter, then activates when counter > refreshTime.
+	// Keeping refreshTime at the card's own value and back-dating the counter makes the
+	// packet ready after exactly ``ticks`` updates; longer-than-normal waits grow the clock.
+	const int refresh = std::max(packet.mRefreshTime, ticks);
+	packet.mActive = false;
+	packet.mRefreshing = true;
+	packet.mRefreshTime = refresh;
+	packet.mRefreshCounter = refresh - ticks + 1;
+	return true;
+}
+
+bool LawnApp::EnvironmentSetWave(int wave, int countdown)
+{
+	if (!mBoard || mGameScene != GameScenes::SCENE_PLAYING ||
+		wave < mBoard->mCurrentWave || wave > mBoard->mNumWaves ||
+		countdown < -1 || countdown > 1000000)
+		return false;
+	const int oldWave = mBoard->mCurrentWave;
+	mBoard->mCurrentWave = wave;
+	if (countdown >= 0)
+	{
+		mBoard->mZombieCountDown = std::max(countdown, 1);
+		mBoard->mZombieCountDownStart = mBoard->mZombieCountDown;
+	}
+	if (wave != oldWave)
+	{
+		// The health gate belongs to a wave that was actually spawned; a scenario jump has
+		// not spawned it yet, so disable the early-next-wave shortcut until the engine sends it.
+		mBoard->mZombieHealthWaveStart = 0;
+		mBoard->mZombieHealthToNextWave = -1;
+	}
+	return true;
+}
+
 void LawnApp::EnvironmentWait(int ticks)
 {
 	if (!mBoard || ticks < 0 || ticks > 1000000)

@@ -478,6 +478,57 @@ static bool ExecuteEnvironmentAction(LawnApp* app, const std::string& command,
 		app->EnvironmentWait(ticks);
 		return true;
 	}
+	if (command == "SPAWN")
+	{
+		int type = -1, row = -1, targetCol = -1;
+		float x = 0.0f;
+		input >> type >> row >> x;
+		if (input.fail())
+			return false;
+		std::string targetText, extra;
+		if (input >> targetText)
+		{
+			std::istringstream targetInput(targetText);
+			if (!(targetInput >> targetCol) || targetInput.peek() != std::char_traits<char>::eof() ||
+				(input >> extra))
+				return false;
+		}
+		return app->EnvironmentSpawnZombie(type, row, x, targetCol);
+	}
+	if (command == "SET_SUN")
+	{
+		int sun = -1;
+		std::string extra;
+		input >> sun;
+		if (input.fail() || (input >> extra))
+			return false;
+		return app->EnvironmentSetSun(sun);
+	}
+	if (command == "SET_COOLDOWN")
+	{
+		int slot = -1, ticks = -1;
+		std::string extra;
+		input >> slot >> ticks;
+		if (input.fail() || (input >> extra))
+			return false;
+		return app->EnvironmentSetCooldown(slot, ticks);
+	}
+	if (command == "SET_WAVE")
+	{
+		int wave = -1, countdown = -1;
+		std::string countdownText, extra;
+		input >> wave;
+		if (input.fail())
+			return false;
+		if (input >> countdownText)
+		{
+			std::istringstream countdownInput(countdownText);
+			if (!(countdownInput >> countdown) || countdownInput.peek() != std::char_traits<char>::eof() ||
+				(input >> extra))
+				return false;
+		}
+		return app->EnvironmentSetWave(wave, countdown);
+	}
 	if (command == "COLLECT")
 	{
 		int x = -1, y = -1;
@@ -2318,7 +2369,8 @@ static void RunEnvironment(LawnApp* app)
 				before = ReadCounters(app);
 			}
 		}
-		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "COLLECT")
+		else if (command == "PLANT" || command == "SHOVEL" || command == "WAIT" || command == "COLLECT" ||
+			command == "SPAWN" || command == "SET_SUN" || command == "SET_COOLDOWN" || command == "SET_WAVE")
 		{
 			ok = ExecuteEnvironmentAction(app, command, input);
 		}

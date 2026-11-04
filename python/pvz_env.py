@@ -527,8 +527,44 @@ class PvZEnv:
         elif kind == "collect":
             x, y = self._coordinates(action, ("x", "y"))
             command = f"COLLECT {x} {y}"
+        elif kind == "spawn":
+            zombie_type, row = self._coordinates(action, ("zombie_type", "row"))
+            if not 0 <= zombie_type < 33:
+                raise ValueError("spawn zombie_type must be 0..32")
+            if not 0 <= row < 6:
+                raise ValueError("spawn row must be 0..5")
+            x = action.get("x")
+            if type(x) not in (int, float) or not math.isfinite(float(x)):
+                raise ValueError("spawn x must be a finite number")
+            target_col = action.get("target_col")
+            if target_col is not None and (type(target_col) is not int or not 0 <= target_col < 9):
+                raise ValueError("spawn target_col must be an integer 0..8 or None")
+            command = f"SPAWN {zombie_type} {row} {float(x):.9g}"
+            if target_col is not None:
+                command += f" {target_col}"
+        elif kind == "set_sun":
+            sun = action.get("sun")
+            if type(sun) is not int or not 0 <= sun <= 9990:
+                raise ValueError("set_sun sun must be an integer 0..9990")
+            command = f"SET_SUN {sun}"
+        elif kind == "set_cooldown":
+            slot, ticks = self._coordinates(action, ("slot", "ticks"))
+            if slot < 0 or not 0 <= ticks <= 1_000_000:
+                raise ValueError("set_cooldown needs slot >= 0 and ticks 0..1000000")
+            command = f"SET_COOLDOWN {slot} {ticks}"
+        elif kind == "set_wave":
+            wave = action.get("wave")
+            if type(wave) is not int or wave < 0:
+                raise ValueError("set_wave wave must be a non-negative integer")
+            countdown = action.get("countdown")
+            if countdown is not None and (type(countdown) is not int or not 0 <= countdown <= 1_000_000):
+                raise ValueError("set_wave countdown must be an integer 0..1000000 or None")
+            command = f"SET_WAVE {wave}"
+            if countdown is not None:
+                command += f" {countdown}"
         else:
-            raise ValueError("action type must be 'plant', 'shovel', 'collect' or 'wait'")
+            raise ValueError("action type must be 'plant', 'shovel', 'collect', 'wait', "
+                             "'spawn', 'set_sun', 'set_cooldown' or 'set_wave'")
 
         response = self._command(command)
         observation = response.get("observation")
@@ -550,6 +586,40 @@ class PvZEnv:
         self._record_operation({"kind": "action", "request": dict(action), "action": dict(action),
                                 "ticks_advanced": ticks_advanced}, observation, info["events"])
         return observation, 0.0, bool(observation.get("terminal")), False, info
+
+    def spawn(self, zombie_type: int, row: int, x: float, target_col: int | None = None) -> dict[str, Any]:
+        """task237: place one zombie at (row, x) on the current board.
+
+        ``x`` is the zombie's pixel position, except for the Bungee Zombie where it selects
+        the target cell; ``target_col`` overrides that choice.  The engine validates the
+        terrain combination and ``ValueError`` is raised for e.g. a dolphin on the roof.
+        """
+        action: dict[str, Any] = {"type": "spawn", "zombie_type": zombie_type, "row": row,
+                                  "x": float(x)}
+        if target_col is not None:
+            action["target_col"] = target_col
+        return self._scenario_action(action)
+
+    def set_sun(self, sun: int) -> dict[str, Any]:
+        """task237: set the board's current sun count (0..9990)."""
+        return self._scenario_action({"type": "set_sun", "sun": sun})
+
+    def set_cooldown(self, slot: int, ticks: int) -> dict[str, Any]:
+        """task237: make card ``slot`` ready after exactly ``ticks`` updates (0 = now)."""
+        return self._scenario_action({"type": "set_cooldown", "slot": slot, "ticks": ticks})
+
+    def set_wave(self, wave: int, countdown: int | None = None) -> dict[str, Any]:
+        """task237: move to ``wave`` (waves already sent) and optionally set the next-wave timer."""
+        action: dict[str, Any] = {"type": "set_wave", "wave": wave}
+        if countdown is not None:
+            action["countdown"] = countdown
+        return self._scenario_action(action)
+
+    def _scenario_action(self, action: dict[str, Any]) -> dict[str, Any]:
+        observation, _, _, _, info = self.step(action)
+        if not info["ok"]:
+            raise ValueError(f"simulator rejected {action['type']} action: {action}")
+        return observation
 
     def observe(self) -> dict[str, Any]:
         response = self._command("OBS")

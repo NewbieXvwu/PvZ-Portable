@@ -362,6 +362,8 @@ public:
 	void					ShakeBoard(int theShakeAmountX, int theShakeAmountY);
 	int								CountUntriggerLawnMowers();
 	Zombie*				AddZombieInRow(ZombieType theZombieType, int theRow, int theFromWave);
+	bool					EnvironmentCanSpawnZombie(int theRow, ZombieType theZombieType);
+	Zombie*				EnvironmentSpawnZombie(ZombieType theZombieType, int theRow, float thePosX, int theTargetCol = -1);
 	bool					IsPoolSquare(int theGridX, int theGridY);
 	void							PickZombieWaves();
 	void							StopAllZombieSounds();
