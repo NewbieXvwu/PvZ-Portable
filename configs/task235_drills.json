@@ -1,0 +1,6021 @@
+{
+ "schema": "pvz-drill-manifest-v1",
+ "task": "task235",
+ "seed_block": [
+  53000000,
+  53021248
+ ],
+ "future_seed_count": 256,
+ "counts": {
+  "drills": 83,
+  "by_level_type": {
+   "31|jack": 12,
+   "32|football": 7,
+   "32|jack": 11,
+   "33|balloon": 13,
+   "34|balloon": 3,
+   "34|dolphin": 1,
+   "36|digger": 3,
+   "37|jack": 9,
+   "38|pogo": 10,
+   "39|balloon": 9,
+   "39|pogo": 5,
+   "40|balloon": 4,
+   "40|jack": 1,
+   "40|pogo": 3
+  }
+ },
+ "tasks": [
+  {
+   "task_id": "drill235_l31_jack_019c4d55",
+   "level": 31,
+   "seeds": [
+    20261031
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    5,
+    23,
+    17,
+    19,
+    2,
+    3
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_31_snow_m200/seed_20261031/demo_fog_31_snow_m200",
+    "decisions": [
+     434
+    ],
+    "index": 0,
+    "future_seed_start": 53000000,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68812803,
+      "row": 1,
+      "type": 15,
+      "name": "jack",
+      "x": 770.5
+     },
+     {
+      "id": 69337103,
+      "row": 1,
+      "type": 15,
+      "name": "jack",
+      "x": 769.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_31_snow_m200:r433",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 670.4,
+     "front_x": 560.0,
+     "tick": 21318,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 535.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_31_snow_m200/seed_20261031/demo_fog_31_snow_m200",
+    "decision": 434,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_f80c1565",
+   "level": 31,
+   "seeds": [
+    20261031
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    5,
+    23,
+    17,
+    19,
+    2,
+    3
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_31_snow_m200/seed_20261031/demo_fog_31_snow_m200",
+    "decisions": [
+     652
+    ],
+    "index": 0,
+    "future_seed_start": 53000256,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73007109,
+      "row": 4,
+      "type": 15,
+      "name": "jack",
+      "x": 783.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_31_snow_m200:r651",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 749.3,
+     "front_x": 640.0,
+     "tick": 32009,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 624.3,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_31_snow_m200/seed_20261031/demo_fog_31_snow_m200",
+    "decision": 652,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_9d01d6e6",
+   "level": 31,
+   "seeds": [
+    200001384
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    5,
+    23,
+    17,
+    19,
+    2,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200001384/c90demofog31snowm200hv2s495_o336_review1_o360_fast_search",
+    "decisions": [
+     359
+    ],
+    "index": 0,
+    "future_seed_start": 53000512,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67764231,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 799.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c90demofog31snowm200hv2s495_o336_review1_o360_fast_search:r358",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 758.9,
+     "front_x": 640.0,
+     "tick": 18420,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 758.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200001384/c90demofog31snowm200hv2s495_o336_review1_o360_fast_search",
+    "decision": 359,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_8e8a9bab",
+   "level": 31,
+   "seeds": [
+    200001386
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    5,
+    23,
+    17,
+    19,
+    2,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200001386/c90demofog31snowm200hv2s495_o336_review1_o360_fast_search",
+    "decisions": [
+     615
+    ],
+    "index": 0,
+    "future_seed_start": 53000768,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70647812,
+      "row": 1,
+      "type": 15,
+      "name": "jack",
+      "x": 833.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c90demofog31snowm200hv2s495_o336_review1_o360_fast_search:r614",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 833.1,
+     "front_x": 720.0,
+     "tick": 30480,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 730.2,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200001386/c90demofog31snowm200hv2s495_o336_review1_o360_fast_search",
+    "decision": 615,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_84e573f4",
+   "level": 31,
+   "seeds": [
+    49500011
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49500011/c104foguserv2l31snowm200_o0_fast_search",
+    "decisions": [
+     420
+    ],
+    "index": 0,
+    "future_seed_start": 53001024,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69599237,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 720.3
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c104foguserv2l31snowm200_o0_fast_search:r419",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 625.7,
+     "front_x": 560.0,
+     "tick": 21000,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 472.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49500011/c104foguserv2l31snowm200_o0_fast_search",
+    "decision": 420,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_b18ef432",
+   "level": 31,
+   "seeds": [
+    49500020
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49500020/c104foguserv2l31snowm200_o0_fast_search",
+    "decisions": [
+     563
+    ],
+    "index": 0,
+    "future_seed_start": 53001280,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72220683,
+      "row": 1,
+      "type": 15,
+      "name": "jack",
+      "x": 783.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c104foguserv2l31snowm200_o0_fast_search:r562",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 741.8,
+     "front_x": 640.0,
+     "tick": 28500,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 698.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49500020/c104foguserv2l31snowm200_o0_fast_search",
+    "decision": 563,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_63fbc00d",
+   "level": 31,
+   "seeds": [
+    49400011
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 1.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49400011/c99foguserv2l31snowm175_o0_fast_search",
+    "decisions": [
+     393
+    ],
+    "index": 0,
+    "future_seed_start": 53001536,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68419588,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 759.7
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c99foguserv2l31snowm175_o0_fast_search:r392",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 656.7,
+     "front_x": 560.0,
+     "tick": 20220,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 515.2,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49400011/c99foguserv2l31snowm175_o0_fast_search",
+    "decision": 393,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_dc2c5250",
+   "level": 31,
+   "seeds": [
+    49400011
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 1.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49400011/c99foguserv2l31snowm175_o0_fast_search",
+    "decisions": [
+     721
+    ],
+    "index": 0,
+    "future_seed_start": 53001792,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73465861,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 823.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c99foguserv2l31snowm175_o0_fast_search:r720",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 804.2,
+     "front_x": 720.0,
+     "tick": 36420,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 630.0,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49400011/c99foguserv2l31snowm175_o0_fast_search",
+    "decision": 721,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_dfd99b6e",
+   "level": 31,
+   "seeds": [
+    49300197
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49300197/c74foguserv2l31snowm150_o192_fast_search",
+    "decisions": [
+     359
+    ],
+    "index": 0,
+    "future_seed_start": 53002048,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69074948,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 797.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c74foguserv2l31snowm150_o192_fast_search:r358",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 756.3,
+     "front_x": 640.0,
+     "tick": 18660,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 547.8,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49300197/c74foguserv2l31snowm150_o192_fast_search",
+    "decision": 359,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_608e471f",
+   "level": 31,
+   "seeds": [
+    49300197
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49300197/c74foguserv2l31snowm150_o192_fast_search",
+    "decisions": [
+     575
+    ],
+    "index": 0,
+    "future_seed_start": 53002304,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 71696393,
+      "row": 4,
+      "type": 15,
+      "name": "jack",
+      "x": 558.6
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c74foguserv2l31snowm150_o192_fast_search:r574",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 494.8,
+     "front_x": 400.0,
+     "tick": 29580,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 416.3,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49300197/c74foguserv2l31snowm150_o192_fast_search",
+    "decision": 575,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l31_jack_59a97b20",
+   "level": 31,
+   "seeds": [
+    49600024
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    3,
+    5
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_49600024/c109foguserv2l31snowm250_o0_review1_o24_fast_search",
+    "decisions": [
+     355
+    ],
+    "index": 0,
+    "future_seed_start": 53002560,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67960842,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 790.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c109foguserv2l31snowm250_o0_review1_o24_fast_search:r354",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 748.4,
+     "front_x": 640.0,
+     "tick": 18300,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 496.0,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_49600024/c109foguserv2l31snowm250_o0_review1_o24_fast_search",
+    "decision": 355,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_ec621a94",
+   "level": 32,
+   "seeds": [
+    210602123
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    31,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_210602123/c109opening119l32magnetm100_o2100_b1_fast_search",
+    "decisions": [
+     793
+    ],
+    "index": 0,
+    "future_seed_start": 53002816,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 71958539,
+      "row": 5,
+      "type": 7,
+      "name": "football",
+      "x": 678.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c109opening119l32magnetm100_o2100_b1_fast_search:r792",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 7,
+     "name": "football",
+     "x": 678.4,
+     "front_x": 720.0,
+     "tick": 42101,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 568.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_210602123/c109opening119l32magnetm100_o2100_b1_fast_search",
+    "decision": 793,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_aa472c5f",
+   "level": 32,
+   "seeds": [
+    20261032
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_32_snow_m200/seed_20261032/demo_fog_32_snow_m200",
+    "decisions": [
+     866
+    ],
+    "index": 0,
+    "future_seed_start": 53003072,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 74776595,
+      "row": 4,
+      "type": 15,
+      "name": "jack",
+      "x": 812.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_32_snow_m200:r865",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 812.1,
+     "front_x": 720.0,
+     "tick": 40181,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 640.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_32_snow_m200/seed_20261032/demo_fog_32_snow_m200",
+    "decision": 866,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_bfdca39e",
+   "level": 32,
+   "seeds": [
+    20261032
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_32_snow_m200/seed_20261032/demo_fog_32_snow_m200",
+    "decisions": [
+     916
+    ],
+    "index": 0,
+    "future_seed_start": 53003328,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 76808220,
+      "row": 1,
+      "type": 7,
+      "name": "football",
+      "x": 811.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_32_snow_m200:r915",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 751.9,
+     "front_x": 640.0,
+     "tick": 42779,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 552.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_32_snow_m200/seed_20261032/demo_fog_32_snow_m200",
+    "decision": 916,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_4ef2afc1",
+   "level": 32,
+   "seeds": [
+    200004169
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decisions": [
+     514
+    ],
+    "index": 0,
+    "future_seed_start": 53003584,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68943880,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 792.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r513",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 792.9,
+     "front_x": 720.0,
+     "tick": 25500,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 754.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decision": 514,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_600d1075",
+   "level": 32,
+   "seeds": [
+    200004169
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decisions": [
+     730
+    ],
+    "index": 0,
+    "future_seed_start": 53003840,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70975502,
+      "row": 0,
+      "type": 7,
+      "name": "football",
+      "x": 774.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r729",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 7,
+     "name": "football",
+     "x": 774.8,
+     "front_x": 720.0,
+     "tick": 35700,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 531.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decision": 730,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_1d78b7c5",
+   "level": 32,
+   "seeds": [
+    200004169
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decisions": [
+     784
+    ],
+    "index": 0,
+    "future_seed_start": 53004096,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 71106561,
+      "row": 1,
+      "type": 7,
+      "name": "football",
+      "x": 780.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r783",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 758.8,
+     "front_x": 640.0,
+     "tick": 38280,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 721.2,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decision": 784,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_59bc1167",
+   "level": 32,
+   "seeds": [
+    200004167
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200004167/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decisions": [
+     711
+    ],
+    "index": 0,
+    "future_seed_start": 53004352,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 71565321,
+      "row": 1,
+      "type": 15,
+      "name": "jack",
+      "x": 803.3
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r710",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 762.6,
+     "front_x": 720.0,
+     "tick": 34860,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 593.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200004167/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decision": 711,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_8415239a",
+   "level": 32,
+   "seeds": [
+    200004167
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    3
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200004167/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decisions": [
+     832
+    ],
+    "index": 0,
+    "future_seed_start": 53004608,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73465863,
+      "row": 5,
+      "type": 7,
+      "name": "football",
+      "x": 795.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r831",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 7,
+     "name": "football",
+     "x": 741.2,
+     "front_x": 640.0,
+     "tick": 40740,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 741.2,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200004167/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+    "decision": 832,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_be50d3b6",
+   "level": 32,
+   "seeds": [
+    139057009
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decisions": [
+     372
+    ],
+    "index": 0,
+    "future_seed_start": 53004864,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69337090,
+      "row": 1,
+      "type": 15,
+      "name": "jack",
+      "x": 755.7
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r371",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 755.7,
+     "front_x": 640.0,
+     "tick": 21720,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 487.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decision": 372,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_6bc900b1",
+   "level": 32,
+   "seeds": [
+    139057009
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decisions": [
+     431
+    ],
+    "index": 0,
+    "future_seed_start": 53005120,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70647812,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 782.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r430",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 750.9,
+     "front_x": 640.0,
+     "tick": 26540,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 551.0,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decision": 431,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_34df36dc",
+   "level": 32,
+   "seeds": [
+    139057009
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decisions": [
+     531
+    ],
+    "index": 0,
+    "future_seed_start": 53005376,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73662476,
+      "row": 0,
+      "type": 7,
+      "name": "football",
+      "x": 784.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r530",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 7,
+     "name": "football",
+     "x": 752.2,
+     "front_x": 640.0,
+     "tick": 34680,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 436.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decision": 531,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_football_6b78a41a",
+   "level": 32,
+   "seeds": [
+    139057009
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decisions": [
+     593
+    ],
+    "index": 0,
+    "future_seed_start": 53005632,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 74383374,
+      "row": 1,
+      "type": 7,
+      "name": "football",
+      "x": 768.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r592",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 673.7,
+     "front_x": 560.0,
+     "tick": 38440,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 439.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+    "decision": 593,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_98d37b74",
+   "level": 32,
+   "seeds": [
+    139137003
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.25,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587",
+    "decisions": [
+     430
+    ],
+    "index": 0,
+    "future_seed_start": 53005888,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70385664,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 774.1
+     },
+     {
+      "id": 70123524,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 769.6
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587:r429",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 672.5,
+     "front_x": 560.0,
+     "tick": 26000,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 468.8,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587",
+    "decision": 430,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_9995ad82",
+   "level": 32,
+   "seeds": [
+    139137003
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.25,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587",
+    "decisions": [
+     446
+    ],
+    "index": 0,
+    "future_seed_start": 53006144,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70451207,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 804.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587:r445",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 745.0,
+     "front_x": 640.0,
+     "tick": 27080,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 634.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587",
+    "decision": 446,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_50dcaebd",
+   "level": 32,
+   "seeds": [
+    139018034
+   ],
+   "deck": [
+    9,
+    8,
+    16,
+    32,
+    39,
+    44,
+    2,
+    20,
+    30,
+    27
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/f9f99256f38d234799bb8609978ae14bb9980075330c5737ac2bd3e580911767",
+    "decisions": [
+     394
+    ],
+    "index": 0,
+    "future_seed_start": 53006400,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68485126,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 490.6
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:f9f99256f38d234799bb8609978ae14bb9980075330c5737ac2bd3e580911767:r393",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 490.6,
+     "front_x": 480.0,
+     "tick": 20880,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 230.4,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "f9f99256f38d234799bb8609978ae14bb9980075330c5737ac2bd3e580911767",
+    "decision": 394,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_ba61c841",
+   "level": 32,
+   "seeds": [
+    1591200015
+   ],
+   "deck": [
+    2,
+    3,
+    6,
+    8,
+    9,
+    12,
+    16,
+    20,
+    27,
+    29
+   ],
+   "zombie_count_multiplier": 0.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1591200015/c51rd159l3227fa36e6571bm050_o0_fast_search",
+    "decisions": [
+     848
+    ],
+    "index": 0,
+    "future_seed_start": 53006656,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69337100,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 782.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c51rd159l3227fa36e6571bm050_o0_fast_search:r847",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 744.4,
+     "front_x": 640.0,
+     "tick": 43140,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 553.8,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_1591200015/c51rd159l3227fa36e6571bm050_o0_fast_search",
+    "decision": 848,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l32_jack_dedaa97d",
+   "level": 32,
+   "seeds": [
+    1591300017
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 0.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1591300017/c52rd159l32f3a348c1a94dm050_o0_fast_search",
+    "decisions": [
+     583
+    ],
+    "index": 0,
+    "future_seed_start": 53006912,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67829769,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 762.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c52rd159l32f3a348c1a94dm050_o0_fast_search:r582",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 661.2,
+     "front_x": 560.0,
+     "tick": 30540,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 461.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_1591300017/c52rd159l32f3a348c1a94dm050_o0_fast_search",
+    "decision": 583,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_d09e29d0",
+   "level": 33,
+   "seeds": [
+    20261033
+   ],
+   "deck": [
+    9,
+    8,
+    16,
+    43,
+    10,
+    31,
+    3,
+    17,
+    19,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_33_cattail_snow_m200/seed_20261033/demo_fog_33_cattail_snow_m200",
+    "decisions": [
+     745
+    ],
+    "index": 0,
+    "future_seed_start": 53007168,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73203717,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 589.4
+     },
+     {
+      "id": 73924615,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 722.6
+     },
+     {
+      "id": 73596942,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 584.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_33_cattail_snow_m200:r744",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 690.5,
+     "front_x": 720.0,
+     "tick": 34842,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 584.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_33_cattail_snow_m200/seed_20261033/demo_fog_33_cattail_snow_m200",
+    "decision": 745,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_e333ed0a",
+   "level": 33,
+   "seeds": [
+    20261033
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_33_cactus_snow_m200/seed_20261033/demo_fog_33_cactus_snow_m200",
+    "decisions": [
+     612
+    ],
+    "index": 0,
+    "future_seed_start": 53007424,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 71041031,
+      "row": 4,
+      "type": 16,
+      "name": "balloon",
+      "x": 775.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_33_cactus_snow_m200:r611",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 710.8,
+     "front_x": 640.0,
+     "tick": 29652,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 657.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_33_cactus_snow_m200/seed_20261033/demo_fog_33_cactus_snow_m200",
+    "decision": 612,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_5f741356",
+   "level": 33,
+   "seeds": [
+    20261033
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_33_cactus_snow_m200/seed_20261033/demo_fog_33_cactus_snow_m200",
+    "decisions": [
+     640
+    ],
+    "index": 0,
+    "future_seed_start": 53007680,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72024073,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 765.6
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_33_cactus_snow_m200:r639",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 675.2,
+     "front_x": 560.0,
+     "tick": 30668,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 624.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_33_cactus_snow_m200/seed_20261033/demo_fog_33_cactus_snow_m200",
+    "decision": 640,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_174613ee",
+   "level": 33,
+   "seeds": [
+    139093041
+   ],
+   "deck": [
+    1,
+    12,
+    14,
+    16,
+    19,
+    34,
+    41,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c",
+    "decisions": [
+     310
+    ],
+    "index": 0,
+    "future_seed_start": 53007936,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 66715654,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 432.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c:r309",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 393.6,
+     "front_x": 80.0,
+     "tick": 21430,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 297.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c",
+    "decision": 310,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_6b2feaa3",
+   "level": 33,
+   "seeds": [
+    139093041
+   ],
+   "deck": [
+    1,
+    12,
+    14,
+    16,
+    19,
+    34,
+    41,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c",
+    "decisions": [
+     687
+    ],
+    "index": 0,
+    "future_seed_start": 53008192,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69402626,
+      "row": 0,
+      "type": 16,
+      "name": "balloon",
+      "x": 481.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c:r686",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 434.6,
+     "front_x": 320.0,
+     "tick": 43210,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 291.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c",
+    "decision": 687,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_a652db6f",
+   "level": 33,
+   "seeds": [
+    139091021
+   ],
+   "deck": [
+    9,
+    12,
+    16,
+    21,
+    24,
+    26,
+    27,
+    29
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591",
+    "decisions": [
+     338
+    ],
+    "index": 0,
+    "future_seed_start": 53008448,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 66781193,
+      "row": 4,
+      "type": 16,
+      "name": "balloon",
+      "x": 498.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591:r337",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 396.1,
+     "front_x": 240.0,
+     "tick": 18840,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 89.2,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591",
+    "decision": 338,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_5614a9fa",
+   "level": 33,
+   "seeds": [
+    139091021
+   ],
+   "deck": [
+    9,
+    12,
+    16,
+    21,
+    24,
+    26,
+    27,
+    29
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591",
+    "decisions": [
+     524
+    ],
+    "index": 0,
+    "future_seed_start": 53008704,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68091905,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 780.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591:r523",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 780.4,
+     "front_x": 720.0,
+     "tick": 28920,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 452.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591",
+    "decision": 524,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_a19a6bc2",
+   "level": 33,
+   "seeds": [
+    139140051
+   ],
+   "deck": [
+    1,
+    9,
+    16,
+    8,
+    10,
+    15,
+    14,
+    24,
+    43,
+    19
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3",
+    "decisions": [
+     191
+    ],
+    "index": 0,
+    "future_seed_start": 53008960,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 66781189,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 585.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3:r190",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 585.8,
+     "front_x": 560.0,
+     "tick": 9780,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 275.8,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3",
+    "decision": 191,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_5d9ce402",
+   "level": 33,
+   "seeds": [
+    139140051
+   ],
+   "deck": [
+    1,
+    9,
+    16,
+    8,
+    10,
+    15,
+    14,
+    24,
+    43,
+    19
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3",
+    "decisions": [
+     276
+    ],
+    "index": 0,
+    "future_seed_start": 53009216,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67567623,
+      "row": 2,
+      "type": 16,
+      "name": "balloon",
+      "x": 769.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3:r275",
+    "terrain": "fog",
+    "trigger": {
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 671.8,
+     "front_x": 560.0,
+     "tick": 14580,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 379.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3",
+    "decision": 276,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_f3afe15e",
+   "level": 33,
+   "seeds": [
+    139140064
+   ],
+   "deck": [
+    9,
+    8,
+    16,
+    7,
+    22,
+    40,
+    17,
+    19,
+    27,
+    30
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/b74349c8247721546428987c08ca4b615eaf0ba9dff1f51cd1697145bf649046",
+    "decisions": [
+     361
+    ],
+    "index": 0,
+    "future_seed_start": 53009472,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67960839,
+      "row": 4,
+      "type": 16,
+      "name": "balloon",
+      "x": 485.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:b74349c8247721546428987c08ca4b615eaf0ba9dff1f51cd1697145bf649046:r360",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 485.8,
+     "front_x": 560.0,
+     "tick": 20660,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 421.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "b74349c8247721546428987c08ca4b615eaf0ba9dff1f51cd1697145bf649046",
+    "decision": 361,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l33_balloon_24d2f0cc",
+   "level": 33,
+   "seeds": [
+    218000014
+   ],
+   "deck": [
+    9,
+    16,
+    8,
+    26,
+    0,
+    22,
+    4
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/2b2a099dab1a47a0e25474aae287c8424872adb05a620001bb825f522fa3220f",
+    "decisions": [
+     185
+    ],
+    "index": 0,
+    "future_seed_start": 53009728,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 66715654,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 651.7
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:2b2a099dab1a47a0e25474aae287c8424872adb05a620001bb825f522fa3220f:r184",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 651.7,
+     "front_x": 560.0,
+     "tick": 11320,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 304.4,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "2b2a099dab1a47a0e25474aae287c8424872adb05a620001bb825f522fa3220f",
+    "decision": 185,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l34_dolphin_c57d970a",
+   "level": 34,
+   "seeds": [
+    20261034
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_34_cactus_snow_m200/seed_20261034/demo_fog_34_cactus_snow_m200",
+    "decisions": [
+     615
+    ],
+    "index": 0,
+    "future_seed_start": 53009984,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70516748,
+      "row": 3,
+      "type": 14,
+      "name": "dolphin",
+      "x": 741.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_34_cactus_snow_m200:r614",
+    "terrain": "fog",
+    "trigger": {
+     "row": 3,
+     "type": 14,
+     "name": "dolphin",
+     "x": 646.5,
+     "front_x": 560.0,
+     "tick": 27701,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 438.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_34_cactus_snow_m200/seed_20261034/demo_fog_34_cactus_snow_m200",
+    "decision": 615,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l34_balloon_03478479",
+   "level": 34,
+   "seeds": [
+    20261034
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_34_cactus_snow_m200/seed_20261034/demo_fog_34_cactus_snow_m200",
+    "decisions": [
+     732
+    ],
+    "index": 0,
+    "future_seed_start": 53010240,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72417289,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 793.5
+     },
+     {
+      "id": 72024081,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 796.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_34_cactus_snow_m200:r731",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 751.5,
+     "front_x": 640.0,
+     "tick": 31608,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 606.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_34_cactus_snow_m200/seed_20261034/demo_fog_34_cactus_snow_m200",
+    "decision": 732,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l34_balloon_33f8ecfb",
+   "level": 34,
+   "seeds": [
+    200010264
+   ],
+   "deck": [
+    9,
+    16,
+    8,
+    7,
+    22,
+    23,
+    19,
+    27,
+    25,
+    43
+   ],
+   "zombie_count_multiplier": 0.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200010264/c70rd193l34m075_o24_fast_search",
+    "decisions": [
+     505
+    ],
+    "index": 0,
+    "future_seed_start": 53010496,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68222985,
+      "row": 0,
+      "type": 16,
+      "name": "balloon",
+      "x": 758.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c70rd193l34m075_o24_fast_search:r504",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 675.8,
+     "front_x": 560.0,
+     "tick": 27180,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 427.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200010264/c70rd193l34m075_o24_fast_search",
+    "decision": 505,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_23754b93",
+   "level": 37,
+   "seeds": [
+    81022034
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/1a931937703796563e91b4ec473601dca2e56abfbbd5c937cee861091a56229a",
+    "decisions": [
+     556
+    ],
+    "index": 0,
+    "future_seed_start": 53010752,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73728019,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 775.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:1a931937703796563e91b4ec473601dca2e56abfbbd5c937cee861091a56229a:r555",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 672.4,
+     "front_x": 560.0,
+     "tick": 37589,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 560.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "1a931937703796563e91b4ec473601dca2e56abfbbd5c937cee861091a56229a",
+    "decision": 556,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_222e7437",
+   "level": 37,
+   "seeds": [
+    81022005
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/db3aef1206b93fad815b2d1945f8716253e8cc8565b423f0a74db39dcc3775a8",
+    "decisions": [
+     815
+    ],
+    "index": 0,
+    "future_seed_start": 53011008,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 82247691,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 790.6
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:db3aef1206b93fad815b2d1945f8716253e8cc8565b423f0a74db39dcc3775a8:r814",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 694.3,
+     "front_x": 720.0,
+     "tick": 56048,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 630.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "db3aef1206b93fad815b2d1945f8716253e8cc8565b423f0a74db39dcc3775a8",
+    "decision": 815,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_650219cb",
+   "level": 37,
+   "seeds": [
+    79202107
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    28
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_79202107/c101fog79bl37bestm125_o30_review1_o54_fast_search",
+    "decisions": [
+     388
+    ],
+    "index": 0,
+    "future_seed_start": 53011264,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68091913,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 816.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c101fog79bl37bestm125_o30_review1_o54_fast_search:r387",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 753.6,
+     "front_x": 640.0,
+     "tick": 19440,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 753.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_79202107/c101fog79bl37bestm125_o30_review1_o54_fast_search",
+    "decision": 388,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_4b6836d7",
+   "level": 37,
+   "seeds": [
+    79202106
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    28
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_79202106/c101fog79bl37bestm125_o30_review1_o54_fast_search",
+    "decisions": [
+     715
+    ],
+    "index": 0,
+    "future_seed_start": 53011520,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70844416,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 767.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c101fog79bl37bestm125_o30_review1_o54_fast_search:r714",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 707.3,
+     "front_x": 640.0,
+     "tick": 35984,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 465.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_79202106/c101fog79bl37bestm125_o30_review1_o54_fast_search",
+    "decision": 715,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_3a467d17",
+   "level": 37,
+   "seeds": [
+    200008497
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    28
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200008497/c95gpt193l3722f4fe020f69s541_o24_review1_o48_fast_search",
+    "decisions": [
+     881
+    ],
+    "index": 0,
+    "future_seed_start": 53011776,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 71958528,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 797.7
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c95gpt193l3722f4fe020f69s541_o24_review1_o48_fast_search:r880",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 797.7,
+     "front_x": 720.0,
+     "tick": 43913,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 728.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200008497/c95gpt193l3722f4fe020f69s541_o24_review1_o48_fast_search",
+    "decision": 881,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_3afdc3c6",
+   "level": 37,
+   "seeds": [
+    323000052
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_323000052/c89fog79l37snowmagnetv2m200s81022002a492433842832s897_o24_review1_o48_fast_search",
+    "decisions": [
+     1022
+    ],
+    "index": 0,
+    "future_seed_start": 53012032,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 74448910,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 817.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c89fog79l37snowmagnetv2m200s81022002a492433842832s897_o24_review1_o48_fast_search:r1021",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 741.8,
+     "front_x": 640.0,
+     "tick": 50587,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 626.4,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_323000052/c89fog79l37snowmagnetv2m200s81022002a492433842832s897_o24_review1_o48_fast_search",
+    "decision": 1022,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_6e1ac523",
+   "level": 37,
+   "seeds": [
+    139096020
+   ],
+   "deck": [
+    1,
+    7,
+    16,
+    34,
+    39,
+    41,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/eac4b497f64b8aa58e775a7a75b0da54df7593ec4d68aa7190e903bad882bebf",
+    "decisions": [
+     951
+    ],
+    "index": 0,
+    "future_seed_start": 53012288,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72417283,
+      "row": 4,
+      "type": 15,
+      "name": "jack",
+      "x": 692.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:eac4b497f64b8aa58e775a7a75b0da54df7593ec4d68aa7190e903bad882bebf:r950",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 589.8,
+     "front_x": 480.0,
+     "tick": 54720,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 583.0,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "eac4b497f64b8aa58e775a7a75b0da54df7593ec4d68aa7190e903bad882bebf",
+    "decision": 951,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_0a889d27",
+   "level": 37,
+   "seeds": [
+    139099076
+   ],
+   "deck": [
+    8,
+    9,
+    16,
+    17,
+    18,
+    21,
+    25,
+    32,
+    34,
+    46
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081",
+    "decisions": [
+     264
+    ],
+    "index": 0,
+    "future_seed_start": 53012544,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67764233,
+      "row": 4,
+      "type": 15,
+      "name": "jack",
+      "x": 810.2
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081:r263",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 744.0,
+     "front_x": 640.0,
+     "tick": 19180,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 563.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081",
+    "decision": 264,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l37_jack_c0f4fed4",
+   "level": 37,
+   "seeds": [
+    139099076
+   ],
+   "deck": [
+    8,
+    9,
+    16,
+    17,
+    18,
+    21,
+    25,
+    32,
+    34,
+    46
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081",
+    "decisions": [
+     756
+    ],
+    "index": 0,
+    "future_seed_start": 53012800,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72351755,
+      "row": 5,
+      "type": 15,
+      "name": "jack",
+      "x": 800.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081:r755",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 739.9,
+     "front_x": 640.0,
+     "tick": 44960,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 81.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081",
+    "decision": 756,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_8270b710",
+   "level": 38,
+   "seeds": [
+    333000051
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_333000051/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+    "decisions": [
+     420
+    ],
+    "index": 0,
+    "future_seed_start": 53013056,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67764234,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 773.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search:r419",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 773.0,
+     "front_x": 720.0,
+     "tick": 21420,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 356.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_333000051/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+    "decision": 420,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_c3fe7f7a",
+   "level": 38,
+   "seeds": [
+    200013056
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013056/c65rd193l38m100_o0_fast_search",
+    "decisions": [
+     547
+    ],
+    "index": 0,
+    "future_seed_start": 53013312,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67633157,
+      "row": 5,
+      "type": 18,
+      "name": "pogo",
+      "x": 789.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c65rd193l38m100_o0_fast_search:r546",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 18,
+     "name": "pogo",
+     "x": 735.8,
+     "front_x": 640.0,
+     "tick": 27720,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 216.0,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013056/c65rd193l38m100_o0_fast_search",
+    "decision": 547,
+    "teacher": {
+     "games": 6,
+     "wins": 3,
+     "rate": 0.5
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_ae47a812",
+   "level": 39,
+   "seeds": [
+    81027036
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    27,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/c39151a7ff85bb771f185fd50d9fde71f094d6d64de5e38303c66498ed771fc4",
+    "decisions": [
+     349
+    ],
+    "index": 0,
+    "future_seed_start": 53013568,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69664769,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 685.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:c39151a7ff85bb771f185fd50d9fde71f094d6d64de5e38303c66498ed771fc4:r348",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 573.1,
+     "front_x": 640.0,
+     "tick": 22480,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 573.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "c39151a7ff85bb771f185fd50d9fde71f094d6d64de5e38303c66498ed771fc4",
+    "decision": 349,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_pogo_c21ecd9a",
+   "level": 39,
+   "seeds": [
+    81026017
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/7490c9b18074fdb03a93a7a6973d38c55632ff511c68197de7692776fe78cdb0",
+    "decisions": [
+     588
+    ],
+    "index": 0,
+    "future_seed_start": 53013824,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 74579992,
+      "row": 0,
+      "type": 18,
+      "name": "pogo",
+      "x": 789.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:7490c9b18074fdb03a93a7a6973d38c55632ff511c68197de7692776fe78cdb0:r587",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 765.6,
+     "front_x": 720.0,
+     "tick": 39300,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 692.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "7490c9b18074fdb03a93a7a6973d38c55632ff511c68197de7692776fe78cdb0",
+    "decision": 588,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_pogo_065e5fc4",
+   "level": 39,
+   "seeds": [
+    81026017
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/e9c2f17c27bba99a99880f8456a5f41b3dd513c8725db1d975f55aca88ce2b87",
+    "decisions": [
+     588
+    ],
+    "index": 0,
+    "future_seed_start": 53014080,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 74579992,
+      "row": 0,
+      "type": 18,
+      "name": "pogo",
+      "x": 789.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:e9c2f17c27bba99a99880f8456a5f41b3dd513c8725db1d975f55aca88ce2b87:r587",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 765.6,
+     "front_x": 720.0,
+     "tick": 39300,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 692.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "e9c2f17c27bba99a99880f8456a5f41b3dd513c8725db1d975f55aca88ce2b87",
+    "decision": 588,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_a040811d",
+   "level": 39,
+   "seeds": [
+    20261039
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/human/demo_fog_39_cactus_snow_m200/seed_20261039/demo_fog_39_cactus_snow_m200",
+    "decisions": [
+     1159
+    ],
+    "index": 0,
+    "future_seed_start": 53014336,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73990155,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 722.0
+     },
+     {
+      "id": 74842136,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 762.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:demo_fog_39_cactus_snow_m200:r1158",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 675.6,
+     "front_x": 560.0,
+     "tick": 41701,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 617.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "human/demo_fog_39_cactus_snow_m200/seed_20261039/demo_fog_39_cactus_snow_m200",
+    "decision": 1159,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_pogo_e281e731",
+   "level": 39,
+   "seeds": [
+    1592300024
+   ],
+   "deck": [
+    2,
+    5,
+    8,
+    9,
+    10,
+    16,
+    17,
+    19,
+    23,
+    26
+   ],
+   "zombie_count_multiplier": 0.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1592300024/c59rd159l399620bf216504m050_o24_fast_search",
+    "decisions": [
+     523
+    ],
+    "index": 0,
+    "future_seed_start": 53014592,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67764231,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 789.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c59rd159l399620bf216504m050_o24_fast_search:r522",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 789.5,
+     "front_x": 720.0,
+     "tick": 29131,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 220.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_1592300024/c59rd159l399620bf216504m050_o24_fast_search",
+    "decision": 523,
+    "teacher": {
+     "games": 6,
+     "wins": 3,
+     "rate": 0.5
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_balloon_00d0e4b0",
+   "level": 40,
+   "seeds": [
+    200013642
+   ],
+   "deck": [
+    9,
+    8,
+    16,
+    13,
+    29,
+    5,
+    6,
+    27,
+    17,
+    30
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013642/c76rd193l40m075_o48_review1_o72_fast_search",
+    "decisions": [
+     395
+    ],
+    "index": 0,
+    "future_seed_start": 53014848,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69402635,
+      "row": 4,
+      "type": 16,
+      "name": "balloon",
+      "x": 532.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c76rd193l40m075_o48_review1_o72_fast_search:r394",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 431.1,
+     "front_x": 320.0,
+     "tick": 21336,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 119.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013642/c76rd193l40m075_o48_review1_o72_fast_search",
+    "decision": 395,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_pogo_f4904c96",
+   "level": 40,
+   "seeds": [
+    81029002
+   ],
+   "deck": [],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "conveyor_start": "original",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/4af32472f9524d719de378dc5684315761703f872ac1ce656685e6ca4a1c40f7",
+    "decisions": [
+     316
+    ],
+    "index": 0,
+    "future_seed_start": 53015104,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72810512,
+      "row": 0,
+      "type": 18,
+      "name": "pogo",
+      "x": 753.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:4af32472f9524d719de378dc5684315761703f872ac1ce656685e6ca4a1c40f7:r315",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 640.9,
+     "front_x": 560.0,
+     "tick": 26550,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 489.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "4af32472f9524d719de378dc5684315761703f872ac1ce656685e6ca4a1c40f7",
+    "decision": 316,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_balloon_be563792",
+   "level": 40,
+   "seeds": [
+    241000006
+   ],
+   "deck": [],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "conveyor_start": "original",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/c432c7009d7643507731cff0bbc7a29c7caa3ef698fd913ce0fbab47d975db01",
+    "decisions": [
+     252
+    ],
+    "index": 0,
+    "future_seed_start": 53015360,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70975495,
+      "row": 3,
+      "type": 16,
+      "name": "balloon",
+      "x": 667.3
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:c432c7009d7643507731cff0bbc7a29c7caa3ef698fd913ce0fbab47d975db01:r251",
+    "terrain": "fog",
+    "trigger": {
+     "row": 3,
+     "type": 16,
+     "name": "balloon",
+     "x": 595.7,
+     "front_x": 480.0,
+     "tick": 20850,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 368.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "c432c7009d7643507731cff0bbc7a29c7caa3ef698fd913ce0fbab47d975db01",
+    "decision": 252,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_balloon_2648df7d",
+   "level": 40,
+   "seeds": [
+    200013592
+   ],
+   "deck": [
+    1,
+    5,
+    7,
+    16,
+    18,
+    23,
+    26,
+    28,
+    29,
+    30
+   ],
+   "zombie_count_multiplier": 0.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013592/c70rd193l40m075_o24_fast_search",
+    "decisions": [
+     354
+    ],
+    "index": 0,
+    "future_seed_start": 53015616,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69599237,
+      "row": 2,
+      "type": 16,
+      "name": "balloon",
+      "x": 799.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c70rd193l40m075_o24_fast_search:r353",
+    "terrain": "fog",
+    "trigger": {
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 741.9,
+     "front_x": 640.0,
+     "tick": 18540,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 607.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013592/c70rd193l40m075_o24_fast_search",
+    "decision": 354,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_pogo_21a86310",
+   "level": 40,
+   "seeds": [
+    200013592
+   ],
+   "deck": [
+    1,
+    5,
+    7,
+    16,
+    18,
+    23,
+    26,
+    28,
+    29,
+    30
+   ],
+   "zombie_count_multiplier": 0.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013592/c70rd193l40m075_o24_fast_search",
+    "decisions": [
+     598
+    ],
+    "index": 0,
+    "future_seed_start": 53015872,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73859091,
+      "row": 0,
+      "type": 18,
+      "name": "pogo",
+      "x": 767.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c70rd193l40m075_o24_fast_search:r597",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 659.0,
+     "front_x": 560.0,
+     "tick": 31340,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": true,
+     "min_x_ahead": -13.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013592/c70rd193l40m075_o24_fast_search",
+    "decision": 598,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_balloon_35f653e5",
+   "level": 40,
+   "seeds": [
+    200013593
+   ],
+   "deck": [
+    1,
+    5,
+    7,
+    16,
+    18,
+    23,
+    26,
+    28,
+    29,
+    30
+   ],
+   "zombie_count_multiplier": 0.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013593/c70rd193l40m075_o24_fast_search",
+    "decisions": [
+     421
+    ],
+    "index": 0,
+    "future_seed_start": 53016128,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70844420,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 801.7
+     },
+     {
+      "id": 70451211,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 634.3
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c70rd193l40m075_o24_fast_search:r420",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 749.2,
+     "front_x": 640.0,
+     "tick": 21960,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 634.3,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013593/c70rd193l40m075_o24_fast_search",
+    "decision": 421,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l40_jack_0b47e670",
+   "level": 40,
+   "seeds": [
+    200013593
+   ],
+   "deck": [
+    1,
+    5,
+    7,
+    16,
+    18,
+    23,
+    26,
+    28,
+    29,
+    30
+   ],
+   "zombie_count_multiplier": 0.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013593/c70rd193l40m075_o24_fast_search",
+    "decisions": [
+     481
+    ],
+    "index": 0,
+    "future_seed_start": 53016384,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 72024081,
+      "row": 0,
+      "type": 15,
+      "name": "jack",
+      "x": 763.2
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c70rd193l40m075_o24_fast_search:r480",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 669.2,
+     "front_x": 560.0,
+     "tick": 25221,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 579.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013593/c70rd193l40m075_o24_fast_search",
+    "decision": 481,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l36_digger_19ed2541",
+   "level": 36,
+   "seeds": [
+    139059029
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/789660510cab78a960e90c7e651c35f28884a7d14f7ab7e39e0eaf968916fd32",
+    "decisions": [
+     201
+    ],
+    "index": 0,
+    "future_seed_start": 53016640,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67305474,
+      "row": 0,
+      "type": 17,
+      "name": "digger",
+      "x": 789.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:789660510cab78a960e90c7e651c35f28884a7d14f7ab7e39e0eaf968916fd32:r200",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 17,
+     "name": "digger",
+     "x": 670.6,
+     "front_x": 560.0,
+     "tick": 11980,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 9.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "789660510cab78a960e90c7e651c35f28884a7d14f7ab7e39e0eaf968916fd32",
+    "decision": 201,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_977af253",
+   "level": 38,
+   "seeds": [
+    200042754
+   ],
+   "deck": [
+    9,
+    16,
+    8,
+    29,
+    31,
+    3,
+    19
+   ],
+   "zombie_count_multiplier": 0.75,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200042754/c111rd193l38m075_o240_fast_search",
+    "decisions": [
+     575
+    ],
+    "index": 0,
+    "future_seed_start": 53016896,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68550664,
+      "row": 4,
+      "type": 18,
+      "name": "pogo",
+      "x": 532.6
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c111rd193l38m075_o240_fast_search:r574",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 532.6,
+     "front_x": 720.0,
+     "tick": 28083,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": true,
+     "min_x_ahead": -8.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200042754/c111rd193l38m075_o240_fast_search",
+    "decision": 575,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_8eac22ab",
+   "level": 38,
+   "seeds": [
+    79204463
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 1.25,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_79204463/c81fog79bl38bestm125_o348_fast_search",
+    "decisions": [
+     398
+    ],
+    "index": 0,
+    "future_seed_start": 53017152,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68616197,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 772.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c81fog79bl38bestm125_o348_fast_search:r397",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 718.8,
+     "front_x": 720.0,
+     "tick": 20100,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 692.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_79204463/c81fog79bl38bestm125_o348_fast_search",
+    "decision": 398,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_167b20b5",
+   "level": 38,
+   "seeds": [
+    139020015
+   ],
+   "deck": [
+    2,
+    3,
+    6,
+    8,
+    9,
+    12,
+    16,
+    20,
+    27,
+    29
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/978029656f809a4b3a55f10d992ad69c0c7733d812fcbe6ac2459614a8ab9f66",
+    "decisions": [
+     777
+    ],
+    "index": 0,
+    "future_seed_start": 53017408,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70975498,
+      "row": 5,
+      "type": 18,
+      "name": "pogo",
+      "x": 818.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:978029656f809a4b3a55f10d992ad69c0c7733d812fcbe6ac2459614a8ab9f66:r776",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 18,
+     "name": "pogo",
+     "x": 737.4,
+     "front_x": 640.0,
+     "tick": 40890,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 284.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "978029656f809a4b3a55f10d992ad69c0c7733d812fcbe6ac2459614a8ab9f66",
+    "decision": 777,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_b7ffd1ca",
+   "level": 38,
+   "seeds": [
+    139139011
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.25,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/d73e950b751cb838c5fa8c4246b1655764e9d57115d6d9cf846d7abd1f8af29b",
+    "decisions": [
+     374
+    ],
+    "index": 0,
+    "future_seed_start": 53017664,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68354055,
+      "row": 4,
+      "type": 18,
+      "name": "pogo",
+      "x": 763.9
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:d73e950b751cb838c5fa8c4246b1655764e9d57115d6d9cf846d7abd1f8af29b:r373",
+    "terrain": "fog",
+    "trigger": {
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 655.9,
+     "front_x": 560.0,
+     "tick": 21340,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 547.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "d73e950b751cb838c5fa8c4246b1655764e9d57115d6d9cf846d7abd1f8af29b",
+    "decision": 374,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_c779efb1",
+   "level": 38,
+   "seeds": [
+    200013059
+   ],
+   "deck": [
+    2,
+    3,
+    8,
+    9,
+    16,
+    17,
+    20,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013059/c65rd193l38m100_o0_fast_search",
+    "decisions": [
+     821
+    ],
+    "index": 0,
+    "future_seed_start": 53017920,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69861384,
+      "row": 0,
+      "type": 18,
+      "name": "pogo",
+      "x": 798.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c65rd193l38m100_o0_fast_search:r820",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 744.1,
+     "front_x": 640.0,
+     "tick": 41270,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 636.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013059/c65rd193l38m100_o0_fast_search",
+    "decision": 821,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_dc3c0b99",
+   "level": 38,
+   "seeds": [
+    81024016
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/2160cfe3610c102d7e9ea05a3c93f48df52ac77c12c29d1d69fa5e5fd79429e8",
+    "decisions": [
+     598
+    ],
+    "index": 0,
+    "future_seed_start": 53018176,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 75825175,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 548.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:2160cfe3610c102d7e9ea05a3c93f48df52ac77c12c29d1d69fa5e5fd79429e8:r597",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 548.8,
+     "front_x": 560.0,
+     "tick": 36834,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": true,
+     "min_x_ahead": -8.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "2160cfe3610c102d7e9ea05a3c93f48df52ac77c12c29d1d69fa5e5fd79429e8",
+    "decision": 598,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_99214716",
+   "level": 38,
+   "seeds": [
+    333000048
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_333000048/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+    "decisions": [
+     417
+    ],
+    "index": 0,
+    "future_seed_start": 53018432,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67829761,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 765.7
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search:r416",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 657.7,
+     "front_x": 560.0,
+     "tick": 21780,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 335.6,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_333000048/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+    "decision": 417,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l38_pogo_dd51db9d",
+   "level": 38,
+   "seeds": [
+    139020032
+   ],
+   "deck": [
+    2,
+    3,
+    6,
+    8,
+    9,
+    12,
+    16,
+    20,
+    27,
+    29
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/4026a9c30d5f46aaf0856a89499ca13a18d74463f624a7fff370448bc6979494",
+    "decisions": [
+     634
+    ],
+    "index": 0,
+    "future_seed_start": 53018688,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 70647813,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 843.1
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:4026a9c30d5f46aaf0856a89499ca13a18d74463f624a7fff370448bc6979494:r633",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 735.1,
+     "front_x": 640.0,
+     "tick": 33480,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 376.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "4026a9c30d5f46aaf0856a89499ca13a18d74463f624a7fff370448bc6979494",
+    "decision": 634,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_12ac693d",
+   "level": 39,
+   "seeds": [
+    200013447
+   ],
+   "deck": [
+    1,
+    3,
+    8,
+    9,
+    14,
+    15,
+    16,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013447/c86rd193l39m050_o108_review1_o132_fast_search",
+    "decisions": [
+     835
+    ],
+    "index": 0,
+    "future_seed_start": 53018944,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 69861379,
+      "row": 2,
+      "type": 16,
+      "name": "balloon",
+      "x": 753.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c86rd193l39m050_o108_review1_o132_fast_search:r834",
+    "terrain": "fog",
+    "trigger": {
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 678.4,
+     "front_x": 560.0,
+     "tick": 41988,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 452.1,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013447/c86rd193l39m050_o108_review1_o132_fast_search",
+    "decision": 835,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_pogo_e1e8947a",
+   "level": 39,
+   "seeds": [
+    81026005
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/cc2a0274dacb24f6a61641810254c2f789d0dfcfada80876341af1964fe24955",
+    "decisions": [
+     904
+    ],
+    "index": 0,
+    "future_seed_start": 53019200,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 79167505,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 622.3
+     },
+     {
+      "id": 79429662,
+      "row": 1,
+      "type": 18,
+      "name": "pogo",
+      "x": 787.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:cc2a0274dacb24f6a61641810254c2f789d0dfcfada80876341af1964fe24955:r903",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 673.9,
+     "front_x": 560.0,
+     "tick": 50022,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 565.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "cc2a0274dacb24f6a61641810254c2f789d0dfcfada80876341af1964fe24955",
+    "decision": 904,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_acf0e568",
+   "level": 39,
+   "seeds": [
+    200013445
+   ],
+   "deck": [
+    1,
+    3,
+    8,
+    9,
+    14,
+    15,
+    16,
+    27,
+    30,
+    43
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_200013445/c86rd193l39m050_o108_review1_o132_fast_search",
+    "decisions": [
+     601
+    ],
+    "index": 0,
+    "future_seed_start": 53019456,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68812800,
+      "row": 0,
+      "type": 16,
+      "name": "balloon",
+      "x": 810.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c86rd193l39m050_o108_review1_o132_fast_search:r600",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 746.8,
+     "front_x": 640.0,
+     "tick": 30120,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 671.4,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_200013445/c86rd193l39m050_o108_review1_o132_fast_search",
+    "decision": 601,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_pogo_62429021",
+   "level": 39,
+   "seeds": [
+    330000051
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    26,
+    5
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_330000051/c89fog79l39snowcactusv2m200s81026007adab6656b879cs775_o24_review1_o48_fast_search",
+    "decisions": [
+     516
+    ],
+    "index": 0,
+    "future_seed_start": 53019712,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68878338,
+      "row": 0,
+      "type": 18,
+      "name": "pogo",
+      "x": 792.8
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c89fog79l39snowcactusv2m200s81026007adab6656b879cs775_o24_review1_o48_fast_search:r515",
+    "terrain": "fog",
+    "trigger": {
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 738.8,
+     "front_x": 640.0,
+     "tick": 26127,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 354.9,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_330000051/c89fog79l39snowcactusv2m200s81026007adab6656b879cs775_o24_review1_o48_fast_search",
+    "decision": 516,
+    "teacher": {
+     "games": 3,
+     "wins": 2,
+     "rate": 0.6667
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_af35d3dd",
+   "level": 39,
+   "seeds": [
+    224000008
+   ],
+   "deck": [
+    9,
+    8,
+    16,
+    32,
+    43,
+    31,
+    3,
+    17
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925",
+    "decisions": [
+     301
+    ],
+    "index": 0,
+    "future_seed_start": 53019968,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67895305,
+      "row": 1,
+      "type": 16,
+      "name": "balloon",
+      "x": 788.4
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925:r300",
+    "terrain": "fog",
+    "trigger": {
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 748.7,
+     "front_x": 640.0,
+     "tick": 18220,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 630.8,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925",
+    "decision": 301,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_0646b99a",
+   "level": 39,
+   "seeds": [
+    224000008
+   ],
+   "deck": [
+    9,
+    8,
+    16,
+    32,
+    43,
+    31,
+    3,
+    17
+   ],
+   "zombie_count_multiplier": 1.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925",
+    "decisions": [
+     406
+    ],
+    "index": 0,
+    "future_seed_start": 53020224,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 68681731,
+      "row": 5,
+      "type": 16,
+      "name": "balloon",
+      "x": 790.2
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925:r405",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 742.5,
+     "front_x": 640.0,
+     "tick": 24160,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 742.5,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925",
+    "decision": 406,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l39_balloon_38f78314",
+   "level": 39,
+   "seeds": [
+    1592300028
+   ],
+   "deck": [
+    2,
+    5,
+    8,
+    9,
+    10,
+    16,
+    17,
+    19,
+    23,
+    26
+   ],
+   "zombie_count_multiplier": 0.5,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2/seed_1592300028/c59rd159l399620bf216504m050_o24_fast_search",
+    "decisions": [
+     657
+    ],
+    "index": 0,
+    "future_seed_start": 53020480,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 67829769,
+      "row": 3,
+      "type": 16,
+      "name": "balloon",
+      "x": 793.0
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "framesv2:c59rd159l399620bf216504m050_o24_fast_search:r656",
+    "terrain": "fog",
+    "trigger": {
+     "row": 3,
+     "type": 16,
+     "name": "balloon",
+     "x": 793.0,
+     "front_x": 720.0,
+     "tick": 34474,
+     "crossed": false,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 492.3,
+     "original_plant_loss": 0
+    },
+    "source_root": "framesv2",
+    "archive": "seed_1592300028/c59rd159l399620bf216504m050_o24_fast_search",
+    "decision": 657,
+    "teacher": {
+     "games": 3,
+     "wins": 1,
+     "rate": 0.3333
+    },
+    "coverage_only": false
+   }
+  },
+  {
+   "task_id": "drill235_l36_digger_1bdb8d4c",
+   "level": 36,
+   "seeds": [
+    81020024
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/4cbdd0e0dae1f03ba32f122dbc2999ecf5058ae0a18d95e1ddc1061057a7728d",
+    "decisions": [
+     552
+    ],
+    "index": 0,
+    "future_seed_start": 53020736,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73465864,
+      "row": 5,
+      "type": 17,
+      "name": "digger",
+      "x": 519.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:4cbdd0e0dae1f03ba32f122dbc2999ecf5058ae0a18d95e1ddc1061057a7728d:r551",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 17,
+     "name": "digger",
+     "x": 519.5,
+     "front_x": 560.0,
+     "tick": 34994,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 516.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "4cbdd0e0dae1f03ba32f122dbc2999ecf5058ae0a18d95e1ddc1061057a7728d",
+    "decision": 552,
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "coverage_only": true
+   }
+  },
+  {
+   "task_id": "drill235_l36_digger_d045f1d2",
+   "level": 36,
+   "seeds": [
+    81020024
+   ],
+   "deck": [
+    9,
+    8,
+    10,
+    16,
+    23,
+    17,
+    19,
+    2,
+    5,
+    31
+   ],
+   "zombie_count_multiplier": 2.0,
+   "fog_observation": "human_v2",
+   "drill_start": {
+    "archive": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256/5730712a36a5062519c04b66fdd63c7b2f10fd431c82907d7b66b7dd2a0ccd54",
+    "decisions": [
+     552
+    ],
+    "index": 0,
+    "future_seed_start": 53020992,
+    "future_seed_count": 256,
+    "horizon": 1200,
+    "criterion": {
+     "threats_neutralized": true,
+     "mower_unchanged": true,
+     "house_unchanged": true,
+     "secondary": "plants_lost"
+    },
+    "targets": [
+     {
+      "id": 73465864,
+      "row": 5,
+      "type": 17,
+      "name": "digger",
+      "x": 519.5
+     }
+    ]
+   },
+   "drill_meta": {
+    "id": "llmimport:5730712a36a5062519c04b66fdd63c7b2f10fd431c82907d7b66b7dd2a0ccd54:r551",
+    "terrain": "fog",
+    "trigger": {
+     "row": 5,
+     "type": 17,
+     "name": "digger",
+     "x": 519.5,
+     "front_x": 560.0,
+     "tick": 34994,
+     "crossed": true,
+     "near": false,
+     "breach_ahead": false,
+     "min_x_ahead": 516.7,
+     "original_plant_loss": 0
+    },
+    "source_root": "llmimport",
+    "archive": "5730712a36a5062519c04b66fdd63c7b2f10fd431c82907d7b66b7dd2a0ccd54",
+    "decision": 552,
+    "teacher": {
+     "games": 3,
+     "wins": 3,
+     "rate": 1.0
+    },
+    "coverage_only": true
+   }
+  }
+ ]
+}

@@ -949,9 +949,11 @@ def main(*, step_observer=None) -> None:
         def observer(path, rows):
             source_counts.observe(path, rows)
     demo_plan = None
-    if args.demo_row_weight != 1.0 or args.demo_start_row_weight != 1.0:
+    if (args.demo_row_weight != 1.0 or args.demo_start_row_weight != 1.0
+            or args.drill_row_weight != 1.0):
         from pvz_training_rows import DemoRowWeights
-        demo_plan = DemoRowWeights(args.demo_row_weight, args.demo_start_row_weight)
+        demo_plan = DemoRowWeights(args.demo_row_weight, args.demo_start_row_weight,
+                                   args.drill_row_weight)
         demo_observer = observer
         def observer(path, rows):
             demo_plan.observe(path, rows)

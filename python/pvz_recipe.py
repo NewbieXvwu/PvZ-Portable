@@ -22,7 +22,7 @@ TRAIN_DEFAULTS = dict(
     pool='mean', row_pool=False, packet_head='slot', aux_weight=0.0,
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
-    demo_row_weight=1.0, demo_start_row_weight=1.0, llm_demo_import=None, llm_demo_results=[1],
+    demo_row_weight=1.0, demo_start_row_weight=1.0, drill_row_weight=3.0, llm_demo_import=None, llm_demo_results=[1],
     save_epochs=0, lr_schedule='constant', init=None, distill_from=None, distill_weight=0.0,
     cache=True, cache_dir=None, read_cache_dir=None, dense_boards=False,
     source_row_report=False, max_steps=None, batch_size=2048, validation_batch_size=4096,
@@ -179,7 +179,7 @@ def validate(document, kind=None):
                 or len(set(outcomes)) != len(outcomes)):
             raise ValueError('llm_demo_results: expected unique results from [0, 1, 2]')
         for name in ('packet_balance', 'aux_weight', 'cell_soft_weight', 'spread_weight',
-                     'demo_row_weight', 'demo_start_row_weight'):
+                     'demo_row_weight', 'demo_start_row_weight', 'drill_row_weight'):
             _number(result[name], name)
         for name in ('soft_temperature', 'spread_cap'):
             _number(result[name], name, positive=True)

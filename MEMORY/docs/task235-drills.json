@@ -1,0 +1,3237 @@
+{
+ "task": "task235",
+ "title": "雾关必刷题接入生产采集与训练（drill_start cell 族）",
+ "created": "2026-11-04",
+ "status": "implemented; not deployed (main controller deploys)",
+ "environment": {
+  "machine": "Mac (headless)",
+  "engine": "/Users/newbiexvwu/pvz-mac-collect/build2/pvz-portable",
+  "engine_revision": "482729be824bd280078c2e2c3a8ef6056200cafe",
+  "workers": 6,
+  "archives_location": "desktop production roots, read-only; Mac staging copies under artifacts/task235 (deleted after the task)"
+ },
+ "models": {
+  "student_r111": {
+   "path": "~/pvz-logs/curriculum_state.pipeline/round_000111/student/model.pt",
+   "sha256": "aafeccf7563cdc83f1596f63d727b4f95c752e5f559cdc7aba9650187ea9e4b3",
+   "note": "state[student], round 111"
+  },
+  "teacher_prior_gptbc_s1": {
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "value_v5": {
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "value_roof_v5": {
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  },
+  "static_branch1": {
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "qc_parameters": "per-card 1, student-candidates 2, samples 3, verify 9, horizon 2500, min-gap 300, save-candidates 1 on L31-40"
+ },
+ "archive_roots": {
+  "framesv2": "/home/newbiexvwu/PvZ-search/artifacts/student/frames_v2",
+  "llmimport": "/home/newbiexvwu/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256",
+  "pipeline": "/home/newbiexvwu/pvz-logs/curriculum_state.pipeline/frames (symlinks into frames_v2; deduplicated by realpath)"
+ },
+ "mining": {
+  "drills": 666,
+  "archives": 222,
+  "by_level": {
+   "31": 41,
+   "32": 67,
+   "33": 67,
+   "34": 36,
+   "36": 92,
+   "37": 87,
+   "38": 91,
+   "39": 160,
+   "40": 25
+  },
+  "by_type": {
+   "balloon": 209,
+   "digger": 137,
+   "dolphin": 10,
+   "football": 30,
+   "jack": 129,
+   "pogo": 151
+  },
+  "excluded": "demo_start continuation archives (frame 0 is a restored mid-game state, replay from reset differs); 18 such drills errored during calibration and were dropped",
+  "not_covered": [
+   "digger needs a dedicated underground-state rule; only 1 in-band digger item survived, plus 2 all-1 coverage anchors"
+  ],
+  "candidate_entries": 666,
+  "unique_drills": 660
+ },
+ "calibration": {
+  "seeds": 3,
+  "seed_base": 88000000,
+  "games": 1998,
+  "ok": 1956,
+  "errors": 42,
+  "drills_with_3_seeds": 648,
+  "all_zero": 418,
+  "all_three": 149,
+  "middle": 81,
+  "band": [
+   0.25,
+   0.9
+  ],
+  "selected": 83,
+  "in_band": 81,
+  "coverage_only": 2,
+  "teacher_mean_in_band": 0.4856,
+  "by_level": {
+   "31": {
+    "n": 11,
+    "mean_rate": 0.545,
+    "one_of_three": 4,
+    "two_of_three": 7,
+    "all_three": 0,
+    "half": 0
+   },
+   "32": {
+    "n": 17,
+    "mean_rate": 0.412,
+    "one_of_three": 13,
+    "two_of_three": 4,
+    "all_three": 0,
+    "half": 0
+   },
+   "33": {
+    "n": 11,
+    "mean_rate": 0.485,
+    "one_of_three": 6,
+    "two_of_three": 5,
+    "all_three": 0,
+    "half": 0
+   },
+   "34": {
+    "n": 3,
+    "mean_rate": 0.556,
+    "one_of_three": 1,
+    "two_of_three": 2,
+    "all_three": 0,
+    "half": 0
+   },
+   "36": {
+    "n": 3,
+    "mean_rate": 0.778,
+    "one_of_three": 1,
+    "two_of_three": 0,
+    "all_three": 2,
+    "half": 0
+   },
+   "37": {
+    "n": 9,
+    "mean_rate": 0.556,
+    "one_of_three": 3,
+    "two_of_three": 6,
+    "all_three": 0,
+    "half": 0
+   },
+   "38": {
+    "n": 10,
+    "mean_rate": 0.45,
+    "one_of_three": 6,
+    "two_of_three": 3,
+    "all_three": 0,
+    "half": 1
+   },
+   "39": {
+    "n": 12,
+    "mean_rate": 0.514,
+    "one_of_three": 5,
+    "two_of_three": 6,
+    "all_three": 0,
+    "half": 1
+   },
+   "40": {
+    "n": 7,
+    "mean_rate": 0.476,
+    "one_of_three": 4,
+    "two_of_three": 3,
+    "all_three": 0,
+    "half": 0
+   }
+  },
+  "by_type": {
+   "balloon": 24,
+   "digger": 3,
+   "dolphin": 1,
+   "football": 7,
+   "jack": 31,
+   "pogo": 17
+  },
+  "unique_drills_with_3_seeds": 648
+ },
+ "selected_drills": [
+  {
+   "id": "framesv2:demo_fog_31_snow_m200:r433",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_31_snow_m200/seed_20261031/demo_fog_31_snow_m200",
+   "decision": 434,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68812803,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 770.5
+    },
+    {
+     "id": 69337103,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 769.0
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 15,
+    "name": "jack",
+    "x": 670.4,
+    "front_x": 560.0,
+    "tick": 21318,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 535.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_31_snow_m200:r651",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_31_snow_m200/seed_20261031/demo_fog_31_snow_m200",
+   "decision": 652,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73007109,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 783.0
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 15,
+    "name": "jack",
+    "x": 749.3,
+    "front_x": 640.0,
+    "tick": 32009,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 624.3,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c90demofog31snowm200hv2s495_o336_review1_o360_fast_search:r358",
+   "source_root": "framesv2",
+   "archive": "seed_200001384/c90demofog31snowm200hv2s495_o336_review1_o360_fast_search",
+   "decision": 359,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67764231,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 799.9
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 758.9,
+    "front_x": 640.0,
+    "tick": 18420,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 758.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c90demofog31snowm200hv2s495_o336_review1_o360_fast_search:r614",
+   "source_root": "framesv2",
+   "archive": "seed_200001386/c90demofog31snowm200hv2s495_o336_review1_o360_fast_search",
+   "decision": 615,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70647812,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 833.1
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 15,
+    "name": "jack",
+    "x": 833.1,
+    "front_x": 720.0,
+    "tick": 30480,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 730.2,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c104foguserv2l31snowm200_o0_fast_search:r419",
+   "source_root": "framesv2",
+   "archive": "seed_49500011/c104foguserv2l31snowm200_o0_fast_search",
+   "decision": 420,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69599237,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 720.3
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 625.7,
+    "front_x": 560.0,
+    "tick": 21000,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 472.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c104foguserv2l31snowm200_o0_fast_search:r562",
+   "source_root": "framesv2",
+   "archive": "seed_49500020/c104foguserv2l31snowm200_o0_fast_search",
+   "decision": 563,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72220683,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 783.1
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 15,
+    "name": "jack",
+    "x": 741.8,
+    "front_x": 640.0,
+    "tick": 28500,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 698.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c99foguserv2l31snowm175_o0_fast_search:r392",
+   "source_root": "framesv2",
+   "archive": "seed_49400011/c99foguserv2l31snowm175_o0_fast_search",
+   "decision": 393,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68419588,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 759.7
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 656.7,
+    "front_x": 560.0,
+    "tick": 20220,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 515.2,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c99foguserv2l31snowm175_o0_fast_search:r720",
+   "source_root": "framesv2",
+   "archive": "seed_49400011/c99foguserv2l31snowm175_o0_fast_search",
+   "decision": 721,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73465861,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 823.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 804.2,
+    "front_x": 720.0,
+    "tick": 36420,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 630.0,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c74foguserv2l31snowm150_o192_fast_search:r358",
+   "source_root": "framesv2",
+   "archive": "seed_49300197/c74foguserv2l31snowm150_o192_fast_search",
+   "decision": 359,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69074948,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 797.0
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 756.3,
+    "front_x": 640.0,
+    "tick": 18660,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 547.8,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c74foguserv2l31snowm150_o192_fast_search:r574",
+   "source_root": "framesv2",
+   "archive": "seed_49300197/c74foguserv2l31snowm150_o192_fast_search",
+   "decision": 575,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 71696393,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 558.6
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 15,
+    "name": "jack",
+    "x": 494.8,
+    "front_x": 400.0,
+    "tick": 29580,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 416.3,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c109foguserv2l31snowm250_o0_review1_o24_fast_search:r354",
+   "source_root": "framesv2",
+   "archive": "seed_49600024/c109foguserv2l31snowm250_o0_review1_o24_fast_search",
+   "decision": 355,
+   "level": 31,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67960842,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 790.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 748.4,
+    "front_x": 640.0,
+    "tick": 18300,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 496.0,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c109opening119l32magnetm100_o2100_b1_fast_search:r792",
+   "source_root": "framesv2",
+   "archive": "seed_210602123/c109opening119l32magnetm100_o2100_b1_fast_search",
+   "decision": 793,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 71958539,
+     "row": 5,
+     "type": 7,
+     "name": "football",
+     "x": 678.4
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 7,
+    "name": "football",
+    "x": 678.4,
+    "front_x": 720.0,
+    "tick": 42101,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 568.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_32_snow_m200:r865",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_32_snow_m200/seed_20261032/demo_fog_32_snow_m200",
+   "decision": 866,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 74776595,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 812.1
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 15,
+    "name": "jack",
+    "x": 812.1,
+    "front_x": 720.0,
+    "tick": 40181,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 640.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_32_snow_m200:r915",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_32_snow_m200/seed_20261032/demo_fog_32_snow_m200",
+   "decision": 916,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 76808220,
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 811.0
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 7,
+    "name": "football",
+    "x": 751.9,
+    "front_x": 640.0,
+    "tick": 42779,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 552.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r513",
+   "source_root": "framesv2",
+   "archive": "seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+   "decision": 514,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68943880,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 792.9
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 792.9,
+    "front_x": 720.0,
+    "tick": 25500,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 754.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r729",
+   "source_root": "framesv2",
+   "archive": "seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+   "decision": 730,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70975502,
+     "row": 0,
+     "type": 7,
+     "name": "football",
+     "x": 774.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 7,
+    "name": "football",
+    "x": 774.8,
+    "front_x": 720.0,
+    "tick": 35700,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 531.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r783",
+   "source_root": "framesv2",
+   "archive": "seed_200004169/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+   "decision": 784,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 71106561,
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 780.4
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 7,
+    "name": "football",
+    "x": 758.8,
+    "front_x": 640.0,
+    "tick": 38280,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 721.2,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r710",
+   "source_root": "framesv2",
+   "archive": "seed_200004167/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+   "decision": 711,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 71565321,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 803.3
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 15,
+    "name": "jack",
+    "x": 762.6,
+    "front_x": 720.0,
+    "tick": 34860,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 593.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c103demofog32snowm200hv2s448_o558_review1_o582_fast_search:r831",
+   "source_root": "framesv2",
+   "archive": "seed_200004167/c103demofog32snowm200hv2s448_o558_review1_o582_fast_search",
+   "decision": 832,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73465863,
+     "row": 5,
+     "type": 7,
+     "name": "football",
+     "x": 795.8
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 7,
+    "name": "football",
+    "x": 741.2,
+    "front_x": 640.0,
+    "tick": 40740,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 741.2,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r371",
+   "source_root": "llmimport",
+   "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+   "decision": 372,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69337090,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 755.7
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 15,
+    "name": "jack",
+    "x": 755.7,
+    "front_x": 640.0,
+    "tick": 21720,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 487.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r430",
+   "source_root": "llmimport",
+   "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+   "decision": 431,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70647812,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 782.1
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 750.9,
+    "front_x": 640.0,
+    "tick": 26540,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 551.0,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r530",
+   "source_root": "llmimport",
+   "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+   "decision": 531,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73662476,
+     "row": 0,
+     "type": 7,
+     "name": "football",
+     "x": 784.0
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 7,
+    "name": "football",
+    "x": 752.2,
+    "front_x": 640.0,
+    "tick": 34680,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 436.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef:r592",
+   "source_root": "llmimport",
+   "archive": "9d92231e924bc666b186a8cd58ac717a985f548766ca3636516b1da177fdcfef",
+   "decision": 593,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 74383374,
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 768.5
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 7,
+    "name": "football",
+    "x": 673.7,
+    "front_x": 560.0,
+    "tick": 38440,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 439.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587:r429",
+   "source_root": "llmimport",
+   "archive": "5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587",
+   "decision": 430,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70385664,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 774.1
+    },
+    {
+     "id": 70123524,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 769.6
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 672.5,
+    "front_x": 560.0,
+    "tick": 26000,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 468.8,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587:r445",
+   "source_root": "llmimport",
+   "archive": "5d369ed13c5ce1ccf534e6a777a64b90b9d638339675eec816040b7ebd5e0587",
+   "decision": 446,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70451207,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 804.9
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 745.0,
+    "front_x": 640.0,
+    "tick": 27080,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 634.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:f9f99256f38d234799bb8609978ae14bb9980075330c5737ac2bd3e580911767:r393",
+   "source_root": "llmimport",
+   "archive": "f9f99256f38d234799bb8609978ae14bb9980075330c5737ac2bd3e580911767",
+   "decision": 394,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68485126,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 490.6
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 490.6,
+    "front_x": 480.0,
+    "tick": 20880,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 230.4,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c51rd159l3227fa36e6571bm050_o0_fast_search:r847",
+   "source_root": "framesv2",
+   "archive": "seed_1591200015/c51rd159l3227fa36e6571bm050_o0_fast_search",
+   "decision": 848,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69337100,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 782.0
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 744.4,
+    "front_x": 640.0,
+    "tick": 43140,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 553.8,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c52rd159l32f3a348c1a94dm050_o0_fast_search:r582",
+   "source_root": "framesv2",
+   "archive": "seed_1591300017/c52rd159l32f3a348c1a94dm050_o0_fast_search",
+   "decision": 583,
+   "level": 32,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67829769,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 762.9
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 661.2,
+    "front_x": 560.0,
+    "tick": 30540,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 461.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_33_cattail_snow_m200:r744",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_33_cattail_snow_m200/seed_20261033/demo_fog_33_cattail_snow_m200",
+   "decision": 745,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73203717,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 589.4
+    },
+    {
+     "id": 73924615,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 722.6
+    },
+    {
+     "id": 73596942,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 584.4
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 16,
+    "name": "balloon",
+    "x": 690.5,
+    "front_x": 720.0,
+    "tick": 34842,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 584.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_33_cactus_snow_m200:r611",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_33_cactus_snow_m200/seed_20261033/demo_fog_33_cactus_snow_m200",
+   "decision": 612,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 71041031,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 775.0
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 16,
+    "name": "balloon",
+    "x": 710.8,
+    "front_x": 640.0,
+    "tick": 29652,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 657.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_33_cactus_snow_m200:r639",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_33_cactus_snow_m200/seed_20261033/demo_fog_33_cactus_snow_m200",
+   "decision": 640,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72024073,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 765.6
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 16,
+    "name": "balloon",
+    "x": 675.2,
+    "front_x": 560.0,
+    "tick": 30668,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 624.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c:r309",
+   "source_root": "llmimport",
+   "archive": "ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c",
+   "decision": 310,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 66715654,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 432.1
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 393.6,
+    "front_x": 80.0,
+    "tick": 21430,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 297.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c:r686",
+   "source_root": "llmimport",
+   "archive": "ca5d87b03d8226ac1911cff6323e2037d2cdafc9212e21810d03bd0e8a8ff10c",
+   "decision": 687,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69402626,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 481.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 16,
+    "name": "balloon",
+    "x": 434.6,
+    "front_x": 320.0,
+    "tick": 43210,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 291.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591:r337",
+   "source_root": "llmimport",
+   "archive": "96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591",
+   "decision": 338,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 66781193,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 498.4
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 16,
+    "name": "balloon",
+    "x": 396.1,
+    "front_x": 240.0,
+    "tick": 18840,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 89.2,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591:r523",
+   "source_root": "llmimport",
+   "archive": "96c991396cb758a9df2d7823191af88239344e83171b1b64a2648ea7f91c0591",
+   "decision": 524,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68091905,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 780.4
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 16,
+    "name": "balloon",
+    "x": 780.4,
+    "front_x": 720.0,
+    "tick": 28920,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 452.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3:r190",
+   "source_root": "llmimport",
+   "archive": "38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3",
+   "decision": 191,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 66781189,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 585.8
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 585.8,
+    "front_x": 560.0,
+    "tick": 9780,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 275.8,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3:r275",
+   "source_root": "llmimport",
+   "archive": "38582b3f581aa7bb1c46cab3d342a9ec8ce68874b1e203fb1a545668fdcc41a3",
+   "decision": 276,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67567623,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 769.4
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 16,
+    "name": "balloon",
+    "x": 671.8,
+    "front_x": 560.0,
+    "tick": 14580,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 379.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:b74349c8247721546428987c08ca4b615eaf0ba9dff1f51cd1697145bf649046:r360",
+   "source_root": "llmimport",
+   "archive": "b74349c8247721546428987c08ca4b615eaf0ba9dff1f51cd1697145bf649046",
+   "decision": 361,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67960839,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 485.8
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 16,
+    "name": "balloon",
+    "x": 485.8,
+    "front_x": 560.0,
+    "tick": 20660,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 421.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:2b2a099dab1a47a0e25474aae287c8424872adb05a620001bb825f522fa3220f:r184",
+   "source_root": "llmimport",
+   "archive": "2b2a099dab1a47a0e25474aae287c8424872adb05a620001bb825f522fa3220f",
+   "decision": 185,
+   "level": 33,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 66715654,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 651.7
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 16,
+    "name": "balloon",
+    "x": 651.7,
+    "front_x": 560.0,
+    "tick": 11320,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 304.4,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_34_cactus_snow_m200:r614",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_34_cactus_snow_m200/seed_20261034/demo_fog_34_cactus_snow_m200",
+   "decision": 615,
+   "level": 34,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70516748,
+     "row": 3,
+     "type": 14,
+     "name": "dolphin",
+     "x": 741.9
+    }
+   ],
+   "trigger": {
+    "row": 3,
+    "type": 14,
+    "name": "dolphin",
+    "x": 646.5,
+    "front_x": 560.0,
+    "tick": 27701,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 438.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_34_cactus_snow_m200:r731",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_34_cactus_snow_m200/seed_20261034/demo_fog_34_cactus_snow_m200",
+   "decision": 732,
+   "level": 34,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72417289,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 793.5
+    },
+    {
+     "id": 72024081,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 796.5
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 751.5,
+    "front_x": 640.0,
+    "tick": 31608,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 606.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c70rd193l34m075_o24_fast_search:r504",
+   "source_root": "framesv2",
+   "archive": "seed_200010264/c70rd193l34m075_o24_fast_search",
+   "decision": 505,
+   "level": 34,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68222985,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 758.5
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 16,
+    "name": "balloon",
+    "x": 675.8,
+    "front_x": 560.0,
+    "tick": 27180,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 427.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:1a931937703796563e91b4ec473601dca2e56abfbbd5c937cee861091a56229a:r555",
+   "source_root": "llmimport",
+   "archive": "1a931937703796563e91b4ec473601dca2e56abfbbd5c937cee861091a56229a",
+   "decision": 556,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73728019,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 775.0
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 672.4,
+    "front_x": 560.0,
+    "tick": 37589,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 560.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:db3aef1206b93fad815b2d1945f8716253e8cc8565b423f0a74db39dcc3775a8:r814",
+   "source_root": "llmimport",
+   "archive": "db3aef1206b93fad815b2d1945f8716253e8cc8565b423f0a74db39dcc3775a8",
+   "decision": 815,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 82247691,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 790.6
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 694.3,
+    "front_x": 720.0,
+    "tick": 56048,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 630.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c101fog79bl37bestm125_o30_review1_o54_fast_search:r387",
+   "source_root": "framesv2",
+   "archive": "seed_79202107/c101fog79bl37bestm125_o30_review1_o54_fast_search",
+   "decision": 388,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68091913,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 816.0
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 753.6,
+    "front_x": 640.0,
+    "tick": 19440,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 753.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c101fog79bl37bestm125_o30_review1_o54_fast_search:r714",
+   "source_root": "framesv2",
+   "archive": "seed_79202106/c101fog79bl37bestm125_o30_review1_o54_fast_search",
+   "decision": 715,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70844416,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 767.0
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 707.3,
+    "front_x": 640.0,
+    "tick": 35984,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 465.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c95gpt193l3722f4fe020f69s541_o24_review1_o48_fast_search:r880",
+   "source_root": "framesv2",
+   "archive": "seed_200008497/c95gpt193l3722f4fe020f69s541_o24_review1_o48_fast_search",
+   "decision": 881,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 71958528,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 797.7
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 797.7,
+    "front_x": 720.0,
+    "tick": 43913,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 728.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c89fog79l37snowmagnetv2m200s81022002a492433842832s897_o24_review1_o48_fast_search:r1021",
+   "source_root": "framesv2",
+   "archive": "seed_323000052/c89fog79l37snowmagnetv2m200s81022002a492433842832s897_o24_review1_o48_fast_search",
+   "decision": 1022,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 74448910,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 817.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 741.8,
+    "front_x": 640.0,
+    "tick": 50587,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 626.4,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:eac4b497f64b8aa58e775a7a75b0da54df7593ec4d68aa7190e903bad882bebf:r950",
+   "source_root": "llmimport",
+   "archive": "eac4b497f64b8aa58e775a7a75b0da54df7593ec4d68aa7190e903bad882bebf",
+   "decision": 951,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72417283,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 692.5
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 15,
+    "name": "jack",
+    "x": 589.8,
+    "front_x": 480.0,
+    "tick": 54720,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 583.0,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081:r263",
+   "source_root": "llmimport",
+   "archive": "0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081",
+   "decision": 264,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67764233,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 810.2
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 15,
+    "name": "jack",
+    "x": 744.0,
+    "front_x": 640.0,
+    "tick": 19180,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 563.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081:r755",
+   "source_root": "llmimport",
+   "archive": "0f41992ec570b0fef5fe597029fb68e740ec57582ebb50b15308e977d831a081",
+   "decision": 756,
+   "level": 37,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72351755,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 800.9
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 739.9,
+    "front_x": 640.0,
+    "tick": 44960,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 81.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search:r419",
+   "source_root": "framesv2",
+   "archive": "seed_333000051/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+   "decision": 420,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67764234,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 773.0
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 773.0,
+    "front_x": 720.0,
+    "tick": 21420,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 356.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c65rd193l38m100_o0_fast_search:r546",
+   "source_root": "framesv2",
+   "archive": "seed_200013056/c65rd193l38m100_o0_fast_search",
+   "decision": 547,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67633157,
+     "row": 5,
+     "type": 18,
+     "name": "pogo",
+     "x": 789.8
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 18,
+    "name": "pogo",
+    "x": 735.8,
+    "front_x": 640.0,
+    "tick": 27720,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 216.0,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 6,
+    "wins": 3,
+    "rate": 0.5
+   }
+  },
+  {
+   "id": "llmimport:c39151a7ff85bb771f185fd50d9fde71f094d6d64de5e38303c66498ed771fc4:r348",
+   "source_root": "llmimport",
+   "archive": "c39151a7ff85bb771f185fd50d9fde71f094d6d64de5e38303c66498ed771fc4",
+   "decision": 349,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69664769,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 685.5
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 573.1,
+    "front_x": 640.0,
+    "tick": 22480,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 573.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:7490c9b18074fdb03a93a7a6973d38c55632ff511c68197de7692776fe78cdb0:r587",
+   "source_root": "llmimport",
+   "archive": "7490c9b18074fdb03a93a7a6973d38c55632ff511c68197de7692776fe78cdb0",
+   "decision": 588,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 74579992,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 789.9
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 765.6,
+    "front_x": 720.0,
+    "tick": 39300,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 692.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:e9c2f17c27bba99a99880f8456a5f41b3dd513c8725db1d975f55aca88ce2b87:r587",
+   "source_root": "llmimport",
+   "archive": "e9c2f17c27bba99a99880f8456a5f41b3dd513c8725db1d975f55aca88ce2b87",
+   "decision": 588,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 74579992,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 789.9
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 765.6,
+    "front_x": 720.0,
+    "tick": 39300,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 692.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:demo_fog_39_cactus_snow_m200:r1158",
+   "source_root": "framesv2",
+   "archive": "human/demo_fog_39_cactus_snow_m200/seed_20261039/demo_fog_39_cactus_snow_m200",
+   "decision": 1159,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73990155,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 722.0
+    },
+    {
+     "id": 74842136,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 762.4
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 675.6,
+    "front_x": 560.0,
+    "tick": 41701,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 617.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c59rd159l399620bf216504m050_o24_fast_search:r522",
+   "source_root": "framesv2",
+   "archive": "seed_1592300024/c59rd159l399620bf216504m050_o24_fast_search",
+   "decision": 523,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67764231,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 789.5
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 789.5,
+    "front_x": 720.0,
+    "tick": 29131,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 220.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 6,
+    "wins": 3,
+    "rate": 0.5
+   }
+  },
+  {
+   "id": "framesv2:c76rd193l40m075_o48_review1_o72_fast_search:r394",
+   "source_root": "framesv2",
+   "archive": "seed_200013642/c76rd193l40m075_o48_review1_o72_fast_search",
+   "decision": 395,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69402635,
+     "row": 4,
+     "type": 16,
+     "name": "balloon",
+     "x": 532.9
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 16,
+    "name": "balloon",
+    "x": 431.1,
+    "front_x": 320.0,
+    "tick": 21336,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 119.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:4af32472f9524d719de378dc5684315761703f872ac1ce656685e6ca4a1c40f7:r315",
+   "source_root": "llmimport",
+   "archive": "4af32472f9524d719de378dc5684315761703f872ac1ce656685e6ca4a1c40f7",
+   "decision": 316,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72810512,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 753.4
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 640.9,
+    "front_x": 560.0,
+    "tick": 26550,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 489.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:c432c7009d7643507731cff0bbc7a29c7caa3ef698fd913ce0fbab47d975db01:r251",
+   "source_root": "llmimport",
+   "archive": "c432c7009d7643507731cff0bbc7a29c7caa3ef698fd913ce0fbab47d975db01",
+   "decision": 252,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70975495,
+     "row": 3,
+     "type": 16,
+     "name": "balloon",
+     "x": 667.3
+    }
+   ],
+   "trigger": {
+    "row": 3,
+    "type": 16,
+    "name": "balloon",
+    "x": 595.7,
+    "front_x": 480.0,
+    "tick": 20850,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 368.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c70rd193l40m075_o24_fast_search:r353",
+   "source_root": "framesv2",
+   "archive": "seed_200013592/c70rd193l40m075_o24_fast_search",
+   "decision": 354,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69599237,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 799.4
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 16,
+    "name": "balloon",
+    "x": 741.9,
+    "front_x": 640.0,
+    "tick": 18540,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 607.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c70rd193l40m075_o24_fast_search:r597",
+   "source_root": "framesv2",
+   "archive": "seed_200013592/c70rd193l40m075_o24_fast_search",
+   "decision": 598,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73859091,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 767.0
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 659.0,
+    "front_x": 560.0,
+    "tick": 31340,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": true,
+    "min_x_ahead": -13.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c70rd193l40m075_o24_fast_search:r420",
+   "source_root": "framesv2",
+   "archive": "seed_200013593/c70rd193l40m075_o24_fast_search",
+   "decision": 421,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70844420,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 801.7
+    },
+    {
+     "id": 70451211,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 634.3
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 749.2,
+    "front_x": 640.0,
+    "tick": 21960,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 634.3,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c70rd193l40m075_o24_fast_search:r480",
+   "source_root": "framesv2",
+   "archive": "seed_200013593/c70rd193l40m075_o24_fast_search",
+   "decision": 481,
+   "level": 40,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 72024081,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 763.2
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 669.2,
+    "front_x": 560.0,
+    "tick": 25221,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 579.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:789660510cab78a960e90c7e651c35f28884a7d14f7ab7e39e0eaf968916fd32:r200",
+   "source_root": "llmimport",
+   "archive": "789660510cab78a960e90c7e651c35f28884a7d14f7ab7e39e0eaf968916fd32",
+   "decision": 201,
+   "level": 36,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67305474,
+     "row": 0,
+     "type": 17,
+     "name": "digger",
+     "x": 789.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 17,
+    "name": "digger",
+    "x": 670.6,
+    "front_x": 560.0,
+    "tick": 11980,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 9.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c111rd193l38m075_o240_fast_search:r574",
+   "source_root": "framesv2",
+   "archive": "seed_200042754/c111rd193l38m075_o240_fast_search",
+   "decision": 575,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68550664,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 532.6
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 18,
+    "name": "pogo",
+    "x": 532.6,
+    "front_x": 720.0,
+    "tick": 28083,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": true,
+    "min_x_ahead": -8.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c81fog79bl38bestm125_o348_fast_search:r397",
+   "source_root": "framesv2",
+   "archive": "seed_79204463/c81fog79bl38bestm125_o348_fast_search",
+   "decision": 398,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68616197,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 772.9
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 718.8,
+    "front_x": 720.0,
+    "tick": 20100,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 692.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:978029656f809a4b3a55f10d992ad69c0c7733d812fcbe6ac2459614a8ab9f66:r776",
+   "source_root": "llmimport",
+   "archive": "978029656f809a4b3a55f10d992ad69c0c7733d812fcbe6ac2459614a8ab9f66",
+   "decision": 777,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70975498,
+     "row": 5,
+     "type": 18,
+     "name": "pogo",
+     "x": 818.4
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 18,
+    "name": "pogo",
+    "x": 737.4,
+    "front_x": 640.0,
+    "tick": 40890,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 284.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:d73e950b751cb838c5fa8c4246b1655764e9d57115d6d9cf846d7abd1f8af29b:r373",
+   "source_root": "llmimport",
+   "archive": "d73e950b751cb838c5fa8c4246b1655764e9d57115d6d9cf846d7abd1f8af29b",
+   "decision": 374,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68354055,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 763.9
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 18,
+    "name": "pogo",
+    "x": 655.9,
+    "front_x": 560.0,
+    "tick": 21340,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 547.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c65rd193l38m100_o0_fast_search:r820",
+   "source_root": "framesv2",
+   "archive": "seed_200013059/c65rd193l38m100_o0_fast_search",
+   "decision": 821,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69861384,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 798.1
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 744.1,
+    "front_x": 640.0,
+    "tick": 41270,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 636.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:2160cfe3610c102d7e9ea05a3c93f48df52ac77c12c29d1d69fa5e5fd79429e8:r597",
+   "source_root": "llmimport",
+   "archive": "2160cfe3610c102d7e9ea05a3c93f48df52ac77c12c29d1d69fa5e5fd79429e8",
+   "decision": 598,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 75825175,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 548.8
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 548.8,
+    "front_x": 560.0,
+    "tick": 36834,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": true,
+    "min_x_ahead": -8.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search:r416",
+   "source_root": "framesv2",
+   "archive": "seed_333000048/c89fog79l38snowmagnetv2m200s81024007ae2f2c0b739a0s380_o24_review1_o48_fast_search",
+   "decision": 417,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67829761,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 765.7
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 657.7,
+    "front_x": 560.0,
+    "tick": 21780,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 335.6,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:4026a9c30d5f46aaf0856a89499ca13a18d74463f624a7fff370448bc6979494:r633",
+   "source_root": "llmimport",
+   "archive": "4026a9c30d5f46aaf0856a89499ca13a18d74463f624a7fff370448bc6979494",
+   "decision": 634,
+   "level": 38,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 70647813,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 843.1
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 735.1,
+    "front_x": 640.0,
+    "tick": 33480,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 376.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c86rd193l39m050_o108_review1_o132_fast_search:r834",
+   "source_root": "framesv2",
+   "archive": "seed_200013447/c86rd193l39m050_o108_review1_o132_fast_search",
+   "decision": 835,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 69861379,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 753.8
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 16,
+    "name": "balloon",
+    "x": 678.4,
+    "front_x": 560.0,
+    "tick": 41988,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 452.1,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:cc2a0274dacb24f6a61641810254c2f789d0dfcfada80876341af1964fe24955:r903",
+   "source_root": "llmimport",
+   "archive": "cc2a0274dacb24f6a61641810254c2f789d0dfcfada80876341af1964fe24955",
+   "decision": 904,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 79167505,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 622.3
+    },
+    {
+     "id": 79429662,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 787.4
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 673.9,
+    "front_x": 560.0,
+    "tick": 50022,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 565.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c86rd193l39m050_o108_review1_o132_fast_search:r600",
+   "source_root": "framesv2",
+   "archive": "seed_200013445/c86rd193l39m050_o108_review1_o132_fast_search",
+   "decision": 601,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68812800,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 810.0
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 16,
+    "name": "balloon",
+    "x": 746.8,
+    "front_x": 640.0,
+    "tick": 30120,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 671.4,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "framesv2:c89fog79l39snowcactusv2m200s81026007adab6656b879cs775_o24_review1_o48_fast_search:r515",
+   "source_root": "framesv2",
+   "archive": "seed_330000051/c89fog79l39snowcactusv2m200s81026007adab6656b879cs775_o24_review1_o48_fast_search",
+   "decision": 516,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68878338,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 792.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 738.8,
+    "front_x": 640.0,
+    "tick": 26127,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 354.9,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 2,
+    "rate": 0.6667
+   }
+  },
+  {
+   "id": "llmimport:1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925:r300",
+   "source_root": "llmimport",
+   "archive": "1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925",
+   "decision": 301,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67895305,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 788.4
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 16,
+    "name": "balloon",
+    "x": 748.7,
+    "front_x": 640.0,
+    "tick": 18220,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 630.8,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925:r405",
+   "source_root": "llmimport",
+   "archive": "1d258c62c73f051a04e13b1e50213ce364ccbc511db6c885b2bf3c6d56d5f925",
+   "decision": 406,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 68681731,
+     "row": 5,
+     "type": 16,
+     "name": "balloon",
+     "x": 790.2
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 16,
+    "name": "balloon",
+    "x": 742.5,
+    "front_x": 640.0,
+    "tick": 24160,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 742.5,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "framesv2:c59rd159l399620bf216504m050_o24_fast_search:r656",
+   "source_root": "framesv2",
+   "archive": "seed_1592300028/c59rd159l399620bf216504m050_o24_fast_search",
+   "decision": 657,
+   "level": 39,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 67829769,
+     "row": 3,
+     "type": 16,
+     "name": "balloon",
+     "x": 793.0
+    }
+   ],
+   "trigger": {
+    "row": 3,
+    "type": 16,
+    "name": "balloon",
+    "x": 793.0,
+    "front_x": 720.0,
+    "tick": 34474,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 492.3,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 1,
+    "rate": 0.3333
+   }
+  },
+  {
+   "id": "llmimport:4cbdd0e0dae1f03ba32f122dbc2999ecf5058ae0a18d95e1ddc1061057a7728d:r551",
+   "source_root": "llmimport",
+   "archive": "4cbdd0e0dae1f03ba32f122dbc2999ecf5058ae0a18d95e1ddc1061057a7728d",
+   "decision": 552,
+   "level": 36,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73465864,
+     "row": 5,
+     "type": 17,
+     "name": "digger",
+     "x": 519.5
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 17,
+    "name": "digger",
+    "x": 519.5,
+    "front_x": 560.0,
+    "tick": 34994,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 516.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 3,
+    "rate": 1.0
+   },
+   "coverage_only": true
+  },
+  {
+   "id": "llmimport:5730712a36a5062519c04b66fdd63c7b2f10fd431c82907d7b66b7dd2a0ccd54:r551",
+   "source_root": "llmimport",
+   "archive": "5730712a36a5062519c04b66fdd63c7b2f10fd431c82907d7b66b7dd2a0ccd54",
+   "decision": 552,
+   "level": 36,
+   "terrain": "fog",
+   "horizon": 1200,
+   "targets": [
+    {
+     "id": 73465864,
+     "row": 5,
+     "type": 17,
+     "name": "digger",
+     "x": 519.5
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 17,
+    "name": "digger",
+    "x": 519.5,
+    "front_x": 560.0,
+    "tick": 34994,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 516.7,
+    "original_plant_loss": 0
+   },
+   "teacher": {
+    "games": 3,
+    "wins": 3,
+    "rate": 1.0
+   },
+   "coverage_only": true
+  }
+ ],
+ "production": {
+  "cell_family": "drill_start",
+  "manifest": "configs/task235_drills.json",
+  "task_id": "drill235_l{level}_{trigger}_{sha1[:8]}",
+  "seed_block": [
+   53000000,
+   53021248
+  ],
+  "future_seed_count": 256,
+  "horizon": 1200,
+  "criterion": "all target ids gone/off board, no mower fired, no house breach (scripts/drill_start.py)",
+  "budget": "--drill-share 0.05 (<=36/768 games), --drill-games 12",
+  "row_weight": "drill_row_weight=3.0 in pvz_recipe defaults; applied at load by the existing DemoRowWeights provenance path, no pack key/column change"
+ },
+ "caveats": [
+  "The 2 L36 all-1 coverage anchors teach expert labels but cannot discriminate difficulty; they exist only because L36 digs and its local criterion is weak.",
+  "Calibration uses the current teacher (r111 + gpt prior); a later incumbent changes the rates and the bank should be recalibrated.",
+  "Drill archives contain only the short horizon, so history-based observation features have no pre-root history; the rows are still valid labels but the first decisions see a short history.",
+  "The teacher already succeeds on 49% of the in-band items; these are the learnable gap, not an exam estimate (3 seeds per item, ICC high)."
+ ]
+}

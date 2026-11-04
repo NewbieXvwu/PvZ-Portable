@@ -1779,3 +1779,45 @@ B 谱系，而是从排轮时的现任学生（`state['student']` / `student_rou
 谱系行为完全不变（已晋升的 B 候选仍会更新 `b_student`，便于以后切回）。
 task233 起 B 配方可带 `distill_weight`：排轮时把 `distill_from` 冻结为 B 的 init（即现任），
 训练时另加 `distill_weight × KL(冻结现任‖学生)` 到 BC 损失，A 配方与共享打包键不变。
+
+### task235：雾关必刷题 `drill_start` 格（2026-11-04 登记，AGENTS §8 第 4 条）
+
+task234 实测雾关学生 r101 救场成功率 8.3%、生产老师 30.6%（p=0.008），夜间/屋顶不差。
+本族把“关键时刻救场”接进生产采集：新族名 **`drill_start`**，清单
+`configs/task235_drills.json`，任务 id `drill235_l{level}_{trigger}_{sha1[:8]}`。
+它复用 `demo_start` 的（存档、决策号、RESEED 未来种子）机制，只多一个局部判据：
+
+- **题源**：台式机生产存档只读挖掘，根为
+  `~/PvZ-search/artifacts/student/frames_v2`（`human/`、`mac197/`、`seed_*`）、
+  `~/PvZ-search/.claude/worktrees/llmimport/artifacts/task105/import/sha256`，以及
+  `~/pvz-logs/curriculum_state.pipeline/frames`（symlink 到 frames_v2，按 realpath 去重）。
+  存档留在原位置，清单只记绝对路径。Demo-start 续跑存档（frame 0 是中途恢复态）不能从
+  reset 重放，挖掘时跳过。
+- **题库**：666 道候选（L31–L34、L36–L40，222 个存档）；生产老师（r111 + gpt 先验，
+  qc 参数 verify 9 / student-candidates 2 / samples 3 / horizon 2500 / min-gap 300 /
+  雾区 save-candidates 1）在 Mac 上每题跑 3 个 RESEED 未来种子。648 题满 3 局：
+  全 0 418、全 3 149、中间 81。保留 25–90% 的 81 题，另为 L36（挖土机，判据只覆盖
+  地面状态）加 2 道全 3 覆盖锚，共 **83 题**；老师平均成功率 48.6%（中间题）。
+  分关卡 n：L31 11、L32 17、L33 11、L34 3、L36 3、L37 9、L38 10、L39 12、L40 7。
+- **判据**：`scripts/drill_start.py` 是唯一实现——目标僵尸 id 全部离场/死亡、没有割草机
+  触发、没有破屋；`drill_run.py` 与生产 `search_play.py` 共用。horizon 1200 ticks，
+  到点结束这一局，不打完整局。挖掘器只读僵尸 roster/位置和前排植物 x，不选卡。
+- **种子段**：**53,000,000–53,021,247**（83 × 256），与 44.0M–47.0M 示范格、
+  48.0M 屋顶倍率、62M 新倍率、81M LLM、83M 稳健性、200M–201M 续领池不相交；
+  每格 `future_seed_start/count` 独立，用完由 task99 的续领账本续。
+- **预算**：`--drill-share` 默认 **0.05**（768 局/轮时上限 38 局），
+  `--drill-games` 默认 **12**；实际每轮 3 组 ×12 = 36 局（4.7%）。drill 格不参与
+  β 混合、不生成 1x 复习组；起点阶梯只有 1 档（固定救场点），升降逻辑复用但不会移动。
+- **训练加权**：`drill_row_weight=3.0` 进配方默认值，沿用 task132 的
+  `DemoRowWeights` 加载时来源加权路径（按 archive 的 `meta['drill']` 识别），
+  **不新增打包列/键**，A/B 共用同一个包；drill 存档本身只含 horizon 内的行。
+- **部署**：把本分支的 `scripts/drill_start.py`、`drill_manifest.py`、`drill_select.py`、
+  `drill_scan.py`、`search_play.py`、`curriculum_queue.py`、`drill_mine.py`、
+  `drill_run.py` 和 `python/pvz_recipe.py`、`pvz_training_rows.py`、
+  `train_rollout_policy.py`、`configs/task235_drills.json` 放进生产 cq 工作树；
+  存档不动。重启 qc 后 `--drill-manifest` 默认读到清单，`reconcile_start_cells`
+  自动加 83 格，**不需要手改 `curriculum_state.json`**。回滚：删/改名清单后重启，
+  83 格自动进 `retired_cells`；或把 `--drill-share` 设 0。
+- **证据与 caveat**：[task234 原型](MEMORY/docs/task234-drills.json)；
+  [task235 题库/校准](MEMORY/docs/task235-drills.json)。L36 的两道全 3 只作覆盖锚，
+  不用于难度判别；换现任后需重校准。

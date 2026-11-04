@@ -61,17 +61,25 @@ PLANT_POT = 33
 
 
 def terrain_of(level: int, scene: dict) -> str:
+    """Adventure level range is authoritative; the scene flags are only a fallback.
+
+    L40 is a fog level but its engine scene reports ``fog: false, pool: true``
+    (storm/hurricane presentation), so trusting the flags there would file the last
+    fog level under pool and break the per-level bank coverage.
+    """
+    if level == 50:
+        return "boss"
+    for name, low, high in TERRAIN_BY_LEVEL:
+        if low <= level <= high:
+            return name
     if scene.get("roof"):
-        return "boss" if level == 50 else "roof"
+        return "roof"
     if scene.get("fog"):
         return "fog"
     if scene.get("pool"):
         return "pool"
     if scene.get("night"):
         return "night"
-    for name, low, high in TERRAIN_BY_LEVEL:
-        if low <= level <= high:
-            return name
     return "other"
 
 
@@ -151,6 +159,10 @@ def mine_archive(item, max_per_archive, horizon, lookback, min_gap, include_huma
         return [], [], Counter()
     meta_path = archive / "meta.json"
     meta = json.loads(meta_path.read_text()) if meta_path.exists() else {}
+    if meta.get("demo_archive"):
+        # A start-cell continuation begins mid-game: its frame 0 is the restored demo
+        # state, not tick 0, so it cannot be replayed from reset as a drill root.
+        return [], [], Counter()
     level = int(frames[0]["scene"].get("level") or (meta.get("task") or {}).get("level") or 0)
     terrain = terrain_of(level, frames[0]["scene"])
     lanes = list(frames[0].get("lanes") or range(len(frames[0].get("row_terrain") or [])))

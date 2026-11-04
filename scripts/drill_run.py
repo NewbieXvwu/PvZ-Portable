@@ -42,6 +42,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path[:0] = [str(ROOT / "python"), str(ROOT / "scripts")]
 
 import search_play  # noqa: E402
+from drill_start import judge, on_board, restore_prefix  # noqa: E402
 
 PRIOR_TERRAINS = {"fog", "roof", "boss"}
 TEACHER = dict(per_card=1, student_candidates=2, samples=3, verify_samples=9,
@@ -120,25 +121,6 @@ def _ready_mowers(obs):
     return sum(1 for d in obs.get("defenses") or [] if d.get("state") == 1)
 
 
-def _on_board(obs):
-    """Zombie ids still on board, from a privileged frame when the engine allows it."""
-    frame = obs
-    try:
-        frame = _WORKER["env"].privileged_state()
-    except Exception:
-        pass
-    out = {}
-    for z in frame.get("zombies") or []:
-        if isinstance(z, dict):
-            if not z.get("on_board"):
-                continue
-            out[int(z["id"])] = dict(row=int(z["row"]), type=int(z["type"]),
-                                     x=float(z["x"]), hp=int(z.get("health") or 0))
-        elif z[5]:
-            out[int(z[9])] = dict(row=int(z[0]), type=int(z[1]), x=float(z[2]), hp=int(z[4]))
-    return out
-
-
 def _plant_type(obs, row, col):
     for p in obs.get("plants") or []:
         if p["row"] == row and p["col"] == col and not p.get("squished"):
@@ -183,49 +165,6 @@ def _sequence(actions):
     return out
 
 
-def restore_prefix(env, archive, decision, frames, meta):
-    """Restore the archive's state at ``decision`` with the existing replay path.
-
-    Human-demo archives carry per-operation ticks and are replayed by
-    ``human_demo.replay`` (rejections and the exact RNG included).  Collection
-    archives (search_play frames) have no operation column; for those the recorded
-    actions are the prefix, and the reset context comes from the archive itself.
-    """
-    from pvz_env import TaskSpec, PlayerProfileContext
-    from pvz_tasks import profile_for_deck
-    if (archive / "ticks.jsonl").exists() and "operation" in frames[min(decision - 1, len(frames) - 1)]:
-        from human_demo import replay
-        obs, _meta, prefix = replay(env, archive, decision=decision)
-        return obs, prefix
-    if meta.get("environment_task"):
-        config = dict(meta["environment_task"])
-        config["profile"] = PlayerProfileContext(**config["profile"])
-        config["preplanted"] = tuple(tuple(p) for p in config.get("preplanted") or ())
-        deck = meta["task"]["deck"]
-        obs, _ = env.reset(deck=deck, task=TaskSpec(**config))
-    else:
-        # Collection frames predate the full environment_task block.  The deck is in
-        # frame 0's seed bank; level/seed/multiplier are in the archive meta.
-        deck = [int(p[1]) for p in frames[0].get("packets") or []]
-        if not deck or any(not 0 <= seed_type < 49 for seed_type in deck):
-            raise ValueError("archive has neither environment_task nor a valid seed bank")
-        level = int((meta.get("context") or {}).get("level") or frames[0]["scene"]["level"])
-        seed = int((meta.get("task") or {}).get("seed"))
-        multiplier = float((meta.get("context") or {}).get("multiplier") or 1.0)
-        obs, _ = env.reset(deck=deck, task=TaskSpec(
-            level=level, seed=seed, playthrough=2,
-            profile=profile_for_deck(deck), zombie_count_multiplier=multiplier))
-    for index in range(1, decision):
-        action = frames[index].get("action") or frames[index].get("input_action")
-        if action is None:
-            delta = int(frames[index + 1]["tick"]) - int(frames[index]["tick"])
-            action = dict(type="wait", ticks=max(1, delta))
-        obs, _r, _d, _t, _info = env.step(action)
-        if int(obs["tick"]) != int(frames[index]["tick"]):
-            raise ValueError(f"prefix differs at frame {index}: {obs['tick']} != {frames[index]['tick']}")
-    return obs, frames[:decision]
-
-
 def _run_one(job):
     cfg, drill, arm, seed, horizon = (_WORKER["config"], job["drill"], job["arm"],
                                       job["seed"], job["horizon"])
@@ -240,7 +179,14 @@ def _run_one(job):
     archive = cfg["roots"][drill["source_root"]] / drill["archive"]
     frames = read_frames(frame_path(archive))
     meta = json.loads((archive / "meta.json").read_text())
-    obs, prefix = restore_prefix(env, archive, int(drill["decision"]), frames, meta)
+    # Fog drills are presented to the student the way production does (human_v2 unless
+    # the archive recorded storm); the board itself is untouched.
+    fog_mode = ((meta.get("environment_task") or {}).get("fog_observation")
+                or (meta.get("task") or {}).get("fog_observation"))
+    if fog_mode is None and drill["terrain"] == "fog":
+        fog_mode = "human_v2"
+    obs, prefix = restore_prefix(env, archive, int(drill["decision"]), frames, meta,
+                                 fog_observation=fog_mode)
     if obs.get("terminal"):
         return dict(status="terminal_at_root", drill_id=drill.get("uid", drill["id"]), arm=arm, seed=seed)
     env.reseed(seed)
@@ -312,15 +258,14 @@ def _run_one(job):
             if obs.get("result") == 2:
                 house_breach = True
         final_tick = int(obs["tick"])
-        alive = _on_board(obs)
-        alive_targets = [tid for tid in targets if tid in alive]
-        success = (not alive_targets and mower_used == 0 and not house_breach)
+        verdict = judge(env, obs, drill.get("targets") or [], root_ready,
+                        root_ready - mower_used, horizon=horizon, root_tick=root_tick)
         return dict(
             status="ok", drill_id=drill.get("uid", drill["id"]), arm=arm, seed=seed, terrain=terrain,
-            level=drill["level"], prior=prior, success=bool(success),
-            target_count=len(targets), targets_alive=len(alive_targets),
-            alive=alive_targets, target_types=sorted({root_targets[t]["type"] for t in targets}),
-            mower_used=mower_used, house_breach=bool(house_breach),
+            level=drill["level"], prior=prior, success=verdict["success"],
+            target_count=verdict["target_count"], targets_alive=verdict["targets_alive"],
+            alive=verdict["alive"], target_types=sorted({root_targets[t]["type"] for t in targets}),
+            mower_used=verdict["mower_used"], house_breach=verdict["house_breach"],
             plants_lost=plants_lost, root_tick=root_tick, final_tick=final_tick,
             tick_delta=final_tick - root_tick, decisions=len(actions),
             searched=stats["searched"], overrides=stats["overrides"], shovels=stats["shovels"],

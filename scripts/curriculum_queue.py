@@ -705,9 +705,15 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
     cells: dict[str, dict] = {}
     manifests: dict[str, Path] = {}
     for task in document.get('tasks') or []:
-        start = task.get('demo_start')
+        drill = task.get('drill_start')
+        start = drill or task.get('demo_start')
         if not start:
             continue
+        if drill:
+            if not isinstance(start.get('targets'), list) or not start['targets']:
+                raise ValueError(f'{task["task_id"]}: drill_start needs a nonempty targets list')
+            if int(start.get('horizon', 1200)) <= 0:
+                raise ValueError(f'{task["task_id"]}: drill_start.horizon must be positive')
         ladder = [int(value) for value in start['decisions']]
         if not ladder or ladder != sorted(ladder, reverse=True):
             raise ValueError(f'{task["task_id"]}: demo_start.decisions must be descending')
@@ -729,10 +735,14 @@ def load_demo_start_cells(path: Path) -> tuple[dict[str, dict], dict[str, Path]]
         archive = archive if archive.is_absolute() else ROOT / archive
         # Archive checks belong to planning: a bad cell must not abort qc startup.
         cells[task['task_id']] = dict(
-            family='demo_start', level=int(task['level']), mult_index=int(start.get('index', 0)),
+            family=('drill_start' if drill else 'demo_start'), level=int(task['level']),
+            mult_index=int(start.get('index', 0)),
             last_round=0, windows={}, ladder=ladder, task_id=task['task_id'],
             archive=str(archive), seeds=seeds,
-            seed_blocks=start_seed_segments(seeds))
+            seed_blocks=start_seed_segments(seeds),
+            **({'drill': True, 'horizon': int(start.get('horizon', 1200)),
+                'criterion': dict(start.get('criterion') or {}),
+                'targets': list(start.get('targets') or [])} if drill else {}))
         manifests[task['task_id']] = path
     return cells, manifests
 
@@ -818,10 +828,13 @@ def reconcile_start_cells(state: dict, specs: dict[str, dict], windows: dict | N
         if seeds[:len(spec['seeds'])] != list(spec['seeds']):
             seeds = list(spec['seeds'])                      # 清单换了块：回到第一段
             cell['seed_blocks'] = list(spec.get('seed_blocks') or [])
-        changed = [key for key in ('ladder', 'archive') if cell.get(key) != spec[key]]
+        changed = [key for key in ('ladder', 'archive', 'family', 'horizon', 'criterion', 'targets')
+                   if cell.get(key) != spec.get(key)]
         if seeds != cell.get('seeds'):
             changed.append('seeds')
-        cell.update({key: spec[key] for key in ('ladder', 'archive', 'family', 'level', 'task_id')})
+        cell.update({key: spec[key] for key in
+                     ('ladder', 'archive', 'family', 'level', 'task_id', 'drill', 'horizon',
+                      'criterion', 'targets') if key in spec})
         cell['seeds'] = seeds
         cell['mult_index'] = min(int(cell.get('mult_index', 0)), len(spec['ladder']) - 1)
         if changed:
@@ -2087,8 +2100,9 @@ def review_groups(state, groups, tasks, share, start_seed_ledger, renew_size, ch
     for group in groups:
         task = group.get('task_definition') or tasks.get(group['task_id'], {})
         games = math.ceil(group['games'] * share)
-        if not games or task.get('zombie_count_multiplier', 1.) == 1. or group['label'] in finished:
-            continue
+        if (not games or task.get('zombie_count_multiplier', 1.) == 1. or group['label'] in finished
+                or group.get('drill') or task.get('drill_start')):
+            continue   # a drill is a fixed short-horizon rescue, not a 1x full-level review
         cell = state['cells'].get(group['base'])
         if cell is None:
             continue
@@ -2124,6 +2138,8 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                save_candidates_levels=frozenset(),
                random_deck_share: float = RANDOM_DECK_SHARE,
                demo_start_share: float | None = None,
+               drill_share: float | None = None,
+               drill_games: int = 12,
                live_catalog: dict | None = None,
                review_share: float = REVIEW_SHARE) -> tuple[list[dict], list[str]]:
     changes = isolate_cells(state, values)
@@ -2148,26 +2164,40 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
     if specialists and pending_special > remaining:
         return [], changes + ['opening specialists start next round: partial-round budget already spent']
     ordinary_budget = remaining - pending_special
-    if demo_start_share is None:
+    if demo_start_share is None and drill_share is None:
         # Default remains the deploy16 planner, including its ordering.
         picks = special_picks + allocate(ordinary, values, ordinary_budget,
                                         per_group, state['round'] + 1, teacher,
                                         random_deck_cap=int(budget * random_deck_share))
     else:
         def category(cell):
+            if cell.get('drill_start') or cell.get('drill'):
+                return 'drill'
             return 'random' if cell.get('random_deck_cell') else 'demo' if (cell.get('archive') is not None or cell.get('demo_archive') is not None) else 'multiplier'
         completed_games = {kind: sum(group['games'] for group in completed
                            if category(state['cells'].get(group['base'], state.get('retired_cells', {}).get(group['base'], group))) == kind)
-                           for kind in ('random', 'demo')}
+                           for kind in ('random', 'drill', 'demo')}
         caps = dict(random=max(0, int(budget * random_deck_share) - completed_games['random']),
-                    demo=max(0, int(budget * demo_start_share) - completed_games['demo']))
+                    demo=(max(0, int(budget * demo_start_share) - completed_games['demo'])
+                          if demo_start_share is not None else None),
+                    drill=(max(0, int(budget * drill_share) - completed_games['drill'])
+                           if drill_share is not None else None))
         picks = list(special_picks)
-        # Reserve random decks before the large demo floor can consume their budget.
-        # Remaining non-demo budget goes to multiplier cells, including any unused quota.
-        for kind in ('random', 'demo', 'multiplier'):
-            subset = {base: cell for base, cell in ordinary.items() if category(cell) == kind}
-            quota = min(ordinary_budget, caps[kind]) if kind in caps else ordinary_budget
-            selected = allocate(subset, values, quota, per_group, state['round'] + 1, teacher)
+        # Reserve random decks and drills before the large demo floor can consume
+        # their budget.  Remaining non-demo budget goes to multiplier cells,
+        # including any unused quota.
+        for kind in ('random', 'drill', 'demo', 'multiplier'):
+            if kind == 'multiplier' and caps.get('demo') is None:
+                continue   # demo and multiplier share one uncapped pool (old planner)
+            if kind == 'demo' and caps.get('demo') is None:
+                subset = {base: cell for base, cell in ordinary.items()
+                          if category(cell) in ('demo', 'multiplier')}
+            else:
+                subset = {base: cell for base, cell in ordinary.items() if category(cell) == kind}
+            group_games = max(1, int(drill_games)) if kind == 'drill' else per_group
+            cap = caps.get(kind)
+            quota = min(ordinary_budget, cap) if cap is not None else ordinary_budget
+            selected = allocate(subset, values, quota, group_games, state['round'] + 1, teacher)
             picks.extend(selected)
             ordinary_budget -= sum(games for _, _, games in selected)
     plan = []
@@ -2226,7 +2256,7 @@ def plan_round(state: dict, tasks: dict[str, dict], names: dict[str, float], val
                     meta = read_json(Path(archive) / 'meta.json')
                 except FileNotFoundError:
                     raise ValueError(f'configuration invalid: demo_start archive missing: {archive}') from None
-                if not meta.get('verified'):
+                if not meta.get('verified') and not cell.get('drill'):
                     raise ValueError(f'configuration invalid: demo_start archive is not verified: {archive}')
                 demo_seed = meta['task']['seed']
                 if demo_seed not in tasks[task_id]['seeds']:
@@ -2314,6 +2344,8 @@ def _run_group(args, state, item, round_index, per_worker):
     else:
         beta = 0.0
     beta = item.get('beta', beta)
+    if cell.get('drill'):
+        beta = 0.0   # a drill needs the teacher's rescue labels, not a student-mixed episode
     item['beta'] = beta
     command = command_for(args, Path(item['manifest']), item['task_id'], item['offset'],
                           item['games'], item['label'], workers=workers, beta=beta,
@@ -2498,7 +2530,10 @@ def collect_rounds(args, state, tasks, names, values, manifests, teacher):
                                        start_seed_ledger=getattr(args, 'start_seed_ledger', None),
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
-                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog,
+                                       demo_start_share=getattr(args, 'demo_start_share', None),
+                                       drill_share=getattr(args, 'drill_share', 0.05),
+                                       drill_games=getattr(args, 'drill_games', 12),
+                                       live_catalog=live_catalog,
                                        review_share=getattr(args, 'review_share', REVIEW_SHARE))
             print_plan(state, plan, changes)
             if per_worker < 0:
@@ -2548,6 +2583,13 @@ def main() -> None:
     parser.add_argument('--demo-start-manifest', type=Path, default=ROOT / 'configs/human_demo_tasks.json',
                         help='task manifest whose demo_start entries become start cells (task71); '
                              'missing file = no start cells')
+    parser.add_argument('--drill-manifest', type=Path, default=ROOT / 'configs/task235_drills.json',
+                        help='task manifest whose drill_start entries become short-horizon cells (task235); '
+                             'missing file = no drill cells')
+    parser.add_argument('--drill-share', type=float, default=0.05,
+                        help='max share of the round budget for drill cells (task235; default 5%%)')
+    parser.add_argument('--drill-games', type=int, default=12,
+                        help='games per drill group; drills stop at their short horizon (default 12)')
     parser.add_argument('--state', type=Path, default=DEFAULT_STATE)
     parser.add_argument('--log', type=Path, default=DEFAULT_LOG)
     parser.add_argument('--stop-flag', type=Path, default=STOP_FLAG,
@@ -2645,7 +2687,7 @@ def main() -> None:
         parser.error(str(error))
     for name in ('manifest', 'state', 'log', 'out', 'frames', 'rollout_policy', 'static_value',
                  'value', 'executable', 'resource_dir', 'recipe', 'python', 'stop_flag',
-                 'promotion_panel', 'teacher_rates', 'demo_start_manifest',
+                 'promotion_panel', 'teacher_rates', 'demo_start_manifest', 'drill_manifest',
                  'gpt_import_dir', 'gpt_archive_root', 'gpt_cold_rates'):
         value = getattr(args, name)
         if value is not None and not value.is_absolute():
@@ -2663,6 +2705,10 @@ def main() -> None:
         parser.error('--random-deck-share must be within 0..1')
     if args.demo_start_share is not None and not 0.0 <= args.demo_start_share <= 1.0:
         parser.error('--demo-start-share must be within 0..1')
+    if not 0.0 <= args.drill_share <= 1.0:
+        parser.error('--drill-share must be within 0..1')
+    if args.drill_games < 1:
+        parser.error('--drill-games must be positive')
     tasks, values, names, manifests = load_panel(args.manifest, args.extra_manifest)
     extra_bases = {cell_of(task_id, names) for task_id, task in tasks.items()
                    if task.get('random_deck_cell')}
@@ -2671,11 +2717,15 @@ def main() -> None:
         tasks.update(opening)
         manifests.update({task_id: args.opening_manifest for task_id in opening})
     start_cells, start_manifests = ({}, {})
-    if args.demo_start_manifest.exists():
-        start_cells, start_manifests = load_demo_start_cells(args.demo_start_manifest)
-        tasks.update({task_id: task for task_id, task in load_tasks(args.demo_start_manifest).items()
-                      if task_id in start_cells})
-        manifests.update(start_manifests)
+    for start_manifest in (args.demo_start_manifest, args.drill_manifest):
+        if not start_manifest.exists():
+            continue
+        cells, cell_manifests = load_demo_start_cells(start_manifest)
+        start_cells.update(cells)
+        start_manifests.update(cell_manifests)
+        tasks.update({task_id: task for task_id, task in load_tasks(start_manifest).items()
+                      if task_id in cells})
+        manifests.update(cell_manifests)
     teacher = load_teacher_rates(args.teacher_rates)
     if not teacher:
         log_line(args.log, f'no teacher-rate evidence at {args.teacher_rates}; ranking by student rate only')
@@ -2700,7 +2750,8 @@ def main() -> None:
         for base in args.restore_start_cell:
             if base not in state['cells']:
                 parser.error(f'--restore-start-cell {base}: not a retired start cell in {args.state}')
-            manifests.setdefault(base, args.demo_start_manifest)
+            if base not in manifests:
+                manifests[base] = args.demo_start_manifest
     else:
         windows, offsets = init_from_runs(patterns, names, extra_bases)
         state = make_state(tasks, names, windows, offsets, str(args.manifest), start_cells)
@@ -2716,7 +2767,10 @@ def main() -> None:
                                        args.games_per_group, teacher, start_seed_ledger=ledger,
                                        save_candidates_levels=args.save_candidates_levels,
                                        random_deck_share=args.random_deck_share,
-                                       demo_start_share=getattr(args, 'demo_start_share', None), live_catalog=live_catalog,
+                                       demo_start_share=getattr(args, 'demo_start_share', None),
+                                       drill_share=getattr(args, 'drill_share', 0.05),
+                                       drill_games=getattr(args, 'drill_games', 12),
+                                       live_catalog=live_catalog,
                                        review_share=args.review_share)
         print_plan(state, plan, changes)
         for item in plan:

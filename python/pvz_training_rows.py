@@ -103,16 +103,21 @@ class DemoRowWeights:
     No new pack columns/signatures. Human rows and explicitly imported LLM demo rows
     share demo_row_weight; teacher rows with demo_archive are continuations. Task names never
     classify a row. Default factors return before reading metadata or touching weights.
+    A drill archive (task235) is identified by its own ``meta['drill']`` marker and gets
+    drill_row_weight; its archive is already truncated at the drill horizon, so every
+    row it contains is a short-horizon row.
     Apply AFTER packet/spread/intervention/level balancing: these boosts are not capped
     or renormalized, so a final level share can exceed the earlier level-balance cap.
     """
-    def __init__(self, demo_row_weight=1.0, demo_start_row_weight=1.0):
+    def __init__(self, demo_row_weight=1.0, demo_start_row_weight=1.0, drill_row_weight=3.0):
         self.demo_row_weight = demo_row_weight
         self.demo_start_row_weight = demo_start_row_weight
-        self.enabled = demo_row_weight != 1.0 or demo_start_row_weight != 1.0
+        self.drill_row_weight = drill_row_weight
+        self.enabled = (demo_row_weight != 1.0 or demo_start_row_weight != 1.0
+                        or drill_row_weight != 1.0)
         self.observed = 0
         self.spans = []
-        self.rows = dict(human=0, demo_start=0, llm_demo=0)
+        self.rows = dict(human=0, demo_start=0, llm_demo=0, drill=0)
 
     def observe(self, path, rows, meta=None):
         if not self.enabled:
@@ -125,7 +130,9 @@ class DemoRowWeights:
             meta_path = Path(path).parent / 'meta.json'
             meta = json.loads(meta_path.read_text()) if meta_path.is_file() else {}
         source = meta.get('label_source', 'teacher')
-        if source == 'human':
+        if meta.get('drill'):
+            category, factor = 'drill', self.drill_row_weight
+        elif source == 'human':
             category, factor = 'human', self.demo_row_weight
         elif source_kind(meta) == 'llm_demo':
             category, factor = 'llm_demo', self.demo_row_weight
@@ -148,6 +155,7 @@ class DemoRowWeights:
     def metadata(self):
         return dict(demo_row_weight=self.demo_row_weight,
                     demo_start_row_weight=self.demo_start_row_weight,
+                    drill_row_weight=self.drill_row_weight,
                     rows=self.rows, stage='after_level_balance', participates_in_cap=False)
 
 

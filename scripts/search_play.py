@@ -54,6 +54,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "scripts"))
+from drill_start import drill_spec, horizon_reached  # noqa: E402  (task235: short-horizon drills)
 from growable_pool import GIB, GrowablePool  # noqa: E402  (task138: growable worker pool)
 DEFAULT_RESOURCE_DIR = os.environ.get("PVZ_RESOURCE_DIR",
                                       str(Path.home() / ".cache" / "pvz-research-resources"))
@@ -428,8 +429,10 @@ def _play(job: dict, observer=None) -> dict:
         _W['demo_actions'] = []
         if demo_archive:
             from dataclasses import asdict
-            from human_demo import replay
+            from drill_start import restore_prefix
             demo_meta = json.loads((Path(demo_archive) / 'meta.json').read_text())
+            from pvz_frame_store import frame_path, read_frames
+            demo_frames = read_frames(frame_path(Path(demo_archive)))
             # Compare every field the archive recorded. A field added to TaskSpec after the
             # demonstration was recorded (fog_observation, task53) did not exist then and must not
             # block the start. fog_observation is exempt outright (task70 B6): it is presentation
@@ -454,15 +457,25 @@ def _play(job: dict, observer=None) -> dict:
 
             recorded_env = comparable(recorded, demo_meta['task']['deck'])
             current_env = comparable(current, kw['deck'])
-            if (demo_meta['task']['id'] != args.task_id and
-                    not (isinstance(args.task_id, str) and args.task_id.startswith(demo_meta['task']['id'] + '_')) or
+            # A drill task id names the drill, not the archive's original episode; the
+            # archive path is explicit and the deck/seed/environment still have to match.
+            same_task_id = (demo_meta['task']['id'] == args.task_id or
+                            (isinstance(args.task_id, str) and
+                             args.task_id.startswith(demo_meta['task']['id'] + '_')))
+            if ((not same_task_id and drill_spec(task_definition) is None) or
                     [deck_card(card) for card in demo_meta['task']['deck']] !=
                     [deck_card(card) for card in kw['deck']] or
                     any(current_env.get(key) != value for key, value in recorded_env.items()
                         if key != 'fog_observation')):
                 raise ValueError('demonstration task, deck, seed or environment differs from the manifest')
-            obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision,
-                                    fog_observation=task.fog_observation)
+            if drill_spec(task_definition) is not None:
+                obs, prefix = restore_prefix(env, Path(demo_archive), args.demo_decision,
+                                             demo_frames, demo_meta,
+                                             fog_observation=task.fog_observation)
+            else:
+                from human_demo import replay
+                obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision,
+                                        fog_observation=task.fog_observation)
             if future_seed is not None:
                 # The restored snapshot carries the demonstration's RNG, so replaying it would hand the
                 # teacher the true future (the clairvoyance problem, scripts/verify_reseed.py). RESEED
@@ -473,11 +486,13 @@ def _play(job: dict, observer=None) -> dict:
                 env.set_token_observation(True)
                 env._token_observation = True
                 obs = env.observe()
-            from pvz_frame_store import frame_path, read_frames
-            demo_frames = read_frames(frame_path(Path(demo_archive)))
-            _W['demo_actions'] = [(before['tick'], after['action'])
-                                  for before, after in zip(demo_frames, demo_frames[1:])
-                                  if (after.get('action') or {}).get('type') == 'plant']
+            # A drill archive is a full self-play episode: replaying its later recorded
+            # plants as a "demo candidate" would hand the searcher the true future.  Only
+            # a human/LLM demonstration keeps that candidate.
+            _W['demo_actions'] = ([] if drill_spec(task_definition) is not None else
+                                  [(before['tick'], after['action'])
+                                   for before, after in zip(demo_frames, demo_frames[1:])
+                                   if (after.get('action') or {}).get('type') == 'plant'])
         else:
             obs, _ = env.reset(deck=tuple(kw["deck"]), task=task)
         fog_diagnostics = None
@@ -513,6 +528,11 @@ def _play(job: dict, observer=None) -> dict:
         dagger = random.Random(kw["seed"]) if args.dagger_beta < 1.0 else None
         ready_mowers = lambda o: sum(1 for d in o.get("defenses") or [] if d["state"] == 1)
         mowers_start = mowers_left = ready_mowers(obs)
+        drill = drill_spec(task_definition)
+        drill_horizon = None if drill is None else int(drill.get("horizon", 1200))
+        drill_targets = list((drill or {}).get("targets") or [])
+        drill_criterion = dict((drill or {}).get("criterion") or {})
+        drill_root_tick = int(obs["tick"])
         planted: dict[int, int] = {}
         planted_by_type: dict[int, int] = {}
         from pvz_episode_stats import planted_by_type as read_types, planted_slots, plant_type_before_action
@@ -533,6 +553,8 @@ def _play(job: dict, observer=None) -> dict:
         native_root = (getattr(args, 'native_games', False) and observer is None
                        and getattr(_W['fast'], 'token_input', None) != 'obs_v3')
         while not obs["terminal"] and decisions < MAX_ACTIONS:
+            if horizon_reached(obs, drill_root_tick, drill_horizon):
+                break
             if observer is not None:
                 observer.before(env, obs, fast_state, decisions)
             action = policy_choice = _fast_action(obs, fast_state, env if native_root else None)
@@ -638,6 +660,12 @@ def _play(job: dict, observer=None) -> dict:
         _W.pop("env", None)
         env.close()
         raise
+    # A drill is judged on the local short-horizon criterion, not the level result.
+    drill_verdict = None
+    if drill_horizon is not None:
+        from drill_start import judge
+        drill_verdict = judge(env, obs, drill_targets, mowers_start, mowers_left,
+                              horizon=drill_horizon, root_tick=drill_root_tick)
     if frames is not None:
         # Same layout as episode_query archives, so scripts/train_value_net.py reads it directly.
         seed_tag = job["seed"] if future_seed is None else f"{job['seed']}_f{future_seed}"
@@ -658,10 +686,19 @@ def _play(job: dict, observer=None) -> dict:
                             policy='student', checkpoint=str(Path(args.rollout_policy).resolve()),
                             arm=job['arm'], playthrough=2,
                             **{k: v for k, v in kw['task_extra'].items() if v is not None})
-        archive_outcome = dict(result=obs.get('result') or 0, won=obs.get('result') == 1,
+        archive_outcome = dict(result=obs.get('result') or 0,
+                               won=(drill_verdict['success'] if drill_verdict is not None
+                                    else obs.get('result') == 1),
                                final_wave=obs['wave'], final_tick=obs['tick'],
                                wave_count=obs.get('wave_count'),
-                               reason='win' if obs.get('result') == 1 else 'not_won')
+                               reason=('drill' if drill_verdict is not None else
+                                       'win' if obs.get('result') == 1 else 'not_won'))
+        if drill_verdict is not None:
+            archive_outcome.update(drill_success=drill_verdict['success'],
+                                   drill_horizon=drill_verdict['horizon'],
+                                   drill_targets_alive=drill_verdict['targets_alive'],
+                                   drill_mower_used=drill_verdict['mower_used'],
+                                   drill_house_breach=drill_verdict['house_breach'])
         if (demo_archive or 'deck_perturb' in task_definition or 'deck_random' in task_definition
                 or task_definition.get('live193')
                 or task_definition.get('conveyor_start') == 'original'
@@ -673,8 +710,9 @@ def _play(job: dict, observer=None) -> dict:
             if 'deck_perturb' in task_definition:
                 archive_task['deck_perturb'] = task_definition['deck_perturb']
                 archive_task['base_deck'] = task_definition['deck']
-            archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0),
-                                   reason='win' if obs.get('result') == 1 else 'not_won')
+            archive_outcome.update(final_tick=obs['tick'], wave_count=_frame(obs)['scene'].get('wave_count', 0))
+            if drill_verdict is None:
+                archive_outcome['reason'] = 'win' if obs.get('result') == 1 else 'not_won'
         write_meta(archive, {
             "label_source": "teacher",
             **({'observation_attachment': attachment_info} if attachment_info else {}),
@@ -684,8 +722,21 @@ def _play(job: dict, observer=None) -> dict:
             "environment_task": asdict(task),
             "frame_count": len(frames), "operations": decisions,
             "context": task_context,
+            **({"drill": dict(horizon=drill_verdict["horizon"],
+                              criterion=drill_criterion,
+                              targets=drill_targets,
+                              success=drill_verdict["success"],
+                              target_count=drill_verdict["target_count"],
+                              targets_alive=drill_verdict["targets_alive"],
+                              mower_used=drill_verdict["mower_used"],
+                              house_breach=drill_verdict["house_breach"],
+                              root_tick=drill_verdict["root_tick"],
+                              final_tick=drill_verdict["final_tick"])}
+               if drill_verdict is not None else {}),
             "outcome": archive_outcome})
-    result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"], "won": obs.get("result") == 1,
+    result = {"seed": job["seed"], "future_seed": future_seed, "arm": job["arm"],
+            "won": drill_verdict["success"] if drill_verdict is not None else obs.get("result") == 1,
+            **({"drill": drill_verdict} if drill_verdict is not None else {}),
             **({'deck': list(kw['deck'])} if 'deck_random' in task_definition else {}),
             **({'fog_diagnostics': fog_diagnostics.result(), 'deck': list(kw['deck']),
                 'final_tick': obs['tick']} if fog_diagnostics is not None else {}),
@@ -697,7 +748,8 @@ def _play(job: dict, observer=None) -> dict:
             # Keep all on-board zombies: nearest-x alone is ambiguous for bungees/vehicles.
             "final_zombies": _final_zombies(env.privileged_state()
                 if task_definition.get('fog_observation') == 'storm' else obs),
-            "mowers_used": mowers_start - mowers_left, "planted_slots": planted,
+            "mowers_used": (drill_verdict["mower_used"] if drill_verdict is not None
+                            else mowers_start - mowers_left), "planted_slots": planted,
             "planted_types": planted_by_type,
             "searched": stats["searched"], "overrides": stats["overrides"],
             **{name: stats.get(name, 0) for name in ("rollout_batches", "rollout_lanes",
@@ -877,7 +929,7 @@ def main() -> None:
         seeds = task_seeds[args.seed_offset: args.seed_offset + args.seeds]
     if args.demo_archive:
         demo = json.loads((args.demo_archive / 'meta.json').read_text())
-        if not demo.get('verified'):
+        if not demo.get('verified') and drill_spec(task_definition) is None:
             p.error('verify the human demonstration before starting a teacher game')
         seed = demo['task']['seed']
         if seed not in seeds:
