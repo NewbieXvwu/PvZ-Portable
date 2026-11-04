@@ -84,6 +84,11 @@ def export_models(args, keep):
         target = Path(keep.name) / f"{name}.bin"
         export_value_net(load_value_net(path), str(target))
         bins[name] = str(target)
+    for name, path in (("reference", args.reference_value), ("reference_roof", args.reference_roof)):
+        if path:
+            target = Path(keep.name) / f"{name}.bin"
+            export_value_net(load_value_net(path), str(target))
+            bins[name] = str(target)
     for name, path in (("student", args.student), ("gpt", args.teacher_prior)):
         target = Path(keep.name) / f"{name}.bin"
         export_student(load_student(path), str(target))
@@ -200,7 +205,11 @@ def run_drill(job):
                 out["plans"][name] = entry
                 continue
             entry["post_tick"] = post_tick
+            env.load_value_net(cfg["bins"]["roof" if terrain in ("roof", "boss") else "value"])
             entry["leaf"] = float(env.leaf_values()[0])
+            if "reference" in cfg["bins"]:
+                reference = "reference_roof" if terrain in ("roof", "boss") else "reference"
+                env.load_value_net(cfg["bins"].get(reference, cfg["bins"]["reference"]))
             values = {}
             for horizon in job["horizons"]:
                 vals = []
@@ -386,6 +395,10 @@ def main():
     parser.add_argument("--value", type=Path, required=True)
     parser.add_argument("--value-roof", type=Path, required=True)
     parser.add_argument("--static-value", type=Path, required=True)
+    parser.add_argument("--reference-value", type=Path,
+                        help="fixed rollout-end judge, independent of the tested leaf network")
+    parser.add_argument("--reference-roof", type=Path,
+                        help="fixed roof judge; defaults to --reference-value")
     parser.add_argument("--executable", type=Path, required=True)
     parser.add_argument("--resource-dir", type=Path,
                         default=Path.home() / ".cache/pvz-research-resources")
@@ -407,7 +420,7 @@ def main():
     if not drills:
         parser.error("no drills selected")
     args.out.mkdir(parents=True, exist_ok=True)
-    keep = tempfile.TemporaryDirectory(prefix="task236-values-")
+    keep = tempfile.TemporaryDirectory(prefix="task236-values-", dir=args.out)
     bins = export_models(args, keep)
     seeds = [args.seed_base + index for index in range(args.seeds)]
     horizons = sorted({args.horizon, args.horizon2})
@@ -430,7 +443,9 @@ def main():
     summary.update(seconds=round(time.time() - started, 1), seeds=seeds, horizons=horizons,
                    bank=str(args.bank), student=str(args.student),
                    teacher_prior=str(args.teacher_prior), value=str(args.value),
-                   value_roof=str(args.value_roof), static_value=str(args.static_value))
+                   value_roof=str(args.value_roof), static_value=str(args.static_value),
+                   reference_value=str(args.reference_value) if args.reference_value else None,
+                   reference_roof=str(args.reference_roof) if args.reference_roof else None)
     (args.out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n")
     print(json.dumps(summary, ensure_ascii=False, indent=1))
     keep.cleanup()

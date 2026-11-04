@@ -93,6 +93,27 @@ def run_one(job: dict) -> dict:
         trace.unlink(missing_ok=True)
 
 
+def save_features(results, out, channels, scalars, suffix=""):
+    for terrain in TERRAINS:
+        games = sorted((r for r in results if r["ok"] and r["terrain"] == terrain),
+                       key=lambda r: r["index"])
+        if not games:
+            continue
+        features = np.asarray([row for game in games for _op, row in game["rows"]], dtype=np.float32)
+        expected = channels * 60 + scalars + 35
+        if features.shape[1] != expected:
+            raise RuntimeError(f"{terrain}: trace has {features.shape[1]} floats, expected {expected}")
+        columns = {name: np.asarray([game[key] for game in games for _ in game["rows"]], dtype=dtype)
+                   for name, key, dtype in (("seed", "seed", np.int64), ("level", "level", np.int16),
+                                            ("y", "won", np.int8), ("game", "index", np.int32))}
+        columns["op"] = np.asarray([op for game in games for op, _ in game["rows"]], dtype=np.int32)
+        np.savez_compressed(out / f"{terrain}{suffix}.npz",
+                            board=features[:, :channels * 60].reshape(-1, channels, 60).astype(np.float16),
+                            scalars=features[:, channels * 60:channels * 60 + scalars],
+                            context=features[:, channels * 60 + scalars:], **columns)
+        print(f"{terrain}{suffix}: {len(games)} games, {len(features)} rows", flush=True)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--corpus", type=Path, required=True)
@@ -103,6 +124,8 @@ def main() -> int:
     parser.add_argument("--per-game", type=int, default=64)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--limit", type=int, default=0)
+    parser.add_argument("--shard-size", type=int, default=0,
+                        help="games per bounded-memory export shard; 0 = one file per terrain")
     args = parser.parse_args()
 
     channels, scalars = net_shape(args.value_bin)
@@ -126,40 +149,31 @@ def main() -> int:
     results = []
     context = mp.get_context("spawn")
     with ProcessPoolExecutor(max_workers=args.workers, mp_context=context) as pool:
-        futures = [pool.submit(run_one, job) for job in jobs]
-        for done, future in enumerate(as_completed(futures), 1):
-            result = future.result()
-            results.append(result)
-            if not result["ok"]:
-                print(f"[{done}/{len(jobs)}] FAILED {result['archive']}\n{result['error']}", flush=True)
-            elif done % 10 == 0:
-                print(f"[{done}/{len(jobs)}] ok", flush=True)
+        size = args.shard_size or max(1, len(jobs))
+        for start in range(0, len(jobs), size):
+            batch = []
+            futures = [pool.submit(run_one, job) for job in jobs[start:start + size]]
+            for done, future in enumerate(as_completed(futures), start + 1):
+                result = future.result()
+                batch.append(result)
+                if not result["ok"]:
+                    print(f"[{done}/{len(jobs)}] FAILED {result['archive']}\n{result['error']}", flush=True)
+                elif done % 10 == 0:
+                    print(f"[{done}/{len(jobs)}] ok", flush=True)
+            save_features(batch, args.out, channels, scalars,
+                          f"-{start // size:04d}" if args.shard_size else "")
+            for result in batch:
+                result.pop("rows", None)
+                results.append(result)
 
     ok = [result for result in results if result["ok"]]
     failed = [result for result in results if not result["ok"]]
-    for terrain in TERRAINS:
-        games = [result for result in ok if result["terrain"] == terrain]
-        if not games:
-            continue
-        board = np.asarray([row for game in games for _op, row in game["rows"]], dtype=np.float32)
-        expected = channels * 60 + scalars + 35
-        if board.shape[1] != expected:
-            raise RuntimeError(f"{terrain}: trace has {board.shape[1]} floats, expected {expected}")
-        board6 = board[:, :channels * 60].reshape(-1, channels, 60).astype(np.float16)
-        scalars6 = board[:, channels * 60:channels * 60 + scalars].astype(np.float32)
-        context6 = board[:, channels * 60 + scalars:].astype(np.float32)
-        seeds = np.asarray([game["seed"] for game in games for _op, _row in game["rows"]], dtype=np.int64)
-        ops = np.asarray([op for game in games for op, _row in game["rows"]], dtype=np.int32)
-        levels = np.asarray([game["level"] for game in games for _op, _row in game["rows"]], dtype=np.int16)
-        labels = np.asarray([game["won"] for game in games for _op, _row in game["rows"]], dtype=np.int8)
-        games_index = np.asarray([game["index"] for game in games for _op, _row in game["rows"]], dtype=np.int32)
-        np.savez_compressed(args.out / f"{terrain}.npz", board=board6, scalars=scalars6, context=context6,
-                            y=labels, seed=seeds, op=ops, level=levels, game=games_index)
-        print(f"{terrain}: {len(games)} games, {len(board6)} rows, wins {int((labels == 1).sum())}", flush=True)
-
     summary = dict(games=len(ok), failed=len(failed), channels=channels, scalars=scalars,
                    per_game=args.per_game, failed_archives=[item.get("archive") for item in failed],
-                   by_terrain={terrain: dict(games=sum(1 for x in ok if x["terrain"] == terrain)) for terrain in TERRAINS})
+                   failures=failed,
+                   by_terrain={terrain: dict(games=sum(1 for x in ok if x["terrain"] == terrain),
+                                            wins=sum(x["won"] for x in ok if x["terrain"] == terrain))
+                               for terrain in TERRAINS})
     (args.out / "summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1) + "\n")
     tmp.rmdir()
     print(json.dumps(summary, ensure_ascii=False), flush=True)

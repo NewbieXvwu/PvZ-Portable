@@ -54,6 +54,10 @@ def metrics(prob: np.ndarray, label: np.ndarray) -> dict:
 def load_rows(directory: Path) -> dict[str, dict[str, np.ndarray]]:
     data = {}
     for terrain in TERRAINS:
+        packed = directory / terrain
+        if packed.is_dir():
+            data[terrain] = {path.stem: np.load(path, mmap_mode="r") for path in packed.glob("*.npy")}
+            continue
         path = directory / f"{terrain}.npz"
         if not path.is_file():
             continue
@@ -82,21 +86,40 @@ def torch_view(rows: dict[str, np.ndarray], encoder: int) -> tuple[torch.Tensor,
 
 def run_arm(data: dict, encoder: int, width: int, seed: int, epochs: int, device: torch.device,
             train_seeds: set, holdout_seeds: set, lr: float = 2e-4,
-            dropout: float = 0.3, weight_decay: float = 1e-3, init_state: dict | None = None) -> tuple[dict, dict]:
+            dropout: float = 0.3, weight_decay: float = 1e-3, init_state: dict | None = None,
+            batch_size: int = 256) -> tuple[dict, dict]:
     terrain_of, seed_of = [], []
-    for terrain, rows in data.items():
+    for terrain in TERRAINS:
+        if terrain not in data:
+            continue
+        rows = data[terrain]
         terrain_of.extend([terrain] * len(rows["y"]))
         seed_of.extend([int(value) for value in rows["seed"]])
     terrain_of = np.asarray(terrain_of)
     seed_of = np.asarray(seed_of)
     train_mask = np.asarray([(terrain_of[i], seed_of[i]) in train_seeds for i in range(len(seed_of))])
-    holdout_mask = ~train_mask if (~train_mask).any() else train_mask.copy()
-    terrain_parts = {terrain: data[terrain] for terrain in data}
-    # concatenate per terrain in the stable TERRAINS order, then mask
-    all_rows = {key: np.concatenate([terrain_parts[t][key] for t in TERRAINS if t in terrain_parts])
-                for key in ("board", "scalars", "context", "y", "seed")}
-    board, scalars, context, labels = torch_view(all_rows, encoder)
-    board, scalars, context, labels = board.to(device), scalars.to(device), context.to(device), labels.to(device)
+    holdout_mask = np.asarray([(terrain_of[i], seed_of[i]) in holdout_seeds for i in range(len(seed_of))])
+    labels = np.concatenate([data[t]["y"] for t in TERRAINS if t in data]).astype(np.float32)
+    offsets, offset = [], 0
+    for terrain in TERRAINS:
+        if terrain in data:
+            end = offset + len(data[terrain]["y"])
+            offsets.append((offset, end, data[terrain]))
+            offset = end
+
+    def batch(index):
+        # Gather only the requested rows. Full exports are float16 memmaps and stay off MPS.
+        channels, scalar_count = (92, 119) if encoder == 2 else (139, 125)
+        boards = np.empty((len(index), channels, 6, 10), dtype=np.float32)
+        scalars = np.empty((len(index), scalar_count + 35), dtype=np.float32)
+        for start, end, rows in offsets:
+            mask = (index >= start) & (index < end)
+            local = index[mask] - start
+            boards[mask] = rows["board"][local, :channels].reshape(-1, channels, 6, 10)
+            scalars[mask, :scalar_count] = rows["scalars"][local, :scalar_count]
+            scalars[mask, scalar_count:] = rows["context"][local]
+        return (torch.from_numpy(boards).to(device), torch.from_numpy(scalars).to(device),
+                torch.from_numpy(labels[index]).to(device))
 
     torch.manual_seed(seed)
     net = ValueNet(width=width, context=True, encoder_version=encoder, dropout=dropout).to(device)
@@ -114,42 +137,52 @@ def run_arm(data: dict, encoder: int, width: int, seed: int, epochs: int, device
         net.load_state_dict(state)
     optimizer = torch.optim.AdamW(net.parameters(), lr=lr, weight_decay=weight_decay)
     loss_fn = nn.BCEWithLogitsLoss()
-    train_index = torch.from_numpy(np.flatnonzero(train_mask)).to(device)
-    holdout_index = torch.from_numpy(np.flatnonzero(holdout_mask)).to(device)
+    train_index = np.flatnonzero(train_mask)
+    holdout_index = np.flatnonzero(holdout_mask)
+    order_generator = torch.Generator().manual_seed(seed)
 
     best = (float("inf"), -1, None)
     history = []
     for epoch in range(epochs):
         net.train()
-        order = train_index[torch.randperm(len(train_index)).to(device)]
+        order = train_index[torch.randperm(len(train_index), generator=order_generator).numpy()]
         total = 0.0
-        for start in range(0, len(order), 256):
-            index = order[start:start + 256]
+        for start in range(0, len(order), batch_size):
+            index = order[start:start + batch_size]
+            board_batch, scalar_batch, label_batch = batch(index)
             optimizer.zero_grad()
-            logits = net(board[index], torch.cat([scalars[index], context[index]], dim=1))
-            loss = loss_fn(logits, labels[index])
+            logits = net(board_batch, scalar_batch)
+            loss = loss_fn(logits, label_batch)
             loss.backward()
             optimizer.step()
-            total += float(loss) * len(index)
+            total += float(loss.detach()) * len(index)
         net.eval()
         with torch.no_grad():
-            valid_logits = net(board[holdout_index], torch.cat([scalars[holdout_index], context[holdout_index]], dim=1))
-            valid_loss = float(loss_fn(valid_logits, labels[holdout_index]))
+            valid_total = 0.0
+            for start in range(0, len(holdout_index), batch_size):
+                index = holdout_index[start:start + batch_size]
+                board_batch, scalar_batch, label_batch = batch(index)
+                valid_total += float(loss_fn(net(board_batch, scalar_batch), label_batch)) * len(index)
+            valid_loss = valid_total / len(holdout_index)
         history.append(dict(epoch=epoch, fit=total / len(train_index), validation=valid_loss))
         print(f"  epoch {epoch:02d} fit {total / len(train_index):.4f} validation {valid_loss:.4f}", flush=True)
         if valid_loss < best[0]:
             best = (valid_loss, epoch, {key: value.detach().cpu().clone() for key, value in net.state_dict().items()})
     net.load_state_dict(best[2])
     net.eval()
+    prob = np.empty(len(labels), dtype=np.float32)
     with torch.no_grad():
-        prob = torch.sigmoid(net(board, torch.cat([scalars, context], dim=1))).cpu().numpy()
+        for start in range(0, len(labels), batch_size):
+            index = np.arange(start, min(start + batch_size, len(labels)))
+            board_batch, scalar_batch, _ = batch(index)
+            prob[index] = torch.sigmoid(net(board_batch, scalar_batch)).cpu().numpy()
     report = {"encoder": encoder, "width": width, "best_epoch": best[1], "best_validation": best[0],
-              "history": history, "all_holdout": metrics(prob[holdout_mask], labels.cpu().numpy()[holdout_mask]),
+              "history": history, "all_holdout": metrics(prob[holdout_mask], labels[holdout_mask]),
               "by_terrain": {}}
     for terrain in TERRAINS:
         mask = holdout_mask & (terrain_of == terrain)
         if mask.any():
-            report["by_terrain"][terrain] = metrics(prob[mask], labels.cpu().numpy()[mask])
+            report["by_terrain"][terrain] = metrics(prob[mask], labels[mask])
     checkpoint = dict(encoder="pvz_value_net.featurize v6" if encoder == 6 else "pvz_value_net.featurize v2",
                       width=width, context=True, state_dict=net.state_dict())
     return report, checkpoint, prob, holdout_mask
