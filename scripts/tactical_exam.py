@@ -170,7 +170,8 @@ def main():
     parser.add_argument('--bank', type=Path, required=True)
     parser.add_argument('--models', required=True, help='JSON model paths, including incumbent')
     parser.add_argument('--teacher-prior', type=Path, help='production GPT prior on fog/roof during calibration')
-    parser.add_argument('--training-manifest', type=Path, default=ROOT / 'configs/task235_drills.json')
+    parser.add_argument('--training-manifest', type=Path, nargs='+',
+                        default=[ROOT / 'configs/task235_drills.json'])
     parser.add_argument('--archive-root', action='append', default=[], metavar='NAME=PATH')
     parser.add_argument('--value', type=Path, required=True)
     parser.add_argument('--value-roof', type=Path)
@@ -189,7 +190,8 @@ def main():
     bank = json.loads(args.bank.read_text())
     if bank.get('status') == 'insufficient_calibration':
         parser.error('exam calibration has fewer than 100 or more than 200 selected items')
-    check_split(bank, json.loads(args.training_manifest.read_text()))
+    for manifest in args.training_manifest:
+        check_split(bank, json.loads(manifest.read_text()))
     items = bank['items'][:args.limit] if args.limit else bank['items']
     if not items:
         parser.error('empty exam')

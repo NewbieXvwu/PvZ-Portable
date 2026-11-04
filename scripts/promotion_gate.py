@@ -227,8 +227,8 @@ def exam_monitor(args, models):
             raise ValueError('no selected exam candidate')
         command = [sys.executable, str(ROOT / 'scripts/tactical_exam.py'),
                    '--bank', str(bank), '--models', json.dumps(selected),
-                   '--training-manifest', str(getattr(args, 'exam_training_manifest',
-                                                      ROOT / 'configs/task235_drills.json')),
+                   '--training-manifest', *[str(path) for path in getattr(
+                       args, 'exam_training_manifest', [ROOT / 'configs/task235_drills.json'])],
                    '--value', str(args.value), '--executable', str(args.executable),
                    '--resource-dir', str(args.resource_dir),
                    '--workers', str(min(args.eval_units, 4)), '--out', str(folder)]
@@ -273,7 +273,8 @@ def main():
                              'omit to allocate the next free block')
     parser.add_argument('--exam-bank', type=Path, default=ROOT / 'configs/task242_exam.json')
     parser.add_argument('--exam-sides', default='A,B', help='monitored candidates; B for a smaller budget')
-    parser.add_argument('--exam-training-manifest', type=Path, default=ROOT / 'configs/task235_drills.json')
+    parser.add_argument('--exam-training-manifest', type=Path, nargs='+',
+                        default=[ROOT / 'configs/task235_drills.json'])
     args = parser.parse_args()
     if args.workers not in (1, 2):
         parser.error('--workers must be 1 or 2')

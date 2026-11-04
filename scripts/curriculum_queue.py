@@ -1385,8 +1385,10 @@ class TrainingPipeline:
                     '--calibration', json.dumps(frozen['calibration'])]
         command += ['--exam-bank', str(getattr(self.args, 'exam_bank', ROOT / 'configs/task242_exam.json')),
                     '--exam-sides', getattr(self.args, 'exam_sides', 'A,B'),
+                    # task240 made --drill-manifest repeatable: pass every training drill manifest.
                     '--exam-training-manifest',
-                    str(getattr(self.args, 'drill_manifest', ROOT / 'configs/task235_drills.json'))]
+                    *[str(path) for path in (getattr(self.args, 'drill_manifest', None)
+                                             or [ROOT / 'configs/task235_drills.json'])]]
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against '
                                 f'{frozen["incumbent"]} eval_units={units}')
