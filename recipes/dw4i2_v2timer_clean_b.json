@@ -66,7 +66,7 @@
  "validation_batch_size": 4096,
  "optimizer": {
   "name": "AdamW",
-  "lr": 0.002,
+  "lr": 0.0005,
   "weight_decay": 0.0001,
   "betas": [
    0.9,
