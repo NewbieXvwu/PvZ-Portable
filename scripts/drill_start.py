@@ -56,7 +56,24 @@ def replayable_by_operations(archive: Path, frames, decision: int) -> bool:
     return (Path(archive) / "ticks.jsonl").exists() and "operation" in frames[index]
 
 
-def restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fog_observation=None):
+def restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fog_observation=None,
+                   cache=None):
+    """Replay once per exam item, optionally restoring the shared engine snapshot afterwards."""
+    key = (str(archive), int(decision), fog_observation)
+    if cache is not None:
+        if cache.get('env') is env:
+            if cache['key'] == key:
+                return env.restore(cache['snapshot']), cache['prefix']
+            env.release_snapshot(cache['snapshot'])
+        cache.clear()
+    obs, prefix = _restore_prefix(env, archive, decision, frames, meta,
+                                  fog_observation=fog_observation)
+    if cache is not None:
+        cache.update(env=env, key=key, snapshot=env.snapshot(), prefix=prefix)
+    return obs, prefix
+
+
+def _restore_prefix(env, archive: Path, decision: int, frames, meta: dict, *, fog_observation=None):
     """Restore ``archive`` at ``decision`` and replay the action prefix.
 
     Human/LLM recordings replay through ``human_demo.replay`` (exact operation timeline,

@@ -439,7 +439,7 @@ def _play(job: dict, observer=None) -> dict:
             # block the start. fog_observation is exempt outright (task70 B6): it is presentation
             # only, so a demo start cell may replay a null-mode recording under human_v2, and the
             # _hv2 start cells deliberately carry task ids that extend the recorded one.
-            recorded = demo_meta['environment_task']
+            recorded = demo_meta.get('environment_task') or {}
             current = json.loads(json.dumps(asdict(task)))
 
             def comparable(env_task: dict, deck) -> dict:
@@ -456,13 +456,14 @@ def _play(job: dict, observer=None) -> dict:
                 env_task['profile'] = profile
                 return env_task
 
-            recorded_env = comparable(recorded, demo_meta['task']['deck'])
+            recorded_env = comparable(recorded, demo_meta['task']['deck']) if recorded else {}
             current_env = comparable(current, kw['deck'])
             # A drill task id names the drill, not the archive's original episode; the
             # archive path is explicit and the deck/seed/environment still have to match.
-            same_task_id = (demo_meta['task']['id'] == args.task_id or
+            demo_task_id = demo_meta['task'].get('id')
+            same_task_id = (demo_task_id is not None and (demo_task_id == args.task_id or
                             (isinstance(args.task_id, str) and
-                             args.task_id.startswith(demo_meta['task']['id'] + '_')))
+                             args.task_id.startswith(demo_task_id + '_'))))
             if ((not same_task_id and drill_spec(task_definition) is None) or
                     [deck_card(card) for card in demo_meta['task']['deck']] !=
                     [deck_card(card) for card in kw['deck']] or
@@ -472,7 +473,8 @@ def _play(job: dict, observer=None) -> dict:
             if drill_spec(task_definition) is not None:
                 obs, prefix = restore_prefix(env, Path(demo_archive), args.demo_decision,
                                              demo_frames, demo_meta,
-                                             fog_observation=task.fog_observation)
+                                             fog_observation=task.fog_observation,
+                                             cache=_W.get('drill_prefix_cache'))
             else:
                 from human_demo import replay
                 obs, _, prefix = replay(env, Path(demo_archive), decision=args.demo_decision,
@@ -559,7 +561,10 @@ def _play(job: dict, observer=None) -> dict:
             # ENV_SKIP_HEIGHT (bit 4) drops PlantDrawHeightOffset, which only moves a plant's
             # reanim on screen; the student never reads it, and the final board state is
             # unchanged (MEMORY/docs/task166c-fog-profile.md).
-            obs = env.rollout(None, 0, max_actions=MAX_ACTIONS, sim_skip=4)
+            obs = env.rollout(None, 0 if drill_horizon is None else drill_root_tick + drill_horizon,
+                              max_actions=MAX_ACTIONS, sim_skip=4,
+                              **(dict(student_history=fast_state.get('history'))
+                                 if drill_horizon is not None else {}))
             details = env._last_response
             decisions, mowers_left = details["decisions"], details["mowers_left"]
             planted = planted_slots(details)

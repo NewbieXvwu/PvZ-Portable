@@ -1383,6 +1383,10 @@ class TrainingPipeline:
                    '--seed-ledger', str(self.args.seed_ledger)]
         command += ['--candidates', json.dumps(frozen['candidates']),
                     '--calibration', json.dumps(frozen['calibration'])]
+        command += ['--exam-bank', str(getattr(self.args, 'exam_bank', ROOT / 'configs/task242_exam.json')),
+                    '--exam-sides', getattr(self.args, 'exam_sides', 'A,B'),
+                    '--exam-training-manifest',
+                    str(getattr(self.args, 'drill_manifest', ROOT / 'configs/task235_drills.json'))]
         started = time.time()
         log_line(self.args.log, f'background round {job["round"]} evaluate started against '
                                 f'{frozen["incumbent"]} eval_units={units}')
@@ -1404,12 +1408,17 @@ class TrainingPipeline:
         if decision.get('monitor'):
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
-                f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
+                f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()
+                if name != 'tactical_exam'))
         experiment = experiment_name(job)
         self._marker(folder / 'ab_result.json', dict(round=job['round'], experiment=experiment,
             seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
             candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
-            calibration=frozen['calibration'], **(decision.get('ab') or
+            calibration=frozen['calibration'],
+            monitor=dict(heldout={side: result['monitor']
+                                  for side, result in decision.get('candidates', {}).items()},
+                         tactical_exam=decision.get('monitor', {}).get('tactical_exam')),
+            **(decision.get('ab') or
                 dict(available=False, reason='evaluation or training candidate unavailable'))))
         if decision.get('approved'):
             import shutil
@@ -2660,6 +2669,9 @@ def main() -> None:
     parser.add_argument('--promotion-panel', type=Path,
                         default=ROOT / 'configs/gate_v8_panel.json',
                         help='registered v8 deck panel for the mandatory paired promotion gate')
+    parser.add_argument('--exam-bank', type=Path, default=ROOT / 'configs/task242_exam.json',
+                        help='fixed tactical exam, reported only and never a promotion veto')
+    parser.add_argument('--exam-sides', default='A,B', help='exam candidates; B reduces monitor cost')
     parser.add_argument('--seed-ledger', type=Path, default=Path(SEED_LEDGER_DEFAULT),
                         help='out-of-git gate seed ledger (task73b; v2 gates allocate fresh-seed blocks here)')
     parser.add_argument('--start-seed-ledger', type=Path, default=Path(START_SEED_LEDGER_DEFAULT),

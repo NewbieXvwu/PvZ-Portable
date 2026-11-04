@@ -1,0 +1,692 @@
+{
+  "task": "task242",
+  "title": "战术考试：校准题集与门禁旁路监控",
+  "created": "2026-11-04",
+  "status": "完成，分支 exam242；未部署",
+  "base_commit": "d35a1fdf",
+  "veto": false,
+  "bank": {
+    "path": "configs/task242_exam.json",
+    "sha256": "48941d5bf0635e20dc56fbc859740d9b1e7bbdc89529a0ed16f78c8424f7e8dc",
+    "items": 100,
+    "terrain": {
+      "fog": 20,
+      "night": 6,
+      "pool": 15,
+      "roof": 59
+    },
+    "skills": {
+      "fog|balloon": 6,
+      "fog|jack": 4,
+      "fog|pogo": 10,
+      "night|football": 3,
+      "night|polevaulter": 3,
+      "pool|dolphin": 2,
+      "pool|football": 3,
+      "pool|polevaulter": 3,
+      "pool|snorkel": 6,
+      "pool|zamboni": 1,
+      "roof|football": 13,
+      "roof|gargantuar": 13,
+      "roof|jack": 4,
+      "roof|ladder": 13,
+      "roof|pogo": 4,
+      "roof|polevaulter": 12
+    },
+    "archives": 77,
+    "exam_seeds": [
+      242200000,
+      242200100
+    ],
+    "seed_end_exclusive": true,
+    "seeds_per_item": 1,
+    "horizon_ticks": 1200,
+    "success": "时限内目标僵尸全部死亡或离场，割草机未消耗且未破屋；复用 drill_start.judge",
+    "excluded_weak_targets": [
+      "digger",
+      "bungee",
+      "catapult",
+      "bobsled"
+    ]
+  },
+  "calibration": {
+    "student": "r112",
+    "seeds_per_model_per_item": 3,
+    "rule": "老师成功率在 20–80%，或老师与 r112 成功率不同；两边必须完成相同的三个种子",
+    "selection": "按地形×僵尸类型逐层轮流选取，层内先选恢复耗时较低的题，冻结 100 题",
+    "fog": {
+      "original_unique_items": 660,
+      "training_archive_excluded_pool": 409,
+      "teacher_three_of_three_rechecked_with_r112": 89,
+      "selected": 20,
+      "seeds": [
+        88000000,
+        88000001,
+        88000002
+      ],
+      "reused_teacher_games": 267,
+      "reuse_reason": "雾区生产老师使用同一 GPT 先验、价值网、引擎与搜索参数，复用 task235 成功记录"
+    },
+    "new": {
+      "archive_sample": 352,
+      "initial_items": 409,
+      "extra_items": 64,
+      "seeds": [
+        242100000,
+        242100001,
+        242100002
+      ],
+      "method": "台式机只读生产存档，调用现有 drill_mine.mine_archive；horizon=1200、lookback=300、min_gap=900"
+    },
+    "considered": {
+      "candidates": 562,
+      "complete": 556,
+      "eligible": 105,
+      "eligible_skills": {
+        "fog|jack": 4,
+        "fog|balloon": 6,
+        "fog|pogo": 10,
+        "night|football": 3,
+        "pool|football": 3,
+        "roof|pogo": 4,
+        "roof|polevaulter": 12,
+        "pool|snorkel": 6,
+        "roof|football": 14,
+        "roof|ladder": 16,
+        "roof|gargantuar": 14,
+        "roof|jack": 4,
+        "night|polevaulter": 3,
+        "pool|dolphin": 2,
+        "pool|polevaulter": 3,
+        "pool|zamboni": 1
+      },
+      "selected": {
+        "items": 100,
+        "skills": {
+          "fog|balloon": 6,
+          "fog|jack": 4,
+          "fog|pogo": 10,
+          "night|football": 3,
+          "night|polevaulter": 3,
+          "pool|dolphin": 2,
+          "pool|football": 3,
+          "pool|polevaulter": 3,
+          "pool|snorkel": 6,
+          "pool|zamboni": 1,
+          "roof|football": 13,
+          "roof|gargantuar": 13,
+          "roof|jack": 4,
+          "roof|ladder": 13,
+          "roof|pogo": 4,
+          "roof|polevaulter": 12
+        }
+      },
+      "selection_excluded": {
+        "no_observed_discrimination": 451,
+        "incomplete_calibration": 6
+      }
+    },
+    "selected_skill_results": {
+      "fog|balloon": {
+        "items": 6,
+        "teacher_wins": 18,
+        "incumbent_wins": 0,
+        "games_per_model": 18
+      },
+      "fog|jack": {
+        "items": 4,
+        "teacher_wins": 12,
+        "incumbent_wins": 3,
+        "games_per_model": 12
+      },
+      "fog|pogo": {
+        "items": 10,
+        "teacher_wins": 30,
+        "incumbent_wins": 3,
+        "games_per_model": 30
+      },
+      "night|football": {
+        "items": 3,
+        "teacher_wins": 5,
+        "incumbent_wins": 6,
+        "games_per_model": 9
+      },
+      "night|polevaulter": {
+        "items": 3,
+        "teacher_wins": 2,
+        "incumbent_wins": 7,
+        "games_per_model": 9
+      },
+      "pool|dolphin": {
+        "items": 2,
+        "teacher_wins": 4,
+        "incumbent_wins": 3,
+        "games_per_model": 6
+      },
+      "pool|football": {
+        "items": 3,
+        "teacher_wins": 6,
+        "incumbent_wins": 4,
+        "games_per_model": 9
+      },
+      "pool|polevaulter": {
+        "items": 3,
+        "teacher_wins": 2,
+        "incumbent_wins": 8,
+        "games_per_model": 9
+      },
+      "pool|snorkel": {
+        "items": 6,
+        "teacher_wins": 6,
+        "incumbent_wins": 10,
+        "games_per_model": 18
+      },
+      "pool|zamboni": {
+        "items": 1,
+        "teacher_wins": 2,
+        "incumbent_wins": 3,
+        "games_per_model": 3
+      },
+      "roof|football": {
+        "items": 13,
+        "teacher_wins": 16,
+        "incumbent_wins": 17,
+        "games_per_model": 39
+      },
+      "roof|gargantuar": {
+        "items": 13,
+        "teacher_wins": 12,
+        "incumbent_wins": 21,
+        "games_per_model": 39
+      },
+      "roof|jack": {
+        "items": 4,
+        "teacher_wins": 7,
+        "incumbent_wins": 6,
+        "games_per_model": 12
+      },
+      "roof|ladder": {
+        "items": 13,
+        "teacher_wins": 25,
+        "incumbent_wins": 19,
+        "games_per_model": 39
+      },
+      "roof|pogo": {
+        "items": 4,
+        "teacher_wins": 3,
+        "incumbent_wins": 11,
+        "games_per_model": 12
+      },
+      "roof|polevaulter": {
+        "items": 12,
+        "teacher_wins": 11,
+        "incumbent_wins": 11,
+        "games_per_model": 36
+      }
+    },
+    "games_with_reused_teacher": 3372,
+    "errors": 36,
+    "wall_seconds": {
+      "new": 1372.764,
+      "extra": 237.445,
+      "fog_student": 32.26,
+      "legacy_retry": 1.49
+    },
+    "limitation": "三个种子仅支持初步难度筛选。各技能题数不均，低题数层仅作观察，不作显著性或晋升判断",
+    "selected_teacher_in_band_items": 47,
+    "selected_teacher_student_different_items": 93,
+    "selected_overall": {
+      "teacher_wins": 161,
+      "incumbent_wins": 132,
+      "games_per_model": 300
+    }
+  },
+  "split": {
+    "training_manifest": "configs/task235_drills.json",
+    "training_manifest_sha256": "7927b33eb658926a6457fb0ed8c167048e754f80cfe5c4f2ffdd438d2fcd2101",
+    "training_cells": 83,
+    "training_archives": 63,
+    "training_seed_block": [
+      53000000,
+      53021248
+    ],
+    "archive_overlap": 0,
+    "future_seed_overlap": 0,
+    "calibration_seed_overlap": 0,
+    "rule": "整来源存档隔离，严于只隔离起点；运行前只读当前 drill 训练清单检查路径与未来种子，绝不重放训练题",
+    "no_training_output": "考试仅写数值结果，不生成训练帧，不登记 curriculum cell"
+  },
+  "environment": {
+    "machine": "Mac，无窗口，采集持续运行，游戏测量最多 2 个工作进程",
+    "executable": "/Users/newbiexvwu/pvz-mac-collect/build2/pvz-portable",
+    "engine_revision": "482729be824bd280078c2e2c3a8ef6056200cafe",
+    "desktop": "只读挖题，nice -n 19 ionice -c3，内存上限 4 GB，无游戏或 pytest，无 GPU",
+    "models": {
+      "r111": {
+        "sha256": "aafeccf7563cdc83f1596f63d727b4f95c752e5f559cdc7aba9650187ea9e4b3",
+        "bytes": 4447342
+      },
+      "r112": {
+        "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57",
+        "bytes": 5467950
+      },
+      "teacher_prior": {
+        "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+      },
+      "value": {
+        "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+      },
+      "roof_value": {
+        "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+      },
+      "static": {
+        "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+      }
+    },
+    "teacher": "drill_run.TEACHER：per_card=1, student_candidates=2, samples=3, verify=9, horizon=2500, min_gap=300；雾区 save_candidates=1，雾与屋顶用 GPT 先验，其余用 r112"
+  },
+  "cost": {
+    "per_candidate_games": 100,
+    "default_AB_incumbent_games": 300,
+    "B_incumbent_games": 200,
+    "mac_measured": {
+      "workers": 2,
+      "seconds": 75.028,
+      "games": 200,
+      "includes": "进程启动、模型导出、存档读取、首次前缀回放和两模型考试"
+    },
+    "desktop_estimate": {
+      "eval_units": 4,
+      "B_incumbent_seconds": 37.514,
+      "AB_incumbent_seconds": 56.271,
+      "planned_range_seconds": [
+        60,
+        120
+      ],
+      "assumption": "按高负载 Mac 单调时钟总耗时与局数线性换算到 4 个评估单元，计入启动及调度余量预计 1–2 分钟；未在生产台式机跑考试"
+    },
+    "limit_seconds": 300,
+    "timeout_behavior": "终止考试独立进程组，记录 skipped，保留门禁结论",
+    "optimization": "每题首次完整恢复后缓存一个引擎快照及完整历史，后续模型只恢复并重新播种；换题释放",
+    "cached_reference": {
+      "items": 8,
+      "games": 48,
+      "workers": 2,
+      "seconds": 76.736
+    },
+    "cache_equivalence": {
+      "games": 24,
+      "win_differences": 0,
+      "end_tick_differences": 0
+    }
+  },
+  "integration": {
+    "files": [
+      "scripts/tactical_exam.py",
+      "scripts/exam_select.py",
+      "scripts/drill_start.py",
+      "scripts/search_play.py",
+      "scripts/promotion_gate.py",
+      "scripts/curriculum_queue.py"
+    ],
+    "timing": "原门禁评分与 decision.json 先落盘，评估单元空出后再考；最多 4 个工作进程",
+    "models": "默认 A/B/现任同题同种子；--exam-sides B 缩小到 B/现任",
+    "outputs": [
+      "evaluation.log",
+      "decision.json.monitor.tactical_exam",
+      "ab_result.json.monitor.tactical_exam"
+    ],
+    "fields": "每技能双方胜负、gain/harm、配对净差、区间与缺失配对，另有 A-B 比较",
+    "isolation": "单局异常记缺失配对，进程崩溃/超时/报告缺失记 skipped；不修改 approved/reasons/winner 或门禁契约",
+    "reuse": "游戏、特征、搜索与学生推理使用现有 C++ 路径，Python 仅编排与统计；未另写规则策略"
+  },
+  "tests": {
+    "directed": "11 passed, 5 deselected，2.29 秒；监控字典隔离修正后相关 1 例通过（0.07 秒）",
+    "command": "ulimit -f 2000000; timeout 300 python3 -m pytest python/test_tactical_exam.py python/test_drill_start.py -k \"exam or short_horizon_is_measured or local_success_criterion_is_mechanical\" -q",
+    "coverage": "同题种子配对、缺失处理、训练来源与种子隔离、单次恢复、分层筛选、崩溃/超时/缺报告隔离、考试退步不否决、ab_result 持久化",
+    "real_models": "r111 与 r112 只读副本，先完成 8 题×3 种子×2 模型，再跑冻结题集；均最多 2 个工作进程"
+  },
+  "sample": {
+    "candidate": "历史 r111（B）",
+    "incumbent": "r112",
+    "status": "ok",
+    "missing_pairs": 0,
+    "overall": {
+      "expected_pairs": 100,
+      "missing_pairs": 0,
+      "pairs": 100,
+      "candidate_wins": 47,
+      "incumbent_wins": 45,
+      "gain": 8,
+      "harm": 6,
+      "both_win": 39,
+      "both_lose": 47,
+      "delta_rate": 0.02,
+      "ci95": [
+        -0.054728701975527205,
+        0.09417488055898582
+      ],
+      "mcnemar_worse_p": 0.78802490234375,
+      "candidate_losses": 53,
+      "incumbent_losses": 55
+    },
+    "skills": {
+      "fog|balloon": {
+        "expected_pairs": 6,
+        "missing_pairs": 0,
+        "pairs": 6,
+        "candidate_wins": 0,
+        "incumbent_wins": 0,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 0,
+        "both_lose": 6,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.3903342879021652,
+          0.3903342879021652
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 6,
+        "incumbent_losses": 6
+      },
+      "fog|jack": {
+        "expected_pairs": 4,
+        "missing_pairs": 0,
+        "pairs": 4,
+        "candidate_wins": 3,
+        "incumbent_wins": 1,
+        "gain": 2,
+        "harm": 0,
+        "both_win": 1,
+        "both_lose": 1,
+        "delta_rate": 0.5,
+        "ci95": [
+          -0.1354884005829513,
+          0.7890832680847557
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 1,
+        "incumbent_losses": 3
+      },
+      "fog|pogo": {
+        "expected_pairs": 10,
+        "missing_pairs": 0,
+        "pairs": 10,
+        "candidate_wins": 5,
+        "incumbent_wins": 2,
+        "gain": 3,
+        "harm": 0,
+        "both_win": 2,
+        "both_lose": 5,
+        "delta_rate": 0.3,
+        "ci95": [
+          -0.05295300126521835,
+          0.5665478379157729
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 5,
+        "incumbent_losses": 8
+      },
+      "night|football": {
+        "expected_pairs": 3,
+        "missing_pairs": 0,
+        "pairs": 3,
+        "candidate_wins": 2,
+        "incumbent_wins": 2,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 2,
+        "both_lose": 1,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.47137741565836877,
+          0.47137741565836877
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 1,
+        "incumbent_losses": 1
+      },
+      "night|polevaulter": {
+        "expected_pairs": 3,
+        "missing_pairs": 0,
+        "pairs": 3,
+        "candidate_wins": 2,
+        "incumbent_wins": 2,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 2,
+        "both_lose": 1,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.47137741565836877,
+          0.47137741565836877
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 1,
+        "incumbent_losses": 1
+      },
+      "pool|dolphin": {
+        "expected_pairs": 2,
+        "missing_pairs": 0,
+        "pairs": 2,
+        "candidate_wins": 1,
+        "incumbent_wins": 1,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 1,
+        "both_lose": 1,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.5734194679697172,
+          0.5734194679697172
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 1,
+        "incumbent_losses": 1
+      },
+      "pool|football": {
+        "expected_pairs": 3,
+        "missing_pairs": 0,
+        "pairs": 3,
+        "candidate_wins": 1,
+        "incumbent_wins": 2,
+        "gain": 0,
+        "harm": 1,
+        "both_win": 1,
+        "both_lose": 1,
+        "delta_rate": -0.3333333333333333,
+        "ci95": [
+          -0.7177751119240839,
+          0.31580068443749115
+        ],
+        "mcnemar_worse_p": 0.5,
+        "candidate_losses": 2,
+        "incumbent_losses": 1
+      },
+      "pool|polevaulter": {
+        "expected_pairs": 3,
+        "missing_pairs": 0,
+        "pairs": 3,
+        "candidate_wins": 2,
+        "incumbent_wins": 2,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 2,
+        "both_lose": 1,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.47137741565836877,
+          0.47137741565836877
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 1,
+        "incumbent_losses": 1
+      },
+      "pool|snorkel": {
+        "expected_pairs": 6,
+        "missing_pairs": 0,
+        "pairs": 6,
+        "candidate_wins": 5,
+        "incumbent_wins": 3,
+        "gain": 2,
+        "harm": 0,
+        "both_win": 3,
+        "both_lose": 1,
+        "delta_rate": 0.3333333333333333,
+        "ci95": [
+          -0.1717038002551573,
+          0.6742831315008133
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 1,
+        "incumbent_losses": 3
+      },
+      "pool|zamboni": {
+        "expected_pairs": 1,
+        "missing_pairs": 0,
+        "pairs": 1,
+        "candidate_wins": 1,
+        "incumbent_wins": 1,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 1,
+        "both_lose": 0,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.7934506856227626,
+          0.7934506856227626
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 0,
+        "incumbent_losses": 0
+      },
+      "roof|football": {
+        "expected_pairs": 13,
+        "missing_pairs": 0,
+        "pairs": 13,
+        "candidate_wins": 5,
+        "incumbent_wins": 6,
+        "gain": 0,
+        "harm": 1,
+        "both_win": 5,
+        "both_lose": 7,
+        "delta_rate": -0.07692307692307693,
+        "ci95": [
+          -0.25802173793124655,
+          0.1162577897703431
+        ],
+        "mcnemar_worse_p": 0.5,
+        "candidate_losses": 8,
+        "incumbent_losses": 7
+      },
+      "roof|gargantuar": {
+        "expected_pairs": 13,
+        "missing_pairs": 0,
+        "pairs": 13,
+        "candidate_wins": 6,
+        "incumbent_wins": 8,
+        "gain": 0,
+        "harm": 2,
+        "both_win": 6,
+        "both_lose": 5,
+        "delta_rate": -0.15384615384615385,
+        "ci95": [
+          -0.35662167395722655,
+          0.08069712294301015
+        ],
+        "mcnemar_worse_p": 0.25,
+        "candidate_losses": 7,
+        "incumbent_losses": 5
+      },
+      "roof|jack": {
+        "expected_pairs": 4,
+        "missing_pairs": 0,
+        "pairs": 4,
+        "candidate_wins": 1,
+        "incumbent_wins": 1,
+        "gain": 0,
+        "harm": 0,
+        "both_win": 1,
+        "both_lose": 3,
+        "delta_rate": 0.0,
+        "ci95": [
+          -0.42716620538637595,
+          0.42716620538637595
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 3,
+        "incumbent_losses": 3
+      },
+      "roof|ladder": {
+        "expected_pairs": 13,
+        "missing_pairs": 0,
+        "pairs": 13,
+        "candidate_wins": 8,
+        "incumbent_wins": 7,
+        "gain": 1,
+        "harm": 0,
+        "both_win": 7,
+        "both_lose": 5,
+        "delta_rate": 0.07692307692307693,
+        "ci95": [
+          -0.11625778977034298,
+          0.2580217379312465
+        ],
+        "mcnemar_worse_p": 1.0,
+        "candidate_losses": 5,
+        "incumbent_losses": 6
+      },
+      "roof|pogo": {
+        "expected_pairs": 4,
+        "missing_pairs": 0,
+        "pairs": 4,
+        "candidate_wins": 2,
+        "incumbent_wins": 3,
+        "gain": 0,
+        "harm": 1,
+        "both_win": 2,
+        "both_lose": 1,
+        "delta_rate": -0.25,
+        "ci95": [
+          -0.6552866603491048,
+          0.31955725151330316
+        ],
+        "mcnemar_worse_p": 0.5,
+        "candidate_losses": 2,
+        "incumbent_losses": 1
+      },
+      "roof|polevaulter": {
+        "expected_pairs": 12,
+        "missing_pairs": 0,
+        "pairs": 12,
+        "candidate_wins": 3,
+        "incumbent_wins": 4,
+        "gain": 0,
+        "harm": 1,
+        "both_win": 3,
+        "both_lose": 8,
+        "delta_rate": -0.08333333333333333,
+        "ci95": [
+          -0.30171172280074143,
+          0.1409636594572995
+        ],
+        "mcnemar_worse_p": 0.5,
+        "candidate_losses": 9,
+        "incumbent_losses": 8
+      }
+    },
+    "note": "真实运行结果，r111 仅作为配对格式与成本示例，不是待晋升的新模型"
+  },
+  "deployment": {
+    "performed": false,
+    "steps": [
+      "合入 exam242 的代码、configs/task242_exam.json 和文档。",
+      "保留题集引用的台式机生产存档；运行器直接读这些路径，不复制进 git。",
+      "按现有流程在正常轮次边界重启 qc，默认读取固定题集，无需修改 curriculum_state.json。",
+      "默认评估 A/B/现任；若实机额外耗时超过预算，启动参数设 --exam-sides B。",
+      "从 evaluation.log 与 ab_result.json.monitor.tactical_exam 查看体检表，晋升仍由原门禁决定。"
+    ]
+  },
+  "cleanup": "Mac artifacts/task242 与台式机 ~/pvz-logs/task242 的任务中间文件清理；HF transfer/task242 数据取用后删除，生产存档与采集未改动"
+}
