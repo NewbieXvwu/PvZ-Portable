@@ -1383,3 +1383,4 @@
   - 学习率降到 1/4 后，白天照样掉，而且比从头重训的 A 掉得更多（A 白天平均约 −6 / 96），泳池则大涨。
   - 判断：问题可能在数据构成上——当前数据把白天往偏离门禁的方向拉，把泳池往对的方向拉。
   - 派 task231（dsh，mixaudit 工作树，只读）：r101 与 r108 配方按区 × 来源 × 倍率 × 卡组族统计训练行，查白天新增行的来源，可选做离线分歧对比，给出 1–2 个单变量实验建议。
+- 11-04 12:40 dsh 服务约 12:20 重启：MCP 桥接（dsh-bridge）此后一直报 `Error POSTing to endpoint: not found`，task231 停在半路（中间结果在 mixaudit/.task231/）。headless 命令行续不了 MCP 开的会话（`runs under agent preset "standard"`），于是用 `~/pvz-dsh/dshjob task231b` 新开 headless 任务，复用中间结果接着做（session-601aa6ec，确认走 opencode-go）。
