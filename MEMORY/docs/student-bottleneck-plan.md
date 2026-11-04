@@ -1513,3 +1513,8 @@
   - 约 4000 局重放、约 38 万行，同数据 v5 对照；离线三方对比（v6 / 同数据 v5 / 生产 v5）。
   - 老师换叶值整局配对（每地形 1–2 关 × 32 对）；铲子误判用独立裁判复测。不上生产。
   - 为它让资源，Mac 采集降到 8 worker（新进程组 50964）。
+- 11-05 00:45 **Mac 过载**（负载 58 / 15 核）：采集 8 + task243 重放 6 进程 + 6 引擎 + task242 考试 2 + 用户自己的 iOS 模拟器 / qodercli。处理：task243 / task242 的进程组 renice 到 10，采集降到 6 worker（新进程组 77692，nice 10）。
+- 11-05 00:50 **集成分支 pkg238 9ab2dd12** = 生产 d35a1fdf + review241（task241 修复）+ task238（导入器 / GPT 包代码 / scenario 引擎源码）。
+  - 台式机临时工作树验证：新 human_demo_tasks.json（192 条，demo_start 31，多出 43 条 llmplay_frontier 非起点项）可被 curriculum_queue 正常加载；drill 清单 83；import_llm_run 可运行。
+  - 用 `autodeploy-pkg238` 取代 `autodeploy-review241`：等 r114 结束后 deploy26 9ab2dd12。
+  - 台式机后台低优先级编译 scenario 引擎（`~/pvz-logs/build-scenario1`，systemd build-scenario1，nice 19、-j4），完成后放 `artifacts/production/scenario1/`，只给导入 scenario 存档用。
