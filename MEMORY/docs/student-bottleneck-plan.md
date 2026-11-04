@@ -1458,3 +1458,13 @@
 - 11-04 21:20 **226 包第二次交回**（`LLMPlay_2026-11-04_182006_HKT.zip.001`，43 MB）：resume 接上后累计已打 379 / 8392，剩 8013；存档 380 份，全是夜间中盘接回，378 胜。台式机导入 import-226b exit 0：380 份里 378 份通过入库，2 份失败（应为 2 局败局）；与上次重复的 101 份由回执去重。导入后删了台式机副本。用户下次续跑用这一份交回分卷，11-03 那份已被取代。
 - 11-04 21:40 **226b 包**（`~/Downloads/pvz-llmplay-226b/`，pkg md5 f6444805…，res 7c55cd5b… 与 226 相同）：只把中盘接回的地形顺序从 夜 > 池 > 日 > 雾 改为 **雾 > 屋顶 > 池 > 夜 > 日**（`configs/llmplay_seeds.json` 的 `resume.terrain_order`），其余逐字节不变。实测队首全是雾关的新鲜项（priority 0）。理由：必刷题实测雾关学生救场 8% vs 老师 31%；夜间 GPT 99% 胜、学生不差。续跑仍用 `llmplay.resume(最新交回分卷)`，resume 不校验包版本。
 - 11-04 21:10 **r112 B 晋升**（连续第二次蒸馏 B 晋升，20:58 激活）：look 1 即通过，+3.7pp；A −9.7pp（泳池、夜间）。B 以 r111 为初始化与蒸馏教师（distill 5、lr 0.0005、4 epoch）。Mac 08:03（Mac 时间）切电池，看门狗自动冻结采集。
+- 11-04 21:45 **task237 完成**（scenario 13643df1）：C++ 新增 `SPAWN <type> <row> <x> [target_col]`、`SET_SUN`、`SET_COOLDOWN`、`SET_WAVE`（只能往前），都是普通 operation，写进存档、可重放。Python 薄接口 `PvZEnv.spawn / set_sun / set_cooldown / set_wave`，`Game.from_archive(path, decision)`。
+  - 10 类特殊僵尸行为验证正常；非法组合会被拒绝。
+  - 不改存档格式，旧存档照常重放；含 SPAWN 的存档能通过导入器。
+  - 不用新命令时与生产 build2 逐位一致（90 / 90 状态哈希）。
+  - 出题示例 `scripts/llmplay/examples/drill_scenario.py`。未部署（生产暂不需要，出题包用）。
+- 11-04 21:45 **task235 上线**（drillcells d35a1fdf，deploy26 exit 0，21:41 新增 83 个 drill cell）。
+  - 题库：生产存档挖出 660 题，老师 r111 在 3 个 RESEED 下全对或全错的剔除，保留 81 题 + 2 道 L36 覆盖锚。老师平均 49%。类型：小丑 31、气球 24、跳跳 17、橄榄球 7、矿工 3、海豚 1。
+  - 机制：drill_start = demo_start + 1200 tick 视界 + 机械判据（目标僵尸离场 / 死、无割草机、无破屋）；课程按局部成功率统计；每轮约 36 局（4.7%），耗时 <1%；drill 行训练权重 ×3（DemoRowWeights，加载时施加，共用包）。
+  - 回滚：改名 `configs/task235_drills.json` 后重启，或 `--drill-share 0`。
+- 11-04 21:45 task236 第一次跑因 dsh `TRANSPORT: Connection error` 只说了一句就结束，已用 `dshjob --continue` 续跑。
