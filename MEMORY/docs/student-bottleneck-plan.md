@@ -1527,3 +1527,9 @@
   - 已实现 reference_terminal 评分、多清单加载、7 个泳池升级链 cell（task240_drills.json，共用 5% 预算与 ×3 行权重）。`COMBO_BASES` 改为从 Plant.cpp 解析，已核对与原常量相同。
   - 合进集成分支 **6b127e14**；布 `autodeploy-integ240`，等 r115 结束后部署。
 - 11-05 02:45 Mac 负载再到 77：Codex 新开的进程组未降优先级，已 renice 10。期间 Mac→台式机 SSH 多次超时（Tailscale ping 正常，疑为 Mac 过载）。台式机 scenario 引擎首次编译失败：cmake 拉 mimalloc 没走代理。已加 https_proxy 重编（build-scenario1b）。
+- 11-05 05:00 CST **Mac 自 02:08 起进入闲置睡眠**：用户不在、屏幕关闭，接着电。此后每 15 分钟 DarkWake 约 40–60 s 后又睡；其中一半是 “Dark Wake Thermal Emergency”：DarkWake 时我们的满载作业让机器过热，被强制睡眠。
+  - 后果：Mac → 台式机 SSH 大量超时，Codex task243 只能在短暂唤醒时推进，/loop 也只在唤醒时触发。
+  - 已冻结 Mac 采集降热（`freeze.sh stop`，进程组 77692；看门狗不会自动解这次手动冻结）。
+  - 是否用 caffeinate 让接电时保持唤醒，属于改系统行为，等用户决定。台式机生产不受影响。
+  - 期间合入 task242 战术考试，并修了一个合并后的 bug：drill 清单改为列表后，考试收到的是列表的字符串形式，每次都会被跳过。修复见 pkg238 a7ca891c。另布 `autodeploy-integ242`。
+  - 台式机 scenario 引擎重编成功（build-scenario1 exit 0）。
