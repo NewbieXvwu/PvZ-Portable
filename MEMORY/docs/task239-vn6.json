@@ -1,0 +1,706 @@
+{
+ "task": "task239",
+ "title": "价值网 v6：补齐植物/僵尸/波次内部状态（设计 + 小规模先导）",
+ "created": "2026-11-04",
+ "status": "C++ 编码 v6 + Python 训练接口 + 151 局先导；未上生产，未改默认值",
+ "environment": {
+  "machine": "Mac（采集 12 worker 继续运行，本任务最多 4 worker；未冻结采集）",
+  "engine": "/Users/newbiexvwu/pvz-mac-collect/build-vn6/pvz-portable",
+  "engine_sha256": "2f7e814c28ccfe6559cebca6ab033aea19dcfbc129a6d2a5a3b70b27219d85b5",
+  "engine_build_dir": "~/pvz-mac-collect/build-vn6（独立目录，build2 未触碰）",
+  "engine_source_base": "19028509",
+  "resources": "~/.cache/pvz-research-resources",
+  "python": "~/pvz-torch-venv（torch 2.15.0，MPS）",
+  "pilot_models": {
+   "v5": "artifacts/task239/models_lr2/v5.pt",
+   "v6": "artifacts/task239/models_lr2/v6.pt",
+   "v5_sha256": "1c41c72e3166da857150c7d16e418a99305857dc89ff926186d289260984fb93",
+   "v6_sha256": "b7a086547dc70c35fb7df479243ef89c984159653d6fa01a53f31a7d7053c92f"
+  }
+ },
+ "versioning": {
+  "cpp_header": "PVZVN001（magic 不变，version 字段升到 6；迁移期 1/2/3/4/5/6 均可加载）",
+  "production_v5": "encoder 2：92 board channels + 119 scalars + 35 task context",
+  "v6": "encoder 6：139 board channels + 125 scalars + 35 task context",
+  "layout": "v6 的前 92 个 board 通道和前 119 个 scalar 与 v5 逐位相同，之后依次追加 v5 的 bungee/sleep/timer 12 通道（92..103）、v6 内部状态 35 通道（104..138）、6 个 v6 scalar（119..124），最后是 context",
+  "compatibility": "旧 v5 checkpoint 不改即可加载；用同一 reset 局面比较 C++ v5 特征与 Python encode_frame(v2)，board/scalar maxdiff = 0.0",
+  "python": "ValueNet 支持 encoder_version 6（139/125）；encode_frame(version=6) 明确抛 NotImplementedError，v6 特征只由 C++ 生成，避免第二套实现漂移"
+ },
+ "feature_design": {
+  "principle": "只加“当前状态中会影响未来”的量；不加年龄、已投入阳光、动画帧、受击闪白等沉没成本/纯表现量。",
+  "plant_channels": [
+   {
+    "name": "mState",
+    "encoding": "max(state)/32",
+    "why": "土豆雷埋/出土、大嘴花咀嚼、窝瓜起跳、玉米炮装填"
+   },
+   {
+    "name": "mStateCountdown",
+    "encoding": "max(clamp(countdown,0,4000))/4000",
+    "why": "距下一次状态变化；土豆雷 1500、大嘴花 4000、窝瓜/玉米炮更短"
+   },
+   {
+    "name": "mDoSpecialCountdown",
+    "encoding": "max(clamp(countdown,0,100))/100",
+    "why": "樱桃/辣椒/寒冰菇/毁灭菇/咖啡豆引爆或唤醒倒计时"
+   },
+   {
+    "name": "launch progress",
+    "encoding": "launchRate>0 ? 1 - clamp(launchCounter,0)/launchRate : 0",
+    "why": "下一次射击/产阳光还剩多少；这是铲向日葵经济账的核心"
+   },
+   {
+    "name": "mLaunchRate",
+    "encoding": "clamp(rate,0,3000)/3000",
+    "why": "产阳光/射击周期；与类型共同决定未来产出"
+   },
+   {
+    "name": "mWakeUpCounter",
+    "encoding": "clamp(counter,0,1200)/1200",
+    "why": "夜间蘑菇醒来剩余时间"
+   },
+   {
+    "name": "mIsAsleep",
+    "encoding": "0/1",
+    "why": "睡着时不能攻击/生产"
+   },
+   {
+    "name": "mPlantHealth",
+    "encoding": "sum(clamp(health,0,1000))/1000（按格求和，clamp 1）",
+    "why": "v5 只有血量比例；绝对血量影响还能扛多久"
+   },
+   {
+    "name": "mTargetX",
+    "encoding": "max(x>0 ? x/800 : 0)",
+    "why": "窝瓜落点/玉米炮目标；只靠 state+countdown 不能完全恢复"
+   },
+   {
+    "name": "mTargetY",
+    "encoding": "max(y>0 ? y/600 : 0)",
+    "why": "同上"
+   },
+   {
+    "name": "mDisappearCountdown",
+    "encoding": "max(clamp(countdown,0,600))/600",
+    "why": "墓碑吞噬者/一次性植物还剩多久消失"
+   },
+   {
+    "name": "mSubclass",
+    "encoding": "max(clamp(subclass,0,4))/4",
+    "why": "玉米炮左右/上下等变体"
+   }
+  ],
+  "zombie_channels": [
+   {
+    "name": "mZombiePhase",
+    "encoding": "max(clamp(phase,0,32))/32",
+    "why": "撑杆跳有杆/无杆、跳跳、梯子、气球、舞王"
+   },
+   {
+    "name": "mPhaseCounter",
+    "encoding": "max(clamp(counter,0,3000))/3000",
+    "why": "当前 phase 内还剩多少 tick"
+   },
+   {
+    "name": "mVelX",
+    "encoding": "max(clamp(velX/2,-1,1))",
+    "why": "v5 按 80px 分格，速度完全丢失"
+   },
+   {
+    "name": "mVelZ",
+    "encoding": "max(clamp(velZ/2,-1,1))",
+    "why": "气球/跳跳的垂直速度"
+   },
+   {
+    "name": "mAltitude",
+    "encoding": "max(clamp(altitude,0,600))/600",
+    "why": "气球高度/跳跳抛物线；posY 不完全等价"
+   },
+   {
+    "name": "mFlyingHealth",
+    "encoding": "sum(clamp(flyingHealth,0,600))/600",
+    "why": "气球本体血量与飞行血量分开"
+   },
+   {
+    "name": "mMindControlled",
+    "encoding": "count/4",
+    "why": "被催眠的僵尸是友军；v5 仍按敌方计"
+   },
+   {
+    "name": "enemy count",
+    "encoding": "count/4",
+    "why": "同一格敌方僵尸数量；v5 只有总血量"
+   },
+   {
+    "name": "mUseLadderCol",
+    "encoding": "max(col>=0 ? (col+1)/10 : 0)",
+    "why": "梯子会架在哪一列"
+   },
+   {
+    "name": "mTargetCol",
+    "encoding": "max(col>=0 ? (col+1)/10 : 0)",
+    "why": "蹦极/投石目标列"
+   },
+   {
+    "name": "mSummonCounter",
+    "encoding": "max(clamp(counter,0,3000))/3000",
+    "why": "舞王下一次召唤伴舞"
+   },
+   {
+    "name": "mFlatTires",
+    "encoding": "count/4",
+    "why": "冰车轮胎被打掉后的速度变化"
+   },
+   {
+    "name": "mBodyHealth",
+    "encoding": "sum(clamp(body,0,200))/200",
+    "why": "v5 只有 body+helm+shield 总和"
+   },
+   {
+    "name": "mHelmHealth",
+    "encoding": "sum(clamp(helm,0,200))/200",
+    "why": "头盔剩余量"
+   },
+   {
+    "name": "mShieldHealth",
+    "encoding": "sum(clamp(shield,0,200))/200",
+    "why": "盾/门剩余量"
+   },
+   {
+    "name": "intact parts",
+    "encoding": "max((hasHead+hasArm+hasObject)/3)",
+    "why": "头/手/梯子是否还在"
+   },
+   {
+    "name": "mChilledCounter",
+    "encoding": "max(clamp(counter,0,1200))/1200",
+    "why": "v5 只有 chilled>0 布尔，剩余时间丢失"
+   },
+   {
+    "name": "mButteredCounter",
+    "encoding": "max(clamp(counter,0,1200))/1200",
+    "why": "黄油剩余时间"
+   },
+   {
+    "name": "mIceTrapCounter",
+    "encoding": "max(clamp(counter,0,1200))/1200",
+    "why": "冰冻陷阱剩余时间"
+   }
+  ],
+  "bullet_and_grid_channels": [
+   {
+    "name": "projectiles",
+    "encoding": "sum(0.125) per cell，clamp 1",
+    "why": "v5 完全没有子弹；按格计数，8 发封顶"
+   },
+   {
+    "name": "grid item type",
+    "encoding": "max(type/12)",
+    "why": "墓碑/弹坑/梯子/传送门/花瓶"
+   },
+   {
+    "name": "grid item state",
+    "encoding": "max(state/10)",
+    "why": "墓碑升起、花瓶内容等"
+   },
+   {
+    "name": "grid item counter",
+    "encoding": "max(clamp(counter,0,1200))/1200",
+    "why": "格子物品计时是审计里的明确盲区"
+   }
+  ],
+  "scalars": [
+   {
+    "name": "mZombieCountDown",
+    "encoding": "clamp/3000",
+    "why": "下一波倒计时"
+   },
+   {
+    "name": "mHugeWaveCountDown",
+    "encoding": "clamp/1000",
+    "why": "大波倒计时"
+   },
+   {
+    "name": "wave health remaining",
+    "encoding": "TotalZombiesHealthInWave(currentWave-1)/max(1,mZombieHealthWaveStart)，clamp 1",
+    "why": "本波还剩多少血"
+   },
+   {
+    "name": "mSunCountDown",
+    "encoding": "clamp/1200",
+    "why": "下一次天降阳光"
+   },
+   {
+    "name": "zombies on board",
+    "encoding": "clamp(count/50)",
+    "why": "全局压力"
+   },
+   {
+    "name": "plants on board",
+    "encoding": "clamp(count/45)",
+    "why": "全局阵地规模"
+   }
+  ],
+  "cell_convention": "同一格可能有南瓜+普通植物/睡莲：state/计时器/布尔取 max，血量取 sum（clamp 1）。",
+  "not_added": [
+   "mAnimCounter/年龄",
+   "已投入阳光",
+   "mRecentlyEatenCountdown/受击闪白",
+   "mDroppedLoot",
+   "mPlayingSong",
+   "boss 专用表现量",
+   "卡槽重复身份"
+  ],
+  "occupancy_pilot": {
+   "rows": 9664,
+   "launch_progress_nonzero": 0.274,
+   "health_abs_nonzero": 0.381,
+   "plant_state_nonzero": 0.076,
+   "phase_nonzero": 0.012,
+   "enemy_count_nonzero": 0.069,
+   "body_hp_nonzero": 0.065,
+   "bullets_nonzero": 0.028,
+   "grid_counter_nonzero": 0.017,
+   "note": "多数新通道稀疏但在关键局面非零；launch_progress/health_abs 的覆盖率最高，正对应向日葵/射手与铲子经济账。"
+  }
+ },
+ "data_source": {
+  "compact_frame_fields": "frames.npz 的每一行是 JSON：plants=[row,col,type,health,max_health]；zombies=[row,type,x,velocity_x,body+helm+shield,on_board,eating,chilled,ice_trap,id,scale]；mowers/packets/graves/scene/row_terrain/lanes/totals；可选 v2/v3/bungee/sleep/boss/fog_amount/conveyor_start。v5 的 featurizer 只读 plants/zombies/mowers/lanes/packets/scene/graves。",
+  "v2_block_fields": "wave_timer、huge_wave_countdown、wave_health、wave_start_health、sun_countdown、sun_pending；plants=[row,col,type,state,stateCountdown,doSpecialCountdown,launchCounter,launchRate]；zombies=[hasObject,helmHealth,shieldHealth]；projectiles=[row,x,damage]。仍然没有 zombie phase/phaseCounter/velZ/altitude/flyingHealth/mindControlled/ladderCol/targetCol/summonCounter/flatTires，没有 plant wakeUp/targetX/Y/disappear/subclass，没有 grid item counter 和 bullet motion/type。",
+  "v2_coverage": "抽样 80 份 artifacts/value_net/episodes（v5 的 L7 语料）：80/80 无 v2；80 份 artifacts/student/frames：80/80 无 v2；80 份 artifacts/hard_mac/frames：80/80 有 v2。也就是说 v5 当初的主要训练帧没有内部状态，新采集帧有 v2 但仍缺上表字段。",
+  "replay_required": "是。要拿到 v6 特征必须用存档里的操作序列在引擎里重放，再由 C++ EnvironmentValueNet（encoder 6）导出特征；不能从现有 frames 直接补列。",
+  "replay_determinism": "先导 169 局中 151 局重放成功，终局 tick/result 与存档 meta 一致；18 局失败（demo-start / 未来种子 _f 存档，reset 初态与 frame0 不一致），已剔除。另有部分存档 meta.operations 存的是 final tick，采集器改用 frame_count-1，并在 ticks.jsonl 缺失时用 frames 自带 action 组成操作带。",
+  "v5_training_source": "MEMORY/docs/value-widen-training.json：3,597 exposed seeds，branch fit/val 324,559/29,446 行 + episode 75,136/9,600 行，合计约 438,741 行；编码 pvz_value_net.featurize v2。task78 已确认原始 442,601 行语料本机/HF 都不在，无法行级复原。"
+ },
+ "pilot": {
+  "corpus": "桌面 frames_v2 的 154 局（day 32 / night 32 / pool 32 / fog 26 / roof 32）+ 17 局补采（pool 6 / fog 2 / roof 9）；按地形、胜负、关卡分散挑选。",
+  "valid_games": {
+   "day": 32,
+   "night": 32,
+   "pool": 34,
+   "fog": 24,
+   "roof": 29,
+   "total": 151
+  },
+  "rows": 9664,
+  "rows_by_terrain": {
+   "day": 2048,
+   "night": 2048,
+   "pool": 2176,
+   "fog": 1536,
+   "roof": 1856
+  },
+  "wins": 5376,
+  "frames_per_game": 64,
+  "features": "artifacts/task239/features/*.npz（board 139x60 float16，scalars 125，context 35，y/seed/op/level/game）",
+  "failed_games": 18,
+  "failed_reason": "demo-start / 未来种子 _f 存档的 reset 初态与 frame0 不同；不是逐位重放失败"
+ },
+ "training": {
+  "architecture": "ValueNet width 16，3 层 conv + row max + scalar MLP + head；dropout 0.5；AdamW lr 2e-4，weight_decay 0.01，batch 256，最多 12 epochs，按验证 log loss 早停",
+  "split": "按 (terrain, seed) 分 5 折，每个种子恰好落在一次留出集；同一 seed 的所有帧不跨折",
+  "v5_control": "encoder 2，board 取前 92 通道、scalar 取前 119 个，和 v6 用完全相同的行、标签、超参、随机种子",
+  "v6": "encoder 6，139 通道 + 125 scalar",
+  "device": "MPS",
+  "cv_seconds": 33
+ },
+ "results": {
+  "outcome_prediction_5fold": {
+   "v5": {
+    "log_loss": 0.6498,
+    "brier": 0.23,
+    "auc": 0.6397,
+    "accuracy": 0.6025
+   },
+   "v6": {
+    "log_loss": 0.6205,
+    "brier": 0.2134,
+    "auc": 0.72,
+    "accuracy": 0.668
+   },
+   "paired_game_bootstrap_v6_minus_v5": {
+    "log_loss_improvement": {
+     "mean": 0.0298,
+     "low": -0.0111,
+     "high": 0.0682
+    },
+    "brier_improvement": {
+     "mean": 0.0167,
+     "low": 0.0021,
+     "high": 0.0312
+    },
+    "auc_improvement": {
+     "mean": 0.0805,
+     "low": 0.0297,
+     "high": 0.1348
+    },
+    "note": "正值表示 v6 更好；Brier 与 AUC 的 95% CI 不含 0，log loss 的 CI 跨 0"
+   },
+   "by_terrain": {
+    "day": {
+     "v5": {
+      "log_loss": 0.6275,
+      "brier": 0.2179,
+      "auc": 0.784
+     },
+     "v6": {
+      "log_loss": 0.5014,
+      "brier": 0.1637,
+      "auc": 0.882
+     },
+     "delta_auc": [
+      0.01,
+      0.195
+     ]
+    },
+    "night": {
+     "v5": {
+      "log_loss": 0.7247,
+      "brier": 0.2648,
+      "auc": 0.453
+     },
+     "v6": {
+      "log_loss": 0.7223,
+      "brier": 0.2533,
+      "auc": 0.596
+     },
+     "delta_auc": [
+      0.011,
+      0.262
+     ]
+    },
+    "pool": {
+     "v5": {
+      "log_loss": 0.6519,
+      "brier": 0.2312,
+      "auc": 0.626
+     },
+     "v6": {
+      "log_loss": 0.6978,
+      "brier": 0.2486,
+      "auc": 0.586
+     },
+     "delta_auc": [
+      -0.146,
+      0.087
+     ]
+    },
+    "fog": {
+     "v5": {
+      "log_loss": 0.6581,
+      "brier": 0.2345,
+      "auc": 0.539
+     },
+     "v6": {
+      "log_loss": 0.644,
+      "brier": 0.2212,
+      "auc": 0.667
+     },
+     "delta_auc": [
+      0.004,
+      0.253
+     ]
+    },
+    "roof": {
+     "v5": {
+      "log_loss": 0.5826,
+      "brier": 0.1998,
+      "auc": 0.782
+     },
+     "v6": {
+      "log_loss": 0.5294,
+      "brier": 0.1765,
+      "auc": 0.811
+     },
+     "delta_auc": [
+      -0.026,
+      0.094
+     ]
+    }
+   }
+  },
+  "leaf_vs_task236_drills": {
+   "protocol": "task236 同一 31 题（7 条人类屋顶序列 + 12 night + 12 roof），4 个共享 RESEED 种子，horizon 600/1200（补充 2500）；leaf=动作后局面叶值，sim=同协议短视界推演",
+   "arms": {
+    "production_v5": "~/pvz-mac-collect/models/value.pt + value_roof.pt，task236 原配置",
+    "pilot_v5": "同样本重训的 encoder 2 对照",
+    "pilot_v6": "encoder 6 先导"
+   },
+   "mae_and_sign_by_plan": {
+    "shovel_only": {
+     "h600": {
+      "production_v5": {
+       "mae": 0.0486,
+       "sign_disagree": 13,
+       "n": 31
+      },
+      "pilot_v5": {
+       "mae": 0.0163,
+       "sign_disagree": 9,
+       "n": 31
+      },
+      "pilot_v6": {
+       "mae": 0.0213,
+       "sign_disagree": 16,
+       "n": 31
+      }
+     },
+     "h1200": {
+      "production_v5": {
+       "mae": 0.0571,
+       "sign_disagree": 11,
+       "n": 31
+      },
+      "pilot_v5": {
+       "mae": 0.0198,
+       "sign_disagree": 8,
+       "n": 31
+      },
+      "pilot_v6": {
+       "mae": 0.0264,
+       "sign_disagree": 10,
+       "n": 31
+      }
+     },
+     "h2500": {
+      "pilot_v5": {
+       "mae": 0.0371,
+       "sign_disagree": 10,
+       "bias": 0.0164,
+       "n": 31
+      },
+      "pilot_v6": {
+       "mae": 0.0416,
+       "sign_disagree": 14,
+       "bias": 0.0104,
+       "n": 31
+      }
+     }
+    },
+    "replant_same": {
+     "h600": {
+      "production_v5": {
+       "mae": 0.0944,
+       "sign_disagree": 5,
+       "n": 14
+      },
+      "pilot_v5": {
+       "mae": 0.0253,
+       "sign_disagree": 7,
+       "n": 14
+      },
+      "pilot_v6": {
+       "mae": 0.0197,
+       "sign_disagree": 4,
+       "n": 14
+      }
+     },
+     "h1200": {
+      "production_v5": {
+       "mae": 0.1048,
+       "sign_disagree": 6,
+       "n": 14
+      },
+      "pilot_v5": {
+       "mae": 0.0245,
+       "sign_disagree": 5,
+       "n": 14
+      },
+      "pilot_v6": {
+       "mae": 0.0192,
+       "sign_disagree": 5,
+       "n": 14
+      }
+     },
+     "h2500": {
+      "pilot_v5": {
+       "mae": 0.0203,
+       "sign_disagree": 6,
+       "n": 14
+      },
+      "pilot_v6": {
+       "mae": 0.0212,
+       "sign_disagree": 6,
+       "n": 14
+      }
+     }
+    },
+    "human_replace": {
+     "h600": {
+      "production_v5": {
+       "mae": 0.0959,
+       "sign_disagree": 2,
+       "n": 6
+      },
+      "pilot_v5": {
+       "mae": 0.0346,
+       "sign_disagree": 3,
+       "n": 6
+      },
+      "pilot_v6": {
+       "mae": 0.0303,
+       "sign_disagree": 3,
+       "n": 6
+      }
+     },
+     "h1200": {
+      "production_v5": {
+       "mae": 0.0901,
+       "sign_disagree": 3,
+       "n": 6
+      },
+      "pilot_v5": {
+       "mae": 0.0331,
+       "sign_disagree": 3,
+       "n": 6
+      },
+      "pilot_v6": {
+       "mae": 0.0298,
+       "sign_disagree": 3,
+       "n": 6
+      }
+     },
+     "h2500": {
+      "pilot_v5": {
+       "mae": 0.0171,
+       "sign_disagree": 4,
+       "n": 6
+      },
+      "pilot_v6": {
+       "mae": 0.0194,
+       "sign_disagree": 2,
+       "n": 6
+      }
+     }
+    }
+   },
+   "paired_bootstrap_600_1200": {
+    "shovel_only_h600": {
+     "mae_diff_v6_v5": -0.0051,
+     "ci": [
+      -0.0134,
+      0.0029
+     ],
+     "sign_rate_diff": -0.225,
+     "sign_ci": [
+      -0.452,
+      -0.032
+     ]
+    },
+    "shovel_only_h1200": {
+     "mae_diff_v6_v5": -0.0069,
+     "ci": [
+      -0.0195,
+      0.0045
+     ],
+     "sign_rate_diff": -0.066,
+     "sign_ci": [
+      -0.29,
+      0.129
+     ]
+    },
+    "replant_same_h600": {
+     "mae_diff_v6_v5": 0.0056,
+     "ci": [
+      -0.007,
+      0.0172
+     ],
+     "sign_rate_diff": 0.216,
+     "sign_ci": [
+      -0.214,
+      0.571
+     ]
+    },
+    "replant_same_h1200": {
+     "mae_diff_v6_v5": 0.0053,
+     "ci": [
+      -0.0076,
+      0.017
+     ],
+     "sign_rate_diff": -0.004,
+     "sign_ci": [
+      -0.357,
+      0.357
+     ]
+    },
+    "human_replace_h600": {
+     "mae_diff_v6_v5": 0.0044,
+     "ci": [
+      -0.0039,
+      0.0118
+     ],
+     "sign_rate_diff": 0.0,
+     "sign_ci": [
+      -0.5,
+      0.5
+     ]
+    },
+    "human_replace_h1200": {
+     "mae_diff_v6_v5": 0.0032,
+     "ci": [
+      -0.0074,
+      0.0183
+     ],
+     "sign_rate_diff": 0.0,
+     "sign_ci": [
+      -0.5,
+      0.5
+     ]
+    },
+    "note": "MAE diff 为 v6-v5（负= v6 误差小）；sign rate diff 为 v6-v5 的判反比例差（负= v6 判反少）"
+   },
+   "interpretation": [
+    "v6 在结局预测上明显更好：Brier/AUC 的配对 bootstrap CI 都排除 0，白天/雾/夜间的排序提升最大；泳池略退步且 CI 跨 0。",
+    "但把同一批能力搬到 task236 的铲子叶值上，结论是混合的：白铲（replant_same）和人类救场（human_replace）在 600-1200 视界的 MAE 下降，铲掉不补（shovel_only）反而在 600/1200/2500 都略差，600 的符号判反从 9/31 升到 16/31。",
+    "先导里最大的改善其实来自数据刷新而不是特征：production v5 的铲掉不补 MAE 0.049/0.057、判反 13/11；同样本重训的 pilot v5 已经降到 0.016/0.020、判反 9/8。v6 再在这上面加特征，只把白铲/救场继续压低，没有修好铲掉不补。",
+    "shovel_only 的 sim delta 在 600/1200 只有 ±0.002 量级，符号本身接近噪声；v6 的叶值更持续地给“移除=负”，在 2500 视界 sim 也转为负（v6 bias 从 -0.0064 收到 +0.0104），说明 600/1200 的短视界不能裁决经济类铲子。",
+    "因此不能据此打开铲子候选；v6 值得进入全量重训，但必须同时补铲子后果数据/更长视界或固定参考打分器。"
+   ]
+  }
+ },
+ "answers": {
+  "is_v6_better": "结局预测：是，且不是单折偶然（5 折、按种子分组、按整局 bootstrap；Brier 改善 +0.0167，95% CI 0.0021..0.0312；AUC 改善 +0.0805，95% CI 0.0297..0.1348）。铲子叶值：不明确，铲掉不补没有变好，白铲/人类救场变好；当前版本不足以过铲子门槛。",
+  "data_regeneration": "必须重放。建议从桌面 frames_v2（65,819 份带 environment_task 的 meta；前 30,000 份抽样中 24,571 份多帧）按地形/胜负分层抽 4,000 局（day 1,200 / night 1,000 / pool 800 / fog 600 / roof 400），每局均匀导出 96 帧，约 384,000 行；再对 2,000-4,000 个铲子决策点做 wait/shovel_only/replant_same/human_replace 分支，补 5-10 万条后果行。v5 原语料约 438,741 行，规模可比。",
+  "full_retrain_cost": {
+   "data_replay": "Mac 4 worker 实测约 15.6 秒/局（151 局约 10 分钟，含特征导出）；4,000 局约 4.3 小时。桌面 20 核 idle nice/ionice 可压到约 1-1.5 小时，但需主控安排且不能影响生产。",
+   "feature_storage": "384k 行、139x60 float16 原始约 12.8 GB；压缩 npz 约 4-6 GB；分地形分片，训练时 memmap。",
+   "training": "width 64、16 epochs、384k 行，Mac MPS 约 20-40 分钟；桌面 GPU 约 10-20 分钟。",
+   "shovel_branches": "2,000-4,000 决策 × 4 plans × 4 seeds × 2 horizons ≈ 6.4-12.8 万次 rollout；按 0.1-0.5 秒/次，4 worker 约 1-9 小时，取决于是否跑到终局。",
+   "total": "Mac 4 worker 约 1-1.5 天（重放 + 训练 + 评估）；若主控给桌面 idle 窗口可压到半天。"
+  },
+  "production_path": "先离线全量重训 v6 → 按地形/种子留出验证（Brier/AUC/log loss + 与 v5 的配对 bootstrap）→ 过老师整局配对的“价值网替换”门槛（沿用 task43/task195 的 32 对/关口径，非劣 + 不显著变差）→ 才改默认叶值；叶值稳定后再回到铲子候选，用 64 对整局门槛（task236 的 L7/L14）复测，铲子默认仍关。",
+  "recommendation": "进入全量 v6 重训，但把“铲子专项数据 + 长视界/固定参考打分器”作为同一阶段的一部分；不要现在用 v6 替换生产叶值，也不要打开铲子候选。"
+ },
+ "costs_this_task": {
+  "cpp": "EnvironmentValueNet.cpp/.h 约 150 行（35 通道 + 6 scalar + encoder 5/6 兼容）",
+  "python": "pvz_value_net.py encoder 6 形状、replay 帧带 fallback、4 个 task239 脚本约 700 行",
+  "pilot_runtime": "重放约 10 分钟（4 worker）；5 折训练 33 秒；31 题 × 3 臂诊断约 2 分钟/臂（h600/1200），h2500 约 3 分钟/臂",
+  "no_production_changes": "未改生产默认值、未部署、未冻结采集、未使用 /tmp、未在台式机跑训练"
+ },
+ "caveats": [
+  "task236 的 sim 在视界末用当前叶值打分（score_value=True），所以 v5/v6 的 sim 不是同一个独立裁判；v6 的 sim 本身也被 v6 叶值影响，叶值误差对比有循环性。全量验收应改用固定参考叶值或终局标签。",
+  "31 题里只有 6 条人类救场，白铲 14 条；符号判反在 sim delta 接近 0 时非常不稳定，不能只看比例。",
+  "先导 v6 只有 151 局、9,664 行，泳池略退步；全量需要更多局和更均衡的胜负。",
+  "18 局 demo-start/_f 存档重放失败被剔除；它们不是逐位不一致，而是 reset 初态需要 demo 前缀，后续可用 drill_start 重建。",
+  "部分存档 meta.operations 存的是 final tick（不是操作数）；采集器改用 frame_count-1，并为缺失 ticks.jsonl 的存档加了 frames 操作带 fallback。",
+  "v6 新通道多数稀疏：phase 1.2%、bullets 2.8%、grid_counter 1.7% 非零；需要在更大语料上确认不是只在少数局面起作用。",
+  "未跑生产整局配对门槛；本任务只做设计 + 先导。"
+ ],
+ "code_changes": [
+  "src/EnvironmentValueNet.h/.cpp：encoder 5/6、v6 InternalFeatures、6 个 wave/timing scalar、v5 前缀兼容",
+  "python/pvz_value_net.py：encoder 6 的 139/125 形状；encode_frame(6) 明确指向 C++",
+  "python/test_value_encoder.py：v6 形状 + NotImplementedError 测试",
+  "scripts/human_demo.py：replay 支持 on_observation 回调；ticks.jsonl 缺失时用 frame tape；保持原有逐位校验",
+  "scripts/task239_export.py：重放导 v6 特征",
+  "scripts/task239_train.py：v5/v6 同数据训练、5 折/单折、warm-start 可选",
+  "scripts/task239_cv.py：按种子分组 5 折 + 整局 bootstrap",
+  "scripts/task239_compare.py：task236 叶值-推演误差/符号判反对比"
+ ],
+ "artifacts": {
+  "features": "artifacts/task239/features/*.npz",
+  "cv_report": "artifacts/task239/cv/cv_report.json",
+  "leaf_error_table": "artifacts/task239/leaf_error_table.json",
+  "diagnose_summaries": "artifacts/task239/diag31-{prodv5,v5,v6,v5-h2500,v6-h2500}/summary.json",
+  "note": "大文件（corpus/tar/日志）任务结束后清理；检查点与 npz 不入 git"
+ }
+}

@@ -7,6 +7,7 @@
 #include "Lawn/LawnMower.h"
 #include "Lawn/SeedPacket.h"
 #include "Lawn/GridItem.h"
+#include "Lawn/Projectile.h"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -21,6 +22,115 @@
 #include <cblas.h>
 #endif
 
+namespace
+{
+float Clamp01(double value)
+{
+	return static_cast<float>(std::clamp(value, 0.0, 1.0));
+}
+
+// Value-net v6 (encoder 6).  Only current state that changes the future is encoded; plant age
+// and invested sun are deliberately absent.  A cell can hold a pumpkin and a normal plant, so
+// state/timers take the maximum and health takes the sum, like the v5 board cells.
+void InternalFeatures(LawnApp* app, float* out)
+{
+	Board* state = app->mBoard;
+	auto cell = [out](int channel, int row, int col) -> float&
+	{
+		return out[channel * EnvironmentValueNet::Cells + row * 10 + col];
+	};
+	auto bump = [&cell](int channel, int row, int col, float value)
+	{
+		float& target = cell(channel, row, col);
+		target = std::max(target, value);
+	};
+	auto add = [&cell](int channel, int row, int col, float value)
+	{
+		float& target = cell(channel, row, col);
+		target = std::min(1.0f, target + value);
+	};
+	for (const Plant* plant : state->mPlants)
+	{
+		if (plant->mDead || plant->mSquished || app->EnvironmentStormHidden() ||
+			plant->mRow < 0 || plant->mRow >= 6 || plant->mPlantCol < 0 || plant->mPlantCol >= 9) continue;
+		const int row = plant->mRow, col = plant->mPlantCol;
+		bump(0, row, col, Clamp01(static_cast<double>(plant->mState) / 32.0));
+		bump(1, row, col, Clamp01(static_cast<double>(std::max(0, plant->mStateCountdown)) / 4000.0));
+		bump(2, row, col, Clamp01(static_cast<double>(std::max(0, plant->mDoSpecialCountdown)) / 100.0));
+		const double launch = plant->mLaunchRate > 0
+			? 1.0 - static_cast<double>(std::max(0, plant->mLaunchCounter)) / plant->mLaunchRate : 0.0;
+		bump(3, row, col, Clamp01(launch));
+		bump(4, row, col, Clamp01(static_cast<double>(std::max(0, plant->mLaunchRate)) / 3000.0));
+		bump(5, row, col, Clamp01(static_cast<double>(std::max(0, plant->mWakeUpCounter)) / 1200.0));
+		bump(6, row, col, plant->mIsAsleep ? 1.0f : 0.0f);
+		add(7, row, col, Clamp01(static_cast<double>(std::max(0, plant->mPlantHealth)) / 1000.0));
+		bump(8, row, col, plant->mTargetX > 0 ? Clamp01(static_cast<double>(plant->mTargetX) / 800.0) : 0.0f);
+		bump(9, row, col, plant->mTargetY > 0 ? Clamp01(static_cast<double>(plant->mTargetY) / 600.0) : 0.0f);
+		bump(10, row, col, Clamp01(static_cast<double>(std::max(0, plant->mDisappearCountdown)) / 600.0));
+		bump(11, row, col, Clamp01(static_cast<double>(std::max(0, plant->mSubclass)) / 4.0));
+	}
+	int zombies = 0, plants = 0;
+	for (const Plant* plant : state->mPlants)
+		if (!plant->mDead && !plant->mSquished) ++plants;
+	for (Zombie* zombie : state->mZombies)
+	{
+		if (zombie->mDead || !zombie->IsOnBoard() || zombie->mRow < 0 || zombie->mRow >= 6 ||
+			!app->EnvironmentZombieVisible(zombie)) continue;
+		double x = zombie->mPosX;
+		const double boundary = 40.0 + 80.0 * std::round((x - 40.0) / 80.0);
+		if (std::abs(x - boundary) < 0.001) x = EnvironmentWaitEvents::RenderedPublicCoordinate(x);
+		const int row = zombie->mRow;
+		const int col = std::clamp(static_cast<int>(std::floor((x - 40.0) / 80.0)), 0, 9);
+		++zombies;
+		bump(12, row, col, Clamp01(static_cast<double>(std::max(0, static_cast<int>(zombie->mZombiePhase))) / 32.0));
+		bump(13, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mPhaseCounter)) / 3000.0));
+		bump(14, row, col, static_cast<float>(std::clamp(static_cast<double>(zombie->mVelX) / 2.0, -1.0, 1.0)));
+		bump(15, row, col, static_cast<float>(std::clamp(static_cast<double>(zombie->mVelZ) / 2.0, -1.0, 1.0)));
+		bump(16, row, col, Clamp01(static_cast<double>(std::max(0.0f, zombie->mAltitude)) / 600.0));
+		add(17, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mFlyingHealth)) / 600.0));
+		add(18, row, col, zombie->mMindControlled ? 0.25f : 0.0f);
+		add(19, row, col, zombie->mMindControlled ? 0.0f : 0.25f);
+		bump(20, row, col, zombie->mUseLadderCol >= 0 ? Clamp01((zombie->mUseLadderCol + 1) / 10.0) : 0.0f);
+		bump(21, row, col, zombie->mTargetCol >= 0 ? Clamp01((zombie->mTargetCol + 1) / 10.0) : 0.0f);
+		bump(22, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mSummonCounter)) / 3000.0));
+		add(23, row, col, zombie->mFlatTires ? 0.25f : 0.0f);
+		add(24, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mBodyHealth)) / 200.0));
+		add(25, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mHelmHealth)) / 200.0));
+		add(26, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mShieldHealth)) / 200.0));
+		const int parts = (zombie->mHasHead ? 1 : 0) + (zombie->mHasArm ? 1 : 0) + (zombie->mHasObject ? 1 : 0);
+		bump(27, row, col, parts / 3.0f);
+		bump(28, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mChilledCounter)) / 1200.0));
+		bump(29, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mButteredCounter)) / 1200.0));
+		bump(30, row, col, Clamp01(static_cast<double>(std::max(0, zombie->mIceTrapCounter)) / 1200.0));
+	}
+	for (const Projectile* projectile : state->mProjectiles)
+	{
+		if (projectile->mDead) continue;
+		const int row = projectile->mRow;
+		const int col = std::clamp(static_cast<int>(std::floor((projectile->mPosX - 40.0) / 80.0)), 0, 9);
+		if (row < 0 || row >= 6) continue;
+		add(31, row, col, 0.125f);
+	}
+	for (const GridItem* item : state->mGridItems)
+	{
+		if (item->mDead || item->mGridX < 0 || item->mGridX >= 9 || item->mGridY < 0 || item->mGridY >= 6) continue;
+		const int row = item->mGridY, col = item->mGridX;
+		bump(32, row, col, Clamp01(static_cast<double>(static_cast<int>(item->mGridItemType)) / 12.0));
+		bump(33, row, col, Clamp01(static_cast<double>(static_cast<int>(item->mGridItemState)) / 10.0));
+		bump(34, row, col, Clamp01(static_cast<double>(std::max(0, item->mGridItemCounter)) / 1200.0));
+	}
+}
+
+int ExtraChannels(uint32_t version)
+{
+	if (version >= 6) return EnvironmentValueNet::V5ExtraChannels + EnvironmentValueNet::V6ExtraChannels;
+	if (version == 5) return EnvironmentValueNet::V5ExtraChannels;
+	if (version == 4) return 8;
+	if (version == 3) return 6;
+	return 0;
+}
+}
+
 void EnvironmentValueNet::Load(const std::string& path)
 {
 	std::ifstream input(path, std::ios::binary);
@@ -31,10 +141,10 @@ void EnvironmentValueNet::Load(const std::string& path)
 	input.read(reinterpret_cast<char*>(&version), 4);
 	input.read(reinterpret_cast<char*>(&contextSize), 4);
 	if (!input || std::string(magic, 8) != "PVZVN001" || std::endian::native != std::endian::little ||
-		size < 1 || size > 512 || (version < 1 || version > 4) || (contextSize != 0 && contextSize != TaskContext))
+		size < 1 || size > 512 || (version < 1 || version > 6) || (contextSize != 0 && contextSize != TaskContext))
 		throw std::runtime_error("invalid value network header");
-	const size_t w = size, s = Scalars + (version >= 2 ? 6 : 0) + contextSize;
-	const std::vector<size_t> counts = {w * (Channels + (version == 4 ? 8 : version == 3 ? 6 : 0)) * 9, w, w * w * 9, w, w * w * 3, w,
+	const size_t w = size, s = Scalars + (version >= 2 ? 6 : 0) + (version >= 6 ? V6ExtraScalars : 0) + contextSize;
+	const std::vector<size_t> counts = {w * (Channels + ExtraChannels(version)) * 9, w, w * w * 9, w, w * w * 3, w,
 		w * s, w, w * w * 8, w, w, 1};
 	std::vector<std::vector<float>> loaded;
 	for (size_t count : counts)
@@ -59,7 +169,9 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 	Board* state = app->mBoard;
 	b.assign(ChannelCount() * Cells, 0.0f); s.assign(ScalarCount(), 0.0f);
 	if (encoder >= 3) EnvironmentRollout::BungeeFeatures(app, b.data() + Channels * Cells);
-	if (encoder == 4) EnvironmentRollout::SleepFeatures(app, b.data() + (Channels + 6) * Cells);
+	if (encoder >= 4) EnvironmentRollout::SleepFeatures(app, b.data() + (Channels + 6) * Cells);
+	if (encoder >= 5) EnvironmentRollout::TimerFeatures(app, b.data() + (Channels + 8) * Cells);
+	if (encoder >= 6) InternalFeatures(app, b.data() + (Channels + V5ExtraChannels) * Cells);
 	// numpy's cell += scalar casts each term to float32 first, then accumulates in float32;
 	// rounding the term before the add is what reproduces that bit-exactly.
 	for (const Plant* plant : state->mPlants)
@@ -121,9 +233,27 @@ void EnvironmentValueNet::Features(LawnApp* app, double income, std::vector<floa
 		for (const GridItem* item : state->mGridItems) if (!item->mDead) ++graves;
 		s[118] = graves / 45.0;
 	}
+	if (encoder >= 6)
+	{
+		// Value-net v6 wave/timing scalars, appended after the six v5 scene scalars.
+		const int start = Scalars + (encoder >= 2 ? 6 : 0);
+		s[start + 0] = Clamp01(static_cast<double>(std::max(0, state->mZombieCountDown)) / 3000.0);
+		s[start + 1] = Clamp01(static_cast<double>(std::max(0, state->mHugeWaveCountDown)) / 1000.0);
+		const int waveHealth = state->TotalZombiesHealthInWave(state->mCurrentWave - 1);
+		s[start + 2] = Clamp01(static_cast<double>(waveHealth) / std::max(1, state->mZombieHealthWaveStart));
+		s[start + 3] = Clamp01(static_cast<double>(std::max(0, state->mSunCountDown)) / 1200.0);
+		int onBoard = 0;
+		for (Zombie* zombie : state->mZombies)
+			if (!zombie->mDead && zombie->IsOnBoard()) ++onBoard;
+		s[start + 4] = std::min(1.0, onBoard / 50.0);
+		int living = 0;
+		for (const Plant* plant : state->mPlants)
+			if (!plant->mDead && !plant->mSquished) ++living;
+		s[start + 5] = std::min(1.0, living / 45.0);
+	}
 	if (context)
 	{
-		const int start = Scalars + (encoder >= 2 ? 6 : 0);
+		const int start = Scalars + (encoder >= 2 ? 6 : 0) + (encoder >= 6 ? V6ExtraScalars : 0);
 		s[start] = app->mEnvironmentTaskSpec.zombieCountMultiplier / 3.0;
 		for (int type = 0; type < NUM_ZOMBIE_TYPES && type < 100; ++type)
 			if (state->mZombieAllowed[type]) s[start + 1 + std::min(type, 33)] = 1.0f;

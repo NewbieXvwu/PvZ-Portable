@@ -36,6 +36,14 @@ class ValueEncoderTest(unittest.TestCase):
         f.pop('conveyor_start')
         self.assertEqual(encode_frame(f,2)[1][SCALAR_BASE+2],0)
 
+    def test_v6_engine_encoder_shape(self):
+        # v6 features are produced by the C++ engine; Python only owns the head shape.
+        net = ValueNet(8, context=True, encoder_version=6).eval()
+        logits = net(torch.zeros(2, 139, 6, 10), torch.zeros(2, 125 + 35))
+        self.assertEqual(tuple(logits.shape), (2,))
+        with self.assertRaises(NotImplementedError):
+            encode_frame(frame(), 6)
+
     def test_checkpoint_dispatch(self):
         import sys
         sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))

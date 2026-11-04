@@ -133,14 +133,38 @@ class Recorder:
         self._save_meta()
 
 
+
+def _tape_entries(archive: Path, frames: list[dict]):
+    """Archive operations: ticks.jsonl when present, otherwise the frame tape.
+
+    Older imports kept only frames.npz.  Each frame after the first is one operation and carries
+    the action that produced it, so the same replay loop can drive both layouts.
+    """
+    tape = archive / 'ticks.jsonl'
+    if tape.is_file():
+        with tape.open() as stream:
+            for line in stream:
+                yield json.loads(line)
+        return
+    for index in range(1, len(frames)):
+        current, previous = frames[index], frames[index - 1]
+        action = current.get('action') or current.get('input_action')
+        if action is None:
+            raise RuntimeError(f'frame tape has no action at operation {index}')
+        yield dict(tick=previous['tick'], end_tick=current['tick'], action=action,
+                   ok=not current.get('action_rejected'))
+
+
 def replay(env, archive: Path, decision: int | None = None, overrides: dict | None = None,
-           save: Path | None = None, *, fog_observation: str | None = None):
+           save: Path | None = None, *, fog_observation: str | None = None, on_observation=None):
     meta = read_meta(archive)
     frames = read_frames(frame_path(archive))
     if decision is not None and not 1 <= decision <= len(frames):
         raise ValueError(f'decision must be between 1 and {len(frames)}')
     stop = frames[decision - 1]['operation'] if decision is not None else meta['operations']
     obs = reset_archive(env, meta, fog_observation=fog_observation)
+    if on_observation is not None:
+        on_observation(0, obs)
     recorder = None
     if save is not None:
         config = dict(meta['environment_task'])
@@ -161,40 +185,40 @@ def replay(env, archive: Path, decision: int | None = None, overrides: dict | No
     mowers = sum(defense['state'] == 1 for defense in obs.get('defenses') or [])
     mowers_left = mowers
     skip_until = 0
-    with (archive / 'ticks.jsonl').open() as stream:
-        for operation, line in enumerate(stream, 1):
-            if operation > stop:
-                break
-            if operation <= skip_until:
-                continue
-            entry = json.loads(line)
-            if not diverged and obs['tick'] != entry['tick']:
-                raise RuntimeError(f'demonstration tick differs at operation {operation}')
-            action = entry['action']
-            if operation in replacements:
-                skip_until, action = replacements[operation]
-            diverged |= operation in replacements
-            if recorder is None:
-                obs, _, _, _, info = env.step(action)
-            else:
-                before_events = dict(recorder.events)
-                obs = recorder.step(action)
-                info = dict(ok=recorder.last_info['ok'], events={name: value - before_events.get(name, 0)
-                                                               for name, value in recorder.events.items()})
-            rejected |= operation in replacements and not info['ok']
-            for name, value in info['events'].items():
-                events[name] = events.get(name, 0) + value
-            if not obs['terminal']:
-                mowers_left = sum(defense['state'] == 1 for defense in obs.get('defenses') or [])
-            if changed_frames is not None and (operation in replacements or operation in frame_operations or obs['terminal']):
-                frame = _frame(obs)
-                frame.update(action=action if action['type'] in ('plant', 'wait') else None,
-                             action_rejected=not info['ok'], label_source='counterfactual')
-                changed_frames.append(frame)
-            if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick']):
-                raise RuntimeError(f'demonstration action timeline differs at operation {operation}, tick {obs["tick"]}')
-            if obs['terminal'] and diverged:
-                break
+    for operation, entry in enumerate(_tape_entries(archive, frames), 1):
+        if operation > stop:
+            break
+        if operation <= skip_until:
+            continue
+        if not diverged and obs['tick'] != entry['tick']:
+            raise RuntimeError(f'demonstration tick differs at operation {operation}')
+        action = entry['action']
+        if operation in replacements:
+            skip_until, action = replacements[operation]
+        diverged |= operation in replacements
+        if recorder is None:
+            obs, _, _, _, info = env.step(action)
+        else:
+            before_events = dict(recorder.events)
+            obs = recorder.step(action)
+            info = dict(ok=recorder.last_info['ok'], events={name: value - before_events.get(name, 0)
+                                                           for name, value in recorder.events.items()})
+        rejected |= operation in replacements and not info['ok']
+        for name, value in info['events'].items():
+            events[name] = events.get(name, 0) + value
+        if not obs['terminal']:
+            mowers_left = sum(defense['state'] == 1 for defense in obs.get('defenses') or [])
+        if changed_frames is not None and (operation in replacements or operation in frame_operations or obs['terminal']):
+            frame = _frame(obs)
+            frame.update(action=action if action['type'] in ('plant', 'wait') else None,
+                         action_rejected=not info['ok'], label_source='counterfactual')
+            changed_frames.append(frame)
+        if not diverged and (info['ok'] != entry['ok'] or obs['tick'] != entry['end_tick']):
+            raise RuntimeError(f'demonstration action timeline differs at operation {operation}, tick {obs["tick"]}')
+        if on_observation is not None:
+            on_observation(operation, obs)
+        if obs['terminal'] and diverged:
+            break
     if decision is None and not diverged:
         outcome = meta['outcome']
         if (obs['tick'], obs['wave'], obs['result']) != (outcome['final_tick'], outcome['final_wave'], outcome['result']):

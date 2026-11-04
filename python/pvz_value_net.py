@@ -120,7 +120,10 @@ ENCODER_V2 = "pvz_value_net.featurize v2"
 ENCODER_V3 = "pvz_value_net.featurize v3"
 ENCODER_V4 = "pvz_value_net.featurize v4"
 ENCODER_V5 = "pvz_value_net.featurize v5"
+ENCODER_V6 = "pvz_value_net.featurize v6"
 scene_scalar_count = 6  # night, pool, fog, roof, original conveyor, public grave count / 45
+_v6_scalars = 6  # wave countdown, huge wave countdown, wave health, sun countdown, zombies, plants
+_v6_channels = 35  # engine-side internal state; see src/EnvironmentValueNet.cpp InternalFeatures
 
 
 def bungee_features(frame: dict) -> np.ndarray:
@@ -206,6 +209,10 @@ def encode_frame(frame: dict, version: int = 1) -> tuple[torch.Tensor, torch.Ten
     """Versioned value-only encoding; existing students keep the frozen v1 entrypoint."""
     if version == 1:
         return featurize(frame)
+    if version == 6:
+        # v6 is defined once, in the C++ engine (src/EnvironmentValueNet.cpp): the replay dump
+        # carries the engine's own board/scalars, so there is no Python re-encoding to drift.
+        raise NotImplementedError("value encoder v6 is produced by the C++ engine; use its feature dump")
     if version not in (2, 3, 4, 5):
         raise ValueError(f"unknown value encoder version: {version}")
     # Start without packets: negative empty types must never alias global/cooldown scalars.
@@ -287,19 +294,23 @@ class ValueNet(nn.Module):
     a per-row max pool keeps "which lane is in trouble" before everything is averaged.
     """
 
-    def __init__(self, width: int = 64, context: bool = False, encoder_version: int = 1):
+    def __init__(self, width: int = 64, context: bool = False, encoder_version: int = 1,
+                 dropout: float = 0.0):
         super().__init__()
-        if encoder_version not in (1, 2, 3, 4, 5):
+        if encoder_version not in (1, 2, 3, 4, 5, 6):
             raise ValueError(f"unknown value encoder version: {encoder_version}")
         self.encoder_version = encoder_version
         self.context = context        # scalars then carry SCALARS + CONTEXT values
+        self.dropout = dropout
         self.conv = nn.Sequential(
-            # v3 = +蹦极 6；v4 = +睡眠 2；v5 = +可见计时与卡序 4。
-            nn.Conv2d(BOARD_CHANNELS + (12 if encoder_version == 5 else 8 if encoder_version == 4 else 6 if encoder_version == 3 else 0), width, 3, padding=1), nn.ReLU(),
+            # v3 = +蹦极 6；v4 = +睡眠 2；v5 = +可见计时与卡序 4；v6 = v5 + 引擎内部状态 35。
+            nn.Conv2d(BOARD_CHANNELS + (12 + _v6_channels if encoder_version == 6 else 12 if encoder_version == 5 else 8 if encoder_version == 4 else 6 if encoder_version == 3 else 0), width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, 3, padding=1), nn.ReLU(),
             nn.Conv2d(width, width, (1, 3), padding=(0, 1)), nn.ReLU(),
         )
-        self.scalar = nn.Sequential(nn.Linear(SCALARS + (scene_scalar_count if encoder_version >= 2 else 0) + (CONTEXT if context else 0), width), nn.ReLU())
+        self.scalar = nn.Sequential(nn.Linear(SCALARS + (scene_scalar_count if encoder_version >= 2 else 0)
+                                               + (_v6_scalars if encoder_version >= 6 else 0)
+                                               + (CONTEXT if context else 0), width), nn.ReLU())
         self.head = nn.Sequential(
             nn.Linear(width * (2 + ROWS), width), nn.ReLU(),
             nn.Linear(width, 1),
@@ -307,6 +318,7 @@ class ValueNet(nn.Module):
 
     def forward(self, board: torch.Tensor, scalars: torch.Tensor) -> torch.Tensor:
         h = self.conv(board)                            # [B, W, 6, 10]
+        h = nn.functional.dropout(h, self.dropout, self.training)
         rows = h.amax(dim=3).flatten(1)                 # [B, W*6] worst cell per lane
         pooled = h.mean(dim=(2, 3))                     # [B, W]
         x = torch.cat([pooled, rows, self.scalar(scalars)], dim=1)
@@ -317,7 +329,8 @@ def load_value_net(path) -> ValueNet:
     """A value checkpoint in eval mode; ``net.context`` says whether it expects the task context."""
     checkpoint = torch.load(path, map_location="cpu", weights_only=False)
     encoder = checkpoint.get("encoder", ENCODER_V1)
-    versions = {ENCODER_V1: 1, ENCODER_V2: 2, ENCODER_V3: 3, ENCODER_V4: 4, ENCODER_V5: 5}
+    versions = {ENCODER_V1: 1, ENCODER_V2: 2, ENCODER_V3: 3, ENCODER_V4: 4, ENCODER_V5: 5,
+                ENCODER_V6: 6}
     if encoder not in versions:
         raise ValueError(f"unsupported value encoder: {encoder!r}")
     net = ValueNet(width=int(checkpoint.get("width", 64)), context=bool(checkpoint.get("context", False)),
