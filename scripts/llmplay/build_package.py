@@ -35,6 +35,10 @@ RESOURCE_DIR = Path("/home/newbiexvwu/.cache/pvz-research-resources")
 DEFAULT_OUT = Path.home() / "pvz-logs" / "llmplay-decks"
 SEED_PLAN = ROOT / "configs" / "llmplay_seeds.json"
 ROBUSTNESS_PLAN = ROOT / "configs" / "llmplay_robustness.json"
+RESUME_PLAN = ROOT / "configs" / "llmplay_resume.json"
+# task220：中盘接回存档（meta.json + ticks.jsonl + 截断点那一帧）。二进制不进 git，
+# 从台式机取回到本机临时目录，打包时整目录复制进接口包。
+DEFAULT_RESUME_DIR = Path.home() / "pvz-logs" / "task220" / "resume"
 
 SECRET_PATTERNS = [re.compile(pattern) for pattern in
                    (rb"hf_[A-Za-z0-9]{20,}", rb"sk-[A-Za-z0-9]{20,}", rb"AIza[A-Za-z0-9_-]{30,}",
@@ -162,6 +166,22 @@ def merge_carry(prior: dict, latest: dict) -> dict:
     return result
 
 
+def copy_resume(stage: Path, source: Path | None) -> int:
+    """把中盘接回存档与清单放进接口包；返回条数。"""
+    target = stage / "resume"
+    count = 0
+    if source is not None and Path(source).is_dir():
+        for archive in sorted(Path(source).iterdir()):
+            if not archive.is_dir() or not (archive / "meta.json").is_file():
+                continue
+            shutil.copytree(archive, target / archive.name)
+            count += 1
+    target.mkdir(parents=True, exist_ok=True)
+    if RESUME_PLAN.is_file():
+        shutil.copyfile(RESUME_PLAN, stage / "configs" / "llmplay_resume.json")
+    return count
+
+
 def copy_carry(stage: Path, carry: Path | None, partial: Path | None = None) -> None:
     """把前次进度放进 carry/：首次 import 时接口自动接上，不用再传别的文件。"""
     if carry is None:
@@ -242,7 +262,8 @@ def build(executable: Path, out: Path, *, cache_dir: Path, resource_dir: Path = 
 
 
 def repack_interface(previous: Path, out: Path, carry: Path | None = None,
-                     partial: Path | None = None, resource_zip: Path | None = None) -> list[Path]:
+                     partial: Path | None = None, resource_zip: Path | None = None,
+                     resume_dir: Path | None = None) -> list[Path]:
     """复用已交付引擎及资源契约，只重打接口，不重建资源、不重复逐关 reset。
 
     previous 是上一包的 stage；大文件留在本机，不进入 git。py7zr 仅构建时需要。
@@ -275,6 +296,11 @@ def repack_interface(previous: Path, out: Path, carry: Path | None = None,
         for name in ("PROMPT.md", "README.md"):
             shutil.copyfile(ROOT / "scripts" / "llmplay" / name, stage / name)
         copy_carry(stage, carry, partial)
+        fallback = previous / "resume"
+        source = resume_dir if resume_dir and Path(resume_dir).is_dir() else (
+            fallback if fallback.is_dir() else None)
+        archived = copy_resume(stage, source)
+        print(json.dumps(dict(resume_items=archived)))
         copy_reference(stage)
         shutil.copytree(ROOT / "scripts" / "llmplay" / "examples", stage / "examples")
         hits = scan(stage)
@@ -380,13 +406,16 @@ def main() -> int:
     parser.add_argument("--partial", type=Path, help="合入新会话 out.zip / out 目录 / progress.json；只读进度")
     parser.add_argument("--resource-zip", type=Path, help="原样沿用的资源 zip，默认上一包旁的 llmplay_res.zip")
     parser.add_argument("--resource-dir", type=Path, default=RESOURCE_DIR)
+    parser.add_argument("--resume-dir", type=Path, default=DEFAULT_RESUME_DIR,
+                        help="task220 中盘接回存档目录（默认 ~/pvz-logs/task220/resume）")
     parser.add_argument("--out", type=Path, default=DEFAULT_OUT)
     parser.add_argument("--cache-dir", type=Path,
                         help="cache_prepare.py 生成的 full-appdata（旁边须有 cache-audit.json）")
     args = parser.parse_args()
     if args.reuse_package:
         repack_interface(args.reuse_package, args.out, carry=args.carry,
-                         partial=args.partial, resource_zip=args.resource_zip)
+                         partial=args.partial, resource_zip=args.resource_zip,
+                         resume_dir=args.resume_dir)
         return 0
     if not args.executable or not args.cache_dir:
         parser.error("首次构建需要 --executable 和 --cache-dir")

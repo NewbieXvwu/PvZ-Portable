@@ -262,6 +262,9 @@ class Game:
         # 属性不能叫 robustness —— 那是方法名，会被这个赋值遮住。
         self.robustness_report = robustness
         self.manual_patch = bool(manual_patch)
+        # task220：中盘接回的来源（resume/<archive>）；普通开局是 None。
+        self.resume_id = None
+        self.resume_source = {}
         # RESEED 过的局不能再按操作日志重放（未来已经换过），所以内部试打局带这个标记。
         self._reseeded = None
         # 内部试打局（robustness 的 k 个新未来）不写「最远进度」、不进自动 observe。
@@ -962,7 +965,8 @@ class Game:
         game = cls(task["id"], seed=task["seed"], ops=ops, frames=frames,
                    tick=meta["outcome"]["final_tick"], note=meta.get("note", ""),
                    robustness=meta.get("robustness"), manual_patch=meta.get("manual_patch", False),
-                   deck=task["deck"], reason=meta.get("deck_reason", ""), strategy=meta.get("strategy", ""),
+                   deck=task["deck"], reason=meta.get("deck_reason", ""),
+                   strategy=kwargs.pop("strategy", meta.get("strategy", "")),
                    deck_review=meta.get("deck_review", ""), abandon_reason=meta.get("abandon_reason"), attempt_id=meta.get("attempt_id"),
                    cycle=meta.get("cycle"), workflow_layer=meta.get("workflow_layer"),
                    deck_attempt_seeds=meta.get("deck_attempt_seeds"),
@@ -971,6 +975,10 @@ class Game:
                                 'deck': task['deck'], 'seeds': [task['seed']],
                                 'layer': meta.get('workflow_layer', 'A')}, **kwargs)
         game.run_id = meta.get("run_id") or game.run_id
+        # task220：中盘接回项用 resume_id 认领（同一生产任务族下有多条不同起点的存档）。
+        game.resume_id = meta.get("resume_id") or None
+        game.resume_source = dict(meta.get("resume") or {})
+        game.workflow_layer = meta.get("workflow_layer") or game.workflow_layer
         from pvz_env import PlayerProfileContext
         config = dict(meta["environment_task"])
         config["profile"] = PlayerProfileContext(**config["profile"])
@@ -1027,6 +1035,8 @@ class Game:
             **attempts,
             schema=ARCHIVE_SCHEMA, label_source=LABEL_SOURCE, cycle=self.cycle,
             workflow_layer=self.workflow_layer, opening=opening,
+            **({"resume_id": self.resume_id, "resume": dict(self.resume_source)}
+               if self.resume_id else {}),
             run_id=self.run_id, environment_fingerprint=dict(environment_fingerprint()),
             note=self.note if note is None else note,
             deck_reason=self.deck_reason, strategy=self.strategy, deck_review=self.deck_review,

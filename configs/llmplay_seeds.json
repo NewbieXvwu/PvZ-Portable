@@ -587,28 +587,28 @@
       235000000
     ],
     "llmplay_decks_native_l5_m100": [
-      236000000
+      307000000
     ],
     "llmplay_decks_native_l10_m100": [
-      237000000
+      306000000
     ],
     "llmplay_decks_native_l20_m100": [
-      238000000
+      305000000
     ],
     "llmplay_decks_native_l25_m100": [
-      239000000
+      304000000
     ],
     "llmplay_decks_native_l30_m100": [
-      240000000
+      303000000
     ],
     "llmplay_decks_native_l40_m100": [
-      241000000
+      302000000
     ],
     "llmplay_decks_native_l45_m100": [
-      242000000
+      301000000
     ],
     "llmplay_decks_native_l50_m100": [
-      243000000
+      300000000
     ]
   },
   "mode": "decks",
@@ -669,8 +669,8 @@
     "min_eight_decks": 3,
     "coverage_per_card": 2,
     "coverage_priority": {},
-    "growth_step": 4,
-    "default_shards": 3,
+    "growth_step": 2,
+    "default_shards": 1,
     "terrain_shards": [
       [
         "day",
@@ -691,8 +691,7 @@
     "blacklist": {
       "all": [
         38,
-        45,
-        47
+        45
       ],
       "day": [
         11,
@@ -703,7 +702,8 @@
         27,
         33,
         37,
-        43
+        43,
+        47
       ],
       "night": [
         16,
@@ -714,20 +714,23 @@
         33,
         35,
         37,
-        43
+        43,
+        47
       ],
       "pool": [
         11,
         25,
         27,
         33,
-        37
+        37,
+        47
       ],
       "fog": [
         11,
         33,
         35,
-        37
+        37,
+        47
       ],
       "roof": [
         11,
@@ -752,18 +755,130 @@
         46
       ]
     },
-    "note": "task186: 仅扩展胜利卡组；coverage_priority 按地形/卡号补 task185 重点卡目标次数；旧循环定义保留供历史读取。",
+    "note": "task186: 仅扩展胜利卡组。task210: 传送带支线优先、各关目标 16 胜。task211: 弱地形重放最高优先。task220: 派发改为 学生败局中盘接回(resume) > 前沿倍率(frontier，仅 >1.0 关卡) > 传送带/Boss > 主线新卡组(升级植物优先)；普通 ×1 日/夜/池重放退役。",
     "native_order": [
-      "llmplay_decks_native_l5_m100",
-      "llmplay_decks_native_l10_m100",
-      "llmplay_decks_native_l20_m100",
-      "llmplay_decks_native_l25_m100",
-      "llmplay_decks_native_l30_m100",
-      "llmplay_decks_native_l40_m100",
+      "llmplay_decks_native_l50_m100",
       "llmplay_decks_native_l45_m100",
-      "llmplay_decks_native_l50_m100"
+      "llmplay_decks_native_l40_m100",
+      "llmplay_decks_native_l30_m100",
+      "llmplay_decks_native_l25_m100",
+      "llmplay_decks_native_l20_m100",
+      "llmplay_decks_native_l10_m100",
+      "llmplay_decks_native_l5_m100"
     ],
-    "native_wins": 8,
-    "native_seed_base": 236000000
+    "native_wins": 16,
+    "frontier": {
+      "order": [
+        "llmplay_frontier_l1_m250",
+        "llmplay_frontier_l3_m250",
+        "llmplay_frontier_l4_m250",
+        "llmplay_frontier_l6_m200",
+        "llmplay_frontier_l8_m250",
+        "llmplay_frontier_l9_m175",
+        "llmplay_frontier_l11_m200",
+        "llmplay_frontier_l13_m150",
+        "llmplay_frontier_l16_m150",
+        "llmplay_frontier_l18_m150",
+        "llmplay_frontier_l21_m125",
+        "llmplay_frontier_l22_m125",
+        "llmplay_frontier_l31_m150",
+        "llmplay_frontier_l38_m125",
+        "llmplay_frontier_l1_m300",
+        "llmplay_frontier_l3_m300",
+        "llmplay_frontier_l4_m300",
+        "llmplay_frontier_l6_m250",
+        "llmplay_frontier_l8_m300",
+        "llmplay_frontier_l9_m225",
+        "llmplay_frontier_l11_m250",
+        "llmplay_frontier_l13_m200",
+        "llmplay_frontier_l16_m200",
+        "llmplay_frontier_l18_m200",
+        "llmplay_frontier_l21_m175",
+        "llmplay_frontier_l22_m175",
+        "llmplay_frontier_l31_m200",
+        "llmplay_frontier_l38_m175",
+        "llmplay_frontier_l32_m100",
+        "llmplay_frontier_l33_m100",
+        "llmplay_frontier_l34_m100",
+        "llmplay_frontier_l36_m100",
+        "llmplay_frontier_l37_m100",
+        "llmplay_frontier_l39_m100",
+        "llmplay_frontier_l41_m100",
+        "llmplay_frontier_l42_m100",
+        "llmplay_frontier_l43_m100",
+        "llmplay_frontier_l44_m100",
+        "llmplay_frontier_l46_m100",
+        "llmplay_frontier_l47_m100",
+        "llmplay_frontier_l48_m100",
+        "llmplay_frontier_l49_m100"
+      ],
+      "tasks": [
+        {"task_id":"llmplay_frontier_l1_m250","level":1,"multiplier":2.5,"tier":"frontier","seed_base":320000000},
+        {"task_id":"llmplay_frontier_l3_m250","level":3,"multiplier":2.5,"tier":"frontier","seed_base":322000000},
+        {"task_id":"llmplay_frontier_l4_m250","level":4,"multiplier":2.5,"tier":"frontier","seed_base":323000000},
+        {"task_id":"llmplay_frontier_l6_m200","level":6,"multiplier":2,"tier":"frontier","seed_base":325000000},
+        {"task_id":"llmplay_frontier_l8_m250","level":8,"multiplier":2.5,"tier":"frontier","seed_base":327000000},
+        {"task_id":"llmplay_frontier_l9_m175","level":9,"multiplier":1.75,"tier":"frontier","seed_base":328000000},
+        {"task_id":"llmplay_frontier_l11_m200","level":11,"multiplier":2,"tier":"frontier","seed_base":330000000},
+        {"task_id":"llmplay_frontier_l13_m150","level":13,"multiplier":1.5,"tier":"frontier","seed_base":332000000},
+        {"task_id":"llmplay_frontier_l16_m150","level":16,"multiplier":1.5,"tier":"frontier","seed_base":335000000},
+        {"task_id":"llmplay_frontier_l18_m150","level":18,"multiplier":1.5,"tier":"frontier","seed_base":337000000},
+        {"task_id":"llmplay_frontier_l21_m125","level":21,"multiplier":1.25,"tier":"frontier","seed_base":340000000},
+        {"task_id":"llmplay_frontier_l22_m125","level":22,"multiplier":1.25,"tier":"frontier","seed_base":341000000},
+        {"task_id":"llmplay_frontier_l31_m150","level":31,"multiplier":1.5,"tier":"frontier","seed_base":350000000},
+        {"task_id":"llmplay_frontier_l38_m125","level":38,"multiplier":1.25,"tier":"frontier","seed_base":357000000},
+        {"task_id":"llmplay_frontier_l1_m300","level":1,"multiplier":3,"tier":"stretch","seed_base":380000000},
+        {"task_id":"llmplay_frontier_l3_m300","level":3,"multiplier":3,"tier":"stretch","seed_base":382000000},
+        {"task_id":"llmplay_frontier_l4_m300","level":4,"multiplier":3,"tier":"stretch","seed_base":383000000},
+        {"task_id":"llmplay_frontier_l6_m250","level":6,"multiplier":2.5,"tier":"stretch","seed_base":385000000},
+        {"task_id":"llmplay_frontier_l8_m300","level":8,"multiplier":3,"tier":"stretch","seed_base":387000000},
+        {"task_id":"llmplay_frontier_l9_m225","level":9,"multiplier":2.25,"tier":"stretch","seed_base":388000000},
+        {"task_id":"llmplay_frontier_l11_m250","level":11,"multiplier":2.5,"tier":"stretch","seed_base":390000000},
+        {"task_id":"llmplay_frontier_l13_m200","level":13,"multiplier":2,"tier":"stretch","seed_base":392000000},
+        {"task_id":"llmplay_frontier_l16_m200","level":16,"multiplier":2,"tier":"stretch","seed_base":395000000},
+        {"task_id":"llmplay_frontier_l18_m200","level":18,"multiplier":2,"tier":"stretch","seed_base":397000000},
+        {"task_id":"llmplay_frontier_l21_m175","level":21,"multiplier":1.75,"tier":"stretch","seed_base":400000000},
+        {"task_id":"llmplay_frontier_l22_m175","level":22,"multiplier":1.75,"tier":"stretch","seed_base":401000000},
+        {"task_id":"llmplay_frontier_l31_m200","level":31,"multiplier":2,"tier":"stretch","seed_base":410000000},
+        {"task_id":"llmplay_frontier_l38_m175","level":38,"multiplier":1.75,"tier":"stretch","seed_base":417000000},
+        {"task_id":"llmplay_frontier_l32_m100","level":32,"multiplier":1,"tier":"terrain","seed_base":431000000},
+        {"task_id":"llmplay_frontier_l33_m100","level":33,"multiplier":1,"tier":"terrain","seed_base":432000000},
+        {"task_id":"llmplay_frontier_l34_m100","level":34,"multiplier":1,"tier":"terrain","seed_base":433000000},
+        {"task_id":"llmplay_frontier_l36_m100","level":36,"multiplier":1,"tier":"terrain","seed_base":435000000},
+        {"task_id":"llmplay_frontier_l37_m100","level":37,"multiplier":1,"tier":"terrain","seed_base":436000000},
+        {"task_id":"llmplay_frontier_l39_m100","level":39,"multiplier":1,"tier":"terrain","seed_base":438000000},
+        {"task_id":"llmplay_frontier_l41_m100","level":41,"multiplier":1,"tier":"terrain","seed_base":440000000},
+        {"task_id":"llmplay_frontier_l42_m100","level":42,"multiplier":1,"tier":"terrain","seed_base":441000000},
+        {"task_id":"llmplay_frontier_l43_m100","level":43,"multiplier":1,"tier":"terrain","seed_base":442000000},
+        {"task_id":"llmplay_frontier_l44_m100","level":44,"multiplier":1,"tier":"terrain","seed_base":443000000},
+        {"task_id":"llmplay_frontier_l46_m100","level":46,"multiplier":1,"tier":"terrain","seed_base":445000000},
+        {"task_id":"llmplay_frontier_l47_m100","level":47,"multiplier":1,"tier":"terrain","seed_base":446000000},
+        {"task_id":"llmplay_frontier_l48_m100","level":48,"multiplier":1,"tier":"terrain","seed_base":447000000},
+        {"task_id":"llmplay_frontier_l49_m100","level":49,"multiplier":1,"tier":"terrain","seed_base":448000000}
+      ],
+      "target_wins": 24,
+      "seed_window": 1000000,
+      "seed_epoch_stride": 64000000,
+      "note": "task220 追加：每个 >1.0 的关卡 24 胜，再加前沿 +0.5 的拉伸档；雾/屋顶按各自倍率单独一层（倍率 1.0 也派，用于广度）。"
+    },
+    "upgrades": {
+      "cards": {
+        "day": [40, 41],
+        "night": [42],
+        "pool": [43],
+        "fog": [42, 43],
+        "roof": [44, 47]
+      },
+      "targets": {
+        "day": 24, "night": 24, "pool": 24, "fog": 24, "roof": 24
+      },
+      "note": "task220：只统计本次会话新打的胜组（carry 历史不计）；升级植物只能种在底座上（40←7、41←1、42←10、43←16、44←39、46←21、47←34），所有权由 profile_for_deck 声明。"
+    },
+    "resume": {
+      "catalog": "configs/llmplay_resume.json",
+      "terrain_order": ["night", "pool", "day", "fog"],
+      "note": "task220：从学生自己的败局中盘接回（首次破门前 45 秒），最高优先；每条只打一次，胜/负都记。"
+    },
+    "native_seed_base": 300000000
   }
 }

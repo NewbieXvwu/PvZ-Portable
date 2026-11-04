@@ -36,7 +36,6 @@ sys.path.insert(0, str(ROOT / "scripts"))
 from pvz_env import PvZEnv, TaskSpec  # noqa: E402
 from pvz_constants import PLANT_NAME, grid_square_types  # noqa: E402
 from pvz_tasks import profile_for_deck  # noqa: E402
-from unified_panel import read_panel
 
 # 真实路的地形集合：草地或水路。DIRT/NONE/HIGH_GROUND 是填充或特殊格。
 _LANE_TERRAIN = frozenset(
@@ -288,6 +287,7 @@ def load_training_task(manifest_path: str | Path, task_id: str) -> dict:
     这是**复现训练任务**的唯一权威来源。把 level / deck / 上限 / 倍率手抄到命令行上
     必然漂移 —— 第 49 关的卡组就是这么漂的（[0,1,2,3,4,5,33] vs 任务清单 [0,1,3,4,7,33]）。
     """
+    from unified_panel import read_panel  # 只有生成面板时才需要；包内不装这一串生成脚本
     doc = read_panel(manifest_path)
     for task in doc.get("tasks") or []:
         if task.get("task_id") == task_id:
