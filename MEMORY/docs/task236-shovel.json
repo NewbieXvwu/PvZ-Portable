@@ -1,0 +1,575 @@
+{
+ "task": "task236",
+ "title": "铲子第三次尝试：诊断价值网、补观测完整性、用统计门槛加铲子候选（研究阶段，不上生产）",
+ "created": "2026-11-04",
+ "status": "prototype + measurement; C++ replacement candidates default off; no deployment",
+ "environment": {
+  "machine": "Mac (headless, collector frozen during runs)",
+  "engine": "/Users/newbiexvwu/pvz-mac-collect/build-shovel3/pvz-portable",
+  "engine_source_commit": "49f574c7403885724889d07c681226754fff7bf8",
+  "engine_build_dir": "~/pvz-mac-collect/build-shovel3 (independent; build2 untouched)",
+  "resources": "~/.cache/pvz-research-resources",
+  "workers_max": 6,
+  "python": "~/pvz-torch-venv (torch 2.15.0, numpy 2.5.4)"
+ },
+ "models": {
+  "student": {
+   "path": "artifacts/task236/models/student.pt",
+   "sha256": "b5e31a7e8a6513931fe001e8e7d2c423454dacf4f6edc9321f56603481f4de57"
+  },
+  "gptbc": {
+   "path": "artifacts/task236/models/gptbc.pt",
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "value_v5": {
+   "path": "artifacts/task236/models/value.pt",
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "value_roof_v5": {
+   "path": "artifacts/task236/models/value_roof.pt",
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  },
+  "static_branch1": {
+   "path": "artifacts/task236/models/static.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  }
+ },
+ "phase1_diagnosis": {
+  "doc": "scripts/task236_diagnose.py; rows in artifacts/task236/diagnose-stable/",
+  "design": "same root branched into wait / shovel_only / replant_same / human_replace; each plan scored by the leaf value net on the post-action board and by a real engine continuation with 4 shared RESEED futures (CRN); horizons 600 and 1200; 31 drills = 7 human sequences + 12 roof + 12 night; the 12 task234 gen-fog drills could not be replayed (ephemeral archives gone)",
+  "drills": 31,
+  "by_terrain": {
+   "night": {
+    "wait": {
+     "n": 12,
+     "mean_sim_delta": 0.0,
+     "mean_leaf_delta": 0.0,
+     "mean_error": 0.0,
+     "sign_disagree": 0
+    },
+    "shovel_only": {
+     "n": 12,
+     "mean_sim_delta": -0.0055,
+     "mean_leaf_delta": -0.00455,
+     "mean_error": 0.00095,
+     "sign_disagree": 2
+    },
+    "replant_same": {
+     "n": 2,
+     "mean_sim_delta": 0.05451,
+     "mean_leaf_delta": 0.07758,
+     "mean_error": 0.02307,
+     "sign_disagree": 0
+    }
+   },
+   "roof": {
+    "wait": {
+     "n": 19,
+     "mean_sim_delta": 0.0,
+     "mean_leaf_delta": 0.0,
+     "mean_error": 0.0,
+     "sign_disagree": 0
+    },
+    "shovel_only": {
+     "n": 19,
+     "mean_sim_delta": 0.0058,
+     "mean_leaf_delta": -0.0011,
+     "mean_error": -0.0069,
+     "sign_disagree": 10
+    },
+    "replant_same": {
+     "n": 12,
+     "mean_sim_delta": -0.00605,
+     "mean_leaf_delta": -0.04879,
+     "mean_error": -0.04273,
+     "sign_disagree": 6
+    },
+    "human_replace": {
+     "n": 6,
+     "mean_sim_delta": 0.06095,
+     "mean_leaf_delta": 0.05528,
+     "mean_error": -0.00567,
+     "sign_disagree": 3
+    }
+   }
+  },
+  "by_plan": {
+   "wait": {
+    "drills": 31,
+    "h600": {
+     "n": 31,
+     "mean_sim_delta": 0.0,
+     "mean_leaf_delta": 0.0,
+     "mean_error": 0.0,
+     "sd_sim_delta": 0.0,
+     "sd_error": 0.0,
+     "sign_disagree": 0
+    },
+    "h1200": {
+     "n": 31,
+     "mean_sim_delta": 0.0,
+     "mean_leaf_delta": 0.0,
+     "mean_error": 0.0,
+     "sd_sim_delta": 0.0,
+     "sd_error": 0.0,
+     "sign_disagree": 0
+    }
+   },
+   "shovel_only": {
+    "drills": 31,
+    "h600": {
+     "n": 31,
+     "mean_sim_delta": 0.00611,
+     "mean_leaf_delta": -0.00243,
+     "mean_error": -0.00855,
+     "sd_sim_delta": 0.07146,
+     "sd_error": 0.07187,
+     "sign_disagree": 13
+    },
+    "h1200": {
+     "n": 31,
+     "mean_sim_delta": 0.00143,
+     "mean_leaf_delta": -0.00243,
+     "mean_error": -0.00386,
+     "sd_sim_delta": 0.08391,
+     "sd_error": 0.09613,
+     "sign_disagree": 12
+    }
+   },
+   "replant_same": {
+    "drills": 14,
+    "h600": {
+     "n": 14,
+     "mean_sim_delta": 0.00101,
+     "mean_leaf_delta": -0.03074,
+     "mean_error": -0.03175,
+     "sd_sim_delta": 0.06795,
+     "sd_error": 0.1067,
+     "sign_disagree": 5
+    },
+    "h1200": {
+     "n": 14,
+     "mean_sim_delta": 0.0026,
+     "mean_leaf_delta": -0.03074,
+     "mean_error": -0.03333,
+     "sd_sim_delta": 0.10151,
+     "sd_error": 0.13348,
+     "sign_disagree": 6
+    }
+   },
+   "human_replace": {
+    "drills": 6,
+    "h600": {
+     "n": 6,
+     "mean_sim_delta": 0.03514,
+     "mean_leaf_delta": 0.05528,
+     "mean_error": 0.02014,
+     "sd_sim_delta": 0.08636,
+     "sd_error": 0.12359,
+     "sign_disagree": 2
+    },
+    "h1200": {
+     "n": 6,
+     "mean_sim_delta": 0.06095,
+     "mean_leaf_delta": 0.05528,
+     "mean_error": -0.00567,
+     "sd_sim_delta": 0.09571,
+     "sd_error": 0.12628,
+     "sign_disagree": 3
+    }
+   }
+  },
+  "by_urgency": {
+   "urgent": {
+    "wait": {
+     "h600": {
+      "n": 8,
+      "mean_sim_delta": 0.0,
+      "mean_leaf_delta": 0.0,
+      "mean_error": 0.0,
+      "sign_disagree": 0
+     },
+     "h1200": {
+      "n": 8,
+      "mean_sim_delta": 0.0,
+      "mean_leaf_delta": 0.0,
+      "mean_error": 0.0,
+      "sign_disagree": 0
+     }
+    },
+    "shovel_only": {
+     "h600": {
+      "n": 8,
+      "mean_sim_delta": 0.00997,
+      "mean_leaf_delta": -0.01576,
+      "mean_error": -0.02573,
+      "sign_disagree": 7
+     },
+     "h1200": {
+      "n": 8,
+      "mean_sim_delta": -0.00757,
+      "mean_leaf_delta": -0.01576,
+      "mean_error": -0.00819,
+      "sign_disagree": 4
+     }
+    },
+    "replant_same": {
+     "h600": {
+      "n": 8,
+      "mean_sim_delta": -0.01414,
+      "mean_leaf_delta": -0.07988,
+      "mean_error": -0.06573,
+      "sign_disagree": 1
+     },
+     "h1200": {
+      "n": 8,
+      "mean_sim_delta": -0.02308,
+      "mean_leaf_delta": -0.07988,
+      "mean_error": -0.0568,
+      "sign_disagree": 3
+     }
+    },
+    "human_replace": {
+     "h600": {
+      "n": 2,
+      "mean_sim_delta": -0.03451,
+      "mean_leaf_delta": 0.02183,
+      "mean_error": 0.05634,
+      "sign_disagree": 2
+     },
+     "h1200": {
+      "n": 2,
+      "mean_sim_delta": 0.03873,
+      "mean_leaf_delta": 0.02183,
+      "mean_error": -0.0169,
+      "sign_disagree": 1
+     }
+    }
+   },
+   "economic": {
+    "wait": {
+     "h600": {
+      "n": 23,
+      "mean_sim_delta": 0.0,
+      "mean_leaf_delta": 0.0,
+      "mean_error": 0.0,
+      "sign_disagree": 0
+     },
+     "h1200": {
+      "n": 23,
+      "mean_sim_delta": 0.0,
+      "mean_leaf_delta": 0.0,
+      "mean_error": 0.0,
+      "sign_disagree": 0
+     }
+    },
+    "shovel_only": {
+     "h600": {
+      "n": 23,
+      "mean_sim_delta": 0.00477,
+      "mean_leaf_delta": 0.0022,
+      "mean_error": -0.00257,
+      "sign_disagree": 6
+     },
+     "h1200": {
+      "n": 23,
+      "mean_sim_delta": 0.00456,
+      "mean_leaf_delta": 0.0022,
+      "mean_error": -0.00236,
+      "sign_disagree": 8
+     }
+    },
+    "replant_same": {
+     "h600": {
+      "n": 6,
+      "mean_sim_delta": 0.02122,
+      "mean_leaf_delta": 0.03478,
+      "mean_error": 0.01356,
+      "sign_disagree": 4
+     },
+     "h1200": {
+      "n": 6,
+      "mean_sim_delta": 0.03683,
+      "mean_leaf_delta": 0.03478,
+      "mean_error": -0.00204,
+      "sign_disagree": 3
+     }
+    },
+    "human_replace": {
+     "h600": {
+      "n": 4,
+      "mean_sim_delta": 0.06997,
+      "mean_leaf_delta": 0.07201,
+      "mean_error": 0.00204,
+      "sign_disagree": 0
+     },
+     "h1200": {
+      "n": 4,
+      "mean_sim_delta": 0.07205,
+      "mean_leaf_delta": 0.07201,
+      "mean_error": -5e-05,
+      "sign_disagree": 2
+     }
+    }
+   }
+  },
+  "removal_leaf": {
+   "n": 31,
+   "positive": 16,
+   "mean_leaf": 0.39387
+  },
+  "human_sequence_summary": {
+   "n": 6,
+   "mean_leaf_delta": 0.0553,
+   "mean_pct": 10.5,
+   "mean_sim_delta_600": 0.0351,
+   "mean_sim_delta_1200": 0.0609,
+   "per_case_pct_and_sim": [
+    [
+     "human4",
+     8.8,
+     0.205,
+     0.27
+    ],
+    [
+     "human0",
+     9.1,
+     0.033,
+     -0.009
+    ],
+    [
+     "human5",
+     3.3,
+     0.025,
+     -0.005
+    ],
+    [
+     "human6",
+     9.6,
+     -0.088,
+     0.05
+    ],
+    [
+     "human1",
+     33.9,
+     0.016,
+     0.033
+    ],
+    [
+     "human3",
+     -1.7,
+     0.019,
+     0.027
+    ]
+   ]
+  },
+  "misjudgment": {
+   "removal_positive": 16,
+   "removal_n": 31,
+   "removal_positive_median_pct": 8.0,
+   "removal_max_pct": 197.8,
+   "removal_mean_pct": 9.7,
+   "abs_error_urgent_1200": 0.0854,
+   "abs_error_economic_1200": 0.0679,
+   "sign_disagree_shovel_only_1200": 12,
+   "sign_disagree_shovel_only_600": 13,
+   "note": "per-case leaf-sim errors reach 18-24pp; the mean absolute error (7-9pp) is the same order as the value differences the gate must resolve"
+  },
+  "root_cause": [
+   "价值网 v5（encoder 2）的植物特征只有 SeedType + health/max，没有 mState/mStateCountdown/mLaunchCounter/mLaunchRate/mTargetX/Y；铲掉一株向日葵只少一个类型通道，产阳光的未来损失看不见",
+   "僵尸只看类型 + 80px 格 + 总血量 + eating/chilled；phase/phaseCounter/velX/velZ/altitude/mindControlled/ladderCol 全缺；子弹、格子物品计时、下一波倒计时也不在 VN",
+   "短视界叶值在 600-1200 tick 内看不到经济代价：整局里出现“甜瓜→向日葵”这种短视界盈利、长期亏本的替换",
+   "价值网从未在“铲掉健康植物之后”的局面上训练，叶值在这些 board 上属于分布外外推",
+   "单株价值差只有几个百分点，与 7-9pp 的估值误差同量级；2-4 个候选取最大 = 赢家诅咒"
+  ]
+ },
+ "phase2_audit": {
+  "doc": "MEMORY/docs/task236-markov-audit.md",
+  "key_gaps_obs_v3": [
+   "植物 mLaunchCounter（下一次射击/产阳光倒计时）",
+   "植物 mTargetX/mTargetY、mDisappearCountdown、mSubclass",
+   "僵尸 mPhaseCounter、mVelZ/mAltitude、mFlyingHealth、mMindControlled、mUseLadderCol/mTargetCol、mSummonCounter、mFlatTires",
+   "波次 mZombieCountDown、mHugeWaveCountDown、wave_health；格子物品 mGridItemCounter；子弹"
+  ],
+  "key_gaps_value_net": [
+   "植物内部状态全部（state/countdown/launchCounter/launchRate/wakeUp/asleep/x/y）",
+   "僵尸行为状态几乎全部（phase/velocity/altitude/flying health/mind control/ladder target）",
+   "子弹、格子物品计时",
+   "波次倒计时与波血量"
+  ],
+  "note": "改 VN 特征 = 价值网重训；改 obs-v3 token = 学生重训。旧帧新槽为 0，可混训但分布有偏移。沉没成本（年龄/已投入阳光）不建议补，补内部计时器即可。"
+ },
+ "phase3_prototype": {
+  "primitive": "src/LawnApp.cpp EnvironmentReplace(packet,col,row): GetTopPlantAt(TOPPLANT_ANY) -> reject flowerpot/lilypad -> EnvironmentShovel -> EnvironmentPlant in the same tick; wire action type 'replace' / REPLACE / branch token R:packet:col:row",
+  "search_params": {
+   "shovel_candidates": 2,
+   "shovel_samples": 4,
+   "shovel_horizon": 600,
+   "default": "0/0/0 (off)"
+  },
+  "candidate_generation": "for every affordable active packet × every occupied non-under cell: score the post-replacement board with the static net; keep per_card best cells per card; sort all by static score; keep top shovel_candidates",
+  "adoption_rule": "after the ordinary search picks its no-shovel action, run n paired CRN futures (same seed per future) for baseline and replacement to tick+horizon; d=replace-baseline; adopt the highest-mean candidate only if mean(d) - t_{0.95,n-1}*sd(d)/sqrt(n) > 0 (one-sided 95% Student-t). No hand margin.",
+  "code_surfaces": [
+   "src/main.cpp: R candidate, REPLACE action, BuildShovelPlans, ShovelChoice, StudentT95, SEARCH stats.shovel",
+   "python/pvz_env.py: replace action, branch token, SEARCH fields version-gated on search_version>=2",
+   "scripts/search_play.py: --shovel-* flags, replace stats",
+   "scripts/drill_run.py: --shovel-* flags, synthetic shovel+plant records, per-decision screen records"
+  ],
+  "drill_3seed_all": {
+   "paired_games": {
+    "n": 129,
+    "off_wins": 43,
+    "on_wins": 40,
+    "only_off": 5,
+    "only_on": 2,
+    "mcnemar_p": 0.4531
+   },
+   "by_terrain": {
+    "roof": {
+     "n": 57,
+     "off_wins": 34,
+     "on_wins": 31,
+     "only_off": 3,
+     "only_on": 0,
+     "mcnemar_p": 0.25
+    },
+    "night": {
+     "n": 36,
+     "off_wins": 6,
+     "on_wins": 4,
+     "only_off": 2,
+     "only_on": 0,
+     "mcnemar_p": 0.5
+    },
+    "fog": {
+     "n": 36,
+     "off_wins": 3,
+     "on_wins": 5,
+     "only_off": 0,
+     "only_on": 2,
+     "mcnemar_p": 0.5
+    }
+   }
+  },
+  "drill_3seed_roof_night": {
+   "paired_games": {
+    "n": 93,
+    "off_wins": 40,
+    "on_wins": 35,
+    "only_off": 5,
+    "only_on": 0,
+    "mcnemar_p": 0.0625
+   },
+   "by_terrain": {
+    "roof": {
+     "n": 57,
+     "off_wins": 34,
+     "on_wins": 31,
+     "only_off": 3,
+     "only_on": 0,
+     "mcnemar_p": 0.25
+    },
+    "night": {
+     "n": 36,
+     "off_wins": 6,
+     "on_wins": 4,
+     "only_off": 2,
+     "only_on": 0,
+     "mcnemar_p": 0.5
+    }
+   },
+   "replacements": 93,
+   "screens": 261,
+   "candidates_screened": 417,
+   "passes": 105,
+   "overrides": 93
+  },
+  "drill_3seed_fog": {
+   "paired_games": {
+    "n": 36,
+    "off_wins": 3,
+    "on_wins": 5,
+    "only_off": 0,
+    "only_on": 2,
+    "mcnemar_p": 0.5
+   },
+   "replacements": 59,
+   "sunflower_removed": 0,
+   "sequences": 6,
+   "sequence_kind": "sunshroom(9) -> cherrybomb(2) -> sunshroom(9), 5 cases on cell [2,0]",
+   "screens": 169
+  },
+  "human_7": {
+   "games": 21,
+   "at_human_cell_shovels": 1,
+   "total_shovels": 19,
+   "success_off": 17,
+   "success_on": 17,
+   "note": "the teacher never reproduced the recorded shovel→squash→replant; 1/19 shovels happened on the recorded cell and it was a white chomper→chomper"
+  },
+  "whole_game_64": {
+   "tasks": [
+    "L7 day deck_for_level",
+    "L14 night deck_for_level"
+   ],
+   "seeds_per_task": 32,
+   "pairs": 64,
+   "off_wins": 54,
+   "on_wins": 45,
+   "only_off": 12,
+   "only_on": 3,
+   "mcnemar_p": 0.0352,
+   "by_task": {
+    "l7": {
+     "n": 32,
+     "off_wins": 32,
+     "on_wins": 31,
+     "only_off": 1,
+     "only_on": 0,
+     "mcnemar_p": 1.0,
+     "replacements": 886
+    },
+    "l14": {
+     "n": 32,
+     "off_wins": 22,
+     "on_wins": 14,
+     "only_off": 11,
+     "only_on": 3,
+     "mcnemar_p": 0.0574,
+     "replacements": 622
+    }
+   },
+   "replacements": 1508,
+   "replacements_per_game": 23.56,
+   "sunflower_removed": 497,
+   "sunflower_share": 33.0,
+   "baseline_1018": {
+    "shovels": 1483,
+    "games": 128,
+    "per_game": 11.6,
+    "sunflower": 1171,
+    "sunflower_share": 79.0
+   }
+  },
+  "whole_game_interpretation": "64 对整局：关铲 54/64、开铲 45/64（McNemar p=0.035，显著变差）；L7 32→31，L14 22→14。铲子频率 23.6 次/局，远高于 10-18 的 11.6 次/局；向日葵占 33%（10-18 为 79%），说明这次不是只反复铲向日葵，而是更广泛的“铲掉再种/换卡”噪声出口。"
+ },
+ "answers": {
+  "value_net_misjudgment": "价值网不是“算不准铲子”，而是根本没看到决定铲子价值的状态：植物只剩类型+血量比例，僵尸只剩类型+格+总血量，经济产出/计时器/子弹/波次全缺；再叠加 600-1200 tick 的叶值短视界，铲掉一株甜瓜换向日葵在短视界里是赚的。10-18 的“去掉植物价值反而升高”在 31 题里仍有 16 题成立（正值中位 +8%，最大 +197.8%，一例向日葵 +27.2%）；单例误差可达 18-24pp。",
+  "prototype_drill": "3 种子 129 对（43 题×3）：关 43、开 40（only_off 5 / only_on 2, p=0.453）；屋顶 34→31（p=0.25），夜间 6→4（p=0.5），雾 3→5（p=0.5）。方向偏差但不显著；雾里出现 6 次“阳光菇→樱桃→补阳光菇”的替换序列，说明候选/执行链路是通的，但不是人类屋顶救场。",
+  "prototype_whole": "64 对整局（L7/L14，各 32 种子，生产搜索参数 + 本原型）：关 54/64、开 45/64，McNemar p=0.035，显著更差，未过“不能比关铲子差”的门槛；L14 22→14。铲子 1508 次、23.6 次/局；向日葵 497 次（33.0%），但白铲同种 124 次、阳光菇→向日葵 115 次、向日葵→豌豆 110 次等广泛替换。",
+  "human_reproduction": "7 条人类序列 ×3 种子：开铲与关铲的成功数完全相同（19/21），没有复现 recorded cell 的“铲向日葵→窝瓜”；21 局里 19 次铲子只有 1 次落在 recorded cell，且是 chomper→chomper 白铲。等效救场也没有：原本失败的 human2/human3 仍有种子失败。",
+  "worth_next_stage": "值得进入下一阶段的是“补观测 + 用铲子后果重训价值网 + 采铲子数据”，不值得现在加学生铲子头。这版铲子原型在整局上显著更差，根因是叶值/特征而不是动作空间；先把 VN v6（植物内部计时器、僵尸 phase/速度/高度/催眠/梯子、波次计时、子弹、格子物品）和 replace 存档语法做出来，用人类/GPT 铲子 + 老师探索性铲子的真实结果重训，再按同一 64 对整局门槛复测。学生头最后做；在此之前铲子候选保持默认关。",
+  "urgent_vs_economic": "紧急类（短视界内破防/不破防）可以用 600 tick 的真实续走 + 终局结果裁决；经济类（换土豆雷/换向日葵）在 600-1200 tick 内估值误差与收益同量级，必须用更长视界（>=2500）或 v6 叶值，并且门槛按配对方差算。当前原型的 600 tick 门槛把经济类也放进来了，是整局变差的主因之一。"
+ },
+ "costs": {
+  "next_phase": "补 VN 特征 + 重训 v6：2-3 人日；replace 存档语法 + 人类/GPT 铲子回放/采集：1-2 人日；64-128 对整局复测：1 天；学生铲子头（仅 v6 通过后）：3-5 人日。",
+  "this_task": "C++ 原型约 230 行 + Python 薄接口约 70 行；诊断脚本 440 行；3 种子 drill 129 对约 10 分钟（6 worker）；64 对整局约 25 分钟。"
+ },
+ "caveats": [
+  "原 task234 的 12 条 gen-fog drill 依赖临时 gen_frames，已被清理；本次雾题用 demo 工作树可读存档重新挖了 12 条（6 气球/4 小丑/1 跳跳/1 海豚），与 task234 的雾题不是同一批，雾的 3→5 不能直接与 task234 的 8.3% vs 30.6% 比。",
+  "3 种子屋顶/夜间跑（43 题 bank）里 36 个雾题因存档丢失报错，已剔除；雾单独用新 12 题 bank 重跑。",
+  "整局用 deck_for_level 的 L7/L14 卡组（不是用户 L44 卡组）；L7 基线 32/32 触顶，只有 L14 有下降空间。",
+  "replace 动作尚未进入存档 action 语法；本轮没有写 frames，--shovel-candidates 与 --frames 互斥，避免产生训练器读不懂的存档。",
+  "所有对局只在 Mac headless 跑，采集进程在开跑前手动冻结（freeze.sh stop）；未跑台式机生产、未部署。"
+ ]
+}
