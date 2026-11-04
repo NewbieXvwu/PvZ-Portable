@@ -1,0 +1,2353 @@
+{
+ "schema": "pvz-drill-bank-v1",
+ "task": "task234-eval",
+ "parent": "task234",
+ "criterion": {
+  "horizon": 900,
+  "lookback": 300,
+  "success": [
+   "all root threats gone or off board by horizon",
+   "no lawn mower fired",
+   "no house breach"
+  ],
+  "secondary": "plants_eaten during the horizon"
+ },
+ "counts": {
+  "drills": 36,
+  "by_terrain": {
+   "fog": 12,
+   "roof": 12,
+   "night": 12
+  }
+ },
+ "drills": [
+  {
+   "id": "gen:gen_fast:r465",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400043/gen_fast",
+   "decision": 466,
+   "root_frame": 465,
+   "root_tick": 24222,
+   "level": 39,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 69074952,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 651.9,
+     "health": 500
+    },
+    {
+     "id": 69206030,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 635.9,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 69206030,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 635.9
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 18,
+    "name": "pogo",
+    "x": 516.9,
+    "front_x": 400.0,
+    "tick": 24522,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 220.1,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r467",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400040/gen_fast",
+   "decision": 468,
+   "root_frame": 467,
+   "root_tick": 23572,
+   "level": 39,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 69074947,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 732.1,
+     "health": 500
+    },
+    {
+     "id": 68943879,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 765.1,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 69074947,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 732.1
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 18,
+    "name": "pogo",
+    "x": 630.1,
+    "front_x": 640.0,
+    "tick": 23872,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 295.6,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r538",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400042/gen_fast",
+   "decision": 539,
+   "root_frame": 538,
+   "root_tick": 27190,
+   "level": 39,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 69992452,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 774.6,
+     "health": 500
+    },
+    {
+     "id": 70123531,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 785.6,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 69992452,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 774.6
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 18,
+    "name": "pogo",
+    "x": 774.6,
+    "front_x": 720.0,
+    "tick": 27190,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 356.9,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r436",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400031/gen_fast",
+   "decision": 437,
+   "root_frame": 436,
+   "root_tick": 22920,
+   "level": 34,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 68943883,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 484.3,
+     "health": 270
+    },
+    {
+     "id": 69468174,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 473.8,
+     "health": 270
+    }
+   ],
+   "targets": [
+    {
+     "id": 69468174,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 473.8
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 16,
+    "name": "balloon",
+    "x": 386.7,
+    "front_x": 240.0,
+    "tick": 23220,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 212.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r534",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400035/gen_fast",
+   "decision": 535,
+   "root_frame": 534,
+   "root_tick": 27173,
+   "level": 34,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 69140483,
+     "row": 3,
+     "type": 14,
+     "name": "dolphin",
+     "x": 131.7,
+     "health": 280
+    },
+    {
+     "id": 69599243,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 474.2,
+     "health": 270
+    }
+   ],
+   "targets": [
+    {
+     "id": 69599243,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 474.2
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 16,
+    "name": "balloon",
+    "x": 382.6,
+    "front_x": 240.0,
+    "tick": 27473,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 199.3,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r264",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400025/gen_fast",
+   "decision": 265,
+   "root_frame": 264,
+   "root_tick": 14040,
+   "level": 33,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 67436549,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 505.6,
+     "health": 270
+    },
+    {
+     "id": 67305479,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 484.0,
+     "health": 270
+    }
+   ],
+   "targets": [
+    {
+     "id": 67305479,
+     "row": 2,
+     "type": 16,
+     "name": "balloon",
+     "x": 484.0
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 16,
+    "name": "balloon",
+    "x": 380.1,
+    "front_x": 240.0,
+    "tick": 14340,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 172.2,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r676",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400011/gen_fast",
+   "decision": 677,
+   "root_frame": 676,
+   "root_tick": 33960,
+   "level": 32,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 71106566,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 512.7,
+     "health": 460
+    },
+    {
+     "id": 71303175,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 521.1,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 71303175,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 521.1
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 423.2,
+    "front_x": 320.0,
+    "tick": 34260,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 320.3,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r1133",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400015/gen_fast",
+   "decision": 1134,
+   "root_frame": 1133,
+   "root_tick": 56159,
+   "level": 32,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 77201420,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 512.7,
+     "health": 500
+    },
+    {
+     "id": 76808221,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 531.3,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 76808221,
+     "row": 5,
+     "type": 15,
+     "name": "jack",
+     "x": 531.3
+    }
+   ],
+   "trigger": {
+    "row": 5,
+    "type": 15,
+    "name": "jack",
+    "x": 425.4,
+    "front_x": 320.0,
+    "tick": 56475,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 312.1,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r842",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400003/gen_fast",
+   "decision": 843,
+   "root_frame": 842,
+   "root_tick": 42540,
+   "level": 31,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 73662464,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 531.6,
+     "health": 500
+    },
+    {
+     "id": 73531393,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 525.3,
+     "health": 460
+    },
+    {
+     "id": 73728002,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 544.4,
+     "health": 460
+    },
+    {
+     "id": 73465864,
+     "row": 1,
+     "type": 15,
+     "name": "jack",
+     "x": 525.3,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 73662464,
+     "row": 4,
+     "type": 15,
+     "name": "jack",
+     "x": 531.6
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 15,
+    "name": "jack",
+    "x": 430.0,
+    "front_x": 320.0,
+    "tick": 42840,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 329.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r925",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400015/gen_fast",
+   "decision": 926,
+   "root_frame": 925,
+   "root_tick": 46213,
+   "level": 32,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 73596946,
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 445.5,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 73596946,
+     "row": 1,
+     "type": 7,
+     "name": "football",
+     "x": 445.5
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 7,
+    "name": "football",
+    "x": 347.2,
+    "front_x": 240.0,
+    "tick": 46513,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 199.6,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r845",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400010/gen_fast",
+   "decision": 846,
+   "root_frame": 845,
+   "root_tick": 41954,
+   "level": 32,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 73334787,
+     "row": 4,
+     "type": 7,
+     "name": "football",
+     "x": 602.6,
+     "health": 1670
+    },
+    {
+     "id": 73465866,
+     "row": 5,
+     "type": 7,
+     "name": "football",
+     "x": 580.7,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 73334787,
+     "row": 4,
+     "type": 7,
+     "name": "football",
+     "x": 602.6
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 7,
+    "name": "football",
+    "x": 503.6,
+    "front_x": 400.0,
+    "tick": 42254,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 361.7,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "gen:gen_fast:r697",
+   "source_root": "gen",
+   "archive": "gen_frames/seed_23400032/gen_fast",
+   "decision": 698,
+   "root_frame": 697,
+   "root_tick": 35481,
+   "level": 34,
+   "terrain": "fog",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5
+   ],
+   "threats": [
+    {
+     "id": 71434241,
+     "row": 0,
+     "type": 16,
+     "name": "balloon",
+     "x": 735.4,
+     "health": 270
+    },
+    {
+     "id": 71237637,
+     "row": 1,
+     "type": 16,
+     "name": "balloon",
+     "x": 728.2,
+     "health": 270
+    },
+    {
+     "id": 71368712,
+     "row": 3,
+     "type": 14,
+     "name": "dolphin",
+     "x": 728.5,
+     "health": 500
+    },
+    {
+     "id": 71172112,
+     "row": 2,
+     "type": 14,
+     "name": "dolphin",
+     "x": 720.4,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 71172112,
+     "row": 2,
+     "type": 14,
+     "name": "dolphin",
+     "x": 720.4
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 14,
+    "name": "dolphin",
+    "x": 613.7,
+    "front_x": 560.0,
+    "tick": 35781,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 442.2,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "imitater:user_l44_a9f0126df282:human_r806",
+   "kind": "human_rescue",
+   "source_root": "imitater",
+   "archive": "artifacts/human_demo/raw/seed_647333091/user_l44_a9f0126df282",
+   "decision": 807,
+   "root_frame": 806,
+   "root_tick": 30152,
+   "level": 44,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 69206026,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 460.3,
+     "health": 260
+    }
+   ],
+   "targets": [
+    {
+     "id": 69206026,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 460.3
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 18,
+    "name": "pogo",
+    "x": 460.3,
+    "front_x": 560.0,
+    "tick": 30152,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 460.3,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost",
+    "human_sequence": {
+     "kind": "human_shovel_sequence",
+     "source_root": "imitater",
+     "archive": "artifacts/human_demo/raw/seed_647333091/user_l44_a9f0126df282",
+     "decision": 807,
+     "root_frame": 806,
+     "root_tick": 30152,
+     "level": 44,
+     "terrain": "roof",
+     "row": 4,
+     "col": 4,
+     "removed_type": 1,
+     "planted": {
+      "type": 17,
+      "tick": 30152,
+      "packet": 7
+     },
+     "replanted": {
+      "type": 1,
+      "tick": 30443,
+      "packet": 0
+     },
+     "complete": true,
+     "targets": [
+      {
+       "id": 69206026,
+       "row": 4,
+       "type": 18,
+       "name": "pogo",
+       "x": 460.3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "main:demo_roof_44_melon_m200:r769",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261044/demo_roof_44_melon_m200",
+   "decision": 770,
+   "root_frame": 769,
+   "root_tick": 33205,
+   "level": 44,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 71630854,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 624.2,
+     "health": 342
+    },
+    {
+     "id": 71434252,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 605.5,
+     "health": 368
+    }
+   ],
+   "targets": [
+    {
+     "id": 71630854,
+     "row": 1,
+     "type": 18,
+     "name": "pogo",
+     "x": 624.2
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 18,
+    "name": "pogo",
+    "x": 594.5,
+    "front_x": 480.0,
+    "tick": 33527,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 572.9,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_44_melon_m200:r958",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261044/demo_roof_44_melon_m200",
+   "decision": 959,
+   "root_frame": 958,
+   "root_tick": 42305,
+   "level": 44,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 75497472,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 639.8,
+     "health": 314
+    },
+    {
+     "id": 75563010,
+     "row": 4,
+     "type": 21,
+     "name": "ladder",
+     "x": 643.9,
+     "health": 948
+    },
+    {
+     "id": 75366405,
+     "row": 3,
+     "type": 21,
+     "name": "ladder",
+     "x": 636.3,
+     "health": 896
+    },
+    {
+     "id": 75300879,
+     "row": 4,
+     "type": 18,
+     "name": "pogo",
+     "x": 654.4,
+     "health": 474
+    }
+   ],
+   "targets": [
+    {
+     "id": 75497472,
+     "row": 0,
+     "type": 18,
+     "name": "pogo",
+     "x": 639.8
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 18,
+    "name": "pogo",
+    "x": 599.7,
+    "front_x": 480.0,
+    "tick": 42648,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 596.0,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "imitater:user_l47_5240981d44c6:r569",
+   "source_root": "imitater",
+   "archive": "artifacts/human_demo/raw/seed_116649463/user_l47_5240981d44c6",
+   "decision": 570,
+   "root_frame": 569,
+   "root_tick": 23738,
+   "level": 47,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 67698690,
+     "row": 2,
+     "type": 21,
+     "name": "ladder",
+     "x": 639.5,
+     "health": 788
+    }
+   ],
+   "targets": [
+    {
+     "id": 67698690,
+     "row": 2,
+     "type": 21,
+     "name": "ladder",
+     "x": 639.5
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 21,
+    "name": "ladder",
+    "x": 575.5,
+    "front_x": 480.0,
+    "tick": 24042,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 507.6,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "imitater:user_l47_5240981d44c6:r615",
+   "source_root": "imitater",
+   "archive": "artifacts/human_demo/raw/seed_116649463/user_l47_5240981d44c6",
+   "decision": 616,
+   "root_frame": 615,
+   "root_tick": 25676,
+   "level": 47,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 68026371,
+     "row": 0,
+     "type": 21,
+     "name": "ladder",
+     "x": 650.1,
+     "health": 896
+    }
+   ],
+   "targets": [
+    {
+     "id": 68026371,
+     "row": 0,
+     "type": 21,
+     "name": "ladder",
+     "x": 650.1
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 21,
+    "name": "ladder",
+    "x": 597.5,
+    "front_x": 480.0,
+    "tick": 25976,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 511.7,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_43_melon_m200:r631",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261043/demo_roof_43_melon_m200",
+   "decision": 632,
+   "root_frame": 631,
+   "root_tick": 24711,
+   "level": 43,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 68354057,
+     "row": 1,
+     "type": 21,
+     "name": "ladder",
+     "x": 776.7,
+     "health": 1000
+    },
+    {
+     "id": 68812812,
+     "row": 1,
+     "type": 21,
+     "name": "ladder",
+     "x": 802.6,
+     "health": 1000
+    }
+   ],
+   "targets": [
+    {
+     "id": 68354057,
+     "row": 1,
+     "type": 21,
+     "name": "ladder",
+     "x": 776.7
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 21,
+    "name": "ladder",
+    "x": 658.6,
+    "front_x": 640.0,
+    "tick": 25022,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 638.3,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_42_gloommelon_m200:human_r1186",
+   "kind": "human_rescue",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261042/demo_roof_42_gloommelon_m200",
+   "decision": 1187,
+   "root_frame": 1186,
+   "root_tick": 59233,
+   "level": 42,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 81330202,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 642.5,
+     "health": 422
+    },
+    {
+     "id": 81002535,
+     "row": 1,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 524.3,
+     "health": 408
+    }
+   ],
+   "targets": [
+    {
+     "id": 81002535,
+     "row": 1,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 524.3
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 524.3,
+    "front_x": 640.0,
+    "tick": 59233,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 524.3,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost",
+    "human_sequence": {
+     "kind": "human_shovel_sequence",
+     "source_root": "main",
+     "archive": "artifacts/human_demo/raw/seed_20261042/demo_roof_42_gloommelon_m200",
+     "decision": 1187,
+     "root_frame": 1186,
+     "root_tick": 59233,
+     "level": 42,
+     "terrain": "roof",
+     "row": 1,
+     "col": 7,
+     "removed_type": 36,
+     "planted": {
+      "type": 17,
+      "tick": 59292,
+      "packet": 8
+     },
+     "replanted": {
+      "type": 36,
+      "tick": 59547,
+      "packet": 4
+     },
+     "complete": true,
+     "targets": [
+      {
+       "id": 81002535,
+       "row": 1,
+       "type": 3,
+       "name": "polevaulter",
+       "x": 524.3
+      }
+     ]
+    }
+   }
+  },
+  {
+   "id": "main:demo_roof_42_gloommelon_m200:r719",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261042/demo_roof_42_gloommelon_m200",
+   "decision": 720,
+   "root_frame": 719,
+   "root_tick": 34807,
+   "level": 42,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 70582278,
+     "row": 0,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 514.3,
+     "health": 334
+    },
+    {
+     "id": 70713357,
+     "row": 4,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 486.6,
+     "health": 340
+    }
+   ],
+   "targets": [
+    {
+     "id": 70713357,
+     "row": 4,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 486.6
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 438.4,
+    "front_x": 320.0,
+    "tick": 35107,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 438.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_48_doom_m200:r733",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261048/demo_roof_48_doom_m200",
+   "decision": 734,
+   "root_frame": 733,
+   "root_tick": 33262,
+   "level": 48,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 72024068,
+     "row": 1,
+     "type": 23,
+     "name": "gargantuar",
+     "x": 579.7,
+     "health": 1916
+    },
+    {
+     "id": 72089620,
+     "row": 2,
+     "type": 23,
+     "name": "gargantuar",
+     "x": 575.0,
+     "health": 1620
+    }
+   ],
+   "targets": [
+    {
+     "id": 72024068,
+     "row": 1,
+     "type": 23,
+     "name": "gargantuar",
+     "x": 579.7
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 23,
+    "name": "gargantuar",
+    "x": 544.0,
+    "front_x": 560.0,
+    "tick": 33589,
+    "crossed": true,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 544.0,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_49_doom_m200:r1280",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261049/demo_roof_49_doom_m200",
+   "decision": 1281,
+   "root_frame": 1280,
+   "root_tick": 58696,
+   "level": 49,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 83034120,
+     "row": 1,
+     "type": 23,
+     "name": "gargantuar",
+     "x": 542.4,
+     "health": 364
+    },
+    {
+     "id": 81985545,
+     "row": 2,
+     "type": 23,
+     "name": "gargantuar",
+     "x": 599.5,
+     "health": 690
+    }
+   ],
+   "targets": [
+    {
+     "id": 81985545,
+     "row": 2,
+     "type": 23,
+     "name": "gargantuar",
+     "x": 599.5
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 23,
+    "name": "gargantuar",
+    "x": 582.9,
+    "front_x": 560.0,
+    "tick": 59030,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 582.9,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_49_doom_m200:r802",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261049/demo_roof_49_doom_m200",
+   "decision": 803,
+   "root_frame": 802,
+   "root_tick": 32568,
+   "level": 49,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 72351745,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 496.7,
+     "health": 448
+    },
+    {
+     "id": 72220688,
+     "row": 2,
+     "type": 15,
+     "name": "jack",
+     "x": 485.5,
+     "health": 368
+    }
+   ],
+   "targets": [
+    {
+     "id": 72351745,
+     "row": 0,
+     "type": 15,
+     "name": "jack",
+     "x": 496.7
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 15,
+    "name": "jack",
+    "x": 434.0,
+    "front_x": 320.0,
+    "tick": 32906,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 421.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n16dag2m_fast_search:r790",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1954229/n16dag2m_fast_search",
+   "decision": 791,
+   "root_frame": 790,
+   "root_tick": 42296,
+   "level": 16,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 68812808,
+     "row": 2,
+     "type": 7,
+     "name": "football",
+     "x": 601.7,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 68812808,
+     "row": 2,
+     "type": 7,
+     "name": "football",
+     "x": 601.7
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 7,
+    "name": "football",
+    "x": 506.8,
+    "front_x": 400.0,
+    "tick": 42596,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 359.1,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n17dag6m_fast_search:r1427",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1964496/n17dag6m_fast_search",
+   "decision": 1428,
+   "root_frame": 1427,
+   "root_tick": 72540,
+   "level": 17,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 72417281,
+     "row": 3,
+     "type": 7,
+     "name": "football",
+     "x": 623.3,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 72417281,
+     "row": 3,
+     "type": 7,
+     "name": "football",
+     "x": 623.3
+    }
+   ],
+   "trigger": {
+    "row": 3,
+    "type": 7,
+    "name": "football",
+    "x": 526.4,
+    "front_x": 480.0,
+    "tick": 72840,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 438.8,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n16dag2m_fast_search:r536",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1954229/n16dag2m_fast_search",
+   "decision": 537,
+   "root_frame": 536,
+   "root_tick": 29335,
+   "level": 16,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 67698694,
+     "row": 4,
+     "type": 7,
+     "name": "football",
+     "x": 677.7,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 67698694,
+     "row": 4,
+     "type": 7,
+     "name": "football",
+     "x": 677.7
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 7,
+    "name": "football",
+    "x": 579.3,
+    "front_x": 480.0,
+    "tick": 29635,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 477.7,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n17dag6m_fast_search:r1275",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1964496/n17dag6m_fast_search",
+   "decision": 1276,
+   "root_frame": 1275,
+   "root_tick": 65024,
+   "level": 17,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 71368707,
+     "row": 4,
+     "type": 7,
+     "name": "football",
+     "x": 723.7,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 71368707,
+     "row": 4,
+     "type": 7,
+     "name": "football",
+     "x": 723.7
+    }
+   ],
+   "trigger": {
+    "row": 4,
+    "type": 7,
+    "name": "football",
+    "x": 620.1,
+    "front_x": 560.0,
+    "tick": 65324,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 520.2,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n16dag4m_fast_search:r914",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1954396/n16dag4m_fast_search",
+   "decision": 915,
+   "root_frame": 914,
+   "root_tick": 49263,
+   "level": 16,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 68943880,
+     "row": 3,
+     "type": 7,
+     "name": "football",
+     "x": 439.4,
+     "health": 69
+    },
+    {
+     "id": 69730313,
+     "row": 0,
+     "type": 7,
+     "name": "football",
+     "x": 759.3,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 69730313,
+     "row": 0,
+     "type": 7,
+     "name": "football",
+     "x": 759.3
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 7,
+    "name": "football",
+    "x": 660.6,
+    "front_x": 560.0,
+    "tick": 49563,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 518.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n17dag3m_fast_search:r1011",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1964290/n17dag3m_fast_search",
+   "decision": 1012,
+   "root_frame": 1011,
+   "root_tick": 54903,
+   "level": 17,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 70385674,
+     "row": 2,
+     "type": 7,
+     "name": "football",
+     "x": 760.0,
+     "health": 1670
+    }
+   ],
+   "targets": [
+    {
+     "id": 70385674,
+     "row": 2,
+     "type": 7,
+     "name": "football",
+     "x": 760.0
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 7,
+    "name": "football",
+    "x": 665.6,
+    "front_x": 560.0,
+    "tick": 55203,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 498.8,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n14dag7m_fast_search:r1149",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1934599/n14dag7m_fast_search",
+   "decision": 1150,
+   "root_frame": 1149,
+   "root_tick": 57410,
+   "level": 14,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 70778895,
+     "row": 1,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 364.1,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 70778895,
+     "row": 1,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 364.1
+    }
+   ],
+   "trigger": {
+    "row": 1,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 266.2,
+    "front_x": 160.0,
+    "tick": 57710,
+    "crossed": false,
+    "near": true,
+    "breach_ahead": false,
+    "min_x_ahead": 37.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n14dag2m_fast_search:r325",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1934177/n14dag2m_fast_search",
+   "decision": 326,
+   "root_frame": 325,
+   "root_tick": 19106,
+   "level": 14,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 66781188,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 371.6,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 66781188,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 371.6
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 274.3,
+    "front_x": 80.0,
+    "tick": 19406,
+    "crossed": false,
+    "near": true,
+    "breach_ahead": false,
+    "min_x_ahead": 120.2,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n14dag8m_fast_search:r1560",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1934715/n14dag8m_fast_search",
+   "decision": 1561,
+   "root_frame": 1560,
+   "root_tick": 79290,
+   "level": 14,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 74579968,
+     "row": 4,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 582.2,
+     "health": 500
+    },
+    {
+     "id": 74907655,
+     "row": 0,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 600.2,
+     "health": 500
+    },
+    {
+     "id": 75169814,
+     "row": 3,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 576.2,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 75169814,
+     "row": 3,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 576.2
+    }
+   ],
+   "trigger": {
+    "row": 3,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 477.6,
+    "front_x": 400.0,
+    "tick": 79590,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": true,
+    "min_x_ahead": 278.6,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n14dag8m_fast_search:r773",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1934715/n14dag8m_fast_search",
+   "decision": 774,
+   "root_frame": 773,
+   "root_tick": 40080,
+   "level": 14,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 68550666,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 683.3,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 68550666,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 683.3
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 587.6,
+    "front_x": 480.0,
+    "tick": 40380,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 355.2,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n14t2m_fast_search:r494",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_2234223/n14t2m_fast_search",
+   "decision": 495,
+   "root_frame": 494,
+   "root_tick": 25560,
+   "level": 14,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 67502086,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 758.6,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 67502086,
+     "row": 2,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 758.6
+    }
+   ],
+   "trigger": {
+    "row": 2,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 662.6,
+    "front_x": 560.0,
+    "tick": 25860,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 605.1,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:n14dag7m_fast_search:r300",
+   "source_root": "main",
+   "archive": "artifacts/hard_mac/frames/seed_1934599/n14dag7m_fast_search",
+   "decision": 301,
+   "root_frame": 300,
+   "root_tick": 15780,
+   "level": 14,
+   "terrain": "night",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 66650119,
+     "row": 3,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 759.2,
+     "health": 500
+    }
+   ],
+   "targets": [
+    {
+     "id": 66650119,
+     "row": 3,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 759.2
+    }
+   ],
+   "trigger": {
+    "row": 3,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 660.8,
+    "front_x": 560.0,
+    "tick": 16080,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 437.5,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  },
+  {
+   "id": "main:demo_roof_42_gloommelon_m200:r760",
+   "source_root": "main",
+   "archive": "artifacts/human_demo/raw/seed_20261042/demo_roof_42_gloommelon_m200",
+   "decision": 761,
+   "root_frame": 760,
+   "root_tick": 36861,
+   "level": 42,
+   "terrain": "roof",
+   "lanes": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "threats": [
+    {
+     "id": 70844429,
+     "row": 3,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 520.7,
+     "health": 260
+    },
+    {
+     "id": 71041038,
+     "row": 0,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 517.6,
+     "health": 460
+    }
+   ],
+   "targets": [
+    {
+     "id": 71041038,
+     "row": 0,
+     "type": 3,
+     "name": "polevaulter",
+     "x": 517.6
+    }
+   ],
+   "trigger": {
+    "row": 0,
+    "type": 3,
+    "name": "polevaulter",
+    "x": 439.1,
+    "front_x": 320.0,
+    "tick": 37161,
+    "crossed": false,
+    "near": false,
+    "breach_ahead": false,
+    "min_x_ahead": 411.4,
+    "original_plant_loss": 0
+   },
+   "horizon": 900,
+   "criterion": {
+    "threats_neutralized": true,
+    "mower_unchanged": true,
+    "house_unchanged": true,
+    "secondary": "plants_lost"
+   }
+  }
+ ]
+}

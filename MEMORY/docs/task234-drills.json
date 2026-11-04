@@ -1,0 +1,1716 @@
+{
+ "task": "task234",
+ "title": "必刷题（关键时刻救场练习）原型 v0",
+ "created": "2026-11-04",
+ "status": "prototype + measurement; no production change",
+ "environment": {
+  "machine": "Mac (headless)",
+  "engine": "/Users/newbiexvwu/pvz-mac-collect/build2/pvz-portable",
+  "engine_revision": "de06a1756388a5d10ff2f30306e93fae1e1b461b",
+  "engine_build": "3189",
+  "resources": "~/.cache/pvz-research-resources",
+  "workers": 6,
+  "note": "Mac collector process group was manually frozen; no desktop production run"
+ },
+ "models": {
+  "student_r101": {
+   "path": "~/pvz-mac-collect/models/student_e4aa3bf3088a.pt",
+   "sha256": "bbe0ef31fee41adda21aad9d91487c336003f8835590323e8d90f7c8ed696661",
+   "bytes": 4007726,
+   "source": "curriculum_state.pipeline/round_000101/student/model.pt (task228 collector log)"
+  },
+  "teacher_prior": {
+   "path": "~/pvz-mac-collect/models/gptbc.pt",
+   "sha256": "bb3d3778d4e44ec0a1d77950630e500528adee6f806fe255058aa3f428624fcd"
+  },
+  "value_v5": {
+   "path": "~/pvz-mac-collect/models/value.pt",
+   "sha256": "8a636d337c03dcf3037f42ce41f79abc5e0b898eb5a2b39d9a00ad3b9d88c3b4"
+  },
+  "static_branch1": {
+   "path": "~/pvz-mac-collect/models/static.pt",
+   "sha256": "2485841036cf3a8738174affb0dadc0201a925ca3ea0ebe6e3eb02e74621e314"
+  },
+  "value_roof": {
+   "path": "~/pvz-mac-collect/models/value_roof.pt",
+   "sha256": "5e8485e4f9176c784eb726c6cc302ff58c99b6fbe5d754dce2661fe09b9460b8"
+  }
+ },
+ "drill_definition": {
+  "start": "(archive, decision) using the existing demo_start convention; RESEED future seed",
+  "horizon_ticks": 1200,
+  "mined_horizon_ticks": 900,
+  "lookback_ticks": 300,
+  "success": [
+   "all target threats gone/off board by horizon",
+   "no lawn mower fired",
+   "no house breach"
+  ],
+  "secondary": "plants_eaten during the horizon",
+  "target": "counter zombie(s) in the trigger wave within 120 px of the trigger zombie",
+  "no_tactic_rule": "miner reads only zombie roster/position and the frontmost plant x; it never selects a card"
+ },
+ "mining": {
+  "drills": 197,
+  "by_terrain": {
+   "fog": 104,
+   "night": 43,
+   "pool": 11,
+   "roof": 39
+  },
+  "by_terrain_type": {
+   "fog|balloon": 49,
+   "fog|dolphin": 4,
+   "fog|football": 6,
+   "fog|jack": 37,
+   "fog|pogo": 8,
+   "night|football": 23,
+   "night|polevaulter": 20,
+   "pool|dolphin": 2,
+   "pool|football": 2,
+   "pool|polevaulter": 1,
+   "pool|snorkel": 2,
+   "pool|zamboni": 4,
+   "roof|football": 1,
+   "roof|gargantuar": 6,
+   "roof|jack": 2,
+   "roof|ladder": 14,
+   "roof|pogo": 9,
+   "roof|polevaulter": 9
+  },
+  "by_type": {
+   "balloon": 54,
+   "dolphin": 7,
+   "football": 33,
+   "gargantuar": 7,
+   "jack": 44,
+   "ladder": 18,
+   "pogo": 21,
+   "polevaulter": 33,
+   "snorkel": 2,
+   "zamboni": 4
+  },
+  "sources": {
+   "main": 76,
+   "gen": 91,
+   "userpick": 21,
+   "imitater": 9
+  },
+  "human_sequences": {
+   "raw": 175,
+   "complete": 33,
+   "replant_same_type": 7,
+   "actionable_counter_drills": 3
+  },
+  "not_covered": [
+   "digger (underground x stays at the house; needs a state rule)",
+   "bungee/catapult (left board != killed; need no-steal criterion)"
+  ]
+ },
+ "measurement": {
+  "bank": "configs/task234_drills_eval.json (36 drills: 12 fog, 12 roof, 12 night)",
+  "seeds": 3,
+  "seed_base": 88000000,
+  "paired": true,
+  "games": 324,
+  "arms": {
+   "student": "r101 alone",
+   "teacher": "production qc: per-card 1, student-candidates 2, samples 3, verify 9, horizon 2500, min-gap 300, save-candidates 1 on fog",
+   "wide": "per-card 2, student-candidates 3, samples 4, verify 12, horizon 3500, min-gap 150",
+   "teacher_r101": "ablation: teacher params but r101 prior on roof/night (72 games)"
+  },
+  "horizon_ticks": 1200,
+  "wall_seconds": 625.6,
+  "overall": {
+   "student": {
+    "games": 108,
+    "success": 38,
+    "rate": 0.3519,
+    "mean_plants_lost": 2.61,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher": {
+    "games": 108,
+    "success": 39,
+    "rate": 0.3611,
+    "mean_plants_lost": 2.45,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "wide": {
+    "games": 108,
+    "success": 37,
+    "rate": 0.3426,
+    "mean_plants_lost": 2.57,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   }
+  },
+  "by_terrain": {
+   "student|fog": {
+    "games": 36,
+    "success": 3,
+    "rate": 0.0833,
+    "mean_plants_lost": 3.78,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher|fog": {
+    "games": 36,
+    "success": 11,
+    "rate": 0.3056,
+    "mean_plants_lost": 3.33,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "wide|fog": {
+    "games": 36,
+    "success": 10,
+    "rate": 0.2778,
+    "mean_plants_lost": 3.44,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "student|night": {
+    "games": 36,
+    "success": 8,
+    "rate": 0.2222,
+    "mean_plants_lost": 3.81,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher|night": {
+    "games": 36,
+    "success": 6,
+    "rate": 0.1667,
+    "mean_plants_lost": 3.81,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "wide|night": {
+    "games": 36,
+    "success": 5,
+    "rate": 0.1389,
+    "mean_plants_lost": 4,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "student|roof": {
+    "games": 36,
+    "success": 27,
+    "rate": 0.75,
+    "mean_plants_lost": 0.25,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher|roof": {
+    "games": 36,
+    "success": 22,
+    "rate": 0.6111,
+    "mean_plants_lost": 0.22,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "wide|roof": {
+    "games": 36,
+    "success": 22,
+    "rate": 0.6111,
+    "mean_plants_lost": 0.28,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   }
+  },
+  "by_type": {
+   "balloon": {
+    "student": {
+     "games": 9,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 2.22,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 9,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 2.78,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 9,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 2.78,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "dolphin": {
+    "student": {
+     "games": 3,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 5.67,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 3,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 5,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 3,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 5,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "football": {
+    "student": {
+     "games": 24,
+     "success": 5,
+     "rate": 0.2083,
+     "mean_plants_lost": 3.88,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 24,
+     "success": 7,
+     "rate": 0.2917,
+     "mean_plants_lost": 3.71,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 24,
+     "success": 7,
+     "rate": 0.2917,
+     "mean_plants_lost": 3.62,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "gargantuar": {
+    "student": {
+     "games": 6,
+     "success": 3,
+     "rate": 0.5,
+     "mean_plants_lost": 0.17,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 6,
+     "success": 1,
+     "rate": 0.1667,
+     "mean_plants_lost": 0,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 6,
+     "success": 0,
+     "rate": 0.0,
+     "mean_plants_lost": 0.5,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "jack": {
+    "student": {
+     "games": 12,
+     "success": 6,
+     "rate": 0.5,
+     "mean_plants_lost": 5.17,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 12,
+     "success": 8,
+     "rate": 0.6667,
+     "mean_plants_lost": 4,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 12,
+     "success": 7,
+     "rate": 0.5833,
+     "mean_plants_lost": 4.42,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "ladder": {
+    "student": {
+     "games": 9,
+     "success": 6,
+     "rate": 0.6667,
+     "mean_plants_lost": 0,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 9,
+     "success": 3,
+     "rate": 0.3333,
+     "mean_plants_lost": 0,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 9,
+     "success": 4,
+     "rate": 0.4444,
+     "mean_plants_lost": 0,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "pogo": {
+    "student": {
+     "games": 18,
+     "success": 9,
+     "rate": 0.5,
+     "mean_plants_lost": 1.11,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 18,
+     "success": 12,
+     "rate": 0.6667,
+     "mean_plants_lost": 1.11,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 18,
+     "success": 12,
+     "rate": 0.6667,
+     "mean_plants_lost": 1.11,
+     "mower_games": 0,
+     "house_games": 0,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   },
+   "polevaulter": {
+    "student": {
+     "games": 27,
+     "success": 9,
+     "rate": 0.3333,
+     "mean_plants_lost": 2.56,
+     "mower_games": 3,
+     "house_games": 3,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "teacher": {
+     "games": 27,
+     "success": 8,
+     "rate": 0.2963,
+     "mean_plants_lost": 2.52,
+     "mower_games": 3,
+     "house_games": 3,
+     "shovels": 0,
+     "multi_step_games": 0
+    },
+    "wide": {
+     "games": 27,
+     "success": 7,
+     "rate": 0.2593,
+     "mean_plants_lost": 2.78,
+     "mower_games": 3,
+     "house_games": 3,
+     "shovels": 0,
+     "multi_step_games": 0
+    }
+   }
+  },
+  "ablation": {
+   "student|roof": {
+    "games": 36,
+    "success": 27,
+    "rate": 0.75,
+    "mean_plants_lost": 0.25,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher|roof": {
+    "games": 36,
+    "success": 22,
+    "rate": 0.6111,
+    "mean_plants_lost": 0.22,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher_r101|roof": {
+    "games": 36,
+    "success": 26,
+    "rate": 0.7222,
+    "mean_plants_lost": 0.39,
+    "mower_games": 0,
+    "house_games": 0,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "student|night": {
+    "games": 36,
+    "success": 8,
+    "rate": 0.2222,
+    "mean_plants_lost": 3.81,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher|night": {
+    "games": 36,
+    "success": 6,
+    "rate": 0.1667,
+    "mean_plants_lost": 3.81,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   },
+   "teacher_r101|night": {
+    "games": 36,
+    "success": 6,
+    "rate": 0.1667,
+    "mean_plants_lost": 3.81,
+    "mower_games": 3,
+    "house_games": 3,
+    "shovels": 0,
+    "multi_step_games": 0
+   }
+  },
+  "paired_tests": {
+   "teacher_vs_student": {
+    "None": {
+     "n": 108,
+     "a_wins": 39,
+     "b_wins": 38,
+     "only_a": 8,
+     "only_b": 7,
+     "p": 1.0
+    },
+    "fog": {
+     "n": 36,
+     "a_wins": 11,
+     "b_wins": 3,
+     "only_a": 8,
+     "only_b": 0,
+     "p": 0.0078
+    },
+    "night": {
+     "n": 36,
+     "a_wins": 6,
+     "b_wins": 8,
+     "only_a": 0,
+     "only_b": 2,
+     "p": 0.5
+    },
+    "roof": {
+     "n": 36,
+     "a_wins": 22,
+     "b_wins": 27,
+     "only_a": 0,
+     "only_b": 5,
+     "p": 0.0625
+    }
+   },
+   "teacher_r101_vs_teacher_roof": {
+    "n": 36,
+    "a_wins": 26,
+    "b_wins": 22,
+    "only_a": 5,
+    "only_b": 1,
+    "p": 0.2188
+   },
+   "teacher_r101_vs_student_roof": {
+    "n": 36,
+    "a_wins": 26,
+    "b_wins": 27,
+    "only_a": 0,
+    "only_b": 1,
+    "p": 1.0
+   },
+   "teacher_vs_wide": {
+    "None": {
+     "n": 108,
+     "a_wins": 39,
+     "b_wins": 37,
+     "only_a": 4,
+     "only_b": 2,
+     "p": 0.6875
+    },
+    "fog": {
+     "n": 36,
+     "a_wins": 11,
+     "b_wins": 10,
+     "only_a": 1,
+     "only_b": 0,
+     "p": 1.0
+    },
+    "night": {
+     "n": 36,
+     "a_wins": 6,
+     "b_wins": 5,
+     "only_a": 2,
+     "only_b": 1,
+     "p": 1.0
+    },
+    "roof": {
+     "n": 36,
+     "a_wins": 22,
+     "b_wins": 22,
+     "only_a": 1,
+     "only_b": 1,
+     "p": 1.0
+    }
+   }
+  },
+  "bootstrap": {
+   "teacher_vs_student|all": {
+    "mean": 0.0094,
+    "lo": -0.1019,
+    "hi": 0.1204
+   },
+   "wide_vs_student|all": {
+    "mean": -0.0089,
+    "lo": -0.1296,
+    "hi": 0.1111
+   },
+   "teacher_vs_wide|all": {
+    "mean": 0.0185,
+    "lo": -0.0185,
+    "hi": 0.0556
+   },
+   "teacher_vs_student|fog": {
+    "mean": 0.2228,
+    "lo": 0.0,
+    "hi": 0.4722
+   },
+   "wide_vs_student|fog": {
+    "mean": 0.195,
+    "lo": 0.0,
+    "hi": 0.4167
+   },
+   "teacher_vs_wide|fog": {
+    "mean": 0.0279,
+    "lo": 0.0,
+    "hi": 0.0833
+   },
+   "teacher_vs_student|night": {
+    "mean": -0.0555,
+    "lo": -0.1389,
+    "hi": 0.0
+   },
+   "wide_vs_student|night": {
+    "mean": -0.0833,
+    "lo": -0.2222,
+    "hi": 0.0
+   },
+   "teacher_vs_wide|night": {
+    "mean": 0.0279,
+    "lo": 0.0,
+    "hi": 0.0833
+   },
+   "teacher_vs_student|roof": {
+    "mean": -0.1391,
+    "lo": -0.3333,
+    "hi": 0.0
+   },
+   "wide_vs_student|roof": {
+    "mean": -0.1382,
+    "lo": -0.3889,
+    "hi": 0.0556
+   },
+   "teacher_vs_wide|roof": {
+    "mean": -0.0004,
+    "lo": -0.0833,
+    "hi": 0.0833
+   }
+  },
+  "item_variance": {
+   "student": {
+    "drills": 36,
+    "zero_items": 22,
+    "one_items": 12,
+    "middle_items": 2,
+    "mean": 0.3519,
+    "observed_sd": 0.4644,
+    "mean_within_se": 0.0151,
+    "within_var": 0.0041,
+    "between_sd": 0.46,
+    "icc": 0.981
+   },
+   "teacher": {
+    "drills": 36,
+    "zero_items": 21,
+    "one_items": 11,
+    "middle_items": 4,
+    "mean": 0.3611,
+    "observed_sd": 0.4539,
+    "mean_within_se": 0.0302,
+    "within_var": 0.0082,
+    "between_sd": 0.4447,
+    "icc": 0.96
+   },
+   "wide": {
+    "drills": 36,
+    "zero_items": 21,
+    "one_items": 11,
+    "middle_items": 4,
+    "mean": 0.3426,
+    "observed_sd": 0.4478,
+    "mean_within_se": 0.0302,
+    "within_var": 0.0082,
+    "between_sd": 0.4385,
+    "icc": 0.959
+   }
+  },
+  "teacher_shovels": {
+   "games": 324,
+   "shovel_actions": 0,
+   "multi_step_games": 0
+  },
+  "human_sequence_evidence": {
+   "found": 7,
+   "replayed_sequence": true,
+   "exact_user_case": {
+    "archive": "imitater:artifacts/human_demo/raw/seed_647333091/user_l44_a9f0126df282",
+    "decision": 807,
+    "root_frame": 806,
+    "tick": 30152,
+    "level": 44,
+    "terrain": "roof",
+    "row": 4,
+    "col": 4,
+    "removed": "sunflower(1)",
+    "planted": "squash(17)",
+    "replanted": "sunflower(1)",
+    "pogo_id": 69206026,
+    "pogo_x": 460.3,
+    "pogo_hp": 260,
+    "pogo_gone_tick": 30392,
+    "replant_tick": 30443,
+    "note": "human archive timeline: pogo disappears 240 ticks after squash, sunflower replanted 51 ticks later"
+   },
+   "other_actionable": [
+    "main:demo_roof_45_orig_m100:human_r739 (ladder)",
+    "main:demo_roof_42_gloommelon_m200:human_r1186 (polevaulter)"
+   ]
+  },
+  "per_drill": {
+   "gen:gen_fast:r465": {
+    "terrain": "fog",
+    "level": 39,
+    "targets": [
+     [
+      "pogo",
+      635.9
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r467": {
+    "terrain": "fog",
+    "level": 39,
+    "targets": [
+     [
+      "pogo",
+      732.1
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "gen:gen_fast:r538": {
+    "terrain": "fog",
+    "level": 39,
+    "targets": [
+     [
+      "pogo",
+      774.6
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r436": {
+    "terrain": "fog",
+    "level": 34,
+    "targets": [
+     [
+      "balloon",
+      473.8
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r534": {
+    "terrain": "fog",
+    "level": 34,
+    "targets": [
+     [
+      "balloon",
+      474.2
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r264": {
+    "terrain": "fog",
+    "level": 33,
+    "targets": [
+     [
+      "balloon",
+      484.0
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r676": {
+    "terrain": "fog",
+    "level": 32,
+    "targets": [
+     [
+      "jack",
+      521.1
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 2,
+     "games": 3,
+     "rate": 0.6667
+    },
+    "wide": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    }
+   },
+   "gen:gen_fast:r1133": {
+    "terrain": "fog",
+    "level": 32,
+    "targets": [
+     [
+      "jack",
+      531.3
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "gen:gen_fast:r842": {
+    "terrain": "fog",
+    "level": 31,
+    "targets": [
+     [
+      "jack",
+      531.6
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r925": {
+    "terrain": "fog",
+    "level": 32,
+    "targets": [
+     [
+      "football",
+      445.5
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "gen:gen_fast:r845": {
+    "terrain": "fog",
+    "level": 32,
+    "targets": [
+     [
+      "football",
+      602.6
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "gen:gen_fast:r697": {
+    "terrain": "fog",
+    "level": 34,
+    "targets": [
+     [
+      "dolphin",
+      720.4
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "imitater:user_l44_a9f0126df282:human_r806": {
+    "terrain": "roof",
+    "level": 44,
+    "targets": [
+     [
+      "pogo",
+      460.3
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "main:demo_roof_44_melon_m200:r769": {
+    "terrain": "roof",
+    "level": 44,
+    "targets": [
+     [
+      "pogo",
+      624.2
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "main:demo_roof_44_melon_m200:r958": {
+    "terrain": "roof",
+    "level": 44,
+    "targets": [
+     [
+      "pogo",
+      639.8
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "imitater:user_l47_5240981d44c6:r569": {
+    "terrain": "roof",
+    "level": 47,
+    "targets": [
+     [
+      "ladder",
+      639.5
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    }
+   },
+   "imitater:user_l47_5240981d44c6:r615": {
+    "terrain": "roof",
+    "level": 47,
+    "targets": [
+     [
+      "ladder",
+      650.1
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "main:demo_roof_43_melon_m200:r631": {
+    "terrain": "roof",
+    "level": 43,
+    "targets": [
+     [
+      "ladder",
+      776.7
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:demo_roof_42_gloommelon_m200:human_r1186": {
+    "terrain": "roof",
+    "level": 42,
+    "targets": [
+     [
+      "polevaulter",
+      524.3
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:demo_roof_42_gloommelon_m200:r719": {
+    "terrain": "roof",
+    "level": 42,
+    "targets": [
+     [
+      "polevaulter",
+      486.6
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "main:demo_roof_48_doom_m200:r733": {
+    "terrain": "roof",
+    "level": 48,
+    "targets": [
+     [
+      "gargantuar",
+      579.7
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:demo_roof_49_doom_m200:r1280": {
+    "terrain": "roof",
+    "level": 49,
+    "targets": [
+     [
+      "gargantuar",
+      599.5
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:demo_roof_49_doom_m200:r802": {
+    "terrain": "roof",
+    "level": 49,
+    "targets": [
+     [
+      "jack",
+      496.7
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "main:n16dag2m_fast_search:r790": {
+    "terrain": "night",
+    "level": 16,
+    "targets": [
+     [
+      "football",
+      601.7
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n17dag6m_fast_search:r1427": {
+    "terrain": "night",
+    "level": 17,
+    "targets": [
+     [
+      "football",
+      623.3
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n16dag2m_fast_search:r536": {
+    "terrain": "night",
+    "level": 16,
+    "targets": [
+     [
+      "football",
+      677.7
+     ]
+    ],
+    "student": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    },
+    "teacher": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    },
+    "wide": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    }
+   },
+   "main:n17dag6m_fast_search:r1275": {
+    "terrain": "night",
+    "level": 17,
+    "targets": [
+     [
+      "football",
+      723.7
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   },
+   "main:n16dag4m_fast_search:r914": {
+    "terrain": "night",
+    "level": 16,
+    "targets": [
+     [
+      "football",
+      759.3
+     ]
+    ],
+    "student": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n17dag3m_fast_search:r1011": {
+    "terrain": "night",
+    "level": 17,
+    "targets": [
+     [
+      "football",
+      760.0
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n14dag7m_fast_search:r1149": {
+    "terrain": "night",
+    "level": 14,
+    "targets": [
+     [
+      "polevaulter",
+      364.1
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n14dag2m_fast_search:r325": {
+    "terrain": "night",
+    "level": 14,
+    "targets": [
+     [
+      "polevaulter",
+      371.6
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n14dag8m_fast_search:r1560": {
+    "terrain": "night",
+    "level": 14,
+    "targets": [
+     [
+      "polevaulter",
+      576.2
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n14dag8m_fast_search:r773": {
+    "terrain": "night",
+    "level": 14,
+    "targets": [
+     [
+      "polevaulter",
+      683.3
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:n14t2m_fast_search:r494": {
+    "terrain": "night",
+    "level": 14,
+    "targets": [
+     [
+      "polevaulter",
+      758.6
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 2,
+     "games": 3,
+     "rate": 0.6667
+    },
+    "wide": {
+     "wins": 1,
+     "games": 3,
+     "rate": 0.3333
+    }
+   },
+   "main:n14dag7m_fast_search:r300": {
+    "terrain": "night",
+    "level": 14,
+    "targets": [
+     [
+      "polevaulter",
+      759.2
+     ]
+    ],
+    "student": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "teacher": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    },
+    "wide": {
+     "wins": 0,
+     "games": 3,
+     "rate": 0.0
+    }
+   },
+   "main:demo_roof_42_gloommelon_m200:r760": {
+    "terrain": "roof",
+    "level": 42,
+    "targets": [
+     [
+      "polevaulter",
+      517.6
+     ]
+    ],
+    "student": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "teacher": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    },
+    "wide": {
+     "wins": 3,
+     "games": 3,
+     "rate": 1.0
+    }
+   }
+  }
+ },
+ "answers": {
+  "student_vs_teacher": "只在雾关明显差：雾 8.3% vs 30.6%（+22.2pp, McNemar p=0.0078）；夜间 22.2% vs 16.7%（-5.6pp, p=0.5），屋顶 75.0% vs 61.1%（-13.9pp, p=0.0625）。总体 35.2% vs 36.1%（+0.9pp, p=1.0），地形互相抵消。夜间是搜索本身改坏（r101 先验的 teacher_r101 仍 16.7%）；屋顶主要是生产把先验换成 GPT（teacher_r101 72.2%，与学生的 75.0% 基本持平）。老师并非全面更强。",
+  "teacher_multistep": "不能。C++ SEARCH 的候选只有 plant / wait / save-plan wait；没有 shovel 候选，学生也没有铲除头。324 局里 shovel 动作 0 次、多步序列 0 次。人类录像里有 7 条“铲掉→种对策卡→补种同类型”的完整序列（全部屋顶），其中 user_l44 第 807 决策就是用户说的跳跳：铲向日葵(1)→种窝瓜(17)→240 tick 后跳跳消失→51 tick 后补回向日葵(1)。要老师学会这类招，必须先把铲除加进 C++ 搜索候选。",
+  "variance_exam": "单题内 3 个种子的平均 SE 约 1.5pp（学生）/3.0pp（老师），但题目间观测 SD 约 45pp，ICC≈0.96–0.98：几乎全部方差来自题目难度，种子噪声很小。老师 36 题里 32 题是 0/3 或 3/3，只有 4 题中间；36 题 ×3 种子的总体配对差 95% bootstrap 区间约 ±11pp，检测 3pp 差异约需 1200 对局。当前题库不能当低噪声门禁指标；只能当诊断/辅助指标，且要先剔除 0/3、3/3 的题。",
+  "wide_teacher": "加宽/加长没有帮助：总体 34.3% vs 36.1%；雾 27.8% vs 30.6%；夜间 13.9% vs 16.7%；屋顶 61.1% = 61.1%。searched/局 6.72 vs 5.08，成本更高、收益为负。"
+ },
+ "production_plan": {
+  "cell_family": "增加 drill_start 族：复用 demo_start 的 archive/decision/RESEED；清单加 horizon、criterion、targets；采集器在 horizon 停止，不跑完整局。",
+  "training": "帧标签 drill；短视界内的行加权（建议 3–5×，消融确认），horizon 外不加权；只对老师实际搜索/覆盖的决策加权，避免把等待行灌进去。",
+  "curriculum": "每轮最多 1–2 个 drill cell、预算约 5%；题库按地形/类型分层；入库前要求老师成功率在 20–80%，剔除全 0/全 1。",
+  "gate": "固定 100+ 题、同种子配对、按地形/类型分层；报告 McNemar/配对 bootstrap；3pp 门槛按 ~1200 对局估预算；当前 36 题只作辅助面板。",
+  "board_api": "植物已能摆：RESET_V2 的 preplanted(type,row,col) 在 CanPlantAt 合法时可放任意植物（屋顶先放花盆、水路先放睡莲）。僵尸不能凭空摆：C++ 有 Board::AddZombieInRow/AddZombie，但 RESET_V2、EnvironmentTaskSpec、Python TaskSpec 都没有僵尸列表，环境命令也没有 SPAWN。",
+  "board_work": "加 prezombies: EnvironmentTaskSpec + RESET_V2 解析 + AddZombieInRow(type,row,ZOMBIE_WAVE_DEBUG) 后设 mPosX；bungee 另设 target。C++ 1–2 天、Python/存档/测试 1 天，约 2–3 人日；若只做 SPAWN 命令约 1 天。"
+ },
+ "costs": {
+  "v0_scripts": "drill_mine.py 约 370 行；drill_run.py 约 500 行；不改生产代码",
+  "measurement": "324 局 625.6 秒（6 workers，含 replay），约 0.52 局/秒；老师 5.08 次搜索/局",
+  "next": "生产 cell + 行权重 3–5 天；100+ 题校准 2–3 天；C++ 摆盘 2–3 天；门禁接入 2 天；合计约 8–12 人日"
+ },
+ "caveats": [
+  "Mac collector was frozen; no desktop production archives were readable (tunnel 22222 refused).",
+  "Fog/roof drills include 91 self-play archives generated with r101 at m200/m100; they are ephemeral and regenerable from configs/task234_drills.json generation_tasks.",
+  "Night drills come from old hard_mac collection archives (m100), not gate eval; levels 14/16/17/20 only.",
+  "Bungee/catapult/digger are not scored; bungee and catapult are counted separately.",
+  "Success is binary and short-horizon; plants_lost is recorded but not in the primary rate.",
+  "The production teacher on roof uses the GPT prior, so the roof comparison mixes prior and search; the teacher_r101 ablation separates them."
+ ]
+}
