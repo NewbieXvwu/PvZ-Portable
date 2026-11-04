@@ -470,6 +470,18 @@ def gridsquare_label(value) -> str:
     return _GRIDSQUARE_LABEL.get(name, name)
 
 
+def upgrade_bases() -> dict[int, int]:
+    """Upgrade -> base facts parsed from Plant::IsUpgradableTo, not a playing rule."""
+    text = _read(PLANT_CPP)
+    start, end = _function_span(text, 'bool Plant::IsUpgradableTo')
+    ids = _parse_enum(_read(CONST_ENUMS), 'SeedType')
+    pairs = re.findall(r'theUpgradedType == SeedType::(SEED_\w+) && mSeedType == SeedType::(SEED_\w+)',
+                       text[start:end])
+    if not pairs:
+        raise RuntimeError('Plant::IsUpgradableTo: no upgrade/base pairs')
+    return {ids[upgrade]: ids[base] for upgrade, base in pairs}
+
+
 def upgrade_plants() -> frozenset[int]:
     """升级植物集合（SeedType 编号），从 `Plant::IsUpgrade`（Plant.cpp）解析。
 

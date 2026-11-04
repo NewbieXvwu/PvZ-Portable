@@ -60,6 +60,78 @@ TERRAIN_BY_LEVEL = (
 PLANT_POT = 33
 
 
+def opening_drills(panel, levels, seeds):
+    """Reset existing panel tasks, preserving their decks and environment fields."""
+    return [dict(id=f"opening:{task['task_id']}:{seed}", family='opening',
+                 terrain=terrain_of(int(task['level']), {}), level=int(task['level']),
+                 task_seed=int(seed), task_definition=dict(task, seeds=[int(seed)]),
+                 horizon=6000, scoring='reference_terminal', targets=[],
+                 criterion=dict(scoring='reference_terminal'))
+            for task in panel['tasks'] if int(task['level']) in levels for seed in seeds]
+
+
+def mine_families(item):
+    """Real preparation/upgrade windows; inclusion uses engine facts only.
+
+    Preparation precedes the first on-board occurrence of a counter type by 1800
+    ticks. Upgrade windows start at tick 3000 when both cards are in the seed bank
+    and that upgrade is absent. Neither inclusion nor scoring prescribes an action.
+    """
+    from pvz_constants import upgrade_bases
+    archive = Path(item['path'])
+    meta = json.loads((archive / 'meta.json').read_text())
+    if meta.get('demo_archive'):
+        return []
+    frames = read_frames(frame_path(archive))
+    if not frames:
+        return []
+    level = int(frames[0]['scene']['level'])
+    terrain = terrain_of(level, frames[0]['scene'])
+    result = []
+
+    def add(family, index, horizon, trigger):
+        frame = frames[index]
+        if frame.get('terminal'):
+            return
+        result.append(dict(
+            id=f"{item['source_root']}:{item['archive']}:{family}:{trigger['name']}:r{index}",
+            source_root=item['source_root'], archive=item['archive'],
+            decision=index + 1, root_frame=index, root_tick=int(frame['tick']),
+            level=level, terrain=terrain, family=family, horizon=horizon,
+            scoring='reference_terminal', criterion=dict(scoring='reference_terminal'),
+            targets=[], trigger=trigger))
+
+    seen = set()
+    for frame in frames:
+        for z in frame.get('zombies') or []:
+            kind = int(z[1])
+            if not z[5] or kind not in {7, 12, 14, 16, 18, 20, 21, 22} or kind in seen:
+                continue
+            seen.add(kind)
+            tick = int(frame['tick'])
+            if tick < 3000:
+                continue
+            index = frame_at_or_before(frames, tick - 1800)
+            if any(q[5] and int(q[1]) == kind for q in frames[index]['zombies']):
+                continue
+            add('preparation', index, 3000,
+                dict(name=TYPE_NAME.get(kind, SPECIAL_TYPES.get(kind)), type=kind,
+                     arrival_tick=tick, lead_ticks=tick - int(frames[index]['tick'])))
+    deck = {int(p[1]) for p in frames[0].get('packets') or []}
+    index = frame_at_or_after(frames, 3000)
+    frame = frames[index]
+    if int(frame['tick']) >= 3000:
+        chains = []
+        for upgrade, base in upgrade_bases().items():
+            if not {upgrade, base} <= deck or any(int(p[2]) == upgrade for p in frame['plants']):
+                continue
+            chains.append(dict(upgrade=upgrade, base=base,
+                bases_at_root=sum(int(p[2]) == base for p in frame['plants'])))
+        if chains:
+            add('upgrade', index, 6000, dict(name='upgrade_chain', chains=chains))
+    return result
+
+
 def terrain_of(level: int, scene: dict) -> str:
     """Adventure level range is authoritative; the scene flags are only a fallback.
 
@@ -369,6 +441,12 @@ def main():
     parser.add_argument("--lookback", type=int, default=300)
     parser.add_argument("--min-gap", type=int, default=900)
     parser.add_argument("--no-human-sequences", action="store_true")
+    parser.add_argument('--families', action='store_true',
+                        help='mine preparation and upgrade windows with reference-terminal scoring')
+    parser.add_argument('--opening-panel', type=Path,
+                        help='existing task panel for reset-state economy questions (no archives)')
+    parser.add_argument('--opening-levels', default='1-50')
+    parser.add_argument('--opening-seeds', default='89000100,89000101')
     args = parser.parse_args()
 
     roots = {}
@@ -387,13 +465,23 @@ def main():
         if not sep or name not in roots:
             parser.error(f"--archive needs a known root: {entry}")
         items.append(dict(source_root=name, archive=rel, path=roots[name] / rel))
-    if not items:
+    if not items and not args.opening_panel:
         parser.error("no archives")
 
     drills, human = [], []
+    if args.opening_panel:
+        from drill_scan import parse_levels
+        drills.extend(opening_drills(json.loads(args.opening_panel.read_text()),
+                                      parse_levels(args.opening_levels),
+                                      [int(s) for s in args.opening_seeds.split(',')]))
     stats, special_stats = Counter(), Counter()
     sources = []
     for item in items:
+        if args.families:
+            got = mine_families(item)
+            drills.extend(got)
+            sources.append(dict(item, drills=len(got)))
+            continue
         got, seq, special = mine_archive(item, args.max_per_archive, args.horizon, args.lookback,
                                           args.min_gap, not args.no_human_sequences)
         drills.extend(got)
@@ -407,14 +495,18 @@ def main():
         for name, count in special.items():
             special_stats[f"{got[0]['terrain'] if got else 'mixed'}|{name}"] += count
     by_terrain = Counter(drill["terrain"] for drill in drills)
-    by_type = Counter(drill["trigger"]["name"] for drill in drills)
+    by_type = Counter(drill.get('trigger', {}).get('name', 'opening') for drill in drills)
     document = dict(
-        schema="pvz-drill-bank-v1", task="task234",
-        criterion=dict(horizon=args.horizon, lookback=args.lookback,
+        schema="pvz-drill-bank-v1", task="task240" if args.families or args.opening_panel else "task234",
+        criterion=(dict(scoring='reference_terminal', reference='frozen student',
+                        success='terminal win', secondary='mowers used')
+                   if args.families or args.opening_panel else dict(horizon=args.horizon, lookback=args.lookback,
                        success=["all root threats gone or off board by horizon",
                                 "no lawn mower fired", "no house breach"],
-                       secondary="plants_eaten during the horizon"),
+                       secondary="plants_eaten during the horizon")),
         counts=dict(drills=len(drills), human_sequences=len(human),
+                    by_family=dict(Counter(d.get('family', 'rescue') for d in drills)),
+                    by_level=dict(Counter(d['level'] for d in drills)),
                     by_terrain=dict(sorted(by_terrain.items())),
                     by_type=dict(sorted(by_type.items())),
                     by_terrain_type=dict(sorted(stats.items())),

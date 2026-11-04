@@ -11,13 +11,18 @@ production collector (``scripts/search_play.py``):
 * read the on-board zombie ids from the engine (privileged when available);
 * judge ``criterion``: every target gone/off board, no mower fired, no house breach.
 
-No tactic is encoded here: the caller supplies the target ids and the horizon from
-the mined drill.  The miner's roster/position rule lives in ``scripts/drill_mine.py``.
+Task240 also scores delayed consequences through the frozen reference policy's
+existing native ROLLOUT, returning terminal victory and mower loss. Reference
+continuation does not add training frames. The horizon board is restored afterwards.
+
+No tactic is encoded here: the caller supplies the target ids or frozen reference
+and the horizon. The miner's state rules live in ``scripts/drill_mine.py``.
 """
 from __future__ import annotations
 
 import json
 from pathlib import Path
+import time
 
 DEFAULT_HORIZON = 1200
 DEFAULT_CRITERION = dict(threats_neutralized=True, mower_unchanged=True,
@@ -123,8 +128,42 @@ def on_board(env, obs) -> dict[int, dict]:
 
 
 def judge(env, obs, targets, mowers_start: int, mowers_left: int, *, horizon: int,
-          root_tick: int) -> dict:
+          root_tick: int, reference_policy=None, student_history=None, actor_policy=None,
+          previous_tick=None, previous_plant=False) -> dict:
     """The mined drill's mechanical local success, never a tactic or a heuristic."""
+    if reference_policy is not None:
+        # Score a delayed consequence with one frozen native policy. Restore the
+        # horizon board afterwards: reference frames must never enter training.
+        snapshot = env.snapshot()
+        started = time.monotonic()
+        try:
+            leaf = obs
+            if not obs.get('terminal'):
+                env.load_rollout_net(reference_policy)
+                # ROLLOUT's automatic first move starts with fresh action context.
+                # Use the existing native predictor once to preserve the handoff's
+                # previous tick/plant inputs, then let native ROLLOUT own the rest.
+                first = env.rollout_predict(previous_tick, previous_plant,
+                                            student_history=student_history)['action']
+                leaf = env.rollout(first, 0, sim_skip=4, student_history=student_history)
+                mowers_left = min(mowers_left, int(env._last_response['mowers_left']))
+            if not leaf.get('terminal'):
+                raise RuntimeError('reference continuation did not reach a terminal state')
+            return dict(success=leaf.get('result') == 1,
+                        target_count=0, targets_alive=0, alive=[],
+                        mower_used=max(0, mowers_start - mowers_left),
+                        house_breach=leaf.get('result') == 2,
+                        root_tick=int(root_tick), final_tick=int(obs['tick']),
+                        tick_delta=int(obs['tick']) - int(root_tick), horizon=int(horizon),
+                        scoring='reference_terminal', result=int(leaf['result']),
+                        final_wave=int(leaf['wave']), wave_count=int(leaf['wave_count']),
+                        reference_final_tick=int(leaf['tick']),
+                        reference_seconds=round(time.monotonic() - started, 4))
+        finally:
+            env.restore(snapshot)
+            env.release_snapshot(snapshot)
+            if actor_policy is not None:
+                env.load_rollout_net(actor_policy)
     alive = on_board(env, obs)
     target_ids = [int(target["id"]) for target in targets]
     alive_targets = [target_id for target_id in target_ids if target_id in alive]
