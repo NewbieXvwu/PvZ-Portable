@@ -1518,3 +1518,12 @@
   - 台式机临时工作树验证：新 human_demo_tasks.json（192 条，demo_start 31，多出 43 条 llmplay_frontier 非起点项）可被 curriculum_queue 正常加载；drill 清单 83；import_llm_run 可运行。
   - 用 `autodeploy-pkg238` 取代 `autodeploy-review241`：等 r114 结束后 deploy26 9ab2dd12。
   - 台式机后台低优先级编译 scenario 引擎（`~/pvz-logs/build-scenario1`，systemd build-scenario1，nice 19、-j4），完成后放 `artifacts/production/scenario1/`，只给导入 scenario 存档用。
+- 11-05 02:45 **集成版 9ab2dd12 已上线**（autodeploy-pkg238，01:24 左右，exit 0）：task241 修复 + GPT 包导入器 / scenario 源码。r114 否（01:22 retained），r115 已采完，正在训练。
+- 11-05 02:45 **Codex task240 完成**（drillfam 2c81e948）。三类专项都用“视界后冻结 r112 续走到终局”评分：
+  - 开局经济：学生 36% vs 老师 30%（p = 0.09），老师并不更好。L9 经济退化是训练不稳，不是老师教得差，已由蒸馏解决。
+  - 对策预备：56% vs 57%，持平。
+  - 升级链：33% vs 37%，其中**泳池 18% vs 29%（p = 0.031）**。
+  - ICC 0.6–0.7，3pp 精度约需 240–390 题。
+  - 已实现 reference_terminal 评分、多清单加载、7 个泳池升级链 cell（task240_drills.json，共用 5% 预算与 ×3 行权重）。`COMBO_BASES` 改为从 Plant.cpp 解析，已核对与原常量相同。
+  - 合进集成分支 **6b127e14**；布 `autodeploy-integ240`，等 r115 结束后部署。
+- 11-05 02:45 Mac 负载再到 77：Codex 新开的进程组未降优先级，已 renice 10。期间 Mac→台式机 SSH 多次超时（Tailscale ping 正常，疑为 Mac 过载）。台式机 scenario 引擎首次编译失败：cmake 拉 mimalloc 没走代理。已加 https_proxy 重编（build-scenario1b）。
