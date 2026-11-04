@@ -886,6 +886,48 @@ def _read_segments(paths, data, row_observer, source_weight, spill=None, reuse=F
                 dense_targets["weight"][entry["pos"]:entry["pos"] + span] *= factor
     return result
 
+def _architecture(net: RolloutNet) -> dict:
+    """The metadata that must agree before one network can supervise another (task233)."""
+    return dict(width=int(net.trunk[0].weight.shape[0]), pool=net.pool, context=net.context,
+                obs=net.obs, row_pool=net.row_pool, packet_head=net.packet_head,
+                plant_embedding_dim=net.plant_embedding_dim, aux=net.aux is not None)
+
+
+def load_distill_teacher(net: RolloutNet, path, device):
+    """The frozen incumbent used as the second supervision signal; never a silent no-op."""
+    if path is None:
+        raise ValueError('distill_weight > 0 requires distill_from')
+    from pvz_rollout_policy import load_student
+    teacher = load_student(Path(path))
+    ours, theirs = _architecture(net), _architecture(teacher)
+    differ = {name: (ours[name], theirs[name]) for name in ours if ours[name] != theirs[name]}
+    if differ:
+        raise ValueError(f'distill teacher architecture differs: {differ}')
+    ours_state, theirs_state = net.state_dict(), teacher.state_dict()
+    if ours_state.keys() != theirs_state.keys():
+        raise ValueError('distill teacher state_dict keys differ')
+    for name, value in ours_state.items():
+        if value.shape != theirs_state[name].shape:
+            raise ValueError(f'distill teacher shape differs: {name}')
+    return teacher.to(device).eval().requires_grad_(False)
+
+
+def _head_kl(teacher_logits: torch.Tensor, student_logits: torch.Tensor) -> torch.Tensor:
+    """Per-row KL(teacher || student) for one categorical head.
+
+    Masked packet entries carry -1e9 in both logits; clamping the student's log-probability
+    keeps their zero teacher probability from turning 0 * -inf into NaN.
+    """
+    teacher = F.softmax(teacher_logits, dim=1)
+    student = F.log_softmax(student_logits, dim=1).clamp_min(-1e30)
+    return (teacher * (torch.log(teacher.clamp_min(1e-12)) - student)).sum(1)
+
+
+def _binary_logits(logits: torch.Tensor) -> torch.Tensor:
+    """A Bernoulli logit as the two-class logits [wait, plant] the categorical KL expects."""
+    return torch.stack((torch.zeros_like(logits), logits), dim=1)
+
+
 def main(*, step_observer=None) -> None:
     # task34: train after collection, but before the controller and the WSL access path.
     set_oom_score_adj(OOM_SCORE_TRAINING)
@@ -1016,6 +1058,8 @@ def main(*, step_observer=None) -> None:
         from pvz_rollout_policy import load_student, warm_start_student
         warm_start_student(net, load_student(args.init))
     net = net.to(args.device)
+    # task233: weight 0 must stay exactly the old BC run -- no teacher read, no extra forward.
+    teacher = load_distill_teacher(net, args.distill_from, args.device) if args.distill_weight > 0 else None
     opt = torch.optim.AdamW(net.parameters(), **{k: v for k, v in args.optimizer.items() if k != "name"})
     waits = float(weight[plant < 0.5].sum())
     positive_count = float(plant[weight > 0].sum())
@@ -1025,17 +1069,23 @@ def main(*, step_observer=None) -> None:
     side_stream = torch.cuda.Stream() if str(args.device).startswith("cuda") else None
     loaded_event = torch.cuda.Event() if side_stream is not None else None
 
-    def batch_loss(parts, train):
+    def batch_loss(parts, train, distill=True):
         b, s, y, pk, c, w, info, cd, aux = parts
         planted = y > 0.5
         packet_args = {'packet_info': info} if info is not None else {}
+        # The teacher runs first under no_grad, so its temporary buffers are released before the
+        # student's autograd graph is built (task233).
+        teacher_out = None
+        if distill and teacher is not None:
+            with torch.no_grad():
+                teacher_out = teacher(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         out = net(b, s, pk.clamp(min=0), auxiliary=bool(args.aux_weight), **packet_args)
         denom = w.sum().clamp_min(1e-30) if private_weights is not None else w.sum()
-        loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
-                ).sum() / denom
+        bc_loss = (F.binary_cross_entropy_with_logits(out["plant"], y, pos_weight=pos_weight, reduction="none") * w
+                   ).sum() / denom
         if args.aux_weight:
             row_loss = F.binary_cross_entropy_with_logits(out["aux"], aux, reduction="none").mean(1)
-            loss = loss + args.aux_weight * (row_loss * w).sum() / denom
+            bc_loss = bc_loss + args.aux_weight * (row_loss * w).sum() / denom
         if args.cell_soft_weight and planted.any():
             # cd is (B, K, 3): packet, cell, value
             same = (cd[:, :, 0] == pk[:, None].float()) & ~torch.isnan(cd[:, :, 2]) & planted[:, None]
@@ -1045,15 +1095,31 @@ def main(*, step_observer=None) -> None:
                 # empty candidate slots are NaN; NaN -> long is 0 on ARM but INT64_MIN on x86, so zero them first (masked by m anyway)
                 logits = out["cell"][rows].gather(1, cd[rows][:, :, 1].nan_to_num(0).clamp(min=0).long())
                 student = torch.log_softmax(logits.masked_fill(~m, -1e9), 1)
-                teacher = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
-                kl = (teacher * (torch.log(teacher.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)
+                target = torch.softmax((cd[rows][:, :, 2].nan_to_num(0) / args.soft_temperature).masked_fill(~m, -1e9), 1)
+                kl = (target * (torch.log(target.clamp(min=1e-12)) - student)).masked_fill(~m, 0).sum(1)
                 wc = w[rows]
                 cell_denom=wc.sum().clamp_min(1e-30) if private_weights is not None else wc.sum()
-                loss = loss + args.cell_soft_weight * (kl * wc).sum() / cell_denom
+                bc_loss = bc_loss + args.cell_soft_weight * (kl * wc).sum() / cell_denom
         if planted.any():
             wp = w[planted]                               # all 1 unless --label-weight is used
-            loss = loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
-                            F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if private_weights is not None else wp.sum())
+            bc_loss = bc_loss + ((F.cross_entropy(out["packet"][planted], pk[planted], reduction="none") +
+                                  F.cross_entropy(out["cell"][planted], c[planted], reduction="none")) * wp).sum() / (wp.sum().clamp_min(1e-30) if private_weights is not None else wp.sum())
+        distill_loss = torch.zeros((), device=args.device)
+        if teacher_out is not None:
+            # Same heads and row weighting as BC, summed like BC sums its heads. The plant head
+            # covers every row; packet and cell only the rows where BC supervises an action.
+            terms = [(_head_kl(_binary_logits(teacher_out["plant"]), _binary_logits(out["plant"])) * w).sum() / denom]
+            if args.aux_weight:
+                terms.append((_head_kl(_binary_logits(teacher_out["aux"]), _binary_logits(out["aux"])) * w).sum() / denom)
+            if planted.any():
+                wp = w[planted]
+                packet_denom = wp.sum().clamp_min(1e-30) if private_weights is not None else wp.sum()
+                terms.append((_head_kl(teacher_out["packet"][planted], out["packet"][planted]) * wp).sum() / packet_denom)
+                terms.append((_head_kl(teacher_out["cell"][planted], out["cell"][planted]) * wp).sum() / packet_denom)
+            distill_loss = torch.stack(terms).sum()
+            loss = bc_loss + args.distill_weight * distill_loss
+        else:
+            loss = bc_loss
         stats = {}
         if not train:
             with torch.no_grad():
@@ -1062,7 +1128,7 @@ def main(*, step_observer=None) -> None:
                          "plant_recall": float(pred_plant[planted].float().mean()) if planted.any() else 0.0,
                          "packet_acc": float((out["packet"][planted].argmax(1) == pk[planted]).float().mean()) if planted.any() else 0.0,
                          "cell_acc": float((out["cell"][planted].argmax(1) == c[planted]).float().mean()) if planted.any() else 0.0}
-        return loss, stats
+        return loss, stats, bc_loss, distill_loss
 
     train_idx = torch.nonzero(~is_val & (weight > 0)).squeeze(1).to(torch.int32)
     val_idx = torch.nonzero(is_val & (weight > 0)).squeeze(1).to(torch.int32)
@@ -1113,7 +1179,7 @@ def main(*, step_observer=None) -> None:
         perm = train_idx[torch.randperm(len(train_idx))]
         if len(perm) < epoch_rows:
             perm = perm.repeat(-(-epoch_rows // len(perm)))[:epoch_rows]
-        train_loss = 0.0
+        train_loss = train_bc_loss = train_distill_loss = 0.0
         # task164: the gather for batch i+1 runs on a worker thread and its copies are queued on the
         # side stream while batch i is still in flight, so the host-side part of the batch build no
         # longer competes with the kernel launches of the current one (measured 1.1-1.2x, see
@@ -1126,7 +1192,7 @@ def main(*, step_observer=None) -> None:
         parts = load_batch(source, prepared, args.device, side_stream, loaded_event) if prepared is not None else None
         try:
             while prepared is not None:
-                loss, _ = batch_loss(parts, True)
+                loss, _, bc_loss, distill_loss = batch_loss(parts, True)
                 opt.zero_grad(); loss.backward(); opt.step()
                 if schedule is not None:
                     schedule.step()
@@ -1141,6 +1207,8 @@ def main(*, step_observer=None) -> None:
                 if step_observer is not None:
                     step_observer(completed_steps + 1, value)
                 train_loss += value * count
+                train_bc_loss += float(bc_loss.detach()) * count
+                train_distill_loss += float(distill_loss.detach()) * count
                 completed_steps+=1
                 completed_rows += count
                 metrics.update(step=completed_steps, rows=completed_rows, epoch=epoch)
@@ -1155,12 +1223,17 @@ def main(*, step_observer=None) -> None:
         # 4096: no gradients are kept, so the chunk only has to hold one forward's activations, and the
         # cell head's (chunk, 320, 6, 10) input is what made 4096 the tallest part of a whole run (task32).
         with torch.no_grad():
-            parts = [(len(chunk), *batch_loss(load_batch(source, source.prepare(chunk), args.device), False))
+            # Validation stays the pure BC metric it was before task233: no teacher forward.
+            parts = [(len(chunk), *batch_loss(load_batch(source, source.prepare(chunk), args.device), False,
+                                              distill=False))
                      for chunk in val_idx.split(args.validation_batch_size)]
-        total = sum(n for n, _l, _s in parts)
-        vl = sum(float(l) * n for n, l, _s in parts) / total
-        vs = {k: sum(st[k] * n for n, _l, st in parts) / total for k in parts[0][2]}
-        history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows, "val_loss": float(vl),
+        total = sum(n for n, *_ in parts)
+        vl = sum(float(part[1]) * part[0] for part in parts) / total
+        vs = {k: sum(st[k] * n for n, _l, st, _bc, _d in parts) / total for k in parts[0][2]}
+        history.append({"epoch": epoch, "train_loss": train_loss / epoch_rows,
+                        "bc_loss": train_bc_loss / epoch_rows,
+                        "distill_loss": train_distill_loss / epoch_rows,
+                        "val_loss": float(vl),
                         **vs, "seconds": time.perf_counter() - epoch_started})
         print(json.dumps(history[-1]), flush=True)
         if args.save_epochs and epoch > args.epochs - args.save_epochs:

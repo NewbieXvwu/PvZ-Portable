@@ -281,6 +281,16 @@ def retry_io(operation):
     return call
 
 
+def experiment_name(job):
+    """`ab_result.experiment`: the B lineage plus the two runtime switches that changed it."""
+    experiment = job.get('b_lineage')
+    if job.get('b_init_source') == 'incumbent':
+        experiment = f'{experiment}+b-from-incumbent'
+    if job.get('distill_weight', 0) > 0:
+        experiment = f'{experiment}+distill{job["distill_weight"]:g}'
+    return experiment
+
+
 def read_json(path):
     return json.loads(retry_io(path.read_text)())
 
@@ -1379,9 +1389,7 @@ class TrainingPipeline:
             # task128: heldout cells are monitored, never vetoed. Their wins go into the round report.
             log_line(self.args.log, f'background round {job["round"]} heldout monitor (no veto): ' + ' '.join(
                 f'{name}={cell["candidate_wins"]}/{cell["pairs"]}' for name, cell in decision['monitor'].items()))
-        experiment = job.get('b_lineage')
-        if job.get('b_init_source') == 'incumbent':
-            experiment = f'{experiment}+b-from-incumbent'
+        experiment = experiment_name(job)
         self._marker(folder / 'ab_result.json', dict(round=job['round'], experiment=experiment,
             seed_block=frozen['seed_block'], incumbent=frozen['incumbent'],
             candidates=frozen['candidates'], look=decision.get('sequential', {}).get('look'),
@@ -1501,6 +1509,10 @@ class TrainingPipeline:
         if epochs is None:
             epochs = job['b_epochs'] if parent_round else job['b_initial_epochs']
         recipe.update(init=str(parent), epochs=epochs)
+        if recipe.get('distill_weight', 0) > 0:
+            # task233: the teacher is always the frozen parent this candidate fine-tunes from,
+            # so a later promotion or lineage refresh cannot retarget the round's B.
+            recipe['distill_from'] = str(parent)
         return recipe
 
     def _refresh_lineage(self, path, job, restart=False):
@@ -1592,8 +1604,9 @@ class TrainingPipeline:
             if base_options != variant_options:
                 raise ValueError('A/B recipes must share pack row options')
             variant_path = folder / 'recipe_b.json'
-            write_recipe(variant_path, self._round_recipe(variant, job, parent, parent_round,
-                                                          epochs=b_epochs))
+            variant = self._round_recipe(variant, job, parent, parent_round, epochs=b_epochs)
+            job['distill_weight'] = float(variant.get('distill_weight', 0) or 0)
+            write_recipe(variant_path, variant)
             repeats = 1
             job['candidate_recipes'] = [
                 dict(recipe=str(candidate_path), source_recipe=str(source), recipe_family=family)
@@ -1844,6 +1857,7 @@ class TrainingPipeline:
                                  source_recipe=variant.get('source_recipe', str(recipe_path)),
                                  recipe_family=variant.get('recipe_family', 'A'),
                                  init=child_recipe['init'], epochs=child_recipe['epochs'],
+                                 distill_weight=float(child_recipe.get('distill_weight', 0) or 0),
                                  train_started=time.time())
                 if variant.get('recipe_family') == 'B' and job.get('b_init_source'):
                     candidate.update(b_init_source=job['b_init_source'],

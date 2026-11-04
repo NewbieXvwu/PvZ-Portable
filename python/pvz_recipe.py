@@ -23,8 +23,8 @@ TRAIN_DEFAULTS = dict(
     aux_horizon=8, context=False, obs='v1', soft_temperature=.05,
     cell_soft_weight=0.0, spread_weight=0.0, spread_cap=5.0,
     demo_row_weight=1.0, demo_start_row_weight=1.0, llm_demo_import=None, llm_demo_results=[1],
-    save_epochs=0, lr_schedule='constant', init=None, cache=True,
-    cache_dir=None, read_cache_dir=None, dense_boards=False,
+    save_epochs=0, lr_schedule='constant', init=None, distill_from=None, distill_weight=0.0,
+    cache=True, cache_dir=None, read_cache_dir=None, dense_boards=False,
     source_row_report=False, max_steps=None, batch_size=2048, validation_batch_size=4096,
     optimizer=dict(name='AdamW', lr=.002, weight_decay=.0001, betas=[.9, .999], eps=1e-8, amsgrad=False),
     validation=dict(seed=0, fraction=.1), provenance={})
@@ -59,7 +59,7 @@ def resolve_paths(document):
     return result
 
 
-PATH_FIELDS = ('data', 'out', 'init', 'cache_dir', 'read_cache_dir', 'llm_demo_import',
+PATH_FIELDS = ('data', 'out', 'init', 'distill_from', 'cache_dir', 'read_cache_dir', 'llm_demo_import',
                'manifest', 'rollout_policy', 'value', 'executable', 'resource_dir',
                'day_manifest', 'perturb_manifest', 'night_manifest', 'day_orig_manifest',
                'pool_manifest', 'pressure_manifest')
@@ -118,6 +118,9 @@ def validate(document, kind=None):
         if value is not None and (not isinstance(value, str) or not value):
             raise ValueError(f'{name}: expected a path string')
     if kind == 'training':
+        # The queue fills distill_from from the frozen B init, so a positive weight with a
+        # null teacher is a valid intermediate recipe; the trainer rejects it at launch.
+        _number(result['distill_weight'], 'distill_weight')
         if 'history_l7_keep' in result:
             _number(result['history_l7_keep'], 'history_l7_keep', maximum=1)
         if 'deck_weight_cap' in result:

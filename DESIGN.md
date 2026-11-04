@@ -1777,3 +1777,5 @@ B 谱系，而是从排轮时的现任学生（`state['student']` / `student_rou
 `b_init`、`b_init_round`），之后后台门禁再晋升别人也不改本轮 B；`ab_result.experiment`
 写成 `<lineage>+b-from-incumbent` 便于事后区分。关闭开关时 `_b_parent` 与旧干净 B
 谱系行为完全不变（已晋升的 B 候选仍会更新 `b_student`，便于以后切回）。
+task233 起 B 配方可带 `distill_weight`：排轮时把 `distill_from` 冻结为 B 的 init（即现任），
+训练时另加 `distill_weight × KL(冻结现任‖学生)` 到 BC 损失，A 配方与共享打包键不变。
